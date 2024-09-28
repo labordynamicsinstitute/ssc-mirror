@@ -1,4 +1,4 @@
-*! ivreg2h  1.1.07  28aug2024  cfb/mes
+*! ivreg2h  1.1.08  26sep2024  cfb/mes
 *! cloned from
 *! xtivreg2 1.0.13 28Aug2011
 *! author mes
@@ -25,6 +25,7 @@
 *!         gen insts can be recovered
 *! 1.1.06: fe option disabled. Should be implemented in ivreg2hfe.
 *! 1.1.07: correct handling of excluded insts in genextinst code
+*! 1.1.08: changed all tsunab, tsrevar to fvunab, fvrevar to permit FV syntax
 
 program define ivreg2h, eclass byable(recall)
 	version 9
@@ -58,14 +59,14 @@ program define ivreg2h, eclass byable(recall)
 	else {
 
 		local cmdline "ivreg2h `*'"
-// disable fe
-		syntax [anything(name=0)] [if] [in] [aw fw pw iw/] , [ /* FE   fd
-			*/	Ivar(varname) Tvar(varname) first ffirst rf /*
-			*/	savefirst SAVEFPrefix(name) saverf SAVERFPrefix(name) CLuster(varlist)	/*
-			*/	orthog(string) ENDOGtest(string) REDundant(string) PARTIAL(string)		/*
-			*/	BW(string) SKIPCOLL														/*
-			*/	GEN1 GEN2(string) NOOUTput Z(string)									/*
-			*/	* ]
+// disable fe, fd [ /* FE   fd */ 
+		syntax [anything(name=0)] [if] [in] [aw fw pw iw/] , [ /// 
+				Ivar(varname) Tvar(varname) first ffirst rf ///
+				savefirst SAVEFPrefix(name) saverf SAVERFPrefix(name) CLuster(varlist)	///
+				orthog(string) ENDOGtest(string) REDundant(string) PARTIAL(string)		///
+				BW(string) SKIPCOLL														///
+				GEN1 GEN2(string) NOOUTput Z(string)									///
+				* ]
 
 // ms - `gen'=1 if ivreg2h leaves behind generated instruments, =0 if not
 		local gen = ("`gen1'`gen2'"~="")
@@ -145,9 +146,11 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 			loc qnoout nooutput
 			marksample touse
 			markout `touse' `lhs' `inexog' `exexog' `endo' `cluster' /* `tvar' */, strok
-			tsrevar `lhs', substitute
+//			tsrevar `lhs', substitute
+			fvrevar `lhs', substitute
 			local lhs_t "`r(varlist)'"
-			tsrevar `inexog', substitute
+//			tsrevar `inexog', substitute
+			fvrevar `inexog', substitute
 			local inexog_t "`r(varlist)'"
 // di in r "inexog_t `inexog_t'"
 			loc n_inex : word count `inexog_t'
@@ -160,26 +163,33 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 			local zts : subinstr local zts "." "_", all	
 // di in r "z: `z'"
 // di in r "`zts: `zts'"
-			tsrevar `z', substitute
+//			tsrevar `z', substitute
+			fvrevar `z', substitute
 //			local z_t "`r(varlist)'"
 			local zlist_t "`r(varlist)'"
 // di in r "zlist_t: `zlist_t'"
 // di in r "n_inex `n_inex'" _n
-			tsrevar `endo', substitute
+//			tsrevar `endo', substitute
+			fvrevar `endo', substitute
 			local endo_t "`r(varlist)'"
 			loc n_endo : word count `endo_t'
 // di in r "n_endo `n_endo'"
-			tsrevar `exexog', substitute
+//			tsrevar `exexog', substitute
+			fvrevar `exexog', substitute
 			local exexog_t "`r(varlist)'"
 			loc n_exex : word count `exexog_t'
 // di in r "n_exex `n_exex'"
-			tsrevar `orthog', substitute
+//			tsrevar `orthog', substitute
+			fvrevar `orthog', substitute
 			local orthog_t "`r(varlist)'"
-			tsrevar `endogtest', substitute
+//			tsrevar `endogtest', substitute
+			fvrevar `endogtest', substitute
 			local endogtest_t "`r(varlist)'"
-			tsrevar `redundant', substitute
+//			tsrevar `redundant', substitute
+			fvrevar `redundant', substitute
 			local redundant_t "`r(varlist)'"
-			tsrevar `partial', substitute
+//			tsrevar `partial', substitute
+			fvrevar `partial', substitute
 			local partial_t "`r(varlist)'"
 			local npan1 0
 // cfb ivreg2h: switch off noconstant for non-FE models
@@ -231,8 +241,10 @@ di as err "pv `pv'"
 			cap est drop StdIV
 		} 
 		else {
-			
+		
+// ---------------------------------------------------------------------------------------			
 // COMPUTE STANDARD IV RESULTS IF EQUATION IS IDENTIFIED ---------------------------------
+// ---------------------------------------------------------------------------------------	
 
 			if "`nooutput'"=="" {
 				di as res _n "Standard IV Results" _n "`feest'"
@@ -370,8 +382,10 @@ di as err "pv `pv'"
 					}
 */
 					}	// end standard IV block
-			
+
+// ---------------------------------------------------------------------------------------				
 // COMPUTE RESULTS FOR GENERATED INSTRUMENTS ONLY ----------------------------------------
+// ---------------------------------------------------------------------------------------	
 
 // Even if no excluded insts, must generate insts						
 // Lewbel hetero instruments, based only on centered included exog in FSR
@@ -404,10 +418,7 @@ di as err "pv `pv'"
 */				
 //  di as err "zlist_t `zlist_t'"
 
-// ******
 // 1.1.06: must grab original z content to rename generated instruments if TS ops are used
-// ******
-
 //				loc n_inexog: word count `inexog_t'
 
 // 1.1.06: refer to zlist_t
@@ -612,8 +623,10 @@ di as err "pv `pv'"
 				if "`feest'" != "" {
 					di as err _n "Warning: variables have been centered"
 					}
-*/				
+*/	
+// ---------------------------------------------------------------------------------------				
 // COMPUTE RESULTS FOR GENERATED AND EXCLUDED INSTRUMENTS --------------------------------
+// ---------------------------------------------------------------------------------------	
 				
 // Lewbel hetero instruments, based on centered included exog + excluded exog in FSR
 // Z() overrides list in inexog, expanded into z_t
@@ -940,12 +953,14 @@ di as err `"the equal sign "=" is required"'
 				}
 				local temp_ct  : word count `endo'
 				if `temp_ct' > 0 {
-					tsunab endo : `endo'
+				//	tsunab endo : `endo'
+					fvunab endo : `endo'
 				}
 * To enable OLS estimator with (=) syntax, allow for empty exexog list
 				local temp_ct  : word count `depvar'
 				if `temp_ct' > 0 {
-					tsunab exexog : `depvar'
+				//	tsunab exexog : `depvar'
+					fvunab exexog : `depvar'
 				}
 			}
 			else {
@@ -956,7 +971,8 @@ di as err `"the equal sign "=" is required"'
 		}
 		local 0 `"`depvar' `0'"'
 
-		tsunab inexog : `inexog'
+//		tsunab inexog : `inexog'
+		fvunab inexog : `inexog'
 		tokenize `inexog'
 		local depvar "`1'"
 		local 1 " " 

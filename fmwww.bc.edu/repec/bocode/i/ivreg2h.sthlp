@@ -47,15 +47,16 @@ which will also be suffixed with {cmd:_g}.
 You may remove earlier instruments with those same names with the {cmd:replace} suboption.
 In order to use a subset of the included exogenous variables to construct instruments, include
 them in the {cmd:z()} option. Make sure that the variables listed here are in the list of included
-instruments. The current version of {cmd:ivreg2h} does not support fixed-effects models. They can
-be implemented by manually centering all variables in the regression.
+instruments. Although factor variables (with c. and i. prefixes) and time-series operators can be used in the model
+specification, they cannot be included in the {cmd:z()} option.
 
 {p}{cmd:ivreg2h} can be invoked to estimate a traditionally identified single equation, 
 or a single equation that--before augmentation with the generated instruments--fails the 
 order condition for identification:
 either ({cmd:a}) by having no excluded instruments, 
 or ({cmd:b}) by having fewer excluded instruments than needed for 
-traditional identification. 
+traditional identification.  The current version of {cmd:ivreg2h} does not support fixed-effects models. They can
+be implemented by manually centering all variables in the regression.
 
 {p}In the former case ({cmd:a}), of adequate external instruments augmented by 
 generated instruments, the program provides three sets of estimates: the traditional IV 
