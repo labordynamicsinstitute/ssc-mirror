@@ -1,0 +1,42 @@
+d 'MI_IMPUTE_FROM': module to impute using an external imputation model
+d
+d      mi impute from fills in missing values using an estimated
+d imputation model    estimated in one or multiple studies.  A
+d quantitative missing variable can be	  imputed passing the
+d estimates of 99 (q=0.01(.01).99) linear predictors of    quantile
+d regression models.  A categorical missing variable with k levels
+d can be    imputed passing k linear predictors of multinomial
+d logistic regression models.  A    binary (0/1) missing variable
+d can be imputed passing the linear predictors of    logistic
+d regression models.  The command assumes that variables used in
+d the	 imputation model are available in the current data.  The
+d mi_impute_from_get is    reading the files containing the
+d estimated models, estimate a weighted inverse    variance least
+d square model to combine regression coefficients of the imputation
+d    model across studies, and formatting matrices to be passed to
+d mi impute from. 
+d
+d KW: multiple imputation
+d KW: quantile regression
+d KW: logistic regression
+d
+d Requires: Stata version 18 
+d
+d Distribution-Date: 20240928
+d
+d Author: Robert Thiesmeier,  Institute of Environmental Medicine, Karolinska Institutet
+d Support: email NA
+d
+d Author:  Matteo Bottai,  Institute of Environmental Medicine, Karolinska Institutet
+d Support: email  matteo.bottai@@ki.se
+d
+d Author: Nicola Orsini, Institute of Environmental Medicine, Karolinska Institutet
+d Support: email Nicola.Orsini@@ki.se
+d
+f mi_impute_cmd_from_init.ado
+f mi_impute_cmd_from_parse.ado
+f mi_impute_cmd_from_return.ado
+f mi_impute_from_get.ado
+f mi_impute_cmd_from.ado
+f mi_impute_from.sthlp
+f mi_impute_from_get.sthlp

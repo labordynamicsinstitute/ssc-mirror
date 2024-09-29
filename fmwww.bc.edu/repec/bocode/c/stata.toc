@@ -274,6 +274,7 @@ p csjl module to extend cs command for exposures with more than two categories
 p csranks module to construct uniformly asymptotically valid confidence sets on ranks
 p cstable module to calculate summary table for cohort study
 p csti module that modifies csi command in order to use total numbers rather than individual cell counts
+p csum module to compute cumulative sum (CUSUM) charts for monitoring clinical performance 
 p csvconvert module to append multiple csv files
 p cta module for conducting Classification Tree Analysis
 p ctabstat module to display table of summary statistics

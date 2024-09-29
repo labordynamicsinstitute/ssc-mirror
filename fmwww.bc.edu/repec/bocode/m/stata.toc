@@ -135,6 +135,7 @@ p mgof module to perform goodness-of-fit tests for multinomial data
 p mhl module to compute Hodges and Lehman (1963) robust measure of location
 p mhtexp module to perform multiple hypothesis testing correction procedure
 p mhtreg module for multiple hypothesis testing controlling for FWER
+p mi_impute_from module to impute using an external imputation model
 p mi_impute_wlogit module to perform weighted multiple imputation for binary/categorical variables
 p mi_mvncat module to assign "final" values to (mvn) imputed categorical variables
 p mi_twoway module  for computing scores on questionnaires containing missing item responses

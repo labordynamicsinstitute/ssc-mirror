@@ -1,0 +1,29 @@
+d 'CSUM': module to compute cumulative sum (CUSUM) charts for monitoring clinical performance 
+d
+d  csum produces a cumulative sum (CUSUM) chart for monitoring
+d clinical performance over time, by signaling if sufficient
+d evidence has accumulated to detect a change in the failure rate
+d of the outcome (Steiner et al. 2000). The CUSUM procedure
+d requires a binary yvar (where a value of 1 indicates failure and
+d 0 indicates success), and a sequential xvar which typically
+d represents sequential patient numbers or the passage of time.
+d Process deterioration is detected when the CUSUM exceeds the a
+d priori control limit in the positive direction. Similarly,
+d process improvement is detected when the CUSUM exceeds the a
+d priori control limit in the negative direction. See Steiner et
+d al. (2000) for a comprehensive discussion about how CUSUM charts
+d are produced and interpreted. 
+d
+d KW: cumulative sum
+d KW: performance monitoring
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20240927
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f csum.ado
+f csumdgp.ado
+f csum.sthlp
