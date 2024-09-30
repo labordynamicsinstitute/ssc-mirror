@@ -11846,6 +11846,7 @@ fmwww.bc.edu/repec/bocode/g/grpvars.ado
 fmwww.bc.edu/repec/bocode/g/glmdeco.sthlp
 fmwww.bc.edu/repec/bocode/g/gzipsave.ado
 fmwww.bc.edu/repec/bocode/g/gs2slsarxt.pkg
+fmwww.bc.edu/repec/bocode/g/graphfunctions.pkg
 fmwww.bc.edu/repec/bocode/g/gformula.ado
 fmwww.bc.edu/repec/bocode/g/galbr.dlg
 fmwww.bc.edu/repec/bocode/g/glcurve7.hlp
@@ -12263,6 +12264,7 @@ fmwww.bc.edu/repec/bocode/g/gllasim.html
 fmwww.bc.edu/repec/bocode/g/get_pwmse.ado
 fmwww.bc.edu/repec/bocode/g/gmap.ado
 fmwww.bc.edu/repec/bocode/g/go.sthlp
+fmwww.bc.edu/repec/bocode/g/graphfunctions.sthlp
 fmwww.bc.edu/repec/bocode/g/getmxdata.ado
 fmwww.bc.edu/repec/bocode/g/group3hdfe.pkg
 fmwww.bc.edu/repec/bocode/g/geo2xy_world_coor.dta
@@ -12890,6 +12892,7 @@ fmwww.bc.edu/repec/bocode/l/llog2markup.mata
 fmwww.bc.edu/repec/bocode/l/lpgraph.ado
 fmwww.bc.edu/repec/bocode/l/longplot.pkg
 fmwww.bc.edu/repec/bocode/l/labmask.hlp
+fmwww.bc.edu/repec/bocode/l/labsplit.sthlp
 fmwww.bc.edu/repec/bocode/l/lmngry.dlg
 fmwww.bc.edu/repec/bocode/l/leebounds.sthlp
 fmwww.bc.edu/repec/bocode/l/lrjtest.hlp
@@ -13367,6 +13370,7 @@ fmwww.bc.edu/repec/bocode/l/le8.ado
 fmwww.bc.edu/repec/bocode/l/linshell2.mlib
 fmwww.bc.edu/repec/bocode/l/lmadurh2.html
 fmwww.bc.edu/repec/bocode/l/labvalch3.pkg
+fmwww.bc.edu/repec/bocode/l/labsplit.ado
 fmwww.bc.edu/repec/bocode/l/loadcty.mata
 fmwww.bc.edu/repec/bocode/l/lmabg.ado
 fmwww.bc.edu/repec/bocode/l/labmatch.pkg

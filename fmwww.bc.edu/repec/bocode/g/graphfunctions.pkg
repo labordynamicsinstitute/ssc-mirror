@@ -1,0 +1,19 @@
+d 'GRAPHFUNCTIONS': module providing a suite of programs to support visualization customizations
+d
+d  This is a suite of programs to support visualization
+d customizations. 
+d
+d KW: graphics
+d KW: label wrap
+d KW: word wrap
+d
+d Requires: Stata version 15 
+d
+d Distribution-Date: 20240929
+d
+d Author: Asjad Naqvi, Austrian Institute of Economic Research (WIFO)
+d Support: email asjadnaqvi@@gmail.com
+d
+f graphfunctions.sthlp
+f ../l/labsplit.ado
+f ../l/labsplit.sthlp
