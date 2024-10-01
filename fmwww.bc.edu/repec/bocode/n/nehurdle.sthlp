@@ -1,10 +1,10 @@
 {smcl}
-{* *! Version 1.0.0 09 August 2017}{...}
+{* *! Version 2.0.0 20 September 2024}{...}
 
 {title:Title}
 
 {p2colset 5 18 20 2}{...}
-{p2col :{hi:nehurdle} {hline 2}}estimation command for data with corner solutions.{p_end}
+{p2col :{hi:nehurdle} {hline 2}}estimation command for hurdle models.{p_end}
 {p2colreset}{...}
 
 {marker syntax}{...}
@@ -17,9 +17,11 @@
 {phang}
 	{cmd:nehurdle} {depvar} [{indepvars}] {ifin}
 	[{it:{help nehurdle##weight:weight}}] [{cmd:,}
-	{{opt he:ckman}|{opt to:bit}|{opt tr:unc}} {it:shared_options}
+	{{opt he:ckman}|{opt to:bit}|{opt tr:unc}|{opt truncp}|{opt truncnb1}|{opt truncnb2}} {it:shared_options}
 	{it:specific_options} ]
 {p_end}
+
+{dlgtab:Models for Continuous Variables}
 
 {p 2 6 2}
 	Tobit's Syntax:
@@ -32,7 +34,7 @@
 {p_end}
 
 {p 2 6 2}
-	Truncated Hurdle's Syntax:
+	Normal Truncated Hurdle's Syntax:
 {p_end}
 
 {phang}
@@ -51,25 +53,60 @@
 	[ {it:shared_options} {it:specific_options} ]
 {p_end}
 
+{dlgtab:Models for Count Data}
+
+{p 2 6 2}
+	Poisson Truncated Hurdle's Syntax:
+{p_end}
+
+{phang}
+	{cmd:nehurdle} {depvar} [{indepvars}] {ifin}
+	[{it:{help nehurdle##weight:weight}}] {cmd:,} {opt truncp}
+	[ {it:shared_options} {it:specific_options} ]
+{p_end}
+
+{p 2 6 2}
+	NB1 Truncated Hurdle's Syntax:
+{p_end}
+
+{phang}
+	{cmd:nehurdle} {depvar} [{indepvars}] {ifin}
+	[{it:{help nehurdle##weight:weight}}] {cmd:,} {opt truncnb1}
+	[ {it:shared_options} {it:specific_options} ]
+{p_end}
+
+{p 2 6 2}
+	NB2 Truncated Hurdle's Syntax:
+{p_end}
+
+{phang}
+	{cmd:nehurdle} {depvar} [{indepvars}] {ifin}
+	[{it:{help nehurdle##weight:weight}}] {cmd:,} {opt truncnb2}
+	[ {it:shared_options} {it:specific_options} ]
+{p_end}
+
+{title:Options}
+
 {synoptset 20 tabbed}{...}
 {synopthdr}
 {synoptline}
 {syntab:Estimator}
 {synopt:{opt he:ckman}}required to use the Type II Tobit estimator{p_end}
 {synopt:{opt to:bit}}required to use the Tobit estimator{p_end}
-{synopt:{opt tr:unc}}optional to use the truncated hurdle estimator; this is
+{synopt:{opt tr:unc}}optional to use the Normal truncated hurdle estimator; this is
 the default if no estimator option is specified{p_end}
+{synopt:{opt truncp}}required to use the Poisson truncated hurdle estimator{p_end}
+{synopt:{opt truncnb1}}required to use the NB1 truncated hurdle estimator{p_end}
+{synopt:{opt truncnb2}}required to use the NB2 truncated hurdle estimator{p_end}
 
 {syntab:Shared Options}
 {synopt:{opt coefl:egend}}display legend instead of statistics{p_end}
-{synopt:{opt expon:ential}}specifies the value equation to be exponential{p_end}
 {synopt:{opth exp:osure(varname)}}include ln({it:varname}) in the value equation
 with coefficient constrained to 1{p_end}
-{synopt:{opt het}{bf:(}{help nehurdle##hetspec:{it:hetspec}}{opt )}}specifies
-	the functional form of the value's heteroskedasticity{p_end}
 {synopt:{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}{p_end}
 {synopt:{help nehurdle##mlopts:{it:ml options}}}options that work with {cmd:ml}{p_end}
 {synopt:{opt nocon:stant}}suppress constant term in the value equation{p_end}
+{synopt:{opt nohe:ader}}do not display the header of the results{p_end}
 {synopt:{opt nolo:g}}do not display the iteration log of the log likelihood{p_end}
 {synopt:{opth off:set(varname)}}include {it:varname} in value equation with
 coefficient constrained to 1{p_end}
@@ -78,10 +115,21 @@ covariance matrix. {it:vcetype} may be {opt cl:uster} {it:clustvar}, {opt oim},
 {opt opg}, or {opt r:obust}{p_end}
 
 {syntab:Specific Options}
-{synopt:The following can also be used with either {opt trunc} or {opt heckman} estimators}
+{p 6 6 2}
+	The following can also be used with not all of the estimators. See
+	{help nehurdle##spopts:Specific Options} for details on which can be used
+	with whatestimator
+{p_end}
 
-{synopt:{opt sel:ect}{bf:(}{help nehurdle##selspec:selspec}{bf:)}}specify the independent variables and options for
-the selection equation{p_end}
+{synopt:{opt expon:ential}}specifies the explained variable to be longnormally
+distributed{p_end}
+{synopt:{opt het}{bf:(}{help nehurdle##hetspec:{it:hetspec}}{opt )}}specifies
+	the functional form of the value's heteroskedasticity or the heterogeneity
+	in the dispersion{p_end}
+{synopt:{opt nolrt:est}}specifies that the likelihood-ratio test of the
+the dispersion parameter being zero should not be done{p_end}
+{synopt:{opt sel:ect}{bf:(}{help nehurdle##selspec:selspec}{bf:)}}specifies the
+independent variables and options for the selection equation{p_end}
 {synoptline}
 {marker hetspec}{...}
 {p 4 6 2}
@@ -120,31 +168,40 @@ the selection equation{p_end}
  
 {title:Description}
 
-{pstd}{cmd:nehurdle} estimates models for dependent variables with corner
-	solutions at 0. It collects the following maximum-likelihood estimators: Tobit
-	({help nehurdle##tobin:Tobin (1958)}), Truncated Hurdle
-	({help nehurdle##cragg:Cragg (1971)}), and Type II Tobit. It allows for both
-	linear and exponential specification of the value equation, as well as for
-	modeling exponential (multiplicative) heteroskedasticity, like in
-	{help nehurdle##harvey:Harvey (1976)}, in both the selection and value
-	processes where appropriate.
+{pstd}{cmd:nehurdle} estimates different hurdle models via maximum likelihood.
+For continuous variables it collects the Tobit ({help nehurdle##tobin:Tobin (1958)}),
+(Log)Normal (Truncated) Hurdle ({help nehurdle##cragg:Cragg (1971)}), and
+(Log)Normal Type II Tobit. For count data it collects the Poisson Truncated
+Hurdle, and NB1 and NB2 Truncated Hurdle versions of the negative binomial
+models. It allows to model heteroskedasticity in the selection process in
+all models except Tobit. It also allows to model heteroskedasticity in the value
+process for all (log)normal models, and heterogeneity in the dispersion parameter
+in the negative binomial family models.
 
-{pstd} In version 14, {cmd:Stata} introduced {cmd:churdle}, a command that
-	allows estimations of models with bounded dependent variables. {cmd:churdle}
-	is, in fact a Truncated Hurdle estimator that allows linear and exponential
-	specifications of the value equation, as well as modeling heteroskedasticity
-	both in the selection and the value equation. {cmd:nehurdle} differs from
-	{cmd:churdle} in that {cmd:nehurdle} works on versions 11 and later, not
-	just 14 and later, in that {cmd:nehurlde} only works on variables that are
-	bounded from below 	at zero, a subset of variables on which {cmd:churdle}
-	works, and in that {cmd:nehurdle} also has the Tobit and Type II Tobit
-	estimators for linear and exponential specifications of the value equation
-	that allows modeling of heteroskedasticity in the value and selection
-	processes, while {cmd:churdle} only does this with the Truncated Hurdle
-	estimator.
+{pstd} It is common to observe variables of interest with many zeroes. {cmd:nehurdle}
+provides a collection of estimators that can be used in explaining those variables,
+for both continuous and discrete variables. Tobit is the original model for
+continuous variables, but hurdle models add a level of flexibility in separating
+the selection process from the value process. Most of the models here can be
+estimated one way or another with {cmd:Stata}'s commands, so {cmd:nehurdle}'s
+purpose is to provide a common interface that is extremely easy to use, and
+adding some functionality, whether it is modeling heteroskedasticity in the
+selection process, heterogeneity/heteroskedasticity in the value process,
+or the ability to easily predict many different parameters after estimation that
+would be more complicated otherwise.
+
+{pstd}For information about all the models here, check chapters 19 and 20 of
+{help nehurdle##ctriv:Cameron and Trivedi (2022)}. Another excellent reference
+for the truncated hurdle models of count data is chapter 9 of
+{help nehurdle##LFreese: Long and Freese (2014)}. The NB1 and NB2 names follow
+{help nehurdle##ctcup: Cameron and Trivedi (2013)}.
+
+{pstd}In all its estimations, {cmd:nehurdle} reports a pseudo R-squared that equals
+the squared correlation coefficient of the predicted observed variable mean
+and the explained variable.
 
 {marker options}{...}
-{title:Options}
+{title:Option Description}
 
 {dlgtab:Estimator}
 
@@ -158,9 +215,18 @@ the selection equation{p_end}
 	
 {phang}{opt tobit} is required to tell {cmd: nehurdle} to use the Tobit estimator.
 
-{phang}{opt trunc} is optional to tell {cmd: nehurdle} to use the Truncated
+{phang}{opt trunc} is optional to tell {cmd: nehurdle} to use the Normal
 	Hurdle estimator. This is {cmd: nehurdle}'s default estimator, which is why
 	it is optional to specify it.
+
+{phang}{opt truncp} is required to tell {cmd: nehurdle} to use the Poisson
+	Truncated Hurdle estimator.
+
+{phang}{opt truncnb1} is required to tell {cmd: nehurdle} to use the NB1
+	Truncated Hurdle estimator.
+	
+{phang}{opt truncnb2} is required to tell {cmd: nehurdle} to use the NB2
+	Truncated Hurdle estimator.
 
 {dlgtab:Shared Options}
 
@@ -168,23 +234,13 @@ the selection equation{p_end}
 	These options can be used with all estimators.
 {p_end}
 
-{phang}{opt coeflegend}; see
+{phang}{opt coeflegend} see
      {helpb estimation options##coeflegend:[R] estimation options}.
-
-{phang}{opt exponential} tells {cmd:nehurdle} to estimate an exponential value
-	equation. {cmd:nehurdle} will estimate a linear in parameters equation with
-	the dependent variable being the natural logarithm of the actual variable.
 
 {phang}{opth exposure(varname)} includes ln({it:varname}) in the model for the
 	value equation with its coefficient constrained to 1.
 
-{phang}{opt het}{bf:({indepvars},} {opt nocons:tant)} lets you specify the functional
-	form of the value process heteroskedasticity. {cmd: nehurdle} models
-	multiplicative heteroskedasticity, by specifying the standard deviation of
-	the value process as an exponential process. It, thus, models the natural
-	logarithm of the standard deviation of the value process.
-
-{phang}{opt level(#)}; see
+{phang}{opt level(#)} see
 	{helpb estimation options##level():[R] estimation options}.
 
 {marker mlopts}{...}
@@ -234,9 +290,12 @@ to be dropped, but others the constraint is still applied to the estimation.
 
 {pmore}{opt nonrtolerance} turns off the default {opt nrtolerance()} criterion.
 
-{pmore}{opt nrtolerance(#)} specifies the level for scaled graident tolerance.
+{pmore}{opt nrtolerance(#)} specifies the level for scaled gradient tolerance.
 When the scaled gradient, g*inv(H)*g', has a value that is less than the level
-scaled gradient convergence is achieved. The default is {cmd:nrtolerance(1e-5)}.
+scaled gradient convergence is achieved. {cmd:Stata}'s default is
+{cmd:nrtolerance(1e-5)}, but since all ml evaluators in {cmd:nehurdle} have
+both the analytical gradient and hessian programmed, it sets the default to
+{cmd:nrtolerance(1e-12)}.
 
 {pmore}{opt qtolerance(#)} sets the level of convergene for the q-H matrix. It
 works when specified with algorithms {cmd:bhhh}, {cmd:dfp}, or
@@ -262,7 +321,7 @@ You can specify different algorithms to be used at different intervals of the
 iterations. {it:algorithm_spec} is {it:algorithm} [ {it:#} [ {it:algorithm}
 	[{it:#}] ] ... ] where {it:algorithm} is
 	{{opt nr}|{opt bhhh}|{opt dfp}|{opt bfgs}}. For details, see
-	{help nehurdle##gould:Gould, Pitblado, and Poi (2010)}.
+	{help nehurdle##gould:Pitblado, Poi, and Gould (2024)}.
 
 {pmore}{opt tolerance(#)} sets the level for the coefficient vector tolerance.
 When the relative change in the coefficient vector is less than the specified
@@ -273,7 +332,7 @@ level, coefficient vector convergence is achieved. The default is
 coefficients after the each iteration in the iteration log, even if you have
 specified {opt nolog}.
 
-{phang}{opt noconstant}; see
+{phang}{opt noconstant} see
 {helpb estimation options##noconstant:[R] estimation options}.
 
 {phang}{opt nolog} tells {cmd:nehurdle} to hide the iteration information of the
@@ -286,9 +345,47 @@ with its coefficient constrained to 1.
 includes types that are robust to some kinds of misspecification
 ({cmd:robust}), that allow for intragroup correlation ({cmd:cluster}
 {it:clustvar}), and that are derived from asymptotic theory
-({cmd:oim}, {cmd:opg}); see {helpb vce_option:[R] {it:vce_option}}.
+({cmd:oim}, {cmd:opg}). See {helpb vce_option:[R] {it:vce_option}}.
 
+{marker spopts}{...}
 {dlgtab:Specific Options}
+
+{phang}
+{opt exponential} tells {cmd:nehurdle} that the explained variable is lognormally,
+rather than normally, distributed. {cmd:nehurdle} will estimate a linear in
+parameters value equation with the explained variable being the natural logarithm
+of the actual variable. 
+	
+{pmore}{cmd:nehurdle} takes care of the transformation
+internally, so you still need to pass the original variable as the explained
+variable in the variable list.
+
+{pmore} This option is only valid for the models that
+assume a normal distribution of the value process: Tobit, Normal Hurdle, and
+Type II Tobit.
+
+{phang}
+{opt het}{bf:({indepvars},} {opt nocons:tant)} lets you specify the functional
+form for either heteroskedasticity in the value process in all the models for
+continuous variables (Tobit, Normal Hurdle, and Type II Tobit), or observed
+heterogeneity in the dispersion parameter for negative binomial family of
+estimators (NB1 and NB2 Truncated Hurdle models).
+
+{pmore}It doesn't work with the Poisson Truncated Hurdle model, because the
+Poisson assumption fixes the variance to be equal to the mean, and there cannot
+be overdispersion, so there is no dispersion parameter to model.
+
+{phang}
+{opt nolrtest} tells {cmd:nehurdle} to not do the likelihood-ratio test of the
+dispersion parameter being zero, i.e. the test of whether a negative binomial
+model collapses into the Poisson model.
+
+{pmore}This is only available with the NB1 and NB2 truncated hurdle models,
+since they are the ones that have a dispersion parameter, you have not
+modeled heterogeneity in the dispersion, and you are not estimating robust or
+clustered standard errors. In any of these last two cases the likelihood-ratio
+test is not performed, and {opt:nolrtest} will be ignored because it becomes
+redundant.
 
 {phang}
 {opt select(:}{bf:{indepvars}, het({indepvars}) noconstant exposure({varname}) offset({varname}))}
@@ -296,19 +393,17 @@ specifies the composition of the explanatory variables in the selection equation
 as well as whether to model heteroskedasticity in the selection equation. This
 is an optional option (all of it).
 
-{pmore}{opt select()} only works when using either the Truncated Hurdle estimator
-or the Type II Tobit estimator. It doesn't work with the Tobit estimator because
-the Tobit estimator doesn't have separate selection and value processes.
+{pmore}{opt select()} works with all the models except for the Tobit model. It
+doesn't work with the Tobit estimator because the Tobit estimator doesn't have
+separate selection and value processes.
 
-{pmore}The first {it:{indepvars}} sets the independent variables of the selection equation.
-If you don't include it {cmd:nehurdle} assumes that the independent variables for
-the selection equation are the same as those of the value equation.
+{pmore}The first {it:{indepvars}} sets the independent variables of the
+selection equation. If you don't include it, {cmd:nehurdle} assumes that
+the independent variables for the selection equation are the same as those
+of the value equation.
 
 {pmore}{opth het(indepvars)} sets the independent variables of the heteroskedasticity
-in the selection equation. Like with the value equation, {cmd:nehurdle} models
-multiplicative heteroskedasticity in the value equation, so the independent variables
-will help explain the natural logarithm of the standard deviation of the selection
-process.
+in the selection process.
 
 {pmore}{opt noconstant} tells {cmd:nehurdle} to not include a constant in the
 selection equation.
@@ -333,6 +428,8 @@ is the heteroskedastic Probit estimator, like {cmd:hetprobit}.
 {marker examples}{...}
 {title:Examples}
 
+{dlgtab:Models for Continuous Variables}
+
 {pstd}Data Setup{p_end}
 {phang2}. {stata "webuse womenwk, clear"}{p_end}
 {phang2}. {stata "replace wage = 0 if missing(wage)"}{p_end}
@@ -340,36 +437,27 @@ is the heteroskedastic Probit estimator, like {cmd:hetprobit}.
 
 {pstd}Homoskedastic Tobit{p_end}
 {phang2}. {stata "nehurdle wage $xvars, tobit nolog"}{p_end}
-{phang2}. {stata "tobit wage $xvars, ll"}{p_end}
+{phang2}. {stata "tobit wage $xvars, ll nolog"}{p_end}
 
 {pstd}Homoskedastic Exponential Tobit{p_end}
 {phang2}. {stata "nehurdle wage $xvars, tobit expon nolog"}{p_end}
 {phang2}. {stata "gen double lny = ln(wage)"}{p_end}
 {phang2}. {stata "summarize lny, mean"}{p_end}
 {phang2}. {stata "replace lny = (r(min) - 1e-7) if missing(lny)"}{p_end}
-{phang2}. {stata "tobit lny $xvars, ll"}{p_end}
+{phang2}. {stata "tobit lny $xvars, ll nolog"}{p_end}
 {phang2}. {stata "drop lny"}{p_end}
 
 {pstd}Heteroskedastic Tobit{p_end}
 {phang2}. {stata "nehurdle wage $xvars, tobit het($xvars) offset(age) nolog"}{p_end}
 
-{pstd}Heteroskedastic Exponential Tobit{p_end}
-{phang2}. {stata "nehurdle wage $xvars, tobit expon het($xvars) nolog"}{p_end}
-
-{pstd}Homoskedastic Truncated Hurdle{p_end}
+{pstd}Homoskedastic Normal Truncated Hurdle{p_end}
 {phang2}. {stata "nehurdle wage $xvars, nolog"}{p_end}
 
-{pstd}Homoskedastic Exponential Truncated Hurdle{p_end}
-{phang2}. {stata "nehurdle wage $xvars, expon nolog"}{p_end}
+{pstd}Value Heteroskedastic Lognormal Hurdle{p_end}
+{phang2}. {stata "nehurdle wage $xvars, het($xvars) expon nolog"}{p_end}
 
-{pstd}Heteroskedastic Value Truncated Hurdle{p_end}
-{phang2}. {stata "nehurdle wage $xvars, het($xvars) nolog"}{p_end}
-
-{pstd}Heteroskedastic Selection and Value Truncated Hurdle{p_end}
+{pstd}Selection and Value Heteroskedastic Normal Truncated Hurdle{p_end}
 {phang2}. {stata "nehurdle wage $xvars, het($xvars) sel(, het($xvars)) nolog"}{p_end}
-
-{pstd}Heteroskedastic Value Exponential Truncated Hurdle{p_end}
-{phang2}. {stata "nehurdle wage $xvars, expon het($xvars) nolog"}{p_end}
 
 {pstd}Homoskedastic Type II Tobit{p_end}
 {phang2}. {stata "nehurdle wage $xvars, heck nolog"}{p_end}
@@ -383,19 +471,43 @@ is the heteroskedastic Probit estimator, like {cmd:hetprobit}.
 {phang2}. {stata "heckman lny $xvars, sel($xvars) nolog"}{p_end}
 {phang2}. {stata "drop lny"}{p_end}
 
-{pstd}Heteroskedastic Value Type II Tobit{p_end}
+{pstd}Value Heteroskedastic Type II Tobit{p_end}
 {phang2}. {stata "nehurdle wage $xvars, heck het($xvars) nolog"}{p_end}
 
-{pstd}Heteroskedastic Selection and Value Type II Tobit{p_end}
-{phang2}. {stata "nehurdle wage $xvars, heck het($xvars) sel(, het($xvars)) nolog"}{p_end}
+{pstd}Selection Heteroskedastic Lognormal Type II Tobit:{p_end}
+{phang2}. {stata "nehurdle wage $xvars, heck expon sel(, het($xvars)) nolog"}{p_end}
 
-{pstd}Heteroskedastic Value Exponential Type II Tobit:{p_end}
-{phang2}. {stata "nehurdle wage $xvars, heck expon het($xvars) nolog"}{p_end}
+{dlgtab:Models for Count Data}
+
+{pstd}Data Setup{p_end}
+{phang2}. {stata "use http://www.stata-press.com/data/mus2/mus220mepsdocvis, clear"}{p_end}
+{phang2}. {stata global xvars i.private i.medicaid age educyr i.actlim totchr}{p_end}
+{phang2}. {stata global shet income age totchr}{p_end}
+{phang2}. {stata global ahet age totchr i.female}{p_end}
+
+{pstd}Poisson Truncated Hurdle:{p_end}
+{phang2}. {stata "nehurdle docvis $xvars, truncp nolog"}{p_end}
+
+{pstd}Selection Heteroskedastic Poisson Truncated Hurdle:{p_end}
+{phang2}. {stata "nehurdle docvis $xvars, truncp sel(, het($shet)) nolog"}{p_end}
+
+{pstd}NB1 Truncated Hurdle:{p_end}
+{phang2}. {stata nehurdle docvis $xvars, truncnb1 nolog}{p_end}
+
+{pstd}NB1 Truncated Hurdle with dispersion heterogeneity:{p_end}
+{phang2}. {stata "nehurdle docvis $xvars, truncnb1 nolog het($ahet)"}{p_end}
+
+{pstd}NB2 Truncated Hurdle:{p_end}
+{phang2}. {stata nehurdle docvis $xvars, truncnb2 nolog}{p_end}
+
+{pstd}Selection Heteroskedastic NB2 Truncated Hurdle with dispersion heterogeneity:{p_end}
+{phang2}. {stata "nehurdle docvis $xvars, truncnb2 nolog het($ahet) sel(, het($shet))"}{p_end}
 
 {title:Stored Results}
 {pstd}
 {cmd:nehurdle} stores the following in {cmd:e()}:
 
+{marker stscal}{...}
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
 {synopt:{cmd:e(N)}}total number of observations{p_end}
@@ -415,35 +527,36 @@ is the heteroskedastic Probit estimator, like {cmd:hetprobit}.
 {synopt:{cmd:e(df_m)}}number of non-constant parameters estimated (degrees of
 	freedom of the overall significance test){p_end}
 {synopt:{cmd:e(chi2)}}overall significance test Wald chi-squared{p_end}
-{synopt:{cmd:e(p)}}overall significance test significance{p_end}
+{synopt:{cmd:e(p)}}overall significance test p-value{p_end}
 {synopt:{cmd:e(sel_df)}}number of non-constant parameters in the selection
 	equation (degrees of freedom of the joint significance test for the
-	selection equation); reported for Truncated Hurdle, and Type II Tobit
-	estimations{p_end}
+	selection equation); reported for all models except Tobit{p_end}
 {synopt:{cmd:e(sel_chi2)}}selection equation joint significance test Wald
-	chi-squared; reported for Truncated Hurdle, and Type II Tobit estimations{p_end}
-{synopt:{cmd:e(sel_p)}}selection equation joint significance test significance;
-	reported for Truncated Hurdle, and Type II Tobit estimations{p_end}
+	chi-squared; reported for all models except Tobit{p_end}
+{synopt:{cmd:e(sel_p)}}selection equation joint significance test p-value;
+	reported for all models except Tobit{p_end}
 {synopt:{cmd:e(val_df)}}number of non-constant parameters in the value equation
 	(degrees of freedom of the joint significance test for the value equation);
-	reported for all Truncated Hurdle, and Type II Tobit estimations, as well as
-	for heteroskedastic Tobit estimations{p_end}
+	reported for all Truncated Hurdle models, and the Type II Tobit estimations;
+	also reported for the Tobit model when modeling value heteroskedasticity{p_end}
 {synopt:{cmd:e(val_chi2)}}value equation joint significance test Wald 
-	chi-squared; reported for all Truncated Hurdle, and Type II Tobit
-	estimations, as well as for heteroskedastic Tobit estimations{p_end}
-{synopt:{cmd:e(val_p)}}value equation joint significance test significance;
-	reported for Truncated Hurdle, and Type II Tobit estimations, as well as for
-	heteroskedastic Tobit estimations{p_end}
+	chi-squared; reported for all Truncated Hurdle models, and the Type II Tobit estimations;
+	also reported for the Tobit model when modeling value heteroskedasticity{p_end}
+{synopt:{cmd:e(val_p)}}value equation joint significance test p-value;
+	reported for all Truncated Hurdle models, and the Type II Tobit estimations;
+	also reported for the Tobit model when modeling value heteroskedasticity{p_end}
 {synopt:{cmd:e(het_df)}}number of non-constant parameters in the value
-	hetersokedasticity equation (degrees of freedom of the joint significance
-	test for value heteroskedasticity); reported for all estimations that
-	model the value heteroksedasticity{p_end}
-{synopt:{cmd:e(het_chi2)}}value heteroskedasticity equation joint significance
-	test Wald chi-squared; reported for all estimations that model the value
-	heteroksedasticity{p_end}
-{synopt:{cmd:e(het_p)}}value heteroskedasticity equation joint significance test
-	significance; reported for all estimations that model the value
-	heteroksedasticity{p_end}
+	hetersokedasticity / dispersion heterogeneity equation (degrees of freedom
+	of the joint significance test for value heteroskedasticity / dispersion
+	heterogeneity); reported for all estimations that model the value
+	heteroksedasticity or dispersion heterogeneity{p_end}
+{synopt:{cmd:e(het_chi2)}}value heteroskedasticity / dispersion heterogeneity
+	equation joint significance test Wald chi-squared; reported for all
+	estimations that model the value heteroksedasticity or dispersion
+	heterogeneity{p_end}
+{synopt:{cmd:e(het_p)}}value heteroskedasticity / dispersion heterogeneity
+	equation joint significance test p-value; reported for all estimations that
+	model the value	heteroksedasticity / dispersion heterogeneity{p_end}
 {synopt:{cmd:e(selhet_df)}}number of non-constant parameters in the selection
 	hetersokedasticity equation (degrees of freedom of the joint significance
 	test for selection heteroskedasticity); reported for all estimations that
@@ -452,16 +565,16 @@ is the heteroskedastic Probit estimator, like {cmd:hetprobit}.
 	significance test Wald chi-squared; reported for all estimations that model
 	the selection heteroksedasticity{p_end}
 {synopt:{cmd:e(selhet_p)}}selection heteroskedasticity equation joint
-	significance test significance; reported for all estimations that model the
+	significance test p-value; reported for all estimations that model the
 	selection heteroksedasticity{p_end}
 {synopt:{cmd:e(chi2_c)}}chi-squared of LR test against Truncated Hurdle;
 	reported for Type II Tobit estimations{p_end}
 {synopt:{cmd:e(p_c)}}LR test against Truncated Hurdle significance{p_end}
 {synopt:{cmd:e(r2)}}pseudo r-squared{p_end}
 {synopt:{cmd:e(gamma)}}lowest value of the natural logarithm of the dependent
-	variable in the value equation; reported for exponential models{p_end}
+	variable in the value equation; reported for the Lognormal Tobit{p_end}
 {synopt:{cmd:e(sigma)}}standard deviation of the value process; reported for
-	homoskedastic estimations{p_end}
+	value homoskedastic estimations of (Log)Normal models{p_end}
 {synopt:{cmd:e(rho)}}correlation between selection and value errors; reported
 	for Type II Tobit estimations{p_end}
 {synopt:{cmd:e(lambda)}}lambda; reported for Type II Tobit estimations{p_end}
@@ -469,8 +582,8 @@ is the heteroskedastic Probit estimator, like {cmd:hetprobit}.
 {p2col 5 20 24 2: Macros}{p_end}
 {synopt:{cmd:e(cmd)}}{cmd:nehurdle}{p_end}
 {synopt:{cmd:e(cmdline)}}command as typed{p_end}
-{synopt:{cmd:e(cmd_opt)}}the estimator option: {opt heckman}, {opt tobit} or
-	{opt trunc}{p_end}
+{synopt:{cmd:e(cmd_opt)}}the estimator option: {opt heckman}, {opt tobit},
+	{opt trunc}, {opt truncp}, {opt truncnb1}, or {opt truncnb2}{p_end}
 {synopt:{cmd:e(depvar)}}the dependent variable{p_end}
 {synopt:{cmd:e(wtype)}}type of weight; reported for estimations using weights{p_end}
 {synopt:{cmd:e(wexp)}}weight expression; reported for estimations using weights{p_end}
@@ -494,6 +607,20 @@ is the heteroskedastic Probit estimator, like {cmd:hetprobit}.
 			
 {title:References}
 
+{marker ctcup}{...}
+{phang}
+	Cameron, A. Colin, and Pravin K. Trivedi. 2013.
+	{it:Regression Analysis of Count Data}. Econometric Society Monographs. 2nd ed.
+	Cambrdige, UK: Cambridge University Press.
+{p_end}
+
+{marker ctriv}{...}
+{phang}
+	Cameron, A. Colin, and Pravin K. Trivedi. 2022.
+	{browse "https://www.stata.com/bookstore/microeconometrics-stata/":{it:Micreconometrics Using Stata}. 2nd ed.}
+	Vol II: Nonlinear Models and Casual Inference Methods. College Station, TX: Stata Press.
+{p_end}
+
 {marker cragg}{...}
 {phang}
 	Cragg John G. 1971. Some Statistical Models for Limited Dependent Variables
@@ -503,15 +630,16 @@ is the heteroskedastic Probit estimator, like {cmd:hetprobit}.
 
 {marker gould}{...}
 {phang}
-	Gould, William W., Jeffrey Pitblado, and Brian P. Poi. 2010.
-	{browse "http://www.stata-press.com/books/ml4.html":{it:Maximum Likelihood Estimation with Stata}. 4th ed.}
+	Pitbaldo, Jeffrey, Poi, Brian P., and William M. Gould. 2024.
+	{browse "https://www.stata.com/bookstore/maximum-likelihood-estimation-stata/":{it:Maximum Likelihood Estimation with Stata}. 5th ed.}
 	College Station, TX: Stata Press.
 {p_end}
 
-{marker harvey}{...}
+{marker LFreese}{...}
 {phang}
-	Harvey, Andrew C. 1976. Estimating Regression Models with Multiplicative
-	Heteroskedasticity. {it:Econometrica} 44(3): 461-465
+	Long, J. Scott, and Jeremy Freese. 2014.
+	{browse "https://www.stata.com/bookstore/regression-models-categorical-dependent-variables/":{it:Regression Models for Categorical Dependent Variables Using Stata}. 4th ed.}
+	College Station, TX: Stata Press.
 {p_end}
 
 {marker tobin}{...}
@@ -531,13 +659,11 @@ is the heteroskedastic Probit estimator, like {cmd:hetprobit}.
 {title:Author}
 
 {phang}Alfonso S{c a'}nchez-Pe{c n~}alver{p_end}
-{phang}University of South Florida{p_end}
-{phang}Tampa, FL USA{p_end}
 {phang}alfonsos1@usf.edu{p_end}
 
 {title:Also See}
 
 {psee}
 Manual: {manlink R heckman}, {manlink R hetprobit}, {manlink R probit},
-{manlink R tobit}
+{manlink R tnbreg}, {manlink R tobit}, {manlink R tpoisson}
 {p_end}

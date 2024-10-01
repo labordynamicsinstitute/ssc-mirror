@@ -31,7 +31,7 @@ d KW: Heckman
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20230303
+d Distribution-Date: 20240930
 d
 d Author:  Alfonso Sánchez-Peñalver,  University of South Florida
 d Support: email  alfonsos1@@usf.edu
@@ -43,7 +43,13 @@ f nehtests.sthlp
 f nehurdle_heckman_het.ado
 f nehurdle_heckman.ado
 f nehurdle_p.ado
+f nehurdle_postestimation.sthlp
 f nehurdle_tobit.ado
 f nehurdle_trunc_het.ado
 f nehurdle_trunc.ado
-f nehurdle_postestimation.sthlp
+f nehurdle_truncnb1_het.ado
+f nehurdle_truncnb1.ado
+f nehurdle_truncnb2_het.ado
+f nehurdle_truncnb2.ado
+f nehurdle_truncp_het.ado
+f nehurdle_truncp.ado

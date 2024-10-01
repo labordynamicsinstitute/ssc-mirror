@@ -9846,6 +9846,7 @@ fmwww.bc.edu/repec/bocode/n/num2words.hlp
 fmwww.bc.edu/repec/bocode/n/nca.ado
 fmwww.bc.edu/repec/bocode/n/normalbvr.pkg
 fmwww.bc.edu/repec/bocode/n/ndbci.pkg
+fmwww.bc.edu/repec/bocode/n/nehurdle_truncp_het.ado
 fmwww.bc.edu/repec/bocode/n/nvars.hlp
 fmwww.bc.edu/repec/bocode/n/normd.ado
 fmwww.bc.edu/repec/bocode/n/npivcv.ado
@@ -9878,6 +9879,7 @@ fmwww.bc.edu/repec/bocode/n/network_meta.sthlp
 fmwww.bc.edu/repec/bocode/n/newsimpact.pkg
 fmwww.bc.edu/repec/bocode/n/nlsur__quaidsce.ado
 fmwww.bc.edu/repec/bocode/n/nsplit.pkg
+fmwww.bc.edu/repec/bocode/n/nehurdle_truncnb2_het.ado
 fmwww.bc.edu/repec/bocode/n/numids.html
 fmwww.bc.edu/repec/bocode/n/newey2.ado
 fmwww.bc.edu/repec/bocode/n/newey2.html
@@ -9972,6 +9974,7 @@ fmwww.bc.edu/repec/bocode/n/normalizepath.ado
 fmwww.bc.edu/repec/bocode/n/nrunsi.ado
 fmwww.bc.edu/repec/bocode/n/nw_projection.ado
 fmwww.bc.edu/repec/bocode/n/nehtests.sthlp
+fmwww.bc.edu/repec/bocode/n/nehurdle_truncnb1.ado
 fmwww.bc.edu/repec/bocode/n/nctprob.ado
 fmwww.bc.edu/repec/bocode/n/ndbci.hlp
 fmwww.bc.edu/repec/bocode/n/nct.html
@@ -9999,6 +10002,7 @@ fmwww.bc.edu/repec/bocode/n/normalizepath.sthlp
 fmwww.bc.edu/repec/bocode/n/niceloglabels.pkg
 fmwww.bc.edu/repec/bocode/n/nwStrengthcent.ado
 fmwww.bc.edu/repec/bocode/n/network.ado
+fmwww.bc.edu/repec/bocode/n/nehurdle_truncnb1_het.ado
 fmwww.bc.edu/repec/bocode/n/nredound.ado
 fmwww.bc.edu/repec/bocode/n/ntreatreg.pkg
 fmwww.bc.edu/repec/bocode/n/newsimpact.ado
@@ -10035,6 +10039,7 @@ fmwww.bc.edu/repec/bocode/n/network_unset.ado
 fmwww.bc.edu/repec/bocode/n/newsimpact.hlp
 fmwww.bc.edu/repec/bocode/n/network_query.ado
 fmwww.bc.edu/repec/bocode/n/nbstrat.html
+fmwww.bc.edu/repec/bocode/n/nehurdle_truncnb2.ado
 fmwww.bc.edu/repec/bocode/n/NonlinTst.m
 fmwww.bc.edu/repec/bocode/n/nehurdle_trunc_het.ado
 fmwww.bc.edu/repec/bocode/n/nnest.ado
@@ -10190,6 +10195,7 @@ fmwww.bc.edu/repec/bocode/n/nwStrengthcent.sthlp
 fmwww.bc.edu/repec/bocode/n/nmf.pkg
 fmwww.bc.edu/repec/bocode/n/numids.ado
 fmwww.bc.edu/repec/bocode/n/network_sidesplit.sthlp
+fmwww.bc.edu/repec/bocode/n/nehurdle_truncp.ado
 fmwww.bc.edu/repec/bocode/n/numids.hlp
 fmwww.bc.edu/repec/bocode/o/opendf_write.sthlp
 fmwww.bc.edu/repec/bocode/o/opendf_read.sthlp
