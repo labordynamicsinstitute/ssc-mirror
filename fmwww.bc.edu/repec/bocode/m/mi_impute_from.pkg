@@ -24,13 +24,13 @@ d Requires: Stata version 18
 d
 d Distribution-Date: 20240928
 d
-d Author: Robert Thiesmeier,  Institute of Environmental Medicine, Karolinska Institutet
-d Support: email NA
+d Author: Robert Thiesmeier,  Karolinska Institutet
+d Support: email robert.thiesmeier@@ki.se
 d
-d Author:  Matteo Bottai,  Institute of Environmental Medicine, Karolinska Institutet
+d Author:  Matteo Bottai,  Karolinska Institutet
 d Support: email  matteo.bottai@@ki.se
 d
-d Author: Nicola Orsini, Institute of Environmental Medicine, Karolinska Institutet
+d Author: Nicola Orsini, Karolinska Institutet
 d Support: email Nicola.Orsini@@ki.se
 d
 f mi_impute_cmd_from_init.ado
