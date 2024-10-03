@@ -1,0 +1,51 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>nearest</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Distance and identity of nearest neighbour from point coordinates</u></b>
+<p>
+  <b>nearest</b> <i>xvar</i> <i>yvar</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] , <b>dist(</b><i>distvar</i><b>)</b> [<b>id(</b><i>idvar</i><b>)</b>]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>nearest</b> calculates the distance from each point to its nearest neighbour given
+the planar point coordinates given in <i>xvar</i> and <i>yvar</i>.  Distance is calculated as
+straight-line (crow-fly) Euclidean or Pythagorean distance.  Optionally, the
+identity (observation number in current sort order) of the nearest neighbour
+may also be generated.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+British English <i>neighbour</i> corresponds to American English <i>neighbor</i>.
+<p>
+<p>
+<b><u>Options</u></b>
+ 
+<b>dist(</b><i>distvar</i><b>)</b> specifies a new variable for holding the distances. This is a
+    required option.
+<p>
+<b>id(</b><i>idvar</i><b>)</b> specifies a new variable for holding the identifiers (observation
+    numbers in current sort order) of the nearest neighbours.  If two or more
+    points are equally distant from any given point, that with the lowest
+    observation number is regarded as the nearest neighbour.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    . nearest x y, id(id) dist(dist)
+<p>
+<p>
+<b><u>Author</u></b> 
+<p>
+        Nicholas J. Cox, University of Durham, U.K.
+        n.j.cox@durham.ac.uk
+         
+         
+<b><u>Acknowledgements</u></b> 
+<p>
+        This problem was suggested by Benoit Dulong. 
+<p>
+</pre>

@@ -1,0 +1,39 @@
+d 'NCA': module to perform Necessary Condition Analysis (NCA)
+d
+d  nca performs a Necessary Condition Analysis (NCA). NCA
+d identifies a necessary condition X for an outcome Y in datasets.
+d NCA draws a ceiling line  Y = f(X) in an XY plot. The  line
+d separates the area without observations (the area of ‘no Y
+d without X’)  from the area with observations. NCA estimates
+d several parameters including necessity effect size and its p
+d value. 
+d
+d KW: necessary
+d KW: condition
+d KW: nca
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20231124
+d
+d Author: Daniele Spinelli, University of Milano Bicocca
+d Support: email daniele.spinelli@@unimib.it
+d
+d Author: Jan Dul , Rotterdam School of Management,  Erasmus University Rotterdam
+d Support: email jdul@@rsm.nl
+d
+d Author:  Govert Buijs , Rotterdam School of Management,  Erasmus University Rotterdam
+d Support: email buijs@@rsm.nl
+d
+f nca.ado
+f nca_centiles.ado
+f nca_display.ado
+f nca_display_bottleneck_table.ado
+f nca_estimate.ado
+f nca_get_centiles.ado
+f nca_parse_scope.ado
+f nca_test.ado
+f nca_examples.do
+f nca.sthlp
+f ../l/lnca.mlib
+f ncaexample.dta

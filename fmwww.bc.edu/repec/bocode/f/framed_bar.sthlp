@@ -1,5 +1,5 @@
 {smcl}
-{* 24sep2024}{...}
+{* 24sep2024/2oct2024}{...}
 {cmd:help framed_bar}
 {hline}
 
@@ -244,6 +244,15 @@ Exceptionally however, with syntax 2 and if you not specify the
 constant and will be displayed using {cmd:note()}.  Options that apply
 to {cmd:note()} may be used to tune the display. 
 
+{p 4 8 2}
+{opt countlabelprefix()} controls text before the displayed count. 
+The default is "{it:n} = ". As a special case, {cmd:countlabelprefix(none)}
+removes that text. 
+
+{p 4 8 2}
+{opt countlabelsuffix()} controls text after the displayed count.
+The default is to show nothing. 
+
 
 {it:twoway options}
 
@@ -323,6 +332,9 @@ probability scale: see e.g. Unwin et al. (2006) or Unwin (2015).
 {p 8 8 2}Frames are supported in {help tabplot} (Cox 2016, but in 
 the 2020 update). 
 
+{p 8 8 2}
+For an example of implicit frames, see Bawden (2024). 
+
 {p 4 4 2}
 For alternative displays of sets of indicator variables, see 
 commands discussed by Cox and Morris (2024). 
@@ -400,10 +412,15 @@ n.j.cox@durham.ac.uk
 
 {p 4 4 2}Although frames as a graphic device are at least a century old, my understanding owes most to the work of 
 William S. Cleveland. Encouragement to use frames in {cmd:tabplot} arose from comments from William Huber and 
-Jeff Laux. The initial stimulus for this command was in a Statalist thread by Jonathan Afilalo. Encouraging comments came from Tim Morris.  
+Jeff Laux. The initial stimulus for this command was in a Statalist thread by Jonathan Afilalo. Encouraging comments came from Tim Morris. Comments from Marc Kaulisch led to extra options for count label display.
 
 
 {title:References} 
+
+{p 4 8 2}Bawden, A. 2024. 
+Sharp drop in condom use putting young people's health at risk, WHO report says. 
+{it:The Guardian} 30 August, p.14. 
+{browse "https://www.theguardian.com/society/article/2024/aug/29/young-peoples-health-at-risk-from-fall-in-condom-use-warns-who"}
 
 {p 4 8 2}Brinton, W.C. 1939.
 {it:Graphic Presentation.}

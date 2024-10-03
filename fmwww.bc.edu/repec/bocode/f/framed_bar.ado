@@ -1,3 +1,4 @@
+*! 1.0.1 NJC 2 Oct 2024 
 *! 1.0.0 NJC 23 Sept 2024 
 program framed_bar 
 	version 12 
@@ -10,13 +11,15 @@ program framed_bar
 	capture syntax varname(numeric)  [fweight aweight pweight iweight] [if] [in], over(varname) ///
 	[ STATistic(str) CALCulator(str) ALLobs cw sort DESCending subset(passthru) ///
 	frame(real 1) frameopts(str asis) base(real 0) BARWidth(real 0.8) HORIzontal ///
-    barlabel(str asis) COUNTlabel COUNTlabel2(str asis) wherecount(numlist max=1) by(str asis) ///
+    barlabel(str asis) COUNTlabel COUNTlabel2(str asis) countlabelprefix(str asis) ///
+	countlabelsuffix(str) wherecount(numlist max=1) by(str asis) ///
 	format(str) list LIST2(str asis) *]
 	
 	if _rc syntax varlist(numeric) [fweight aweight pweight iweight] [if] [in] ,  ///
 	[ STATistic(str) CALCulator(str) ALLobs cw sort DESCending subset(passthru) ///
 	frame(real 1) frameopts(str asis) base(real 0) BARWidth(real 0.8) HORIzontal ///
-	barlabel(str asis) COUNTlabel COUNTlabel2(str asis) wherecount(numlist max=1) by(str asis) ///
+	barlabel(str asis) COUNTlabel COUNTlabel2(str asis) countlabelprefix(str asis) ///
+	countlabelsuffix(str) wherecount(numlist max=1) by(str asis) ///
 	format(str) list LIST2(str asis) * ] 
 	
 	// by() option? 
@@ -30,7 +33,8 @@ program framed_bar
 		}
 		if `found' == 0 local byopts `byopts' legend(off)
 		
-		if strpos(`"`byopts'"', `"note("")"') == 0 local byopts `byopts' note("")
+		* comment out in 1.0.1 
+		* if strpos(`"`byopts'"', `"note("")"') == 0 local byopts `byopts' note("")
 		
 		local bybyvar by(`byvar')
 		local byby by(`byvar', `byopts')
@@ -51,6 +55,9 @@ program framed_bar
 	if "`statistic'" == "" local statistic "mean"
 	local ylah yla(, ang(h))
 	
+	if "`countlabelprefix'" == "" local countlabelprefix "{it:n } = "
+	else if "`countlabelprefix'" == "none" local countlabelprefix 
+	
 	// support first syntax 
 	quietly if "`over'" != "" { 
 		// the categorical axis title comes from the -over()- variable 
@@ -65,7 +72,7 @@ program framed_bar
 		if "`countlabel'`countlabel2'" != "" { 
 			tempvar count showcount 
 			collapse (count) `count'=`varlist' (`statistic') `varlist' if `touse' [`weight' `exp'], by(`over' `byvar')
-			gen `showcount' = "{it:n} = " + strofreal(`count')
+			gen `showcount' = "`countlabelprefix'" + strofreal(`count') + "`countlabelsuffix'"
 		}
 		// else we -collapse- on the chosen statistic
 		else collapse (`statistic') `varlist' if `touse' [`weight' `exp'], by(`over' `byvar')
@@ -193,15 +200,15 @@ program framed_bar
 		// otherwise it goes in a variable 
 		if "`countlabel'`countlabel2'" != "" { 
 			tempvar listcount 
-			if "`allobs'" == "" { 
-				local countshow note("{it:n} = `count_N'", `countlabel2')  
+			if "`allobs'" == "" {
+				local countshow note("`countlabelprefix'`count_N'`countlabelsuffix'", `countlabel2')  
 				gen `listcount' = `count_N'
 			}				
 			else {
 				tempvar showcount where 
-				gen `showcount' = "{it:n} = "
+				gen `showcount' = "`countlabelprefix'"
 				forval x = 1/`X' {
-					replace `showcount' = `showcount' + "`count_`x''" in `x'
+					replace `showcount' = `showcount' + "`count_`x''`countlabelsuffix'" in `x'
 				}
 
 				gen `listcount' = real(word(`showcount', 3))

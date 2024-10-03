@@ -1,0 +1,23 @@
+d 'NICELABELS': module for nice axis labels for general scales
+d
+d      nicelabels suggests axis labels that would look nice on a
+d graph using a general scale.	It can help when,    for example,
+d you want to choose the same labels for a series of graphs.
+d Results are put in a local macro for	  later use.   "Nice" is a
+d little hard to define but easier to recognize. This command
+d follows common practice in general	and Heckbert (Graphics Gems
+d 1990) in particular in selecting power-of-ten multiples of 1, 2
+d or 5 that are equally spaced. 
+d
+d KW: graphics
+d KW: axis labels
+d
+d Requires: Stata version 9
+d
+d Distribution-Date: 20220510
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f nicelabels.ado
+f nicelabels.sthlp

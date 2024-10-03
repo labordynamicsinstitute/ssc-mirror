@@ -1,0 +1,24 @@
+d 'NLLS': module to compute non-negative least squares in Stata
+d
+d     nnls is a command implementing non-negative least squares
+d (NNLS) in Stata on top of Python using the Python function   
+d "nnls()". NNLS is a type of constrained least squares problem
+d where the coefficients are not allowed to become negative.   
+d Generally, NNLS provides regularized (or sparse) solution,
+d meaning that only a few parameters of the least squares   
+d regression are allowed to be positive and non-zero. 
+d
+d KW: non-negative least squares
+d KW: python
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20240506
+d
+d Author: Giovanni Cerulli, IRCrES-CNR
+d Support: email giovanni.cerulli@@ircres.cnr.it
+d
+f nlls.ado
+f nlls_predict.ado
+f nlls.sthlp
+f ../b/boston.dta 

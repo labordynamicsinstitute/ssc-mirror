@@ -1,0 +1,102 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>nbfit</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Fitting negative binomial distribution by maximum likelihood</u></b> 
+<p>
+        <b>nbfit</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<i>weight</i>] [, <b><u>l</u></b><b>og</b> ]
+<p>
+<p>
+<b><u>Description</u></b> 
+<p>
+<b>nbfit</b> fits a negative binomial distribution to a single variable by the method
+of maximum likelihood. Frequency weights may be used to fit variables given in
+frequency distribution form.
+<p>
+The distribution is here parameterised by m (estimated by the mean) and k:
+<p>
+             Gamma(k + x)               k               x
+    pr(x) =  ------------  (k / (k + m))   (m / (k + m))
+             Gamma(k) x!
+<p>
+             Gamma(k + x)   k   x
+          =  ------------  q   p
+             Gamma(k) x!
+<p>
+where p = m / (k + m) and q = 1 - p.
+<p>
+The estimation is carried out by <b>nbreg</b>. Its <b>_b[_cons]</b> is ln m and its
+<b>_b[/lnalpha]</b> is ln(1 / k).
+<p>
+<p>
+<b><u>Option</u></b> 
+<p>
+<b>log</b> specifies that the results of <b>nbreg</b> should be displayed.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+Hilborn and Mangel (1997, p.100) give data on incidental capture of albatrosses
+in the New Zealand subantarctic squid trawl fishery, 1990. (The birds get
+trapped accidentally in nets or trawl gear or cables.) The data are in
+frequency distribution form:
+<p>
+    . input x freq
+    1. 0 807
+    2. 1 37
+    3. 2 27
+    4. 3 8
+    5. 4 4
+    6. 5 4
+    7. 6 1
+    8. 7 3
+    9. 8 1
+    10. 9 0
+    11. 10 0
+    12. 11 2
+    13. 12 1
+    14. 13 1
+    15. 14 0
+    16. 15 0
+    17. 16 0
+    18. 17 1
+    19. end
+<p>
+    . nbfit x [w=freq]
+<p>
+<p>
+<b><u>Saved values</u></b> 
+<p>
+    r(N)      number of values used
+    r(mean)   ML estimate of m
+    r(k)      ML estimate of k
+    r(p)      ML estimate of p
+    r(V)      variance-covariance matrix of (m,k,p) (delta method)
+<p>
+<b><u>References</u></b> 
+<p>
+Hilborn, R. and Mangel, M. 1997.  <i>The ecological detective: confronting models</i>
+<i>with data.</i>  Princeton University Press, Princeton, NJ.
+<p>
+Krebs, C.J. 1999. <i>Ecological methodology.</i> Benjamin/Cummings, Menlo Park, CA.
+<p>
+Rice, J.A. 1995. <i>Mathematical statistics and data analysis.</i> Duxbury, Belmont,
+CA.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+         Nicholas J. Cox, University of Durham, U.K.
+         n.j.cox@durham.ac.uk
+<p>
+         Roberto G. Gutierrez, Stata Corporation
+         rgutierrez@stata.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for nbreg 
+ Manual:  <b>[R] nbreg</b>
+<p>
+</pre>
