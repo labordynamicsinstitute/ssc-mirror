@@ -53,7 +53,7 @@ factor variable and time-series operators.{p_end}
 
 {marker description}{...}
 {title:Description}
-{pstd} {cmd: nca} performs a Necessary Condition Analysis (NCA). NCA identifies a necessary condition X for an outcome Y in datasets. NCA draws a ceiling line  Y = f(X) in an XY plot. The  line separates the area without observations (the area of 'no Y without X')  from the area with observations. NCA estimates several parameters including necessity effect size and its p value.
+{pstd} {cmd: nca} performs a Necessary Condition Analysis (NCA). NCA identifies a necessary condition X for an outcome Y in datasets. NCA draws a ceiling line  Y = f(X) in an XY plot. The  line separates the area without observations (the area of 'no Y without X')  from the area with observations (Dul, 2016; Dul, 2020). NCA estimates several parameters including necessity effect size and its p value  (Dul, van der Laan and Kuik, 2020).
 
 
 {marker options}{...}
@@ -74,21 +74,21 @@ factor variable and time-series operators.{p_end}
 {phang}
 {opt flipy}  forces {opt nca} to reverse the sign of the outcome  {p_end}
 {phang}
-{opt cor:ner(numlist)}  an integer constant or a vector of integers indicating the corners to analyze, this option is equivalent to the combionations of {opt flipx} and {opt flipy}. If a single integer is specified by the user {opt nca} estimates the same corner for all the conditions. Users can specifiy a different corner for each condition. The default is 1 and means that neither the outcome nor the conditions are reversed in sign. {opt cor:ner(2)} is equivalent to {opt flipx}, {opt cor:ner(3)} is equivalent to {opt flipy} and {opt cor:ner(4)} is equivalent to {opt flipx flipy}.
+{opt cor:ner(numlist)}  an integer constant or a vector of integers indicating the corners to analyze, this option is equivalent to the combinations of {opt flipx} and {opt flipy}. If a single integer is specified by the user {opt nca} estimates the same corner for all the conditions. Users can specify a different corner for each condition. The default is 1 and means that neither the outcome nor the conditions are reversed in sign. {opt cor:ner(2)} is equivalent to {opt flipx}, {opt cor:ner(3)} is equivalent to {opt flipy} and {opt cor:ner(4)} is equivalent to {opt flipx flipy}.
 {p_end}
 {dlgtab:Bottlenecks table}
 {phang}
-{opt bottlenecks}[{bf:(}{it:numlist}{bf:)}]  the values of {it: outcome} to be used in the bottleneck table. numlist is optional and, when it is not specified, the values of the outcome to be displayed in the bottleneck table are controlled by {opt steps} and {opt stepsize}. If numlist is specified {cmd: nca} overrides {opt steps} and {opt stepsize}  {p_end}
+{opt bottlenecks}[{bf:(}{it:numlist}{bf:)}]  the values of the {it: outcome} to be used in the bottleneck table. numlist is optional and, when it is not specified, the values of the outcome to be displayed in the bottleneck table are controlled by {opt steps} and {opt stepsize}. If numlist is specified {cmd: nca} overrides {opt steps} and {opt stepsize}  {p_end}
 {phang}
 {opt steps(#)} number of intervals of equal length to divide the bottleneck table, the default is 10.  {p_end}
 {phang}
 {opt stepsize(numlist)} Step size for the bottleneck table. {p_end}
 {phang}
-{opt xbottlenecks(string)} and {opt ybot:tlenecks(string)} options for controlling the scale of the conditions in the bottleneck table. The possible options are{p_end}
-{phang2} - {it: perc_range} : express the conditions in actual values. The default.{p_end}
-{phang2} - {it: perc_range} : express the conditions in percentage of the range{p_end}
-{phang2} - {it: perc_max} : express the conditions in percentage of the maximum{p_end}
-{phang2} - {it: percentile} : express the conditions in percentiles{p_end}
+{opt xbottlenecks(string)} and {opt ybottlenecks(string)} control the scale of the conditions and of the outcome in the bottleneck table. The possible arguments are{p_end}
+{phang2} - {it: perc_range} :  express the conditions (or the outcome). The default.{p_end}
+{phang2} - {it: perc_range} : express the conditions (or the outcome) as a percentage of the range{p_end}
+{phang2} - {it: perc_max} : express the conditions (or the outcome) as a percentage of the maximum{p_end}
+{phang2} - {it: percentile} : express the conditions (or the outcome) in percentiles{p_end}
 {phang}
 {opt cutoff(#)}  option for controlling how to display the x and y values that are outside the observed range. The possible options are.  {p_end}
 {phang2} - 0 : NN (non necessary) and NA (not available) {p_end}
@@ -107,7 +107,7 @@ factor variable and time-series operators.{p_end}
 
 {marker examples}{...}
 {title:Examples}
-{pstd} Load the dataset {p_end}
+{pstd} Load the dataset (data from Dul, 2020) {p_end}
 {phang2} {cmd:. use ncaexample.dta,clear}{p_end}
 
 {pstd}NCA using individualism as condition and innovationperformance as outcome. FDH and VRS ceiling (CE and CR) and show default bottlenecks table{p_end}
@@ -159,25 +159,20 @@ factor variable and time-series operators.{p_end}
 {pstd}  Dul, J., van der Laan, E., & Kuik, R. (2020).   A statistical significance test for Necessary Condition Analysis."   Organizational Research Methods, 23(2), 385-395.   https://journals.sagepub.com/doi/10.1177/1094428118795272 {p_end}
 
 {title:Authors}
-{pstd}Daniele Spinelli  (corresponding author){p_end}
+{pstd}Daniele Spinelli{p_end}
 {pstd}Department of Statistics and Quantitative Methods {p_end}
 {pstd}University of Milano-Bicocca{p_end}
 {pstd}Milan, Italy{p_end}
 {pstd}daniele.spinelli@unimib.it{p_end}
 
 {pstd}Jan Dul{p_end}
+{pstd}Department of Technology & Operations Management{p_end}
 {pstd}Rotterdam School of Management{p_end}
-{pstd}Department of Technology and Operations Management {p_end}
-{pstd}Erasmus University Rotterdam{p_end}
-{pstd}Rotterdam, the Netherlands{p_end}
+{pstd}Rotterdam, The Netherlands{p_end}
 {pstd}jdul@rsm.nl{p_end}
 
-{pstd}Govert Buijs{p_end}
-{pstd}Rotterdam School of Management{p_end}
-{pstd}Department of Technology and Operations Management {p_end}
-{pstd}Erasmus University Rotterdam{p_end}
-{pstd}Rotterdam, the Netherlands{p_end}
-{pstd}buijs@rsm.nl{p_end}
+{title: Acknowledgements}
+{pstd}We are grateful Govert Buijs for the helpful comments during the development of the package and to Ricardo Ernesto Buitrago, Marno Verbeek and Caroline Witte for their beta testing. {p_end}
 
 
 
