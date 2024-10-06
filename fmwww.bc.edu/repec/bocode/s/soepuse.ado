@@ -1,4 +1,4 @@
-*! version 3.0.1 Mai 20, 2022 @ 10:04:56 UK
+*! version 3.0.1 August 20, 2024 @ 10:22:12 UK
 // This is -mkdat- reloaded
 // 1.0.0 Initial version
 // 1.0.1 Option uc does not work -> fixed.
@@ -71,7 +71,7 @@ version 11
 	// Value for interview
 	// -------------------
 	
-	local intvalue = cond("`oldnetto'"=="",10,1) 
+	local intvalue = cond("`oldnetto'"=="","10,19","1,1") 
 	
 	// Check Namelist
 	// -------------
@@ -158,10 +158,11 @@ version 11
 	// (and use only the variables you really need)
 	
 	foreach wave of local shortwlist {
-		local pfadvar "`pfadvar' `wave'hhnr `wave'netto"
+		local nettovars "`nettovars' `wave'netto"
 	}
 	
-	qui use cid pid `pfadvar' `keep' using `using'/ppfad
+	qui use cid pid hid* `nettovars' `keep' using `using'/ppfad
+	order cid pid hid* `nettovars' `keep'
 	
 	// Set up the longitudinal design
 	// ------------------------------
@@ -172,7 +173,7 @@ version 11
 		tempvar g
 		gen byte `g' = 0
 		foreach var of varlist *netto {
-			qui replace `g' = `g' + 1 if `var' == `intvalue' 
+			qui replace `g' = `g' + 1 if inrange(`var',`intvalue')
 		}
 		qui keep if `g'>=`design'
 		di as text _n "Kept respondents interviewed " ///
@@ -184,7 +185,7 @@ version 11
 		local wavecount: word count `waves'
 		gen byte `g' = 0
 		foreach var of varlist *netto {
-			qui replace `g' = `g' + 1 if `var' == `intvalue'
+			qui replace `g' = `g' + 1 if inrange(`var',`intvalue')
 		}
 		qui keep if `g' == `wavecount'
 		drop *netto
@@ -196,13 +197,18 @@ version 11
 	
 	// Merge Using files
 	// -----------------
-	
+
 	quietly {
+		local i 1
 		gen long hid = .
 		foreach file of local filelist {
-			local noostfile = subinstr("`file'","ost","",.)
-			local i = strlen("`noostfile'")-strlen("`ftyp'")
-			replace hid = `=substr("`noostfile'",1,`i')'hhnr
+			if "`file'" == "gpost" | "`file'" == "ghost" | "`file'" == "gpkalost" local year = 1990
+			else if "`file'" == "hpost" | "`file'" == "gpkalost" local year = 1991
+			else {
+				local year `:word `i' of `waves''
+				local i = `i' +1
+			}
+			replace hid = hid_`year'
 			sort `identif'
 			merge `match' `identif' using ``file'', keep(1 3) nogen
 		}
