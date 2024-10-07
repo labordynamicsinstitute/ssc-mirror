@@ -1,6 +1,6 @@
 *! 1.0.0 Ariel Linden 16Sep2024
 
-program define csumdgp, rclass byable(recall) 
+program define csumdgp, rclass 
         version 11
         syntax [, obs(integer 1000) mult(real 2) p0(real 0.05) ]
         drop _all
@@ -12,7 +12,7 @@ program define csumdgp, rclass byable(recall)
 		local p1 = `o1' / (1 + `o1')
 		
 		tempvar ysim w_t c_t
-		gen `ysim' = rbinomial(1,	`p0')
+		gen `ysim' = rbinomial(1, `p0')
 		gen `w_t' = `ysim' * log(`p1' / `p0') + (1 - `ysim') * log((1 - `p1') / (1 - `p0'))
 		gen `c_t' = 0
 		
@@ -21,7 +21,7 @@ program define csumdgp, rclass byable(recall)
 			forvalues ii = 2/`n' {
 				replace `c_t' in `ii' = max(0, `c_t'[`ii'-1] + `w_t'[`ii'])
 			}	
-		}
+		} 
 		summarize `c_t', meanonly
 		return scalar max = r(max)
 		

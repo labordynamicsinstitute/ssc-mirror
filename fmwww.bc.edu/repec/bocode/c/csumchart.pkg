@@ -1,0 +1,37 @@
+d 'CSUMCHART': module to compute cumulative sum (CUSUM) charts for monitoring clinical performance 
+d
+d  The csumchart package produces risk-adjusted and
+d non-risk-adjusted cumulative sum (CUSUM) charts for monitoring
+d clinical performance over time, by signaling if sufficient
+d evidence has accumulated to detect a change in the failure rate
+d of the outcome (Steiner et al. 2000). The CUSUM procedure
+d requires a binary yvar (where a value of 1 indicates failure and
+d 0 indicates success), and a sequential xvar which typically
+d represents sequential patient numbers or the passage of time. In
+d the case of risk-adjusted outcomes, an additional variable
+d containing the riskscores is required.  Process deterioration is
+d detected when the CUSUM exceeds the a priori control limit in the
+d positive direction.  Similarly, process improvement is detected
+d when the CUSUM exceeds the a priori control limit in the negative
+d direction. See Steiner et al. (2000) for a comprehensive
+d discussion about how CUSUM charts are produced and interpreted. 
+d
+d KW: cumulative sum
+d KW: performance monitoring
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20241006
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f csum.ado
+f csumdgp.ado
+f csumra.ado
+f csumradgp.ado
+f csumralimit.ado
+f csum.sthlp
+f csumchart.sthlp
+f csumra.sthlp
+f csumralimit.sthlp

@@ -1,18 +1,15 @@
-*! 1.0.0 Ariel Linden 16Sep2024
+*! 1.0.0 Ariel Linden 02Oct2024
 
-program define csum, rclass
+program define csumra, rclass
 
 	version 11.0
 
 	/* obtain settings */
 	syntax varlist(min=2 max=2 numeric) [if] [in] , ///
-	BLProb(numlist >0 <1 max=1)						///
-	[ ODDS(real 2)									///
+	RISK(varname)									///
 	LIMit(numlist max=1)							///
-	Reps(integer 50)				                ///	
-	SEED(string) 									///
-	CENtile(real 95)								///
-	Wt(varlist min=1 max=1)							///
+	[ ODDS(real 2)									///
+	Wt(varname)										///
 	REPLace											///
 	NOgraph	*										///
 	]         
@@ -35,6 +32,13 @@ program define csum, rclass
             exit 450 
         }
 		
+		// verification that riskscore values are between 0 and 1
+		qui sum `risk' if `touse', meanonly
+		if r(min) < 0 | r(max) > 1 {
+            di as err "`risk' must only contain values between 0 and 1"
+            exit 198 			
+		} 
+
 		// error if odds == 1
 		if `odds' == 1 { 
 			di as err "the odds cannot be set to 1 because it won't detect a process change"
@@ -43,54 +47,26 @@ program define csum, rclass
 		
 		// odds cannot be negative
 		if `odds' <= 0 {
-			di as err "the odds multiplier must be greater than 0"
+			di as err "the odds must be greater than 0"
             exit 198  
 		}	
 				
-		// replace previously generated variables by csum
+		// replace previously generated variables by csumra
 		if "`replace'" != "" {
-			local csumvars : char _dta[_csumvars]
-			if "`csumvars'" != "" {
-				foreach v of local csumvars {
+			local csumravars : char _dta[_csumravars]
+			if "`csumravars'" != "" {
+				foreach v of local csumravars {
 					capture drop `v'
 				}
 			}
 		}
 		
-		// recode baseline probability (blprob) if > 50%
-		if `blprob' >  0.50 {
-			local blprob = 1 - `blprob'
-		}
-	
-		// compute limit if not specified
-		if "`limit'" == "" {
-			if `odds' > 1 { 
-				preserve
-				simulate ct_max = r(max) , reps(`reps') seed(`seed') nolegend: csumdgp , obs(`N') mult(`odds') p0(`blprob')
-				qui centile ct_max, centile(`centile')
-				local limit = r(c_1) 
-				restore
-			}
-			else if `odds' < 1 { 
-				preserve
-				local centile = 100 - `centile'
-				simulate ct_min = r(min) , reps(`reps') seed(`seed') nolegend: csumdgp , obs(`N') mult(`odds') p0(`blprob')
-				qui centile ct_min, centile(`centile')
-				local limit = r(c_1) 
-				restore
-			}
-		} // end no limit 	
-		return scalar limit = `limit'
-
 		// weighting
-		local o0 = `blprob' / (1 - `blprob')
-		local oA = `odds' * `o0'
-		local pA = `oA' / (1 + `oA')
-				
-		if 	"`wt'" == "" {
-			local wf = log(`pA' /  `blprob')
-			local ws = log((1 - `pA') / (1 - `blprob'))
-			qui gen _wt = cond(y==1, `wf', `ws') if `touse'
+		if 	"`wt'" == "" {		
+			tempvar _ws _wf
+			qui gen `_ws' = log((1)/(1 - `risk' + `odds' * `risk')) if `touse'
+			qui gen `_wf' = log(`odds' / ((1 - `risk' + `odds' * `risk') * 1)) if `touse'
+			qui gen _wt = cond(y,`_wf',`_ws') if `touse'
 		}
 		else {
 			qui gen _wt = `wt' if `touse'
@@ -101,7 +77,7 @@ program define csum, rclass
 	
 		sort `touse' `xvar'	
 	
-		// odds multiplier > 1 indicates process deterioration
+		// odds > 1 indicates process deterioration
 		if `odds' > 1 {
 			qui replace _ct in 1 = max(0, _ct[1] + _wt[1]) if `touse'
 			forvalues ii = 2/`N' {
@@ -109,7 +85,7 @@ program define csum, rclass
 			}
 			qui gen _signal = cond(_ct > `limit', 1, 0) if `touse'		
 		}	
-		// odds multiplier < 1 indicates process improvement
+		// odds < 1 indicates process improvement
 		else if `odds' < 1 {
 			qui replace _ct in 1 = min(0, _ct[1] - _wt[1]) if `touse'
 			forvalues ii = 2/`N' {
@@ -119,16 +95,16 @@ program define csum, rclass
 		}	
 
 		// keep track of variables created by csum
-		local csumvars _wt _ct _signal
-        char def _dta[_csumvars] "`csumvars'"
+		local csumravars _wt _ct _signal
+        char def _dta[_csumravars] "`csumravars'"
 		
 
 		// graph it
         if "`nograph'" == ""  {	
 			local roundlimit = round(`limit',.001)
 			twoway(connected _ct `xvar' if `touse', mcol(black) msize(vsmall) lcolor(black)) ///
-				(connected _ct `xvar' if _signal==1 & `touse', mcol(orange) msize(vsmall) lcolor(orange)), yline(`limit') ///
-				ytitle("Cusum (`1')") note("control limit: `roundlimit'") legend(off) `options'
+			(connected _ct `xvar' if _signal==1 & `touse', mcol(orange) msize(vsmall) lcolor(orange)), yline(`limit') ///
+				ytitle("Risk Adjusted Cusum (`1')") note("control limit: `roundlimit'") legend(off) `options'
 		}		
 	
 end	

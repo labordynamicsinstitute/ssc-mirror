@@ -25,7 +25,7 @@ marksample touse
 * The Distributions under the Null of these tests are supplied in the File 
 * NullDistributions.dta, which has to be in the same folder as the .ado file.
 *
-* Authors: 	Christian Bayer, Universität Bonn
+* Authors: 	Christian Bayer, Universitâ€°t Bonn
 *		Christoph Hanck, Universitaat Maastricht
 * Version 0.9
 * Date: 05 June 2009
@@ -37,9 +37,10 @@ tempvar ort
 qui gen `ort'="`r(fn)'"
 qui replace `ort'=reverse(`ort')
 qui replace `ort'=substr(`ort',15,.)
+// cfb pick up dta file from /n
+qui replace `ort'="/n"+substr(`ort',3,.)
 qui replace `ort'=reverse(`ort')
 local ortaux=`ort' in 1
-
 
 *-----------------------------------------------------------
 * Check Syntax, Define Defaults
@@ -254,7 +255,7 @@ local cv2=critvals2[`nvar',`trendtype']
 *-------------------------------------------------
 di " "
 di as txt "---------------------------------------------------"
-di as txt "    Bayer-Hanck (2009) Test for Cointergration"
+di as txt "    Bayer-Hanck (2009) Test for Cointegration"
 di as txt "---------------------------------------------------"
 di " "
 
