@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.7.0 01Apr2023}{...}
+{* *! version 0.7.1 24Sep2024}{...}
 {viewerdialog staggered "dialog staggered"}{...}
 {vieweralsosee "[R] staggered" "mansection R staggered"}{...}
 {viewerjumpto "Syntax" "staggered##syntax"}{...}
@@ -52,7 +52,7 @@ be requested (and multiple estimands are allowed).
 {synopt :{opt drop_treated_beforet}} Drop cohorts treated (weakly) before first time period.{p_end}
 {synopt :{opt use_last_treated_only}} Only use last treated cohort as treatment.{p_end}
 {synopt :{opt vce(str)}} Either 'neyman' or 'adjusted' (default){p_end}
-{synopt :{opt sa}} Callaway and Sant'Anna estimator (alias for beta(1) drop_treated_beforet).{p_end}
+{synopt :{opt cs}} Callaway and Sant'Anna estimator (alias for beta(1) drop_treated_beforet).{p_end}
 {synopt :{opt sa}} Sun and Abraham estimator (alias for beta(1) drop_treated_beforet use_last_treated_only).{p_end}
 
 {p2colreset}{...}
@@ -68,7 +68,7 @@ See the {browse "https://github.com/mcaceresb/stata-staggered#readme":online exa
 {title:Example 1: Basic Usage}
 
 {phang2}{cmd:. local github https://github.com/mcaceresb/stata-staggered }{p_end}
-{phang2}{cmd:. use `github'/raw/main/pj_officer_level_balanced.dta, clear}{p_end}
+{phang2}{cmd:. use `github'/raw/main/test/pj_officer_level_balanced.dta, clear}{p_end}
 {phang2}{cmd:.                                                           }{p_end}
 {phang2}{cmd:. local stagopts i(uid) t(period) g(first_trained)          }{p_end}
 {phang2}{cmd:. staggered complaints, `stagopts' estimand(simple)         }{p_end}
