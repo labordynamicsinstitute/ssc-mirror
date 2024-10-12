@@ -1,6 +1,6 @@
 d 'SVR': module to compute estimates with survey replication (SVR) based standard errors
 d
-d The prefix svr stands for SurVey Replication, and refers to
+d  The prefix svr stands for SurVey Replication, and refers to
 d commands that analyze complex survey data using replication
 d methods.  The available methods are balanced repeated replication
 d (BRR), and several versions of survey jackknife (JK1, JK2, and
@@ -17,11 +17,10 @@ d KW: ordered probit,
 d
 d Requires: Stata version 7.0
 d
+d Distribution-Date: 20180201
 d
 d Author: Nick Winter,  University of Virginia
 d Support: email nwinter@@virginia.edu
-d
-d Distribution-Date: 20180201
 d
 f svr.hlp
 f survwgt.ado

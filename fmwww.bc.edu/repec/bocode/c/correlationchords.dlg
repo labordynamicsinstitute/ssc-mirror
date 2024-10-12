@@ -1,0 +1,261 @@
+VERSION 18.0
+
+POSITION . . 708 769
+
+DIALOG main, label("correlationchords - Circular chord diagram of correlations") tabtitle("Main")
+BEGIN
+GROUPBOX	gb_a1		25		25		320		60,		label("Variables")
+VARLIST		var_a1		+25		+25		270		.,
+
+GROUPBOX	gb_a2		25		100		320		110,	label("Test employed")
+RADIO		bul_a2_1	+25		+25		.		.,		first	label(Pearson's χ²)
+RADIO		bul_a2_2	@		+25		.		.,		middle	label(One-sided Fisher's exact text)
+RADIO		bul_a2_3	@		+25		.		.,		last	label(Two-sided Fisher's exact text)
+
+GROUPBOX	gb_a3		25		225		320		110,	label("Figure format options")
+TEXT		tx_a3_1		+25 	+25		.		.,		label("Start angle:")
+EDIT		ed_a3_1		+195	@		75 		.,		default(90)
+TEXT		tx_a3_2		50	 	+25		.		.,		label("Centripetal force:")
+EDIT		ed_a3_2		+195	@		75 		.,		default(0.5)
+TEXT		tx_a3_3		50  	+25 	.		.,		label("Distance between center and label:")
+EDIT		ed_a3_3		+195	@		75		.,		default(1.1)
+
+GROUPBOX	gb_a4		25 		350		320		394,	label("Label options")
+GROUPBOX	gb_a4_1		50		+25 	270		85,		label("Orientation relative to the radius")
+RADIO		bul_a4_1a	+25 	+25 	.		.,		first	label(Perpendicular)
+RADIO		bul_a4_1b	@		+25 	.		.,		last	label(Parallel)
+TEXT		tx_a4_2		50		+38 	270		.,		label("Text color:")
+COLOR 		col_a4_2	270		@	 	50 		21,		default(0 0 0)
+TEXT		tx_a4_3		50		+25 	270		.,		label("Text size:")
+EDIT 		ed_a4_3		270		@	 	50 		.,		default(16)
+CHECKBOX	ck_a4_4		50		+25 	270		.,		label("Use custom labels") onclickon(main.ed_a4_4.enable) onclickoff(main.ed_a4_4.disable)
+EDIT		ed_a4_4		@		+25 	270		176,	default(Separate labels with spaces. Use quotes for names with spaces.)
+
+GROUPBOX	gb_b		363		25		320		719,	label("Color scheme")
+RADIO 		bul_b1 		388		+25		.		.,		first	label("Use discrete colors") onclickon(program bul_b1)
+GROUPBOX	gb_b1_1		388		+13		270		321,	
+TEXT		tx_b1_1		413		+25 	270		.,		label("Significance level:")
+EDIT		ed_b1_1		+170 	@		50 		.,		default(0.05)
+TEXT		tx_b1_2		413		+25 	270		.,		label("Line color:")
+COLOR 		col_b1_2	+170	@	 	50 		21,		default(100 100 100)
+TEXT		tx_b1_3		413		+25 	270		.,		label("Line width:")
+SPINNER		spi_b1_3	+170	@	 	50		.,		default(2)	
+CHECKBOX	ck_b1_4		413		+25 	270 	.,		label("Highlight if p-correction is exceeded:") default(0) onclickon(script b1_4on) onclickoff(script b1_4off)
+GROUPBOX	gb_b1_4		413		+13 	220		85,	
+TEXT		tx_b1_4a	438		+25 	270		.,		label("Line color:")
+COLOR 		col_b1_4a	+120	@	 	50 		21,		default(0 0 0)
+TEXT		tx_b1_4b	438		+25 	270		.,		label("Line width:")
+SPINNER		spi_b1_4b	+120	@	 	50		.,		default(4)	
+CHECKBOX	ck_b1_5		413		+38 	270 	.,		label("Show non-significant relationships:") onclickon(script b1_5on) onclickoff(script b1_5off)
+GROUPBOX	gb_b1_5		413		+13 	220		85,	
+TEXT		tx_b1_5a	438		+25 	270		.,		label("Line color:")
+COLOR 		col_b1_5a	+120	@	 	50 		21,		default(225 225 225)
+TEXT		tx_b1_5b	438		+25 	270		.,		label("Line width:")
+SPINNER		spi_b1_5b	+120	@	 	50		.,		default(1)
+
+RADIO		bul_b2		388		397		.		.,		last 	label("Use continuous colors") onclickon(program bul_b2)
+GROUPBOX	gb_b2_1		388		+13		270		309,
+TEXT		tx_b2_1		413		+25 	270		.,		label("Significance level:")
+EDIT		ed_b2_1		+170 	@		50 		.,		default(0.5)
+TEXT		tx_b2_4		413		+25 	270 	.,		label("Parameters for p = 0:")
+GROUPBOX	gb_b2_4		413		+13 	220		85,	
+TEXT		tx_b2_4a	438		+25 	270		.,		label("Line color:")
+COLOR 		col_b2_4a	+120	@	 	50 		21,		default(255 252 121)
+TEXT		tx_b2_4b	438		+25 	270		.,		label("Line width:")
+SPINNER		spi_b2_4b	+120	@	 	50		.,		default(4)	
+TEXT		tx_b2_5		413		+38 	270 	.,		label("Parameters for p = significance:")
+GROUPBOX	gb_b2_5		413		+13 	220		85,	
+TEXT		tx_b2_5a	438		+25 	270		.,		label("Line color:")
+COLOR 		col_b2_5a	+120	@	 	50 		21,		default(148 33 147)
+TEXT		tx_b2_5b	438		+25 	270		.,		label("Line width")
+SPINNER		spi_b2_5b	+120	@	 	50		.,		default(1)
+CHECKBOX	ck_b2_6		413		+38 	270		.,		label("Long direction of hue gradient") default(0)
+CHECKBOX	ck_b2_7		413		+25 	270		.,		label("Show legend") default(1)
+
+END
+
+PROGRAM bul_b1
+	BEGIN
+		call main.tx_b1_1.enable
+		call main.ed_b1_1.enable
+		call main.tx_b1_2.enable
+		call main.col_b1_2.enable
+		call main.tx_b1_3.enable
+		call main.spi_b1_3.enable
+		call main.ck_b1_4.enable
+		if main.ck_b1_4 {
+			call main.tx_b1_4a.enable
+			call main.col_b1_4a.enable
+			call main.tx_b1_4b.enable
+			call main.spi_b1_4b.enable
+		}
+		call main.ck_b1_5.enable
+		if main.ck_b1_5 {		
+			call main.tx_b1_5a.enable
+			call main.col_b1_5a.enable
+			call main.tx_b1_5b.enable
+			call main.spi_b1_5b.enable
+		}	
+		call main.tx_b2_1.disable
+		call main.ed_b2_1.disable
+		call main.tx_b2_4.disable
+		call main.tx_b2_4a.disable
+		call main.col_b2_4a.disable
+		call main.tx_b2_4b.disable
+		call main.spi_b2_4b.disable
+		call main.tx_b2_5.disable
+		call main.tx_b2_5a.disable
+		call main.col_b2_5a.disable
+		call main.tx_b2_5b.disable
+		call main.spi_b2_5b.disable
+		call main.ck_b2_6.disable
+		call main.ck_b2_7.disable				
+	END
+
+PROGRAM bul_b2
+	BEGIN
+		call main.tx_b1_1.disable
+		call main.ed_b1_1.disable
+		call main.tx_b1_2.disable
+		call main.col_b1_2.disable
+		call main.tx_b1_3.disable
+		call main.spi_b1_3.disable
+		call main.ck_b1_4.disable
+		call main.tx_b1_4a.disable
+		call main.col_b1_4a.disable
+		call main.tx_b1_4b.disable
+		call main.spi_b1_4b.disable
+		call main.ck_b1_5.disable
+		call main.tx_b1_5a.disable
+		call main.col_b1_5a.disable
+		call main.tx_b1_5b.disable
+		call main.spi_b1_5b.disable
+		call main.tx_b2_1.enable
+		call main.ed_b2_1.enable
+		call main.tx_b2_4.enable
+		call main.tx_b2_4a.enable
+		call main.col_b2_4a.enable
+		call main.tx_b2_4b.enable
+		call main.spi_b2_4b.enable
+		call main.tx_b2_5.enable
+		call main.tx_b2_5a.enable
+		call main.col_b2_5a.enable
+		call main.tx_b2_5b.enable
+		call main.spi_b2_5b.enable
+		call main.ck_b2_6.enable
+		call main.ck_b2_7.enable
+	END
+
+SCRIPT b1_4on
+	BEGIN
+		main.tx_b1_4a.enable
+		main.col_b1_4a.enable
+		main.tx_b1_4b.enable
+		main.spi_b1_4b.enable
+	END
+
+SCRIPT b1_4off
+	BEGIN
+		main.tx_b1_4a.disable
+		main.col_b1_4a.disable
+		main.tx_b1_4b.disable
+		main.spi_b1_4b.disable
+	END
+
+SCRIPT b1_5on
+	BEGIN
+		main.tx_b1_5a.enable
+		main.col_b1_5a.enable
+		main.tx_b1_5b.enable
+		main.spi_b1_5b.enable
+	END
+
+SCRIPT b1_5off
+	BEGIN
+		main.tx_b1_5a.disable
+		main.col_b1_5a.disable
+		main.tx_b1_5b.disable
+		main.spi_b1_5b.disable
+	END
+
+OK ok1,      label("OK")
+CANCEL can1, label("Cancelar")
+SUBMIT sub1, label("Enviar")
+HELP hlp1,   view("help correlationchords")
+RESET res1
+COPY copy1
+
+PROGRAM command
+BEGIN
+	put "correlationchords "
+	put main.var_a1
+	put ", "
+
+	if main.bul_a2_1 {
+		put "test(chi2) "
+	}
+	if main.bul_a2_2 {
+		put "test(exact1sided) "
+	}	
+	if main.bul_a2_3 {
+		put "test(exact2sided) "
+	}
+
+	put "startangle("
+	put main.ed_a3_1
+	put ") strength("
+	put main.ed_a3_2
+	put ") labeldistance("
+	put main.ed_a3_3
+	put ") "
+
+	if main.bul_a4_1a {
+		put "labelorientation(perpendicular) "
+	}
+	if main.bul_a4_1b {
+		put "labelorientation(parallel) "
+	}
+	
+	put "labelcolor(" main.col_a4_2 ") "
+	put "labelsize(" main.ed_a4_3 "pt) "
+
+	if main.ck_a4_4 {
+		put `"customlabel(`"
+		put main.ed_a4_4
+		put `""
+		put "') "
+	}
+
+if main.bul_b1 {
+	put "colorscheme(discrete) "
+	put "significationdiscrete(" main.ed_b1_1 ") "
+	put "colordiscrete(" main.col_b1_2 ") "
+	put "linewidthdiscrete(" main.spi_b1_3 ") "
+	if main.ck_b1_4 {
+	put "colordiscretesignificative(" main.col_b1_4a ") "
+	put "linewidthdiscretesignificative(" main.spi_b1_4b ") "
+	}
+	if main.ck_b1_5 {
+	put "colordiscretenotsignificative(" main.col_b1_5a ") "
+	put "linewidthdiscretenotsignificative(" main.spi_b1_5b ") "	
+	}	
+}
+
+if main.bul_b2 {
+	put "colorscheme(continuous) "
+	put "significationcontinuous(" main.ed_b2_1 ") "
+	put "colorcontinuousmin(" main.col_b2_4a ") "
+	put "linewidthcontinuousmin(" main.spi_b2_4b ") "
+	put "colorcontinuousmax(" main.col_b2_5a ") "
+	put "linewidthcontinuousmax(" main.spi_b2_5b ") "
+	if main.ck_b2_6 {
+	put "sensecontinuous(long) "
+	}
+	else {
+	put "sensecontinuous(short) "
+	}
+	if main.ck_b2_7 {
+	put "legend"
+	}
+}		
+END

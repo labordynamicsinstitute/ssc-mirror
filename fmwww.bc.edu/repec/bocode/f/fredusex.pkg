@@ -9,8 +9,8 @@ d string-date variable and header with information about    the
 d series.  fredusex imports series into a Stata dataset.      This
 d routine updates David Drukker's very useful freduse routine,
 d published in the Stata Journal 6(3) and updated in	15(3).
-d Recent changes to the underlying text format used by FRED caused
-d the freduse routine to fail. 
+d There is now a revised version of {cmd:freduse} on SSC that works
+d properly. 
 d
 d KW: data management
 d KW: macro data
@@ -19,7 +19,7 @@ d KW: FRED
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20240905
+d Distribution-Date: 20240926
 d
 d Author: Kit Baum, Boston College
 d Support: email baum@@bc.edu

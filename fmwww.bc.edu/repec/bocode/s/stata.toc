@@ -32,6 +32,7 @@ p staggered module implementing R staggered package based on Roth and Sant'Anna 
 p standsurv module to compute standardized (marginal) survival and related functions
 p stata_linter module providing a tool to detect and correct bad Stata coding practices
 p stata_sage module to answer your research questions
+p statacmds module to produce list of all commands known to Stata, including fuctions and built-ins
 p stckar module to draw stacked area graphs
 p step3 module to relate latent class membership to external variables
 p stfform module to provide Functional form test for Cox Models
@@ -47,6 +48,7 @@ p summclust module to compute cluster level measures of leverage, influence, and
 p summtab module to compute summary statistics overall and/or across levels of a categorical variable 
 p sunburst module for (half) sunburst plots
 p susoapi module to provide Survey Solutions API client class for Stata
+p svr module to compute estimates with survey replication (SVR) based standard errors
 p svycanon module to assess the statistical significance of the canonical correlations incorporating complex survey design factors
 p swpermute module to compute Permutation tests for Stepped-Wedge Cluster-Randomised Trials
 p synth2 module to implement synthetic control method (SCM) with placebo tests, robustness test and visualization

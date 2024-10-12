@@ -1,6 +1,6 @@
 d 'RFL': module to maintain lists of recently accessed files
 d
-d rfl is an enhanced Most Recently Used Files List allowing the
+d  rfl is an enhanced Most Recently Used Files List allowing the
 d user to open a dataset from a list of previously opened datasets.
 d Every file opened with rfl is added to a list of recently used
 d files and may be accessed via rfl's dialog window or Stata's User

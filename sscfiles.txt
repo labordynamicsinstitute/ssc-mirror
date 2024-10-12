@@ -16439,6 +16439,7 @@ fmwww.bc.edu/repec/bocode/c/chaidforest_estat.ado
 fmwww.bc.edu/repec/bocode/c/ckdrop.html
 fmwww.bc.edu/repec/bocode/c/cprplot2.html
 fmwww.bc.edu/repec/bocode/c/cdfquantreg_postestimation.sthlp
+fmwww.bc.edu/repec/bocode/c/correlationchords.sthlp
 fmwww.bc.edu/repec/bocode/c/ceqgraph_cdf.ado
 fmwww.bc.edu/repec/bocode/c/ChkIn.ado
 fmwww.bc.edu/repec/bocode/c/cprdent_147.sthlp
@@ -16512,6 +16513,7 @@ fmwww.bc.edu/repec/bocode/c/c_ml_stata_data_new_example.dta
 fmwww.bc.edu/repec/bocode/c/cquad.pkg
 fmwww.bc.edu/repec/bocode/c/cihplot.html
 fmwww.bc.edu/repec/bocode/c/combinadd.ado
+fmwww.bc.edu/repec/bocode/c/correlationchords.dlg
 fmwww.bc.edu/repec/bocode/c/chesspuzzle.sthlp
 fmwww.bc.edu/repec/bocode/c/concindc.ado
 fmwww.bc.edu/repec/bocode/c/cs_pystacked_reg.do
@@ -17003,6 +17005,7 @@ fmwww.bc.edu/repec/bocode/c/ccmatch.pkg
 fmwww.bc.edu/repec/bocode/c/codebookout.pkg
 fmwww.bc.edu/repec/bocode/c/cnsrsig.html
 fmwww.bc.edu/repec/bocode/c/cquadequ.ado
+fmwww.bc.edu/repec/bocode/c/correlationchords.pkg
 fmwww.bc.edu/repec/bocode/c/circpvm.hlp
 fmwww.bc.edu/repec/bocode/c/cprdlsoa_patient_index.ado
 fmwww.bc.edu/repec/bocode/c/chitest.ado
@@ -17323,6 +17326,7 @@ fmwww.bc.edu/repec/bocode/c/conindex_example.do
 fmwww.bc.edu/repec/bocode/c/cgroup.html
 fmwww.bc.edu/repec/bocode/c/cs_weakiv_1.0.06.do
 fmwww.bc.edu/repec/bocode/c/cfitzrw.hlp
+fmwww.bc.edu/repec/bocode/c/correlationchords.ado
 fmwww.bc.edu/repec/bocode/c/censornb.html
 fmwww.bc.edu/repec/bocode/c/china_map.zip
 fmwww.bc.edu/repec/bocode/c/ckrename.hlp

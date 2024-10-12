@@ -1,47 +1,43 @@
-*! nca_random Version 1.0 (Beta) 03 Oct 2023 
+*! nca_random Version 1.0 11 Oct 2024
 pro def nca_random  
-syntax, [Nobs(integer 1000) Reps(integer 1) slope(real 1) intercept(real 0) /// 
-		meanx(real 0) sdx(real 1) meany(real 0) sdy(real 1) scopex(numlist) /// 
-		distrx(string) distry(string) miny(real 0)]
+syntax [namelist(min=2 max=2)], n(numlist min=1 max=1 integer >=1) Slopes(numlist) Intercepts(numlist) [ /// 
+		XMean(numlist min=0 ) XSd(numlist min=0 >0) YMean(numlist min=0) YSd(numlist min=0 >0) /// 
+		XDistribution(string) YDistribution(string) clear]
 		version 15
-		if ("`distrx'"=="") local distrx uniform
-		if ("`distry'"=="") local distry uniform
-		if ("`distrx'"!="normal" &  "`distrx'"!="uniform") {
-			di as error "please specify {bf: normal} or {bf: uniform} in option {bf: distrx}"
+		`clear'
+		if ("`xdistribution'"=="") local xdistribution uniform
+		if ("`ydistribution'"=="") local ydistribution uniform
+		if ("`xdistribution'"!="normal" &  "`xdistribution'"!="uniform") {
+			di as error "please specify {bf: normal} or {bf: uniform} in option {bf: xdistribution}"
 			exit 144
 		} 
-		if ("`distry'"!="normal" &  "`distry'"!="uniform") {
-			di as error "please specify {bf: normal} or {bf: uniform} in option {bf: distry}"
+		if ("`ydistribution'"!="normal" &  "`ydistribution'"!="uniform") {
+			di as error "please specify {bf: normal} or {bf: uniform} in option {bf: ydistribution}"
 			exit 144
 		} 
-		if ("`distrx'"=="uniform") {
-			if ("`scopex'"=="") local scopex 0 1 
-			cap numlist "`scopex'", ascending min(2) max(2)
-			if (_rc==122) di as error "invalid {bf: scopex()} option: it has too few elements"
-			if (_rc==124) di as error "invalid {bf: scopex()} option: elements are not in ascending order"
-			if _rc exit _rc
-			local scopex= subinstr("`scopex'"," ",",",.) 
-			local scopex (`scopex')
+
+		if (`:word count `slopes''>1 & `:word count `intercepts''==1) local intercepts=`:word count `slopes''*"`intercepts' "
+		if (`:word count `slopes''==1 & `:word count `intercepts''>1) local slopes=`:word count `intercepts''*"`slopes' "
+		if (`:word count `slopes''!=`:word count `intercepts'') {
+			di as error "{bf: intercepts} and {bf: slopes} should have the same number of arguments"
+			exit 144
 		}
-		cap numlist "`nobs'", integer min(1) max(1)  range(>=1)
-		if _rc {
-			di as error "option {bf: nobs} incorrectly specified"
-			exit _rc
-		}
-		cap numlist "`reps'", integer min(1) max(1)  range(>=1)
-			if _rc {
-			di as error "option {bf: reps} incorrectly specified"
-			exit _rc
-		}
-		cap numlist "`sdx' `sdy'",  min(2) max(2)  range(>0)
-		if _rc {
-			di as error "{bf: sdx} and {bf: sdy}  must be positive real numbers"
-			exit _rc
-		}
-		if ("`distrx'"=="normal") local paramX (`meanx',`sdx')
-		else local paramX `scopex'
-		if ("`distry'"=="normal") local paramY (`meany',`sdy')
-		else local paramY (`miny',1)
+		if ("`xmean'"=="") local xmean=0.5 
+		if ("`ymean'"=="") local ymean=0.5 
+		if ("`xsd'"=="") local xsd=0.2 
+		if ("`ysd'"=="") local ysd=0.2 
+		if ("`namelist'"=="") local namelist x y
 		
-		quie mata: _nca_random(`nobs', `reps', ("`distrx'","`distry'"), (`intercept',`slope'), `paramX', `paramY', 1)
-		end
+		if ("`xdistribution'"=="normal") local paramX (`xmean',`xsd')
+		else local paramX (.,.)
+		if ("`ydistribution'"=="normal") local paramY (`ymean',`ysd')
+		else local paramY (.,.)
+		
+		quie mata:  _nca_random2(`n', 1,   ("`xdistribution'","`ydistribution'"), "`intercepts'", "`slopes'",  `paramX', `paramY' , "`namelist'")
+		local vlist `:word 1 of `namelist''* `:word 2 of `namelist'' 
+		foreach var of varlist `vnames' {
+		cap assert !missing(`var')
+		if _rc di as text "WARNING!  {bf:`var'} has values outside [0,1] , please check {bf: intercepts} and {bf: slopes}"
+		}
+		 
+end

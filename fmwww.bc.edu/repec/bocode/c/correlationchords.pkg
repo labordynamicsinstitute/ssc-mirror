@@ -1,0 +1,20 @@
+d 'CORRELATIONCHORDS': module to produce a circular chord diagram of correlations
+d
+d     correlationchords is a highly customizable circular chord
+d graph that visualizes the significance level obtained when   
+d performing an independence test for all possible combinations of
+d two of a list of variables. 
+d
+d KW: graphics
+d KW: correlations
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20241011
+d
+d Author: Emilio Domínguez-Durán, NA
+d Support: email emilienko@@gmail.com
+d
+f correlationchords.ado
+f correlationchords.dlg
+f correlationchords.sthlp
