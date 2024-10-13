@@ -1,0 +1,34 @@
+d 'ABRSQOL': module providing Quality-of-life solver for "Measuring quality of life under spatial frictions"
+d
+d  ABRSQOL is part of the ABRSQOL-toolkit that provides numerical
+d solvers for quality-of-life (QoL) measures that are consistent
+d with the mode developed in Ahlfeldt, Bald, Roth, Seidel:
+d Measuring quality of life under spatial frictions, henceforth
+d ABRS. Notice that quality of life is identified up to a constant.
+d Therefore, the inverted QoL measures measure has a relative
+d interpretation only. We normalize the QoL relative to the first
+d observation in the data set. It is straightforward to rescale the
+d QoL measure to any other location or any other value (such as the
+d mean or median in the distribution of QoL across locations). 
+d
+d KW: quality of life
+d KW: spatial frictions
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20241012
+d
+d Author: Gabriel M Ahlfeldt , Humboldt University of Berlin
+d Support: email G.Ahlfeldt@@lse.ac.uk
+d
+d Author: Fabian Bald , European University Viadrina
+d Support: email bald@@europa-uni.de
+d
+d Author: Duncan Roth , Institute for Employment Research
+d Support: email Duncan.Roth@@iab.de
+d
+d Author: Tobias Seidel , University of Duisburg-Essen
+d Support: email NA
+d
+f abrsqol.ado
+f abrsqol.sthlp

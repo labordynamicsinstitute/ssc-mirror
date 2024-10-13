@@ -1,6 +1,6 @@
 d 'BACKRASCH': module to implement a backward procedure with a Rasch model
 d
-d backrasch realizes a Backward procedure on a Rasch model: the
+d  backrasch realizes a Backward procedure on a Rasch model: the
 d items are  removed one per one if they have a bad fit to the
 d Rasch model. The fit of the items  is evaluated by a first-order
 d statistics (test R1c, R1m or Q1) It is possible to  build several
