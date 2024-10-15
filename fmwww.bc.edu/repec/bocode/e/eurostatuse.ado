@@ -1,49 +1,53 @@
 /*	
-	Authors: Sebastien Fontenay (UAH, ULB- sebastien.fontenay@uah.es / sebastien.fontenay@ulb.be)
-	         Sem Vandekerckhove (HIVA, KUL - sem.vandekerckhove@kuleuven.be)
+	Authors: 
+	
+	Sem Vandekerckhove (HIVA-KU LEUVEN - sem.vandekerckhove@kuleuven.be)
+	Sebastien Fontenay (UAH Alcalá (Madrid), ULB - sebastien.fontenay@uah.es)
+	         
 
-	Version: 3.2
-	Last update: 8 Februari 2024 (date fixes, labels, notes)
+	Version: 3.3
+	Last update: 11 October 2024 
+	What's new:
+	- Uncompressed option
+	- Rare unzip issue solved
+	- Help file updated 
+	- Dialog box updated
+	- Runs saved .tsv files directly without downloading (after previous noerase option)
  
 	Thanks to:
+	- Wolf-Fabian Hungerland (wolf-fabian.hungerland@bmwk.bund.de): suggestion to include uncompressed option
 	- Nikolaos Kanellopoulos (nkanel@kepe.gr): date fix
-	- Diego Jose Torres Torres (diegotorrestorres@gmail.com): early syntax
+	- Diego Jose Torres Torres (diegotorrestorres@gmail.com): some early syntax ideas
 	- Duarte Gonçalves: early feedback and help file
+	
+	Notes: 	
+	- EUROSTAT has migrated its database in 2024. Some previous functionality 
+		with respect to time variables and indicator labels, is now lost. 
+	- For datasets with a high time frequency (e.g. monthly data), it may be 
+		faster to _not_ use the 'long' option and to reshape the data in 
+		your syntax.
+	- Please let us know if you experience other issues in the mean time.
 
-	**********************************************************************************************************************************
-	**********************************************************************************************************************************
-	**	                                            	                                                                            **
-	**	NOTES                                            	                                                                        **
-	**	                                            	                                                                            **
-	**	EUROSTAT has migrated its database in 2024. Some previous functionality with respect to time variables and indicator        **
-	**  labels, is currently lost. For datasets with a high time frequency (e.g. monthly data), it may be much faster to not use    **
-	**	the 'long' option and to reshape the data in your syntax.                                            	                    **
-	**	                                            	                                                                            **
-	**	Please let us know if you experience other issues in the mean time.                                                         **
-	**	                                            	                                                                            **
-	**	                                            	                                                                            **
-	**	INSTALLATION                                            	                                                                **
-	**	                                            	                                                                            **
-	**	If you are using Stata on a Windows computer, you need to have 7-zip (http://www.7-zip.org/)                                **
-	**	installed in the program files folder (C:\Program Files\7-Zip\7zG.exe) in order to unzip the gunzip (.gz) files.            **
-	**	                                                                                                         	                **
-	**	If you are behind a proxy you should consult: http://www.stata.com/support/faqs/web/common-connection-error-messages/       **
-	**                                                                                                                              **
-	**********************************************************************************************************************************
-	*********************************************************************************************************************************/
+	Installation:
+	- If you are using Stata on a Windows computer, you either need to specify 
+		the [uncompressed] option or have 7-zip (http://www.7-zip.org/) installed 
+		in the program files folder (C:\Program Files\7-Zip\7zG.exe) in order to 
+		unzip the gunzip (.gz) files.
+	- If you are behind a proxy, please consult: http://www.stata.com/support/faqs/web/common-connection-error-messages/      
+	
+*/
 
 capture program drop eurostatuse
 program define eurostatuse
 version 11.0
-syntax namelist(name=indicator) [, long noflags nolabel noerase save ///
+syntax namelist(name=indicator) [, uncompressed long noflags nolabel noerase save ///
 								   start(string) end(string) geo(string) ///
 								   keepdim(string) clear]
 
 quietly {
 
-local indicator = upper("`indicator'")
-
-// Clear data and check whether the database exists
+* Get data
+* ========
 
 if `"`clear'"' == "clear" {
 	clear
@@ -52,72 +56,92 @@ if (c(changed) == 1) & (`"`clear'"' == "" ) {
     error 4
 	}
 
-copy "https://ec.europa.eu/eurostat/api/dissemination/files/inventory?type=data" databaselist.txt, replace
-insheet using databaselist.txt, clear names // this tale doesn't have the variable labels anymore
-keep if code=="`indicator'"
-count
-if r(N)==0 {
-	noisily display in red "Dataset does not exist - Consult Eurostat website: https://ec.europa.eu/eurostat/data/database"
-	clear
-	exit
+local indicator = upper("`indicator'") // Eurostat uses upper case
+
+* Check whether the database exists in the working directory, then online
+
+capture confirm file "`indicator'.tsv" // change if somewhere else
+if _rc==0 {
+	// proceed
 	}
-
-/* OLD (hope to recover this metadata)
-
 else {
-	replace title=ltrim(title)
-	noisily display in green ///
-	_newline _col(5) "Dataset: " title ///
-	_newline _col(5) "Last update: " lastupdateofdata ///
-	_newline _col(5) "Start: " datastart ///
-	_newline _col(5) "End: " dataend ///
-	_newline
-	clear
-}
-*/
-
-/* NEW: no start/end nor title, just latest change */
-else {
-	noisily display in green ///
-	_newline _col(5) "Last update: " lastdatachange ///
-	_newline
-	clear
-	}
-
-
-// Check that 7-zip is installed on Windows computer
-
-if c(os)=="Windows" {
-	capture confirm file "C:\Program Files\7-Zip\7zG.exe"
-		if _rc==0 {
+	copy "https://ec.europa.eu/eurostat/api/dissemination/files/inventory?type=data" databaselist.txt, replace
+	insheet using databaselist.txt, clear names // this doesn't have the variable labels anymore
+	keep if code=="`indicator'"
+	count
+	if r(N)==0 {
+		noisily display in red "Dataset does not exist - Consult Eurostat website: https://ec.europa.eu/eurostat/data/database"
+		clear
+		exit
 		}
-		else {
-			noisily di in red "Install 7-zip here: C:\Program Files\7-Zip\7zG.exe, or edit ado."
-			exit
+	else {
+		noisily display in green ///
+		_newline _col(5) "Last update: " lastdatachange ///
+		_newline
+		clear
 		}
+
+	/* OLD (hope to recover this metadata)
+
+	else {
+		replace title=ltrim(title)
+		noisily display in green ///
+		_newline _col(5) "Dataset: " title ///
+		_newline _col(5) "Last update: " lastupdateofdata ///
+		_newline _col(5) "Start: " datastart ///
+		_newline _col(5) "End: " dataend ///
+		_newline
+		clear
 	}
 
-cap erase databaselist.txt // toggle for troubleshooting 
+	NEW: no start/end nor title, just latest change 
+	*/
+
+	* Check that 7-zip is installed on Windows computer
+
+	if c(os)=="Windows" {
+		capture confirm file "C:\Program Files\7-Zip\7zG.exe" // change if somewhere else
+			if _rc==0 {
+				// nothing
+				}
+			else {
+				noisily di in red "Install 7-zip here: C:\Program Files\7-Zip\7zG.exe, or edit ado."
+				noisily di in red "Continuing with uncompressed option (larger and slower file transer)."
+			local uncompressed = "uncompressed"
+			}
+		}
+
+	cap erase databaselist.txt // toggle for troubleshooting 
 
 
-// Download data from Eurostat bulk download facility (2024 migration)
+	// Download data from Eurostat bulk download facility (2024 migration)
+	noisily di "Downloading and formating data ..."
 
-noisily di "Downloading and formating data ..."
-copy  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/`indicator'/?format=TSV&compressed=true" `indicator'.tsv.gz, replace
-if c(os)=="Windows" {
-	shell "C:\Program Files\7-Zip\7zG.exe" x -y `indicator'.tsv.gz
-	}
-if c(os)=="MacOSX" {
-	shell gunzip `indicator'.tsv.gz
-	}
+	if "`uncompressed'" == "" {
+		copy  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/`indicator'/?format=TSV&compressed=true" `indicator'.tsv.gz, replace
+		if c(os)=="Windows" {
+			shell "C:\Program Files\7-Zip\7zG.exe" x -y "`indicator'.tsv.gz"
+			}
+		if c(os)=="MacOSX" {
+			shell gunzip "`indicator'.tsv.gz"
+			}
+		// add Linux if needed
+		}
+	else {
+		copy  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/`indicator'/?format=TSV&compressed=false" `indicator'.tsv, replace
+		}
+	} // end download from Eurostat
+
+	
+* Load and clean data
+* ===================
 
 insheet using `indicator'.tsv, tab names double
 ds
 local firstvar : word 1 of `r(varlist)'
 rename `firstvar' DimensionS
 
-// Keep only specified time range
-
+* Keep specified time range
 if "`start'"!="" {
 	lookfor \time
 	if "`r(varlist)'"=="DimensionS" {
@@ -126,21 +150,25 @@ if "`start'"!="" {
 			noisily display in red "Start time not in range or no data for this time period"
 			clear
 			cap erase `indicator'.tsv.gz
-			cap erase `indicator'.tsv
+			if "`erase'" != "noerase" {
+				cap erase `indicator'.tsv	
+				}
 			exit 197
-		}
+			}
 		local num : word count `r(varlist)'
 		local varend : word `num' of `r(varlist)'
 		keep DimensionS-`varend'
-	}
+		}
 	else {
 		noisily display in red "No time dimension - cannot specify [, start()] option"
 		clear
 		cap erase `indicator'.tsv.gz
-		cap erase `indicator'.tsv
+		if "`erase'" != "noerase" {
+			cap erase `indicator'.tsv	
+			}
 		exit 197
+		}
 	}
-}
 
 if "`end'"!="" {
 		lookfor \time
@@ -150,7 +178,9 @@ if "`end'"!="" {
 			noisily display in red "End time not in range or no data for this time period"
 			clear
 			cap erase `indicator'.tsv.gz
-			cap erase `indicator'.tsv
+			if "`erase'" != "noerase" {
+				cap erase `indicator'.tsv	
+				}
 			exit 197
 			}
 			local varfirst : word 1 of `r(varlist)'
@@ -158,18 +188,19 @@ if "`end'"!="" {
 			local num : word count `r(varlist)'
 			local lastvar : word `num' of `r(varlist)'
 			keep DimensionS `varfirst'-`lastvar'
-		}
+			}
 		else {
 			noisily display in red "No time dimension - cannot specify [, end()] option"
 			clear
 			cap erase `indicator'.tsv.gz
-			cap erase `indicator'.tsv
+			if "`erase'" != "noerase" {
+				cap erase `indicator'.tsv	
+				}
 			exit 197
+			}
 	}
-}
 
-// Keep only selected geo entities
-
+* Keep selected geo entities
 if "`geo'"!="" {
 	lookfor \time
 	if "`r(varlist)'"=="DimensionS" {
@@ -179,65 +210,68 @@ if "`geo'"!="" {
 				count if regexm(DimensionS2, ",`dim',")
 				if r(N)!=0 {
 				replace dimcomplex=1 if regexm(DimensionS2, ",`dim',")		
-				}
+					}
 				else {
 					noisily display in red "No data for one geo entity or wrong code"
 					clear
 					cap erase `indicator'.tsv.gz
 					cap erase `indicator'.tsv
 					exit 197
+					}
 				}
-			}
 			drop if dimcomplex!=1
 			drop dimcomplex	DimensionS2		
-	}
+		}
 
 	lookfor \geo
 	if "`r(varlist)'"=="DimensionS" {
-	local geo2=lower("`geo'")
-	foreach dim of local geo2 {
-		lookfor `dim'
-		if "`r(varlist)'"=="" {
-			noisily display in red "No data for one geo entity or wrong code"
-			clear
-			cap erase `indicator'.tsv.gz
-			cap erase `indicator'.tsv
-			exit 197
+		local geo2=lower("`geo'")
+		foreach dim of local geo2 {
+			lookfor `dim'
+			if "`r(varlist)'"=="" {
+				noisily display in red "No data for one geo entity or wrong code"
+				clear
+				cap erase `indicator'.tsv.gz
+				if "`erase'" != "noerase" {
+					cap erase `indicator'.tsv	
+					}
+				exit 197
+				}
+			}
+		keep DimensionS `geo2'
 		}
 	}
-	keep DimensionS `geo2'
-	}
-}
 
-// Keep only selected dimensions
-
+* Keep selected dimensions
 if "`keepdim'"!="" {
-gen DimensionS2=","+DimensionS+","
-tokenize `keepdim', parse(";")
-local i = 1
-while "``i''" != "" {
-	if "``i''"!=";" {
-		gen dimcomplex=.
-			foreach dim of local `i' {
-				count if regexm(DimensionS2, ",`dim',")
-				if r(N)==0 {
-					noisily display in red "No data for one dimension or wrong code"
-					clear
-					cap erase `indicator'.tsv.gz
-					cap erase `indicator'.tsv
-					exit 197	
+	gen DimensionS2=","+DimensionS+","
+	tokenize `keepdim', parse(";")
+	local i = 1
+	while "``i''" != "" {
+		if "``i''"!=";" {
+			gen dimcomplex=.
+				foreach dim of local `i' {
+					count if regexm(DimensionS2, ",`dim',")
+					if r(N)==0 {
+						noisily display in red "No data for one dimension or wrong code"
+						clear
+						cap erase `indicator'.tsv.gz
+						if "`erase'" != "noerase" {
+							cap erase `indicator'.tsv	
+							}
+						exit 197	
+					}
+					replace dimcomplex=1 if regexm(DimensionS2, ",`dim',")
 				}
-				replace dimcomplex=1 if regexm(DimensionS2, ",`dim',")
-			}
-			drop if dimcomplex!=1
-			drop dimcomplex
-		}			
-	local i = `i' + 1
+				drop if dimcomplex!=1
+				drop dimcomplex
+			}			
+		local i = `i' + 1
+		}
+	drop DimensionS2
 	}
-drop DimensionS2
-}
 
-// Separate values and flags (default: have flags)
+* Separate values and flags (default: have flags)
 
 ds DimensionS, not
 foreach var of varlist `r(varlist)' {
@@ -250,9 +284,9 @@ foreach var of varlist `r(varlist)' {
 		order flags_`indicator'`geotime', after(`indicator'`geotime')
 		tostring flags_`indicator'`geotime', replace force
 		replace flags_`indicator'`geotime' = trim(substr(flags_`indicator'`geotime',strpos(flags_`indicator'`geotime'," "),.))
-	}
+		}
 	destring `indicator'`geotime', replace ignore("b c d e f i n p r s u z :")
-}
+	}
 
 
 * Reshape dataset to long format (long option)
@@ -320,7 +354,7 @@ if "`long'" == "long" {
 			}
 	}
 
-// Split DimensionS
+* Split DimensionS
 
 split DimensionS, parse(,) gen(Dimension_) destring
 order Dimension_*
@@ -350,7 +384,7 @@ https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/codelist/ESTAT/EFFECT/?
 
 * Labels
 * ======
-/* Download and apply labels from Eurostat bulk download facility (default: label variables)*/
+/* Download and apply labels from Eurostat bulk download facility (default: label variables) */
 
 preserve
 
@@ -362,10 +396,11 @@ preserve
 		}
 
 	if "`label'" == "nolabel" {
-	}
+		// nothing
+		}
 	else {
 		noisily display in green "Downloading and formating labels ..."
-	}
+		}
 
 	ds *`indicator'*, not
 	
@@ -423,17 +458,17 @@ cap erase codelist.txt // toggle for troubleshooting labels
 ds *`indicator'*, not
 foreach var of varlist `r(varlist)' {
 	if "`var'"!="time" {
-	label var `var' "`lb`var''"
-	}
-		if "`label'" == "nolabel" {
+		label var `var' "`lb`var''"
 		}
-		else {
-			if "`var'"!="time" {
+	if "`label'" == "nolabel" {
+		// nothing
+		}
+	else {
+		if "`var'"!="time" {
 			cap merge m:1 `var' using ``var'_file', nogenerate keep(match)
 			cap order `var'_label, after(`var')
 			}
 		}
-	
 	}
 .
 
@@ -441,22 +476,21 @@ foreach var of varlist `r(varlist)' {
 * Finish process
 * ==============
 
-// Sort data
+* Sort data
 
 ds *`indicator'*, not
 sort `r(varlist)'
 
-// Erase working files  (default: erase)
-
+* Erase working files  (default: erase)
 cap erase `indicator'.tsv.gz
 if "`erase'" == "noerase" {
 	noisily display in green "raw data stored as `indicator'.tsv"
-}
+	}
 else {
 	erase `indicator'.tsv
-}
+	}
 
-// Save in Stata format with lower case variables
+// Save in Stata format with lower case variables and file name
 
 compress
 
@@ -467,10 +501,11 @@ foreach var of varlist `r(varlist)' {
 	}
 
 if "`save'" == "save" {
+	local indicator = lower("`indicator'")
 	save `indicator'.dta, replace
 	noisily	display in green "file `indicator'.dta saved"
-}
+	}
 
-}
+} // end quietly
 
 end

@@ -1,43 +1,48 @@
-        VERSION 11
-        POSITION . . 550 390
+VERSION 11
+POSITION . . 550 380
 
-        DIALOG main, title("EurostatUse") tabtitle("Series")
-        BEGIN
-	GROUPBOX serie          10  20  520  60, label("Table name from Eurostat website")
-	COMBOBOX seriename      20  45  160  25
+DIALOG main, title("EurostatUse") tabtitle("Series")
+BEGIN
 
-	GROUPBOX dimension      10  95  520  135, label("Select data (optional - select all if left blank)")
-	COMBOBOX country	270 +30  250  25, dropdown contents(countrylist) values(countryvalues) append
-	TEXT country_lab	20    @  180  15, label(Select geo dimension)
-	COMBOBOX start          305  +30 80 25
-	TEXT start_lab	        20    @  180  15, label(Select time dimension)
-	TEXT start_lab2	        270   @  30  15, label(Start)
-	COMBOBOX end            440   @  80  25
-	TEXT end_lab	        410   @  30  15, label(End)
-	COMBOBOX dimension3     270  +30 250  25, nomemory
-	TEXT dim3_lab	        20    @  250  15, label(Select other dimension(s) - separate with)
-	TEXT dim3_lab2	        20    +15  250  15, label(	semicolon)
+	GROUPBOX serie             10  20  520  60, label("Table name from Eurostat website")
+	COMBOBOX seriename         20  45  160  25
 
-	GROUPBOX options1       10  240  520  60, label("Format options")
-	CHECKBOX ck_long	20  +25  180   ., option(long) nomemory label(Reshape data to long format)
-	CHECKBOX ck_nolabel	200  @   180   ., option(nolabel) nomemory label(Drop the label variables)
-	CHECKBOX ck_noflags	350  @   180   ., option(noflags) nomemory label(Remove flags)
+	GROUPBOX options1          10  100   520  50, label("Format options (optional)")
+  	CHECKBOX ck_long	       20  +20  180   ., option(long) nomemory label(Reshape data to long format)
+  	CHECKBOX ck_nolabel	     200  @   180   ., option(nolabel) nomemory label(Drop the label variables)
+  	CHECKBOX ck_noflags	     350  @   180   ., option(noflags) nomemory label(Remove flags)
 
-	GROUPBOX options2       10  315  520  60, label("Saving options")
-	CHECKBOX ck_clear	20  +25  180   ., option(clear) nomemory label(Clear data in memory)
-	CHECKBOX ck_noerase	200  @   180   ., option(noerase) nomemory label(Keep original .tsv file)
-	CHECKBOX ck_save	350  @   180   ., option(save) nomemory label(Save output in Stata format)
-        END
+  GROUPBOX options2           10  165   520  70, label("Saving options (optional)")
+    CHECKBOX ck_clear         20  +20   240   ., option(clear) nomemory label(Clear data in memory)
+    CHECKBOX ck_noerase       240  @    240   ., option(noerase) nomemory label(Keep original .tsv file)
+    CHECKBOX ck_uncompressed  20  +20   240   ., option(uncompressed) nomemory label(Download uncompressed .tsv file)
+    CHECKBOX ck_save          240  @    240   ., option(save) nomemory label(Save output in Stata format)
 
-        OK      ok1, label("Ok")
-        CANCEL  can1
-        SUBMIT  sub1
-        HELP    hlp1, view("help eurostatuse")
-        RESET   res1
+  GROUPBOX dimension      10  250  520  120, label("Select data (optional)")
+    COMBOBOX country      270 +20  250  25, dropdown contents(countrylist) values(countryvalues) append
+    TEXT country_lab      20    @  180  15, label(Select geo dimension)
+    COMBOBOX start        305  +25 80 25
+    TEXT start_lab        20    @  180  15, label(Select time dimension)
+    TEXT start_lab2       270   @  30  15, label(Start)
+    COMBOBOX end          440   @  80  25
+    TEXT end_lab          410   @  30  15, label(End)
+    COMBOBOX dimension3   270  +25 250  25, nomemory
+    TEXT dim3_lab         20    @  250  15, label(Select other dimension(s) - separate with)
+    TEXT dim3_lab2        20    +15  250  15, label(  semicolon)
+
+END
+
+OK      ok1, label("Ok")
+CANCEL  can1
+SUBMIT  sub1
+HELP    hlp1, view("help eurostatuse")
+RESET   res1
 
 LIST countrylist
 BEGIN
-European Union (28 countries)
+European Union (27 countries - 2020)
+European Union (28 countries - 2008/2019)
+European Union (27 countries - 2007)
 European Union (changing composition)
 Euro area (19 countries)
 Euro area (changing composition)
@@ -80,7 +85,9 @@ END
 
 LIST countryvalues
 BEGIN
+EU27_2020
 EU28
+EU27_2007
 EU
 EA19
 EA
@@ -121,24 +128,25 @@ TR
 US
 END
 
-        PROGRAM command
-        BEGIN
-          put "eurostatuse "
-          put main.seriename
-            beginoptions
-              option main.ck_clear
-              option main.ck_long
-              option main.ck_nolabel
-              option main.ck_noflags
-              option main.ck_noerase
-              option main.ck_save
-              put " geo("main.country
-              put ") "
-              put " keepdim("main.dimension3
-              put ") "
-              put " start("main.start
-              put ") "
-              put " end("main.end
-              put ")
-            endoptions
-        END
+PROGRAM command
+BEGIN
+  put "eurostatuse "
+  put main.seriename
+    beginoptions
+      option main.ck_clear
+      option main.ck_long
+      option main.ck_nolabel
+      option main.ck_noflags
+      option main.ck_noerase
+      option main.ck_uncompressed
+      option main.ck_save
+      put " geo("main.country
+      put ") "
+      put " keepdim("main.dimension3
+      put ") "
+      put " start("main.start
+      put ") "
+      put " end("main.end
+      put ")
+    endoptions
+END
