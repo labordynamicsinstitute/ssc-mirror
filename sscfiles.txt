@@ -1707,6 +1707,7 @@ fmwww.bc.edu/repec/bocode/g/grstyle.hlp
 fmwww.bc.edu/repec/bocode/g/giacross_test_data.csv
 fmwww.bc.edu/repec/bocode/g/grouplabs.pkg
 fmwww.bc.edu/repec/bocode/g/goprobit_ll.ado
+fmwww.bc.edu/repec/bocode/g/gencpr.ado
 fmwww.bc.edu/repec/bocode/g/genidseq.pkg
 fmwww.bc.edu/repec/bocode/g/gphudak6.ado
 fmwww.bc.edu/repec/bocode/g/gllasim.hlp
@@ -1829,6 +1830,7 @@ fmwww.bc.edu/repec/bocode/g/gzipsave.ado
 fmwww.bc.edu/repec/bocode/g/gb2fit.ado
 fmwww.bc.edu/repec/bocode/g/gs3sls.ado
 fmwww.bc.edu/repec/bocode/g/grstest2.pkg
+fmwww.bc.edu/repec/bocode/g/gencpr.pkg
 fmwww.bc.edu/repec/bocode/g/grdigap.html
 fmwww.bc.edu/repec/bocode/g/glgamma2.pkg
 fmwww.bc.edu/repec/bocode/g/gpfobl.ado
@@ -1971,6 +1973,7 @@ fmwww.bc.edu/repec/bocode/g/geodist2.sthlp
 fmwww.bc.edu/repec/bocode/g/gs2slsar.dlg
 fmwww.bc.edu/repec/bocode/g/getknots.html
 fmwww.bc.edu/repec/bocode/g/Gardner_2sdd.pdf
+fmwww.bc.edu/repec/bocode/g/gencpr.sthlp
 fmwww.bc.edu/repec/bocode/g/grvar.sthlp
 fmwww.bc.edu/repec/bocode/g/goelevation.ado
 fmwww.bc.edu/repec/bocode/g/gologit.hlp
@@ -19902,6 +19905,7 @@ fmwww.bc.edu/repec/bocode/s/spmstard.sthlp
 fmwww.bc.edu/repec/bocode/s/savesome.html
 fmwww.bc.edu/repec/bocode/s/spregxt32.ado
 fmwww.bc.edu/repec/bocode/s/skewplot.ado
+fmwww.bc.edu/repec/bocode/s/sumdocx.pkg
 fmwww.bc.edu/repec/bocode/s/SuSo.class
 fmwww.bc.edu/repec/bocode/s/svyselmlog.html
 fmwww.bc.edu/repec/bocode/s/sptobitmstar6.ado
@@ -20540,6 +20544,7 @@ fmwww.bc.edu/repec/bocode/s/stjm_d0_w_na.ado
 fmwww.bc.edu/repec/bocode/s/svrset.html
 fmwww.bc.edu/repec/bocode/s/sproper.sthlp
 fmwww.bc.edu/repec/bocode/s/sumlist.hlp
+fmwww.bc.edu/repec/bocode/s/sumdocx.sthlp
 fmwww.bc.edu/repec/bocode/s/spregfext.sthlp
 fmwww.bc.edu/repec/bocode/s/sqstattab2.sthlp
 fmwww.bc.edu/repec/bocode/s/screenmatches.hlp
@@ -20637,6 +20642,7 @@ fmwww.bc.edu/repec/bocode/s/si.dta
 fmwww.bc.edu/repec/bocode/s/spregrext.pkg
 fmwww.bc.edu/repec/bocode/s/spivreg.html
 fmwww.bc.edu/repec/bocode/s/strmst2.sthlp
+fmwww.bc.edu/repec/bocode/s/sumdocx.ado
 fmwww.bc.edu/repec/bocode/s/strgroup.hlp
 fmwww.bc.edu/repec/bocode/s/stpepemori.html
 fmwww.bc.edu/repec/bocode/s/stkerhaz.hlp

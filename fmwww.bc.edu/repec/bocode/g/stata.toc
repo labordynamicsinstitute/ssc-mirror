@@ -23,6 +23,7 @@ p geekel2d module to estimate the parameters of unidimensional and bidimensional
 p geivars module to calculate Generalized Entropy inequality indices
 p gen_tail module to work with indicator observations
 p genass module to perform Genetic Case-control Association tests
+p gencpr module for users of Danish CPR numbers
 p geneigen module to calculate eigenvalues of a real general matrix
 p genfreq module to produce a frequency distribution for a variable
 p gengroup module to produce groups of  individuals

@@ -1,4 +1,4 @@
-*! version 3.0.2 Mai 20, 2022 @ 10:04:56 UK
+*! version 3.0.2 Mai 23, 2022 @ 21:48:43 UK
 * This is -holrein- reloaded
 
 // 1.0.0 Initial version
@@ -161,13 +161,18 @@ version 11
 
 	// Merge Using files
 	// -----------------
-	
+
 	quietly {
+		local i 1
 		gen long hid = .
 		foreach file of local filelist {
-			local noostfile = subinstr("`file'","ost","",.)
-			local i = strlen("`noostfile'")-strlen("`ftyp'")
-			replace hid = `=substr("`noostfile'",1,`i')'hhnr
+			if "`file'" == "gpost" | "`file'" == "ghost" | "`file'" == "gpkalost" local year = 1990
+			else if "`file'" == "hpost" | "`file'" == "gpkalost" local year = 1991
+			else {
+				local year `:word `i' of `waves''
+				local i = `i' +1
+			}
+			replace hid = hid_`year'
 			sort `identif'
 			merge `match' `identif' using ``file'', keep(1 3) nogen
 		}

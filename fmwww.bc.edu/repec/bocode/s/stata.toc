@@ -44,6 +44,7 @@ p stripplot module for strip plots (one-way dot plots)
 p stute_test module to compute Stute (1997) linearity test
 p styletextab module to style LaTeX tables exported by collect suite of commands
 p submatrix module to perform advanced matrix subscripting
+p sumdocx module to generate comprehensive summary statistics and comparison tables
 p summclust module to compute cluster level measures of leverage, influence, and a cluster jackknife variance estimator
 p summtab module to compute summary statistics overall and/or across levels of a categorical variable 
 p sunburst module for (half) sunburst plots

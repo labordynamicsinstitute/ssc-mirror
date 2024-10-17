@@ -1,0 +1,19 @@
+d 'GENCPR': module for users of Danish CPR numbers
+d
+d  This is a package that will clean Danish CPR numbers and
+d generates variables with Modulus-11 test, gender, birthday and
+d age. 
+d
+d KW: dta management
+d KW: Denmark
+d KW: CPR numbers
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20241016
+d
+d Author: Christoffer Scavenius, VIVE – The Danish Centre for Social Science Research
+d Support: email css@@vive.dk
+d
+f gencpr.ado
+f gencpr.sthlp

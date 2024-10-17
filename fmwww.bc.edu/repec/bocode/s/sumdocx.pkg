@@ -1,0 +1,21 @@
+d 'SUMDOCX': module to generate comprehensive summary statistics and comparison tables
+d
+d  The sumdocx package generates comprehensive summary statistics
+d and comparison tables in Word format. It streamlines the process
+d of producing detailed variable summaries, including two-group
+d comparisons with t-tests, and is highly customizable to meet the
+d formatting needs of researchers and organizations. 
+d
+d KW: summary statistics
+d KW: tables
+d KW: MSWord
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20241016
+d
+d Author:   Kabira Namit,  World Bank
+d Support: email   knamit@@worldbank.org
+d
+f sumdocx.ado
+f sumdocx.sthlp
