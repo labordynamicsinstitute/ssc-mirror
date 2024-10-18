@@ -34,6 +34,7 @@ p usespss module to import SPSS (*.sav) data (Windows only)
 p usexmlex module to import data stored in XML format 
 p usmaps module to provide US state map coordinates for tmap
 p usmaps2 module to provide US county map coordinates for tmap
+p usort module to perform locale-based ascending and descending sort that supports conditional statements, observation ranges, and user-defined handling of substrings and missing values 
 p usos module for computing the unweighted sum of squares test for global goodness of fit after logistic model
 p usswm module to provide US state and county spatial weight (contiguity) matrices
 p utest module to test for a U-shaped relationship

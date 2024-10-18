@@ -318,11 +318,11 @@ This option can not be combined with the {cmd:by} option.
 
 {p 4 8}
 {cmd:predict_het(}{it:varlist,numlist}{cmd:)}: when this option is specified, the command outputs tables showing whether the group-level
-and time-invariant variables in {it:varlist} predict groups' estimated event-study effects. By default,
-with this option the command produces one table per event-study effect estimated, each displaying the coefficients from regressions of the group-level estimate of the event-study effect on the variables in
-{it:varlist}. The p-value of a test that all coefficients are equal to zero is shown below each table. If you are only interested in predicting a subset of
-the event-study effects estimated, you can specify that subset inside {it:numlist}. You always need to put a comma after
-{it:varlist}, even if you are not including a specific {it:numlist}.  
+and time-invariant variables in {it:varlist} predict groups' estimated event-study effects. By default, with this option the command produces one table per event-study effect estimated, each displaying the coefficients from regressions of the group-level estimate of the event-study effect on the variables in {it:varlist}. This method to analyze 
+heterogeneous treatment effects assumes that switchers' counterfactual outcome evolutions is uncorrelated with the variables in {it:varlist}. To placebo test this condition, 
+the command also shows placebo regression tables, where switchers' outcome evolutions before their treatment changed is regressed on the covariates. 
+The p-value of a test that all coefficients are equal to zero is shown below each table. If you are interested in predicting all the event-study 
+effects estimated, you can specify {it:all} as the option's second argument, instead of {it:numlist}.  
 This option cannot be specified together with {cmd:normalized} or {cmd:controls}. 
 See Section 1.5 of the Web Appendix
 of de Chaisemartin and D'Haultfoeuille (2024) for further details.

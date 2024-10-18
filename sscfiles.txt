@@ -21863,6 +21863,7 @@ fmwww.bc.edu/repec/bocode/u/use10save9.pkg
 fmwww.bc.edu/repec/bocode/u/umeta.ado
 fmwww.bc.edu/repec/bocode/u/udiff_p.ado
 fmwww.bc.edu/repec/bocode/u/umbrella.html
+fmwww.bc.edu/repec/bocode/u/usort.sthlp
 fmwww.bc.edu/repec/bocode/u/ucgof.sthlp
 fmwww.bc.edu/repec/bocode/u/usegz.sthlp
 fmwww.bc.edu/repec/bocode/u/UK500.dta
@@ -21917,6 +21918,7 @@ fmwww.bc.edu/repec/bocode/u/usd.pkg
 fmwww.bc.edu/repec/bocode/u/utest.ado
 fmwww.bc.edu/repec/bocode/u/uirt_sim.sthlp
 fmwww.bc.edu/repec/bocode/u/unemp.ado
+fmwww.bc.edu/repec/bocode/u/usort.pkg
 fmwww.bc.edu/repec/bocode/u/usewsz.ihlp
 fmwww.bc.edu/repec/bocode/u/usecausaldata.sthlp
 fmwww.bc.edu/repec/bocode/u/urcovar.html
@@ -22004,6 +22006,7 @@ fmwww.bc.edu/repec/bocode/u/usrate.dta
 fmwww.bc.edu/repec/bocode/u/uirt_theta.sthlp
 fmwww.bc.edu/repec/bocode/u/uniqlist.ado
 fmwww.bc.edu/repec/bocode/u/uirt_sim.ado
+fmwww.bc.edu/repec/bocode/u/usort.ado
 fmwww.bc.edu/repec/bocode/u/usesome.html
 fmwww.bc.edu/repec/bocode/u/UIS.dta
 fmwww.bc.edu/repec/bocode/u/udiff_lf.mata

@@ -1,0 +1,24 @@
+d 'USORT': module to perform locale-based ascending and descending sort that supports conditional statements, observation ranges, and user-defined handling of substrings and missing values 
+d
+d  This program is a byable sort command, which allows a) custom
+d first and last substrings, including system (.) and all remaining
+d missing values, b) gsort-like syntax for the ascending and
+d descending order, as well as c) conditional [if] and range [in]
+d sorting. The program is built around the Stata sort command and
+d adds the data-sorted flag (sorted by) to the dataset if all rows
+d are selected and applies Mata _collate() otherwise. Sorting large
+d datasets might be taxing on machine memory or disk space. 
+d
+d KW: sort
+d KW: conditional
+d KW: descending order
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20241017
+d
+d Author: Ilya Bolotov, Prague University of Economics and Business
+d Support: email ilya.bolotov@@vse.cz
+d
+f usort.ado
+f usort.sthlp
