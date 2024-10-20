@@ -1,7 +1,7 @@
 {smcl}
-{* 28Sep2024}{...}
+{* 15Oct2024}{...}
 {hi:help graphfunctions}{...}
-{right:{browse "https://github.com/asjadnaqvi/stata-graphfunctions":graphfunctions v1.0 (GitHub)}}
+{right:{browse "https://github.com/asjadnaqvi/stata-graphfunctions":graphfunctions v1.4 (GitHub)}}
 
 
 {title:GRAPH FUNCTIONS}: 
@@ -12,6 +12,9 @@ This package contains the following program(s):
 {hline}
 
 {stata help labsplit:labsplit}   Various options for wrapping labels.
+{stata help catspline:catspline}  Generate Catmull-Rom splines.
+{stata help arc:arc}        Draw an arc between two points.
+{stata help shapes:shapes}     Draw shapes. Users can also use {stata help shape:shape}.
 
 {hline}
 
@@ -19,20 +22,6 @@ This package contains the following program(s):
 {title:Examples}
 
 See {browse "https://github.com/asjadnaqvi/stata-graphfunctions":GitHub}.
-
-
-{title:Package details}
-
-Version      : {bf:graphfunctions} v1.0
-This release : 28 Sep 2024
-First release: 28 Sep 2024
-Repository   : {browse "https://github.com/asjadnaqvi/stata-graphfunctions":GitHub}
-License      : {browse "https://opensource.org/licenses/MIT":MIT}
-
-Author       : {browse "https://github.com/asjadnaqvi":Asjad Naqvi}
-E-mail       : asjadnaqvi@gmail.com
-Twitter/X    : {browse "https://x.com/AsjadNaqvi":@AsjadNaqvi}
-
 
 
 {title:Feedback}
@@ -44,15 +33,29 @@ Please submit bugs, errors, feature requests on {browse "https://github.com/asja
 
 Suggested citation guidlines for this package:
 
-Naqvi, A. (2024). Stata package "graphfunctions" version 1.0. Release date 28 September 2024. https://github.com/asjadnaqvi/stata-graphfunctions.
+Naqvi, A. (2024). Stata package "graphfunctions" version 1.4. Release date 14 October 2024. https://github.com/asjadnaqvi/stata-graphfunctions.
 
 @software{graphfunctions,
    author = {Naqvi, Asjad},
    title = {Stata package ``graphfunctions''},
    url = {https://github.com/asjadnaqvi/stata-graphfunctions},
-   version = {1.0},
-   date = {2024-09-28}
+   version = {1.4},
+   date = {2024-10-15}
 }
+
+
+{title:Package details}
+
+Version      : {bf:graphfunctions} v1.4
+This release : 15 Oct 2024
+First release: 28 Sep 2024
+Repository   : {browse "https://github.com/asjadnaqvi/stata-graphfunctions":GitHub}
+License      : {browse "https://opensource.org/licenses/MIT":MIT}
+
+Author       : {browse "https://github.com/asjadnaqvi":Asjad Naqvi}
+E-mail       : asjadnaqvi@gmail.com
+Twitter/X    : {browse "https://x.com/AsjadNaqvi":@AsjadNaqvi}
+
 
 {title:Other packages}
 

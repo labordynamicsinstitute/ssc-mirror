@@ -1,3 +1,4 @@
+*! 3.0.1 NJC 19 October 2024 
 *! 3.0.0 NJC 23 September 2024 
 *! 2.0.2 NJC 10 December 2010 
 * 2.0.1 NJC 18 May 2010 
@@ -10,7 +11,7 @@
 program catplot
 	version 8
 	
-	capture syntax [if] [in] [fweight aweight iweight/] ///
+	syntax [if] [in] [fweight aweight iweight/] ///
 	, OVER1(str asis) [PERCent(varlist) PERCent2 FRaction(varlist) FRaction2   ///
 	YTItle(str asis) OVER2(str asis) by(str asis) recast(str) * ]
 

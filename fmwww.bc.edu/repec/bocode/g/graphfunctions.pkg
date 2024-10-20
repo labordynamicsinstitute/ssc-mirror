@@ -9,11 +9,19 @@ d KW: word wrap
 d
 d Requires: Stata version 15 
 d
-d Distribution-Date: 20240929
+d Distribution-Date: 20241019
 d
 d Author: Asjad Naqvi, Austrian Institute of Economic Research (WIFO)
 d Support: email asjadnaqvi@@gmail.com
 d
 f graphfunctions.sthlp
+f ../a/arc.ado
+f ../a/arc.sthlp
+f ../c/catspline.ado
+f ../c/catspline.sthlp
 f ../l/labsplit.ado
 f ../l/labsplit.sthlp
+f ../s/shape.ado
+f ../s/shape.sthlp
+f ../s/shapes.ado
+f ../s/shapes.sthlp
