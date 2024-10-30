@@ -111,14 +111,14 @@ The first example explores eating, and the second explores solitary TV use (watc
 {phang2}. {stata "timeusex exercise, diaryid(personid diaryid) diaryst(4)":timeusex exercise, diaryid(personid diaryid) diaryst(4)}{p_end}
 
 
-{title:Author}
+{title:Author:}
 
 {pstd} Juana Lamote de Grignon Pérez, Centre for Time Use Research (UCL), juana.lamote@gmail.com
 
 {pstd} Thanks for citing this software as follows:
 
 {pmore}
-Lamote de Grignon, J. (2024). timeusex: Stata module to extract detailed time use information for a single activity. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
+Lamote de Grignon, J. (2024). timeuse: Stata package to facilitate the manipulation of diary-based time-use data. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
 
 
 {title:Acknowledgments}

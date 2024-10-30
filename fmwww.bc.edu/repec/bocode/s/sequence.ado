@@ -200,7 +200,7 @@ disp as text "the new file has `endN' episodes (Avg. of " %3.1f `mean2' " episod
 
 	else {
 	
-		disp as error "The variable tslot does not value the same values across diaries. Fix and run program again"
+		disp as error "The variable tslot does not take the same values across diaries. Fix and run program again"
 		 
 	}
 

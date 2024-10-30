@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3  16apr2024}{...}
+{* *! version 1.4.0  11oct2024}{...}
 {viewerjumpto "Syntax" "styletextab##syntax"}{...}
 {viewerjumpto "Description" "styletextab##description"}{...}
 {viewerjumpto "Options" "styletextab##options"}{...}
@@ -32,13 +32,13 @@
 {synopt:[{cmd:no}]{opt book:tabs}}specify whether to use LaTeX booktabs rules (default is {opt booktabs}){p_end}
 {synopt:{opth lab:el(styletextab##marker:marker)}}label the table for cross-referencing{p_end}
 {synopt:{opt ls:cape}}wrap the table in a LaTeX {it:landscape} environment{p_end}
-{synopt:{cmdab:usep:ackage(}{it:pkg}[{cmd:,} {help styletextab##pkgopts:{it:pkg_opts}}]{cmd:)}}load a LaTeX package{p_end}
+{synopt:{cmdab:usep:ackage(}{help styletextab##usepackage:{it:pkg}}[{cmd:,} {help styletextab##pkgopts:{it:pkg_opts}}]{cmd:)}}load a LaTeX package{p_end}
 {synopt:{cmdab:before:text(}{it:strlist}{cmd:)}}add text before table{p_end}
 {synopt:{cmdab:after:text(}{it:strlist}{cmd:)}}add text after table{p_end}
 {synopt:{cmd:pt(}{it:#}{cmd:)}}set the size of the main font used in the document{p_end}
 {synopt:{cmdab:paper:size(}{it:papersize}{cmd:)}}set the paper size{p_end}
 {synopt:{cmdab:tabs:ize(}{it:fontsize}{cmd:)}}set the size of the font used in the table{p_end}
-
+{synopt:{cmdab:inj:ect(}{help styletextab##rownum:{it:rownum}}{cmd:,} {help styletextab##injectopts:{it:inject_opts}}{cmd:)}}inject lines of LaTeX code within the {it:tabular} environment{p_end}
 {synoptline}
 
 {synoptset 28}{...}
@@ -48,6 +48,13 @@
 {synopt:{opth opt:(styletextab##optlist:optlist)}|{opt opts(optlist)}}specify the list of options for the LaTeX package loaded{p_end}
 {synopt:{opt pre}}specify whether the LaTeX package should be loaded at the beginning of the preamble right after {it:\documentclass{}} (default is to add it to the end of the preamble){p_end}
 {synopt:{cmdab:n:extlines(}{it:strlist}{cmd:)}}add line(s) of text after the package is loaded{p_end}
+{synoptline}
+
+{synoptset 28}{...}
+{marker injectopts}{...}
+{synopthdr:inject_opts}
+{synoptline}
+{synopt:{cmdab:n:extlines(}{it:strlist}{cmd:)}}add line(s) of LaTeX code after the specified row number{p_end}
 {synoptline}
 
 {marker marker}{...}
@@ -72,6 +79,23 @@ or in the form
 {p 8 8 2} {it:]{package}}{p_end}
 
 {p 8}if {opt opts()} is used.
+
+{marker rownum}{...}
+{phang}
+{it:rownum} specifies the row number within the {it:tabular} environment.
+For example, in a {it:tabular} environment with 16 lines of code in the form
+
+{p 9}{it:# }{c |}{space 1}{it:line}{p_end}
+{p 8}{hline 3}{c +}{hline 15}{p_end}
+{p 8}{space 1}{it:1 }{c |}{space 1}{it:\begin{tabular}}{p_end}
+{p 8}{space 1}{it:2 }{c |}{space 5}{it:row#1 \\}{p_end}
+{p 8}{space 1}{it:3 }{c |}{space 5}{it:row#2 \\}{p_end}
+{p 8}{space 1}{it:. }{c |}{space 5}{it:...}{p_end}
+{p 8}{space 0}{it:15 }{c |}{space 5}{it:row#14 \\}{p_end}
+{p 8}{space 0}{it:NA }{c |}{space 1}{it:\end{tabular}}{p_end}
+{p 8}{hline 3}{c BT}{hline 15}{p_end}
+
+{p 8}{it:rownum} can take any (integer) value from 1 to 15.
 
 
 {marker description}{...}
@@ -126,9 +150,9 @@ Similarly, if the {opt saving()} option is omitted,
 {phang}
 {cmd:lscape} invokes LaTeX's {bf:pdflscape} package to wrap the table in a landscape layout. This makes it easier to view tables that are too wide to fit in a portait page (for example, a regression comparison table with more than 5-6 models).
 
+{marker usepackage}{...}
 {phang}
-{cmdab:usep:ackage(}{it:pkg}[{cmd:,} {help styletextab##pkgopts:{it:pkg_opts}}]{cmd:)} specifies a LaTeX package to be included in the document.
-{cmd:usepackage()} may be specified multiple times to add packages in the specified order.
+{cmd:usepackage(}{it:pkg}[{cmd:,} {help styletextab##pkgopts:{it:pkg_opts}}]{cmd:)} specifies a LaTeX package to be included in the document. {cmd:usepackage()} may be specified multiple times to add packages in the specified order.
 
 {phang2}
 {it:pkg_opts} are
@@ -137,9 +161,9 @@ Similarly, if the {opt saving()} option is omitted,
 {opt nextlines(strlist)}.
 
 {phang3}
-{opth opt:(styletextab##optlist:optlist)} specifies the set of options for the LaTeX package loaded.
+{opt opt(optlist)} specifies the set of options for the LaTeX package loaded.
 {opt opts()} is the multiline version of {cmd:opt()}, putting each option to its own line,
-which is useful for quickly commenting and uncommenting distinct options to see their effects.
+which is useful for quickly commenting and uncommenting distinct options to observe their effects.
 
 {phang3}
 {opt pre} specifies whether the LaTeX package should be loaded at the beginning of the preamble (the default is to load the package at the end of the preamble).
@@ -150,8 +174,7 @@ Multiple lines can be added by using double quotes,
 i.e., specify {it:strlist} as "{it:First line}" "{it:Second line}" etc.
 
 {phang}
-{opt beforetext(strlist)} and {opt aftertext(strlist)}
-add text before and after the table
+{opt beforetext(strlist)} and {opt aftertext(strlist)} add text before and after the table
 (relevant only if {opt fragment} and {opt tableonly} options are omitted).
 Multiple lines of text can be added by using double quotes,
 i.e., specify {it:strlist} as "{it:First line}" "{it:Second line}" etc.
@@ -180,6 +203,31 @@ Common options are {it:a4} for A4 paper, {it:legal} for Legal paper, and {it:let
 {opt tabsize(fontsize)} sets the size of the font used in the table.
 {it:fontsize} can be one of {it:tiny}, {it:scriptsize}, {it:footnotesize},
 {it:small}, {it:normalsize}, {it:large}, {it:Large}, {it:LARGE}, {it:huge}, and {it:Huge}.
+
+{marker inject}{...}
+{phang}
+{cmd:inject(}{it:rownum}{cmd:,} {help styletextab##inject_opts:{it:inject_opts}}{cmd:)} specifies a new line of LaTeX code to be inserted in the {it:tabular} environment right after the row specified by {it:rownum}.
+It is used for post-processing the table.
+For example, you may want to add a custom column header after the table has been created,
+without having to tinker with the {help collect} commands.
+{cmd:inject()} may be specified multiple times.
+
+{phang2}
+Currently, the only {it:inject_opts} is
+{opt nextlines(strlist)}.
+
+{phang3}
+{opt nextlines(strlist)} adds the text {it:string} after the row specified by {it:rownum}.
+Multiple lines can be added by using double quotes,
+i.e., specify {it:strlist} as "{it:First line}" "{it:Second line}" etc.
+
+{phang2}
+Note that this option works by modifying the "fragment"
+(the {it:tabular} environment produced by earlier commands).
+When it's used, the output becomes the new "fragment".
+Therefore, edits accumulate rather than overwrite the original table.
+It's also not possible to revert to a previous state;
+you will need to re-export the table.
 
 
 {marker remarks}{...}
@@ -231,7 +279,8 @@ It also allows for simple reporting with the ability to add text before or after
 {cmd:styletextab} operates by dissecting a .tex table file into its constituent sections
 and utilizing {help file} commands to reformat and improve the look of the tables.
 An advantage of {cmd:styletextab} is its ability to transition seamlessly between
-different modes without the need to recreate the table from scratch.
+different modes without the need to recreate the table from scratch
+(with the exception of {opt inject()} option, as it modifies the {it:tabular} environment).
 For example, one can go from portrait to landscape mode and then back to portrait
 mode without needing to re-export the table at each step.
 
@@ -285,6 +334,28 @@ mode without needing to re-export the table at each step.
 {phang}{cmd:> {space 4}before(Let's see how \dq{they} look:){space 24} ///}{p_end}
 {phang}{cmd:> {space 4}after(This text comes after Table~\ref{fig:reg1}. \lipsum[2]) ///}{p_end}
 {phang}{cmd:> {space 4}after(\lipsum[3])}{p_end}
+
+{pstd}Add custom header and rows:{p_end}
+{phang}{cmd:. styletextab, {space 52} ///}{p_end}
+{phang}{cmd:> {space 4}pt(11) paper(a4){space 45} ///}{p_end}
+{phang}{cmd:> {space 4}tabsize(small){space 47} ///}{p_end}
+{phang}{cmd:> {space 4}label(fig:reg1){space 46} ///}{p_end}
+{phang}{cmd:> {space 4}usepackage(geometry, opt(margin=1in) pre){space 20} ///}{p_end}
+{phang}{cmd:> {space 4}usepackage(lipsum, nextl(%Preamble ends here!)){space 14} ///}{p_end}
+{phang}{cmd:> {space 4}usepackage(parskip, pre){space 37} ///}{p_end}
+{phang}{cmd:> {space 4}before(\section*{Regression models}){space 25} ///}{p_end}
+{phang}{cmd:> {space 4}before("Table~\ref{fig:reg1} presents regressions."{space 10} ///}{p_end}
+{phang}{cmd:> {space 11}"These regressions are very interesting." \lipsum[1]){space 1} ///}{p_end}
+{phang}{cmd:> {space 4}before(Let's see how \dq{they} look:){space 24} ///}{p_end}
+{phang}{cmd:> {space 4}after(This text comes after Table~\ref{fig:reg1}. \lipsum[2]) ///}{p_end}
+{phang}{cmd:> {space 4}after(\lipsum[3]) {space 43} ///}{p_end}
+{phang}{cmd:> {space 4}inject(2 , n("\textbf{DV:} & \multicolumn{4}{c}{Price} \\" {space 2} ///}{p_end}
+{phang}{cmd:> {space 17}"\cmidrule{2-5}")) {space 29} ///}{p_end}
+{phang}{cmd:> {space 4}inject(4 , n("\hspace{-.5em}\textit{Main IV:} \\[.5em]")) {space 3} ///}{p_end}
+{phang}{cmd:> {space 4}inject(6 , n("\hspace{-.5em}\textit{Controls:} \\[.5em]")) {space 2} ///}{p_end}
+{phang}{cmd:> {space 4}inject(11, n("Fixed effects & \multicolumn{1}{c}{No} & & " {space 2} ///}{p_end}
+{phang}{cmd:> {space 33}"\multicolumn{1}{c}{No} & \\" {space 2} ///}{p_end}
+{phang}{cmd:> {space 17}"\midrule"))}{p_end}
 
 {pstd}Keep the {it:table} environment only:{p_end}
 {phang}{cmd:. styletextab, tableonly}{p_end}

@@ -61,9 +61,9 @@ In addition to the variables specified in the argument, the following variable S
 {title:Examples}
 
 {p}
-The following lines of code load the dataset "example_diary.dta" -an episode file where the episodes of activity are defined by the following variables: 
+The following lines of code load the dataset "diary.dta" -an episode file where the episodes of activity are defined by the following variables: 
 primary activity, secondary activity, copresence, location, and enjoyment among others- and creates new episode files defined by fewer variables. 
-
+Describing the package, {stata "ssc describe timeuse":ssc describe timeuse} may be needed before loading the example datasets. 
 
 {bf:Example 1: episodes defined by primary activity only} 
 
@@ -94,15 +94,14 @@ This may be useful if you are interested in exploring how often people change th
 {phang2}. {stata "sequencex enjoyment, diaryid(personid diaryid) diaryst(4)":sequencex enjoyment, diaryid(personid diaryid) diaryst(4)}{p_end}
 
 
-{title:Author}
+{title:Author:}
 
 {pstd} Juana Lamote de Grignon Pérez, Centre for Time Use Research (UCL), juana.lamote@gmail.com
 
 {pstd} Thanks for citing this software as follows:
 
 {pmore}
-Lamote de Grignon, J. (2024). sequencex: Stata module to create episode files from other episode files. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
-
+Lamote de Grignon, J. (2024). timeuse: Stata package to facilitate the manipulation of diary-based time-use data. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
 
 
 {title:Acknowledgments}

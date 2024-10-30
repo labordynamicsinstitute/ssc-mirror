@@ -109,6 +109,7 @@ p circstat modules to calculate circular statistics
 p circular module for circular statistics
 p circularkde module to perform kernel density estimation for circular data
 p cisd module to compute confidence intervals for standard deviations
+p cisets module for for confidence interval sets 
 p cistat module to produce confidence intervals in matrix form
 p civplot module to plot confidence intervals vertically
 p ciw module for binomial confidence intervals for proportions using Wilson scores

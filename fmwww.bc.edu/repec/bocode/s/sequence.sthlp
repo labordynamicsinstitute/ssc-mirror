@@ -68,6 +68,7 @@ In the first example the episodes are defined by the primary activity only.
 In the second example the location field is used to define the episodes. 
 In the third example, three variables are used: the primary activity, the secondary activity and the location.
 Note how the number of episodes drops when fewer variables are used to define the episodes. The diary starts at 4:00 am and the diaries are uniquely identified by the variables 'personid' and 'diaryid'.
+Describing the package, {stata "ssc describe timeuse":ssc describe timeuse} may be needed before loading the example datasets. 
 
 {bf:Example 1: episodes defined by primary only} 
 
@@ -87,14 +88,15 @@ Note how the number of episodes drops when fewer variables are used to define th
 {phang2}. {stata "use calendar, clear":use calendar, clear}{p_end}
 {phang2}. {stata "sequence primary secondary location, diaryid(personid diaryid) diaryst(4)":sequence primary secondary location, diaryid(personid diaryid) diaryst(4)}{p_end}
 
-{title:Author}
+
+{title:Author:}
 
 {pstd} Juana Lamote de Grignon Pérez, Centre for Time Use Research (UCL), juana.lamote@gmail.com
 
 {pstd} Thanks for citing this software as follows:
 
 {pmore}
-Lamote de Grignon, J. (2024). sequence: Stata module to create episode files from calendar files. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
+Lamote de Grignon, J. (2024). timeuse: Stata package to facilitate the manipulation of diary-based time-use data. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
 
 
 {title:Acknowledgments}

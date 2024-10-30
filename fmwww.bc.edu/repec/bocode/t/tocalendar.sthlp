@@ -64,7 +64,7 @@ If you have an episode file these variables should be there although they may ha
 
 {p}
 The following lines of code load the dataset "diary.dta" and convert it into a diary level file -where each row of data represents a day. episode file defined by the primary activity, secondary activity and location. The diary starts at 4:00 am and the diary identifier is the variable 'id'.
-
+Describing the package, {stata "ssc describe timeuse":ssc describe timeuse} may be needed before loading the example datasets. 
 
 {phang2}. {stata "net get timeuse":net get timeuse}{p_end}
 {phang2}. {stata "use diary, clear":use example_diary, clear}{p_end}
@@ -78,7 +78,7 @@ The following lines of code load the dataset "diary.dta" and convert it into a d
 {pstd} Thanks for citing this software as follows:
 
 {pmore}
-Lamote de Grignon, J. (2024). tocalendar: Stata module to transform episode files into calendar files. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
+Lamote de Grignon, J. (2024). timeuse: Stata package to facilitate the manipulation of diary-based time-use data. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
 
 {title:Acknowledgments:}
 

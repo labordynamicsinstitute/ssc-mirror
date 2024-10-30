@@ -67,6 +67,7 @@ The following examples start by loading the dataset "diary.dta" and run the qual
 In the first example, the report shows that the diary file is unproblematic. 
 In the remaining examples, we introduce errors and show how the report displays them. 
 After the errors are fixed (by either actually fixing them or dropping the diaries that have problems), the program {cmd:epichecks} is run again to show how the report is clean once the problems have been solved. 
+Describing the package, {stata "ssc describe timeuse":ssc describe timeuse} may be needed before loading the example datasets. 
 
 
 {bf:Example 1: a file without problems}
@@ -116,7 +117,7 @@ After the errors are fixed (by either actually fixing them or dropping the diari
 {pstd} Thanks for citing this software as follows:
 
 {pmore}
-Lamote de Grignon, J. (2024). epichecks: Stata module to detect errors in episode files. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
+Lamote de Grignon, J. (2024). timeuse: Stata package to facilitate the manipulation of diary-based time-use data. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
 
 
 

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0  07oct2024}{...}
+{* *! version 1.1.1  07oct2024}{...}
 {viewerjumpto "Syntax" "usort##syntax"}{...}
 {viewerjumpto "Description" "usort##description"}{...}
 {viewerjumpto "Methods and formulas" "usort##methods"}{...}
@@ -185,6 +185,9 @@ store interim results in a temporary file.
 {pstd}Sort observations in ascending order by {cmd:price}:{p_end}
 {phang2}{cmd:. usort price}
 
+{pstd}Sort observations in ascending order by {cmd:rep78}, missing first:{p_end}
+{phang2}{cmd:. usort rep78, mfirst}
+
 {pstd}Sort observations in ascending order by {cmd:make} in Czech, grouped by
 {cmd:foreign}, with VW models placed at the top:{p_end}
 {phang2}{cmd:. bysort foreign: usort make, first(VW, pos) loc(cs_CS)}
@@ -212,3 +215,7 @@ A special thanks to Leonardo Guizzetti for requesting and testing this program.
 Thanks for citing this software and my works on the topic:
 
 {p 8 8 2}
+    Bolotov, I. (2024). USORT: Stata module to perform locale-based ascending
+    and descending sort that supports conditional statements, observation
+    ranges, and user-defined handling of substrings and missing values.
+    Available from {browse "https://ideas.repec.org/c/boc/bocode/s459385.html"}.

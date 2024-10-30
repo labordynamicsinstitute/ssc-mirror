@@ -1,0 +1,28 @@
+d 'CISETS': module for for confidence interval sets 
+d
+d  cisets computes confidence interval sets for population means,
+d proportions, variances, standard deviations, geometric means,
+d harmonic means, and centiles.  It is a wrapper for variously ci
+d (for means, proportions, variances and standard deviations);
+d ameans (for geometric and harmonic means); and centile.   All
+d syntaxes include cisets followed by a subcommand which specifies
+d a particular summary measure. There are two flavours of commands
+d otherwise, for variables and for groups of observations. 
+d Confidence interval sets are temporary datasets that may be saved
+d as permanent datasets and in turn combined with other sets using
+d append. That allows graphical and other applications. 
+d
+d KW: summary statistics
+d KW: confidence intervals
+d KW: graphics 
+d
+d Requires: Stata version 14.1
+d
+d Distribution-Date: 20241029
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f cisets.ado
+f cisets.sthlp
+f cisets_examples.do

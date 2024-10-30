@@ -1,4 +1,4 @@
-*! version 1.1.0  07oct2024  I I Bolotov
+*! version 1.1.1  07oct2024  I I Bolotov
 program def usort, sclass byable(onecall)
 	version 14
 	/*
@@ -29,12 +29,12 @@ program def usort, sclass byable(onecall)
 			preserve
 			qui  keep if `byid' == `i'
 		   `=cond("`_byrc0'"!="","cap","")' _sort `0'  // (ignore) group errors 
-			cap  append  using  `tmpf',     force
-			qui  drop           `byid'
 			qui  save           `tmpf',     replace
 			restore
+			qui  drop if `byid' == `i'
+			qui  append  using  `tmpf',     force
 		}    /* Do sort on the by- and sortvars to set the data-sorted flag. */
-		qui use `tmpf',  clear
+		qui drop         `byid'
 		/* Save each sortvar into a string (`svl`) or numeric (`nvl`) macro. */
 		foreach  var of  varl `_byvars'  `s(varlist)' {
 			cap conf str var  `var'
@@ -75,8 +75,17 @@ program def _sort, sclass
 		format(string) codepoint(integer 129769) *							///
 	]
 	// adjust and preprocess options                                            
+	if ustrregexm("`anything'", "[+-]\s+") error 100
 	loc anything    = subinstr("`anything'", "+", "", .) /* strip plus signs */
-	loc varlist     = subinstr("`anything'", "-", "", .) /* obtain variables */
+	foreach s in   `anything' {							 /* expand wildcards */
+		loc sign    = cond(ustrregexm("`s'", "^\s*-\s*"), "-", "")
+		qui ds     `=     ustrregexrf("`s'", "^\s*-\s*",  "",  . )'
+		mata:         st_local("signlist", st_local("signlist") + " "     + ///
+			         invtokens( "`sign'" :+  tokens(st_global("r(varlist)")) ))
+		mata:         st_local("varlist",  st_local("varlist" ) + " "     + ///
+			                                        st_global("r(varlist)"))
+	}
+	loc anything    "`signlist'"
 	if ("`mfirst'" != ""                          )  & "`ignorem'" == ""	///
 	mata:             st_local("first",invtokens("." :+ (tokens(            ///
 		                 /* sort .-.z first */ c("alpha"))) )  +      " .")
@@ -84,17 +93,9 @@ program def _sort, sclass
 	mata:             st_local( "last",invtokens("." :+ (tokens(strreverse(	///
 		                 /* sort .-.z  last */ c("alpha")))))  +      " .")
 	loc format      =     cond("`format'"  != "",   "`format'",  "%32.16f")
+	conf form      `format'
 	loc locale      =     cond("`locale'"  != "",   "`locale'",				///
 													c(locale_functions)   )
-	****
-	if "`anything'"  == ""                                                    {
-		di as err "varlist required"
-		exit  100
-	}
-	if strpos("`anything'", "- ") | ustrregexm("`anything'", "[^ +-_0-9A-z]") {
-		error 100
-	}
-	conf form `format'
 	****
 	tempvar  select
 	tempname n p s
@@ -197,12 +198,15 @@ program def _sort, sclass
 	   which are sorted on columns 2 through the number of sortvars + 1, with a
 	   negative index indicating descending order in a sortfvar.             */
 	qui sum `select'								   // r(sum) = number of 1s 
-	mata:   `p'  = strtoreal(sort((strofreal(1::st_numscalar("r(sum)")),    ///
-		           st_sdata(., tokens("`varlist'"), "`select'")),           ///
-		           (  2..(cols(tokens("`varlist'")) + 1))            :*     ///
-		           strtoreal(tokens(ustrregexra(ustrregexra("`anything'",   ///
-		           "(^|\s+)\w+", " 1"), "(^|\s+)-\w+", " -1"))))            ///
-		     )[.,1]
+	mata:   `p' =                                                           ///
+		    sort((substr("0" * strlen(strofreal(st_numscalar("r(sum)"))) :+ ///
+		          strofreal(1::st_numscalar("r(sum)")),                     ///
+		         -strlen(strofreal(st_numscalar("r(sum)"))), .),            ///
+		          st_sdata(., tokens("`varlist'"), "`select'")),            ///
+		         (2..(cols(tokens("`varlist'")) + 1))                    :* ///
+		         strtoreal(tokens(ustrregexra(ustrregexra("`anything'",     ///
+		         "(^|\s+)\w+", " 1"), "(^|\s+)-\w+", " -1")))               ///
+		    )[.,1]
 
 	// collate for all rows with or a subset without adding the data-sorted flag
 	restore
@@ -218,19 +222,21 @@ program def _sort, sclass
 		   the matrices `s' and `n' in Mata, replace them with `p', perform the
 		   regular Stata `sort` (i.e., jumbling and collation), and replace the
 		   `p'-s with the sortvar values collated on the permutation vector. */
-		mata: if ("`svl'" != "") `s' =  st_sdata(.,      tokens("`svl'"));  ///
-			                           st_sstore(.,      tokens("`svl'"),   ///
-			          strofreal( `p' #        J(1,ustrwordcount("`svl'"),1)));;
-		mata: if ("`nvl'" != "") `n' =   st_data(.,      tokens("`nvl'"));  ///
-			                            st_store(.,      tokens("`nvl'"),   ///
-			                   ( `p' #        J(1,ustrwordcount("`nvl'"),1)));;
-		sort `varlist',          `options'			   // sort and add the flag 
+		mata: if ("`svl'" != "") {  `s' =  st_sdata(.,    tokens("`svl'")); ///
+			                              st_sstore(.,    tokens("`svl'"),  ///
+			              J(1,ustrwordcount("`svl'"),               `p' ) ); };
+		mata: if ("`nvl'" != "") {  `n' =   st_data(.,    tokens("`nvl'")); ///
+			                               st_store(.,    tokens("`nvl'"),  ///
+			              J(1,ustrwordcount("`nvl'"),  strtoreal(   `p' ))); };
+		sort `varlist',     `options'				   // sort and add the flag 
 		if ("`svl'" != "") {
-			mata:  _collate(`s', `p'); st_sstore(.,       tokens("`svl'"), `s')
+			mata:                        _collate(`s', strtoreal(   `p' )); ///
+				                        st_sstore(.,      tokens("`svl'"), `s')
 			mata: mata drop `s'                        // minimize memory usage 
 		}
 		if ("`nvl'" != "") {
-			mata:  _collate(`n', `p');  st_store(.,       tokens("`nvl'"), `n')
+			mata:                        _collate(`n', strtoreal(   `p' )); ///
+				                         st_store(.,      tokens("`nvl'"), `n')
 			mata: mata drop `n'                        // minimize memory usage 
 		}
 		sret loc  varlist   `varlist'				   // pass sortvars trhough 
@@ -241,19 +247,21 @@ program def _sort, sclass
 		foreach  var of  varl *         {
 			cap conf str var  `var'
 			if  ! _rc {
-				mata:    _collate((`s'= st_sdata(., "`var'", "`select'")), `p')
-				mata:                  st_sstore(., "`var'", "`select'",   `s')
+				mata:    _collate((`s'=  st_sdata(., "`var'", "`select'")), ///
+					                    strtoreal(    `p'))
+				mata:                   st_sstore(., "`var'", "`select'",  `s')
 				mata:    mata drop `s'                 // minimize memory usage 
 			}
 			else      {
-				mata:    _collate((`n'=  st_data(., "`var'", "`select'")), `p')
-				mata:                   st_store(., "`var'", "`select'",   `n')
+				mata:    _collate((`n'=   st_data(., "`var'", "`select'")), ///
+					                    strtoreal(    `p'))
+				mata:                    st_store(., "`var'", "`select'",  `n')
 				mata:    mata drop `n'                 // minimize memory usage 
 			}
 		}
 	}
 
 	// set a data-have-changed flag if `p' results in collation of variable rows
-	mata: if (`p' != (1::rows(`p'))) st_updata(1);;
+	mata: if (`p' != sort(`p', 1))      st_updata(1);;
 	mata: mata drop `p'                                // minimize memory usage 
 end

@@ -59,6 +59,7 @@ The program creates a diary level file with the following variables:
 {p}
 The following example loads the dataset "diary.dta" and runs the program {cmd:timeuse} to create a diary level file with time use information for the categories of activity included in the variable primary.
 After running the problem a small report will be displayed in the results window that will tell the user whether or not the variables created containing the time spent on each category of activity add up to 1440 or not. That the categories of activity do not add up to 1440 is not necessarily a problem. Datasets often have missing values and in those cases, it is expected that the sum of the different activities does not add up to 1440 minutes.
+Describing the package, {stata "ssc describe timeuse":ssc describe timeuse} may be needed before loading the example datasets. 
 
 {bf:Example 1: time spent across the different categories of 'primary'} 
 
@@ -89,13 +90,16 @@ To have categories of activity adding up to 1440 minutes, we give valid values t
 {pstd} Thanks for citing this software as follows:
 
 {pmore}
-Lamote de Grignon, J. (2024). timeuse: Stata module to extract basic time use information for multiple activities. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
+Lamote de Grignon, J. (2024). timeuse: Stata package to facilitate the manipulation of diary-based time-use data. Available from: {browse "https://ideas.repec.org/c/boc/bocode/s459346.html":https://ideas.repec.org/c/boc/bocode/s459346.html.}
 
 
 
-{title:Acknowledgments:}
+
+
+{title:Acknowledgments}
 
 {pstd} I am grateful to Elena Mylona and Margarita Vega Rapún for their feedback during the development of the program.
+
 
 
 

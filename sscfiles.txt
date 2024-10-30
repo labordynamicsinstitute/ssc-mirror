@@ -15925,6 +15925,7 @@ fmwww.bc.edu/repec/bocode/c/cauchyevaluator.ado
 fmwww.bc.edu/repec/bocode/c/clocktomins.sthlp
 fmwww.bc.edu/repec/bocode/c/contour.ado
 fmwww.bc.edu/repec/bocode/c/cprdenttype.ado
+fmwww.bc.edu/repec/bocode/c/clocktomin.ado
 fmwww.bc.edu/repec/bocode/c/circular.pkg
 fmwww.bc.edu/repec/bocode/c/circrplot.ado
 fmwww.bc.edu/repec/bocode/c/createsharedesc.ado
@@ -16019,6 +16020,7 @@ fmwww.bc.edu/repec/bocode/c/chinagcode-1.sthlp
 fmwww.bc.edu/repec/bocode/c/cauchitasinhinnerw2.ado
 fmwww.bc.edu/repec/bocode/c/cleanplots.sthlp
 fmwww.bc.edu/repec/bocode/c/cdist.zip
+fmwww.bc.edu/repec/bocode/c/cisets.ado
 fmwww.bc.edu/repec/bocode/c/countmatch.pkg
 fmwww.bc.edu/repec/bocode/c/circscatter.html
 fmwww.bc.edu/repec/bocode/c/choi_lr_testdata.dta
@@ -16501,6 +16503,7 @@ fmwww.bc.edu/repec/bocode/c/color-vermillion.style
 fmwww.bc.edu/repec/bocode/c/cns.ado
 fmwww.bc.edu/repec/bocode/c/cycleplot.hlp
 fmwww.bc.edu/repec/bocode/c/clarify.pkg
+fmwww.bc.edu/repec/bocode/c/cisets_examples.do
 fmwww.bc.edu/repec/bocode/c/crm.pkg
 fmwww.bc.edu/repec/bocode/c/ceqgraph.sthlp
 fmwww.bc.edu/repec/bocode/c/codebookout.sthlp
@@ -16724,6 +16727,7 @@ fmwww.bc.edu/repec/bocode/c/codebook_ripper.sthlp
 fmwww.bc.edu/repec/bocode/c/cnborder.ado
 fmwww.bc.edu/repec/bocode/c/Cerulli_Zinilli_datanet.pdf
 fmwww.bc.edu/repec/bocode/c/censlope.pdf
+fmwww.bc.edu/repec/bocode/c/clocktomin.sthlp
 fmwww.bc.edu/repec/bocode/c/clr3bou.ado
 fmwww.bc.edu/repec/bocode/c/cpiget.sthlp
 fmwww.bc.edu/repec/bocode/c/colelms.html
@@ -17079,6 +17083,7 @@ fmwww.bc.edu/repec/bocode/c/cvar.hlp
 fmwww.bc.edu/repec/bocode/c/ceqeduc.sthlp
 fmwww.bc.edu/repec/bocode/c/circovstr.ado
 fmwww.bc.edu/repec/bocode/c/ckvaredit.html
+fmwww.bc.edu/repec/bocode/c/cisets.sthlp
 fmwww.bc.edu/repec/bocode/c/color-orangebrown.style
 fmwww.bc.edu/repec/bocode/c/centpow.ado
 fmwww.bc.edu/repec/bocode/c/clustsens.ado
@@ -17189,6 +17194,7 @@ fmwww.bc.edu/repec/bocode/c/cprd_browser_medical.sthlp
 fmwww.bc.edu/repec/bocode/c/circsu.html
 fmwww.bc.edu/repec/bocode/c/cs_weakiv_2.4.03.do
 fmwww.bc.edu/repec/bocode/c/cortesti.html
+fmwww.bc.edu/repec/bocode/c/cisets.pkg
 fmwww.bc.edu/repec/bocode/c/catgraph.pkg
 fmwww.bc.edu/repec/bocode/c/cusum9.ado
 fmwww.bc.edu/repec/bocode/c/contrast.html

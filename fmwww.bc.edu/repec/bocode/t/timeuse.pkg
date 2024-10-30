@@ -23,7 +23,7 @@ d KW: episodes
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20240703
+d Distribution-Date: 20241029
 d
 d Author:   Juana Lamote de Grignon Pérez, Centre for Time Use Research (UCL)
 d Support: email juana.lamote@@gmail.com
@@ -34,10 +34,8 @@ f timeusex.ado
 f timeusex.sthlp
 f tocalendar.ado
 f tocalendar.sthlp
-f ../c/clocktominb.ado
-f ../c/clocktominb.sthlp
-f ../c/clocktomine.ado
-f ../c/clocktomine.sthlp
+f ../c/clocktomin.ado
+f ../c/clocktomin.sthlp
 f ../c/clocktomins.ado
 f ../c/clocktomins.sthlp
 f ../e/epichecks.ado

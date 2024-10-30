@@ -1,8 +1,11 @@
-*! version 1.3.1  8jul2024  Gorkem Aksaray <aksarayg@tcd.ie>
+*! version 1.4.0 11oct2024  Gorkem Aksaray <aksarayg@tcd.ie>
 *! Restyle LaTeX tables exported by the collect suite of commands
 *! 
 *! Changelog
 *! ---------
+*!   [1.4.0]
+*!     - Added inject() option to inject lines of LaTeX code after any row
+*!       within the tabular environment.
 *!   [1.3.1]
 *!     - Automatic conversion of hyphens as minus signs was causing special
 *!       characters to disappear. This is now fixed.
@@ -40,7 +43,8 @@ program styletextab, rclass
     forvalues i = 0/`repeated_option_maxcount' {
         local usepackage "`usepackage' USEPackage`i'(string asis)"
         local beforetext "`beforetext' BEFOREtext`i'(string asis)"
-        local  aftertext  "`aftertext'  AFTERtext`i'(string asis)"
+        local  aftertext " `aftertext'  AFTERtext`i'(string asis)"
+        local     inject "    `inject'     INJECT`i'(string asis)"
     }
     
     syntax [using/] [,                                      ///
@@ -53,6 +57,7 @@ program styletextab, rclass
                      `usepackage'                           ///
                      `beforetext'                           ///
                      `aftertext'                            ///
+                     `inject'                               ///
                      pt(numlist min=1 max=1 >=10 <=12 int)  ///
                      PAPERsize(string)                      ///
                      TABSize(string)                        ///
@@ -116,11 +121,11 @@ program styletextab, rclass
     }
     
     capture assert ///
-        inlist("`papersize'", "a0", "a1", "a2", "a3", "a4", "a5", "a6")         | ///
-        inlist("`papersize'", "b0", "b1", "b2", "b3", "b4", "b5", "b6")         | ///
-        inlist("`papersize'", "c0", "c1", "c2", "c3", "c4", "c5", "c6")         | ///
-        inlist("`papersize'", "b0j", "b1j", "b2j", "b3j", "b4j", "b5j", "b6j")  | ///
-        inlist("`papersize'", "ansia", "ansib", "ansic", "ansid", "ansie")      | ///
+        inlist("`papersize'", "a0", "a1", "a2", "a3", "a4", "a5", "a6")        | ///
+        inlist("`papersize'", "b0", "b1", "b2", "b3", "b4", "b5", "b6")        | ///
+        inlist("`papersize'", "c0", "c1", "c2", "c3", "c4", "c5", "c6")        | ///
+        inlist("`papersize'", "b0j", "b1j", "b2j", "b3j", "b4j", "b5j", "b6j") | ///
+        inlist("`papersize'", "ansia", "ansib", "ansic", "ansid", "ansie")     | ///
         inlist("`papersize'", "letter", "executive", "legal", "")
     if _rc == 9 {
         di as err "{p 0 0 2}"
@@ -198,7 +203,7 @@ program styletextab, rclass
                 }
                 tokenize `"`nextlines'"', parse(`"""')
                 while "`1'" != "" {
-                    file write `tf' "`1'" _n
+                    file write `tf' `"`1'"' _n
                     macro shift
                 }
             }
@@ -255,7 +260,7 @@ program styletextab, rclass
                 }
                 tokenize `"`nextlines'"', parse(`"""')
                 while "`1'" != "" {
-                    file write `tf' "`1'" _n
+                    file write `tf' `"`1'"' _n
                     macro shift
                 }
             }
@@ -275,7 +280,7 @@ program styletextab, rclass
                 file write `tf' _n
                 tokenize `"`beforetext`i''"', parse(`"""')
                 while "`1'" != "" {
-                    file write `tf' "`1'" _n
+                    file write `tf' `"`1'"' _n
                     macro shift
                 }
             }
@@ -320,6 +325,7 @@ program styletextab, rclass
     while r(eof) == 0 {
         if strpos(`"`macval(line)'"', "\begin{tabular}") != 0 {
             local keepline = 1
+            local _rownum = 0
         }
         if `keepline' == 1 {
             if "`booktabs'" == "nobooktabs" & strpos(`"`macval(line)'"', "\cmidrule") != 0 {
@@ -340,6 +346,30 @@ program styletextab, rclass
             }
             else {
                 file write `tf' `"`macval(line)'"' _n
+            }
+            
+            // inject
+            if substr(`"`macval(line)'"', -1, 1) != "&" {
+                local ++ _rownum
+            }
+            if strpos(`"`macval(line)'"', "\end{tabular}") != 0 {
+                local _rownum
+            }
+            forvalues i = 0/`repeated_option_maxcount' {
+                if `"`inject`i''"' != "" {
+                    local 0 `"`inject`i''"'
+                    syntax anything(name=rownum id="row number"), ///
+                        Nextlines(string asis)
+                    confirm integer number `rownum'
+                    if "`rownum'" == "`_rownum'" {
+                        tokenize `"`nextlines'"', parse(`"""')
+                        while "`1'" != "" {
+                            file write `tf' `"`1'"' _n
+                            macro shift
+                        }
+                        local inject`i' // consume inject so it's not reused later!
+                    }
+                }
             }
         }
         if strpos(`"`macval(line)'"', "\end{tabular}") != 0 {
@@ -385,7 +415,7 @@ program styletextab, rclass
                 file write `tf' _n
                 tokenize `"`aftertext`i''"', parse(`"""')
                 while "`1'" != "" {
-                    file write `tf' "`1'" _n
+                    file write `tf' `"`1'"' _n
                     macro shift
                 }
             }
