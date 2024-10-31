@@ -5120,6 +5120,7 @@ fmwww.bc.edu/repec/bocode/o/ordplot.hlp
 fmwww.bc.edu/repec/bocode/o/opchar_gs.sthlp
 fmwww.bc.edu/repec/bocode/o/overlay.hlp
 fmwww.bc.edu/repec/bocode/o/outtable.hlp
+fmwww.bc.edu/repec/bocode/o/opl_ma_fb.ado
 fmwww.bc.edu/repec/bocode/o/oparallel.sthlp
 fmwww.bc.edu/repec/bocode/o/outdat.pkg
 fmwww.bc.edu/repec/bocode/o/outreg5.pkg
@@ -5439,6 +5440,7 @@ fmwww.bc.edu/repec/bocode/o/opendf_installpython.ado
 fmwww.bc.edu/repec/bocode/o/oaxaca.pkg
 fmwww.bc.edu/repec/bocode/o/ovbdc.ado
 fmwww.bc.edu/repec/bocode/o/oaxaca8.zip
+fmwww.bc.edu/repec/bocode/o/opl_ma.ado
 fmwww.bc.edu/repec/bocode/o/opendf.sthlp
 fmwww.bc.edu/repec/bocode/o/opendf_dta2csv.ado
 fmwww.bc.edu/repec/bocode/o/odkexport_example.do
@@ -8569,6 +8571,7 @@ fmwww.bc.edu/repec/bocode/n/nctinv.hlp
 fmwww.bc.edu/repec/bocode/n/ndbci.pkg
 fmwww.bc.edu/repec/bocode/n/network_meta.ado
 fmwww.bc.edu/repec/bocode/n/nbinreg.html
+fmwww.bc.edu/repec/bocode/n/nca_power.sthlp
 fmwww.bc.edu/repec/bocode/n/ncfncp.hlp
 fmwww.bc.edu/repec/bocode/n/normi.ado
 fmwww.bc.edu/repec/bocode/n/nct2.hlp
@@ -8768,6 +8771,7 @@ fmwww.bc.edu/repec/bocode/n/nearmrg.sthlp
 fmwww.bc.edu/repec/bocode/n/nproc.hlp
 fmwww.bc.edu/repec/bocode/n/nnest.html
 fmwww.bc.edu/repec/bocode/n/network_map.sthlp
+fmwww.bc.edu/repec/bocode/n/nca_power.ado
 fmwww.bc.edu/repec/bocode/n/nlcorr.ado
 fmwww.bc.edu/repec/bocode/n/nnmatch.ado
 fmwww.bc.edu/repec/bocode/n/network.ado

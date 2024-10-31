@@ -1,5 +1,5 @@
 {smcl}
-{* 10April2024}{...}
+{* 24July2024}{...}
 {cmd:help make_cate}
 {hline}
 
@@ -16,10 +16,11 @@
 {it:outcome}
 {it:features} ,
 {cmd:treatment}{cmd:(}{it:varname}{cmd:)}
-{cmd:model}{cmd:(}{it:model_type}{cmd:)}
 {cmd:new_cate}{cmd:(}{it:name}{cmd:)}
 {cmd:train_cate}{cmd:(}{it:name}{cmd:)}
 {cmd:new_data}{cmd:(}{it:name}{cmd:)}
+[{cmd:model}{cmd:(}{it:model_type}{cmd:)}
+{cmd:type}{cmd:(}{it:algorithm_type}{cmd:)}]
 
 {dlgtab:Inputs}
 
@@ -30,7 +31,7 @@
 
 {dlgtab:Description}
 
-{pstd} {cmd:make_cate} is a command generating conditional average treatment effect (CATE) for both a training dataset and a testing (or new) dataset related to a binary (treated vs. untreated) policy program. It provides the main input for running {helpb opl_tb} (optimal policy learning of a threshold-based policy), {helpb opl_tb_c} (optimal policy learning of a threshold-based policy at specific thresholds), {helpb opl_lc} (optimal policy learning of a 
+{pstd} {cmd:make_cate} is a command generating conditional average treatment effect (CATE) for both a training dataset and a testing (or new) dataset related to a binary (treated vs. untreated) policy program. {cmd:make_cate} uses two distinct algorithms to estimate CATE: (i) the Regression Adjustment (or T-Learner) (Kunzel et al., 2019), and (ii) the Cross-Fitting Augmented Inverse Probability Weighting (CF-AIPW), which has the double-robust property (Kennedy, 2023). {cmd:make_cate} provides the main input for running {helpb opl_tb} (optimal policy learning of a threshold-based policy), {helpb opl_tb_c} (optimal policy learning of a threshold-based policy at specific thresholds), {helpb opl_lc} (optimal policy learning of a 
 linear-combination policy), {helpb opl_lc_c} (optimal policy learning of a linear-combination policy at specific parameters), {helpb opl_dt} (optimal policy learning of a decision-tree policy), {helpb opl_dt_c} (optimal policy learning of a decision-tree policy at specific thresholds and selection variables). Based on Kitagawa and Tetenov (2018), the main econometrics supported by these commands can be found in Cerulli (2022).          
 
 
@@ -40,12 +41,12 @@ linear-combination policy), {helpb opl_lc_c} (optimal policy learning of a linea
 {synopthdr :options}
 {synoptline}
 {synopt :{opt treatment(varname)}}defines the treatment variable adopted in the old (ex-post) policy run. It must be a 0/1 dummy (1=treated; 0=untreated).{p_end}
-{synopt :{opt model(model_type)}}indicates the treatment model used for estimating and predicting the conditional average treatment effect (CATE). 
-The implemented estimation methods are linear and non-linear regression adjustment. As {it:model_type}, use the following options: "linear", if the outcome variable is gaussian (numerical and continuous); 
-"logit", if the outcome variable is binary (0/1); "poisson", if the outcome variable is countable; "flogit", if the outcome variable is fractional.{p_end}
 {synopt :{opt new_data(name)}}indicates by {it:name} the dataset stored in the home directory containing the data of the new policy run (i.e., the features of the would-be beneficiaries).{p_end} 
 {synopt :{opt new_cate(name)}}indicates by {it:name} the variable that will be generated containing the prediction over {cmd:new_data} of the conditional average treatment effect (CATE).{p_end}
 {synopt :{opt train_cate(name)}}indicates by {it:name} the variable that will be generated containing the prediction over the training dataset of the conditional average treatment effect (CATE).{p_end}
+{synopt :{opt model(model_type)}}indicates the treatment model used for estimating and predicting the conditional average treatment effect (CATE) when the algorithm used is Regression Adjustment (T-Learner). The implemented estimation methods are linear and non-linear regression adjustment. As {it:model_type}, use the following options: "linear", if the outcome variable is gaussian (numerical and continuous); 
+"logit", if the outcome variable is binary (0/1); "poisson", if the outcome variable is countable; "flogit", if the outcome variable is fractional.{p_end}
+{synopt :{opt type(algorithm_type)}}specifies the algorithm used to estimate the conditional average treatment effects (CATE). There are two available options: (i) "ra", implementing the Regression Adjustment (or T-Learner), and (ii) "dr", implementing the Cross-Fitting Augmented Inverse Probability Weighting (CF-AIPW), which has the double-robust property (hence the acronym "dr"). CF-AIPW always assumes a continuous outcome, thus no model options are specified in this case.{p_end}  
 {synoptline}
 
 
@@ -86,33 +87,35 @@ The implemented estimation methods are linear and non-linear regression adjustme
 {phang2} Set the selection variables{p_end}
 {phang3} {stata global z "age mostrn"}{p_end}
 {phang2} Run "make_cate" and generate training (old policy) and testing (new policy) CATE predictions{p_end}
-{phang3} {stata make_cate $y $x , treatment($w) model("linear") new_cate("my_cate_new") train_cate("my_cate_train") new_data("jtrain_test")}{p_end}
+{phang3} {stata make_cate $y $x , treatment($w) type("ra") model("linear") new_cate("my_cate_new") train_cate("my_cate_train") new_data("jtrain_test")}{p_end}
 
 
 {dlgtab:References}
 
-{pstd} 
+{phang}
 Athey, S., and Wager S. 2021. Policy Learning with Observational Data, {it:Econometrica}, 89, 1, 133–161.
 
-{pstd} 
+{phang}
 Cerulli, G. 2021. Improving econometric prediction by machine learning, {it:Applied Economics Letters}, 28, 16, 1419-1425.
 
-{pstd} 
-Cerulli, G. 2022. Optimal treatment assignment of a threshold-based policy: empirical protocol and related issues, {it:Applied Economics Letters}, 30, 8, 1010-1017.
+{phang}
+Cerulli, G. 2022. Optimal treatment assignment of a threshold-based policy: empirical protocol and related issues, {it:Applied Economics Letters}, 30, 8, 1010-1017. 
 
-{pstd} 
-Cerulli, G. 2023. {it:Fundamentals of Supervised Machine Learning: With Applications in Python, R, and Stata}, Springer. 
+{phang}
+Cerulli, G. 2023. {it:Fundamentals of Supervised Machine Learning: With Applications in Python, R, and Stata}, Springer, 2023. 
 
-{pstd} 
-Cerulli, G. 2024. Optimal Policy Learning using Stata. Zenodo. DOI: https://doi.org/10.5281/zenodo.10822240.
+{phang}
+Gareth, J., Witten, D., Hastie, D.T., Tibshirani, R. 2013. {it:An Introduction to Statistical Learning : with Applications in R}. New York, Springer.
 
-{pstd} 
-Gareth, J., Witten, D., Hastie, D.T., Tibshirani, R. 2013. {it:An Introduction to Statistical Learning: with Applications in R}. New York, Springer.  
+{phang}
+Kennedy, E. H. 2023. Towards optimal doubly robust estimation of heterogeneous causal effects. {it:Electronic Journal of Statistics}, 17, 2, 3008-3049.
 
-{pstd} Kitagawa, T., and A. Tetenov. 2018. Who Should Be Treated? Empirical Welfare Maximization Methods for Treatment Choice, {it:Econometrica}, 86, 2, 591–616.
-{p_end}
+{phang}
+Kitagawa, T., and A. Tetenov. 2018. Who Should Be Treated? Empirical Welfare Maximization Methods for Treatment Choice, {it:Econometrica}, 86, 2, 591–616.
 
-
+{phang}
+Kunzel, S. R., Sekhon, J. S., Bickel, P. J., Yu, B. (2019). Metalearners for estimating heterogeneous treatment effects using machine learning. 
+{it:Proceedings of the National Academy of Sciences of the United States of America}, 116, 10, 4156-4165.
 
 {dlgtab:Acknowledgment}
 

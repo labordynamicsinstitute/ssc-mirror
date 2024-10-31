@@ -1,7 +1,7 @@
 ********************************************************************************
 * PROGRAM "opl_dt"
 ********************************************************************************
-*! opl_dt, v1, GCerulli, 24may2024
+*! opl_dt, v4, GCerulli, 16oct2024
 program opl_dt , eclass
 version 16
 syntax , xlist(varlist max=2 min=2) cate(varlist max=1 min=1)
@@ -79,16 +79,36 @@ svmat `A'
 tempvar max_w
 drop if `A'7==.
 egen `max_w'=max(`A'7)
+
+qui sum `max_w'  //
+ereturn scalar Max_W=round(r(mean),0.01)  //
+
 keep if `A'7 ==`max_w'
 keep `A'1 `A'2 `A'3 `A'4 `A'5 `A'6 `A'7 `max_w'
-duplicates drop `A'7 , force
-*collapse _all
-*replace `A'1=trunc(`A'1) 
-*replace `A'2=trunc(`A'2) 
-*replace `A'3=trunc(`A'3) 
+
+* List maximands (multiple solutions)
+tempname W //
+mkmat `A'1 `A'2 `A'3 `A'4 `A'5 `A'6 `A'7 if `A'7==`max_w' , matrix(`W') //
+noi matname `W' x1 x2 x3 c1 c2 c3 W_max , columns(1..7) explicit //
+
+noi{
+di " "
+di "{hline 55}"
+noi di in gr "{bf:Main results}"
+di "{hline 55}"
+di in gr "{bf:Policy class: 2-layer fixed-depth decision tree}"
+di "{hline 55}"
+
+matlist `W' , ///
+border(rows) rowtitle(Maximand) ///
+title("{bf:Welfare maximands. Optimal splitting variables: x1, x2, x3. Optimal thresholds: c1, c2, c3}") 
+
+ereturn matrix W=`W'
+}
+
 ********************************************************************************
 qui sum `A'1 if `A'7==`max_w'
-if r(mean)==1{
+if r(mean)<=1.5{
 	ereturn local best_x1 "`yname1'"
 }
 else{
@@ -96,7 +116,7 @@ else{
 }
 ********************************************************************************
 qui sum `A'2 if `A'7==`max_w'
-if r(mean)==1{
+if r(mean)<=1.5{
 	ereturn local best_x2 "`yname1'"
 }
 else{
@@ -104,7 +124,7 @@ else{
 }
 ********************************************************************************
 qui sum `A'3 if `A'7==`max_w'
-if r(mean)==1{
+if r(mean)<=1.5{
 	ereturn local best_x3 "`yname1'"
 }
 else{
@@ -112,11 +132,22 @@ else{
 }
 ********************************************************************************
 qui sum `A'4 if `A'7==`max_w' 
-ereturn scalar best_c1=r(mean)
+ereturn scalar best_c1=round(r(mean),0.01)
 qui sum `A'5 if `A'7==`max_w'
-ereturn scalar best_c2=r(mean)
+ereturn scalar best_c2=round(r(mean),0.01)
 qui sum `A'6 if `A'7==`max_w'
-ereturn scalar best_c3=r(mean)
+ereturn scalar best_c3=round(r(mean),0.01)
+
+
+noi{
+tempname D
+mat `D'=(e(best_c1)\e(best_c2)\e(best_c3))
+matrix rownames `D' = `e(best_x1)' `e(best_x2)' `e(best_x3)'
+matname `D' Threshold , columns(1) explicit
+matlist `D' ,  twidth(30) ///
+border(rows) rowtitle(Optimal splitting variables) title("{bf: Optimal splitting variables and thresholds: average over maximands}")
+di "{hline 55}"
+}
 restore
 ********************************************************************************
 } // end quietly

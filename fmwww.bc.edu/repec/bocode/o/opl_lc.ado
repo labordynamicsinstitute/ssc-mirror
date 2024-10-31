@@ -1,7 +1,7 @@
 ********************************************************************************
 * PROGRAM "opl_lc"
 ********************************************************************************
-*! opl_lc, v1, GCerulli, 04June2022
+*! opl_lc, v2, GCerulli, 16oct2024
 program opl_lc , eclass
 version 16
 syntax  ,  ///
@@ -42,23 +42,55 @@ mat `A'[`i',4] =e(W_constr) // optimal welfare at c
 local i=`i'+1
 }
 }
+}
 ********************************************************************************
 preserve
 ereturn clear
 svmat `A'
 tempname max_w
 egen `max_w'=max(`A'4)
+qui sum `max_w'
+ereturn scalar Max_W=round(r(mean),0.01)
+
+* List maximands (multiple solutions)
+tempname W
+mkmat `A'1 `A'2 `A'3 `A'4 if `A'4==`max_w' , matrix(`W') 
+matname `W' c1 c2 c3 W_max , columns(1..4) explicit
+
+noi{
+di " "
+di "{hline 55}"
+noi di in gr "{bf:Main results}"
+di "{hline 55}"
+di in gr "{bf:Policy class: Linear-combination}"
+di "{hline 55}"
+
+matlist `W' , ///
+border(rows) rowtitle(Maximand) ///
+title("{bf: Welfare maximands. Optimal parameters: c1, c2, c3}") 
+ereturn matrix W=`W'
+}
+
 qui sum `A'1 if `A'4==`max_w' 
-ereturn scalar best_c1=r(mean)
+ereturn scalar best_c1=round(r(mean),0.01)
 qui sum `A'2 if `A'4==`max_w'
-ereturn scalar best_c2=r(mean)
+ereturn scalar best_c2=round(r(mean),0.01)
 qui sum `A'3 if `A'4==`max_w'
-ereturn scalar best_c3=r(mean)
+ereturn scalar best_c3=round(r(mean),0.01)
+
+tempname C
+mat `C'=(e(best_c1)\e(best_c2)\e(best_c3))
+matrix rownames `C' = c1 c2 c3
+matname `C' Values , columns(1) explicit
+noi{
+matlist `C' , twidth(30) ///
+border(rows) rowtitle(Optimal parameters) title("{bf: Optimal parameters: average over maximands}")
+di "{hline 55}"
+}
 restore
 ********************************************************************************
 } // end quietly
 ********************************************************************************
-}
 rename _units_to_be_treated _optimal_to_be_treated
 ********************************************************************************
 preserve

@@ -14,7 +14,7 @@ d KW: nca
 d
 d Requires: Stata version 15
 d
-d Distribution-Date: 20241011
+d Distribution-Date: 20241030
 d
 d Author: Daniele Spinelli, University of Milano Bicocca
 d Support: email daniele.spinelli@@unimib.it
@@ -30,9 +30,11 @@ f nca_estimate.ado
 f nca_get_centiles.ado
 f nca_parse_scope.ado
 f nca_random.ado
+f nca_power.ado
 f nca_test.ado
 f nca_examples.do
 f nca.sthlp
+f nca_power.sthlp
 f nca_random.sthlp
 f ../l/lnca.mlib
 f ncaexample.dta

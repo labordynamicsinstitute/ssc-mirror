@@ -22,7 +22,7 @@ d KW: regression adjustment
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20240524
+d Distribution-Date: 20241030
 d
 d Author: Giovanni Cerulli, IRCrES-CNR
 d Support: email giovanni.cerulli@@ircres.cnr.it
@@ -38,6 +38,8 @@ f opl_lc_c.ado
 f opl_lc_c.sthlp
 f opl_lc.ado
 f opl_lc.sthlp
+f opl_ma_fb.ado
+f opl_ma.ado
 f opl_tb_c.ado
 f opl_tb_c.sthlp
 f opl_tb.ado

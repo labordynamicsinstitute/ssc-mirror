@@ -1,5 +1,5 @@
 {smcl}
-{* 10April2024}{...}
+{* 24July2024}{...}
 {cmd:help opl_tb}
 {hline}
 
@@ -64,7 +64,7 @@ class a threshold-based (or quadrant) approach.
 {phang2} Set the selection variables{p_end}
 {phang3} {stata global z "age mostrn"}{p_end}
 {phang2} Run "make_cate" and generate training (old policy) and testing (new policy) CATE predictions{p_end}
-{phang3} {stata make_cate $y $x , treatment($w) model("linear") new_cate("my_cate_new") train_cate("my_cate_train") new_data("jtrain_test")}{p_end}
+{phang3} {stata make_cate $y $x , treatment($w) type("ra") model("linear") new_cate("my_cate_new") train_cate("my_cate_train") new_data("jtrain_test")}{p_end}
 {phang2} Generate a global macro containing the name of the variable "cate_new"{p_end}
 {phang3} {stata global T `e(cate_new)'}{p_end}
 {phang2} Select only the "new data"{p_end}
@@ -80,27 +80,30 @@ class a threshold-based (or quadrant) approach.
 
 {dlgtab:References}
 
-{pstd} 
+{phang}
 Athey, S., and Wager S. 2021. Policy Learning with Observational Data, {it:Econometrica}, 89, 1, 133–161.
 
-{pstd} 
+{phang}
 Cerulli, G. 2021. Improving econometric prediction by machine learning, {it:Applied Economics Letters}, 28, 16, 1419-1425.
 
-{pstd} 
-Cerulli, G. 2022. Optimal treatment assignment of a threshold-based policy: empirical protocol and related issues, {it:Applied Economics Letters}, 30, 8, 1010-1017.
+{phang}
+Cerulli, G. 2022. Optimal treatment assignment of a threshold-based policy: empirical protocol and related issues, {it:Applied Economics Letters}, 30, 8, 1010-1017. 
 
-{pstd} 
-Cerulli, G. 2023. {it:Fundamentals of Supervised Machine Learning: With Applications in Python, R, and Stata}, Springer. 
+{phang}
+Cerulli, G. 2023. {it:Fundamentals of Supervised Machine Learning: With Applications in Python, R, and Stata}, Springer, 2023. 
 
-{pstd} 
-Cerulli, G. 2024. Optimal Policy Learning using Stata. Zenodo. DOI: https://doi.org/10.5281/zenodo.10822240.
+{phang}
+Gareth, J., Witten, D., Hastie, D.T., Tibshirani, R. 2013. {it:An Introduction to Statistical Learning : with Applications in R}. New York, Springer.
 
-{pstd} 
-Gareth, J., Witten, D., Hastie, D.T., Tibshirani, R. 2013. {it:An Introduction to Statistical Learning: with Applications in R}. New York, Springer.  
+{phang}
+Kennedy, E. H. 2023. Towards optimal doubly robust estimation of heterogeneous causal effects. {it:Electronic Journal of Statistics}, 17, 2, 3008-3049.
 
-{pstd} Kitagawa, T., and A. Tetenov. 2018. Who Should Be Treated? Empirical Welfare Maximization Methods for Treatment Choice, {it:Econometrica}, 86, 2, 591–616.
-{p_end}
+{phang}
+Kitagawa, T., and A. Tetenov. 2018. Who Should Be Treated? Empirical Welfare Maximization Methods for Treatment Choice, {it:Econometrica}, 86, 2, 591–616.
 
+{phang}
+Kunzel, S. R., Sekhon, J. S., Bickel, P. J., Yu, B. (2019). Metalearners for estimating heterogeneous treatment effects using machine learning. 
+{it:Proceedings of the National Academy of Sciences of the United States of America}, 116, 10, 4156-4165.
 
 {dlgtab:Acknowledgment}
 
