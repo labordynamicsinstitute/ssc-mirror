@@ -1,0 +1,133 @@
+VERSION 18.0
+
+POSITION . . 1003 418
+
+DIALOG main, label("logitgraph - Graph of the Probabilities from a Logistic Regression Model") tabtitle("Main")
+BEGIN
+
+GROUPBOX	gb_a1		25		25		320		135,	label("Variables")
+TEXT		tx_a1		+25		+25		270		.,		label("Dependent variable")
+VARNAME		var_a1		@		+25		270		.,
+TEXT		tx_a2		@		+25		270		.,		label("Independent variables")
+VARLIST		var_a2		@		+25		270		.,
+
+GROUPBOX	gb_a2		25		175		320		218,	label("Order")
+GROUPBOX	gb_a2a		50		200		270		85,		label("Order of independent variables")
+RADIO		rad_a2a1	75		225		270		.,		first	label("Sort by magnitude of coefficients")
+RADIO		rad_a2a2	@		250		270		.,		last	label("Keep the provided order")
+GROUPBOX	gb_a2b		50		288		270		85,		label("Order of categories")
+RADIO		rad_a2b1	75		+25		270		.,		first	label("Reverse the order if negative coefficient")
+RADIO		rad_a2b2	@		+25		270		.,		last	label("Keep the provided order")
+
+GROUPBOX	gb_b		363		25		615		368,	label("Graph options")
+TEXT		tx_b1		+25		+35		270		.,		label("Width between lines:")
+EDIT		ed_b1		+195	@		75 		.,		default(1)
+TEXT		tx_b2		388		+25		270		.,		label("Background color:")
+COLOR 		col_b2		+220	@	 	50 		21,		default(255 255 255)
+TEXT		tx_b3		388		+25		270		.,		label("Text color:")
+COLOR 		col_b3		+220	@	 	50 		21,		default(0 0 0)
+TEXT		tx_b4		388		+25		270		.,		label("Text size:")
+EDIT		ed_b4		+195	@		75 		.,		default(10)
+
+GROUPBOX	gb_b16		388		180		270		193,	label("Color scheme")
+RADIO		rad_b17a	+25		+25		270		.,		first	label("Use an unique color") onclickon(script mono)
+TEXT		tx_b18		+25		+25		270		.,		label("Line color:")
+COLOR 		col_b18		+145	@	 	50 		21,		default(0 0 0)
+RADIO		rad_b17b	413		+33		270		.,		last	label("Use a color gradient") onclickon(script gradient)
+TEXT		tx_b19		+25		+25		270		.,		label("Line color p=0:")
+COLOR 		col_b19		+145	@	 	50 		21,		default(255 255 80)
+TEXT		tx_b20		-145	+25		270		.,		label("Line color p=1:")
+COLOR 		col_b20		+145	@	 	50 		21,		default(200 0 150)
+CHECKBOX	ck_b21		-145	+25		270		.,		label("Long direction of hue gradient")
+
+GROUPBOX	gb_b8		683		50		270		110,	label("Stimation point")
+TEXT		tx_b10		+25		+25		270		.,		label("Point size:")
+EDIT		ed_b10		+170	@		50 		.,		default(6)
+CHECKBOX	ck_b9		-170	+25		270		.,		label("Inner color:") default(1)
+COLOR 		col_b9		+170	@	 	50 		21,		default(255 255 255)
+TEXT		tx_b11		-170	+25		270		.,		label("Gap to the label:")
+EDIT		ed_b11		+170	@		50 		.,		default(6)
+
+GROUPBOX	gb_b12		683		169		270		110,	label("Confidence interval")
+CHECKBOX	ck_b13		+25		+25		270		.,		label("Show confidence interval") default(1)
+CHECKBOX	ck_b14		@		+25		270		.,		label("Show limits of the confidence interval") default(1)
+TEXT		tx_b15		@		+25		270		.,		label("Line width:")
+EDIT		ed_b15		+170	@		50 		.,		default(3)
+
+GROUPBOX	gb_b5		683		+44		270		85,		label("Base line")
+TEXT		tx_b6		708		+25		270		.,		label("Line color:")
+COLOR 		col_b6		+170	@	 	50 		21,		default(200 200 200)
+TEXT		tx_b7		-170	+25		270		.,		label("Line width:")
+EDIT		ed_b7		+170	@		50 		.,		default(1)
+
+END
+
+OK ok1,      label("OK")
+CANCEL can1, label("Cancelar")
+SUBMIT sub1, label("Enviar")
+HELP hlp1,   view("help logitgraph")
+RESET res1
+COPY copy1
+
+SCRIPT mono
+BEGIN
+	main.tx_b18.enable
+	main.col_b18.enable
+	main.tx_b19.disable
+	main.col_b19.disable
+	main.tx_b20.disable
+	main.col_b20.disable
+	main.ck_b21.disable
+END
+
+SCRIPT gradient
+BEGIN
+	main.tx_b18.disable
+	main.col_b18.disable
+	main.tx_b19.enable
+	main.col_b19.enable
+	main.tx_b20.enable
+	main.col_b20.enable
+	main.ck_b21.enable
+END
+
+PROGRAM command
+BEGIN
+	put "logitgraph "
+	put main.var_a1 " " 
+	put main.var_a2 ", "
+	if main.rad_a2a2 {
+		put "keepvarorder "
+	}
+	if main.rad_a2b2 {
+		put "keepcatorder "
+	}
+	put "linedist(" main.ed_b1 ") "
+	put "bgcolor(" main.col_b2 ") "
+	put "textcolor(" main.col_b3 ") "
+	put "textsize(" main.ed_b4 ") "
+	if main.rad_b17a {
+		put "lcolor(" main.col_b18 ") "
+	}
+	if main.rad_b17b {
+		put "lcolor0(" main.col_b19 ") lcolor1(" main.col_b20 ") "
+		if main.ck_b21 {
+			put "colorlongway "
+		}
+	}
+	put "ptsize(" main.ed_b10 ") "
+	if main.ck_b9 {
+	put "ptcolor(" main.col_b9 ") "
+	}	
+	put "labelgap(" main.ed_b11 ") "
+	if !main.ck_b13 {
+		put "hideci "
+	}
+	if !main.ck_b14 {
+		put "hidecilim "
+	}
+	put "linewidth(" main.ed_b15 ") "
+	put "basecolor(" main.col_b6 ") "	
+	put "basewidth(" main.ed_b7 ") "
+
+END

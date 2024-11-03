@@ -1,0 +1,21 @@
+d 'LOGITGRAPH': module to produce Graph of the Probabilities from a Logistic Regression Model
+d
+d     logitgraph is a chart that horizontally displays the
+d probabilities and their confidence intervals for    all
+d combinations of categories of each independent variable in a
+d logistic regression model. 
+d
+d KW: graphics
+d KW: logit
+d KW: probabilities
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20241102
+d
+d Author: Emilio Domínguez-Durán, NA
+d Support: email emilienko@@gmail.com
+d
+f logitgraph.ado
+f logitgraph.dlg
+f logitgraph.sthlp
