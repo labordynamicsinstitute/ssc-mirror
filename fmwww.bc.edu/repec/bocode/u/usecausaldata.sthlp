@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.1.5  25feb2022}{...}
+{* *! version 0.1.7  25oct2024}{...}
 {viewerjumpto "Syntax" "usecausaldata##syntax"}{...}
 {viewerjumpto "Description" "usecausaldata##description"}{...}
 {viewerjumpto "Author" "usecausaldata##author"}{...}

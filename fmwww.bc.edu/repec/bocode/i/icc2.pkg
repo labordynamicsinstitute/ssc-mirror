@@ -1,0 +1,31 @@
+d 'ICC2': module to compute Intraclass correlation coefficients based on crossed mixed regression
+d
+d   Textbooks often calculate the ICC using sums of squares on a   
+d subject-by-measurement matrix with non-missing cells.    The idea
+d of the ICC is to compare the wanted variation explained by a
+d factor    variable on an outcome with the total variation, the
+d total variation being the    wanted variation by the factor
+d variable plus the unwanted variation.    Bias occurs sometimes
+d from the measurement repetitions.    The ANOVA-like calculations
+d ignore all measurements by a subject if just one    measurement
+d for that subject is missing and may also return ICC estimates
+d below    zero.    The latter is theoretically impossible.    To
+d better utilize subjects with missing measurements and avoid
+d obtaining negative	ICCs, it is better to use estimates from a
+d mixed, crossed regression.	The command icc2 returns a matrix
+d with the absolute and consistency ICCs with a    95% confidence
+d interval and a P-value for the ICCs equal to zero.	The user
+d can obtain more precise confidence intervals using the bootstrap. d
+d KW: intraclass correlation
+d KW: ICC
+d KW: mixed regression
+d
+d Requires: Stata version 13.1
+d
+d Distribution-Date: 20241103
+d
+d Author: Niels Henrik Bruun, Aalborg University Hospital
+d Support: email niels.henrik.bruun@@gmail.com
+d
+f icc2.ado
+f icc2.sthlp

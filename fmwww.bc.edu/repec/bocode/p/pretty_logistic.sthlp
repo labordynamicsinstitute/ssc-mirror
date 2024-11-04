@@ -33,14 +33,15 @@ help for {cmd:pretty_logistic} {right: Version 1.0 06 February 2024}
 {synopthdr}
 {synoptline}
 {syntab:Required }
-{synopt:{opt predictor:}({help varname})} - grouping variable. {p_end}
-{synopt:{opt logtype}({help string})} - {it: string} may be {bf: rr rd or}. {it: string} specifies the coefficent to be returned. {p_end}
+{synopt:{opt predictor:}({help varname})} - grouping variable. 
 
 {syntab:Optional}
+{synopt:{opt logtype}({help string})} - {it: string} may be {bf: rr rd or}. {it: string} specifies the coefficent to be returned. {p_end}
 {synopt:{opt out:comes}({help varlist})} - specified outcome variables. {p_end}
 {synopt:{opt con:founders}({help varlist})} - confounding variables. {help fvvarlist} operators can be used to specify relationships and factor/continuous variables. {p_end}
 {synopt:{opt re:equation}({help string})} - {it: string} may used to specify random effects following {help melogit} {it: syntax} for random effects equations, the initial || does not need to be specified. {p_end}
-{synopt:{opt title:}({help string})} - title of the table {p_end}
+{synopt:{opt title:}({help string})} - title the table will be saved by. when multiple tables generated separate titles by {bf: ,} {p_end}
+{synopt:{opt nosub:headings}({help string})} - option to remove primary and secondary outcome titles if multiple outcomes specified. {p_end}
 {synopt:{opt flog}({help format})} - specify the format of decimal points for the main coefficients. {p_end}
 {synopt:{opt fci}({help format})} - specify the format of decimal points for the confidence intervals. {p_end}
 {synopt:{opt fp}({help format})} - specify the format of decimal points for the probability. {p_end}

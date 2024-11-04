@@ -10906,6 +10906,7 @@ fmwww.bc.edu/repec/bocode/p/probitiv.pkg
 fmwww.bc.edu/repec/bocode/p/poverty.html
 fmwww.bc.edu/repec/bocode/p/ppssampford.ado
 fmwww.bc.edu/repec/bocode/p/pathmaker.ado
+fmwww.bc.edu/repec/bocode/p/pretty_linear.sthlp
 fmwww.bc.edu/repec/bocode/p/propcnsreg_postestimation.html
 fmwww.bc.edu/repec/bocode/p/petpoisson_me.ado
 fmwww.bc.edu/repec/bocode/p/pip_cl.ado
@@ -11688,6 +11689,7 @@ fmwww.bc.edu/repec/bocode/p/prwe.html
 fmwww.bc.edu/repec/bocode/p/prodest.pkg
 fmwww.bc.edu/repec/bocode/p/psreg.sthlp
 fmwww.bc.edu/repec/bocode/p/pobrezaECU.sthlp
+fmwww.bc.edu/repec/bocode/p/pretty_linear.ado
 fmwww.bc.edu/repec/bocode/p/partialhdfejl.ado
 fmwww.bc.edu/repec/bocode/p/pciplot.ado
 fmwww.bc.edu/repec/bocode/p/plotsgpv-leukemia-example.do
@@ -11830,6 +11832,7 @@ fmwww.bc.edu/repec/bocode/p/power_roc.pkg
 fmwww.bc.edu/repec/bocode/p/pedronidata.dta
 fmwww.bc.edu/repec/bocode/p/petometan.ado
 fmwww.bc.edu/repec/bocode/p/power_icc.pkg
+fmwww.bc.edu/repec/bocode/p/pretty_text.sthlp
 fmwww.bc.edu/repec/bocode/p/panell.ado
 fmwww.bc.edu/repec/bocode/p/prismscore.ado
 fmwww.bc.edu/repec/bocode/p/povguide2.sthlp
@@ -12159,6 +12162,7 @@ fmwww.bc.edu/repec/bocode/p/project.pkg
 fmwww.bc.edu/repec/bocode/p/progres.pkg
 fmwww.bc.edu/repec/bocode/p/plotmatrix.sthlp
 fmwww.bc.edu/repec/bocode/p/pcm000301_lf.ado
+fmwww.bc.edu/repec/bocode/p/pretty_text.ado
 fmwww.bc.edu/repec/bocode/p/pocock_simon_v2_factbal.dta
 fmwww.bc.edu/repec/bocode/p/plotrpys.sthlp
 fmwww.bc.edu/repec/bocode/p/power_cmd_concord.ado
@@ -12293,6 +12297,7 @@ fmwww.bc.edu/repec/bocode/i/irrepro.html
 fmwww.bc.edu/repec/bocode/i/intllf_sgt.ado
 fmwww.bc.edu/repec/bocode/i/iccvar.pkg
 fmwww.bc.edu/repec/bocode/i/index.sthlp
+fmwww.bc.edu/repec/bocode/i/icc2.ado
 fmwww.bc.edu/repec/bocode/i/iop.ado
 fmwww.bc.edu/repec/bocode/i/iia.hlp
 fmwww.bc.edu/repec/bocode/i/imusic.pkg
@@ -12959,6 +12964,7 @@ fmwww.bc.edu/repec/bocode/i/inorm.ado
 fmwww.bc.edu/repec/bocode/i/ietestform.ado
 fmwww.bc.edu/repec/bocode/i/igini1.pkg
 fmwww.bc.edu/repec/bocode/i/ivregress2.pkg
+fmwww.bc.edu/repec/bocode/i/icc2.sthlp
 fmwww.bc.edu/repec/bocode/i/iskotrei.ado
 fmwww.bc.edu/repec/bocode/i/ivhettest.ado
 fmwww.bc.edu/repec/bocode/i/icio_clean.ado
@@ -13040,6 +13046,7 @@ fmwww.bc.edu/repec/bocode/i/ipdover.ado
 fmwww.bc.edu/repec/bocode/i/int_utils.pkg
 fmwww.bc.edu/repec/bocode/i/ietoolkit.sthlp
 fmwww.bc.edu/repec/bocode/i/ivglog.pkg
+fmwww.bc.edu/repec/bocode/i/icc2.pkg
 fmwww.bc.edu/repec/bocode/i/iscolab.html
 fmwww.bc.edu/repec/bocode/i/imusic.sthlp
 fmwww.bc.edu/repec/bocode/i/ilr.ado

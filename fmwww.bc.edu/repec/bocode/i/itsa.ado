@@ -1,3 +1,7 @@
+*! 3.2.0 Ariel Linden 26Oct2024						// fixed trperiods to ensure proper ordering 
+													// coded legend to appear at 6 o'clock (because v18 moves the legend to 3 o'clock) 
+													// added shading option
+*! 3.1.2 Ariel Linden 12Sep2024						// return matrix r(table) manually to ensure it is available after -itsa-  
 *! 3.1.1 Ariel Linden 09Sep2024						// changed code in CI option to utilize -predictnl- for computing predictions and CIs
 *! 3.1.0 Ariel Linden 07Aug2024						// added CI option
 *! 3.0.0 Ariel Linden 01Apr2024						// changed default model to -glm- with Newey-West std errors
@@ -36,6 +40,7 @@ version 11.0
 	PRAIS        												///
     POSTTRend                                                   ///
 	FIGure   FIGure2(str asis)                              	///
+	SHADe(string)	                          			     	///		
 	LOWess														///
 	CI															///
 	REPLace PREfix(str) *]
@@ -104,12 +109,50 @@ version 11.0
 				local trperiod `trp'
 			}  // end if
 		} // end while
+		/* ensure correct ordering of trperiods */		
+		local trperiod = subinstr("`trperiod'", " ", "\ ", .)
+		mata: st_local("trperiod",  invtokens(strofreal(sort(`trperiod',1))'))		
 		
 		/* check if trperiod is among tvars */
 		levelsof `tvar' if `touse', local(levt)
 		if !`: list trperiod in levt' {
 			di as err "{p}Treatment period(s) not found in the time variable: check {bf:trperiod()} to ensure that dates are specified correctly,{p_end}"
 			di as err "{p} and that multiple dates are separated by semicolons (;).{p_end}"
+			exit 198
+		}
+		
+		/* parse dates in shade() */
+		if "`shade'" != "" {
+			tokenize "`shade'" , parse(";")
+			local done = 0
+			local i = 0
+			local count = 0
+			while !`done' {  
+				local ++i
+				local next = "``i''"
+				local done = ("`next'" == "")
+				// keep dates only (exclude semicolon)
+				if ("`next'" != ";") & (!`done') {
+					local ++count
+					local shade`count' = `period'(`next') 
+					local shading `shading' `shade`count''
+					local shadeperiod `shading'
+				}  // end if
+			} // end while
+			local shadecnt: word count `shadeperiod'	
+			if `shadecnt' != 2 {
+				di as err "shade() must contain two time values"
+				exit 498
+			}
+			/* ensure correct ordering of shading time values */
+			local shadeperiod = subinstr("`shadeperiod'", " ", "\ ", .)
+			mata: st_local("shadeperiod",  invtokens(strofreal(sort(`shadeperiod',1))'))			
+		} // end parse shade
+
+		/* check if shadeperiod is among tvars */
+		levelsof `tvar' if `touse', local(levt)
+		if !`: list shadeperiod in levt' {
+			di as err "{p}Shade period(s) not found in the time variable: check {bf:shade()} to ensure that dates are specified correctly{p_end}"
 			exit 198
 		}
 		
@@ -215,7 +258,7 @@ version 11.0
 	/*************************************************
 	  TYPE 1 ANALYSIS: SINGLE GROUP IN DATA
 	**************************************************/
-	if `atype'==1 {
+	if `atype'== 1 {
 		quietly {
 			sort `touse' `tvar'
 			/* gen t (time from start to end) */
@@ -254,7 +297,7 @@ version 11.0
 			glm2 `dvar' `rhs' `xvar'  if `touse' [`weight' `exp'], force vce(hac nwest `lag') vfactor(`vfac') `options'	
 			/* create matrix of r(table) to ensure it is available */
 			matrix table =r(table)
-			return matrix table = table 					
+			return matrix table = table			
 			
 			local z_t z			
 			local z_t_p P>|z|
@@ -325,7 +368,7 @@ version 11.0
 				quietly predictnl `prefix'_s_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl') level(`clv') 
 			}
 			local itsavars `dvar' `rhs' `prefix'_s_`dvar'_pred
-			char def _dta[`prefix'_itsavars] "`itsavars'"			
+			char def _dta[`prefix'_itsavars] "`itsavars'"
 		} // end CI
 
 		/*************************************************************
@@ -377,7 +420,7 @@ version 11.0
 			if "`ci'" != "" {	
 				tempvar lcl_t ucl_t
 				gen `lcl_t' = `lcl'
-				gen `ucl_t' = `ucl'			
+				gen `ucl_t' = `ucl'	
 				local tct: word count `trperiod'
 				local tmax: word `tct' of `trperiod'
 				local k = 0
@@ -410,7 +453,7 @@ version 11.0
 				}  /* end of TRPERIOD LOOP */
 			}	// end CI	
 				
-		 /* Set up Plot Variables */
+				/* Set up Plot Variables */
 				forvalues k = 1/`tct' {
 					local plotvars `plotvars' `plt_t`k'' 
 					local cpart `cpart' l
@@ -447,41 +490,107 @@ version 11.0
 			local tper = strofreal(`t',"`tsf'")
 			local tperlist `tperlist' `tper'
 		}
-		/* set up legend when lowess and/or CIs are specified */
+		
+		if "`shade'" != "" {
+			if "`ci'" != "" { 
+				sum `dvar' if `touse', meanonly
+				local mindvar_t = r(min)
+				local maxdvar_t = r(max)
+				sum `ypred_t' if `touse', meanonly
+				local minypred_t = r(min)			
+				local maxypred_t = r(max)
+				sum `ucl_t' if `touse', meanonly
+				local maxucl = r(max)
+				sum `lcl_t' if `touse', meanonly
+				local minlcl = r(min)	
+				local down = min(`mindvar_t', `minypred_t',`minlcl')			
+				local up = max(`maxdvar_t', `maxypred_t', `maxucl')				
+			}
+			else {
+				sum `dvar' if `touse', meanonly
+				local mindvar_t = r(min)
+				local maxdvar_t = r(max)
+				sum `ypred_t' if `touse', meanonly
+				local minypred_t = r(min)			
+				local maxypred_t = r(max)
+				local down = min(`mindvar_t', `minypred_t')			
+				local up = max(`maxdvar_t', `maxypred_t')
+			}	
+			/* use nicelabels (Nick Cox) to get nice lower and upper values for the shading */
+			mata: nicelabels(`down', `up', 5, 0)
+			tempvar upy
+			gen `upy' = `upper' if `touse'
+			local shhh (area `upy' `tvar' if inrange(`tvar', `shade1',`shade2') & `touse', base(`lower') bcolor(gs14) plotregion(margin(b=0 t=0)))			
+		}	// end shade		
+
+		/* set up legend when lowess and/or CI and/or shades are specified */
 		if "`lowess'" != "" {
 			local low (lowess `dvar' `tvar' if `touse', lcolor(red))
 			if "`ci'" != "" {
-				local x = `tct' - 1	
-				local act1 = `tct' + 5 + `x'
-				local pred1 = `tct' + 6 + `x'
-				local ci1 = 2
-				local low1 = 1
-				local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(`act1' `pred1' `low1' `ci1') label(`act1' "Actual") ///
-				label(`pred1' "Predicted") label(`low1' "Lowess") label(`ci1' "`clv'% CI"))),
-			}
+				if "`shade'" == "" {
+					local x = `tct' - 1	
+					local act1 = `tct' + 5 + `x'
+					local pred1 = `tct' + 6 + `x'
+					local ci1 = 2
+					local low1 = 1
+					local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(`act1' `pred1' `low1' `ci1') label(`act1' "Actual") ///
+					label(`pred1' "Predicted") label(`low1' "Lowess") label(`ci1' "`clv'% CI") position(6))),
+				} // yes low, yes ci, no shade
+				else {
+					local x = `tct' - 1	
+					local act1 = `tct' + 6 + `x'
+					local pred1 = `tct' + 7 + `x'
+					local ci1 = 3
+					local low1 = 2
+					local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(`act1' `pred1' `low1' `ci1') label(`act1' "Actual") ///
+					label(`pred1' "Predicted") label(`low1' "Lowess") label(`ci1' "`clv'% CI") position(6))),					
+				} // yes low, yes ci, yes shade
+			} // end ci
 			if "`ci'" == "" {
-				local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(2 3 1) label(1 "Lowess") label(2 "Actual") label(3 "Predicted"))),
-			}			
+				if "`shade'" == "" {
+					local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(2 3 1) label(1 "Lowess") label(2 "Actual") ///
+					label(3 "Predicted") position(6))),
+				} // yes low, no ci, no shade
+				else {
+					local shading = 8
+					local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(3 4 2) label(3 "Actual") label(4 "Predicted") ///
+					label(2 "Lowess") position(6))),					
+				} // yes low, no ci, yes shade
+			} // end ci	
 		} // end lowess
 		else if "`lowess'" == "" {
 			if "`ci'" != "" {
-				local x = `tct' - 1	
-				local act1 = `tct' + 4 + `x'
-				local pred1 = `tct' + 5 + `x'
-				local ci1 = 1
-				local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(`act1' `pred1' `ci1') label(`act1' "Actual") ///
-				label(`pred1' "Predicted") label(`ci1' "`clv'% CI"))),
-			}
+				if "`shade'" == "" {				
+					local x = `tct' - 1	
+					local act1 = `tct' + 4 + `x'
+					local pred1 = `tct' + 5 + `x'
+					local ci1 = 1
+					local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(`act1' `pred1' `ci1') label(`act1' "Actual") ///
+					label(`pred1' "Predicted") label(`ci1' "`clv'% CI") position(6))),
+				} // no low, yes ci, no shade
+				else {
+					local x = `tct' - 1	
+					local act1 = `tct' + 5 + `x'
+					local pred1 = `tct' + 6 + `x'
+					local ci1 = 2
+					local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(`act1' `pred1' `ci1') label(`act1' "Actual") ///
+					label(`pred1' "Predicted") label(`ci1' "`clv'% CI") position(6))),					
+				} // no low, yes ci, yes shade
+			} // end ci
 			if "`ci'" == "" {			
-				local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(1 2) label(1 "Actual") label(2 "Predicted"))),
-			}
-		}	
+				local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(2 3) label(2 "Actual") label(3 "Predicted") position(6))),
+			} // no low, no ci, no shade
+		} // end no low	
 		if "`ci'" != "" {
 			local lcl (line `plotvarsL' `tvar' if `touse' [`weight' `exp'], `lc2') 
 			local ucl (line `plotvarsU' `tvar' if `touse' [`weight' `exp'], `lc2') 	
 		}
+		
+		/* graph it */
 		#delim ;
-		tw  `low'
+		tw 
+		`shhh'			
+		`low'
 		`lcl'
 		`ucl'
  		(scatter  `dvar' `plotvars' `tvar' if `touse' [`weight' `exp'],		
@@ -492,6 +601,7 @@ version 11.0
 			ytitle("`ydesc'")
 			xtitle("`tdesc'")
 			title("`treatdesc'")
+			ylabel(`results')			
 			`nolow'
 			`lowleg'
             `figure2'
@@ -620,7 +730,6 @@ version 11.0
 			char def _dta[`prefix'_itsavars] "`itsavars'"			
 		} // end CI		
 		
-		
 		/************************************************
 		*             PLOT SECTION FOR TYPE 2           *
 		*************************************************/
@@ -676,7 +785,7 @@ version 11.0
 				if "`ci'" != "" {	
 					tempvar lcl_t ucl_t
 					gen `lcl_t' = `lcl' 
-					gen `ucl_t' = `ucl'			
+					gen `ucl_t' = `ucl'	
 					local tct: word count `trperiod'
 					local tmax: word `tct' of `trperiod'
 					local k = 0
@@ -747,42 +856,107 @@ version 11.0
 				local tperlist `tperlist' `tper'
 			}
 			
-			/* set up legend when lowess and/or CIs are specified */
+			if "`shade'" != "" {
+				if "`ci'" != "" { 
+					sum `dvar' if `pvar'==`treatid' & `touse', meanonly
+					local mindvar_t = r(min)
+					local maxdvar_t = r(max)
+					sum `ypred_t' if `pvar'==`treatid' & `touse', meanonly
+					local minypred_t = r(min)			
+					local maxypred_t = r(max)
+					sum `ucl_t' if `pvar'==`treatid' & `touse', meanonly
+					local maxucl = r(max)
+					sum `lcl_t' if `pvar'==`treatid' & `touse', meanonly
+					local minlcl = r(min)	
+					local down = min(`mindvar_t', `minypred_t',`minlcl')			
+					local up = max(`maxdvar_t', `maxypred_t', `maxucl')				
+				}
+				else {
+					sum `dvar' if `pvar'==`treatid' & `touse', meanonly
+					local mindvar_t = r(min)
+					local maxdvar_t = r(max)
+					sum `ypred_t' if `pvar'==`treatid' & `touse', meanonly
+					local minypred_t = r(min)			
+					local maxypred_t = r(max)
+					local down = min(`mindvar_t', `minypred_t')			
+					local up = max(`maxdvar_t', `maxypred_t')
+				}
+
+				/* use nicelabels (Nick Cox) to get "nice" lower and upper values for the shading */				
+				mata: nicelabels(`down', `up', 5, 0)
+				tempvar upy
+				gen `upy' = `upper' if `touse'
+				local shhh (area `upy' `tvar' if `pvar'==`treatid' & inrange(`tvar', `shade1',`shade2') & `touse', base(`lower') bcolor(gs14) plotregion(margin(b=0 t=0)))			
+			}	// end shade		
+		
+			/* set up legend when lowess and/or CI and/or shades are specified */
 			if "`lowess'" != "" {
 				local low (lowess `dvar' `tvar' if `pvar'==`treatid' & `touse', lcolor(red))
 				if "`ci'" != "" {
-					local x = `tct' - 1	
-					local act1 = `tct' + 5 + `x'
-					local pred1 = `tct' + 6 + `x'
-					local ci1 = 2
-					local low1 = 1
-					local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(`act1' `pred1' `low1' `ci1') label(`act1' "Actual") ///
-					label(`pred1' "Predicted") label(`low1' "Lowess") label(`ci1' "`clv'% CI"))),
-				}
+					if "`shade'" == "" {
+						local x = `tct' - 1	
+						local act1 = `tct' + 5 + `x'
+						local pred1 = `tct' + 6 + `x'
+						local ci1 = 2
+						local low1 = 1
+						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(`act1' `pred1' `low1' `ci1') label(`act1' "Actual") ///
+						label(`pred1' "Predicted") label(`low1' "Lowess") label(`ci1' "`clv'% CI") position(6))),
+					} // yes low, yes ci, no shade
+					else {
+						local x = `tct' - 1	
+						local act1 = `tct' + 6 + `x'
+						local pred1 = `tct' + 7 + `x'
+						local ci1 = 3
+						local low1 = 2
+						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(`act1' `pred1' `low1' `ci1') label(`act1' "Actual") ///
+						label(`pred1' "Predicted") label(`low1' "Lowess") label(`ci1' "`clv'% CI") position(6))),					
+					} // yes low, yes ci, yes shade
+					
+				} // end ci
 				if "`ci'" == "" {
-					local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(2 3 1) label(1 "Lowess") label(2 "Actual") label(3 "Predicted"))),
-				}			
+					if "`shade'" == "" {
+						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(2 3 1) label(1 "Lowess") label(2 "Actual") ///
+						label(3 "Predicted") position(6))),
+					} // yes low, no ci, no shade
+					else {
+						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) order(3 4 2) label(3 "Actual") label(4 "Predicted") ///
+						label(2 "Lowess") position(6))),					
+					} // yes low, no ci, yes shade
+				} // end ci	
 			} // end lowess
 			else if "`lowess'" == "" {
 				if "`ci'" != "" {
-					local x = `tct' - 1	
-					local act1 = `tct' + 4 + `x'
-					local pred1 = `tct' + 5 + `x'
-					local ci1 = 1
-					local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(`act1' `pred1' `ci1') label(`act1' "Actual") ///
-					label(`pred1' "Predicted") label(`ci1' "`clv'% CI"))),
-				}
+					if "`shade'" == "" {				
+						local x = `tct' - 1	
+						local act1 = `tct' + 4 + `x'
+						local pred1 = `tct' + 5 + `x'
+						local ci1 = 1
+						local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(`act1' `pred1' `ci1') label(`act1' "Actual") ///
+						label(`pred1' "Predicted") label(`ci1' "`clv'% CI") position(6))),
+					} // no low, yes ci, no shade
+					else {
+						local x = `tct' - 1	
+						local act1 = `tct' + 5 + `x'
+						local pred1 = `tct' + 6 + `x'
+						local ci1 = 2
+						local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(`act1' `pred1' `ci1') label(`act1' "Actual") ///
+						label(`pred1' "Predicted") label(`ci1' "`clv'% CI") position(6))),					
+					} // no low, yes ci, yes shade
+				} // end ci
 				if "`ci'" == "" {			
-					local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(1 2) label(1 "Actual") label(2 "Predicted"))),
-				}
-			} // end no lowess	
+					local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(2 3) label(2 "Actual") label(3 "Predicted") position(6))),
+				} // no low, no ci, no shade
+			}	
 			if "`ci'" != "" {
 				local lcl (line `plotvarsL' `tvar' if `pvar'==`treatid' & `touse' [`weight' `exp'], `lc2') 
 				local ucl (line `plotvarsU' `tvar' if `pvar'==`treatid' & `touse' [`weight' `exp'], `lc2') 	
 			}
 
+			/* graph it */			
 			#delim ;
-			noi tw  `low'
+			noi tw  
+			`shhh'
+			`low'
 			`lcl'
 			`ucl'			
 			(scatter  `dvar' `plotvars' `tvar' if `pvar'==`treatid' & `touse' [`weight' `exp'],
@@ -797,6 +971,7 @@ version 11.0
 			title("`treatdesc'")
 			`nolow'
 			`lowleg'
+			ylabel(`results')
 			`figure2'
 			;
 			#delim cr
@@ -876,8 +1051,7 @@ version 11.0
 			local itsavars `dvar' `rhs' `prefix'_m_`dvar'_pred
 			char def _dta[`prefix'_itsavars] "`itsavars'"			
 		} // end CI			
-		
-		
+	
 		/*******************************************
 		 LINCOM:   MULTIPLE GROUP COMPARISON       *
 		********************************************/
@@ -1170,8 +1344,7 @@ version 11.0
 							}
 						}  /* end of TRPERIOD LOOP */
 					}	// end CI	
-
-			
+		
 					/* Set up plot variables - CONTROLS */
 					forvalues k = 1/`tct' {
 					local plotvars_c `plotvars_c' `plt_c`k''
@@ -1224,6 +1397,68 @@ version 11.0
 				local tperlist `tperlist' `tper'
 			}
 			
+			if "`shade'" != "" {
+				if "`ci'" != "" { 
+					sum `dvar_t', meanonly
+					local mindvar_t = r(min)
+					local maxdvar_t = r(max)
+					
+					sum `ypred_t', meanonly
+					local minypred_t = r(min)			
+					local maxypred_t = r(max)
+					
+					sum `dvar_c', meanonly
+					local mindvar_c = r(min)
+					local maxdvar_c = r(max)
+					
+					sum `ypred_c', meanonly
+					local minypred_c = r(min)			
+					local maxypred_c = r(max)
+					
+					sum `ucl_t', meanonly
+					local maxucl_t = r(max)
+					
+					sum `ucl_c', meanonly
+					local maxucl_c = r(max)
+					
+					sum `lcl_t', meanonly
+					local minlcl_t = r(min)
+					
+					sum `lcl_c', meanonly
+					local minlcl_c = r(min)					
+					
+					local down = min(`mindvar_t', `minypred_t',`minlcl_t',`mindvar_c', `minypred_c',`minlcl_c')			
+					local up = max(`maxdvar_t', `maxypred_t', `maxucl_t', `maxdvar_c', `maxypred_c', `maxucl_c')				
+				}
+				else {
+					sum `dvar_t', meanonly
+					local mindvar_t = r(min)
+					local maxdvar_t = r(max)
+					
+					sum `ypred_t', meanonly
+					local minypred_t = r(min)			
+					local maxypred_t = r(max)
+					
+					sum `dvar_c', meanonly
+					local mindvar_c = r(min)
+					local maxdvar_c = r(max)
+					
+					sum `ypred_c', meanonly
+					local minypred_c = r(min)			
+					local maxypred_c = r(max)
+					
+					local down = min(`mindvar_t', `minypred_t',`mindvar_c', `minypred_c')			
+					local up = max(`maxdvar_t', `maxypred_t',`maxdvar_c', `maxypred_c')
+				}	
+				
+				/* use nicelabels (Nick Cox) to get "nice" lower and upper values for the shading */				
+				mata: nicelabels(`down', `up', 5, 0)
+
+				tempvar upy
+				gen `upy' = `upper'
+				local shhh (area `upy' `tvar' if inrange(`tvar', `shade1',`shade2'), base(`lower')  bcolor(gs14) plotregion(margin(b=0 t=0)))			
+			}	// end shade		
+
 			#delim ;
 			 /* Titles for Two-Group Comparison */
 			local titlesec
@@ -1246,7 +1481,6 @@ version 11.0
 				local lowc (lowess `dvar_c'  `tvar', lcolor(orange))
 			}	
 			
-			
 		} // end quietly	
 			
 			/* if no covariates */
@@ -1256,48 +1490,96 @@ version 11.0
 					local lowt (lowess `dvar_t'  `tvar', lcolor(red)) 
 					local lowc (lowess `dvar_c'  `tvar', lcolor(orange))
 					if "`ci'" == "" {
-						local ctrl1 = `tct' + 3				
-						local ctrl2 = `tct' + 4	
-						local low1 = `ctrl2' + `tct' + 1
-						local low2 = `ctrl2' + `tct' + 2
-						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 `low1' - "Controls average:" `ctrl1' `ctrl2' `low2') ///
-							label(1 "Actual") label(2 "Predicted") label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///					
-							label(`low1' "Lowess") label(`low2' "Lowess") symxsize(8))
-					}
+						if "`shade'" == "" {
+							local ctrl1 = `tct' + 3				
+							local ctrl2 = `tct' + 4	
+							local low1 = `ctrl2' + `tct' + 1
+							local low2 = `ctrl2' + `tct' + 2
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 `low1' - "Controls average:" `ctrl1' `ctrl2' `low2') ///
+								label(1 "Actual") label(2 "Predicted") label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///					
+								label(`low1' "Lowess") label(`low2' "Lowess") symxsize(8) position(6))
+						} // yes lowess, no ci, no shade
+						else {
+							local ctrl1 = `tct' + 4				
+							local ctrl2 = `tct' + 5	
+							local low1 = `ctrl2' + `tct' + 1
+							local low2 = `ctrl2' + `tct' + 2
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 2 3 `low1' - "Controls average:" `ctrl1' `ctrl2' `low2') ///
+								label(3 "Predicted") label(2 "Actual") label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///					
+								label(`low1' "Lowess") label(`low2' "Lowess") symxsize(8) position(6))							
+						} // yes lowess, no ci, yes shade
+					} // no ci	
+						
 					if "`ci'" != "" {
-						local x = `tct' - 1	
-						local ctrl1 = `tct' + 3				
-						local ctrl2 = `tct' + 4	
-						local low1 = `ctrl2' + `tct' + 1
-						local low2 = `ctrl2' + `tct' + 2
-						local cl1 = `low1' + 2
-						local cl2 = `tct' + `low2' + (7 + `x')
-						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 `low1' `cl1' - "Controls average:" `ctrl1' `ctrl2' `low2' `cl2') ///
-							label(1 "Actual") label(2 "Predicted") label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///					
-							label(`low1' "Lowess") label(`low2' "Lowess") label(`cl1' "`clv'% CI") label(`cl2' "`clv'% CI") symxsize(8))
-					}
+						if "`shade'" == "" {						
+							local x = `tct' - 1	
+							local ctrl1 = `tct' + 3				
+							local ctrl2 = `tct' + 4	
+							local low1 = `ctrl2' + `tct' + 1
+							local low2 = `ctrl2' + `tct' + 2
+							local cl1 = `low1' + 2
+							local cl2 = `tct' + `low2' + (7 + `x')
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) ///
+								order(- "`treatdesc': " 1 2 `low1' `cl1' - "Controls average:" `ctrl1' `ctrl2' `low2' `cl2') ///
+								label(1 "Actual") label(2 "Predicted") label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///					
+								label(`low1' "Lowess") label(`low2' "Lowess") label(`cl1' "`clv'% CI") label(`cl2' "`clv'% CI") symxsize(8) position(6))
+						} // yes lowess, yes ci, no shade
+						else {
+							local x = `tct' - 1	
+							local ctrl1 = `tct' + 4				
+							local ctrl2 = `tct' + 5	
+							local low1 = `ctrl2' + `tct' + 1
+							local low2 = `ctrl2' + `tct' + 2
+							local cl1 = `low1' + 2
+							local cl2 = `tct' + `low2' + (7 + `x')
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) ///
+								order(- "`treatdesc': " 2 3 `low1' `cl1' - "Controls average:" `ctrl1' `ctrl2' `low2' `cl2') ///
+								label(3 "Predicted") label(2 "Actual") label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///					
+								label(`low1' "Lowess") label(`low2' "Lowess") label(`cl1' "`clv'% CI") label(`cl2' "`clv'% CI") symxsize(8) position(6))							
+						} // yes lowess, yes ci, yes shade
+					} // yes ci	
 				} // end yes lowess
 				
 				if "`lowess'" == "" {
 					if "`ci'" == "" {
-						local ctrl1 = `tct' + 3				
-						local ctrl2 = `tct' + 4	
-						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 - "Controls average:" `ctrl1' `ctrl2') ///
-							label(1 "Actual") label(2 "Predicted") label(`ctrl1' "Actual") label(`ctrl2' "Predicted") symxsize(8))					
-					}
+						if "`shade'" == "" {			
+							local ctrl1 = `tct' + 3				
+							local ctrl2 = `tct' + 4	
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 - "Controls average:" `ctrl1' `ctrl2') ///
+								label(1 "Actual") label(2 "Predicted") label(`ctrl1' "Actual") label(`ctrl2' "Predicted") symxsize(8) position(6))					
+						} // no lowess, no ci, no shade
+						else {
+							local ctrl1 = `tct' + 4				
+							local ctrl2 = `tct' + 5	
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 2 3 - "Controls average:" `ctrl1' `ctrl2') ///
+								label(3 "Predicted") label(2 "Actual") label(`ctrl1' "Actual") label(`ctrl2' "Predicted") symxsize(8) position(6))					
+						} // no lowess, no ci, yes shade							
+					} // no ci		
 					if "`ci'" != "" {
-						local ctrl1 = `tct' + 3				
-						local ctrl2 = `tct' + 4	
-						local cl1 = `ctrl2' + `tct' + 1
-						local cl2 = `tct' + `ctrl1' + `ctrl2' + 4						
-						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 `cl1' - "Controls average:" `ctrl1' `ctrl2' `cl2') ///
-							label(1 "Actual") label(2 "Predicted") label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///					
-							label(`cl1' "`clv'% CI") label(`cl2' "`clv'% CI") symxsize(8))
-					}
-				} // end no lowess
+						if "`shade'" == "" {						
+							local ctrl1 = `tct' + 3				
+							local ctrl2 = `tct' + 4	
+							local cl1 = `ctrl2' + `tct' + 1
+							local cl2 = `tct' + `ctrl1' + `ctrl2' + 4						
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 `cl1' - "Controls average:" `ctrl1' `ctrl2' `cl2') ///
+								label(1 "Actual") label(2 "Predicted") label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///					
+								label(`cl1' "`clv'% CI") label(`cl2' "`clv'% CI") symxsize(8) position(6))
+						} // no lowess, yes ci, no shade
+						else {
+							local ctrl1 = `tct' + 4				
+							local ctrl2 = `tct' + 5	
+							local cl1 = `ctrl2' + `tct' + 1
+							local cl2 = `tct' + `ctrl1' + `ctrl2' + 4						
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 2 3 `cl1' - "Controls average:" `ctrl1' `ctrl2' `cl2') ///
+								label(3 "Predicted") label(2 "Actual") label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///					
+								label(`cl1' "`clv'% CI") label(`cl2' "`clv'% CI") symxsize(8) position(6))							
+						} // no lowess, yes ci, yes shade
+					} // yes ci
+				} // no lowess
 			
 				// * graph it - no xvars *//
 				twoway ///
+					`shhh' ///				
 					(scatter  `dvar_t' `plotvars_t' `tvar', `cpart' `tmspart' `lc' `mc') ///
 					(scatter  `dvar_c' `plotvars_c' `tvar', `cpart' `cmspart' `lc' `mc' `clp') ///
 					`lowt' ///
@@ -1307,9 +1589,9 @@ version 11.0
 					`lclc' ///
 					`uclc' ///	
 					, xline(`trperiod', lpattern(shortdash) lcolor(black)) ///
+					ylabel(`results') ///						
 					`lowleg' ///
 					 `titlesec' note(`"`note'"') `figure2'
-			
 			} // end no xvars
 
 			/* with xvars */
@@ -1319,33 +1601,59 @@ version 11.0
 					local lowt (lowess `dvar_t'  `tvar', lcolor(red)) 
 					local lowc (lowess `dvar_c'  `tvar', lcolor(orange))
 					if "`ci'" == "" {
-						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 5 - "Controls average:" 3 4 6) ///
+						if "`shade'" == "" {
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 5 - "Controls average:" 3 4 6) ///
 							label(1 "Actual") label(2 "Predicted") label(3 "Actual") ///
-							label(4 "Predicted") label(5 "Lowess") label(6 "Lowess") symxsize(8))
+							label(4 "Predicted") label(5 "Lowess") label(6 "Lowess") symxsize(8) position(6))
+						} // yes low, no ci, no shade
+						else {
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 2 3 6 - "Controls average:" 4 5 7) ///
+							label(2 "Actual") label(3 "Predicted") label(6 "Lowess") ///
+							label(4 "Actual") label(5 "Predicted") label(7 "Lowess") symxsize(8) position(6))							
+						} // yes low, no ci, yes shade
 					} // end no ci
-					
 					if "`ci'" != "" {
-						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 5 7 - "Controls average:" 3 4 6 9) ///
+						if "`shade'" == "" {						
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 5 7 - "Controls average:" 3 4 6 9) ///
 							label(1 "Actual") label(2 "Predicted") label(3 "Actual") label(4 "Predicted") ///					
-							label(5 "Lowess") label(6 "Lowess") label(7 "`clv'% CI") label(9 "`clv'% CI") symxsize(8))
+							label(5 "Lowess") label(6 "Lowess") label(7 "`clv'% CI") label(9 "`clv'% CI") symxsize(8) position(6))
+						} // yes low, yes ci, no shade
+						else {
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 2 3 6 8 - "Controls average:" 4 5 7 10) ///
+							label(2 "Actual") label(3 "Predicted") label(6 "Lowess") label(4 "Actual") ///					
+							label(5 "Predicted") label(7 "Lowess") label(8 "`clv'% CI") label(10 "`clv'% CI") symxsize(8) position(6))							
+						} // yes low, yes ci, yes shade 
 					} // end yes ci
 				} // end yes lowess			
 
 				if "`lowess'" == "" {
 					if "`ci'" == "" {
-						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 - "Controls average:" 3 4) ///
-							label(1 "Actual") label(2 "Predicted") label(3 "Actual") label(4 "Predicted") symxsize(8))					
-					}
+						if "`shade'" == "" {							
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 - "Controls average:" 3 4) ///
+							label(1 "Actual") label(2 "Predicted") label(3 "Actual") label(4 "Predicted") symxsize(8) position(6))					
+						} // no low, no ci, no shade
+						else {
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 2 3 - "Controls average:" 4 5) ///
+							label(2 "Actual") label(3 "Predicted") label(4 "Actual") label(5 "Predicted") symxsize(8) position(6))								
+						} // no low, no ci, yes shade
+					}	
 					if "`ci'" != "" {
-						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 5 - "Controls average:" 3 4 7) ///
+						if "`shade'" == "" {	
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 1 2 5 - "Controls average:" 3 4 7) ///
 							label(1 "Actual") label(2 "Predicted") label(3 "Actual") label(4 "Predicted") ///					
-							label(5 "`clv'% CI") label(7 "`clv'% CI") symxsize(8))
+							label(5 "`clv'% CI") label(7 "`clv'% CI") symxsize(8) position(6))
+						} // no low, yes ci, no shade
+						else {
+							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) order(- "`treatdesc': " 2 3 6 - "Controls average:" 4 5 8) ///
+							label(2 "Actual") label(3 "Predicted") label(4 "Actual") label(5 "Predicted") ///					
+							label(6 "`clv'% CI") label(8 "`clv'% CI") symxsize(8) position(6))							
+						} // no low, yes ci, yes shade
 					}
 				} // end no lowess				
-			
-				
+
 				// * graph it - xvars *//		
 				twoway ///
+					`shhh' ///						
 					(scatter `dvar_t' `ypred_t' `dvar_c' `ypred_c'  `tvar', c(. l . l) ms(O none Oh none) mcolor(black black black black) ///
 						lcolor(black black black black) lpattern(blank solid blank dash) xline(`trperiod', lpattern(shortdash) lcolor(black))) ///
 					`lowt' ///
@@ -1355,12 +1663,59 @@ version 11.0
 					`lclc' ///
 					`uclc' ///	
 					, `lowleg' ///
-					 `titlesec' note(`"`note'"') `figure2'	
-					 
+					ylabel(`results') ///					
+					`titlesec' note(`"`note'"') `figure2'	
 			} // end xvars
 		}   /* End of Figure Block */
 	}   /* End of Type 3 */
 
 end
+
+// the following code is a slightly modified version of Nick Cox's -nicelabels- code
+version 11.0
+mata : 
+
+void nicelabels(real min, real max, real nvals, real tight) { 
+        if (min == max) {
+                st_local("results", min) 
+                exit(0) 
+        }
+        real range, d, newmin, newmax
+        colvector nicevals 
+        range = nicenum(max - min, 0) 
+        d = nicenum(range / (nvals - 1), 1)
+        newmin = tight == 0 ? d * floor(min / d) : d * ceil(min / d)
+        newmax = tight == 0 ? d * ceil(max / d) : d * floor(max / d)  
+        nvals = 1 + (newmax - newmin) / d 
+        nicevals = newmin :+ (0 :: nvals - 1) :* d  
+        st_local("lower", strofreal(newmin))
+        st_local("upper", strofreal(newmax)) 			
+		st_local("interval", strofreal(d)) 
+        st_local("results", invtokens(strofreal(nicevals')))   
+}
+
+real nicenum(real x, real round) { 
+        real expt, f, nf 
+        expt = floor(log10(x)) 
+        f = x / (10^expt) 
+        
+        if (round) { 
+                if (f < 1.5) nf = 1 
+                else if (f < 3) nf = 2
+                else if (f < 7) nf = 5
+                else nf = 10 
+        }
+        else { 
+                if (f <= 1) nf = 1 
+                else if (f <= 2) nf = 2 
+                else if (f <= 5) nf = 5 
+                else nf = 10 
+        }
+
+		return(nf * 10^expt)
+}
+
+end 
+
 
 					

@@ -1,4 +1,5 @@
 {smcl}
+{* 02Nov2024}{...}
 {* 09Sep2024}{...}
 {* 20Aug2024}{...}
 {* 13May2024}{...}
@@ -29,13 +30,15 @@
 {p 8 12 2}
 {cmd:itsa} {depvar} [{indepvars}] {ifin} {weight}{cmd:,}
 {cmdab:trp:eriod(}{it:{help datetime:date}}{cmd:)} 
-[{opt sing:le} {opt treat:id(#)}
+[{opt sing:le} 
+{opt treat:id(#)}
 {cmdab:cont:id(}{it:{help numlist:numlist}}{cmd:)} 
 {opt prais} 
 {opt lag(#)}
 {opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]
+{opt low:ess}
 {opt ci}
-{opt low:ess} 
+{cmdab:shad:e(}{it:{help datetime:date1}} ; {it:{help datetime:date2}}{cmd:)} 
 {opt posttr:end} 
 {opt repl:ace} 
 {opt pre:fix(string)}
@@ -54,6 +57,31 @@ A dataset for a single panel must be declared to be time-series data by using
 {cmd:tsset} {it:timevar}. When the dataset contains multiple panels, a
 strongly balanced panel dataset using {cmd:tsset} {it:panelvar} {it:timevar}
 must be declared. See {helpb tsset}.
+
+
+
+{synoptset 30 tabbed}{...}
+{synopthdr}
+{synoptline}
+{p2coldent:* {opt trp:eriod}{cmd:(}{it:datelist}{cmd:)}}specify the time period(s) when the intervention begins (e.g. {cmd:trperiod(2020)} or {cmd:trperiod(2001q2)} or {cmd:trperiod(21jan2020 ; 08feb2020)})  {p_end}
+{synopt:{opt sing:le}}indicates that {cmd:itsa} will be used for a single-group analysis {p_end}
+{synopt:{opt treatid}{cmd:(#)}}specify the treated unit's identifier. Not required when only the treated unit is in the data 
+and {cmd:single} is specified {p_end}
+{synopt:{opt contid}{cmd:(numlist)}}specify a list of identifiers to be used as control units in the multiple-group analysis; default is to use all{p_end}
+{synopt:{opt prais}}fit a {helpb prais} model. Default is to fit a {helpb glm} model with Newey-West standard errors {p_end}
+{synopt:{opt lag}{cmd:(#)}}specify the maximum lag to be considered when a glm model with Newey-West standard errors is estimated{p_end}
+{synopt:{opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]}produce an interrupted time-series plot. Specifying {cmd:figure} without options uses the default graph settings {p_end}
+{synopt:{opt low:ess}}plot a lowess smoothed line of {it:depvar} on {it:timevar} on the figure{p_end}
+{synopt:{opt ci}}plot the confidence interval(s) on the figure {p_end}
+{synopt:{opt shade}{cmd:(}{it:date1} ; {it:date2}{cmd:)}}plot a shaded area on the figure between two dates, separated by a semicolon (e.g. {cmd:shade(21jan2020 ; 08feb2020)}) {p_end}
+{synopt:{opt posttr:end}}produce post-intervention trend estimates using {helpb lincom}, for the specified model {p_end}
+{synopt:{opt repl:ace}}replace variables created by {cmd:itsa} if they already exist {p_end}
+{synopt:{opt pre:fix}{cmd:(}{it:string}{cmd:)}}add a prefix to the names of variables created by {cmd:itsa}. Short prefixes are recommended {p_end}
+{synopt:[{it:model_options}]}specify all available options for {helpb prais} or {helpb glm}, depending on model chosen {p_end}
+{synoptline}
+{p 4 6 2}* {opt trperiod()} is required. {p_end}
+{p2colreset}{...}
+
 
 
 {title:Description}
@@ -90,13 +118,12 @@ available model options are allowed. {p_end}
 {phang}
 {cmd:trperiod(}{it:date}{cmd:)} specifies the time period when the
 intervention begins. The value(s) entered for time period(s) must be in the same
-units as the panel time variable specified in {cmd:tsset} {it:timevar}; see
-{helpb tsset}. Dates should be specified using the respective
-pseudofunction (see {helpb datetime:datetime}), such as {cmd:trperiod(2020)} 
-for a four-digit year, {cmd:trperiod(2019m11)} for quarterly data or 
-{cmd:trperiod(20jan2021)} for daily data. Multiple periods may be specified, 
-separated by a semicolon, as {cmd:trperiod(2019m6; 2019m11)}; {cmd:trperiod()} is
-required.
+units as the panel time variable specified in {helpb tsset}. Dates should be 
+specified using the respective pseudofunction (see {helpb datetime:datetime}), 
+such as {cmd:trperiod(2020)} for a four-digit year, {cmd:trperiod(2019m11)} for 
+quarterly data or {cmd:trperiod(20jan2021)} for daily data. Multiple periods 
+may be specified, separated by a semicolon, as {cmd:trperiod(2019m6 ; 2019m11)}; 
+{cmd:trperiod() is required}.
 
 {phang}
 {cmd:single} indicates that {cmd:itsa} will be used for a single-group
@@ -125,8 +152,7 @@ as the default model.
 {phang}
 {cmd:lag(}{it:#}{cmd:)} specifies the maximum lag to be considered in the
 autocorrelation structure when a {cmd:glm} model with Newey-West standard errors 
-is chosen. If the user specifies {cmd:lag(0)}, the default, the output is the 
-same as {cmd:glm,} {cmd:vce(robust)}.  An error message will appear if 
+is chosen (the default is {cmd:lag(0)}). An error message will appear if 
 both {cmd:prais} and {cmd:lag()} are specified, because {cmd:prais} implements 
 an AR(1) model by design.
 
@@ -137,9 +163,10 @@ of the actual values of {it:depvar} over time. In a multiple-group analysis,
 {cmd:figure} plots the average values of all controls used in the analysis
 (more specifically, data for specified controls are collapsed and the monthly
 observations are averaged). Specifying {cmd:figure} without options uses the
-default graph settings. Note: in Stata version 18, the legend appears on
-the right side of the graph by default. To ensure that the legend appears at 
-the bottom center, type as an option: {cmd:figure(legend(position(6)))}
+default graph settings.
+
+{phang}
+{cmd:lowess} plots a lowess smoothed line of {it:depvar} on {it:timevar}.
 
 {phang}
 {cmd:ci} plots the confidence interval(s) on the {cmd:figure}. By default,
@@ -147,8 +174,16 @@ the bottom center, type as an option: {cmd:figure(legend(position(6)))}
 a model option.
 
 {phang}
-{cmd:lowess} plots a lowess smoothed line of {it:depvar} on {it:timevar}.
-
+{cmd:shade(}{it:date1} ; {it:date2}{cmd:)} plots a shaded area on the figure 
+between two dates, specified by the user and separated by a semicolon. The values 
+entered for time periods must be in the same units as the panel time variable 
+specified in {helpb tsset}. Dates should be specified using the respective 
+pseudofunction (see {helpb datetime:datetime}), such as {cmd:shade(2020 ; 2021)} 
+for a four-digit year, {cmd:shade(2019m11 ; 2020m3)} for quarterly data or 
+{cmd:shade(20jan2021 ; 30jan2021)} for daily data. Shading may be helpful to 
+highlight a "washout" period before introduction of the intervention, or 
+to highlight some other event worthy of note.
+ 
 {phang}
 {cmd:posttrend} produces posttreatment trend estimates using {helpb lincom},
 for the specified model. In the case of a single-group ITSA, one estimate is
@@ -170,6 +205,7 @@ created by {cmd:itsa}. Short prefixes are recommended.
 {it:model_options} specify all available options for {helpb prais} when the
 {cmd:prais} option is chosen; otherwise, all available options for 
 {helpb glm} can be specified.
+
 
 
 {title:Remarks} 
@@ -241,6 +277,7 @@ outcomes (Linden and Adams 2011). See Linden (2017a) for many
 additional ITSA postestimation measures.
 
 
+
 {title:Examples}
 
 {pstd}
@@ -266,12 +303,12 @@ We then run {helpb actest} to test for autocorrelation over the past 12
 periods. (See Linden and Yarnold [2016] for a comprehensive
 discussion.){p_end}
 
-{phang3}{bf:{stata "itsa cigsale, single trperiod(1989) lag(1) figure(legend(position(6))) posttrend": . itsa cigsale, single trperiod(1989) lag(1) figure(legend(position(6))) posttrend}}{p_end}
+{phang3}{bf:{stata "itsa cigsale, single trperiod(1989) lag(1) fig posttrend": . itsa cigsale, single trperiod(1989) lag(1) fig posttrend}}{p_end}
 {phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
 
 {pmore}
-Same as above but we now specify that the confidence interval be added to the graph {p_end}
-{phang3}{bf:{stata "itsa cigsale, single trperiod(1989) lag(1) figure(legend(position(6))) posttrend ci replace": . itsa cigsale, single trperiod(1989) lag(1) figure(legend(position(6))) posttrend ci replace}}{p_end}
+Same as above but we now specify that the confidence interval and lowess smoother be added to the graph {p_end}
+{phang3}{bf:{stata "itsa cigsale, single trperiod(1989) lag(1) fig posttrend ci low replace": . itsa cigsale, single trperiod(1989) lag(1) fig posttrend ci low replace}}{p_end}
 
 {pmore}
 Now we use the rescaled outcome ({opt cigsale_scaled}) which lies between 0 and 1, and accordingly, we specify the binomial GLM family with logit link. We also add CIs to the graph {p_end}
@@ -280,10 +317,15 @@ Now we use the rescaled outcome ({opt cigsale_scaled}) which lies between 0 and 
 {phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
 
 {pmore}
-Now we use the rescaled count outcome ({opt cigsale_count}) which is a non-negative integer, and accordingly, we specify the poisson GLM family with log link. Additionally, we add CIs to the graph {p_end}
+Now we use the rescaled count outcome ({opt cigsale_count}) which is a non-negative integer, and accordingly, we specify the poisson GLM family with log link. Additionally, we add CIs and a
+lowess smoother to the graph {p_end}
 
-{phang3}{bf:{stata "itsa cigsale_count, single trperiod(1989) lag(1) fig posttrend f(poisson) l(log) replace ci": . itsa cigsale_count, single trperiod(1989) lag(1) fig posttrend f(poisson)l(log) replace ci}}{p_end}
+{phang3}{bf:{stata "itsa cigsale_count, single trperiod(1989) lag(1) fig posttrend f(poisson) l(log) replace ci low": . itsa cigsale_count, single trperiod(1989) lag(1) fig posttrend f(poisson)l(log) replace ci low}}{p_end}
 {phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
+
+{pmore}
+We now specify two treatment periods and shade the area between them on the graph, We also add the confidence interval and lowess smoother to the graph {p_end}
+{phang3}{bf:{stata "itsa cigsale, single trperiod(1986; 1989) shade(1986; 1989) lag(1) fig posttrend ci low replace": . itsa cigsale, single trperiod(1986 ; 1989) shade(1986; 1989) lag(1) fig posttrend ci low replace}}{p_end}
 
 
 {pstd}
@@ -302,30 +344,30 @@ the results with an added lowess smoother, and produce a table of the posttreatm
 We then run {helpb actest} to test for autocorrelation over the past 12
 periods.
 
-{phang3}{bf:{stata "itsa cigsale, single treat(3) trperiod(1989) lag(1) figure(legend(position(6))) low posttrend replace": . itsa cigsale, single treatid(3) trperiod(1989) lag(1) figure(legend(position(6))) low posttrend replace}}{p_end}
+{phang3}{bf:{stata "itsa cigsale, single treat(3) trperiod(1989) lag(1) fig low posttrend replace": . itsa cigsale, single treatid(3) trperiod(1989) lag(1) fig low posttrend replace}}{p_end}
 {phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
 
 {pmore}
 Same as above, but we now specify that CIs be presented on the graph instead of the lowess smoother.
 
-{phang3}{bf:{stata "itsa cigsale, single treat(3) trperiod(1989) lag(1) figure(legend(position(6))) posttrend replace ci": . itsa cigsale, single treatid(3) trperiod(1989) lag(1) figure(legend(position(6))) posttrend replace ci}}{p_end}
+{phang3}{bf:{stata "itsa cigsale, single treat(3) trperiod(1989) lag(1) fig posttrend replace ci": . itsa cigsale, single treatid(3) trperiod(1989) lag(1) fig posttrend replace ci}}{p_end}
 
 {pmore}
 Now we specify {cmd:prais} to fit an AR(1) model.  We specify {cmd:rhotype(tscorr)}, which bases p on the autocorrelation of the
-residuals, and compute robust standard errors. We also add CIs to the graph
+residuals, and compute robust standard errors. We also add CIs and a lowess smoother to the graph
 
-{phang3}{bf:{stata "itsa cigsale, single treatid(3) trperiod(1989) posttrend replace prais rhotype(tscorr) vce(robust) fig ci":. itsa cigsale, single treatid(3) trperiod(1989) posttrend replace prais rhotype(tscorr) vce(robust) fig ci}} {p_end}
+{phang3}{bf:{stata "itsa cigsale, single treatid(3) trperiod(1989) posttr replace prais rhotype(tscorr) vce(robust) fig ci low":. itsa cigsale, single treatid(3) trperiod(1989) posttr replace prais rhotype(tscorr) vce(robust) fig ci low}} {p_end}
 
 {pmore}
-Here we specify two treatment periods, starting in 1982 and 1989 and specify
+Here we specify two treatment periods and shade the area between them, starting in 1982 and 1989 and specify
 that {cmd:xlabel()} shows 5-year increments. We also add a lowess smoother to the graph.
 
-{phang3}{bf:{stata "itsa cigsale, single treat(3) trperiod(1982; 1989) lag(1) figure(xlabel(1970(5)2000)) low posttr replace":. itsa cigsale, single treatid(3) trperiod(1982; 1989) lag(1) figure(xlabel(1970(5)2000)) low posttr replace}}{p_end}
+{phang3}{bf:{stata "itsa cigsale, single treat(3) trperiod(1982; 1989) shade(1982; 1989) lag(1) fig low replace":. itsa cigsale, single treatid(3) trperiod(1982; 1989) shade(1982; 1989) lag(1) figure(xlabel(1970(5)2000)) low replace}}{p_end}
 
 {pmore}
-Here we limit the range of observations to the period 1975 to 1995.
+Here we limit the range of observations to the period 1975 to 1995 and add CIs to the graph.
 
-{phang3}{bf:{stata "itsa cigsale if inrange(year, 1975, 1995), single treatid(3) trperiod(1982; 1989) lag(1) figure posttr replace":. itsa cigsale if inrange(year, 1975, 1995), single treatid(3) trperiod(1982; 1989) lag(1) figure posttr replace}}
+{phang3}{bf:{stata "itsa cigsale if inrange(year, 1975, 1995), single treatid(3) trperiod(1982; 1989) lag(1) fig ci posttr replace":. itsa cigsale if inrange(year, 1975, 1995), single treatid(3) trperiod(1982; 1989) lag(1) fig ci posttr replace}} 
 
 
 {pstd}
@@ -335,12 +377,12 @@ Here we limit the range of observations to the period 1975 to 1995.
 We specify a multiple-group ITSA by omitting {cmd:single} and allowing all
 other groups in the file to be used as control groups.{p_end}
 
-{phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1989) lag(1) figure(legend(position(6))) posttrend replace":. itsa cigsale, treatid(3) trperiod(1989) lag(1) figure(legend(position(6))) posttrend replace}}{p_end}
+{phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1989) lag(1) fig posttrend replace":. itsa cigsale, treatid(3) trperiod(1989) lag(1) fig posttrend replace}}{p_end}
 
 {pmore}
-Same as above, but we add CIs to the graph.
+Same as above, but we add CIs and lowess smoother to the graph.
 
-{phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1989) lag(1) figure(legend(position(6))) posttrend replace ci":. itsa cigsale, treatid(3) trperiod(1989) lag(1) figure(legend(position(6))) posttrend replace ci}}{p_end}
+{phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1989) lag(1) fig posttrend replace ci low":. itsa cigsale, treatid(3) trperiod(1989) lag(1) fig posttrend replace ci low}}{p_end}
 
 {pmore}
 Here we specify the ITSA model using weights described in Abadie et al. (2010) as {opt aweights} and estimate the weighted model. We also add a lowess smoother to the graph.
@@ -348,10 +390,9 @@ Here we specify the ITSA model using weights described in Abadie et al. (2010) a
 {phang3}{bf:{stata "itsa cigsale [aw=weights], treatid(3) trperiod(1989) replace figure(xlabel(1970(5)2000)) posttrend low": . itsa cigsale [aw=weights], treatid(3) trperiod(1989) replace figure(xlabel(1970(5)2000)) posttrend low}}{p_end}
 
 {pmore}
-Same as above, but we now indicate specific control groups to use in the
-analysis that were identified using {helpb itsamatch}.
+We now indicate specific control groups to use in the analysis that were identified using {helpb itsamatch}. We add a lowess smoother to the graph
 
-{phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1989) contid(4 8 19) lag(1) replace figure(xlabel(1970(5)2000)) posttrend": . itsa cigsale, treatid(3) trperiod(1989) contid(4 8 19) lag(1) replace figure(xlabel(1970(5)2000)) posttrend}}
+{phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1989) contid(4 8 19) lag(1) replace figure(xlabel(1970(5)2000)) posttr low": . itsa cigsale, treatid(3) trperiod(1989) contid(4 8 19) lag(1) replace figure(xlabel(1970(5)2000)) posttr low}}
 
 {pmore}
 We now use the rescaled binary [0,1] version of the outcome ({opt cigsale_scaled}) with the best single match identified using {helpb itsamatch}. We also add a lowess smoother to the graph.
@@ -367,6 +408,11 @@ Now we use the rescaled count version of the outcome ({opt cigsale_count}) with 
 Here we add a covariate {cmd:retprice} to the model and specify that estimates be computed at the 99% level. We also add CIs to the graph. One can see that, with the addition of covariates, the estimates are no longer linear.   
 
 {phang3}{bf:{stata "itsa cigsale retprice, treatid(3) trperiod(1989) replace fig posttrend ci level(99)": . itsa cigsale retprice, treatid(3) trperiod(1989) replace fig posttrend ci level(99)}}{p_end}
+
+{pmore}
+Here we specify two treatment periods and shade the area between them on the graph. We also add CIs and lowess smoother.
+
+{phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1986; 1989) shade(1986 ; 1989) lag(1) replace fig posttr ci low": . itsa cigsale, treatid(3) trperiod(1986; 1989) shade(1986 ; 1989) lag(1) replace fig posttr ci low}}
 
 
 
@@ -400,6 +446,7 @@ be applied to all variables generated by {cmd:itsa}.
 {p2colreset}{...}
 
 
+
 {title:Acknowledgments}
 
 {p 4 4 2}
@@ -410,6 +457,7 @@ and help with various other improvements to {cmd:itsa}. Federico Tedeschi
 found an error in the multiple-group or multiple-intervention posttrend
 estimation. Nicola Orsini correctly noted that {cmd:_t} should start at 0,
 rather than 1. 
+
 
 
 {title:References}
@@ -514,14 +562,17 @@ Simonton, D. K. 1977b. Erratum to Simonton. {it:Psychological Bulletin}
 84: 1097.
 
 
+
 {title:Author}
 
 {pstd}Ariel Linden{p_end}
 {pstd}Linden Consulting Group, LLC{p_end}
 {pstd}alinden@lindenconsulting.org{p_end}
        
- 
+
+
 {title:Also see}
+
 {p 4 13 2}	
           Article: {it:Stata Journal}, volume 24, number 2: {browse "https://doi.org/10.1177/1536867X241258015":st0389_9},{break}
                     {it:Stata Journal}, volume 22, number 1: {browse "https://doi.org/10.1177/1536867X221083929":st0389_8},{break}

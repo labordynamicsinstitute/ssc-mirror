@@ -1,6 +1,7 @@
 p iati module to import International Aid Transparency Initiative data
 p ic module to compute measures of interaction contrast (biological interaction) 
 p icalc module to compute Interaction Effects in Linear and Generalized Linear Models
+p icc2 module to compute Intraclass correlation coefficients based on crossed mixed regression
 p icc23 module that computes models 2 and 3 of the intra-class correlation
 p iccconf module to compute a confidence interval for an intraclass correlation (ICC)
 p iccvar module to calculate intraclass correlation (ICC) after xtmixed

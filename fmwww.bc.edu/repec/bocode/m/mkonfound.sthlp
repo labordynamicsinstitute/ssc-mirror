@@ -13,7 +13,7 @@
 {title:Title}
 
 {phang}
-{bf:mkonfound} {hline 2} Beta version: For multiple studies, this command calculates (1) % bias necessary to invalidate/sustain an inference; (2) the impact threshold of an omitted confounding variable to invalidate/sustain an inference.
+{bf:mkonfound} {hline 2} Beta version: For multiple studies, this command calculates (1) how much bias there must be in an estimate to invalidate/sustain an inference; (2) the impact of an omitted variable necessary to invalidate/sustain an inference for a regression coefficient.
 
 
 {marker syntax}{...}
@@ -40,27 +40,20 @@
 {title:Description}
 
 {phang}
-{cmd:mkonfound} calculates the impact of an omitted variable necessary to invalidate an inference of a 
-regression coefficient for multiple studies. The command also assesses how strong an omitted 
-variable must be correlated with the outcome and with the predictor of interest to invalidate/sustain the 
-inference for each study. Users input two variables: the observed t-ratio and the degrees of freedom for each study. 
-The command {cmd:mkonfound} produces four variables.  The first variable is {it:itcv_}, indicating the 
-impact of an omitted variable needed to invalidate/sustain the inference.  The second variable is
- {it:r_cv_y}, indicating the correlation between the omitted variable and the outcome necessary to 
-invalidate/sustain an inference, conditioning on other covariates.  Third variable is {it:r_cv_x}, 
-indicating the correlation between the omitted variable and the predictor of interest necessary 
-to invalidate/sustain an inference, conditioning on other covariates.  Fourth variable is 
-{it:stat_sig_}, indicating if the original regression coefficient is statistically significant;  
-1 if yes and 0 otherwise. {p_end}
+{cmd:mkonfound} (1) Calculate how much bias there must be in an estimate to invalidate/sustain an inference for multiple studies. The bias necessary to invalidate/sustain an inference is interpreted in terms of sample replacement.
+Users input two variables: the observed t-ratio and the degrees of freedom in each study. The command {cmd:mkonfound} produces two variables.
+First variable is {it:percent_replace}, indicating how many percent of the original cases must be replaced to invalidate the inference;
+Second variable is {it:percent_sustain}, indicating how many percent of the original cases must be replaced to sustain the inference. 
+The mkonfound command calculates the pecentage bias based on the correlation between the predictor of interest and the outcome relative to a threshold correlation.  
+This allows comparability across studies and may differ from application to individual studies in the pkonfound command. {p_end}
 {phang}
-{cmd:mkonfound} also calculates how much bias there must be in an estimate to invalidate (or to sustain) an 
-inference for multiple studies. The % bias necessary to invalidate/sustain an inference is interpreted 
-in terms of sample replacement.  Users input two variables: the observed t-ratio and the degrees 
-of freedom in each study. The command mkonfound produces two variables. The first variable is 
-{it:percent_replace}, indicating what % of the original cases must be replaced to invalidate the 
-inference; the second variable is {it:percent_sustain}, indicating what % of the original cases 
-must be replaced to sustain an inference. {p_end}
-
+{cmd:mkonfound} (2) Calculate the impact of an omitted variable on the inference of a regression coefficient for multiple studies. The command also assesses how strong an omitted variable 
+has to be correlated with the outcome and the predictor of interest to invalidate/sustain the inference for each study.
+Users input two variables: the observed t-ratio and the degrees of freedom in each study. The command {cmd:mkonfound} produces four variables.
+First variable is {it:itcv_}, indicating the impact of an omitted variable needed to invalidate/sustain the inference.
+Second variable is {it:r_cv_y}, indicating the correlation between the omitted variable and the outcome necessary to invalidate/sustain an inference, conditioning on other covariates.
+Third variable is {it:r_cv_x}, indicating the correlation between the omitted variable and the predictor of interest necessary to invalidate/sustain an inference, conditioning on other covariates.
+Fourth variable is {it:stat_sig_}, indicating if the original regression coefficient is statistically significant. 1 if yes and 0 otherwise. {p_end}
 
 {marker options}{...}
 {title:Options}
@@ -86,7 +79,7 @@ default is 0 {cmd:nu(0)}
 {opt z_tran(#)} Calculates the % bias based on Fisher's z-transformation (only apply to non-zero hypothesis testing);
         default calculation is based on the original test statistic {cmd:z_tran(0)};
 		to calculate based on Fisher's z use {cmd:z_tran(1)}. 
-		This option will produce two additional variables based on Fisher's z: {it:percent_replace_z} and {it:percent_sustain_z}
+		And the command will produce two additional variables based on Fisher's z: {it:percent_replace_z} and {it:percent_sustain_z}
 		
 		
 {marker remarks}{...}
@@ -98,8 +91,6 @@ For a graphical illustration of the impact of a confounding variable see {browse
 {phang}
 For additional details of the calculations in a spreadsheet format and other supporting materials see {browse "https://msu.edu/~kenfrank/research.htm#causal"}. {p_end}
 
-{phang}
-For a web-based version of konfound see {browse "http://konfound-it.com"}. {p_end}
 
 {marker examples}{...}
 {title:Examples}
@@ -139,4 +130,4 @@ Pan, W., and Frank, K.A., 2004. A probability index of the robustness of a causa
 Frank, K.A., Gary Sykes, Dorothea Anagnostopoulos, Marisa Cannata, Linda Chard, Ann Krause, Raven McCrory. 2008. Extended Influence: National Board Certified Teachers as Help Providers.  Education, Evaluation, and Policy Analysis.  Vol 30(1): 3-30.
 
 {pstd}
-Frank, K.A., Maroulis, S., Duong, M., and Kelcey, B. 2013.  What would it take to Change an Inference?: Using Rubin’s Causal Model to Interpret the Robustness of Causal Inferences.   Education, Evaluation and Policy Analysis.  Vol 35: 437-460.
+Frank, K.A., Maroulis, S., Duong, M., and Kelcey, B. 2013.  What would it take to Change an Inference?: Using Rubin s Causal Model to Interpret the Robustness of Causal Inferences.   Education, Evaluation and Policy Analysis.  Vol 35: 437-460.

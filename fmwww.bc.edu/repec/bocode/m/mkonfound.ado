@@ -118,15 +118,15 @@ gen `threshold' = `criticalt' * `sd'
   else {
   gen `bias' = round(100*(1- (`threshold'/(`coef'-`nu'))),.01)
   }
-quietly    gen `sustain' = round(100*(1- ((`coef')/((`threshold'+`nu')))),.01)
-quietly	replace `sustain' = round(100*(1- ((`threshold'+`nu')/(`coef'))),.01) if abs(`coef') > abs(`threshold'+`nu')
+    gen `sustain' = round(100*(1- ((`coef')/((`threshold'+`nu')))),.01)
+	replace `sustain' = round(100*(1- ((`threshold'+`nu')/(`coef'))),.01) if abs(`coef') > abs(`threshold'+`nu')
   
-quietly gen valid_ = (abs(`coef' - `nu')- abs(`threshold'))
-quietly gen percent_replace=`bias'
-quietly replace percent_replace =. if  valid_ < 0
-quietly gen percent_sustain = `sustain'
-quietly replace percent_sustain =. if  valid_ > 0
-quietly  drop valid_ 
+gen valid_ = (abs(`coef' - `nu')- abs(`threshold'))
+gen percent_replace=`bias'
+replace percent_replace =. if  valid_ < 0
+gen percent_sustain = `sustain'
+replace percent_sustain =. if  valid_ > 0
+  drop valid_ 
   
 }
 
@@ -139,15 +139,15 @@ else {
   else {
   gen `bias' = round(100*(1- (`threshold'/(`coef'-`nu'))),.01)
   }
-quietly  gen `sustain' = round(100*(1- ((`coef')/(`threshold'+(`nu')))),.01)
-quietly  replace `sustain' = round(100*(1- ((`threshold'+`nu')/(`coef'))),.01) if abs(`coef') > abs(`threshold'+`nu')
+  gen `sustain' = round(100*(1- ((`coef')/(`threshold'+(`nu')))),.01)
+  replace `sustain' = round(100*(1- ((`threshold'+`nu')/(`coef'))),.01) if abs(`coef') > abs(`threshold'+`nu')
   
-quietly gen valid_ = (abs(`coef' - `nu')- abs(`threshold'))  
-quietly gen percent_replace=`bias'
-quietly replace percent_replace =. if  valid_ < 0
-quietly gen percent_sustain = `sustain'
-quietly replace percent_sustain =. if  valid_ > 0
-quietly drop valid_ 
+gen valid_ = (abs(`coef' - `nu')- abs(`threshold'))  
+gen percent_replace=`bias'
+replace percent_replace =. if  valid_ < 0
+gen percent_sustain = `sustain'
+replace percent_sustain =. if  valid_ > 0
+ drop valid_ 
   
   
   }
@@ -169,14 +169,14 @@ gen `threshold' = `criticalt'/sqrt(`criticalt'^2+`df')
   
   gen `bias' = round(100*(1- ((`threshold')/`obsr')),.01)
   
-quietly      gen `sustain' = round(100*(1- ((`obsr')/((`threshold'+`nu')))),.01)
-quietly  replace `sustain' = round(100*(1- ((`threshold'+`nu')/(`obsr'))),.01) if abs(`obsr') > abs(`threshold'+`nu')
-quietly gen valid_ = (abs(`obsr' - `nu')- abs(`threshold')) 
-quietly gen percent_replace=`bias'
-quietly replace percent_replace =. if  valid_ <0
-quietly gen percent_sustain = `sustain'
-quietly replace percent_sustain =. if  valid_ >0
-quietly drop valid_ 
+      gen `sustain' = round(100*(1- ((`obsr')/((`threshold'+`nu')))),.01)
+  replace `sustain' = round(100*(1- ((`threshold'+`nu')/(`obsr'))),.01) if abs(`obsr') > abs(`threshold'+`nu')
+gen valid_ = (abs(`obsr' - `nu')- abs(`threshold')) 
+gen percent_replace=`bias'
+replace percent_replace =. if  valid_ <0
+gen percent_sustain = `sustain'
+replace percent_sustain =. if  valid_ >0
+ drop valid_ 
   }
   
   else {
@@ -186,14 +186,14 @@ quietly drop valid_
   else {
   gen `bias2' = round(100*(1- (`threshold'/(`obsr'-`nu'))),.01)
   }
-quietly  gen `sustain2' = round(100*(1- ((`obsr')/(`threshold'+(`nu')))),.01)
-quietly  replace `sustain2' = round(100*(1- ((`threshold'+`nu')/(`obsr'))),.01) if abs(`obsr') > abs(`threshold'+`nu')
-quietly gen valid_2 = (abs(`obsr' - `nu')- abs(`threshold')) 
-quietly gen percent_replace=`bias2'
-quietly replace percent_replace =. if  valid_2 <0
-quietly gen percent_sustain = `sustain2'
-quietly replace percent_sustain =. if  valid_2 >0
-quietly drop valid_2 
+  gen `sustain2' = round(100*(1- ((`obsr')/(`threshold'+(`nu')))),.01)
+  replace `sustain2' = round(100*(1- ((`threshold'+`nu')/(`obsr'))),.01) if abs(`obsr') > abs(`threshold'+`nu')
+gen valid_2 = (abs(`obsr' - `nu')- abs(`threshold')) 
+gen percent_replace=`bias2'
+replace percent_replace =. if  valid_2 <0
+gen percent_sustain = `sustain2'
+replace percent_sustain =. if  valid_2 >0
+ drop valid_2 
   
   
   tempvar crit_z thres_z z_nu thres_r thres_z1 z_obs
@@ -210,16 +210,16 @@ quietly drop valid_2
   gen `bias' = round(100*(1- ((`thres_r'-`nu')/(`obsr'-`nu'))),.01)
   }
   
-quietly  gen `sustain' = round(100*(1- ((`obsr')/((`thres_r')))),.01)
-quietly  replace `sustain' = round(100*(1- ((`thres_r')/(`obsr'))),.01) if abs(`obsr') > abs(`thres_r')
+  gen `sustain' = round(100*(1- ((`obsr')/((`thres_r')))),.01)
+  replace `sustain' = round(100*(1- ((`thres_r')/(`obsr'))),.01) if abs(`obsr') > abs(`thres_r')
   
   if `z_tran' ==1 {
-quietly gen valid_ = (abs(`z_obs'-`z_nu')- abs(`thres_z1'))  
-quietly gen percent_replace_z=`bias'
-quietly replace percent_replace_z =. if  valid_ <0
-quietly gen percent_sustain_z = `sustain'
-quietly replace percent_sustain_z =. if  valid_ >0
-quietly    drop valid_ 
+gen valid_ = (abs(`z_obs'-`z_nu')- abs(`thres_z1'))  
+gen percent_replace_z=`bias'
+replace percent_replace_z =. if  valid_ <0
+gen percent_sustain_z = `sustain'
+replace percent_sustain_z =. if  valid_ >0
+    drop valid_ 
 	}
   }
   
@@ -237,14 +237,14 @@ gen `obsr'= `obst'/sqrt(`obst'^2+`df')
   
   gen `bias' = round(100*(1- ((`threshold')/`obsr')),.01)
   
-quietly      gen `sustain' = round(100*(1- ((`obsr')/((`threshold'+`nu')))),.01)
-quietly  replace `sustain' = round(100*(1- ((`threshold'+`nu')/(`obsr'))),.01) if abs(`obsr') > abs(`threshold'+`nu')
-quietly gen valid_ = (abs(`obsr' - `nu')- abs(`threshold')) 
-quietly gen percent_replace=`bias'
-quietly replace percent_replace =. if  valid_ <0
-quietly gen percent_sustain = `sustain'
-quietly replace percent_sustain =. if  valid_ >0
-quietly drop valid_ 
+      gen `sustain' = round(100*(1- ((`obsr')/((`threshold'+`nu')))),.01)
+  replace `sustain' = round(100*(1- ((`threshold'+`nu')/(`obsr'))),.01) if abs(`obsr') > abs(`threshold'+`nu')
+gen valid_ = (abs(`obsr' - `nu')- abs(`threshold')) 
+gen percent_replace=`bias'
+replace percent_replace =. if  valid_ <0
+gen percent_sustain = `sustain'
+replace percent_sustain =. if  valid_ >0
+ drop valid_ 
   }
   else {
     if `rep_0'==1 {
@@ -253,14 +253,14 @@ quietly drop valid_
   else {
   gen `bias2' = round(100*(1- (`threshold'/(`obsr'-`nu'))),.01)
   }
-quietly  gen `sustain2' = round(100*(1- ((`obsr')/(`threshold'+(`nu')))),.01)
-quietly  replace `sustain2' = round(100*(1- ((`threshold'+`nu')/(`obsr'))),.01) if abs(`obsr') > abs(`threshold'+`nu')
-quietly gen valid_2 = (abs(`obsr' - `nu')- abs(`threshold')) 
-quietly gen percent_replace=`bias2'
-quietly replace percent_replace =. if  valid_2 <0
-quietly gen percent_sustain = `sustain2'
-quietly replace percent_sustain =. if  valid_2 >0
-quietly drop valid_2 
+  gen `sustain2' = round(100*(1- ((`obsr')/(`threshold'+(`nu')))),.01)
+  replace `sustain2' = round(100*(1- ((`threshold'+`nu')/(`obsr'))),.01) if abs(`obsr') > abs(`threshold'+`nu')
+gen valid_2 = (abs(`obsr' - `nu')- abs(`threshold')) 
+gen percent_replace=`bias2'
+replace percent_replace =. if  valid_2 <0
+gen percent_sustain = `sustain2'
+replace percent_sustain =. if  valid_2 >0
+ drop valid_2 
  
   tempvar crit_z thres_z z_nu thres_r z_obs thres_z1
   gen `crit_z' =sign(`obsr'-`nu') *  invttail(10000,`sig'/2)
@@ -276,17 +276,17 @@ quietly drop valid_2
   gen `bias' = round(100*(1- ((`thres_r'-`nu')/(`obsr'-`nu'))),.01)
   }
   
-quietly  gen `sustain' = round(100*(1- ((`obsr')/((`thres_r')))),.01)
- quietly replace `sustain' = round(100*(1- ((`thres_r')/(`obsr'))),.01) if abs(`obsr') > abs(`thres_r')
+  gen `sustain' = round(100*(1- ((`obsr')/((`thres_r')))),.01)
+  replace `sustain' = round(100*(1- ((`thres_r')/(`obsr'))),.01) if abs(`obsr') > abs(`thres_r')
   
   if `z_tran' ==1 {
   
-quietly gen valid_ = (abs(`z_obs'-`z_nu')- abs(`thres_z1')) 
-quietly gen percent_replace_z=`bias'
-quietly replace percent_replace_z =. if  valid_ <0
-quietly gen percent_sustain_z = `sustain'
-quietly replace percent_sustain_z =. if  valid_ >0
-quietly   drop valid_ 
+gen valid_ = (abs(`z_obs'-`z_nu')- abs(`thres_z1')) 
+gen percent_replace_z=`bias'
+replace percent_replace_z =. if  valid_ <0
+gen percent_sustain_z = `sustain'
+replace percent_sustain_z =. if  valid_ >0
+    drop valid_ 
 	}
   } 
   

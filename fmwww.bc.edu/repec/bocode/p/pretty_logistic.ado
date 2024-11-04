@@ -70,44 +70,73 @@ capture program drop pretty_logistic
 	if "`vlname'" != "" {
 		
 	qui foreach level of local levelcheck{
+		
 	local m = `m' + 1
 	local vl`m':label `vlname' `level'
+	
 	}
 	
 	}
 	
 	if `:word count `levelcheck'' > 2 {
-		di as error "Predictor contains more than two levels"
-		exit
+		/*di as error "Predictor contains more than two levels"
+		exit*/
+		
+		local levelnotbinary = 1 
+		
 	}
+	
+		else {
+			
+			local levelnotbinary = 0 
+		}
 
-	tokenize "`levelcheck'"
-	
-	qui recode `predictor' (`1' = 0) (`2' = 1)
-	
-	***********************************************
-	** Collecting value labels for the predictor ** 
-	***********************************************	
-	if "`vlname'" != "" {
+	if `levelnotbinary' == 0 {
 		
-	label define predictorlabel 0 "`vl1'" 1 "`vl2'"
-	label values `predictor' predictorlabel
-	
+		tokenize "`levelcheck'"
 		
-	local a: label(`predictor') 0
-	local b: label(`predictor') 1
+		qui recode `predictor' (`1' = 0) (`2' = 1)
+		
+		***********************************************
+		** Collecting value labels for the predictor ** 
+		***********************************************	
+		
+		if "`vlname'" != "" {
+			
+		label define predictorlabel 0 "`vl1'" 1 "`vl2'"
+		label values `predictor' predictorlabel
+		
+			
+		local a: label(`predictor') 0
+		local b: label(`predictor') 1
+		
+		label drop predictorlabel
+		
+		}
+		
+		
+		else {
+		
+		local a "a"
+		local b "b"
 	
-	label drop predictorlabel
 	}
 	
+		*********************************************
+		** Creating local for factor specification **
+		********************************************
+		
+		local predictorspecific i.`predictor'
+		
+		di "`predictorspecific'"
+		
+	}
 	
 	else {
 	
-	local a "a"
-	local b "b"
+	local predictorspecific `predictor'
 	
 	}
-	
 	
 	****************************************
 	** Labelling outcomes if not labelled ** 
@@ -139,10 +168,12 @@ capture program drop pretty_logistic
 ** CALCULATE DESCRIPTIVES FOR LOGISTIC TABLES **
 ************************************************ 
 	*Freq and Percent
+	if `levelnotbinary' != 1 {
+		
 	table () (`predictor') `weight', ///
 	stat(fvfrequency `outcomes') ///
 	stat(fvpercent `outcomes')
-		
+	
 	*Counts
 	count if `predictor' == 0
 	local A_N `r(N)'
@@ -150,8 +181,18 @@ capture program drop pretty_logistic
 	count if `predictor' == 1 
 	local B_N `r(N)'
 		
+	}	
+	
+	else {
+		
+	table ()() `weight', ///
+	stat(fvfrequency `outcomes') ///
+	stat(fvpercent `outcomes')
+		
+	}
+		
 	** Bold Category Headings 	
-	qui foreach var of local outcomes {
+ 	qui foreach var of local outcomes {
 	local q = `q' + 1
 	local variablelabel :variable label `var'
 	
@@ -161,10 +202,9 @@ capture program drop pretty_logistic
 	
 	local `var'fl ``var'fl' `l'.`var'
 	
-
 	}
 	
-	
+
 	if "`variablelabel'" != "" {
 	collect addtags varheading`q'["`:variable label `var''"], ///
 	fortags(colname[``var'fl'])
@@ -213,16 +253,18 @@ capture program drop pretty_logistic
 		****************************
 		** RD with no confounder **
 		****************************
-		if `"`:word `j' of `logtype''"' == "rd"{
+		if `"`:word `j' of `logtype''"' == "rd" {
 		
 		if `:word count `confounders'' == 0 & ///
 		`:word count `reequation'' == 0 {		
 		
 		** Calculate risk difference
-		qui foreach var of local outcomes{
-		melogit `var' i.`predictor' `weight', or allbase
+		noisily foreach var of local outcomes {
+		melogit `var' `predictorspecific' `weight', or allbase
 		collect get _r_b _r_lb _r_ub: margins, dydx(`predictor')
 		local i = `i' + 1
+		
+		if `levelnotbinary' == 0 {
 		collect remap colname[1.`predictor']=colname[1.`var'], ///
 		fortags(cmdset[`i'])
 		collect remap colname[0.`predictor']=colname[0.`var'], ///
@@ -230,15 +272,25 @@ capture program drop pretty_logistic
 		collect recode result _r_p = _r_incorrect
 		}
 		
+		else {
+		collect remap colname[`predictor']=colname[1.`var'], ///
+		fortags(cmdset[`i'])	
+		}
+		
+	
+		}
+		
 		*Collecting correct p-value
 		qui foreach var of local outcomes{
-		melogit `var' i.`predictor' `weight', or allbase
+		melogit `var' `predictorspecific' `weight', or allbase
 		collect get _r_p
+		
+		if `levelnotbinary' == 0 {
 		collect remap colname[1.`predictor'] = colname[1.`var'], fortags(result[_r_p]#`predictor'[1])
 		}
 		
-		
 		}
+
 		
 		
 		*************************
@@ -250,24 +302,34 @@ capture program drop pretty_logistic
 			
 		** Calculate adjusted risk difference
 		qui foreach var of local outcomes{
-		melogit `var' i.`predictor' `confounders' `weight', ///
+		melogit `var' `predictorspecific' `confounders' `weight', ///
 		or allbase
 		collect get _r_b _r_lb _r_ub _r_p: margins, dydx(`predictor')
 		local i = `i' + 1
+		
+		if `levelnotbinary' == 0 {
 		collect remap colname[1.`predictor']=colname[1.`var'], ///
 		fortags(cmdset[`i'])
 		collect recode result _r_p = _r_incorrect
 		}
 		
+		else {
+		collect remap colname[`predictor']=colname[1.`var'], ///
+		fortags(cmdset[`i'])	
+		}	
+		
+		}
 		
 		*Collecting correct p-value
 		qui foreach var of local outcomes{
-		melogit `var' i.`predictor' `confounders' `weight', or allbase
+		melogit `var' `predictorspecific' `confounders' `weight', or allbase
 		collect get _r_p
+		
+		if `levelnotbinary' == 0 {
 		collect remap colname[1.`predictor'] = colname[1.`var'], fortags(result[_r_p]#`predictor'[1])
 		}
 		
-		
+		}
 		
 		** Add note for confounders
 		fvrevar `confounders', list
@@ -313,23 +375,33 @@ capture program drop pretty_logistic
 		
 		** Calculate risk difference
 		qui foreach var of local outcomes{
-		melogit `var' i.`predictor' `weight' || `reequation', or allbase
+		melogit `var' `predictorspecific' `weight' || `reequation', or allbase
 		collect get _r_b _r_lb _r_ub _r_p: margins, dydx(`predictor')
 		local i = `i' + 1
+		
+		if `levelnotbinary' == 0 {
 		collect remap colname[1.`predictor']=colname[1.`var'], ///
 		fortags(cmdset[`i'])
 		collect recode result _r_p = _r_incorrect
 		}
 		
+		else {
+		collect remap colname[`predictor']=colname[1.`var'], ///
+		fortags(cmdset[`i'])	
+		}
+	
+		}
 		
 		*Collecting correct p-value
 		qui foreach var of local outcomes{
-		melogit `var' i.`predictor' `weight' || `reequation', or allbase
+		melogit `var' `predictorspecific' `weight' || `reequation', or allbase
 		collect get _r_p
+		
+		if `levelnotbinary' == 0 
 		collect remap colname[1.`predictor'] = colname[1.`var'], fortags(result[_r_p]#`predictor'[1])
 		}
 		
-		
+		}
 		}
 		
 		
@@ -353,7 +425,7 @@ capture program drop pretty_logistic
 		
 		*Collecting correct p-value
 		qui foreach var of local outcomes{
-		melogit `var' i.`predictor' `confounders' `weight' || `reequation', or allbase
+		melogit `var' `predictorspecific' `confounders' `weight' || `reequation', or allbase
 		collect get _r_p
 		collect remap colname[1.`predictor'] = colname[1.`var'], fortags(result[_r_p]#`predictor'[1])
 		}
@@ -412,7 +484,7 @@ capture program drop pretty_logistic
 		
 		** Calculate risk ratio
 		qui foreach var of local outcomes{
-		melogit `var' i.`predictor' `weight', or allbase
+		melogit `var' `predictorspecific' `weight', or allbase
 		margins `predictor', post
 		collect get _r_b _r_lb _r_ub: ///
 		nlcom _b[1.`predictor'] / _b[0.`predictor']  
@@ -424,7 +496,7 @@ capture program drop pretty_logistic
 	
 		*Collecting correct p-value
 		qui foreach var of local outcomes{
-		melogit `var' i.`predictor' `weight', or allbase
+		melogit `var' `predictorspecific' `weight', or allbase
 		collect get _r_p
 		collect remap colname[1.`predictor'] = colname[1.`var'], fortags(result[_r_p]#`predictor'[1])
 		}
@@ -441,7 +513,7 @@ capture program drop pretty_logistic
 			
 		** Calculate adjusted risk ratio
 		qui foreach var of local outcomes{
-		melogit `var' i.`predictor' `confounders' `weight', ///
+		melogit `var' `predictorspecific' `confounders' `weight', ///
 		or allbase
 		margins `predictor', post
 		collect get _r_b _r_lb _r_ub: ///
@@ -454,7 +526,7 @@ capture program drop pretty_logistic
 		
 		*Collecting correct p-value
 		qui foreach var of local outcomes{
-		melogit `var' i.`predictor' `confounders' `weight', or allbase
+		melogit `var' `predictorspecific' `confounders' `weight', or allbase
 		collect get _r_p
 		collect remap colname[1.`predictor'] = colname[1.`var'], fortags(result[_r_p]#`predictor'[1])
 		}
@@ -502,7 +574,7 @@ capture program drop pretty_logistic
 		
 		** Calculate risk ratio
 		qui foreach var of local outcomes{
-		melogit `var' i.`predictor' `weight' || `reequation', or allbase
+		melogit `var' `predictorspecific' `weight' || `reequation', or allbase
 		margins `predictor', post
 		collect get _r_b _r_lb _r_ub: ///
 		nlcom _b[1.`predictor'] / _b[0.`predictor']  
@@ -514,7 +586,7 @@ capture program drop pretty_logistic
 		
 		*Collecting correct p-value
 		qui foreach var of local outcomes{
-		melogit `var' i.`predictor' `confounders' `weight' || `reequation', or allbase
+		melogit `var' `predictorspecific' `confounders' `weight' || `reequation', or allbase
 		collect get _r_p
 		collect remap colname[1.`predictor'] = colname[1.`var'], fortags(result[_r_p]#`predictor'[1])
 		}
@@ -531,7 +603,7 @@ capture program drop pretty_logistic
 			
 		** Calculate adjusted risk ratio
 		qui foreach var of local outcomes{
-		melogit `var' i.`predictor' `confounders' `weight' || `reequation', ///
+		melogit `var' `predictorspecific' `confounders' `weight' || `reequation', ///
 		or allbase
 		margins `predictor', post
 		collect get _r_b _r_lb _r_ub: ///
@@ -544,7 +616,7 @@ capture program drop pretty_logistic
 		
 		*Collecting correct p-value
 		qui foreach var of local outcomes{
-		melogit `var' i.`predictor' `confounders' `confounders' `weight' || `reequation', or allbase
+		melogit `var' `predictorspecific' `confounders' `confounders' `weight' || `reequation', or allbase
 		collect get _r_p
 		collect remap colname[1.`predictor'] = colname[1.`var'], fortags(result[_r_p]#`predictor'[1])
 		}
@@ -601,12 +673,21 @@ capture program drop pretty_logistic
 		** Calculate odds ratio
 		qui foreach var of local outcomes{
 		collect get _r_b _r_lb _r_ub _r_p: ///
-		melogit `var' i.`predictor' `weight', or allbase
+		melogit `var' `predictorspecific' `weight', or allbase
 		local i = `i' + 1
+
+		if `levelnotbinary' == 0 {
 		collect remap colname[1.`predictor']=colname[1.`var'], ///
 		fortags(cmdset[`i'])
 		collect remap colname[0.`predictor']=colname[0.`var'], ///
 		fortags(cmdset[`i'])
+		}
+		
+		else {
+		collect remap colname[`predictor']=colname[1.`var'], ///
+		fortags(cmdset[`i'])	
+		}	
+		
 		}
 						
 		} 
@@ -621,11 +702,20 @@ capture program drop pretty_logistic
 		** Calculate adjusted odds ratio
 		qui foreach var of local outcomes{
 		collect get _r_b _r_lb _r_ub _r_p: ///
-		melogit `var' i.`predictor' `confounders' `weight', ///
+		melogit `var' `predictorspecific' `confounders' `weight', ///
 		or allbase
 		local i = `i' + 1
+		
+		if `levelnotbinary' = 0 {
 		collect remap colname[1.`predictor']=colname[1.`var'], ///
 		fortags(cmdset[`i'])
+		}
+		
+		else {
+		collect remap colname[`predictor']=colname[1.`var'], ///
+		fortags(cmdset[`i'])	
+		}	
+		
 		}
 		
 		** Add note for confounders
@@ -672,10 +762,20 @@ capture program drop pretty_logistic
 		** Calculate odds ratio
 		qui foreach var of local outcomes{
 		collect get _r_b _r_lb _r_ub _r_p: ///
-		melogit `var' i.`predictor' `weight' || `reequation', or allbase
+		melogit `var' `predictorspecific' `weight' || `reequation', or allbase
 		local i = `i' + 1
+		
+		if `levelnotbinary' == 0 {
 		collect remap colname[1.`predictor']=colname[1.`var'], ///
 		fortags(cmdset[`i'])
+		} 
+		
+		
+		else {
+		collect remap colname[`predictor']=colname[1.`var'], ///
+		fortags(cmdset[`i'])	
+		}	
+		
 		}
 						
 		} 
@@ -690,13 +790,21 @@ capture program drop pretty_logistic
 		** Calculate adjusted odds ratio
 		qui foreach var of local outcomes{
 		collect get _r_b _r_lb _r_ub _r_p: ///
-		melogit `var' i.`predictor' `confounders' `weight' || `reequation', ///
+		melogit `var' `predictorspecific' `confounders' `weight' || `reequation', ///
 		or allbase
 		local i = `i' + 1
+		
+		if `levelnotbinary' == 0 {
 		collect remap colname[1.`predictor']=colname[1.`var'], ///
 		fortags(cmdset[`i'])
 		collect remap colname[0.`predictor']=colname[0.`var'], ///
 		fortags(cmdset[`i'])
+		}
+		
+		else {
+		collect remap colname[`predictor']=colname[1.`var'], ///
+		fortags(cmdset[`i'])	
+		}	
 		}
 		
 		** Add note for confounders
@@ -759,26 +867,46 @@ capture program drop pretty_logistic
 	 
 	}
 
+	if `levelnotbinary' == 0 {
+	
 	foreach var of local outcomes {
+		
 	collect addtags extra[logistic], fortags(result[_r_logistic]#colname[1.`var'])
 	collect addtags extra[probability], fortags(result[_r_prob]#colname[1.`var'])
 	collect addtags extra[ci], fortags(result[_r_combined]#colname[1.`var'])
+	
 	}
 	
+	}
+	
+	else {
+		
+	foreach var of local outcomes {
+		
+	collect addtags extra[logistic], fortags(result[_r_logistic]#colname[1.`var'])	
+		
+	}	
+		
+	}
 
 	*****************************************
 	** Formatting results for all logistic **
 	*****************************************
 	
 	*Label and combine counts and frequencies
+	if `levelnotbinary' != 1 {
+		
 	collect label levels `predictor' ///
 	0 "`a' [N = `A_N']" ///
 	1 "`b' [N = `B_N']" ///
 	, replace 
 	
+	}
+	
 	collect label dim `predictor' "Treatment Arm"
- 
- 
+	
+	
+	
 	*Recode frequency and percent results
 	collect recode result `"fvfrequency"' = `"1"' ///
 	`"fvpercent"' = `"2"'
@@ -810,6 +938,7 @@ capture program drop pretty_logistic
 	collect style header extra[probability ci logistic], ///
 	level(hide) title(hide)
 	
+	
 	** General alignment formatting
 	collect style cell, halign(left)
 	
@@ -818,6 +947,16 @@ capture program drop pretty_logistic
 	nformat(%5.1fc) sformat("(%s)") halign(left)
 	
 	collect style cell colname#result[1], halign(right)
+	
+	if `levelnotbinary' == 1 {
+
+	collect label dim result "`: variable label `predictor''", modify
+	
+	collect style header result[1 2], title(label)
+	
+	}
+	
+	
 	
 	** Formatting Results alignment
 	collect style cell result[1], halign(right)
@@ -846,14 +985,27 @@ capture program drop pretty_logistic
 		************************************
 		** Assembing Final Logistic Table **
 		************************************
+		
+		if `levelnotbinary' == 0 {
+			
 		qui collect layout (`categoricalheading') ///
 		(`predictor'[0 1]#result[1 2] ///
 		extra[logistic ci probability]#result[_r_logistic _r_combined _r_prob])
+
+		}
 		
+		else {
+		
+		collect label dim result "`:var l `predictor''"
+	
+		qui collect layout (`categoricalheading') ///
+		(result[1 2] ///
+		result[_r_logistic _r_combined _r_prob])
+			
+		}
+	
 		*Add a space between lines
 		collect style row stack, spacer nobinder
-	
-	
 	
 ***************************************
 ** GENERAL FORMATTING FOR ALL TABLES ** 		

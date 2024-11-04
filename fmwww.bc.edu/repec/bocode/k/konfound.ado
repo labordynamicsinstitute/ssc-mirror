@@ -1,7 +1,10 @@
 capture program drop konfound
-program define konfound
+program define konfound, rclass
 	version 13.1
-syntax varlist (min=1 max=10), [if] [in] [ sig(real 0.05) nu(real 0)  onetail(real 0) uncond (real 0)  rep_0(real 0) non_li(real 0)]
+syntax varlist (min=1 max=10), [if] [in] [ sig(real 0.05) onetail(real 0) uncond(real 0) non_li(real 0)]
+**Lock some features for updating
+local rep_0 = 0
+local nu = 0
 
 capture drop esti_ 
 capture drop thres_ 
@@ -28,12 +31,13 @@ else  {
   local `x'sd=sqrt(el(r(V),1,1))
   }
   
-  if `onetail'==1 {
-  if e(N_g)==. {
-local `x'criticalt = sign(``x'coef' - `nu') *  invttail(e(N)-e(df_m),`sig')
+//for RIR
+if e(N_g)==. {
+  //modification
+local `x'criticalt = sign(``x'coef' - `nu') *  invttail(e(N)-e(df_m)-1,`sig'/(2 - `onetail'))
 }
 else {
-local `x'criticalt = sign(``x'coef' - `nu') *  invttail(e(N)-e(df_m)-e(N_g)+1,`sig')
+local `x'criticalt = sign(``x'coef' - `nu') *  invttail(e(N)-e(df_m)-e(N_g),`sig'/(2 - `onetail'))
 }
 local `x'threshold = ``x'criticalt' * ``x'sd'
   if `rep_0'==1 {
@@ -48,7 +52,7 @@ local `x'threshold = ``x'criticalt' * ``x'sd'
 	else {
     local `x'sustain = string(100*(1- ((``x'coef')/((``x'threshold'+`nu')))),"%6.2f")
 	}
-  local `x'recase = round(e(N) * ``x'bias'/100,1)
+ 
   if (abs(``x'coef' - `nu')- abs(``x'threshold')) <0  {
   dis "------------------"
   dis "For `x': Your estimate is not statistically significant."
@@ -56,12 +60,14 @@ local `x'threshold = ``x'criticalt' * ``x'sd'
   }
   
   if `non_li' == 1  {
+  dis "Note that if your model is a logistic regression we recommend using the pkonfound command for logistic regression with manually entered parameter estimates and other quantities."
   dis "Following calculation is based on Average Partial Effect:"
   }
   dis "------------------"
   dis "The Threshold for % Bias to Invalidate/Sustain the Inference" 
   dis ""
   if (abs(``x'coef' - `nu')- abs(``x'threshold')) >=0  {
+  local `x'recase = round(e(N) * ``x'bias'/100,1)
   
   if `rep_0'==0 {
   dis "For `x':" _newline "To invalidate the inference ``x'bias'% of the estimate would have to be due to bias; to invalidate the" _newline "inference ``x'bias'% (``x'recase') cases would have to be replaced with cases for which there is an effect of `nu'."
@@ -72,8 +78,9 @@ else {
 }
   }
   else {
+  local `x'recase = round(e(N) * ``x'sustain'/100,1)
 
-  dis "For `x':" _newline "To sustain the inference ``x'sustain'% of the estimate would have to be due to bias; to sustain the" _newline "inference ``x'sustain'% of the cases with 0 effect would have to be replaced with cases at the threshold of inference."
+  dis "For `x':" _newline "To sustain the inference ``x'sustain'% (``x'recase') of the estimate would have to be due to bias; to sustain the" _newline "inference ``x'sustain'% (``x'recase') of the cases with 0 effect would have to be replaced with cases at the threshold of inference."
   }
   
 if e(r2_p)!=. & `non_li' == 0 {
@@ -84,67 +91,6 @@ dis ""
 dis "For a non-linear model users might also want to consider alternative standard error estimation methods,"_newline "such as the bootstrapping method."
 dis "To use the bootstrapping method type [bootstrap, reps(#):] before your original command."
 }  
-}
-  
-  
-else {
-    if e(N_g)==. {
-local `x'criticalt = sign(``x'coef' - `nu') *  invttail(e(N)-e(df_m),`sig'/2)
-}
-else {
-local `x'criticalt = sign(``x'coef' - `nu') *  invttail(e(N)-e(df_m)-e(N_g)+1,`sig'/2)
-}
-  local `x'threshold = ``x'criticalt' * ``x'sd'
-  if `rep_0'==1 {
-  local `x'bias = string(100*(1- ((``x'threshold'+`nu')/``x'coef')),"%6.2f")
-  }
-  else {
-  local `x'bias = string(100*(1- (``x'threshold'/(``x'coef'-`nu'))),"%6.2f")
-  }
-     if abs(``x'coef') > abs(``x'threshold'+`nu') {
-    local `x'sustain = string(100*(1- ((``x'threshold'+`nu')/(``x'coef'))),"%6.2f")
-	}
-	else {
-    local `x'sustain = string(100*(1- ((``x'coef')/((``x'threshold'+`nu')))),"%6.2f")
-	}
-  local `x'recase = round(e(N) * ``x'bias'/100,1)
-  
-  if (abs(``x'coef' - `nu')- abs(``x'threshold')) <0  {
-  dis "------------------"
-  dis "For `x': Your estimate is not statistically significant."
-  dis "------------------"
-  }
-  
-    if `non_li' == 1  {
-  dis "Following calculation is based on Average Partial Effect:"
-  }
- dis "------------------"
-    dis "The Threshold for % Bias to Invalidate/Sustain the Inference" 
-  dis ""
-  
-  if (abs(``x'coef' - `nu')- abs(``x'threshold')) >=0 {
-  
-  if `rep_0'==0 {
-  dis "For `x':" _newline "To invalidate the inference ``x'bias'% of the estimate would have to be due to bias; to invalidate the" _newline "inference ``x'bias'% (``x'recase') cases would have to be replaced with cases for which there is an effect of `nu'."
-}
-else {
-  dis "For `x':" _newline "To invalidate the inference ``x'bias'% of the estimate would have to be due to bias; to invalidate the" _newline "inference ``x'bias'% (``x'recase') cases would have to be replaced with cases for which there is an zero effect."
-
-}
-  }
-  else {
-
-  dis "For `x':" _newline "To sustain the inference ``x'sustain'% of the estimate would have to be due to bias; to sustain the" _newline "inference ``x'sustain'% of the cases with 0 effect would have to be replaced with cases at the threshold of inference."
-  }
-  if e(r2_p)!=. & `non_li' == 0 {
-  dis ""
-  dis "Warnings:"
-dis "For a non-linear model calculation based on average partial effect is recommended, in the options use non_li(1)."
-dis ""
-dis "For a non-linear model users might also want to consider alternative standard error estimation methods,"_newline "such as the bootstrapping method."
-dis "To use the bootstrapping method type [bootstrap, reps(#):] before your original command."
-} 
-  }
   
 if  ``x'bias' > 0 & `nu' == 0 & ``x'sd' != 0{
 
@@ -207,48 +153,84 @@ else  {
   }
 
 }
-
-foreach x in `varlist'  { 
+//for ITCV
+foreach x in `varlist'{ 
   
- if `onetail'==1 {
- 
-  if `Ng'==. {
-local `x'criticalt =sign(``x'coef' - `nu') *  invttail(`NN'-`dfm',`sig')
+if `Ng'==. {
+local `x'criticalt =sign(``x'coef' - `nu') *  invttail(`NN'-`dfm'-1,`sig'/(2 - `onetail'))
 local `x'be_th = ``x'criticalt' * ``x'sd' +`nu'
 local `x't_critr = ``x'be_th'/``x'sd'
-local `x'r_crit = ``x't_critr'/sqrt((``x't_critr')^2 + `NN'-`dfm'-2)
-local `x'r_obs = (``x'coef'/``x'sd')/sqrt((``x'coef'/``x'sd')^2 +`NN'-`dfm'-2)
+local `x'r_crit = ``x't_critr'/sqrt((``x't_critr')^2 + (`NN'-`dfm'-1))
+local `x'r_obs = (``x'coef'/``x'sd')/sqrt((``x'coef'/``x'sd')^2 +(`NN'-`dfm'-1))
 }
 
 else {
-local `x'criticalt =sign(``x'coef' - `nu') *  invttail(`NN'-`dfm'-`Ng'+1,`sig')
+//degrees of freedom calculated as in Xtreg including use of one degree of freedom to estimate a parameter for each group
+local `x'criticalt =sign(``x'coef' - `nu') *  invttail(`NN'-`dfm'-`Ng',`sig'/(2 - `onetail'))
 local `x'be_th = ``x'criticalt' * ``x'sd' +`nu'
 local `x't_critr = ``x'be_th'/``x'sd'
-local `x'r_crit = ``x't_critr'/sqrt((``x't_critr')^2 + `NN'-`dfm'-`Ng'-2)
-local `x'r_obs = (``x'coef'/``x'sd')/sqrt((``x'coef'/``x'sd')^2 +`NN'-`dfm'-`Ng'-2)
+local `x'r_crit = ``x't_critr'/sqrt((``x't_critr')^2 + `NN'-`dfm'-`Ng')
+local `x'r_obs = (``x'coef'/``x'sd')/sqrt((``x'coef'/``x'sd')^2 +`NN'-`dfm'-`Ng')
+}
+if (`dfm' > 1) {
+	local `x'RsqYZ = ((``x'r_obs')^2 - `Rsq')/((``x'r_obs')^2 - 1)
+}
+else{
+    local `x'RsqYZ = .
 }
 
-local `x'RsqYZ = ((``x'r_obs')^2 - `Rsq')/((``x'r_obs')^2 - 1)
 quietly sum `x' if samused_==1
 local `x'VarX= r(Var)
-local `x'RsqXZ = max(0, 1 - ((`VarY'*(1-`Rsq'))/(``x'VarX'*(`NN'-`dfm'-2)*((``x'sd')^2)))) 
 
-  if (``x'r_obs' - ``x'r_crit') >= 0 {
-  local `x'itcv = (``x'r_obs' - ``x'r_crit')/(1-``x'r_crit')
+if (`dfm' > 1) {
+    local `x'RsqXZ = 1 - ((`VarY'*(1-`Rsq'))/(``x'VarX'*(`NN'-`dfm'-1)*((``x'sd')^2)))
+}
+else{
+	local `x'RsqXZ = .
+}
+//what is for nested data?
+
+if (``x'r_obs' - ``x'r_crit') >= 0 {
+  local `x'itcv = (``x'r_obs' - ``x'r_crit')/(1 -``x'r_crit')
   }
-  else {
+else {
   local `x'itcv = (``x'r_obs' - ``x'r_crit')/(1 +``x'r_crit')
   }
-  
-  local `x'impact =  string(``x'itcv',"%6.4f")
- local `x'r_con = string(sqrt(abs(``x'itcv')),"%6.3f")
- local `x'nr_con = -1 * ``x'r_con' 
- local `x'r_ycv = string(``x'r_con' * sqrt(1-(``x'RsqYZ')),"%6.3f")
- local `x'r_xcv = string(``x'r_con' * sqrt(1-(``x'RsqXZ')),"%6.3f")
- local `x'nr_xcv = -1 * ``x'r_xcv'
- local `x'un_impact = string(``x'itcv'*sqrt(1-(``x'RsqYZ'))*sqrt(1-(``x'RsqXZ')),"%6.4f")
+//"%9.3f"
+local `x'impact = string(``x'itcv',"%9.3f")
+local `x'r_con = string(sqrt(abs(``x'itcv')),"%9.3f")
+local `x'rr_con = sqrt(abs(``x'itcv'))
+local `x'nr_con = string(-1 * ``x'r_con',"%9.3f")
  
-
+if (`dfm' > 1) {
+ local `x'r_xcv = string(``x'rr_con' * sqrt(1-(``x'RsqXZ')),"%9.3f")
+    if (``x'itcv') <0{
+	    local `x'rr_ycv = -1 * ``x'rr_con' * sqrt(1-(``x'RsqYZ'))
+		local `x'r_ycv = string(-1 * ``x'rr_con' * sqrt(1-(``x'RsqYZ')),"%9.3f")
+	}
+	else{
+	    local `x'rr_ycv = ``x'rr_con' * sqrt(1-(``x'RsqYZ'))
+		local `x'r_ycv = string(``x'rr_con' * sqrt(1-(``x'RsqYZ')),"%9.3f")
+	}
+ local `x'rr_xcv = ``x'rr_con' * sqrt(1-(``x'RsqXZ'))
+ local `x'nr_xcv = -1 * ``x'r_xcv'
+ local `x'un_itcv = ``x'itcv'*sqrt(1-(``x'RsqYZ'))*sqrt(1-(``x'RsqXZ'))
+ local `x'un_impact = string(``x'un_itcv',"%9.3f")
+}
+else{
+   if (``x'itcv') <0{
+       local `x'rr_ycv = -1* ``x'rr_con'
+	   local `x'r_ycv = string(``x'nr_con',"%9.3f")
+     }
+   else{
+       local `x'rr_ycv = ``x'rr_con'
+	   local `x'r_ycv = string(``x'r_con',"%9.3f")
+ }
+ local `x'r_xcv = string(``x'r_con',"%9.3f")
+ local `x'rr_xcv = ``x'rr_con'
+ local `x'un_itcv = ``x'itcv'
+ local `x'un_impact = string(``x'itcv',"%9.3f")
+}
  
   if abs((``x'coef' - `nu')/``x'sd') >= abs(``x'criticalt')  {
   
@@ -256,13 +238,13 @@ local `x'RsqXZ = max(0, 1 - ((`VarY'*(1-`Rsq'))/(``x'VarX'*(`NN'-`dfm'-2)*((``x'
   dis "------------------"
   dis "Impact Threshold for Omitted Variable" 
 dis ""
-  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_con' with the outcome and at ``x'r_con' with the predictor" _newline "of interest (conditioning on observed covariates) to invalidate an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_con' x ``x'r_con'=``x'impact' to invalidate an inference."
+  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_con' with the outcome and at ``x'r_con' with the predictor" _newline "of interest (conditioning on observed covariates) to invalidate an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_con' x ``x'r_con' = ``x'impact' to invalidate an inference."
 }
 else {
 dis "------------------"
 dis "Impact Threshold for Omitted Variable" 
 dis ""
-  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_con' with the outcome and at ``x'nr_con' with the predictor" _newline "of interest (conditioning on observed covariates. signs are interchangeable) to invalidate an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'nr_con' x ``x'r_con'=``x'impact' to invalidate an inference."
+  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'nr_con' with the outcome and at ``x'r_con' with the predictor" _newline "of interest (conditioning on observed covariates. signs are interchangeable) to invalidate an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'nr_con' x ``x'r_con' = ``x'impact' to invalidate an inference."
 
 }
 
@@ -273,13 +255,13 @@ dis ""
   dis "------------------"
   dis "Impact Threshold for Omitted Variable" 
 dis ""
-  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_con' with the outcome and at ``x'r_con' with the predictor" _newline "of interest (conditioning on observed covariates) to sustain an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_con' x ``x'r_con'=``x'impact' to sustain an inference."
+  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_con' with the outcome and at ``x'r_con' with the predictor" _newline "of interest (conditioning on observed covariates) to sustain an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_con' x ``x'r_con' = ``x'impact' to sustain an inference."
 }
 else {
 dis "------------------"
 dis "Impact Threshold for Omitted Variable" 
 dis ""
-  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_con' with the outcome and at ``x'nr_con' with the predictor" _newline "of interest (conditioning on observed covariates. signs are interchangeable) to sustain an inference. " _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'nr_con' x ``x'r_con'=``x'impact' to sustain an inference."
+  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'nr_con' with the outcome and at ``x'r_con' with the predictor" _newline "of interest (conditioning on observed covariates. signs are interchangeable) to sustain an inference. " _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'nr_con' x ``x'r_con' = ``x'impact' to sustain an inference."
 
 }  
 }
@@ -290,11 +272,11 @@ if `uncond' ==1 {
   
   if ``x'itcv'>0 {
   dis ""
-  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_ycv' with the outcome and at ``x'r_xcv' with the predictor" _newline "of interest (before conditioning on observed covariates) to invalidate an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_ycv'  x ``x'r_xcv'=``x'un_impact' to invalidate an inference."
+  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_ycv' with the outcome and at ``x'r_xcv' with the predictor" _newline "of interest (before conditioning on observed covariates) to invalidate an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_ycv' x ``x'r_xcv' = ``x'un_impact' to invalidate an inference."
 }
 else {
 dis ""
-  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_ycv' with the outcome and at ``x'nr_xcv' with the predictor" _newline "of interest (before conditioning on observed covariates. signs are interchangeable) to invalidate an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_ycv'  x ``x'nr_xcv'=``x'un_impact' to invalidate an inference."
+  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_ycv' with the outcome and at ``x'r_xcv' with the predictor" _newline "of interest (before conditioning on observed covariates. signs are interchangeable) to invalidate an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_ycv' x ``x'r_xcv' = ``x'un_impact' to invalidate an inference."
 
 }
 
@@ -303,130 +285,34 @@ dis ""
 
   if ``x'itcv'>0 {
   dis ""
-  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_ycv' with the outcome and at ``x'r_xcv' with the predictor" _newline "of interest (before conditioning on observed covariates) to sustain an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_ycv'  x ``x'r_xcv'=``x'un_impact' to sustain an inference."
+  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_ycv' with the outcome and at ``x'r_xcv' with the predictor" _newline "of interest (before conditioning on observed covariates) to sustain an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_ycv' x ``x'r_xcv' = ``x'un_impact' to sustain an inference."
 }
 else {
 dis ""
-  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_ycv' with the outcome and at ``x'nr_xcv' with the predictor" _newline "of interest (before conditioning on observed covariates. signs are interchangeable) to sustain an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_ycv' x ``x'nr_xcv'=``x'un_impact' to sustain an inference."
+  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_ycv' with the outcome and at ``x'r_xcv' with the predictor" _newline "of interest (before conditioning on observed covariates. signs are interchangeable) to sustain an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_ycv' x ``x'r_xcv' = ``x'un_impact' to sustain an inference."
 
 }  
 }
-
 }
+dis " "
+dis "konfound should only be run immediately after a model is estimated. No other commands should be entered" _newline "between estimating the model and running konfound."
+dis " "
+dis "For exact values calculated by ITCV, include 'return list' following the konfound command."
+
 if `Nz'>0 {
 dis ""
 dis "These thresholds can be compared with the impacts of observed covariates below."
 }
-} 
-  
-else {
-
-  if `Ng'==. {
-local `x'criticalt =sign(``x'coef' - `nu') *  invttail(`NN'-`dfm',`sig'/2)
-local `x'be_th = ``x'criticalt' * ``x'sd' +`nu'
-local `x't_critr = ``x'be_th'/``x'sd'
-local `x'r_crit = ``x't_critr'/sqrt((``x't_critr')^2 + `NN'-`dfm'-2)
-local `x'r_obs = (``x'coef'/``x'sd')/sqrt((``x'coef'/``x'sd')^2 +`NN'-`dfm'-2)
-}
-else {
-local `x'criticalt =sign(``x'coef' - `nu') *  invttail(`NN'-`dfm'-`Ng'+1,`sig'/2)
-local `x'be_th = ``x'criticalt' * ``x'sd' +`nu'
-local `x't_critr = ``x'be_th'/``x'sd'
-local `x'r_crit = ``x't_critr'/sqrt((``x't_critr')^2 + `NN'-`dfm'-`Ng'-2)
-local `x'r_obs = (``x'coef'/``x'sd')/sqrt((``x'coef'/``x'sd')^2 +`NN'-`dfm'-`Ng'-2)
-}
-
-local `x'RsqYZ = ((``x'r_obs')^2 - `Rsq')/((``x'r_obs')^2 - 1)
-quietly sum `x' if samused_==1
-local `x'VarX= r(Var)
-local `x'RsqXZ = max(0, 1 - ((`VarY'*(1-`Rsq'))/(``x'VarX'*(`NN'-`dfm'-2)*((``x'sd')^2)))) 
-
-  if (``x'r_obs' - ``x'r_crit') >= 0 {
-  local `x'itcv = (``x'r_obs' - ``x'r_crit')/(1-``x'r_crit')
-  }
-  else {
-  local `x'itcv = (``x'r_obs' - ``x'r_crit')/(1 +``x'r_crit')
-  }
- local `x'impact =  string(``x'itcv',"%6.4f")
- local `x'r_con = string(sqrt(abs(``x'itcv')),"%6.3f")
- local `x'nr_con = -1 * ``x'r_con'
- local `x'r_ycv = string(``x'r_con' * sqrt(1-(``x'RsqYZ')),"%6.3f")
- local `x'r_xcv = string(``x'r_con' * sqrt(1-(``x'RsqXZ')),"%6.3f")
- local `x'nr_xcv = -1 * ``x'r_xcv'
- local `x'un_impact = string(``x'itcv'*sqrt(1-(``x'RsqYZ'))*sqrt(1-(``x'RsqXZ')),"%6.4f")
- 
-
- 
-  if abs((``x'coef' - `nu')/``x'sd') >= abs(``x'criticalt')  {
-  
-  if ``x'itcv'>0 {
-  dis "------------------"
-   dis "Impact Threshold for Omitted Variable" 
-dis ""
-  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_con' with the outcome and at ``x'r_con' with the predictor" _newline "of interest (conditioning on observed covariates) to invalidate an inference. " _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_con' x ``x'r_con'=``x'impact' to invalidate an inference."
-}
-else {
-dis "------------------"
- dis "Impact Threshold for Omitted Variable" 
-dis ""
-  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_con' with the outcome and at ``x'nr_con' with the predictor" _newline "of interest (conditioning on observed covariates. signs are interchangeable) to invalidate an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'nr_con' x ``x'r_con'=``x'impact' to invalidate an inference."
-
-}
-  }
-  else {
-
-  if ``x'itcv'>0 {
-  dis "------------------"
-   dis "Impact Threshold for Omitted Variable" 
-dis ""
-  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_con' with the outcome and at ``x'r_con' with the predictor" _newline "of interest (conditioning on observed covariates) to sustain an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_con' x ``x'r_con'=``x'impact' to sustain an inference."
-}
-else {
-dis "------------------"
- dis "Impact Threshold for Omitted Variable" 
-dis ""
- dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_con' with the outcome and at ``x'nr_con' with the predictor" _newline "of interest (conditioning on observed covariates. signs are interchangeable) to sustain an inference." _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'nr_con' x ``x'r_con'=``x'impact' to sustain an inference."
-
-}
-   
-}
- 
- if `uncond' ==1 {
-
-  if abs((``x'coef' - `nu')/``x'sd') >= abs(``x'criticalt')  {
-  
-  if ``x'itcv'>0 {
-  dis ""
-  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_ycv' with the outcome and at ``x'r_xcv' with the predictor" _newline "of interest (before conditioning on observed covariates) to invalidate an inference. " _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_ycv'  x ``x'r_xcv'=``x'un_impact' to invalidate an inference."
-}
-else {
-dis ""
-  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_ycv' with the outcome and at ``x'nr_xcv' with the predictor" _newline "of interest (before conditioning on observed covariates. signs are interchangeable) to invalidate an inference. " _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_ycv'  x ``x'nr_xcv'=``x'un_impact' to invalidate an inference."
-
-}
-
-  }
-  else {
-
-  if ``x'itcv'>0 {
-  dis ""
-  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_ycv' with the outcome and at ``x'r_xcv' with the predictor" _newline "of interest (before conditioning on observed covariates) to sustain an inference. " _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_ycv'  x ``x'r_xcv'=``x'un_impact' to sustain an inference."
-}
-else {
-dis ""
-  dis "For `x':" _newline "An omitted variable would have to be correlated at ``x'r_ycv' with the outcome and at ``x'nr_xcv' with the predictor" _newline "of interest (before conditioning on observed covariates. signs are interchangeable) to sustain an inference. " _newline "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be" _newline "``x'r_ycv' x ``x'nr_xcv'=``x'un_impact' to sustain an inference."
-
-}  
-}
-
-} 
-
-
-if `Nz'>0 {
- dis ""
-dis "These thresholds can be compared with the impacts of observed covariates below." 
-}
-}  
+//return the core statistics
+return scalar itcv = ``x'itcv'
+return scalar unconitcv = ``x'un_itcv'
+return scalar rir = ``x'recase'
+return scalar thr = ``x'threshold'
+return scalar RsqYZ = ``x'RsqYZ'
+return scalar RsqXZ = ``x'RsqXZ'
+return scalar Rsq = `Rsq'
+return scalar r_ycv = ``x'rr_ycv'
+return scalar r_xcv = ``x'rr_xcv'
 
 if `Nz'>0 {
 
@@ -519,7 +405,15 @@ dis ""
  dis "For a non-linear model impact threshold should not be used."
  dis ""
  }
-
+ 
+ dis ""
+ dis "See Frank et al. (2013) for a description of the method."
+ dis ""
+ dis "Citation: Frank, K.A., Maroulis, S., Duong, M., and Kelcey, B. (2013)."
+ dis "What would it take to change an inference?"
+ dis "Using Rubin's causal model to interpret the robustness of causal inferences."
+ dis "Education, Evaluation and Policy Analysis, 35, 437-460."	
+ 
 end
 
 

@@ -1,4 +1,4 @@
-{smcl}
+ {smcl}
 {* *! version 2.0 2 January 2024}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Install command2" "ssc install command2"}{...}
@@ -25,7 +25,8 @@ help for {cmd:pretty_baseline} {right: Version 2.0 13 December 2023}
 {tab}						Option for ordering of display
 {tab}						Option to save the table and add a title
 {tab}						Median and IQR option for skewed data
-
+{tab}3.0 		2 October 2024       Includes option to display IQR as a range.
+							Minor formatting changes
 {marker syntax}{...}
 {title:Syntax}
 {p 8 17 2}
@@ -47,6 +48,7 @@ help for {cmd:pretty_baseline} {right: Version 2.0 13 December 2023}
 {synopt:{opt categ:orical}({help varname})} - categorical variables. Summary statistics of frequency and percentages returned. {p_end}
 {synopt:{opt fcont:}({help string})} - format for display of continuous variables{p_end}
 {synopt:{opt fcateg:}({help string})} - format for display of categorical variables{p_end}
+{synopt:{opt iqrrange:}} -  Invoking the iqrrange option gives the values for the first and third quartiles in a skewed distribution. Without this option, the value of the difference between Q3 and Q1 is calculated and displayed. {p_end}
 {synopt:{opt title:}({help string})} - title of table{p_end}
 {synopt:{opt sav:ing}({help string})} - option to save and name baseline table{p_end}
 {synopt:{opt pos:ition}({help string})} - option to change sequence of presentation of the variables of the table ("categ", "contn", "conts"){p_end}
@@ -98,8 +100,8 @@ The default variable labels for the table are the value labels from the dataset.
 {tab} {bf: Basic table with no grouping variable}
 {phang} {cmd:. pretty_baseline, contn(age) conts(height weight) categ(race)}
 
-{tab} {bf:Table with formatting of output}
-{phang} {cmd:. pretty_baseline, by(sex) contn(age) conts(height weight) categ(race) fcont(%9.3fc) fcateg(%9.1fc)}
+{tab} {bf:Table with formatting of output and Interquartile Range}
+{phang} {cmd:. pretty_baseline, by(sex) contn(age) conts(height weight) categ(race) fcont(%9.3fc) fcateg(%9.1fc) iqrrange}
 
 {tab} {bf:Table with formatted output, title, saving word document, and changing order of output}
 {phang} {cmd:. pretty_baseline, by(sex) contn(age) conts(height weight) categ(race) fcont(%9.3fc) fcateg(%9.1fc)} /// {p_end}
