@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.1  20feb2024}{...}
+{* *! version 1.0.2  31oct2024}{...}
 {viewerjumpto "Syntax" "xtrevu##syntax"}{...}
 {viewerjumpto "Syntax" "xtrevu##description"}{...}
 {viewerjumpto "Examples" "xtrevu##examples"}{...}
@@ -74,8 +74,9 @@ a comprehensive post-estimation command can be executed, see
 {marker examples}{...}
 {title:Examples}
 
-        time series (an AP(1) model!):
+        time series (a forward unit root test and an AP(1) model!):
         {cmd:. sysuse gnp96.dta, clear}
+        {cmd:. xtrevu gnp96, prefix(ru_): pperron ru_gnp96}
         {cmd:. xtrevu gnp96, prefix(rv_): arima rv_gnp96, arima(1,0,0)}
 
         panel data:
@@ -90,6 +91,7 @@ a comprehensive post-estimation command can be executed, see
 {break}Prague University of Economics and Business
 {break}Prague, Czech Republic
 {break}{browse "mailto:ilya.bolotov@vse.cz":ilya.bolotov@vse.cz}
+
 {pstd}
 Thanks for citing this software and my works on the topic:
 

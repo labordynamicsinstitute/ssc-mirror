@@ -1,4 +1,4 @@
-*! version 1.1.1  07oct2024  I I Bolotov
+*! version 1.1.2  07oct2024  I I Bolotov
 program def usort, sclass byable(onecall)
 	version 14
 	/*
@@ -198,66 +198,28 @@ program def _sort, sclass
 	   which are sorted on columns 2 through the number of sortvars + 1, with a
 	   negative index indicating descending order in a sortfvar.             */
 	qui sum `select'								   // r(sum) = number of 1s 
-	mata:   `p' =                                                           ///
-		    sort((substr("0" * strlen(strofreal(st_numscalar("r(sum)"))) :+ ///
-		          strofreal(1::st_numscalar("r(sum)")),                     ///
-		         -strlen(strofreal(st_numscalar("r(sum)"))), .),            ///
+	mata:   `p' = strtoreal(sort((strofreal(1::st_numscalar("r(sum)")),     ///
 		          st_sdata(., tokens("`varlist'"), "`select'")),            ///
-		         (2..(cols(tokens("`varlist'")) + 1))                    :* ///
-		         strtoreal(tokens(ustrregexra(ustrregexra("`anything'",     ///
-		         "(^|\s+)\w+", " 1"), "(^|\s+)-\w+", " -1")))               ///
-		    )[.,1]
+		          (2..(cols(tokens("`varlist'")) + 1))                   :* ///
+		          strtoreal(tokens(ustrregexra(ustrregexra("`anything'",    ///
+		          "(^|\s+)\w+", " 1"), "(^|\s+)-\w+", " -1")))              ///
+		     )[.,1])
 
 	// collate for all rows with or a subset without adding the data-sorted flag
 	restore
-	qui sum `select'
-	if r(N) == r(sum) {								   // r(sum) = number of 1s 
-		/* Save each sortvar into a string (`svl`) or numeric (`nvl`) macro. */
-		foreach  var of  varl `varlist' {
-			cap conf str var  `var'
-			if ! _rc loc svl "`svl' `var'"
-			else     loc nvl "`nvl' `var'"
+	/* Collate the rows of all variables in the dataset, selected with the help
+	   of the selectvar, on the permutation vector                           */
+	foreach  var of  varl *  {
+		cap conf str var  `var'
+		if  ! _rc {
+			mata:    _collate((`s'=  st_sdata(., "`var'", "`select'")), `p')
+			mata:                   st_sstore(., "`var'", "`select'",   `s')
+			mata:    mata drop `s'                     // minimize memory usage 
 		}
-		/* Preserving the original string and numeric values of the sortvars in
-		   the matrices `s' and `n' in Mata, replace them with `p', perform the
-		   regular Stata `sort` (i.e., jumbling and collation), and replace the
-		   `p'-s with the sortvar values collated on the permutation vector. */
-		mata: if ("`svl'" != "") {  `s' =  st_sdata(.,    tokens("`svl'")); ///
-			                              st_sstore(.,    tokens("`svl'"),  ///
-			              J(1,ustrwordcount("`svl'"),               `p' ) ); };
-		mata: if ("`nvl'" != "") {  `n' =   st_data(.,    tokens("`nvl'")); ///
-			                               st_store(.,    tokens("`nvl'"),  ///
-			              J(1,ustrwordcount("`nvl'"),  strtoreal(   `p' ))); };
-		sort `varlist',     `options'				   // sort and add the flag 
-		if ("`svl'" != "") {
-			mata:                        _collate(`s', strtoreal(   `p' )); ///
-				                        st_sstore(.,      tokens("`svl'"), `s')
-			mata: mata drop `s'                        // minimize memory usage 
-		}
-		if ("`nvl'" != "") {
-			mata:                        _collate(`n', strtoreal(   `p' )); ///
-				                         st_store(.,      tokens("`nvl'"), `n')
-			mata: mata drop `n'                        // minimize memory usage 
-		}
-		sret loc  varlist   `varlist'				   // pass sortvars trhough 
-	}
-	else              {
-		/* Collate the rows of all variables in the dataset, specified with the
-		   help of the selectvar, on the permutation vector.                 */
-		foreach  var of  varl *         {
-			cap conf str var  `var'
-			if  ! _rc {
-				mata:    _collate((`s'=  st_sdata(., "`var'", "`select'")), ///
-					                    strtoreal(    `p'))
-				mata:                   st_sstore(., "`var'", "`select'",  `s')
-				mata:    mata drop `s'                 // minimize memory usage 
-			}
-			else      {
-				mata:    _collate((`n'=   st_data(., "`var'", "`select'")), ///
-					                    strtoreal(    `p'))
-				mata:                    st_store(., "`var'", "`select'",  `n')
-				mata:    mata drop `n'                 // minimize memory usage 
-			}
+		else      {
+			mata:    _collate((`n'=   st_data(., "`var'", "`select'")), `p')
+			mata:                    st_store(., "`var'", "`select'",   `n')
+			mata:    mata drop `n'                     // minimize memory usage 
 		}
 	}
 

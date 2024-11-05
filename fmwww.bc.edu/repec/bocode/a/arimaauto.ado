@@ -1,4 +1,4 @@
-*! version 1.0.7  07oct2024  I I Bolotov
+*! version 1.0.8  31oct2024  I I Bolotov
 program define arimaauto, rclass byable(recall)
 	version 15.1
 	/*

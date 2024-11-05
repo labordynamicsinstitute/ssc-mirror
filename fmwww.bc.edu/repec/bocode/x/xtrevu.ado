@@ -1,4 +1,4 @@
-*! version 1.0.1  20fev2024  I I Bolotov
+*! version 1.0.2  31oct2024  I I Bolotov
 program define xtrevu, rclass
 	version 16.0
 	/*
