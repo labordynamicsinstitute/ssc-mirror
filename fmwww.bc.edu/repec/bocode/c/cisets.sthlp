@@ -1,5 +1,5 @@
 {smcl}
-{* NJC 27oct2024}{...}
+{* NJC 27oct2024/1nov2024/5nov2024}{...}
 
 {cmd:help cisets}
 {hline}
@@ -306,12 +306,12 @@
 
 
 {p 4 4 2}
-{opt aweight}s are allowed with {cmd:cisets} subcommands {cmd:means} for normal data; 
-{cmd:gmean}; and {cmd:hmean}. 
+{opt aweight}s are allowed with {cmd:cisets} subcommands {cmd:means} for
+normal data; {cmd:gmean}; and {cmd:hmean}. 
 
 {p 4 4 2}
-{opt fweight}s are allowed with {cmd:cisets} subcommands {cmd:means}; {cmd:proportions};
-{cmd:variances}; {cmd:gmean}; and {cmd:hmean}. 
+{opt fweight}s are allowed with {cmd:cisets} subcommands {cmd:means};
+{cmd:proportions}; {cmd:variances}; {cmd:gmean}; and {cmd:hmean}. 
 
 {p 4 4 2} 
 Weights are not allowed with subcommand {cmd:centile}. 
@@ -322,12 +322,11 @@ Weights are not allowed with subcommand {cmd:centile}.
 {pstd}
 {cmd:cisets} computes confidence interval sets for population means,
 proportions, variances, standard deviations, geometric means, harmonic
-means, and centiles.  It is a wrapper for variously {help ci} 
-(for means, proportions, variances and standard deviations); 
-{help ameans} (for geometric and harmonic means); 
-and {help centile}. 
-The help for these commands and the corresponding manual entries 
-should be consulted for more detail on statistical principles and procedures. 
+means, and centiles.  It is a wrapper for variously {help ci} (for
+means, proportions, variances and standard deviations); {help ameans}
+(for geometric and harmonic means); and {help centile}.  The help for
+these commands and the corresponding manual entries should be consulted
+for more detail on statistical principles and procedures. 
 
 {pstd}
 All syntaxes include {cmd:cisets} followed by a subcommand which
@@ -335,23 +334,25 @@ specifies a particular summary measure. There are two flavours of
 commands otherwise: 
 
 {p 8 8 2}{cmd:cisets} {it:subcommand} {it:varlist} calculates results
-for one or more variables {it:varlist}. This is called the {it:variables syntax}.  
+for one or more variables {it:varlist}. This is called the 
+{it:variables syntax}.  
 
-{p 8 8 2}{cmd:cisets} {it:subcommand} {it:varname} {cmd:,} {opt over(groupvar)} 
-calculates results for one variable {it:varname} for each distinct value of
-{it:groupvar}. This is called the {it:groups syntax}.  
+{p 8 8 2}{cmd:cisets} {it:subcommand} {it:varname} {cmd:,} {opt
+over(groupvar)} calculates results for one variable {it:varname} for
+each distinct value of {it:groupvar}. This is called the 
+{it:groups syntax}.  
 
 {pstd}
-A confidence interval set consists of a temporary dataset consisting of some 
-or occasionally all of the following variables. 
+A confidence interval set consists of a temporary dataset consisting of
+some or occasionally all of the following variables. 
 
 {p 4 4 2}
 * {cmd:varname} is a string variable holding the name or names of the
 variable(s) being summarized. 
 
 {p 4 4 2}
-* {cmd:varlabel} is a string variable holding the variable label of the
-variable(s) being summarized. If no variable label has been defined, 
+* {cmd:varlabel} is a string variable holding the variable label of each
+variable being summarized. If no variable label has been defined, 
 the value is instead the variable name. 
 
 {p 4 4 2}
@@ -416,19 +417,19 @@ specified as a record of such use.
 {title:Remarks}
 
 {pstd}{cmd:cisets} by default lists its results. Although saving to 
-a permanent dataset is optional, that is the intended key to most 
+a permanent dataset is optional, that is the intended key to many 
 useful applications. Either the confidence interval dataset is what 
 is needed or it may be combined using {help append} or {help merge} 
 with other such sets for further analysis. 
 
-{pstd}The approach is thus one of providing a building block that may 
-be useful directly or if combined with other building blocks. 
-Flexibility is needed because so many different problems may be of interest, 
-not just comparison of intervals for different variables, or of intervals 
-for one variable for different groups, but also of intervals for several 
-variables and several groups; comparison of parameters; comparison of 
-results for different confidence levels; comparison of different methods; 
-and so forth. 
+{pstd}The approach is thus one of providing a building block that may be
+useful directly or if combined with other building blocks.  Flexibility
+is needed because so many different problems may be of interest, not
+just comparison of intervals for different variables, or of intervals
+for one variable for different groups, but also of intervals for several
+variables and several groups; comparison of parameters; comparison of
+results for different confidence levels; comparison of different
+methods; and so forth. 
 
 {pstd}As in {help ci}, variables that are not (0, 1) binary variables 
 are ignored with {cmd:cisets proportions}. 
@@ -436,11 +437,11 @@ are ignored with {cmd:cisets proportions}.
 {pstd}As in {help ameans}, any zero or negative values are ignored 
 with {cmd:cisets gmean} and {cmd:cisets hmean}. 
 
-{pstd}At first sight, a confidence interval set may seem repetitious. 
-With a little experience, you will see that this is often helpful when 
-combining such sets. In any case, you can always ignore what you 
-do not need. Similarly, you can use {help rename} and {help replace}
-as you wish downstream of this command.
+{pstd}At first sight, a confidence interval set may seem repetitious.
+With a little experience, you will see that such repetition is often
+helpful when combining such sets. In any case, you can always ignore
+what you do not need. Similarly, you can use {help rename} and 
+{help replace} as you wish downstream of this command.
 
 {pstd}Graphical and other applications lie downstream of this command,
 although some suggestions are included in the examples. Possibilities 
@@ -453,7 +454,8 @@ for the point estimates within.
 for automating axis labels.  
 
 {pstd}The approach to correlation confidence intervals of Cox (2008) is 
-broadly similar. 
+broadly similar. See also {help pctilesets} or {help momentsets} if
+installed.
 
 {pstd}In statistical graphics, showing confidence intervals {c -} or their 
 antecedents and relatives under various names such as error bars {c -} has 
@@ -476,6 +478,25 @@ whether coloured or blank, using something like {help twoway rbar} seems less
 common than either of those. The choice may seem a matter of style or personal
 preference unless there is evidence that any form is most effective. 
 Wilkinson (1999, 2005) gives examples of all, including range bars. 
+See also Wilkinson (2006) on Pareto dot plots. 
+
+{pstd}The command {cmd:qplot} is used in examples: see Cox (1999, 2005) 
+and search for updates. By default the horizontal axis is a probability 
+scale from 0 to 1 so (for example) 1 is a predictable place to add 
+a confidence interval on the right of each display, so long as any 
+bar is not too wide. For a normal quantile plot the range of standard 
+normal deviates depends on the sample size, as indicated by this Mata 
+output for a plotting position (rank - 0.5) / sample size. The largest 
+standard normal deviate plotted increases with sample size.
+
+    : n ,  (n :- 0.5) :/ n,  invnormal((n :- 0.5) :/ n)
+                     1             2             3
+        +-------------------------------------------+
+      1 |           10           .95   1.644853627  |
+      2 |          100          .995   2.575829304  |
+      3 |         1000         .9995   3.290526731  |
+      4 |        10000        .99995   3.890591886  |
+        +-------------------------------------------+
 
 
 {title:Options}
@@ -516,7 +537,7 @@ as synonyms.
 {phang}
 {opt over(groupvar)} must be specified to name the group variable. 
 Distinct groups of observations on {it:groupvar} will be used 
-to determine confidence intervals for the variable specified. 
+to determine confidence intervals for the main variable specified. 
 
 
 {it:Option allowed with the groups syntax}
@@ -683,7 +704,23 @@ on the sample mean and standard deviation, and it assumes normality.
 
 {phang}{cmd:. myaxis group2=group, sort(mean point)}{p_end}
 {pstd}{cmd:. twoway rspike ub lb group2 || scatter point group2, pstyle(p1) xla(1/9, valuelabel tlc(none))}{p_end}
-{pstd}{cmd:  ytitle(`=varlabel' (day {&degree}F)) subtitle("`=statname's: `=level'% confidence intervals", place(w)) legend(off) xsc(r(0.8 9.2)) name(CI4, replace)}{p_end}
+{pstd}{cmd:  ytitle(`=varlabel' (day {&degree}F)) subtitle("`=statname's: `=level'% confidence intervals", place(w)) legend(off) xsc(r(0.8 9.2)) name(CI5, replace)}{p_end}
+
+{phang}{cmd:. sysuse auto, clear}{p_end}
+
+{phang}{cmd:. cisets gmean price, over(foreign) saving(foo, replace)}{p_end}
+
+{phang}{cmd:. clonevar origgvar=foreign}{p_end}
+
+{phang}{cmd:. merge m:1 origgvar using foo}{p_end}
+
+{phang}{cmd:. gen where = 1}{p_end}
+
+{phang}{cmd:. qplot price, ms(O) by(foreign, legend(off) note(95% confidence intervals for geometric means))}{p_end}
+{pstd}{cmd: xla(0 0.25 "0.25" 0.5 "0.5" 0.75 "0.75" 1)}{p_end}
+{pstd}{cmd: ysc(log) yla(3000(2000)15000) ytitle(Price (USD)) xtitle(Fraction of data)}{p_end}
+{pstd}{cmd: addplot(rbar ub lb where, barw(0.08) fcolor(none) pstyle(p2)}{p_end}
+{pstd}{cmd: || scatter point where, ms(D) msize(medlarge) pstyle(p2)) name(CI6, replace)}{p_end}
 
 
 {title:Author}
@@ -693,6 +730,14 @@ n.j.cox@durham.ac.uk
 
 
 {title:References}
+
+{phang}Cox, N. J. 1999. 
+Quantile plots, generalized.
+{it:Stata Technical Bulletin} 51: 16{c -}18.        
+
+{phang}Cox, N. J. 2005.      
+Speaking Stata: The protean quantile plot. 
+{it:Stata Journal} 5: 442{c -}460. 
 
 {phang}Cox, N. J. 2008. 
 Speaking Stata: Correlation with confidence, or Fisher's z revisited.
@@ -718,6 +763,9 @@ New York: Springer. See pp.183, 223, 269, 271.
 {it:The Grammar of Graphics.}
 New York: Springer. See pp.102, 131, 218, 220, 461, 470, 478, 479, 480, 481, 522. 
 
+{phang}Wilkinson, L. 2006. 
+Revising the Pareto chart.  {it:American Statistician} 60: 332{c -}334.
+
 
 {title:Also see}
 
@@ -726,10 +774,3 @@ New York: Springer. See pp.102, 131, 218, 220, 461, 470, 478, 479, 480, 481, 522
 {p 4 4 2}help for {help ameans} 
 
 {p 4 4 2}help for {help centile} 
-
-
-
-
-
-
-

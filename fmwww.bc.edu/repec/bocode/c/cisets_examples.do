@@ -1,4 +1,5 @@
-* last example requires myaxis from Stata Journal 
+* one example requires myaxis from Stata Journal 
+* one example requires qplot from Stata Journal 
 * in Stata <18 use a different scheme 
 
 sysuse auto, clear 
@@ -78,4 +79,23 @@ u foo
 myaxis group2=group, sort(mean point)
 set scheme stcolor
 twoway rspike ub lb group2 || scatter point group2, pstyle(p1) xla(1/9, valuelabel tlc(none)) ytitle(`=varlabel' (day {&degree}F)) subtitle("`=statname's: `=level'% confidence intervals", place(w)) legend(off) xsc(r(0.8 9.2)) name(CI5, replace)
+
+sysuse auto, clear
+
+cisets gmean price, over(foreign) saving(foo, replace)
+
+clonevar origgvar=foreign
+
+merge m:1 origgvar using foo
+
+gen where = 1
+
+qplot price, ms(O) by(foreign, legend(off) note(95% confidence intervals for geometric means)) ///
+xla(0 0.25 "0.25" 0.5 "0.5" 0.75 "0.75" 1) ///
+ysc(log) yla(3000(2000)15000) ytitle(Price (USD)) xtitle(Fraction of data) ///
+addplot(rbar ub lb where, barw(0.08) fcolor(none) pstyle(p2) ///
+|| scatter point where, ms(D) msize(medlarge) pstyle(p2)) name(CI6, replace)
+
+
+
 

@@ -1,6 +1,7 @@
-*! 1.1.1 NJC 26 October 2024
-*! 1.1.0 NJC 25 October 2024 
-*! 1.0.0 NJC 21 October 2024 
+*! 1.1.2 NJC 31 October 2024
+* 1.1.1 NJC 26 October 2024
+* 1.1.0 NJC 25 October 2024 
+* 1.0.0 NJC 21 October 2024 
 program cisets
 	version 14.1 
 	
@@ -114,8 +115,8 @@ program _mean
 	list, noobs `options'
 	
 	if `wantsave' {
-		quietly compress
 		display  
+		quietly compress
 		save "`filename'", replace
 	} 
 end 
@@ -175,6 +176,7 @@ program _mean_g
 	if `"`saving'"' != "" { 
 		label data 
 		display 
+		quietly compress 
 		save `saving'
 	}
 end 
@@ -251,8 +253,8 @@ program _prop
 	list, noobs `options'
 
 	if `wantsave' {
-		quietly compress 
 		display
+		quietly compress 
 		save "`filename'", replace
 	}
 end 
@@ -320,6 +322,7 @@ program _prop_g
 	if `"`saving'"' != "" { 
 		label data 
 		display 
+		quietly compress
 		save `saving'
 	} 
 end 
@@ -381,8 +384,8 @@ program _var
 	list, noobs `options'
 	
 	if `wantsave' {
-		quietly compress 
 		display 
+		quietly compress 
 		save "`filename'", replace
 	}
 end 
@@ -443,8 +446,9 @@ program _var_g
 	list, noobs `options'
 
 	if `"`saving'"' != "" { 
-		label data 
+		label data
 		display 
+		quietly compress 
 		save `saving'
 	}
 end 
@@ -506,8 +510,8 @@ program _gmean
 	list, noobs `options'
 	
 	if `wantsave' {
-		quietly compress 
 		display 
+		quietly compress 
 		save "`filename'", replace
 	}
 end 
@@ -569,6 +573,7 @@ program _gmean_g
 	if `"`saving'"' != "" { 
 		label data 
 		display 
+		quietly compress 
 		save `saving'
 	}
 end 
@@ -629,8 +634,8 @@ program _hmean
 	list, noobs `options'
 	
 	if `wantsave' {
-		quietly compress 
 		display  
+		quietly compress 
 		save "`filename'", replace
 	}
 end 
@@ -692,6 +697,7 @@ program _hmean_g
 	if `"`saving'"' != "" { 
 		label data 
 		display 
+		quietly compress 
 		save `saving'
 	}
 end 
@@ -753,8 +759,8 @@ program _centile
 	list, noobs `options'
 	
 	if `wantsave' {
-		quietly compress 
 		display 
+		quietly compress 
 		save "`filename'", replace
 	}
 end 
@@ -817,6 +823,7 @@ program _centile_g
 	if `"`saving'"' != "" { 
 		label data 
 		display  
+		quietly compress 
 		save `saving'
 	} 
 end 
