@@ -1,0 +1,20 @@
+d 'TWOLEVELR2': module to compute within, between, and overall R-squared in linear two-level models
+d
+d  twolevelr2 computes the within, between, and overall R-squared
+d for a linear two-level model using the approach proposed by Holm,
+d Jann, and Karlson (forthcoming in Sociological Methodology). 
+d
+d KW: multilevel model
+d KW: explained variance
+d KW: r-squared
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20241110
+d
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
+d
+f twolevelr2.ado
+f twolevelr2.sthlp
+f twolevelr2.zip

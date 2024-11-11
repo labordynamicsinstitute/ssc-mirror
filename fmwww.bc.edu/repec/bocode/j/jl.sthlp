@@ -1,5 +1,5 @@
 {smcl}
-{* *! jl 1.0.0 8apr2024}{...}
+{* *! jl 1.1.0 8nov2024}{...}
 {help jl:jl}
 {hline}{...}
 
@@ -136,7 +136,7 @@ to Stata's {help use} and {help save}, but copy to and from Julia DataFrames. Un
 will clear the current data set if the {opt clear} option is included, and ensure that the new data set has enough rows to receive all the data.
 
 {pstd}
-The low-level routines give more include options to improve performance that are 
+The low-level routines give more options to improve performance, which are 
 useful when using {cmd:jl} to write a Julia back end for a Stata package. By default, the {cmd:jl PutVarsToDF} subcommand will map Stata data columns
 to Julia DataFrame columns of corresponding type, and mark all destination columns to allow missing values. {cmd:jl GetVarsFromDF} does
 something similar in the other direction. {cmd:PutVarsToDF}'s {opt nomiss:ing} option increases speed and is appropriate for variables known to contain no missing values. 
@@ -178,7 +178,7 @@ have a different effect than the same commands in the opposite order.
 
 {pstd}
 This package is designed for 64-bit Windows, Linux, and macOS, the last on an Intel or Apple CPU. It requires 
-Julia 1.9.4 or higher. As documented {browse "https://github.com/JuliaLang/juliaup#installation":here}, the easiest way to
+Julia 1.11.1 or higher. As documented {browse "https://github.com/JuliaLang/juliaup#installation":here}, the easiest way to
 install it in Windows is from the {browse "https://apps.microsoft.com/detail/9NJNWW8PVKMN":Microsoft Store}; and the 
 easiest way to install it in Linux and macOS is with this shell command from inside Stata, which is clickable:
 

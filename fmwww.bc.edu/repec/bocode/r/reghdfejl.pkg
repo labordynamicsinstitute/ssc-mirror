@@ -5,12 +5,13 @@ d which uses a Julia back-end for speed. It requires Stata 15 or
 d later, as well as Python 3.X and Julia, which are freely
 d available. 
 d
+d KW: reghdfe
 d KW: Julia
 d KW: plugins
 d
-d Requires: Stata version 15, julia from SSC, Julia 1.9
+d Requires: Stata version 15, julia from SSC, Julia 1.11
 d
-d Distribution-Date: 20241005
+d Distribution-Date: 20241110
 d
 d Author: David Roodman
 d Support: email david@@davidroodman.com

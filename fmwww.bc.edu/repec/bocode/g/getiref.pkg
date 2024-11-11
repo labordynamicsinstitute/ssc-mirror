@@ -1,0 +1,27 @@
+d 'GETIREF': module to Search and share Stata resources and blogs within Stata Command Window
+d
+d      getiref make it easy to get meta data of most academic
+d articles using their DOIs.  It gets	 information like Author
+d name, Publication year, article Title, page range, and even
+d provides links to    PDFs, as well as .bibtex/.ris files
+d associated with an anticle.	 The citation information can be
+d displayed and exported in various styles, including Markdown,
+d LaTeX,    or Plain text.  This feature enables easy insertion or
+d pasting into .md, .docx, or .tex documents.	 It proves highly
+d practical for efficient literature note-taking, significantly
+d saving time on    downloading, organizing PDF documents, and
+d managing references. 
+d
+d KW: references citations
+d KW: DOI
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20241110
+d
+d Author: Yujun Lian, Lingnan College, Sun Yat-Sen University, China
+d Support: email arlionn@@163.com
+d
+ ../l/getiref.ado
+ ../l/getiref.sthlp
+ ../l/getiref-get-all-refs.do

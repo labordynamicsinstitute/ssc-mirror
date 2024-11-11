@@ -1,4 +1,5 @@
 {smcl}
+{* 07Nov2024}{...}
 {* 09Sep2024}{...}
 {* 25Aug2024}{...}
 {* 10Mar2021}{...}
@@ -39,6 +40,7 @@ and {cmd:single} is specified {p_end}
 {synopt:{opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]}plot the average actual and predicted {it:depvar} variable over time. Specifying {cmd:figure} without options uses the default graph settings {p_end}
 {synopt:{opt low:ess}}plots a lowess smoothed line of {it:depvar} on {it:timevar} {p_end}
 {synopt:{opt ci}}plots the confidence interval(s) on the {cmd:figure} {p_end}
+{synopt:{opt shad:e}({it:{help datetime:date1}} ; {it:{help datetime:date2}})}plot a shaded area on the figure between two dates, separated by a semicolon (e.g. {cmd:shade(21jan2020 ; 08feb2020)}) {p_end}
 {synopt:[{it:model_options}]}specify all available options for {helpb xtgee}{p_end}
 {synoptline}
 {p 4 6 2}
@@ -117,12 +119,23 @@ of the average actual values of {it:depvar} over time. Specifying {cmd:figure}
 without options uses the default graph settings.
 
 {phang}
+{cmd:lowess} plots a lowess smoothed line of {it:depvar} on {it:timevar}.
+
+{phang}
 {cmd:ci} plots the confidence interval(s) on the {cmd:figure}. By default,
 95% CIs are presented but can be changed by specifying {cmd:level()} as 
 a model option. 
 
 {phang}
-{cmd:lowess} plots a lowess smoothed line of {it:depvar} on {it:timevar}.
+{cmd:shade(}{it:date1} ; {it:date2}{cmd:)} plots a shaded area on the figure 
+between two dates, specified by the user and separated by a semicolon. The values 
+entered for time periods must be in the same units as the panel time variable 
+specified in {helpb tsset}. Dates should be specified using the respective 
+pseudofunction (see {helpb datetime:datetime}), such as {cmd:shade(2020 ; 2021)} 
+for a four-digit year, {cmd:shade(2019m11 ; 2020m3)} for quarterly data or 
+{cmd:shade(20jan2021 ; 30jan2021)} for daily data. Shading may be helpful to 
+highlight a "washout" period before introduction of the intervention, or 
+to highlight some other event worthy of note.
 
 {phang}
 {it:model_options} specify all available options for {helpb xtgee}.
@@ -231,9 +244,15 @@ We see from the output that there is autocorrelation up to lag 9, so we reestima
 {phang3}{bf:{stata "xtitsa y, single trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9) low": . xtitsa y, single trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9) low}}{p_end}
 
 {pmore}
+We specify two treatment periods and shade the area between them {p_end}
+
+{phang3}{bf:{stata "xtitsa y, single trperiod(2019m9 ; 2019m11) shade(2019m9 ; 2019m11) vce(robust) fig repl corr(ar 9) low": . xtitsa y, single trperiod(2019m9 ; 2019m11) shade(2019m9 ; 2019m11) vce(robust) fig repl corr(ar 9) low}} {p_end}
+
+{pmore}
 We specify a single-group ITSA for a fractional response (i.e. 0 to 1.0 scale) with family(binomial) and vce(robust) and add CIs to the graph.{p_end}
 
 {phang3}{bf:{stata "xtitsa y01, single trperiod(2019m11) family(binomial) vce(robust) figure posttr replace ci":. xtitsa y01, single trperiod(2019m11) family(binomial) vce(robust) figure posttr replace ci}} {p_end}
+
 
 {pstd}
 {opt 2) Single-group ITSA in dataset with other data:}{p_end}
@@ -267,14 +286,15 @@ We now specify corr(ar 9) to fit an AR(9) model and add a confidence interval to
 {phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9) ci":. xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9) ci}}{p_end}
 
 {pmore}
-Here we specify two treatment periods - 2019m6 and 2019m11 and add a lowess smoother to the graph.
+Here we specify two treatment periods, 2019m6 and 2019m11, shade the area between them on the graph, and add a lowess smoother.
 
-{phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m6; 2019m11) vce(robust) posttrend replace fig low":. xtitsa y, single treat(z) trperiod(2019m6; 2019m11) vce(robust) posttrend replace fig low}} {p_end}
+{phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m6; 2019m11) shade(2019m6; 2019m11) vce(robust) posttr repl fig low":. xtitsa y, single treat(z) trperiod(2019m6; 2019m11) shade(2019m6; 2019m11) vce(robust) posttr repl fig low}} {p_end}
 
 {pmore}
 We specify a single-group ITSA for a fractional response (i.e. 0 to 1.0 scale) with family(binomial) and vce(robust) and add CIs to the graph.{p_end}
 
 {phang3}{bf:{stata "xtitsa y01, single treat(z) trperiod(2019m11) family(binomial) vce(robust) figure posttr replace ci":. xtitsa y01, single treat(z) trperiod(2019m11) family(binomial) vce(robust) figure posttr replace ci}} {p_end}
+
 
 {pstd}
 {opt 3) Multiple-group ITSA (treatment vs control):}{p_end}
@@ -288,6 +308,11 @@ We specify a multiple-group ITSA by omitting {cmd:single}. The variable z includ
 Same as above, but we add confidence intervals to the graph. {p_end}
 
 {phang3}{bf:{stata "xtitsa y, treat(z) trperiod(2019m11) vce(robust) posttrend figure replace ci":. xtitsa y, treat(z) trperiod(2019m11) vce(robust) posttrend figure replace ci}}{p_end}
+
+{pmore}
+Here we add another treatment period and shade the area between them on the graph. We also add confidence intervals. {p_end}
+
+{phang3}{bf:{stata "xtitsa y, treat(z) trperiod(2019m9 ; 2019m11) shade(2019m9 ; 2019m11) vce(robust) posttr fig repl ci":. xtitsa y, treat(z) trperiod(2019m9 ; 2019m11) shade(2019m9 ; 2019m11) vce(robust) posttr fig repl ci}}{p_end}
 
 {pmore}
 Here we add a covariate {cmd:x} to the model and specify that estimates be computed at the 99% level. We also add CIs to the graph. One can see that, with the addition of covariates, the estimates are no longer linear. {p_end}

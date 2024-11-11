@@ -56,6 +56,7 @@ p get_pwmse module to execute PWMSE-based model evaluation
 p getcensus module to load American Community Survey data from the U.S. Census Bureau API into Stata
 p getdata module to import SDMX data from several providers
 p getfilename2 program for handling filename specifications
+p getiref module to Search and share Stata resources and blogs within Stata Command Window
 p getmstatistic module to Quantify Systematic Heterogeneity in Meta-Analysis
 p getmxdata module to import Mexican economic data 
 p getprime module to get the prime number closer to the specified number

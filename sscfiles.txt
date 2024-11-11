@@ -1663,8 +1663,10 @@ fmwww.bc.edu/repec/bocode/g/gformula_Daniel_DeStavola_Cousens.pdf
 fmwww.bc.edu/repec/bocode/g/gsreg.pkg
 fmwww.bc.edu/repec/bocode/g/geo2xy_albers.hlp
 fmwww.bc.edu/repec/bocode/g/greg.sthlp
+fmwww.bc.edu/repec/bocode/g/getiref.sthlp
 fmwww.bc.edu/repec/bocode/g/grlogit.pkg
 fmwww.bc.edu/repec/bocode/g/GSS_1998.dta
+fmwww.bc.edu/repec/bocode/g/getiref.ado
 fmwww.bc.edu/repec/bocode/g/gs2slsar.pkg
 fmwww.bc.edu/repec/bocode/g/grstest.pkg
 fmwww.bc.edu/repec/bocode/g/geivars.ado
@@ -1880,6 +1882,7 @@ fmwww.bc.edu/repec/bocode/g/gconc.html
 fmwww.bc.edu/repec/bocode/g/getfilename2.hlp
 fmwww.bc.edu/repec/bocode/g/grstest2.ado
 fmwww.bc.edu/repec/bocode/g/gs2slsxt.dlg
+fmwww.bc.edu/repec/bocode/g/getiref.pkg
 fmwww.bc.edu/repec/bocode/g/geocodeopen.pkg
 fmwww.bc.edu/repec/bocode/g/grdigap.hlp
 fmwww.bc.edu/repec/bocode/g/glmdeco.ado
@@ -2063,6 +2066,7 @@ fmwww.bc.edu/repec/bocode/g/grep.html
 fmwww.bc.edu/repec/bocode/g/gs3slsar1.dta
 fmwww.bc.edu/repec/bocode/g/groupdist.hlp
 fmwww.bc.edu/repec/bocode/g/gensurvsim_core.ado
+fmwww.bc.edu/repec/bocode/g/getiref-get-all-refs.do
 fmwww.bc.edu/repec/bocode/g/graphbinary.html
 fmwww.bc.edu/repec/bocode/g/grqreg.hlp
 fmwww.bc.edu/repec/bocode/g/geochart.pkg
@@ -6858,6 +6862,7 @@ fmwww.bc.edu/repec/bocode/t/tfv.pkg
 fmwww.bc.edu/repec/bocode/t/tex.ado
 fmwww.bc.edu/repec/bocode/t/tabform.ado
 fmwww.bc.edu/repec/bocode/t/tabmerge.hlp
+fmwww.bc.edu/repec/bocode/t/twolevelr2.zip
 fmwww.bc.edu/repec/bocode/t/turnbull.ado
 fmwww.bc.edu/repec/bocode/t/tabcond.ado
 fmwww.bc.edu/repec/bocode/t/tryem.ado
@@ -6942,6 +6947,7 @@ fmwww.bc.edu/repec/bocode/t/tabletutorial_25.ihlp
 fmwww.bc.edu/repec/bocode/t/tocalendar.sthlp
 fmwww.bc.edu/repec/bocode/t/tdpd.hlp
 fmwww.bc.edu/repec/bocode/t/ColorSchemes.dta
+fmwww.bc.edu/repec/bocode/t/twolevelr2.pkg
 fmwww.bc.edu/repec/bocode/t/tpoisson.ado
 fmwww.bc.edu/repec/bocode/t/tex3pt.ado
 fmwww.bc.edu/repec/bocode/t/triplot6.ado
@@ -7146,6 +7152,7 @@ fmwww.bc.edu/repec/bocode/t/testjfe.ado
 fmwww.bc.edu/repec/bocode/t/timeuse.pkg
 fmwww.bc.edu/repec/bocode/t/MilanoOutline-Coordinates.dta
 fmwww.bc.edu/repec/bocode/t/tkdensity.sthlp
+fmwww.bc.edu/repec/bocode/t/twolevelr2.sthlp
 fmwww.bc.edu/repec/bocode/t/try.ado
 fmwww.bc.edu/repec/bocode/t/tabmult.ado
 fmwww.bc.edu/repec/bocode/t/tfconcat.sthlp
@@ -7520,6 +7527,7 @@ fmwww.bc.edu/repec/bocode/t/tesensitivity_cpitable.sthlp
 fmwww.bc.edu/repec/bocode/t/truernd.pkg
 fmwww.bc.edu/repec/bocode/t/testout.sthlp
 fmwww.bc.edu/repec/bocode/t/table1.pkg
+fmwww.bc.edu/repec/bocode/t/twolevelr2.ado
 fmwww.bc.edu/repec/bocode/t/tex_equal.sthlp
 fmwww.bc.edu/repec/bocode/t/tolong.sthlp
 fmwww.bc.edu/repec/bocode/t/timeusex.sthlp
@@ -11170,6 +11178,7 @@ fmwww.bc.edu/repec/bocode/p/polar.pkg
 fmwww.bc.edu/repec/bocode/p/pem.sthlp
 fmwww.bc.edu/repec/bocode/p/pexp.ado
 fmwww.bc.edu/repec/bocode/p/pip_countries.sthlp
+fmwww.bc.edu/repec/bocode/p/pctilesets.pkg
 fmwww.bc.edu/repec/bocode/p/pschdes.ado
 fmwww.bc.edu/repec/bocode/p/parmcip.hlp
 fmwww.bc.edu/repec/bocode/p/pwcorrs.pkg
@@ -11190,6 +11199,7 @@ fmwww.bc.edu/repec/bocode/p/pip_update.ado
 fmwww.bc.edu/repec/bocode/p/pbeta.html
 fmwww.bc.edu/repec/bocode/p/pschdes.dlg
 fmwww.bc.edu/repec/bocode/p/pschdb.ado
+fmwww.bc.edu/repec/bocode/p/pctilesets_examples.do
 fmwww.bc.edu/repec/bocode/p/piaacdes.ado
 fmwww.bc.edu/repec/bocode/p/prevent30.sthlp
 fmwww.bc.edu/repec/bocode/p/pschset_i_2.dlg
@@ -11369,6 +11379,7 @@ fmwww.bc.edu/repec/bocode/p/plotm.ado
 fmwww.bc.edu/repec/bocode/p/plotbetas.ado
 fmwww.bc.edu/repec/bocode/p/pfwb.sthlp
 fmwww.bc.edu/repec/bocode/p/pretty_logistic.sthlp
+fmwww.bc.edu/repec/bocode/p/pctilesets.sthlp
 fmwww.bc.edu/repec/bocode/p/parplot.html
 fmwww.bc.edu/repec/bocode/p/plotmatrix.pkg
 fmwww.bc.edu/repec/bocode/p/propcnsreg_postestimation.sthlp
@@ -11694,6 +11705,7 @@ fmwww.bc.edu/repec/bocode/p/partialhdfejl.ado
 fmwww.bc.edu/repec/bocode/p/pciplot.ado
 fmwww.bc.edu/repec/bocode/p/plotsgpv-leukemia-example.do
 fmwww.bc.edu/repec/bocode/p/piaactab.ado
+fmwww.bc.edu/repec/bocode/p/pctilesets.ado
 fmwww.bc.edu/repec/bocode/p/piaacreg.sthlp
 fmwww.bc.edu/repec/bocode/p/pfs.ado
 fmwww.bc.edu/repec/bocode/p/pip_new_session.ado

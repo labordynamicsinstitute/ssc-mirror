@@ -1,0 +1,28 @@
+d 'PCTILESETS': module for percentile or quantile sets for selected levels
+d
+d  pctilesets computes percentile or quantile sets.  It is a
+d wrapper for summarize.  Typically the user  will specify one or
+d more of the options pctile(), minimum and maximum to select
+d extremes and/or  any or all of the percentiles for 1, 5, 10, 25
+d (lower quartile), 50 (median), 75 (upper quartile), 90,  95 and
+d 99% cumulative probability.  There are two syntaxes, for
+d variables and for groups of  observations. pctilesets by default
+d lists its results. Although saving to a permanent dataset is
+d optional, that is the  intended key to many useful  applications,
+d graphical and otherwise. 
+d
+d KW: summary statistics
+d KW: percentiles
+d KW: quantiles
+d KW: graphics 
+d
+d Requires: Stata version 8.1
+d
+d Distribution-Date: 20241110
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f pctilesets.ado
+f pctilesets.sthlp
+f pctilesets_examples.do

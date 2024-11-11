@@ -1,4 +1,4 @@
-*! version 1.0  Justin Wiltshire 05/06/2022 - Wrapper adding functionality to -synth- package
+*! version 1.2 by Justin Wiltshire. Updated 11/07/2024 - Wrapper adding functionality to -synth- package
 
 program allsynth, eclass sortpreserve byable(recall)
 	version 15.1 // Not tested on earlier versions
@@ -56,7 +56,7 @@ program allsynth, eclass sortpreserve byable(recall)
 			Keep(string)
 			BCORrect(string)
 			GAPFIGure(string)
-			PVALues
+			PVALues(string)
 			PLACeboskeep
 			TRANSform(string)
 			STACKed(string)
@@ -86,7 +86,7 @@ program allsynth, eclass sortpreserve byable(recall)
 				resultsperiod
 				keep
 				unitnames 
-				customv
+				customV
 				margin
 				maxiter
 				sigf
@@ -276,20 +276,23 @@ program allsynth, eclass sortpreserve byable(recall)
 			}
 			if "`_Entry'" == "sampleavgs" {
 				if "`pvalues'" == "" {
-					di as err "The `_Entry'() option of the allsynth option stacked() is specified, but the allsynth option -pvalues- is not specified. Specify the allsynth option -pvalues- or do not specify `_Entry'() in the allsynth stacked()"
+					di as err "The `_Entry'() option of the allsynth option stacked() is specified, but the allsynth option -pvalues()- is not specified. Specify the allsynth option -pvalues()- or do not specify `_Entry'() in the allsynth stacked()"
 					exit 198
 				}
 				local _stSampleavgs "`s2'"
 				capture assert round(`_stSampleavgs') == `_stSampleavgs' & `_stSampleavgs' >= 30
 				if _rc != 0 {
-					di as err "The `_Entry'() option of the allsynth option stacked() is misspecified. If `_Entry'() is specified, it can only accept an integer value of at least 30"
+					di as err "The `_Entry'() option of the allsynth option stacked() is misspecified. If pvalues(variance) is not specified and `_Entry'() is specified, then `_Entry'() can only accept an integer value of at least 30. If pvalues(variance) is specified then `_Entry'() will be forced to 1000"
 					exit 198
 				}
 				local s4 "`s4' `_Entry'"
 			}
-			if "`_stSampleavgs'" == "" & "`pvalues'" != "" {
-					local _stSampleavgs "100"
-				}
+			if "`_stSampleavgs'" == "" & "`pvalues'" == "rmspe" {
+				local _stSampleavgs "100"
+			}
+			if "`pvalues'" == "variance" | "`pvalues'" == "variance rmspe" | "`pvalues'" == "rmspe variance" {
+				local _stSampleavgs "1000"
+			}
 			if "`_Entry'" == "eventtime" {
 				local _Eventtimesize : list sizeof s2
 				local _Eventtime "`s2'"
@@ -412,8 +415,16 @@ program allsynth, eclass sortpreserve byable(recall)
 					local s2 = substr("`s2'", 1, `pq')
 				}
 				local _stFigure "`s2'"
-				if "`pvalues'" == "" & strpos("`_stFigure'", "placebos") != 0 {
-					di as err "`_Entry'(`_stFigure') is specified in the allsynth option stacked(), but the allsynth option -pvalues- is not specified. Specify the allsynth option -pvalues- or do not specify -placebos- in the `_Entry'() option of the allsynth option stacked()"
+				if "`pvalues'" == "" & (strpos("`_stFigure'", "placebos") != 0 | strpos("`_stFigure'", "ci") != 0) {
+					di as err "`_Entry'(`_stFigure') is specified in the allsynth option stacked(), but the allsynth option -pvalues()- is not specified. Specify the allsynth option -pvalues()- or do not specify -`_stFigure'- in the `_Entry'() option of the allsynth option stacked()"
+					exit 198
+				}
+				if strpos("`_stFigure'", "classic") != 0 & strpos("`_stFigure'", "bcorrect") != 0 & strpos("`_stFigure'", "placebos") != 0 {
+					di as err "`_Entry'(`_stFigure') is specified in the allsynth option stacked(), but the -placebos- option may only be specified with exactly one of -classic- or -bcorrect- in the `_Entry'() option of the allsynth option stacked()"
+					exit 198
+				}
+				if strpos("`_stFigure'", "classic") != 0 & strpos("`_stFigure'", "bcorrect") != 0 & strpos("`_stFigure'", "ci") != 0 {
+					di as err "`_Entry'(`_stFigure') is specified in the allsynth option stacked(), but the -ci- option may only be specified with exactly one of -classic- or -bcorrect- in the `_Entry'() option of the allsynth option stacked()"
 					exit 198
 				}
 				
@@ -504,10 +515,11 @@ program allsynth, eclass sortpreserve byable(recall)
 		}
 		if "`_stClear'" != "" {
 			local filelist: dir "`_Filepath'" files "*.dta"
+			di
+			di as txt "Erasing existing *.dta files in `_Filepath'"
+			di
 			foreach f of local filelist {
 				if strpos("`f'", "`filename'_`pvar'") != 0 {
-					di
-					di as txt "Erasing existing `f' file..."
 					qui erase "`_Filepath'`_Slash'`f'"
 				}
 			}
@@ -527,7 +539,7 @@ program allsynth, eclass sortpreserve byable(recall)
 	}
 	
 	* Preserve the user-specified macros
-	local _userMacros "anything counit xperiod mspeperiod resultsperiod unitnames figure keep bcorrect gapfigure pvalues transform stacked replace customv margin maxiter sigf bound nested allopt"
+	local _userMacros "anything counit xperiod mspeperiod resultsperiod unitnames figure keep bcorrect gapfigure pvalues transform stacked replace customV margin maxiter sigf bound nested allopt"
 	foreach m of local _userMacros {
 		local `m'2 ``m''
 	}
@@ -538,6 +550,7 @@ program allsynth, eclass sortpreserve byable(recall)
 	
 	* Loop through the treated units (including a single treated unit)
 	qui levelsof `pvar' if `_trU' == 1, local(_trUnitslist)
+	qui gettoken _trUnitsFirst : _trUnitslist
 	foreach trunit of local _trUnitslist {
 		graph close _all
 		graph drop _all
@@ -564,15 +577,17 @@ program allsynth, eclass sortpreserve byable(recall)
 		qui drop if `_trU' == 1 & `pvar' != `trunit'
 		
 		* Keep donor pool units specified in donorif, if donorif() is specified
-		if "`_stDonorCond1'" != "" | "`_stDonorCond3'" != "" {
-			`_stDonorCond1'
-			`_stDonorCond2'
-			`_stDonorCond3'
-			`_stDonorCond4'
-			`_stDonorCond5'
-			`_stDonorCond6'
-			`_stDonorCond7'
-			`_stDonorCond8'
+		quietly {
+			if "`_stDonorCond1'" != "" | "`_stDonorCond3'" != "" {
+				`_stDonorCond1'
+				`_stDonorCond2'
+				`_stDonorCond3'
+				`_stDonorCond4'
+				`_stDonorCond5'
+				`_stDonorCond6'
+				`_stDonorCond7'
+				`_stDonorCond8'
+			}
 		}
 		if "`_stDonorif'" == "" & ("`_stDonorCond1'" != "" | "`_stDonorCond3'" != "" | "`_stDonorCond5'" != "" | "`_stDonorCond7'" != "") {
 		di
@@ -580,8 +595,6 @@ program allsynth, eclass sortpreserve byable(recall)
 			exit 198
 		}
 		if "`_stDonorif'" != "" {
-			di
-			di "Restricting donor pool for treated `pvar' == `trunit', as specified"
 			qui keep if `_trU' == 1 | `_stDonorif'
 		}
 
@@ -602,18 +615,47 @@ program allsynth, eclass sortpreserve byable(recall)
 		* `tvar' values and count
 		qui levelsof `tvar', local(_t)
 		local tsize : list sizeof _t
-				
-		* Require keep be specified if pvalues is specified
-		if "`pvalues'" != "" & "`keep'" == "" {
-			di as err "pvalues is specified but -keep()- is not specified. As it can take considerable time to run pvalues, -keep()- is likely desirable and must be specified"
+		
+		* Initialize pvalues specification locals
+		local pvaluesvariance = 0
+		local pvaluesrmspe = 0
+		
+		* Parse the pvalues() string
+		foreach s of local pvalues {
+			capture assert "`s'" == "variance" | "`s'" == "rmspe"
+			if _rc != 0 {
+				di as err "pvalues() contains an invalid specification. Only -variance-, -rmspe-, or both are allowed. Specifying pvalues() without any options will be treated as if pvalues() is not specified"
+				exit 198
+			}
+			local pvalues`s' = 1
+		}
+		if "`stacked'" == "" & `pvaluesvariance' == 1 {
+			di as err "pvalues(`pvalues') is specified but stacked() is not specified. pvalues(variance) may only be specified if stacked() is specified"
 			exit 198
 		}
-				
-		* Keep placebo estimates if pvalues is specified and keep is specified
-		if "`pvalues'" != "" {
+		
+		* Set other locals
+		local placeboskeep ""
+		local placebovariance ""
+		if `pvaluesvariance' == 1 | `pvaluesrmspe' == 1 {
+			local pvalues = 1
 			local placeboskeep = 1
 		}
-
+				
+		* Require keep be specified if pvalues(placebos) is specified
+		if "`placeboskeep'" == "1" & "`keep'" == "" {
+			di as err "pvalues() is specified but -keep()- is not specified. As it can take considerable time to estimate the placebos, -keep()- is likely desirable and must be specified"
+			exit 198
+		}
+		
+		* Return error message if stacked() options require placebos and pvalues(placebos) is not specified
+		if "`_stSampleavgs'" != "" {
+			if "`pvalues'" == "" {
+				di as err "The sampleavgs() option of the allsynth option stacked() is specified, but the allsynth options -pvalues(rmspe)- or -pvalues(variance)- are not specified. Specify at least one of -pvalues(rmspe)- or -pvalues(variance)-, or do not specify `_Entry'() in the allsynth stacked()"
+				exit 198
+			}
+		}
+		
 		* Initialize bcorrect specification locals
 		local bcorrectnosave = 0
 		local bcorrectmerge = 0
@@ -895,14 +937,13 @@ program allsynth, eclass sortpreserve byable(recall)
 					di as err "The variable `normVar' was specified for normalization but `normVar'(`_trperiodM1') was specified as a predictor. This is not allowed because `normVar' is being normalized to its `_trperiodM1' values. Remove `normVar'(`_trperiodM1') from the list of predictor variables or remove `normVar' from varlist in transform()"
 					exit 198
 				}
-				di "Normalizing `normVar' to `_trperiodM1' values"
 				qui gen _XnormVar = `normVar' if `tvar' == `_trperiodM1'
 				bysort `pvar': egen _xXnormVar = max(_XnormVar)
 				qui replace `normVar' = 100*`normVar'/_xXnormVar
-				drop _XnormVar _xXnormVar
+				qui drop _XnormVar _xXnormVar
 			}
 		}
-		
+				
 		* Demean specified variables
 		if `transtypedemean' != 0 {
 			local gaptitle "Demeaned"
@@ -923,16 +964,15 @@ program allsynth, eclass sortpreserve byable(recall)
 					di as err "The variable `dmVar' was specified for normalization but is not specified as either an outcome variable or a predictor variable. Remove `dmVar' from varlist in transform(), or add it to the list of predictor variables"
 					exit 198
 				}
-				di "De-meaning `dmVar'"
 				bysort `pvar': egen _XdmVar = mean(`dmVar') if `tvar' < `trperiod'
 				bysort `pvar': egen _xXdmVar = max(_XdmVar)
 				qui replace `dmVar' = `dmVar' - _xXdmVar
 				qui replace `dmVar' = 0.000001 if `dmVar' == 0
-				drop _XdmVar _xXdmVar
+				qui drop _XdmVar _xXdmVar
 			}
 		}
 		
-		* Continue if bias-correction option specified
+		* Continue if bias-correction option specified and/or pvalues() specified
 		if "`bcorrect'" != "" | "`pvalues'" != "" {
 
 			* Preserve original user inputs for -synth- command
@@ -961,9 +1001,6 @@ program allsynth, eclass sortpreserve byable(recall)
 			
 			* Identify donor pool
 			qui gen dXonor_pooL = 0
-			di
-			di "Identifying donor pool..."
-			di
 			foreach dU of local counit {
 				qui replace dXonor_pooL = 1 if `pvar' == `dU'
 			}
@@ -1096,21 +1133,6 @@ program allsynth, eclass sortpreserve byable(recall)
 			unab var : `ordvar'
 			local anything = subinstr("`anything'", "`ordvar' ", "`var' ", 1)
 			local ordvar "`var'"
-			
-			/* Ensure there are no duplicates in the list of predictors
-			local everything2 "`everything'"
-			local evsize : list sizeof everything2
-			local everything
-			while `evsize' > 0 {
-				gettoken predvar everything2: everything2
-				capture assert regexm("`everything2'", "`predvar'") == 0
-				if _rc == 0 {
-					local everything "`everything' `predvar'"
-				}
-				local evsize = `evsize' - 1
-			}
-			local anything "`ordvar'`everything'"
-			local anything2 "`anything'"*/
 
 			* Check at least one predictor variable is specified
 			if "`everything'" == "" {
@@ -1118,64 +1140,28 @@ program allsynth, eclass sortpreserve byable(recall)
 				exit 198
 			}
 			
-			/******* Temporarily rename control variables to allow for long names
-			local xthing
-			local ything
-			
-			* Capture unique variable lists and separate period specifications
-			foreach v of local anything {
-				local p = strpos("`v'", "(") - 1
-				if `p' != -1 {
-					local q = strpos("`v'", "(")
-					local vapp = substr("`v'", `q', .)
-					local v = substr("`v'", 1, `p')
-					capture assert `v'
-					if _rc == 0 {
-						local xthing "`xthing' `v'"
-						local ything "`ything' `vapp'"
-					}
-				}
-				if `p' == -1 {
-					local xthing "`xthing' `v'"
-					local ything "`ything' (NO)"
-				}
-			}
-			
-			* Rename the dependent variable and update the xthing local
-			gettoken dvar: xthing
-			local dvar2 = substr("`dvar'", 1, 8)
-			local xthing = subinword("`xthing'", "`dvar'", "`dvar2'_Y", .)
-			rename `dvar' `dvar2'_Y
-
-			* Rename variables and create new version of xthing local with new names
-			local j = 0
-			local zthing "`xthing'"
-			foreach v of local xthing {
-				if "`v'" != "`dvar2'_Y" {
-					local j = `j' + 1
-					local v2 = substr("`v'", 1, 8)
-					local zthing = subinword("`zthing'", "`v'", "`v2'_X`j'", .)
-					capture assert `v'
-					if _rc == 0 {
-						qui rename `v' `v2'_X`j'
-					}
-				}
-			}
-
-			* Re-define the anything local with the new variable names
-			local ct: word count `zthing'
-			local listthing
-			while `ct' > 0 {
-				gettoken a zthing: zthing
-				gettoken b ything: ything
-				local listthing "`listthing' `a'`b'"
-				local ct = `ct' - 1
-			}
-			local anything = subinstr("`listthing'", "(NO)", "", .)*/
-			
 			* Get dependent variable with new name and re-define the everything local
 			gettoken dvar everything: anything
 			capture confirm numeric var `dvar'
+			local dvarnorm = 0
+			local dvardemean = 0
+			if `transtypenormalize' != 0 {
+				foreach _transform of local transform {
+					
+					if "`_transform'" == "`dvar'" {
+						local dvarnorm = 1
+					}
+				}	
+			}
+			if `transtypedemean' != 0 {
+				foreach _transform of local transform {
+					
+					if "`_transform'" == "`dvar'" {
+						local dvardemean = 1
+					}
+				}	
+			}
+			
 			if _rc {
 				di as err "`dvar' does not exist as a (numeric) variable in dataset"
 				exit 198
@@ -1359,7 +1345,7 @@ program allsynth, eclass sortpreserve byable(recall)
 			local counit : subinstr local counit "  " "", all
 			local units "`trunit' `counit'"
 			
-			* Only run through for the treated unit if pvalues is not specified
+			* Only run through for the treated unit if pvalues() is not specified
 			if "`pvalues'" == "" {
 				local units `trunit'
 			}
@@ -1403,7 +1389,7 @@ program allsynth, eclass sortpreserve byable(recall)
 				qui rename `v' `vname'
 			}
 			qui rename c1 `pvar'
-			
+
 			* Save the predictor variables in a macro and get the number for sparsity analysis
 			local predvars
 			foreach v of varlist _all {
@@ -1444,10 +1430,10 @@ program allsynth, eclass sortpreserve byable(recall)
 
 				* Re-populate user-specified options with user inputs
 				foreach u of local inputlist {
-					if !inlist("`u'", "", "keep", "counit", "customv") {
+					if !inlist("`u'", "", "keep", "counit", "customV") {
 						qui local `u' "`u'(``u'local')"
 					}
-					if "`u'" == "customv" & "`nested'" == "" {
+					if "`u'" == "customV" & "`nested'" == "" {
 						qui local `u' "`u'(``u'local')"
 					}
 					if "`u'" == "keep" & "`placeboskeep'" == "" & "`i'" == "`trunit'" {
@@ -1464,16 +1450,17 @@ program allsynth, eclass sortpreserve byable(recall)
 				* Display message and set macros
 				if `trunit' == `actreat' & "`bcorrect'" != "" {
 					local qu ""
-					di 
-					di 
-					di "Bias-correcting the plain vanilla -synth- estimate for `pvar' `actreat'"
-					di 
 				}
 				if `trunit' != `actreat' {
 					local qu "qui"
 					local caploc "capture"
 				}
 				local treatfig ""
+				if `i' == `actreat' & "`pvalues'" == "" {
+					di 
+					di as smcl "Estimating treated unit `pvar' == `actreat'"
+					di 
+				}
 				
 				* Run the synthetic control and capture the weights
 				#delimit ;
@@ -1489,7 +1476,7 @@ program allsynth, eclass sortpreserve byable(recall)
 						`treatfig' 
 						`keep' 
 						`replace'
-						`customv'
+						`customV'
 						`margin'
 						`maxiter'
 						`sigf'
@@ -1522,7 +1509,7 @@ program allsynth, eclass sortpreserve byable(recall)
 							`treatfig' 
 							`keep' 
 							`replace'
-							`customv'
+							`customV'
 							`margin'
 							`maxiter'
 							`sigf'
@@ -1530,11 +1517,74 @@ program allsynth, eclass sortpreserve byable(recall)
 							`allopt';
 						#delimit cr
 				}
-				
+
+				* Save matrices and calculate the gap
 				qui mat Y_t_`i' = e(Y_treated)
 				qui mat Y_s_`i' = e(Y_synthetic)
 				qui mat gap_`i' = Y_t_`i' - Y_s_`i'
 				qui mat w = e(W_weights)
+
+				* Ensure weights sum to 1 (synth sometimes doesn't due to rounding error). Otherwise, implement a correction
+				tempfile core3
+				qui save "`core3'", replace
+				qui clear
+				qui svmat w, names(w)
+				collapse (sum) w=w2
+				qui sum w
+				local _W_adjust = 1/r(mean)
+				if `_W_adjust' != 1 {
+					qui clear
+					qui svmat w, names(w)
+					qui rename (w1 w2) (`pvar' _W_Weight)
+					qui replace _W_Weight = _W_Weight*`_W_adjust'
+					tempfile core4
+					qui save "`core4'", replace
+					qui rename `pvar' _Co_Number
+					qui mkmat _Co_Number _W_Weight, matrix(w) rownames(_Co_Number)
+					tempfile _W_adj
+					qui save "`_W_adj'", replace
+					qui use "`core3'", clear
+					if `transtypenormalize' != 0 & `dvarnorm' == 1 {
+						qui gen _XnormVar = `dvar' if `tvar' == `_trperiodM1'
+						bysort `pvar': egen _xXnormVar = max(_XnormVar)
+						qui replace `dvar' = 100*`dvar'/_xXnormVar
+						qui drop _XnormVar _xXnormVar
+					}
+					quietly {
+						if `transtypedemean' != 0 & `dvardemean' == 1 {
+							bysort `pvar': egen _XdmVar = mean(`dvar') if `tvar' < `trperiod'
+							bysort `pvar': egen _xXdmVar = max(_XdmVar)
+							qui replace `dvar' = `dvar' - _xXdmVar
+							qui replace `dvar' = 0.000001 if `dvar' == 0
+							qui drop _XdmVar _xXdmVar
+						}
+					}
+					qui merge m:1 `pvar' using "`core4'", nogen norep keep(3)
+					qui collapse (mean) _Y_synthetic=`dvar' [aw=_W_Weight], by(`tvar')
+					qui mkmat _Y_synthetic, matrix(Y_s_`i') rownames(`tvar')
+					mat gap_`i' = Y_t_`i' - Y_s_`i'
+					qui rename `tvar' _time
+					qui keep _time _Y_synthetic
+					tempfile _Y_s_`i'
+					qui save "`_Y_s_`i''", replace
+					if "`keep'" != "" {
+						local _K = substr("`keep'", 6, .)
+						local _K = reverse("`_K'")
+						local _K = reverse(substr("`_K'", 2, .))
+						qui use "`_K'", clear
+						qui replace _Co_Number = -99999 - _n if mi(_Co_Number)
+						qui merge 1:1 _Co_Number using "`_W_adj'", nogen norep replace update
+						qui replace _Co_Number = . if _Co_Number < -99999
+						qui replace _time = -99999 - _n if mi(_time)
+						qui merge 1:1 _time using "`_Y_s_`i''", nogen norep replace update
+						qui replace _time = . if _time < -99999
+						qui sort _time
+						qui save "`_K'", replace
+					}
+				}
+				qui use "`core3'", clear
+				
+				* Analyze W-matrix
 				forval w = 1/`n0' {
 					if `w' == 1 {
 						qui mat W = w[`w',2]
@@ -1552,7 +1602,7 @@ program allsynth, eclass sortpreserve byable(recall)
 				mat _eRMSPE = e(RMSPE)
 				mat _eV_matrix = e(V_matrix)
 				mat _eX_balance = e(X_balance)
-				mat _eW_weights = e(W_weights)
+				mat _eW_weights = w
 				mat _eY_synthetic = e(Y_synthetic)
 				mat _eY_treated = e(Y_treated)
 				
@@ -1587,13 +1637,6 @@ program allsynth, eclass sortpreserve byable(recall)
 				qui gen pred_y = .
 				local y_bc_list ""
 				foreach y of local tvars {
-					/*local predvars2
-					foreach v of local predvars {
-						capture assert "`v'" != "outcome_var_`y'_"
-						if _rc == 0 {
-							local predvars2 "`predvars2' `v'"
-						}
-					}*/
 					local predvars2 "`predvars'"
 					qui `bcorreg' `dvar' `predvars2' if dXonor_pooL == 1 & `tvar' == `y' `aW'
 					qui predict pred_y_`y'
@@ -1641,7 +1684,7 @@ program allsynth, eclass sortpreserve byable(recall)
 					mat bcorrfig = Y1,Yhat,`tvar'
 				}
 
-				* Calculate the bias-corrected synthetic control "gap" for treated unit and placebo runs (if pvalues specified)
+				* Calculate the bias-corrected synthetic control "gap" for treated unit and placebo runs (if pvalues() specified)
 				mat gap_bc_`i' = Y1 - Yhat
 				mat gap_bc_`i' = [`pvar',`tvar',gap_`i',gap_bc_`i']
 				if "`bcorrect'" == "merge" {
@@ -1675,17 +1718,22 @@ program allsynth, eclass sortpreserve byable(recall)
 			
 				*Display messages
 				if "`zz'" == "`actreat'"  & "`bcorrect'" != "" & "`pvalues'" == "" {
-					di ""
+					di 
 					di "Applying bias-correction procedure to -synth- estimates...
-					di ""
+					di 
 				}
 				if "`zz'" == "`actreat'" & "`pvalues'" != "" {
-					di ""
-					di "Estimating synthetic controls using in-space placebo treatments for treated unit `pvar' == `actreat'. This could take awhile...
-					di ""
+					di 
+					di as smcl "Estimating `n0' in-space placebos for treated unit `pvar' == `actreat'
+					di 
 				}
 				if `trunit' != `actreat' {
-					di "`d' of `n0' (donor pool unit `pvar' == `i' for treated unit `pvar' == `actreat')"
+					if mod(`d',10)==0 {	
+						display "`d'" _continue
+					}
+					if mod(`d',10)!=0 {
+						display "." _continue
+					}
 					local d = `d' + 1
 				}
 				
@@ -1693,311 +1741,336 @@ program allsynth, eclass sortpreserve byable(recall)
 				local zz `i'
 				local counit `counit' `i'
 			}
-			di
-			di "Saving results..."
-					
-			* Reset the treated unit to the actually treated unit
-			local trunit = `actreat'
 			
-			* Set the placement of the dotted vertical line 
-			local trpm1 = `trperiod' - `gapfiglineback'
+			quietly {
 			
-			* Graph figure, if specified
-			if "`figure'" == "figure" {
-				qui clear
-				mat classicfig = Y_t_`actreat',Y_s_`actreat',`tvar'
-				qui svmat classicfig, names(v)
-				format v3 `_tVarformat'
-				#delimit ;
-					twoway 
-						(line v1 v3, lcolor(black)) 
-						(line v2 v3, lpattern(dash) lcolor(black)), 
-						ytitle("`gaptitle' `ordvar' `gaptitlepct'") 
-						xtitle("`tvar'") 
-						xline(`trpm1', lpattern(shortdash) lcolor(black))
-						legend(label(1 "`tlab'") label(2 "synthetic `tlab'"))
-						name(classic_sc);
-					#delimit cr
-			}
-			
-			* Graph bcorrect(figure), if specified
-			if `bcorrectfigure' == 1 {
-				qui clear
-				qui svmat bcorrfig, names(v)
-				format v3 `_tVarformat'
-				#delimit ;
-					twoway 
-						(line v1 v3, lcolor(black)) 
-						(line v2 v3, lpattern(dash) lcolor(black)), 
-						ytitle("`gaptitle' `ordvar' `gaptitlepct'") 
-						xtitle("`tvar'") 
-						xline(`trpm1', lpattern(shortdash) lcolor(black))
-						legend(rows(2) label(1 "`tlab', bias-corrected") label(2 "synthetic `tlab', bias-corrected"))
-						name(bias_corrected_sc);
-					#delimit cr
-			}
-			
-			* Save the matrices to a data set
-			tempfile core2
-			foreach i of local units {
-				qui clear
-				mat gap_bc_`i' = gap_bc_`i',uW
-				qui svmat gap_bc_`i', names(v)
-				if "`bcorrect'" == "nosave" | "`bcorrect'" == "" {
-					qui rename v1 `pvar'
-					qui rename v2 `tvar'
-					format `tvar' `_tVarformat'
-					qui rename v3 gap
-					qui rename v4 gap_bc
-					qui rename v5 unique_W
-				}
-				if "`bcorrect'" == "merge" {
-					qui rename v1 _Y_treated_bc
-					qui rename v2 _Y_synthetic_bc
-					qui rename v3 `pvar'
-					qui rename v4 `tvar'
-					format `tvar' `_tVarformat'
-					qui rename v5 gap
-					qui rename v6 gap_bc
-					qui rename v7 unique_W
-				}
-				if `i' == `idfirst' {
-					qui save "`core2'", replace
-				}
-				if `i' != `idfirst' {
-					qui append using "`core2'"
-					qui save "`core2'", replace
-				}
-			}
-			
-			* Save trunit (and avgweights) to dataset if stacked() is specified
-			if "`stacked'" != "" {
-				qui gen trunit = `actreat'
-				qui gen trperiod = `trperiod'
-				if "`_stAvgweights'" != "" {
-					qui gen _stAvgweights = `avgweights'
-				}
-			}
-
-			*** Calculate the RMSPEs and RMSPE p-values
-			if "`pvalues'" != "" {
+				* Reset the treated unit to the actually treated unit
+				local trunit = `actreat'
 				
-				* Generate the RMSPE for T
-				qui gen rmspe = .
-				qui levelsof(`pvar'), local(id)
-				bysort `tvar': gen N = _N
-				foreach i of local id {
-					qui egen xpre = total(gap^2) if `tvar' < `trperiod' & `pvar' == `i'
-					qui gen xpre2 = xpre/`T0'
-					qui egen mspe_pre = max(xpre2) if `pvar' == `i'
-					qui drop x*
-					
-					* Treated period
-					foreach tt of local trtvars {
-						qui egen xpost2 = mean(gap^2) if inrange(`tvar', `trperiod', `tt') & `pvar' == `i'
-						qui egen mspe_post_`tt' = max(xpost2) if `pvar' == `i'
-						qui replace rmspe = mspe_post_`tt'/mspe_pre if `pvar' == `i' & `tvar' == `tt'
-						qui drop x* mspe_post_`tt'
+				* Set the placement of the dotted vertical line 
+				local trpm1 = `trperiod' - `gapfiglineback'
+				
+				* Graph figure, if specified
+				if "`figure'" == "figure" {
+					qui clear
+					mat classicfig = Y_t_`actreat',Y_s_`actreat',`tvar'
+					qui svmat classicfig, names(v)
+					format v3 `_tVarformat'
+					#delimit ;
+						twoway 
+							(line v1 v3, lcolor(black)) 
+							(line v2 v3, lpattern(dash) lcolor(black)), 
+							ytitle("`gaptitle' `ordvar' `gaptitlepct'") 
+							xtitle("`tvar'") 
+							xline(`trpm1', lpattern(shortdash) lcolor(black))
+							legend(label(1 "`tlab'") label(2 "synthetic `tlab'"))
+							name(classic_sc);
+						#delimit cr
+				}
+				
+				* Graph bcorrect(figure), if specified
+				if `bcorrectfigure' == 1 {
+					qui clear
+					qui svmat bcorrfig, names(v)
+					format v3 `_tVarformat'
+					#delimit ;
+						twoway 
+							(line v1 v3, lcolor(black)) 
+							(line v2 v3, lpattern(dash) lcolor(black)), 
+							ytitle("`gaptitle' `ordvar' `gaptitlepct'") 
+							xtitle("`tvar'") 
+							xline(`trpm1', lpattern(shortdash) lcolor(black))
+							legend(rows(2) label(1 "`tlab', bias-corrected") label(2 "synthetic `tlab', bias-corrected"))
+							name(bias_corrected_sc);
+						#delimit cr
+				}
+				
+				* Save the matrices to a data set
+				tempfile core2
+				foreach i of local units {
+					qui clear
+					mat gap_bc_`i' = gap_bc_`i',uW
+					qui svmat gap_bc_`i', names(v)
+					if "`bcorrect'" == "nosave" | "`bcorrect'" == "" {
+						qui rename v1 `pvar'
+						qui rename v2 `tvar'
+						format `tvar' `_tVarformat'
+						qui rename v3 gap
+						qui rename v4 gap_bc
+						qui rename v5 unique_W
 					}
-					qui drop mspe*
+					if "`bcorrect'" == "merge" {
+						qui rename v1 _Y_treated_bc
+						qui rename v2 _Y_synthetic_bc
+						qui rename v3 `pvar'
+						qui rename v4 `tvar'
+						format `tvar' `_tVarformat'
+						qui rename v5 gap
+						qui rename v6 gap_bc
+						qui rename v7 unique_W
+					}
+					if `i' == `idfirst' {
+						qui save "`core2'", replace
+					}
+					if `i' != `idfirst' {
+						qui append using "`core2'"
+						qui save "`core2'", replace
+					}
 				}
 				
-				* Generate RMSPE-ranked p-values
-				qui gsort `tvar' -rmspe
-				bysort `tvar': gen rmspe_rank = _n  if `tvar' >= `trperiod'
-				qui gen p = rmspe_rank/N if `tvar' >= `trperiod'
-				qui order `pvar' `tvar' gap rmspe* p N
-				
-				* Calculate the bias-corrected RMSPE and p-values
-				if "`bcorrect'" != "" {
+				* Save trunit (and avgweights) to dataset if stacked() is specified
+				if "`stacked'" != "" {
+					qui gen trunit = `actreat'
+					qui gen trperiod = `trperiod'
+					if "`_stAvgweights'" != "" {
+						qui gen _stAvgweights = `avgweights'
+					}
+				}
+
+				* Inference
+				if "`pvalues'" != "" {
+
+					* RMSPE-based estimates
+					if "`pvaluesrmspe'" == "1"  {
 			
-					* Generate the bias-corrected RMSPE for T
-					qui gen rmspe_bc = .
-					qui levelsof(`pvar'), local(id)
-					foreach i of local id {
-						qui egen xpre = total(gap_bc^2) if `tvar' < `trperiod' & `pvar' == `i'
-						qui gen xpre2 = xpre/`T0'
-						qui egen mspe_pre = max(xpre2) if `pvar' == `i'
-						qui drop x*
+						* Generate the RMSPE for T
+						qui gen rmspe = .
+						qui levelsof(`pvar'), local(id)
+						bysort `tvar': gen N = _N
+						foreach i of local id {
+							qui egen xpre = total(gap^2) if `tvar' < `trperiod' & `pvar' == `i'
+							qui gen xpre2 = xpre/`T0'
+							qui egen mspe_pre = max(xpre2) if `pvar' == `i'
+							qui drop x*
+							
+							* Treated period
+							foreach tt of local trtvars {
+								qui egen xpost2 = mean(gap^2) if inrange(`tvar', `trperiod', `tt') & `pvar' == `i'
+								qui egen mspe_post_`tt' = max(xpost2) if `pvar' == `i'
+								qui replace rmspe = mspe_post_`tt'/mspe_pre if `pvar' == `i' & `tvar' == `tt'
+								qui drop x* mspe_post_`tt'
+							}
+							qui drop mspe*
+						}
 						
-						* If the pre-period bias-corrected MSPE = 0 (e.g. because all pre-period outcomes are specified as predictors), set to 1
-						if mspe_pre == 0 {
-							local mspe_flag = 1
-						}
-						qui recode mspe_pre (0=1)
+						* Generate RMSPE-ranked p-values
+						qui gsort `tvar' -rmspe
+						bysort `tvar': gen rmspe_rank = _n  if `tvar' >= `trperiod'
+						qui gen p = rmspe_rank/N if `tvar' >= `trperiod'
+						qui order `pvar' `tvar' gap rmspe* p N
+						local pvalrmspevars "rmspe p N"
+						
+						* Calculate the bias-corrected RMSPE and p-values
+						if "`bcorrect'" != "" {
+					
+							* Generate the bias-corrected RMSPE for T
+							qui gen rmspe_bc = .
+							qui levelsof(`pvar'), local(id)
+							foreach i of local id {
+								qui egen xpre = total(gap_bc^2) if `tvar' < `trperiod' & `pvar' == `i'
+								qui gen xpre2 = xpre/`T0'
+								qui egen mspe_pre = max(xpre2) if `pvar' == `i'
+								qui drop x*
+								
+								* If the pre-period bias-corrected MSPE = 0 (e.g. because all pre-period outcomes are specified as predictors), set to 1
+								if mspe_pre == 0 {
+									local mspe_flag = 1
+								}
+								qui recode mspe_pre (0=1)
 
-						* Treated period
-						foreach tt of local trtvars {
-							qui egen xpost2 = mean(gap_bc^2) if inrange(`tvar', `trperiod', `tt') & `pvar' == `i'
-							qui egen mspe_post_`tt' = max(xpost2) if `pvar' == `i'
-							qui replace rmspe_bc = mspe_post_`tt'/mspe_pre if `pvar' == `i' & `tvar' == `tt'
-							qui drop x* mspe_post_`tt'
+								* Treated period
+								foreach tt of local trtvars {
+									qui egen xpost2 = mean(gap_bc^2) if inrange(`tvar', `trperiod', `tt') & `pvar' == `i'
+									qui egen mspe_post_`tt' = max(xpost2) if `pvar' == `i'
+									qui replace rmspe_bc = mspe_post_`tt'/mspe_pre if `pvar' == `i' & `tvar' == `tt'
+									qui drop x* mspe_post_`tt'
+								}
+								qui drop mspe*
+							}
+
+							* Generate RMSPE-ranked p-values
+							qui gsort `tvar' -rmspe_bc
+							bysort `tvar': gen rmspe_bc_rank = _n if `tvar' >= `trperiod'
+							qui gen p_bc = rmspe_bc_rank/N if `tvar' >= `trperiod'
+							qui order `pvar' `tvar' gap gap_bc rmspe* p p_bc N
+							local pvalrmspevars "rmspe* p p_bc N"
 						}
-						qui drop mspe*
 					}
-
-					* Generate RMSPE-ranked p-values
-					qui gsort `tvar' -rmspe_bc
-					bysort `tvar': gen rmspe_bc_rank = _n if `tvar' >= `trperiod'
-					qui gen p_bc = rmspe_bc_rank/N if `tvar' >= `trperiod'
-					qui order `pvar' `tvar' gap gap_bc rmspe* p p_bc N
 				}
 			}
 					
 			* If bcorrect() is specified as -merge-, combine results into one file
 			if "`bcorrect'" == "merge" {
+				di ""
 				di
-				di "Combining data files"
-				qui label var _Y_treated_bc "Bias-corrected treated outcome. Only useful for calculating the gap"
-				qui label var _Y_synthetic_bc "Bias-corrected synthetic outcome. Only useful for calculating the gap"
-				if "`placeboskeep'" != "" {
-					tempfile ests
-					qui save "`ests'", replace
-					foreach i of local units {
-					
-						* Drop observations with missing _time from the unit-specific keep files
-						qui use "`keeplocal'_`pvar'_`i'.dta", clear
-						qui drop if mi(_time)
-						qui save "`keeplocal'_`pvar'_`i'.dta", replace
+				quietly {
+					label var _Y_treated_bc "Bias-corrected treated outcome. Only useful for calculating the gap"
+					label var _Y_synthetic_bc "Bias-corrected synthetic outcome. Only useful for calculating the gap"
+					if "`placeboskeep'" != "" {
+						tempfile ests
+						save "`ests'", replace
+						foreach i of local units {
 						
-						* Merge
-						qui use "`ests'", clear
-						qui rename `tvar' _time
-						qui keep if `pvar' == `i'
-						qui sort `pvar' _time
-						qui merge 1:1 _time using "`keeplocal'_`pvar'_`i'.dta", nogen norep
-						qui order `pvar' _time gap gap_bc rmspe* p p_bc N _Co_Number _W_Weight _Y_treated* _Y_synthetic*
-						if `i' != `idfirst' {
-							qui append using "`keeplocal'"
+							* Drop observations with missing _time from the unit-specific keep files
+							use "`keeplocal'_`pvar'_`i'.dta", clear
+							*qui drop if mi(_time)
+							replace _time = -99999 - _n if mi(_time)
+							save "`keeplocal'_`pvar'_`i'.dta", replace
+
+							* Merge
+							use "`ests'", clear
+							rename `tvar' _time
+							keep if `pvar' == `i'
+							sort `pvar' _time
+							merge 1:1 _time using "`keeplocal'_`pvar'_`i'.dta", nogen norep
+							order `pvar' _time gap gap_bc `pvalrmspevars' `pvalvariancevars' _Co_Number _W_Weight _Y_treated* _Y_synthetic*
+							if `i' != `idfirst' {
+								append using "`keeplocal'"
+							}
+							replace _time = . if mi(_Y_treated)
+							replace `pvar' = `i' if mi(`pvar')
+							save "`keeplocal'", `replace'
+							erase "`keeplocal'_`pvar'_`i'.dta"
 						}
-						qui save "`keeplocal'", `replace'
-						qui erase "`keeplocal'_`pvar'_`i'.dta"
 					}
+					if "`placeboskeep'" == "" {
+						rename `tvar' _time
+						keep if `pvar' == `actreat'
+						sort `pvar' _time 
+						sum `pvar'
+						local i = r(mean)
+						merge 1:m _time using `keeplocal', nogen norep
+						order `pvar' _time gap gap_bc _Co_Number _W_Weight _Y_treated* _Y_synthetic*
+						replace `pvar' = `i' if mi(`pvar')
+					}
+
+					* Save and adjust for display
+					capture save "`keeplocal'", `replace'
+					rename _time `tvar'
+					drop if mi(`tvar')
+					drop _Co_Number _W_Weight _Y_*
 				}
-				if "`placeboskeep'" == "" {
-					qui rename `tvar' _time
-					qui keep if `pvar' == `actreat'
-					qui sort `pvar' _time 
-					qui merge 1:m _time using `keeplocal', nogen norep
-					qui order `pvar' _time gap gap_bc _Co_Number _W_Weight _Y_treated* _Y_synthetic*
-				}
-				
-				* Save and adjust for display
-				capture save "`keeplocal'", `replace'
-				qui rename _time `tvar'
-				qui drop _Co_Number _W_Weight _Y_*
 			}
-			if "`placeboskeep'" != "" & ("`bcorrect'" == "nosave" | "`bcorrect'" == "") {
-				tempfile ests
-				qui save "`ests'", replace
-				foreach i of local units {
-					
-					* Drop observations with missing _time from the unit-specific keep files
-					qui use "`keeplocal'_`pvar'_`i'.dta", clear
-					qui drop if mi(_time)
-					qui save "`keeplocal'_`pvar'_`i'.dta", replace
+
+			quietly {
+				if "`pvaluesrmspe'" == "1" & ("`bcorrect'" == "nosave" | "`bcorrect'" == "") {
+					tempfile ests
+					save "`ests'", replace
+					foreach i of local units {
 						
-					* Merge
-					qui use "`ests'", clear
-					qui rename `tvar' _time
-					qui keep if `pvar' == `i'
-					qui sort `pvar' _time
-					qui merge 1:1 _time using "`keeplocal'_`pvar'_`i'.dta", nogen norep
-					qui order `pvar' _time gap rmspe rmspe_rank p N _Co_Number _W_Weight _Y_treated _Y_synthetic
-					if `i' != `idfirst' {
-						qui append using "`keeplocal'"
+						* Drop observations with missing _time from the unit-specific keep files
+						use "`keeplocal'_`pvar'_`i'.dta", clear
+						replace _time = -99999 - _n if mi(_time)
+						save "`keeplocal'_`pvar'_`i'.dta", replace
+							
+						* Merge
+						use "`ests'", clear
+						rename `tvar' _time
+						keep if `pvar' == `i'
+						sort `pvar' _time
+						merge 1:1 _time using "`keeplocal'_`pvar'_`i'.dta", nogen norep
+						order `pvar' _time gap `pvalrmspevars' `pvalvariancevars' _Co_Number _W_Weight _Y_treated _Y_synthetic
+						if `i' != `idfirst' {
+							append using "`keeplocal'"
+						}
+						replace _time = . if mi(_Y_treated)
+						replace `pvar' = `i' if mi(`pvar')
+						save "`keeplocal'", `replace'
+						erase "`keeplocal'_`pvar'_`i'.dta"
 					}
-					qui save "`keeplocal'", `replace'
-					qui erase "`keeplocal'_`pvar'_`i'.dta"
-				}
-				tempfile ests
-				qui save "`ests'", replace
-				qui drop *_bc*
-				qui save "`keeplocal'", `replace'
-				qui use "`ests'", clear
-				
-				* Adjust for display
-				qui rename _time `tvar'
-				qui drop _Co_Number _W_Weight _Y_*
-			}
+					tempfile ests
+					save "`ests'", replace
+					drop *_bc*
+					save "`keeplocal'", `replace'
+					use "`ests'", clear
 					
-			* Return results
-			qui save "`core2'", replace
-			ereturn clear
-			ereturn mat Y_treated _eY_treated
-			ereturn mat Y_synthetic _eY_synthetic
-			ereturn mat W_weights _eW_weights
-			ereturn mat X_balance _eX_balance
-			ereturn mat V_matrix _eV_matrix
-			ereturn mat RMSPE _eRMSPE
-			mat unW = uW[1,1]
-			mat colnames unW = Unique_W
-			ereturn mat unique_W unW
-			keep if `pvar' == `trunit'
-			if "`placeboskeep'" == "" & "`bcorrect'" != "" {
-				mkmat gap gap_bc, mat(gaps)
-				mat colnames gaps = Gap BCorr_Gap
-				mat rownames gaps = `_t'
-				ereturn mat gaps gaps
-				mkmat `tvar' gap gap_bc, mat(results)
-				mat results = results,uW
-				mat colnames results = `tvar' Gap BCorr_Gap Unique_W
-				mat rownames results = `_t'
-				ereturn mat results results
+					* Adjust for display
+					rename _time `tvar'
+					drop if mi(`tvar')
+					drop _Co_Number _W_Weight _Y_*
+				}
+				
+				* Return results
+				save "`core2'", replace
+				ereturn clear
+				ereturn mat Y_treated _eY_treated
+				ereturn mat Y_synthetic _eY_synthetic
+				ereturn mat W_weights _eW_weights
+				ereturn mat X_balance _eX_balance
+				ereturn mat V_matrix _eV_matrix
+				ereturn mat RMSPE _eRMSPE
+				mat unW = uW[1,1]
+				mat colnames unW = Unique_W
+				ereturn mat unique_W unW
+				keep if `pvar' == `trunit'
+				if "`pvaluesrmspe'" != "1" & "`bcorrect'" != "" {
+					mkmat gap gap_bc, mat(gaps)
+					mat colnames gaps = Gap BCorr_Gap
+					mat rownames gaps = `_t'
+					ereturn mat gaps gaps
+					mkmat `tvar' gap gap_bc, mat(results)
+					mat results = results,uW
+					mat colnames results = `tvar' Gap BCorr_Gap Unique_W
+					mat rownames results = `_t'
+					ereturn mat results results
+				}
+				if "`pvaluesrmspe'" == "1" & "`bcorrect'" == "" {
+					mkmat gap, mat(gaps)
+					mat colnames gaps = Gap
+					mat rownames gaps = `_t'
+					ereturn mat gaps gaps
+					mkmat p, mat(inference)
+					mat colnames inference = RMSPE_p
+					mat rownames inference = `_t'
+					ereturn mat inference inference
+					mkmat `tvar' gap p, mat(results)
+					mat results = results,uW
+					mat colnames results = `tvar' Gap RMSPE_p Unique_W
+					mat rownames results = `_t'
+					ereturn mat results results
+				}
+				if "`pvaluesrmspe'" == "1" & "`bcorrect'" != "" {
+					mkmat p p_bc, mat(inference)
+					mat colnames inference = RMSPE_p BCorr_RMSPE_p
+					mat rownames inference = `_t'
+					ereturn mat inference inference
+					mkmat `tvar' gap p gap_bc p_bc, mat(results)
+					mat results = results,uW
+					mat colnames results = `tvar' Gap RMSPE_p BCorr_Gap BCorr_RMSPE_p Unique_W
+					mat rownames results = `_t'
+					ereturn mat results results
+				}
+				use "`core2'", clear
+				
+				* Drop *_bc* results if bcorrect() not specified
+				if "`bcorrect'" == "" {
+					drop *_bc*
+				}
+				
+				* Drop trunit, trperiod and avgweights from display
+				capture assert trunit
+				if _rc == 0 {
+					drop trunit trperiod
+				}
+				capture assert _stAvgweights
+				if _rc == 0 {
+					drop _stAvgweights 
+				}
 			}
-			if "`placeboskeep'" != "" & "`bcorrect'" == "" {
-				mkmat gap, mat(gaps)
-				mat colnames gaps = Gap
-				mat rownames gaps = `_t'
-				ereturn mat gaps gaps
-				mkmat p, mat(pvalues)
-				mat colnames pvalues = RMSPE_p
-				mat rownames pvalues = `_t'
-				ereturn mat pvalues pvalues
-				mkmat `tvar' gap p, mat(results)
-				mat results = results,uW
-				mat colnames results = `tvar' Gap RMSPE_p Unique_W
-				mat rownames results = `_t'
-				ereturn mat results results
+
+			* Display results if single treated unit
+			if "`stacked'" == "" {
+				di ""
+				di "Treated unit (`pvar' == `trunit') results:"
+				di ""
+				list if `pvar' == `trunit'
 			}
-			if "`placeboskeep'" != "" & "`bcorrect'" != "" {
-				mkmat p p_bc, mat(pvalues)
-				mat colnames pvalues = RMSPE_p BCorr_RMSPE_p
-				mat rownames pvalues = `_t'
-				ereturn mat pvalues pvalues
-				mkmat `tvar' gap p gap_bc p_bc, mat(results)
-				mat results = results,uW
-				mat colnames results = `tvar' Gap RMSPE_p BCorr_Gap BCorr_RMSPE_p Unique_W
-				mat rownames results = `_t'
-				ereturn mat results results
-			}
-			qui use "`core2'", clear
-			
-			* Drop *_bc* results if bcorrect() not specified
-			if "`bcorrect'" == "" {
-				qui drop *_bc*
-			}
-			
-			* Drop trunit, trperiod and avgweights from display
-			capture assert trunit
-			if _rc == 0 {
-				qui drop trunit trperiod
-			}
-			capture assert _stAvgweights
-			if _rc == 0 {
-				qui drop _stAvgweights 
-			}
-			* Display results
-			di ""
-			di "Treated unit (`pvar' == `trunit') results:"
-			di ""
-			list if `pvar' == `trunit'
 			
 			* Prepare gapfigure() graph if specified
 			if "`gapfigure'" != "" {
 				graphgaps, tvar(`tvar') pvar(`pvar') figure(`gapfigure') trperiod(`trperiod') tvarformat(`_tVarformat') actreat(`actreat') tlab(`tlab') gaptitle(`gaptitle') gaptitlepct(`gaptitlepct') gftwopts(`gftwopts') figuresave(`gapfigsave') figurereplace(`gapfigsavereplace')
 			}
-			
+
 			* Indicate if bias-corrected pre-treatment MSPE was 0 (and thus set to 1)
 			if "`pvalues'" != "" & `mspe_flag' == 1 {
 				di ""
@@ -2054,6 +2127,25 @@ program allsynth, eclass sortpreserve byable(recall)
 			}
 			local predno : list sizeof anything
 			local predno = `predno' - 1
+			
+			* Identify dvar if needed
+			gettoken dvar: anything
+			local dvarnorm = 0
+			local dvardemean = 0
+			if `transtypenormalize' != 0 {
+				foreach _transform of local transform {
+					if "`_transform'" == "`dvar'" {
+						local dvarnorm = 1
+					}
+				}	
+			}
+			if `transtypedemean' != 0 {
+				foreach _transform of local transform {
+					if "`_transform'" == "`dvar'" {
+						local dvardemean = 1
+					}
+				}	
+			}
 
 			* Run the synthetic control and capture the weights
 			#delimit ;
@@ -2069,7 +2161,7 @@ program allsynth, eclass sortpreserve byable(recall)
 					`figure' 
 					keep(`keep') 
 					`replace'
-					`customv'
+					customV(`customV')
 					margin(`margin')
 					maxiter(`maxiter')
 					sigf(`sigf')
@@ -2084,11 +2176,66 @@ program allsynth, eclass sortpreserve byable(recall)
 			di 
 			di as txt "{hline}"	
 			
-			* Calculate the gap and analyze W-matrix
+			* Save matrices and calculate the gap
 			qui mat Y_t = e(Y_treated)
 			qui mat Y_s = e(Y_synthetic)
 			qui mat gap = Y_t - Y_s
 			qui mat w = e(W_weights)
+			
+			* Ensure weights sum to 1 (synth sometimes doesn't due to rounding error). Otherwise, implement a correction
+			tempfile core3
+			qui save "`core3'", replace
+			qui clear
+			qui svmat w, names(w)
+			collapse (sum) w=w2
+			qui sum w
+			local _W_adjust = 1/r(mean)
+			if `_W_adjust' != 1 {
+				qui clear
+				qui svmat w, names(w)
+				qui rename (w1 w2) (`pvar' _W_Weight)
+				qui replace _W_Weight = _W_Weight*`_W_adjust'
+				tempfile core4
+				qui save "`core4'", replace
+				qui rename `pvar' _Co_Number
+				qui mkmat _Co_Number _W_Weight, matrix(w) rownames(_Co_Number)
+				tempfile _W_adj
+				qui save "`_W_adj'", replace
+				qui use "`core3'", clear
+				if `transtypenormalize' != 0 & `dvarnorm' == 1 {
+					qui gen _XnormVar = `dvar' if `tvar' == `_trperiodM1'
+					bysort `pvar': egen _xXnormVar = max(_XnormVar)
+					qui replace `dvar' = 100*`dvar'/_xXnormVar
+					qui drop _XnormVar _xXnormVar
+				}
+				if `transtypedemean' != 0 & `dvardemean' == 1 {
+					bysort `pvar': egen _XdmVar = mean(`dvar') if `tvar' < `trperiod'
+					bysort `pvar': egen _xXdmVar = max(_XdmVar)
+					qui replace `dvar' = `dvar' - _xXdmVar
+					qui replace `dvar' = 0.000001 if `dvar' == 0
+					drop _XdmVar _xXdmVar
+				}
+				qui merge m:1 `pvar' using "`core4'", nogen norep keep(3)
+				qui collapse (mean) _Y_synthetic=`dvar' [aw=_W_Weight], by(`tvar')
+				qui mkmat _Y_synthetic, matrix(Y_s) rownames(`tvar')
+				mat gap = Y_t - Y_s
+				qui rename `tvar' _time
+				qui keep _time _Y_synthetic
+				tempfile _Y_s
+				qui save "`_Y_s'", replace
+				if "`keep'" != "" {
+					qui use "`keep'", clear
+					qui merge 1:1 _Co_Number using "`_W_adj'", nogen norep replace update
+					qui replace _time = -99999 - _n if mi(_time)
+					qui merge 1:1 _time using "`_Y_s'", nogen norep replace update
+					qui replace _time = . if _time < -99999
+					qui sort _time
+					qui save "`keep'", replace
+				}
+			}
+			qui use "`core3'", clear
+			
+			* Analyze W-matrix
 			forval w = 1/`n0' {
 				if `w' == 1 {
 					qui mat W = w[`w',2]
@@ -2100,7 +2247,7 @@ program allsynth, eclass sortpreserve byable(recall)
 					qui mat W = W'
 				}
 			}
-			
+
 			* Restrict to treated unit for graph and save the gap
 			qui keep if `pvar' == `trunit'
 			qui svmat gap, names(gap)
@@ -2168,7 +2315,6 @@ program allsynth, eclass sortpreserve byable(recall)
 				di "{hline}"
 			}
 
-			
 			* Indicate if treated-unit weighting matrix is not sparse or not unique
 			if (`nonzerows' > `predno') & `chzero' != 0 {
 				di ""
@@ -2202,12 +2348,14 @@ program allsynth, eclass sortpreserve byable(recall)
 			}
 		}
 	}
-
+	
 	* Stack, if specified
 	if "`stacked'" != "" {
-		sampleplacebos,	tvar(`tvar') pvar(`pvar') filename(`_Filename') tvarformat(`_tVarformat') filepath("`_Filepath'") avgs("`_stSampleavgs'") emin("`_stEventtimemin'") emax("`_stEventtimemax'") avgwts("_stAvgweights") balance("`_stBalanced'") uW("`_stUnique_w'") figure("`_stFigure'") figureopts("`stfigureopts'") figuresave("`stfigsave'") figurereplace("`stfigsavereplace'") gaptitle("`gaptitle'") gaptitlepct("`gaptitlepct'")
+		
+		* Stackedsc
+		stackedsc,	tvar(`tvar') pvar(`pvar') filename(`_Filename') tvarformat(`_tVarformat') filepath("`_Filepath'") avgs("`_stSampleavgs'") pvalrmspe("`pvaluesrmspe'") pvalvar("`pvaluesvariance'") emin("`_stEventtimemin'") emax("`_stEventtimemax'") avgwts("_stAvgweights") jackse("`_stJackse'") balance("`_stBalanced'") uW("`_stUnique_w'") figure("`_stFigure'") figureopts("`stfigureopts'") figuresave("`stfigsave'") figurereplace("`stfigsavereplace'") gaptitle("`gaptitle'") gaptitlepct("`gaptitlepct'")
 	}
-	
+		
 	* Citation reminder
 	di
 	di as smcl "{cmd:________________________________}"
@@ -2221,8 +2369,8 @@ end
 
 *** Subroutines by Justin C. Wiltshire
 
-* Subroutine sampleplacebos: samples placebo averages to create the sample empirical ditribution of placebo average treatment effects */ 
-program sampleplacebos, rclass
+* Subroutine stackedsc: stack and average the synthetic control estimates for the treated units and, if specified, samples placebo averages to create the sample empirical ditribution of placebo average treatment effects */ 
+program stackedsc, rclass
 	version 15.1
 	#delimit ;
 		syntax , 
@@ -2233,9 +2381,12 @@ program sampleplacebos, rclass
 		[
 		filepath(string)
 		avgs(numlist min=1 max=1 >0 integer) 
+		pvalrmspe(string)
+		pvalvar(string)
 		emin(numlist min=1 max=1 <0 integer) 
 		emax(numlist min=1 max=1 >0 integer) 
-		avgwts(string) 
+		avgwts(string)
+		jackse(string)
 		balance(string)
 		uW(string)
 		figure(string)
@@ -2249,13 +2400,11 @@ program sampleplacebos, rclass
 		;
 	#delimit cr
 
-	* Set seed 
-	set seed 12345
-	
 	* Tempfiles
 	tempfile core
 	tempfile core2
 	tempfile core3
+	tempfile core4
 
 	* Get filelist
 	local filelist: dir "`filepath'" files "*.dta"
@@ -2264,15 +2413,10 @@ program sampleplacebos, rclass
 		local _Slash "/"
 	}
 	
-	* Loop over the files
-	di as txt " "
-	di "Stacking the estimates..."
-	di
-	
 	* Append the estimates and adjust as appropriate
 	local counter = 0
 	foreach f of local filelist {
-		if strpos("`f'", "`filename'_`pvar'") != 0 {
+		if strpos("`f'", "`filename'_`pvar'") != 0 & strpos("`f'", "__tmpwts") == 0 {
 			qui use "`filepath'`_Slash'`f'", clear
 			qui rename _time `tvar'
 			if `counter' == 0 {
@@ -2342,31 +2486,62 @@ program sampleplacebos, rclass
 	qui save "`core'", replace
 	qui keep if `pvar' == trunit
 	if "`balance'" != "" {
-		qui levelsof `pvar', local(_Units)
-		local nunits : list sizeof _Units
-		bysort _tm: gen _tmCount = _N
-		qui keep if _tmCount == `nunits'
+		quietly {
+			qui levelsof `pvar', local(_Units)
+			local nunits : list sizeof _Units
+			bysort _tm: gen _tmCount = _N
+			qui keep if _tmCount == `nunits'
+		}
 	}
 	if "`avgwts'" != "" {
 		local awts "[aw=`avgwts']"
 	}
 	collapse (mean) gap* `awts', by(_tm)
+	qui drop if mi(_tm)
 	qui compress
 	qui save "`filepath'`_Slash'`filename'_ate.dta", replace
 	list 
 	di
 	di as txt "Estimated average treatment effects saved in `filepath'`_Slash'`filename'_ate.dta"
 	di
-	
+		
+	* Drop *_bc* results if bcorrect() not specified
+	if "`bcorrect'" == "" {
+		qui drop *_bc*
+	}
+				
+	* Drop trunit, trperiod and avgweights from display
+	capture assert trunit
+	if _rc == 0 {
+		qui drop trunit trperiod
+	}
+	capture assert _stAvgweights
+	if _rc == 0 {
+		qui drop _stAvgweights 
+	}
+
 	* Sample the placebo average treatment effects if specified
 	if "`avgs'" != "" {
-		di "Randomly sampling `avgs' placebo average treatment effects. This could take a while..."
+	
+		* Set seed
+		set seed 12345
+		
+		di
+		di "Randomly sampling `avgs' placebo average treatment effects. This could take some time..."
 		di
 		qui use "`core'", clear
 		qui levelsof trunit, local(trunits)
 		qui drop if `pvar' == trunit
 		qui save "`core2'", replace		
 		forval n = 1/`avgs' {
+			if mod(`n',20) == 0 {	
+				display "`n'" _continue
+			}
+			if mod(`n',20) != 0 {
+				if mod(`n',5)== 0 {
+					display "." _continue
+				}
+			}
 			
 			* Randomly select a placebo treated unit from each actually treated unit
 			qui use "`core2'", clear
@@ -2398,78 +2573,147 @@ program sampleplacebos, rclass
 		qui replace _placeboID = 0 if mi(_placeboID)
 		qui save "`core3'", replace
 		
-		*** Calculate the RMSPEs and RMSPE p-values
-		local pvar _placeboID
-		local tvar _tm
-		qui sum `tvar'
-		local T0 = `trperiod' - r(min)
-		local T1 = r(max) - `trperiod' + 1
-		qui levelsof `tvar' if `tvar' >= `trperiod', local(trtvars)
-		qui gen rmspe = .
-		qui levelsof(`pvar'), local(id)
-		bysort `tvar': gen N = _N
-		foreach i of local id {
-			qui egen xpre = total(gap^2) if `tvar' < `trperiod' & `pvar' == `i'
-			qui gen xpre2 = xpre/`T0'
-			qui egen mspe_pre = max(xpre2) if `pvar' == `i'
-			qui drop x*
-				
-			* Treated period
-			foreach tt of local trtvars {
-				qui egen xpost2 = mean(gap^2) if inrange(`tvar', `trperiod', `tt') & `pvar' == `i'
-				qui egen mspe_post_`tt' = max(xpost2) if `pvar' == `i'
-				qui replace rmspe = mspe_post_`tt'/mspe_pre if `pvar' == `i' & `tvar' == `tt'
-				qui drop x* mspe_post_`tt'
-			}
-			qui drop mspe*
-		}
-				
-		* Generate RMSPE-ranked p-values
-		qui gsort `tvar' -rmspe
-		bysort `tvar': gen rmspe_rank = _n  if `tvar' >= `trperiod'
-		qui gen p = rmspe_rank/N if `tvar' >= `trperiod'
-		qui order `pvar' `tvar' gap rmspe* p N
-			
-		* Calculate the bias-corrected RMSPE and p-values if bcorrect() specified
-		capture assert gap_bc
-		if _rc != 111 {
-			
-			* Generate the bias-corrected RMSPE for T
-			qui gen rmspe_bc = .
-			qui levelsof(`pvar'), local(id)
-			foreach i of local id {
-				qui egen xpre = total(gap_bc^2) if `tvar' < `trperiod' & `pvar' == `i'
-				qui gen xpre2 = xpre/`T0'
-				qui egen mspe_pre = max(xpre2) if `pvar' == `i'
-				qui drop x*
+		quietly {
+		
+			* Placebo RMSPE and p-val estimation
+			if "`pvalrmspe'" != "" {
+				*** Calculate the RMSPEs and RMSPE p-values
+				local pvar _placeboID
+				local tvar _tm
+				qui sum `tvar'
+				local T0 = `trperiod' - r(min)
+				local T1 = r(max) - `trperiod' + 1
+				qui levelsof `tvar' if `tvar' >= `trperiod', local(trtvars)
+				qui gen rmspe = .
+				qui levelsof(`pvar'), local(id)
+				bysort `tvar': gen N = _N
+				foreach i of local id {
+					qui egen xpre = total(gap^2) if `tvar' < `trperiod' & `pvar' == `i'
+					qui gen xpre2 = xpre/`T0'
+					qui egen mspe_pre = max(xpre2) if `pvar' == `i'
+					qui drop x*
 						
-				* If the pre-period bias-corrected MSPE = 0 (e.g. because all pre-period outcomes are specified as predictors), set to 1
-				if mspe_pre == 0 {
-					local mspe_flag = 1
+					* Treated period
+					foreach tt of local trtvars {
+						qui egen xpost2 = mean(gap^2) if inrange(`tvar', `trperiod', `tt') & `pvar' == `i'
+						qui egen mspe_post_`tt' = max(xpost2) if `pvar' == `i'
+						qui replace rmspe = mspe_post_`tt'/mspe_pre if `pvar' == `i' & `tvar' == `tt'
+						qui drop x* mspe_post_`tt'
+					}
+					qui drop mspe*
 				}
-				qui recode mspe_pre (0=1)
+						
+				* Generate RMSPE-ranked p-values
+				qui gsort `tvar' -rmspe
+				bysort `tvar': gen rmspe_rank = _n  if `tvar' >= `trperiod'
+				qui gen p = rmspe_rank/N if `tvar' >= `trperiod'
+				qui order `pvar' `tvar' gap rmspe* p N
+				local pvalrmspevars "rmspe* p N"
+					
+				* Calculate the bias-corrected RMSPE and p-values if bcorrect() specified
+				capture assert gap_bc
+				if _rc != 111 {
+					
+					* Generate the bias-corrected RMSPE for T
+					qui gen rmspe_bc = .
+					qui levelsof(`pvar'), local(id)
+					foreach i of local id {
+						qui egen xpre = total(gap_bc^2) if `tvar' < `trperiod' & `pvar' == `i'
+						qui gen xpre2 = xpre/`T0'
+						qui egen mspe_pre = max(xpre2) if `pvar' == `i'
+						qui drop x*
+								
+						* If the pre-period bias-corrected MSPE = 0 (e.g. because all pre-period outcomes are specified as predictors), set to 1
+						if mspe_pre == 0 {
+							local mspe_flag = 1
+						}
+						qui recode mspe_pre (0=1)
 
-				* Treated period
-				foreach tt of local trtvars {
-					qui egen xpost2 = mean(gap_bc^2) if inrange(`tvar', `trperiod', `tt') & `pvar' == `i'
-					qui egen mspe_post_`tt' = max(xpost2) if `pvar' == `i'
-					qui replace rmspe_bc = mspe_post_`tt'/mspe_pre if `pvar' == `i' & `tvar' == `tt'
-					qui drop x* mspe_post_`tt'
+						* Treated period
+						foreach tt of local trtvars {
+							qui egen xpost2 = mean(gap_bc^2) if inrange(`tvar', `trperiod', `tt') & `pvar' == `i'
+							qui egen mspe_post_`tt' = max(xpost2) if `pvar' == `i'
+							qui replace rmspe_bc = mspe_post_`tt'/mspe_pre if `pvar' == `i' & `tvar' == `tt'
+							qui drop x* mspe_post_`tt'
+						}
+						qui drop mspe*
+					}
+
+					* Generate RMSPE-ranked p-values
+					qui gsort `tvar' -rmspe_bc
+					bysort `tvar': gen rmspe_bc_rank = _n if `tvar' >= `trperiod'
+					qui gen p_bc = rmspe_bc_rank/N if `tvar' >= `trperiod'
+					qui order `pvar' `tvar' gap gap_bc rmspe* p p_bc N
+					local pvalrmspevars "rmspe* p p_bc N"
 				}
-				qui drop mspe*
 			}
+			qui save "`core3'", replace
+			
+			* Placebo variance estimation
+			if "`pvalvar'" != "" {
+				
+				local pvar _placeboID
+				local tvar _tm
+				
+				* Set seed
+				set seed 12345
+						
+				* Keep only the placebo averages
+				tempfile _Plvar_S
+				qui use "`core3'", clear
+				qui drop if `pvar' == 0
+				
+				* Get the estimated variance and standard eror
+				capture assert gap_bc
+				if _rc != 111 {
+					local _plgapbc "_Avg_plgapbc=gap_bc"
+					local _plvarbc "_Pl_var_bc=_Sq_demean_bc"
+				}
+				qui collapse (mean) _Avg_plgap=gap `_plgapbc', by(`tvar')
+				qui merge 1:m `tvar' using "`core3'", nogen norep
+				qui gen _Sq_demean = (gap - _Avg_plgap)^2
+				if "`_plgapbc'" != "" {
+					qui gen _Sq_demean_bc = (gap_bc - _Avg_plgapbc)^2
+				}
+				qui collapse (mean) _Pl_var=_Sq_demean `_plvarbc', by(`tvar')
+				qui gen _Se = sqrt(_Pl_var)
+				if "`_plgapbc'" != "" {
+					qui gen _Se_bc = sqrt(_Pl_var_bc)
+				}
+				qui save "`_Plvar_S'", replace
 
-			* Generate RMSPE-ranked p-values
-			qui gsort `tvar' -rmspe_bc
-			bysort `tvar': gen rmspe_bc_rank = _n if `tvar' >= `trperiod'
-			qui gen p_bc = rmspe_bc_rank/N if `tvar' >= `trperiod'
-			qui order `pvar' `tvar' gap gap_bc rmspe* p p_bc N
+				* Merge in and estimate 95% CIs
+				qui merge 1:m `tvar' using "`core3'", nogen norep
+				qui keep if `pvar' == 0
+				qui keep `tvar' `pvar' gap* _Se*
+				qui gen _Tstat = abs(gap)/_Se
+				qui gen _Pval = 2*ttail(`avgs',_Tstat)
+				qui gen LB_95 = gap - 1.96*_Se
+				qui gen UB_95 = gap + 1.96*_Se
+				if "`_plgapbc'" != "" {
+					qui gen _Tstat_bc = abs(gap_bc)/_Se_bc
+					qui gen _Pval_bc = 2*ttail(`avgs',_Tstat_bc)
+					qui gen LB_95_bc = gap_bc - 1.96*_Se_bc
+					qui gen UB_95_bc = gap_bc + 1.96*_Se_bc
+				}
+				qui drop gap*
+				qui merge 1:1 `tvar' `pvar' using "`core3'", nogen norep
+				qui sort `tvar' `pvar' gap* `pvalrmspevars' _Se* _Pval*
+				local pvalvariancevars "_Se* _Tstat* _Pval* LB* UB*"
+				qui compress
+			}
 		}
+		qui rename N S
+		qui replace S = S - 1
+		
+		* Save and display the results
 		qui save "`filepath'`_Slash'`filename'_ate_distn.dta", replace
 		qui sort `pvar' `tvar'
-		list if `pvar' == 0
+		di ""
 		di
 		di as txt "Sample distribution saved in `filepath'`_Slash'`filename'_ate_distn.dta"
+		di
+		list if _placeboID == 0
 		di
 	}	
 	
@@ -2478,6 +2722,9 @@ program sampleplacebos, rclass
 	if "`figure'" != "" {
 		local atefilename "`filepath'`_Slash'`filename'_ate.dta"
 		local distfilename "`filepath'`_Slash'`filename'_ate_distn.dta"
+		di
+		di "Generating plot..."
+		di
 		graphgaps, tvar(_tm) pvar(`pvar') figure(`figure') trperiod(`trperiod') tvarformat(`tvarformat') stacked(`_Stacked') avgs(`avgs') atefilename(`atefilename') distfilename(`distfilename') actreat(0) gaptitle(`gaptitle') gaptitlepct(`gaptitlepct') gftwopts(`figureopts') eperiods(`eperiods') figuresave(`figuresave') figurereplace(`figurereplace')
 	}
 end
@@ -2530,8 +2777,9 @@ program graphgaps, rclass
 	local gapfigbcorrect = 0
 	local gapfigplacebos = 0
 	local gapfiglineback = 0
+	local gapfigci = 0
 	foreach s of local figure {
-		capture assert "`s'" == "classic" | "`s'" == "bcorrect" | "`s'" == "placebos" | "`s'" == "lineback"
+		capture assert "`s'" == "classic" | "`s'" == "bcorrect" | "`s'" == "placebos" | "`s'" == "lineback" | "`s'" == "ci"
 		local gapfig`s' = 1
 	}
 
@@ -2549,6 +2797,25 @@ program graphgaps, rclass
 	if `gapfigbcorrect' == 0 {
 		qui gen _tmpmin = `gapmin'
 		qui gen _tmpmax = `gapmax'
+		if `gapfigci' == 1 & `gapfigplacebos' == 0 {
+			qui sum LB_95 if `pvar' == `actreat'
+			local cimin = r(mean)
+			qui sum UB_95 if `pvar' == `actreat'
+			local cimax = r(mean)
+			qui replace _tmpmin = min(`gapmin', `cimin')
+			qui replace _tmpmax = max(`gapmax', `cimax')
+		}
+		if `gapfigci' == 1 & `gapfigplacebos' == 1 {
+			qui sum LB_95 if `pvar' == `actreat'
+			local cimin = r(mean)
+			qui sum UB_95 if `pvar' == `actreat'
+			local cimax = r(mean)
+			qui sum gap
+			local allgapmin = r(min)
+			local allgapmax = r(max)
+			qui replace _tmpmin = min(`gapmin', `cimin', `allgapmin')
+			qui replace _tmpmax = max(`gapmax', `cimax', `allgapmax')
+		}
 	}
 	if `gapfigbcorrect' == 1 {
 		qui sum gap_bc if `pvar' == `actreat'
@@ -2556,6 +2823,32 @@ program graphgaps, rclass
 		local gapbcmax = r(max)
 		qui gen _tmpmin = min(`gapmin', `gapbcmin')
 		qui gen _tmpmax = max(`gapmax', `gapbcmax')
+		if `gapfigci' == 1 & `gapfigplacebos' == 0 {
+			qui sum LB_95_bc if `pvar' == `actreat'
+			local cibcmin = r(mean)
+			qui sum UB_95_bc if `pvar' == `actreat'
+			local cibcmax = r(mean)
+			qui replace _tmpmin = min(`gapmin', `gapbcmin', `cibcmin')
+			qui replace _tmpmax = max(`gapmax', `gapbcmax', `cibcmax')
+		}
+		if `gapfigci' == 0 & `gapfigplacebos' == 1 {
+			qui sum gap_bc if `pvar' == `actreat'
+			local allgapbcmin = r(min)
+			local allgapbcmax = r(max)
+			qui replace _tmpmin = min(`gapmin', `gapbcmin', `allgapbcmin')
+			qui replace _tmpmax = max(`gapmax', `gapbcmax', `allgapbcmax')
+		}
+		if `gapfigci' == 1 & `gapfigplacebos' == 1 {
+			qui sum LB_95_bc if `pvar' == `actreat'
+			local cibcmin = r(mean)
+			qui sum UB_95_bc if `pvar' == `actreat'
+			local cibcmax = r(mean)
+			qui sum gap_bc
+			local allgapbcmin = r(min)
+			local allgapbcmax = r(max)
+			qui replace _tmpmin = min(`gapmin', `gapbcmin', `cibcmin', `allgapbcmin')
+			qui replace _tmpmax = max(`gapmax', `gapbcmax', `cibcmax', `allgapbcmax')
+		}
 	}
 	qui gen ylab = max(abs(_tmpmin),abs(_tmpmax))
 	qui sum ylab
@@ -2671,6 +2964,8 @@ program graphgaps, rclass
 	local gapfigbc ""
 	local gapfigcleg " "
 	local gapfigbcleg ""
+	local gapfigcis ""
+	local gapfigcisbc ""
 	local cleglabo ""
 	local bcleglabo ""
 	local cleglabc ""
@@ -2763,11 +3058,13 @@ program graphgaps, rclass
 			#delimit cr
 	}
 				
-	* Prepare data if gapfigure(placebos) specified
-	if `gapfigplacebos' == 1 {
+	* Prepare data if gapfigure(placebos) and/or gapfigure(ci) specified
+	if `gapfigplacebos' == 1 | `gapfigci' == 1 {
 		local gap "gap"
 		local placleglab "Classic SC"
 		local placlabd "donor pool units"
+		local lb
+		local ub
 		if "`stacked'" != "" {
 			local placleglab "Avg classic SC"
 			local tlab "treated units"
@@ -2780,25 +3077,53 @@ program graphgaps, rclass
 				local placleglab "Avg bias-corrected SC"
 			}
 		}
-		keep `tvar' `gap' `pvar'
-						
-		* Create locals for the placebo results and put treatment effects in percent terms
-		qui levelsof(`pvar'), local(id)
-		local numpvar: word count `id'
-		local numpvarp1 = `numpvar' + 1
+		if `gapfigci' == 1 {
+			local lb "LB*"
+			local ub "UB*"
+		}
+		keep `tvar' `gap' `pvar' `lb' `ub'
+		
 		local placebos
-		foreach i of local id {
-			local placebos "`placebos' (line `gap' `tvar' if `pvar' == `i' & `actreat' != `i' & inrange(`gap', -`yext', `yext'), lwidth(thin) lcolor(gs12) lp(solid))"
+		local gapfigcis
+		local gapfigcisbc
+		if `gapfigplacebos' == 1 {
+			
+			* Create locals for the placebo results
+			qui levelsof(`pvar'), local(id)
+			local numpvar: word count `id'
+			local numpvarp1 = `numpvar' + 1
+			foreach i of local id {
+				local placebos "`placebos' (line `gap' `tvar' if `pvar' == `i' & `actreat' != `i' & inrange(`gap', -`yext', `yext'), lwidth(thin) lcolor(gs8) lp(solid))"
+			}
+		}
+		if `gapfigci' == 1 {
+			if `gapfigclassic' == 1 {
+				local gapfigcis "(rarea LB_95 UB_95 `tvar if `pvar' == `actreat', color(gs12%50) lwidth(none))"
+			}
+			if `gapfigbcorrect' == 1 {
+				local gapfigcisbc "(rarea LB_95_bc UB_95_bc `tvar' if `pvar' == `actreat', color(gs12%50) lwidth(none))"
+			}
 		}
 		
 		* Re-define the default twoway options as necessary
-		local opt_legend "legend(rows(2) order(`numpvarp1' "`placleglab', `tlab'" `numpvar' "`placleglab', `placlabd'"))"
-		local opt_name "name(st_`cname'`bcname'placebos_gaps)"
+		if `gapfigplacebos' == 1 & `gapfigci' == 0 {
+			local opt_legend "legend(rows(2) order(`numpvarp1' "`placleglab', `tlab'" `numpvar' "`placleglab', `placlabd'"))"
+			local opt_name "name(st_`cname'`bcname'placebos_gaps)"
+		}
+		if `gapfigplacebos' == 0 & `gapfigci' == 1 {
+			local opt_legend "legend(rows(2) order(2 "`placleglab', `tlab'" 1 "95% confidence intervals"))"
+			local opt_name "name(st_`cname'`bcname'_cis)"
+		}
+		if `gapfigplacebos' == 1 & `gapfigci' == 1 {
+			local numpvarp2 = `numpvarp1' + 1
+			local opt_legend "legend(rows(3) order(`numpvarp2' "`placleglab', `tlab'" `numpvar' "`placleglab', `placlabd'" `numpvarp1' "95% confidence intervals"))"
+			local opt_name "name(st_`cname'`bcname'placebos_cis)"
+		}
 			
 		* Create the gapfigure() graph if gapfigure(placebos) specified
 		#delimit ;
 			twoway  
-				`placebos' (line `gap' `tvar' if `pvar' == `actreat', lwidth(medthick) lcolor(black) lp(solid)),
+				`placebos' `gapfigcis' `gapfigcisbc' (line `gap' `tvar' if `pvar' == `actreat', lwidth(medthick) lcolor(black) lp(solid)),
 				`opt_yscale' `opt_ylabel'
 				`opt_xline' `opt_yline' 
 				`opt_plotregion'

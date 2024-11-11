@@ -54,6 +54,7 @@ p pcontract module to make a data set of frequencies and percentages
 p pcorr2 module to display partial and semipartial correlation coefficients
 p pcorrmat module to compute partial correlation coefficients controlled for a fixed set of covariates
 p pcpanel module to perform power calculations for randomized experiments with panel data, allowing for arbitrary serial correlation
+p pctilesets module for percentile or quantile sets for selected levels
 p pctrim module to trim variables based on percentiles
 p pdc module for computing the Proportion of Days Covered (of a medication)
 p pdfplot module to Plot a Distribution's Probability Density Function

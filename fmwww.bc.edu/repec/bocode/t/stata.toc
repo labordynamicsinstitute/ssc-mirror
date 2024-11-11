@@ -163,6 +163,7 @@ p twfem module to efficiently estimate a two-way fixed effects model based on So
 p twgravity module to estimate exponential-regression models with two-way fixed effects from a cross-section of data on dyadic interactions
 p twitter2stata module to import data from Twitter
 p twofold module to perform multiple imputation using the two-fold fully conditional specification algorithm to impute missing values in longitudinal data
+p twolevelr2 module to compute within, between, and overall R-squared in linear two-level models
 p twopm module to estimate two-part models
 p twostep module to perform twostep multilevel analysis
 p twostepweakiv module to implement two-step weak-instrument-robust confidence sets for linear instrumental-variable (IV) models
