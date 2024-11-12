@@ -1,0 +1,29 @@
+d 'MOMENTSETS': module for moment-based measures collected as datasets
+d
+d  momentsets computes moment-based measures and collects them into
+d datasets.   It is a wrapper for summarize.  Typically the user
+d will specify one or more of the  options mean, sd, var, skewness
+d or kurtosis. There are two syntaxes, for variables  and for
+d groups of observations. momentsets by default lists its results.
+d Although  saving to a permanent dataset is optional, that is the
+d intended key to many useful	applications, graphical and
+d otherwise. 
+d
+d KW: summary statistics
+d KW: moments
+d KW: mean
+d KW: standard deviation
+d KW: skewness
+d KW: kurtosis
+d KW: graphics 
+d
+d Requires: Stata version 8.1
+d
+d Distribution-Date: 20241111
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f momentsets.ado
+f momentsets.sthlp
+f momentsets_examples.do

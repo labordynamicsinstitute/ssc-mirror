@@ -205,6 +205,7 @@ p mog module to produce one way or two way tables of means (or totals)
 p mol module to evaluate literacy level
 p moments module to compute moment-based statistics
 p moments2 module to compute skewness and kurtosis measures
+p momentsets module for moment-based measures collected as datasets
 p moranplot module to produce Moran scatter plots
 p moransi module to compute Moran's I
 p more_clarify module to estimate quantities of interest through simulation and resampling methods 

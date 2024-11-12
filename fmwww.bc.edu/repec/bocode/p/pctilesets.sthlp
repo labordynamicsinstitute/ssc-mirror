@@ -1,5 +1,5 @@
 {smcl}
-{* NJC 1nov2024}{...}
+{* NJC 1nov2024/11nov2024}{...}
 
 {cmd:help pctilesets}
 {hline}
@@ -110,7 +110,7 @@ in the estimate.
 
 {p 4 4 2}
 * Any or all of {cmd:min}, {cmd:p1}, {cmd:p5}, {cmd:p10}, {cmd:p25},
-{cmd:p50}, {cmd:p75}, {cmd:p90}, {cmd:p95} and {cmd:p99} holding results
+{cmd:p50}, {cmd:p75}, {cmd:p90}, {cmd:p95}, {cmd:p99} and {cmd:max} holding results
 for the measure concerned. 
 
 {p 4 4 2}

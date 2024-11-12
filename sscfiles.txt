@@ -2506,6 +2506,7 @@ fmwww.bc.edu/repec/bocode/m/maforest.sthlp
 fmwww.bc.edu/repec/bocode/m/msplot.ado
 fmwww.bc.edu/repec/bocode/m/muxplot.pkg
 fmwww.bc.edu/repec/bocode/m/multidensity.ado
+fmwww.bc.edu/repec/bocode/m/momentsets.pkg
 fmwww.bc.edu/repec/bocode/m/mtebinary_data.dta
 fmwww.bc.edu/repec/bocode/m/mixrandregret.sthlp
 fmwww.bc.edu/repec/bocode/m/mregress.sthlp
@@ -2974,6 +2975,7 @@ fmwww.bc.edu/repec/bocode/m/myaxis.sthlp
 fmwww.bc.edu/repec/bocode/m/mystack.do
 fmwww.bc.edu/repec/bocode/m/mici_warn1.html
 fmwww.bc.edu/repec/bocode/m/mim.hlp
+fmwww.bc.edu/repec/bocode/m/momentsets.ado
 fmwww.bc.edu/repec/bocode/m/mulogit.html
 fmwww.bc.edu/repec/bocode/m/mvnxpb.pkg
 fmwww.bc.edu/repec/bocode/m/macrof.pkg
@@ -3455,6 +3457,7 @@ fmwww.bc.edu/repec/bocode/m/msgraph.ado
 fmwww.bc.edu/repec/bocode/m/matcfm.hlp
 fmwww.bc.edu/repec/bocode/m/mlcoint.pkg
 fmwww.bc.edu/repec/bocode/m/mvnormal.ado
+fmwww.bc.edu/repec/bocode/m/momentsets_examples.do
 fmwww.bc.edu/repec/bocode/m/mergevirtual.ado
 fmwww.bc.edu/repec/bocode/m/meltmle.sthlp
 fmwww.bc.edu/repec/bocode/m/metacum.dlg
@@ -4535,6 +4538,7 @@ fmwww.bc.edu/repec/bocode/m/mvprob_ll.ado
 fmwww.bc.edu/repec/bocode/m/marimekko.ado
 fmwww.bc.edu/repec/bocode/m/mvsamp1i.html
 fmwww.bc.edu/repec/bocode/m/myhead1.htm
+fmwww.bc.edu/repec/bocode/m/momentsets.sthlp
 fmwww.bc.edu/repec/bocode/m/multistate_details.txt
 fmwww.bc.edu/repec/bocode/m/m_mygmm2s.mata
 fmwww.bc.edu/repec/bocode/m/mivif.sthlp
