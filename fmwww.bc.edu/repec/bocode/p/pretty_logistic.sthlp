@@ -110,7 +110,7 @@ Adjusted Risk Difference Table with Random Effects
 {hline}
 
 Setup
-{tab}{phang}{cmd:. webuse nhanes2l, clear}{p_end}
+{tab}{phang}{cmd:. webuse nhanes2, clear}{p_end}
 
 Multiple Tables with Multiple Outcomes
 {tab}{phang} {cmd:. pretty_logistic, predictor(diabetes) logtype(or rr rd) outcomes(heartatk highbp) confounders(c.age i.female) title(Table 1, Table 2, Table 3) flog(%9.2fc)}

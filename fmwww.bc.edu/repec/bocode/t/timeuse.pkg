@@ -1,4 +1,4 @@
-d 'TIMEUSE': module to transform an episode file into a diary-level file containing basic time use information
+d 'TIMEUSE': module to facilitate the manipulation of diary-based time-use data
 d
 d  Time use surveys are a rich data source that can inform many
 d disciplines. However, much of their potential remains untapped

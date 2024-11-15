@@ -128,7 +128,7 @@ capture program drop pretty_logistic
 		
 		local predictorspecific i.`predictor'
 		
-		di "`predictorspecific'"
+		*di "`predictorspecific'"
 		
 	}
 	
@@ -243,7 +243,8 @@ capture program drop pretty_logistic
 			}
 		
 		}		
-			
+		
+		
 		
 *********************
 ** RISK DIFFERENCE **
@@ -259,7 +260,7 @@ capture program drop pretty_logistic
 		`:word count `reequation'' == 0 {		
 		
 		** Calculate risk difference
-		noisily foreach var of local outcomes {
+		foreach var of local outcomes {
 		melogit `var' `predictorspecific' `weight', or allbase
 		collect get _r_b _r_lb _r_ub: margins, dydx(`predictor')
 		local i = `i' + 1
@@ -290,8 +291,8 @@ capture program drop pretty_logistic
 		}
 		
 		}
+		}
 
-		
 		
 		*************************
 		** RD with confounders **
@@ -300,15 +301,16 @@ capture program drop pretty_logistic
 		else if `:word count `confounders'' != 0 & ///
 		`:word count `reequation'' == 0 {
 			
-		** Calculate adjusted risk difference
-		qui foreach var of local outcomes{
-		melogit `var' `predictorspecific' `confounders' `weight', ///
-		or allbase
-		collect get _r_b _r_lb _r_ub _r_p: margins, dydx(`predictor')
+		** Calculate risk difference
+		foreach var of local outcomes {
+		melogit `var' `predictorspecific' `confounders' `weight', or allbase
+		collect get _r_b _r_lb _r_ub: margins, dydx(`predictor')
 		local i = `i' + 1
 		
 		if `levelnotbinary' == 0 {
 		collect remap colname[1.`predictor']=colname[1.`var'], ///
+		fortags(cmdset[`i'])
+		collect remap colname[0.`predictor']=colname[0.`var'], ///
 		fortags(cmdset[`i'])
 		collect recode result _r_p = _r_incorrect
 		}
@@ -316,8 +318,9 @@ capture program drop pretty_logistic
 		else {
 		collect remap colname[`predictor']=colname[1.`var'], ///
 		fortags(cmdset[`i'])	
-		}	
+		}
 		
+	
 		}
 		
 		*Collecting correct p-value
@@ -330,6 +333,8 @@ capture program drop pretty_logistic
 		}
 		
 		}
+			
+	
 		
 		** Add note for confounders
 		fvrevar `confounders', list
@@ -364,6 +369,7 @@ capture program drop pretty_logistic
 		
 		
 		}
+		
 	
 		
 		**********************************************
@@ -383,6 +389,8 @@ capture program drop pretty_logistic
 		collect remap colname[1.`predictor']=colname[1.`var'], ///
 		fortags(cmdset[`i'])
 		collect recode result _r_p = _r_incorrect
+		collect remap colname[0.`predictor']=colname[0.`var'], ///
+		fortags(cmdset[`i'])
 		}
 		
 		else {
@@ -402,7 +410,7 @@ capture program drop pretty_logistic
 		}
 		
 		}
-		}
+		
 		
 		
 		********************************************
@@ -706,7 +714,7 @@ capture program drop pretty_logistic
 		or allbase
 		local i = `i' + 1
 		
-		if `levelnotbinary' = 0 {
+		if `levelnotbinary' == 0 {
 		collect remap colname[1.`predictor']=colname[1.`var'], ///
 		fortags(cmdset[`i'])
 		}
@@ -855,7 +863,7 @@ capture program drop pretty_logistic
 	delimiter(" to ") replace trim
 		
 	*Collect risk difference and probibility statistics
-	collect composite define _r_logistic= _r_b , replace
+	collect composite define _r_logistic = _r_b , replace
 		
 	collect composite define _r_prob = _r_p, replace
 	
@@ -1046,6 +1054,14 @@ capture program drop pretty_logistic
 	collect style putdocx, layout(autofitcontents)
 	
 	
+	
+
+	*********************************
+	** Displaying table on console **
+	*********************************
+	noisily collect preview
+	
+	
 	************************
 	** Exporting document **
 	************************
@@ -1053,25 +1069,22 @@ capture program drop pretty_logistic
 	if "`saving'" != "" {
 	collect export "`saving'", as(docx) `replace'	
 	}
-
-		
-	
-	*********************************
-	** Displaying table on console **
-	*********************************
-	collect preview
-	
 	
 	*********************************
 	** Replacing original dataset **
 	*********************************
 	qui use `data', clear
 	
+	macro drop _p _q _outcomecount
 	
+	foreach var of local outcomes {
+		
+	macro drop _`var'fl 
+		
+	}
 	
 	}
 	
-	collect preview
 	
 	end
 	
