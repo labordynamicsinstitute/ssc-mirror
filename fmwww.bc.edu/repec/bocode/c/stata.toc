@@ -175,6 +175,7 @@ p cnstroke module to return the stroke count of Chinese characters
 p cntop10 module to download information of top 10 shareholders for a list of stock codes from HeXun
 p cntrade module to retrieve Chinese stock market quotations from NetEase
 p cntraveltime module to extract the time needed for traveling between two locations from Baidu Map
+p cnuse module to Download datasets from the Quantitative Economics WeChat Public Account, the Econometric Service Center WeChat Public Account, and other network data sources.
 p cochran module to test for equality of proportions in matched samples (Cochran's Q) 
 p codci module to calculate Bonett-Seier's Confidence Interval for the COD
 p codebook2 module to produce a codebook describing a data file

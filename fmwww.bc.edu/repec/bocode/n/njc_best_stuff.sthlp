@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-index of NJC's best Stata stuff (version 12 June 2024)  
+index of NJC's best Stata stuff (version 17 November 2024)  
 {hline}
 
 {title:Description} 
@@ -43,7 +43,6 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help aaplot}              scatter plot with linear and/or quadratic fit, automatically annotated
 {space 4}{help binsm}               bin smoothing and summary on scatter plots
 {space 4}{help catplot}             plots of categorical data
-{space 4}{help ciplot}              plots of confidence intervals 
 {space 4}{help combineplot}         combine similar plots for different variables 
 {space 4}{help corrtable}           correlation matrix as graphical table
 {space 4}{help crossplot}           scatter (twoway) plots for each y vs each x 
@@ -61,6 +60,7 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help favplots}            formatted added-variable plot(s)
 {space 4}{help floatplot}           floating or sliding stacked bar plot
 {space 4}{help fractileplot}        smoothing with distribution function predictors
+{space 4}{help framed_bar}          framed bar charts
 {space 4}{help jaccard}             Jaccard similarity or dissimilarity of sets 
 {space 4}{help kaplansky}           graph examples of distributions of varying kurtosis 
 {space 4}{help linkplot}            linked scatter plots 
@@ -80,11 +80,13 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help pdplot}              Pareto dot plots 
 {space 4}{help polarsm}             polar smoothing 
 {space 4}{help ppplot}              P-P plots 
+{space 4}{help qbplot}              quantile plot with box flavour
 {space 4}{help qplot}               quantile plots
 {space 4}{help qqplotg}             quantile-quantile plots, generalized 
 {space 4}{help rcspline}            restricted cubic spline smoothing
 {space 4}{help sdline}              SD line (reduced major axis)
 {space 4}{help sepscatter}          scatter plots separated by a third variable 
+{space 4}{help side_histogram}      side by side histograms for two groups
 {space 4}{help skewplot}            skewness plots
 {space 4}{help sliceplot}           time series or other plot in slices 
 {space 4}{help sparkline}           sparkline-type plots 
@@ -132,7 +134,8 @@ available at {help njc_stuff:NJC stuff}.
 {title:Other statistics} 
 
 {space 4}{help bkrosenblatt}        Blum, Kiefer and Rosenblatt test of bivariate independence
-{space 4}{help circular}            circular statistics 
+{space 4}{help circular}            circular statistics
+{space 4}{help cisets}              confidence interval sets
 {space 4}{help concord}             concordance correlation
 {space 4}{help corrci}, {help corrcii}     correlation with z-based confidence intervals
 {space 4}{help cpcorr}              correlations for each row vs each column variable
@@ -150,10 +153,12 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help lvalues}             letter value calculation
 {space 4}{help modes}               tabulation of modes 
 {space 4}{help moments}             moment-based statistics
+{space 4}{help momentsets}          moment-based statistics sets 
 {space 4}{help multidensity}        kernel density estimation for one or more variables or groups
 {space 4}{help nruns}               number of runs compared with random shuffles
 {space 4}{help omninorm}            omnibus test for univariate or multivariate normality 
 {space 4}{help pcacoefsave}         save results of PCA to new dataset 
+{space 4}{help pctilesets}          percentile sets 
 {space 4}{help qsbayes}, {help qsbayesi}   quasi-Bayes smoothing of categorical frequencies 
 {space 4}{help rangerun}            run commands on observations within range
 {space 4}{help rangestat}           generate statistics using observations within range

@@ -1,0 +1,28 @@
+d 'CNUSE': module to Download datasets from the Quantitative Economics WeChat Public Account, the Econometric Service Center WeChat Public Account, and other network data sources.
+d
+d     cnuse is used to access datasets provided in blog posts from
+d the Econometric Service Center or    datasets mentioned in
+d quantitative economics resources. The command can import various
+d file formats	  including .dta, .xls, .xlsx, .txt, .csv, .shp,
+d and .zip. This includes spatial data (.shp files),	which makes
+d cnuse unique compared to other importing commands.	If the
+d dataset is declared as a time series or panel, the tsset or xtset
+d command will be    automatically issued to display those
+d characteristics.    Datasets downloaded in .zip format will be
+d automatically extracted and read into Stata. 
+d
+d KW: data management
+d KW: spatial data
+d KW: time series
+d KW: panel
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20241116
+d
+d Author:  Wang Qiang , Xi’an Jiaotong University
+d Support: email  740130359@@qq.com
+d
+f cnuse.ado
+f cnuse.sthlp
+f cnuse_cn.sthlp

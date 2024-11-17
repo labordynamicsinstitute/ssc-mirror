@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-index of NJC's Stata stuff (version 12 June 2024)
+index of NJC's Stata stuff (version 17 November 2024)
 {hline}
 
 {title:Description}
@@ -45,7 +45,7 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}sup means superseded
 {space 4}psup means partially superseded
 {space 4}+ means good
-{space 4}judgements assume availability of Stata 17 
+{space 4}judgements assume availability of Stata 18
 
 {space 4}{help aaplot}
 {space 4}SSC (NJC)
@@ -209,7 +209,7 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help ciplot}
 {space 4}SSC (NJC)
 {space 4}plots of confidence intervals
-{space 4}+
+{space 4}pobs(cisets)
 
 {space 4}{help cipolate}
 {space 4}SSC (NJC)
@@ -229,6 +229,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help circular}
 {space 4}SSC (NJC)
 {space 4}circular statistics (3; for Stata 8 up)
+{space 4}+
+
+{space 4}{help cisets}
+{space 4}SSC (NJC)
+{space 4}confidence interval sets
 {space 4}+
 
 {space 4}{help cistat}
@@ -842,6 +847,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}smoothing with respect to distribution function predictors
 {space 4}+
 
+{space 4}{help framed_bar}
+{space 4}SSC (NJC)
+{space 4}framed bar charts
+{space 4}+
+
 {space 4}{help fs}
 {space 4}SSC (NJC)
 {space 4}show names of files in compact form
@@ -1216,6 +1226,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}moment-based statistics
 {space 4}+
 
+{space 4}{help momentsets}
+{space 4}SSC (NJC)
+{space 4}moment-based statistics sets
+{space 4}+
+
 {space 4}{help moreobs}
 {space 4}SSC (NJC)
 {space 4}add observations to dataset
@@ -1479,6 +1494,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}piecewise cubic Hermite interpolation
 {space 4}sup(SSC mipolate)
 
+{space 4}{help pctilesets}
+{space 4}SSC (NJC)
+{space 4}percentile sets
+{space 4}+
+
 {space 4}{help pdplot}
 {space 4}SSC (NJC)
 {space 4}Pareto dot plots
@@ -1525,6 +1545,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help qbeta}
 {space 4}SSC (NJC)
 {space 4}quantile-quantile plots for data vs fitted beta distribution
+{space 4}+
+
+{space 4}{help qbplot}
+{space 4}SSC (NJC)
+{space 4}quantile plot with box flavour
 {space 4}+
 
 {space 4}qenv: {help qenvnormal}, {help qenvgamma}, etc. 
@@ -1594,6 +1619,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 
 {space 4}{help qqplotg}
 {space 4}SSC
+{space 4}quantile-quantile plots, generalized
+{space 4}sup(SJ 24-3)
+
+{space 4}{help qqplotg}
+{space 4}gr0096 sj24-3 (NJC)
 {space 4}quantile-quantile plots, generalized
 {space 4}+
 
@@ -1769,6 +1799,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help shownear}
 {space 4}SSC (NJC)
 {space 4}show nearby values of numeric variable
+
+{space 4}{help side_histogram}
+{space 4}SSC (NJC)
+{space 4}side-by-side histograms for two groups
+{space 4}+
 
 {space 4}Singh-Maddala etc.
 {space 4}gr35 stb48 (NJC)

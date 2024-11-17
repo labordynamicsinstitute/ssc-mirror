@@ -16065,6 +16065,7 @@ fmwww.bc.edu/repec/bocode/c/cs_lassologit_weights.do
 fmwww.bc.edu/repec/bocode/c/cenpois.ado
 fmwww.bc.edu/repec/bocode/c/color_style.sthlp
 fmwww.bc.edu/repec/bocode/c/chiplot.hlp
+fmwww.bc.edu/repec/bocode/c/cnuse.ado
 fmwww.bc.edu/repec/bocode/c/collett.do
 fmwww.bc.edu/repec/bocode/c/cntrade.pkg
 fmwww.bc.edu/repec/bocode/c/csumdgp.ado
@@ -16164,6 +16165,7 @@ fmwww.bc.edu/repec/bocode/c/carryforward.pkg
 fmwww.bc.edu/repec/bocode/c/cic_examples.do
 fmwww.bc.edu/repec/bocode/c/chewfile.html
 fmwww.bc.edu/repec/bocode/c/stata.toc
+fmwww.bc.edu/repec/bocode/c/cnuse.pkg
 fmwww.bc.edu/repec/bocode/c/caplog.hlp
 fmwww.bc.edu/repec/bocode/c/checkvar.pkg
 fmwww.bc.edu/repec/bocode/c/cmi_in.ado
@@ -17187,6 +17189,7 @@ fmwww.bc.edu/repec/bocode/c/circscatter.hlp
 fmwww.bc.edu/repec/bocode/c/clchi2.ado
 fmwww.bc.edu/repec/bocode/c/checkfor2.ado
 fmwww.bc.edu/repec/bocode/c/cpspear.html
+fmwww.bc.edu/repec/bocode/c/cnuse_cn.sthlp
 fmwww.bc.edu/repec/bocode/c/1horse.c
 fmwww.bc.edu/repec/bocode/c/Ch03_2mod.do
 fmwww.bc.edu/repec/bocode/c/cs_ivreg2_3.1.04.do
@@ -17360,6 +17363,7 @@ fmwww.bc.edu/repec/bocode/c/cs_ivreg2.smcl
 fmwww.bc.edu/repec/bocode/c/clippolyline.ado
 fmwww.bc.edu/repec/bocode/c/cusum9.sthlp
 fmwww.bc.edu/repec/bocode/c/cprplots.ado
+fmwww.bc.edu/repec/bocode/c/cnuse.sthlp
 fmwww.bc.edu/repec/bocode/c/Ch08_1mod.do
 fmwww.bc.edu/repec/bocode/c/cprdhesae_investigation.sthlp
 fmwww.bc.edu/repec/bocode/c/circpvm.html

@@ -27,6 +27,7 @@ f jl.sthlp
 F ../s/stataplugininterface.jl
 G LINUX64 jl.pluginLINUX64 jl.plugin
 G MACARM64 jl.pluginMACARM64 jl.plugin
+G OSX.ARM64 jl.pluginMACARM64 jl.plugin
 G MACINTEL64 jl.pluginMACINTEL64 jl.plugin
 G WIN64 jl.pluginWIN64.dll jl.plugin
 h jl.plugin
