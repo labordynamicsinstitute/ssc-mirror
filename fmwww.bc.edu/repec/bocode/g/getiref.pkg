@@ -22,6 +22,6 @@ d
 d Author: Yujun Lian, Lingnan College, Sun Yat-Sen University, China
 d Support: email arlionn@@163.com
 d
- ../l/getiref.ado
- ../l/getiref.sthlp
- ../l/getiref-get-all-refs.do
+f getiref.ado
+f getiref.sthlp
+f getiref-get-all-refs.do
