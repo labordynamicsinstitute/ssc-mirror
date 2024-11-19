@@ -32,6 +32,7 @@
 {synopt :{opt ederer2}}calculate Ederer II estimate rather than Pohar Perme{p_end}
 {synopt :{opt fh}}use Fleming Harrington estimator of survival{p_end}
 {synopt :{opt frame(framename)}}save list results to a frame{p_end}
+{synopt :{opt inccens}evaluate at censoring times{p_end}
 {synopt :{opt indw:eights(varname)}}individual weights (used for external standardization){p_end}
 {synopt :{opt lev:els(#)}}level for confidence intervals (default 95){p_end}
 {synopt :{opt list(numlist)}}list of times to view in in output{p_end}
@@ -121,6 +122,9 @@ If two variables are listed then both crude probabilties of death due to cancer 
 
 {phang}
 {opt frame(framename)} will save the results obtained through using the {cmd:list()} option to a frame. You can use a {cmd:, replace} suboption to overwrite an existing frame.
+
+{phang}
+{opt inccens} evaluate survival functions at censoring times as well as event times. This will lead to more precise long term estimates when there is sparse data, but will increase computation time.
 
 {phang}
 {opt indweights(varname)} incorporates individual level weights to up- or down-weight individuals relative to a reference population. This is useful for external age standardization.

@@ -1,4 +1,4 @@
-d 'GETIREF': module to Search and share Stata resources and blogs within Stata Command Window
+d 'GETIREF': module to list reference in Results Window, and download PDF, .ris, .bibtex files for given DOI
 d
 d      getiref make it easy to get meta data of most academic
 d articles using their DOIs.  It gets	 information like Author

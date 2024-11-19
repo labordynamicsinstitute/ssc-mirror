@@ -1546,6 +1546,7 @@ fmwww.bc.edu/repec/bocode/g/glst.ado
 fmwww.bc.edu/repec/bocode/g/grfreq.html
 fmwww.bc.edu/repec/bocode/g/gzuse.html
 fmwww.bc.edu/repec/bocode/g/git.sthlp
+fmwww.bc.edu/repec/bocode/g/genindweights.sthlp
 fmwww.bc.edu/repec/bocode/g/gcode.ado
 fmwww.bc.edu/repec/bocode/g/giacross.ado
 fmwww.bc.edu/repec/bocode/g/group_id.pkg
@@ -1714,6 +1715,7 @@ fmwww.bc.edu/repec/bocode/g/goprobit_ll.ado
 fmwww.bc.edu/repec/bocode/g/gencpr.ado
 fmwww.bc.edu/repec/bocode/g/genidseq.pkg
 fmwww.bc.edu/repec/bocode/g/gphudak6.ado
+fmwww.bc.edu/repec/bocode/g/genindweights.ado
 fmwww.bc.edu/repec/bocode/g/gllasim.hlp
 fmwww.bc.edu/repec/bocode/g/graphexportpdf.pkg
 fmwww.bc.edu/repec/bocode/g/gb2lfit_ll.ado

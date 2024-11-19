@@ -1,4 +1,4 @@
-*! version 1.3.0 2024-08-16
+*! version 1.3.1 2024-11-18
 
 program define stpp, rclass sortpreserve
   version 16.0
@@ -18,6 +18,7 @@ program define stpp, rclass sortpreserve
                    FH                                                   ///
                    FRame(string)                                        ///
                    LEVel(real `c(level)')                               ///
+                   INCCENS                                              ///
                    INDWeights(varname)                                  ///
                    LIST(numlist ascending >0)                           ///
                    MINEXPsurv(string)                                   ///
@@ -67,8 +68,19 @@ program define stpp, rclass sortpreserve
   }
   local RS_newvarname `varlist'
 
-  if "`indweights'" != "" confirm var `indweights'    
+  if "`indweights'" != "" {
+    confirm var `indweights'    
+    quietly count if missing(`indweights') & `touse'
+    if `r(N)'>0 {
+      di as err "You have missing values in `indweights'"
+      exit 198
+    }
+    di as error
+  }
   if "`by'"         != "" confirm var `by'    
+  
+  
+  
 
   if "`standstrata'" != "" {
   	count if missing(`standstrata') & `touse'
@@ -261,8 +273,9 @@ program define stpp, rclass sortpreserve
 
   // merge in results  
   tempvar tmplink
+  if "`inccens'" == "" local add_d _d
   quietly {
-    frlink m:1 _t _d `by' `touse', frame(stpp_tmpdataframe) generate(`tmplink')
+    frlink m:1 _t `add_d' `by' `touse', frame(stpp_tmpdataframe) generate(`tmplink')
     frget *, from(`tmplink')
     frame drop stpp_tmpdataframe
   }
@@ -270,6 +283,7 @@ program define stpp, rclass sortpreserve
 *******************
 // fill in gaps	///
 *******************	
+if "`inccens'"=="" {
   local newvarlist `RS_newvarname' `RS_newvarname'_lci `RS_newvarname'_uci
   if "`allcause'"  != "" local newvarlist `newvarlist' `AC_newvarname' `AC_newvarname'_lci `AC_newvarname'_uci
   if "`crudeprob'" != "" {
@@ -288,8 +302,9 @@ program define stpp, rclass sortpreserve
   }
 	
   foreach v in `newvarlist' {
-    quietly bysort `by' `touse' (_t `d0'): replace `v' = `v'[_n-1] if `v' >= . & `touse' & _d==0
+    quietly bysort `by' `touse'  (_t `d0'): replace `v' = `v'[_n-1] if `v' >= . & `touse' 
   }
+}
   
 *******************
 // graphs     	///
@@ -502,6 +517,7 @@ struct stpp_info {
                         hasframe,         // write result to a frame
                         hasflemhar,       // Fleming Harrington   
                         hasminexpsurv,    // has minimum expected survival
+                        hasinccens,       // include censored observations
                         minexpsurv,       // values of minimum expected survival  
                         pmmaxage,         // maximum age in popmort file
                         pmmaxyear,        // maximum year in popmort file
@@ -563,9 +579,11 @@ struct stpp_info {
                         t0,               // entry times
                         d,                // event indicator
                         standstrata,      // standstrata data 
-                        indweights        // individual level weights
+                        indweights      // individual level weights
+                             
                         
-  transmorphic matrix   pmothervars       // other variables
+  transmorphic matrix   pmothervars,       // other variables
+                        pmotherselect      // which pmother group
 
 // standstrata options
   real         scalar   Nstandlevels      // Number of levels in standstrata
@@ -649,6 +667,7 @@ function PP_Get_stpp_info()
   S.hasflemhar     = st_local("fh") != ""
   S.hasminexpsurv  = st_local("minexpsurv") != ""
   S.hasframe       = st_local("frame") != ""
+  S.hasinccens     = st_local("inccens") != ""
   S.pmage          = st_local("pmage")
   S.pmyear         = st_local("pmyear")
   S.pmother        = tokens(st_local("pmother"))
@@ -772,14 +791,24 @@ function PP_Get_stpp_info()
   S.maxt_k       = asarray_create("real",1)
   S.mint_k       = asarray_create("real",1)
   S.maxtall_k    = asarray_create("real",1)
-  
+
   for(k=1;k<=S.Nbylevels;k++) {
     for(s=1;s<=S.Nstandlevels;s++) {
-      asarray(S.unique_t_sk,(s,k), uniqrows(S.t[selectindex(S.d :& rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars :& S.standstrata:==S.standlevels[s])]))
+      if(S.hasinccens) {
+        asarray(S.unique_t_sk,(s,k), uniqrows(S.t[selectindex(rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars :& S.standstrata:==S.standlevels[s])]))
+      }
+      else {
+        asarray(S.unique_t_sk,(s,k), uniqrows(S.t[selectindex(S.d :& rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars :& S.standstrata:==S.standlevels[s])]))
+      }
       S.Nunique_t_sk[s,k] = rows(asarray(S.unique_t_sk,(s,k)))
       S.Nobs_by_sk[s,k]   = sum(S.by:==S.bylevels[k,] :& S.standstrata:==S.standlevels[s])
     }
-    asarray(S.unique_t_k,(k),uniqrows(S.t[selectindex(S.d :& rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars)]))
+    if(S.hasinccens) {
+      asarray(S.unique_t_k,(k),uniqrows(S.t[selectindex(rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars)]))
+    }
+    else {
+      asarray(S.unique_t_k,(k),uniqrows(S.t[selectindex(S.d :& rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars)]))
+    }
     S.Nunique_t_k[k] = rows(asarray(S.unique_t_k,(k)))
     asarray(S.mint_k,k,min(asarray(S.unique_t_k,(k))))
     asarray(S.maxt_k,k,max(asarray(S.unique_t_k,(k))))
@@ -947,14 +976,13 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
               died_tj, atrisk, atrisk_index, exprates_index,
               wt_atrisk, N_wt, Y_wt, v1, v2,
               died_tj_select, Ndied_tj,
-              tmpattyear, tmpselect
+              tmpattyear, tmpselect, bob
  
   real scalar Nuniq, tj, tstart_j,
               s, k, j, sumatrisk 
 
 // loop over by groups and standstrata levels 
   for(k=1;k<=S.Nbylevels;k++) {
-
     for(s=1;s<=S.Nstandlevels;s++) {
       if(S.verbose) PP_verbose_print_by_strata(S,k,s)
       byselect     = rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars :& S.standstrata:==S.standlevels[s]
@@ -970,11 +998,10 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
         lambda_pop1_tmp_var = J(S.Nunique_t_sk[s,k],1,.)
       }
       if(S.haspopmort2) lambda_pop2_tmp = J(S.Nunique_t_sk[s,k],1,.)
-      if(!S.haspopmort2) expsurv2_tj = 1
-
+      else expsurv2_tj = 1
+      
       if(S.Nunique_t_sk[s,k]:==1) t_rates_start = 0
       else t_rates_start = (0\asarray(S.unique_t_sk,(s,k))[|1 \ (S.Nunique_t_sk[s,k]:-1)|])
-
       y = asarray(S.unique_t_sk,(s,k)) :- t_rates_start
       expcumhaz     = J(S.Nobs_by_sk[s,k],1,0)
       if(S.haspopmort2) expcumhaz2 = J(S.Nobs_by_sk[s,k],1,0)
@@ -997,27 +1024,26 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
         tj       = asarray(S.unique_t_sk,(s,k))[j]
         tstart_j = t_rates_start[j]
         S.yj     = y[j]
-
+        
         S.atrisk_all  = (t_by:>=tj)
         S.atrisk_all_index  = selectindex(S.atrisk_all) // keeps those who will be at risk in future (delayed entry)
-        atrisk        = S.atrisk_all :& (t0_by:<tj)
-        atrisk_index  = selectindex(atrisk)
+        atrisk_index  = selectindex(S.atrisk_all :& (t0_by:<tj))
         exprates_index = selectindex(t0_by[S.atrisk_all_index]:<tj) // needed to reduce exprates with delayentry
 
 // attained age (note quicker than using rowmin)
-        S.attage = floor(agediag_by[S.atrisk_all_index] :+ tstart_j) 
+        S.attage = floor(agediag_by[S.atrisk_all_index] :+ tstart_j)
         tmpselect = selectindex(S.attage:>S.pmmaxage)
         if(cols(tmpselect)) S.attage[tmpselect] = J(rows(tmpselect),1,S.pmmaxage) 
         S.attage = S.attage :+ S.ageplus
-
+        
 // attained year (note quicker than using rowmin)
-        S.attyear = year(datediag_by[S.atrisk_all_index] :+ (tstart_j)*365.241)
+        S.attyear = year(datediag_by[S.atrisk_all_index] :+ tstart_j*365.241)
         tmpselect = selectindex(S.attyear:>S.pmmaxyear)
         if(cols(tmpselect)) S.attyear[tmpselect] = J(rows(tmpselect),1,S.pmmaxyear) 
-        S.attyear = S.attyear :+ S.yearplus        
+        S.attyear = S.attyear :+ S.yearplus
         exprates = PP_gen_exprates(S,1,S.pm,S.attyear):*S.yj  
         expcumhaz[S.atrisk_all_index] = expcumhaz[S.atrisk_all_index] :+ exprates
-       
+
         expsurv_tj = exp(-(expcumhaz[atrisk_index]))
         if(S.hasminexpsurv) {
           tmpselect = selectindex(expsurv_tj:<S.minexpsurv)
@@ -1036,35 +1062,50 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
             expsurv2_tj[tmpselect] = J(rows(tmpselect),1,S.minexpsurv)
           }
         }
+
         died_tj = (t_by[atrisk_index]:==tj) :& d_by[atrisk_index]  
         died_tj_select = selectindex(died_tj)
 	
         if(!S.ederer2) wt_atrisk = (indweights_by[atrisk_index]:*expsurv2_tj):/expsurv_tj        
         else wt_atrisk = indweights_by[atrisk_index]:*expsurv2_tj     
-        
-        N_wt = colsum(wt_atrisk[died_tj_select])
-        Y_wt = colsum(wt_atrisk)	
-        v1   = colsum((wt_atrisk[died_tj_select]:^2))	
 
-        if(!S.dropexpected) lambda_e_tmp[j] = (N_wt :- colsum(wt_atrisk:*exprates[exprates_index])):/Y_wt
+        if(cols(died_tj_select)) {
+          N_wt = quadcolsum(wt_atrisk[died_tj_select])
+          v1   = quadcolsum((wt_atrisk[died_tj_select]:^2))
+        }
+        else {
+          N_wt = 0
+          v1   = 0
+        }
+        Y_wt = quadcolsum(wt_atrisk)	
+
+        if(!S.dropexpected) lambda_e_tmp[j] = (N_wt :- quadcolsum(wt_atrisk:*exprates[exprates_index])):/Y_wt
         else lambda_e_tmp[j] = (N_wt):/Y_wt
         lambda_e_tmp_var[j] = (v1:/(Y_wt:^2))
 
 // Crude probabilities and allcause
         if(S.hascrudeprob | S.hasallcause) {
           if(!S.haspopmort2) { 
-            sumatrisk             =  colsum(indweights_by[atrisk_index])
-            Ndied_tj              =  colsum((indweights_by[atrisk_index])[died_tj_select])
-            v2                    =  colsum((indweights_by[atrisk_index])[died_tj_select]:^2)
+            sumatrisk             =  quadcolsum(indweights_by[atrisk_index])
+
+            if(sum(died_tj_select)==0) {
+              Ndied_tj = 0
+              v2 = 0
+            }
+            else {
+              Ndied_tj  =  quadcolsum((indweights_by[atrisk_index])[died_tj_select])
+              v2                    =  quadcolsum((indweights_by[atrisk_index])[died_tj_select]:^2)
+            }
             lambda_all_tmp[j]     =  Ndied_tj:/sumatrisk
             lambda_all_tmp_var[j] =  v2:/sumatrisk:^2
-            lambda_pop1_tmp[j]    =  colsum(exprates[exprates_index]:*indweights_by[atrisk_index]):/sumatrisk
+            lambda_pop1_tmp[j]    =  quadcolsum(exprates[exprates_index]:*indweights_by[atrisk_index]):/sumatrisk
           }
           else {
+            sumatrisk             =  quadcolsum(indweights_by[atrisk_index])
             lambda_all_tmp[j]     =  N_wt:/Y_wt
             lambda_all_tmp_var[j] =  v1:/((Y_wt:^2))
-            lambda_pop1_tmp[j]    =  colsum(wt_atrisk:*exprates[exprates_index]):/Y_wt
-            lambda_pop2_tmp[j]    =  colsum(wt_atrisk:*exprates2[exprates_index]):/Y_wt
+            lambda_pop1_tmp[j]    =  quadcolsum(wt_atrisk:*exprates[exprates_index]:*indweights_by[atrisk_index]):/Y_wt
+            lambda_pop2_tmp[j]    =  quadcolsum(wt_atrisk:*exprates2[exprates_index]:*indweights_by[atrisk_index]):/Y_wt
           }
         }
       }
@@ -1105,11 +1146,13 @@ real matrix PP_gen_exprates(struct stpp_info scalar   S,
   real scalar  p, b, yminmax, ymin, ymax
   exprates = J(rows(S.atrisk_all_index),1,.)
   yminmax=minmax(tmpattyear)
+  ymin= yminmax[1]
+  ymax = yminmax[2]
   for(p=1;p<=S.Npmoth_levels[1,pmnumber];p++) {
     pmotherselect = rowsum(asarray(S.pmothervars_by,pmnumber)[S.atrisk_all_index,] :== 
                     asarray(S.pmoth_levels,pmnumber)[p,]):==S.Npmother[pmnumber] :& S.atrisk_all[S.atrisk_all_index]
 
-    for(b=yminmax[1];b<=yminmax[2];b++) {
+    for(b=ymin;b<=ymax;b++) {
       rateindex = selectindex((tmpattyear:==b) :& pmotherselect)
       if(cols(rateindex)) exprates[rateindex] = asarray(pm,asarray(S.pmoth_levels,pmnumber)[p,])[S.attage[rateindex] , b]
     } 
@@ -1202,8 +1245,10 @@ real matrix allcause, allcause_v,
       // Marginal all cause    
       if(S.hasallcause | S.hascrudeprob) {
         // replaced 15/8/2024
-        //lambda_c = asarray(S.lambda_all_t, (1,S.bylevels[k,])) :- asarray(S.lambda_pop1_t,(1,S.bylevels[k,]))
-        lambda_c = asarray(S.lambda_e_t,(1,S.bylevels[k,]))
+        //if(S.haspopmort2) lambda_c = asarray(S.lambda_all_t, (1,S.bylevels[k,])) :- asarray(S.lambda_pop1_t,(1,S.bylevels[k,]))
+        //else lambda_c = asarray(S.lambda_e_t,(1,S.bylevels[k,]))
+        //lambda_c = asarray(S.lambda_e_t,(1,S.bylevels[k,]))
+        if(S.haspopmort2) lambda_c = asarray(S.lambda_all_t, (1,S.bylevels[k,])) :- asarray(S.lambda_pop1_t,(1,S.bylevels[k,]))
         
         allcause_v = quadrunningsum(asarray(S.lambda_all_t_var,(1,S.bylevels[k,])))
         if(S.hasflemhar) {
@@ -1214,6 +1259,7 @@ real matrix allcause, allcause_v,
           if(S.haspopmort2) allcause = -quadrunningsum(log(1:-(lambda_c :+ asarray(S.lambda_pop2_t,(1,S.bylevels[k,])))))
           else allcause   = -quadrunningsum(log(1:-asarray(S.lambda_all_t,(1,S.bylevels[k,]))))          
         }
+
         asarray(S.AC,k,PP_log_tran_var(S,allcause, allcause_v, zz))
       }
 
@@ -1221,12 +1267,15 @@ real matrix allcause, allcause_v,
       if(S.hascrudeprob) {
         if(S.hasdeathprob) {
         	allcause_lag = 1\(1:-asarray(S.AC,k)[,1])[|1,1 \ (S.Nunique_t_k[k]-1),1|]
-          tmp_CP_t_s = (1:-asarray(S.AC,k)[,1]):*quadrunningsum(lambda_c:/allcause_lag)        
         }        
         else {
         	allcause_lag = 1\(asarray(S.AC,k)[,1])[|1,1 \ (S.Nunique_t_k[k]-1),1|]
-          tmp_CP_t_s = (asarray(S.AC,k)[,1]):*quadrunningsum(lambda_c:/allcause_lag)        
-        }        
+        }   
+
+        if(S.haspopmort2) lambda_c = asarray(S.lambda_all_t,(1,S.bylevels[k,])) :- asarray(S.lambda_pop1_t,(1,S.bylevels[k,]))
+        else lambda_c = asarray(S.lambda_all_t,(1,S.bylevels[k,])) :- asarray(S.lambda_pop1_t,(1,S.bylevels[k,]))
+
+        
      	  tmpmat   = quadrunningsum(allcause_lag:*lambda_c)
         Nuniq  = S.Nunique_t_k[k]
         lambda_all_t_var=asarray(S.lambda_all_t_var,(1,S.bylevels[k,])) 
@@ -1236,7 +1285,7 @@ real matrix allcause, allcause_v,
           tmpmat_v[j]=quadsum((allcause_lag[1::j,.]):^2 :*(1:-((tmpmat[j]:-tmpmat[1::j,.]):/allcause_lag[1::j,.])):^2:*lambda_all_t_var[1::j,.]) 
          }        
         asarray(S.CP_can, k, PP_loglog_tran_var(tmpmat,tmpmat_v,zz))
-        
+
         if(S.CP_calcother) {
           tmpmat_v = J(Nuniq,1,0)        
           if(S.haspopmort2) tmpmat = runningsum(allcause_lag:*asarray(S.lambda_pop2_t,(1,S.bylevels[k,])))
@@ -1304,8 +1353,7 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
                       CP_can_list_matrix, CP_oth_list_matrix
 
 					  
-///////// //ADDED - THIS NEEDS MOVING TO THE RIGHT PLACE**
-///////// HERE SO IT RUNS EVEN WITHOUT LIST OPTION**
+
   if(S.ederer2) method = "Ederer II"
   else method = "Pohar Perme"
   if(S.haspopmort2) method = method + " (Sasieni and Brentnall weights)"
@@ -1342,8 +1390,12 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
         if(S.CP_calcother) CP_oth_tmplist[i,] = (S.list[i],asarray(S.CP_oth, k)[tminindex,])
       }
       else if(S.list[i]<asarray(S.mint_k,k)) {
-        RS_tmplist[i,] = (S.list[i],1,1,1)
-        if(S.hasallcause)  AC_tmplist[i,]     = (S.list[i],1,1,1)    
+        if(S.hasdeathprob) RS_tmplist[i,] = (S.list[i],0,0,0)
+        else RS_tmplist[i,] = (S.list[i],1,1,1)
+        if(S.hasallcause)  {
+          if(S.hasdeathprob) AC_tmplist[i,] = (S.list[i],0,0,01)    
+          else AC_tmplist[i,] = (S.list[i],1,1,1)    
+        }
         if(S.hascrudeprob) CP_can_tmplist[i,] = (S.list[i],0,0,0)  
         if(S.CP_calcother) CP_oth_tmplist[i,] = (S.list[i],0,0,0)        
       }
@@ -1477,7 +1529,7 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
 ////////////////////////////////
 
 
-void function PP_Write_new_variables(struct stpp_info scalar   S) 
+void function PP_Write_new_variables(struct stpp_info scalar  S) 
 {
   real scalar k
   real matrix data_k, return_data
@@ -1502,7 +1554,6 @@ void function PP_Write_new_variables(struct stpp_info scalar   S)
     if(k==1) return_data = J(0,cols(data_k),.)
     return_data = return_data \ data_k
   }
-  
   newvars_merge = "_t", "_d", S.byvars, S.touse
   newvars = S.RS_newvarname,S.RS_newvarname+"_lci", S.RS_newvarname+"_uci"
   if(S.hasallcause) newvars = newvars, S.AC_newvarname,S.AC_newvarname+"_lci", S.AC_newvarname+"_uci"
