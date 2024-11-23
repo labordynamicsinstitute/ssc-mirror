@@ -1,0 +1,38 @@
+d 'TVPREG': module to perform parameter path estimation in unstable environments
+d
+d  tvpreg} facilitates practitioners to estimate and visualize the
+d parameter path and impulse response functions in unstable
+d environments. Estimation results} are stored in e() form.
+d Postestimation commands} are provided to store and visualize the
+d estimation results. 
+d
+d KW: parameter path
+d KW: uncertainty
+d
+d Requires: Stata version 17 
+d
+d Distribution-Date: 20241121
+d
+d Author:  Atsushi Inoue, Department of Economics, Vanderbilt University
+d Support: email atsushi.inoue@@vanderbilt.edu
+d
+d Author: Barbara Rossi, Universitat Pompeu Fabra
+d Support: email barbara.rossi@@upf.edu
+d
+d Author:  Yiru Wang, University of Pittsburgh
+d Support: email yiru.wang@@pitt.edu
+d
+d Author: Lingyun Zhou, PBC School of Finance, Tsinghua University
+d Support: email zhouly.23@@pbcsf.tsinghua.edu.cn
+d
+f tvpreg.ado
+f tvpreg_p.ado
+f tvpplot.ado
+f tvpreg.mata
+f tvpreg.sthlp
+f tvpreg_p.sthlp
+f tvpplot.sthlp
+f ../d/data_Fiscal.dta
+f ../d/data_MP.dta
+f ../d/data_PC_weak.dta
+f tvpreg_demo.do

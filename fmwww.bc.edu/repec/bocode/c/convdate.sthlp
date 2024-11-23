@@ -1,5 +1,5 @@
 {smcl}
-{* 17aug2017/1sep2017}{...}
+{* 17aug2017/1sep2017/22nov2024}{...}
 {cmd:help convdate}
 {hline}
 
@@ -221,6 +221,12 @@ from a given {it:coarse date} is that before the first possible
 
 {pstd}Nicholas J. Cox, Durham University, UK{p_end}
 {pstd}n.j.cox@durham.ac.uk{p_end}
+
+
+{title:Acknowledgments}
+
+{pstd}Luis Pecht found a bug. For some inputs of clock variables, not enough 
+precision was carried. 
 
 
 {title:References} 

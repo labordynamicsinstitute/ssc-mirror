@@ -1,8 +1,10 @@
-*! 1.2.1 NJC 31 August 2017 
+*! 1.2.3 NJC 22 November 2024
+*! 1.2.2 NJC 18 November 2024
+*! 1.2.1 NJC 31 August 2017
 * 1.2.0 NJC 17 August 2017 
 * 1.1.0 NJC 3 August 2017 
 * 1.0.0 NJC 1 August 2017 
-program convdate 
+program convdate
 	version 12 
 
 	/// get and check wanted date-time type, zapping any hyphens or percents 
@@ -136,7 +138,7 @@ program Tryit
 	args touse newvar oldvar intype out format last 
 	tempvar work toshow nmiss 
 
-	if inlist("`out'", "clock", "Clock") { 
+	if inlist("`out'", "clock", "Clock", "c", "C") | inlist("`intype'", "clock", "Clock", "c", "C") { 
 		local vtype "double" 
 	} 
 	local out = substr("`out'", 1, 1) 
@@ -168,7 +170,7 @@ end
 program Doit 
 	args touse newvar oldvar intype out format last 
 	
-	if inlist("`out'", "clock", "Clock") { 
+	if inlist("`out'", "clock", "Clock", "c", "C") | inlist("`intype'", "clock", "Clock", "c", "C") { 
 		local vtype "double" 
 	} 
 	local out = substr("`out'", 1, 1) 
@@ -178,7 +180,7 @@ program Doit
 		replace `newvar' = `out'ofd(dof`intype'(`newvar')) if `touse'  
 		if `last' replace `newvar' = `newvar' - 1 
 
-		if "`out'" == "" compress `newvar' 
+		compress `newvar' 
 	} 
 
 	format `newvar' `format' 

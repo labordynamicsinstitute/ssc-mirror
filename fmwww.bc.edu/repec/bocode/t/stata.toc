@@ -155,6 +155,7 @@ p tuples module for selecting all possible tuples from a list
 p turnbull module to estimate the Turnbull empirical distribution estimator of willingness to pay
 p tvdiff module to compute pre- and post-treatment estimation of the Average Treatment Effect (ATE) with binary time-varying treatment
 p tvgc module to perform Time-Varying Granger Causality tests
+p tvpreg module to perform parameter path estimation in unstable environments
 p tw3xls module to export publication-ready three-way and four-way tables into xls or xlsx
 p twby module to create a cross-tabulation of graphs
 p twexp module to estimate exponential-regression models with two-way fixed effects
