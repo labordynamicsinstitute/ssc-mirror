@@ -1,4 +1,4 @@
-*! jl 1.1.1 22 November 2024
+*! jl 1.1.2 23 November 2024
 *! Copyright (C) 2023-24 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -16,27 +16,23 @@
 
 * Version history at bottom
   
+global JULIA_COMPAT_VERSION 1.11
 
 // Take 1 argument, possible path for julia executable, return workable path, if any, in caller's libpath and libname locals; error otherwise
 cap program drop wheresjulia
 program define wheresjulia, rclass
   version 14.1
-  tempfile tempfile
-  cap {
-    cap mata _fclose(fh)
-    !`1'julia -e "using Libdl; println(dlpath(\"libjulia\"))" > `tempfile'  // fails in RH Linux
-    mata pathsplit(_fget(fh = _fopen("`tempfile'", "r")), _juliapath="", _julialibname="")
+  tempfile stdio stderr
+  tempname rc
+  foreach bindir in "" `=cond(c(os)!="Windows", "~/.juliaup/bin/", "")' {
+    !`bindir'juliaup -h > "`stdio'" 2> "`stderr'"
+    cap mata _fget(_julia_fh = _fopen("`stderr'", "r")); st_numscalar("`rc'", fstatus(_julia_fh))  // if previous command good, then stderr empty and fget hit EOF, causing fstatus!=0
+    if `rc' {
+      return local bindir `bindir'
+      return scalar success = 1
+      continue, break
+    }
   }
-  if _rc cap {
-    !`1'julia -e 'using Libdl; println(dlpath( "libjulia" ))' > `tempfile'  // fails in Windows
-    mata pathsplit(_fget(fh = _fopen("`tempfile'", "r")), _juliapath="", _julialibname="")
-  }
-  local rc = _rc
-  cap mata _fclose(fh)
-  error `rc'
-  mata st_local("libpath", _juliapath); st_local("libname", _julialibname)
-  c_local libpath `libpath'
-  c_local libname `libname'
 end
 
 cap program drop assure_julia_started
@@ -44,22 +40,52 @@ program define assure_julia_started
   version 14.1
 
   if `"$julia_loaded"' == "" {
-    syntax, [threads(string)]
+    syntax, [threads(string) channel(string)]
     if !inlist(`"`threads'"', "", "auto") {
       cap confirm integer number `threads'
       _assert !_rc & `threads'>0, msg(`"threads() option must be "auto" or a positive integer"') rc(198)
     }
 
+    if "`channel'"=="" local channel $JULIA_COMPAT_VERSION  // only guaranteed compatible with this Julia version
+    
     cap noi {
-      cap wheresjulia
-      cap if _rc & c(os)!="Windows" wheresjulia ~/.juliaup/bin/
-      cap if _rc & c(os)=="MacOSX" {
-        forvalues v=9/20 {  // https://github.com/JuliaLang/juliaup/issues/758#issuecomment-1836577702
-          cap wheresjulia /Applications/Julia-1.`v'.app/Contents/Resources/julia/bin/
-          if !_rc continue, break
+      wheresjulia      
+      if !0`r(success)' {  // can't find juliaup so try to install it
+        if c(os)=="Windows" {
+          !winget install julia -s msstore --accept-package-agreements
         }
+        else {
+          !curl -fsSL https://install.julialang.org | sh -s -- -y
+        }
+                       
+        wheresjulia
+        if !0`r(success)' exit 198  // still can't run juliaup: give up
       }
-      error _rc
+
+      local bindir `r(bindir)'
+      tempname stdio stderr
+      tempname rc
+
+      qui !`bindir'julia +`channel' -e '1' 2> "`stderr'"
+      qui mata _fget(_julia_fh = _fopen("`stderr'", "r")); st_numscalar("`rc'", !fstatus(_julia_fh))  // if previous command good, then stderr empty and fget hit EOF, causing fstatus!=0
+      if `rc' {
+        di as txt `"Attempting to add `channel' channel to the local Julia installation."'
+        di "This will not affect which version of Julia runs by default when you call it from outside of Stata."
+        di "To learn more about the Julia version manager, type or click on {stata !juliaup --help}."
+        di "This version of the {cmd:julia} Stata package is only guaranteed stable with Julia $JULIA_COMPAT_VERSION." _n
+        !`bindir'juliaup add `channel'  
+      }
+      cap {
+        cap mata _fclose(_julia_fh)
+        !`bindir'julia +`channel' -e "using Libdl; println(dlpath(\"libjulia\"))" > "`stdio'"  // fails in RH Linux
+        mata pathsplit(_fget(_julia_fh = _fopen("`stdio'", "r")), _juliapath="", _julialibname="")
+      }
+      if _rc & c(os)!="Windows" cap {
+        !`bindir'julia +`channel' -e 'using Libdl; println(dlpath( "libjulia" ))' > "`stdio'"  // fails in Windows
+        mata pathsplit(_fget(_julia_fh = _fopen("`stdio'", "r")), _juliapath="", _julialibname="")
+      }
+      cap mata _fclose(_julia_fh)
+      mata st_local("libpath", _juliapath); st_local("libname", _julialibname)
 
       di as txt `"Starting Julia `=cond(`"`threads'"'!="", "with threads=`threads'", "")'"'
       mata displayflush() 
@@ -67,21 +93,12 @@ program define assure_julia_started
       plugin call _julia, start "`libpath'/`libname'" "`libpath'" `threads'
     }
     if _rc {
-      di as err "Can't access Julia. {cmd:jl} requires that Julia be installed and that you are"
-      di as err `"able to start it by typing "julia" in a terminal window (though you won't normally need to)."'
+      di as err "Can't access Julia and Juliaup. {cmd:jl} requires that Julia be installed, along with the version manager Juliaup, and that"
+      di as err `"you are able to start both by typing "julia" and "juliaup" in a terminal window (though you won't normally need to)."'
       di as err `"See the Installation section of the {help jl##installation:jl help file}."'
       exit 198
     }
  
-    plugin call _julia, eval `"Int(VERSION < v"1.11.0")"'
-    if `__jlans' {
-      di as err _n "jl requires that Julia 1.11.0 or higher be installed and accessible by default."
-      di as txt "It may suffice to type {stata !juliaup up} in Stata, and then restart Stata."
-      di as txt "See the Installation section of the {help jl##installation:jl help file}."
-      global julia_loaded
-      exit 198
-    }
-
     cap noi {
       plugin call _julia, evalqui "using Pkg"
       AddPkg DataFrames, minver(1.6.1)
@@ -211,9 +228,9 @@ program define jl, rclass
     }
 
     if `"`cmd'"'=="start" {
-      syntax, [Threads(passthru)]
-      if 0$julia_loaded & `"`threads'"'!="" di as txt "threads() option ignored because Julia is already running."
-      assure_julia_started, `threads'
+      if 0$julia_loaded exit
+      syntax, [Threads(passthru) CHANnel(passthru)]
+      assure_julia_started, `threads' `channel'
       exit
     }
 
@@ -437,3 +454,4 @@ program _julia, plugin using(jl.plugin)
 * 1.0.2 Fix crashes on really long included regressor lists; add status call to GetEnv & SetEnv; bug fixes
 * 1.1.0 Fix bug in GetVarsFromDF, nomissing. Now requires Julia >=1.11.
 * 1.1.1 Fixed crash in 1.1.0 in Mac ARM
+* 1.1.2 Switch to using a dedicated 1.11 Juliaup channel; automatically install Julia

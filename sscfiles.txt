@@ -11449,6 +11449,7 @@ fmwww.bc.edu/repec/bocode/p/pexp5.html
 fmwww.bc.edu/repec/bocode/p/powerfamily.sthlp
 fmwww.bc.edu/repec/bocode/p/pmcalplot.pkg
 fmwww.bc.edu/repec/bocode/p/power_swgee.sthlp
+fmwww.bc.edu/repec/bocode/p/predperf.sthlp
 fmwww.bc.edu/repec/bocode/p/ppmlhdfe_p.ado
 fmwww.bc.edu/repec/bocode/p/predxcat.sthlp
 fmwww.bc.edu/repec/bocode/p/postrcspline.html
@@ -11549,6 +11550,7 @@ fmwww.bc.edu/repec/bocode/p/persuasio4yz.ado
 fmwww.bc.edu/repec/bocode/p/project_setup.dlg
 fmwww.bc.edu/repec/bocode/p/paverage.ado
 fmwww.bc.edu/repec/bocode/p/prosperity.ado
+fmwww.bc.edu/repec/bocode/p/predperf.pkg
 fmwww.bc.edu/repec/bocode/p/paramed.sthlp
 fmwww.bc.edu/repec/bocode/p/pisareg.ado
 fmwww.bc.edu/repec/bocode/p/pwexp.pkg
@@ -12020,6 +12022,7 @@ fmwww.bc.edu/repec/bocode/p/ppplot.hlp
 fmwww.bc.edu/repec/bocode/p/pip_examples.ado
 fmwww.bc.edu/repec/bocode/p/python_plugin.pdf
 fmwww.bc.edu/repec/bocode/p/pshare.sthlp
+fmwww.bc.edu/repec/bocode/p/predperf.ado
 fmwww.bc.edu/repec/bocode/p/prevent.pkg
 fmwww.bc.edu/repec/bocode/p/predxcon.hlp
 fmwww.bc.edu/repec/bocode/p/psid_long.ado
@@ -18854,6 +18857,7 @@ fmwww.bc.edu/repec/bocode/s/spregsem.sthlp
 fmwww.bc.edu/repec/bocode/s/svytabform.html
 fmwww.bc.edu/repec/bocode/s/sptobitsemxt.sthlp
 fmwww.bc.edu/repec/bocode/s/spregsacxt.ado
+fmwww.bc.edu/repec/bocode/s/sheinerbealdata.dta
 fmwww.bc.edu/repec/bocode/s/sfcross_p.ado
 fmwww.bc.edu/repec/bocode/s/sctree.pkg
 fmwww.bc.edu/repec/bocode/s/scenttest.pkg

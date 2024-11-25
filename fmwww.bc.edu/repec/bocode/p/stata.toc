@@ -148,6 +148,7 @@ p ppschromy module to draw sample with probability proportionate to size, using 
 p ppssampford module to draw sample with probability proportionate to size, without replacement, using Sampford's method
 p pre module to calculate the proportional reduction in errors accomplished by an estimated model
 p predcalc module to calculate out-of-sample predictions for regression, logistic
+p predperf module module for calculating simple indices describing the accuracy and precision of one or two continuous-value predictors, based on a series of predictions matched with corresponding ‘true’ observations.
 p predsurv module to compute predicted survival to a specified time after streg
 p predxcat module to calculate predicted means, medians, or proportions for nominal X's
 p predxcon module to calculate predicted means, medians, or proportions for a continuous X variable

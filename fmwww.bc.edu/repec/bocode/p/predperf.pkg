@@ -1,0 +1,42 @@
+d 'PREDPERF': module module for calculating simple indices describing the accuracy and precision of one or two continuous-value predictors, based on a series of predictions matched with corresponding ‘true’ observations.
+d
+d  In pharmacometrics, as in many other disciplines involving
+d modeling, we regularly need to validate a model built to predict
+d the values of a continuous marker by comparing its predictions
+d with a series of “true” observations. We also often need to
+d compare two models on the basis of their respective performances.
+d A seminal paper by Lewis Sheiner and Stuart Beal, still widely
+d cited today, laid the conceptual foundations for evaluating the
+d predictive performance of a model for a continuous outcome
+d variable (Sheiner LB, Beal SL. Some suggestions for measuring
+d predictive performance. J Pharmacokinet Biopharm. 1981;9:503-12.
+d doi: 10.1007/BF01060893). The accuracy of predictions is
+d reflected in their mean bias relative to observations, while the
+d precision of predictions is reflected in their root mean square
+d residual error with respect to the observations. Sheiner and Beal
+d showed how to estimate simple confidence intervals around these
+d two indices, and how to test simple hypotheses. This
+d unpretentious program implements these calculations in STATA,
+d while providing an illustrative graph of the calculated indices
+d over a scatterplot of observations versus predictions. It offers
+d the option of calculating absolute bias and imprecision, or their
+d relative counterparts (i.e. expressed as percentage ratios), or
+d their logarithmic counterparts (i.e. based on the logarithm of
+d the values compared). 
+d
+d KW: predictive performance
+d KW: model validation
+d KW: mean bias
+d KW: root mean squared error
+d KW: rmse
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20241111
+d
+d Author: Thierry Buclin, Clinical Pharmacology Service, University Hospital of Lausanne
+d Support: email Thierry.Buclin@@chuv.ch
+d
+f predperf.ado
+f predperf.sthlp
+f ../s/sheinerbealdata.dta
