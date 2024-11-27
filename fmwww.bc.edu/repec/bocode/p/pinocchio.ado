@@ -11,7 +11,7 @@ local pinocchio = `"
 "5. In a bivariate regression the R-squared will always be greater than the absolute value of the correlation coefficient. "
 "6. In a bivariate regression the p-value of an F-test is always greater than that of a t-test."
 "7. In a bivariate linear regression the beta coefficient is calculated as the covariance between X and Y divided by the variance of Y. "
-"8. Regression residuals are calculated as the differnce between predicted and observed values, therefore positive residuals indicate overpredictions and negative residuals underpredictions."
+"8. Regression residuals are calculated as the difference between predicted and observed values, therefore positive residuals indicate overpredictions and negative residuals underpredictions."
 "9. A bivariate regression is a model with two explanatory variables (X1 and X2) to predict or explain the variation in another variable (Y)."
 "10. In a simple linear regression the error or residuals of the estimation are calculated as e = Y_obs - alpha_hat + B1_hat*X1_obs + B2_hat*X2_obs. "
 "11. In a regression model the Root Mean Square Error (RMSE) is equal to the square root of the Model Mean Squares (MMS) or the square root of the quotient of the Model Sum of Squares (MSS) and the Model degrees of freedom (k). "
@@ -151,6 +151,7 @@ local pinocchio = `"
 ;
 #d cr
 
+set seed `: display %13.0f mod(now(), 2^31-1)'
 local countstatements : word count `pinocchio'
 local randomnum = runiformint(1, `countstatements')
 local statement  :  word `randomnum' of `pinocchio'

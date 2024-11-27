@@ -16,8 +16,7 @@
 {title:Description}
 
 {pstd}
-Pinocchio functions as a stochastic producer of spurious econometric assertions, while the accurate statements are itemized below. Its purpose is conceived as both a revision aid and a repository of key concepts to retain. 
-It is recommended to set a random seed every time Stata is initiated.
+Pinocchio functions as a stochastic producer of spurious econometric assertions, while the accurate statements are itemized below. Its purpose is conceived as both a revision aid and a repository of key concepts to retain.
 
 {title:True Statements}
 
@@ -471,11 +470,6 @@ and the alternative hypothesis is the hypothesis that there is a significant dif
 
 {pstd}
 142. The standard error is calculated by dividing the standard deviation by the square root of the sample size.      
-
-{title:Contact}
-
-{pstd}
-For corrections, suggestions, and contributions feel free to contact me at marco.santacroce@eui.eu.
 
 {phang}
 

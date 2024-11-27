@@ -1,7 +1,9 @@
-*! version 1.1.6  25mar2023  Gorkem Aksaray <aksarayg@tcd.ie>
+*! version 1.1.7  23nov2024  Gorkem Aksaray <aksarayg@tcd.ie>
 *!
 *! Changelog
 *! ---------
+*!   [1.1.7]
+*!     - Using quotes in if expression was causing an error. This is now fixed.
 *!   [1.1.6]
 *!     - frapply now returns r-class results, in addition to e-class results if
 *!       any, stored by the last command in commandlist.
@@ -35,7 +37,7 @@ program define frapply, rclass
     
     // parse prefix and command(s)
     gettoken prefix command : 0, parse(":")
-    if "`prefix'" == ":" {
+    if `"`prefix'"' == ":" {
         local prefix ""
     }
     else {

@@ -74,8 +74,8 @@ Basic table with one grouping variable
 {tab}{phang} {cmd:. pretty_text, string(make) by(foreign) sav("Example_Table")}{p_end}
 
 Table with multiple grouping variables
-{tab}{phang}{cmd:. gen Colour = "White"}{p_end}
-{tab}{phang}{cmd:. replace Colour = "Black" in 5/10}{p_end}
-{tab}{phang}{cmd:. pretty_text, string(make) by(foreign) sav("Example_Table")}{p_end}
+{tab}{phang}{cmd:. gen colour = "White"}{p_end}
+{tab}{phang}{cmd:. replace colour = "Black" in 5/10}{p_end}
+{tab}{phang}{cmd:. pretty_text, string(make) by(foreign colour) sav("Example_Table")}{p_end}
 
 

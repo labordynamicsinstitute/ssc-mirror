@@ -92,7 +92,7 @@ capture program drop pretty_linear
 		if `:word count `confounders'' == 0 {		
 		
 		** Calculate linear coefficient
-		noisily foreach var of local independent {
+		qui foreach var of local independent {
 		collect get _r_b _r_lb _r_ub: regress `var' `dependent' `weight'
 		local i = `i' + 1
 		}

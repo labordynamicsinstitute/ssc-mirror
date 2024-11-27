@@ -1,4 +1,4 @@
-*! version 16.21   15.7.2024   John Casterline
+*! version 16.24   25.11.2024   John Casterline
 capture program drop mswtable
 program define mswtable, rclass
 version 16
@@ -18,14 +18,15 @@ syntax , COLWidth(string)
            est_stat(string) 
            est_stat1(string) est_stat2(string) est_stat3(string) est_stat4(string)
            est_stat5(string)
-           est_star(string)  est_se  est_se(string)  est_no(string) 
-           est_means(string)  est_mat(string)
+           est_star(string)  est_se  est_se(string)  est_no(string)  
+           add_means(string)  add_mat(string)  add_excel(string)
            title(string asis) SUBTitle(string asis)
            note1(string) note2(string) note3(string) note4(string) note5(string)
            note6(string) note7(string) note8(string) note9(string)
            font(passthru)
            tline(string) bline(string)   firstX lastX   extra_place
-           sdec(string)  
+           sdec(string) 
+           ct_set(string)
            ct(string)
            cst_set(string)
            cst1(string asis) cst2(string asis) cst3(string asis) cst4(string asis)
@@ -78,7 +79,7 @@ syntax , COLWidth(string)
 
 #d cr
 
-*  n = 206 options  (max allowed = 256)
+*  n = 208 options  (max allowed = 256)
 
 
 if "`mat'"~="" & "`mat1'"~=""     {
@@ -101,21 +102,32 @@ if "`est1'"~=""  &  "`mat1'"~=""  {
    exit
 }
 
-if ("`est'"=="" & "`est1'"=="") & ("`est_stat'"~="" | "`est_star'"~="" | "`est_se'"~="" | "`est_means'"~="")     {
+if ("`est'"=="" & "`est1'"=="") & ("`est_stat'"~="" | "`est_star'"~="" |      ///
+    "`est_se'"~="" | "`add_means'"~="" | "`add_mat'"~="")     {
    noi di _n(1) _col(3) in y  "ERROR:  est option requested but not est"   _n(1) " "
    exit
 }
 
-if "`est_means'"~=""  &  "`est_mat'"~=""  {
-   noi di _n(1) _col(3) in y  "ERROR:  cannot specify BOTH est_means and est_mat"  _n(1) " "
+if ("`mat'"~="" | "`mat1'"~="") & "`add_means'"~=""  {
+   noi di _n(1) _col(3) in y  "ERROR:  cannot specify add_means with mat input"  _n(1) " "
+   exit
+}
+
+if ("`mat'"~="" | "`mat1'"~="") & "`add_mat'"~=""  {
+   noi di _n(1) _col(3) in y  "ERROR:  cannot specify add_mat with mat input"  _n(1) " "
+   exit
+}
+
+if "`add_means'"~=""  &  "`add_mat'"~=""  {
+   noi di _n(1) _col(3) in y  "ERROR:  cannot specify BOTH add_means and add_mat"  _n(1) " "
    exit
 }
 
 
 
 
-*************************************************************************************
-*************************************************************************************
+******************************************************************************************
+******************************************************************************************
 
 
 *  ***********************************************************
@@ -162,8 +174,8 @@ if `"`rst1'"' ~= ""          {
 
 
 
-*************************************************************************************
-*************************************************************************************
+******************************************************************************************
+******************************************************************************************
 
 
 *  *********************************
@@ -292,14 +304,45 @@ local sttitles
 
 
 
+*  ct_set
+
+local ct_format ""
+if "`ct_set'" ~= ""            {
+   tokenize "`ct_set'", parse(" ,")
+   while "`1'" ~= ""           {
+      if "`1'" == "bold"       {
+         local ct_format "bold"
+      }
+      if "`1'" == "underline"  {
+         local ct_format "underline"
+      }
+      mac shift
+   }
+}
+
+
+
 *  cst_set
 
 local cst_format "underline"
-if "`cst_set'" == "bold"    {
-   local cst_format "bold"
-}
-if "`cst_set'" == "none"    {
-   local cst_format ""
+local cst_just "center"
+if "`cst_set'" ~= ""         {
+   tokenize "`cst_set'", parse(" ,")
+   while "`1'" ~= ""         {
+      if "`1'"=="bold"       {
+         local cst_format "bold"
+      }
+      if "`1'"=="neither"    {
+         local cst_format ""
+      }
+      if "`1'" == "left"     {
+         local cst_just "left"
+      }
+      if "`1'" == "right"    {
+         local cst_just "right"
+      }
+      mac shift
+   }
 }
 
 
@@ -308,16 +351,16 @@ if "`cst_set'" == "none"    {
 
 local rst_format ""
 local rst_indent ""
-if "`rst_set'" ~= ""           {
+if "`rst_set'" ~= ""            {
    tokenize "`rst_set'", parse(" ,")
-   while "`1'" ~= ""           {
-      if "`1'" == "bold"       {
+   while "`1'" ~= ""            {
+      if "`1'" == "bold"        {
         local rst_format "bold"
       }
-      if "`1'" == "underline"  {
+      if "`1'" == "underline"   {
          local rst_format "underline"
       }
-      if "`1'" == "indent"     {
+      if "`1'" == "indent"      {
          local rst_indent "indent"
       }
       mac shift
@@ -328,28 +371,28 @@ if "`rst_set'" ~= ""           {
 
 *  pt_set
 
-local pt_format " "
+local pt_format ""
 local pt_just "left"
 if "`pt_set'"=="" |        ///
    ("`pt_set'"=="left" |  "`pt_set'"=="center" | "`pt_set'"=="right")   {
    local pt_format "underline"
 }
-if "`pt_set'" ~= ""            {
+if "`pt_set'" ~= ""             {
    tokenize "`pt_set'", parse(" ,")
-   while "`1'" ~= ""           {
-      if "`1'" == "underline"  {
+   while "`1'" ~= ""            {
+      if "`1'" == "underline"   {
          local pt_format "`pt_format' underline"
       }
-      if "`1'" == "bold"       {
+      if "`1'" == "bold"        {
          local pt_format "`pt_format' bold"
       }
-      if "`1'" == "none"       {
+      if "`1'" == "neither"     {
          local pt_format ""
       }
-      if "`1'" == "center"     {
+      if "`1'" == "center"      {
          local pt_just "center"
       }
-      if "`1'" == "right"      {
+      if "`1'" == "right"       {
          local pt_just "right"
       }
       mac shift
@@ -376,11 +419,13 @@ while `"`1'"' ~= ""        {
 *  title & subtitle
 
 if `"`title'"' ~= ""           {
-   local title_just "center"
+   local title_just   "center"
+   local title_format ""
    tokenize `"`title'"', parse(" ,")
    while "`1'" ~= ""           {
       if "`1'" ~= ","          {
-         if "`1'"~="left" & "`1'"~="center" & "`1'"~="right"  {
+         if "`1'"~="left" & "`1'"~="center" & "`1'"~="right" &  ///
+            "`1'"~="bold" & "`1'"~="underline"  {
             local TITLE "`1'"
          } 
          if "`1'" == "left"    {
@@ -389,16 +434,24 @@ if `"`title'"' ~= ""           {
          if "`1'" == "right"   {
             local title_just "right"
          }
+         if "`1'" == "bold"    {
+            local title_format "bold"
+         }
+         if "`1'" == "underline"   {
+            local title_format "underline"
+         }
       }
       mac shift
    }
 }
 if `"`subtitle'"' ~= ""             {
-   local sub_just "center"
+   local sub_just   "center"
+   local sub_format ""
    tokenize `"`subtitle'"', parse(" ,")
    while "`1'" ~= ""           {
       if "`1'" ~= ","          {
-         if "`1'"~="left" & "`1'"~="center" & "`1'"~="right"  {
+         if "`1'"~="left" & "`1'"~="center" & "`1'"~="right" &  ///
+            "`1'"~="bold" & "`1'"~="underline"  {
             local SUB "`1'"
          } 
          if "`1'" == "left"    {
@@ -406,6 +459,12 @@ if `"`subtitle'"' ~= ""             {
          }
          if "`1'" == "right"   {
             local sub_just "right"
+         }
+         if "`1'" == "bold"    {
+            local sub_format "bold"
+         }
+         if "`1'" == "underline"   {
+            local sub_format "underline"
          }
       }
       mac shift
@@ -438,8 +497,54 @@ if "`outfile'" ~= ""  {
 quietly  {
 
 
-*************************************************************************************
-*************************************************************************************
+******************************************************************************************
+******************************************************************************************
+
+
+*  **********************************
+*
+*  ****  PROCESSING ADD_EXCEL  ****
+*
+*  **********************************
+
+
+local EXC_SIDE "left"
+local n_colE = 0
+
+if `"`add_excel'"' ~= ""         {
+
+   local k = 0
+   tokenize `"`add_excel'"', parse(" ,")
+   local EXC_SIDE = cond("`1'"=="left" | "`1'"=="right","`1'","left")
+   while "`1'" ~= ""             {
+      if "`1'"~="left" & "`1'"~="right" & "`1'" ~= ","   {
+         local EXC_FILE "`1'"
+      }
+      mac shift
+   }
+
+   preserve
+
+   import excel using "`EXC_FILE'", clear
+   desc, varlist
+   local EXC_VARS "`r(varlist)'"
+   count
+   local NUM = `r(N)'
+   
+   foreach a of local EXC_VARS   {
+      local ++n_colE
+      local EXC_type`a' : type `a'
+      local EXC_TYPE`a' = substr("`EXC_type`a''",1,3)
+      forvalues n = 1/`NUM'      {
+         local exc`a'`n' = `a'[`n']
+      }
+   }
+
+   restore
+
+}
+
+
 
 
 *  **********************************
@@ -449,17 +554,18 @@ quietly  {
 *  **********************************
 
 
-
 local n_mat   = 0
 local n_est   = 0
 local n_pstat = 0
 local n_pt    = 0
 local n_rt    = 0
 forvalues p = 1/5  {
-   if "`mat`p''" ~= ""      {
+   if "`mat`p''" ~= ""           {
       local n_mat = `n_mat' + 1
       local n_pt  = `n_pt'  + 1
    }
+}
+forvalues p = 1/5  {
    if "`est`p''" ~= ""      {
       local n_est = `n_est' + 1
       local n_pt  = `n_pt'  + 1
@@ -493,7 +599,9 @@ if "`est1'" ~= ""  {
 
 
 
-*  processing matrices
+*
+*  ****  PROCESSING MAT  ****
+*
 
 if "`mat1'" ~= ""  {
 
@@ -502,22 +610,45 @@ if "`mat1'" ~= ""  {
    local n_rowD = 0
    local n_rowS = 0                  //  statistics - always zero with matrix input
    matrix XxYyZz = `mat1'
-   forvalues m = 1/5   {
-      if "`mat`m''" ~= ""  {
-         local n_rowD`m' : rowsof `mat`m''
-         local n_rowD = `n_rowD' + `n_rowD`m''
-         local n_rowS`m' = 0        //  statistics - always zero with matrix input
-         if `m' > 1        {
-            matrix XxYyZz = XxYyZz \ `mat`m''
+   forvalues p = 1/`n_mat'   {
+      if "`mat`p''" ~= ""    {
+         local n_rowD`p' : rowsof `mat`p''
+         local n_rowD = `n_rowD' + `n_rowD`p''
+         local n_rowS`p' = 0        //  statistics - always zero with matrix input
+         if `p' > 1          {
+            matrix XxYyZz = XxYyZz \ `mat`p''
          }
       }
    }
+   forvalues p = 1/`n_mat'      {          //  if ct or rt are NOT specified
+      if `p'==1 & "`ct'" == ""  {
+         local ct " "
+         local COLNAME : colnames `mat`p'', quoted
+         tokenize `"`COLNAME'"'
+         while "`1'" ~= ""      {
+            local ct "`ct' `1' !"
+            mac shift
+         }
+      } 
+      if "`rt`p''" == ""        {
+         local rt`p' " "
+         local ROWNAME : rownames `mat`p'', quoted
+         tokenize `"`ROWNAME'"'
+         while "`1'" ~= ""      {
+            local rt`p' "`rt`p'' `1' !"
+            mac shift
+         }
+      } 
+   }
+
 }
 local mat "XxYyZz"
 
 
 
-*  processing estimates
+*
+*  ****  PROCESSING EST  ****
+*
 
 if "`est1'" ~= ""  {
 
@@ -535,6 +666,28 @@ if "`est1'" ~= ""  {
       }
     } 
 
+    forvalues p = 1/`n_est'      {          //  if ct or rt are NOT specified
+       qui estimates table `eqs`p''
+       matrix EQ`p' = r(coef)
+       if `p'==1 & "`ct'" == ""  {
+         local ct " "
+         local COLNAME : colnames EQ`p', quoted
+         tokenize `"`COLNAME'"'
+         while "`1'" ~= ""       {
+            local ct "`ct' `1' !"
+            mac shift
+         }
+      } 
+      if "`rt`p''" == ""    {
+         local rt`p' " "
+         local ROWNAME : rownames EQ`p', quoted
+         tokenize `"`ROWNAME'"'
+         while "`1'" ~= ""  {
+            local rt`p' "`rt`p'' `1' !"
+            mac shift
+         }
+      } 
+   }
 
    forvalues p = 1/`n_est'    {
       local stats`p' " "
@@ -612,7 +765,7 @@ if "`est1'" ~= ""  {
             local BE "beside"
          }
          if "`BE'"=="beside" & "`est_star'"~=""  {
-            noi di _n(2) _col(3) in y  "ERROR:  est_star and se/t/p/ci beside are incompatible"   _n(1) " "
+            noi di _n(2) _col(3) in y  `"ERROR:  est_star and se/t/p/ci "beside" are incompatible"'   _n(1) " "
             exit         
          }
          mac shift
@@ -813,14 +966,20 @@ if "`est1'" ~= ""  {
    }
 
 
+
+
+*  **********************************
+*
+*  ****  ADD_MEANS OPTION  ****
+*
+*  **********************************
+
+   local ADD_SIDE "left"
    local n_colM = 0
 
-
-*  est_means option -- obtain vector of means
-
-   if "`est_means'" ~= ""          {
+   if "`add_means'" ~= ""          {
       local k = 0
-      tokenize "`est_means'", parse(" ,")
+      tokenize "`add_means'", parse(" ,")
       local ADD_SIDE = cond("`1'"=="left" | "`1'"=="right","`1'","left")
       while "`1'" ~= ""            {
          if "`1'"~="left" & "`1'"~="right" & "`1'" ~= ","   {
@@ -833,22 +992,23 @@ if "`est1'" ~= ""  {
          mac shift
       }
       if `k' ~= `n_pt'             {
-         noi di _n(2) _col(3) in y  "ERROR:  est_means - number of equation names unequal to number of panels"   _n(1) " "
+         noi di _n(2) _col(3) in y  "ERROR:  add_means - number of equation names unequal to number of panels"   _n(1) " "
          exit  
       }
    }  
 
 
-*  est_mat - additional matrix
 
-   if "`est_mat'" ~= ""          {
-      if "`mat1'" ~= ""          {
-         noi di _n(2) _col(3) in y  "ERROR:  est_mat cannot be used with mat"
-         noi di       _col(3) in y  "        use matrix utilities to combine the matrices"    _n(1) " "
-         exit  
-      }
+
+*  **********************************
+*
+*  ****  ADD_MAT OPTION  ****
+*
+*  **********************************
+
+   if "`add_mat'" ~= ""          {
       local k = 0
-      tokenize "`est_mat'", parse(" ,")
+      tokenize "`add_mat'", parse(" ,")
       local ADD_SIDE = cond("`1'"=="left" | "`1'"=="right","`1'","left")
       while "`1'" ~= ""          {
          if "`1'"~="left" & "`1'"~="right" & "`1'" ~= ","   {
@@ -860,13 +1020,13 @@ if "`est1'" ~= ""  {
          mac shift
       }
       if `k' ~= `n_pt'           {
-         noi di _n(2) _col(3) in y  "ERROR:  est_mat - number of matrix names unequal to number of panels"   _n(1) " "
+         noi di _n(2) _col(3) in y  "ERROR:  add_mat - number of matrix names unequal to number of panels"   _n(1) " "
          exit  
       }
       forvalues p = 1/`n_pt'     { 
          forvalues P = 1/`n_pt'  {
             if `n_colM`p'' ~= `n_colM`P''  {
-               noi di _n(2) _col(3) in y  "ERROR:  est_mat - number of matrix columns must be the same in all panels"   _n(1) " "
+               noi di _n(2) _col(3) in y  "ERROR:  add_mat - number of matrix columns must be the same in all panels"   _n(1) " "
                exit
             }
          }
@@ -875,27 +1035,15 @@ if "`est1'" ~= ""  {
    }  
 
 
-*  est_no option -- identify "no" columns (accounting for extra means/matrix columns)
-
-   forvalues c = 1/`n_colD'        { 
-      local est_no`c' "yes"
-   }
-   if "`est_no'" ~= ""             {
-      tokenize "`est_no'", parse(" ,")
-      while "`1'" ~= ""            {
-         forvalues c = 1/`n_colD'  {
-            if "`1'" == "`c'"      {
-               local d = cond("`ADD_SIDE'"=="left",`c' + `n_colM',`c')
-               local est_no`d' "no"
-            }
-         }
-         mac shift
-      }
-   }   
 
 
+*  **********************************************
+*
+*  ****  CONSTRUCT MATRIX FOR PUTDOCX TABLE  ****
+*
+*  **********************************************
 
-*  construct matrices for input to putdocx table:
+*  matrix for input to putdocx table:
 *      C    if no statistics have been requested
 *      CM   if no statistics, but means or matrix have been requested
 *      CZ   if statistics have been requested [ CZ = C + STAT ]
@@ -915,7 +1063,7 @@ if "`est1'" ~= ""  {
       }
       local mat "CZ"
    } 
-   if "`est_means'"~="" & "`est_stat1'"==""   {
+   if "`add_means'"~="" & "`est_stat1'"==""   {
       if "`ADD_SIDE'" == "left"               {
          matrix coljoinbyname CM1 = MEANS1 C1
          matrix CM = CM1
@@ -934,7 +1082,7 @@ if "`est1'" ~= ""  {
       }
       local mat "CM"
    }
-   if "`est_means'"~="" & "`est_stat1'"~=""   {
+   if "`add_means'"~="" & "`est_stat1'"~=""   {
       if "`ADD_SIDE'" == "left"               {
          matrix coljoinbyname CZM1 = MEANS1 CZ1
          matrix CZM = CZM1
@@ -953,7 +1101,7 @@ if "`est1'" ~= ""  {
       }
       local mat "CZM"
    }
-   if "`est_mat'"~=""                         {     //  truncate rows if exceeds rows in C matrix 
+   if "`add_mat'"~=""                         {     //  truncate rows if exceeds rows in C matrix 
       forvalues p = 1/`n_est'                 {
          matrix M`p' = MAT`p'
          if `n_rowM`p'' > `n_rowD`p''         {
@@ -961,7 +1109,7 @@ if "`est1'" ~= ""  {
          }
       }      
    }
-   if "`est_mat'"~="" & "`est_stat1'"==""     {
+   if "`add_mat'"~="" & "`est_stat1'"==""     {
       local n_colCM = `n_colD' + `n_colM1'
       local leftX  = `n_colM1' + 1
       local rightX = `n_colD'  + 1
@@ -982,7 +1130,7 @@ if "`est1'" ~= ""  {
       }
       local mat "CM"
    }
-   if "`est_mat'"~="" & "`est_stat1'"~=""     {
+   if "`add_mat'"~="" & "`est_stat1'"~=""     {
       local n_colCM = `n_colD' + `n_colM1'
       local leftX  = `n_colM1' + 1
       local rightX = `n_colD'  + 1
@@ -1004,17 +1152,90 @@ if "`est1'" ~= ""  {
       }
       local mat "CZM"
    }
+  
+  
+}     //  end processing est  
 
 
 
-*  est clean up
+*
+*  ****  ADD_EXCEL - FINISHING  ****
+*
 
+if `"`add_excel'"' ~= ""         {
+
+   local n_rows : rowsof `mat'
+
+   matrix EXC = J(`n_rows',`n_colE',.)
+
+   if "`EXC_SIDE'" == "left"     {
+      matrix `mat' = EXC,`mat'
+   }
+   if "`EXC_SIDE'" == "right"    {
+      matrix `mat' = `mat',EXC
+   }
+
+}
+
+
+
+*  **********************************
+*
+*  ****  EST_NO OPTION  ****
+*
+*  **********************************
+
+*  identify "no" columns (accounting for extra means/matrix/excel columns)
+
+   forvalues c = 1/`n_colD'        { 
+      local est_no`c' "yes"
+   }
+   if "`est_no'" ~= ""             {
+      tokenize "`est_no'", parse(" ,")
+      while "`1'" ~= ""            {
+         forvalues c = 1/`n_colD'  {
+            if "`1'" == "`c'"      {
+               if ("`EXC_SIDE'"=="left" & `n_colE'>0) & ("`ADD_SIDE'"=="right" | `n_colM'==0)  { 
+                  local d = `c' + `n_colE'
+                  local est_no`d' "no"
+               }
+               if ("`ADD_SIDE'"=="left" & `n_colM'>0) & ("`EXC_SIDE'"=="right" | `n_colE'==0)  { 
+                  local d = `c' + `n_colM'
+                  local est_no`d' "no"
+               }
+               if ("`EXC_SIDE'"=="left" & `n_colE'>0) & ("`ADD_SIDE'"=="left" & `n_colM'>0)    { 
+                  local d = `c' + `n_colE' + `n_colM'
+                  local est_no`d' "no"
+               }
+               if ("`EXC_SIDE'"=="right" & `n_colE'>0) & ("`ADD_SIDE'"=="right" & `n_colM'>0)  { 
+                  local d = `c' 
+                  local est_no`d' "no"
+               }
+               if `n_colE'==0 & `n_colM'==0  {
+                  local d = `c'
+                  local est_no`d' "no"
+               }
+            }
+         }
+         mac shift
+      }
+   }   
+
+
+
+*  **********************************
+*
+*  ****  INPUT CLEAN UP  ****
+*
+*  **********************************
+
+
+if "`est1'" ~= ""  {
    forvalues p = 1/`n_est'  {
       capture matrix drop EQ`p'
       capture matrix drop STAT`p'
       capture matrix drop V`p'
    }
-
    forvalues c = 1/`n_colD'      {
       capture matrix drop coef`c'
       capture matrix drop var`c'
@@ -1027,15 +1248,13 @@ if "`est1'" ~= ""  {
          capture matrix drop ci_u`p'`c'
       }
    }
-   
-  
-}     //  end processing est  
+}
 
 
 
 
-*************************************************************************************
-*************************************************************************************
+******************************************************************************************
+******************************************************************************************
 
 
 *  **********************************
@@ -1052,15 +1271,18 @@ if "`est1'" ~= ""  {
 *
 *     n_colD   number of data columns (equations or matrix elements), excluding means/matrices
 *     n_colM   number of means/matrix columns
-*     n_colT   number of data/means/matrix columns
-*     n_colTX  number of columns:  row title + data/means/matrix columns
+*     n_colE   number of excel columns
+*     n_colT   number of data/means/matrix/excel columns
+*     n_colTX  number of columns:  row title + data/means/matrix/excel columns
 *
-*     col_DF   first data column (with extra column: row title)
-*     col_DL   last data column (with extra columns: row title, stars, se)
-*     col_MF   first means/matrix column (with extra column for row title)
-*     col_ML   last means/matrix column (with extra column for row title) 
-*     col_F    first data/means/matrix column (with extra column for row title)
-*     col_L    last data/means/matrix column (with extra column for row titles)
+*     col_DF   first data column (accounting for row title column = 1)
+*     col_DL   last data column (accounting for extra columns: row title, stars, se)
+*     col_MF   first means/matrix column (accounting for row title column = 1)
+*     col_ML   last means/matrix column (accounting for row title column = 1) 
+*     col_EF   first excel column (accounting for row title column = 1)
+*     col_EL   last excel column (accounting for row title column = 1) 
+*     col_F    first data/means/matrix/excel column (accounting for row title column = 1)
+*     col_L    last data/means/matrix/excel column (accounting for row title column = 1)
 *
 *     row_SP   column spanning title row
 *     row_C    column title row
@@ -1153,52 +1375,124 @@ forvalues p = 1/`n_p'      {                 //  panel-specific first and last d
 *
 *     n_colD   number of data columns (equations or matrix elements), excluding means/matrices
 *     n_colM   number of means/matrix columns
-*     n_colT   number of data/means/matrix columns
-*     n_colTX  number of columns:  row title + data/means/matrix columns
+*     n_colE   number of excel columns
+*     n_colT   number of data/means/matrix/excel columns
+*     n_colTX  number of columns:  row title + data/means/matrix/excel columns
 *
-*     col_DF   first data column (with extra column: row title)
-*     col_DL   last data column (with extra columns: row title, stars, se)
-*     col_MF   first means/matrix column (with extra column for row title)
-*     col_ML   last means/matrix column (with extra column for row title) 
-*     col_F    first data/means/matrix column (with extra column for row title)
-*     col_L    last data/means/matrix column (with extra column for row titles)
+*     col_DF   first data column (accounting for row title column = 1)
+*     col_DL   last data column (accounting for extra columns: row title, stars, se)
+*     col_MF   first means/matrix column (accounting for row title column = 1)
+*     col_ML   last means/matrix column (accounting for row title column = 1) 
+*     col_EF   first excel column (accounting for row title column = 1)
+*     col_EL   last excel column (accounting for row title column = 1) 
+*     col_F    first data/means/matrix/excel column (accounting for row title column = 1)
+*     col_L    last data/means/matrix/excel column (accounting for row title column = 1)
 *
 
-local n_colT  = `n_colD' + `n_colM'
+local n_colT  = `n_colD' + `n_colM' + `n_colE'
 local n_colTX = `n_colT' + 1
+
+
+*  taking account of means/matrix columns  AND  excel columns
 
 local col_MF = 0
 local col_ML = 0
+local col_EF = 0
+local col_EL = 0
 
-if "`ADD_SIDE'" ~= "left"    {
-   local col_DF = 1 + 1 
-   local col_DL = `col_DF' + (`n_colD' - 1)
-   if "`est_star'"~="" | "`BE'"=="beside"    {
-      local col_DL = `col_DF' + ((2*`n_colD') - 1)
+if `n_colM'==0 | "`ADD_SIDE'"=="right"           {    //  add NOT on left (right or missing)
+   if `n_colE'==0                                {    //  excel missing
+      local col_DF = 1 + 1 
+      local col_DL = `col_DF' + (`n_colD' - 1)
+      if "`est_star'"~="" | "`BE'"=="beside"     {
+         local col_DL = `col_DF' + ((2*`n_colD') - 1)
+      }
+      if "`add_means'"~="" | "`add_mat'"~=""     {
+         local col_MF = `col_DL' + 1
+         local col_ML = `col_MF' + (`n_colM' - 1)
+      }
    }
-   if "`est_means'"~="" | "`est_mat'"~=""    {
-      local col_MF = `col_DL' + 1
+   if `n_colE'>0 & "`EXC_SIDE'" == "right"       {    //  excel on right
+      local col_DF  = 1 + 1 
+      local col_DL  = `col_DF'  + (`n_colD' - 1)
+      local col_DLX = `col_DF'  + (`n_colD' - 1)      //  for use when inputting excel cell values
+      local col_EFX = `col_DL'  + 1                
+      if "`est_star'"~="" | "`BE'"=="beside"     {
+         local col_DL = `col_DF' + ((2*`n_colD') - 1)
+      }
+      local col_EF = `col_DL' + 1
+      local col_EL = `col_EF' + (`n_colE' - 1)
+      if "`add_means'"~="" | "`add_mat'"~=""     {
+         local col_MF  = `col_DL'  + 1
+         local col_ML  = `col_MF'  + (`n_colM' - 1)
+         local col_EF  = `col_ML'  + 1
+         local col_EL  = `col_EF'  + (`n_colE' - 1)
+         local col_EFX = `col_DLX' + `n_colM' + 1
+      }
+   }
+   if `n_colE'>0 & "`EXC_SIDE'" == "left"        {    //  excel on left
+      local col_DF = 1 + `n_colE' + 1 
+      local col_DL = `col_DF' + (`n_colD' - 1)
+      if "`est_star'"~="" | "`BE'"=="beside"     {
+         local col_DL = `col_DF' + ((2*`n_colD') - 1)
+      }
+      local col_EF = 1 + 1
+      local col_EL = `col_EF' + (`n_colE' - 1)
+      if "`add_means'"~="" | "`add_mat'"~=""     {
+         local col_MF = `col_DL' + 1
+         local col_ML = `col_MF' + (`n_colM' - 1)
+      }
+   }
+}
+
+if `n_colM'>0 & "`ADD_SIDE'"=="left"             {    //  add on left
+   if `n_colE'==0                                {    //  excel missing
+      local col_DF = 1 + `n_colM' + 1
+      local col_DL = `col_DF' + (`n_colD' - 1)
+      if "`est_star'"~="" | "`BE'"=="beside"     {
+         local col_DL = `col_DF' + ((2*`n_colD') - 1)
+      }
+      local col_MF = 1 + 1
+      local col_ML = `col_MF' + (`n_colM' - 1)
+   }
+   if "`EXC_SIDE'" == "right"                    {    //  excel on right
+      local col_DF  = 1 + `n_colM' + 1
+      local col_DL  = `col_DF'  + (`n_colD' - 1)
+      local col_EFX = `col_DL'  + 1                   //  for use when inputting excel cell values
+      if "`est_star'"~="" | "`BE'"=="beside"     {
+         local col_DL = `col_DF' + ((2*`n_colD') - 1)
+      }
+      local col_MF = 1 + 1
+      local col_ML = `col_MF' + (`n_colM' - 1)
+      local col_EF = `col_DL' + 1
+      local col_EL = `col_EF' + (`n_colE' - 1)
+   }
+   if `n_colE'>0 & "`EXC_SIDE'" == "left"        {    //  excel on left
+      local col_DF = 1 + `n_colE' + `n_colM' + 1 
+      local col_DL = `col_DF' + (`n_colD' - 1)
+      if "`est_star'"~="" | "`BE'"=="beside"     {
+         local col_DL = `col_DF' + ((2*`n_colD') - 1)
+      }
+      local col_EF = 1 + 1
+      local col_EL = `col_EF' + (`n_colE' - 1)
+      local col_MF = `col_EL' + 1
       local col_ML = `col_MF' + (`n_colM' - 1)
    }
 }
-if "`ADD_SIDE'" == "left"    {
-   local col_DF = 1 + `n_colM' + 1
-   local col_DL = `col_DF' + (`n_colD' - 1)
-   if "`est_star'"~="" | "`BE'"=="beside"    {
-      local col_DL = `col_DF' + ((2*`n_colD') - 1)
-   }
-   local col_MF = 1 + 1
-   local col_ML = `col_MF' + (`n_colM' - 1)
+if "`col_EFX'" == ""            {
+   local col_EFX = `col_EF'
 }
 
-local col_F = cond(`col_MF'<`col_DF' & `col_MF'>0,`col_MF',`col_DF')
-local col_L = cond(`col_ML'>`col_DL' & `col_ML'>0,`col_ML',`col_DL')
+local col_F = 2
+
+local col_L = cond(`col_DL'>`col_ML',`col_DL',`col_ML')
+local col_L = cond(`col_EL'>`col_L',`col_EL',`col_L')
 
 
 
 
-*************************************************************************************
-*************************************************************************************
+******************************************************************************************
+******************************************************************************************
 
 
 *  ******************************
@@ -1264,16 +1558,38 @@ if "`est_star'" ~= ""            {
       }
       local ++k
    }
-   if `col_MF' > 0               {
-      local k = cond("`ADD_SIDE'"=="right",`n_colD' + 2,2)
-      forvalues c = `col_MF'/`col_ML'   {
+   if `n_colM' > 0                     {
+      local k = 2
+      if "`ADD_SIDE'"=="right" & "`EXC_SIDE'"=="right"                 {
+         local k = `n_colD' + 2
+      }
+      if "`ADD_SIDE'"=="right" & ("`EXC_SIDE'"=="left" & `n_colE'>0)   {
+         local k = `n_colD' + `n_colE' + 2
+      }
+      if "`ADD_SIDE'"=="left" & ("`EXC_SIDE'"=="left" & `n_colE'>0)    {
+         local k = `n_colE' + 2
+      }
+      forvalues c = `col_MF'/`col_ML'  {
          local colwidth`c' "1in"
-         if "`cw`k''" ~= ""      {
+         if "`cw`k''" ~= ""            {
             local colwidth`c' "`cw`k''in"
          }
          local ++k
       }
-   }      
+   } 
+   if `n_colE' > 0                            {
+      local k = 2
+      if "`EXC_SIDE'"=="right" & `n_colM'>0   {
+         local k = `n_colD' + `n_colM' + 2
+      }
+      forvalues c = `col_EF'/`col_EL'         {
+         local colwidth`c' "1in"
+         if "`cw`k''" ~= ""                   {
+            local colwidth`c' "`cw`k''in"
+         }
+         local ++k
+      }
+   } 
 }
 
 if "`BE'" == "beside"            {
@@ -1304,16 +1620,38 @@ if "`BE'" == "beside"            {
       }
       local ++k
    }
-   if `col_MF' > 0               {
-      local k = cond("`ADD_SIDE'"=="right",`n_colD' + 2,2)
+   if `n_colM' > 0                     {
+      local k = 2
+      if "`ADD_SIDE'"=="right" & "`EXC_SIDE'"=="right"                 {
+         local k = `n_colD' + 2
+      }
+      if "`ADD_SIDE'"=="right" & ("`EXC_SIDE'"=="left" & `n_colE'>0)   {
+         local k = `n_colD' + `n_colE' + 2
+      }
+      if "`ADD_SIDE'"=="left" & ("`EXC_SIDE'"=="left" & `n_colE'>0)    {
+         local k = `n_colE' + 2
+      }
       forvalues c = `col_MF'/`col_ML'  {
          local colwidth`c' "1in"
-         if "`cw`k''" ~= ""      {
+         if "`cw`k''" ~= ""            {
             local colwidth`c' "`cw`k''in"
          }
          local ++k
       }
-   }      
+   } 
+   if `n_colE' > 0                            {
+      local k = 2
+      if "`EXC_SIDE'"=="right" & `n_colM'>0   {
+         local k = `n_colD' + `n_colM' + 2
+      }
+      forvalues c = `col_EF'/`col_EL'         {
+         local colwidth`c' "1in"
+         if "`cw`k''" ~= ""                   {
+            local colwidth`c' "`cw`k''in"
+         }
+         local ++k
+      }
+   } 
 }
 
 
@@ -1328,173 +1666,327 @@ forvalues c = 1/`col_L'                              {
 }
 
 
-*  format of data columns (number of decimals)  ( allowing extra columns for est_star and est_se "beside" )
+*  format of data columns (number of decimals)  
+*  ( allowing extra columns for est_star and est_se "beside" )
+*  ( attending to column-wise vs. row-wise )
 *  default = %10.1fc
 
-if "`sdec'" ~= ""         {
+local WISE "cols"
+if "`sdec'" ~= ""                   {
    tokenize "`sdec'", parse(" ,")
    local k = 1
-   while "`1'"~=""        {
-      if "`1'" ~= ","     {
+   if "`1'"=="rows" | "`1'"=="row" | "`1'"=="Rows" | "`1'"=="Row"   {
+      if `n_p' > 1         {
+         noi di _n(1) _col(3) in y  `"ERROR:  sdec "rows" not allowed with multiple panels"'       _n(1) " "
+         exit 
+      }
+      if "`STPC'" == "se"  {
+         noi di _n(1) _col(3) in y  `"ERROR:  sdec "rows" cannot be specified with est_se "se" "'  _n(1) " "
+         exit
+      }
+      if "`STPC'"=="ci"    {
+         noi di _n(1) _col(3) in y  `"ERROR:  sdec "rows" cannot be specified with est_se "ci" "'  _n(1) " "
+         exit
+      }
+      local WISE "rows"
+      mac shift
+   }
+   if "`1'"=="cols" | "`1'"=="col" | "`1'"=="Cols" | "`1'"=="Col"   {
+      local WISE "cols"
+      mac shift
+   }
+   while "`1'"~=""                  {
+      if "`1'" ~= ","               {
          local nf`k' "`1'"
-         local D = `1' + 1             //  set additional decimals (if any) for standard error
+         local D = `1' + 1                 //  set additional decimals (if any) for standard error
          local sef`k' "`D'"
          local NF "`nf`k''"
          local ++k
       }
       mac shift
    }
-   forvalues j = `k'/`n_colT'   {      //  extend through all data columns
-      local nf`j' "`NF'"
-      local sef`j' "`D'"
+   if "`WISE'" == "cols"            {
+      forvalues j = `k'/`n_colT'    {      //  extend through all data columns
+         local nf`j' "`NF'"
+         local sef`j' "`D'"
+      }
+   }  
+   if "`WISE'" == "rows"            {
+      forvalues j = `k'/`n_rowD'    {      //  extend through all data rows
+         local nf`j' "`NF'"
+         local sef`j' "`D'"
+      }
    }      
 }
 
-if "`est_star'"=="" & "`BE'"~="beside"  {
+if "`est_star'"=="" & "`BE'"~="beside"      {
    local k = 1
-   forvalues c = `col_F'/`col_L'        {
-      local nform`c' "%10.1fc"
-      if "`sdec'" ~= ""                 {
-         if "`nf`k''" ~= ""             {
-            local NFORM "%10.`nf`k''fc"
-         }
-         local nform`c' "`NFORM'"
-      }
-      local ++k
-   } 
-   if "`BE'" == "below"                 {
-      local k = `col_DF' - 1
-      forvalues c = `col_DF'/`col_DL'   {
-         if "`STPC'" == "se"            {
-            local stpcform`c' "%8.2f"
-            if "`sdec'" ~= ""           {
-               if "`sef`k''" ~= ""      {
-                  local STPCFORM "%8.`sef`k''f"
-               }
-               local stpcform`c' "`STPCFORM'"
-            }
-         }
-         if "`STPC'"=="t"               {
-            local stpcform`c' "%3.2f"
-         }
-         if "`STPC'"=="p"               {
-            local stpcform`c' "%4.3f"
-         }
-         if "`STPC'"=="ci"              {
-            local stpcform`c' "`nform`c''"
-         }
-         local ++k
-      }
-   }   
-}
-
-if "`est_star'" ~= ""                   {
-   local k = `col_DF' - 1
-   forvalues c = `col_DF'(2)`col_DL'    {
-      local nform`c' "%10.1fc"
-      if "`sdec'" ~= ""                 {
-         if "`nf`k''" ~= ""             {
-            local NFORM "%10.`nf`k''fc"
-         }
-         local nform`c' "`NFORM'"
-      }
-      local ++k
-   }  
-   if "`BE'" == "below"                 {
-      local k = `col_DF' - 1
-      forvalues c = `col_DF'(2)`col_DL' {
-         if "`STPC'" == "se"            {
-            local stpcform`c' "%8.2f"
-            if "`sdec'" ~= ""           {
-               if "`sef`k''" ~= ""      {
-                  local STPCFORM "%8.`sef`k''f"
-               }
-               local stpcform`c' "`STPCFORM'"
-            }
-         }
-         if "`STPC'"=="t"               {
-            local stpcform`c' "%3.2f"
-         }
-         if "`STPC'"=="p"               {
-            local stpcform`c' "%4.3f"
-         }
-         if "`STPC'"=="ci"              {
-            local stpcform`c' "`nform`c''"
-         }
-         local ++k
-      }
-   } 
-   if `col_MF' > 0                      {
-      local k = cond("`ADD_SIDE'"=="right",`n_colD' + 1,1)
-      forvalues c = `col_MF'/`col_ML'   {
-         local nform`c' "%10.1fc"
-         if "`sdec'" ~= ""              {
-            if "`nf`k''" ~= ""          {
+   if "`WISE'" == "cols"                    { 
+      forvalues c = `col_F'/`col_L'         {
+         local nform`c' "nformat(%10.1fc)"
+         local CIFORM`c' "%10.1fc"
+         if "`sdec'" ~= ""                  {
+            if "`nf`k''" ~= ""              {
                local NFORM "%10.`nf`k''fc"
             }
-            local nform`c' "`NFORM'"
+            local nform`c' "nformat(`NFORM')"
+            local CIFORM`c' "`NFORM'"
          }
          local ++k
       }
-   }  
+   } 
+   if "`WISE'" == "rows"                    {
+      forvalues r = `row_F'/`row_L'         {
+         local nform`r' "nformat(%10.1fc)"
+         if "`sdec'" ~= ""                  {
+            if "`nf`k''" ~= ""              {
+               local NFORM "%10.`nf`k''fc"
+            }
+            local nform`r' "nformat(`NFORM')"
+         }
+         local ++k
+      }
+   } 
+
+   if "`BE'" == "below"                     {
+      local k = `col_DF' - 1
+      forvalues c = `col_DF'/`col_DL'       {
+         if "`STPC'" == "se"                {
+            local stpcform`c' "%8.2f"
+            if "`sdec'" ~= ""               {
+               if "`sef`k''" ~= ""          {
+                  local STPCFORM "%8.`sef`k''f"
+               }
+               local stpcform`c' "`STPCFORM'"
+            }
+         }
+         if "`STPC'"=="t"                   {
+            local stpcform`c' "%3.2f"
+         }
+         if "`STPC'"=="p"                   {
+            local stpcform`c' "%4.3f"
+         }
+         if "`WISE'" == "cols"              {
+            if "`STPC'"=="ci"               {
+               local stpcform`c' "`CIFORM`c''"
+            }
+         }
+         local ++k
+      }
+   }
+
 }
 
-if "`BE'" == "beside"                   {
-   local k = `col_DF' - 1
-   forvalues c = `col_DF'(2)`col_DL'    {
-      local nform`c' "%10.1fc"
-      if "`sdec'" ~= ""                 {
-         if "`nf`k''" ~= ""             {
-            local NFORM "%10.`nf`k''fc"
+if "`est_star'" ~= ""                       {
+   if "`WISE'" == "cols"                    {
+      local k = `col_DF' - 1
+      forvalues c = `col_DF'(2)`col_DL'     {
+         local nform`c' "nformat(%10.1fc)"
+         local CIFORM`c' "%10.1fc"
+         if "`sdec'" ~= ""                  {
+            if "`nf`k''" ~= ""              {
+               local NFORM "%10.`nf`k''fc"
+            }
+            local nform`c' "nformat(`NFORM')"
+            local CIFORM`c' "`NFORM'"
          }
-         local nform`c' "`NFORM'"
+         local ++k
+      }  
+   }
+   if "`WISE'" == "rows"                    {
+      local k = 1
+      forvalues r = `row_F'/`row_L'         {
+         local nform`r' "nformat(%10.1fc)"
+         if "`sdec'" ~= ""                  {
+            if "`nf`k''" ~= ""              {
+               local NFORM "%10.`nf`k''fc"
+            }
+            local nform`r' "nformat(`NFORM')"
+         }
+         local ++k
       }
-      local ++k
-   }  
+   } 
+   if "`BE'" == "below"                     {
+      local k = `col_DF' - 1
+      forvalues c = `col_DF'(2)`col_DL'     {
+         if "`STPC'" == "se"                {
+            local stpcform`c' "%8.2f"
+            if "`sdec'" ~= ""               {
+               if "`sef`k''" ~= ""          {
+                  local STPCFORM "%8.`sef`k''f"
+               }
+               local stpcform`c' "`STPCFORM'"
+            }
+         }
+         if "`STPC'"=="t"                   {
+            local stpcform`c' "%3.2f"
+         }
+         if "`STPC'"=="p"                   {
+            local stpcform`c' "%4.3f"
+         }
+         if "`WISE'" == "cols"              {
+            if "`STPC'"=="ci"               {
+               local stpcform`c' "`CIFORM`c''"
+            }
+         }
+         local ++k
+      }
+   } 
+   if "`WISE'" == "cols"                    {
+      if `n_colM' > 0                       {
+         local k = 1
+         if "`ADD_SIDE'"=="right" & "`EXC_SIDE'"=="right"  {
+         local k = `n_colD' + 1
+         }
+         if "`ADD_SIDE'"=="right" & "`EXC_SIDE'"=="left"   {
+            local k = `n_colD' + `n_colE' + 1
+         }
+         forvalues c = `col_MF'/`col_ML'    {
+            local nform`c' "nformat(%10.1fc)"
+            if "`sdec'" ~= ""               {
+               if "`nf`k''" ~= ""           {
+                  local NFORM "%10.`nf`k''fc"
+               }
+               local nform`c' "nformat(`NFORM')"
+            }
+            local ++k
+         }
+      } 
+      if `n_colE' > 0                       {
+         local k = 1
+         if "`EXC_SIDE'"=="right" & "`ADD_SIDE'"=="right"  {
+            local k = `n_colD' + 1
+         }
+         if "`EXC_SIDE'"=="right" & "`ADD_SIDE'"=="left"   {
+            local k = `n_colD' + `n_colM' + 1
+         }
+         forvalues c = `col_EF'/`col_EL'    {
+            local nform`c' "nformat(%10.1fc)"
+            if "`sdec'" ~= ""               {
+               if "`nf`k''" ~= ""           {
+                  local NFORM "%10.`nf`k''fc"
+               }
+               local nform`c' "nformat(`NFORM')"
+            }
+            local ++k
+         }
+      } 
+   }
+}
+
+if "`BE'" == "beside"                       {
+   if "`WISE'" == "cols"                    {
+      local k = `col_DF' - 1
+      forvalues c = `col_DF'(2)`col_DL'     {
+         local nform`c' "nformat(%10.1fc)"
+         local CIFORM`c' "%10.1fc"
+         if "`sdec'" ~= ""                  {
+            if "`nf`k''" ~= ""              {
+               local NFORM "%10.`nf`k''fc"
+            }
+            local nform`c' "nformat(`NFORM')"
+            local CIFORM`c' "`NFORM'"
+         }
+         local ++k
+      } 
+   } 
+   if "`WISE'" == "rows"                    {
+      local k = 1
+      forvalues r = `row_F'/`row_L'         {
+         local nform`r' "nformat(%10.1fc)"
+         if "`sdec'" ~= ""                  {
+            if "`nf`k''" ~= ""              {
+               local NFORM "%10.`nf`k''fc"
+            }
+            local nform`r' "nformat(`NFORM')"
+         }
+         local ++k
+      }
+   } 
    local k = `col_DF' - 1
    local col_DFX = `col_DF' + 1
-   forvalues c = `col_DFX'(2)`col_DL'   {
-      if "`STPC'" == "se"               {
+   forvalues c = `col_DFX'(2)`col_DL'       {
+      if "`STPC'" == "se"                   {
          local stpcform`c' "%8.2f"
-         if "`sdec'" ~= ""              {
-            if "`sef`k''" ~= ""         {
+         if "`sdec'" ~= ""                  {
+            if "`sef`k''" ~= ""             {
                local STPCFORM "%8.`sef`k''f"
             }
             local stpcform`c' "`STPCFORM'"
          }
       }
-      if "`STPC'"=="t"                  {
+      if "`STPC'"=="t"                      {
          local stpcform`c' "%3.2f"
       }
-      if "`STPC'"=="p"                  {
+      if "`STPC'"=="p"                      {
          local stpcform`c' "%4.3f"
       }
-      if "`STPC'"=="ci"                 {
-         local b = `c' - 1
-         local stpcform`c' "`nform`b''"
+      if "`WISE'" == "cols"                 {
+         if "`STPC'"=="ci"                  {
+            local b = `c' - 1
+            local stpcform`c' "`CIFORM`b''"
+         }
       }
       local ++k
    } 
-   if `col_MF' > 0                      {
-      local k = cond("`ADD_SIDE'"=="right",`n_colD' + 1,1)
-      forvalues c = `col_MF'/`col_ML'   {
-         local nform`c' "%10.1fc"
-         if "`sdec'" ~= ""              {
-            if "`nf`k''" ~= ""          {
-               local NFORM "%10.`nf`k''fc"
-            }
-            local nform`c' "`NFORM'"
+   if "`WISE'" == "cols"                    {
+      if `n_colM' > 0                       {
+         local k = 1
+         if "`ADD_SIDE'"=="right" & "`EXC_SIDE'"=="right"  {
+            local k = `n_colD' + 1
          }
-         local ++k
+         if "`ADD_SIDE'"=="right" & "`EXC_SIDE'"=="left"   {
+            local k = `n_colD' + `n_colE' + 1
+         }
+         forvalues c = `col_MF'/`col_ML'    {
+            local nform`c' "nformat(%10.1fc)"
+            if "`sdec'" ~= ""               {
+               if "`nf`k''" ~= ""           {
+                  local NFORM "%10.`nf`k''fc"
+               }
+               local nform`c' "nformat(`NFORM')"
+            }
+            local ++k
+         }
+      } 
+      if `n_colE' > 0                      {
+         local k = 1
+         if "`EXC_SIDE'"=="right" & "`ADD_SIDE'"=="right"  {
+         local k = `n_colD' + 1
+         }
+         if "`EXC_SIDE'"=="right" & "`ADD_SIDE'"=="left"   {
+            local k = `n_colD' + `n_colM' + 1
+         }
+         forvalues c = `col_EF'/`col_EL'   {
+            local nform`c' "nformat(%10.1fc)"
+            if "`sdec'" ~= ""              {
+               if "`nf`k''" ~= ""          {
+                  local NFORM "%10.`nf`k''fc"
+               }
+               local nform`c' "nformat(`NFORM')"
+            }
+            local ++k
+         }
+      } 
+   }
+}
+
+if "`WISE'" == "cols"                      {
+   if `col_EF' > 0                         {
+      local c = `col_EF'
+      foreach a in A B                     {
+         if "`EXC_TYPE`a''"=="str"         {
+            local nform`c' ""
+         }
+         local ++c
       }
-   }  
+   }
 }
 
 
 
-
-*************************************************************************************
-*************************************************************************************
+******************************************************************************************
+******************************************************************************************
 
 
 *  ************************
@@ -1545,15 +2037,18 @@ putdocx table `tabname' = mat(`mat'),
 *
 *     n_colD   number of data columns (equations or matrix elements), excluding means/matrices
 *     n_colM   number of means/matrix columns
-*     n_colT   number of data/means/matrix columns
-*     n_colTX  number of columns:  row title + data/means/matrix columns
+*     n_colE   number of excel columns
+*     n_colT   number of data/means/matrix/excel columns
+*     n_colTX  number of columns:  row title + data/means/matrix/excel columns
 *
-*     col_DF   first data column (with extra column: row title)
-*     col_DL   last data column (with extra columns: row title, stars, se)
-*     col_MF   first means/matrix column (with extra column for row title)
-*     col_ML   last means/matrix column (with extra column for row title) 
-*     col_F    first data/means/matrix column (with extra column for row title)
-*     col_L    last data/means/matrix column (with extra column for row titles)
+*     col_DF   first data column (accounting for row title column = 1)
+*     col_DL   last data column (accounting for extra columns: row title, stars, se)
+*     col_MF   first means/matrix column (accounting for row title column = 1)
+*     col_ML   last means/matrix column (accounting for row title column = 1) 
+*     col_EF   first excel column (accounting for row title column = 1)
+*     col_EL   last excel column (accounting for row title column = 1) 
+*     col_F    first data/means/matrix/excel column (accounting for row title column = 1)
+*     col_L    last data/means/matrix/excel column (accounting for row title column = 1)
 *
 *     row_SP   column spanning title row
 *     row_C    column title row
@@ -1598,6 +2093,26 @@ capture drop VVV
 
 
 
+*  filling in excel columns
+
+local ROWS = `n_rowD' + `n_rowS'
+local c = `col_EFX'
+foreach a of local EXC_VARS     {
+   local r = `row_F'
+   forvalues n = 1/`ROWS'       {
+      if "`exc`a'`n''"=="" | "`exc`a'`n''"=="."  {
+         putdocx table `tabname'(`r',`c') = (" "), font(`font',`b_fsize')
+      }
+      if "`exc`a'`n''"~="" & "`exc`a'`n''"~="."  {
+         putdocx table `tabname'(`r',`c') = ("`exc`a'`n''"), font(`font',`b_fsize')
+      }
+      local ++r
+   }
+   local ++c
+} 
+
+
+
 *  column titles and data cells: horizontal right align, vertical bottom align
 
 putdocx table `tabname'(`row_C'/`row_LS',2/`n_colTX'), halign(right) valign(bottom)
@@ -1633,24 +2148,34 @@ if "`ct'" ~= ""         {
 }
 
 local ctitleht "single"
-forvalues c = 1/`n_colTX'             {
-   if "`ctitle`c''" ~= ""             {        
+forvalues c = 1/`n_colTX'                {
+   if "`ctitle`c''" ~= ""                {
       tokenize "`ctitle`c''", parse("\")
-      if "`3'" == ""                  {
-         putdocx table `tabname'(`row_C',`c') = ("`1'"), font(`font', `l_fsize') 
+      if "`3'" == ""                     {
+         putdocx table `tabname'(`row_C',`c') = ("`1'"), font(`font', `l_fsize') `ct_format'
       }
-      if "`3'" ~= ""                  {
-         if "`ctitleht'" ~= "triple"  {
+      if "`3'" ~= ""                     {
+         if "`ctitleht'" ~= "triple"     {
             local ctitleht "double" 
          }
-         putdocx table `tabname'(`row_C',`c') = ("`1'"), font(`font', `l_fsize') linebreak(1)
-         if "`5'" == ""               {
-            putdocx table `tabname'(`row_C',`c') = ("`3'"), font(`font', `l_fsize') append
+         if "`ct_format'" == "bold"      {
+            putdocx table `tabname'(`row_C',`c') = ("`1'"), font(`font', `l_fsize') `ct_format' linebreak(1)
          }
-         if "`5'" ~= ""               {
+         if "`ct_format'" ~= "bold"      {
+            putdocx table `tabname'(`row_C',`c') = ("`1'"), font(`font', `l_fsize') linebreak(1)
+         }
+         if "`5'" == ""                  {
+            putdocx table `tabname'(`row_C',`c') = ("`3'"), font(`font', `l_fsize') `ct_format' append
+         }
+         if "`5'" ~= ""                  {
             local ctitleht "triple" 
-            putdocx table `tabname'(`row_C',`c') = ("`3'"), font(`font', `l_fsize') append linebreak(1)
-            putdocx table `tabname'(`row_C',`c') = ("`5'"), font(`font', `l_fsize') append
+            if "`ct_format'" == "bold"   {
+               putdocx table `tabname'(`row_C',`c') = ("`3'"), font(`font', `l_fsize') `ct_format' append linebreak(1)
+            }
+            if "`ct_format'" ~= "bold"   {
+               putdocx table `tabname'(`row_C',`c') = ("`3'"), font(`font', `l_fsize') append linebreak(1)
+            }
+            putdocx table `tabname'(`row_C',`c') = ("`5'"), font(`font', `l_fsize') `ct_format' append
          }
       }
       if `c'==1  {
@@ -1783,15 +2308,18 @@ forvalues p = 1/`n_p'      {
 *
 *     n_colD   number of data columns (equations or matrix elements), excluding means/matrices
 *     n_colM   number of means/matrix columns
-*     n_colT   number of data/means/matrix columns
-*     n_colTX  number of columns:  row title + data/means/matrix columns
+*     n_colE   number of excel columns
+*     n_colT   number of data/means/matrix/excel columns
+*     n_colTX  number of columns:  row title + data/means/matrix/excel columns
 *
-*     col_DF   first data column (with extra column: row title)
-*     col_DL   last data column (with extra columns: row title, stars, se)
-*     col_MF   first means/matrix column (with extra column for row title)
-*     col_ML   last means/matrix column (with extra column for row title) 
-*     col_F    first data/means/matrix column (with extra column for row title)
-*     col_L    last data/means/matrix column (with extra column for row titles)
+*     col_DF   first data column (accounting for row title column = 1)
+*     col_DL   last data column (accounting for extra columns: row title, stars, se)
+*     col_MF   first means/matrix column (accounting for row title column = 1)
+*     col_ML   last means/matrix column (accounting for row title column = 1) 
+*     col_EF   first excel column (accounting for row title column = 1)
+*     col_EL   last excel column (accounting for row title column = 1) 
+*     col_F    first data/means/matrix/excel column (accounting for row title column = 1)
+*     col_L    last data/means/matrix/excel column (accounting for row title column = 1)
 *
 *     row_SP   column spanning title row
 *     row_C    column title row
@@ -1841,12 +2369,19 @@ if "`est_star'"~="" | "`BE'"=="beside"   {
 *  format data cells:  numeric format, row height  
 *  (note:  statistics formatting corrected later)
 
-forvalues c = 2/`col_L'         {
-   putdocx table `tabname'(`row_F'/`row_LS',`c'), nformat("`nform`c''") font(`font',`b_fsize')
+forvalues c = 2/`col_L'              {
+   if "`WISE'" == "cols"             {
+      putdocx table `tabname'(`row_F'/`row_LS',`c'), `nform`c'' font(`font',`b_fsize')
+   }
+   if "`WISE'" == "rows"             {
+      forvalues r = `row_F'/`row_L'  {
+         putdocx table `tabname'(`r',`c'), `nform`r'' font(`font',`b_fsize')
+      }
+   }
 }
-forvalues r = `row_F'/`row_LS'  {
+forvalues r = `row_F'/`row_LS'       {
    putdocx table `tabname'(`r',.), height(`bf121'pt, exact)
-   if "`est_se'" == ""          {
+   if "`est_se'" == ""               {
       putdocx table `tabname'(`r',.), height(`bf117'pt, exact)
    }
 }
@@ -2156,8 +2691,9 @@ if `"`rst11'"' ~= "" |   `"`rst21'"' ~= "" |  `"`rst31'"' ~= "" |    ///
 if "`slim'" == ""             {
    if "`firstX'" ~= ""        {
       forvalues p = 1/`n_p'   {
-         putdocx table `tabname'(`row_F`p'',.), addrows(1, after)
-         local row_F_1 = `row_F`p'' + 1           //  after first row:  additional row
+         local row_FX = cond("`BE'"=="below",`row_F`p''+1,`row_F`p'')     
+         putdocx table `tabname'(`row_FX',.), addrows(1, after)
+         local row_F_1 = `row_FX' + 1           //  after first row:  additional row
          putdocx table `tabname'(`row_F_1',.), height(`bf025'pt, exact)
          local row_L   = `row_L'  + 1             //  last data/coeff row
          local row_LS  = `row_LS' + 1             //  last data/coeff/stat row
@@ -2174,8 +2710,9 @@ if "`slim'" == ""             {
    }
    if "`lastX'" ~= ""         {
       forvalues p = 1/`n_p'   {
-         putdocx table `tabname'(`row_L`p'',.), addrows(1, before)
-         putdocx table `tabname'(`row_L`p'',.), height(`bf025'pt, exact)
+         local row_LX = cond("`BE'"=="below",`row_L`p''-1,`row_L`p'')
+         putdocx table `tabname'(`row_LX',.), addrows(1, before)
+         putdocx table `tabname'(`row_LX',.), height(`bf025'pt, exact)
          local row_L   = `row_L'  + 1             //  last data/coeff row
          local row_LS  = `row_LS' + 1             //  last data/coeff/stat row
          local row_LSE = `row_LSE' + 1            //  last data/coeff/stat/extra row
@@ -2200,15 +2737,18 @@ if "`slim'" == ""             {
 *
 *     n_colD   number of data columns (equations or matrix elements), excluding means/matrices
 *     n_colM   number of means/matrix columns
-*     n_colT   number of data/means/matrix columns
-*     n_colTX  number of columns:  row title + data/means/matrix columns
+*     n_colE   number of excel columns
+*     n_colT   number of data/means/matrix/excel columns
+*     n_colTX  number of columns:  row title + data/means/matrix/excel columns
 *
-*     col_DF   first data column (with extra column: row title)
-*     col_DL   last data column (with extra columns: row title, stars, se)
-*     col_MF   first means/matrix column (with extra column for row title)
-*     col_ML   last means/matrix column (with extra column for row title) 
-*     col_F    first data/means/matrix column (with extra column for row title)
-*     col_L    last data/means/matrix column (with extra column for row titles)
+*     col_DF   first data column (accounting for row title column = 1)
+*     col_DL   last data column (accounting for extra columns: row title, stars, se)
+*     col_MF   first means/matrix column (accounting for row title column = 1)
+*     col_ML   last means/matrix column (accounting for row title column = 1) 
+*     col_EF   first excel column (accounting for row title column = 1)
+*     col_EL   last excel column (accounting for row title column = 1) 
+*     col_F    first data/means/matrix/excel column (accounting for row title column = 1)
+*     col_L    last data/means/matrix/excel column (accounting for row title column = 1)
 *
 *     row_SP   column spanning title row
 *     row_C    column title row
@@ -2246,15 +2786,15 @@ if "`est_stat1'"~=""       {
       if "`slim'" == ""           {
          putdocx table `tabname'(`row_FS`p'',.), addrows(1, before)   //  before first stat row:  add row
          if "`lastX'" == ""       {
-            putdocx table `tabname'(`row_FS`p'',.), height(`bf044'pt, exact)
+            putdocx table `tabname'(`row_FS`p'',.), height(`bf058'pt, exact)
             if "`BE'" == "below"  {
-               putdocx table `tabname'(`row_FS`p'',.), height(`bf050'pt, exact)
+               putdocx table `tabname'(`row_FS`p'',.), height(`bf067'pt, exact)
             }
          }
          if "`lastX'"~="" | ("`extra_place'"~="" & ("`extra1'"~="" | "`extra`p'1'"~=""))  {
-            putdocx table `tabname'(`row_FS`p'',.), height(`bf050'pt, exact)
+            putdocx table `tabname'(`row_FS`p'',.), height(`bf067'pt, exact)
             if "`BE'" == "below"  {
-               putdocx table `tabname'(`row_FS`p'',.), height(`bf058'pt, exact)
+               putdocx table `tabname'(`row_FS`p'',.), height(`bf075'pt, exact)
             }
          }
          local row_L      = `row_L'      + 1         //  last data/coeff row
@@ -2273,7 +2813,7 @@ if "`est_stat1'"~=""       {
 
 
 
-*  if there are extra information rows
+*  extra information rows
 *  one set below all panels and multiple panels
 *  linespace:  add one after last data/stat row (unless slim requested) 
 
@@ -2386,7 +2926,7 @@ if "`extra1'"~="" & `n_p'>1        {
 
 
 
-*  if there are extra information rows
+*  extra information rows
 *  one set per panel
 
 if ("`extra1'"~="" & `n_p'==1) |                            ///
@@ -2535,8 +3075,8 @@ if "`slim'" == ""      {
 
 
 
-****************************************************************************************
-****************************************************************************************
+******************************************************************************************
+******************************************************************************************
 
 
 *  *************************************
@@ -2555,15 +3095,18 @@ if "`slim'" == ""      {
 *
 *     n_colD   number of data columns (equations or matrix elements), excluding means/matrices
 *     n_colM   number of means/matrix columns
-*     n_colT   number of data/means/matrix columns
-*     n_colTX  number of columns:  row title + data/means/matrix columns
+*     n_colE   number of excel columns
+*     n_colT   number of data/means/matrix/excel columns
+*     n_colTX  number of columns:  row title + data/means/matrix/excel columns
 *
-*     col_DF   first data column (with extra column: row title)
-*     col_DL   last data column (with extra columns: row title, stars, se)
-*     col_MF   first means/matrix column (with extra column for row title)
-*     col_ML   last means/matrix column (with extra column for row title) 
-*     col_F    first data/means/matrix column (with extra column for row title)
-*     col_L    last data/means/matrix column (with extra column for row titles)
+*     col_DF   first data column (accounting for row title column = 1)
+*     col_DL   last data column (accounting for extra columns: row title, stars, se)
+*     col_MF   first means/matrix column (accounting for row title column = 1)
+*     col_ML   last means/matrix column (accounting for row title column = 1) 
+*     col_EF   first excel column (accounting for row title column = 1)
+*     col_EL   last excel column (accounting for row title column = 1) 
+*     col_F    first data/means/matrix/excel column (accounting for row title column = 1)
+*     col_L    last data/means/matrix/excel column (accounting for row title column = 1)
 *
 *     row_SP   column spanning title row
 *     row_C    column title row
@@ -2585,25 +3128,50 @@ if "`slim'" == ""      {
 
 
 *  deleting est_star and est_se columns    (must precede panel titles, notes, column-spanning titles)
-*  begin by defining starting and ending columns, prior to column deletion
-*  est_no is specified in terms of data matrix, but deletion must take account of row-title column
+*
+*  1.  defining starting and ending columns, prior to column deletion
+*      (this is defined for all columns, whether or not est_star / beside apply)
+*      (defined in terms of data columns, i.e. excluding row-title column)
 
-if "`est_star'"=="" & "`BE'"~="beside"     {
-   local k = 1
-   if `n_colM'>0  &  "`ADD_SIDE'"=="left"  {
-      forvalues c = `col_MF'/`col_ML'      {
-         local start`k' = `c'
+local DB   "/"
+local PLUS ""
+if "`est_star'"~="" | "`BE'"=="beside"      {
+   local DB   "(2)"
+   local PLUS "+ 1"
+}
+
+local k = 1
+if `n_colE'==0 & `n_colM'==0                {   //  neither excel or add
+   forvalues c = `col_DF'`DB'`col_DL'       {
+      local start`k' = `c'
+      local end`k' = `c' `PLUS'
+      local ++k
+   }
+   local lastD = `k' - 1
+}
+
+if `n_colE'>0  &  `n_colM'==0               {   //  excel but no add
+   if "`EXC_SIDE'"=="left"                  {
+      forvalues c = `col_EF'/`col_EL'       {
+         local start`k' = `c' 
          local end`k' = `c'
          local ++k
       }
+      forvalues c = `col_DF'`DB'`col_DL'    {
+         local start`k' = `c'
+         local end`k' = `c' `PLUS'
+         local ++k
+      }
+      local lastD = `k' - 1
    }
-   forvalues c = `col_DF'/`col_DL'         {
-      local start`k' = `c'
-      local end`k' = `c'
-      local ++k
-   }
-   if `n_colM'>0  &  "`ADD_SIDE'"=="right" {
-      forvalues c = `col_MF'/`col_ML'      {
+   if "`EXC_SIDE'"=="right"                 {
+      forvalues c = `col_DF'`DB'`col_DL'    {
+         local start`k' = `c'
+         local end`k' = `c' `PLUS'
+         local ++k
+      }
+      local lastD = `k' - 1
+      forvalues c = `col_EF'/`col_EL'       {
          local start`k' = `c'
          local end`k' = `c'
          local ++k
@@ -2611,29 +3179,109 @@ if "`est_star'"=="" & "`BE'"~="beside"     {
    }
 }
 
+if `n_colE'==0  &  `n_colM'>0               {   //  add but no excel
+   if "`ADD_SIDE'"=="left"                  {
+      forvalues c = `col_MF'/`col_ML'       {
+         local start`k' = `c'
+         local end`k' = `c'
+         local ++k
+      }
+      forvalues c = `col_DF'`DB'`col_DL'    {
+         local start`k' = `c'
+         local end`k' = `c' `PLUS'
+         local ++k
+      }
+      local lastD = `k' - 1
+   }
+   if "`ADD_SIDE'"=="right"                 {
+      forvalues c = `col_DF'`DB'`col_DL'    {
+         local start`k' = `c'
+         local end`k' = `c' `PLUS'
+         local ++k
+      }
+      local lastD = `k' - 1
+      forvalues c = `col_MF'/`col_ML'       {
+         local start`k' = `c'
+         local end`k' = `c'
+         local ++k
+      }
+   }
+}
+
+if `n_colE'>0  &  `n_colM'>0                {   //  both excel and add
+   if "`EXC_SIDE'"=="left"                  {
+      forvalues c = `col_EF'/`col_EL'       {
+         local start`k' = `c'
+         local end`k' = `c'
+         local ++k
+      }
+      if "`ADD_SIDE'"=="left"               {
+         forvalues c = `col_MF'/`col_ML'    {
+            local start`k' = `c'
+            local end`k' = `c'
+            local ++k
+         }
+         forvalues c = `col_DF'`DB'`col_DL' {
+            local start`k' = `c'
+            local end`k' = `c' `PLUS'
+            local ++k
+         }
+         local lastD = `k' - 1
+      }
+      if "`ADD_SIDE'"=="right"              {
+         forvalues c = `col_DF'`DB'`col_DL' {
+            local start`k' = `c'
+            local end`k' = `c' `PLUS'
+            local ++k
+         }
+         local lastD = `k' - 1
+         forvalues c = `col_MF'/`col_ML'    {
+            local start`k' = `c'
+            local end`k' = `c'
+            local ++k
+         }
+      }
+   }
+   if "`EXC_SIDE'"=="right"                 {
+      if "`ADD_SIDE'"=="left"               {
+         forvalues c = `col_MF'/`col_ML'    {
+            local start`k' = `c'
+            local end`k' = `c'
+            local ++k
+         }
+         forvalues c = `col_DF'`DB'`col_DL' {
+            local start`k' = `c'
+            local end`k' = `c' `PLUS'
+            local ++k
+         }
+         local lastD = `k' - 1
+      }
+      if "`ADD_SIDE'"=="right"              {
+         forvalues c = `col_DF'`DB'`col_DL' {
+            local start`k' = `c'
+            local end`k' = `c' `PLUS'
+            local ++k
+         }
+         local lastD = `k' - 1
+         forvalues c = `col_MF'/`col_ML'    {
+            local start`k' = `c'
+            local end`k' = `c'
+            local ++k
+         }
+      }
+      forvalues c = `col_EF'/`col_EL'       {
+         local start`k' = `c'
+         local end`k' = `c'
+         local ++k
+      }
+   }
+}
+
+
+*  2.  column deletion 
+*      
+
 if "`est_star'"~="" | "`BE'"=="beside"     {
-   local k = 1
-   if `n_colM'>0  &  "`ADD_SIDE'"=="left"  {
-      forvalues c = `col_MF'/`col_ML'      {
-         local start`k' = `c'
-         local end`k' = `c'
-         local ++k
-      }
-   }
-   forvalues c = `col_DF'(2)`col_DL'       {
-      local firstD = `k'
-      local start`k' = `c'
-      local end`k' = `c' + 1
-      local ++k
-   }
-   local lastD = `k' - 1
-   if `n_colM'>0  &  "`ADD_SIDE'"=="right" {
-      forvalues c = `col_MF'/`col_ML'      {
-         local start`k' = `c'
-         local end`k' = `c'
-         local ++k
-      }
-   }
    local highK = `k' - 1
    if "`est_no'" ~= ""                     {
       local k = `lastD'
@@ -2708,30 +3356,30 @@ forvalues p = 1/`n_p'   {
                local HT1 "bf083"
             }
             if "`BE'"=="below"     {
-               local HT1 "bf067"
+               local HT1 "bf075"
             }
          }
          if "`pt`p''"~=""               {
-            local HT1 "bf050"
+            local HT1 "bf058"
             if "`est_stat'"~="" | "`est_stat`q''"~="" | "`extra`q'1'"~=""    {
                if `"`rst`p'1'"'==""     {
-                  local HT1 "bf067"
+                  local HT1 "bf083"
                   if "`BE'"=="below"    {
-                     local HT1 "bf058"
+                     local HT1 "bf075"
                   }
                }
                if `"`rst`p'1'"'~=""     {
-                  local HT1 "bf075"
+                  local HT1 "bf083"
                   if "`BE'"=="below"    {
-                     local HT1 "bf067"
+                     local HT1 "bf075"
                   }
                }
             }
             if ("`est_stat'"~="" | "`est_stat`q''"~="") & ("`extra`q'1'"~="")   {
                if `"`rst`p'1'"'==""     {
-                  local HT1 "bf075"
+                  local HT1 "bf083"
                   if "`BE'"=="below"    {
-                     local HT1 "bf067"
+                     local HT1 "bf075"
                   }
                }
                if `"`rst`p'1'"'~=""     {
@@ -2865,15 +3513,18 @@ local row_N = `row_LSE'     //  first row of notes section
 *
 *     n_colD   number of data columns (equations or matrix elements), excluding means/matrices
 *     n_colM   number of means/matrix columns
-*     n_colT   number of data/means/matrix columns
-*     n_colTX  number of columns:  row title + data/means/matrix columns
+*     n_colE   number of excel columns
+*     n_colT   number of data/means/matrix/excel columns
+*     n_colTX  number of columns:  row title + data/means/matrix/excel columns
 *
-*     col_DF   first data column (with extra column: row title)
-*     col_DL   last data column (with extra columns: row title, stars, se)
-*     col_MF   first means/matrix column (with extra column for row title)
-*     col_ML   last means/matrix column (with extra column for row title) 
-*     col_F    first data/means/matrix column (with extra column for row title)
-*     col_L    last data/means/matrix column (with extra column for row titles)
+*     col_DF   first data column (accounting for row title column = 1)
+*     col_DL   last data column (accounting for extra columns: row title, stars, se)
+*     col_MF   first means/matrix column (accounting for row title column = 1)
+*     col_ML   last means/matrix column (accounting for row title column = 1) 
+*     col_EF   first excel column (accounting for row title column = 1)
+*     col_EL   last excel column (accounting for row title column = 1) 
+*     col_F    first data/means/matrix/excel column (accounting for row title column = 1)
+*     col_L    last data/means/matrix/excel column (accounting for row title column = 1)
 *
 *     row_SP   column spanning title row
 *     row_C    column title row
@@ -2976,21 +3627,21 @@ if `"`cst11'"' ~= ""    {
          if "`3'" == ""  { 
             putdocx table `tabname'(`row_SP',`start`cststart''), colspan(`cstwidth') 
             putdocx table `tabname'(`row_SP',`start`cststart'') = ("`1'"),       ///
-               font(`font', `l_fsize') `cst_format'  halign(center) valign(bottom)  
+               font(`font', `l_fsize') `cst_format'  halign(`cst_just') valign(bottom)  
          }
          if "`3'" ~= ""  {
             local cstitleht "double" 
             putdocx table `tabname'(`row_SP',`start`cststart''), colspan(`cstwidth') 
             if "`cst_format'" == "bold"  {
                putdocx table `tabname'(`row_SP',`start`cststart'') = ("`1'"),    ///
-                  font(`font', `l_fsize') `cst_format'  halign(center) valign(bottom) append linebreak(1)  
+                  font(`font', `l_fsize') `cst_format'  halign(`cst_just') valign(bottom) append linebreak(1)  
             }
             if "`cst_format'" ~= "bold"  {
                putdocx table `tabname'(`row_SP',`start`cststart'') = ("`1'"),    ///
-                  font(`font', `l_fsize') halign(center) valign(bottom) append linebreak(1)  
+                  font(`font', `l_fsize') halign(`cst_just') valign(bottom) append linebreak(1)  
             }
             putdocx table `tabname'(`row_SP',`start`cststart'') = ("`3'"),       ///
-               font(`font', `l_fsize') `cst_format'  halign(center) valign(bottom) append 
+               font(`font', `l_fsize') `cst_format'  halign(`cst_just') valign(bottom) append 
          }
       }
    }
@@ -3036,21 +3687,21 @@ if `"`cst1'"' ~= ""  {
          if "`3'" == ""  { 
             putdocx table `tabname'(`row_SP',`start`cststart''), colspan(`cstwidth') 
             putdocx table `tabname'(`row_SP',`start`cststart'') = ("`1'"),       ///
-               font(`font', `l_fsize') `cst_format'  halign(center) valign(bottom)  
+               font(`font', `l_fsize') `cst_format'  halign(`cst_just') valign(bottom)  
          }
          if "`3'" ~= ""      {
             local cstitleht "double" 
             putdocx table `tabname'(`row_SP',`start`cststart''), colspan(`cstwidth') 
             if "`cst_format'" == "bold"  {
                putdocx table `tabname'(`row_SP',`start`cststart'') = ("`1'"),    ///
-                  font(`font', `l_fsize') `cst_format'  halign(center) valign(bottom) append linebreak(1)  
+                  font(`font', `l_fsize') `cst_format'  halign(`cst_just') valign(bottom) append linebreak(1)  
             }
             if "`cst_format'" ~= "bold"  {
                putdocx table `tabname'(`row_SP',`start`cststart'') = ("`1'"),    ///
-                  font(`font', `l_fsize') halign(center) valign(bottom) append linebreak(1)  
+                  font(`font', `l_fsize') halign(`cst_just') valign(bottom) append linebreak(1)  
             }
             putdocx table `tabname'(`row_SP',`start`cststart'') = ("`3'"),       ///
-               font(`font', `l_fsize') `cst_format'  halign(center) valign(bottom) append 
+               font(`font', `l_fsize') `cst_format'  halign(`cst_just') valign(bottom) append 
          }
       }
    }
@@ -3082,9 +3733,9 @@ if "`slim'" == ""     {
    local row_C_1 = `row_C' + 1           //  after column title row:  1st add row
    local row_C_2 = `row_C' + 2           //  after column title row:  2nd add row
    putdocx table `tabname'(`row_C_1',.), height(`bf025'pt, exact) border(bottom)
-   putdocx table `tabname'(`row_C_2',.), height(`bf050'pt, exact)
+   putdocx table `tabname'(`row_C_2',.), height(`bf058'pt, exact)
    if "`pt1'" ~= ""   {
-      putdocx table `tabname'(`row_C_2',.), height(`bf044'pt, exact)
+      putdocx table `tabname'(`row_C_2',.), height(`bf050'pt, exact)
    }
 }
 if "`slim'" ~= ""     {
@@ -3100,14 +3751,14 @@ if "`TITLE'" ~= ""       {
    putdocx table `tabname'(1,1), colspan(`col_L')
    tokenize "`TITLE'", parse("\")
    if "`3'" == ""        {
-      putdocx table `tabname'(1,1) = ("`1'"), font(`font', `t_fsize')   
+      putdocx table `tabname'(1,1) = ("`1'"), font(`font', `t_fsize') `title_format'  
       putdocx table `tabname'(1,1), halign(`title_just') valign(center) 
    }
    if "`3'" ~= ""        {
-      putdocx table `tabname'(1,1) = ("`1'"), font(`font', `t_fsize')     ///
-              halign(`title_just') valign(center) append linebreak(1)
-      putdocx table `tabname'(1,1) = ("`3'"), font(`font', `t_fsize')     ///
-              halign(`title_just') valign(center) append
+      putdocx table `tabname'(1,1) = ("`1'"), font(`font', `t_fsize')  ///
+              `title_format' halign(`title_just') valign(center) append linebreak(1)
+      putdocx table `tabname'(1,1) = ("`3'"), font(`font', `t_fsize')  ///
+              `title_format' halign(`title_just') valign(center) append
    }
    local substart1 "1"
    local substart2 "2"
@@ -3130,14 +3781,14 @@ if "`TITLE'" ~= ""       {
       putdocx table `tabname'(`substart2',1), colspan(`col_L')
       tokenize "`SUB'", parse("\")
       if "`3'" == ""     {
-         putdocx table `tabname'(`substart2',1) = ("`1'"), font(`font', `s_fsize')   
+         putdocx table `tabname'(`substart2',1) = ("`1'"), font(`font', `s_fsize') `sub_format'  
          putdocx table `tabname'(`substart2',1), halign(`sub_just') valign(center) 
       }
       if "`3'" ~= ""     {
          putdocx table `tabname'(`substart2',1) = ("`1'"), font(`font', `s_fsize')     ///
-                 halign(`sub_just') valign(center) append linebreak(1)
+                 `sub_format' halign(`sub_just') valign(center) append linebreak(1)
          putdocx table `tabname'(`substart2',1) = ("`3'"), font(`font', `s_fsize')     ///
-                 halign(`sub_just') valign(center) append
+                 `sub_format' halign(`sub_just') valign(center) append
       }
       if "`slim'" == ""  {
          putdocx table `tabname'(`substart2',.), addrows(1, after) 
@@ -3149,8 +3800,8 @@ if "`TITLE'" ~= ""       {
 
 
 
-****************************************************************************************
-****************************************************************************************
+******************************************************************************************
+******************************************************************************************
 
 
 *  *******************************
@@ -3173,6 +3824,7 @@ if "`outfile'" ~= ""  {
 
 *  clean-up
 
+capture matrix drop XxYyZz
 capture matrix drop C
 capture matrix drop CZ
 capture matrix drop CM
@@ -3198,7 +3850,6 @@ forvalues p = 1/`n_pt'   {
    capture matrix drop CI`p'
    capture matrix drop STPC`p'
 }
-capture matrix drop XxYyZz
 
 
 

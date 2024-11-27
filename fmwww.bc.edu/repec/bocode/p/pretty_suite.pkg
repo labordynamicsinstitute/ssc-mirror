@@ -13,15 +13,22 @@ d
 d KW: descriptive table
 d KW: baseline characteristics
 d KW: clinical trials
+d KW: logistic regression
+d KW: linear regression
+d KW: text tables
 d
 d Requires: Stata version 17
 d
-d Distribution-Date: 20241114
+d Distribution-Date: 20241126
 d
 d Author: Rafael Gafoor, University College London
 d Support: email r.gafoor@@ucl.ac.uk
 d
 f pretty_baseline.ado
 f pretty_baseline.sthlp
+f pretty_linear.ado
+f pretty_linear.sthlp
 f pretty_logistic.ado
 f pretty_logistic.sthlp
+f pretty_text.ado
+f pretty_text.sthlp
