@@ -1,0 +1,27 @@
+d 'TOPSIS': module to calculate comprehensive scores based on the entropy method or the entropy-TOPSIS method
+d
+d      topsis is used to calculate comprehensive scores based on
+d the entropy method or the TOPSIS method.    This command allows
+d users to specify both positive and negative indicators, and
+d automatically performs data normalization, calculates information
+d entropy, redundancy,	  and weights, and finally calculates a
+d comprehensive score.	  Additionally, the program can use the
+d TOPSIS method to calculate the score (optional, depending on user
+d preference).	  If the topsis option is not used, the program
+d will output the information entropy, redundancy, and weights of
+d each indicator, and by default, display the	 comprehensive
+d scores for the first 10 samples. 
+d
+d KW: entropy
+d KW: topsis
+d KW: scores
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20241130
+d
+d Author:  Wang Qiang , Xi’an Jiaotong University
+d Support: email  740130359@@qq.com
+d
+f topsis.ado
+f topsis.sthlp

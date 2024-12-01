@@ -7244,6 +7244,7 @@ fmwww.bc.edu/repec/bocode/t/tmvnormalden.ado
 fmwww.bc.edu/repec/bocode/t/testex.ado
 fmwww.bc.edu/repec/bocode/t/tolong.ado
 fmwww.bc.edu/repec/bocode/t/tabsort6.html
+fmwww.bc.edu/repec/bocode/t/topsis.sthlp
 fmwww.bc.edu/repec/bocode/t/table1_mc.pkg
 fmwww.bc.edu/repec/bocode/t/tcod.ado
 fmwww.bc.edu/repec/bocode/t/tvgc.sthlp
@@ -7329,6 +7330,7 @@ fmwww.bc.edu/repec/bocode/t/transplot.sthlp
 fmwww.bc.edu/repec/bocode/t/tabletutorial_17.ihlp
 fmwww.bc.edu/repec/bocode/t/tabsheet.pkg
 fmwww.bc.edu/repec/bocode/t/twed.sthlp
+fmwww.bc.edu/repec/bocode/t/topsis.pkg
 fmwww.bc.edu/repec/bocode/t/twitter2s.ado
 fmwww.bc.edu/repec/bocode/t/tw3xls_example.do
 fmwww.bc.edu/repec/bocode/t/trnclist.hlp
@@ -7448,6 +7450,7 @@ fmwww.bc.edu/repec/bocode/t/traces.html
 fmwww.bc.edu/repec/bocode/t/trnbin0.ado
 fmwww.bc.edu/repec/bocode/t/tmpm.ado
 fmwww.bc.edu/repec/bocode/t/tesensitivity_cpiplot.sthlp
+fmwww.bc.edu/repec/bocode/t/topsis.ado
 fmwww.bc.edu/repec/bocode/t/tab3way.html
 fmwww.bc.edu/repec/bocode/t/touch.hlp
 fmwww.bc.edu/repec/bocode/t/twopm.sthlp

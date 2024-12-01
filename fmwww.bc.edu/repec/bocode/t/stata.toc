@@ -95,6 +95,7 @@ p tolong module to provide a faster reshape long
 p tolower module to rename variables with lower case names
 p tomata module to make vectors in Mata of variables in Stata
 p tomode module to change values of a variable to mode(s)
+p topsis module to calculate comprehensive scores based on the entropy method or the entropy-TOPSIS method
 p torats module to facilitate transfer of data to RATS
 p torumm module to produce data in RUMM format
 p tosql module to transfer data to SQL database
