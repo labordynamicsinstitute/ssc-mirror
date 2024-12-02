@@ -1,15 +1,16 @@
 d 'RESHAPE7': module to provide improved reshape
 d
-d  improved reshape which preserves variable labels when going from
-d  long to wide to long. 
+d   improved reshape which preserves variable labels when going
+d from	long to wide to long. 
 d
-d KW: data validation
+d KW: tokens
+d KW: variables
+d KW: data management
 d
 d Requires: Stata version 7.0
 d
+d Distribution-Date: 20020905
 d
 d Author: Bill Rising,  University of Louisville
-d Support: email   brising@@louisville.edu
+d Support: email  brising@@louisville.edu
 d
-d Distribution-Date: 20020905
-

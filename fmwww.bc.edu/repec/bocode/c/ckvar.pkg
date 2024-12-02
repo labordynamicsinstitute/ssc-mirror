@@ -1,6 +1,6 @@
 d 'CKVAR': module to allow error checking routines to easily be defined and attached directly to variables
 d
-d ckvar provides a system for storing validation or scoring rules
+d  ckvar provides a system for storing validation or scoring rules
 d with the variables in a dataset, and then running the validation
 d or scoring.	By attaching the validation rules to the variables
 d themselves, they   are available even if the dataset is merged,

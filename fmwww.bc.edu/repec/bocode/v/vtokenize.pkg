@@ -1,6 +1,6 @@
 d 'VTOKENIZE': module to split a variable into its tokens 
 d
-d  vtokenize and vgettoken do for variables what tokenize and 
+d   vtokenize and vgettoken do for variables what tokenize and 
 d gettoken do for strings in Stata. The main use of this is for
 d dealing  with nasty datasets. vtokenize splits every observation
 d into its tokens, creating as many  variables as needed to hold
@@ -10,6 +10,12 @@ d choice, optionally placing  the remainder into yet another
 d variable. Both commands allow user-specified delimiter lists and
 d both allow either  treating the delimiters as tokens or ignoring
 d them completely. 
+d
+d KW: tokens
+d KW: variables
+d KW: data management
+d
+d Requires: Stata version 8.2
 d
 d Distribution-Date: 20031211
 d

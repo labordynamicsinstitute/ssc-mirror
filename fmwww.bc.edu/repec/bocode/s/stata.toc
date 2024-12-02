@@ -20,10 +20,12 @@ p simsum module to perform analyses of simulation studies including Monte Carlo 
 p simulate2 module enhancing and parallelising simulate
 p sivqr module to perform smoothed IV quantile regression
 p skewreg module to estimate skewness and kurtosis regressions
+p smcl2do module to convert log files to do-files in a robust fashion
 p soepuse module providing easy SOEP access
 p sortl module to sort factor loadings or rotated matrix from PCA or factor
 p sotable module to produce tests and confidence bands for multiple comparisons of two-sided or one-sided hypotheses
 p spgen module to generate spatially lagged variables
+p sphdist module to compute spherical distances
 p spider module for spider plots
 p splinefit module for smooth connected line plots
 p sq module for sequence analysis
