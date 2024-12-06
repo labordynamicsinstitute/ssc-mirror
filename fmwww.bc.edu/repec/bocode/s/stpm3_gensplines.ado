@@ -47,7 +47,7 @@ program define stpm3_gensplines,
  
   getknots `tt' if `touse', `allknots' `knots' `bknots' ttrans(`ttrans')
 
-// basesline splines
+// baseline splines
   if "`intknots'" != "" local gensplinesopt knots(`intknots')
   if "`allknots'" != "" local gensplinesopt allknots(`allknots')
   if "`bknots'" != "" local gensplinesopt `gensplinesopt' bknots(`bknots')

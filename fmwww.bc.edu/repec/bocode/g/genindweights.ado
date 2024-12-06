@@ -1,38 +1,43 @@
-*! version 0.1 2024-11-17
+*! version 0.2 2024-12-05
 program define genindweights, rclass sortpreserve
-  st_is 2 analysis
   syntax newvarlist(max=1)  [if][in], [                            ///
                                         AGEGroup(varname)          ///
                                         BY(varlist)                ///
                                         NAGEGroups(integer 5)      ///
+                                        OBSproportion(string)      ///
                                         REFConditional(string)     ///
                                         REFEXTernal(string)        ///
                                         REFFRame(string)           /// 
                                         REFProportion(string)      ///
-                                        OBSproportion(string)      ///
                                         SAVEREFFrame(string)       ///
+                                        STIGnore                   ///
+                                        noSUMmary                  ///
                                       ]
   
   marksample touse, novarlist
     
   local newvarname `varlist'
-// Error checks  
-  qui count if _st==0 & `touse'
-  if `r(N)'>0 {
-    di as error "You have values of _st=0." ///
-                "Either drop these of use an if statement."
-                exit 198
+// Error checks 
+  if "`stignore'" == "" {
+    st_is 2 analysis
+    
+    qui count if _st==0 & `touse'
+    if `r(N)'>0 {
+      di as error "You have values of _st=0." ///
+                  "Either drop these of use an if statement."
+                  exit 198
+    }
   }
   
-  if "`agegroup'"=="" & ("`refexternal'`refframe'" != "") {
+  if "`agegroup'"=="" & ("`refexternal'" != "") {
     di as error "You must specify the agegroup() option when" ///
-                "using refexternal() or refframe()"
+                "using refexternal()"
     exit 198
   } 
   
 
-  if "`agegroup'" !="" & ("`refconditional'" != "") {
-    di as error "Do not use the agegroup() option when using refconditional()"
+  if "`agegroup'" !="" & ("`refconditional'`refframe'" != "") {
+    di as error "Do not use the agegroup() option when using refconditional() or refframe()."
     exit 198
   }   
   
@@ -53,7 +58,6 @@ program define genindweights, rclass sortpreserve
       exit 198
     }
   }
- 
   if "`obsproportion'" != "" {
     confirm new var `obsproportion'
     local newobsproportion `obsproportion'
@@ -72,10 +76,11 @@ program define genindweights, rclass sortpreserve
 // if no by variables define a constant
   if "`by'" == "" {
     tempvar cons
-    gen `cons' = 1 if `touse'
+    qui gen `cons' = 1 if `touse'
     local by `cons'
+    local nobyoption nobyoption
   }  
-  
+
 // check age group not listed in by
  if "`agegroup'" != "" {
    foreach byvar in `by' { 
@@ -95,7 +100,7 @@ program define genindweights, rclass sortpreserve
     }
     CheckInteger `var'
   }      
-      
+ 
 // Reference proportions
   tempname refframetmp
   if "`refexternal'" != "" {
@@ -104,45 +109,67 @@ program define genindweights, rclass sortpreserve
                     nagegroups(`Nagegroups') agegrouplevels(`agegroup_levels') ///
                     refframetmp(`refframetmp')
     qui frlink m:1 `agegroup', frame(`refframetmp')
-    local refwtname refproportion
+    local refwtname refp
   }
   if "`refframe'" != "" {
     Parse_refframe `refframe'
     local refframetmp `r(refframename)'
-    local refwtname `r(refframe_wtname)'
+    local refwtname `r(refframe_refwtname)'
     local refframe_strata `r(refframe_strata)'
     qui frlink m:1 `refframe_strata', frame(`refframetmp')
 
   }
+
   if "`refconditional'" != "" {
     // check for comma or do some parsing first?  
     GetRefcond `refconditional' touse(`touse')  ///
                          refframetmp(`refframetmp')
     qui frlink m:1 `refcond_strata', frame(`refframetmp')
-    local refwtname refproportion
+    local refwtname refp
   }
-  
 
 // calculate observed proportions in by/agegroup combinations
   tempvar bygrouptotal bygrouptotal_agegrp obsby_proportion
-  bysort `by': egen `bygrouptotal' = total(`touse') if `touse'   
-  bysort `by' `refframe_strata' `refcond_strata' `agegroup': egen `bygrouptotal_agegrp' = total(`touse') if `touse'   
-  gen double `obsby_proportion' = `bygrouptotal_agegrp'/`bygrouptotal'
+  qui bysort `by':  egen `bygrouptotal' = total(`touse') if `touse'   
+  qui bysort `by' `refframe_strata' `refcond_strata' `agegroup':  egen `bygrouptotal_agegrp' = total(`touse') if `touse'   
+  qui gen double `obsby_proportion' = `bygrouptotal_agegrp'/`bygrouptotal' if `touse'
   
   // Now merge in reference proportions & calculate indweight
+  
   tempvar refproportion
   qui frget `refproportion' = `refwtname', from(`refframetmp')
-  qui gen double `newvarname' = `refproportion'/`obsby_proportion'
+  qui gen double `newvarname' = `refproportion'/`obsby_proportion' if `touse'
+ 
+  if "`summary'" == "" {
+    tempvar first
+    tempname summframe
+    qui bysort `touse' `by' `refframe_strata' `refcond_strata' `agegroup': gen `first'=_n==1
+    frame put `by' `refframe_strata' `refcond_strata' `agegroup' `obsby_proportion' `refproportion' `newvarname' if `first' & `touse', into(`summframe')
+    frame `summframe' {
+      qui rename `obsby_proportion' obs
+      qui rename `refproportion' ref
+      di "Summary of weights" _continue
+      local addby = cond("`nobyoption'"=="","`by'","")
+      list `addby' `refframe_strata' `refcond_strata' `agegroup' obs ref `newvarname', noobs abbrev(30) sepby(`by')
+      di as result  "Observed proportions (obs): reference proportions (ref) and relative weights (`newvarname')"
+    }
+  }
  
 // save obsproportion / refproportion and frame
   if "`newobsproportion'" != "" {
-    gen double `newobsproportion' = `obsby_proportion'
+    qui gen double `newobsproportion' = `obsby_proportion' if `touse'
   }
   if "`newrefproportion'" != "" {
-    gen double `newrefproportion' = `refproportion'
+    qui gen double `newrefproportion' = `refproportion' if `touse'
   }  
   if "`saverefframe'" != "" {
-    frame copy `refframetmp' `saverefframe'
+    Parse_saverefframe `saverefframe'
+    local saverefframename `r(saverefframename)'
+    local saverefframevarname `r(saverefframe_refwtname)'
+    frame copy `refframetmp' `saverefframename', `r(saverefframereplace)'
+    if "`refwtname'" != "`saverefframevarname'" {
+      frame `saverefframename': rename `refwtname' `saverefframevarname'
+    }
   }
 end
 
@@ -163,12 +190,12 @@ end
 ///   Parse_refframe ///
 ////////////////////////
 program define Parse_refframe, rclass
-  syntax anything(name=refframe id="frame name"), strata(string) [wtname(string)]
-  if "`wtname'" == "" local wtname refproportion
+  syntax anything(name=refframe id="frame name"), strata(string) [refwtname(string)]
+  if "`refwtname'" == "" local refwtname refp
   
-  frame `refframe': capture confirm var `wtname'
+  frame `refframe': capture confirm var `refwtname'
   if _rc {
-    di as err "Variable `wtname' not found in frame `refframe'."
+    di as err "Variable `refwtname' not found in frame `refframe'."
     exit 198
   }
   frame `refframe': qui duplicates report `strata'
@@ -179,9 +206,21 @@ program define Parse_refframe, rclass
   }
   
   return local refframename `refframe'
-  return local refframe_wtname `wtname'
+  return local refframe_refwtname `refwtname'
   return local refframe_strata `strata'
 end
+
+////////////////////////
+///   Parse_saverefframe ///
+////////////////////////
+program define Parse_saverefframe, rclass
+  syntax anything(name=refframename id="frame name"), [replace refwtname(string)]
+  if "`refwtname'" == "" local refwtname refp
+  return local saverefframereplace `replace'
+  return local saverefframename `refframename'
+  return local saverefframe_refwtname `refwtname'
+end
+
 
 ///////////////////////
 ///  GetExternalRef ///
@@ -204,8 +243,8 @@ program define GetExternalRef
     forvalues i = 1/`nagegroups' {
       qui replace `agegroup' = real(word("`agegrouplevels'",`i')) in `i'
     }
-    qui gen double refproportion = .
-    get`reftype', refproportion(refproportion) nagegroups(`nagegroups')
+    qui gen double refp = .
+    get`reftype', refproportion(refp) nagegroups(`nagegroups')
   }
 end
 
@@ -218,7 +257,7 @@ program define getICSS1_5
     di as error "ICCS1_5 should have 5 levels for agegroup"
     exit 198
   }
-  mata st_store(.,"refproportion",(0.07,0.12,0.23,0.29,0.29)')
+  mata st_store(.,"refp",(0.07,0.12,0.23,0.29,0.29)')
 end
 
 ////////////////////
@@ -230,7 +269,7 @@ program define getICSS1_5N
     di as error "ICCS1_5N should have 5 levels for agegroup"
     exit 198
   }
-  mata st_store(.,"refproportion",(0.11906,0.16735,0.27593,0.28897,0.14869)')
+  mata st_store(.,"refp",(0.11906,0.16735,0.27593,0.28897,0.14869)')
 end
 
 ///////////////////
@@ -241,7 +280,7 @@ program define getICSS2_5
     di as error "ICCS2_5 should have 5 levels for agegroup"
     exit 198
   }
-  mata st_store(.,"refproportion",(0.28,0.17,0.21,0.20,0.14)')
+  mata st_store(.,"refp",(0.28,0.17,0.21,0.20,0.14)')
 end
 
 ///////////////////
@@ -252,7 +291,7 @@ program define getICSS2_5N
     di as error "ICCS2_5N should have 5 levels for agegroup"
     exit 198
   }
-  mata st_store(.,"refproportion",(0.36283,0.18611,0.22098,0.16262,0.06746)')
+  mata st_store(.,"refp",(0.36283,0.18611,0.22098,0.16262,0.06746)')
 end
 
 ///////////////////
@@ -263,9 +302,13 @@ program define getICSS3_5
     di as error "ICCS3_5 should have 5 levels for agegroup"
     exit 198
   }  
-  mata st_store(.,"refproportion",(0.60,0.10,0.10,0.10,0.10)')
+  mata st_store(.,"refp",(0.60,0.10,0.10,0.10,0.10)')
 end
 
+
+///////////////////
+///  GetRefcond ///
+///////////////////
 program define GetRefcond, rclass sortpreserve
   syntax [anything(name=refcondexp everything)],  touse(string)         ///
                                                     refframetmp(string)   ///
@@ -282,7 +325,7 @@ program define GetRefcond, rclass sortpreserve
   if inlist("`refcondexp'","","."," ") {
     local refcondexp
     tempvar refcondexp
-    gen `refcondexp' = 1 if `touse'
+    qui gen `refcondexp' = 1 if `touse'
     quietly count if `refcondexp'
     local Nrefexp `r(N)'
   }
@@ -296,12 +339,12 @@ program define GetRefcond, rclass sortpreserve
   }
   
   tempvar bygrouptotal refproportion firstrow tousereverse
-  bysort `strata': egen `bygrouptotal' = total(`refcondexp' & `touse') if  `touse'  
-  gen double `refproportion' = `bygrouptotal'/`Nrefexp' if `touse'
-  gen byte `tousereverse' = 1 - `touse'
-  bysort `strata' (`tousereverse'): gen `firstrow' = _n==1
+  qui bysort `strata': egen `bygrouptotal' = total(`refcondexp' & `touse') if  `touse'  
+  qui gen double `refproportion' = `bygrouptotal'/`Nrefexp' if `touse'
+  qui gen byte `tousereverse' = 1 - `touse'
+  qui bysort `strata' (`tousereverse'): gen `firstrow' = _n==1
   frame put `strata' `refproportion' if `touse' & `firstrow', into(`refframetmp')
-  frame `refframetmp': rename `refproportion' refproportion
+  frame `refframetmp': rename `refproportion' refp
   
   c_local refcond_strata `strata'
     

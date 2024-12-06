@@ -32,9 +32,9 @@
 {synopt :{opt ederer2}}calculate Ederer II estimate rather than Pohar Perme{p_end}
 {synopt :{opt fh}}use Fleming Harrington estimator of survival{p_end}
 {synopt :{opt frame(framename)}}save list results to a frame{p_end}
-{synopt :{opt inccens}evaluate at censoring times{p_end}
+{synopt :{opt inccens}}evaluate at censoring times{p_end}
 {synopt :{opt indw:eights(varname)}}individual weights (used for external standardization){p_end}
-{synopt :{opt lev:els(#)}}level for confidence intervals (default 95){p_end}
+{synopt :{opt lev:el(#)}}level for confidence intervals (default 95){p_end}
 {synopt :{opt list(numlist)}}list of times to view in in output{p_end}
 {synopt :{opt pmage(varname)}}name of age variable in popmort file{p_end}
 {synopt :{opt pmother(varname)}}name of other variables in popmort file{p_end}
@@ -42,9 +42,10 @@
 {synopt :{opt pmyear(varname)}}name of calendar year variable in popmort file{p_end}
 {synopt :{opt pmmaxage(#)}}maximum age in popmort file{p_end}
 {synopt :{opt pmmaxyear(#)}}maximum year in popmort file{p_end}
+{synopt :{opt popmort2(filename, suboptions)}}incorporate second population mortality file{p_end}
 {synopt :{opt standstrata(varname)}}name of standardization variables{p_end}
 {synopt :{opt standweights(numlist)}}weights for standardizing{p_end}
-{synopt :{opt using2(filename, suboptions)}}incorporate second population mortality file{p_end}
+{synopt :{opt using2(filename, suboptions)}}synonym for popmort2(){p_end}
 {synopt :{opt verbose}}more detailed output{p_end}
 {synopt :{opt graph}}create a graph, with confidence interval{p_end}
 {synopt :{opt graphn:ame(name [, replace])}}name the resulting graph{p_end}
@@ -81,12 +82,12 @@ The data must be {cmd:stset} before using {cmd:stpp}. There should only be 1 row
 {cmd:using} {it:filename} specifies a file containing general-population mortality rates typically stratified by age, sex, calendar year and potentially other variables. In the {cmd:using} file, age must be specified in one-year increments and calendar year in one-year intervals.
 
 {pstd}
-The {cmd:using2({it:filename})} option specifies a scecond file containing general-population mortality rates, 
+The {cmd:popmort2({it:filename})} option specifies a scecond file containing general-population mortality rates, 
 which enables alternative weights to be used. 
 This includes the methods descibed by Sasieni and Brentnall (2016) for net survival and 
 reference adjusted measures for all-cause and crude probabilties (Rutherford {it: et al.} 2022). 
 The aim of these methods is to estimate the survival that would be observed in a population 
-with the expected survival defined by the rates in the {cmd:using2()} file.
+with the expected survival defined by the rates in the {cmd:popmort2()} file.
 
 
 {pstd}
@@ -118,7 +119,8 @@ If two variables are listed then both crude probabilties of death due to cancer 
 {opt ederer2} will lead to calculation of the Ederer II estimate rather than Pohar Perme estimate.
 
 {phang}
-{opt fh} will use the Fleming-Harrington estiamtor of survival (the expoential of the negative cumulative (excess) hazard). The default is the product intergral method.
+{opt fh} use  Fleming-Harrington estimate of survival (the exponential of the negative cumulative (excess) hazard). 
+The default is the product integral (Kaplan-Meier type) method.
 
 {phang}
 {opt frame(framename)} will save the results obtained through using the {cmd:list()} option to a frame. You can use a {cmd:, replace} suboption to overwrite an existing frame.
@@ -140,11 +142,11 @@ For example, {cmd:list(1 5 10)} will list marginal survival at 1, 5 and 10 years
 {opt pmage(varname)} gives name of age variable in the population mortality file. The default is {cmd:_age}. This variable cannot exist in the patient data file, but should exist in the population mortality file.
 
 {phang}
-{opt pmyear(varname)} name of year variable in the population mortality file. The default is {cmd:_year}. This variable cannot exist in the patient data file, but should exist in the population mortality file.
+{opt pmyear(varname)} gives the name of year variable in the population mortality file. The default is {cmd:_year}. This variable cannot exist in the patient data file, but should exist in the population mortality file.
 
 {phang}
-{opt pmother(varlist)} names additional variables in the population mortality file. 
-Usually this will include sex, but could additionally be, for example, information on region, deprivation etc. 
+{opt pmother(varlist)} gives additional variables in the population mortality file.  
+Usually this will include sex, but there could additionally be information on region, deprivation etc for example.  
 All variables listed should be in both the data and the population mortality file.
 
 {phang}
@@ -154,26 +156,13 @@ If you only have one year survival probabilities in the population mortality fil
 where {cmd:survprob} is the one year survival probability.
 
 {phang}
-{opt pmmaxage(#)} specifies the maximum age for which general-population mortality rates are provided in the using file.
+{opt pmmaxage(#)} specifies the maximum age for which general-population mortality rates are provided in the population mortality file. 
 Rates for individuals older than this value are assumed to be the same as for maximum age {it:#}.
 The default maximum age is 99.
 
 {phang}
-{opt pmmaxyear(#)} specifies the maximum year for which general-population mortality rates are provided in the using file.
-Rates for individuals still at risk after this year are assumed to be the same as for maximum year {it:#}.  
-
-{phang}
-{opt standstrata(varname)} gives the variable defining strata across which to average marginal relative survival.
-Weights can be specified using the {cmd:standweights()} options.
-
-{phang}
-{opt standweights(numlist)} gives the weights for obtaining standardized estimates. 
-The {it:numlist} should be of length equal to the number of levels specified in {cmd:standstrata(varname)}
-
-{phang}
-{opt using2(filename, suboptions)} gives the name of a second population mortality file. 
-This can be incorporated as a second time-dependent weight so that the estimators of Sasieni and Brentnall are incorporated when calculating marginal relative survival. When used when calculating crude probabilities of death or all-cause survival the second popmort file is applied to ensure these measures are comparable in that they should only differ due to differences in excess mortality (assuming they have been standardized appropriately). 
-These give what are known as {it: Reference Adjusted} measures (Rutherford {et al}. 2022).
+{opt popmort2(filename, suboptions)} gives the name of a second population mortality file. 
+This can be incorporated as a second time-dependent weight so that the estimators of Sasieni and Brentnall are incorporated when calculating marginal relative survival. When used when calculating crude probabilities of death or all-cause survival/death probabilities reference adjusted measures are calcualed. These measures are comparable in that they should only differ due to differences in excess mortality (assuming they have been standardized appropriately). See Rutherford {et al}. (2022).
 
 {phang2} 
 The following suboptions are available.
@@ -192,9 +181,25 @@ use {cmd:pmother2(.)}.
 used in the {cmd:pmrate} option
 
 {phang2} 
-{opt pmyear2(varname)} gives name of calednar year variable in the second population mortality file. The default is the same name 
+{opt pmyear2(varname)} gives name of calendar year variable in the second population mortality file. The default is the same name 
 used in the {cmd:pmyear} option. If population rates do not vary by calendar year in the second population mortality file then
 use {cmd:pmyear2(.)}.
+
+
+{phang}
+{opt pmmaxyear(#)} specifies the maximum year for which general-population mortality rates are provided in the population mortality file. 
+Rates for individuals still at risk after this year are assumed to be the same as for maximum year {it:#}.  
+
+{phang}
+{opt standstrata(varname)} gives the variable defining strata across which to average marginal relative survival.
+Weights can be specified using the {cmd:standweights()} option.
+
+{phang}
+{opt standweights(numlist)} gives the weights for obtaining standardized estimates. 
+The {it:numlist} should be of length equal to the number of levels specified in {cmd:standstrata(varname)}
+
+{phang}
+{opt using2(filename, suboptions)} synonym for {cmd: popmort2()}
 
 {phang}
 {opt verbose} give some details about the how far the estimation process has proceeded. 
@@ -207,7 +212,7 @@ This was useful when developing the command, but may bring pleasure to those who
 {opt graphname(name [, replace])} an option to name the graph - can replace an existing graph with the replace suboption. 
 
 {phang}
-{opt graphcode(filename)} creates a new do file, which contains the code to recreate the standard graph - this allows the option to make changes to the the plot - e.g. titles, whether to have a risktable etc.
+{opt graphcode(filename [, replace])} creates a new do file, which contains the code to recreate the standard graph - this allows the option to make changes to the the plot - e.g. titles, whether to have a risktable etc.
 
 
 {title:Examples}

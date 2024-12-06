@@ -30,9 +30,10 @@
 {synopt:{opt refext:ernal(string)}}reference weights defined externally{p_end}
 {synopt:{opt reffr:ame(framename)}}reference weights stored in frame{p_end}
 {synopt:{opt refp:roportion(framename)}}save reference proportion{p_end}
-{synopt:{opt refv:ar(framename)}}names of variables to define reference groups{p_end}
 {synopt:{opt savereffr:ame(newframename)}}save reference weights to new frame{p_end}
-{synoptline}
+{synopt:{opt stig:nore}}do not do survival data checks{p_end}
+{synopt:{opt nosum:mary}}do not display summary table{p_end}
+
 
 {marker description}{...}
 {title:Description}
@@ -60,8 +61,8 @@ The reference population can be defined in three different ways.
 
 {phang}
 {opt agegroup(varname)} specifies name of the variable that defines age groups.
-This option is compulsory when using {cmd:refexternal()} or {cmd:refframe()},
-but cannot be used when using {cmd:refconditional()}.
+This option is compulsory when using {cmd:refexternal()}, 
+but cannot be used when using {cmd:refframe()} or {cmd:refconditional()}.
 
 {phang}
 {opt by(varlist)} will calculate relative weights separately for each of the groups 
@@ -75,10 +76,10 @@ defined by {it:varlist}.
 For example, it is sometimes useful to age standardize to the most recent
 calendar period when investigating time trends. 
 The {cmd:strata()} option is compulsory and gives the variables that defines the groups
-to standardize over.
+to standardize over. 
 
 {phang}
-{opt refexternal(external_weigts)} gives the name of the external weights used for age
+{opt refexternal(external_weights)} gives the name of the external weights used for age
 standardization. 
 
 {phang2}
@@ -111,15 +112,30 @@ the weights, and corresponding options, are defined as follows:
 Note that it is the responsibility of the user to define age groups appropriately.           
            
 {phang}
-{opt refframe(framename, strata(varlist))} gives the name of the frame where external weights are stored.
+{opt refframe(framename, strata(varlist) refwtname(varname))} gives the name of the frame where external weights are stored.
 The {cmd:strata()} option is compulsory and gives the variables that defines the groups
 to standardize over. These variables must exist in both the active frame and the
-frame containing the weights.
+frame containing the weights. 
+The {cmd:refwtname()} option gives the name of the variable containing the reference weights.
+By default, this variable is named {cmd:refp}.
 
 {phang}
-{opt saverefframe(newframename)} gives the name of a new frame to save the
+{opt refproportion(newvarname)} save the reference proportions in a new variable.
+
+{phang}
+{opt saverefframe(newframename)}{bf:, [replace refwtname({it:varname}))} gives the name of a new frame to save the
 external weights. This is useful when using the {cmd:refconditional()} option,
 so that the weights can be applied to a different dataset.
+The default name of the reference proportions is {cmd:refp}, but this can 
+be changed with the {cmd:refwtname()} option.
+
+{phang}
+{opt nosummary} do not display summary table of weights.
+
+{phang}
+{opt stignore} do not do survival analysis checks. Although {cmd:genindweights} was
+originally developed for use with survival data, it is also potentially useful in other contexts,
+so this option will omit any checks that data has been {cmd:stset} and {cmd:_st=1}.
 
          
 {marker examples}{...}
@@ -159,13 +175,13 @@ stratified by sex.
 {phang2}
 . genindweights wt1, by(sex) agegroup(ICSSagegrp) refexternal(ICSS1_5){p_end}
 {pmore}
-. stpp R_pp using "https://p{bind:textclambert.net/data/popmort.dta",{* ///}{p_end}
+. stpp R_pp using "https://pclambert.net/data/popmort.dta",  ///{p_end}
 {p 16 20 2}
-agediag(age) datediag(dx){bind:text ///}{p_end}
+agediag(age) datediag(dx) {bind:                          }///{p_end}
 {p 16 20 2}
-pmother(sex) list(1 5 ){bind:text   ///}{p_end}
+pmother(sex) list(1 5 )   {bind:                            }///{p_end}
 {p 16 20 2}
-by(sex){bind:text                   ///}{p_end}
+by(sex)  {bind:                                           }       ///{p_end}
 {p 16 20 2}
 indweights(wt1){p_end}
 {txt}{...}
@@ -213,7 +229,7 @@ end{p_end}
 {phang2}
 // strata gives the strata in the reference frame{p_end}
 {phang2}
-. genindweights wt2, by(sex) agegroup(ICSSagegrp) ///{p_end}
+. genindweights wt2, by(sex) {bind:                              } ///{p_end}
 {p 16 20 2}
 refframe(ageweights, strata(ICSSagegrp) wtname(wt)){p_end}
 {phang2}
@@ -251,13 +267,13 @@ The individual weights are the ratio of reference/observed probabilities.
 {phang2}
 . genindweights wt3, by(sex) refconditional(sex==1, strata(agegrp10)){p_end}
 {pmore}
-. stpp R_pp using "https://p{bind:textclambert.net/data/popmort.dta",{* ///}{p_end}
+. stpp R_pp using "https://pclambert.net/data/popmort.dta", ///{p_end}
 {p 16 20 2}
-agediag(age) datediag(dx){bind:text ///}{p_end}
+agediag(age) datediag(dx){bind:                           }///{p_end}
 {p 16 20 2}
-pmother(sex) list(1 5 ){bind:text   ///}{p_end}
+pmother(sex) list(1 5 ){bind:                             }///{p_end}
 {p 16 20 2}
-by(sex){bind:text                   ///}{p_end}
+by(sex){bind:                                             }///{p_end}
 {p 16 20 2}
 indweights(wt3){p_end}
 {txt}{...}
@@ -282,9 +298,9 @@ frame. This can later be used in a new dataset using the {cmd:refframe()} option
 {phang2}
 . egen agegrp10 = cut(age), group(10){p_end}
 {phang2}
-. genindweights wt3, by(sex) refconditional(sex==1, strata(agegrp10)){p_end}
+. genindweights wt3, by(sex) refconditional(sex==1, strata(agegrp10)) ///{p_end}
 {p 16 20 2}
-obsproportion(obsp) refproportion(refp)      ///{p_end}
+obsproportion(obsp) refproportion(refp) {bind:               }     ///{p_end}
 {p 16 20 2}
 saverefframe(age10ref){p_end}
 {phang2}

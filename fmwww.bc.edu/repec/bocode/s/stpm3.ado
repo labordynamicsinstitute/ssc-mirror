@@ -1,5 +1,4 @@
-*! version 1.13 2024-09-05
-
+*! version 1.14 2024-12-04
 program stpm3, eclass byable(onecall)
 	version 16.1
 
@@ -150,7 +149,7 @@ program Estimate, eclass
     local extfunclist `"`extfunclist' `r(extfunclist)'"'
     local tvc `r(cleanedvarlist)'
   }
-  stpm3_gen_extended_functions `extfunclist', xb("`anything'") tvc("`tvc'") 
+  stpm3_gen_extended_functions `extfunclist' if `touse', xb("`anything'") tvc("`tvc'") 
   
   if `"`tvc'"' != "" local tvcopt tvc(`tvc')  
   
@@ -352,10 +351,10 @@ program Estimate, eclass
       local initvalmodels exp weibull stpm2
     }
     if "`scale'" == "probit" & "`mlmethod'" == "" {
-      local mlmethod = cond("`bhazard'"=="","gf1","gf0")
+      local mlmethod = cond("`bhazard'"=="","gf2","gf1")
     }
     if "`scale'" == "lnodds" & "`mlmethod'" == "" {
-      local mlmethod = cond("`bhazard'"=="","gf2","gf0")
+      local mlmethod = cond("`bhazard'"=="","gf2","gf1")
     }  
     
     if "`mlmethod'" == "" local mlmethod gf2    
@@ -679,7 +678,7 @@ program define CoxInit, rclass
     qui replace `coxindex'=`coxindex'-`r(mean)' if `touse'
     qui stcox `coxindex' if `touse', 
     qui predict double `S' if `touse', basechazard
-    qui replace `S' = exp(-`S')
+    qui replace `S' = exp(-`S') if `touse'
     if "`bhazard'" != "" {
       qui replace `S' = `S'/exp(-`bhazinit'*`bhazard'*_t) if `touse'
     }
@@ -691,7 +690,7 @@ program define CoxInit, rclass
     local predopt = cond("`scale'"!="lnhazard","csurv","hazard")
     qui predict double `Sadj' if `touse', `predopt'
     if "`bhazard'" != "" {
-      qui replace `Sadj' = `Sadj'/exp(-`bhazinit'*`bhazard'*_t)
+      qui replace `Sadj' = `Sadj'/exp(-`bhazinit'*`bhazard'*_t) if `touse'
     }    
   }
   else if "`model'" == "weibull" {
@@ -699,14 +698,13 @@ program define CoxInit, rclass
     local predopt = cond("`scale'"!="lnhazard","csurv","hazard")
     qui predict double `Sadj' if `touse', `predopt'  
     if "`bhazard'" != "" {
-      qui replace `Sadj' = `Sadj'/exp(-`bhazinit'*`bhazard'*_t)
+      qui replace `Sadj' = `Sadj'/exp(-`bhazinit'*`bhazard'*_t) if `touse'
     }       
   }
   else if "`model'" == "stpm2" {
     if "`bhazard'" != "" local bhazopt bhazard(`bhazard')
     qui stpm2 `varlist' if `touse', df(5) scale(hazard) `bhazopt'  
     qui predict double `Sadj' if `touse', survival 
-    
     qui predict double `hadj' if `touse', hazard 
   }  
   
@@ -722,10 +720,10 @@ program define CoxInit, rclass
     qui gen double `Z' = invnormal((`nobs'*(1-`Sadj')-3/8)/(`nobs'+1/4))  `addoff' if `touse'
   }
   else if "`scale'" == "lnhazard" {
-    qui gen double `Z' = ln(`Sadj')
+    qui gen double `Z' = ln(`Sadj') if `touse'
   }
   else if "`scale'"=="hazard" {
-     qui gen double `Z' = `hadj' 
+     qui gen double `Z' = `hadj' if `touse'
   }
   
   
@@ -923,7 +921,7 @@ program define stpm3_gen_extended_functions, rclass
       local add_v_extend`j'
       local functype `r(functype)'
       if inlist("`functype'","ns","bs","rcs") {
-        gensplines `v', `allopts' gen(_`r(functype)'_f`Nf'_`v') ///
+        gensplines `v' if `touse', `allopts' gen(_`r(functype)'_f`Nf'_`v') ///
                                type(`r(functype)')
         local ef_`v'_center`Nf' `r(center)'                                   
         local ef_`v'_knots`Nf'  `r(knots)'                                   
@@ -931,13 +929,13 @@ program define stpm3_gen_extended_functions, rclass
         if "`functype'" == "bs" local ef_`v'_degree`Nf' `r(degree)'
       }
       else if "`functype'" == "fp" {
-        stpm3_fpgen `v', `allopts' stub(_fp_f`Nf'_`v')
+        stpm3_fpgen `v' if `touse', `allopts' stub(_fp_f`Nf'_`v')
         local ef_`v'_powers`Nf' `r(powers)'                                   
         local ef_`v'_center`Nf' `r(center)'                                   
         local ef_`v'_scale`Nf'  `r(scale)'                                   
       }
       else if "`functype'" == "poly" {
-        stpm3_polygen `v', `allopts' stub(_poly_f`Nf'_`v')
+        stpm3_polygen `v' if `touse', `allopts' stub(_poly_f`Nf'_`v')
         local ef_`v'_degree`Nf' `r(degree)'                                   
         local ef_`v'_center`Nf' `r(center)'                                   
       }
@@ -945,7 +943,7 @@ program define stpm3_gen_extended_functions, rclass
         local vname  = cond("`r(stub)'"=="","f`ef_Nuser'","`r(stub)'")
         local fn_names `fn_names' `vname'
         local ef_`ef_Nuser' `ef'
-        stpm3_userfunc `r(function)', `allopts' vname(_fn_`vname')
+        stpm3_userfunc `r(function)' if `touse', `allopts' vname(_fn_`vname')
         local ef_fn`ef_Nuser'_centerval `r(fncenter)'
       }      
 

@@ -20,7 +20,7 @@ program define stpm3_userfunc, rclass
   else if `hascenterv' local centerval `centerv'
 
   if "`centerval'" != "" {
-    replace `vname' = `vname' - `centerval'
+    replace `vname' = `vname' - `centerval' if `touse'
   }
   
   return local fnvarname `vname'

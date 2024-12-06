@@ -93,7 +93,7 @@ program define stpm3km, rclass
   
   // frame options 
   if "`frame'" != "" { 
-  	getframeoptions `frame'
+  	getframeoptions_stpm3km `frame'
     mata: st_local("frameexists",strofreal(st_frameexists(st_local("resframe"))))
     if `frameexists' & "`framereplace'" == "" & "`framemerge'" == "" {
       di as error "Frame `resframe' exists. Use replace suboption or another framename."
@@ -386,7 +386,7 @@ program addcommas, rclass
 end
 
 // get frame options
-program define getframeoptions
+program define getframeoptions_stpm3km
   syntax [anything], [replace]
   c_local resframe       `anything'
   c_local framereplace   `replace'

@@ -1,4 +1,4 @@
-*! version 1.3.1 2024-11-18
+*! version 1.3.3 2024-12-05
 
 program define stpp, rclass sortpreserve
   version 16.0
@@ -12,22 +12,23 @@ program define stpp, rclass sortpreserve
                    ALLCause(namelist max=1)                             ///
                    BY(varlist)                                          ///
                    CRUDEProb(namelist min=1 max=2)                      ///
-                   DEATHPROB                                            ///
+                   DEATHProb                                            ///
                    dropexpected                                         ///
-                   ederer2                                              ///
+                   EDerer2                                              ///
                    FH                                                   ///
                    FRame(string)                                        ///
                    LEVel(real `c(level)')                               ///
                    INCCENS                                              ///
                    INDWeights(varname)                                  ///
-                   LIST(numlist ascending >0)                           ///
+                   LIST(numlist ascending >=0)                          ///
                    MINEXPsurv(string)                                   ///
-                   pmage(string)                                        ///
-                   pmother(string)                                      ///
-                   pmrate(string)                                       ///
-                   pmyear(string)                                       ///
+                   PMAGE(string)                                        ///
+                   PMOTHER(string)                                      ///
+                   PMRATE(string)                                       ///
+                   PMYEAR(string)                                       ///
                    pmmaxage(real 99)                                    ///
                    pmmaxyear(real 10000)                                ///
+                   POPmort2(string)                                     ///
                    STANDSTrata(varname)                                 ///            
                    STANDWeights(numlist >=0 <=1)                        ///
                    USING2(string)                                       ///
@@ -42,7 +43,17 @@ program define stpp, rclass sortpreserve
   qui replace `touse' = 0  if _st==0 | _st==. 	
 	
   local otheroptions `options'
-
+  
+  // extract allowed graph options
+  _get_gropts, graphopts(`otheroptions') getallowed(legend xtitle ytitle title)
+  if "`s(graphopts)'" ! = "" {
+    di as error "Illegal option(s), `s(graphopts)'"
+    exit 198
+  }
+  if `"`s(ytitle)'"' == "" local ytitle ytitle("Marginal Relative Survival")
+  if `"`s(xtitle)'"' == "" local xtitle xtitle("Time since diagnosis (years)")
+  if `"`s(legend)'"' !=""  local haslegend haslegend
+  
 // id variable
   if `"`_dta[st_id]'"' == "" {
   di as err "stpp requires that you have previously stset an id() variable"
@@ -78,12 +89,9 @@ program define stpp, rclass sortpreserve
     di as error
   }
   if "`by'"         != "" confirm var `by'    
-  
-  
-  
 
   if "`standstrata'" != "" {
-  	count if missing(`standstrata') & `touse'
+  	qui count if missing(`standstrata') & `touse'
     if `r(N)' > 0 {
     	display as error "Missing values not allowed for standstrata."
     	display as error "You can exclude using an if statement."
@@ -120,10 +128,21 @@ program define stpp, rclass sortpreserve
     }
   }
 
-  if "`ederer2'" != "" & "`using2'" != ""{
-    di as error "You can't use the ederer2 option and using2() options together"
+  
+  if "`popmort2'" != "" & "`using2'" != ""{
+    di as error "You can't use both the using2() and popmort2() options."
     exit 198
   }
+  
+  if "`popmort2'" != "" local using2 `popmort2'
+
+  if "`ederer2'" != "" & "`using2'" != ""{
+    di as error "You can't use the ederer2 option and using2()/popmort2() options together"
+    exit 198
+  }
+
+  
+  
   
   /// checks that at least one observation and 1 event. (within standstrata???)
   if "`by'" != "" | "`standstrata'" != "" {
@@ -202,7 +221,7 @@ program define stpp, rclass sortpreserve
     foreach var in `pmage2' `pmyear2' `pmother2' `pmrate2' {
       local varinpopmort2:list posof "`var'" in popmort2vars
       if !`varinpopmort2' {
-        di "`var' is not in using2() file"
+        di "`var' is not in popmort2() file"
         exit 198
       }
     }    
@@ -219,7 +238,7 @@ program define stpp, rclass sortpreserve
   qui gen `yeardiag' = year(`datediag') if `touse'
   summ `yeardiag'  if `touse', meanonly
   local minyear = `r(min)'
-  qui gen `attyear' = year(`datediag' + (_t+1)*365.25)  if `touse'
+  qui gen `attyear' = year(`datediag' + (_t+1)*365.241)  if `touse'
   summ `attyear' if `touse', meanonly
   local maxattyear = min(`r(max)',`pmmaxyear')	
 
@@ -234,18 +253,16 @@ program define stpp, rclass sortpreserve
     if "`pmyear2'" != "" {
       local inrangepmyear2 "& inrange(`pmyear2',`minyear',`maxattyear')"
     }
-    frame `popmort2frame': use "`using2filename'" if                ///
+    frame `popmort2frame': qui use "`using2filename'" if                ///
 	                     inrange(`pmage2',`minage',`maxattage') `inrangepmyear2'
     frame `popmort2frame': qui count
     if `r(N)'==0 {
-      di as error "using2 file has no observation after restrictions - check syntax."
+      di as error "popmort2() file has no observation after restrictions - check syntax."
       di as error "You may want to use pmyear2(.) and/or pmother2(.) if"              
       di as error "popmort file does not vary by year / other covariates."
       exit 198
     }
   } 
-	
-  return clear
 	
   mata: stpp()
 
@@ -279,6 +296,37 @@ program define stpp, rclass sortpreserve
     frget *, from(`tmplink')
     frame drop stpp_tmpdataframe
   }
+  
+  
+  
+// add further details to frame
+if "`frame'" != "" {
+  tempfile Natrisk
+  
+  summ _t if `touse', meanonly
+  local tmax `r(max)'
+  foreach n in `list' {
+    if `n'<=`tmax' local list2 `list2' `n'
+  }
+  qui sts list if `touse', by(`by') atrisk0 risktable(`list2') saving(`Natrisk')
+  
+  tempname Natrisk_frame
+  frame create `Natrisk_frame'
+  frame `Natrisk_frame' {
+    use `Natrisk'
+    keep `by' time at_risk
+  }  
+  frame `resframe' {
+    qui frlink 1:1 `by' time, frame(`Natrisk_frame')
+    qui frget Natrisk = at_risk, from(`Natrisk_frame')
+    qui replace Natrisk = 0 if Natrisk ==.
+    order `by' time Natrisk
+  }
+  char _dta[cmd] stpp `0'
+  qui findfile stpp.ado
+}  
+  
+  
 
 *******************
 // fill in gaps	///
@@ -305,17 +353,18 @@ if "`inccens'"=="" {
     quietly bysort `by' `touse'  (_t `d0'): replace `v' = `v'[_n-1] if `v' >= . & `touse' 
   }
 }
+
+
+
+
+
+
   
 *******************
 // graphs     	///
 *******************	
   if "`graph'"!="" | "`graphname'"!="" | "`graphcode'"!="" {
     quietly {
-      _get_gropts, graphopts(`otheroptions') getallowed(legend xtitle ytitle title)
-
-      if `"`s(ytitle)'"' == "" local ytitle ytitle("Marginal Relative Survival")
-      if `"`s(xtitle)'"' == "" local xtitle xtitle("Time since diagnosis (years)")
-      if `"`s(legend)'"' !=""  local haslegend haslegend
 	  
       preserve
         keep if `touse'
@@ -791,6 +840,7 @@ function PP_Get_stpp_info()
   S.maxt_k       = asarray_create("real",1)
   S.mint_k       = asarray_create("real",1)
   S.maxtall_k    = asarray_create("real",1)
+ 
 
   for(k=1;k<=S.Nbylevels;k++) {
     for(s=1;s<=S.Nstandlevels;s++) {
@@ -1024,7 +1074,6 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
         tj       = asarray(S.unique_t_sk,(s,k))[j]
         tstart_j = t_rates_start[j]
         S.yj     = y[j]
-        
         S.atrisk_all  = (t_by:>=tj)
         S.atrisk_all_index  = selectindex(S.atrisk_all) // keeps those who will be at risk in future (delayed entry)
         atrisk_index  = selectindex(S.atrisk_all :& (t0_by:<tj))
@@ -1041,10 +1090,12 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
         tmpselect = selectindex(S.attyear:>S.pmmaxyear)
         if(cols(tmpselect)) S.attyear[tmpselect] = J(rows(tmpselect),1,S.pmmaxyear) 
         S.attyear = S.attyear :+ S.yearplus
-        exprates = PP_gen_exprates(S,1,S.pm,S.attyear):*S.yj  
-        expcumhaz[S.atrisk_all_index] = expcumhaz[S.atrisk_all_index] :+ exprates
 
+        exprates = PP_gen_exprates(S,1,S.pm,S.attyear):*S.yj  
+
+        expcumhaz[S.atrisk_all_index] = expcumhaz[S.atrisk_all_index] + exprates
         expsurv_tj = exp(-(expcumhaz[atrisk_index]))
+
         if(S.hasminexpsurv) {
           tmpselect = selectindex(expsurv_tj:<S.minexpsurv)
           expsurv_tj[tmpselect] = J(rows(tmpselect),1,S.minexpsurv)
@@ -1055,7 +1106,7 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
 
           exprates2 = PP_gen_exprates(S,2,S.pm2,tmpattyear):*S.yj
 	  
-          expcumhaz2[S.atrisk_all_index] = expcumhaz2[S.atrisk_all_index] :+ exprates2
+          expcumhaz2[S.atrisk_all_index] = expcumhaz2[S.atrisk_all_index] + exprates2
           expsurv2_tj = exp(-(expcumhaz2[atrisk_index])) 
           if(S.hasminexpsurv) {
             tmpselect = selectindex(expsurv2_tj:<S.minexpsurv)
@@ -1079,33 +1130,36 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
         }
         Y_wt = quadcolsum(wt_atrisk)	
 
-        if(!S.dropexpected) lambda_e_tmp[j] = (N_wt :- quadcolsum(wt_atrisk:*exprates[exprates_index])):/Y_wt
-        else lambda_e_tmp[j] = (N_wt):/Y_wt
-        lambda_e_tmp_var[j] = (v1:/(Y_wt:^2))
+        if(!S.dropexpected) lambda_e_tmp[j] = (N_wt - quadcolsum(wt_atrisk:*exprates[exprates_index]))/Y_wt
+        else lambda_e_tmp[j] = (N_wt)/Y_wt
+
+        if(!S.dropexpected) lambda_e_tmp[j] = (N_wt - quadcolsum(wt_atrisk:*exprates[exprates_index]))/Y_wt
+        else lambda_e_tmp[j] = (N_wt)/Y_wt
+        lambda_e_tmp_var[j] = (v1/(Y_wt:^2))
 
 // Crude probabilities and allcause
         if(S.hascrudeprob | S.hasallcause) {
           if(!S.haspopmort2) { 
             sumatrisk             =  quadcolsum(indweights_by[atrisk_index])
 
-            if(sum(died_tj_select)==0) {
+            if(sum(died_tj_select)) {
+              Ndied_tj  =  quadcolsum((indweights_by[atrisk_index])[died_tj_select])
+              v2        =  quadcolsum((indweights_by[atrisk_index])[died_tj_select]:^2)
+            }
+            else {
               Ndied_tj = 0
               v2 = 0
             }
-            else {
-              Ndied_tj  =  quadcolsum((indweights_by[atrisk_index])[died_tj_select])
-              v2                    =  quadcolsum((indweights_by[atrisk_index])[died_tj_select]:^2)
-            }
-            lambda_all_tmp[j]     =  Ndied_tj:/sumatrisk
-            lambda_all_tmp_var[j] =  v2:/sumatrisk:^2
-            lambda_pop1_tmp[j]    =  quadcolsum(exprates[exprates_index]:*indweights_by[atrisk_index]):/sumatrisk
+            lambda_all_tmp[j]     =  Ndied_tj/sumatrisk
+            lambda_all_tmp_var[j] =  v2/sumatrisk:^2
+            lambda_pop1_tmp[j]    =  quadcolsum(exprates[exprates_index]:*indweights_by[atrisk_index])/sumatrisk
           }
           else {
             sumatrisk             =  quadcolsum(indweights_by[atrisk_index])
-            lambda_all_tmp[j]     =  N_wt:/Y_wt
-            lambda_all_tmp_var[j] =  v1:/((Y_wt:^2))
-            lambda_pop1_tmp[j]    =  quadcolsum(wt_atrisk:*exprates[exprates_index]:*indweights_by[atrisk_index]):/Y_wt
-            lambda_pop2_tmp[j]    =  quadcolsum(wt_atrisk:*exprates2[exprates_index]:*indweights_by[atrisk_index]):/Y_wt
+            lambda_all_tmp[j]     =  N_wt/Y_wt
+            lambda_all_tmp_var[j] =  v1/((Y_wt:^2))
+            lambda_pop1_tmp[j]    =  quadcolsum(wt_atrisk:*exprates[exprates_index]:*indweights_by[atrisk_index])/Y_wt
+            lambda_pop2_tmp[j]    =  quadcolsum(wt_atrisk:*exprates2[exprates_index]:*indweights_by[atrisk_index])/Y_wt
           }
         }
       }
@@ -1129,7 +1183,7 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
 
 
 
-////////////////////////////////
+///////////////f/////////////////
 // PP_gen_exprates.mata
 //
 // Generate expected rates
@@ -1144,25 +1198,41 @@ real matrix PP_gen_exprates(struct stpp_info scalar   S,
 {  
   real matrix  exprates, rateindex, pmotherselect 
   real scalar  p, b, yminmax, ymin, ymax
+  
+  real matrix tmpexprates, tmpattage, tmpattyear_pmo
+  
   exprates = J(rows(S.atrisk_all_index),1,.)
+  
   yminmax=minmax(tmpattyear)
-  ymin= yminmax[1]
+  ymin = yminmax[1]
   ymax = yminmax[2]
+
   for(p=1;p<=S.Npmoth_levels[1,pmnumber];p++) {
     pmotherselect = rowsum(asarray(S.pmothervars_by,pmnumber)[S.atrisk_all_index,] :== 
-                    asarray(S.pmoth_levels,pmnumber)[p,]):==S.Npmother[pmnumber] :& S.atrisk_all[S.atrisk_all_index]
+                    asarray(S.pmoth_levels,pmnumber)[p,]):==S.Npmother[pmnumber] //:& S.atrisk_all[S.atrisk_all_index]
 
-    for(b=ymin;b<=ymax;b++) {
-      rateindex = selectindex((tmpattyear:==b) :& pmotherselect)
-      if(cols(rateindex)) exprates[rateindex] = asarray(pm,asarray(S.pmoth_levels,pmnumber)[p,])[S.attage[rateindex] , b]
-    } 
-  }  
+    pmotherselect = selectindex(pmotherselect) 
+    tmpexprates = exprates[pmotherselect] 
+    tmpattage = S.attage[pmotherselect]
+
+    // some speed gains counting backwards
+    tmpattyear_pmo = tmpattyear[pmotherselect]
+    for(b=ymax;b>=ymin;b--) {
+       rateindex = selectindex((tmpattyear_pmo:==b))
+       if(cols(rateindex)) tmpexprates[rateindex] = asarray(pm,asarray(S.pmoth_levels,pmnumber)[p,])[tmpattage[rateindex] , b]
+     } 
+   
+    exprates[pmotherselect] = tmpexprates
+   } 
   return(exprates)
-}  
+}   
 
 
 /*
 Note - pmotherselect is slow - could form an array and just update using S.atrisk_all
+Some speed gains by 
+  -- counting backwards in loop
+  -- select subset of exprates (tmpexprates)
 */
 
 
@@ -1345,7 +1415,7 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
 
   real scalar         i, k, j
 
-  string scalar       method, bytext, rmatname, agestand, currentframe
+  string scalar       method, methodshort, bytext, rmatname, agestand, currentframe, RSname
   
   string matrix       newvars
   
@@ -1356,7 +1426,7 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
 
   if(S.ederer2) method = "Ederer II"
   else method = "Pohar Perme"
-  if(S.haspopmort2) method = method + " (Sasieni and Brentnall weights)"
+  if(S.haspopmort2) method = method + "Sasieni and Brentnall"
   if(S.hasstandstrata) agestand=sprintf("(Standardized by %s)",S.standstrata_var) 
 	else agestand = ""
   st_local("subtitle",sprintf(method))
@@ -1369,11 +1439,6 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
   if(S.hasallcause)  AC_list_matrix     = asarray_create("real",1)
   if(S.hascrudeprob) CP_can_list_matrix = asarray_create("real",1)
   if(S.CP_calcother) CP_oth_list_matrix = asarray_create("real",1)
-
-  tempPP = J(0,S.Nbyvars+4,.)
-  if(S.hasallcause) tempAC = J(0,S.Nbyvars+4,.)
-  if(S.hascrudeprob) tempCP_can = J(0,S.Nbyvars+4,.)
-  if(S.CP_calcother) tempCP_oth = J(0,S.Nbyvars+4,.)
 
   for(k=1;k<=S.Nbylevels;k++) {
     RS_tmplist         = J(S.Nlist,4,.)
@@ -1421,10 +1486,24 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
   }
 
 // List results
-  if(S.ederer2) method = "Ederer II"
-  else method = "Pohar Perme"
-  if(S.haspopmort2) method = method + " (Sasieni and Brentnall weights)"
+  if(S.ederer2) {
+    method = "Ederer II"
+    methodshort = "E2"
+  }
+  else {
+    method = "Pohar Perme"
+    methodshort = "PP"
+  }
+  if(S.haspopmort2) {
+    method = "Sasieni and Brentnall"
+    methodshort = "SB"
+  }
   if(S.haslist) {
+    st_rclear()
+    tempPP = J(0,S.Nbyvars+4,.)
+    if(S.hasallcause) tempAC = J(0,S.Nbyvars+4,.)
+    if(S.hascrudeprob) tempCP_can = J(0,S.Nbyvars+4,.)
+    if(S.CP_calcother) tempCP_oth = J(0,S.Nbyvars+4,.)       
     printf("\n\n"+method+" Estimates of Marginal Relative Survival\n")
     if(S.hasstandstrata) printf("(Standardized by %s)",S.standstrata_var) 
     printf("\n\n")
@@ -1436,7 +1515,8 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
     	  }
     	printf("{txt}-> %s\n\n",bytext)
       }
-      printf("{txt}Time{space   7}{c |}   PP{space 5}(%s{txt}%% CI) \n",strofreal(S.level*100))
+      
+      printf("{txt}Time{space   7}{c |}   "+methodshort+"{space 5}(%s{txt}%% CI) \n",strofreal(S.level*100))
       printf("{hline 11}{c +}{hline 26}\n")		
       for(i=1;i<=S.Nlist;i++) {
         printf("{res}%6.3g{space 5}{txt}{c |} {res}%5.3f (%5.3f to %5.3f)\n",
@@ -1446,12 +1526,11 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
         asarray(RS_list_matrix,k)[i,4])
       }
       printf("{txt}{hline 11}{c +}{hline 26}\n\n")
-      stata("return clear")
-
+      
       if(S.hasby) {
          tempPP = tempPP \ (J(rows(asarray(RS_list_matrix,k)),1,S.bylevels[k,]),asarray(RS_list_matrix,k))
          rmatname = "r(PP" + strofreal(k) + ")"
-         st_matrix(rmatname,tempPP)      
+         st_matrix(rmatname,tempPP)
       }
       else tempPP = asarray(RS_list_matrix,k) 
 
@@ -1496,7 +1575,12 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
     currentframe = st_framecurrent()
     st_framecreate(S.resframe)
     st_framecurrent(S.resframe)
-    newvars = (S.byvars,"time","PP","PP_lci","PP_uci")
+    
+    if(S.haspopmort2) RSname = "SB"
+    else if(S.ederer2) RSname = "E2"
+    else RSname = "PP"
+    
+    newvars = (S.byvars,"time",RSname,RSname+"_lci",RSname+"_uci")
     (void) st_addvar("double", newvars)
     st_addobs(rows(tempPP)) 
     st_store(.,newvars,.,tempPP)

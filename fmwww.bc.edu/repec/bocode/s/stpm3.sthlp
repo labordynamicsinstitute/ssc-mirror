@@ -59,7 +59,7 @@ for some examples.
 
 {syntab:Estimation options}
 {synopt:{opt initm:odel(modeltype)}}model used for initial values{p_end}
-{synopt:{opt initmodelloop}}loop over different inital model types{p_end}
+{synopt:{opt initvaluesloop}}loop over different inital model types{p_end}
 {synopt:{opt mlmethod(method)}}estimation method{p_end}
 {synopt :{opt nod:es(#)}}number of nodes for Gauss-Legendre integration{p_end}
 {synopt :{it:{help stpm3##maximize_options:maximize_options}}}control the maximization process; seldom used{p_end}

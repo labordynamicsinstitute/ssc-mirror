@@ -15,8 +15,9 @@ d complex models involving non-linear effects, interactions and
 d time-dependent effects. 
 d
 d KW: survival
-d KW: survival function
-d KW: hazard function
+d KW: Pohar
+d KW: Perme
+d KW: marginal net survival
 d
 d Requires: Stata version 16.1
 d
