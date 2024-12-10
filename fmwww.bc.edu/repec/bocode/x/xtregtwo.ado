@@ -5,7 +5,7 @@
 program define xtregtwo, eclass
     version 14.2
  
-    syntax varlist(numeric) [if] [in] [, NOConstant FE]
+    syntax varlist(numeric) [if] [in] [, NOConstant FE TWFE]
     marksample touse
  
 	qui xtset
@@ -29,12 +29,17 @@ program define xtregtwo, eclass
 	  local fixedeffect = 0
 	}
 	
+	local twowayfixedeffect = 1
+	if "`twfe'" == "" {
+	  local twowayfixedeffect = 0
+	}
+	
 	mata: estimation("`depvar'","`cnames'","`panelid'","`timeid'",		 ///
 					 "`touse'","`b'","`V'","`N'","`T'","`NT'","`M'",     ///
-					 `const',`fixedeffect')
+					 `const',`fixedeffect',`twowayfixedeffect')
 	
 	local cnames `cnames'
-	if "`noconstant'" == "" & "`fe'" == ""{
+	if "`noconstant'" == "" & "`fe'" == "" & "`twfe'" == "" {
 		local cnames "`cnames' _cons"
 	}
 	matrix colnames `b' = `cnames'
@@ -48,8 +53,9 @@ program define xtregtwo, eclass
 	ereturn scalar M    = `M'
 	ereturn local  cmd  "xtregtwo"
 	ereturn display
-	di "Reference: Chiang, H.D., B.E. Hansen, and Y. Sasaki (2022) Standard Errors for"
-	di "Two-Way Clustering with Serially Correlated Time Effects. Working Paper."
+	di "Reference: Chiang, H.D., B.E. Hansen, and Y. Sasaki (2024) Standard Errors for"
+	di "Two-Way Clustering with Serially Correlated Time Effects. Review of Economics"
+	di "and Statistics, forthcoming."
 end
 ////////////////////////////////////////////////////////////////////////////////
  
@@ -62,7 +68,7 @@ void estimation(string scalar depvar, 	string scalar indepvars, 			 ///
 				string scalar Vname,   	string scalar nname,	 			 ///
 				string scalar tname,	string scalar ntname,				 ///
 				string scalar mname,	real scalar constant,				 ///
-				real scalar fe)
+				real scalar fe,			real scalar twfe)
 {
     Y = st_data(., depvar, touse)
     X = st_data(., indepvars, touse)
@@ -73,14 +79,14 @@ void estimation(string scalar depvar, 	string scalar indepvars, 			 ///
 	N = rows(uniq_i)
 	T = rows(uniq_t)
 	
-	if( constant > 0.5 & fe < 0.5){
+	if( constant > 0.5 & fe < 0.5 & twfe < 0.5 ){
 		ones = J(rows(X),1,1)
 		X = X,ones
 	}
 	
 //////////////////////////////////////////////////////////////////////////////// 
-// Within-Transformation If Fixed Effect
-	if( fe > 0.5 ){
+// Within-Transformation If One-Way Fixed Effect
+	if( fe > 0.5 & twfe < 0.5 ){
 		for( uidx = 1 ; uidx <= N ; uidx++ ){
 			idx = uniq_i[uidx,1]
 			for( jdx = 1 ; jdx <= cols(X) ; jdx++ ){
@@ -88,6 +94,38 @@ void estimation(string scalar depvar, 	string scalar indepvars, 			 ///
 			}	
 			Y[select((1..rows(X))',i:==idx),  1] = Y[select((1..rows(X))',i:==idx),  1] :- mean(Y[select((1..rows(X))',i:==idx),  1])
 		}
+		//X = X[select((1..rows(X))',t:!=uniq_t[1,1]),]
+		//Y = Y[select((1..rows(Y))',t:!=uniq_t[1,1]),]
+		//i = i[select((1..rows(i))',t:!=uniq_t[1,1]),]
+		//t = t[select((1..rows(t))',t:!=uniq_t[1,1]),]
+		uniq_i = uniqrows(i)
+		uniq_t = uniqrows(t)
+		N = rows(uniq_i)
+		T = rows(uniq_t)
+	}
+	
+//////////////////////////////////////////////////////////////////////////////// 
+// Within-Transformation If Two-Way Fixed Effect
+	if( twfe > 0.5 ){
+		for( uidx = 1 ; uidx <= N ; uidx++ ){
+			idx = uniq_i[uidx,1]
+			for( jdx = 1 ; jdx <= cols(X) ; jdx++ ){
+				X[select((1..rows(X))',i:==idx),jdx] = X[select((1..rows(X))',i:==idx),jdx] :- mean(X[select((1..rows(X))',i:==idx),jdx])
+			}	
+			Y[select((1..rows(X))',i:==idx),  1] = Y[select((1..rows(X))',i:==idx),  1] :- mean(Y[select((1..rows(X))',i:==idx),  1])
+		}
+		for( utdx = 1 ; utdx <= T ; utdx++ ){
+			tdx = uniq_t[utdx,1]
+			for( jdx = 1 ; jdx <= cols(X) ; jdx++ ){
+				X[select((1..rows(X))',t:==tdx),jdx] = X[select((1..rows(X))',t:==tdx),jdx] :- mean(X[select((1..rows(X))',t:==tdx),jdx])
+			}	
+			Y[select((1..rows(X))',t:==tdx),  1] = Y[select((1..rows(X))',t:==tdx),  1] :- mean(Y[select((1..rows(X))',t:==tdx),  1])
+		}
+		for( jdx = 1 ; jdx <= cols(X) ; jdx++ ){
+			X[,jdx] = X[,jdx] :+ mean(X[,jdx])
+		}
+		Y[,1] = Y[,1] :+ mean(Y[,1])
+		
 		//X = X[select((1..rows(X))',t:!=uniq_t[1,1]),]
 		//Y = Y[select((1..rows(Y))',t:!=uniq_t[1,1]),]
 		//i = i[select((1..rows(i))',t:!=uniq_t[1,1]),]
@@ -143,15 +181,15 @@ void estimation(string scalar depvar, 	string scalar indepvars, 			 ///
 		utdx = 2
 		tdx = uniq_t[utdx,1]
 		tdx_lag = uniq_t[utdx-1,1]
-		S = X[select((1..rows(X))',t:==tdx),kdx]:*Uhat[select((1..rows(X))',t:==tdx),1]
-		S_lag = X[select((1..rows(X))',t:==tdx_lag),kdx]:*Uhat[select((1..rows(X))',t:==tdx_lag),1]
+		S = sum( X[select((1..rows(X))',t:==tdx),kdx]:*Uhat[select((1..rows(X))',t:==tdx),1] )
+		S_lag = sum( X[select((1..rows(X))',t:==tdx_lag),kdx]:*Uhat[select((1..rows(X))',t:==tdx_lag),1] )
 		for( utdx = 3 ; utdx <= T ; utdx++ ){
 			tdx = uniq_t[utdx,1]
 			tdx_lag = uniq_t[utdx-1,1]
-			S = S \ X[select((1..rows(X))',t:==tdx),kdx]:*Uhat[select((1..rows(X))',t:==tdx),1]
-			S_lag = S_lag \ X[select((1..rows(X))',t:==tdx_lag),kdx]:*Uhat[select((1..rows(X))',t:==tdx_lag),1]
+			S = S \ sum( X[select((1..rows(X))',t:==tdx),kdx]:*Uhat[select((1..rows(X))',t:==tdx),1] )
+			S_lag = S_lag \ sum( X[select((1..rows(X))',t:==tdx_lag),kdx]:*Uhat[select((1..rows(X))',t:==tdx_lag),1] )
 		}
-		rho_hat[kdx] = ( luinv((J(rows(S_lag),1,1),S_lag)' * (J(rows(S_lag),1,1),S_lag)) * (J(rows(S_lag),1,1),S_lag)'*S )[2,1]
+		rho_hat[kdx] = ( luinv((S_lag)' * (S_lag)) * (S_lag)'*S )[1,1]
 	}
 	m = floor( 1.8171 * ( sum(rho_hat:^2:/(1:-rho_hat):^4) / sum((1:-rho_hat:^2):^2:/(1:-rho_hat):^4) )^(1/3) * T^(1/3) )
 	

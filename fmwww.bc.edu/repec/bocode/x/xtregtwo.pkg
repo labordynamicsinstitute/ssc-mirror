@@ -16,16 +16,16 @@ d KW: time effects
 d
 d Requires: Stata version 14.2
 d
-d Distribution-Date: 20220808
+d Distribution-Date: 20241209
 d
 d Author: Harold D. Chiang,  University of Wisconsin 
-d Support: email yuya.sasaki@@gmail.com
+d Support: email hdchiang@@wisc.edu   
 d
 d Author: Bruce E. Hansen, University of Wisconsin
-d Support: email 
+d Support: email behansen@@wisc.edu
 d
 d Author: Yuya Sasaki, Department of Economics, Vanderbilt University
-d Support: email 
+d Support: email yuya.sasaki@@gmail.com
 d
 f xtregtwo.ado
 f xtregtwo.sthlp

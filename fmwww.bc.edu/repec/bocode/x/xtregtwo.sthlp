@@ -14,7 +14,7 @@
 {it:depvar}
 [{it:indepvars}]
 {ifin}
-[{cmd:,} {bf:{ul:noc}onstant} {bf:fe}]
+[{cmd:,} {bf:{ul:noc}onstant} {bf:fe} {bf:twfe}]
 
 
 {marker description}{...}
@@ -22,9 +22,11 @@
 
 {phang}
 {cmd:xtregtwo} executes estimation of linear panel regression models with standard errors robust to two-way clustering and untruncated serial correlation in common time effects.
-The method is based on {browse "https://arxiv.org/abs/2201.11304":Chiang, Hansen, and Sasaki (2022)}.
+The method is based on {browse "https://doi.org/10.1162/rest_a_01507":Chiang, Hansen, and Sasaki (2024)}.
 The command reports the ordinary least squares estimates, robust standard errors, z values, p values, and confidence intervals.
-The command runs the fixed-effect estimation by within-transformation if the {cmd:fe} option is used.
+The command runs the fixed-effect estimation by within-i transformation if the {cmd:fe} option is used.
+The command runs the two-way fixed-effect estimation by within-i and within-t transformations if the {cmd:twfe} option is used.
+Note that the standard errors would be generally invalid without two-way clustering even when one- or two-way fixed effects are included -- see Section 4 of {browse "https://doi.org/10.1162/rest_a_01507":Chiang, Hansen, and Sasaki (2024)}.
 
 
 {marker options}{...}
@@ -35,7 +37,11 @@ The command runs the fixed-effect estimation by within-transformation if the {cm
 {p_end}
 
 {phang}
-{bf:fe} {space 9}fixed effects by within-transformation
+{bf:fe} {space 9}one-way fixed effects by within-i transformation
+
+{phang}
+{bf:twfe} {space 7}two-way fixed effects by within-i and within-t transformations
+
 {p_end}
 
 
@@ -107,8 +113,8 @@ Functions
 
 {title:Reference}
 
-{p 4 8}Chiang, H.D., B.E. Hansen, and Y. Sasaki 2022. Standard Errors for Two-Way Clustering with Serially Correlated Time Effects. Working Paper.
-{browse "https://arxiv.org/abs/2201.11304":Link to Paper}.
+{p 4 8}Chiang, H.D., B.E. Hansen, and Y. Sasaki 2024. Standard Errors for Two-Way Clustering with Serially Correlated Time Effects. Review of Economics and Statistics, forthcoming.
+{browse "https://doi.org/10.1162/rest_a_01507":Link to Paper}.
 {p_end}
 
 {title:Authors}
