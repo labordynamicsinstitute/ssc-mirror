@@ -2642,6 +2642,7 @@ fmwww.bc.edu/repec/bocode/m/multibar.html
 fmwww.bc.edu/repec/bocode/m/mizrachl2.html
 fmwww.bc.edu/repec/bocode/m/mixregls_plugin.lin32
 fmwww.bc.edu/repec/bocode/m/mtab2.ado
+fmwww.bc.edu/repec/bocode/m/mpm.sthlp
 fmwww.bc.edu/repec/bocode/m/mpitb.sthlp
 fmwww.bc.edu/repec/bocode/m/mean_ci_plot.pkg
 fmwww.bc.edu/repec/bocode/m/markov.pkg
@@ -3096,6 +3097,7 @@ fmwww.bc.edu/repec/bocode/m/mail.hlp
 fmwww.bc.edu/repec/bocode/m/mhl.pkg
 fmwww.bc.edu/repec/bocode/m/malmq2.ado
 fmwww.bc.edu/repec/bocode/m/minmse.sthlp
+fmwww.bc.edu/repec/bocode/m/mph.sthlp
 fmwww.bc.edu/repec/bocode/m/mbitobit_p.ado
 fmwww.bc.edu/repec/bocode/m/mareg_est.ado
 fmwww.bc.edu/repec/bocode/m/metandi.hlp
@@ -3877,6 +3879,7 @@ fmwww.bc.edu/repec/bocode/m/mcl.pkg
 fmwww.bc.edu/repec/bocode/m/mict_model_terminal.sthlp
 fmwww.bc.edu/repec/bocode/m/mktab.ado
 fmwww.bc.edu/repec/bocode/m/multishell.ado
+fmwww.bc.edu/repec/bocode/m/mpm.ado
 fmwww.bc.edu/repec/bocode/m/matodd.zip
 fmwww.bc.edu/repec/bocode/m/marhis.pkg
 fmwww.bc.edu/repec/bocode/m/mp_dta_c.mpb
@@ -4533,6 +4536,7 @@ fmwww.bc.edu/repec/bocode/m/mkstrsn.ado
 fmwww.bc.edu/repec/bocode/m/makeid.sthlp
 fmwww.bc.edu/repec/bocode/m/metan_continuous.sthlp
 fmwww.bc.edu/repec/bocode/m/meta_lr.hlp
+fmwww.bc.edu/repec/bocode/m/mph.ado
 fmwww.bc.edu/repec/bocode/m/mark.pkg
 fmwww.bc.edu/repec/bocode/m/mijoin.html
 fmwww.bc.edu/repec/bocode/m/metatrim.dlg
@@ -11109,6 +11113,7 @@ fmwww.bc.edu/repec/bocode/p/practice.do
 fmwww.bc.edu/repec/bocode/p/pvtest.hlp
 fmwww.bc.edu/repec/bocode/p/power_onesens.sthlp
 fmwww.bc.edu/repec/bocode/p/poi2hdfe.sthlp
+fmwww.bc.edu/repec/bocode/p/pace.pkg
 fmwww.bc.edu/repec/bocode/p/plssas.html
 fmwww.bc.edu/repec/bocode/p/pwmc.sthlp
 fmwww.bc.edu/repec/bocode/p/povmap.ado
@@ -11879,6 +11884,7 @@ fmwww.bc.edu/repec/bocode/p/p53.dta
 fmwww.bc.edu/repec/bocode/p/pisastats.sthlp
 fmwww.bc.edu/repec/bocode/p/ptrendi.ado
 fmwww.bc.edu/repec/bocode/p/pkonfound.ado
+fmwww.bc.edu/repec/bocode/p/pace.sthlp
 fmwww.bc.edu/repec/bocode/p/pcm000402_lf.ado
 fmwww.bc.edu/repec/bocode/p/pperron2.hlp
 fmwww.bc.edu/repec/bocode/p/pcorrmat.hlp

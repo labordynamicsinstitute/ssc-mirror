@@ -1,4 +1,4 @@
-*!*** version 1.12.4 18032024
+*!*** version 1.12.5 19042024
 
 ** L256 over(var) conditionn dans average 23/03
 ** L260 correction display average long_over: line 260 is now ignored and even deleted (29/05/15)  -- 16 apr 2015
@@ -49,6 +49,7 @@
 * SSES2023          - 11/01/2024
 * SSES and SSES 2023 - flags          - 25/01/2024
 * STATA codes for ASCII characters          - 18/03/2024
+* Update repest_PIAAC_variancefactor to accomodate Cycle 2                            - 19/04/2024
 global regressions_command="cnsreg etregress glm intreg nl regress tobit truncreg" ///
 	+" sem  stcox  streg biprobit cloglog  hetprobit logistic logit   probit scobit"  /// 
 	+" clogit mlogit mprobit ologit oprobit slogit gnbreg nbreg poisson  tnbreg"  ///
@@ -1093,11 +1094,25 @@ program define repest_parser, rclass
 			}
 		else if "${svyname}"=="PIAAC" {
 			local NBpv=10*(`pv_here'==1)+1*(`pv_here'==0)
-			local final_weight_name="spfwt0"
-			local rep_weight_name="spfwt"	
+			local NREP = 80 // the actual number of useful replicates varies by country. This is accounted for in the computation of the variance factor	
 			local variancefactor=. //set later
-			local NREP = 80
-			local keepsvy "vemethodn"
+			tempname confirm_min confirm_maj
+
+			cap confirm variable  spfwt0 
+			local `confirm_min'=_rc
+			cap confirm variable  SPFWT0 
+			local `confirm_maj'=_rc
+			if ``confirm_maj''==0  {
+				local final_weight_name="SPFWT0"
+				local rep_weight_name="SPFWT"
+				local keepsvy "VEMETHODN VENREPS VEFAYFAC"
+				}
+			if ``confirm_min''==0  {
+				local final_weight_name="spfwt0"
+				local rep_weight_name="spfwt"
+				local keepsvy "vemethodn venreps vefayfac"
+				}
+				
 			}
 		else if "${svyname}"=="SSES" {
 			local NBpv=1
@@ -1348,31 +1363,41 @@ program define repest_parser, rclass
 end
 
 
-
 cap program drop repest_PIAAC_variancefactor
 program define repest_PIAAC_variancefactor, rclass
 	syntax [if] [in] [aweight]  [,  nrep(integer 80) by_level(string)] // check if JK1, JK2 or pooled
+	tempvar varfac
+	tempname confirm_min confirm_maj
 
-	qui tab1 vemethodn `if' `in'
-	if r(r) == 1 {		// if all obs are either JK1 or JK2
-		if vemethodn[1] == 1 local variancefactor = (`nrep'-1)/`nrep'
-		if vemethodn[1] == 1 & inlist("`by_level'","Australia","AUS","36")==1 {
-			local variancefactor = (min(`nrep',60)-1)/min(`nrep',60)
-			if `nrep'>60 di as res "warning: number of replicates for Australia in PIAAC = 60 (for Jacknife 1 calculations)"
+		cap confirm variable  spfwt0 
+		local `confirm_min'=_rc
+		cap confirm variable  SPFWT0 
+		local `confirm_maj'=_rc
+		if ``confirm_maj''==0  {
+			qui gen `varfac'=(VEMETHODN==1)*(VENREPS-1)/VENREPS +(VEMETHODN==2) + (VEMETHODN==4)/(VENREPS*(1-VEFAYFAC)^2)
+			qui replace `varfac'=(VEMETHODN==1)*(VENREPS-1)/VENREPS +(VEMETHODN==2) if missing(VEFAYFAC)==1
 			}
-		if vemethodn[1] == 2 local variancefactor = 1 
+		if ``confirm_min''==0  {
+			qui gen `varfac'=(vemethodn==1)*(venreps-1)/venreps +(vemethodn==2) + (vemethodn==4)/(venreps*(1-vefayfac)^2)
+			qui replace `varfac'=(vemethodn==1)*(venreps-1)/venreps +(vemethodn==2) if missing(vefayfac)==1
+			}
+				
+	qui su `varfac' `if' `in', meanonly
+	if r(min)==r(max) {		// if all obs come from one country or a set of countries with the same parameters
+		local variancefactor = r(mean)
 		}
-	else {				// if JK1 and JK2 countries are pooled
+	else {				// if countries with different parameters are pooled together.
+		dis "VEMETHODN is not constant, the weighted average of the variance factors is used for computing sampling errors. Results may be wrong."
 		tempvar sample
 		cap gen `sample' = e(sample) `if' `in'
 		qui levelsof `sample' `if' `in'
 		if "`r(levels)'" == "0 1"  { 	// if estimation command sets sample, and some obs are excluded
-			su vemethodn [aw `exp'] if `sample' `in', meanonly
+			su `varfac' [aw `exp'] if `sample' `in', meanonly
 			}
 		else { 						// if estimation command does not set sample, or all obs are excluded
-			su vemethodn [aw `exp'] `if' `in', meanonly
+			su `varfac' [aw `exp'] `if' `in', meanonly
 			}
-		local variancefactor = (`nrep'-(2-r(mean)))/`nrep'
+		local variancefactor = r(mean)
 		}
 	return scalar variancefactor = `variancefactor'
 end

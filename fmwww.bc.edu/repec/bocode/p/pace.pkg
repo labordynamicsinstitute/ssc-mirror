@@ -1,0 +1,22 @@
+d 'PACE': module to convert between minutes per mile and miles per hour
+d
+d  The pace package converts between miles per hour and minutes per
+d mile. This is intended to be a useful tool for runners who may
+d know their pace in one metric but would like to compute their
+d pace in the other metric (such as when running on the treadmill
+d and the pace is presented only in miles per hour). 
+d
+d KW: running pace
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20240927
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f pace.sthlp
+f ../m/mph.ado
+f ../m/mpm.ado
+f ../m/mph.sthlp
+f ../m/mpm.sthlp

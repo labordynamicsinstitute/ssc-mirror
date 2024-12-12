@@ -1,4 +1,5 @@
 p p2ci module to calculate confidence limits of a regression coefficient from the p-value
+p pace module to convert between minutes per mile and miles per hour
 p pagetrend module to  perform Page's L trend test for ordered alternatives
 p pairdata module to create paired datasets from individual-per-row data
 p pairplot module for plots of paired observations
