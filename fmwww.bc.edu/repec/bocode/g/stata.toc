@@ -59,6 +59,7 @@ p getfilename2 program for handling filename specifications
 p getiref module to Search and share Stata resources and blogs within Stata Command Window
 p getmstatistic module to Quantify Systematic Heterogeneity in Meta-Analysis
 p getmxdata module to import Mexican economic data 
+p getnhs module to download NHANES data
 p getprime module to get the prime number closer to the specified number
 p getregstats module for computing all values in a regression table when only the coefficient and one other statistic is available
 p gets module to implement a General-to-Specific modelling algorithm

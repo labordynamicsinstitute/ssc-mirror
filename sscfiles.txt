@@ -2068,6 +2068,7 @@ fmwww.bc.edu/repec/bocode/g/grep.html
 fmwww.bc.edu/repec/bocode/g/gs3slsar1.dta
 fmwww.bc.edu/repec/bocode/g/groupdist.hlp
 fmwww.bc.edu/repec/bocode/g/gensurvsim_core.ado
+fmwww.bc.edu/repec/bocode/g/getnhs.pkg
 fmwww.bc.edu/repec/bocode/g/getiref-get-all-refs.do
 fmwww.bc.edu/repec/bocode/g/graphbinary.html
 fmwww.bc.edu/repec/bocode/g/grqreg.hlp
@@ -2123,6 +2124,7 @@ fmwww.bc.edu/repec/bocode/g/gammasym.hlp
 fmwww.bc.edu/repec/bocode/g/gen_tail.ado
 fmwww.bc.edu/repec/bocode/g/_gsqelemcount.ado
 fmwww.bc.edu/repec/bocode/g/gtools_unix_v2.plugin
+fmwww.bc.edu/repec/bocode/g/getnhs.sthlp
 fmwww.bc.edu/repec/bocode/g/gs3slsar.do
 fmwww.bc.edu/repec/bocode/g/gcrobustvar.ado
 fmwww.bc.edu/repec/bocode/g/gs2slsarxt.dta
@@ -2247,6 +2249,7 @@ fmwww.bc.edu/repec/bocode/g/grpdf.pkg
 fmwww.bc.edu/repec/bocode/g/getcensus.sthlp
 fmwww.bc.edu/repec/bocode/g/genqreg.sthlp
 fmwww.bc.edu/repec/bocode/g/gphepssj.html
+fmwww.bc.edu/repec/bocode/g/getnhs.ado
 fmwww.bc.edu/repec/bocode/g/georoute.sthlp
 fmwww.bc.edu/repec/bocode/g/genstacks.hlp
 fmwww.bc.edu/repec/bocode/g/gammafit_lf.ado

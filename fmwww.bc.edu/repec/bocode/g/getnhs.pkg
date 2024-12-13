@@ -1,0 +1,16 @@
+d 'GETNHS': module to download NHANES data
+d
+d    This routine downloads NHANES data. 
+d
+d KW: data management
+d KW: NHANES
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20241212
+d
+d Author:    Zumin Shi, Qatar University
+d Support: email  zumin@@qu.edu.qa
+d
+f getnhs.ado
+f getnhs.sthlp
