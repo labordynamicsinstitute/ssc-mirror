@@ -6,7 +6,7 @@ d with estimation commands in Stata.  There are two prefix
 d commands, -xv- an -xvloo- that are used to implement the entire
 d cross-validation pipeline with the estimation command supplied by
 d the user.  For users that require more fine-grained control over
-d the cross-validation process, the commands -splitit-, -fitit-,
+d the cross-validation process, the commands -splitit2-, -fitit-,
 d -predictit-, and -validateit- implement each phase of
 d cross-validation discretely.	There are also several utility
 d commands included as well.  Lastly, the include Mata library
@@ -27,7 +27,7 @@ d KW: evaluation
 d
 d Requires: Stata version 15
 d
-d Distribution-Date: 20240801
+d Distribution-Date: 20241216
 d
 d Author: William R. Buchanan,   SAG Corporation
 d Support: email wbuchanan@@sagcorp.com
@@ -48,12 +48,10 @@ f ../l/libxv.mlib
 f ../l/libxv.sthlp
 f ../p/predictit.ado
 f ../p/predictit.sthlp
-f ../s/splitit.ado
-f ../s/splitit.sthlp
+f ../s/splitit2.ado
+f ../s/splitit2.sthlp
 f ../s/state.ado
 f ../s/state.sthlp
-f ../s/splitit.ado
-f ../s/splitit.sthlp
 f ../v/validateit.ado
 f ../v/validateit.sthlp
 f ../x/xv.ado

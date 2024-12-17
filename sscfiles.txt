@@ -18673,6 +18673,7 @@ fmwww.bc.edu/repec/bocode/s/spregsarxt.sthlp
 fmwww.bc.edu/repec/bocode/s/stquant.ado
 fmwww.bc.edu/repec/bocode/s/srslogit.pkg
 fmwww.bc.edu/repec/bocode/s/seqlogit10_postestimation.hlp
+fmwww.bc.edu/repec/bocode/s/splitit2.ado
 fmwww.bc.edu/repec/bocode/s/scat3.pkg
 fmwww.bc.edu/repec/bocode/s/sb_example-1.do
 fmwww.bc.edu/repec/bocode/s/synthopt.linux64
@@ -20157,6 +20158,7 @@ fmwww.bc.edu/repec/bocode/s/sdplot.ado
 fmwww.bc.edu/repec/bocode/s/semipar.sthlp
 fmwww.bc.edu/repec/bocode/s/Stata_UK23_Vincent.pdf
 fmwww.bc.edu/repec/bocode/s/sampsi_reg.hlp
+fmwww.bc.edu/repec/bocode/s/splitit2.sthlp
 fmwww.bc.edu/repec/bocode/s/shownear.ado
 fmwww.bc.edu/repec/bocode/s/spgmmxt.dlg
 fmwww.bc.edu/repec/bocode/s/statastates_data.ado

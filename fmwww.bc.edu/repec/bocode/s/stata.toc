@@ -28,6 +28,7 @@ p spgen module to generate spatially lagged variables
 p sphdist module to compute spherical distances
 p spider module for spider plots
 p splinefit module for smooth connected line plots
+p splitit module to split chronological overlapping spells in spell data
 p sq module for sequence analysis
 p stackdid module to estimate Stacked Difference-in-Differences Regression
 p staggered module implementing R staggered package based on Roth and Sant'Anna (2023)
