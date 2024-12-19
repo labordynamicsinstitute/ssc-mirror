@@ -40,6 +40,7 @@ p genstest module to perform generalized S tests for models in the generalized m
 p gentrun module to generate truncated normal variate
 p genvars module to generate covariate patterns
 p geo2xy module to convert latitude and longitude to xy using map projections
+p geoboundary module for administrative boundaries
 p geochart module to create interactive map web pages from Stata data 
 p geocircles module to create circles defined by geographic coordinates
 p geocode module to geocode data

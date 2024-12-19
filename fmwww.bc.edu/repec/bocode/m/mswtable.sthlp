@@ -1,5 +1,5 @@
 {smcl}
-{* 25november2024}{...}
+{* 18December2024}{...}
 {hi:help mswtable}
 {hline}
 
@@ -26,9 +26,9 @@
   {p_end}
 {synopt :{opth est_stat(string)}}estimates input: requests equation statistics (N, AIC, etc.)
   {p_end}
-{synopt :{opth est_star(string)}}estimates input, coefficient tests: requests asterisks
+{synopt :{opth est_star(string)}}estimates input, requests coeff tests: asterisks
   {p_end}
-{synopt :{opth est_se(string)}}estimates input, coefficient precision: requests standard error, etc.
+{synopt :{opth est_se(string)}}estimates input, requests coeff uncertainty or tests (se, ci, t-statistic, p-value)
   {p_end}
 {synopt :{opth sdec(string)}}number of decimal places, column- or row-specific 
   {p_end}
@@ -61,6 +61,10 @@
   {p_end}
 {synopt :{opth rst#(string)}}row-spanning titles: text and location (maximum sixteen)
   {p_end}
+{synopt :{opt firstX}}top row in table: extra space after
+  {p_end}
+{synopt :{opt lastX}}bottom row in table: extra space before
+  {p_end}
 {synopt :{opth extra#(string)}}extra information rows (maximum nine), placed below coefficients and statistics
   {p_end}
 
@@ -80,10 +84,6 @@
   {p_end}
 {synopt :{opth bline(string)}}bottom line in table: format (bold, double, neither)
   {p_end}
-{synopt :{opt firstX}}top row in table: extra space after
-  {p_end}
-{synopt :{opt lastX}}bottom row in table: extra space before
-  {p_end}
 {synopt :{opt slim}}eliminate rows without information (rows inserted for aesthetics only)
   {p_end}
 {synopt :{opth tabname(string)}}name for putdocx table 
@@ -91,11 +91,11 @@
 
 {marker comopt}{synopthdr:Multiple Panels (max 5)}
 {synoptline}
-{synopt :{opth mat#(string)}}matrix input: identifies matrices panel-by-panel
+{synopt :{opth mat#(string)}}matrix input: identifies matrices, panel-specific
   {p_end}
-{synopt :{opth est#(string)}}estimates input: identifies stored equations panel-by-panel
+{synopt :{opth est#(string)}}estimates input: identifies stored equations, panel-specific
   {p_end}
-{synopt :{opth est_stat#(string)}}estimates input: requests equation statistics panel-by-panel
+{synopt :{opth est_stat#(string)}}estimates input: equation statistics, panel-specific
   {p_end}
 {synopt :{opt pline}}draw line separating panels
   {p_end}
@@ -130,8 +130,6 @@
 
 {pstd} Option {cmd:colwidth}() is required.  And either {cmd:mat}() OR {cmd:est}().{p_end}
 
-{pstd} Row and column labels: the default are the row and column names in the input matrix/equations, but these can be replaced (options {cmd:ct} and {cmd:rt}).{p_end}
-
 {pstd} {cmd:mswtable} will construct a table with multiple panels (five panels maximum).  See discussion below of multi-panel syntax.{p_end}
 
 {pstd} The constructed table can be saved as a MSWord table (option {bf:outfile}).
@@ -147,9 +145,10 @@ appearance only.){p_end}
 
 {marker comoptd}{it:{dlgtab:core options}}
 
-{phang} {opth colw:idth(string)} specifies the width of each column, in inches.  
-This includes column for row titles (first column on left), and columns requested by {cmd:add_} options. 
-{cmd:colwidth} contains an array of numbers (decimals are permitted), separated by comma or space.
+{phang} {opth colw:idth(string)} specifies column widths in inches, left to right.  This includes the   
+column for the row titles (first column on left) and the columns requested by {cmd:add_} options
+({cmd:add_means}, {cmd:add_mat}, {cmd:add_excel}).  "string" is an array of numbers (decimals
+are permitted), separated by comma or space.
 {cmd:colwidth} is required.{p_end}
 {pmore} Examples:  {cmd:colw(1.2,0.8,0.8,1)}{p_end}
 {p 19}             {cmd:colw(1.5 1 1 1 1.2)}{p_end}
@@ -163,13 +162,13 @@ after {cmd:margins} if the {cmd:post} option is specified in the {cmd:margins} c
 {p 19}             {cmd:est(eq1,eq2,eq3)}{p_end}
 
 {phang} {opth est_stat(string)} requests equation "statistics" (N, aic, etc).  
-These are placed at the bottom of the table, following the coefficients.  
-(Some are renamed, e.g. "r2_a" becomes "Adjusted R-squared".  For further renaming, insert at lines 290ff in mswtable.ado.  Also, 
-statistic names can be set via option {cmd:rt}.){p_end}
-{pmore} Contents of {cmd:est_stat} are as follows:{p_end}
+These are placed at the bottom of the table, following the coefficients.  Contents 
+of {cmd:est_stat} are as follows:{p_end}
 {p 11 16} (i){space 2}name of the statistic (Stata naming convention){p_end}
 {p 11 16} (ii){space 1}number of decimal places for the statistic{p_end}
 {pmore} Separate (i) and (ii) with comma or space.  Multiple statistics can be requested - separate with "!".{p_end}
+{pmore} Certain statistics are renamed, e.g. "r2_a" becomes "Adjusted R-squared".  For further renaming, insert
+at lines 292ff in mswtable.ado.  Also, statistic names can be set via option {cmd:rt}.{p_end}
 {pmore} Examples:  {cmd:est_stat(N,0! r2_a,2! bic,1)}{p_end}
 {p 19}             {cmd:est_stat(N 0! r2_a 2)}{p_end}
 
@@ -182,14 +181,14 @@ In the MSWord table, the first p-value will be denoted by one asterisk, the seco
 {pmore} Examples:  {cmd:est_star(0.05,0.01,0.001)}{p_end}
 {p 19}             {cmd:est_star(0.10 0.05)}{p_end}
 
-{phang} {opth est_se(string)} requests inclusion of statistical tests of the regression coefficients.  
-"string" can contain:{p_end}
-{pmore} (i){space 3}"se" or "t" or "p" or "ci" or "ci()", to request:{p_end}
+{phang} {opth est_se(string)} requests inclusion of regression coefficients' uncertainty or statistical
+tests.  "string" can contain:{p_end}
+{pmore} (i){space 3}"se" or "ci" or "ci()" or "t" or "p", to request:{p_end}
 {p 14 19}        "se"{space 4}standard error{p_end}
-{p 14 19}        "t"{space 5}t-statistic (ratio of coefficient to standard error){p_end}
-{p 14 19}        "p"{space 5}p-value for t-statistic (two-sided test){p_end}
 {p 14 19}        "ci"{space 4}confidence interval (95%){p_end}
 {p 14 19}        "ci()"{space 2}confidence interval, with p-value and size of font within parentheses{p_end}
+{p 14 19}        "t"{space 5}t-statistic (ratio of coefficient to standard error){p_end}
+{p 14 19}        "p"{space 5}p-value for t-statistic (two-sided test){p_end}
 {p 8 14} (ii){space 2}"below" or "beside" - place below or immediately to the right of the coefficient{p_end}
 {p 8 14} (iii){space 1}"paren" or "noparen" - whether enclosed in parentheses (or not).  (Confidence intervals are placed in brackets instead of parentheses.){p_end}
 {p 8 8} Separate with comma or space.  Any or all of the three items can be specified, in any order.{p_end}
@@ -200,21 +199,22 @@ defaults.  {it:note}: "beside" is incompatible with {cmd:est_star}.{p_end}
 {pmore} "ci()" is syntax for specifying, within the parentheses, p-value and size of font.  
 These are numeric values.  
 If <.50, the value is assumed to be p-value; default is .05.  
-If larger than 4, the value is assumed to be font size; default is 2.0-point less than body-of-table font.  
+If larger than 2, the value is assumed to be font size; default is 1.5-point less than body-of-table font.  
 One or both can be specified; if both, either order is allowed, and separate by comma or space.{p_end}
 
 {pmore} Examples:  {cmd:est_se}{space 14}standard error, below, in parentheses{p_end}
-{p 19}             {cmd:est_se(t beside)}{p_end}
-{p 19}             {cmd:est_se(ci)}{space 10}95% confidence interval{p_end}
+{p 19}             {cmd:est_se(t beside)}{space 4}t-statistic, beside, in parentheses{p_end}
+{p 19}             {cmd:est_se(ci,below)}{space 4}95% confidence interval, below, in parentheses{p_end}
 {p 19}             {cmd:est_se(ci(.10,11))}{space 2}90% confidence interval, font size 11{p_end}
 
 {phang} {opth sdec(string)} specifies number of decimal places for each column/row, including additional
-columns due to {cmd: add_} options but excluding far-left column (row titles).  "string" contains
-"cols" or "rows", followed by a set of integers; separate by comma or space.  "cols" and "rows" indicate
-column-wise and row-wise application, respectively; "cols" is the default and may be omitted.  The set
-of integers need not represent every column/row - {cmd:mswtable} will fill in based on the last number
-specified.  That is, {cmd:sdec(1)} is equivalent to {cmd:sdec(1,1,1)}, and {cmd:sdec(1 1 0)} is equivalent
-to {cmd:sdec(1 1 0 0 0)}.  The default is one decimal place if option {cmd:sdec}() is omitted.{p_end}
+columns due to {cmd: add_} options ({cmd:add_means}, {cmd:add_mat}, {cmd:add_excel}) but excluding 
+far-left column (row titles).  "string" contains "cols" or "rows", followed by a set of integers; separate
+by comma or space.  "cols" and "rows" indicate column-wise and row-wise application, respectively; "cols" 
+is the default and may be omitted.  The set of integers need not represent every column/row - {cmd:mswtable} will
+fill in based on the last number specified.  That is, {cmd:sdec(1)} is equivalent to {cmd:sdec(1,1,1)}, 
+and {cmd:sdec(1 1 0)} is equivalent to {cmd:sdec(1 1 0 0 0)}.  The default is one decimal place if 
+option {cmd:sdec}() is omitted.{p_end}
 
 {p 8 14} {it:note}: "rows" is {ul:not} allowed with {cmd:est_se} option if either "se" or "ci" sub-option
 is requested{p_end}
@@ -231,9 +231,7 @@ Current default font is Cambria, with font sizes (in points):{p_end}
 {p 11} 12{space 4}column and row titles{p_end}
 {p 11} 11.5{space 2}body of table{p_end}
 {p 11} 10.5{space 2}notes{p_end}
-{p 11 11} Fonts for statistics (N, aic, etc) and "extra" information are 0.5-point less than body-of-table font; font for
-standard errors (including t and p) is 1.0-point less than body-of-table font.  ({it:note}: these font settings can be modified
-at lines 226ff in mswtable.ado.){p_end}
+{pmore} (Fonts sizes for other table contents, including {cmd:est_se} options - see {bf:{ul on}Technical Odds and Ends{ul off}} below){p_end}
   
 {p 8}"string" can take two forms:{p_end}
 {p 11} (i){space 2}name of font only{p_end}
@@ -265,14 +263,13 @@ blank lines.){p_end}
 "underline", "neither" (default).{p_end}
 
 {phang} {opth ct(string)} are column titles.  
-Often it is convenient to construct this separately as local macro.  
-Use "!" to separate elements in this string, and do {ul:not} embed quotation marks.  
-Spaces between words in the title are allowed.  
-Titles are applied column-by-column in sequential order, beginning with the far left column 
-(column for row titles) and including columns added via {cmd:add_means} or {cmd:add_mat}.  Column
-titles can be left blank by specifying successive "!" ("!!" or "! !").  Multiple
-lines in each column title are indicated by using "\" as separator; maximum is three lines.  
-If {cmd:ct} is not specified, default is input matrix column names.{p_end}
+Often it is convenient to construct this separately as local macro.  Use "!" to separate elements in this 
+string, and do {ul:not} embed quotation marks.  Spaces between words in the title are allowed.  Titles are
+applied column-by-column in sequential order, beginning with the far left column (column for row titles) and
+including columns added via {cmd: add_} options ({cmd:add_means}, {cmd:add_mat}, {cmd:add_excel}).  Column
+titles can be left blank by specifying successive "!" ("!!" or "! !").  Multiple lines in each column title
+are indicated by using "\" as separator; maximum is three lines.  If {cmd:ct} is not specified, default is
+input matrix column names.{p_end}
 {pmore} Example:  {cmd:ct("`ctitles'")}{p_end}
 
 {phang} {opth rt(string)} are row titles.  It is
@@ -415,9 +412,11 @@ The syntax is identical to {cmd:cst1}-{cmd:cst10}.
 
 {phang} {opth rst_set(string)} specifies two optional features of the row spanning titles (see {cmd:rst#}):{p_end}
 {p 11 16} (i){space 2}format for font: "bold", "underline", "neither" (default){p_end}
-{p 11 16} (ii){space 1}"indent" the rows encompassed by row spanning title by three spaces; default is no indent{p_end}
-{pmore} Separate with comma or space.{p_end}
-{pmore} Example:  {cmd:rst_set(bold,indent)}{p_end}
+{p 11 16} (ii){space 1}"indent" the rows encompassed by row spanning title; default is no indent{p_end}
+{pmore} Separate with comma or space.  Syntax for indentation is either: "indent" (3 spaces);
+"indent()" with number of spaces in parentheses (maximum 6).{p_end}
+{pmore} Examples:  {cmd:rst_set(underline)}{p_end}
+{p 19}             {cmd:rst_set(bold,indent)}{p_end}
 
 {phang} {opth rst1(string)} . . . {opth rst16(string)} are row-spanning titles, i.e. titles that apply to multiple
 rows.  The rows might be, for example, categories of a variable (e.g. for place of residence, "rural" "small city"
@@ -432,11 +431,19 @@ the remainder of the row blank.  The spanning title may be bold or underlined, o
 {it:further note}:  the {cmd:rst#} must be ordered top to bottom of the table.{p_end}
 {pmore} Example:  {cmd:rst1("Place of Residence",4,3)}{p_end}
 
+{phang} {opt firstX} and {opt lastX} request insertion of low-height row between:{p_end}
+{p 11 16} (i){space 2}first data row and next row  [{cmd:firstX}]{p_end}
+{p 11 16} (ii){space 1}last data row and previous row  [{cmd:lastX}]{p_end}
+{pmore} These are for visual enhancement and might be appropriate if, for example, the first
+or last row is "Total", or to provide some separation for the intercept.  
+In multi-panel tables, this request is carried out panel-by-panel.  
+{it:note}: option {cmd:slim} overrides these two options.
+
 {phang} {opth extra1(string)} . . . {opth extra9(string)} are additional rows of information (maximum nine).  
 These are added to the foot of the table, following data specified in {cmd:mat} or {cmd:est}
 and also following equation statistics (option {cmd:est_stat}()) but prior to {cmd:note}.  
 Each "string" contains column-by-column text, starting with the first column on left (row title column).
-Columns inserted due to {cmd:add_means} or {cmd:add_mat} are included.   
+Columns inserted due to {cmd:add_means}, {cmd:add_mat}, or {cmd:add_excel} are included.   
 Separate the column entries with "!", and do {ul:not} embed quotation marks.  
 Spaces within entries are allowed.
 Cells can be left blank by specifying successive "!" ("!!" or "! !").{p_end}
@@ -504,14 +511,6 @@ The default order is {cmd:est_stat} rows followed by {cmd:extra#} rows.{p_end}
 {pmore} Options are "double" (double line) and "bold" (single bold line).  
 Both options {ul:cannot} be requested together.  The default is non-bold single line.{p_end}
 
-{phang} {opt firstX} and {opt lastX} request insertion of low-height row between:{p_end}
-{p 11 16} (i){space 2}first data row and next row  [{cmd:firstX}]{p_end}
-{p 11 16} (ii){space 1}last data row and previous row  [{cmd:lastX}]{p_end}
-{pmore} This might be appropriate if, for example, the first or last row is "Total", or 
-to provide some separation for the intercept.  
-In multi-panel tables, this request is carried out panel-by-panel.  
-{it:note}: option {cmd:slim} overrides these two options.
-
 {phang} {opt slim} eliminates rows that contain no information.  
 These are rows inserted only to improve visual appearance.{p_end}
 
@@ -563,6 +562,7 @@ allowing for additions or other enhancements to the table via {cmd:putdocx table
                 sdec(2)
                 ct("`cols'")
                 rt("`xvars'")
+                lastX
                 outfile("$D/analysis/tab2", append);
 
       mswtable, colwidth(2.0,0.7,0.7,1.0,0.8,0.8,0.8) 
@@ -582,6 +582,8 @@ allowing for additions or other enhancements to the table via {cmd:putdocx table
                 ct_set(underline)
                 ct("`cols'")
                 rt("`xvars'")
+                rst_set(underline,indent)
+                rst1("Demographic",1,5)  rst2("Region",6,5)
                 outfile("$D/analysis/tab2", append);
 
 
@@ -679,9 +681,9 @@ table -- all panels inclusive.{p_end}
                cst1("Equations" 1 4)
                ct("`cols'")
                rt1("`xvars'") rt2("`xvars'")
+               pt_set(center,bold)
                pt1("Low fertility (TFR < 4.5)")
                pt2("High fertility (TFR >= 4.5)")
-               pt_set(center,bold)
                pline  
                tline(double) bline(double)
                outfile("$D/analysis/tab3", replace);
@@ -691,33 +693,34 @@ table -- all panels inclusive.{p_end}
 {p 1}{bf:{ul on}Technical odds and ends{ul off}}{p_end}
 
 {pstd} {it:Cell justification (horizontal), non-modifiable}:{p_end}
-{p 8 10} - row titles (first column on left) and notes: left-justified{p_end}
-{p 8 10} - column titles, all data cells, "Intercept", row titles for rows at foot of the
-table (statistics, extra info): right-justified{p_end}
-{p 8 10} - {cmd:est_se} cells in the "beside" location: left-justified{p_end}
+{p 8 10} - left-justified:  row titles (first column on left); notes; cells in the "beside" location{p_end}
+{p 8 10} - right-justified: column titles; all data cells; "Intercept"; row titles for rows at foot of the
+table (statistics, extra info){p_end}
 
 {pstd} {it:Table width}:{p_end}
 {pmore}{cmd:mswtable} constrains the width of the table to be the sum of the column widths ({cmd:colwidth}),
 plus columns inserted for {cmd:est_star} and {cmd:est_se}.  Although MSWord does not always perfectly
 comply (?!?).{p_end}
 
-{pstd} {cmd:est_se}{space 2}{it:formatting}:{p_end}
-{pmore} {it:Decimal points}:{p_end}
+{pstd} {cmd:est_se} {it:decimal points}:{p_end}
 {p 8 10} - standard errors: one decimal point more than the coefficients (see {cmd:sdec}){p_end}
 {p 8 10} - t-statistics: two decimal points{p_end}
 {p 8 10} - p-values: three decimal points{p_end}
 {p 8 10} - confidence intervals: same as coefficients (see {cmd:sdec}){p_end}
-{pmore} {it:Font sizes}:{p_end}
-{p 8 10} - standard errors, t-statistic, p-value: 1.0-point less than body-of-table font{p_end}
-{p 8 10} - confidence interval: 2.0-point less than body-of-table font (but can be adjusted in "ci()"){p_end}
-{p 10 10}These two settings (and other fonts) can be modified at lines 226ff in mswtable.ado.{p_end}
+
+{pstd} {it:Default font sizes}:{p_end}
+{p 8 10} - statistics (N, aic, etc): 0.5-point less than body-of-table font (but see {cmd:est_stat} syntax){p_end}
+{p 8 10} - "extra" information: 0.5-point less than body-of-table font{p_end}
+{p 8 10} - standard errors (including t and p): 1.0-point less than body-of-table font{p_end}
+{p 8 10} - confidence intervals: 1.5-point less than body-of-table font (but see "ci()" sub-option to {cmd:est_se}){p_end}
+{p 8 10} {it:note}: these default sizes can be modified at lines 226ff in mswtable.ado{p_end}
 
 {pstd} {it:fonts and row heights}:{p_end}
 {pmore} Some fonts are by their nature taller (or shorter).  {cmd:mswtable} accounts for this in setting 
 row heights. Specifically, default row heights are inflated for {it:Arial} and
 {it:LM Roman 12}.  The same adjustment could be applied to other fonts by inserting code at lines 238ff in mswtable.ado.{p_end}
 
-{pstd} {cmd:rt}{space 2}{it:row titles and row heights}:{p_end}
+{pstd} {cmd:rt} {it:row titles and row heights}:{p_end}
 {pmore} {cmd:mswtable} is not smart about row heights.  Rows with multi-line titles are set higher,
 but only those rows, resulting in non-uniform row heights if the row titles are not entirely one line or two lines.  
 Keeping all row titles to one line is recommended.{p_end}

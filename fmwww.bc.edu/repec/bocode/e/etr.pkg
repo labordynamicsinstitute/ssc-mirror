@@ -1,0 +1,26 @@
+d 'ETR': module to calculate the cost of capital and forward-looking effective tax rates
+d
+d  This package calculates the cost of capital and forward-looking
+d average and marginal effective tax rate on a hypothetical
+d investment for specified parameters or based on information
+d contained in a database, as described in Hebous and Mengistu
+d (2024). 
+d
+d KW: tax policy
+d KW: cost of capital
+d KW: effective tax rate
+d
+d Requires: Stata version 15 
+d
+d Distribution-Date: 20241218
+d
+d Author: Andualem Mengistu, Tax Policy Division, International Monetary Fund
+d Support: email amengistu2@@IMF.org
+d
+f etr.ado
+f etr.sthlp
+f ../d/dietr.ado
+f ../d/dietr.sthlp
+f etr_demo.do
+f ../d/dietr_demo.do
+f dietr_database.dta

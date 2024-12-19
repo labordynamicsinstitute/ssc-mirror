@@ -1,9 +1,11 @@
-d 'MARIMEKKO': module for marikmekko charts
+d 'GEOBOUNDARY': module for administrative boundaries
 d
-d  This is a Stata package for marikmekko charts. 
+d  A Stata package for administrative boundaries 
 d
 d KW: graphics
-d KW: marimekko
+d KW: map
+d KW: boundary
+d KW: shapefiles
 d
 d Requires: Stata version 15 
 d
@@ -12,5 +14,5 @@ d
 d Author: Asjad Naqvi, Austrian Institute of Economic Research (WIFO)
 d Support: email asjadnaqvi@@gmail.com
 d
-f marimekko.ado
-f marimekko.sthlp
+f geoboundary.ado
+f geoboundary.sthlp

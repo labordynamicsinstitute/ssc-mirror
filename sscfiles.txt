@@ -1479,6 +1479,7 @@ fmwww.bc.edu/repec/bocode/f/fmmlc.pkg
 fmwww.bc.edu/repec/bocode/f/factref.html
 fmwww.bc.edu/repec/bocode/g/GasHoliday.dta
 fmwww.bc.edu/repec/bocode/g/gregress.sthlp
+fmwww.bc.edu/repec/bocode/g/geoboundary.pkg
 fmwww.bc.edu/repec/bocode/g/gnbstrat.html
 fmwww.bc.edu/repec/bocode/g/graph3d.ado
 fmwww.bc.edu/repec/bocode/g/geo2xy_canada_data.dta
@@ -1680,6 +1681,7 @@ fmwww.bc.edu/repec/bocode/g/getprime.sthlp
 fmwww.bc.edu/repec/bocode/g/geoinpoly.pkg
 fmwww.bc.edu/repec/bocode/g/gsdata.ado
 fmwww.bc.edu/repec/bocode/g/galbr_tjs.dlg
+fmwww.bc.edu/repec/bocode/g/geoboundary.ado
 fmwww.bc.edu/repec/bocode/g/gologit2.pdf
 fmwww.bc.edu/repec/bocode/g/glass.dta
 fmwww.bc.edu/repec/bocode/g/ghistcum.html
@@ -1826,6 +1828,7 @@ fmwww.bc.edu/repec/bocode/g/ghxt.sthlp
 fmwww.bc.edu/repec/bocode/g/gtoplevelsof.ado
 fmwww.bc.edu/repec/bocode/g/ghazal_guzzler.pkg
 fmwww.bc.edu/repec/bocode/g/gr_prob_cub.ado
+fmwww.bc.edu/repec/bocode/g/geoboundary.sthlp
 fmwww.bc.edu/repec/bocode/g/gamet.html
 fmwww.bc.edu/repec/bocode/g/grnotem.html
 fmwww.bc.edu/repec/bocode/g/gciget.sthlp
@@ -5821,8 +5824,10 @@ fmwww.bc.edu/repec/bocode/e/ellip.ado
 fmwww.bc.edu/repec/bocode/e/example_2006_2008_2010.dta
 fmwww.bc.edu/repec/bocode/e/elabel_functions.sthlp
 fmwww.bc.edu/repec/bocode/e/eth2grecal.sthlp
+fmwww.bc.edu/repec/bocode/e/etr_demo.do
 fmwww.bc.edu/repec/bocode/e/egfr.sthlp
 fmwww.bc.edu/repec/bocode/e/ebct.sthlp
+fmwww.bc.edu/repec/bocode/e/etr.pkg
 fmwww.bc.edu/repec/bocode/e/egfr.pkg
 fmwww.bc.edu/repec/bocode/e/eba.ado
 fmwww.bc.edu/repec/bocode/e/evalues.sthlp
@@ -6123,6 +6128,7 @@ fmwww.bc.edu/repec/bocode/e/enlarge.html
 fmwww.bc.edu/repec/bocode/e/estout_defaults_options.ihlp
 fmwww.bc.edu/repec/bocode/e/epdhelp.pdf
 fmwww.bc.edu/repec/bocode/e/emplorenz.mo
+fmwww.bc.edu/repec/bocode/e/etr.ado
 fmwww.bc.edu/repec/bocode/e/estread.ado
 fmwww.bc.edu/repec/bocode/e/estout_parameter_statistics_options.html
 fmwww.bc.edu/repec/bocode/e/evalue.pkg
@@ -6198,6 +6204,7 @@ fmwww.bc.edu/repec/bocode/e/er.ado
 fmwww.bc.edu/repec/bocode/e/elife.dta
 fmwww.bc.edu/repec/bocode/e/eaalogit.ado
 fmwww.bc.edu/repec/bocode/e/epi_seir.ado
+fmwww.bc.edu/repec/bocode/e/etr.sthlp
 fmwww.bc.edu/repec/bocode/e/elabel_rename.sthlp
 fmwww.bc.edu/repec/bocode/e/exquantile.ado
 fmwww.bc.edu/repec/bocode/e/example_3.do
@@ -13563,6 +13570,7 @@ fmwww.bc.edu/repec/bocode/d/dagumpred.html
 fmwww.bc.edu/repec/bocode/d/dta2sav.ado
 fmwww.bc.edu/repec/bocode/d/dotemplate.sthlp
 fmwww.bc.edu/repec/bocode/d/dseg.ado
+fmwww.bc.edu/repec/bocode/d/dietr.sthlp
 fmwww.bc.edu/repec/bocode/d/ddml_eq.sthlp
 fmwww.bc.edu/repec/bocode/d/distill_example.dta
 fmwww.bc.edu/repec/bocode/d/doubletofloat.ado
@@ -13861,6 +13869,8 @@ fmwww.bc.edu/repec/bocode/d/didplacebo.pkg
 fmwww.bc.edu/repec/bocode/d/dbins.ado
 fmwww.bc.edu/repec/bocode/d/domin.sthlp
 fmwww.bc.edu/repec/bocode/d/dicseg.sthlp
+fmwww.bc.edu/repec/bocode/d/dietr.ado
+fmwww.bc.edu/repec/bocode/d/dietr_database.dta
 fmwww.bc.edu/repec/bocode/d/dtastamp.pkg
 fmwww.bc.edu/repec/bocode/d/diagsampsi.ado
 fmwww.bc.edu/repec/bocode/d/doub2flt.hlp
@@ -14180,6 +14190,7 @@ fmwww.bc.edu/repec/bocode/d/diffpi.pkg
 fmwww.bc.edu/repec/bocode/d/dltable.sthlp
 fmwww.bc.edu/repec/bocode/d/do2screen.ado
 fmwww.bc.edu/repec/bocode/d/digituse.html
+fmwww.bc.edu/repec/bocode/d/dietr_demo.do
 fmwww.bc.edu/repec/bocode/d/diplot.pkg
 fmwww.bc.edu/repec/bocode/d/ddirifit.html
 fmwww.bc.edu/repec/bocode/d/dd.ado

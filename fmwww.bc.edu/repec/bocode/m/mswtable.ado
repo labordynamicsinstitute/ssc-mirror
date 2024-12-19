@@ -1,4 +1,4 @@
-*! version 16.24   25.11.2024   John Casterline
+*! version 16.24   18.12.2024   John Casterline
 capture program drop mswtable
 program define mswtable, rclass
 version 16
@@ -226,7 +226,7 @@ if `"`font'"' ~= ""  {                     //  font is reset
       local st_fsize = `b_fsizeX' - 0.5    //  statistics
       local ex_fsize = `b_fsizeX' - 0.5    //  extra information
       local se_fsize = `b_fsizeX' - 1.0    //  standard errors (including t and p)
-      local ci_fsize = `b_fsizeX' - 2.0    //  confidence intervals
+      local ci_fsize = `b_fsizeX' - 1.5    //  confidence intervals
       local a_fsize  = `b_fsizeX' - 1.5    //  asterisks
       local n_fsize  "`font5'"             //  notes
    }
@@ -255,15 +255,17 @@ local bf092 = `b_fsize'*(11/12)
 local bf100 = `b_fsize'*(12/12)
 local bf108 = `b_fsize'*(13/12)*`inflate'
 local bf117 = `b_fsize'*(14/12)*`inflate'
-local bf121 = `b_fsize'*(14.5/12)*`inflate'
 local bf125 = `b_fsize'*(15/12)*`inflate'
 local bf142 = `b_fsize'*(17/12)*`inflate'
 local bf150 = `b_fsize'*(18/12)*`inflate'
 local bf167 = `b_fsize'*(20/12)*`inflate'
 local bf182 = `b_fsize'*(22/12)*`inflate'
 local bf250 = `b_fsize'*(30/12)*`inflate'
+local bf275 = `b_fsize'*(33/12)*`inflate'
+local bf284 = `b_fsize'*(34/12)*`inflate'
 local bf300 = `b_fsize'*(36/12)*`inflate'
 local bf375 = `b_fsize'*(45/12)*`inflate'
+local bf400 = `b_fsize'*(48/12)*`inflate'
 
 
 local lineT "single"
@@ -351,17 +353,26 @@ if "`cst_set'" ~= ""         {
 
 local rst_format ""
 local rst_indent ""
-if "`rst_set'" ~= ""            {
-   tokenize "`rst_set'", parse(" ,")
-   while "`1'" ~= ""            {
-      if "`1'" == "bold"        {
+local SPACES "   "
+if "`rst_set'" ~= ""                      {
+   tokenize "`rst_set'", parse(" ,()")
+   while "`1'" ~= ""                      {
+      if "`1'" == "bold"                  {
         local rst_format "bold"
       }
-      if "`1'" == "underline"   {
+      if "`1'" == "underline"             {
          local rst_format "underline"
       }
-      if "`1'" == "indent"      {
+      if "`1'" == "indent"                {
          local rst_indent "indent"
+      }
+      if real("`1'")>0 & real("`1'")<=6   {
+         local SPACES ""
+         forvalues n = 1/6                {
+            if `n'<=real("`1'")           {
+               local SPACES " `SPACES'"
+            }
+         }
       }
       mac shift
    }
@@ -755,7 +766,7 @@ if "`est1'" ~= ""  {
          if real("`1'")>=.0001 & real("`1'")<=.50  {
             local ci_p = `1'
          }
-         if real("`1'")>=4 & real("`1'")<30  {
+         if real("`1'")>=2 & real("`1'")<30  {
             local ci_fsize "`1'"    
          }
          if "`1'" == "noparen"  {
@@ -2191,12 +2202,23 @@ forvalues c = 1/`n_colTX'                {
 
 *  height of column titles row (depends on number of lines)
 
-local htR = `bf125'
-if "`ctitleht'" == "double"  {
-   local htR = round(`bf250')
+if "`ctitleht'" == "single"     {
+   local htR = `bf150'
+   if `"`cst1'"' ~= ""          {
+      local htR = round(`bf142')
+   }
 }
-if "`ctitleht'" == "triple"  {
-   local htR = round(`bf375')
+if "`ctitleht'" == "double"     {
+   local htR = round(`bf275')
+   if `"`cst1'"' ~= ""          {
+      local htR = round(`bf250')
+   }
+}
+if "`ctitleht'" == "triple"     {
+   local htR = round(`bf400')
+   if `"`cst1'"' ~= ""          {
+      local htR = round(`bf375')
+   }
 }
 putdocx table `tabname'(`row_C',.), height(`htR'pt, exact) valign(bottom)
 
@@ -2249,7 +2271,7 @@ forvalues p = 1/`n_p'      {
                      mac shift
                   }
                   tokenize `"`RST'"', parse(",")
-                  if `k'>=`3' & `k'<=(`3'+`5')   {
+                  if `k'>=`3' & `k'<(`3'+`5')   {
                      local indent`p'`k' "yes"
                   }
                }
@@ -2263,24 +2285,24 @@ forvalues p = 1/`n_p'      {
    forvalues R = `row_F`p''/`row_LS`p''   {
       if "`rtitle`p'`r''" ~= ""  {
          tokenize "`rtitle`p'`r''", parse("\")
-         if "`3'" == ""      {
+         if "`3'" == ""                   {
             putdocx table `tabname'(`R',1) = ("`1'"), font(`font', `l_fsize') 
             if "`indent`p'`r''" == "yes"  {
-               putdocx table `tabname'(`R',1) = ("   `1'"), font(`font', `l_fsize') 
+               putdocx table `tabname'(`R',1) = ("`SPACES'`1'"), font(`font', `l_fsize') 
             }
             local X = strtrim("`1'")
             if "`X'"=="_cons" | "`X'"=="constant" | "`X'"=="Constant" |    ///
                "`X'"=="intercept" | "`X'"=="Intercept"          {
-               local row_I = `R'
                putdocx table `tabname'(`R',.), height(`bf150'pt, exact) valign(center)
+               local row_I = `R'
             }
          }
-         if "`3'" ~= ""      {
+         if "`3'" ~= ""                   {
             putdocx table `tabname'(`R',1) = ("`1'"), font(`font', `l_fsize') linebreak(1) 
             putdocx table `tabname'(`R',1) = ("`3'"), font(`font', `l_fsize') append 
             if "`indent`p'`r''" == "yes"  {
-               putdocx table `tabname'(`R',1) = ("   `1'"), font(`font', `l_fsize') linebreak(1)
-               putdocx table `tabname'(`R',1) = ("   `3'"), font(`font', `l_fsize') append
+               putdocx table `tabname'(`R',1) = ("`SPACES'`1'"), font(`font', `l_fsize') linebreak(1) 
+               putdocx table `tabname'(`R',1) = ("`SPACES'`3'"), font(`font', `l_fsize') append 
             }
             putdocx table `tabname'(`R',.), height(`bf182'pt, exact)
             putdocx table `tabname'(`R',1), halign(left) valign(bottom)
@@ -2369,18 +2391,34 @@ if "`est_star'"~="" | "`BE'"=="beside"   {
 *  format data cells:  numeric format, row height  
 *  (note:  statistics formatting corrected later)
 
+local R = 1
+local C = 1
 forvalues c = 2/`col_L'              {
    if "`WISE'" == "cols"             {
-      putdocx table `tabname'(`row_F'/`row_LS',`c'), `nform`c'' font(`font',`b_fsize')
+      local NF "`nform`c''"
+      scalar X = el(`mat',`R',`C')
+      if X < 10000                   {
+         local NF = subinstr("`nform`c''","fc","f",1)
+      }
+      putdocx table `tabname'(`row_F'/`row_LS',`c'), `NF' font(`font',`b_fsize')
    }
    if "`WISE'" == "rows"             {
       forvalues r = `row_F'/`row_L'  {
-         putdocx table `tabname'(`r',`c'), `nform`r'' font(`font',`b_fsize')
+         local NF "`nform`r''"
+         scalar X = el(`mat',`R',`C')
+         if X < 10000                {
+            local NF = subinstr("`nform`r''","fc","f",1)
+         }
+         putdocx table `tabname'(`r',`c'), `NF' font(`font',`b_fsize')
       }
    }
+   local ++R
+   local ++C
+   capture scalar drop X
 }
+
 forvalues r = `row_F'/`row_LS'       {
-   putdocx table `tabname'(`r',.), height(`bf121'pt, exact)
+   putdocx table `tabname'(`r',.), height(`bf125'pt, exact)
    if "`est_se'" == ""               {
       putdocx table `tabname'(`r',.), height(`bf117'pt, exact)
    }
@@ -2520,7 +2558,7 @@ if "`BE'" == "below"        {
          putdocx table `tabname'(`r',.), addrows(1, after) 
          putdocx table `tabname'(`r',.), height(`bf108'pt, exact)
          local rx = `r' + 1
-         putdocx table `tabname'(`rx',.), height(`bf121'pt, exact)
+         putdocx table `tabname'(`rx',.), height(`bf125'pt, exact)
          local r = `r' + 2
          local ++n_extra
       }
@@ -2648,34 +2686,41 @@ if `"`rst11'"' ~= "" |   `"`rst21'"' ~= "" |  `"`rst31'"' ~= "" |    ///
             }
             tokenize `"`RST'"', parse(",")
             local lab_rst`r' "`1'"
-            if "`BE'"~="below"  {
+            if "`BE'"~="below"          {
                local row_rst`r' = `3' + (`row_F`p'' - 1) + `n'
                local alignV "bottom"
             }
-            if "`BE'"=="below"        {
+            if "`BE'"=="below"          {
                local row_rst`r' = `3' + (`3'-1) + (`row_F`p'' - 1) + `n'
                local alignV "center"
             }
-            local HT "bf167"
-            if `3'==1 | "`BE'"=="below"  {
-               local HT "bf142"
+            local HT  "bf125"
+            local HTX "bf025"
+            if "`BE'"=="below"          {
+               local HTX "bf016"
             }
-            if `3'~=1 & "`slim'"~=""     {
-               local HT "bf121"
+            if `3'~=1 & "`slim'"~=""    {
+               local HTX "bf016"
             }
             putdocx table `tabname'(`row_rst`r'',.), addrows(1, before)
             putdocx table `tabname'(`row_rst`r'',.), height(``HT''pt, exact) valign(`alignV')
             putdocx table `tabname'(`row_rst`r'',1) = ("`lab_rst`r''"),   ///
                font(`font', `l_fsize') `rst_format' halign(left)
-            local row_L      = `row_L'   + 1         //  last data/coeff row
-            local row_LS     = `row_LS'  + 1         //  last data/coeff/stat row
-            local row_LSE    = `row_LSE' + 1         //  last data/coeff/stat/extra row
-            local row_L`p'   = `row_L`p''  + 1       //  last data/coeff row, panel-specific
-            local row_LS`p'  = `row_LS`p'' + 1       //  last data/coeff/stat row, panel-specific
+            local ADD = 1
+            if "`slim'"=="" & `3' ~= 1  {
+               putdocx table `tabname'(`row_rst`r'',.), addrows(1, before)
+               putdocx table `tabname'(`row_rst`r'',.), height(``HTX''pt, exact) valign(`alignV')
+               local ADD = 2
+            }
+            local row_L      = `row_L'   + `ADD'        //  last data/coeff row
+            local row_LS     = `row_LS'  + `ADD'        //  last data/coeff/stat row
+            local row_LSE    = `row_LSE' + `ADD'        //  last data/coeff/stat/extra row
+            local row_L`p'   = `row_L`p''  + `ADD'      //  last data/coeff row, panel-specific
+            local row_LS`p'  = `row_LS`p'' + `ADD'      //  last data/coeff/stat row, panel-specific
             forvalues q = `Q'/`n_p'  {
-               local row_F`q'   = `row_F`q''  + 1    //  first data/coeff row, subsequent panels
-               local row_L`q'   = `row_L`q''  + 1    //  last data/coeff row, subsequent panels 
-               local row_LS`q'  = `row_LS`q'' + 1    //  last data/coeff/stat row, subsequent panels
+               local row_F`q'   = `row_F`q''  + `ADD'   //  first data/coeff row, subsequent panels
+               local row_L`q'   = `row_L`q''  + `ADD'   //  last data/coeff row, subsequent panels 
+               local row_LS`q'  = `row_LS`q'' + `ADD'   //  last data/coeff/stat row, subsequent panels
             }
          }
       }
@@ -2694,7 +2739,7 @@ if "`slim'" == ""             {
          local row_FX = cond("`BE'"=="below",`row_F`p''+1,`row_F`p'')     
          putdocx table `tabname'(`row_FX',.), addrows(1, after)
          local row_F_1 = `row_FX' + 1           //  after first row:  additional row
-         putdocx table `tabname'(`row_F_1',.), height(`bf025'pt, exact)
+         putdocx table `tabname'(`row_F_1',.), height(`bf033'pt, exact)
          local row_L   = `row_L'  + 1             //  last data/coeff row
          local row_LS  = `row_LS' + 1             //  last data/coeff/stat row
          local row_LSE = `row_LSE' + 1            //  last data/coeff/stat/extra row
@@ -2712,7 +2757,7 @@ if "`slim'" == ""             {
       forvalues p = 1/`n_p'   {
          local row_LX = cond("`BE'"=="below",`row_L`p''-1,`row_L`p'')
          putdocx table `tabname'(`row_LX',.), addrows(1, before)
-         putdocx table `tabname'(`row_LX',.), height(`bf025'pt, exact)
+         putdocx table `tabname'(`row_LX',.), height(`bf033'pt, exact)
          local row_L   = `row_L'  + 1             //  last data/coeff row
          local row_LS  = `row_LS' + 1             //  last data/coeff/stat row
          local row_LSE = `row_LSE' + 1            //  last data/coeff/stat/extra row
@@ -2786,7 +2831,7 @@ if "`est_stat1'"~=""       {
       if "`slim'" == ""           {
          putdocx table `tabname'(`row_FS`p'',.), addrows(1, before)   //  before first stat row:  add row
          if "`lastX'" == ""       {
-            putdocx table `tabname'(`row_FS`p'',.), height(`bf058'pt, exact)
+            putdocx table `tabname'(`row_FS`p'',.), height(`bf067'pt, exact)
             if "`BE'" == "below"  {
                putdocx table `tabname'(`row_FS`p'',.), height(`bf067'pt, exact)
             }
@@ -2856,10 +2901,10 @@ if "`extra1'"~="" & `n_p'>1        {
       putdocx table `tabname'(`row_LS',.), addrows(1, after)
       local row_LS_1  = `row_LS' + 1
       if "`est_stat1'"~="" & "`extra_place'"==""  {
-         putdocx table `tabname'(`row_LS_1',.), height(`bf067'pt, exact)  
+         putdocx table `tabname'(`row_LS_1',.), height(`bf075'pt, exact)  
       }
       if "`est_stat1'"=="" | "`extra_place'"~=""  {
-         putdocx table `tabname'(`row_LS_1',.), height(`bf058'pt, exact)  
+         putdocx table `tabname'(`row_LS_1',.), height(`bf067'pt, exact)  
       }
       local row_LSE = `row_LSE' + 1
    }
@@ -2977,7 +3022,7 @@ if ("`extra1'"~="" & `n_p'==1) |                            ///
          local row_ZZZ_1 = cond("`slim'"=="",`row_`ZZZ'`p''+1,`row_`ZZZ'`p'')
          if "`slim'" == ""   {
             putdocx table `tabname'(`row_`ZZZ'`p'',.), addrows(1, after)
-            putdocx table `tabname'(`row_ZZZ_1',.), height(`bf050'pt, exact)
+            putdocx table `tabname'(`row_ZZZ_1',.), height(`bf058'pt, exact)
          }
          putdocx table `tabname'(`row_ZZZ_1',.), addrows(`n_extra', after)
          forvalues r = 1/`n_extra'   {
@@ -3345,7 +3390,7 @@ forvalues p = 1/`n_p'   {
          }
       }
    }
-   local HT1 "bf058"            //  HT1:  height of row immediately before beginning of panel
+   local HT1 "bf075"            //  HT1:  height of row immediately before beginning of panel
    local HT2 "bf033"            //  HT2:  height of pline row (line is top border), prior to panel
    if `p' > 1                      {
       local q = `p' - 1
@@ -3353,23 +3398,23 @@ forvalues p = 1/`n_p'   {
          if "`pt`p''"==""          {
             local HT1 = cond("`lastX'"~="","bf092","bf075")
             if "`est_stat'"~="" | "`est_stat`q''"~="" | "`extra`q'1'"~=""    {
-               local HT1 "bf083"
+               local HT1 "bf092"
             }
             if "`BE'"=="below"     {
                local HT1 "bf075"
             }
          }
          if "`pt`p''"~=""               {
-            local HT1 "bf058"
+            local HT1 "bf067"
             if "`est_stat'"~="" | "`est_stat`q''"~="" | "`extra`q'1'"~=""    {
                if `"`rst`p'1'"'==""     {
-                  local HT1 "bf083"
+                  local HT1 "bf092"
                   if "`BE'"=="below"    {
                      local HT1 "bf075"
                   }
                }
                if `"`rst`p'1'"'~=""     {
-                  local HT1 "bf083"
+                  local HT1 "bf092"
                   if "`BE'"=="below"    {
                      local HT1 "bf075"
                   }
@@ -3377,20 +3422,20 @@ forvalues p = 1/`n_p'   {
             }
             if ("`est_stat'"~="" | "`est_stat`q''"~="") & ("`extra`q'1'"~="")   {
                if `"`rst`p'1'"'==""     {
-                  local HT1 "bf083"
+                  local HT1 "bf092"
                   if "`BE'"=="below"    {
                      local HT1 "bf075"
                   }
                }
                if `"`rst`p'1'"'~=""     {
-                  local HT1 "bf083"
+                  local HT1 "bf092"
                   if "`BE'"=="below"    {
                      local HT1 "bf075"
                   }
                }
             }
             if "`est_stat'"=="" & "`est_stat`q''"=="" & "`extra`q'1'"=="" & "`lastX'"~=""  {
-               local HT1 "bf058"
+               local HT1 "bf067"
             }
          }
       }
@@ -3645,9 +3690,9 @@ if `"`cst11'"' ~= ""    {
          }
       }
    }
-   local htR = `bf150'
+   local htR = `bf167'
    if "`cstitleht'" == "double"  {
-      local htR = `bf250'
+      local htR = `bf284'
    }
    putdocx table `tabname'(`row_SP',.), height(`htR'pt, exact) border(top, `lineT') 
 
@@ -3705,9 +3750,9 @@ if `"`cst1'"' ~= ""  {
          }
       }
    }
-   local htR = `bf150'
+   local htR = `bf167'
    if "`cstitleht'" == "double"  {
-      local htR = `bf250'
+      local htR = `bf284'
    }
    if `"`cst11'"' == ""          {
       putdocx table `tabname'(`row_SP',.), height(`htR'pt, exact) border(top, `lineT') 
