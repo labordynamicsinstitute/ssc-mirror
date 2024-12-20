@@ -1,4 +1,7 @@
-*! -table1_mc- version 3.4 Mark Chatfield    2023-11-07
+*! -table1_mc- version 3.5 Mark Chatfield    2024-12-19
+* varlabplus option added
+
+* -table1_mc- version 3.4 Mark Chatfield    2023-11-07
 * highpdp option added as some journals ask for all p-values to 3 decimal places
 * levels of numeric variable with decimal places did not always print when treated as a categorical variable
 
@@ -89,7 +92,8 @@ program define table1_mc, sclass
 		[slashN]			///  report n/N instead of n
 		[total(string)]		///  include a total column before/after presenting by group
 		[gurmeet]			/// equivalent to specifying:  percformat(%5.1f) percent_n percsign("") sdleft(" [±") sdright("]") gsdleft(" [x/ ") gsdright("]") onecol
-		[catrowperc]		//  report row percentages rather than column percentages for cat/cate variables
+		[catrowperc]		///  report row percentages rather than column percentages for cat/cate variables
+		[varlabplus]        //   adds ", median (IQR)", ", mean (SD)" "geometric mean (×/GSD)"  ", No. (%)" after variable label
 		
 *display ustrunescape("\u02e3\u002f")
 *di ustrunescape("\u00d7\u002f")
@@ -128,7 +132,26 @@ local meanSD : display "mean"`sdleft'"SD"`sdright'
 
 if `"`gsdleft'"' == "" local gsdleft `"" (×/""'
 if `"`gsdright'"' == "" local gsdright `"")""'
-local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
+local gmeanSD : display "geometric mean"`gsdleft'"GSD"`gsdright'  // 2024 it was "geometric SD"
+
+	*copied, slightly edited and moved up here 2024
+	local n "No."  // it was n 
+	if "`slashN'" == "slashN" local n "`n'/total"
+	local percentage "%"
+	if "`catrowperc'" != "" {
+		local percentage2 "`percentage'"
+		local percentage2 "column `percentage'"
+		if "`percent_n'" == "percent_n" & "`percent'"=="" local percfootnote2 "`percentage2' (`n')" 
+		if "`percent_n'" != "percent_n" & "`percent'"=="" local percfootnote2 "`n' (`percentage2')" 
+		if "`percent'"=="percent" local percfootnote2 "`percentage2'" 
+		local percentage "row `percentage'"
+	}
+	if "`percent_n'" == "percent_n" & "`percent'"=="" local percfootnote "`percentage' (`n')" 
+	if "`percent_n'" != "percent_n" & "`percent'"=="" local percfootnote "`n' (`percentage')" 
+	if "`percent'"=="percent" local percfootnote "`percentage'"
+	if `"`percfootnote2'"' == "" local percfootnote2 "`percfootnote'"
+	
+
 		
 	marksample touse
 	
@@ -293,7 +316,7 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				label var N_ "N" // makes no difference unless make it string here
 
 				qui gen factor="`varlab', `meanSD'"
-				qui replace factor="`varlab'" // mc
+				if `"`varlabplus'"' == "" qui replace factor="`varlab'" // mc
 				qui clonevar factor_sep=factor
 				
 				keep factor* `groupnum' mean_sd _columna_ _columnb_ N_
@@ -387,7 +410,7 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				label var N_ "N" // makes no difference unless make it string here
 
 				qui gen factor="`varlab', `gmeanSD'"
-				qui replace factor="`varlab'" // mc
+				if `"`varlabplus'"' == "" qui replace factor="`varlab'" // mc
 				qui clonevar factor_sep=factor
 				
 				keep factor* `groupnum' mean_sd _columna_ _columnb_ N_
@@ -486,7 +509,7 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				label var N_ "N" // makes no difference unless make it string here
 				
 				qui gen factor="`varlab', median (IQR)"
-				qui replace factor="`varlab'" // mc
+				if `"`varlabplus'"' == "" qui replace factor="`varlab'" // mc
 				qui clonevar factor_sep=factor
 				keep factor* `groupnum' median_iqr _columna_ _columnb_ N_
 				qui reshape wide median_iqr _columna_ _columnb_ N_, i(factor) j(`groupnum')
@@ -641,7 +664,8 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				* add factor and level variables, unless onecol option specified
 				* in which case just add factor variable (with levels included)
 				if "`onecol'"=="" {
-					qui gen factor="`varlab'" if _n==1
+					qui gen factor="`varlab', `percfootnote2'" if _n==1 
+					if `"`varlabplus'"' == "" qui replace factor="`varlab'" if _n==1
 					qui gen factor_sep="`varlab'" // allows neat sepby
 					qui gen level= string(`varnum')   // was just qui gen level=""  before 2023 10 20
 					qui levelsof `varnum', local(levels)
@@ -661,7 +685,8 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 					foreach v of var N_* {					
 						qui replace `v' = `v'[_n+1] if _n==1
 					}
-					qui gen factor="`varlab'" if _n==1
+					qui gen factor="`varlab', `percfootnote2'" if _n==1 
+					if `"`varlabplus'"' == "" qui replace factor="`varlab'" if _n==1					
 					qui replace factor="   " + string(`varnum') if _n!=1 // new 2023 10 20
 					qui gen factor_sep="`varlab'" // allows neat sepby
 					qui levelsof `varnum', local(levels)
@@ -804,7 +829,8 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 				drop _freq perc n_ // mc now keeping tot, but dropping newly created n_
 				qui reshape wide n_perc _columna_ _columnb_ N_, i(`varname') j(`groupnum')
 				qui drop `varname'
-				qui gen factor="`varlab'" if _n==1
+				qui gen factor="`varlab', `percfootnote'" if _n==1 
+				if `"`varlabplus'"' == "" qui replace factor="`varlab'" if _n==1				
 				qui clonevar factor_sep=factor
 				rename n_perc* `groupnum'*
 
@@ -1000,6 +1026,7 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 	if regexm("`vars' ", " bin ") == 1 | regexm("`vars' ", " bine ") == 1 local ybin "1"
 	if regexm("`vars' ", " cat ") == 1 | regexm("`vars' ", " cate ") == 1 local ycat "1" 
 	if "`ycat'" == "1" | "`ybin'" == "1" local ycatbin "1"
+	/*
 	local n "n"
 	if "`slashN'" == "slashN" local n "`n'/total"
 	local percentage "%"
@@ -1014,6 +1041,7 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 	if "`percent_n'" == "percent_n" & "`percent'"=="" local percfootnote "`percentage' (`n')" 
 	if "`percent_n'" != "percent_n" & "`percent'"=="" local percfootnote "`n' (`percentage')" 
 	if "`percent'"=="percent" local percfootnote "`percentage'" 
+	*/
 	*if "`ycat'" == "1" | "`ybin'" == "1" local ycat "`percfootnote'"
 	if regexm("`vars' ", " contn ") == 1  local ycontn "1"
 	if regexm("`vars' ", " contln ") == 1  local ycontln "1" 
@@ -1029,8 +1057,8 @@ local gmeanSD : display "geometric mean"`gsdleft'"geometric SD"`gsdright'
 	if "`ycont'" != "" & "`ycatbin'" =="" local ymix "`ycont'"
 	if "`ycont'" == "" & "`ycatbin'" !="" local ymix "`percfootnote'"
 	if "`catrowperc'" != "" & "`ycat'" == "1" & "`ybin'" == "1" local ymix "`ymix' and `percfootnote2' for binary measures"
-	local Dapa "Data are presented as `ymix'."
-	display "`Dapa'"
+	if `"`varlabplus'"' == "" local Dapa "Data are presented as `ymix'."
+	if `"`varlabplus'"' == "" display "`Dapa'"
 	sreturn local Dapa "`Dapa'"	
 	display " "
 	

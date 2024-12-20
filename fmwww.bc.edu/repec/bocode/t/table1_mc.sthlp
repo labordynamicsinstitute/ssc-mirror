@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.3 2022-05-05}{...}
+{* *! version 3.5 2024-12-19}{...}
 {hline}
 help for {cmd:table1_mc}
 {hline}
@@ -19,7 +19,7 @@ help for {cmd:table1_mc}
 {phang}where {it: vartype} is one of:{p_end}
 {tab}contn  - continuous, normally distributed  (mean and SD will be reported)
 {tab}contln - continuous, log normally distributed (geometric mean and GSD reported)
-{tab}conts  - continuous, neither log normally or normally distributed (median and IQR reported)
+{tab}conts  - continuous, neither log normally or normally distributed (median, Q1 and Q3 reported)
 {tab}cat    - categorical, groups compared using Pearson's chi-square test
 {tab}cate   - categorical, groups compared using Fisher's exact test
 {tab}bin    - binary (0/1), groups compared using Pearson's chi-square test
@@ -44,6 +44,7 @@ help for {cmd:table1_mc}
 {synopt:{cmdab:f:ormat(}{it:{help fmt:%fmt}}{cmd:)}}default display format for continuous variables{p_end}
 {synopt:{cmdab:percf:ormat(}{it:{help fmt:%fmt}}{cmd:)}}default display format for percentages for categorical/binary variables{p_end}
 {synopt:{cmdab:nf:ormat(}{it:{help fmt:%fmt}}{cmd:)}}display format for n and N; default is nformat(%12.0fc){p_end}
+{synopt:{opt varlabplus}}adds ", median (IQR)" ", mean (SD)" ", No. (%)" etc. after variable label; default is to explain all this in one footnote{p_end}
 {synopt:{opt iqrmiddle("string")}}allows for e.g. median (Q1, Q3) using iqrmiddle(", ") rather than median (Q1-Q3){p_end}
 {synopt:{opt sdleft("string")}}allows for e.g. mean±sd using sdleft("±") rather than mean (SD){p_end}
 {synopt:{opt sdright("string")}}allows for e.g. mean±sd using sdright("") rather than mean (SD){p_end}
@@ -80,7 +81,7 @@ significance test is performed to compare each characteristic between groups. {i
 are compared using ANOVA (with and without log transformation of positive values respectively) 
 [equivalent to an independent t-test when 2 groups],
 {it:conts} variables are compared using the Wilcoxon rank-sum (2 groups)
-or Kruskal-Wallis (>2 groups) test, {it:cat} and {it:bin} variables are compared using Pearson's
+or Kruskal-Wallis (>2 groups) test (adjusted for ties), {it:cat} and {it:bin} variables are compared using Pearson's
 chi-square test, and {it:cate} and {it:bine} variables are compared using Fisher's exact test.
 Specifying the {bf:test} option adds a column to the table describing the test used.
 And specifying the {bf:statistic} option adds a column to the table describing the value of the test statistic.
@@ -91,7 +92,7 @@ variable the default display format is the same as that variable's current displ
 change the table's default display format of summary statistics for continuous variables using the {bf:format()} option.
  After each variable's type you may
 optionally specify a display format to override the table's default by specifying {it:{help fmt:%fmt1}}.
-Specification of {it:{help fmt:%fmt2}} also, will affect the display format of IQR/SD/geometric SD.
+Specification of {it:{help fmt:%fmt2}} also, will affect the display format of Q1,Q3/SD/geometric SD.
 For categorical/binary variables the default is to
 display the column percentage using either 0 or 1 decimal place depending on the total frequency. You
 can change this default using the {bf:percformat()} option.{p_end}
@@ -107,23 +108,13 @@ using the command {help table1_mc_dta2docx:table1_mc_dta2docx}.{p_end}
 
 {title:Remarks}
 
-{pstd}Stata 18 introduced the {cmd:dtable} command, and Stata 17 introduced a massively revised and expanded {cmd:table} command. 
-Both offer much flexibility, though {cmd:table1_mc} is much easier to use and read about.{p_end}
-
-{pstd}{cmd:table1_mc} is an extension and modification of Phil Clayton's {cmd:table1} command.{p_end}  
-{pstd}Other user written commands that do similar things include:{break}
- {cmd:baselinetable} ... very nice, but no p-values. Can use any statistics from summarise, can't report geometric mean and geometric SD.{break}
- {cmd:tabout} ... http://tabout.net.au/docs/home.php{break}
- {cmd:sumtable} ... two stats in two (not one) columns, generally not as flexible, no p-values{break}
- {cmd:partchart} ... quite similar but strangely doesn't seem to express IQR as (Q1-Q3), reporting instead the difference between the two quartiles{break}
- {cmd:tabxml} ... survey data frequencies and/or % for categorical variables, means and SE / CI for continuous variables. To avoid matsum error message: . net install sg100, from(http://www.stata.com/stb/stb47){break}
- {cmd:basetable} ... "can be used for survey analysis". Nice, can do 95% CIs for each group. 
- Can save in various styles e.g. Latex. Stata Journal 2022; 22: 416-429.{p_end}
-
-{pstd}See also http://blog.stata.com/2017/04/06/creating-excel-tables-with-putexcel-part-3-writing-custom-reports-for-arbitrary-variables/{p_end}
-
+{pstd}Stata's {help dtable:dtable} command, introduced in version 18, can do a lot of what {cmd:table1_mc} can do, and more. 
+[If using {cmd:dtable}, the {help tables_intro:collect} suite of commands can help to report 
+binary variables on one row, provide finer control of decimal places, and other things.]{p_end}
 
 {pstd}While {cmd:table1_mc} does not report an effect size (e.g. differences in means, medians or proportions) & associated 95% CI for a variable when there are 2 (or more) groups, users might consider calculating and reporting these also.{p_end}
+
+{pstd}{cmd:table1_mc} is an extension and modification of Phil Clayton's {cmd:table1} command.{p_end}  
 
 
 {title:Examples}
@@ -132,16 +123,16 @@ Both offer much flexibility, though {cmd:table1_mc} is much easier to use and re
 {phang}{sf:. }{stata "generate much_headroom = (headroom>=3)"}{p_end}
 {phang}{sf:. }{stata "table1_mc, by(foreign) vars(weight contn %5.0f \ price contln %5.0f %4.2f \ mpg conts %5.0f \ rep78 cate \ much_headroom bin) onecol nospace"}{p_end}
 
-{pstd}{sf: To save a resulting table as an .xlsx file}{break}
+{pstd}{bf: To save a resulting table as an .xlsx file}{break}
 {sf:. cd "H:\"   (or whichever directory you want to save to)} {break}
 {sf:. }{stata `"table1_mc, by(foreign) vars(weight contn %5.0f \ price contln %5.0f %4.2f \ mpg conts %5.0f \ rep78 cate \ much_headroom bin) onecol test statistic saving("example Table 1.xlsx", replace)"'}{p_end}
 
 
-{pstd}{bf: To save a resulting table in a .docx file [Stata 15.1 required]}{break}
+{pstd}{bf: To save a resulting table in a .docx file}{break}
 Use the {bf:clear} option of table1_mc together with the command {help table1_mc_dta2docx:table1_mc_dta2docx}:{p_end}
 {pstd}{sf:. }{stata "sysuse auto, clear"} {break} 
 {sf:. }{stata "preserve"} {break}
-{sf:. }{stata "table1_mc, by(foreign) vars(price conts \ weight contn %5.0f \ rep78 cate) onecol extraspace test statistic clear"} {break}
+{sf:. }{stata "table1_mc, by(foreign) vars(price conts \ weight contn %5.0f \ rep78 cate) onecol varlabplus nospace test statistic clear"} {break}
 {sf:Note the use of the} {bf:clear} {sf:option} above, which {bf:overwrites the data in memory with the summary table} 
 {sf:hence the use of } {bf:preserve} {sf:and} {bf:restore}{break}
 {sf:. cd "H:\"   (or whichever directory you want to save to)} {break}
