@@ -257,6 +257,8 @@ p multiline module for multiple panel line plots
 p multimport module to import multiple non-Stata datafiles into memory, appending them automatically
 p multipurt module to run 1st and 2nd generation panel unit root tests for multiple variables and lags
 p multishell module to allot do files and variations of loops across parallel instances of Windows Stata and computers efficiently
+p multisite_varitt module to estimate and conduct inference on the variance of ITTs across sites in multi-site randomized trials
+p multisite_varlate module to estimate and conduct inference on the variance of LATEs across sites in multi-site randomized trials
 p multistate module to perform multi-state survival analysis
 p multivrs module to conduct multiverse analysis
 p mundlak module to estimate random-effects regressions adding group-means of independent variables to the model

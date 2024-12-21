@@ -1,0 +1,24 @@
+d 'MULTISITE_VARITT': module to estimate and conduct inference on the variance of ITTs across sites in multi-site randomized trials
+d
+d    multisite_varITT estimates and conducts inference on the
+d variance of ITTs across sites in multi-site randomized trials    
+d    studied in de Chaisemartin & Deeb (2024), and provides the
+d ratio of the standard deviation of ITTs across sites to the	   
+d  average ITT.  The command can also be used to estimate the
+d variance of ITT effects across strata in stratified RCTs. 
+d
+d KW: randomized trials
+d KW: ITT
+d
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 20241220
+d
+d Author: Clement de Chaisemartin,  Sciences Po
+d Support: email clementdechaisemartin@@gmail.com
+d
+d Author: Antoine Deeb, World Bank
+d Support: email adeeb1@@worldbank.org
+d
+f multisite_varITT.ado
+f multisite_varITT.sthlp
