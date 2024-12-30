@@ -1,3 +1,4 @@
+*! 2.1.1 Ariel Linden 26Dec2024 // fixed error in legend for the case when no CI, lowess, or shading is specified
 *! 2.1.0 Ariel Linden 06Nov2024 // added shading option 
 *! 2.0.1 Ariel Linden 09Sep2024 // changed code in CI option to utilize -predictnl- for computing predictions and CIs
 *! 2.0.0 Ariel Linden 24Aug2024 // added lowess and CI options
@@ -495,8 +496,8 @@ version 11.0
 						label(`pred1' "Predicted") label(`ci1' "`clv'% CI") position(6))),					
 					} // no low, yes ci, yes shade
 				} // end ci
-				if "`ci'" == "" {			
-					local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(2 3) label(2 "Actual") label(3 "Predicted") position(6))),
+				else if "`ci'" == "" {			
+					local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(1 2) label(1 "Actual") label(2 "Predicted") position(6))),
 				} // no low, no ci, no shade
 			} // end no low	
 			if "`ci'" != "" {
@@ -826,8 +827,8 @@ version 11.0
 						label(`pred1' "Predicted") label(`ci1' "`clv'% CI") position(6))),					
 					} // no low, yes ci, yes shade
 				} // end ci
-				if "`ci'" == "" {			
-					local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(2 3) label(2 "Actual") label(3 "Predicted") position(6))),
+				else if "`ci'" == "" {			
+					local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(1 2) label(1 "Actual") label(2 "Predicted") position(6))),
 				} // no low, no ci, no shade
 			} // end no low	
 			if "`ci'" != "" {

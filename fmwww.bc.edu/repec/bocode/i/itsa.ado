@@ -1,4 +1,6 @@
-*! 3.2.0 Ariel Linden 26Oct2024						// fixed trperiods to ensure proper ordering 
+*! 3.2.2 Ariel Linden 26Dec2024						// fixed error in legend for the case when no CI, lowess, or shading is specified 
+*! 3.2.1 Ariel Linden 06Nov2024						// fixed shade() to ensure proper ordering 
+*! 3.2.0 Ariel Linden 26Oct2024						// fixed trperiods() to ensure proper ordering 
 													// coded legend to appear at 6 o'clock (because v18 moves the legend to 3 o'clock) 
 													// added shading option
 *! 3.1.2 Ariel Linden 12Sep2024						// return matrix r(table) manually to ensure it is available after -itsa-  
@@ -27,7 +29,7 @@
 *! 1.0.0 Ariel Linden 12Feb2014
 *! 0.0.9 Ariel Linden 01Jan2014
 
-program define itsa,  rclass sort
+program define itsa, rclass sort
 version 11.0
 
 	/* obtain settings */
@@ -75,6 +77,20 @@ version 11.0
 		local pvar `r(panelvar)'
 		local multi_pnl = (r(imax)-r(imin)) > 0 & (r(imax)-r(imin)<.)
 		
+		/* check for gaps in the tvar */
+		if `r(gaps)' ==  1 {
+			di as err "" "`r(timevar)'" " (the time variable specified in -tsset-), must be evenly-spaced with no gaps" 
+			exit 498			
+		}
+		
+		/* make sure that panel is strongly balanced */
+		if "`pvar'" != "" & "`single'" == "" {
+			if "`r(balanced)'" != "strongly balanced" {
+				di as err "strong balance required"
+				exit 498
+			}
+		}		
+		
 		/* get format for timevar for output */
 		* format specified for the timevar (used for lincom title and figure title)
 		loc tsf `r(tsfmt)'
@@ -85,13 +101,6 @@ version 11.0
 		}
 		else local tsfr `tsf'
 
-		if "`pvar'" != "" & "`single'" == "" {
-			if "`r(balanced)'" != "strongly balanced" {
-				di as err "strong balance required"
-				exit 498
-			}
-		}
-		
 		/* parse dates in trperiod() */
 		tokenize "`trperiod'", parse(";")
 		local done = 0
@@ -139,14 +148,25 @@ version 11.0
 					local shadeperiod `shading'
 				}  // end if
 			} // end while
+			
+			// ensure correct ordering of shade1 and shade2
+			if `shade1' == `shade2' {
+				di as err "shade() must contain two different values"
+				exit 198
+			}
+			if `shade1' > `shade2' {
+				local shade3 = `shade2'
+				local shade4 = `shade1'
+				local shade1 = `shade3'
+				local shade2 = `shade4'
+			}
+			
 			local shadecnt: word count `shadeperiod'	
 			if `shadecnt' != 2 {
 				di as err "shade() must contain two time values"
 				exit 498
 			}
-			/* ensure correct ordering of shading time values */
-			local shadeperiod = subinstr("`shadeperiod'", " ", "\ ", .)
-			mata: st_local("shadeperiod",  invtokens(strofreal(sort(`shadeperiod',1))'))			
+
 		} // end parse shade
 
 		/* check if shadeperiod is among tvars */
@@ -277,7 +297,6 @@ version 11.0
 
 		}  // end quietly
 		
-			
 		/* run Prais or Newey regression */
 		tsset
 		if "`prais'" != "" {
@@ -577,10 +596,11 @@ version 11.0
 					label(`pred1' "Predicted") label(`ci1' "`clv'% CI") position(6))),					
 				} // no low, yes ci, yes shade
 			} // end ci
-			if "`ci'" == "" {			
-				local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(2 3) label(2 "Actual") label(3 "Predicted") position(6))),
+			else if "`ci'" == "" {			
+				local nolow subtitle("Intervention starts: `tperlist'")  legend(rows(1) order(1 2) label(1 "Actual")label(2 "Predicted"))) , 
 			} // no low, no ci, no shade
 		} // end no low	
+
 		if "`ci'" != "" {
 			local lcl (line `plotvarsL' `tvar' if `touse' [`weight' `exp'], `lc2') 
 			local ucl (line `plotvarsU' `tvar' if `touse' [`weight' `exp'], `lc2') 	
@@ -943,8 +963,8 @@ version 11.0
 						label(`pred1' "Predicted") label(`ci1' "`clv'% CI") position(6))),					
 					} // no low, yes ci, yes shade
 				} // end ci
-				if "`ci'" == "" {			
-					local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(2 3) label(2 "Actual") label(3 "Predicted") position(6))),
+				else if "`ci'" == "" {			
+					local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) order(1 2) label(1 "Actual") label(2 "Predicted") position(6))),
 				} // no low, no ci, no shade
 			}	
 			if "`ci'" != "" {
@@ -963,15 +983,13 @@ version 11.0
 			`cpart' `mspart' `lc'
 			xline(`trperiod', lpattern(shortdash) lcolor(black))
 			mcolor(black)
-			legend(rows(1) order(1 2)
-			label(1 "Actual") label(2 "Predicted"))
 			note(`"`note'"')
 			ytitle("`ydesc'")
 			xtitle("`tdesc'")
 			title("`treatdesc'")
-			`nolow'
-			`lowleg'
 			ylabel(`results')
+			`lowleg'
+			`nolow'
 			`figure2'
 			;
 			#delim cr
@@ -981,7 +999,7 @@ version 11.0
 	/*************************************************
 	TYPE 3 ANALYSIS: MULTIPLE GROUP ANALYSIS
 	**************************************************/
-	else if `atype'==3 {
+	else if `atype'== 3 {
 		/* variables based on trperiod */
   		quietly {
 			bysort `touse' `pvar' (`tvar'): gen `prefix'_t = `tvar' - `tvar'[1] if `touse'
@@ -1577,7 +1595,7 @@ version 11.0
 					} // yes ci
 				} // no lowess
 			
-				// * graph it - no xvars *//
+				// * graph it - no xvars * //
 				twoway ///
 					`shhh' ///				
 					(scatter  `dvar_t' `plotvars_t' `tvar', `cpart' `tmspart' `lc' `mc') ///
@@ -1651,7 +1669,7 @@ version 11.0
 					}
 				} // end no lowess				
 
-				// * graph it - xvars *//		
+				// * graph it - xvars * //		
 				twoway ///
 					`shhh' ///						
 					(scatter `dvar_t' `ypred_t' `dvar_c' `ypred_c'  `tvar', c(. l . l) ms(O none Oh none) mcolor(black black black black) ///
