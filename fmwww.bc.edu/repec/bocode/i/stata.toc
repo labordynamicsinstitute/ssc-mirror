@@ -112,6 +112,7 @@ p istdize module to generate indirectly standardized rates using a standard popu
 p isvar module  to filter names into variable names and others
 p itpscore module to implement Iterative Propensity Score Logistic Regression Model Search Procedure
 p itsa module to perform interrupted time series analysis for single and multiple groups
+p itsadgp module to generate artificial data for interrupted time-series analysis
 p itsamatch module to perform matching in multiple group interrupted time-series analysis
 p itsaperm module to perform permutation tests for matched multiple group interrupted time series analysis 
 p itsarand module for conducting randomization tests for single-case and multiple-baseline AB phase designs 

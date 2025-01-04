@@ -1,7 +1,7 @@
 program define xframeappend
 /*
 *!Author: Roger Newson
-*!Date: 15 March 2021 
+*!Date: 01 January 2024
 */
 
 	version 16.0
@@ -102,7 +102,7 @@ program define xframeappend
 		  tempvar temphome
 		  foreach X of varlist `shared_varlist' {
 		    frget `temphome'=`X', from(`temp_link')
-		    replace `X'=`temphome' in `=`to_N'+1' / `new_N'
+		    if `to_N'<`new_N' replace `X'=`temphome' in `=`to_N'+1' / `new_N'
 		    drop `temphome'
 		  }
 		}

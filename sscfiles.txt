@@ -12683,6 +12683,7 @@ fmwww.bc.edu/repec/bocode/i/invcise.pkg
 fmwww.bc.edu/repec/bocode/i/inormpi.ado
 fmwww.bc.edu/repec/bocode/i/isa_xplots.ado
 fmwww.bc.edu/repec/bocode/i/ivreg28.ado
+fmwww.bc.edu/repec/bocode/i/itsadgp.pkg
 fmwww.bc.edu/repec/bocode/i/iciss.html
 fmwww.bc.edu/repec/bocode/i/ivprob.hlp
 fmwww.bc.edu/repec/bocode/i/inequal2.pkg
@@ -12773,6 +12774,7 @@ fmwww.bc.edu/repec/bocode/i/iia.ado
 fmwww.bc.edu/repec/bocode/i/inmor.pkg
 fmwww.bc.edu/repec/bocode/i/ifwins.pkg
 fmwww.bc.edu/repec/bocode/i/itmeus.ado
+fmwww.bc.edu/repec/bocode/i/itsadgp.ado
 fmwww.bc.edu/repec/bocode/i/iimpute.hlp
 fmwww.bc.edu/repec/bocode/i/ipfraking-v32.pdf
 fmwww.bc.edu/repec/bocode/i/ivprob.html
@@ -12918,6 +12920,7 @@ fmwww.bc.edu/repec/bocode/i/icp.sthlp
 fmwww.bc.edu/repec/bocode/i/ivreg2hfe.sthlp
 fmwww.bc.edu/repec/bocode/i/intcens.hlp
 fmwww.bc.edu/repec/bocode/i/ipdfc.ado
+fmwww.bc.edu/repec/bocode/i/itsadgp.sthlp
 fmwww.bc.edu/repec/bocode/i/ineqfac.pkg
 fmwww.bc.edu/repec/bocode/i/ivdesc.ado
 fmwww.bc.edu/repec/bocode/i/invtmvnormal.ado

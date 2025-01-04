@@ -1,4 +1,4 @@
-*! version 16.24   18.12.2024   John Casterline
+*! version 16.25   30.12.2024   John Casterline
 capture program drop mswtable
 program define mswtable, rclass
 version 16
@@ -18,7 +18,7 @@ syntax , COLWidth(string)
            est_stat(string) 
            est_stat1(string) est_stat2(string) est_stat3(string) est_stat4(string)
            est_stat5(string)
-           est_star(string)  est_se  est_se(string)  est_no(string)  
+           est_star  est_star(string)   est_se  est_se(string)   est_no(string)  
            add_means(string)  add_mat(string)  add_excel(string)
            title(string asis) SUBTitle(string asis)
            note1(string) note2(string) note3(string) note4(string) note5(string)
@@ -79,7 +79,7 @@ syntax , COLWidth(string)
 
 #d cr
 
-*  n = 208 options  (max allowed = 256)
+*  n = 205 options  (max allowed = 256)
 
 
 if "`mat'"~="" & "`mat1'"~=""     {
@@ -266,6 +266,8 @@ local bf284 = `b_fsize'*(34/12)*`inflate'
 local bf300 = `b_fsize'*(36/12)*`inflate'
 local bf375 = `b_fsize'*(45/12)*`inflate'
 local bf400 = `b_fsize'*(48/12)*`inflate'
+local bf500 = `b_fsize'*(60/12)*`inflate'
+local bf525 = `b_fsize'*(63/12)*`inflate'
 
 
 local lineT "single"
@@ -309,6 +311,7 @@ local sttitles
 *  ct_set
 
 local ct_format ""
+local ct_just "right"
 if "`ct_set'" ~= ""            {
    tokenize "`ct_set'", parse(" ,")
    while "`1'" ~= ""           {
@@ -317,6 +320,12 @@ if "`ct_set'" ~= ""            {
       }
       if "`1'" == "underline"  {
          local ct_format "underline"
+      }
+      if "`1'" == "left"       {
+         local ct_just "left"
+      }
+      if "`1'" == "center"     {
+         local ct_just "center"
       }
       mac shift
    }
@@ -368,7 +377,7 @@ if "`rst_set'" ~= ""                      {
       }
       if real("`1'")>0 & real("`1'")<=6   {
          local SPACES ""
-         forvalues n = 1/6                {
+         forvalues n = 1/8                {
             if `n'<=real("`1'")           {
                local SPACES " `SPACES'"
             }
@@ -412,15 +421,15 @@ if "`pt_set'" ~= ""             {
 
 
 
-*  est_se
+*  est_se  and  est_star - settings for default (i.e. no "string")
 
 tokenize `"`INPUT'"', parse(" ,")
-while `"`1'"' ~= ""        {
-   if `"`1'"' == "est_se"  {
+while `"`1'"' ~= ""          {
+   if `"`1'"' == "est_se"    {
       local est_se "XX"
-      local STPC   "se"
-      local BE     "below"
-      local PAREN  "yes"
+   }
+   if `"`1'"' == "est_star"  {
+      local est_star "XX"
    }
    mac shift
 }
@@ -727,21 +736,28 @@ if "`est1'" ~= ""  {
       }            
    }
 
-   if "`est_star'" == ""  {
+   local num_es = 3
+   local pv1 = 0.05
+   local pv2 = 0.01
+   local pv3 = 0.001
+   if "`est_star'" ~= ""   {
       local num_es = 3
-      local pv1 = 0.10
+      local pv1 = 0.05
       local pv2 = 0.01
       local pv3 = 0.001
-   }
-   if "`est_star'" ~= ""  {
-      local num_es = 0
-      tokenize "`est_star'", parse(" ,")
-      local k = 1
+      tokenize "`est_star'", parse(" ,()")
+      if real("`1'")>=.00001 & real("`1'")<=.99      {
+         local num_es = 0
+         local pv1 ""
+         local pv2 ""
+         local pv3 ""
+         local k = 0
+      }
       while "`1'" ~= ""    {
-         if "`1'" ~= ","   {
+         if real("`1'")>=.00001 & real("`1'")<=.99   {
             local ++num_es
-            local pv`k' "`1'"
             local ++k
+            local pv`k' "`1'"
          }
          mac shift
       }    
@@ -2131,7 +2147,7 @@ putdocx table `tabname'(`row_C'/`row_LS',2/`n_colTX'), halign(right) valign(bott
 
 
 *  column titles
-*  (syntax assumes three lines maximum, separated by slashes)
+*  (syntax assumes four lines maximum, separated by slashes)
 
 if "`ct'" ~= ""         {
    tokenize "`ct'", parse("!")
@@ -2162,38 +2178,54 @@ local ctitleht "single"
 forvalues c = 1/`n_colTX'                {
    if "`ctitle`c''" ~= ""                {
       tokenize "`ctitle`c''", parse("\")
-      if "`3'" == ""                     {
+      if "`3'"==""                       {
          putdocx table `tabname'(`row_C',`c') = ("`1'"), font(`font', `l_fsize') `ct_format'
       }
-      if "`3'" ~= ""                     {
-         if "`ctitleht'" ~= "triple"     {
+      if "`3'"~="" & "`5'"==""           {
+         if "`ctitleht'"~="triple"  &  "`ctitleht'"~="quad"      {
             local ctitleht "double" 
          }
-         if "`ct_format'" == "bold"      {
+         if "`ct_format'"=="bold"        {
             putdocx table `tabname'(`row_C',`c') = ("`1'"), font(`font', `l_fsize') `ct_format' linebreak(1)
          }
-         if "`ct_format'" ~= "bold"      {
+         if "`ct_format'"~="bold"        {
             putdocx table `tabname'(`row_C',`c') = ("`1'"), font(`font', `l_fsize') linebreak(1)
          }
-         if "`5'" == ""                  {
-            putdocx table `tabname'(`row_C',`c') = ("`3'"), font(`font', `l_fsize') `ct_format' append
-         }
-         if "`5'" ~= ""                  {
+         putdocx table `tabname'(`row_C',`c') = ("`3'"), font(`font', `l_fsize') `ct_format' append
+      }
+      if "`5'"~="" & "`7'"==""           {
+         if "`ctitleht'"~="quad"         {
             local ctitleht "triple" 
-            if "`ct_format'" == "bold"   {
-               putdocx table `tabname'(`row_C',`c') = ("`3'"), font(`font', `l_fsize') `ct_format' append linebreak(1)
-            }
-            if "`ct_format'" ~= "bold"   {
-               putdocx table `tabname'(`row_C',`c') = ("`3'"), font(`font', `l_fsize') append linebreak(1)
-            }
-            putdocx table `tabname'(`row_C',`c') = ("`5'"), font(`font', `l_fsize') `ct_format' append
          }
+         if "`ct_format'"=="bold"        {
+            putdocx table `tabname'(`row_C',`c') = ("`1'"), font(`font', `l_fsize') `ct_format' linebreak(1)
+            putdocx table `tabname'(`row_C',`c') = ("`3'"), font(`font', `l_fsize') `ct_format' append linebreak(1)
+         }
+         if "`ct_format'"~="bold"        {
+            putdocx table `tabname'(`row_C',`c') = ("`1'"), font(`font', `l_fsize') linebreak(1)
+            putdocx table `tabname'(`row_C',`c') = ("`3'"), font(`font', `l_fsize') append linebreak(1)
+         }
+         putdocx table `tabname'(`row_C',`c') = ("`5'"), font(`font', `l_fsize') `ct_format' append
+      }
+      if "`7'"~=""                       {
+         local ctitleht "quad"         
+         if "`ct_format'"=="bold"        {
+            putdocx table `tabname'(`row_C',`c') = ("`1'"), font(`font', `l_fsize') `ct_format' linebreak(1)
+            putdocx table `tabname'(`row_C',`c') = ("`3'"), font(`font', `l_fsize') `ct_format' append linebreak(1)
+            putdocx table `tabname'(`row_C',`c') = ("`5'"), font(`font', `l_fsize') `ct_format' append linebreak(1)
+         }
+         if "`ct_format'"~="bold"        {
+            putdocx table `tabname'(`row_C',`c') = ("`1'"), font(`font', `l_fsize') linebreak(1)
+            putdocx table `tabname'(`row_C',`c') = ("`3'"), font(`font', `l_fsize') append linebreak(1)
+            putdocx table `tabname'(`row_C',`c') = ("`5'"), font(`font', `l_fsize') append linebreak(1)
+         }
+         putdocx table `tabname'(`row_C',`c') = ("`7'"), font(`font', `l_fsize') `ct_format' append
       }
       if `c'==1  {
          putdocx table `tabname'(`row_C',`c'), halign(left)
       }
       if `c'>1   {
-         putdocx table `tabname'(`row_C',`c'), halign(right)
+         putdocx table `tabname'(`row_C',`c'), halign(`ct_just')
       }
    }
 }
@@ -2220,6 +2252,13 @@ if "`ctitleht'" == "triple"     {
       local htR = round(`bf375')
    }
 }
+if "`ctitleht'" == "quad"       {
+   local htR = round(`bf525')
+   if `"`cst1'"' ~= ""          {
+      local htR = round(`bf500')
+   }
+}
+
 putdocx table `tabname'(`row_C',.), height(`htR'pt, exact) valign(bottom)
 
 
@@ -2320,6 +2359,7 @@ forvalues p = 1/`n_p'      {
 
 *  note:  row-spanning titles are below, after: insertion of columns and filling of columns
 *                                        OR     insertion of rows and filling of rows
+*                                       AND     deletion of columns
 
 
 
@@ -2656,76 +2696,6 @@ if "`BE'" == "below"        {
          capture drop STPC_L STPC_U
       } 
    }
-}
-
-
-
-*  row spanning titles (maximum twelve per panel)
-*  (syntax assumes three values in each rst#, separated by comma or space)
-*  (assumes within-panel numbering)
-*  (must occur after:  insertion of columns and filling of columns
-*                  OR  insertion of rows and filling of rows)
-*  
- 
-if `"`rst11'"' ~= "" |   `"`rst21'"' ~= "" |  `"`rst31'"' ~= "" |    ///
-   `"`rst41'"' ~= "" |   `"`rst51'"' ~= ""    {
-
-   forvalues p = 1/`n_p'              {
-      local Q = `p' + 1
-      local MAX = cond(`p'==1,16,12)
-      forvalues r = 1/`MAX'           {
-         if `"`rst`p'`r''"' ~= ""     {
-            local RST ""
-            local n = `r' - 1
-            tokenize `"`rst`p'`r''"', parse(" ,")
-            while "`1'" ~= ""         {
-               if "`1'" ~= ","        {
-                  local RST "`RST'`1',"
-               }
-               mac shift
-            }
-            tokenize `"`RST'"', parse(",")
-            local lab_rst`r' "`1'"
-            if "`BE'"~="below"          {
-               local row_rst`r' = `3' + (`row_F`p'' - 1) + `n'
-               local alignV "bottom"
-            }
-            if "`BE'"=="below"          {
-               local row_rst`r' = `3' + (`3'-1) + (`row_F`p'' - 1) + `n'
-               local alignV "center"
-            }
-            local HT  "bf125"
-            local HTX "bf025"
-            if "`BE'"=="below"          {
-               local HTX "bf016"
-            }
-            if `3'~=1 & "`slim'"~=""    {
-               local HTX "bf016"
-            }
-            putdocx table `tabname'(`row_rst`r'',.), addrows(1, before)
-            putdocx table `tabname'(`row_rst`r'',.), height(``HT''pt, exact) valign(`alignV')
-            putdocx table `tabname'(`row_rst`r'',1) = ("`lab_rst`r''"),   ///
-               font(`font', `l_fsize') `rst_format' halign(left)
-            local ADD = 1
-            if "`slim'"=="" & `3' ~= 1  {
-               putdocx table `tabname'(`row_rst`r'',.), addrows(1, before)
-               putdocx table `tabname'(`row_rst`r'',.), height(``HTX''pt, exact) valign(`alignV')
-               local ADD = 2
-            }
-            local row_L      = `row_L'   + `ADD'        //  last data/coeff row
-            local row_LS     = `row_LS'  + `ADD'        //  last data/coeff/stat row
-            local row_LSE    = `row_LSE' + `ADD'        //  last data/coeff/stat/extra row
-            local row_L`p'   = `row_L`p''  + `ADD'      //  last data/coeff row, panel-specific
-            local row_LS`p'  = `row_LS`p'' + `ADD'      //  last data/coeff/stat row, panel-specific
-            forvalues q = `Q'/`n_p'  {
-               local row_F`q'   = `row_F`q''  + `ADD'   //  first data/coeff row, subsequent panels
-               local row_L`q'   = `row_L`q''  + `ADD'   //  last data/coeff row, subsequent panels 
-               local row_LS`q'  = `row_LS`q'' + `ADD'   //  last data/coeff/stat row, subsequent panels
-            }
-         }
-      }
-   }
-
 }
 
 
@@ -3120,15 +3090,9 @@ if "`slim'" == ""      {
 
 
 
-******************************************************************************************
-******************************************************************************************
-
-
 *  *************************************
 *
-*  ****  FINISHING TOUCHES, I  ****
-*
-*        column deletion
+*  ****  COLUMN DELETION  ****
 *
 *  *************************************
 
@@ -3323,6 +3287,7 @@ if `n_colE'>0  &  `n_colM'>0                {   //  both excel and add
 }
 
 
+
 *  2.  column deletion 
 *      
 
@@ -3345,6 +3310,134 @@ if "`est_star'"~="" | "`BE'"=="beside"     {
    }
 }
 
+
+
+
+******************************************************************************************
+******************************************************************************************
+
+
+*  Guide to rows and columns  (reprise)
+*
+*     n_rowD   number data rows (coefficients or matrix elements):        all panels
+*     n_rowS   number statistics rows (N, r-squared, BIC, etc):           all panels
+*
+*     n_colD   number of data columns (equations or matrix elements), excluding means/matrices
+*     n_colM   number of means/matrix columns
+*     n_colE   number of excel columns
+*     n_colT   number of data/means/matrix/excel columns
+*     n_colTX  number of columns:  row title + data/means/matrix/excel columns
+*
+*     col_DF   first data column (accounting for row title column = 1)
+*     col_DL   last data column (accounting for extra columns: row title, stars, se)
+*     col_MF   first means/matrix column (accounting for row title column = 1)
+*     col_ML   last means/matrix column (accounting for row title column = 1) 
+*     col_EF   first excel column (accounting for row title column = 1)
+*     col_EL   last excel column (accounting for row title column = 1) 
+*     col_F    first data/means/matrix/excel column (accounting for row title column = 1)
+*     col_L    last data/means/matrix/excel column (accounting for row title column = 1)
+*
+*     row_SP   column spanning title row
+*     row_C    column title row
+*
+*     row_F    first data row                                       first row, first panel
+*     row_L    last data/coeff row:                                 last row, last panel
+*     row_LS   last data/coeff/stat row:                            after all panels
+*     row_LSE  last data/coeff/stat/extra row:                      after all panels
+*     row_N    first row of notes                                   after all panels
+*
+*     n_rowD#  number data rows (coefficients or matrix elements):  panel-specific
+*     n_rowS#  number statistics rows (N, r-squared, BIC, etc):     panel-specific
+*
+*     row_F#   first data row:                                      panel-specific
+*     row_L#   last data/coeff row:                                 panel-specific
+*     row_LS#  last data/coeff/stat row:                            panel-specific
+*
+*     note:  panel-specific are absolute -- based on row_F, not renumbered panel-by-panel
+
+
+
+
+*  *************************************
+*
+*  ****  FINISHING TOUCHES, I  ****
+*
+*        row spanning titles
+*
+*  *************************************
+
+
+*  row spanning titles (maximum twelve per panel)
+*  (syntax assumes three values in each rst#, separated by comma or space)
+*  (assumes within-panel numbering)
+*  (must occur after:  insertion of columns and filling of columns
+*                  OR  insertion of rows and filling of rows)
+*                 AND  deletion of columns (because rst span all columns ("colspan"))
+*  
+ 
+if `"`rst11'"' ~= "" |   `"`rst21'"' ~= "" |  `"`rst31'"' ~= "" |    ///
+   `"`rst41'"' ~= "" |   `"`rst51'"' ~= ""    {
+
+   forvalues p = 1/`n_p'              {
+      local Q = `p' + 1
+      local MAX = cond(`p'==1,16,12)
+      local extra = 0
+      forvalues r = 1/`MAX'           {
+         if `"`rst`p'`r''"' ~= ""     {
+            local RST ""
+            tokenize `"`rst`p'`r''"', parse(" ,")
+            while "`1'" ~= ""         {
+               if "`1'" ~= ","        {
+                  local RST "`RST'`1',"
+               }
+               mac shift
+            }
+            tokenize `"`RST'"', parse(",")
+            local lab_rst`r' "`1'"
+            if "`BE'"~="below"          {
+               local row_rst`r' = `3' + (`row_F`p'' - 1) + `extra'
+               local alignV "bottom"
+            }
+            if "`BE'"=="below"          {
+               local row_rst`r' = `3' + (`3'-1) + (`row_F`p'' - 1) + `extra'
+               local alignV "center"
+            }
+            local HT  "bf125"
+            local HTX "bf025"
+            if "`BE'"=="below"          {
+               local HTX "bf016"
+            }
+            if `3'~=1 & "`slim'"~=""    {
+               local HTX "bf016"
+            }
+            putdocx table `tabname'(`row_rst`r'',.), addrows(1, before)
+            putdocx table `tabname'(`row_rst`r'',1), colspan(`col_L')
+            putdocx table `tabname'(`row_rst`r'',.), height(``HT''pt, exact) valign(`alignV')
+            putdocx table `tabname'(`row_rst`r'',1) = ("`lab_rst`r''"),   ///
+               font(`font', `l_fsize') `rst_format' halign(left)
+            local ADD = 1
+            local ++extra
+            if "`slim'"=="" & `3' ~= 1  {
+               putdocx table `tabname'(`row_rst`r'',.), addrows(1, before)
+               putdocx table `tabname'(`row_rst`r'',.), height(``HTX''pt, exact) valign(`alignV')
+               local ADD = 2
+               local ++extra
+            }
+            local row_L      = `row_L'   + `ADD'        //  last data/coeff row
+            local row_LS     = `row_LS'  + `ADD'        //  last data/coeff/stat row
+            local row_LSE    = `row_LSE' + `ADD'        //  last data/coeff/stat/extra row
+            local row_L`p'   = `row_L`p''  + `ADD'      //  last data/coeff row, panel-specific
+            local row_LS`p'  = `row_LS`p'' + `ADD'      //  last data/coeff/stat row, panel-specific
+            forvalues q = `Q'/`n_p'  {
+               local row_F`q'   = `row_F`q''  + `ADD'   //  first data/coeff row, subsequent panels
+               local row_L`q'   = `row_L`q''  + `ADD'   //  last data/coeff row, subsequent panels 
+               local row_LS`q'  = `row_LS`q'' + `ADD'   //  last data/coeff/stat row, subsequent panels
+            }
+         }
+      }
+   }
+
+}
 
 
 
@@ -3551,45 +3644,6 @@ local row_N = `row_LSE'     //  first row of notes section
 *  *************************************
 
 
-*  Guide to rows and columns  (reprise)
-*
-*     n_rowD   number data rows (coefficients or matrix elements):        all panels
-*     n_rowS   number statistics rows (N, r-squared, BIC, etc):           all panels
-*
-*     n_colD   number of data columns (equations or matrix elements), excluding means/matrices
-*     n_colM   number of means/matrix columns
-*     n_colE   number of excel columns
-*     n_colT   number of data/means/matrix/excel columns
-*     n_colTX  number of columns:  row title + data/means/matrix/excel columns
-*
-*     col_DF   first data column (accounting for row title column = 1)
-*     col_DL   last data column (accounting for extra columns: row title, stars, se)
-*     col_MF   first means/matrix column (accounting for row title column = 1)
-*     col_ML   last means/matrix column (accounting for row title column = 1) 
-*     col_EF   first excel column (accounting for row title column = 1)
-*     col_EL   last excel column (accounting for row title column = 1) 
-*     col_F    first data/means/matrix/excel column (accounting for row title column = 1)
-*     col_L    last data/means/matrix/excel column (accounting for row title column = 1)
-*
-*     row_SP   column spanning title row
-*     row_C    column title row
-*
-*     row_F    first data row                                       first row, first panel
-*     row_L    last data/coeff row:                                 last row, last panel
-*     row_LS   last data/coeff/stat row:                            after all panels
-*     row_LSE  last data/coeff/stat/extra row:                      after all panels
-*     row_N    first row of notes                                   after all panels
-*
-*     n_rowD#  number data rows (coefficients or matrix elements):  panel-specific
-*     n_rowS#  number statistics rows (N, r-squared, BIC, etc):     panel-specific
-*
-*     row_F#   first data row:                                      panel-specific
-*     row_L#   last data/coeff row:                                 panel-specific
-*     row_LS#  last data/coeff/stat row:                            panel-specific
-*
-*     note:  panel-specific are absolute -- based on row_F, not renumbered panel-by-panel
-
-
 *  notes
 
 if "`note1'" ~= ""           {
@@ -3630,11 +3684,6 @@ if "`note1'" ~= ""           {
 
 *  column spanning titles:  add row for spanning titles
 *
-*  horizontal line:  on top of spanning titles row
-*  
-
-
-*  second-level column spanning titles
 
 if `"`cst11'"' ~= ""    {
 
@@ -3648,6 +3697,7 @@ if `"`cst11'"' ~= ""    {
    local row_C  = `row_C'  + 1      //  column title row
          
 
+
 *  second-level column spanning titles (maximum five)
 *
 *  relies on starting and ending columns, calculated above
@@ -3655,7 +3705,7 @@ if `"`cst11'"' ~= ""    {
 *  (syntax allows for two lines maximum per piece of text, separated by slashes)
   
    forvalues s = 5(-1)1        {
-      if `"`cst1`s''"' ~= ""   {
+      if `"`cst1`s''"'~=""     {
          local CST ""
          tokenize `"`cst1`s''"', parse(" ,")
          while "`1'" ~= ""     {
@@ -3669,19 +3719,19 @@ if `"`cst11'"' ~= ""    {
          local cstend   = `3' + (`5' - 1)
          local cstwidth = (`end`cstend'' - `start`cststart'') + 1
          tokenize "`1'",  parse("\")
-         if "`3'" == ""  { 
+         if "`3'"==""                    { 
             putdocx table `tabname'(`row_SP',`start`cststart''), colspan(`cstwidth') 
             putdocx table `tabname'(`row_SP',`start`cststart'') = ("`1'"),       ///
                font(`font', `l_fsize') `cst_format'  halign(`cst_just') valign(bottom)  
          }
-         if "`3'" ~= ""  {
+         if "`3'"~=""                    {
             local cstitleht "double" 
             putdocx table `tabname'(`row_SP',`start`cststart''), colspan(`cstwidth') 
-            if "`cst_format'" == "bold"  {
+            if "`cst_format'"=="bold"    {
                putdocx table `tabname'(`row_SP',`start`cststart'') = ("`1'"),    ///
                   font(`font', `l_fsize') `cst_format'  halign(`cst_just') valign(bottom) append linebreak(1)  
             }
-            if "`cst_format'" ~= "bold"  {
+            if "`cst_format'"~="bold"    {
                putdocx table `tabname'(`row_SP',`start`cststart'') = ("`1'"),    ///
                   font(`font', `l_fsize') halign(`cst_just') valign(bottom) append linebreak(1)  
             }
@@ -3706,13 +3756,15 @@ if `"`cst1'"' ~= ""  {
    putdocx table `tabname'(`row_C',.), addrows(1, before)
    local row_SP = `row_C'
    local row_C  = `row_C'  + 1      //  column title row
-         
+
+   local cstitleht "single"    
+
 
 *  first-level column spanning titles (maximum ten)
 *
 *  relies on starting and ending columns, calculated above
 *  (syntax assumes three values in each cst#, separated by comma or space)
-*  (syntax allows for two lines maximum per piece of text, separated by slashes)
+*  (syntax allows for three lines maximum per piece of text, separated by slashes)
   
    forvalues s = 10(-1)1  {
       if `"`cst`s''"' ~= ""   {
@@ -3729,23 +3781,43 @@ if `"`cst1'"' ~= ""  {
          local cstend   = `3' + (`5' - 1)
          local cstwidth = (`end`cstend'' - `start`cststart'') + 1
          tokenize "`1'",  parse("\")
-         if "`3'" == ""  { 
+         if "`3'"==""                    { 
             putdocx table `tabname'(`row_SP',`start`cststart''), colspan(`cstwidth') 
             putdocx table `tabname'(`row_SP',`start`cststart'') = ("`1'"),       ///
                font(`font', `l_fsize') `cst_format'  halign(`cst_just') valign(bottom)  
          }
-         if "`3'" ~= ""      {
-            local cstitleht "double" 
-            putdocx table `tabname'(`row_SP',`start`cststart''), colspan(`cstwidth') 
-            if "`cst_format'" == "bold"  {
-               putdocx table `tabname'(`row_SP',`start`cststart'') = ("`1'"),    ///
-                  font(`font', `l_fsize') `cst_format'  halign(`cst_just') valign(bottom) append linebreak(1)  
+         if "`3'"~="" & "`5'"==""        {
+            if "`cstitleht'"~="triple"   {
+               local cstitleht "double" 
             }
-            if "`cst_format'" ~= "bold"  {
+            putdocx table `tabname'(`row_SP',`start`cststart''), colspan(`cstwidth') 
+            if "`cst_format'"=="bold  "   {
                putdocx table `tabname'(`row_SP',`start`cststart'') = ("`1'"),    ///
-                  font(`font', `l_fsize') halign(`cst_just') valign(bottom) append linebreak(1)  
+                  font(`font', `l_fsize') `cst_format'  halign(`cst_just') valign(bottom) linebreak(1) 
+            }
+            if "`cst_format'"~="bold"    {
+               putdocx table `tabname'(`row_SP',`start`cststart'') = ("`1'"),    ///
+                  font(`font', `l_fsize') halign(`cst_just') valign(bottom) linebreak(1)  
             }
             putdocx table `tabname'(`row_SP',`start`cststart'') = ("`3'"),       ///
+               font(`font', `l_fsize') `cst_format'  halign(`cst_just') valign(bottom) append 
+         }
+         if "`5'"~=""                    {
+            local cstitleht "triple" 
+            putdocx table `tabname'(`row_SP',`start`cststart''), colspan(`cstwidth') 
+            if "`cst_format'"=="bold"    {
+               putdocx table `tabname'(`row_SP',`start`cststart'') = ("`1'"),    ///
+                  font(`font', `l_fsize') `cst_format'  halign(`cst_just') valign(bottom) linebreak(1) 
+               putdocx table `tabname'(`row_SP',`start`cststart'') = ("`3'"),    ///
+                  font(`font', `l_fsize') `cst_format'  halign(`cst_just') valign(bottom) append linebreak(1) 
+            }
+            if "`cst_format'"~="bold"    {
+               putdocx table `tabname'(`row_SP',`start`cststart'') = ("`1'"),    ///
+                  font(`font', `l_fsize') halign(`cst_just') valign(bottom) linebreak(1) 
+                putdocx table `tabname'(`row_SP',`start`cststart'') = ("`3'"),   ///
+                  font(`font', `l_fsize') halign(`cst_just') valign(bottom) append linebreak(1)  
+            }
+            putdocx table `tabname'(`row_SP',`start`cststart'') = ("`5'"),       ///
                font(`font', `l_fsize') `cst_format'  halign(`cst_just') valign(bottom) append 
          }
       }
@@ -3753,6 +3825,9 @@ if `"`cst1'"' ~= ""  {
    local htR = `bf167'
    if "`cstitleht'" == "double"  {
       local htR = `bf284'
+   }
+   if "`cstitleht'" == "triple"  {
+      local htR = `bf400'
    }
    if `"`cst11'"' == ""          {
       putdocx table `tabname'(`row_SP',.), height(`htR'pt, exact) border(top, `lineT') 
