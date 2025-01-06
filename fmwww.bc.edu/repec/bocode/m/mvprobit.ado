@@ -1,3 +1,5 @@
+*! version 3.0.2 05jan2025 Cappellari & Jenkins (allow factor variable notation)
+*! See https://www.statalist.org/forums/forum/general-stata-discussion/general/1760942-mvprobit
 *! version 3.0.1  05may2024 Cappellari & Jenkins   
 *!  fix rarely-biting bug in Replay (thanks to Jeff Pitblado for suggested fix)
 *! version 3.0.0  12april2006 Cappellari & Jenkins            
@@ -8,7 +10,7 @@
 *! Multivariate probit by method of MSL.  
 
 program define mvprobit, eclass byable(onecall)
-	version 8.2
+	version 12
 	if replay() {
 		if "`e(cmd)'" != "mvprobit" {
 			di as error "results for mvprobit not found"
@@ -55,7 +57,7 @@ program define Estimate, eclass byable(recall)
 		if "`dep`i'n'" == "" {
 			local dep`i'n "`dep`i''"
 		}
-		syntax [varlist(default=none)] [, noCONstant]
+		syntax [varlist(default=none ts fv)] [, noCONstant]
 		local ind`i' `varlist'        
 		local ninds`i' : word count `ind`i''
 		if "`constant'" == "" {

@@ -248,6 +248,7 @@ p mtpi module for the modified Toxicity Probability Interval design
 p mtreatreg module to fits models with multinomial treatments and continuous, count and binary outcomes using maximum simulated likelihood
 p mulogit module to calculate multivariate and univariate odds ratios in logistic regression
 p multencode module to encode multiple string variables into numeric
+p multiauc module to calculate of correlated areas under the receiver operating characteristic curves and their differences
 p multibar module to produce bar and dot graphs for use with overlapping over() categories
 p multicoefplot module to produce advanced repeated cross-section graphical analysis
 p multidensity module for kernel density estimation for many variables or groups

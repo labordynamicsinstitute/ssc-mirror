@@ -1,0 +1,28 @@
+d 'XTSTGATHERCOVID19': module to Download COVID-19 Data from Our World in Data
+d
+d  xtstgathercovid19 downloads COVID-19 Data from Our World in
+d Data. The command xtstgathercovid19 allows to download
+d COVID-19/CORONAVIRUS/SARS-CoV-2 data in Stata format. It permits
+d to obtain time series and panel datasets on numerous variables,
+d such as: new cases, new deaths, new vaccinations, stringency
+d index, reproduction rate, population, etc. The downloaded
+d datasets can be aggregated at any frequency: daily, weekly,
+d monthly, quarterly, yearly, etc. Cross-sections of the datasets
+d can also be obtained after transforming the downloaded data. All
+d these datasets come from Our World in Data which is a website
+d dedicated to sharing the necessary research and data to address
+d and overcome the most significant global challenges. 
+d
+d KW: COVID-19
+d KW: data management
+d KW: panel data
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20250105
+d
+d Author: Diallo Ibrahima Amadou
+d Support: email zavren@@gmail.com
+d
+f xtstgathercovid19.ado
+f xtstgathercovid19.sthlp

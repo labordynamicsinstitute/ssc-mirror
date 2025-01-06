@@ -136,6 +136,7 @@ p xtsfkk module to estimate endogenous panel stochastic frontier models in the s
 p xtspj module for split-panel jackknife estimation
 p xtss module to estimate (S,s) rule regression models for panel data
 p xtstfetchcovid19 module to Download COVID-19 Datasets from the COVID-19 Data Hub
+p xtstgathercovid19 module to Download COVID-19 Data from Our World in Data
 p xtsum2docx module to report summary statistics of panel data to a formatted table in the DOCX format
 p xtsur module to estimate seemingly unrelated regression model on unbalanced panel data
 p xtteifeci module to provide Estimation and Inference of Treatment Effects through a Factor-Based Approach

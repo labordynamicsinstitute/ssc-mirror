@@ -1,0 +1,23 @@
+d 'MULTIAUC': module to calculate of correlated areas under the receiver operating characteristic curves and their differences
+d
+d   This program implements a non-parametric extension of the
+d DeLong (1988) method for the estimation and comparison of
+d correlated areas under the receiver operating characteristic
+d curve. The new method is described in Zou {it:et al.} (2024) and
+d allows for missing data among the scores. 
+d
+d KW:  area under the curve
+d KW: receiver operating characteristic curve
+d KW: AUC
+d KW: ROC
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20250105
+d
+d Author:   Leonardo Guizzetti,  NA
+d Support: email leonardo.guizzetti@@gmail.com
+d
+f multiauc.ado
+f multiauc.sthlp
+f ../d/delong1988.dta
