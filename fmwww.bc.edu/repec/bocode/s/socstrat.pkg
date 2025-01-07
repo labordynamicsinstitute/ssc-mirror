@@ -1,0 +1,24 @@
+d 'SOCSTRAT': module to compute and analyze social stratification variables
+d
+d  socstrat is designed to calculate and analyze social
+d stratification variables based on two variables: the National
+d Statistics Socio-Economic Classification (NS-SEC) or Registrar
+d General's Social Class (RGSC). The command requires at least two
+d variables to define the standard occupation classification (SOC)
+d code and the employment status (via the socstatus() option) and
+d generates a new variable that represents the computed social
+d stratification variable. 
+d
+d KW: data management
+d KW: social stratification
+d KW: social status
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20250106
+d
+d Author: Scott Oatley , University of Edinburgh
+d Support: email soatley@@exseed.ed.ac.uk
+d
+f socstrat.ado
+f socstrat.sthlp

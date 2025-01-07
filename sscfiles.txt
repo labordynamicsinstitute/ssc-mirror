@@ -15308,6 +15308,7 @@ fmwww.bc.edu/repec/bocode/x/xtcce.pkg
 fmwww.bc.edu/repec/bocode/x/xtile2.pkg
 fmwww.bc.edu/repec/bocode/x/xtbreak_tests.ado
 fmwww.bc.edu/repec/bocode/x/xtscc_p.ado
+fmwww.bc.edu/repec/bocode/x/xtserialpm.ado
 fmwww.bc.edu/repec/bocode/x/xtbunitroot_example.dta
 fmwww.bc.edu/repec/bocode/x/xauto.sthlp
 fmwww.bc.edu/repec/bocode/x/xthst.sthlp
@@ -20206,6 +20207,7 @@ fmwww.bc.edu/repec/bocode/s/stmixed_example1.dta
 fmwww.bc.edu/repec/bocode/s/shakespeare.sthlp
 fmwww.bc.edu/repec/bocode/s/svmatf.html
 fmwww.bc.edu/repec/bocode/s/single.plugin
+fmwww.bc.edu/repec/bocode/s/socstrat.pkg
 fmwww.bc.edu/repec/bocode/s/sbbq.html
 fmwww.bc.edu/repec/bocode/s/spregxt18.ado
 fmwww.bc.edu/repec/bocode/s/stcapture.pkg
@@ -20909,6 +20911,7 @@ fmwww.bc.edu/repec/bocode/s/svycepois.html
 fmwww.bc.edu/repec/bocode/s/subjob48.ado
 fmwww.bc.edu/repec/bocode/s/stpm3_predictions_eg.ado
 fmwww.bc.edu/repec/bocode/s/smwoodbury_lu_solve.sthlp
+fmwww.bc.edu/repec/bocode/s/socstrat.ado
 fmwww.bc.edu/repec/bocode/s/stpiece.hlp
 fmwww.bc.edu/repec/bocode/s/simulation_usecase.do
 fmwww.bc.edu/repec/bocode/s/sspecialreg.html
@@ -20934,6 +20937,7 @@ fmwww.bc.edu/repec/bocode/s/spregcs33.ado
 fmwww.bc.edu/repec/bocode/s/sttex.zip
 fmwww.bc.edu/repec/bocode/s/st_tuples_py.py
 fmwww.bc.edu/repec/bocode/s/strsrcs.ado
+fmwww.bc.edu/repec/bocode/s/socstrat.sthlp
 fmwww.bc.edu/repec/bocode/s/scheme-burd5.scheme
 fmwww.bc.edu/repec/bocode/s/sccsdta.pkg
 fmwww.bc.edu/repec/bocode/s/sequence.sthlp
@@ -23777,4 +23781,3 @@ fmwww.bc.edu/repec/bocode/l/lmnnlsur.dta
 fmwww.bc.edu/repec/bocode/l/labels_v2.mo
 fmwww.bc.edu/repec/bocode/l/lmdi.ado
 fmwww.bc.edu/repec/bocode/l/lmhnlsur.html
-fmwww.bc.edu/repec/bocode/xtserialpm.ado
