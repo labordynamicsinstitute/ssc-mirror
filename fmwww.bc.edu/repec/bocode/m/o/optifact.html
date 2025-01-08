@@ -1,0 +1,68 @@
+<pre>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Optifact - v1.2 - 11 Mar 2008</u></b>
+<p>
+    <b>Find the most appropriate summated rating scales from a list of items</b>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>optifact</b> <i>varlist</i> [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> <i>options</i>]
+<p>
+<b><u>Options</u></b>
+    <b>top(#)</b> The number of the best candidate scales to list after analysis
+        (default 10)
+<p>
+    <b>smallest(#)</b> The smallest number of items allowed in the candidate scales
+        (default 3)
+<p>
+    <b>largest(#)</b> The largest number of items allowed in the candidate scales
+        (default is all the items)
+<p>
+    <b>maxfact(#)</b> The maximum number of factors (latent concepts) in the scale
+        (default is 1)
+<p>
+    <b>minslope(#)</b> The minimum allowable slope in the canonical correlation
+        model (default .01)
+<p>
+    <b>criteria(varlist)</b> A list of variables for criterion validity testing
+        using canonical correlation
+<p>
+    <b>type(string)</b> The type of factor analysis to use.  Must be one of pf pcf
+        or ml.  Default is pf.  See help for factor
+<p>
+    <b>sig</b> Output the statistical significance of the model (assumes ml models).
+        Note this is the probability from the factor model (with ml option)
+        that all parameters of the model are zero in the population.
+        To get the statistical significance of alpha, bootstrap the
+        particular scale you are interested in.
+        For example: bootstrap "factor item1 tem2 tem4 item6" r(alpha),
+        reps(400)
+<p>
+    <b>by</b> may be used with <b>optifact</b>; see by.
+<p>
+    <b>aweights and fweights</b> are allowed; see weight.
+<p>
+    <b>Note: you must first install </b><i>matsort</i><b> before you can use optifact</b>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>optifact</b> examines every possible combination of items specified by 
+      <i>varlist</i> then lists out the scales with highest alpha and the given
+      number of factors that can be constructed from these items.
+<p>
+<b><u>Example</u></b>
+<p>
+    <b>. sysuse</b> auto
+<p>
+    <b>. optifact</b> price mpg rep78 headroom trunk weight length turn displacement
+      gear_ratio, largest(4) criteria(foreign)
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+Paul Millar
+www.ucalgary.ca/~pemillar
+pemillar@ucalgary.ca
+<p>
+</pre>

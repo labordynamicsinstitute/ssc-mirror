@@ -1,0 +1,169 @@
+<pre>
+.-
+help for ^oprobpr6^                                                    Nick Win
+&gt; ter
+.-
+<p>
+Displaying predicted probabilities from ordered probit &amp; logit, under Stata 6
+-----------------------------------------------------------------------------
+<p>
+      ^oprobpr6^ yvar xvar [weight] [^if^ exp] [^in^ range] 
+                [^,^ ^f^rom^(^#^)^ ^t^o^(^#^)^ ^inc(^#^)^
+                ^a^djust^(^varlist^)^ ^x^act^(^varlist^)^ ^po^ly^(^#^)^ 
+                ^p^lot^(^n,...,n^)^ ^s^ymbol^(^name,...,name^)^ ^c^ommand(cmd_n
+&gt; ame) 
+                ^nol^ist ^nop^lot ^nom^odel ^save(^filename[, replace]^)^ 
+                ^mod^eloptions(options) graph_options ] 
+<p>
+<p>
+Description
+-----------
+<p>
+^oprobpr6^ estimates an ordered dependent variable model on a continuous X
+   variable and an optional set of covariates, then lists and graphs the 
+   predicted probabilities from this model against the X variable, 
+   holding the covariates constant.  Optionally, quadratic or quadratic 
+   and cubic terms can be added to the model, as well as interaction terms 
+   between X and one or more other covariates. 
+<p>
+By default all response categories are listed and plotted; the ^plot()^ 
+   option allows the user to control plotting of only some categories, or
+   combinations of categories. ^symbol()^ allows control of the labelling 
+   of the plotted lines.
+<p>
+^oprobpr6^ is an extension of ^logpred^ published by Joanne Garrett
+   and of ^probpred^ published by Mead Over in sg42.2: STB 42. Unlike ^logpred^
+&gt;  
+   and ^probpred^, ^oprobpr6^ does not include confidence intervals in the list
+&gt;  
+   or graph.
+<p>
+Note that ^oprobpr6^ is out of date; use ^oprobpr^ if you are running Stata
+   version 7 or later.
+<p>
+Options
+-------
+<p>
+^from(^#^)^ specifies the lowest value of ^xvar^ for which a prediction is to b
+&gt; e
+   calculated.  The default is to use the minimum of ^xvar^ in the data.
+<p>
+^to(^#^)^ specifies the highest value of ^xvar^ for which a prediction is to be
+   calculated.  The default is to use the maximum of ^xvar^ in the data.
+<p>
+^inc(^#^)^ specifies the increment between adjacent values of ^xvar^.  The defa
+&gt; ult
+   is to set an increment such that eleven probabilities are calculated.
+<p>
+^adjust(^covlist^)^ specifies the other covariates in the model.  By default th
+&gt; ese
+   are set to their mean, based on the observations used in the analysis, or
+   can be set to other values, e.g. ^a(mpg=50 foreign=1 weight)^.
+<p>
+^xact(^varlist^)^ indicates that the variables in ^varlist^ (a subset of 
+   ^a()^) should also enter the model in interaction with ^xvar^. The 
+   interaction terms are created and entered in the model automatically.
+<p>
+^poly(^#^)^ indicates that ^xvar^ enters the model as a polynomial.  Quadratic
+   and cubic models are allowed.  They are indicated by ^poly(2)^ and ^poly(3)^
+&gt; ,
+   respectively. The polynomial terms are created and entered in the 
+   model automatically.
+<p>
+^plot(^n,...,n^)^ controls which categories of the dependent variable
+   are plotted and listed. The default is to list and plot probabilities 
+   for all categories. For example, ^p(^1,3,4^)^ would result in categories 
+   1, 3 and 4 only being listed and plotted.
+<p>
+   ^plot()^ also allows categories to be combined. So, for example, 
+   ^p(^1+2,3,4+5+6^)^ would plot three lines: one that is the sum of probabilit
+&gt; ies
+   for categories one and two, one that is the probability of category three,
+   and one that is the sum of categories 4 through 6.
+<p>
+^symbol(^name,...,name^)^ indicates how the lines on the graph should be 
+   labelled.  By default, simple categories are labeled with the appropriate 
+   value label from the dependent variable, if available. Otherwise, they are
+   labelled "Cat 1", "Cat 2" ... , through "Cat n". For example, 
+   ^s(^Low,Medium,High^)^ would label the lines "Low", "Medium",
+   and "High". To leave a line unlabeled, indicate a "." for its label.
+<p>
+^command^ specifies the estimation command to be used. Valid options are
+   oprobit, ologit, svyoprob, and svyolog. The default is oprobit.
+<p>
+^nomodel^ suppresses the display of the estimated regression.
+<p>
+^nolist^ suppresses the list of predicted values.
+<p>
+^noplot^ suppresses the graph of predicted values.
+<p>
+^save(^filename^)^ saves the prediction data set.
+<p>
+^modeloptions^ specifies options to be included in the running of the model,
+   such as ^robust^
+<p>
+graph_options allowed include ^xlabel^, ^ylabel^, ^saving(^filename^)^, and ^ti
+&gt; tles^.
+<p>
+<p>
+Examples
+--------
+<p>
+   . ^oprobpr6 rep78 mpg, adj(weight gratio foreign) noplot^
+<p>
+        Calculates the predicted probabilities of 1978 repair ratings (rep78)
+        for various values of mpg, adjusted for weight, gear ratio and 
+        foreign; mpg ranges in 10 steps according to its minimum and maximum 
+        in the data; displays model and predicted values but not the graph.
+<p>
+<p>
+   . ^oprobpr6 rep78 mpg, adj(weight gratio foreign=0)^
+<p>
+        Same as above, except predictions are for foreign==0 instead of for 
+        the sample average of foreign.  Graph and predictions are displayed.
+<p>
+<p>
+   . ^oprobpr6 rep78 mpg, adj(weight gratio foreign=0)^ 
+               ^xact(weight) poly(3) logit^
+<p>
+        Same as above, except that the interaction term weight*mpg is included
+        in the model using the xact(weight) option, and terms for mpg-squared 
+        and mpg-cubed are included using poly(3).  Model estimated is ordered
+        logit rather than ordered probit.
+<p>
+<p>
+   . ^oprobpr6 rep78 mpg, adj(weight gratio foreign=0) p(1,3+4,5)^
+               ^s(Low,Med&amp;High,Very High) ylab(0,.5,1)^
+<p>
+        Same as above but only lists and plots categories 1 and 5 and the
+        sum of categories 3 and 4 of rep78, and labels them "Low", "Very High",
+        and "Med&amp;High", respectively. The ylab option labels the y-axis 
+        appropriately for predicted probabilities.  Note that any other option 
+        which works on the ^graph^ command will also work here.
+<p>
+<p>
+   . ^oprobpr6 rep78 mpg, f(30) t(50) adj(weight gratio) xlab ylab nolist^
+<p>
+        Calculates the predicted probability over the range 30 to 50 of
+        mpg, rather than the range of mpg in the data set. Displays the
+        model and the graph, but omits the list of predictions.
+<p>
+<p>
+Author
+------
+<p>
+      Nick Winter
+      Cornell University
+      nwinter@@umich.edu
+<p>
+<p>
+Also see
+--------
+<p>
+    STB:  STB-42 sg42.2, STB-26 sg42, STB-24 sg33
+ Manual:  [R] oprobit, oprobitp, ologit, ologitp
+On-line:  help for @oprobit@, @oprobitp@, @ologit@, @ologitp@, 
+          @probpred@ (if installed), @regpred2@ (if installed), 
+          @logpred@ (if installed), @adjmean@ (if installed), 
+          @adjprop@ (if installed)
+</pre>

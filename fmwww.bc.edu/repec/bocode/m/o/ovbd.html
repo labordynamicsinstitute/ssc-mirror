@@ -1,0 +1,123 @@
+<pre>
+<b>help ovbd</b>                                                Version 1.0 2007-02-27
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>ovbd</b>
+<p>
+<p>
+<b><u>Generate correlated random binomial variables</u></b>
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>ovbd</b> [<i>newvarlist</i>] <b>,</b> <b><u>m</u></b><b>eans(</b><i>name</i><b>)</b> <b><u>c</u></b><b>orr(</b><i>name</i><b>)</b> <b>n(#)</b> [<i>options</i>] <b>clear</b>
+<p>
+    <i>options</i>               Description
+    -------------------------------------------------------------------------
+    Main
+      <b><u>m</u></b><b>eans(</b><i>name</i><b>)</b>         row vector of mean values (proportions)
+      <b><u>c</u></b><b>orr(</b><i>name</i><b>)</b>          correlation coefficient matrix
+      <b>n(</b><i>#</i><b>)</b>                # of observations to be generated
+      <b>clear</b>               mandatory reminder that the dataset will be
+                            overwritten
+<p>
+    Options
+      <b><u>st</u></b><b>ub(</b><i>string</i><b>)</b>        stub for new variable names
+      <b>seed(</b><i>#</i><b>)</b>             seed for random-number generator
+      <b><u>v</u></b><b>erbose</b>             verbose root-finder output
+    -------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>ovbd</b> generates correlated random binomial variables using the algorithm
+    of Ahn and Chen (1995) as described by Gregori, Di Consiglio and Carmeci
+    (1995).
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+        +------+
+    ----+ Main +-------------------------------------------------------------
+<p>
+<p>
+    <b>means</b> the name of a row vector containing the desired proportions in the
+        variables containing the resulting correlated random binomial
+        variables; proportions the row vector must be in the same order as
+        the the corresponding variables in <i>newvarlist</i>, if used.
+<p>
+    <b>corr</b> the name of a symmetric matrix containing the desired correlation
+        coefficients.
+<p>
+    <b>n</b> an integer specifying the desired number of observations.
+<p>
+    <b>stub</b> stub for new variable names if <i>newvarlist</i> is not specified.  At
+        least one of <i>stub()</i> or <i>newvarlist</i> must be specified.  If <i>newvarlist</i>
+        is specified, then <i>stub()</i> is ignored.
+<p>
+    <b>seed</b> seed for random number generator; a seed value of zero is ignored.
+<p>
+    <b>verbose</b> requests diplay of output from <b>ridder</b>, which is called by <b>ovbd</b>;
+        primarily for diagnostic purposes when Ridder's method fails.
+<p>
+    <b>clear</b> not optional; the user's acknowledgment the dataset will be
+        cleared, as will any global macro <i>S_1</i> that the user has defined.
+        Despite this forced option, none of the <i>newvarlist</i> may be present in
+        the dataset.  (<b>clear</b> might become truly optional in a later version
+        of <b>ovbd</b>.)
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>ovbd</b> follows the algorithm of Ahn and Chen (1995), and is roughly modeled
+    after the implementation described by Gregori, Di Consiglio and Carmeci
+    (1995), from whose Fortran-77 subroutine the Stata command's name
+    derives.
+<p>
+    <b>ovbd</b> calls <b>ridder</b>, which, in turn, calls the Stata function <b>binormal()</b>,
+    in order to find the bivariate normal correlation coefficients that will
+    give rise to the desired correlations between the end-result pairs of
+    binomial variables.  Finding this correlation coefficient for each pair
+    is not guaranteed to be successful; <b>verbose</b> will show the pair (matrix
+    elements) where the root-finding exercise fails first.  This might aid in
+    finding a more judicious construction of the mean vector and correlation
+    matrix to feed to <b>ovbd</b>.
+<p>
+    The command also calls <b>drawnorm</b> in order to generate the correlated
+    normal variables used in creating the corresponding correlated binomial
+    variables.  The option to use <i>newvarlist</i> follows the convention of the
+    latter, and allows greater flexibility in naming the new variables, but
+    the use of <i>stub()</i> might be more convenient for workaday use.
+<p>
+<p>
+<b><u>References</u></b>
+<p>
+    H. Ahn and J. J. Chen, Generation of overdispersed and underdispersed
+    binomial variables. <i>Journal of Computational and Graphical Statistics</i>
+    <b>4</b>:55–64, 1995.
+<p>
+    D. Gregori, L. Di Consiglio and G. Carmeci, A Fortran77 routine for
+    overdispersed binary data generation. Presented at the <i>1st Conference of</i>
+    <i>the Biometric Society, Italian Region</i> June 16 and 17, 1995.
+    http://lib.stat.cmu.edu/general/corbin
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. ovbd a b c, means(A) corr(B) n(250) clear</b>
+<p>
+    <b>. ovbd , st(response_) means(A) corr(B) n(200) seed(12345) clear</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Joseph Coveney jcoveney@bigplanet.com
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Manual:  <b>[D] drawnorm</b>, <b>[P] matrix</b>
+<p>
+    Online:  <b>ridder</b>, <b>drawnorm</b>, <b>matrix</b>, <b>nbreg</b>, <b>rnd</b> (if installed), <b>ebb</b> (if
+</pre>

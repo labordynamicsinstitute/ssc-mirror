@@ -1,0 +1,182 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>oprobpr</b>                                                    Nick Winter
+-------------------------------------------------------------------------------
+<p>
+<b><u>Displaying predicted probabilities from ordered probit &amp; logit</u></b>
+<p>
+     <b>oprobpr</b> <i>xvar</i> [[<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [<b>,</b> <b><u>l</u></b><b>evels(</b><i>level_spec</i><b>)</b> <b>noesample</b>
+               <b><u>cat</u></b><b>egories(</b><i>cat_spec</i>[<b>,</b> ...]<b>)</b> <b><u>lab</u></b><b>els(</b><i>lablist</i><b>)</b> <b><u>gt</u></b><b>ype(</b><i>plot_type</i><b>)</b>
+               <b>stack</b> <b><u>f</u></b><b>rom(</b><i>#</i><b>)</b> <b><u>t</u></b><b>o(</b><i>#</i><b>)</b> <b>inc(</b><i>#</i><b>)</b> <b><u>nwid</u></b><b>th(</b><i>#</i><b>)</b> <b><u>nol</u></b><b>ist</b>
+               <b><u>save</u></b><b>(</b><i>filename</i>[<b>, replace</b>]<b>)</b>} <b>plot(</b><i>plot</i><b>)</b> <i>graph_options</i>
+<p>
+<b><u>Description</u></b>
+<p>
+<b>oprobpr</b> plots (and optionally lists) the predicted probabilities from a
+     previously-estimated ordered dependent variable model against a single
+     covariate from the model, holding the other covariates constant.
+<p>
+By default all response categories are listed and plotted; the <b>categories()</b>
+     option allows the user to control plotting of only some categories, or
+     combinations of categories. <b>labels()</b> allows control of the labelling of
+     the plotted lines.
+<p>
+<b>oprobpr</b> is a substantially-updated version that takes advantage of Stata's
+     version 8 graphics.  With this revision, <b>oprobpr</b> now operates as a
+     post-estimation command, rather than estimating and plotting the model
+     in one step.  See the important note below on handling interaction terms
+     in the revised command.  This program was originally based on logpred
+     published by Joanne Garrett and of probpred published by Mead Over in
+     sg42.2: STB 42.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+<b>levels(</b><i>level_spec</i><b>)</b> specifies the levels at which to hold the other covariates
+     in the model.  By default, all covariates are set at their estimation
+     sample means (but see the <b>noesample()</b> option).  Note that the command
+     automatically calculates these means in the estimation sample only , any
+     <b>if</b> and/or <b>in</b> conditions specified with <b>oprobpr</b> will <i>further</i> restrict the
+     calculation of these means.
+<p>
+     The <b>levels()</b> option allows you to set covariates to other values; e.g.
+     <b>levels(mpg=50, foreign=1)</b>.
+<p>
+     In addition, if the model includes interaction terms between the <i>xvar</i>
+     variable you are plotting and some other covariate, they must be
+     appropriately specified in the <b>levels()</b> option in order that <b>oprobpr</b> can
+     re-calculate them appropriately. For example, if your model included a
+     variable called mXw, which is the interaction between mpg and weight,
+     and mpg is your <i>xvar</i>, then you would specify <b>levels(mXw=mpgXweight)</b>.  Of
+     course, you can mix and match the two uses of <b>levels()</b>:
+     <b>levels(weight=2500, mXw=mpg*weight)</b>.
+<p>
+<b>noesample</b> specifies that the calculation of means of covariates should be
+     done without regard to the estimation sample from the model estimation.
+     This means both that any <b>if</b> and/or <b>in</b> conditions specified when the
+     model was estimated are ignorred, and that all cases are included in the
+     calculation of each variable's mean (that is, cases are not excluded on
+     a casewise basis).  Any <b>if</b> and/or <b>in</b> conditions specified with the
+     <b>oprobpr</b> do restrict the calculation of means.
+<p>
+<b>from(</b><i>#</i><b>)</b> specifies the lowest value of <i>xvar</i> for which a prediction is to be
+     calculated.  The default is to use the minimum of <i>xvar</i> in the estimation
+     sample.
+<p>
+<b>to(</b><i>#</i><b>)</b> specifies the highest value of <i>xvar</i> for which a prediction is to be
+     calculated.  The default is to use the maximum of <i>xvar</i> in the estimation
+     sample.
+<p>
+<b>newobs(</b><i>#</i><b>)</b> specifies the number of observations to be created for calculation
+     and graphing of predicted probabilities.  The default is 25; more may be
+     specified if necessary to yield a smooth line.
+<p>
+<b>categories(</b><i>n,...,n</i><b>)</b> controls which categories of the dependent variable are
+     plotted and listed. The default is to list and plot probabilities for
+     all categories. For example, <b>cat(1,3,4)</b> would result in categories 1, 3
+     and 4 only being listed and plotted.
+<p>
+     <b>categories()</b> also allows categories to be combined. So, for example,
+     <b>cat(1+2,3,4+5+6)</b> would plot three lines: one that is the sum of
+     probabilities for categories one and two, one that is the probability of
+     category three, and one that is the sum of categories 4 through 6.
+<p>
+<b>labels()</b> specifies text labels with which to label the lines.  By default,
+     simple categories are labeled with the appropriate value label from the
+     dependent variable, if available. Otherwise, they are labelled
+     "Category 1", "Category 2" ... , through "Category <i>n</i>".  For example,
+     <b>cat(Low Medium High)</b> would label the lines "Low", "Medium", and "High".
+     To leave a line unlabeled, indicate a "." for its label.
+<p>
+     Enclose any labels that have spaces with quotation marks: <b>lab("Very Low"</b>
+     <b>Low Medium High "Very High")</b>
+<p>
+     Note that the labels can also be specified within the legend() option's
+     <b>label()</b> suboption; this just provides a somewhat easier way to change
+     multiple labels with a single option.
+<p>
+<b>gtype()</b> specifies the type of twoway graph to create.  By default this is
+     scatter.
+<p>
+<b>stack</b> causes the categories to be calculated as cumulative probabilities,
+     allowing the creation of a stacked plot; when this is specified the
+     <b>gtype()</b> defaults to area.
+<p>
+<b>nwidth()</b> specifies the width of the note that <b>oprobpr</b> creates to indicate the
+     levels of the covariates.  The default is 80.
+<p>
+<b>save(</b><i>filename</i><b>)</b> saves the prediction data set. This is useful for conducting
+     additional analysis of the predicted values. (Note that the graph option
+     <b>saving()</b> is different, and may be used to save the resulting <i>graph</i>.)
+<p>
+<b>plot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph; see help
+     plot_option.  Note that the dataset will be intact, but will have
+     additional observations added at the end for the calculation of
+     predicted probabilities.  To exclude these observations from any
+     additional plots, include the condition <b>in @@@</b> in these plots; this will
+     be translated to cover the range of the original dataset.
+<p>
+<i>graph_options</i> can be any valid options for a twoway graph.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+     <b>. oprobit rep78 mpg weight gear_ratio foreign</b> <b>. oprobpr mpg</b>
+<p>
+     Plots the predicted probabilities for categories of rep78 against mpg,
+     holding the other covariates constant at their estimation-sample means.
+<p>
+<p>
+     <b>. oprobpr mpg, levels(weight=2500, foreign=0)</b>
+<p>
+     Same as above, except predictions are for foreign==0 and weight==2500
+     instead of for the sample averages of those variables.
+<p>
+<p>
+     <b>. generate mpgXweight = mpg*weight</b>
+     <b>. ologit rep78 mpg weight mpgXweight gear_ratio foreign</b>
+     <b>. oprobpr mpg, levels(weight=2500, mpgXweight=mpg*weight, foreign=0)</b>
+<p>
+     Same as above, except that the interaction term weight*mpg is included
+     in the original model, and is specified in the <b>oprobpr()</b> command.
+     Weight is held constant at 2500, foreign at 0, and gear_ratio at its
+     sample mean.  Model estimated is ordered logit rather than ordered
+     probit.
+<p>
+<p>
+     <b>. oprobpr mpg, cat(1,3+4,5) lab(Low "Medium &amp; High" "Very High")</b>
+          <b>clpattern(dash dot dash_dot) msym(i i i) title( , size(small))</b>
+<p>
+     Plots only categories 1, the sum of 3 and 4, and 5 of rep78, and labels
+     them "Low", "Medium &amp; High", and "Very High", respectively.  The default
+     line patterns and marker symbols are overridden, and the size of the
+     overall title is adjusted.  Note that any other option which works on
+     the graph command will also work here.
+<p>
+<p>
+     <b>. oprobpr mpg, stack</b>
+<p>
+     Probabilities are graphed as a stacked area plot instead of as a series
+     of lines.
+<p>
+        
+     <b>. oprobpr mpg, plot(function y=.75, range(mpg) ) legend(order(1 2 3 4 5)</b>
+<p>
+     An additional plot is overlaid, in this case a horizontal line at 0.75,
+     specified to run over the range of the variable mpg.  The legend option
+     is specified to suppress the listing of this additional plot in the
+     legend.  Note that this effect could also be achieved with the <b>yline()</b>
+     option.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+     Nicholas Winter
+     University of Virginia
+     nwinter@virginia.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+On-line:  help for predict, oprobit, ologit, graph twoway
+</pre>

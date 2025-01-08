@@ -1,0 +1,61 @@
+<pre>
+<b>help outreg_update</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    Changes to <b>outreg</b> since version 3.  
+<p>
+    This version is a complete rewrite of outreg, mostly programmed in Mata.
+    All it shares with the previous versions of outreg other than the name is
+    part of the command syntax.
+<p>
+    The objective of this version was as complete control of the layout and
+    formatting of estimation tables as possible, creating both Word and TeX
+    files.
+<p>
+    1. The most obvious change to outreg is that it now writes fully
+        formatted Word or TeX files rather than flat text files.  For this
+        reason, there are a lot of new options relating to fonts, text
+        justification, cell border lines, etc. that were not needed before.
+<p>
+    2. <b>outreg</b> can now display any number of statistics for each estimated
+        coefficient (instead of just two), and these statistics can be
+        displayed side-by-side as well as one above the other.  One can
+        choose from 26 different statistics for inclusion in a table,
+        including the full panoply of marginal effects and confidence
+        intervals.
+<p>
+    3. One can now selectively keep or drop coefficients or equations from
+        the estimation results.
+<p>
+    4. Tables can be merged or appended more flexibly than before.  Multiple
+        tables can also be written successively to the same file with regular
+        paragraphs of text in between, so that it is possible to create a
+        whole statistical appendix in a single document with a .do file.
+<p>
+    5. Text can include italic, bold, super and subscripts, and Greek
+        characters.  It is possible to include user-specified fonts (
+        addfont).  Column titles can span multiple cells (multicol).
+        Footnotes can be added to any part of the table (annotate).
+<p>
+    6. The table created by <b>outreg</b> is displayed in the Stata results window,
+        minus some of the finer formatting destined for the Word or TeX file.
+<p>
+<p>
+    Some <b>outreg</b> syntax changes may cause confusion:
+<p>
+    1. Name of "append" option changed.
+        Successive estimation results are now combined with the merge option,
+        which was named the "append" option in previous versions of <b>outreg</b>.
+        This makes the new <b>outreg</b> consistent with the way the Stata <b>merge</b>
+        command works on datasets versus the Stata <b>append</b> command.
+<p>
+    2. By default, variable labels are not used.
+        In the new <b>outreg</b>, variable labels replace variable names only when
+        the varlabels option is chosen.
+<p>
+    2. By default, multiequation models are not merged into multiple columns.
+        Estimated coefficients from multiequation models like reg3 and mlogit
+        are reported in one (long) column by default.  To merge them into
+</pre>

@@ -1,0 +1,185 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>onewayplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Oneway dot plots</u></b>
+<p>
+        <b>onewayplot</b> <i>varlist</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b><u>vert</u></b><b>ical</b> <b><u>w</u></b><b>idth(</b><i>#</i><b>)</b> <b><u>st</u></b><b>ack</b>
+                 <b><u>h</u></b><b>eight(</b><i>#</i><b>)</b> { <b><u>ce</u></b><b>ntre</b> | <b><u>ce</u></b><b>nter</b> } <b>variablelabels</b> <b>plot(</b><i>plot</i><b>)</b>
+                 <i>graph_options</i> ]
+<p>
+        <b>onewayplot</b> <i>varname</i> [<b>if</b> <i>exp</i>] [<b>in</b> <i>range</i>] [ <b>,</b> <b>by(</b><i>byvar</i><b>)</b> <b><u>vert</u></b><b>ical</b>
+                 <b><u>w</u></b><b>idth(</b><i>#</i><b>)</b> <b><u>st</u></b><b>ack</b> <b><u>h</u></b><b>eight(</b><i>#</i><b>)</b> { <b><u>ce</u></b><b>ntre</b> | <b><u>ce</u></b><b>nter</b> } <b>plot(</b><i>plot</i><b>)</b>
+                 <i>graph_options</i> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>onewayplot</b> plots data as a series of marks against a single magnitude
+    axis. By default this axis is horizontal. With the option <b>vertical</b> it is
+    vertical.
+<p>
+<p>
+<b><u>Remarks</u></b>
+<p>
+    <b>onewayplot</b> differs from <b>gr7, oneway</b> and <b>dotplot</b>:
+<p>
+        <b>onewayplot</b> may have either horizontal or vertical magnitude axis.
+        With <b>gr7, oneway</b> the magnitude axis is always horizontal.  With
+        <b>dotplot</b> the magnitude axis is always vertical.
+<p>
+        <b>onewayplot</b> and <b>dotplot</b> put descriptive text on the axes.  <b>gr7, oneway</b>
+        puts descriptive text under each line of marks.
+<p>
+        <b>onewayplot</b> and <b>dotplot</b> allow any marker symbol to be used for the
+        data marks.  <b>gr7, oneway</b> always shows data marks as short vertical
+        bars, unless <b>jitter()</b> is specified.
+<p>
+        <b>onewayplot</b> and <b>dotplot</b> interpret <b>jitter()</b> in the same way as does
+        <b>scatter</b>.  <b>gr7, oneway</b> interprets <b>jitter()</b> as replacing short vertical
+        bars by sets of dots.
+<p>
+        <b>onewayplot</b> and <b>dotplot</b> allow tuning of <b>xlabel()</b>.  <b>gr7, oneway</b> does
+        not allow such tuning: the minimum and maximum are always shown.
+        Similarly, <b>onewayplot</b> and <b>dotplot</b> allow the use of <b>xline()</b> and
+        <b>yline()</b>.
+<p>
+        <b>onewayplot</b> and <b>dotplot</b> use by default only one colour in the body of
+        the graph. <b>gr7, oneway</b> uses several colours with several variables.
+<p>
+        There is no equivalent with <b>onewayplot</b> or <b>dotplot</b> to <b>gr7, oneway</b>
+        <b>rescale</b>, which stretches each set of data marks to extend over the
+        whole horizontal range of the graph.
+<p>
+        <b>onewayplot</b> and <b>dotplot</b> with option <b>by(</b><i>byvar</i><b>)</b> do not require data to
+        be sorted by <i>byvar</i>.  <b>gr7, oneway by(</b><i>byvar</i><b>)</b> requires this.
+<p>
+        <b>onewayplot</b> and <b>dotplot</b> with option <b>by(</b><i>byvar</i><b>)</b> do take the values of
+        <i>byvar</i> literally.  <b>gr7, oneway by(</b><i>byvar</i><b>)</b> does not take the values of
+        <i>byvar</i> literally: displays for values 1, 2 and 4 will appear equally
+        spaced.
+<p>
+        <b>onewayplot</b> with the <b>stack</b> option produces a variant on <b>dotplot</b>. There
+        is by default no binning of data: compare <b>dotplot, nogroup</b>. Binning
+        may be accomplished with the <b>width()</b> option so that classes are
+        defined by <i>width</i> <b>* floor(</b><i>varname/width</i><b>)</b>:  contrast <b>dotplot, ny()</b>.
+<p>
+        <b>onewayplot</b> has no options for showing means, means +/- SDs, medians
+        or quartiles, in contrast to <b>gr7, oneway box</b> or <b>dotplot</b>.
+<p>
+    Similar plots under a variety of names go back at least as far as Langren
+    (1644): see Tufte (1997, p.15). Wilkinson (1999) gives several further
+    references of historical interest. Chambers <i>et al.</i> (1983) used the term
+    <i>one-dimensional scatter plots</i>. The term <i>oneway plots</i> appears to have been
+    introduced by Computing Resource Center (1985) and the term <i>strip plots</i>
+    appears traceable to work by J.W. and P.A. Tukey.  Wild and Seber (2000)
+    show many interesting examples of oneway plots.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b>by(</b><i>byvar</i><b>)</b> specifies that values of <i>varname</i> are to be shown separately by
+        groups defined by <i>byvar</i>. This option may only be specified with a
+        single variable.  If <b>stack</b> is also specified, then note that distinct
+        values of any numeric <i>byvar</i> are assumed to differ by at least 1.
+        <b>height()</b> or the prior use of <b>egen, group() label</b> will fix any
+        problems. See help on egen if desired.
+<p>
+    <b>width(</b><i>#</i><b>)</b> specifies that values are to be rounded in classes of specified
+        width. Classes are defined by <i>width</i> <b>* floor(</b><i>varname/width</i><b>)</b>.
+<p>
+    <b>vertical</b> specifies that the magnitude axis should be vertical.
+<p>
+    <b>stack</b> specifies that data points with identical values are to be stacked,
+        as in <b>dotplot</b>, except that by default there is no binning of data.
+<p>
+    <b>height(</b><i>#</i><b>)</b> controls the amount of graph space taken up by stacked data
+        points under the <b>stack</b> option above. The default is 0.8.  This option
+        will not by itself change the appearance of a plot for a single
+        variable. Note that the height may need to be much smaller or much
+        larger than 1 with <b>by()</b>, given that the latter takes values
+        literally. For example, if your classes are 0(45)360, 36 might be a
+        suitable height.
+<p>
+    <b>centre</b> or <b>center</b> centres or centers marks for each variable or group on a
+        hidden line.
+<p>
+    <b>variablelabels</b> specifies that multiple variables be labelled by their
+        variable labels. The default is to use variable names.
+<p>
+    <b>plot(</b><i>plot</i><b>)</b> provides a way to add other plots to the generated graph; see
+        help plot_option.
+<p>
+    <i>graph_options</i> are options of scatter.
+<p>
+<p>
+<b><u>Examples</u></b> 
+<p>
+    <b>. onewayplot mpg</b>
+    <b>. onewayplot mpg, by(foreign)</b>
+    <b>. onewayplot mpg, by(foreign) vertical</b>
+    <b>. onewayplot mpg, by(foreign) vertical stack</b>
+    <b>. onewayplot mpg, by(foreign) vertical stack h(0.4)</b>
+<p>
+    <b>. gen pipe = "|"</b>
+    <b>. onewayplot mpg, ms(none) mlabpos(0) mlabel(pipe) mlabsize(*2) stack</b>
+<p>
+    <b>. onewayplot price, by(rep78) w(200) stack h(0.4)</b>
+<p>
+    <b>. egen median = median(mpg), by(rep78)</b>
+    <b>. egen loq = pctile(mpg), by(rep78) p(25)</b>
+    <b>. egen upq = pctile(mpg), by(rep78) p(75)</b>
+    <b>. gen rep78_2 = rep78 - 0.2</b>
+    <b>. onewayplot mpg, by(rep78) stack h(0.5) plot(scatter rep78_2 median ||</b>
+        <b>rcap upq loq rep78_2, hor legend(off) xtitle("Mileage (mpg)"))</b>
+<p>
+    <b>. egen mean = mean(mpg), by(rep78)</b>
+    <b>. gen lb = .</b>
+    <b>. gen ub = .</b>
+    <b>. qui forval i = 1/5 {</b>
+    <b>.         ci mpg if rep78 == `i'</b>
+    <b>.         replace lb = r(lb) if rep78 == `i'</b>
+    <b>.         replace ub = r(ub) if rep78 == `i'</b>
+    <b>. }</b>
+    <b>. gen rep78_4 = rep78 + 0.4</b>
+    <b>. onewayplot mpg, by(rep78) stack h(0.25) plot(scatter rep78_4 mean ||</b>
+        <b>rcap ub lb rep78_4, hor legend(off) xtitle("Mileage (mpg)"))</b>
+<p>
+<p>
+<b><u>Acknowledgements</u></b>
+<p>
+    Philip Ender helpfully identified a bug.
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>References</u></b> 
+<p>
+    Chambers, J.M., W.S. Cleveland, B. Kleiner and P.A.Tukey. 1983.
+        <i>Graphical methods for data analysis.</i> Belmont, CA: Wadsworth.
+<p>
+    Computing Resource Center. 1985. <i>STATA/Graphics User's Guide.</i>  Los
+        Angeles, CA: Computing Resource Center.
+<p>
+    Langren, Michael Florent van. 1644.  <i>La verdadera longitud por mar y</i>
+        <i>tierra.</i> Antwerp.
+<p>
+    Tufte, E.R. 1997.  <i>Visual explanations: images and quantities, evidence</i>
+        <i>and narrative.</i>  Cheshire, CT: Graphics Press.
+<p>
+    Wild, C.J. and G.A.F. Seber. 2000.  <i>Chance encounters: a first course in</i>
+        <i>data analysis and inference.</i>  New York: John Wiley.
+<p>
+    Wilkinson, L. 1999. Dot plots. <i>American Statistician</i> 53: 276-281.
+<p>
+<p>
+<b><u>Also see</u></b> 
+<p>
+    On-line: help for dotplot, gr7oneway, histogram
+<p>
+</pre>

@@ -1,0 +1,206 @@
+<pre>
+<p>
+<p>
+help for <b>obsofint</b>
+-------------------------------------------------------------------------------
+<p>
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>obsofint</b> -- Displays observations of interest.
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>obsofint</b> [<i>varlist</i>] [<i>if</i>] [<i>in</i>] [<i>weight</i>] [<b>,</b> <b><u>zcut</u></b><b>off(</b><i>#</i><b>)</b> <b><u>whisker</u></b><b>length(</b><i>#</i><b>)</b>
+               <b>z</b> <b><u>tuk</u></b><b>ey</b> <b><u>asym</u></b><b>tukey</b> <b><u>id</u></b><b>list(</b><i>varlist</i><b>)</b> <b>sortid</b> <b>nosort</b> <b>loud</b>
+               <b><u>sum</u></b><b>marize</b>[(<i>stats</i>[,<i> verbose</i>])] <b><u>gen</u></b><b>erate(</b><i>stub</i> [<b>,</b> <i>replace</i> <i>all</i>]<b>)</b>
+               <i>list_options</i> ]
+<p>
+    <b>fweights</b>, <b>aweights</b>, and <b>pweights</b> are allowed.
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>obsofint</b> is intended to help scan a large number of variables for unusual
+    observations.  These unusual observations are unusual in the sense that
+    they either have a much smaller or a much larger value on a given
+    variable than the bulk of the data. Such unusual observations are
+    commonly referred to as outliers. While such observations are commonly
+    referred to as outliers, we feel that this term is increasingly
+    associated with the bad practice of automatically considering such
+    observations as a problematic cases which should automatically be
+    deleted. So instead we will use the term observations of interest. On the
+    one hand, this terminology allows for the possibility that these
+    observations are date entry errors, while on the other hand it also
+    allows for the possibility that these observations are legitimate
+    observations. In the former case deletion of that observation is only a
+    measure of last resort, while in the latter case deletion would remove
+    especially informative observations.
+<p>
+    The observations of interest are identified using a criterium that is an
+    adaptation of the commonly used Tukey bounds. In our experience these
+    Tukey bounds flagged too many values as extreme values if a variable is
+    either skewed or has a spike (a value that is very common).  This is not
+    surprising as these bounds were intended for normal/Gaussian-like
+    variables, but it makes these bounds less useful for scanning a large set
+    of variables for unusual observations. So, instead <b>obsofint</b> will use the
+    following generalization of the Tukey bounds:
+<p>
+    The traditional Tukey bounds are:
+<p>
+    lb = Q_1 - 3*(Q_3 - Q_1), ub = Q_3 + 3*(Q_3 - Q_1)
+<p>
+    The adjusted Tukey bounds are:
+<p>
+    lb = Q_1 - 6*(Q_2 - Q_1), ub = Q_3 + 6*(Q_3 - Q_2)
+<p>
+    lb and ub are respectively the lower and the upper bounds. Q_1, Q_2, and
+    Q_3 are the first, second, and third quartile.
+<p>
+    These adjusted Tukey bounds tend to lead to less false positives --- that
+    is, less observations that are flagged as of interest that are actually
+    perferctly normal --- when the data is skewed. However, these bounds do
+    still lead to too many false positives when the variable contains a spike
+    that is large enough to make either the first and second quartile, or the
+    second and third quartile, or all three quartiles the same. If this
+    happens, <b>obsofint</b> will automatically change the criterium of an
+    observation of interest to a deviation of more than 3 standard deviation
+    from the mean.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <b><u>whisker</u></b><b>length(</b><i>#</i><b>)</b> specifies the number of inter-quartile ranges one needs
+        to deviate from the 1st or 3rd quartile in order to be classified as
+        an observation of interest, when the traditional Tukey bounds are
+        used. The default is 3. In the adjusted Tukey ranges, that are
+        default in <b>obsofint</b>, it specifies 1/2 of the number of distances
+        between the lower quartile and the median or the higher quartile and
+        the median. Notice that this way the traditional Tukey bounds and the
+        adjusted tukey bounds lead to exactly the same results when the
+        distribution of that variable is symetric.
+<p>
+    <b><u>zcut</u></b><b>off(</b><i>#</i><b>)</b> specifies the number of standard deviations that an
+        observation needs to deviate from the mean in order to be classified
+        as an observation of interest. The default is 3.
+<p>
+    <b>z</b> specifies that only the z-score criterium --- that is, the number of
+        standard deviations that an observation deviates from the mean --- is
+        to be used when identifying observations of interest. When this
+        option is specified, one can not specify the <b>whiskerlength()</b> option.
+<p>
+    <b><u>tuk</u></b><b>ey</b> specifies that only the traditional Tukey bounds are to be used
+        when identifying observations of interest. When this option is
+        specified, one can not specify the <b>zcutoff()</b> option.
+<p>
+    <b><u>asym</u></b><b>tukey</b> specifies that only the adjusted Tukey bounds are to be used
+        when identifying observations of interest. When this option is
+        specified, one can not specify the <b>zcutoff()</b> option.
+<p>
+    <b><u>id</u></b><b>list(</b><i>varlist</i><b>)</b> specifies the variables that are to be listed next to the
+        extreme values.  Typically these will be either identification
+        numbers and/or variables that might explain why an observation might
+        be exceptional.
+<p>
+    <b>sortid</b> specifies that observations are sorted by the variables specified
+        in <b>idlist()</b>.  The <b>idlist()</b> option must thus be specified when
+        specifying the <b>sortid</b> options.  The default is that the observations
+        are sorted by the variable being listed.
+<p>
+    <b>nosort</b> specifies that the observation are not sorted. The default is that
+        the observations are sorted by the variable being listed.
+<p>
+        If the <b>nosort</b> option is specified the observation numbers will be
+        displayed as is normal in list. When the <b>nosort</b> option is specified,
+        the observation number will be displayed as an variable with the name
+        <b>obs_nr</b> unless there is already a variable with that name. In that
+        case it will use the name <b>obs</b> unless there is also a variable with
+        that name. In that case the name <b>_n</b> will be used.
+<p>
+    <b>loud</b> specifies that <b>obsofint</b> will display a message for each variable
+        that does not have any observations flagged as of interest. By
+        default, <b>obsofint</b> displays nothing for those variables.
+<p>
+    <b><u>sum</u></b><b>marize</b>[(<i>stats</i>[,<i> verbose</i>])] specifies that for those variables that
+        contain observations of interest, the statistics <i>stats</i> will be
+        displayed in the report. If no statistics have been it will display
+        N, mean, sd, min, p25, p50, p75, and max. One or more of the
+        following statistics may be specified: N, sum_w, mean, Var, sd,
+        skewness, kurtosis, sum, min, max, p1, p5, p10, p25, p50, p75, p90,
+        p95, p99. The<i> verbose</i> suboption
+<p>
+    <b><u>gen</u></b><b>erate(</b><i>stub</i> [<b>,</b> <i>replace</i> <i>all</i>]<b>)</b> specifies that indicator variables are be
+        created for each variable containg variables of interest, which will
+        be 1 if that observation is of interest and 0 otherwise. These
+        indicator variables will be called <i>stub</i>_variablename. If these
+        variables already exist <b>obsofint</b> will exit with an error unless the
+        <b>replace</b> sub-option is specified, in which case the existing indicator
+        variables will be overwritten.  If the <b>all</b> suboption is specified
+        these indicator variables will be created for all variables checked
+        by <b>obsofint</b>, regardless whether observations of interest were found
+        or not.
+<p>
+    <i>list_options</i> all options for <b>list</b> can also be specified for <b>obsofint</b> and
+        will be used when listing observations of interest.
+<p>
+<p>
+<b><u>Saved results</u></b>
+<p>
+    <b>r(</b><i>result</i><b>)</b> Contains a matrix with a row for each variable in <i>varlist</i>. The
+        first column shows the number of observation classified as of
+        interest, the second and third columns show the lower and upper bound
+        used to classify the observations. These bounds will be missing when
+        the variable is a constant. The last three collumns indicate whether
+        the z-score, adjusted Tukey bounds, or traditional Tukey bounds
+        criterium was used to identify observations of interest. The
+        criterium used is represented by a 1 and the remaining criteria will
+        receive a 0. If a variable is a constant, all criteria will receive a
+        0.
+<p>
+<p>
+<b><u>Example</u></b>
+<p>
+<p>
+<b>    sysuse auto, clear</b>
+<b>    obsofint, idlist(make)</b>
+<p>
+    (click to run)
+<p>
+<p>
+<b>    sysuse auto, clear</b>
+<b>    obsofint price - foreign, loud idlist(make) sum</b>
+<p>
+    (click to run)
+<p>
+<p>
+<b>    sysuse auto, clear</b>
+<b>    obsofint price - foreign, idlist(make) tukey</b>
+<p>
+    (click to run)
+        
+        
+<b><u>Authors</u></b>
+<p>
+    Maarten L. Buis
+    Universitaet Tuebingen
+    Institut fuer Soziologie
+    maarten.buis@uni-tuebingen.de
+<p>
+    Ronnie Babigumira
+    Center for International Forestry Network (CIFOR)
+    The Poverty Environment Network (PEN)
+    r.babigumira@cgiar.org
+<p>
+<p>
+<b><u>Acknowledgement</u></b>
+<p>
+    <b>obsofint</b> was written while Maarten Buis was visiting CIFOR as a
+    consultant to work on the PEN project.
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    Online:  <b>lv</b> <b>iqr</b> (if installed)
+<p>
+</pre>

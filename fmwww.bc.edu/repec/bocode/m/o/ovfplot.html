@@ -1,0 +1,61 @@
+<pre>
+-------------------------------------------------------------------------------
+help for <b>ovfplot</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Plots of observed versus fitted values after model fit</u></b>
+<p>
+        <b>ovfplot</b> [<b>,</b> <i>scatter_options</i> <b>plot(</b><i>plot</i><b>)</b> ]
+<p>
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>ovfplot</b> plots observed versus fitted or predicted values for the response
+    from an immediately previous <b>regress</b> or similar command, with a line of
+    equality superimposed.
+<p>
+<p>
+<b><u>Remarks</u></b> 
+<p>
+    In more technical detail: <b>ovfplot</b> plots a single dependent or response
+    variable as specified in <b>e(depvar)</b> on the <i>y</i> axis and whatever single
+    variable is calculated by the default of <b>predict</b> on the <i>x</i> axis, which
+    makes sense whenever those variables are on the same scale.
+<p>
+    The plot is restricted to the estimation sample.
+<p>
+<p>
+<b><u>Options</u></b>
+<p>
+    <i>scatter_options</i> are options of twoway scatter.  Note also that the
+        presentation of the line of equality observed = fitted can be tuned
+        by using the options <b>clstyle()</b>, <b>clpattern()</b>, <b>clwidth()</b> and <b>clcolor()</b>.
+<p>
+    <b>plot(</b>plot<b>)</b> provides a way to add other plots to the generated graph; see 
+        plot_option.
+<p>
+<p>
+<b><u>Examples</u></b>
+<p>
+    <b>. sysuse auto</b>
+<p>
+    <b>. regress mpg weight</b>
+    <b>. ovfplot</b>
+    <b>. gen weightsq = weight^2</b>
+    <b>. regress mpg weight weightsq</b>
+    <b>. ovfplot</b>
+<p>
+    <b>. glm mpg weight foreign, link(log)</b>
+    <b>. ovfplot, by(foreign)</b>
+<p>
+<p>
+<b><u>Author</u></b>
+<p>
+    Nicholas J. Cox, University of Durham, U.K.
+    n.j.cox@durham.ac.uk
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    On-line:  help for predict, scatter, modeldiag
+</pre>

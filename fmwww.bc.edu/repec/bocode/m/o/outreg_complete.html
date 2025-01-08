@@ -1,0 +1,1405 @@
+<pre>
+<b>help outreg_complete</b>
+-------------------------------------------------------------------------------
+<p>
+<b><u>Title</u></b>
+<p>
+    <b>outreg</b> - reformat and write regression tables to a document file
+<p>
+    <i>n.b.</i> <b>outreg</b> has many options. For basic options only, see basic outreg.
+<p>
+    For an explanation of the large changes to <b>outreg</b> since the previous
+    version, see outreg updates.
+<p>
+<p>
+<b><u>Syntax</u></b>
+<p>
+        <b>outreg</b> [<b>using</b> <i>filename</i>] [<b>,</b> <i>options</i>]
+<p>
+<b><u>Description</u></b>
+<p>
+    <b>outreg</b> can arrange the results of Stata estimation commands in tables as
+    they are typically presented in journal articles, rather than as they are
+    presented in the Stata Results window.  By default, <i>t</i> statistics appear
+    in parentheses below the coefficient estimates with asterisks for
+    significance levels.
+<p>
+    <b>outreg</b> provides as complete control of the layout and formatting of
+    estimation tables as possible, both in Word and TeX files.  Almost every
+    aspect of the table's structure and format (including fonts) can be
+    specified with options.  Multiple tables can be written to the same
+    document, with paragraphs of text in between, creating a whole
+    statistical appendix.
+<p>
+    <b>outreg</b> works after any estimation command in Stata (see estimation
+    commands for a complete list*).  Like predict, <b>outreg</b> makes use of
+    internally saved estimation results, so it should be invoked after the
+    estimation.
+<p>
+    <b>outreg</b> creates a Microsoft Word file by default, or a TeX file using the
+    tex option.  In addition, the table created by <b>outreg</b> is displayed in the
+    Results window, minus some of the finer formatting destined for the Word
+    or TeX file.
+<p>
+    Successive estimation results, which may use different variables, can be
+    combined by <b>outreg</b> into a single table using the merge option.  (n.b. In
+    previous versions of <b>outreg</b>, the <b>merge</b> option was called "append".)
+<p>
+        * To be precise, <b>outreg</b> can display results after every estimation
+            command which saves both e(b) and e(V) values.  Estimation
+            commands which do not save both e(b) and e(V) are ca, candisc, 
+            discrim, exlogistic, expoisson, factor, mca, mds, mfp, pca, 
+            procrustes, svy:tabulate.  The estimates from these estimation
+            commands (in the e() matrices) can be turned into a Word or TeX
+            table with the <b>frmttable</b> command.  <b>outreg</b> <i>can</i> display the results
+            of the commands mean, ratio, proportion, and total which may not
+            be thought of as estimation commands, and these commands accept
+            the svy: prefix.
+<p>
+<p>
+    <i>options categories</i>       Description
+    ---------------------------------------------------------------------------
+    <i>estimates selection</i>       which statistics are displayed in table
+    <i>estimates formatting</i>      numerical formatting &amp; arrangement of estimates
+    <i>text additions</i>            titles, notes, added rows and columns
+    <i>text formatting:</i>         
+       <i>column formatting</i>      column widths, justification, etc.
+       <i>fonts</i>                  font specifications for table
+       <i>lines &amp; spaces</i>         horizontal and vertical lines, cell spacing
+       <i>page formatting</i>        page orientation and size
+    <i>file &amp; display options</i>    TeX files, merge, replace, etc.
+    <i>stars options</i>             change stars for statistical significance
+    <i>brackets options</i>          change brackets around, e.g., <i>t</i> stats
+    <i>summary stats options</i>     summary statistics below estimates
+    <i>frmttable options</i>         technical options passed to frmttable
+    ---------------------------------------------------------------------------
+<p>
+    Inline text formatting: superscripts, italics, Greek characters, etc.
+    Notes about specific estimation commands
+    Examples of outreg in use
+<a name="est_opts"></a><p>
+    <i>estimates selection</i>      Description
+    ---------------------------------------------------------------------------
+    <b>se</b>                       report standard errors rather than <i>t</i> statistics
+    <b><u>ma</u></b><b>rginal</b>                 report marginal effects instead of coefficients
+    <b>or</b> | <b>hr</b> | <b>irr</b> | <b>rrr</b>      odds ratios, that is, exp(b) instead of b
+    <b><u>s</u></b><b>tats(</b><i>statname</i> [<i>...</i>]<b>)</b>    report statistics other than b and <i>t</i> statistics
+    <b>nocons</b>                   drop constant estimate (don't include _cons
+                             coefficient)
+    <b><u>ke</u></b><b>ep(</b><i>eqlist</i> | <i>varlist</i><b>)</b>   include only specified coefficients
+    <b><u>dr</u></b><b>op(</b><i>eqlist</i> | <i>varlist</i><b>)</b>   exclude specified coefficients
+    <b><u>l</u></b><b>evel(</b><i>#</i><b>)</b>                 set level for confidence intervals; default is
+                             <b>level(</b>95<b>)</b>
+    ---------------------------------------------------------------------------
+<a name="est_for_opts"></a><p>
+    <i>estimates formatting</i>     Description
+    ---------------------------------------------------------------------------
+    <b><u>bd</u></b><b>ec(</b><i>numlist</i><b>)</b>            decimal places for coefficients
+    <b><u>td</u></b><b>ec(</b><i>#</i><b>)</b>                  decimal places for <i>t</i> statistics
+    <b><u>sd</u></b><b>ec(</b><i>numgrid</i><b>)</b>            decimal places for all statistics
+    <b><u>bf</u></b><b>mt(</b><i>fmtlist</i><b>)</b>            numerical format for coefficients
+    <b><u>sf</u></b><b>mt(</b><i>fmtgrid</i><b>)</b>            numerical format for all statistics
+    <b><u>nosub</u></b><b>stat</b>                don't put <i>t</i> statistics (or others) below
+                             coefficients
+    <b><u>e</u></b><b>q_merge</b>                 merge multi-equation coefficients into multiple
+                             columns
+    ---------------------------------------------------------------------------
+<a name="text_add_opts"></a><p>
+    <i>text additions</i>               Description
+    ---------------------------------------------------------------------------
+    <b><u>va</u></b><b>rlabels</b>                    use variable labels as rtitles
+    <b><u>t</u></b><b>itle(</b><i>textcolumn</i><b>)</b>            put title above table
+    <b><u>ct</u></b><b>itles(</b><i>textgrid</i><b>)</b>            headings at top of columns
+    <b><u>rt</u></b><b>itles(</b><i>textgrid</i><b>)</b>            headings to the left of each row
+    <b><u>not</u></b><b>e(</b><i>textcolumn</i><b>)</b>             put note below table
+    <b><u>pr</u></b><b>etext(</b><i>textcolumn</i><b>)</b>          regular text placed before the table
+    <b><u>po</u></b><b>sttext(</b><i>textcolumn</i><b>)</b>         regular text placed after the table
+    <b><u>noco</u></b><b>ltitl</b>                    no column titles
+    <b><u>noro</u></b><b>wtitl</b>                    no row titles
+    <b><u>ad</u></b><b>drows(</b><i>textgrid</i><b>)</b>            add rows at bottom of table
+    <b><u>addrt</u></b><b>c(</b><i>#</i><b>)</b>                    number of rtitles columns in addrows
+    <b><u>addc</u></b><b>ols(</b><i>textgrid</i><b>)</b>            add columns to right of table
+    <b><u>an</u></b><b>notate(</b><i>Stata matrix name</i><b>)</b>  grid of annotation locations
+    <b><u>as</u></b><b>ymbol(</b><i>textrow</i><b>)</b>             symbols for annotations
+    ---------------------------------------------------------------------------
+<a name="col_form_opts"></a><p>
+    <i>column formatting</i>                    Description
+    ---------------------------------------------------------------------------
+    <b><u>colw</u></b><b>idth(</b><i>numlist</i><b>)</b>*                   change column widths
+    <b><u>mu</u></b><b>lticol(</b><i>numtriple</i>[;<i>numtriple</i> ...]<b>)</b>  have column titles span multiple
+                                         columns
+    <b><u>colj</u></b><b>ust(</b><i>cjstring</i>[;<i>cjstring</i> ...]<b>)</b>     column justification: left, center,
+                                         right, or decimal
+    <b><u>noce</u></b><b>nter</b>                             Don't center table within page
+    ---------------------------------------------------------------------------
+      * Word-only option
+<a name="font_opts"></a><p>
+    <i>font specification</i>                 Description
+    ---------------------------------------------------------------------------
+    <b><u>ba</u></b><b>sefont(</b><i>fontlist</i><b>)</b>                 change the base font for all text
+    <b><u>titlf</u></b><b>ont(</b><i>fontcolumn</i><b>)</b>               change font for table title
+    <b><u>ctitlf</u></b><b>ont(</b><i>fontgrid</i>[;<i>fontgrid</i>...]<b>)</b>  change font for column titles
+    <b><u>rtitlf</u></b><b>ont(</b><i>fontgrid</i>[;<i>fontgrid</i>...]<b>)</b>  change font for row titles
+    <b><u>statf</u></b><b>ont(</b><i>fontgrid</i>[;<i>fontgrid</i>...]<b>)</b>   change font for statistics in body of
+                                       table
+    <b><u>notef</u></b><b>ont(</b><i>fontcolumn</i><b>)</b>               change font for notes below table
+    <b><u>addf</u></b><b>ont(</b><i>fontname</i><b>)</b>*                 add a new font type
+    <b><u>p</u></b><b>lain</b>                              plain text - one font size, no
+                                       justification
+    <i>table sections</i>                     explanation of <b>outreg</b> table sections
+    ---------------------------------------------------------------------------
+      * Word-only option
+<a name="lines_spaces_opts"></a><p>
+    <i>border lines and spacing</i>   Description
+    ---------------------------------------------------------------------------
+    <b><u>hl</u></b><b>ines(</b><i>linestring</i><b>)</b>         horizontal lines between rows
+    <b><u>vl</u></b><b>ines(</b><i>linestring</i><b>)</b>         verticle lines between columns
+    <b><u>hls</u></b><b>tyle(</b><i>lstylelist</i><b>)</b>*       change style of horizontal lines (e.g. double,
+                               dashed)
+    <b><u>vls</u></b><b>tyle(</b><i>lstylelist</i><b>)</b>*       change style of verticle lines (e.g. double,
+                               dashed)
+    <b><u>spaceb</u></b><b>ef(</b><i>spacestring</i><b>)</b>      put space above cell contents.
+    <b><u>spacea</u></b><b>ft(</b><i>spacestring</i><b>)</b>      put space below cell contents.
+    <b><u>spaceht(</u></b><i>#</i><b>)</b>                 change size of <b>spacebef</b> &amp; <b>spaceaft</b>.
+    ---------------------------------------------------------------------------
+      * Word-only option
+<a name="page_fmt_opts"></a><p>
+    <i>page formatting</i>          Description
+    ---------------------------------------------------------------------------
+    <b><u>la</u></b><b>ndscape</b>                pages in landscape orientation
+    <b><u>a4</u></b>                       A4 size paper (instead of 8 1/2Ó x 11Ó)
+    ---------------------------------------------------------------------------
+<a name="file_opts"></a><p>
+    <i>file and display options</i>   Description
+    ---------------------------------------------------------------------------
+    <b><u>tex</u></b>                        write a TeX file instead of the default Word
+                               file
+    <b><u>m</u></b><b>erge</b>[<b>(</b><i>tblname</i><b>)</b>]           merge as new columns to existing table
+    <b><u>replace</u></b>                    replace existing file
+    <b><u>addt</u></b><b>able</b>                   write a new table below an existing table
+    <b><u>ap</u></b><b>pend</b>[<b>(</b><i>tblname</i><b>)</b>]          append as new rows below an existing table
+    <b><u>re</u></b><b>play</b>[<b>(</b><i>tblname</i><b>)</b>]          write preexisting table
+    <b><u>sto</u></b><b>re(</b><i>tblname</i><b>)</b>             store table with name "<i>tblname</i>"
+    <b><u>clear</u></b>[<b>(</b><i>tblname</i><b>)</b>]           clear existing table from memory
+    <b><u>fr</u></b><b>agment</b>**                 create TeX code fragment to insert into TeX
+                               document
+    <b><u>nod</u></b><b>isplay</b>                  don't display table in results window
+    <b><u>dw</u></b><b>ide</b>                      display all columns however wide
+    ---------------------------------------------------------------------------
+      ** TeX-only option
+<a name="stars_opts"></a><p>
+    <i>stars options</i>            Description
+    ---------------------------------------------------------------------------
+    <b><u>starlev</u></b><b>els(</b><i>numlist</i><b>)</b>      significance levels for stars
+    <b><u>starloc</u></b><b>(</b><i>#</i><b>)</b>               locate stars next to which statistic (def=2)
+    <b><u>margs</u></b><b>tars</b>                calculate stars from marginal effects, not
+                             coefficients
+    <b><u>nostar</u></b><b>s</b>                  no stars for significance
+    <b><u>nole</u></b><b>gend</b>                 no legend explaining significance levels
+    <b><u>si</u></b><b>gsymbols(</b><i>textrow</i><b>)</b>      symbols for significance (in place of stars)
+    ---------------------------------------------------------------------------
+<a name="brack_opts"></a><p>
+    <i>brackets options</i>                      Description
+    ---------------------------------------------------------------------------
+    <b><u>sq</u></b><b>uarebrack</b>                           square brackets instead of
+                                          parentheses
+    <b><u>br</u></b><b>ackets(</b><i>textpair</i> [ \ <i>textpair</i> ...]<b>)</b>  symbols with which to bracket
+                                          substatistics
+    <b><u>nobrk</u></b><b>et</b>                               put no brackets on substatistics
+    <b><u>dbl</u></b><b>div(</b><i>text</i><b>)</b>                          symbol dividing double statistics
+                                          ("-")
+    ---------------------------------------------------------------------------
+<a name="summstat_opts"></a><p>
+    <i>summary statistics options</i>  Description
+    ---------------------------------------------------------------------------
+    <b><u>summs</u></b><b>tat(</b><i>e_values</i><b>)</b>          additional summary statistics below
+                                coefficients
+    <b><u>summd</u></b><b>ec(</b><i>numlist</i><b>)</b>            decimal places for summary statistics
+    <b><u>summt</u></b><b>itles(</b><i>textgrid</i><b>)</b>        row titles for summary statistics
+    <b><u>noau</u></b><b>tosumm</b>                  no automatic summary stats (R^2, N)
+    ---------------------------------------------------------------------------
+<a name="frmttable_opts"></a><p>
+    <i>frmttable options</i>        Description
+    ---------------------------------------------------------------------------
+    <b><u>bl</u></b><b>ankrows</b>                allow (don't drop) blank rows in table
+    <b><u>nofi</u></b><b>ndcons</b>               don't assign _cons to separate section of table
+    ---------------------------------------------------------------------------
+<p>
+<p>
+<a name="estimates_select"></a>        +---------------------+
+    ----+ Estimates selection +----------------------------------------------
+<a name="se"></a><p>
+    <b>se</b> specifies that standard errors rather than <i>t</i> statistics are reported
+        in parentheses below the coefficient estimates. The decimal places
+        displayed are those set by bdec.
+<a name="marginal"></a><p>
+    <b>marginal</b> specifies that marginal effects rather than coefficients are
+        reported.  The <i>t</i> statistics are for the hypothesis that the marginal
+        effects, not the coefficients, are equal to zero, and the asterisks
+        report the significance of this hypothesis test.  <b>marginal</b> is
+        equivalent to stats(b_dfdx t_abs_dfdx) (or <b>stats(</b>b_dfdx se_dfdx<b>)</b> if
+        the <b>se</b> option is used) combined with the margstars option.
+<a name="or"></a><a name="hr"></a><a name="irr"></a><a name="rrr"></a><p>
+    <b>or | hr | irr | rrr</b> cause the coefficients to be displayed in
+        exponentiated form: for each coefficient, exp(b) rather than b is
+        displayed.  Standard errors and confidence intervals are also
+        transformed.  Display of the intercept, if any, is suppressed. These
+        options are identical, but by convention different estimation methods
+        use different names.
+<p>
+          exponentiation option   name
+          ---------------------------------------
+            <b>or</b>                    odds ratio
+            <b>hr</b>                    hazard ratio
+            <b>irr</b>                   incidence-rate ratio
+            <b>rrr</b>                   relative-risk ratio
+          ---------------------------------------
+<p>
+        Note that after commands such as stcox, which report coefficients in
+        exponentiated form by default, you must use one of the exponentiation
+        options for the <b>outreg</b> table to display exponentiated coefficients
+        and standard errors as they are displayed in the Results window after
+        <b>stcox</b> command.
+<p>
+        The exponentiation options are equivalent to the option <b>stats(</b><i>e_b t</i><b>)</b>
+        (or <b>stats(</b><i>e_b e_se</i><b>)</b> if the <b>se</b> option is in effect).
+<p>
+        These options correspond to the <b>or</b> option used for logit, clogit, and
+        glogit estimation, <b>irr</b> for poisson estimation, <b>rrr</b> for mlogit, <b>hr</b> for
+        stcox hazard models, and <b>eform</b> for xtgee, but they can be used to
+        exponentiate the coefficients after any estimation.  Exponentiation
+        of coefficients is explained in <b>[R] maximize - methods and formulas</b>.
+<a name="stats"></a><p>
+    <b>stats(</b><i>statname</i> [<i>...</i>]<b>)</b> specifies the statistics to be displayed; the
+        default is equivalent to specifying <b>stats(</b><i>b t_abs</i><b>)</b>.  Multiple
+        statistics are arranged below each other (unless you use the
+        nosubstat option), with varying brackets.  Available statistics are:
+<a name="statname"></a><p>
+          statname    definition
+          ------------------------------------------------------------------
+            <b>b</b>            coefficient estimates
+            <b>se</b>           standard errors of estimate
+            <b>t</b>            <i>t</i> statistics for the test of b=0
+            <b>t_abs</b>        absolute value of <i>t</i> statistics
+            <b>p</b>            <i>p</i> value of <i>t</i> statistics
+            <b>ci</b>           confidence interval of estimates
+            <b>ci_l</b>         lower confidence interval of estimates
+            <b>ci_u</b>         upper confidence interval of estimates
+            <b>beta</b>         normalized beta coefficients (see the beta option
+                                    of regress)
+            <b>e_b</b>          exponentiated form of the coefficients.
+            <b>e_se</b>         exponentiated standard errors
+            <b>e_ci</b>         exponentiated confidence interval
+            <b>e_ci_l</b>       exponentiated lower confidence interval
+            <b>e_ci_u</b>       exponentiated upper confidence interval
+            <b>b_dfdx</b>       marginal effect of the coefficients (requires 
+                                    margins)
+            <b>se_dfdx</b>      standard errors of marginal effects
+            <b>t_dfdx</b>       <i>t</i> statistics of marginal effects
+            <b>t_abs_dfdx</b>   absolute value of <i>t</i> statistics of marginal effects
+            <b>p_dfdx</b>       <i>p</i> values of <i>t</i> statistics of marginal effects
+            <b>ci_dfdx</b>      confidence interval of marginal effects
+            <b>ci_l_dfdx</b>    lower confidence interval of marginal effects
+            <b>ci_u_dfdx</b>    upper confidence interval of marginal effects
+            <b>at</b>           values around which marginal effects were estimated
+          ------------------------------------------------------------------
+<a name="nocons"></a><p>
+    <b>nocons</b> drops the constant estimate from the table.
+<a name="keep"></a><a name="drop"></a><p>
+    <b>keep(</b><i>eqlist</i> | <i>coeflist</i><b>)</b> includes only the specified coefficients (and
+        potentially reorders included coefficients).
+    <b>drop(</b><i>eqlist</i> | <i>coeflist</i><b>)</b> excludes the specified coefficients.
+<p>
+<a name="eqlist"></a>        <i>eqlist</i> (equation list) consists of <i>eqname:</i> [<i>coeflist</i>] [<i>eqname</i>:
+        [<i>coeflist</i>] ...].
+<p>
+<a name="coeflist"></a>        <i>coeflist</i> (coefficient list) is like a <i>varlist</i> but can include "<b>_cons</b>"
+        for the constant coefficient, or other parameter names.  Factor
+        variable notation can be included.  The <i>coeflist</i> can include any of
+        the simple column names of the <b>e(b)</b> coefficient vector, which forms
+        the basis of the table created by <b>outreg</b>.  You can see the contents
+        of the <b>e(b)</b> vector after an estimation command by typing <b>matrix list</b>
+        <b>e(b)</b>.  If using marginal effects (after the margins command) rather
+        than coefficient estimates, the relevant vector is <b>r(b)</b>.
+<p>
+        <i>eqname</i> is a second level column name of the <b>e(b)</b> vector used for
+        multi-equation estimation commands, such as reg3 or mlogit.  Many
+        Stata estimation commands attach additional parameters to the
+        coefficient vector <b>e(b)</b> with a distinct equation name.  For instance,
+        the xtreg,fe command includes two parameters in <b>e(b)</b> with <i>eqnames</i>
+        "<b>sigma_u:</b>" and "<b>sigma_e:</b>".  The <i>coeflist</i> for each of these <i>eqnames</i> is
+        "<b>_cons</b>".
+<p>
+        To report only the coefficient estimates without additional
+        parameters in the <b>e(b)</b> vector, it usually works to use the
+        <b>keep(</b><i>depvar</i>:<b>)</b> option, since the coefficients are given an <i>eqname</i> of
+        the dependent variable.
+<p>
+        You can use the <b>keep</b> option to reorder variables for the formatted
+        <b>outreg</b> table.  The estimation coefficients will be displayed in the
+        order specified in <b>keep</b>.  Don't forget to include "<b>_cons</b>" in the
+        reordered <i>coeflist</i> if you want the constant coefficient term to be
+        included in the formatted table.  By default, the "<b>_cons</b>" term is
+        always displayed last in <b>outreg</b> even if it is not listed last in the
+        <b>keep</b> <i>coeflist</i>.  To display the "<b>_cons</b>" coefficient other than last,
+        combine the <b>keep</b> option with the nofindcons option.  If you want the
+        "<b>_cons</b>" coefficient not to be last and are merging multiple tables,
+        you must specify the <b>nofindcons</b> option with all the tables being
+        merged, whether you employ the <b>keep</b> option for them or not, to insure
+        that the coefficients merge properly.
+<p>
+        If in doubt about what variable names, or especially equation names,
+        to include in keep or drop, use <b>matrix list e(b)</b> (or <b>matrix list r(b)</b>
+        for marginal effects) to see what names are assigned to saved
+        estimation results.
+<p>
+        You may have problems with <b>keep</b> and <b>drop</b> if you have chosen both
+        coefficients and marginal effects as statistics, since they usually
+        do not have the same <i>coeflist</i> in both cases due to the absence of a
+        constant coefficient estimate in the marginal effects.  A <b>keep</b> option
+        that included "<b>_cons</b>" would result in an error message because no
+        constant could be found in the marginal effects.  In this case, you
+        could only <b>keep</b> or <b>drop</b> variables occurring in both vectors.
+        However, if you are using <b>drop</b>, you can still eliminate the constant
+        term with the <b>nocons</b> option.
+<a name="level"></a><p>
+    <b>level(</b><i>#</i><b>)</b> sets the significance level for confidence intervals, which are
+        included in the <b>outreg</b> table using the <b>stats(</b><i>ci</i><b>)</b> option.  The default
+        is level(95) for a 95% confidence level. Note that <b>level</b> has no
+        impact on the asterisks for the statistical significance of
+        coefficients (for this, see starlevels).  For more information about
+        <b>level</b> see <b>[R] estimation options - level</b>.  The default <b>level</b> can be
+        set for all Stata commands, including <b>outreg</b> using the set level
+        command.
+<p>
+<a name="estimates_formatting"></a>        +----------------------+
+    ----+ Estimates formatting +---------------------------------------------
+<a name="bdec"></a><p>
+    <b>bdec(</b><i>numlist</i><b>)</b> specifies the number of decimal places reported for
+        coefficient estimates (the b's).  It also specifies the decimal
+        places reported for standard errors if the <b>se</b> option is in effect.
+        The default value for <b>bdec</b> is 3.  The minimum value is 0 and the
+        maximum value is 15.  If one number is specified in <b>bdec</b>, it will
+        apply to all coefficients.  If multiple numbers are specified in
+        <b>bdec</b>, the first number will determine the decimals reported for the
+        first coefficient, the second number, the decimals for the second
+        coefficient, etc.  If there are fewer numbers in <b>bdec</b> than
+        coefficients, the last number in <b>bdec</b> will apply to all the remaining
+        coefficients.
+<p>
+        The decimal places applied to each coefficient are also applied to
+        the corresponding standard errors, confidence intervals, beta
+        coefficients, and marginal effects, if they are included with the <b>se</b>
+        or <b>stats</b> options.
+<a name="tdec"></a><p>
+    <b>tdec(</b><i>#</i><b>)</b> specifies the number of decimal places reported for <i>t</i> statistics.
+        The default value for <b>tdec</b> is 2. The minimum value is 0 and the
+        maximum value is 15.
+<a name="sdec"></a><p>
+    <b>sdec(</b><i>numgrid</i><b>)</b> is for finer control of the decimal places of estimates
+        than is possible with <b>bdec</b> and <b>tdec</b>, but is rarely needed.  The <b>sdec</b>
+        <i>numgrid</i> corresponds to the decimal places for each of the statistics
+        in the table.  It can be used, for instance, to specify different
+        decimal places for coefficients versus standard errors (<b>bdec</b> applies
+        to both), or to allow varying decimal places for <i>t</i> statistics.
+<p>
+        <i>numgrid</i> is a grid of intergers 0-15 in the form used by <b>matrix</b>
+        <b>define</b>.  Commas separate elements along a row, and backslashes ("\")
+        separate rows: <i>numgrid</i> has the form #[,#...] [\ #[,#...] [...]].  For
+        example, if the table of statistics has three rows and two columns,
+        the <b>sdec(</b><i>numgrid</i><b>)</b> could be <b>sdec(</b>1,2 \ 2,2 \ 1,3<b>)</b>.  If you specify a
+        grid smaller than the table of statistics created by <b>outreg</b>, the last
+        rows and columns of the <b>sdec</b> <i>numgrid</i> will be repeated to cover the
+        whole table.  Unbalanced rows or columns will not cause an error.
+        They will be filled in, and <b>outreg</b> will display a warning message.
+<a name="bfmt"></a><p>
+    <b>bfmt(</b><i>fmtlist</i><b>)</b> specifies the numerical format for coefficients.
+<p>
+        <i>fmtlist</i> consists of <i>fmt</i> [<i>fmt</i> ...]] where <i>fmt</i> is either e, f, fc, g,
+        or gc:
+<p>
+          fmt code   format type
+          -------------------------------------------------
+            <b>e</b>        exponential (scientific) notation
+            <b>f</b>        fixed number of decimals
+            <b>fc</b>       fixed with commas for thousands, etc.
+                                    - the default for
+                                    <b>outreg</b>
+            <b>g</b>        "general" format (see format)
+            <b>gc</b>       "general" format with commas for
+                                    thousands, etc.
+          -------------------------------------------------
+<p>
+        The <b>g</b> formats do not allow the user to control the number of decimal
+        places displayed.
+<p>
+        Like <b>bdec</b>, if one format is specified in <b>bfmt</b>, it will apply to all
+        coefficients.  If multiple format codes are specified in <b>bfmt</b>, the
+        first format will apply to the first coefficient, the second format,
+        the second coefficient, etc.  If there are fewer formats in <i>fmt</i> than
+        coefficients, the last format in <b>bfmt</b> will apply to all the remaining
+        coefficients.  The format applied to each coefficient is also applied
+        to the corresponding standard errors, confidence intervals, beta
+        coefficients, and marginal effects, if they are specified in <b>se</b> or
+        <b>stats</b>.
+<a name="sfmt"></a><p>
+    <b>sfmt(</b><i>fmtgrid</i><b>)</b> is for finer control of the numerical formats of estimates
+        than is possible with bfmt, but is rarely needed.  The <b>sfmt</b> <i>fmtgrid</i>
+        is a grid of the format types (e, f, g, fc, or gc) for each statistic
+        in the table.  For example, <b>sfmt</b> could be used to assign different
+        numerical formats for the coefficients in different columns of a
+        multi-equation estimation, or to change the format for <i>t</i> statistics.
+<p>
+        The <i>fmtgrid</i> in <b>sfmt</b> has the same form as the <i>numgrid</i> of the sdec
+        option above.
+<a name="nosubstat"></a><p>
+    <b>nosubstat</b> puts additional statistics, like <i>t</i> statistics or other
+        "sub-statistics", in columns to the right of coefficients, rather
+        than below them.  Applying the <b>nosubstat</b> with the default statistics
+        of <b>b</b> and <b>t_abs</b>, the <b>outreg</b> table would have one only row, but two
+        columns, for each coefficient.  For example, the command <b>outreg using</b>
+        <b>test, nosubstat stats(</b>b se t p ci_l ci_u<b>)</b> will arrange regression
+        output the way it is displayed in the Stata Results window after the 
+        regress command, with each statistic in a separate column.  In this
+        case, for each variable in the regression, there is one row of
+        results, but six columns, of statistics (see Example 15).
+<a name="eq_merge"></a><p>
+    <b>eq_merge</b> merges multi-equation estimation results into multiple columns,
+        one column per equation.  By default, <b>outreg</b> displays the equations
+        one below the other in a single column.  <b>eq_merge</b> is most useful
+        after estimation commands like reg3, sureg, mlogit, and mprobit,
+        where many or all of the variables recur in each equation.  The
+        coefficients are merged as if the equations were estimated one at a
+        time, and the results were sequentially combined with the <b>merge</b>
+        option.
+<p>
+<a name="stars_options"></a>        +---------------+
+    ----+ Stars options +----------------------------------------------------
+<a name="starlevels"></a><p>
+    <b>starlevels(</b><i>numlist</i><b>)</b> indicates significance levels for stars in percent.
+        By default, one star is placed next to coefficients which pass the
+        test for significant difference from zero at the 5% level, and two
+        stars are placed next to coefficients that pass the test for
+        significance at the 1% level, which is equivalent to specifying
+        <b>starlevels(</b><i>5 1</i><b>)</b>.  To place one star for the 10% level, 2 for the 5%
+        level, and 3 for the 1% level, you would specify <b>starlevels(</b><i>10 5 1</i><b>)</b>.
+        To place one star for the 5% level, 2 for the 1% level, and 3 for the
+        0.1% level, you would specify <b>starlevels(</b><i>5 1 </i>.<i>1</i><b>)</b>.
+<p>
+        Example 5 applies the <b>starlevels</b> option.
+<a name="starloc"></a><p>
+    <b>starloc(</b><i>#</i><b>)</b> put stars next to the statistic indicated.  By default, stars
+        are displayed next to the second statistic (<b>starloc(</b><i>2</i><b>)</b>), but they can
+        be placed next to the first statistic (usually the coefficient
+        estimate) or next to third or higher statistic if they have been
+        specified in stats.
+<a name="margstars"></a><p>
+    <b>margstars</b> calculates stars for significance from marginal effects (and
+        their standard errors), rather than from the coefficients themselves,
+        which is the default.
+<a name="nostars"></a><p>
+    <b>nostars</b> suppresses the stars indicating significance levels.
+<a name="nolegend"></a><p>
+    <b>nolegend</b> indicates that there will be no legend explaining the stars for
+        significance levels below the table (by default, the legend is "*
+        <i>p</i>&lt;0.05; ** <i>p</i>&lt;0.01").  To replace the legend, use the <b>nolegend</b> option,
+        and put your own legend in a note.
+<a name="sigsymbols"></a><p>
+    <b>sigsymbols(</b><i>textrow</i><b>)</b> replaces the stars used to indicate statistical
+        significance with other symbols of your choice.  For example, to use
+        a plus sign "+" to indicate a 10% significance level, you could apply
+        <b>sigsymbols(</b><i>+</i><b>,*,**)</b> along with <b>starlevels(</b><i>10 5 1</i><b>)</b>.  By default, <b>outreg</b>
+        uses one star for the first significance level, and adds an
+        additional star for each additional significance level displayed.
+<p>
+        The argument <i>textrow</i> consists of text separated by commas.
+<p>
+        Example 5 applies the <b>sigsymbols</b> option.
+<p>
+<a name="summstat_options"></a>        +----------------------------+
+    ----+ Summary statistics options +---------------------------------------
+<a name="summstat"></a><p>
+    <b>summstat(</b><i>evaluegrid</i><b>)</b> places summary statistics below the coefficient
+        estimates.  <i>evaluegrid</i> is a grid of the names of different e() return
+        values already calculated by the estimation command.  The syntax of
+        the <i>evaluegrid</i> is the same as the other grids in <b>outreg</b>.  Elements
+        within a row are separated with commas (","), and rows are separated
+        by backslashes ("\").  The default value of <b>summstat</b> is <b>summstat(</b><i>r2 \</i>
+        <i>N</i><b>)</b> (when e(r2) is defined), which places the R-squared statistic
+        e(r2) below the coefficient estimates, and the number of observations
+        e(N) below that.
+<p>
+        To replace the R-squared with the adjusted R-squared stored in
+        e(r2_a), you could use the options <b>summstat(</b><i>r2_a \ N</i><b>)</b> and
+        <b>summtitle(</b><i>"Adjusted R2" \ "N"</i><b>)</b>.  You can also specify the decimal
+        places for the summary statistics with the summdec option.  To see a
+        complete list of the e() macro values available after each estimation
+        command, type <b>ereturn list</b>.
+<p>
+        Statistics not included in the e() return values can be added to the
+        table with the addrows option as in Example 7.
+<p>
+        See an application of <b>summstat</b> in Example 5.
+<a name="summdec"></a><p>
+    <b>summdec(</b><i>numlist</i><b>)</b> designates the decimal places displayed for summary
+        statistics in the manner of bdec.
+<a name="summtitles"></a><p>
+    <b>summtitles(</b><i>textgrid</i><b>)</b> designates row titles for summary statistics in the
+        same manner as rtitles.
+<a name="noautosumm"></a><p>
+    <b>noautosumm</b> eliminates the automatically generated summary stats
+        (R-squared, if there is one, and the number of observations) from the
+        <b>outreg</b> table.
+<p>
+<a name="frmttable_options"></a>        +-------------------+
+    ----+ frmttable options +------------------------------------------------
+<a name="blankrows"></a><p>
+    <b>blankrows</b> allows blank rows (across all columns) in the body of the
+        <b>outreg</b> table to remain blank without being deleted.  By default,
+        <b>outreg</b> sweeps out any completely blank rows.  This option is useful
+        if you want to use blank rows to separate different parts of the
+        table.
+<a name="nofindcons"></a><p>
+    <b>findcons</b> is a technical option that finds rows of <b>statmat</b> with row titles
+        "_cons" and puts them in a separate row section.  Usually finding the
+        constant is needed to ensure that new variables coefficients are
+        merged in correctly, above the constant term, when multiple
+        estimations are merged together.  This option is most likely to be
+        useful when you don't want the "_cons" term to be last when using the
+        keep option, or when merging with a non-<b>outreg</b> table that treats
+        constants differently.
+<a name="greek"></a><p>
+<b><u> Notes about specific estimation commands</u></b>
+<p>
+    rocfit reports a <i>t</i> statistic for the null hypothesis that the slope is
+        equal to 1.  <b>outreg</b> reports the <i>t</i> statistic for the null hypothesis
+        that the slope is equal to 0.
+<p>
+    stcox and streg report hazard ratios by default, and the coefficients
+        only if the <b>nohr</b> option is employed.  <b>outreg</b> does the reverse.  To
+        show the hazard rates in the <b>outreg</b> table, use the hr option.
+<p>
+    mim is a user-written command that makes multiple imputations (see also
+        the Stata command mi).  <b>mim</b> does not store the estimation results in
+        the <b>e(</b><i>b</i><b>)</b> and <b>e(</b><i>V</i><b>)</b> matrices, so it is necessary to repost them to
+        these matrices before <b>outreg</b> can access the <b>mim</b> results.  This is
+        accomplished with the following commands:
+<p>
+        <b>. mat b = e(MIM_Q)</b>
+<b>        . mat V = e(MIM_V)</b>
+<b>        . ereturn post b V, depname(`e(MIM_depvar)') obs(`e(MIM_Nmin)') ///</b>
+<b>             dof(`e(MIM_dfmin)')</b>
+<p>
+        After these commands, <b>outreg</b> can be used in the usual manner.
+<a name="examples"></a><p>
+<p>
+<b><u>Examples</u></b>
+<p>
+1.  Basic usage and variable labels
+2.  Decimal places for coefficients and titles
+3.  Merging estimation tables together
+4.  Standard errors, no stars, and square brackets in a TeX file
+5.  10% significance level and summary statistics
+6.  Display some but not all coefficients
+7.  Add statistics not in summstat
+8.  Multi-equation models
+9.  Marginal effects and star options
+10. Multi-column ctitles; merge variable means to estimation results
+11. Specifying fonts
+12. Superscripts, italics, and Greek characters
+13. Place additional tables in same document
+14. Place footnotes among coefficients
+15. Show statistics side-by-side, like Stata estimation results
+16. Merge multiple estimations in a loop
+<a name="xmpl6"></a><p>
+<p>
+<b><u>Example 6.  Display some but not all coefficients</u></b>
+<p>
+    The options keep and drop allow you to display some but not all
+    coefficients in the estimation.  <b>keep</b> also allows you to change the order
+    in which the coefficient estimates are displayed.  To <b>keep</b> or <b>drop</b> the
+    constant term, include "_cons" in the list of coefficients.
+<p>
+    The first example removes dummy variable coefficients and reorders the
+    coefficients with <b>keep(</b><i>weight foreign</i><b>)</b>:
+<p>
+        <b>. tab rep78, gen(repair)</b>
+<b>        </b>(<i>output omitted</i>)
+        
+        <b>. regress mpg foreign weight repair1-repair4</b>
+<b>        </b>(<i>output omitted</i>)
+        
+        <b>. outreg using auto, keep(weight foreign) varlabels replace ///</b>
+<b>             note(Coefficients for repair dummy variables not shown)</b>
+<b>        </b>
+                           --------------------------------
+                                            Mileage (mpg) 
+                           --------------------------------
+                            Weight (lbs.)      -0.006     
+                                              (9.16)**    
+                            Car type           -2.923     
+                                               (2.18)*    
+                            R2                  0.69      
+                            N                    69       
+                           --------------------------------
+                                  * p&lt;0.05; ** p&lt;0.01
+                   Coefficients for repair dummy variables not shown
+<p>
+    The <b>keep</b> and <b>drop</b> options can use the wildcard characters *, ?, and ~.
+    They can also use factor variable notation.
+<p>
+    The second example uses <b>keep</b> to remove from the table the auxiliary
+    parameters included in e(b) by Stata.  The tobit command estimates a
+    sigma parameter.  The main coefficient estimates are included in the e(b)
+    vector with the equation name "model" and the sigma parameter is given
+    the equation name "sigma".  When in doubt about which equation names are
+    included in the e(b) vector after an estimation, you can view the matrix
+    and its names with the matrix list e(b) command.  <b>outreg</b> includes the
+    sigma parameter and the equation names in the estimates table.
+<p>
+        <b>. gen wgt = weight/100</b>
+<b>        . label var wgt "Weight (lbs/100)"</b>
+<b>        . tobit mpg wgt, ll(17)</b>
+<b>        </b>(<i>output omitted</i>)
+        
+        <b>. outreg using auto, replace </b>
+<b>        </b>
+                              ---------------------------
+                               model  wgt      -0.687   
+                                              (9.82)**  
+                                      _cons    41.499   
+                                              (20.16)** 
+                               sigma  _cons     3.846   
+                                              (10.50)** 
+                               N                 74     
+                              ---------------------------
+                                  * p&lt;0.05; ** p&lt;0.01
+<p>
+    To limit the table to the coefficient estimates alone, we can use the
+    option <b>keep(</b><i>model:</i><b>)</b>.  The colon after "model" indicates that it is an
+    equation name, not a coefficient name, and all estimates in the "model"
+    equation are kept.
+<p>
+        <b>. outreg using auto, keep(model:) varlabel replace</b>
+<b>        </b>
+                          -----------------------------------
+                                              Mileage (mpg) 
+                          -----------------------------------
+                           Weight (lbs/100)      -0.687     
+                                                (9.82)**    
+                           Constant              41.499     
+                                                (20.16)**   
+                           N                       74       
+                          -----------------------------------
+                                  * p&lt;0.05; ** p&lt;0.01
+<a name="xmpl7"></a><p>
+<p>
+<b><u>Example 7.  Add statistics not in summstat</u></b>
+<p>
+    There are many statistics, particularly test statistics, which we may
+    want to report in estimation tables but are not available in the summstat
+    option.  The statistics available in <b>summstat</b> are limited to the e( )
+    scalar values that can be viewed after an estimation command with <b>ereturn</b>
+    <b>list</b>.
+<p>
+    The addrows option can add additional rows of text below the coefficient
+    estimates and summary statistics.  This example shows how to display the
+    results of the test command as addeds rows of the <b>outreg</b> table.
+<p>
+    Below we test whether the coefficient on the variable <b>foreign</b> is equal to
+    the negative of the coefficient on <b>goodrep</b> with <b>test foreign = -goodrep</b>.
+    The command test saves the <i>F</i> statistic in the return value r(F) and its <i>p</i>
+    value in the return value r(p).  If we include r(F) and r(p) in <b>addrows</b>
+    directly, they are reported with seven or eight decimal places.  To
+    control the numerical formatting of the return values F and p, we use the
+    local macro directive <b>display</b>.  <b>local F : display %5.2f `r(F)'</b> takes the
+    value in r(F) and puts it in the local macro "F" displayed with two
+    decimal places and a width of 5.  Similarly, the local macro "p" has
+    three decimal places.
+<p>
+        <b>. gen goodrep = rep78==5</b>
+<b>        . reg mpg weight foreign goodrep</b>
+<b>        </b>(<i>output omitted</i>)
+        
+        <b>. test foreign = -goodrep</b>
+<b>        </b>(<i>output omitted</i>)
+        
+        <b>. local F : display %5.2f `r(F)'</b>
+<b>        . local p : display %4.3f `r(p)'</b>
+<p>
+    We are now ready to add the test statistics to the <b>outreg</b> table.  The
+    <b>addrows</b> option below adds two rows, one for the <i>F</i> test and one for its <i>p</i>
+    value, and two columns, one for the text in the left column and one for
+    the test values.  As usual, columns of text are separated with a comma,
+    and rows of text are separated with the backslash.
+<p>
+        <b>. outreg using auto, replace ///</b>
+<b>             addrows("F test: foreign = -goodrep", "`F'" \ "p value", "`p'")</b>
+<b>        </b>
+                       -----------------------------------------
+                                                        mpg    
+                       -----------------------------------------
+                        weight                        -0.006   
+                                                     (10.40)** 
+                        foreign                       -2.745   
+                                                      (2.53)*  
+                        goodrep                        3.613   
+                                                     (2.98)**  
+                        _cons                         40.733   
+                                                     (19.59)** 
+                        R2                             0.70    
+                        N                               74     
+                        F test: foreign = -goodrep      0.43   
+                        p value                        0.515   
+                       -----------------------------------------
+                                  * p&lt;0.05; ** p&lt;0.01
+<p>
+    If we wanted to report the <i>F</i> test statistics above the summary statistics
+    (R2 and N), then we would need to use the option <b>noautosumm</b> to suppress
+    the default summary statistics, and instead include them in the <b>addrows</b>
+    option below the <i>F</i> test statistics.  The values of R2 and N are available
+    in the scalars e(r2) and e(N).
+<a name="xmpl8"></a><p>
+<p>
+<b><u>Example 8.  Multi-equation models</u></b>
+<p>
+    <b>outreg</b> displays estimation results in a single column even for
+    multi-equation models unless the user chooses the eq_merge option (for
+    "equation merge").  When different equations in the estimation model
+    share many of the same covariates, users may prefer to display the
+    results like the merged results of separate estimations.  <b>eq_merge</b> puts
+    each equation is a separate column and any common variables are displayed
+    the same row.  Using an example of seemingly unrelated regression
+    estimation with the three equations each sharing two covariates, <b>outreg</b>
+    organizes the table as shown below.
+<p>
+        <b>. sureg (price foreign weight length) (mpg displ = foreign weight)</b>
+<b>        </b>(<i>output omitted</i>)
+        
+        <b>. outreg using auto, varlabels eq_merge replace ///</b>
+<b>             ctitles("", Price Equation, Mileage Equation, Engine Size Equation</b>
+<b>&gt; ) ///</b>
+<b>             summstat(r2_1, r2_2, r2_3 \ N, N, N) summtitle(R2 \ N)</b>
+<b>        </b>
+        
+   -------------------------------------------------------------------------
+        
+                    Price Equation  Mileage Equation  Engine Size Equation 
+        
+   -------------------------------------------------------------------------
+        
+    Car type          3,575.260          -1.650             -25.613        
+        
+                       (5.75)**          (1.57)             (2.05)*        
+        
+    Weight (lbs.)       5.691            -0.007              0.097         
+        
+                       (6.18)**        (10.56)**           (13.07)**       
+        
+    Length (in.)       -88.271                                             
+        
+                       (2.81)**                                            
+        
+    Constant          4,506.212          41.680             -87.235        
+        
+                        (1.26)         (19.65)**            (3.47)**       
+        
+    R2                   0.55             0.66                0.81         
+        
+    N                     74               74                  74          
+        
+   -------------------------------------------------------------------------
+                                  * p&lt;0.05; ** p&lt;0.01
+<p>
+    Each of the equations in <b>sureg</b> has an R-squared statistic, so the
+    <b>summstat</b> option places them below the coefficient estimates along with
+    the number of observations.  The <b>summstat</b> option has three columns and
+    two rows.
+<a name="xmpl9"></a><p>
+<p>
+<b><u>Example 9.  Marginal effects and star options</u></b>
+<p>
+    <b>outreg</b> can display marginal effects estimates calculated by the margins
+    command instead of coefficient estimates.  <b>outreg</b> can also display
+    marginal effects calculated by the mfx and dprobit commands that were
+    part of Stata 10 and earlier.  Displaying marginal effects requires that
+    the user run <b>margins, dydx(*)</b> or a similar command after the estimation
+    in question before using <b>outreg</b>.
+<p>
+    The simplest way to substitute marginal effects for coefficient estimates
+    is with the marginal option.  This replaces the statistic <b>b_dfdx</b> for <b>b</b>
+    and <b>t_abs_dfdx</b> for <b>t_abs</b> (or <b>se_dfdx</b> for <b>se</b> if the <i>option</i> <b>se</b> is in
+    effect).  The asterisks for significance now refer to the marginal
+    effects rather than the underlying coefficients.
+<p>
+        <b>. logit foreign wgt mpg</b>
+<b>        </b>(<i>output omitted</i>)
+        
+        <b>. margins, dydx(*)</b>
+<b>        </b>(<i>output omitted</i>)
+        
+        <b>. outreg using auto, marginal replace</b>
+<b>        </b>
+                                   -----------------
+                                          foreign  
+                                   -----------------
+                                    wgt    -0.046  
+                                          (8.01)** 
+                                    mpg    -0.020  
+                                          (2.03)*  
+                                    N        74    
+                                   -----------------
+                                  * p&lt;0.05; ** p&lt;0.01
+<p>
+    Marginal effects can also be combined with regression coefficients or
+    other statistics in the <b>outreg</b> table.  Below, the table displays each
+    coefficient estimate with the marginal effect below it, and the 95%
+    confidence interval of the marginal effect below that, because of the 
+    <b>stats(</b>b b_dfdx ci_dfdx<b>)</b> option.  Note that the statistics <b>b_dfdx</b> and
+    <b>ci_dfdx</b> refer to whichever marginal effects were specified in the margins
+    command.  This could be from the <b>dydx()</b>, <b>eydx()</b>, <b>dyex()</b>, or <b>eyex()</b>
+    option.
+<p>
+    The margstar option specifies that the asterisks refer to the
+    significance of the hypothesis that the marginal effects are zero, rather
+    than the coefficients being zero.  The starloc(3) option places the
+    asterisks next to the third statistic (the marginal effect confidence
+    intervals) instead of the default, next to the second statistic.
+<p>
+        <b>. outreg using auto, stat(b b_dfdx ci_dfdx) replace     ///</b>
+<b>             title("Marginal Effects &amp; Confidence Intervals" \   ///</b>
+<b>                   "Below Coefficients") margstar starloc(3) </b>
+<b>        </b>
+                        Marginal Effects &amp; Confidence Intervals
+                                  Below Coefficients
+                            ------------------------------
+                                           foreign       
+                            ------------------------------
+                             wgt           -0.391        
+                                          (-0.046)       
+                                     [-0.057 - -0.035]** 
+                             mpg           -0.169        
+                                          (-0.020)       
+                                      [-0.039 - 0.001]   
+                             _cons         13.708        
+                             N               74          
+                            ------------------------------
+                                  * p&lt;0.05; ** p&lt;0.01
+<a name="xmpl10"></a><p>
+<p>
+<b><u>Example 10.  Multi-column ctitles; merge variable means with estimation results</u></b>
+<p>
+    The summary statistics for the variables used in estimations, usually
+    their means and standard deviations, are commonly reported in empirical
+    papers.  This example shows how to merge variable means onto an
+    estimation table.
+<p>
+    First we create an <b>outreg</b> table which merges two simple regressions as
+    was done in Example 3.  The <b>nodisplay</b> option suppresses display of the
+    <b>outreg</b> tables we are creating, which normally appears in the Stata
+    results window.  The ctitles have been specified to have two rows, with a
+    supertitle on the first two columns of "Regressions".
+<p>
+    Notice that the two <b>outreg</b> commands below do not include a <b>using</b>
+    statement.  This means that the results are not written as Word files.
+    This is not necessary because we will merge more estimation results
+    below, and don't need to save the intermediate files.  The contents of
+    the table are saved in Stata's memory in the mean time.
+<p>
+        <b>. reg mpg foreign weight</b>
+<b>        </b>(<i>output omitted</i>)
+        <b>. outreg, bdec(2 5 2) varlabels nodisplay    ///</b>
+<b>             ctitles("", "Regressions" \ "", "Base case") </b>
+<b>        . reg mpg foreign weight weightsq</b>
+<b>        </b>(<i>output omitted</i>)
+        <b>. outreg, bdec(2 5 2) bfmt(f f e f) varlabels merge ///</b>
+<b>             ctitles("", "" \ "", "Quadratic mpg") nodisplay</b>
+<p>
+    Then we run the mean command, which calculates variable means and their
+    standard errors.  <b>mean</b> is an estimation command, so it stores its results
+    in e(b) and e(V) and they can be displayed and merged using <b>outreg</b>.  We
+    <b>merge</b> the variable means to the <b>outreg</b> table already created above.  The
+    <b>ctitles</b> in this <b>outreg</b> command have two rows, aligning them with the
+    previous <b>ctitles</b>.  The multicol(1,2,2) option causes the cell in the
+    first row, second column, to span two cells horizontally so that the
+    title "Regressions" is centered over both the "Base case" and "Quadratic
+    mpg" columns.  The effect of the <b>multicol</b> option can not be seen in the
+    Stata results window (shown below), but does appear in the Word or TeX
+    document created by <b>outreg</b>.  Note that the <b>multicol</b> option must be used
+    in the third and last <b>outreg</b> command, because it is a formatting
+    characteristic that is not retained from an earlier <b>outreg</b> table that is
+    <b>merged</b> with a new one.
+<p>
+        <b>. mean mpg foreign weight</b>
+<b>        </b>(<i>output omitted</i>)
+        <b>. outreg using auto, bdec(1 3 0) nostar merge replace      ///</b>
+<b>             ctitles("", "Means &amp;" \ "", "Std Errors") multicol(1,2,2)</b>
+<b>        </b>
+                 ----------------------------------------------------
+                             Regressions                  Means &amp;   
+                              Base case   Quadratic mpg  Std Errors 
+                 ----------------------------------------------------
+                  foreign       -1.65         -2.20        0.297    
+                               (1.53)        (2.08)*      (0.053)   
+                  weight      -0.00659      -0.01657       3,019    
+                              (10.34)**     (4.18)**        (90)    
+                  weightsq                  1.59e-06                
+                                             (2.55)*                
+                  mpg                                       21.3    
+                                                           (0.7)    
+                  _cons         41.68         56.54                 
+                              (19.25)**     (9.12)**                
+                  R2            0.66          0.69                  
+                  N              74            74            74     
+                 ----------------------------------------------------
+                                  * p&lt;0.05; ** p&lt;0.01
+<p>
+    We could embellish the "Regressions" supertitle by underlining it.  In
+    Word files, this is accomplished with the formatting code "{\ul
+    Regressions}".  If we want the underline to span more widely than the
+    word "Regressions", one approach is to place tab characters before and
+    after the word.  Spaces do not do the job, because Word does not
+    underline spaces.  To place one tab character on either side of the
+    supertitle, we would use "{\ul\tab Regressions\tab}" in the <b>ctitles</b>
+    option.  Another option is to use underscore characters, although the
+    line they create is offset slightly below the underlining.  See Inline
+    formatting for more information about underlining and other within-string
+    formatting issues.
+<p>
+    The mean command calculates the variable means and their standard <i>errors</i>.
+    More typically, summary statistic tables report the variable means and
+    their standard deviations (which differ from the standard errors of the
+    mean by a factor of the square root of <i>N</i>).  To report the standard
+    deviations of the variables, I use the as yet unreleased command <b>outstat</b>
+    which, since it is also based on the underlying formatting engine
+    <b>frmttable</b>, can be appended to an <b>outreg</b> table:
+<p>
+        <b>. reg mpg foreign weight</b>
+<b>        </b>(<i>output omitted</i>)
+        <b>. outreg</b>
+<b>        </b>(<i>output omitted</i>)
+        <b>. outstat mpg foreign weight using auto, merge replace       ///</b>
+<b>             title(Merge summary statistics with regression results) ///</b>
+<b>             sdec(2\2\4\4\0\0) varlabels basefont(fs10)</b>
+<b>        </b>(note: tables being merged have different numbers of row sections)
+        
+                           --------------------------------
+                                         mpg      Means   
+                           --------------------------------
+                            foreign    -1.650     0.2973  
+                                       (1.53)    (0.4602) 
+                            weight     -0.007     3,019   
+                                      (10.34)**   (777)   
+                            mpg                   21.30   
+                                                  (5.79)  
+                            _cons      41.680             
+                                      (19.25)**           
+                            R2          0.66              
+                            N            74               
+                           --------------------------------
+                                  * p&lt;0.05; ** p&lt;0.01
+<p>
+    The warning message "tables being merged have different numbers of row
+    sections" is displayed because the differing structure of the <b>outreg</b>
+    table and the <b>outstat</b> table mean that the <b>merge</b> process may not align
+    rows the way the user intended, but in this case there is no problem.
+<a name="xmpl11"></a><p>
+<p>
+<b><u>Example 11. Specifying fonts</u></b>
+<p>
+    One of the objectives of this version of <b>outreg</b> is to have as complete
+    control of the layout and appearance of estimates tables as possible.  An
+    important element of this is fine control of fonts.  <b>outreg</b> now enables
+    users to specify fonts down to the table cell level, although this is
+    needed only rarely.  Users can specify font sizes, font types (such as
+    Times Roman or Arial), and font styles (such as bold or italic).  For
+    Word files, users can apply any font type installed on their computers by
+    adding the font name in the addfont option.
+<p>
+    This example prepares a table for a presentation as an overhead slide
+    with special fonts that are displayed much larger than usual.  Two
+    specialized fonts are added to the document with the <b>addfont(</b><i>Futura</i><b>,</b><i>Didot</i>
+    <i>Bold</i><b>)</b> command.  These fonts can then be applied to different parts of the
+    table as "fnew1" for the first added font, or "fnew2", the second added
+    font.  We set the default font of the table to be Futura ("fnew1") in the
+    <b>basefont(</b><i>fs32 fnew1</i><b>)</b>.  This <b>basefont</b> option also sets the font size to 32
+    points to make the table fill the whole overhead slide.  The title is
+    assigned the second added font, Didot Bold, with a 40 point size in
+    <b>titlfont(</b><i>fs40 fnew2</i><b>)</b>.  The statistics in the table are displayed in the
+    Arial font for readability with the <b>statfont(</b><i>arial</i><b>)</b> option.  (Times
+    Roman, Arial, and Courier fonts are predefined in Word and TeX documents
+    and don't need to be added.) The <b>basefont</b> font characteristics apply to
+    all parts of the table, unless otherwise specified, so the Arial font in
+    <b>statfont</b> has a point size of 32.
+<p>
+    Font specifications do not change the appearance of the table displayed
+    in the Stata results window (only in the Word document written to
+    auto.doc), so the output is omitted.
+<p>
+        <b>. reg mpg foreign weight</b>
+<b>        </b>(<i>output omitted</i>)
+        <b>. outreg using auto, addfont(Futura, Didot Bold)                ///</b>
+<b>             basefont(fs32 fnew1) titlfont(fs40 fnew2) statfont(arial) ///</b>
+<b>             title(New Fonts for Overhead Slides) varlabels replace</b>
+<b>        </b>(<i>output omitted</i>)
+<a name="xmpl12"></a><p>
+<p>
+<b><u>Example 12. Superscripts, italics, and Greek characters</u></b>
+<p>
+    This example uses some of the methods of inline formatting explained
+    above to apply superscripts, italic text, and Greek characters.  It is
+    helpful to review those methods to understand the codes used here.
+<p>
+    This example is similar to Example 7 in that the results of a test of
+    coefficient equality are displayed in the estimation table.  However,
+    since the estimation is nonlinear, the test statistic is a chi-squared
+    rather than an <i>F</i> statistic.  We will write the chi-squared with the Greek
+    character chi and a superscripted "2" in the Word table generated by
+    <b>outreg</b>.  A different set of codes can produce the same formatting in TeX
+    files, as discussed in Inline formatting.
+<p>
+    The Word code for the Unicode representation of the Greek lower-case
+    letter chi is "\u0966?" (see all Word Greek letter codes here).  The code
+    for chi needs to be placed in quotes in the <b>addrows</b> option because
+    otherwise the backslash would be interpreted as a row divider.  The
+    superscripted 2 is encoded as "{\super 2}".  Note the space between the
+    formatting code ("\super") and the regular text ("2").  Without it, Word
+    would try to interpret the code "\super2", which doesn't exist.  Finally,
+    we italicize the "p" in <i>p</i> value like this: "{\i p}".  The full <b>addrows</b>
+    option becomes <b>addrows(</b><i>"\u0966</i>{<i>\super 2</i>}<i> test"</i><b>,</b><i> "`chi2'" \ "</i>{<i>\i p</i>}
+    <i>value"</i><b>,</b><i> "`p'"</i><b>)</b>.  As in Example 7, `chi2' and `p' are the value of local
+    macros containing the numerically formatted values of the chi-squared
+    statistic and its <i>p</i> value.
+<p>
+    The <b>note</b> option in the <b>outreg</b> command below has a couple of tricks in it.
+    The first is a blank row ("") to separate the <b>note</b> text from the legend
+    for asterisks above it.  We also add Stata system macro values for the
+    current time, date, and dataset file name from predefined Stata macros
+    $S_TIME, $S_DATE, and $S_FN, respectively.
+<p>
+        <b>. logit foreign wgt mpg</b>
+<b>        </b>(<i>output omitted</i>)
+        <b>. test wgt = mpg</b>
+<b>        </b>(<i>output omitted</i>)
+        <b>. local chi2 : display %5.2f `r(chi2)'</b>
+<b>        . local p : display %4.3f `r(p)'</b>
+<b>        . outreg using auto, replace ///</b>
+<b>             addrows("\u0966?{\super 2} test", "`chi2'" \ "{\i p} value", "`p'"</b>
+<b>&gt; ) ///</b>
+<b>             note("" \ "Run at $S_TIME, $S_DATE" \ "Using data from $S_FN") </b>
+<b>        </b>
+                   ------------------------------------------------
+                                                         foreign  
+                   ------------------------------------------------
+                    wgt                                   -0.391  
+                                                         (3.86)** 
+                    mpg                                   -0.169  
+                                                          (1.83)  
+                    _cons                                 13.708  
+                                                         (3.03)** 
+                    N                                       74    
+                    \u0966?{\super 2}(1) test: wgt=mpg    10.84   
+                    {\i p} value                          0.001   
+                   ------------------------------------------------
+                                  * p&lt;0.05; ** p&lt;0.01
+                                           
+                             Run at 16:51:44, 27 Aug 2010
+                Using data from /Applications/Stata/ado/base/a/auto.dta
+<a name="xmpl13"></a><p>
+<p>
+<b><u>Example 13. Place additional tables in same document</u></b>
+<p>
+    One of the goals for <b>outreg</b> is to create whole documents, such as
+    statistical appendices, from a Stata <b>.do</b> file.  To do this, one must be
+    able to write multiple tables to the same document, which is possible
+    with the <b>addtable</b> option.
+<p>
+    Below, the mean command creates summary statistics for the variables.
+    <b>outreg</b> with the addtable option places summary statistics table below the
+    table just created in Example 12 in the Word file <b>auto.doc</b>.  The option
+    nostars turns off asterisks for significance tests, and nosubstat puts
+    the standard errors side-by-side with the means, as explained in Example
+    15 below.
+        . mean foreign wgt mpg
+        
+        Mean estimation             Number of obs    =      74
+<p>
+        --------------------------------------------------------------
+                     |       Mean   Std. Err.     [95% Conf. Interval]
+        -------------+------------------------------------------------
+             foreign |   .2972973   .0534958      .1906803    .4039143
+                 wgt |   30.19459   .9034692      28.39398    31.99521
+                 mpg |    21.2973   .6725511       19.9569    22.63769
+        --------------------------------------------------------------
+<p>
+        . outreg using auto, addtable ctitle(Variables, Means, Std Errors) ///
+                  nostars nosubstat title("Summary Statistics") basefont(fs6)
+        
+                                  Summary Statistics
+                           ---------------------------------
+                            Variables   Means   Std Errors 
+                           ---------------------------------
+                            foreign     0.297     0.053    
+                            wgt         30.195    0.903    
+                            mpg         21.297    0.673    
+                           ---------------------------------
+<p>
+    The user can add paragraphs of regular text before and after each table
+    with the pretext and posttext options.
+<a name="xmpl14"></a><p>
+<p>
+<b><u>Example 14. Place footnotes among coefficients</u></b>
+<p>
+    Placing footnotes in any of the text elements of a <b>outreg</b> table is
+    straightforward, such as in title, ctitles, rtitles, or note.  You can
+    place a footnote number in the text, using a superscript as in Example 12
+    if you want, and place the footnote text in the <b>note</b> or <b>posttext</b>.
+<p>
+    Placing a footnote in the body of the <b>outreg</b> table is not as
+    straightforward as in the text elements, because the table body is made
+    up of numeric statistics.  For this, we use the <b>annotate</b> option.  First
+    we create a Stata matrix with the footnote locations used by <b>annotate</b>,
+    and put the footnote symbols in the text string of <b>asymbol</b>.  It is
+    helpful to review the entry for the annotate option for details.
+<p>
+    Below, we place superscripted footnotes in a regression table.  The first
+    footnote is added to the label of the variable <b>foreign</b>, which is used by
+    <b>outreg</b> because of the <b>varlabels</b> option.  The next two footnotes are
+    placed among the regression statistics.  For this we create a Stata
+    matrix with the <b>matrix annotmat = J(3,2,0)</b> command.  This creates a 3 by
+    2 matrix of zeros.  The matrix should have the dimension of the number of
+    coefficients (3, including the constant) by the number of statistics (by
+    default, 2: <b>b</b> and <b>t_abs</b>).  All elements of the matrix <i>annotmat</i> which are
+    zero are ignored.  The locations with a "1" have the first <b>asymbol</b>
+    appended, "2" have the second <b>asymbol</b>, etc.  Since we want to place a
+    footnote next to the first <i>t</i> statistic, we place a 1 at position (1,2) of
+    <i>annotmat</i> for the first coefficient, second statistic of the table.  We
+    place another footnote next to the third coefficient estimate, so we
+    place a 2 at position (3,1) of <i>annotmat</i>.  The 1 and 2 in <i>annotmat</i>
+    correspond to the first and second strings in <b>asymbol</b>, which are "{\super
+    2}" and "{\super 3}" since these should be footnotes number 2 and 3.
+<p>
+    The final footnote, 4, is placed in the text labeling the summary
+    statistic, <i>N</i>, using the <b>summtitle(</b><i>"</i>{<i>\i N</i>}{<i>super 4</i>}<i>"</i><b>)</b> which gives us an
+    italicized <i>N</i> and a superscripted 4.
+<p>
+    It is not possible to position a footnote next to the summary statistic
+    in <b>summstat</b>.  To accomplish this, it is necessary to turn off the
+    automatic summary statistics with <b>noautosumm</b> (which <b>summstat</b> does by
+    default), and place the statistic and the footnote symbol in <b>addrows</b>,
+    which was described in Example 7 and Example 12.
+<p>
+    The footnote text is added below the table in the <b>note</b> option, with
+    superscripts for the footnote numbers.
+<p>
+        <b>. reg mpg foreign weight</b>
+<b>        . label var foreign "Car Type{\super 1}"</b>
+<b>        . matrix annotmat = J(3,2,0)</b>
+<b>        . matrix annotmat[1,2] = 1</b>
+<b>        . matrix annotmat[3,1] = 2</b>
+<b>        . outreg using auto, varlabels replace colwidth(10 10)        ///</b>
+<b>             annotate(annotmat) asymbol("{\super 2}","{\super 3}")    ///</b>
+<b>             basefont(fs10) summstat(N) summtitle("{\i N}{\super 4}") ///</b>
+<b>             note("{\super 1}First footnote." \                       ///</b>
+<b>                  "{\super 2}Second footnote." \                      ///</b>
+<b>                  "{\super 3}Third footnote." \                       ///</b>
+<b>                  "{\super 4}Fourth footnote.")</b>
+<b>        </b>
+                       ----------------------------------------
+                                              Mileage (mpg)   
+                       ----------------------------------------
+                        Car Type{\super 1}        -1.650      
+                                             (1.53){\super 2} 
+                        Weight (lbs.)             -0.007      
+                                                (10.34)**     
+                        Constant             41.680{\super 3} 
+                                                (19.25)**     
+                        {\i N}{\super 4}            74        
+                       ----------------------------------------
+                                  * p&lt;0.05; ** p&lt;0.01
+                               {\super 1}First footnote.
+                              {\super 2}Second footnote.
+                               {\super 3}Third footnote.
+                              {\super 4}Fourth footnote.
+<a name="xmpl15"></a><p>
+<p>
+<b><u>Example 15. Show statistics side-by-side, like Stata estimation results</u></b>
+<p>
+    To show statistics side-by-side, such as <i>t</i> statistics next to the
+    coefficients rather than below them, use the <b>nosubstat</b> option.  The
+    following example creates a table similar to Stata's display of
+    regression results, reporting six statistics using the <b>stats</b> option.
+    Asterisks for significance have been turned off with the <b>nostars</b> option.
+<p>
+        <b>. outreg using auto, nosubstat stats(b se t p ci_l ci_u) nostar    ///</b>
+<b>             ctitles("mpg", "Coef.", "Std. Err.", "t", "P&gt;|t|", "[95% Conf.",  </b>
+<b>&gt; ///</b>
+<b>             "Interval]") bdec(7) replace                                  ///</b>
+<b>             title("Horizontal Output like Stata's -estimates post-")</b>
+<b>             </b>
+<b>        </b>
+                    Horizontal Output like Stata's -estimates post-
+        
+   -------------------------------------------------------------------------
+        
+    mpg         Coef.     Std. Err.    t     P&gt;|t|  [95% Conf.  Interval]  
+        
+   -------------------------------------------------------------------------
+        
+    foreign   -1.6500291  1.0759941  -1.53   0.13   -3.7955004  0.4954422  
+        
+    weight    -0.0065879  0.0006371  -10.34  0.00   -0.0078583  -0.0053175 
+        
+    _cons     41.6797023  2.1655472  19.25   0.00   37.3617239  45.9976808 
+        
+   -------------------------------------------------------------------------
+<a name="xmpl16"></a><p>
+<p>
+<b><u>Example 16. Merge multiple estimation results in a loop</u></b>
+<p>
+    If you want to run the same estimation on different datasets or on
+    different groups within a dataset, it is often efficient to create a loop
+    using the forvalues or foreach commands.  This example shows how to merge
+    the results of each estimation in the loop into a single <b>outreg</b> table,
+    and secondly, how to merge sequential estimations in a loop into two
+    separate tables.
+<p>
+    Say we want to run separate regressions by groups which are indexed by
+    the categorical variable <b>rep78</b> in the <b>auto.dta</b> dataset.  We use the 
+    forvalues command to create a loop that steps through the values of <b>rep78</b>
+    from 2 to 5.  For each value of <b>rep78</b>, we run a regression of the
+    variable <b>mpg</b> on covariates, restricting the sample to the current value
+    of <b>rep78</b> with the statement <b>if rep78==`r'</b>.  <b>r</b> is a local macro containing
+    the current value of the loop indicator.
+<p>
+    Following each regression, the <b>outreg, merge</b> command merges successive
+    regression results into a single table.  The first time that <b>outreg,</b>
+    <b>merge</b> is executed after the first regression, we actually don't want it
+    to merge with anything.  The <b>merge</b> option allows merging without an
+    existing table precisely to enable its use in loops, although <b>outreg</b> does
+    produce the warning message below, that no existing <b>outreg</b> table was
+    found.
+<p>
+    To ensure that there is no preexisting table before the first <b>outreg,</b>
+    <b>merge</b> command in the loop that would be merged to the first regression
+    coefficients, we preceed the<b> forvalues</b> loop with a <b>outreg, clear</b> command.
+    The <b>clear</b> option removes any <b>outreg</b> table in memory, since <b>outreg</b> tables
+    persist until cleared or replaced by a new table.  Even if no previous
+    <b>outreg</b> command has been run, if the commands in this example are rerun,
+    the <b>outreg, clear</b> command is necessary to clear out the previous version
+    of the table.
+<p>
+        <b>. outreg, clear</b>
+<b>        . forvalues r = 2/5 {</b>
+<b>          2.   quietly reg mpg price weight if rep78==`r'</b>
+<b>          3.   outreg, merge varlabels ctitle("", "`r'") nodisplay</b>
+<b>          4. }</b>
+<b>        </b>warning: no existing table found for merge or append
+<p>
+    The <b>outreg</b> command in the loop does not need any <b>using</b> statement because
+    we don't need to save the table as a Word document (or TeX document)
+    until we have merged all the regressions together.  Once we have, and the
+    loop is complete, we save the table as a Word document with the <b>outreg</b>
+    <b>using auto, replay</b> command.
+<p>
+        <b>. outreg using auto, replay replace title(Regressions by Repair Record)</b>
+<p>
+                         Regressions by Repair Record
+         ------------------------------------------------------------
+                              2          3          4         5     
+         ------------------------------------------------------------
+          Price            -0.000      0.000      0.000     0.001   
+                           (0.61)     (0.07)     (0.71)     (0.98)  
+          Weight (lbs.)    -0.008     -0.004     -0.005     -0.025  
+                          (5.40)**   (4.74)**   (8.47)**   (3.10)*  
+          Constant         44.953     34.052     34.918     78.648  
+                          (10.91)**  (14.40)**  (15.96)**  (6.17)** 
+          R2                0.92       0.64       0.84       0.76   
+          N                   8         30         18         11    
+         ------------------------------------------------------------
+<p>
+    The <b>replay</b> option tells <b>outreg</b> to use the existing <b>outreg</b> table in memory
+    instead of creating a new one.  If we had left out the <b>replay</b> option, we
+    would have created a new table from the existing <b>e(b)</b> matrix, which holds
+    just the results of the last regression in the loop, so the <b>replay</b> option
+    is important.  With the <b>replay</b> option, it is possible to make text
+    additions (except for varlabels) such as new titles or even addrows, but
+    it is not possible to change the numerical contents or numerical
+    formatting of the statistics in the table (options for estimate
+    selection, estimates formatting, star options, brackets options, and
+    summary statistics will be ignored).  When using the <b>replay</b> option, it <i>is</i>
+    possible to specify all the text formatting options such as fonts, lines,
+    and spacing, and the relevant file options such as replace or tex.
+<p>
+    Since the <b>outreg</b> command in the loop above used the <b>merge</b> option, no
+    legend was created at the bottom of the table for the asterisks.  This
+    can be rectified with the option <b>note(*</b><i> p&lt;0</i>.<i>05; </i><b>**</b><i> p&lt;0</i>.<i>01</i><b>)</b> in the<b> outreg,</b>
+    <b>replay</b> command.
+<p>
+    There are some contexts in which it is helpful to merge the estimation
+    results in a loop into two separate <b>outreg</b> tables, such as when for each
+    iteration of the loop, the results of the first estimation are used in
+    the second estimation, and we want to record the results of both
+    estimations.  In this example, we run instrumental variables estimation
+    in a loop, and record both the first and second stage regressions.  In
+    order to merge the regressions results to two separate tables, we need to
+    give the tables separate names.  Each time the <b>merge</b> option is used, it
+    will refer to either the "first" table (for the first stage regression
+    results) or the "iv" table (for the second stage results).  These
+    table-specific <b>merge</b> options become <b>merge(first)</b> and <b>merge(iv)</b>.
+<p>
+    As before, we preceed the <b>forvalues</b> loop with <b>outreg, clear</b> to clear out
+    any <b>outreg</b> table in memory, but in this case we need to refer to the
+    named tables, so we have two commands <b>outreg, clear(</b><i>first</i><b>)</b> and <b>outreg,</b>
+    <b>clear(</b><i>iv</i><b>)</b>.  The built-in Stata command for instrumental variables
+    estimation, ivregress does not have the capability of saving the first
+    stage results (although they can be displayed).  Instead we use the
+    excellent user-written command ivreg2, which saves the first stage
+    results with the <b>savefirst</b> option.  The <b>ivreg2</b> command is preceded by the
+    quietly command to suppress the display of its output.  We then add the
+    instrumental variables estimates to the "iv" table with the <b>outreg,</b>
+    <b>merge(iv)</b> command.  The <b>estimates restore _ivreg2_hsngval</b> command puts
+    the first stage estimates into the <b>e(b)</b> and <b>e(V)</b> vectors, so the second
+    <b>outreg</b> command <b>outreg, merge(first)</b> saves the first stage regression
+    results in the "first" table.
+<p>
+        . webuse hsng2, clear
+        (1980 Census housing data)
+<p>
+        . outreg, clear(iv)
+        . outreg, clear(first)
+        . forvalues r = 1/4 {
+          2.   quietly ivreg2 rent pcturban (hsngval = faminc) if reg`r', savef
+&gt; irst
+          3.   outreg, merge(iv) varlabels ctitle("","Region `r'") nodisplay
+          4.   quietly estimates restore _ivreg2_hsngval
+          5.   outreg, merge(first) varlabels ctitle("","Region `r'") nodisplay
+          6. }
+        warning: no existing table found for merge or append
+        warning: no existing table found for merge or append
+<p>
+    We now save the two tables with two <b>outreg, replay</b> commands.  To replay
+    the table of first stage estimates, we use the <b>replay(</b><i>first</i><b>)</b> option, and
+    the second stage estimates with the <b>replay(</b><i>iv</i><b>)</b> option.  By using the
+    <b>addtable</b> option in the second <b>outreg, replay</b> command (and <b>using</b> the same
+    file name) we combine both tables into the file <b>iv.doc</b>.
+<p>
+        . outreg using iv, replay(first) replace ///
+            title(First Stage Regressions by Region)
+        (<i>output omitted</i>)
+        . outreg using iv, replay(iv) addtable /// 
+            title(Instrumental Variables Regression by Region)
+        (<i>output omitted</i>)
+<p>
+<b><u>Author</u></b>
+<p>
+        John Luke Gallup, Portland State University, USA
+        jlgallup@pdx.edu
+<p>
+<p>
+<b><u>Also see</u></b>
+<p>
+    basic outreg
+<p>
+<p>
+</pre>
