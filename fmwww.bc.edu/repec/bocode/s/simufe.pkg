@@ -1,0 +1,19 @@
+d 'SIMUFE': module to simulate panel data with fixed effects and generate scatter plots with optional fitting lines
+d
+d    simufe is a Stata program that simulates panel data with fixed
+d effects and generates scatter plots	 with optional fitting
+d lines. 
+d
+d KW: simulation
+d KW: panel data
+d KW: fixed effects
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20250110
+d
+d Author: Yujun Lian, Lingnan College, Sun Yat-Sen University, China
+d Support: email arlionn@@163.com
+d
+f simufe.ado
+f simufe.sthlp

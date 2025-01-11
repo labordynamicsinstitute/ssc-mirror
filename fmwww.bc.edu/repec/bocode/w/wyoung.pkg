@@ -14,9 +14,9 @@ d KW: multiple inference
 d KW: Bonferroni
 d KW: family-wise error rate
 d
-d Requires: Stata version 12
+d Requires: Stata version 13
 d
-d Distribution-Date: 20220321
+d Distribution-Date: 20250110
 d
 d Author: Julian Reif , University of Illinois
 d Support: email  jreif@@illinois.edu

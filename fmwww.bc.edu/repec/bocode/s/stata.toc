@@ -17,6 +17,7 @@ p shuffle module to shuffle a list
 p sicff module to create Fama French Industry Variable from SIC Code
 p side_histogram module to plot side by side histograms 
 p simsum module to perform analyses of simulation studies including Monte Carlo error
+p simufe module to simulate panel data with fixed effects and generate scatter plots with optional fitting lines
 p simulate2 module enhancing and parallelising simulate
 p sivqr module to perform smoothed IV quantile regression
 p skewreg module to estimate skewness and kurtosis regressions

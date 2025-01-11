@@ -14099,6 +14099,7 @@ fmwww.bc.edu/repec/bocode/s/seqlogit_sensitivity.sthlp
 fmwww.bc.edu/repec/bocode/s/sumby.html
 fmwww.bc.edu/repec/bocode/s/summdate.html
 fmwww.bc.edu/repec/bocode/s/stjm_pred.ado
+fmwww.bc.edu/repec/bocode/s/simufe.sthlp
 fmwww.bc.edu/repec/bocode/s/sqstattab1.hlp
 fmwww.bc.edu/repec/bocode/s/smileplot7.hlp
 fmwww.bc.edu/repec/bocode/s/shakespeare.pkg
@@ -14759,7 +14760,9 @@ fmwww.bc.edu/repec/bocode/s/simuped.pkg
 fmwww.bc.edu/repec/bocode/s/subjob33.ado
 fmwww.bc.edu/repec/bocode/s/stkap.pkg
 fmwww.bc.edu/repec/bocode/s/stablernd.m
+fmwww.bc.edu/repec/bocode/s/simufe.pkg
 fmwww.bc.edu/repec/bocode/s/svrtotal.hlp
+fmwww.bc.edu/repec/bocode/s/simufe.ado
 fmwww.bc.edu/repec/bocode/s/survgini.sthlp
 fmwww.bc.edu/repec/bocode/s/stbtcalc.hlp
 fmwww.bc.edu/repec/bocode/s/stcrmix.pkg
