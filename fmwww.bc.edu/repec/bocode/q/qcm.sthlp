@@ -63,11 +63,11 @@
 {title:Description}
 
 {p 4 4 2}
-{cmd:qcm} implements quantile control method (QCM) via random forest (Chen, Xiao and Yao, 2024), which constructs confidence intervals for treatment effects in panel data with a single treated unit using quantile random forest (QRF; Meinshausen, 2006). 
+{cmd:qcm} implements quantile control method (QCM) via random forest (Chen, Xiao and Yao, 2025), which constructs confidence intervals for treatment effects in panel data with a single treated unit using quantile random forest (QRF; Meinshausen, 2006). 
 As a nonparametric ensemble machine learning method, QRF is robust to heteroskedasticity, autocorrelation and model misspecification, and easily accommodates high-dimensional data. 
 
 {p 4 4 2}
-Simulations in Chen, Xiao and Yao (2024) show that QCM confidence intervals enjoy excellent performance in finite samples. 
+Simulations in Chen, Xiao and Yao (2025) show that QCM confidence intervals enjoy excellent performance in finite samples. 
 In particular, for 95% nominal confidence level, the empirical coverage rates of QCM confidence intervals can reach above or near 90% if the number of pretreatment periods is greater than or equal to 20, 
 and the number of control units is greater than or equal to 10. 
 Moreover, additional covariates can be used to help predict the counterfactual outcomes of the treated unit.  
@@ -85,7 +85,8 @@ As another example, if the outcome variable is GDP with an exponential trend, it
 {title:Required Settings}
 
 {p 4 4 2}
-{cmd:qcm} automatically reshapes the panel dataset from the long form to the wide form before implementation, 
+Users should provide the panel data in the long form. 
+During execution, {cmd:qcm} automatically reshapes the panel dataset from the long form to the wide form, 
 such that {depvar} of the treated unit is transformed to the response, while {depvar} of the control units are transformed to predictors. 
 If {indepvars} are specified, {indepvars} of all units are transformed to predictors.
 
@@ -171,7 +172,9 @@ The frame named {it:framename} is replaced if existed, and created if not.
 If this option is not specified, the default is to show all bars.
 
 {phang}
-{opt noimportance} suppresses the display of variable importance. The default is to show the variable importance.
+{opt noimportance} suppresses the display of variable importance. 
+The default is to show the variable importance, 
+which measures the relative contribution of each variable in decreasing the mean squared errors as the split variable.
 
 {phang}
 {opt nofigure} suppresses the display of figures. The default is to display all figures.
@@ -185,7 +188,7 @@ Note that this option only applies when {opt nofigure} is not specified.
 
 
 {marker examples}{...}
-{title:Examples 1 (without covariate): economic integration of Hong Kong with mainland China (Hsiao et al.,2012)}
+{title:Example 1 (without covariate): economic integration of Hong Kong with mainland China (Hsiao et al.,2012)}
 
 {phang2}{cmd:. use growth, clear}{p_end}
 {phang2}{cmd:. xtset region time}{p_end}
@@ -215,17 +218,59 @@ and stores results in a new Stata frame named "growth"{p_end}
 {phang2}* Switch back to the default frame{p_end}
 {phang2}{cmd:. frame change default}{p_end}
 
-{title:Examples 2 (with covariates): effect of carbon taxes in Sweden on CO2 emissions (Andersson, 2019)}
+{title:Example 2 (without covariate): economic impact of German reunification on West Germany (Abadie et al.,2015)}
 
-{phang2}{cmd:. use carbontaxgr, clear}{p_end}
+{phang2}{cmd:. use repgermany.dta, clear}{p_end}
+{phang2}{cmd:. xtset country year}{p_end}
+
+{phang2}* Show the unit number of West Germany{p_end}
+{phang2}{cmd:. label list}{p_end}
+
+{phang2}* Transform the variables from levels into growth rates to make them stationary. Drop missing observations thus generated{p_end}
+{phang2}{cmd:. qui generate g_gdp = d.gdp/l.gdp}{p_end}
+{phang2}{cmd:. drop if g_gdp == .}{p_end}
+
+{phang2}* Implement quantile control method{p_end}
+{phang2}{cmd:. set seed 1}{p_end}
+{phang2}{cmd:. qcm g_gdp, trunit(17) trperiod(1990)}{p_end}
+
+{phang2}* Same as above, but uses a different style of confidence intervals{p_end}
+{phang2}{cmd:. set seed 1}{p_end}
+{phang2}{cmd:. qui qcm g_gdp, trunit(17) trperiod(1990) cistyle(2)} {p_end}
+
+{phang2}* Same as above, but uses yet another different style of confidence intervals, 
+saves generated graphs with prefix "germany" (replacing existing files with the same names if necessary), 
+and stores results in a new Stata frame named "germany"{p_end}
+{phang2}{cmd:. set seed 1}{p_end}
+{phang2}{cmd:. qui qcm g_gdp, trunit(17) trperiod(1990) cistyle(3) savegraph(germany, replace) frame(germany)} {p_end}
+
+{phang2}* Switch to the "germany" frame, and describe the data{p_end}
+{phang2}{cmd:. frame change germany}{p_end}
+{phang2}{cmd:. describe}{p_end}
+
+{phang2}* Switch back to the default frame{p_end}
+{phang2}{cmd:. frame change default}{p_end}
+
+{title:Example 3 (with covariates): effect of carbon taxes in Sweden on CO2 emissions (Andersson, 2019)}
+
+{phang2}{cmd:. use carbontax, clear}{p_end}
 {phang2}{cmd:. xtset country year}{p_end}
 
 {phang2}* Show the unit number of Sweden{p_end}
 {phang2}{cmd:. label list}{p_end}
 
+{phang2}* Transform the variables from levels into growth rates to make them stationary. Drop missing observations thus generated{p_end}
+{phang2}{cmd:. qui generate g_CO2 = d.CO2/l.CO2}{p_end}
+{phang2}{cmd:. qui generate g_GDP = d.GDP/l.GDP}{p_end}
+{phang2}{cmd:. qui generate g_gas = d.gas/l.gas}{p_end}
+{phang2}{cmd:. qui generate g_vehicles = d.vehicles/l.vehicles}{p_end}
+{phang2}{cmd:. qui generate g_urban = d.urban/l.urban}{p_end}
+{phang2}{cmd:. qui generate g_pop = d.pop/l.pop}{p_end}
+{phang2}{cmd:. drop if g_CO2 == .}{p_end}
+
 {phang2}* Implement quantile control method, and only show up to 20 bars in bar plots{p_end}
 {phang2}{cmd:. set seed 1}{p_end}
-{phang2}{cmd:. qcm CO2 GDP gas vehicles urban pop, trunit(13) trperiod(1990) show(20)}{p_end}
+{phang2}{cmd:. qcm g_CO2 g_GDP g_gas g_vehicles g_urban g_pop, trunit(13) trperiod(1990) show(20) fill(linear)}{p_end}
 
 {marker storedresults}{...}
 {title:Stored results}
@@ -287,7 +332,7 @@ Andersson, J. J. 2019. Carbon taxes and CO2 emissions: Sweden as a case study. {
 Akinshin, A. 2024. Trimmed Harrell-Davis quantile estimator based on the highest density interval of the given width. {it: Communications in Statistics - Simulation and Computation}, DOI: 10.1080/03610918.2022.2050396
 
 {phang}
-Chen, Q., Xiao Z. and Yao Q. 2024, Quantile Control via Random Forest, {it: Journal of Econometrics}, 105789.
+Chen, Q., Xiao Z. and Yao Q. 2025, Quantile Control via Random Forest, {it: Journal of Econometrics}, forthcoming.
 
 {phang}
 Hsiao, C., Steve Ching, H., & Ki Wan, S. 2012. 
