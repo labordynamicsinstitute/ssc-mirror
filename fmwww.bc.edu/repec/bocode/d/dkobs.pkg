@@ -1,0 +1,18 @@
+d 'DKOBS': module to drop or keep a range of observations
+d
+d   dkobs  is a Stata program that about drops or keeps a range
+d (irregular ranges are allowed) of observations. 
+d
+d KW: data management
+d KW: drop
+d KW: keep
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20250116
+d
+d Author:  Dejin Xie, School of Economics and Management, Nanchang University
+d Support: email xiedejin@@ncu.edu.cn
+d
+f dkobs.ado
+f dkobs.sthlp

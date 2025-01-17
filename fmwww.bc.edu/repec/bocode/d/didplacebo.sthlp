@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 16 Jun 2023}{...}
+{* *! version 2.0 8 Apr 2024}{...}
 {cmd:help didplacebo} 
 {hline}
 {vieweralsosee "help didplacebo" "help didplacebo"}{...}
@@ -90,20 +90,20 @@ as inputs to the {cmd:didplacebo} command.
 {phang} 
 {opth pbotime:(numlist:numlist)} specifies in-time placebo test using a series of fake treatment times prior to the actual treatment time, 
 while all treated observations are dropped. The fake treatment times are specified by {it:{help numlist:numlist}}, 
-which contains positive integers used to generate fake treatment variables by moving the initial treatment time {it:treatvarname} {it:{help numlist:numlist}}-periods forward. 
+which contains positive integers used to generate fake treatment variables by moving the initial treatment time {it:treatvarname} {it:{help numlist:numlist}}-periods shift back. 
 The placebo effects are then estimated using the fake treatment variables. {bf:didplacebo} uses the same method to compute the standard errors as specified by the command used to estimate the DID model. 
 For example, if the DID model was previously estimated by "{bf:xtreg, r}", then {bf:didplacebo} uses "{bf:xtreg, r}" as well, which yields cluster-robust standard errors. 
 Similarly, if the DID model was previously estimated by "{bf:reghdfe, cluster(clustvar)}", then {bf:didplacebo} uses "{bf:reghdfe, cluster(clustvar)}" too, again yielding cluster-robust standard errors.  
 
 {phang2} 
-Here is an example of shifting the initial treatment time 2-period forward, where "o" means untreated while "x" denotes treated or taken placebo:
+Here is an example of shifting the initial treatment time 2-period shift back, where "o" means untreated while "x" denotes treated or taken placebo:
 
           {it:t=1} {it:t=2} {it:t=3} {it:t=4} {it:t=5} {it:t=6} {it:t=7} {it:t=8} {space 34} {it:t=1} {it:t=2} {it:t=3} {it:t=4}
          {c TLC}{hline 31}{c TRC} {space 32} {c TLC}{hline 15}{c TRC}
      {it:i=1} {c |} o   o   o   o   o   o   o   o {c |} {space 28} {it:i=1} {c |} o   o   o   o {c |}
      {it:i=2} {c |} o   o   o   o   o   o   o   o {c |}    drop posttreatment data   {it:i=2} {c |} o   o   o   o {c |}
      {it:i=3} {c |} o   o   o   o   o   o   o   o {c |} {hline 27}> {it:i=3} {c |} o   o   o   o {c |}
-     {it:i=4} {c |} o   o   o   o   x   x   x   x {c |}      2-period forward        {it:i=4} {c |} o   o   x   x {c |}
+     {it:i=4} {c |} o   o   o   o   x   x   x   x {c |}      2-period shift back     {it:i=4} {c |} o   o   x   x {c |}
      {it:i=5} {c |} o   o   o   o   x   x   x   x {c |} {space 28} {it:i=5} {c |} o   o   x   x {c |}
          {c BLC}{hline 31}{c BRC} {space 32} {c BLC}{hline 15}{c BRC}
 
@@ -180,7 +180,7 @@ If the {opt nodrop} option is not specified, {opt didplacebo} will automatically
 {opth repeat(int)} specifies the number of repetitions, which defaults to 500.
 
 {phang}
-{opth seed(int)} specifies the random seed for reproducible results, which defaults to 1.
+{opth seed(int)} specifies the random seed for reproducible results, which defaults to ".", that is, no seed is set.
 
 {dlgtab:Optimization for Mixed Placebo Test}  
 
@@ -219,14 +219,14 @@ Note that this option only applies when {opt nofigure} is not specified.
 {phang2}{cmd:. xtset county year}{p_end}
 {phang2}{cmd:. reghdfe rebel canal_post, absorb(i.county i.year) cluster(county)}{p_end}
 {phang2}{cmd:. estimates store did_cao_chen}{p_end}
-{phang2}* Implements in-time placebo tests using fake treatment time forwarded by 1-10 periods{p_end}
+{phang2}* Implements in-time placebo tests using fake treatment time shifted back by 1-10 periods{p_end}
 {phang2}{cmd:. didplacebo did_cao_chen, treatvar(canal_post) pbotime(1(1)10)}{p_end}
 {phang2}* Implements in-space placebo test {p_end}
-{phang2}{cmd:. didplacebo did_cao_chen, treatvar(canal_post) pbounit}{p_end}
+{phang2}{cmd:. didplacebo did_cao_chen, treatvar(canal_post) pbounit seed(1)}{p_end}
 {phang2}* Implements mixed placebo test suitable for standard DID {p_end}
-{phang2}{cmd:. didplacebo did_cao_chen, treatvar(canal_post) pbomix(1)}{p_end}
+{phang2}{cmd:. didplacebo did_cao_chen, treatvar(canal_post) pbomix(1) seed(1)}{p_end}
 {phang2}* Implements in-time, in-space and mixed placebo tests simultaneously{p_end}
-{phang2}{cmd:. didplacebo did_cao_chen, treatvar(canal_post) pbotime(1(1)10) pbounit pbomix(1)}{p_end}
+{phang2}{cmd:. didplacebo did_cao_chen, treatvar(canal_post) pbotime(1(1)10) pbounit pbomix(1) seed(1)}{p_end}
 
 {title:Example 2 (Staggered DID): the impact of bank deregulation on income inequality (Beck et al., 2010)}
 
@@ -235,16 +235,16 @@ Note that this option only applies when {opt nofigure} is not specified.
 {phang2}{cmd:. global cov gsp_pc_growth prop_blacks prop_dropouts prop_female_headed unemploymentrate}{p_end}
 {phang2}{cmd:. xtreg log_gini _intra $cov i.wrkyr, fe r}{p_end}
 {phang2}{cmd:. estimates store did_bbb}{p_end}
-{phang2}* Implements in-time placebo test using fake treatment time forwarded by 1-10 periods{p_end}
+{phang2}* Implements in-time placebo test using fake treatment time shifted back by 1-10 periods{p_end}
 {phang2}{cmd:. didplacebo did_bbb, treatvar(_intra) pbotime(1(1)10)}{p_end}
 {phang2}* Implements in-space placebo test{p_end}
-{phang2}{cmd:. didplacebo did_bbb, treatvar(_intra) pbounit}{p_end}
+{phang2}{cmd:. didplacebo did_bbb, treatvar(_intra) pbounit seed(1)}{p_end}
 {phang2}* Implements the free version of mixed placebo test suitable for staggered DID{p_end}
-{phang2}{cmd:. didplacebo did_bbb, treatvar(_intra) pbomix(2)}{p_end}
+{phang2}{cmd:. didplacebo did_bbb, treatvar(_intra) pbomix(2) seed(1)}{p_end}
 {phang2}* Implements the restricted version of mixed placebo test suitable for staggered DID{p_end}
-{phang2}{cmd:. didplacebo did_bbb, treatvar(_intra) pbomix(3)}{p_end}
+{phang2}{cmd:. didplacebo did_bbb, treatvar(_intra) pbomix(3) seed(1)}{p_end}
 {phang2}* Implements in-time, in-space and mixed placebo tests{p_end}
-{phang2}{cmd:. didplacebo did_bbb, treatvar(_intra) pbotime(1(1)10) pbounit pbomix(2 3)}{p_end}
+{phang2}{cmd:. didplacebo did_bbb, treatvar(_intra) pbotime(1(1)10) pbounit pbomix(2 3) seed(1)}{p_end}
 
 {marker note}{...}
 {title:Note} 

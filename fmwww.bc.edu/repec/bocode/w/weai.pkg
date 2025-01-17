@@ -1,0 +1,42 @@
+d 'WEAI': module to compute different versions of the Women's Empowerment in Agricultural Index (WEAI)
+d
+d   The Women's Empowerment in Agriculture Index (WEAI) is a
+d standardized, survey-based tool that has been widely used to
+d track gender equality and measure  empowerment, agency, and
+d women's inclusion in the agricultural sector (Alkire et al.
+d 2013). Since the WEAI's release in 2012, an abbreviated version
+d of the  WEAI (referred to as A-WEAI) and project-level version of
+d the WEAI (referred to as pro-WEAI) have been developed (Malapit
+d et al. 2017; Malapit et al. 2019).  Depending on the options
+d specified by the user, weai is capable of computing all versions
+d of the WEAI. weai allows for flexibility in the specification of 
+d the binary adequacy indicators, empowerment cutoff, and indicator
+d weights. weai provides a decomposition by indicator and, when
+d specified, by sub-groups.  Note that because the WEAI requires
+d data from women and men, users are required to specify a variable
+d (and values) identifying the sex of respondents. 
+d
+d KW: WEAI
+d KW: empowerment
+d KW: agency
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20250116
+d
+d Author: Malick Dione, International Food Policy Research Institute
+d Support: email malick.dione@@cgiar.org
+d
+d Author: Greg Seymour, United States Census Bureau
+d Support: email gregory.t.seymour@@census.gov
+d
+d Author: Nathaniel Ferguson, International Food Policy Research Institute
+d Support: email n.ferguson@@cgiar.org
+d
+d Author: Hazel Malapit, International Food Policy Research Institute
+d Support: email h.malapit@@cgiar.org
+d
+f weai.ado
+f weai.sthlp
+f ../s/scheme-weai.scheme.do
+f weai_examples.dta

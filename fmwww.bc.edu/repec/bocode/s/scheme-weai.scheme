@@ -1,0 +1,29 @@
+* Scheme to create Stata graphs
+* with IFPRI WEAI colors
+ 
+#include s2mono
+
+* bar chart
+color p1bar  "186 228 179"
+color p2bar  "116 196 118"
+color p3bar  "49 163 84"
+color p4bar  "254 237 222"
+color p5bar  "253 208 162"
+color p6bar  "253 174 107"
+color p7bar  "253 141 60"
+color p8bar  "230 85 13"
+color p9bar  "166 54 3" 
+color p10bar "188 189 220"
+
+* plot elements
+color p   "186 228 179"
+color p1  "186 228 179"
+color p2  "116 196 118"
+color p3  "49 163 84"
+color p4  "254 237 222"
+color p5  "253 208 162"
+color p6  "253 174 107"
+color p7  "253 141 60"
+color p8  "230 85 13"
+color p9  "166 54 3" 
+color p10 "188 189 220"

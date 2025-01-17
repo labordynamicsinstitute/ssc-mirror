@@ -97,6 +97,7 @@ p distrate module to compute direct standardized rates with improved confidence 
 p divcat module to calculate five measures of diversity for multiple categories
 p divratio module for estimating diversion ratios and willingness-to-pay from a semiparametric choice model 
 p dkdensity module for deconvolution kernel density estimation and construction of its uniform confidence band
+p dkobs module to drop or keep a range of observations
 p dlagif Module to Estimate Irving Fisher Arithmetic Distributed Lag Model
 p dldq module to compute treatment effects under alternative Parallel-q assumptions
 p dlist module to list with variable labels

@@ -6347,6 +6347,7 @@ fmwww.bc.edu/repec/bocode/w/williams.ado
 fmwww.bc.edu/repec/bocode/w/wordy4.ado
 fmwww.bc.edu/repec/bocode/w/wntestq2.html
 fmwww.bc.edu/repec/bocode/w/whotdeck.pkg
+fmwww.bc.edu/repec/bocode/w/WEAI_examples.dta
 fmwww.bc.edu/repec/bocode/w/wbopendata_adminregion.sthlp
 fmwww.bc.edu/repec/bocode/w/weakiv.sthlp
 fmwww.bc.edu/repec/bocode/w/weakiv10.pkg
@@ -6508,6 +6509,7 @@ fmwww.bc.edu/repec/bocode/w/white.pkg
 fmwww.bc.edu/repec/bocode/w/wallplot.ado
 fmwww.bc.edu/repec/bocode/w/worldstatworld_coords.dta
 fmwww.bc.edu/repec/bocode/w/weibullfit.hlp
+fmwww.bc.edu/repec/bocode/w/weai.ado
 fmwww.bc.edu/repec/bocode/w/wtd.pkg
 fmwww.bc.edu/repec/bocode/w/wlas2data.dta
 fmwww.bc.edu/repec/bocode/w/whitetst.pkg
@@ -6536,6 +6538,7 @@ fmwww.bc.edu/repec/bocode/w/worldstat.pkg
 fmwww.bc.edu/repec/bocode/w/weakivtest.pkg
 fmwww.bc.edu/repec/bocode/w/winsor.ado
 fmwww.bc.edu/repec/bocode/w/wtdpreddur.ado
+fmwww.bc.edu/repec/bocode/w/weai.pkg
 fmwww.bc.edu/repec/bocode/w/writeinput.ado
 fmwww.bc.edu/repec/bocode/w/wtdttt_abstract.txt
 fmwww.bc.edu/repec/bocode/w/wbopendata_incomelevel.sthlp
@@ -6579,6 +6582,7 @@ fmwww.bc.edu/repec/bocode/w/wridit.ado
 fmwww.bc.edu/repec/bocode/w/whichlist.ado
 fmwww.bc.edu/repec/bocode/w/writekml.html
 fmwww.bc.edu/repec/bocode/w/weakiv10.sthlp
+fmwww.bc.edu/repec/bocode/w/WEAI_examples.do
 fmwww.bc.edu/repec/bocode/w/wtd.hlp
 fmwww.bc.edu/repec/bocode/w/weibullfit.sthlp
 fmwww.bc.edu/repec/bocode/w/worldstatOceania_coords.dta
@@ -6696,6 +6700,7 @@ fmwww.bc.edu/repec/bocode/w/wosload.html
 fmwww.bc.edu/repec/bocode/w/wbopendata.sthlp
 fmwww.bc.edu/repec/bocode/w/wangtsiatis.sthlp
 fmwww.bc.edu/repec/bocode/w/weaverwkhtmltopdf.ado
+fmwww.bc.edu/repec/bocode/w/weai.sthlp
 fmwww.bc.edu/repec/bocode/w/wclogit.hlp
 fmwww.bc.edu/repec/bocode/w/weathr.html
 fmwww.bc.edu/repec/bocode/w/witch.pkg
@@ -6800,6 +6805,7 @@ fmwww.bc.edu/repec/bocode/d/duncan.html
 fmwww.bc.edu/repec/bocode/d/dftolgraph.sthlp
 fmwww.bc.edu/repec/bocode/d/dftol.html
 fmwww.bc.edu/repec/bocode/d/dyn_bias.do
+fmwww.bc.edu/repec/bocode/d/dkobs.sthlp
 fmwww.bc.edu/repec/bocode/d/doseresponse2.ado
 fmwww.bc.edu/repec/bocode/d/dtapaper.dlg
 fmwww.bc.edu/repec/bocode/d/dwstat2.html
@@ -7033,6 +7039,7 @@ fmwww.bc.edu/repec/bocode/d/doubmass.html
 fmwww.bc.edu/repec/bocode/d/dlogit.zip
 fmwww.bc.edu/repec/bocode/d/drmmws.pkg
 fmwww.bc.edu/repec/bocode/d/doparser.sthlp
+fmwww.bc.edu/repec/bocode/d/dkobs.pkg
 fmwww.bc.edu/repec/bocode/d/diagplots2.hlp
 fmwww.bc.edu/repec/bocode/d/domin.pkg
 fmwww.bc.edu/repec/bocode/d/data_MP.dta
@@ -7411,6 +7418,7 @@ fmwww.bc.edu/repec/bocode/d/dfao.pkg
 fmwww.bc.edu/repec/bocode/d/dpplot7.hlp
 fmwww.bc.edu/repec/bocode/d/diff_plot.ado
 fmwww.bc.edu/repec/bocode/d/ddirifit.hlp
+fmwww.bc.edu/repec/bocode/d/dkobs.ado
 fmwww.bc.edu/repec/bocode/d/do2screen.ado
 fmwww.bc.edu/repec/bocode/d/dentonmq.html
 fmwww.bc.edu/repec/bocode/d/data_sample.dta
@@ -12867,6 +12875,7 @@ fmwww.bc.edu/repec/bocode/s/slower.ado
 fmwww.bc.edu/repec/bocode/s/svygei.ado
 fmwww.bc.edu/repec/bocode/s/srslogit.pkg
 fmwww.bc.edu/repec/bocode/s/sqn.ado
+fmwww.bc.edu/repec/bocode/s/scheme-weai.scheme
 fmwww.bc.edu/repec/bocode/s/stjmgraph.html
 fmwww.bc.edu/repec/bocode/s/summclust.pkg
 fmwww.bc.edu/repec/bocode/s/sbldo.sthlp

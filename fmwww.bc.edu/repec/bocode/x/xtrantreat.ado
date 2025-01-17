@@ -23,7 +23,7 @@ prog def xtrantreat, sortpreserve
 		mata: time = uniqrows(data[., 2])'; 
 		mata: data_tmp = select(data, data[.,3]);
 		mata: _sort(data_tmp, (1,2,3));
-		mata: info = panelsetup(data_tmp, 1, 2);
+		mata: info = panelsetup(data_tmp, 1);
 		mata: data_sum = data_tmp[info[.,1],1..2];
 		mata: timelb = ("`method'"=="1"? sort(time', 1)[2, .]:min(data_sum[., 2])); 
 		mata: timeub = ("`method'"=="1"? max(time):max(data_sum[., 2])); 

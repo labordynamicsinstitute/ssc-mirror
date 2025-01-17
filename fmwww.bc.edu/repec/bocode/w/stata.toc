@@ -8,6 +8,7 @@ p wcbregress module to estimate a Linear Regression Model with Clustered Errors 
 p wclogit module to perform conditional logistic regression with within-group varying weights
 p wdireshape module to reshape World Development Indicators database
 p wdiscrim module to compute earnings discrimination statistics
+p weai module to compute different versions of the Women's Empowerment in Agricultural Index (WEAI)
 p weakiv module to perform weak-instrument-robust tests and confidence intervals for instrumental-variable (IV) estimation of linear, probit and tobit models
 p weakiv10 module to perform weak-instrument-robust tests and confidence intervals for instrumental-variable (IV) estimation of linear, probit and tobit models
 p weakivtest module to perform weak instrument test for a single endogenous regressor in TSLS and LIML 

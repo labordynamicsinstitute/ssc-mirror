@@ -28,7 +28,8 @@
 
 {p 4 4 2}
 {cmd:xtrantreat} randomizes a treatment variable (a dummy variable specifed by {varname}) in a panel dataset.
-A typical scenario of application is in implementing mixed placebo test for difference-in-differences (DID) models. {cmd:xtrantreat} converts a treatment variable to a fake treatment variable where both treatment units and times are randomized.
+A typical scenario of application is in implementing mixed placebo test for difference-in-differences (DID) models. 
+{cmd:xtrantreat} converts a treatment variable to a fake treatment variable where both treatment units and times are randomized.
 The random assignment process can be specified by the options {opth ranunitnum(int)}, {opt rantimescope(t_min t_max)} and {cmd:method}{bf:(}{{bf:1}|{bf:2}|{bf:3}}{bf:)},
 where {cmd:method}{bf:(}{{bf:1}|{bf:2}|{bf:3}}{bf:)} corresponds to three different ways of randomizing the treatment variable.
 
@@ -54,7 +55,10 @@ All periods within the range of {it:t_min} to {it:t_max} have the same probabili
 
 {phang2} For the standard DID design, if {opt rantimescope(t_min t_max)} is not specified, {it:t_min} and {it:t_max} default to the second period and the last period in the sample respectively. 
 
-{phang2} For the staggered DID design, if {opt rantimescope(t_min t_max)} is not specified, {it:t_min} defaults to the earliest treatment time (or the first period in the sample, whichever is larger), and {it:t_max} defaults to the latest treatment time in the sample. Another possible choice is for users to set  {it:t_min} and {it:t_max} as the first period and the last period in the sample respectively.
+{phang2} For the staggered DID design, if {opt rantimescope(t_min t_max)} is not specified, 
+{it:t_min} defaults to the earliest treatment time (or the first period in the sample, 
+whichever is larger), and {it:t_max} defaults to the latest treatment time in the sample. 
+Another possible choice is for users to set  {it:t_min} and {it:t_max} as the first period and the last period in the sample respectively.
 
 {phang}
 {cmd:method}{bf:(}{{bf:1}|{bf:2}|{bf:3}}{bf:)} specifies one of the following three methods for generating the fake treatment variable.
@@ -66,10 +70,13 @@ The number of fake treatment units and the range of fake treatment times are spe
 
 {phang2}
 {cmd:method}{bf:(}{bf:2}{bf:)} and {cmd:method}{bf:(}{bf:3}{bf:)} are suitable for implementing mixed placebo test for staggered DID models with staggered adoption, where {bf:2} and {bf:3} correponds to the unrestricted version and the restricted version, respectively. 
-{cmd:method}{bf:(}{bf:2}{bf:)} (the unrestricted version) randomly selects a fake treatment time for each unit, without maintaining the original cohort structure (i.e., how many units in each cohort). 
+{cmd:method}{bf:(}{bf:2}{bf:)} (the unrestricted version) randomly selects a fake treatment time for each unit, 
+without maintaining the original cohort structure (i.e., how many units in each cohort). 
 The number of fake treatment units and the range of fake treatment times are specified by the options {opth ranunitnum(int)}  and {opt rantimescope(t_min t_max)} respectively.
-On the other hand, {cmd:method}{bf:(}{bf:3}{bf:)} (the restricted version) maintains the cohort structure.  Specifically, suppose the treatment times in the sample consist of t_1, t_2,...,t_G, and the correponding cohorts contain N_1, N_2,...,N_G units respectively.
-We randomly partition all units in the sample into G cohorts containing N_1, N_2,...,N_G units respectively, then randomly assign G different treatment times from {opt rantimescope(t_min t_max)} to these cohorts as their fake treatment times.
+On the other hand, {cmd:method}{bf:(}{bf:3}{bf:)} (the restricted version) maintains the cohort structure.  
+Specifically, suppose the treatment times in the sample consist of t_1, t_2,...,t_G, and the correponding cohorts contain N_1, N_2,...,N_G units respectively.
+We randomly partition all units in the sample into G cohorts containing N_1, N_2,...,N_G units respectively, 
+then randomly assign G different treatment times from {opt rantimescope(t_min t_max)} to these cohorts as their fake treatment times.
 Note that the range of fake treatment times specified by the options {opt rantimescope(t_min t_max)} must be greater than or equal to the number of periods in the actual treatment variable.
 
 {phang} 

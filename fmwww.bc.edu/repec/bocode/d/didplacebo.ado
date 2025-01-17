@@ -1,4 +1,4 @@
-*! didplacebo 1.0.1 2023.08.19
+*! didplacebo 2.0.0 2024/04/08
 prog def didplacebo, eclass
 	version 16
     qui xtset
@@ -7,7 +7,7 @@ prog def didplacebo, eclass
 		exit 198
     }
 	syntax anything, TREATVar(varname) [RANUnitnum(numlist min=1 max=1 >0 integer) RANTimescope(numlist min=2 max=2 >0 integer) ///
-		REPeat(integer 500) seed(integer 1) PBOUnit PBOTime(numlist >0 integer) PBOMix(numlist min=1 max=3 >=1 <=3 integer) frame(string) noFIGure SAVEGraph(string) nodrop]
+		REPeat(integer 500) seed(numlist min=1 max=1 missingokay integer) PBOUnit PBOTime(numlist >0 integer) PBOMix(numlist min=1 max=3 >=1 <=3 integer) frame(string) noFIGure SAVEGraph(string) nodrop]
 	loc panelvar "`r(panelvar)'"
     loc timevar "`r(timevar)'"
 	local graphlist = ""
@@ -57,7 +57,7 @@ prog def didplacebo, eclass
 	if "`pbotime'" != "" {
 		preserve
 		di
-	    di as txt "Implementing in-time placebo test using fake treatment time forwarded by " _continue
+	    di as txt "Implementing in-time placebo test using fake treatment time shifted back by " _continue
 		mata: didplacebo_intimePBOTEST(data, "`panelvar'", "`timevar'", "`treatvar'", "`treatvartip'", "`cmdline'", strtoreal(tokens("`pbotime'")), "`drop'")
 		di as txt " periods respectively."
 		di
@@ -71,12 +71,12 @@ prog def didplacebo, eclass
 		frame `pboframe'{
 			matrix `pbotimeci' = (r(table))'
 			qui svmat `pbotimeci', names(col)
-			mata: st_store(., st_addvar("int", "forwarded"), abs(strtoreal(tokens("`pbotime'")')))
-			twoway(rcap ul ll forwarded)(connected b forwarded, msymbol(smcircle_hollow)), xlabel(`pbotime') ///
-			yline(0, lp(dash)) xtitle("number of periods forwarded as fake treatment time") ytitle("placebo effect") title("In-time Placebo Test") ///
+			mata: st_store(., st_addvar("int", "lagged"), abs(strtoreal(tokens("`pbotime'")')))
+			twoway(rcap ul ll lagged)(connected b lagged, msymbol(smcircle_hollow)), xlabel(`pbotime') ///
+			yline(0, lp(dash)) xtitle("number of periods shifted back as fake treatment time") ytitle("placebo effect") title("In-time Placebo Test") ///
 			legend(order(2 "Placebo Effect" 1 "95% Confidence Interval") position(6) rows(1)) nodraw name(pbotime, replace)
 			local graphlist = "`graphlist' pbotime"
-			mkmat forwarded b se z pvalue ll ul, matrix(`pbotimeci') 
+			mkmat lagged b se z pvalue ll ul, matrix(`pbotimeci') 
 		}
 		restore
 	}
@@ -116,7 +116,7 @@ prog def didplacebo, eclass
 				mata: time = uniqrows(data[., 2])'; 
 				mata: data_tmp = select(data, data[.,3]);
 				mata: _sort(data_tmp, (1,2,3));
-				mata: info = panelsetup(data_tmp, 1, 2);
+				mata: info = panelsetup(data_tmp, 1);
 				mata: data_sum = data_tmp[info[.,1],1..2];
 				mata: timelb = ("`i'"=="1"? sort(time', 1)[2, .]:min(data_sum[., 2])); 
 				mata: timeub = ("`i'"=="1"? max(time):max(data_sum[., 2])); 
@@ -192,24 +192,24 @@ end
 
 version 16
 mata:
-	void didplacebo_intimePBOTEST(real matrix data, string scalar panelvar, string scalar timevar, string scalar treatvar, string scalar treatvartip, string scalar cmdline, real matrix forwards, string scalar nodrop){
+	void didplacebo_intimePBOTEST(real matrix data, string scalar panelvar, string scalar timevar, string scalar treatvar, string scalar treatvartip, string scalar cmdline, real matrix lags, string scalar nodrop){
 		real matrix data_sum_F, data_tmp, info, data_sum, data_res, key, pboeffs_b, pboeffs_V; real scalar t; string matrix names; real scalar time_max, time_tr_max, i;
 		time_max = max(data[., 2]');
 		data_tmp = select(data, data[.,3]);
 		_sort(data_tmp, (1,2,3));
-		info = panelsetup(data_tmp, 1, 2);
+		info = panelsetup(data_tmp, 1);
 		data_sum = data_tmp[info[.,1],1..2];
 		if(nodrop == ""){
 			time_tr_max = max(data_sum[., 2]')
 			stata(sprintf("qui drop if " + timevar + " >= %g", time_tr_max))
 		}
 		stata("qui drop if " + treatvar + " == 1")
-		pboeffs_b = J(1, cols(forwards), 0)
-		pboeffs_V = J(cols(forwards), cols(forwards), 0)
-		names = J(cols(forwards), 2, "")
+		pboeffs_b = J(1, cols(lags), 0)
+		pboeffs_V = J(cols(lags), cols(lags), 0)
+		names = J(cols(lags), 2, "")
 		data_res = st_data(., panelvar + " "+ timevar + " " + treatvar); 
-		for(t = 1; t<=cols(forwards); t++){
-			data_sum_F = (data_sum[., 1], data_sum[., 2]:-forwards[., t])
+		for(t = 1; t<=cols(lags); t++){
+			data_sum_F = (data_sum[., 1], data_sum[., 2]:-lags[., t])
 			key = asarray_create("real"); 
 			asarray_notfound(key, time_max + 1); 
 			for(i = 1; i <= rows(data_sum_F); i ++) asarray(key, data_sum_F[i, 1], data_sum_F[i, 2]);
@@ -221,9 +221,9 @@ mata:
 			stata(sprintf(`"matrix tmpV = e(V)["%s", "%s"]"', treatvartip, treatvartip));
 			pboeffs_b[1, t] = st_matrix("tmpb");
 			pboeffs_V[t, t] = st_matrix("tmpV");
-			names[t, 2] = sprintf("F%g.%s", forwards[., t], treatvar)
-			printf("{res}%g", forwards[t]);
-			if(t != cols(forwards)) printf(", ");
+			names[t, 2] = sprintf("L%g.%s", lags[., t], treatvar)
+			printf("{res}%g", lags[t]);
+			if(t != cols(lags)) printf(", ");
 			displayflush();
 		}
 		st_matrix("b", pboeffs_b)
@@ -234,12 +234,12 @@ mata:
 	}
 	real matrix didplacebo_inspacePBOTEST(real matrix data, string scalar panelvar, string scalar timevar, string scalar treatvar, string scalar treatvartip, real matrix units, string scalar cmdline, real scalar reps, real scalar seed){
 		real scalar time_max, seed_org, i, r; real matrix units_random, data_tmp, data_sum, info, key, data_sum_random, pboeffs, data_res;
- 		seed_org = rngstate();
- 		rseed(seed);
+ 		// seed_org = rngstate();
+ 		if(seed != .) rseed(seed);
 		time_max = max(data[., 2]');
 		data_tmp = select(data, data[.,3]);
 		_sort(data_tmp, (1,2,3));
-		info = panelsetup(data_tmp, 1, 2);
+		info = panelsetup(data_tmp, 1);
 		data_sum = data_tmp[info[.,1],1..2];
 		data_res = data;
 		pboeffs = J(reps, 1, .)
@@ -262,13 +262,13 @@ mata:
 			if(mod(r, 10) == 0) printf("%g", r); else printf(".");
 			displayflush();
 		}
- 		rngstate(seed_org);
+ 		// rngstate(seed_org);
 		return(pboeffs);
 	}
 	real matrix didplacebo_mixPBOTEST(real matrix data, string scalar panelvar, string scalar timevar, string scalar treatvar, string scalar treatvartip, real unitnum_ltd, real matrix units, real matrix times, string scalar cmdline, real scalar reps, real scalar seed, real scalar method){
 		real scalar time_max, seed_org, i, unitnum, r; real matrix data_tmp, data_sum, info, key, data_sum_random, pboeffs, units_random, times_random, times_tr, data_res;
-		seed_org = rseed();
-		rseed(seed);
+		// seed_org = rseed();
+		if(seed != .) rseed(seed);
 		time_max = max(data[., 2]');
 		data_tmp = select(data, data[.,3]);
 		_sort(data_tmp, (1,2,3));
@@ -319,7 +319,7 @@ mata:
 			if(mod(r, 10) == 0) printf("%g", r); else printf(".");
 			displayflush();
 		}
-		rngstate(seed_org);
+		// rngstate(seed_org);
 		return(pboeffs);
 	}
 	void didplacebo_pbomatp(real scalar treff, real matrix pboeffs, string scalar matrixname, string scalar treatvar){
@@ -335,5 +335,6 @@ mata:
 	}
 end
 * Version history
+* 2.0.0 Cancel the default setting of seed(1) and change the describe of "forwarded" to "shifted back" for the time placebo test
 * 1.0.1 Fix the issue of excessive treated units causing the program to be unable to run
 * 1.0.0 Submit the initial version
