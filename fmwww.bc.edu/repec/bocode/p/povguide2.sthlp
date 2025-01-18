@@ -1,5 +1,5 @@
 {smcl}
-{* 24jan2024}
+{* 17jan2025}
 {hline}
 help for {hi:povguide2}
 {hline}
@@ -17,7 +17,7 @@ help for {hi:povguide2}
 
 {p 4 4 2}
 {cmd:povguide2} generates a numeric variable representing the official
-U.S. poverty guideline. This is an update to the original {cmd:povguide} by David Kantor. Supports years 1973-2024, plus guideline values for Alaska and Hawaii.
+U.S. poverty guideline. This is an update to the original {cmd:povguide} by David Kantor. Supports years 1973-2025, plus guideline values for Alaska and Hawaii.
 
 {p 4 4 2}
 Important: this is one of two official poverty levels
@@ -40,7 +40,7 @@ below 1 will be coerced to 1).
 {cmd:year(}{it:year}{cmd:)} specifies an expression representing the year
 for which the computation is to be made. It will be truncated to an integer.
 Presently, the acceptable values
-are 1973-2023. Out-of-bounds values will result in a warning and missing
+are 1973-2025. Out-of-bounds values will result in a warning and missing
 values in the result.
 
 {p 4 4 2}
@@ -103,10 +103,10 @@ Typically, you would follow this with something like...{p_end}
 
 {title:Author}
 {pstd}Original author: David Kantor. {p_end}
-{pstd}Updated by Reginald Hebert to include guidelines through 2023, along with Alaska and Hawaii tables.{p_end}
+{pstd}Updated by Reginald Hebert to include guidelines through 2025, along with Alaska and Hawaii tables.{p_end}
 
 {marker contact}{...}
 {title:Contact}
 {pstd}Reginald Hebert{break}
-Georgia State University{break}
-rhebert3@student.gsu.edu{p_end}
+Yale University{break}
+reginald.hebert@yale.edu{p_end}

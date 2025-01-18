@@ -1,5 +1,5 @@
 * First Version June 26 2023
-* This Version June 26 2023
+* This Version January 15 2025
 
 program lpgraph
 version 13.0:
@@ -10,23 +10,28 @@ syntax anything [if] [in], [Hor(numlist integer) Zero TItle(string) TTItle(strin
 
 *********************************************************************************************************************************************
 *********************************************************************************************************************************************
+
 loc nh = wordcount("`hor'")
-if `nh'==0 {
+if `nh'>1 {
+	loc hor : subinstr local hor " " ",", all	
+	loc hs=min(`hor')
+	if `hs'<0 loc neghor=1
+	loc hor=max(`hor')
+	loc hran `hs'/`hor'	
+}
+else if `nh'==0 {
 	loc hs=0
 	loc hor=5
+	loc hran `hs'/`hor'
 }
 else if `nh'==1 {
 	loc hs=0
+	loc hran `hs'/`hor'
 }
-else if `nh'>1 {
-	loc hor : subinstr local hor " " ",", all	
-	loc hs=min(`hor')
-	loc hor=max(`hor')
-}
-if `hs'==0 loc h1 = `hor'+ 1
+if `hs'<=0 loc h1 = `hor'+ 1 -`hs'
 else loc h1 = `hor'
 
-loc mod = mod(`hor',2)
+loc mod = mod(`hor'-`hs',2)
 if `hor'-`hs'>12 & `mod'==0 loc p 2
 else if `hor'-`hs'>12 & `mod'==1 loc p 3
 else loc p 1
@@ -58,7 +63,7 @@ else {
 }
 
 tempvar t _zero
-if `hs'==0 qui gen `t' =_n-1
+if `hs'<=0 qui gen `t' =_n-1+`hs'
 else  qui gen `t' =_n
 if "`zero'"=="zero" qui gen `_zero' = 0
 else qui gen `_zero' = .

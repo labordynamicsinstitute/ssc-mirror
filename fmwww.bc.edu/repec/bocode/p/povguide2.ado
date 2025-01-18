@@ -1,13 +1,14 @@
 /*-----------------------------------------------------------------------------
 POVGUIDE2
-by Reginald Hebert (rhebert3@student.gsu.edu)
+by Reginald Hebert (reginald.hebert@yale.edu)
 (Update to POVGUIDE, originally written by David Kantor)
 *******************************************************************************
+17 January 2025		- Updated using 2025 tables
 24 January 2024		- Updated help file to amend a typo; added 2024 tables
 20 September 2023 	- Code cleanup
-20 August 2023 		- 	Added Alaska and Hawaii tables, plus option for enabling 
-					state FIPS as an argument
-4 August 2023 		- 	Added years 2009 through 2023
+20 August 2023 		- Added Alaska and Hawaii tables, plus option for enabling 
+				state FIPS as an argument
+4 August 2023 		- Added years 2009 through 2023
 -------------------------------------------------------------------------------
 Original module: 
 https://econpapers.repec.org/software/bocbocode/s456935.htm
@@ -99,7 +100,8 @@ matrix input `povtable' = (
 /*2021*/	12880, 4540 \
 /*2022*/	13590, 4720 \
 /*2023*/	14850, 5140 \
-/*2024*/	15060, 5380
+/*2024*/	15060, 5380 \
+/*2025*/	15650, 5500
 );
 #delimit cr
 
@@ -160,7 +162,8 @@ matrix input `povtableAK' = (
 /*2021*/	16090,	5680	\
 /*2022*/	16990,	5900	\
 /*2023*/	18210,	6430	\
-/*2024*/	18810,  6730
+/*2024*/	18810,  6730	\
+/*2025*/	19550,  6880
 );
 #delimit cr
 
@@ -223,13 +226,14 @@ matrix input `povtableHI' = (
 /*2021*/	14820,	5220	\
 /*2022*/	15630,	5430	\
 /*2023*/	16770,	5910	\
-/*2024*/	17310,  6190
+/*2024*/	17310,  6190	\
+/*2025*/	17990,  6330
 );
 #delimit cr
 
 
 local yearlo "1973"
-local yearhi "2024"
+local yearhi "2025"
 
 
 

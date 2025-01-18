@@ -1,0 +1,21 @@
+d 'WINPROB': module to compute the win probability for a single outcome
+d
+d  This program calculates the non-parametric win probability of
+d one group over another for a single outcome. The outcome can be
+d ordinal or continuous. This is the probability of one group
+d scores being at least as high or higher than those in the other
+d group. 
+d
+d KW: win probability
+d KW: area under the curve
+d KW: AUC
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20250117
+d
+d Author:   Leonardo Guizzetti,  NA
+d Support: email leonardo.guizzetti@@gmail.com
+d
+f winprob.ado
+f winprob.sthlp

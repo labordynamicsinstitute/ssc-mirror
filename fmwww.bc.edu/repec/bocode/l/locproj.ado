@@ -1,17 +1,25 @@
-*! version 27 October 03 2023
+*! version 07 January 17 2025
 * First Version May 10 2023
 program locproj, eclass
 version 13.0:
 
-	syntax varlist (fv ts) [if] [in], [Hor(numlist integer) Shock(varlist fv ts) Controls(varlist fv ts) FControls(varlist fv ts) Met(string) /*
-	*/TRansf(string) lcs(string) YLags(integer 0) SLags(integer 0) LCOpt(string) SAVEirf IRFName(string) INStr(string) NOIsily STats hopt(string) /*
-	*/Fact(real 1) conf(numlist max=2 integer) nograph LCOLor(string) TItle(string) LABel(string) TTItle(string) Zero GRName(string) GRSave(string) /*
-	*/as(string) GROpt(string) MARGins MRFVar(varlist fv ts) MRPRed(string) MROpt(string) * ]
+	syntax varlist (fv ts) [if] [in] [fweight aweight pweight iweight], [Hor(numlist integer) Shock(varlist fv ts) Controls(varlist fv ts) /*
+	*/FControls(varlist fv ts) Met(string) TRansf(string) lcs(string) YLags(integer 0) SLags(integer 0) LCOpt(string) SAVEirf IRFName(string) /*
+	*/INStr(string) NOIsily STats hopt(string) Fact(real 1) conf(numlist max=2 integer) nograph LCOLor(string) TItle(string) LABel(string) /*
+	*/TTItle(string) Zero GRName(string) GRSave(string) as(string) GROpt(string) MARGins MRFVar(varlist fv ts) MRPRed(string) MROpt(string) /*
+	*/IVTest(string) * ]
 
 *********************************************************************************************************************************************
 *********************************************************************************************************************************************
 loc nh = wordcount("`hor'")
-if `nh'==0 {
+if `nh'>1 {
+	loc hor : subinstr local hor " " ",", all	
+	loc hs=min(`hor')
+	if `hs'<0 loc neghor=1
+	loc hor=max(`hor')
+	loc hran `hs'/`hor'	
+}
+else if `nh'==0 {
 	loc hs=0
 	loc hor=5
 	loc hran `hs'/`hor'
@@ -20,14 +28,7 @@ else if `nh'==1 {
 	loc hs=0
 	loc hran `hs'/`hor'
 }
-else if `nh'>1 {
-	loc hor : subinstr local hor " " ",", all	
-	loc hs=min(`hor')
-	loc hor=max(`hor')
-	loc hran `hs'/`hor'	
-}
-if `hs'==0 loc h1 = `hor'+ 1
-else loc h1 = `hor'
+
 
 *********************************************************************************************************************************************
 *********************************************************************************************************************************************
@@ -145,16 +146,22 @@ if `iv'==1 & "`instr'"=="" {
 	exit 0004
 }
 
+
 *********************************************************************************************************************************************
 *********************************************************************************************************************************************
 
 * levels
 if "`transf'"==""|"`transf'"=="level" {
 	forvalues h = `hran' {
+		loc hstr = `h' - `hs'
 		loc m = `h'+`chl'
-		tempvar y_h`h'
-		qui gen `y_h`h'' = f`h'.`y'		
-		loc trn`h' "`y'_h`m'"
+		tempvar y_h`hstr'
+		if `h'<0 {
+			loc ah = abs(`h')
+			qui gen `y_h`hstr'' = l`ah'.`y'
+			}				
+		else qui gen `y_h`hstr'' = f`h'.`y'		
+		loc trn`hstr' "`y'_h(`m')"
 	}
 	if `ylags'==0 loc ly
 	if `ylags'>0 loc ly L(1/`ylags').`y'
@@ -169,10 +176,15 @@ else if "`transf'"=="diff" {
 	loc ltr=r(varlist)
 	loc ltrn "D.`y'"
 	forvalues h = `hran' {
+		loc hstr = `h' - `hs'
 		loc m = `h'+`chl'
-		tempvar dy_h`h'
-		qui gen `dy_h`h'' = f`h'.`y' - l.f`h'.`y' 
-		loc trn`h' "D.`y'_h`m'"
+		tempvar dy_h`hstr'
+		if `h'<0 {
+			loc ah = abs(`h')
+			qui gen `dy_h`hstr'' = l`ah'.`y' - l.l`ah'.`y'
+			}				
+		else qui gen `dy_h`hstr'' = f`h'.`y' - l.f`h'.`y' 
+		loc trn`hstr' "D.`y'_h(`m')"
 	}
 	if `ylags==0' loc yl
 	if `ylags'>0 loc ly L(1/`ylags').`dy'
@@ -187,10 +199,15 @@ else if "`transf'"=="cmlt" {
 	loc ltr=r(varlist)
 	loc ltrn "D.`y'"
 	forvalues h = `hran' {
+		loc hstr = `h' - `hs'
 		loc m = `h'+`chl'
-		tempvar cy_h`h'
-		qui gen `cy_h`h'' = f`h'.`y' - l.`y' 
-		loc trn`h' "cml_`y'_h`m'"
+		tempvar cy_h`hstr'
+		if `h'<0 {
+			loc ah = abs(`h')
+			qui gen `cy_h`hstr'' = l`ah'.`y' - l.`y'
+			}				
+		else qui gen `cy_h`hstr'' = f`h'.`y' - l.`y' 
+		loc trn`hstr' "cml_`y'_h(`m')"
 	}
 	if `ylags==0' loc yl
 	if `ylags'>0 loc ly L(1/`ylags').`dy'
@@ -204,10 +221,15 @@ if "`transf'"=="logs" {
 	loc ltr=r(varlist)
 	loc ltrn "ln`y'"
 	forvalues h = `hran' {
+		loc hstr = `h' - `hs'
 		loc m = `h'+`chl'
-		tempvar lny_h`h'
-		qui gen `lny_h`h'' = ln(f`h'.`y')		
-		loc trn`h' "ln`y'_h`m'"
+		tempvar lny_h`hstr'
+		if `h'<0 {
+			loc ah = abs(`h')
+			qui gen `lny_h`hstr'' = ln(l`ah''.`y')
+			}				
+		else qui gen `lny_h`hstr'' = ln(f`h'.`y')		
+		loc trn`hstr' "ln`y'_h(`m')"
 	}
 	if `ylags'==0 loc ly
 	if `ylags'>0 loc ly L(1/`ylags').`lny'
@@ -222,10 +244,15 @@ else if "`transf'"=="logs diff" {
 	loc ltr=r(varlist)
 	loc ltrn "D.ln`y'"
 	forvalues h = `hran' {
+		loc hstr = `h' - `hs'
 		loc m = `h'+`chl'
-		tempvar dlny_h`h'
-		qui gen `dlny_h`h'' = ln(f`h'.`y') - ln(l.f`h'.`y') 
-		loc trn`h' "D.ln`y'_h`m'"
+		tempvar dlny_h`hstr'
+		if `h'<0 {
+			loc ah = abs(`h')
+			qui gen `dlny_h`hstr'' = ln(l`ah'.`y') - ln(l.l`ah'.`y')
+			}				
+		else qui gen `dlny_h`hstr'' = ln(f`h'.`y') - ln(l.f`h'.`y') 
+		loc trn`hstr' "D.ln`y'_h(`m')"
 	}
 	if `ylags==0' loc yl
 	if `ylags'>0 loc ly L(1/`ylags').`dlny'
@@ -240,10 +267,15 @@ else if "`transf'"=="logs cmlt" {
 	loc ltr=r(varlist)
 	loc ltrn "D.ln`y'"
 	forvalues h = `hran' {
+		loc hstr = `h' - `hs'
 		loc m = `h'+`chl'
-		tempvar clny_h`h'
-		qui gen `clny_h`h'' = ln(f`h'.`y') - ln(l.`y')
-		loc trn`h' "cml_ln`y'_h`m'"
+		tempvar clny_h`hstr'
+		if `h'<0 {
+			loc ah = abs(`h')
+			qui gen `clny_h`hstr'' = ln(l`ah'.`y') - ln(l.`y')
+			}				
+		else qui gen `clny_h`hstr'' = ln(f`h'.`y') - ln(l.`y')
+		loc trn`hstr' "cml_ln`y'_h(`m')"
 	}
 	if `ylags==0' loc yl
 	if `ylags'>0 loc ly L(1/`ylags').`dlny'
@@ -255,6 +287,9 @@ cap drop _birf _seirf _birf_lo _birf_up
 cap drop _birf_lo2 _birf_up2
 tempvar birf seirf _t birf_up birf_lo birf_up2 birf_lo2 _zero
 
+if `hs'<=0 loc h1 = `hor'+ 1 -`hs'
+else loc h1 = `hor'
+
 qui gen `birf' = 0 if _n<=`h1'
 qui gen `seirf' = 0 if _n<=`h1'
 qui gen `birf_up' = 0 if _n<=`h1'
@@ -264,7 +299,7 @@ if `nconf'>1 {
 	qui gen `birf_lo2' = 0 if _n<=`h1'
 }
 
-if `hs'==0 qui gen `_t' =_n-1
+if `hs'<=0 qui gen `_t' =_n-1+`hs'
 else  qui gen `_t' =_n
 
 if "`zero'"=="zero" qui gen `_zero' = 0
@@ -280,74 +315,78 @@ matrix stats = J(`hor'+`chl'-`hs'+1,6,.)
 
 qui {
 	forval h=`hran' {
-		if `hs'==0 loc k=`h'+ 1 +`chl'
+		if `hs'<=0 loc k=`h'+ 1 +`chl' - `hs'
 		else loc k=`h'+`chl'
+		loc hstr = `h' - `hs'
+		if `h'<0 loc elag = abs(`h')
+		else loc elag = 0
 
-		tempname b`h' V`h'
+		tempname b`hstr' V`hstr'
 		
 		if "`hopt'"!="" {
-			if "`fcontrols'"=="" `met' ``y'`h'' `s' `ls' `ly' `c' `if' `in', `hopt'(`h') `mopt' `options'
-			else qui `met' ``y'`h'' `s' `ls' `ly' `c' f`h'.(`fcontrols') `if' `in', `hopt'(`h') `mopt' `options'
+			if "`fcontrols'"=="" `met' ``y'`hstr'' `s' `ls' L(`elag')(`ly') `c' `if' `in' [`weight'`exp'], `hopt'(`h') `mopt' `options'
+			else qui `met' ``y'`hstr'' `s' `ls' L(`elag')(`ly') `c' f`h'.(`fcontrols') `if' `in' [`weight'`exp'], `hopt'(`h') `mopt' `options'
 		}
 		else if `iv'==1 {
-			if "`fcontrols'"=="" `met' ``y'`h'' `ls' `ly' `c' (`s'=`instr') `if' `in', `mopt' `options'
-			else qui `met' ``y'`h'' `ls' `ly' `c' f`h'.(`fcontrols') (`s'=`instr') `if' `in', `mopt' `options'
+			if "`fcontrols'"=="" `met' ``y'`hstr'' `ls' L(`elag')(`ly') `c' (`s'=`instr') `if' `in' [`weight'`exp'], `mopt' `options'
+			else qui `met' ``y'`hstr'' `ls' L(`elag')(`ly') `c' f`h'.(`fcontrols') (`s'=`instr') `if' `in' [`weight'`exp'], `mopt' `options'
 		}	
 		else {
-			if "`fcontrols'"=="" `met' ``y'`h'' `s' `ls' `ly' `c' `if' `in', `mopt' `options'
-			else qui `met' ``y'`h'' `s' `ls' `ly' `c' f`h'.(`fcontrols') `if' `in', `mopt' `options'
+			if "`fcontrols'"=="" `met' ``y'`hstr'' `s' `ls' L(`elag')(`ly') `c' `if' `in' [`weight'`exp'], `mopt' `options'
+			else qui `met' ``y'`hstr'' `s' `ls' L(`elag')(`ly') `c' f`h'.(`fcontrols') `if' `in' [`weight'`exp'], `mopt' `options'
 		}
 		
-        matrix `b`h'' = e(b)
-        matrix `V`h'' = e(V)
+        matrix `b`hstr'' = e(b)
+        matrix `V`hstr'' = e(V)
 		loc cfn : colfullnames e(b)
 		
-		matrix stats[`h'+`chl'+1,1]=e(N)
-		if e(r2)!=. matrix stats[`h'+`chl'+1,2]=e(r2)
-		else if e(r2_o)!=. matrix stats[`h'+`chl'+1,2]=e(r2_o)
-		else matrix stats[`h'+`chl'+1,2]=1-e(rss)/(e(rss)+e(mss))
-		matrix stats[`h'+`chl'+1,3]=e(r2_p)
-		matrix stats[`h'+`chl'+1,4]=e(F)
-		matrix stats[`h'+`chl'+1,5]=e(chi2)		
-		if e(p)!=.  matrix stats[`h'+`chl'+1,6]=e(p)
-		else if e(F)!=. matrix stats[`h'+`chl'+1,6]=1-F(e(df_m)+1,e(df_r),e(F))
-		else matrix stats[`h'+`chl'+1,6]=1-chi2(e(df_m)+1,e(chi2))
+		matrix stats[`hstr'+`chl'+1,1]=e(N)
+		if e(r2)!=. matrix stats[`hstr'+`chl'+1,2]=e(r2)
+		else if e(r2_o)!=. matrix stats[`hstr'+`chl'+1,2]=e(r2_o)
+		else matrix stats[`hstr'+`chl'+1,2]=1-e(rss)/(e(rss)+e(mss))
+		matrix stats[`hstr'+`chl'+1,3]=e(r2_p)
+		matrix stats[`hstr'+`chl'+1,4]=e(F)
+		matrix stats[`hstr'+`chl'+1,5]=e(chi2)		
+		if e(p)!=.  matrix stats[`hstr'+`chl'+1,6]=e(p)
+		else if e(F)!=. matrix stats[`hstr'+`chl'+1,6]=1-F(e(df_m)+1,e(df_r),e(F))
+		else matrix stats[`hstr'+`chl'+1,6]=1-chi2(e(df_m)+1,e(chi2))
 
 		
 		local cfn=regexr("`cfn'","`ltr'","`ltrn'")
 		if `ylags'>1 {
+			if `h'<0 loc ylags = `ylags' + `elag'
 			forval p=2/`ylags' {
 				local cfn=regexr("`cfn'","`p'\.`ltr'","`p'.`ltrn'")
 			}	
 		}
-        matrix colnames `b`h'' = `cfn'
-        matrix rownames `V`h'' = `cfn'
-        matrix colnames `V`h'' = `cfn'
+        matrix colnames `b`hstr'' = `cfn'
+        matrix rownames `V`hstr'' = `cfn'
+        matrix colnames `V`hstr'' = `cfn'
 
 *********************************************************************************************************************************************
 		
 		if "`margins'"=="margins" {
 			if "`mrpred'"=="" margins `mrfvar', dydx(`s') `mropt' level(`conf')
-			else "`mrpred'"=="" margins `mrfvar', dydx(`s') predict(`mrpred') `mropt' level(`conf')
+			else margins `mrfvar', dydx(`s') predict(`mrpred') `mropt' level(`conf')
 			mat M=r(table)
 			foreach i in b se ll ul {
-				scalar `i'=M[rownumb(M,"`i'"),1]
+					scalar _sca`i'=M[rownumb(M,"`i'"),1]
 			}
 			if `nconf'>1 {
-				if "`mrpred'"=="" margins `mrfvar', dydx(`s') `mropt' level(`conf')
-				else "`mrpred'"=="" margins `mrfvar', dydx(`s') predict(`mrpred') `mropt' level(`conf')
+				if "`mrpred'"=="" margins `mrfvar', dydx(`s') `mropt' level(`conf2')
+				else margins `mrfvar', dydx(`s') predict(`mrpred') `mropt' level(`conf2')
 				mat M=r(table)
 				foreach i in ll ul {
-					scalar `i'2=M[rownumb(M,"`i'"),1]
+					scalar _sca`i'2=M[rownumb(M,"`i'"),1]
 				}		
 			}
-			replace `birf' = `fact'*b if _n==`k'
-			replace `seirf' = `fact'*se if _n==`k'
-			replace `birf_up' = `fact'*ll if _n==`k'
-			replace `birf_lo' = `fact'*ul if _n==`k'
+			replace `birf' = `fact'*_scab if _n==`k'
+			replace `seirf' = `fact'*_scase if _n==`k'
+			replace `birf_up' = `fact'*_scaul if _n==`k'
+			replace `birf_lo' = `fact'*_scall if _n==`k'
 			if `nconf'>1 {
-				replace `birf_up2' = `fact'*ll if _n==`k'
-				replace `birf_lo2' = `fact'*ul2 if _n==`k'
+				replace `birf_up2' = `fact'*_scaul2 if _n==`k'
+				replace `birf_lo2' = `fact'*_scall2 if _n==`k'
 			}				
 		}	
 *********************************************************************************************************************************************
@@ -359,7 +398,7 @@ qui {
 				if `nconf'>1 {
 					lincom `lcs', `lcopt' level(`conf2')
 					loc lb2 = r(lb)
-					loc up2 = r(ub)				
+					loc ub2 = r(ub)				
 				}	
 			}
 			else {
@@ -391,9 +430,16 @@ qui {
 			}
 		}
 
-******************************************************************************************************************************************
-		ereturn post `b`h'' `V`h''
-        `noisily' di "`trn`h''"
+*********************************************************************************************************************************************
+		if `iv'==1 & "`ivtest'"!="" {
+			noi di "IV Test Step = `h'" 
+			noi estat `ivtest'
+			noi di "  "
+		}
+	
+********************************************************************************************************************************************
+		ereturn post `b`hstr'' `V`hstr''
+        `noisily' di "`trn`hstr''"
 		`noisily' _coef_table
 	}
 
@@ -429,12 +475,12 @@ matrix rownames IRF = `rows'
 matrix colnames stats = " N " "R2" "psR2" "F" "Chi2" "Prob"
 matrix rownames stats = `rows'
 
-if "`stats'"=="stats" matlist stats, cspec(&o2 R %9.0f o2|%9.0f & %9.3f & %9.3f & %9.2f & %9.2f & %9.4f &) rspec(&-`lines') title("Statistics by step")
+if "`stats'"=="stats" matlist stats, cspec(&o4 %9.0f w2 R|o1 %9.0f &o1 %9.3f &o1 %9.3f &o1 %9.2f &o1 %9.1f &o1 %9.3f &) rspec(&-`lines') title("Statistics by step") 
 matlist IRF, noheader format(%9.5f) title("Impulse Response Function") lines(oneline)
 
 *********************************************************************************************************************************************
 *********************************************************************************************************************************************
-loc mod = mod(`hor',2)
+loc mod = mod(`hor'-`hs',2)
 if `hor'-`hs'>12 & `mod'==0 loc p 2
 else if `hor'-`hs'>12 & `mod'==1 loc p 3
 else loc p 1

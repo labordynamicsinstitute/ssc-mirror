@@ -34,6 +34,7 @@ p whotdeck module to perform multiple imputation using the Approximate Bayesian 
 p wid module to download data from the World Inequality Database (WID.world)
 p williams module to estimate logistic regression via Williams procedure
 p windowsmonitor module to send a winexec command to a Windows operating system and display the output in the Stata results window in (almost) real time
+p winprob module to compute the win probability for a single outcome
 p winratio module to calculate the unmatched Win Ratio for prioritised outcomes 
 p winratiotest module to calculate the unmatched Win Ratio for prioritised outcomes 
 p winsor module to Winsorize a variable

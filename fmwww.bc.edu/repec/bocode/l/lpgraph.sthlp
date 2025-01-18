@@ -48,8 +48,8 @@ of those commands are saved with the same name structure in which {cmd:locproj} 
 {synoptline}
 
 
-{synopt:{opt h:or(numlist/integer)}}Specifies the number of steps or horizon length for the IRF. 
-It can be specified either as a range (e.g. {it:hor(0/6)} or {it:hor(1/6)}), or just as the final horizon period (e.g. {it:hor(6)}) 
+{synopt:{opt h:or(numlist/integer)}}Specifies the number of steps or horizon length for the IRF. The initial horizon could be negative.
+It can be specified either as a range (e.g. {it:hor(0/6)} or {it:hor(-3/6)}), or just as the final horizon period (e.g. {it:hor(6)}) 
 in which case the command assumes the horizon starts at period 0 and ends in period 6. The default horizon range is {it:hor = 0,...,5} 
 if nothing is specified.{p_end}
 

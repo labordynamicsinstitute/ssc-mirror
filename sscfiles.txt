@@ -6440,6 +6440,7 @@ fmwww.bc.edu/repec/bocode/w/wclist.hlp
 fmwww.bc.edu/repec/bocode/w/wo.ado
 fmwww.bc.edu/repec/bocode/w/wooldid.ado
 fmwww.bc.edu/repec/bocode/w/wtd_set.ado
+fmwww.bc.edu/repec/bocode/w/winprob.pkg
 fmwww.bc.edu/repec/bocode/w/wooldid.sthlp
 fmwww.bc.edu/repec/bocode/w/wdiscrim.ado
 fmwww.bc.edu/repec/bocode/w/white.ado
@@ -6528,6 +6529,7 @@ fmwww.bc.edu/repec/bocode/w/wyoung.sthlp
 fmwww.bc.edu/repec/bocode/w/wid_list_population_codes.sthlp
 fmwww.bc.edu/repec/bocode/w/wscv.pkg
 fmwww.bc.edu/repec/bocode/w/wtddat.dta
+fmwww.bc.edu/repec/bocode/w/winprob.ado
 fmwww.bc.edu/repec/bocode/w/wjtest.html
 fmwww.bc.edu/repec/bocode/w/wtdtttpreddur.sthlp
 fmwww.bc.edu/repec/bocode/w/writepsfrag.sthlp
@@ -6661,6 +6663,7 @@ fmwww.bc.edu/repec/bocode/w/whichencoding.ado
 fmwww.bc.edu/repec/bocode/w/wtdq.sthlp
 fmwww.bc.edu/repec/bocode/w/williams.html
 fmwww.bc.edu/repec/bocode/w/which_edit.ado
+fmwww.bc.edu/repec/bocode/w/winprob.sthlp
 fmwww.bc.edu/repec/bocode/w/wtpcikr.pkg
 fmwww.bc.edu/repec/bocode/w/williams.hlp
 fmwww.bc.edu/repec/bocode/w/wordy.ado
@@ -9621,6 +9624,7 @@ fmwww.bc.edu/repec/bocode/p/plssemcmat.ado
 fmwww.bc.edu/repec/bocode/p/predperf.ado
 fmwww.bc.edu/repec/bocode/p/povtime.ado
 fmwww.bc.edu/repec/bocode/p/phenotype.ado
+fmwww.bc.edu/repec/bocode/p/povguide2.README.md
 fmwww.bc.edu/repec/bocode/p/panels.html
 fmwww.bc.edu/repec/bocode/p/percat.pkg
 fmwww.bc.edu/repec/bocode/p/pescadf.pkg
