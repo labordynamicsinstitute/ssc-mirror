@@ -18261,6 +18261,7 @@ fmwww.bc.edu/repec/bocode/o/oparallel.sthlp
 fmwww.bc.edu/repec/bocode/o/outreg.sthlp
 fmwww.bc.edu/repec/bocode/o/outtable.pkg
 fmwww.bc.edu/repec/bocode/o/overid9.hlp
+fmwww.bc.edu/repec/bocode/o/open.sthlp
 fmwww.bc.edu/repec/bocode/o/opendf_write.ado
 fmwww.bc.edu/repec/bocode/o/opencagegeo.pdf
 fmwww.bc.edu/repec/bocode/o/oaxaca8.hlp
@@ -18273,6 +18274,7 @@ fmwww.bc.edu/repec/bocode/o/osgen.ado
 fmwww.bc.edu/repec/bocode/o/outputst.hlp
 fmwww.bc.edu/repec/bocode/o/optvtam.txt
 fmwww.bc.edu/repec/bocode/o/orthog.html
+fmwww.bc.edu/repec/bocode/o/open.ado
 fmwww.bc.edu/repec/bocode/o/outputst.ado
 fmwww.bc.edu/repec/bocode/o/obsofint.html
 fmwww.bc.edu/repec/bocode/o/opl_lc_c.ado
@@ -18323,6 +18325,7 @@ fmwww.bc.edu/repec/bocode/o/outseries.html
 fmwww.bc.edu/repec/bocode/o/omamatv3.plugin.arm64
 fmwww.bc.edu/repec/bocode/o/outdat_spss.ado
 fmwww.bc.edu/repec/bocode/o/oprobpr.hlp
+fmwww.bc.edu/repec/bocode/o/open2.ado
 fmwww.bc.edu/repec/bocode/o/oaxaca_rif.sthlp
 fmwww.bc.edu/repec/bocode/o/ocratio.pkg
 fmwww.bc.edu/repec/bocode/o/ovport.ado
@@ -18442,6 +18445,7 @@ fmwww.bc.edu/repec/bocode/o/outdat.html
 fmwww.bc.edu/repec/bocode/o/onespell.ado
 fmwww.bc.edu/repec/bocode/o/opencagegeo.ado
 fmwww.bc.edu/repec/bocode/o/pdc.sthlp
+fmwww.bc.edu/repec/bocode/o/open_cn.sthlp
 fmwww.bc.edu/repec/bocode/o/odk2xls.ado
 fmwww.bc.edu/repec/bocode/o/outtable7.html
 fmwww.bc.edu/repec/bocode/o/outputst.sthlp
@@ -18517,6 +18521,7 @@ fmwww.bc.edu/repec/bocode/o/outtex6.html
 fmwww.bc.edu/repec/bocode/o/oaxaca.pkg
 fmwww.bc.edu/repec/bocode/o/outdat_stata.ado
 fmwww.bc.edu/repec/bocode/o/oglm9.hlp
+fmwww.bc.edu/repec/bocode/o/open2_cn.sthlp
 fmwww.bc.edu/repec/bocode/o/odk2doc.ado
 fmwww.bc.edu/repec/bocode/o/oneclick.sthlp
 fmwww.bc.edu/repec/bocode/o/ovfplot7.ado
@@ -18551,6 +18556,7 @@ fmwww.bc.edu/repec/bocode/o/odk_validate.ado
 fmwww.bc.edu/repec/bocode/o/odk2doc.sthlp
 fmwww.bc.edu/repec/bocode/o/overfit.sthlp
 fmwww.bc.edu/repec/bocode/o/oeratio.sthlp
+fmwww.bc.edu/repec/bocode/o/open2.sthlp
 fmwww.bc.edu/repec/bocode/o/ordvar.hlp
 fmwww.bc.edu/repec/bocode/o/omamatv3.plugin.x86_64
 fmwww.bc.edu/repec/bocode/o/outtable.ado
@@ -19183,6 +19189,7 @@ fmwww.bc.edu/repec/bocode/l/ldecomp.html
 fmwww.bc.edu/repec/bocode/l/lcmcsimul.dta
 fmwww.bc.edu/repec/bocode/l/labellist.html
 fmwww.bc.edu/repec/bocode/l/lmabpxt.dta
+fmwww.bc.edu/repec/bocode/l/log2md_cn.sthlp
 fmwww.bc.edu/repec/bocode/l/lmharchnl.sthlp
 fmwww.bc.edu/repec/bocode/l/log2markup.sthlp
 fmwww.bc.edu/repec/bocode/l/lmnadxt.ado
@@ -19405,6 +19412,7 @@ fmwww.bc.edu/repec/bocode/l/lmhgl.dlg
 fmwww.bc.edu/repec/bocode/l/ljs.pkg
 fmwww.bc.edu/repec/bocode/l/labmask.ado
 fmwww.bc.edu/repec/bocode/l/lnmor.ado
+fmwww.bc.edu/repec/bocode/l/log2md.sthlp
 fmwww.bc.edu/repec/bocode/l/latab.ado
 fmwww.bc.edu/repec/bocode/l/lxhget.sthlp
 fmwww.bc.edu/repec/bocode/l/lmabpg.pkg
@@ -19879,6 +19887,7 @@ fmwww.bc.edu/repec/bocode/l/labgen.pkg
 fmwww.bc.edu/repec/bocode/l/lcaentropy.pkg
 fmwww.bc.edu/repec/bocode/l/labmm.ado
 fmwww.bc.edu/repec/bocode/l/lsmcl.sthlp
+fmwww.bc.edu/repec/bocode/l/log2md.pkg
 fmwww.bc.edu/repec/bocode/l/lmoments.ado
 fmwww.bc.edu/repec/bocode/l/lmcovreg3.html
 fmwww.bc.edu/repec/bocode/l/lmcol.ado
@@ -20064,6 +20073,7 @@ fmwww.bc.edu/repec/bocode/l/lmhhpxt.dta
 fmwww.bc.edu/repec/bocode/l/lmhmss2.ado
 fmwww.bc.edu/repec/bocode/l/logithetm.sthlp
 fmwww.bc.edu/repec/bocode/l/logittoriski.ado
+fmwww.bc.edu/repec/bocode/l/log2md.ado
 fmwww.bc.edu/repec/bocode/l/lbpower.html
 fmwww.bc.edu/repec/bocode/l/lowyseattle.pkg
 fmwww.bc.edu/repec/bocode/l/log2html7.ado

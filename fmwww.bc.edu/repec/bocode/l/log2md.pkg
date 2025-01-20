@@ -1,0 +1,30 @@
+d 'LOG2MD': module to generate Markdown-formatted logs with customizable options
+d
+d    'log2md' is used to generate Markdown-formatted logs with
+d customizable options,  such as titles and code block wrapping,
+d making it suitable for sharing on platforms	like GitHub or
+d Jupyter Notebooks.   This command allows users to specify whether
+d to overwrite an existing file   (replace option) or append
+d content to an existing file (append option).	 It also supports
+d adding custom titles to the log for better organization. 
+d
+d KW: Markdown logs
+d KW: log file
+d KW: documentation
+d
+d Requires: Stata version 8
+d
+d Distribution-Date: 20250119
+d
+d Author:  Wang Qiang , Xi’an Jiaotong University
+d Support: email  740130359@@qq.com
+d
+f log2md.ado
+f log2md.sthlp
+f log2md_cn.sthlp
+f ../o/open.ado
+f ../o/open.sthlp
+f ../o/open_cn.sthlp
+f ../o/open2.ado
+f ../o/open2.sthlp
+f ../o/open2_cn.sthlp

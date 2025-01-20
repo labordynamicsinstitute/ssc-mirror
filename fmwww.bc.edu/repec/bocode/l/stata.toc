@@ -181,6 +181,7 @@ p loevh module to compute Guttman errors and Loevinger H coefficients
 p log2do2 module to convert log file to do file
 p log2html module to produce HTML log files
 p log2markup module to transform a Stata text log into a markup document
+p log2md module to generate Markdown-formatted logs with customizable options
 p logitcprplot module to graph component-plus-residual plot for logistic regression
 p logitfe module to compute analytical and jackknife bias corrections for fixed effects estimators of panel logit models with individual and time effects
 p logitgraph module to produce Graph of the Probabilities from a Logistic Regression Model

@@ -276,6 +276,7 @@ end
 ///  getICSS2_5 ///
 ///////////////////
 program define getICSS2_5
+  syntax , refproportion(varname) nagegroups(string)
   if `nagegroups' != 5 {
     di as error "ICCS2_5 should have 5 levels for agegroup"
     exit 198
@@ -287,6 +288,7 @@ end
 ///  getICSS2_5N ///
 ///////////////////
 program define getICSS2_5N
+  syntax , refproportion(varname) nagegroups(string)
   if `nagegroups' != 5 {
     di as error "ICCS2_5N should have 5 levels for agegroup"
     exit 198
@@ -298,6 +300,7 @@ end
 ///  getICSS3_5 ///
 ///////////////////
 program define getICSS3_5
+  syntax , refproportion(varname) nagegroups(string)
   if `nagegroups' != 5 {
     di as error "ICCS3_5 should have 5 levels for agegroup"
     exit 198

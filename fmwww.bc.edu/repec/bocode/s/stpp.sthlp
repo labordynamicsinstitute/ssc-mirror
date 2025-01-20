@@ -19,7 +19,7 @@
 [{it:options}]
 
 {marker options}{...}
-{synoptset 29 tabbed}{...}
+{synoptset 35 tabbed}{...}
 {synopthdr}
 {synoptline}
 {syntab:Options}
@@ -27,6 +27,7 @@
 {synopt :{opt dated:iag(varname)}}date at diagnosis{p_end}
 {synopt :{opt allcause(newvarlist)}}calculate all-cause probabilities{p_end}
 {synopt :{opt by(varlist)}}calculate separately in groupes defined in {varlist}{p_end}
+{synopt :{opt contrast(contrasttype, suboptions)}}calculate contrasts{p_end}
 {synopt :{opt crudeprob(newvarlist)}}calculate crude probabilities{p_end}
 {synopt :{opt deathprob}}calculate probabilities of death rather than survival{p_end}
 {synopt :{opt ederer2}}calculate Ederer II estimate rather than Pohar Perme{p_end}
@@ -107,6 +108,26 @@ Confidence intervals are also calculated and named {it: newvar}{cmd:_lci} and {i
 {phang}
 {opt by(varlist)} calculates separate estimates of marginal relative survival for the groups defined by {varlist}. 
 Note that a missing value is included as a level when using {cmd:by()}.
+
+{phang}
+{opt contrast(contrasttype, suboptions)} Calculate contrasts between different levels of a variable specified in the {cmd: by()} option.
+Currently the only contrast type is {cmd:difference}, but this will be added to.
+The contrasts and confidence intervals are displayed on the screen and stored in a new
+frame if the {cmd: frame()} option is specified.
+
+{phang2} 
+The following suboptions are available.
+
+{phang2} 
+{opt baselevel(varname #)} The base level when performing contrasts. 
+For contrast {cmd: difference} this is the negative term. 
+When there is more than one variable specified in the {cmd: by()} option,
+contrasts are calculate at all levels of the variable not specified in the 
+{cmd: contrast option}.
+
+{phang2} 
+{opt per(#)} multiplies the calculated contrast contrast by {it: #}.
+
 
 {phang}
 {opt crudeprob(newvarlist)} calculates crude probabilities of death. If only one new variable is listed then the crude probabilities of death due to the disease are calculated. 
