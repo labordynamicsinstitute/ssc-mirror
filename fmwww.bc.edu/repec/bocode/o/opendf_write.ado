@@ -16,7 +16,7 @@
 
 -----------------------------------------------------------------------------------*/
 *! opendf_write.ado: saves a Stata (.dta) dataset in the opendf format 
-*! version 2.0.2 - 28 August 2024 - SSC Initial Release
+*! version 2.0.3
 
 program define opendf_write 
     version 16
@@ -37,9 +37,14 @@ program define opendf_write
 	  }
     if (`"`input'"' != "") {
       capture quietly use "`input'", clear
-      if _rc==601{
-        di as error "Error: `input' is not a valid Stata dataset (.dta). Insert the path to a valid dataset (.dta) or leave argument 'input' empty to use the dataset loaded in Stata."
-        exit 601
+      if _rc!=0{
+        if (_rc==601 | _rc==610) {
+          di as error "Error: `input' is not a valid Stata dataset (.dta). Insert (the path to a) valid dataset (.dta) or leave argument 'input' empty to use the dataset loaded in Stata."
+          exit _rc
+        }
+        else {
+          use "`input'", clear
+        }
       }
     }
     if (`"`variables'"' != "" & `"`variables'"'!= "all") {
@@ -76,11 +81,11 @@ program define opendf_write
     opendf_dta2csv, languages(`languages') input(`input') output_dir("`c(tmpdir)'")
     capture opendf_csv2zip, output(`"`output'"') input("`c(tmpdir)'") variables_arg("yes") export_data("yes") `verbose'
     if (_rc != 0) {
-	  di as error "Error in writing `output'. There might be problems with the writing permissions in the output folder or with some metadata."
-	  if (`"`verbose'"' != "") {
-		opendf_zip2csv , input_zip(`input_zip') output_dir("`csv_temp'") languages(`languages') `verbose'
-    	  }
-	  exit _rc
+      di as error "Error in writing `output'. There might be problems with the writing permissions in the output folder or with some metadata."
+      if (`"`verbose'"' != "") {
+        opendf_zip2csv , input_zip(`input_zip') output_dir("`csv_temp'") languages(`languages') `verbose'
+      }
+      exit _rc
     }
     capture confirm file `"`output'"'
     if _rc == 0 {

@@ -1,4 +1,4 @@
-# version 2.0.2 (28 August 2024)
+# version 2.0.3
 
 # Modules
 import csv
@@ -12,11 +12,11 @@ def pretty_print(current, parent=None, index=-1, depth=0):
     pretty_print(node, current, i, depth + 1)
   if parent is not None:
     if index == 0:
-      parent.text = '\n' + ('\t' * depth)
+      parent.text = '\n' + ('  ' * depth)
     else:
-      parent[index - 1].tail = '\n' + ('\t' * depth)
+      parent[index - 1].tail = '\n' + ('  ' * depth)
     if index == len(parent) - 1:
-      current.tail = '\n' + ('\t' * (depth - 1))
+      current.tail = '\n' + ('  ' * (depth - 1))
 
 # get head of csv file              
 def header(input_dir,csv_file):
@@ -182,10 +182,9 @@ def csv2xml(input_dir, output_dir):
                     varFormat.attrib['type'] = row['type']                
                 # Variable URL
                 if 'url' in list_keys:    
-                  if not row['url'] == '':
-                    notes = ET.SubElement(var, 'notes')
-                    ExtLink = ET.SubElement(notes, 'ExtLink')
-                    ExtLink.attrib['URI'] = row['url']
+                  notes = ET.SubElement(var, 'notes')
+                  ExtLink = ET.SubElement(notes, 'ExtLink')
+                  ExtLink.attrib['URI'] = row['url']
                 
     # write xml
     temp_output_dir=input_dir+'/'+output_dir_name

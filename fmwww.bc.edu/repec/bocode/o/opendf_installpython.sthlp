@@ -7,7 +7,7 @@
 {viewerjumpto "Options" "opendf installpython##options"}{...}
 {viewerjumpto "Description" "opendf installpython##description"}{...}
 {viewerjumpto "Examples" "opendf installpython##examples"}{...}
-help for {cmd:opendf installpython (opendf_installpython)}{right: version 2.0.2 (28 August 2024)}
+help for {cmd:opendf installpython (opendf_installpython)}{right: version 2.0.3}
 {hline}
 
 {phang}

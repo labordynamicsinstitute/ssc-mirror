@@ -16,11 +16,12 @@
 
 -----------------------------------------------------------------------------------*/
 *! opendf_csv2dta.ado: loads data from csvs including meta data to build a Stata dataset
-*! version 2.0.2 - 28 August 2024 - SSC Initial Release
+*! version 2.0.3
 
 program define opendf_csv2dta 
 	version 16
 	syntax, csv_loc(string) [ROWRange(string) COLRange(string) SAVE(string) REPLACE CLEAR VERBOSE]
+	
 	local replaceit 0
 		if (`"`replace'"' != "") local replaceit 1
 		
@@ -105,7 +106,7 @@ program define opendf_csv2dta
 
 
 	*Directory where to save csvs
-	quietly: import delimited "`csv_loc'/dataset.csv", varnames(1) case(preserve) encoding(UTF-8) bindquote(strict) maxquotedrows(10000) asdouble `clear'
+	quietly: import delimited "`csv_loc'/dataset.csv", varnames(1) case(preserve) encoding(UTF-8) bindquote(strict) maxquotedrows(unlimited) asdouble `clear'
 	*remove gravis (`) from strings to avert errors
 	foreach var of varlist _all{
 		local _variable_type : type `var'
@@ -123,9 +124,27 @@ program define opendf_csv2dta
 		local dataset_char`dataset_nchar'_name = "`var'"
 		local dataset_char`dataset_nchar'_label = `var' in 1
 	}
+	
+	* get metadata Languages
+	scalar _language_default_exists = 0
+	local _label_languages = ""
+	
+	foreach var of varlist _all {
+		if ("`var'" == "label" | "`var'" == "description"){
+			scalar _language_default_exists = 1
+			local _label_languages = "`_label_languages' default"
+		}
+		if substr("`var'", 1, 6) =="label_" {
+			local _label_language = subinstr("`var'", "label_", "", .)
+			local _label_languages = "`_label_languages' `_label_language'"
+		}
+		if substr("`var'", 1, 12) =="description_" {
+			local _label_language = subinstr("`var'", "description_", "", .)
+			local _label_languages = "`_label_languages' `_label_language'"
+		}
+	}
 
-
-	quietly: import delimited "`csv_loc'/variables.csv", varnames(1) case(preserve) encoding(UTF-8) bindquote(strict) maxquotedrows(10000) asdouble clear
+	quietly: import delimited "`csv_loc'/variables.csv", varnames(1) case(preserve) encoding(UTF-8) bindquote(strict) maxquotedrows(unlimited) asdouble clear
 	*remove gravis (`) from strings to avert errors
 	foreach var of varlist _all{
 		local _variable_type : type `var'
@@ -148,9 +167,25 @@ program define opendf_csv2dta
 			local _var`i'_char_label`_var`i'nchar'= `var' in `i'
 		}
 	}
-	 	
+	
+	foreach var of varlist _all {
+		if ("`var'" == "label" | "`var'" == "description"){
+			scalar _language_default_exists = 1
+			local _label_languages = "`_label_languages' default"
+		}
+		if substr("`var'", 1, 6) =="label_" {
+			local _label_language = subinstr("`var'", "label_", "", .)
+			local _label_languages = "`_label_languages' `_label_language'"
+		}
+		if substr("`var'", 1, 12) =="description_" {
+			local _label_language = subinstr("`var'", "description_", "", .)
+			local _label_languages = "`_label_languages' `_label_language'"
+		}
+	}
+
+
 	*Import variable value labels
-	quietly: import delimited "`csv_loc'/categories.csv", varnames(1) case(preserve) encoding(UTF-8) bindquote(strict) maxquotedrows(10000) asdouble clear
+	quietly: import delimited "`csv_loc'/categories.csv", varnames(1) case(preserve) encoding(UTF-8) bindquote(strict) maxquotedrows(unlimited) asdouble clear
 	*remove gravis (`) from strings to avert errors
 	foreach var of varlist _all{
 		local _variable_type : type `var'
@@ -233,41 +268,55 @@ program define opendf_csv2dta
 		}
 	}
 
-	
+	foreach var of varlist _all {
+		if ("`var'" == "label"){
+			scalar _language_default_exists = 1
+			local _label_languages = "`_label_languages' default"
+		}
+		if substr("`var'", 1, 6) =="label_" {
+			local _label_language = subinstr("`var'", "label_", "", .)
+			local _label_languages = "`_label_languages' `_label_language'"
+		}
+	}
+	* remove trailing whitespace of language list
+	local _label_languages = strtrim("`_label_languages'")
+
 
 	*Import Data
-	quietly: import delimited "`csv_loc'/data.csv", varnames(1) rowrange(`rowrange') colrange(`colrange') case(preserve) encoding(UTF-8) asdouble clear	
+	quietly: import delimited "`csv_loc'/data.csv", varnames(1) rowrange(`rowrange') colrange(`colrange') case(preserve) encoding(UTF-8) bindquote(strict) maxquotedrows(unlimited) asdouble clear	
 	*Indicates whether a default language exists (if there are descriptions or labels without language tag)
-	local default_exists=0
+	* Add all metadata languages to label languages
+	foreach lang in `_label_languages' {
+		capture label language `lang', new   // Add the language if it doesn't already exist
+		if "`lang'" != "default" & _language_default_exists == 0{
+			capture label language default, delete
+		}
+	}
+
+	* count the languages and define the language1 to languageN locals with the languages
 	local language_counter=0
+	local languages: char _dta[_lang_list]
+	foreach lang in `languages'{
+		local language_counter = `language_counter' + 1
+		local _language`language_counter' = "`lang'"
+	}
+
+
 
 	*assign dataset labels and characteristics
 	forvalues i=1/`dataset_nchar' {
 			if (strpos("`dataset_char`i'_name'", "label")>0){
 				if ("`dataset_char`i'_name'"=="label"){
+					* If no language is defined, the label is assigned to the language default
 					quietly: label language default
 					label data "`dataset_char`i'_label'"
-					* If no language is defined, the label is assigned to the language default
-					if `default_exists'==0{
-						local language_counter=`language_counter'+1
-						local _language`language_counter'="default"
-						local default_exists=1
-					}
+					
 				}
 				else {
 					local _label_language = subinstr("`dataset_char`i'_name'", "label_", "", .)
-					capture quietly: label language `_label_language', new
-					if (_rc==110) {
 					quietly: label language `_label_language'
-					}
-					else {
-					local language_counter=`language_counter'+1
-					local _language`language_counter'="`_label_language'"
 					quietly: label data "`dataset_char`i'_label'"
 				}
-				
-				}
-				
 			}
 		if (strpos("`dataset_char`i'_name'", "label")==0){
 			char _dta[`dataset_char`i'_name'] "`dataset_char`i'_label'"
@@ -285,22 +334,10 @@ program define opendf_csv2dta
 					if ("`_var`i'_char_name`j''"=="label"){
 						quietly: label language default
 						label var `_varcode' `"`_var`i'_char_label`j''"'
-						if `default_exists'==0{
-							local language_counter=`language_counter'+1
-							local _language`language_counter'="`_label_language'"
-							local default_exists=1
-						}
 					}
-					if ("`_var`i'_char_name`j''"!="label"){
+					else {
 						local _label_language = subinstr("`_var`i'_char_name`j''", "label_", "", .)
-						capture label language `_label_language'
-						if (_rc == 111){
-							quietly: label language `_label_language', new
-							local language_counter=`language_counter'+1
-							local _language`language_counter'="`_label_language'"
-							local _datasetlabelmissing=1
-							global warnings= `"$warnings {p}{red: Warning: No Dataset Label defined for Language{it: `_label_language'}.}{p_end}"'
-						}
+						quietly label language `_label_language'
 						quietly: label var `_varcode' `"`_var`i'_char_label`j''"'
 					}
 				}
@@ -320,7 +357,7 @@ program define opendf_csv2dta
 			local _varlabel : variable label `var'
 			if "`_varlabel'" == ""{
 				local _varlabelmissing=1
-				global warnings= `"$warnings {p}{red: Warning: No Label defined for Variable{it: `var'} for Language{it: `_language`l''}.}{p_end}"'
+				global warnings= `"$warnings {p}{red: Warning: No label defined for lariable{it: `var'} for language{it: `_language`l''}.}{p_end}"'
 			}
 		}
 	}
@@ -398,14 +435,8 @@ program define opendf_csv2dta
 		}	
 	}
 	
-	
-	if (`default_exists'!=1){
-		capture label language default, delete
-	}
-	else {
-		if (`verboseit'==1) {
-			di "{red: Your dataset contains labels and/or descriptions without a language tag. The labels have been assigned to the language default.}"
-		}
+	if (`verboseit'==1 & _language_default_exists!=1) {
+		di "{red: Your dataset contains labels and/or descriptions without a language tag. The labels have been assigned to the language default.}"
 	}
 	if `saveit'==1 {
 		quietly: save `"`save'"', `replace'
@@ -416,5 +447,5 @@ program define opendf_csv2dta
 	if (`_valuelabelforstringvariable'==1 & `verboseit'==1) di `"{red: Warning: Some Value Labels were not assigned because Variable is a string Variable. For further information display global {it:warnings}}"'
 	if (`_varlabelmissing'==1 & `verboseit'==1) di `"{red: Warning: No Label defined for some Variables for some Languages. For further information display global {it:warnings}}"'
 	if (`_valuelabelmissing'==1 & `verboseit'==1) di `"{red: Warning: No Value Labels defined for some Variables. For further information display global {it:warnings}}"'
-	qui label language `_language1'
+
 end

@@ -16,7 +16,7 @@
 
 -----------------------------------------------------------------------------------*/
 *! opendf_dta2csv.ado: loads data from csvs including meta data to build a Stata dataset
-*! version 2.0.2 - 28 August 2024 - SSC Initial Release
+*! version 2.0.3
 
 
 program define opendf_dta2csv 
@@ -29,8 +29,8 @@ program define opendf_dta2csv
 
 	*if output_dir is not temp dir or if we are in linux, we add / to the path
 	if ("`output_dir'" != "`c(tmpdir)'" | "`c(os)'"=="Unix"){
-      		local output_dir = "`output_dir'/"
-    	}
+      	local output_dir = "`output_dir'/"
+    }
 	*Save dataset as data.csv
 	quietly: export delimited "`output_dir'data",  nolabel replace quote
 	
@@ -93,6 +93,8 @@ program define opendf_dta2csv
 			}
 		}
 		gen url="`url'"
+
+
 		
 		*order columns (check whether label/description without language tag exist)
 		capture confirm variable description, exact
@@ -211,7 +213,7 @@ program define opendf_dta2csv
 		*drop empty labels and descriptions columns
 		foreach var of varlist * {
 			qui replace `var' = "" if `var'=="."
-            if ("`var'" =="label" | "`var'" == "description"){
+            if (strpos("`var'", "label") > 0 | strpos("`var'", "description") > 0){
                 qui count if missing(`var')
 		        if (`=r(N)' == `_nvar') drop `var'
             }     
@@ -288,41 +290,37 @@ program define opendf_dta2csv
 			if (strpos("`_variable_type'", "str") == 1 & `_has_label' == 1) {
 				use `categoriestempfile', clear
 				while "`_values'" != "" {
-					local _nvaluelabel = `_nvaluelabel' + 1
-					if (c(N) < `_nvaluelabel') {
-						set obs `_nvaluelabel'
+					local _row_categories_out = `_row_categories_out' + 1
+					if (c(N) < `_row_categories_out') {
+						set obs `_row_categories_out'
 					}
-					replace variable = "`var'" in `_nvaluelabel'
+					replace variable = "`var'" in `_row_categories_out'
 					if (strpos("`_values'", "<;>") >0) {
 						local _val = substr("`_values'", 1, strpos("`_values'", "<;>")-1)
-						di "`_val'"
-						replace value = `_val' in `_nvaluelabel'
+						replace value = `_val' in `_row_categories_out'
 						local _values = substr("`_values'", strpos("`_values'", "<;>")+3, strlen("`_values'"))
 						foreach l in `_languages'{
 							local _lab = substr("`_labels_`l''", 1, strpos("`_labels_`l''", "<;>")-1)
-							di "`_lab'"
 							if ("`l'" != "default"){
-								replace label_`l' = "`_lab'" in `_nvaluelabel'
+								replace label_`l' = "`_lab'" in `_row_categories_out'
 							}
 							else {
-								replace label = "`_lab'" in `_nvaluelabel'
+								replace label = "`_lab'" in `_row_categories_out'
 							}
 							local _labels_`l' = substr("`_labels_`l''", strpos("`_labels_`l''", "<;>")+3, strlen("`_labels_`l''"))
 						}
 					}
 					else {
 						local _val = "`_values'"
-						di "`_val'"
-						replace value = `_val' in `_nvaluelabel'
+						replace value = `_val' in `_row_categories_out'
 						local _values=""
 						foreach l in `_languages'{
 							local _lab = "`_labels_`l''"
-							di "`_lab'"
 							if ("`l'" != "default"){
-								replace label_`l' = "`_lab'" in `_nvaluelabel'
+								replace label_`l' = "`_lab'" in `_row_categories_out'
 							}
 							else {
-								replace label = "`_lab'" in `_nvaluelabel'
+								replace label = "`_lab'" in `_row_categories_out'
 							}
 							local _labels_`l' = ""
 						} 
@@ -406,7 +404,7 @@ program define opendf_dta2csv
 	*drop empty labels and descriptions
 	foreach var of varlist * {
 			if ("`var'"!="value") qui replace `var' = "" if `var'=="."
-            if ("`var'"=="label"){
+            if (strpos("`var'", "label") > 0){
                 quietly: qui count if missing(`var')
 			    quietly: if (`=r(N)' == c(N)) drop `var'
             }     

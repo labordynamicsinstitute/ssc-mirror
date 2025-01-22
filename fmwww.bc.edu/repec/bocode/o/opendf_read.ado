@@ -16,7 +16,7 @@
 
 -----------------------------------------------------------------------------------*/
 *! opendf_read.ado: loads data from opendf format (zip) to Stata
-*! version 2.0.2 - 28 August 2024 - SSC Initial Release
+*! version 2.0.3
 
 
 			
@@ -29,7 +29,7 @@ program define opendf_read
 		local _tempdir "`c(tmpdir)'"
 		if (substr("`_tempdir'", strlen("`_tempdir'"), strlen("`_tempdir'")) != "/" & substr("`_tempdir'", strlen("`_tempdir'"), strlen("`_tempdir'")) != "\"){
 			local _tempdir = "`_tempdir'/"
-    		}
+    	}
 	  	local _path_to_data `"`_tempdir'data.zip"'
 		quietly: copy `input' `_path_to_data', replace
 		local input `_path_to_data'
@@ -43,11 +43,11 @@ program define opendf_read
 	  	local languages `languages'
 	}
 	else {
-      		local languages "all"
-    	}
-    	local input_zip=`"`input'"'
-    	local csv_temp = "`c(tmpdir)'"
-    	opendf_zip2csv , input_zip(`input_zip') output_dir("`csv_temp'") languages(`languages') `verbose'
+      	local languages "all"
+    }
+    local input_zip=`"`input'"'
+    local csv_temp = "`c(tmpdir)'"
+    opendf_zip2csv , input_zip(`input_zip') output_dir("`csv_temp'") languages(`languages') `verbose'
 	opendf_csv2dta, csv_loc("`csv_temp'") rowrange(`rowrange') colrange(`colrange') save(`save') `replace' `clear' `verbose'
 end
 

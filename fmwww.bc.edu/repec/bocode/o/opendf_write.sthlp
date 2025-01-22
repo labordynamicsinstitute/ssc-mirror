@@ -6,7 +6,7 @@
 {viewerjumpto "Description" "opendf write##description"}{...}
 {viewerjumpto "Remarks" "opendf write##remarks"}{...}
 {viewerjumpto "Examples" "opendf write##examples"}{...}
-help for {cmd:opendf write (opendf_write)}{right: version 2.0.2 (28 August 2024)}
+help for {cmd:opendf write (opendf_write)}{right: version 2.0.3}
 {hline}
 
 {phang}
