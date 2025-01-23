@@ -1,7 +1,23 @@
-*! xtbreak version 1.1 - 10.01.2022
+*! xtbreak version 2.0 - 20.01.2025
 /*
 Changelog
-- 15.11.2021 - but when variable name contained "est". 
+version 2.0
+- 02.05.2024 - additional check if time series used, then csa option ignored
+- 06.11.2024 - bug fixed in xtbreak_listbreaks()
+- 06.12.2024 - added WPN as VCE
+version 1.5
+- 08.04.2024 - additional checks if trimming, breaks and breakpoints are valid
+version 1.4
+- 10.03.2024 - bug fix when k < q
+- 19.03.2023 - bug when time series and vce(hac) used fixed
+- 15.11.2022 - bug when using fixed effects, FE always partialled out with breaks, fixed.
+			 - added e(SSR) with minimum SSR for xtbreak est
+			 - added e(SSRm) as hidden matrix with all partial SSRs
+			 - support for Stata 14.2
+- 30.02.2022 - breaks are now a column vector, harmonized across all programs
+version 1.1
+- 15.11.2021 - bug when variable name contained "est". 
+- 07.02.2021 - error when using Stata 15 and xtbreak, local cannot access r() matrix.
 
 */
 
@@ -9,8 +25,8 @@ capture program drop xtbreak
 
 program define xtbreak, rclass
 	syntax [anything] [if], [* version update ] 
-		
-		version 15.1
+		timer on 1 
+		version 14.2
 
 		local cmd "`*'"
 
@@ -45,8 +61,8 @@ program define xtbreak, rclass
 		}
 
 		if "`version'" != "" {
-			local version 1.1
-			noi disp "This is version 1.1 - 07.01.2022"
+			local version 2.0
+			noi disp "This is version `version' - 20.01.2025"
 			return local version "`version'"
 			exit
 		}
@@ -82,8 +98,19 @@ program define xtbreak, rclass
 			return add
 		}
 		else {
-			local 0 `*' , `options'
-			syntax anything [if] , [Breaks(string) BREAKPoints(string) ] * 
+			local 0 `*' `if' , `options'
+			syntax anything [if] , [Breaks(string) BREAKPoints(string) cvalue(string) level(real 0.95) skiph2 strict MAXbreaks(passthru) wdmax *]  
+
+			/// default 95%
+			if "`cvalue'" == "" local cvalue = `c(level)'
+
+			if `cvalue' < 1 local cvalue = `cvalue' * 100
+			
+			if `cvalue' == 99 | `cvalue' == 0.99 local c_select = 1
+			else if `cvalue' == 1 | `cvalue' == 0.01 local c_select = 1
+			else if `cvalue' == 90 | `cvalue' == 0.9 local c_select = 3
+			else if `cvalue' == 10 | `cvalue' == 0.1 local c_select = 3
+			else local c_select = 2
 
 			
 
@@ -99,41 +126,79 @@ program define xtbreak, rclass
 				noi disp as smcl "{stata xtbreak estimate `anything' `if', breaks(`breaks') `options'}"
 				exit
 			}
+			
+			local deplagchk 
+			if "`skiph2'" == "" {
+				xtbreak_tests `anything' `if' ,`options' donotdisptrim h(2) `maxbreaks' `wdmax' level(`level')
+				if `r(DepLagMsg)' == 1 local LagDepWarningMSG "Warning: lagged dependent variables not allowed in the panel case. Remove the lagged dependent variable and specify an appropriate vce option. Serial correlation in panels is dealt through the error variance-covariance matrix."
 
-			xtbreak_tests `anything' `if' ,`options' donotdisptrim
+				local deplagchk nodeplag
+			}
+			xtbreak_tests `anything' `if' ,`options' donotdisptrim h(3) sequential `maxbreaks' `strict' cvalue(`cvalue') `deplagchk'
+			if "`deplagchk'" == "" & `r(DepLagMsg)' == 1 local LagDepWarningMSG "Warning: lagged dependent variables not allowed in the panel case. Remove the lagged dependent variable and specify an appropriate vce option. Serial correlation in panels is dealt through the error variance-covariance matrix."
 
-			tempname estBreak
+			tempname estBreak Nbreaksmat
+			matrix `Nbreaksmat' = r(Nbreaks)
 
+			
+			
+			local estBreak = `Nbreaksmat'[1,`c_select']
+			local cng = 0
+			while `estBreak' == . & `c_select' <= 3 {
+				local ++c_select
+				local estBreak = `Nbreaksmat'[1,`c_select']
+				local ++cng
+			}
+			if `estBreak' == 0 local estBreak = Nbreaksmat[2,`c_select']
+
+/*
 			if `c(level)' == 99 { 
-				local estBreak = r(Nbreaks)[1,1]
+				local estBreak = `Nbreaksmat'[1,1]
 				if `estBreak' == 0 {
-					local estBreak = r(Nbreaks)[2,1] 
+					local estBreak = `Nbreaksmat'[2,1] 
 				}
 			}
 			else if `c(level)' == 90 {
-				local estBreak = r(Nbreaks)[1,3]
+				local estBreak = `Nbreaksmat'[1,3]
 				if `estBreak' == 0 {
-					local estBreak = r(Nbreaks)[2,3] 
+					local estBreak = `Nbreaksmat'[2,3] 
 				}
 			}
 			else {
-				local estBreak = r(Nbreaks)[1,2]
+				local estBreak = `Nbreaksmat'[1,2]
 				if `estBreak' == 0 {
-					local estBreak = r(Nbreaks)[2,2] 
+					local estBreak = `Nbreaksmat'[2,2] 
 				}
 			}
+
+		*/
 			return add
 
-			if `estBreak' == . | `estBreak'== 0{
+			if `estBreak' == . | `estBreak'== 0 {
+				return clear
+				ereturn clear
 				noi disp ""
 				noi disp in smcl as error "No breaks found, cannot estimate breakpoints."
+
+				qui xtbreak_estimate `anything' `if', `options' breaks(0) nodeplag
 				exit
 			}
+			else if `cng' > 0 {
+				if `c_select' == 2 local newLev 95
+				if `c_select' == 3 local newLev 90
+				noi disp in text _col(3) "No breaks found for critival values at `=100-`c(level)''% level, `estBreak' break(s) found at `=100-`newLev''% level. "
+			}
+			
+			xtbreak_estimate `anything' `if', `options' breaks(`estBreak') nodeplag 
 
-			xtbreak_estimate `anything' `if', `options' breaks(`estBreak')
-
+			if "`LagDepWarningMSG'" != "" noi disp as text "`LagDepWarningMSG'"
+			
 			return local cmd "xtbreak `cmd'"
 			return hidden local seq "1"
 		}
+
+		timer off 1
 	
 end
+
+

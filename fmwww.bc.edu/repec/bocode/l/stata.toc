@@ -188,6 +188,7 @@ p logitgraph module to produce Graph of the Probabilities from a Logistic Regres
 p logithetm module to estimate Logit Multiplicative Heteroscedasticity Regression
 p logitjack module to provide cluster robust inference for logit models
 p logittorisk module for conversion of logistic regression output to differences and ratios of risk
+p logloss module for computing the log loss metric for binary outcome models
 p lognfit module to fit lognormal distribution by maximum likelihood
 p logout module to convert log or ASCII files into various output formats
 p logpred module to calculate logistic regression probabilities

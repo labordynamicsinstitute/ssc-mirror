@@ -1,0 +1,22 @@
+d 'LOGLOSS': module for computing the log loss metric for binary outcome models
+d
+d  logloss computes the log loss metric to assess the accuracy of a
+d binary prediction model. The log loss metric is considered to be
+d more sensitive than brier in distinguishing between good and poor
+d predictive models. The log loss ranges from 0 to infinity, where
+d a lower score indicates better performance. A perfect model would
+d have a log loss of 0, while a random model would have a log loss
+d of around 0.693. 
+d
+d KW:  log loss
+d KW: classification accuracy
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250122
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f logloss.ado
+f logloss.sthlp
