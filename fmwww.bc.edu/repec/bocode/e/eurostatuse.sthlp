@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.3.0  12oct2024}{...}
+{* *! version 4.0.0  22jan2025}{...}
 {viewerjumpto "Syntax" "eurostatuse##syntax"}{...}
 {viewerjumpto "Dialogue box" "eurostatuse##dialogue"}{...}
 {viewerjumpto "Description" "eurostatuse##description"}{...}
@@ -20,7 +20,7 @@
 {cmdab:eurostatuse} {it:table_name} [{cmd:,} {it:options}]
 
 {p 8 8 2}
-{it:table_name} is the Eurostat data file to be downloaded, unzipped and processed.
+{it:table_name} is the code of the Eurostat data file to be downloaded, unzipped and processed.
 
 {synoptset 20 tabbed}{...}
 {synopthdr}
@@ -29,8 +29,7 @@
 {synopt:{bf:long}}creates output in the long format (e.g. time in rows) {p_end}
 {synopt:{bf:[no]label}}drops the label variables {p_end}
 {synopt:{bf:[no]flags}}drops the flag variables {p_end}
-{synopt:{bf:[no]erase}}saves the original .tsv file in the active folder {p_end}
-{synopt:{bf:uncompressed}}downloads uncompressed .tsv file (no need for 7-zip on Windows) (new) {p_end}
+{synopt:{bf:uncompressed}}downloads uncompressed .tsv file (no need for 7-zip on Windows) {p_end}
 {synopt:{bf:save}}saves output in a Stata data (.dta) file {p_end}
 {synopt:{bf:clear}}clears data in memory {p_end}
 
@@ -59,7 +58,7 @@ You can access the dialogue box by clicking on the link above or by entering {cm
 {pstd}{cmd:eurostatuse} imports data from the Eurostat repository into Stata. It also provides information on the data set, downloads labels, separates flags and values, implements the reshape to long format, and fixes time formats.
 {p_end}
 
-{pstd}{it:table_name} should include just one Eurostat data file. You should only specify the name ("Eurostat code"), not the .tsv or .gz extension, indicated between brackets after the titles in the navigation tree.
+{pstd}{it:table_name} should include just one Eurostat data file. You should only specify the Eurostat code, no extension, as indicated between brackets after the titles in the navigation tree. Capitalisation does not matter.
 {p_end}
 
 {pstd}
@@ -78,24 +77,21 @@ See also: {browse "https://ec.europa.eu/eurostat/databrowser/bulk?lang=en"}.
 {opt long} creates output in the long format (time in rows). Default is wide. Depending on the size of the data set the reshaping could take a while.
 {p_end}
 
+
 {phang}
-{opt [no]erase} saves the original .tsv file in the working directory. Note that {cmd:eurostatuse} will use this file instead of a new download if it exists.
+{opt [no]label} removes the label variable. This is the faster option and it keeps the file size small.
 {p_end}
 
 {phang}
-{opt [no]label} removes the label variables. The codes may be self-explanatory.
+{opt [no]flags} removes the flags (referring to comments) Eurostat adds to the data.
 {p_end}
 
 {phang}
-{opt [no]flags} removes the flags Eurostat uses to comment on the data.
+{opt uncompressed} downloads the uncompressed .tsv file. Downloads will be larger and slower, but you don't need to install 7-zip on Windows and avoid using a shell command. This may help when using a working directory on a cloud drive.
 {p_end}
 
 {phang}
-{opt [uncompressed} downloads the uncompressed .tsv file (larger and slower, but no need for 7-zip on Windows).
-{p_end}
-
-{phang}
-{opt save} saves output in a Stata data (.dta) file.
+{opt save} saves output in a Stata data (.dta) file. The filename will be the table code in lower case.
 {p_end}
 
 {phang}
@@ -107,11 +103,11 @@ See also: {browse "https://ec.europa.eu/eurostat/databrowser/bulk?lang=en"}.
 {phang} These options significantly reduce processing time of long data requests. {p_end}
 
 {phang}
-{opt start()} defines the start period (e.g. 2008, 2010Q3, 2012M09). If not sure about the time code, download the full table first for a small sample depending on geo() or keepdim().
+{opt start()} defines the start period (e.g. yearly: 2008, half-yearly: 2009S2, quarterly: 2010Q3, monthly: 2011M04). It is somewhat lenient with respect to the time code.
 {p_end}
 
 {phang}
-{opt end()} defines the end period (as above). You do not have to specify both end and start period.
+{opt end()} defines the end period (as above). You do not have to specify both end and start period (or any).
 {p_end}
 
 {phang}
@@ -119,16 +115,14 @@ See also: {browse "https://ec.europa.eu/eurostat/databrowser/bulk?lang=en"}.
 {p_end}
 
 {phang}
-{opt keepdim()} selects by other dimensions. Multiple dimensions have to be separated by a semicolon but need not be named. Just enter the desired values within a dimension, each separated by a space. The ordering of the dimensions is not important and you should not use quotes for the values. {p_end}
+{opt keepdim()} selects by other dimensions. Just enter the desired values within one dimension, each separated by a space, and do not use quotes. Multiple dimensions can be used, but need not be named and the order does not matter: just separate them by a semicolon.
+{p_end}
 
 {marker remarks}{...}
 {title:Remarks}
 
 {pstd}
-The Eurostat repository at {browse "https://ec.europa.eu/eurostat/data/database"} contains a large number of EU policy data sets, generally time series (monthly, quarterly, annually). Each series is stored in a separate file that also contains a string-date variable and header with information about the series.  {p_end}
-
-{pstd}
-{cmd:eurostatuse} imports data series into a Stata dataset. The output is a file with the same name as the data set, but always in lower case. The same goes for the variables in the data set. If you specify the {opt noerase} option to save the original download, the .tsv file will have the data set name in upper case.
+The Eurostat repository at {browse "https://ec.europa.eu/eurostat/data/database"} contains a large number of EU policy data sets, generally time series (monthly, quarterly, annually). Each series is stored in a separate file that also contains a string-date variable and header with information about the data set.
 {p_end}
 
 {pstd}
@@ -193,7 +187,11 @@ The following country abbreviations are used by Eurostat and can be used as {it:
 {p_end}
 
 {phang}
-{cmd:. eurostatuse} une_ltu_a, noflags nolabel long geo(BE DE FR) clear
+{cmd:. eurostatuse} une_ltu_a, noflags nolabel long geo(BE DE FR NL) clear
+{p_end}
+
+{phang}
+{cmd:. eurostatuse} eurostatuse une_rt_m, noflags nolabel long geo(AT) start(2010M1) end(2022M12) keepdim(PC_ACT; SA; T; TOTAL) clear
 {p_end}
 
 {phang}
@@ -201,18 +199,18 @@ The following country abbreviations are used by Eurostat and can be used as {it:
 {p_end}
 
 {phang}
-{cmd:. eurostatuse} nama_10r_3gdp, flags label long noerase clear
+{cmd:. eurostatuse} nama_10r_3gdp, flags label long clear
 {p_end}
 
 {marker install}{...}
 {title:Install}
 
 {pstd}
-Download or update eurostatuse over SSC (ssc install eurostatuse, replace) or put the eurostatuse.ado file in your personal ado folder (by default, on Windows, the folder is C:\ado\personal\, on macOS it is found within the Stata folder in the library). Put it in the subfolder e\ to keep the folder orderly. Stata will automatically search this directory for programs on the next run and have the command ready when you call it.
+Download or update eurostatuse over SSC (ssc install eurostatuse, replace) or put the eurostatuse.ado file in your personal ado folder. By default, on Windows, the folder is C:\ado\personal\, on macOS it is found within the Stata folder in the library. Put the files in the subfolder e\ to keep it orderly. Stata will automatically search this directory for programs on the next run and have the command ready when you call it.
 {p_end}
 
 {pstd}
-On Windows, to use the default compressed file transfer, you need to have 7-zip installed into the program files directory (C:\Program Files\7-Zip\7zG.exe). If you install it elsewhere, the ado needs to be changed - you can do that. Mac users don't need to do anything. A Linux shell should also be straightforward to add but it is currently not in the ado.
+On Windows, to use the default compressed file transfer, you need to have 7-zip installed into the program files directory (C:\Program Files\7-Zip\7zG.exe). If you install it elsewhere or choose for a different decompression tool, the local `exepath' in the ado will need to be changed. MacOS users don't need to do anything. A Linux shell should also be straightforward to add but it is currently not in the ado. For all platforms, using the [uncompressed] option may solve many download and decompression issues.
 {p_end}
 
 {pstd}

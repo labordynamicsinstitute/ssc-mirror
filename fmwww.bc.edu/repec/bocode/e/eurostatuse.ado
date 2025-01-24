@@ -4,28 +4,30 @@
 	Sem Vandekerckhove (HIVA-KU LEUVEN - sem.vandekerckhove@kuleuven.be)
 	Sebastien Fontenay (UAH Alcalá (Madrid), ULB - sebastien.fontenay@uah.es)
 	         
-
-	Version: 3.3
-	Last update: 11 October 2024 
+	Version: 4.0.0
+	Last update: 22 January 2025
 	What's new:
-	- Uncompressed option
-	- Rare unzip issue solved
-	- Help file updated 
-	- Dialog box updated
-	- Runs saved .tsv files directly without downloading (after previous noerase option)
+	- Import of tsv file recoded (use [altimport] if it fails)
+	- Removed the [noerase] option (now undocumented)
+	- Help file and dialog box are updated
  
 	Thanks to:
-	- Wolf-Fabian Hungerland (wolf-fabian.hungerland@bmwk.bund.de): suggestion to include uncompressed option
-	- Nikolaos Kanellopoulos (nkanel@kepe.gr): date fix
-	- Diego Jose Torres Torres (diegotorrestorres@gmail.com): some early syntax ideas
-	- Duarte Gonçalves: early feedback and help file
+	- Josip Arneric (jarneric@net.efzg.h): signaling broken start() and end() options.
+	- Wolf-Fabian Hungerland (wolf-fabian.hungerland@bmwk.bund.de): suggestion to include uncompressed option.
+	- Nikolaos Kanellopoulos (nkanel@kepe.gr): date fix.
+	- Diego Jose Torres Torres (diegotorrestorres@gmail.com): some early syntax ideas.
+	- Duarte Gonçalves: early feedback and help file.
 	
-	Notes: 	
+	Notes: 
+	- [nolabel] is faster and reduces file size
+	- [long] is very useful, but for datasets with a high time frequency (e.g. monthly or daily data), 
+		it may be faster to _not_ use it, and instead to reshape the data in your syntax.
+	- For larger tables, the decompressing may fail. Use [uncompressed] in that case.
+	- Use [uncompressed] also to avoid issues with cloud storage and shell commands.
+	- The import code has been rewritten entirely. For an even faster import, use the [altimport] 
+		option, but this uses some shell commands.
 	- EUROSTAT has migrated its database in 2024. Some previous functionality 
 		with respect to time variables and indicator labels, is now lost. 
-	- For datasets with a high time frequency (e.g. monthly data), it may be 
-		faster to _not_ use the 'long' option and to reshape the data in 
-		your syntax.
 	- Please let us know if you experience other issues in the mean time.
 
 	Installation:
@@ -39,38 +41,67 @@
 
 capture program drop eurostatuse
 program define eurostatuse
-version 11.0
-syntax namelist(name=indicator) [, uncompressed long noflags nolabel noerase save ///
-								   start(string) end(string) geo(string) ///
-								   keepdim(string) clear]
+version 14.0
+syntax namelist(name=indicator) [,  long noflags nolabel ///
+									start(string) end(string) geo(string) keepdim(string)  ///
+									altimport uncompressed noerase save clear]
 
 quietly {
+
+/* For testing
+local clear = "clear"
+local indicator = "NAMA_10_GDP"
+*local flags = "noflags"
+local start = "1990"
+local end = "2010"
+local keepdim = "P3_P6 D3; PC_GDP"
+local geo = "BE DE"	// testing
+*local label = "nolabel"
+local table = "/Users/semvandekerckhove/Temp/NAMA_10_GDP BU.tsv"
+*local erase = "noerase"
+*/
+
 
 * Get data
 * ========
 
 if `"`clear'"' == "clear" {
 	clear
-	} 
-if (c(changed) == 1) & (`"`clear'"' == "" ) {
-    error 4
 	}
 
-local indicator = upper("`indicator'") // Eurostat uses upper case
+* Errors 
+if (c(changed) == 1) & (`"`clear'"' == "" ) {
+    error 4 // no; dataset in memory has changed since last saved
+	}
+
+* Set indicator variable capitalization
+local indicator = lower(`"`indicator'"')
+local upind = upper(`"`indicator'"')
+
+* Harmonise time range
+foreach trange in "start" "end" {
+	local `trange' = subinstr("``trange''", "-","M",1)
+	local `trange' = subinstr("``trange''", "-","D",1) 
+	local `trange' = subinstr("``trange''", "MQ","Q",1) 
+	local `trange' = subinstr("``trange''", "MS","S",1)
+	local `trange' = subinstr("``trange''", "M0","M",1) 
+	local `trange' = subinstr("``trange''", "D0","D",1) 
+	local `trange' = lower("``trange''")
+ }
 
 * Check whether the database exists in the working directory, then online
 
-capture confirm file "`indicator'.tsv" // change if somewhere else
-if _rc==0 {
-	// proceed
+capture confirm file `upind'.tsv
+if _rc == 0 & ("`erase'" == "noerase") {
+	noisily display as input "Using existing Eurostat table (`indicator')."
 	}
 else {
 	copy "https://ec.europa.eu/eurostat/api/dissemination/files/inventory?type=data" databaselist.txt, replace
 	insheet using databaselist.txt, clear names // this doesn't have the variable labels anymore
-	keep if code=="`indicator'"
+	keep if code == `"`upind'"'
 	count
 	if r(N)==0 {
-		noisily display in red "Dataset does not exist - Consult Eurostat website: https://ec.europa.eu/eurostat/data/database"
+		noisily display in red "Dataset `indicator' does not exist - Consult Eurostat website: https://ec.europa.eu/eurostat/data/database"
 		clear
 		exit
 		}
@@ -98,278 +129,288 @@ else {
 	*/
 
 	* Check that 7-zip is installed on Windows computer
-
-	if c(os)=="Windows" {
-		capture confirm file "C:\Program Files\7-Zip\7zG.exe" // change if somewhere else
-			if _rc==0 {
-				// nothing
-				}
-			else {
+	if c(os) == "Windows" {
+		local exepath = "C:\Program Files\7-Zip\7zG.exe" // change if installed elsewhere (also below)
+		noi di "`exepath'"
+		capture confirm file `"`exepath'"' 
+			if _rc!=0 {
 				noisily di in red "Install 7-zip here: C:\Program Files\7-Zip\7zG.exe, or edit ado."
 				noisily di in red "Continuing with uncompressed option (larger and slower file transer)."
-			local uncompressed = "uncompressed"
-			}
+				local uncompressed = "uncompressed"
+				}
 		}
 
-	cap erase databaselist.txt // toggle for troubleshooting 
-
+	cap erase databaselist.txt // keep when troubleshooting 
 
 	// Download data from Eurostat bulk download facility (2024 migration)
-	noisily di "Downloading and formating data ..."
+	noisily display as text "Downloading and formatting data ..."
 
+	if "`uncompressed'" == "uncompressed"  {
+		copy  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/`indicator'/?format=TSV&compressed=false" `upind'.tsv, replace
+		}
 	if "`uncompressed'" == "" {
-		copy  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/`indicator'/?format=TSV&compressed=true" `indicator'.tsv.gz, replace
-		if c(os)=="Windows" {
-			shell "C:\Program Files\7-Zip\7zG.exe" x -y "`indicator'.tsv.gz"
+		copy  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/`indicator'/?format=TSV&compressed=true" `upind'.tsv.gz, replace
+		if c(os) == "Windows" {
+			shell "`exepath'" x -y "`upind'".tsv.gz
+			*shell "C:\Program Files\7-Zip\7zG.exe" x -y "`upind'".tsv.gz
 			}
-		if c(os)=="MacOSX" {
-			shell gunzip "`indicator'.tsv.gz"
+		if c(os) == "MacOSX" {
+			shell gunzip `upind'.tsv.gz
 			}
-		// add Linux if needed
 		}
-	else {
-		copy  "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/data/`indicator'/?format=TSV&compressed=false" `indicator'.tsv, replace
-		}
-	} // end download from Eurostat
+	}
 
-	
 * Load and clean data
 * ===================
+//insheet using `upind'.tsv, tab names double // old command
 
-insheet using `indicator'.tsv, tab names double
+* Replace commas by tabs (could also be done using -split-)
+
+//  alternative import (a bit faster but uses shell/powershell)
+if "`altimport'" == "altimport" {
+	tempfile outputfile
+	if c(os) == "MacOSX" {
+		shell sed 's/,/\t/g' "`upind'.tsv" > `outputfile' // output_file.tsv
+		}
+	if c(os) == "Windows" {
+		shell powershell -Command "(Get-Content `upind'.tsv) -replace ',', [char]9 | Set-Content `outputfile'"
+		}
+	import delimited `outputfile', asdouble varnames(1) clear
+	cap erase `outputfile'
+	cap rename geotime_period geo // check whether some tables may not have a geo variable
+	label var geo ""
+
+	desc
+	//list if geo == "BE" & na_item == "D3"
+
+	* Fix time variable labels
+	ds
+	local firstvar : word 1 of `r(varlist)' 			// ususally this is "freq" (frequency of measurement)
+	ds `firstvar'-geo, not								// this is assuming there is always a geo
+	local tsvars = "`r(varlist)'"
+	}
+
+// default import
+if "`altimport'" == "" {							// more like old syntax, less shell
+	import delimited "`upind'.tsv", asdouble varnames(1) clear
+
+	ds
+	local firstvar : word 1 of `r(varlist)'
+	rename `firstvar' DimensionS
+
+	split DimensionS, parse(,) gen(Dimension_) destring
+	order Dimension_*, first
+
+	local DIMENSIONS : variable label DimensionS
+	local DIMENSIONS : subinstr local DIMENSIONS "," " " , all
+	local DIMENSIONS : subinstr local DIMENSIONS "\" " "
+	local DIMENSIONS : subinstr local DIMENSIONS "TIME_PERIOD" " "
+	local dn : word count `DIMENSIONS'
+	*noisily display "Dimensions altimport (`dn'): `DIMENSIONS'"
+	forvalues i=1/`dn' {
+		capture local varname`i' : word `i' of `DIMENSIONS'
+		capture rename Dimension_`i' `varname`i'' 
+		}
+	drop DimensionS
+
+	ds
+	local firstdim : word 1 of `r(varlist)'
+	local lastdim : word `dn' of `r(varlist)'
+	ds `firstdim'-`lastdim'
+	local dimensions = "`r(varlist)'"
+	ds `dimensions', not
+	local tsvars = "`r(varlist)'"
+	}
+
+* Label, define, and select timeseries and dimensions
+* ---------------------------------------------------
+/* what to do if there is no time series? */
+foreach var of varlist `tsvars' {
+	qui display "`var'"
+	local varlab : var label `var'
+
+	// harmonize time label
+	local varlab = subinstr("`varlab'", "-","M",1)
+	local varlab = subinstr("`varlab'", "-","D",1) 
+	local varlab = subinstr("`varlab'", "MQ","Q",1) 
+	local varlab = subinstr("`varlab'", "MS","S",1)
+	local varlab = subinstr("`varlab'", "M0","M",1) 
+	local varlab = subinstr("`varlab'", "D0","D",1) 
+	local varlab = lower("`varlab'")
+	qui di "`varlab'"
+	rename `var' `indicator'`varlab'
+	}
+
 ds
-local firstvar : word 1 of `r(varlist)'
-rename `firstvar' DimensionS
+local firstvar : word 1 of `r(varlist)' // eg. "freq'
 
-* Keep specified time range
-if "`start'"!="" {
-	lookfor \time
-	if "`r(varlist)'"=="DimensionS" {
-		lookfor `start'
-		if "`r(varlist)'"=="" {
-			noisily display in red "Start time not in range or no data for this time period"
-			clear
-			cap erase `indicator'.tsv.gz
-			if "`erase'" != "noerase" {
-				cap erase `indicator'.tsv	
-				}
-			exit 197
+* Dimensions ("new")
+ds `indicator'*, not
+local newdimensions = "`r(varlist)'"
+
+
+* Time series filter
+if "`start'" == "" & "`end'" == "" {
+	// keep all variables
+	}
+else {
+	// select the time range
+	ds `indicator'*
+	local n : word count `r(varlist)'
+	di "word count n = ", `n'
+	local startvar : word 1 of `r(varlist)' // first measurement by default
+	local endvar : word `n' of `r(varlist)'
+	forvalues vn = 1/`n' {
+		local tsvar : word `vn' of `r(varlist)'
+		if "`tsvar'" == "`indicator'`start'" {
+			local startvar = "`tsvar'"
 			}
-		local num : word count `r(varlist)'
-		local varend : word `num' of `r(varlist)'
-		keep DimensionS-`varend'
+		if "`tsvar'" == "`indicator'`end'" {
+			local endvar = "`tsvar'"
+			}
 		}
-	else {
-		noisily display in red "No time dimension - cannot specify [, start()] option"
-		clear
-		cap erase `indicator'.tsv.gz
-		if "`erase'" != "noerase" {
-			cap erase `indicator'.tsv	
+	//noi display "`startvar'"
+	//noi display "`endvar'"
+	ds `startvar'-`endvar'
+	local timeseries = "`r(varlist)'"
+	//noi di "`timeseries'"
+	keep `newdimensions' `timeseries'
+	}
+
+
+* Geo filter
+if "`geo'" == "" {
+	}
+else {
+	tempvar select
+	gene byte `select' = 0
+	
+	local n : word count `geo'
+	display "geo number", `n'		// testing
+	forvalues gn = 1/`n' {
+		local i : word `gn' of `geo'
+		display "country: `i'"
+		replace `select' = 1 if geo == "`i'"
+		}
+	keep if `select' == 1
+	drop `select'
+	}
+
+* Other filters
+if !inlist("`keepdim'","",";") {
+	tokenize `keepdim', parse(";")	
+	local i = 1							// loops through tokens, which consist of words
+	while "``i''" != "" { 				// the next token after the last is empty
+		display as result "Dimension values: ``i''"
+		if "``i''" != ";" {
+			tempvar dselect
+			gene byte `dselect' = .
+			local semicolon = 0
+			foreach var of varlist `newdimensions' {
+				if !inlist("`var'","geo","freq") {
+					display "`var'"
+					local n : word count ``i''
+					display "Number of values", `n' // testing
+					forvalues dn = 1/`n' {
+						local dimval : word `dn' of ``i''
+						local dimval = trim("`dimval'")
+						di "Value to check: `dimval'"
+						replace `dselect' = 1 if trim(`var') == "`dimval'" //ok
+						}
+					}				
+				}
 			}
-		exit 197
+		if "``i''" == ";" {				// semicolons are also tokens: trigger a filter 
+			local semicolon = 1
+			//display as result "Keep selected values and move to next dimension or proceed"
+			keep if `dselect' == 1
+			drop `dselect'
+			}
+		local ++i
+		}
+	if `semicolon' != 1 {
+		keep if `dselect' == 1
+		drop `dselect'
 		}
 	}
 
-if "`end'"!="" {
-		lookfor \time
-		if "`r(varlist)'"=="DimensionS" {
-			lookfor `end'
-			if "`r(varlist)'"=="" {
-			noisily display in red "End time not in range or no data for this time period"
-			clear
-			cap erase `indicator'.tsv.gz
-			if "`erase'" != "noerase" {
-				cap erase `indicator'.tsv	
-				}
-			exit 197
-			}
-			local varfirst : word 1 of `r(varlist)'
-			ds
-			local num : word count `r(varlist)'
-			local lastvar : word `num' of `r(varlist)'
-			keep DimensionS `varfirst'-`lastvar'
-			}
-		else {
-			noisily display in red "No time dimension - cannot specify [, end()] option"
-			clear
-			cap erase `indicator'.tsv.gz
-			if "`erase'" != "noerase" {
-				cap erase `indicator'.tsv	
-				}
-			exit 197
-			}
-	}
-
-* Keep selected geo entities
-if "`geo'"!="" {
-	lookfor \time
-	if "`r(varlist)'"=="DimensionS" {
-		gen DimensionS2=","+DimensionS+","
-		gen dimcomplex=.
-			foreach dim of local geo {	
-				count if regexm(DimensionS2, ",`dim',")
-				if r(N)!=0 {
-				replace dimcomplex=1 if regexm(DimensionS2, ",`dim',")		
-					}
-				else {
-					noisily display in red "No data for one geo entity or wrong code"
-					clear
-					cap erase `indicator'.tsv.gz
-					cap erase `indicator'.tsv
-					exit 197
-					}
-				}
-			drop if dimcomplex!=1
-			drop dimcomplex	DimensionS2		
-		}
-
-	lookfor \geo
-	if "`r(varlist)'"=="DimensionS" {
-		local geo2=lower("`geo'")
-		foreach dim of local geo2 {
-			lookfor `dim'
-			if "`r(varlist)'"=="" {
-				noisily display in red "No data for one geo entity or wrong code"
-				clear
-				cap erase `indicator'.tsv.gz
-				if "`erase'" != "noerase" {
-					cap erase `indicator'.tsv	
-					}
-				exit 197
-				}
-			}
-		keep DimensionS `geo2'
-		}
-	}
-
-* Keep selected dimensions
-if "`keepdim'"!="" {
-	gen DimensionS2=","+DimensionS+","
-	tokenize `keepdim', parse(";")
-	local i = 1
-	while "``i''" != "" {
-		if "``i''"!=";" {
-			gen dimcomplex=.
-				foreach dim of local `i' {
-					count if regexm(DimensionS2, ",`dim',")
-					if r(N)==0 {
-						noisily display in red "No data for one dimension or wrong code"
-						clear
-						cap erase `indicator'.tsv.gz
-						if "`erase'" != "noerase" {
-							cap erase `indicator'.tsv	
-							}
-						exit 197	
-					}
-					replace dimcomplex=1 if regexm(DimensionS2, ",`dim',")
-				}
-				drop if dimcomplex!=1
-				drop dimcomplex
-			}			
-		local i = `i' + 1
-		}
-	drop DimensionS2
-	}
-
-* Separate values and flags (default: have flags)
-
-ds DimensionS, not
+* Separate flags from values
+ds `newdimensions', not
 foreach var of varlist `r(varlist)' {
-	local geotime : variable label `var'
-	local geotime = subinstr("`geotime'","-","", .) // new version 3.1
-	rename `var' `indicator'`geotime'
-	label var `indicator'`geotime'
+	//display "`var'"
+	label var `var' ""
 	if "`flags'" != "noflags" {
-		generate flags_`indicator'`geotime' = `indicator'`geotime'
-		order flags_`indicator'`geotime', after(`indicator'`geotime')
-		tostring flags_`indicator'`geotime', replace force
-		replace flags_`indicator'`geotime' = trim(substr(flags_`indicator'`geotime',strpos(flags_`indicator'`geotime'," "),.))
+		generate flags_`var' = `var'
+		tostring flags_`var', replace force
+		replace  flags_`var' = trim(substr(flags_`var',strpos(flags_`var'," "),.))
+		order flags_`var', after(`var')
 		}
-	destring `indicator'`geotime', replace ignore("b c d e f i n p r s u z :")
+	destring `var', replace ignore("b c d e f i n p r s u z :")
 	}
 
 
-* Reshape dataset to long format (long option)
-* ============================================
+* Reshape
+* =======
+/*
+Either with or without flags.
+Time format needs to be defined.
+*/
 
 if "`long'" == "long" {
-	noisily di "Reshaping dataset ..."
 	if "`flags'" == "noflags" {
-		reshape long `indicator', i(DimensionS) j(geotime, string)
+		reshape long `indicator', i(`newdimensions') j(time, string)
 		}
-	else {
-		reshape long `indicator' flags_`indicator', i(DimensionS) j(geotime, string)
+	else { 
+		reshape long `indicator' flags_`indicator', i(`newdimensions') j(time, string)
+		tostring flags, force replace
+		replace flags = "" if flags == "."
 		}
-	order geotime, before(`indicator')
 
-	// Fix time or geo dimension
-
-	lookfor \time
-	if "`r(varlist)'"=="DimensionS" { 
-		rename geotime date
+	levelsof freq
+	return list
+	rename time date
+	if r(r) == 1 {
+		local timefreq : word 1 of `r(levels)'
+		di "`timefreq'"
 		local annual = 1
-		* Daily
-		if regexm(date, "D") {
-			replace date=subinstr(date, "M", "/", .)
-			replace date=subinstr(date, "D", "/", .)
-			gen time=daily(date, "YMD")
-			format time %td
-			noisily di "Time format: daily"
-			local annual = 0
-			}
-		* Monthly
-		if regexm(date, "M") {
-			gen time=monthly(date, "YM")
-			format time %tm
-			noisily di "Time format: monthly"
-			local annual = 0
-			}
-		* Quarterly
-		if regexm(date, "Q") {
+		if "`timefreq'" == "Q" {
+			noisily display as text "Quarterly time format"
 			gen time=quarterly(date, "YQ")
 			format time %tq
-			noisily di "Time format: quarterly"
 			local annual = 0
 			}
-		* Half yearly // New version 3.2
-		if regexm(date, "S") {
-			cap gen time=halfyearly(date, "YH")
+		if "`timefreq'" == "M" {
+			noisily display as text "Monthly time format"
+			gen time=monthly(date, "YM")
+			format time %tm
+			local annual = 0
+			}
+		if "`timefreq'" == "S" {
+			noisily display as text "Half yearly time format"
+			gen time=halfyearly(date, "YH")
 			format time %th
-			noisily di "Time format: half yearly"
 			local annual = 0
 			}
-		* Yearly
-		cap destring date, replace
-		cap gen time=date
-		cap order time, after(date)
-		cap drop date
-		
+		if "`timefreq'" == "D" {
+			noisily display as text "Daily time format"
+			gen time=daily(date, "YMD")
+			format time %td
+			local annual = 0
+			}
 		if `annual' == 1 {
-			noisily di "Time format: yearly"
+			noisily di "Annual time format"
+			gene time = date
+			cap destring time, replace
 			}
-	}
-	lookfor \geo
-		if "`r(varlist)'"=="DimensionS" {
-			rename geotime geo
-			}
-	}
-
-* Split DimensionS
-
-split DimensionS, parse(,) gen(Dimension_) destring
-order Dimension_*
-local DIMENSIONS : variable label DimensionS
-local DIMENSIONS : subinstr local DIMENSIONS "," " " , all
-local DIMENSIONS : subinstr local DIMENSIONS "\" " "
-local N_DIMENSIONS : word count `DIMENSIONS'
-forvalues i=1/`N_DIMENSIONS' {
-	capture local varname`i' : word `i' of `DIMENSIONS'
-	capture rename Dimension_`i' `varname`i'' 
+		}
+	drop date
+		
+		
 	}
 
-drop DimensionS
 
-/* NEW 2024 */
+* Labels
+* ======
 
 /* 
 
@@ -379,92 +420,76 @@ https://ec.europa.eu/eurostat/api/dissemination/sdmx/3.0/structure/codelist/ESTA
 The online table shows this (works, 2.1, which works):
 https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/codelist/ESTAT/EFFECT/?compressed=true&format=TSV&lang=en			
 
-*/	
+*/
 
+* Download and apply labels from Eurostat bulk download facility (default: label variables)
+noisily display as text "Downloading and formatting labels ..."
 
-* Labels
-* ======
-/* Download and apply labels from Eurostat bulk download facility (default: label variables) */
+ds *`indicator'*, not // varlist of dimensions plus time
+di "`r(varlist)'"
 
-preserve
+copy "https://ec.europa.eu/eurostat/api/dissemination/files/inventory?type=codelist" codelist.txt, replace // list with variable labels
 
-	// new database has upper case variables, ado appears to not accept placeholder for all variables
-	ds 
-	foreach var of varlist `r(varlist)' {
-		local upper = upper("`var'")
-		cap rename `var' `upper'
-		}
-
-	if "`label'" == "nolabel" {
-		// nothing
-		}
-	else {
-		noisily display in green "Downloading and formating labels ..."
-		}
-
-	ds *`indicator'*, not
-	
-	// First download the list before looping (varlist still in memory)
-	
-	copy "https://ec.europa.eu/eurostat/api/dissemination/files/inventory?type=codelist" codelist.txt, replace
-	insheet using codelist.txt, clear
-	
-	foreach var in `r(varlist)' {
-	di "`var'"
-		*insheet using "https://ec.europa.eu/eurostat/estat-navtree-portlet-prod/BulkDownloadListing?sort=1&file=dic%2Fen%2Fdimlst.dic", tab clear
-		insheet using codelist.txt, clear
-		keep if code=="`var'"
-		
-		*replace v1=lower(v1)
-		gene v1 = lower(code)
-		
-		*local lb`var'=v2
-		local lb`var'=label
-		
-		* Download value labels (need to be unzipped)
-		if "`label'" == "nolabel" {
-			}
-		else {
-			local lbls = upper("`var'")
-			di "`lbls'"
-			copy "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/codelist/ESTAT/`lbls'/?compressed=true&format=TSV&lang=en" `lbls'.tsv.gz, replace
-				if c(os)=="Windows" {
-					shell "C:\Program Files\7-Zip\7zG.exe" x -y `lbls'.tsv.gz
-				}
-				if c(os)=="MacOSX" {
-					shell gunzip `lbls'.tsv.gz
-				}
-			insheet using `lbls'.tsv, tab double clear
+foreach var of varlist `r(varlist)' {
+	if !inlist("`var'","exludethis") {
+		preserve
+			// Step 1: variable labels - save a loop of locals with the label
+			di "`var'"
+			local upvar = upper("`var'")
+			insheet using codelist.txt, clear
+			keep if code == "`upvar'"
+			local lb`var' = label[1]
+			di as result "Variable label: `lb`var''"
 			
-				cap tempfile `var'_file
-				cap rename v1 `var'
-				cap rename v2 `var'_label
-				cap save ``var'_file', replace
-				erase `lbls'.tsv
-			}
+			// Step 2: value labels, download, decompress and save in different tempfiles
+			if "`label'" == "nolabel" {
+				// do nothing
+				}
+			else {
+				local upvar = upper("`var'")
+				di "Variable: `upvar'"
+				if "`uncompressed'" == "" {	
+					copy "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/codelist/ESTAT/`upvar'/?format=TSV&compressed=true&lang=en" `upvar'.tsv.gz, replace
+
+						if c(os) == "Windows" {
+							*shell `"`exepath'"' x -y `"`upvar'.tsv.gz"'
+							shell "`exepath'" x -y "`upvar'".tsv.gz
+						}
+						if c(os) == "MacOSX" {
+							shell gunzip `upvar'.tsv.gz
+						}
+					}
+				else {
+					copy "https://ec.europa.eu/eurostat/api/dissemination/sdmx/2.1/codelist/ESTAT/`upvar'/?format=TSV&compressed=false&lang=en" `upvar'.tsv, replace
+					}
+				
+				insheet using `upvar'.tsv, tab double clear
+				*list in 1/10, clean
+				tempfile `var'_file
+				rename v1 `var'
+				rename v2 `var'_label
+				save ``var'_file', replace
+				erase `upvar'.tsv
+				}
+		restore
 		}
-		
-restore
+	}
 
 cap erase codelist.txt // toggle for troubleshooting labels
 
-	ds 
-	foreach var of varlist `r(varlist)' {
-		local upper = upper("`var'")
-		cap rename `var' `upper'
-		}
-	ds
-	
 ds *`indicator'*, not
+di "`r(varlist)'"
+
 foreach var of varlist `r(varlist)' {
-	if "`var'"!="time" {
+	display as result "Labeling `var'"
+	if !inlist("`var'","time") {
 		label var `var' "`lb`var''"
-		}
-	if "`label'" == "nolabel" {
-		// nothing
-		}
-	else {
-		if "`var'"!="time" {
+
+		if "`label'" == "nolabel" {
+			// do nothing
+			}
+		else {
+			cap label var `var'_label "`lb`var''"
 			cap merge m:1 `var' using ``var'_file', nogenerate keep(match)
 			cap order `var'_label, after(`var')
 			}
@@ -472,40 +497,62 @@ foreach var of varlist `r(varlist)' {
 	}
 .
 
-
 * Finish process
 * ==============
 
-* Sort data
-
 ds *`indicator'*, not
+order `r(varlist)'
 sort `r(varlist)'
 
 * Erase working files  (default: erase)
-cap erase `indicator'.tsv.gz
+cap erase `upind'.tsv.gz
 if "`erase'" == "noerase" {
-	noisily display in green "raw data stored as `indicator'.tsv"
+	noisily display as result "Original table stored as `upind'.tsv, use [noerase] to use this file next time."
 	}
 else {
-	erase `indicator'.tsv
+	erase `upind'.tsv
 	}
 
 // Save in Stata format with lower case variables and file name
-
 compress
 
-ds 
-foreach var of varlist `r(varlist)' {
-	local lower = lower("`var'")
-	cap rename `var' `lower'
+if "`save'" == "save" {
+	save `indicator'.dta, replace
+	noisily	display as result "File `indicator'.dta was saved"
 	}
 
-if "`save'" == "save" {
-	local indicator = lower("`indicator'")
-	save `indicator'.dta, replace
-	noisily	display in green "file `indicator'.dta saved"
-	}
+noisily display as result "Program completed"
 
 } // end quietly
-
 end
+
+
+/* -waitfor- ado
+
+	/* 
+	Stata may proceed before the shell script or copy has finished.
+	Another issue is that unzipping larger tables on cloud drives may fail. Using a local
+	drive, or using the uncompressed option, are solutions. 
+
+	https://u.osu.edu/odden.2/2015/03/10/using-semaphores-to-make-stata-wait-on-a-winexec-result/
+
+	Alternatively, a timer can be programmed to check with intervals whether the file exist. Although
+	the approach makes sense, it doesn't work and the [uncompressed] option is your way out.
+	*/
+
+// give the shell some time 
+local proceed = 0
+while `proceed' == 0 {
+capture confirm file `upvar'.tsv
+if _rc !=0 {
+	noisily display "." _continue
+	sleep 1000
+	//shell gunzip `"$gfile"'
+	}
+else {
+	local ++proceed
+	}
+}
+// file should be decompressed
+*/
+

@@ -1,34 +1,34 @@
-VERSION 11
-POSITION . . 550 380
+VERSION 14.0
+POSITION           .     .   550   360   // x y w h
 
-DIALOG main, title("EurostatUse") tabtitle("Series")
+DIALOG main, title("eurostatuse") tabtitle("Series")
 BEGIN
 
-	GROUPBOX serie             10  20  520  60, label("Table name from Eurostat website")
-	COMBOBOX seriename         20  45  160  25
+GROUPBOX serie             10    20   520   50, label("Table name (Eurostat code)")
+COMBOBOX seriename         20    40   180   20
 
-	GROUPBOX options1          10  100   520  50, label("Format options (optional)")
-  	CHECKBOX ck_long	       20  +20  180   ., option(long) nomemory label(Reshape data to long format)
-  	CHECKBOX ck_nolabel	     200  @   180   ., option(nolabel) nomemory label(Drop the label variables)
-  	CHECKBOX ck_noflags	     350  @   180   ., option(noflags) nomemory label(Remove flags)
+GROUPBOX options1          10    80   520   50, label("Formatting options (optional)")
+CHECKBOX ck_long           20   100   180    ., option(long) nomemory label(Reshape to long format)
+CHECKBOX ck_nolabel       200   100   180    ., option(nolabel) nomemory label(Do not add value labels)
+CHECKBOX ck_noflags       380   100   180    ., option(noflags) nomemory label(Remove flags)
 
-  GROUPBOX options2           10  165   520  70, label("Saving options (optional)")
-    CHECKBOX ck_clear         20  +20   240   ., option(clear) nomemory label(Clear data in memory)
-    CHECKBOX ck_noerase       240  @    240   ., option(noerase) nomemory label(Keep original .tsv file)
-    CHECKBOX ck_uncompressed  20  +20   240   ., option(uncompressed) nomemory label(Download uncompressed .tsv file)
-    CHECKBOX ck_save          240  @    240   ., option(save) nomemory label(Save output in Stata format)
+GROUPBOX options2          10   145   520   50, label("Saving options (optional)")
+CHECKBOX ck_clear          20   165   240    ., option(clear) nomemory label(Clear data in memory)
+CHECKBOX ck_save          200   165   240    ., option(save) nomemory label(Save output in Stata format)
 
-  GROUPBOX dimension      10  250  520  120, label("Select data (optional)")
-    COMBOBOX country      270 +20  250  25, dropdown contents(countrylist) values(countryvalues) append
-    TEXT country_lab      20    @  180  15, label(Select geo dimension)
-    COMBOBOX start        305  +25 80 25
-    TEXT start_lab        20    @  180  15, label(Select time dimension)
-    TEXT start_lab2       270   @  30  15, label(Start)
-    COMBOBOX end          440   @  80  25
-    TEXT end_lab          410   @  30  15, label(End)
-    COMBOBOX dimension3   270  +25 250  25, nomemory
-    TEXT dim3_lab         20    @  250  15, label(Select other dimension(s) - separate with)
-    TEXT dim3_lab2        20    +15  250  15, label(  semicolon)
+GROUPBOX dimension         10   210   520   140, label("Select data (optional)")
+TEXT country_lab           20   230   180    15, label("Select geo dimension")
+TEXT start_lab             20   255   180    15, label("Select time range")
+TEXT start_lab2           270   255    30    15, label(Start)
+TEXT end_lab              405   255    30    15, label(End)
+COMBOBOX country          270   230   250    25, dropdown contents(countrylist) values(countryvalues) append
+COMBOBOX start            305   255    85    20
+COMBOBOX end              430   255    85    20
+
+TEXT dim3_lab              20   280   200    15, label("Select in other dimension(s)")
+TEXT dim3_lab2             30   295   200    15, label("separate values with spaces and")
+TEXT dim3_lab3             30   310   200    15, label("dimensions with a semicolon") 
+COMBOBOX dimension3       270   280   250    20, nomemory
 
 END
 
@@ -133,12 +133,10 @@ BEGIN
   put "eurostatuse "
   put main.seriename
     beginoptions
-      option main.ck_clear
       option main.ck_long
       option main.ck_nolabel
       option main.ck_noflags
-      option main.ck_noerase
-      option main.ck_uncompressed
+      option main.ck_clear
       option main.ck_save
       put " geo("main.country
       put ") "
