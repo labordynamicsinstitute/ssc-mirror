@@ -49,6 +49,7 @@ p geocodehere module to provide geocoding relying on Nokia’s Here Maps API
 p geocodeopen module to geocode addresses using MapQuest Open Geocoding Services and Open Street Maps
 p geodist module to compute geographical distances
 p geodist2 module to calculate straight line distance between two coordinates
+p geoflow module for generating spatial arcs
 p geoinpoly module to match geographic locations to shapefile polygons
 p geonear module to find nearest neighbors using geodetic distances
 p geoplot module to draw maps

@@ -38,5 +38,6 @@ d Support: email h.malapit@@cgiar.org
 d
 f weai.ado
 f weai.sthlp
-f ../s/scheme-weai.scheme.do
+f ../s/scheme-weai.scheme
+f weai_examples.do
 f weai_examples.dta

@@ -1,7 +1,7 @@
 {smcl}
-{* 09Nov2024}{...}
+{* 14Jan2025}{...}
 {hi:help spider}{...}
-{right:{browse "https://github.com/asjadnaqvi/stata-spider":spider v1.51 (GitHub)}}
+{right:{browse "https://github.com/asjadnaqvi/stata-spider":spider v1.53 (GitHub)}}
 
 {hline}
 
@@ -19,8 +19,8 @@ The command is based on the following guide on Medium: {browse "https://medium.c
                   {cmd:format}({it:fmt}) {cmd:wrap}({it:num}) {cmdab:ms:ize}({it:str}) {cmdab:mlw:idth}({it:str}) {cmdab:displacel:ab}({it:num}) {cmdab:displaces:pike}({it:num}) {cmdab:grid}  
                   {cmdab:gc:olor}({it:str}) {cmdab:gw:idth}({it:str}) {cmdab:gp:attern}({it:str}) {cmdab:glabs:ize}({it:str}) {cmdab:glabc:olor}({it:str}) {cmdab:glaba:ngle}({it:str}) {cmdab:glabops:ition}({it:str}) 
                   {cmd:rline({it:numlist})} {cmdab:rlinec:olor}({it:str}) {cmdab:rlinew:idth}({it:str}) {cmdab:rlinep:attern}({it:str})
-                  {cmdab:sc:olor}({it:str}) {cmdab:sw:idth}({it:str}) {cmdab:slabs:ize}({it:str}) {cmdab:slabc:olor}({it:str})
-                  {cmdab:noleg:end} {cmdab:legpos:iton}({it:num}) {cmdab:legpos:ition}({it:num}) {cmdab:legcol:umns}({it:num}) {cmdab:legs:ize}({it:num}) {cmd:xsize}({it:num}) {cmd:ysize}({it:num})
+                  {cmdab:sc:olor}({it:str}) {cmdab:sw:idth}({it:str}) {cmdab:slabs:ize}({it:str}) {cmdab:slabc:olor}({it:str}) {cmdab:noleg:end} 
+                  {cmdab:legpos:ition}({it:num}) {cmdab:legcol:umns}({it:num}) {cmdab:legs:ize}({it:num}) {cmdab:legopt:ions}({it:str}) {cmd:xsize}({it:num}) {cmd:ysize}({it:num})
                   {cmd:stat}({it:mean}|{it:sum}) {cmd:pad}({it:num}) * {cmd:]}
 
 {p 4 4 2}
@@ -138,11 +138,12 @@ The default value is {opt displaces(2)} for 2%.{p_end}
 
 {p2coldent : {opt legs:ize(num)}}Size of legend entries. Default is {opt legs(2.2)}.{p_end}
 
+{p2coldent : {opt legopt:ions(str)}}All other legend() options not specified above. This allows users to micro finetune the plot.{p_end}
+
 {p2coldent : {opt nolegend}}Hide the legend.{p_end}
 
 
-
-{p2coldent : {opt *}}All other standard twoway options.{p_end}
+{p2coldent : {opt *}}All other standard twoway options not elsewhere specified.{p_end}
 
 {synoptline}
 {p2colreset}{...}
@@ -167,23 +168,14 @@ Please submit bugs, errors, feature requests on {browse "https://github.com/asja
 
 {title:Citation guidelines}
 
-Suggested citation for this package:
-
-Naqvi, A. (2024). Stata package "spider" version 1.4. Release date 13 October 2024. https://github.com/asjadnaqvi/stata-spider.
-
-@software{spider,
-   author = {Naqvi, Asjad},
-   title = {Stata package ``spider''},
-   url = {https://github.com/asjadnaqvi/stata-spider},
-   version = {1.5},
-   date = {2024-10-13}
-}
+See {browse "https://ideas.repec.org/c/boc/bocode/s459136.html"} for the official SSC citation. 
+Please note that the GitHub version might be newer than the SSC version.
 
 
 {title:Package details}
 
-Version      : {bf:spider} v1.51
-This release : 09 Nov 2024
+Version      : {bf:spider} v1.53
+This release : 14 Jan 2025
 First release: 13 Oct 2022
 Repository   : {browse "https://github.com/asjadnaqvi/stata-spider":GitHub}
 Keywords     : Stata, graph, spider plot
@@ -191,7 +183,8 @@ License      : {browse "https://opensource.org/licenses/MIT":MIT}
 
 Author       : {browse "https://github.com/asjadnaqvi":Asjad Naqvi}
 E-mail       : asjadnaqvi@gmail.com
-Twitter      : {browse "https://twitter.com/AsjadNaqvi":@AsjadNaqvi}
+Twitter/X    : {browse "https://twitter.com/AsjadNaqvi":@AsjadNaqvi}
+BlueSky      : {browse "https://bsky.app/profile/asjadnaqvi.bsky.social":@asjadnaqvi.bsky.social}
 
 
 {title:References}
@@ -202,9 +195,8 @@ Twitter      : {browse "https://twitter.com/AsjadNaqvi":@AsjadNaqvi}
 
 
 {title:Other visualization packages}
-
 {psee}
-    {helpb arcplot}, {helpb alluvial}, {helpb bimap}, {helpb bumparea}, {helpb bumpline}, {helpb circlebar}, {helpb circlepack}, {helpb clipgeo}, {helpb delaunay}, {helpb graphfunctions}, {helpb joyplot}, 
+    {helpb arcplot}, {helpb alluvial}, {helpb bimap}, {helpb bumparea}, {helpb bumpline}, {helpb circlebar}, {helpb circlepack}, {helpb clipgeo}, {helpb delaunay}, {helpb graphfunctions}, {helpb geoboundary}, {helpb geoflow}, {helpb joyplot}, 
 	{helpb marimekko}, {helpb polarspike}, {helpb sankey}, {helpb schemepack}, {helpb spider}, {helpb splinefit}, {helpb streamplot}, {helpb sunburst}, {helpb ternary}, {helpb treecluster}, {helpb treemap}, {helpb trimap}, {helpb waffle}
 
-or visit {browse "https://github.com/asjadnaqvi":GitHub}.
+Visit {browse "https://github.com/asjadnaqvi":GitHub} for further information.

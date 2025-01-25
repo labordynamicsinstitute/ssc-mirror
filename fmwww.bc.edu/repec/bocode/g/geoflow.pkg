@@ -1,0 +1,17 @@
+d 'GEOFLOW': module for generating spatial arcs
+d
+d  geoflow is a Stata package for generating spatial arcs. 
+d
+d KW: graphics
+d KW: maps. flows
+d KW: arcs
+d
+d Requires: Stata version 15 and graphfunctions from SSC (q.v.)
+d
+d Distribution-Date: 20250124
+d
+d Author: Asjad Naqvi, Austrian Institute of Economic Research (WIFO)
+d Support: email asjadnaqvi@@gmail.com
+d
+f geoflow.ado
+f geoflow.sthlp

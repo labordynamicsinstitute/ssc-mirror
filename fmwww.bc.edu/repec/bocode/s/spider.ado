@@ -1,6 +1,8 @@
-*! spider v1.51 (09 Nov 2024)
+*! spider v1.53 (14 Jan 2025)
 *! Asjad Naqvi (asjadnaqvi@gmail.com)
 
+* v1.53 (14 Jan 2025): bug fixes.
+* v1.52 (07 Jan 2025): Data is now rectanguarlized properly.
 * v1.51 (09 Nov 2024): added flip to change orientation. starting position is now by default on the top. fixed a bug in generating gaps.
 * v1.5 	(13 Oct 2024): support for rline(). Grids are generated using graphfunctions rather than use internal Stata functions. Users can now specify marker and lp, lw lists.
 *                       renamed ra*() to g*() and c*() to g*() to represet grids. Added grid. Added lpattern().
@@ -35,7 +37,8 @@ version 15
 		[ xsize(real 1) ysize(real 1)  * ]	///
 		[ stat(string) unique pad(real 10) n(real 50) wrap(numlist >0 max=1) ] /// // v1.4 
 		[ LWidth(string) LPattern(string) MSYMbol(string) MSize(string) MLWIDth(string) GColor(string) GWidth(string) GPattern(string) grid OFFSet(real 0) ] /// // v1.5 
-		[ rline(numlist) RLINEColor(string) RLINEWidth(string) RLINEPattern(string) GLABPOSition(string) flip  ] // v1.5 cont.
+		[ rline(numlist) RLINEColor(string) RLINEWidth(string) RLINEPattern(string) GLABPOSition(string) flip  ] /// // v1.5 cont.
+		[ LEGOPTions(string) ] 
 		
 	// check dependencies
 	cap findfile colorpalette.ado
@@ -73,22 +76,24 @@ preserve
 	
 	
 	if `length' == 1 & "`by'" == "" {
-		di as error "Please specify a {bf:by()} with at least three categories."
+		di as error "Please specify a {bf:by()} variable with at least three categories."
 		exit
 	}
 	
 	if `length' == 1 & "`by'" != "" {
 		levelsof `by'
 		if r(r) < 3 {
-			display as error "by() variable should contain at least three categories."
+			display as error "{bf:by()} variable should contain at least three categories."
 			exit
 		}
 	}
 		
 	if `length' > 1 & "`by'" != "" {	
-		di as error "If more than one variable are specified then {bf:by} is not required."
+		di as error "{bf:by()} is not allowed if more than one variable is specified."
 		exit
 	}
+	
+
 	
 	// parse varlists 
 	if `length' > 1 {
@@ -97,7 +102,7 @@ preserve
 		local i = 1
 		
 		foreach x of local varlist {
-			drop if missing(`x')
+			*drop if missing(`x')
 			
 			// somewhere here preserve unique values
 			ren `x' _val`i'
@@ -159,7 +164,7 @@ preserve
 		levelsof `over'
 
 		if r(r) < 2 {
-			display as error "over() variable should contain at least two categories."
+			display as error "{bf:over()} variable should contain at least two categories."
 			exit
 		}		
 		
@@ -184,20 +189,30 @@ preserve
 			local over _over 
 		}	
 	}
+
+	if `length'==1 {
+		fillin `by' `over'  // rectanguarlize
+		drop _fillin
+	}	
 	
+	foreach x of local varlist {
+		recode `x' (.=0)  // fill the series
+	}	
+
 	
 	if "`stat'" == "" local stat mean
 	if "`weight'" != "" local myweight  [`weight' = `exp']
 	
 	collapse (`stat') `varlist' `myweight', by(`by' `over')
 
+	
 
 	/////////////////////
 	// set the scales  //  
 	/////////////////////
 	
 	if "`range'" != ""  {
-			
+
 		local pnum1 "`range'"
 		local pnum2 : subinstr  local pnum1 " " "," , all
 		
@@ -216,7 +231,6 @@ preserve
 		local norm2 = ceil(`varmax' + `disp')
 	}
 	
-	di "`norm1', `norm2'"
 
 	// rescale variables between [0,100] from their global min/max. This ensures that negative numbers are there as well
 	
@@ -284,8 +298,7 @@ preserve
 		local pnum2 : subinstr  local pnum1 " " "," , all
 	}
 
-	
-	*cap drop _order _id _x _y
+
 	
 	local rogrid = `rotate' + 90
 	
@@ -317,7 +330,6 @@ preserve
 		if "`rlinewidth'" 	== "" local rlinewidth 0.3
 		if "`rlinepattern'" == "" local rlinepattern solid
 		
-
 		foreach x of numlist `rline' {	
 			
 			local y = ((`x' - `norm1') / (`norm2' - `norm1')) * 100
@@ -346,7 +358,6 @@ preserve
 	
 	if "`format'" == "" local format %12.1f
 	
-
 	gen xvar = .
 	gen yvar = .
 	gen xlab = ""
@@ -373,7 +384,7 @@ preserve
 	if "`swidth'" == "" local swidth 0.1
 	
 	
-	gen double spikes = _n in 1/`items'
+	gen spikes = _n in 1/`items'
 	
 	forval x = 1/`items' {
 		local theta = `x' * 2 * _pi / `items'  
@@ -451,7 +462,7 @@ preserve
 		local poptions `3'
 	}
 	
-	qui levelsof `over'
+	levelsof `over'
 	local items = r(r)
 	
 	forval i = 1/`items' {
@@ -487,10 +498,8 @@ preserve
 	
 	if "`nolegend'" != "" | `overswitch' == 1  {
 		local mylegend legend(off)
-				
 	}
 	else {
-	
 		forval i = 1/`items' {
 			
 			local j = `i' + 1 + `byitems' 
@@ -499,8 +508,7 @@ preserve
 			local entries `" `entries' `j'  "`varn'"  "'
 		}
 	
-
-		local mylegend legend(order("`entries'") pos(`legposition') size(`legsize') col(`legcolumns')) 
+		local mylegend legend(order("`entries'") pos(`legposition') size(`legsize') col(`legcolumns') `legoptions') 
 		
 	}
 	
@@ -533,8 +541,7 @@ preserve
 							`mylegend' ///
 							`options'
 								
-									
-			
+								
 	*/
 		
 restore						
