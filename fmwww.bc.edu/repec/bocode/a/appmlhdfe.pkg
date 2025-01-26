@@ -1,0 +1,24 @@
+d 'APPMLHDFE': module to estimate asymmetric Poisson regression with high dimensional fixed effects
+d
+d  appmlhdfe estimates conditional expectiles using Efron's (1992)
+d asymmetric Poisson maximum likelihood estimator; the expectiles
+d are assumed to be an exponential function of a linear index, just
+d like in standard Poisson regression. By default, the expectile
+d 0.5 is estimated, which corresponds to Poisson regression. 
+d
+d KW: Poisson
+d KW: asymmetric Poisson
+d KW: fixed effects
+d
+d Requires: Stata version 11.1, ppmlhdfe and reghdfe from SSC (q.v.)
+d
+d Distribution-Date: 20250125
+d
+d Author: Matthew Clance, University of Pretoria
+d Support: email matthew.clance@@up.ac.za
+d
+d Author: J.M.C. Santos Silva, University of Surrey
+d Support: email jmcss@@surrey.ac.uk
+d
+f appmlhdfe.ado
+f appmlhdfe.sthlp
