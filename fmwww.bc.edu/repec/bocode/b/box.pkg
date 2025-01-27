@@ -1,0 +1,21 @@
+d 'BOX': module to find and set the Box local folder as Stata's working directory 
+d
+d  box locates a user's Box directory and sets Stata's working
+d directory to that location. The command is useful for running
+d do-files saved in Box across different computers (e.g., office or
+d home) or shared between colleagues without the need to manually
+d amend the working directory in the do-file. 
+d
+d KW: data management
+d KW: box
+d KW: directory 
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20250124
+d
+d Author: Giacomo Zanello ,  University of Reading 
+d Support: email g.zanello@@reading.ac.uk
+d
+f box.ado
+f box.sthlp

@@ -13809,6 +13809,7 @@ fmwww.bc.edu/repec/bocode/b/births.dta
 fmwww.bc.edu/repec/bocode/b/boottest.sthlp
 fmwww.bc.edu/repec/bocode/b/brmunid.sthlp
 fmwww.bc.edu/repec/bocode/b/bmi.ado
+fmwww.bc.edu/repec/bocode/b/box.ado
 fmwww.bc.edu/repec/bocode/b/bmputin.bmp
 fmwww.bc.edu/repec/bocode/b/b1x2.ado
 fmwww.bc.edu/repec/bocode/b/bmtest.ado
@@ -14219,6 +14220,7 @@ fmwww.bc.edu/repec/bocode/b/bnormpdf.html
 fmwww.bc.edu/repec/bocode/b/bnormpdf.ado
 fmwww.bc.edu/repec/bocode/b/bronch.pkg
 fmwww.bc.edu/repec/bocode/b/bioprobit.hlp
+fmwww.bc.edu/repec/bocode/b/box.sthlp
 fmwww.bc.edu/repec/bocode/b/bmp2dta.pkg
 fmwww.bc.edu/repec/bocode/b/bsens.ado
 fmwww.bc.edu/repec/bocode/b/bacondecomp.pkg
@@ -14398,6 +14400,7 @@ fmwww.bc.edu/repec/bocode/b/bootsamb.ado
 fmwww.bc.edu/repec/bocode/b/background_grey.zip
 fmwww.bc.edu/repec/bocode/b/btaxisstyle.sthlp
 fmwww.bc.edu/repec/bocode/b/barplot.ado
+fmwww.bc.edu/repec/bocode/b/box.pkg
 fmwww.bc.edu/repec/bocode/b/bpagan.hlp
 fmwww.bc.edu/repec/bocode/b/bnormpdf.hlp
 fmwww.bc.edu/repec/bocode/b/btstarstyle.sthlp
