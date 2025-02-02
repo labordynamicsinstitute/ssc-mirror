@@ -11461,6 +11461,7 @@ fmwww.bc.edu/repec/bocode/g/geoboundary.sthlp
 fmwww.bc.edu/repec/bocode/g/geekel2d.html
 fmwww.bc.edu/repec/bocode/g/gfi.sthlp
 fmwww.bc.edu/repec/bocode/g/getcensus.pkg
+fmwww.bc.edu/repec/bocode/g/ginidecomp.pkg
 fmwww.bc.edu/repec/bocode/g/glst.hlp
 fmwww.bc.edu/repec/bocode/g/ghansen.hlp
 fmwww.bc.edu/repec/bocode/g/gpreset.html

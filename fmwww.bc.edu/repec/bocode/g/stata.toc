@@ -77,6 +77,7 @@ p ghistcum module to graph histogram and cumulative distribution
 p ghk2 module (enhanced Mata function) to implement the Geweke-Hajivassiliou-Keane multivariate normal simulator
 p ghsurv module for the estimation of survival model using repeated cross-sectional data
 p ghxt module to compute Panel Groupwise Heteroscedasticity Tests
+p ginidecomp module to decompose the Gini coefficient by population subgroups
 p ginidesc module to compute Gini index with within- and between-group inequality decomposition
 p giniinc module for measuring inequality from incomplete income and survival data
 p ginireg module for Gini regression

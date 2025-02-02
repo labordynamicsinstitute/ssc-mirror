@@ -1,4 +1,4 @@
-*! jl 1.1.4 3 January 2025
+*! jl 1.1.5 1 February 2025
 *! Copyright (C) 2023-25 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -157,6 +157,7 @@ program define GetVarsFromDF
     local col : word `v' of `cols'
     local name: word `v' of `namelist'
     cap gen `type' `name' = `=cond(substr("`type'",1,3)=="str", `""""', ".")'
+
     cap noi plugin call _julia, eval "Int(`source'.`col' isa CategoricalVector)"
     _assert !_rc, msg(`"`__jlans'"') rc(198)
     if `__jlans' {
@@ -168,6 +169,17 @@ program define GetVarsFromDF
   }
   cap noi plugin call _julia `namelist' `if' `in', GetVarsFromDF`missing' `"`source'"' _cols `:strlen local cols' `ncols'
   _assert !_rc, msg(`"`__jlans'"') rc(198)
+  
+  forvalues v=1/`ncols' {
+    local col : word `v' of `cols'
+    local name: word `v' of `namelist'
+    cap noi plugin call _julia, eval "Int(`source'.`col' |> eltype |> nonmissingtype <: Date)"
+    _assert !_rc, msg(`"`__jlans'"') rc(198)
+    if `__jlans' format %td `name'
+    cap noi plugin call _julia, eval "Int(`source'.`col' |> eltype |> nonmissingtype <: DateTime)"
+    _assert !_rc, msg(`"`__jlans'"') rc(198)
+    if `__jlans' format %tc `name'  // NOT %tC
+  }
 end
 
 cap program drop PutVarsToDF
@@ -466,3 +478,4 @@ program _julia, plugin using(jl.plugin)
 * 1.1.2 Switch to using a dedicated 1.11 Juliaup channel; automatically install Julia
 * 1.1.3 Bug fixes. Make GetVarsFromDF varlist default to cols() option.
 * 1.1.4 Make sure to close all temp files opened in Mata, which otherwise can crash other programs
+* 1.1.5 Add date/datetime support to -jl use-
