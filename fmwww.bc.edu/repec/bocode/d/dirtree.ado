@@ -1,4 +1,4 @@
-*! version 1.0.0 14Jun2023 MLB
+*! version 1.1.0 10Jun2024 MLB
 program define dirtree
     version 14
     syntax, [dir(string) cd] *
@@ -31,8 +31,8 @@ program define main
     local kd : word count `dirs'
     local kf : word count `files'
     
-    local lastchild `"as txt "└── ""'
-    local child `"as txt "├── ""'
+    local lastchild `"as txt "{c BLC}{c -}{c -} ""'
+    local child `"as txt "{c LT}{c -}{c -} ""'
     local enddir `" as txt " \""'
 
     // display the root
@@ -64,7 +64,7 @@ program define main
             di as txt "`directory'"`lastchild' as result "`dir'"  `enddir'
         }
         else { // not last directory
-            local newdirectory "`directory'│   "
+            local newdirectory "`directory'{c |}   "
             di as txt "`directory'"`child'  as result "`dir'" `enddir'
         }
         // use recursion to display what is inside those directories

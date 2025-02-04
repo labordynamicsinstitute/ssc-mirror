@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0 15June2023 MLB}{...}
+{* *! version 1.1.0 10June2024 MLB}{...}
 {vieweralsosee "cd" "help cd"}{...}
 {vieweralsosee "dir" "help dir"}{...}
 {viewerjumpto "Syntax" "dirtree##syntax"}{...}
