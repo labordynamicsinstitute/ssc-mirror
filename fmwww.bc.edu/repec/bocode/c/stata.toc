@@ -51,6 +51,7 @@ p cepois module to estimate censored maximum likelihood Poisson regression model
 p ceq module to carry out Commitment to Equity (CEQ) fiscal incidence analysis
 p cf2 module to compare two datasets
 p cf3 module to compare two datasets
+p cfbinout module to perform Control Function Estimation of Binary Outcome Models
 p cfby module to compare datasets and produce discrepancy rates
 p cfitzrw module to implement Christiano-Fitzgerald Random Walk band pass filter for timeseries data
 p cflpois module to calculate confidence limits for rates based on Poisson outcome

@@ -14,7 +14,7 @@ d KW: boilerplate
 d
 d Requires: Stata version 15
 d
-d Distribution-Date: 20240610
+d Distribution-Date: 20250204
 d
 d Author: Maarten L. Buis, University of Konstanz
 d Support: email maarten.buis@@uni-konstanz.de
@@ -64,3 +64,7 @@ F mp_rlog.mpb
 F mp_rlogc.mpb
 F mp_smclpres.mpb
 F mp_smclpres.mpp
+f mp_b_dta_g.sthlp
+F mp_dta_g.mpb
+F mp_main_g.mpb
+f mp_b_main_g.sthlp

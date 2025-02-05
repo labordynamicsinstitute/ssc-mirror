@@ -1,0 +1,46 @@
+d 'CFBINOUT': module to perform Control Function Estimation of Binary Outcome Models
+d
+d   cfbinout implements control function (two-stage residuals
+d inclusion) estimation of binary outcome models, specifically
+d logit, probit, and cloglog, as suggested in Wooldridge (2015).
+d That is, in a first stage the endogenous right-hand-side
+d variables are regressed on the exogenous variables in the model.
+d Subsequently, the (generalized) residuals from these regressions
+d enter the second-stage regression as additional regressors.
+d Regarding the implementation in Stata and Mata, cfbinout draws on
+d Terza (2017, 2023). cfbinout complements the official Stata
+d command ivprobit, twostep and the recent community-contributed
+d command ivcloglog. Unlike ivprobit, twostep and ivcloglog,
+d cfbinout allows for discrete/factor endogenous right-hand-side
+d variables. For them, nonlinear first-stage models (default logit,
+d alternatively probit) are estimated and generalized residuals are
+d included in the second-stage regression, unless the option
+d fslink(linear) is specified. With a probit link-function and the
+d option fslink(linear), cfbinout probit is equivalent to ivprobit,
+d twostep in terms of model estimation. An important difference is,
+d however, that unless the option noresgenerate is specified,
+d cfbinout takes the control functions (included residuals) into
+d account in postestimation. The equivalence of cfbinout probit is
+d even closer with cfprobit, an official Stata command that was
+d released for StataNow almost at the same time as cfbinout was
+d completed. 
+d
+d KW: binary outcome
+d KW: control-function estimation
+d KW: generalized residual
+d KW: two-step estimation
+d KW: endogenous right-hand-side variables
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20250204
+d
+d Author: Elena Yurkevich, Friedrich-Alexander-Universität Erlangen-Nürnberg
+d Support: email elena.yurkevich@@fau.de
+d
+d Author: Harald Tauchmann, Friedrich-Alexander-Universität Erlangen-Nürnberg
+d Support: email harald.tauchmann@@fau.de
+d
+f cfbinout.ado
+F ../_/_llcfbin_v.do
+f cfbinout.sthlp

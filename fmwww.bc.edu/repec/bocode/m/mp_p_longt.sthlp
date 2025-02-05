@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.1.3}{...}
+{* *! version 2.1.4}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {title:Title}
@@ -40,18 +40,18 @@ shows the content of the created project folder using {help dirtree}, and the
 This template will create the following sub-directories and files:
 
     proj_abbrev /   
-    ├──  docu / 
-    |    └── {help mp_b_rlog:research_log.md} 
-    ├──  posted / 
-    |    ├── analysis /
-    |    ├── data /
-    |    └── txt /
-    └──  work / 
-         ├── analysis /
-         |   ├── {help mp_b_ana:proj_abbrev_ana01.do}
-         |   ├── {help mp_b_dta:proj_abbrev_dta01.do}
-         |   └── {help mp_b_main:proj_abbrev_main.do}
-         └── txt /
+    {c LT}{c -}{c -}  docu / 
+    {c |}    {c BLC}{c -}{c -} {help mp_b_rlog:research_log.md} 
+    {c LT}{c -}{c -}  posted / 
+    {c |}    {c LT}{c -}{c -} analysis /
+    {c |}    {c LT}{c -}{c -} data /
+    {c |}    {c BLC}{c -}{c -} txt /
+    {c BLC}{c -}{c -}  work / 
+         {c LT}{c -}{c -} analysis /
+         {c |}   {c LT}{c -}{c -} {help mp_b_ana:proj_abbrev_ana01.do}
+         {c |}   {c LT}{c -}{c -} {help mp_b_dta:proj_abbrev_dta01.do}
+         {c |}   {c BLC}{c -}{c -} {help mp_b_main:proj_abbrev_main.do}
+         {c BLC}{c -}{c -} txt /
 
 
 {title:Commands}

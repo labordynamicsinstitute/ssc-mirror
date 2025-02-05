@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.1.3}{...}
+{* *! version 2.1.4}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {title:Title}
@@ -33,19 +33,14 @@ This template creates a .do file with the following content:
     
     ## Requirements and use
     
-    These .do files require Stata # or higher.
-    
-    In addition it requires the following community contributed package(s):
-    
-    - `fre` from SSC
+    These .do files require Stata <stata_version> or higher.
     
     To use these .do files you:
     
-    1. Install the required packages
-    2. fork this repository
-    3. Obtain the raw data files [name1, name2, ...]  from  https://doi.org/######### and save those in the directory `data`
-    4. In ana/main.do change line 5 (`cd ..."`) to where your directory is
-    5. run main.do 
+    1. fork this repository
+    2. Obtain the raw data files [name1, name2, ...]  from  https://doi.org/######### and save those in the directory `data`
+    3. In ana/<proj_abbrev>_main.do change line 5 (`cd ..."`) to where your directory is
+    4. run main.do 
 {txt}
 
 {title:Tags}

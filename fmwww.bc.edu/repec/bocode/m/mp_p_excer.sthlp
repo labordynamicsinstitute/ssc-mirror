@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.1.3}{...}
+{* *! version 2.1.4}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {title:Title}
@@ -21,7 +21,7 @@ a course
 This template will create the following sub-directories and files:
 
     proj_abbrev / 
-    └──  {help mp_b_excer:proj_abbrev.do}
+    {c BLC}{c -}{c -}  {help mp_b_excer:proj_abbrev.do}
 
 
 {title:Commands}

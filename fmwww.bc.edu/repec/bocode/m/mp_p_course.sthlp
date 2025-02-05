@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.1.3}{...}
+{* *! version 2.1.4}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {title:Title}
@@ -22,14 +22,14 @@ would be a project someone has to do for a course.
 This template will create the following sub-directories and files:
 
     proj_abbrev /  
-    ├──  ana /
-    |    ├── {help mp_b_ana:proj_abbrev_ana01.do}
-    |    ├── {help mp_b_dta_c:proj_abbrev_dta01.do}
-    |    └── {help mp_b_main:proj_abbrev_main.do}
-    ├──  data /
-    ├──  docu /
-    |    └── {help mp_b_rlogc:research_log.md}
-    └──  txt /
+    {c LT}{c -}{c -}  ana /
+    {c |}    {c LT}{c -}{c -} {help mp_b_ana:proj_abbrev_ana01.do}
+    {c |}    {c LT}{c -}{c -} {help mp_b_dta_c:proj_abbrev_dta01.do}
+    {c |}    {c BLC}{c -}{c -} {help mp_b_main:proj_abbrev_main.do}
+    {c LT}{c -}{c -}  data /
+    {c LT}{c -}{c -}  docu /
+    {c |}    {c BLC}{c -}{c -} {help mp_b_rlogc:research_log.md}
+    {c BLC}{c -}{c -}  txt /
 
 
 {title:Commands}

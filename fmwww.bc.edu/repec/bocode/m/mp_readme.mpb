@@ -1,6 +1,6 @@
 <header>
 <mkproject> boilerplate
-<version> 2.1.0
+<version> 2.1.4
 <label> readme.md for when you want to put your project on github or the like
 <description>
 {pstd} 
@@ -22,17 +22,12 @@ These are the replication files for the project [title]. The aim of this project
 
 ## Requirements and use
 
-These .do files require Stata # or higher.
-
-In addition it requires the following community contributed package(s):
-
-- `fre` from SSC
+These .do files require Stata <stata_version> or higher.
 
 To use these .do files you:
 
-1. Install the required packages
-2. fork this repository
-3. Obtain the raw data files [name1, name2, ...]  from  https://doi.org/######### and save those in the directory `data`
-4. In ana/main.do change line 5 (`cd ..."`) to where your directory is
-5. run main.do 
+1. fork this repository
+2. Obtain the raw data files [name1, name2, ...]  from  https://doi.org/######### and save those in the directory `data`
+3. In ana/<proj_abbrev>_main.do change line 5 (`cd ..."`) to where your directory is
+4. run main.do 
 </body> ------------------------------------------------------------------------

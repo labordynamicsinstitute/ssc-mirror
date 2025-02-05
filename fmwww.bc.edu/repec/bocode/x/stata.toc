@@ -50,6 +50,7 @@ p xtcse2 module to estimate the exponent of cross-sectional dependence in large 
 p xtcsi module to investigate Residual Cross-Section Independence 
 p xtdcce module to estimate heterogeneous coefficient models using common correlated effects in a dynamic panel
 p xtdcce2 module to estimate heterogeneous coefficient models using common correlated effects in a dynamic panel
+p xtdhazard module to perform Own-Differences IV/CF Estimation of the Discrete-Time Hazard Model
 p xtdolshm module to perform panel data cointegration 
 p xtdpdbc module to perform bias-corrected estimation of linear dynamic panel data models
 p xtdpdgmm module to perform generalized method of moments estimation of linear dynamic panel data models

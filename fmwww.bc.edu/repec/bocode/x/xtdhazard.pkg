@@ -1,0 +1,43 @@
+d 'XTDHAZARD': module to perform Own-Differences IV/CF Estimation of the Discrete-Time Hazard Model
+d
+d  xtdhazard implements the linear (first) differences instrumental
+d variables estimator, suggested by Farbmacher & Tauchmann (2023)
+d for dealing with unit-level unobserved heterogeneity (possibly
+d correlated with explanatory variables) in the discrete-time
+d hazard model. xtdhazard also implements related non-linear
+d control-function (cf) estimators. These procedures address the
+d issue that, conventional (linear) fixed-effects panel estimators
+d (within-transformation, first-differences), fail to eliminate
+d unobserved time-invariant heterogeneity and are biased and
+d inconsistent if the dependent variable is a binary dummy
+d indicating an absorbing state. xtdhazard is essentially a wrapper
+d for ivregress 2sls and, depending on which estimator is
+d specified, for community-contributed command cfbinout. xtdhazard
+d temporarily generates first and/or, depending on how the option
+d difference(#) is specified, higher-order own-differences of the
+d explanatory variables, and uses them as instruments for the
+d levels. With estimator 2sls, estimation is by 2sls for which
+d xtdhazard calls ivregress 2sls. With estimators logit, probit, or
+d cloglog, xtdhazard, instead of ivregress, calls the community
+d contributed command cfbinout to run a non-linear control-function
+d (cf, two-stage residuals inclusion) regression; cf. Wooldridge
+d (2015). Unlike conventional fixed effects estimation, these
+d estimators (both, 2sls and cf) rest on the assumption that the
+d unobserved heterogeneity is uncorrelated with the first (or
+d higher-order) own-differences of the explanatory variables. 
+d
+d KW: discrete-time Hazard model
+d KW: unobserved heterogeneity
+d KW: internal instruments
+d KW: 2SLS
+d KW: control-function (cf) estimation
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20250204
+d
+d Author: Harald Tauchmann, Friedrich-Alexander-Universität Erlangen-Nürnberg
+d Support: email harald.tauchmann@@fau.de
+d
+f xtdhazard.ado
+f xtdhazard.sthlp

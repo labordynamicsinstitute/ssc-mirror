@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.1.3}{...}
+{* *! version 2.1.4}{...}
 {vieweralsosee "mkproject" "help mkproject"}{...}
 {vieweralsosee "boilerplate" "help boilerplate"}{...}
 {title:Title}
@@ -20,11 +20,11 @@ This template sets up a directory for a {help smclpres} presentation.
 This template will create the following sub-directories and files:
 
     proj_abbrev /  
-    ├──  handout /
-    ├──  presentation /
-    ├──  source /
-    |    └── {help mp_b_smclpres:presentation.do}
-    └──  {help mp_b_readme_sp:readme.txt} 
+    {c LT}{c -}{c -}  handout /
+    {c LT}{c -}{c -}  presentation /
+    {c LT}{c -}{c -}  source /
+    {c |}    {c BLC}{c -}{c -} {help mp_b_smclpres:presentation.do}
+    {c BLC}{c -}{c -}  {help mp_b_readme_sp:readme.txt} 
 
 
 {title:Commands}
