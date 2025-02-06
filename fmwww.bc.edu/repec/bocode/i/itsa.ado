@@ -1,4 +1,6 @@
-*! 3.2.2 Ariel Linden 26Dec2024						// fixed error in legend for the case when no CI, lowess, or shading is specified 
+*! 3.2.3 Ariel Linden 04Feb2025						// fixed bug in post-trend output that didn't account for "prefix" when specified 
+													// fixed bug in single-group figure that didn't set legend at position 6
+*! 3.2.2 Ariel Linden 26Dec2024						// fixed bug in legend for the case when no CI, lowess, or shading is specified 
 *! 3.2.1 Ariel Linden 06Nov2024						// fixed shade() to ensure proper ordering 
 *! 3.2.0 Ariel Linden 26Oct2024						// fixed trperiods() to ensure proper ordering 
 													// coded legend to appear at 6 o'clock (because v18 moves the legend to 3 o'clock) 
@@ -597,7 +599,7 @@ version 11.0
 				} // no low, yes ci, yes shade
 			} // end ci
 			else if "`ci'" == "" {			
-				local nolow subtitle("Intervention starts: `tperlist'")  legend(rows(1) order(1 2) label(1 "Actual")label(2 "Predicted"))) , 
+				local nolow subtitle("Intervention starts: `tperlist'")  legend(rows(1) order(1 2) label(1 "Actual")label(2 "Predicted") position(6))) , 
 			} // no low, no ci, no shade
 		} // end no low	
 
@@ -1078,7 +1080,7 @@ version 11.0
 			/* Start Loop over time */
          	local btexp "_b[`prefix'_t] + _b[`prefix'_z_t]"
             local bcexp "_b[`prefix'_t]"
-           	local bdexp "_b[_z_t]"
+           	local bdexp "_b[`prefix'_z_t]"
 
 			foreach t in `trperiod' {
 				* format trperiod date for lincom output

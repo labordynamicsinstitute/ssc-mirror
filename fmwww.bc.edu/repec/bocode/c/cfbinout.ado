@@ -1,6 +1,7 @@
 ********************************************************************************************************************************
 ** Control Function Estimation of Non-Linear Binary Outcome Models *************************************************************
 ********************************************************************************************************************************
+*! version 2.2 2025-02-05 ht (minor bug fix for Stata versions 14 and 15)
 *! version 2.1 2024-12-13 ey & ht (analytical cross-stage derivatives for Terza (2023))
 *! version 2.0 2024-12-02 ht (Terza (2023) variance-covariance estimation)
 *! version 1.3 2023-12-17 ht (option order())
@@ -27,7 +28,7 @@ program cfbinout, eclass
 			*/ [CFORMAT(string asis)] [PFORMAT(string asis)] [SFORMAT(string asis)] [nolstretch] /*
 			*/ [DIFficult] [TECHnique(passthru)] [ITERate(passthru)] [TOLerance(passthru)] [LTOLerance(passthru)] [NRTOLerance(passthru)] [QTOLerance(passthru)] [NONRTOLerance] [FROM(passthru)]
 			** RESERVE NAME FOR TEMPORARY OBJECTS **
-			tempname _bfs _Vfs _alphaxtd _betaxtd _Bbeta _Balpha _Valphaxtd _Vbetaxtd _W _X _Bu _BW _SCORE _WVEC _EACCM _b _V _G _DER _omit	_checkvfs _Vmissing	
+			tempname _bfs _Vfs _alphaxtd _betaxtd _Bbeta _Balpha _Valphaxtd _Vbetaxtd _W _X _Bu _BW _SCORE _WVEC _EACCM _b _V _G _DER _omit	_checkvfs _Vmissing	_btmp
 			tempvar _tempweight _one _id _tmpres _score2s _xb2s _esample _fsesample _touse _2spr
 			** PARSEING Of ANYTHING **				
 			local outexo = ustrregexrf("`anything'"," \((.)+\)","", 1)
@@ -444,6 +445,7 @@ program cfbinout, eclass
 					** SAVE INFORMATION ON OMITTED VARS IN FIRST-STAGE **
 					if `terza' == 2023 & "`analytic'" == "noanalytic" {					
 						_ms_omit_info e(b)
+                        matrix `_btmp' = e(b)
 						if r(k_omit) >0 {
 							local omit1s = 1
 						}
@@ -456,17 +458,17 @@ program cfbinout, eclass
 							matcproc `_T`rescount'' `_a`rescount'' `_C`rescount''
 						}
 						else {
-							matrix `_T`rescount'' = I(colsof(e(b)))
-							matrix `_a`rescount'' = J(1,colsof(e(b)),0)
+							matrix `_T`rescount'' = I(colsof(`_btmp'))
+							matrix `_a`rescount'' = J(1,colsof(`_btmp'),0)
 						}
 						if `rescount' == 1 {
 							local ffscoef = 1
-							local lfscoef = colsof(e(b)) - `komit'
+							local lfscoef = colsof(`_btmp') - `komit'
 
 						}
 						else {
 							local ffscoef = `lfscoef'+ 1
-							local lfscoef = `lfscoef'+ (colsof(e(b)) - `komit')
+							local lfscoef = `lfscoef'+ (colsof(`_btmp') - `komit')
 						}
 					}
 					********************************************************************************
@@ -632,10 +634,11 @@ program cfbinout, eclass
 			if `n0' > 0 | `n1' > 0 {
 				noi di as text "{p 0 2 2 `ls'}note: `n0' failures and `n1' successes completely determined; variance estimation may fail{p_end}"
 			}
-			** STORE SOME RESLTS FROM 2ND STAGE **		
+			** STORE SOME RESLTS FROM 2ND STAGE **	
+            matrix `_btmp' = e(b)	
 			local cn : colnames e(b)
 			local 2sbn : colfullnames e(b)	
-			local 2sbcols = colsof(e(b))
+			local 2sbcols = colsof(`_btmp')
 			local _N = e(N)
 			local ll = e(ll)
 			if "`clustvar'" != "" {

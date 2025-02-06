@@ -13236,7 +13236,6 @@ fmwww.bc.edu/repec/bocode/x/xtsel.sthlp
 fmwww.bc.edu/repec/bocode/x/xtnptimevarsansb.ado
 fmwww.bc.edu/repec/bocode/x/xtevent.pkg
 fmwww.bc.edu/repec/bocode/x/xmiss.pkg
-fmwww.bc.edu/repec/bocode/x/xtlhazard.pkg
 fmwww.bc.edu/repec/bocode/x/xtteifeci.ado
 fmwww.bc.edu/repec/bocode/x/xls2dta_old_syntax.sthlp
 fmwww.bc.edu/repec/bocode/x/xclock12.ado
@@ -13394,7 +13393,6 @@ fmwww.bc.edu/repec/bocode/x/xtregfem.ado
 fmwww.bc.edu/repec/bocode/x/xtsum2docx.ado
 fmwww.bc.edu/repec/bocode/x/xclock10.ado
 fmwww.bc.edu/repec/bocode/x/xtcointreg.sthlp
-fmwww.bc.edu/repec/bocode/x/xtlhazard.sthlp
 fmwww.bc.edu/repec/bocode/x/xtbunitroot.sthlp
 fmwww.bc.edu/repec/bocode/x/xtregwhm.ado
 fmwww.bc.edu/repec/bocode/x/xtsfkk_ml.ado
@@ -13636,7 +13634,6 @@ fmwww.bc.edu/repec/bocode/x/xcollapse.pkg
 fmwww.bc.edu/repec/bocode/x/xtregsam.sthlp
 fmwww.bc.edu/repec/bocode/x/xtpatternvar.pkg
 fmwww.bc.edu/repec/bocode/x/xtserialpm.sthlp
-fmwww.bc.edu/repec/bocode/x/xtlhazard.ado
 fmwww.bc.edu/repec/bocode/x/xtmipolateu.ado
 fmwww.bc.edu/repec/bocode/x/xtregwem.html
 fmwww.bc.edu/repec/bocode/x/xripred.ado
