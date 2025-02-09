@@ -132,6 +132,7 @@ p power_kappa module to compute power and sample size for the two-rater kappa st
 p power_loa module to compute power and sample size for limits of agreement (LOA) analysis
 p power_oneroc module to compute power and sample size for a one-sample ROC test
 p power_roc module to compute power and sample-size analysis for receiver operating characteristic (ROC) analysis
+p power_step module to compute power for a step intervention with AR(1) Error
 p power_swgee module to compute power (under both a Z and t distribution) for cluster randomized stepped wedge designs 
 p power_tworates_zhu module to calculate sample size or power for a two-sample test of rates
 p power_tworoc module to compute power and sample size for a two-sample (independent or paired) ROC test

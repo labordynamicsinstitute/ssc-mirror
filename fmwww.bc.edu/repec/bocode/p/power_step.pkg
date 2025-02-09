@@ -1,0 +1,35 @@
+d 'POWER_STEP': module to compute power for a step intervention with AR(1) Error
+d
+d  power_step computes power for an interrupted time series
+d analysis (ITSA) in which the intervention is expected to change
+d the level (step) of the series (McLeod and Vingilis 2008). The
+d results are computed in terms of the size of the intervention
+d effect in units corresponding to standard deviations of the
+d pre-intervention series (presented as the scaled intervention
+d parameter δ). The power estimates assume that the intervention
+d analysis will be performed using an autoregressive moving-average
+d (ARMA) model. The computations and output of power_step largely
+d mirror those found at
+d https://www.stats.uwo.ca/faculty/aim/2007/OnlinePower/TwoSided.ht
+d ml.  However, there are cases in which the results between the
+d online calculator and power_step slightly differ. This is due to
+d the fact that Javascript does not naturally compute the
+d cumulative standard distribution function (CDF) and therefore the
+d author uses an approximation. Conversely, power_step uses
+d normal() to compute the CDF. 
+d
+d KW:  interrupted time series analysis
+d KW: ITSA
+d KW: ARIMA
+d KW: power
+d KW: sample size
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250208
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f power_step.ado
+f power_step.sthlp

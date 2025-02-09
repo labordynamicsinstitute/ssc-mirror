@@ -1,0 +1,107 @@
+d 'CROSSWALK': module to recode variable based on crosswalk table (bulk recoding)
+d
+d  crosswalk applies fast table-based recoding. Pre-defined
+d crosswalk tables are provided for common recoding tasks related
+d to occupational classifications. 
+d
+d KW: bulk recoding
+d KW:  ISCO-08
+d KW:  ISCO-88
+d KW:  ISCO-68
+d KW:  International Socio-economic Index of Occupational Status ISEI
+d KW:  Standard International Occupational Prestige Scale SIOPS
+d KW:  Magnitude Prestige Scale MPS
+d KW:  European Socio-economic Classification ESeC
+d KW:  EGP classes
+d KW:  OESCH classes
+d KW:  Occupational Earning Potential OEP
+d
+d Requires: Stata version 14 and moremata from SSC (q.v.)
+d
+d Distribution-Date: 20250208
+d
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
+d
+f crosswalk.ado
+f crosswalk.sthlp
+f ../_/_cwcasefcn_egp.sthlp
+f ../_/_cwcasefcn_egp68.sthlp
+f ../_/_cwcasefcn_esec.sthlp
+f ../_/_cwcasefcn_esec88.sthlp
+f ../_/_cwcasefcn_oesch.sthlp
+f ../_/_cwfcn_isco08_1_to_oep.sthlp
+f ../_/_cwfcn_isco08_2_to_isco08_1.sthlp
+f ../_/_cwfcn_isco08_2_to_oep.sthlp
+f ../_/_cwfcn_isco08_3_to_esec.sthlp
+f ../_/_cwfcn_isco08_3_to_isco08_1.sthlp
+f ../_/_cwfcn_isco08_3_to_isco08_2.sthlp
+f ../_/_cwfcn_isco08_3_to_oep.sthlp
+f ../_/_cwfcn_isco08_to_esec.sthlp
+f ../_/_cwfcn_isco08_to_isco08_1.sthlp
+f ../_/_cwfcn_isco08_to_isco08_2.sthlp
+f ../_/_cwfcn_isco08_to_isco08_3.sthlp
+f ../_/_cwfcn_isco08_to_isco88.sthlp
+f ../_/_cwfcn_isco08_to_isei.sthlp
+f ../_/_cwfcn_isco08_to_iseisps.sthlp
+f ../_/_cwfcn_isco08_to_oep.sthlp
+f ../_/_cwfcn_isco08_to_oesch.sthlp
+f ../_/_cwfcn_isco08_to_oesch5.sthlp
+f ../_/_cwfcn_isco08_to_oesch8.sthlp
+f ../_/_cwfcn_isco08_to_siops.sthlp
+f ../_/_cwfcn_isco08_to_treiman.sthlp
+f ../_/_cwfcn_isco68_to_egp.sthlp
+f ../_/_cwfcn_isco68_to_egp11.sthlp
+f ../_/_cwfcn_isco68_to_isco08.sthlp
+f ../_/_cwfcn_isco68_to_isco88.sthlp
+f ../_/_cwfcn_isco68_to_isei.sthlp
+f ../_/_cwfcn_isco68_to_siops.sthlp
+f ../_/_cwfcn_isco68_to_treiman.sthlp
+f ../_/_cwfcn_isco88_1_to_oep.sthlp
+f ../_/_cwfcn_isco88_2_to_isco88_1.sthlp
+f ../_/_cwfcn_isco88_2_to_oep.sthlp
+f ../_/_cwfcn_isco88_3_to_esec.sthlp
+f ../_/_cwfcn_isco88_3_to_isco88_1.sthlp
+f ../_/_cwfcn_isco88_3_to_isco88_2.sthlp
+f ../_/_cwfcn_isco88_3_to_oep.sthlp
+f ../_/_cwfcn_isco88_to_egp.sthlp
+f ../_/_cwfcn_isco88_to_egp11.sthlp
+f ../_/_cwfcn_isco88_to_esec.sthlp
+f ../_/_cwfcn_isco88_to_isco08.sthlp
+f ../_/_cwfcn_isco88_to_isco68.sthlp
+f ../_/_cwfcn_isco88_to_isco88_1.sthlp
+f ../_/_cwfcn_isco88_to_isco88_2.sthlp
+f ../_/_cwfcn_isco88_to_isco88_3.sthlp
+f ../_/_cwfcn_isco88_to_isco88com.sthlp
+f ../_/_cwfcn_isco88_to_isei.sthlp
+f ../_/_cwfcn_isco88_to_mps.sthlp
+f ../_/_cwfcn_isco88_to_oep.sthlp
+f ../_/_cwfcn_isco88_to_oesch.sthlp
+f ../_/_cwfcn_isco88_to_oesch5.sthlp
+f ../_/_cwfcn_isco88_to_oesch8.sthlp
+f ../_/_cwfcn_isco88_to_siops.sthlp
+f ../_/_cwfcn_isco88_to_treiman.sthlp
+f ../_/_cwfcn_labels_egp.sthlp
+f ../_/_cwfcn_labels_egp11.sthlp
+f ../_/_cwfcn_labels_esec.sthlp
+f ../_/_cwfcn_labels_isco08.sthlp
+f ../_/_cwfcn_labels_isco08_1.sthlp
+f ../_/_cwfcn_labels_isco08_2.sthlp
+f ../_/_cwfcn_labels_isco08_3.sthlp
+f ../_/_cwfcn_labels_isco68.sthlp
+f ../_/_cwfcn_labels_isco88.sthlp
+f ../_/_cwfcn_labels_isco88_1.sthlp
+f ../_/_cwfcn_labels_isco88_2.sthlp
+f ../_/_cwfcn_labels_isco88_3.sthlp
+f ../_/_cwfcn_labels_isco88a.sthlp
+f ../_/_cwfcn_labels_isco88b.sthlp
+f ../_/_cwfcn_labels_isco88com.sthlp
+f ../_/_cwfcn_labels_isco88com_1.sthlp
+f ../_/_cwfcn_labels_isco88com_2.sthlp
+f ../_/_cwfcn_labels_isco88com_3.sthlp
+f ../_/_cwfcn_labels_oesch.sthlp
+f ../_/_cwfcn_labels_oesch5.sthlp
+f ../_/_cwfcn_labels_oesch8.sthlp
+f ../_/_cwfcn_oesch_to_oesch5.sthlp
+f ../_/_cwfcn_oesch_to_oesch8.sthlp
+f crosswalk.zip
