@@ -13101,7 +13101,6 @@ fmwww.bc.edu/repec/bocode/x/xtss.ado
 fmwww.bc.edu/repec/bocode/x/xttest3.html
 fmwww.bc.edu/repec/bocode/x/xtnondynthreshsfa.ado
 fmwww.bc.edu/repec/bocode/x/xteurostat.sthlp
-fmwww.bc.edu/repec/bocode/x/xtabond2.html
 fmwww.bc.edu/repec/bocode/x/xtreghet.ado
 fmwww.bc.edu/repec/bocode/x/xtregsam.pkg
 fmwww.bc.edu/repec/bocode/x/xtpsse.ado
