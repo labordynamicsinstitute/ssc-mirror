@@ -178,6 +178,7 @@ p localp module for kernel-weighted local polynomial smoothing
 p locpr module for semi-parametric estimation
 p locproj module to estimate Local Projections
 p loevh module to compute Guttman errors and Loevinger H coefficients
+p loevh2 module to calculate Loevinger's H for two dichotomous variables
 p log2do2 module to convert log file to do file
 p log2html module to produce HTML log files
 p log2markup module to transform a Stata text log into a markup document

@@ -1,0 +1,25 @@
+d 'EUROMOD': module to connect to EUROMOD (Windows only)
+d
+d   This routine connects Stata to EUROMOD. 
+d
+d KW: EUROMOD
+d KW: modeling
+d KW: data management
+d
+d Requires: Stata version 15.1 for Windows
+d
+d Distribution-Date: 20250210
+d
+d Author:  Hannes Serruys ,  B2-JRC Seville
+d Support: email Hannes.SERRUYS@@ec.europa.eu)
+d
+f euromod.ado
+f euromod.sthlp
+f euromod_getdata.ado
+f euromod_getdata.sthlp
+f euromod_getinfo.ado
+f euromod_getinfo.sthlp
+f euromod_run.ado
+f euromod_run.sthlp
+f euromod_setinfo.ado
+f euromod_setinfo.sthlp

@@ -1,0 +1,20 @@
+d 'LOEVH2': module to calculate Loevinger's H for two dichotomous variables
+d
+d   loevh2 calculates Loevinger's H for two dichotomous variables.
+d loevh2_boot provides bootstrapped confidence intervals. 
+d
+d KW: Loevinger's H
+d KW: association measure
+d KW: Bootstrap confidence intervals
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20250210
+d
+d Author: Dirk Enzmann, University of Hamburg
+d Support: email dirk.enzmann@@uni-hamburg.de
+d
+f loevh2.ado
+f loevh2.sthlp
+f loevh2_boot.ado
+f loevh2_boot.sthlp
