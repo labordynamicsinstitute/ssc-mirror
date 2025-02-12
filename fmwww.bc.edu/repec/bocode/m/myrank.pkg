@@ -1,0 +1,28 @@
+d 'MYRANK': module to generate axis variable base on ranks 
+d
+d   myrank generates a variable for a graph axis that is base on
+d (unique or distinct) ranks of values of a numeric variable, with
+d various possible twists.  First, if a grouping variable is
+d specified, ranks are determine separately within groups of that
+d variable but remain distinct overall.  Second, given the first
+d twist, gaps of integer length may be adde between groups.  
+d Third, ranking by default is ascending, lowest to highest, but
+d optionally may be descending, highest to lowest.  The major an
+d intende use of such a variable is for side-by-side quantile
+d plots, as illustrate in Cox 2024. Stata Journal 24:766-776. 
+d
+d KW: ranks
+d KW: percentiles
+d KW:  quantiles
+d KW: graphics
+d
+d Requires: Stata version 8.1
+d
+d Distribution-Date: 20250211
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f myrank.ado
+f myrank.sthlp
+f myrank.do

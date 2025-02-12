@@ -1,0 +1,24 @@
+d 'SYMBIONET': module to build a symbiotic (or symmetric) correlation network from a list of variables
+d
+d  symbionet builds a symbiotic (or symmetric) correlation network
+d from a variable list. Keeps only correlations significant at the
+d level set in slevel() Returns the    edgelsit of correlation
+d network in Stata and its the adjacency matrix in Mata (unless
+d specified otherwise).  Previous dataset is deleted, unless   
+d output(intial) option is chosen. 
+d
+d KW: network
+d KW: correlations
+d
+d Requires: Stata version 9
+d
+d Distribution-Date: 20250211
+d
+d Author: Nadia Von Jacobi, University of Trento
+d Support: email NA
+d
+d Author: Charlie Joyez, Universite Cote d'Azur
+d Support: email charlie.joyez@@univ-cotedazur.fr
+d
+f symbionet.ado
+f symbionet.sthlp

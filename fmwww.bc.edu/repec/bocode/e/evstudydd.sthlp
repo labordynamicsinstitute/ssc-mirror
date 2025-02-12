@@ -14,7 +14,7 @@
 {title:Syntax}
 
 {phang}
-{cmd: evstudydd} {it: Y t} [if] [in], {ul:t}reated(name) {ul:shockt}ime(string) {ul:p}eriod(string) {ul:cl}uster(string) {ul:fe}(string) {ul:n}ame(string) [{ul:w}eight(name)] [{ul:contr}ols(string)] [{ul:e}stimator(string)]
+{cmd: evstudydd} {it: Y t} [if] [in], {ul:t}reated(name) {ul:shockt}ime(string) {ul:p}eriod(string) {ul:cl}uster(string) {ul:fe}(string) {ul:n}ame(string) [{ul:w}eight(name)] [{ul:contr}ols(string)] [{ul:e}stimator(string)] [{ul:int}eraction(varname)]
 {p_end}
 
 
@@ -30,7 +30,13 @@
 {bf: evstudydd} produces the event study for any D-i-D setting, generates variables for the point estimates, standard errors, and time indicators, and saves these three variables in a .dta file.
 {p_end}
 
+{pstd}
+The command saves the following variables in the output dataset:
+{p_end}
 
+{phang2}B: Point estimates for the treatment effects{p_end}
+{phang2}SE: Standard errors of the estimates{p_end}
+{phang2}time: Time indicators relative to the event (-k to +j){p_end}
 
 
 {marker options}{...}
@@ -73,6 +79,9 @@ The variable should be time invariant within each unit. The interaction of {it: 
 {p_end}
 
 
+{phang}{opt interaction(varname)}: Allows specifying a continuous variable that interacts with the treatment timing indicators. When specified, the command estimates both the base treatment effects and interaction effects for each period. The output dataset will include additional variables B_int and SE_int containing the interaction term coefficients and their standard errors respectively. The interaction is created for all event-time dummies, including pre-treatment periods, the reference period (which is set to zero), and post-treatment periods. For example, if you want to study heterogeneous treatment effects by firm size, you could specify {cmd:interaction(firm_size)}. This will create interactions between the treatment timing indicators and firm size, allowing you to examine how the treatment effect varies with firm size over time.
+{p_end}
+
 
 {marker example}{...}
 {title:Example}
@@ -113,6 +122,11 @@ The variable should be time invariant within each unit. The interaction of {it: 
 	
         {cmd:evstudydd Y t, treated(treat) shocktime(tshock) period(6 5) cluster(id) fe(id geography#year) name("example") estimator(reghdfe)}
 	
+
+{phang}{bf:7)} Similar to example 1 but including heterogeneous effects by firm size:
+{p_end}
+
+       {cmd:evstudydd Y year, treated(treat) shocktime(yrshock) period(3 3) cluster(id) fe(id year) name("example") interaction(firm_size)}
 
 
 {marker author}{...}

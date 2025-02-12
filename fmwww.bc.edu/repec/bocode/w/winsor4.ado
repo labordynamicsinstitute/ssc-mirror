@@ -1,51 +1,54 @@
 *! winsor4: trims or winsorizes a variable based on outliers defined by either percentiles or interquartile range.
-*! Version: August, 2024
+*! Version: February, 2025
 *! Authors: Adrien Matray, Pablo E. Rodriguez
+
+qui {
 
 capture program drop winsor4
 program define winsor4
     syntax varlist(numeric min=1 max=1), METhod(string) OUTlier(string) Level(string) [NEWvar(string)] [POSitive] [GRoup(string)]
     version 13.0
-
     quietly {
         * Parse the level option
         tokenize `level'
         local threshold `1'
-
+        
         * Validate the method option
         if inlist("`method'", "trim", "winsor") == 0 {
             display as error "Invalid method specified. Please use 'trim' or 'winsor'."
             exit 198
         }
-
+        
         * Validate the outlier option
         if inlist("`outlier'", "tail", "iqr") == 0 {
             display as error "Invalid outlier definition specified. Please use 'tail' or 'iqr'."
             exit 198
         }
-
-        * Create temporary variable for the group option
+        
+        * Create temporary variables
         tempvar groupvar
-
+        
         * Handle the group option
         if "`group'" == "" {
             gen `groupvar' = 1
         }
         else {
-            gen `groupvar' = `group'
+            * Create a group identifier from multiple variables
+            local groupvars `group'
+            egen `groupvar' = group(`groupvars')
         }
-
+        
         * Handle the positive option
         local condition "1"
         if "`positive'" != "" {
             local condition "`varlist' > 0"
         }
-		
-		 * If newvar option is specified, create the new variable outside the loop
+        
+        * If newvar option is specified, create the new variable outside the loop
         if "`newvar'" != "" {
             gen `newvar' = `varlist'
         }
-
+        
         * Process based on method and outlier options
         levelsof `groupvar', local(groups)
         foreach g of local groups {
@@ -62,7 +65,7 @@ program define winsor4
                 local lowcut = r(p50) - `threshold' * `iqr'
                 local upcut = r(p50) + `threshold' * `iqr'
             }
-
+            
             if "`method'" == "trim" {
                 if "`newvar'" == "" {
                     quietly replace `varlist' = . if (`varlist' < `lowcut' | `varlist' > `upcut') & `groupvar' == `g' & `condition' & `varlist'<.
@@ -83,15 +86,4 @@ program define winsor4
     }
 end
 
-
-
-
-
-
-
-
-
-
-
-
-
+}

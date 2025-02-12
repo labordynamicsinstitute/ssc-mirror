@@ -9,7 +9,7 @@
 ** Subsections may contain unnumbered subsubsections, tagged with "//".
 ** Subsubsections may be further divided into paragraphs, tagged with "*".
 ** Comments are also tagged with "*".
-** This version : January, 2025
+** This version : March 21st, 2024
 
 ********************************************************************************
 *                                 PROGRAM 1                                    *
@@ -718,6 +718,9 @@ else if `continuous'>0{
 	drop if avg_post_switch_treat_XX==d_sq_XX_orig&F_g_XX!=T_g_XX+1
 	gen S_g_XX=(avg_post_switch_treat_XX>d_sq_XX_orig) if F_g_XX!=T_max_XX+1
 }	
+// correct for the fact that if all avg_post_switch_treat_XX are missing it is considered as +inf
+egen aux_XX = min(avg_post_switch_treat_XX), by(group_XX)
+replace S_g_XX = . if aux_XX ==.
 
 // Define another version where S_g=-1 for switchers out, which we need 
 // when predict_het or continuous specified.
@@ -1012,6 +1015,9 @@ scalar L_placebo_u_XX=r(max)
 if "`trends_lin'"!=""{
 	scalar L_placebo_u_XX=L_placebo_u_XX-1
 }
+if L_placebo_u_XX==. {
+    scalar L_placebo_u_XX = 0
+}
 }
 }
 
@@ -1025,6 +1031,9 @@ sum L_g_placebo_XX if S_g_XX==0
 scalar L_placebo_a_XX=r(max)
 if "`trends_lin'"!=""{
 	scalar L_placebo_a_XX=L_placebo_a_XX-1
+}
+if L_placebo_a_XX==. {
+    scalar L_placebo_a_XX = 0
 }
 }
 }
@@ -3853,9 +3862,7 @@ if "`switchers_core'"=="in"{
 scalar l_u_a_XX=min(`effects', L_u_XX)
 
 if `placebo'!=0{
-	if L_placebo_u_XX!=.&L_placebo_u_XX!=0{
 	scalar l_placebo_u_a_XX=min(`placebo', L_placebo_u_XX)
-	}
 	}
 
 	scalar increase_XX=1
@@ -3865,9 +3872,7 @@ if "`switchers_core'"=="out"{
 scalar l_u_a_XX=min(`effects', L_a_XX)
 
 if `placebo'!=0{
-	if L_placebo_a_XX!=.&L_placebo_a_XX!=0{
 	scalar l_placebo_u_a_XX=min(`placebo', L_placebo_a_XX)
-	}
 	}
 
 scalar increase_XX=0

@@ -59,7 +59,7 @@ The distribution can be computed unconditionally over the full distribution of {
 {p_end}
 
 
-{phang}{opt group(string)}: Specifies a grouping variable. The operations are applied within each group separately. {cmd:group} is not a required option.
+{phang}{opt group(string)}: Specifies one or more grouping variables. When multiple variables are specified, the program creates groups for each unique combination of values (e.g., group(year industry) creates groups for each year-industry pair). Operations are performed separately within each group. {cmd:group} is not a required option.
 {p_end}
 
 
@@ -84,9 +84,11 @@ The distribution can be computed unconditionally over the full distribution of {
 {phang2} *- Winsor based on one time the IQR and replace the variable. {p_end}
 {phang2}{inp:.} {stata "winsor4 wage, method(winsor) outlier(iqr) level(1)":  winsor4 wage, method(winsor) outlier(iqr) level(1)}{p_end}
 
-{phang2} *- Winsor based on (p1 p99) percentiles by industry and replace the variable {p_end}
+{phang2} *- Winsor based on (p1 p99) percentiles by industry and replace the variable. {p_end}
 {phang2}{inp:.} {stata "winsor4 wage, method(winsor) outlier(tail) level(1) group(industry)":  winsor4 wage, method(winsor) outlier(tail) level(1) group(industry)}{p_end}
 
+{phang2} *- Winsor based on (p1 p99) percentiles by industry and occupation, and replace the variable. {p_end}
+{phang2}{inp:.} {stata "winsor4 wage, method(winsor) outlier(tail) level(1) group(industry)":  winsor4 wage, method(winsor) outlier(tail) level(1) group(industry occupation)}{p_end}
 
 {marker author}{...}
 {title:Authors}

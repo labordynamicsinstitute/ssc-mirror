@@ -57,4 +57,5 @@ p susoapi module to provide Survey Solutions API client class for Stata
 p svr module to compute estimates with survey replication (SVR) based standard errors
 p svycanon module to assess the statistical significance of the canonical correlations incorporating complex survey design factors
 p swpermute module to compute Permutation tests for Stepped-Wedge Cluster-Randomised Trials
+p symbionet module to build a symbiotic (or symmetric) correlation network from a list of variables
 p synth2 module to implement synthetic control method (SCM) with placebo tests, robustness test and visualization
