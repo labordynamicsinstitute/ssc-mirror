@@ -1,4 +1,4 @@
-*! version 1.3.4 2025-01-18
+*! version 1.3.5 2025-02-12
   
 program define stpp, rclass sortpreserve
   version 16.0
@@ -187,7 +187,7 @@ program define stpp, rclass sortpreserve
     qui replace `touse' = 0 if `bygroups' == .
   }
   else {
-    quietly count if _d==1 &`touse'
+    quietly count if _d==1 & `touse'
     if `r(N)' == 0 {
     	di as error "There are zero events" 
       exit 198
@@ -196,6 +196,10 @@ program define stpp, rclass sortpreserve
 
 // frames
   if "`frame'" != "" {
+    if "`list'" == "" {
+      di as error "You must specify the list option() when using frame(). "
+      exit 198
+    }
     getframeoptions `frame'    
   } 
   mata: st_local("frameexists",strofreal(st_frameexists(st_local("resframe"))))
@@ -351,9 +355,11 @@ if "`frame'" != "" {
   frame create `Natrisk_frame'
   frame `Natrisk_frame' {
     use `Natrisk'
+    qui replace time = float(time)
     keep `by' time at_risk
   }  
-  frame `resframe' {
+  frame `resframe' {    
+    qui replace time = float(time)
     qui frlink 1:1 `by' time, frame(`Natrisk_frame')
     qui frget Natrisk = at_risk, from(`Natrisk_frame')
     qui replace Natrisk = 0 if Natrisk ==.

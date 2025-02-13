@@ -1,0 +1,24 @@
+d 'MULTISITE': module to install the three components of the multisite poackage 
+d
+d   This command installs the three components of the multisite
+d poackage. 
+d
+d KW: regression
+d KW: randomized trials
+d KW: ITT
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20250212
+d
+d Author: Clement de Chaisemartin,  Sciences Po
+d Support: email clementdechaisemartin@@gmail.com
+d
+d Author: Antoine Deeb, World Bank
+d Support: email adeeb1@@worldbank.org
+d
+d Author: Bingxue Li,  Sciences Po
+d Support: email bingxue.li@@sciencespo.fr
+d
+f multisite.ado
+f multisite.sthlp

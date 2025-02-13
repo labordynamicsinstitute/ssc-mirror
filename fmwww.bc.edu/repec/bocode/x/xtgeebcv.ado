@@ -1,9 +1,9 @@
-*!version5.4 07Sep2023
+*!version5.5 12Feb2025
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: xtgeebcv
-** VERSION: 5.4
-** DATE: SEPTEMBER 07, 2023
+** VERSION: 5.5
+** DATE: FEBRUARY 12, 2025
 ** -----------------------------------------------------------------------------
 ** CREATED BY: JOHN GALLIS, FAN LI, LIZ TURNER
 ** -----------------------------------------------------------------------------
@@ -33,6 +33,7 @@
 			May 23, 2023 - Updating program to allow for different ways of computing degrees of freedom
 			Aug 03, 2023 - Updating program to allow for abbreviations in the family and link names, and abbreviations of options
 			Sep 07, 2023 - Program updated to re-output scalars and macros necessary for proper functioning of postestimation commands such as margins
+			Feb 12, 2025 - Added a new error message, because xtgeebcv was having a conformability error in Mata if any level of a covariate was completely dropped because of another covariate's missing values. This is because xtgeebcv takes for the design matrix all levels of every variable, but doesn't know if levels are dropped in the regression. This leads to the design matrix and the Beta matrix not being conformable.
 **			
 ** -----------------------------------------------------------------------------
 ** OPTIONS: SEE HELP FILE
@@ -299,6 +300,17 @@ program define xtgeebcv, eclass
 		qui mkmat _first _last, matrix(beginend)
 	restore
 	
+	
+	local Betarow `=colsof(Beta)'
+	local varlistrow: word count `newvarlist'
+	*NEW ERROR, FEBRUARY 2025: CONFORMABILITY ERROR IN MATA IF LEVELS OF SOME COVARIATE(S) ARE DROPPED IN THE MODEL
+	if `Betarow' == `varlistrow'-2 {
+		
+	}
+	else {
+		di as err "Conformability error: Check for missing data in the covariates that are perfectly collinear with one or more levels of another covariate"
+		exit 198
+	}	
 	
 	
 	/* \\\\\\\\\\\\\\\\\\\\\\\\\\\ RUN MATA PROGRAM \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ */

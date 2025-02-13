@@ -25,6 +25,7 @@
 {synoptline}
 {synopt:{opt ageg:roup(varname)}}name of age group variable{p_end}
 {synopt:{opt by(varlist)}}calculate weights separately by {it:varlist}{p_end}
+{synopt:{opt byrestrict(exp)}}restict to {it:exp} for by groups{p_end}
 {synopt:{opt obsp:roportion(newvar)}}save observed proportions{p_end}
 {synopt:{opt refc:onditional(expression)}}reference weights defined by conditioning on data{p_end}
 {synopt:{opt refext:ernal(string)}}reference weights defined externally{p_end}
@@ -67,6 +68,13 @@ but cannot be used when using {cmd:refframe()} or {cmd:refconditional()}.
 {phang}
 {opt by(varlist)} will calculate relative weights separately for each of the groups 
 defined by {it:varlist}.
+
+{phang}
+{opt byrestrict(exp)} when calculating weights stratified when using the {bf:by()}
+option this will restriced the observed proportion with in strata to be based
+on expression {it:exp}. An example of its use is when implementing period 
+analysis in survival analysis: here we want the observed proportions to be defined
+based on those diagnosed in a calendar period window.
 
 {phang}
 {opt obsproportion(newvarname)} save the observed proportions in a new variable.

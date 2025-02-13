@@ -122,7 +122,7 @@ The following suboptions are available.
 {opt baselevel(varname #)} The base level when performing contrasts. 
 For contrast {cmd: difference} this is the negative term. 
 When there is more than one variable specified in the {cmd: by()} option,
-contrasts are calculate at all levels of the variable not specified in the 
+contrasts are calculated at all levels of the variable not specified in the 
 {cmd: contrast option}.
 
 {phang2} 

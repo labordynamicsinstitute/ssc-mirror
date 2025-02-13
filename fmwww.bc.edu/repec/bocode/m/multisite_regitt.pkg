@@ -1,0 +1,29 @@
+d 'MULTISITE_REGITT': module to compute the coefficients from a regression of site-level ITTs on site-level characteristics in multi-site randomized trials
+d
+d   This command computes the coefficients from a regression of
+d site-level ITTs on site-level characteristics in multi-site
+d randomized trials studied in de Chaisemartin & Deeb (2024), the
+d standard errors of those coefficients, and the regression's
+d R-squared.  The command can also be applied to stratified RCTs,
+d to compute the coefficients from a regression of strata-level
+d ITTs on strata-level characteristics. 
+d
+d KW: regression
+d KW: randomized trials
+d KW: ITT
+d
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 20250212
+d
+d Author: Clement de Chaisemartin,  Sciences Po
+d Support: email clementdechaisemartin@@gmail.com
+d
+d Author: Antoine Deeb, World Bank
+d Support: email adeeb1@@worldbank.org
+d
+d Author: Bingxue Li,  Sciences Po
+d Support: email bingxue.li@@sciencespo.fr
+d
+f multisite_regitt.ado
+f multisite_regitt.sthlp

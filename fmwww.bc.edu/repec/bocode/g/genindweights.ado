@@ -1,8 +1,9 @@
-*! version 0.2 2024-12-05
+*! version 0.4 2025-02-08
 program define genindweights, rclass sortpreserve
   syntax newvarlist(max=1)  [if][in], [                            ///
                                         AGEGroup(varname)          ///
                                         BY(varlist)                ///
+                                        BYRESTRICT(string)         ///
                                         NAGEGroups(integer 5)      ///
                                         OBSproportion(string)      ///
                                         REFConditional(string)     ///
@@ -58,6 +59,11 @@ program define genindweights, rclass sortpreserve
       exit 198
     }
   }
+  if "`byrestrict'" != "" & "`by'" == "" {
+    di as error "You have specified byrestict() without using the by() option"
+    exit 198
+  }
+  
   if "`obsproportion'" != "" {
     confirm new var `obsproportion'
     local newobsproportion `obsproportion'
@@ -129,11 +135,12 @@ program define genindweights, rclass sortpreserve
   }
 
 // calculate observed proportions in by/agegroup combinations
+
   tempvar bygrouptotal bygrouptotal_agegrp obsby_proportion
-  qui bysort `by':  egen `bygrouptotal' = total(`touse') if `touse'   
-  qui bysort `by' `refframe_strata' `refcond_strata' `agegroup':  egen `bygrouptotal_agegrp' = total(`touse') if `touse'   
+  if "`byrestrict'" != "" local byrestrict & `byrestrict'
+  qui bysort `by':  egen `bygrouptotal' = total(`touse' `byrestrict') if `touse'   
+  qui bysort `by' `refframe_strata' `refcond_strata' `agegroup':  egen `bygrouptotal_agegrp' = total(`touse' `byrestrict') if `touse'   
   qui gen double `obsby_proportion' = `bygrouptotal_agegrp'/`bygrouptotal' if `touse'
-  
   // Now merge in reference proportions & calculate indweight
   
   tempvar refproportion
@@ -313,9 +320,10 @@ end
 ///  GetRefcond ///
 ///////////////////
 program define GetRefcond, rclass sortpreserve
-  syntax [anything(name=refcondexp everything)],  touse(string)         ///
-                                                    refframetmp(string)   ///
-                                                    strata(varlist)                   
+  syntax [anything(name=refcondexp everything)],  strata(varlist)       ///
+                                                  touse(string)         ///
+                                                  refframetmp(string)   
+                                                                       
                                                 
   foreach var in `strata' {
     CheckInteger `var'
