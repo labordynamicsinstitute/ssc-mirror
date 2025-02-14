@@ -1860,7 +1860,6 @@ foreach cv of local catvars{
 			}
 			
 			local s=1
-			local v=`j'
 			foreach c of local c_l {
 				local d = `cur_col'
 				if "`lbe'" != ""{	
@@ -2380,7 +2379,6 @@ foreach cv of local catvars{
 		}
 		
 		local s=1
-		local v=`j'
 		foreach c of local c_l {
 			
 			local d = `cur_col'

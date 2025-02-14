@@ -1,5 +1,5 @@
 {smcl}
-{* 10feb2025}{...}
+{* 10feb2025/11feb2025}{...}
 {cmd:help myrank}
 {hline}
 
@@ -40,9 +40,9 @@ highest, but optionally may be descending, highest to lowest.
 
 {p 4 4 2}
 See Cox (2024b) for the context here and examples of a simple graphical 
-method using a special axis variable. This command is at root only a 
-simple helper command to carry out preliminary calculation of that axis, 
-variable allowing such graphs to follow more easily. 
+method, showing side-by-side quantile plots using a special axis variable. 
+This command is at root only a simple helper command to carry out 
+preliminary calculation of that axis variable, allowing such graphs to follow more easily. 
 
 {p 4 4 2}
 The command name {cmd:myrank} is to be parsed "my rank variable".  The
@@ -55,10 +55,9 @@ mentions of a command named just {cmd:rank} would be harder to spot
 among other uses of the term.
 
 {p 4 4 2}
-The major and intended use of such a variable is for side-by-side
-quantile plots, as in Cox (2024b). See Cox (1999, 2005, 2007, 2024a) and 
+See Cox (1999, 2005, 2007, 2024a) and 
 {cmd:search qplot, sj} for more on quantile plots in Stata. The literal 
-values of the rank variable have simple meaning only for the first group 
+values of the rank variable created by {cmd:myrank} have simple meaning only for the first group 
 so created. However, the purpose is not to use those ranks literally, 
 but only to create a variable to use as one axis. 
 
