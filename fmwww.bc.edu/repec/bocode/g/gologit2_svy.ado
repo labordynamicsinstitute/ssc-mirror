@@ -1,4 +1,4 @@
-*! version 3.2.5 17may2019 Richard Williams, rwilliam@nd.edu
+*! version 3.2.6 15feb2025 Richard Williams, rwilliam@nd.edu
 
 * Specialized svy prefix for gologit2 - handles otherwise
 * problematic options. Use this instead of svy:,

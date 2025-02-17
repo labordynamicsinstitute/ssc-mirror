@@ -1,7 +1,7 @@
 {smcl}
-{* Last revised May 17, 2019}{...}
+{* Last revised Feb 15, 2025}{...}
 {hline}
-help for {hi:gologit2} version 3.2.5
+help for {hi:gologit2} version 3.2.6
 {hline}
 
 {title:Generalized Ordered Logit Models for Ordinal Dependent Variables}

@@ -17608,7 +17608,6 @@ fmwww.bc.edu/repec/bocode/g/gendummies.html
 fmwww.bc.edu/repec/bocode/g/group1d.ado
 fmwww.bc.edu/repec/bocode/g/gr_options.idlg
 fmwww.bc.edu/repec/bocode/g/gmvport.ado
-fmwww.bc.edu/repec/bocode/g/gphepssj.html
 fmwww.bc.edu/repec/bocode/g/genass.hlp
 fmwww.bc.edu/repec/bocode/g/galbr.dlg
 fmwww.bc.edu/repec/bocode/g/gdistinct.ado
@@ -17617,7 +17616,6 @@ fmwww.bc.edu/repec/bocode/g/ginidesc.pkg
 fmwww.bc.edu/repec/bocode/g/glevelsof.ado
 fmwww.bc.edu/repec/bocode/g/gduplicates.ado
 fmwww.bc.edu/repec/bocode/g/gphdt.ado
-fmwww.bc.edu/repec/bocode/g/groups.html
 fmwww.bc.edu/repec/bocode/g/glmdeco.sthlp
 fmwww.bc.edu/repec/bocode/g/geo2xy_world_data.dta
 fmwww.bc.edu/repec/bocode/g/getdata.sthlp
@@ -17633,7 +17631,6 @@ fmwww.bc.edu/repec/bocode/g/gumbelfit.ado
 fmwww.bc.edu/repec/bocode/g/getiref.pkg
 fmwww.bc.edu/repec/bocode/g/gologit2_autofit.ado
 fmwww.bc.edu/repec/bocode/g/ghcloglog.ado
-fmwww.bc.edu/repec/bocode/g/gphdt.html
 fmwww.bc.edu/repec/bocode/g/gen_tail.html
 fmwww.bc.edu/repec/bocode/g/gconc.pkg
 fmwww.bc.edu/repec/bocode/g/gtsheckman.pkg
@@ -17677,26 +17674,22 @@ fmwww.bc.edu/repec/bocode/g/goll.ado
 fmwww.bc.edu/repec/bocode/g/gologit29_autofit.ado
 fmwww.bc.edu/repec/bocode/g/geo2xy_albers_sphere.hlp
 fmwww.bc.edu/repec/bocode/g/grand.hlp
-fmwww.bc.edu/repec/bocode/g/gs2slsxt.html
 fmwww.bc.edu/repec/bocode/g/grdiame.ado
 fmwww.bc.edu/repec/bocode/g/gendummies.sthlp
 fmwww.bc.edu/repec/bocode/g/geekel2d.ado
 fmwww.bc.edu/repec/bocode/g/giacross.sthlp
 fmwww.bc.edu/repec/bocode/g/genhwcci.html
 fmwww.bc.edu/repec/bocode/g/glcurve.pkg
-fmwww.bc.edu/repec/bocode/g/grand2.html
 fmwww.bc.edu/repec/bocode/g/gciget.pkg
 fmwww.bc.edu/repec/bocode/g/gby.html
 fmwww.bc.edu/repec/bocode/g/getTimeSeries.ado
 fmwww.bc.edu/repec/bocode/g/ginidecomp.sthlp
 fmwww.bc.edu/repec/bocode/g/geodist.ado
-fmwww.bc.edu/repec/bocode/g/gsgroup.html
 fmwww.bc.edu/repec/bocode/g/ghazal_guzzler.ado
 fmwww.bc.edu/repec/bocode/g/gzipsave.ado
 fmwww.bc.edu/repec/bocode/g/ghsurv.sthlp
 fmwww.bc.edu/repec/bocode/g/gnbstrat.hlp
 fmwww.bc.edu/repec/bocode/g/gammareg_lf.ado
-fmwww.bc.edu/repec/bocode/g/gsa.html
 fmwww.bc.edu/repec/bocode/g/grtestsub.ado
 fmwww.bc.edu/repec/bocode/g/gb2fit.ado
 fmwww.bc.edu/repec/bocode/g/gnpoisson.ado
@@ -17705,8 +17698,6 @@ fmwww.bc.edu/repec/bocode/g/genhwcci.hlp
 fmwww.bc.edu/repec/bocode/g/gs2slsar.dta
 fmwww.bc.edu/repec/bocode/g/gevfit.ado
 fmwww.bc.edu/repec/bocode/g/ge_gravity2.pkg
-fmwww.bc.edu/repec/bocode/g/grdidip.html
-fmwww.bc.edu/repec/bocode/g/graphexportpdf.html
 fmwww.bc.edu/repec/bocode/g/gs3slsar.do
 fmwww.bc.edu/repec/bocode/g/glmcorr.html
 fmwww.bc.edu/repec/bocode/g/glmcorr.ado
@@ -17755,7 +17746,6 @@ fmwww.bc.edu/repec/bocode/g/glst.hlp
 fmwww.bc.edu/repec/bocode/g/genvars.pkg
 fmwww.bc.edu/repec/bocode/g/gintreg_old.ado
 fmwww.bc.edu/repec/bocode/g/gphsave.ado
-fmwww.bc.edu/repec/bocode/g/gpreset.html
 fmwww.bc.edu/repec/bocode/g/getmstatistic.ado
 fmwww.bc.edu/repec/bocode/g/gs2slsxt.pkg
 fmwww.bc.edu/repec/bocode/g/_gsqallpos.ado
@@ -17786,7 +17776,6 @@ fmwww.bc.edu/repec/bocode/g/getcensus.dlg
 fmwww.bc.edu/repec/bocode/g/graphlog_example.ado
 fmwww.bc.edu/repec/bocode/g/grstest2.sthlp
 fmwww.bc.edu/repec/bocode/g/geoboundary.pkg
-fmwww.bc.edu/repec/bocode/g/gs3sls.html
 fmwww.bc.edu/repec/bocode/g/gbgfit.pkg
 fmwww.bc.edu/repec/bocode/g/gr_prob_cub.ado
 fmwww.bc.edu/repec/bocode/g/g2oz.html
@@ -17798,7 +17787,6 @@ fmwww.bc.edu/repec/bocode/g/gologit29.ado
 fmwww.bc.edu/repec/bocode/g/geocode.hlp
 fmwww.bc.edu/repec/bocode/g/_gsqepicount.ado
 fmwww.bc.edu/repec/bocode/g/giteedlg.ado
-fmwww.bc.edu/repec/bocode/g/grnotem.html
 fmwww.bc.edu/repec/bocode/g/gumbelfit.hlp
 fmwww.bc.edu/repec/bocode/g/genicv.pkg
 fmwww.bc.edu/repec/bocode/g/get_unit_time_effects.sthlp
@@ -17873,7 +17861,6 @@ fmwww.bc.edu/repec/bocode/g/ggeocode.sthlp
 fmwww.bc.edu/repec/bocode/g/gtools_unix_v2.plugin
 fmwww.bc.edu/repec/bocode/g/genspec.sthlp
 fmwww.bc.edu/repec/bocode/g/fix.zip
-fmwww.bc.edu/repec/bocode/g/goprobit.html
 fmwww.bc.edu/repec/bocode/g/geoboundary.sthlp
 fmwww.bc.edu/repec/bocode/g/gsa_binpu.ado
 fmwww.bc.edu/repec/bocode/g/genscore.hlp
@@ -17891,7 +17878,6 @@ fmwww.bc.edu/repec/bocode/g/gnbstrat.ado
 fmwww.bc.edu/repec/bocode/g/greek_in_word.sthlp
 fmwww.bc.edu/repec/bocode/g/_gsqgapcount.ado
 fmwww.bc.edu/repec/bocode/g/gs3slsar.dta
-fmwww.bc.edu/repec/bocode/g/gs2sls.html
 fmwww.bc.edu/repec/bocode/g/getregstats.ado
 fmwww.bc.edu/repec/bocode/g/grexport.hlp
 fmwww.bc.edu/repec/bocode/g/ghistcum.pkg
@@ -17983,14 +17969,12 @@ fmwww.bc.edu/repec/bocode/g/gs2slsarxt.dlg
 fmwww.bc.edu/repec/bocode/g/ginidesc.html
 fmwww.bc.edu/repec/bocode/g/gphsave.hlp
 fmwww.bc.edu/repec/bocode/g/gby.ado
-fmwww.bc.edu/repec/bocode/g/grcomb.html
 fmwww.bc.edu/repec/bocode/g/gs2slsxt.sthlp
 fmwww.bc.edu/repec/bocode/g/gevfit.html
 fmwww.bc.edu/repec/bocode/g/gdsum.sthlp
 fmwww.bc.edu/repec/bocode/g/gam.pkg
 fmwww.bc.edu/repec/bocode/g/grstyle_set.ado
 fmwww.bc.edu/repec/bocode/g/gdp.dta
-fmwww.bc.edu/repec/bocode/g/gsample.html
 fmwww.bc.edu/repec/bocode/g/gmemultinomial.sthlp
 fmwww.bc.edu/repec/bocode/g/geo2xy_equidistant_cylindrical.hlp
 fmwww.bc.edu/repec/bocode/g/genfreq.hlp
@@ -18019,7 +18003,6 @@ fmwww.bc.edu/repec/bocode/g/gllamm.html
 fmwww.bc.edu/repec/bocode/g/graphlog_example.do
 fmwww.bc.edu/repec/bocode/g/geoquery.ado
 fmwww.bc.edu/repec/bocode/g/gllamm.ado
-fmwww.bc.edu/repec/bocode/g/greek_in_word.html
 fmwww.bc.edu/repec/bocode/g/gazoline_did_multiplegt_stat.dta
 fmwww.bc.edu/repec/bocode/g/genefetch.sthlp
 fmwww.bc.edu/repec/bocode/g/gs3slsar.dlg
@@ -18041,7 +18024,6 @@ fmwww.bc.edu/repec/bocode/g/gzsave.html
 fmwww.bc.edu/repec/bocode/g/grexport.pkg
 fmwww.bc.edu/repec/bocode/g/gzsaveold.html
 fmwww.bc.edu/repec/bocode/g/gamet.pkg
-fmwww.bc.edu/repec/bocode/g/gradip.html
 fmwww.bc.edu/repec/bocode/g/gtsheckman.ado
 fmwww.bc.edu/repec/bocode/g/groupdata.hlp
 fmwww.bc.edu/repec/bocode/g/gsa_qoi.ado
@@ -18053,7 +18035,6 @@ fmwww.bc.edu/repec/bocode/g/groups.ado
 fmwww.bc.edu/repec/bocode/g/gphudak.ado
 fmwww.bc.edu/repec/bocode/g/genhwcci.pkg
 fmwww.bc.edu/repec/bocode/g/ggtaxonomy.pkg
-fmwww.bc.edu/repec/bocode/g/grmarg.html
 fmwww.bc.edu/repec/bocode/g/gglm.ado
 fmwww.bc.edu/repec/bocode/g/geocodeopen.sthlp
 fmwww.bc.edu/repec/bocode/g/getmstatistic.sthlp
@@ -18097,7 +18078,6 @@ fmwww.bc.edu/repec/bocode/g/getfilename2.hlp
 fmwww.bc.edu/repec/bocode/g/ghxt.dlg
 fmwww.bc.edu/repec/bocode/g/geochart.ado
 fmwww.bc.edu/repec/bocode/g/gb2fit_ll.ado
-fmwww.bc.edu/repec/bocode/g/grfreq.html
 fmwww.bc.edu/repec/bocode/g/gciget.sthlp
 fmwww.bc.edu/repec/bocode/g/gammasym.hlp
 fmwww.bc.edu/repec/bocode/g/grcompare.pkg
@@ -18160,7 +18140,6 @@ fmwww.bc.edu/repec/bocode/g/gammafit.html
 fmwww.bc.edu/repec/bocode/g/geivars.ado
 fmwww.bc.edu/repec/bocode/g/gquantiles.sthlp
 fmwww.bc.edu/repec/bocode/g/glcurve7.pkg
-fmwww.bc.edu/repec/bocode/g/group_id.html
 fmwww.bc.edu/repec/bocode/g/getdataconfig.ado
 fmwww.bc.edu/repec/bocode/g/go.ado
 fmwww.bc.edu/repec/bocode/g/graphlog.pkg
@@ -18191,7 +18170,6 @@ fmwww.bc.edu/repec/bocode/g/GWNB062_pollutants.dta
 fmwww.bc.edu/repec/bocode/g/getcensus.sthlp
 fmwww.bc.edu/repec/bocode/g/geivars.html
 fmwww.bc.edu/repec/bocode/g/gllamm.pkg
-fmwww.bc.edu/repec/bocode/g/gs2slsarxt.html
 fmwww.bc.edu/repec/bocode/g/grdigap.hlp
 fmwww.bc.edu/repec/bocode/g/gformula_example.do
 fmwww.bc.edu/repec/bocode/g/geocode_ip.ado
@@ -18218,7 +18196,6 @@ fmwww.bc.edu/repec/bocode/g/getgeneids.ado
 fmwww.bc.edu/repec/bocode/g/gpfobl.ado
 fmwww.bc.edu/repec/bocode/g/GasHoliday.dta
 fmwww.bc.edu/repec/bocode/g/grand.ado
-fmwww.bc.edu/repec/bocode/g/grcompare.html
 fmwww.bc.edu/repec/bocode/g/ginidecomp.ado
 fmwww.bc.edu/repec/bocode/g/genicv.sthlp
 fmwww.bc.edu/repec/bocode/g/ggt_methods.pdf
@@ -18259,7 +18236,6 @@ fmwww.bc.edu/repec/bocode/g/gencpr.ado
 fmwww.bc.edu/repec/bocode/g/gumbelfit.pkg
 fmwww.bc.edu/repec/bocode/g/gwhet.hlp
 fmwww.bc.edu/repec/bocode/g/ghk2.html
-fmwww.bc.edu/repec/bocode/g/gnpoisson.html
 fmwww.bc.edu/repec/bocode/g/GBSG2.dta
 fmwww.bc.edu/repec/bocode/g/gpfobl.html
 fmwww.bc.edu/repec/bocode/g/gziputil.sthlp
@@ -18294,13 +18270,11 @@ fmwww.bc.edu/repec/bocode/g/ghquadm.hlp
 fmwww.bc.edu/repec/bocode/g/gaussgibbs.zip
 fmwww.bc.edu/repec/bocode/g/groupfunction.pkg
 fmwww.bc.edu/repec/bocode/g/gsreg.pkg
-fmwww.bc.edu/repec/bocode/g/groupdist.html
 fmwww.bc.edu/repec/bocode/g/group_id.dlg
 fmwww.bc.edu/repec/bocode/g/gdecomp.pkg
 fmwww.bc.edu/repec/bocode/g/gpreset.pkg
 fmwww.bc.edu/repec/bocode/g/gsa.ado
 fmwww.bc.edu/repec/bocode/g/glst.html
-fmwww.bc.edu/repec/bocode/g/grand.html
 fmwww.bc.edu/repec/bocode/g/grouplabs.ado
 fmwww.bc.edu/repec/bocode/g/geoflow.sthlp
 fmwww.bc.edu/repec/bocode/g/ghansen.html
@@ -18314,7 +18288,6 @@ fmwww.bc.edu/repec/bocode/g/gsdata.pkg
 fmwww.bc.edu/repec/bocode/g/geodist2.pkg
 fmwww.bc.edu/repec/bocode/g/genidseq.pkg
 fmwww.bc.edu/repec/bocode/g/gs2slsar.do
-fmwww.bc.edu/repec/bocode/g/grexport.html
 fmwww.bc.edu/repec/bocode/g/georoutei.sthlp
 fmwww.bc.edu/repec/bocode/g/geocodehere.ado
 fmwww.bc.edu/repec/bocode/g/grexport.ado
@@ -18337,7 +18310,6 @@ fmwww.bc.edu/repec/bocode/g/grand2.ado
 fmwww.bc.edu/repec/bocode/g/gciget.ado
 fmwww.bc.edu/repec/bocode/g/grnote.hlp
 fmwww.bc.edu/repec/bocode/g/graphexportpdf.pkg
-fmwww.bc.edu/repec/bocode/g/gpscore.html
 fmwww.bc.edu/repec/bocode/g/geonear.hlp
 fmwww.bc.edu/repec/bocode/g/goprobit_p.ado
 fmwww.bc.edu/repec/bocode/g/gather.ado
@@ -18347,21 +18319,17 @@ fmwww.bc.edu/repec/bocode/g/gmm_mqg.ado
 fmwww.bc.edu/repec/bocode/g/graph_header.idlg
 fmwww.bc.edu/repec/bocode/g/givgauss2.hlp
 fmwww.bc.edu/repec/bocode/g/geocodeopen.ado
-fmwww.bc.edu/repec/bocode/g/gologit.html
 fmwww.bc.edu/repec/bocode/g/gitee.dlg
 fmwww.bc.edu/repec/bocode/g/gentrun.html
 fmwww.bc.edu/repec/bocode/g/gmmcovearn.ado
 fmwww.bc.edu/repec/bocode/g/gzsave.hlp
 fmwww.bc.edu/repec/bocode/g/giniinc.sthlp
 fmwww.bc.edu/repec/bocode/g/gmmcovearn.pkg
-fmwww.bc.edu/repec/bocode/g/grdigap.html
-fmwww.bc.edu/repec/bocode/g/grqreg.html
 fmwww.bc.edu/repec/bocode/g/getprime.sthlp
 fmwww.bc.edu/repec/bocode/g/grtext.pkg
 fmwww.bc.edu/repec/bocode/g/gsample.ado
 fmwww.bc.edu/repec/bocode/g/gby.pkg
 fmwww.bc.edu/repec/bocode/g/glcurve7.hlp
-fmwww.bc.edu/repec/bocode/g/gologit2.html
 fmwww.bc.edu/repec/bocode/g/gb2lfit.hlp
 fmwww.bc.edu/repec/bocode/g/gausshermite.pkg
 fmwww.bc.edu/repec/bocode/g/gzappend.hlp
@@ -18387,7 +18355,6 @@ fmwww.bc.edu/repec/bocode/g/gensurvsim.ado
 fmwww.bc.edu/repec/bocode/g/gdsum.ado
 fmwww.bc.edu/repec/bocode/g/gisid.ado
 fmwww.bc.edu/repec/bocode/g/geo2xy_examples.ado
-fmwww.bc.edu/repec/bocode/g/grubbs.html
 fmwww.bc.edu/repec/bocode/g/gitee.sthlp
 fmwww.bc.edu/repec/bocode/g/gtools_macosx_v3.plugin
 fmwww.bc.edu/repec/bocode/g/goprobit.pkg
@@ -18420,7 +18387,6 @@ fmwww.bc.edu/repec/bocode/g/ginilma.ado
 fmwww.bc.edu/repec/bocode/g/german-pre-election-polls.dta
 fmwww.bc.edu/repec/bocode/g/goprobit.ado
 fmwww.bc.edu/repec/bocode/g/gs2sls.pkg
-fmwww.bc.edu/repec/bocode/g/gprefscode.html
 fmwww.bc.edu/repec/bocode/g/ghsurv.pkg
 fmwww.bc.edu/repec/bocode/g/getb.ado
 fmwww.bc.edu/repec/bocode/g/ginicumul.ado
@@ -18457,8 +18423,6 @@ fmwww.bc.edu/repec/bocode/g/gpreg.pkg
 fmwww.bc.edu/repec/bocode/g/gcode.ado
 fmwww.bc.edu/repec/bocode/g/gendist.ado
 fmwww.bc.edu/repec/bocode/g/graphlog.ado
-fmwww.bc.edu/repec/bocode/g/grlogit.html
-fmwww.bc.edu/repec/bocode/g/grstest.html
 fmwww.bc.edu/repec/bocode/g/geoframe.ado
 fmwww.bc.edu/repec/bocode/g/gentrun.pkg
 fmwww.bc.edu/repec/bocode/g/gridsearch.ado
@@ -18478,10 +18442,8 @@ fmwww.bc.edu/repec/bocode/g/gammafit_lf.ado
 fmwww.bc.edu/repec/bocode/g/gdecomp.html
 fmwww.bc.edu/repec/bocode/g/ggtax.ado
 fmwww.bc.edu/repec/bocode/g/_gsqelemcount.ado
-fmwww.bc.edu/repec/bocode/g/gphsave.html
 fmwww.bc.edu/repec/bocode/g/getdata.ado
 fmwww.bc.edu/repec/bocode/g/grfreq.hlp
-fmwww.bc.edu/repec/bocode/g/grnote.html
 fmwww.bc.edu/repec/bocode/g/geodist.pkg
 fmwww.bc.edu/repec/bocode/g/gridsearch.pkg
 fmwww.bc.edu/repec/bocode/g/gcause.ado
@@ -18503,7 +18465,6 @@ fmwww.bc.edu/repec/bocode/g/gwhet.ado
 fmwww.bc.edu/repec/bocode/g/gipf.pkg
 fmwww.bc.edu/repec/bocode/g/ginidesc.hlp
 fmwww.bc.edu/repec/bocode/g/gologit2.sthlp
-fmwww.bc.edu/repec/bocode/g/gs2slsar.html
 fmwww.bc.edu/repec/bocode/g/gammasym.pkg
 fmwww.bc.edu/repec/bocode/g/ggtaxonomy.ado
 fmwww.bc.edu/repec/bocode/g/gsum.pkg
@@ -18517,7 +18478,6 @@ fmwww.bc.edu/repec/bocode/g/gcollapse.sthlp
 fmwww.bc.edu/repec/bocode/g/gs3slsar.ado
 fmwww.bc.edu/repec/bocode/g/gnbstrat.html
 fmwww.bc.edu/repec/bocode/g/genstacks.ado
-fmwww.bc.edu/repec/bocode/g/group1d.html
 fmwww.bc.edu/repec/bocode/g/geoinpoly.sthlp
 fmwww.bc.edu/repec/bocode/g/grsftest.sthlp
 fmwww.bc.edu/repec/bocode/g/gzmerge.html
@@ -18529,7 +18489,6 @@ fmwww.bc.edu/repec/bocode/g/ggt_Documentation_Full.pdf
 fmwww.bc.edu/repec/bocode/g/influence_delete.ado
 fmwww.bc.edu/repec/bocode/g/group3hdfe.ado
 fmwww.bc.edu/repec/bocode/g/glmcorr.hlp
-fmwww.bc.edu/repec/bocode/g/graphbinary.html
 fmwww.bc.edu/repec/bocode/g/gologit3_lf2.ado
 fmwww.bc.edu/repec/bocode/g/gs3slsar.sthlp
 fmwww.bc.edu/repec/bocode/g/getiref.ado
@@ -18562,12 +18521,10 @@ fmwww.bc.edu/repec/bocode/g/grstyle_set.hlp
 fmwww.bc.edu/repec/bocode/g/geoframe.sthlp
 fmwww.bc.edu/repec/bocode/g/giacross_test_data.csv
 fmwww.bc.edu/repec/bocode/g/gstats_transform.sthlp
-fmwww.bc.edu/repec/bocode/g/groupdata.html
 fmwww.bc.edu/repec/bocode/g/geninteract.ado
 fmwww.bc.edu/repec/bocode/g/gsample.zip
 fmwww.bc.edu/repec/bocode/g/gzuse.hlp
 fmwww.bc.edu/repec/bocode/g/gmmcovearn.html
-fmwww.bc.edu/repec/bocode/g/gs3slsar.html
 fmwww.bc.edu/repec/bocode/g/geodist.html
 fmwww.bc.edu/repec/bocode/g/groupcl.pkg
 fmwww.bc.edu/repec/bocode/g/gnbstrat.pkg

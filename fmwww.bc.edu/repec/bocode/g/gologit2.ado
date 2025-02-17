@@ -1,4 +1,4 @@
-*! version 3.2.5 17may2019 Richard Williams, rwilliam@nd.edu
+*! version 3.2.6 15feb2025 Richard Williams, rwilliam@nd.edu
 
 * 2.0.0 - Initial release of gologit2.ado
 * 2.0.1 - bugs with autofix, v1 and by fixed; Wald test for final model added
@@ -40,6 +40,8 @@
 *         using subpop correctly.
 * 3.2.5 - Fixed problem with base category variables having very small values
 *         when they should be zero
+* 3.2.6 - Ereturns cmdline, which gives to command given or the last command 
+*         executed by autofit
 
 	program gologit2, eclass byable(recall) sortpreserve ///
         properties(svyr svyb svyj swml or rrr irr hr eform mi)
@@ -448,6 +450,13 @@ else {
 	*** ereturn local marginsprop addcons *** Not needed
 	ereturn local marginsok pr xb
 	ereturn local marginsnotok stdp stddp SCores
+	
+//  Return cmdline
+
+	local cmdline = subinstr("`0'", "noplay", "", .)
+	local cmdline = subinstr("`cmdline'", "golauto", "", .)
+	local cmdline = stritrim("`cmdline'")
+	ereturn local cmdline gologit2 `cmdline'
 
 	
 // display the results
@@ -1005,7 +1014,7 @@ program Replay
 	Level(cilevel)			 	///
 	or irr rrr hr EForm 			///
 	Gamma Gamma2(name) STOre(name) NOPLAY	///
-	COEFLegend NOCNSReport * ] 
+	COEFLegend NOCNSReport BASElevels ALLBASElevels ] 
 	
 	if "`gamma2'"!="" local gamma gamma
 	// redo gamma parameters in case they got zapped with svy:
@@ -1020,15 +1029,16 @@ program Replay
 	// This could be tidied up a little
 	_get_diopts diopts options, `options' 
 	local diopts `diopts' `eform' level(`level') `or' `rrr' `irr' `hr' `coeflegend' `nocnsreport'
+	if "`baselevels'" == "" & "`allbaselevels'" == "" local diopts `diopts' noemptycells
 
-	if "`noplay'"=="" ml display , `diopts' noemptycells
+	if "`noplay'"=="" ml display , `diopts' 
 	
 	
 	// display alternative gamma format if requested. 
 		if "`gamma'"!="" & "`noplay'"=="" {
 		gamma_parameterization , level(`level') `or' `irr' `rrr' `hr' `eform'
 		// Next command keeps r(table) correct
-		quietly ml display , `diopts' noemptycells
+		quietly ml display , `diopts'
 	}
 
 end
