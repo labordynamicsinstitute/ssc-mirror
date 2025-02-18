@@ -1,4 +1,4 @@
-*! version 1.0 23may2024
+*! version 1.2.1 17feb2025
 capture program drop stackdid
 program define stackdid, rclass
         version 11
@@ -18,30 +18,51 @@ program define stackdid, rclass
         */      clear                   /*
         */      saving(string)          /*
         */      noLOG                   /* 
-        */      absorb(varlist fv)      /* UNDOCUMENTED
+        */      absorb(varlist fv)      /*
+		*/		sw 						/*
         */      *                       /* estimator-specific options other than absorb()
         */      ]
   
         * Confirm required options, or nobuild, specified
-        if ("`treatment'"=="" | "`group'"=="" | "`window'"=="") & ("`build'"=="") {
-                di as err "options treatment(), group(), and window() " ///
-                          "are required unless nobuild is specified"
+        if ("`treatment'"=="" | "`group'"=="") & ("`build'"=="") {
+                di as err "treatment() and group() are required unless nobuild is specified"
                 exit 198
         }
+		
+		* Confirm dependencies installed
+		if ("`regress'"=="") {
+			if ("`poisson'"!="") {
+				cap which ppmlhdfe 
+				if (_rc) {
+					di as err "package ppmlhdfe required: " as smcl "{bf:{stata ssc describe ppmlhdfe}}"
+					exit 199
+				}
+				else	local cmd "ppmlhdfe"
+			}
+			else {
+				cap which reghdfe 
+				if (_rc) {
+					di as err "package reghdfe required: " as smcl "{bf:{stata ssc describe reghdfe}}"
+					exit 199
+				}
+				else	local cmd "reghdfe"
+			}
+		}
         
 /* BUILD */
 
         if ("`build'"=="") {
-                
-                * Assert data is xtset'ed
-                capture xtset 
-                if (_rc) {
-                        di as err "must xtset data first"
+			
+				* Assert data is xtset'ed
+                capture xtset
+                if (_rc) | inlist("","`r(panelvar)'","`r(timevar)'") {
+                        di as err "must xtset data with panelvar and timevar"
                         exit 198
                 }
                 local unit `r(panelvar)'
                 local time `r(timevar)'
                 
+				* Note to self: Is the following check worth it?
                 * Assert treatment takes values {0,1,.}
                 capture assert inlist(`treatment',0,1,.) `if' `in'
                 if (_rc) { 
@@ -50,12 +71,14 @@ program define stackdid, rclass
                 }
 
                 * Parse window()
-                gettoken pre post: window
-                capture assert `pre'<`post' & inrange(0,`pre',`post'-1)
-                if (_rc) {
-                        di as err "option window() specified incorrectly"
-                        exit 198
-                }
+				if ("`window'"!="") {
+					gettoken pre post: window
+					capture assert `pre'<`post' & inrange(0,`pre',`post'-1)
+					if (_rc) {
+							di as err "option window() specified incorrectly"
+							exit 198
+					}
+				}
                 
                 * Assert varnames are available
                 foreach vname in _cohort _cohort_time _cohort_group {
@@ -73,7 +96,10 @@ program define stackdid, rclass
                 if ("`log'"!="") local nolog "quietly" // suppress build log
                 if ("`if'"!="") local ampif = subinstr("`if'","if","&",1) // replace if w/ ampersand
 
-                * Find event times
+                * Preserve
+				preserve
+				
+				* Find event times
                 sort `group' `time'
                 qui gen byte `treat_prev' = `treatment'[_n-1] if (`group'[_n-1]==`group' & `time'[_n-1]+1==`time')
                 qui gen byte `treat_event' = (`treatment'==1 & `treat_prev'==0)
@@ -94,8 +120,13 @@ program define stackdid, rclass
                         if ("`nevertreat'"!="") qui replace `treated' = . if (`treated'==0 & `nevertreated'==0)
 
                         * (1): grab everything within window of event
-                        qui gen byte `tostack' = inrange(`time',`pre'+`co',`post'+`co'-1) if missing(_cohort) & !missing(`treated') `ampif' `in'
-
+						if ("`window'"!="") {
+								qui gen byte `tostack' = inrange(`time',`pre'+`co',`post'+`co'-1) if missing(_cohort) & !missing(`treated') `ampif' `in'
+						}
+						else {
+								qui gen byte `tostack' = (missing(_cohort) & !missing(`treated')) `ampif' `in'
+						}
+						
                         * (2): remove latest treatment and prior
                         qui egen `ttype' `latest_treat' = max(cond(`treatment'==1,`time',.)) if (`tostack'==1 & `time'<`co'), by(`group')
                         qui replace `tostack' = 0 if (`tostack'==1 & `treatment'==1 & `time'<=`latest_treat' & !missing(`latest_treat'))
@@ -118,16 +149,23 @@ program define stackdid, rclass
                         qui replace _cohort = `co' if (`stacked'==1)
                         drop `tostack' `stacked'
                 }
-                
-                * Generate fixed effects
+				di
+				
+				* Generate fixed effects
                 qui egen _cohort_time = group(_cohort `time') if !missing(_cohort), autotype
                 qui egen _cohort_unit = group(_cohort `unit') if !missing(_cohort), autotype 
+				
+				* Generate sample weight (inverse frequency)
+				if ("`clear'"!="") | ("`sw'"!="") {
+						qui bysort `unit' `time': gen _sw = 1/(_N-1) 
+						label var _sw "-stackdid- sample weight"
+				}
                 
                 * Label saved (non-temporary) variables 
                 format _cohort `tfmt'
-                label var _cohort "treatment cohort, identified by time of treatment, from -stackdid-"
-                label var _cohort_time "cohort-time fixed effect, from -stackdid-"
-                label var _cohort_unit "unit-cohort fixed effect, from -stackdid-"
+                label var _cohort "-stackdid- treatment cohort"
+                label var _cohort_time "-stackdid- cohort-time fixed effect"
+                label var _cohort_unit "-stackdid- unit-cohort fixed effect"
                 
                 * Clean up & grab N
                 qui count if missing(_cohort)
@@ -135,37 +173,38 @@ program define stackdid, rclass
                 qui count if !missing(_cohort)
                 local N_stacked = r(N)
                 
-                * Apply clear/saving options
-                if ("`clear'"!="") {
-                        qui drop if missing(_cohort)
-                        if ("`saving'"!="") {
-                                save `saving'
-                        }
-                }
-                else if ("`saving'"!="") {
-                        preserve
-                                qui drop if missing(_cohort)
-                                save `saving'
-                        restore
-                }
-                di
         }
         
 /* ESTIMATE */
         
         if ("`regress'"=="") {
-                local cmd = cond("`poisson'"!="", "ppmlhdfe", "reghdfe")
                 local abs absorb(`absorb' _cohort_time _cohort_unit)
-                `cmd' `anything' [`weight'`exp'] `if' `in', `abs' `options'
+				local w = cond(("`sw'"!=""), "[aweight=_sw]", "[`weight'`exp']")
+                `cmd' `anything' `w' `if' `in', `abs' `options'
                 return local regline "`e(cmdline)'"
         }
         
 /* CLEAN UP */
         
-        if ("`clear'"=="" & "`build'"=="") {
-                qui drop if !missing(_cohort)
-                drop _cohort _cohort_time _cohort_unit
-        }
+		* Apply clear/saving options
+		if ("`build'"=="") {
+				if ("`clear'"!="") {
+						restore, not
+						qui drop if missing(_cohort)
+						if ("`saving'"!="") {
+								di 
+								save `saving'
+						}
+				}
+				else if ("`saving'"!="") {
+						qui drop if missing(_cohort)
+						di
+						save `saving'
+						restore
+				}
+				else	restore
+		}
+
         
 /* RETURNS + MESSAGES */
 

@@ -1,28 +1,31 @@
 {smcl}
-{* *! version 2.0  12jul2022}{...}
-{viewerjumpto "Syntax" "examplehelpfile##syntax"}{...}
-{viewerjumpto "Description" "examplehelpfile##description"}{...}
-{viewerjumpto "Options" "examplehelpfile##options"}{...}
-{viewerjumpto "Remarks" "examplehelpfile##remarks"}{...}
-{viewerjumpto "Examples" "examplehelpfile##examples"}{...}
-{viewerjumpto "References" "references##references"}{...}
-
+{* *! version 3.0 06feb2024}{...}
+{vieweralsosee "[R] intreg" "help intreg"}{...}
+{viewerjumpto "Syntax" "gintreg##syntax"}{...}
+{viewerjumpto "Description" "gintreg##description"}{...}
+{viewerjumpto "Options" "gintreg##options"}{...}
+{viewerjumpto "Remarks" "gintreg##remarks"}
+{viewerjumpto "Postestimation syntax" "gintreg##postestimation"}{...}
+{viewerjumpto "Examples" "gintreg##examples"}{...}
+{viewerjumpto "Stored results" "gintreg##results"}{...}
+{viewerjumpto "Authors" "gintreg##authors"}{...}
+{viewerjumpto "References" "gintreg##references"}{...}
 {title:Title}
 
-{phang}
-{bf:gintreg} {hline 2} Generalized Interval Regression
+{p2colset 5 18 20 2}{...}
+{p2col:{cmd:gintreg} {hline 2}}Generalized interval regression{p_end}
 
 
 {marker syntax}{...}
 {title:Syntax}
 
-{p 8 20 2}
-{cmdab:gintreg}
+{p 8 15 2}
+{cmd:gintreg}
 {it:{help depvar:depvar1}}
 {it:{help depvar:depvar2}}
 [{indepvars}]
-[{it:if}]
-[{it:in}]
+{ifin}
+[{it:{help gintreg##weight:weight}}]
 [{cmd:,} {it:options}]
 
 {pstd}
@@ -30,201 +33,229 @@
 
              Type of data {space 16} {it:depvar1}  {it:depvar2}
              {hline 46}
-             point data{space 10}{it:a} = [{it:a},{it:a}]{space 4}{it:a}{space 8 }{it:a} 
-             interval data{space 11}[{it:a},{it:b}]{space 4}{it:a}{space 8}{it:b }
+             point data{space 10}{it:a} = [{it:a},{it:a}]{space 4}{it:a}{space 8}{it:a} 
+             interval data{space 11}[{it:a},{it:b}]{space 4}{it:a}{space 8}{it:b}
              left-censored data{space 3}(-inf,{it:b}]{space 4}{cmd:.}{space 8}{it:b}
-             right-censored data{space 3}[{it:a},inf){space 4}{it:a}{space 8}{cmd:.} 
+             right-censored data{space 2}[{it:a},+inf){space 4}{it:a}{space 8}{cmd:.}
+             missing{space 26}{cmd:.}{space 8}{cmd:.} 
              {hline 46}
-			 
-{pstd}
-If using grouped data then the form will be similar:
 
-	     Type of data {space 16} {it:depvar1}  {it:depvar2} {space 1} {it: frequency}
-             {hline 59}
-             point data{space 10}{it:a} = [{it:a},{it:a}]{space 4}{it:a}{space 8 }{it:a} {space 8} {it:n}
-             interval data{space 11}[{it:a},{it:b}]{space 4}{it:a}{space 8}{it:b } {space 7} {it:n}
-             left-censored data{space 3}(-inf,{it:b}]{space 4}{cmd:.}{space 8}{it:b} {space 8} {it:n}
-             right-censored data{space 3}[{it:a},inf){space 4}{it:a}{space 8}{cmd:.}  {space 7} {it:n}
-             {hline 59}
-
-
-{synoptset 24 tabbed}{...}
+{synoptset 32 tabbed}{...}
 {synopthdr}
 {synoptline}
-{syntab:Main}
-{synopt:{opt dist:ribution(dist_type)}} Supported distributions come from the Skewed Generalized t and Generlized Beta of the Second Kind families of distributions, namely:
+{syntab :Model}
+{synopt :{opth dist:ribution(gintreg##distname:distname)}}specify distribution; default is {opt dist:ribution(normal)}{p_end}
+{synopt :{cmdab:lnsigma(}{varlist} [{cmd:,} {opt nocons:tant}]{cmd:)}}independent
+variables to model the variance; use {opt noconstant} to suppress constant
+term{p_end}
+{synopt :{cmdab:lambda(}{varlist} [{cmd:,} {opt nocons:tant}]{cmd:)}}independent
+variables to model the skewness; use {opt noconstant} to suppress constant
+term{p_end}
+{synopt :{cmdab:p(}{varlist} [{cmd:,} {opt nocons:tant}]{cmd:)}}independent
+variables to model the shape; use {opt noconstant} to suppress constant
+term{p_end}
+{synopt :{cmdab:q(}{varlist} [{cmd:,} {opt nocons:tant}]{cmd:)}}independent
+variables to model the shape; use {opt noconstant} to suppress constant
+term{p_end}
+{synopt :{opth off:set(varname)}}include {it:varname} in model with coefficient
+constrained to 1{p_end}
+{synopt :{opt nocons:tant}}suppress constant term of model equation{p_end}
+{synopt :{cmdab:const:raints(}{it:{help estimation options##constraints():constraints}}{cmd:)}}apply specified linear constraints{p_end}
 
-				Distribution{space 25}{it:dist_type}
-				{hline 46}
-				Normal{space 31}normal
-				Skewed Normal{space 24}snormal
-				Laplace{space 30}laplace
-				Skewed Laplace{space 23}slaplace
-				Generalized Error{space 20}ged
-				Skewed Generalized Error{space 13}sged
-				t{space 36}t
-				Generalized t{space 24}gt
-				Skewed t{space 29}st
-				Skewed Generalized t{space 17}sgt
-				Lognormal{space 28}lnormal
-				Weibull{space 30}weibull
-				Gamma{space 32}gamma
-				Generalized Gamma{space 20}ggamma
-				Burr type 3{space 26}br3
-				Burr type 12{space 25}br12
-				Generalized Beta of the Second Kind{space 2}gb2
-				{hline 46}
-{synopt:{opth const:raints(numlist)}} specified linear constraints by number to be applied. Can use this option along with {opt dist:ribution} to allow for any distribution in the SGT or GB2 family trees.{p_end}
-{synopt:{opth freq:uency(varlist)}} if using group data specify variable that denotes frequency. {p_end}
+{syntab :SE/Robust}
+{synopt :{opth vce(vcetype)}}{it:vcetype} may be {opt oim},
+{opt r:obust}, {opt cl:uster} {it:clustvar}, {opt opg}, {opt boot:strap},
+or {opt jack:knife}{p_end}
+{synopt :{opt robust}}use robust standard errors{p_end}
+{synopt :{opth cluster(varname)}}cluster standard errors with respect to sampling
+unit {varname}{p_end}
 
-{syntab: Model}
-{synopt:{opth sigma(varlist)}} allows the {opt log of sigma} to vary as a linear function of independent variables; can use with any {it:dist_type} except gamma. {p_end}
-{synopt:{opth lambda(varlist)}} allows lambda to vary as a function of independent variables; can use with {it:dist_type} snormal, slaplace, sged, st or sgt.{p_end}
-{synopt:{opth p(varlist)}} allows p to vary as a linear function of independent variables; can use with {it:dist_type} ged, sged, gt, sgt, gamma, ggamma, br3 or gb2. {p_end}
-{synopt:{opth q(varlist)}} allows q to vary as a linear function of independent variables; can use with {it:dist_type} t, gt, st, sgt, br12 or gb2. {p_end}
+{syntab :Reporting}
+{synopt :{opt gini}}display gini coefficient of a model without {it:indepvars} 
+and is operable with {opt dist:ribution(weibull | gamma | br3 | br12)}{p_end}
+{synopt :{opt notran:sform}}do not display transformed coefficients{p_end}
+{synopt :{opt nocnsr:eport}}do not display constraints{p_end}
+{synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}{p_end}
+{synopt :{it:{help gintreg##display_options:display_options}}}control
+INCLUDE help shortdes-displayoptall
 
-{syntab: SE/Robust}
-{synopt :{opth vce(vcetype)}} {it:vcetype} may be {opt oim}, {opt r:obust}, {opt cl:uster} {it:clustvar}, {opt opg}, {opt boot:strap} or {opt jack:knife}. {p_end}
-{synopt:{opt robust}} use robust standard errors. {p_end}
-{synopt: {opth cluster(varlist)}} cluster standard errors with respect to sampling
-unit {varlist}. {p_end}
+{syntab :Maximization}
+{synopt :{opt initiald(distname)}}use {cmd:gintreg} with {opt dist:ribution(distname)} to find starting values{p_end}
+{synopt :{opt from(init_specs)}}set initial parameter values; see {it:{help gintreg##maximize_options:maximize_options}}{p_end}
+{synopt :{it:{help gintreg##maximize_options:maximize_options}}}control the maximization process; seldom used{p_end}
 
-{syntab: Estimation}
-{synopt:{opth init:ial(numlist)}} initial values for p,q and lambda in that order. if the distribution does not have p, q or lambda, key in initial values for mu and lnsigma in that order. 
-Because of the construction of {bf:gintreg}, redundant values are sometimes required, e.g. three values are required for the t distribution (corresponding to p, q, lambda) despite p and lambda being constrained to 2 and 0.
+{synopt:{opt col:linear}}keep collinear variables{p_end}
+INCLUDE help shortdes-coeflegend
+{synoptline}
 
-				Distribution{space 25}{it:initial values}
-				{hline 51}
-				Normal{space 31}{it:none}
-				Skewed Normal{space 24}2, lambda
-				Laplace{space 30}{it:none}
-				Skewed Laplace{space 23}1, lambda
-				Generalized Error{space 20}p, 0
-				Skewed Generalized Error{space 13}p, lambda
-				t{space 36}2, q, 0
-				Generalized t{space 24}p, q, 0
-				Skewed t{space 29}2, q, lambda
-				Skewed Generalized t{space 17}p, q, lambda
-				Lognormal{space 28}{it:none}
-				Weibull{space 30}{it:none}
-				Gamma{space 32}p
-				Generalized Gamma{space 20}p
-				Burr type 3{space 26}p, 1
-				Burr type 12{space 25}1, q
-				Generalized Beta of the Second Kind{space 2}p, q
-				{hline 51}
-{synopt:{it:{help ml##noninteractive_maxopts:maximize_options}}}control the
-maximization process{p_end}
+{marker distname}{...}
+{synoptset 32 tabbed}{...}
+{synopthdr:distname}
+{synoptline}
+{syntab :SGT family}
+{synopt :{opt normal}}normal distribution; the default{p_end}
+{synopt :{opt snormal}}skewed normal distribution{p_end}
+{synopt :{opt laplace}}Laplace distribution{p_end}
+{synopt :{opt slaplace}}skewed Laplace distribution{p_end}
+{synopt :{opt ged}}generalized error distribution{p_end}
+{synopt :{opt sged}}skewed generalized error distribution{p_end}
+{synopt :{opt t}}t distribution{p_end}
+{synopt :{opt st}}skewed t distribution{p_end}
+{synopt :{opt gt}}generalized t distribution{p_end}
+{synopt :{opt sgt}}skewed generalized t distribution{p_end}
 
-{syntab: Display}
-{synopt: {opth eyx(stat)}} shows the expected value of {depvar} conditional on {indepvars} at indicated level of {it:stat}; default is mean. {p_end}
-{synopt: {opth plot(numlist)}} plots the probability density function over chosen range. {p_end}
-{synopt: {opt gini}} prints the gini coefficient. Only operational with Weibull, Gamma, Burr type 3 and Burr type 12. {p_end}
-{synopt: {opt aicbic}} prints AIC and BIC values of the estimated model. Operational with non-grouped data. {p_end}
+{syntab :GB2 family}
+{synopt :{opt lognormal | lnormal}}lognormal distribution{p_end}
+{synopt :{opt weibull}}Weibull distribution{p_end}
+{synopt :{opt gamma}}gamma distribution{p_end}
+{synopt :{opt ggamma}}generalized gamma distribution{p_end}
+{synopt :{opt br3 | dagum}}Burr 3 or Dagum distribution{p_end}
+{synopt :{opt br12 | sm}}Burr 12 or Singh-Maddala distribution{p_end}
+{synopt :{opt gb2}}generalized beta of the second kind distribution{p_end}
 {synoptline}
 {p2colreset}{...}
+
+{p2colreset}{...}
+INCLUDE help fvvarlist2
+{p 4 6 2}
+{it:depvar1}, {it:depvar2}, {it:indepvars}, and {it:varlist} may contain
+time-series operators; see {help tsvarlist}.{p_end}
+{marker weight}{...}
+{p 4 6 2}
+{opt aweight}s, {opt fweight}s, {opt iweight}s, and {opt pweight}s are
+allowed; see {help weight}.{p_end}
+{p 4 6 2}
+See {help gintreg##postestimation:postestimation syntax} for features
+available after estimation.{p_end}
 
 
 {marker description}{...}
 {title:Description}
 
 {pstd}
-{cmd:gintreg} fits a model of {depvar} on {indepvars} using maximum likelihood
-where the dependent variable can be point data, interval data, right-censored data,
- left-censored data or grouped data with different error distributions. This is a generalization of the built in STATA command {cmd: intreg} and will yield identical estimates if the normal distribution option is used. Unlike {cmd: intreg}, {cmd: gintreg} allows the underlying variable of interest to be distributed according to a more general distribution including all distributions in the Skewed Generalized t (SGT) family and Generalized Beta of the Second Kind (GB2) family. {cmd:gintreg} can also be used to fit different distributions to variables of interest. Finally, {cmd: gintreg} allows the distributional parameters in the SGT and GB2 to be functions of designated explanatory variables.
+{cmd:gintreg} fits a linear model with a possibly nonnormal disturbance and with an outcome measured as
+point data, interval data, left-censored data, or right-censored data.  As
+such, it is a generalization of the models fit by {helpb intreg} and {helpb stintreg}. {cmd:gintreg} yields
+identical estimates to {helpb intreg} when the normal distribution is specified.  
+Unlike {cmd: intreg}, {cmd: gintreg} allows the underlying variable of interest
+to be distributed according to a more general distribution.  
+{help gintreg##distname:Supported distributions} are those in the Skewed Generalized t (SGT) family and Generalized
+Beta of the Second Kind (GB2) family.  Auxillary parameters affecting variance, 
+skewness and shape of these distributions may be modeled as linear functions of 
+{help indepvars}.
 
 {pstd}
-The assumed model for interval regression is {it:y = Xb + u} for the SGT family and {it:ln(y) = Xb + u} for the GB2 family, where only the thresholds containing the latent variable y are observed, X is a vector of explanatory variables with a corresponding coefficient vector b and the random disturbance u is assumed to be independently and identically distributed according to the selected distribution. The upper and lower thresholds for y can be denoted by U and L respectively.
+The assumed model for interval regression in {it:y = Xb + u} for the SGT family
+and {it:ln(y) = Xb + u} for the GB2 family, where only thresholds containing the
+latent variable {it:y} are observed, {it:X} is a vector of explanatory variables
+with a corresponding coefficient vector {it:b} and the random disturbance {it:u}
+is assumed to be independently and identically distributed according to the 
+specified distribution.
+Let {it:U} and {it:L} denote the upper and lower thresholds of {it:y}, F denote
+the [conditional] cumulative distribution function (CDF) of {it:y}, and {it:theta}
+denote a vector of distributional parameters.  Then,
+the conditional probability that {it:y} is in the interval ({it:L,U}) is:
 
-{pstd}
-The conditional probability that y is in the interval (L,U) is: Pr(L <= y <= U)
-= F(eps = U - XB: theta) - F(eps: L-XB: theta), where F denotes the cdf of the
-random disturbances and theta denotes a vector of distributional parameters. 
-{cmd:gintreg} uses MLE on the corresponding log-likelihood function to estimate
-beta (displayed as mu or delta in the output) and the distributional parameters 
-theta.
+{phang2}
+Pr({it:L} <= {it:y} <= {it:U}}) = F({it:eps = U - Xb: theta}) - F({it:eps = L - Xb: theta}).
 
 
 {marker options}{...}
 {title:Options}
 
-{dlgtab:Main}
+{dlgtab:Model}
 
 {phang}
-{opt dist:ribution(dist_type)} specifies the type of distribution used in the interval regressions.
-{cmd: gintreg} will use a log-likelihood function composed of the pdf and cdf of this distribution
-(pdf for point data and cdf for intervals and censored observations). dist_type may be normal, snormal, 
-laplace, slaplace, ged, sged, t, gt, st, sgt, lnormal, weibull, gamma, ggamma, br3, br12, gb2; the default is normal.
+{opth dist:ribution(gintreg##distname:distname)} specifies the distribution of 
+interest.
 
 {phang}
-{opth constraints(numlist)} specified linear constraints by number to be applied. Can use this option along with {opt dist:ribution} to allow for any distribution in the SGT or GB2 family trees. Constraints are defined using the {cmd:constraint} command; see {manhelp constraint R}. Examples using this option are also provided below.
-{cmd:gintreg} natively uses constraints for many distributions; when applying your own, be careful not to define with same number identifier as one already used. The list of constraints are printed right above the output table or are returnable with {cmd:. constraint list} after estimation. Or, simply use an integer >=3 as the identifier, eg {cmd:. constraint define 3 sigma[_cons]=1}.
-
-{phang} 
-{opth freq:uency(varlist)} if using grouped data, specify the variable 
-that denotes the frequency of the observation. Can be in percentage terms or 
-levels as {cmd: gintreg} will normalize by summing the value of 
-frequency for all observations. E.g. {cmd:. gintreg depvar1 depvar2 indepvars, freq(freqvar)}
-
-{dlgtab: Model}
+{opt noconstant}; see 
+{helpb estimation options##noconstant:[R] Estimation options}.
 
 {phang}
-The {indepvars} specified will allow the location parameter (mu, delta or b) to vary
-as a function of the independent variables. The other parameters in the distribution
-can also be a function of explanatory variables by using the commands below.
+{cmd:lnsigma(}{varlist}[{opt , noconstant}]{cmd:)} specifies that
+the natural logarithm of the parameter {bf:sigma} be modeled as a linear function
+of {it:varlist}.  The constant is included unless {cmd:noconstant} is
+specified.
 
 {phang}
-{opth sigma(varlist)} allows the {bf:log of sigma} to be a linear function of {varlist} and can 
-model heteroskedasticity.
+{cmd:lambda(}{varlist}[{opt , noconstant}]{cmd:)} specifies that
+the hyperbolic tangent of the parameter {bf:lambda} be modeled as a linear function
+of {it:varlist}.  The constant is included unless {cmd:noconstant} is
+specified.
 
 {phang}
-{opth lambda(varlist)} allows lambda to be a nonlinear function of {varlist} that bounds lambda to be 
-between -1 and 1 and can model skewness. In order to accomplish this, {cmd:gintreg} first estimates an intermediary "alpha" 
-as a linear combination of {it:{help varlist}}. In instances where {opt lambda(varlist)} is not used and only a constant is esitmated, alpha is transformed into lambda, nonlinearly as to be bounded 
-between -1 and 1, using the following equations:
-		
-		lambda[_cons] = (exp(alpha[_cons]-1)) / (exp(alpha[_cons]+1))
-		lambda[_se] = (alpha[_se]*2*exp(alpha[_cons])) / (exp(alpha[_cons]+1)^2)
-
-{phang}{space 4}When {opt lambda(varlist)} is used, however, only the intermediary alpha is reported; this is done to avoid imposing a nonlinear functional form that maps the transformation from a vector of alpha's coefficients to lambda's. Therefore, using this option is useful in determining significance of {indepvars} on skewness, {bf:but the coefficients should not be taken literally}.
+{cmd:p(}{varlist}[{opt , noconstant}]{cmd:)} specifies that
+the parameter {bf:p} be modeled as a linear function
+of {it:varlist}.  The constant is included unless {cmd:noconstant} is
+specified.
 
 {phang}
-{opth p(varlist)} allows p to be a linear function of {varlist}. A shape parameter
-that impacts the tail thickness and peakedness of the distribution.
+{cmd:q(}{varlist}[{opt , noconstant}]{cmd:)} specifies that
+the parameter {bf:q} be modeled as a linear function
+of {it:varlist}.  The constant is included unless {cmd:noconstant} is
+specified.
 
 {phang}
-{opth q(varlist)} allows q to be a linear function of {varlist}. A shape parameter
-that impacts the tail thickness and peakedness of the distribution.
+{opth offset(varname)}, {opt constraints(constraints)}; see
+{helpb estimation options:[R] Estimation options}.
 
+{dlgtab:SE/Robust}
 
-{dlgtab: Standard Errors}
-
-{phang}
-{opt vce(vcetype)} specifies the type of standard error reported, which includes
-        types that are robust to some kinds of misspecification (robust), that
-        allow for intragroup correlation (cluster clustvar), and that are
-        derived from asymptotic theory (oim, opg); see {manhelp vce_option R}.
+INCLUDE help vce_asymptall
 
 {phang}
-{opt robust} use robust standard errors.
+{opt robust} is a synonym for {cmd:vce(robust)}.{p_end}
 
 {phang}
-{opth cluster(varlist)} cluster standard errors with respect to sampling
-unit {varlist}.
+{opt cluster(clustvar)} is a synonym for {cmd:vce(cluster }{it:clustvar}{cmd:)}.{p_end}
 
-{dlgtab: Estimation}
-		
+{dlgtab:Reporting}
+
 {phang}
-{opth initial(numlist)} 
-list of numbers that specifies the initial values of the parameters in the constant
-only model. This must be equal to the number of distributional parameters, which are presented in {bf:initial} under {bf:Syntax}. 
+{opt gini} computes, reports, and returns the Gini Inequality Index.  It requires
+there to be no {it:indepvars} and is only operational with these distributions: 
+{it:weibull, gamma, br3, br12}.  To find the Gini Inequality Index of a GB2 
+distribution, see {cmd:gb2dist} on {cmd:ssc}.{p_end}
+     
+{phang}
+{opt notran:sform} suppresses the display of transformed coefficients, which are
+otherwise displayed in additional rows to the coefficent table when the coefficient
+is {bf:not} a function of {it:indepvars}. These are:
 
-{phang}{marker noninteractive_maxopts}
+{phang2}
+{bf:sigma}{space 2}= exp(lnsigma); transform lnsigma back to sigma (estimated in the log metric to improve convergence){p_end}
+{phang2}
+{bf:lambda} = tanh(lambda); map lambda (estimated as a linear function) to [-1,1]{p_end}
+{phang2}
+{bf:a}{space 6}= 1/exp(lnsigma); a,b parameterization for distributions in the GB2 family{p_end}
+{phang2}
+{bf:b}{space 6}= exp(delta); a,b parameterization for distributions in the GB2 family{p_end}
+
+{phang}
+{opt level(#)}, {opt nocnsr:eport}; see
+     {helpb estimation options:[R] Estimation options}.
+
+INCLUDE help displayopts_list
+
+{marker maximize_options}{...}
+{dlgtab:Maximization}
+
+{phang}
+{opt initiald(distaname)} can assist in the maximization process by estimating a
+simpler distribution to find starting values.{p_end}
+
+{phang}
+{opt from(init_specs)} can assist in the maximization process by manually 
+providing starting values for the vector of estimates.{p_end}
+
+{phang}
 {it:maximize_options}:
 {opt dif:ficult},
-{opt tech:nique(algorithm_spec)},
+{opth tech:nique(maximize##algorithm_spec:algorithm_spec)},
 {opt iter:ate(#)},
-[{cmdab:no:}]{opt lo:g},
+{opt nolog},
 {opt tr:ace},
 {opt grad:ient},
 {opt showstep},
@@ -232,122 +263,210 @@ only model. This must be equal to the number of distributional parameters, which
 {opt showtol:erance},
 {opt tol:erance(#)},
 {opt ltol:erance(#)},
-{opt nrtol:erance(#)}; see {manhelp maximize R}. Allowed techniques include Newton-Raphson (nr), Berndt-Hall-Hausman (bhhh), Davidon
--Fletcher-Powell (dfp), and Broyden-Fletcher-Goldfarb-Shanno (bfgs). The default
- algorithm is Newton-Raphson.
- 
+{opt nrtol:erance(#)}, and
+{opt nonrtol:erance};
+see {helpb maximize:[R] Maximize}.  These options are seldom used.
 
-{dlgtab: Display}
+{pmore}
+Setting the optimization type to {cmd:technique(bhhh)} resets the default
+{it:vcetype} to {cmd:vce(opg)}.
 
-{phang}
-{opt eyx(stat)} This option helps with inference in models with a positive distribution
-(gb2, gg, lnormal). At the end of the STATA printout, it displays the estimated conditional value of the dependent variable
-with respect to the independent variables being at the level of stat. This result is returned and is accessible after estimation
-by e(eyx).
-
-If stat is not specified then the independent variables will be taken at their mean levels:
-
-{synoptset 15 tabbed}{...}
-{p2col 5 15 19 2: stat}{p_end}
-{synopt:{cmd:mean}}mean values of independent variables{p_end}
-{synopt:{cmd:min}}minimum values of independent variables{p_end}
-{synopt:{cmd:max}}maximum values of independent variables{p_end}
-{synopt:{cmd: p1}}1st percentile of independent variables{p_end}
-{synopt:{cmd: p5}}5th percentile of independent variables {p_end}
-{synopt:{cmd: p10}}10th percentile of independent variables{p_end}
-{synopt:{cmd: p25}}25th percentile of independent variables{p_end}
-{synopt:{cmd: p50}}50th percentile of independent variables{p_end}
-{synopt:{cmd: p75}}75th percentile of independent variables{p_end}
-{synopt:{cmd: p90}}90th percentile of independent variables{p_end}
-{synopt:{cmd: p95}}95th percentile of independent variables{p_end}
-{synopt:{cmd: p99}}99th percentile of independent variables{p_end}
-{p2colreset}{...}
-
-{phang}
-{opth plot(numlist)} Uses the estimated constants only and twoway_function to plot the selected distribution with the estimated parameters over a range of the 
-user's choice. {it: numlist} takes a lower and upper bound in the same way {opt range(numlist)} does in {bf:{help twoway_function}}, ie {cmd:plot(0 1)}. 
-To flexibly plot PDFs, see {cmd:gintreg}'s companion program, {bf:{help pdfplot}}.
-
-{phang}
-{opt gini} Calculates and displays the gini coefficient if the selected distribution is Weibull, Gamma, Burr type 3 or Burr type 12. To find the gini of a Generalized Beta of the Second Kind distribution, see {bf:{help gb2dist}}. 
-
-{pstd}To install gb2dist:{p_end}
-{phang2}{cmd:. net from "http://coin.wne.uw.edu.pl/mbrzezinski/software"}{p_end}
-{phang2}{cmd:. net describe gb2dist}{p_end}
-
-{phang}
-{opt aicbic} Calculates and displays the Akaike Information Criterion and Bayesian Information Criterion. 
-These are returnable values with "e(aic)" and "e(bic)". 
-The equations are given, where {it:k} denotes the number of estimated parameters in the model, 
-{it:lnL} is the maximized log-likelihood value for the model, and {it:N} denotes the sample size:
-
-		AIC = 2*{it:k}-2*{it:lnL}
-		BIC = {it:k}*{it:ln(N)}-2*{it:lnL}
-
-
+     
 {marker remarks}{...}
 {title:Remarks}
 
 {pstd}
-If the optimization is not working, try using the {opt dif:ficult} option. You can also use the option {cmd: technique(bfgs)}, or the other two {cmd: technique} options,
- which are often more robust than the default {cmd: technique(nr)}.
- 
+If convergence is slow or not being achieved, try using the options 
+{opth initiald:(gintreg##distname:distname)}, {opt diff:icult}, and/or 
+{opt tech:nique(algorithm_spec)}, where {it:{help gintreg##distname:distname}} 
+is a nested distribution of the one with convergence issues. 
+
+
+{marker postestimation}{...}
+{title:Postestimation syntax}
+
 {pstd}
-Several parameterizations for the GB2 are found in the literature. One of the most common involves the parameters {it:a,b,p,q}. {cmd:gintreg} uses a different parameterization with {it:sigma,delta,p,q} where the two parameterizations are related as follows: {it:b=exp(delta)} and {it:a=1/exp(sigma)}. This version of {cmd:gintreg} reports both sets of estimates. See {bf:Wikipedia} for additional details about the definitions and interrelationships for the Generalized Beta Distribution and for the Skewed Generalized t Distribution.
+{helpb gintregplot} draws the conditional distribution of {it:depvar1} and 
+{it:depvar2} estimated by {cmd:gintreg}.{p_end}
+
+{pstd}
+{cmd:predict} obtains linear predictions using all parameter equations estimated by 
+{cmd:gintreg} with the following syntax:
+        
+        {cmd:predict} [{help type}] {newvar} {ifin} [, {help predict##options:noOFFset}]
+
+{pstd}
+The following built-in postestimation commands are also available after {cmd:gintreg}:
+
+{synoptset 17 tabbed}{...}
+{p2coldent :Command}Description{p_end}
+{synoptline}
+INCLUDE help post_contrast
+INCLUDE help post_estatic
+INCLUDE help post_estatvce
+INCLUDE help post_estimates
+INCLUDE help post_etable
+INCLUDE help post_lincom
+INCLUDE help post_lrtest
+INCLUDE help post_nlcom
+INCLUDE help post_pwcompare
+INCLUDE help post_test
+INCLUDE help post_testnl
+{synoptline}
+{p2colreset}{...}
+{p 4 6 2}
+
+     
+{marker missing_features}
+{title:Missing features}
+
+{phang}(If you are interested in discussing these or others, feel free to {help gintreg##authors:contact me})
+
+{p2colset 8 12 12 2}{...}
+{p2col: -}Incorporate score equations into log-likelihood files; this would improve convergence and enable more postestimation features{p_end}
+{p2col: -}More postestimation commands (margins, suest, hausman){p_end}
+{p2colreset}{...}
 
 
 {marker examples}{...}
 {title:Examples}
 
-{pstd}Load the example dataset{p_end}
-{phang2}{cmd:. webuse intregxmpl}{p_end}
+{pstd}
+Compare this example to the example in {helpb intreg##examples:help intreg} to 
+illustrate {cmd:gintreg}'s potential advantages derived from its flexibility.
 
-{pstd}This file has data on wages reported in intervals ({it:wage1, wage2}) as well as point data measured in $1,000's ({it:wage)}, age in current year ({it:age}), if never married ({it:nev_mar}), rural status ie 1 if not SMSA ({it:rural}), lastest grade completed ({it:school}) and job tenure in years ({it:tenure}).{p_end}
+{pstd}
+We have a dataset containing wages, truncated and in categories.  Some of
+the observations on wages are
 
         wage1    wage2
-{p 8 27 2}20{space 7}25{space 6} meaning  20000 <= wage <= 25000{p_end}
-{p 8 27 2}50{space 8}.{space 6} meaning 50000 <= wage{p_end}
+{p 8 27 2}20{space 7}25{space 6} meaning  20000 <= wages <= 25000{p_end}
+{p 8 27 2}50{space 8}.{space 6} meaning 50000 <= wages
 
-{pstd}Fitting Normal pdf using interval data{p_end}
-{phang2}{cmd:. gintreg wage1 wage2}
+{pstd}Setup{p_end}
+{phang2}{cmd:. webuse intregxmpl}{p_end}
 
-{pstd}Interval regression with a normal distribution{p_end}
-{phang2}{cmd:. gintreg wage1 wage2 age nev_mar rural school tenure}
+{pstd}Fit interval data to a skewed t distribution{p_end}
+{phang2}{cmd:. gintreg wage1 wage2, dist(st)}{p_end}
+{phang2}{cmd:. gintregplot, range(0 60)}
 
-{pstd}Regular regression with a normal distribution{p_end}
-{phang2}{cmd:. gintreg wage wage age nev_mar rural school tenure}
+{pstd}Likelihood-ratio test to determine if the GED is an improvement over a normal distribution{p_end}
+{phang2}{cmd:. gintreg wage1 wage2 age age2 nev_mar rural school tenure}{p_end}
+{phang2}{cmd:. estimates store normal}{p_end}
+{phang2}{cmd:. gintreg wage1 wage2 age age2 nev_mar rural school tenure, dist(ged)}{p_end}
+{phang2}{cmd:. lrtest . normal}{p_end}
 
-{pstd}Interval regression with a gb2 distribution using difficult option{p_end}
-{phang2}{cmd:. gintreg wage1 wage2 age nev_mar rural school, distribution(gb2) diff}
+{pstd}Using information criterion to compare goodness-of-fit between non-nested models{p_end}
+{phang2}{cmd:. gintreg wage1 wage2, dist(normal) nolog nodisplay}{p_end}
+{phang2}{cmd:. estat ic}{p_end}
+{phang2}{cmd:. gintreg wage1 wage2, dist(lognormal) nolog nodisplay}{p_end}
+{phang2}{cmd:. estat ic}{p_end}
 
-{pstd}Interval regression with a gb2 distribution with the expected value of the 
-dependent variable evaluated when the independent variables are at the 25 percentile (E[Y|X] appears 
-at the end of the printout{p_end}
-{phang2}{cmd:. gintreg wage1 wage2 age, distribution(gb2) eyx(p25)}
+{pstd}Compute the Gini inequality index of using a Weibull distrubution{p_end}
+{phang2}{cmd:. gintreg wage1 wage2, dist(weibull) gini}{p_end}
 
-{pstd}The following two regressions both fit a Burr type 3{p_end}
-{phang2}{cmd:. gintreg wage1 wage2 age nev_mar rural school tenure, dist(br3)}
+{pstd}GB2 interval regression using a Burr 3 to find starting values{p_end}
+{phang2}{cmd:. gintreg wage1 wage2 age age2 nev_mar rural school tenure, dist(gb2) initiald(br3)}
 
-{phang2}{cmd:. constraint define 1 [q]_cons=1}{p_end}
-{phang2}{cmd:. gintreg wage1 wage2 age nev_mar rural school tenure, dist(gb2) constr(1)}
+{pstd}GB2 interval regression with heteroskedasticity in all parameters (delta,lnsigma,p,q), using a lognormal to find starting values{p_end}
+{phang2}{cmd:. local x age age2 nev_mar rural school tenure}{p_end}
+{phang2}{cmd:. gintreg wage1 wage2 `x', lnsigma(`x') p(`x') q(`x') dist(gb2) initiald(lognormal)}
 
-{pstd}Fitting a Burr type 3 to interval data for wages, plotting the fitted pdf and printing the Gini coefficient{p_end}
-{phang2}{cmd:. gintreg wage1 wage2, dist(br3) plot(0 150) gini}
-
-{pstd}Interval regression with a sgt distribution allowing log(sigma) to vary as a function of independent variables [heteroskedasticity]{p_end}
-{phang2}{cmd:. gintreg wage1 wage2 age nev_mar rural school tenure, distribution(sgt) sigma(age nev_mar rural school tenure)}
-
-{pstd}FItting a Generalized Beta of the Second Kind from an estimated Burr type 3{p_end}
-{phang2}{cmd:. gintreg wage1 wage2, dist(gb2) init(.965 1)}
+{pstd}Manually supply start values to interval regression{p_end}
+{phang2}{cmd:. regress wage1 age age2 nev_mar rural school tenure}{p_end}
+{phang2}{cmd:. mat b0 = (e(b),ln(e(rmse)))}{p_end}
+{phang2}{cmd:. gintreg wage1 wage2 age age2 nev_mar rural school tenure, from(b0, copy)}{p_end}
 
 
-{marker author}{...}
-{title:Author}
+{marker results}{...}
+{title:Stored results}
 
-{phang}
-Originally authored in 2016 by James McDonald and Jacob Orchard at Brigham Young University. 
-Will Cockriel, Bryan Chia, Jonny Jensen and Jacob Triplett have joined James McDonald as additional collaborators over the years. 
-The program reached version 2.0 in 2022. Jacob Triplett can be contacted for support at "jacobwtriplett@icloud.com".
+{pstd}{cmd:gintreg} stores the following in {cmd:e()}:
+
+{synoptset 23 tabbed}{...}
+{p2col 5 23 26 2: Scalars}{p_end}
+{synopt:{cmd:e(N)}}number of observations{p_end}
+{synopt:{cmd:e(N_unc)}}number of uncensored observations{p_end}
+{synopt:{cmd:e(N_lc)}}number of left-censored observations{p_end}
+{synopt:{cmd:e(N_rc)}}number of right-censored observations{p_end}
+{synopt:{cmd:e(N_int)}}number of interval observations{p_end}
+{synopt:{cmd:e(k)}}number of parameters{p_end}
+{synopt:{cmd:e(k_aux_eq)}}number of auxiliary equations{p_end}
+{synopt:{cmd:e(k_eq)}}number of equations in {cmd:e(b)}{p_end}
+{synopt:{cmd:e(k_eq_model)}}number of equations in overall model test{p_end}
+{synopt:{cmd:e(k_dv)}}number of dependent variables{p_end}
+{synopt:{cmd:e(df_m)}}model degrees of freedom{p_end}
+{synopt:{cmd:e(ll)}}log likelihood{p_end}
+{synopt:{cmd:e(N_clust)}}number of clusters{p_end}
+{synopt:{cmd:e(p)}}{it:p}-value for model chi-squared test{p_end}
+{synopt:{cmd:e(gini_coef)}}gini coefficient{p_end}
+{synopt:{cmd:e(b_sigma)}}estimated sigma{p_end}
+{synopt:{cmd:e(se_sigma)}}standard error of sigma{p_end}
+{synopt:{cmd:e(b_lambda)}}estimated lambda{p_end}
+{synopt:{cmd:e(se_lambda)}}standard error of lambda{p_end}
+{synopt:{cmd:e(b_p)}}estimated p{p_end}
+{synopt:{cmd:e(se_p)}}standard error of p{p_end}
+{synopt:{cmd:e(b_q)}}estimated q{p_end}
+{synopt:{cmd:e(se_q)}}standard error of q{p_end}
+{synopt:{cmd:e(rank)}}rank of {cmd:e(V)}{p_end}
+{synopt:{cmd:e(ic)}}number of iterations{p_end}
+{synopt:{cmd:e(rc)}}return code{p_end}
+{synopt:{cmd:e(converged)}}{cmd:1} if converged, {cmd:0} otherwise{p_end}
+
+{p2col 5 23 26 2: Macros}{p_end}
+{synopt:{cmd:e(cmd)}}{cmd:gintreg}{p_end}
+{synopt:{cmd:e(cmdline)}}command as typed{p_end}
+{synopt:{cmd:e(distribution)}}distribution as specified{p_end}
+{synopt:{cmd:e(depvar)}}names of dependent variables{p_end}
+{synopt:{cmd:e(wtype)}}weight type{p_end}
+{synopt:{cmd:e(wexp)}}weight expression{p_end}
+{synopt:{cmd:e(title)}}title in estimation output{p_end}
+{synopt:{cmd:e(clustvar)}}name of cluster variable{p_end}
+{synopt:{cmd:e(offset)}}linear offset variable{p_end}
+{synopt:{cmd:e(gini)}}{cmd:gini}, if {cmd:gini} specified{p_end}
+{synopt:{cmd:e(chi2type)}}{cmd:Wald} or {cmd:LR}; type of model chi-squared
+        test{p_end}
+{synopt:{cmd:e(vce)}}{it:vcetype} specified in {cmd:vce()}{p_end}
+{synopt:{cmd:e(vcetype)}}title used to label Std. err.{p_end}
+{synopt:{cmd:e(het_lnsigma)}}{cmd:heteroskedasticity}, if {cmd:lnsigma()} specified{p_end}
+{synopt:{cmd:e(het_lambda)}}{cmd:heteroskedasticity}, if {cmd:lambda()} specified{p_end}
+{synopt:{cmd:e(het_p)}}{cmd:heteroskedasticity}, if {cmd:p()} specified{p_end}
+{synopt:{cmd:e(het_q)}}{cmd:heteroskedasticity}, if {cmd:q()} specified{p_end}
+{synopt:{cmd:e(opt)}}type of optimization{p_end}
+{synopt:{cmd:e(which)}}{cmd:max} or {cmd:min}; whether optimizer is to perform
+                         maximization or minimization{p_end}
+{synopt:{cmd:e(ml_method)}}type of {cmd:ml} method{p_end}
+{synopt:{cmd:e(user)}}name of likelihood-evaluator program{p_end}
+{synopt:{cmd:e(technique)}}maximization technique{p_end}
+{synopt:{cmd:e(properties)}}{cmd:b V}{p_end}
+{synopt:{cmd:e(predict)}}program used to implement {cmd:predict}{p_end}
+{synopt:{cmd:e(asbalanced)}}factor variables {cmd:fvset} as {cmd:asbalanced}{p_end}
+{synopt:{cmd:e(asobserved)}}factor variables {cmd:fvset} as {cmd:asobserved}{p_end}
+
+{p2col 5 23 26 2: Matrices}{p_end}
+{synopt:{cmd:e(b)}}coefficient vector{p_end}
+{synopt:{cmd:e(Cns)}}constraints matrix{p_end}
+{synopt:{cmd:e(ilog)}}iteration log (up to 20 iterations){p_end}
+{synopt:{cmd:e(gradient)}}gradient vector{p_end}
+{synopt:{cmd:e(V)}}variance-covariance matrix of the estimators{p_end}
+{synopt:{cmd:e(V_modelbased)}}model-based variance{p_end}
+
+{p2col 5 23 26 2: Functions}{p_end}
+{synopt:{cmd:e(sample)}}marks estimation sample{p_end}
+{p2colreset}{...}
+
+INCLUDE help rtable
+
+
+{marker authors}{...}
+{title:Authors}
+
+{pstd}
+Originally authored in 2016 by James McDonald and Jacob Orchard at Brigham Young
+University.  Will Cockriel, Bryan Chia, Jonny Jensen and Jacob Triplett have
+joined James McDonald as additional collaborators over the years.  Jacob 
+Triplett brought the program to version 3.0 in 2024.  He can be contacted for 
+support at "jacobtri@andrew.cmu.edu".
 
 
 {marker references}{...}
@@ -364,10 +483,13 @@ James B. McDonald, Daniel Walton and Bryan Chia. 2020.
 Computational Economics, 52:431-460.
 
 {phang}
-Michal Brzezinki. 2012. {cmd:gb2dist} Stata command. "http://coin.wne.uw.edu.pl/mbrzezinski/software".
+Michal Brzezinki. 2012. {cmd:gb2dist} Stata command.
+"http://coin.wne.uw.edu.pl/mbrzezinski/software".
 
 {phang}
-Skewed Generalized t Distribution, Wikipedia, "https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution".{p_end}
+Skewed Generalized t Distribution, Wikipedia,
+"https://en.wikipedia.org/wiki/Skewed_generalized_t_distribution".{p_end}
 
 {phang}
-Generalized Beta of the Second Kind Distribution, Wikipedia, "https://en.wikipedia.org/wiki/Generalized_beta_distribution#Generalized_beta_of_the_second_kind_(GB2)".{p_end}
+Generalized Beta of the Second Kind Distribution, Wikipedia,
+"https://en.wikipedia.org/wiki/Generalized_beta_distribution#Generalized_beta_of_the_second_kind_(GB2)".{p_end}

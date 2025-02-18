@@ -1,4 +1,4 @@
-*! version 2.3.1 14may2024  Richard Williams, rwilliam@nd.edu
+*! version 2.3.2 16feb2025  Richard Williams, rwilliam@nd.edu
 
 program oglm_svy_check
          version 11.2

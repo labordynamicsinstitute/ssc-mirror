@@ -1,4 +1,4 @@
-*! version 2.3.0 30aug2016  Richard Williams, rwilliam@nd.edu
+*! version 2.3.2 16feb2025  Richard Williams, rwilliam@nd.edu
 
 * 1.0.0 - Initial release 
 * 1.0.1 - BETA experimental log link added
@@ -30,6 +30,8 @@
 *         to default to using all the outcomes rather than just the first.
 * 2.3.0 - Added modifications provided by Ben Shear, Stanford, to specify 
 *         initial values via the STARTVALS option
+* 2.3.1 - ordwarm2.dta added as an ancilliary file
+* 2.3.2 - e(cmdline) added to the ereturns
 
 program oglm, eclass byable(recall) sortpreserve properties(swml svyr svyb svyj or irr rrr hr eform mi fvaddcons)
 	version 11.2
@@ -64,6 +66,8 @@ program oglm, eclass byable(recall) sortpreserve properties(swml svyr svyb svyj 
 	}
 	// Drop global vars
 	macro drop oglmby oglmx oglmh Link dv_*
+	// ereturn cmdline
+	ereturn local cmdline `"oglm `0'"'
 
 end
 

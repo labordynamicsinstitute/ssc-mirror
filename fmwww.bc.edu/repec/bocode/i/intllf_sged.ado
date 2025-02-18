@@ -1,99 +1,40 @@
-/*This ado file gives the log likelihood function used in interval regressions
-for the SGED distribution.
-It works with gintreg.ado
-v 1.1
-Author--Jacob Orchard
-Update--6/13/2016*/
-
 program intllf_sged
 version 13
-		args lnf mu sigma p a 
-		tempvar Fu Fl zu zl lambda
-		qui gen double `Fu' = .
-		qui gen double `Fl' = .
-		qui gen double `zu' = . 
-		qui gen double `zl' = .
-		qui gen double `lambda' = .
-		
-		qui replace `lambda' = (exp(`a') - 1) / (exp(`a') + 1) 
-		
-		
-		*Point data
-		
-		/*
-			tempvar x s l 
-			qui gen double `x' = $ML_y1 - (`mu') if $ML_y1 != . & $ML_y2 != . ///
-												& $ML_y1 == $ML_y2
-												
-			qui gen double `s' = log(`p') - (abs(`x')^`p'/(`sigma'*(1+`lambda'*sign(`x')))^`p') ///
-								if $ML_y1 != . & $ML_y2 != .  & $ML_y1 == $ML_y2
-												
-			qui gen double `l' = log(2) + log(`sigma') + lngamma((1/`p')) ///
-								if $ML_y1 != . & $ML_y2 != . & $ML_y1 == $ML_y2
-																					
-			qui replace `lnf' = `s' - `l' if $ML_y1 != . & $ML_y2 != . & ///
-								$ML_y1 == $ML_y2
-								
-		*/
-		
-		tempvar x s l 
-		
-		qui gen double `x' = $ML_y1 - (`mu') if $ML_y1 != . & $ML_y2 != . ///
-											& $ML_y1 == $ML_y2
-											
-		qui gen double `s' = log(`p') - (abs(`x')^`p'/(exp(`sigma')*(1+`lambda'*sign(`x')))^`p') ///
-							if $ML_y1 != . & $ML_y2 != .  & $ML_y1 == $ML_y2
-											
-		qui gen double `l' = log(2) + `sigma' + lngamma((1/`p')) ///
-							if $ML_y1 != . & $ML_y2 != . & $ML_y1 == $ML_y2
-																				
-		qui replace `lnf' = `s' - `l' if $ML_y1 != . & $ML_y2 != . & ///
-							$ML_y1 == $ML_y2
-	
-	
-		*Interval data
-		
-		qui replace `zu' = (abs($ML_y2 - `mu')^`p')/( ///
-							(exp(`sigma')^`p')*(1+`lambda'*sign($ML_y2 -`mu'))^`p') ///
-							if $ML_y1 != . & $ML_y2 != . &  $ML_y1 != $ML_y2
-							
-		qui replace `Fu' = .5*(1-`lambda') + .5*(1+`lambda'*sign($ML_y2- ///
-							`mu'))*sign($ML_y2 - `mu')*gammap( (1/`p'),`zu') ///
-							if $ML_y1 != . & $ML_y2 != . &  $ML_y1 != $ML_y2
-							
-		qui replace `zl' = (abs($ML_y1 - `mu')^`p')/( ///
-							(exp(`sigma')^`p')*(1+`lambda'*sign($ML_y1 -`mu'))^`p') ///
-							if $ML_y1 != . & $ML_y2 != . &  $ML_y1 != $ML_y2
-							
-		qui replace `Fl' = .5*(1-`lambda') + .5*(1+`lambda'*sign($ML_y1- ///
-							`mu'))*sign($ML_y1 - `mu')*gammap((1/`p'),`zl')  ///
-							if $ML_y1 != . & $ML_y2 != . &  $ML_y1 != $ML_y2
-							
-		qui replace `lnf' = log(`Fu' -`Fl') if $ML_y1 != . & $ML_y2 != . &  ///
-													$ML_y1 != $ML_y2
-	
-		*Bottom coded data
-		qui replace `zl' = (abs($ML_y1 - `mu')^`p')/( ///
-							(exp(`sigma')^`p')*(1+`lambda'*sign($ML_y1 -`mu'))^`p') ///
-							if $ML_y1 != . & $ML_y2 == .
-							
-		qui replace `Fl' = .5*(1-`lambda') + .5*(1+`lambda'*sign($ML_y1- ///
-							`mu'))*sign($ML_y1 - `mu')*gammap((1/`p'),`zl') ///
-							if $ML_y1 != . & $ML_y2 == .
-							
-		qui replace `lnf' = log(1-`Fl') if $ML_y1 != . & $ML_y2 == .
-	
-		*Top coded data
-		qui replace `zu' = (abs($ML_y2 - `mu')^`p')/( ///
-							(exp(`sigma')^`p')*(1+`lambda'*sign($ML_y2 -`mu'))^`p') ///
-							if $ML_y2 != . & $ML_y1 == .
-							
-		qui replace `Fu' = .5*(1-`lambda') + .5*(1+`lambda'*sign($ML_y2- ///
-							`mu'))*sign($ML_y2 - `mu')*gammap((1/`p'),`zu') ///
-							if $ML_y2 != . & $ML_y1 == .
-							
-		qui replace `lnf' = log(`Fu') if $ML_y2 != . & $ML_y1 == .
-	
-		*Missing values
-		qui replace `lnf' = 0 if $ML_y2 == . & $ML_y1 == .	
+        args lnf mu lnsigma p lambda
+
+        tempvar xl xu zl zu Fl Fu s l
+        local y1  "$ML_y1"
+        local y2  "$ML_y2"
+        local idx "$ML_y3"
+        
+        * Intermediate values: cdf@y1, cdf@y2 
+        qui gen double `xl' = `y1'-`mu'                 if inlist(`idx',1,3,4)
+        qui gen double `xu' = `y2'-`mu'                 if inlist(`idx',2,4)
+        
+        qui gen double `zl' = abs(`xl')^`p'                                 /*
+        */ / [exp(`lnsigma')^`p' * (1+tanh(`lambda')*sign(`xl'))^`p']       /*
+        */                                              if inlist(`idx',3,4)
+        
+        qui gen double `zu' = abs(`xu')^`p'                                 /*
+        */ / [exp(`lnsigma')^`p' * (1+tanh(`lambda')*sign(`xu'))^`p']       /*
+        */                                              if inlist(`idx',2,4)
+        
+        qui gen double `Fl' = .5*(1-tanh(`lambda'))                         /*
+        */ + .5*(1+tanh(`lambda')*sign(`xl'))*sign(`xl')*gammap(1/`p',`zl') /*
+        */                                              if inlist(`idx',3,4)
+        
+        qui gen double `Fu' = .5*(1-tanh(`lambda'))                         /*
+        */ + .5*(1+tanh(`lambda')*sign(`xu'))*sign(`xu')*gammap(1/`p',`zu') /*
+        */                                              if inlist(`idx',2,4) 
+        
+        * Intermediate values: pdf@y1
+        qui gen double `s' = ln(`p')-abs(`xl')^`p'                           /*
+        */ / [exp(`lnsigma')*(1+tanh(`lambda')*sign(`xl'))]^`p' if (`idx'==1)
+        qui gen double `l' = ln(2)+`lnsigma'+lngamma(1/`p')    if (`idx'==1)
+        
+        * Fill in log likelihood values 
+        qui replace `lnf' = `s'-`l'       if (`idx'==1) // uncensored
+        qui replace `lnf' = ln(`Fu')      if (`idx'==2) // left censored
+	qui replace `lnf' = ln(1-`Fl')    if (`idx'==3) // right censored
+	qui replace `lnf' = ln(`Fu'-`Fl') if (`idx'==4) // interval    
 end

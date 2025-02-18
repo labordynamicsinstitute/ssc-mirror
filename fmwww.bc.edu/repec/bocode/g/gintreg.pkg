@@ -21,7 +21,7 @@ d KW: censored data
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20230126
+d Distribution-Date: 20250217
 d
 d Author: James McDonald, Brigham Young University
 d Support: email james_mcdonald@@byu.edu
@@ -31,15 +31,13 @@ d Support: email  jacobwtriplett@@icloud.com
 d
 f gintreg.ado
 f gintreg.sthlp
+f gintreg_p.ado
+f gintregplot.ado
+f gintregplot.sthlp
 f ../i/intllf_normal.ado
-f ../i/intllf_normal_group.ado
 f ../i/intllf_sged.ado
-f ../i/intllf_sged_group.ado
-f ../i/intllf_sgt_condition.ado
-f ../i/intllf_sgt_condition_group.ado
-f ../i/intllf_lnormal.ado
-f ../i/intllf_lnormal_group.ado
-f ../i/intllf_ggsigma.ado
-f ../i/intllf_ggsigma_group.ado
-f ../i/intllf_gb2exp.ado
-f ../i/intllf_gb2exp_group.ado
+f ../i/intllf_sgt.ado
+f ../i/intllf_lognormal.ado
+f ../i/intllf_ggamma.ado
+f ../i/intllf_gb2.ado
+

@@ -1,4 +1,4 @@
-*! version 2.3.0 30aug2016  Richard Williams, rwilliam@nd.edu
+*! version 2.3.2 16feb2025  Richard Williams, rwilliam@nd.edu
 
 * oglm_ll.ado is called by oglm written by Richard Williams
 * Technical details can be found at the bottom of this file

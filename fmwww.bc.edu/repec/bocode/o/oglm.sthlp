@@ -1,7 +1,7 @@
 {smcl}
-{* Last revised May 14, 2024}{...}
+{* Last revised Feb 16, 2025}{...}
 {hline}
-help for {hi:oglm} version 2.31 released May 14, 2024
+help for {hi:oglm} version 2.3.2 released Feb 16, 2025
 {hline}
 
 {title:Ordinal Generalized Linear Models}
