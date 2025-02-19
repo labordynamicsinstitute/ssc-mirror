@@ -1,0 +1,20 @@
+d 'GOPROBIT2': module to perform generalized ordered probit regression
+d
+d    goprobit2 is a community-contributed module which fits ordered
+d response regression models of ordinal variable depvar on the
+d independent variables     indepvars. It extends oprobit by
+d offering a variety of link functions based on the SGT(skewed
+d generalized t) family of statistical distributions. 
+d
+d KW: ordered probit
+d KW: ordered response
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20250218
+d
+d Author: Jacob Triplett, University of North Carolina
+d Support: email Jacob_Triplett@@kenan-flagler.unc.edu
+d
+f goprobit2.ado
+f goprobit2.sthlp

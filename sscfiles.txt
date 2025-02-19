@@ -17543,6 +17543,7 @@ fmwww.bc.edu/repec/bocode/g/galbr.dlg
 fmwww.bc.edu/repec/bocode/g/gdistinct.ado
 fmwww.bc.edu/repec/bocode/g/grstest.pkg
 fmwww.bc.edu/repec/bocode/g/ginidesc.pkg
+fmwww.bc.edu/repec/bocode/g/goprobit2.pkg
 fmwww.bc.edu/repec/bocode/g/glevelsof.ado
 fmwww.bc.edu/repec/bocode/g/gduplicates.ado
 fmwww.bc.edu/repec/bocode/g/gphdt.ado
@@ -17676,6 +17677,7 @@ fmwww.bc.edu/repec/bocode/g/glst.hlp
 fmwww.bc.edu/repec/bocode/g/genvars.pkg
 fmwww.bc.edu/repec/bocode/g/gintreg_old.ado
 fmwww.bc.edu/repec/bocode/g/gphsave.ado
+fmwww.bc.edu/repec/bocode/g/gmd.pkg
 fmwww.bc.edu/repec/bocode/g/getmstatistic.ado
 fmwww.bc.edu/repec/bocode/g/gs2slsxt.pkg
 fmwww.bc.edu/repec/bocode/g/_gsqallpos.ado
@@ -18229,6 +18231,7 @@ fmwww.bc.edu/repec/bocode/g/gcrobustvar.pkg
 fmwww.bc.edu/repec/bocode/g/gsum.html
 fmwww.bc.edu/repec/bocode/g/gtools_macosx_v2.plugin
 fmwww.bc.edu/repec/bocode/g/grlogit.ado
+fmwww.bc.edu/repec/bocode/g/gmd.sthlp
 fmwww.bc.edu/repec/bocode/g/gbgfit_ll.ado
 fmwww.bc.edu/repec/bocode/g/genscore.ado
 fmwww.bc.edu/repec/bocode/g/gentrun.ado
@@ -18273,6 +18276,7 @@ fmwww.bc.edu/repec/bocode/g/geo2xy_us_data.dta
 fmwww.bc.edu/repec/bocode/g/gmlabvpos.pkg
 fmwww.bc.edu/repec/bocode/g/gph.m
 fmwww.bc.edu/repec/bocode/g/geoplot.ado
+fmwww.bc.edu/repec/bocode/g/goprobit2.sthlp
 fmwww.bc.edu/repec/bocode/g/graph_output.gph
 fmwww.bc.edu/repec/bocode/g/gstats_summarize.sthlp
 fmwww.bc.edu/repec/bocode/g/glmdeco.pkg
@@ -18331,6 +18335,7 @@ fmwww.bc.edu/repec/bocode/g/getprime.pkg
 fmwww.bc.edu/repec/bocode/g/ggt_test_data.dta
 fmwww.bc.edu/repec/bocode/g/geonear.ado
 fmwww.bc.edu/repec/bocode/g/gzipuse.html
+fmwww.bc.edu/repec/bocode/g/gmd.ado
 fmwww.bc.edu/repec/bocode/g/ghk2.hlp
 fmwww.bc.edu/repec/bocode/g/getregstats.pkg
 fmwww.bc.edu/repec/bocode/g/gologit29.pkg
@@ -18374,6 +18379,7 @@ fmwww.bc.edu/repec/bocode/g/gammafit_lf.ado
 fmwww.bc.edu/repec/bocode/g/gdecomp.html
 fmwww.bc.edu/repec/bocode/g/ggtax.ado
 fmwww.bc.edu/repec/bocode/g/_gsqelemcount.ado
+fmwww.bc.edu/repec/bocode/g/goprobit2.ado
 fmwww.bc.edu/repec/bocode/g/getdata.ado
 fmwww.bc.edu/repec/bocode/g/grfreq.hlp
 fmwww.bc.edu/repec/bocode/g/geodist.pkg

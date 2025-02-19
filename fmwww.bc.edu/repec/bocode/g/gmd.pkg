@@ -1,0 +1,25 @@
+d 'GMD': module to access and manipulate data from the Global Macro Database
+d
+d  This package provides tools to access and manipulate data from
+d the Global Macro Database, a comprehensive international
+d macroeconomic dataset that unifies and extends existing
+d resources. The database harmonizes and integrates data from 32
+d contemporary sources (including IMF, World Bank, and OECD) with
+d historical records from 78 additional datasets, creating
+d comprehensive annual time series for 46 variables across 243
+d countries. 
+d
+d KW: data management
+d KW: global macro database
+d KW: time series
+d KW: international data
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20250218
+d
+d Author:   Mohamed Lehbib, National University of Singapore
+d Support: email  lehbib@@nus.edu.sg
+d
+f gmd.ado
+f gmd.sthlp

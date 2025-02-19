@@ -26,18 +26,17 @@ d
 d Author: James McDonald, Brigham Young University
 d Support: email james_mcdonald@@byu.edu
 d
-d Author:  Jacob Triplett
-d Support: email  jacobwtriplett@@icloud.com
+d Author:  Jacob Triplett, University of North Carolina
+d Support: email Jacob_Triplett@@kenan-flagler.unc.edu
 d
 f gintreg.ado
 f gintreg.sthlp
 f gintreg_p.ado
-f gintregplot.ado
-f gintregplot.sthlp
 f ../i/intllf_normal.ado
 f ../i/intllf_sged.ado
 f ../i/intllf_sgt.ado
 f ../i/intllf_lognormal.ado
 f ../i/intllf_ggamma.ado
 f ../i/intllf_gb2.ado
-
+f gintregplot.ado
+f gintregplot.sthlp

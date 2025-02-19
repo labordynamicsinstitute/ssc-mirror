@@ -96,6 +96,7 @@ p glmdeco module to compute Detailed Decomposition of Average Outcome Differenti
 p glst module for trend estimation of summarized dose-response data
 p gmap module to create heatmaps for the web, using java api developped by google 
 p gmci module to calculate geometric means and their confidence intervals
+p gmd module to access and manipulate data from the Global Macro Database
 p gmemultinomial module to fit multinomial models using generalized maximum entropy
 p gmlabvpos module providing egen function for label positioning
 p gmmcovearn module to compute GMM estimates of the Covariance Structure of Earnings
@@ -107,6 +108,7 @@ p gologit2 module to estimate generalized logistic regression models for ordinal
 p gologit29 module to estimate generalized logistic regression models for ordinal dependent variables
 p googleplaces module to return search results from Google Places
 p goprobit module to estimate generalized ordered probit models
+p goprobit2 module to perform generalized ordered probit regression
 p gpfobl module to perform rotation after factor / principal components
 p gphepssj module to translate Stata graph files to .eps as used for The Stata Journal
 p gphudak module to estimate long memory in a timeseries
