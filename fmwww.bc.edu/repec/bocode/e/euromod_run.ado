@@ -75,6 +75,11 @@ program define euromod_run, rclass
 	marksample touse
 	// Next foreach loop makes sure that variables which were previous output are not entering as input again 
 	//(unless they were assigned to be an input variable before and overwritten by the output of a simulation)
+	
+	if ("`vars_output'" != "") | ("`il_output'" != "") {
+		local outputdataset = "custom_output.txt"
+	}
+	
 	foreach var in `numeric_list' {
 		if  `: list var in not_simulated_list' {
 			local varlist_input_EM9870 = "`varlist_input_EM9870' `var'"
@@ -106,7 +111,7 @@ program define euromod_run, rclass
 	}
 	else if (strpos("$EM_outputs","custom_output") > 0) {
 		quietly euromod_getdata, outputdataset("custom_output.txt") prefix(`prefix') `replace'
-		display in r "Loaded custom_output.txt by default."
+		display "Loaded custom_output.txt by default."
 		return add
 	}
 	else {

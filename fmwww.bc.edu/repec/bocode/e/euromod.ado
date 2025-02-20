@@ -2,12 +2,11 @@
 #  Version 1.0.4
 #  Author: Hannes Serruys
 #  Last updated: 12/12/2024
-%  Corresponding: EUROMOD version 3.7.10
+%  Minimum EUROMOD version required: 3.7.10
 #####################################################*/
 global EUROMOD_CONNECTOR_VERSION = "3.7.10"
-qui set linesize 255
 
-capture mata: mata drop *get_latest_version()
+capture mata: mata drop get_latest_version()
 capture mata: 
 	void get_latest_version(string dirPath)
 	{
@@ -40,7 +39,6 @@ if _rc != 0 {
 }
 program define euromod
 	
-	version 15.1
 	
     gettoken first rest : 0, parse(", ")
        if "`first'" == "run" {
@@ -53,11 +51,14 @@ program define euromod
 			local subcommand = "euromod_getinfo"
 	   }
 	   else if "`first'" == "setinfo" {
-			local subcommand = "`euromod_setinfo'"
+			local subcommand = "euromod_setinfo"
+	   }
+	   else if "`first'" == "getmodel" {
+			local subcommand = "euromod_getmodel"
 	   }
 	   else {
 			di as err "No valid subcommand specified."
-			error `-1'
+			error -1
 	   }
        `subcommand'`rest'
 end

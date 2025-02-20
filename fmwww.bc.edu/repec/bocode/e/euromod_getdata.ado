@@ -49,8 +49,8 @@ program define euromod_getdata, rclass
 	if (_rc != 0) {
 	    if ("`replace'" != "replace") {
 	    quietly cd "`wd'"
-		noi display in r "Output dataset cannot be concatenated."
-		noi display in r "Consider replacing existing dataset with current one using replace option."
+		display in r "Output dataset cannot be concatenated."
+		display in r "Consider replacing existing dataset with current one using replace option."
 		quietly plugin call EM_StataPlugin, "setReturnList"
 		error -1
 		exit

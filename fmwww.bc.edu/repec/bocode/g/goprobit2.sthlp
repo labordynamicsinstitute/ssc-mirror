@@ -1,5 +1,7 @@
 {smcl}
-{* *! version 1.0.0  17feb2025}{...}
+{* *! version 1.0.0  19feb2025}{...}
+{title:Title}
+
 {p2colset 6 19 25 2}{...}
 {p2col:{bf:goprobit2} {hline 2}}Generalized ordered probit regression{p_end}
 {p2colreset}{...}

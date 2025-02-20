@@ -18,3 +18,7 @@ d Support: email Jacob_Triplett@@kenan-flagler.unc.edu
 d
 f goprobit2.ado
 f goprobit2.sthlp
+f goprobit2_sgt_llf.ado
+f goprobit2_sged_llf.ado
+f goprobit2_normal_llf.ado
+f goprobit2_laplace_llf.ado

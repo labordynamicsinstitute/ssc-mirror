@@ -8,10 +8,10 @@ d KW: data management
 d
 d Requires: Stata version 15.1 for Windows
 d
-d Distribution-Date: 20250210
+d Distribution-Date: 20250219
 d
 d Author:  Hannes Serruys ,  B2-JRC Seville
-d Support: email Hannes.SERRUYS@@ec.europa.eu)
+d Support: email Hannes.SERRUYS@@ec.europa.eu
 d
 f euromod.ado
 f euromod.sthlp
