@@ -1,4 +1,4 @@
-*! jl 1.1.5 1 February 2025
+*! jl 1.1.6 19 February 2025
 *! Copyright (C) 2023-25 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -107,7 +107,7 @@ program define assure_julia_started
       plugin call _julia, evalqui "using Pkg"
       AddPkg DataFrames, minver(1.6.1)
       AddPkg CategoricalArrays, minver(0.10.8)
-      plugin call _julia, evalqui "using DataFrames, CategoricalArrays"
+      plugin call _julia, evalqui "using DataFrames, CategoricalArrays, Dates"
 
       qui findfile stataplugininterface.jl
       plugin call _julia, evalqui `"pushfirst!(LOAD_PATH, dirname(expanduser(raw"`r(fn)'")))"'
@@ -479,3 +479,4 @@ program _julia, plugin using(jl.plugin)
 * 1.1.3 Bug fixes. Make GetVarsFromDF varlist default to cols() option.
 * 1.1.4 Make sure to close all temp files opened in Mata, which otherwise can crash other programs
 * 1.1.5 Add date/datetime support to -jl use-
+* 1.1.6 Fix 1.1.5 crash

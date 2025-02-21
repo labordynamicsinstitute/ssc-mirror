@@ -1,4 +1,4 @@
-program testjfe_fixed, rclass
+program testjfe, rclass
 	version 13
 	local version
 	/*

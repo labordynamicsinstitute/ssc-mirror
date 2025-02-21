@@ -17,6 +17,8 @@ f euromod.ado
 f euromod.sthlp
 f euromod_getdata.ado
 f euromod_getdata.sthlp
+f euromod_getmodel.ado
+f euromod_getmodel.sthlp
 f euromod_getinfo.ado
 f euromod_getinfo.sthlp
 f euromod_run.ado

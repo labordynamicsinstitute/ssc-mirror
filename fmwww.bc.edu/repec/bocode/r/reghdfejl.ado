@@ -1,8 +1,8 @@
-*! reghdfejl 1.0.8 8 November 2024
+*! reghdfejl 1.0.10 19 February 2025
 
 // The MIT License (MIT)
 //
-// Copyright (c) 2023-24 David Roodman
+// Copyright (c) 2023-25 David Roodman
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -150,7 +150,7 @@ program define _reghdfejl, eclass
       local inexogname `inexogname' `anything'
       continue, break
     }
-    else local inexogname `inexogname' `term'
+    else if subinstr(`"`term'"'," ","",.) != "[]" local inexogname `inexogname' `term'  // handle rare event of empty weight opt, "[]"
   }
   if !`hasiv' local ivreg2 0
 
@@ -466,7 +466,7 @@ program define _reghdfejl, eclass
     }
   }
 
-  local putvars `putvars' `_cluster' `wtvar' `absorbvars' `bscluster'
+  unab putvars: `putvars' `_cluster' `wtvar' `absorbvars' `bscluster'
   local putvars: list uniq putvars
 
   if `compact' {
@@ -646,7 +646,7 @@ program define _reghdfejl, eclass
     _jl: res = nothing;
   }
 
-  tempname t N I
+  tempname t N I used_df_r
 
   _jl: st_numscalar("`N'", nobs(m));
 
@@ -744,6 +744,10 @@ program define _reghdfejl, eclass
     ereturn scalar df_a = `t'
     _jl: st_numscalar("`t'", dof_residual(m));
     ereturn scalar df_r = `t'
+    _jl: st_numscalar("`t'", m.tss);
+    ereturn scalar tss = `t'
+    _jl: st_numscalar("`t'", m.rss / (1-m.r2_within));
+    ereturn scalar tss_within = `t'
     _jl: st_numscalar("`t'", rss(m));
     ereturn scalar rss = `t'
     _jl: st_numscalar("`t'", mss(m));
@@ -758,7 +762,10 @@ program define _reghdfejl, eclass
       _jl: st_numscalar("`t'", m.F_kp);
       ereturn scalar widstat = `t'
     }
-    ereturn scalar rmse = sqrt(e(rss) / (e(N) - e(df_a) - e(rank)))
+    scalar `used_df_r' = e(N) - e(df_a) - e(rank)
+    ereturn scalar r2_a_within = 1 - (e(rss) / `used_df_r') / (e(tss_within) / (e(N) - e(df_a)))
+
+    ereturn scalar rmse = sqrt(e(rss) / `used_df_r')
     ereturn scalar ll  = -e(N)/2*(1 + log(2*_pi / e(N) *  e(rss)          ))
     ereturn scalar ll0 = -e(N)/2*(1 + log(2*_pi / e(N) * (e(rss) + e(mss))))
 
@@ -914,26 +921,28 @@ program define Display
 end
 
 * Version history
-* 0.3.0 Add support for absorbing string vars and clustering on interactions
-* 0.3.1 Add compact option
-* 0.3.2 Much better handling of interactions. Switched to BLISBLAS.jl.
-* 0.3.3 Fixed bugs in handling of interactions and constant term
-* 0.4.0 Added mask and unmask
-* 0.4.1 Handle varlists with -/?/*/~
-* 0.4.2 Set version minima for some packages
-* 0.4.3 Add julia.ado version check. Fix bug in posting sample size. Prevent crash on insufficient observations
-* 0.5.0 Add gpu & other options to partialhdfejl. Document the command. Create reghdfejl_load.ado
-* 0.5.1 Fix dropping of some non-absorbed interaction terms. Handle noconstant when no a()
-* 0.6.0 Added vce(bs)
-* 0.6.1 Bug fixes. Added interruptible option.
-* 0.6.2 Bug fixes. Add Kleibergen-Paap return value. Catch small option.
-* 0.6.3 Bug fixes, including [pw] not triggering robust. Bump to julia.ado 0.10.0. Speed up handling of non-absorbed factor variables--don't fvrevar and then copy.
-* 1.0.0 Support wildcards in absorb(). Added ivreg2 option.
-* 1.0.1 Add vce(bs, saving()) suboption. Made rng seeds more deterministic. Refined the bootstrap code. Fix crash in varlistJ2S.
-* 1.0.2 Bug fix for 1.0.1 bug fix.
-* 1.0.3 Fix crashes with 100s of non-absorbed regressors
-* 1.0.4 Fix crash in Stata<18 from using {n} in regexm()
-* 1.0.5 Redo translation of fv vars from Stata to Julia
-* 1.0.6 Fix crash on vce(bs) with non-absorbed factor vars
-* 1.0.7 Fix crashes on i.x when x is constant in sample
-* 1.0.8 Make compatible with Julia 1.11
+* 0.3.0  Add support for absorbing string vars and clustering on interactions
+* 0.3.1  Add compact option
+* 0.3.2  Much better handling of interactions. Switched to BLISBLAS.jl.
+* 0.3.3  Fixed bugs in handling of interactions and constant term
+* 0.4.0  Added mask and unmask
+* 0.4.1  Handle varlists with -/?/*/~
+* 0.4.2  Set version minima for some packages
+* 0.4.3  Add julia.ado version check. Fix bug in posting sample size. Prevent crash on insufficient observations
+* 0.5.0  Add gpu & other options to partialhdfejl. Document the command. Create reghdfejl_load.ado
+* 0.5.1  Fix dropping of some non-absorbed interaction terms. Handle noconstant when no a()
+* 0.6.0  Added vce(bs)
+* 0.6.1  Bug fixes. Added interruptible option.
+* 0.6.2  Bug fixes. Add Kleibergen-Paap return value. Catch small option.
+* 0.6.3  Bug fixes, including [pw] not triggering robust. Bump to julia.ado 0.10.0. Speed up handling of non-absorbed factor variables--don't fvrevar and then copy.
+* 1.0.0  Support wildcards in absorb(). Added ivreg2 option.
+* 1.0.1  Add vce(bs, saving()) suboption. Made rng seeds more deterministic. Refined the bootstrap code. Fix crash in varlistJ2S.
+* 1.0.2  Bug fix for 1.0.1 bug fix.
+* 1.0.3  Fix crashes with 100s of non-absorbed regressors
+* 1.0.4  Fix crash in Stata<18 from using {n} in regexm()
+* 1.0.5  Redo translation of fv vars from Stata to Julia
+* 1.0.6  Fix crash on vce(bs) with non-absorbed factor vars
+* 1.0.7  Fix crashes on i.x when x is constant in sample
+* 1.0.8  Make compatible with Julia 1.11
+* 1.0.9  Make sure to unab all variables before PutVarsToDF in order to catch all duplicates
+* 1.0.10 Clean up sum-of-squares return values and their documentation

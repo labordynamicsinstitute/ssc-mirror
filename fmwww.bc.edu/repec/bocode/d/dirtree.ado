@@ -1,7 +1,7 @@
-*! version 1.1.0 10Jun2024 MLB
+*! version 1.2.0 20Feb2025 MLB
 program define dirtree
     version 14
-    syntax, [dir(string) cd] *
+    syntax, [dir(string) cd *]
 
     local odir = c(pwd)
 
@@ -24,10 +24,14 @@ end
 program define main
     version 14
     syntax, [hidden ONLYDirs nolink           /// options for users
+	        NOEXPand(string asis) NOEXPand2   /// options for users  
             where(string) directory(string)]  //  "bookkeeping" options
-    
-    getnames, `hidden'  // makes locals dirs and files
-    
+
+    local noexpand : list clean noexpand		
+	
+	getnames, `hidden'  // makes locals dirs and files
+
+	
     local kd : word count `dirs'
     local kf : word count `files'
     
@@ -68,10 +72,25 @@ program define main
             di as txt "`directory'"`child'  as result "`dir'" `enddir'
         }
         // use recursion to display what is inside those directories
-        qui cd "`dir'"
-        mata : st_local("where_out", pathjoin("`where'", "`dir'"))
-        main, directory("`newdirectory'") `hidden' `onlydirs' where("`where_out'") `link'
-        qui cd ..
+		local dir2  = `""`dir'""'
+		local dir2 : list clean dir2
+		if "`expand2'" == "" & !`: list dir2 in noexpand' {
+			qui cd "`dir'"
+			mata : st_local("where_out", pathjoin("`where'", "`dir'"))
+			main, directory("`newdirectory'") `hidden' `onlydirs' ///
+			      where("`where_out'") `link' noexpand(`noexpand') `noexpand2'
+			qui cd ..
+		}
+		else {
+			mata: st_local("hiddendir", pathjoin(pwd(),"`dir'")) 
+			di as txt "`newdirectory'"`lastchild'_continue
+			if "`link'" == "" {
+				di `"{stata `"dirtree, dir("`hiddendir'") `hidden' `onlydirs' `link'"':...}"' 
+			}
+			else {
+				di as result "..."
+			}
+		}
     }
 end
 
