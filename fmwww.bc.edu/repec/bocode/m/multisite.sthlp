@@ -12,6 +12,10 @@
 multi-site randomized experiments with few units per site.
 {p_end}
 
+{title:Syntax}
+
+{p 4 8}{cmd:multisite}
+{p_end}
 
 {marker description}{...}
 {title:Description}
@@ -50,8 +54,6 @@ multi-site randomized experiments with few units per site.
 {p 4 8}Clément de Chaisemartin, Sciences Po.{p_end}
 {p 4 8}Antoine Deeb, World Bank.{p_end}
 {p 4 8}Bingxue Li, Sciences Po.{p_end}
-
-{title:Contact}
 
 {title:Contact}
 {browse "mailto:adeeb1@worldbank.org":adeeb1@worldbank.org}

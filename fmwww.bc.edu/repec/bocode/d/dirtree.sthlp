@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2.0 20Feb2025 MLB}{...}
+{* *! version 1.3.0 21Feb2025 MLB}{...}
 {vieweralsosee "cd" "help cd"}{...}
 {vieweralsosee "dir" "help dir"}{...}
 {viewerjumpto "Syntax" "dirtree##syntax"}{...}
@@ -16,21 +16,23 @@
 {title:Syntax}
 
 {p 8 17 2}
-{cmdab:dirtree}
+{cmdab:dirtree} [{it:directory}]
 [{cmd:,} {it:options}]
 
 {synoptset 20 tabbed}{...}
 {synopthdr}
 {synoptline}
-{synopt:{opt dir(directory)}}specify the directory; default is the current 
-        working directory{p_end}
 {synopt:{opt cd}}change to the directory specified in {cmd:dir()}{p_end}
 {synopt:{opt hidden}}display hidden files and directories{p_end}
 {synopt:{opt onlyd:irs}}only display the directories and not the files{p_end}
 {synopt:{opt nolink}}files that can be opened in Stata are not shown as a link{p_end}
+{synopt:{opt export}}the lines of the tree are drawn with symbols that don't look
+so nice in Stata, but do look nicer when coppied into plain text{p_end}
 {synopt:{opt noexp:and}{cmd:[(}{it:list}{cmd:)]}}specifies that directories in 
 {it:list} will not be expanded. If no list is specified than no directory will be
 expanded.{p_end}
+{synopt:{opt maxdepth(#)}}specifies the maximum depth of sub-directories that 
+will be displayed{p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -40,18 +42,17 @@ expanded.{p_end}
 
 {pstd}
 {cmd:dirtree} shows the content of a directory, including sub-directories, as a 
-tree. By default, files that can be opened in Stata are shown as clickable links.
+tree. The current working directory will be used if no directory is specified. 
+By default, files that can be opened in Stata are shown as clickable links. 
+Clicking on the name of a directory will change the working directory to that 
+directory.
 
 
 {marker options}{...}
 {title:Options}
 
 {phang}
-{opt dir(directory)} Specifies the directory that is to be displayed. By default
-the current working directory is used
-
-{phang}
-{opt cd} change the current working directory to the directory specified in {opt dir()}
+{opt cd} change the current working directory to the directory specified
 
 {phang}
 {opt hidden} display hidden directories and files, that is, files and directories 
@@ -63,6 +64,12 @@ starting with a "."
 {phang}
 {opt nolink} Shows just the file names. By default files that can be opened in 
 Stata are shown as a link that will open that file. 
+
+{phang}
+{opt export} the lines of the tree are drawn with symbols that don't look
+so nice in Stata, but do look nicer when coppied into plain text. This can be 
+useful when copying to a forum like Statalist. This option requires the 
+{cmd:nolink} option.
 
 {phang}
 {opt noexpand(list)} specifies that directories in {it:list} are not to be 
@@ -82,13 +89,18 @@ spaces, then the name of that directory needs to be enclosed in double quotes.
 
 {phang}
 {opt noexpand} specifies that only the content of the current directory is to be
-displayed and none of the sub-directories are to be expanded.
+displayed and none of the sub-directories are to be expanded. This is equivalent
+to {cmd:maxdepth(1)}
+
+{phang} 
+{opt maxdepth(#)} specifies the maximum depth of sub-directories that will be 
+displayed. The default is {cmd:maxdepth(.)}, i.e. show the entire tree.
 
 
 {marker examples}{...}
 {title:Examples}
 
-{phang}{stata dirtree}{p_end}
+{phang}{stata dirtree, maxdepth(2)}{p_end}
 
 {phang}{cmd:dirtree, noexp(data "directory name with spaces")}
 
