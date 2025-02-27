@@ -1,4 +1,4 @@
-*! actest 2.0.15 CFB/MES 30apr2024 
+*! actest 2.0.16 CFB/MES 26feb2025
 *! see end of file for version comments
 
 if c(version) < 12 {
@@ -15,7 +15,7 @@ if c(version) < 12 {
 
 program define actest, rclass sortpreserve
 
-	local lversion 02.0.15
+	local lversion 02.0.16
 
 * Minimum of version 9 required
 	version 9
@@ -697,6 +697,13 @@ di as err "       tsset time var=`tvar'; cluster var=`cluster1'"
 	noi di as text "{hline 11}{c BT}{hline 29}{c BT}{hline 5}{c BT}{hline 29}"
 	matrix colnames `m' = lag_l lag_u chi2_lu p_lu lag chi2 p
 
+// bw95
+	mata: minbw95() 
+	if bw95 == 0 {
+		sca bw95 = `lhi'+1
+	}
+
+
 * Footnotes
 	if ~`univariate' {
 		if "`strictexog'"=="" {
@@ -729,6 +736,7 @@ di as err "       tsset time var=`tvar'; cluster var=`cluster1'"
 	return scalar minlag=`llo'
 	return local kernel = "`kernel'"
 	return scalar bw=`bw'
+	return scalar bw95=bw95
 	return matrix results=`m'
 	
 	return matrix vrhat=`vrhat'
@@ -740,6 +748,22 @@ end
 
 cap version 11.2
 mata:
+
+void minbw95 ()
+{
+	real rowvector w
+	real scalar bw95
+	pv=st_matrix(st_local("m"))[.,7]
+	w=mm_which(pv[.]:>0.05)
+	if (rows(w)==0){
+		bw95=0
+	}
+	else {
+		bw95=w[1]
+	}
+	st_numscalar("bw95",bw95)
+}
+
 void s_acstat(string scalar xvars, 
 				string scalar zvars,
 				real scalar q, 
@@ -953,3 +977,4 @@ end
 *                  Added actestcmd macro (="actest" or "actest9")
 * 2.0.15 30apr2024 Accepted Ariel Linden's modifications to allow execution after any glm 
 *                  with predict, response
+* 2.0.16 26feb2025 Added return bw95 as first lag at which marginal AC>0.05, or maxlag+1

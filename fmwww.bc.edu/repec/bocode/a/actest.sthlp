@@ -119,7 +119,8 @@ Note that {cmd:actest} will indicate in the test output whether a test statistic
 
 {p}{cmd:actest} saves the minimum and maximum lag orders tested in {cmd:r(minlag), r(maxlag}). 
 The matrix {cmd:r(results)} contains, in each row, the results up to that lag order (in columns 3-4) and the results for that lag order (in columns 6-7). 
-See {cmd:return list}.{p_end}
+See {cmd:return list}. The scalar {cmd:r(bw95)} contains the first lag for which the marginal autocorrelation has a p-value greater
+than 0.05, or  {cmd: r(maxlag)}+1 if all marginal autocorrelations are significant at 95%.{p_end}
 
 
 {title:Examples}

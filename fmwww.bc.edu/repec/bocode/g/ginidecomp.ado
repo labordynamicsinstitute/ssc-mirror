@@ -1,18 +1,23 @@
-*! version 1.0, January 2025
+*! version 1.1, February 2025
 *! Authors: Vesa-Matti Heikkuri and Matthias Schief
 *! This program computes the Gini coefficient and implements the decomposition 
 *! by population subgroups derived in Heikkuri and Schief (2024)
 *! The program builds on "ineqdecgini.ado" by Stephen P. Jenkins
 
 
-program ginidecomp, sortpreserve rclass 
 
 version 13.1
+
+program ginidecomp, sortpreserve rclass 
 
 syntax varname(numeric) [aweight fweight iweight pweight] [if] [in] [, BYgroup(varlist)]
 
 set more off
 local inc "`varlist'"
+
+if strlen("`inc'") > 14{
+	local inc_short = substr("`inc'", 1, 14)
+}
 
 * Temporary variables	 
 tempvar w cumulProp gini firstObs meanIncome_k relativeMeanIncome_k totalWeights_k relativeWeight_k popShare_k incomeShare_k cumulProp_k gini_k
@@ -44,8 +49,8 @@ qui gen double `cumulProp' = (2 * sum(`w') - `totalWeights' - `w')/(`totalWeight
 qui egen double `gini' = total(`w'*`inc'*`cumulProp') if `touse'
 
 lab var `gini' "Gini"
-	
-	
+
+
 * Subgroup decomposition
 
 if "`bygroup'" != "" {	
@@ -80,12 +85,12 @@ if "`bygroup'" != "" {
 			sort `sortVar'
 			local firstBygroup = 1
 			foreach var in `bygroup'{
-				local g_`var' = `var'[1]
+				local value = `var'[1]
 				if `firstBygroup' == 1{
-					local label_text = "`var' = `g_`var''"
+					local label_text = "`var' = `value'"
 				}
 				else{
-					local label_text = "`label_text'" + ",  `var' = `g_`var''"
+					local label_text = "`label_text'" + ",  `var' = `value'"
 				}
 				local firstBygroup = 0
 			}
@@ -109,10 +114,11 @@ if "`bygroup'" != "" {
 
 		bysort `notuse' `bygroup_num' (`inc'): gen double `cumulProp_k' = (2 * sum(`w') - `totalWeights_k' - `w')/(`totalWeights_k'*`totalWeights_k'*`meanIncome_k') if `touse'
 		by `notuse' `bygroup_num': egen double `gini_k' = total(`w'*`inc'*`cumulProp_k') if `touse'
+		replace `gini_k' = abs(`gini_k')
 
 		lab var `popShare_k' "Population share"
 		lab var `meanIncome_k' "Mean"
-		lab var `incomeShare_k' "`inc' share"
+		lab var `incomeShare_k' "`inc_short' share"
 		lab var `gini_k' "Gini"	
 
 		* Compute within and between-group inequality terms
@@ -176,7 +182,7 @@ if "`bygroup'" != "" {
 	di as txt "Subgroup Decomposition:"
 	tabdisp `touse' in 1, c(`gini' `withinGroupIneq' `betweenGroupIneq') f(%9.5f)
 	di "  "
-	di as txt "Subgroup Decomposition (% of total):"
+	di as txt "Sugroup Decomposition (% of total):"
 	tabdisp `touse' in 1, c(`withinGroupIneq_percent' `betweenGroupIneq_percent') f(%9.5f)
 	di "Note: The above results show the decomposition of the aggregate Gini coefficient of '`inc'' into inequality within and between subgroups defined by '`bygroup''. The subgroup decomposition is based on the formula presented in Heikkuri and Schief (2024). For more information, type 'help ginidecomp'."
 }

@@ -2,6 +2,7 @@
 1
 2
 3
+p s2s module to provide survey to survey imputation tool
 p sadi Sequence analysis distance measures
 p sankey module for Sankey diagrams 
 p scatterfit module to produce scatter plots with fit lines

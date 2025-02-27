@@ -1,0 +1,43 @@
+d 'S2S': module to provide survey to survey imputation tool
+d
+d      Obtaining consistent estimates on poverty over time as well
+d as monitoring poverty trends on a timely basis is essential for
+d poverty reduction. However,	 these objectives are not readily
+d achieved in practice where household consumption data are
+d infrequently collected or not constructed using consistent and   
+d transparent criteria. The challenge can be broadly regarded as
+d one involving missing data: consumption (or income) data are
+d available in one period but are    either unavailable or
+d incomparable in the next period(s).	 Dang, Lanjouw, and
+d Serajuddin (Oxford Econ. Papers, 2017) propose a method that
+d imputes headcount poverty in these settings. Dang et al. (2024)
+d employ this method and provide    further validation evidence for
+d other poverty indicators in the Foster–Greer–Thorbecke (FGT)
+d family of poverty indicators, several other vulnerability   
+d indicators, and mean consumption (income) data.    s2s implements
+d their imputation procedures. 
+d
+d KW: poverty
+d KW: survey data
+d KW: imputation
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20250226
+d
+d Author:    Hai-Anh H. Dang, World Bank
+d Support: email hdang@@worldbank.org
+d
+d Author:     Minh Cong Nguyen, World Bank
+d Support: email  mnguyen3@@worldbank.org
+d
+d Author:    Kseniya Abanokova, World Bank
+d Support: email kabanokova@@worldbank.org
+d
+f s2s.ado
+f s2s.sthlp
+f s2s_indicators.ado
+f ../e/epctile.ado
+f ../e/epctile.sthlp
+f ../f/FormXLevels.ado
+f ../t/Tanzania_dataset.dta
