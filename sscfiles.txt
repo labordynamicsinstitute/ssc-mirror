@@ -14823,6 +14823,7 @@ fmwww.bc.edu/repec/bocode/_/_capital.ado
 fmwww.bc.edu/repec/bocode/_/_grtvor.ado
 fmwww.bc.edu/repec/bocode/_/_geoframe_spjoin.ado
 fmwww.bc.edu/repec/bocode/_/_v2jackpseud.mata
+fmwww.bc.edu/repec/bocode/_/_cwfcn_ilo_isco08_to_isco88.sthlp
 fmwww.bc.edu/repec/bocode/_/_mpitb_est.ado
 fmwww.bc.edu/repec/bocode/_/_lendingtypename.ado
 fmwww.bc.edu/repec/bocode/_/_mrsvmat.ado
@@ -14865,13 +14866,16 @@ fmwww.bc.edu/repec/bocode/_/_gsqmarkpattern.ado
 fmwww.bc.edu/repec/bocode/_/_goutside.ado
 fmwww.bc.edu/repec/bocode/_/_nargs.ado
 fmwww.bc.edu/repec/bocode/_/_gsqfirstpos.ado
+fmwww.bc.edu/repec/bocode/_/_cwfcn_soc10_to_isco08.sthlp
 fmwww.bc.edu/repec/bocode/_/_regsen_breakfront_plot.ado
 fmwww.bc.edu/repec/bocode/_/_regsen_idset_plot.ado
 fmwww.bc.edu/repec/bocode/_/_gprod.html
 fmwww.bc.edu/repec/bocode/_/_tesen_plot.ado
 fmwww.bc.edu/repec/bocode/_/_ivcrc_estimator.ado
+fmwww.bc.edu/repec/bocode/_/_cwfcn_ilo_isco88_to_isco08.sthlp
 fmwww.bc.edu/repec/bocode/_/_gmypp.ado
 fmwww.bc.edu/repec/bocode/_/_char2dlg.ado
+fmwww.bc.edu/repec/bocode/_/_cwfcn_isco08_to_soc10.sthlp
 fmwww.bc.edu/repec/bocode/_/_geom.ado
 fmwww.bc.edu/repec/bocode/_/_svy_twopm_display.ado
 fmwww.bc.edu/repec/bocode/_/_gfastxtile.ado
@@ -14907,6 +14911,7 @@ fmwww.bc.edu/repec/bocode/_/_cwfcn_isco08_3_to_isco08_2.sthlp
 fmwww.bc.edu/repec/bocode/_/_update_indicators.ado
 fmwww.bc.edu/repec/bocode/_/_wbod_tmpfile1.ado
 fmwww.bc.edu/repec/bocode/_/_bcsf_ridders.mata
+fmwww.bc.edu/repec/bocode/_/_cwfcn_soc18_to_soc10.sthlp
 fmwww.bc.edu/repec/bocode/_/_gkweight.ado
 fmwww.bc.edu/repec/bocode/_/_lnmor_svyb.ado
 fmwww.bc.edu/repec/bocode/_/_grepeat.ado
@@ -14949,7 +14954,9 @@ fmwww.bc.edu/repec/bocode/_/_scauchyreg.ado
 fmwww.bc.edu/repec/bocode/_/_ggini.ado
 fmwww.bc.edu/repec/bocode/_/_lnreg.ado
 fmwww.bc.edu/repec/bocode/_/_sgedreg.ado
+fmwww.bc.edu/repec/bocode/_/_cwfcn_soc10_to_soc00.sthlp
 fmwww.bc.edu/repec/bocode/_/_het_did_gmm.ado
+fmwww.bc.edu/repec/bocode/_/_cwfcn_labels_soc00.sthlp
 fmwww.bc.edu/repec/bocode/_/_svm_setenv_LINUX64.plugin
 fmwww.bc.edu/repec/bocode/_/_svm_train.ado
 fmwww.bc.edu/repec/bocode/_/_blncdtree.mata
@@ -15024,6 +15031,7 @@ fmwww.bc.edu/repec/bocode/_/_bcsf_regula.mata
 fmwww.bc.edu/repec/bocode/_/_mpitb_gafvars.ado
 fmwww.bc.edu/repec/bocode/_/_svmachines_mac64.plugin
 fmwww.bc.edu/repec/bocode/_/_cwfcn_isco08_to_isco08_3.sthlp
+fmwww.bc.edu/repec/bocode/_/_cwfcn_soc10_to_soc18.sthlp
 fmwww.bc.edu/repec/bocode/_/_cwfcn_isco88_to_egp.sthlp
 fmwww.bc.edu/repec/bocode/_/_gtvand.ado
 fmwww.bc.edu/repec/bocode/_/_stevaluator.ado
@@ -15066,6 +15074,7 @@ fmwww.bc.edu/repec/bocode/_/_query_metadata.ado
 fmwww.bc.edu/repec/bocode/_/_somdtransf.mata
 fmwww.bc.edu/repec/bocode/_/_grminmax.pkg
 fmwww.bc.edu/repec/bocode/_/_mpitb_ctyselect.ado
+fmwww.bc.edu/repec/bocode/_/_cwfcn_soc00_to_isco88.sthlp
 fmwww.bc.edu/repec/bocode/_/_cwfcn_isco08_to_isco08_2.sthlp
 fmwww.bc.edu/repec/bocode/_/_svm_setenv_MACINTEL64.plugin
 fmwww.bc.edu/repec/bocode/_/_stms_parsecmd.ado
@@ -15083,6 +15092,7 @@ fmwww.bc.edu/repec/bocode/_/_svmachines_win64.plugin
 fmwww.bc.edu/repec/bocode/_/_jl.ado
 fmwww.bc.edu/repec/bocode/_/_inshell_detect_pwsh.ado
 fmwww.bc.edu/repec/bocode/_/_gslope.ado
+fmwww.bc.edu/repec/bocode/_/_cwfcn_labels_soc18.sthlp
 fmwww.bc.edu/repec/bocode/_/_sgtevaluator.ado
 fmwww.bc.edu/repec/bocode/_/_welcom_vers.ado
 fmwww.bc.edu/repec/bocode/_/_slaplacereg.ado
@@ -15238,6 +15248,7 @@ fmwww.bc.edu/repec/bocode/_/_gelap.ado
 fmwww.bc.edu/repec/bocode/_/_lendingtype.ado
 fmwww.bc.edu/repec/bocode/_/_svm_getenv_LINUX64.plugin
 fmwww.bc.edu/repec/bocode/_/_svm_dlopenable_win64.plugin
+fmwww.bc.edu/repec/bocode/_/_cwfcn_isco88_to_soc00.sthlp
 fmwww.bc.edu/repec/bocode/_/_cwfcn_labels_egp.sthlp
 fmwww.bc.edu/repec/bocode/_/_gwmean.sthlp
 fmwww.bc.edu/repec/bocode/_/_cwfcn_isco88_to_treiman.sthlp
@@ -15308,6 +15319,7 @@ fmwww.bc.edu/repec/bocode/_/_mpitb_setwgts.ado
 fmwww.bc.edu/repec/bocode/_/_region.ado
 fmwww.bc.edu/repec/bocode/_/_getmxdatabanxico.ado
 fmwww.bc.edu/repec/bocode/_/_svm_setenv_mac64.plugin
+fmwww.bc.edu/repec/bocode/_/_cwfcn_soc00_to_soc10.sthlp
 fmwww.bc.edu/repec/bocode/_/_grndsub.ado
 fmwww.bc.edu/repec/bocode/_/_inshell_deansify.ado
 fmwww.bc.edu/repec/bocode/_/_ghmmss.ado
@@ -15327,6 +15339,7 @@ fmwww.bc.edu/repec/bocode/_/_grmargb.hlp
 fmwww.bc.edu/repec/bocode/_/_cwfcn_isco88_to_oep.sthlp
 fmwww.bc.edu/repec/bocode/_/_mpitb_rframe.ado
 fmwww.bc.edu/repec/bocode/_/_gvreldif.sthlp
+fmwww.bc.edu/repec/bocode/_/_cwfcn_labels_soc10.sthlp
 fmwww.bc.edu/repec/bocode/_/_svm_dlopenable_MACINTEL64.plugin
 fmwww.bc.edu/repec/bocode/_/_latitude.ado
 fmwww.bc.edu/repec/bocode/_/_svm_getenv_MACARM64.plugin
