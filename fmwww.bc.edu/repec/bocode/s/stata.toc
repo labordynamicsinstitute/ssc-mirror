@@ -54,6 +54,7 @@ p sumdocx module to generate comprehensive summary statistics and comparison tab
 p summclust module to compute cluster level measures of leverage, influence, and a cluster jackknife variance estimator
 p summtab module to compute summary statistics overall and/or across levels of a categorical variable 
 p sunburst module for (half) sunburst plots
+p surveyspan module to analyze timestamp metadata from field surveys to monitor data quality.
 p susoapi module to provide Survey Solutions API client class for Stata
 p svr module to compute estimates with survey replication (SVR) based standard errors
 p svycanon module to assess the statistical significance of the canonical correlations incorporating complex survey design factors

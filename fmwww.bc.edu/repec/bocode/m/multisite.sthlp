@@ -21,7 +21,9 @@ multi-site randomized experiments with few units per site.
 {title:Description}
 
 {p 4 8}
-{cmd:multisite} wraps in three commands to estimate treatment-effect heterogeneity across sites in multi-site RCTs, and more generally in stratified RCTs. The three commands wrapped by {cmd:multisite} respectively estimate the variance of ITTs across sites, the variance of LATEs across sites, and regressions of ITTs on explanatory variables.
+{cmd:multisite} wraps in four commands to estimate treatment-effect heterogeneity across sites in multi-site RCTs, and more generally in stratified RCTs. The four commands wrapped by {cmd:multisite} respectively estimate the variance of ITTs across sites, the variance of LATEs across sites, the regressions of ITTs on explanatory variables, and the sign of univariate regression coefficients from regressions of site-level LATEs on explanatory variables.
+
+{p 4 8}One just needs to install {cmd:multisite} and execute it once to install those four commands.
 
 {p 4 8}
 {cmd:multisite_varITT} computes the estimated variance of ITTs across sites in multi-site randomized trials.
@@ -42,6 +44,13 @@ multi-site randomized experiments with few units per site.
 
 {p 12 12}
 {help multisite_regITT}. 
+{p_end}
+
+{p 4 8}
+{cmd:multisite_regLATE} estimates the sign of univariate regression coefficients from regressions of site-level LATEs on site-level characteristics in multi-site randomized trials.
+
+{p 12 12}
+{help multisite_regLATE}. 
 {p_end}
 
 {title:References}

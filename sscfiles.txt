@@ -2971,6 +2971,7 @@ fmwww.bc.edu/repec/bocode/s/spxtivdfreg.sthlp
 fmwww.bc.edu/repec/bocode/s/sparl.ado
 fmwww.bc.edu/repec/bocode/s/spell.hlp
 fmwww.bc.edu/repec/bocode/s/splitit2.sthlp
+fmwww.bc.edu/repec/bocode/s/surveyspan.sthlp
 fmwww.bc.edu/repec/bocode/s/side_histogram.pkg
 fmwww.bc.edu/repec/bocode/s/simarwilson.sthlp
 fmwww.bc.edu/repec/bocode/s/spregcs04.ado
@@ -3551,6 +3552,7 @@ fmwww.bc.edu/repec/bocode/s/sencode.ado
 fmwww.bc.edu/repec/bocode/s/stregmat.ado
 fmwww.bc.edu/repec/bocode/s/symmetry.html
 fmwww.bc.edu/repec/bocode/s/stpm3.sthlp
+fmwww.bc.edu/repec/bocode/s/surveyspan.ado
 fmwww.bc.edu/repec/bocode/s/stsurvimpute.pkg
 fmwww.bc.edu/repec/bocode/s/spmstar2_lf.ado
 fmwww.bc.edu/repec/bocode/s/svylorenz.html
@@ -4498,6 +4500,7 @@ fmwww.bc.edu/repec/bocode/s/svmatf.html
 fmwww.bc.edu/repec/bocode/s/statplot.pkg
 fmwww.bc.edu/repec/bocode/s/sptobitmstardh.dlg
 fmwww.bc.edu/repec/bocode/s/spreg_estat.ado
+fmwww.bc.edu/repec/bocode/s/surveyspan.pkg
 fmwww.bc.edu/repec/bocode/s/spec_stand.html
 fmwww.bc.edu/repec/bocode/s/Siegel_Castellan_p140-141.dta
 fmwww.bc.edu/repec/bocode/s/stjm11.pkg
@@ -6913,6 +6916,7 @@ fmwww.bc.edu/repec/bocode/m/mpitb.ado
 fmwww.bc.edu/repec/bocode/m/metadata.hlp
 fmwww.bc.edu/repec/bocode/m/msq2ftsq.sthlp
 fmwww.bc.edu/repec/bocode/m/mkstrsn.ado
+fmwww.bc.edu/repec/bocode/m/multisite_reglate.sthlp
 fmwww.bc.edu/repec/bocode/m/mict_model_gap.ado
 fmwww.bc.edu/repec/bocode/m/mi_impute_from.sthlp
 fmwww.bc.edu/repec/bocode/m/mibmi.sthlp
@@ -6960,6 +6964,7 @@ fmwww.bc.edu/repec/bocode/m/marktouse.zip
 fmwww.bc.edu/repec/bocode/m/miset.hlp
 fmwww.bc.edu/repec/bocode/m/missing.html
 fmwww.bc.edu/repec/bocode/m/moremata10_source.html
+fmwww.bc.edu/repec/bocode/m/multisite_reglate.pkg
 fmwww.bc.edu/repec/bocode/m/minap.hlp
 fmwww.bc.edu/repec/bocode/m/metan.sthlp
 fmwww.bc.edu/repec/bocode/m/MonteCarloSimulation_Multishell_panel_client.do
@@ -8184,6 +8189,7 @@ fmwww.bc.edu/repec/bocode/m/metan_example_data.dta
 fmwww.bc.edu/repec/bocode/m/malmq2.pkg
 fmwww.bc.edu/repec/bocode/m/mrdum.pkg
 fmwww.bc.edu/repec/bocode/m/mict_model_terminal.sthlp
+fmwww.bc.edu/repec/bocode/m/multisite_reglate.ado
 fmwww.bc.edu/repec/bocode/m/mi_dom.ado
 fmwww.bc.edu/repec/bocode/m/mlboolean.pkg
 fmwww.bc.edu/repec/bocode/m/mtemore.pkg

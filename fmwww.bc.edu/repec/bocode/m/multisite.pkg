@@ -1,6 +1,6 @@
-d 'MULTISITE': module to install the three components of the multisite poackage 
+d 'MULTISITE': module to install the four components of the multisite poackage 
 d
-d   This command installs the three components of the multisite
+d   This command installs the four components of the multisite
 d poackage. 
 d
 d KW: regression
@@ -9,7 +9,7 @@ d KW: ITT
 d
 d Requires: Stata version 12
 d
-d Distribution-Date: 20250221
+d Distribution-Date: 20250228
 d
 d Author: Clement de Chaisemartin,  Sciences Po
 d Support: email clementdechaisemartin@@gmail.com

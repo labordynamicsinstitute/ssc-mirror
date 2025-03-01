@@ -1,0 +1,26 @@
+d 'SURVEYSPAN': module to analyze timestamp metadata from field surveys to monitor data quality.
+d
+d  surveyspan is an r-class command that analyzes timestamp
+d metadata from field surveys to monitor data quality. As its core
+d function, it calculates survey durations and flags potential
+d problems like rushed or after-hours interviews. It can also
+d generate an Excel workbook containing comprehensive statistics by
+d group, including mean durations, excluded observations, and
+d quality indicators. 
+d
+d KW: suevey data
+d KW: data management
+d KW: timestamps
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20250228
+d
+d Author:   Kabira Namit,  World Bank
+d Support: email   knamit@@worldbank.org
+d
+d Author:   Ketki Samel,   Centre for Effective Governance of Indian States
+d Support: email    ketkisamel1@@gmail.com
+d
+f surveyspan.ado
+f surveyspan.sthlp

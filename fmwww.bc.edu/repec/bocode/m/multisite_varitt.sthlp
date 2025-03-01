@@ -6,8 +6,8 @@
 {title:Title}
 
 {p 4 8}
-{cmd:multisite_varITT} {hline 2} Estimates and conducts inference on the variance of ITTs across sites in multi-site randomized trials
-studied in de Chaisemartin & Deeb (2024), and provides the ratio of the standard deviation of ITTs across sites to the average ITT. 
+{cmd:multisite_varITT} {hline 2} Estimates and conducts inference on the variance of ITTs across sites in multi-site randomized trials, 
+and provides the ratio of the standard deviation of ITTs across sites to the average ITT, see Section 4.1 of de Chaisemartin & Deeb (2024). 
 The command can also be used to estimate the variance of ITT effects across strata in stratified RCTs.
 {p_end}
 

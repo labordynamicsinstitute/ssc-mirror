@@ -258,8 +258,9 @@ p multiline module for multiple panel line plots
 p multimport module to import multiple non-Stata datafiles into memory, appending them automatically
 p multipurt module to run 1st and 2nd generation panel unit root tests for multiple variables and lags
 p multishell module to allot do files and variations of loops across parallel instances of Windows Stata and computers efficiently
-p multisite module to install the three components of the multisite poackage 
+p multisite module to install the four components of the multisite poackage 
 p multisite_regitt module to compute the coefficients from a regression of site-level ITTs on site-level characteristics in multi-site randomized trials
+p multisite_reglate module to Estimates the sign of univariate regression coefficients from regressions of site-level LATEs on site-level characteristics in multi-site randomized trials studied in de Chaisemartin & Deeb (2024)
 p multisite_varitt module to estimate and conduct inference on the variance of ITTs across sites in multi-site randomized trials
 p multisite_varlate module to estimate and conduct inference on the variance of LATEs across sites in multi-site randomized trials
 p multistate module to perform multi-state survival analysis

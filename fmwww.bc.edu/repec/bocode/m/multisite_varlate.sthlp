@@ -6,8 +6,7 @@
 {title:Title}
 
 {p 4 8}
-{cmd:multisite_varLATE} {hline 2} Estimates and conducts inference on the variance of LATEs across sites in multi-site randomized trials
-studied in de Chaisemartin & Deeb (2024), and provides the ratio of the standard deviation of LATEs across sites to the average LATE.
+{cmd:multisite_varLATE} {hline 2} Estimates and conducts inference on the variance of LATEs across sites in multi-site randomized trials, and provides the ratio of the standard deviation of LATEs across sites to the average LATE, see Section 5.2 of de Chaisemartin & Deeb (2024).
 The command can also be used to estimate the variance of LATEs across strata in stratified RCTs.
 {p_end}
 
@@ -54,7 +53,7 @@ Estimating the variance of LATEs across sites requires additional assumptions, p
 {it:The results in the paper allow for weights w_s, what w_s does the command use?}
 {p_end}
 
-{p 4 4} The command automatically weights each site by its sample size: w_s=n_s/n
+{p 4 4} The command uses w_s=n_s/n, the proportion that site s accounts for in the population. Then, each site is weighted by the product of w_s and its first-stage effect, thus weighting each site in proportion to its number of compliers.
 {p_end}
 
 {p 4 8}
@@ -62,7 +61,7 @@ Estimating the variance of LATEs across sites requires additional assumptions, p
 {p_end}
 
 {p 4 4}
-[aweight] allows to use weights to estimate the ITT effects in each site, and the variance of those effects. [aweight] does not affect w_s. 
+[aweight] allows to use weights to estimate the ITT and FS effects in each site, and the variance of those effects. [aweight] does not affect w_s. 
 {p_end}
 
 {marker references}{...}

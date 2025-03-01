@@ -2,7 +2,7 @@ cap program drop multisite
 program define multisite
 version 12.0
 
-    local cmd_list multisite_varITT multisite_varLATE multisite_regITT
+    local cmd_list multisite_varITT multisite_varLATE multisite_regITT multisite_regLATE
 	
 	* Install all of the three commands
 	foreach p in `cmd_list' {            

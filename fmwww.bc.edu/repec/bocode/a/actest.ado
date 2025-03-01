@@ -754,7 +754,7 @@ void minbw95 ()
 	real rowvector w
 	real scalar bw95
 	pv=st_matrix(st_local("m"))[.,7]
-	w=mm_which(pv[.]:>0.05)
+	w=selectindex(pv[.]:>0.05)
 	if (rows(w)==0){
 		bw95=0
 	}

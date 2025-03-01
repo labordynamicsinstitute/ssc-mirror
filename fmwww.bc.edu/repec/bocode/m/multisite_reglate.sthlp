@@ -7,18 +7,19 @@
 {title:Title}
 
 {p 4 8}
-{cmd:multisite_regITT} {hline 2} This command computes the coefficients from a regression of site-level ITTs on site-level characteristics in multi-site randomized trials, the standard errors of those coefficients, and the regression's R-squared, see Section 4.2 of de Chaisemartin & Deeb (2024). 
-The command can also be applied to stratified RCTs, to compute the coefficients from a regression of strata-level ITTs on strata-level characteristics. 
+{cmd:multisite_regLATE} {hline 2} This command estimates the sign of coefficients from univariate regressions of site-level LATEs on site-level characteristics in multi-site randomized trials,
+see Section 5.1 of de Chaisemartin & Deeb (2024). 
+The command can also be applied to stratified RCTs, to compute the coefficients from a regression of strata-level LATEs on strata-level characteristics. 
 {p_end}
 
 {marker syntax}{...}
 {title:Syntax}
 
-{p 4 8}{cmd:multisite_regITT outcome instrument site} [if] [aweight] [{cmd:,}
+{p 4 8}{cmd:multisite_regLATE outcome treatment instrument site} [if] [aweight] [{cmd:,}
 {cmd:controls(}{it:varlist numeric}{cmd:)}
 {cmd:mediators(}{it:varlist numeric}{cmd:)}
 {cmd:y0}
-{cmd:fs(}{it:treatment numeric}{cmd:)}
+{cmd:fs}
 ]
 {p_end}
 
@@ -29,6 +30,10 @@ The command can also be applied to stratified RCTs, to compute the coefficients 
 
 {p 4 8}
 {cmd:outcome} is the main outcome variable of interest.
+{p_end}
+
+{p 4 8}
+{cmd:treatment} is an indicator variable for whether a unit is treated.
 {p_end}
 
 {p 4 8}
@@ -43,21 +48,20 @@ The command can also be applied to stratified RCTs, to compute the coefficients 
 {title:Options}
 
 {p 4 8}
-{cmd:controls(}{it:varlist}{cmd:)} gives the list of site-level characteristics {bf:that are observed and do not need to be estimated} to be included in the regression.
+{cmd:controls(}{it:varlist}{cmd:)} gives the list of site-level characteristics {bf:that are observed and do not need to be estimated} whose coefficients' sign has to be estimated.
 {p_end}
 
 {p 4 8}
-{cmd:mediators(}{it:varlist}{cmd:)} gives the list of mediators to be included in the regression. Mediators are variables that could be affected by the treatment, and that effect could in turn explain
+{cmd:mediators(}{it:varlist}{cmd:)} gives the list of mediators whose coefficients' sign has to be estimated. Mediators are variables that could be affected by the treatment, and that effect could in turn explain
 the treatment's effect on the main outcome variable. Therefore, mediators are other outcome variables, {bf:whose site-level ITTs need to be estimaded}. 
 {p_end}
 
 {p 4 8}
-{cmd: y0} indicates that the site's average outcome without a treatment offer should be included in the regression. This can be used to assess if ITT effects are lower or larger in sites with a high y0, to assess if treatment offers reduce or increase
-inequalities across sites. 
+{cmd: y0} indicates that the sign of the coefficient on sites' average outcome without a treatment offer should be estimated. This can be used to assess if LATEs are lower or larger in sites with a high y0.
 {p_end}
 
 {p 4 8}
-{cmd: fs(}{it:treatment}{cmd:)} indicates that the site's first-stage effect should be included in the regression. {it:treatment} is an indicator variable for whether a unit is treated.
+{cmd: fs} indicates that the sign of the coefficient on sites' first-stage effect should be estimated. This can be used to assess if sites with the largest treatment take up rate also have the largest LATEs, which would be consistent with a Roy model.
 {p_end}
 
 {marker FAQ}{...}
@@ -74,7 +78,7 @@ inequalities across sites.
 {it:The results in the paper allow for weights w_s, what w_s does the command use?}
 {p_end}
 
-{p 4 4} The command automatically weights each site by its sample size: w_s=n_s/n
+{p 4 4} The command uses w_s=n_s/n, the proportion that site s accounts for in the population. Then, each site is weighted by the product of w_s and its first-stage effect, thus weighting each site in proportion to its number of compliers.
 {p_end}
 
 {p 4 8}
@@ -82,9 +86,8 @@ inequalities across sites.
 {p_end}
 
 {p 4 4}
-[aweight] allows to use weights to estimate the ITT effects in each site, and the variance of those effects. [aweight] does not affect w_s. 
+[aweight] allows to use weights to estimate the ITT and FS effects in each site, and the variance of those effects. [aweight] does not affect w_s. 
 {p_end}
-
 
 {marker references}{...}
 {title:References}

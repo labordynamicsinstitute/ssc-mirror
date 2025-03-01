@@ -1,0 +1,28 @@
+d 'MULTISITE_REGLATE': module to Estimates the sign of univariate regression coefficients from regressions of site-level LATEs on site-level characteristics in multi-site randomized trials studied in de Chaisemartin & Deeb (2024)
+d
+d  This command estimates the sign of coefficients from univariate
+d regressions of site-level LATEs on site-level characteristics in
+d multi-site randomized trials, see Section 5.1 of de Chaisemartin
+d & Deeb (2024).  The command can also be applied to stratified
+d RCTs, to compute the coefficients from a regression of
+d strata-level LATEs on strata-level characteristics. 
+d
+d KW: regression
+d KW: randomized trials
+d KW: LATE
+d
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 20250228
+d
+d Author: Clement de Chaisemartin,  Sciences Po
+d Support: email clementdechaisemartin@@gmail.com
+d
+d Author: Antoine Deeb, World Bank
+d Support: email adeeb1@@worldbank.org
+d
+d Author: Bingxue Li,  Sciences Po
+d Support: email bingxue.li@@sciencespo.fr
+d
+f multisite_reglate.ado
+f multisite_reglate.sthlp
