@@ -13,7 +13,7 @@
 {title:Title}
 
 {phang} 
-{bf:pkonfound} {hline 2} This command calculates sensitivity analysis for published studies. This command calculates (1) how much bias there must be in an estimate to invalidate/sustain an inference; (2) the impact of an omitted variable necessary to invalidate/sustain an inference for a regression coefficient.
+{bf:pkonfound} {hline 2} This command calculates sensitivity analysis for published studies. This command calculates (1) how much bias there must be in an estimate to nullify/sustain an inference; (2) the impact of an omitted variable necessary to nullify/sustain an inference for a regression coefficient.
 
 
 {marker syntax}{...}
@@ -120,6 +120,14 @@ ITCV conditioning on the observed covariates
 Unconditional ITCV
 
 {phang}
+{opt benchmark_corr_product}
+Benchmark correlation product representing the product RxZ × RyZ, capturing the association strength of all observed covariates Z with the predictor X and the outcome Y.
+
+{phang}
+{opt itcv_ratio_to_benchmark}
+ITCV ratio to benchmark. The ratio of the required correlation product to the benchmark correlation product.
+
+{phang}
 {opt beta_threshold}
 Threshold value for estimated effect
 
@@ -138,7 +146,6 @@ Robustness of Inference to Replacement (RIR)
 {phang}
 {opt RIR_perc}
 RIR as % of total sample (for linear regression) 
-
 
 
 {phang}
@@ -209,7 +216,7 @@ To view these stored results, use the {cmd:return list} command immediately afte
 {opt conditional_rir_pi_fixed_y} The proportional impact of replacing cases with a fixed value on the inference, offering a ratio that represents the sensitivity of the inference to such replacements.
 
 {phang}
-{opt conditional_rir_fixed_y} The conditional replacement inference risk (RIR) when replacement cases have a fixed value, quantifying the number of cases that must be replaced to invalidate the statistical inference.
+{opt conditional_rir_fixed_y} The conditional replacement inference risk (RIR) when replacement cases have a fixed value, quantifying the number of cases that must be replaced to nullify the statistical inference.
 
 {phang}
 {opt conditional_rir_pi_null} The proportional impact of replacements assuming a null distribution, providing insight into the robustness of the inference when adding null-effect cases.
@@ -228,7 +235,6 @@ To view these stored results, use the {cmd:return list} command immediately afte
 
 {phang}
 {opt cor_exact} Correlation matrix implied by delta_exact
-
 
 
 {phang}
@@ -340,10 +346,10 @@ For user's logistic regression model, this command calculates Fragility – the 
 		to change to one-tail use {cmd:onetail(1)}			 
 			 
 {phang}
-{opt switch_trm(#)} Whether to switch the treatment and control cases; defaults to True {cmd:replace(1)}; applicable only when {cmd:model_type(1)}
+{opt switch_trm(#)} Whether to switch the treatment and control cases; defaults to True {cmd:switch_trm(1)}.
 
 {phang}
-{opt replace(#)} Whether using entire sample or the control group to calculate the base rate; the default value is control {cmd:replace(0)}, to change to entire use {cmd:replace(1)}
+{opt replace(#)} Whether using entire sample or the control group to calculate the base rate; the default value is control {cmd:replace(1)}, to change to entire use {cmd:replace(0)}
 
 {syntab: {ul:Values}}
 
@@ -416,10 +422,10 @@ This command calculates indices such as the Fragility and the Robustness of Infe
              To change the significance level to .10 use {cmd:sig(.1)}
 
 {phang}
-{opt switch_trm(#)} Whether to switch the treatment and control cases; defaults to True {cmd:replace(1)}; applicable only when {cmd:model_type(1)}
+{opt switch_trm(#)} Whether to switch the treatment and control cases; defaults to True {cmd:switch_trm(1)}.
 
 {phang}
-{opt replace(#)} Whether using entire sample or the control group to calculate the base rate; the default value is control {cmd:replace(0)}, to change to entire use {cmd:replace(1)}
+{opt replace(#)} Whether using entire sample or the control group to calculate the base rate; the default value is control {cmd:replace(1)}, to change to entire use {cmd:replace(0)}
 
 {phang}
 {opt test1(#)} Whether using Fisher's Exact Test or a chi-square test; the default value is Fisher's Exact Test {cmd:test1(0)}; to change to chi-square test use {cmd:test1(1)}
@@ -457,7 +463,7 @@ The 2 by 2 table after replacement and switching
 {title:Description}
 
 {pstd}
-{cmd:pkonfound} this command calculates (1) how much bias there must be in an estimate to invalidate/sustain an inference. The bias necessary to invalidate/sustain an inference is interpreted in terms of sample replacement; (2) the impact of an omitted variable necessary to invalidate/sustain an inference for a regression coefficient. It also assesses how strong an omitted variable has to be correlated with the outcome and the predictor of interest to invalidate/sustain the inference.
+{cmd:pkonfound} this command calculates (1) how much bias there must be in an estimate to nullify/sustain an inference. The bias necessary to nullify/sustain an inference is interpreted in terms of sample replacement; (2) the impact of an omitted variable necessary to nullify/sustain an inference for a regression coefficient. It also assesses how strong an omitted variable has to be correlated with the outcome and the predictor of interest to nullify/sustain the inference.
 
 
 {marker examples}{...}

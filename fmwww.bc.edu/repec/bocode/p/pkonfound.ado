@@ -1,3 +1,11 @@
+* This version contains small patches for resolving unconditional ITCV sign error and default `replace' setting.
+* for help file
+* this part "replace(#) Whether using entire sample or the control group to calculate the base rate; the default value is control replace(0), to change to entire use replace(1)"
+* should be changed as "replace(#) Whether using entire sample or the control group to calculate the base rate; the default value is control replace(1), to change to entire use replace(0)"
+
+
+* made by JC 111924 / edited by JC 022825
+
 // #1
 capture program drop isinvalidate
 program define isinvalidate, rclass
@@ -2561,6 +2569,134 @@ if _rc == 0 {
 end
 
 
+
+capture program drop cal_max_rcvz
+program define cal_max_rcvz, rclass
+    syntax anything
+
+    local fr2max    : word 1 of `anything'
+    local est_eff   : word 2 of `anything'
+    local sdx       : word 3 of `anything'
+    local sdy       : word 4 of `anything'
+    local std_err   : word 5 of `anything'
+    local df        : word 6 of `anything'
+    local eff_thr   : word 7 of `anything'
+    local var_x     : word 8 of `anything'
+    local var_y     : word 9 of `anything'
+    local r2        : word 10 of `anything'
+    local RX_Z      : word 11 of `anything'
+	
+
+    local r2xz = 1 - ((`var_y' * (1 - `r2'))/(`var_x' * `df' * (`std_err'^2)))
+    if (`r2xz' <= 0) {
+        di as error "Error: r2xz <= 0! 请检查 std_err, r2 或 df 的输入。"
+        exit 198
+    }
+    local rxz = sqrt(`r2xz')
+    return scalar rxz = `rxz'
+	display "rxz "= `rxz'
+    
+    * -------------------------------
+    * 标准化系数计算
+    * -------------------------------
+    local beta_thr = `eff_thr' * `sdx' / `sdy'
+    return scalar beta_thr = `beta_thr'
+    
+    local se = `std_err' * `sdx' / `sdy'
+    return scalar se = `se'
+    
+    local beta = `est_eff' * `sdx' / `sdy'
+    return scalar beta = `beta'
+    
+    local tyxgz = `beta' / `se'
+    return scalar tyxgz = `tyxgz'
+    
+    local ryxgz = `tyxgz' / sqrt(`df' - 6  + (`tyxgz'^2))
+    return scalar ryxgz = `ryxgz'
+	display "ryxgz="`ryxgz'
+    
+    local sdxgz = `sdx' * sqrt(1 - `rxz'^2)
+    return scalar sdxgz = `sdxgz'
+	display "sdxgz="`sdxgz'
+    
+    * -------------------------------
+    * 计算 ryz（利用 ryxgz 和 r2 的关系）
+    * -------------------------------
+    local r2yz = ((`ryxgz'^2) - `r2') / ((`ryxgz'^2) - 1)
+    if (`r2yz' < 0) {
+        di as error "Error: r2yz < 0! 请检查输入值。"
+        exit 198
+    }
+    local ryz = sqrt(`r2yz')
+    return scalar ryz = `ryz'
+    display "ryz="`ryz'
+	
+    local sdygz = `sdy' * sqrt(1 - `ryz'^2)
+    return scalar sdygz = `sdygz'
+    display "sdygz="`sdygz'
+	
+    * -------------------------------
+    * 计算中间量 ryxcvgz_exact_sq
+    * 公式： (fr2max - ryz^2) / (1 - ryz^2)
+    * -------------------------------
+    local ryxcvgz_exact_sq = (`fr2max' - `ryz'^2) / (1 - `ryz'^2)
+    if (`ryxcvgz_exact_sq' < 0) {
+        di as error "Error: ryxcvgz_exact_sq < 0!"
+        exit 198
+    }
+    return scalar ryxcvgz_exact_sq = `ryxcvgz_exact_sq'
+    display "ryxcvgz_exact_sq="`ryxcvgz_exact_sq'
+	
+    * -------------------------------
+    * 计算 rxcvgz_exact（对应 R 中 rxcvGz_exact）
+    * 公式：
+    *   rxcvgz_exact = [ryxgz - (sdxgz/sdygz)*beta_thr] / 
+    *                  sqrt( (sdxgz^2/sdygz^2)*beta_thr^2 - 2*ryxgz*(sdxgz/sdygz)*beta_thr + ryxcvgz_exact_sq )
+    * -------------------------------
+    local rxcvgz_exact = ( `ryxgz' - (`sdxgz' / `sdygz') * `beta_thr' ) / ///
+        sqrt( (`sdxgz'^2 / `sdygz'^2) * `beta_thr'^2 - 2 * `ryxgz' * (`sdxgz' / `sdygz') * `beta_thr' + `ryxcvgz_exact_sq' )
+    if (abs(`rxcvgz_exact') > 1) {
+        di as error "Error: rxcvgz_exact 超出 [-1, 1] 范围！"
+        exit 198
+    }
+    return scalar rxcvgz_exact = `rxcvgz_exact'
+    display "rxcvgz_exact="`rxcvgz_exact'
+	
+    * -------------------------------
+    * 根据 R 代码，首先计算 delta_exact
+    * 其中先计算 rxcv_exact = sqrt(1 - rxz^2)*rxcvgz_exact，
+    * 然后 delta_exact = rxcv_exact / rxz
+    * -------------------------------
+    local rxcv_exact = sqrt(1 - `rxz'^2) * `rxcvgz_exact'
+    local delta_exact = `rxcv_exact' / `rxz'
+	return scalar rxcv_exact = `rxcv_exact'
+	return scalar delta_exact = `delta_exact'
+    display "rxcv_exact="`rxcv_exact'
+	display "delta_exact="`delta_exact'
+    * -------------------------------
+    * 根据 delta_exact 判断
+    * 如果 delta_exact < 1，则 max_rCVZ 返回缺失值（在 Stata 中用 . 表示）
+    * 否则按公式计算：
+    *   max_rCVZ = [2 * rxcvgz_exact * rxz * sqrt(1 - rxz^2)] / abs(rxcvgz_exact^2 * rxz^2 - rxcvgz_exact^2 - rxz^2)
+    * -------------------------------
+    if (`delta_exact' < 1) {
+        return scalar max_rcvz = .
+        exit 0
+    }
+    else {
+        local num = 2 * `rxcvgz_exact' * `RX_Z' * sqrt(1 - `RX_Z'^2)
+        local denom = abs((`rxcvgz_exact'^2 * `RX_Z'^2) - `rxcvgz_exact'^2 - `RX_Z'^2)
+        if (`denom' == 0) {
+            di as error "Error: denominator is zero!"
+            exit 198
+        }
+        local max_rcvz = `num' / `denom'
+        return scalar max_rcvz = `max_rcvz'
+    }
+    display "max_rcvz="`max_rcvz'
+end
+
+
 // Main Function
 * pkonfound_v2 (now its most updated pkonfound) with 3 types
 capture program drop pkonfound
@@ -2570,7 +2706,7 @@ version 16.0
 
 // please run fisher_p.ado, fisher_oddsratio.ado, chisqp.ado, chisq_value.ado, getswitch_fisher.ado (fisher_oddsratio.ado; fisher_p.ado; gettkfnl.ado; taylorexp.ado), getswitch_chisq.ado prior to run this file with model_type == 2!!!
 
-syntax anything, [if] [in] [sig(real 0.05) nu(real 0) onetail(real 0) model_type(real 0) switch_trm(real 1) replace(real 0) rep_0(real 0) test1(real 0) far_bound(real 0) sdx(real -98765432123456789.987654321) sdy(real -98765432123456789.987654321) rs(real -98765432123456789.987654321) eff_thr(real -98765432123456789.987654321) fr2max_multiplier(real 1.3) fr2max(real 0) alpha(real 0.05) tails(integer 2) indx(str) ]
+syntax anything, [if] [in] [sig(real 0.05) nu(real 0) onetail(real 0) model_type(real 0) switch_trm(real 1) replace(real 1) rep_0(real 0) test1(real 0) far_bound(real 0) sdx(real -98765432123456789.987654321) sdy(real -98765432123456789.987654321) rs(real -98765432123456789.987654321) eff_thr(real -98765432123456789.987654321) fr2max_multiplier(real 1.3) fr2max(real 0) alpha(real 0.05) tails(integer 2) indx(str) ]
 
 // replace: 0 = entire //1 = control
 // switch_trm: default = True
@@ -2912,6 +3048,15 @@ if `model_type'== 0 {
     local r_conn = string(sqrt(abs(`itcv')),"%6.3f")
     local nr_conn = -1 * `r_conn'
 	
+	* updated 240112 JC0
+	if ((`sdx' != `NA') & (`sdy' != `NA') & (`rs' != `NA') & (`n_covariates' > 0)) {
+		
+		local benchmark_corr_product = `r2xz' * `r2yz' 
+		
+		local itcv_ratio_to_benchmark = abs((`uncond_rxcv' * `uncond_rycv') / `benchmark_corr_product') 
+	}
+	*
+
 
 	
     * III. for test_cop
@@ -3122,6 +3267,9 @@ if `model_type'== 0 {
 	//return scalar rxcv_exactt = `rxcv_exact'
 	//return scalar delta_exact = `delta_exact'
 
+	quietly cal_max_rcvz `fr2max' `est_eff' `sdx' `sdy' `std_err' `df' `eff_thr' `var_x' `var_y' `rs' `rxz'
+	local max_rcvz = `r(max_rcvz)'
+
 	* calculate critical t based on the sign of the estimated effect
 	local alpha_tails = `alpha' / `tails'
 	if (`est_eff' < 0) {
@@ -3328,17 +3476,16 @@ if `model_type'== 0 {
            (line coef_x modellabelNum if cat == "exact", lcolor(blue)) ///
            (line coef_x modellabelNum if cat == "star", lcolor(blue) lpattern(dash)) ///
            (scatter r2r modellabelNum if cat == "exact", mcolor(green) msymbol(S) yaxis(2)) ///
-           (scatter r2r modellabelNum if cat == "star", mcolor(green) msymbol(S) yaxis(2)) ///
-           (line r2r modellabelNum if cat == "exact", lcolor(green) yaxis(2)) ///
-           (line r2r modellabelNum if cat == "star", lcolor(green) lpattern(dash) yaxis(2)), ///
+           (line r2r modellabelNum if cat == "exact", lcolor(green) yaxis(2)), ///
 	       yscale(axis(1)) ///
            yscale(axis(2) range(0 `max_r2_scaled')) ///
            ytitle("Coefficient (X)", axis(1)) ///
 	       ytitle("Scaled R2", axis(2)) ///
            xtitle("Model Label") ///
            xlabel(1 "Baseline(M1)" 2 "Intermediate(M2)" 3 "Final(M3)", axis(1)) ///
-           legend(order(1 "Exact coef_x" 2 "Star coef_x" 3 "Exact R2" 4 "Star R2"))
-	}
+		   legend(order(1 "Exact coef_x" 2 "Star coef_x" 6 "Exact R2"))
+			  
+			  }
 	
 	
     * IV. for test_pse
@@ -3491,26 +3638,27 @@ if `model_type'== 0 {
 			if ((`sdx'!=`NA') & (`sdy'!=`NA') & (`rs'!=`NA') & (`n_covariates' != 0)) {
 			dis "Unconditional ITCV:"
 			dis ""
-			dis "The minimum impact of an omitted variable to invalidate the inference for a null hypothesis"
-			dis "of an effect of nu (`nu') is based on a correlation of " string(round(`uncond_rycv', 0.001), "%9.3f") " with the outcome and " string(round(`uncond_rxcv', 0.001), "%9.3f") " with"
-			dis "the predictor of interest (BEFORE conditioning on observed covariates; signs are interchangeable)."
-			dis "This is based on a threshold effect of " string(round(`critical_r', 0.001), "%9.3f") " for statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
+			dis "The minimum impact of an omitted variable to nullify the inference for a null hypothesis"
+			dis "of an effect of `nu' (nu) is based on a correlation of " string(round(`uncond_rycv', 0.001), "%9.3f") " with the outcome and " string(round(`uncond_rxcv', 0.001), "%9.3f") " with"
+			dis "the predictor of interest (BEFORE conditioning on observed covariates; signs are interchangeable"
+			dis "if they are different). This is based on a threshold effect of " string(round(`critical_r', 0.001), "%9.3f") " for statistical significance"
+			dis "(alpha = " string(round(`sig', 0.001), "%9.3f") ")."
 			dis ""
 			dis "Correspondingly the UNCONDITIONAL impact of an omitted variable (as defined in Frank 2000) must be"
-			dis string(round(`uncond_rxcv', 0.001), "%9.3f") " X " string(round(`uncond_rycv', 0.001), "%9.3f") " = " string(round(`uncond_rxcv' * `uncond_rycv', 0.001), "%9.3f") " to invalidate the inference for a null hypothesis of an effect of nu (`nu')."
+			dis string(round(`uncond_rxcv', 0.001), "%9.3f") " X " string(round(`uncond_rycv', 0.001), "%9.3f") " = " string(round(`uncond_rxcv' * `uncond_rycv', 0.001), "%9.3f") " to nullify the inference for a null hypothesis of an effect of `nu' (nu)."
 			dis ""
 			dis "Conditional ITCV:"
 			dis ""
 			}
 			
-			dis "The minimum impact of an omitted variable to invalidate the inference for a null hypothesis"
-			dis "of an effect of nu (`nu') is based on a correlation of " string(round(`r_conn', 0.001), "%9.3f") " with the outcome and " string(round(`r_conn', 0.001), "%9.3f") " with"
+			dis "The minimum impact of an omitted variable to nullify the inference for a null hypothesis"
+			dis "of an effect of `nu' (nu) is based on a correlation of " string(round(`rycvGz', 0.001), "%9.3f") " with the outcome and " string(round(`rxcvGz', 0.001), "%9.3f") " with"
 			dis "the predictor of interest (conditioning on all observed covariates in the model; signs are"
-			dis "interchangeable). This is based on a threshold effect of " string(round(`critical_r', 0.001), "%9.3f") " for statistical significance"
-			dis "(alpha = " string(round(`sig', 0.001), "%9.3f") ")."
+			dis "interchangeable if they are different). This is based on a threshold effect of " string(round(`critical_r', 0.001), "%9.3f") " for"
+			dis "statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
 			dis ""
 			dis "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be"
-			dis string(round(`r_conn', 0.001), "%9.3f") " X " string(round(`r_conn', 0.001), "%9.3f") " = " string(round(`r_conn'^2, 0.001), "%9.3f") " to invalidate the inference for a null hypothesis of an effect of nu (`nu')."
+			dis string(round(`rycvGz', 0.001), "%9.3f") " X " string(round(`rxcvGz', 0.001), "%9.3f") " = " string(round(`rycvGz'*`rxcvGz', 0.001), "%9.3f") " to nullify the inference for a null hypothesis of an effect of `nu' (nu)."
     
     } 
 	else if abs(`obs_r') > abs(`critical_r') & `obs_r' < 0 {
@@ -3518,27 +3666,27 @@ if `model_type'== 0 {
 
 			dis "Unconditional ITCV:"
 			dis ""
-			dis "The minimum (in absolute value) impact of an omitted variable to invalidate the inference"
-			dis "for a null hypothesis of an effect of nu (`nu') is based on a correlation of " string(round(`uncond_rycv', 0.001), "%9.3f") " with the"
+			dis "The minimum (in absolute value) impact of an omitted variable to nullify the inference"
+			dis "for a null hypothesis of an effect of `nu' (nu) is based on a correlation of " string(round(`uncond_rycv', 0.001), "%9.3f") " with the"
 			dis "outcome and " string(round(`uncond_rxcv', 0.001), "%9.3f") " with the predictor of interest (BEFORE conditioning on observed covariates;"
-			dis "signs are interchangeable). This is based on a threshold effect of " string(round(`critical_r', 0.001), "%9.3f") " for statistical"
-			dis "significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
+			dis "signs are interchangeable if they are different). This is based on a threshold effect of " string(round(`critical_r', 0.001), "%9.3f")
+			dis "for statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
 			dis ""
 			dis "Correspondingly the UNCONDITIONAL impact of an omitted variable (as defined in Frank 2000) must be"
-			dis string(round(`uncond_rxcv', 0.001), "%9.3f") " X " string(round(`uncond_rycv', 0.001), "%9.3f") " = " string(round(`uncond_rxcv' * `uncond_rycv', 0.001), "%9.3f") " to invalidate the inference for a null hypothesis of an effect of nu (`nu')."
+			dis string(round(`uncond_rxcv', 0.001), "%9.3f") " X " string(round(`uncond_rycv', 0.001), "%9.3f") " = " string(round(`uncond_rxcv' * `uncond_rycv', 0.001), "%9.3f") " to nullify the inference for a null hypothesis of an effect of `nu' (nu)."
 			dis ""
 			dis "Conditional ITCV:"
 			dis ""
 			}
 		
-        dis "The minimum (in absolute value) impact of an omitted variable to invalidate the inference"
-		dis "for a null hypothesis of an effect of nu (`nu') is based on a correlation of " string(round(-`r_conn', 0.001), "%9.3f") " with the"
-		dis "outcome and " string(round(`r_conn', 0.001), "%9.3f") " with the predictor of interest (conditioning on all observed covariates"
-		dis "in the model; signs are interchangeable). This is based on a threshold effect of " string(round(`critical_r', 0.001), "%9.3f")
-		dis "for statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
+        dis "The minimum (in absolute value) impact of an omitted variable to nullify the inference"
+		dis "for a null hypothesis of an effect of `nu' (nu) is based on a correlation of " string(round(`rycvGz', 0.001), "%9.3f") " with the"
+		dis "outcome and " string(round(`rxcvGz', 0.001), "%9.3f") " with the predictor of interest (conditioning on all observed covariates"
+		dis "in the model; signs are interchangeable if they are different). This is based on a threshold"
+		dis "effect of " string(round(`critical_r', 0.001), "%9.3f") " for statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
 		dis ""
 		dis "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be"
-		dis string(round(-`r_conn', 0.001), "%9.3f") " X " string(round(`r_conn', 0.001), "%9.3f") " = " string(round(-`r_conn'^2, 0.001), "%9.3f") " to invalidate the inference for a null hypothesis of an effect of nu (`nu')."
+		dis string(round(`rycvGz', 0.001), "%9.3f") " X " string(round(`rxcvGz', 0.001), "%9.3f") " = " string(round(`rycvGz'*`rxcvGz', 0.001), "%9.3f") " to nullify the inference for a null hypothesis of an effect of `nu' (nu)."
     
     } 
 	else if abs(`obs_r') < abs(`critical_r') & `obs_r' >= 0 {
@@ -3547,26 +3695,26 @@ if `model_type'== 0 {
 			dis "Unconditional ITCV:"
 			dis ""
 			dis "The maximum impact (in absolute value) of an omitted variable to sustain an inference"
-			dis "for a null hypothesis of an effect of nu (`nu') is based on a correlation of " string(round(`uncond_rycv', 0.001), "%9.3f")
+			dis "for a null hypothesis of an effect of `nu' (nu) is based on a correlation of " string(round(`uncond_rycv', 0.001), "%9.3f")
 			dis "with the outcome and " string(round(`uncond_rxcv', 0.001), "%9.3f") " with the predictor of interest (BEFORE conditioning on"
-			dis "observed covariates; signs are interchangeable). This is based on a threshold effect"
-			dis "of " string(round(`critical_r', 0.001), "%9.3f") " for statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
+			dis "observed covariates; signs are interchangeable if they are different). This is based"
+			dis "on a threshold effect of " string(round(`critical_r', 0.001), "%9.3f") " for statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
 			dis ""
 			dis "Correspondingly the UNCONDITIONAL impact of an omitted variable (as defined in Frank 2000) must be"
-			dis string(round(`uncond_rxcv', 0.001), "%9.3f") " X " string(round(`uncond_rycv', 0.001), "%9.3f") " = " string(round(`uncond_rxcv' * `uncond_rycv', 0.001), "%9.3f") " to sustain an inference for a null hypothesis of an effect of nu (`nu')."
+			dis string(round(`uncond_rxcv', 0.001), "%9.3f") " X " string(round(`uncond_rycv', 0.001), "%9.3f") " = " string(round(`uncond_rxcv' * `uncond_rycv', 0.001), "%9.3f") " to sustain an inference for a null hypothesis of an effect of `nu' (nu)."
 			dis ""
 			dis "Conditional ITCV:"
 			dis ""
 			}
 			
         dis "The maximum impact (in absolute value) of an omitted variable to sustain an inference"
-		dis "for a null hypothesis of an effect of nu (`nu') is based on a correlation of " string(round(-`r_conn', 0.001), "%9.3f") " with"
-		dis "the outcome and " string(round(`r_conn', 0.001), "%9.3f") " with the predictor of interest (conditioning on all observed"
-		dis "covariates in the model; signs are interchangeable). This is based on a threshold effect"
-		dis "of " string(round(`beta_threshold', 0.001), "%9.3f") " for statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
+		dis "for a null hypothesis of an effect of `nu' (nu) is based on a correlation of " string(round(`rycvGz', 0.001), "%9.3f") " with"
+		dis "the outcome and " string(round(`rxcvGz', 0.001), "%9.3f") " with the predictor of interest (conditioning on all observed"
+		dis "covariates in the model; signs are interchangeable if they are different). This is"
+		dis "based on a threshold effect of " string(round(`beta_threshold', 0.001), "%9.3f") " for statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
 		dis ""
 		dis "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be"
-		dis string(round(-`r_conn', 0.001), "%9.3f") " X " string(round(`r_conn', 0.001), "%9.3f") " = " string(round(-`r_conn'^2, 0.001), "%9.3f") " to sustain an inference for a null hypothesis of an effect of nu (`nu')."
+		dis string(round(`rycvGz', 0.001), "%9.3f") " X " string(round(`rxcvGz', 0.001), "%9.3f") " = " string(round(`rycvGz'*`rxcvGz', 0.001), "%9.3f") " to sustain an inference for a null hypothesis of an effect of `nu' (nu)."
     
     } 
 	else if abs(`obs_r') < abs(`critical_r') & `obs_r' < 0 {
@@ -3576,25 +3724,26 @@ if `model_type'== 0 {
 			dis "Unconditional ITCV:"
 			dis ""
 			dis "The maximum impact of an omitted variable to sustain an inference for a null hypothesis"
-			dis "of an effect of nu (`nu') is based on a correlation of " string(round(`uncond_rycv', 0.001), "%9.3f") " with the outcome and " string(round(`uncond_rxcv', 0.001), "%9.3f") " with"
-			dis "the predictor of interest (BEFORE conditioning on observed covariates; signs are interchangeable)."
-			dis "This is based on a threshold effect of " string(round(`critical_r', 0.001), "%9.3f") " for statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
+			dis "of an effect of `nu' (nu) is based on a correlation of " string(round(`uncond_rycv', 0.001), "%9.3f") " with the outcome and " string(round(`uncond_rxcv', 0.001), "%9.3f") " with"
+			dis "the predictor of interest (BEFORE conditioning on observed covariates; signs are interchangeable"
+			dis "if they are different). This is based on a threshold effect of " string(round(`critical_r', 0.001), "%9.3f") " for statistical significance"
+			dis "(alpha = " string(round(`sig', 0.001), "%9.3f") ")."
 			dis ""
 			dis "Correspondingly the UNCONDITIONAL impact of an omitted variable (as defined in Frank 2000) must be"
-			dis string(round(`uncond_rxcv', 0.001), "%9.3f") " X " string(round(`uncond_rycv', 0.001), "%9.3f") " = " string(round(`uncond_rxcv' * `uncond_rycv', 0.001), "%9.3f") " to sustain an inference for a null hypothesis of an effect of nu (`nu')."
+			dis string(round(`uncond_rxcv', 0.001), "%9.3f") " X " string(round(`uncond_rycv', 0.001), "%9.3f") " = " string(round(`uncond_rxcv' * `uncond_rycv', 0.001), "%9.3f") " to sustain an inference for a null hypothesis of an effect of `nu' (nu)."
 			dis ""
 			dis "Conditional ITCV:"
 			dis ""
 			}
 			
 		dis "The maximum impact of an omitted variable to sustain an inference for a null hypothesis"
-		dis "of an effect of nu (`nu') is based on a correlation of " string(round(`r_conn', 0.001), "%9.3f") " with the outcome and " string(round(`r_conn', 0.001), "%9.3f") " with"
+		dis "of an effect of `nu' (nu) is based on a correlation of " string(round(`rycvGz', 0.001), "%9.3f") " with the outcome and " string(round(`rxcvGz', 0.001), "%9.3f") " with"
 		dis "the predictor of interest (conditioning on all observed covariates in the model; signs are"
-		dis "interchangeable). This is based on a threshold effect of " string(round(`beta_threshold', 0.001), "%9.3f") " for statistical significance"
-		dis "(alpha = " string(round(`sig', 0.001), "%9.3f") ")."
+		dis "interchangeable if they are different). This is based on a threshold effect of " string(round(`beta_threshold', 0.001), "%9.3f") " for"
+		dis "statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
 		dis ""
 		dis "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be"
-		dis string(round(`r_conn', 0.001), "%9.3f") " X " string(round(`r_conn', 0.001), "%9.3f") " = " string(round(`r_conn'^2, 0.001), "%9.3f") " to sustain an inference for a null hypothesis of an effect of nu (`nu')."
+		dis string(round(`rycvGz', 0.001), "%9.3f") " X " string(round(`rxcvGz', 0.001), "%9.3f") " = " string(round(`rycvGz'*`rxcvGz', 0.001), "%9.3f") " to sustain an inference for a null hypothesis of an effect of `nu' (nu)."
     
     } 
 	else if `obs_r' == `critical_r' {
@@ -3612,6 +3761,25 @@ if `model_type'== 0 {
 			dis ""
 		}
 		
+		if ((`sdx'!=`NA') & (`sdy'!=`NA') & (`rs'!=`NA') & (`n_covariates' != 0)) {
+			dis "Interpretation of Benchmark Correlations for ITCV:"
+			dis ""
+			dis "Benchmark correlation product ('benchmark_corr_product') is Rxz * Ryz = " string(round(`benchmark_corr_product', 0.001), "%9.3f") ", showing"
+			dis "the association strength of all observed covariates Z with X and Y."
+			dis ""
+			dis "The ratio ('itcv_ratio_to_benchmark') is unconditional ITCV/Benchmark = " string(abs(round(`uncond_rxcv' * `uncond_rycv', 0.001)), "%9.3f") "/" string(round(`benchmark_corr_product', 0.001), "%9.3f") " = " string(round(`itcv_ratio_to_benchmark', 0.001), "%9.3f") ","
+			dis "indicating the robustness of inference."
+			dis ""
+			dis "A larger the ratio the stronger must be the unobserved impact relative to the"
+			dis "impact of all observed covariates to nullify the inference. The larger the ratio"
+			dis "the more robust the inference."
+			dis ""
+			dis "If Z includes pretests or fixed effects, the benchmark may be inflated, making the ratio"
+			dis "unusually small. Interpret robustness cautiously in such cases."
+			dis ""
+		}
+
+			
 		dis "See Frank. (2000) for a description of the method."
 		dis ""
 		dis "Citation:"
@@ -3633,10 +3801,10 @@ if `model_type'== 0 {
 	
     if (abs(`est_eff') > abs(`beta_threshold') & `eff_thr' == `NA') {
 
-        dis "To invalidate the inference of an effect using the threshold of " string(round(`beta_threshold', 0.001), "%9.3f") " for"
+        dis "To nullify the inference of an effect using the threshold of " string(round(`beta_threshold', 0.001), "%9.3f") " for"
         dis "statistical significance (with null hypothesis = `nu' and alpha = `sig'), " string(round(`bias', 0.001), "%9.3f") "%"
         dis "of the (`est_eff') estimate would have to be due to bias. This implies that to"
-        dis "invalidate the inference one would expect to have to replace `recase' (" string(round(`bias', 0.001), "%9.3f") "%)"
+        dis "nullify the inference one would expect to have to replace `recase' (" string(round(`bias', 0.001), "%9.3f") "%)"
         dis "observations with data points for which the effect is `nu' (RIR = `recase')."
         dis ""
         
@@ -3655,8 +3823,8 @@ if `model_type'== 0 {
             dis "The threshold used takes the same sign as the estimated effect. See comment above."
             dis ""
         }
-        dis "To invalidate the inference based on your estimate, " string(round(`bias', 0.001), "%9.3f") "% of the (`est_eff')"
-        dis "estimate would have to be due to bias. This implies that to invalidate"
+        dis "To nullify the inference based on your estimate, " string(round(`bias', 0.001), "%9.3f") "% of the (`est_eff')"
+        dis "estimate would have to be due to bias. This implies that to nullify"
         dis "the inference one would expect to have to replace `recase' (" string(round(`bias', 0.001), "%9.3f") "%) observations"
         dis "with data points for which the effect is `nu' (RIR = `recase')."
         dis ""
@@ -3725,7 +3893,7 @@ if `model_type'== 0 {
 	dis ""
 	di "Include 'return list' following the pkonfound command to see more specific results" _newline "and graphic presentation of the result."
 	di ""
-	di "This function also calculates conditional RIR that invalidates the statistical inference."
+	di "This function also calculates conditional RIR that nullifies the statistical inference."
 	di "If the replacement cases have a fixed value, then RIR = " string(`cond_rir_fixedy', "%9.3f") "."
 	di "If the replacement cases follow a null distribution, then RIR = " string(`cond_rir_null', "%9.3f") "."
 	di "If the replacement cases satisfy rxy|Z = 0, then RIR = " string(`cond_rir_rxyz', "%9.3f") "."  
@@ -3780,6 +3948,8 @@ if `model_type'== 0 {
 		if ((`sdx'!=`NA') & (`sdy'!=`NA') & (`rs'!=`NA')){
 			return scalar rycv = `uncond_rycv'
 			return scalar rxcv = `uncond_rxcv'
+			return scalar benchmark_corr_product = `benchmark_corr_product'
+			return scalar itcv_ratio_to_benchmark = `itcv_ratio_to_benchmark'
 		}
 		
 		return scalar r_final = `r_finall' // should be updated soon
@@ -3792,6 +3962,7 @@ if `model_type'== 0 {
 
 	* return raw_output for test_cop
 	if ("`indx'" == "COP") {
+		return scalar max_rcvz = `max_rcvz' 
 		return scalar conditional_rir_rxygz = `cond_rir_rxyz'
 		return scalar conditional_rir_pi_rxygz = `cond_rirpi_rxyz'
 		return scalar conditional_rir_null = `cond_rir_null'
@@ -3807,7 +3978,7 @@ if `model_type'== 0 {
 		return scalar delta_star = `delta_star'
 		dis ""
 		dis "Final table"
-		matlist ftable
+		matlist ftable, format(%15.6f)
 		*matlist cormatrix
 		dis "
 		dis "Correlation matrix implied by delta*"
@@ -4356,8 +4527,8 @@ if `model_type'== 1 {
 	
 	* Decision on invalidation or sustaining the inference
 	if (`invalidate_ob' == 1) {
-		local change "To invalidate the inference that the effect is different from 0 (alpha = `=string(`sig',"%9.3f")'),"
-		local change_t "to invalidate the inference,"
+		local change "To nullify the inference that the effect is different from 0 (alpha = `=string(`sig',"%9.3f")'),"
+		local change_t "to nullify the inference,"
 	}
 	else {
 		local change "To sustain an inference that the effect is different from 0 (alpha = `=string(`sig',"%9.3f")'),"
@@ -4869,7 +5040,7 @@ if `model_type'== 2 {
 	///// start from here
 	// Define conditional statement for p_ob and alpha
 	if (`p_ob' < `alpha') {
-		local change "To invalidate the inference that the effect is different from 0 (alpha = `alpha'), "
+		local change "To nullify the inference that the effect is different from 0 (alpha = `alpha'), "
 	} 
 	else {
 		local change "To sustain an inference that the effect is different from 0 (alpha = `alpha'), "
@@ -4925,7 +5096,7 @@ if `model_type'== 2 {
 	if (`allnotenough' == 1) {
 		
 			if (`p_ob' < `alpha') {
-				local change_t "to invalidate the inference that the effect is different from 0 (alpha = `alpha'), "
+				local change_t "to nullify the inference that the effect is different from 0 (alpha = `alpha'), "
 			} 
 			else {
 				local change_t "to sustain an inference that the effect is different from 0 (alpha = `alpha'), "
@@ -4973,7 +5144,7 @@ if `model_type'== 2 {
 
 	// Additional information
 	local info1 "This function calculates the number of data points that would have to be replaced with" 
-	local info2 "zero effect data points (RIR) to invalidate the inference made about the association"
+	local info2 "zero effect data points (RIR) to nullify the inference made about the association"
 	local info3 "between the rows and columns in a 2x2 table."
 	local info4 "One can also interpret this as switches (Fragility) from one cell to another, such as from"
 	local info5 "the treatment success cell to the treatment failure cell."

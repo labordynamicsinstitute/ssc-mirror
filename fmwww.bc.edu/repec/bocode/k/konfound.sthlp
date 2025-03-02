@@ -13,7 +13,7 @@
 {title:Title}
 
 {phang}
-{bf:konfound} {hline 2} For user's model, this command calculates (1) how much bias there must be in an estimate to invalidate/sustain an inference; (2) the impact of an omitted variable necessary to invalidate/sustain an inference for a regression coefficient.
+{bf:konfound} {hline 2} For user's model, this command calculates (1) how much bias there must be in an estimate to nullify/sustain an inference; (2) the impact of an omitted variable necessary to nullify/sustain an inference for a regression coefficient.
 
 
 {marker syntax}{...}
@@ -51,7 +51,11 @@
 See {browse "https://docs.google.com/spreadsheets/d/1VWVhdzIaXgqjZienfzUGJM-IIaPu4Qn3/edit?usp=sharing&ouid=107224617699146866513&rtpof=true&sd=true":konfound-it spreadsheet} for more information.
 
 {phang}
-{opt non_li(#)} Basis for interpreting % bias to invalidate/sustain an inference for non-linear models (e.g., logit or probit); default is to use the original coefficient {cmd:non_li(0)}. To change the calcuation based on average partial effects, use {cmd:non_li(1)}. Note that if user's model is a logistic regression we recommend using the {opt pkonfound} command for logistic regression with manually entered parameter estimates and other quantities.
+{opt non_li(#)} Basis for interpreting % bias to nullify/sustain an inference for non-linear models (e.g., logit or probit); default is to use the original coefficient {cmd:non_li(0)}. To change the calcuation based on average partial effects, use {cmd:non_li(1)}. Note that if user's model is a logistic regression we recommend using the {opt pkonfound} command for logistic regression with manually entered parameter estimates and other quantities. Otherwise, the command can calculate the robustness of inference (RIR) when the user provides the number of treatment observations ({cmd:n_treat}).
+
+{phang}
+{opt indx(#)} The user can specify whether the output for a model should be RIR {cmd:indx("RIR")} or ITCV {cmd:indx("IT")}; the default is RIR. To change to ITCV one should specify {cmd:indx("IT")} 	
+
 
 {syntab: {ul:Values}}
 
@@ -93,10 +97,10 @@ See {browse "https://docs.google.com/spreadsheets/d/1VWVhdzIaXgqjZienfzUGJM-IIaP
 {title:Description}
 
 {pstd}
-{cmd:konfound} calculates (1) how much bias there must be in an estimate to invalidate/sustain an inference from the immediately preceding model, interpreting this bias in terms of sample replacement. After running a model (example: linear regression), user can input a list of variable names, and {cmd:konfound} will calculate the % bias needed to invalidate/sustain the inference for each variable in the variable list. The command generates sensitivity plots for variables that are statistically significant in the user's model. {p_end}
+{cmd:konfound} calculates (1) how much bias there must be in an estimate to nullify/sustain an inference from the immediately preceding model, interpreting this bias in terms of sample replacement. After running a model (example: linear regression), user can input a list of variable names, and {cmd:konfound} will calculate the % bias needed to nullify/sustain the inference for each variable in the variable list. The command generates sensitivity plots for variables that are statistically significant in the user's model. {p_end}
 
 {pstd}
-{cmd:konfound} also calculates (2) the impact of an omitted variable necessary to invalidate/sustain an inference for a regression coefficient from a user's model. It assesses how strong an omitted variable has to be correlated with the outcome and the predictor of interest to invalidate/sustain the inference. After running a model (example: linear regression), the user can provide a list of variables, and {cmd:konfound} will calculate the impact of an omitted variable necessary to invalidate/sustain an inference. The command also produces the observed impact table for all observed covariates in the user's previous model. {p_end}
+{cmd:konfound} also calculates (2) the impact of an omitted variable necessary to nullify/sustain an inference for a regression coefficient from a user's model. It assesses how strong an omitted variable has to be correlated with the outcome and the predictor of interest to nullify/sustain the inference. After running a model (example: linear regression), the user can provide a list of variables, and {cmd:konfound} will calculate the impact of an omitted variable necessary to nullify/sustain an inference. The command also produces the observed impact table for all observed covariates in the user's previous model. {p_end}
 
 
 {marker examples}{...}
@@ -113,14 +117,19 @@ See {browse "https://docs.google.com/spreadsheets/d/1VWVhdzIaXgqjZienfzUGJM-IIaP
 {phang}{cmd:. sysuse auto.dta, clear} {p_end}
 
 {pstd}
-## konfound command to calculate bias and sensitivity analysis for the weight variable after conditioning on covariates
+## {cmd:konfound} command calculates bias and sensitivity analysis for the specified variable after conditioning on covariates. To specify the output index, the user can set it using {cmd:indx("RIR")}  (the default) or {cmd:indx("IT")} .
 
 {phang}{cmd:. regress mpg weight displacement} {p_end}
 
 {phang}{cmd:. konfound weight} {p_end}
 
+{phang}{cmd:. konfound weight, indx("IT")} {p_end}
+
+{phang}{cmd:. konfound weight, indx("RIR")} {p_end}
+
+
 {pstd}
-## konfound command to calculate bias and sensitivity analysis for the weight variable before conditioning on covariates
+## {cmd:konfound} command to calculate bias and sensitivity analysis for the weight variable before conditioning on covariates
 
 {phang}{cmd:. regress mpg weight displacement} {p_end}
 
