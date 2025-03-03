@@ -201,6 +201,7 @@ p mnthplot module for scatter plot for monthly data with repetition of data
 p mod11 module to generate Chile's National Identification Number (RUT) check digit (DV) (modulo 11)
 p modeldiag module to generate graphics after regression
 p modlpr module to estimate long memory in a timeseries
+p modplot module for plotting graphs of moderating effects
 p mog module to produce one way or two way tables of means (or totals) 
 p mol module to evaluate literacy level
 p moments module to compute moment-based statistics
