@@ -20249,6 +20249,7 @@ fmwww.bc.edu/repec/bocode/n/npinfo.sthlp
 fmwww.bc.edu/repec/bocode/n/network_meta.ado
 fmwww.bc.edu/repec/bocode/n/nopo_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/n/netplot.html
+fmwww.bc.edu/repec/bocode/n/nrow2.sthlp
 fmwww.bc.edu/repec/bocode/n/pcpanel.sthlp
 fmwww.bc.edu/repec/bocode/n/nuamodes.ado
 fmwww.bc.edu/repec/bocode/n/nrow_example.dta
@@ -20322,6 +20323,7 @@ fmwww.bc.edu/repec/bocode/n/npinfo.ado
 fmwww.bc.edu/repec/bocode/n/ntreatreg.sthlp
 fmwww.bc.edu/repec/bocode/n/nnmatch.hlp
 fmwww.bc.edu/repec/bocode/n/nearmrg.sthlp
+fmwww.bc.edu/repec/bocode/n/nrow2.ado
 fmwww.bc.edu/repec/bocode/n/nbercycles.pkg
 fmwww.bc.edu/repec/bocode/n/nwind.sthlp
 fmwww.bc.edu/repec/bocode/n/num2words.pkg
@@ -20413,6 +20415,7 @@ fmwww.bc.edu/repec/bocode/n/normalrir.sthlp
 fmwww.bc.edu/repec/bocode/n/nysiis.sthlp
 fmwww.bc.edu/repec/bocode/n/normalrir.ado
 fmwww.bc.edu/repec/bocode/n/nca_random.sthlp
+fmwww.bc.edu/repec/bocode/n/nrow2.pkg
 fmwww.bc.edu/repec/bocode/n/nmissing.html
 fmwww.bc.edu/repec/bocode/n/nb_adj.mo
 fmwww.bc.edu/repec/bocode/n/nctinv.ado

@@ -52,6 +52,7 @@ p npseries module to perform Nonparametric Power Series Estimation
 p npss module to estimate nonparametric heteroskedastic state space models
 p npsynth module to implement Nonparametric Synthetic Control Method
 p nrow module to rename variables as their nth-row values
+p nrow2 module to rename variables as their nth row values 
 p nruns module to compute number of runs compared with random shuffles
 p nscale module to scale data
 p nsplit module to split numeric variable into components

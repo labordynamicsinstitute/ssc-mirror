@@ -1,0 +1,19 @@
+d 'NROW2': module to rename variables as their nth row values 
+d
+d   nrow2  is a Stata program that about renaming variables as
+d their nth row values. 
+d
+d KW: rename
+d KW: variable name
+d KW: row
+d KW: observation number
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20250303
+d
+d Author: 	 Dejin Xie, School of Economics and Management, Nanchang University, China
+d Support: email xiedejin@@ncu.edu.cn
+d
+f nrow2.ado
+f nrow2.sthlp
