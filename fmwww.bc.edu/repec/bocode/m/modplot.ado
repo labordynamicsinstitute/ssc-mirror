@@ -1,10 +1,11 @@
 *===================================================================================*
-* Ado-file: 	ModPlot Version 1.0 
+* Ado-file: 	ModPlot Version 1.1
 * Author: 		Shutter Zor(左祥太)
 * Affiliation: 	Accounting Department, Xiamen University
 * E-mail: 		Shutter_Z@outlook.com 
 * Date: 		2024/3/14 launch project
-*				2025/2/26 first attempt                                          
+*				2025/2/26 first attempt    
+*				2025/3/4  fix bug                                      
 *===================================================================================*
 
 
@@ -12,7 +13,7 @@ capture program drop modplot
 program define modplot, rclass
 	version 13
 	
-	syntax, Model(string) [Plot Scheme(string) Dot Right]
+	syntax, Model(string) [Plot Scheme(string) Dot Right *]
 	
 	*- check the model() option	
 	local condition_if = subinword("`model'", "if", "S-Z-if", .)
@@ -49,10 +50,22 @@ program define modplot, rclass
 	dis "`opts'"
 	*/
 	
-	qui tab `indepvar'
-	local indepvar_level = r(r)
-	qui tab `modvar'
-	local modvar_level = r(r)	
+	*- record independent and moderate variable levels
+	*- command tab has limitation
+	capture tab `indepvar'
+	if _rc == 0 {
+		local indepvar_level = r(r)
+	}
+	else {
+		local indepvar_level = 3
+	}
+	capture tab `modvar'
+	if _rc == 0 {
+		local modvar_level = r(r)
+	}
+	else {
+		local modvar_level = 3
+	}
 	
 	*- y = coefaX + coefbM + coefcXM + coefd
 	qui sum `depvar'
@@ -210,7 +223,7 @@ program define modplot, rclass
 					        `plot_ytitle_y_max' "High DV" `ylabel_end' " ", noticks)		///
 					 xlabel(`xlabel_begin' " " `plot_xtitle_x_min' "Low IV" 				///
 					        `plot_xtitle_x_max' "High IV" `xlabel_end' " ", noticks)		///
-					 xtitle("") ytitle("") scheme(`scheme')				
+					 xtitle("") ytitle("") scheme(`scheme')	`options'		
 		}
 		else {
 			twoway (function y = `function_ll_coefx'*x + `function_ll_cons'					///
@@ -228,7 +241,7 @@ program define modplot, rclass
 					        `plot_ytitle_y_max' "High DV" `ylabel_end' " ", noticks)		///
 					 xlabel(`xlabel_begin' " " `plot_xtitle_x_min' "Low IV" 				///
 					        `plot_xtitle_x_max' "High IV" `xlabel_end' " ", noticks)		///
-					 xtitle("") ytitle("") scheme(`scheme')	
+					 xtitle("") ytitle("") scheme(`scheme')	`options'
 		}			
 	}
 

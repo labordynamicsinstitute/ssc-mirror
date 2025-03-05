@@ -1,9 +1,9 @@
 d 'MODPLOT': module for plotting graphs of moderating effects
 d
 d    modplot will help you plot the moderating effects in one
-d click, but you need to be aware that the picture will only	be
+d click, but you need to be aware that the picture will only be
 d available if you have used the plot option. Otherwise the default
-d will only store the equation for the moderating effect    in the
+d will only store the equation for the moderating effect in the
 d return value. 
 d
 d KW: moderation
@@ -12,9 +12,9 @@ d KW: plotting
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20250302
+d Distribution-Date: 20250304
 d
-d Author: Shutter Zor	 , Xiamen University
+d Author: Shutter Zor, Xiamen University
 d Support: email Shutter_Z@@outlook.com
 d
 f modplot.ado

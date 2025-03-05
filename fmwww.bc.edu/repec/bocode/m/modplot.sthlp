@@ -15,12 +15,13 @@ help for {hi:modplot}
 
 {p 4 13 2}
 {cmdab:modplot}, 
-{cmdab:m:odel:}{cmd:(}command independentvar dependentvar controlvars, options{cmd:)}
+{cmdab:m:odel:}{cmd:(}command dependentvar independentvar moderatevar controlvars, options{cmd:)}
 [
 {cmdab:p:lot:}
 {cmdab:d:ot:}
 {cmdab:r:ight:}
 {cmdab:s:cheme:}{cmd:(}{help scheme intro:schemename}{cmd:)}
+{cmd:other_opts}
 ]{p_end}
 
 
@@ -37,7 +38,7 @@ equation for the moderating effect in the return value.
 {title:Options}
 
 {phang}
-{cmdab:m:odel}{hi:(command independentvar dependentvar controlvars, options)} 
+{cmdab:m:odel}{hi:(command dependentvar independentvar moderatevar controlvars, options)} 
 specifies your regression model. Note that this command does not support 
 {hi:{it:if}} and {hi:{it:in}}, and also automatically records the second 
 variable in your model as the independent variable and the third variable 
@@ -63,6 +64,10 @@ right of the image.
 {cmdab:s:cheme:}{cmd:(}{help scheme_option:{bf:}{it:schemename}}{cmd:)} 
 Specifies the drawing style of the image. You can click on the blue 
 hyperlinks to see the styles available for your Stata.
+{p_end}
+
+{phang}
+{cmd:other_opts} you can add other plotting options here, such as {cmd:title("this is a title")}
 {p_end}
 
 
@@ -113,9 +118,20 @@ variable is a binary variable. {p_end}
 {stata `"modplot, model(reg price weight length foreign, vce(r)) plot dot scheme(s1mono)"'}
 {p_end}
 
+{p 4 4 2} *- Other plotting options (added by Professor Christopher F. Baum) {p_end}
+{p 4 4 2}{inp:-} 
+{stata `"sysuse auto.dta, clear"'}
+{p_end}
+{p 4 4 2}{inp:-} 
+{stata `"modplot, model(reg price foreign length weight, vce(r)) plot ti("Effects of length")"'}
+{p_end}
+{p 4 4 2}{inp:-} 
+{stata `"modplot, model(reg price foreign length weight, vce(r)) plot ti("Effects of length", box) legend(rows(1) size(small))"'}
+{p_end}
+
 {p 4 4 2} *- Additionally, you can use other regression estimators for regression. 
 {it:modplot} theoretically supports regression methods where all coefficients 
-are stored in the {it:e(b)} matrix.
+are stored in the {it:e(b)} matrix and with coefficient term.
 {p_end}
 
 
@@ -148,7 +164,8 @@ WeChat Official Account: {browse "https://shutterzor.cn/images/QRcode.png":OneSt
 {title:Acknowledgments}
 
 {p 4 4 2}
-Thanks to Bilibili users (导导们).
+Thanks to Bilibili users (导导们). Thanks to Professor Christopher F. Baum for the 
+information that gave me a better understanding of Stata programming.
 {p_end}
 
 

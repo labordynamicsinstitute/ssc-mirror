@@ -32,7 +32,7 @@ This template will create the following sub-directories and files:
     {c LT}{c -}{c -}  docu / 
     {c |}    {c BLC}{c -}{c -} {help mp_b_rlog:research_log.md} 
     {c LT}{c -}{c -}  txt / 
-    {c LT}{c -}{c -}  {help mp_b_ignore:.ignore}  
+    {c LT}{c -}{c -}  {help mp_b_ignore:.gitignore}  
     {c BLC}{c -}{c -}  {help mp_b_readme:readme.md}  
 
 
