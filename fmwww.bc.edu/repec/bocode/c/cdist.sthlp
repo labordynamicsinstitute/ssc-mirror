@@ -1,5 +1,5 @@
 {smcl}
-{* 06apr2023}{...}
+{* 07mar2025}{...}
 {hi:help cdist}{...}
 {right:{browse "http://github.com/benjann/cdist/"}}
 {hline}
@@ -102,7 +102,7 @@
 {synopt :{opt pool:ed}}adjust to the pooled characteristics distribution
     {p_end}
 {synopt :{opt jmp}[{cmd:(}{help cdist##jmp:{it:type}}{cmd:)}]}include location-shifted
-    counterfactuals
+    counterfactuals; requires {cmd:method(qr)}
     {p_end}
 
 {syntab :Target statistics}
@@ -250,7 +250,8 @@
     {cmd:cdist decomp} will report such a decomposition. Argument {it:type} can
     be {opt med:ian} to use median regression for the location model (the
     default), or {opt mean} to use least-squares regression for the location
-    model. {cmd:jmp} is not allowed together with {opt pooled}.
+    model. {cmd:jmp} is not allowed together with {opt pooled}. {cmd:jmp}
+    requires {cmd:method(qr)}
 
 {dlgtab:Target statistics}
 
@@ -444,7 +445,7 @@
     outcome values and the weights. {it:spec} is either an explicit list of variable
     names or {it:stub}{cmd:*} to generate automatic names with a common prefix. Specifying
     {cmd:generate} without argument is equivalent to
-    {cmd:generate(_dstat_*)}.
+    {cmd:generate(_cdist_*)}.
 
 {phang}
     {cmd:replace} allows replacing existing variables.

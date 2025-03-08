@@ -13,9 +13,9 @@ d KW: counterfactual decomposition
 d KW: distribution regression
 d KW: quantile regression process
 d
-d Requires: Stata version 14 and moremata  from SSC (q.v.)
+d Requires: Stata version 14 and moremata from SSC (q.v.)
 d
-d Distribution-Date: 20230408
+d Distribution-Date: 20250307
 d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@soz.unibe.ch
