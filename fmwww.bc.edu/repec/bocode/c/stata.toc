@@ -1,5 +1,6 @@
 p c_ml_stata module to implement machine learning classification in Stata
 p c_ml_stata_cv module to implement machine learning classification in Stata
+p cache module to cache all other Stata commands
 p cal module to generate calendar
 p calibest module to estimate proportions and means after survey data have been calibrated to population totals
 p calibr module for inverse regression and calibration
