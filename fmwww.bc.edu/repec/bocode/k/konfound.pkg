@@ -24,7 +24,7 @@ d KW: konfound; sensitivity analysis; omitted variable; rubin causal model
 d
 d Requires: Stata version 13.1 and moss, matsort, indeplist from SSC (q.v.)
 d
-d Distribution-Date: 20250301
+d Distribution-Date: 20250311
 d
 d Author: Kenneth A. Frank, 	 Michigan State University
 d Support: email kenfrank@@msu.edu

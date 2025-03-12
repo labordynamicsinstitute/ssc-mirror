@@ -7,7 +7,7 @@
 {viewerjumpto "Options" "opendf installpython##options"}{...}
 {viewerjumpto "Description" "opendf installpython##description"}{...}
 {viewerjumpto "Examples" "opendf installpython##examples"}{...}
-help for {cmd:opendf removepython (opendf_removepython)}{right: version 2.0.3}
+help for {cmd:opendf removepython (opendf_removepython)}{right: version 2.1.0}
 {hline}
 
 {phang}

@@ -6,7 +6,7 @@
 {viewerjumpto "Description" "opendf write##description"}{...}
 {viewerjumpto "Remarks" "opendf write##remarks"}{...}
 {viewerjumpto "Examples" "opendf write##examples"}{...}
-help for {cmd:opendf write (opendf_write)}{right: version 2.0.3}
+help for {cmd:opendf write (opendf_write)}{right: version 2.1.0}
 {hline}
 
 {phang}
@@ -16,7 +16,7 @@ help for {cmd:opendf write (opendf_write)}{right: version 2.0.3}
 {marker syntax}
 {title:Syntax}
 {p 8 17 2}
-{cmd:opendf write} {it: output} [,{opt input()} {opt languages()} {opt variables()} {opt replace} {opt verbose}]
+{cmd:opendf write} {it: output} [,{opt input()} {opt languages()} {opt variables()} {opt odf_version()} {opt replace} {opt verbose}]
 
 {synoptset 20 tabbed}{...}
 {marker options}{synopthdr:options}
@@ -25,6 +25,7 @@ help for {cmd:opendf write (opendf_write)}{right: version 2.0.3}
 {synopt :{opt input(string)}}A path to a Stata dataset which should be saved in opendf-format. {p_end}
 {synopt :{opt languages(string)}}Chooses, which languages to keep. Default is all. {p_end}
 {synopt :{opt variables(string)}}Chooses, which Variables to keep. Default is all. {p_end}
+{synopt :{opt odf_version(string)}}Indicates the ODF version of the ODF output file. {p_end}
 {synopt :{opt replace}}Overwrite the opendf file. {p_end}
 {synopt :{opt verbose}}More warnings are displayed. {p_end}
 {synoptline}
@@ -43,6 +44,8 @@ help for {cmd:opendf write (opendf_write)}{right: version 2.0.3}
 {opt languages} The languages that should be saved in the opendf-file. Default is all.{p_end}
 {pstd}
 {opt variables} Indicates the variables that should be saved in the opendf-file. Default is all.{p_end}
+{pstd}
+{opt odf_version} Indicates the ODF version of the ODF output file. Default is the most recent. {p_end}
 {pstd}
 {opt replace} Indicates whether any existing file with this name should be overwritten.{p_end}
 {pstd}

@@ -11,6 +11,13 @@ program define konfound, rclass
     local indx "RIR"
 }
 	
+	if "`indx'" == "RIR" {
+        di ""
+        di "The default framework for the konfound command is now RIR (Robustness of"
+        di "Inference to Replacement). To generate ITCV, enter: konfound ind_var, indx(IT)"
+        di "where ind_var is the focal predictor."
+    }
+	
     if "`e(cmd)'" != "regress" & "`e(cmd)'" != "logit" {
     di as error "Error: konfound can only be used with linear regression (regress) or logistic regression (logit) models."
     exit

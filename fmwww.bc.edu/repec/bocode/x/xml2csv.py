@@ -1,4 +1,4 @@
-# version 2.0.3
+# version 2.1.0
 
 #########################
 # MODULES
@@ -9,6 +9,7 @@ import os
 import shutil
 import xml.etree.ElementTree as ET
 import zipfile
+import json
 
 #########################
 # MAIN FUNCTION
@@ -16,11 +17,13 @@ import zipfile
 
 def make_csvs(input_zip, output_dir, languages):
   global root
-  root = load(input_zip, output_dir)
+  global odf_version
   make_dir(output_dir)
+  root, odf_version = load(input_zip, output_dir)
   write_dataset_csv(output_dir, languages)
   write_variables_csv(output_dir, languages)
   write_categories_csv(output_dir, languages)
+  return odf_version
   
 
 #########################
@@ -31,11 +34,22 @@ def make_csvs(input_zip, output_dir, languages):
 def load(input_zip, output_dir):
   with zipfile.ZipFile(input_zip, 'r') as zip_ref: # unzip and get tree
     zip_ref.extractall(output_dir)
-    tree=ET.parse(output_dir+'/metadata.xml')
+  version_path = os.path.join(output_dir, 'odf-version.json')
+# Check if the file exists
+  if os.path.isfile(version_path):
+    with open(version_path, "r") as f:
+      vers_file = json.load(f)  # Load JSON content
+    odf_version = vers_file['version']
+    metadatafile = vers_file['files']['metadata']
+  else:
+    odf_version = '1.0.0'
+    metadatafile = 'metadata.xml'
+  os.path.join(output_dir, metadatafile)
+  tree=ET.parse(os.path.join(output_dir, metadatafile))
   root=tree.getroot() #  get root
   for i in root.iter(): # cut namespace
     i.tag=i.tag.split('}')[-1]
-  return root
+  return root, odf_version
 
 # get language codes
 def get_lang(xpath):

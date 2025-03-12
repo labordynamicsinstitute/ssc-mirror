@@ -16,11 +16,11 @@
 
 -----------------------------------------------------------------------------------*/
 *! opendf.ado: provides programs to work with opendf data format
-*! version 2.0.3
+*! version 2.1.0
 
 program define opendf, rclass 
 	version 16
-	syntax [anything], [INPUT(string) OUTPUT(string) SAVE(string) LANGUAGES(string) VARIABLES(string) VERSION(string) LOCATION(string) ROWRange(string) COLRange(string) csv_loc(string) variables_arg(string) export_data(string) input_zip(string) output_dir(string) REPLACE CLEAR VERBOSE]
+	syntax [anything], [INPUT(string) OUTPUT(string) SAVE(string) LANGUAGES(string) VARIABLES(string) VERSION(string) odf_version(string) LOCATION(string) ROWRange(string) COLRange(string) csv_loc(string) variables_arg(string) export_data(string) input_zip(string) output_dir(string) REPLACE CLEAR VERBOSE]
 	local _fun = `"`anything'"'
 	tokenize `"`_fun'"'
 
@@ -29,7 +29,7 @@ program define opendf, rclass
 	}
 
 	if ("`1'"=="write"){
-		opendf_write `"`2'"', input("`input'") languages("`languages'") variables("`variables'") `replace' `verbose'
+		opendf_write `"`2'"', input("`input'") languages("`languages'") variables("`variables'") odf_version("`odf_version'") `replace' `verbose'
 	}
 	
 	if ("`1'"=="installpython"){

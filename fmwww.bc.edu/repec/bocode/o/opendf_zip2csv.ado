@@ -16,9 +16,9 @@
 
 -----------------------------------------------------------------------------------*/
 *! opendf_zip2csv.ado: loads data from csvs including meta data to build a Stata dataset
-*! version 2.0.3
+*! version 2.1.0
 
-program define opendf_zip2csv 
+program define opendf_zip2csv, rclass
     version 16
     syntax, input_zip(string) output_dir(string) languages(string) [VERBOSE]
     local verboseit 0
@@ -85,7 +85,6 @@ program define opendf_zip2csv
         di as error("Error in finding the python script")
         exit
     }
-    
     python: from sfi import Macro
     python: import sys
     python: import os
@@ -94,5 +93,7 @@ program define opendf_zip2csv
     python: output_dir=Macro.getLocal('output_dir')
     python: sys.path.append(Macro.getLocal('_path_to_py_ado'))
     python: import xml2csv
-    python: xml2csv.make_csvs(input_zip=input_zip, output_dir=output_dir, languages=languages)
+    python: odf_version = xml2csv.make_csvs(input_zip=input_zip, output_dir=output_dir, languages=languages)
+    python: Macro.setLocal('odf_version', '1.1.0')
+    return local odf_version "`odf_version'"
 end

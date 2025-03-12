@@ -16,16 +16,23 @@
 
 -----------------------------------------------------------------------------------*/
 *! opendf_write.ado: saves a Stata (.dta) dataset in the opendf format 
-*! version 2.0.3
+*! version 2.1.0
 
 program define opendf_write 
     version 16
-    syntax anything [,input(string) languages(string) variables(varlist) REPLACE VERBOSE]
+    syntax anything [,input(string) languages(string) variables(varlist) odf_version(string) REPLACE VERBOSE]
     preserve
     local replaceit 0
     if (`"`replace'"' != "") local replaceit 1
     local output=`anything'
-    if (strpos("`output'", ".zip") == 0) local output = "`output'.zip"
+    if (strpos("`output'", ".zip") == 0){
+      if ("`odf_version'" == "1.0.0" | strpos("`output'", ".odf")>0){
+        local output = "`output'.zip"
+      }
+      else {
+        local output = "`output'.odf.zip"
+      }
+    } 
     capture confirm file "`output'"
     if (_rc == 0 & `replaceit'==0){
       di as error "file `output' already exists"
@@ -46,6 +53,10 @@ program define opendf_write
           use "`input'", clear
         }
       }
+    }
+
+    if "`odf_version'" == ""{
+      local odf_version = "1.1.0"
     }
     if (`"`variables'"' != "" & `"`variables'"'!= "all") {
 	  	    keep `variables'
@@ -77,13 +88,12 @@ program define opendf_write
 	    di as red "To keep value labels of extended missings, replace extended missings with integers and transfer value labels to ne value."
     }
 
-
-    opendf_dta2csv, languages(`languages') input(`input') output_dir("`c(tmpdir)'")
-    capture opendf_csv2zip, output(`"`output'"') input("`c(tmpdir)'") variables_arg("yes") export_data("yes") `verbose'
+    opendf_dta2csv, languages(`languages') input(`input') output_dir("`c(tmpdir)'") odf_version("`odf_version'")
+    capture opendf_csv2zip, output(`"`output'"') input("`c(tmpdir)'") variables_arg("yes") export_data("yes") odf_version("`odf_version'") `verbose'
     if (_rc != 0) {
       di as error "Error in writing `output'. There might be problems with the writing permissions in the output folder or with some metadata."
       if (`"`verbose'"' != "") {
-        opendf_zip2csv , input_zip(`input_zip') output_dir("`csv_temp'") languages(`languages') `verbose'
+        opendf_csv2zip , output(`"`output'"') input("`c(tmpdir)'") variables_arg("yes") export_data("yes") odf_version("`odf_version'") `verbose'
       }
       exit _rc
     }

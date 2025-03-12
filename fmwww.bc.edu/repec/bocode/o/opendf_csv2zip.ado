@@ -15,11 +15,11 @@
 
 -----------------------------------------------------------------------------------*/
 *! opendf_csv2zip.ado: builds opendf_zip-file containing data.csv and metadata.xml from 4 csvs
-*! version 2.0.3
+*! version 2.1.0
 
 program define opendf_csv2zip 
 	  version 16
-    syntax, output(string) [input(string) variables_arg(string) export_data(string) VERBOSE]
+    syntax, output(string) [input(string) variables_arg(string) export_data(string) odf_version(string) VERBOSE]
     if `"`input'"' == ""{
         local input = "`c(tmpdir)'"
     }
@@ -38,6 +38,11 @@ program define opendf_csv2zip
     if (`"`variables_arg'"' == "") {
         local variables_arg "yes"
     }
+
+    if "`odf_version'" == ""{
+		local odf_version "1.1.0"
+	}
+
     local verboseit 0
 	  if (`"`verbose'"' != "") {
 	      local verboseit 1
@@ -80,8 +85,7 @@ program define opendf_csv2zip
     }
     
     
-    qui local output_dir= subinstr(`"`output'"', ".zip", "", .)
-    local output_dir = subinstr("`output_dir'", "\", "/", .)
+    local output_dir = subinstr("`output'", "\", "/", .)
     local input_dir = subinstr("`input'", "\", "/", .)
    
     local _ado_path  "`c(sysdir_plus)'"
@@ -102,17 +106,17 @@ program define opendf_csv2zip
 	      di as error("Error in finding the python script")
 	      exit
     }
-
     python: import sys
     python: import os
     python: from sfi import Macro
     python: input_dir=Macro.getLocal('input_dir')
     python: output_dir=Macro.getLocal('output_dir')
+    python: odf_version=Macro.getLocal('odf_version')
     python: sys.path.append(Macro.getLocal('_path_to_py_ado'))
     python: import csv2xml
     python: csv2xml.export_data=Macro.getLocal('export_data')
     python: csv2xml.variables_arg=Macro.getLocal('variables_arg')
-    python: csv2xml.csv2xml(input_dir=input_dir, output_dir=output_dir)
+    python: csv2xml.csv2xml(input_dir=input_dir, output_dir=output_dir, odf_version=odf_version)
     capture confirm file `"`output'"'
     if _rc == 0 {
       di "{text: Dataset successfully saved in opendf-format to {it:`output'}.}"

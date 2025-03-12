@@ -16,7 +16,7 @@
 
 -----------------------------------------------------------------------------------*/
 *! opendf_read.ado: loads data from opendf format (zip) to Stata
-*! version 2.0.3
+*! version 2.1.0
 
 
 			
@@ -30,15 +30,33 @@ program define opendf_read
 		if (substr("`_tempdir'", strlen("`_tempdir'"), strlen("`_tempdir'")) != "/" & substr("`_tempdir'", strlen("`_tempdir'"), strlen("`_tempdir'")) != "\"){
 			local _tempdir = "`_tempdir'/"
     	}
-	  	local _path_to_data `"`_tempdir'data.zip"'
+	  	local _path_to_data `"`_tempdir'data.odf.zip"'
 		quietly: copy `input' `_path_to_data', replace
 		local input `_path_to_data'
 	}
-	*Add default extension if .zip is missing
+	*Check if file exists and add extension if .odf.zip (or .zip) if missing
 	if strpos(`"`input'"', ".zip")==0{
-		local input=`"`input'.zip"'
+		capture confirm file `"`input'.odf.zip"'
+		if _rc == 0{
+			local input = "`input'.odf.zip"
+		}
+		else {
+			capture confirm file `"`input'.zip"'
+			if _rc == 0{
+				local input = "`input'.zip"
+			}
+			else {
+				di as error "File `input'.odf.zip (and `input'.zip) not found."
+				exit
+			}
+		}
 	}
-	confirm file `"`input'"'
+	capture confirm file `"`input'"'
+	if _rc != 0{
+		di as error "File `input' not found."
+		exit
+	}
+
 	if (`"`languages'"' != "") {
 	  	local languages `languages'
 	}
@@ -48,6 +66,6 @@ program define opendf_read
     local input_zip=`"`input'"'
     local csv_temp = "`c(tmpdir)'"
     opendf_zip2csv , input_zip(`input_zip') output_dir("`csv_temp'") languages(`languages') `verbose'
-	opendf_csv2dta, csv_loc("`csv_temp'") rowrange(`rowrange') colrange(`colrange') save(`save') `replace' `clear' `verbose'
+	opendf_csv2dta, csv_loc("`csv_temp'") rowrange(`rowrange') colrange(`colrange') odf_version("`r(odf_version)'") save(`save') `replace' `clear' `verbose'
 end
 

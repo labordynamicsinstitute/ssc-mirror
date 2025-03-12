@@ -16,7 +16,7 @@
 
 -----------------------------------------------------------------------------------*/
 *! opendf_docu.ado: displays metadata of variable or datasat
-*! version 2.0.3
+*! version 2.1.0
 
 
 program define opendf_docu 

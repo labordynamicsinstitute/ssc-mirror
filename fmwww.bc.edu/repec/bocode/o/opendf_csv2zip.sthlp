@@ -7,7 +7,7 @@
 {viewerjumpto "Description" "opendf_csv2zip##description"}{...}
 {viewerjumpto "Options" "opendf_csv2zip##options"}{...}
 {viewerjumpto "Examples" "opendf_csv2zip##examples"}{...}
-help for {cmd:opendf csv2zip (opendf_csv2zip)}{right: version 2.0.3}
+help for {cmd:opendf csv2zip (opendf_csv2zip)}{right: version 2.1.0}
 {hline}
 
 {phang}
@@ -18,7 +18,7 @@ help for {cmd:opendf csv2zip (opendf_csv2zip)}{right: version 2.0.3}
 {title:Syntax}
 {p 8 17 2}
 {cmd:opendf_csv2zip}, 
-{opt output()} [{opt input()} {opt variables_arg()} {opt export_data()} {opt verbose}]
+{opt output()} [{opt input()} {opt variables_arg()} {opt export_data()} {opt odf_version()} {opt verbose}]
 
 {synoptset 20 tabbed}{...}
 {marker options}{synopthdr:options}
@@ -27,6 +27,7 @@ help for {cmd:opendf csv2zip (opendf_csv2zip)}{right: version 2.0.3}
 {synopt :{opt input(string)}}Indicates location of csvs. {p_end}
 {synopt :{opt variables_arg(string)}}Specifies whether variable metadata should be exported. Default is "yes". {p_end}
 {synopt :{opt export_data(string)}}Indicates whether the data.csv should be exported to the opendf-zip file. Default is "yes".{p_end}
+{synopt :{opt odf_version(string)}}Indicates the ODF version of the ODF output file. {p_end}
 {synopt :{opt verbose}}More warnings are displayed. {p_end}
 {synoptline}
 
@@ -43,6 +44,7 @@ help for {cmd:opendf csv2zip (opendf_csv2zip)}{right: version 2.0.3}
 
 {pstd}{opt output} Name of the output-zip-folder. Can also include a path where to save the output. {p_end}
 {pstd}{opt input} is a path to a folder where 4 csvs have to be included that contain data and metadata. {p_end}
+{pstd}{opt odf_version} Indicates the ODF version of the ODF output file. Default is the most recent. {p_end}
 {pstd}If you are exporting the entire dataset, you can choose whether or not to export all available metadata (labels and descriptions of the dataset and the variables). {p_end}
 {pstd}By default all metadata is exported ({opt variables_arg("yes")}): information describing the dataset itself, as well as information describing all variables in the dataset. {p_end}
 {pstd}If you set {opt variables_arg("no")}, only the information describing the dataset is exported. {p_end}

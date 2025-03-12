@@ -5,7 +5,7 @@
 {viewerjumpto "Syntax" "opendf##functions"}{...}
 {viewerjumpto "Description" "opendf##description"}{...}
 {viewerjumpto "Remarks" "opendf##remarks"}{...}
-help for {cmd:opendf}{right: version 2.0.3}
+help for {cmd:opendf}{right: version 2.1.0}
 {hline}
 
 {phang}
@@ -22,7 +22,7 @@ help for {cmd:opendf}{right: version 2.0.3}
 
     Write data
 
-{p 8 16 2}{cmd:opendf} {cmd:write} {it:output} [,{opt input()} {opt languages()} {opt variables()} {opt verbose}]
+{p 8 16 2}{cmd:opendf} {cmd:write} {it:output} [,{opt input()} {opt languages()} {opt variables()} {opt odf_version()} {opt verbose}]
 
 
     Display metadata of dataset or variable
@@ -46,17 +46,17 @@ help for {cmd:opendf}{right: version 2.0.3}
 
     Build a Stata dataset (.dta) with metadata from the opendf specification from csv files containing meta data for survey data.
 
-{p 8 16 2}{cmd:opendf} {cmd:csv2dta} , {opt csv_loc()} [{opt rowrange}([start][:end]) {opt colrange}([start][:end])} {opt clear} {opt save()} {opt replace} {opt verbose}]
+{p 8 16 2}{cmd:opendf} {cmd:csv2dta} , {opt csv_loc()} [{opt rowrange}([start][:end]) {opt colrange}([start][:end])  {opt odf_version()}} {opt clear} {opt save()} {opt replace} {opt verbose}]
 
 
     Write data in open data format (.zip) from csv files containing meta data for survey data.
 
-{p 8 16 2}{cmd:opendf} {cmd:csv2zip}, {opt output()} [{opt input()} {opt variables_arg()} {opt export_data()} {opt verbose}]
+{p 8 16 2}{cmd:opendf} {cmd:csv2zip}, {opt output()} [{opt input()} {opt variables_arg()} {opt export_data()}  {opt odf_version()} {opt verbose}]
 
 
     Write four CSV-files with data and meta data from Stata ODF dataset.
 
-{p 8 16 2}{cmd:opendf} {cmd:dta2csv}, {opt output_dir()} [{opt languages()} {opt input()}]
+{p 8 16 2}{cmd:opendf} {cmd:dta2csv}, {opt output_dir()} [{opt languages()} {opt input()}  {opt odf_version()}]
 
 
     Write four CSV-files with data and meta data from ODF zip-file.

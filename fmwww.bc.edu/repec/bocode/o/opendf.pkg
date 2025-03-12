@@ -31,7 +31,7 @@ d KW: open data format
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20250121
+d Distribution-Date: 20250311
 d
 d Author: Tom Hartl, DIW Berlin
 d Support: email  thartl@@diw.de
@@ -58,4 +58,4 @@ f opendf_write.sthlp
 f opendf_zip2csv.sthlp
 f ../c/csv2xml.py
 f ../x/xml2csv.py
-f opendf_example_data.zip
+f opendf_example_data.odf.zip

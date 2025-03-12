@@ -7,7 +7,7 @@
 {viewerjumpto "Description" "opendf_dta2csv##description"}{...}
 {viewerjumpto "Options" "opendf_dta2csv##options"}{...}
 {viewerjumpto "Examples" "opendf_dta2csv##examples"}{...}
-help for {cmd:opendf_dta2csv}{right: version 2.0.3}
+help for {cmd:opendf_dta2csv}{right: version 2.1.0}
 {hline}
 
 {phang}
@@ -17,7 +17,7 @@ help for {cmd:opendf_dta2csv}{right: version 2.0.3}
 {title:Syntax}
 {p 8 17 2}
 {cmd:opendf_dta2csv}
-{cmd:}, {output_dir()} [{languages()} {input()}]
+{cmd:}, {output_dir()} [{languages()} {input()} {opt odf_version()}]
 
 {synoptset 20 tabbed}{...}
 {marker options}{synopthdr:options}
@@ -25,6 +25,7 @@ help for {cmd:opendf_dta2csv}{right: version 2.0.3}
 {synopt :{opth output_dir(string)}}Specifies a directory where to save the csvs. {p_end}
 {synopt :{opt languages(string)}}Specifies which label and description languages should be written to the csvs. (Default: "all") {p_end}
 {synopt :{opt input(string)}}Specifies a .dta file that should be loaded and written to csvs. {p_end}
+{synopt :{opt odf_version(string)}}Indicates the ODF version. {p_end}
 {synoptline}
 
 
@@ -36,6 +37,7 @@ help for {cmd:opendf_dta2csv}{right: version 2.0.3}
 {pstd}{opt output_dir} Indicates the folder where the csv files are saved. {p_end}
 {pstd}{opt languages} Indicates which languages to keep. Default is "all". {p_end}
 {pstd}{opt input} Indicates a .dta file that should be loaded and written to csv. Default is the dataset currently loaded in Stata. {p_end}
+{pstd}{opt odf_version} Indicates the ODF version. Default is the most recent. {p_end}
 {pstd}data.csv containings the data. {p_end}
 {pstd}dataset.csv contains the metadata of the dataset  {p_end}
 {pstd}variables.csv contains the metadata of the variables.  {p_end}

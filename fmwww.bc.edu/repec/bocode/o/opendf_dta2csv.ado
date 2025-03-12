@@ -16,16 +16,20 @@
 
 -----------------------------------------------------------------------------------*/
 *! opendf_dta2csv.ado: loads data from csvs including meta data to build a Stata dataset
-*! version 2.0.3
+*! version 2.1.0
 
 
 program define opendf_dta2csv 
 	version 16
-    	syntax, output_dir(string) [languages(string) input(string)]
+    	syntax, output_dir(string) [languages(string) input(string) odf_version(string)]
 	if (c(N) == 0 & c(k)==0) {
     	di as error "Dataset is empty."
     	exit
   	}
+	
+	if "`odf_version'" == ""{
+		local odf_version "1.1.0"
+	}
 
 	*if output_dir is not temp dir or if we are in linux, we add / to the path
 	if ("`output_dir'" != "`c(tmpdir)'" | "`c(os)'"=="Unix"){
@@ -378,6 +382,7 @@ program define opendf_dta2csv
 							else {
 								replace label_`l' in `_row_categories_out'=`"`_lbl_`l'`i''"'
 							}
+							local _lbl_`l'`i' = ""
 						}
 					}
 					save `categoriestempfile', replace
