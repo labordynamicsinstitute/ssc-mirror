@@ -1,5 +1,0 @@
-*! version 1.0.0  02jun2013
-sequence 9996
-label "mrc-bluegrey"
-
-set rgb "106 138 127"

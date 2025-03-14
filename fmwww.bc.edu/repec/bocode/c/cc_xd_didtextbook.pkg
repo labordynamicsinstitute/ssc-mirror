@@ -2,13 +2,14 @@ d 'CC_XD_DIDTEXTBOOK': module to provide do-files and datafiles for textbook
 d
 d   This package contains example do-files and Stata data files for
 d the DiD textbook of  Clément de Chaisemartin and Xavier
-d D'Haultfoeuille. 
+d D'Haultfoeuille. There are no installable files; give the get
+d command to download files to your current working directory.
 d
 d KW: DID
 d
 d Requires: Stata version 12
 d
-d Distribution-Date: 20240705
+d Distribution-Date: 20250314
 d
 d Author:  Clément de Chaisemartin,  Economics Department, Sciences Po
 d Support: email  chaisemartin.packages@@gmail.com

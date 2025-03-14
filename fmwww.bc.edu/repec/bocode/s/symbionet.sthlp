@@ -90,6 +90,7 @@ Any nonnumeric variables in the {it: varlist} will be ignored.
 {title:Saved results}
 {pstd}
 {cmd: In Mata}
+
 {cmd: Mat} : The adjacency matrix of the correlation network.
 
 {cmd: if nwcommands is installed}
@@ -105,7 +106,7 @@ Horvath, S. (2011). Weighted network analysis: applications in genomics and syst
 
 
 {title: Cite as}
-Please, cite the command as:
+Please, cite the command as: Nadia Von Jacobi & Charlie Joyez, 2025. "SYMBIONET: Stata module to build a symbiotic (or symmetric) correlation network from a list of variables," Statistical Software Components S459424, Boston College Department of Economics. 
 
 {title:Author}
 Nadia Von Jacobi, University of Trento

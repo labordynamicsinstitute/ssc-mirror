@@ -1,5 +1,0 @@
-*! version 1.0  26apr2022
-sequence 3010
-label "ukri-pink"
-
-set rgb "146 61 157"

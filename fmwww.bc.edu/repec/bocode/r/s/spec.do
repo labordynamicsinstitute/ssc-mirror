@@ -1,1 +1,0 @@
-* Special effects modeluse loganmclgen occgen diag=(focc==occ)*foccxi: mclest i.occ i.diag, sor(educ black) rc2(focc) muby(black)

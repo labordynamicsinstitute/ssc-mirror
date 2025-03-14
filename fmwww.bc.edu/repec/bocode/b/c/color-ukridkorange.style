@@ -1,5 +1,0 @@
-*! version 1.0  26apr2022
-sequence 3002
-label "ukri-dkorange"
-
-set rgb "255 105 0"

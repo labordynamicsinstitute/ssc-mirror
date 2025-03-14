@@ -1,5 +1,0 @@
-*! version 1.0  26apr2022
-sequence 3000
-label "ukri-grey"
-
-set rgb "103 103 103"

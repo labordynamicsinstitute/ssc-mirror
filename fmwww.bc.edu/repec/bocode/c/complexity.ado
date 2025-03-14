@@ -1,5 +1,5 @@
-*! Date        : 23 june 2021
-*! Version     : 4.0
+*! Date        : March 2025
+*! Version     : 5.0
 *! Author      : Charlie Joyez, Universite Cote d'Azur
 *! Email	   : charlie.joyez@univ-cotedazur.fr
 
@@ -15,12 +15,13 @@
 			   *  v3.1 In fitness method : Returns a product complexity score, reverse to the initial fitness score (cf Tachela et al (2012) : "Finally inverting the sum makes Q coherent with its positive meaning of complexity")
 			   *  v4.0 allows Stata variables as inputs. Therefore removes the .dta possibility for matsource (no longer useful)
 			   *  v4.0 introduces RCA option, and makes default input non RCA matrix
+			   *  v5.0 introduces Relatedness and Potential options. Changes the nodes names to activities.
 	
 			 
 capture program drop complexity
 program complexity, rclass
 	version 9
-	syntax , [ VARlist(varlist) Matrix(string) MATSource(string) Projection(string) METhod(string) ITERations(string) Xvar Transpose RCA]
+	syntax , [ VARlist(varlist) Matrix(string) MATSource(string) Projection(string) METhod(string) ITERations(string) Xvar Transpose RCA RELatedness POTential]
 
 	*****************
 *Options
@@ -73,12 +74,12 @@ if "`matsource'"!=""{
 ****
 *Computation options
 
-	*Projection individuals (e.g countries) / Nodes (e.g Products)
+	*Projection individuals (e.g countries) / activities (e.g Products)
 		if (mi(`"`projection'"')){
         local projection="indiv"
     }
-	    if !inlist(`"`projection'"', "", "indiv", "nodes") {
-        display as err "invalid option projection(), only {res}nodes {err}or  {res}indiv {txt}(default) arguments are possible"
+	    if !inlist(`"`projection'"', "", "indiv", "activities") {
+        display as err "invalid option projection(), only {res}activities {err}or  {res}indiv {txt}(default) arguments are possible"
         exit 198
     }	
 
@@ -130,9 +131,10 @@ if "`method'"=="fitness"{
 ***** Core of program
 **********************
 *Transform specialization data in RCA if not yet.	
-if "`rca'"==""{ 
 mata T=comp_M
-mata comp_M=(T:/rowsum(T)):/(colsum(T):/sum(T))
+mata t=(T:/rowsum(T)):/(colsum(T):/sum(T))
+if "`rca'"==""{ 
+mata comp_M=t
 }
 
 mata comp_M=mm_cond(comp_M:<1,0,1) /*make binary matrix if not initially, requires more_mata from SSC*/
@@ -140,7 +142,8 @@ mata comp_M=mm_cond(comp_M:<1,0,1) /*make binary matrix if not initially, requir
 	mata comp_D=rowsum(comp_M) /*Diversification*/
 
 	mata comp_U=rowsum(comp_M') /*ubiquity*/
-	
+
+
 
 if "`method'"!="fitness"{
 *Method of Reflection
@@ -207,7 +210,7 @@ forvalues j=2 (2)`it'{
 		mata mkp`itm1'=sum(kp`itm1')/rows(kp`itm1')
 		mata dkp`itm1'=(kp`itm1':-mkp`itm1')
 		mata sdkp`itm1'=sqrt((1/rows(kp`itm1'))*(sum(dkp`itm1':^2)))
-		mata comp_n_MR=(kp`itm1' :- mkp`itm1') :/sdkp`itm1'	
+		mata comp_a_MR=(kp`itm1' :- mkp`itm1') :/sdkp`itm1'	
 	
 
 
@@ -236,7 +239,7 @@ if "`method'"!="mr"{
 	mata st_matrix("Complexity_i", comp_i)		 
 
 	
-	*Complexity of nodes
+	*Complexity of activities
  
 		mata comp_V=(comp_M':/comp_U)*(comp_M:/comp_D)
 		mata eigensystemselecti(comp_V, (1,2), comp_X=., comp_L=.)
@@ -250,17 +253,17 @@ if "`method'"!="mr"{
 		mata comp_q=sum(comp_Q)/rows(comp_Q)
 		mata comp_d=(comp_Q:-comp_q):^2
 		mata comp_stdev=sqrt((1/rows(comp_Q))*sum(comp_d))
-		mata Comp_n=(comp_Q:-comp_q):/comp_stdev
+		mata Comp_a=(comp_Q:-comp_q):/comp_stdev
 		 
 
-	mata comp_n=Re(Comp_n)
-	mata st_matrix("Complexity_n", comp_n)		 
+	mata comp_a=Re(Comp_a)
+	mata st_matrix("Complexity_a", comp_a)		 
 	
 
-*Correct ECI/PCI sign if required : Correlate with MR
+*Correct ECI/PCI sign if required : Correlate with MR : comp_a real complexity vector
 	quietly{
 		mata st_matrix("comp_i_MR", comp_i_MR)
-		mata st_matrix("comp_n_MR", comp_n_MR)
+		mata st_matrix("comp_a_MR", comp_a_MR)
 		
 		count
 		local n=r(N)
@@ -283,16 +286,16 @@ if "`method'"!="mr"{
 		
 		count
 		local n=r(N)
-		quie svmat Complexity_n 
-		quie svmat comp_n_MR
-		corr Complexity_n1 comp_n_MR1
+		quie svmat Complexity_a 
+		quie svmat comp_a_MR
+		corr Complexity_a1 comp_a_MR1
 		local r=r(rho)
 		if `r'<0 {
-		mata comp_n = - comp_n
-		mata st_matrix("Complexity_n", comp_n)
+		mata comp_a = - comp_a
+		mata st_matrix("Complexity_a", comp_a)
 		}
-		drop Complexity_n1 comp_n_MR1	
-		capture rename Complexity_n1 Complexity_n
+		drop Complexity_a1 comp_a_MR1	
+		capture rename Complexity_a1 Complexity_a
 		drop if _n>`n'
 	}
 }
@@ -301,7 +304,7 @@ if "`method'"!="mr"{
 	if "`xvar'"==""{
 	
 	if "`method'"!="mr"{
-		if "`projection'"!="nodes"{
+		if "`projection'"!="activities"{
 		 quie count
 		 local N=r(N)
 		 mata n=rows(comp_M)
@@ -328,16 +331,16 @@ if "`method'"!="mr"{
 		 if `n'>`N'{
 		 set obs `n'
 		 }
-		 capture drop Complexity_n
-		 svmat Complexity_n
-		 capture rename Complexity_n1 Complexity_n
+		 capture drop Complexity_a
+		 svmat Complexity_a
+		 capture rename Complexity_a1 Complexity_a
 	   }
 	}
  	if "`method'"=="mr"{ 
 	mata st_matrix("comp_i_MR", comp_i_MR)
-    mata st_matrix("comp_n_MR", comp_n_MR) 
+    mata st_matrix("comp_a_MR", comp_a_MR) 
 
-		if "`projection'"!="nodes"{
+		if "`projection'"!="activities"{
 		 quie count
 		 local N=r(N)
 		 mata n=rows(comp_M)
@@ -364,9 +367,9 @@ if "`method'"!="mr"{
 		 if `n'>`N'{
 		 set obs `n'
 		 }
-		 capture drop MR_Complexity_n
-		 svmat comp_n_MR
-		 capture rename comp_n_MR MR_Complexity_n
+		 capture drop MR_Complexity_a
+		 svmat comp_a_MR
+		 capture rename comp_a_MR MR_Complexity_a
 	   }
     }
    }
@@ -379,11 +382,11 @@ if "`method'"!="mr"{
 	return matrix Diversity=Diversity
 	if "`method'"!="mr"{
 	return matrix Complexity_indiv_EV=Complexity_i
-	return matrix Complexity_node_EV=Complexity_n
+	return matrix Complexity_activity_EV=Complexity_a
 	}
 	if "`method'"=="mr"{
 	return matrix Complexity_individualMR=comp_i_MR
-	return matrix Complexity_nodeMR=comp_n_MR
+	return matrix Complexity_activityMR=comp_a_MR
 	}
 	return scalar iterations=`it'
 }	
@@ -405,9 +408,9 @@ if "`method'"=="fitness"{
 	mata fkp`j' = fkp`j':/mfkp`j'
 	}
 	mata st_matrix("fitness_i", fkc`it')
-	mata st_matrix("fitness_n", fkp`it')
+	mata st_matrix("fitness_a", fkp`it')
 
-	if "`projection'"!="nodes"{
+	if "`projection'"!="activities"{
 		capture drop fitness_i
 		if "`xvar'"==""{
 			capture drop fitness_i
@@ -416,42 +419,42 @@ if "`method'"=="fitness"{
 			}
 		}
 	else{
-		capture drop fitness_n
+		capture drop fitness_a
 		if "`xvar'"==""{
-			capture drop fitness_n
-			svmat fitness_n
-			capture rename fitness_n1 fitness_n
+			capture drop fitness_a
+			svmat fitness_a
+			capture rename fitness_a1 fitness_a
 			}
 		}
-	capt drop complexity_n
-	capture replace fitness_n=1/fitness_n
+	capt drop complexity_a
+	capture replace fitness_a=1/fitness_a
 	mata fitness_i=fkc`it'
-	mata fitness_n=1:/fkp`it'
-	*mata complexity_n=1:/fkp`it'
-	mata st_matrix("fitness_n", fitness_n)
+	mata fitness_a=1:/fkp`it'
+	*mata complexity_a=1:/fkp`it'
+	mata st_matrix("fitness_a", fitness_a)
 	mata st_matrix("Ubiquity", fkp0)
 	mata st_matrix("Diversity", fkc0)
 	return matrix Ubiquity=Ubiquity
 	return matrix Diversity=Diversity
 	return matrix Fitness_individual=fitness_i
-	return matrix Fitness_node=fitness_n
-	*return matrix Complexity_node=complexity_n
+	return matrix Fitness_aode=fitness_a
+	*return matrix Complexity_aode=complexity_a
 	return scalar iterations=`it'
 }
 if "`method'"=="eigenvalue"{
 	if "`projection'"=="indiv"{
 		su Complexity_i
 	}
-	if "`projection'"=="nodes"{
-		su Complexity_n
+	if "`projection'"=="activities"{
+		su Complexity_a
 	}
 }
 if "`method'"=="mr"{
 	if "`projection'"=="indiv"{
 		su MR_Complexity_i
 	}
-	if "`projection'"=="nodes"{
-		su MR_Complexity_n
+	if "`projection'"=="activities"{
+		su MR_Complexity_a
 	}
 }
 
@@ -459,9 +462,70 @@ if "`method'"=="fitness"{
 	if "`projection'"=="indiv"{
 		su fitness_i
 	}
-	if "`projection'"=="nodes"{
-		su fitness_n
-	}
+	if "`projection'"=="activities"{
+		su fitness_a
+	}		
 }
+
+if "`relatedness'"!=""{ 
+	mata P1n=(comp_M'*comp_M):/comp_U /*Conditional Probability of being specialized in i knowing specoalization in j, see Hidalgo et al. 2007*/
+	mata P2n=P1n' /*proba of the reverse*/
+	mata Prox_a=mm_cond(P1n:<P2n,P1n,P2n) /*minimum of the two*/
+	mata Prox_a=Prox_a:-diag(Prox_a) /*remove self loops*/
+
+	mata P1i=(comp_M*comp_M'):/comp_D 
+	mata P2i=P1i' 
+	mata Prox_i=mm_cond(P1i:<P2i,P1i,P2i) 
+	mata Prox_i=Prox_i:-diag(Prox_i) 
+
+
+	mata t=mm_cond(t:==.,0,t)
+	 mata R_i=diagonal(t:/comp_D*Prox_a*t':/comp_U)
+	 /*relatedness of individuals (eg countries) as average proximity of activities they are specialized in . Works even better for weighted Mcp (RCA) matrices (not Prox)*/
+	 
+	 mata R_a=diagonal(t':/comp_U*Prox_i*t:/comp_D)
+	 
+	 	if "`projection'"=="activities"{
+			getmata R_a, force
+			capture drop Relatedness_a
+			rename R_a Relatedness_a
+			quie su Relatedness_a
+			local mR=r(mean)
+			local sR=r(sd)
+			replace Relatedness_a=(Relatedness_a-`mR')/`sR'
+		}
+	 
+		if "`projection'"=="indiv"{
+			getmata R_i, force
+			capture drop Relatedness_i
+			rename R_i Relatedness_i
+			quie su Relatedness_i
+			local mR=r(mean)
+			local sR=r(sd)
+			replace Relatedness_i=(Relatedness_i-`mR')/`sR'
+		}
+	}		
+			
+	if "`potential'"!=""{
+		mata AvNeiComp=Prox_a*comp_a /*sum of complexity of neigbhoring activities*/
+		mata invMcp=mm_cond(comp_M:>0,0,1)
+		mata comp_apos=mm_cond(comp_a:<0,0,comp_a)/*only positive complexity goods to be considered*/
+		mata AvNeiComppot=(((T:/rowsum(T))*Prox_a):*invMcp)*comp_apos /*Average neighboring potential of goods not yet exported */
+		mata AvNeiComppot=Re(AvNeiComppot)
+		getmata AvNeiComppot,force
+		capt drop CompPotential_i
+		rename AvNeiComppot CompPotential_i
+		*mata Comp_a=Re(Comp_a)
+		*mata IsComplex_a=mm_cond(Comp_a:>0,1,0)'
+		*mata Prox2=mm_cond(Prox_a:>0.3,1,0) 
+		*mata Target=(comp_M*Prox2:*invMcp):*IsComplex_a
+		mata Target=(((T:/rowsum(T))*Prox_a):*invMcp):*comp_a' /*complexity of a good not yet exported weighted by its proximity to current specialization*/
+		mata Target=mm_cond(Target:<0,0,Target) 
+			
+			getmata (target*)=Target,force
+		}
+
+
+
 	end
 

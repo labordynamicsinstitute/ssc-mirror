@@ -1,4 +1,0 @@
-unemployment	employment
-job	employment
-ecomony	economy
-ive	i have
