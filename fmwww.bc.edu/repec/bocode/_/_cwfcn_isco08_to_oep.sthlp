@@ -1,5 +1,5 @@
 {smcl}
-{* version 1.0.2  08mar2025  Ben Jann}{...}
+{* version 1.0.3  12mar2025  Ben Jann}{...}
 {hi:isco08_to_oep()} {hline 2} Translate 4-digit ISCO-08 to OEP scores
 
 {title:Syntax}
@@ -32,7 +32,7 @@
 {phang}
     Oesch, Daniel, Oliver Lipps, Roujman Shahbazian, Erik Bihagen,
     Katy Morris. 2025. Occupational Earning Potential (OEP) Scale
-    (2025-03-04 update). OSF,
+    (2025-03-11 update). OSF,
     DOI:{browse "https://doi.org/10.17605/OSF.IO/PR89U":10.17605/OSF.IO/PR89U}. 
     {p_end}
 {hline}
@@ -433,6 +433,7 @@
 6224 32
 6300 21
 6310 21
+6320 21
 6330 21
 6340 21
 7000 43

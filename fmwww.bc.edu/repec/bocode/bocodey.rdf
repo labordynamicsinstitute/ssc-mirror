@@ -1,0 +1,23 @@
+﻿
+Template-Type: ReDIF-Software 1.0
+Title: TABLAB: Stata module to autocrosstabulate a variable
+Author-Name: Nicholas J. Cox
+Author-Email: N.J.Cox@durham.ac.uk
+Author-WorkPlace-Name: University of Durham
+Programming-Language: Stata
+Abstract: tablab takes a variable and cross-tabulates it with a copy of itself.
+ This may be useful if and only if the variable is a labelled numeric
+ variable and you wish to examine its labelled and unlabelled versions
+ simultaneously.
+Keywords: tabulations, labels
+Series: Statistical Software Components
+Number: S331001
+Creation-Date: 19980108
+File-URL: http://fmwww.bc.edu/repec/bocode/t/tablab.ado
+File-Format: text/plain
+File-Function: program code
+File-URL: http://fmwww.bc.edu/repec/bocode/t/tablab.hlp
+File-Format: text/plain
+File-Function: help file
+Handle: RePEc:boc:bocode:S331001
+
