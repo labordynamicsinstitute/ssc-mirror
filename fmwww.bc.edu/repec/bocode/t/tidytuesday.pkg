@@ -1,0 +1,15 @@
+d 'TIDYTUESDAY': module for fetching tidytuesday data
+d
+d  This program fetches tidytuesday data. 
+d
+d KW: data management
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250315
+d
+d Author: Asjad Naqvi, Austrian Institute of Economic Research (WIFO)  
+d Support: email asjadnaqvi@@gmail.com
+d
+f tidytuesday.ado
+f tidytuesday.sthlp

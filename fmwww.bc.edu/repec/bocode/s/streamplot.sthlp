@@ -1,7 +1,7 @@
 {smcl}
-{* 10Jun2024}{...}
+{* 08Feb2025}{...}
 {hi:help streamplot}{...}
-{right:{browse "https://github.com/asjadnaqvi/stata-streamplot":streamplot v1.82 (GitHub)}}
+{right:{browse "https://github.com/asjadnaqvi/stata-streamplot":streamplot v1.9 (GitHub)}}
 
 {hline}
 
@@ -15,10 +15,10 @@ The command is based on the following guide on Medium: {browse "https://medium.c
 {p 8 15 2}
 
 {cmd:streamplot} {it:y x} {ifin}, {cmd:by}(varname) 
-            {cmd:[} {cmd:palette}({it:str}) {cmd:smooth}({it:num}) {cmd:labcond}({it:str}) {cmd:offset}({it:num}) {cmd:alpha}({it:num}) {cmd:droplow} {cmdab:yrev:erse} {cmd:cat}({it:varname}) 
+            {cmd:[} {cmd:palette}({it:str}) {cmd:smooth}({it:num}) {cmd:labcond}({it:str}) {cmd:offset}({it:num}) {cmd:alpha}({it:num}) {cmdab:yrev:erse} {cmd:cat}({it:varname}) 
                {cmdab:rec:enter}({it:top}|{it:mid}|{it:bot}) {cmdab:lc:olor}({it:str}) {cmdab:lw:idth}({it:str}) {cmdab:labs:ize}({it:num}) {cmdab:labc:olor}({it:color}|{it:palette})
                {cmd:percent} {cmd:format}({it:str}) {cmdab:area} {cmdab:nolab:el} {cmd:wrap}({it:num}) {cmd:tline} {cmdab:tlc:olor}({it:str}) {cmdab:tlw:idth}({it:str}) 
-               {cmdab:tlp:attern}({it:str}) {cmd:yline}({it:str}) {cmd:labprop} {cmd:labscale}({it:num}) {cmd:wrap}({it:num}) {cmd:*}
+               {cmdab:tlp:attern}({it:str}) {cmd:yline}({it:str}) {cmdab:laboff:set}({it:num}) {cmd:labprop} {cmd:labscale}({it:num}) {cmd:wrap}({it:num}) {cmd:*}
             {cmd:]}
 
 
@@ -46,9 +46,6 @@ For brevity, the following can be specified: {it:middle} = {it:mid} = {it:m}, {i
 
 {p2coldent : {opt area}}Show stacked area graph. Options {opt recenter(bottom)} and {opt smooth(0)} are recommended with this option.{p_end}
 
-{p2coldent : {opt droplow}}If there are fewer than 10 observations per {opt by()} variable, the command will throw an error. If only some groups have this issue, 
-then use the {opt droplow} option to drop these observations. This option is intended to quickly plot the data. Ideally, clean up the data before plotting.{p_end}
-
 {p2coldent : {opt smooth(num)}}The smoothing parameter defined in terms of last observations to use. The default value is {opt smooth(3)}.
 A value of 0 implies no smoothing.{p_end}
 
@@ -59,18 +56,18 @@ Default is {stata colorpalette tableau:{it:tableau}}.{p_end}
 
 {p2coldent : {opt offset(num)}}Extends the x-axis range to accommodate labels. The default value is {opt offset(15)} for 15% of {it:xmax-xmin} of the axis range.{p_end}
 
-{p2coldent : {opt wrap(num)}}Wrap the labels after a number of characters. For example, {opt wrap(50)} will wrap labels every 50 characters.{p_end}
+{p2coldent : {opt wrap(num)}}Wrap the labels after a specific number of characters. Word boundaries are respected. Requires the latest {stata help graphfunctions:graphfunctions} package.{p_end}
 
 {p2coldent : {opt labc:olor(str)}}Label colors are either defined as a single color, e.g. default is {opt labc(black)}. Or if {opt labc(palette)} is specified,
 labels have the {opt palette()} colors.{p_end}
 
-{p2coldent : {opt labs:ize(str)}}Size of the stream labels. Default value is {opt labs(1.4)}.{p_end}
+{p2coldent : {opt labs:ize(str)}}Size of the stream labels. The default value is {opt labs(1.4)}.{p_end}
 
 {p2coldent : {opt percent}}Shows the percentage share for the y-axis categories.{p_end}
 
-{p2coldent : {opt format()}}Format the values of the y-axis category. Default value is {opt format(%12.0f)}.{p_end}
+{p2coldent : {opt format(fmt)}}Format the values of the y-axis category. The default is {opt format(%12.0f)}.{p_end}
 
-{p2coldent : {opt xlabel()}}This is the standard twoway graph option for labeling and formatting the x-axis. {p_end}
+{p2coldent : {opt laboff:set(num)}}Offset the stream labels. Negative values will offset towards the left. The default is {opt laboff(0)}.{p_end}
 
 {p2coldent : {opt labcond(num)}}The label condition can be used to limit the number of labels shown. 
 For example, {opt labcond(100)} will only shows labels where the last data point value is greater than 100.{p_end}
@@ -87,7 +84,7 @@ For example, {opt labcond(100)} will only shows labels where the last data point
 
 {p2coldent : {opt tlp:attern(str)}}The timeline pattern. The default is {opt tlp(solid)}.{p_end}
 
-{p2coldent : {opt labprop}}Scale the bar labels based on the relative stocks.{p_end}
+{p2coldent : {opt labprop}}Scale the bar labels based on the relative values.{p_end}
 
 {p2coldent : {opt labscale(num)}}Scale factor of {opt labprop}. Default value is {opt labscale(0.3333)}. Values closer to zero result in more exponential scaling, while values closer
 to one are almost linear scaling. This is an advanced option so use carefully.{p_end}
@@ -98,32 +95,14 @@ to one are almost linear scaling. This is an advanced option so use carefully.{p
 
 {title:Dependencies}
 
-The {browse "http://repec.sowi.unibe.ch/stata/palettes/index.html":palette} package (Jann 2018, 2022) is required for {cmd:streamplot}:
-
 {stata ssc install palettes, replace}
 {stata ssc install colrspace, replace}
+{stata ssc install graphfunctions, replace}
 
-Even if you have these installed, it is highly recommended to check for updates: {stata ado update, update}
 
 {title:Examples}
 
 See {browse "https://github.com/asjadnaqvi/stata-streamplot":GitHub}.
-
-{hline}
-
-
-{title:Package details}
-
-Version      : {bf:streamplot} v1.82
-This release : 10 Jun 2024
-First release: 06 Aug 2021
-Repository   : {browse "https://github.com/asjadnaqvi/stata-streamplot":GitHub}
-Keywords     : Stata, graph, stream plot
-License      : {browse "https://opensource.org/licenses/MIT":MIT}
-
-Author       : {browse "https://github.com/asjadnaqvi":Asjad Naqvi}
-E-mail       : asjadnaqvi@gmail.com
-Twitter      : {browse "https://twitter.com/AsjadNaqvi":@AsjadNaqvi}
 
 
 {title:Feedback}
@@ -133,17 +112,23 @@ Please submit bugs, errors, feature requests on {browse "https://github.com/asja
 
 {title:Citation guidelines}
 
-Suggested citation guidlines for this package:
+See {browse "https://ideas.repec.org/c/boc/bocode/s459060.html"} for the official SSC citation. 
+Please note that the GitHub version might be newer than the SSC version.
 
-Naqvi, A. (2024). Stata package "streamplot" version 1.82. Release date 10 June 2024. https://github.com/asjadnaqvi/stata-streamplot.
 
-@software{streamplot,
-   author = {Naqvi, Asjad},
-   title = {Stata package ``streamplot''},
-   url = {https://github.com/asjadnaqvi/stata-streamplot},
-   version = {1.82},
-   date = {2024-06-10}
-}
+{title:Package details}
+
+Version      : 1.9
+This release : 08 Feb 2025
+First release: 06 Aug 2021
+Repository   : {browse "https://github.com/asjadnaqvi/stata-streamplot":GitHub}
+Keywords     : Stata, graph, streamplot
+License      : {browse "https://opensource.org/licenses/MIT":MIT}
+
+Author       : {browse "https://github.com/asjadnaqvi":Asjad Naqvi}
+E-mail       : asjadnaqvi@gmail.com
+Twitter/X    : {browse "https://x.com/AsjadNaqvi":@AsjadNaqvi}
+BlueSky      : {browse "https://bsky.app/profile/asjadnaqvi.bsky.social":@asjadnaqvi.bsky.social}
 
 
 {title:References}
@@ -154,9 +139,8 @@ Naqvi, A. (2024). Stata package "streamplot" version 1.82. Release date 10 June 
 
 
 {title:Other visualization packages}
-
 {psee}
-    {helpb arcplot}, {helpb alluvial}, {helpb bimap}, {helpb bumparea}, {helpb bumpline}, {helpb circlebar}, {helpb circlepack}, {helpb clipgeo}, {helpb delaunay}, {helpb joyplot}, 
-	{helpb marimekko}, {helpb polarspike}, {helpb sankey}, {helpb schemepack}, {helpb spider}, {helpb streamplot}, {helpb sunburst}, {helpb treecluster}, {helpb treemap}, {helpb waffle}
+    {helpb arcplot}, {helpb alluvial}, {helpb bimap}, {helpb bumparea}, {helpb bumpline}, {helpb circlebar}, {helpb circlepack}, {helpb clipgeo}, {helpb delaunay}, {helpb graphfunctions}, {helpb geoboundary}, {helpb geoflow}, {helpb joyplot}, 
+	{helpb marimekko}, {helpb polarspike}, {helpb sankey}, {helpb schemepack}, {helpb spider}, {helpb splinefit}, {helpb streamplot}, {helpb sunburst}, {helpb ternary}, {helpb treecluster}, {helpb treemap}, {helpb trimap}, {helpb waffle}
 
-or visit {browse "https://github.com/asjadnaqvi":GitHub} for detailed documentation and examples.	
+Visit {browse "https://github.com/asjadnaqvi":GitHub} for further information.

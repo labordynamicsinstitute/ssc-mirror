@@ -1,9 +1,8 @@
-d 'JOYPLOT': module to produce joyplots
+d 'RIDGELINE': module to produce ridgeline plots
 d
-d  This program produces joy plots, or ridgeline plots, as
-d described in the Medium ridgeline plots feature. 
+d  This program produces ridgeline plots, as described in the
+d Medium ridgeline plots feature. 
 d
-d KW: joyplot
 d KW: graphics
 d KW: ridgeline plot
 d
@@ -14,7 +13,7 @@ d
 d Author: Asjad Naqvi, Austrian Institute of Economic Research (WIFO)
 d Support: email asjadnaqvi@@gmail.com
 d
-f joyplot.ado
-f joyplot.sthlp
-f ../r/ridgeline.ado
-f ../r/ridgeline.sthlp
+f ridgeline.ado
+f ridgeline.sthlp
+f ../j/joyplot.ado
+f ../j/joyplot.sthlp

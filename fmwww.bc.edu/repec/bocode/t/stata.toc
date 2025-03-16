@@ -71,6 +71,7 @@ p theilr2 module to compute Theil R2 Multicollinearity Effect
 p thsearch module to evaluate threshold search model for non-linear models based on information criterion
 p tictoc module to provide simplified timer commands
 p tidy module to ease reshaping of data
+p tidytuesday module for fetching tidytuesday data
 p tihtest module to test for time invariant unobserved heterogeneity in generalized linear models for panel data
 p timeit module to provide single line version of timer on/off
 p timestamp module to obtain a UNIX timestamp and the current time of a user-specified timezone

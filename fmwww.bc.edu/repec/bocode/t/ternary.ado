@@ -1,11 +1,12 @@
-*! ternary v1.1 (12 Sep 2024)
+*! ternary v1.2 (12 Mar 2025)
 *! Asjad Naqvi (asjadnaqvi@gmail.com)
 
+* v1.2 (12 Mar 2025) : Marker weights added. fill is now default. nofill now has to be specified. norm(100) should now work. Option pad() added.
 * v1.1 (12 Sep 2024) : Marker label options added. Normalize option added. Better zoom
 * v1.0 (28 Aug 2024) : Beta release
 
 
-program ternary, // sortpreserve  
+program ternary, sortpreserve  
 	
 	version 15 
 	
@@ -13,9 +14,10 @@ program ternary, // sortpreserve
 		[ , cuts(real 5) showlabel LColor(string) LWidth(string) format(str)   ] ///
 		[ msize(string) malpha(real 90) MLColor(string) MLWIDth(string) MColor(string) MSYMbol(string) TICKSize(string) LABColor(string) ]	///
 		[ colorR(string) colorL(string) colorB(string)  ] ///
-		[ fill points lines labels 	 ]	///
+		[ points lines labels 	 ]	///
 		[ zoom  * ]	///
-		[ MLABel(varlist max=1) MLABSize(string) MLABColor(string) MLABPOSition(string) NORMalize(string) ]
+		[ MLABel(varlist max=1) MLABSize(string) MLABColor(string) MLABPOSition(string) NORMalize(string) ] ///
+		[ scale pad(real 5) NOFILL ] // v1.2
 	
 	
 	 
@@ -32,34 +34,41 @@ program ternary, // sortpreserve
 		exit
 	}
 	
+	local filltrack 1
+	if "`nofill'" != "" local filltrack 0
+
+
 	
-	if "`points'" != "" | "`fill'" != "" {
-		qui {	
+	
+	if "`points'" != "" | "`nofill'"=="" {
+		
+	
+		quietly {	
 			preserve
 				clear
 				tempfile _triangles
-				qui _ternary_triangles, cuts(`cuts') colorB(`colorB') colorR(`colorR') colorL(`colorL')
+				_ternary_triangles, cuts(`cuts') colorB(`colorB') colorR(`colorR') colorL(`colorL')
 				save `_triangles'			
 			restore		
 		}
 	}	
 	
 	if "`points'" != ""  {
-		qui {	
+		quietly {	
 			preserve
 				clear
 				tempfile _points
 				use `_triangles'
 				keep if _tag==1
 				keep _id color
-				ren _id tri_id
+				rename _id tri_id
 				save `_points'			
 			restore		
 		}
 	}
 
 
-quietly {	
+quietly {
 	preserve
 	
 	keep if `touse'
@@ -85,25 +94,25 @@ quietly {
 	
 	// run checks
 
-	egen _check = rowtotal(_R _L _B)
+	egen double _total = rowtotal(_R _L _B)
 	
 	
 	if "`normalize'" == "1" {
-		replace _R = _R / _check		
-		replace _L = _L / _check
-		replace _B = _B / _check
+		replace _R = _R / _total		
+		replace _L = _L / _total
+		replace _B = _B / _total
 		local normlvl = 1
 		
 	}
 	else if "`normalize'" == "100"  { // default
-		replace _R = (_R / _check) * 100
-		replace _L = (_L / _check) * 100
-		replace _B = (_B / _check) * 100		
+		replace _R = (_R / _total) 
+		replace _L = (_L / _total) 
+		replace _B = (_B / _total)	
 		local normlvl = 100
 		
 	}
 	else {
-		summ _check, meanonly
+		summarize _total, meanonly
 		
 		if round(`r(max)') == 1 {
 			noisily display in yellow "Normalization of 1 assumed."
@@ -124,13 +133,8 @@ quietly {
 		
 	}
 	
-	drop _check
 	
-	if "`format'" == "" {
-		if `normlvl' == 1 	local format  %5.2f 
-		if `normlvl' == 100 local format  %6.0f 
-	} 	
-	
+	if "`format'" == ""  local format  %6.2f 
 	
 	local mymax = 1
 	local mymin = 0
@@ -144,12 +148,14 @@ quietly {
 			summ `x', meanonly
 			
 			if `mymin' < `r(min)' {
-				local mymin = (floor(`r(min)' * 100) / 100)
+				local mymin = r(min)
 				local myvar `x'
 			}
-			
 			local ++i
 		}
+		
+		local mymin = max(0, `mymin' * (1 - (`pad' / 100))) // pad
+		
 		
 		// normalize
 		local others "_R _L _B" 
@@ -163,9 +169,11 @@ quietly {
 			summ `x', meanonly
 			
 			if `mymax' > `r(min)' {
-				local mymax = (floor(`r(min)' * 100) / 100)
+				local mymax = `r(min)'
 			}
 		}
+		
+		local mymax = min(1, `mymax' * (1 + (`pad' / 100))) // pad
 		
 		local mymax = 1 - `mymax'
 		
@@ -177,6 +185,7 @@ quietly {
 				
 	}	
 
+	
 
 	// barycentric coordinates	
 	gen double _yvar = _R * sqrt(3) / 2 
@@ -278,8 +287,6 @@ quietly {
 	}
 	
 	
-	
-
 	// generate the title labels
 	gen tx = .
 	gen ty = .
@@ -302,8 +309,17 @@ quietly {
 	
 	**** return color triangles
 	
-
+	
 	if "`msymbol'" == "" 	local msymbol circle
+	
+	if "`scale'"== "" {
+		local msym2 `msymbol'
+	}
+	else {
+		local msym2 none
+	}
+
+	
 	if "`msize'"   == "" 	local msize   1.5
 	if "`mcolor'"  == "" 	local mcolor  white
 	if "`mlcolor'" == "" 	local mlcolor black
@@ -311,7 +327,7 @@ quietly {
 	if "`lwidth'"  == "" 	local lwidth  0.15
 	
 	if "`lcolor'"  == "" {
-		if "`fill'" != "" {
+		if "`nofill'" == "" {
 			local lcolor  white
 		}
 		else {
@@ -325,6 +341,10 @@ quietly {
 	
 	// point colors
 	
+	
+	if "`scale'"  !="" {
+		local mypoints `mypoints'  (scatter _yvar _xvar [fw = _total], msymbol(`msymbol') msize(`msize') mcolor(`mcolor') mlcolor(`mlcolor') mlwidth(`mlwidth') ) 
+	}	
 	
 	if "`points'"!="" {
 		
@@ -415,35 +435,39 @@ quietly {
 		merge m:1 tri_id using `_points'
 		
 		sort _seq	
-		drop if _m==2
+		drop if _merge==2
 		drop _merge _seq
 		drop _ytr _xtr
 		
 		
 		gen _i2 = _n
+
 		
-		levelsof tri_id, local(clrlvls)
+	levelsof tri_id, local(clrlvls)
 		
-		foreach x of local clrlvls {
+	foreach x of local clrlvls {
 		
-			summ _i2 if tri_id==`x', meanonly
-			local myclr = color[`r(min)'] 
+		summ _i2 if tri_id==`x', meanonly
+		local myclr = color[`r(min)'] 
 			
-			colorpalette `myclr', nograph
+		colorpalette `myclr', nograph
 			
-			local mypoints `mypoints' (scatter _yvar _xvar if tri_id==`x', msize(`msize') mcolor("`r(p1)'%`malpha'") mlcolor(`mlcolor') mlwidth(`mlwidth') mlabel(`mlabel') mlabcolor(`mlabcolor') mlabsize(`mlabsize') mlabpos(`mlabposition') ) 
+		local mypoints `mypoints' (scatter _yvar _xvar if tri_id==`x', msymbol(`msym2') msize(`msize') mcolor("`r(p1)'%`malpha'") mlcolor(`mlcolor') mlwidth(`mlwidth') mlabel(`mlabel') mlabcolor(`mlabcolor') mlabsize(`mlabsize') mlabpos(`mlabposition') ) 
 				
 		}
 	}
 	else {
-			local mypoints (scatter _yvar _xvar, msymbol(`msymbol') msize(`msize') mcolor(`mcolor') mlcolor(`mlcolor') mlwidth(`mlwidth')  mlabel(`mlabel') mlabcolor(`mlabcolor') mlabsize(`mlabsize') mlabpos(`mlabposition') ) 
+		local mypoints `mypoints' (scatter _yvar _xvar, msymbol(`msym2') msize(`msize') mcolor(`mcolor') mlcolor(`mlcolor') mlwidth(`mlwidth')  mlabel(`mlabel') mlabcolor(`mlabcolor') mlabsize(`mlabsize') mlabpos(`mlabposition') ) 
 	}
+
 	
+
+			
 	
 	**** generate the triangles ****
 	
-	if "`fill'"!="" {
-
+	if "`nofill'" == "" {
+	
 		append using `_triangles'
 		gen _i = _n
 		
@@ -712,9 +736,8 @@ end
 
 
 
-
-
 **** END ****
+
 
 
 

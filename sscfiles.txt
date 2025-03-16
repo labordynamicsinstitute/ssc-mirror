@@ -17727,6 +17727,7 @@ fmwww.bc.edu/repec/bocode/t/tabletutorial_9.ihlp
 fmwww.bc.edu/repec/bocode/t/tabchii.ado
 fmwww.bc.edu/repec/bocode/t/tabsort6.ado
 fmwww.bc.edu/repec/bocode/t/tobexog.ado
+fmwww.bc.edu/repec/bocode/t/tidytuesday.sthlp
 fmwww.bc.edu/repec/bocode/t/txttool.pkg
 fmwww.bc.edu/repec/bocode/t/tobitiv.pkg
 fmwww.bc.edu/repec/bocode/t/table1_mc13.ado
@@ -18001,6 +18002,7 @@ fmwww.bc.edu/repec/bocode/t/tlablist.ado
 fmwww.bc.edu/repec/bocode/t/twfe.pkg
 fmwww.bc.edu/repec/bocode/t/twed.sthlp
 fmwww.bc.edu/repec/bocode/t/tomode.ado
+fmwww.bc.edu/repec/bocode/t/tidytuesday.pkg
 fmwww.bc.edu/repec/bocode/t/test_xtavplot.do
 fmwww.bc.edu/repec/bocode/t/t2t2outerv3.ado
 fmwww.bc.edu/repec/bocode/t/ttable3.sthlp
@@ -18138,6 +18140,7 @@ fmwww.bc.edu/repec/bocode/t/tvgc0.ado
 fmwww.bc.edu/repec/bocode/t/tocalendar.ado
 fmwww.bc.edu/repec/bocode/t/Us48-Coordinates.dta
 fmwww.bc.edu/repec/bocode/t/trackobs.ado
+fmwww.bc.edu/repec/bocode/t/tidytuesday.ado
 fmwww.bc.edu/repec/bocode/t/tiva2023_gettivafiles.ado
 fmwww.bc.edu/repec/bocode/t/tsmktim.hlp
 fmwww.bc.edu/repec/bocode/t/tfinsert.ado
@@ -18678,6 +18681,7 @@ fmwww.bc.edu/repec/bocode/r/rcspline.ado
 fmwww.bc.edu/repec/bocode/r/rerdata.dta
 fmwww.bc.edu/repec/bocode/r/read_differencetest.sthlp
 fmwww.bc.edu/repec/bocode/r/reg2hdfe.pkg
+fmwww.bc.edu/repec/bocode/r/ridgeline.pkg
 fmwww.bc.edu/repec/bocode/r/raschtestv7.ado
 fmwww.bc.edu/repec/bocode/r/renfiles.hlp
 fmwww.bc.edu/repec/bocode/r/rangerun.sthlp

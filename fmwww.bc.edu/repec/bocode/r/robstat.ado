@@ -1,4 +1,4 @@
-*! version 1.0.4  21dec2020  Ben Jann
+*! version 1.0.5  15mar2025  Ben Jann
 
 local rc 0
 capt findfile lmoremata.mlib
@@ -615,7 +615,7 @@ program Estimate, eclass
         local wgt
         local swgt
     }
-    if "`svy'"!="" & `"`exp'"'!="" {
+    if "`svy'"!="" & `"`exp'"'!="" { // include obs with zero weight
         su `touse' if `touse', meanonly
     }
     else {
@@ -623,6 +623,13 @@ program Estimate, eclass
     }
     local N = r(N)
     if `N'==0 error 2000
+    if `"`over'"'!="" {
+        if "`weight'"!="" {
+            su `touse' `swgt' if `touse' & `subpop', meanonly
+            local W = r(sum_w)
+        }
+        else local W `N'
+    }
     
     // check whether variance estimation is supported
     if "`se'"=="" {
@@ -676,6 +683,13 @@ program Estimate, eclass
     }
     mat rown `_N' = `overvals' `total'
     mat coln `_N' = "N"
+    if `"`over'"'!="" {
+        if "`weight'"!="" {
+            tempname _W
+            mat `_W' = `_N'
+        }
+        else local _W `_N'
+    }
     foreach v of local varlist {
         local k 0
         foreach overval in `overvals' `total' {
@@ -693,13 +707,22 @@ program Estimate, eclass
             else if "`over'"!="" & `nstats'>1 local eq "`overval'"
             else local eq
             // count obs
-            if "`svy'"!="" & `"`exp'"'!="" {
+            if "`svy'"!="" & `"`exp'"'!="" { // include obs with zero weight
                 su `touse' if `touse' & `subpop' & `touse1', meanonly
             }
             else {
                 su `touse' `swgt' if `touse' & `subpop' & `touse1', meanonly
             }
             mat `_N'[`k', 1] = r(N)
+            if `"`over'"'!="" {
+                if "`weight'"!="" {
+                    if "`svy'"!="" & `"`exp'"'!="" {
+                        su `touse' `swgt' if `touse' & `subpop' & `touse1',/*
+                            */ meanonly
+                    }
+                    mat `_W'[`k', 1] = r(sum_w)
+                }
+            }
             // compute stats
             mat `btmp' = J(1, `nstats', .)
             mat coln `btmp' = `statslbl'
@@ -725,6 +748,9 @@ program Estimate, eclass
                 local ++j
                 Estimate_`stat' `wgt' if `touse' & `subpop' & `touse1', ///
                     v(`v') u(`u') `estopts'
+                if `"`over'"'!="" { // rescale IF
+                    qui replace `u' = `u' * (`W'/`_W'[`k', 1])
+                }
                 mat `btmp'[1, `j']   = r(b)
                 mat `cltmp'[1, `j']  = r(class)
                 mat `auxtmp'[1, `j'] = r(k)

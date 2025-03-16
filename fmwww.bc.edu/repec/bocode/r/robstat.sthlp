@@ -46,7 +46,7 @@
     of survey design as set by {helpb svyset}, optionally restricting
     computations to {it:subpop}
     {p_end}
-{synopt :{opt nose}}supress computation of standard errors and confidence
+{synopt :{opt nose}}suppress computation of standard errors and confidence
     intervals
     {p_end}
 {synopt :{opt gen:erate}[{cmd:(}{it:prefix}{cmd:)}]}stores the values of the
