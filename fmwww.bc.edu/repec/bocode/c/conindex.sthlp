@@ -21,6 +21,7 @@ help for {cmd:conindex} {right: Erasmus University Rotterdam & NUI Galway}
  [{cmdab:loud}] 
  [{cmdab:COMPare}{cmd:(}{it:varname}{cmd:)}]
  [{cmdab:KEEPrank}{cmd:(}{it:string}{cmd:)}]
+ [{cmdab:KEEPGraphdata}{cmd:(}{it:string}{cmd:)}]
  [{cmdab:svy}]
  
 {title:Description}
@@ -49,7 +50,9 @@ help for {cmd:conindex} {right: Erasmus University Rotterdam & NUI Galway}
 
 {p 5 5 2} The value of an index can be compared across groups, and the null of homogeneity tested, using the {it:compare} option. This option cannot be combined with the prefix {it:by varlist:}.
 
-{p 5 5 2} The fractional rank may be preserved using the option {it:keeprank(string)} where {it: string} is the name given to the rank variable created.
+{p 5 5 2} The fractional rank may be preserved using the option {it:keeprank(string)} where {it: string} is the name given to the rank variable created. 
+
+{p 5 5 2} The data from the Lorenz or concentration curves can be stored in a new dataset using the option {it:keepgraphdata(string)} where {it: string} is the name for the dataset.
 
 {p 5 5 2} {it:conindex} can be used on data from complex survey designs by including the option {it:svy} if {it:svyset} has been used to identify the survey design characteristics prior to running {it:conindex}.
 
@@ -93,6 +96,8 @@ help for {cmd:conindex} {right: Erasmus University Rotterdam & NUI Galway}
 {col 5} {it:keeprank(string)} {col 25} creates a new variable which contains the fractional ranks, where {it:string} is the name of the variable to be created. When used 
 {col 25} in conjunction with compare, the variable {it:string} will contain the fractional rank for the full sample and the suffix {it:k} is added to
 {col 25} {it:string} to indicate the fractional rank for group {it:k}. 
+
+{col 5} {it:keepgraphdata(string)} {col 25} creates a new dataset storing the data used to graph the Lorenz or concentration curve, where {it:string} is the name of the dataset to be created. 
 
 {col 5} {it:compare(varname)} {col 25}computes indices specific to groups specified by varname. Two tests of the null of equality of the index values across groups are 
 {col 25} produced: an F-test that is valid in small samples but requires an assumption of equal variances across groups and a z-test that  
@@ -196,9 +201,9 @@ help for {cmd:conindex} {right: Erasmus University Rotterdam & NUI Galway}
 
 {title:Author}
 
-{p 5 5 2} Owen O’Donnell, Erasmus School of Economics, Erasmus University Rotterdam, the Netherlands; Tinbergen Institute, the Netherlands; and University of Macedonia, Greece.
+{p 5 5 2} Owen O Donnell, Erasmus School of Economics, Erasmus University Rotterdam, the Netherlands; Tinbergen Institute, the Netherlands; and University of Macedonia, Greece.
 
-{p 5 5 2} Stephen O’Neill (corresponding author), Department of Health Services Research and Policy, London School of Hygiene and Tropical Medicine, UK. stephen.oneill@lshtm.ac.uk
+{p 5 5 2} Stephen O Neill (corresponding author), Department of Health Services Research and Policy, London School of Hygiene and Tropical Medicine, UK. stephen.oneill@lshtm.ac.uk
 
 {p 5 5 2} Tom Van Ourti, Erasmus School of Economics, Erasmus University Rotterdam, the Netherlands; Tinbergen Institute, the Netherlands.
 

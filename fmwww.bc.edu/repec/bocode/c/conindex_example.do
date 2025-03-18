@@ -11,7 +11,10 @@ use "CDHS2010hh.dta", clear
 sum healthexp [aweight=sampweight_hh]
 xtile wealthquint_hh = wealthindex [pweight=sampweight_hh], n(5)
 graph bar (mean) healthexp [pweight = sampweight_hh], over(wealthquint_hh)
+* aweights are not supported 
 conindex healthexp [aweight=sampweight_hh], rankvar(wealthindex) truezero cluster(PSU) graph ytitle(Cumulative share of healthexp) xtitle(Fractional Income rank)
+* pweights and fweights (for integer weights) are supported
+conindex healthexp [pweight=sampweight_hh], rankvar(wealthindex) truezero cluster(PSU) graph ytitle(Cumulative share of healthexp) xtitle(Fractional Income rank)
 conindex healthexp [aweight=sampweight_hh], rankvar(wealthindex) generalized truezero cluster(PSU) 
 conindex healthexp [aweight=sampweight_hh], rankvar(wealthindex) v(1.5) truezero cluster(PSU)
 conindex healthexp [aweight=sampweight_hh], rankvar(wealthindex) v(5) truezero cluster(PSU)

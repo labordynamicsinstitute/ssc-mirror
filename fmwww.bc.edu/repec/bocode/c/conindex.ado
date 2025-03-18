@@ -1,4 +1,4 @@
-*! conindex 1.5  18 July 2018
+*! conindex 1.7  12 March 2025
 *! Copyright (C) 2015 Owen O'Donnell, Stephen O'Neill, Tom Van Ourti & Brendan Walsh.
 *! svy option added (16 Feb 2016)
 *| using lorenz.ado for graphs (18 July 2018)
@@ -18,10 +18,10 @@
 capture program drop conindex
 program define conindex, rclass sortpreserve byable(recall)
 version 11.0
-syntax varname [if] [in] [fweight aweight pweight]  , [RANKvar(varname)] [, robust] [, CLUSter(varname)] [, truezero] [, LIMits(numlist min=1 max=2 missingokay)] [, generalized][, generalised] [, bounded] [, WAGstaff] [, ERReygers]  [, v(string)] [,beta(string)] [, graph] [, loud] [, COMPare(varname)] [, KEEPrank(string)] [, ytitle(string)] [, xtitle(string)] [,compkeep(numlist)] [,extended] [,symmetric] [,bygroup(numlist)] [,svy] 
+syntax varname [if] [in] [fweight aweight pweight]  , [RANKvar(varname)] [, robust] [, CLUSter(varname)] [, truezero] [, LIMits(numlist min=1 max=2 missingokay)] [, generalized][, generalised] [, bounded] [, WAGstaff] [, ERReygers]  [, v(string)] [,beta(string)] [, graph] [, loud] [, COMPare(varname)] [, KEEPRANK(string)] [, KEEPGraphdata(string)] [, ytitle(string)] [, xtitle(string)] [,compkeep(numlist)] [,extended] [,symmetric] [,bygroup(numlist)] [,svy] 
 marksample touse
 tempname grouptest counter
-tempvar wght sumw cumw cumw_1 cumwr cumwr_1 frnk temp sigma2 meanlhs meanlhs_star cumlhs cumlhs1 lhs rhs1 rhs2 xmin xmax varlist_star weight1 meanweight1 tempx temp1x sumlhsx  temps tempex lhsex rhs1ex rhs2ex sigma2ex exrank tempgx  lhsgex lhsgexstar symrank smrankmean tempsym sigma2sym lhssym lhssymstar rhs1sym rhs2sym lhsgsym tempgxstar raw_rank_c wi_c cusum_c wj_c rank_c var_rank_c mean_c lhs_c split_c ranking  extwght temp1 meanweight  sumlhs sumwr  counts meanoverall tempdis temp0 meanlhs2  rhs temp2  frnktest meanlhsex2  equality group lhscomp  rhs1comp rhs2comp rhscomp intercept scale  
+tempvar wght sumw cumw cumw_1 cumwr cumwr_1 frnk temp sigma2 meanlhs meanlhs_star cumlhs cumlhs1 cumlhs2 lhs rhs1 rhs2 xmin xmax varlist_star weight1 meanweight1 tempx temp1x sumlhsx  temps tempex lhsex rhs1ex rhs2ex sigma2ex exrank tempgx  lhsgex lhsgexstar symrank smrankmean tempsym sigma2sym lhssym lhssymstar rhs1sym rhs2sym lhsgsym tempgxstar raw_rank_c wi_c cusum_c wj_c rank_c var_rank_c mean_c lhs_c split_c ranking  extwght temp1 meanweight  sumlhs sumwr  counts meanoverall tempdis temp0 meanlhs2  rhs temp2  frnktest meanlhsex2  equality group lhscomp  rhs1comp rhs2comp rhscomp intercept scale  
 local weighted [`weight'`exp'] 
 if "`weight'" != "" local weighted [`weight'`exp'] 
 if "`weight'" == "" qui gen byte `wght' = 1 
@@ -342,6 +342,9 @@ quietly {
 	}
 
 
+	
+	
+
 	if "`graph'"=="graph" {
  		capture which lorenz
  		if _rc==111 disp "conindex requires the lorenz.ado by Ben Jahn to produce graphs. Please install this before using conindex." 
@@ -362,16 +365,35 @@ quietly {
 			local xtitle = "Rank of `xtext'"
 		}	
 		if `generalized'== 0{
-			lorenz estimate `varlist_star'  [`weight'`exp'], pvar(`ranking')
-			lorenz graph, ytitle(`ytitle', size(medsmall)) yscale(titlegap(5))  xtitle(`xtitle', size(medsmall))  ytitle(`ytitle', size(medsmall)) graphregion(color(white)) bgcolor(white) 
+			lorenz estimate `varlist_star'  [`weight'`exp'] if `touse', pvar(`ranking')		
+			if "`keepgraphdata'"!="" {
+				tempname memhold
+				postfile `memhold' pct lorenz using "`keepgraphdata'`compkeep'.dta", replace
+				forvalues i = 1/21 {
+					local p = e(p)[1, `i']  // Extract percentile from e(p)
+					local l = e(b)[1, `i']  // Extract Lorenz ordinate from e(b)
+					post `memhold' (`p') (`l')
+				}
+				postclose `memhold'
+			}
+			lorenz graph, ytitle(`ytitle', size(medsmall)) yscale(titlegap(5))  xtitle(`xtitle', size(medsmall))  ytitle(`ytitle', size(medsmall)) graphregion(color(white)) bgcolor(white) 			
 		}
 		if `generalized'==1 {
-			lorenz estimate `varlist_star' [`weight'`exp'], pvar(`ranking') generalized 
+			lorenz estimate `varlist_star' [`weight'`exp']  if `touse', pvar(`ranking') generalized 
+			if "`keepgraphdata'"!="" {
+				tempname memhold
+				postfile `memhold' pct lorenz using "`keepgraphdata'`compkeep'.dta", replace
+				forvalues i = 1/21 {
+					local p = e(p)[1, `i']  // Extract percentile from e(p)
+					local l = e(b)[1, `i']  // Extract Lorenz ordinate from e(b)
+					post `memhold' (`p') (`l')
+				}
+				postclose `memhold'
+			}
 			lorenz graph, ytitle(`ytitle', size(medsmall)) yscale(titlegap(5))  xtitle(`xtitle', size(medsmall))  ytitle(`ytitle', size(medsmall)) graphregion(color(white)) bgcolor(white) 
 		}	
 	}
-
-	
+		
 	noisily  di in smcl ///
         "{hline 19}{c TT}{hline 13}{c TT}{hline 13}{c TT}{hline 19}" _c
 	noi di in smcl  "{c TT}{hline 10}{c TRC}"
@@ -508,8 +530,6 @@ quietly {
 			gen  double `keeprank'_`bygroup'=`savedrank'
 			}			
 	} 
-	
-
 
 
 	if "`compkeep'"!="" {
@@ -543,7 +563,7 @@ quietly {
 			else local CompWT_options`i' = "`CompWT_options' `compif`i'' `in',"
 			qui sum `compare' if `touse' & `group'==`i', meanonly 
 			noisily  di in text "CI for group `i': `compare' = "r(mean)
-			noisily conindex `CompWT_options`i'' `Comp_options' keeprank(`keeprank') compkeep(`i') 
+			noisily conindex `CompWT_options`i'' `Comp_options' keeprank(`keeprank')  compkeep(`i') `graph' keepgraphdata(`keepgraphdata')
 			noisily  di in text ""
 			replace `lhscomp'=templhs if `touse' & `group'==`i'
 			replace `rhscomp'=temprhs if `touse' & `group'==`i'

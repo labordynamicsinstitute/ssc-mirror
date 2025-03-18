@@ -1,4 +1,4 @@
-*! version 1.3.5 2025-02-12
+*! version 1.3.6 2025-03-17
   
 program define stpp, rclass sortpreserve
   version 16.0
@@ -1492,7 +1492,7 @@ void function PP_Gen_cumulative_indweights(struct stpp_info scalar S)
   S.CP_oth_var = asarray_create("real",1)
   zz = invnormal(0.5*(1+S.level))       
   
-  
+
   for(k=1;k<=S.Nbylevels;k++) {
     asarray(S.RS_PP_var,k,quadrunningsum(asarray(S.lambda_e_t_var,(1,S.bylevels[k,]))))
     
@@ -1898,7 +1898,7 @@ void function PP_calc_return_matrices(struct stpp_info scalar S)
   if(S.hasallcause) S.AC_frame_results = tempAC
   if(S.hascrudeprob) {
     S.CP_can_frame_results = tempCP_can
-    if(S.CP_calcother) S.CP_oth_frame_results = tempCP_can
+    if(S.CP_calcother) S.CP_oth_frame_results = tempCP_oth
   }
   if(S.hascontrast) {
     S.RS_frame_contrast = tempPP_contrast
