@@ -51,6 +51,7 @@ jobs:
     - name: Capture PKG files
       run: |
         zip -rp stata-pkg-files.zip $(find mirror/fmwww.bc.edu/repec/bocode -iname \*.pkg)
+        cp stata-pkg-files.zip mirror/
    # Upload as artifact
     - name: Upload artifact of PKG files
       uses: actions/upload-artifact@v4
