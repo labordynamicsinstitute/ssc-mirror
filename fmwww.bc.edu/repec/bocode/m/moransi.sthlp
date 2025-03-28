@@ -1,6 +1,6 @@
 {smcl}
-{* *! version 1.30  19 March 2025}{...}
-{right: version 1.30. 19 March 2025}
+{* *! version 1.31  23 March 2025}{...}
+{right: version 1.31. 23 March 2025}
 {cmd:help moransi}
 {hline}
 
@@ -30,12 +30,13 @@
 {p2coldent:* {opt swm(swmtype)}}specifies a type of spatial weight matrix{p_end}
 {p2coldent:* {opt dist(#)}}specifies the threshold distance for the spatial weight matrix{p_end}
 {p2coldent:* {opt dunit}{cmd:(km}|{cmd:mi)}}specify the unit of distance (kilometers or miles){p_end}
-{synopt:{opt wvar(varname)}}specifies a weight variable for the spatial weight matrix.{p_end}
+{synopt:{opt wvar(varname)}}specifies a weight variable for the spatial weight matrix{p_end}
 {synopt:{opt dms}}converts the degrees, minutes, and seconds format to a decimal format{p_end}
+{synopt:{opt large:size}}is used for large sized data to increase calculation speed{p_end}
 {synopt:{opt app:rox}}uses bilateral distance approximated by the simplified version of the Vincenty formula{p_end}
 {synopt:{opt det:ail}}displays summary statistics of the bilateral distance{p_end}
 {synopt:{opt nomat:save}}does not save the bilateral distance matrix on the memory{p_end}
-{synopt:{opt rep:lace}}overwrites the existing outcome variables in the dataset.{p_end}
+{synopt:{opt rep:lace}}overwrites the existing outcome variables in the dataset{p_end}
 {synopt:{opt graph}}draws a Moran scatterplot.{p_end}
 {synoptline}
 {p2colreset}{...}
@@ -78,11 +79,13 @@ are required.
 {opth lat(varname)} specifies the variable of latitude in the dataset. The
 decimal format is expected in the default setting. A positive value denotes
 the north latitude, whereas a negative value denotes the south latitude. {cmd:lat()} is required.
+{p_end}
 
 {phang}
 {opth lon(varname)} specifies the variable of longitude in the dataset. The
 decimal format is expected in the default setting. A positive value denotes
 the east longitude, whereas a negative value denotes the west longitude. {cmd:lon()} is required.
+{p_end}
 
 {phang}
 {opt swm(swmtype)} specifies a type of spatial weight matrix. One of the
@@ -93,17 +96,20 @@ neighbor as follows: {cmd:swm(knn} {it:#}{cmd:)}. The distance decay parameter
 {it:#} must be specified for the exponential and power function
 types of spatial weight matrix as follows: {cmd:swm(exp} {it:#}{cmd:)} and
 {cmd:swm(pow} {it:#}{cmd:)}. {cmd:swm()} is required.
+{p_end}
 
 {phang}
 {opt dist(#)} specifies the threshold distance {it:#} for the spatial weight
 matrix. The unit of distance is specified by the {opt dunit()} option. Regions
 located within the threshold distance {it:#} take a value of 1 in the
 binary spatial weight matrix or a positive value in the nonbinary spatial
-weight matrix, and take 0 otherwise. {cmd:dist()} is required.
+weight matrix, and take 0 otherwise. An error message appears and the {cmd:moransi} command ends if there are no neighors in any region within dist(#) km. {cmd:dist()} is required.
+{p_end}
 
 {phang}
 {opt dunit}{cmd:(km}|{cmd:mi)} specifies the unit of distance. Either {cmd:km}
 (kilometers) or {cmd:mi} (miles) must be specified. {cmd:dunit()} is required.
+{p_end}
 
 {phang}
 {opt wvar(varname)} specifies a weight variable for the spatial weight matrix. A weight variable is not used in the default setting.
@@ -112,17 +118,24 @@ weight matrix, and take 0 otherwise. {cmd:dist()} is required.
 {phang}
 {opt dms} converts the degrees, minutes, and seconds format to a decimal
 format.
+{p_end}
+
+{phang}
+{opt large:size} is used for large sized data to increase calculation speed. The {opt large:size} option is not used in the default setting.
+{p_end}
 
 {phang}
 {opt app:rox} uses the bilateral distance approximated by the simplified
 version of the Vincenty formula.
+{p_end}
 
 {phang}
 {opt det:ail} displays summary statistics of the bilateral distance.
+{p_end}
 
 {phang}
-{opt nomat:save} does not save the bilateral distance matrix {bf:r(D)} and spatial
-weight matrix {bf:r(W)} on the memory.
+{opt nomat:save} does not save the bilateral distance matrix {bf:r(D)} and spatial weight matrix {bf:r(W)} on the memory.
+{p_end}
 
 {phang}
 {opt rep:lace} is used to overwrite the existing output variables in the dataset. The {opt rep:lace} option is not used in the default setting.
@@ -141,51 +154,57 @@ Consider the Columbus dataset provided by GeoDa (2025).
 {p_end}
 
 {pstd}
-Case 1: Binary spatial weight matrix: neighbors within 50 km{p_end}
+Case 1: Binary spatial weight matrix: neighbors within 50 km.{p_end}
 {phang2}
 {cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(bin) dist(50) dunit(km)}
 {p_end}
 
 {pstd}
-Case 2: K-Nearest Neighbor spatial weight matrix (k=1){p_end}
+Case 2: K-Nearest Neighbor spatial weight matrix (k=1).{p_end}
 {phang2}
 {cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(knn 1) dist(50) dunit(km)}
 {p_end}
 
 {pstd}
-Case 3: Nonbinary spatial weight matrix by exponential function{p_end}
+Case 3: Nonbinary spatial weight matrix by exponential function.{p_end}
 {phang2}
 {cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(exp 0.03) dist(.) dunit(km)}
 {p_end}
 
 {pstd}
-Case 4: Nonbinary spatial weight matrix by power function{p_end}
+Case 4: Nonbinary spatial weight matrix by power function.{p_end}
 {phang2}
-{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(pow 1) dist(.) dunit(km)}
+{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(pow 4) dist(.) dunit(km)}
 {p_end}
 
 {pstd}
-Case 5: {opt wvar(varname)} option to consider an additional weight variable between regions in the spatial weight matrix{p_end}
+Case 5: {opt large:size} option to increase calculation speed for the large-sized spatial weight matrix.{p_end}
 {phang2}
-{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(pow 1) dist(.) dunit(km) wvar(INC)}
+{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(pow 4) dist(.) dunit(km) large}
 {p_end}
 
 {pstd}
-Case 6: {opt app:rox} option to increase the speed of distance calculations{p_end}
+Case 6: {opt app:rox} option to increase the speed of distance calculations. {opt large:size} option can be used simultaneously.{p_end}
 {phang2}
-{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(pow 1) dist(.) dunit(km) approx}
+{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(pow 4) dist(.) dunit(km) approx large}
 {p_end}
 
 {pstd}
-Case 7: {opt rep:lace} option to overwrite outcome variables generated by the moransi command{p_end}
+Case 7: {opt wvar(varname)} option to consider an additional weight variable between regions in the spatial weight matrix.{p_end}
 {phang2}
-{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(pow 1) dist(.) dunit(km) replace}
+{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(pow 4) dist(.) dunit(km) wvar(INC)}
 {p_end}
 
 {pstd}
-Case 8: {opt graph} option to draw a Moran scatterplot{p_end}
+Case 8: {opt rep:lace} option to overwrite outcome variables generated by the moransi command.{p_end}
 {phang2}
-{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(pow 1) dist(.) dunit(km) graph}
+{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(pow 4) dist(.) dunit(km) replace}
+{p_end}
+
+{pstd}
+Case 9: {opt graph} option to draw a Moran scatterplot.{p_end}
+{phang2}
+{cmd:. moransi CRIME, lat(y_cntrd) lon(x_cntrd) swm(pow 4) dist(.) dunit(km) graph}
 {p_end}
 
 {pstd}

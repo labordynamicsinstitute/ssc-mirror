@@ -1,22 +1,37 @@
 {smcl}
-{* *! version 2.0.0  17jul2024}{...}
-{cmd:help pwmc}
-{hline}
-
+{* *! version 3.0.0  24mar2025}{...}
+{vieweralsosee "[R] pwmean" "help pwmean"}{...}
+{vieweralsosee "[R] pwcompare" "help pwcompare"}{...}
+{vieweralsosee "[R] oneway" "help oneway"}{...}
+{vieweralsosee "[R] ttest" "help ttest"}{...}
+{vieweralsosee "" "--"}{...}
+{vieweralsosee "dunnett" "help dunett"}{...}
+{vieweralsosee "prcomp" "help prcomp"}{...}
+{viewerjumpto "Syntax" "pwmc##syntax"}{...}
+{viewerjumpto "Description" "pwmc##description"}{...}
+{viewerjumpto "Options" "pwmc##options"}{...}
+{viewerjumpto "Remarks" "pwmc##remarks"}{...}
+{viewerjumpto "Examples" "pwmc##examples"}{...}
+{viewerjumpto "Stored results" "pwmc##results"}{...}
+{viewerjumpto "References" "pwmc##references"}{...}
+{viewerjumpto "Support" "pwmc##support"}{...}
+{...}
 {title:Title}
 
-{p 5 8 2}
-{cmd:pwmc} {hline 2} Pairwise multiple comparisons of means with
-unequal variances
+{p 5 29 2}
+{bf:[COMMUNITY-CONTRIBUTED] pwmc} {hline 2} 
+Pairwise multiple comparisons of means with unequal variances
 
 
+{...}
+{marker syntax}{...}
 {title:Syntax}
 
 {p 5 8 2}
 Pairwise multiple comparisons of means  
 
 {p 8 8 2}
-{cmd:pwmc} 
+{cmd:pwmc}
 {varname} 
 {ifin} 
 {cmd:,} {cmd:over(}{varname}{cmd:)} 
@@ -24,7 +39,7 @@ Pairwise multiple comparisons of means
 {it:options}
 ]
 
-
+{...}
 {p 5 8 2}
 Immediate form
 
@@ -49,24 +64,35 @@ of {it:varname}
 {p_end}
 
 {syntab:Reporting}
-{synopt:{cmd:{ul:mcomp}are(}{it:{help pwmc##mcmethod:method}}{cmd:)}}adjust 
-for multiple comparisons; default is {cmd:mcompare(c gh t2)}
+{synopt:{cmd:{ul:mcomp}are(}{it:{help pwmc##method:method}}{cmd:)}}adjust 
+for multiple comparisons; 
+default is {cmd:mcompare(gh)}
 {p_end}
-{synopt:{opt hc3}}estimate HC3 standard errors; see {helpb regress}{p_end}
-{synopt:{opt w:elch}}use Welch's approximate degrees of freedom{p_end}
+{synopt:{cmd:se({it:{help pwmc##se_type:se_type}}{cmd:)}}}type of 
+standard error; default is {cmd:se(hc2)}
+{p_end}
+{synopt:{cmd:df(}{it:{help pwmc##df_method:df_method}}{c |}{it:#}{cmd:)}}degrees of freedom 
+for computing confidence intervals and {it:p}-values;
+default is {cmd:df(satterthwaite)}
+{p_end}
 {synopt:{opt l:evel(#)}}set confidence level; default is 
 {cmd:level({ccl level})}
 {p_end}
 {synopt:{opt ci:effects}}display confidence intervals; the default
 {p_end}
-{synopt:{opt pv:effects}}display test statistics and p-values
+{synopt:{opt pv:effects}}display test statistics and {it:p}-values
 {p_end}
-{synopt:{opt eff:ects}}display test statistics, p-values, and 
+{synopt:{opt eff:ects}}display test statistics, {it:p}-values, and 
 confidence intervals
 {p_end}
 {synopt:{opt varl:abel}}display variable labels{p_end}
-{synopt:{opt vall:abel}}display value labels{p_end}
+{synopt:{opt novall:abel}}do not display value labels{p_end}
 {synopt:{it:{help pwmc##fmtopts:format_options}}}control column formats
+{p_end}
+{synopt:{opt su:mmarize}}display table of summary statistics
+{p_end}
+{synopt:{opt zstd}}report z-standardized 
+coefficients, standard errors, and confidence intervals 
 {p_end}
 {synopt:{opt notab:le}}suppress coefficient table
 {p_end}
@@ -76,6 +102,61 @@ confidence intervals
 immediate command and required otherwise.
 
 
+{marker method}{...}
+{synoptset 20 tabbed}{...}
+{synopthdr:method}
+{synoptline}
+{synopt:{opt gh}}Games and Howell's method; 
+synonyms {opt gam:es} or {opt how:ell}; the default
+{p_end}
+{synopt:{opt c:ochran}}Dunnett's C method
+{p_end}
+{synopt:{opt tam:hane}}Tamhane's method; 
+synonym {opt t2}
+{p_end}
+{synopt:{opt noadj:ust}}do not adjust for multiple comparisons
+{p_end}
+{synoptline}
+{p2colreset}{...}
+
+
+{marker se_type}{...}
+{synoptset 20 tabbed}{...}
+{synopthdr:se_type}
+{synoptline}
+{synopt:{opt hc2}}robust HC2 standard errors
+(see {help regress}); the default 
+{p_end}
+{synopt:{opt hc3}}robust HC3 standard errors
+(see {help regress})
+{p_end}
+{synopt:{opt ols}}ordinary least-squares standard errors
+(see {help regress})
+{p_end}
+{synoptline}
+{p2colreset}{...}
+
+
+{marker df_method}{...}
+{synoptset 20 tabbed}{...}
+{synopthdr:df_method}
+{synoptline}
+{synopt:{opt sat:terthwaite}}Satterthwaite's approximation; the default
+{p_end}
+{synopt:{opt w:elch}}Welch's approximation
+{p_end}
+{synopt:{opt bm}}Bell and McCaffrey's adjustment
+(see {help regress})
+{p_end}
+{synopt:{opt r:esidual}}residual degrees of freedom
+{p_end}
+{synoptline}
+{p2colreset}{...}
+
+
+{*  ____________________________________________________  Description  }{...}
+{...}
+{marker description}{...}
 {title:Description}
 
 {pstd}
@@ -83,16 +164,28 @@ immediate command and required otherwise.
 performs pairwise comparisons of means. 
 It computes pairwise differences of the means of {varname} 
 over the levels of {opt over(varname)}. 
-The standard errors and confidence intervals 
-do not assume equal variances across groups. 
 {cmd:pwmc} 
-adjusts the p-values and confidence intervals for multiple comparisons. 
+adjusts the {it:p}-values and confidence intervals for multiple comparisons. 
+Tests and confidence intervals 
+do not assume equal variances across groups. 
+
+{pstd}
+{cmd:pwmc} supports all combinations of 
+{help pwmc##method:methods},
+{help pwmc##se_type:standard errors},
+and (approximate) {help pwmc##df_method:degrees of freedom}. 
+However, most of these combinations lack rigorous theoretical justification. 
+It is your responsibility to ensure their validity 
+and interpret the results correctly.
 
 {pstd}
 {cmd:pwmci} 
 is the immediate form of {cmd:pwmc}; see {help immed}.
 
 
+{*  ________________________________________________________  Options  }{...}
+{...}
+{marker options}{...}
 {title:Options}
 
 {dlgtab:Main}
@@ -103,129 +196,226 @@ is required with {cmd:pwmc}
 and it specifies that means are computed for each level of {it:varname}. 
 The option is not allowed with {cmd:pwmci}.
 
+{...}
 {dlgtab:Reporting}
 
-{marker mcmethod}{...}
 {phang}
 {opt mcompare(method)} 
-specifies the method for computing p-values and confidence intervals. 
+specifies the method for computing confidence intervals and {it:p}-values. 
 Confidence intervals are computed as 
 
 {p 24 24 2}
-CI = d +/- A*se
+{it:CI} = {it:d} +/- {it:c_a}*{it:se}
 
 {phang2}
-where d is the difference between means, se is the standard error of 
-the difference, and A is the critical value adjusted according to 
-{it:method}. 
+where {it:d} is the difference between means, 
+{it:c_a} is the critical value, adjusted according to {it:method}, 
+and {it:se} is the standard error of the mean difference.
 
+{...}
 {phang2}
-{cmd:mcompare({ul:noadj}ust)} specifies no adjustment for multiple 
-comparisons.
+{cmd:mcompare(gh)} 
+implements the method discussed in Games and Howell (1976). 
+This is the default.
 
 {p 24 24 2}
-A = inv_t{nuhat, (1-alpha)/2}
+{it:c_a} = inv_q({it:k},{it:nuhat},{it:alpha}) / {help sqrt:sqrt(2)}
 
-{p 12 12 2}
-where inv_t is the inverse cumulative (upper tail) 
-{help f_invttail:Student's t distribution} with nuhat degrees 
-of freedom using Satterthwaite's (1946) approximation formula, 
-and alpha = {ccl level}/100 (see option {opt level()}).
+{phang3}
+where inv_q() is the
+inverse cumulative {help f_invtukeyprob:studentized range distribution}
+with {it:k} means, 
+{it:nuhat} degrees of freedom, 
+and {it:alpha} = {ccl level}/100 (see option {opt level()}).
+{it:nuhat} is the approximate degrees of freedom 
+from Satterthwaite's (1946) formula.
 
-{p 12 12 2}
-The unadjusted p-value is 
+{phang3}
+The adjusted {it:p}-value is computed as 
 
 {p 24 24 2}
-p = 2 * ttail{nuhat, {c |}t{c |}}
+{it:p}_adj = 1 - q[{it:k},{it:nuhat},{c |}{it:t}_0{c |}*sqrt{c -(}2{c )-}]
 
-{p 12 12 2}
-where ttail is the cumulative (upper tail) 
-{help f_ttail:Student's t distribution} and {c |}t{c |} is the 
-(absolute) t value. 
+{phang3}
+where q[] is the 
+cumulative {help f_tukeyprob:studentized range distribution}
+and {c |}{it:t}_0{c |} denotes the absolute value {help abs:abs({it:d}/{it:se})}. 
 
-{p 12 12 2}
-{opt noadjust} is a synonym for {cmd:mcompare(noadjust)}.
+{phang3}
+{opt gam:es} and {opt how:ell} are synonyms for {opt gh}.
 
+{...}
 {phang2}
-{cmd:mcompare(c)} implements Dunnett's (1980) C method. 
+{cmd:mcompare(cochran)} 
+implements Dunnett's (1980) C method. 
 
 {p 24 24 2}
-A = inv_SR_star^(1/2)
+{it:c_a} = inv_q' / sqrt(2)
 
-{p 12 12 2}
-where inv_SR_star is computed as follows. Let i = 1, 2, ..., k denote 
-the k groups. Let n_i denote the number of observations in group i and 
-v_i the squared standard error of the mean in group i. Further, let 
-inv_SR_i{k, n_i-1, alpha} denote the inverse 
-{help f_invtukeyprob:Studentized range distribution} with k, n_i, and 
-alpha defined as above. Then, 
+{phang3}
+where inv_q' is a weighted averaged
+inverse cumulative studentized range distribution 
+that is computed as follows. 
+Let {it:i} = 1, 2, ..., {it:k} denote the {it:k} groups. 
+Let {it:n_i} denote the number of observations in group {it:i} 
+and let {it:V_i} denote the variance of the mean in group {it:i}. 
+Further, let inv_q_{it:i} be short for inv_q_{it:i}({it:k},{it:n_i}-1,{it:alpha})
+and denote the inverse cumulative studentized range distribution 
+with {it:k} means, 
+{it:n_i}-1 degrees of freedom, 
+and {it:alpha} defined as above.
+Then, 
 
 {p 24 24 2}
-inv_SR_star = (inv_SR_i*v_i + inv_SR_j*v_j) / (v_i + v_j)
+inv_q' = (inv_q_{it:i}*{it:V_i} + inv_q_{it:j}*{it:V_j}) / ({it:V_i} + {it:V_j})
 
-{p 12 12 2}
-{cmd: pwmc} does not compute adjusted p-values for Dunnett's C method.
+{phang3}
+Dunnett (1980) does not provide a formula for computing adjusted {it:p}-values. 
+{cmd:pwmc} computes the adjusted {it:p}-value for Dunnett's C method as
 
+{p 24 24 2}
+{it:p}_adj =  1 - (q_{it:i}*{it:V_i} + q_{it:j}*{it:V_j}) / ({it:V_i} + {it:V_j})
+
+{phang3}
+where q_{it:i} denotes the 
+the cumulative studentized range distribution
+with {it:k} means, 
+{it:n_i}-1 degrees of freedom,
+and test statistic {c |}{it:t}_0{c |}*sqrt(2).
+
+{...}
 {phang2}
-{cmd:mcompare(gh)} implements the method discussed in 
-Games and Howell (1976). 
+{cmd:mcompare(tamhane)} implements Tamhane's (1979) T2 method. 
 
 {p 24 24 2}
-A = inv_SR{k, nuhat, alpha}^(1/2)
+{it:c_a} = inv_t[{it:nuhat},{c -(}1-(1-{it:alpha}^{c -(}1/{it:kstar}{c )-}){c )-}/2]
 
-{p 12 12 2}
-where inv_SR is the inverse Studentized range distribution and all other 
-terms are defined as above.
-
-{p 12 12 2}
-The adjusted p-value is computed as 
-
-{p 24 24 2}
-p_adj = 1 - SR{k, nuhat, {c |}t{c |}*2^(1/2)}
-
-{p 12 12 2}
-where SR is the cumulative {help f_tukeyprob:Studentized range distribution} 
+{phang3}
+where inv_t[] is the 
+inverse reverse cumulative (upper tail) {help f_invttail:Student's t distribution},
+{it:kstar} = {it:k}*({it:k}-1)/2, the number of comparisons, 
 and all other terms are defined as above.
 
-{phang2}
-{cmd:mcompare(t2)} implements Tamhane's (1979) T2 method. 
+{phang3}
+The adjusted {it:p}-value is computed as 
 
 {p 24 24 2}
-A = inv_t{nuhat, (1-alpha^(1/kstar))/2}
+{it:p}_adj = 1 - (1-{it:p})^{it:kstar}
 
-{p 12 12 2}
-where kstar = k*(k-1)/2, the number of comparisons, and all other 
-terms are defined as above.
+{phang3}
+where {it:p} is the unadjusted {it:p}-value (see below) 
+and all other terms are defined as above.
 
-{p 12 12 2}
-The adjusted p-value is computed as 
+{phang3}
+{cmd:t2} is a synonym for {cmd:tamhane}.
+
+{...}
+{phang2}
+{cmd:mcompare(noadjust)} 
+specifies no adjustment for multiple comparisons.
 
 {p 24 24 2}
-p_adj = 1 - (1-p)^kstar
+{it:c_a} = inv_t[{it:nuhat},{c -(}1-{it:alpha}{c )-}/2]
 
-{p 12 12 2}
-where p is the unadjusted p-value and all other terms are defined as above.
+{phang3}
+with all terms defined as above.
 
+{phang3}
+The unadjusted {it:p}-value is 
 
-{phang2}
-In {it:method}, case does not matter, and the default is (historically)
-{cmd:mcompare(c gh t2)}.
+{p 24 24 2}
+{it:p} = 2 * t({it:nuhat},{c |}{it:t}_0{c |})
 
+{phang3}
+where t() is the cumulative (upper tail) {help ttail:Student's t distribution}.
+
+{phang3}
+{opt noadj:ust} is a synonym for {cmd:mcompare(noadjust)}.
+
+{...}
 {phang}
+{cmd:se(}{it:se_type{cmd:)}}
+specifies the type of the standard error. 
+The following {it:se_types} are available:
+
+{phang2}
+{opt hc2}
+estimates the robust standard errors 
+sqrt[{c -(}({it:s2_i}/{it:n_i})+({it:s2_j}/{it:n_j}){c )-}],
+where {it:s2_i} is the estimated variance in group {it:i}. 
+These standard errors are equivalent 
+to those reported by {cmd:regress} with the option {cmd:vce(hc2)} 
+for a model with binary group indicators as predictors. 
+The same standard errors are used by {helpb ttest} 
+with the {opt unequal} option. 
+{cmd:se(hc2)} is the default. 
+
+{phang2}
 {opt hc3} 
 uses (n-1) as the denominator for computing standard errors. 
-The resulting standard errors are equivalent to those reported by {helpb regress} 
-for a model with a single categorical predictor that indicates the groups
-when {cmd:vce(hc3)} is specified.
-The default standard errors are equivalent to those of {cmd:regress} 
-when the {cmd:vce(hc2)} option is specified 
-and those reported by {helpb ttest} with the {opt unequal} option.
+The resulting standard errors are equivalent 
+to those reported by {cmd:regress} with the option {cmd:vce(hc3)} 
+for a model with binary group indicators as predictors. 
 
+{phang2}
+{opt ols}
+estimates the ordinary least-squares standard errors,
+assuming equal variances across groups.  
+These standard errors are equivalent 
+to those reported by {cmd:regress} by default, 
+or with the option {cmd:vce(ols)},
+for a model with binary group indicators as predictors. 
+
+{phang2}
+Note that {cmd:se()} affects {it:V_i} 
+used as weights in {cmd:mcompare(cochran)}
+but does not affect {it:V_i} used in {opt df()} (see below).
+
+{...}
 {phang}
-{opt welch} 
-uses Welch's (1947) formula to approximate the degrees of freedom. 
-The default is to use Satterthwaite's (1946) approximation.
+{cmd:df(}{it:df_method}{c |}{it:#}{cmd:)} 
+uses {it:df_method} or {it:#} to compute confidence intervals and {it:p}-values. 
+The following {it:df_method}s are available:
 
+{phang2}
+{opt satterthwaite}
+uses Satterthwaite's (1946) approximate degrees of freedom 
+(see {help ttest:ttest, unequal}); this is the default.
+
+{phang3}
+{it:nuhat} = ({it:V_i} + {it:V_j})^2 / [{it:V_i}^2/{c -(}{it:n_i}-1{c )-} + {it:V_j}^2/{c -(}{it:n_j}-1{c )-}] 
+
+{phang2}
+{opt welch} 
+uses Welch's (1947) approximate degrees of freedom
+
+{phang3}
+{it:nuhat} = -2 + [{c -(}{it:V_i} + {it:V_j}{c )-}^2 / {c -(}{it:V_i}^2/({it:n_i}+1) + {it:V_j}^2/({it:n_j}+1){c )-}] 
+
+{phang2}
+{opt bm} uses Bell and McCaffrey's (2002) adjustment 
+as described by Imbens and Kolesar (2016)
+
+{phang3}
+{it:nuhat} = [{c -(}{it:n_i}+{it:n_j}{c )-}^2{c -(}{it:n_i}-1{c )-}{c -(}{it:n_j}-1{c )-}] / [{it:n_i}^2{c -(}{it:n_i}-1{c )-} + {it:n_j}^2{c -(}{it:n_j}-1{c )-}]
+
+{phang3}
+{cmd:df(bm)} assumes equal variances across groups.
+
+{phang2}
+{opt residual}
+uses the residual degrees of freedom 
+[{c -(}{it:n_i}-1{c )-}+{c -(}{it:n_j}-1{c )-}+{it:...}+{c -(}{it:n_k}-1{c )-}-{it:k}] 
+from a linear regression model with {it:k}-1 binary group indicators.
+
+{phang2}
+Note that 
+{cmd:df(satterthwaite)},
+{cmd:df(welch)},
+and {cmd:df(bm)}
+do not affect {cmd:mcompare(cochran)}.
+
+{...}
 {phang}
 {opt l:evel(#)} 
 specifies the confidence level, as a percentage, for confidence intervals. 
@@ -238,11 +428,13 @@ This is the default.
 
 {phang}
 {opt pveffects} 
-reports mean differences, standard errors, test statistics, and p-values.
+reports mean differences, standard errors, test statistics, and {it:p}-values.
+There is no (adjusted) {it:p}-value for Dunnett's C method.
         
 {phang}
 {opt effects} 
-reports mean differences, standard errors, test statistics, p-values, and confidence intervals.
+reports mean differences, standard errors, test statistics, {it:p}-values, and confidence intervals.
+There is no (adjusted) {it:p}-value for Dunnett's C method.
 
 {phang}
 {opt varlabel} 
@@ -250,8 +442,9 @@ displays variable labels instead of variable names.
 This option is not allowed with {cmd:pwmci}.
 
 {phang}
-{opt vallabel} 
-displays value labels instead of numeric codes. 
+{opt novallabel} 
+does not display value labels;
+displays numeric codes instead. 
 This option is not allowed with {cmd:pwmci}.
 
 {marker fmtopts}{...}
@@ -263,92 +456,196 @@ specify how to format
 differences of means, 
 standard errors, 
 confidence limits; 
-(adjusted) p-values; 
+(adjusted) {it:p}-values; 
 and test statistics, 
 respectively.
+
+{phang}
+{opt summarize}
+displays a table of means, standard deviations, and observations 
+for the levels of {opt over(varname)}.
+
+{phang}
+{opt zstd}
+reports z-standardized coefficients, standard errors, and confidence intervals. 
+Results are equivalent to those obtained by standardizing {it:varname},
+the outcome, to have mean 0 and unit variance. 
+When combined with option {opt summarize}, 
+option {opt zstd} additionally reports the standard deviation 
+of the (standardized) standard deviations within the levels of {opt over(varname)}. 
+Option {opt zstd} is not allowed with {cmd:pwmci}.
 
 {phang}
 {opt notable} 
 does not report the results; results are still stored in {cmd:r()}.
 
 
+{*  ________________________________________________________  Remarks  }{...}
+{...}
+{marker remarks}{...}
+{title:Remarks}
+
+{pstd}
+As of version 3 of
+{cmd:pwmc}, 
+the default method for computing confidence intervals and {it:p}-values
+is Games and Howell's (1976) method;
+old defaults remain available as
+
+{p 8 8 2}
+{cmd:pwmc_version 2:} {it:varname} {cmd:,} {opt over(varname)} {it:...}
+
+{pstd}
+{cmd:pwmc_version} is a wrapper command for 
+{cmd:pwmc}
+and
+{cmd:pwmci}
+designed to facilitate the maintenance of old code. 
+
+
+{*  _______________________________________________________  Examples  }{...}
+{...}
+{marker examples}{...}
 {title:Examples}
 
-{phang2}
-{cmd:. sysuse nlsw88}
-{p_end}
-{phang2}
-{cmd:. pwmc wage , over(race)}
-{p_end}
-{phang2}
-{cmd:. pwmci (1637 8.08 5.96) (583 6.84 5.08) (26 8.56 5.21)}
-{p_end}
+    {hline}
+{pstd}
+Set up
+
+    {cmd:. sysuse nlsw88}
+
+{pstd}    
+Pairwise comparisons of mean wages over race
+
+    {cmd:. pwmc wage , over(race)}
+
+{pstd}
+Same as above; immediate form
+
+    {cmd:. pwmci (1637 8.08 5.96) (583 6.84 5.08) (26 8.55 5.21)}
+
+    {hline}
+{pstd}
+Set up (also, see {help pwmean##examples:pwmean})
+
+    {cmd:. webuse yield}
+
+{pstd}
+Pairwise comparisons of mean yields for the fertilizers
+(replicate {cmd:pwmean})
+
+    {cmd:. pwmc yield , over(fertilizer) mcompare(noadjust) se(ols) df(residual) effects}
+
+{pstd}
+Pairwise comparisons of the mean yields 
+replicating Tukey's adjustment for multiple comparisons when computing p-values
+
+    {cmd:. pwmc yield , over(fertilizer) mcompare(gh) se(ols) df(residual) pveffects}
+
+{pstd}
+Instead of Tukey's adjustment, use Games and Howell's adjustemt allowing for unequal variances
+
+    {cmd:. pwmc yield, over(fertilizer) mcompare(gh) se(hc2) df(satterthwaite) pveffects}
 
 
-{title:Saved results}
+{*  _________________________________________________  Stores results  }{...}
+{...}
+{marker results}{...}
+{title:Stored results}
 
 {pstd}
 {cmd:pwmc} saves the following in {cmd:r()}:
 
 {pstd}
 Scalars{p_end}
-{synoptset 16 tabbed}{...}
+{synoptset 20 tabbed}{...}
+{synopt:{cmd:r(level)}}confidence level{p_end}
+{synopt:{cmd:r(N)}}number of observations{p_end}
 {synopt:{cmd:r(k)}}number of groups{p_end}
 {synopt:{cmd:r(ks)}}number of pairwise comparisons{p_end}
-{synopt:{cmd:r(level)}}confidence level{p_end}
 
 {pstd}
 Macros{p_end}
-{synoptset 16 tabbed}{...}
+{synoptset 20 tabbed}{...}
+{synopt:{cmd:r(mcmethod_vs)}}{it:method} from {opt mcompare()}{p_end}
+{synopt:{cmd:r(setype)}}{it:se_type} from {opt se()}{p_end}
+{synopt:{cmd:r(dfname)}}{opt satterthwaite}, {opt welch}, or {opt bm} from {opt df()}{p_end}
 {synopt:{cmd:r(cmd)}}{cmd:pwmc}{p_end}
 {synopt:{cmd:r(cmd2)}}{cmd:pwmci} (immediate command only){p_end}
 {synopt:{cmd:r(depvar)}}{it:varname} from which means are 
 computed{p_end}
 {synopt:{cmd:r(over)}}{it:varname} from {opt over()}{p_end}
-{synopt:{cmd:r(mcmethod_vs)}}{it:method} from {opt mcompare()}{p_end}
 
 {pstd}
 Matrices{p_end}
-{synoptset 16 tabbed}{...}
-{synopt:{cmd:r(table_vs)}}table of pairwise differences, standard 
-errors, test statistics, unadjusted p-values, and unadjusted 
+{synoptset 20 tabbed}{...}
+{synopt:{cmd:r(table_vs)}}pairwise differences, standard 
+errors, test statistics, unadjusted {it:p}-values, and unadjusted 
 confidence intervals{p_end}
+{synopt:{cmd:r(table_vs_}{it:method}{cmd:)}}pairwise differences, standard 
+errors, test statistics, adjusted {it:p}-values, and adjusted 
+confidence intervals according to {it:method}{p_end}
 
 
+{*  _____________________________________________________  References  }{...}
+{...}
+{marker references}{...}
 {title:References}
 
 {pstd}
-Dunnett, C. W. 1980. Pairwise Multiple Comparisons in the Unequal Variance 
-Case, Journal of the American Statistical Association, 75(372), 796--800.
+Bell, R. M., & McCaffrey, D. F. 2002. 
+Bias reduction in standard errors for linear regression with multi-stage samples. 
+Survey Methodology, 28(2), 169--181.
 
 {pstd}
-Games, P. A., & Howell, J. F. 1976. Pairwise Multiple Comparison 
-Procedures with Unequal N's and/or Variances: A Monte Carlo study, 
+Dunnett, C. W. 1980. 
+Pairwise Multiple Comparisons in the Unequal Variance Case. 
+Journal of the American Statistical Association, 75(372), 796--800.
+
+{pstd}
+Games, P. A., & Howell, J. F. 1976. 
+Pairwise Multiple Comparison Procedures with Unequal N's and/or Variances: A Monte Carlo study. 
 Journal of Educational Statistics, 1(2), 113--125.
 
 {pstd}
-Satterthwaite, F. E. 1946. An approximate distribution of estimates of 
-variance components. Biometrics Bulletin, 2(6), 110--114.
+Imbens, G. W., & M. Kolesar. 2016. 
+Robust standard errors in small samples: Some practical advice. 
+Review of Economics and Statistics, 98(4), 701--712.
 
 {pstd}
-Tamhane, A. C. 1979. A Comparison of Procedures for Multiple Comparisons 
-of Means with Unequal Variances, Journal of the American Statistical 
-Association, 74(366), 471--480.
+Satterthwaite, F. E. 1946. 
+An approximate distribution of estimates of variance components. 
+Biometrics Bulletin, 2(6), 110--114.
 
 {pstd}
-Welch, B. L. 1947. The generalization of 'student's' problem when several different population variances are involved. Biometrika, 34(1/2), 28--35.
+Tamhane, A. C. 1979. 
+A Comparison of Procedures for Multiple Comparisons of Means with Unequal Variances.
+Journal of the American Statistical Association, 74(366), 471--480.
+
+{pstd}
+Welch, B. L. 1947. 
+The generalization of 'student's' problem when several different population variances are involved. Biometrika, 34(1/2), 28--35.
 
 
+{*  ________________________________________________  Acknowledgments  }{...}
+{...}
 {title:Acknowledgments}
 
 {pstd}
-Andreas Franken and David Kremelberg 
-reported a bug on Linux OS. 
+Collaboration with Felix Bittmann resulted in better default settings 
+and other improvements.
 {break}
-Earlier versions of the software 
-borrowed from Matthew K. Lau's DTK package for R.
+Andreas Franken and David Kremelberg 
+independently reported a bug on Linux OS. 
+{break}
+Early versions of the software borrowed from 
+Matthew K. Lau's DTK package for R
+(https://cran.r-project.org/web/packages/DTK/index.html).
 
 
+{*  ________________________________________________________  Support  }{...}
+{...}
+{marker support}{...}
 {title:Support}
 
 {pstd}
@@ -356,6 +653,7 @@ Daniel Klein{break}
 klein.daniel.81@gmail.com
 
 
+{...}
 {title:Also see}
 
 {psee}

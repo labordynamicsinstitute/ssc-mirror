@@ -13928,6 +13928,7 @@ fmwww.bc.edu/repec/bocode/p/pschset_i_2.dlg
 fmwww.bc.edu/repec/bocode/p/pwlaw.ado
 fmwww.bc.edu/repec/bocode/p/pip_install.ado
 fmwww.bc.edu/repec/bocode/p/ppssampford.ado
+fmwww.bc.edu/repec/bocode/p/pwmc_version.ado
 fmwww.bc.edu/repec/bocode/p/pcontract.ado
 fmwww.bc.edu/repec/bocode/p/povimp.pkg
 fmwww.bc.edu/repec/bocode/p/poi2hdfe.ado
@@ -14167,7 +14168,6 @@ fmwww.bc.edu/repec/bocode/p/pieplot.html
 fmwww.bc.edu/repec/bocode/p/parallel_map.sthlp
 fmwww.bc.edu/repec/bocode/p/pip_cache.ado
 fmwww.bc.edu/repec/bocode/p/pexp5.html
-fmwww.bc.edu/repec/bocode/p/pwmc.html
 fmwww.bc.edu/repec/bocode/p/psm.html
 fmwww.bc.edu/repec/bocode/p/powerclus.pkg
 fmwww.bc.edu/repec/bocode/p/pkonfound.sthlp
@@ -20110,6 +20110,7 @@ fmwww.bc.edu/repec/bocode/r/regsave.ado
 fmwww.bc.edu/repec/bocode/r/rctmiss_smlik.ado
 fmwww.bc.edu/repec/bocode/r/robit5.ado
 fmwww.bc.edu/repec/bocode/r/reffadjust4nlcom.html
+fmwww.bc.edu/repec/bocode/r/reproot.dlg
 fmwww.bc.edu/repec/bocode/r/runmixregls.ado
 fmwww.bc.edu/repec/bocode/r/rtfrstyle.sthlp
 fmwww.bc.edu/repec/bocode/r/rewrite.html
@@ -20161,6 +20162,7 @@ fmwww.bc.edu/repec/bocode/r/rndlgn.hlp
 fmwww.bc.edu/repec/bocode/r/rmanova.hlp
 fmwww.bc.edu/repec/bocode/r/rtfappend.sthlp
 fmwww.bc.edu/repec/bocode/r/rotate2.hlp
+fmwww.bc.edu/repec/bocode/r/reproot_setup_dlg_output.ado
 fmwww.bc.edu/repec/bocode/r/rglm.html
 fmwww.bc.edu/repec/bocode/r/rdpower.ado
 fmwww.bc.edu/repec/bocode/r/relogitq.sthlp
