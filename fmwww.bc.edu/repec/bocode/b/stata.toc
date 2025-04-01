@@ -37,6 +37,7 @@ p bgtest module to calculate Breusch-Godfrey test for serial correlation
 p bhapkar module to compute Bhapkar's test of marginal homogeneity between two raters for categorical observations
 p bhatt module to compute Bhattacharyya Coefficient and Bhattacharyya Distance statistics of distribution overlap
 p biasepi module to perform simple bias analysis, multidimensional bias analysis, and multiple bias modeling
+p biastest module to test parameter equality across different models
 p bibrep module to produce a bibliometric report on a single senior researcher
 p bic module to evaluate the statistical significance of variables in a model
 p bicdrop1 module to estimate the probability a model is more likely without each explanatory variable

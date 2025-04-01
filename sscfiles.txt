@@ -12840,6 +12840,7 @@ fmwww.bc.edu/repec/bocode/b/batcher.sthlp
 fmwww.bc.edu/repec/bocode/b/brewsearch.sthlp
 fmwww.bc.edu/repec/bocode/b/bhapkar.ado
 fmwww.bc.edu/repec/bocode/b/burr8burr7.ado
+fmwww.bc.edu/repec/bocode/b/biastest.sthlp
 fmwww.bc.edu/repec/bocode/b/bynote.html
 fmwww.bc.edu/repec/bocode/b/biplotvlab.pkg
 fmwww.bc.edu/repec/bocode/b/b1x2.sthlp
@@ -13059,6 +13060,7 @@ fmwww.bc.edu/repec/bocode/b/bsopm.ado
 fmwww.bc.edu/repec/bocode/b/block_and_cluster_ra.sthlp
 fmwww.bc.edu/repec/bocode/b/BerryFowler_Leaders.pdf
 fmwww.bc.edu/repec/bocode/b/bspline.ado
+fmwww.bc.edu/repec/bocode/b/biastest.pkg
 fmwww.bc.edu/repec/bocode/b/bdiff.pkg
 fmwww.bc.edu/repec/bocode/b/birthsim.html
 fmwww.bc.edu/repec/bocode/b/betafit_ex.ado
@@ -13136,6 +13138,7 @@ fmwww.bc.edu/repec/bocode/b/binscatterhist.sthlp
 fmwww.bc.edu/repec/bocode/b/bynote.pkg
 fmwww.bc.edu/repec/bocode/b/bsens.pkg
 fmwww.bc.edu/repec/bocode/b/boost_logistic.do
+fmwww.bc.edu/repec/bocode/b/biastest.ado
 fmwww.bc.edu/repec/bocode/b/btanglestyle.sthlp
 fmwww.bc.edu/repec/bocode/b/burr8logistic.ado
 fmwww.bc.edu/repec/bocode/b/block_ra.ado
@@ -13432,6 +13435,7 @@ fmwww.bc.edu/repec/bocode/b/bunchtobit.sthlp
 fmwww.bc.edu/repec/bocode/b/btlabelstyle.sthlp
 fmwww.bc.edu/repec/bocode/b/bcg.dta
 fmwww.bc.edu/repec/bocode/b/bgtest.hlp
+fmwww.bc.edu/repec/bocode/b/blastest.pdf
 fmwww.bc.edu/repec/bocode/b/bunching.sthlp
 fmwww.bc.edu/repec/bocode/b/biasepi.pkg
 fmwww.bc.edu/repec/bocode/b/brrmodel.html
@@ -18936,6 +18940,7 @@ fmwww.bc.edu/repec/bocode/r/regplot.hlp
 fmwww.bc.edu/repec/bocode/r/rmclass.sthlp
 fmwww.bc.edu/repec/bocode/r/rddensity_unique.mo
 fmwww.bc.edu/repec/bocode/r/rndf.hlp
+fmwww.bc.edu/repec/bocode/r/reghdfejl_parse_absorb.ado
 fmwww.bc.edu/repec/bocode/r/reghdfe_store_alphas.ado
 fmwww.bc.edu/repec/bocode/r/rdci.hlp
 fmwww.bc.edu/repec/bocode/r/rpaxioms.sthlp

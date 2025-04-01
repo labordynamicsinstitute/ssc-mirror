@@ -1,4 +1,4 @@
-*! reghdfejl 1.0.10 19 February 2025
+*! reghdfejl 1.1.1 28 March 2025
 
 // The MIT License (MIT)
 //
@@ -134,7 +134,7 @@ program define _reghdfejl, eclass
     }
     else local wtvar: copy local exp
     local wtopt , weights = :`wtvar'
-    if "`weight'"=="pweight" local robust robust
+    if "`weight'"=="pweight" & `"`vce'"'=="" local robust robust
   }
   
   local hasiv 0
@@ -218,57 +218,10 @@ program define _reghdfejl, eclass
   }
 
   if `"`absorb'"' != "" {
-    local 0 `absorb'
-    syntax anything(equalok), [SAVEfe]
-    tokenize `anything', parse(" =")
-
-    while `"`1'"' != "" {
-      local t = "`2'"' == "="
-      if `t' {
-        confirm new var `1'
-        local fenames = `"`fenames'"' + " `1'"
-        macro shift 2
-        local namedfe 1
-      }
-      fvunab varlist: `1'
-      local feterms `feterms' `varlist'
-      local fenames = `"`fenames'"' + `" "" "' * (`:word count `varlist'' - `t')
-      macro shift
+    reghdfejl_parse_absorb `absorb'
+    foreach macro in fenames feterms namedfe absorb N_hdfe absorbvars {
+      local `macro' `r(`macro')'
     }
-    local absorb: copy local feterms
-    local N_hdfe: word count `feterms'
-
-    local feterms i.`: subinstr local feterms " " " i.", all'
-
-    local absorbvars: copy local feterms
-    local feterms: subinstr local feterms "##c." ")*(", all
-    local feterms: subinstr local feterms "#c." ")&(", all
-    local feterms: subinstr local feterms "##i." ")*fe(", all
-    local feterms: subinstr local feterms "##" "#", all
-    local feterms: subinstr local feterms "#" "#i.", all
-    local feterms: subinstr local feterms "i.i." "i.", all
-    local feterms: subinstr local feterms "#i." ")&fe(", all
-    local feterms: subinstr local feterms "i." "fe(", all
-    local feterms: subinstr local feterms " " ") + ", all
-    local feterms: subinstr local feterms ")" " )", all
-    local feterms: subinstr local feterms "(" "( ", all
-    local feterms + `feterms' )
-
-    local absorbvars: subinstr local absorbvars "i." " ", all
-    local absorbvars: subinstr local absorbvars "c." " ", all
-    local absorbvars: subinstr local absorbvars "#" " ", all
-    local absorbvars: list uniq absorbvars
-
-    foreach var in `absorbvars' {
-      cap confirm numeric var `var'
-      if _rc {
-        tempvar t
-        qui egen long `t' = group(`var') if `touse'
-        local absorbvars: subinstr local absorbvars "`var'" "`t'", word all
-        local feterms   : subinstr local feterms    "`var'" "`t'", word all
-      }
-    }
-    
     markout `touse' `absorbvars'
   }
   else local feterms + `="`constant'"==""'
@@ -348,8 +301,14 @@ program define _reghdfejl, eclass
   }
 
   if "`residuals'" != "" {
-    cap drop _reghdfejl_resid
-    local residuals _reghdfejl_resid
+    local residuals
+    forvalues i=1/120000 {
+      cap confirm new var _reghdfejl_resid`i'
+      if !_rc {
+        local residuals _reghdfejl_resid`i'
+        continue, break
+      }
+    }
   }
   else {
     local 0, `_options'
@@ -475,7 +434,6 @@ program define _reghdfejl, eclass
     c_local noncompactfile `noncompactfile'
     keep `putvars' `touse'
     qui keep if `touse'
-    local iftouse
   }
   else local iftouse if `touse'
 
@@ -529,7 +487,7 @@ program define _reghdfejl, eclass
     tempname M
     mat `M' = e(b)
     local colnames: colnames `M'
-    _jl: reghdfejl.D = Dict(x=>y for (x,y) in zip(split("`allpartialled'"), split("`allvars'")));  // mapping from partialled, revar'D var names for ivreg2 back to display names
+    _jl: reghdfejl.D = Dict(x=>y for (x,y) in zip(split("`allpartialled'"), split("`allvars'")));  // mapping from partialled, revar'd var names for ivreg2 back to display names
     _jl: st_global("reghdfejl_ans", join(getindex.(Ref(reghdfejl.D), split("`colnames'")), " "))
     mat colnames `M' = $reghdfejl_ans
     ereturn repost b=`M', rename
@@ -566,57 +524,59 @@ program define _reghdfejl, eclass
   local flinejl f = @formula(`depformula' ~ `inexogformula' `ivarg' `feterms')
   local cmdlinejl `nl'reg(df, f `familyopt' `linkopt' `wtopt' `vcovopt' `methodopt' `threadsopt' `singletonopt' `saveopt' `sepopt' `tolopt' `iteropt' `dummyopt')
   _jl: `flinejl';
+  _jl: m = 0
   if "`verbose'"!="" {
     di `"`flinejl'"'
-    di `"`cmdlinejl'"'
+    di `"m = `cmdlinejl'"'
     jl, `interruptible': m = `cmdlinejl'
   }
   else _jl, `interruptible': m = `cmdlinejl';
 
   _assert `"`r(ans)'"'!="sample is empty", msg(no observations) rc(2000)
   
+  qui jl: Int(m==0)
+  _assert !`r(ans)', msg(estimation failed) rc(199)
+  
   tempname k
-  _jl: k = length(coef(m)); st_numscalar("`k'", k);
-  _jl: sizedf = size(df);
+  _jl: reghdfejl.k = length(coef(m)); st_numscalar("`k'", reghdfejl.k);
+  _jl: reghdfejl.sizedf = size(df);
   if "`wtvar'"!="" _jl: sumweights = mapreduce((w,s)->(s ? w : 0), +, df.`wtvar', m.esample; init = 0);
 
   if `k' & 0`bs' {
     local hasclust = "`bscluster'"!=""
 
-    qui _jl: nworkers()
-    if      `procs' > `r(ans)' _jl: addprocs(`procs'-`r(ans)'+(`r(ans)'==1), exeflags="-t1 --project=$(Base.active_project())");  /* single-threaded workers */     ///
-                                    @everywhere using `=cond(c(os)=="MacOSX", "Metal, AppleAccelerate", "CUDA, BLISBLAS")', DataFrames, FixedEffectModels;
-    else if `procs' < `r(ans)' _jl: rmprocs(workers()[end-(`r(ans)'-`procs'-(`procs'>1)):end]);
+    _jl: batches = [floor(Int, `reps'/`procs'*(t-1))+1:floor(Int,`reps'/`procs'*t) for t ∈ 1:`procs'];  // indexes to split simulations by CPU thread
 
-    _jl: @everywhere using StableRNGs, SharedArrays;
-    _jl: @everywhere module reghdfejlbs global rng, id, wt end;  // worker-specific storage
-    if "`saving'"!="" _jl: _reghdfejl_saving = SharedMatrix{Float64}(`reps', k);
-    _jl: @everywhere reghdfejlbs.rng = StableRNG(`=runiformint(0, 1e6)' * findfirst(==(myid()), procs()) + 42);  // different, ~deterministic seeds for each worker
-    _jl: _reghdfejl_df = DataFrame(SharedMatrix(Matrix(df)), names(df))  // copy of df shareable across workers
+    _jl: reghdfejl.bbs = Matrix{Float64}(undef, `reps', reghdfejl.k);
+    _jl: reghdfejl.Vbs = zeros(Float64,`procs', reghdfejl.k, reghdfejl.k);
+    _jl: reghdfejl.rngs = [StableRNG(`=runiformint(0, 1e6)' * t + 42) for t ∈ 1:`procs'];  // different, deterministic seeds for each thread
+    _jl: reghdfejl.dfs = [DataFrame(df, copycols=false) for _ ∈ 1:`procs']  // copies of df with same underlying data; will hold different bs weights
 
     if `hasclust' {
-      _jl: reghdfejl.s = Set(df.`bscluster'); _reghdfejl_Nclust = length(reghdfejl.s);
-      _jl: _reghdfejl_id = getindex.(Ref(Dict(zip(reghdfejl.s, 1:_reghdfejl_Nclust))), df.`bscluster'); /* ordinalize cluster id, in Main so workers can access*/
+      _jl: reghdfejl.s = Set(df.`bscluster'); reghdfejl.Nclust = length(reghdfejl.s);
+      _jl: reghdfejl.id = getindex.(Ref(Dict(zip(reghdfejl.s, 1:reghdfejl.Nclust))), df.`bscluster');  // ordinalize cluster id
       _jl: reghdfejl.s = nothing
     }
-    else _jl: _reghdfejl_Nclust = size(df,1); reghdfejlbs.id = Colon();
-    _jl: _reghdfejl_bssize = iszero(0`size') ? _reghdfejl_Nclust : 0`size'; reghdfejl.reps = `reps'
-    _jl: Distributed.remotecall_eval(Main, procs(), :(reghdfejlbs.wt = Vector{Int}(undef, $(_reghdfejl_Nclust))));  ///
-         retval = @distributed (+) for m in 1:reghdfejl.reps                                                        ///
-           fill!(reghdfejlbs.wt, 0);                                                                                ///
-           @inbounds for i in 1:_reghdfejl_bssize                                                                   ///
-             reghdfejlbs.wt[rand(reghdfejlbs.rng, 1:_reghdfejl_Nclust)] += 1                                        ///
-           end;                                                                                                     ///
-           _reghdfejl_df.__reghdfejl_bswt = reghdfejlbs.wt[_reghdfejl_id];                                          ///
-           `=cond("`wtopt'"!="", "_reghdfejl_df.__reghdfejl_bswt .*= _reghdfejl_df.`wtvar';", "")'                  ///
-           b = coef(`nl'reg(_reghdfejl_df, f `familyopt' `linkopt', weights=:__reghdfejl_bswt `methodopt' `threadsopt' `sepopt' `tolopt' `dummyopt')); ///
-           `=cond("`saving'"!="","_reghdfejl_saving[m,:] = b;", "")'                                                ///
-           [b, b*b']                                                                                                ///
-         end;                                                                                                       ///
-         reghdfejl.Vbs = retval[1];                                                                                 ///
-         reghdfejl.Vbs = (retval[2] .- reghdfejl.Vbs' ./ reghdfejl.reps .* reghdfejl.Vbs) ./ (reghdfejl.reps - `="`mse'"==""'); ///
-         Distributed.clear!((:rng, :id, :wt); mod=reghdfejlbs);                                                     ///
-         _reghdfejl_id = _reghdfejl_df = nothing;
+    else _jl: reghdfejl.Nclust = size(df,1); reghdfejl.id = Colon();
+
+    _jl: reghdfejl.bssize = iszero(0`size') ? reghdfejl.Nclust : 0`size';                                                             ///
+         reghdfejl.wts = [Vector{Int}(undef, reghdfejl.Nclust) for _ ∈ 1:`procs'];                                                    ///
+         Threads.@threads for t ∈ 1:`procs'                                                                                           ///
+           @inbounds for m ∈ batches[t]                                                                                               ///
+             fill!(reghdfejl.wts[t], 0);                                                                                              ///
+             for _ ∈ 1:reghdfejl.bssize                                                                                               ///
+               reghdfejl.wts[t][rand(reghdfejl.rngs[t], 1:reghdfejl.Nclust)] += 1                                                     ///
+             end;                                                                                                                     ///
+             reghdfejl.dfs[t].__reghdfejl_bswt .= reghdfejl.wts[t][reghdfejl.id];                                                     ///
+             `=cond("`wtopt'"!="", "reghdfejl.dfs[t].__reghdfejl_bswt .*= df.`wtvar';", "")'                                          ///
+             reghdfejl.b = coef(`nl'reg(reghdfejl.dfs[t], f `familyopt' `linkopt', weights=:__reghdfejl_bswt, nthreads=1 `methodopt' `sepopt' `tolopt' `dummyopt')); ///
+             reghdfejl.bbs[m,:] = reghdfejl.b;                                                                                                    ///
+             reghdfejl.Vbs[t,:,:] += reghdfejl.b * reghdfejl.b'                                                                                               ///
+           end                                                                                                                        ///
+         end;                                                                                                                         ///
+         reghdfejl.b = sum(reghdfejl.bbs; dims=1);                                                                                    ///
+         reghdfejl.Vbs = (sum(reghdfejl.Vbs; dims=1)[1,:,:] .- reghdfejl.b' ./ `reps' .* reghdfejl.b) ./ (`reps' - `="`mse'"==""'); ///
+         reghdfejl.id = reghdfejl.V = reghdfejl.rng = reghdfejl.dfs = reghdfejl.wts = nothing;
   }
 
   if "`verbose'"=="" _jl: df = nothing;  // yield memory
@@ -679,7 +639,6 @@ program define _reghdfejl, eclass
     mat colnames `b' = $reghdfejl__coefnames
     mat colnames `V' = $reghdfejl__coefnames
     mat rownames `V' = $reghdfejl__coefnames
-    global reghdfejl__coefnames
     global reghdfejl__instdnames
 
     forvalues i=1/`:word count `coefnames'' {
@@ -696,20 +655,22 @@ program define _reghdfejl, eclass
         cwf `frame'
         qui set obs `reps'
         forvalues i=1/`=`k'' {
-          local coefname: word `i' of `coefnames'
+          local coefname: word `i' of $reghdfejl__coefnames
           local savvar = cond(strpos("`coefname'","."), "_bs_`i'", "_b_`coefname'")
           local savvars `savvars' `savvar'
           qui gen `double' `savvar' = .
           label var `savvar' "_b[`coefname']"
         }
-        jl GetVarsFromMat `savvars', source(view(_reghdfejl_saving,:,`I')) replace
-        _jl: _reghdfejl_saving = nothing
-        save `saving', replace
+        jl GetVarsFromMat `savvars', source(view(reghdfejl.bbs,:,`I')) replace
+        label data "(bootstrap: reghdfejl)"
+        save `saving', `replace'
       }
       cwf `currentframe'
       frame drop `frame'
       if _rc error _rc
     }
+    _jl: reghdfejl.b = nothing
+    global reghdfejl__coefnames
   }
   else local hascons = 0
 
@@ -719,7 +680,7 @@ program define _reghdfejl, eclass
   ereturn local wexp: copy local wexp
 
   ereturn scalar N_hdfe = 0`N_hdfe'
-  _jl: st_numscalar("`t'", sizedf[1]);
+  _jl: st_numscalar("`t'", reghdfejl.sizedf[1]);
   ereturn scalar N_full = `t'
   mata st_numscalar("e(rank)", rank(st_matrix("e(V)")))
   ereturn scalar df_m = e(rank)
@@ -728,7 +689,7 @@ program define _reghdfejl, eclass
   ereturn scalar ic = `t'
   _jl: st_numscalar("`t'", m.converged);
   ereturn scalar converged = `t'
-  _jl: st_numscalar("`t'", sizedf[1] - nobs(m));
+  _jl: st_numscalar("`t'", reghdfejl.sizedf[1] - nobs(m));
   ereturn scalar num_singletons = `t'
 
   if "`nl'"!="" {
@@ -784,7 +745,7 @@ program define _reghdfejl, eclass
   if 0`bs' {
     ereturn local vce bootstrap
     ereturn local vcetype Bootstrap
-    _jl: st_numscalar("`t'", _reghdfejl_Nclust);
+    _jl: st_numscalar("`t'", reghdfejl.Nclust);
     ereturn scalar N_clust = `t'
     ereturn scalar N_clust1 = `t'
     if "`bscluster'"!="" {
@@ -946,3 +907,7 @@ end
 * 1.0.8  Make compatible with Julia 1.11
 * 1.0.9  Make sure to unab all variables before PutVarsToDF in order to catch all duplicates
 * 1.0.10 Clean up sum-of-squares return values and their documentation
+* 1.0.11 Make ado crash if estimation fails. Fix crash on absorb(v1##c.(v2 v3)).
+* 1.1.1  Change default residuals filename to _reghdfejl_resid[N] where N chosen by program to create unique var name
+*        Switch bs from Distributed to Threads & guarantee reproducible order of simulations with bs(, saving)
+*        Move parsing of absorb() into reghdfejl_parse_absorb, to share with partialhdfejl

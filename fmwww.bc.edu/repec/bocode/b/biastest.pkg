@@ -1,0 +1,29 @@
+d 'BIASTEST': module to test parameter equality across different models
+d
+d  The biastest command in Stata is a powerful and user-friendly
+d tool designed to compare the coefficients of different regression
+d models, enabling researchers to assess the robustness and
+d consistency of their empirical findings. This command is
+d particularly valuable for evaluating alternative modeling
+d approaches, such as ordinary least squares versus robust
+d regression, robust regression versus median regression, quantile
+d regression across different quantiles, and fixed effects versus
+d random effects models in panel data analysis. By providing both
+d variable-specific and joint tests, biastest command offers a
+d comprehensive framework for detecting bias or significant
+d differences in model estimates, ensuring that researchers can
+d make informed decisions about model selection and interpretation. d
+d KW: bias
+d KW: parameter equality
+d KW: regression
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20250331
+d
+d Author: Hasraddin Guliyev,  Azərbaycan Dövlət İqtisad Universiteti
+d Support: email hasradding@@unec.edu.az
+d
+f biastest.ado
+f biastest.sthlp
+f biastest.pdf
