@@ -31,14 +31,14 @@ d KW: open data format
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20250311
+d Distribution-Date: 20250121
 d
 d Author: Tom Hartl, DIW Berlin
 d Support: email  thartl@@diw.de
 d
 f opendf.ado
-f opendf_csv2dta.ado
-f opendf_csv2zip.ado
+f ../_/csv2dta.ado
+f ../_/csv2zip.ado
 f opendf_docu.ado
 f opendf_dta2csv.ado
 f opendf_installpython.ado
@@ -47,8 +47,8 @@ f opendf_removepython.ado
 f opendf_write.ado
 f opendf_zip2csv.ado
 f opendf.sthlp
-f opendf_csv2dta.sthlp
-f opendf_csv2zip.sthlp
+f ../_/csv2dta.sthlp
+f ../_/csv2zip.sthlp
 f opendf_docu.sthlp
 f opendf_dta2csv.sthlp
 f opendf_installpython.sthlp
@@ -58,4 +58,4 @@ f opendf_write.sthlp
 f opendf_zip2csv.sthlp
 f ../c/csv2xml.py
 f ../x/xml2csv.py
-f opendf_example_data.odf.zip
+f opendf_example_data.zip
