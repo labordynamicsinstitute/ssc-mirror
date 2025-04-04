@@ -14,6 +14,7 @@ p unicode2ascii modules to translate between Unicode and ASCII
 p unique module to report number of unique values in variable(s)
 p uniquestrata module to abort the program if the specified variables don't collectively account for every observation
 p unitab program to display a univariate table for a binary outcome variable
+p unitchg module to manage conversion of units
 p univar module to generate univariate summary with box-and-whiskers plot
 p univstat module to produce summary statistics in matrix form
 p upsetplot module to show Euler or Venn diagrams mapped to bar charts, upsetplot style

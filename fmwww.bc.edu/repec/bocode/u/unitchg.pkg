@@ -1,0 +1,22 @@
+d 'UNITCHG': module to manage conversion of units
+d
+d  This routine, available as an egen function and a Stata command,
+d handles conversion of units. 
+d
+d KW: data management
+d KW: units
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20150403
+d
+d Author: Ulrich Kohler, WZB
+d Support: email kohler@@wz-berlin.de
+d
+f unitchg.ado
+f ../_/_gunitchg.ado
+f ../l/lunitchg.mata
+f ../l/lunitchg.mlib
+f unitchg_currency.ado
+f unitchg_ratio.ado
+f unitchg.sthlp
