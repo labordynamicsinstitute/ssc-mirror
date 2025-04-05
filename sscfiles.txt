@@ -18952,6 +18952,7 @@ fmwww.bc.edu/repec/bocode/r/rddensity_unique.mo
 fmwww.bc.edu/repec/bocode/r/rndf.hlp
 fmwww.bc.edu/repec/bocode/r/reghdfejl_parse_absorb.ado
 fmwww.bc.edu/repec/bocode/r/reghdfe_store_alphas.ado
+fmwww.bc.edu/repec/bocode/r/randmarkovseq.sthlp
 fmwww.bc.edu/repec/bocode/r/rdci.hlp
 fmwww.bc.edu/repec/bocode/r/rpaxioms.sthlp
 fmwww.bc.edu/repec/bocode/r/robit8.ado
@@ -19558,6 +19559,7 @@ fmwww.bc.edu/repec/bocode/r/roman.pkg
 fmwww.bc.edu/repec/bocode/r/racplot.ado
 fmwww.bc.edu/repec/bocode/r/rdpermute.ado
 fmwww.bc.edu/repec/bocode/r/rvpplot27.hlp
+fmwww.bc.edu/repec/bocode/r/randmarkovseq.ado
 fmwww.bc.edu/repec/bocode/r/reorder.ado
 fmwww.bc.edu/repec/bocode/r/realcomimpute.pkg
 fmwww.bc.edu/repec/bocode/r/r2reg3.ado
