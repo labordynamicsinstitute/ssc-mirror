@@ -19,6 +19,7 @@ p randcmd module to compute randomization inference p-values
 p randcmdci module to produce robust randomization-t p-values and confidence intervals for regression coefficients
 p randcoef module to estimate correlated random effects and correlated random coefficients models
 p randinf module to calculate the treatment effect and p-value of a stratified randomized controlled experiment 
+p randmarkovseq module to compute a random sequence of values from an underlying discrete time Markov chain
 p randomid module to identify every observation in the dataset with random alphanumeric characters
 p randomize module to create random assignments for experimental trials, including blocking, balance checking, and automated rerandomization
 p randomizr module to implement random assignment procedures

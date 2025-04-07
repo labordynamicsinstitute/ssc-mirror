@@ -18740,6 +18740,7 @@ fmwww.bc.edu/repec/bocode/r/rndgam.hlp
 fmwww.bc.edu/repec/bocode/r/rndf.ado
 fmwww.bc.edu/repec/bocode/r/revlist.hlp
 fmwww.bc.edu/repec/bocode/r/rbiprobit_postestimation.sthlp
+fmwww.bc.edu/repec/bocode/r/randmarkovseq.pkg
 fmwww.bc.edu/repec/bocode/r/reshape8.pkg
 fmwww.bc.edu/repec/bocode/r/roctabi.pkg
 fmwww.bc.edu/repec/bocode/r/r2o.ado

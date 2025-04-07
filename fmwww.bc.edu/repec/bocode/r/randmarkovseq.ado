@@ -1,3 +1,4 @@
+*! 1.0.1 Ariel Linden 04Apr2025 // fixed error coding for row sum = 1
 *! 1.0.0 Ariel Linden 26Mar2025 
 
 program randmarkovseq, rclass
@@ -50,22 +51,25 @@ program randmarkovseq, rclass
 					di as err "the matrix must be symmetrical"
 					exit 198	
 				}
-				// check that rowtotals equal 1
-				mata : X = rowsum(st_matrix("`matrix'"))
-				mata: st_matrix("rowX", X)
-				mata: st_numscalar("rowX", sum(st_matrix("rowX")))
-				
-				mata: st_numscalar("sumX", sum(st_matrix("X")))
-				if scalar(rowX) != scalar(sumX) {
-					di as err "row totals of matrix `matrix' do not equal 1.0"
-					exit 198	
+
+				// check that row totals equal 1 
+				local rows = rowsof("`matrix'")
+
+				* Loop through each row to check if the sum equals 1
+				forval i = 1/`rows' {
+					* Calculate the row sum
+					scalar row_sum = 0
+					forval j = 1/4 {
+						scalar row_sum = row_sum + `matrix'[`i', `j']
+					}
+					* Check if the row sum is not equal to 1
+					if abs(row_sum - 1) > 1e-6 {
+						di as err "row `i' of matrix `matrix' does not sum to 1. Sum = " row_sum
+						exit 198
+					}
 				}
-				// check that number of labels equals number of values in matrix row
-				if `labcnt' != rowsof("`matrix'") {
-					di as err "the number of labels specified does not equal the number of values in the matrix row"
-					exit 198			
-				}
-			
+
+
 				mata : matvals(`sample', "`matrix'")
 
 				// convert matrix A to variables
@@ -78,7 +82,7 @@ program randmarkovseq, rclass
 				expand `freq'
 				drop `freq'
 				drop `col'
-			}
+			} // if matrix is specified
 			// if no matrix is specified
 			else {
 				set obs `labcnt'

@@ -1,0 +1,24 @@
+d 'RANDMARKOVSEQ': module to compute a random sequence of values from an underlying discrete time Markov chain
+d
+d  randmarkovseq generates a random sequence of values from an
+d underlying discrete time Markov chain (DTMC). A DTMC is a
+d sequence of random variables characterized by the Markov property
+d which asserts that the distribution of the next state depends
+d only on the current state and not any prior state. If the user
+d specifies the option transition, a twoway table is produced to
+d show the transitions from the current state to the next. 
+d
+d KW:  Markov chain model
+d KW: discrete time Markov chain
+d KW: contingency table
+d KW: simulation
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250404
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+ ../e/randmarkovseq.ado
+ ../e/randmarkovseq.sthlp
