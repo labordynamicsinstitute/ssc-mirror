@@ -21,11 +21,11 @@ d
 d KW: distribution function
 d KW: density estimation
 d KW: histogram
-d KW: quantiles,
+d KW: quantiles
 d
 d Requires: Stata version 14 and moremata, coefplot from SSC (q.v.)
 d
-d Distribution-Date: 20230324
+d Distribution-Date: 20250407
 d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@soz.unibe.ch
