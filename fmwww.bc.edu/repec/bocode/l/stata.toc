@@ -168,6 +168,7 @@ p lmnwhite2 Module to Compute 2SLS-IV White IM Non Normality Test
 p lmnwhitenl module to compute NLS Non Normality White Test
 p lmnwhitext module to compute Panel Data Non Normality White Test
 p lmoments module to generate L-moments and derived statistics
+p lmomentsets module for L-moment-based measures collected as datasets
 p lms module to perform least median squares regression fit
 p lmsrd module to compute Spurious Regression Diagnostic after OLS Regression
 p lmtest module to perform Lagrange multiplier test after constrained maximum likelihood estimation

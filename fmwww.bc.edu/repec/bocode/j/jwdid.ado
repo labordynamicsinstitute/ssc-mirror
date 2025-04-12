@@ -1,4 +1,10 @@
-*!v2.00 Paper Out
+*!v2.2 Fixing issue with RCS 
+*v2.13 Fixing Treatment Intensity
+*v2.12 Bug with tobit
+*v2.11 Bug with trtvar
+*v2.10 CRE! An addition of corrections for nonlinear models 
+*v2.01 xattvar
+*v2.00 Paper Out
 *v1.77 Allows Anticipation 
 *v1.76 Excludes Fixed variables from the interactions with Cohort
 *v1.75 May allow for Intervalled Event
@@ -117,6 +123,11 @@ end
 **  Small program to check fix vars
 mata:
     void mt_fixvar(string scalar xvarname, string scalar touse){
+        real matrix xvar
+        real matrix info
+        real scalar i
+        real matrix csum
+        string matrix toret1 , toret2
         // Load all data
         xvar = st_data(.,xvarname,touse)        
         // sort and PanelStup 
@@ -129,8 +140,9 @@ mata:
         csum =colsum(xvar[info[,2],]:-xvar[info[,1],])
         toret1 = invtokens(select(tokens(xvarname), csum ))
         toret2 = invtokens(select(tokens(xvarname),!csum ))
-        st_global("r(xvarvar)",toret1)
-        st_global("r(xvarcons)",toret2)
+
+        st_local("xvarvar",toret1)
+        st_local("xvarcons",toret2)
     }
 end
 
@@ -143,10 +155,13 @@ program is_x_fix, rclass
     ** ID original variables
     getvarlist `varlist'
     local xvarlist `r(varlist)'    
-  fvset base none `xvarlist '
-    mata:mt_fixvar("`ivar' `evarlist '","`touse'")
-  fvset base default `xvarlist'
-    
+	fvset base none `xvarlist '
+	mata:mt_fixvar("`ivar' `evarlist '","`touse'")
+	
+	fvset base default `xvarlist'
+ 	return local xvarcons   `xvarcons'
+	return local xvarvar    `xvarvar'
+	 
 end 
  
 program jwdid, eclass
@@ -173,7 +188,8 @@ program jwdid, eclass
 								  [exovar(varlist fv ts) exogvar(varlist fv ts) ]  /// Variables not to be interacted with Gvar Tvar Treatment
                                   [xtvar(varlist fv ts) ]  /// Variables interacted with  Tvar 
                                   [xgvar(varlist fv ts) ]  /// Variables interacted with Gvar 
-								  [xasis ] ///  
+                                  [xattvar(varlist fv ts) ]  /// Variables interacted with Tvar x Gvar <- for Treatment Heterogeneity
+								  [xasis cre] ///  
 								  [ANTIcipation(numlist max=1 >0) ] // Allows for Anticipation
 						
 	// For Gravity
@@ -217,18 +233,15 @@ program jwdid, eclass
 	}
 	if "`tvar'"=="" local tvar `time'
 
-	if "`gvar'`trtvar'"=="" {
-		display in red "option gvar/trtvar() required"
-		error 198
-	}
-
 	if "`trtvar'`gvar'"=="" {
 		display as error "Cohort variable not specified"
+		display in red "options gvar or trtvar() required"
 		error 198
 	} 
 	else if "`trtvar'"!="" & "`gvar'"!="" {
-		display as error "You can only specify gvar or trtvar. Not both"		
-		error 198
+		display "You Specified TRTVAR and Gvar. Make sure they are consistent"
+		display "if tvar<gvar -> trtvar = 0"
+		
 	}
 	else if "`trtvar'"!="" {
 		capture drop __gvar
@@ -247,9 +260,9 @@ program jwdid, eclass
 		is_x_fix `x' if `touse', ivar(`ivar')
 		local xvarcons  `r(xvarcons)'
 		local xvarvar   `r(xvarvar)'
- 
+		
 	}
-
+	
  	*easter_egg
 	** Count gvar
 	/*qui:count if `gvar'==0 & `touse'==1 
@@ -305,7 +318,6 @@ program jwdid, eclass
 		
 	}	
 	else {		
-		error 1
 		qui:capture drop __tr__
 		qui:gen      __tr__=`trtvar' if `touse'
 		qui:replace  __tr__=1        if `touse' & "`never'"!="" & `trtvar'==0 & `gvar'!=0
@@ -388,15 +400,15 @@ program jwdid, eclass
 ** Two options: Either we Demean  data, or used actual data
 ** Same Results		
 	if "`xasis'"=="" {
-		if "`x'"!="" {
+		if "`x'`xattvar'"!="" {
 				capture drop _x_*
-				qui:hdfe `y' `x' if `touse'	[`wgt'`exp'], abs(`toabshere') 	keepsingletons  gen(_x_)
+				qui:hdfe `y' `x' `xattvar' if `touse'	[`wgt'`exp'], abs(`toabshere') 	keepsingletons  gen(_x_)
 				capture drop _x_`y'
 				local xxvar _x_*
 		}
 	}
-	else local xxvar `x'
-
+	else local xxvar `x' `xattvar'
+ 
 	*****************************************************
 	*****************************************************
 	// If Hettype Full
@@ -412,7 +424,7 @@ program jwdid, eclass
 						local xvar  `xvar'   c.__tr__#i`i'.`gvar'#i`j'.`tvar' 							  
 						local xvar2 `xvar2'           i`i'.`gvar'#i`j'.`tvar' 
 						
-						if "`x'"!="" {
+						if "`x'`xxvar'"!="" {
 							local xvar  `xvar'   c.__tr__#i`i'.`gvar'#i`j'.`tvar'#c.(`xxvar') 
 							local xvar3 `xvar3'           i`i'.`gvar'#i`j'.`tvar'#c.(`xxvar')  
 							}
@@ -423,7 +435,7 @@ program jwdid, eclass
 						local xvar `xvar'   c.__tr__#i`i'.`gvar'#i`j'.`tvar' 							  
 						local xvar2 `xvar2'          i`i'.`gvar'#i`j'.`tvar' 
 						
-						if "`x'"!="" {
+						if "`x'`xxvar'"!="" {
 							local xvar  `xvar'  c.__tr__#i`i'.`gvar'#i`j'.`tvar'#c.(`xxvar') 
 							local xvar3 `xvar3'          i`i'.`gvar'#i`j'.`tvar'#c.(`xxvar')  
 						}
@@ -445,7 +457,7 @@ program jwdid, eclass
 						local xvar `xvar'   c.__tr__#i`i'.__post__#i`j'.`tvar' 							  
 						local xvar2 `xvar2'          i`i'.__post__#i`j'.`tvar' 
 						
-						if "`x'"!="" {
+						if "`x'`xxvar'"!="" {
 							local xvar `xvar'   c.__tr__#i`i'.__post__#i`j'.`tvar'#c.(`xxvar') 
 							local xvar3 `xvar3'          i`i'.__post__#i`j'.`tvar'#c.(`xxvar')  
 						}
@@ -456,7 +468,7 @@ program jwdid, eclass
 						local xvar `xvar'   c.__tr__#i`i'.__post__#i`j'.`tvar' 							  
 						local xvar2 `xvar2'          i`i'.__post__#i`j'.`tvar' 
 						
-						if "`x'"!="" {
+						if "`x'`xxvar'"!="" {
 							local xvar  `xvar'  c.__tr__#i`i'.__post__#i`j'.`tvar'#c.(`xxvar') 
 							local xvar3 `xvar3'          i`i'.__post__#i`j'.`tvar'#c.(`xxvar')  
 						}
@@ -479,7 +491,7 @@ program jwdid, eclass
 						local xvar `xvar'   c.__tr__#i`i'.`gvar'#i`j'.__post__ 							  
 						local xvar2 `xvar2'          i`i'.`gvar'#i`j'.__post__
 						
-						if "`x'"!="" {
+						if "`x'`xxvar'"!="" {
 							local xvar `xvar'   c.__tr__#i`i'.`gvar'#i`j'.__post__#c.(`xxvar') 
 							local xvar3 `xvar3'          i`i'.`gvar'#i`j'.__post__#c.(`xxvar')  
 						}
@@ -490,7 +502,7 @@ program jwdid, eclass
 						local xvar `xvar'   c.__tr__#i`i'.`gvar'#i`j'.__post__ 							  
 						local xvar2 `xvar2'          i`i'.`gvar'#i`j'.__post__ 
 						
-						if "`x'"!="" {
+						if "`x'`xxvar'"!="" {
 							local xvar  `xvar'  c.__tr__#i`i'.`gvar'#i`j'.__post__#c.(`xxvar') 
 							local xvar3 `xvar3'          i`i'.`gvar'#i`j'.__post__#c.(`xxvar')  
 						}
@@ -524,7 +536,7 @@ program jwdid, eclass
 				if "`never'"=="" & (`ccev'>-`antigap') {	
 					local xvar `xvar'   c.__tr__#i`i'.__evnt__
 					local xvar2 `xvar2'          i`i'.__evnt__						
-					if "`x'"!="" {
+					if "`x'`xxvar'"!="" {
 						local xvar `xvar'   c.__tr__#i`i'.__evnt__#c.(`xxvar') 
 						local xvar3 `xvar3'          i`i'.__evnt__#c.(`xxvar')  
 					}
@@ -532,7 +544,7 @@ program jwdid, eclass
 				if "`never'"!="" & `ccev'!=(-`antigap') {	
 					local xvar `xvar'   c.__tr__#i`i'.__evnt__
 					local xvar2 `xvar2'          i`i'.__evnt__						
-					if "`x'"!="" {
+					if "`x'`xxvar'"!="" {
 						local xvar `xvar'   c.__tr__#i`i'.__evnt__#c.(`xxvar') 
 						local xvar3 `xvar3'          i`i'.__evnt__#c.(`xxvar')  
 					}
@@ -553,7 +565,7 @@ program jwdid, eclass
 						local xvar `xvar'   c.__tr__#i`i'.`gvar'#i`j'.__evnt__ 							  
 						local xvar2 `xvar2'          i`i'.`gvar'#i`j'.__evnt__
 						
-						if "`x'"!="" {
+						if "`x'`xxvar'"!="" {
 							local xvar `xvar'   c.__tr__#i`i'.`gvar'#i`j'.__evnt__#c.(`xxvar') 
 							local xvar3 `xvar3'          i`i'.`gvar'#i`j'.__evnt__#c.(`xxvar')  
 							}
@@ -573,7 +585,7 @@ program jwdid, eclass
 					local xvar `xvar'   c.__tr__#i`i'.__post__
 					local xvar2 `xvar2'          i`i'.__post__ 
 					
-					if "`x'"!="" {
+					if "`x'`xxvar'"!="" {
 						local xvar `xvar'   c.__tr__#i`i'.__post__#c.(`xxvar') 
 						local xvar3 `xvar3'          i`i'.__post__#c.(`xxvar')  
 					}
@@ -584,7 +596,7 @@ program jwdid, eclass
 					local xvar `xvar'   c.__tr__#i`i'.__post__
 					local xvar2 `xvar2'          i`i'.__post__
 					
-					if "`x'"!="" {
+					if "`x'`xxvar'"!="" {
 						local xvar  `xvar'  c.__tr__#i`i'.__post__#c.(`xxvar') 
 						local xvar3 `xvar3'          i`i'.__post__#c.(`xxvar')  
 					}
@@ -613,13 +625,16 @@ program jwdid, eclass
 	if "`cluster'"!=""                local cvar `cluster'
 	
 	if "`method1'"=="fracreg" local tocluster vce(cluster `cvar')
+	else if "`method1'"=="tobit" local tocluster vce(cluster `cvar')
 	else local tocluster cluster(`cvar')
 	
+    
+    ***
 	if "`method'"=="" {
 		if "`group'"=="" {
 			** ogxvar  will be excluded if they are fixed across time
 			if "`tocluster'"=="" local tocluster vce(robust)
-			reghdfe `y' `xvar' `ogxvar'  `otxvar' 	`exogvar' ///
+			reghdfe `y' `xvar' `xvarvar' `ogxvar'  `otxvar' 	`exogvar' ///
 				if `touse' [`weight'`exp'], abs(`ivar' `tvar' `fevar') `tocluster' keepsingletons `options'
 			local scmd `e(cmdline)'		
 		}	
@@ -630,7 +645,7 @@ program jwdid, eclass
 		 
 				if "`corr'"!="" {
 					** Correction 
-					qui:myhdmean `xvar' `x' `ogxvar'  `otxvar' `exogvar'  i.`tvar' if `touse'	[`wgt'`exp'] , prefix(_z_) keepsingletons abs(`ivar')
+					qui:myhdmean `xvar' `xvarvar' `ogxvar'  `otxvar' `exogvar'  i.`tvar' if `touse'	[`wgt'`exp'] , prefix(_z_) keepsingletons abs(`ivar')
 					local xcorr  `r(vlist)'
 				}
 			}	
@@ -641,24 +656,42 @@ program jwdid, eclass
 	}
 	else if "`method'"=="ppmlhdfe" {
 		
-		ppmlhdfe `y' `xvar' `ogxvar'  `otxvar'	`exogvar' ///
+		ppmlhdfe `y' `xvar' `xvarvar' `ogxvar'  `otxvar'	`exogvar' ///
 				if `touse' [`weight'`exp'], abs(`ivar' `tvar' `fevar') `tocluster' keepsingletons ///
 				d `method_option' `options'
 		local scmd `e(cmdline)'				
-	}	
+	}
+	**** Else Two Add CRE option
 	else {
-		if "`ivar'"!="" {
-			qui:xtset `ivar' `tvar'
-			mata:is_balanced("`ivar' `tvar'","`touse'")	
-			if   "`corr'"!=""  {
-					** Correction 
-					qui:myhdmean `xvar'  `x'  `ogxvar' `otxvar' `xcorr' `exogvar'  i.`tvar' if `touse'	[`wgt'`exp'] , prefix(_z_) keepsingletons abs(`ivar')
-					local xcorr  `r(vlist)'				
-			} 
-		}
-		`method'  `y' `xvar'  `x'  `ogxvar' `otxvar' `xcorr' `exogvar'   i.`gvar' i.`tvar' ///
-		if `touse' [`weight'`exp'], `tocluster' `method_option' `options'
-		local scmd `e(cmdline)'
+        if "`cre'"=="" {        
+            if "`ivar'"!="" {
+                qui:xtset `ivar' `tvar'
+                mata:is_balanced("`ivar' `tvar'","`touse'")	
+                if   "`corr'"!=""  {
+                        ** Correction 
+                        qui:myhdmean `xvar'  `xvarvar'  `ogxvar' `otxvar' `xcorr' `exogvar'  i.`tvar' if `touse'	///
+                                     [`wgt'`exp'] , prefix(_z_) keepsingletons abs(`ivar')
+                        local xcorr  `r(vlist)'				
+                } 
+            }
+            `method'  `y' `xvar'  `x'  `ogxvar' `otxvar' `xcorr' `exogvar'   i.`gvar' i.`tvar' ///
+            if `touse' [`weight'`exp'], `tocluster' `method_option' `options'
+            local scmd `e(cmdline)'
+        }
+        else {
+            if "`ivar'"!="" local tofe  `ivar'
+            else local tofe `gvar'
+            qui:cre_jwdid `xvar'  `x'  `ogxvar' `otxvar' `xcorr' `exogvar' i.`tvar' if `touse' [`weight'`exp'], abs(`tofe')
+            
+            qui: `method'  `y' `xvar'  `x'  `ogxvar' `otxvar' `xcorr' `exogvar' /// Main Variables
+                           _cre_* i.`tvar' /// Mundlak terms  + time FE
+                           if `touse' [`weight'`exp'], `tocluster' `method_option' `options'
+            
+            display "Estimation Done" _n ///
+                    "{p}If Need to see results type -ereturn display-. They could be very extensive, depending on the model{p_end}" _n ///
+                    "Otherwise, type -estat [simple/event]- for aggregates"
+            
+        }
 	}
 	
 	ereturn local cmd jwdid
@@ -807,6 +840,65 @@ program _gjwgvar, sortpreserve
 	label var `varlist' "Group Variable based on `exp'"
 end
 
+program cre_jwdid, rclass sortpreserve
+    syntax varlist(fv ts) [if] [aw iw pw], abs(varname)
+    capture drop _cre_*
+    ** Capturing sample
+    marksample  touse 
+    markout    `touse' `abs'
+	sort `touse' `abs' 
+    ** expand Varlist
+    fvexpand `varlist'
+    local mfvlist `r(varlist)'
+    ** define weights
+    if "`weight'"!="" local weight aw
+    local exp = subinstr("`exp'","=","",1)
+    if "`exp'"=="" local exp 1
+    ** Counts Obs
+    count if `touse'
+    
+    ** Gets Weight
+    tempvar vwexp
+    by `touse' `abs':gen double `vwexp' =  sum(`exp')
+    by `touse' `abs':replace    `vwexp' =  `vwexp'[_N]
+    
+    tempvar res_mm
+    qui:gen double `res_mm'=.
+    local cnt 0
+    foreach i of local mfvlist {
+        
+        ** Create
+        local cnt = `cnt'+1
+        by `touse' `abs':gen double _cre_`cnt'=sum((`i')*`exp') if `touse'
+        by `touse' `abs':replace    _cre_`cnt'=_cre_`cnt'[_N]/`vwexp'
+        ** check if Any Var
+        replace `res_mm' = abs((`i')-_cre_`cnt') if `touse'
+        sum `res_mm', meanonly
+        if (r(max)-r(min))>epsfloat()  {
+            local flist `flist' _cre_`cnt'
+            label var _cre_`cnt' "mndlk `i'"
+        }
+        else drop _cre_`cnt'
+    }
+    
+    ** Final Collinearity Check
+    qui: _rmcoll _cre_*
+     
+    local fflist  `r(varlist)'
+    local flist
+    
+    foreach i of local fflist {
+        
+        if strpos("`i'","o.")>0 {
+            local todr= subinstr("`i'","o.","",1)
+            drop `todr'
+        }
+        else local flist `flist' `i'
+    }
+    return local varlist `flist'    
+    
+    
+end 
 *** Problem.
 /*
 What to do if DIF(1) c.x does give you a different result from dif() c.dx

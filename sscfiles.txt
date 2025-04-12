@@ -418,6 +418,7 @@ fmwww.bc.edu/repec/bocode/l/lmalb2.dlg
 fmwww.bc.edu/repec/bocode/l/lmhharv.dlg
 fmwww.bc.edu/repec/bocode/l/logitgraph.sthlp
 fmwww.bc.edu/repec/bocode/l/lmadurm2.sthlp
+fmwww.bc.edu/repec/bocode/l/lmomentsets.ado
 fmwww.bc.edu/repec/bocode/l/lognormalreg_lf.ado
 fmwww.bc.edu/repec/bocode/l/lmngry2.pkg
 fmwww.bc.edu/repec/bocode/l/lexpgen.ado
@@ -753,6 +754,7 @@ fmwww.bc.edu/repec/bocode/l/lmhhp.dlg
 fmwww.bc.edu/repec/bocode/l/labvalcl.hlp
 fmwww.bc.edu/repec/bocode/l/lmztest.pkg
 fmwww.bc.edu/repec/bocode/l/lmoments9.html
+fmwww.bc.edu/repec/bocode/l/lmomentsets.sthlp
 fmwww.bc.edu/repec/bocode/l/lmnreg3.dlg
 fmwww.bc.edu/repec/bocode/l/lgraph.html
 fmwww.bc.edu/repec/bocode/l/lmnwhite2.ado
@@ -815,6 +817,7 @@ fmwww.bc.edu/repec/bocode/l/libbrewscheme.ado
 fmwww.bc.edu/repec/bocode/l/lmadurh2.do
 fmwww.bc.edu/repec/bocode/l/lsacsetup.ado
 fmwww.bc.edu/repec/bocode/l/levels7.html
+fmwww.bc.edu/repec/bocode/l/lmoments_explain.do
 fmwww.bc.edu/repec/bocode/l/lgtools.mlib
 fmwww.bc.edu/repec/bocode/l/louvain.sthlp
 fmwww.bc.edu/repec/bocode/l/lmhlrxt.dta
@@ -1417,6 +1420,7 @@ fmwww.bc.edu/repec/bocode/l/lmalb2.ado
 fmwww.bc.edu/repec/bocode/l/loasampsi.ado
 fmwww.bc.edu/repec/bocode/l/lvalues.ado
 fmwww.bc.edu/repec/bocode/l/log2md.pkg
+fmwww.bc.edu/repec/bocode/l/lmomentsets.pkg
 fmwww.bc.edu/repec/bocode/l/loevh2.sthlp
 fmwww.bc.edu/repec/bocode/l/labrecode.hlp
 fmwww.bc.edu/repec/bocode/l/lmmtxttool.mlib

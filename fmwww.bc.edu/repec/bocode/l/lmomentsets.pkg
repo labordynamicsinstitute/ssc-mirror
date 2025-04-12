@@ -1,0 +1,25 @@
+d 'LMOMENTSETS': module for L-moment-based measures collected as datasets
+d
+d   lmomentsets computes L-moment-based measures and collects them 
+d into datasets. Compare lmoments which is separate.There are two
+d syntaxes. lmomentsets varlist calculates results for one or more
+d variables. lmomentsets varname, over(groupvar) calculates results
+d for one variable varname for each distinct value of groupvar.
+d lmomentsets by default lists its results. Although saving to a
+d permanent dataset is optional, that is the intended key to many
+d useful  applications, graphical and otherwise. 
+d
+d KW: summary statistics
+d KW: L-moments
+d KW: graphics 
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20250411
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f lmomentsets.ado
+f lmomentsets.sthlp
+f lmoments_explain.do

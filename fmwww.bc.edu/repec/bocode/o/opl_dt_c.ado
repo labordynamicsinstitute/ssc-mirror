@@ -1,7 +1,7 @@
 ********************************************************************************
 * PROGRAM "opl_dt_c"
 ********************************************************************************
-*! opl_dt_c, v2, GCerulli, 24may2024
+*! opl_dt_c, v3, GCerulli, 02apr2025
 program opl_dt_c , eclass
 version 16
 syntax , ///
@@ -17,6 +17,7 @@ cate(varlist max=1 min=1) ///
 marksample touse
 markout `touse' `x1' `x2' `x3' 
 ********************************************************************************
+qui{ // start quietly
 ereturn clear
 ereturn scalar c1=`c1'
 ereturn scalar c2=`c2'
@@ -109,6 +110,7 @@ ereturn scalar _N=r(N)
 qui tab _units_to_be_treated if _units_to_be_treated==1
 ereturn scalar Ntreat=r(N)
 ereturn scalar Nuntreat=_N-r(N)
+} // end quietly
 ********************************************************************************
 * Display output
 ********************************************************************************
