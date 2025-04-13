@@ -492,14 +492,14 @@ if "`graph'"!="nograph" {
 		(rarea `birf_up' `birf_lo' `_t', fcolor(`lcolor'%30) lc(`lcolor'%15)) ///
 		(line `_zero' `_t', lcolor(gs5) lpattern(dash)) ///
 		(line `birf' `_t', lcolor(`lcolor') lpattern(solid)) if _n<=`h1', ///
-		legend(`off' order(4)) title("`title'", size(*0.8)) `gropt' tlabel(`hs'(`p')`hor') xtitle(`ttitle') ///
+		legend(`off' order(4) position(6)) title("`title'", size(*0.8)) `gropt' tlabel(`hs'(`p')`hor') xtitle(`ttitle') ///
 		name(`grname', replace)
 	}
 	else {
 		qui twoway (rarea `birf_up' `birf_lo' `_t', fcolor(`lcolor'%15) lc(`lcolor'%7)) ///
 		(line `_zero' `_t', lcolor(gs5) lpattern(dash)) ///
 		(line `birf' `_t', lcolor(`lcolor') lpattern(solid)) if _n<=`h1', ///
-		legend(`off' order(3)) title("`title'", size(*0.8)) `gropt' tlabel(`hs'(`p')`hor') xtitle(`ttitle') ///
+		legend(`off' order(3) position(6)) title("`title'", size(*0.8)) `gropt' tlabel(`hs'(`p')`hor') xtitle(`ttitle') ///
 		name(`grname', replace)
 	}
 }

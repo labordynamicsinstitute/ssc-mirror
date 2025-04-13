@@ -1,11 +1,11 @@
 * First Version June 26 2023
-* This Version January 15 2025
+* This Version February 07 2025
 
 program lpgraph
 version 13.0:
 
-syntax anything [if] [in], [Hor(numlist integer) Zero TItle(string) TTItle(string) YTItle(string) ti1(string) ti2(string) ti3(string) /*
-*/ lab1(string) lab2(string) lab3(string) LColor(string) lc1(string) lc2(string) lc3(string) SEParate nolegend /*
+syntax anything [if] [in], [Hor(numlist integer) Zero TItle(string) TTItle(string) YTItle(string) ti1(string) ti2(string) ti3(string) ti4(string) /*
+*/ lab1(string) lab2(string) lab3(string) lab4(string) LColor(string) lc1(string) lc2(string) lc3(string) lc4(string) SEParate nolegend /*
 */ GRName(string) GRSave(string) as(string) COMBine(string) *]
 
 *********************************************************************************************************************************************
@@ -48,17 +48,21 @@ if "`separate'"=="" {
 	else loc color2 `lc2'
 	if "`lc3'"=="" loc color3 green
 	else loc color3 `lc3'
+	if "`lc4'"=="" loc color4 orange
+	else loc color4 `lc4'
 } 
 else {
 	if "`lcolor'"=="" {
 		loc color1 blue
 		loc color2 blue
 		loc color3 blue	
+		loc color4 blue	
 	} 
 	else {
 		loc color1 `lcolor'
 		loc color2 `lcolor'
 		loc color3 `lcolor'	
+		loc color4 `lcolor'	
 	} 
 }
 
@@ -97,13 +101,13 @@ forval i=1/`n' {
 
 if "`separate'"=="" {
 	twoway `areas' `linezero' `lines' if _n<=`h1', ///
-	legend(order(`order') rows(1)) ///
+	legend(order(`order') rows(1) position(6)) ///
 	title(`title') tlabel(`hs'(`p')`hor') xtitle(`ttitle') ytitle(`ytitle') `options' name(`grname', replace)
 }
 
 if "`separate'"=="separate" {
 	forval i=1/`n' {
-		twoway `area`i'' `linezero' `line`i'' if _n<=`h1', legend(`off' order(3) rows(1)) ///
+		twoway `area`i'' `linezero' `line`i'' if _n<=`h1', legend(`off' order(3) rows(1) position(6)) ///
 		title(`ti`i'', size(*`size')) tlabel(`hs'(`p')`hor') xtitle(`ttitle') ytitle(`ytitle') name(``i'', replace) `options' nodraw
 	}	
 gr combine `names', title(`title') name(`grname', replace) `combine'

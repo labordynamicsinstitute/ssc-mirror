@@ -1,0 +1,35 @@
+d 'SPSFE': module for estimation of spatial stochastic frontier models
+d
+d  This software implements spatial stochastic frontier models that
+d address both endogenous frontier/environmental variables and
+d spatial spillover effects, based on the methodology developed in
+d Kutlu et al. (Eur.J.Op.Res., 2020). The package extends
+d traditional stochastic frontier analysis by incorporating spatial
+d autoregressive (SAR) components while correcting biases from
+d endogenous covariates through a control function approach. Key
+d features include support for time-varying spatial weight
+d matrices, decomposition of direct/indirect efficiency effects,
+d and heteroskedasticity modeling in inefficiency terms. This
+d implementation provides practitioners with tools for analyzing
+d productivity in spatially dependent systems with endogenous
+d regressors, particularly relevant for regional economic studies
+d and policy impact evaluations. 
+d
+d KW: stochastic frontier
+d KW: spatial modeling
+d KW: endogenous frontier
+d KW: spatial spillover
+d
+d Requires: Stata version 16, xtsfsp from SJ, moremata from SSC (q.v.)
+d
+d Distribution-Date: 20250412
+d
+d Author: Luojia Wang, Xiamen University
+d Support: email ljwang@@stu.xmu.edu.cn
+d
+f spsfe.ado
+f spsfe_p.ado
+f spsfe_postestimation.sthlp
+f ../l/lspsfe.mlib
+f ../m/M1.stswm
+f ../w/w_ex1.mmat
