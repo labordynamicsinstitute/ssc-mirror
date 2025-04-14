@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2  1feb2025}{...}
+{* *! version 1.3  13apr2025}{...}
 {cmd:help cfbinout} 
 {hline}
 

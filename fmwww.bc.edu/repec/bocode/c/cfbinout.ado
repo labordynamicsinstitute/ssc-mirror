@@ -1,6 +1,7 @@
 ********************************************************************************************************************************
 ** Control Function Estimation of Non-Linear Binary Outcome Models *************************************************************
 ********************************************************************************************************************************
+*! version 2.3 2025-04-13 ht (fix handling weights with analytic variance estimation [addresses memory issue with large data sets])
 *! version 2.2 2025-02-05 ht (minor bug fix for Stata versions 14 and 15)
 *! version 2.1 2024-12-13 ey & ht (analytical cross-stage derivatives for Terza (2023))
 *! version 2.0 2024-12-02 ht (Terza (2023) variance-covariance estimation)
@@ -10,7 +11,6 @@
 *! version 1.0 2023-11-14 ey
 *! authors Elena Yurkevich & Harald Tauchmann 
 *! Control Function Estimation of Non-Linear Binary Outcome Models
-cap program drop cfbinout
 program cfbinout, eclass
 	version 14
 	if !replay() {	
@@ -754,11 +754,17 @@ program cfbinout, eclass
 					exit 416
 				}			
                 ** DETERMINE MATRIX OF CORSS-STAGE DERIVATIVES OF PSEUDO-LOG-LIKELIHOOD FUNCTION ANALYTICALLY **
-				mata : `_CROSSALFABETA' = ((`_DGENR2S'#J(1,cols(`_X'),1)):*`_X')'diag(`_WVEC')*(((`_Bu')#(J(rows(`_X'),cols(`_W'),1))):*((`_DER')#J(1,cols(`_W'),1)):*(J(1,cols(`_Bu'),1)#`_W'))- /*
-				*/ (J(rows(`_X'),(cols(`_X')-cols(`_Bu')-1),0),J(rows(`_X'),cols(`_Bu'),1),J(rows(`_X'),1,0))'diag(`_WVEC')*((((`_SCORE'#J(1,cols(`_Bu'),1)):*`_DER')#J(1,cols(`_W'),1)):*(J(1,cols(`_Bu'),1)#`_W')):* /*
-				*/(J(cols(`_X')-cols(`_Bu')-1,cols(`_Bu'),0) \ I(cols(`_Bu')) \ J(1,cols(`_Bu'),0))#J(1,cols(`_W'),1)
+                ** BUG FIX 2025-04-13: ALTERNAIVE HANDLING OF WEIGHTS [`_WVEC'] IN MATRIX OPERATION TO AVOID MATA RUNNING INTO MEMORY ISSUE  **
+                cap mata : `_CROSSALFABETA' = (((`_DGENR2S':*`_WVEC')#J(1,cols(`_X'),1)):*`_X')'(((`_Bu')#(J(rows(`_X'),cols(`_W'),1))):*((`_DER')#J(1,cols(`_W'),1)):*(J(1,cols(`_Bu'),1)#`_W'))- /*
+                */ (J(rows(`_X'),(cols(`_X')-cols(`_Bu')-1),0),J(rows(`_X'),cols(`_Bu'),1),J(rows(`_X'),1,0))'(((((`_SCORE':*`_WVEC')#J(1,cols(`_Bu'),1)):*`_DER')#J(1,cols(`_W'),1)):*(J(1,cols(`_Bu'),1)#`_W')):* /*
+                */(J(cols(`_X')-cols(`_Bu')-1,cols(`_Bu'),0) \ I(cols(`_Bu')) \ J(1,cols(`_Bu'),0))#J(1,cols(`_W'),1)
 				mata : `_EACCM' = `_Vbetaxtd' * (`_CROSSALFABETA') * `_Valphaxtd' * (`_CROSSALFABETA'') * `_Vbetaxtd'' + `_Vbetaxtd' * (`_Bbeta''*`_Bbeta') * `_Vbetaxtd'  /* assymptotic covariance matrix Terza (2023) */ 
 				mata : mata drop `_DGENR2S' `_CROSSALFABETA'
+                if _rc == 3900 {
+					mata : mata drop `_alphaxtd' `_betaxtd' `_Bbeta' `_Balpha' `_Valphaxtd' `_Vbetaxtd' `_W' `_X' `_Bu' `_BW' `_SCORE' `_WVEC' `_DER' `_DGENR2S'
+					noi di as error "{p 0 2 2 `ls'}mata out of memory; consider specifying {bf:noanalytic}{p_end}"
+					exit 3900                
+                }
 			}
 			** NUMERIC VARIANCE-COVARIANCE MATRIX FOR Terza (2023) **
 			if `terza' == 2023 & "`analytic'" == "noanalytic" {
@@ -831,15 +837,22 @@ program cfbinout, eclass
 					mata : `_DERIV' = deriv(_D, 2)
 					if ("`vce'" != "oim" & "`vce'" != "opg") & "`sandwich'" != "nosandwich" {
 						mata : `_SCORES' = deriv_result_scores(_D)
+** mata : _SCORES = `_SCORES'
 						mata : st_numscalar("`_checksym'",issymmetric(((`_SCORES')'(`_SCORES'))))
 						mata : st_numscalar("`_checkzero'",diag0cnt(invsym((((`_SCORES')'(`_SCORES'))))))						
 						if `_checksym' != 1 | `_checkzero' != 0 {
+if `_checksym' != 1 {
+    noi di as error "OPG not symmtertic"
+}
+if `_checkzero' != 0 {
+    noi di as error "OPG: 0s on princ. diagonal" 
+}
 							noi di as text "{p 0 2 2 `ls'}note: OPG matrix invalid; sandwich estimator not used for cross-stage derivatives{p_end}"
 							mata : `_CROSSDEV' = `_TALL'*`_DERIV'*`_TALL''
 							local sandwich "nosandwich"
 						}
 						else {
-							mata : `_CROSSDEV' = `_TALL'*`_DERIV'*(invsym(((`_SCORES')'(`_SCORES'))))*`_DERIV'*`_TALL''
+							mata : `_CROSSDEV' = `_TALL'*`_DERIV'*(invsym(/*makesymmetric*/((`_SCORES')'(`_SCORES'))))*`_DERIV'*`_TALL''
 							local sandwich "sandwich"
 						}
 						cap mata : mata drop `_SCORES'

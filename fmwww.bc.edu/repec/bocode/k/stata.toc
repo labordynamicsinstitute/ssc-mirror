@@ -24,6 +24,7 @@ p khb module to decompose total effects into direct and indirect via KHB-method
 p kinkyreg module to perform kinky least squares estimation and inference
 p kit_livingincome module providing Tables and Bar charts of the Gap to the Living Income Benchmark
 p kitchensink module to return the model with the highest number of statistically significant predictors
+p kldbrecode module that provides crosswalk tables for translations between German KldB and ISCO. 
 p kmatch module module for multivariate-distance and propensity-score matching, including entropy balancing, inverse probability weighting, (coarsened) exact matching, and regression adjustment
 p kmest module to compute Kaplan-Meier survival probabilities as estimation results
 p knapsack module to solve the knapsack problem

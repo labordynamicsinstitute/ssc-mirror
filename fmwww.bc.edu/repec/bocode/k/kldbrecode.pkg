@@ -1,0 +1,128 @@
+d 'KLDBRECODE': module that provides crosswalk tables for translations between German KldB and ISCO. 
+d
+d  kldbrecode provides crosswalk tables for translations between
+d German KldB and ISCO. The recodings can be performed using the
+d crosswalk command by Ben Jann. The package allows for various
+d transformations from German KldB codes: KldB 2010 to KldB 1988,
+d ISCO-08, BIBB occupational fields and BAS occupational prestige.
+d KldB 1992 to KldB 2010, KldB 1988, ISCO-88 (minor groups) and
+d BIBB occupational fields. KldB 1988 to KldB 2010 and BIBB
+d occupational fields. KldB 1975 to KldB 1988. ISCO-08 to KldB 2010
+d and BIBB occupational fields. 
+d
+d KW:  KldB 2010
+d KW: KldB 1992
+d KW: KldB 1988
+d KW: ISCO-08
+d KW: ISCO-88
+d KW: Berufsklassifikation
+d KW: Classification of Occupations
+d
+d Requires: Stata version 14 and crosswalk, moremata from SSC (q.v.)
+d
+d Distribution-Date: 20250406
+d
+d Author: Hans Gerhardt , WZB Berlin
+d Support: email hans.gerhardt@@wzb.eu
+d
+d Author: Anneke Kappes, WZB Berlin
+d Support: email anneke.kappes@@wzb.eu
+d
+f kldbrecode.sthlp
+f ../_/_cwfcn_isco08_to_bibb.sthlp
+f ../_/_cwfcn_isco08_to_kldb10_2d.sthlp
+f ../_/_cwfcn_isco08_to_kldb10_2plus5.sthlp
+f ../_/_cwfcn_isco08_to_kldb10_3d.sthlp
+f ../_/_cwfcn_isco08_to_kldb10_3plus5.sthlp
+f ../_/_cwfcn_kldb10_2plus5_to_bas25.sthlp
+f ../_/_cwfcn_kldb10_2plus5_to_kldb10_2d.sthlp
+f ../_/_cwfcn_kldb10_3d_to_bas3.sthlp
+f ../_/_cwfcn_kldb10_3d_to_kldb10_2d.sthlp
+f ../_/_cwfcn_kldb10_3plus5_to_bas25.sthlp
+f ../_/_cwfcn_kldb10_3plus5_to_bas3.sthlp
+f ../_/_cwfcn_kldb10_3plus5_to_bibb.sthlp
+f ../_/_cwfcn_kldb10_3plus5_to_isco08.sthlp
+f ../_/_cwfcn_kldb10_3plus5_to_isco08_1.sthlp
+f ../_/_cwfcn_kldb10_3plus5_to_isco08_2.sthlp
+f ../_/_cwfcn_kldb10_3plus5_to_isco08_3.sthlp
+f ../_/_cwfcn_kldb10_3plus5_to_kldb10_2d.sthlp
+f ../_/_cwfcn_kldb10_3plus5_to_kldb10_2plus5.sthlp
+f ../_/_cwfcn_kldb10_3plus5_to_kldb10_3d.sthlp
+f ../_/_cwfcn_kldb10_4d_to_bas3.sthlp
+f ../_/_cwfcn_kldb10_4d_to_kldb10_2d.sthlp
+f ../_/_cwfcn_kldb10_4d_to_kldb10_3d.sthlp
+f ../_/_cwfcn_kldb10_5d_to_bas25.sthlp
+f ../_/_cwfcn_kldb10_5d_to_bas3.sthlp
+f ../_/_cwfcn_kldb10_5d_to_bibb.sthlp
+f ../_/_cwfcn_kldb10_5d_to_isco08.sthlp
+f ../_/_cwfcn_kldb10_5d_to_isco08_1.sthlp
+f ../_/_cwfcn_kldb10_5d_to_isco08_2.sthlp
+f ../_/_cwfcn_kldb10_5d_to_isco08_3.sthlp
+f ../_/_cwfcn_kldb10_5d_to_kldb10_2d.sthlp
+f ../_/_cwfcn_kldb10_5d_to_kldb10_2plus5.sthlp
+f ../_/_cwfcn_kldb10_5d_to_kldb10_3d.sthlp
+f ../_/_cwfcn_kldb10_5d_to_kldb10_3plus5.sthlp
+f ../_/_cwfcn_kldb10_5d_to_kldb10_4d.sthlp
+f ../_/_cwfcn_kldb10_5d_to_kldb88_2d.sthlp
+f ../_/_cwfcn_kldb10_5d_to_kldb88_3d.sthlp
+f ../_/_cwfcn_kldb10_5d_to_kldb88harm.sthlp
+f ../_/_cwfcn_kldb75_3d_to_kldb88_2d.sthlp
+f ../_/_cwfcn_kldb75_3d_to_kldb88_3d.sthlp
+f ../_/_cwfcn_kldb75_3d_to_kldb88harm.sthlp
+f ../_/_cwfcn_kldb88_3d_to_bibb.sthlp
+f ../_/_cwfcn_kldb88_3d_to_kldb10_2d.sthlp
+f ../_/_cwfcn_kldb88_3d_to_kldb10_2plus5.sthlp
+f ../_/_cwfcn_kldb88_3d_to_kldb10_3d.sthlp
+f ../_/_cwfcn_kldb88_3d_to_kldb10_3plus5.sthlp
+f ../_/_cwfcn_kldb88_3d_to_kldb10_4d.sthlp
+f ../_/_cwfcn_kldb88_3d_to_kldb10_5d.sthlp
+f ../_/_cwfcn_kldb88_3d_to_kldb88_2d.sthlp
+f ../_/_cwfcn_kldb88_3d_to_kldb88harm.sthlp
+f ../_/_cwfcn_kldb88_4d_to_bibb.sthlp
+f ../_/_cwfcn_kldb88_4d_to_kldb10_2d.sthlp
+f ../_/_cwfcn_kldb88_4d_to_kldb10_2plus5.sthlp
+f ../_/_cwfcn_kldb88_4d_to_kldb10_3d.sthlp
+f ../_/_cwfcn_kldb88_4d_to_kldb10_3plus5.sthlp
+f ../_/_cwfcn_kldb88_4d_to_kldb10_4d.sthlp
+f ../_/_cwfcn_kldb88_4d_to_kldb10_5d.sthlp
+f ../_/_cwfcn_kldb88_4d_to_kldb88_2d.sthlp
+f ../_/_cwfcn_kldb88_4d_to_kldb88_3d.sthlp
+f ../_/_cwfcn_kldb88_4d_to_kldb88harm.sthlp
+f ../_/_cwfcn_kldb92_3d_to_bibb.sthlp
+f ../_/_cwfcn_kldb92_3d_to_kldb10_2d.sthlp
+f ../_/_cwfcn_kldb92_3d_to_kldb10_2plus5.sthlp
+f ../_/_cwfcn_kldb92_3d_to_kldb10_3d.sthlp
+f ../_/_cwfcn_kldb92_3d_to_kldb88_2d.sthlp
+f ../_/_cwfcn_kldb92_3d_to_kldb88_3d.sthlp
+f ../_/_cwfcn_kldb92_3d_to_kldb88harm.sthlp
+f ../_/_cwfcn_kldb92_3d_to_kldb92_2d.sthlp
+f ../_/_cwfcn_kldb92_4d_to_bibb.sthlp
+f ../_/_cwfcn_kldb92_4d_to_isco88_1.sthlp
+f ../_/_cwfcn_kldb92_4d_to_isco88_2.sthlp
+f ../_/_cwfcn_kldb92_4d_to_isco88_3.sthlp
+f ../_/_cwfcn_kldb92_4d_to_kldb10_2d.sthlp
+f ../_/_cwfcn_kldb92_4d_to_kldb10_2plus5.sthlp
+f ../_/_cwfcn_kldb92_4d_to_kldb10_3d.sthlp
+f ../_/_cwfcn_kldb92_4d_to_kldb10_3plus5.sthlp
+f ../_/_cwfcn_kldb92_4d_to_kldb10_4d.sthlp
+f ../_/_cwfcn_kldb92_4d_to_kldb10_5d.sthlp
+f ../_/_cwfcn_kldb92_4d_to_kldb88_2d.sthlp
+f ../_/_cwfcn_kldb92_4d_to_kldb88_3d.sthlp
+f ../_/_cwfcn_kldb92_4d_to_kldb88harm.sthlp
+f ../_/_cwfcn_kldb92_4d_to_kldb92_2d.sthlp
+f ../_/_cwfcn_kldb92_4d_to_kldb92_3d.sthlp
+f ../_/_cwfcn_labels_bibb.sthlp
+f ../_/_cwfcn_labels_kldb10_1d.sthlp
+f ../_/_cwfcn_labels_kldb10_2d.sthlp
+f ../_/_cwfcn_labels_kldb10_2plus5.sthlp
+f ../_/_cwfcn_labels_kldb10_3d.sthlp
+f ../_/_cwfcn_labels_kldb10_3plus5.sthlp
+f ../_/_cwfcn_labels_kldb10_4d.sthlp
+f ../_/_cwfcn_labels_kldb10_5d.sthlp
+f ../_/_cwfcn_labels_kldb88_2d.sthlp
+f ../_/_cwfcn_labels_kldb88_3d.sthlp
+f ../_/_cwfcn_labels_kldb88_4d.sthlp
+f ../_/_cwfcn_labels_kldb88harm.sthlp
+f ../_/_cwfcn_labels_kldb92_2d.sthlp
+f ../_/_cwfcn_labels_kldb92_3d.sthlp
+f ../_/_cwfcn_labels_kldb92_4d.sthlp
