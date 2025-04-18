@@ -4,6 +4,7 @@
 3
 p s2s module to provide survey to survey imputation tool
 p sadi Sequence analysis distance measures
+p samregc module to perform Sensitivity Analysis of Main Regression Coefficients
 p sankey module for Sankey diagrams 
 p scatterfit module to produce scatter plots with fit lines
 p sccsdta module to generate a dataset for the self-controlled case series method (SCCS)

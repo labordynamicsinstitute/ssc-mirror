@@ -1,0 +1,40 @@
+d 'SAMREGC': module to perform Sensitivity Analysis of Main Regression Coefficients
+d
+d  SAMREGC is a Stata package designed to enhance robustness and
+d sensitivity analyses for regression coefficients by
+d systematically performing subset regressions. It significantly
+d improves upon existing tools by introducing innovative solutions
+d for distinguishing between sample and omitted
+d variables/collinearity effects (with samesample and sisters
+d options). Additionally, samregc expands computational feasibility
+d and analytical detail. The ncomb() option allows targeted
+d combinational analyses of control variables rather than
+d exhaustive all-subset approaches, increasing the practical limit
+d of manageable testing variables well beyond the (∼25
+d control/testing variables) limit of existing alternatives. The
+d griterateover() option further enhances flexibility by iterating
+d over groups of conceptually related variables, significantly
+d reducing complexity and aligning analysis with theoretical
+d frameworks. Moreover, SAMREGC improves interpretability by
+d providing detailed diagnostic tables and comprehensive plots,
+d effectively highlighting control variables with the greatest
+d robustness impact on interest/main variables and clearly
+d distinguishing sample-driven variability from genuine model
+d uncertainty (sample vs omitted variables/collinearity effects). 
+d
+d KW: regression
+d KW: specification
+d KW: robustness
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20150417
+d
+d Author: Pablo Gluzmann , CEDLAS-FCE-UNLP 
+d Support: email gluzmann@@yahoo.com
+d
+d Author: Demian Panigo, Instituto Malvinas, UNLP
+d Support: email panigo@@gmail.com
+d
+f samregc.ado
+f samregc.sthlp

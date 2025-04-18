@@ -2,7 +2,7 @@ d 'REGHDFEJL': module to estimate high-dimensional fixed-effect linear models us
 d
 d  reghdfejl is a slot-in replacement for reghdfe and ivreghdfe,
 d which uses a Julia back-end for speed. It requires Stata 15 or
-d later, as well as  and Julia, which is freely available. 
+d later, as well as Julia, which is freely available. 
 d
 d KW: reghdfe
 d KW: Julia
@@ -10,7 +10,7 @@ d KW: plugins
 d
 d Requires: Stata version 15, julia from SSC, Julia 1.11
 d
-d Distribution-Date: 20250331
+d Distribution-Date: 20250417
 d
 d Author: David Roodman
 d Support: email david@@davidroodman.com

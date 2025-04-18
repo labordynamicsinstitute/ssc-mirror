@@ -14,26 +14,26 @@ prog def tofirsttreat, sortpreserve
     }
 	mata: data = st_data(., "`id' `time' `varlist'");
 	mata: units = uniqrows(data[., 1])'
-	mata: tofirsttreat(data, "`varlist'", units, "`generate'")
+	mata: tofirsttreat(data, "`varlist'", units, "`generate'", "`time'")
 end
 
 mata:
-	real matrix tofirsttreat(real matrix data, string scalar treatvar, real matrix units, string scalar genvar){
+	real matrix tofirsttreat(real matrix data, string scalar treatvar, real matrix units, string scalar genvar,string scalar timevar){
 		real scalar i; real matrix data_tmp, data_sum, info, key, data_sum_random, data_res;
 		data_tmp = select(data, data[.,3]);
 		_sort(data_tmp, (1,2,3));
-		info = panelsetup(data_tmp, 1);
+		info = panelsetup(data_tmp, 1, 2);
 		data_sum = data_tmp[info[.,1],1..2];
 		data_res = data;
 		key = asarray_create("real"); 
 		asarray_notfound(key, .); 
-		for(i = 1; i <= rows(data_sum); i ++) asarray(key, data_sum[i, 1], data_sum[i, 2]);
-		for(i = 1; i <= rows(data_res); i++) data_res[i, 3] = asarray(key, data_res[i, 1])
+		for(i = 1; i <= rows(data_sum); i++) asarray(key, data_sum[i, 1], data_sum[i, 2]);
+		for(i = 1; i <= rows(data_res); i++) data_res[i, 3] = asarray(key, data_res[i, 1]);
 		if(genvar == "") {
 			st_store(., treatvar,  data_res[, 3]);
 			printf("{txt}({res}" + treatvar +"{txt} has been changed)");
 		} else {
-			st_store(., st_addvar(st_vartype(treatvar), genvar),  data_res[, 3]);
+			st_store(., st_addvar(st_vartype(timevar), genvar),  data_res[, 3]);
 			printf("{txt}({res}" + genvar +"{txt} has been generated)");
 		}
 	}

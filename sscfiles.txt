@@ -2290,6 +2290,7 @@ fmwww.bc.edu/repec/bocode/s/sampicc.hlp
 fmwww.bc.edu/repec/bocode/s/scultest.do
 fmwww.bc.edu/repec/bocode/s/sptobitmstar.pkg
 fmwww.bc.edu/repec/bocode/s/solvqui.ado
+fmwww.bc.edu/repec/bocode/s/samregc.pkg
 fmwww.bc.edu/repec/bocode/s/splitvallabels.hlp
 fmwww.bc.edu/repec/bocode/s/savewsz.html
 fmwww.bc.edu/repec/bocode/s/svrtotal.hlp
@@ -4272,6 +4273,7 @@ fmwww.bc.edu/repec/bocode/s/sptobitsdmxt3.ado
 fmwww.bc.edu/repec/bocode/s/spmstarxt06.ado
 fmwww.bc.edu/repec/bocode/s/svyselmlog.html
 fmwww.bc.edu/repec/bocode/s/sptobitsarxt3.ado
+fmwww.bc.edu/repec/bocode/s/samregc.sthlp
 fmwww.bc.edu/repec/bocode/s/sssplot.pkg
 fmwww.bc.edu/repec/bocode/s/spregcs.ado
 fmwww.bc.edu/repec/bocode/s/stopwordexample.txt
@@ -4630,6 +4632,7 @@ fmwww.bc.edu/repec/bocode/s/stgenreg_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/s/sqmc.sthlp
 fmwww.bc.edu/repec/bocode/s/sptobitsdmxt4.ado
 fmwww.bc.edu/repec/bocode/s/stpm2_standsurv.ado
+fmwww.bc.edu/repec/bocode/s/samregc.ado
 fmwww.bc.edu/repec/bocode/s/sctofunctions.do
 fmwww.bc.edu/repec/bocode/s/sphdist.hlp
 fmwww.bc.edu/repec/bocode/s/sptobitsem.ado
