@@ -2926,6 +2926,7 @@ fmwww.bc.edu/repec/bocode/s/stcband.pdf
 fmwww.bc.edu/repec/bocode/s/svrratio.hlp
 fmwww.bc.edu/repec/bocode/s/spweight.ado
 fmwww.bc.edu/repec/bocode/s/spineplot.sthlp
+fmwww.bc.edu/repec/bocode/s/samregc.pdf
 fmwww.bc.edu/repec/bocode/s/spmstarxt09.ado
 fmwww.bc.edu/repec/bocode/s/swapval.hlp
 fmwww.bc.edu/repec/bocode/s/spregsdm.pkg
@@ -20358,6 +20359,7 @@ fmwww.bc.edu/repec/bocode/n/nlcheck.zip
 fmwww.bc.edu/repec/bocode/n/nnmatch.ado
 fmwww.bc.edu/repec/bocode/n/nrunsi.hlp
 fmwww.bc.edu/repec/bocode/n/network_rank.sthlp
+fmwww.bc.edu/repec/bocode/n/nca_nca.ado
 fmwww.bc.edu/repec/bocode/n/nstagebinopt.pkg
 fmwww.bc.edu/repec/bocode/n/nlcorr.sthlp
 fmwww.bc.edu/repec/bocode/n/ncfprob.html
@@ -20466,6 +20468,7 @@ fmwww.bc.edu/repec/bocode/n/npinfo.ado
 fmwww.bc.edu/repec/bocode/n/ntreatreg.sthlp
 fmwww.bc.edu/repec/bocode/n/nnmatch.hlp
 fmwww.bc.edu/repec/bocode/n/nearmrg.sthlp
+fmwww.bc.edu/repec/bocode/n/nca_perm.ado
 fmwww.bc.edu/repec/bocode/n/nrow2.ado
 fmwww.bc.edu/repec/bocode/n/nbercycles.pkg
 fmwww.bc.edu/repec/bocode/n/nwind.sthlp
@@ -20480,6 +20483,7 @@ fmwww.bc.edu/repec/bocode/n/nmissing.ado
 fmwww.bc.edu/repec/bocode/n/nbercycles.sthlp
 fmwww.bc.edu/repec/bocode/n/NonlinTstANN.docx
 fmwww.bc.edu/repec/bocode/n/nctncp.hlp
+fmwww.bc.edu/repec/bocode/n/nca_nca_perm.ado
 fmwww.bc.edu/repec/bocode/n/npiv.pkg
 fmwww.bc.edu/repec/bocode/n/nrow.ado
 fmwww.bc.edu/repec/bocode/n/nmiss.ado

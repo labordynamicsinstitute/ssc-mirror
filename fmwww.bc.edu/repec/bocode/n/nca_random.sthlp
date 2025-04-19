@@ -47,17 +47,15 @@
 
 {synopt:{opt ys:d(#)}}  Standard deviation of the outcome variable to be generated.
 
-{synopt:{opt cor:ner(#)}}  Define which corner should be empty.
-
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
-{it:stub} contain the prefix of all of the conditions to be generated. {it: varname} contains the name of the outcome variable to be generated. The default are {bf:x} for {it:stub} and {bf:y} for {it:varname}.
+{it:stub} contain the prefix of all of the conditions to be generated. {it: varname} contains the name of the outcome variable to be generated. The default are {bf:X} for {it:stub} and {bf:Y} for {it:varname}.
 
 {marker description}{...}
 {title:Description}
 {pstd}
-Generates random datapoints for y and x to be used for necessary condition analysis (NCA). New variables are created in the current dataset. 
+Generates random datapoints for Y and X to be used for necessary condition analysis (NCA).
 
 {marker options}{...}
 {title:Options}
@@ -67,10 +65,10 @@ Generates random datapoints for y and x to be used for necessary condition analy
 {opt n(#)}  The number of observations to be generated.
 
 {phang}
-{opt s:lopes(numlist)}  A list of real numbers containing the slopes. Users can choose to specify {bf: slopes} with the same length as {bf: intercepts} or to specify a single intercept, that will be replicated to match the length of {bf: intercepts}. The number of conditions to be generated is equal to the length of {bf: slopes} and {bf: intercepts}.
+{opt s:lopes(numlist)}  A list of real numbers containing the slopes. Users can choose to specify {bf: slopes} with the same length as {bf: intercepts} or to specify a single intercept, that will be replicated to match the lenght of {bf: intercepts}. The number of conditions to be generated is equal to the length of {bf: slopes} and {bf: intercepts}.
 
 {phang}
-{opt i:ntercepts(numlist)} A list of real numbers containing the intercepts. Users can choose to specify {bf: intercepts} with the same length as {bf: slopes} or to specify a single intercept, that will be replicated to match the length of {bf: slopes}.  The number of conditions to be generated is equal to the length of {bf: slopes} and {bf: intercepts}. 
+{opt i:ntercepts(numlist)} A list of real numbers containing the intercepts. Users can choose to specify {bf: intercepts} with the same length as {bf: slopes} or to specify a single intercept, that will be replicated to match the lenght of {bf: slopes}.  The number of conditions to be generated is equal to the length of {bf: slopes} and {bf: intercepts}. 
 
 {phang}
 {opt xd:istribution(string)}  the distribution to be used for the conditions. Specify {bf: uniform} or {bf: normal}. The default is {bf: uniform}.
@@ -79,7 +77,7 @@ Generates random datapoints for y and x to be used for necessary condition analy
 {opt yd:istribution(string)}  the distribution to be used for the outcome. Specify {bf: uniform} or {bf: normal}. The default is {bf: uniform}.
 
 {phang}
-{opt clear} Clears the current dataset.
+{opt clear} 
 
 {phang}
 {opt xm:ean(#)}  Mean of the condition variables to be generated. The default is 0.5.
@@ -93,32 +91,30 @@ Generates random datapoints for y and x to be used for necessary condition analy
 {phang}
 {opt ys:d(#)}  Standard deviation of the outcome variable to be generated. The default is 0.2.
 
-{phang}
-{opt cor:ner(#)}  A positive integer (min=1 max=4) that defines which corner should be empty, default is 1 (upper left); 2 is upper right, 3 is bottom left and is 4 bottom right. Corners 1 and 4 require that all of the terms in {bf:slopes} are positive. Corners 2 and 3 require negative slopes.  See also the {bf:corner} option in {bf:help nca}. 
-
 {marker examples}{...}
 {title:Examples}
 
 {pstd} Generate 1000 observations from the uniform distribution. y is bounded by the y=x line{p_end}
 {phang2}{cmd:. clear} {p_end}
 {phang2}{cmd:. nca_random, n(1000) slopes(1) intercepts(0) }{p_end}
-{phang2}{cmd:. twoway (scatter y x1) (function y=x), legend(off) }{p_end}
+{phang2}{cmd:. twoway (scatter Y X) (function y=x), legend(off) }{p_end}
 
-{pstd} Generate 1000 observations from the uniform distribution. y is bounded from below by the y=1-x line. {p_end}
-{phang2}{cmd:. clear} {p_end}
-{phang2}{cmd:. nca_random, n(1000) slopes(-1) intercepts(1) corner(3) }{p_end}
-{phang2}{cmd:. twoway (scatter y x1) (function y=1-x), legend(off) }{p_end}
 
 {pstd} Generate 1000 observations. y is bounded by the y=x1 and y=0.1+0.5x2 line. {p_end}
 {phang2}{cmd:. clear} {p_end}
 {phang2}{cmd:. nca_random, n(1000) slopes(1 0.5) intercepts(0 0.1) }{p_end}
-{phang2}{cmd:. twoway (scatter y x1) (function y=x), legend(off) }{p_end}
-{phang2}{cmd:. twoway (scatter y x2) (function y=0.1+0.5*x), legend(off) }{p_end}
+{phang2}{cmd:. twoway (scatter Y X1) (function y=x), legend(off) }{p_end}
+{phang2}{cmd:. twoway (scatter Y X2) (function y=0.1+0.5*x), legend(off) }{p_end}
 
 {pstd}Generate 1000 observations from the normal distribution (both x and y). The x has mean 0.4 and standard deviation equal to 0.1, y is bounded by the y=0.1+0.4x line and has 0.5 mean and 0.2 standard devation. {p_end}
 {phang2}{cmd:. clear} {p_end}
 {phang2}{cmd:. nca_random, n(1000)  xdistribution(normal) xmean(0.4) xsd(0.1) ydistribution(normal)  intercepts(0.1) slopes(0.4) }{p_end}
-{phang2}{cmd:. twoway (scatter y x1) (function y=0.4*x + 0.1 ), legend(off) }{p_end}
+{phang2}{cmd:. twoway (scatter Y X) (function y=0.4*x + 0.1 ), legend(off) }{p_end}
+
+{pstd} Generate 1000 observations from the uniform distribution. y is bounded from below by the y=1-x line. {p_end}
+{phang2}{cmd:. clear} {p_end}
+{phang2}{cmd:. nca_random, n(1000) slopes(-1) intercepts(1) corner(3) }{p_end}
+{phang2}{cmd:. twoway (scatter Y X) (function y=1-x), legend(off) }{p_end}
 
 {title:Author}
 {pstd}Daniele Spinelli{p_end}

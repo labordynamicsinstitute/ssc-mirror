@@ -1,4 +1,4 @@
-*! nca Version 1.0 (Beta) 07 Nov 2023 
+*! nca v1.0 04/18/2025
 program define nca, eclass
 syntax [anything] [, *]
 version 15

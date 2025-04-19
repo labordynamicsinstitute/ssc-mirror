@@ -2,8 +2,9 @@
 ************START NCA_ESTIMATE
 
 pro def nca_estimate, eclass 
-syntax varlist (numeric min=2) [if] [in], [CEILings(string asis) nograph  TESTrep(integer 0)  GRAPHNAmes(string) nocombine BOTtlenecks(numlist sort) BOTtlenecks_default SCOpe(numlist missingokay)  flipx flipy CORner(numlist integer missingokay) steps(integer 10) stepsize(numlist max=1 >=0) XBOTtlenecks(string) YBOTtlenecks(string) cutoff(integer 0) noSUMmaries]
+syntax varlist (numeric min=2) [if] [in], [CEILings(string asis) nograph  TESTrep(integer 0)  GRAPHNAmes(string) nocombine BOTtlenecks(numlist sort) BOTtlenecks_default SCOpe(numlist missingokay)  flipx flipy CORner(numlist integer missingokay) steps(integer 10) stepsize(numlist max=1 >=0) XBOTtlenecks(string) YBOTtlenecks(string) cutoff(integer 0) noSummaries Version(integer 3)]
 marksample touse //setting the estimation sample
+local version "v`version'"
 if (`cutoff'>2) {
 	di as error "invalid {bf: cutoff}"
 	exit 144
