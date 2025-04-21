@@ -1,0 +1,22 @@
+d 'GRXTQREG': module to graph the coefficients of a Quantile Regression for Panel Data
+d
+d  grxtqreg graphs the coefficients of the quantile regression for
+d panel data. It  also has the option to graph the confidence
+d interval,	     the general FE (fixed effect) coefficient and
+d the FE confidence interval on the same graph. The command is
+d based on xtqreg.	   A panel variable and a time variable
+d must be specified; use xtset. 
+d
+d KW:  graphics
+d KW: quantile regression
+d KW: panel data
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20250420
+d
+d Author: Dejin Xie , Nanchang University
+d Support: email xiedejin@@ncu.edu.cn
+d
+f grxtqreg.ado
+f grxtqreg.sthlp

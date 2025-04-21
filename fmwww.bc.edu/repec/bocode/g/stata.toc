@@ -156,6 +156,7 @@ p grstyle module to customize the overall look of graphs
 p grtext module to insert nonstandard characters in graph text
 p grubbs module to perform Grubbs' test for outliers
 p grvar module to apply a non-constant growth rate to a variable
+p grxtqreg module to graph the coefficients of a Quantile Regression for Panel Data
 p gs2sls module to estimate Generalized Spatial Two Stage Least Squares Cross Sections Regression
 p gs2slsar module to estimate Generalized Spatial Autoregressive Two Stage Least Squares Regression
 p gs2slsarxt module to estimate Generalized Spatial Panel Autoregressive Two Stage Least Squares Cross Sections Regression

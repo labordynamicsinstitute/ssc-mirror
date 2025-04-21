@@ -1,5 +1,5 @@
 ﻿{smcl}
-{* 26jun2024}{...}
+{* 18apr2025}{...}
 {hline}
 help for {hi:kappalate}
 {hline}
@@ -28,13 +28,21 @@ default is {opt cbps}{p_end}
 {synopt:{opt vce(vcetype)}}{it:vcetype} is passed on to Stata's {cmd:gmm} command and specifies the type of standard error reported (see {helpb gmm} for details); default is {opt robust}{p_end}
 {synopt:{opt std(string)}}{it:string} may be {opt on} or {opt off}, which determines whether nonbinary covariates are standardized prior to estimation; default is {opt on}{p_end}
 {synopt:{opt which(string)}}{it:string} may be {opt all} or {opt norm}, which determines whether all estimates or only normalized estimates are displayed; default is {opt norm}{p_end}
+{synopt:{opt pstol:erance(#)}}set tolerance for overlap assumption;
+the default value is {cmd:pstolerance(1e-5)};
+{cmd:kappalate} will exit with an error if an observation has an estimated instrument propensity score smaller than that specified by {cmd:pstolerance()} or larger than one minus that specified by {cmd:pstolerance()}{p_end}
+{synopt:{opth os:ample(newvar)}}create an indicator variable {it:newvar} that identifies observations that violate the overlap assumption{p_end}
+{synopt:{opt tech:nique(string)}}select the maximization technique; options include {opt nr} (the default),
+{opt bhhh}, {opt dfp}, and {opt bfgs} when estimating the instrument propensity score using maximum likelihood (ML)
+and {opt gn} (the default), {opt nr}, {opt dfp}, and {opt bfgs} when estimating the instrument propensity score
+using covariate balancing (CB){p_end}
 {synoptline}
 
 
 {title:Description}
 
 {pstd} {cmd:kappalate} estimates the local average treatment effect (LATE) using methods based on inverse probability weighting, most of which can be motivated by Abadie's (2003) kappa theorem.
-See Słoczyński, Uysal, and Wooldridge (2024) for a detailed treatment of the underlying theoretical results.
+See Słoczyński, Uysal, and Wooldridge (2025) for a detailed treatment of the underlying theoretical results.
 
 {pstd} The following variables should be designated.
 {it:depvar} is the outcome variable.
@@ -44,14 +52,14 @@ See Słoczyński, Uysal, and Wooldridge (2024) for a detailed treatment of the u
 {it:instrument} is assumed to be valid conditional on {it:indepvars} and needs to satisfy the monotonicity assumption.
 
 {pstd} {cmd:kappalate} displays up to five estimates of the LATE, dependent on the options chosen.
-The naming convention for the alternative estimates follows Słoczyński, Uysal, and Wooldridge (2024), who recommend normalized estimators (option {cmd:which(norm)}),
+The naming convention for the alternative estimates follows Słoczyński, Uysal, and Wooldridge (2025), who recommend normalized estimators (option {cmd:which(norm)}),
 and especially the estimator in Uysal (2011), referred to as {it:tau_u}, with covariate balancing propensity scores (option {cmd:zmodel(cbps)}), as in Heiler (2022).
 We also recommend standardizing nonbinary covariates before estimation (option {cmd:std(on)}), as this may improve the performance of Stata's optimization process without affecting the estimation results.
 
-{pstd} {cmd:kappalate} allows for multivalued treatments, even though this case is not explicitly discussed by Słoczyński, Uysal, and Wooldridge (2024).
+{pstd} {cmd:kappalate} allows for multivalued treatments, even though this case is not explicitly discussed by Słoczyński, Uysal, and Wooldridge (2025).
 The fact that, with a multivalued treatment, {it:tau_u} can be used to estimate the average causal response (ACR), a variant of the LATE, follows from Frölich (2007).
 
-{pstd} If you use this program in your work, please cite Słoczyński, Uysal, and Wooldridge (2024).
+{pstd} If you use this program in your work, please cite Słoczyński, Uysal, and Wooldridge (2025).
 
 
 {title:References}
@@ -66,7 +74,7 @@ Frölich, Markus (2007). "Nonparametric IV Estimation of Local Average Treatment
 Heiler, Phillip (2022). "Efficient Covariate Balancing for the Local Average Treatment Effect." {it:Journal of Business & Economic Statistics} 40(4), 1569{c 150}1582.
 
 {phang}
-Słoczyński, Tymon, S. Derya Uysal, and Jeffrey M. Wooldridge (2024). "Abadie's Kappa and Weighting Estimators of the Local Average Treatment Effect." {it:Journal of Business & Economic Statistics}, forthcoming.
+Słoczyński, Tymon, S. Derya Uysal, and Jeffrey M. Wooldridge (2025). "Abadie's Kappa and Weighting Estimators of the Local Average Treatment Effect." {it:Journal of Business & Economic Statistics} 43(1), 164{c 150}177.
 Available at {browse "https://doi.org/10.1080/07350015.2024.2332763"}.
 
 {phang}

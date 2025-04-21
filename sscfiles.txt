@@ -21484,6 +21484,7 @@ fmwww.bc.edu/repec/bocode/g/gcause.hlp
 fmwww.bc.edu/repec/bocode/g/gevfit.pkg
 fmwww.bc.edu/repec/bocode/g/gnbstrat.ado
 fmwww.bc.edu/repec/bocode/g/gdecomp.ado
+fmwww.bc.edu/repec/bocode/g/grxtqreg.ado
 fmwww.bc.edu/repec/bocode/g/gridsearch.pkg
 fmwww.bc.edu/repec/bocode/g/gwhet.ado
 fmwww.bc.edu/repec/bocode/g/geochart.ado
@@ -21502,6 +21503,7 @@ fmwww.bc.edu/repec/bocode/g/gengroup.html
 fmwww.bc.edu/repec/bocode/g/gr_prob_cub.sthlp
 fmwww.bc.edu/repec/bocode/g/ghquadm.hlp
 fmwww.bc.edu/repec/bocode/g/gconc.html
+fmwww.bc.edu/repec/bocode/g/grxtqreg.sthlp
 fmwww.bc.edu/repec/bocode/g/gzappend.hlp
 fmwww.bc.edu/repec/bocode/g/geo2xy_lambert_sphere.hlp
 fmwww.bc.edu/repec/bocode/g/georoutei.ado
@@ -21567,6 +21569,7 @@ fmwww.bc.edu/repec/bocode/g/get_train_test.sthlp
 fmwww.bc.edu/repec/bocode/g/genhwcci.ado
 fmwww.bc.edu/repec/bocode/g/gmm_ivcloglog.ado
 fmwww.bc.edu/repec/bocode/g/GGmixtureLEandUC_loglik.ado
+fmwww.bc.edu/repec/bocode/g/grxtqreg.pkg
 fmwww.bc.edu/repec/bocode/g/ghansen.pkg
 fmwww.bc.edu/repec/bocode/g/gs2sls.do
 fmwww.bc.edu/repec/bocode/g/geochart.pkg

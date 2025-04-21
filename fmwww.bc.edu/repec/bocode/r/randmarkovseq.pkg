@@ -15,10 +15,10 @@ d KW: simulation
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20250404
+d Distribution-Date: 20250406
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
 d
- ../e/randmarkovseq.ado
- ../e/randmarkovseq.sthlp
+f randmarkovseq.ado
+f randmarkovseq.sthlp
