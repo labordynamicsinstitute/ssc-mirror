@@ -1,21 +1,17 @@
+*! 2.0.0 Ariel Linden 21Apr2025 // changed methodology for generating the sequence
 *! 1.0.1 Ariel Linden 04Apr2025 // fixed error coding for row sum = 1
 *! 1.0.0 Ariel Linden 26Mar2025 
 
 program randmarkovseq, rclass
 		version 11.0
 		syntax , 						///
-		Sample(integer)					///
+		OBS(integer)					///
 		LAbels(string asis)				/// 
-		[ MATrix(string)				///
-		SEED(string)					///
-		First(string) 					///
+		MATrix(string)					///
+		[ First(string) 				///
 		TRANSition * ]
 
 		quietly {
-			
-			// set the seed
-			if "`seed'" != "" set seed `seed'
-			local seed `c(seed)'
 
 			// ensure that more than one label is specified
 			local labcnt : word count `labels'
@@ -41,62 +37,60 @@ program randmarkovseq, rclass
 			}	
 			
 			clear
+			set obs `obs'
 			
-			// if the matrix is specified
-			if "`matrix'" != "" {
-				// check that matrix exists
-				qui mat li `matrix'
-				// check that matrix is symmetrical
-				if rowsof("`matrix'") != colsof("`matrix'") {
-					di as err "the matrix must be symmetrical"
-					exit 198	
-				}
-
-				// check that row totals equal 1 
-				local rows = rowsof("`matrix'")
-
-				* Loop through each row to check if the sum equals 1
-				forval i = 1/`rows' {
-					* Calculate the row sum
-					scalar row_sum = 0
-					forval j = 1/4 {
-						scalar row_sum = row_sum + `matrix'[`i', `j']
-					}
-					* Check if the row sum is not equal to 1
-					if abs(row_sum - 1) > 1e-6 {
-						di as err "row `i' of matrix `matrix' does not sum to 1. Sum = " row_sum
-						exit 198
-					}
-				}
-
-
-				mata : matvals(`sample', "`matrix'")
-
-				// convert matrix A to variables
-				tempvar freq col
-				svmat int_matrix, name(`freq')
-
-				//  reshape into long format
-				gen sequence = _n  //  Create a row identifier
-				reshape long `freq', i(sequence) j(`col')
-				expand `freq'
-				drop `freq'
-				drop `col'
-			} // if matrix is specified
-			// if no matrix is specified
-			else {
-				set obs `labcnt'
-				gen sequence = _n
-				local cnt = ceil(`sample' / `labcnt')
-				expand `cnt'
+			// check that matrix is symmetrical
+			if rowsof("`matrix'") != colsof("`matrix'") {
+				di as err "the matrix must be symmetrical"
+				exit 198	
 			}
-			tempvar rand
-			gen double `rand' = runiform()
-			sort `rand'
-			drop `rand'
-			count
-			drop if _n > `sample'
 
+			// get row count
+			local rows = rowsof("`matrix'")
+
+			// Loop through each row to check if the sum equals 1
+			forval i = 1/`rows' {
+				* Calculate the row sum
+				scalar row_sum = 0
+				forval j = 1/`rows' {
+					scalar row_sum = row_sum + `matrix'[`i', `j']
+				}
+				* Check if the row sum is not equal to 1
+				if abs(row_sum - 1) > 1e-6 {
+					di as err "row `i' of matrix `matrix' does not sum to 1. Sum = " row_sum
+					exit 198
+				}
+			}
+
+			
+			tempname state
+			
+			// start sequence by using "first" (either specified or randomly chosen)
+			if "`first'" == "" {
+				scalar `state' = runiformint(1,rowsof(`matrix'))
+			}
+			else {
+				scalar `state' = `k'
+			}
+			
+			// gen the variable sequence
+			gen sequence = .
+			
+			// first run of sequence
+			mata: state = st_numscalar("`state'")
+			mata: `matrix' = st_matrix("`matrix'")
+
+			// remaining runs of sequence up to N
+			forvalues i = 1/`obs' {
+				mata row = `matrix'[state,]
+				mata: next = rdiscrete(1, 1, (row))
+				mata: seqval = next[1,1]
+				mata: st_numscalar("seqval", seqval)
+	
+				replace sequence = seqval in `i'
+				mata: state = next
+			}
+				
 			// label labels with those provided by user
 			tokenize `labels'
 			forval i = 1/`labcnt' { 
@@ -106,10 +100,7 @@ program randmarkovseq, rclass
 				label values sequence labels
  
 			} 
-			if "`first'" != "" {
-				replace sequence = `k' in 1
-			}
-			
+				
 			// generate transition table
 			tempvar prev table
 			gen `prev' = sequence[_n-1]
@@ -126,40 +117,4 @@ program randmarkovseq, rclass
 		// return list
 		return matrix table = `table'
 			
-end
-
-version 11.0
-mata:
-mata clear
-void function matvals(real scalar grand, string scalar stata_matrixname)
-
-{
-
-	real matrix X
-    X = st_matrix(stata_matrixname)
-
-	total_sum = grand
-		  
-	r = rows(X)
-	c = cols(X)
-
-	// initialize a column vector of random values
-	rand_vals = runiform(1, r)
-
-    // sum of the random values
-	total = sum(rand_vals)
-    
-    // scale the random values to sum to 1
-	rand_vals_scaled = ceil((rand_vals / total) * total_sum)
-	
-    // initialize matrix to store the integer values
-	int_matrix = J(r, c, 0)  
-	
-	// generate integer values
-	int_matrix = round(X:*rand_vals_scaled')	
-	
-	// convert to Stata matrix 
-	st_matrix("int_matrix", int_matrix)
-
-}
 end

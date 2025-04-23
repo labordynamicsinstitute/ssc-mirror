@@ -1,0 +1,18 @@
+d 'TSTI': module to immediately apply the three-sided testing (TST) framework in Stata
+d
+d  Immediate application of the three-sided testing (TST) framework
+d in Stata (Goeman, Solari, and Stijnen, Statistics in Medicine,
+d 2010) 
+d
+d KW: tests
+d KW: immediate
+d
+d Requires: Stata version 9
+d
+d Distribution-Date: 20250422
+d
+d Author:  Jack Fitzgerald  , Vrije Universiteit Amsterdam 
+d Support: email j.f.fitzgerald@@vu.nl 
+d
+f tsti.ado
+f tsti.sthlp

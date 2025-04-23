@@ -145,6 +145,7 @@ p tsmktim module to generate time-series calendar variable
 p tsplot module to produce a time series plot
 p tsspell module for identification of spells or runs in time series
 p tstf module to compute intervention time-series models
+p tsti module to immediately apply the three-sided testing (TST) framework in Stata
 p ttab module to produce formatted tables with t-test for two-groups mean-comparison
 p ttable module to produce Mean Comparison for many variables between two groups with formatted table output
 p ttable2 module to produce Mean Comparison for many variables between two groups with formatted table output

@@ -1,10 +1,11 @@
 {smcl}
+{* *! version 1.0.1 21apr2025}{...}
 {* *! version 1.0.0 03apr2025}{...}
 
 {title:Title}
 
 {p2colset 5 22 26 2}{...}
-{p2col:{hi:randmarkovseq} {hline 2}} Generate random sequence from an underlying discrete time Markov chain   {p_end}
+{p2col:{hi:randmarkovseq} {hline 2}} Generate random sequence from an underlying discrete time Markov chain {p_end}
 {p2colreset}{...}
 
 
@@ -15,13 +16,12 @@
 {p 8 17 2}
 {cmd:randmarkovseq}
 {cmd:,} 
-{opt s:ample}{it:(#)} 
+{opt obs}{it:(#)} 
 {opt l:abels}{it:(string)} 
-[
 {opt mat:rix}{it:(string)} 
+[
 {opt f:irst}{it:(string)}
 {opt trans:ition}[{it:tabulate_twoway_options}]
-{opt seed:}{it:(#)}
 ]
 
  
@@ -29,15 +29,14 @@
 {synopthdr}
 {synoptline}
 {syntab:Required}
-{synopt:{opt s:ample(#)}}number of values to generate{p_end}
-{synopt:{opt l:abels(string)}}labels to assign to sequence values. If {opt matrix()} is specified, the number of labels must equal the number of values in the matrix rows {p_end}
+{synopt:{opt obs(#)}}number of values to generate in the sequence{p_end}
+{synopt:{opt l:abels(string)}}labels to assign to sequence values. The number of labels must equal the number of values in the matrix rows {p_end}
+{synopt:{opt mat:rix(string)}}the name of the symmetrical matrix containing the probability distributions of the current and following states. Each row must add up to 1.0 {p_end}
 
 {syntab:Optional}
-{synopt:{opt mat:rix(string)}}the name of the symmetrical matrix containing the probability distributions of the current and following states. Each row must add up to 1.0 {p_end}
-{synopt:{opt f:irst(string)}}specify which label value should begin the sequence{p_end}
+{synopt:{opt f:irst(string)}}specify which label value should be used to initialize the sequence{p_end}
 {synopt:{opt trans:ition}}produces a transition table of the current and following states based on the sequence generated{p_end}
 {synopt:[{it:tabulate_twoway_options}]}specify all available options for {helpb tabulate twoway}{p_end}
-{synopt:{opt seed:(#)}}set random-number seed to #{p_end}
 {synoptline}
 {p 4 6 2}
 {p2colreset}{...}				
@@ -47,8 +46,9 @@
 {title:Description}
 
 {pstd}
-{cmd:randmarkovseq} generates a random sequence of values from an underlying discrete time Markov chain (DTMC). A DTMC is a sequence of random variables characterized by the Markov
-property which asserts that the distribution of the next state depends only on the current state and not any prior state. If the user specifies the option {cmd:transition}, a twoway 
+{cmd:randmarkovseq} generates a random sequence of values based on the transition probabilities from an underlying discrete time Markov 
+chain (DTMC). A DTMC is a sequence of random variables characterized by the Markov property which asserts that the distribution of the 
+next state depends only on the current state and not any prior state. If the user specifies the option {cmd:transition}, a twoway 
 table is produced to show the transitions from the current state to the next.
 
 {pstd}
@@ -59,16 +59,18 @@ Note: {cmd:randmarkovseq} replaces the data in memory, so be sure to save your d
 {title:Options}
 
 {p 4 8 2}
-{cmd:sample(}{it:#}{cmd:)} the number of values to generate; {cmd:required}.
+{cmd:obs(}{it:#}{cmd:)} the number of values to generate; {cmd:required}.
 
 {p 4 8 2}
-{cmd:labels(}{it:string}{cmd:)} labels to assign to the values generated. When {cmd: matrix()} is not specified, the number of unique labels 
-indicates how many rows to create. For example, specifying {cmd:labels(A B C)} indicates that a 3 X 3 table should be generated with states 
-labeled "A", "B" and "C". When {cmd: matrix()} is specified, the number of labels should equal the number of rows; {cmd:labels()} is {cmd:required}.
+{cmd:labels(}{it:string}{cmd:)} labels to assign to the values generated. The number of labels should equal the number of rows in the {cmd:matrix()}; {cmd:labels()} is {cmd:required}.
 
 {p 4 8 2}
-{cmd:first(}{it:string}{cmd:)} specifies the first value in the sequence. For example, if a sequence of randomly ordered months is generated, the user may wish
-that the first month be "January".  
+{cmd:matrix(}{it:string}{cmd:)} matrix containing the probability distributions of the current and following states. Each row must add up to 1.0 and the matrix 
+must be symmetrical (e.g. 2 X 2); {cmd:matrix()} is {cmd:required}.
+
+{p 4 8 2}
+{cmd:first(}{it:string}{cmd:)} specifies which value label should initialize the random sequencing. This does not mean that the value specified in {cmd:first()} will neccesarily be 
+the first value of the sequence! If {cmd:first()} is not specified, the initial value is randomly chosen from {cmd:labels()}.
 
 {p 4 8 2}
 {cmd:transition} produces a transition table of the current and following states based on the sequence generated. The row percentages indicate the transition 
@@ -79,26 +81,25 @@ independent successive states should be rejected.
 {p 4 8 2}
 [{it:tabulate_twoway_options}] specifies all available options for {helpb tabulate twoway}.
 
-{p 4 8 2}
-{cmd:seed(}{it:#}{cmd:)} set random-number seed to #.
+
 		
-
-
 {title:Examples}
 
 {pstd}
-Generate a random sequence of exercise patterns (run, walk, and crawl) for 365 days, where
-the first day starts with a run. Show the transition table  {p_end}
-{phang2}{cmd:. randmarkovseq , sample(365) labels(run walk crawl) first(run) trans}
+Generate a 4 X 4 matrix of transition probabilities, based on Table 1 of Avery and Henderson (1999){p_end}
+
+{phang2}{cmd:. mat A = (.3585, .1434, .1667, .3314 \  .3840, .1559, .0228, .4373 \ .3053, .1991, .1504, .3452 \ .2845, .1820, .1767, .3568)}
 
 {pstd}
-Generate a 3 X 3 matrix of transition probabilities, ensuring that each row equals 1.0{p_end}
-{phang2}{cmd:. matrix A = (0.7, 0.2, 0.1 \ 0.3, 0.4, 0.3 \ 0.2, 0.45, 0.35)}
+Generate a sequence of 1562 values labelled "A", "C", "G" and "T" using the transition probabilities in matrix A. We specify the "expected" 
+option for the twoway tabulation. The resulting transition table is similar to that of the original data in Table 1 of Avery and Henderson (1999) {p_end}
+
+{phang2}{cmd:. randmarkovseq , obs(1562) labels(A C G T) matrix(A) trans expected}
 
 {pstd}
-Same as above but we now use the transition probabilities in matrix A. We set the seed for 
-reproducibility and specify the "expected" option for the twoway tabulation {p_end}
-{phang2}{cmd:. randmarkovseq , sample(365) labels(run walk crawl) first(run) matrix(A) seed(123456789) trans expected}
+Same as above, but specify that the value "A" should be used to initialize the random sequence generation {p_end}
+
+{phang2}{cmd:. randmarkovseq , obs(1562) labels(A C G T) matrix(A) first(A) trans expected}
 
 
 	
@@ -110,6 +111,14 @@ reproducibility and specify the "expected" option for the twoway tabulation {p_e
 {synoptset 10 tabbed}{...}
 {p2col 5 11 12 2: Matrices}{p_end}
 {synopt:{cmd:r(table)}}the two-way tabulation frequencies from the transition table{p_end}
+
+
+
+{marker references}{title:References}
+
+{p 4 8 2}
+Avery P. J. and D. A. Henderson. (1999). Fitting Markov chain models to discrete state series such as DNA sequences. 
+{it:Journal of the Royal Statistical Society Series C: Applied Statistics} 48: 53-61.
 
 
 

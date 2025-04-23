@@ -168,6 +168,7 @@ fmwww.bc.edu/repec/bocode/l/lib_var_nr.mlib
 fmwww.bc.edu/repec/bocode/l/lli.ado
 fmwww.bc.edu/repec/bocode/l/lclogit.pkg
 fmwww.bc.edu/repec/bocode/l/ltihtest12.mlib
+fmwww.bc.edu/repec/bocode/l/lddtest.ado
 fmwww.bc.edu/repec/bocode/l/lmngry.dta
 fmwww.bc.edu/repec/bocode/l/lmfreg.sthlp
 fmwww.bc.edu/repec/bocode/l/lmadurmnl.html
@@ -388,6 +389,7 @@ fmwww.bc.edu/repec/bocode/l/lmtest.ado
 fmwww.bc.edu/repec/bocode/l/lpdensity_normdgp.mo
 fmwww.bc.edu/repec/bocode/l/listutil.pkg
 fmwww.bc.edu/repec/bocode/l/log2do2.ado
+fmwww.bc.edu/repec/bocode/l/lddtest.pkg
 fmwww.bc.edu/repec/bocode/l/lmnwhite.ado
 fmwww.bc.edu/repec/bocode/l/labelsof.zip
 fmwww.bc.edu/repec/bocode/l/levinlin.pkg
@@ -1201,6 +1203,7 @@ fmwww.bc.edu/repec/bocode/l/labelmiss.pkg
 fmwww.bc.edu/repec/bocode/l/lmfreg2.do
 fmwww.bc.edu/repec/bocode/l/lmhcw2.dlg
 fmwww.bc.edu/repec/bocode/l/labdtch.hlp
+fmwww.bc.edu/repec/bocode/l/lddtest.sthlp
 fmwww.bc.edu/repec/bocode/l/lmabgnl.ado
 fmwww.bc.edu/repec/bocode/l/lmadw.sthlp
 fmwww.bc.edu/repec/bocode/l/lmdi.ado
@@ -17761,6 +17764,7 @@ fmwww.bc.edu/repec/bocode/t/txttool.ado
 fmwww.bc.edu/repec/bocode/t/twexp.ado
 fmwww.bc.edu/repec/bocode/t/tddens.ado
 fmwww.bc.edu/repec/bocode/t/texteditors.pkg
+fmwww.bc.edu/repec/bocode/t/tsti.pkg
 fmwww.bc.edu/repec/bocode/t/timeit.sthlp
 fmwww.bc.edu/repec/bocode/t/traveltime.html
 fmwww.bc.edu/repec/bocode/t/testout.pkg
@@ -18053,6 +18057,7 @@ fmwww.bc.edu/repec/bocode/t/timestamp.ado
 fmwww.bc.edu/repec/bocode/t/textpad.html
 fmwww.bc.edu/repec/bocode/t/tabcusum.pkg
 fmwww.bc.edu/repec/bocode/t/trimplot.sthlp
+fmwww.bc.edu/repec/bocode/t/tsti.ado
 fmwww.bc.edu/repec/bocode/t/twofold.ado
 fmwww.bc.edu/repec/bocode/t/tolerance.sthlp
 fmwww.bc.edu/repec/bocode/t/tablecol.hlp
@@ -18544,6 +18549,7 @@ fmwww.bc.edu/repec/bocode/t/survwgt.html
 fmwww.bc.edu/repec/bocode/t/tabhplot.ado
 fmwww.bc.edu/repec/bocode/t/tabexport.html
 fmwww.bc.edu/repec/bocode/t/tabletutorial_example6.pdf
+fmwww.bc.edu/repec/bocode/t/tsti.sthlp
 fmwww.bc.edu/repec/bocode/t/txtlabdef.ado
 fmwww.bc.edu/repec/bocode/t/tsmktim.pkg
 fmwww.bc.edu/repec/bocode/t/tvdiff.sthlp

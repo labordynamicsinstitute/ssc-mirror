@@ -1,0 +1,20 @@
+d 'LDDTEST': module to perform logarithmic density discontinuity equivalence testing for regression discontinuity designs
+d
+d  lddtest performs equivalence testing on logarithmic density
+d discontinuities of running variables at the cutoff in regression
+d discontinuity designs, as described in Fitzgerald (2024). lddtest
+d is functionally a wrapper for McCrary's (2008) classical
+d DCdensity command. 
+d
+d KW: tests
+d KW: regression discontinuity
+d
+d Requires: Stata version 9
+d
+d Distribution-Date: 20250422
+d
+d Author:  Jack Fitzgerald  , Vrije Universiteit Amsterdam 
+d Support: email j.f.fitzgerald@@vu.nl 
+d
+f lddtest.ado
+f lddtest.sthlp
