@@ -1,3 +1,4 @@
+*! 2.0.1 Ariel Linden 23Apr2025 // added matrix of row probabilities to return list
 *! 2.0.0 Ariel Linden 21Apr2025 // changed methodology for generating the sequence
 *! 1.0.1 Ariel Linden 04Apr2025 // fixed error coding for row sum = 1
 *! 1.0.0 Ariel Linden 26Mar2025 
@@ -114,7 +115,17 @@ program randmarkovseq, rclass
 			
 		} // end quietly
 		
+		// generate matrix of row probabilities
+		mata: B = st_matrix("`table'")		
+		mata: r = rows(B)
+		mata: c = cols(B)
+		mata: rowsum = rowsum(B)
+		mata: rowprobs = J(r, c, 0)
+		mata: rowprobs = (B:/rowsum)
+		mata: st_matrix("rowprobs", rowprobs)
+		
 		// return list
+		return matrix rowprobs = rowprobs
 		return matrix table = `table'
-			
+		
 end

@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 1.0.2 23apr2025}{...}
 {* *! version 1.0.1 21apr2025}{...}
 {* *! version 1.0.0 03apr2025}{...}
 
@@ -108,9 +109,10 @@ Same as above, but specify that the value "A" should be used to initialize the r
 {pstd}
 {cmd:randmarkovseq} stores the following in {cmd:r()}:
 
-{synoptset 10 tabbed}{...}
-{p2col 5 11 12 2: Matrices}{p_end}
+{synoptset 12 tabbed}{...}
+{p2col 5 18 19 2: Matrices}{p_end}
 {synopt:{cmd:r(table)}}the two-way tabulation frequencies from the transition table{p_end}
+{synopt:{cmd:r(rowprobs)}}the row probabilities from the transition table{p_end}
 
 
 

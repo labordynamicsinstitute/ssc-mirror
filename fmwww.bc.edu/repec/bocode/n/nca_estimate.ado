@@ -4,6 +4,7 @@
 pro def nca_estimate, eclass 
 syntax varlist (numeric min=2) [if] [in], [CEILings(string asis) nograph  TESTrep(integer 0)  GRAPHNAmes(string) nocombine BOTtlenecks(numlist sort) BOTtlenecks_default SCOpe(numlist missingokay)  flipx flipy CORner(numlist integer missingokay) steps(integer 10) stepsize(numlist max=1 >=0) XBOTtlenecks(string) YBOTtlenecks(string) cutoff(integer 0) noSummaries Version(integer 3)]
 marksample touse //setting the estimation sample
+
 local version "v`version'"
 if (`cutoff'>2) {
 	di as error "invalid {bf: cutoff}"
@@ -138,6 +139,7 @@ local plotcmd
 tempname result_x scopex bottlenecks_x results bnecks_table
 _rmcoll `X', expand
 _rmdcoll `y' `X'
+	quie cap gen ______ToUsE=`touse'
 foreach x of local X {
 	local plotcmd 
 	matrix `scopex'=`scopeX'[rownumb(`scopeX',"`x'"),1..2]
@@ -185,10 +187,13 @@ foreach x of local X {
 
 	}
 	if ("`graph'"=="nograph") continue
+
+	
 	`plotcmd' xtitle(`=cond("`:variable label `x''"=="","`x'" ,"`:variable label `x''")' ) ytitle(`=cond("`:variable label `y''"=="","`y'" ,"`:variable label `y''")') 
 	local plotlist `plotlist' `graphnames'`x'
 	
 }
+cap drop ______ToUsE
 if ("`graph'"!="nograph") grc1leg `plotlist', rows(`=floor( `=sqrt(`: word count `X'' )') ') ycommon
 matrix rownames `results'= "Number of observations" /// 
 	"Scope" /// 

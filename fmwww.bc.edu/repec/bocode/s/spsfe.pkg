@@ -20,9 +20,9 @@ d KW: spatial modeling
 d KW: endogenous frontier
 d KW: spatial spillover
 d
-d Requires: Stata version 16, xtsfsp from SJ, moremata from SSC (q.v.)
+d Requires: Stata version 16.1, xtsfsp from SJ, moremata from SSC (q.v.)
 d
-d Distribution-Date: 20250412
+d Distribution-Date: 20250424
 d
 d Author: Luojia Wang, Xiamen University
 d Support: email ljwang@@stu.xmu.edu.cn
@@ -33,3 +33,12 @@ f spsfe_postestimation.sthlp
 f ../l/lspsfe.mlib
 f ../m/M1.stswm
 f ../w/w_ex1.mmat
+f ../w/w_ex2.mmat
+f ../w/Wd.mmat
+f ../c/case.dta
+f spsfe_example.dta
+f spsfe1.dta
+f spsfe2.dta
+f ../c/city.dbf
+f ../c/city.shp
+f ../c/city.shx

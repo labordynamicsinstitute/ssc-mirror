@@ -56,13 +56,14 @@ specify explanatory
 variables for the idiosyncratic error variance function.{p_end}
 
 {syntab :Spatial setting}
-{synopt :{cmdab:wm:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)}}specify spatial weight matrix{p_end}
+{synopt :{cmdab:wm:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)}}specify spatial weight matrix for the Spatial lag of the independent variable and 
+for the Spatial Durbin terms in the frontier function. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset.{p_end}
 
 {synopt :{cmdab:wym:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)}}specify spatial weight matrix for 
-spatial lag term{p_end}
+spatial lag term. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset.{p_end}
 
 {synopt :{cmdab:wxm:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)}}specify spatial weight matrix for 
-spatial Durbin terms in the frontier{p_end}
+spatial Durbin terms in the frontier. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset.{p_end}
 
 
 {syntab :Regression}
@@ -143,11 +144,14 @@ with the variance expressed as a function of the covariates defined in
 {dlgtab:Spatial weight matrix}
 
 {phang}
-{cmdab:wm:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)} specifies that the spatial weight matrices. If specified, 
-all spatial terms are assumed with the same weight matrices. 
+{cmdab:wm:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)} specifies that the spatial weight matrices for the Spatial lag of the independent variable and
+and for the Spatial Durbin terms in the frontier function. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset.
 
 {phang}
-By default, weight matrices are {cmd:Sp objects}. Specifying {cmd:mata} declares weight matrices as Mata matrices. When a single weight matrix (W1) is specified, it assumes a time-constant structure.
+By default, weight matrices are {cmd:sp objects}. 
+
+{phang}
+Specifying {cmd:mata} declares weight matrices as Mata matrices. When a single weight matrix (W1) is specified, it assumes a time-constant structure.
 For time-varying cases, weight matrices (W1 W2 ... WT) must be specified in chronological order.
 
 {phang}
@@ -157,7 +161,8 @@ Otherwise, array keys define temporal identifiers while array values contain tim
 
 {phang}
 The {cmd:dta} option supports (time-)sparse matrix specifications. 
-The data can be entered either from a local file or from a data frame (with the prefix {cmd:frame:}). 
+The data can be entered either from a local file or from a data frame. 
+If the {cmd:frame} is specified, the user needs to declare the loaded frame, replacing {cmd:filename} with the format {cmd:frame: frame name}. Otherwise, the data file must come from the local .dta file and search by default from the current path.
 The variables id_i, id_j, and weight in the dta file are mandatory when using dta. 
 Time-varing sparse matrices require .dta variables ordered as: time, id_i, id_j, weight - where id_i/id_j are fixed variable names.
 For time-constant sparse matrices, the time variable is omitted.
@@ -165,11 +170,11 @@ For time-constant sparse matrices, the time variable is omitted.
 
 {phang}
 {cmdab:wym:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)} specifies that the spatial weight matrices 
-for the Spatial lag of the independent variable. 
+for the Spatial lag of the independent variable. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset.
 
 {phang}
 {cmdab:wxm:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)} specifies that the spatial weight matrices 
-for the Spatial Durbin terms in the frontier function. 
+for the Spatial Durbin terms in the frontier function. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset.
 
 
 
@@ -202,11 +207,11 @@ out of the default iv list.
 {cmd:mlsearch(}{it:{help ml##model_options:search_options}}{cmd:)} specifies ml search options for searching initial values.
 
 {phang}
-{cmd:delve} provides a regression-based methodology to search for 
-initial values. The default is to use {helpb ml search:ml search} with default options.
+{cmd:delve} generates initial values through a multi-stage regression approach, fitting non-convex log-likelihood functions and high-dimensional parameter spaces, it accelerates convergence in maximum likelihood optimization.   
+The default is to use {helpb ml search:ml search} with default options.
 
 {phang}
-{opt mlplot} specifes using ml plot to find better initial values.
+{opt mlplot} employs ml plot to parallelize the computation of likelihood values across grid points and visualize the likelihood surface.   It combines initial value search with diagnostic analysis, assisting users in adjusting starting values to enhance convergence stability.
 
 {phang}
 {cmd:mlmodel({it:{help ml##mlmode:model_options}})} controls the {cmd:ml}
@@ -226,6 +231,9 @@ initial values. The default is to use {helpb ml search:ml search} with default o
 
 {phang}
 {cmd:mex(}{it:varlist}{cmd:)} is required for calculation of total, direct, and indirect marginal effects for the specified variables in the frontier function. These effects are computed during estimation and stored in the following matrices returned by {cmd:e(totalmargins)}, {cmd:e(directmargins)}, and {cmd:e(indirectmargins)}. Computation of marginal effects requires additional processing time. Omit this option if marginal effects are not needed.
+
+{phang}
+By applying a first-order Taylor expansion, the delta method enables asymptotic inference on functions for marginal effects, and is used to efficiently approximate the variance of nonlinear functions of estimators in spsfe. For theoretical foundations and applications of the delta method, see {help spsfe##Arbia2020:{bind:Arbia et al. (2020)}} 
 
 {phang}
 {cmd:mldisplay({it:{help ml##mldisplay:display_options}})} controls the
@@ -375,6 +383,9 @@ send an email to Kerui Du at
  “A Spatial Stochastic Frontier Model with Endogenous Frontier and Environmental Variables.”  European Journal of Operational Research,
 286, 1: 389–99. https://doi.org/10.1016/j.ejor.2020.03.020.
 
+{marker Arbia2020}{...}
+{phang}Arbia, G., Bera, A. K., Doğan, O., & Taşpınar, S. (2020). 
+ “Testing Impact Measures in Spatial Autoregressive Models.” International Regional Science Review, 43(1–2), 40–75. https://doi.org/10.1177/0160017619826264
 
 
 

@@ -444,8 +444,8 @@ else {
 global tranparametrs
    Replay , `diopts'
      di " "
-     di in gre "Note: rho = 1/(rmin+rmin*exp(Wy:_cons))+exp(Wy:_cons)/(rmax+rmax*exp(Wy:_cons)); "
-     di in gre "      where rmin and rmax are the minimum and maximum eigenvalues of sp matrix"
+     di in gre "Note: rho is the coefficient of spatial lag of dependent variable; "
+     di in gre "           Wy:_cons is the tranformed parameter of rho in MLE, see Du et al. (2025) for details."
 	 di " "
      di in gre "   ---convert Wy:_cons to the original form---  "
      di " "
@@ -457,8 +457,8 @@ global tranparametrs
           di in smcl in gr "{hline 13}{c +}{hline 64}"
 	_diparm Wy, label("rho") prob function($rmin/(1+exp(@))+$rmax*exp(@)/(1+exp(@))) d(exp(@)*(($rmax-$rmin)/(1+exp(@))^2))
 	 di " "
-	 di in gre "Note: rho = 1/(rmin+rmin*exp(Wy:_cons))+exp(Wy:_cons)/(rmax+rmax*exp(Wy:_cons)); "
-     di in gre "      where rmin and rmax are the minimum and maximum eigenvalues of sp matrix"
+         di in gre "Note: rho is the coefficient of spatial lag of dependent variable; "
+         di in gre "           Wy:_cons is the tranformed parameter of rho in MLE, see Du et al. (2025) for details."
 */	
 
 if ("`wmat'"!="" | "`wymat'"!=""){
@@ -1183,8 +1183,8 @@ else {
  global tranparametrs
    Replay , `diopts'
      di " "
-     di in gre "Note: rho = 1/(rmin+rmin*exp(Wy:_cons))+exp(Wy:_cons)/(rmax+rmax*exp(Wy:_cons)); "
-     di in gre "      where rmin and rmax are the minimum and maximum eigenvalues of sp matrix"
+     di in gre "Note: rho is the coefficient of spatial lag of dependent variable; "
+     di in gre "           Wy:_cons is the tranformed parameter of rho in MLE, see Du et al. (2025) for details."
 	 di " "
      di in gre "   ---convert Wy:_cons to the original form---  "
      di " "
@@ -1199,8 +1199,8 @@ else {
 	_diparm Wy, label("rho") prob function($rmin/(1+exp(@))+$rmax*exp(@)/(1+exp(@))) d(exp(@)*(($rmax-$rmin)/(1+exp(@))^2))
 
 	 di " "
-	 di in gre "Note: rho = 1/(rmin+rmin*exp(Wy:_cons))+exp(Wy:_cons)/(rmax+rmax*exp(Wy:_cons)); "
-     di in gre "      where rmin and rmax are the minimum and maximum eigenvalues of sp matrix"
+     di in gre "Note: rho is the coefficient of spatial lag of dependent variable; "
+     di in gre "           Wy:_cons is the tranformed parameter of rho in MLE, see Du et al. (2025) for details."
 	 */
 if ("`wmat'"!="" | "`wymat'"!=""){
 local wy_cons = _b[Wy:_cons]
@@ -1373,8 +1373,9 @@ if "`$end1'"!=""{
 }
 
 if `"$tranparametrs"'!=""{
-	   di "Note: rho = 1/(rmin+rmin*exp(Wy:_cons))+exp(Wy:_cons)/(rmax+rmax*exp(Wy:_cons)),"  
-	   di "      where rmin and rmax are the minimum and maximum eigenvalues of sp matrix"
+di in gre "Note: rho is the coefficient of spatial lag of dependent variable; "
+di in gre "      Wy:_cons is the tranformed parameter of rho in MLE."
+di in gre "      See Du et al. (2025) for details."
 }
 
 end

@@ -171,8 +171,8 @@ factor variable and time-series operators.{p_end}
 {pstd}Rotterdam, The Netherlands{p_end}
 {pstd}jdul@rsm.nl{p_end}
 
-{title: Acknowledgements}
-{pstd}We are grateful Govert Buijs for the helpful comments during the development of the package and to Ricardo Ernesto Buitrago, Marno Verbeek and Caroline Witte for their beta testing. {p_end}
+{title:Acknowledgements}
+{pstd}We are grateful to Govert Buijs, Ricardo Ernesto Buitrago, Marno Verbeek and Caroline Witte for their beta testing. {p_end}
 
 
 
