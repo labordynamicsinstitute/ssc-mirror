@@ -1,4 +1,4 @@
-*! version 1.0.2  23mar2024  Ben Jann
+*! version 1.0.3  26apr2025  Ben Jann
 
 program listreg, eclass properties(svyb svyj mi)
     version 14
@@ -204,11 +204,12 @@ program Estimate, eclass
     }
     syntax [varlist(default=none numeric fv)] [if] [in] [pw fw iw] [,/*
         */ noCONStant AEQuations NOIsily AVErage LISTwise CASEwise/*
-        */ NOSE vce(passthru) Robust CLuster(passthru) NODFr/*
+        */ NOSE vce(passthru) Robust CLuster(passthru) NORMAL NODFr/*
         */ IFGENerate(str) replace/*
         */ saveifuninmata/* technical option for svy; do not use manually
         */ Level(cilevel)/* (not used)
         */ * ]
+    if "`normal'"!=""   local nodfr nodfr // (nodfr is old syntax)
     if "`listwise'"!="" local casewise casewise
     if "`noisily'"==""  local qui quietly
     else                local qui
@@ -270,6 +271,13 @@ program Estimate, eclass
     }
     _nobs `touse' `wgt' if `touse'
     local N = r(N)
+    if "`wvar'"!="" & "`weight'"!="fweight" {
+        su `wvar' if `touse', meanonly
+        local sum_w = r(sum)
+        local msg `:di %12.0gc r(sum)'
+        di as txt "(sum of wgt is `msg')"
+    }
+    else local sum_w `N'
     
     // generate long list indicator
     tempvar T
@@ -486,6 +494,7 @@ program Estimate, eclass
     
     // post results
     eret post `b' `V' [`weight'`exp'], esample(`touse') obs(`N')
+    eret scalar sum_w = `sum_w'
     eret local title "List experiment regression"
     eret local cmd "listreg"
     eret local depvar "`ovar'"

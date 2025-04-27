@@ -1,5 +1,5 @@
 {smcl}
-{* 18sep2024}{...}
+{* 26apr2025}{...}
 {hi:help listreg}{...}
 {right:{browse "https://github.com/benjann/listreg/"}}
 {hline}
@@ -65,7 +65,7 @@
     {p_end}
 {synopt :{opt cl:uster(clustvar)}}synonym for {cmd:vce(cluster} {it:clustvar}{cmd:)}
     {p_end}
-{synopt :{opt nodf:r}}report large-sample test statistics
+{synopt :{opt normal}}use normal distribution for statistical inference
     {p_end}
 {synopt :{opt nose}}omit variance estimation
     {p_end}
@@ -201,10 +201,10 @@
     {opt cluster(clustvar)} is a synonym for {cmd:vce(cluster} {it:clustvar}{cmd:)}.
 
 {phang}
-    {opt nodfr} divides variances by N rather than N-1 and reports test statistics
+    {opt normal} divides variances by N rather than N-1 and reports test statistics
     based on the standard normal distribution rather than the
     t-distribution. Use this option to obtain results that are equivalent to
-    results returned by {helpb gmm}. {cmd:nodfr} has no effect if {cmd:vce(svy)},
+    results returned by {helpb gmm}. {cmd:normal} has no effect if {cmd:vce(svy)},
     {cmd:vce(bootstrap)}, or {cmd:vce(jackknife)} is specified.
 
 {phang}
@@ -424,7 +424,7 @@
         gmm (1: (`T'!=1)*(`Y' - {xb0:`Z' _cons})) ///
             (2: (`T'==1)*(`Y' - {xb0:} - {xb1:`X' _cons})) ///
             , instruments(1:`Z') instruments(2:`X') winitial(identity)
-        listreg `Y' `T' `X', controls(`Z') nodfr{txt}
+        listreg `Y' `T' `X', controls(`Z') normal{txt}
 
 {pstd}
     Example for the double-list design:
@@ -440,7 +440,7 @@
             (3: (`T'==1)*(`Y1' - {xb0:}) + (`T'!=1)*(`Y2' - {xb1:}) - {xb2:`X' _cons}) ///
             , instruments(1:`Z1') instruments(2:`Z2') instruments(3:`X') ///
               winitial(identity)
-        listreg `Y1' `Y2' = `T' `X', controls(`Z1') controls(`Z2') nodfr listwise{txt}
+        listreg `Y1' `Y2' = `T' `X', controls(`Z1') controls(`Z2') normal listwise{txt}
 
 {marker ex_atet}{...}
 {dlgtab:Relation to treatment effect estimation}
@@ -456,7 +456,7 @@
         . {stata teffects ra (bweight prenatal1 mmarried mage fbaby) (mbsmoke), atet}
     {p_end}
 {p 8 12 2}
-        . {stata listreg bweight mbsmoke, controls(prenatal1 mmarried mage fbaby) nodfr}{txt}
+        . {stata listreg bweight mbsmoke, controls(prenatal1 mmarried mage fbaby) normal}{txt}
 
 {pstd}
     This means that {cmd:listreg} can be used for treatment effect heterogeneity
@@ -465,12 +465,29 @@
     first-birth status:
 
 {p 8 12 2}
-        . {stata listreg bweight mbsmoke prenatal1 fbaby, controls(prenatal1 mmarried mage fbaby) nodfr}{txt}
+        . {stata listreg bweight mbsmoke prenatal1 fbaby, controls(prenatal1 mmarried mage fbaby) normal}{txt}
 
 {pstd}
     First-trimester exam status does not seem to play a role, but the results
     indicate that the treatment effect is less pronounced in case of a
     first baby.
+
+{pstd}
+    Furthermore, note that the double-list estimator can be used to recover the
+    average treatment effect (ATE). The trick is to use reversed outcomes in
+    {it:ovar2}. Example:
+
+{p 8 12 2}
+        . {stata teffects ra (bweight prenatal1 mmarried mage fbaby) (mbsmoke)}
+    {p_end}
+{p 8 12 2}
+        . {stata generate rbw = -bweight}
+    {p_end}
+{p 8 12 2}
+        . {stata listreg bweight rbw = mbsmoke, controls(prenatal1 mmarried mage fbaby) normal}
+    {p_end}
+{p 8 12 2}
+        . {stata listreg bweight rbw = mbsmoke prenatal1 fbaby, controls(prenatal1 mmarried mage fbaby) normal}{txt}
 
 
 {title:Returned results}
