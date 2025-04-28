@@ -140,6 +140,7 @@ p xtstfetchcovid19 module to Download COVID-19 Datasets from the COVID-19 Data H
 p xtstgathercovid19 module to Download COVID-19 Data from Our World in Data
 p xtsum2docx module to report summary statistics of panel data to a formatted table in the DOCX format
 p xtsur module to estimate seemingly unrelated regression model on unbalanced panel data
+p xtsurmg module implementing Fourier Seemingly Unrelated Regression Mean Group Estimator
 p xtteifeci module to provide Estimation and Inference of Treatment Effects through a Factor-Based Approach
 p xttest2 module to perform Breusch-Pagan LM test for cross-sectional correlation in panel data model
 p xttest3 module to compute Modified Wald statistic for groupwise heteroskedasticity

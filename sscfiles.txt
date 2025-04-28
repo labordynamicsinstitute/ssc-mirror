@@ -9586,6 +9586,7 @@ fmwww.bc.edu/repec/bocode/x/xtpattern.html
 fmwww.bc.edu/repec/bocode/x/xtsel.sthlp
 fmwww.bc.edu/repec/bocode/x/xtcd.sthlp
 fmwww.bc.edu/repec/bocode/x/xtmixediou.sthlp
+fmwww.bc.edu/repec/bocode/x/xtsurmg.ado
 fmwww.bc.edu/repec/bocode/x/xtregwem.ado
 fmwww.bc.edu/repec/bocode/x/xtimportu.sthlp
 fmwww.bc.edu/repec/bocode/x/xtdcce2133_estat.ado
@@ -9833,6 +9834,7 @@ fmwww.bc.edu/repec/bocode/x/xt2treatments.ado
 fmwww.bc.edu/repec/bocode/x/xtusreg.ado
 fmwww.bc.edu/repec/bocode/x/xtqptest.pkg
 fmwww.bc.edu/repec/bocode/x/xttrans2.pkg
+fmwww.bc.edu/repec/bocode/x/xtsurmg.pkg
 fmwww.bc.edu/repec/bocode/x/xtregbn.ado
 fmwww.bc.edu/repec/bocode/x/xls2dta_old_syntax.sthlp
 fmwww.bc.edu/repec/bocode/x/xtab.hlp
@@ -9900,6 +9902,7 @@ fmwww.bc.edu/repec/bocode/x/xtteifeci.pkg
 fmwww.bc.edu/repec/bocode/x/xtfisher.ado
 fmwww.bc.edu/repec/bocode/x/xtstfetchcovid19.sthlp
 fmwww.bc.edu/repec/bocode/x/xtregam.dlg
+fmwww.bc.edu/repec/bocode/x/xtsurmg.sthlp
 fmwww.bc.edu/repec/bocode/x/xtcsi.ado
 fmwww.bc.edu/repec/bocode/x/xtdolshm.html
 fmwww.bc.edu/repec/bocode/x/xtgrangert.sthlp
@@ -21750,6 +21753,7 @@ fmwww.bc.edu/repec/bocode/g/gs2slsxt.ado
 fmwww.bc.edu/repec/bocode/g/ghquadm.hlp
 fmwww.bc.edu/repec/bocode/g/glcurve5.html
 fmwww.bc.edu/repec/bocode/g/gpreset.pkg
+fmwww.bc.edu/repec/bocode/g/g7data.dta
 fmwww.bc.edu/repec/bocode/g/gboxplot.ado
 fmwww.bc.edu/repec/bocode/g/ghazal_guzzler.ado
 fmwww.bc.edu/repec/bocode/g/influence_barchart.ado

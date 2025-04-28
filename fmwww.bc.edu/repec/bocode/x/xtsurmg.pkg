@@ -1,0 +1,19 @@
+d 'XTSURMG': module implementing Fourier Seemingly Unrelated Regression Mean Group Estimator
+d
+d  xtsurmg implements the Fourier Seemingly Unrelated Regression
+d Mean Group (F-SURMG) estimator for heterogeneous panel data with
+d smooth changes (Guliyev, Innovation and Green Development, 2025). d
+d KW: seemingly unrelated regression
+d KW: SUR
+d KW: mean group
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20250427
+d
+d Author:   Hasraddin Guliyev, Azerbaijan State University of Economics 
+d Support: email hasradding@@unec.edu.az
+d
+f xtsurmg.ado
+f xtsurmg.sthlp
+f ../g/g7data.dta
