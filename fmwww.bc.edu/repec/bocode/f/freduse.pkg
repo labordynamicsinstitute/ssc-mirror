@@ -22,7 +22,7 @@ d Author:  Jacob Williams, Federal Reserve Board
 d Support: email jacob.m.williams@@frb.gov
 d
 f freduse.ado
-f freduse.hlp
+f freduse.sthlp
 f ../_/_freduse.ado
 f ../_/_freduse2.ado
 f ../_/_fredweb.ado
