@@ -1,0 +1,30 @@
+d 'CODENSITY': module for kernel density estimation for one or more variables or groups
+d
+d  codensity is a convenience command for creating and plotting
+d kernel estimates of univariate probability density for one or
+d (especially) more variables or for one or (especially) more
+d groups of a specified variable. It is variously a wrapper for
+d twoway__kdensity_gen and graph twoway. In addition to its more
+d obvious use for probability density estimates, for either
+d different variables or different groups of a single variable,
+d codensity is designed to accommodate tasks such as exploring the
+d effects of different kernel choices or of different bandwidths
+d with the same data. codensity is also unusual in supporting
+d estimates of probability density on various transformed scales,
+d back-transformed to be shown against the original scale. 
+d
+d KW: density estimation
+d KW: distributions
+d KW: graphics 
+d
+d Requires: Stata version 8
+d
+d Distribution-Date: 20250429
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f codensity.ado
+f codensity.sthlp
+f codensity_examples.do
+f ../p/palmer_penguins.dta

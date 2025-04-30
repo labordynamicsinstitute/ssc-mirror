@@ -223,6 +223,9 @@ Note that this option only applies when {opt nofigure} is not specified.
 {phang2}* Implement in-time placebo test using the fake treatment time 1985 and dropping the covariate cigsale(1988) {p_end}
 {phang2}{cmd:. synth2 cigsale lnincome age15to24 retprice beer cigsale(1980) cigsale(1975), trunit(3) trperiod(1989) xperiod(1980(1)1984) nested placebo(period(1985))} {p_end}
 
+{phang2}* Implement mixed placebo tests using the fake treatment units with pre-treatment MSPE 10 times smaller than or equal to that of the treated unit and the fake treatment time 1985{p_end}
+{phang2}{cmd:. synth2 cigsale lnincome age15to24 retprice beer cigsale(1980) cigsale(1975), trunit(3) trperiod(1985) xperiod(1980(1)1984) nested placebo(unit cut(10)) sigf(6)} {p_end}
+
 {phang2}* Implement leave-one-out robustness test, create a Stata frame "california" storing generated variables, 
 and save all produced graphs to the current path{p_end}
 {phang2}{cmd:. synth2 cigsale lnincome age15to24 retprice beer cigsale(1988) cigsale(1980) cigsale(1975), trunit(3) trperiod(1989) xperiod(1980(1)1988) nested loo frame(california) savegraph(california, replace)}{p_end}
@@ -296,6 +299,9 @@ Abadie, A., A. Diamond, and J. Hainmueller. 2010. Synthetic Control Methods for 
 {phang}
 Abadie, A. and Gardeazabal, J. 2003. Economic Costs of Conflict: A Case Study of the Basque Country. 
 {it:American Economic Review} 93(1): 113-132.
+
+{phang}
+{browse "https://www.sciencedirect.com/science/article/abs/pii/S0165176523000290": Chen, Q., & Yan, G. 2023. A mixed placebo test for synthetic control method. {it:Economics Letters} 224: 111004.}
 
 {phang}
 {browse "https://journals.sagepub.com/doi/abs/10.1177/1536867X231195278": Yan, G. and Chen, Q. 2023. synth2: Synthetic Control Method with Placebo Tests, Robustness Test and Visualization. {it:The Stata Journal} 23(3): 597-624.}

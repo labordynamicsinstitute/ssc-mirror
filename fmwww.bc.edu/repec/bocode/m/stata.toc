@@ -252,7 +252,6 @@ p multencode module to encode multiple string variables into numeric
 p multiauc module to calculate of correlated areas under the receiver operating characteristic curves and their differences
 p multibar module to produce bar and dot graphs for use with overlapping over() categories
 p multicoefplot module to produce advanced repeated cross-section graphical analysis
-p multidensity module for kernel density estimation for many variables or groups
 p multidot module for multiple panel dot charts and similar
 p multif module to construct multiple if-restrictions with the same value for different variables
 p multiline module for multiple panel line plots 

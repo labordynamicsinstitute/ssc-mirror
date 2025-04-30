@@ -183,6 +183,7 @@ p codci module to calculate Bonett-Seier's Confidence Interval for the COD
 p codebook2 module to produce a codebook describing a data file
 p codebook_ripper module to  convert metadata managed in a spreadsheet into do files with renaming, notes as well as variable and value labelling
 p codebookout module to save codebook in MS excel format
+p codensity module for kernel density estimation for one or more variables or groups
 p coefout module to keeps the beta-coefficients for specified variables and labelnames from a regression.
 p coefplot module to plot regression coefficients and other results
 p cohend module to compute Cohen's d

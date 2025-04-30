@@ -1,12 +1,12 @@
 {smcl}
-{* *! version 1.1  24 May 2024}{...}
+{* *! version 1.4}{...}
 {vieweralsosee "" "--"}{...}
-{vieweralsosee "Install regmat" "ssc install matrixtools"}{...}
-{vieweralsosee "Help regmat (if installed)" "help regmat"}{...}
 {viewerjumpto "Syntax" "sccsdta##syntax"}{...}
 {viewerjumpto "Description" "sccsdta##description"}{...}
 {viewerjumpto "Examples" "sccsdta##examples"}{...}
-{viewerjumpto "Rreferences" "sccsdta##references"}{...}
+{viewerjumpto "New variables in the generated dataset" "sccsdta##new_variables"}{...}
+{viewerjumpto "Stored results" "sccsdta##stored_results"}{...}
+{viewerjumpto "References" "sccsdta##references"}{...}
 {viewerjumpto "Author and support" "sccsdta##author"}{...}
 {title:Title}
 {phang}
@@ -16,8 +16,7 @@
 {title:Syntax}
 {p 8 17 2}
 {cmdab:sccsdta}
-varlist(min=2
-max=2)
+varlist(min=2 max=2)
 [{cmd:,}
 {it:options}]
 
@@ -25,34 +24,43 @@ max=2)
 {synopthdr}
 {synoptline}
 
-{syntab:Required }
+{syntab:Required options}
 {synopt:{opt en:ter}({varname|number})} Start of the individual observation period.
 
-{synopt:{opt r:iskpoints(numlist sort)}} End points of intervals at risk.{break}
-First value is the starting point of the first at risk interval.{break}
-The rest of the values are the last point of an at risk interval.{break}
-All intervals include their last end points.
+{synopt:{opt r:iskpoints(numlist)}} Endpoints of intervals at risk.{break}
+The first value is the starting point of the first at-risk interval.{break}
+The rest of the values are the last point of an at-risk interval.{break}	
+All intervals include their last endpoints.
 
-{synopt:{opt t:imepoints(numlist sort)}} At least one interval end point(s) 
-for time dependence.{break}
-The first time interval starts with {opt en:ter}.{break}
-The end points are relative to {opt en:ter} unless 
-option {opt a:bsolutetimepoints} is set.
+{syntab:Options}
+{synopt:{opt ex:it(varname)}}  A variable for the absolute last endpoint in the observation period.
+
+{synopt:{opt t:imepoints(numlist)}} At least one endpoint for time dependence.{break}
+The first time-interval starts with {opt en:ter}.{break}
+The endpoints are relative to {opt en:ter} unless 
+option {opt a:bsolutetimepoints} is set.{break}
 The last time interval end is also the end of the individual observation period
-unless the option {opt:ex:it} is set.{break}
-All intervals include their last end points.
+unless the option {opt ex:it} is set.{break}
+All intervals include their last endpoints.
 
-{syntab:Optional}
-{synopt:{opt ex:it(varname)}}  A variable for the absolute last end point in the observation period.
-
-{synopt:{opt a:bsolutetimepoints}}  Treat the time end points in 
+{synopt:{opt a:bsolutetimepoints}}  Treat the time endpoints in 
 {opt t:imepoints} as absolute.
 
-{synopt:{opt nor:egression}} The regression output can be ignored by this option.
+{synopt:{opt ev:enttimes}}  Use the event times as absolute endpoints.
+{opt ev:enttimes} also set {opt a:bsolutetimepoints}.
 
-{synopt:{opt noq:uietly}}  See the code run in the result window.
+{synopt:{opt kn:ots(3-7)}}  Number of knots to use when generating restricted cubic
+splines, see ({help mkspline:mkspline}), on the event period endpoints.{break}
+{opt kn:ots(3-7)} also set {opt ev:enttimes} and {opt a:bsolutetimepoints}.
 
-{synopt:{opt *:}}  Add options for the used {help xtpoisson:xtpoisson} command.
+{synopt:{opt nor:egression}} The regression output from {help xtpoisson:xtpoisson} 
+can be ignored by this option.
+
+{synopt:{opt noq:uietly}}  Program output is echoed to the Results window.
+
+{synopt:{opt p:reserve}}  Preserve the original dataset.
+
+    The user can add further options for the underlying command {help xtpoisson:xtpoisson}.
 
 {synoptline}
 
@@ -61,32 +69,34 @@ All intervals include their last end points.
 
 {marker description}{...}
 {title:Description}
-{pstd}The SCCS method examines the association between a time-varying exposure 
-and an event outcome.{break}
-The study samples only cases, and it requires that an event has occurred during 
-the observation period.{break}
-The method doesn't compare incidences for cases with incidences for references.{break} 
-Instead, it contrasts incidences in periods of risk with incidences in periods 
-where the case is not at risk.{break}
-In this approach, cases serve as their control for fixed confounders.{break}
-It's feasible to adjust for time effects such as age.{break}
-The intervals are marked by risk, time, and individual.{break}
-For each interval, the number of incidences and the width of the interval are 
-determined..{break}
-The command {cmd:sccsdta} reports the output from a {help xtpoisson:xtpoisson} 
-where data are {help xtset:xtset} by the generated variable {it:_rowid}.{break}
-However, the undocumented old version of {help xtpoisson:xtpoisson} using the 
-option {opt i:} for the {help xtset:xtset}-setting.
+{pstd}The Self-Controlled Case Series (SCCS) method investigates the relationship 
+between a time-varying exposure and an event outcome.{break} 
+The sample consists of cases with an exposure who also experienced an event 
+during the observation period.{break} 
+This method compares the incidence rates during risk periods with those during 
+non-risk periods.{break} 
+In this approach, each case acts as its control for fixed confounders, and it is possible to adjust for time-related effects such as age.
+
+{pstd}The intervals generated by {cmd:sccsdta} are defined by three variables: 
+risk, time, and individual.{break} 
+For each interval, the number of incidences and the interval's width are determined.
+
+{pstd}The {cmd:sccsdta} command outputs results from an {help xtpoisson:xtpoisson} regression 
+using the undocumented option {it:i(_rowid)} for the {help xtset:xtset} data setting.{break}
+It is also possible to use event times as period endpoints and to create a 
+restricted cubic spline for adjustments in the xtpoisson regression.
+
 
 {marker examples}{...}
 {title:Examples}
 
-{phang}The datasets used below are readable from version 15.1.{break}
-Version 12 datasets with the same data are added to the package.{p_end}
+{phang}The datasets from {browse "https://sccs-studies.info": "https://sccs-studies.info"} 
+are readable from version 15.1.{break}
+Version 12 datasets with the necessary data are added to the package.{p_end}
 
 {phang}{bf:Case 3.1 in 2005 Whitaker}{break}
-Hospital records indicate a association between MMR vaccination and viral meningitis.{break} 
-Specifically, the use of a certain live mumps vaccine, known as the Urabe strain, 
+Hospital records indicate an association between MMR vaccination and viral meningitis.{break} 
+Specifically, using a certain live mumps vaccine, known as the Urabe strain, 
 has been linked to an increased risk of viral meningitis.{break}
 Instances of viral meningitis were identified in 10 children during their second 
 year of life. 
@@ -94,7 +104,7 @@ year of life.
 
 {phang}Get a dataset with an event day (day of meningitis) and a day for exposure
 (day of vaccination):{p_end}
-{phang}{stata `". use eventday exday using "https://sccs-studies.info/uploads/1/1/6/4/116436421/oxford.dta", clear"'}{p_end}
+{phang}{stata `". use "http://fmwww.bc.edu/RePEc/bocode/s/sccsdta_mmr.dta", clear"'}{p_end}
 
 
 {phang}{bf:Case 3.1 in 2005 Whitaker continued}{break}
@@ -104,80 +114,224 @@ following the administration of the MMR vaccine.{break}
 Time groups were 366 to 547 (relative endpoint 182) days and 548 to 730 
 days (relative endpoint 365).{p_end}
 
-{phang}Generate the SCCS dataset and do the analysis using absolute time end points:{p_end}
-{phang}{stata `". sccsdta eventday exday, enter(365) riskpoints(14 35) timepoints(547 730) absolutetimepoints nolog"'}{p_end}
+{phang}Generate the SCCS dataset and do the analysis using absolute time endpoints:{p_end}
+{phang}{stata `". sccsdta eventday exday, enter(365) riskpoints(14 35) timepoints(547 730) absolutetimepoints"'}{p_end}
 
-{phang}or with relative time end points:{p_end}
-{phang}{stata `". use eventday exday using "https://sccs-studies.info/uploads/1/1/6/4/116436421/oxford.dta", clear"'}{p_end}
-{phang}{stata `". sccsdta eventday exday, enter(365) riskpoints(14 35) timepoints(182 365) nolog"'}{p_end}
+{phang}Or with relative time endpoints:{p_end}
+{phang}{stata `". use "http://fmwww.bc.edu/RePEc/bocode/s/sccsdta_mmr.dta", clear"'}{p_end}
+{phang}{stata `". sccsdta eventday exday, enter(365) riskpoints(14 35) timepoints(182 365)"'}{p_end}
 
-     . xtpoisson _nevents i._exgr i._tmgr, fe i(_rowid) exposure(_interval) irr nolog
-     
-     
-     Conditional fixed-effects Poisson regression         Number of obs    =     38
-     Group variable: _id                                  Number of groups =     10
-     
-                                                          Obs per group:
-                                                                       min =      2
-                                                                       avg =    3.8
-                                                                       max =      4
-     
-                                                          Wald chi2(2)     =  19.10
-     Log likelihood = -10.088277                          Prob > chi2      = 0.0001
-     
-     ------------------------------------------------------------------------------
-         _nevents |        IRR   Std. err.      z    P>|z|     [95% conf. interval]
-     -------------+----------------------------------------------------------------
-            _exgr |
-        ]14; 35]  |     12.037      8.528     3.51    0.00        3.002      48.259
-                  |
-            _tmgr |
-      ]182; 365]  |      0.225      0.252    -1.33    0.18        0.025       2.016
-     ln(_inter~l) |      1.000  (exposure)
-     ------------------------------------------------------------------------------
+    Interval and event counts, and follow-up time by risk groups
+    
+                                     |         n     events  Follow-up 
+    ---------------------------------+--------------------------------
+                                ctrl |        29          5       3461 
+                            (14, 35] |         9          5        189 
+                               Total |        38         10       3650 
+    
+    The SCCS regression table
+    
+                                     |       IRR       [95%        CI]   P(IRR=1) 
+    ---------------------------------+-------------------------------------------
+    At risk                          |                                           
+                                ctrl |         1          .          .          . 
+                            (14, 35] |  12.03687   3.002256   48.25915   .0004453 
+    ---------------------------------+-------------------------------------------
+    Time group                       |                                           
+                  (enter, enter+182] |         1          .          .          . 
+              (enter+182, enter+365] |  .2252429   .0251654   2.016037   .1825429 
 
-{phang}We estimate the incidence rate ratio of the risk period versus the no 
-risk period using a poisson regression and looking at the {it:i._exgr} estimate:{p_end}
-{phang}Compare the {it:i._exgr} estimate with the Stata output at page 11 in 
+{phang}We estimate the incidence rate ratio of the risk period versus the no-risk 
+period using a Poisson regression and looking at the {it:i._exgr} estimate:{p_end}
+{phang}Compare the {it:i._exgr} estimate with the Stata output on page 11 in 
 2005 Whitaker.
 {p_end}
 
 {phang}{bf:Conclusion}{break}
 The incidence rate in the risk period is around 12 times higher
 than in the no-risk period.{break}
-Hence, there is a a association between MMR vaccination and viral meningitis.{p_end} 
+Hence, there is an association between MMR vaccination and viral meningitis.{p_end} 
+ 
 
-{phang}Reproducing Table V in 2005 Whitaker:{p_end}
-{phang}{stata `". use * using "https://sccs-studies.info/uploads/1/1/6/4/116436421/itp.dta", clear"'}{p_end}
-{phang}{stata `". sccsdta eventday mmr, en(cutp1) ex(cutp2) r(-1 14 28 42) t(426(61)670) a nolog"'}{p_end}
+{phang}Using the event times as absolute time endpoints:{p_end}
+{phang}{stata `". use "http://fmwww.bc.edu/RePEc/bocode/s/sccsdta_mmr.dta", clear"'}{p_end}
+{phang}{stata `". sccsdta eventday exday, enter(365) riskpoints(14 35) eventtimes"'}{p_end}
 
-{phang}Reproducing Table VII, analyses 1 in 2005 Whitaker:{p_end}
-{phang}{stata `". use * using "https://sccs-studies.info/uploads/1/1/6/4/116436421/intuss.dta", clear"'}{p_end}
-{phang}{stata `". sccsdta eventday agep3, en(cutp1) ex(cutp2) r(13 27 41) t(57(30)117 148(31)334) a nolog"'}{p_end}
+    Interval and event counts, and follow-up time by risk groups
+    
+                                     |         n     events  Follow-up 
+    ---------------------------------+--------------------------------
+                                ctrl |        94          5       3161 
+                            (14, 35] |        23          5        189 
+                               Total |       117         10       3350 
+    
+    The SCCS regression table
+    
+                                     |       IRR       [95%        CI]   P(IRR=1) 
+    ---------------------------------+-------------------------------------------
+    At risk                          |                                           
+                                ctrl |         1          .          .          . 
+                            (14, 35] |  23.98834   3.348215   171.8649   .0015628 
+    ---------------------------------+-------------------------------------------
+    Time group                       |                                           
+                        (enter, 398] |         1          .          .          . 
+                          (398, 399] |  32.99998   2.064111   527.5873   .0134208 
+                          (399, 413] |  .9127331   .0397668   20.94917   .9544528 
+                          (413, 449] |  .2368413   .0096357    5.82145   .3779499 
+                          (449, 455] |  .5655929   .0173055   18.48517   .7487175 
+                          (455, 472] |   .304316   .0099871   9.272795     .49496 
+                          (472, 474] |  9.586816   .4962026   185.2208   .1346197 
+                          (474, 485] |  1.551727   .0803607   29.96308   .7711515 
+                          (485, 524] |  .2554009   .0105932    6.15769   .4005926 
+                          (524, 700] |  .1693383   .0104601   2.741427   .2112738 
+
+{phang}Reproducing Table V in 2005 Whitaker:{break}
+The effect of the measles, mumps, and rubella (MMR) vaccine on idiopathic 
+thrombocytopenic purpura (ITP) within 42 days after the vaccination was 
+analyzed using 44 admissions among 35 children aged 12-23 months.{break}
+The observation periods ran mostly from age 366 to 730 days.
+{p_end}
+{phang}{stata `". use "http://fmwww.bc.edu/RePEc/bocode/s/sccsdta%20itp.dta", clear"'}{p_end}
+{phang}{stata `". sccsdta eventday mmr, en(cutp1) ex(cutp2) riskpoints(-1 14 28 42) timepoints(426(61)670) absolutetimepoints"'}{p_end}
+
+    Interval and event counts, and follow-up time by risk groups
+    
+                                     |         n     events  Follow-up 
+    ---------------------------------+--------------------------------
+                                ctrl |       268         31      14282 
+                            (-1, 14] |        40          2        524 
+                            (14, 28] |        43          8        474 
+                            (28, 42] |        41          3        450 
+                               Total |       392         44      15730 
+    
+    The SCCS regression table
+    
+                                     |       IRR       [95%        CI]   P(IRR=1) 
+    ---------------------------------+-------------------------------------------
+    At risk                          |                                           
+                                ctrl |         1          .          .          . 
+                            (-1, 14] |  1.308872   .2992227   5.725324   .7207272 
+                            (14, 28] |  5.953976   2.519222   14.07174   .0000479 
+                            (28, 42] |  2.600204   .7453587    9.07088   .1338836 
+    ---------------------------------+-------------------------------------------
+    Time group                       |                                           
+                        (enter, 426] |         1          .          .          . 
+                          (426, 487] |  .6564854   .2953778   1.459057   .3016861 
+                          (487, 548] |    .21047   .0594804   .7447431   .0156464 
+                          (548, 609] |  .2914526   .0943224   .9005775    .032202 
+                          (609, 670] |  .3959018   .1385691    1.13112   .0836419 
+                         (670, exit] |  .4015822   .1404577   1.148163     .08872 
+    												 
+{phang}Using restricted cubic splines with 4 knots on the event times as time adjustment:{p_end}
+{phang}{stata `". use "http://fmwww.bc.edu/RePEc/bocode/s/sccsdta%20itp.dta", clear"'}{p_end}
+{phang}{stata `". sccsdta eventday mmr, en(cutp1) ex(cutp2) riskpoints(-1 14 28 42) nknots(4)"'}{p_end}
+
+    Interval and event counts, and follow-up time by risk groups
+    
+                                     |         n     events  Follow-up 
+    ---------------------------------+--------------------------------
+                                ctrl |      1633         31      14282 
+                            (-1, 14] |       113          2        524 
+                            (14, 28] |       136          8        474 
+                            (28, 42] |       117          3        450 
+                               Total |      1999         44      15730 
+    
+    The SCCS regression table
+    
+                                     |       IRR       [95%        CI]   P(IRR=1) 
+    ---------------------------------+-------------------------------------------
+    At risk                          |                                           
+                                ctrl |         1          .          .          . 
+                            (-1, 14] |   1.25916    .288486   5.495874   .7592143 
+                            (14, 28] |  5.742021   2.429854   13.56905   .0000679 
+                            (28, 42] |  2.368114   .6742125   8.317797   .1786396 
+    ---------------------------------+-------------------------------------------
+    Time by restricted cubic splines |                                           
+                            _rcs_tm1 |   1.00165     .98033   1.023434    .880618 
+                            _rcs_tm2 |  .9167747   .7610117   1.104419   .3604082 
+                            _rcs_tm3 |  1.160045   .8641528   1.557254   .3230805 
+
+														
+{phang}Reproducing Table VII, analyses 1 in 2005 Whitaker:{break}
+Researchers examined 218 hospital episodes to investigate the potential 
+association between oral polio vaccine (OPV) and intussusception in infants 
+aged 28 to 365 days.{p_end}
+{phang}{stata `". use "http://fmwww.bc.edu/RePEc/bocode/s/sccsdta%20intuss.dta", clear"'}{p_end}
+{phang}{stata `". sccsdta eventday agep3, en(cutp1) ex(cutp2) r(13 27 41) t(57(30)117 148(31)334) absolutetimepoints"'}{p_end}
+
+    Interval and event counts, and follow-up time by risk groups
+    
+                                     |         n     events  Follow-up 
+    ---------------------------------+--------------------------------
+                                ctrl |      2356        181      66323 
+                            (13, 27] |       296         23       2906 
+                            (27, 41] |       303         14       2912 
+                               Total |      2955        218      72141 
+    
+    The SCCS regression table
+    
+                                     |       IRR       [95%        CI]   P(IRR=1) 
+    ---------------------------------+-------------------------------------------
+    At risk                          |                                           
+                                ctrl |         1          .          .          . 
+                            (13, 27] |  2.139165   1.315599   3.478283   .0021704 
+                            (27, 41] |  1.244714   .6891081   2.248287   .4680561 
+    ---------------------------------+-------------------------------------------
+    Time group                       |                                           
+                         (enter, 57] |         1          .          .          . 
+                            (57, 87] |  3.728533   1.237447   11.23438   .0193585 
+                           (87, 117] |  4.689852   1.595374   13.78655   .0049695 
+                          (117, 148] |  5.984681   2.085926   17.17051   .0008774 
+                          (148, 179] |  5.423653   1.859055    15.8231    .001968 
+                          (179, 210] |  8.239254   2.924505   23.21258   .0000659 
+                          (210, 241] |  6.418219   2.247761   18.32647   .0005148 
+                          (241, 272] |  5.289528   1.826447   15.31887   .0021388 
+                          (272, 303] |  3.012165   .9807741   9.250995   .0540976 
+                          (303, 334] |  3.039608   .9897246   9.335137   .0521465 
+                         (334, exit] |  1.406979   .3965318   4.992263   .5972047 
 
 
-{title:Variables in the generated dataset}
+{marker new_variables}{...}
+{title:New variables in the generated dataset}
 
 {synoptset 15 tabbed}{...}
-{p2col 5 15 19 2: Created variables}{p_end}
 {synopt:{cmd:_rowid}}  A row id variable{p_end}
-{synopt:{cmd:_start}}  Interval start value (not included in interval){p_end}
-{synopt:{cmd:_stop}}  Interval stop value (included in interval){p_end}
-{synopt:{cmd:_nevents}}  Number of events per individual in interval{p_end}
+{synopt:{cmd:_start}}  Interval start value (not included in the interval){p_end}
+{synopt:{cmd:_stop}}  Interval stop value (included in the interval){p_end}
+{synopt:{cmd:_nevents}}  Number of events per individual in an interval{p_end}
 {synopt:{cmd:_exgr}}  Intervals marked by risk groups{p_end}
 {synopt:{cmd:_tmgr}}  Intervals marked by time groups{p_end}
 {synopt:{cmd:_interval}}  Interval width (the exposure){p_end}
 
+
+{marker stored_results}{...}
 {title:Stored results}
 
-{synopt:{cmd:cmd}}  The regression {help xtpoisson:xtpoisson} command.{p_end}
+{pstd}
+{cmd:sccsdta} stores the following in {cmd:r()}:
+
+{synoptset 23 tabbed}{...}
+{p2col 5 23 26 2: Macros}{p_end}
+{synopt:{cmd:r(cmd)}}The regression {help xtpoisson:xtpoisson} command for the SCCS regression summary table.{p_end}
+
+{p2col 5 23 26 2: Matrices}{p_end}
+{synopt:{cmd:r(summary)}}Number of intervals, number of events, and follow-up time by risk groups.{p_end}
+{synopt:{cmd:r(sccsdta)}}The SCCS regression table.{p_end}
 
 
 {marker references}{...}
 {title:References}
 
-{pstd}2005 Whitaker - Tutorial in biostatistics; The self-controlled case series method
-{break}2016 Petersen - Self controlled case series methods; An alternative to standard epidemiological study designs
+{pstd}Whitaker, Heather J., C. Paddy Farrington, Bart Spiessens, and Patrick Musonda. 2006. 
+"Tutorial in Biostatistics: The Self-Controlled Case Series Method." 
+Statistics in Medicine 25 (10): 1768–97.
+{break}Farrington, C. P., and H. J. Whitaker. 2006. 
+"Semiparametric Analysis of Case Series Data." 
+Applied Statistics 55 (5): 553–94.
+{break}Petersen, Irene, Ian Douglas, and Heather Whitaker. 2016. 
+"Self Controlled Case Series Methods: An Alternative to Standard Epidemiological Study Designs." 
+BMJ (Online) 354: i4515–i4515.
+
 
 {marker author}{...}
 {title:Authors and support}

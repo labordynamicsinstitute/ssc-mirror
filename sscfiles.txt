@@ -1371,6 +1371,7 @@ fmwww.bc.edu/repec/bocode/c/cart.hlp
 fmwww.bc.edu/repec/bocode/c/color-ply3.style
 fmwww.bc.edu/repec/bocode/c/chesspos.ado
 fmwww.bc.edu/repec/bocode/c/charlist.pkg
+fmwww.bc.edu/repec/bocode/c/codensity.sthlp
 fmwww.bc.edu/repec/bocode/c/color_brewer.ado
 fmwww.bc.edu/repec/bocode/c/cqiv.pkg
 fmwww.bc.edu/repec/bocode/c/cflpois.ado
@@ -1565,6 +1566,7 @@ fmwww.bc.edu/repec/bocode/c/cs_ivreg2_3.1.08.do
 fmwww.bc.edu/repec/bocode/c/cseplist.ado
 fmwww.bc.edu/repec/bocode/c/convert_top_lines.html
 fmwww.bc.edu/repec/bocode/c/cgmwildboot.hlp
+fmwww.bc.edu/repec/bocode/c/codensity_examples.do
 fmwww.bc.edu/repec/bocode/c/csjl.ado
 fmwww.bc.edu/repec/bocode/c/clustergram.sthlp
 fmwww.bc.edu/repec/bocode/c/clustersampsim.sthlp
@@ -2494,6 +2496,7 @@ fmwww.bc.edu/repec/bocode/c/cquad.pkg
 fmwww.bc.edu/repec/bocode/c/clr_pb.ado
 fmwww.bc.edu/repec/bocode/c/cmatch.sthlp
 fmwww.bc.edu/repec/bocode/c/chunky8.html
+fmwww.bc.edu/repec/bocode/c/codensity.ado
 fmwww.bc.edu/repec/bocode/c/cngdf.ado
 fmwww.bc.edu/repec/bocode/c/combomarginsplot.sthlp
 fmwww.bc.edu/repec/bocode/c/cortesti.pkg
@@ -2675,6 +2678,7 @@ fmwww.bc.edu/repec/bocode/c/classtabi.sthlp
 fmwww.bc.edu/repec/bocode/c/cmi_interva.ado
 fmwww.bc.edu/repec/bocode/c/condisc.pkg
 fmwww.bc.edu/repec/bocode/c/choplist.hlp
+fmwww.bc.edu/repec/bocode/c/codensity.pkg
 fmwww.bc.edu/repec/bocode/c/caplog.hlp
 fmwww.bc.edu/repec/bocode/c/csumdgp.ado
 fmwww.bc.edu/repec/bocode/c/Ch04_2mod.do
@@ -3845,6 +3849,7 @@ fmwww.bc.edu/repec/bocode/p/pcm010101_lf.ado
 fmwww.bc.edu/repec/bocode/p/punafcc_p.ado
 fmwww.bc.edu/repec/bocode/p/phack_deround.sthlp
 fmwww.bc.edu/repec/bocode/p/psmatch27.ado
+fmwww.bc.edu/repec/bocode/p/palmer_penguins.dta
 fmwww.bc.edu/repec/bocode/p/pisacmd.sthlp
 fmwww.bc.edu/repec/bocode/p/pgamma4.ado
 fmwww.bc.edu/repec/bocode/p/parseloc.ado
@@ -14246,7 +14251,6 @@ fmwww.bc.edu/repec/bocode/m/multiline.sthlp
 fmwww.bc.edu/repec/bocode/m/mf_kdens.html
 fmwww.bc.edu/repec/bocode/m/matdelrc.hlp
 fmwww.bc.edu/repec/bocode/m/mici_warn2.hlp
-fmwww.bc.edu/repec/bocode/m/multidensity.pkg
 fmwww.bc.edu/repec/bocode/m/mcmcsummarize.ado
 fmwww.bc.edu/repec/bocode/m/metasim.sthlp
 fmwww.bc.edu/repec/bocode/m/matin4.html
