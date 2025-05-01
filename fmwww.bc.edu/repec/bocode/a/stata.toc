@@ -71,6 +71,7 @@ p anovaplot module for plots of anova fit, including interaction plots
 p anymatch module to perform distance matching based on any metric
 p anythingtodate module to convert all types of date variables to Stata date variables
 p apc module for estimating age-period-cohort effects
+p apcbound module providing tools to facilitate the Fosse-Winship bounding approach to APC analysis
 p apcd module for estimating age-period-cohort effects with detrended coefficients
 p apcgo module to calculate age-period-cohort effects for the gap between two groups (based on a Blinder-Oaxaca decomposition), including trends for each parameter
 p apch module for estimating age-period-cohort and hysteresis effects

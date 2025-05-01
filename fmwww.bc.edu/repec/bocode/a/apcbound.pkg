@@ -1,0 +1,26 @@
+d 'APCBOUND': module providing tools to facilitate the Fosse-Winship bounding approach to APC analysis
+d
+d  This package provides the tools to facilitate Fosse-Winship
+d bounding approach to Age-Period-Cohort (APC) analysis. It
+d includes 1) a wrapper command for the estimation of APC models
+d (apcest), 2) a command for optimizing bounded solutions for the
+d linear components of APC effects given explicit assumptions
+d (apcbound), and 3) a command for inspecting and visualizing APC
+d effects (apcplot). 
+d
+d KW: bounding approach
+d KW: APC analysis
+d
+d Requires: Stata version 18 and palettes from SSC (q.v.)
+d
+d Distribution-Date: 20250430
+d
+d Author:  Gordey Yastrebov, Department of Sociology and Social Psychology, University of Cologne
+d Support: email gordey.yastrebov@@gmail.com
+d
+f apcbound.ado
+f apcbound.sthlp
+f apcest.ado
+f apcest.sthlp
+f apcplot.ado
+f apcplot.sthlp

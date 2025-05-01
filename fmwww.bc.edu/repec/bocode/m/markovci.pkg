@@ -1,0 +1,25 @@
+d 'MARKOVCI': module for computing nonparametric bootstrapped confidence intervals for discrete time Markov chains
+d
+d  markovci bootstraps randomly generated data sequences based on
+d the transition probabilities from an underlying discrete time
+d Markov chain (using randmarkovseq as the data generating process)
+d and produces nonparametric confidence intervals. 
+d
+d KW:  Markov chain model
+d KW: discrete time Markov chain
+d KW: transition table
+d KW: simulation
+d KW: bootstrap
+d KW: confidence interval
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250430
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f markovci.ado
+f markovci.sthlp
+f ../r/randmarkovseq.ado
+f ../r/randmarkovseq.sthlp
