@@ -1,0 +1,22 @@
+d 'DESCRIPTIVE_TABLE': module to produce  Descriptive table with suppression of small cell counts in an active Word (.docx) document
+d
+d      descriptive_table creates a descriptive table, optionally
+d with suppression in an active    Word document generated using
+d [RPT] putdocx.     The suppression algorithm is meant to suppress
+d values below the threshold AND a    sufficient number of other
+d cells to avoid deriving the suppressed values by simple   
+d addition or subtraction across rows or columns. 
+d
+d KW: data managemnt
+d KW: tables
+d KW: Word
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20250501
+d
+d Author:  Christiaan Righolt,  University of Manitoba
+d Support: email crigholt@@orthoinno.com
+d
+f descriptive_table.ado
+f descriptive_table.sthlp

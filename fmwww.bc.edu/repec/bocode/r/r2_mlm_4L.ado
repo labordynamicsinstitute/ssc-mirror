@@ -1,4 +1,4 @@
-program mlmr2_4L, rclass sortpreserve
+program r2_mlm_4L, rclass sortpreserve
 	version 17
 	syntax [, ]
 	qui _estimates hold mixedest, copy restore
@@ -702,78 +702,139 @@ program mlmr2_4L, rclass sortpreserve
 	sca `R2_L2_t' = `var2'/`tvar'
 	sca `R2_L3_t' = `var3'/`tvar'
 	sca `R2_L4_t' = `var4'/`tvar'
-	di "{txt}mlmr2: R-Squared Measures for Mixed Models"
-	di _newline"  Level-1 Model-Implied Variance of ""`dv'"" = {res}" `var1' "{txt} (Prop. of Total = {res}" %5.4f `R2_L1_t' "{txt})"_continue
-	di _newline"  Level-2 Model-Implied Variance of ""`dv'"" = {res}" `var2' "{txt} (Prop. of Total = {res}" %5.4f `R2_L2_t' "{txt})"_continue
-	di _newline"  Level-3 Model-Implied Variance of ""`dv'"" = {res}" `var3' "{txt} (Prop. of Total = {res}" %5.4f `R2_L3_t' "{txt})"_continue
-	di _newline"  Level-4 Model-Implied Variance of ""`dv'"" = {res}" `var4' "{txt} (Prop. of Total = {res}" %5.4f `R2_L4_t' "{txt})"_continue
-	di _newline"    Total Model-Implied Variance of ""`dv'"" = {res}" `tvar'
-	di _newline"{txt}{hline 16}{c TT}{hline 68}"_continue
-	di _newline"   R-Squared    {c |}                           Interpretation                           "_continue
-	di _newline"{hline 16}{c +}{hline 68}"_continue
-	di _newline"    Level-1     {c |}       Proportion of level-1 outcome variance explained by...       "_continue
-	di _newline"{hline 16}{c +}{hline 68}"_continue
-	di _newline"  R2f1 = {res}" %5.4f `R2_f1_1'  "{txt} {c |} the level-1 portion of predictors via fixed slopes.                "_continue
-	di _newline" R2v12 = {res}" %5.4f `R2_v12_1' "{txt} {c |} the level-1 portion of predictors via level-2 random slope (co)var."_continue
-	di _newline" R2v13 = {res}" %5.4f `R2_v13_1' "{txt} {c |} the level-1 portion of predictors via level-3 random slope (co)var."_continue
-	di _newline" R2v14 = {res}" %5.4f `R2_v14_1' "{txt} {c |} the level-1 portion of predictors via level-4 random slope (co)var."_continue
-	di _newline" Resid = {res}" %5.4f `Resid_1'  "{txt} {c |} level-1 residuals (i.e., proportion of unexplained variance).      "_continue
-	di _newline"{hline 16}{c +}{hline 68}"_continue
-	di _newline"    Level-2     {c |}       Proportion of level-2 outcome variance explained by...       "_continue
-	di _newline"{hline 16}{c +}{hline 68}"_continue
-	di _newline"  R2f2 = {res}" %5.4f `R2_f2_2'  "{txt} {c |} the level-2 portion of predictors via fixed slopes.                "_continue
-	di _newline" R2v22 = {res}" %5.4f `R2_v22_2' "{txt} {c |} the level-2 portion of predictors via level-2 random slope (co)var."_continue
-	di _newline" R2v23 = {res}" %5.4f `R2_v23_2' "{txt} {c |} the level-2 portion of predictors via level-3 random slope (co)var."_continue
-	di _newline" R2v24 = {res}" %5.4f `R2_v24_2' "{txt} {c |} the level-2 portion of predictors via level-4 random slope (co)var."_continue
-	di _newline"  R2m2 = {res}" %5.4f `R2_m2_2'  "{txt} {c |} level-2 outcome means via level-2 random intercept variation.      "_continue
-	di _newline"{hline 16}{c +}{hline 68}"_continue
-	di _newline"    Level-3     {c |}       Proportion of level-3 outcome variance explained by...       "_continue
-	di _newline"{hline 16}{c +}{hline 68}"_continue
-	di _newline"  R2f3 = {res}" %5.4f `R2_f3_3'  "{txt} {c |} the level-3 portion of predictors via fixed slopes.                "_continue
-	di _newline" R2v32 = {res}" %5.4f `R2_v32_3' "{txt} {c |} the level-3 portion of predictors via level-2 random slope (co)var."_continue
-	di _newline" R2v33 = {res}" %5.4f `R2_v33_3' "{txt} {c |} the level-3 portion of predictors via level-3 random slope (co)var."_continue
-	di _newline" R2v34 = {res}" %5.4f `R2_v34_3' "{txt} {c |} the level-3 portion of predictors via level-4 random slope (co)var."_continue
-	di _newline"  R2m3 = {res}" %5.4f `R2_m3_3'  "{txt} {c |} level-3 outcome means via level-3 random intercept variation.      "_continue
-	di _newline"{hline 16}{c +}{hline 68}"_continue
-	di _newline"    Level-4     {c |}       Proportion of level-4 outcome variance explained by...       "_continue
-	di _newline"{hline 16}{c +}{hline 68}"_continue
-	di _newline"  R2f4 = {res}" %5.4f `R2_f4_4'  "{txt} {c |} the level-4 portion of predictors via fixed slopes.                "_continue
-	di _newline" R2v42 = {res}" %5.4f `R2_v42_4' "{txt} {c |} the level-4 portion of predictors via level-2 random slope (co)var."_continue
-	di _newline" R2v43 = {res}" %5.4f `R2_v43_4' "{txt} {c |} the level-4 portion of predictors via level-3 random slope (co)var."_continue
-	di _newline" R2v44 = {res}" %5.4f `R2_v44_4' "{txt} {c |} the level-4 portion of predictors via level-4 random slope (co)var."_continue
-	di _newline"  R2m4 = {res}" %5.4f `R2_m4_4'  "{txt} {c |} level-4 outcome means via level-4 random intercept variation.      "_continue
-	di _newline"{hline 16}{c +}{hline 68}"_continue
-	di _newline"     Total      {c |}        Proportion of total outcome variance explained by...        "_continue
-	di _newline"{hline 16}{c +}{hline 68}"_continue
-	di _newline"  R2f1 = {res}" %5.4f `R2_f1_t'  "{txt} {c |} the level-1 portion of predictors via fixed slopes.                "_continue
-	di _newline"  R2f2 = {res}" %5.4f `R2_f2_t'  "{txt} {c |} the level-2 portion of predictors via fixed slopes.                "_continue
-	di _newline"  R2f3 = {res}" %5.4f `R2_f3_t'  "{txt} {c |} the level-3 portion of predictors via fixed slopes.                "_continue
-	di _newline"  R2f4 = {res}" %5.4f `R2_f4_t'  "{txt} {c |} the level-4 portion of predictors via fixed slopes.                "_continue
-	di _newline" R2v12 = {res}" %5.4f `R2_v12_t' "{txt} {c |} the level-1 portion of predictors via level-2 random slope (co)var."_continue
-	di _newline" R2v22 = {res}" %5.4f `R2_v22_t' "{txt} {c |} the level-2 portion of predictors via level-2 random slope (co)var."_continue
-	di _newline" R2v32 = {res}" %5.4f `R2_v32_t' "{txt} {c |} the level-3 portion of predictors via level-2 random slope (co)var."_continue
-	di _newline" R2v42 = {res}" %5.4f `R2_v42_t' "{txt} {c |} the level-4 portion of predictors via level-2 random slope (co)var."_continue
-	di _newline"  R2v2 = {res}" %5.4f `R2_v2_t'  "{txt} {c |} all predictors via level-2 random slope (co)variation.             "_continue
-	di _newline" R2v13 = {res}" %5.4f `R2_v13_t' "{txt} {c |} the level-1 portion of predictors via level-3 random slope (co)var."_continue
-	di _newline" R2v23 = {res}" %5.4f `R2_v23_t' "{txt} {c |} the level-2 portion of predictors via level-3 random slope (co)var."_continue
-	di _newline" R2v33 = {res}" %5.4f `R2_v33_t' "{txt} {c |} the level-3 portion of predictors via level-3 random slope (co)var."_continue
-	di _newline" R2v43 = {res}" %5.4f `R2_v43_t' "{txt} {c |} the level-4 portion of predictors via level-3 random slope (co)var."_continue
-	di _newline"  R2v3 = {res}" %5.4f `R2_v3_t'  "{txt} {c |} all predictors via level-3 random slope (co)variation.             "_continue
-	di _newline" R2v14 = {res}" %5.4f `R2_v14_t' "{txt} {c |} the level-1 portion of predictors via level-4 random slope (co)var."_continue
-	di _newline" R2v24 = {res}" %5.4f `R2_v24_t' "{txt} {c |} the level-2 portion of predictors via level-4 random slope (co)var."_continue
-	di _newline" R2v34 = {res}" %5.4f `R2_v34_t' "{txt} {c |} the level-3 portion of predictors via level-4 random slope (co)var."_continue
-	di _newline" R2v44 = {res}" %5.4f `R2_v44_t' "{txt} {c |} the level-4 portion of predictors via level-4 random slope (co)var."_continue
-	di _newline"  R2v4 = {res}" %5.4f `R2_v4_t'  "{txt} {c |} all predictors via level-4 random slope (co)variation.             "_continue
-	di _newline"  R2m2 = {res}" %5.4f `R2_m2_t'  "{txt} {c |} level-2 outcome means via level-2 random intercept variation.      "_continue
-	di _newline"  R2m3 = {res}" %5.4f `R2_m3_t'  "{txt} {c |} level-3 outcome means via level-3 random intercept variation.      "_continue
-	di _newline"  R2m4 = {res}" %5.4f `R2_m4_t'  "{txt} {c |} level-4 outcome means via level-4 random intercept variation.      "_continue
-	di _newline"   R2f = {res}" %5.4f `R2_f_t'   "{txt} {c |} all predictors via fixed slopes.                                   "_continue
-	di _newline"   R2v = {res}" %5.4f `R2_v_t'   "{txt} {c |} all predictors via random slope (co)variation.                     "_continue
-	di _newline"   R2m = {res}" %5.4f `R2_m_t'   "{txt} {c |} all outcome means via random intercept variation.                  "_continue
-	di _newline"  R2fv = {res}" %5.4f `R2_fv_t'  "{txt} {c |} all predictors via fixed slopes and random slope (co)variation.    "_continue
-	di _newline" R2fvm = {res}" %5.4f `R2_fvm_t' "{txt} {c |} the whole model.                                                   "_continue
-	di _newline" Resid = {res}" %5.4f `Resid_t'  "{txt} {c |} level-1 residuals (i.e., proportion of unexplained variance).      "_continue
-	di _newline"{hline 16}{c BT}{hline 68}"	
+	if (`R2_v22_2' >= 10^-5 & !mi(`R2_v22_2')) | (`R2_v32_3' >= 10^-5 & !mi(`R2_v32_3')) | (`R2_v33_3' >= 10^-5 & !mi(`R2_v33_3')) | (`R2_v42_4' >= 10^-5 & !mi(`R2_v42_4')) | (`R2_v43_4' >= 10^-5 & !mi(`R2_v43_4')) | (`R2_v44_4' >= 10^-5 & !mi(`R2_v44_4')) {
+		di _newline"{txt}r2_mlm: R-Squared Measures for Mixed Models"
+		di _newline"  Level-1 Model-Implied Variance of ""`dv'"" = {res}" `var1' "{txt} (Prop. of Total = {res}" %5.4f `R2_L1_t' "{txt})"_continue
+		di _newline"  Level-2 Model-Implied Variance of ""`dv'"" = {res}" `var2' "{txt} (Prop. of Total = {res}" %5.4f `R2_L2_t' "{txt})"_continue
+		di _newline"  Level-3 Model-Implied Variance of ""`dv'"" = {res}" `var3' "{txt} (Prop. of Total = {res}" %5.4f `R2_L3_t' "{txt})"_continue
+		di _newline"  Level-4 Model-Implied Variance of ""`dv'"" = {res}" `var4' "{txt} (Prop. of Total = {res}" %5.4f `R2_L4_t' "{txt})"_continue
+		di _newline"    Total Model-Implied Variance of ""`dv'"" = {res}" `tvar'
+		di _newline"{txt}{hline 16}{c TT}{hline 68}"_continue
+		di _newline"   R-Squared    {c |}                           Interpretation                           "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"    Level-1     {c |}       Proportion of level-1 outcome variance explained by...       "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"  R2f1 = {res}" %5.4f `R2_f1_1'  "{txt} {c |} the level-1 portion of predictors via fixed slopes.                "_continue
+		di _newline" R2v12 = {res}" %5.4f `R2_v12_1' "{txt} {c |} the level-1 portion of predictors via level-2 random slope (co)var."_continue
+		di _newline" R2v13 = {res}" %5.4f `R2_v13_1' "{txt} {c |} the level-1 portion of predictors via level-3 random slope (co)var."_continue
+		di _newline" R2v14 = {res}" %5.4f `R2_v14_1' "{txt} {c |} the level-1 portion of predictors via level-4 random slope (co)var."_continue
+		di _newline" Resid = {res}" %5.4f `Resid_1'  "{txt} {c |} level-1 residuals (i.e., proportion of unexplained variance).      "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"    Level-2     {c |}       Proportion of level-2 outcome variance explained by...       "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"  R2f2 = {res}" %5.4f `R2_f2_2'  "{txt} {c |} the level-2 portion of predictors via fixed slopes.                "_continue
+		di _newline" R2v22 = {res}" %5.4f `R2_v22_2' "{txt} {c |} the level-2 portion of predictors via level-2 random slope (co)var."_continue
+		di _newline" R2v23 = {res}" %5.4f `R2_v23_2' "{txt} {c |} the level-2 portion of predictors via level-3 random slope (co)var."_continue
+		di _newline" R2v24 = {res}" %5.4f `R2_v24_2' "{txt} {c |} the level-2 portion of predictors via level-4 random slope (co)var."_continue
+		di _newline"  R2m2 = {res}" %5.4f `R2_m2_2'  "{txt} {c |} level-2 outcome means via level-2 random intercept variation.      "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"    Level-3     {c |}       Proportion of level-3 outcome variance explained by...       "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"  R2f3 = {res}" %5.4f `R2_f3_3'  "{txt} {c |} the level-3 portion of predictors via fixed slopes.                "_continue
+		di _newline" R2v32 = {res}" %5.4f `R2_v32_3' "{txt} {c |} the level-3 portion of predictors via level-2 random slope (co)var."_continue
+		di _newline" R2v33 = {res}" %5.4f `R2_v33_3' "{txt} {c |} the level-3 portion of predictors via level-3 random slope (co)var."_continue
+		di _newline" R2v34 = {res}" %5.4f `R2_v34_3' "{txt} {c |} the level-3 portion of predictors via level-4 random slope (co)var."_continue
+		di _newline"  R2m3 = {res}" %5.4f `R2_m3_3'  "{txt} {c |} level-3 outcome means via level-3 random intercept variation.      "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"    Level-4     {c |}       Proportion of level-4 outcome variance explained by...       "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"  R2f4 = {res}" %5.4f `R2_f4_4'  "{txt} {c |} the level-4 portion of predictors via fixed slopes.                "_continue
+		di _newline" R2v42 = {res}" %5.4f `R2_v42_4' "{txt} {c |} the level-4 portion of predictors via level-2 random slope (co)var."_continue
+		di _newline" R2v43 = {res}" %5.4f `R2_v43_4' "{txt} {c |} the level-4 portion of predictors via level-3 random slope (co)var."_continue
+		di _newline" R2v44 = {res}" %5.4f `R2_v44_4' "{txt} {c |} the level-4 portion of predictors via level-4 random slope (co)var."_continue
+		di _newline"  R2m4 = {res}" %5.4f `R2_m4_4'  "{txt} {c |} level-4 outcome means via level-4 random intercept variation.      "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"     Total      {c |}        Proportion of total outcome variance explained by...        "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"  R2f1 = {res}" %5.4f `R2_f1_t'  "{txt} {c |} the level-1 portion of predictors via fixed slopes.                "_continue
+		di _newline"  R2f2 = {res}" %5.4f `R2_f2_t'  "{txt} {c |} the level-2 portion of predictors via fixed slopes.                "_continue
+		di _newline"  R2f3 = {res}" %5.4f `R2_f3_t'  "{txt} {c |} the level-3 portion of predictors via fixed slopes.                "_continue
+		di _newline"  R2f4 = {res}" %5.4f `R2_f4_t'  "{txt} {c |} the level-4 portion of predictors via fixed slopes.                "_continue
+		di _newline" R2v12 = {res}" %5.4f `R2_v12_t' "{txt} {c |} the level-1 portion of predictors via level-2 random slope (co)var."_continue
+		di _newline" R2v22 = {res}" %5.4f `R2_v22_t' "{txt} {c |} the level-2 portion of predictors via level-2 random slope (co)var."_continue
+		di _newline" R2v32 = {res}" %5.4f `R2_v32_t' "{txt} {c |} the level-3 portion of predictors via level-2 random slope (co)var."_continue
+		di _newline" R2v42 = {res}" %5.4f `R2_v42_t' "{txt} {c |} the level-4 portion of predictors via level-2 random slope (co)var."_continue
+		di _newline"  R2v2 = {res}" %5.4f `R2_v2_t'  "{txt} {c |} all predictors via level-2 random slope (co)variation.             "_continue
+		di _newline" R2v13 = {res}" %5.4f `R2_v13_t' "{txt} {c |} the level-1 portion of predictors via level-3 random slope (co)var."_continue
+		di _newline" R2v23 = {res}" %5.4f `R2_v23_t' "{txt} {c |} the level-2 portion of predictors via level-3 random slope (co)var."_continue
+		di _newline" R2v33 = {res}" %5.4f `R2_v33_t' "{txt} {c |} the level-3 portion of predictors via level-3 random slope (co)var."_continue
+		di _newline" R2v43 = {res}" %5.4f `R2_v43_t' "{txt} {c |} the level-4 portion of predictors via level-3 random slope (co)var."_continue
+		di _newline"  R2v3 = {res}" %5.4f `R2_v3_t'  "{txt} {c |} all predictors via level-3 random slope (co)variation.             "_continue
+		di _newline" R2v14 = {res}" %5.4f `R2_v14_t' "{txt} {c |} the level-1 portion of predictors via level-4 random slope (co)var."_continue
+		di _newline" R2v24 = {res}" %5.4f `R2_v24_t' "{txt} {c |} the level-2 portion of predictors via level-4 random slope (co)var."_continue
+		di _newline" R2v34 = {res}" %5.4f `R2_v34_t' "{txt} {c |} the level-3 portion of predictors via level-4 random slope (co)var."_continue
+		di _newline" R2v44 = {res}" %5.4f `R2_v44_t' "{txt} {c |} the level-4 portion of predictors via level-4 random slope (co)var."_continue
+		di _newline"  R2v4 = {res}" %5.4f `R2_v4_t'  "{txt} {c |} all predictors via level-4 random slope (co)variation.             "_continue
+		di _newline"  R2m2 = {res}" %5.4f `R2_m2_t'  "{txt} {c |} level-2 outcome means via level-2 random intercept variation.      "_continue
+		di _newline"  R2m3 = {res}" %5.4f `R2_m3_t'  "{txt} {c |} level-3 outcome means via level-3 random intercept variation.      "_continue
+		di _newline"  R2m4 = {res}" %5.4f `R2_m4_t'  "{txt} {c |} level-4 outcome means via level-4 random intercept variation.      "_continue
+		di _newline"   R2f = {res}" %5.4f `R2_f_t'   "{txt} {c |} all predictors via fixed slopes.                                   "_continue
+		di _newline"   R2v = {res}" %5.4f `R2_v_t'   "{txt} {c |} all predictors via random slope (co)variation.                     "_continue
+		di _newline"   R2m = {res}" %5.4f `R2_m_t'   "{txt} {c |} all outcome means via random intercept variation.                  "_continue
+		di _newline"  R2fv = {res}" %5.4f `R2_fv_t'  "{txt} {c |} all predictors via fixed slopes and random slope (co)variation.    "_continue
+		di _newline" R2fvm = {res}" %5.4f `R2_fvm_t' "{txt} {c |} the whole model.                                                   "_continue
+		di _newline" Resid = {res}" %5.4f `Resid_t'  "{txt} {c |} level-1 residuals (i.e., proportion of unexplained variance).      "_continue
+		di _newline"{hline 16}{c BT}{hline 68}"
+	}
+	else {
+		di _newline"{txt}r2_mlm: R-Squared Measures for Mixed Models"
+		di _newline"  Level-1 Model-Implied Variance of ""`dv'"" = {res}" `var1' "{txt} (Prop. of Total = {res}" %5.4f `R2_L1_t' "{txt})"_continue
+		di _newline"  Level-2 Model-Implied Variance of ""`dv'"" = {res}" `var2' "{txt} (Prop. of Total = {res}" %5.4f `R2_L2_t' "{txt})"_continue
+		di _newline"  Level-3 Model-Implied Variance of ""`dv'"" = {res}" `var3' "{txt} (Prop. of Total = {res}" %5.4f `R2_L3_t' "{txt})"_continue
+		di _newline"  Level-4 Model-Implied Variance of ""`dv'"" = {res}" `var4' "{txt} (Prop. of Total = {res}" %5.4f `R2_L4_t' "{txt})"_continue
+		di _newline"    Total Model-Implied Variance of ""`dv'"" = {res}" `tvar'
+		di _newline"{txt}{hline 16}{c TT}{hline 68}"_continue
+		di _newline"   R-Squared    {c |}                           Interpretation                           "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"    Level-1     {c |}       Proportion of level-1 outcome variance explained by...       "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"  R2f1 = {res}" %5.4f `R2_f1_1'  "{txt} {c |} the level-1 portion of predictors via fixed slopes.                "_continue
+		di _newline" R2v12 = {res}" %5.4f `R2_v12_1' "{txt} {c |} the level-1 portion of predictors via level-2 random slope (co)var."_continue
+		di _newline" R2v13 = {res}" %5.4f `R2_v13_1' "{txt} {c |} the level-1 portion of predictors via level-3 random slope (co)var."_continue
+		di _newline" R2v14 = {res}" %5.4f `R2_v14_1' "{txt} {c |} the level-1 portion of predictors via level-4 random slope (co)var."_continue
+		di _newline" Resid = {res}" %5.4f `Resid_1'  "{txt} {c |} level-1 residuals (i.e., proportion of unexplained variance).      "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"    Level-2     {c |}       Proportion of level-2 outcome variance explained by...       "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"  R2f2 = {res}" %5.4f `R2_f2_2'  "{txt} {c |} the level-2 portion of predictors via fixed slopes.                "_continue
+		di _newline" R2v23 = {res}" %5.4f `R2_v23_2' "{txt} {c |} the level-2 portion of predictors via level-3 random slope (co)var."_continue
+		di _newline" R2v24 = {res}" %5.4f `R2_v24_2' "{txt} {c |} the level-2 portion of predictors via level-4 random slope (co)var."_continue
+		di _newline"  R2m2 = {res}" %5.4f `R2_m2_2'  "{txt} {c |} level-2 outcome means via level-2 random intercept variation.      "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"    Level-3     {c |}       Proportion of level-3 outcome variance explained by...       "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"  R2f3 = {res}" %5.4f `R2_f3_3'  "{txt} {c |} the level-3 portion of predictors via fixed slopes.                "_continue
+		di _newline" R2v34 = {res}" %5.4f `R2_v34_3' "{txt} {c |} the level-3 portion of predictors via level-4 random slope (co)var."_continue
+		di _newline"  R2m3 = {res}" %5.4f `R2_m3_3'  "{txt} {c |} level-3 outcome means via level-3 random intercept variation.      "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"    Level-4     {c |}       Proportion of level-4 outcome variance explained by...       "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"  R2f4 = {res}" %5.4f `R2_f4_4'  "{txt} {c |} the level-4 portion of predictors via fixed slopes.                "_continue
+		di _newline"  R2m4 = {res}" %5.4f `R2_m4_4'  "{txt} {c |} level-4 outcome means via level-4 random intercept variation.      "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"     Total      {c |}        Proportion of total outcome variance explained by...        "_continue
+		di _newline"{hline 16}{c +}{hline 68}"_continue
+		di _newline"  R2f1 = {res}" %5.4f `R2_f1_t'  "{txt} {c |} the level-1 portion of predictors via fixed slopes.                "_continue
+		di _newline"  R2f2 = {res}" %5.4f `R2_f2_t'  "{txt} {c |} the level-2 portion of predictors via fixed slopes.                "_continue
+		di _newline"  R2f3 = {res}" %5.4f `R2_f3_t'  "{txt} {c |} the level-3 portion of predictors via fixed slopes.                "_continue
+		di _newline"  R2f4 = {res}" %5.4f `R2_f4_t'  "{txt} {c |} the level-4 portion of predictors via fixed slopes.                "_continue
+		di _newline" R2v12 = {res}" %5.4f `R2_v12_t' "{txt} {c |} the level-1 portion of predictors via level-2 random slope (co)var."_continue
+		di _newline" R2v13 = {res}" %5.4f `R2_v13_t' "{txt} {c |} the level-1 portion of predictors via level-3 random slope (co)var."_continue
+		di _newline" R2v14 = {res}" %5.4f `R2_v14_t' "{txt} {c |} the level-1 portion of predictors via level-4 random slope (co)var."_continue
+		di _newline" R2v23 = {res}" %5.4f `R2_v23_t' "{txt} {c |} the level-2 portion of predictors via level-3 random slope (co)var."_continue
+		di _newline" R2v24 = {res}" %5.4f `R2_v24_t' "{txt} {c |} the level-2 portion of predictors via level-4 random slope (co)var."_continue
+		di _newline" R2v34 = {res}" %5.4f `R2_v34_t' "{txt} {c |} the level-3 portion of predictors via level-4 random slope (co)var."_continue
+		di _newline"  R2m2 = {res}" %5.4f `R2_m2_t'  "{txt} {c |} level-2 outcome means via level-2 random intercept variation.      "_continue
+		di _newline"  R2m3 = {res}" %5.4f `R2_m3_t'  "{txt} {c |} level-3 outcome means via level-3 random intercept variation.      "_continue
+		di _newline"  R2m4 = {res}" %5.4f `R2_m4_t'  "{txt} {c |} level-4 outcome means via level-4 random intercept variation.      "_continue
+		di _newline"   R2f = {res}" %5.4f `R2_f_t'   "{txt} {c |} all predictors via fixed slopes.                                   "_continue
+		di _newline"   R2v = {res}" %5.4f `R2_v_t'   "{txt} {c |} all predictors via random slope (co)variation.                     "_continue
+		di _newline"   R2m = {res}" %5.4f `R2_m_t'   "{txt} {c |} all outcome means via random intercept variation.                  "_continue
+		di _newline"  R2fv = {res}" %5.4f `R2_fv_t'  "{txt} {c |} all predictors via fixed slopes and random slope (co)variation.    "_continue
+		di _newline" R2fvm = {res}" %5.4f `R2_fvm_t' "{txt} {c |} the whole model.                                                   "_continue
+		di _newline" Resid = {res}" %5.4f `Resid_t'  "{txt} {c |} level-1 residuals (i.e., proportion of unexplained variance).      "_continue
+		di _newline"{hline 16}{c BT}{hline 68}"
+	}
 	if wordcount("`fvlist'")>0 & !mi("`fvlist'") {
 		loc i = 1
 		foreach var of varlist `fvfvlist' {
@@ -781,25 +842,25 @@ program mlmr2_4L, rclass sortpreserve
 			qui su `v`i'_1' if e(sample)
 			sca `v`i'_1var' = r(Var)
 			loc v`i'_1vc = 0
-			if `v`i'_1var'>=10^-10 & !mi(`v`i'_1var') {
+			if `v`i'_1var'>=10^-8 & !mi(`v`i'_1var') {
 				loc v`i'_1vc = 1
 			}
 			qui su `v`i'_2' if e(sample)
 			sca `v`i'_2var' = r(Var)
 			loc v`i'_2vc = 0
-			if `v`i'_2var'>=10^-10 & !mi(`v`i'_2var') {
+			if `v`i'_2var'>=10^-8 & !mi(`v`i'_2var') {
 				loc v`i'_2vc = 1
 			}
 			qui su `v`i'_3' if e(sample)
 			sca `v`i'_3var' = r(Var)
 			loc v`i'_3vc = 0
-			if `v`i'_3var'>=10^-10 & !mi(`v`i'_3var') {
+			if `v`i'_3var'>=10^-8 & !mi(`v`i'_3var') {
 				loc v`i'_3vc = 1
 			}
 			qui su `v`i'_4m' if e(sample)
 			sca `v`i'_4mvar' = r(Var)
 			loc v`i'_4mvc = 0
-			if `v`i'_4mvar'>=10^-10 & !mi(`v`i'_4mvar') {
+			if `v`i'_4mvar'>=10^-8 & !mi(`v`i'_4mvar') {
 				loc v`i'_4mvc = 1
 			}
 			if `v`i'_1vc'==1 & `v`i'_2vc'==1 & `v`i'_3vc'==0 & `v`i'_4mvc'==0 {
@@ -813,7 +874,7 @@ program mlmr2_4L, rclass sortpreserve
 						cap gen double `diff`i'' = `v`i'_2m'-`fv' if e(sample)
 						qui su `diff`i'' if e(sample)
 						sca `diff`i'_var' = r(Var)
-						if `diff`i'_var'<10^-10 {
+						if `diff`i'_var'<10^-8 {
 							loc unconf2m = `unconf2m'+1
 						}
 					}
@@ -834,7 +895,7 @@ program mlmr2_4L, rclass sortpreserve
 						cap gen double `diff`i'' = `v`i'_3m'-`fv' if e(sample)
 						qui su `diff`i'' if e(sample)
 						sca `diff`i'_var' = r(Var)
-						if `diff`i'_var'<10^-10 {
+						if `diff`i'_var'<10^-8 {
 							loc unconf3m = `unconf3m'+1
 						}
 					}
@@ -855,7 +916,7 @@ program mlmr2_4L, rclass sortpreserve
 						cap gen double `diff`i'' = `v`i'_4m'-`fv' if e(sample)
 						qui su `diff`i'' if e(sample)
 						sca `diff`i'_var' = r(Var)
-						if `diff`i'_var'<10^-10 {
+						if `diff`i'_var'<10^-8 {
 							loc unconf4m = `unconf4m'+1
 						}
 					}
@@ -884,13 +945,13 @@ program mlmr2_4L, rclass sortpreserve
 						cap gen double `diff`i'_4m' = `v`i'_4m'-`fv' if e(sample)
 						qui su `diff`i'_4m' if e(sample)
 						sca `diff`i'_4m_var' = r(Var)
-						if `diff`i'_3m_var'<10^-10 {
+						if `diff`i'_3m_var'<10^-8 {
 							loc unconf3m = `unconf3m'+1
 						}
-						if `diff`i'_3_var'<10^-10 {
+						if `diff`i'_3_var'<10^-8 {
 							loc unconf3 = `unconf3'+1
 						}
-						if `diff`i'_4m_var'<10^-10 {
+						if `diff`i'_4m_var'<10^-8 {
 							loc unconf4m = `unconf4m'+1
 						}
 					}
@@ -922,13 +983,13 @@ program mlmr2_4L, rclass sortpreserve
 						cap gen double `diff`i'_4m' = `v`i'_4m'-`fv' if e(sample)
 						qui su `diff`i'_4m' if e(sample)
 						sca `diff`i'_4m_var' = r(Var)
-						if `diff`i'_2m_var'<10^-10 {
+						if `diff`i'_2m_var'<10^-8 {
 							loc unconf2m = `unconf2m'+1
 						}
-						if `diff`i'_2_var'<10^-10 {
+						if `diff`i'_2_var'<10^-8 {
 							loc unconf2 = `unconf2'+1
 						}
-						if `diff`i'_4m_var'<10^-10 {
+						if `diff`i'_4m_var'<10^-8 {
 							loc unconf4m = `unconf4m'+1
 						}
 					}
@@ -960,13 +1021,13 @@ program mlmr2_4L, rclass sortpreserve
 						cap gen double `diff`i'_3m' = `v`i'_3m'-`fv' if e(sample)
 						qui su `diff`i'_3m' if e(sample)
 						sca `diff`i'_3m_var' = r(Var)
-						if `diff`i'_2m_var'<10^-10 {
+						if `diff`i'_2m_var'<10^-8 {
 							loc unconf2m = `unconf2m'+1
 						}
-						if `diff`i'_2_var'<10^-10 {
+						if `diff`i'_2_var'<10^-8 {
 							loc unconf2 = `unconf2'+1
 						}
-						if `diff`i'_3m_var'<10^-10 {
+						if `diff`i'_3m_var'<10^-8 {
 							loc unconf3m = `unconf3m'+1
 						}
 					}
@@ -1006,19 +1067,19 @@ program mlmr2_4L, rclass sortpreserve
 						cap gen double `diff`i'_4m' = `v`i'_4m'-`fv' if e(sample)
 						qui su `diff`i'_4m' if e(sample)
 						sca `diff`i'_4m_var' = r(Var)
-						if `diff`i'_2m_var'<10^-10 {
+						if `diff`i'_2m_var'<10^-8 {
 							loc unconf2m = `unconf2m'+1
 						}
-						if `diff`i'_2_var'<10^-10 {
+						if `diff`i'_2_var'<10^-8 {
 							loc unconf2 = `unconf2'+1
 						}
-						if `diff`i'_3m_var'<10^-10 {
+						if `diff`i'_3m_var'<10^-8 {
 							loc unconf3m = `unconf3m'+1
 						}
-						if `diff`i'_3_var'<10^-10 {
+						if `diff`i'_3_var'<10^-8 {
 							loc unconf3 = `unconf3'+1
 						}
-						if `diff`i'_4m_var'<10^-10 {
+						if `diff`i'_4m_var'<10^-8 {
 							loc unconf4m = `unconf4m'+1
 						}
 					}
@@ -1051,25 +1112,25 @@ program mlmr2_4L, rclass sortpreserve
 				qui su `v`i'_1`q'' if e(sample)
 				sca `v`i'_1`q'var' = r(Var)
 				loc v`i'_1`q'vc = 0
-				if `v`i'_1`q'var'>=10^-10 & !mi(`v`i'_1`q'var') {
+				if `v`i'_1`q'var'>=10^-8 & !mi(`v`i'_1`q'var') {
 					loc v`i'_1`q'vc = 1
 				}
 				qui su `v`i'_2`q'' if e(sample)
 				sca `v`i'_2`q'var' = r(Var)
 				loc v`i'_2`q'vc = 0
-				if `v`i'_2`q'var'>=10^-10 & !mi(`v`i'_2`q'var') {
+				if `v`i'_2`q'var'>=10^-8 & !mi(`v`i'_2`q'var') {
 					loc v`i'_2`q'vc = 1
 				}
 				qui su `v`i'_3`q'' if e(sample)
 				sca `v`i'_3`q'var' = r(Var)
 				loc v`i'_3`q'vc = 0
-				if `v`i'_3`q'var'>=10^-10 & !mi(`v`i'_3`q'var') {
+				if `v`i'_3`q'var'>=10^-8 & !mi(`v`i'_3`q'var') {
 					loc v`i'_3`q'vc = 1
 				}
 				qui su `v`i'_4m`q'' if e(sample)
 				sca `v`i'_4m`q'var' = r(Var)
 				loc v`i'_4m`q'vc = 0
-				if `v`i'_4m`q'var'>=10^-10 & !mi(`v`i'_4m`q'var') {
+				if `v`i'_4m`q'var'>=10^-8 & !mi(`v`i'_4m`q'var') {
 					loc v`i'_4m`q'vc = 1
 				}
 				if `v`i'_1`q'vc'==1 & `v`i'_2`q'vc'==1 & `v`i'_3`q'vc'==0 & `v`i'_4m`q'vc'==0 {
@@ -1083,7 +1144,7 @@ program mlmr2_4L, rclass sortpreserve
 							cap gen double `diff`q'_`i'' = `v`i'_2m`q''-`fv`q'' if e(sample)
 							qui su `diff`q'_`i'' if e(sample)
 							sca `diff`q'_`i'_var' = r(Var)
-							if `diff`q'_`i'_var'<10^-10 {
+							if `diff`q'_`i'_var'<10^-8 {
 								loc unconf2m`q' = `unconf2m`q''+1
 							}
 						}
@@ -1104,7 +1165,7 @@ program mlmr2_4L, rclass sortpreserve
 							cap gen double `diff`q'_`i'' = `v`i'_3m`q''-`rv`q'' if e(sample)
 							qui su `diff`q'_`i'' if e(sample)
 							sca `diff`q'_`i'_var' = r(Var)
-							if `diff`q'_`i'_var'<10^-10 {
+							if `diff`q'_`i'_var'<10^-8 {
 								loc unconf3m`q' = `unconf3m`q''+1
 							}
 						}
@@ -1125,7 +1186,7 @@ program mlmr2_4L, rclass sortpreserve
 							cap gen double `diff`q'_`i'' = `v`i'_4m`q''-`rv`q'' if e(sample)
 							qui su `diff`q'_`i'' if e(sample)
 							sca `diff`q'_`i'_var' = r(Var)
-							if `diff`q'_`i'_var'<10^-10 {
+							if `diff`q'_`i'_var'<10^-8 {
 								loc unconf4m`q' = `unconf4m`q''+1
 							}
 						}
@@ -1154,13 +1215,13 @@ program mlmr2_4L, rclass sortpreserve
 							cap gen double `diff`q'_`i'_4m' = `v`i'_4m`q''-`rv`q'' if e(sample)
 							qui su `diff`q'_`i'_4m' if e(sample)
 							sca `diff`q'_`i'_4m_var' = r(Var)
-							if `diff`q'_`i'_3m_var'<10^-10 {
+							if `diff`q'_`i'_3m_var'<10^-8 {
 								loc unconf3m`q' = `unconf3m`q''+1
 							}
-							if `diff`q'_`i'_3_var'<10^-10 {
+							if `diff`q'_`i'_3_var'<10^-8 {
 								loc unconf3_`q' = `unconf3_`q''+1
 							}
-							if `diff`q'_`i'_4m_var'<10^-10 {
+							if `diff`q'_`i'_4m_var'<10^-8 {
 								loc unconf4m`q' = `unconf4m`q''+1
 							}
 						}
@@ -1192,13 +1253,13 @@ program mlmr2_4L, rclass sortpreserve
 							cap gen double `diff`q'_`i'_4m' = `v`i'_4m`q''-`rv`q'' if e(sample)
 							qui su `diff`q'_`i'_4m' if e(sample)
 							sca `diff`q'_`i'_4m_var' = r(Var)
-							if `diff`q'_`i'_2m_var'<10^-10 {
+							if `diff`q'_`i'_2m_var'<10^-8 {
 								loc unconf2m`q' = `unconf2m`q''+1
 							}
-							if `diff`q'_`i'_2_var'<10^-10 {
+							if `diff`q'_`i'_2_var'<10^-8 {
 								loc unconf2_`q' = `unconf2_`q''+1
 							}
-							if `diff`q'_`i'_4m_var'<10^-10 {
+							if `diff`q'_`i'_4m_var'<10^-8 {
 								loc unconf4m`q' = `unconf4m`q''+1
 							}
 						}
@@ -1230,13 +1291,13 @@ program mlmr2_4L, rclass sortpreserve
 							cap gen double `diff`q'_`i'_3m' = `v`i'_3m`q''-`rv`q'' if e(sample)
 							qui su `diff`q'_`i'_3m' if e(sample)
 							sca `diff`q'_`i'_3m_var' = r(Var)
-							if `diff`q'_`i'_2m_var'<10^-10 {
+							if `diff`q'_`i'_2m_var'<10^-8 {
 								loc unconf2m`q' = `unconf2m`q''+1
 							}
-							if `diff`q'_`i'_2_var'<10^-10 {
+							if `diff`q'_`i'_2_var'<10^-8 {
 								loc unconf2_`q' = `unconf2`q''+1
 							}
-							if `diff`q'_`i'_3m_var'<10^-10 {
+							if `diff`q'_`i'_3m_var'<10^-8 {
 								loc unconf3m`q' = `unconf3m`q''+1
 							}
 						}
@@ -1276,19 +1337,19 @@ program mlmr2_4L, rclass sortpreserve
 							cap gen double `diff`q'_`i'_4m' = `v`i'_4m`q''-`rv`q'' if e(sample)
 							qui su `diff`q'_`i'_4m' if e(sample)
 							sca `diff`q'_`i'_4m_var' = r(Var)
-							if `diff`q'_`i'_2m_var'<10^-10 {
+							if `diff`q'_`i'_2m_var'<10^-8 {
 								loc unconf2m`q' = `unconf2m`q''+1
 							}
-							if `diff`q'_`i'_2_var'<10^-10 {
+							if `diff`q'_`i'_2_var'<10^-8 {
 								loc unconf2_`q' = `unconf2_`q''+1
 							}
-							if `diff`q'_`i'_3m_var'<10^-10 {
+							if `diff`q'_`i'_3m_var'<10^-8 {
 								loc unconf3m`q' = `unconf3m`q''+1
 							}
-							if `diff`q'_`i'_3_var'<10^-10 {
+							if `diff`q'_`i'_3_var'<10^-8 {
 								loc unconf3_`q' = `unconf3_`q''+1
 							}
-							if `diff`q'_`i'_4m_var'<10^-10 {
+							if `diff`q'_`i'_4m_var'<10^-8 {
 								loc unconf4m`q' = `unconf4m`q''+1
 							}
 						}
@@ -1313,93 +1374,105 @@ program mlmr2_4L, rclass sortpreserve
 				di as err _newline"  `conflist`q''"
 			}
 		}
+	}	
+	if `R2_v22_2'<10^-8 & !mi(`R2_v22_2') {
+		sca `R2_v22_2' = 0
+	}
+	if `R2_v32_3'<10^-8 & !mi(`R2_v32_3') {
+		sca `R2_v32_3' = 0
+	}
+	if `R2_v33_3'<10^-8 & !mi(`R2_v33_3') {
+		sca `R2_v33_3' = 0
+	}
+	if `R2_v42_4'<10^-8 & !mi(`R2_v42_4') {
+		sca `R2_v42_4' = 0
+	}
+	if `R2_v43_4'<10^-8 & !mi(`R2_v43_4') {
+		sca `R2_v43_4' = 0
+	}
+	if `R2_v44_4'<10^-8 & !mi(`R2_v44_4') {
+		sca `R2_v44_4' = 0
+	}
+	if `R2_v22_t'<10^-8 & !mi(`R2_v22_t') {
+		sca `R2_v22_t' = 0
+	}
+	if `R2_v32_t'<10^-8 & !mi(`R2_v32_t') {
+		sca `R2_v32_t' = 0
+	}
+	if `R2_v33_t'<10^-8 & !mi(`R2_v33_t') {
+		sca `R2_v33_t' = 0
+	}
+	if `R2_v42_t'<10^-8 & !mi(`R2_v42_t') {
+		sca `R2_v42_t' = 0
+	}
+	if `R2_v43_t'<10^-8 & !mi(`R2_v43_t') {
+		sca `R2_v43_t' = 0
+	}
+	if `R2_v44_t'<10^-8 & !mi(`R2_v44_t') {
+		sca `R2_v44_t' = 0
 	}
 	ret clear
 	mat `R2' = (`R2_f1_1',`R2_v12_1',`R2_v13_1',`R2_v14_1',`Resid_1',`R2_f2_2',`R2_v22_2',`R2_v23_2',`R2_v24_2',`R2_m2_2',`R2_f3_3',`R2_v32_3',`R2_v33_3',`R2_v34_3',`R2_m3_3',`R2_f4_4',`R2_v42_4',`R2_v43_4',`R2_v44_4',`R2_m4_4',`R2_f1_t',`R2_f2_t',`R2_f3_t',`R2_f4_t',`R2_v12_t',`R2_v22_t',`R2_v32_t',`R2_v42_t',`R2_v2_t',`R2_v13_t',`R2_v23_t',`R2_v33_t',`R2_v43_t',`R2_v3_t',`R2_v14_t',`R2_v24_t',`R2_v34_t',`R2_v44_t',`R2_v4_t',`R2_m2_t',`R2_m3_t',`R2_m4_t',`R2_f_t',`R2_v_t',`R2_m_t',`R2_fv_t',`R2_fvm_t',`Resid_t')
-	mat colnames `R2' = R2_f1_1 R2_v12_1 R2_v13_1 R2_v14_1 Resid_1 R2_f2_2 R2_v22_2 R2_v23_2 R2_v24_2 R2_m2_2 R2_f3_3 R2_v32_3 R2_v33_3 R2_v34_3 R2_m3_3 R2_f4_4 R2_v42_4 R2_v43_4 R2_v44_4 R2_m4_4 R2_f1_t R2_f2_t R2_f3_t R2_f4_t R2_v12_t R2_v22_t R2_v32_t R2_v42_t R2_v2_t R2_v13_t R2_v23_t R2_v33_t R2_v43_t R2_v3_t R2_v14_t R2_v24_t R2_v34_t R2_v44_t R2_v4_t R2_m2_t R2_m3_t R2_m4_t R2_f_t R2_v_t R2_m_t R2_fv_t R2_fvm_t Resid_t
+	mat colnames `R2' = r2f1_1 r2v12_1 r2v13_1 r2v14_1 resid_1 r2f2_2 r2v22_2 r2v23_2 r2v24_2 r2m2_2 r2f3_3 r2v32_3 r2v33_3 r2v34_3 r2m3_3 r2f4_4 r2v42_4 r2v43_4 r2v44_4 r2m4_4 r2f1_t r2f2_t r2f3_t r2f4_t r2v12_t r2v22_t r2v32_t r2v42_t r2v2_t r2v13_t r2v23_t r2v33_t r2v43_t r2v3_t r2v14_t r2v24_t r2v34_t r2v44_t r2v4_t r2m2_t r2m3_t r2m4_t r2f_t r2v_t r2m_t r2fv_t r2fvm_t resid_t
 	mat rownames `R2' = "`dv'"
 	ret mat R2 = `R2'
 	qui _estimates unhold mixedest
 	qui _estimates hold mixedest, copy restore
-	ret sca R2_L4_Total = `R2_L4_t'
-	ret sca R2_L3_Total = `R2_L3_t'
-	ret sca R2_L2_Total = `R2_L2_t'
-	ret sca R2_L1_Total = `R2_L1_t'
-	ret sca Resid_Total = `Resid_t'
-	ret sca R2_fvm_Total = `R2_fvm_t'
-	ret sca R2_fv_Total = `R2_fv_t'
-	ret sca R2_m_Total = `R2_m_t'
-	ret sca R2_m4_Total = `R2_m4_t'
-	ret sca R2_m3_Total = `R2_m3_t'
-	ret sca R2_m2_Total = `R2_m2_t'
-	ret sca R2_v_Total = `R2_v_t'
-	ret sca R2_v4_Total = `R2_v4_t'
-	ret sca R2_v44_Total = `R2_v44_t'
-	ret sca R2_v34_Total = `R2_v34_t'
-	ret sca R2_v24_Total = `R2_v24_t'
-	ret sca R2_v14_Total = `R2_v14_t'
-	ret sca R2_v3_Total = `R2_v3_t'
-	ret sca R2_v43_Total = `R2_v43_t'
-	ret sca R2_v33_Total = `R2_v33_t'
-	ret sca R2_v23_Total = `R2_v23_t'
-	ret sca R2_v13_Total = `R2_v13_t'
-	ret sca R2_v2_Total = `R2_v2_t'
-	ret sca R2_v42_Total = `R2_v42_t'
-	ret sca R2_v32_Total = `R2_v32_t'
-	ret sca R2_v22_Total = `R2_v22_t'
-	ret sca R2_v12_Total = `R2_v12_t'
-	ret sca R2_f_Total = `R2_f_t'
-	ret sca R2_f4_Total = `R2_f4_t'
-	ret sca R2_f3_Total = `R2_f3_t'
-	ret sca R2_f2_Total = `R2_f2_t'
-	ret sca R2_f1_Total = `R2_f1_t'
-	ret sca R2_m4_L4 = `R2_m4_4'
-	ret sca R2_v44_L4 = `R2_v44_4'
-	ret sca R2_v43_L4 = `R2_v43_4'
-	ret sca R2_v42_L4 = `R2_v42_4'
-	ret sca R2_f4_L4 = `R2_f4_4'
-	ret sca R2_m3_L3 = `R2_m3_3'
-	ret sca R2_v34_L3 = `R2_v34_3'
-	ret sca R2_v33_L3 = `R2_v33_3'
-	ret sca R2_v32_L3 = `R2_v32_3'
-	ret sca R2_f3_L3 = `R2_f3_3'
-	ret sca R2_m2_L2 = `R2_m2_2'
-	ret sca R2_v24_L2 = `R2_v24_2'
-	ret sca R2_v23_L2 = `R2_v23_2'
-	ret sca R2_v22_L2 = `R2_v22_2'
-	ret sca R2_f2_L2 = `R2_f2_2'
-	ret sca Resid_L1 = `Resid_1'
-	ret sca R2_v14_L1 = `R2_v14_1'
-	ret sca R2_v13_L1 = `R2_v13_1'
-	ret sca R2_v12_L1 = `R2_v12_1'
-	ret sca R2_f1_L1 = `R2_f1_1'
-	ret sca Total_MI_Var = `tvar'
-	ret sca L4_MI_Var = `var4'
-	ret sca L3_MI_Var = `var3'
-	ret sca L2_MI_Var = `var2'
-	ret sca L1_MI_Var = `var1'
-	ret sca s2 = `s2'
-	ret sca m4 = `m4'[1,1]
-	ret sca m3 = `m3'[1,1]
-	ret sca m2 = `m2'[1,1]
-	ret sca v4 = `v4'[1,1]
-	ret sca v44 = `v44'[1,1]
-	ret sca v34 = `v34'[1,1]
-	ret sca v24 = `v24'[1,1]
-	ret sca v14 = `v14'[1,1]
-	ret sca v3 = `v3'[1,1]
-	ret sca v43 = `v43'[1,1]
-	ret sca v33 = `v33'[1,1]
-	ret sca v23 = `v23'[1,1]
-	ret sca v13 = `v13'[1,1]
-	ret sca v2 = `v2'[1,1]
-	ret sca v42 = `v42'[1,1]
-	ret sca v32 = `v32'[1,1]
-	ret sca v22 = `v22'[1,1]
-	ret sca v12 = `v12'[1,1]
-	ret sca f = `f'[1,1]
-	ret sca f4 = `f4'[1,1]
-	ret sca f3 = `f3'[1,1]
-	ret sca f2 = `f2'[1,1]
-	ret sca f1 = `f1'[1,1]
+	ret sca resid_t = `Resid_t'
+	ret sca r2fvm_t = `R2_fvm_t'
+	ret sca r2fv_t = `R2_fv_t'
+	ret sca r2m_t = `R2_m_t'
+	ret sca r2v_t = `R2_v_t'
+	ret sca r2f_t = `R2_f_t'
+	ret sca r2m4_t = `R2_m4_t'
+	ret sca r2m3_t = `R2_m3_t'
+	ret sca r2m2_t = `R2_m2_t'
+	ret sca r2v4_t = `R2_v4_t'
+	ret sca r2v44_t = `R2_v44_t'
+	ret sca r2v34_t = `R2_v34_t'
+	ret sca r2v24_t = `R2_v24_t'
+	ret sca r2v14_t = `R2_v14_t'
+	ret sca r2v3_t = `R2_v3_t'
+	ret sca r2v43_t = `R2_v43_t'
+	ret sca r2v33_t = `R2_v33_t'
+	ret sca r2v23_t = `R2_v23_t'
+	ret sca r2v13_t = `R2_v13_t'
+	ret sca r2v2_t = `R2_v2_t'
+	ret sca r2v42_t = `R2_v42_t'
+	ret sca r2v32_t = `R2_v32_t'
+	ret sca r2v22_t = `R2_v22_t'
+	ret sca r2v12_t = `R2_v12_t'
+	ret sca r2f4_t = `R2_f4_t'
+	ret sca r2f3_t = `R2_f3_t'
+	ret sca r2f2_t = `R2_f2_t'
+	ret sca r2f1_t = `R2_f1_t'
+	ret sca r2m4_4 = `R2_m4_4'
+	ret sca r2v44_4 = `R2_v44_4'
+	ret sca r2v43_4 = `R2_v43_4'
+	ret sca r2v42_4 = `R2_v42_4'
+	ret sca r2f4_4 = `R2_f4_4'
+	ret sca r2m3_3 = `R2_m3_3'
+	ret sca r2v34_3 = `R2_v34_3'
+	ret sca r2v33_3 = `R2_v33_3'
+	ret sca r2v32_3 = `R2_v32_3'
+	ret sca r2f3_3 = `R2_f3_3'
+	ret sca r2m2_2 = `R2_m2_2'
+	ret sca r2v24_2 = `R2_v24_2'
+	ret sca r2v23_2 = `R2_v23_2'
+	ret sca r2v22_2 = `R2_v22_2'
+	ret sca r2f2_2 = `R2_f2_2'
+	ret sca resid_1 = `Resid_1'
+	ret sca r2v14_1 = `R2_v14_1'
+	ret sca r2v13_1 = `R2_v13_1'
+	ret sca r2v12_1 = `R2_v12_1'
+	ret sca r2f1_1 = `R2_f1_1'
+	ret sca r2L4_t = `R2_L4_t'
+	ret sca r2L3_t = `R2_L3_t'
+	ret sca r2L2_t = `R2_L2_t'
+	ret sca r2L1_t = `R2_L1_t'
+	ret sca Var_t = `tvar'
+	ret sca Var_4 = `var4'
+	ret sca Var_3 = `var3'
+	ret sca Var_2 = `var2'
+	ret sca Var_1 = `var1'
 end

@@ -8,8 +8,9 @@ d cumulative distribution function; relrank(): grade
 d transformation; ranks(): ranks/cumulative frequencies; freq():
 d compute frequency counts; histogram(): produce histogram data;
 d mgof(): multinomial goodness-of-fit tests; collapse(): summary
-d statistics by subgroups; _collapse(): summary statistics by
-d subgroups; gini(): Gini coefficient; sample(): draw random
+d statistics by subgroups; File-URL:
+d http://fmwww.bc.edu/repec/bocode/_/collapse(): summary statistics
+d by subgroups; gini(): Gini coefficient; sample(): draw random
 d sample; srswr(): SRS with replacement; srswor(): SRS without
 d replacement; upswr(): UPS with replacement; upswor(): UPS without
 d replacement; bs(): bootstrap estimation; bs2(): bootstrap
@@ -60,7 +61,8 @@ d tokens(); realofstr(): convert string into real; strexpand():
 d expand string argument; matlist(): display a (real) matrix;
 d insheet(): read spreadsheet file; infile(): read free-format
 d file; outsheet(): write spreadsheet file; callf(): pass optional
-d args to function; callf_setup(): setup for mm_callf().     
+d args to function; callf_setup(): setup for mmFile-URL:
+d http://fmwww.bc.edu/repec/bocode/_/callf().	  
 d
 d KW: Mata
 d KW:  quantile
@@ -87,7 +89,7 @@ d KW: histogram
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20221124
+d Distribution-Date: 20250501
 d
 d Author: Ben Jann, University of Bern
 d Support: email jann@@soz.unibe.ch
@@ -171,3 +173,4 @@ f mf_mm_version.hlp
 f mf_mm_ebalance.sthlp
 f mf_mm_wbal.sthlp
 f mf_mm_crosswalk.sthlp
+f mf_mm_read_csv.hlp

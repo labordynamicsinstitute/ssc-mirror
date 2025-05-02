@@ -1,6 +1,6 @@
-d 'MLMR2': module to compute r-squared measures for models estimated by mixed
+d 'R2_MLM': module to compute r-squared measures for models estimated by mixed
 d
-d   mlmr2 produces r-squared measures for models estimated by
+d   r2_mlm produces r-squared measures for models estimated by
 d mixed.  Using the Rights and Sterba (2019; 2021; 2023b) framework
 d for decomposing the total model-implied outcome variance from a
 d linear mixed model into its sources, mlmr2 computes measures of
@@ -22,14 +22,14 @@ d KW: multilevel models
 d
 d Requires: Stata version 17
 d
-d Distribution-Date: 20231203
+d Distribution-Date: 20250501
 d
 d Author: Anthony J. Gambino , University of Connecticut
 d Support: email anthony.gambino@@uconn.edu
 d
-f mlmr2.ado
-f mlmr2_2L.ado
-f mlmr2_3L.ado
-f mlmr2_4L.ado
-f mlmr2_5L.ado
-f mlmr2.sthlp
+f r2_mlm.ado
+f r2_mlm_2L.ado
+f r2_mlm_3L.ado
+f r2_mlm_4L.ado
+f r2_mlm_5L.ado
+f r2_mlm.sthlp

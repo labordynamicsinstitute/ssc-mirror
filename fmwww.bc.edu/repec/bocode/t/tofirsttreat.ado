@@ -22,7 +22,7 @@ mata:
 		real scalar i; real matrix data_tmp, data_sum, info, key, data_sum_random, data_res;
 		data_tmp = select(data, data[.,3]);
 		_sort(data_tmp, (1,2,3));
-		info = panelsetup(data_tmp, 1, 2);
+		info = panelsetup(data_tmp, 1);
 		data_sum = data_tmp[info[.,1],1..2];
 		data_res = data;
 		key = asarray_create("real"); 

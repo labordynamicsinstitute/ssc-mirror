@@ -1,3 +1,4 @@
+p r2_mlm module to compute r-squared measures for models estimated by mixed
 p r2_mz module to compute McKelvey & Zavoina's R2
 p r2_nakagawa module for computing Nakagawa's R-squared statistic for multilevel mixed-effects linear regression
 p r2c module to compute several fit statistics for count data models 
