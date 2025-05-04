@@ -1,3 +1,4 @@
+*! 3.0.1 Ariel Linden 02May2025 // changed invbinomial() to invbinomialtail() for computing LCL 
 *! 3.0.0 Ariel Linden 30Sep2022 // rearranged (and relabeled) 2 X 2 matrix, added exact confidence intervals 
 *! 2.0.1 Ariel Linden 05oct2017 // accepted edits by NJC                                                                       
 *! 2.0.0 Ariel Linden 03oct2017 // fixed bug occurring when cell value is 0
@@ -63,37 +64,37 @@ program define classtabi, rclass
 			local allden = `1'+`2'+`3'+`4'
 			local allnum = `1'+`4'
 			return scalar allub = invbinomial(`allden',`allnum', `alpha') * 100
-			return scalar alllb = invbinomial(`allden',`allnum', 1-`alpha') * 100		
+			return scalar alllb = invbinomialtail(`allden',`allnum', `alpha') * 100		
 		ret scalar sens = (`1'/(`1'+`2'))*100     										/* sensitivity          		*/
 			local sensden = `1'+`2'
 			local sensnum = `1'
 			return scalar sensub = invbinomial(`sensden',`sensnum', `alpha') * 100
-			return scalar senslb = invbinomial(`sensden',`sensnum', 1-`alpha') * 100
+			return scalar senslb = invbinomialtail(`sensden',`sensnum', `alpha') * 100
 		ret scalar spec = (`4'/(`3'+`4'))*100     										/* specificity					*/
 			local specden = `3'+`4'
 			local specnum = `4'
 			return scalar specub = invbinomial(`specden',`specnum', `alpha') * 100
-			return scalar speclb = invbinomial(`specden',`specnum', 1-`alpha') * 100		
+			return scalar speclb = invbinomialtail(`specden',`specnum', `alpha') * 100		
 		ret scalar ppv = (`1'/(`1'+`3'))*100     										/* positive pred value			*/
 			local ppvden = `1'+`3'
 			local ppvnum = `1'
 			return scalar ppvub = invbinomial(`ppvden',`ppvnum', `alpha') * 100
-			return scalar ppvlb = invbinomial(`ppvden',`ppvnum', 1-`alpha') * 100	
+			return scalar ppvlb = invbinomialtail(`ppvden',`ppvnum', `alpha') * 100	
 		ret scalar npv = (`4'/(`2'+`4'))*100     										/* negative pred value			*/
 			local npvden = `2'+`4'
 			local npvnum = `4'
 			return scalar npvub = invbinomial(`npvden',`npvnum', `alpha') * 100
-			return scalar npvlb = invbinomial(`npvden',`npvnum', 1-`alpha') * 100	
+			return scalar npvlb = invbinomialtail(`npvden',`npvnum', `alpha') * 100	
 		ret scalar fpr = (`3'/(`3'+`4'))*100     										/* false positive rate			*/
 			local fprden = `3'+`4'
 			local fprnum = `3'
 			return scalar fprub = invbinomial(`fprden',`fprnum', `alpha') * 100
-			return scalar fprlb = invbinomial(`fprden',`fprnum', 1-`alpha') * 100	
+			return scalar fprlb = invbinomialtail(`fprden',`fprnum', `alpha') * 100	
 		ret scalar fnr = (`2'/(`1'+`2'))*100     										/* false negative rate			*/
 			local fnrden = `1'+`2'
 			local fnrnum = `2'
 			return scalar fnrub = invbinomial(`fnrden',`fnrnum', `alpha') * 100
-			return scalar fnrlb = invbinomial(`fnrden',`fnrnum', 1-`alpha') * 100	
+			return scalar fnrlb = invbinomialtail(`fnrden',`fnrnum', `alpha') * 100	
 		
 
 		// run tabi here to expand data to run -roctab-
