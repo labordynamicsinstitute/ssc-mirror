@@ -1,0 +1,20 @@
+d 'MATCHI2': module for calculating Pearson's chi-squared from a two-way matrix of frequency counts
+d
+d  matchi2 calculates and displays Pearson's chi-squared for the
+d hypothesis that the rows and columns in a two-way matrix are
+d independent. It is a convenient alternative to tabi when data are
+d already stored in matrix form. 
+d
+d KW: matrix
+d KW: two-way table
+d KW: Pearson’s chi-squared 
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250504
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f matchi2.ado
+f matchi2.sthlp

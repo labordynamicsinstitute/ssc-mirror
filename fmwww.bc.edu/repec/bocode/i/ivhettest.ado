@@ -1,4 +1,4 @@
-*! ivhettest 1.2.0 24jan2023
+*! ivhettest 1.2.1 4may2025
 *! author mes
 * Implements Pagan-Hall (1983) heteroskedasticity tests for IV plus related statistics.
 * Notation largely follows White (1982).
@@ -15,6 +15,8 @@
 * 1.1.9   Fixed bug in handling varnames that had "_cons" in them
 * 1.1.10  Enabled use after ivreg2h
 * 1.2.0   Version set to 12, fv use enabled by cfb; now requires mes fvstrip
+* 1.2.1   cfb added additional fvstrip where needed to zap o.
+//          Does not work with xtreg,fe
 
 program define ivhettest, rclass
 	version 12.0
@@ -25,7 +27,8 @@ program define ivhettest, rclass
 
 	if "`e(cmd)'" != "ivreg" & "`e(cmd)'" != "ivreg2" & "`e(cmd)'" != "ivreg28" /*
 		*/ & "`e(cmd)'" != "ivreg29" & "`e(cmd)'" != "ivregress" & "`e(cmd)'" != "regress" ///
-		& "`e(cmd)'" != "ivreg2h" {
+		 & "`e(cmd)'" != "ivreg2h"   {
+//		& "`e(cmd)'" != "xtreg" & "`e(cmd)'" != "ivreg2h" & "`e(cmd)'" != "ivreg2hfe"  {
 		error 301
 	}
 	if "`e(fwl1)'`e(partial)'" != "" | "`e(fwlcons)'`e(partialcons)'"=="1" {
@@ -171,6 +174,18 @@ di in r "Weights not allowed in current implementation"
 		tokenize `varlist'
 		local i = 1
 		local nrvars : word count `varlist' 
+		loc expan 
+		forv i=1/`nrvars' {
+			fvrevar ``i''
+			loc expan "`expan' `r(varlist)'"
+		}
+//		di "`expan'"
+		loc nrvars : word count `expan'
+		tokenize `expan'
+// mes routine
+		fvstrip `expan', dropomit onebyone
+		loc expan `r(varlist)'		
+		loc i 1
 		while `i' <= `nrvars' {
 			tempvar vn
 			qui gen double `vn' = ``i''
@@ -179,7 +194,12 @@ di in r "Weights not allowed in current implementation"
 			}
 		qui _rmcoll `psi'
 		local psi `r(varlist)'
+// mes routine
+		fvstrip `psi', dropomit onebyone
+		loc psi `r(varlist)'
+//      di "`psi'"
 	}
+
 
 * ivlev - psi is all instruments in levels, a la Breusch-Pagan/Godfrey/Cook-Weisberg
 * ivsq -  psi is all instruments in levels and squares
@@ -232,7 +252,11 @@ di in r "Weights not allowed in current implementation"
 		local psi `*'
 		qui _rmcoll `psi'
 		local psi `r(varlist)'
-// di "ivcp `psi'"
+ // di "ivcp `psi'"
+ // cfb 2025 zap o. variables here
+// mes routine
+		fvstrip `psi', dropomit onebyone
+		loc psi `r(varlist)'
 	}
 
 * Generate Xu, regressors * error.
@@ -302,7 +326,6 @@ di in r "Weights not allowed in current implementation"
 	}
 	qui mat accum `XhXh' = `Xhat', nocons
 	mat `XhXhinv' = syminv(`XhXh')
-
 * Put psi in mean-deviation form
 	tokenize `psi'
 	local i = 1

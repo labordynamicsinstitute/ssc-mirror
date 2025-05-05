@@ -14226,6 +14226,7 @@ fmwww.bc.edu/repec/bocode/m/mkomega.sthlp
 fmwww.bc.edu/repec/bocode/m/mkproject.ado
 fmwww.bc.edu/repec/bocode/m/mcqscore.pkg
 fmwww.bc.edu/repec/bocode/m/maptile_newgeo.sthlp
+fmwww.bc.edu/repec/bocode/m/matchi2.pkg
 fmwww.bc.edu/repec/bocode/m/mf_aandb.sthlp
 fmwww.bc.edu/repec/bocode/m/markovci.sthlp
 fmwww.bc.edu/repec/bocode/m/moremata.pkg
@@ -15738,6 +15739,7 @@ fmwww.bc.edu/repec/bocode/m/mp_p_smclpres.sthlp
 fmwww.bc.edu/repec/bocode/m/metan_proportion.sthlp
 fmwww.bc.edu/repec/bocode/m/metafrag.pkg
 fmwww.bc.edu/repec/bocode/m/mtreatreg_postestimation.html
+fmwww.bc.edu/repec/bocode/m/matchi2.sthlp
 fmwww.bc.edu/repec/bocode/m/multif.dlg
 fmwww.bc.edu/repec/bocode/m/mycolours.pkg
 fmwww.bc.edu/repec/bocode/m/matchit.pkg
@@ -16042,6 +16044,7 @@ fmwww.bc.edu/repec/bocode/m/mfelogit.pkg
 fmwww.bc.edu/repec/bocode/m/make2.ado
 fmwww.bc.edu/repec/bocode/m/mfpmi_10.ado
 fmwww.bc.edu/repec/bocode/m/mktable_mediate.ado
+fmwww.bc.edu/repec/bocode/m/matchi2.ado
 fmwww.bc.edu/repec/bocode/m/metandi.pkg
 fmwww.bc.edu/repec/bocode/m/mspredict.ado
 fmwww.bc.edu/repec/bocode/m/mixmcm.pkg
