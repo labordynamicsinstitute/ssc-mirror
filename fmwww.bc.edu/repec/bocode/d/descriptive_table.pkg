@@ -19,4 +19,5 @@ d Author:  Christiaan Righolt,  University of Manitoba
 d Support: email crigholt@@orthoinno.com
 d
 f descriptive_table.ado
+f ../g/get_var_info.ado
 f descriptive_table.sthlp

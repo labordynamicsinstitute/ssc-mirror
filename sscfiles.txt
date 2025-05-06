@@ -21307,6 +21307,7 @@ fmwww.bc.edu/repec/bocode/g/gzsave.html
 fmwww.bc.edu/repec/bocode/g/graph_header.idlg
 fmwww.bc.edu/repec/bocode/g/getfilename2.html
 fmwww.bc.edu/repec/bocode/g/gphudak.sthlp
+fmwww.bc.edu/repec/bocode/g/get_var_info.ado
 fmwww.bc.edu/repec/bocode/g/gb2lfit.hlp
 fmwww.bc.edu/repec/bocode/g/getregstats.ado
 fmwww.bc.edu/repec/bocode/g/globel.ado
