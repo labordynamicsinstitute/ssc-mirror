@@ -24,7 +24,7 @@
 *======================================================
 
   *-~~~~~~~ Insert the DOI of the literature to be retrieved here ~~~~~~~~(!!!! important !!!! )
-  global DOI "10.1111/joes.12493" 
+  global DOI "10.1007/s11205-014-0747-y" 
   *           ------------------
 
 
@@ -35,14 +35,15 @@
 //  global pdf "pdf"
 //   global bib "bib"
   global bib ""
-  global md  "text"   // Options: text, latex 
+  global md  "md"   // Options: md, text, latex 
   
 * Clear screen (optional, comment out if not needed)
   cls 
 
 *-Storage path: Path name to store PDF files (if it does not exist, it will be created automatically)
 * global Root "D:/_temp_getiref" 
-  global Root "D:\stata\personal\adolian\getiref"
+//   global Root "D:\stata\personal\adolian\getiref"
+  global Root "D:\JG\助教推文提交\2020助教推文\refs"
   
   qui getiref $DOI, path($Root)
   global filename "`r(author1)'_`r(year)'"
@@ -68,6 +69,7 @@
 *-Retrieve data and save as .txt and .dta data
   //   local type "citations"  // Citation, temporarily unavailable
   local type "references"   // References
+  local type "citations"
   local api_url "https://opencitations.net/index/coci/api/v1/`type'"   
   local url "`api_url'/$DOI"
   
@@ -170,4 +172,3 @@ qui{      // qui ----------------------- begin -----------------
 
   
 * ---------------------- over -----------------------
-```

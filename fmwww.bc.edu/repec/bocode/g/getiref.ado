@@ -1,5 +1,14 @@
-*!  version 2.1  2024/7/12 
-*    Papers form arXiv.org can be sent to CLIP now. 
+*! version 2.3  2025/05/08
+*   // 'http' to 'https'
+*   local API   "https://api.crossref.org/works"   
+*  version 2.2  2024/12/6
+*   a. for arXiv.org papers, you can use 
+*                      'getiref                2401.01645, arxiv'
+*        instead of    'getiref 10.48550/arXiv.2401.01645'
+*   b. PDF documents can be download properly now 
+*      shell curl -L "https://arxiv.org/pdf/2401.01645.pdf" -o "`FN'.pdf"
+*  version 2.1  2024/11/18 
+*    Citation information form arXiv.org can be sent to CLIP now. 
 *  version 1.10.1 2024/5/18
 *    update American Journal of Political Science (open access)
 *    https://onlinelibrary.wiley.com/doi/epdf/10.1111/ajps.12808
@@ -180,6 +189,7 @@ version 14
            FASTscihub           ///  // re-search the fast url of SCI-Hub. Seldom use. Time use: 1-2 seconds
            CLEAN                ///  // clean pattern: Display only [link] and [PDF]. Default: [link] (rep), [PDF], [Appendix]
            CLIPoff              ///  // do not send message to clipboard
+		   ARxiv                ///  // for arXiv papers, DOI can be simplied as '2401.01645' instead of '10.48550/arXiv.2401.01645' 
            Notip                ///  // do not display 'Tips: Text is on clipboard.'
            NOGoogle             ///  // don't display google links
            Doicheck             ///  // get {DOI} using regular expression from text given by user. 
@@ -254,6 +264,14 @@ preserve //>>>>>>>>>>>>>>>>>>>>>>>>>>>>> preserve begin
       local pdf_save = "1"  // downlaod PDF document 'from SCI-HUB'
   }
   
+// Update: 2024/12/6 10:06  
+*   for arXiv.org papers, you can use 
+*                         getiref                2401.01645, arxiv  
+*           instead of    
+*                         getiref 10.48550/arXiv.2401.01645  
+  if ("`arxiv'" != "") & (strpos("`anything'", "/ar"))==0{
+       local anything "10.48550/arXiv.`anything'"
+  }
   
   *-check option conflicts
   
@@ -784,7 +802,7 @@ preserve //>>>>>>>>>>>>>>>>>>>>>>>>>>>>> preserve begin
 *---------------
 *- export: cite   Author (Year)
 *---------------  
-// set trace on 
+
   if "`cite'" != ""{
       get_cite `v_body', doi("`DOI'") link `latex'         // author (Year), with link
   }
@@ -819,7 +837,7 @@ preserve //>>>>>>>>>>>>>>>>>>>>>>>>>>>>> preserve begin
       } 
       else{
           if `pdf_source' == 0{ // from SCI-HUB
-              cap noi get_pdf_scihub    "`DOI'", saving("`filename'") path("`path'")
+              cap noi get_pdf_scihub "`DOI'", saving("`filename'") path("`path'")
               
               * Stata Journal: Some paper is open-access
               if `r(pdf_got)'==0 & strpos("`DOI'", "10.1177/1536867"){
@@ -919,9 +937,9 @@ end
 
 
 
-*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 *                            over 
-*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+*>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 
 
@@ -1067,12 +1085,11 @@ preserve
   local styleexp     "?style=`style'"  // expression of style
   local url_datacite "`head'/`mine'/`DOI'`styleexp'"
 
-
 // ========= crossref =====
 *-API and MIME from <api.crossref.org>
 * url: https://github.com/CrossRef/rest-api-doc#resource-components
-  
-  local API   "http://api.crossref.org/works"
+
+  local API   "https://api.crossref.org/works"   // Update: 2025/5/8, 'http' to 'https'
   local trans "transform/text/x-bibliography"   
   local url_crossref "`API'/`DOI'/`trans'"
 
@@ -1822,7 +1839,11 @@ syntax anything(name=DOI) [ , Saving(string) Path(string) ]
   if strpos(`"`DOI'"', "`key'"){
       local ar_ID = subinstr("`DOI'", "`key'.", "", 1)  // get: 2312.05400 ({article ID})
       local pdf_url "https://arxiv.org/pdf/`ar_ID'.pdf"
+	  *local yes_arXiv = 1  // indicator for arXiv papers
   }
+//   else{
+//   	  local yes_arXiv = 0 
+//   }
         
 *-NBER           with PDF
 * DOI: 10.3386/w31184  -->  10.3386/{ar_ID}
@@ -1864,14 +1885,22 @@ syntax anything(name=DOI) [ , Saving(string) Path(string) ]
   local pdf_url = subinstr("`pdf_url'", `"//10"', "/10",.) 
 
   *-download PDF file
+
   cap qui copy `"`pdf_url'"'  `"`path'/`fn'.pdf"', replace   // download PDF document  
   
-  if _rc{   
-      local pdf_ok = 0
+  if _rc{  
+  	  shell curl -L "`pdf_url'" -o "`path'/`fn'.pdf" // DOS command to download PDF. Format: curl -L "fileA" -o "fileB"
+	  if fileexists(`"`path'/`fn'.pdf"')==0{
+	  	local pdf_ok = 0
+	  }
+      else{
+	  	local pdf_ok = 1
+	  }
   }
   else{
       local pdf_ok = 1
   }
+
   
 *-display error message, hints and show results 
   

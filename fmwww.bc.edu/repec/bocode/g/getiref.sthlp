@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.1  12Jul2024}{...}
+{* *! version 2.2  08May2025}{...}
 {hi:help getiref}{right:also see: {help lianxh}}
 {right: {browse "https://github.com/arlionn/getiref"}}
 {hline}
@@ -39,7 +39,8 @@
          {opt cite1}               
          {opt   c1}                
          {opt cite2}               
-         {opt   c2}                          	   
+         {opt   c2}    
+         {opt ar:xiv}
                       
 {p 19}       
          {opt dis:fn}  
@@ -80,6 +81,7 @@
 {col 7}{cmd:c1     }              {col 28}shortcut of {cmd:cite1} 
 {col 7}{cmd:cite2}                {col 28}'Author (Year)', plain text
 {col 7}{cmd:c2     }              {col 28}shortcut of {cmd:cite2} 
+{col 7}{cmdab:ar:xiv }            {col 28}For arXiv papers, use '2401.01645' instead of '10.48550/arXiv.2401.01645' for DOI.
 
 {col 5}Control and Save
 {col 5}{hline 10}        
@@ -208,6 +210,16 @@ Journal of Human Resources, 50(2), 317–372.
 {phang2}. {stata "getiref 10.1257/aer.109.4.1197, cite2"}{p_end}
 
 {phang2}Similar as the {cmd:cite} case, but the text does not have a hyperlink.{p_end}
+
+
+{dlgtab:Special cases:}
+
+{pstd}
+The following two commands are equivalent, and 'ar' means 'arxiv'.:
+
+{phang2}. {stata "getiref 2303.17564, ar"}{p_end}
+
+{phang2}. {stata "getiref 10.48550/arXiv.2303.17564"}{p_end}
 
 
 {title:Appendix: About DOI}

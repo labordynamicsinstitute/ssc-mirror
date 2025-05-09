@@ -1,4 +1,4 @@
-*!   attregtest v2.0.0  GHO13Nov2023
+*!   attregtest v2.0.1  GHO7May2025
 
 
 program attregtest, rclass 
@@ -6,7 +6,7 @@ program attregtest, rclass
 	syntax     varlist(min=1 numeric) [if] [in], treatvar(varlist numeric max=1) respvar(varlist numeric  max=1)  [ vce(passthru) stratavar(varlist numeric max=1) timevar(varlist numeric fv max=1) export(string)] 
 
 	marksample touse, novarlist
-	local      res   p_IVP  p_IVR  pIVR1 pIVP1 pIVR2 pIVP2
+	local      res   p_IValP  p_IValR  pIValR1 pIValP1 pIValR2 pIValP2
 	tempname   `res' 
 	
 	
@@ -93,7 +93,7 @@ if 	"`stratavar'"=="" {
 	local       treatvars_minus1 "`rest'"
 
 	*============================================================================
-	* CONDUCT THE TESTS OF IV-R and IV-P FOR CASE IN WHICH # VARLIST =1 
+	* CONDUCT THE TESTS OF IVal-R and IVal-P FOR CASE IN WHICH # VARLIST =1 
     *               AND SAVE ESTIMATES FOR OUTPUT TABLE
     *============================================================================
 
@@ -139,7 +139,7 @@ if 	"`stratavar'"=="" {
 		*   SET UP NULL HYPOTHESES
 		*--------------------------------
 
-        *Set up H0 for IV-R 
+        *Set up H0 for IVal-R 
 		local     ivr_vars "`treatvars_minus1' `treatresp'"
 			
 		foreach 	v in `ivr_vars' {
@@ -149,7 +149,7 @@ if 	"`stratavar'"=="" {
 		gettoken   first ivr_null: ivr_null, parse(" ")
 			
 			
-		*Set up H0 for IV-P
+		*Set up H0 for IVal-P
 		local     ivp_vars "`treatvars_minus1' response `treatresp'"
 			
 		foreach 	v in `ivp_vars' {
@@ -162,15 +162,15 @@ if 	"`stratavar'"=="" {
 		*   TEST NULL HYPOTHESES
 		*--------------------------------
 			
-		*Test of IV-R
+		*Test of IVal-R
 		qui: test   `ivr_null' 
-		qui: estadd scalar    p_IVR=r(p): model_z1
-		return scalar p_IVR = r(p)
+		qui: estadd scalar    p_IValR=r(p): model_z1
+		return scalar p_IValR = r(p)
 			
-		*Test of IV-P
+		*Test of IVal-P
 		qui: test `ivp_null'
-		qui: estadd scalar    p_IVP=r(p): model_z1
-		return scalar p_IVP = r(p)
+		qui: estadd scalar    p_IValP=r(p): model_z1
+		return scalar p_IValP = r(p)
 		
 		*-----------------------------------------------------------------
 		* CALCULATES THE MEAN BASELINE VARIABLE FOR CONTROL ATTRITORS 
@@ -191,7 +191,7 @@ if 	"`stratavar'"=="" {
     }
 
     *============================================================================
-	* CONDUCT THE TESTS OF IV-R and IV-P FOR CASE IN WHICH # VARLIST > 1 
+	* CONDUCT THE TESTS OF IVal-R and IVal-P FOR CASE IN WHICH # VARLIST > 1 
     *               AND SAVE ESTIMATES FOR OUTPUT TABLE
     *============================================================================
 
@@ -255,7 +255,7 @@ if 	"`stratavar'"=="" {
             }
 
             *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            *  SET UP NULL HYPOTHESIS IV-R 
+            *  SET UP NULL HYPOTHESIS IVal-R 
             *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
             
         
@@ -276,7 +276,7 @@ if 	"`stratavar'"=="" {
         
     
             *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-            *  SET UP NULL HYPOTHESIS IV-P 
+            *  SET UP NULL HYPOTHESIS IVal-P 
             *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                     
             * Individual H0
@@ -319,18 +319,18 @@ if 	"`stratavar'"=="" {
 
 
         *-----------------------------------------------
-        * JOINT TESTS OF IV-R AND IV-P
+        * JOINT TESTS OF IVal-R AND IVal-P
         *-----------------------------------------------
 
-        * Test of IV-R
+        * Test of IVal-R
         qui: test   `ivr_null_multz' 
-        qui: estadd scalar    p_IVR=r(p) : model_z`nbasevars'	
-		return scalar p_IVR = r(p)
+        qui: estadd scalar    p_IValR=r(p) : model_z`nbasevars'	
+		return scalar p_IValR = r(p)
 		
-        *Test of IV-P
+        *Test of IVal-P
         qui: test `ivp_null_multz'
-        qui: estadd scalar    p_IVP=r(p) : model_z`nbasevars'
-		return scalar p_IVP = r(p)
+        qui: estadd scalar    p_IValP=r(p) : model_z`nbasevars'
+		return scalar p_IValP = r(p)
 
         cap: drop  `treatresp'  response 
 		
@@ -358,7 +358,7 @@ if 	"`stratavar'"=="" {
         if "`vce'"=="" {
             esttab `modelsz' , cells(b(fmt(3)) se(par fmt(3))) ///
             legend label    nostar            ///
-            stats(meanCA  N  p_IVR p_IVP , fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IV-R (p-val)" "Test of IV-P (p-val)" )) ///
+            stats(meanCA  N  p_IValR p_IValP , fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IVal-R (p-val)" "Test of IVal-P (p-val)" )) ///
             addnotes("The attrition tests correspond to the conditions on the equality of means provided in Eq. (15) in the paper.") ///
 			varwidth(32) 
         }
@@ -367,7 +367,7 @@ if 	"`stratavar'"=="" {
 	  	if "`vce'"!="" {
 			esttab `modelsz',  cells(b(fmt(3)) se(par fmt(3))) ///
 			legend label   nostar             ///
-			stats(meanCA N p_IVR p_IVP, fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IV-R (p-val)" "Test of IV-P (p-val)" )) ///
+			stats(meanCA N p_IValR p_IValP, fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IVal-R (p-val)" "Test of IVal-P (p-val)" )) ///
 			addnotes("The attrition tests correspond to the conditions on the equality of means provided in Eq. (15) in the paper." /// 
 					"Standard errors are `vce'.")	///
 			varwidth(32) 
@@ -381,7 +381,7 @@ if 	"`stratavar'"=="" {
 	  	if "`vce'"=="" {
 			esttab `modelsz' , cells(b(fmt(3)) se(par fmt(3))) ///
 			legend label    nostar            ///
-			stats(meanCA  N p_IVR p_IVP, fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IV-R (p-val)" "Test of IV-P (p-val)")) ///
+			stats(meanCA  N p_IValR p_IValP, fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IVal-R (p-val)" "Test of IVal-P (p-val)")) ///
 			addnotes("The attrition tests are conditions on the joint equality of means across all baseline variables (see Eq. (16) in the paper).") ///
 			varwidth(32) 
 		}
@@ -390,7 +390,7 @@ if 	"`stratavar'"=="" {
 	  	if "`vce'"!="" {
 			esttab `modelsz',  cells(b(fmt(3)) se(par fmt(3))) ///
 			legend label   nostar             ///
-			stats(meanCA  N p_IVR p_IVP, fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IV-R (p-val)" "Test of IV-P (p-val)" )) ///
+			stats(meanCA  N p_IValR p_IValP, fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IVal-R (p-val)" "Test of IVal-P (p-val)" )) ///
 			addnotes("The attrition tests are conditions on the joint equality of means across all baseline variables (see Eq. (16) in the paper)." ///
 					"Standard errors are `vce'.") ///
 			varwidth(32) 
@@ -413,7 +413,7 @@ if 	"`stratavar'"=="" {
             if "`vce'"=="" {
                 esttab `modelsz' using "`export'", cells(b(fmt(3)) se(par fmt(3))) ///
                 legend label    nostar            ///
-				stats(meanCA  N  p_IVR p_IVP , fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IV-R (p-val)" "Test of IV-P (p-val)" )) ///
+				stats(meanCA  N  p_IValR p_IValP , fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IVal-R (p-val)" "Test of IVal-P (p-val)" )) ///
 				addnotes("The attrition tests correspond to the conditions on the equality of means provided in Eq. (15) in the paper.") ///
 				varwidth(32) 
             }
@@ -422,7 +422,7 @@ if 	"`stratavar'"=="" {
             if "`vce'"!="" {
                 esttab `modelsz' using "`export'",  cells(b(fmt(3)) se(par fmt(3))) ///
                 legend label   nostar             ///
-				stats(meanCA N p_IVR p_IVP, fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IV-R (p-val)" "Test of IV-P (p-val)" )) ///
+				stats(meanCA N p_IValR p_IValP, fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IVal-R (p-val)" "Test of IVal-P (p-val)" )) ///
 				addnotes("The attrition tests  correspond to the conditions on the equality of means provided in Eq. (15) in the paper." /// 
 						"Standard errors are `vce'.")	///
 				varwidth(32) 
@@ -436,7 +436,7 @@ if 	"`stratavar'"=="" {
             if "`vce'"=="" {
                 esttab `modelsz' using "`export'" , cells(b(fmt(3)) se(par fmt(3))) ///
                 legend label    nostar            ///
-				stats(meanCA  N p_IVR p_IVP, fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IV-R (p-val)" "Test of IV-P (p-val)")) ///
+				stats(meanCA  N p_IValR p_IValP, fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IVal-R (p-val)" "Test of IVal-P (p-val)")) ///
 				addnotes("The attrition tests are conditions on the joint equality of means across all baseline variables (see Eq. (16) in the paper.)") ///
 				varwidth(32) 
             }
@@ -445,7 +445,7 @@ if 	"`stratavar'"=="" {
             if "`vce'"!="" {
                 esttab `modelsz' using "`export'",  cells(b(fmt(3)) se(par fmt(3))) ///
                 legend label   nostar             ///
-				stats(meanCA  N p_IVR p_IVP, fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IV-R (p-val)" "Test of IV-P (p-val)" )) ///
+				stats(meanCA  N p_IValR p_IValP, fmt(3 0 3 3) label("Mean value for control attritors" "Observations" "Test of IVal-R (p-val)" "Test of IVal-P (p-val)" )) ///
 				addnotes("The attrition tests are conditions on the joint equality of means across all baseline variables (see Eq. (16) in the paper.)" ///
 						"Standard errors are `vce'.") ///
 				varwidth(32) 
@@ -531,7 +531,7 @@ if "`stratavar'"!="" {
 	}
 
     *============================================================================
-	* CONDUCT THE TESTS OF IV-R and IV-P FOR CASE IN WHICH # VARLIST = 1 
+	* CONDUCT THE TESTS OF IVal-R and IVal-P FOR CASE IN WHICH # VARLIST = 1 
     *               AND SAVE ESTIMATES FOR OUTPUT TABLE
     *============================================================================
 
@@ -576,7 +576,7 @@ if "`stratavar'"!="" {
 		* SAVE NULL HYPOTHESES IN LOCALS: FULLY SATURATED MODEL
 		*------------------------------------------------------
 
-		* TEST OF IV-R
+		* Test of IVal-R
 		
 		local   ivr_vars "`int_treatstrata' `int_trs'"
 		
@@ -588,7 +588,7 @@ if "`stratavar'"!="" {
 		
 		
 	
-		* TEST OF IV-P
+		* Test of IVal-P
 
 		local   ivp_vars " `int_treatstrata' `int_respstrata' `int_trs'"
 		
@@ -605,7 +605,7 @@ if "`stratavar'"!="" {
 		*--------------------------------------------------------
 
 
-		 *Test of IV-R
+		 *Test of IVal-R
         
         local   ivr_vars_fe "`treatvars_minus1' `int_treatresp'"
         
@@ -618,7 +618,7 @@ if "`stratavar'"!="" {
 
         
         
-        *Test of IV-P
+        *Test of IVal-P
         
         local   ivp_vars_fe "`treatvars_minus1' response `int_treatresp'"
         
@@ -633,8 +633,8 @@ if "`stratavar'"!="" {
 		*----------------------------------------------------------------------
 		* REGRESSION TESTS 
 		* Note: three regressions -- see details in Section B of paper
-		*	(1) Strata FE only model: specification for IV-P test
-		*	(2) Strata FE only model: specification for IV-R test
+		*	(1) Strata FE only model: specification for IVal-P test
+		*	(2) Strata FE only model: specification for IVal-R test
         *   (3) Fully saturated model with strata FE and strata-specific coeff
 		*----------------------------------------------------------------------
 	
@@ -645,27 +645,27 @@ if "`stratavar'"!="" {
 
 		    if "`timevar'"=="" {	
             
-            * (1) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IV-P TEST
+            * (1) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IVal-P TEST
 			
 			    qui: regress	  `basevars'  `int_treatresp' `treatvars_minus1' response `stratavars'  if `touse' ,  nocons `vce'
 			    qui: estimates  store model_z1, title("`basevars'")
 
-				*Test of IV-P
+				*Test of IVal-P
 				qui: test    `ivp_null_fe'
-				qui: estadd scalar    pIVP2=r(p) : model_z1	
-				return scalar pIVP2 = `r(p)'
+				qui: estadd scalar    pIValP2=r(p) : model_z1	
+				return scalar pIValP2 = `r(p)'
 			
 		
-			* (2) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IV-R TEST
+			* (2) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IVal-R TEST
 			    // no need to save estimates b/c output table only reports p-val
 
 			    qui: regress	  `basevars'  `int_respstrata' `treatvars_minus1'  `int_treatresp' `stratavars'  if `touse' ,  nocons `vce'
            
 
-				*Test of IV-R
+				*Test of IVal-R
 				qui: test     	`ivr_null_fe'
-                qui: estadd scalar    pIVR2=r(p) : model_z1	
-				return scalar pIVR2 = `r(p)'
+                qui: estadd scalar    pIValR2=r(p) : model_z1	
+				return scalar pIValR2 = `r(p)'
 
             * (3) ESTIMATION OF FULLY SATURATED MODEL
                 // no need to save estimates b/c output table only reports p-val
@@ -673,15 +673,15 @@ if "`stratavar'"!="" {
 			    qui: regress	  `basevars' `stratavars' `int_respstrata' `int_treatstrata'   `int_trs'   if `touse' , nocons  `vce'
                 
 
-				*Test of IV-R
+				*Test of IVal-R
 				qui: test      `ivr_null' 
-                qui: estadd scalar    pIVR1=r(p) : model_z1	
-				return scalar pIVR1 = r(p)
+                qui: estadd scalar    pIValR1=r(p) : model_z1	
+				return scalar pIValR1 = r(p)
 				
-				*Test of IV-P
+				*Test of IVal-P
 				qui: test       `ivp_null'
-                qui: estadd scalar    pIVP1=r(p) : model_z1	
-				return scalar pIVP1= r(p)
+                qui: estadd scalar    pIValP1=r(p) : model_z1	
+				return scalar pIValP1= r(p)
 
 			    qui: estadd local modelfe ""
 			    qui: estadd local satmodel ""
@@ -695,27 +695,27 @@ if "`stratavar'"!="" {
 		    if "`timevar'"!="" {	
 
 
-            * (1) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IV-P TEST
+            * (1) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IVal-P TEST
 			
 			    qui xi: regress	  `basevars'  `int_treatresp' `treatvars_minus1' response `stratavars' i.`timevar' if `touse' ,  nocons `vce'
 			    qui: estimates  store model_z1, title("`basevars'")
 
-				*Test of IV-P
+				*Test of IVal-P
 				qui: test    `ivp_null_fe'
-				qui: estadd scalar    pIVP2=r(p) : model_z1	
-				return scalar pIVP2 = r(p)
+				qui: estadd scalar    pIValP2=r(p) : model_z1	
+				return scalar pIValP2 = r(p)
 				
 	
-            * (2) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IV-R TEST
+            * (2) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IVal-R TEST
                 // no need to save estimates b/c output table only reports p-val
 			 
 			    qui xi: regress	  `basevars'  `int_respstrata' `treatvars_minus1'  `int_treatresp' `stratavars' i.`timevar' if `touse' ,  nocons `vce'
                 
 
-				*Test of IV-R
+				*Test of IVal-R
 				qui: test     	`ivr_null_fe'
-                qui: estadd scalar    pIVR2=r(p) : model_z1	
-				return scalar pIVR2 = r(p)
+                qui: estadd scalar    pIValR2=r(p) : model_z1	
+				return scalar pIValR2 = r(p)
 			
 
             * (3) ESTIMATION OF FULLY SATURATED MODEL
@@ -724,15 +724,15 @@ if "`stratavar'"!="" {
 			    qui xi: regress	  `basevars' `stratavars' `int_respstrata' `int_treatstrata'   `int_trs' i.`timevar'  if `touse' , nocons  `vce'
                 
 
-				*Test of IV-R
+				*Test of IVal-R
 				qui: test      `ivr_null' 
-                qui: estadd scalar    pIVR1=r(p) : model_z1	
-				return scalar pIVR1 = r(p)
+                qui: estadd scalar    pIValR1=r(p) : model_z1	
+				return scalar pIValR1 = r(p)
 				
-				*Test of IV-P
+				*Test of IVal-P
 				qui: test       `ivp_null'
-                qui: estadd scalar    pIVP1=r(p) : model_z1	
-				return scalar pIVP1 = r(p)
+                qui: estadd scalar    pIValP1=r(p) : model_z1	
+				return scalar pIValP1 = r(p)
 
 			    qui: estadd local modelfe ""
 			    qui: estadd local satmodel ""
@@ -756,7 +756,7 @@ if "`stratavar'"!="" {
 
 
     *============================================================================
-	* CONDUCT THE TESTS OF IV-R and IV-P FOR CASE IN WHICH # VARLIST > 1 
+	* CONDUCT THE TESTS OF IVal-R and IVal-P FOR CASE IN WHICH # VARLIST > 1 
     *               AND SAVE ESTIMATES FOR OUTPUT TABLE
     *============================================================================
 
@@ -805,7 +805,7 @@ if "`stratavar'"!="" {
             * SAVE NULL HYPOTHESES IN LOCALS: FULLY STURATED MODEL
             *------------------------------------------------------
                 *~~~~~~~~~~~~~~~~~
-                *   TEST OF IV-R
+                *   Test of IVal-R
                 *~~~~~~~~~~~~~~~~
             
                 * Individual H0
@@ -823,7 +823,7 @@ if "`stratavar'"!="" {
                 
 
                 *~~~~~~~~~~~~~~~~~
-                *   TEST OF IV-P
+                *   Test of IVal-P
                 *~~~~~~~~~~~~~~~~
            
                 * Individual H0
@@ -846,7 +846,7 @@ if "`stratavar'"!="" {
 
 
                 *~~~~~~~~~~~~~~~~~
-                *   TEST OF IV-R
+                *   Test of IVal-R
                 *~~~~~~~~~~~~~~~~
         
                 * Individual H0
@@ -865,7 +865,7 @@ if "`stratavar'"!="" {
 
 
                 *~~~~~~~~~~~~~~~~~
-                *   TEST OF IV-P
+                *   Test of IVal-P
                 *~~~~~~~~~~~~~~~~
         
                 * Individual H0
@@ -889,8 +889,8 @@ if "`stratavar'"!="" {
             *--------------------------------------------------------------------
             * REGRESSION TESTS 
             * Note: three regressions -- see details in Section B of paper
-            * (1) Strata FE only model: specification for IV-P test
-		    * (2) Strata FE only model: specification for IV-R test
+            * (1) Strata FE only model: specification for IVal-P test
+		    * (2) Strata FE only model: specification for IVal-R test
             * (3) Fully saturated model with strata FE and strata-specific coeff
             *--------------------------------------------------------------------
 
@@ -899,7 +899,7 @@ if "`stratavar'"!="" {
                 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 if "`timevar'"=="" {	
                 
-                * (1) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IV-P TEST
+                * (1) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IVal-P TEST
                     //estimates and pvals are reported in output table
                 
                     *Using `vce'
@@ -910,7 +910,7 @@ if "`stratavar'"!="" {
                     qui: regress	  `var'  `int_treatresp' `treatvars_minus1' response `stratavars'  if `touse' ,  nocons 
                     qui: estimates  store mfeivp_z`i', title("`var'")
 
-                * (2) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IV-R TEST 
+                * (2) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IVal-R TEST 
                     // only pvals are repoted in output table
                     
                     *Without `vce' for suest
@@ -935,7 +935,7 @@ if "`stratavar'"!="" {
                 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                 if "`timevar'"!="" {	
 
-                 * (1) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IV-P TEST
+                 * (1) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IVal-P TEST
                     //estimates and pvals are reported in output table
                 
                     *Using `vce'
@@ -946,7 +946,7 @@ if "`stratavar'"!="" {
                     qui xi:: regress	  `var'  `int_treatresp' `treatvars_minus1' response `stratavars'  i.`timevar' if `touse' ,  nocons 
                     qui: estimates  store mfeivp_z`i', title("`var'")
 
-                * (2) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IV-R TEST 
+                * (2) ESTIMATION OF STRATA FE ONLY MODEL: SPECIFICATION OF IVal-R TEST 
                     // only pvals are repoted in output table
                     
                     *Without `vce' for suest
@@ -998,10 +998,10 @@ if "`stratavar'"!="" {
 
             qui: suest  `modelsfe_suest_ivp'  , `vce'
             
-            *Test of IV-P
+            *Test of IVal-P
             qui: test `ivp_null_multz_fe'
-            qui: estadd scalar    pIVP2=r(p) : model_z`nbasevars'
-			return scalar pIVP2= r(p)
+            qui: estadd scalar    pIValP2=r(p) : model_z`nbasevars'
+			return scalar pIValP2= r(p)
 
 
             *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1015,10 +1015,10 @@ if "`stratavar'"!="" {
 
             qui: suest  `modelsfe_suest_ivr'  , `vce'
 
-            * Test of IV-R
+            * Test of IVal-R
             qui: test   `ivr_null_multz_fe'
-            qui: estadd scalar    pIVR2=r(p) : model_z`nbasevars'	
-			return scalar pIVR2= r(p)
+            qui: estadd scalar    pIValR2=r(p) : model_z`nbasevars'	
+			return scalar pIValR2= r(p)
 
 
             *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1032,15 +1032,15 @@ if "`stratavar'"!="" {
 
             qui: suest  `modelsfull_suest'  , `vce'
 
-            * Test of IV-R
+            * Test of IVal-R
             qui: test   `ivr_null_multz_full'
-            qui: estadd scalar    pIVR1=r(p) : model_z`nbasevars'	
-            return scalar pIVR1= r(p)
+            qui: estadd scalar    pIValR1=r(p) : model_z`nbasevars'	
+            return scalar pIValR1= r(p)
 			
-            *Test of IV-P
+            *Test of IVal-P
             qui: test `ivp_null_multz_full'
-            qui: estadd scalar    pIVP1=r(p) : model_z`nbasevars'
-			return scalar pIVP1= r(p)
+            qui: estadd scalar    pIValP1=r(p) : model_z`nbasevars'
+			return scalar pIValP1= r(p)
 
         cap:   drop  `int_treatresp' `int_respstrata' `int_trs' response
 
@@ -1067,9 +1067,9 @@ if "`stratavar'"!="" {
         if "`vce'"=="" {
             esttab `modelsz', cells(b(fmt(3)) se(par fmt(3))) drop(`stratavars' ) ///
             legend label   nostar              ///
-            stats(meanCA N  satmodel  pIVR1 pIVP1 modelfe pIVR2 pIVP2, fmt(3 0 0 3 3 0 3 3 ) ///
-            label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IV-R (p-val)" "Test of IV-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
-			"Test of IV-R (p-val)" "Test of IV-P (p-val)")) ///
+            stats(meanCA N  satmodel  pIValR1 pIValP1 modelfe pIValR2 pIValP2, fmt(3 0 0 3 3 0 3 3 ) ///
+            label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IVal-R (p-val)" "Test of IVal-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
+			"Test of IVal-R (p-val)" "Test of IVal-P (p-val)")) ///
             addnotes("(+)These tests are conditions on the equality of means within strata (see Eq. 18 in the paper)." ///
 			"(&)These tests are conditions on the equality of means in the model with strata fixed effects (see Eq. 19 in the paper)." ///
 			"The reported coefficients correspond to the model in Eq. 19 in the paper." ) ///
@@ -1079,9 +1079,9 @@ if "`stratavar'"!="" {
         if "`vce'"!="" {
             esttab `modelsz', cells(b( fmt(3)) se(par fmt(3))) drop(`stratavars' ) ///
             legend label   nostar              ///
-            stats(meanCA N  satmodel  pIVR1 pIVP1 modelfe pIVR2 pIVP2, fmt(3 0 0 3 3 0 3 3 ) ///
-            label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IV-R (p-val)" "Test of IV-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
-			"Test of IV-R (p-val)" "Test of IV-P (p-val)")) ///
+            stats(meanCA N  satmodel  pIValR1 pIValP1 modelfe pIValR2 pIValP2, fmt(3 0 0 3 3 0 3 3 ) ///
+            label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IVal-R (p-val)" "Test of IVal-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
+			"Test of IVal-R (p-val)" "Test of IVal-P (p-val)")) ///
             addnotes("(+)These tests are conditions on the equality of means within strata (see Eq. 18 in the paper)." ///
 			"(&)These tests are conditions on the equality of means in the model with strata fixed effects (see Eq. 19 in the paper)." ///
 			"The reported coefficients correspond to the model in Eq. 19 in the paper." ///
@@ -1095,9 +1095,9 @@ if "`stratavar'"!="" {
         if "`vce'"=="" {
             esttab `modelsz', cells(b(fmt(3)) se(par fmt(3))) drop(`stratavars' ) ///
             legend label   nostar              ///
-            stats(meanCA N  satmodel  pIVR1 pIVP1 modelfe pIVR2 pIVP2, fmt(3 0 0 3 3 0 3 3 ) ///
-            label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IV-R (p-val)" "Test of IV-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
-			"Test of IV-R (p-val)" "Test of IV-P (p-val)")) ///
+            stats(meanCA N  satmodel  pIValR1 pIValP1 modelfe pIValR2 pIValP2, fmt(3 0 0 3 3 0 3 3 ) ///
+            label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IVal-R (p-val)" "Test of IVal-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
+			"Test of IVal-R (p-val)" "Test of IVal-P (p-val)")) ///
 			addnotes("The attrition tests are conditions on the joint equality of means across all baseline variables." ///
 			"(+)These tests are conditions on the equality of means within strata." ///
 			"(&)These tests are conditions on the equality of means in a model with strata fixed effects." ///
@@ -1108,9 +1108,9 @@ if "`stratavar'"!="" {
         if "`vce'"!="" {
             esttab `modelsz', cells(b( fmt(3)) se(par fmt(3))) drop(`stratavars' ) ///
             legend label   nostar              ///
-            stats(meanCA N  satmodel  pIVR1 pIVP1 modelfe pIVR2 pIVP2, fmt(3 0 0 3 3 0 3 3 ) ///
-            label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IV-R (p-val)" "Test of IV-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
-			"Test of IV-R (p-val)" "Test of IV-P (p-val)")) ///
+            stats(meanCA N  satmodel  pIValR1 pIValP1 modelfe pIValR2 pIValP2, fmt(3 0 0 3 3 0 3 3 ) ///
+            label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IVal-R (p-val)" "Test of IVal-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
+			"Test of IVal-R (p-val)" "Test of IVal-P (p-val)")) ///
 			addnotes("The attrition tests are conditions on the joint equality of means across all baseline variables." ///
 			"(+)These tests are conditions on the equality of means within strata." ///
 			"(&)These tests are conditions on the equality of means in a model with strata fixed effects." ///
@@ -1131,9 +1131,9 @@ if "`stratavar'"!="" {
             if "`vce'"=="" {
                 esttab `modelsz' using "`export'", cells(b(fmt(3)) se(par fmt(3))) drop(`stratavars' ) ///
                 legend label   nostar              ///
-				stats(meanCA N  satmodel  pIVR1 pIVP1 modelfe pIVR2 pIVP2, fmt(3 0 0 3 3 0 3 3 ) ///
-				label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IV-R (p-val)" "Test of IV-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
-				"Test of IV-R (p-val)" "Test of IV-P (p-val)")) ///
+				stats(meanCA N  satmodel  pIValR1 pIValP1 modelfe pIValR2 pIValP2, fmt(3 0 0 3 3 0 3 3 ) ///
+				label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IVal-R (p-val)" "Test of IVal-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
+				"Test of IVal-R (p-val)" "Test of IVal-P (p-val)")) ///
 				addnotes("(+)These tests are conditions on the equality of means within strata (see Eq. 18 in the paper)." ///
 				"(&)These tests are conditions on the equality of means in the model with strata fixed effects (see Eq. 19 in the paper)." ///
 				"The reported coefficients correspond to the model in Eq. 19 in the paper." ) ///
@@ -1143,9 +1143,9 @@ if "`stratavar'"!="" {
             if "`vce'"!="" {
                 esttab `modelsz' using "`export'", cells(b( fmt(3)) se(par fmt(3))) drop(`stratavars' ) ///
                 legend label   nostar              ///
-				stats(meanCA N  satmodel  pIVR1 pIVP1 modelfe pIVR2 pIVP2, fmt(3 0 0 3 3 0 3 3 ) ///
-				label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IV-R (p-val)" "Test of IV-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
-				"Test of IV-R (p-val)" "Test of IV-P (p-val)")) ///
+				stats(meanCA N  satmodel  pIValR1 pIValP1 modelfe pIValR2 pIValP2, fmt(3 0 0 3 3 0 3 3 ) ///
+				label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IVal-R (p-val)" "Test of IVal-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
+				"Test of IVal-R (p-val)" "Test of IVal-P (p-val)")) ///
 				addnotes("(+)These tests are conditions on the equality of means within strata (see Eq. 18 in the paper)." ///
 				"(&)These tests are conditions on the equality of means in the model with strata fixed effects (see Eq. 19 in the paper)." ///
 				"The reported coefficients correspond to the model in Eq. 19 in the paper."  ///
@@ -1159,9 +1159,9 @@ if "`stratavar'"!="" {
             if "`vce'"=="" {
                 esttab `modelsz' using "`export'", cells(b(fmt(3)) se(par fmt(3))) drop(`stratavars' ) ///
                 legend label   nostar              ///
-				stats(meanCA N  satmodel  pIVR1 pIVP1 modelfe pIVR2 pIVP2, fmt(3 0 0 3 3 0 3 3 ) ///
-				label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IV-R (p-val)" "Test of IV-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
-				"Test of IV-R (p-val)" "Test of IV-P (p-val)")) ///
+				stats(meanCA N  satmodel  pIValR1 pIValP1 modelfe pIValR2 pIValP2, fmt(3 0 0 3 3 0 3 3 ) ///
+				label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IVal-R (p-val)" "Test of IVal-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
+				"Test of IVal-R (p-val)" "Test of IVal-P (p-val)")) ///
 				addnotes("The attrition tests are conditions on the joint equality of means across all baseline variables." ///
 				"(+)These tests are conditions on the equality of means within strata." ///
 				"(&)These tests are conditions on the equality of means in a model with strata fixed effects." ///
@@ -1172,9 +1172,9 @@ if "`stratavar'"!="" {
             if "`vce'"!="" {
                 esttab `modelsz' using "`export'", cells(b( fmt(3)) se(par fmt(3))) drop(`stratavars' ) ///
                 legend label   nostar              ///
-				stats(meanCA N  satmodel  pIVR1 pIVP1 modelfe pIVR2 pIVP2, fmt(3 0 0 3 3 0 3 3 ) ///
-				label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IV-R (p-val)" "Test of IV-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
-				"Test of IV-R (p-val)" "Test of IV-P (p-val)")) ///
+				stats(meanCA N  satmodel  pIValR1 pIValP1 modelfe pIValR2 pIValP2, fmt(3 0 0 3 3 0 3 3 ) ///
+				label("Mean value for control attritors" "Observations"   "TESTABLE RESTRICTIONS(+)"  "Test of IVal-R (p-val)" "Test of IVal-P (p-val)"  "IMPLICATIONS OF RESTR.(&)" ///
+				"Test of IVal-R (p-val)" "Test of IVal-P (p-val)")) ///
 				addnotes("The attrition tests are conditions on the joint equality of means across all baseline variables." ///
 				"(+)These tests are conditions on the equality of means within strata." ///
 				"(&)These tests are conditions on the equality of means in a model with strata fixed effects." ///

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.0 13Nov2023}{...}
+{* *! version 2.0.1 7May2025}{...}
 {findalias asfradohelp}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[R] help" "help help"}{...}
@@ -11,10 +11,12 @@
 {title:Title}
 
 {phang}
-{bf:attregtest} {hline 2} implements the regression-based attrition tests proposed in {help attregtest##JHR2023: Ghanem et al. (2023)}. These attrition tests are outcome-specific and can be applied to field experiments with completely, cluster, or stratified randomization. 
+{bf:attregtest} {hline 2} implements the regression-based attrition tests proposed in {help attregtest##JHR2024: Ghanem et al. (2024)}. These attrition tests are outcome-specific and can be applied to field experiments with completely, cluster,
+or stratified randomization. 
 
 {pstd}
-This new version of the program allows for the inclusion of additional baseline data on the determinants of (or proxies for) the outcome of interest in the attrition tests. The output of this program is a table with the main regression results and the p-values of the internal validity tests for the outcome in question.{p_end}
+This new version of the program allows for the inclusion of additional baseline data on the determinants of (or proxies for) the outcome of interest in the attrition tests. The output of this program is a table with the main regression results 
+and the p-values of the internal validity tests for the outcome in question.{p_end}
 
 {marker syntax}{...}
 {title:Syntax}
@@ -41,7 +43,8 @@ respvar(varname)
 
 
 {pstd}NOTES:{p_end}
-{pstd}{bf: varlist} refers to the outcome of interest measured at baseline. This varlist can include one or multiple variables depending on whether the researcher chooses to include baseline data on the determinants of (or proxies for) the outcome of interest in the attrition tests as well. See Section IV.B in the paper for a discussion on the proper use of covariates in the attrition tests. {p_end}
+{pstd}{bf: varlist} refers to the outcome of interest measured at baseline. This varlist can include one or multiple variables depending on whether the researcher chooses to include baseline data on the determinants of (or proxies for) the 
+outcome of interest in the attrition tests as well. See Section IV.B in the paper for a discussion on the proper use of covariates in the attrition tests. {p_end}
 {pstd}{bf:treatvar} must be a single numerical variable with information on treatment status. This program can be applied to settings with multiple treatment arms as long as
 the reference treatment (or control group) takes the value of zero.{p_end}
 {pstd}{bf:respvar} is a binary variable that takes the value of one if the outcome of interest is observed at follow-up.{p_end} 
@@ -54,8 +57,9 @@ update this package using the following code: {it:ssc install estout, replace}.{
 {title:Description}
 
 {pstd}
-{cmd:attregtest} implements the mean version of the two attrition tests proposed in {help attregtest##JHR2023: Ghanem et al. (2023)}. The first test focuses on the testable implication of the identifying assumption of internal validity for the respondent subpopulation (IV-R), and the second test is based on the testable implication
-of the identifying assumption of internal validity for the study population (IV-P). For more details on these regression-based tests, see Appendix A in the published version of the paper.  {p_end}
+{cmd:attregtest} implements the mean version of the two attrition tests proposed in {help attregtest##JHR2024: Ghanem et al. (2024)}. The first test focuses on the testable implication of the identifying assumption of internal validity for 
+the respondent subpopulation (IVal-R), and the second test is based on the testable implication
+of the identifying assumption of internal validity for the study population (IVal-P). For more details on these regression-based tests, see Appendix A in the published version of the paper.  {p_end}
 
 {pstd}
 These attrition tests can be applied to completely and cluster randomized experiments as well as experiments with stratified randomization. Here is a brief description of the null hypotheses and the results reported in each case: {p_end}
@@ -64,23 +68,25 @@ These attrition tests can be applied to completely and cluster randomized experi
 {ul:Completely and Cluster Randomized Experiments:}{p_end}
 
 {pstd} 
-As detailed in Equation 15 in the paper, if the experiment is completely or cluster randomized, the null hypotheses of the mean IV-R
-and IV-P tests for the outcome of interest Y_{i0} are given by:{p_end}
+As detailed in Equation 15 in the paper, if the experiment is completely or cluster randomized, the null hypotheses of the mean IVal-R
+and IVal-P tests for the outcome of interest Y_{i0} are given by:{p_end}
 
 {p 12 17 2}
 Y_{i0}= a + B_{01}R_{i} + B_{10}T_{i} + B_{11}T_{i}R_{i} + e_{i}
 {p_end}
 {p 12 17 2}
-(IV-R)   H_o: B_{10}=B_{11}=0.{p_end}
+(IVal-R)   H_o: B_{10}=B_{11}=0.{p_end}
 {p 12 17 2}
-(IV-P)   H_o: B_{01}=B_{10}=B_{11}=0.{p_end}
+(IVal-P)   H_o: B_{01}=B_{10}=B_{11}=0.{p_end}
 
 {pstd} 
-where T_{i} denotes treatment status and R_{i} refers to the outcome-specific response status at follow-up. In this case, the null hypothesis of the IV-R test consists of the mean equality of baseline outcome for treatment and control respondents as well as treatment and control attritors. In contrast, the null hypothesis of the IV-P test 
+where T_{i} denotes treatment status and R_{i} refers to the outcome-specific response status at follow-up. In this case, the null hypothesis of the IVal-R test consists of the mean equality of baseline outcome for treatment and control respondents
+ as well as treatment and control attritors. In contrast, the null hypothesis of the IVal-P test 
 consists of the mean equality of baseline outcome across all treatment/response subgroups.{p_end}
 
 {pstd} 
-{it: Adding Covariates to The Test:} If the researcher includes additional baseline data on the determinants of (or proxies for) the outcome of interest in the attrition test, the program conducts the tests proposed in Equation 16 in the paper. These attrition tests are conditions on the joint equality of means across all the specified variables. 
+{it: Adding Covariates to The Test:} If the researcher includes additional baseline data on the determinants of (or proxies for) the outcome of interest in the attrition test, the program conducts the tests proposed in Equation 16 in the paper. 
+These attrition tests are conditions on the joint equality of means across all the specified variables. 
 See Section IV.B in the paper for a discussion on the proper use of covariates in the attrition tests.{p_end}
 
 
@@ -93,42 +99,49 @@ to produce an output table with the main regression results and the p-values of 
 {ul:Stratified Randomized Experiments:}{p_end}
 
 {pstd} 
-If the experiment is stratified, the mean testable restrictions of the IV-R and IV-P assumptions are conditional versions of the testable restrictions for completely or clustered experiments. Thus, the option {opt stratavar(varname)} must be specified. As described in Equation 18 in the paper, the attrition tests in these settings are given by:{p_end}
+If the experiment is stratified, the mean testable restrictions of the IVal-R and IVal-P assumptions are conditional versions of the testable restrictions for completely or clustered experiments. Thus, the option {opt stratavar(varname)} must
+ be specified. As described in Equation 18 in the paper, the attrition tests in these settings are given by:{p_end}
 
 {p 12 17 2}
 Y_{i0}= \Sum_{s=1}^{S}[a^{s} + B_{01}^{s}R_{i} + B_{10}^{s}T_{i} + B_{11}^{s}T_{i}R_{i}]1{S_{i}=s} + e_{i}
 {p_end}
 {p 12 17 2}
-(IV-R)   H_o: B_{10}^{s}=B_{11}^{s}=0 for all s=1,2,...,S.{p_end}
+(IVal-R)   H_o: B_{10}^{s}=B_{11}^{s}=0 for all s=1,2,...,S.{p_end}
 {p 12 17 2}
-(IV-P)   H_o: B_{01}^{s}=B_{10}^{s}=B_{11}^{s}=0 for all s=1,2,...,S.{p_end}
+(IVal-P)   H_o: B_{01}^{s}=B_{10}^{s}=B_{11}^{s}=0 for all s=1,2,...,S.{p_end}
  
 {pstd} 
-where T_{i} is treatment status, R_{i} is the response status at follow-up, and S is the total number of strata used in the randomization. In this case, the null hypothesis of the IV-R test are equality restrictions on the mean baseline outcome for treatment
+where T_{i} is treatment status, R_{i} is the response status at follow-up, and S is the total number of strata used in the randomization. In this case, the null hypothesis of the IVal-R test are equality restrictions on the mean baseline outcome 
+for treatment
 and control respondents as well as treatment and control attritors {it:within} each stratum, while the null hypothesis of 
-the IV-P test are equality restrictions on the mean baseline outcome across all treatment/response subgroups {it:within} each stratum. {p_end}
+the IVal-P test are equality restrictions on the mean baseline outcome across all treatment/response subgroups {it:within} each stratum. {p_end}
 
 {pstd}
-Since testing the equality of means {it:within} each stratum may result in high-dimensional inference issues when the number of strata is large, the program also reports the test results of the implications of these restrictions. These implications, detailed in Equation 19 in the paper, are equality restrictions on the mean baseline outcome across subgroups in a model with strata fixed effects: {p_end}
+Since testing the equality of means {it:within} each stratum may result in high-dimensional inference issues when the number of strata is large, the program also reports the test results of the implications of these restrictions. 
+These implications, detailed in Equation 19 in the paper, are equality restrictions on the mean baseline outcome across subgroups in a model with strata fixed effects: {p_end}
 
 {p 12 17 2}
 Y_{i0}= \Sum_{s=1}^{S}[a^{s} +B_{01}^{s}R_{i}]1{S_{i}=s} + B_{10}T_{i} + B_{11}T_{i}R_{i} + e_{i}
 {p_end}
 {p 12 17 2}
-(IV-R)   H_o: B_{10}=B_{11}=0.{p_end}
+(IVal-R)   H_o: B_{10}=B_{11}=0.{p_end}
 
 {p 12 17 2}
 Y_{i0}= \Sum_{s=1}^{S}[a^{s}]1{S_{i}=s} + B_{01}R_{i} + B_{10}T_{i} + B_{11}T_{i}R_{i} + e_{i}
 {p_end}
 {p 12 17 2}
-(IV-P)   H_o: B_{01}=B_{10}=B_{11}=0.{p_end}
+(IVal-P)   H_o: B_{01}=B_{10}=B_{11}=0.{p_end}
 
 
 {pstd} 
-{it: Reported Output:} Since the appropriate type of attrition tests for stratified experiments (testable restrictions vs implications) depends on each setting, {cmd:attregtest} produces an output table  with both sets of p-values. The first two p-values correspond to the test of the mean testable restrictions {it: within} each stratum, while the last two p-values correspond to the tests of the implications (i.e., model with strata fixed effects). This table also displays the regression coefficients of the model with strata fixed effects (Equation 19 in the paper), but the fixed effects are omitted for brevity. The p-vals of the testable restrictions are stored as {it: r(pIVR1)} and {it: r(pIVP1)}, while the p-vals of the implications of these restrictions are stored as {it: r(pIVR2)} and {it: r(pIVP2)}.{p_end}
+{it: Reported Output:} Since the appropriate type of attrition tests for stratified experiments (testable restrictions vs implications) depends on each setting, {cmd:attregtest} produces an output table  with both sets of p-values. The first 
+two p-values correspond to the test of the mean testable restrictions {it: within} each stratum, while the last two p-values correspond to the tests of the implications (i.e., model with strata fixed effects). This table also displays the 
+regression coefficients of the model with strata fixed effects (Equation 19 in the paper), but the fixed effects are omitted for brevity. The p-vals of the testable restrictions are stored as {it: r(pIValR1)} and {it: r(pIValP1)}, while the p-vals 
+of the implications of these restrictions are stored as {it: r(pIValR2)} and {it: r(pIValP2)}.{p_end}
 
 {pstd} 
-{it: Adding Covariates to The Test:} If the researcher includes additional baseline data on the determinants of (or proxies for) the outcome of interest in the attrition test, the program tests the joint versions of the testable restrictions and implications described above across all the specified variables in {it: varlist}. 
+{it: Adding Covariates to The Test:} If the researcher includes additional baseline data on the determinants of (or proxies for) the outcome of interest in the attrition test, the program tests the joint versions of the testable restrictions
+and implications described above across all the specified variables in {it: varlist}. 
 See Section IV.B in the paper for a discussion on the proper use of covariates in the attrition tests. {p_end}
 
 
@@ -214,9 +227,9 @@ See {helpb esttab:[R] {it:esttab}} for more details on the supported formats.{p_
 {marker references}{...}
 {title:References}
 
-{marker JHR2023}{...}
+{marker JHR2024}{...}
 {phang}
-Ghanem, Dalia, Hirshleifer, Sarojini, Ortiz-Becerra, Karen. 2023. Testing Attrition Bias in Field Experiments. {it:Journal of Human Resources}, 
+Ghanem, Dalia, Sarojini Hirshleifer, and Karen Ortiz-Beccera, "Testing Attrition Bias in Field Experiments," {it:Journal of Human Resources}, 2024. 
 http//doi.org/10.3368/jhr.0920-11190R2.{p_end}
 
 {marker authors}{...}

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0 03May2025}{...}
+{* *! version 1.0.1 07May2025}{...}
 
 {title:Title}
 
@@ -14,7 +14,8 @@
 {p 8 17 2}
 {cmd:matchi2}
 {it:matrix_name}
-
+[{cmd:,} 
+{opth tit:le(strings:string)}]
 
 {pstd}
 {it: matrix_name} identifies a two-way matrix (i.e. containing at least two rows) of frequency counts. 
@@ -29,6 +30,13 @@ to {helpb tabi} when data are already stored in matrix form.
 
 
 
+{title:Options}
+
+{p 4 8 2}
+{opth tit:le(strings:string)} title displayed above table{p_end}
+
+
+
 {title:Examples}
 
 {pstd}
@@ -37,9 +45,22 @@ Generate a 2 X 3 matrix of frequency counts {p_end}
 {phang2}{cmd:. matrix A = (30, 18, 38 \ 13, 7, 22)}
 
 {pstd}
+Specify row and column names {p_end}
+
+{phang2}{cmd:. matrix rownames A = Yes No}
+
+{phang2}{cmd:. matrix colnames A = Left Center Right}
+
+
+{pstd}
 Redisplay the matrix in table format and report Pearson's chi-squared  {p_end}
 
 {phang2}{cmd:. matchi2 A}
+
+{pstd}
+Add a title  {p_end}
+
+{phang2}{cmd:. matchi2 A, title(Doesn't this work great?)}
 
 
 
@@ -57,7 +78,7 @@ Redisplay the matrix in table format and report Pearson's chi-squared  {p_end}
 
 
 
-{marker citation}{title:Citation of {cmd:markovci}}
+{marker citation}{title:Citation of {cmd:matchi2}}
 
 {p 4 8 2}{cmd:matchi2} is not an official Stata command. It is a free contribution
 to the research community, like a paper. Please cite it as such: {p_end}

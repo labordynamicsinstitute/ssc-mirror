@@ -1,8 +1,9 @@
+*! 1.0.1 Ariel Linden 07May2025 // added the "title" option
 *! 1.0.0 Ariel Linden 03May2025 
 
 program matchi2, rclass
 		version 11.0
-		syntax anything
+		syntax anything [, TITle(string)]    
 		
 		local count : word count `anything'
 		if (`count' > 1) exit = 103
@@ -19,7 +20,8 @@ program matchi2, rclass
 		mata: matchi("`anything'")
 		local pval =  1-chi2(`df',`chisq')
 		
-		matlist `anything',  border(bottom) lines(oneline) tindent(1) aligncolnames(ralign) twidth(8) format(%6.0f)
+		local title title(`title')
+		matlist `anything',  border(bottom) lines(oneline) tindent(1) aligncolnames(ralign) twidth(8) format(%6.0f) `title'
 		
 		di as txt _n "   Pearson chi2({bf:`df'}) = " as result %6.4f `chisq' as txt "   Pr = " as result %5.3f `pval'
 		
