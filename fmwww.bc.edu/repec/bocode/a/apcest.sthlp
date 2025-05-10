@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 || 30.04.2025 || Gordey Yastrebov}{...}
+{* *! version 1.1 || 08.05.2025 || Gordey Yastrebov}{...}
 {hi:help apcest}{...}
 {right:also see: {helpb apcbound}, {helpb apcplot}}
 {hline}
@@ -55,6 +55,10 @@ a variable {it:varname} will be sliced as per {opt cut(varname)} in Stata's {cmd
 command with the option {opt at(numlist)}. A sliced variable will be temporary and it will be dropped after estimation, leaving the original variable {it:varname} intact. A reference will be assigned
 automatically as one of the middle categories.
 
+{pstd}{bf:All} continuous APC variables will be automatically mean-centered prior to model 
+estimation and restored to their original scales afterward. Mean-centering is taken into 
+account in the rendering of APC effects by {cmd:apcplot}.
+
 {pstd}{bf:Important notice:} All source APC variables specified with {it:varname}, 
 regardless of whether they are specified as continuous or categorical, must have 
 consistent scales. A most straightforward example of scale consistency is when all 
@@ -72,27 +76,31 @@ are measured in years).
 
 {title:Examples}
 
-{pstd}Estimate a simple OLS model with {bf:bmi} as a dependent variable,
-{bf:male} and {bf:white} as controls, {bf:age} specified as a 4th order 
-polynomial, {bf:period} specified as a categorical variable, and {bf:cohort}
-sliced into 10 year intervals:
+{pstd}Load sample data:
 
-	. {cmd:apcest regress bmi male white, a(age^4) p(i.period) c(cohort:1900(10)2000)}
+	. {stata webuse nlswork, clear}
 
-{pstd}Same as above, except estimating a logistic regression with a binary
-{bf:unemployed} variable, selecting observations and specifying weight, and asking 
-the estimation command to return odds ratios instead of regular logits:
+{pstd}Estimate a simple OLS model with {bf:ln_wage} as a dependent variable,
+{bf:race} as a control, {it:age} effect specified using 2nd order 
+polynomial terms, {it:period} effect specified using single-year dummies, and {it:cohort} effect
+specified using a simple linear term:
 
-	. {cmd:apcest logit unemployed male white if age > 25 [fweight = weight], a(age^4) p(i.period) c(cohort:1900(10)2000) or}
+	. {stata apcest regress ln_wage i.race, a(age^2) p(i.year) c(birth_yr)}
+
+{pstd}Same as above, except estimating a logistic regression with a binary {bf:msp} 
+variable on a subset of observations, and asking the estimation command to return odds 
+ratios instead of regular logits:
+
+	. {stata apcest logit msp i.race if age > 25, a(age^2) p(i.year) c(birth_yr) or}
 
 {pstd}An example with mixed model estimation:
 
-	. {cmd:apcest mixed gpa male white || school: gpa, a(age^4) p(i.period) c(cohort:1900(10)2000)}
+	. {stata "apcest mixed ln_wage i.race || idcode:, a(age^2) p(i.year) c(birth_yr)"}
 
 
 {title:Stored results}
 
-{pstd}{cmd:apest} stores all estimation results in a container called {bf:__apcest}, 
+{pstd}{cmd:apcest} stores all estimation results in a container called {bf:__apcest}, 
 from which {helpb apcbound} and {helpb apcplot} commands will extract all relevant
 information in post-estimation.
 

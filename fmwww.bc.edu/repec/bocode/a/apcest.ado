@@ -2,7 +2,7 @@
 APCEST: An estimation wrapper command to facilitate Fosse-Winship bounding 
 approach to APC analysis.
 ********************************************************************************
-Version: 1.0 (30.04.2025)
+Version: 1.1 (08.05.2025)
 Author: Gordey Yastrebov, University of Cologne
 License: GPL-3.0
 *******************************************************************************/
@@ -22,7 +22,7 @@ License: GPL-3.0
 	pr de _apcest, eclass
 	syntax anything(name=estimation_cmd) [if] [in] [aw fw pw iw], ///
 		a(string) p(string) c(string) [*]
-	
+
 *** Parse estimation command
 	gettoken cmd vars : estimation_cmd
 	gettoken depvar indepvars: vars
@@ -76,9 +76,9 @@ License: GPL-3.0
 	}
 	
 *** Scale consistency check
-	g __apcacheck = `pvar' - `cvar'
-	g __apcpcheck = `cvar' + `avar'
-	g __apcccheck = `pvar' - `avar'
+	qui g __apcacheck = `pvar' - `cvar'
+	qui g __apcpcheck = `cvar' + `avar'
+	qui g __apcccheck = `pvar' - `avar'
 	foreach apcvar in a p c {
 		qui reg ``apcvar'var' __apc`apcvar'check
 		if !inrange(_b[__apc`apcvar'check], .95, 1.05) {
@@ -88,6 +88,8 @@ License: GPL-3.0
 		drop __apc`apcvar'check
 	}
 	
+*** Define estimation sample to bypass the problem with [if] (when conditioning on APC variabels)
+	qui cap reg `depvar' `aspec' `pspec' `cspec' `indepvars' `if' `in'
 	
 *** Continuous variable transformations
 	foreach apcvar in a p c {
@@ -100,17 +102,15 @@ License: GPL-3.0
 		else if "``apcvar'numlist'" != "" {
 			qui clonevar __apccache``apcvar'var' = ``apcvar'var'
 			drop ``apcvar'var'
-			egen ``apcvar'var' = cut(__apccache``apcvar'var'), at(``apcvar'numlist')
+			qui egen ``apcvar'var' = cut(__apccache``apcvar'var'), at(``apcvar'numlist')
 			levelsof ``apcvar'var', l(values)
 			loc base = `:word `=floor(`:word count `values''/2)' of `values''
 			loc `apcvar'spec ib`base'.``apcvar'var'
 		}
 	}
-	
 		
 *** Run estimation command and store estimates
-	n `cmd' `depvar' `avar' `cvar' `aspec' `pspec' `cspec' `indepvars' ///
-		`if' `in' [`weight'`exp'], `options'
+	n `cmd' `depvar' `avar' `cvar' `aspec' `pspec' `cspec' `indepvars' if e(sample) `in' [`weight'`exp'], `options'
 	foreach apcvar in a p c {
 		if !``apcvar'continuous' {
 			loc colnames : colnames r(table)
@@ -133,11 +133,11 @@ License: GPL-3.0
 	
 *** Uncache everything
 	foreach v of varlist __apccache* {
-		uncache_var `v'
+		qui uncache_var `v'
 	}
 
 	end
-	
+
 /////// Routines: //////////////////////////////////////////////////////////////
 	pr de confirm_exists
 		syntax varlist(min=1 max=1)

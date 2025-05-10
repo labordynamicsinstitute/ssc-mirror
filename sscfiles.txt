@@ -17528,6 +17528,7 @@ fmwww.bc.edu/repec/bocode/t/MilanoDistricts-Coordinates.dta
 fmwww.bc.edu/repec/bocode/t/triplot.hlp
 fmwww.bc.edu/repec/bocode/t/tosql.pkg
 fmwww.bc.edu/repec/bocode/t/tabsplit6.hlp
+fmwww.bc.edu/repec/bocode/t/timeleft.sthlp
 fmwww.bc.edu/repec/bocode/t/tabsheet.ado
 fmwww.bc.edu/repec/bocode/t/testijfe.pkg
 fmwww.bc.edu/repec/bocode/t/tomata.hlp
@@ -17674,6 +17675,7 @@ fmwww.bc.edu/repec/bocode/t/tlist.ado
 fmwww.bc.edu/repec/bocode/t/TDICPS.m
 fmwww.bc.edu/repec/bocode/t/ltihtest16.mlib
 fmwww.bc.edu/repec/bocode/t/tfdiff_Chicago2019.pdf
+fmwww.bc.edu/repec/bocode/t/timeleft.ado
 fmwww.bc.edu/repec/bocode/t/twostepweakiv.sthlp
 fmwww.bc.edu/repec/bocode/t/t2docx.pkg
 fmwww.bc.edu/repec/bocode/t/treatoprobitsim_work.ado
@@ -17845,6 +17847,7 @@ fmwww.bc.edu/repec/bocode/t/ttestplus.pkg
 fmwww.bc.edu/repec/bocode/t/tail.sthlp
 fmwww.bc.edu/repec/bocode/t/tmpinvi.pkg
 fmwww.bc.edu/repec/bocode/t/tesensitivity.ado
+fmwww.bc.edu/repec/bocode/t/timeleft.pkg
 fmwww.bc.edu/repec/bocode/t/title.hlp
 fmwww.bc.edu/repec/bocode/t/try.ado
 fmwww.bc.edu/repec/bocode/t/tabone.pkg
@@ -19278,6 +19281,7 @@ fmwww.bc.edu/repec/bocode/e/ecollapse.sthlp
 fmwww.bc.edu/repec/bocode/e/elasticregress.ado
 fmwww.bc.edu/repec/bocode/e/estoutdef.html
 fmwww.bc.edu/repec/bocode/e/ebalfit.zip
+fmwww.bc.edu/repec/bocode/e/example_StandardDID.do
 fmwww.bc.edu/repec/bocode/e/effdisp.sthlp
 fmwww.bc.edu/repec/bocode/e/electind.html
 fmwww.bc.edu/repec/bocode/e/eventstudyinteract.ado
@@ -19462,6 +19466,7 @@ fmwww.bc.edu/repec/bocode/e/elfs_instance.sthlp
 fmwww.bc.edu/repec/bocode/e/example_prevent.dta
 fmwww.bc.edu/repec/bocode/e/ereplace.sthlp
 fmwww.bc.edu/repec/bocode/e/EXAMPLE_mata_shortrun.do
+fmwww.bc.edu/repec/bocode/e/example_StaggeredDID.do
 fmwww.bc.edu/repec/bocode/e/expy.pkg
 fmwww.bc.edu/repec/bocode/e/enwei.sthlp
 fmwww.bc.edu/repec/bocode/e/elabel_parsefcn.sthlp

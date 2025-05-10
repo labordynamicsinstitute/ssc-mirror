@@ -1,0 +1,20 @@
+d 'TIMELEFT': module to count the number of days...
+d
+d      This program counts the number of days until 20 January
+d 2029. Credit due to The Economist, cover story of 26 April
+d 2025. 
+d
+d KW: calendar
+d KW: academic freedom
+d KW: US Constitution
+d KW: Foxtrot Delta Tango
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20250509
+d
+d Author: Kit Baum, Boston College
+d Support: email baum@@bc.edu
+d
+f timeleft.ado
+f timeleft.sthlp

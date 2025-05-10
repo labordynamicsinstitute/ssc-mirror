@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 || 30.04.2025 || Gordey Yastrebov}{...}
+{* *! version 1.1 || 08.05.2025 || Gordey Yastrebov}{...}
 {hi:help apcplot}{...}
 {right:also see: {helpb apcest}, {helpb apcbound}}
 {hline}
@@ -39,7 +39,7 @@ is specified, only age and cohort effects will be plotted.
 {synopt:{opt gridf:ading(#)}}sets the intensity of grid fading, where # is a value between 0 (default) and 1{p_end}
 {synopt:{opt gridlabops}({help scatter##marker_label_options:{it:marker_label_options}})}custom grid labels decoration{p_end}
 {synopt:{opt gridline}({help line_options:{it:line_options}})}custom grid lines decoration{p_end}
-{synopt:{opt gridp:alette}({help colorpalette##palette:{it:palette}})}grid color palette; default is {help colorpalette##tableau:{it:tableau}}{p_end}
+{synopt:{opt gridp:alette}({help colorpalette##palette:{it:palettes}})}grid color palette(s); default is {help colorpalette##:{it:tableau}}{p_end}
 
 {syntab:{help apcplot##gradient:Gradient options}}
 {synopt:{opt nogr:adient}}suppresses gradient rendering{p_end}
@@ -135,9 +135,11 @@ custom look for the grid lines.
 {phang}{opt gridlabels}({help marker_label_options:{it:marker_label_options}}) 
 determines the custom look for the marker labels for rotation degrees.
 
-{phang}{opt gridpalette}({help colorpalette##palette:{it:palette}}) determines 
-the color palette, i.e., a set of colors, to color the grid lines
-({help colorpalette##tableau:{it:tableau}} is the default). 
+{phang}{opt gridpalette}({help colorpalette##palette:{it:palettes}}) determines the color 
+palette(s) to color the grid lines. If two palettes are specified (need to be separated by
+a comma, e.g., {opt gridpalette(palette1, palette2)}), positive and negative grid increments 
+will be rendered using separate palettes. The default palette is set to 
+{help colorpalette##:{it:tableau}}. 
 
 {marker gradient}{dlgtab:Gradient options}
 
@@ -181,36 +183,41 @@ the combined plot.
 
 
 {title:Examples}
-	
-{pstd}A simple call to inspect the nonlinear shapes of APC effects after estimation:
 
-	. {cmd:apcest regress lnwage, a(age^2) p(i.period) c(cohort:1900(10)2000)}
-	. {cmd:apcplot, combined}
+{pstd}Load sample data and estimate a model:
+
+	. {stata webuse nlswork, clear}
+	. {stata apcest regress ln_wage, a(age^2) p(ib78.year) c(birth_yr)}
+	
+{pstd}A simple call to inspect the nonlinear shapes of APC effects after estimation in 
+a single combined plot:
+
+	. {stata apcplot, combined}
 
 {pstd}The nonlinear shapes enhanced with the diagnostic grid lines for the age effects 
-with 3 degrees of rotation for α, both positive and negative, and each step defined as .001:
+with 3 degrees of rotation for α, both positive and negative, and each step defined as .01:
 	
-	. {cmd:apcplot A, grid(.001 3)}
+	. {stata apcplot A, grid(.01 3)}
 
 {pstd}A diagnostic grid for all APC effects, with the grid anchored and only positive 
-rotation assumed for α and γ (accordingly, negative for π):
+rotation assumed for α and γ (accordingly, negative for π), in a combined plot:
 
-	. {cmd:apcplot, grid(+.001 3) anchorgrid}
+	. {stata apcplot, grid(+.01 3) anchorgrid combined}
 
-{pstd}The shapes of APC effects assuming custom values for α and γ, with 95% confidence 
-intervals for the nonlinear effects included:
+{pstd}The shape of period effects assuming a specific custom value for α, 
+with 95% confidence intervals for the nonlinear effects included:
 	
-	. {cmd:apcplot, a(.001) c(-.02) ci(95)}
+	. {stata apcplot P C, a(.01) ci(95)}
 
 {pstd}A call to visualize the bounded solution obtained after {cmd:apcbound}:
 
-	. {cmd:apcbound, a(0 .) p(0 .)}
-	. {cmd:apcplot, bounded combined}
+	. {stata apcbound, p(-.03 .) c(0 .)}
+	. {stata apcplot, bounded combined}
 
 {pstd}Requesting a bounded solution, with 95% confidence intervals shown:
 
-	. {cmd:apcbound, a(0 .) p(0 .) ci(95)}
-	. {cmd:apcplot, bounded combined ci(95)}
+	. {stata apcbound, p(-.03 .) c(0 .) ci(95)}
+	. {stata apcplot, bounded combined ci(95)}
 
 
 {title:Author}

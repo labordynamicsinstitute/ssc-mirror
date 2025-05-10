@@ -74,6 +74,7 @@ p tidy module to ease reshaping of data
 p tidytuesday module for fetching tidytuesday data
 p tihtest module to test for time invariant unobserved heterogeneity in generalized linear models for panel data
 p timeit module to provide single line version of timer on/off
+p timeleft module to count the number of days...
 p timestamp module to obtain a UNIX timestamp and the current time of a user-specified timezone
 p timeuse module to transform an episode file into a diary-level file containing basic time use information
 p titebeta module to conduct toxicity monitoring for phase 2 (and 3) trials 

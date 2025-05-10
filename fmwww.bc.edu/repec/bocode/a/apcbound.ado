@@ -2,7 +2,7 @@
 APCBOUND: A tool for optimizing the identificaiton bounds on APC effects to 
 facilitate Fosse-Winship bounding approach to APC analysis.
 ********************************************************************************
-Version: 1.0 (30.04.2025)
+Version: 1.1 (08.05.2025)
 Author: Gordey Yastrebov, University of Cologne
 License: GPL-3.0
 *******************************************************************************/

@@ -36,4 +36,6 @@ f ../x/xtrantreat.sthlp
 f ../x/xtshuffle.ado
 f ../x/xtshuffle.sthlp
 f ../b/bbb.dta
-f ../_/chen.dta
+f ../c/cao_chen.dta
+f ../e/example_StandardDID.do
+f ../e/example_StaggeredDID.do

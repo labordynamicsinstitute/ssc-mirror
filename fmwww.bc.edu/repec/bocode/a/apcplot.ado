@@ -2,7 +2,7 @@
 APCPLOT: A tool for visualizing APC effects to facilitate Fosse-Winship bounding 
 approach to APC analysis.
 ********************************************************************************
-Version: 1.0 (30.04.2025)
+Version: 1.1 (08.05.2025)
 Author: Gordey Yastrebov, University of Cologne
 License: GPL-3.0
 *******************************************************************************/
@@ -86,10 +86,12 @@ License: GPL-3.0
 		if _rc == 0 & (`ci' > 0 & `ci' < 100) {
 			loc no_ci = 0
 			loc ci_lvl = `ci'
-			if `ci_lvl' != `e(apcboundCI)' & "`bounded'" != "" {
-				di as err "Specified confidence level does not match " ///
-					"the level from {it:apcbound}." _n "Confidence-interval " ///
-					"bounded solution will be inaccurate."
+			if "`e(apcboundCI)'" != "" {
+				if `ci_lvl' != `e(apcboundCI)' & "`bounded'" != "" {
+					di as err "Specified confidence level does not match " ///
+						"the level from {it:apcbound}." _n "Confidence-interval " ///
+						"bounded solution will be inaccurate."
+				}	
 			}
 		}
 		else {
@@ -173,7 +175,7 @@ License: GPL-3.0
 			loc remaining a p
 		}
 		forv i=1/2 {
-			loc imply`i' = "`p_letter' = " + string(``: word `i' of `remaining''_value', "%9.3g")
+			loc imply`i' = "``: word `i' of `remaining''_letter' = " + string(``: word `i' of `remaining''_value', "%9.3g")
 		}
 		di as txt "Parameter {bf:``letter'_letter'} set to {bf:``letter'_value'} " ///
 			"(implies {bf:`imply1'} and {bf:`imply2'})".
@@ -271,9 +273,10 @@ License: GPL-3.0
 			forv i=1/`=rowsof(ests)' {
 				loc x = `:word `i' of `xvalues''
 				mat ests[`i', 1] = `x' // x original value/scale
-				forv j=2/5 {
-					mat ests[`i', `j'] = `x' - `e(`apcvar'center)' 
-				}
+				mat ests[`i', 2] = `x' - `e(`apcvar'center)'
+				mat ests[`i', 3] = 0
+				mat ests[`i', 4] = 0
+				mat ests[`i', 5] = 0
 			}
 		}
 	* inappropriate input
@@ -283,22 +286,27 @@ License: GPL-3.0
 		}
 		loc baseline = ``apcvar'_value'
 		forv i=1/`=rowsof(ests)' {
+			loc letter = strupper("`apcvar'")
 			loc x = ests[`i', 2]
-			loc L_coef_min = `=e(pe`=strupper("`apcvar'")'min)'
-			loc L_coef_max = `=e(pe`=strupper("`apcvar'")'max)'
+			loc L_coef_min = `=e(pe`letter'min)'
+			loc L_coef_max = `=e(pe`letter'max)'
 			if "`apcvar'" == "p" { // a master flipper for period effects
-				loc L_coef_min = `=e(pe`=strupper("`apcvar'")'max)'
-				loc L_coef_max = `=e(pe`=strupper("`apcvar'")'min)'
+				loc L_coef_min = `=e(pe`letter'max)'
+				loc L_coef_max = `=e(pe`letter'min)'
 			}
-			mat ests[`i', 6] = ests[`i', 3] + `baseline' * `x'
-			mat ests[`i', 7] = ests[`i', 4] + `baseline' * `x'
-			mat ests[`i', 8] = ests[`i', 5] + `baseline' * `x'
-			mat ests[`i', 9]  = `L_coef_min' * `x' // lbL
-			mat ests[`i', 10] = `L_coef_max' * `x' // ubL
-			mat ests[`i', 11] = ests[`i', 9]  + ests[`i', 3] // lb = lbL + NL
-			mat ests[`i', 12] = ests[`i', 10] + ests[`i', 3] // ub = ubL + NL
-			mat ests[`i', 13] = min(ests[`i', 9], ests[`i', 10]) + ests[`i', 4] // lbCI
-			mat ests[`i', 14] = max(ests[`i', 9], ests[`i', 10]) + ests[`i', 5] // ubCI
+			mat ests[`i', 6] = ests[`i', 3] + `baseline' * `x' // NLshift (PE)
+			mat ests[`i', 7] = ests[`i', 4] + `baseline' * `x' // NLlbCIshift (CI)
+			mat ests[`i', 8] = ests[`i', 5] + `baseline' * `x' // NLubCIshift (CI)
+			mat ests[`i', 9]  = `L_coef_min' * `x' // lbL REDUNDANT?
+			mat ests[`i', 10] = `L_coef_max' * `x' // ubL REDUNDANT?
+			mat ests[`i', 11] = `L_coef_min' * `x' + ests[`i', 3] // lb = lbL + NL (PE)
+			mat ests[`i', 12] = `L_coef_max' * `x' + ests[`i', 3] // ub = ubL + NL (PE)
+			mat ests[`i', 13] = ///
+				min(`=e(ci`letter'min)' * `x', `=e(ci`letter'max)' * `x') + ///
+				ests[`i', 4] // lbCI = NLlbCI (CI)
+			mat ests[`i', 14] = ///
+				max(`=e(ci`letter'min)' * `x', `=e(ci`letter'max)' * `x') + ///
+				ests[`i', 5] // ubCI = NLubCI (CI)
 		}
 		mat coln ests = x xL NL NLlbCI NLubCI /// cols 1-5
 			NLshift NLlbCIshift NLubCIshift /// cols 6-8
@@ -310,20 +318,15 @@ License: GPL-3.0
 ***	Grid palette, matrix and label rendering (if requested)
 	if !`no_grid' {
 	* palettes:
-		if "`gridpalette'" == "" {
-			loc pal1 "tableau"
-			loc pal2 "tableau"
+		if "`gridpalette'" == "" loc gridpalette = "tableau"
+		if strpos("`gridpalette'", ",") {
+			loc comma = strpos("`gridpalette'", ",")
+			loc pal1 = trim(substr("`gridpalette'", `comma' + 1, .))
+			loc pal2 = trim(substr("`gridpalette'", 1, `comma' - 1))
 		}
 		else {
-			if strpos("`gridpalette'", ",") {
-				loc comma = strpos("`gridpalette'", ",")
-				loc pal1 = trim(substr("`gridpalette'", `comma' + 1, .))
-				loc pal2 = trim(substr("`gridpalette'", 1, `comma' - 1))
-			}
-			else {
-				loc pal1 "`gridpalette'"
-				loc pal2 "`gridpalette'"				
-			}
+			loc pal1 "`gridpalette'"
+			loc pal2 "`gridpalette'"				
 		}
 		if "`gridfading'" == "" loc gridfading = 0
 		forv i=1/`grid_steps' {
@@ -425,6 +428,7 @@ License: GPL-3.0
 	foreach apcvar in `selection' {
 		loc xlabels : val lab `e(`apcvar'var)'
 		preserve
+		clear
 		qui svmat `apcvar'_plot_matrix, n(col)
 		la val x `xlabels'
 		if !`no_shapes' loc pe_plot (line NLshift x, sort `shapeplops')

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 || 30.04.2025 || Gordey Yastrebov}{...}
+{* *! version 1.1 || 08.05.2025 || Gordey Yastrebov}{...}
 {hi:help apcbound}{...}
 {right:also see: {helpb apcest}, {helpb apcplot}}
 {hline}
@@ -103,21 +103,23 @@ appear in the output window of Stata after running the command. The default is {
 
 {title:Examples}
 
-{pstd}A simple call of {bf:apcbound} implementing assumptions {bf:π > 0} (positive {bf:period} effect
-linear component) and {bf:γ > 0} (positive {bf:cohort} effect linear component) after estimation 
-with {helpb apcest}:
+{pstd}Load sample data and estimate a model:
 
-	. {cmd:apcest regress lnwage, a(age^2) p(i.period) c(cohort:1900(10)2000)}
-	. {cmd:apcbound, p(0 .) c(0 .)}
+	. {stata webuse nlswork, clear}
+	. {stata apcest regress ln_wage, a(age^2) p(i.year) c(birth_yr)}
+
+{pstd}A simple call of apcbound implementing assumptions π > -.03 and γ > 0:
+
+	. {stata apcbound, p(-.03 .) c(0 .)}
 
 {pstd}Previous call but enhanced with confidence intervals and formatting option specified:
 	
-	. {cmd:apcbound, p(0 .) c(0 .) ci(95) format(%9.4f)}
+	. {stata apcbound, p(-.03 .) c(0 .) ci(95) format(%9.4f)}
 
-{pstd}An autonomous call (no data or estimation needed) implementing the same assumptions but using a 
-custom set of estimates {bf:θ₁ = α + π = -.5} and {bf:θ₂ = γ + π = .5}:
+{pstd}An autonomous call (no data or estimation needed) implementing the same assumptions 
+but using a custom set of estimates {bf:θ₁ = α + π = -.5} and {bf:θ₂ = γ + π = .5}:
 
-	. {cmd:apcbound, p(0 .) c(0 .) ac(-.5 .5)}
+	. {stata apcbound, p(0 .) c(0 .) ac(-.5 .5)}
 
 
 {title:Stored results}
