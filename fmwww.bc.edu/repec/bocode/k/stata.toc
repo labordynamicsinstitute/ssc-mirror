@@ -29,6 +29,7 @@ p kmatch module module for multivariate-distance and propensity-score matching, 
 p kmest module to compute Kaplan-Meier survival probabilities as estimation results
 p knapsack module to solve the knapsack problem
 p kobo2stata module to create labelled Stata datasets from KoboToolbox
+p koenker module to perform Koenker/White detailed test for heteroskedasticity 
 p konfound module to quantify robustness of causal inferences
 p kotlarski module to execute deconvolution kernel density estimation and produce a robust construction of its uniform confidence band
 p kountry module to standardize country names across various datasets

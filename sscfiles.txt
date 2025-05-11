@@ -18226,6 +18226,7 @@ fmwww.bc.edu/repec/bocode/k/kappci.ado
 fmwww.bc.edu/repec/bocode/k/k_wbc.ado
 fmwww.bc.edu/repec/bocode/k/kinkyreg_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/k/kappaci.hlp
+fmwww.bc.edu/repec/bocode/k/koenker.sthlp
 fmwww.bc.edu/repec/bocode/k/kpss.ado
 fmwww.bc.edu/repec/bocode/k/ksmirnov2var.sthlp
 fmwww.bc.edu/repec/bocode/k/kotlarski.ado
@@ -18379,6 +18380,7 @@ fmwww.bc.edu/repec/bocode/k/keyby.sthlp
 fmwww.bc.edu/repec/bocode/k/kountrybackup.html
 fmwww.bc.edu/repec/bocode/k/kanom.pkg
 fmwww.bc.edu/repec/bocode/k/kappaetci.sthlp
+fmwww.bc.edu/repec/bocode/k/koenker.pkg
 fmwww.bc.edu/repec/bocode/k/kernreg1.hlp
 fmwww.bc.edu/repec/bocode/k/kmatch.ado
 fmwww.bc.edu/repec/bocode/k/kappalate.sthlp
@@ -18436,6 +18438,7 @@ fmwww.bc.edu/repec/bocode/k/kountrynames.hlp
 fmwww.bc.edu/repec/bocode/k/keepvar.hlp
 fmwww.bc.edu/repec/bocode/k/kr20.html
 fmwww.bc.edu/repec/bocode/k/kappa2.dlg
+fmwww.bc.edu/repec/bocode/k/koenker.ado
 fmwww.bc.edu/repec/bocode/k/keepvar.pkg
 fmwww.bc.edu/repec/bocode/k/keybygen.ado
 fmwww.bc.edu/repec/bocode/k/kappaetc_choosing.sthlp

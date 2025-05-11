@@ -1,0 +1,26 @@
+d 'KOENKER': module to perform Koenker/White detailed test for heteroskedasticity 
+d
+d    koenker implements the Koenker/White N*R2 test for
+d heteroskedasticity  after regress.  estat hettest with the mtest
+d option is based on the Breusch-Pagan/Cook-Weisberg LM test, which
+d has a null hypothesis of normality of the error distribution. The
+d Koenker/White test relaxes this assumption, presuming that errors
+d are i.i.d. under the null hypothesis. The test is executed
+d separately for each regressor, and then for the entire
+d regression. The simultaneous test is based on the full set of
+d regressors. 
+d
+d KW: heterokedasticity
+d KW: Koenker
+d KW: White
+d KW: N^R2
+d
+d Requires: Stata version 12 and ivhettest from SSC (q.v.)
+d
+d Distribution-Date: 20250510
+d
+d Author: Kit Baum, Boston College
+d Support: email baum@@bc.edu
+d
+f koenker.ado
+f koenker.sthlp
