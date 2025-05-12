@@ -1971,6 +1971,7 @@ fmwww.bc.edu/repec/bocode/c/ceqdinineq.ado
 fmwww.bc.edu/repec/bocode/c/cprdenttype.ado
 fmwww.bc.edu/repec/bocode/c/corrsqm.sthlp
 fmwww.bc.edu/repec/bocode/c/cnevent.ado
+fmwww.bc.edu/repec/bocode/c/cjive.pkg
 fmwww.bc.edu/repec/bocode/c/cprdutil.pkg
 fmwww.bc.edu/repec/bocode/c/cisd.sthlp
 fmwww.bc.edu/repec/bocode/c/cprd_xyzlookup.sthlp
@@ -2269,6 +2270,7 @@ fmwww.bc.edu/repec/bocode/c/crtData.dta
 fmwww.bc.edu/repec/bocode/c/clttest.hlp
 fmwww.bc.edu/repec/bocode/c/couliari.hlp
 fmwww.bc.edu/repec/bocode/c/cattaneo2.dta
+fmwww.bc.edu/repec/bocode/c/cjive.ado
 fmwww.bc.edu/repec/bocode/c/crit_values.matrix
 fmwww.bc.edu/repec/bocode/c/chinaaddress-1.sthlp
 fmwww.bc.edu/repec/bocode/c/combine.html
@@ -2325,6 +2327,7 @@ fmwww.bc.edu/repec/bocode/c/ceq.pkg
 fmwww.bc.edu/repec/bocode/c/ckkeep.hlp
 fmwww.bc.edu/repec/bocode/c/c_ml_stata_default.ado
 fmwww.bc.edu/repec/bocode/c/color-ukrigreen.style
+fmwww.bc.edu/repec/bocode/c/cjive.sthlp
 fmwww.bc.edu/repec/bocode/c/catplot_old.ado
 fmwww.bc.edu/repec/bocode/c/ceqrace.do
 fmwww.bc.edu/repec/bocode/c/crtrees.sthlp
@@ -8594,6 +8597,7 @@ fmwww.bc.edu/repec/bocode/a/avplots2.hlp
 fmwww.bc.edu/repec/bocode/a/ad_sthlp.ado
 fmwww.bc.edu/repec/bocode/a/allcatplot.ado
 fmwww.bc.edu/repec/bocode/a/avplots4.hlp
+fmwww.bc.edu/repec/bocode/a/Avery_preproglucacon.dta
 fmwww.bc.edu/repec/bocode/a/all_models_paper.txt
 fmwww.bc.edu/repec/bocode/a/allsubsetsmeta_win.plugin
 fmwww.bc.edu/repec/bocode/a/adodown.ado
@@ -14495,6 +14499,7 @@ fmwww.bc.edu/repec/bocode/m/matmps.hlp
 fmwww.bc.edu/repec/bocode/m/mte1_cov_quad.eps.pdf
 fmwww.bc.edu/repec/bocode/m/mitools.pkg
 fmwww.bc.edu/repec/bocode/m/majority.pkg
+fmwww.bc.edu/repec/bocode/m/markovfirstorder.pkg
 fmwww.bc.edu/repec/bocode/m/mf_mm_mgof.hlp
 fmwww.bc.edu/repec/bocode/m/mkern.sthlp
 fmwww.bc.edu/repec/bocode/m/mtreatreg_normal_p.ado
@@ -14508,6 +14513,7 @@ fmwww.bc.edu/repec/bocode/m/meresc.pkg
 fmwww.bc.edu/repec/bocode/m/mlogitroc.pkg
 fmwww.bc.edu/repec/bocode/m/mylabels.sthlp
 fmwww.bc.edu/repec/bocode/m/makematrix.ado
+fmwww.bc.edu/repec/bocode/m/markovfirstorder.ado
 fmwww.bc.edu/repec/bocode/m/mrjd_pred.m
 fmwww.bc.edu/repec/bocode/m/MonteCarloSimulation_Multishell.do
 fmwww.bc.edu/repec/bocode/m/mydays.ado
@@ -15740,6 +15746,7 @@ fmwww.bc.edu/repec/bocode/m/metan_proportion.sthlp
 fmwww.bc.edu/repec/bocode/m/metafrag.pkg
 fmwww.bc.edu/repec/bocode/m/mtreatreg_postestimation.html
 fmwww.bc.edu/repec/bocode/m/matchi2.sthlp
+fmwww.bc.edu/repec/bocode/m/markovfirstorder.sthlp
 fmwww.bc.edu/repec/bocode/m/multif.dlg
 fmwww.bc.edu/repec/bocode/m/mycolours.pkg
 fmwww.bc.edu/repec/bocode/m/matchit.pkg

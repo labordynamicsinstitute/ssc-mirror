@@ -1,0 +1,38 @@
+d 'MARKOVFIRSTORDER': module for ssessing whether a sequence follows an independent state model or a first-order Markov chain model
+d
+d  markovfirstorder assesses whether a sequence of values follows
+d an independent state model or a first-order Markov chain model
+d (Avery and Henderson 1999). An independent state model  assumes
+d that the state in a particular position of the sequence is
+d independent of the previous state. An independent state model is
+d presented as a two-way table and evaluated using Pearson's
+d chi-squared statistic. A statistically significant chi-squared
+d indicates that the hypothesis of independent successive states
+d should be rejected. Next, a first-order Markov chain model is
+d assessed by analyzing a three-way table of the number of times
+d that triplet (i, j, k) occurs where i, j, k = 1, 2, . . ., b. The
+d Pearson's chi-squared statistic for a first-order Markov chain
+d model is computed by summing the chi-squared statistic over all
+d triplets (i, j, k), and where the degrees of freedom = k * (k -
+d 1)^2.  A statistically significant chi-squared statistic
+d indicates that the sequence follows a higher order than a
+d first-order Markov chain model. See Avery and Henderson (1999)
+d for a comprehensive discussion. 
+d
+d KW: Markov chain model
+d KW: discrete time Markov chain
+d KW: first-order Markov chain
+d KW: Pearson’s chi-squared
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250511
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f markovfirstorder.ado
+f markovfirstorder.sthlp
+f matchi2.ado
+f matchi2.sthlp
+f ../a/Avery_preproglucacon.dta

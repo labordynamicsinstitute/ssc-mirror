@@ -1,0 +1,25 @@
+d 'CJIVE': module to perform Cluster Jackknife Instrumental Variables Estimation (CJIVE)
+d
+d  CJIVE estimates coefficients on potentially endogenous
+d regressors via leave-one-cluster-out jackknife instrumental
+d variables. This estimator is appropriate when there are many
+d instruments and inference must be clustered because of, for
+d example, a clustered structure of the error term covariance.
+d Two-stage least squares and well-known alternatives such as LIML
+d and jackknife instrumental variables estimation (JIVE) are biased
+d and inconsistent in such settings. CJIVE eliminates that bias. 
+d
+d KW: instrumental variables
+d KW: IV
+d KW: cluster
+d KW: jackknife
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20250510
+d
+d Author: Brigham Frandsen, Brigham Young University
+d Support: email brigham.frandsen@@gmail.com
+d
+f cjive.ado
+f cjive.sthlp

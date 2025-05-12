@@ -35,6 +35,7 @@ p markdoc module for literate programming
 p marker module to generate indicator variable marking desired sample
 p markov module to generate Markov probabilities
 p markovci module for computing nonparametric bootstrapped confidence intervals for discrete time Markov chains
+p markovfirstorder module for ssessing whether a sequence follows an independent state model or a first-order Markov chain model
 p markstat module to support literate data analysis using Stata and Markdown
 p marktouse module to mark the observations to be used
 p markupest module for markup estimation via Micro and Macro approaches 
