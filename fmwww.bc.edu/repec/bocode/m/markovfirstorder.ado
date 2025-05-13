@@ -1,3 +1,4 @@
+*! 1.0.1 Ariel Linden 12May2025 // replaced tostring with decode for variables with labels 
 *! 1.0.0 Ariel Linden 08May2025 
 
 program markovfirstorder, rclass
@@ -22,13 +23,26 @@ program markovfirstorder, rclass
 		} // end if sequence is a string
 		// if numeric
 		else if _rc == 0 {
-			tostring `varlist', gen(`new_seq2')
-			encode `new_seq2', gen(`sequence')
-			levelsof `varlist', local(levels)	
-			local lbls
-			foreach i of local levels {
-				local lbl  `i'
-				local lbls `lbls' `lbl'				
+			if "`: value label `varlist''" != "" {
+				decode `varlist', gen(`new_seq2') // to get labels, not underlying numeric values
+				encode `new_seq2', gen(`sequence')
+				levelsof `sequence'
+				local scnt = r(r)
+				local lbls
+				forvalues i = 1/`scnt' {
+					local lbl : label (`sequence') `i'
+					local lbls `" `lbls' "`lbl'" "'
+				}
+			}	
+			else {
+				tostring `varlist', gen(`new_seq2')
+				encode `new_seq2', gen(`sequence')
+				levelsof `varlist', local(levels)	
+				local lbls
+				foreach i of local levels {
+					local lbl  `i'
+					local lbls `lbls' `lbl'				
+				}
 			}
 		}	
 		

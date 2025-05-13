@@ -15,6 +15,7 @@ p odksplit module to split and label multiple response variables generated from 
 p oeratio module to calculate ratio of observed to expected outcomes 
 p oesch module to recode ISCO codes into Oesch class scheme
 p ofrtplot module to plot observed, fitted and residuals versus time variable
+p oga module to perform estimation and inference for high-dimensional regressions without imposing the sparsity restriction
 p oglm module to estimate Ordinal Generalized Linear Models
 p oglm9 module to estimate Ordinal Generalized Linear Models
 p omega module to calculate the omega reliability coefficient

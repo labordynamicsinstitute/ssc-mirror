@@ -1,0 +1,29 @@
+d 'OGA': module to perform estimation and inference for high-dimensional regressions without imposing the sparsity restriction
+d
+d  oga performs estimation and inference for high-dimensional
+d regression models without imposing a sparsity assumption, based
+d on the methodology of Cha, Chiang, and Sasaki.  The estimation
+d procedure combines the orthogonal greedy algorithm (OGA), the
+d high-dimensional Akaike information criterion (HDAIC), and
+d double/debiased machine learning (DML). 
+d
+d KW: high-dimensional regression
+d KW: orthogonal greedy algorithm
+d KW: high-dimensional Akaike information criterion
+d KW: double/debiased machine learning
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20230820
+d
+d Author: Jooyoung Cha, Vanderbilt University 
+d Support: email jooyoung.cha@@vanderbilt.edu
+d
+d Author: Harold D. Chiang,  University of Wisconsin
+d Support: email hdchiang@@wisc.edu 
+d
+d Author: Yuya Sasaki, Department of Economics, Vanderbilt University
+d Support: email yuya.sasaki@@gmail.com
+d
+ ../e/oga.ado
+ ../e/oga.sthlp

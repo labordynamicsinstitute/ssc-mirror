@@ -18,7 +18,7 @@ spm42@byu.edu
 
 capture program drop cjive
 program cjive, eclass 
-	version 18
+
 	syntax anything(equalok) [if] [in], cluster(varname) [gen(string)]
 	
 	*Warn if gen is alrady specified
@@ -186,27 +186,6 @@ program cjive, eclass
 	matrix colnames `V' = `names'
 	matrix rownames `V' = `names'
 	
-	
-	
-	*Create Display
-	tempname len e sd i t
-	scalar len = rowsof(`V')
-	
-	disp "______________________________________________________________"
-	disp "Variable          Coefficient    Standard Error    T statistic"
-	disp "______________________________________________________________"
-
-	forvalues i = 1 / `d_count' {
-		local var : word `i' of `endogenous'
-		scalar `e' = e(b)[1,`i']
-		scalar `sd' = sqrt(e(V)[`i', `i'])
-		scalar `t' = `e' / `sd'
-		
-		disp %-14s "`var'"  %12.4f `e'  %15.4f `sd'  %15.2f round(`t', 0.01)
-	}
-	disp "______________________________________________________________"
-	disp "______________________________________________________________"
-	
 
 	*Generate variables if gen
 	if "`gen'" != "" {
@@ -224,6 +203,10 @@ program cjive, eclass
     ereturn local cmd "cjive"
 	ereturn local title "CJIVE"
     ereturn local depvar "`dependent'"
+	
+	display "Cluster Jackknife Instrumental Variable Estimation"
+	ereturn display
+
 	}
 end	
 
