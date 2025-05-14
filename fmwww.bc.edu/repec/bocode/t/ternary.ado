@@ -1,9 +1,10 @@
-*! ternary v1.2 (12 Mar 2025)
+*! ternary v1.3 (05 May 2025)
 *! Asjad Naqvi (asjadnaqvi@gmail.com)
 
-* v1.2 (12 Mar 2025) : Marker weights added. fill is now default. nofill now has to be specified. norm(100) should now work. Option pad() added.
-* v1.1 (12 Sep 2024) : Marker label options added. Normalize option added. Better zoom
-* v1.0 (28 Aug 2024) : Beta release
+* v1.3 (04 May 2025): by() added, palette() added, legend() added, msym() now takes a list
+* v1.2 (12 Mar 2025): Marker weights added. fill is now default. nofill now has to be specified. norm(100) should now work. Option pad() added.
+* v1.1 (12 Sep 2024): Marker label options added. Normalize option added. Better zoom
+* v1.0 (28 Aug 2024): Beta release
 
 
 program ternary, sortpreserve  
@@ -11,17 +12,23 @@ program ternary, sortpreserve
 	version 15 
 	
 	syntax varlist(min=3 max=3 numeric) [if] [in]  ///
-		[ , cuts(real 5) showlabel LColor(string) LWidth(string) format(str)   ] ///
+		[ , by(varlist max=1) cuts(real 5) showlabel LColor(string) LWidth(string) format(str)   ] ///
 		[ msize(string) malpha(real 90) MLColor(string) MLWIDth(string) MColor(string) MSYMbol(string) TICKSize(string) LABColor(string) ]	///
 		[ colorR(string) colorL(string) colorB(string)  ] ///
-		[ points lines labels 	 ]	///
-		[ zoom  * ]	///
+		[ points lines labels zoom  * 		]	///
 		[ MLABel(varlist max=1) MLABSize(string) MLABColor(string) MLABPOSition(string) NORMalize(string) ] ///
-		[ scale pad(real 5) NOFILL ] // v1.2
-	
+		[ scale pad(real 5) NOFILL 			] /// // v1.2
+		[ palette(string) legend(string) 	]  // v1.3
 	
 	 
 	marksample touse, strok
+	
+	// check dependencies
+	cap findfile colorpalette.ado
+	if _rc != 0 {
+		display as error "The palettes package is missing. Please install the {stata ssc install palettes, replace:palettes} and {stata ssc install colrspace, replace:colrspace} packages."
+		exit
+	}	
 	
 		
 	if "`colorB'" == "" local colorB #DCB600
@@ -72,7 +79,7 @@ quietly {
 	preserve
 	
 	keep if `touse'
-	keep `varlist' `mlabel'
+	keep `varlist' `mlabel' `by'
 
 	foreach x of local varlist {
 		if "`: var label `x''" != "" {
@@ -83,6 +90,27 @@ quietly {
 		}
 	}
 	
+	if "`by'" != "" {
+		cap confirm numeric var `by'
+		
+		if _rc!=0 {  // if string
+			encode `by', gen(_by)
+			local by _by
+		}
+		else { // if numeric with value label
+			egen _by = group(`by')
+			if "`: value label `by''" != "" {
+				tempvar tempov
+				decode  `by', gen(`tempov')		
+				labmask _by , val(`tempov')		
+			}
+			else { // if numeric with value label
+				labmask _by, val(`by')
+			}
+			local by _by 
+		}	
+	}
+		
 	
 	tokenize `varlist'
 	
@@ -132,10 +160,11 @@ quietly {
 		replace _B = _B / `normlvl'
 		
 	}
-	
-	
+		
 	if "`format'" == ""  local format  %6.2f 
 	
+	
+	local zbool = 0
 	local mymax = 1
 	local mymin = 0
 	
@@ -154,8 +183,8 @@ quietly {
 			local ++i
 		}
 		
-		local mymin = max(0, `mymin' * (1 - (`pad' / 100))) // pad
 		
+		local mymin = max(0, `mymin' * (1 - (`pad' / 100))) // pad
 		
 		// normalize
 		local others "_R _L _B" 
@@ -168,25 +197,31 @@ quietly {
 		foreach x of local others {
 			summ `x', meanonly
 			
-			if `mymax' > `r(min)' {
+			if `mymax' > `r(min)'  {
 				local mymax = `r(min)'
 			}
 		}
+		
 		
 		local mymax = min(1, `mymax' * (1 + (`pad' / 100))) // pad
 		
 		local mymax = 1 - `mymax'
 		
-		foreach x of local others {
-			replace `x' = (`x' - (1 - `mymax')) / (`mymax' - `mymin') 
+		
+		if `mymax' == 1 & `mymin' == 0 {
+			break
+			local zbool = 1
 		}
-
-		replace `myvar' = (`myvar' - `mymin' ) / (`mymax' - `mymin') 
-				
+		else {
+			foreach x of local others {
+				replace `x' = (`x' - (1 - `mymax')) / (`mymax' - `mymin') 
+			}
+			
+			replace `myvar' = (`myvar' - `mymin' ) / (`mymax' - `mymin') 
+		}
 	}	
 
 	
-
 	// barycentric coordinates	
 	gen double _yvar = _R * sqrt(3) / 2 
 	gen double _xvar = 1 -  (_R/2 + _L) 
@@ -212,7 +247,7 @@ quietly {
 		
 		local myval = (`i' - 1) / `cuts'
 		
-		if "`zoom'" != "" {
+		if "`zoom'" != "" & `zbool' == 0 {
 			if `myvar' == _B {
 				replace _Blab = string( ((`mymax' - `mymin')*`myval' + `mymin') * `normlvl' , "`format'") in `i'
 			}
@@ -242,7 +277,7 @@ quietly {
 		replace xR = 1 - (yR / tan(60 * _pi / 180)) in `i'
 		
 		
-		if "`zoom'" != "" {
+		if "`zoom'" != ""  & `zbool' == 0 {
 			if `myvar' == _R {
 				replace _Rlab = string( ((`mymax' - `mymin')*`myval' + `mymin') * `normlvl' , "`format'") in `i'
 			}
@@ -273,7 +308,7 @@ quietly {
 		replace xL = yL / tan(60 * _pi / 180) 		in `i'
 		
 		
-		if "`zoom'" != "" {
+		if "`zoom'" != ""  & `zbool' == 0 {
 			if `myvar' == _L {
 				replace _Llab = string( ((`mymax' - `mymin')*(1 - `myval') + `mymin') * `normlvl' , "`format'") in `i'
 			}
@@ -310,14 +345,15 @@ quietly {
 	**** return color triangles
 	
 	
-	if "`msymbol'" == "" 	local msymbol circle
+	*if "`msymbol'" == "" 	local msymbol circle
 	
-	if "`scale'"== "" {
-		local msym2 `msymbol'
-	}
-	else {
-		local msym2 none
-	}
+	*if "`scale'"== "" {
+	*	local msym2 `msymbol'
+	*}
+	*else {
+	*if "`scale'"!= "" {	
+	*		local msym2 none
+	*}
 
 	
 	if "`msize'"   == "" 	local msize   1.5
@@ -342,9 +378,20 @@ quietly {
 	// point colors
 	
 	
-	if "`scale'"  !="" {
-		local mypoints `mypoints'  (scatter _yvar _xvar [fw = _total], msymbol(`msymbol') msize(`msize') mcolor(`mcolor') mlcolor(`mlcolor') mlwidth(`mlwidth') ) 
+	if "`palette'" == "" {
+		local palette tableau
+	}
+	else {
+		tokenize "`palette'", p(",")
+		local palette  `1'
+		local poptions `3'
 	}	
+	
+	local _legend off
+	
+	local _scale
+	if "`scale'" != "" local _scale [fw = _total]
+	
 	
 	if "`points'"!="" {
 		
@@ -431,7 +478,6 @@ quietly {
 			}
 		}			
 		
-		
 		merge m:1 tri_id using `_points'
 		
 		sort _seq	
@@ -439,42 +485,147 @@ quietly {
 		drop _merge _seq
 		drop _ytr _xtr
 		
-		
 		gen _i2 = _n
-
 		
-	levelsof tri_id, local(clrlvls)
-		
-	foreach x of local clrlvls {
-		
-		summ _i2 if tri_id==`x', meanonly
-		local myclr = color[`r(min)'] 
+		levelsof tri_id, local(clrlvls)
 			
-		colorpalette `myclr', nograph
-			
-		local mypoints `mypoints' (scatter _yvar _xvar if tri_id==`x', msymbol(`msym2') msize(`msize') mcolor("`r(p1)'%`malpha'") mlcolor(`mlcolor') mlwidth(`mlwidth') mlabel(`mlabel') mlabcolor(`mlabcolor') mlabsize(`mlabsize') mlabpos(`mlabposition') ) 
+		foreach x of local clrlvls {
+						
+			if "`by'" == "" {
 				
+				summ _i2 if tri_id==`x', meanonly
+				local myclr = color[`r(min)'] 
+					
+				colorpalette `myclr', nograph
+				
+				local mypoints `mypoints' (scatter _yvar _xvar if tri_id==`x'  `_scale', msymbol(`msymbol') msize(`msize') mcolor("`r(p1)'%`malpha'") mlcolor(`mlcolor') mlwidth(`mlwidth') mlabel(`mlabel') mlabcolor(`mlabcolor') mlabsize(`mlabsize') mlabpos(`mlabposition') ) 
+			}
+			else {
+				levelsof `by', local(bylvls)
+				local items = r(r)
+				local q = 1		
+				
+				foreach y of local bylvls {					
+					
+				if "`msymbol'" == "" {
+					symbolpalette default, n(`items') nograph
+					local _mysym `r(p`q')'
+				}
+				else {
+									
+					symbolpalette `msymbol', nograph
+					
+					if `r(n)' < `items' {   // if list is incomplete, take the last symbol.
+						local _mysym `r(p`r(n)')'	
+					}
+					else {
+						local _mysym `r(p`q')'
+					}
+				}
+					
+					
+					summ _i2 if tri_id==`x', meanonly
+					local myclr = color[`r(min)'] 
+						
+					colorpalette `myclr', nograph
+					
+					
+					*colorpalette `palette', nograph `poptions'
+					
+
+					
+					local mypoints `mypoints' (scatter _yvar _xvar if tri_id==`x' & `by'==`y' `_scale', msymbol(`_mysym')  msize(`msize')  mcolor("`r(p1)'%`malpha'") mlcolor(`mlcolor') mlwidth(`mlwidth') mlabel(`mlabel') mlabcolor(`mlabcolor') mlabsize(`mlabsize') mlabpos(`mlabposition') ) 
+					local ++q
+				}
+			}
 		}
 	}
-	else {
-		local mypoints `mypoints' (scatter _yvar _xvar, msymbol(`msym2') msize(`msize') mcolor(`mcolor') mlcolor(`mlcolor') mlwidth(`mlwidth')  mlabel(`mlabel') mlabcolor(`mlabcolor') mlabsize(`mlabsize') mlabpos(`mlabposition') ) 
+	else {  // if no points option specified
+
+	
+		if "`by'" == "" {
+			local mypoints `mypoints'  (scatter _yvar _xvar `_scale' , msymbol(`msymbol') msize(`msize') mcolor(`mcolor') mlcolor(`mlcolor') mlwidth(`mlwidth') mlabel(`mlabel') mlabcolor(`mlabcolor') mlabsize(`mlabsize') mlabpos(`mlabposition')) 
+		}
+		else {
+
+			levelsof `by', local(lvls)
+			local items = r(r)
+			local q = 1
+			
+			foreach x of local lvls {
+								
+				if "`msymbol'" == "" {
+					symbolpalette default, n(`items') nograph
+					local _mysym `r(p`q')'
+				}
+				else {
+									
+					symbolpalette `msymbol', nograph
+					
+					if `r(n)' < `items' {   // if list is incomplete, take the last symbol.
+						local _mysym `r(p`r(n)')'	
+					}
+					else {
+						local _mysym `r(p`q')'
+					}
+				}
+				
+				colorpalette `palette', nograph `poptions'
+				
+				local mypoints `mypoints'  (scatter _yvar _xvar if `by'==`x' `_scale', msymbol(`_mysym') msize(`msize') mcolor("`r(p`q')'%`malpha'") mlcolor(`mlcolor') mlwidth(`mlwidth')  mlabel(`mlabel') mlabcolor(`mlabcolor') mlabsize(`mlabsize') mlabpos(`mlabposition')) 
+				local ++q
+			}
+		}
 	}
 
 	
-
-			
+	// legend
 	
+	if "`by'" != "" {	
+		
+		if "`legend'" == "" {
+			local legoptions position(6) size(2) rows(2)
+		}
+		else {
+			local legoptions `legend'
+		}
+		
+		local _legend
+		local q = 1
+		
+		if "`nofill'" == "" {
+			local _counter = `cuts'^2 + 9	
+		}
+		else {
+			local _counter = 9
+		}
+				
+				
+		levelsof `by', local(lvls)		
+		
+		foreach x of local lvls {
+			local j = `_counter' + `q' 
+			local varn : label `by' `q'
+						
+			local entries `" `entries' `j' "`varn'"  "'				
+			local ++q
+		}
+		
+		local _legend order("`entries'") `legoptions'
+		
+	}
+
 	**** generate the triangles ****
 	
+
 	if "`nofill'" == "" {
 	
 		append using `_triangles'
 		gen _i = _n
 		
 		**** plot the triangles
-		
 		levelsof _id, local(lvls)
-
+		
 		foreach x of local lvls {
 
 			summ _i if _id==`x' & _tag==1, meanonly
@@ -512,6 +663,7 @@ quietly {
 		colorpalette `lcolor' `lcolor' `lcolor', nograph
 	}
 	
+
 	twoway ///
 		`triangles'	///
 		(pcspike yR xR yL xL if xL!=0   , lc("`r(p1)'")	lw(`lwidth'))	///
@@ -525,7 +677,7 @@ quietly {
 		(scatter ty tx in 3, mlab(tl) mlabpos(0) mc(none) mlabsize(3) mlabcolor("`labclr2'") mlabangle( 60) ) ///	
 		`mypoints' ///
 			, ///
-			legend(off) aspect(1) xsize(1) ysize(1) ///
+			legend(`_legend') aspect(1) xsize(1) ysize(1) ///
 			xlabel(, nogrid) ylabel(, nogrid) xscale(off) yscale(off)	///
 			`options'
 	

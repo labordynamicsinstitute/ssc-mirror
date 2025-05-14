@@ -1,7 +1,7 @@
 {smcl}
-{* 12Mar2025}{...}
+{* 07May2025}{...}
 {hi:help ternary}{...}
-{right:{browse "https://github.com/asjadnaqvi/stata-ternary":ternary v1.2 (GitHub)}}
+{right:{browse "https://github.com/asjadnaqvi/stata-ternary":ternary v1.3 (GitHub)}}
 
 {hline}
 
@@ -12,9 +12,9 @@
 
 {p 8 15 2}
 {cmd:ternary} {it:varL varR varB} {ifin}, 
-                {cmd:[} {cmd:cuts}({it:num}) {cmd:zoom} {cmd:pad}({it:num}) {cmdab:norm:alize}({it:1}|{it:100}) {cmd:nofill} {cmd:points} {cmd:lines} {cmd:labels} {cmd:colorL}({it:str}) {cmd:colorR}({it:str}) {cmd:colorB}({it:str})
-                  {cmdab:lw:idth}({it:str}) {cmdab:msym:bol}({it:str}) {cmd:msize}({it:str}) {cmdab:mc:olor}({it:str}) {cmdab:mlc:olor}({it:str}) {cmdab:mlw:idth}({it:str}) {cmdab:labc:olor}({it:str}) {cmdab:ticks:ize}({it:str}) 
-				  {cmdab:mlab:el}({it:var}) {cmdab:mlabs:ize}({it:str}) {cmdab:mlabc:olor}({it:str}) {cmdab:mlabpos:ition}({it:str}) {cmdab:scale} {cmdab:format}({it:fmt})  *                                  
+                {cmd:[} {opt by(var)} {opt cuts(num)} {opt zoom} {cmd:pad}({it:num}) {opt norm:alize}({it:1}|{it:100}) {opt nofill} {opt points} {opt lines} {opt labels}
+                   {opt colorL(str)} {opt colorR(str)} {opt colorB(str)} {opt lw:idth(str)} {opt msym:bol(str)} {opt msize(str)} {opt mc:olor(str)} {opt mlc:olor(str)} {opt mlw:idth(str)} {opt labc:olor(str)} {opt ticks:ize(str)} 
+				  {opt mlab:el(var)} {opt mlabs:ize(str)} {opt mlabc:olor(str)} {opt mlabpos:ition(str)} {opt scale} {opt format(fmt)} {opt palette(str)} {opt legend(options)}  *                                  
                 {cmd:]}
 
 {p 4 4 2}
@@ -37,6 +37,18 @@ If this is not specified, the program will auto-detect the normalization level.{
 
 {p2coldent : {opt scale}}Scale the markers based on the total of the three variables. Here one needs to input non-normalized variables and use the {opt norm()}
 in combination with {opt scale}.{p_end}
+
+
+{p 4 4 2}{it:{ul:by() and related options}}
+
+{p2coldent : {opt by(var)}}Define a variable that splits the markers into groups.{p_end}
+
+{p2coldent : {opt legend(options)}}Define the legend options such as rows, size, position etc. Default is set at {opt legend(position(6) size(2) rows(2))}.
+Any user defined option will overwrite all of these defaults.{p_end}
+
+{p2coldent : {opt palette(name)}}Colors of the {opt by()} categories. The palette name is any named scheme defined in the {stata help colorpalette:colorpalette} package.
+Default is {stata colorpalette tableau:{it:tableau}}. Note that this option is only available if {p[t by()} is used, otherwise the program uses to {opt mcolor()}.{p_end}
+
 
 {p 4 4 2}{it:{ul:Colors}}
 
@@ -68,7 +80,7 @@ So avoid going over 10 cuts which in any case renders the information meaningles
 
 {p2coldent : {opt ticks:ize(str)}}Axes tick size. Default is {opt ticks(1)}.{p_end}
 
-{p2coldent : {opt msym:bol(str)}}Marker symbol. Default is {opt msym(circle)}.{p_end}
+{p2coldent : {opt msym:bol(str)}}Marker symbol. Default is {opt msym(circle)}. If the option {opt by()} is specified, then a symbol list can be given here as well.{p_end}
 
 {p2coldent : {opt msize(str)}}Marker size. Default is {opt msize(1.5)}.{p_end}
 
@@ -115,10 +127,16 @@ See {browse "https://github.com/asjadnaqvi/stata-ternary":GitHub}.
 Please submit bugs, errors, feature requests on {browse "https://github.com/asjadnaqvi/stata-ternary/issues":GitHub} by opening a new issue.
 
 
+{title:Citation guidelines}
+
+See {browse "https://ideas.repec.org/c/boc/bocode/s459374.html"} for the official SSC citation. 
+Please note that the GitHub version might be newer than the SSC version.
+
+
 {title:Package details}
 
-Version      : {bf:ternary} v1.2
-This release : 12 Mar 2025
+Version      : {bf:ternary} v1.3
+This release : 07 May 2025
 First release: 28 Aug 2024
 Repository   : {browse "https://github.com/asjadnaqvi/stata-ternary":GitHub}
 Keywords     : Stata, graph, ternary, triplot

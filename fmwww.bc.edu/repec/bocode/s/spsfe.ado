@@ -332,6 +332,7 @@ if `"`endvars'"'!=""{
 
 	if("`initial'"=="" & "`delve'"!="") { 
 		//qui sfpanel `yvar' `xvars' `wxvars2',`noconstant' m(bc95) usigma(`uhet') vsigma(`vhet') emean(`wmuvars2' `mu') iterate(50) `cns'
+		
 		ml model lf sfscal`dist'() (`yvar'=  `wxvars2' `xvars', `noconstant') (`vhet') (`uhet') `mu',  `cns'
 		qui ml max, iterate(50)
 	    mat b0 =e(b)
@@ -357,6 +358,7 @@ local title Spatial frontier model(SPSF_scaling)
 local lnsigv lnsigv
 if (`"`endvars'"'!="") local lnsigv lnsigw
 //mata mata describe
+
 	ml model d0 spsfscal`dist'`epost'() ///
             (frontier:`yvar' =  `wxvars2' `xvars',`noconstant') ///
             (`lnsigv': `vhet')  (lnsigu: `uhet') `mu' ///
@@ -816,6 +818,7 @@ local lnsigv lnsigv
 if (`"`endvars'"'!="") local lnsigv lnsigw
 local lfd0 = cond("`epost'"=="","lf","d0")
 //mata mata describe
+
 	ml model `lfd0' sfscal`dist'`epost'() (frontier: `yvar'= `wxvars2' `xvars', `noconstant') ///
 	 (`lnsigv': `vhet') (lnsigu: `uhet') `mu' `etaterm' `surterm', nopreserve `cns' `mlmodelopt' title(`title')
 	local eq1 `wxvars2' `xvars'
@@ -1089,6 +1092,7 @@ else{
 	
 	
 	if("`initial'"=="" & "`delve'"!="") { 
+
 		ml model lf sfscal`dist'() (`yvar'=  `wxvars2' `xvars', `noconstant') (`vhet') (`uhet') `mu',  `cns'
 		qui ml search
 		qui ml max, iterate(50) difficult
@@ -1114,6 +1118,7 @@ local title Spatial frontier model(SPSF_scaling)
 local lnsigv lnsigv
 if (`"`endvars'"'!="") local lnsigv lnsigw
 //mata mata describe
+
 	ml model d0 spsfscal`dist'`epost'() ///
             (frontier:`yvar' =  `wxvars2' `xvars',`noconstant') ///
             (`lnsigv': `vhet')  (lnsigu: `uhet') `mu' ///

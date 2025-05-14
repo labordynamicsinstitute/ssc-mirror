@@ -1,6 +1,9 @@
-*! tidytuesday v1.0 (16 Feb 2025)
-*! Asjad Naqvi
+*! tidytuesday v1.2 (13 May 2025)
+*! Asjad Naqvi (asjadnaqvi@gmail.com)
 
+
+* v1.2 (13 May 2025): Moved internal calls to regular expressions
+* v1.1 (10 Apr 2025): Fixes to md parsing.
 * v1.0 (16 Feb 2025): First release (beta)
 
 
@@ -40,7 +43,7 @@ quietly {
 
 		drop _id _temp
 
-		drop if regexm(v2, ":---:")==1
+		drop if regexm(v2, "---")==1
 
 
 		foreach x of varlist _all {
@@ -227,27 +230,27 @@ end
 	
 		
 	quietly {
-	
+
 		preserve
 			import delim using "https://raw.githubusercontent.com/rfordatascience/tidytuesday/refs/heads/main/data/`year'/`fetch'/readme.md", clear groupseparator("|")  stripquotes(yes)
 
 			gen markme=.
 
-			replace markme = 1 if v1=="### Data Dictionary"
-			replace markme = 2 if v1=="### Cleaning Script"
+			replace markme = 1 if ustrregexm(v1,"# Data Dictionary") == 1
+			replace markme = 2 if ustrregexm(v1,"# Cleaning Script") == 1
 
 			replace markme = sum(markme)
 			keep if markme==1
 
 			// Define a variable to hold the CSV file names
-			gen filename = v1 if substr(v1, 1, 3 ) == "# `"
-			replace filename = subinstr(filename, "# `", "", .)
-			replace filename = subinstr(filename, "`", "", .)
-
+			gen filename 	= v1 if  ustrregexm(v1, "# `")==1 // substr(v1, 1, 3 ) == "### `"
+			replace filename = ustrregexra(filename, "#+? `", "", .)
+			replace filename = ustrregexra(filename, "`", "", .)
+			
 			gen markme2 = 1 if !missing(filename)
 			replace markme2 = 1 if ustrregexm(v1, "\|variable")==1
 			replace markme2 = 1 if ustrregexm(v1, "^\|$")==1
-			
+
 			carryforward filename, replace
 			order filename	
 			drop if filename==""	
@@ -281,7 +284,7 @@ end
 			tempfile _tidyget
 			save `_tidyget', replace
 			
-			levelsof filename, local(lvls) clean
+			noisily levelsof filename, local(lvls) clean
 		restore
 		
 		preserve
@@ -313,8 +316,9 @@ end
 		restore 
 	}
 
+	*/
 			
-	end
+end
 	
 
 *************************

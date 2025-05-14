@@ -16,7 +16,7 @@
 Estimation syntax
 
 {p 8 17 2}
-{cmd:spsfe} {depvar} {indepvars} {cmd:,} {cmd:uhet(}{it:varlist} [{cmd:,} {opt nocons:tant}]{cmd:)} [{it:options}]
+{cmd:spsfe} {depvar} {indepvars} [{cmd:,} {it:options}]
 
 {pstd}
 Version syntax
@@ -36,34 +36,38 @@ Replay syntax
 {syntab :Data structure}
 
 
-{synopt : {cmd: id({it:varname})}} defines the id variable for panel data structure. If this option is omitted, the dataset defaults to single-series time structure interpretation{p_end}
+{synopt : {cmd: id({it:varname})}} defines the id variable for panel data structure.  (Required) Specified when working with panel data{p_end}
 
 
-{synopt : {cmd: time({it:varname})}} specifies the time variable. Mandatory when working with panel data. If this option is omitted, the data structure defaults to cross-sectional analysis{p_end}
+{synopt : {cmd: time({it:varname})}} specifies the time variable. (Required) Specified when working with panel data{p_end}
 
 {syntab :Frontier}
 {synopt :{opt nocons:tant}}suppress constant term{p_end}
 {synopt :{opt cost}}fit cost frontier model; default is {cmd:production}{p_end}
 {synopt :{cmd:wxvars({it:varlist})}}spatially lagged independent variables 
-in the frontier function{p_end}
+in the frontier function. (Required) Specified when the {cmd:wmat()} or {cmd:wxmat()} options are used{p_end}
 
 {syntab : Ancillary equations}
-{synopt :{cmd:uhet(}{it:varlist} [{cmd:,} {opt nocons:tant}]{cmd:)}}
-(required) specifies that the variance of the inefficiency component is heteroskedastic and must be explicitly modeled through covariates in {it:varlist}. These covariates directly characterize the factors driving inefficiency heterogeneity. The variance function includes a constant by default; specify {opt noconstant} to exclude it term{p_end}
+{synopt :{cmd:uhet(}{it:varlist} [{cmd:,} {opt nocon:stant}]{cmd:)}}
+specifies heteroskedasticity in the variance of the one-sided inefficiency term, parameterized through covariates in {it:varlist} that explain variations in the shape of the inefficiency distribution. The variance function includes a constant term by default; specify {opt nocon:stant} to suppress the constant term{p_end}
 
 {synopt :{cmd:vhet({it:varlist})}}
 specify explanatory
 variables for the idiosyncratic error variance function.{p_end}
 
 {syntab :Spatial setting}
-{synopt :{cmdab:wm:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)}}specify spatial weight matrix for the Spatial lag of the independent variable and 
-for the Spatial Durbin terms in the frontier function. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset.{p_end}
+{synopt :{cmdab:wm:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)}}specify the {cmd:same} spatial weight
+matrices for the spatial Durbin terms in the frontier function. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset. Users should manually
+define spatially lagged independent variables using {cmd:wxvars()}.{p_end}
 
 {synopt :{cmdab:wym:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)}}specify spatial weight matrix for 
-spatial lag term. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset.{p_end}
+spatial lag term. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset. Specified when either the weight matrices
+for the spatial Durbin terms differ or the model is a SAR stochastic frontier model.{p_end}
 
 {synopt :{cmdab:wxm:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)}}specify spatial weight matrix for 
-spatial Durbin terms in the frontier. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset.{p_end}
+spatial Durbin terms in the frontier. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset. Specified when either the spatial
+weight matrices for the spatial Durbin terms differ or the model is an SLX stochastic frontier
+model. Users should manually define spatially lagged independent variables using {cmd:wxvars()}.{p_end}
 
 
 {syntab :Regression}
@@ -100,7 +104,7 @@ features available after estimation.{p_end}
 {title:Description}
 
 {pstd}
-{opt spsfe} implements spatial stochastic frontier models that simultaneously address endogeneity in frontier/environmental variables and spatial spillovers using the methodology of {help spsfe##Kutlu2020:{bind:Kutlu et al. (2020)}}. It supports production/cost frontiers with spatial autoregressive (SAR) terms, endogenous regressors via a control function approach, and time-varying spatial weight matrices. The command provides spillover-adjusted efficiency estimates, decomposes marginal effects into direct/indirect components, and allows heteroskedasticity modeling for inefficiency. It generalizes the traditional stochastic frontier analysis by incorporating spatial dependence structures while correcting biases from endogenous covariates.
+{opt spsfe} implements spatial stochastic frontier models that simultaneously address endogeneity in frontier/environmental variables and spatial spillovers using the methodology of {help spsfe##Kutlu2020:{bind:Kutlu et al. (2020)}}. It supports production/cost frontiers with spatial autoregressive (SAR) terms, endogenous regressors via a control function approach, and time-varying spatial weight matrices. The command provides spillover-adjusted efficiency estimates, decomposes marginal effects into direct/indirect components, and allows heteroskedasticity modeling for inefficiency. It generalizes the traditional stochastic frontier analysis by incorporating spatial dependence structures while correcting biases from endogenous covariates. Additionally, spsfe allows to estimate  models with flexible specifications, such as non-spatial stochastic frontier models with exogenous regressors.
 
 
 {marker options}{...}
@@ -109,10 +113,10 @@ features available after estimation.{p_end}
 {dlgtab:Data structure}
 
 {phang}
-{cmd: id({it:varname})} specifies cross-sectional id variable. If this option is omitted, the dataset defaults to single-series.
+{cmd: id({it:varname})} defines the id variable for panel data structure. (Required) Specified when working with panel data.
 
 {phang}
-{cmd: time({it:varname})} specifies time variable. It must be specified for panel data. If not, the data is assumed to be cross-sectional. 
+{cmd: time({it:varname})} specifies the time variable. (Required) Specified when working with panel data.
 
 {dlgtab:Frontier}
 
@@ -124,16 +128,13 @@ features available after estimation.{p_end}
 default is {cmd:production}.
 
 {phang}
-{cmd: wxvars({it:varlist})} specifies spatially lagged independent variables in the frontier function.
+{cmd: wxvars({it:varlist})} specifies spatially lagged independent variables in the frontier function. (Required) Specified when the {cmd:wmat()} or {cmd:wxmat()} options are used.
 
 
 {dlgtab:Ancillary equations}
 
 {phang}{cmd:uhet(}{it:varlist}[{cmd:,} {cmd:noconstant}]{cmd:)}
-specifies that the technical inefficiency component is heteroskedastic,
-with the variance expressed as a function of the covariates 
-defined in {it:varlist}. Specifying {cmd:noconstant} suppresses 
-the constant in this function.
+specifies heteroskedasticity in the variance of the one-sided inefficiency term, parameterized through covariates in {it:varlist} that explain variations in the shape of the inefficiency distribution. The variance function includes a constant term by default; specify {opt nocon:stant} to suppress the constant term.
 
 {phang}{cmd:vhet(}{it:varlist}{cmd:)}
 specifies that the idiosyncratic error component is heteroskedastic,
@@ -144,8 +145,9 @@ with the variance expressed as a function of the covariates defined in
 {dlgtab:Spatial weight matrix}
 
 {phang}
-{cmdab:wm:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)} specifies that the spatial weight matrices for the Spatial lag of the independent variable and
-and for the Spatial Durbin terms in the frontier function. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset.
+{cmdab:wm:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)} specify the {cmd:same} spatial weight
+matrices for the spatial Durbin terms in the frontier function. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset. Users should manually
+define spatially lagged independent variables using {cmd:wxvars()}.
 
 {phang}
 By default, weight matrices are {cmd:sp objects}. 
@@ -170,11 +172,14 @@ For time-constant sparse matrices, the time variable is omitted.
 
 {phang}
 {cmdab:wym:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)} specifies that the spatial weight matrices 
-for the Spatial lag of the independent variable. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset.
+for the Spatial lag of the independent variable. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset. Specified when either the weight matrices
+for the spatial Durbin terms differ or the model is a SAR stochastic frontier model.
 
 {phang}
 {cmdab:wxm:at(}[{it:filename}] [W1 W2 ... WT][,mata array dta]{cmd:)} specifies that the spatial weight matrices 
-for the Spatial Durbin terms in the frontier function. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset.
+for the Spatial Durbin terms in the frontier function. Weight matrices require spatial unit ID (and time naming) consistency with the estimation dataset. Specified when either the spatial
+weight matrices for the spatial Durbin terms differ or the model is an SLX stochastic frontier
+model. Users should manually define spatially lagged independent variables using {cmd:wxvars()}.
 
 
 

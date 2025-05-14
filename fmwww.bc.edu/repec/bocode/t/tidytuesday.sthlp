@@ -1,7 +1,7 @@
 {smcl}
-{* 16February2025}{...}
+{* 13May2025}{...}
 {hi:help treecluster}{...}
-{right:{browse "https://github.com/asjadnaqvi/stata-tidytuesday":tidytuesday v1.0 (GitHub)}}
+{right:{browse "https://github.com/asjadnaqvi/stata-tidytuesday":tidytuesday v1.2 (GitHub)}}
 
 {hline}
 
@@ -41,6 +41,12 @@ In this case please check the repository and the raw data for details and for in
 See {browse "https://github.com/asjadnaqvi/stata-tidytuesday":GitHub} for examples.
 
 
+{title:Citation guidelines}
+
+See {browse "https://ideas.repec.org/c/boc/bocode/s459436.html"} for the official SSC citation. 
+Please note that the GitHub version might be newer than the SSC version.
+
+
 {title:Feedback and issues}
 
 Please submit bugs, errors, feature requests on {browse "https://github.com/asjadnaqvi/stata-tidytuesday/issues":GitHub} by creating a new issue.
@@ -48,8 +54,8 @@ Please submit bugs, errors, feature requests on {browse "https://github.com/asja
 
 {title:Package details}
 
-Version      : {bf:tidytuesday} v1.0
-This release : 16 Feb 2025
+Version      : {bf:tidytuesday} v1.2
+This release : 13 May 2025
 First release: 16 Feb 2025
 Repository   : {browse "https://github.com/asjadnaqvi/stata-tidytuesday":GitHub}
 Keywords     : Stata, data, tidytuesday
@@ -67,7 +73,6 @@ BlueSky      : {browse "https://bsky.app/profile/asjadnaqvi.bsky.social":@asjadn
     {helpb alluvial}, {helpb arcplot}, {helpb bimap}, {helpb bumparea}, {helpb bumpline}, {helpb circlebar}, {helpb circlepack}, {helpb clipgeo}, {helpb delaunay}, 
 	{helpb geoboundary}, {helpb geoflow}, {helpb graphfunctions}, {helpb marimekko}, {helpb polarspike}, {helpb ridgeline}, 
 	{helpb sankey}, {helpb schemepack}, {helpb spider}, {helpb splinefit},
-	{helpb streamplot}, {helpb sunburst}, {helpb ternary}, {helpb tidytuesday}, {helpb treecluster}, {helpb treemap}, {helpb trimap}, {helpb waffle}
-
+	{helpb streamplot}, {helpb sunburst}, {helpb ternary}, {helpb tidytuesday}, {helpb treecluster}, {helpb treemap}, {helpb trimap}, {helpb waffle}.
 or visit {browse "https://github.com/asjadnaqvi":GitHub}.
 
