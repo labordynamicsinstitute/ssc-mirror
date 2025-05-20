@@ -1,0 +1,24 @@
+d 'MARKOVPREDICT': module for predicting the next state of a Markov chain model given specified past states 
+d
+d markovpredict predicts the one-step forward state based on the
+d conditional distribution of past states specified by the user. In
+d the case of ties in the mode (highest frequency) of the one-step
+d forward state, the prediction will be randomly chosen amongst the
+d states tied with the largest frequency. An error will be issued
+d if no prediction can be made (which usually occurs when too many
+d past states are specified). 
+d
+d KW: Markov chain model
+d KW: discrete time Markov chain
+d KW: prediction
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250512
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f markovpredict.ado
+f markovpredict.sthlp
+f ../a/Avery_preproglucacon.dta

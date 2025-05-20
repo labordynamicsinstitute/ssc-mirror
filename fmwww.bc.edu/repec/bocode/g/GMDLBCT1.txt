@@ -1,0 +1,273 @@
+cls;
+/* GMDLBCT.PRG */
+Print "***********************************************************************************************************************************";
+Print "This Gauss program performs dynamic tests for contagion as developed by Hatemi-J and Hacker (2005) Hatemi-J (2025) using pairwise bootstrap simulations. It also provides pairwise bootstrap estimators and bootstrap P-values across time! 
+;
+Print "OBS!!! Using this program in any format without explicit acknowledgment and relevant reference is not allowed!";
+Print " This program code is the copyright of the authors. For non-Commercial applications only.";
+/*Print "No performance guarantee is made. Bug reports are welcome. ";*/
+Print " ";
+Print "***********************************************************************************************************************************";
+Print " ";
+/*	This program code is the copyright of the authors. Applications are allowed only if proper reference	*/
+/*	and acknowledgments are provided. For non-Commercial applications only. No performance		*/
+/*	guarantee is made. Bug reports are welcome. If this code is used for research or in any other		*/
+/*	code, proper attribution needs to be included.											*/
+/*									
+/*	© 2025 Prof. Abdulnasser Hatemi-J and Dr. Alan Mustafa */
+--------------------------------------------------------------------------------
+|							PRINTING DETAILS										|
+--------------------------------------------------------------------------------
+|																				|
+|	Printing the following values for both 'slope' and 'change in the slope':																|
+|	- Means Bootstrap Coefficients 													|
+|	- Medians Bootstrap Coefficients, and												|
+|	- P-values based on Empirical Distribution											|
+|																				|
+|	0= Presenting Summarized Values												|
+|	1 = Presenting Detailed Values													|
+--------------------------------------------------------------------------------*/
+
+prntDetails = 1;
+
+/*-------------------------------------------------------------------------------*/
+
+/*
+--------------------------------------------------------------------------------
+|					LOADING DATA SET AND INITIATIALIZATION							|
+--------------------------------------------------------------------------------*/
+
+load w[40,2] = DA40.txt;  		/* Your data file, obs is the number of time periods (observations). The number of variables in the model is 2.*/
+/*load w[3788,2] = cont_2v1.txt;*/  		/* Your data file, obs is the number of time periods (observations). The number of variables in the model is 2.*/
+/*load w[1605,2] = cont_2v2.txt;*/  		/* Your data file, obs is the number of time periods (observations). The number of variables in the model is 2.*/
+/*load w[998,2] = cont_2v3.txt;*/  		/* Your data file, obs is the number of time periods (observations). The number of variables in the model is 2.*/
+
+declare InitialSample, EndingSample;
+obslow = ceil(rows(w) * 0.25);		/*obslow = buttom 25% of all records;*/
+								/* The number of observation for the period before the crisis.*/
+
+obshighO = rows(w) - obslow;		/*obshighO: observable high value Original*/
+								/*obshighO = 75% of all records;*/
+								/* The number of observation for the period after the crisis. Note that obslow +obshigh =total number of observations.*/
+
+obstot = obslow + obshighO;
+theRange = obshighO - obslow + 1;
+
+if prntDetails == 1;
+	print "***********************************************************";
+	print "theRange = " theRange;
+	print "Observation Low Value = " obslow;
+	print "Observation High value = " obshighO;
+	print "Total Number of observations = " obstot;
+	print "";
+	print "***********************************************************";
+	print "";
+endif;
+
+i = 1;
+
+/*Key: mnBC stands for: Mean Bootstrap Coefficient*/
+mnBC1 = zeros(theRange,1);
+mnBC2 = zeros(theRange,1);
+mnBC3 = zeros(theRange,1);
+mnBC4 = zeros(theRange,1);
+
+/*Key: mdnBC stands for: Median Bootstrap Coefficient*/
+mdnBC1 = zeros(theRange,1);
+mdnBC2 = zeros(theRange,1);
+mdnBC3 = zeros(theRange,1);
+mdnBC4 = zeros(theRange,1);
+
+bpv1 = zeros(theRange,1);
+bpv2 = zeros(theRange,1);
+bpv3 = zeros(theRange,1);
+bpv4 = zeros(theRange,1);
+
+
+Do until obslow > obshighO;
+
+	obshigh = obstot - obslow;
+
+	if prntDetails == 1;
+		print "obslow = " obslow;
+		print "obshigh = " obshigh;
+		print "";
+	endif;
+
+
+	rnds =45438;
+	rndseed rnds;
+
+	Y= w[.,1];
+	X =w[.,2];
+
+	D = zeros(obslow,1)|ones(obshigh,1);
+
+	rmax = 10000; 		/* The number of pairwise bootstrap simulations.*/
+
+
+	/* Perform Regular OLS and process that information*/
+	Z = ones(obstot,1)~D~X~(X.*D);
+        coeff = zeros(rmax,cols(Z));
+        InvZTZ= Inv(Z'Z);
+	Ahat = InvZTZ*(Z'*Y);
+        varres = Y - Z*Ahat;
+         t = Ahat./(sqrt((varres'varres/(obstot-cols(Z)))*diag(InvZTZ)));
+	adjres =varres;
+	/* End of OLS and processing of that information*/
+
+
+        Coeff1 = 0;
+ 	Coeff2 = 0;
+	Coeff3 = 0;
+
+	/* Start of Boostrapping Loop: r counts it */
+	r = 1;
+
+	Do until r > rmax;
+		randomnumbers = rndu(1,obstot);
+		index = 1+ trunc(obstot*randomnumbers);
+		Yboot = Y[index,1];
+		Xboot = X[index,1];
+		Dboot = D[index,1];
+		
+		Zboot = ones(obstot,1)~Dboot~Xboot~(Xboot.*Dboot);
+		
+		Ahatboot = (Inv(Zboot'Zboot)*(Zboot'Yboot))';
+		Coeff1 = Coeff1 + Ahatboot[1,1];
+		Coeff2 = Coeff2 + Ahatboot[1,2];
+		Coeff3 = Coeff3 + Ahatboot[1,3];
+		Coeff[r,1] = Ahatboot[1,1];
+		Coeff[r,2] = Ahatboot[1,2];
+		Coeff[r,3] = Ahatboot[1,3];
+		Coeff[r,4] = Ahatboot[1,4];
+		r = r + 1;
+	Endo;
+	/* End of Bootstrapping Loop */
+
+
+
+        /*Process Bootstrapping information */
+
+        Sortedcoeff1 = Sortc(Coeff[.,1],1);
+        Sortedcoeff2 = Sortc(Coeff[.,2],1);
+        Sortedcoeff3 = Sortc(Coeff[.,3],1);
+        Sortedcoeff4 = Sortc(Coeff[.,4],1);
+
+	/*End processing of bootstrapping inforamation*/
+
+	meansortedcoeff = meanc(sortedcoeff4);
+
+	medianc1 = median(sortedcoeff1);
+	medianc2 = median(sortedcoeff2);
+	medianc3 = median(sortedcoeff3);
+	medianc4 = median(sortedcoeff4);
+
+	if prntDetails == 1;
+		print "OLS estimates="
+		Ahat;
+	
+		Print "***********************************************************";
+		Print "************    Mean Bootstrap coefficients    **********";
+
+		"mean Bootstrap coefficient 1 = ";; Coeff1/rmax;; "\t\tmedian Bootstrap coefficient 1=";; medianc1;
+		"mean Bootstrap coefficient 2 = ";; Coeff2/rmax;; "\t\tmedian Bootstrap coefficient 2=";; medianc2;
+		"mean Bootstrap coefficient 3 = ";; Coeff3/rmax;; "\t\tmedian Bootstrap coefficient 3 =";; medianc3;
+		"mean Bootstrap coefficient 4 = ";; meansortedcoeff ;; "\t\tmedian Bootstrap coefficient 4 =";; medianc4;
+	endif;
+
+	mnBC1[i,1] = Coeff1/rmax; mdnBC1[i,1] = medianc1;
+	mnBC2[i,1] = Coeff2/rmax; mdnBC2[i,1] = medianc2;
+	mnBC3[i,1] = Coeff3/rmax; mdnBC3[i,1] = medianc3;
+	mnBC4[i,1] = meansortedcoeff; mdnBC4[i,1] = medianc4;
+
+	if prntDetails == 1;
+		Print "***********************************************************";
+		Print "**********    P-value based on empirical distribution    **********";
+	endif;
+
+	If medianc1  < 0;
+		bpv1[i,1] = (((rmax - counts(Sortedcoeff1,0)) + counts(Sortedcoeff1,(2*medianc1)) )  /rmax);
+		if prntDetails == 1;
+			"Bootstrap p-value==";;bpv1[i,1];
+		endif;	
+	else;
+		bpv1[i,1] = (((counts(Sortedcoeff1,0)) + rmax - counts(Sortedcoeff1,(2*medianc1)) )  /rmax); /* version 2*/
+		if prntDetails == 1;
+			" Bootstrap p-value=";;bpv1[i,1];
+		endif;
+	endif;
+
+	If medianc2  < 0;
+		bpv2[i,1] = (((rmax - counts(Sortedcoeff2,0)) + counts(Sortedcoeff2,(2*medianc2)) )  /rmax);
+		if prntDetails == 1;
+			"Bootstrap p-value==";;bpv2[i,1];
+		endif;
+	else;
+		bpv2[i,1] = (((counts(Sortedcoeff2,0)) + rmax - counts(Sortedcoeff2,(2*medianc2)) )  /rmax);
+		if prntDetails == 1;
+			"Bootstrap p-value==";;bpv2[i,1];
+		endif;
+	endif;
+
+	If medianc3  < 0;
+		bpv3[i,1] = (((rmax - counts(Sortedcoeff3,0)) + counts(Sortedcoeff3,(2*medianc3)) )  /rmax);
+		if prntDetails == 1;
+			"Bootstrap p-value==";;bpv3[i,1];
+		endif;
+	else;
+		bpv3[i,1] = (((counts(Sortedcoeff3,0)) + rmax - counts(Sortedcoeff3,(2*medianc3)) )  /rmax);
+		if prntDetails == 1;
+			"Bootstrap p-value==";;bpv3[i,1];
+		endif;
+	endif;
+	
+	If medianc4  < 0;
+		bpv4[i,1] = (((rmax - counts(Sortedcoeff4,0)) + counts(Sortedcoeff4,(2*medianc4)) )  /rmax);
+		if prntDetails == 1;
+			"Bootstrap p-value==";;bpv4[i,1];
+		endif;
+	else;
+			bpv4[i,1] = (((counts(Sortedcoeff4,0)) + rmax - counts(Sortedcoeff4,(2*medianc4)) )  /rmax);
+		if prntDetails == 1;
+			"Bootstrap p-value==";;bpv4[i,1];
+		endif;
+	endif;
+
+	if prntDetails == 1;
+		Print "***********************************************************************************************************************************";
+		print "";
+	endif;
+
+	obslow = obslow + 1;
+	i = i + 1;
+endo;
+
+
+/*==========================================================================================================*/
+/*================		Section E: PRINTING RESULTS - START 		===========================================*/
+/*==========================================================================================================*/
+
+print "\t---------------------------------------------------------------------------------------------";
+print "\t\t\t\t\t\t\t\tPairwise Bootstrap Test for Contagion";
+print "\t---------------------------------------------------------------------------------------------";
+
+	print "\t\t\t|\t\t\tFOR THE SLOPE\t\t\t|\t\tFOR THE CHANGE IN THE SLOPE\t\t|";
+
+print "\t---------------------------------------------------------------------------------------------";
+print "\tSub-\t\tBootstrap\t\t   Mean\t\tMedian\t\tBootstrap\t\tMean\t\tMedian";
+print "\tsample\t\tP-Value\t\tBootstrap\t\tBootstrap\t\tP-Value\t\tBootstrap\t\tBootstrap";
+print "\t\t\t\t\t\t\tCoefficient\tCoefficient\t\t\t\tCoefficient\tCoefficient";
+print "\t---------------------------------------------------------------------------------------------";
+
+
+for table (1,theRange,1);
+
+	format /rd 1,3;
+	print " \t" table;; print "\t\t" bpv4[table,1];; print "\t\t" mnBC4[table,1];; print "\t\t" mdnBC4[table,1];;
+				  print "\t\t" bpv3[table,1];; print "\t\t" mnBC3[table,1];; print "\t\t" mdnBC3[table,1];
+endfor;
+
+print "	===============================================================================================";
+print "";
+
