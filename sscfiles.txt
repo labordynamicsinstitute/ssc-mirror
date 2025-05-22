@@ -715,6 +715,7 @@ fmwww.bc.edu/repec/bocode/m/miset.html
 fmwww.bc.edu/repec/bocode/m/mixlelast.pdf
 fmwww.bc.edu/repec/bocode/m/mauchly.sthlp
 fmwww.bc.edu/repec/bocode/m/mrobust.do
+fmwww.bc.edu/repec/bocode/m/mode.pkg
 fmwww.bc.edu/repec/bocode/m/mlr2sls.sthlp
 fmwww.bc.edu/repec/bocode/m/metamiss2.html
 fmwww.bc.edu/repec/bocode/m/mergepoly.ado
@@ -1985,6 +1986,7 @@ fmwww.bc.edu/repec/bocode/m/mmodes.pkg
 fmwww.bc.edu/repec/bocode/m/mkdensity.pkg
 fmwww.bc.edu/repec/bocode/m/m_mygmmcue.mata
 fmwww.bc.edu/repec/bocode/m/mf_mm_insheet.hlp
+fmwww.bc.edu/repec/bocode/m/mode.ado
 fmwww.bc.edu/repec/bocode/m/midas9.html
 fmwww.bc.edu/repec/bocode/m/multin_ll.ado
 fmwww.bc.edu/repec/bocode/m/mlogpred.html
@@ -2036,6 +2038,7 @@ fmwww.bc.edu/repec/bocode/m/mfpigen.sthlp
 fmwww.bc.edu/repec/bocode/m/mp_b_main_g.sthlp
 fmwww.bc.edu/repec/bocode/m/metagen.hlp
 fmwww.bc.edu/repec/bocode/m/mcmcconverge.html
+fmwww.bc.edu/repec/bocode/m/mode.sthlp
 fmwww.bc.edu/repec/bocode/m/mf_somdtransf.hlp
 fmwww.bc.edu/repec/bocode/m/msq2ftsq.sthlp
 fmwww.bc.edu/repec/bocode/m/mtemore.ado
@@ -22842,6 +22845,7 @@ fmwww.bc.edu/repec/bocode/g/ggeocode.ado
 fmwww.bc.edu/repec/bocode/g/grcompare.pkg
 fmwww.bc.edu/repec/bocode/g/gpscore2.pkg
 fmwww.bc.edu/repec/bocode/g/getbvarbmod.ado
+fmwww.bc.edu/repec/bocode/g/GMDLBCT.txt
 fmwww.bc.edu/repec/bocode/g/gologit29_autofit.ado
 fmwww.bc.edu/repec/bocode/g/gsreg.sthlp
 fmwww.bc.edu/repec/bocode/g/geo2xy_us_data.dta
@@ -22922,7 +22926,6 @@ fmwww.bc.edu/repec/bocode/g/gengapp.ado
 fmwww.bc.edu/repec/bocode/g/grouplabs.pkg
 fmwww.bc.edu/repec/bocode/g/givgauss2.hlp
 fmwww.bc.edu/repec/bocode/g/glgamma2.pkg
-fmwww.bc.edu/repec/bocode/g/GMDLBCT1.txt
 fmwww.bc.edu/repec/bocode/g/gumbelfit.ado
 fmwww.bc.edu/repec/bocode/g/gfi.sthlp
 fmwww.bc.edu/repec/bocode/g/grmatgroups.sthlp

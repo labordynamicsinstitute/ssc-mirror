@@ -1,0 +1,23 @@
+d 'MODE': module to display and store the mode of a variable
+d
+d  mode is a convenience tool for displaying and storing the mode
+d (highest frequency of values) of a variable, so that it can be
+d easily accessed for later use. In the case of ties between
+d multiple values, mode will display and store all of them. When
+d the nomiss option is specified, missing values are dropped and
+d therefore cannot be considered for the mode. When the nomiss
+d option is not specified, missing values are treated like other
+d values and will be displayed and stored as ".". 
+d
+d KW: statistics
+d KW: mode
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250521
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f mode.ado
+f mode.sthlp

@@ -202,6 +202,7 @@ p mmsrm module to estimate Multidimensional Marginally Sufficient Rasch Model (M
 p mmws module to perform marginal mean weighting through stratification
 p mnthplot module for scatter plot for monthly data with repetition of data
 p mod11 module to generate Chile's National Identification Number (RUT) check digit (DV) (modulo 11)
+p mode module to display and store the mode of a variable
 p modeldiag module to generate graphics after regression
 p modlpr module to estimate long memory in a timeseries
 p modplot module for plotting graphs of moderating effects
