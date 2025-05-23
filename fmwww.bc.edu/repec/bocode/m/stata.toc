@@ -294,4 +294,5 @@ p mydatelabels module to generate axis labels with a label every time a componen
 p mylabels module for axis labels or ticks on transformed scales or for daily dates
 p mypkg module to inform on packages installed over net
 p myrank module to generate axis variable base on ranks 
+p myreg2 module to export results of regression models to a word document
 p myweeks module for generating numbered weeks from daily date variables

@@ -1,0 +1,21 @@
+d 'MYREG2': module to export results of regression models to a word document
+d
+d    myreg2 exports regression results to a Word document after the
+d collection command in Stata 17.    It is designed for creating
+d tables formatted like Table 2 in epidemiological journals.  The  
+d  command combines regression results for a sepcific exposure
+d variable or all variables from    multiple models into a single
+d Table. 
+d
+d KW: tables
+d KW: estimation
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20250522
+d
+d Author: Zumin Shi, Qatar University
+d Support: email zumin@@qu.edu.qa
+d
+f myreg2.ado
+f myreg2.sthlp

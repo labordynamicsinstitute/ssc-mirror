@@ -521,6 +521,7 @@ fmwww.bc.edu/repec/bocode/m/mvtobit.hlp
 fmwww.bc.edu/repec/bocode/m/mmodes.html
 fmwww.bc.edu/repec/bocode/m/mixregls_lib.lin64
 fmwww.bc.edu/repec/bocode/m/mqgamma.ado
+fmwww.bc.edu/repec/bocode/m/myreg2.sthlp
 fmwww.bc.edu/repec/bocode/m/mahascore2.ado
 fmwww.bc.edu/repec/bocode/m/mp_b_rlogc.sthlp
 fmwww.bc.edu/repec/bocode/m/matout4.hlp
@@ -1280,6 +1281,7 @@ fmwww.bc.edu/repec/bocode/m/mvdom.sthlp
 fmwww.bc.edu/repec/bocode/m/MonteCarloSimulation_panel.do
 fmwww.bc.edu/repec/bocode/m/mclgen.html
 fmwww.bc.edu/repec/bocode/m/muxplot.pkg
+fmwww.bc.edu/repec/bocode/m/myreg2.ado
 fmwww.bc.edu/repec/bocode/m/mf_mm_posof.html
 fmwww.bc.edu/repec/bocode/m/myaxis.sthlp
 fmwww.bc.edu/repec/bocode/m/mtefeplot.ado
@@ -1513,6 +1515,7 @@ fmwww.bc.edu/repec/bocode/m/metagraph.ado
 fmwww.bc.edu/repec/bocode/m/mixreg_plugin.lin64
 fmwww.bc.edu/repec/bocode/m/mareg.sthlp
 fmwww.bc.edu/repec/bocode/m/mixlelast.pkg
+fmwww.bc.edu/repec/bocode/m/myreg2.pkg
 fmwww.bc.edu/repec/bocode/m/matpwcorr.pkg
 fmwww.bc.edu/repec/bocode/m/metareg.dlg
 fmwww.bc.edu/repec/bocode/m/margdistfit_mata_zinb.do
