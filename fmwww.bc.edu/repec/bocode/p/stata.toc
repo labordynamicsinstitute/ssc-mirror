@@ -148,6 +148,7 @@ p ppmlhdfe module for Poisson pseudo-likelihood regression with multiple levels 
 p ppplot module for P-P plots
 p ppschromy module to draw sample with probability proportionate to size, using Chromy's method of sequential random sampling
 p ppssampford module to draw sample with probability proportionate to size, without replacement, using Sampford's method
+p pq module to read, write, and manage Parquet files in Stata
 p pre module to calculate the proportional reduction in errors accomplished by an estimated model
 p predcalc module to calculate out-of-sample predictions for regression, logistic
 p predperf module module for calculating simple indices describing the accuracy and precision of one or two continuous-value predictors, based on a series of predictions matched with corresponding ‘true’ observations.

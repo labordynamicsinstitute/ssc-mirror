@@ -1,0 +1,30 @@
+d 'BLOOD_GLUCOSE': module for converting between HbA1c and blood glucose values
+d
+d  The blood glucose package converts glycated hemoglobin (HbA1c)
+d values to blood glucose values and vice versa. HbA1c is a measure
+d of the average blood glucose levels over the past three months.
+d bg2hba1ci and hba1c2bgi are immediate forms of bg2hba1c and
+d hba1c2bg, respectively; see immed. 
+d
+d KW: blood glucose
+d KW: mode
+d KW: HbA1c
+d KW: statistics
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250524
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f blood_glucose.sthlp
+f bg2hba1c.ado
+f bg2hba1c.sthlp
+f bg2hba1ci.ado
+f bg2hba1ci.sthlp
+f ../h/hba1c2bg.ado
+f ../h/hba1c2bg.sthlp
+f ../h/hba1c2bgi.ado
+f ../h/hba1c2bgi.sthlp
+f ../h/hba1c.dta
