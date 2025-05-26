@@ -17675,6 +17675,7 @@ fmwww.bc.edu/repec/bocode/p/parmest.ado
 fmwww.bc.edu/repec/bocode/p/pascal.hlp
 fmwww.bc.edu/repec/bocode/p/piaactools.pkg
 fmwww.bc.edu/repec/bocode/p/paran.do
+fmwww.bc.edu/repec/bocode/p/pq_benchmark.do
 fmwww.bc.edu/repec/bocode/p/poparms.ado
 fmwww.bc.edu/repec/bocode/p/pystacked.pkg
 fmwww.bc.edu/repec/bocode/p/power_concord.pkg

@@ -20,7 +20,8 @@ d Support: email jlrothbaum@@gmail.com
 d
 f pq.ado
 f pq.sthlp
-f pq.so
-f pq.dylib
-f pq.dylib
-f pq.dll
+G LINUX64 pq.so       pq.plugin
+G MACINTEL64 pq.dylib pq.plugin
+G WIN64 pq.dll        pq.plugin
+h pq.plugin
+f pq_benchmark.do
