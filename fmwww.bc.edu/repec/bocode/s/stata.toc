@@ -47,6 +47,7 @@ p stfform module to provide Functional form test for Cox Models
 p stocdom module to compute bounds assuming stochastic dominance
 p stpm3 module to fit flexible parametric survival models
 p stpp module to compute Pohar-Perme non-parametric estimate of marginal relative (net) survival
+p strbee module to estimate a treatment effect adjusting for treatment switches
 p streamplot module to produce streamplots
 p stripplot module for strip plots (one-way dot plots) 
 p stute_test module to compute Stute (1997) linearity test
