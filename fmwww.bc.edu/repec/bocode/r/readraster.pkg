@@ -1,0 +1,65 @@
+d 'READRASTER': module to read and process raster data in NetCDF and GeoTIFF files
+d
+d   This routine reads and processes raster data in NetCDF and
+d GeoTIFF files. 
+d
+d KW: raster
+d KW: NetCDF
+d KW: GeoTIFF
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20250602
+d
+d Author: Kerry Du, School of Management, Xiamen University
+d Support: email kerrydu@@xmu.edu.cn
+d
+d Author: Chunxia Chen, School of Management, Xiamen University, China
+d Support: email 35720241151353@@stu.xmu.edu.cn
+d
+d Author: Shuo Hu, School of Economics, Southwestern University of Finance and Economics, China
+d Support: email advancehs@@163.com
+d
+d Author: Yang Song, School of Economics, Hefei University of Technology, China
+d Support: email ss0706082021@@163.com
+d
+d Author: Ruipeng Tan, School of Economics, Hefei University of Technology, China
+d Support: email tanruipeng@@hfut.edu.cn
+d
+f readraster.sthlp
+f ../c/crsconvert_core.ado
+f ../c/crsconvert.ado
+f ../c/crsconvert.sthlp
+f ../d/DMSP-like2020.tif
+f readraster_example.do
+f ../g/geotools_init.ado
+f ../g/geotools_init.sthlp
+f ../g/gtiffdisp_core.ado
+f ../g/gtiffdisp.ado
+f ../g/gtiffdisp.sthlp
+f ../g/gtiffread_core.ado
+f ../g/gtiffread.ado
+f ../g/gtiffread.sthlp
+f ../g/gzonalstats_core.ado
+f ../g/gzonalstats.ado
+f ../g/gzonalstats.sthlp
+f ../h/hunan_city.dta
+f ../h/hunan.dbf
+f ../h/hunan.prj
+f ../h/hunan.shp
+f ../h/hunan.shx
+f ../m/matchgeop.ado
+f ../m/matchgeop.sthlp
+f ../n/ncdisp_core.ado
+f ../n/ncdisp.ado
+f ../n/ncdisp.sthlp
+f ../n/ncinfo.ado
+f ../n/ncread_core.ado
+f ../n/ncread.ado
+f ../n/ncread.sthlp
+f ../n/ncreadbysec.ado
+f ../n/ncreadtocsv.ado
+f ../n/ncreadtocsvbysec.ado
+f ../n/netcdf_init.ado
+f ../n/netcdf_init.sthlp
+f readraster.sthlp

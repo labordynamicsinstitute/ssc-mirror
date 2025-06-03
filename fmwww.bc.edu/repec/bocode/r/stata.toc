@@ -81,6 +81,7 @@ p rdqte module for estimation and robust inference for quantile treatment effect
 p rdrobust module to provide robust data-driven inference in the regression-discontinuity design
 p rds module for respondent driven sampling
 p readlog module to read and process a file
+p readraster module to read and process raster data in NetCDF and GeoTIFF files
 p readreplace module to make replacements that are specified in an external dataset
 p readshare module to access Survey of Health Ageing and Retirement in Europe (SHARE) data 
 p readwind module to read the data downloaded from the Wind into Stata in a long form

@@ -242,5 +242,5 @@ Plot the long-run evolution of average net national income per adult in France, 
 {title:Contact}
 
 {pstd}
-If you have comments, suggestions, or experience any problem with this command, please contact <thomas.blanchet@wid.world>.
+If you have comments, suggestions, or experience any problem with this command, please contact <stats@wid.world>.
 

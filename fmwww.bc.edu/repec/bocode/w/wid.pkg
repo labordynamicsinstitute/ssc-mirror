@@ -15,10 +15,10 @@ d KW: Income
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20211105
+d Distribution-Date: 20250602
 d
-d Author: Thomas Blanchet, Paris School of Economics
-d Support: email thomas.blanchet@@wid.world
+d Author: Ignacio Flores, Paris School of Economics
+d Support: email ignacio.flores@@psemail.eu
 d
 f wid.ado
 f wid.jar
