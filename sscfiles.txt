@@ -12571,6 +12571,7 @@ fmwww.bc.edu/repec/bocode/s/slideviewer.pkg
 fmwww.bc.edu/repec/bocode/s/spregcs35.ado
 fmwww.bc.edu/repec/bocode/s/sblsf.pkg
 fmwww.bc.edu/repec/bocode/s/sptobitmstard5.ado
+fmwww.bc.edu/repec/bocode/s/sj1.sthlp
 fmwww.bc.edu/repec/bocode/s/scheme-gg_piyg.scheme
 fmwww.bc.edu/repec/bocode/s/sum2.ado
 fmwww.bc.edu/repec/bocode/s/spautoreg.do
@@ -12775,6 +12776,7 @@ fmwww.bc.edu/repec/bocode/s/sm_ll.ado
 fmwww.bc.edu/repec/bocode/s/scul_invasion.dta
 fmwww.bc.edu/repec/bocode/s/spregsac.dta
 fmwww.bc.edu/repec/bocode/s/sfpanel_postestimation.sthlp
+fmwww.bc.edu/repec/bocode/s/sj1.ado
 fmwww.bc.edu/repec/bocode/s/stpm3_gensplines.ado
 fmwww.bc.edu/repec/bocode/s/sumqi.ado
 fmwww.bc.edu/repec/bocode/s/spregsarxt.ado
@@ -15419,6 +15421,7 @@ fmwww.bc.edu/repec/bocode/s/smithwelch.ado
 fmwww.bc.edu/repec/bocode/s/synth2_example.do
 fmwww.bc.edu/repec/bocode/s/spmap_color.ado
 fmwww.bc.edu/repec/bocode/s/spmat_graph.sthlp
+fmwww.bc.edu/repec/bocode/s/sj1.pkg
 fmwww.bc.edu/repec/bocode/s/spmstardxt11.ado
 fmwww.bc.edu/repec/bocode/s/sreweight.dta
 fmwww.bc.edu/repec/bocode/s/strip.ado

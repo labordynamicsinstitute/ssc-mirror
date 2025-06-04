@@ -1,0 +1,21 @@
+d 'SJ1': module providing Enhanced Stata Journal Navigator 
+d
+d  sj1 provides enhanced navigation for the Stata Journal,
+d simplifying access to SJ content.   sj1 is an enhanced version of
+d official commands with these benefits:      • Automatically
+d formats output with journal metadata and statistics	   •
+d Supports batch display of all issues in a volume	•
+d Provides clickable PDF links for one-click paper access      •
+d Displays DOI identifiers for academic citation 
+d
+d KW: Stata Journal
+d
+d Requires: Stata version 
+d
+d Distribution-Date: 20250603
+d
+d Author: Wang Qiang, Xi'an Jiaotong University
+d Support: email  740130359@@qq.com
+d
+f sj1.ado
+f sj1.sthlp

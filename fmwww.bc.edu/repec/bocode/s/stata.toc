@@ -22,6 +22,7 @@ p simsum module to perform analyses of simulation studies including Monte Carlo 
 p simufe module to simulate panel data with fixed effects and generate scatter plots with optional fitting lines
 p simulate2 module enhancing and parallelising simulate
 p sivqr module to perform smoothed IV quantile regression
+p sj1 module providing Enhanced Stata Journal Navigator 
 p skewreg module to estimate skewness and kurtosis regressions
 p smcl2do module to convert log files to do-files in a robust fashion
 p socstrat module to compute and analyze social stratification variables
