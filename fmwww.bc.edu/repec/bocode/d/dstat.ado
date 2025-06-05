@@ -1,4 +1,4 @@
-*! version 1.4.6  25apr2025  Ben Jann
+*! version 1.4.7  04jun2025  Ben Jann
 
 capt mata: assert(mm_version()>=201)
 if _rc {
@@ -966,7 +966,6 @@ program Graph
                 tempname BCI ATCI
                 mat `BCI' = `B'
                 mat `ATCI' = `AT'[2,1...] // bin midpoints
-                if `"`contrast'"'!="" mata: ds_drop_cref("`ATCI'", 0, 1)
                 mata: ds_graph_droplast(("`BCI'", "`CI'", "`ATCI'"))
                 local bci matrix(`BCI')
                 local atci at(`ATCI')
@@ -1140,13 +1139,18 @@ program Graph
     else if inlist(`"`subcmd'"', "histogram", "share") {
         if `"`recast'"'=="" {
             local recast recast(bar) bartype(spanning)
-            if "`horizontal'"=="" local options plotr(margin(b=0)) `options'
-            else                  local options plotr(margin(l=0)) `options'
+            if `"`contrast'"'=="" {
+                if "`horizontal'"=="" local options plotr(margin(b=0)) `options'
+                else                  local options plotr(margin(l=0)) `options'
+            }
             if c(stata_version)>=15 {
                 if `n`ii''>1 local recast `recast' color(%50)
             }
             local ptype bar
-            if `"`base'"'=="" local base base(0)
+            if `"`base'"'=="" {
+                if `"`e(over_ratio)'"'=="ratio" local base base(1)
+                else                            local base base(0)
+            }
         }
         if `"`ci_recast'"'=="" {
             local ci_recast recast(rcap)
@@ -1157,16 +1161,21 @@ program Graph
     else if `"`subcmd'"'=="proportion" {
         if `"`recast'"'=="" {
             local recast recast(bar)
-            if "`vertical'"=="" local options plotr(margin(l=0)) `options'
-            else                local options plotr(margin(b=0)) `options'
+            if `"`contrast'"'=="" {
+                if "`vertical'"=="" local options plotr(margin(l=0)) `options'
+                else                local options plotr(margin(b=0)) `options'
+            }
             local ptype bar
             if `"`barwidth'"'=="" {
                 if `n`ii''==1 local barwidth 0.7
                 else          local barwidth = .5 / `n`ii''
                 local barwidth barwidth(`barwidth')
             }
-            if `"`base'"'=="" local base base(0)
-            if "`noci'"==""   local citop citop
+            if `"`base'"'=="" {
+                if `"`e(over_ratio)'"'=="ratio" local base base(1)
+                else                            local base base(0)
+            }
+            if "`noci'"=="" local citop citop
         }
         if `"`ci_recast'"'=="" {
             local ci_recast recast(rcap)

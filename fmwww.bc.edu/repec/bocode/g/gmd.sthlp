@@ -116,5 +116,5 @@ BibTeX:
 {title:Version}
 
 {pstd}
-This is version 1.1 of {cmd:gmd}.
+This is version 1.2 of {cmd:gmd}.
 {p_end}

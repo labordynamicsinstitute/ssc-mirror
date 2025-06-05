@@ -3,12 +3,21 @@ program define gmd
     version 15.0
     syntax [anything] [, COUntry(string) Version(string) Raw Iso Vars]
 	
+	
 	* Checking for the dependency
 	cap which missings
 	if _rc {
-		di as txt "Installing required package 'missings'..."
-		qui ssc install missings, replace
+		di as error "This command requires the 'missings' package."
+		di as text "Install it by typing: ssc install missings"
+		exit 498
 	}
+	
+	
+	* Preserve 
+	preserve 
+	
+	* Add a capture to ensure we don't clear the data unless we have successfully imported the data
+	cap noisily {
     
     * Store country list
     local countrylist Afghanistan-AFG Albania-ALB Algeria-DZA "American Samoa-ASM" Andorra-AND Angola-AGO Anguilla-AIA Antarctica-ATA "Antigua and Barbuda-ATG" Argentina-ARG Armenia-ARM Aruba-ABW Australia-AUS Austria-AUT Azerbaijan-AZE Bahamas-BHS Bahrain-BHR Bangladesh-BGD Barbados-BRB Belarus-BLR Belgium-BEL Belize-BLZ Benin-BEN Bermuda-BMU Bhutan-BTN Bolivia-BOL "Bonaire, Sint Eustatius and Saba-BES" "Bosnia and Herzegovina-BIH" Botswana-BWA "Bouvet Island-BVT" Brazil-BRA "British Indian Ocean Territory-IOT" "British Virgin Islands-VGB" Brunei-BRN Bulgaria-BGR "Burkina Faso-BFA" Burundi-BDI Cambodia-KHM Cameroon-CMR Canada-CAN "Cape Verde-CPV" "Cayman Islands-CYM" "Central African Republic-CAF" Chad-TCD Chile-CHL China-CHN "Christmas Island-CXR" "Cocos (Keeling) Islands-CCK" Colombia-COL Comoros-COM "Cook Islands-COK" "Costa Rica-CRI" Croatia-HRV Cuba-CUB Curaçao-CUW Cyprus-CYP "Czech Republic-CZE" Czechoslovakia-CSK "Democratic Republic of Yemen-YMD" "Democratic Republic of the Congo-COD" Denmark-DNK Djibouti-DJI Dominica-DMA "Dominican Republic-DOM" Ecuador-ECU Egypt-EGY "El Salvador-SLV" "Equatorial Guinea-GNQ" Eritrea-ERI Estonia-EST Eswatini-SWZ Ethiopia-ETF "Falkland Islands-FLK" "Faroe Islands-FRO" Fiji-FJI Finland-FIN France-FRA "French Guiana-GUF" "French Polynesia-PYF" "French Southern Territories-ATF" Gabon-GAB Gambia-GMB Georgia-GEO "German Democratic Republic-DDR" Germany-DEU Ghana-GHA Gibraltar-GIB Greece-GRC Greenland-GRL Grenada-GRD Guadeloupe-GLP Guam-GUM Guatemala-GTM Guernsey-GGY Guinea-GIN "Guinea-Bissau-GNB" Guyana-GUY Haiti-HTI "Heard Island and McDonald Islands-HMD" "Holy See-VAT" Honduras-HND "Hong Kong-HKG" Hungary-HUN Iceland-ISL India-IND Indonesia-IDN Iran-IRN Iraq-IRQ Ireland-IRL "Isle of Man-IMN" Israel-ISR Italy-ITA "Ivory Coast-CIV" Jamaica-JAM Japan-JPN Jersey-JEY Jordan-JOR Kazakhstan-KAZ Kenya-KEN Kiribati-KIR Kosovo-XKX Kuwait-KWT Kyrgyzstan-KGZ Laos-LAO Latvia-LVA Lebanon-LBN Lesotho-LSO Liberia-LBR Libya-LBY Liechtenstein-LIE Lithuania-LTU Luxembourg-LUX Macau-MAC Macedonia-MKD Madagascar-MDG Malawi-MWI Malaysia-MYS Maldives-MDV Mali-MLI Malta-MLT "Marshall Islands-MHL" Martinique-MTQ Mauritania-MRT Mauritius-MUS Mayotte-MYT Mexico-MEX "Micronesia (Federated States of)-FSM" Moldova-MDA Monaco-MCO Mongolia-MNG Montenegro-MNE Montserrat-MSR Morocco-MAR Mozambique-MOZ Myanmar-MMR Namibia-NAM Nauru-NRU Nepal-NPL Netherlands-NLD "Netherlands Antilles-ANT" "New Caledonia-NCL" "New Zealand-NZL" Nicaragua-NIC Niger-NER Nigeria-NGA Niue-NIU "Norfolk Island-NFK" "North Korea-PRK" "Northern Mariana Islands-MNP" Norway-NOR Oman-OMN Pakistan-PAK Palau-PLW Palestine-PSE Panama-PAN "Papua New Guinea-PNG" Paraguay-PRY Peru-PER Philippines-PHL Pitcairn-PCN Poland-POL Portugal-PRT "Puerto Rico-PRI" Qatar-QAT "Republic of the Congo-COG" Romania-ROU "Russian Federation-RUS" Rwanda-RWA Réunion-REU "Saint Barthélemy-BLM" "Saint Helena, Ascension and Tristan da Cunha-SHN" "Saint Kitts and Nevis-KNA" "Saint Lucia-LCA" "Saint Martin-MAF" "Saint Pierre and Miquelon-SPM" "Saint Vincent and the Grenadines-VCT" Samoa-WSM "San Marino-SMR" "Sao Tome and Principe-STP" "Saudi Arabia-SAU" Senegal-SEN Serbia-SRB "Serbia and Montenegro-SCG" Seychelles-SYC "Sierra Leone-SLE" Singapore-SGP "Sint Maarten-SXM" Slovakia-SVK Slovenia-SVN "Solomon Islands-SLB" Somalia-SOM "South Africa-ZAF" "South Georgia and the South Sandwich Islands-SGS" "South Korea-KOR" "South Sudan-SSD" "Soviet Union-SUN" Spain-ESP "Sri Lanka-LKA" Sudan-SDN Suriname-SUR "Svalbard and Jan Mayen-SJM" Sweden-SWE Switzerland-CHE Syria-SYR Taiwan-TWN Tajikistan-TJK Tanzania-TZA Thailand-THA "Timor-Leste-TLS" Togo-TGO Tokelau-TKL Tonga-TON "Trinidad and Tobago-TTO" Tunisia-TUN Turkey-TUR Turkmenistan-TKM "Turks and Caicos Islands-TCA" Tuvalu-TUV "US Virgin Islands-VIR" Uganda-UGA Ukraine-UKR "United Arab Emirates-ARE" "United Kingdom-GBR" "United States-USA" "United States Minor Outlying Islands-UMI" Uruguay-URY Uzbekistan-UZB Vanuatu-VUT Venezuela-VEN Vietnam-VNM "Wallis and Futuna-WLF" "Western Sahara-ESH" Yemen-YEM Yugoslavia-YUG Zambia-ZMB Zimbabwe-ZWE "Åland Islands-ALA"
@@ -22,44 +31,19 @@ program define gmd
     di as text ""
 	
 	* Determine current version
-	local current_date = date(c(current_date), "DMY")
-	local current_year = year(date(c(current_date), "DMY"))
-	local current_month = month(date(c(current_date), "DMY"))
-
-	
-	* Determine quarter based on current month 
-	if `current_year' == 2025 {
-		if `current_month' < 3 {
-		local quarter "01"
-		}
-		else if `current_month' <= 6 {
-			local quarter "03"
-		}
-		else if `current_month' <= 9 {
-			local quarter "06"
-		}
-		else {
-			local quarter "09"
-		}
+	cap qui import delimited using "https://raw.githubusercontent.com/KMueller-Lab/Global-Macro-Database/refs/heads/main/data/helpers/versions.csv", clear varnames(1)
+	if _rc != 0 {
+		di as error "Error: Unable to access version information. Check internet connection."
+		exit 498
 	}
-	else {
+	qui gen year = substr(versions, 1, 4)
+	qui gen month = substr(versions, -2, 2)
+	qui destring year month, replace
+	gsort -year -month
+	local current_version = versions in 1	
+	qui levelsof versions, local(available_versions) clean
+	clear
 		
-		if `current_month' <= 3 {
-		local quarter "12"
-		}
-		else if `current_month' <= 6 {
-			local quarter "03"
-		}
-		else if `current_month' <= 9 {
-			local quarter "06"
-		}
-		else {
-			local quarter "09"
-		}
-	}
-
-	local current_version "`current_year'_`quarter'"
-	
 	* Check if the variable exist
 	if "`anything'" != "" {
     local varlist "nGDP rGDP rGDP_USD rGDP_pc deflator cons cons_GDP rcons inv inv_GDP finv finv_GDP exports exports_GDP imports imports_GDP CA CA_GDP USDfx REER govexp govexp_GDP govrev govrev_GDP govtax govtax_GDP govdef govdef_GDP govdebt govdebt_GDP HPI CPI infl pop unemp strate ltrate cbrate M0 M1 M2 M3 M4 CurrencyCrisis BankingCrisis SovDebtCrisis"
@@ -148,22 +132,20 @@ program define gmd
 	
 	* Process version option
     if "`version'" != "" {
-		
+	
     * Handle current version explicitly
     if lower("`version'") == "current" {
         local data_url "`base_url'/GMD_`current_version'.dta"
     }
+	
     else {
-        * Parse the year and quarter
-        local year = substr("`version'", 1, 4)
-        local quarter = substr("`version'", 6, 2)
-        
-        * Validate year and quarter
-        if !inrange(`year', 2020, 2050) | !inlist("`quarter'", "01", "03", "06", "09", "12") {
-            di as error "Error: Version must be either 'current' or in YYYY_QQ format (e.g., 2024_04)"
-            di as text _newline "Quarter must be 03, 06, 09, or 12 (Except for the first release which is 2025_01)"
-            exit 498
-			}
+		* Validate year and quarter
+        if !`: list version in available_versions' {
+			di as error "Error: `version' is not valid"
+			di as text "Available versions are: `available_versions'"
+			di as text "The current version is: `current_version'"
+			exit 498
+		}
         
         * If we get here, format is valid
         local data_url "`base_url'/GMD_`version'.dta"
@@ -185,7 +167,7 @@ program define gmd
         local valid = 0
         
         foreach pair of local countrylist {
-            local ccode = substr("`pair'", -3, .)
+            local ccode = substr("`pair'", -3, 3)
             if "`country'" == "`ccode'" {
                 local valid = 1
                 continue, break
@@ -284,18 +266,6 @@ program define gmd
     }
 }
 	
-    * Check for the version error
-    if _rc {
-        if "`version'" != "" {
-            di as error "Error: Version `version' not found"
-        }
-        else {
-            di as error "Error: Unable to download current version"
-        }
-        di as text _newline "Please visit {browse www.globalmacrodata.com/data.html} to see available version dates"
-        exit _rc
-    }
-    
     * If country specified, filter for that country
     if "`country'" != "" {
         qui keep if ISO3 == "`country'"
@@ -346,6 +316,16 @@ program define gmd
 		sort countryname year
 		}	
 	}
+}
+
+	}
+	
+	if _rc != 0 {
+    restore    
+    exit _rc
+}
+else {
+    restore, not    
 }
 
 end
