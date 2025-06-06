@@ -20,7 +20,4 @@ d Support: email friosavi@@levy.org
 d
 f qregplot.ado
 f qregplot.sthlp
-f ../t/tvgc.ado
-f ../t/tvgc0.ado
-f ../t/tvgc_boot.ado
-f ../t/tvgc.sthlp
+
