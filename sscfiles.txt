@@ -17259,6 +17259,7 @@ fmwww.bc.edu/repec/bocode/p/pweibull.ado
 fmwww.bc.edu/repec/bocode/p/parallel.pdf
 fmwww.bc.edu/repec/bocode/p/postcureregtask2.ado
 fmwww.bc.edu/repec/bocode/p/powerps.ado
+fmwww.bc.edu/repec/bocode/p/power_cmd_itsa.ado
 fmwww.bc.edu/repec/bocode/p/predictms_atparse.ado
 fmwww.bc.edu/repec/bocode/p/partpred_examples.ado
 fmwww.bc.edu/repec/bocode/p/plotb.ado
@@ -17383,6 +17384,7 @@ fmwww.bc.edu/repec/bocode/p/pv.html
 fmwww.bc.edu/repec/bocode/p/pcm000102_lf.ado
 fmwww.bc.edu/repec/bocode/p/prepar.hlp
 fmwww.bc.edu/repec/bocode/p/pcpanel.pkg
+fmwww.bc.edu/repec/bocode/p/power_itsa.sthlp
 fmwww.bc.edu/repec/bocode/p/pagetrend.sthlp
 fmwww.bc.edu/repec/bocode/p/parttau.sthlp
 fmwww.bc.edu/repec/bocode/p/pip_cl.ado
@@ -17810,6 +17812,7 @@ fmwww.bc.edu/repec/bocode/p/propcnsreg_e2.ado
 fmwww.bc.edu/repec/bocode/p/pbeta4.hlp
 fmwww.bc.edu/repec/bocode/p/pip.ado
 fmwww.bc.edu/repec/bocode/p/pctilesets_examples.do
+fmwww.bc.edu/repec/bocode/p/power_cmd_itsa_init.ado
 fmwww.bc.edu/repec/bocode/p/pspline.pkg
 fmwww.bc.edu/repec/bocode/p/pim3.ado
 fmwww.bc.edu/repec/bocode/p/pfwb.ado
@@ -18166,6 +18169,7 @@ fmwww.bc.edu/repec/bocode/p/pajek2stata.sthlp
 fmwww.bc.edu/repec/bocode/p/pinvgauss.ado
 fmwww.bc.edu/repec/bocode/p/pbreg.hlp
 fmwww.bc.edu/repec/bocode/p/portel_xl.sthlp
+fmwww.bc.edu/repec/bocode/p/power_itsa.pkg
 fmwww.bc.edu/repec/bocode/p/plotmatrix.hlp
 fmwww.bc.edu/repec/bocode/p/pgb2.hlp
 fmwww.bc.edu/repec/bocode/p/partgam1.do
@@ -18372,6 +18376,7 @@ fmwww.bc.edu/repec/bocode/p/parallel_sim.ado
 fmwww.bc.edu/repec/bocode/p/pschset_i_3.dlg
 fmwww.bc.edu/repec/bocode/p/project_setup.dlg
 fmwww.bc.edu/repec/bocode/p/pvenn.pkg
+fmwww.bc.edu/repec/bocode/p/power_sim_itsa.ado
 fmwww.bc.edu/repec/bocode/p/pwmc.ado
 fmwww.bc.edu/repec/bocode/p/polarspike.sthlp
 fmwww.bc.edu/repec/bocode/p/pchipolate.pkg

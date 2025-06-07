@@ -128,6 +128,7 @@ p povtime module to compute aggregate intertemporal poverty measures (poverty in
 p power_concord module to compute power and sample size for Lin's concordance correlation coefficient
 p power_diagnostic module to compute power and sample size for sensitivity and specificity of a diagnostic test
 p power_icc module to compute power and sample size for one-way random-effects intraclass correlation
+p power_itsa module to compute power and sample size for a single-group interrupted time series analysis 
 p power_kappa module to compute power and sample size for the two-rater kappa statistic with two or more categories
 p power_loa module to compute power and sample size for limits of agreement (LOA) analysis
 p power_oneroc module to compute power and sample size for a one-sample ROC test

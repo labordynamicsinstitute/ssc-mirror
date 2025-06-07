@@ -1,0 +1,39 @@
+d 'POWER_ITSA': module to compute power and sample size for a single-group interrupted time series analysis 
+d
+d  power itsa computes power for a specified number of time periods
+d n() in a single-group interrupted time series analysis (ITSA)
+d using simulation.  The process involves (1) generating a time
+d series using itsadgp, based on the user-inputs replicating the
+d coefficients of a single-group ITSA regression model (see Remarks
+d section)-- which may include autocorrelation for an
+d autoregressive AR(1) model; (2) estimating an ITSA model using
+d Newey-West standard errors; (3) testing if the difference in pre-
+d and post-intervention trends	= 0, or when level is specified,
+d testing if the change in level in the period immediately
+d following introduction of the intervention (compared to the
+d conterfactual) = 0; and (4) repeating this process the number of
+d times specified in reps(). 
+d
+d KW: interrupted time series
+d KW: time series regression
+d KW: power
+d KW: sample size
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250606
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f power_cmd_itsa_init.ado
+f power_cmd_itsa.ado
+f power_sim_itsa.ado
+f power_itsa.sthlp
+f ../i/itsa.ado
+f ../i/itsa.sthlp
+f ../i/itsadgp.ado
+f ../i/itsadgp.sthlp
+f ../g/glm2.ado
+f ../c/cigsales.dta
+f ../c/cigsales_single.dta
