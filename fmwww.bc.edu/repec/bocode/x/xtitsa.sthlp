@@ -81,7 +81,7 @@ intervention begins.  The value(s) entered for time period(s) must be in the sam
 units as the panel time variable specified in {cmd:tsset} {it:timevar}; see
 {helpb tsset}. Dates should be specified as human readible dates using the respective
 pseudofunction (see {helpb datetime##s9:datetime}), such as {cmd:trperiod(2020)} 
-for a four-digit year, or {cmd:trperiod(2019m11)} for quarterly data. 
+for a four-digit year, or {cmd:trperiod(2019m11)} for monthly data. 
 Multiple periods may be specified, separated by a semicolon, as follows
 {cmd:trperiod(2019m6; 2019m11)}; {cmd:trperiod()} is required.
 
@@ -132,7 +132,7 @@ between two dates, specified by the user and separated by a semicolon. The value
 entered for time periods must be in the same units as the panel time variable 
 specified in {helpb tsset}. Dates should be specified using the respective 
 pseudofunction (see {helpb datetime:datetime}), such as {cmd:shade(2020 ; 2021)} 
-for a four-digit year, {cmd:shade(2019m11 ; 2020m3)} for quarterly data or 
+for a four-digit year, {cmd:shade(2019m11 ; 2020m3)} for monthly data or 
 {cmd:shade(20jan2021 ; 30jan2021)} for daily data. Shading may be helpful to 
 highlight a "washout" period before introduction of the intervention, or 
 to highlight some other event worthy of note.

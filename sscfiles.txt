@@ -3982,6 +3982,7 @@ fmwww.bc.edu/repec/bocode/c/cihplot.hlp
 fmwww.bc.edu/repec/bocode/c/cirkdevm.ado
 fmwww.bc.edu/repec/bocode/c/cprdhesae_treatment.sthlp
 fmwww.bc.edu/repec/bocode/c/centroid.hlp
+fmwww.bc.edu/repec/bocode/c/countmatch.sthlp
 fmwww.bc.edu/repec/bocode/c/cluster.hlp
 fmwww.bc.edu/repec/bocode/c/checkrob.ado
 fmwww.bc.edu/repec/bocode/c/clore.ado

@@ -1,7 +1,7 @@
 d 'COUNTMATCH': module to count matching values for one variable in another
 d
-d  countmatch counts observations for which each distinct value  of
-d var1 is matched by (is equal to) var2, whether for the same 
+d   countmatch counts observations for which each distinct value 
+d of var1 is matched by (is equal to) var2, whether for the same 
 d observation or for some different observation. var1 and var2 
 d should be both  numeric or both string. countmatch supersedes 
 d the previous fndmtch2, now withdrawn. The help file includes 
@@ -13,10 +13,10 @@ d KW: matching
 d
 d Requires: Stata version 8
 d
-d Distribution-Date: 20061107
+d Distribution-Date: 20250607
 d
 d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk
 d
 f countmatch.ado
-f countmatch.hlp
+f countmatch.sthlp

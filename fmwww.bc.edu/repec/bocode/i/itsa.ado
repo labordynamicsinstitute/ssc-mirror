@@ -1,3 +1,5 @@
+*! 3.2.5 Ariel Linden 05Jun2025						// fixed bug in ylabel() that didn't allow user to overwrite existing settings 
+													// implemented _natscale to get ylabels using shading to replicate standard Stata
 *! 3.2.4 Ariel Linden 30Apr2025						// hardcoded lines around the legend box to work with Stata v19
 *! 3.2.3 Ariel Linden 04Feb2025						// fixed bug in post-trend output that didn't account for "prefix" when specified 
 													// fixed bug in single-group figure that didn't set legend at position 6
@@ -48,6 +50,7 @@ version 11.0
 	SHADe(string)	                          			     	///		
 	LOWess														///
 	CI															///
+	NAT(int 5)													/// UNDOCUMENTED change _natscale #_n (for shade())
 	REPLace PREfix(str) *]
 
 	if "`exp'" != "" & "`prais'" != "" {
@@ -537,12 +540,14 @@ version 11.0
 				local maxypred_t = r(max)
 				local down = min(`mindvar_t', `minypred_t')			
 				local up = max(`maxdvar_t', `maxypred_t')
-			}	
-			/* use nicelabels (Nick Cox) to get nice lower and upper values for the shading */
-			mata: nicelabels(`down', `up', 5, 0)
+			}
+			/* use _natscale to get "nice" lower and upper values for the shading */	
+			 _natscale `down' `up' `nat'
+			local ylab ylabel(`r(min)'(`r(delta)')`r(max)') 
 			tempvar upy
-			gen `upy' = `upper' if `touse'
-			local shhh (area `upy' `tvar' if inrange(`tvar', `shade1',`shade2') & `touse', base(`lower') bcolor(gs14) plotregion(margin(b=0 t=0)))			
+			gen `upy' = `r(max)' if `touse'
+			local shhh (area `upy' `tvar' if inrange(`tvar', `shade1',`shade2') & `touse', base(`r(min)') bcolor(gs14) plotregion(margin(b=0 t=0)))	
+			
 		}	// end shade		
 
 		/* set up legend when lowess and/or CI and/or shades are specified */
@@ -625,7 +630,7 @@ version 11.0
 			ytitle("`ydesc'")
 			xtitle("`tdesc'")
 			title("`treatdesc'")
-			ylabel(`results')			
+			`ylab' ///
 			`nolow'
 			`lowleg'
             `figure2'
@@ -906,11 +911,12 @@ version 11.0
 					local up = max(`maxdvar_t', `maxypred_t')
 				}
 
-				/* use nicelabels (Nick Cox) to get "nice" lower and upper values for the shading */				
-				mata: nicelabels(`down', `up', 5, 0)
+				/* use _natscale to get "nice" lower and upper values for the shading */			
+				 _natscale `down' `up' `nat'
+				local ylab ylabel(`r(min)'(`r(delta)')`r(max)') 
 				tempvar upy
-				gen `upy' = `upper' if `touse'
-				local shhh (area `upy' `tvar' if `pvar'==`treatid' & inrange(`tvar', `shade1',`shade2') & `touse', base(`lower') bcolor(gs14) plotregion(margin(b=0 t=0)))			
+				gen `upy' = `r(max)' if `touse'
+				local shhh (area `upy' `tvar' if `pvar'==`treatid' & inrange(`tvar', `shade1',`shade2') & `touse', base(`r(min)') bcolor(gs14) plotregion(margin(b=0 t=0)))	
 			}	// end shade		
 		
 			/* set up legend when lowess and/or CI and/or shades are specified */
@@ -975,7 +981,7 @@ version 11.0
 				local lcl (line `plotvarsL' `tvar' if `pvar'==`treatid' & `touse' [`weight' `exp'], `lc2') 
 				local ucl (line `plotvarsU' `tvar' if `pvar'==`treatid' & `touse' [`weight' `exp'], `lc2') 	
 			}
-
+			
 			/* graph it */			
 			#delim ;
 			noi tw  
@@ -991,7 +997,7 @@ version 11.0
 			ytitle("`ydesc'")
 			xtitle("`tdesc'")
 			title("`treatdesc'")
-			ylabel(`results')
+			`ylab'
 			`lowleg'
 			`nolow'
 			`figure2'
@@ -1473,12 +1479,12 @@ version 11.0
 					local up = max(`maxdvar_t', `maxypred_t',`maxdvar_c', `maxypred_c')
 				}	
 				
-				/* use nicelabels (Nick Cox) to get "nice" lower and upper values for the shading */				
-				mata: nicelabels(`down', `up', 5, 0)
-
+				/* use _natscale to get "nice" lower and upper values for the shading */				
+				 _natscale `down' `up' `nat'
+				local ylab ylabel(`r(min)'(`r(delta)')`r(max)') 
 				tempvar upy
-				gen `upy' = `upper'
-				local shhh (area `upy' `tvar' if inrange(`tvar', `shade1',`shade2'), base(`lower')  bcolor(gs14) plotregion(margin(b=0 t=0)))			
+				gen `upy' = `r(max)' 
+				local shhh (area `upy' `tvar' if inrange(`tvar', `shade1',`shade2'), base(`r(min)')  bcolor(gs14) plotregion(margin(b=0 t=0)))				
 			}	// end shade		
 
 			#delim ;
@@ -1617,7 +1623,7 @@ version 11.0
 					`lclc' ///
 					`uclc' ///	
 					, xline(`trperiod', lpattern(shortdash) lcolor(black)) ///
-					ylabel(`results') ///						
+					`ylab' ///						
 					`lowleg' ///
 					 `titlesec' note(`"`note'"') `figure2'
 			} // end no xvars
@@ -1699,59 +1705,10 @@ version 11.0
 					`lclc' ///
 					`uclc' ///	
 					, `lowleg' ///
-					ylabel(`results') ///					
+					`ylab' ///					
 					`titlesec' note(`"`note'"') `figure2'	
 			} // end xvars
 		}   /* End of Figure Block */
 	}   /* End of Type 3 */
 
 end
-
-// the following code is a slightly modified version of Nick Cox's -nicelabels- code
-version 11.0
-mata : 
-
-void nicelabels(real min, real max, real nvals, real tight) { 
-        if (min == max) {
-                st_local("results", min) 
-                exit(0) 
-        }
-        real range, d, newmin, newmax
-        colvector nicevals 
-        range = nicenum(max - min, 0) 
-        d = nicenum(range / (nvals - 1), 1)
-        newmin = tight == 0 ? d * floor(min / d) : d * ceil(min / d)
-        newmax = tight == 0 ? d * ceil(max / d) : d * floor(max / d)  
-        nvals = 1 + (newmax - newmin) / d 
-        nicevals = newmin :+ (0 :: nvals - 1) :* d  
-        st_local("lower", strofreal(newmin))
-        st_local("upper", strofreal(newmax)) 			
-		st_local("interval", strofreal(d)) 
-        st_local("results", invtokens(strofreal(nicevals')))   
-}
-
-real nicenum(real x, real round) { 
-        real expt, f, nf 
-        expt = floor(log10(x)) 
-        f = x / (10^expt) 
-        
-        if (round) { 
-                if (f < 1.5) nf = 1 
-                else if (f < 3) nf = 2
-                else if (f < 7) nf = 5
-                else nf = 10 
-        }
-        else { 
-                if (f <= 1) nf = 1 
-                else if (f <= 2) nf = 2 
-                else if (f <= 5) nf = 5 
-                else nf = 10 
-        }
-
-		return(nf * 10^expt)
-}
-
-end 
-
-
-					
