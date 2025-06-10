@@ -109,6 +109,7 @@ p dmerge module to merge datasets using a modification of Stata's merge
 p dmexogxt module to test consistency of OLS vs XT-IV estimates
 p dmout module to create difference-in-means tables
 p do2screen module to display do-files in result window
+p dobatch module to launch a do-file as a background batch process
 p docd module to change the working directory before executing a do-file
 p docxtab module to list variables to a Word table with head or foot rows from characteristics
 p doiplot module for visualization of asymmetry and heterogeneity in meta-analysis 

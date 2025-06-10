@@ -4,14 +4,18 @@
 	Sem Vandekerckhove (HIVA-KU LEUVEN - sem.vandekerckhove@kuleuven.be)
 	Sebastien Fontenay (UAH Alcalá (Madrid), ULB - sebastien.fontenay@uah.es)
 	         
-	Version: 4.0.0
-	Last update: 22 January 2025
+	Version: 4.1
+	Last update: 9 March 2025
 	What's new:
+	- Solved an issue with a new flag (": @C") which broke the destring operation
+	- Solved an issue with too long lines in the help file
 	- Import of tsv file recoded (use [altimport] if it fails)
 	- Removed the [noerase] option (now undocumented)
 	- Help file and dialog box are updated
  
 	Thanks to:
+	- Lukas Delgado-Prieto (lukas.delgado-prieto@econ.uio.no): troubleshooting this version.
+	- Asjad Naqvi (asjadnaqvi@gmail.com): documenting similar Eurostat automation code on Medium (https://medium.com/the-stata-guide/automating-eurostat-in-stata-part-1-a047941b2b4f)
 	- Josip Arneric (jarneric@net.efzg.h): signaling broken start() and end() options.
 	- Wolf-Fabian Hungerland (wolf-fabian.hungerland@bmwk.bund.de): suggestion to include uncompressed option.
 	- Nikolaos Kanellopoulos (nkanel@kepe.gr): date fix.
@@ -345,7 +349,7 @@ foreach var of varlist `r(varlist)' {
 		replace  flags_`var' = trim(substr(flags_`var',strpos(flags_`var'," "),.))
 		order flags_`var', after(`var')
 		}
-	destring `var', replace ignore("b c d e f i n p r s u z :")
+	destring `var', replace ignore("a b c d e f g h i j k l m n o p q r s t u v w x y z : @ A B C D E F G H I J K L M N O P Q R S T U V W X Y Z")
 	}
 
 

@@ -13,7 +13,7 @@
 {title:Title}
 
 {phang} 
-{bf:pkonfound} {hline 2} This command calculates sensitivity analysis for published studies. This command calculates (1) how much bias there must be in an estimate to nullify/sustain an inference; (2) the impact of an omitted variable necessary to nullify/sustain an inference for a regression coefficient.
+{bf:pkonfound} {hline 2} This command calculates sensitivity analysis for published studies. This command calculates (1) how much bias there must be in an estimate to nullify/sustain an inference; (2) the impact of an omitted variable necessary to nullify/sustain an inference for a regression coefficient. For a full description of the command's usage and additional examples, please refer to our {browse "https://konfound-it.org/page/guide/":practical guide}.
 
 
 {marker syntax}{...}
@@ -23,7 +23,7 @@
 {bf:Linear model} 
 
 {pstd}
-This model type calculates the following indices for the user's linear model: (1) the Impact Threshold for a Confounding Variable (ITCV), which indicates how strongly an omitted variable must be correlated with both the predictor of interest and the outcome to adjust the estimated effect to a user-specified p-value (e.g., 0.05); and (2) the Robustness of Inference to Replacement (RIR), which measures the proportion of data that must be replaced (with cases showing a specific null effect) to adjust the estimated effect to a given p-value (e.g., 0.5).
+This model type calculates the following indices for the user's linear model: (1) the Impact Threshold for a Confounding Variable (ITCV), which indicates how strongly an omitted variable must be correlated with both the predictor of interest and the outcome to adjust the estimated effect to a user-specified p-value (e.g., 0.05); and (2) the Robustness of Inference to Replacement (RIR), which measures the proportion of data that must be replaced (with cases showing a specific null effect) to adjust the estimated effect to a given p-value (e.g., 0.5). 
 
 {p 8 17 2}
 {cmdab:pkonfound}
@@ -465,6 +465,11 @@ The 2 by 2 table after replacement and switching
 {pstd}
 {cmd:pkonfound} this command calculates (1) how much bias there must be in an estimate to nullify/sustain an inference. The bias necessary to nullify/sustain an inference is interpreted in terms of sample replacement; (2) the impact of an omitted variable necessary to nullify/sustain an inference for a regression coefficient. It also assesses how strong an omitted variable has to be correlated with the outcome and the predictor of interest to nullify/sustain the inference.
 
+{marker note}{...}
+{title:Note}
+
+{pstd}
+For a thoughtful background on benchmark options for ITCV, see {browse "https://doi.org/10.1111/rssb.12348":Cinelli & Hazlett (2020)}, {browse "https://doi.org/10.1177/01492063241293126":Lonati & Wulff (2024)}, and {browse "https://doi.org/10.1177/0049124100029002001":Frank (2000)}.
 
 {marker examples}{...}
 {title:Examples}
@@ -479,7 +484,7 @@ The 2 by 2 table after replacement and switching
 {phang}{cmd:. pkonfound 10 2 100 5, indx("IT")}{p_end}
 
 {pstd}
-## Assume in a linear model, the estimate is 10, the standard error of the estimate is 2, the sample size is 100, the number of covariates is 5, the standard deviation of X is 0.3, the standard deviation of Y is 0.5, and the R-squared of the regression is 0.7. To calculate unconditional ITCV:
+## Assume in a linear model, the estimate is 10, the standard error of the estimate is 2, the sample size is 100, the number of covariates is 5, the standard deviation of X is 0.3, the standard deviation of Y is 0.5, and the R-squared of the regression is 0.7. To calculate unconditional ITCV and benchmark correlation for ITCV:
 
 {phang}{cmd:. pkonfound 10 2 100 5, sdx(0.3) sdy(0.5) rs(0.7) indx("IT")}{p_end}
 

@@ -21605,6 +21605,7 @@ fmwww.bc.edu/repec/bocode/d/dfuller2.ado
 fmwww.bc.edu/repec/bocode/d/doseresponse.html
 fmwww.bc.edu/repec/bocode/d/DataMY.dta
 fmwww.bc.edu/repec/bocode/d/dochar.hlp
+fmwww.bc.edu/repec/bocode/d/dobatch.ado
 fmwww.bc.edu/repec/bocode/d/drdid.ado
 fmwww.bc.edu/repec/bocode/d/diagma_example_data.dta
 fmwww.bc.edu/repec/bocode/d/dmerge.html
@@ -21782,6 +21783,7 @@ fmwww.bc.edu/repec/bocode/d/dkobs.sthlp
 fmwww.bc.edu/repec/bocode/d/dolog.sthlp
 fmwww.bc.edu/repec/bocode/d/distcomp.pkg
 fmwww.bc.edu/repec/bocode/d/ddml_cert_partial_iv.do
+fmwww.bc.edu/repec/bocode/d/dobatch_wait.sthlp
 fmwww.bc.edu/repec/bocode/d/dolog13.sthlp
 fmwww.bc.edu/repec/bocode/d/ddml_example_interactiveiv_pystacked_basic.sthlp
 fmwww.bc.edu/repec/bocode/d/dftol.ado
@@ -21953,6 +21955,7 @@ fmwww.bc.edu/repec/bocode/d/distinct.ado
 fmwww.bc.edu/repec/bocode/d/deci.sthlp
 fmwww.bc.edu/repec/bocode/d/datacheck_examples.do
 fmwww.bc.edu/repec/bocode/d/dsearch.html
+fmwww.bc.edu/repec/bocode/d/dobatch.pkg
 fmwww.bc.edu/repec/bocode/d/dataplink.html
 fmwww.bc.edu/repec/bocode/d/difd.pkg
 fmwww.bc.edu/repec/bocode/d/des_dtl.sthlp
@@ -22022,6 +22025,7 @@ fmwww.bc.edu/repec/bocode/d/df.dta
 fmwww.bc.edu/repec/bocode/d/did_multiplegt_dyn.do
 fmwww.bc.edu/repec/bocode/d/datanet.ado
 fmwww.bc.edu/repec/bocode/d/dummies.pkg
+fmwww.bc.edu/repec/bocode/d/dobatch_wait.ado
 fmwww.bc.edu/repec/bocode/d/datmat.hlp
 fmwww.bc.edu/repec/bocode/d/dstat.pkg
 fmwww.bc.edu/repec/bocode/d/datelist.pkg
@@ -22176,6 +22180,7 @@ fmwww.bc.edu/repec/bocode/d/drm_logit_ll.ado
 fmwww.bc.edu/repec/bocode/d/desclong.pkg
 fmwww.bc.edu/repec/bocode/d/dashgph.pkg
 fmwww.bc.edu/repec/bocode/d/drm.sthlp
+fmwww.bc.edu/repec/bocode/d/dobatch.sthlp
 fmwww.bc.edu/repec/bocode/d/devr2.html
 fmwww.bc.edu/repec/bocode/d/dupneigh5.hlp
 fmwww.bc.edu/repec/bocode/d/doubletofloat.hlp

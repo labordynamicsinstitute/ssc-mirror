@@ -41,17 +41,6 @@
 {synoptline}
 {p2colreset}{...}
 
-{marker dialogue}{...}
-{title:Dialogue box}
-
-{pstd}
-{stata db eurostatuse}
-{p_end}
-
-{pstd}
-You can access the dialogue box by clicking on the link above or by entering {cmd: db eurostatuse} in the command line.
-{p_end}
-
 {marker description}{...}
 {title:Description}
 
@@ -67,6 +56,17 @@ Eurostat navigation tree: {browse "https://ec.europa.eu/eurostat/data/database"}
 
 {pstd}
 See also: {browse "https://ec.europa.eu/eurostat/databrowser/bulk?lang=en"}.
+{p_end}
+
+{marker dialogue}{...}
+{title:Dialogue box}
+
+{pstd}
+{stata db eurostatuse}
+{p_end}
+
+{pstd}
+You can access the dialogue box for this command by clicking on the link above or by entering {cmd: db eurostatuse} in the command line.
 {p_end}
 
 {marker options}{...}
@@ -206,17 +206,24 @@ The following country abbreviations are used by Eurostat and can be used as {it:
 {title:Install}
 
 {pstd}
-Download or update eurostatuse over SSC (ssc install eurostatuse, replace) or put the eurostatuse.ado file in your personal ado folder. By default, on Windows, the folder is C:\ado\personal\, on macOS it is found within the Stata folder in the library. Put the files in the subfolder e\ to keep it orderly. Stata will automatically search this directory for programs on the next run and have the command ready when you call it.
+Download or update eurostatuse over SSC (ssc install eurostatuse, replace) or put the eurostatuse.ado file in your personal ado folder. Put the files in the subfolder e\ to keep it orderly. Stata will automatically search this directory for programs on the next run.
 {p_end}
 
 {pstd}
-On Windows, to use the default compressed file transfer, you need to have 7-zip installed into the program files directory (C:\Program Files\7-Zip\7zG.exe). If you install it elsewhere or choose for a different decompression tool, the local `exepath' in the ado will need to be changed. MacOS users don't need to do anything. A Linux shell should also be straightforward to add but it is currently not in the ado. For all platforms, using the [uncompressed] option may solve many download and decompression issues.
+By default, on Windows, the folder is C:\ado\personal\. On macOS, it is within the Stata folder in the Library. 
 {p_end}
 
 {pstd}
-You can download 7-zip from {browse "http://www.7-zip.org/download.html"}.
+On Windows, to use the default [compressed] option, you need to have 7-zip ({browse "http://www.7-zip.org/download.html"}). The apps should be installed into the program files directory: C:\Program Files\7-Zip\7zG.exe. 
 {p_end}
 
+{pstd}
+If installed elsewhere, when using a different decompression app, and when using Linux, change the local 'exepath' in the ado. On MacOS, the default shell commands should work.
+{p_end}
+
+{pstd}
+If download or decompression issues occur, try the [uncompressed] option.
+{p_end}
 
 {marker authors}{...}
 {title:Authors}

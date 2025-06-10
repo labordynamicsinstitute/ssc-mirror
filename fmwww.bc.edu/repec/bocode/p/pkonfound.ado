@@ -5,6 +5,14 @@
 
 
 * made by JC 111924 / edited by JC 022825
+** 2025 v2 update / edited by JC 051625
+
+* linear-RIR: (2) estimate -> estimate of 2
+* linear-ITCV: (for sustain) must be -> is // impact -> conditional impact // 
+* (for nullify) impact -> maximum impact
+* COP & PSE: refine printed output
+* RIR for logistic / 2by2 model: refine printed outputs
+* Update RIR benchmark (Beta version)
 
 // #1
 capture program drop isinvalidate
@@ -2696,6 +2704,406 @@ program define cal_max_rcvz, rclass
     display "max_rcvz="`max_rcvz'
 end
 
+// #27
+capture program drop calc_RIR_raw_to_implied
+program define calc_RIR_raw_to_implied, rclass
+    version 16.0
+    // ------------------------------------------------
+    // calc_RIR_raw_to_implied uncond_mat implied_mat replace
+    //   uncond_mat   : name of 2×2 "raw" matrix
+    //   implied_mat  : name of 2×2 "implied" matrix
+    //   replace_flag : 0 = entire‐sample probabilities
+    //                  1 = control‐group probabilities
+    //
+    // Returns in r():
+    //   control_switches, treatment_switches,
+    //   partial_RIR_control, partial_RIR_treatment,
+    //   total_switches, total_RIR,
+    //   p_fail_used, p_success_used
+    // ------------------------------------------------
+
+    // grab the three tokens
+    args uncond_mat implied_mat replace_flag
+
+    // validate replace
+    if "`replace_flag'" != "0" & "`replace_flag'" != "1" {
+        di as error "`replace' must be 0 (entire) or 1 (control)"
+        exit 198
+    }
+
+    // ensure the matrices exist
+    capture matrix list `uncond_mat'
+    if _rc {
+        di as error "matrix `uncond_mat' not found"
+        exit 198
+    }
+    capture matrix list `implied_mat'
+    if _rc {
+        di as error "matrix `implied_mat' not found"
+        exit 198
+    }
+
+    // extract raw (unconditional) counts
+    scalar a_u = el(`uncond_mat', 1, 1)   // control_fail
+    scalar b_u = el(`uncond_mat', 1, 2)   // control_success
+    scalar c_u = el(`uncond_mat', 2, 1)   // treatment_fail
+    scalar d_u = el(`uncond_mat', 2, 2)   // treatment_success
+
+    // extract implied counts
+    scalar a_i = el(`implied_mat', 1, 1)
+    scalar b_i = el(`implied_mat', 1, 2)
+    scalar c_i = el(`implied_mat', 2, 1)
+    scalar d_i = el(`implied_mat', 2, 2)
+
+    // compute totals
+    scalar total_fail_u    = a_u + c_u
+    scalar total_success_u = b_u + d_u
+    scalar total_sample_u  = total_fail_u + total_success_u
+
+    // choose p_fail / p_success
+    if (`replace_flag' == 0) {
+        // entire sample
+        scalar p_fail    = total_fail_u    / total_sample_u
+        scalar p_success = total_success_u / total_sample_u
+    }
+    else {
+        // control group only
+        scalar control_total = a_u + b_u
+        scalar p_fail    = a_u / control_total
+        scalar p_success = b_u / control_total
+    }
+
+    // helper: control row
+    scalar delta_c = a_i - a_u
+    if (delta_c > 0) {
+        scalar control_switches    = delta_c
+        scalar partial_RIR_control = delta_c / p_fail
+    }
+    else if (delta_c < 0) {
+        scalar control_switches    = abs(delta_c)
+        scalar partial_RIR_control = abs(delta_c) / p_success
+    }
+    else {
+        scalar control_switches    = 0
+        scalar partial_RIR_control = 0
+    }
+
+    // helper: treatment row
+    scalar delta_t = c_i - c_u
+    if (delta_t > 0) {
+        scalar treatment_switches    = delta_t
+        scalar partial_RIR_treatment = delta_t / p_fail
+    }
+    else if (delta_t < 0) {
+        scalar treatment_switches    = abs(delta_t)
+        scalar partial_RIR_treatment = abs(delta_t) / p_success
+    }
+    else {
+        scalar treatment_switches    = 0
+        scalar partial_RIR_treatment = 0
+    }
+
+    // combine
+    scalar total_switches_raw_imp = control_switches + treatment_switches
+    scalar total_RIR_raw_imp      = partial_RIR_control + partial_RIR_treatment
+
+    // return
+    return scalar control_switches = control_switches
+    return scalar treatment_switches = treatment_switches
+    return scalar partial_RIR_control = partial_RIR_control
+    return scalar partial_RIR_treatment = partial_RIR_treatment
+    return scalar total_switches_raw_imp = total_switches_raw_imp
+    return scalar total_RIR_raw_imp = total_RIR_raw_imp
+    return scalar p_fail_used = p_fail
+    return scalar p_success_used = p_success
+	
+end
+
+// #28
+capture program drop benchmark_value_range
+program define benchmark_value_range, rclass
+    version 16.0
+    // Inputs: a_start b_start c_start d_start est_eff est_eff_final
+    args a_start b_start c_start d_start est_eff est_eff_final
+
+	quietly {
+    // Derived totals
+    scalar control_total_start = `a_start' + `b_start'
+    scalar treatment_total_start = `c_start' + `d_start'
+    scalar fail_total_start = `a_start' + `c_start'
+    scalar success_total_start = `b_start' + `d_start'
+
+    // Implied observed treatment success
+    scalar implied_treatment_success = `d_start'
+
+    // Min and max treatment success
+    scalar min_treatment_success = treatment_total_start - (fail_total_start - `a_start')
+    scalar max_treatment_success = treatment_total_start
+
+    // Create dataset and compute benchmarks
+    clear
+    set obs `=(max_treatment_success - min_treatment_success + 1)'
+    gen treatment_success = min_treatment_success + _n - 1
+    gen benchmark = .
+
+    
+    forvalues i = 1/`=_N' {
+		scalar ts = treatment_success[`i']
+		scalar tf = treatment_total_start - ts
+		scalar cf = fail_total_start - tf
+		scalar cs = control_total_start - cf
+
+        if (cf <= 0 | tf <= 0 | cs <= 0 | ts <= 0) continue
+
+        scalar odds_c = cs / cf
+		scalar odds_t = ts / tf
+		scalar oratio = odds_t / odds_c
+		if (oratio <= 0 | missing(oratio)) continue
+
+        scalar logodds = log(oratio)
+        scalar delta_obs = logodds - `est_eff'
+        scalar delta_unobs = `est_eff' - `est_eff_final'
+
+        if (abs(delta_obs) > 0) {
+			replace benchmark = abs(delta_unobs / delta_obs) in `i'
+            }
+	}
+
+
+    drop if missing(benchmark)
+
+    count
+    if r(N) == 0 {
+        display as error "No valid benchmark values found in range-based calculation."
+        exit 1
+    }
+
+    summarize benchmark, meanonly
+    scalar max_benchmark = r(max)
+    scalar dynamic_threshold = 0.05 * max_benchmark
+
+    gen rownum = _n
+    gen is_peak = (benchmark == max_benchmark)
+    egen peak_index = min(cond(is_peak, rownum, .))
+    scalar peak = peak_index[1]
+
+    scalar lower_bound = max(1, peak - 10)
+    scalar upper_bound = min(_N, peak + 10)
+
+    gen keep = (benchmark > dynamic_threshold) & ///
+               (rownum >= lower_bound) & ///
+               (rownum <= upper_bound)
+    preserve
+    keep if keep
+
+    gen is_implied = (treatment_success == implied_treatment_success)
+    summarize benchmark if is_implied, meanonly
+    scalar implied_benchmark_value = r(mean)
+
+	* Create vertical line and dot markers for plotting
+	gen implied_line = .
+	replace implied_line = benchmark if treatment_success == implied_treatment_success
+
+	gen implied_dot = .
+	replace implied_dot = implied_benchmark_value if treatment_success == implied_treatment_success
+
+	* round the label for annotation
+	scalar rounded_benchmark = round(implied_benchmark_value * 100) / 100
+	}
+	
+	* Output Dispatch
+	dis "To calculate this benchmark value, a range of treatment success values is automatically"
+	dis "generated based on the assumption that the marginals are constant between the implied table"
+	dis "and the raw unadjusted table. The benchmark value is visualized as a graph, allowing the"
+	dis "user to interpret how the benchmark changes with hypothesized treatment success values."
+	dis ""
+	dis "To calculate a specific benchmark value, locate the number of treatment successes in the"
+	dis "raw data on the graph below, on the horizontal axis and interpret the corresponding value"
+	dis "on the vertical axis."
+	
+	return scalar implied_benchmark_value = implied_benchmark_value
+
+	* Benchmark graph generation
+	quietly {
+		* prep variables for vertical reference line
+		gen vline_x = .
+		gen vline_y = .
+		replace vline_x = implied_treatment_success if _n <= 2
+		replace vline_y = 0 in 1
+
+		summarize benchmark, meanonly
+		scalar max_bench_val = r(max)
+		replace vline_y = max_bench_val in 2
+
+		* create text label for the implied-success point 
+		gen bench_label = ""
+		replace bench_label = "Benchmark Value: " + ///
+			string(benchmark,"%6.3f") if !missing(implied_dot)
+
+		* draw graph 
+		twoway ///  
+			(line benchmark treatment_success, lcolor(blue) lwidth(medthick) lpattern(solid) ///  
+				legend(label(1 "Benchmark Value vs. Treatment Success"))) ///  
+			(scatter implied_dot treatment_success if !missing(implied_dot), ///  
+				mcolor(red) msymbol(circle) ///  
+				mlabel(bench_label) mlabpos(3) mlabsize(small) mlabcolor(black) ///  
+				legend(label(2 "Benchmark from Implied Treatment Success"))) ///  
+			(line vline_y vline_x, lcolor(green) lpattern(dash) lwidth(medthick) ///  
+				legend(label(3 "Implied Treatment Success"))) ///  
+			, ///  
+			title("Benchmark Values from Hypothesized Treatment Success", size(medium)) ///  
+			subtitle("Based on range of unadjusted treatment success values", size(small)) ///  
+			xtitle("Treatment Success Count", size(medsmall)) ///  
+			ytitle("Log-Odds Ratio Benchmark Value", size(medsmall)) ///  
+			legend(position(2) ring(0) region(lcolor(black)) size(small) cols(1)) ///  
+			graphregion(color(white)) ///  
+			plotregion(margin(zero)) ///  
+			ylabel(, angle(horizontal)) ///  
+			xlabel(, labsize(small))
+	}
+	
+end
+
+// #29
+capture program drop benchmark_value_specific
+program define benchmark_value_specific, rclass
+    version 16.0
+    
+    // Inputs
+    args a_start b_start c_start d_start est_eff est_eff_final total_RIR raw_treatment_success replace_flag
+
+    // Predefined locals (passed via global or macro before calling)
+    // est_eff and est_eff_final should already be available
+    
+    // Totals
+    scalar control_total = `a_start' + `b_start'
+    scalar treatment_total = `c_start' + `d_start'
+    scalar fail_total = `a_start' + `c_start'
+    scalar success_total = `b_start' + `d_start'
+
+    // Check input range
+    if (`raw_treatment_success' <= 0 | `raw_treatment_success' > treatment_total) {
+        display as error "Invalid raw_treatment_success: must be in (0, treatment_total]"
+        exit 198
+    }
+
+    // Derive cell values
+    scalar treatment_fail_new = treatment_total - `raw_treatment_success'
+    scalar control_fail_new = fail_total - treatment_fail_new
+    scalar control_success_new = control_total - control_fail_new
+
+    if (control_fail_new <= 0 | treatment_fail_new <= 0 | control_success_new <= 0) {
+        display as error "Invalid table: cell counts must be > 0"
+        exit 198
+    }
+
+    // Odds and log odds
+    scalar odds_control_new = control_success_new / control_fail_new
+    scalar odds_treatment_new = `raw_treatment_success' / treatment_fail_new
+    scalar odds_ratio_new = odds_treatment_new / odds_control_new
+
+    if (odds_ratio_new <= 0 | missing(odds_ratio_new)) {
+        display as error "Invalid odds ratio calculation"
+        exit 198
+    }
+
+    scalar log_odds_new = log(odds_ratio_new)
+    scalar change_log_odds_obs = log_odds_new - `est_eff'
+    scalar change_log_odds_unobs = `est_eff' - `est_eff_final'
+
+    if (abs(change_log_odds_obs) <= 0) {
+        display as error "Cannot compute benchmark: observed covariate effect = 0"
+        exit 198
+    }
+
+    scalar benchmark_value_logodds = abs(change_log_odds_unobs / change_log_odds_obs)
+    // display "Log-Odds Ratio Benchmark Value: " %6.2f benchmark_value_logodds
+	
+	scalar treatment_success_new = `raw_treatment_success'
+
+    // Define matrices for RIR
+    matrix implied_mat = (`a_start', `b_start' \ `c_start', `d_start')
+
+	// Refined unconditional matrix
+	// Calculate totals
+	scalar uncond_total_fail = control_fail_new + treatment_fail_new
+	scalar uncond_total_success = control_success_new + raw_treatment_success
+	scalar uncond_total_count = uncond_total_fail + uncond_total_success
+
+	scalar uncond_control_total = control_fail_new + control_success_new
+	scalar uncond_treatment_total = treatment_fail_new + raw_treatment_success
+
+	// Calculate success rates
+	scalar uncond_rate_control = 100 * control_success_new / uncond_control_total
+	scalar uncond_rate_treatment = 100 * raw_treatment_success / uncond_treatment_total
+	scalar uncond_rate_total = 100 * uncond_total_success / uncond_total_count
+	
+	* Initialize a 3x3 matrix with zeros
+	matrix uncond_mat = J(3,3,0)
+
+	* Fill in the matrix with values for table_final
+	matrix uncond_mat[1,1] = control_fail_new
+	matrix uncond_mat[1,2] = control_success_new
+	matrix uncond_mat[1,3] = uncond_rate_control
+
+	matrix uncond_mat[2,1] = treatment_fail_new
+	matrix uncond_mat[2,2] = raw_treatment_success
+	matrix uncond_mat[2,3] = uncond_rate_treatment
+
+	matrix uncond_mat[3,1] = uncond_total_fail
+	matrix uncond_mat[3,2] = uncond_total_success
+	matrix uncond_mat[3,3] = uncond_rate_total
+
+	* Name the columns and rows appropriately
+	matrix colnames uncond_mat = Fail Success Success_%
+	matrix rownames uncond_mat = Control Treatment Total	
+	
+	
+    // Calculate RIR from raw -> implied
+    quietly calc_RIR_raw_to_implied uncond_mat implied_mat `replace_flag'
+
+    return scalar raw_to_implied_rir = r(total_RIR_raw_imp)
+
+	
+    // Retrieve predefined local (already set before calling this)
+    local rir_implied_transferred = `total_RIR'
+
+	if (r(total_RIR) > 0) {
+		scalar benchmark_value_rir = `rir_implied_transferred' / r(total_RIR_raw_imp)
+
+		dis "Raw-unadjusted Table:"
+		matlist uncond_mat
+		dis ""
+		
+		display as text "RIR Ratio Benchmark"
+		display as text "RIR ratio = RIR(implied->transfer) / RIR(raw->implied)"
+		display as text "   = " ///
+			string(`rir_implied_transferred', "%4.0f") " / " ///
+			string(r(total_RIR_raw_imp), "%4.0f") " = " ///
+			string(benchmark_value_rir, "%5.3f")
+		display ""
+		display as text "Log-odds Ratio Benchmark"
+		display as text "Bias to change inference / bias due to observed covariates:"
+		display as text "   = (log odds of implied - log odds of transfer)"
+		display as text "     / (log odds of raw - log odds of implied)"
+		display as text "   = (" ///
+			%5.3f `est_eff' " - " ///
+			%5.3f `est_eff_final' ") / (" ///
+			%5.3f log_odds_new " - " ///
+			%5.3f `est_eff' ") ~ " ///
+			%5.3f benchmark_value_logodds
+		display ""
+		display as text "Note that switches in the control row and treatment row required to generate the implied table"
+		display as text "from the unadjusted table are used to define the benchmark RIR."
+		return scalar benchmark_value_rir = benchmark_value_rir
+	} 
+	else {
+		display as error "Cannot compute RIR ratio: RIR from raw->implied is zero."
+	}
+
+    return scalar benchmark_value_logodds = benchmark_value_logodds
+end
+
 
 // Main Function
 * pkonfound_v2 (now its most updated pkonfound) with 3 types
@@ -2706,7 +3114,7 @@ version 16.0
 
 // please run fisher_p.ado, fisher_oddsratio.ado, chisqp.ado, chisq_value.ado, getswitch_fisher.ado (fisher_oddsratio.ado; fisher_p.ado; gettkfnl.ado; taylorexp.ado), getswitch_chisq.ado prior to run this file with model_type == 2!!!
 
-syntax anything, [if] [in] [sig(real 0.05) nu(real 0) onetail(real 0) model_type(real 0) switch_trm(real 1) replace(real 1) rep_0(real 0) test1(real 0) far_bound(real 0) sdx(real -98765432123456789.987654321) sdy(real -98765432123456789.987654321) rs(real -98765432123456789.987654321) eff_thr(real -98765432123456789.987654321) fr2max_multiplier(real 1.3) fr2max(real 0) alpha(real 0.05) tails(integer 2) indx(str) ]
+syntax anything, [if] [in] [sig(real 0.05) nu(real 0) onetail(real 0) model_type(real 0) switch_trm(real 1) replace(real 1) rep_0(real 0) test1(real 0) far_bound(real 0) sdx(real -98765432123456789.987654321) sdy(real -98765432123456789.987654321) rs(real -98765432123456789.987654321) eff_thr(real -98765432123456789.987654321) fr2max_multiplier(real 1.3) fr2max(real 0) alpha(real 0.05) tails(integer 2) raw_treatment_success(real -98765432123456789.987654321) indx(str) ]
 
 // replace: 0 = entire //1 = control
 // switch_trm: default = True
@@ -3657,7 +4065,7 @@ if `model_type'== 0 {
 			dis "interchangeable if they are different). This is based on a threshold effect of " string(round(`critical_r', 0.001), "%9.3f") " for"
 			dis "statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
 			dis ""
-			dis "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be"
+			dis "Correspondingly the conditional impact of an omitted variable (as defined in Frank 2000) must be"
 			dis string(round(`rycvGz', 0.001), "%9.3f") " X " string(round(`rxcvGz', 0.001), "%9.3f") " = " string(round(`rycvGz'*`rxcvGz', 0.001), "%9.3f") " to nullify the inference for a null hypothesis of an effect of `nu' (nu)."
     
     } 
@@ -3685,7 +4093,7 @@ if `model_type'== 0 {
 		dis "in the model; signs are interchangeable if they are different). This is based on a threshold"
 		dis "effect of " string(round(`critical_r', 0.001), "%9.3f") " for statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
 		dis ""
-		dis "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be"
+		dis "Correspondingly the conditional impact of an omitted variable (as defined in Frank 2000) must be"
 		dis string(round(`rycvGz', 0.001), "%9.3f") " X " string(round(`rxcvGz', 0.001), "%9.3f") " = " string(round(`rycvGz'*`rxcvGz', 0.001), "%9.3f") " to nullify the inference for a null hypothesis of an effect of `nu' (nu)."
     
     } 
@@ -3700,7 +4108,7 @@ if `model_type'== 0 {
 			dis "observed covariates; signs are interchangeable if they are different). This is based"
 			dis "on a threshold effect of " string(round(`critical_r', 0.001), "%9.3f") " for statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
 			dis ""
-			dis "Correspondingly the UNCONDITIONAL impact of an omitted variable (as defined in Frank 2000) must be"
+			dis "Correspondingly the UNCONDITIONAL impact of an omitted variable (as defined in Frank 2000) is"
 			dis string(round(`uncond_rxcv', 0.001), "%9.3f") " X " string(round(`uncond_rycv', 0.001), "%9.3f") " = " string(round(`uncond_rxcv' * `uncond_rycv', 0.001), "%9.3f") " to sustain an inference for a null hypothesis of an effect of `nu' (nu)."
 			dis ""
 			dis "Conditional ITCV:"
@@ -3713,7 +4121,7 @@ if `model_type'== 0 {
 		dis "covariates in the model; signs are interchangeable if they are different). This is"
 		dis "based on a threshold effect of " string(round(`beta_threshold', 0.001), "%9.3f") " for statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
 		dis ""
-		dis "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be"
+		dis "Correspondingly the maximum impact of an omitted variable (as defined in Frank 2000) is"
 		dis string(round(`rycvGz', 0.001), "%9.3f") " X " string(round(`rxcvGz', 0.001), "%9.3f") " = " string(round(`rycvGz'*`rxcvGz', 0.001), "%9.3f") " to sustain an inference for a null hypothesis of an effect of `nu' (nu)."
     
     } 
@@ -3729,7 +4137,7 @@ if `model_type'== 0 {
 			dis "if they are different). This is based on a threshold effect of " string(round(`critical_r', 0.001), "%9.3f") " for statistical significance"
 			dis "(alpha = " string(round(`sig', 0.001), "%9.3f") ")."
 			dis ""
-			dis "Correspondingly the UNCONDITIONAL impact of an omitted variable (as defined in Frank 2000) must be"
+			dis "Correspondingly the UNCONDITIONAL impact of an omitted variable (as defined in Frank 2000) is"
 			dis string(round(`uncond_rxcv', 0.001), "%9.3f") " X " string(round(`uncond_rycv', 0.001), "%9.3f") " = " string(round(`uncond_rxcv' * `uncond_rycv', 0.001), "%9.3f") " to sustain an inference for a null hypothesis of an effect of `nu' (nu)."
 			dis ""
 			dis "Conditional ITCV:"
@@ -3742,7 +4150,7 @@ if `model_type'== 0 {
 		dis "interchangeable if they are different). This is based on a threshold effect of " string(round(`beta_threshold', 0.001), "%9.3f") " for"
 		dis "statistical significance (alpha = " string(round(`sig', 0.001), "%9.3f") ")."
 		dis ""
-		dis "Correspondingly the impact of an omitted variable (as defined in Frank 2000) must be"
+		dis "Correspondingly the maximum impact of an omitted variable (as defined in Frank 2000) is"
 		dis string(round(`rycvGz', 0.001), "%9.3f") " X " string(round(`rxcvGz', 0.001), "%9.3f") " = " string(round(`rycvGz'*`rxcvGz', 0.001), "%9.3f") " to sustain an inference for a null hypothesis of an effect of `nu' (nu)."
     
     } 
@@ -3767,10 +4175,9 @@ if `model_type'== 0 {
 			dis "Benchmark correlation product ('benchmark_corr_product') is Rxz * Ryz = " string(round(`benchmark_corr_product', 0.001), "%9.3f") ", showing"
 			dis "the association strength of all observed covariates Z with X and Y."
 			dis ""
-			dis "The ratio ('itcv_ratio_to_benchmark') is unconditional ITCV/Benchmark = " string(abs(round(`uncond_rxcv' * `uncond_rycv', 0.001)), "%9.3f") "/" string(round(`benchmark_corr_product', 0.001), "%9.3f") " = " string(round(`itcv_ratio_to_benchmark', 0.001), "%9.3f") ","
-			dis "indicating the robustness of inference."
+			dis "The ratio ('itcv_ratio_to_benchmark') is unconditional ITCV/Benchmark = " string(abs(round(`uncond_rxcv' * `uncond_rycv', 0.001)), "%9.3f") "/" string(round(`benchmark_corr_product', 0.001), "%9.3f") " = " string(round(`itcv_ratio_to_benchmark', 0.001), "%9.3f") "."
 			dis ""
-			dis "A larger the ratio the stronger must be the unobserved impact relative to the"
+			dis "The larger the ratio the stronger must be the unobserved impact relative to the"
 			dis "impact of all observed covariates to nullify the inference. The larger the ratio"
 			dis "the more robust the inference."
 			dis ""
@@ -3803,7 +4210,7 @@ if `model_type'== 0 {
 
         dis "To nullify the inference of an effect using the threshold of " string(round(`beta_threshold', 0.001), "%9.3f") " for"
         dis "statistical significance (with null hypothesis = `nu' and alpha = `sig'), " string(round(`bias', 0.001), "%9.3f") "%"
-        dis "of the (`est_eff') estimate would have to be due to bias. This implies that to"
+        dis "of the estimate of `est_eff' would have to be due to bias. This implies that to"
         dis "nullify the inference one would expect to have to replace `recase' (" string(round(`bias', 0.001), "%9.3f") "%)"
         dis "observations with data points for which the effect is `nu' (RIR = `recase')."
         dis ""
@@ -3834,7 +4241,7 @@ if `model_type'== 0 {
 
         dis "The estimated effect is `est_eff'. The threshold value for statistical significance"
         dis "is " string(round(`beta_threshold', 0.001), "%9.3f") " (with null hypothesis = `nu' and alpha = `sig'). To reach that threshold,"
-        dis string(round(`sustain', 0.001), "%9.3f") "% of the (`est_eff') estimate would have to be due to bias. This implies to sustain"
+        dis string(round(`sustain', 0.001), "%9.3f") "% of the estimate of `est_eff' would have to be due to bias. This implies to sustain"
         dis "an inference one would expect to have to replace `recase' (" string(round(`sustain', 0.001), "%9.3f") "%) observations with"
         dis "effect of `nu' with data points with effect of " string(round(`beta_threshold', 0.001), "%9.3f") " (RIR = `recase')."
         dis ""
@@ -3854,7 +4261,7 @@ if `model_type'== 0 {
             dis "The threshold used takes the same sign as the estimated effect. See comment above."
             dis ""
         }
-        dis "To reach that threshold, " string(round(`sustain', 0.001), "%9.3f") "% of the (`est_eff') estimate would have to be due"
+        dis "To reach that threshold, " string(round(`sustain', 0.001), "%9.3f") "% of the estimate of `est_eff' would have to be due"
         dis "to bias. This implies that to sustain an inference one would expect to have"
         dis "to replace `recase' (" string(round(`sustain', 0.001), "%9.3f") "%) observations with effect of `nu' with data points with"
         dis "effect of " string(round(`beta_threshold', 0.001), "%9.3f") " (RIR = `recase')."
@@ -3881,10 +4288,10 @@ if `model_type'== 0 {
     }
 	dis "Coefficient of Proportionality (COP):"
 	dis ""
-	dis "This function calculates a correlation-based coefficient of"
-	dis "proportionality (delta) as well as Oster's delta*."
+	dis "This function calculates a correlation-based coefficient of proportionality (delta)"
+	dis "which is exact even in finite samples as well as Oster's delta*."
 	dis ""
-	dis "delta* is " string(`delta_star', "%9.3f") " (assuming no covariates in the baseline model M1),"
+	dis "Delta* is " string(`delta_star', "%9.3f") " (assuming no covariates in the baseline model M1),"
 	dis "the correlation-based delta is " string(`delta_exact', "%9.3f") ", with a bias of " string(`delta_pctbias', "%9.3f") "%."
 	dis "Note that %bias = (delta* - delta) / delta."
 	dis ""
@@ -3904,9 +4311,9 @@ if `model_type'== 0 {
 	dis "Note: Interpreting results from the PSE index in Stata may involve slight inaccuracies" _newline "due to approximations in calculations with complex numbers, which are not fully" _newline "supported by Stata. For more precise results, consider cross-checking with the" _newline "konfound-it app or using the konfound package in R. See the instructions below for using R."
 	
 	dis ""
-	dis "This function calculates the correlations associated with the confound that " 
-	dis "generate an estimated effect that is approximately equal to the threshold " 
-    dis "while preserving the standard error."
+	dis "This function calculates the correlations associated with an omitted confounding" 
+	dis "variable (CV) that generate an estimated effect that is approximately equal to"
+	dis "the threshold while preserving the originally reported standard error." 
     dis ""
     dis "The correlation between X and CV is " string(`rxcv', "%9.3f") ", and the correlation between " 
     dis "Y and CV is " string(`rycv', "%9.3f") "."
@@ -3914,7 +4321,7 @@ if `model_type'== 0 {
     dis "Conditional on the covariates, the correlation between X and CV is " string(`rxcvGz', "%9.3f") ", " 
 	dis "and the correlation between Y and CV is " string(`rycvGz', "%9.3f") "."
     dis ""
-    dis "Including such a CV, the coefficient changes to " string(`eff_x_M3', "%9.3f") ", with standard error "
+    dis "Including such a CV, the coefficient would change to " string(`eff_x_M3', "%9.3f") ", with standard error "
 	dis "of " string(`se_x_M3', "%9.3f") "."
     dis ""
     dis "To see more specific results include 'return list' following the pkonfound command."
@@ -4020,7 +4427,8 @@ if `model_type'== 1 {
 	local n_treat :word 5 of `anything'
 	//local tails :word 6 of `anything' //== onetail=0 ==> two tail; onetail = 1 ==> one tail
 	// removed to_return variable due to STATA's restriction
-	
+	local NA = -98765432123456789.987654321
+
 	// assign `tails' use the existing/user-inserted `onetail' value
 	if (`onetail' == 0){
 		local tails = 2
@@ -4506,7 +4914,7 @@ if `model_type'== 1 {
 	local table_header1_1 "User-entered Table:"
 
 	local table_header2 "The transfer of `total_switch' data points yields the following table:"
-	local table_header2_1 "Transfer Table"
+	local table_header2_1 "Transfer Table:"
 
 	// The summary of the estimates of the implied table
 	if (`changeSE' == 1) {
@@ -4523,7 +4931,7 @@ if `model_type'== 1 {
 	
 	* Summary of the estimates of the transfer table
 	local estimates_summary2 "The log odds (estimated effect) = `=string(`est_eff_final',"%9.3f")', SE = `=string(`std_err_final',"%9.3f")', p-value = `=string(`p_fin',"%9.3f")'."
-	local estimates_summary2_1 "This is based on t = estimated effect/standard error"
+	local estimates_summary2_1 "p-value is based on t = estimated effect/standard error"
 	
 	* Decision on invalidation or sustaining the inference
 	if (`invalidate_ob' == 1) {
@@ -4582,8 +4990,28 @@ if `model_type'== 1 {
 	
 		local conclusion_twoway_8 "In addition, generating the `final_extra' switches from `transferway_extra' is"
 		local conclusion_twoway_9 "equivalent to replacing `RIR_extra' `RIRway_extra' data points with data points for which"
-		local conclusion_twoway_11 "Therefore, the total RIR is `total_RIR'."
-		local conclusion_twoway_12 "RIR = Fragility/P(destination)"
+		local conclusion_twoway_11 "Total RIR = primary RIR + supplemental RIR = (`final_primary'/`p_destination') + (`final_extra'/`p_destination_extra') = `RIR' + `RIR_extra' = `total_RIR'"
+		local conclusion_twoway_12 "based on the calculation RIR = Fragility/P(destination)."
+	}
+	
+	// RIR Benchmark
+	if (`invalidate_ob' == 1) {
+	local benchmark_1 "Benchmarking RIR for Logistic Regression (Beta Version)"
+	local benchmark_2 "The benchmark value helps interpret the RIR necessary to nullify an inference by comparing"
+	local benchmark_3 "the change needed to nullify the inference with the changes in the estimated effect due to"
+	local benchmark_4 "observed covariates. Currently this feature is available only when the reported results are"
+	local benchmark_5 "statistically significant."
+	
+	local benchmark_6 "The benchmark is used to compare the bias needed to nullify the inference / bias reduction due"
+	local benchmark_7 "to observed covariates. Specifically, change in data from implied to transfer table / change in"
+	local benchmark_8 "data from unconditional table to implied table."
+	}
+	else if (`invalidate_ob' == 0) {
+	local benchmark_1 "Benchmarking RIR for Logistic Regression (Beta Version)"
+	local benchmark_2 "The treatment is not statistically significant in the implied table and would also not be"
+	local benchmark_3 "statistically significant in the raw table (before covariates were added). In this scenario, we"
+	local benchmark_4 "do not yet have a clear interpretation of the benchmark and therefore the benchmark calculation"
+	local benchmark_5 "is not reported."
 	}
 
 	// Citation section
@@ -4649,7 +5077,6 @@ if `model_type'== 1 {
 		dis "`conclusion_twoway_10'"
 		dis ""
 		dis "`conclusion_twoway_11'"
-		dis ""
 		dis "`conclusion_twoway_12'"
 	}
 	
@@ -4666,6 +5093,39 @@ if `model_type'== 1 {
 	dis "`estimates_summary2'"
 	dis "`estimates_summary2_1'" 
 	dis ""
+
+	if (`invalidate_ob' == 1) {	
+		dis "`benchmark_1'"
+		dis ""
+		dis "`benchmark_2'"
+		dis "`benchmark_3'"
+		dis "`benchmark_4'"
+		dis "`benchmark_5'"
+		dis ""
+		dis "`benchmark_6'"
+		dis "`benchmark_7'"
+		dis "`benchmark_8'"
+		dis ""
+		
+		if (`raw_treatment_success' != `NA') {
+			benchmark_value_specific `a' `b' `c' `d' `est_eff' `est_eff_final' `total_RIR' `raw_treatment_success' `replace'
+			dis ""
+			}
+		else if (`raw_treatment_success' == `NA') {
+			benchmark_value_range `a' `b' `c' `d' `est_eff' `est_eff_final'
+			dis ""
+			}
+			
+	}
+	else if (`invalidate_ob' == 0) {	
+		dis "`benchmark_1'"
+		dis ""
+		dis "`benchmark_2'"
+		dis "`benchmark_3'"
+		dis "`benchmark_4'"
+		dis "`benchmark_5'"
+	}
+	
 	dis "`citation'"
 	dis ""
 	dis "`citation_1'"
@@ -5121,7 +5581,7 @@ if `model_type'== 2 {
 			
 		local conclusion1g "In addition, generating the `final_extra' switches from `transferway_extra' is equivalent to"
 		local conclusion1h "replacing `RIR_extra' `RIRway_extra' data points with data points for which the probability of `prob_indicator_extra'"
-		local conclusion1j "Therefore, the total RIR is " `RIR' + `RIR_extra' "."
+		local conclusion1j "Therefore, the total RIR is `RIR' + `RIR_extra' = " `RIR' + `RIR_extra' "."
 	}
 
 	// Citation section
@@ -5205,9 +5665,9 @@ if `model_type'== 2 {
 			dis "`conclusion1h'"
 			dis "`conclusion1i'"
 			dis ""
-			dis "`conclusion1j'"
-			dis ""
 			dis "`conclusion1_cal'"
+			dis ""
+			dis "`conclusion1j'"
 	}	
 	
 	dis ""
