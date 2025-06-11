@@ -2,7 +2,7 @@
 APCEST: An estimation wrapper command to facilitate Fosse-Winship bounding 
 approach to APC analysis.
 ********************************************************************************
-Version: 1.1 (08.05.2025)
+Version: 1.2 (10.06.2025)
 Author: Gordey Yastrebov, University of Cologne
 License: GPL-3.0
 *******************************************************************************/

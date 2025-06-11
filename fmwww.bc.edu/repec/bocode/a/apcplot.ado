@@ -2,7 +2,7 @@
 APCPLOT: A tool for visualizing APC effects to facilitate Fosse-Winship bounding 
 approach to APC analysis.
 ********************************************************************************
-Version: 1.1 (08.05.2025)
+Version: 1.2 (10.06.2025)
 Author: Gordey Yastrebov, University of Cologne
 License: GPL-3.0
 *******************************************************************************/
@@ -13,7 +13,8 @@ License: GPL-3.0
 		syntax [anything(name=graphs)], /// APC effect selection option
 		///
 			[Bounded] /// plot bounded solution
- 			[Keepshape] /// keep shapes
+			[Keepshape] /// keep shapes
+			[Info] /// display assumptions / bounds legend
 			[ci(str)] /// CI option
 			[a(numlist min=1 max=1)] /// exact linear components
 			[p(numlist min=1 max=1)] ///
@@ -36,7 +37,7 @@ License: GPL-3.0
 			[NOGRadient] /// supress gradient
 			[GRADes(int 100)] /// gradient grades
 			[AREACONtour(str)] /// gradient area contour
-			[AREAPALette(name)] /// gradient area color palette
+			[AREAPALette(str)] /// gradient area color palette
 		///
 			[SHAPEPLops(str asis)] /// shape line options
 			[PLotops(str)] /// common plot options
@@ -391,11 +392,10 @@ License: GPL-3.0
 *** Render a bounded solution matrix (if requested)
 	if "`bounded'" != "" {
 		if "`nogradient'" == "" {
-			if "`areapalette'" == "" loc areapalette "viridis"
+			if "`areapalette'" == "" loc areapalette "CET R1"
 			colorpalette `areapalette', nogr n(`grades')
 			forv i = 1 / `grades' {
 				loc gradcolor`i' = r(p`i')
-				//loc pgradcolor`i' = r(p`=`grades'-`i'+1')
 			}
 			foreach apcvar in `selection' {
 				mat estimates = `apcvar'_estimates
@@ -403,6 +403,15 @@ License: GPL-3.0
 					`e(pe`=strupper("`apcvar'")'min)') / (`grades' - 1)
 				if "`apcvar'" == "p" loc step = -`step'
 				produce_gradient estimates lb `step' `grades' grad 1
+				mat `apcvar'_gradient_matrix = r(gradient_matrix)
+			}
+		}
+		else {
+			foreach apcvar in `selection' {
+				mat estimates = `apcvar'_estimates
+				loc step = (`e(pe`=strupper("`apcvar'")'max)' - ///
+					`e(pe`=strupper("`apcvar'")'min)')
+				produce_gradient estimates lb `step' 2 grad 1
 				mat `apcvar'_gradient_matrix = r(gradient_matrix)
 			}
 		}
@@ -453,6 +462,14 @@ License: GPL-3.0
 
 		}
 		if "`bounded'" != "" {
+			if "`info'" != "" {
+				loc assumptions `""{bf:Assumptions:}" "`=e(a_assumptions)'" "`=e(p_assumptions)'" "`=e(c_assumptions)'""'
+				loc infos "`=e(`apcvar'_pebounds)'"
+				if !`no_ci' loc infos "`infos'" "`=e(`apcvar'_cibounds)' (CI-adjusted)"
+				if "`combined'" == "" loc infos "`infos'" " " `assumptions'
+				else loc infos_comb note(`assumptions', pos(6))
+				loc infos note("`infos'")
+			}
 			loc i = 1
 			if "`nogradient'" == "" {
 				foreach v of var grad* {
@@ -464,8 +481,7 @@ License: GPL-3.0
 				loc bounded_plot `gradient_plot'
 			} 
 			else {
-				loc bounded_plot (rarea grad1 grad2 x, sort ///
-					lp(solid) fc(`areapalette'))
+				loc bounded_plot (rarea grad1 grad2 x, sort lw(0) fc(`areapalette'))
 			}
 			if !`no_ci' loc cibounded_plot (`recastci' lbCI ubCI x, sort `ciplotops')
 		}
@@ -474,14 +490,15 @@ License: GPL-3.0
 		tw `plot', ``apcvar'_grid_labels' ///
 			yti("`ytitle'") xti(``apcvar'title', height(7)) ///
 			leg(off) name(``apcvar'title', replace) ///
-			`plotops' ``apcvar'plotops'
+			`plotops' ``apcvar'plotops' `infos'
 		restore
 		loc plots_to_combine `plots_to_combine' ``apcvar'title'
 		mat drop `apcvar'_plot_matrix
 	}
+	* COMBINED PLOT:
 	if "`combined'" != "" & `:word count `graphs'' != 1 {
 		gr combine `plots_to_combine', r(1) ycom name(Combined, replace) ///
-			xsiz(`: word count `plots_to_combine'') ysiz(1) `combplotops'
+			xsiz(`: word count `plots_to_combine'') ysiz(1) `combplotops' `infos_comb'
 	}
 
 	end	

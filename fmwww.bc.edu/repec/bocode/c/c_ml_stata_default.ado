@@ -1,8 +1,8 @@
 ********************************************************************************
 *! "c_ml_stata_default"
 *! Author: Giovanni Cerulli
-*! Version: 4
-*! Date: 04 March 2022
+*! Version: 5
+*! Date: 10 June 2025
 ********************************************************************************
 
 
@@ -1882,7 +1882,7 @@ def c_multinomial():
 	R=int(Macro.getLocal("seed"))
 
 	# TRAIN YOUR MODEL USING ALL DATA AND THE BEST PARAMETERS
-	model = LogisticRegression(penalty='none')
+	model = LogisticRegression(penalty=None)
 
 	# FIT THE MODEL
 	model.fit(X, y)

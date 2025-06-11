@@ -18,7 +18,7 @@
 {title:Description}
 
 {p 4 4 2}{cmd:dobatch} runs {it:filename} as a background batch process, allowing multiple do-files to execute in parallel.
-It requires Stata MP and a Linux OS system.
+It requires Stata MP and a Linux or MacOSX terminal OS.
 Before execution, {cmd:dobatch} checks system resources to ensure sufficient CPU availability and to limit the number of active Stata processes.
 If the system is busy, {cmd:dobatch} waits for 5 minutes before checking again.
 By default, the resource thresholds are defined as:

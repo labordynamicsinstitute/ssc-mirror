@@ -2,7 +2,7 @@
 APCBOUND: A tool for optimizing the identificaiton bounds on APC effects to 
 facilitate Fosse-Winship bounding approach to APC analysis.
 ********************************************************************************
-Version: 1.1 (08.05.2025)
+Version: 1.2 (10.06.2025)
 Author: Gordey Yastrebov, University of Cologne
 License: GPL-3.0
 *******************************************************************************/
@@ -113,11 +113,12 @@ License: GPL-3.0
 				"`=string(`theta`i'upper', "`format'")']"
 		}
 	}
+	loc a_assumptions = "`lbalab' < {bf:α (β-Age)} < `ubalab'"
+	loc p_assumptions = "`lbplab' < {bf:π (β-Period)} < `ubplab'"
+	loc c_assumptions = "`lbclab' < {bf:γ (β-Cohort)} < `ubclab'"
 	di as txt "{hline}" _n _n ///
-		"{bf:Bounding assumptions:}" _n ///
-		"{p 2 10}1. `lbalab' < {bf:α (β-Age)} < `ubalab'{p_end}" ///
-		"{p 2 10}2. `lbplab' < {bf:π (β-Period)} < `ubplab'{p_end}" ///
-		"{p 2 10}3. `lbclab' < {bf:γ (β-Cohort)} < `ubclab'{p_end}" ///
+		"{bf:Bounding assumptions:}" _n "{p 2 10}1. `a_assumptions'{p_end}" ///
+		"{p 2 10}2. `p_assumptions'{p_end}" "{p 2 10}3. `c_assumptions'{p_end}" ///
 		_n _n "{bf:Estimated parameters:}" _n ///
 		"{p 2 10}1. {bf:θ₁ = α + π = `=string(`theta1point', "`format'")'}`theta1ci'{p_end}" ///
 		"{p 2 10}2. {bf:θ₂ = γ + π = `=string(`theta2point', "`format'")'}`theta2ci'{p_end}" ///
@@ -161,20 +162,26 @@ License: GPL-3.0
 		if ``v'min' == -1e100 loc `v'minlab "negative infinity"
 		if ``v'max' == 1e100 loc `v'maxlab "positive infinity"
 	}
+	
+*** Save optimized solution ranges as strings
+	loc a_pebounds = "`Aminlab' < {bf:α (β-Age)} < `Amaxlab'"
+	loc p_pebounds = "`Pminlab' < {bf:π (β-Period)} < `Pmaxlab'"
+	loc c_pebounds = "`Cminlab' < {bf:γ (β-Cohort)} < `Cmaxlab'"
+	loc a_cibounds = "`ciAminlab' < {bf:α (β-Age)} < `ciAmaxlab'"
+	loc p_cibounds = "`ciPminlab' < {bf:π (β-Period)} < `ciPmaxlab'"
+	loc c_cibounds = "`ciCminlab' < {bf:γ (β-Cohort)} < `ciCmaxlab'"
 		
 *** Print solutions:
 	di as txt ///
 		"{bf:{ul:Optimized solution ranges using point estimate information only:}}" _n ///
-		"{p 2 10}1. `Aminlab' < {bf:α (β-Age)} < `Amaxlab'{p_end}" ///
-		"{p 2 10}2. `Pminlab' < {bf:π (β-Period)} < `Pmaxlab'{p_end}" ///
-		"{p 2 10}3. `Cminlab' < {bf:γ (β-Cohort)} < `Cmaxlab'{p_end}" _n
+		"{p 2 10}1. `a_pebounds'{p_end}" "{p 2 10}2. `p_pebounds'{p_end}" ///
+		"{p 2 10}3. `c_pebounds'" _n
 	if !`no_ci' {
 	di as txt ///
 		"{bf:{ul:Optimized solution ranges taking `ci_lvl'% confidence " ///
 			"intervals into account:}}" _n ///
-		"{p 2 10}1. `ciAminlab' < {bf:α (β-Age)} < `ciAmaxlab'{p_end}" ///
-		"{p 2 10}2. `ciPminlab' < {bf:π (β-Period)} < `ciPmaxlab'{p_end}" ///
-		"{p 2 10}3. `ciCminlab' < {bf:γ (β-Cohort)} < `ciCmaxlab'{p_end}" _n
+		"{p 2 10}1. `a_cibounds'{p_end}" "{p 2 10}2. `p_cibounds'{p_end}" ///
+		"{p 2 10}3. `c_cibounds'" _n
 	}
 	di "{hline}"
 			
@@ -185,7 +192,6 @@ License: GPL-3.0
 			eret sca ci`v'`bound' = . // wipe clean first
 		}
 	}
-	
 	loc pe_bounded_solution = 1 // reset
 	loc ci_bounded_solution = 1 // reset
 	foreach v in A P C {
@@ -199,6 +205,12 @@ License: GPL-3.0
 			if mi(`ci`v'`bound'') loc ci_bounded_solution = 0
 			if !`no_ci' eret sca ci`v'`bound' = `ci`v'`bound''
 		}
+	}
+	foreach v in a p c {
+		foreach s in pe ci {
+			eret loc `v'_`s'bounds = "``v'_`s'bounds'"
+		}
+		eret loc `v'_assumptions = "``v'_assumptions'"
 	}
 	eret sca pe_bounded_solution = `pe_bounded_solution'
 	eret sca ci_bounded_solution = `ci_bounded_solution'

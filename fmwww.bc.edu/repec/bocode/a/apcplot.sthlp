@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1 || 08.05.2025 || Gordey Yastrebov}{...}
+{* *! version 1.2 || 10.06.2025 || Gordey Yastrebov}{...}
 {hi:help apcplot}{...}
 {right:also see: {helpb apcest}, {helpb apcbound}}
 {hline}
@@ -26,6 +26,7 @@ is specified, only age and cohort effects will be plotted.
 
 {syntab:{help apcplot##basic:Basic options}}
 {synopt:{opt b:ounded}}requests bounded solution visualization{p_end}
+{synopt:{opt i:nfo}}requests the legend for the bounds and assumptions{p_end}
 {synopt:{opt k:eepshape}}forces shape line rendering{p_end}
 {synopt:{opt ci(#)}}requests #% confidence intervals visualization{p_end}
 {synopt:{opt a|p|c(#)}}specifies custom values for {bf:α}, {bf:π}, and/or {bf:γ}{p_end}
@@ -39,13 +40,13 @@ is specified, only age and cohort effects will be plotted.
 {synopt:{opt gridf:ading(#)}}sets the intensity of grid fading, where # is a value between 0 (default) and 1{p_end}
 {synopt:{opt gridlabops}({help scatter##marker_label_options:{it:marker_label_options}})}custom grid labels decoration{p_end}
 {synopt:{opt gridline}({help line_options:{it:line_options}})}custom grid lines decoration{p_end}
-{synopt:{opt gridp:alette}({help colorpalette##palette:{it:palettes}})}grid color palette(s); default is {help colorpalette##:{it:tableau}}{p_end}
+{synopt:{opt gridpal:ette}({help colorpalette##palette:{it:palettes}})}grid color palette(s); default is {help colorpalette##:{it:tableau}}{p_end}
 
 {syntab:{help apcplot##gradient:Gradient options}}
 {synopt:{opt nogr:adient}}suppresses gradient rendering{p_end}
 {synopt:{opt grad:es(#)}}number of grades in a color gradient; default is 100{p_end}
 {synopt:{opt areacon:tour}({help line_options:{it:line_options}})}area contour custom decoration{p_end}
-{synopt:{opt areap:alette}({help colorpalette##palette:{it:palette}})}gradient area color palette; default is {help colorpalette##viridis:{it:viridis}}{p_end}
+{synopt:{opt areapal:ette}({help colorpalette##palette:{it:palette}})}gradient area color palette; default is {help colorpalette##CET:{it:CET R1}}, i.e., rainbow colors{p_end}
 
 {syntab:{help apcplot##further:Further plot customization options}}
 {synopt:{opt shapepl:otops}({help line_options:{it:line_options}})}shape line options{p_end}
@@ -74,6 +75,9 @@ can produce both point-identified and bounded-range solutions.
 {cmd:apcplot} will assume that only the shape lines for selected APC effects will be plotted. If 
 the option {it:is} specified, the shape lines will not be produced over the bounded solutions 
 unless {opt keepshape} is specified.
+
+{phang}{opt info} embeds the information on the bounds and assumptions from the previous call 
+of {cmd:apcbound} into the plots produced by {cmd:apcplot}.
 
 {phang}{opt keepshape} forces the rendering of the shape lines, when {opt bounded} is specified.
 
@@ -105,12 +109,13 @@ the bounding assumptions, revealing how the shapes of APC effects might change
 depending on the changes in {bf:α}, {bf:π}, and/or {bf:γ}. If the option is not 
 specified, no grid will be produced.
 
-{pmore}The first parameter # sets the desired increment. If the value is preceded by a 
-"+" or "-", respectively only increasing or decreasing shifts will be assumed. Othwerwise, 
-both will be illustrated.
+{pmore}The first parameter # sets the desired {it:increment}. 
 
-{pmore}The second parameter # is optional and must be an integer. It sets the number of 
-incremental shifts to demonstrate. If it is not specified, 1 will be the default value.
+{pmore}The second parameter # is optional and must be an integer. It sets the {it:number of 
+incremental shifts} to demonstrate. If it is not specified, 1 will be the default value. If 
+the value is preceded by a "+" or "-", respectively only increasing (positive) or decreasing 
+(negative) shifts will be assumed (e.g., {opt grid(.001 -2)}). Othwerwise, both increasing 
+and decreasing shifts will be illustrated.
 
 {phang}{opt gridlabels(off|left|right)} controls whether and which values of increments 
 will be labeled. By default, if {opt grid()} is specified, the labels will appear both 
@@ -154,9 +159,10 @@ might produce aesthetically better results.
 look for the contour lines enclosing the gradient.
 
 {phang}{opt areapalette}({help colorpalette##palette:{it:palette}}) determines the color 
-palette for the gradient ({help colorpalette##viridis:{it:viridis}} is the default). The 
-rendering of the gradient will always reverse for the period effects, to correspond 
-exactly to the system of relationships specified by θ₁ = α + π and θ₂ = γ + π.
+palette for the gradient (rainbow colors palette {help colorpalette##CET:{it:CET R1}} is 
+the default). If {opt nogradient} is specified, the argument must be a single color. The 
+rendering of the gradient will always reverse for the period effects, to correspond exactly 
+to the system of relationships specified by θ₁ = α + π and θ₂ = γ + π.
 
 {marker further}{dlgtab:Further plot customization options}
 
@@ -199,15 +205,15 @@ with 3 degrees of rotation for α, both positive and negative, and each step def
 	
 	. {stata apcplot A, grid(.01 3)}
 
-{pstd}A diagnostic grid for all APC effects, with the grid anchored and only positive 
+{pstd}A diagnostic grid for all APC effects, with the grid anchored and only negative 
 rotation assumed for α and γ (accordingly, negative for π), in a combined plot:
 
-	. {stata apcplot, grid(+.01 3) anchorgrid combined}
+	. {stata apcplot, grid(.01 -2) anchorgrid combined}
 
 {pstd}The shape of period effects assuming a specific custom value for α, 
 with 95% confidence intervals for the nonlinear effects included:
 	
-	. {stata apcplot P C, a(.01) ci(95)}
+	. {stata apcplot P, a(.01) ci(95)}
 
 {pstd}A call to visualize the bounded solution obtained after {cmd:apcbound}:
 

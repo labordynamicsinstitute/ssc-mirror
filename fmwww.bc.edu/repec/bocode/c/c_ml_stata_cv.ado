@@ -1,8 +1,8 @@
 ********************************************************************************
 *! "c_ml_stata_cv"
 *! Author: Giovanni Cerulli
-*! Version: 11
-*! Date: 15 November 2022
+*! Version: 12
+*! Date: 10 June 2025
 ********************************************************************************
 
 
@@ -10,7 +10,6 @@
 * The program 'numlist_to_matrix' put a Stata "numlist" into a Stata "matrix" 
 * with one row. We use this program to give Python parameters' grids  
 ********************************************************************************
-cap prog drop numlist_to_matrix
 program numlist_to_matrix , rclass
 syntax , num_list(numlist min=1)
 local nel : word count `num_list'
@@ -2716,8 +2715,7 @@ def c_multinomial():
 	R=int(Macro.getLocal("seed"))
 
 	# INITIALIZE THE MODEL
-	model = LogisticRegression(penalty='none',C=0.5, solver='saga',
-									   multi_class='multinomial')
+	model = LogisticRegression(penalty = None , C=0.5, solver='saga', multi_class='multinomial')
 
 	# MLRC "CROSS-VALIDATION" FOR "C" AND "GAMMA" BY PRODUCING A "GRID SEARCH"
 	# GENERATE THE TWO PARAMETERS' GRID AS A "LIST":
@@ -2764,7 +2762,7 @@ def c_multinomial():
 
 	# USING THE BEST PARAMETERS TO MAKE PREDICTIONS
 	# TRAIN YOUR MODEL USING ALL DATA AND THE BEST PARAMETERS
-	model = LogisticRegression(penalty='elasticnet',C=opt_c, solver='saga',
+	model = LogisticRegression(penalty = None,C=opt_c, solver='saga',
 							 multi_class='multinomial',l1_ratio=opt_gamma)
 
 	# FIT THE MODEL
@@ -2811,10 +2809,3 @@ def c_multinomial():
 	OUT.to_stata(D)
 
 end
-
-
-
-
-
-
-

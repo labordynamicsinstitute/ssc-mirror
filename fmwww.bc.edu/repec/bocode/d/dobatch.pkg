@@ -2,15 +2,17 @@ d 'DOBATCH': module to launch a do-file as a background batch process
 d
 d   dobatch runs filename as a background batch process, allowing
 d multiple do-files to execute in    parallel.	It requires Stata
-d MP and a Linux OS system.  Before execution, dobatch checks	
-d system resources to ensure sufficient CPU availability and to
-d limit the number of active Stata    processes. 
+d MP and Linux or MacOSX terminal.  Before execution, dobatch
+d checks    system resources to ensure sufficient CPU availability
+d and to limit the number of active Stata    processes. 
 d
 d KW: batch
-d KW: background
-d KW: Linux
+d KW: parallel processing
+d KW: multiprocessing
+d KW: CPU management
+d KW: automated workflow
 d
-d Requires: Stata/MP version 13 for Linux
+d Requires: Stata/MP version 13 for Linux or MacOSX (terminal)
 d
 d Distribution-Date: 20250609
 d
