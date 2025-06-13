@@ -66,11 +66,11 @@ program wid
 		clear
 		if regexm("`sixlet'", "^[a-z][a-z][a-z][a-z][a-z][a-z]$") {
 			clear
-			javacall com.wid.WIDDownloader importCountriesAvailableVariables, args("`areas'" "`sixlet'" "`verbosity'") jars("WIDDownloader.jar" "java/json.jar" "java/sfi-api.jar")
+			javacall com.wid.WIDDownloader importCountriesAvailableVariables, args("`areas'" "`sixlet'" "`verbosity'") jars("wid.jar" "json-20180813.jar" "sfi-api.jar")
 		}
 		else if ("`sixlet'" == "_all") {
 			clear
-			javacall com.wid.WIDDownloader importCountriesAvailableVariables, args("`areas'" "all" "`verbosity'") jars("WIDDownloader.jar" "java/json.jar" "java/sfi-api.jar")
+			javacall com.wid.WIDDownloader importCountriesAvailableVariables, args("`areas'" "all" "`verbosity'") jars("wid.jar" "json-20180813.jar" "sfi-api.jar")
 		}
 		else {
 			display as error "`name' is not a valid six letter code"
@@ -284,7 +284,8 @@ program wid
 		quietly levelsof country if (chunk == `c'), separate(",") local(areas_list) clean
 		
 		clear
-		javacall com.wid.WIDDownloader importCountriesVariables, args("`areas_list'" "`variables_list'" "`exclude'" "`verbosity'") jars("WIDDownloader.jar" "java/json.jar" "java/sfi-api.jar")
+		javacall com.wid.WIDDownloader importCountriesVariables, args("`areas_list'" "`variables_list'" "`exclude'" "`verbosity'")  jars("wid.jar" "json-20180813.jar" "sfi-api.jar")
+		
 		quietly drop if missing(value)
 		
 		if (`c' != 0) {
@@ -344,7 +345,7 @@ program wid
 			quietly levelsof country if (chunk == `c'), separate(",") local(areas_list) clean
 			
 			clear
-			javacall com.wid.WIDDownloader importCountriesVariablesMetadata, args("`areas_list'" "`variables_list'" "`verbosity'") jars("WIDDownloader.jar" "java/json.jar" "java/sfi-api.jar")
+			javacall com.wid.WIDDownloader importCountriesVariablesMetadata, args("`areas_list'" "`variables_list'" "`verbosity'")  jars("wid.jar" "json-20180813.jar" "sfi-api.jar")
 			
 			// Pass if the dataset is empty (can happen with metadata)
 			quietly count

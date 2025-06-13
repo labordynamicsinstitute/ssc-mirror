@@ -29,6 +29,9 @@
 **** Line 3204, add if "`trends_lin'"=="" condition when adding the avg_effect estimate to the matrix used for esttab (solve delta_XX not found error) -> needed to add this condition at multiple places
 **** Add ereturn for p-value test joint nullity effects
 
+*** DAC:
+**** Added HC2 BM DOF SES to predict_het
+
 ********************************************************************************
 *                                 PROGRAM 1                                    *
 ********************************************************************************
@@ -37,7 +40,7 @@ capture program drop did_multiplegt_dyn
 
 program did_multiplegt_dyn, eclass
 	version 12.0
-	syntax varlist(min=4 max=4 numeric) [if] [in] [, effects(integer 1) placebo(integer 0) switchers(string) only_never_switchers controls(varlist numeric) trends_nonparam(varlist numeric) weight(varlist numeric max=1) dont_drop_larger_lower NORMALIZED cluster(varlist numeric max=1) graphoptions(string) save_results(string) graph_off same_switchers same_switchers_pl effects_equal(string)  drop_if_d_miss_before_first_switch trends_lin ci_level(integer 95) by(varlist numeric max=1) predict_het(string) design(string) date_first_switch(string)  NORMALIZED_weights CONTinuous(integer 0) save_sample less_conservative_se by_path(string) bootstrap(string) _no_updates]
+	syntax varlist(min=4 max=4 numeric) [if] [in] [, effects(integer 1) placebo(integer 0) switchers(string) only_never_switchers controls(varlist numeric) trends_nonparam(varlist numeric) weight(varlist numeric max=1) dont_drop_larger_lower NORMALIZED cluster(varlist numeric max=1) graphoptions(string) save_results(string) graph_off same_switchers same_switchers_pl effects_equal(string)  drop_if_d_miss_before_first_switch trends_lin ci_level(integer 95) by(varlist numeric max=1) predict_het(string) predict_het_hc2bm design(string) date_first_switch(string)  NORMALIZED_weights CONTinuous(integer 0) save_sample less_conservative_se by_path(string) bootstrap(string) _no_updates]
 	
 ////////// 0. Auto-updates
 if "`_no_updates'" == "" {
@@ -322,6 +325,12 @@ if scalar(aggregated_data)==0{
 	replace weight_XX=0 if tag_y_miss_XX==1
 }
 	
+//// Modif Felix 26.05.2025 -> tempvar to use the correct weights when we use by_path and the data is collapsed becausee the group variable is coarser than the panel identifier
+if "`by_path'" != ""{
+	tempvar weight_path_XX
+	generate `weight_path_XX' = weight_XX
+}	
+	
 ///// by option for heterogeneous treatment effects analysis
 
 // define local so we run the loop once if by is not specified
@@ -464,7 +473,18 @@ if "`pred_het'" !=""{
 	display as error "is(are) time-varying, the command will therefore ignore them."
 	di as input _continue ""
 	}
-} 
+}
+
+*Limit use of predict_het_hc2bm to cases where predict_het is specified
+if "`predict_het'"=="" & "`predict_het_hc2bm'" != "" {
+	di as error ""
+	di as error "Option predict_het_hc2bm only available when predict_het is specified."
+	
+	di as input _continue ""
+	
+	exit
+}
+
 
 ///// Creating Y G T D variables
 
@@ -1283,8 +1303,8 @@ global l_placebo_graph_XX=`=-l_placebo_XX'
 
 capture graph drop graph_`k'_XX
 
-// call did_multiplegt_dyn with the corresponding options
-noisily did_multiplegt_dyn `1' `2' `3' `4' if (different_paths_XX==`k'|cont_path_alt_XX==1), effects(`=l_XX') placebo(`=l_placebo_XX') same_switchers switchers(`switchers') `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') weight(`weight') `dont_drop_larger_lower' `normalized' cluster(`cluster') `same_switchers_pl' `trends_lin' by(`by_var_path') predict_het(`predict_het') ci_level(`ci_level') design(`design') date_first_switch(`date_first_switch') continuous(`continuous') `less_conservative_se' `normalized_weights' `graph_off' `save_sample' graphoptions(xlabel(`=-l_placebo_XX'[1]`=l_XX') title(Treatment path (${path_`k'_XX}); ${num_g_path_`k'_XX} switchers, size(small)) xtitle(Relative time to last period before treatment changes (t=0), size(small)) graphregion(color(white)) plotregion(color(white)) legend(pos(6) order(`graph_options_int') rows(1) size(small)) name(graph_`k'_XX) legend(off))
+// call did_multiplegt_dyn with the corresponding options // Modif Felix 26.05.2025 -> change the weight to the tempvar
+noisily did_multiplegt_dyn `1' `2' `3' `4' if (different_paths_XX==`k'|cont_path_alt_XX==1), effects(`=l_XX') placebo(`=l_placebo_XX') same_switchers switchers(`switchers') `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') weight(`weight_path_XX') `dont_drop_larger_lower' `normalized' cluster(`cluster') `same_switchers_pl' `trends_lin' by(`by_var_path') predict_het(`predict_het') ci_level(`ci_level') design(`design') date_first_switch(`date_first_switch') continuous(`continuous') `less_conservative_se' `normalized_weights' `graph_off' `save_sample' graphoptions(xlabel(`=-l_placebo_XX'[1]`=l_XX') title(Treatment path (${path_`k'_XX}); ${num_g_path_`k'_XX} switchers, size(small)) xtitle(Relative time to last period before treatment changes (t=0), size(small)) graphregion(color(white)) plotregion(color(white)) legend(pos(6) order(`graph_options_int') rows(1) size(small)) name(graph_`k'_XX) legend(off))
 
 // Save global with all the graph names to do the combine 
 global graph_by_path "$graph_by_path graph_`k'_XX"
@@ -2960,18 +2980,34 @@ if "`trends_lin'" != ""{
 replace prod_het_`i'_XX=S_g_het_XX*prod_het_`i'_XX
 
 * keep one observation by group to not artificially increase sample
-bys group_XX: replace prod_het_`i'_XX = . if _n != 1
+bys group_XX: replace prod_het_`i'_XX = . if switcher_tag_XX != `i' // Change by DAC to fix issue with the number of units
 
 * F_g_XX#d_sq_XX#S_g_het_XX
 gegen d_sq_group_XX=group(d_sq_XX)
 
+//Define clusters for the SE in the predict_het in case the predict_het_hc2bm option is specified
+if "`cluster'" != ""{
+	local cluster_het `cluster'
+}
+if "`cluster'" == ""{
+	local cluster_het group_XX
+}
+//Define SE type according to if predict_het_hc2bm was specified or not
+if "`predict_het_hc2bm'" == ""{
+	local ses = "hc2"
+}
+if "`predict_het_hc2bm'" != ""{
+	local ses = "hc2 `cluster_het', dfadjust"
+} 
+
+
 // Run regression of interest 
 if "`trends_nonparam'" == "" {
-reg prod_het_`i'_XX `predict_het_good' F_g_XX#d_sq_group_XX#S_g_XX [aw=N_gt_XX] if F_g_XX-1+`i'<=T_g_XX, level(`ci_level') vce(robust)
+reg prod_het_`i'_XX `predict_het_good' F_g_XX#d_sq_group_XX#S_g_XX [aw=N_gt_XX] if F_g_XX-1+`i'<=T_g_XX, level(`ci_level') vce(`ses')
 }
 if "`trends_nonparam'" != "" {
 gegen trends_nonparam_temp_XX=group(`trends_nonparam')	
-reg prod_het_`i'_XX `predict_het_good' F_g_XX#d_sq_group_XX#S_g_XX#trends_nonparam_temp_XX [aw=N_gt_XX] if F_g_XX-1+`i'<=T_g_XX, level(`ci_level') vce(robust)
+reg prod_het_`i'_XX `predict_het_good' F_g_XX#d_sq_group_XX#S_g_XX#trends_nonparam_temp_XX [aw=N_gt_XX] if F_g_XX-1+`i'<=T_g_XX, level(`ci_level') vce(`ses')
 capture drop trends_nonparam_temp_XX
 }
 
@@ -3096,15 +3132,15 @@ if "`trends_lin'" != ""{
 replace prod_het_pl_`i'_XX=S_g_het_XX*prod_het_pl_`i'_XX
 
 * keep one observation by group to not artificially increase sample
-bys group_XX: replace prod_het_pl_`i'_XX = . if _n != 1
+bys group_XX: replace prod_het_pl_`i'_XX = . if switcher_tag_XX != `i' // Change by DAC to fix issue with the number of units
 
 // Run regression of interest 
 if "`trends_nonparam'" == "" {
-reg prod_het_pl_`i'_XX `predict_het_good' F_g_XX#d_sq_group_XX#S_g_XX [aw=N_gt_XX] if F_g_XX-1+`i'<=T_g_XX, level(`ci_level') vce(robust) // leave the F_g_XX-1+`i'<=T_g_XX condition as it is to ensure that we only use treated groups or is this already taken into account by the S_g_XX?
+reg prod_het_pl_`i'_XX `predict_het_good' F_g_XX#d_sq_group_XX#S_g_XX [aw=N_gt_XX] if F_g_XX-1+`i'<=T_g_XX, level(`ci_level') vce(`ses') // leave the F_g_XX-1+`i'<=T_g_XX condition as it is to ensure that we only use treated groups or is this already taken into account by the S_g_XX?
 }
 if "`trends_nonparam'" != "" {
 gegen trends_nonparam_temp_XX=group(`trends_nonparam')	
-reg prod_het_pl_`i'_XX `predict_het_good' F_g_XX#d_sq_group_XX#S_g_XX#trends_nonparam_temp_XX [aw=N_gt_XX] if F_g_XX-1+`i'<=T_g_XX, level(`ci_level') vce(robust)
+reg prod_het_pl_`i'_XX `predict_het_good' F_g_XX#d_sq_group_XX#S_g_XX#trends_nonparam_temp_XX [aw=N_gt_XX] if F_g_XX-1+`i'<=T_g_XX, level(`ci_level') vce(`ses')
 capture drop trends_nonparam_temp_XX
 }
 
@@ -3481,7 +3517,7 @@ if "`save_sample'" != "" {
 		replace _did_sample = -1 if _did_sample == 0
 		replace _did_sample = 0 if _did_sample == .
 		cap label drop switch_lab_XX 
-		label define switch_lab_XX 0 "Control" 1 "Switcher-in" -1 "Switcher-out"
+		label define switch_lab_XX 0 "Never-switcher" 1 "Switcher-in" -1 "Switcher-out"
 		label values _did_sample switch_lab_XX
 		
 		// Save dataset to be in the memory at the end

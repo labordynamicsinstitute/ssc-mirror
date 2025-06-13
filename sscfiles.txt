@@ -12136,7 +12136,6 @@ fmwww.bc.edu/repec/bocode/c/ckvar.html
 fmwww.bc.edu/repec/bocode/c/creplace.pkg
 fmwww.bc.edu/repec/bocode/c/circylowess.hlp
 fmwww.bc.edu/repec/bocode/c/cprdentcode.ado
-fmwww.bc.edu/repec/bocode/c/cc_xd_didtextbook_2025_5_16.zip
 fmwww.bc.edu/repec/bocode/c/ckvarclear.ado
 fmwww.bc.edu/repec/bocode/c/c_ml_stata_cv.sthlp
 fmwww.bc.edu/repec/bocode/c/correlationchords.sthlp
