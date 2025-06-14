@@ -13027,6 +13027,7 @@ fmwww.bc.edu/repec/bocode/m/mark.pkg
 fmwww.bc.edu/repec/bocode/m/meta.dlg
 fmwww.bc.edu/repec/bocode/m/mfpi_plot.ado
 fmwww.bc.edu/repec/bocode/m/mpitb_show.sthlp
+fmwww.bc.edu/repec/bocode/m/mf_mm_loclin.hlp
 fmwww.bc.edu/repec/bocode/m/matvsort.pkg
 fmwww.bc.edu/repec/bocode/m/map.ado
 fmwww.bc.edu/repec/bocode/m/mici.html
@@ -13467,6 +13468,7 @@ fmwww.bc.edu/repec/bocode/m/marktouse.zip
 fmwww.bc.edu/repec/bocode/m/mf_mm_read_csv.hlp
 fmwww.bc.edu/repec/bocode/m/mregress.ado
 fmwww.bc.edu/repec/bocode/m/mcmcconverge.html
+fmwww.bc.edu/repec/bocode/m/mf_mm_linbin2.hlp
 fmwww.bc.edu/repec/bocode/m/mylabels.sthlp
 fmwww.bc.edu/repec/bocode/m/maforest.ado
 fmwww.bc.edu/repec/bocode/m/metaparm_content_opts.sthlp

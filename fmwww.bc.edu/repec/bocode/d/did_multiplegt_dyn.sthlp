@@ -824,8 +824,7 @@ de Chaisemartin, C, D'Haultfoeuille, X (2023).
 {p_end}
 {p 4 8}
 de Chaisemartin, C, Ciccia, D, D'Haultfoeuille, X, Knau, F, Malézieux, M, Sow, D (2024).
-{browse "https://drive.google.com/file/d/1NGgScujLCCS4RrwdN-PC1SnVigfBa32h/view?usp=drive_link":Event-Study 
-Estimators and Variance Estimators Computed by the did_multiplegt_dyn Command}.
+{browse "https://drive.google.com/file/d/1NGgScujLCCS4RrwdN-PC1SnVigfBa32h/view?usp=drive_link":Event-Study Estimators and Variance Estimators Computed by the did_multiplegt_dyn Command}.
 {p_end}
 
 {title:Auxiliary packages}
