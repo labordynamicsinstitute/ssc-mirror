@@ -1015,7 +1015,6 @@ fmwww.bc.edu/repec/bocode/h/hangr_parseopts.ado
 fmwww.bc.edu/repec/bocode/h/hotdeck6.ado
 fmwww.bc.edu/repec/bocode/h/hestonvanilla.m
 fmwww.bc.edu/repec/bocode/h/htmlrt.mata
-fmwww.bc.edu/repec/bocode/h/hammock.hlp
 fmwww.bc.edu/repec/bocode/h/hangr_pareto.ado
 fmwww.bc.edu/repec/bocode/h/hausman.html
 fmwww.bc.edu/repec/bocode/h/htmlhr.mata
@@ -7111,6 +7110,7 @@ fmwww.bc.edu/repec/bocode/s/statsmat.hlp
 fmwww.bc.edu/repec/bocode/s/stableregkw.m
 fmwww.bc.edu/repec/bocode/s/sptobitmstardh2.ado
 fmwww.bc.edu/repec/bocode/s/stcoxgof.ado
+fmwww.bc.edu/repec/bocode/s/shakespeare_v5_stata12.dta
 fmwww.bc.edu/repec/bocode/s/sptobitmstar.dlg
 fmwww.bc.edu/repec/bocode/s/sptobitmstarh.pkg
 fmwww.bc.edu/repec/bocode/s/stcrprep.pkg

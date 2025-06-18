@@ -7,7 +7,7 @@ help for {hi:hammock}{right:{hi: Matthias Schonlau}}
 {title:Title}
 
 {p2colset 5 23 25 2}{...}
-{p2col :{cmd:hammock} {hline 2}} Hammock plot for visualizing categorical and continuous data {p_end}
+{p2col :{cmd:hammock} {hline 2}} Hammock plot for visualizing categorical and numerical data {p_end}
 {p2colreset}{...}
 
 
@@ -20,27 +20,38 @@ help for {hi:hammock}{right:{hi: Matthias Schonlau}}
 {synoptset 20 tabbed}{...}
 {synopthdr}
 {synoptline}
-{syntab :Main}
-{synopt :{opt m:issing}} Show missing values {p_end}
-{synopt :{opt lab:el}} Show value labels or else show values   {p_end}
 
 {syntab :Highlighting}
 {synopt :{opt hivar:iable(varname)}} Name of variable to highlight {p_end}
 {synopt :{opt hival:ues(string)}}  List of values of {it:hivariable} to highlight {p_end}
 {synopt :{opt col:orlist(str)}} Default color and colors for highlighting {p_end}
+{synopt :{opt uni_colorlist(str)}} Default color and colors for highlighting for univariate bars {p_end}
 
-{syntab :Manipulating Spacing and Layout}
-{synopt :{opt spa:ce(real)}} Control fraction of space allocated to labels rather than to graph elements {p_end}
-{synopt :{opt bar:width(real)}} Change width of the plot elements to reduce clutter {p_end}
-{synopt :{opt minbar:freq(int)}} Specify minimum bar width {p_end}
+{syntab :Layout of univariate bars}
+{synopt :{opt nouni:bar}} Do not show univariate bars {p_end}
+{synopt :{opt uni_fraction(real)}} For univariate bars, proportion of vertical space covered with bars {p_end}
+
+{syntab :Layout of labels}
+{synopt :{opt nolab:el}} Do not show value labels  {p_end}
 {synopt :{opt label_min_dist(real)}} Specify minimum distance between two labels on the same axis{p_end}
 {synopt :{opt labelopt(str)}} Pass options to {it:{help added_text_options}}, e.g. to manipulate label text size{p_end}
-{synopt :{opt aspect:ratio(real)}} Aspect ratio of the plot region {p_end}
-{synopt :{opt no_outline}} Do not outline the edges of semi-translucent boxes {p_end}
+{synopt :{opt label_format(str)}} Display format of numerical labels {p_end}
+
+{syntab :Missing values}
+{synopt :{opt m:issing}} Show missing values {p_end}
+{synopt :{opt missing_fraction(real)}} Proportion of vertical space allocated to missing values {p_end}
+
+{syntab :Layout of boxes in between axes}
+{synopt :{opt bar:width(real)}} Change width of the connecting boxes to reduce clutter {p_end}
+{synopt :{opt minbar:freq(int)}} Specify minimum box width {p_end}
+{synopt :{opt shape(str)}} Box shape: "parallelogram" (also "par") or "rectangle" (default) {p_end}
+{synopt :{opt outline}} (rarely needed) Outline the edges of semi-translucent connecting boxes {p_end}
 
 {syntab :Other options}
-{synopt :{opt shape(str)}} Box shape: "parallelogram" or "rectangle" (default) {p_end}
+{synopt :{opt spa:ce(real)}} Control fraction of space allocated to labels/univ. bars rather than to connecting boxes {p_end}
 {synopt :{opt same:scale(varlist)}} Use the same axis scale for each variable specified {p_end}
+{synopt :{opt subspace(real)}} (rarely needed) adjust empty space between univariate bars and connectors {p_end}
+{synopt :{opt aspect:ratio(real)}} (rarely needed) Aspect ratio of the plot region {p_end}
 {synopt :graph_options} Specify additional options passed to  {it:graph, twoway}  {p_end}
 {synoptline}
 
@@ -48,8 +59,7 @@ help for {hi:hammock}{right:{hi: Matthias Schonlau}}
 
 {title:Description}
 
-{pstd}{cmd:hammock} draws a graph to visualize categorical data - though it also does fine
-with continuous data. 
+{pstd}{cmd:hammock} draws a graph to visualize categorical and numerical data. 
 Variables are lined up parallel to the vertical axis. Categories within a variable
 are spread out along a vertical line. Categories of adjacent variables are connected by 
 boxes. (The boxes are parallelograms; we use boxes for brevity). The "width" of a box is proportional to 
@@ -67,9 +77,10 @@ will usually appear to be a single line because each category typically
  only contains one observation.
 
 {pstd} The order of variables in {it:varlist} determines the order of variables in the graph.  
-All variables in {it:varlist} must be numerical, but value labels can be used to assign labels to values.  
+All variables in {it:varlist} must be numerical, but value labels can be used to assign labels to values. 
 String variables should be 
 converted to numerical variables first, e.g. using {cmd: encode} or {cmd: destring}. 
+Each axis is labeled with the corresponding variable name or variable label, if specified. 
 
 {title:Installation}
 {phang} 
@@ -87,21 +98,6 @@ Installation via SSC:
 
 
 {title:Options}
-{dlgtab:Main}
-
-{phang} {opt label} 
-requests value {it:{help labels}} 
- to be displayed on the graph. For variables for which value labels are not defined,  
-the values themselves are displayed. This makes it easier to identify which category
-is displayed where. Value labels must not not contain the characters "@" or ",".
-
-{phang}
-{opt missing} specifies that "missing value" is a separate category. 
-The "missing value category" is always the lowest category drawn at 
-the bottom of the graph. A vertical line is drawn to separate missing values
-from non-missing values. If there are no missing values the space below 
-the vertical line remains empty.
-If this option is not specified, observations with missing values are ignored.
 
 {dlgtab:Highlighting}
 
@@ -136,7 +132,13 @@ using the same color  (the second color in {it: colorlist}).
 {pmore}
 {it:hivalues} may specify strings or subsets of strings when {it:hivariable} is a string variable. 
 For example, for the Shakespeare data set, {it:hivar(play_name)} {it:hivalues(Richard Mac)} 
-highlights all plays that contain "Richard" in one color and those that contain "Mac" in another color. 
+highlights all plays that contain "Richard" in one color and those that contain "Mac" in another color.
+Note 1: It is not possible to higlight a single string that contains a space like "Tedej Pogacar". 
+The program will treat this as two strings. Just highlight "Pogacar" instead.  
+Note 2: It is possible to highlight strings of a string variable as long as the string variable does not appear in the 
+hammock plot.  If you want to show the variable in the plot, 
+use {it:encode} to encode the variable as numerical with a string label.
+
 Because variables in {it:varlist} must be numerical (with optional string labels), 
 this is only relevant if the {it:hivar} is NOT part of {it:varlist}.
 
@@ -147,24 +149,83 @@ this is only relevant if the {it:hivar} is NOT part of {it:varlist}.
 {opt colorlist} specifies a list of colors to be used.  
 The first color in the list is the default color, the remainder is used for highlighting. 
 If unspecified, the color list is  
-"black red  blue teal  yellow sand maroon orange olive magenta".
+"blue%50 orange%50 green red teal  yellow sand maroon olive".
 Color names are explained in {it:{help colorstyle}}.
 The color list should not be shorter than the number of values to be highlighted plus one (default color).
 
-{dlgtab:Spacing and Layout}
+{phang}
+{opt uni_colorlist(str)} specifies different colors to be used for univariate bars. By default, the first (default) color is {it:gray%20}, 
+and the highlighting colors are as specified in {it:colorlist}. 
+If you specify your own list, remember the first color is the default color 
+and the second color is the first highlighting color.
+To avoid univariate bars altogether, specify {it:uni_colorlist(bg)} 
+or {it:uni_colorlist(bg bg)} if there is one highlighting color.
+({it:bg} stands for background color, the bars will be invisible).
+
+
+{dlgtab:Layout of univariate bars}
+
+{phang} {opt nounibar} 
+requests value univariate bars not to be displayed on the graph. 
 
 {phang}
-{opt space} specifies the fraction of plot allocated for 
-displaying labels. If {it:label} is specified, the default is 0.3, meaning 30% of the available
- space is allocated to the display of labels, and 70% for the graph elements.
- If {it:label} is not specified, the default is 0. Negative values are allowed.
+{opt uni_fraction(real)} For univariate bars, proportion of vertical space covered with bars. 
+By default, {it:uni_fraction(0.5)}. This option can be used to avoid overlapping univariate bars
+or to improve layout according to user taste.
 
-{pmore}
-Note: If {it:shape=(parallelogram)}, for technical reasons it is sometimes necessary 
-to "shrink" the boxes to make sure width is proportional to the number of observations.
-(Stata automatically extends the plotting area with interferes with the calculation of width.) 
-In that case, {it:space(0)} may still result in some space.
-Space can be removed by using negative values as in {it:space(-0.1)}.
+
+{dlgtab:Layout of labels}
+
+{phang} {opt nolabel} 
+requests value {it:{help labels}}  
+ not to be displayed on the graph. For variables for which value labels are not defined,  
+the values themselves are displayed. This makes it easier to identify which category
+is displayed where.
+
+{phang}
+{opt label_min_dist} specifies the minimum distance between two labels on the same axis.
+A label is associated with each unique value of a variable.  
+When (numerical) variables have values close to each other, overplotting of labels may occur.  
+This option prevents overplotting by selectively not plotting some labels. 
+The bottom most label is always plotted, and any additional label above is only plotted if 
+it is at least {it:label_min_dist} away from the closest label below.  
+Labels are plotted on a scale from 0 (bottom label) to 100 (top label). 
+By default, a label must be at least 3 units (out of 100) away from the closest label below.
+Specifying {it:label_min_dist(0)} will plot all labels.
+Specifying {it:label_min_dist(100)} will plot only the bottom and the top label.
+This option has no effect unless {it:label} is specified.
+
+{phang}
+{opt label_format(string)}  For numerical labels, display format of the numerical value. 
+By default,   {it:label_format(%6.0g)}. 
+See {it:{ help format}} for other display formats.
+This option has no effect on string labels.
+  
+{phang}
+{opt labelopt} specifies optional arguments to the labels.
+The arguments are passed  to {it:{help added_text_options}}. 
+This can be used to manipulate the text sizes of the labels, for example, {it: labelopt(size(vsmall))}.
+Text size names are explained in {it:{help textsizestyle}}. 
+By default, label size is "medium". If option {it:nolabel} is specified,  option {it:labelopt} is ignored. 
+
+
+{dlgtab:Missing values}
+
+{phang}
+{opt missing} specifies that "missing value" is a separate category. 
+The "missing value category" is always the lowest category drawn at 
+the bottom of the graph. A vertical line is drawn to separate missing values
+from non-missing values. If there are no missing values the space below 
+the vertical line remains empty.
+If this option is not specified, observations with missing values are ignored.
+
+{phang}
+{opt missing_fraction(real)} Proportion of vertical space allocated to missing values. By default, {it:missing_fraction(0.1)}.
+When the proportion of missing values is so large that the missing value boxes overlap with boxes above,
+this option can be used to increase the space allocated to missing values and thus to prevent such overlap. {p_end}
+
+
+{dlgtab:Layout of boxes in between axes}
  
 {phang}
 {opt barwidth} specifies the width of the bars relative to the default width.
@@ -185,52 +246,36 @@ Space can be removed by using negative values as in {it:space(-0.1)}.
  
 {pmore}
  During highlighting, bars may consist of multiple segments with different colors. 
- In that case, {it:minbarfreq} is applied to each color segment separately.
-  
-{phang}
-{opt label_min_dist} specifies the minimum distance between two labels on the same axis.
-A label is associated with each unique value of a variable.  
-When (numerical) variables have values close to each other, overplotting of labels may occur.  
-This option prevents overplotting by selectively not plotting some labels. 
-The bottom most label is always plotted, and any additional label above is only plotted if 
-it is at least {it:label_min_dist} away from the closest label below.  
-Labels are plotted on a scale from 0 (bottom label) to 100 (top label). 
-By default, a label must be at least 3 units (out of 100) away from the closest label below.
-Specifying {it:label_min_dist=0} will plot all labels.
-Specifying {it:label_min_dist=100} will plot only the bottom and the top label.
-This option has no effect unless {it:label} is specified.
-  
-{phang}
-{opt labelopt} specifies optional arguments to the labels.
-The arguments are passed  to {it:{help added_text_options}}. 
-This can be used to manipulate the text sizes of the labels, for example, {it: labelopt(size(vsmall))}.
-Text size names are explained in {it:{help textsizestyle}}. 
-By default, label size is "medium". If option {it:label} is not specified,  option {it:labelopt} is ignored. 
-  
-{phang}
-{opt aspectratio} specifies the aspect ratio of the plot region. By default, aspect=0.7272. Changing the default 
-also affects the space between the plot region and the available area. 
-If a long variable name displays partially outside the graph area, increasing the aspect ratio is 
-one way of ensuring variable names are fully visible. 
-  
-{phang}
-{opt no_outline} (rarely needed) In Stata, translucent boxes (e.g. "red%50" , where the color is 50% translucent) 
-are drawn with an outline that is not translucent.
-If there are several overlapping colors, it may be visually simpler to show the translucent box 
-without outlining the edges of the box. This option removes the outline.
- This option only effects semi-translucent colors; it has no effect on regular colors (e.g. "red"). 
-  
-
-{dlgtab:Other options}
+ In that case, {it:minbarfreq} is applied to each color segment separately.  
+ Currently, this option has no effect on the univariate bars.
 
 {phang}
 {opt shape} refers to the shape of the boxes or plotting elements. 
-The two options are "parallelogram" and "rectangle" (default).  Rectangles can look better for steep angles. 
+The two options are "parallelogram" (or "par" for short) and "rectangle" (default).  Rectangles can look better for steep angles. 
 They also avoid the so-called reverse line-width illusion of the parallelogram: 
 The vertical width of parallelogram-boxes with steep angles are larger than that of parallelogram-boxes with smaller angles. 
 Focusing on the end points of the boxes, can create the illusion that there are more observations in steep-angled parallelograms
 than there really are. 
+The main advantage of "parallelogram" is that the plot will render faster.
 
+{phang}
+{opt outline}  In Stata, translucent boxes (e.g. "red%50" , where the color is 50% translucent) 
+are drawn with an outline that is not translucent.
+If there are several overlapping colors, it may be visually simpler to show the translucent box 
+without outlining the edges of the box. This option adds the outline back in.
+ This option only effects semi-translucent colors; it has no effect on regular colors (e.g. "red"). 
+
+
+{dlgtab:Other options}
+
+{phang}
+{opt space} specifies the fraction of plot allocated for 
+displaying labels / univariate bars. The default is 0.3, meaning 30% of the available
+ space is allocated to the univariate bars and the labels, and 70% for the graph elements.
+ If {it:label} is not specified, the default is 0. 
+ {it:space(1)} is the edge case where only univariate bars are shown.
+ {it:space(0)} is the edge case where only bivariate connectors are shown. 
+ 
 {phang}
 {opt samescale} specifies that for the list of variables specified each axis should have the same scale. 
 The list of variables can be a subset of {it:varlist} or the entire list: {it: samescale(_all)}. 
@@ -238,9 +283,32 @@ This is useful, for example, if one categorical variable has been repeatedly mea
 but not all categories occur each at each time point.
 
 {phang}
+{opt subspace(real)}
+(rarely needed) The plotting area consists of alternating univariate bars and connecting boxes.
+{it:space()} determines the fraction of space allocated for the univariate bars. 
+To avoid that the univariate bars and connecting boxes touch, 
+the univariate space is not used in full; a large fraction is used. We call this fraction {it:subspace}. 
+By default,  {it:subspace(0.8)} meaning that 80% of the allocated space is used for univariate bars; 
+the remainder is empty. 
+
+{phang}
+{opt aspectratio} specifies the aspect ratio of the plot region. By default, aspect=0.7272. Changing the default 
+also affects the space between the plot region and the available area. 
+If a long variable name displays partially outside the graph area, increasing the aspect ratio is 
+one way of ensuring variable names are fully visible. 
+
+{phang}
 {it:graph_options} are options of {cmd: graph, twoway} other than 
 {cmd:symbol()} and {cmd:connect()}. 
-In particular,  the option {it: xlab(,labsize(vsmall))} makes variable names smaller and is sometimes useful.
+In particular, I have found the following options useful: 
+ {it: xlab(,labsize(vsmall))} makes variable names smaller. 
+ {it: xlabel(, angle(30))} angles the variable names (helps to avoid overlap).
+ You can add text such as {it: text(70 8 "America" "Emerging" "Asia" "Europe")}. 
+For the placement of the text, the range of the y-axis is 0 to 100 
+(slightly larger when corners of boxes extend past 100), 
+and the range of the x-axis is 1 to the number of variables. 
+You can explore the placement on the y-axis by specifying {it: yline(0 10 100)} 
+(lowest value, missing value separator, highest value).
 
 
 {title:Examples}
@@ -252,7 +320,7 @@ In particular,  the option {it: xlab(,labsize(vsmall))} makes variable names sma
 
 {phang2}{cmd:. sysuse bplong}{p_end}
 	
-{phang2}{cmd:. hammock sex agegrp when bp, label}{p_end}
+{phang2}{cmd:. hammock sex agegrp when bp}{p_end}
 
 {pstd} We find that the graph elements between the variables are equally thick,
 meaning that they correspond to the same number of people. 
@@ -278,7 +346,7 @@ The lowest blood pressures all belong to the "after" group.
 
 {pstd} We found "placebo" is the label for the value 1.
 
-{phang2}{cmd:. hammock died drug studytime age, label hivar(drug) hival(1) barwidth(.5) labelopt(size(small))}{p_end}
+{phang2}{cmd:. hammock died drug studytime age,  hivar(drug) hival(1) barwidth(.5) labelopt(size(small))}{p_end}
 
 {pstd} We chose width of the bars half as large as the default to reduce visual clutter. 
 To improve the display, we also specified that the size of labels for all variables should be "small" 
@@ -344,7 +412,7 @@ Here, there is no discernible pattern to the missing values.
 
 {pstd} We visually confirm that everything is as expected:
 
-{phang2}{cmd:. 	hammock age agegroup, m space(0.1) label hivar(agegroup) hival(1 2 6 12)}
+{phang2}{cmd:. 	hammock age agegroup, m space(0.1)  hivar(agegroup) hival(1 2 6 12)}
 
 {pstd}{it:({stata hammock_examples hammock_agegroup:click to run})}{p_end}
 
@@ -354,7 +422,7 @@ We also add a little more space to the left and right margins so the variable na
 
 {phang2}{cmd:. 	egen agegroup2= cut(age), at(0,1,2,6,12,16,19)}
 
-{phang2}{cmd:. 	hammock age agegroup2, m space(.1) label hivar(agegroup2) hival(0 1 2 6 12 16) graphregion(margin(l+2 r+3))}
+{phang2}{cmd:. 	hammock age agegroup2, m space(.1)  hivar(agegroup2) hival(0 1 2 6 12 16) graphregion(margin(l+2 r+3))}
 
 {pstd}{it:({stata hammock_examples hammock_agegroup2:click to run})}{p_end}
 
@@ -369,7 +437,7 @@ If you are using Stata 17 or earlier, specify a scheme to ensure a white backgro
 
 {title:Copyright}
 
-{pstd} Copyright 2002-2024 Matthias Schonlau {p_end}
+{pstd} Copyright 2002-2025 Matthias Schonlau {p_end}
 
 {pstd} This program is free software: you can redistribute it and/or modify it under the terms of the GNU General 
 Public License as published by the Free
@@ -385,7 +453,7 @@ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more d
 {title:References}
 
 {p 0 8} Schonlau M. Hammock plots: visualizing categorical and numerical variables. 
-Journal of Computational and Graphical Statistics (to appear in print). 
+Journal of Computational and Graphical Statistics,  Nov 2024, 33(4), 1475–1487. 
 {break} Journal: {browse "https://www.tandfonline.com/doi/full/10.1080/10618600.2024.2322561"}
 {break} Preprint:{browse "https://schonlau.net/publication/24schonlau_hammock_JCGS.pdf"}
 

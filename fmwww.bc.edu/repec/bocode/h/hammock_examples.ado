@@ -30,7 +30,7 @@ program define hammock_bp
 	clear 
 	//set scheme s1mono
 	sysuse bplong
-	hammock sex agegrp when bp, label 
+	hammock sex agegrp when bp 
 end 
 
 
@@ -41,7 +41,7 @@ program define hammock_cancer
 	sysuse cancer
 	describe drug
 	label list type
-	hammock died drug studytime  age, label hivar(drug) hival(1) barwidth(.5) labelopt(size(small))
+	hammock died drug studytime  age, hivar(drug) hival(1) barwidth(.5) labelopt(size(small))
 	
 end 
 
@@ -67,7 +67,7 @@ program define hammock_agegroup
 	gen age=round(uniform()*18)
 
 	egen agegroup= cut(age), at(1,2,6,12,16) 
-	hammock age agegroup ,m  space(0.1) label hivar(agegroup) ///
+	hammock age agegroup ,m  space(0.1) hivar(agegroup) ///
 	   hival(1 2 6 12) 
 end 
 
@@ -80,6 +80,6 @@ program define hammock_agegroup2
 	gen age=round(uniform()*18)
 	egen agegroup2= cut(age), at(0,1,2,6,12,16,19) 
 
-	hammock age agegroup2 ,m space(.1) label hivar(agegroup2) ///
+	hammock age agegroup2 ,m space(.1) hivar(agegroup2) ///
 	   hival(0 1 2 6 12 16)  graphregion(margin(l+2 r+3))
 end
