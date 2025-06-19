@@ -3,6 +3,7 @@ p babibplot module to plot two graph types which are rooted in Bland-Altman plot
 p backrasch module to implement a backward procedure with a Rasch model
 p backup module to make daily backup of important files (Windows only)
 p bacondecomp module to perform a Bacon decomposition of difference-in-differences estimation
+p baiduweather module providing batch query weather data using Baidu Maps API with longitude and latitude coordinates
 p baing module to determine and estimate the number of common factors following Bai and Ng 
 p balancetable module to build a balance table and print it in a LaTeX file or an Excel file
 p bandplot module to plot summary statistics of responses for bands of predictors

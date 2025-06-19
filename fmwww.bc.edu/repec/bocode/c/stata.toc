@@ -98,6 +98,7 @@ p cibar module to plot bar graphs and confidence intervals over groups
 p cibplot module for bar-on-bar plots of confidence intervals 
 p cic module to implement the Athey and Imbens (2006) Changes-in-Changes model
 p cid module to calculate confidence intervals for means or differences
+p cie module providing Navigation Tool for China Industrial Economics Journal
 p ciform module to format confidence interval for tables in documents
 p cifunction module for computing and graphically displaying all possible confidence intervals around a point estimate
 p cihplot module to show horizontally labelled plots showing confidence intervals

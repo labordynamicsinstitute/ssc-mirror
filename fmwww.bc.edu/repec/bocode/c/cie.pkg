@@ -1,0 +1,19 @@
+d 'CIE': module providing Navigation Tool for China Industrial Economics Journal
+d
+d   cie provides access to the China Industrial Economics journal,
+d supporting browsing and    downloading of articles and
+d supplemental materials.    This command directly interfaces with
+d the official website, providing access to all journal    content
+d and supplementary materials from 2017 to present. 
+d
+d KW: China Industrial Economics Journal
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20250618
+d
+d Author: Wang Qiang, Xi'an Jiaotong University
+d Support: email  740130359@@qq.com
+d
+f cie.ado
+f cie.sthlp

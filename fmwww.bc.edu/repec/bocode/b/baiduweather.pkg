@@ -1,0 +1,22 @@
+d 'BAIDUWEATHER': module providing batch query weather data using Baidu Maps API with longitude and latitude coordinates
+d
+d    baiduweather queries weather data in bulk using the Baidu Maps
+d Weather API. This command:	- Automatically processes each
+d longitude/latitude record in the dataset    - Supports real-time
+d weather     - Automatically creates a structured dataset with
+d comprehensive meteorological information    baiduweather2 queries
+d Baidu Weather Data by Administrative Division Code 
+d
+d KW: weather data
+d
+d Requires: Stata version 14 and Baidu Map API key
+d
+d Distribution-Date: 20250618
+d
+d Author: Wang Qiang, Xi'an Jiaotong University
+d Support: email  740130359@@qq.com
+d
+f baiduweather.ado
+f baiduweather.sthlp
+f baiduweather2.ado
+f baiduweather2.sthlp

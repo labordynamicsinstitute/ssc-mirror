@@ -8261,6 +8261,7 @@ fmwww.bc.edu/repec/bocode/j/jaccard.sthlp
 fmwww.bc.edu/repec/bocode/j/jb6.hlp
 fmwww.bc.edu/repec/bocode/j/jsonio.ado
 fmwww.bc.edu/repec/bocode/j/joinvars.sthlp
+fmwww.bc.edu/repec/bocode/j/jqte.sthlp
 fmwww.bc.edu/repec/bocode/j/julia.sthlp
 fmwww.bc.edu/repec/bocode/j/jmpierce2.hlp
 fmwww.bc.edu/repec/bocode/j/jhnb_cln_ll.ado
@@ -8277,6 +8278,7 @@ fmwww.bc.edu/repec/bocode/j/jrule.ado
 fmwww.bc.edu/repec/bocode/j/joinvars.hlp
 fmwww.bc.edu/repec/bocode/j/jonter.html
 fmwww.bc.edu/repec/bocode/j/jtables.sthlp
+fmwww.bc.edu/repec/bocode/j/jqte.pkg
 fmwww.bc.edu/repec/bocode/j/jhnbstr_ll.ado
 fmwww.bc.edu/repec/bocode/j/jcnb_ll.ado
 fmwww.bc.edu/repec/bocode/j/julia.pkg
@@ -8328,6 +8330,7 @@ fmwww.bc.edu/repec/bocode/j/jspmix.dta
 fmwww.bc.edu/repec/bocode/j/jc.sthlp
 fmwww.bc.edu/repec/bocode/j/jc.pkg
 fmwww.bc.edu/repec/bocode/j/jarowinkler.sthlp
+fmwww.bc.edu/repec/bocode/j/jqte.ado
 fmwww.bc.edu/repec/bocode/j/jackson-core-2.6.7.jar
 fmwww.bc.edu/repec/bocode/j/joinlist.ado
 fmwww.bc.edu/repec/bocode/j/jl.pluginWIN64.dll
@@ -8365,6 +8368,7 @@ fmwww.bc.edu/repec/bocode/b/bys.ado
 fmwww.bc.edu/repec/bocode/b/boxpanel.pkg
 fmwww.bc.edu/repec/bocode/b/bicdrop1.ado
 fmwww.bc.edu/repec/bocode/b/bpass.hlp
+fmwww.bc.edu/repec/bocode/b/baiduweather2.sthlp
 fmwww.bc.edu/repec/bocode/b/boxtid.html
 fmwww.bc.edu/repec/bocode/b/box.ado
 fmwww.bc.edu/repec/bocode/b/bdiff.ado
@@ -8440,6 +8444,7 @@ fmwww.bc.edu/repec/bocode/b/byvar.ado
 fmwww.bc.edu/repec/bocode/b/bgtest.ado
 fmwww.bc.edu/repec/bocode/b/bic.ado
 fmwww.bc.edu/repec/bocode/b/basetable2xlv13.mata
+fmwww.bc.edu/repec/bocode/b/baiduweather.sthlp
 fmwww.bc.edu/repec/bocode/b/bkrosenblatt.pkg
 fmwww.bc.edu/repec/bocode/b/boost_win64.plugin
 fmwww.bc.edu/repec/bocode/b/bgodfrey2.dlg
@@ -8565,6 +8570,7 @@ fmwww.bc.edu/repec/bocode/b/batcher.ado
 fmwww.bc.edu/repec/bocode/b/brainunix.plugin
 fmwww.bc.edu/repec/bocode/b/box.sthlp
 fmwww.bc.edu/repec/bocode/b/bnormpdf.html
+fmwww.bc.edu/repec/bocode/b/baiduweather.ado
 fmwww.bc.edu/repec/bocode/b/biplot5.ado
 fmwww.bc.edu/repec/bocode/b/brrcorr.ado
 fmwww.bc.edu/repec/bocode/b/bivpoisson.sthlp
@@ -8673,6 +8679,7 @@ fmwww.bc.edu/repec/bocode/b/btabovebelow.sthlp
 fmwww.bc.edu/repec/bocode/b/btbygraphstyle.sthlp
 fmwww.bc.edu/repec/bocode/b/bandplot.ado
 fmwww.bc.edu/repec/bocode/b/biastest.pkg
+fmwww.bc.edu/repec/bocode/b/baiduweather2.ado
 fmwww.bc.edu/repec/bocode/b/boxcoxsim.sthlp
 fmwww.bc.edu/repec/bocode/b/baplot.pkg
 fmwww.bc.edu/repec/bocode/b/boottest.pkg
@@ -8870,6 +8877,7 @@ fmwww.bc.edu/repec/bocode/b/betterbarci.sthlp
 fmwww.bc.edu/repec/bocode/b/biassurv.sthlp
 fmwww.bc.edu/repec/bocode/b/brewcbsim.sthlp
 fmwww.bc.edu/repec/bocode/b/bandplottest.do
+fmwww.bc.edu/repec/bocode/b/baiduweather.pkg
 fmwww.bc.edu/repec/bocode/b/binscatter.pkg
 fmwww.bc.edu/repec/bocode/b/bap.sthlp
 fmwww.bc.edu/repec/bocode/b/btarrowstyle.sthlp
@@ -10744,6 +10752,7 @@ fmwww.bc.edu/repec/bocode/c/cprdenttype.sthlp
 fmwww.bc.edu/repec/bocode/c/cpcorr.pkg
 fmwww.bc.edu/repec/bocode/c/cprdhes_patient.ado
 fmwww.bc.edu/repec/bocode/c/convlist.ado
+fmwww.bc.edu/repec/bocode/c/cie.sthlp
 fmwww.bc.edu/repec/bocode/c/calc4persuasio.sthlp
 fmwww.bc.edu/repec/bocode/c/cprdhes_hrg.sthlp
 fmwww.bc.edu/repec/bocode/c/cns.sthlp
@@ -11513,6 +11522,7 @@ fmwww.bc.edu/repec/bocode/c/cluster_ra.sthlp
 fmwww.bc.edu/repec/bocode/c/cprd_nonxyzlookup.ado
 fmwww.bc.edu/repec/bocode/c/cmp_lf.ado
 fmwww.bc.edu/repec/bocode/c/collapseunique.hlp
+fmwww.bc.edu/repec/bocode/c/cie.ado
 fmwww.bc.edu/repec/bocode/c/ceqassump.ado
 fmwww.bc.edu/repec/bocode/c/collapse2.html
 fmwww.bc.edu/repec/bocode/c/ckvar_rule_syntax.ihlp
@@ -12565,6 +12575,7 @@ fmwww.bc.edu/repec/bocode/c/ceqppp.sthlp
 fmwww.bc.edu/repec/bocode/c/cprdent_175.ado
 fmwww.bc.edu/repec/bocode/c/color-ienavy.style
 fmwww.bc.edu/repec/bocode/c/cprd_browser_product.sthlp
+fmwww.bc.edu/repec/bocode/c/cie.pkg
 fmwww.bc.edu/repec/bocode/c/cluster2.sthlp
 fmwww.bc.edu/repec/bocode/c/cfbinout.sthlp
 fmwww.bc.edu/repec/bocode/c/ciw.hlp
@@ -15014,6 +15025,7 @@ fmwww.bc.edu/repec/bocode/g/GBSG2.dta
 fmwww.bc.edu/repec/bocode/g/getmstatistic.sthlp
 fmwww.bc.edu/repec/bocode/g/glcurve.ado
 fmwww.bc.edu/repec/bocode/g/genindweights.ado
+fmwww.bc.edu/repec/bocode/g/gaodeweather.ado
 fmwww.bc.edu/repec/bocode/g/garbage_mixlogit.pluginLINUX64
 fmwww.bc.edu/repec/bocode/g/georoutei.ado
 fmwww.bc.edu/repec/bocode/g/grlogit.hlp
@@ -15511,6 +15523,7 @@ fmwww.bc.edu/repec/bocode/g/gather.ado
 fmwww.bc.edu/repec/bocode/g/gnugpl.sthlp
 fmwww.bc.edu/repec/bocode/g/ghk2.hlp
 fmwww.bc.edu/repec/bocode/g/gevfit.ado
+fmwww.bc.edu/repec/bocode/g/gaodeweather.pkg
 fmwww.bc.edu/repec/bocode/g/gquantiles.ado
 fmwww.bc.edu/repec/bocode/g/greg.ado
 fmwww.bc.edu/repec/bocode/g/gdecomp.hlp
@@ -15765,6 +15778,7 @@ fmwww.bc.edu/repec/bocode/g/gpfobl.pkg
 fmwww.bc.edu/repec/bocode/g/GR_demo.do
 fmwww.bc.edu/repec/bocode/g/gtiffread.sthlp
 fmwww.bc.edu/repec/bocode/g/gnpoisson.ado
+fmwww.bc.edu/repec/bocode/g/gaodeweather.sthlp
 fmwww.bc.edu/repec/bocode/g/geo2xy_mercator_sphere.hlp
 fmwww.bc.edu/repec/bocode/g/gpreg.sthlp
 fmwww.bc.edu/repec/bocode/g/gsgroup.pkg

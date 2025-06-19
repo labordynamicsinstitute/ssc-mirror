@@ -1,0 +1,19 @@
+d 'GAODEWEATHER': module providing batch query of weather data using Amap API
+d
+d   gaodeweather  queries weather data in bulk through Amap Weather
+d API (v3). This command:    - Automatically processes each
+d observation in the dataset	- Supports current weather (base)
+d and weather forecast (all) modes    - Automatically creates a
+d structured dataset with 11 meteorological variables 
+d
+d KW: weather data
+d
+d Requires: Stata version 14 and AMap API key
+d
+d Distribution-Date: 20250618
+d
+d Author: Wang Qiang, Xi'an Jiaotong University
+d Support: email  740130359@@qq.com
+d
+f gaodeweather.ado
+f gaodeweather.sthlp

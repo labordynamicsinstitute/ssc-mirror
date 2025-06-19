@@ -1,0 +1,21 @@
+d 'JQTE': module providing Journal Navigation Tool for Journal of Quantitative & Technological Economics
+d
+d  jqte command provides navigation functionality for the Journal
+d of Quantitative & Technological    Economics , supporting
+d browsing and downloading of journal articles and their
+d attachments.	  This command directly accesses the official
+d website data of Journal of Quantitative &    Technological
+d Economics, supporting browsing and attachment downloads for all
+d journal content    from 2018 to present. 
+d
+d KW: Journal of Quantitative & Technological Economics
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20250618
+d
+d Author: Wang Qiang, Xi'an Jiaotong University
+d Support: email  740130359@@qq.com
+d
+f jqte.ado
+f jqte.sthlp

@@ -12,6 +12,7 @@ p joinvars module to join values of variables
 p jonter module to perform Jonckheere-Terpstra test
 p joy_plot module to produce joy plots
 p joyplot module to produce joyplots
+p jqte module providing Journal Navigation Tool for Journal of Quantitative & Technological Economics
 p jrule module to detect model misspecifications in SEM
 p jsonio module for I/O operations on JSON data
 p julia module to provide interface to Julia
