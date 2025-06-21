@@ -1,4 +1,4 @@
-*! boottest 4.4.14 11 June 2025
+*! boottest 4.5.0 18 June 2025
 *! Copyright (C) 2015-25 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -105,7 +105,7 @@ program define _boottest, rclass sortpreserve
 		macro shift
 	}
 	local 0 `*'
-	syntax, [h0(numlist integer >0) Reps(integer 999) seed(string) BOOTtype(string) CLuster(string) Robust BOOTCLuster(string) noNULl QUIetly WEIGHTtype(string) Ptype(string) STATistic(string) NOCI Level(real `c(level)') NOSMall SMall SVMat ///
+	syntax, [h0(numlist integer >0) Reps(integer 999) seed(string) sameseed BOOTtype(string) CLuster(string) Robust BOOTCLuster(string) noNULl QUIetly WEIGHTtype(string) Ptype(string) STATistic(string) NOCI Level(real `c(level)') NOSMall SMall SVMat ///
 						noGRaph gridmin(string) gridmax(string) gridpoints(string) graphname(string asis) graphopt(string asis) ar MADJust(string) CMDline(string) MATSIZEgb(real 1000000) PTOLerance(real 1e-3) svv MARGins ///
             issorted julia PRECision(integer 64) Format(string) jk JACKknife *]
 
@@ -137,8 +137,9 @@ program define _boottest, rclass sortpreserve
     qui jl GetEnv
     c_local env `r(env)'
     qui jl SetEnv boottest
+// _jl: pushfirst!(LOAD_PATH, "D:/OneDrive/Documents/Macros/WildBootTests.jl")
     jl AddPkg StableRNGs
-    jl AddPkg WildBootTests, minver(0.9.12)
+    jl AddPkg WildBootTests, minver(1.0.0)
     _jl: using StableRNGs, WildBootTests
     _jl: rng = StableRNG(0)  // create now, seed later
     global boottest_julia_loaded 1
@@ -366,7 +367,8 @@ program define _boottest, rclass sortpreserve
   else if inlist("`cmd'", "reghdfe", "ivreghdfe") local FEdfadj = max(1, e(df_a))
   else local FEdfadj: copy local NFE
 
-	if `"`seed'"'!="" set seed `seed'
+	if `"`seed'"'=="" local seed = c(seed)
+  set seed `seed'
 
 	tempname p padj se teststat df df_r hold C1 C R1 R r1 r1r R1R r b V b0 V0 keepC repsname repsFeasname t NBootClustname marginsH0 touse
 	mat `b' = e(b)
@@ -556,6 +558,8 @@ program define _boottest, rclass sortpreserve
   local NBootClustVar: word count `bootcluster'
 
 	forvalues h=1/`N_h0s' {  // loop over multiple independent constraints
+    if "`sameseed'"!="" set seed `seed'
+  
     if `margins' mat `R' = `marginsH0'[`h', 1...]
     else {
     	_estimates hold `hold', restore
@@ -819,7 +823,7 @@ program define _boottest, rclass sortpreserve
     }
     else local sample: copy local hold
 
-    return local seed = cond("`seed'"!="", "`seed'", "`c(seed)'")
+    return local seed: copy local seed
 
     if !`julia' {
       mata boottest_stata("`teststat'", "`df'", "`df_r'", "`p'", "`padj'", "`cimat'", "`plotmat'", "`peakmat'", `level', `ptolerance', ///
@@ -862,7 +866,7 @@ program define _boottest, rclass sortpreserve
 // jl: using JLD
 // jl: @save "c:/users/drood/Downloads/tmp.jld" Ynames Xnames_exog Xnames_endog ZExclnames wtname allclustvars FEname scnames R r R1 r1 gridminvec gridmaxvec gridpointsvec b V
       _jl: using Random; Random.seed!(rng, `=runiformint(0, 9007199254740992)')  // chain Stata rng to Julia rng
-      _jl: test = wildboottest!(Float`precision', R, r; resp=Ynames, predexog=Xnames_exog, predendog=Xnames_endog, inst=ZExclnames, ///
+      _jl: _boottest_jl = wildboottest!(Float`precision', R, r; resp=Ynames, predexog=Xnames_exog, predendog=Xnames_endog, inst=ZExclnames, ///
                           obswt=wtname, clustid=allclustvars, feid=FEname, scores=scnames, ///
                           R1, r1, ///
                           nbootclustvar=`NBootClustVar', nerrclustvar=`NErrClustVar', ///
@@ -891,24 +895,24 @@ program define _boottest, rclass sortpreserve
       set seed `r(ans)'
       if "`plotmat'"!="" {
         if `df'==1 {
-          jl GetMatFromMat `plotmat', source([test.plot[:X][1] test.plot[:p]])
-          jl GetMatFromMat `peakmat', source([test.peak[:X][1] test.peak[:p]])
+          jl GetMatFromMat `plotmat', source([_boottest_jl.plot[:X][1] _boottest_jl.plot[:p]])
+          jl GetMatFromMat `peakmat', source([_boottest_jl.peak[:X][1] _boottest_jl.peak[:p]])
         }
-        else jl GetMatFromMat `plotmat', source([vcat(vec([[x y] for x in test.plot[:X][1], y in test.plot[:X][2]])...) test.plot[:p]])
+        else jl GetMatFromMat `plotmat', source([vcat(vec([[x y] for x in _boottest_jl.plot[:X][1], y in _boottest_jl.plot[:X][2]])...) _boottest_jl.plot[:p]])
       }
-      if `level'<100 & "`cimat'" != "" jl GetMatFromMat `cimat', source(test.ci)
-      _jl: SF_scal_save("`teststat'", test.stat)
-      _jl: SF_scal_save("`df'", test.dof)
-      _jl: SF_scal_save("`df_r'", test.dof_r)
-      _jl: SF_scal_save("`p'", test.p)
-      _jl: SF_scal_save("`padj'", test.padj)
-      _jl: SF_scal_save("`repsname'", test.reps)
-      _jl: SF_scal_save("`repsFeasname'", test.repsfeas)
-      _jl: SF_scal_save("`NBootClustname'", test.nbootclust)
-      jl GetMatFromMat `b0', source(test.b)
-      jl GetMatFromMat `V0', source(test.V)
-      if "`dist'"!="" jl GetMatFromMat `dist', source(test.`=cond("`svmat'"=="t", "dist", "numerdist")')
-      if "`svv'" !="" jl GetMatFromMat `svv', source(test.auxweights)
+      if `level'<100 & "`cimat'" != "" jl GetMatFromMat `cimat', source(_boottest_jl.ci)
+      _jl: SF_scal_save("`teststat'", _boottest_jl.stat)
+      _jl: SF_scal_save("`df'", _boottest_jl.dof)
+      _jl: SF_scal_save("`df_r'", _boottest_jl.dof_r)
+      _jl: SF_scal_save("`p'", _boottest_jl.p)
+      _jl: SF_scal_save("`padj'", _boottest_jl.padj)
+      _jl: SF_scal_save("`repsname'", _boottest_jl.reps)
+      _jl: SF_scal_save("`repsFeasname'", _boottest_jl.repsfeas)
+      _jl: SF_scal_save("`NBootClustname'", _boottest_jl.nbootclust)
+      jl GetMatFromMat `b0', source(_boottest_jl.b)
+      jl GetMatFromMat `V0', source(_boottest_jl.V)
+      if "`dist'"!="" jl GetMatFromMat `dist', source(_boottest_jl.`=cond("`svmat'"=="t", "dist", "numerdist")'')
+      if "`svv'" !="" jl GetMatFromMat `svv', source(_boottest_jl.auxweights)
     }
 
 		_estimates unhold `hold'
@@ -1110,6 +1114,7 @@ cap program _julia_boottest, plugin using(jl.plugin)  // create an extra handle 
 
 
 * Version history
+* 4.5.0  Add sameseed option. No longer sort return value from svmat.
 * 4.4.14 Add reference to jl.plugin to reduce chance Stata unloads it and causes crash
 * 4.4.13 Check for and support used of contrast operators in margins
 * 4.4.12 Fixed crash on boottest, margins after areg
