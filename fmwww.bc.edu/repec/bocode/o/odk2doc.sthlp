@@ -1,7 +1,7 @@
-
+﻿
 
 {smcl}
-{* *! version 1.1 Anna Reuter 18mar2021}{...}
+{* *! version 2.1 Anna Reuter 04jun2025}{...}
 {title:Title}
 
 {phang}
@@ -57,7 +57,7 @@
 {cmd:odk2doc} transfers xlsForm-based questionnaires written in xls/xlsx into readable questionnaires and stores them as docx files. 
 It was developed and tested for xlsForms written for ODK. 
 Note that the formatting options might increase the computation time for larger questionnaires, especially if cells should be colored. 
-See odk2xls for a conversion into xlsx files.
+See {helpb odk2xls} for a conversion into xlsx files.
 
 
 {marker options}{...}

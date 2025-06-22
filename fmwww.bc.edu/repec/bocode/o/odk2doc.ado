@@ -1,5 +1,14 @@
+***********************************************
+******************* odk2doc *******************
+*** Stata program to convert xlsform to doc ***
+***********************************************
+*************** By Anna Reuter ****************
+
+*! Version 2.1, June 4th 2025 
+
 
 program odk2doc
+
 	version 15.0
 	
 	syntax using/, to(string) [keep(string)] [DROPType(string)] [DROPVar(string)] [max(integer 30)] [fill] [DELete(string)] [clean] [mark(string)] [doc(string asis)] [fmt(string asis)] [tfmt(string asis)] [qfmt(string asis)] [afmt(string asis)] [replace]
@@ -13,23 +22,37 @@ program odk2doc
 		exit
 	}
 
+	
 preserve
 	
 quietly {
 	
 	tempfile temp_choices temp_vars
+		
+		
+
+***	Get choices sheet ***
 	
 import excel "`using'", sh("choices") first all clear
  
-	// Rename choices, ignore blank rows
-	cap rename list list_name
-	cap rename listname list_name
-	keep list_name name label*
-	drop if list_name==""
+	// Harmonize list name (different versions possible)
+	cap rename 	list 		list_name
+	cap rename 	listname 	list_name
+	keep 		list_name name label*
 	
-	tempvar Nobs nobs
-	gen `nobs' = _n
+	// Ignore blank rows
+	drop 		if list_name==""
+	
+	// Apply max. number of choices
+	tempvar Nobs nobs toomany
+	gen 	`nobs' = _n
 	bysort list_name: gen `Nobs' = _N
+	gen 	`toomany' = `Nobs'>`max'
+	count if `toomany'==1
+	if `r(N)'>0 {
+		noi di _n "The following choices are omitted as the number of answer options exceed `max':"
+		noi tab list_name if `toomany'==1
+	}
 	drop if `Nobs'>`max'
 	sort list_name `nobs'
 	drop `Nobs' 
@@ -39,9 +62,12 @@ import excel "`using'", sh("choices") first all clear
 
 save "`temp_choices'"
 
+
+*** Get survey sheet ***
+
 import excel "`using'", sh("survey") first all clear
 
-	// Error check
+	// Error check: Do all variables specified in "keep" exist?
 	foreach k in `keep' {
 		ds, has(varl "`k'*")
 		if wordcount("`r(varlist)'")==0 {
@@ -57,28 +83,28 @@ import excel "`using'", sh("survey") first all clear
 	drop if `w'==""
 	
 	// Split question type and list name
-	tempvar qtype other dummy
-	gen `qtype' = word(type,1)
-	gen list_name = word(type,2)
-	gen `other' = ""
-	gen `dummy' = wordcount(type)
-	su `dummy', meanonly
+	tempvar qtype other wcount
+	gen 	`qtype' 	= word(type,1)
+	gen 	list_name 	= word(type,2)
+	gen 	`other' 	= ""
+	gen 	`wcount' 	= wordcount(type)
+	su 		`wcount', meanonly
 	if `r(max)'>2 {
 		replace `other' = word(type,3)
 	}
-	replace `qtype' = list_name if inlist(`qtype',"begin","end")
+	replace `qtype' 	= list_name 	if inlist(`qtype',"begin","end")
 	foreach d of local droptype {
-		drop if inlist(`qtype',"`d'")
-		if r(N_drop)>0 noisily di as text `"Dropped questions of type "`d'""'
+		drop 	if inlist(`qtype',"`d'")
+		if r(N_drop)>0 	noi di as text 	`"Dropped questions of type "`d'""'
 	}
 	
 	// Drop unwanted elements
 	local count = 0
 	foreach var in `dropvar' {
 		drop if strmatch(name,"`var'")
-		if r(N_drop)>0 local count = `count'+1
+		if r(N_drop)>0 	local count = `count'+1
 	}
-	if "`dropvar'"!="" & `count'==0 noisily di as text `"No variable specified in option "drovar" could be dropped"'
+	if "`dropvar'"!="" & `count'==0 noi di as text `"No variable specified in option "drovar" could be dropped"'
 
 	// Collect all columns which should be kept.
 	foreach k in `keep' {
@@ -93,24 +119,24 @@ import excel "`using'", sh("survey") first all clear
 	// Display warranted input below questions
 	if "`fill'"!="" {
 		tempvar dup1 dup2 dup3 dup4
-		expand 2 if type=="range", gen(`dup1')
-		expand 2 if (type=="integer" | type=="decimal"), gen(`dup2')
-		expand 2 if regexm(`other',"other"), gen(`dup3')
-		expand 2 if inlist(type,"text","image","geopoint"), gen(`dup4')
+		expand 2 	if type=="range", 							gen(`dup1')
+		expand 2 	if (type=="integer" | type=="decimal"), 	gen(`dup2')
+		expand 2 	if regexm(`other',"other"), 				gen(`dup3')
+		expand 2 	if inlist(type,"text","image","geopoint"), 	gen(`dup4')
 		sort `question_no' `dup1' `dup2' `dup3' `dup4'
 		foreach v of varlist label* {
-			replace `v' = parameter if type=="range" & `dup1' == 1
-			replace `v' = "[Number]" if type=="range" & `dup1' == 1 & missing(`v')	
-			replace `v' = constraint if (type=="integer" | type=="decimal") & `dup2' == 1
-			replace `v' = "[Number]" if (type=="integer" | type=="decimal") & `dup2' == 1 & missing(`v')	
-			replace `v' = "Other, specify" if `other'!="" & `dup3' == 1
-			replace `v' = "[" + strproper(type) + "]" if `dup4' == 1
+			cap replace `v' = parameter 	if type=="range" & `dup1' == 1
+				replace `v' = "[Number]" 	if type=="range" & `dup1' == 1 & missing(`v')	
+			cap replace `v' = constraint 	if (type=="integer" | type=="decimal") & `dup2' == 1
+				replace `v' = "[Number]" 	if (type=="integer" | type=="decimal") & `dup2' == 1 & missing(`v')	
+				replace `v' = "Other, specify" if `other'!="" & `dup3' == 1
+				replace `v' = "[" + strproper(type) + "]" if `dup4' == 1
 		}
 		foreach k in `klist' {
-			replace `k' = "" if `dup1'==1 | `dup2'==1 | `dup3'==1 | `dup4'==1
+			replace `k' = "" 	if `dup1'==1 | `dup2'==1 | `dup3'==1 | `dup4'==1
 		}
-		replace name = "" if `dup1'==1 | `dup2'==1 | `dup4'==1
-		replace `qtype' = "" if `dup3'==1
+		replace name 	= "" 	if `dup1'==1 | `dup2'==1 | `dup4'==1
+		replace `qtype' = "" 	if `dup3'==1
 	}
 	
 	// Mark single/multiple select
@@ -126,37 +152,60 @@ import excel "`using'", sh("survey") first all clear
 	}
 
 	// Order & keep only relevant columns
-	order `question_no' type list_name name label* `klist'
-	keep `question_no' type list_name name label* `klist' `dup1' `dup2' `dup3' `dup4'
-	tempvar q code
+	order 	`question_no' type list_name name label* `klist'
+	keep 	`question_no' type list_name name label* `klist' `dup1' `dup2' `dup3' `dup4'
+	
+	tempvar is_question code
 	gen `code' = name
 	drop name
-	gen `q' = 1
+	gen `is_question' = 1
+	
 	compress
 
 save "`temp_vars'"
 
-	if "`fill'"!="" drop if `dup3'==1
+
+	// If requested input type should be displayed below open-ended questions, "Other, specify" is dropped
+	if "`fill'"!="" {
+		drop if `dup3'==1
+	}
+	
+	// Only keep question number, name, listname and input marker to merge answer lists, other information will be appended
 	keep `question_no' `code' list_name `dup1' `dup2' `dup4'
 
+
+
+*** Combine with answer options ***
+
+	// First combine such that we only have the answers to each question
 joinby list_name using "`temp_choices'"
 	sort `question_no' `dup1' `dup2' `dup4' `nobs'
-	if "`fill'"!="" gen `dup3' = 0
+	if "`fill'"!="" {
+		gen `dup3' = 0
+	}
 	drop list_name
 
+	// Append question labels
 append using "`temp_vars'"
 
 	// Match questions with answer options	
 	ds answer*
 	local a `r(varlist)'
+	local N: list sizeof a
 	tokenize `a'
-	local n = 1
-	foreach w of varlist label* {
-		replace `w' = ``n'' if `w'=="" & ``n''!=""
-		local n = `n' +1
+	
+	ds label*
+	local q `r(varlist)'
+	
+	foreach w of local q {
+		forv n = 1/`N' {
+			if regexr("``n''","answer","label")=="`w'" {
+				replace `w' = ``n'' if `w'=="" & ``n''!=""
+			}
+		}
 	}
 	
-	// Clean
+	// Delete substrings from questions and answers
 	if `"`delete'"'!="" {	
 		foreach w of varlist label* {
 			foreach c of local delete {
@@ -165,7 +214,8 @@ append using "`temp_vars'"
 			replace `w' = ustrtrim(stritrim(`w'))
 		}
 	}
-	
+
+	// Clean Markdown and xlsForm code
 	if "`clean'"!="" {
 		if "`fill'"!="" {
 			foreach w of varlist label* {
@@ -188,19 +238,21 @@ append using "`temp_vars'"
 	}
 	
 	replace `code' = name if name!=""
-	if "`fill'"!="" replace `code' = `code' + "_other" if `dup3'==1
-	sort `question_no' `dup1' `dup2' `dup3' `dup4' `q' `nobs'
+	if "`fill'"!="" {
+		replace `code' = `code' + "_other" if `dup3'==1
+	}
+	sort `question_no' `dup1' `dup2' `dup3' `dup4' `is_question' `nobs'
 	
 	// Only give question number to question, not answers
-	tempvar dummy question
-	by `question_no': gen `dummy'=_n
-	replace `question_no' = . if `dummy'>1
-	gen `question' = strofreal(`question_no')
-	replace `question' = "" if `question'=="."
-	drop `question_no'
+	tempvar running question
+	by `question_no': 	gen 	`running' 		= _n
+						replace `question_no' 	= . 	if `running'>1
+						gen 	`question' 		= strofreal(`question_no')
+						replace `question' 		= "" 	if `question'=="."
+	drop 	`question_no'
 	
-	keep `question' label* `code' `klist'
-	order `question' label* `code' `klist'
+	keep 	`question' label* `code' `klist'
+	order 	`question' label* `code' `klist'
 
 	// Clean "relevant" and "constraint" column
 	foreach v in relevant constraint {

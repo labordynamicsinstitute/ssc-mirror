@@ -85,6 +85,7 @@ p estsave module to save estimation results with current dataset
 p estudy module to perform an event study
 p estwrite module to store estimation results on disk
 p eth2grecal module to convert dates from the Ethiopian calendar to the Gregorian calendar
+p ethiodate module to p[rovide Ethiopian Date Conversion Utilities]
 p etime module to time how long a program runs
 p etr module to calculate the cost of capital and forward-looking effective tax rates
 p euromod module to connect to EUROMOD (Windows only)

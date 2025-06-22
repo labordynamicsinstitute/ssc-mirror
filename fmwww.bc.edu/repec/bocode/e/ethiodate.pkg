@@ -1,0 +1,23 @@
+d 'ETHIODATE': module to p[rovide Ethiopian Date Conversion Utilities]
+d
+d      The ethiodate package offers a fast, reliable, and
+d user-friendly solution for converting dates	 between the
+d Gregorian and Ethiopian calendar systems directly within Stata. 
+d
+d KW: data management
+d KW: Gregorian calendar
+d KW: Ethiopian calendar
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20250621
+d
+d Author:  Gutama Girja Urago, Laterite Consulting PLC
+d Support: email  gurago@@laterite.com
+d
+f ethiodate.sthlp
+f ../t/to_ethiopian.sthlp
+f ../t/to_gregorian.sthlp
+f ../t/to_ethiopian.ado
+f ../t/to_gregorian.ado
+f ../t/test-ethiodate.do

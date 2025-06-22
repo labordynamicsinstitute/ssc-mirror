@@ -1,0 +1,22 @@
+d 'MARKOVTHEOTRANS': module to to test whether a discrete time Markov chain is consistent with a theoretical transition matrix
+d
+d  markovtheotrans tests whether the transition matrix of a
+d discrete time Markov chain (DTMC) is consistent with a
+d theoretical transition matrix, according to Kullback et al.
+d (1962). A non-significant chi-squared test indicates that the
+d DTMC is consistent with the theoretical transition matrix. 
+d
+d KW: Markov chain
+d KW: discrete time Markov chain
+d KW: transition probabilities
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250621
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f markovtheotrans.ado
+f markovtheotrans.sthlp
+f ../k/kulback.dta
