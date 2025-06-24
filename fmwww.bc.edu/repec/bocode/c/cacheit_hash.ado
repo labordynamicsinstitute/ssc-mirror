@@ -15,7 +15,7 @@ Output:
 /*==================================================
               0: Program set up
 ==================================================*/
-program define cache_hash, rclass
+program define cacheit_hash, rclass
 
     syntax [anything(name=subcmd)]   ///
     [,                   	   /// 
@@ -32,7 +32,7 @@ program define cache_hash, rclass
         1: get command call hash
     ==================================================*/
     if ("`subcmd'" == "get")  {
-        cache_hash_get, `options'
+        cacheit_hash_get, `options'
         return add
         exit
     }
@@ -47,7 +47,7 @@ program define cache_hash, rclass
 end
 
 //------------ Get Hash based on string 
-program define cache_hash_get, rclass
+program define cacheit_hash_get, rclass
 	syntax [anything(name=subcmd)], [   ///
 	cmd_call(string)               ///
 	PREfix(string)              ///

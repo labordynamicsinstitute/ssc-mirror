@@ -14,7 +14,7 @@ d KW: confidence interval
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20250430
+d Distribution-Date: 20250623
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
@@ -23,3 +23,4 @@ f markovci.ado
 f markovci.sthlp
 f ../r/randmarkovseq.ado
 f ../r/randmarkovseq.sthlp
+f ../a/Avery_preproglucacon.dta

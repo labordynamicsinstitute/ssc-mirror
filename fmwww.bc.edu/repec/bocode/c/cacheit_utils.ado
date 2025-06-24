@@ -15,7 +15,7 @@ Output:
 /*==================================================
               0: Program set up
 ==================================================*/
-program define cache_utils, rclass
+program define cacheit_utils, rclass
     version 16.1
     syntax [anything(name=subcmd)]   ///
         [,                   	     /// 
@@ -31,7 +31,7 @@ program define cache_utils, rclass
         1:  clean locals
     ==================================================*/
     if ("`subcmd'" == "clean_local")  {
-        cache_utils_clean_local, `options'
+        cacheit_utils_clean_local, `options'
         return add
         exit
     }
@@ -48,7 +48,7 @@ program define cache_utils, rclass
 end 
 
 
-program define cache_utils_clean_local, rclass
+program define cacheit_utils_clean_local, rclass
     syntax [anything(name=subcmd)], [   ///
         text(string)               ///
         strip                    ///

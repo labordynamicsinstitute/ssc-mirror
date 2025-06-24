@@ -1,19 +1,22 @@
 {smcl}
+{* *! version 2.0.0 21jun2025}{...}
 {* *! version 1.0.0 29apr2025}{...}
 
 {title:Title}
 
 {p2colset 5 17 18 2}{...}
-{p2col:{hi:markovci} {hline 2}} Computes nonparametric bootstrapped confidence intervals for discrete time Markov chains {p_end}
+{p2col:{hi:markovci} {hline 2}} Computes parametric and nonparametric (bootstrapped) confidence intervals for discrete time Markov chains {p_end}
 {p2colreset}{...}
 
 
 {marker syntax}{...}
 {title:Syntax}
 
+{pstd}
+Non-parametric bootstrapped confidence intervals
 
 {p 8 17 2}
-{cmd:markovci}
+{cmd:markovci_bs}
 {cmd:,} 
 {opt obs}{it:(#)} 
 {opt l:abels}{it:(string)} 
@@ -28,8 +31,24 @@
 ]
 
 
+{pstd}
+Parametric confidence intervals
+
+{p 8 17 2}
+{cmd:markovci_pa}
+{varname}
+[{cmd:,}
+{opt lev:el}{it:(#)}
+{opt for:mat}{it:({help format:%fmt})} ]
+
+
+{pstd}
+{it: varname} is a sequence of values assumed to form a discrete time Markov chain (DTMC); {it: varname} must be {it: numeric} but can have value labels
+
+
+
 {synoptset 26 tabbed}{...}
-{synopthdr}
+{synopthdr:markovci_bs options}
 {synoptline}
 {syntab:Required}
 {synopt:{opt obs(#)}}number of values to generate in the sequence{p_end}
@@ -45,16 +64,27 @@
 {synopt:{opt sav:ing(string)}}save results to {it:filename}. If {it:filename} already exists, it will be replaced{p_end}
 {synoptline}
 {p 4 6 2}
+{p2colreset}{...}	
+
+{synoptset 26 tabbed}{...}
+{synopthdr:markovci_pa options}
+{synoptline}
+{synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}{p_end}
+{synopt :{opth for:mat(%fmt)}}display format for numeric values in the output tables; default is {cmd:format(%9.0g)}{p_end}
+{synoptline}
+{p 4 6 2}
 {p2colreset}{...}				
+
 
 	
 {title:Description}
 
 {pstd}
+The {cmd:markovci} package computes parametric and non-parametric confidence intervals for discrete time Markov chain transition probabilities. {cmd:markovci_pa} 
+computes parametric confidence intervals using the delta method following estimation of a multinomial logistic regression. {cmd:markovci_bs} bootstraps 
+randomly generated data sequences based on the transition probabilities from an underlying discrete time Markov chain (using {helpb randmarkovseq} as the 
+data generating process) and produces nonparametric confidence intervals. 
 
-{cmd:markovci} bootstraps randomly generated data sequences based on the transition probabilities from an underlying 
-discrete time Markov chain (using {helpb randmarkovseq} as the data generating process) and produces nonparametric 
-confidence intervals. 
 
 
 {title:Options}
@@ -83,7 +113,7 @@ confidence intervals. Estimates of confidence intervals using the percentile
 method typically requires 1,000 or more replications.
  
 {p 4 8 2}
-{cmd:percentile} displays percentile confidence intervals; the default is to display {cmd:normal} approximation confidence intervals.
+{cmd:percentile} displays percentile confidence intervals for bootstrapped confidence intervals; the default is to display {cmd:normal} approximation confidence intervals.
 
 {p 4 8 2}
 {cmd:level(#)} specifies the confidence level, as a percentage, for confidence intervals. The default is {cmd:level(95)} or as set by {help set level}.
@@ -98,6 +128,8 @@ method typically requires 1,000 or more replications.
 		
 {title:Examples}
 
+{pstd}{cmd:Non-parametric bootstrapped confidence intervals}{p_end}
+
 {pstd}
 Generate a 4 X 4 matrix of transition probabilities, based on Table 1 of Avery and Henderson (1999){p_end}
 
@@ -106,17 +138,37 @@ Generate a 4 X 4 matrix of transition probabilities, based on Table 1 of Avery a
 {pstd}
 Produce 100 bootstrap replications of a randomly generated sequence of 1562 values labelled "A", "C", "G" and "T" using the transition probabilities in matrix A. {p_end}
 
-{phang2}{cmd:. markovci , matrix(A) obs(1562) labels(A C G T) reps(100)}
+{phang2}{cmd:. markovci_bs , matrix(A) obs(1562) labels(A C G T) reps(100)}
 
 {pstd}
 Same as above, but specify that the value "A" should be used to initialize the random sequence generation, and that the format of the values be displayed as %5.3f {p_end}
 
-{phang2}{cmd:. markovci , matrix(A) obs(1562) labels(A C G T) first(A) reps(100) format(%5.3f)}
+{phang2}{cmd:. markovci_bs , matrix(A) obs(1562) labels(A C G T) first(A) reps(100) format(%5.3f)}
 
 {pstd}
 Same as above, but we now specify that percentile CIs be computed (and thus we increase the reps to 1000), and we save the results  {p_end}
 
-{phang2}{cmd:. markovci , matrix(A) obs(1562) labels(A C G T) first(A) reps(1000) format(%5.3f) percentile saving(Avery)}
+{phang2}{cmd:. markovci_bs , matrix(A) obs(1562) labels(A C G T) first(A) reps(1000) format(%5.3f) percentile saving(Avery)}
+
+
+{pstd}{cmd:Parametric confidence intervals}{p_end}
+
+{pstd}
+Setup using preproglucacon data {p_end}
+
+{phang2}{cmd:. use "Avery_preproglucacon.dta", clear}
+
+{pstd} Compute parametric 95% confidence interval {p_end}
+
+{phang2}{cmd:. markovci_pa sequence }
+
+{pstd} Change the level to 99% {p_end}
+
+{phang2}{cmd:. markovci_pa sequence, level(99) }
+
+{pstd} Same as above but change the formatting of the values to be displayed as %5.3f {p_end}
+
+{phang2}{cmd:. markovci_pa sequence, level(99) format(%5.3f)}
 
 
 	
@@ -127,9 +179,9 @@ Same as above, but we now specify that percentile CIs be computed (and thus we i
 
 {synoptset 12 tabbed}{...}
 {p2col 5 18 19 2: Matrices}{p_end}
-{synopt:{cmd:r(bsprop)}}the bootstrapped mean transition probabilities{p_end}
-{synopt:{cmd:r(bslcl)}}the bootstrapped lower confidence limit of the transition probabilities{p_end}
-{synopt:{cmd:r(bsucl)}}the bootstrapped upper confidence limit of the transition probabilities{p_end}
+{synopt:{cmd:r(prop)}}the transition probabilities{p_end}
+{synopt:{cmd:r(lcl)}}the lower confidence limit of the transition probabilities{p_end}
+{synopt:{cmd:r(ucl)}}the upper confidence limit of the transition probabilities{p_end}
 
 
 
@@ -147,7 +199,9 @@ Avery P. J. and D. A. Henderson. (1999). Fitting Markov chain models to discrete
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden, Ariel (2025). markovci: Stata module for computing nonparametric bootstrapped confidence intervals for discrete time Markov chains. {p_end}
+Linden, Ariel (2025). MARKOVCI: Stata module for computing parametric and nonparametric (bootstrapped) confidence intervals for discrete time Markov chains. 
+Statistical Software Components S459448, Boston College Department of Economics. 
+{browse "https://ideas.repec.org/c/boc/bocode/s459448.html":https://ideas.repec.org/c/boc/bocode/s459448.html} {p_end}
 
 
 
@@ -161,5 +215,6 @@ Linden, Ariel (2025). markovci: Stata module for computing nonparametric bootstr
 
 {title:Also see}
 
-{p 4 8 2} Online: {helpb mean}, {helpb centile}, {helpb randmarkovseq}{p_end}
+{p 4 8 2} Online: {helpb randmarkovseq} (if installed), {helpb markovfirstorder} (if installed), {helpb markovpredict}	(if installed), 
+{helpb markovtheotrans} (if installed) {p_end}
 

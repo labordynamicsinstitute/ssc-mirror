@@ -1,0 +1,203 @@
+﻿
+
+Template-Type: ReDIF-Article 1.0
+Author-Name: Andy Lin
+Author-Workplace-Name: Institute for Digital Research and Education
+Author-Email: alin@oit.ucla.edu
+Author-Name: Denni Tommasi
+Author-Workplace-Name: University of Bologna
+Author-Email: denni.tommasi@unibo.it
+Author-Person: pto487
+Author-Name: Lina Zhang
+Author-Workplace-Name: University of Amsterdam and Tinbergen Institute
+Author-Email: l.zhang5@uva.nl
+Author-Person: pzh886
+Title: Bounding program benefits when participation is misreported: Estimation and inference with Stata
+Journal: Stata Journal
+Pages: 185-212
+Issue: 2
+Volume: 24
+Year: 2024
+Month: June
+Abstract: Instrumental-variables estimation is an approach commonly used to evaluate the effect of a program in case of noncompliance. However, when the binary treatment status is misreported, standard techniques are not sufficient to point identify and consistently estimate the effect of interest. We present a new command, ivbounds, that implements three partial identification strategies de- veloped by Tommasi and Zhang (2024, Journal of Econometrics 238: 105556) to bound the heterogeneous treatment effect when both noncompliance and misre- porting of treatment status are present. We illustrate the use of the command by reassessing the benefits of participating in the 401(k) pension plan on savings in the United States.
+Keywords: ivbounds, heterogeneous treatment effect, local average treat- ment effect, LATE, differential misclassification, instrumental variable, partial identification, external information
+File-URL: http://www.stata-journal.com/article.html?article=st0744
+File-Function: link to article purchase
+DOI: 10.1177/1536867X241257347
+Note: to access software from within Stata, net describe http://www.stata-journal.com/software/sj24-2/st0744/
+Handle: RePEc:tsj:stataj:v:24:y:2024:i:2:p:185-212
+
+Template-Type: ReDIF-Article 1.0
+Author-Name: Johannes Giesecke
+Author-Workplace-Name: Humboldt-University Berlin
+Author-Email: johannes.giesecke@hu-berlin.de 
+Author-Name: Ulrich Kohler
+Author-Workplace-Name: University of Potsdam
+Author-Email: ulrich.kohler@uni-potsdam.de
+Author-Person: pko106
+Title: Two-step analysis of hierarchical data
+Journal: Stata Journal
+Pages: 213-249
+Issue: 2
+Volume: 24
+Year: 2024
+Month: June
+Abstract: In this article, we describe the package twostep, a bundle of pro- grams to perform analyses of hierarchical data applying the two-step approach. We consider a two-level data setup in which “microlevel” units are nested within “macrolevel” units. One-step models (which can be fit using, for example, mixed) are the most common approach to modeling two-level data. The two-step approach is an alternative in which parameters associated with microlevel and macrolevel predictors are estimated separately for each level. It can be used as an alterna- tive to one-step models if the estimand is a cross-level interaction. We also show how the two-step approach usefully complements one-step approaches by providing exploratory data analysis, descriptive graphs, and regression diagnostics.
+Keywords:  twostep, hierarchical model, mixed model, multilevel analysis, two-step modeling, two-stage regression, estimated dependent variable regression, EDV, exploratory data analysis, EDA, cross-level interaction
+File-URL: http://www.stata-journal.com/article.html?article=st0745
+File-Function: link to article purchase
+DOI: 10.1177/1536867X241257801
+Note: to access software from within Stata, net describe http://www.stata-journal.com/software/sj24-2/st0745/
+Handle: RePEc:tsj:stataj:v:24:y:2024:i:2:p:213-249
+
+Template-Type: ReDIF-Article 1.0
+Author-Name: Ziyue Zhu
+Author-Workplace-Name: Maastricht University
+Author-Email: ziyue.zhu@maastrichtuniversity.nl
+Author-Person: pzh1141
+Author-Name: Álvaro A. Gutiérrez-Vargas
+Author-Workplace-Name: KU Leuven
+Author-Email: alvaro.gutierrezvargas@kuleuven.be 
+Author-Name: Martina Vandebroek
+Author-Workplace-Name: KU Leuven
+Author-Email: martina.vandebroek@kuleuven.be
+Title: Fitting mixed random regret minimization models using maximum simulated likelihood
+Journal: Stata Journal
+Pages: 250-272
+Issue: 2
+Volume: 24
+Year: 2024
+Month: June
+Abstract: In this article, we describe the mixrandregret command, which ex- tends the randregret command introduced in Gutiérrez-Vargas, Meulders, and Vandebroek (2021, Stata Journal 21: 626–658) by allowing random coefficients in random regret minimization models. The newly developed mixrandregret com- mand allows the user to specify a combination of fixed and random coefficients in the regret function of the classical random regret minimization model introduced in Chorus (2010, European Journal of Transport and Infrastructure Research 10: 181–196). In addition, the user can specify normal and lognormal distributions for the random coefficients using the appropriate command’s options. The models are fit by maximum simulated likelihood estimation using numerical integration to approximate the choice probabilities.
+Keywords: mixrandregret, mixrpred, mixrbeta, discrete choice models, random regret model, logit model, random coefficients
+File-URL: http://www.stata-journal.com/article.html?article=st0746
+File-Function: link to article purchase
+DOI:  10.1177/1536867X241257802
+Note: to access software from within Stata, net describe http://www.stata-journal.com/software/sj24-2/st0746/
+Handle: RePEc:tsj:stataj:v:24:y:2024:i:2:p:250-272
+
+Template-Type: ReDIF-Article 1.0
+Author-Name: Javier Alejo
+Author-Workplace-Name: IECON-Universidad de la República
+Author-Email: javier.alejo@fcea.edu.uy
+Author-Person: pal181
+Author-Name: Antonio F. Galvao
+Author-Workplace-Name: Michigan State University
+Author-Email: agalvao@msu.edu
+Author-Person: pga1288
+Author-Name: Gabriel Montes-Rojas
+Author-Workplace-Name: CONICET and IIEP-BAIRES, Universidad de Buenos Aires
+Author-Email: gabriel.montes@fce.uba.ar
+Author-Person: pmo380
+Title: First-stage analysis for instrumental-variables quantile regression
+Journal: Stata Journal
+Pages: 273-286
+Issue: 2
+Volume: 24
+Year: 2024
+Month: June
+Abstract: In this article, we develop a first-stage linear regression command, fsivqreg, for an instrumental-variables quantile regression (QR) model. The quan- tile first stage is analogous to the least-squares case, that is, a linear projection of the endogenous variables on the instruments and other exogenous covariates, with the difference that the QR case is a weighted projection. The weights are given by the conditional density function of the innovation term in the QR structural model, at a given quantile. An empirical application illustrates its implementation.
+Keywords: fsivqreg, quantile regression, instrumental variables, first stage
+File-URL: http://www.stata-journal.com/article.html?article=st0747
+File-Function: link to article purchase
+DOI:  10.1177/1536867X241257803
+Note: to access software from within Stata, net describe http://www.stata-journal.com/software/sj24-2/st0747/
+Handle: RePEc:tsj:stataj:v:24:y:2024:i:2:p:273-286
+
+Template-Type: ReDIF-Article 1.0
+Author-Name: Vincenzo Verardi
+Author-Workplace-Name: Université de Namur
+Author-Email: vincenzo.verardi@unamur.be
+Author-Person: pve73
+Author-Name: Catherine Vermandele
+Author-Workplace-Name: Université libre de Bruxelles
+Author-Email: catherine.vermandele@ulb.be
+Title: Estimating Skellam distribution and regression parameters in Stata
+Journal: Stata Journal
+Pages: 287-300
+Issue: 2
+Volume: 24
+Year: 2024
+Month: June
+Abstract: The Skellam distribution is a discrete probability distribution related to the difference between two independent Poisson-distributed random variables. It has been used in a variety of contexts, including sports or supply and demand imbalances in shared transportation. Stata does not support the Skellam distribu- tion or Skellam regression. We present a command, skellamreg, to estimate the parameters of a Skellam distribution and Skellam regression model using Mata’s optimize function.
+Keywords: skellamreg, skellamreg postestimation, Skellam distribution, Skellam regression, modified Bessel function of the first kind, maximum likelihood, optimize
+File-URL: http://www.stata-journal.com/article.html?article=st0748
+File-Function: link to article purchase
+DOI:  10.1177/1536867X241257804
+Note: to access software from within Stata, net describe http://www.stata-journal.com/software/sj24-2/st0748/
+Handle: RePEc:tsj:stataj:v:24:y:2024:i:2:p:287-300
+
+Template-Type: ReDIF-Article 1.0
+Author-Name: Christopher James Rose
+Author-Workplace-Name: Norwegian Institute of Public Health
+Author-Email: cjro@fhi.no
+Title: Multivariate random-effects meta-analysis for sparse data using smvmeta
+Journal: Stata Journal
+Pages: 301-328
+Issue: 2
+Volume: 24
+Year: 2024
+Month: June
+Abstract: Multivariate meta-analysis is used to synthesize estimates of multi- ple quantities (“effect sizes”), such as risk factors or treatment effects, accounting for correlation and typically also heterogeneity. In the most general case, estima- tion can be intractable if data are sparse (for example, many risk factors but few studies) because the number of model parameters that must be estimated scales quadratically with the number of effect sizes. This article presents a new command, smvmeta, that makes estimation tractable by modeling correlation and heterogene- ity in a low-dimensional space via random projection. This reduces the number of model parameters to be linear in the number of effect sizes. smvmeta is demon- strated in a meta-analysis of 23 risk factors for pain after total knee arthroplasty. Validation experiments show that, compared with meta-regression (a reasonable alternative model that could be used when data are sparse), smvmeta can pro- vide substantially more precise estimates (that is, narrower confidence intervals) at little cost in bias.
+Keywords: smvmeta, multivariate meta-analysis, sparse data, dimension- ality reduction, penalized maximum likelihood, risk factors
+File-URL: http://www.stata-journal.com/article.html?article=st0749
+File-Function: link to article purchase
+DOI: 10.1177/1536867X241258008
+Note: to access software from within Stata, net describe http://www.stata-journal.com/software/sj24-2/st0749/
+Handle:RePEc:tsj:stataj:v:24:y:2024:i:2:p:301-328
+
+Template-Type: ReDIF-Article 1.0
+Author-Name: Nicholas J. Cox
+Author-Workplace-Name: Durham University
+Author-Email: n.j.cox@durham.ac.uk
+Author-Person: pco34
+Author-Name: Tim P. Morris
+Author-Workplace-Name: University College London
+Author-Email: tim.morris@ucl.ac.uk
+Title: Speaking Stata: The joy of sets: Graphical alternatives to Euler and Venn diagrams
+Journal: Stata Journal
+Pages: 329-361
+Issue: 2
+Volume: 24
+Year: 2024
+Month: June
+Abstract: Membership of overlapping or intersecting sets may be recorded in a bundle of (0,1) indicator variables. Annotated Euler or Venn diagrams may be used to show graphically the frequencies of subsets so defined, but beyond just a few sets such diagrams can be hard to draw and use effectively. This column presents two new commands for graphical alternatives: upsetplot and vennbar. Each command produces a bar chart by default, but there is scope to recast to different graphical forms. The differences between the new commands reflect the divide in Stata between twoway commands and other graph commands. They also provide some flexibility in graph design to match tastes and circumstances. The discussion includes many historical details and references.
+Keywords: upsetplot, vennbar, bar charts, Venn diagrams, Euler diagrams, UpSetPlots, set membership, indicator variables, binary variables, graphics
+File-URL: http://www.stata-journal.com/article.html?article=gr0095
+File-Function: link to article purchase
+DOI:   10.1177/1536867X241258010
+Note: to access software from within Stata, net describe http://www.stata-journal.com/software/sj24-2/gr0095/
+Handle: RePEc:tsj:stataj:v:24:y:2024:i:2:p:329-361
+
+Template-Type: ReDIF-Article 1.0
+Author-Name: Mijat Kustudic
+Author-Workplace-Name: Shenzhen University
+Author-Email: mijat.k.ntc@gmail.com
+Author-Name: Ben Niu
+Author-Workplace-Name: Shenzhen University
+Author-Email: drniuben@gmail.com
+Title: Stata tip 155: How to perform high-frequency event studies
+Journal: Stata Journal
+Pages: 362-368
+Issue: 2
+Volume: 24
+Year: 2024
+Month: June
+File-URL: http://www.stata-journal.com/article.html?article=st0750
+File-Function: link to article purchase
+DOI:   10.1177/1536867X241258013
+Handle: RePEc:tsj:stataj:v:24:y:2024:i:2:p:362-368
+
+Template-Type: ReDIF-Article 1.0
+Author-Name: Editors
+Author-Email: editors@stata.com
+Title: Software updates
+Journal: Stata Journal
+Pages: 369
+Issue: 2
+Volume: 24
+Year: 2024
+Month: June 
+Abstract: Updates for previously published packages are provided.
+Note: to access software from within Stata, net describe http://www.stata-journal.com/software/sj24-2/st0389_9/
+Handle:RePEc:tsj:stataj:v:24:y:2024:i:2:p:369
