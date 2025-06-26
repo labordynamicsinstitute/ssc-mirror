@@ -1,21 +1,21 @@
 {smcl}
-{* *! version 5.0  March 2025}{...}
+{* *! version 6.0  June 2025}{...}
 
 {title:Title}
-{cmdab: complexity}  {hline 2}  computes indexes of the complexity of specialization patterns.
+{cmdab: complexity}  {hline 2} A Generalized Approach in Stata for Specialization Complexity Indices and Relatedness metrics.
 
 
 
 {title:Description}
 {p2colset 9 18 22 2}{...}
 
-{cmdab: complexity} only requires as input the matrix of individuals' specialization over activities - either expressed in raw performance in each activity (e.g. export value or employment) or in Revealed Comparative Advantage (RCA).
+{cmdab: complexity} Requires as input the matrix of individuals' specialization over activities - either expressed in raw performance in each activity (e.g. export value or employment) or in Revealed Comparative Advantage (RCA).
 This input can be either specified as Stata varlist, Stata matrix or mata matrix, with inidividuals in row and activities in columns.
  
 Three alternative methodologies are available. By default, the eigenvalue method is followed as detailed at the {browse "https://oec.world/fr/resources/methodology/": OEC methodology} webpage.
 The alternative methods are the inital Method of Reflection (MR, Hidalgo & Hausmann, 2009), and the Fitness index (Tacchela et al, 2012).
 
-Additional metrics can be computed as the Relatedness of the specialization pattern, and the complexity potential for each individual.
+Additional relatedness based metrics can be computed as the coherence of the specialization pattern, and the complexity outlook index or potential for each individual.
 
 For generalization purposes, we refer to individuals and activities, rather than respectively countries and products in the reference literature. 
 
@@ -34,8 +34,10 @@ For generalization purposes, we refer to individuals and activities, rather than
 {opt m:atrix()}
 {opt mats:ource()}
 {opt met:hod()}
-{opt rel:atedness}
-{opt pot:ential}
+{opt coh:erence}
+{opt out:look}
+{opt ubiquity}
+{opt diversity}
 {opt rca}
 {opt iter:ations()}
 {opt p:rojection()}
@@ -64,20 +66,26 @@ OR
 Alternative methods are {cmd:mr} to follow instead the Method of Reflection as in {browse "https://www.pnas.org/content/106/26/10570.short":Hidalgo & Hausmann, 2009},
  or {cmd:fitness} to follow the Fitness Complexity Method as detailed in {browse "https://www.nature.com/articles/srep00723":Tacchella et al.(2012)}. Note that fitness at the activity level is the reverse of its complexity.
 
- {synopt: {opt rel:atedness}} Computes the relatedness of the specialization pattern for each individual (average proximity of specialization area)
+ {synopt: {opt coh:erence}} Computes the coherence of the specialization pattern for each individual (average proximity of specialization area)
 
  
- {synopt:{opt pot:ential}} Indicates the Complexity Potential (average complexity of neighboring activities), and targets ranked by complexity gains/accessibility.
+ {synopt:{opt out:look}} Indicates the Complexity Outlook Index (Hausmann et al., 2014) (average complexity of neighboring activities not yet produced).
+
+ {synopt:{opt ubiquity}} Indicates activities' ubiquity (number of individuals specialized in them).
+ 
+ {synopt:{opt diversity}} Indicates individuals' ubiquity (number of activities they're specialized in).
+
 
  
 {synopt:{opt rca}} To be specified if varlist() or matsource() correspond to Revealed Comparative Advantage matrix. 
  
-{synopt:{opt iter:ations}} Sets the number of iterations (for MR or fitness methods). If reached, the optimal level of iteration (i.e. when the final ranking doesn't vary anymore) is chosen. Iterations must be of even order.
+{synopt:{opt iter:ations}} Sets the number of iterations (for MR or fitness methods). If reached, the optimal level of iteration (i.e. when the final ranking doesn't vary anymore) is chosen. Iterations must be of even order for MR method.
  
 {synopt:{opt p:rojection()}} Indicates which complexity index to return. {cmd: indiv} would return the individuals' complexity (e.g. countries ECI), while {cmd:activities} returns the activities' complexity (e.g. product PCI). 
 In any case both are computed. If none are indicated, individuals' complexity is returned by default.
 
-{synopt:{opt t:ranspose}} Transpose initial matrix if individuals were in columns and activities in rows.
+{synopt:{opt t:ranspose}} Transposes initial matrix if individuals were in columns and activities in rows.
+
 
 {synopt:{opt x:var}} Doesn't return a Stata variable (only Stata and mata matrices are stored).
 
@@ -156,7 +164,7 @@ Otherwise, on random example values:
 {it:Using varlist() input}
 
 {phang}{cmd:. complexity, varlist(n*) }{p_end}
-{phang}{cmd:. complexity, varlist(n*) rel }{p_end}
+{phang}{cmd:. complexity, varlist(n*) coherence }{p_end}
 {phang}{cmd:. complexity, varlist(n*) rca proj(activities) }{p_end}
 
 
@@ -165,14 +173,14 @@ Otherwise, on random example values:
 
 
 {it:Using  a Stata matrix as input}
-{phang}{cmd:. complexity, matsource(matrix) mat(S) potential rca }{p_end}
+{phang}{cmd:. complexity, matsource(matrix) mat(S) outlook rca }{p_end}
 
 
 
 {marker Notes}{...}
 {title:Notes}
 Requires moremata (available on SSC) package to run.
-version 5.0  March 2025
+version 6.0  June 2025
 
 {marker References}{...}
 {title:References}

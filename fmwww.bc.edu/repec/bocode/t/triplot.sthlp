@@ -1,5 +1,5 @@
 {smcl}
-{* 15 Aug 2004/19 Mar 2007/25 Sept 2008/27 Jan 2009/6 Feb 2009/9 Feb 2009}{...}
+{* 15aug2004/19mar2007/25sep2008/27jan2009/6feb2009/9feb2009/28aug2020/24jun2025}{...}
 {hline}
 help for {cmd:triplot}
 {hline}
@@ -11,6 +11,7 @@ help for {cmd:triplot}
 {it:leftvar rightvar botvar}
 [{cmd:if} {it:exp}] 
 [{cmd:in} {it:range}]
+[{weight}] 
 
 {p 17 17 2} 
 [ 
@@ -46,6 +47,9 @@ help for {cmd:triplot}
 {p 17 17 2} 
 {it:scatter_options} 
 ]
+
+{p 4 4 2}{cmd:aweight}s, {cmd:fweight}s and {cmd:pweight}s are allowed: 
+see {help weight}. 
 
 
 {title:Description} 
@@ -83,10 +87,21 @@ In genetics, applications are often called de Finetti diagrams.
 
 {title:Remarks} 
 
-{p 4 4 2}The author recommends the {cmd:s1color} scheme for defaults congenial 
-with these plots.
+{p 4 4 2}The author recommends for Stata 18 up the {cmd:stcolor} scheme,
+and for earlier versions the {cmd:s1color} scheme, for defaults 
+congenial with these plots.
 
-
+{p 4 4 2}
+Howarth (1996) describes the use of ternary diagrams in the physical
+sciences in the 18th and 19th centuries, with applications in the study
+of colour mixing, photoelasticity and the behaviour of three-component
+systems in metallurgy and physical chemistry.  Scientists using the
+ideas included Tobias Mayer (1723{c -}1762), Georg Christoph Lichtenberg
+(1742{c -}1799), Thomas Young (1773{c -}1829), James David Forbes
+(1809{c -}1868), James Clerk Maxwell (1831{c -}1879), Josiah Willard
+Gibbs (1839{c -}1903) and George Gabriel Stokes (1819{c-}1903).  Printed
+graph paper for ternary diagrams has been available since 1897. 
+ 
 {title:Options} 
 
 {p 4 8 2}{cmd:max()} indicates the upper limit of each variable, and the
@@ -177,11 +192,41 @@ pattern to medium.
 
 {title:Examples} 
 
-{p 4 8 2}{cmd:. triplot services industry agriculture, max(100) title("Structure of GDP 1996: 112 economies")} 
+{p 4 8 2}{cmd:. * graph scheme and colours assume Stata 18 up is in use}
 
-{p 4 8 2}{cmd:. triplot services industry agriculture, max(100) title("Structure of GDP 1996: 112 economies") vert(0.2) la(nolabels) y ttext(services) bltext(agriculture) brtext(industry) ltext(" ") rtext(" ") btext(" ")}
+{p 4 8 2}{cmd:. * US civilian labour force composition, from Beniger (1996) }{p_end}
+{p 4 8 2}{cmd:. clear}{p_end}
+{p 4 8 2}{cmd:. input float(year agriculture industry tertiary)}{p_end}
+{p 4 8 2}{cmd:1800 87.2  1.4      11.5}{p_end}
+{p 4 8 2}{cmd:1810   81  6.5      12.5}{p_end}
+{p 4 8 2}{cmd:1820   73   16      11.1}{p_end}
+{p 4 8 2}{cmd:1830 69.7 17.6      12.6}{p_end}
+{p 4 8 2}{cmd:1840 58.8 24.4      16.8}{p_end}
+{p 4 8 2}{cmd:1850 49.5 33.8      16.7}{p_end}
+{p 4 8 2}{cmd:1860 40.6   37      22.4}{p_end}
+{p 4 8 2}{cmd:1870   47   32        21}{p_end}
+{p 4 8 2}{cmd:1880 43.7 25.2      31.1}{p_end}
+{p 4 8 2}{cmd:1890 37.2 28.1      34.7}{p_end}
+{p 4 8 2}{cmd:1900 35.3 26.8      37.9}{p_end}
+{p 4 8 2}{cmd:1910 31.1 36.3      32.6}{p_end}
+{p 4 8 2}{cmd:1920 32.5   32      35.5}{p_end}
+{p 4 8 2}{cmd:1930 20.4 35.3      44.3}{p_end}
+{p 4 8 2}{cmd:1940 15.4 37.2      47.4}{p_end}
+{p 4 8 2}{cmd:1950 11.9 38.3      49.8}{p_end}
+{p 4 8 2}{cmd:1960    6 34.8      59.2}{p_end}
+{p 4 8 2}{cmd:1970  3.1 28.6      68.3}{p_end}
+{p 4 8 2}{cmd:1980  2.1 22.5      75.4}{p_end}
+{p 4 8 2}{cmd:end}{p_end}
 
-{p 4 8 2}{cmd:. triplot Dem Rep other, separate(region)} 
+{p 4 8 2}{cmd:. label var tertiary "services and information"}{p_end}
+
+{p 4 8 2}{cmd:. set scheme stcolor }{p_end}
+{p 4 8 2}{cmd:. generate pos = 3}{p_end}
+{p 4 8 2}{cmd:. replace pos = 9 if inlist(year, 1900, 1920)}{p_end}
+{p 4 8 2}{cmd:. replace pos = 10 if inlist(year, 1870, 1980)}{p_end}
+{p 4 8 2}{cmd:. replace pos = 12 if inlist(year, 1880, 1970)}{p_end}
+{p 4 8 2}{cmd:. triplot agriculture industry tertiary, c(l) max(100)
+mcolor(stc1) mlabel(year) mlabsize(*0.7) mlabc(stc1) clpat(solid) mlabvpos(pos)}{p_end}
 
 
 {title:Author}
@@ -196,22 +241,37 @@ n.j.cox@durham.ac.uk
 questions. 
 Scott Merryman and Thomas Steichen found other bugs. 
 Vince Wiggins provided encouragement. 
+In 2025, questions from Julia Mueller prompted the unearthing code
+for supporting weights. 
 
 
 {title:References}
 
-{p 4 4 2}Cox, N.J. 2004. Graphing categorical
+{p 4 8 2}
+Beniger, J.R. 1986. 
+{it:The Control Revolution: Technological and Economic Origins of the Information Society.}
+Cambridge, MA: Harvard University Press.
+
+{p 4 8 2}Cox, N.J. 2004. Graphing categorical
 and compositional data. {it:Stata Journal} 4: 190{c -}215.
 {browse "http://www.stata-journal.com/article.html?article=gr0004":http://www.stata-journal.com/article.html?article=gr0004}
 
-{p 4 4 2}Gray, J. 1993. M{c o:}bius's geometrical mechanics. In Fauvel, J., R. Flood and R. Wilson (eds)
+{p 4 8 2}Gray, J. 1993. M{c o:}bius's geometrical mechanics. In Fauvel, J., R. Flood and R. Wilson (eds)
 {it:M{c o:}bius and his band: mathematics and astronomy in nineteenth-century Germany.} 
-Oxford: Oxford University Press, pp.79{c -}103. 
+Oxford: Oxford University Press, pp.79{c -}103.
 
-{p 4 4 2}M{c o:}bius, August Ferdinand. 1827. {it:Der barycentrische Calcul: ein neues H{c u:}lfsmittel zur analytischen Behandlung der Geometrie} 
+{p 4 8 2} 
+Howarth, R.J. 1996. Sources for a history of the ternary diagram. 
+{it:British Journal for the History of Science} 29: 337{c -}356. 
+
+{p 4 8 2}M{c o:}bius, August Ferdinand. 1827. {it:Der barycentrische Calcul: ein neues H{c u:}lfsmittel zur analytischen Behandlung der Geometrie} 
 {it:dargestellt und insbesondere auf die Bildung neuer Classen von Aufgaben und die Entwicklung mehrerer Eigenschaften der Kegelschnitte.} 
 Leipzig: Johann Ambrosius Barth. [1790{c -}1868] 
 
-{p 4 4 2}Upton, G.J.G. 2001. A toroidal scatter diagram for ternary variables.
+{p 4 8 2}Rollinson, H.R. 1993. 
+{it:Using Geochemical Data: Evaluation, Presentation, Interpretation.} 
+London: Longman. 
+
+{p 4 8 2}Upton, G.J.G. 2001. A toroidal scatter diagram for ternary variables.
 {it:The American Statistician} 55: 247{c -}250. 
 

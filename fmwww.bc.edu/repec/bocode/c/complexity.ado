@@ -1,5 +1,5 @@
-*! Date        : March 2025
-*! Version     : 5.0
+*! Date        : June 2025
+*! Version     : 6.0
 *! Author      : Charlie Joyez, Universite Cote d'Azur
 *! Email	   : charlie.joyez@univ-cotedazur.fr
 
@@ -8,7 +8,7 @@
 * See Tachela et al (2012) for fitness method.
 
 
-*Major changes :  v2.0 Add MR computation and fitness one. Method() option is added to chose the computation technique
+*Major changes :  v2.0 Add MR computation and fitness. Method() option is added to chose the computation technique
 			   *  v2.1 Add the sign correction for Eigenvector method by correlating with MR
 			   *  v3.0 method() option added, including both MR and fitness. Bug fix for small values, and iteration choice for MR method
 			   *  v3.0 Returns EV Stata matrix
@@ -16,12 +16,14 @@
 			   *  v4.0 allows Stata variables as inputs. Therefore removes the .dta possibility for matsource (no longer useful)
 			   *  v4.0 introduces RCA option, and makes default input non RCA matrix
 			   *  v5.0 introduces Relatedness and Potential options. Changes the nodes names to activities.
+			   *  v5.1 generates actlist, the list of activities when proj(activities) is chosen. Only when input is Stata variables.
+			   *  v6.0 Replace Relatedness and Potential by Coherence and Outlook, more aligned with the literature.
 	
 			 
 capture program drop complexity
 program complexity, rclass
-	version 9
-	syntax , [ VARlist(varlist) Matrix(string) MATSource(string) Projection(string) METhod(string) ITERations(string) Xvar Transpose RCA RELatedness POTential]
+	version 11
+	syntax , [ VARlist(varlist) Matrix(string) MATSource(string) Projection(string) METhod(string) ITERations(string) Xvar Transpose RCA COHerence OUTlook Diversity Ubiquity target]
 
 	*****************
 *Options
@@ -31,12 +33,27 @@ program complexity, rclass
 	 display as err "invalid options : varlist() or matsource() required."
 	 exit 198
 	}
-	
+		
 	*Varlist : use varlist as specilisation inputs
 	if "`varlist'"!="" {
+quie describe
+local k=r(k)
+local N=r(N)
+if `k'>`N' & `k'>400{
+	capture set matsize `k'
+}
+if `k'<=`N' & `k'>400{
+	capture set matsize `N'
+}
 capture matrix drop A
 mkmat `varlist' ,mat(A)
 mata comp_M=st_matrix("A")
+preserve 
+keep `varlist'
+quie des
+local k=r(k)
+mata actlist=st_varname((1..`k'))'
+restore
 }
 
 	***MATSource if not Varlist
@@ -56,15 +73,7 @@ if "`matsource'"!=""{
 		if "`matsource'"=="matrix"{ /*Stata matrix*/
 			 mata comp_M=st_matrix(`"`matrix'"')
 		}
-		/*
-		if "`matsource'"=="dta" | "`matsource'"==".dta" {
-			preserve
-			use `"`matrix'"',clear 
-			mata comp_M=st_data(.,.)
-			restore
-		}
-		*/
-		}
+	}
 	else{
 	mata comp_M=`matrix'
 	}
@@ -83,33 +92,31 @@ if "`matsource'"!=""{
         exit 198
     }	
 
-	*Alternative methods (MR, eingenvalue, fitness)
+	*Alternative methods (MR, eingenvector, fitness)
 		if (mi(`"`method'"')){
-        local method="eigenvalue"
+        local method="eigenvector"
     }
-	    if !inlist(`"`method'"', "", "eigenvalue", "mr", "fitness") {
-        display as err "invalid option {res}method() {err}, only {res}mr {err} (Method of Reflections), {res}fitness {err}  or  {res}eigenvalue {txt}(default) arguments are possible"
+	    if !inlist(`"`method'"', "", "eigenvector", "mr", "fitness") {
+        display as err "invalid option {res}method() {err}, only {res}mr {err} (Method of Reflections), {res}fitness {err}  or  {res}eigenvector {txt}(default) arguments are possible"
         exit 198
     }	
 
-	*Iterations (for MR only (and sign correction in Eigenvalue))
+	*Iterations (for MR only (and sign correction in eigenvector))
 if "`method'"=="fitness"{
 	if (mi(`"`iterations'"')){
 	}
 	else{
-	noi di "note: iteration option not considered. Only for MR method"
+	noi di "note: iteration option not considered in eigenvector method."
 	}
 }
 
-*if "`method'"!="fitness"{
 	if (mi(`"`iterations'"')){
         local it=20 /*default nb of iteration : 20 as recommended by Hidalgo for the Economic Complexity*/
     }
 	else{
 	local it=`"`iterations'"'
-	*di `it'
 	}
-	*noi di "iteration nb:" `it'
+	
 	capture set obs 1
 	capture drop _iterisodd_
 	gen _iterisodd_=mod(`it',2)
@@ -127,6 +134,7 @@ if "`method'"=="fitness"{
 		mata comp_M=comp_M'
 	}
 	
+
 **********************	
 ***** Core of program
 **********************
@@ -137,15 +145,38 @@ if "`rca'"==""{
 mata comp_M=t
 }
 
-mata comp_M=mm_cond(comp_M:<1,0,1) /*make binary matrix if not initially, requires more_mata from SSC*/
+mata comp_M=comp_M:>1 
 	
 	mata comp_D=rowsum(comp_M) /*Diversification*/
 
 	mata comp_U=rowsum(comp_M') /*ubiquity*/
 
-
+if "`xvar'"==""{
+	if "`diversity'"!=""{
+	capt drop Diversity
+	capt drop comp_D
+	getmata comp_D,force
+	rename comp_D Diversity
+	su Diversity
+	}
+	if "`ubiquity'"!=""{
+	capt drop Ubiquity
+	capt drop comp_U
+	getmata comp_U,force
+	rename comp_U Ubiquity
+	capt drop actlist
+	capture getmata actlist, force
+	su Ubiquity
+    capt order actlist, before(Ubiquity)
+	}
+}
+if "`xvar'"!=""{
+noi di "note : Xvar option specified. No Stata variable created"
+}
+	
 
 if "`method'"!="fitness"{
+
 *Method of Reflection
 	
 	mata kc0=comp_D
@@ -160,10 +191,17 @@ if "`method'"!="fitness"{
 *Stop iteration before it if ranking stops to vary
 local optiter=`it'  /*optimal iteration set to max iteration initialy, changes if optimal iteration found*/
 local ns=0
-forvalues j=2 (2)`it'{
+forvalues j=4 (2)`it'{
 	local jm2=`j'-2
-	mata st_matrix("_newiter",kc`j')
-	mata st_matrix("_olditer",kc`jm2')	
+	local km2=`k'-2
+		if "`projection'"!="activities"{
+		mata st_matrix("_newiter",kc`j')
+		mata st_matrix("_olditer",kc`jm2')	
+		}
+		if "`projection'"=="activities"{
+		mata st_matrix("_newiter",kp`k')
+		mata st_matrix("_olditer",kp`km2')		
+		}	
 	capture drop _newiter _olditer 
 	capture drop _old_rank _new_rank _drank
 		svmat _newiter 
@@ -183,24 +221,26 @@ forvalues j=2 (2)`it'{
 		local ns=`ns'+1
 			if `ns'==1 {
 				if  "`method'"=="mr"{
-					noi di "note : MR's optimal iteration reached at the `j'th"
+					noi di "note : MR's ranking stable after `j' iteration. Iterations stopped."
 				}
 				local optiter=`j'
 			mata mkc`optiter'=sum(kc`optiter')/rows(kc`optiter')
 			mata dkc`optiter'=(kc`optiter':-mkc`optiter')
 			mata sdkc`optiter'=sqrt((1/rows(kc`optiter'))*(sum(dkc`optiter':^2)))
 			mata comp_i_MR=(kc`optiter' :- mkc`optiter') :/sdkc`optiter'
+			mata comp_i_MR=editmissing(comp_i_MR,0)
 			}
 		}
-			
-		if `s'!=0 & `j'==`it' { 
+		
+		if `ns'==0 & `s'!=0 & `j'==`it' { 
 			if"`method'"=="mr"{ /*rank still changes but max iter reached*/
-				noi di "note : MR's optimal iteration is of higher order than specified" 
+				noi di "note : MR's optimal iteration is of higher order than the `it' specified" 
 			}
 		mata mkc`it'=sum(kc`it')/rows(kc`it')
 		mata dkc`it'=(kc`it':-mkc`it')
 		mata sdkc`it'=sqrt((1/rows(kc`it'))*(sum(dkc`it':^2)))
 		mata comp_i_MR=(kc`it' :- mkc`it') :/sdkc`it'
+		mata comp_i_MR=editmissing(comp_i_MR,0)
 		}
 	}
 	
@@ -211,11 +251,13 @@ forvalues j=2 (2)`it'{
 		mata dkp`itm1'=(kp`itm1':-mkp`itm1')
 		mata sdkp`itm1'=sqrt((1/rows(kp`itm1'))*(sum(dkp`itm1':^2)))
 		mata comp_a_MR=(kp`itm1' :- mkp`itm1') :/sdkp`itm1'	
-	
+		mata comp_a_MR=editmissing(comp_a_MR,0)
 
+		
 
-*EigenValue Method 
+*Eigenvector Method 
 if "`method'"!="mr"{
+	
 	*Problem in mata with very small numbers, sometimes return missing eigensystem: Solved with inflate if missing values.
 	*If eingensystem missing, then inflate square matrix by a fixed value. Doesn't change the selected eigenvector
 			
@@ -229,7 +271,7 @@ if "`method'"!="mr"{
 		mata if (mis>0) inflate=1  ; ;
 		mata eigensystemselecti(comp_R, (1,2), comp_X=., comp_L=.) 
 		mata comp_K=comp_X[.,2]
-		 /*Eigenvector of M~cc′\tilde{M}_{c{c}'}​M​~​​​cc​′​​​​ associated with the second largest eigenvalue.*/
+		 /*Hidalgo : Eigenvector of M~cc′\tilde{M}_{c{c}'}​M​~​​​cc​′​​​​ associated with the second largest eigenvalue.*/
 		mata comp_k=sum(comp_K)/rows(comp_K)
 		mata comp_d=(comp_K:-comp_k):^2
 		mata comp_std=sqrt((1/rows(comp_R))*sum(comp_d))
@@ -238,7 +280,7 @@ if "`method'"!="mr"{
 	mata comp_i=Re(Comp_i)
 	mata st_matrix("Complexity_i", comp_i)		 
 
-	
+
 	*Complexity of activities
  
 		mata comp_V=(comp_M':/comp_U)*(comp_M:/comp_D)
@@ -249,7 +291,7 @@ if "`method'"!="mr"{
 		mata if (mis>0) inflate_V=1; ;
 		mata		 eigensystemselecti(comp_V, (1,2), comp_X=., comp_L=.)
 		mata comp_Q=comp_X[.,2] 
-		/*Eigenvector of M~cc′\tilde{M}_{c{c}'}​M​~​​​cc​′​​​​ associated with the second largest eigenvalue.*/
+		/*Hidalgo : Eigenvector of M~cc′\tilde{M}_{c{c}'}​M​~​​​cc​′​​​​ associated with the second largest eigenvalue.*/
 		mata comp_q=sum(comp_Q)/rows(comp_Q)
 		mata comp_d=(comp_Q:-comp_q):^2
 		mata comp_stdev=sqrt((1/rows(comp_Q))*sum(comp_d))
@@ -258,13 +300,13 @@ if "`method'"!="mr"{
 
 	mata comp_a=Re(Comp_a)
 	mata st_matrix("Complexity_a", comp_a)		 
-	
 
 *Correct ECI/PCI sign if required : Correlate with MR : comp_a real complexity vector
 	quietly{
 		mata st_matrix("comp_i_MR", comp_i_MR)
 		mata st_matrix("comp_a_MR", comp_a_MR)
-		
+		 mata comp_i_MR=editmissing(comp_i_MR,0)
+		 mata comp_a_MR=editmissing(comp_a_MR,0)
 		count
 		local n=r(N)
 		svmat Complexity_i
@@ -297,7 +339,8 @@ if "`method'"!="mr"{
 		drop Complexity_a1 comp_a_MR1	
 		capture rename Complexity_a1 Complexity_a
 		drop if _n>`n'
-	}
+	
+}
 }
 
 	
@@ -308,10 +351,7 @@ if "`method'"!="mr"{
 		 quie count
 		 local N=r(N)
 		 mata n=rows(comp_M)
-		 *mata n
 		 mata st_local("n", strofreal(n))
-		 *noi di `n'
-		 
 		 if `n'>`N'{
 		 set obs `n'
 		 }
@@ -324,13 +364,13 @@ if "`method'"!="mr"{
 		 quie count
 		 local N=r(N)
 		 mata n=rows(comp_M')
-		 *mata n
 		 mata st_local("n", strofreal(n))
-		 *noi di `n'
 		 
 		 if `n'>`N'{
 		 set obs `n'
 		 }
+		 capture getmata actlist, force
+		
 		 capture drop Complexity_a
 		 svmat Complexity_a
 		 capture rename Complexity_a1 Complexity_a
@@ -344,29 +384,30 @@ if "`method'"!="mr"{
 		 quie count
 		 local N=r(N)
 		 mata n=rows(comp_M)
-		 *mata n
 		 mata st_local("n", strofreal(n))
-		 *noi di `n'
+
 		 
 		 if `n'>`N'{
 		 set obs `n'
 		 }
+
 		capture drop MR_Complexity_i
 		svmat comp_i_MR
 		capture rename comp_i_MR MR_Complexity_i
+
 		}
 		
 	   else{
 		 quie count
 		 local N=r(N)
 		 mata n=rows(comp_M')
-		 *mata n
-		 mata st_local("n", strofreal(n))
-		 *noi di `n'
+		 mata st_local("n", strofreal(n)) 
 		 
 		 if `n'>`N'{
 		 set obs `n'
 		 }
+		 capture getmata actlist, force
+
 		 capture drop MR_Complexity_a
 		 svmat comp_a_MR
 		 capture rename comp_a_MR MR_Complexity_a
@@ -391,62 +432,112 @@ if "`method'"!="mr"{
 	return scalar iterations=`it'
 }	
 	
-
+		
 		*Fitness
 if "`method'"=="fitness"{
-	mata fkc0=comp_D
-	mata fkp0=comp_U
+	mata fkc0=comp_D:/comp_D
+	mata fkp0=comp_U:/comp_U
+	mata fkc0=editmissing(kc0,1)
+	mata fkp0=editmissing(kp0,1)
 	
 	forvalues j=1/`it'{
 	local k=`j'-1
 	mata fkc`j'=(comp_M*fkp`k')
 	mata mfkc`j'=sum(fkc`j')/rows(fkc`j')
 	mata fkc`j' = fkc`j':/mfkc`j'
+	quie mata fkc`j'=editmissing(fkc`j',0)
 	 
 	mata fkp`j'=(comp_M'*(1:/fkc`k'))
 	mata mfkp`j'=sum(fkp`j')/rows(fkp`j')
 	mata fkp`j' = fkp`j':/mfkp`j'
+	quie mata fkp`j'=editmissing(fkp`j',0)
 	}
-	mata st_matrix("fitness_i", fkc`it')
-	mata st_matrix("fitness_a", fkp`it')
+	
+			*Convergence 
+			
+	local optiter=`it'  /*optimal iteration set to max iteration initialy, changes if optimal iteration found*/
+	local ns=0
+	forvalues j=1/`it'{
+		local jm1=`j'-1
+		if "`projection'"!="activities"{
+		mata st_matrix("_newiter",fkc`j')
+		mata st_matrix("_olditer",fkc`jm1')	
+		}
+		if "`projection'"=="activities"{
+		mata st_matrix("_newiter",fkp`j')
+		mata st_matrix("_olditer",fkp`jm1')		
+		}
+		capture drop _newiter _olditer 
+		capture drop _old_rank _new_rank _drank
+			svmat _newiter 
+			svmat _olditer
+			gen _ini_rank = _n
+			sort _newiter
+			gen _new_rank=_n
+			sort _olditer
+			gen _old_rank=_n
+			gen _drank=_new_rank-_old_rank
+			sort _ini_rank
+			qui su _drank
+			local s=r(max) /*s captures max changes in rank*/
+			
+				drop _newiter _olditer 
+				drop _old_rank _new_rank _drank _ini_rank
+			if `s'==0 { /*rank stops to change (max delta rank=0)*/
+			local ns=`ns'+1
+				if `ns'==1 {
+						noi di "note : Fitness ranking stable after `j' iteration. Iterations stopped."
+				local optiter=`j'
+				mata fitness_i=fkc`optiter'
+				mata fitness_a=1:/fkp`optiter'	
+				mata fitness_a=editmissing(fitness_a,0)
+				}
+			}
+				
+			if `ns'==0 & `s'!=0 & `j'==`it' { /*rank still changes but max iter reached*/
+					noi di "note : Fitness optimal iteration is of higher order than the `it' specified" 
+				mata fitness_i=fkc`it'
+				mata fitness_a=1:/fkp`it'
+				mata fitness_a=editmissing(fitness_a,0)
 
+			}
+		}
+	
 	if "`projection'"!="activities"{
 		capture drop fitness_i
 		if "`xvar'"==""{
-			capture drop fitness_i
-			svmat fitness_i
-			capture rename fitness_i1 fitness_i
+			getmata fitness_i,force
 			}
 		}
 	else{
 		capture drop fitness_a
 		if "`xvar'"==""{
-			capture drop fitness_a
-			svmat fitness_a
-			capture rename fitness_a1 fitness_a
+			getmata fitness_a,force
+			capture getmata actlist, force
+		    capt order actlist, before(fitness_a)
 			}
 		}
-	capt drop complexity_a
-	capture replace fitness_a=1/fitness_a
-	mata fitness_i=fkc`it'
-	mata fitness_a=1:/fkp`it'
-	*mata complexity_a=1:/fkp`it'
+
+	mata st_matrix("fitness_i", fitness_i)	
 	mata st_matrix("fitness_a", fitness_a)
 	mata st_matrix("Ubiquity", fkp0)
 	mata st_matrix("Diversity", fkc0)
+	
 	return matrix Ubiquity=Ubiquity
 	return matrix Diversity=Diversity
 	return matrix Fitness_individual=fitness_i
-	return matrix Fitness_aode=fitness_a
-	*return matrix Complexity_aode=complexity_a
+	return matrix Fitness_a=fitness_a
 	return scalar iterations=`it'
 }
-if "`method'"=="eigenvalue"{
+
+if "`xvar'"==""{
+if "`method'"=="eigenvector"{
 	if "`projection'"=="indiv"{
 		su Complexity_i
 	}
 	if "`projection'"=="activities"{
 		su Complexity_a
+		capt order actlist, before(Complexity_a)
 	}
 }
 if "`method'"=="mr"{
@@ -455,6 +546,7 @@ if "`method'"=="mr"{
 	}
 	if "`projection'"=="activities"{
 		su MR_Complexity_a
+		capt order actlist, before(MR_Complexity_a)
 	}
 }
 
@@ -466,65 +558,71 @@ if "`method'"=="fitness"{
 		su fitness_a
 	}		
 }
+}
 
-if "`relatedness'"!=""{ 
+*** Coherence
+if "`coherence'"!=""{ 
 	mata P1n=(comp_M'*comp_M):/comp_U /*Conditional Probability of being specialized in i knowing specoalization in j, see Hidalgo et al. 2007*/
 	mata P2n=P1n' /*proba of the reverse*/
-	mata Prox_a=mm_cond(P1n:<P2n,P1n,P2n) /*minimum of the two*/
+	mata Prox_a=P1n:*(P1n:<P2n)+P2n:*(P2n:<P1n)  /*minimum of the two*/
 	mata Prox_a=Prox_a:-diag(Prox_a) /*remove self loops*/
 
 	mata P1i=(comp_M*comp_M'):/comp_D 
 	mata P2i=P1i' 
-	mata Prox_i=mm_cond(P1i:<P2i,P1i,P2i) 
+	mata Prox_i=P1i:*(P1i:<P2i)+P2i:*(P2i:<P1i) /*minimum of the two*/
 	mata Prox_i=Prox_i:-diag(Prox_i) 
 
 
-	mata t=mm_cond(t:==.,0,t)
-	 mata R_i=diagonal(t:/comp_D*Prox_a*t':/comp_U)
-	 /*relatedness of individuals (eg countries) as average proximity of activities they are specialized in . Works even better for weighted Mcp (RCA) matrices (not Prox)*/
-	 
-	 mata R_a=diagonal(t':/comp_U*Prox_i*t:/comp_D)
+	quie mata t=editmissing(t, 0)
+	
+	mata  coherence_i = diagonal(t * Prox_a * t') 
+
+	 mata coherence_a = diagonal(t' * Prox_i * t)
 	 
 	 	if "`projection'"=="activities"{
-			getmata R_a, force
-			capture drop Relatedness_a
-			rename R_a Relatedness_a
-			quie su Relatedness_a
-			local mR=r(mean)
-			local sR=r(sd)
-			replace Relatedness_a=(Relatedness_a-`mR')/`sR'
+			capture drop coherence_a
+			if "`xvar'"==""{
+				getmata coherence_a, force
+				quie su coherence_a
+	
+			}
 		}
 	 
 		if "`projection'"=="indiv"{
-			getmata R_i, force
-			capture drop Relatedness_i
-			rename R_i Relatedness_i
-			quie su Relatedness_i
-			local mR=r(mean)
-			local sR=r(sd)
-			replace Relatedness_i=(Relatedness_i-`mR')/`sR'
+			capture drop coherence_i
+			if "`xvar'"==""{
+				getmata coherence_i, force
+				quie su coherence_i
+			}
 		}
 	}		
-			
-	if "`potential'"!=""{
-		mata AvNeiComp=Prox_a*comp_a /*sum of complexity of neigbhoring activities*/
-		mata invMcp=mm_cond(comp_M:>0,0,1)
-		mata comp_apos=mm_cond(comp_a:<0,0,comp_a)/*only positive complexity goods to be considered*/
-		mata AvNeiComppot=(((T:/rowsum(T))*Prox_a):*invMcp)*comp_apos /*Average neighboring potential of goods not yet exported */
-		mata AvNeiComppot=Re(AvNeiComppot)
-		getmata AvNeiComppot,force
-		capt drop CompPotential_i
-		rename AvNeiComppot CompPotential_i
-		*mata Comp_a=Re(Comp_a)
-		*mata IsComplex_a=mm_cond(Comp_a:>0,1,0)'
-		*mata Prox2=mm_cond(Prox_a:>0.3,1,0) 
-		*mata Target=(comp_M*Prox2:*invMcp):*IsComplex_a
-		mata Target=(((T:/rowsum(T))*Prox_a):*invMcp):*comp_a' /*complexity of a good not yet exported weighted by its proximity to current specialization*/
-		mata Target=mm_cond(Target:<0,0,Target) 
-			
-			getmata (target*)=Target,force
-		}
 
+	
+	***COI
+	if "`outlook'"!=""{
+		mata P1n=(comp_M'*comp_M):/comp_U /*Conditional Probability of being specialized in i knowing specoalization in j, see Hidalgo et al. 2007*/
+		mata P2n=P1n' /*proba of the reverse*/
+		mata Prox_a=P1n:*(P1n:<P2n)+P2n:*(P2n:<P1n)  /*minimum of the two*/
+		mata Prox_a=Prox_a:-diag(Prox_a) /*remove self loops*/
+	
+		mata dist=(1:-comp_M)
+		mata d=(dist*Prox_a):/colsum(Prox_a)
+
+		mata COI=((1:-d):*dist)*comp_a /*see https://atlas.hks.harvard.edu/glossary*/
+		
+		capt drop COI
+		if "`xvar'"==""{
+			getmata COI
+		}
+		
+		mata invMcp=dist
+		mata Target=(((T:/rowsum(T))*Prox_a):*invMcp):*comp_a' /*complexity of a good not yet exported weighted by its proximity to current specialization*/
+		mata Target=Target:*(Target:>=0)
+			if "`xvar'"=="" & "`target'"!=""{
+				getmata (target*)=Target,force
+			}
+		}
+		
 
 
 	end

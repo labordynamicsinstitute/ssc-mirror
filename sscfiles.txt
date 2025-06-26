@@ -16076,7 +16076,6 @@ fmwww.bc.edu/repec/bocode/t/taba.pkg
 fmwww.bc.edu/repec/bocode/t/tex2col.pkg
 fmwww.bc.edu/repec/bocode/t/twgravity.pkg
 fmwww.bc.edu/repec/bocode/t/tw3xls_example.do
-fmwww.bc.edu/repec/bocode/t/triplot.html
 fmwww.bc.edu/repec/bocode/t/tex2col.ado
 fmwww.bc.edu/repec/bocode/t/takelist.hlp
 fmwww.bc.edu/repec/bocode/t/tab2mat.ado
@@ -16125,7 +16124,6 @@ fmwww.bc.edu/repec/bocode/t/toroman.sthlp
 fmwww.bc.edu/repec/bocode/t/tosql.pkg
 fmwww.bc.edu/repec/bocode/t/treatoprobitsim.sthlp
 fmwww.bc.edu/repec/bocode/t/test_sandwich.sthlp
-fmwww.bc.edu/repec/bocode/t/triplot.hlp
 fmwww.bc.edu/repec/bocode/t/tabletutorial_16.ihlp
 fmwww.bc.edu/repec/bocode/t/tabmenu1.hlp
 fmwww.bc.edu/repec/bocode/t/texmerge.sthlp
@@ -16746,6 +16744,7 @@ fmwww.bc.edu/repec/bocode/t/tabsort6.html
 fmwww.bc.edu/repec/bocode/t/tsspell.sthlp
 fmwww.bc.edu/repec/bocode/t/twowayfeweights.pkg
 fmwww.bc.edu/repec/bocode/t/tabletutorial_17.ihlp
+fmwww.bc.edu/repec/bocode/t/triplot.sthlp
 fmwww.bc.edu/repec/bocode/t/tsplot.ado
 fmwww.bc.edu/repec/bocode/t/tkdensity.html
 fmwww.bc.edu/repec/bocode/t/to_gregorian.ado
