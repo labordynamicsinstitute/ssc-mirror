@@ -37,6 +37,7 @@ p splitit module to split chronological overlapping spells in spell data
 p spsfe module for estimation of spatial stochastic frontier models
 p sq module for sequence analysis
 p stackdid module to estimate Stacked Difference-in-Differences Regression
+p stackedev module to implement stacked event study estimator
 p staggered module implementing R staggered package based on Roth and Sant'Anna (2023)
 p standsurv module to compute standardized (marginal) survival and related functions
 p stata_linter module providing a tool to detect and correct bad Stata coding practices
