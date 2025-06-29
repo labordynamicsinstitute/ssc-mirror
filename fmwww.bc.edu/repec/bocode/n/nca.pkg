@@ -14,12 +14,12 @@ d KW: nca
 d
 d Requires: Stata version 15
 d
-d Distribution-Date: 20250424
+d Distribution-Date: 20250628
 d
 d Author: Daniele Spinelli, University of Milano Bicocca
 d Support: email daniele.spinelli@@unimib.it
 d
-d Author: Jan Dul , Rotterdam School of Management,  Erasmus University Rotterdam
+d Author: Jan Dul, Rotterdam School of Management, Erasmus University Rotterdam
 d Support: email jdul@@rsm.nl
 d
 f nca.ado
@@ -30,6 +30,7 @@ f nca_estimate.ado
 f nca_get_centiles.ado
 f nca_parse_scope.ado
 f nca_random.ado
+f nca_perm.ado
 f nca_power.ado
 f nca_test.ado
 f nca_examples.do
