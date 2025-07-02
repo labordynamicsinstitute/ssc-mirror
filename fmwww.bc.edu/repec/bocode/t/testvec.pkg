@@ -1,0 +1,22 @@
+d 'TESTVEC': module to retrieve cointegrating vectors from vec 
+d
+d   testvec can be run after a vec command to retrieve the
+d estimated cointegrating vectors and	 place them in the
+d e-returns. This permits commands such as test, testparm and
+d lincom to be applied	  to the point and interval estimates of
+d the cointegrating vectors. 
+d
+d KW: vec
+d KW: vector error correction model
+d KW: cointegrating vectors
+d KW: cointegration
+d
+d Requires: Stata version 12 
+d
+d Distribution-Date: 20250701
+d
+d Author: Kit Baum, Boston College
+d Support: email baum@@bc.edu
+d
+f testvec.ado
+f testvec.sthlp

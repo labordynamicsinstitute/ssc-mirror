@@ -46,6 +46,7 @@ p testijfe module to perform test for instrument validity in the judge fixed eff
 p testjfe module to perform test for instrument validity in the Judge fixed effects design
 p testmnt module to test sshfs
 p testout module to execute diagnostic testing of outliers
+p testvec module to retrieve cointegrating vectors from vec 
 p tex2col module to Split Text into Columns
 p tex3pt module to produce LaTeX documents from estout with threeparttable
 p tex_equal module to compare text files

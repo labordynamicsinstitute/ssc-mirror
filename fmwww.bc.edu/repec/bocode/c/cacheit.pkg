@@ -2,19 +2,19 @@ d 'CACHEIT': module to cache all other Stata commands
 d
 d      The cacheit command allows for all output and returned
 d elements of any commands to be saved (cached), and reloaded in
-d the	 future without re-running the command. When cacheit is used,
-d it will check if the indicated command has been previously   
-d issued and cached by the user, and if so reload all elements
+d the	 future without re-running the command. When cacheit is
+d used, it will check if the indicated command has been previously 
+d   issued and cached by the user, and if so reload all elements
 d returned by the command, along with command output, without	
 d re-running the command itself.  Otherwise, if no previously
-d cached result for the command exists, cacheit will run the   
+d cached result for the command exists, cache will run the   
 d command, and cache all output and returns for future uses.   
-d cache is useful if slow or resource-intensive commands are run
+d cacheit is useful if slow or resource-intensive commands are run
 d more than once, as after the first time they are run all   
 d output can be simply accessed from the previously saved version,
-d saving on all processing time. cacheit works with all valid   
+d saving on all processing time. cache works with all valid   
 d Stata commands and is issued as a prefix before the desired
-d command. cacheit stores all command output for the future, or
+d command.     cacheit stores all command output for the future, or
 d loads all elements returned or otherwise altered by the command  
 d  including (where relevant): elements accessible after the
 d command in the ereturn, sreturn or return lists; graphical   
@@ -26,7 +26,7 @@ d KW: commands
 d
 d Requires: Stata version 16.1
 d
-d Distribution-Date: 20250622
+d Distribution-Date: 20250623
 d
 d Author:  R.Andres Castaneda, World Bank
 d Support: email  acastanedaa@@worldbank.org
@@ -41,4 +41,4 @@ f cacheit_examples.ado
 f cacheit_hash.ado
 f cacheit_list.ado
 f cacheit_utils.ado
-
+f cache_setup.do

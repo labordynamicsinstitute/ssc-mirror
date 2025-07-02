@@ -15520,6 +15520,7 @@ fmwww.bc.edu/repec/bocode/t/tabletutorial_27.ihlp
 fmwww.bc.edu/repec/bocode/t/telomerase.dta
 fmwww.bc.edu/repec/bocode/t/tiva2023.ado
 fmwww.bc.edu/repec/bocode/t/tw3xls.ado
+fmwww.bc.edu/repec/bocode/t/testvec.sthlp
 fmwww.bc.edu/repec/bocode/t/textbarplot.ado
 fmwww.bc.edu/repec/bocode/t/tarow.pkg
 fmwww.bc.edu/repec/bocode/t/translog.sthlp
@@ -15683,6 +15684,7 @@ fmwww.bc.edu/repec/bocode/t/tobithetm.html
 fmwww.bc.edu/repec/bocode/t/trexqua.sthlp
 fmwww.bc.edu/repec/bocode/t/texmerge.ado
 fmwww.bc.edu/repec/bocode/t/tofirsttreat.sthlp
+fmwww.bc.edu/repec/bocode/t/testvec.pkg
 fmwww.bc.edu/repec/bocode/t/tobithetm_lfn.ado
 fmwww.bc.edu/repec/bocode/t/treecluster.pkg
 fmwww.bc.edu/repec/bocode/t/triplot.sthlp
@@ -16343,6 +16345,7 @@ fmwww.bc.edu/repec/bocode/t/to_gregorian.ado
 fmwww.bc.edu/repec/bocode/t/twitter2s.ado
 fmwww.bc.edu/repec/bocode/t/tabhbar.html
 fmwww.bc.edu/repec/bocode/t/tpvar.html
+fmwww.bc.edu/repec/bocode/t/testvec.ado
 fmwww.bc.edu/repec/bocode/t/tsoumpou2009cancertreatrevfig2WNL.dta
 fmwww.bc.edu/repec/bocode/t/teenage.dta
 fmwww.bc.edu/repec/bocode/t/twofold.sthlp
