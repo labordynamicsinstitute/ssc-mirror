@@ -21,7 +21,7 @@ d KW: meta-regression
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20231114
+d Distribution-Date: 20250702
 d
 d Author: Victoria Nyawira Nyaga, Belgian Cancer Center/Unit of Cancer Epidemiology, Brussels
 d Support: email Victoria.NyawiraNyaga@@sciensano.be
@@ -30,7 +30,7 @@ f metapreg.ado
 f metapreg.sthlp
 f metapreg_examples.ado
 f ../l/lmetapreg.mlib
-f ../b/bcg.dta
-f matched.dta
-f ../p/paired.dta
-f ../s/schizo.dta
+f ../b/bender2018fig2.dta
+f ../h/hemkens2016analysis18.dta
+f ../h/hemkens2016analysis110.dta
+f ../r/repro.dta

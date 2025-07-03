@@ -36,6 +36,7 @@ p marker module to generate indicator variable marking desired sample
 p markov module to generate Markov probabilities
 p markovci module for computing nonparametric bootstrapped confidence intervals for discrete time Markov chains
 p markovfirstorder module for ssessing whether a sequence follows an independent state model or a first-order Markov chain model
+p markovmfpt module to compute mean first passage time for ergodic Markov chains
 p markovpredict module for predicting the next state of a Markov chain model given specified past states 
 p markovtheotrans module to to test whether a discrete time Markov chain is consistent with a theoretical transition matrix
 p markstat module to support literate data analysis using Stata and Markdown

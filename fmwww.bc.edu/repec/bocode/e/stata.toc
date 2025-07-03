@@ -26,6 +26,7 @@ p egenmore modules to extend the generate function
 p egfr module to calculate estimated glomerular filtration rate (eGFR)
 p egi module to calculate Ellison and Glaeser's index of geographical concentration
 p egranger module to perform Engle-Granger cointegration tests and 2-step ECM estimation
+p ehutchens module computing Hutchens `square root' segregation index, with decompositions by subgroup
 p eitc module to compute U.S. Earned Income Tax Credit receipts
 p elabel module to extend the label commands
 p elapse module to calculate elapsed time in procedure 

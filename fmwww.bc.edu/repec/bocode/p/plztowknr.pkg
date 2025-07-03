@@ -2,7 +2,7 @@ d 'PLZTOWKNR': module to translate German zip codes into electoral districts
 d
 d  The PLZTOWKNR module translates German zip codes into electoral
 d districts for the German federal elections of 1998, 2002, 2005,
-d 2009, 2013, or 2017. PLZTOWKNR generates a new variable which
+d 2009, 2013, 2017, 2021, or 2025. PLZTOWKNR generates a new variable which
 d contains the electoral district number. If a zip codes
 d corresponds to more than one electoral districts, the module
 d generates a new variable for each potential electoral district.
@@ -16,22 +16,24 @@ d KW: electoral districts
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20210319
+d Distribution-Date: 20250702
 d
-d Author: Konstantin Glinitzer , GESIS Leibniz-Institute for the Social Sciences
-d Support: email konstantin.glinitzer@@gesis.org
+d Author: Anne-Kathrin Stroppe, GESIS Leibniz-Institute for the Social Sciences
+d Support: email anne-kathrin.stroppe@gesis.org 
 d
-d Author: Tobias Gummer,  GESIS Leibniz-Institute for the Social Sciences
-d Support: email tobias.gummer@@gesis.org
-d
-d Author: Malte Kaukal, Hessisches Statistisches Landesamt
-d Support: email malte.kaukal@@gmx.de
+d Author: Nils Jungmann, GESIS Leibniz-Institute for the Social Sciences
+d Support: email nils.jungmann@@gesis.org
 d
 d Author: Joss Roßmann, GESIS Leibniz-Institute for the Social Sciences
 d Support: email joss.rossmann@@gesis.org
 d
-d Author: Nils Jungmann, GESIS Leibniz-Institute for the Social Sciences
-d Support: email nils.jungmann@@gesis.org
+d Author: Malte Kaukal, Hessisches Statistisches Landesamt
+d Support: email malte.kaukal@@gmx.de
+d
+d Author: Konstantin Glinitzer, Austrian Court of Audit
+d
+d Author: Tobias Gummer,  GESIS Leibniz-Institute for the Social Sciences
+d Support: email tobias.gummer@@gesis.org
 d
 f plztowknr.ado
 f plztowknr.sthlp

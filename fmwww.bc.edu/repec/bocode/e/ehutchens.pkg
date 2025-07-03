@@ -1,0 +1,37 @@
+d 'EHUTCHENS': module computing Hutchens `square root' segregation index, with decompositions by subgroup
+d
+d   ehutchens is an extension of hutchens command, which computes
+d the `square root' segregation index  proposed by Hutchens (2004)
+d from individual-level data.	      The Hutchens' segregation
+d index, S, is an entropy-based index of inequality in the
+d distribution of   individuals across social units, defined for
+d the two-group case. The Hutchens segregation index satisfies
+d several desirable	    properties for a good numerical measure
+d of segregation, it is is additively decomposable by population
+d subgroup as the sum of within-group segregation (a weighted sum
+d of local S index values across subgroups) plus	
+d between-group segregation. The S is a distributional measure
+d around the marginal distribution of units, defined as the extent
+d of inequality between the social group proportions across social
+d units        and the proportion of social groups in the entire
+d population ("units given groups" notion). The S index is
+d normalized in the unit interval, with zero representing complete
+d integration, and one representing	    complete segregation.
+d Moreover, as an additive index, the S can written as a sum of the
+d contribution of each non-overlapping subgroup to the total
+d segregation, a unique feature across entropy-based indices. 
+d
+d KW: Hutchens index
+d KW: segregation
+d KW: decomposition
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20250702
+d
+d Author: Francisco I. Ceron, Pontificia Universidad Católica de Chile
+d Support: email fcerona@@uc.cl 
+d
+f ehutchens.ado
+f ../h/hu_int.ado
+f ehutchens.sthlp

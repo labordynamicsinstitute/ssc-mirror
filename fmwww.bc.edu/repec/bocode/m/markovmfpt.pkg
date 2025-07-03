@@ -1,0 +1,22 @@
+d 'MARKOVMFPT': module to compute mean first passage time for ergodic Markov chains
+d
+d  markovmfpt computes the mean time (number of steps) to go from
+d one state to another state for the first time in an ergodic
+d Markov chain, according to Grinstead and Snell (2012). 
+d
+d KW: Markov chain
+d KW: discrete time Markov chain
+d KW: transition probabilities
+d KW: mean first passage time
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250702
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f markovmfpt.ado
+f markovmfpt_all.ado
+f markovmfpt_ind.ado
+f markovmfpt.sthlp
