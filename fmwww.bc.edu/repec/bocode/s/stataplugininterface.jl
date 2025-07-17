@@ -9,8 +9,8 @@ using DataFrames, CategoricalArrays, Dates
 global const dllpath = Ref{String}(raw"c:\ado\plus\j\jl.plugin")  # where to look for plugin with accessible wrappers for Stata interface functions
 setdllpath(s::String) = (dllpath[] = s)
 
-global x, s, julia_task, julia_time, M  # used by C++ plugin to avoid contaminating Main name space
-public setdllpath, x, s, julia_task, julia_time
+global x, julia_task, julia_time, M  # used by C++ plugin to avoid contaminating Main name space
+public setdllpath, x, julia_task, julia_time
 
 global macrobuf = Vector{Int8}(undef, 15_480_200+1)  # can hold maximum-sized Stata macro
 
@@ -296,10 +296,12 @@ st_numscalar(scalarname, val) = begin SF_scal_save(scalarname, val); nothing end
 
 
 """
-    st_data(varnames::AbstractVector{<:AbstractString}, sample::Vector{Bool}=Bool[])::Matrix{Float64}
-    st_data(varnames::AbstractString, sample::Vector{Bool}=Bool[])::Matrix{Float64}
+    st_data(varnames::AbstractVector{<:AbstractString}, sample::Union{AbstractString, Vector{Bool}} = Bool[]) :: Matrix{Float64}
+    st_data(varnames::AbstractString, sample::Union{AbstractString, Vector{Bool}} = Bool[]) :: Matrix{Float64}
 
 Return one or more variables in a matrix. `varnames` is a vector of strings or space-delimited string of variable names.
+`sample` is the name of a variable to serve as a sample marker, or a vector of Booleans. 
+If `sample` is empty, all observations are included.
 """
 function st_data(varnames::AbstractVector{<:AbstractString}, sample::Vector{Bool}=Bool[])
     ind = st_varindex.(varnames)
@@ -315,12 +317,21 @@ function st_data(varnames::AbstractVector{<:AbstractString}, sample::Vector{Bool
     stataplugininterface.M
 end
 st_data(varnames::AbstractString, sample::Vector{Bool}=Bool[]) = st_data(split(varnames), sample)
+st_data(varnames, sample::AbstractString) = st_data(varnames, st_view(sample))
+
+function st_data(varnames, sample::AbstractMatrix{<:Number}) 
+    @assert isone(size(sample,2)) "Sample indicator must be a vector or a single-column matrix"
+    st_data(varnames, vec(collect(sample .!= 0)))
+end
+    
 
 """
-    st_view(varnames::AbstractVector{<:AbstractString}, sample::Vector{Bool}=Bool[])::Matrix{Float64}
-    st_view(varnames::AbstractString, sample::Vector{Bool}=Bool[])::Matrix{Float64}
+    st_view(varnames::AbstractString, sample::Union{AbstractString, Vector{Bool}} = Bool[]) :: Matrix{Float64}
+    st_view(varnames::AbstractVector{<:AbstractString}, sample::Union{AbstractString, Vector{Bool}} = Bool[]) :: Matrix{Float64}
 
 Return a matrix-like view onto one or more Stata variables. `varnames` is a vector of strings or space-delimited string of variable names.
+`sample` is the name of a variable to serve as a sample marker, or a vector of Booleans. 
+If `sample` is empty, all observations are included.
 """
 struct st_view{S} <: AbstractMatrix{Float64}  # S is Val(true) for views with defined samples
     nrows::Int64
@@ -340,6 +351,12 @@ function st_view(varnames::AbstractVector{<:AbstractString}, sample::Vector{Bool
     end
 end
 st_view(varnames::AbstractString, sample::Vector{Bool}=Bool[]) = st_view(split(varnames), sample)
+st_view(varnames, sample::AbstractString) = st_view(varnames, st_view(sample))
+
+function st_view(varnames, sample::AbstractMatrix{<:Number}) 
+    @assert isone(size(sample,2)) "Sample indicator must be a vector or a single-column matrix"
+    st_view(varnames, vec(collect(sample .!= 0)))
+end
 
 import Base.size, Base.getindex, Base.setindex!
 size(v::st_view) = v.nrows, v.ncols

@@ -1,4 +1,4 @@
-*! jl 1.1.7 28 March 2025
+*! jl 1.1.9 14 July 2025
 *! Copyright (C) 2023-25 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -42,6 +42,16 @@ program define assure_julia_started
   version 14.1
 
   if `"$julia_loaded"' == "" {
+    tempfile stdio stderr
+    tempname rc
+
+    if c(os)=="MacOSX" & c(machine_type)=="Macintosh (Intel 64-bit)" {
+      !sysctl -n sysctl.proc_translated > "`stdio'"
+      cap mata st_local("rc", _fget(_julia_fh = _fopen("`stdio'", "r")))
+      cap mata fclose(_julia_fh)
+      _assert "`rc'"!="1", msg("Can't load Julia when running under Rosetta. Disable Rosetta for Stata, restart Stata, and reinstall the julia package with {cmd:ssc install julia, replace}.") rc(198)
+    }
+    
     syntax, [threads(string) channel(string)]
     if !inlist(`"`threads'"', "", "auto") {
       cap confirm integer number `threads'
@@ -63,10 +73,7 @@ program define assure_julia_started
         wheresjulia
         if !0`r(success)' exit 198  // still can't run juliaup: give up
       }
-
       local bindir `r(bindir)'
-      tempfile stdio stderr
-      tempname rc
 
       qui !`bindir'julia +`channel' -e '1' 2> "`stderr'"
       qui mata _fget(_julia_fh = _fopen("`stderr'", "r")); st_numscalar("`rc'", !fstatus(_julia_fh))  // if previous command good, then stderr empty and fget hit EOF, causing fstatus!=0
@@ -121,12 +128,13 @@ end
 
 cap program drop AddPkg
 program define AddPkg
+  version 14.1
   syntax name, [MINver(string)]
   plugin call _julia, eval `"Int(!("`namelist'" in keys(Pkg.project().dependencies)))"'
   local notinstalled: copy local __jlans
   if !`notinstalled' & "`minver'"!="" plugin call _julia, eval `"length([1 for v in values(Pkg.dependencies()) if v.name=="`namelist'" && v.version<v"`minver'"])"'
   if `notinstalled' | 0`__jlans' {
-    di as txt "The Julia package `namelist' is not installed and up-to-date in this package environment. Attempting to update it. This could take a few minutes." _n 
+    di as txt _n "The Julia package `namelist' is not installed and up-to-date in this package environment. Attempting to update it. This could take a few minutes."
     mata displayflush() 
     cap plugin call _julia, evalqui `"Pkg.add(PackageSpec(name=String(:`namelist') `=cond("`minver'"=="", "", `", version=VersionNumber(`:subinstr local minver "." ",", all') "')'))"'
     if _rc {
@@ -139,6 +147,7 @@ end
 
 cap program drop GetVarsFromDF
 program define GetVarsFromDF
+  version 14.1
   syntax [namelist] [if] [in], [source(string) replace COLs(string asis) noMISSing]
   if `"`source'"'=="" local source df
   if "`namelist'"=="" & `"`cols'"'!="" local namelist `cols'
@@ -184,6 +193,7 @@ end
 
 cap program drop PutVarsToDF
 program define PutVarsToDF
+  version 14.1
   syntax [varlist] [if] [in], [DESTination(string) COLs(string) DOUBLEonly noMISSing noLABel]
   if `"`destination'"'=="" local destination df
   local ncols = cond("`varlist'"=="", c(k), `:word count `varlist'')
@@ -327,6 +337,7 @@ program define jl, rclass
        plugin call _julia, eval `"size(`source',1)"'
        local rows: copy local __jlans
        plugin call _julia, eval `"size(`source',2)"'
+       _assert `rows' & `__jlans', rc(198) msg("cannot get matrix with height or width 0")
        mat `namelist' = J(`rows', `__jlans', .)
        plugin call _julia, GetMatFromMat `namelist' `"`source'"'
     }
@@ -336,7 +347,7 @@ program define jl, rclass
       plugin call _julia, PutMatToMat `namelist' `destination'
     }
     else {
-      di as err `"`cmd' is not a valid subcommand."'
+      di as err `"`cmd' is not a valid subcommand. Did you forget the ":" after "jl"?"'
       exit 198
     }
   }
@@ -377,6 +388,7 @@ end
 
 cap program drop jlcmd
 program define jlcmd, rclass
+  version 14.1
   cap _on_colon_parse `0'
   local __jlcmd  = trim(`"`s(after)'"')
   local 0 `"`s(before)'"'
@@ -481,3 +493,5 @@ program _julia, plugin using(jl.plugin)
 * 1.1.5 Add date/datetime support to -jl use-
 * 1.1.6 Fix 1.1.5 crash
 * 1.1.7 Automatically load InteractiveUtils
+* 1.1.8 Error if running under Rosetta
+* 1.1.9 Fix st_data() crash in macOS.Made st_data() and st_view() accept varname for sample marker
