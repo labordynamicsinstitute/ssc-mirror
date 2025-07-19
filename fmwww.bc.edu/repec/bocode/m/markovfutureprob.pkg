@@ -1,0 +1,21 @@
+d 'MARKOVFUTUREPROB': module to compute the probability distribution for future periods of a Markov chain
+d
+d  markovfutureprob computes the probability distribution of
+d expected states in future periods, given the specified current
+d state. 
+d
+d KW: Markov chain
+d KW: discrete time Markov chain
+d KW: transition probabilities
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250718
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f markovfutureprob.ado
+f markovfutureprob_ind.ado
+f markovfutureprob_all.ado
+f markovfutureprob.sthlp

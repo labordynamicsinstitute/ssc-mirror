@@ -1,0 +1,24 @@
+d 'ATTCIC': module to implement the attrition corrections from Ghanem et al. (2024b) and comparator approaches
+d
+d    attcic implements the CiC attrition corrections proposed in
+d Ghanem et al. (J of Econometrics, 2024).  These corrections
+d exploit baseline outcome data to recover the ATT-R, ATE-R, and
+d ATE, and can be applied to randomized experiments as well as
+d quasi-experimental difference-in-difference designs.	In addition
+d to these corrections, attcic also reports the results of
+d comparator approaches such as the IPW corrections, Manski bounds,
+d and Lee bounds. 
+d
+d KW: attrition
+d KW: DiD
+d KW: Lee bounds
+d
+d Requires: Stata version 14 and estout, leebounds from SSC (q.v.)
+d
+d Distribution-Date: 20250718
+d
+d Author: Karen Ortiz-Becerra, Knauss School of Business, University of San Diego
+d Support: email kortizbecerra@@sandiego.edu
+d
+f attcic.ado
+f attcic.sthlp

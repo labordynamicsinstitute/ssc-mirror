@@ -1,3 +1,4 @@
+*! 1.1.0 Ariel Linden 07Jul2025 // fixed labeling of tables to mirror value labels of sequence variable
 *! 1.0.0 Ariel Linden 17Jun2025 
 
 program markovtheotrans, rclass
@@ -8,7 +9,8 @@ program markovtheotrans, rclass
 				tempvar prev table
 				qui gen `prev' = `varlist'[_n-1]
 				label var `prev' "current"
-				
+				local lblname : value label `varlist'
+				label values `prev' `lblname'
 				tab `prev' `varlist', row matcell(`table')
 				
 				local rcnt = r(r)
@@ -35,13 +37,22 @@ program markovtheotrans, rclass
 					di as err "the transition probabilities matrix {bf:`trans'} does not have the same number of columns as in the empirical table"
 				}
 				
+				// check if the sequence variable has value labels
+				local lab: value label `varlist'
+				if `"`lab'"' != "" { 
+					getlab `varlist'                                
+					local names =  r(labels)
+					mat rownames `trans' = `names'
+					mat colnames `trans' = `names'
+				}	
+
 				di _n
 				local title2 title(Theoretical transition probabilities)
 				matlist `trans',  border(bottom) lines(oneline) tindent(10) left(10) aligncolnames(ralign) names(all)  twidth(8) format(%6.3f) `title2'
 
 				// get chisq and df from mata
 				mata: theor("`table'", "`trans'")
-
+				
 				local pval =  1-chi2(`df',`chisq')
 				di as txt _n "            chi2({bf:`df'}) = " as result %6.4f `chisq' as txt "   Pr = " as result %5.3f `pval'
 				
@@ -83,4 +94,33 @@ end
 			st_local("df", strofreal(df))	
 		}
 	
+end
+
+
+// this is based on Benn Jann's -labelsof- command
+	program getlab, rclass
+		version 11
+				syntax name
+
+				tempfile fn
+				qui label save `labdef' using `"`fn'"'
+				tempname fh
+				file open `fh' using `"`fn'"', read
+				file read `fh' line
+				local values
+				local labels
+				local space
+				while r(eof)==0 {
+					gettoken value line : line
+					gettoken value line : line
+					gettoken value line : line
+					gettoken value line : line
+					gettoken label line : line, parse(", ") match(paren)
+					local values "`values'`space'`value'"
+					local labels `"`labels'`space'`"`label'"'"'
+					file read `fh' line
+					local space " "
+				}
+				file close `fh'
+				ret local labels `"`labels'"'
 end

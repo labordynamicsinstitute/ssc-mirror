@@ -1,5 +1,5 @@
 {smcl}
-{* *!version 9.0.5  2022-09-29}{...}
+{* *!version 10.0.0  2025-06-30}{...}
 {viewerjumpto "Syntax" "rdbwselect##syntax"}{...}
 {viewerjumpto "Description" "rdbwselect##description"}{...}
 {viewerjumpto "Options" "rdbwselect##options"}{...}
@@ -260,14 +260,14 @@ Options are:{p_end}
 {marker authors}{...}
 {title:Authors}
 
-{p 4 8}Sebastian Calonico, Columbia University, New York, NY.
-{browse "mailto:sebastian.calonico@columbia.edu":sebastian.calonico@columbia.edu}.{p_end}
+{p 4 8}Sebastian Calonico, University of California, Davis, CA.
+{browse "mailto:scalonico@ucdavis.edu":scalonico@ucdavis.edu}.{p_end}
 
 {p 4 8}Matias D. Cattaneo, Princeton University, Princeton, NJ.
 {browse "mailto:cattaneo@princeton.edu":cattaneo@princeton.edu}.{p_end}
 
-{p 4 8}Max H. Farrell, University of Chicago, Chicago, IL.
-{browse "mailto:max.farrell@chicagobooth.edu":max.farrell@chicagobooth.edu}.{p_end}
+{p 4 8}Max H. Farrell, University of California, Santa Barbara, CA.
+{browse "mailto:maxhfarrell@ucsb.edu":maxhfarrell@ucsb.edu}.{p_end}
 
 {p 4 8}Rocio Titiunik, Princeton University, Princeton, NJ.
 {browse "mailto:titiunik@princeton.edu":titiunik@princeton.edu}.{p_end}

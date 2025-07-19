@@ -1,6 +1,6 @@
 d 'POWER_ITSA': module to compute power and sample size for a single-group interrupted time series analysis 
 d
-d  power itsa computes power for a specified number of time periods
+d  power_itsa computes power for a specified number of time periods
 d n() in a single-group interrupted time series analysis (ITSA)
 d using simulation.  The process involves (1) generating a time
 d series using itsadgp, based on the user-inputs replicating the
@@ -21,7 +21,7 @@ d KW: sample size
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20250606
+d Distribution-Date: 20250718
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org

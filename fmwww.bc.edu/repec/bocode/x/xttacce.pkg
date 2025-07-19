@@ -1,0 +1,24 @@
+d 'XTTACCE': module to compute Time Averaged Common Correlated Effects estimator (TACCE) for fixed-N panel data and SUR
+d
+d     Time Averaged Common Correlated Effects estimator (TACCE) for
+d fixed-N panel data and SUR, with    interactive fixed effects in
+d the errors. The idea is to use time averages of the observables
+d to	asymptotically purge the interactive fixed effects.  These
+d averages are included as additional	 regressors and the
+d resulting augmented regression model is estimated by least
+d squares. The estimator    is developed in Westerlund, Kaddoura,
+d and Karavias (2025). 
+d
+d KW: correlated effects estimator
+d KW: panel data
+d KW: fixed effects
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20250718
+d
+d Author: Pengyu Chen, University of Chicago
+d Support: email pengyu@@uchicago.edu
+d
+f xttacce.ado
+f xttacce.sthlp

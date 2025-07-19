@@ -1,4 +1,4 @@
-d 'MARKOVTHEOTRANS': module to to test whether a discrete time Markov chain is consistent with a theoretical transition matrix
+d 'MARKOVTHEOTRANS': module to test whether a discrete time Markov chain is consistent with a theoretical transition matrix
 d
 d  markovtheotrans tests whether the transition matrix of a
 d discrete time Markov chain (DTMC) is consistent with a
@@ -12,7 +12,7 @@ d KW: transition probabilities
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20250621
+d Distribution-Date: 20250718
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org

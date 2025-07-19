@@ -1,3 +1,4 @@
+
 {smcl}
 {* First Version June 26 2023}{...}
 {* This Version February 07 2025}{...}
@@ -12,8 +13,8 @@ Help for {hi:lpgraph}
 
 {title:Description}
 
-{p}{cmd:lpgraph} plots together the results of previously estimated IRFs of more than one model into one graph. The graph can include up to 4 IRFs. 
-It can also generate 4 separate IRF graphs and combine them in one in the same fashion as the command {cmd:grah combine}.{p_end}
+{p}{cmd:lpgraph} plots together the results of previously estimated IRFs of more than one model into one graph. The graph can include up to four IRFs. 
+It can also generate four separate IRF graphs and combine them in one in the same fashion as the command {cmd:grah combine}.{p_end}
  
 {p}The first option is convenient when we want to have a graph in which we compare the magnitude of the different IRFs, since they share
 the same axis.{p_end}
@@ -36,10 +37,12 @@ of those commands are saved with the same name structure in which {cmd:locproj} 
 [ {opt h:or(numlist integer)} {opt z:ero}  {opt tit:le(string)} {opt tti:tle(string)} {opt yti:tle(string)}} {opt sep:arate} 
 {opt ti1(string)} {opt ti2(string)} {opt ti3(string)} {opt ti4(string)}
 {opt lab1(string)} {opt lab2(string)} {opt lab3(string)} {opt lab4(string)} 
-{opt lc1(string)} {opt lc2(string)} {opt lc3(string)} {opt lc4(string)}  
+{opt lc:olor(string)} {opt lc1(string)} {opt lc2(string)} {opt lc3(string)} {opt lc4(string)}  
 {opt nolegend}
 {opt grn:ame(string)} {opt grs:ave(string)} 
-{opt as(string)} {it: other_options}]{p_end}
+{opt as(string)} 
+{opt combine(string)} 
+{it: other_options}]{p_end}
 	
 
 {synoptset 33 tabbed}{...}
@@ -63,18 +66,20 @@ and the command {cmd: graph combine} is that {cmd: lpgraph} will first generate 
 
 {synopt:{opt ti:tle(string)}}Specifies a title for the final graph.{p_end}
 
-{synopt:{opt ti#(string)}}Specifies a title for each one of the 4 separated graphs, e.g. ti1(Title A), ti2(Title B), ti3(Title C) ti4(Title D).
+{synopt:{opt ti#(string)}}Specifies a title for each one of the four separated graphs, e.g. ti1(Title A), ti2(Title B), ti3(Title C) ti4(Title D).
 These options should be used when using the option {opt sep:arate}.{p_end}
 
 {synopt:{opt lcol:or(string)}}Specifies a unique color for the IRF line and the confidence bands of each one of the IRFs.{p_end}
 
-{synopt:{opt lc#(string)}}Specifies a color for the IRF line and confidence bands of each one of the 4 IRFs, 
+{synopt:{opt lc#(string)}}Specifies a color for the IRF line and confidence bands of each one of the four IRFs, 
 e.g. lc1(gray), lc2(green), lc3(blue), lc4(red). These options should be used when using the option {opt sep:arate}.{p_end}
 
 {synopt:{opt nolegend}}Specifies that legends should not be shown. It could be useful if you have separated graphs and each one of 
 them has a title.{p_end}
 
-{synopt:{opt tti:tle(string)}}Specifies a name for the time axis in the IRF graph.{p_end}
+{synopt:{opt tti:tle(string)}}Specifies a name for the time-axis in the IRF graph.{p_end}
+
+{synopt:{opt yti:tle(string)}}Specifies a name for the y- axis in the IRF graph.{p_end}
 
 {synopt:{opt grn:ame(string)}}Specifies a graph name that could be used, for instance, when combining various graphs.{p_end}
 
@@ -95,34 +100,33 @@ in the list before alongside the rest of {cmd:lpgraph} options.{p_end}
 
 {title:Example 1. Creating one graph with various IRFs}
 
-{p 4 8 2}{cmd:. use AED_INTERESTRATES.dta}{p_end}
+{p 4 8 2}. {stata use AED_INTERESTRATES.dta}{p_end}
 
-{p}First, we are going to estimate 3 different IRFs, the first one is a model in levels, the second one uses cumulative changes and the third one
-includes a cuadratic term in the shock. We do not generate graphs ({opt nograph}) and we save the IRFs giving each one a different name 
-(e.g. {it: level, cmlt, cuad}):{p_end}
+{p}First, we are going to estimate four different IRFs, the first one is a model in levels, the second one uses cumulative changes, the third one
+includes a quadratic term in the shock, and the fourth one uses cumulative changes and a quadratic term. We do not generate graphs ({opt nograph}) and we save the IRFs giving each one a different name (e.g. {it: level, cmlt, cuad}):{p_end}
 
-{p 4 8 2}{cmd:. locproj gs10 l(0/4).gs1, h(12) m(newey) hopt(lag) yl(3) nograph save irfn(level)}{p_end}
-{p 4 8 2}{cmd:. locproj gs10 l(0/4).gs1, h(12) m(newey) hopt(lag) yl(3) tr(cmlt) nograph save irfn(cmlt)}{p_end}
-{p 4 8 2}{cmd:. locproj gs10, shock(gs1 c.gs1#c.gs1) h(12) m(newey) hopt(lag) yl(3) sl(4) nograph save irfn(quad)}{p_end}
-{p 4 8 2}{cmd:. locproj gs10, shock(gs1 c.gs1#c.gs1) h(12) m(newey) hopt(lag) yl(3) sl(4) tr(cmlt) nograph save irfn(quad_cmlt)}{p_end}
+{p 4 8 2}. {stata locproj gs10 l(0/4).gs1, h(12) m(newey) hopt(lag) yl(3) nograph save irfn(level)}{p_end}
+{p 4 8 2}. {stata locproj gs10 l(0/4).gs1, h(12) m(newey) hopt(lag) yl(3) tr(cmlt) nograph save irfn(cmlt)}{p_end}
+{p 4 8 2}. {stata locproj gs10 l(0/4)(gs1 c.gs1#c.gs1), h(12) m(newey) hopt(lag) yl(3) nograph save irfn(quad) margins mropt(atmeans)}{p_end} 
+{p 4 8 2}. {stata locproj gs10 l(0/4)(gs1 c.gs1#c.gs1), h(12) m(newey) hopt(lag) yl(3) tr(cmlt) nograph save irfn(quad_cmlt) margins mropt(atmeans)}{p_end}
 
-{p}Second, we are going to create one graph with the 4 IRFs plotted together.{p_end}
+{p}Second, we are going to create one graph with the four IRFs plotted together.{p_end}
 
-{p 4 8 2}{cmd:. lpgraph level cmlt quad quad_cmlt, h(12) tti(Number of Days) lab1(Levels) lab2(Cumulative) lab3(Quadratic) lab4(Quad. & Cumult.) title(1-Year Treasury IRF, size(*0.9))}{p_end}
+{p 4 8 2}. {stata lpgraph level cmlt quad quad_cmlt, h(12) tti(Number of Days) lab1(Levels) lab2(Cumulative) lab3(Quadratic) lab4(Quad. & Cumult.) title(1-Year Treasury IRF, size(*0.9))}{p_end}
 
 {p}In this case we have the option of choosing the color of each one of the IRFs:{p_end}
 
-{p 4 8 2}{cmd:. lpgraph level cmlt quad quad_cmlt, h(12) tti(Number of Days) lab1(Levels) lab2(Cumulative) lab3(Quadratic) lab4(Quad. & Cumult.) lc1(red) lc2(green) lc3(blue) lc4(brown) title(1-Year Treasury IRF, size(*0.9))}{p_end}
+{p 4 8 2}. {stata lpgraph level cmlt quad quad_cmlt, h(12) tti(Number of Days) lab1(Levels) lab2(Cumulative) lab3(Quadratic) lab4(Quad. & Cumult.) lc1(red) lc2(green) lc3(blue) lc4(brown) title(1-Year Treasury IRF, size(*0.9))}{p_end}
 
 
 {title:Example 2. Creating separate graphs and combining them into a single one}
 
-{p}We are going to create three separate graphs and then combine them into a single one. For doing so, we need to specify the option 
+{p}We are going to create four separate graphs and then combine them into a single one. For doing so, we need to specify the option 
 {opt separate}. In this case, we are giving each separate graph a title, and therefore, we also specify the option {opt nogelend}.
-Additionally, we are choosing the color red for the IRFs lines of the three graphs:{p_end}
+Additionally, we are choosing the color red for the IRFs lines of the four graphs:{p_end}
 
 
-{p 4 8 2}{cmd:. lpgraph level cmlt quad quad_cmlt, ti1(Levels) ti2(Cumulative) ti3(Quadratic) ti4(Quadratic & Cumulative) separate nolegend lcolor(red) tti(Number of Days) h(12) title(1-Year Treasury IRF, size(*0.9))}{p_end}
+{p 4 8 2}. {stata lpgraph level cmlt quad quad_cmlt, ti1(Levels) ti2(Cumulative) ti3(Quadratic) ti4(Quadratic & Cumulative) separate nolegend lcolor(red) tti(Number of Days) h(12) title(1-Year Treasury IRF, size(*0.9))}{p_end}
 
 
 {synoptline}

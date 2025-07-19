@@ -69,15 +69,20 @@ for differences between proportions.
 The log-log transform of {cmd:transformation(loglog)} is defined by the Stata formula
 
 {pstd}
-{cmd:y=cloglog(1-x)}
+{cmd:y=-cloglog(1-x)}
 
 {pstd}
 where {cmd:x} is a variable that should have values in the open interval between 0 and 1.
-The log-log transform is widely used in survival analysis
+The log-log transform (or its negation) is widely used in survival analysis
 to calculate confidence intervals for Kaplan-Meier survival probabilities
 (see help for {helpb sts}).
-The {cmd:transformation()} values {cmd:log}, {cmd:logit}, {cmd:cloglog}, {cmd:atanh} and {cmd:asin}
+The {cmd:transformation()} values {cmd:log}, {cmd:logit}, 
+{cmd:cloglog}, {cmd:atanh} and {cmd:asin}
 are defined using the {help functions:Stata functions} of the same names.
+The transformations 
+{cmd:log}, {cmd:logit}, {cmd:loglog}, and {cmd:cloglog}
+are defined un the same way as the transformations of the same names used in
+the {cmd:link()} option of {helpb glm}.
 
 {pstd}
 {cmd:esetran} computes the transformed standard errors using the delta method.
@@ -253,8 +258,8 @@ to exchange values between the back-transformed confidence limits.
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, Queen Mary University of London, UK.
+Email: {browse "mailto:r.newson@qmul.ac.uk":r.newson@qmul.ac.uk}
 
 
 {title:References}

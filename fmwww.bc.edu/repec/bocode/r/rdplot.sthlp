@@ -1,5 +1,5 @@
 {smcl}
-{* *!version 9.0.5  2022-09-29}{...}
+{* *!version 10.0.0  2025-06-30}{...}
 {viewerjumpto "Syntax" "rdplot##syntax"}{...}
 {viewerjumpto "Description" "rdplot##description"}{...}
 {viewerjumpto "Options" "rdplot##options"}{...}
@@ -112,7 +112,7 @@ Default is {cmd:kernel(uniform)} (i.e., equal/no weighting to all observations o
 
 {p 4 8}{cmd:covs(}{it:covars}{cmd:)} additional covariates used to construct the local-polynomial estimator(s).{p_end}
 
-{p 4 8}{cmd:covs_eval(}{it:covars_eval}{cmd:)} sets the evaluation points for the additional covariates, when included in the estimation. Options are: {opt 0} (default) and {opt mean}.
+{p 4 8}{cmd:covs_eval(}{it:covars_eval}{cmd:)} sets the evaluation points for the additional covariates, when included in the estimation. Options are: {opt 0} and {opt mean} (default).
 
 {p 4 8}{cmd:covs_drop(}{it:covsdropoption}{cmd:)} assess collinearity in additional covariates used for estimation and inference. Options {opt pinv} (default choice) and {opt invsym} drops collinear additional covariates, differing only in the type of inverse function used. Option {opt off} omits the check for collinear additional covariates.{p_end}
 
@@ -207,14 +207,14 @@ Default is {cmd:kernel(uniform)} (i.e., equal/no weighting to all observations o
 {marker authors}{...}
 {title:Authors}
 
-{p 4 8}Sebastian Calonico, Columbia University, New York, NY.
-{browse "mailto:sebastian.calonico@columbia.edu":sebastian.calonico@columbia.edu}.{p_end}
+{p 4 8}Sebastian Calonico, University of California, Davis, CA.
+{browse "mailto:scalonico@ucdavis.edu":scalonico@ucdavis.edu}.{p_end}
 
 {p 4 8}Matias D. Cattaneo, Princeton University, Princeton, NJ.
 {browse "mailto:cattaneo@princeton.edu":cattaneo@princeton.edu}.{p_end}
 
-{p 4 8}Max H. Farrell, University of Chicago, Chicago, IL.
-{browse "mailto:max.farrell@chicagobooth.edu":max.farrell@chicagobooth.edu}.{p_end}
+{p 4 8}Max H. Farrell, University of California, Santa Barbara, CA.
+{browse "mailto:maxhfarrell@ucsb.edu":maxhfarrell@ucsb.edu}.{p_end}
 
 {p 4 8}Rocio Titiunik, Princeton University, Princeton, NJ.
 {browse "mailto:titiunik@princeton.edu":titiunik@princeton.edu}.{p_end}

@@ -62,6 +62,7 @@ p flexmat module to create flexible matrices / tables of text, numbers or both
 p flexpaneldid module to perform causal analysis of treatments with varying start dates and durations
 p floatplot module to draw Floating or sliding stacked bar plot
 p floattolong module to recast variables from float to long storage type
+p florindjp module to create a flower plot to visualize indicators
 p flowchart module to generate subject disposition flow diagram figures in LaTeX using PGF/TikZ to include in manuscripts
 p flower module to draw sunflower plots
 p fmiss module to identify variables with problematic missing values 

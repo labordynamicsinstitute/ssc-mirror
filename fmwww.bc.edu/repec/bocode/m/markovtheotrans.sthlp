@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 1.1.0 07Jul2025}{...}
 {* *! version 1.0.0 19Jun2025}{...}
 
 {title:Title}
@@ -94,9 +95,9 @@ Kullback S., Kupperman M. and H. Ku (1962). "Tests for Contingency Tables and Ma
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden, Ariel (2025). MARKOVTHEOTRANS: Stata module to test whether a discrete time Markov chain is consistent with a theoretical transition matrix. {p_end}
-
-
+Linden, Ariel (2025). MARKOVTHEOTRANS: Stata module to test whether a discrete time Markov chain is consistent with a theoretical transition matrix. 
+Statistical Software Components S459467, Boston College Department of Economics.
+{browse "https://ideas.repec.org/c/boc/bocode/s459467.html":https://ideas.repec.org/c/boc/bocode/s459467.html} {p_end}
 
 {title:Author}
 
@@ -108,5 +109,7 @@ Linden, Ariel (2025). MARKOVTHEOTRANS: Stata module to test whether a discrete t
 
 {title:Also see}
 
-{p 4 8 2} Online: {helpb randmarkovseq} (if installed), {helpb markovci} (if installed), {helpb markovfirstorder} (if installed), {helpb markovpredict} (if installed) {p_end}
+{p 4 8 2} Online: {helpb randmarkovseq} (if installed), {helpb markovci} (if installed), {helpb markovfirstorder} (if installed), {helpb markovpredict} (if installed),
+{helpb markovmfpt} (if installed), {helpb markovrecurrence} (if installed), {helpb markovsteadystate} (if installed), {helpb markovfutureprob} (if installed) {p_end}
+
 

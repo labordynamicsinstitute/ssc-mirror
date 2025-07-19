@@ -28,6 +28,9 @@ and saves them as estimation results, without a variance matrix.
 or possibly with the {helpb jackknife} prefix,
 to create confidence intervals for the Kaplan-Meier survival probabilities and/or percentiles,
 possibly allowing for clustering and/or sampling-probability weighting.
+Alternatively, {cmd:kmest} can be used with the {help ssc:SSC} packages {helpb parmest} and {helpb esetran}
+to compute Greenwood confidence intervals,
+or delta-Greenwood confidence intervals using a variety of Normalizing transforms.
 
 
 {title:Options}
@@ -113,6 +116,45 @@ Bootstrap survival odds using logit transform
 
 {phang2}{cmd:. bootstrap, reps(250) eform(Survival odds): kmest, times(100(100)2000) stransform(logit(@))}{p_end}
 
+{pstd}
+The following examples use the {help ssc:SSC} package {helpb parmest}, with the options
+{cmd:bmat(e(b)) vmat(e(greenwood_Vdiag))}, to create untransformed Greenwood and/or transformed delta-Greenwood
+confidence intervals for survivor functions, stored in a {helpb parmest} resultsset with 1 observation
+per confidence interval.
+
+{pstd}
+Set-up
+
+{phang2}{cmd:. webuse stan3, clear}{p_end}
+{phang2}{cmd:. stset}{p_end}
+{phang2}{cmd:. describe, full}{p_end}
+
+{pstd}
+Compute and list Greenwood confidence intervals
+
+{phang2}{cmd:. kmest, times(0(100)1600)}{p_end}
+{phang2}{cmd:. parmest, bmat(e(b)) vmat(e(greenwood_Vdiag)) erow(times) rename(er_1 time) list(time estimate min* max*)}{p_end}
+
+{pstd}
+The following advanced example uses the {help ssc:SSC} packages {helpb parmest} and {helpb esetran}
+to compute, save to memory and list delta-Greenwood confidence intervals,
+using the log transform.
+
+{phang2}{cmd:. kmest, times(0(100)1600)}{p_end}
+{phang2}{cmd:. parmest, bmat(e(b)) vmat(e(greenwood_Vdiag)) erow(times) rename(er_1 time) fast}{p_end}
+{phang2}{cmd:. list time estimate min* max*}{p_end}
+{phang2}{cmd:. esetran estimate stderr, transf(log)}{p_end}
+{phang2}{cmd:. list time estimate stderr}{p_end}
+{phang2}{cmd:. parmcip, replace}{p_end}
+{phang2}{cmd:. foreach Y of var estimate min* max* {c -(}}{p_end}
+{phang2}{cmd:.   replace `Y'=exp(`Y')}{p_end}
+{phang2}{cmd:. {c )-}}{p_end}
+{phang2}{cmd:. list time estimate min* max*}{p_end}
+
+{pstd}
+Alternatively, we could compute delta-Greenwood confidence intervals using other transforms,
+like the logit.
+
 
 {title:Saved results}
 
@@ -131,25 +173,32 @@ Bootstrap survival odds using logit transform
 {synopt:{cmd:e(properties)}}{cmd:b}{p_end}
 
 {p2col 5 20 24 2: Matrices}{p_end}
-{synopt:{cmd:e(b)}}vector of survival probability estimates (in ascending order of time){p_end}
+{synopt:{cmd:e(b)}}vector of survival probability estimates and/or percentiles (in ascending order of time){p_end}
 {synopt:{cmd:e(times)}}vector of survival times (in ascending order){p_end}
 {synopt:{cmd:e(cumfail)}}vector of cumulative failure counts (in ascending order of survival time){p_end}
 {synopt:{cmd:e(temat)}}matrix of survival times and survival probability estimates (in ascending order of survival time){p_end}
 {synopt:{cmd:e(centiles)}}vector of percents (in ascending order){p_end}
-{synopt:{cmd:e(cemat)}}matrix of percents and percentile estimates (in ascending order){p_end}
+{synopt:{cmd:e(cemat)}}matrix of percents and percentile estimates (in ascending order of percent){p_end}
 {synopt:{cmd:e(timcen)}}vector of survval times and/or percents (in ascending order){p_end}
+{synopt:{cmd:e(greenwood_se)}}vector of Greenwood standard errors for survival probabilities (in ascending order of survival time){p_end}
+{synopt:{cmd:e(greenwood_Vdiag)}}diagonal matrix of Greenwood variances for survival probabilities (in ascending order of survival time){p_end}
 
 {p2col 5 20 24 2: Functions}{p_end}
 {synopt:{cmd:e(sample)}}marks estimation sample{p_end}
 
 {p2colreset}{...}
 
+{pstd}
+Note that {cmd:e(greenwood_Vdiag)} is a diagonal matrix.
+It can therefore be used by {helpb parmest} for computing confidence limits,
+but does not estimate the covariance of the survival probability estimates.
+
 
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.{break}
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, Queen Mary University of London, UK.{break}
+Email: {browse "mailto:r.newsn@qmul.ac.uk":r.newsn@qmul.ac.uk}
 
 
 {title:Also see}

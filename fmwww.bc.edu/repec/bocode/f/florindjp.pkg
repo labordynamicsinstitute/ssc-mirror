@@ -1,0 +1,26 @@
+d 'FLORINDJP': module to create a flower plot to visualize indicators
+d
+d  El comando florindjp crea un gráfico en forma de flor para
+d visualizar indicadores, donde cada pétalo representa un
+d indicador y su longitud corresponde a su valor. Toma en
+d consideración que el rango de valores que podría adoptar cada
+d uno de los indicadores debe ser el mismo para el conjunto de
+d indcadores que conforman el gráfico de flor. Los indicadores se
+d agrupan por dimensiones, lo que facilita la comparación visual
+d de su desempeño en diferentes áreas del conocimiento. En el
+d centro del gráfico, se pueden incluir información específica
+d que describa el origen de la información. 
+d
+d KW: graphics
+d KW: flower plot
+d KW: indicators
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20250718
+d
+d Author: Jorge Alberto Pérez Cruz, Universidad Autónoma de Tamaulipas
+d Support: email jperezc@@docentes.uat.edu.mx
+d
+f florindjp.ado
+f florindjp.sthlp

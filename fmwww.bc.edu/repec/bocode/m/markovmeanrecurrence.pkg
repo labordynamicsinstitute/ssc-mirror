@@ -1,0 +1,22 @@
+d 'MARKOVMEANRECURRENCE': module to ompute the mean recurrence time for an ergodic Markov chain
+d
+d  markovmeanrecurrence computes the mean recurrence time for an
+d ergodic Markov chain, which is the average time it takes for a
+d process, starting from a specific state, to return to that same
+d state (Grinstead and Snell, 2012). 
+d
+d KW: Markov chain
+d KW: discrete time Markov chain
+d KW: transition probabilities
+d KW: Markov chain steady states
+d KW: Markov chain mean recurrence time
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250718
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f markovmeanrecurrence.ado
+f markovmeanrecurrence.sthlp

@@ -1,28 +1,31 @@
 d 'LOCPROJ': module to estimate Local Projections
 d
-d  locproj estimates linear and non-linear Impulse Response
+d  locproj estimates linear and nonlinear Impulse Response
 d Functions (IRF) based on the local projections methodology first
-d proposed by Jordà (2005). The procedure allows easily
+d proposed by Jordà (2005). The procedure allows for the easy
 d implementation of several options used in the growing literature
 d of local projections. It reports the IRF, together with its
 d standard error and confidence interval, as an output matrix and
-d through an IRF graph. It allows choosing different estimation
-d methods for both time series and panel data, including some
-d instrumental variables methods. It also allows the use of
-d marginal effects instead of regression coefficients, which is
-d highly convenient when the response variable is binary and the
-d user wants to estimate the response as a probability.   The user
-d can easily choose different options for the desired IRF graph, as
-d well as several other options to save and use the results. The
-d module also includes a post-estimation command called lpgraph
-d that allows plotting together IRFs estimated by different models. d
+d through an IRF graph. It allows for choosing different estimation
+d methods for both time series and panel data, including
+d instrumental variables and quantile regressions. It also allows
+d for the use of marginal effects instead of regression
+d coefficients, which is highly convenient when the response
+d variable is binary and the user wants to estimate the response as
+d a probability. We also show some cases in which it can be used to
+d estimate an Event Study (DiD) regression. The user can easily
+d choose different options for the desired IRF graph, as well as
+d several other options to save and use the results. The module
+d also includes a post-estimation command called lpgraph that can
+d plot IRFs estimated by different models 
+d
 d KW: local projections
 d KW: impulse response functions
 d KW: IRF
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20250412
+d Distribution-Date: 20250718
 d
 d Author: Alfonso Ugarte Ruiz , BBVA Research 
 d Support: email alfonso.ugarte@@bbva.com
@@ -31,9 +34,11 @@ f locproj.ado
 f locproj.sthlp
 f lpgraph.ado
 f lpgraph.sthlp
-f ../a/AED_INTERESTRATES.DTA
-f ../j/JSTdatasetR5.dta
+f ../a/aed_interestrates.dta
+f ../d/did_common_6.dta
+f ../j/jstdatasetr5.dta
 f lpiv_15Mar2022.dta
-f ../r/RecessionDummies.dta
-f ../r/RR_monetary_shock_quarterly.dta
+f ../r/recessiondummies.dta
+f ../r/rr_monetary_shock_quarterly.dta
 f ../u/usmacro2.dta
+f ../u/usmacro3.dta

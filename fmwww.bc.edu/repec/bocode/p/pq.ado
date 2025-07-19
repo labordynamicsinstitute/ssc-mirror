@@ -1,5 +1,5 @@
 *! pq - read/write parquet files with stata
-*! Version 1.2.0
+*! Version 1.5.0 - fix append when columns don't fully overlap
 
 capture program drop pq
 program define pq
@@ -236,7 +236,7 @@ program pq_use_append
 			di as error "pq will interpret > as in SQL, which is different than Stata."
 			di as error "	It will not include . as > any value."
 		}
-		di `"plugin call polars_parquet_plugin, if "`if'""'
+		//	di `"plugin call polars_parquet_plugin, if "`if'""'
 		plugin call polars_parquet_plugin, if `"`if'"'
 	}
 	else {
@@ -399,31 +399,43 @@ program pq_use_append
 		}
 
 		//	_string_length_5:
-		describe
+		
 		frame `f_var_list' {
 			quietly gen index = .
 			quietly gen name = ""
 			quietly gen type = ""
 			quietly gen byte to_edit = .
+			quietly gen duplicate = .
 			quietly set obs `n_vars_already'
 
 			forvalues i = 1/`n_vars_already' {
 				local vari = word("`all_vars'", `i')
 
 				quietly replace name = "`vari'" if _n == `i'
-				quietly replace type = "`type_already_`i''" if _n == `i'				
+				quietly replace type = "`type_already_`i''" if _n == `i'
 			}
 			quietly replace to_edit = 0
+			quietly replace duplicate = 0
 			quietly set obs `=`n_vars' + `n_vars_already''
+			
+			local duplicate_count = 0
 			forvalues i = 1/`n_vars' {
 				local vari = word("`matched_vars'", `i')
+				
+				
+				if (`n_vars_already' > 0) {
+					quietly count if name == "`vari'"
+					local duplicate = r(N)
+			
+					local duplicate_count = `duplicate_count' + (`duplicate' > 0)
+				}
 				
 				quietly replace name = "`vari'" if _n == (`i' + `n_vars_already')
 				quietly replace type = "`type_`i''" if _n == (`i' + `n_vars_already')
 				quietly replace to_edit = 1 if _n == (`i' + `n_vars_already')
+				quietly replace duplicate = `duplicate_count' if _n == (`i' + `n_vars_already')
 			}
 			quietly replace index = _n
-			
 			sort name index
 			
 			
@@ -432,12 +444,17 @@ program pq_use_append
 			quietly gen is_strl = inlist(type,"strl","strL")
 			quietly by name: egen has_strl = max(is_strl)
 			quietly by name: replace type = "strl" if has_strl
+			
 			quietly by name: keep if _n == 1
 			sort new_index
-
+			
+			keep if to_edit == 1
+			
 			local strl_var_indexes
 			forvalues i = 1/`=_N' {
-				local index_`i' = index[`i']
+				local index_`i' = index[`i'] - duplicate[`i']
+				//	di "name_`i': `name_`i''"
+				//	di "index_`i': `index_`i''"
 
 				if (type[`i'] == "strl") {
 					local type_`i' = "strl"
@@ -911,7 +928,31 @@ program pq_register_plugin
 	
 	if (_rc > 0) {
 		// Plugin is not loaded, so initialize it
-		program polars_parquet_plugin, plugin using("pq.plugin")
+		capture program polars_parquet_plugin, plugin using("pq.plugin")
+
+
+		capture plugin call polars_parquet_plugin, setup_check ""
+		if (_rc > 0) {
+            // OS specific check here
+            local os = "`c(os)'"
+            
+            if ("`os'" == "Windows")		local plugin_file = "pq.dll"
+            else if ("`os'" == "MacOSX")	local plugin_file = "pq.dylib"
+            else if ("`os'" == "Unix")		local plugin_file = "pq.so"
+            else {
+                display as error "Unsupported operating system: `os'"
+                exit 198
+            }
+            
+            // Try loading the OS-specific plugin
+            capture program polars_parquet_plugin, plugin using("`plugin_file'")
+            
+            if (_rc > 0) {
+                display as error "Failed to load plugin `plugin_file' for `os'"
+                display as error "Make sure the plugin file exists in the current directory or ado path"
+                exit _rc
+            }
+		}
 	}
 end
 

@@ -1,8 +1,13 @@
-*!version 9.0.5  2022-09-29
+********************************************************************************
+* RDROBUST STATA PACKAGE -- rdrobust
+* Authors: Sebastian Calonico, Matias D. Cattaneo, Max Farrell, Rocio Tititunik
+********************************************************************************
+*!version 10.0.0  2025-06-30
 
 capture program drop rdrobust 
 program define rdrobust, eclass
-	syntax anything [if] [in] [, c(real 0) fuzzy(string) deriv(real 0) p(string) q(real 0) h(string) b(string) rho(real 0) covs(string) covs_drop(string) kernel(string) weights(string) bwselect(string) vce(string) level(real 95) all scalepar(real 1) scaleregul(real 1) nochecks masspoints(string) bwcheck(real 0) bwrestrict(string) stdvars(string)]
+    version 13.1
+	syntax anything [if] [in] [, c(real 0) fuzzy(string) deriv(real 0) p(string) q(real 0) h(string) b(string) rho(real 0) covs(string) covs_drop(string) kernel(string) weights(string) bwselect(string) vce(string) level(real 95) all scalepar(real 1) scaleregul(real 1) nochecks masspoints(string) bwcheck(real 0) bwrestrict(string) stdvars(string) detail vleverage]
 	*disp in yellow "Preparing data." 
 	marksample touse
 	preserve
@@ -382,7 +387,7 @@ masspoints_found = 0
 			st_numscalar("M_l", M_l); st_numscalar("M_r", M_r)
 			mass_l = 1-M_l/N_l
 			mass_r = 1-M_r/N_r				
-			if (mass_l>=0.1 | mass_r>=0.1){
+			if (mass_l>=0.2 | mass_r>=0.2){
 				masspoints_found = 1
 				display("{err}Mass points detected in the running variable.")
 				if ("`masspoints'"=="adjust" & "`bwcheck'"=="0") bwcheck = 10
@@ -632,6 +637,8 @@ masspoints_found = 0
 		beta_q  = beta_q_r  - beta_q_l
 		beta_bc = beta_bc_r - beta_bc_l
 		
+		************************************ No Covariates **********************************
+		
 		if (dZ==0) {		
 				tau_cl = tau_Y_cl = `scalepar'*factorial(`deriv')*beta_p[(`deriv'+1),1]
 				tau_bc = tau_Y_bc = `scalepar'*factorial(`deriv')*beta_bc[(`deriv'+1),1]
@@ -642,10 +649,18 @@ masspoints_found = 0
 				tau_Y_bc_r = `scalepar'*factorial(`deriv')*beta_bc_r[(`deriv'+1),1]				
 				bias_l = tau_Y_cl_l - tau_Y_bc_l
 				bias_r = tau_Y_cl_r - tau_Y_bc_r 		
-				
+	
+				beta_Y_p_l = `scalepar'*factorial(`deriv')*beta_p_l[,1]
+				beta_Y_p_r = `scalepar'*factorial(`deriv')*beta_p_r[,1]
+
+				*** Fuzzy RD ********************
 				if (dT>0) {
 					tau_T_cl =  factorial(`deriv')*beta_p[(`deriv'+1),2]
 					tau_T_bc = 	factorial(`deriv')*beta_bc[(`deriv'+1),2]
+					
+					beta_T_p_l = factorial(`deriv')*beta_p_l[,2]
+					beta_T_p_r = factorial(`deriv')*beta_p_r[,2]
+					
 					s_Y = (1/tau_T_cl \ -(tau_Y_cl/tau_T_cl^2))
 					B_F = tau_Y_cl-tau_Y_bc \ tau_T_cl-tau_T_bc
 					tau_cl = tau_Y_cl/tau_T_cl
@@ -658,12 +673,16 @@ masspoints_found = 0
 					B_F_l = tau_Y_cl_l-tau_Y_bc_l \ tau_T_cl_l-tau_T_bc_l
 					B_F_r = tau_Y_cl_r-tau_Y_bc_r \ tau_T_cl_r-tau_T_bc_r					
 					bias_l = s_Y'*B_F_l
-					bias_r = s_Y'*B_F_r					
+					bias_r = s_Y'*B_F_r		
+		
+				
 				}	
+				
 		}
 		
-		if (dZ>0) {	
-			
+		*********************************** Covariates **********************************
+				
+		if (dZ>0) {				
 			ZWD_p_l  = quadcross(eZ_l,W_h_l,D_l)
 			ZWD_p_r  = quadcross(eZ_r,W_h_r,D_r)
 			colsZ = (2+dT)::(2+dT+dZ-1)
@@ -681,6 +700,7 @@ masspoints_found = 0
 	
 			s_Y = (1 \  -gamma_p[,1])
 			
+			*** Sharp RD ********************
 			if (dT==0) {
 				tau_cl = `scalepar'*s_Y'*beta_p[(`deriv'+1),]'
 				tau_bc = `scalepar'*s_Y'*beta_bc[(`deriv'+1),]'				
@@ -690,8 +710,12 @@ masspoints_found = 0
 				tau_Y_bc_r = `scalepar'*s_Y'*beta_bc_r[(`deriv'+1),]'				
 				bias_l = tau_Y_cl_l-tau_Y_bc_l
 				bias_r = tau_Y_cl_r-tau_Y_bc_r 		
+				
+				beta_Y_p_l = `scalepar'*factorial(`deriv')*(s_Y'*beta_p_l')'
+				beta_Y_p_r = `scalepar'*factorial(`deriv')*(s_Y'*beta_p_r')	'				
 			}
 			
+			*** Fuzzy RD ********************
 			if (dT>0) {
 					s_T  = 1 \ -gamma_p[,2]
 					sV_T = (0 \ 1 \ -gamma_p[,2] )
@@ -701,8 +725,7 @@ masspoints_found = 0
 			
 					tau_Y_bc   = `scalepar'*factorial(`deriv')*s_Y'*vec((beta_bc[  (`deriv'+1),1], beta_bc[  (`deriv'+1),colsZ]))
 					tau_Y_bc_l = `scalepar'*factorial(`deriv')*s_Y'*vec((beta_bc_l[(`deriv'+1),1], beta_bc_l[(`deriv'+1),colsZ]))
-					tau_Y_bc_r = `scalepar'*factorial(`deriv')*s_Y'*vec((beta_bc_r[(`deriv'+1),1], beta_bc_r[(`deriv'+1),colsZ]))
-					
+					tau_Y_bc_r = `scalepar'*factorial(`deriv')*s_Y'*vec((beta_bc_r[(`deriv'+1),1], beta_bc_r[(`deriv'+1),colsZ]))	
 					
 					tau_T_cl   = factorial(`deriv')*s_T'*vec((beta_p[  (`deriv'+1),2], beta_p[  (`deriv'+1),colsZ]))
 					tau_T_cl_l = factorial(`deriv')*s_T'*vec((beta_p_l[(`deriv'+1),2], beta_p_l[(`deriv'+1),colsZ]))
@@ -711,6 +734,12 @@ masspoints_found = 0
 					tau_T_bc =   factorial(`deriv')*s_T'*vec((beta_bc[  (`deriv'+1),2], beta_bc[  (`deriv'+1),colsZ]))
 					tau_T_bc_l = factorial(`deriv')*s_T'*vec((beta_bc_l[(`deriv'+1),2], beta_bc_l[(`deriv'+1),colsZ]))
 					tau_T_bc_r = factorial(`deriv')*s_T'*vec((beta_bc_r[(`deriv'+1),2], beta_bc_r[(`deriv'+1),colsZ]))
+					
+					beta_Y_p_l = `scalepar'*factorial(`deriv')*(s_Y'*(beta_p_l[,1], beta_p_l[,colsZ])')'
+					beta_Y_p_r = `scalepar'*factorial(`deriv')*(s_Y'*(beta_p_r[,1], beta_p_r[,colsZ])')'
+					beta_T_p_l =            factorial(`deriv')*(s_T'*(beta_p_l[,2], beta_p_l[,colsZ])')'
+					beta_T_p_r =            factorial(`deriv')*(s_T'*(beta_p_r[,2], beta_p_r[,colsZ])')'
+					
 					
 					B_F = tau_Y_cl-tau_Y_bc \ tau_T_cl-tau_T_bc
 					s_Y = 1/tau_T_cl \ -(tau_Y_cl/tau_T_cl^2)
@@ -730,7 +759,7 @@ masspoints_found = 0
 		**************************************************************************
 		************ Computing variance-covariance matrix ************************
 		**************************************************************************
-		hii_l=hii_r=predicts_p_l=predicts_p_r=predicts_q_l=predicts_q_r=0
+		hii_p_l=hii_p_r=hii_q_l=hii_q_r=predicts_p_l=predicts_p_r=predicts_q_l=predicts_q_r=0
 		if ("`vce_select'"=="hc0" | "`vce_select'"=="hc1" | "`vce_select'"=="hc2" | "`vce_select'"=="hc3") {
 			predicts_p_l=R_p_l*beta_p_l
 			predicts_p_r=R_p_r*beta_p_r
@@ -738,20 +767,38 @@ masspoints_found = 0
 			predicts_q_r=R_q_r*beta_q_r
 			
 			if ("`vce_select'"=="hc2" | "`vce_select'"=="hc3") {
-				hii_l = rowsum((R_p_l*invG_p_l):*(R_p_l:*W_h_l))
-				hii_r = rowsum((R_p_r*invG_p_r):*(R_p_r:*W_h_r))
+				hii_p_l = rowsum((R_p_l*invG_p_l):*(R_p_l:*W_h_l))
+				hii_p_r = rowsum((R_p_r*invG_p_r):*(R_p_r:*W_h_r))
+				
+				
+				if ("`vleverage'"=="") {
+				
+					hii_q_l = rowsum((R_q_l*invG_q_l):*(R_q_l:*W_b_l))
+					hii_q_r = rowsum((R_q_r*invG_q_r):*(R_q_r:*W_b_r))
+				
+				}
+				else {
+				
+					hii_q_l = hii_p_l
+					hii_q_r = hii_p_r
+				
+				}
+				
 			}
 			
 		}
 			
-		res_h_l = rdrobust_res(eX_l, eY_l, eT_l, eZ_l, predicts_p_l, hii_l, "`vce_select'", `nnmatch', edups_l, edupsid_l, `p'+1)
-		res_h_r = rdrobust_res(eX_r, eY_r, eT_r, eZ_r, predicts_p_r, hii_r, "`vce_select'", `nnmatch', edups_r, edupsid_r, `p'+1)
+		res_h_l = rdrobust_res(eX_l, eY_l, eT_l, eZ_l, predicts_p_l, hii_p_l, "`vce_select'", `nnmatch', edups_l, edupsid_l, `p'+1)
+		res_h_r = rdrobust_res(eX_r, eY_r, eT_r, eZ_r, predicts_p_r, hii_p_r, "`vce_select'", `nnmatch', edups_r, edupsid_r, `p'+1)
+		
 		if ("`vce_select'"=="nn") {
 				res_b_l = res_h_l;	res_b_r = res_h_r
 		}
 		else {
-				res_b_l = rdrobust_res(eX_l, eY_l, eT_l, eZ_l, predicts_q_l, hii_l, "`vce_select'", `nnmatch', edups_l, edupsid_l, `q'+1)
-				res_b_r = rdrobust_res(eX_r, eY_r, eT_r, eZ_r, predicts_q_r, hii_r, "`vce_select'", `nnmatch', edups_r, edupsid_r, `q'+1)
+		
+				res_b_l = rdrobust_res(eX_l, eY_l, eT_l, eZ_l, predicts_q_l, hii_q_l, "`vce_select'", `nnmatch', edups_l, edupsid_l, `q'+1)
+				res_b_r = rdrobust_res(eX_r, eY_r, eT_r, eZ_r, predicts_q_r, hii_q_r, "`vce_select'", `nnmatch', edups_r, edupsid_r, `q'+1)
+		
 		}
 
 		V_Y_cl_l = invG_p_l*rdrobust_vce(dT+dZ, s_Y, R_p_l:*W_h_l, res_h_l, eC_l, indC_l)*invG_p_l
@@ -772,6 +819,7 @@ masspoints_found = 0
 			se_tau_T_cl = sqrt(V_T_cl);	se_tau_T_rb = sqrt(V_T_rb)
 		}
 		
+	
 		
 		**** Stored results
 		st_numscalar("N", N)
@@ -798,7 +846,9 @@ masspoints_found = 0
 		st_numscalar("tau_Y_bc_r", tau_Y_bc_r);	st_numscalar("tau_Y_bc_l", tau_Y_bc_l)
 		
 		st_numscalar("bias_l", bias_l);  st_numscalar("bias_r", bias_r)
-		st_matrix("beta_p_r", beta_p_r[,1]); st_matrix("beta_p_l", beta_p_l[,1])
+		
+		st_matrix("beta_Y_p_r", beta_Y_p_r); st_matrix("beta_Y_p_l", beta_Y_p_l)
+		
 		st_matrix("beta_q_r", beta_q_r); st_matrix("beta_q_l", beta_q_l)
 		st_numscalar("g_l",  g_l);       st_numscalar("g_r",   g_r)
 		st_matrix("b", (tau_cl))
@@ -823,6 +873,9 @@ masspoints_found = 0
 			
 			st_numscalar("tau_T_cl_r", tau_T_cl_r); st_numscalar("tau_T_cl_l", tau_T_cl_l)
 			st_numscalar("tau_T_bc_r", tau_T_bc_r);	st_numscalar("tau_T_bc_l", tau_T_bc_l)
+			
+			st_matrix("beta_T_p_r", beta_T_p_r); st_matrix("beta_T_p_l", beta_T_p_l)
+
 		}
 	}
 	
@@ -872,21 +925,32 @@ masspoints_found = 0
 	if ("`cluster'"!="")                               disp in smcl in gr "{ralign 18:Number of clusters}" _col(19) " {c |} " _col(21) as result %9.0f scalar(g_l)           _col(34) %9.0f  scalar(g_r)                         
 	disp ""
 			
-	if ("`fuzzy'"~="") {
+	if ("`fuzzy'"~="") {		
 		disp in yellow "First-stage estimates. Outcome: `fuzzyvar'. Running variable: `x'."
 		disp in smcl in gr "{hline 19}{c TT}{hline 60}"
-	    disp in smcl in gr "{ralign 18:Method}"  _col(19) " {c |} " _col(24) "Coef."  _col(33) `"Std. Err."'   _col(46) "z"    _col(52) "P>|z|"   _col(61) `"[`level'% Conf. Interval]"'
-		disp in smcl in gr "{hline 19}{c +}{hline 60}"
 		
-		if ("`all'"=="") {
-			disp in smcl in gr "{ralign 18:Conventional}"      _col(19) " {c |} " _col(22) in ye %7.0g scalar(tau_T_cl) _col(33) %7.0g scalar(se_tau_T_cl) _col(43) %5.4f scalar(tau_T_cl/se_tau_T_cl) _col(52) %5.3f  scalar(2*normal(-abs(tau_T_cl/se_tau_T_cl)))  _col(60) %8.0g  scalar(tau_T_cl) - scalar(quant*se_tau_T_cl) _col(73) %8.0g scalar(tau_T_cl + quant*se_tau_T_cl) 
-			disp in smcl in gr "{ralign 18:Robust}"            _col(19) " {c |} " _col(22) in ye %7.0g "    -"  _col(33) %7.0g "    -"     _col(43) %5.4f scalar(tau_T_bc/se_tau_T_rb) _col(52) %5.3f  scalar(2*normal(-abs(tau_T_bc/se_tau_T_rb)))  _col(60) %8.0g  scalar(tau_T_bc - quant*se_tau_T_rb) _col(73) %8.0g scalar(tau_T_bc + quant*se_tau_T_rb) 
-		}
-		else {
+		
+		if ("`all'"!="") {
+			disp in smcl in gr "{ralign 18:Method}"  _col(19) " {c |} " _col(24) "Coef."  _col(33) `"Std. Err."'   _col(46) "z"    _col(52) "P>|z|"   _col(61) `"[`level'% Conf. Interval]"'
+			disp in smcl in gr "{hline 19}{c +}{hline 60}"
 			disp in smcl in gr "{ralign 18:Conventional}"      _col(19) " {c |} " _col(22) in ye %7.0g scalar(tau_T_cl) _col(33) %7.0g scalar(se_tau_T_cl) _col(43) %5.4f scalar(tau_T_cl/se_tau_T_cl) _col(52) %5.3f  scalar(2*normal(-abs(tau_T_cl/se_tau_T_cl))) _col(60) %8.0g  scalar(tau_T_cl - quant*se_tau_T_cl) _col(73) %8.0g scalar(tau_T_cl + quant*se_tau_T_cl)  
 			disp in smcl in gr "{ralign 18:Bias-corrected}"    _col(19) " {c |} " _col(22) in ye %7.0g scalar(tau_T_bc) _col(33) %7.0g scalar(se_tau_T_cl) _col(43) %5.4f scalar(tau_T_bc/se_tau_T_cl) _col(52) %5.3f  scalar(2*normal(-abs(tau_T_bc/se_tau_T_cl))) _col(60) %8.0g  scalar(tau_T_bc - quant*se_tau_T_cl) _col(73) %8.0g scalar(tau_T_bc + quant*se_tau_T_cl) 
 			disp in smcl in gr "{ralign 18:Robust}"            _col(19) " {c |} " _col(22) in ye %7.0g scalar(tau_T_bc) _col(33) %7.0g scalar(se_tau_T_rb) _col(43) %5.4f scalar(tau_T_bc/se_tau_T_rb) _col(52) %5.3f  scalar(2*normal(-abs(tau_T_bc/se_tau_T_rb))) _col(60) %8.0g  scalar(tau_T_bc - quant*se_tau_T_rb) _col(73) %8.0g scalar(tau_T_bc + quant*se_tau_T_rb) 
 		}
+		else if ("`detail'"!="") {
+			disp in smcl in gr "{ralign 18:Method}"  _col(19) " {c |} " _col(24) "Coef."  _col(33) `"Std. Err."'   _col(46) "z"    _col(52) "P>|z|"   _col(61) `"[`level'% Conf. Interval]"'
+			disp in smcl in gr "{hline 19}{c +}{hline 60}"
+			disp in smcl in gr "{ralign 18:Conventional}"      _col(19) " {c |} " _col(22) in ye %7.0g scalar(tau_T_cl) _col(33) %7.0g scalar(se_tau_T_cl) _col(43) %5.4f scalar(tau_T_cl/se_tau_T_cl) _col(52) %5.3f  scalar(2*normal(-abs(tau_T_cl/se_tau_T_cl)))  _col(60) %8.0g  scalar(tau_T_cl) - scalar(quant*se_tau_T_cl) _col(73) %8.0g scalar(tau_T_cl + quant*se_tau_T_cl) 
+			disp in smcl in gr "{ralign 18:Robust}"            _col(19) " {c |} " _col(22) in ye %7.0g "    -"  _col(33) %7.0g "    -"     _col(43) %5.4f scalar(tau_T_bc/se_tau_T_rb) _col(52) %5.3f  scalar(2*normal(-abs(tau_T_bc/se_tau_T_rb)))  _col(60) %8.0g  scalar(tau_T_bc - quant*se_tau_T_rb) _col(73) %8.0g scalar(tau_T_bc + quant*se_tau_T_rb) 
+		}
+		else {
+			disp in smcl in gr "{ralign 18:}"                   _col(19) " {c |} " _col(22) "Point"    _col(35) " {c |} "    "Robust Inference" 
+			disp in smcl in gr "{ralign 18:}"                   _col(19) " {c |} " _col(22) "Estimate" _col(35) " {c |} "    "z-stat"       _col(52) "P>|z|"    _col(61) `"[`level'% Conf. Interval]"'
+			disp in smcl in gr "{hline 19}{c +}{hline 60}"			 
+			disp in smcl in gr "{ralign 18:RD Effect}"          _col(19) " {c |} " _col(22) in ye %7.0g scalar(tau_T_cl)  _col(35) " {c |} "  %5.4f scalar(tau_T_bc/se_tau_T_rb)  _col(52) %5.3f  scalar(2*normal(-abs(tau_T_bc/se_tau_T_rb))) _col(61) %8.0g scalar(tau_T_cl - quant*se_tau_T_cl)  _col(73)  %8.0g scalar(tau_T_cl + quant*se_tau_T_cl)			
+
+		}
+		
 			disp in smcl in gr "{hline 19}{c BT}{hline 60}"
 			disp ""
 	}
@@ -895,17 +959,33 @@ masspoints_found = 0
 	else               disp in yellow "Treatment effect estimates. Outcome: `y'. Running variable: `x'. Treatment Status: `fuzzyvar'."
 		
 	disp in smcl in gr "{hline 19}{c TT}{hline 60}"
-	disp in smcl in gr "{ralign 18:Method}"             _col(19) " {c |} " _col(24) "Coef."               _col(33) `"Std. Err."'    _col(46) "z"                    _col(52) "P>|z|"                                  _col(61) `"[`level'% Conf. Interval]"'
-	disp in smcl in gr "{hline 19}{c +}{hline 60}"
-
-	if ("`all'"=="") {
-		disp in smcl in gr "{ralign 18:Conventional}"   _col(19) " {c |} " _col(22) in ye %7.0g scalar(tau_cl)    _col(33) %7.0g scalar(se_tau_cl)  _col(43) %5.4f scalar(tau_cl/se_tau_cl) _col(52) %5.3f  scalar(2*normal(-abs(tau_cl/se_tau_cl)))  _col(60) %8.0g scalar(tau_cl - quant*se_tau_cl) _col(73) %8.0g scalar(tau_cl + quant*se_tau_cl) 
-		disp in smcl in gr "{ralign 18:Robust}"         _col(19) " {c |} " _col(22) in ye %7.0g "    -"   _col(33) %7.0g "    -"    _col(43) %5.4f scalar(tau_bc/se_tau_rb) _col(52) %5.3f  scalar(2*normal(-abs(tau_bc/se_tau_rb)))  _col(60) %8.0g scalar(tau_bc - quant*se_tau_rb) _col(73) %8.0g scalar(tau_bc + quant*se_tau_rb) 
-	}
-	else {
+		
+	if ("`all'"!="") {
+		disp in smcl in gr "{ralign 18:Method}"         _col(19) " {c |} " _col(24) "Coef."               _col(33) `"Std. Err."'    _col(46) "z"                    _col(52) "P>|z|"                                  _col(61) `"[`level'% Conf. Interval]"'
+		disp in smcl in gr "{hline 19}{c +}{hline 60}"
 		disp in smcl in gr "{ralign 18:Conventional}"   _col(19) " {c |} " _col(22) in ye %7.0g scalar(tau_cl)    _col(33) %7.0g scalar(se_tau_cl) _col(43) %5.4f scalar(tau_cl/se_tau_cl) _col(52) %5.3f  scalar(2*normal(-abs(tau_cl/se_tau_cl))) _col(60) %8.0g  scalar(tau_cl - quant*se_tau_cl) _col(73) %8.0g scalar(tau_cl + quant*se_tau_cl)  
 		disp in smcl in gr "{ralign 18:Bias-corrected}" _col(19) " {c |} " _col(22) in ye %7.0g scalar(tau_bc)    _col(33) %7.0g scalar(se_tau_cl) _col(43) %5.4f scalar(tau_bc/se_tau_cl) _col(52) %5.3f  scalar(2*normal(-abs(tau_bc/se_tau_cl))) _col(60) %8.0g  scalar(tau_bc - quant*se_tau_cl) _col(73) %8.0g scalar(tau_bc + quant*se_tau_cl)  
 		disp in smcl in gr "{ralign 18:Robust}"         _col(19) " {c |} " _col(22) in ye %7.0g scalar(tau_bc)    _col(33) %7.0g scalar(se_tau_rb) _col(43) %5.4f scalar(tau_bc/se_tau_rb) _col(52) %5.3f  scalar(2*normal(-abs(tau_bc/se_tau_rb))) _col(60) %8.0g  scalar(tau_bc - quant*se_tau_rb) _col(73) %8.0g scalar(tau_bc + quant*se_tau_rb)  
+	}
+	else if ("`detail'"!="") {
+		disp in smcl in gr "{ralign 18:Method}"         _col(19) " {c |} " _col(24) "Coef."               _col(33) `"Std. Err."'    _col(46) "z"                    _col(52) "P>|z|"                                  _col(61) `"[`level'% Conf. Interval]"'
+		disp in smcl in gr "{hline 19}{c +}{hline 60}"
+		disp in smcl in gr "{ralign 18:Conventional}"   _col(19) " {c |} " _col(22) in ye %7.0g scalar(tau_cl)    _col(33) %7.0g scalar(se_tau_cl)  _col(43) %5.4f scalar(tau_cl/se_tau_cl) _col(52) %5.3f  scalar(2*normal(-abs(tau_cl/se_tau_cl)))  _col(60) %8.0g scalar(tau_cl - quant*se_tau_cl) _col(73) %8.0g scalar(tau_cl + quant*se_tau_cl) 
+		disp in smcl in gr "{ralign 18:Robust}"         _col(19) " {c |} " _col(22) in ye %7.0g "    -"           _col(33) %7.0g "    -"            _col(43) %5.4f scalar(tau_bc/se_tau_rb) _col(52) %5.3f  scalar(2*normal(-abs(tau_bc/se_tau_rb)))  _col(60) %8.0g scalar(tau_bc - quant*se_tau_rb) _col(73) %8.0g scalar(tau_bc + quant*se_tau_rb) 
+	} 
+	else {
+*		disp in smcl in gr "{ralign 18:}"                   _col(19) " {c |} " _col(22) "Estimate"     _col(35) "P>|z|"     _col(47)   `"[`level'% Robust CI]"'
+*		disp in smcl in gr "{hline 19}{c +}{hline 60}"
+*		disp in smcl in gr "{ralign 18:RD Effect}"   _col(19) " {c |} " _col(22) in ye %7.0g scalar(tau_cl)    _col(35)   %5.3f  scalar(2*normal(-abs(tau_bc/se_tau_rb)))   _col(45) %8.0g scalar(tau_bc - quant*se_tau_rb)   _col(55)  %8.0g scalar(tau_bc + quant*se_tau_rb) 
+*		disp in smcl in gr "{hline 19}{c BT}{hline 60}"
+*		disp ""
+*		disp ""
+		*disp in smcl in gr "{hline 19}{c TT}{hline 60}"
+		disp in smcl in gr "{ralign 18:}"                   _col(19) " {c |} " _col(22) "Point"    _col(35) " {c |} "    "Robust Inference" 
+		disp in smcl in gr "{ralign 18:}"                   _col(19) " {c |} " _col(22) "Estimate" _col(35) " {c |} "    "z-stat"       _col(52) "P>|z|"    _col(61) `"[`level'% Conf. Interval]"'
+		disp in smcl in gr "{hline 19}{c +}{hline 60}"
+		disp in smcl in gr "{ralign 18:RD Effect}"          _col(19) " {c |} " _col(22) in ye %7.0g scalar(tau_cl) _col(35) " {c |} "   %5.4f scalar(tau_bc/se_tau_rb)   _col(52) %5.3f scalar(2*normal(-abs(tau_bc/se_tau_rb))) _col(61) %8.0g scalar(tau_bc - quant*se_tau_rb)  _col(73) %8.0g scalar(tau_bc + quant*se_tau_rb) 
+		
 	}
 		disp in smcl in gr "{hline 19}{c BT}{hline 60}"
 
@@ -994,10 +1074,14 @@ masspoints_found = 0
 		ereturn scalar tau_T_cl_r  = scalar(tau_T_cl_r)
 		ereturn scalar tau_T_bc_l  = scalar(tau_T_bc_l)
 		ereturn scalar tau_T_bc_r  = scalar(tau_T_bc_r)
+		
+		ereturn matrix beta_T_p_r = beta_T_p_r
+		ereturn matrix beta_T_p_l = beta_T_p_l
+	
 	}
 	
-	ereturn matrix beta_p_r = beta_p_r
-	ereturn matrix beta_p_l = beta_p_l
+	ereturn matrix beta_Y_p_r = beta_Y_p_r
+	ereturn matrix beta_Y_p_l = beta_Y_p_l
 	
 	if ("`covs'"!="") {
 		ereturn matrix beta_covs = gamma_p

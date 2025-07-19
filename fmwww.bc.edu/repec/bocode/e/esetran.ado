@@ -9,7 +9,7 @@ version 10.0;
  and recoding non-missing values beyond system limits
  to system limits.
 *!Author: Roger Newson
-*!Date: 27 July 2018
+*!Date: 13 July 2025
 */
 
 syntax varlist(numeric min=2 max=2) [if] [in] , TRansformation(string);
@@ -35,7 +35,9 @@ local estimate: word 1 of `varlist';
 local stderr: word 2 of `varlist';
 qui recast double `estimate' `stderr';
 
-marksample touse;
+* Mark sample to contain observations with estimate nonmissing *;
+marksample touse, novarlist;
+markout `touse' `estimate';
 
 *
  Do transformation
@@ -43,8 +45,8 @@ marksample touse;
 if "`transformation'"=="log" {;
   qui {;
     replace `estimate'=. if `touse' & `estimate'<0;
-    replace `estimate'=c(smallestdouble) if `touse' & `estimate'>=0 & estimate<c(smallestdouble);
-    replace `estimate'=c(maxdouble) if `touse' & estimate>c(maxdouble);
+    replace `estimate'=c(smallestdouble) if `touse' & `estimate'>=0 & `estimate'<c(smallestdouble);
+    replace `estimate'=c(maxdouble) if `touse' & `estimate'>c(maxdouble);
     replace `stderr'=`stderr'/`estimate' if `touse';
     replace `estimate'=log(`estimate') if `touse';
   };
@@ -66,7 +68,7 @@ else if "`transformation'"=="loglog" {;
     replace `estimate'=c(smallestdouble) if `touse' & `estimate'>=0 & `estimate'<c(smallestdouble);
     replace `estimate'=1-c(epsdouble) if `touse' & `estimate'<=1 & `estimate'>1-c(epsdouble);
     replace `stderr'=`stderr'/abs(`estimate'*log(`estimate')) if `touse';
-    replace `estimate'=cloglog(1-`estimate') if `touse';
+    replace `estimate'=-cloglog(1-`estimate') if `touse';
   };
 };
 else if "`transformation'"=="cloglog" {;

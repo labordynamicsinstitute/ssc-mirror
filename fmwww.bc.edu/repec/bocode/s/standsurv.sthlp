@@ -598,19 +598,15 @@ survival curves using the observed covariate values except for {bf:hormon}.{p_en
 
 {title:Authors}
 
-{pstd}Paul C. Lambert{p_end}
-{pstd}Biostatistics Research Group{p_end}
-{pstd}Department of Population Health Sciences{p_end}
-{pstd}University of Leicester{p_end}
-{pstd}{it: and}{p_end}
-{pstd}Department of Medical Epidemiology and Biostatistics{p_end}
-{pstd}Karolinska Institutet{p_end}
-{pstd}E-mail: {browse "mailto:paul.lambert@le.ac.uk":paul.lambert@le.ac.uk}{p_end}
+{pstd}
+Paul C Lambert, Cancer Registry of Norway, NIPH, Norway & Karolinska Institutet, Sweden.
+({browse "mailto:pclt@fhi.no":pclt@fhi.no})
 
-{pstd}Michael J. Crowther{p_end}
-{pstd}Biostatistics Research Group{p_end}
-{pstd}Department of Health Sciences{p_end}
-{pstd}University of Leicester{p_end}
+{pstd}
+Mark J Rutherford
+({browse "mailto:mark.rutherford@leicester.ac.uk":mark.rutherford@leicester.ac.uk})
+
+
 
 {phang}
 Please report any errors you may find.{p_end}

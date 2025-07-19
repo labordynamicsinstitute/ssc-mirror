@@ -1,29 +1,15 @@
-d 'PQ': module to read, write, and manage Parquet files in Stata
+d 'PQ': module to read/write Parquet files in Stata
 d
-d     pq provides commands for working with Apache Parquet files in
-d Stata. Parquet is a columnar	  storage file format designed to
-d efficiently store and process large datasets. This package   
-d allows Stata users to directly read from and write to Parquet
-d files, facilitating data    interchange with other data science
-d tools and platforms that support this format, such as    Python
-d (pandas, polars), R, Spark, and many others. 
+d Author: Jon Rothbaum
 d
-d KW: Parquet
-d KW: data science
+d Requires: Stata 16.0
 d
-d Requires: Stata version 16
+d Distribution-Date: 20250718
 d
-d Distribution-Date: 20250614
+d This module provides commands to read, write, and describe Parquet files.
 d
-d Author:   Jon Rothbaum,  U.S. Census Bureau
-d Support: email jlrothbaum@@gmail.com
-d
-f pq.ado
-f pq.sthlp
-G LINUX64 pq.so       pq.plugin
-G LINUX64P pq.so      pq.plugin
-G MACINTEL64 pq.dylib pq.plugin
-G MACARM64   pq.dylib pq.plugin
-G WIN64 pq.dll        pq.plugin
-h pq.plugin
-f pq_benchmark.do
+F pq.ado
+F pq.sthlp
+F pq.dll
+F pq.so
+F pq.dylib

@@ -1,6 +1,6 @@
 {smcl}
 {* First Version May 10 2023}{...}
-{* This Version November 11 2024}{...}
+{* This Version July 17 2025}{...}
 {viewerdialog locproj "dialog locproj"}{...}
 {vieweralsosee "[R] lincom" "help lincom"}{...}
 {vieweralsosee "[R] margins" "help margins"}{...}
@@ -16,14 +16,13 @@ Help for {hi:locproj}
 
 {title:Description}
 
-{p}{cmd:locproj} estimates linear and non-linear Impulse Response Functions (IRF) based on the local projections methodology first proposed by Jordà (2005). 
+{p}{cmd:locproj} estimates linear and nonlinear Impulse Response Functions (IRF) based on the local projections methodology first proposed by Jordà (2005). 
 The procedure allows easily implementation of several options used in the growing literature of local projections. {p_end}
 
 {p}{cmd:locproj} reports the IRF, together with its standard error and confidence interval, as an output matrix and through an IRF graph. 
 The user can easily choose different options for the desired IRF graph, as well as other options to save and use the results.{p_end}
 
-{p}{cmd:locproj} allows the user to choose different estimation methods for both time series and panel data, including some instrumental variables methods 
-currently available in Stata such as {cmd:ivregress} or {cmd:xtivreg}.{p_end}
+{p}{cmd:locproj} allows the user to choose different estimation methods for both time series and panel data, including some instrumental variables methods currently available in Stata such as {cmd:ivregress} or {cmd:xtivreg}, or quantile regressions methods such as  {cmd:qreg} or {cmd:ivqregress}.{p_end}
 
 {p}{cmd:locproj} uses the Stata command {cmd:lincom} to estimate the response to the shock variable or variables, allowing to estimate responses to linear
 combinations of variables, including interactions with factor or continuous variables. Importantly, it also allows the use of marginal effects instead of 
@@ -35,9 +34,12 @@ the shock corresponds to an interaction of variables (factor or continuous) inst
 different from zero, including negative starting horizons, automatically adjusting the output and the way in which the lags of the 
 dependent variable are included. {p_end}
 
+{p}We can also use {cmd:locproj} to estimate an Event Study based on the DiD estimator in the case where the treatment period is the same for all treated individuals.{p_end}
+
 {p}{cmd:locproj} generates temporary variables with the necessary transformations of the response variable in order to estimate the IRF 
-in the desired transformation option, such as levels, logs, differences, log-differences, cumulative changes or cumulative log-differences. 
-For every option, the procedure also generates temporary variables with the corresponding transformation of the dependent variable 
+in the desired transformation option, such as levels, logs, differences, log-differences, cumulative changes or cumulative log-differences.
+ 
+{p}For every option, the procedure also generates temporary variables with the corresponding transformation of the dependent variable 
 needed in case the user wants to include lags of the dependent variable that are consistent with the chosen transformation.{p_end}
 
 {p}The options allow defining the desired specification in a fully automatic or in a more explicit way, with many alternatives in between. {p_end}
@@ -54,8 +56,7 @@ fully automatic or the fully explicit, depending on which option is easier or mo
 or an interaction with another variable.
 {p_end} 
 
-{p 4 8 2}{bf:Remark:} If the shock includes an interaction with a categorical variable, then we must use one of the options
-{opt lcs()} or {opt margins()}.{p_end}
+{p 4 8 2}{bf:Remark:} {cmd:aweight}s, {cmd:fweight}s, {cmd:iweight}s, and {cmd:pweight}s are allowed; see {help weight}.{p_end}
 
 
 {title:Proceedings USA Stata Conference 2023} 
@@ -94,14 +95,18 @@ https://www.stata.com/meeting/us23/slides/US23_Ugarte-Ruiz.pdf
 {synopt :{helpb locproj##example1_7:Example 1.7}} Changing the confidence level or using more than one level{p_end}
 {synopt :{helpb locproj##example1_8:Example 1.8}} Saving the IRF results into new variables{p_end}
 {synopt :{helpb locproj##example1_9:Example 1.9}} Options for plotting the IRF {p_end}
-{synopt :{helpb locproj##example1_10:Example 1.10}} A simple non-linear example{p_end}
-{synopt :{helpb locproj##example1_10:Example 1.11}} Interaction of a dummy variable with the shock (State-dependent IRF){p_end}
 
-{synopt :{helpb locproj##example2:Example 2}} Non-linear effects and interactions: Using the option lcs() {p_end}
-{synopt :{helpb locproj##example3:Example 3}} More complicated interactions using the option lcs() {p_end}
-{synopt :{helpb locproj##example4:Example 4}} Using instrumental variables methods {p_end}
-{synopt :{helpb locproj##example5:Example 5}} A panel data example and Cholesky decomposition{p_end}
-{synopt :{helpb locproj##example6:Example 6}} Binary dependent variable: Using the option margins{p_end}
+{synopt :{helpb locproj##example2:Example 2}} Interaction of a dummy variable with the shock (State-dependent IRF){p_end}
+{synopt :{helpb locproj##example3:Example 3}} Non-linear effects and interactions: Using the option lcs() {p_end}
+{synopt :{helpb locproj##example4:Example 4}} More complicated interactions using the option lcs() {p_end}
+
+{synopt :{helpb locproj##example4_1:Example 4.1}} Quadratic terms {p_end}
+{synopt :{helpb locproj##example4_2:Example 4.2}} Interaction with a continuous variable {p_end}
+
+{synopt :{helpb locproj##example5:Example 5}} Example using Quantile Regression and LPGRAPH command{p_end}
+{synopt :{helpb locproj##example6:Example 6}} Using instrumental variables methods {p_end}
+{synopt :{helpb locproj##example7:Example 7}} Binary dependent variable: Using the option margins{p_end}
+{synopt :{helpb locproj##example8:Example 8}} D-i-D Event Study{p_end}
 
 {synoptline}
 
@@ -165,13 +170,13 @@ if nothing is specified.{p_end}
 
 {synopt:{opt s:hock(varlist)}}Allows to explicitly define the variable or variables that represent the shock or impulse that 
 will generate the response and the IRF. If this option is not specified the command will automatically choose the first variable that 
-is inmmediately after the {depvar} and its lagged terms if they are included in the main {it:varlist}.
+is immediately after the {depvar} and its lagged terms if they are included in the main {it:varlist}.
 This option should be used when the desired shock includes more than one variable, for instance a non-linear term or 
 an interaction term.{p_end}
 
 {synopt:{opt lcs(string)}}Specifies an expression, usually an addition of variables, that defines a linear combination of variables that represents 
 the desired impulse (shock).  This option should be used when the desired shock includes more than one variable and the name of one of them 
-is not explictily included in the syntax variable list, for instance the constant term ({it:_cons}), or the expansion of an expression that
+is not explicitly included in the syntax variable list, for instance the constant term ({it:_cons}), or the expansion of an expression that
 includes factor variable terms, e.g. {it:12.code#c.xvar}. The expression that should go inside the parenthesis is analogous to any expression 
 that is tested using the commands {cmd:lincom} or {cmd:test}.{p_end}
 
@@ -184,7 +189,7 @@ The way the lags of the dependent variable are included changes depending on the
 through the option {opt tr:ansf()}.{p_end}
 
 {synopt:{opt c:ontrols(varlist)}}Allows to explicitly define the variable or variables that represent the control variables. 
-If this option is not specified the command simply includes all the variables that are inmmediately after the shock variable(s) 
+If this option is not specified the command simply includes all the variables that are immediately after the shock variable(s) 
 and its lagged terms if they are included in the main {it:varlist}. 
 The control variables could include any number of lags, interactions, or any other desired transformations.{p_end}
 
@@ -370,12 +375,16 @@ allowed; see {help weight}.{p_end}
 
 {title:Example 1. Defining the basic options }
 
-Throughout examples 1.1 to 1.6 we are interested in estimating the IRF from a shock to the variable {bf:n} (Growth rate of hours worked) 
-into the variable {bf:y} (Growth rate of real GDP) 
+{p 4 4 0}Throughout examples 1.1 to 1.9 we are interested in estimating the IRF from a shock to the variable {bf:n} (Growth rate of hours worked) 
+into the variable {bf:y} (Growth rate of real GDP){p_end} 
 
-{p 4 8 0}{cmd:. webuse "https://www.stata-press.com/data/r17/usmacro2.dta"}{p_end}
-or 
-{p 4 8 2}{cmd:. use usmacro2.dta}{p_end}
+{p 4 8 0}. {stata webuse set www.stata-press.com/data/r17/}
+
+{p 4 8 0}. {stata webuse usmacro2.dta, clear}{p_end}
+
+Or
+
+{p 4 8 2}. {stata use usmacro2.dta, clear}{p_end}
 
 {marker example1}{...}
 {marker example1_1}{...}
@@ -391,20 +400,20 @@ such cases.{p_end}
 {p 4 4 0}The simplest local projection specification in which the response variable is {bf:y} and the shock variable is {bf:n} would be 
 (automatic specification):{p_end}
 
-{p 8 8 2}{cmd:. locproj y n}{p_end}
+{p 8 8 2}. {stata locproj y n}{p_end}
 
 {p 4 4 0}Which would also be equivalent to the following (explicit specification):
 
-{p 8 8 2}{cmd:. locproj y, shock(n)}{p_end}
+{p 8 8 2}. {stata locproj y, shock(n)}{p_end}
 
 {p 4 4 0}We can also add control variables by adding them after the shock one or using the option controls. In this case our control
 variable is {bf:r}
 
-{p 8 8 2}{cmd:. locproj y n r}{p_end}
+{p 8 8 2}. {stata locproj y n r}{p_end}
 
 {p 4 4 0}Which would be equivalent to the following (explicit specification):
 
-{p 8 8 2}{cmd:. locproj y, shock(n) controls(r)}{p_end}
+{p 8 8 2}. {stata locproj y, shock(n) controls(r)}{p_end}
 
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
 
@@ -420,20 +429,20 @@ variable has 2 lags and that the control variable has 3 lags. They all are exact
 
 {p 4 4 0}{it: Automatic specification}
 
-{p 4 8 2}{cmd:. locproj y l.y n l.n l2.n r l.r l2.r l3.r}{p_end}
-{p 4 8 2}{cmd:. locproj y l.y l(0/2).n l(0/3).r}{p_end}
-{p 4 8 2}{cmd:. locproj l(0/1).y l(0/2).n l(0/3).r}{p_end}
+{p 4 8 2}. {stata locproj y l.y l2.y n l.n l2.n r l.r l2.r l3.r}{p_end}
+{p 4 8 2}. {stata locproj y l.y l2.y l(0/2).n l(0/3).r}{p_end}
+{p 4 8 2}. {stata locproj l(0/2).y l(0/2).n l(0/3).r}{p_end}
 
 {p 4 4 0}{it: Explicit or intermmediate specification}
 
-{p 4 8 2}{cmd:. locproj y n, controls(l.y l2.y l.n l2.n r l.r l2.r)}{p_end}
-{p 4 8 2}{cmd:. locproj y, shock(n) controls(l.y l2.y l.n l2.n r l.r l2.r)}{p_end}
-{p 4 8 2}{cmd:. locproj y, s(n) controls(l(1/2).y l(1/2).n l(0/2).r)}{p_end}
+{p 4 8 2}. {stata locproj y n, controls(l.y l2.y l.n l2.n r l.r l2.r l3.r)}{p_end}
+{p 4 8 2}. {stata locproj y, shock(n) controls(l.y l2.y l.n l2.n r l.r l2.r l3.r)}{p_end}
+{p 4 8 2}. {stata locproj y, s(n) controls(l(1/2).y l(1/2).n l(0/3).r)}{p_end}
 
 {p 4 4 0}{it: Using the ylags and slags options}
 
-{p 4 8 2}{cmd:. locproj y n, ylags(2) slags(2) controls(l(0/2).r)}{p_end}
-{p 4 8 2}{cmd:. locproj y, s(n) ylags(2) slags(2) controls(l(0/2).r)}{p_end}
+{p 4 8 2}. {stata locproj y n, ylags(2) slags(2) controls(l(0/3).r)}{p_end}
+{p 4 8 2}. {stata locproj y, s(n) ylags(2) slags(2) controls(l(0/3).r)}{p_end}
 
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
 
@@ -442,15 +451,15 @@ variable has 2 lags and that the control variable has 3 lags. They all are exact
 
 {p 4 4 0}We can define the horizon either as an interval or just by specifying the final step/horizon:{p_end}
 
-{p 4 8 2}{cmd:. locproj y n, hor(0/12) yl(2) sl(2) c(l(0/2).r)}{p_end}
-{p 4 8 2}{cmd:. locproj y n, hor(12) yl(2) sl(2) c(l(0/2).r)}{p_end}
+{p 4 8 2}. {stata locproj y n, hor(0/12) yl(2) sl(2) c(l(0/2).r)}{p_end}
+{p 4 8 2}. {stata locproj y n, hor(12) yl(2) sl(2) c(l(0/2).r)}{p_end}
 
 {p 4 4 0}The initial step can be different from zero, either negative or positive, but it always has to be an integer number.
 In cases in which the horizon is different from zero, {cmd:locproj} adjusts the output accordingly, and in the cases
 of negative horizons, it also adjusts the way in which the lags of the dependent variable are included. {p_end}
 
-{p 4 8 2}{cmd:. locproj y n, h(-3/12) yl(2) sl(2) c(l(0/2).r)}{p_end}
-{p 4 8 2}{cmd:. locproj y n, h(1/12) yl(2) sl(2) c(l(0/2).r)}{p_end}
+{p 4 8 2}. {stata locproj y n, h(-3/12) yl(2) sl(2) c(l(0/2).r)}{p_end}
+{p 4 8 2}. {stata locproj y n, h(1/12) yl(2) sl(2) c(l(0/2).r)}{p_end}
 
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
 
@@ -460,13 +469,13 @@ of negative horizons, it also adjusts the way in which the lags of the dependent
 {p 4 4 0}We want to use the Newey-West as the estimation method in order to correct for autocorrelation, which consequently requires specifying 
 that the option "lag" in the Newey-West command should depend on the horizon of the IRF in the following way: {p_end}
 
-{p 4 8 2}{cmd:. locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag)}{p_end}
+{p 4 8 2}. {stata locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag)}{p_end}
 
 {p 4 4 0}We can add any other existing methodological option corresponding to the method introduced in the option {opt met()} simply by 
 writing it down after the comma, as long as that option has a different name to any of the existing {cmd:locproj} options. For instance, 
 we can include the option of no-constant term by adding the option {opt noconstant}: {p_end}
 
-{p 4 8 2}{cmd:. locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) noconstant}{p_end}
+{p 4 8 2}. {stata locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) noconstant}{p_end}
 
 
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
@@ -480,12 +489,12 @@ we are using, but a simplified output table. The reason for this is that {cmd: l
 have any meaning and would be difficult to understand. {cmd: locproj} generates a new output table with variable names related to the variable 
 list defined by the user.{p_end} 
 
-{p 4 8 2}{cmd:. locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) noisily}{p_end}
+{p 4 8 2}. {stata locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) noisily}{p_end}
 
 {p 4 4 0}The {bf:stats} option generates a table with each regression statistics for every horizon, i.e. number of observations, R-squared 
 or pseudo-R-squared, F-statistic or Chi2-statistic and their respective p-values.{p_end}
 
-{p 4 8 2}{cmd:. locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) stats}{p_end}
+{p 4 8 2}. {stata locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) stats}{p_end}
 
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
 
@@ -498,38 +507,38 @@ we also make use of the option {bf:fact()} and we scale the response by a factor
 
 {p 4 4 0}We first need to generate the variables in logarithm and their differences in order to compare the results:{p_end}
 
-{p 4 8 2}{cmd:. gen lni = ln(i)}{p_end}
-{p 4 8 2}{cmd:. gen lnr = ln(r)}{p_end}
-{p 4 8 2}{cmd:. gen dlni = d.lni}{p_end}
-{p 4 8 2}{cmd:. gen dlnr = d.lnr}{p_end}
+{p 4 8 2}. {stata gen lni = ln(i)}{p_end}
+{p 4 8 2}. {stata gen lnr = ln(r)}{p_end}
+{p 4 8 2}. {stata gen dlni = d.lni}{p_end}
+{p 4 8 2}. {stata gen dlnr = d.lnr}{p_end}
 
 {p 4 4 0}We first estimate the IRF using the two variables in logarithm:{p_end}
 
-{p 4 8 2}{cmd:. locproj lni lnr, f(100) yl(2) sl(2)}{p_end}
+{p 4 8 2}. {stata locproj lni lnr, f(100) yl(2) sl(2)}{p_end}
 
 {p 4 4 0}But we can also estimate the same by using the option {bf:transf(logs)} for the dependent variable:{p_end}
 
-{p 4 8 2}{cmd:. locproj i lnr, f(100) yl(2) sl(2) tr(logs)}{p_end}
+{p 4 8 2}. {stata locproj i lnr, f(100) yl(2) sl(2) tr(logs)}{p_end}
 
 {p 4 4 0}We can estimate the model in differences by entering the log-difference as the dependent variable:{p_end}
 
-{p 4 8 2}{cmd:. locproj d.lni lnr, f(100) yl(2) sl(2)}{p_end}
+{p 4 8 2}. {stata locproj d.lni lnr, f(100) yl(2) sl(2)}{p_end}
 
 {p 4 4 0}However, we can also use the option {bf:transf(diff)} with the dependent variable in logs:{p_end}
 
-{p 4 8 2}{cmd:. locproj lni lnr, f(100) yl(2) sl(2) tr(diff)}{p_end}
+{p 4 8 2}. {stata locproj lni lnr, f(100) yl(2) sl(2) tr(diff)}{p_end}
 
 {p 4 4 0}Or we can also use the option {bf:transf(logs diff)} with the dependent variable in levels:{p_end}
 
-{p 4 8 2}{cmd:. locproj i lnr, f(100) yl(2) sl(2) tr(logs diff)}{p_end}
+{p 4 8 2}. {stata locproj i lnr, f(100) yl(2) sl(2) tr(logs diff)}{p_end}
 
 {p 4 4 0}For estimating the model in cumulative differences we can do it with both variables in logarithm:{p_end}
 
-{p 4 8 2}{cmd:. locproj lni lnr, f(100) yl(2) sl(2) tr(cmlt)}{p_end}
+{p 4 8 2}. {stata locproj lni lnr, f(100) yl(2) sl(2) tr(cmlt)}{p_end}
 
 {p 4 4 0}Which would be equivalent to estimate the model with the variable {bf:i} in levels and using the option {bf:tr(logs cmlt)}:{p_end}
 
-{p 4 8 2}{cmd:. locproj i lnr, f(100) yl(2) sl(2) tr(logs cmlt)}{p_end}
+{p 4 8 2}. {stata locproj i lnr, f(100) yl(2) sl(2) tr(logs cmlt)}{p_end}
 
 
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
@@ -540,9 +549,9 @@ we also make use of the option {bf:fact()} and we scale the response by a factor
 {p 4 4 0}By default the confidence level for the confidence bands is 95%. If we want to change it, we can use the {opt conf()} option
 which admits a maximum of two levels and only admits integer values:{p_end}
 
-{p 4 8 2}{cmd:. locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) conf(90)}{p_end}
+{p 4 8 2}. {stata locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) conf(90)}{p_end}
 
-{p 4 8 2}{cmd:. locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) conf(66 99)}{p_end}
+{p 4 8 2}. {stata locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) conf(66 99)}{p_end}
 
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
 
@@ -554,9 +563,9 @@ If we just type {bf:saveirf}, {cmd: locproj} generates four (or six) new variabl
 {cmd:locproj} uses some predetermined default names to save the corresponding variables (_irf, _seirf, _irf_lo and _irf_up), but if we want 
 to give them a name of our preference (e.g. {it:newirf}), we can do it through the option {bf:irfname()}:{p_end}
 
-{p 4 8 2}{cmd:. locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) saveirf}{p_end}
+{p 4 8 2}. {stata locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) saveirf}{p_end}
 
-{p 4 8 2}{cmd:. locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) save irfname({it:newirf}) }{p_end}
+{p 4 8 2}. {stata locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) save irfname(newirf)}{p_end}
 
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
 
@@ -565,22 +574,21 @@ to give them a name of our preference (e.g. {it:newirf}), we can do it through t
 
 {p 4 4 0}If we do not want {cmd:locproj} to produce a graph, we just have to type {bf:nograph}:{p_end}
 
-{p 4 8 2}{cmd:. locproj y l(0/4).n l(0/4).r, h(12) m(newey) hopt(lag) yl(3) nograph}{p_end}
+{p 4 8 2}. {stata locproj y l(0/4).n l(0/4).r, h(12) m(newey) hopt(lag) yl(3) nograph}{p_end}
 
-{p 4 4 0}In the following example we are going to produce a graph in which a dashed-line with the value of zero is included, we are goint to give 
-the graph the tittle "LP Example", include a label "Hours worked", change the color of the IRF line and its confidence interval 
+{p 4 4 0}In the following example we are going to produce a graph in which a dashed-line with the value of zero is included, we are goint to give  the graph the tittle "LP Example", include a label "Hours worked", change the color of the IRF line and its confidence interval 
 to red instead of blue, and define the time axis as "Number of Days":{p_end}
 
-{p 4 8 2}{cmd:. locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) zero title("LP Example") label("Hours worked") lcolor(red) ttitle("Number of quarters") conf(66 95)}{p_end}
+{p 4 8 2}. {stata locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) zero title("LP Example") label("Hours worked") lcolor(red) ttitle("Number of quarters") conf(66 95)}{p_end}
 
 {p 4 4 0}Next, we are going to give the graph a name, we are going to save it in a folder in our disk as a png file named "example1":{p_end}
 
-{p 4 8 2}{cmd:. locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) zero title(LP Example) grname(Example1) grsave(C:\Documents\example1.png) as(png)}{p_end}
+{p 4 8 2}. {cmd: locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) zero title(LP Example) grname(Example1) grsave("C:\Documents\example1.png") as(png)}{p_end}
 
 {p 4 4 0}We can also add other graph options inside the {opt gropt()} option, for instance, we can define the labels of the y-axis and change the 
 background color to white:{p_end}
 
-{p 4 8 2}{cmd:. locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) zero title(LP Example) gropt(graphregion(fcolor(white)) ylabel(-0.25(0.25)1))}{p_end}
+{p 4 8 2}. {stata locproj y l.y l(0/2).n l(0/3).r, h(12) met(newey) hopt(lag) zero title(LP Example) gropt(graphregion(fcolor(white)) ylabel(-0.25(0.25)1))}{p_end}
 
 
 {p}{bf:Remark:} We can also combine the results of different IRFs into a single graph using the post-estimation command {cmd:lpgraph}. See {help lpgraph} for specific help about using the command {cmd:lpgraph}.{p_end}
@@ -588,63 +596,48 @@ background color to white:{p_end}
 
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
 
-{marker example1_10}{...}
-{title:Example 1.10. A simple non-linear example}
 
-{p 4 4 0}If we want to specify a very simple non-linear shock, for instance, a quadratic term of the variable {bf:n}, we only need to add 
-such additional variable in the {opt shock()} option:{p_end}
+{marker example2}{...}
+{title:Example 2. Interaction of a dummy variable with the shock}
 
-{p 4 8 2}{cmd:. gen n_2 = n^2}{p_end}
-
-{p 4 8 2}{cmd:. locproj y, shock(n n_2) ylags(1) slags(2) controls(l(0/3).r hor(12)}{p_end}
-
-{p 4 4 0}Alternatively we can include an additional interaction term of two continuous variables in the {opt shock()} option:{p_end}
-
-{p 4 8 2}{cmd:. locproj y, shock(n c.n#c.n) ylags(1) slags(3) controls(l(0/3).r hor(12)}{p_end}
-
-{p 4 4 0}{cmd:locproj} will take all the variables that are defined in the {opt shock()} option and the resulting IRF will correspond to the 
-addition of the individual effect of those variables, for instance, in this example, the IRF would be the addition of the estimated
-coefficients of the variables {bf:n} and {bf:n_2}, or the variables {bf:n} and {bf:c.n#c.n}.{p_end}
-
-{synopt :{helpb locproj##index:Return to Index}}{p_end}
-
-{marker example1_11}{...}
-{title:Example 1.11. Interaction of a dummy variable with the shock}
-
-{p 4 4 0}We want to specify a different reaction to our shock variable before and after the global financial crisis (GFC).  
+{p}We want to specify a different reaction to our shock variable before and after the global financial crisis (GFC).  
 We first need to generate two dummy variables. The first dummy variable {bf:bef_gfc} is equal to one before the first quarter of 2009
 and zero afterwards, meanwhile the second dummy variable {bf:aft_gfc} is equal to one after the first quarter of 2009 and zero before that.{p_end}
 
-{p 4 8 2}{cmd:. gen bef_gfc = dateq<tq(2009q1)}{p_end}
-{p 4 8 2}{cmd:. gen aft_gfc = dateq>=tq(2009q1)}{p_end}
+{p 4 8 2}. {stata gen bef_gfc = dateq<tq(2009q1)}{p_end}
+{p 4 8 2}. {stata gen aft_gfc = dateq>=tq(2009q1)}{p_end}
 
-{p 4 4 0}We can also generate two interaction variables, i.e. the product of the dummy variables times the shock variable {bf:n}. 
+{p}We can also generate two interaction variables, i.e. the product of the dummy variables times the shock variable {bf:n}. 
 The first interaction variable is equal to {bf:n} before the GFC and equal to zero afterwards. The second interaction variable is 
 equal to zero before the GFC and equal to {bf:n} afterwards.{p_end}
 
-{p 4 8 2}{cmd:. gen n_bef = n*bef_gfc}{p_end}
-{p 4 8 2}{cmd:. gen n_aft = n*aft_gfc}{p_end}
+{p 4 8 2}. {stata gen n_bef = n*bef_gfc}{p_end}
+{p 4 8 2}. {stata gen n_aft = n*aft_gfc}{p_end}
 
-{p 4 4 0}Using the interaction variable {bf:n_aft}, we can estimate the IRF resulting from the shock variable {bf:n} after the GFC
-in any of the following two equivalent ways:{p_end}
+{p}The estimated IRF after the GFC corresponds to the addition of the individual coefficients of the variables {bf:n} and {bf:n_aft}. 
+Thus we have to specify that the shock corresponds to both variables, which is done by including both of them inside the option {opt shock()}.
+locproj will take all the variables that are included in the option {opt shock()} and add their individual effects:{p_end}
 
-{p 4 8 2}{cmd:. locproj y, s(n n_aft) ylags(1) slags(2) controls(l(0/3).r hor(12))}{p_end}
-{p 4 8 2}{cmd:. locproj y l.y l(0/3).r, s(n n_aft) sl(2) hor(12)}{p_end}
+{p 4 8 2}. {stata locproj y, s(n n_aft) ylags(1) slags(2) controls(l(0/3).r) hor(12)}{p_end}
 
-{p 4 4 0}In a similar way that in the quadratic term case from the previous example, the resulting IRF after the GFC corresponds to 
-the addition of the individual coefficients of the variables {bf:n} and {bf:n_aft}, thus we have to specify that the shock corresponds 
-to both variables, which is done by including both of them inside the option {opt shock()}.{p_end}
+{p}We can also directly include the interaction between the dummy variable {bf:aft_gfc} and the variable n inside the option shock(), 
+but crucially, we have to specify in the interaction that both variables are continuous even though the first one is a dummy, i.e. {bf:c.aft_gfc#c.n}, and we would get the same results:{p_end}
 
-{p 4 4 0}The interpretation of each individual coeefficient is the following: the coefficient of the variable {bf:n} corresponds to the 
+{p 4 8 2}. {stata locproj y, s(n c.aft_gfc#c.n) ylags(1) slags(2) controls(l(0/3).r) hor(12)}{p_end}
+
+{p}The interpretation of each individual coeefficient is the following: the coefficient of the variable {bf:n} corresponds to the 
 impact before the GFC, and the coefficient of the variable {bf:n_aft} corresponds to the difference between the two periods.{p_end}
 
-{p 4 4 0}Correspondingly, we can use the interaction variable {bf:n_bef} to estimate the IRF resulting from the shock variable {bf:n} before 
-the GFC in any of the following two equivalent ways:{p_end}
+{p}Alternatively, we can use the interaction variable {bf:n_bef} to estimate the IRF resulting from the shock variable {bf:n} before 
+the GFC in the following way:{p_end}
 
-{p 4 8 2}{cmd:. locproj y, s(n_bef n) ylags(1) slags(2) controls(l(0/3).r hor(12))}{p_end}
-{p 4 8 2}{cmd:. locproj y l.y l(0/3).r, s(n_bef n) sl(2) hor(12)}{p_end}
+{p 4 8 2}. {stata locproj y, s(n_bef n) ylags(1) slags(2) controls(l(0/3).r) hor(12)}{p_end}
 
-{p 4 4 0}In this case, the IRF before the GFC corresponds to the addition of the individual coefficients of the variables {bf:n} and {bf:n_bef}, 
+{p}Which is equivalent to (using an interaction of two continuous variables):{p_end}
+
+{p 4 8 2}. {stata locproj y, s(c.bef_gfc#c.n n) ylags(1) slags(2) controls(l(0/3).r) hor(12)}{p_end}
+
+{p}In this case, the IRF before the GFC corresponds to the addition of the individual coefficients of the variables {bf:n} and {bf:n_bef}, 
 meanwhile the coefficient of the variable {bf:n} corresponds to the impact after the GFC, and the coefficient of the variable {bf:n_bef}
 corresponds to the difference between the two periods.{p_end}
 
@@ -652,224 +645,265 @@ corresponds to the difference between the two periods.{p_end}
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
 {synoptline}
 
-{marker example2}{...}
-{title:Example 2. Non-linear effects and interactions: Using the option {opt lcs()}}
+{marker example3}{...}
+{title:Example 3. Non-linear effects and interactions: Using the option {opt lcs()}}
 
-{p}In this example we will replicate Example 1.11 but using the option {opt lcs()}. We are going to use the dummy variable {bf:aft_gfc} that
-is equal to one after the first quarter of 2009. But now we are going to use the factor variables syntax to specify the shock, and thus,
-we will need to use the option {opt lcs()}, since the syntax of factor variables could be more complicated, although sometimes more 
-convenient to use.{p_end}
+{p}We will replicate Example 2 but using the option {opt lcs()}. The use of this option is equivalent to the use of the command 
+{cmd:lincom} after estimating any regression command. The expression that goes inside the parenthesis is analogous to any expression
+that is tested using the commands {cmd:lincom} or {cmd:test}.
+
+{p}We are going to use the dummy variable {bf:aft_gfc} that is equal to one after the first quarter of 2009. But now we are going to use 
+the factor variables syntax to specify the shock, and thus, we will need to use the option {opt lcs()}, since the syntax of factor variables could be more complicated, although sometimes more convenient to use.{p_end}
 
 {p}The option {opt lcs()} allows us to specify the shock in any way we want, as long as is expressed as a linear combination of the variables 
 included in the model specification.{p_end}
 
-{p}We will first reproduce exactly what we did in Example 1.11 but using the factor variables syntax. In this case, the model specification 
-includes both the variable {bf:n} and the interaction of the GFC dummy {bf:aft_gfc} and the variable {bf:n}. The interpretation of the 
-coefficients of each variable are the same as in Example 1.11, the coefficient of the variable {bf:n} corresponds to the response during 
-the period preceding the GFC, meanhwile the coefficient of the variable {bf:1.aft_gfc#c.n} corresponds to the difference in the response 
-between the two periods. Thus the total response after the GFC is equal to the sum of the two coefficients. (In this specification the variable
-{bf:0.aft_gfc#c.n} is omitted).{p_end}
+{p}In this case, the model specification includes both the variable {bf:n} and the interaction of the GFC dummy {bf:aft_gfc} 
+and the variable {bf:n}. The interpretation of the coefficients of each variable are the same as in Example 2, the coefficient 
+of the variable {bf:n} corresponds to the response during the period preceding the GFC, meanhwile the coefficient 
+of the variable {bf:1.aft_gfc#c.n} corresponds to the difference in the response between the two periods. Thus the total 
+response after the GFC is equal to the sum of the two coefficients. 
+(In this specification the variable {bf:0.aft_gfc#c.n} is omitted).{p_end}
 
-{p 4 8 2}{cmd:. locproj y l(0/2)(n aft_gfc#c.n) l(0/2).r, ylags(1) lcs(n+1.aft_gfc#c.n) noi}{p_end}
+{p 4 8 2}. {stata locproj y l(0/2)(n aft_gfc#c.n) l(0/3).r, ylags(1) lcs(n+1.aft_gfc#c.n)}{p_end}
 
-{p}However, if we only include the interaction between the dummy and the continuous variable {bf:aft_gfc#c.n} then the response after the GFC is 
-equal to the coefficient of the variable {bf:1.aft_gfc#c.n}, meanwhile the response before the GFC is equal to the coefficient of 
+{p}However, if we only include the interaction between the dummy and the continuous variable {bf:aft_gfc#c.n} then the response after the GFC is equal to the coefficient of the variable {bf:1.aft_gfc#c.n}, meanwhile the response before the GFC is equal to the coefficient of 
 the variable {bf:0.aft_gfc#c.n}{p_end}
 
 IRF before the GFC:
 
-{p 4 8 2}{cmd:. locproj y l(0/2)(aft_gfc#c.n) l(0/2).r, ylags(1) lcs(0.aft_gfc#c.n) noi}{p_end}
+{p 4 8 2}. {stata locproj y l(0/2)(aft_gfc#c.n) l(0/3).r, ylags(1) lcs(0.aft_gfc#c.n)}{p_end}
 
 IRF after the GFC:
 
-{p 4 8 2}{cmd:. locproj y l(0/2)(aft_gfc#c.n) l(0/2).r, ylags(1) lcs(1.aft_gfc#c.n) noi}{p_end}
+{p 4 8 2}. {stata locproj y l(0/2)(aft_gfc#c.n) l(0/3).r, ylags(1) lcs(1.aft_gfc#c.n)}{p_end}
  
 
 
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
 {synoptline}
 
-{marker example3}{...}
-{title:Example 3. More complicated interactions using the option {opt lcs()}}
-
-{p}We are going to use the JST dataset and the "RecessionDummies" dataset that contains data on recessions and financial crises.{p_end}
-
-{p 4 8 2}{cmd:. webuse "http://data.macrohistory.net/JST/JSTdatasetR5.dta"}{p_end}
-{p 4 8 0}{cmd:. merge 1:1 year iso using "RecessionDummies.dta", nogen}{p_end}
-or 
-{p 4 8 2}{cmd:. use JSTdatasetR5.dta}{p_end}
-{p 4 8 2}{cmd:. merge 1:1 year iso using "RecessionDummies.dta", nogen}{p_end}
-
-We need to declare the panel data variables:
-
-{p 4 8 2}{cmd:. xtset ifs year}{p_end}
-
-We also need to drop WWI and WWII years from JST dataset:
-
-{p 4 8 2}{cmd:. drop if year >=1914 & year <=1919}{p_end}
-{p 4 8 2}{cmd:. drop if year >=1939 & year <=1947}{p_end}
-
-{p}In the "RecessionDummies" database, the variable {bf:F} is a Financial Crisis dummy variable, while the variable {bf:N} is a Normal Recession dummy variable. 
-In this example we want to look at the cumulative IRF of real GDP per capita to a financial crisis, while controling for the effect of normal recessions, 
-and viceversa. Thus, we need to use the option {opt lcs()} since the effect we are looking for is the sum of the constant term plus the effect of 
-{bf:F=1} or {bf:N=1}.{p_end}
-
-{p}Therefore, in the following examples we include the expression "_cons + l.F" and "_cons + l.N" inside the option {opt lcs()}. Notice that when we use
-the option {opt lcs()} the order of the variables l.F and l.N in the main syntax does not matter, since the shock that {cmd:locproj} evaluates 
-is {bf:only determined} by what it is defined by the option {opt lcs()}:{p_end}
-
-{p 4 8 2}{cmd:. locproj rgdppc l.F l.N, fe robust tr(logs cmlt) h(4) z f(100) lcs(_cons + l.F)}{p_end}
-
-{p 4 8 2}{cmd:. locproj rgdppc l.F l.N, fe robust tr(logs cmlt) h(4) z f(100) lcs(_cons + l.N)}{p_end}
-
-{p}We can include more complicated interactions, for instance we can interact the effect of Financial Crisis (F) or Normal Recessions (N) with the
-public debt-to-GDP ratio and evaluate the IRF at different levels of such ratio.{p_end}
-
-{p}We first estimate the mean and standard deviation of the Public Debt-to-GDP ratio:{p_end}
-
-{p 4 8 2}{cmd:. sum debtgdp}{p_end}
-{p 4 8 2}{cmd:. sca dm=r(mean)}{p_end}
-{p 4 8 2}{cmd:. sca dsd=r(sd)}{p_end}
-
-{p}In the command syntax we include the interaction of the public debt ratio with the financial crises and the normal recessions. Then in the {opt lcs()}
-we enter the expansion of the interaction between financial crises and the debt ratio {bf:(1.l.F#c.l.debtgdp)}, multiplied by the mean and std. deviaton of
-the ratio {bf:(dm+dsd)}:{p_end}
-
-{p 4 8 2}{cmd:. locproj rgdppc l.N l.F l.(N#c.debtgdp F#c.debtgdp), fe robust tr(logs cmlt) nograph f(100) lcs(_cons+l.F+1.l.F#c.l.debtgdp*(dm+dsd))}{p_end}
-
-{p}In a similar way for normal recessions:{p_end}
-
-{p 4 8 2}{cmd:. locproj rgdppc l.N l.F l.(N#c.debtgdp F#c.debtgdp), fe robust tr(logs cmlt) nograph f(100) lcs(_cons+l.N+1.l.N#c.l.debtgdp*(dm+dsd))}{p_end}
-
-
-{synopt :{helpb locproj##index:Return to Index}}{p_end}
-{synoptline}
-
-
 {marker example4}{...}
-{title:Example 4. Examples using instrumental variables methods}
+{title:Example 4 More complicated interactions using the option {opt lcs()}}
 
-{p}This example reproduces another example that was previoulsy provided by Oscar Jordà on his website based on his own research. In order to to that we need 
-to use the databases RR_monetary_shock_quarterly.dta and lpiv_15Mar2022.dta.{p_end}
+{marker example4_1}{...}
+{title:Example 4.1 Quadratic terms}
 
-{p 4 8 2}{cmd:. use RR_monetary_shock_quarterly.dta}{p_end}
-{p 4 8 2}{cmd:. merge 1:1 date using lpiv_15Mar2022.dta, nogen}{p_end}
+{p 4 4 0}If we want to estimate the response to a nonlinear shock we need to take into account that the estimated response 
+might depend on the size of the shock, on the level of the interaction variable, and in some cases on the shock variable 
+initial level. Therefore, the estimation depends on the coefficients and levels of more than one variable.{p_end}
 
-Next, we keep only nonmissing observations in resid_full i.e. 1969m1 - 2007m12
+{p 4 4 0}We are going to show how to estimate the case of the response when the shock includes a quadratic term, for instance, 
+a quadratic term of the variable {bf:n}. In Stata we can generate a new variable equal to the square of {bf:n}:{p_end}
 
-{p 4 8 2}{cmd:. keep if resid_full != .}{p_end}
+{p 4 8 2}. {stata gen n_2 = n^2}{p_end}
 
-We need to declare the time series variable
+{p 4 4 0}Alternatively we can use an interaction term such as {bf:c.n#c.n}. For simplicity of the syntax, in this example we use 
+the new generated variable {bf:n_2}, but the result will be exactly the same if we use {bf:c.n#c.n} instead.{p_end}
 
-{p 4 8 2}{cmd:. tsset date}{p_end}
+{p 4 4 0}Since the shock is composed of two variables we are going to include both {bf:n} and {bf:n_2} into the option {opt shock()} 
+and we are going to write down the expression for the impulse response in this case inside the option {opt lcs()}. 
+The IRF depends on the size of the shock to the variable {bf:n} and on its intial level, which we will assume equal to 
+its sample average.{p_end}
 
-{p}For estimating the IRF using OLS we need to take into consideration that in the example, the response horizon starts at {it:hor = 1}. However, for exactly replicating the example, we need to use the one-step ahead forecast of UNRATE as the dependent variable instead of UNRATE. We also use Newey-West as the variance-covariance estimation method, which requires defining the option {opt lag()} in Newey-West, and thus, we need to use the option
-{opt hopt()} in our {cmd:locproj} command:{p_end}
+{p 4 4 0}We first assume that the size of the shock is equal to one, i.e. n = 1, and therefore n_2 = 1. We then need to calculate 
+and save the sample average of the variable {bf:n}.{p_end}
 
-{p 4 8 2}{cmd:. locproj f.UNRATE DFF l(1/4).DFF l(1/4).UNRATE, h(0/15) hopt(lag) m(newey) z}{p_end}
+{p 4 8 2}. {stata sum n}{p_end}
+{p 4 8 2}. {stata sca nm=r(mean)}{p_end}
 
-{p}For replicating the instrumental variable IRF example, we use the option {opt met()} specifying that the method is {it:ivregress gmm}. 
-Notice that in this case the {opt met()} option should include the {it:gmm} sub-method. Additionally, we need to define the instrument(s) 
-for the shock, which in this case corresponds to the variable {it:resid_full}. Moreover, we define as an estimation method option the 
-variance-covariance estimator {it: hac nwest} in the following way:{p_end}
+{p 4 8 2}. {stata locproj y, shock(n n_2) ylags(1) slags(2) controls(l(0/3).r) hor(12) lcs(n*1+2*n_2*1*nm+n_2*1)}{p_end}
 
-{p 4 8 2}{cmd:. locproj f.UNRATE l(0/4).DFF l(1/4).UNRATE, h(0/15) met(ivregress gmm) instr(resid_full) vce(hac nwest) z}{p_end}
+{p 4 4 0}If we want to estimate the IRF for other values of the variable {bf:n}, for instance, {bf:n = 3} and {bf:n = 5}, 
+and therefore, {bf:n^2 = 9} and {bf:n^2 = 25} we would need to change the expression that goes into the option {opt lcs()}:{p_end}
 
-{p}If we had more available instruments we should include them in the {opt instr()}. For instance we can include also the instrument variable
-{it:resid_romer}:{p_end}
+{p 4 8 2}. {stata locproj y, shock(n n_2) ylags(1) slags(2) controls(l(0/3).r) hor(12) lcs(n*3+2*n_2*3*nm+n_2*9)}{p_end}
 
-{p 4 8 2}{cmd:. locproj f.UNRATE l(0/4).DFF l(1/4).UNRATE, h(0/15) met(ivregress gmm) instr(resid_full resid_romer) vce(hac nwest) z}{p_end}
+{p 4 8 2}. {stata locproj y, shock(n n_2) ylags(1) slags(2) controls(l(0/3).r) hor(12) lcs(n*5+2*n_2*5*nm+n_2*25)}{p_end}
 
-{p}If we have more than one instrument and if our estimation method is {cmd:ivregress} we can test whether we have overidentification at every step of 
-the local projection. This can be done by using the option {opt ivtest()} which performs and displays one out of the three postestimation tests 
-that are available after using the command {cmd:ivregress}, for each step/horizon. For testing overindentifying restrictions we need to use the suboption
-{it:overid} inside the option {opt ivtest()}:{p_end}
+{p 4 4 0}We can also use the option {opt margins}, although it has some limitations. We cannot use the option {opt shock()} with 
+the two variables since {opt margins} can obtain the derivative of only one variable and we are indicating two different ones.{p_end} 
+{p 4 4 0}Since we want to include lags of the shock variable, we cannot use the options {opt slags()}, but we need to specify the lags manually, making sure that specification includes the same lags of both n and its quadratic term as before. 
+We are also going to use the interaction c.n#c.n instead of the variable n_2. {p_end}
 
-{p 4 8 2}{cmd:. locproj f.UNRATE l(0/4).DFF l(1/4).UNRATE, h(0/15) met(ivregress gmm) instr(resid_full resid_romer) vce(hac nwest) z ivtest(overid)}{p_end}
+{p 4 4 0}We also need to use the option {opt mropt()} to specify that the shock variable is evaluated at the desired initial level (its sample average), by introducing the option {opt atmeans}:{p_end}
 
-{p}We can also use the suboption {it:endogenous} to perform tests to determine whether endogenous regressors in the model are in fact exogenous at every step: {p_end}
+{p 4 8 2}. {stata locproj y l(0/2)(n c.n#c.n), ylags(1) controls(l(0/3).r) h(12) margins mropt(atmeans)}{p_end}
 
-{p 4 8 2}{cmd:. locproj f.UNRATE l(0/4).DFF l(1/4).UNRATE, h(0/15) met(ivregress gmm) instr(resid_full) vce(hac nwest) z ivtest(endogenous)}{p_end}
 
-{p}The suboption {it:firststage} is also available, which reports various statistics that measure the relevance of the excluded exogenous variables. {p_end}
+{marker example4_2}{...}
+{title:Example 4.2 .Interaction with a continuous variable}
+
+{p 4 4 0}In this example we will estimate an IRF when the shock is a continuous variable and it interacts with another 
+continuous variable. The variable that interacts is {bf:e}, the percent change in US exchange rate. As in other examples, 
+we are only interested in this interaction as a way to show how to do it with {cmd:locproj} and not because 
+its economic meaning or relevance.{p_end}
+
+{p 4 4 0}This case is pretty similar to the one of a quadratic term, however in this case the initial level of the shock 
+variable does not intervene. However, the idea of the interaction is to evaluate the response at different levels of 
+the interaction variable. Initially, we assume that the size of the shock, {bf:n = 1}, and we want to estimate the 
+response at a level of the variable {bf:e = 1}. To do so we just need to include our shock variable {bf:n} and the 
+interaction term {bf:c.n#c.e} in the option {opt shock()}:{p_end}
+
+{p 4 8 2}. {stata locproj y, s(n c.n#c.e) ylags(1) sl(3) controls(l(0/3).r) hor(12)}{p_end}
+
+{p 4 4 0}However, if we want to estimate the response at other levels of the variable {bf:e}, for instance, at its sample mean, 
+we can use the option {opt lcs()}:{p_end}
+
+{p 4 8 2}. {stata sum e}{p_end}
+{p 4 8 2}. {stata scalar em=r(mean)}{p_end}
+
+{p 4 8 2}. {stata locproj y, s(n c.n#c.e) ylags(1) sl(3) controls(l(0/3).r) hor(12) lcs( n + c.n#c.e*em)}{p_end}
+
+{p 4 4 0}We would obtain exactly the same result if we use the option margins in the following
+way (3.1645 is the mean of e): {p_end}
+
+{p 4 8 2}. {stata locproj y  l(0/3)(n c.n#c.e), ylags(1) controls(l(0/3).r) hor(12) margins mropt(atmeans at(e=3.164551))}{p_end}
+
+{p 4 4 0}We can evaluate the IRF at different levels of the variable e. Evaluating the IRF at e = 6 
+using the {opt option lcs()} would be given by:{p_end}
+
+{p 4 8 2}. {stata locproj y l(0/3)(n c.n#c.e), ylags(1) controls(l(0/3).r) hor(12) lcs(n + c.n#c.e*6)}{p_end}
+
+{p 4 4 0}We would obtain exactly the same results using the option margins in the following way:{p_end}
+
+{p 4 8 2}. {stata locproj y l(0/3)(n c.n#c.e), ylags(1) controls(l(0/3).r) hor(12) margins mropt(atmeans at(e=6))}{p_end}
+
 
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
 {synoptline}
+
 
 {marker example5}{...}
-{title:Example 5. A panel data example and the Cholesky decomposition}
+{title:Example 5. Example using Quantile Regression and LPGRAPH command}
 
-{p}{cmd:locproj} does not need any special adjustments in order to estimate local projections using panel data. We only need to declare the dataset using 
-the usual command {cmd:xtset}. {cmd:locproj} recognizes if the dataset is a panel and it uses the command {cmd:xtreg} by default.{p_end}
+{p}In this example we are going to estimate the IRF of the GDP growth rate to a shock in the monetary policy interest rate {bf:r}. 
+We want to estimate the IFR for different quantiles of the distribution of our dependent variable, using the quantile 
+regression method {cmd:qreg}.{p_end}
 
-{p 4 8 2}{cmd:. webuse "http://data.macrohistory.net/JST/JSTdatasetR5.dta"}{p_end}
+{p}We want our shock variable to have an impact with a one period lag. However, the {cmd:qreg} command does not allow the use of 
+time-series operators. Thus we first need to generate the variable r(t−1) and using it as our shock variable:{p_end}
 
-We need to declare the panel data variables:
+{p 4 8 2}. {stata gen lr=l.r}{p_end}
 
-{p 4 8 2}{cmd:. xtset ifs year}{p_end}
+{p}Nevertheless, {cmd:locproj} has been adapted so that we can include lags of the dependent variable and the shock variable 
+automatically even if the estimating method we are using does not allow time-series operators. We can do it by using 
+the options {opt ylags()} and {opt slags()} respectively.{p_end} 
 
-We first need to generate some variables:
+{p}For instance, in this example we want to include three lags of y and of r(t−1). Normally, if we are using {cmd:qreg} 
+we would need to generate all these lagged variables, but with {cmd:locproj} we can just write {bf:yl(3)} 
+and {bf:sl(3)}.{p_end}
 
-{p 4 8 2}{cmd:. gen lgdpr = 100*ln(rgdppc*pop)}{p_end}
-{p 4 8 2}{cmd:. gen lcpi = 100*ln(cpi)}{p_end}
-{p 4 8 2}{cmd:. gen dlgdpr = d.lgdpr}{p_end}
-{p 4 8 2}{cmd:. gen dstir = d.stir}{p_end}
+{p}However, if we want to include {bf:lags of our control variables}, we do need to do it by hand, generating each one of the 
+lagged-terms we want. In our example, we are going to introduce three lags of the variable {bf:n}:{p_end}
 
-{p}Throughout this example we assume that the real GDP (GDPR) responds with a lag to shocks in the short-term interest rate (STIR) and to shocks 
-in consumer prices (CPI); CPI responds with a lag to shocks in STIR and contemporaneously to shocks in GDPR; STIR responds contemporaneously 
-to shocks in GDPR and CPI.{p_end}
+{p 4 8 2}. {stata gen ln=l.n}{p_end}
+{p 4 8 2}. {stata gen l2n=l2.n}{p_end}
+{p 4 8 2}. {stata gen l3n=l3.n}{p_end}
 
-{p}Now, we can estimate the response of real GDP to a 1pp shock to the real short-term interest rate. The next five examples are exactly equivalent. 
-They differ in how to define the shock variable and its lags, and the dependent variable and its lags. In all of them, the estimation method is {cmd:xtreg}, 
-they use the "fixed-effect" estimator and a cluster-robust covariance matrix. They use a confidence level of 90%. The graph options define the values of 
-the y-axis, they y-axis title, the x-axis label and the title of the graph:{p_end}
+{p}We are going to estimate the IRF for three moments of the variable y distribution: its mean, the 20th percentile, 
+the median, and the 80th percentile. In all cases we use a robust estimator of the variance-covariance matrix. 
+For the average outcome, we use OLS:{p_end}
 
-{it:Using the transformation option transf() and the fully explicit options:}
-{p 4 8 2}{cmd:. locproj lgdpr, s(l.d.stir) c(l(1/3).d.lcpi) tr(diff) h(4) yl(3) sl(2) fe cluster(iso) z conf(90) gropt(ylabel(-0.4(0.2)0.2) ytitle(Percent)) tti(Year) title(Response of GDPR to 1pp shock to STIR (Cholesky))}{p_end}
+{p 4 8 2}. {stata locproj y lr n ln l2n l3n, yl(3) sl(3) h(-4/12) save irfn(Mean) r nograph}{p_end}
 
-{it:Using the existing differentiated variables and a fully automatic specification:}
-{p 4 8 2}{cmd:. locproj l(0/3).dlgdpr l(1/3).dstir l(1/3).d.lcpi, fe cluster(iso) h(4) z conf(90) gropt(ylabel(-0.4(0.2)0.2) ytitle(Percent)) tti(Year) title(Response of GDPR to 1pp shock to STIR (Cholesky))}{p_end}
+For the other moments of the distribution we use the command {cmd:qreg}:
 
-{it:Using the transformation option transf() and the fully automatic options:}
-{p 4 8 2}{cmd:. locproj l(0/3).lgdpr l(1/3).d.stir l(1/3).d.lcpi, fe cluster(iso) tr(diff) h(4) z conf(90) gropt(ylabel(-0.4(0.2)0.2) ytitle(Percent)) tti(Year) title(Response of GDPR to 1pp shock to STIR (Cholesky))}{p_end}
-
-{it:Using the transformation option transf() and a combination of automatic and explicit options:}
-{p 4 8 2}{cmd:. locproj lgdpr l.d.stir l(1/3).d.lcpi, h(4) yl(3) sl(2) fe cluster(iso) tr(diff) z conf(90) gropt(ylabel(-0.4(0.2)0.2) ytitle(Percent)) tti(Year) title(Response of GDPR to 1pp shock to STIR (Cholesky))}{p_end}
-
-{p}In all the previous equivalent five examples, the shock variable is included with a lag and no contemporaneous term (L.D.stir), and thus, the response at {it:hor = 0} is equal to 0 and an extra period is added to 
-the final horizon period.{p_end}
+{p 4 8 2}. {stata locproj y lr n ln l2n l3n, yl(3) sl(3) h(-4/12) m(qreg) q(20) nograph save irfn(Q20) vce(r)}{p_end}
+{p 4 8 2}. {stata locproj y lr n ln l2n l3n, yl(3) sl(3) h(-4/12) m(qreg) q(50) nograph save irfn(Q50) vce(r)}{p_end}
+{p 4 8 2}. {stata locproj y lr n ln l2n l3n, yl(3) sl(3) h(-4/12) m(qreg) q(80) nograph save irfn(Q80) vce(r)}{p_end}
 
 
-{p}Alternatively, in the next example, when estimating the response of CPI to the short-term interest rate, we just need to change the dependent variable to CPI instead of GDPR in any of the previous examples. 
-We also need to change the number of lags of the control variable, which in this case is the GDP, from (0/3) to (1/3) in order to specify a Cholesky decomposition.{p_end}
+{p}In all the cases we used the option "nograph" since we want to compare the four IRFs plotting them together in one graph 
+using the command lpgraph. Therefore, we have also used the options save and ifrname to save the results of each LP into some
+variables that we can use.{p_end}
 
-{p 4 8 2}{cmd:. locproj lcpi, s(l.d.stir) c(l(0/3).d.lgdpr) tr(diff) h(4) yl(3) sl(2) fe cluster(iso) z conf(90) gropt(ytitle(Percent)) tti(Year) title(Response of CPI to 1pp shock to STIR (Cholesky))}{p_end}
+{p}Now we can create one graph with the four IRFs plotted together, while also choosing the color of each one of the IRFs{p_end}
 
+{p 4 8 2}. {stata lpgraph Mean Q20 Q50 Q80, h(-4/12) tti(Quarters) lab1(OLS) lab2(Low - Q20) lab3(Median) lab4(High - Q80) lc1(red) lc2(green) lc3(blue) lc4(brown) title(Example of qreg & lpgraph, size(0.9)) z}{p_end}
 
-{p}Finally, in the final exercise, the shock variable is the same as the dependent variable, so it is more convenient to use an explicit option 
-for the shock and its lags.Moreover, the first response at {it:hor = 0} is equal to 1 since the response variable and the shock are the same
-at that horizon period.{p_end}
+{p}We can also create four separate graphs and then combine them into a single one. For doing so, we need to specify the 
+option {opt separate}. In this case, we are giving each separate graph a title, and therefore, we also specify the option nogelend. Additionally, we are choosing the color red for the IRFs lines of the four graphs:{p_end}
 
-{p 4 8 2}{cmd:. locproj d.stir l(0/3).d.lcpi l(0/3).d.lgdpr, s(d.stir) sl(3) h(4) fe cluster(iso) z conf(90) gropt(ytitle(Percent)) tti(Year) title(Response of STIR to 1pp shock to STIR (Cholesky))}{p_end}
-
+{p 4 8 2}. {stata lpgraph Mean Q20 Q50 Q80, h(-4/12) separate nolegend tti(Quarters) ti1(OLS) ti2(Low - Q20) ti3(Median) ti4(High - Q80) lcolor(red) title(Example of qreg & lpgraph, size(0.9)) z}{p_end}
 
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
 {synoptline}
 
 
 {marker example6}{...}
-{title:Example 6. Non-linear effects, interactions and binary dependent variable: Using the option {opt margins}}
+{title:Example 6. Examples using instrumental variables methods}
 
-{p}We need again the JST and the "RecessionDummies" datasets:{p_end}
+{p}We follow the example of the command {cmd ivlpirf} in the Stata 19.0 manual and we use data on U.S. industrial production 
+growth ({bf:ip_growth}) and the interest rate ({bf:fedfunds}) to estimate the effects of an interest rate increase 
+on economic activity.{p_end}
 
-{p 4 8 2}{cmd:. use "http://data.macrohistory.net/JST/JSTdatasetR5.dta"}{p_end}
-{p 4 8 2}{cmd:. merge 1:1 year iso using "RecessionDummies.dta", nogen}{p_end}
-{p 4 8 2}{cmd:. xtset ifs year}{p_end}
+{p}Following the example, we are concerned that the change in {bf:fedfunds} is endogenous. We have available an instrument, 
+{bf:money_inst}, that captures monetary shocks. It is correlated with change in {bf:fedfunds} but uncorrelated with any 
+nonmonetary shocks. We use this variable as an instrument for the change in {bf:fedfunds}.{p_end}
+
+{p}In the following equation locproj interprets that the shock variable is {bf:ip_growth} and we need to specify 
+the instruments we want to use using the option {opt instr()}. Initially, we will only use the instrument {bf:money_inst}. 
+We also need to specify which method we want to use through the option {opt met()}, which in this case is {cmd:ivregress gmm}. 
+Notice that in this case the option {opt met()} should include the {opt gmm} sub-method.{p_end}
+
+{p 4 8 2}. {stata use usmacro3.dta, clear}{p_end}
+
+Or:
+{p 4 8 0}. {stata webuse set www.stata-press.com/data/r18/}
+
+{p 4 8 2}. {stata webuse usmacro3.dta, clear}{p_end}
+
+{p 4 8 2}. {stata locproj ip_growth d.fedfunds, h(4) yl(2) sl(2) m(ivregress gmm) instr(money_inst)}{p_end}
+
+{p}If we have more available instruments we should include them in the option {opt instr()}. For example, we can also 
+include the instrument variable {bf:oil_instr}. If our estimation method is ivregress we can test whether we have 
+overidentification at every step of the LP. This can be done by using the option {opt ivtest()}, which performs and displays one of
+the three postestimation tests available after using the {cmd:command ivregress}, for each step/horizon. 
+For testing overindentifying restrictions we need to use the suboption {opt overid} inside the option {opt ivtest()}.{p_end}
+
+{p 4 8 2}. {stata locproj ip_growth d.fedfunds, ivtest(overid) instr(money_inst oil_inst) h(4) yl(2) sl(2) m(ivregress gmm)}{p_end}
+
+{p}We can also use the suboption {opt endogenous} in {opt ivtest()} to perform tests to determine whether endogenous regressors in the model are in fact exogenous at every step:{p_end}
+
+{p 4 8 2}. {stata locproj ip_growth d.fedfunds, instr(money_inst) ivtest(endogenous) h(4) yl(2) sl(2) m(ivregress gmm)}
+
+{p}The suboption {it:firststage} is also available, which reports various statistics that measure the relevance of the excluded 
+exogenous variables. {p_end}
+
+{p}We can also use the command {cmd:ivqregress} if we want to use instrumental-variables quantile regression as our estimation method. 
+In the same way as in the case of command {cmd:qreg}, we can specify lags of the dependent variable and the shock as options, 
+but we cannot use time-series operators in the main syntax. Then we would first need to generate a new variable equal to the change 
+in the fed funds rate, d.fedfunds. We also need to specify the sub-method in the option met together with the 
+command {cmd:ivqregress}:{p_end}
+
+{p 4 8 2}. {stata gen dfedfunds = d.fedfunds}{p_end}
+{p 4 8 2}. {stata locproj ip_growth dfedfunds, h(4) yl(2) sl(2) m(ivqregress iqr) instr(money_inst)}{p_end}
+
+
+{synopt :{helpb locproj##index:Return to Index}}{p_end}
+{synoptline}
+
+
+{marker example7}{...}
+{title:Example 7. Non-linear effects, interactions and binary dependent variable: Using the option {opt margins}}
+
+{p}We need to use the JST database and merge it with the "RecessionDummies" datasets:{p_end}
+
+{p 4 8 2}. {stata use JSTdatasetR5.dta, clear}{p_end}
+
+Or
+{p 4 8 2}. {stata webuse set data.macrohistory.net/JST/}
+
+{p 4 8 2}. {stata webuse JSTdatasetR5.dta, clear}{p_end}
+
+{p 4 8 2}. {cmd: merge 1:1 year iso using "RecessionDummies.dta", nogen}{p_end}
+{p 4 8 2}. {stata xtset ifs year}{p_end}
 
 We also need to drop WWI and WWII years from JST dataset:
 
-{p 4 8 2}{cmd:. drop if year >=1914 & year <=1919}{p_end}
-{p 4 8 2}{cmd:. drop if year >=1939 & year <=1947}{p_end}
+{p 4 8 2}. {stata drop if year >=1914 & year <=1919}{p_end}
+{p 4 8 2}. {stata drop if year >=1939 & year <=1947}{p_end}
 
 {p}In our first example, we will estimate the IRF of the probability of a banking crisis to an increase in the USA short-term interest rate. 
 Our dependent variable in this case is the dummy variable {bf:crisisJST} that is equal to 1 for banking crises.{p_end}
@@ -877,40 +911,92 @@ Our dependent variable in this case is the dummy variable {bf:crisisJST} that is
 {p}We need to generate a new variable {bf:stir_us} with the US interest rate as a common variable for all the countries in the sample, in order
 to estimate the response of the probability of a banking crisis to the short-term interest rate in the US:{p_end}
 
-{p 4 8 2}{cmd:. gen stir_us0=stir if iso=="USA"}{p_end}
-{p 4 8 2}{cmd:. egen stir_us=mean(stir_us0), by(year)}{p_end}
+{p 4 8 2}. {stata gen stir_us0=stir if iso=="USA"}{p_end}
+{p 4 8 2}. {stata egen stir_us=mean(stir_us0), by(year)}{p_end}
 
 {p}Now we are going to estimate the IRF using the option {opt margins}. The option {opt margins} estimates the marginal effect of a unit of
 our shock variable (stir_us) on the probability of a banking crisis, which is our dependent (response) variable. 
 We are using as estimation method the command {cmd:xtlogit} with fixed effects:{p_end}
 
-{p 4 8 2}{cmd:. locproj crisisJST l(0/2).stir_us, margins m(xtlogit) fe}{p_end}
+{p 4 8 2}. {stata locproj crisisJST l(0/2).stir_us, margins m(xtlogit) fe}{p_end}
 
-{p}We can also interact the shock variable with a dummy variable, for instance, whether a country has a "PEG" foreign exchange regime.{p_end}
+{p}We can also interact the shock variable with a dummy variable, for instance, whether a country has a "PEG" 
+foreign exchange regime.{p_end}
 
-{p}The option margins allow us to estimate a separate IRF for each category of the dummy variable PEG. For doing that we need to use the option
-{opt mrfvar()}. In this option we need to specify the expansion of the {bf:categorical variable that has been interacted with our shock variable}.
-We also need to use the explicit option to define which variable is our shock without any interaction term, since the command {cmd:margins} 
-does not accept an interaction term expression in its {bf:dydx()} option: {p_end}
+{p}The option margins allow us to estimate a separate IRF for each category of the dummy variable PEG. For doing that we need to use the 
+option {opt mrfvar()}. In this option we need to specify the expansion of the categorical variable that has been interacted 
+with our shock variable.{p_end}
 
-{p 4 8 2}{cmd:. locproj crisisJST peg#c.l(0/2).stir_us, s(stir_us) margins m(xtlogit) fe mrfvar(1.peg)}{p_end}
-{p 4 8 2}{cmd:. locproj crisisJST peg#c.l(0/2).stir_us, s(stir_us) margins m(xtlogit) fe mrfvar(0.peg)}{p_end}
+{p}We also need to use the explicit option to define which variable is our shock without any interaction term, since the command 
+{cmd:margins} does not accept an interaction term expression in its {bf:dydx()} option: {p_end}
+
+{p 4 8 2}. {stata locproj crisisJST peg#c.l(0/2).stir_us, s(stir_us) margins m(xtlogit) fe mrfvar(1.peg)}{p_end}
+{p 4 8 2}. {stata locproj crisisJST peg#c.l(0/2).stir_us, s(stir_us) margins m(xtlogit) fe mrfvar(0.peg)}{p_end}
 
 {p}Alternatively, instead of entering the shock variable as {bf:peg#c.l(0/2).stir_us} in the main syntax, we can enter the expression 
 {bf:l(0/2).stir_us peg#c.l(0/2).stir_us} and in this way the command would use the variable {bf:stir_us} as the shock variable, 
 whithout the need to specify it through the {cmd:locproj} option {opt shock()}:{p_end}
 
-{p 4 8 2}{cmd:. locproj crisisJST l(0/2).stir_us peg#c.l(0/2).stir_us, margins m(xtlogit) fe mrfvar(1.peg)}{p_end}
-{p 4 8 2}{cmd:. locproj crisisJST l(0/2).stir_us peg#c.l(0/2).stir_us, margins m(xtlogit) fe mrfvar(0.peg)}{p_end}
+{p 4 8 2}. {stata locproj crisisJST l(0/2).stir_us peg#c.l(0/2).stir_us, margins m(xtlogit) fe mrfvar(1.peg)}{p_end}
+{p 4 8 2}. {stata locproj crisisJST l(0/2).stir_us peg#c.l(0/2).stir_us, margins m(xtlogit) fe mrfvar(0.peg)}{p_end}
+
+{synopt :{helpb locproj##index:Return to Index}}{p_end}
+{synoptline}
+
+
+{marker example8}{...}
+{title:Example 8. D-i-D Event Study}
+
+{p}We can use {cmd:locproj} to estimate an Event Study based on the DiD estimator in the case where the treatment period is the same 
+for all treated individuals.{p_end}
+
+{p}In this example, we have a dataset that contains a response variable {bf:y} and a variable {bf:d} that is equal to one for a subset of individuals who were all treated in the year 2004. The dataset also contains a set of dummy variables 
+{it:f01}, {it:f02},..., {it:f06} that are equal to one for the years 2001 to 2006 respectively.{p_end}
+
+{p}Following Wooldridge (2021) we can estimate the Event Study regression without covariates using the following specification:{p_end}
+
+{p 4 8 2}. {stata use did_common_6, clear}{p_end}
+{p 4 8 2}. {stata xtset id year}{p_end}
+{p 4 8 2}. {stata reg y c.d#c.f01 c.d#c.f02 c.d#c.f04 c.d#c.f05 c.d#c.f06 d i.year, vce(cluster id)}{p_end}
+
+{p}All effects are measured relative to the period just before intervention, i.e. 2003. The event-study coefficients are thus 
+{bf:-0.551, -.342, 0, 3.177, 4.894, 5.839}. {p_end}
+
+{p}We can reproduce these results with {cmd:locproj}. We need to use the option {opt transf(cmlt)} in order to obtain 
+the long-term differencing. We need to define the horizon period as hor(-3/2) since the coefficient of the period {it:h = −1} 
+is normalized to zero and we want to evaluate two periods before the intervention {it:h = −3, −2} and three periods 
+after the intervention {it:h = 0, 1, 2}. {p_end}
+
+{p}We also need to have a variable that is equal to one only for treated individuals and only after the intervention, i.e. from 2004 onward, which we are going to call treat. Our shock variable is the change in this new variable d.treat:{p_end}
+
+{p 4 8 2}. {stata gen treat=year>=2004 & d}{p_end}
+{p 4 8 2}. {stata locproj y d.treat i.year, tr(cmlt) vce(cluster id) h(-3/2) z gropt(xline(-1, lc(gray)))}{p_end}
 
 
 {synoptline}
 
 {title:References}
 
-{p}"Jordà, Òscar. "Estimation and inference of impulse responses by local projections." American Economic Review 95, no. 1 (2005): 161-182."{p_end}
-{p} https://sites.google.com/site/oscarjorda/home/local-projections?pli=1
+{p}Jordà, Òscar. 2005, "Estimation and inference of impulse responses by local projections." American Economic Review 95, no. 1 (2005): 161-182."{p_end}
 
+{p}Wooldridge, J. M., 2021, "Two-way fixed effects, the two-way mundlak regression, and difference-in-differences estimators". Available at SSRN 3906345{p_end}
+
+{p}Jordà, Ò. and Taylor, A.M. 2024, "Local Projections". Federal Reserve Bank of San Francisco Working Paper Series 2024(24){p_end}
+
+{p}https://sites.google.com/site/oscarjorda/home/local-projections?pli=1{p_end}
+
+{synoptline}
+
+{marker acknowledgements}{...}
+{title:Acknowledgements}
+{pstd}I am grateful to Enrique Pinzon (StataCorp) for its useful comments and suggestions at the US Stata Conference 2023.{p_end}
+
+{synoptline}
+
+{p}If you use this package, please cite both the package and the paper introducing it:{p_end}
+
+{p}Ugarte-Ruiz, A. 2023. "LOCPROJ: Stata module to estimate Local Projections," Statistical Software Components S459204, Boston College Department of Economics{p_end}
+{p}Ugarte-Ruiz, A. 2025., "LOCPROJ & LPGRAPH: Stata commands to estimate Local Projections". BBVA-Research WP-09, July 2025{p_end}
 
 {synoptline}
 

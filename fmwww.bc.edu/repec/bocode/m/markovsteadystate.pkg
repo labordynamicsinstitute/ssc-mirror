@@ -1,0 +1,22 @@
+d 'MARKOVSTEADYSTATE': module to compute steady state probabilities for Markov chains
+d
+d  markovsteadystate computes the steady-state probabilities of the
+d Markov chain (also referred to as equilibrium distribution or
+d stationary distribution), indicating the long-term behavior of
+d the system regardless of the initial state. In other words, it is
+d the state the chain settles into after many transitions. 
+d
+d KW: Markov chain
+d KW: discrete time Markov chain
+d KW: transition probabilities
+d KW: steady state probabilities
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250718
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f markovsteadystate.ado
+f markovsteadystate.sthlp

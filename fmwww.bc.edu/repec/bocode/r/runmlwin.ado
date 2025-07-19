@@ -1,4 +1,4 @@
-*! runmlwin.ado, George Leckie and Chris Charlton, 23Apr2024
+*! runmlwin.ado, George Leckie and Chris Charlton, 17Jul2025
 program runmlwin, eclass
   if c(stata_version) >= 15 local user user
   if _caller() >= 12 version 12.0, `user'
@@ -105,7 +105,7 @@ program Estimates, eclass sortpreserve
       local versionok = 1
       local versionold = 0
       if (`majorver' < 2) | (`majorver' == 2 & `minorver' < 36) local versionok = 0
-      if (`majorver' < 3) | (`majorver' == 3 & `minorver' < 05) local versionold = 1
+      if (`majorver' < 3) | (`majorver' == 3 & `minorver' < 14) local versionold = 1
       if `versionok' == 0 {
         display as error "runmlwin assumes MLwiN version 2.36 or higher. You can download the latest version of MLwiN at:" _n "https://www.bristol.ac.uk/cmm/software/mlwin/download/upgrades.html." _n "If you want to ignore this warning and attempt to continue anyway you can use the noversioncheck option"
         exit 198
@@ -117,7 +117,7 @@ program Estimates, eclass sortpreserve
     if _rc { // if not replace with missing
       local mlwinversion .
     }
-    if `mlwinversion' < 3 {
+    if `mlwinversion' < 3 { // Checking for double->single rounding could be removed if we stopped supporting MLwiN prior to v3.00
       local doublevar 0
     }
   }
@@ -679,7 +679,7 @@ program Estimates, eclass sortpreserve
 
       if "`mtype'" == "multivariate" {
         forvalues eq = 1/`nummlwineqns' {
-          if `l' == 1 & "`discrete'" ~= "" & "`=word("`distribution'", `eq')'"=="binomial" local rp`l'_`eq' bcons //_`eq'
+          if `l' == 1 & "`discrete'" ~= "" & "`=word("`distribution'", `eq')'"=="binomial" local rp`l'_`eq' bcons
           local numrpvars`eq'  :list sizeof rp`l'_`eq'
           local rp`l'name`eq'
           foreach var of local rp`l'_`eq'  {
@@ -719,18 +719,6 @@ program Estimates, eclass sortpreserve
         local rp`l' `rp`l'' `rp`l'_`e''
         if "`mtype'" == "univariate" local rp`l'name`e' `rp`l'_`e''
       }
-
-  //    * Add in extra binomial variation parameters etc
-  //    if `l' == 1 & "`discrete'" ~= "" & "`mtype'" ~= "multivariate"{
-  //      if "`distribution'" == "multinomial" & "`link'"=="mlogit" local rp`l'name1 `rp`l'name1' P -P
-  //      //forvalues a = 1/`nummlwineqns' {
-  //      //  if "`=word("`distribution'", `a')'" == "binomial" local rp`l'name`a' `rp`l'name`a'' bcons.`a'
-  //      //  if "`=word("`distribution'", `a')'" == "poisson" local rp`l'name`a' `rp`l'name`a'' bcons.`a'
-  //      //  if "`=word("`distribution'", `a')'" == "nbinomial" local rp`l'name`a' `rp`l'name`a'' bcons.`a' bcons2.`a'
-  //      //}
-  //      //if "`distribution'" == "multinomial" & "`link'"=="mlogit" local rp`l'name1 `rp`l'name1' P -P bcons.1
-  //      //if "`distribution'" == "multinomial" & ("`link'"=="ologit" | "`link'"=="oprobit" | "`link'"=="ocloglog") local rp`l'name1 `rp`l'name1' bcons.1
-  //    }
 
       forvalues e = 1/`numrpbrackets`l'' {          // loop over the equations
         * Ensure random part names are in the correct order
@@ -888,11 +876,6 @@ program Estimates, eclass sortpreserve
       }
 
       if ("`mmids'" ~= "") {
-        //if "`mcmc'" == "" | "`mtype'" ~= "univariate" {
-        //  display as error "Multiple membership is only allowed in Univariate MCMC models"
-        //  exit 198
-        //}
-        //else
         local mmids`l' `mmids'
       }
 
@@ -903,11 +886,6 @@ program Estimates, eclass sortpreserve
         }
         else {
           local mmweights`l' `mmweights'
-          // This is checked later
-          //if :list sizeof mmids ~= :list sizeof mmweights {
-          //  display as error "Number of multiple membership weight variables does not match number of ID variables"
-          //  exit 198
-          //}
         }
       }
 
@@ -1131,12 +1109,10 @@ program Estimates, eclass sortpreserve
   if "`mlwinsettings'" ~= "" {
     local 0, `mlwinsettings'
     syntax , [Size(numlist >0 integer min=1 max=1) Levels(numlist >=3 integer min=1 max=1) Columns(numlist >=1500 integer min=1 max=1) Variables(numlist >=1 integer min=1 max=1) TEMPMAT OPTIMAT RNGVersion(integer 10)]
-    if "`verbose'" ~= "" display "Worksheet size (KCells): `size', Maximum number of levels: `levels', Number of columns: `columns', Maximum number of modelled variables: `variables'"
+    if "`verbose'" ~= "" display "Maximum number of levels: `levels', Number of columns: `columns'"
 
     if "`levels'" ~= "" local toplevel `levels'
     if "`columns'" ~= "" local numwscolumns `columns'
-    if "`variables'" ~= "" local maxexpl `variables'
-    if "`size'" ~= "" local worksize `size'
   }
 
   ******************************************************************************
@@ -1446,9 +1422,6 @@ program Estimates, eclass sortpreserve
     }
     else {
       tempfile savechains
-      //tempname fh
-      //file open `fh' using "`savechains'", write
-      //file close `fh'
     }
 
     forvalues l = 1/`maxlevels' {
@@ -1553,11 +1526,10 @@ program Estimates, eclass sortpreserve
 
     local mcmc_defaultprior = `defaultprior'      // MLwiN MCMC command option 10
 
-    // MCMC doesn't allow neg binomial
     if "`mtype'" == "univariate" & "`distribution'"=="normal"   local mcmc_modeltype = 1 // Normal models
     if "`mtype'" == "univariate" & "`distribution'"=="binomial" local mcmc_modeltype = 2 // Binomial models
     if "`mtype'" == "univariate" & "`distribution'"=="poisson"  local mcmc_modeltype = 3 // Poisson models
-    if "`mtype'" == "univariate" & "`distribution'"=="nbinomial"  local mcmc_modeltype = 8 // Poisson models
+    if "`mtype'" == "univariate" & "`distribution'"=="nbinomial"  local mcmc_modeltype = 8 // Negative-binomial models
     if "`mtype'" == "multivariate" & "`discrete'" == ""         local mcmc_modeltype = 4 // Multivariate normal models
     if "`mtype'" == "multivariate" & "`discrete'" ~= ""         local mcmc_modeltype = 5 // Multivariate mixed models (must be normal/binomial with probit link)
     if "`mtype'" == "multinomial" & "`link'"=="mlogit"          local mcmc_modeltype = 6 // Unordered multinomial models
@@ -1607,11 +1579,6 @@ program Estimates, eclass sortpreserve
         }
       }
     }
-
-    //if "`resptype'" == "2" {
-    //  display as error "Negative binomial is currently unavailable for MCMC estimation"
-    //  exit 198
-    //}
 
     local allnormal 1
     local resptypes `distribution'
@@ -1701,7 +1668,7 @@ program Estimates, eclass sortpreserve
         local fname `fname' `=abbrev("`name'", 32)'
       }
     }
-    mat colnames `FP_b`r'' = `fname' //`fp`r''
+    mat colnames `FP_b`r'' = `fname'
   }
   tempname matFP_b
   forvalues r = 1/`numfpbrackets' {
@@ -1714,23 +1681,8 @@ program Estimates, eclass sortpreserve
     if `:list sizeof rp`l'name'>=1 {
       runmlwin_rplpars , rpname(`rp`l'name')
       local rp`l'pars `r(rplong)'
-
       runmlwin_rplpars , rpname(`origrp`l'name')
       local origrp`l'pars `r(rplong)'
-
-    //  if "`mtype'"=="multinomial" & "`link'"=="mlogit" {
-    //    * Remove non-existant parameter from multinomial model
-    //  //  local tmpname var(P) var(_P) // cov(P\bcons_1) cov(_P\bcons_1)
-    //  //  //if "`mcmc'" ~= "" local tmpname `tmpname' var(bcons_1) // This isn't included for MCMC models
-    //  //  if "`mcmc'" ~= "" local tmpname `tmpname' cov(P\_P) // This isn't included for MCMC models
-    //    if "`mcmc'" ~= "" local tmpname OD:bcons_2
-    //    local rp`l'pars `:list rp`l'pars - tmpname'
-    //  }
-
-      * Remove non-existant parameter from negative-binomial model
-      // local tmpname cov(bcons_1\bcons2_1)
-      // if "`distribution'"=="nbinomial" local rp`l'pars `:list rp`l'pars - tmpname'
-
       local numrp`l'pars: word count `rp`l'pars'
       if `numrp`l'pars' > 0 {
         mat `RP`l'_b' = J(1,`numrp`l'pars',.)
@@ -2119,7 +2071,6 @@ program Estimates, eclass sortpreserve
     ereturn clear
     ereturn matrix matb = `matb'
     ereturn matrix matV = `matV'
-    //ereturn post `matb' `matV'
   }
 
   ******************************************************************************
@@ -2165,7 +2116,7 @@ program Estimates, eclass sortpreserve
       }
 
       bysort `hier': egen `propsum' = total(`proportion')
-      capture assert inrange(`propsum',0.995,1.005) // >= 0 & `propsum' <= 1
+      capture assert inrange(`propsum', 0.995, 1.005)
       if _rc {
         display as error "The sum of multinomial proportions for each unit should equal one"
         exit 198
@@ -2235,14 +2186,6 @@ program Estimates, eclass sortpreserve
     if "`mmweights`l''" ~= "" local mmweightvars `mmweightvars' `mmweights`l''
   }
 
-  * List of multiple membership ID variables
-  //local mmweightids
-  //forvalues l = 2/`maxlevels' {
-  //  if "`mmids`l''" ~= "" {
-  //    local mmweightids `mmweightids' `mmids`l''
-  //  }
-  //}
-
   * List of (R)IGLS sampling weight variables
   local weightvars
   forvalues l = 1/`maxlevels' {
@@ -2290,35 +2233,6 @@ program Estimates, eclass sortpreserve
   local numcolumns = r(k)
   local N = r(N)
 
-  local explvars
-
-  forvalues e = 1/`numfpbrackets' {
-    local explvars `:list explvars | fpname`e''
-  }
-
-  forvalues l = `maxlevels'(-1)1 {
-    forvalues e = 1/`numrpbrackets`l'' {
-      local explvars `:list explvars | rp`l'name`e''
-    }
-  }
-
-  local numrpparam = colsof(`matRP_b')
-  if "`mtype'" == "multivariate" & "`discrete'" ~= "" { // Account for adding bcons parameters with SETV in multivariate (i.e. add off-diagonal)
-    local numrpparam = `numrpparam' + (((`nummlwineqns' * (`nummlwineqns'+1)) /2) - `nummlwineqns')
-  }
-  local numexpl = max(`:list sizeof explvars', `numrpparam')
-
-  * Allow for bcons.1
-  if "`distribution'" == "binomial" | "`distribution'" == "poisson" | "`distribution'" == "nbinomial" | "`mtype'" == "multinomial" local ++numexpl
-
-  * Allow for bcons2.1
-  if "`distribution'" == "nbinomial" local ++numexpl
-
-  * Allow for P parameter
-  if "`mtype'" == "multinomial" local ++numexpl
-
-  if "`maxexpl'" == "" local maxexpl = `numexpl' + 1 // MLwiN appears to allow one fewer than specified
-
   if "`toplevel'" == "" {
     local toplevel `maxlevels'
     if ("`mtype'"=="multivariate" | "`mtype'"=="multinomial") local ++toplevel
@@ -2326,11 +2240,6 @@ program Estimates, eclass sortpreserve
     if `toplevel' < 3 local toplevel = 3
   }
   if "`numwscolumns'" == "" local numwscolumns 1500
-
-  * Attempt to estimate how large the data will be after expansion
-  if "`worksize'" == "" {
-    local worksize = 10000
-  }
 
   if ("`verbose'"~="") display as text "Expanded variables: Count: `numexpand', Length: `longN' Estimated sheet size: `sheetsize'"
 
@@ -2429,24 +2338,15 @@ program Estimates, eclass sortpreserve
     file write `macro1' "NOTE   See: www.bristol.ac.uk/cmm/runmlwin for help" _n
     file write `macro1' "NOTE   ***********************************************************************" _n(2)
 
-    if "`verbose'" ~= "" display as text "Estimated worksheet size: `worksize'"
     if "`verbose'" ~= "" display as text "Number of levels: `toplevel'"
-    if "`verbose'" ~= "" display as text "Number of explanatory variables/random parameters: `maxexpl' (`explvars')"
 
     if "`verbose'" ~= "" file write `macro1' "ECHO 1" _n
-    file write `macro1' "NOTE   Initialise MLwiN storage" _n "INIT `toplevel' `worksize' `numwscolumns' `maxexpl' 30" _n(2)
-    if "`optimat'" == "" file write `macro1' "OPTS 0" _n
-    else file write `macro1' "OPTS 1" _n
-    if "`tempmat'" == "" file write `macro1' "NOTE   Don't use worksheet for matrix storage" _n "MEMS 1" _n(2)
-    else file write `macro1' "NOTE   Use worksheet for matrix storage" _n "MEMS 0" _n(2)
+    file write `macro1' "NOTE   Initialise MLwiN storage" _n "INIT `toplevel' 10000 `numwscolumns' 150 30" _n(2)
 
     file write `macro1' "MARK 0" _n
     if "`batch'" ~= "" {
       file write `macro1' "NOTE divert error messages to a file" _n "ERRO 0" _n
       tempfile errlog
-      //tempname fh
-      //file open `fh' using "`errlog'", write
-      //file close `fh'
       file write `macro1' "LOGO '`errlog'' 1" _n(2)
     }
 
@@ -2710,15 +2610,12 @@ program Estimates, eclass sortpreserve
       }
 
       * Need to fit the ordered model for at least two iterations before we can impose starting values
-      //if ("`mcmc'"~="" & "`cc'" == "") | ("`inits'"~="" & ("`link'"=="ologit" | "`link'"=="oprobit" | "`link'"=="ocloglog" | "`link'"=="mlogit")) { // CMJC added check for mlogit to get model in the correct state for lowest level residuals (e.g. adds P/-P parameter which will then be removed later)
       if ("`mcmc'"~="" & "`cc'" == "") | ("`link'"=="ologit" | "`link'"=="oprobit" | "`link'"=="ocloglog" | "`link'"=="mlogit") { // CMJC added check for mlogit to get model in the correct state for lowest level residuals (e.g. adds P/-P parameter which will then be removed later)
         file write `macro1' "NOTE   Fit model for two iterations to correctly setup the model (this is only required for the multilevel ordered multinomial model)" _n
         if "`linearization'"=="MQL1" file write `macro1' "LINE 0 1" _n
         if "`linearization'"=="MQL2" file write `macro1' "LINE 0 2" _n
         if "`linearization'"=="PQL1" file write `macro1' "LINE 1 1" _n
         if "`linearization'"=="PQL2" file write `macro1' "LINE 1 2" _n
-
-        //file write `macro1' "MAXI 2" _n "BATCH 1" _n "STAR" _n "ITNU 0" _n(2)
         file write `macro1' "MAXI 2" _n "BATCH 1" _n "STAR" _n(2)
 
         // set the maximum iterations back to the default if not set
@@ -2732,9 +2629,7 @@ program Estimates, eclass sortpreserve
         file write `macro1' "FCON b1001" _n
         forvalues r = 1/`numfpconstraints' {
           file write `macro1' "JOIN   cb1001 `fpconstraint`r'' cb1001" _n
-          //file write `macro1' "JOIN   c1001 `fpconstraint`r'' c1001" _n
         }
-        //file write `macro1' "FCON   c1001" _n(2) // note that this column will not be free if multinomial or multivariate has been specified
       }
 
       * Random part constraint(s)
@@ -2743,9 +2638,7 @@ program Estimates, eclass sortpreserve
         file write `macro1' "RCON b1002" _n
         forvalues r = 1/`numrpconstraints' {
           file write `macro1' "JOIN   cb1002 `rpconstraint`r'' cb1002" _n
-          //file write `macro1' "JOIN   c1002 `rpconstraint`r'' c1002" _n
         }
-        //file write `macro1' "RCON   c1002" _n(2) // note that this column will not be free if multinomial or multivariate has been specified
       }
     }
 
@@ -2933,10 +2826,6 @@ program Estimates, eclass sortpreserve
         * Correlated residuals
         if "`corresiduals'" ~= "" {
           file write `macro1' "NOTE   Set up correlated residuals" _n
-          //if "`corresiduals'" == "full" { // default
-          //  file write `macro1' "NOTE   full covariance matrix" _n
-          //  file write `macro1' "MCCO 0" _n
-          //}
           if "`corresiduals'" == "exchangeable" file write `macro1' "NOTE   all correlations equal and all variances equal" _n "MCCO 1" _n
           if "`corresiduals'" == "areqvars" file write `macro1' "NOTE   an AR1 structure with all variances equal" _n "MCCO 2" _n
           if "`corresiduals'" == "eqcorrsindepvars" file write `macro1' "NOTE   all correlations equal but independent variances" _n "MCCO 3" _n
@@ -3087,44 +2976,7 @@ program Estimates, eclass sortpreserve
         if "`useresid'" ~= "" & "`cc'" == "" & (`maxlevels' > 1 | "`mtype'" == "multivariate" | ("`mtype'" == "multinomial" & "`link'"=="mlogit")){
           * Calculate MCMC starting values for level `l' residuals
 
-          // set up PRE and POST file
-          if `allnormal' == 1 {
-            file write `macro1' "PREF 0" _n
-            file write `macro1' "POST 0" _n
-          }
-          else {
-            local path `mlwinpath'
-            local revpath `=reverse("`path'")'
-            local revpath `=substr("`revpath'", `=strpos("`revpath'", "\")+1' , .)'
-            local path `=reverse("`revpath'")'
-
-            if "`mtype'"=="multinomial" {
-              capture confirm file `"`path'\multicat\PRE"'
-              if !_rc file write `macro1' "FPAT '`path'\multicat'" _n
-              else {
-                local revpath `=reverse("`path'")'
-                local revpath `=substr("`revpath'", `=strpos("`revpath'", "\")+1' , .)'
-                local path `=reverse("`revpath'")'
-                capture confirm file `"`path'\multicat\PRE"'
-                if !_rc file write `macro1' "FPAT '`path'\multicat'" _n
-              }
-            }
-            else{
-              capture confirm file `"`path'\discrete\PRE"'
-              if !_rc file write `macro1' "FPAT '`path'\discrete'" _n
-              else {
-                local revpath `=reverse("`path'")'
-                local revpath `=substr("`revpath'", `=strpos("`revpath'", "\")+1' , .)'
-                local path `=reverse("`revpath'")'
-                capture confirm file `"`path'\discrete\PRE"'
-                if !_rc file write `macro1' "FPAT '`path'\discrete'" _n
-              }
-            }
-            file write `macro1' "PREF 'PRE'" _n
-            file write `macro1' "POST 'POST'" _n
-            file write `macro1' "PREF 1" _n
-            file write `macro1' "POST 1" _n
-
+          if `allnormal' ~= 1 {
             if "`mtype'" == "multinomial" {
               file write `macro1' "SETV 1 'bcons.1'" _n
             }
@@ -3202,7 +3054,7 @@ program Estimates, eclass sortpreserve
                 file write `macro1' "LINK `c' g11" _n
               }
             }
-            // LINK
+            // LINK (backup/restore of model columns before residuals is no longer needed in MLwiN 3.13 and later)
             file write `macro1' "LINK -5 g19 1" _n
             file write `macro1' "LINK 0 g18" _n
             file write `macro1' "CALC g18=g19" _n
@@ -3248,7 +3100,7 @@ program Estimates, eclass sortpreserve
           file write `macro1' "MISR 1" _n
 
           if `allnormal' != 1 {
-            // UNLINK
+            // UNLINK (backup/restore of model columns before residuals is no longer needed in MLwiN 3.13 and later)
             file write `macro1' "CALC g19=g18" _n
             file write `macro1' "ERASe g18" _n
             file write `macro1' "LINK 0 g18" _n
@@ -3335,8 +3187,8 @@ program Estimates, eclass sortpreserve
           if "`residcol'" ~= "" file write `macro1' "LINK 0 G27" _n
         }
         local total_stored = ceil(`mcmc_chain' / `mcmc_thinning')
-        if ("`batch'"=="") {    // split MCMC chain into 50 (stored) iterations at a time then update
-          file write `macro1' _n
+        if ("`batch'"=="") {    // split MCMC chain into mcmc_refresh (stored) iterations at a time then update
+          file write `macro1' _n // (MREF command was introduced in v3.09, so conditions could be merged if this was the minimum version supported)
           local curriter 0 // Unthinned iterations
           if "`imputeiterations'" ~= "" {
             local nextimpute `:word 1 of `imputeiterations''
@@ -3358,9 +3210,6 @@ program Estimates, eclass sortpreserve
                   file write `macro1' "NAME G22[`e'] '_mi_`response`e'''" _n
                 }
                 tempfile impfile
-                //tempname fh
-                //file open `fh' using "`impfile'", write
-                //file close `fh'
 
                 file write `macro1' "PSTA '`impfile'' '`_sortindex'' G22" _n
                 local imputefiles `" `imputefiles' "`impfile'" "'
@@ -3407,9 +3256,6 @@ program Estimates, eclass sortpreserve
                 file write `macro1' "NAME G22[`e'] 'imp`response`e'''" _n
               }
               tempfile impfile
-              //tempname fh
-              //file open `fh' using "`impfile'", write
-              //file close `fh'
 
               file write `macro1' "PSTA '`impfile'' '`_sortindex'' G22" _n
               local imputefiles `" `imputefiles' "`impfile'" "'
@@ -3451,9 +3297,6 @@ program Estimates, eclass sortpreserve
         }
 
         tempfile imputesummaries
-        //tempname fh
-        //file open `fh' using "`imputesummaries'", write
-        //file close `fh'
 
         file write `macro1' "PSTA '`imputesummaries'' '`_sortindex'' G22 G23" _n
         file write `macro1' "ERAS G21 G22 G23" _n
@@ -3485,9 +3328,6 @@ program Estimates, eclass sortpreserve
       forvalues l = `maxlevels'(-1)1 {
         if ("`residuals`l''"~=""){
           tempfile residfile`l'
-          //tempname fh
-          //file open `fh' using "`residfile`l''", write
-          //file close `fh'
           local lids
           forvalues lev = `maxlevels'(-1)1 {
             local lids `lids' lev`lev'id(`lev`lev'id')
@@ -3506,11 +3346,8 @@ program Estimates, eclass sortpreserve
         file write `macro1' "DAFA G21[1] G21[2]" _n
         file write `macro1' "SET b35 1" _n
         forvalues l = 1/`maxlevels' {
-          if ("`fscores`l''"~=""){
+          if ("`fscores`l''"~="") {
             tempfile fscoresfile`l'
-            //tempname fh
-            //file open `fh' using "`fscoresfile`l''", write
-            //file close `fh'
             local count = `=colsof(`flinit`l'')' * 2
             file write `macro1' "LINK `count' G22" _n
 
@@ -3607,16 +3444,9 @@ program Estimates, eclass sortpreserve
     if "`fit'" ~= "nofit" {
       file write `macro2' "LINK 1 G30" _n
 
-      * Store number of cases and number in use
-      //file write `macro2' "NOBS 1 b31 b32" _n
-      //file write `macro2' "EDIT 1 G30[1] b31" _n  // Total Cases
-      //file write `macro2' "EDIT 2 G30[1] b32" _n  // Cases in use
-
       * Put deviance in c1300
-
       file write `macro2' "NAME   G30[1] '_Stats'" _n
       if ("`discrete'"=="" & "`mcmc'"=="") {
-      //if ("`mcmc'"=="") {
         file write `macro2' "LIKE   b100" _n
         file write `macro2' "EDIT 3 G30[1] b100" _n // Deviance
       }
@@ -3629,16 +3459,6 @@ program Estimates, eclass sortpreserve
       }
       file write `macro2' "EDIT 7 G30[1] b21" _n  // Number of iterations
       file write `macro2' "EDIT 8 G30[1] b22" _n  // Converged
-
-      * Store number of units in higher levels
-      //local nextrownum = 9
-      //forvalues l = `maxlevels'(-1)2 {
-      //  file write `macro2' "NOBS `l' b33 b34" _n
-      //  file write `macro2' "EDIT `nextrownum' G30[1] b33" _n // Total Cases
-      //  local ++nextrownum
-      //  file write `macro2' "EDIT `nextrownum' G30[1] b34" _n // Cases in use
-      //  local ++nextrownum
-      //}
 
       file write `macro2' "NAME   c1098 '_FP_b'" _n
       file write `macro2' "NAME   c1099 '_FP_v'" _n
@@ -3661,9 +3481,6 @@ program Estimates, eclass sortpreserve
 
       if "`savestata'" == "" {
         tempfile fileresults
-        //tempname fh
-        //file open `fh' using "`fileresults'", write
-        //file close `fh'
       }
       else {
         local 0 `savestata'
@@ -3689,12 +3506,9 @@ program Estimates, eclass sortpreserve
       if "`mcmc'" ~= "" {
         file write `macro2' "LINK 0 G21" _n /* Residuals */ "LINK 0 G22" _n /* Factors */ "LINK 0 G23" _n /* Factor variances */
         local paramlength = colsof(`matFP_b') + colsof(`matRP_b') // numvars is 4 here
-        //local chainlength =`mcmc_chain'/`mcmc_thinning'
         local chainnames `:colfullnames `matFP_b'' `:colfullnames `matRP_b''
         if "`mtype'"=="multinomial" & ("`link'"=="ologit"|"`link'"=="oprobit"|"`link'"=="ocloglog") {
           local paramlength = `paramlength' - 1
-          //local tmp RP1:var(bcons_1)
-          //display "`chainnames'"
           local tmp OD:bcons_1
           local chainnames `:list chainnames - tmp'
         }
@@ -3735,15 +3549,12 @@ program Estimates, eclass sortpreserve
           file write `macro2' "LINK 1 G25" _n
           file write `macro2' "PUT   b40 1  G25[1]'" _n
           if _caller() >= 11 {
-            //file write `macro2' "NAME   G25[1] '`=strtoname("RP1:var(bcons_1)")''" _n
             file write `macro2' "NAME   G25[1] '`=strtoname("OD:bcons_1")''" _n
           }
           else {
-            //mata: st_local("tmpname", validname("RP1:var(bcons_1)"))
             mata: st_local("tmpname", validname("OD:bcons_1"))
             file write `macro2' "NAME  G25[1] '`tmpname''" _n
           }
-          //file write `macro2' "DESC   G25[1] 'RP1:var(bcons_1)'" _n
           file write `macro2' "DESC   G25[1] 'OD:bcons_1'" _n
           file write `macro2' "GSET 2 G21 G25 G21" _n
           file write `macro2' "LINK 0 G25" _n
@@ -3825,9 +3636,6 @@ program Estimates, eclass sortpreserve
 
         if ("`savechains'"=="") {
           tempfile savechains
-          //tempname fh
-          //file open `fh' using "`savechains'", write
-          //file close `fh'
         }
 
         file write `macro2' "PSTA '`savechains'' 'iteration' 'deviance' G21" _n
@@ -3841,8 +3649,6 @@ program Estimates, eclass sortpreserve
 
             local ll = `l'
             if ("`mtype'"=="multivariate" | "`mtype'"=="multinomial") local ++ll
-            //local numresi = `numrp`l'vars'
-            //if `numresi' == 0 local numresi = 1
             file write `macro2' "NOBS `ll' b31 b32" _n
             file write `macro2' "CALC b33 = b31 * `numresi`l''" _n
             file write `macro2' "CALC b34 = b31 * b40" _n
@@ -3853,13 +3659,13 @@ program Estimates, eclass sortpreserve
             if ("`cc'"=="") {
               local hier
               forvalues lev = `l'/`maxlevels' {
-                local hier '`lev`l'id'' `hier'
+                local hier '`lev`lev'id'' `hier'
               }
               file write `macro2' "COMB `hier' G25[4]" _n
               file write `macro2' "TAKE G25[4] '`lev`l'id'' G25[3] G25[2]" _n
               file write `macro2' "ERAS G25[3] G25[4]" _n
             }
-            if "`mmids`l''" ~= "" {
+            else if "`mmids`l''" ~= "" {
               file write `macro2' "ERAS G25[1]" _n
               foreach varname of varlist `mmids`l'' {
                 file write `macro2' "APPE G25[1] '`varname'' G25[1]" _n
@@ -4162,12 +3968,8 @@ program Estimates, eclass sortpreserve
   ereturn local cmd           runmlwin
   ereturn local cmdline `e(cmd)' `runmlwin_cmdline'
   ereturn local version `mlwinversion'
-  ereturn scalar size = `worksize'
   ereturn scalar maxlevels = `toplevel'
   ereturn scalar columns = `numwscolumns'
-  ereturn scalar variables = `maxexpl'
-  if "`tempmat'" == "" ereturn scalar tempmat = 0
-  else ereturn scalar tempmat = 1
 
   if ("`cc'"~="") local classtype "(cross-classified)"
   else local classtype "(hierarchical)"
@@ -4209,17 +4011,6 @@ program Estimates, eclass sortpreserve
   }
   ereturn local ivars `ivars'
 
-//  * Number of units at each level
-//  if `maxlevels'>1 {
-//    matrix N_g = J(1, `=`maxlevels'-1', .)
-//    local nextrownum = 9
-//    forvalues l = `maxlevels'(-1)2 {
-//      matrix N_g[1, `=`maxlevels' -`l'+1'] = _Stats[`nextrownum']
-//      local nextrownum = `nextrownum' + 2
-//    }
-//    ereturn matrix N_g = N_g
-//  }
-
   * (R)IGLS Weighting options
   local weightvar
   local weighttype
@@ -4233,8 +4024,6 @@ program Estimates, eclass sortpreserve
   ereturn local weighttype `weighttype'
 
   * Model fit
-  //if ("`mcmc'"=="") ereturn scalar ll     = -_Stats[3]/2
-  //if ("`mcmc'"=="") ereturn scalar deviance   = _Stats[3]
   if ("`discrete'"=="" & "`mcmc'"=="") ereturn scalar ll    = -_Stats[3]/2
   if ("`discrete'"=="" & "`mcmc'"=="") ereturn scalar deviance  = _Stats[3]
   ereturn scalar iterations         = _Stats[7]
@@ -4260,7 +4049,6 @@ program Estimates, eclass sortpreserve
       if `factorson' == 1 {
         local chainnames `chainnames' `:colfullnames `mat_RP_b_fact'' `:colfullnames `mat_RP_b_factvar''
       }
-      //ereturn local parnames "`chainnames'"
       local temp = `:list sizeof chainnames'
       runmlwin_savechains, parnames(`chainnames') chainresults(`savechains')
 
@@ -4684,7 +4472,6 @@ program define runmlwin_setinit
       local ++i
     }
   }
-  //if "`mtype'"=="multinomial" & "`link'"=="mlogit" file write `macro1' "EDIT `i' c1096  1" _n
   file write `macro1' _n
 
   * Random part initial values standard errors
@@ -4841,7 +4628,6 @@ program define runmlwin_calcresiduals
   local 0 ,`options'
   syntax, `lids'
 
-  //if "`numrpxvars'" == "0" | "`mcmc'" ~= "" local numrpxvars "1"
   if "`numrpxvars'" == "0" local numrpxvars "1"
 
   file write `macro1' "NOTE   Store level `level' residuals" _n
@@ -4912,11 +4698,9 @@ program define runmlwin_calcresiduals
       file write `macro1' "RESI" _n               // Save the residuals and the variances
     }
     local ccount = 1
-    //if "`standardised'" ~= "" {
     forvalues i = 1/`numrpxvars' {
       file write `macro1' "CALC  G23[`i'] = G21[`i']/sqrt(G22[`i'])" _n         // Convert the variances to standard errors
     }
-    //}
   }
 
   // NOTE leverage depends on residuals with rtype 0
@@ -5077,7 +4861,7 @@ program define runmlwin_calcresiduals
   if ("`cc'"=="") {
     local hier
     forvalues lev = `level'/`maxlevels' {
-      local hier '`lev`level'id'' `hier'
+      local hier '`lev`lev'id'' `hier'
     }
     file write `macro1' "COMB `hier' G29[4]" _n
     file write `macro1' "TAKE G29[4] '`lev`level'id'' G29[3] G29[2]" _n
@@ -5154,10 +4938,6 @@ program define runmlwin_mergeresiduals, sortpreserve
   }
   else {
     if ("`cc'"~="") {       // cross-classified models in MCMC can have non-nested IDs in which case user must specify unique IDs
-      //tempvar temp
-      //gen `temp' = `levXid'
-      //replace `temp' = `c(minfloat)' if `levXid'==.
-      //quietly egen _residualid = group(`temp') if `touse' == 1, missing
       if "`mmid'" ~= "" {
         local mmnum 1
         foreach var of varlist `mmid' {
@@ -5199,7 +4979,6 @@ program define runmlwin_mergeresiduals, sortpreserve
           qui merge m:1 `levelid' using "`residfile'", assert(master match) nogenerate noreport
         }
         else {
-          //mata: setsortorder("`residfile'", "`levelid'")
           sort `levelid'
           preserve
             use "`residfile'", clear
@@ -5544,7 +5323,7 @@ program runmlwin_display
           local contrast_denom = `basecategory'
           local contrast_numers : list respcategories - contrast_denom
           forvalues contrast = 1/`=`num_respcategories' - 1' {
-            local respcategory : word `contrast' of `contrast_numers' //= word("`contrast_numers'",`contrast')
+            local respcategory : word `contrast' of `contrast_numers'
             local p = 13 - length("`contrast'")
 
             di as res  _col(`p') "`contrast'" as txt _col(14) "{c |}" _c
@@ -5955,10 +5734,6 @@ program runmlwin_display
   //------------------------------------------------------------------------------
   if "`retable'" == "" {
     * Display random part of the model
-    // Need to allow the display at level 1 if we allow for extra binomial variation
-    //if ~(`e(numlevels)'==1 & ~regexm("`e(distribution)'","normal")==1) {
-    //if regexm("`e(distribution)'","normal")==1 | regexm("`e(distribution)'","nbinomial")==1 | `e(extrabinomial)' == 1 {
-
       local eqlist :coleq e(b)
       local eqlist :list uniq eqlist
 
@@ -5981,12 +5756,6 @@ program runmlwin_display
           }
           local ++i
         }
-
-        //if `:list posof "OD" in eqlist' > 0 {
-        //  local ordlist `ordlist' OD
-        //  local ordlist`i'des  Overdispersion Parameters
-        //  local ++i
-        //}
 
         if `:list posof "RP`l'D" in eqlist' > 0 {
           local ordlist `ordlist' RP`l'D
@@ -6012,8 +5781,6 @@ program runmlwin_display
 
       // Here we want to display the random part only if variables have been specified
       if `:list sizeof ordlist' > 0 {
-        //if ~(`i'==`iLAST' & regexm("`e(distribution)'","normal")==0) {
-        //if `:list sizeof ordlist' > 1 { // | regexm("`e(distribution)'","normal")==1 | regexm("`e(distribution)'","nbinomial")==1 | "`e(extrabinomial)'" == "1" {
           display as txt "{hline 29}{c TT}{hline 48}"
           if e(method)~="MCMC" {
             display as txt _col(4) "Random-effects Parameters" _continue
@@ -6040,8 +5807,6 @@ program runmlwin_display
           }
 
           foreach eq in `ordlist' {
-            //if "`eq'"~="RP1" | wordcount("`e(distribution)'") ~= 1 | "`e(distribution)'"=="normal" | "`e(extrabinomial)'" == "1" {
-            //if "`eq'"~="RP1" | regexm("`e(distribution)'","normal")==1 | regexm("`e(distribution)'","nbinomial")==1 | "`e(extrabinomial)'" == "1" {
               local r = 1
               display as txt "{hline 29}{c +}{hline 48}"
               display as res "`ordlist`i'des'" _continue
@@ -6073,11 +5838,6 @@ program runmlwin_display
               foreach par of local names {
 
                 // Don't display when constrained to one
-                //if "`eq'" == "RP1" & "`e(distribution)'"~="normal" & "`par'" == "var(bcons_1)" & "`e(extrabinomial)'" == "0" {
-                //  local ++r
-                //  continue
-                //}
-
                 local partype
                 if regexm("`par'", "(var)[\(]([a-zA-Z0-9_]+)[\)]") == 1 {
                   local partype `=regexs(1)'
@@ -6297,14 +6057,11 @@ program runmlwin_display
                 }
               }
               local ++i
-            //}
           }
           * Horizontal line
           display as txt "{hline 29}{c BT}{hline 48}
 
         }
-      //}
-    //}
   }
 
   local eqlist :coleq e(b)

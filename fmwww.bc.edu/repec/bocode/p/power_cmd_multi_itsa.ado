@@ -1,0 +1,68 @@
+*! 1.0.0 Ariel Linden 11Jun2025
+
+capture program drop power_cmd_multi_itsa
+program define power_cmd_multi_itsa, rclass
+        version 11
+
+    syntax , n(integer) 		/// number of periods
+			CINTercept(real) 	/// starting level - controls
+			CPOSTtrend(real) 	/// post-intervention trend - controls
+			TINTercept(real) 	/// starting level - treated
+			TPOSTtrend(real) 	/// post-intervention trend	- treated		
+			[ TRPeriod(string)	/// the treatment period when the intervention begins
+			CPREtrend(real 0)	/// baseline trend - controls
+			CSTep(real 0) 		/// post-intervention change in level - controls		
+			CSD(real 1)			/// standard deviation for variability of time series - controls
+			CACorr(real 0)		/// autocorrelation (rho) - controls
+			TPREtrend(real 0)	/// baseline trend - treated
+			TSTep(real 0) 		/// post-intervention change in level - treated	
+			TSD(real 1)			/// standard deviation for variability of time series - treated
+			TACorr(real 0)		/// autocorrelation (rho) - treated					
+			Alpha(real 0.05)	/// alpha level				
+			LEVel				/// specify level change and not trend change
+			NOIsily				/// show the simulations dots
+			reps(integer 100) ]	//  number of repetitions      
+
+			preserve
+			
+			if "`noisily'" == "" {
+				local quietly quietly
+			}
+			
+			if "`trperiod'" == "" {
+				local trperiod = ceil(`n' / 2)
+			}
+			
+			`quietly' simulate reject=r(reject), reps(`reps'): power_sim_multi_itsa, n(`n') ///
+				tintercept(`tintercept') cintercept(`cintercept') ///
+				tpretrend(`tpretrend') cpretrend(`cpretrend') ///
+				tposttrend(`tposttrend') cposttrend(`cposttrend') ///
+				tstep(`tstep') cstep(`cstep') ///
+				tsd(`tsd') csd(`csd') ///
+				tacorr(`tacorr') cacorr(`cacorr') ///
+				trperiod(`trperiod') alpha(`alpha') `level'
+    
+			summarize reject, meanonly
+
+			// return results
+			return scalar power = r(mean)
+			return scalar N = `n'
+			return scalar trperiod = `trperiod'			
+			return scalar alpha = `alpha'
+			return scalar tintercept = `tintercept'
+			return scalar tpretrend = `tpretrend'
+			return scalar tstep = `tstep'
+			return scalar tposttrend = `tposttrend'
+			return scalar tsd = `tsd'		
+			return scalar tacorr = `tacorr'	
+			return scalar cintercept = `cintercept'
+			return scalar cpretrend = `cpretrend'
+			return scalar cstep = `cstep'
+			return scalar cposttrend = `cposttrend'
+			return scalar csd = `csd'		
+			return scalar cacorr = `cacorr'
+			return scalar reps = `reps'
+			
+			restore
+
+end

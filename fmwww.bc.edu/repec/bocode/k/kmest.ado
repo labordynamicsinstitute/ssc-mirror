@@ -8,7 +8,7 @@ version 16.0;
  for input to bootstrap or jackknife.
  This command assumes that the data have been stset.
 *!Author: Roger Newson
-*!Date: 11 March 2020
+*!Date: 05 July 2025
 */
 
 
@@ -68,6 +68,7 @@ if "`centiles'"=="" {;
 else {;
   numlist "`centiles'", sort;
   local centiles "`r(numlist)'";
+  
   local centiles: list uniq centiles;
   local Ncentile: word count `centiles';
 };
@@ -83,34 +84,40 @@ scal `Nscal'=r(sum);
 
 
 *
- Compute Kaplan-Meier estimates for sample
+ Compute Kaplan-Meier estimates and SEs for sample
 *;
 tempvar kmsurv;
 qui sts generate `kmsurv'=s if `touse';
-
+tempvar se_kmsurv;
+qui sts generate `se_kmsurv'=se(s) if `touse';
 
 *
  Extract survival times and probabilities
 *;
 tempname survframe;
-frame put _t _d `kmsurv' `touse', into(`survframe');
+frame put _t _d `kmsurv' `se_kmsurv' `touse', into(`survframe');
 qui frame `survframe' {;
   keep if `touse';
   drop `touse';
+  sort _t _d, stable;
+  tempvar obsseq;
+  gene long `obsseq'=_n;
   * Extract number of failures *;
   tempname N_fail_scal;
   summ _d, meanonly;
   scal `N_fail_scal'=r(sum);
   * Create output vectors of times and survival probabilities *;
   if `Ntime'>0 {;
-    tempname tmat smat sscal cfmat cfscal;
+    tempname tmat smat sscal cfmat cfscal sebmat sebscal;
     local sstransform=subinstr(`"`stransform'"',"@","`sscal'",.);
     matr def `tmat'=J(1,`Ntime',.);
     matr def `smat'=J(1,`Ntime',.);
     matr def `cfmat'=J(1,`Ntime',.);
+    matr def `sebmat'=J(1,`Ntime',.);
     matr rownames `tmat'="_t";
     matr rownames `smat'="_t";
     matr rownames `cfmat'="_t";
+    matr rownames `sebmat'="_t";
     local cnames "";
     forv i1=1(1)`Ntime' {;
       local cnames `"`cnames' st_`i1'"';
@@ -118,6 +125,7 @@ qui frame `survframe' {;
     matr colnames `tmat'=`cnames';
     matr colnames `smat'=`cnames';
     matr colnames `cfmat'=`cnames';
+    matr colnames `sebmat'=`cnames';
     forv i1=1(1)`Ntime' {;
       local Tcur: word `i1' of `times';
       matr def `tmat'[1,`i1']=`Tcur';
@@ -132,6 +140,10 @@ qui frame `survframe' {;
       summ _d if _t<=`Tcur', meanonly;
       scal `cfscal'=max(r(sum),0);
       matr def `cfmat'[1,`i1']=`cfscal';
+      summ `obsseq' if _t<=`Tcur', meanonly;
+      scal `sebscal'=r(max);
+      scal `sebscal'=`se_kmsurv'[`sebscal'];
+      matr def `sebmat'[1,`i1']=`sebscal';
     };
   };
   * Create output vectors of percents and percentiles *;
@@ -176,6 +188,10 @@ if `Ntime'>0 {;
   tempname temat;
   matr def `temat'=`tmat'',`smat'';
   matr colnames `temat'="Time" "Survival";
+  * parmestable diagonal variance matrix *;
+  tempname vabdiagmat;
+  matr def `vabdiagmat'=diag(`sebmat');
+  matr def `vabdiagmat'=`vabdiagmat'*`vabdiagmat';
 };
 if `Ncentile'>0 {;
   tempname cemat;
@@ -228,6 +244,8 @@ ereturn local predict "kmest_p";
 ereturn local ctransform `"`ctransform'"';
 ereturn local stransform `"`stransform'"';
 if `Ntime'>0 {;
+  ereturn matrix greenwood_se=`sebmat';
+  ereturn matrix greenwood_Vdiag=`vabdiagmat';
   ereturn matrix cumfail=`cfmat';
   ereturn matrix temat=`temat';
   ereturn matrix times=`tmat';

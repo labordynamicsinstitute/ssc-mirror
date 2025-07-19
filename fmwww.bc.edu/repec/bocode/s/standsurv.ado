@@ -1,4 +1,4 @@
-*! version 1.06 2023-02-14
+*! version 1.08 2025-07-04
 program define standsurv, rclass sortpreserve
   version 16.1
   syntax [anything] [if] [in],        ///
@@ -326,7 +326,7 @@ program define standsurv, rclass sortpreserve
       }
       local 0 `2'`3'
       syntax ,[ATIF(string) ATINDWeights(varname) ATTIMEVar(string) ATENTER(string)]
-      if `hasif' & `"`atif'"' != "" {
+      if `hasif' & `"`atif'"' != "" & "`over'" == "" {
         di as error "You can either use an if statement or the atif suboptions" _newline ///
               "of the at() options, but not both"
         exit 198

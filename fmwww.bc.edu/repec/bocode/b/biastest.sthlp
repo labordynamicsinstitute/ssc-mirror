@@ -1,103 +1,122 @@
 {smcl}
-{* *! version 1.0.0 20feb2025}{...}
+{* $Id$}
+{hline}
+help for {cmd:biastest}{right:Hasraddin Guliyev}
+{hline}
+
 {title:Title}
 
 {p 4 4 2}
-{bf:biastest} — Testing parameter equality across different models in Stata.
+{cmd:biastest} — Testing parameter equality across different models in Stata.
 
 {title:Syntax}
 
-{p 8 17 2}
-{cmd:biastest} {it:depvar} {it:indepvars} [{cmd:if}] [{cmd:in}], {cmd:m1(}{it:string}{cmd:)} [{cmd:m1ops(}{it:string}{cmd:)}] {cmd:m2(}{it:string}{cmd:)} [{cmd:m2ops(}{it:string}{cmd:)}]
+{p 8 15 2}
+{cmd:biastest} {depvar} {indepvars} {ifin}, 
+{cmd:m1(}{it:string}{cmd:)} [{cmd:m1ops(}{it:string}{cmd:)}] 
+{cmd:m2(}{it:string}{cmd:)} [{cmd:m2ops(}{it:string}{cmd:)}] 
+[{cmd:sigmaless}]
 
 {synoptset 25 tabbed}{...}
 {synopthdr}
 {synoptline}
 {syntab:Model}
-{synopt:{opt m1(string)}}specifies the first regression model to estimate. This is a required option.{p_end}
-{synopt:{opt m1ops(string)}}specifies additional options for the first model.{p_end}
-{synopt:{opt m2(string)}}specifies the second regression model to estimate. This is a required option.{p_end}
-{synopt:{opt m2ops(string)}}specifies additional options for the second model.{p_end}
+{synopt:{opt m1}({it:string})}specifies the first regression model to estimate (required){p_end}
+{synopt:{opt m1ops}({it:string})}specifies additional options for the first model{p_end}
+{synopt:{opt m2}({it:string})}specifies the second regression model to estimate (required){p_end}
+{synopt:{opt m2ops}({it:string})}specifies additional options for the second model{p_end}
+{synopt:{opt sigmaless}}adjust for non–positive-definite-differenced covariance matrix {p_end}
 {synoptline}
+{p2colreset}{...}
 
 {title:Description}
 
-{p 4 4 2}
-The {cmd:biastest} command in Stata is a powerful and versatile tool for comparing the coefficients of different regression models. It assesses the robustness and consistency of findings by testing for bias between two models.
+{pstd}
+The {cmd:biastest} command in Stata is a powerful and versatile tool for comparing the coefficients of different regression models.
+It assesses the robustness and consistency of findings by testing for bias between two models.
 
-{p 4 4 2}
-The individual bias test examines each independent variable separately, while the joint bias test evaluates whether all coefficients are jointly equal across the two models. This command is particularly useful in contexts such as:
+{pstd}
+The individual bias test examines each independent variable separately, while the joint bias test evaluates whether all
+coefficients are jointly equal across the two models. This command is particularly useful in contexts such as:
 
-{p 6 6 2}
-- Comparing ordinary least squares (OLS) and robust regression.{p_end}
-{p 6 6 2}
-- Comparing quantile regression across different percentiles.{p_end}
-{p 6 6 2}
-- Comparing fixed-effects and random-effects models in panel data analysis.{p_end}
+{p 8 12 2}- Comparing ordinary least squares (OLS) and robust regression{p_end}
+{p 8 12 2}- Comparing quantile regression across different percentiles{p_end}
+{p 8 12 2}- Comparing fixed-effects and random-effects models in panel data analysis{p_end}
 
 {title:Options}
 
-{synoptset 25 tabbed}{...}
-{syntab:Model}
-{synopt:{opt m1(string)}}specifies the first regression model to estimate (e.g., {cmd:regress}). This is a required option.{p_end}
-{synopt:{opt m1ops(string)}}specifies additional options for the first model (e.g., {cmd:vce(robust)}).{p_end}
-{synopt:{opt m2(string)}}specifies the second regression model to estimate (e.g., {cmd:rreg}). This is a required option.{p_end}
-{synopt:{opt m2ops(string)}}specifies additional options for the second model (e.g., {cmd:nolog}).{p_end}
+{dlgtab:Model}
 
-{title:Stored Results}
+{phang}
+{opt m1}({it:string}) specifies the first regression model to estimate (e.g., regress). This is a required option.
 
-{p 4 4 2}
-{cmd:biastest} stores the following results in {cmd:e()}:
+{phang}
+{opt m1ops}({it:string}) specifies additional options for the first model (e.g., vce(robust)).
 
-{synoptset 25 tabbed}{...}
-{syntab:Matrices}
-{synopt:{cmd:e(b1)}}coefficients from the first model.{p_end}
-{synopt:{cmd:e(V1)}}variance-covariance matrix from the first model.{p_end}
-{synopt:{cmd:e(b2)}}coefficients from the second model.{p_end}
-{synopt:{cmd:e(V2)}}variance-covariance matrix from the second model.{p_end}
-{synopt:{cmd:e(tstat)}}t-statistics for individual parameter tests.{p_end}
-{synopt:{cmd:e(pvalues)}}p-values for individual parameter tests.{p_end}
+{phang}
+{opt m2}({it:string}) specifies the second regression model to estimate (e.g., rreg). This is a required option.
 
-{syntab:Scalars}
-{synopt:{cmd:e(chi2)}}chi-squared statistic for the joint test.{p_end}
-{synopt:{cmd:e(df_chi2)}}degrees of freedom for the joint test.{p_end}
-{synopt:{cmd:e(p_chi2)}}p-value for the joint test.{p_end}
+{phang}
+{opt m2ops}({it:string}) specifies additional options for the second model (e.g., nolog).
+
+{phang}
+{opt sigmaless} scales the variance matrix of the model with smaller coefficients by (σ₁/σ₂)², where σ₁ and σ₂ are the residual standard deviations from each model. This adjustment fixs non–positive-definite-differenced covariance matrix.
+
+{title:Stored results}
+
+{pstd}
+{cmd:biastest} stores the following in {cmd:e()}:
+
+{synoptset 20 tabbed}{...}
+{p2col 5 20 24 2: Scalars}{p_end}
+{p2col:{cmd:e(N)}}number of observations{p_end}
+{p2col:{cmd:e(chi2)}}chi-squared statistic for the joint test{p_end}
+{p2col:{cmd:e(df_chi2)}}degrees of freedom for the joint test{p_end}
+{p2col:{cmd:e(p_chi2)}}p-value for the joint test{p_end}
+{p2col:{cmd:e(s2_1)}}σ from model 1 (if sigmaless used){p_end}
+{p2col:{cmd:e(s2_2)}}σ from model 2 (if sigmaless used){p_end}
+
+{p2col 5 20 24 2: Matrices}{p_end}
+{p2col:{cmd:e(b1)}}coefficients from the first model{p_end}
+{p2col:{cmd:e(V1)}}variance-covariance matrix from the first model{p_end}
+{p2col:{cmd:e(b2)}}coefficients from the second model{p_end}
+{p2col:{cmd:e(V2)}}variance-covariance matrix from the second model{p_end}
+{p2col:{cmd:e(tstat)}}t-statistics for individual parameter tests{p_end}
+{p2col:{cmd:e(pvalues)}}p-values for individual parameter tests{p_end}
+
+{p2col 5 20 24 2: Macros}{p_end}
+{p2col:{cmd:e(sigmaless)}}"adjusted" if sigmaless option used{p_end}
 
 {title:Examples}
 
-{p 4 4 2}
-{bf:Example 1: Crime Dataset}
-Compare OLS ({cmd:reg}) and robust regression ({cmd:rreg}) results for the crime dataset.
+{phang}{bf:Example 1:} Compare OLS and robust regression{p_end}
+{cmd}{...}
+. use https://stats.idre.ucla.edu/stat/stata/dae/crime, clear
+. biastest crime pctmetro pcths poverty, m1(reg) m2(rreg) m2ops(nolog)
+{txt}{...}
 
-{phang2}
-{cmd:. use https://stats.idre.ucla.edu/stat/stata/dae/crime, clear}{p_end}
-{phang2}
-{cmd:. biastest crime pctmetro pcths poverty, m1(reg) m2(rreg) m2ops(nolog)}{p_end}
+{phang}{bf:Example 2:} Quantile regression with sigmaless adjustment{p_end}
+{cmd}{...}
+. webuse engel1857, clear
+. biastest foodexp income, m1(qreg) m1ops(q(25)) m2(qreg) m2ops(q(75)) sigmaless
+{txt}{...}
 
-{p 4 4 2}
-{bf:Example 2: Engel1857 Dataset}
-Compare quantile regression ({cmd:sqreg}) results at the 25th and 75th percentiles for the Engel1857 dataset.
-
-{phang2}
-{cmd:. webuse engel1857, clear}{p_end}
-{phang2}
-{cmd:. biastest foodexp income, m1(sqreg) m1ops(q(.25) r(100) nolog) m2(sqreg) m2ops(q(.75) r(100) nolog)}{p_end}
-
-{p 4 4 2}
-{bf:Example 3: Grunfeld Dataset}
-Compare fixed-effects ({cmd:xtreg, fe}) and random-effects ({cmd:xtreg, re}) models for the Grunfeld dataset.
-
-{phang2}
-{cmd:. webuse grunfeld, clear}{p_end}
-{phang2}
-{cmd:. biastest invest mvalue kstock, m1(xtreg) m1ops(fe) m2(xtreg) m2ops(re)}{p_end}
+{phang}{bf:Example 3:} Panel data models{p_end}
+{cmd}{...}
+. webuse grunfeld, clear
+. biastest invest mvalue kstock, m1(xtreg) m1ops(fe) m2(xtreg) m2ops(re)
+{txt}{...}
 
 {title:Author}
 
-{p 4 4 2}
-Hasraddin Guliyev, Azerbaijan State University of Economics, {browse "mailto:hasradding@unec.edu.az":hasradding@unec.edu.az}.
+{pstd}
+Hasraddin Guliyev{p_end}
+{pstd}
+Azerbaijan State University of Economics{p_end}
+{pstd}
+hasradding@unec.edu.az{p_end}
 
-{title:Also See}
+{title:Also see}
 
-{p 4 4 2}
-{help regress}, {help rreg}, {help sqreg}, {help xtreg}, {help test}
+{psee}
+Manual: {help regress}, {help rreg}, {help sqreg}, {help xtreg}, {help test}{p_end}
