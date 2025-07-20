@@ -1,0 +1,19 @@
+d 'STVARCOM': module to generate subset combinations of a string variable
+d
+d  stvarcom  is a Stata program that about generating subset
+d combinations of string variable. 
+d
+d KW: string variable
+d KW: split
+d KW: subset combinations
+d KW: tuples
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20250719
+d
+d Author:  Dejin Xie, School of Economics and Management, Nanchang University
+d Support: email xiedejin@@ncu.edu.cn
+d
+f stvarcom.ado
+f stvarcom.sthlp

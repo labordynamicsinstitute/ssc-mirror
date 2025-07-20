@@ -1,0 +1,34 @@
+d 'TWC_INF': module to implement the twoway-clustered inference tools of "Analytic inference with two-way clustering" by Davezies et al. (wp, 2025)
+d
+d     twc_inf fits a regression model of depvar on indepvars using
+d the model specified by method(). For	  each regression
+d coefficient, the command computes the associated standard error  
+d  se=max(se_1,se_2,se_u) - proposed in Davezies et al. (2025) -
+d that allows to conduct asymptotically    valid inference in
+d presence of two-way clustering along the variables var1 and var2
+d provided through    the cluster() option. Corresponding
+d confidence intervals are also reported for each regression   
+d coefficient. 
+d
+d KW: two-way clustering
+d KW: probit
+d KW: logit
+d KW: poisson regression
+d
+d Requires: Stata version 16.1
+d
+d Distribution-Date: 20250719
+d
+d Author:  Laurent Davezies, CREST
+d Support: email  laurent.davezies@@ensae.fr
+d
+d Author:   Xavier D'Haultfoeuille, CREST-ENSAE
+d Support: email   xavier.dhaultfoeuille@@ensae.fr
+d
+d Author: Yannick Guyonvarch, INRAE
+d Support: email yannick.guyonvarch@@inrae.fr
+d
+f twc_inf.ado
+f twc_inf.sthlp
+f testing_twc_inf.do
+f twc_inf_db.dta

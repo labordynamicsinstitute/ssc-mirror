@@ -1,0 +1,25 @@
+d 'FLAGOUT': module to flag outliers using a robust Z-score
+d
+d   flagout flags outliers in the supplied variable, using a robust
+d Z-score based on the median and IQR.	  The robust Z-score is
+d defined as (x-p50)/((p75-p25)/1.35) or (x-p50)/((p90-p10)/2.56)
+d if p75-p25 =	  0.  The scale factors of 1.35 and 2.56 make it
+d equivalent to a standard Z-score on a normally    distributed
+d variable as IQR = 1.35 * sd and p90-p10 = 2.56 * sd for such
+d variables.  The use of the	median and re-scaled interquartile
+d range makes it more robust to the presence of outliers in the   
+d distribution which can bias the estimatation of the mean and
+d standard deviation. 
+d
+d KW: outliers
+d KW: Z-scores
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20250719
+d
+d Author:  Liz Foster, World Bank
+d Support: email efoster1@@worldbank.org
+d
+f flagout.ado
+f flagout.sthlp

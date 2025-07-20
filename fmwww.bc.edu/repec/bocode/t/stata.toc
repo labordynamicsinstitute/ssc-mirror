@@ -163,6 +163,7 @@ p tvgc module to perform Time-Varying Granger Causality tests
 p tvpreg module to perform parameter path estimation in unstable environments
 p tw3xls module to export publication-ready three-way and four-way tables into xls or xlsx
 p twby module to create a cross-tabulation of graphs
+p twc_inf module to implement the twoway-clustered inference tools of "Analytic inference with two-way clustering" by Davezies et al. (wp, 2025)
 p twexp module to estimate exponential-regression models with two-way fixed effects
 p twfe module to perform regressions with two-way fixed effects or match effects for large datasets
 p twfem module to efficiently estimate a two-way fixed effects model based on Somaini and Wolak (2015)

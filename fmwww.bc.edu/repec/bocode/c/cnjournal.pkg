@@ -1,0 +1,29 @@
+d 'CNJOURNAL': module providing access to a number of Chinese scholarly journals
+d
+d  This package contains commands that enable online browsing and
+d PDF viewing for  several Chinese scholarly journals: China
+d Journal of Econometrics, Journal of Central University of Finance
+d & Economics, Chinese Journal of Sociology, Journal of China
+d Economics, Journal of World Economy, Business Management Journal. d
+d KW: journals
+d KW: China
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20250719
+d
+d Author: Wang Qiang, Xi'an Jiaotong University
+d Support: email  740130359@@qq.com
+d
+f cjoe.ado
+f cjoe.sthlp
+f cjs.ado
+f cjs.sthlp
+f ../j/jce.ado
+f ../j/jce.sthlp
+f ../j/jcufe.ado
+f ../j/jcufe.sthlp
+f ../j/jigl.ado
+f ../j/jigl.sthlp
+f ../j/jwe.ado
+f ../j/jwe.sthlp
