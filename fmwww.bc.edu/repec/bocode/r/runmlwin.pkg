@@ -44,15 +44,17 @@ f ../u/usewsz.ado
 f ../u/usewsz.hlp
 f ../u/usewsz.ihlp
 f ../u/usewsz.sthlp
-f runmlwin_mcmcdiag.ado
-f runmlwin_verinfo.ado
-f runmlwin_qshell.ado
-f runmlwin_mcmcdiagnostics.lin32
-f runmlwin_mcmcdiagnostics.lin64
-f runmlwin_mcmcdiagnostics.mac
-f runmlwin_mcmcdiagnostics.win32
-f runmlwin_mcmcdiagnostics.win64
-f runmlwin_getversion.win32
-f runmlwin_getversion.win64
-f runmlwin_quietshell.win32
-f runmlwin_quietshell.win64
+g WIN runmlwin_getversion.win32 runmlwin_getversion.plugin
+g WIN64 runmlwin_getversion.win64 runmlwin_getversion.plugin
+g WIN runmlwin_quietshell.win32 runmlwin_quietshell.plugin
+g WIN64 runmlwin_quietshell.win64 runmlwin_quietshell.plugin
+g WIN runmlwin_mcmcdiagnostics.win32 runmlwin_mcmcdiagnostics.plugin
+g WIN64 runmlwin_mcmcdiagnostics.win64 runmlwin_mcmcdiagnostics.plugin
+g MACINTEL64 runmlwin_mcmcdiagnostics.mac runmlwin_mcmcdiagnostics.plugin
+g OSX.X8664 runmlwin_mcmcdiagnostics.mac runmlwin_mcmcdiagnostics.plugin
+g MACARM64 runmlwin_mcmcdiagnostics.arm64 runmlwin_mcmcdiagnostics.plugin
+g OSX.ARM64 runmlwin_mcmcdiagnostics.arm64 runmlwin_mcmcdiagnostics.plugin
+g LINUX runmlwin_mcmcdiagnostics.lin32 runmlwin_mcmcdiagnostics.plugin
+g LINUX64 runmlwin_mcmcdiagnostics.lin64 runmlwin_mcmcdiagnostics.plugin
+h runmlwin_mcmcdiagnostics.plugin
+
