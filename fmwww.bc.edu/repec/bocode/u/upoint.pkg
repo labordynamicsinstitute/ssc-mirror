@@ -1,0 +1,21 @@
+d 'UPOINT': module to calculate the change value of inflection point of U or inverted U curve
+d
+d  upoint calculates the change value of inflection point of U or
+d inverted U curve. 
+d
+d KW: data management
+d KW: inflection point
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20250727
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email NA
+d
+f upoint.ado
+f upoint.sthlp
+f ../c/conservatism.dta

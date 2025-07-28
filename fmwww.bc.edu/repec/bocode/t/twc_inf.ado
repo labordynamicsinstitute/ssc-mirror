@@ -1,6 +1,6 @@
-*author: Yannick Guyonvarch, date: July 7 2025. Version 2.
+*author: Yannick Guyonvarch, date: July 22 2025. Version 3.
 
-*twc_inf: Stata module that computes the inference tools developed in "Asymptotic results under two-way clustering" (wp, 2025) by L. Davezies, X. D'Haultfoeuille and Y. Guyonvarch
+*twc_inf: Stata module that computes the inference tools developed in "Asymptotic results under two-way clustering" (Arxiv wp, 2025) by L. Davezies, X. D'Haultfoeuille and Y. Guyonvarch
 
 quietly capture program drop twc_inf
 quietly program twc_inf, byable(recall) rclass sortpreserve
@@ -53,15 +53,16 @@ quietly program twc_inf, byable(recall) rclass sortpreserve
 	matrix `b' = e(b)
 	matrix `bbis' = e(b) /*duplicate storage of e(b) for practical reasons*/
 	matrix `D' = e(V)
+	local k = colsof(`D')
 	local N = e(N)
 	*Stata does not use the same dof correction for regress and for nonlinear 
 	*mle-typem models -> we store the corresponding ingredient for dof
 	*correction in a local named k
 	if "`method'"=="regress" {
-		local k = colsof(`D')
+		local dof = e(rank)
 	}
 	else {
-		local k = 1
+		local dof = 1
 	}	
 	
 	*obtain residuals/scores of the (nonlinear) regression
@@ -86,7 +87,7 @@ quietly program twc_inf, byable(recall) rclass sortpreserve
 			local dof_corr = 1
 		} 
 		else {
-			local dof_corr = ((`N'-1)/(`N'-`k'))*(`C`j''/(`C`j''-1))
+			local dof_corr = ((`N'-1)/(`N'-`dof'))*(`C`j''/(`C`j''-1))
 		}
 		matrix `V`j'' = `dof_corr'*`D'*`M`j''*`D'
 	}
@@ -103,7 +104,7 @@ quietly program twc_inf, byable(recall) rclass sortpreserve
 		local dof_corr = 1
 	} 
 	else {
-		local dof_corr = ((`N'-1)/(`N'-`k'))*(`C12'/(`C12'-1))
+		local dof_corr = ((`N'-1)/(`N'-`dof'))*(`C12'/(`C12'-1))
 	}
 	matrix `V12' = `dof_corr'*`D'*`M12'*`D'
 	matrix colnames `V12' = `varlist_bis' _cons

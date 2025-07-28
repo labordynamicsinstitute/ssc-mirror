@@ -20,7 +20,7 @@ d KW: non-binary treatment
 d
 d Requires: Stata version 12 and gtools from SSC (q.v.avity2)
 d
-d Distribution-Date: 20250612
+d Distribution-Date: 20250725
 d
 d Author:  Clément de Chaisemartin,  Economics Department, Sciences Po
 d Support: email  chaisemartin.packages@@gmail.com
@@ -43,3 +43,7 @@ d
 f did_multiplegt_dyn.ado
 f did_multiplegt_dyn.sthlp
 f ../f/favara_imbs_did_multiplegt_dyn.dta
+f deryugina_2017.dta
+f ../e/east_et_al_2023.dta
+f ../g/gentzkowetal_didtextbook.dta
+f ../h/hollingsworth_et_al_2022.dta

@@ -290,6 +290,7 @@ p csumchart module to compute cumulative sum (CUSUM) charts for monitoring clini
 p csvconvert module to append multiple csv files
 p cta module for conducting Classification Tree Analysis
 p ctabstat module to display table of summary statistics
+p ctohri module to translate From Counts to Hazard Ratio
 p ctreatreg module for estimating dose-response models under exogenous and endogenous treatment
 p cub module to estimate ordinal outcome model estimated by a mixture of a uniform and a shifted binomial
 p cuentacot module for Contributions Counting

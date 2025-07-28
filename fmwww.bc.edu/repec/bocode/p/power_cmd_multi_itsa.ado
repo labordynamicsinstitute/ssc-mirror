@@ -1,3 +1,4 @@
+*! 1.1.0 Ariel Linden 24Jul2025
 *! 1.0.0 Ariel Linden 11Jun2025
 
 capture program drop power_cmd_multi_itsa
@@ -10,6 +11,7 @@ program define power_cmd_multi_itsa, rclass
 			TINTercept(real) 	/// starting level - treated
 			TPOSTtrend(real) 	/// post-intervention trend	- treated		
 			[ TRPeriod(string)	/// the treatment period when the intervention begins
+			CONTCnt(int 1)		/// count of controls			
 			CPREtrend(real 0)	/// baseline trend - controls
 			CSTep(real 0) 		/// post-intervention change in level - controls		
 			CSD(real 1)			/// standard deviation for variability of time series - controls
@@ -33,7 +35,8 @@ program define power_cmd_multi_itsa, rclass
 				local trperiod = ceil(`n' / 2)
 			}
 			
-			`quietly' simulate reject=r(reject), reps(`reps'): power_sim_multi_itsa, n(`n') ///
+			`quietly' simulate reject=r(reject), reps(`reps'): power_sim_multi_itsa, ///
+				n(`n') contcnt(`contcnt') ///
 				tintercept(`tintercept') cintercept(`cintercept') ///
 				tpretrend(`tpretrend') cpretrend(`cpretrend') ///
 				tposttrend(`tposttrend') cposttrend(`cposttrend') ///
@@ -47,6 +50,7 @@ program define power_cmd_multi_itsa, rclass
 			// return results
 			return scalar power = r(mean)
 			return scalar N = `n'
+			return scalar contcnt = `contcnt'
 			return scalar trperiod = `trperiod'			
 			return scalar alpha = `alpha'
 			return scalar tintercept = `tintercept'

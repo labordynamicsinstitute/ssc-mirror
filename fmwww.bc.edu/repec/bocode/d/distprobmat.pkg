@@ -1,0 +1,24 @@
+d 'DISTPROBMAT': module to ompute distance/similarity measures between two probability density matrices
+d
+d  distprobmat computes 46 different distance/similarity measures
+d between probability density functions, as surveyed in Cha (2007).
+d distprobmat requires that the probability densities to be
+d compared are stored in two matrices with the same number of rows
+d and columns. Given that the distances are computed for each row
+d separately, each row in the two matrices must sum to 1.0.
+d distprobmat produces the same results as those of the R package
+d philentropy. 
+d
+d KW: distance
+d KW: probability density function
+d KW: similiarity
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250727
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f distprobmat.ado
+f distprobmat.sthlp

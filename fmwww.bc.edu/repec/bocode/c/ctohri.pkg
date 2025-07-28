@@ -1,0 +1,25 @@
+d 'CTOHRI': module to translate From Counts to Hazard Ratio
+d
+d     ctohri estimates the hazard ratio along with a confidence
+d interval and Wald-type hypothesis test    under the assumptions
+d (constant baseline hazard and proportional hazards) of an
+d Exponential (or    Poisson) survival model.  The force underlying
+d censoring should be similar in both groups.	 Specifically, it
+d requires six inputs: the number of participants, number of
+d events, and total    follow-up time for both the treatment and
+d control groups.  It can be used for meta-analyses when   
+d individual-level survival data are not available. 
+d
+d KW: hazard ratio
+d KW: survival model
+d KW: immediate command
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20250727
+d
+d Author: Nicola Orsini, Institute of Environmental Medicine, Karolinska Institutet
+d Support: email Nicola.Orsini@@ki.se
+d
+f ctohri.ado
+f ctohri.sthlp

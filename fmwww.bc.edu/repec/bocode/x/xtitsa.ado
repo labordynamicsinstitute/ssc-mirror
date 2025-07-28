@@ -1,14 +1,15 @@
-*! 2.1.2 Ariel Linden 06Jun2025 // hardcoded lines around the legend box to work with Stata v19 
-								// fixed bug in ylabel() that didn't allow user to overwrite existing settings
-								// implemented _natscale to get ylabels using shading to replicate standard Stata
-*! 2.1.1 Ariel Linden 26Dec2024 // fixed error in legend for the case when no CI, lowess, or shading is specified
-*! 2.1.0 Ariel Linden 06Nov2024 // added shading option 
-*! 2.0.1 Ariel Linden 09Sep2024 // changed code in CI option to utilize -predictnl- for computing predictions and CIs
-*! 2.0.0 Ariel Linden 24Aug2024 // added lowess and CI options
-*! 1.1.1 Ariel Linden 22Mar2021 // fixed bug in trperiod() loop
-*! 1.1.0 Ariel Linden 10Mar2021 // added parsing code to extract date(s) from trperiod() 
-*! 1.0.1 Ariel Linden 21Feb2021 // fixed code to handle depvar when using ts operators (e.g. L.depvar) 
-*! 1.0.1 Ariel Linden 29Apr2023 // fixed regexm code to find "ef" of "eform"
+*! 2.2.0 Ariel Linden 23Jul2025 	// added smin() and smax() options to allow user to manually set ylabel() for shading 
+*! 2.1.2 Ariel Linden 06Jun2025 	// hardcoded lines around the legend box to work with Stata v19 
+									// fixed bug in ylabel() that didn't allow user to overwrite existing settings
+									// implemented _natscale to get ylabels using shading to replicate standard Stata
+*! 2.1.1 Ariel Linden 26Dec2024 	// fixed error in legend for the case when no CI, lowess, or shading is specified
+*! 2.1.0 Ariel Linden 06Nov2024 	// added shading option 
+*! 2.0.1 Ariel Linden 09Sep2024 	// changed code in CI option to utilize -predictnl- for computing predictions and CIs
+*! 2.0.0 Ariel Linden 24Aug2024 	// added lowess and CI options
+*! 1.1.1 Ariel Linden 22Mar2021 	// fixed bug in trperiod() loop
+*! 1.1.0 Ariel Linden 10Mar2021 	// added parsing code to extract date(s) from trperiod() 
+*! 1.0.1 Ariel Linden 21Feb2021 	// fixed code to handle depvar when using ts operators (e.g. L.depvar) 
+*! 1.0.1 Ariel Linden 29Apr2023 	// fixed regexm code to find "ef" of "eform"
 *! 1.0.0 Ariel Linden 13Jan2021
 
 program define xtitsa, sort
@@ -20,7 +21,9 @@ version 11.0
  	SINGle																		///
 	POSTTRend																	///
 	FIGure   FIGure2(str asis)													///
-	SHADe(string)	                          			     					///			
+	SHADe(string)	                          			     					///	
+	SMIN(numlist min=1 max=1)													///
+	SMAX(numlist min=1 max=1)													///		
 	LOWess																		///
 	CI																			///
 	NAT(int 5)																	/// UNDOCUMENTED change _natscale #_n (forshade())
@@ -428,7 +431,7 @@ version 11.0
 					local down = min(`mindvar_t', `minypred_t',`minlcl')			
 					local up = max(`maxdvar_t', `maxypred_t', `maxucl')				
 				}
-				else {
+				else if "`ci'" == "" {
 					sum `dvar', meanonly
 					local mindvar_t = r(min)
 					local maxdvar_t = r(max)
@@ -438,7 +441,13 @@ version 11.0
 					local down = min(`mindvar_t', `minypred_t')			
 					local up = max(`maxdvar_t', `maxypred_t')
 				}
-				
+				/* if user specifies smin and/or smax */
+				if "`smin'" != "" {
+					local down = `smin'
+				}
+				if "`smax'" != "" {
+					local up = `smax'
+				}				
 				/* use _natscale to get "nice" lower and upper values for the shading */	
 				 _natscale `down' `up' `nat'
 				local ylab ylabel(`r(min)'(`r(delta)')`r(max)')
@@ -760,7 +769,7 @@ version 11.0
 					local down = min(`mindvar_t', `minypred_t',`minlcl')			
 					local up = max(`maxdvar_t', `maxypred_t', `maxucl')				
 				}
-				else {
+				else if "`ci'" == "" {
 					sum `dvar', meanonly
 					local mindvar_t = r(min)
 					local maxdvar_t = r(max)
@@ -770,7 +779,13 @@ version 11.0
 					local down = min(`mindvar_t', `minypred_t')			
 					local up = max(`maxdvar_t', `maxypred_t')
 				}
-				
+				/* if user specifies smin and/or smax */
+				if "`smin'" != "" {
+					local down = `smin'
+				}
+				if "`smax'" != "" {
+					local up = `smax'
+				}					
 				/* use _natscale to get "nice" lower and upper values for the shading */			
 				 _natscale `down' `up' `nat'
 				local ylab ylabel(`r(min)'(`r(delta)')`r(max)')
@@ -1284,7 +1299,7 @@ version 11.0
 						local down = min(`mindvar_t', `minypred_t',`minlcl_t',`mindvar_c', `minypred_c',`minlcl_c')			
 						local up = max(`maxdvar_t', `maxypred_t', `maxucl_t', `maxdvar_c', `maxypred_c', `maxucl_c')				
 					}
-					else {
+					else if "`ci'" == "" {
 						sum `dvar_t', meanonly
 						local mindvar_t = r(min)
 						local maxdvar_t = r(max)
@@ -1303,8 +1318,14 @@ version 11.0
 					
 						local down = min(`mindvar_t', `minypred_t',`mindvar_c', `minypred_c')			
 						local up = max(`maxdvar_t', `maxypred_t',`maxdvar_c', `maxypred_c')
-					}	
-				
+					}
+					/* if user specifies smin and/or smax */
+					if "`smin'" != "" {
+						local down = `smin'
+					}
+					if "`smax'" != "" {
+						local up = `smax'
+					}					
 					/* use _natscale to get "nice" lower and upper values for the shading */				
 					_natscale `down' `up' `nat'
 					local ylab ylabel(`r(min)'(`r(delta)')`r(max)') 

@@ -1,4 +1,5 @@
 {smcl}
+{* 23Jul2025}{...}
 {* 07Nov2024}{...}
 {* 09Sep2024}{...}
 {* 25Aug2024}{...}
@@ -40,7 +41,10 @@ and {cmd:single} is specified {p_end}
 {synopt:{opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]}plot the average actual and predicted {it:depvar} variable over time. Specifying {cmd:figure} without options uses the default graph settings {p_end}
 {synopt:{opt low:ess}}plots a lowess smoothed line of {it:depvar} on {it:timevar} {p_end}
 {synopt:{opt ci}}plots the confidence interval(s) on the {cmd:figure} {p_end}
-{synopt:{opt shad:e}({it:{help datetime:date1}} ; {it:{help datetime:date2}})}plot a shaded area on the figure between two dates, separated by a semicolon (e.g. {cmd:shade(21jan2020 ; 08feb2020)}) {p_end}
+{synopt:{opt shad:e}({it:{help datetime:date1}} ; {it:{help datetime:date2}})}plot a shaded area on the figure between two dates, separated by a semicolon (e.g. {cmd:shade(21jan2020 ; 08feb2020)}) 
+{p_end}
+{synopt:{opt smin}{cmd:(#)}}specify the minimum value displayed on {cmd:ylabel()} when {cmd:shade()} is specified {p_end}
+{synopt:{opt smax}{cmd:(#)}}specify the maximum value displayed on {cmd:ylabel()} when {cmd:shade()} is specified {p_end}
 {synopt:[{it:model_options}]}specify all available options for {helpb xtgee}{p_end}
 {synoptline}
 {p 4 6 2}
@@ -136,6 +140,16 @@ for a four-digit year, {cmd:shade(2019m11 ; 2020m3)} for monthly data or
 {cmd:shade(20jan2021 ; 30jan2021)} for daily data. Shading may be helpful to 
 highlight a "washout" period before introduction of the intervention, or 
 to highlight some other event worthy of note.
+
+{phang}
+{cmd:smin(}{it:#}{cmd:)} specifies the minimum value of the {cmd:ylabel()} when the {cmd:shade()} option is 
+specified. {cmd:smin()} is most relevant when the user overrides the default {cmd:ylabel()} settings,
+leaving the shading section misaligned with the bottom of the graph. 
+
+{phang}
+{cmd:smax(}{it:#}{cmd:)} specifies the maximum value of the {cmd:ylabel()} when the {cmd:shade()} option is 
+specified. {cmd:smax()} is most relevant when the user overrides the default {cmd:ylabel()} settings,
+leaving the shading section misaligned with the top of the graph. 
 
 {phang}
 {it:model_options} specify all available options for {helpb xtgee}.
@@ -291,6 +305,13 @@ Here we specify two treatment periods, 2019m6 and 2019m11, shade the area betwee
 {phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m6; 2019m11) shade(2019m6; 2019m11) vce(robust) posttr repl fig low":. xtitsa y, single treat(z) trperiod(2019m6; 2019m11) shade(2019m6; 2019m11) vce(robust) posttr repl fig low}} {p_end}
 
 {pmore}
+Here we specify shading, but manually override the {cmd:ylabel()} settings and specify a range between 0 and 140 in increments of 20. We now need to set the {cmd:smin()} value to 0 
+and {cmd:smax()} value to 140 to align with the minimum and maximun values that we specified in {cmd:ylabel()}. If we do not specify {cmd:smin()} and {cmd:smax()}, the shaded section 
+will not reach the bottom or the top of the graph. 
+
+{phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m11) shade(2019m10; 2019m11) repl fig(ylab(0(20)140)) smin(0) smax(140)":. xtitsa y, single treat(z) trperiod(2019m11) shade(2019m10; 2019m11) repl fig(ylab(0(20)140)) smin(0) smax(140)}} {p_end}
+
+{pmore}
 We specify a single-group ITSA for a fractional response (i.e. 0 to 1.0 scale) with family(binomial) and vce(robust) and add CIs to the graph.{p_end}
 
 {phang3}{bf:{stata "xtitsa y01, single treat(z) trperiod(2019m11) family(binomial) vce(robust) figure posttr replace ci":. xtitsa y01, single treat(z) trperiod(2019m11) family(binomial) vce(robust) figure posttr replace ci}} {p_end}
@@ -410,9 +431,14 @@ Persistent threats to validity in single-group interrupted time series analysis 
 
 {phang}
 ------. 2022.
-{browse "https://journals.sagepub.com/doi/full/10.1177/1536867X221083929":Erratum: A comprehensive set of postestimation measures to enrich interrupted time-series analysis}.
+{browse "https://journals.sagepub.com/doi/full/10.1177/1536867X221083929": Erratum: A comprehensive set of postestimation measures to enrich interrupted time-series analysis}.
 {it:Stata Journal}
 22: 231-233. 
+
+{phang}
+------. 2025. 
+{browse "https://journals.sagepub.com/doi/10.1177/01632787251361514": A Comprehensive Simulation Study to Evaluate the Effect Size and Study Length Relationship in Single-Group Interrupted Time Series Analysis}. 
+{it:Evaluation & the Health Professions} 
 
 {phang} 
 Linden, A., and J. L. Adams. 2011. 

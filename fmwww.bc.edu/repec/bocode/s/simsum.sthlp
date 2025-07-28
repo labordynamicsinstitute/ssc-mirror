@@ -1,11 +1,11 @@
 {smcl}
-{* updated 12jun2023  Ian White}{...}
-{* v2.0  13jan2023  Ian White}{...}
+{* v2.3  25jul2025  Ian White}{...}
 {viewerjumpto "Syntax" "simsum##syntax"}{...}
 {viewerjumpto "Main options" "simsum##main_options"}{...}
 {viewerjumpto "Data checking options" "simsum##check_options"}{...}
 {viewerjumpto "Calculation options" "simsum##calc_options"}{...}
 {viewerjumpto "Options specifying degrees of freedom" "simsum##df_options"}{...}
+{viewerjumpto "Options specifying CIs and p-values" "simsum##ci_options"}{...}
 {viewerjumpto "Performance measure options" "simsum##pm_options"}{...}
 {viewerjumpto "Display options" "simsum##display_options"}{...}
 {viewerjumpto "Output data set options" "simsum##output_options"}{...}
@@ -25,22 +25,21 @@
 The program {cmd:simsum} computes performance measures for 
 simulation studies in which each simulated data set yields point estimates by one or more analysis 
 methods. 
-Bias, empirical standard error, precision relative to a reference method and mean squared error can be computed for each method.
-If, in addition, model-based standard errors are available then {cmd:simsum} can compute 
-the average model-based standard error, 
+Possible performance measures include bias, empirical standard error and mean squared error.
+If, in addition, model-based standard errors are available, then possible performance measures also include
 the relative error in the model-based standard error, the coverage of nominal confidence intervals, 
 and the power to reject a null hypothesis. 
 Monte Carlo errors are available for all estimated quantities.
 
 {p 4 4 2}
-This is a user-written command: please cite {help simsum##citation:our paper}, which also gives more details of the methods.
+This is a user-written command: please cite {help simsum##citation:my paper}, which also gives more details of the methods.
 Please also see our {help simsum##Morris++19:tutorial} on simulation studies.
 
 
 {title:Syntax}{marker syntax}
 
 {p 4 4 2}
-Data may be in a wide or long format. 
+Data may be in a wide or long format for analysis methods. 
 
 {p 4 4 2}
 In the wide format, the data contain one record per simulated data set. 
@@ -53,14 +52,15 @@ The appropriate syntax is:
 where {it:estvarlist} is a {it:varlist} containing point estimates from one or more analysis methods.
 
 {p 4 4 2}
-In the long format, the data contain one record per method per simulated data set, and the appropriate syntax is:
+In the long format, the data contain one record per analysis method per simulated data set.
+The appropriate syntax is:
 
 {p 8 17 2}
 {cmd:simsum} {it:estvarname} {ifin}, [{cmd:true(}{it:expression}{cmd:)} {cmdab:meth:odvar(}{it:varname}{cmd:)} {cmd:id(}{it:varlist}{cmd:)}  {it:options}]
 
 {p 4 4 2}
 where {it:estvarname} is a variable containing the point estimates, 
-{cmdab:meth:odvar(}{it:varname}{cmd:)} identifies the method and {cmd:id(}{it:varlist}{cmd:)} identifies the simulated data set. 
+{cmdab:meth:odvar(}{it:varname}{cmd:)} identifies the analysis method and {cmd:id(}{it:varlist}{cmd:)} identifies the simulated data set. 
 The {it:options} are described below.
 
 
@@ -70,7 +70,7 @@ The {it:options} are described below.
 This is used in calculations of bias and coverage and is required whenever these performance measures are requested.
 
 {phang} {cmdab:meth:odvar(}{it:varname}{cmd:)} specifies that the data are in long format, 
-with each record representing one analysis of one simulated data set using the method identified by {it:varname}. 
+with each record representing one analysis of one simulated data set using the analysis method identified by {it:varname}. 
 Option {cmd:id({it:varlist})} must be specified.
 If {cmdab:meth:odvar()} is not specified, the data must be in wide format, with each record representing all analyses of one simulated data set.
 
@@ -91,7 +91,7 @@ It may be combined with {cmdab:sep:refix(}{cmd:)} but not with {cmd:se(}{cmd:)}.
 
 {title:Data checking options}{marker check_options}
 
-{phang} {cmd:graph} requests a descriptive graph of standard errors against point estimates.
+{phang} {cmd:graph}[({it:options})] requests a descriptive graph of standard errors against point estimates. This is an old-style graph using {help graph7}, for which {it:options} are any options.
 
 {phang} {cmdab:nomem:check} turns off checking that adequate memory is free. 
 This check aims to avoid spending calculation time when {cmd:simsum} is likely to fail due to lack of memory.
@@ -112,9 +112,9 @@ Otherwise the program halts with an error. (Missing values are always dropped.)
 
 {title:Calculation options}{marker calc_options}
 
-{phang} {cmd:level(}#{cmd:)} specifies the confidence level for coverages and powers. Default is {cmd:$level}.
+{phang} {cmd:level(}#{cmd:)} specifies the confidence level for coverages and powers. Default is {cmd:$S_level}.
 
-{phang} {cmd:by(}{it:varlist}{cmd:)} computes performance measures by {it:varlist}.
+{phang} {cmd:by(}{it:varlist}{cmd:)} computes performance measures by {it:varlist}. Missing values in {it:varlist} are allowed.
 
 {phang} {cmd:mcse} reports Monte Carlo standard errors for all performance measures.
 
@@ -125,11 +125,18 @@ instead of those based on an assumption of normally distributed point estimates.
 {phang} {cmdab:modelsem:ethod(rmse|mean)} specifies whether the model standard error should be computed
 as the root mean squared value (the default) or as the arithmetic mean.
 
-{phang} {cmd:ref(}{it:string}{cmd:)} specifies the reference method against which relative precisions will be calculated. 
-With data in wide format, {it:string} must be a variable name. 
-With data in long format, {it:string} must be a value of the method variable; if the value is labelled then the label must be used.
+{phang} {cmd:ref(}{it:string}{cmd:)} specifies the reference analysis method against which relative precisions will be calculated. 
 
-{phang} {cmd:null(}#{cmd:)} specifies the null value against which power will be calculated. 
+{pmore}With data in wide format, {it:string} must be a variable name.
+The default is the first variable listed.
+
+{pmore}With data in long format, {it:string} must be a value of the analysis method variable. If the value is labelled then the label must be used.
+The default is the lowest value of the analysis method variable in sort order (ignoring any value labels).
+
+{phang} {cmd:null(}#{cmd:)} specifies the null value against which power will be calculated. Default is {cmd:null(0)}.
+
+{phang} {cmdab:semiss:ingok} specifies that missing values of the standard error are acceptable.
+By default, estimates are changed to missing if the standard error is missing.
 
 
 {title:Options specifying degrees of freedom}{marker df_options}
@@ -148,6 +155,39 @@ by adding the given suffix to the names of the variables containing the point es
 It may be combined with {cmd:dfprefix()} but not with {cmd:df()}.
 
 
+{title:Options specifying confidence intervals and p-values}{marker ci_options}
+
+{phang}Confidence intervals are used in calculating coverages and powers.
+P-values are used in calculating powers.
+
+{phang} {cmd:lci(}{it:string}{cmd:)} specifies 
+the names of the variables containing the lower confidence limits. 
+For data in long format, it is a single variable.
+
+{phang} {cmd:uci(}{it:string}{cmd:)} specifies
+the names of the variables containing the upper confidence limits. 
+For data in long format, it is a single variable.
+
+{phang} {cmd:p(}{it:string}{cmd:)} specifies
+the names of the variables containing the p-values. 
+For data in long format, it is a single variable.
+
+{phang} 
+{cmdab:lcip:refix(}{it:string}{cmd:)}, 
+{cmdab:lcis:uffix(}{it:string}{cmd:)},
+{cmdab:ucip:refix(}{it:string}{cmd:)}, 
+{cmdab:ucis:uffix(}{it:string}{cmd:)},
+{cmdab:pp:refix(}{it:string}{cmd:)}, 
+and 
+{cmdab:ps:uffix(}{it:string}{cmd:)} 
+are alternatives to 
+{cmd:lci(}{it:string}{cmd:)}, 
+{cmd:uci(}{it:string}{cmd:)}
+and
+{cmd:p(}{it:string}{cmd:)}. 
+They work in the same way as {cmdab:sep:refix(}{it:string}{cmd:)} and {cmdab:ses:uffix(}{it:string}{cmd:)}.
+
+
 {title:Performance measure options}{marker pm_options}
 
 {phang}If none of the following options is specified, then all available performance measures are computed.
@@ -158,12 +198,15 @@ It may be combined with {cmd:dfprefix()} but not with {cmd:df()}.
 
 {phang} {cmd:bias} estimates the bias in the point estimates.
 
+{phang} {cmd:pctbias} estimates the bias in the point estimates as a percentage of the true value.
+
 {phang} {cmd:mean} estimates the mean of the point estimates.
 
 {phang} {cmd:empse} estimates the empirical standard error -- the standard deviation of the point estimates.
 
 {phang} {cmd:relprec} estimates the relative precision 
--- the inverse squared ratio of the empirical standard error of this method to the empirical standard error of the reference method.
+-- the percentage improvement in precision for this analysis method compared with the reference analysis method.
+Precision is the inverse square of the empirical standard error. 
 This calculation is slow: omitting it can reduce run time by up to 90%.
 
 {phang} {cmd:mse} estimates the mean squared error.
@@ -174,7 +217,7 @@ This calculation is slow: omitting it can reduce run time by up to 90%.
 
 {phang} {cmd:ciwidth} estimates the mean confidence interval width. 
 
-{phang} {cmd:relerror} estimates the proportional error in the model-based standard error, using the empirical standard error as gold standard.
+{phang} {cmd:relerror} estimates the percentage error in the model-based standard error, using the empirical standard error as gold standard.
 
 {phang} {cmd:cover} estimates the coverage of nominal confidence intervals at the specified level.
 
@@ -187,6 +230,7 @@ The null hypothesis is that the true parameter is the value specified by the {cm
 {col 8} bsims {col 25}  {col 40} 
 {col 8} sesims {col 25}  {col 40} x
 {col 8} bias {col 25} x {col 40} 
+{col 8} pctbias {col 25} x {col 40} 
 {col 8} mean {col 25}  {col 40} 
 {col 8} empse {col 25}  {col 40}
 {col 8} relprec {col 25}  {col 40} 
@@ -209,8 +253,8 @@ The default is to list the results as a single table.
 {phang} {cmd:format(}{it:string}{cmd:)} specifes the format for printing the results and saving the 
 performance measure data.
 If {cmd:listsep} is also specified then up to three formats may be specified: 
-(1) for results on the scale of the original estimates (bias, empse, modelse);
-(2) for percentages (relprec, relerror, cover, power);
+(1) for results on the scale of the original estimates (bias, mean, empse, mse, rmse, modelse, ciwidth);
+(2) for percentages (pctbias, relprec, relerror, cover, power);
 (3) for integers (bsims, sesims).
 Defaults are the existing format of the [first] estimate variable for (1) and (2), and %7.0f for (3).
 
@@ -222,6 +266,7 @@ Defaults are the existing format of the [first] estimate variable for (1) and (2
 {title:Output data set options}{marker output_options}
 
 {phang} {cmd:clear} loads the performance measure data into memory.
+They will be in a wide format for analysis methods, regardless of the original data format.
 
 {phang} {cmd:saving(}{it:filename}{cmd:)} saves the performance measure data into {it:filename}.
 
@@ -233,18 +278,28 @@ specifies the prefix for new variables identifying the different performance mea
 transposes the output data set so that performance measures are columns and methods are rows
 (only useful with {cmd:clear} or {cmd:saving()}).
 
+{pstd}The performance measure dataset has one row per performance measure and per level of the by variable(s) (if any).
+Performance measure codes (e.g. "empse" etc.) are stored in the string variable {cmd:perfmeascode}, and their longer descriptions (e.g. "Empirical standard errror" etc.) are the labels of the numeric variable {cmd:perfmeasnum}.
+Values of performance measures are stored in the variable {it:estvarname}, and their Monte Carlo standard errors (if computed) in {it:estvarname}_mcse.
+
+{pstd}Programmers should avoid hard-coding the numeric values of {cmd:perfmeasnum}, since these can change across versions of {cmd:simsum} as more performance measures are added.
+
+
 
 {title:Example}{marker example}
 
 {phang}This example uses data in long format stored in MIsim.dta:
 
-{phang}{cmd:. simsum b, se(se) methodvar(method) id(dataset) true(0.5) mcse format(%7.0g)}
+{phang}. {stata "use https://github.com/UCL/simsum/raw/main/package/MIsim.dta, clear"}
+
+{phang}. {stata "simsum b, se(se) methodvar(method) id(dataset) true(0.5) mcse format(%7.0g)"}
 
 {phang}Alternatively, the data could first be reshaped to wide format:
 
-{phang}{cmd:. reshape wide b se, i(dataset) j(method) string}
+{phang}. {stata "reshape wide b se, i(dataset) j(method) string"}
 
-{phang}{cmd:. simsum b*, se(se*) true(0.5) mcse format(%7.0g)}
+{phang}. {stata "simsum b*, se(se*) true(0.5) mcse format(%7.0g)"}
+
 
 
 {title:Errata}{marker errata}

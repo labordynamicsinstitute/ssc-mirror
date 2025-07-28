@@ -1,12 +1,39 @@
 /***********************************************************************************************
 HISTORY
-*! version 2.0.4 Ian White 1aug2023
-	bug fix: MCSE for RMSE was (seriously) wrong
+*! version 2.3 Ian White 25jul2025
 	released on SSC
+version 2.2.3 Ian White 01apr2025
+	semissingok controls whether beta is changed to missing when se is missing
+version 2.2.2 Ian White 31mar2025
+	-byvar- is captured to avoid annoying "no observations" messages for each missing dgmvar combination 
+	relprec = 0 for ref method, not .
+	don't change beta to missing when se is missing
+version 2.2.1 Ian White 26mar2025
+	allow just one of lci() and uci() 
+	- the other is assumed to be +/- infty for cover and power
+	- but ciwidth not allowed
+version 2.2 Ian White 14mar2024
+	new lci, uci and p options
+version 2.1.2 Ian White 12mar2024
+	drop label if pre-existing - helps siman analyse to avoid crash
+	correct true to truevar
+	updated returned version
+version 2.1.1 Ian White 14feb2024
+	pctbias was causing error if no true() - fixed
+version 2.1   Ian White 19oct2023
+	variables needed for MCSE calculation are only created if mcse option used
+	new performance measure: pctbias
+	correct formats for mean, rmse, ciwidth when using listsep
+version 2.0.5 Ian White 30aug2023
+	fixed bug where MCSE of relprec wasn't computed if a byvar was missing
+	NB missing values are allowed in byvars
+version 2.0.4 Ian White 1aug2023
+	bug fix: MCSE for RMSE was (seriously) wrong
+	released on SSC [NB has r(simsum_version) = 2.0.3]
 version 2.0.3 Ian White 21jul2023
 	moved the bsims=1 check before the big observation check (else useless)
 	added hidden r(simsum_version)
-* version 2.0.2 Ian White 22may2023
+version 2.0.2 Ian White 22may2023
 	better handling of bsims=1 case: abort unless new -force- is specified; 
 		MCSE correctly . for cover & power (but formulae otherwise unchanged)
 version 2.0.1 Ian White 19jan2023
@@ -86,7 +113,7 @@ version 10
 if _caller() >= 12 {
 	local hidden hidden
 }
-return `hidden' local simsum_version "2.0.3"
+return `hidden' local simsum_version "2.3"
 
 syntax varlist [if] [in], ///
     [true(string) METHodvar(varname) id(varlist)                             /// main options
@@ -94,14 +121,16 @@ syntax varlist [if] [in], ///
     graph GRAPH2(string) noMEMcheck max(real 10) semax(real 100)             /// data checking options
     dropbig nolistbig listmiss                                               /// data checking options
     level(real $S_level) by(varlist) mcse robust                             /// calculation options
-    MODELSEMethod(string) ref(string) null(real 0)                           /// calculation options
+    MODELSEMethod(string) ref(string) null(real 0) SEMISSingok               /// calculation options
     df(string) DFPrefix(string) DFSuffix(string)                             /// degrees of freedom options
-    bsims sesims bias mean empse relprec mse rmse                            /// performance measure options
+    lci(string) LCIPrefix(string) LCISuffix(string)                          /// CI options
+    uci(string) UCIPrefix(string) UCISuffix(string)                          /// CI options
+    p(string) PPrefix(string) PSuffix(string)                                /// p-value options
+    bsims sesims bias pctbias mean empse relprec mse rmse                    /// performance measure options
     modelse ciwidth relerror cover power                                     /// performance measure options
-	force																	 ///
     nolist listsep format(string) sepby(varlist) ABbreviate(passthru)        /// display options
     clear saving(string) gen(string) TRANSpose                               /// output data set options
-    debug                                                                    /// undocumented options
+    force debug                                                              /// undocumented options
     ]
 
 // CHECK OPTIONS 
@@ -113,6 +142,11 @@ if "`modelsemethod'"!="rmse" & "`modelsemethod'"!="mean" {
 }
 
 if !mi("`graph2'") local graph graph
+
+if !mi("`robust'") & mi("`mcse'") {
+	di as text "MCSE not requested, so ignoring robust option"
+	local robust
+}
 
 * SORT OUT BY
 if "`by'"!="" {
@@ -133,33 +167,35 @@ foreach beta of varlist `varlist' {
 }
 local m `i'
 
-* SORT OUT SE'S
-if "`seprefix'"!="" | "`sesuffix'"!="" {
-    if "`se'"!="" {
-        di as error "Can't specify se() with seprefix() or sesuffix()"
-        exit 498
-    }
-    forvalues i=1/`m' {
-        local se`i' `seprefix'`beta`i''`sesuffix'
-        confirm var `se`i''
-        local selist `selist' `se`i''
-    }
-}
-else if "`se'"!="" {
-    local i 0
-    foreach sevar of varlist `se' {
-        local ++i
-        local se`i' `sevar'
-        local selist `selist' `se`i''
-    }
-    if `i'<`m' {
-        di as error "Fewer variables in se(`se') than in `betalist'"
-        exit 498
-    }
-    if `i'>`m' {
-        di as error "More variables in se(`se') than in `betalist'"
-        exit 498
-    }
+* SORT OUT SEs, LCI's, UCIs -> locals se1... and selist, etc.
+foreach stat in se lci uci p {
+	if "``stat'prefix'"!="" | "``stat'suffix'"!="" {
+		if "``stat''"!="" {
+			di as error "Can't specify `stat'() with `stat'prefix() or `stat'suffix()"
+			exit 498
+		}
+		forvalues i=1/`m' {
+			local `stat'`i' ``stat'prefix'`beta`i''``stat'suffix'
+			confirm var ``stat'`i''
+			local `stat'list ``stat'list' ``stat'`i''
+		}
+	}
+	else if "``stat''"!="" {
+		local i 0
+		foreach `stat'var of varlist ``stat'' {
+			local ++i
+			local `stat'`i' ``stat'var'
+			local `stat'list ``stat'list' ``stat'`i''
+		}
+		if `i'<`m' {
+			di as error "Fewer variables in `stat'(``stat'') than in `betalist'"
+			exit 498
+		}
+		if `i'>`m' {
+			di as error "More variables in `stat'(``stat'') than in `betalist'"
+			exit 498
+		}
+	}
 }
 /*
 else { // just working with beta's
@@ -169,6 +205,7 @@ else { // just working with beta's
     }
 }   
 */
+	
 * SORT OUT DF'S
 if "`dfprefix'"!="" | "`dfsuffix'"!="" {
     if "`df'"!="" {
@@ -222,7 +259,7 @@ else if "`df'"!="" {
 * PARSE PERFORMANCE MEASURES
 * if no performance measures specified, use all available 
 * we'll strike out ineligible ones later
-local allpms bsims sesims bias mean empse relprec mse rmse modelse ciwidth relerror cover power   
+local allpms bsims sesims bias pctbias mean empse relprec mse rmse modelse ciwidth relerror cover power   
 foreach pm of local allpms { // find list of PMs specified
 	if !mi("``pm''") local origoutput `origoutput' `pm'
 }
@@ -233,25 +270,58 @@ if mi("`origoutput'") { // if nothing specified, specify all
 }
 * strike out ineligible pms
     if "`se1'"=="" { // SE is not reported
-        foreach perfmeas in sesims modelse ciwidth relerror cover power {
+        foreach perfmeas in sesims modelse relerror {
 			if !mi("``perfmeas''") local droppm1 `droppm1' `perfmeas'
             local `perfmeas'
         }
 		if !mi("`droppm1'") {
-			if !mi("`origoutput'") di as error "" _c
-			else di as text "" _c
-			di "SE not reported, so ignoring performance measures: `droppm1'"
+			if !mi("`origoutput'") local msgtype error
+			else local msgtype text
+			di as `msgtype' "SE not reported, so ignoring performance measures: `droppm1'"
 		}
     }
-    if "`true'"=="" { // True parameter is not reported
-        foreach perfmeas in bias mse rmse cover {
+    if "`se1'"=="" & "`lci1'"=="" & "`uci1'"=="" { // none of SE, LCI, UCI is reported
+        foreach perfmeas in cover {
 			if !mi("``perfmeas''") local droppm2 `droppm2' `perfmeas'
             local `perfmeas'
         }
 		if !mi("`droppm2'") {
-			if !mi("`origoutput'") di as error "" _c
-			else di as text "" _c
-			di "true() not specified, so ignoring performance measures: `droppm2'"
+			if !mi("`origoutput'") local msgtype error
+			else local msgtype text
+			di as `msgtype' "Neither SE, LCI nor UCI is reported, so ignoring performance measures: `droppm2'"
+		}
+    }
+    if "`se1'"=="" & mi("`lci1'","`uci1'") { // neither SE nor (LCI,UCI) is reported
+        foreach perfmeas in ciwidth {
+			if !mi("``perfmeas''") local droppm5 `droppm5' `perfmeas'
+            local `perfmeas'
+        }
+		if !mi("`droppm5'") {
+			if !mi("`origoutput'") local msgtype error
+			else local msgtype text
+			di as `msgtype' "Neither SE nor (LCI,UCI) is reported, so ignoring performance measures: `droppm5'"
+		}
+    }
+    if "`se1'"=="" & "`lci1'"=="" & "`uci1'"=="" & "`p1'"=="" { // none of SE, LCI, UCI, P is reported
+        foreach perfmeas in power {
+			if !mi("``perfmeas''") local droppm3 `droppm3' `perfmeas'
+            local `perfmeas'
+        }
+		if !mi("`droppm3'") {
+			if !mi("`origoutput'") local msgtype error
+			else local msgtype text
+			di as `msgtype' "Neither SE, LCI, UCI nor P is reported, so ignoring performance measures: `droppm3'"
+		}
+    }
+    if "`true'"=="" { // True parameter is not reported
+        foreach perfmeas in bias pctbias mse rmse cover {
+			if !mi("``perfmeas''") local droppm4 `droppm4' `perfmeas'
+            local `perfmeas'
+        }
+		if !mi("`droppm4'") {
+			if !mi("`origoutput'") local msgtype error
+			else local msgtype text 
+			di as `msgtype' "true() not specified, so ignoring performance measures: `droppm4'"
 		}
     }
 * find list of PMs specified
@@ -306,12 +376,12 @@ if "`memcheck'"!="nomemcheck" {
 marksample touse, novarlist
 qui count if `touse'
 if r(N)==0 {
-    di in red "no observations"
+    di as error "no observations"
     exit 2000
 }
 
 * check true is specified if bias or cover chosen
-if "`bias'"=="bias" | "`mse'"=="mse" | "`rmse'"=="rmse" | "`cover'"=="cover" {
+if "`bias'"=="bias" | "`pctbias'"=="pctbias" | "`mse'"=="mse" | "`rmse'"=="rmse" | "`cover'"=="cover" {
     tempvar truevar
     qui gen `truevar' = `true'
     qui count if missing(`truevar') & `touse'
@@ -347,6 +417,12 @@ if "`methodvar'"!="" {
         local newbetalist `newbetalist' `betalist'`method'
         if "`selist'"!="" local se`i' `selist'`method'
         if "`selist'"!="" local newselist `newselist' `selist'`method'
+        if "`lcilist'"!="" local lci`i' `lcilist'`method'
+        if "`lcilist'"!="" local newlcilist `newlcilist' `lcilist'`method'
+        if "`ucilist'"!="" local uci`i' `ucilist'`method'
+        if "`ucilist'"!="" local newucilist `newucilist' `ucilist'`method'
+        if "`plist'"!="" local p`i' `plist'`method'
+        if "`plist'"!="" local newplist `newplist' `plist'`method'
         if "`dftype'"=="number" local df`i' `df'
         if "`dftype'"=="varname" local df`i' `dflist'`method'
         if "`label'"!="" local label`i' : label `label' `method'
@@ -364,15 +440,18 @@ if "`methodvar'"!="" {
         else local refmethod 1
     }
     di as text "Reshaping data to wide format ..."
-    keep `betalist' `selist' `dflist' `by' `byvar' `id' `methodvar' `touse' `truevar'
+    keep `betalist' `selist' `dflist' `lcilist' `ucilist' `plist' `by' `byvar' `id' `methodvar' `touse' `truevar'
     cap confirm string var `methodvar'
     if _rc==0 local string string
     local bfmt0: format `betalist' // for later use
 
-    qui reshape wide `betalist' `selist' `dflist', i(`by' `id') j(`methodvar') `string'
+    qui reshape wide `betalist' `selist' `dflist' `lcilist' `ucilist' `plist', i(`by' `id') j(`methodvar') `string'
 
     local betalist `newbetalist'
     local selist `newselist'
+    local lcilist `newlcilist'
+    local ucilist `newucilist'
+    local plist `newplist'
 }
 else { // DATA ARE ALREADY WIDE
     local origformat wide
@@ -388,7 +467,7 @@ else { // DATA ARE ALREADY WIDE
         }
         else local refmethod 1
     }
-    keep `betalist' `selist' `dflist' `by' `byvar' `id' `touse' `truevar' 
+    keep `betalist' `selist' `dflist' `lcilist' `ucilist' `plist' `by' `byvar' `id' `touse' `truevar' 
 }
 
 // CHECK FOR NON-REPLICATED BETA'S
@@ -436,8 +515,11 @@ forvalues i=1/`m' {
             if r(N)>0 {
                 di as text _new "Warning for method `label`i'': " as result r(N) as text " observation(s) have estimate observed and SE missing"
                 if "`listmiss'"=="listmiss" list `by' `id' `beta`i'' `se`i'' if `missing', sepby(`sepby')
-                qui replace `beta`i'' = . if `missing'
-                di as text "--> estimate changed to missing"
+                if mi("`semissingok'") { // original behaviour
+					qui replace `beta`i'' = . if `missing'
+					di as text "--> estimate changed to missing"
+				}
+                else di as text "--> estimate unchanged" // new behaviour with semissingok option
             }
 
             qui replace `missing' = (`se`i''==0) & `touse'
@@ -445,9 +527,12 @@ forvalues i=1/`m' {
             if r(N)>0 {
                 di as text _new "Warning for method `label`i'': " as result r(N) as text " observation(s) have zero values of SE"
                 if "`listmiss'"=="listmiss" list `by' `id' `beta`i'' `se`i'' if `missing', sepby(`sepby')
-                qui replace `beta`i'' = . if `missing'
                 qui replace `se`i'' = . if `missing'
-                di as text "--> estimate and SE changed to missing"
+                if mi("`semissingok'") { // original behaviour
+					qui replace `beta`i'' = . if `missing'
+					di as text "--> estimate and SE changed to missing"
+				}
+                else di as text "--> estimate unchanged, SE changed to missing"
             }
         }
     }
@@ -531,31 +616,39 @@ forvalues i=1/`m' {
         // missing values in df`i' yield normal intervals
     assert !mi(`crit`i'')
     local collcount `collcount' bsims_`i'=`beta`i''
-    if "`bias'"=="bias" {
+    if "`bias'"=="bias" | "`pctbias'"=="pctbias" {
         qui gen bias_`i' = `beta`i'' - `truevar'
         local collmean `collmean' bias_`i' 
-        local collsd `collsd' biassd_`i' = bias_`i'
+        if "`mcse'"=="mcse" local collsd `collsd' biassd_`i' = bias_`i'
     }
     if "`mean'"=="mean" {
         local collmean `collmean' mean_`i' = `beta`i'' 
-        local collsd `collsd' meansd_`i' = `beta`i'' 
+        if "`mcse'"=="mcse" local collsd `collsd' meansd_`i' = `beta`i'' 
     }
     if "`relerror'"=="relerror" | "`modelse'"=="modelse" {
         qui gen var_`i'=`se`i''^2
     }
-    if "`empse'"=="empse" | "`relerror'"=="relerror" | "`relprec'"=="relprec" | "`bias'"=="bias" {
+    if "`empse'"=="empse" | "`relerror'"=="relerror" | "`relprec'"=="relprec" | "`bias'"=="bias" | "`pctbias'"=="pctbias" {
         local collsd `collsd' empse_`i'=`beta`i''
     }
     if "`mse'"=="mse" | "`rmse'"=="rmse" {
         qui gen mse_`i' = (`beta`i'' - `truevar')^2
         local collmean `collmean' mse_`i'
-        local collsd `collsd' msesd_`i'=mse_`i'
+        if "`mcse'"=="mcse" local collsd `collsd' msesd_`i'=mse_`i'
     }
     if "`relprec'"=="relprec" & `i'!=`refmethod' {
-        qui byvar `byvar', r(rho N) gen unique: corr `beta`refmethod'' `beta`i''
-        rename Rrho_ corr_`i'
-        rename RN_ ncorr_`i'
-        local collsum `collsum' corr_`i' ncorr_`i'
+        if "`mcse'"=="mcse" {
+			if !mi("`debug'") di as text "About to run byvar: qui byvar `byvar', r(rho N) gen unique missing: corr `beta`refmethod'' `beta`i''"
+			cap byvar `byvar', r(rho N) gen unique missing: corr `beta`refmethod'' `beta`i''
+			if _rc {
+				di as error "simsum: byvar command failed"
+				exit _rc
+			}
+			if !mi("`debug'") di as text "Have run byvar"
+			rename Rrho_ corr_`i'
+			rename RN_ ncorr_`i'
+			local collsum `collsum' corr_`i' ncorr_`i'
+		}
     }
     if "`modelse'"=="modelse" | "`relerror'"=="relerror" | "`sesims'"=="sesims" {
         local collcount `collcount' sesims_`i'=`se`i'' 
@@ -567,7 +660,11 @@ forvalues i=1/`m' {
         local collsd `collsd' modelsesd_`i'=`se`i''
     }
 	if "`ciwidth'"=="ciwidth" {
-		qui gen ciwidth_`i'  = 2*(`crit`i'')*`se`i''
+		if !mi("`lcilist'","`ucilist'") {
+			qui gen ciwidth_`i'  = `uci`i'' - `lci`i''
+			if `i'==1 di as text "Note: ciwidth computed from lci and uci"
+		}
+		else qui gen ciwidth_`i'  = 2*(`crit`i'')*`se`i''
 		local collmean `collmean' ciwidth_`i'
 		local collsd `collsd' ciwidthsd_`i' = ciwidth_`i'
 	}
@@ -575,12 +672,38 @@ forvalues i=1/`m' {
         if "`cover'"=="cover" local collcount `collcount' bothsims_`i'=cover_`i'
         else local collcount `collcount' bothsims_`i'=power_`i'
     }
-    if "`cover'"=="cover" {
-        qui gen cover_`i' = 100*(abs(`beta`i''-`truevar')<(`crit`i'')*`se`i'') if !missing(`beta`i'') & !missing(`se`i'') 
+    if "`cover'"=="cover" { // changed 14mar2024 to respect lci, uci
+		if !mi("`lcilist'","`ucilist'") {
+			qui gen cover_`i' = (`lci`i''<=`truevar') & (`truevar'<=`uci`i'') if !missing(`lci`i'',`uci`i'')
+			if `i'==1 di as text "Note: coverage computed from lci and uci"
+		}
+		else if !mi("`lcilist'") {
+			qui gen cover_`i' = (`lci`i''<=`truevar') if !missing(`lci`i'')
+			if `i'==1 di as text "Note: coverage computed from lci, assuming uci=+infinity"
+		}
+		else if !mi("`ucilist'") {
+			qui gen cover_`i' =  (`truevar'<=`uci`i'') if !missing(`uci`i'')
+			if `i'==1 di as text "Note: coverage computed from uci, assuming lci=-infinity"
+		}
+		else {
+			qui gen cover_`i' = abs(`beta`i''-`truevar') < (`crit`i'')*`se`i'' if !missing(`beta`i'',`se`i'') 
+		}
+		qui replace cover_`i' = 100 * cover_`i' 
         local collmean `collmean' cover_`i' 
     }
     if "`power'"=="power" {
-        qui gen power_`i' = 100*(abs(`beta`i''-`null')>=(`crit`i'')*`se`i'') if !missing(`beta`i'') & !missing(`se`i'') 
+		if !mi("`plist'") {
+			qui gen power_`i' = `p`i'' < (1-`level'/100) if !missing(`p`i'')
+			if `i'==1 di as text "Note: power computed from p"
+		}
+		else if !mi("`lcilist'","`ucilist'") {
+			qui gen power_`i' = (`lci`i''>`null') | (`null'>`uci`i'') if !missing(`lci`i'',`uci`i'') 
+			if `i'==1 di as text "Note: power computed from lci and uci"
+		}
+		else {
+			qui gen power_`i' = (abs(`beta`i''-`null')>=(`crit`i'')*`se`i'') if !missing(`beta`i'',`se`i'') 
+		}
+		qui replace power_`i' = 100*power_`i'
         local collmean `collmean' power_`i' 
     }
     if "`robust'"=="robust" {
@@ -619,78 +742,86 @@ if "`collcount'"!="" local collcount (count) `collcount'
 if "`collsum'"!="" local collsum (sum) `collsum'
 
 // PROCESS RESULTS PART 2: -COLLAPSE-
-collapse `collmean' `collsd' `collcount' `collsum', by(`byvar')
-if !mi("`debug'") {
-	di as input "Data after collapse:"
-	l
-}
+if !mi("`debug'") di as input "Running collapse..."
+collapse `collmean' `collsd' `collcount' `collsum', by(`byvar' `truevar')
+if !mi("`debug'") di as input "collapse has run"
 
 // PROCESS RESULTS PART 3: AFTER -COLLAPSE-
 forvalues i=1/`m' {
-    qui gen k_`i' = bsims_`i'/(bsims_`i'-1)
+    if "`mcse'"=="mcse" qui gen k_`i' = bsims_`i'/(bsims_`i'-1)
     if "`bias'"=="bias" {
-        qui gen bias_mcse_`i' = biassd_`i' / sqrt(bsims_`i')
+        if "`mcse'"=="mcse" qui gen bias_mcse_`i' = biassd_`i' / sqrt(bsims_`i')
+    }
+    if "`pctbias'"=="pctbias" {
+        qui gen pctbias_`i' = 100 * bias_`i' / `truevar'
+        if "`mcse'"=="mcse" qui gen pctbias_mcse_`i' = 100 * biassd_`i' / sqrt(bsims_`i') / abs(`truevar')
     }
     if "`mean'"=="mean" {
-        qui gen mean_mcse_`i' = meansd_`i' / sqrt(bsims_`i')
+        if "`mcse'"=="mcse" qui gen mean_mcse_`i' = meansd_`i' / sqrt(bsims_`i')
     }
     if ("`empse'"=="empse"  | "`relerror'"=="relerror") & "`robust'"=="" {
-        qui gen empse_mcse_`i' = empse_`i'/sqrt(2*(bsims_`i'-1))
+        if "`mcse'"=="mcse" qui gen empse_mcse_`i' = empse_`i'/sqrt(2*(bsims_`i'-1))
     }
     else if ("`empse'"=="empse") & "`robust'"=="robust" {
-        qui replace `empseTT`i''=`empseTT`i''*(k_`i'^2)
-        qui replace `empseTB`i''=`empseTB`i''*k_`i'
-        qui replace `empseT`i'' =`empseT`i'' *k_`i'
-        qui gen empse_mcse_`i' = sqrt(k_`i') * sqrt(`empseTT`i'' -2*(`empseT`i''/`empseB`i'')*`empseTB`i'' +(`empseT`i''/`empseB`i'')^2*`empseBB`i'') / `empseB`i''
-        qui replace empse_mcse_`i' = empse_mcse_`i' / (2*empse_`i')
+        if "`mcse'"=="mcse" {
+			qui replace `empseTT`i''=`empseTT`i''*(k_`i'^2)
+			qui replace `empseTB`i''=`empseTB`i''*k_`i'
+			qui replace `empseT`i'' =`empseT`i'' *k_`i'
+			qui gen empse_mcse_`i' = sqrt(k_`i') * sqrt(`empseTT`i'' -2*(`empseT`i''/`empseB`i'')*`empseTB`i'' +(`empseT`i''/`empseB`i'')^2*`empseBB`i'') / `empseB`i''
+			qui replace empse_mcse_`i' = empse_mcse_`i' / (2*empse_`i')
+		}
     }
     if "`relprec'"=="relprec" {
         if `i'!=`refmethod' {
             qui gen relprec_`i' = 100 * ((empse_`refmethod'/empse_`i')^2-1)
-            if "`robust'"=="" {
-                qui gen relprec_mcse_`i' = 200 * (empse_`refmethod'/empse_`i')^2 * sqrt((1-(corr_`i')^2)/(ncorr_`i'-1))
-            }
-            else {
-                qui gen relprec_mcse_`i' = 100 * sqrt(`relprecTT`i'' -2*(`relprecT`i''/`relprecB`i'')*`relprecTB`i'' +(`relprecT`i''/`relprecB`i'')^2*`relprecBB`i'') / `relprecB`i''
-            }
+            if "`mcse'"=="mcse" {
+				if "`robust'"=="" {
+					qui gen relprec_mcse_`i' = 200 * (empse_`refmethod'/empse_`i')^2 * sqrt((1-(corr_`i')^2)/(ncorr_`i'-1))
+				}
+				else {
+					qui gen relprec_mcse_`i' = 100 * sqrt(`relprecTT`i'' -2*(`relprecT`i''/`relprecB`i'')*`relprecTB`i'' +(`relprecT`i''/`relprecB`i'')^2*`relprecBB`i'') / `relprecB`i''
+				}
+			}
         }
         else {
-            qui gen relprec_`i' = .
-            qui gen relprec_mcse_`i' = .
+            qui gen relprec_`i' = 0
+            if "`mcse'"=="mcse" qui gen relprec_mcse_`i' = 0
         }
     }
     if "`mse'"=="mse" {
-        qui gen mse_mcse_`i' = msesd_`i' / sqrt(bsims_`i')
+        if "`mcse'"=="mcse" qui gen mse_mcse_`i' = msesd_`i' / sqrt(bsims_`i')
     }
     if "`rmse'"=="rmse" {
-        qui gen rmse_`i' = sqrt(mse_`i')
-        qui gen rmse_mcse_`i' = msesd_`i' / (2 * sqrt(bsims_`i') * rmse_`i')
+		qui gen rmse_`i' = sqrt(mse_`i')
+		if "`mcse'"=="mcse" qui gen rmse_mcse_`i' = msesd_`i' / (2 * sqrt(bsims_`i') * rmse_`i')
     }
     if "`modelse'"=="modelse" | "`relerror'"=="relerror" {
         if "`modelsemethod'"=="rmse" {
             qui replace modelse_`i' = sqrt(varmean_`i')
-            qui gen modelse_mcse_`i' = varsd_`i' / sqrt(4 * sesims_`i' * varmean_`i') 
+            if "`mcse'"=="mcse" qui gen modelse_mcse_`i' = varsd_`i' / sqrt(4 * sesims_`i' * varmean_`i') 
         }
         else if "`modelsemethod'"=="mean" {
-            qui gen modelse_mcse_`i' = modelsesd_`i' / sqrt(sesims_`i')
+            if "`mcse'"=="mcse" qui gen modelse_mcse_`i' = modelsesd_`i' / sqrt(sesims_`i')
         }
     }
 	if "`ciwidth'"=="ciwidth" {
-		qui gen ciwidth_mcse_`i' = ciwidthsd_`i' / sqrt(bsims_`i')
+		if "`mcse'"=="mcse" qui gen ciwidth_mcse_`i' = ciwidthsd_`i' / sqrt(bsims_`i')
 	}
     if "`relerror'"=="relerror" {
         qui gen relerror_`i' = 100*(modelse_`i'/empse_`i'-1)
-        if "`robust'"=="" qui gen relerror_mcse_`i' = 100*(modelse_`i'/empse_`i') * sqrt((modelse_mcse_`i'/modelse_`i')^2 + (empse_mcse_`i'/empse_`i')^2 )
-        else {
-            qui gen relerror_mcse_`i' = sqrt(`relerrorTT`i'' -2*(`relerrorT`i''/`relerrorB`i'')*`relerrorTB`i'' +(`relerrorT`i''/`relerrorB`i'')^2*`relerrorBB`i'') / `relerrorB`i''
-            qui replace relerror_mcse_`i' = relerror_mcse_`i' * 100 / (2*(1+relerror_`i'/100))
-        }
+        if "`mcse'"=="mcse" {
+			if "`robust'"=="" qui gen relerror_mcse_`i' = 100*(modelse_`i'/empse_`i') * sqrt((modelse_mcse_`i'/modelse_`i')^2 + (empse_mcse_`i'/empse_`i')^2 )
+			else {
+				qui gen relerror_mcse_`i' = sqrt(`relerrorTT`i'' -2*(`relerrorT`i''/`relerrorB`i'')*`relerrorTB`i'' +(`relerrorT`i''/`relerrorB`i'')^2*`relerrorBB`i'') / `relerrorB`i''
+				qui replace relerror_mcse_`i' = relerror_mcse_`i' * 100 / (2*(1+relerror_`i'/100))
+			}
+		}
     }
     if "`cover'"=="cover" {
-        qui gen cover_mcse_`i' = sqrt(cover_`i'*(100-cover_`i')/bothsims_`i') if bothsims_`i'>1
+        if "`mcse'"=="mcse" qui gen cover_mcse_`i' = sqrt(cover_`i'*(100-cover_`i')/bothsims_`i') if bothsims_`i'>1
     }
     if "`power'"=="power" {
-        qui gen power_mcse_`i' = sqrt(power_`i'*(100-power_`i')/bothsims_`i') if bothsims_`i'>1
+        if "`mcse'"=="mcse" qui gen power_mcse_`i' = sqrt(power_`i'*(100-power_`i')/bothsims_`i') if bothsims_`i'>1
     }
     cap drop varmean_`i' 
     cap drop varsd_`i'
@@ -705,6 +836,7 @@ local alpha=100-`level'
 local bsimsname Non-missing point estimates
 local sesimsname Non-missing standard errors
 local biasname Bias in point estimate
+local pctbiasname % bias in point estimate
 local meanname Mean of point estimate
 local empsename Empirical standard error
 local relprecname % gain in precision relative to method `label`refmethod''
@@ -741,7 +873,8 @@ forvalues i=1/`m' {
 local i 0
 qui gen mcse = .
 qui gen `gen'num = .
-foreach perfmeas in bsims sesims bias mean empse relprec mse rmse modelse ciwidth relerror cover power {
+cap label drop `gen'num // avoids crash if siman analayse is repeated
+foreach perfmeas in bsims sesims bias pctbias mean empse relprec mse rmse modelse ciwidth relerror cover power {
     local ++i
     qui replace mcse=0 if `gen'code=="`perfmeas'"
     qui replace mcse=1 if `gen'code=="`perfmeas'_mcse"
@@ -751,6 +884,7 @@ foreach perfmeas in bsims sesims bias mean empse relprec mse rmse modelse ciwidt
     if "`perfmeas'"=="bsims" local label "Non-missing point estimates"
     if "`perfmeas'"=="sesims" local label "Non-missing standard errors"
     if "`perfmeas'"=="bias" local label "Bias in point estimate"
+    if "`perfmeas'"=="pctbias" local label "% bias in point estimate"
     if "`perfmeas'"=="mean" local label "Mean of point estimate"
     if "`perfmeas'"=="empse" local label "Empirical standard error"
     if "`perfmeas'"=="relprec" local label "% precision gain relative to method `label`refmethod''"
@@ -818,7 +952,7 @@ if mi("`transpose'") {
                 di as text _new "``perfmeas'name'"
                 local thisbetas = cond(inlist("`perfmeas'","bsims","sesims"), "betasnomcse", "betas")
                 if inlist("`perfmeas'","bsims","sesims") local format `nfmt'
-                else if inlist("`perfmeas'","bias","empse","modelse","mse") local format `bfmt'
+                else if inlist("`perfmeas'","bias","`mean'","empse","modelse","mse","rmse","ciwidth") local format `bfmt'
                 else local format `pctfmt'
                 qui format `betas' `format' 
                 list `by' ``thisbetas'' if `gen'code=="`perfmeas'", noo subvarname sepby(`gen'num `sepby') `abbreviate'
@@ -830,7 +964,7 @@ if mi("`transpose'") {
     char `gen'num[varname] 
 }
 else {
-    di "Transposing results ..."
+    di as text "Transposing results ..."
     drop `gen'num
     if "`origformat'"=="long" {
     }
@@ -855,11 +989,11 @@ else {
     	rename `varname' `varname2'
         label var `varname2'
     }
-    cap format `bias' `empse' `mse' `modelse' `bfmt'
-    cap format `relprec' `relerror' `cover' `power' `pctfmt'
+    cap format `bias' `mean' `empse' `mse' `rmse' `modelse' `ciwidth' `bfmt'
+    cap format `relprec' `relerror' `cover' `power' `pctbias' `pctfmt'
     cap format `bsims' `sesims' `sesims' `nfmt'
     if "`list'"!="nolist" {
-        l `by' method `type' `bsims' `sesims' `bias' `empse' `relprec' `mse' `modelse' `relerror' `cover' `power', sepby(`by' `sep2') noo
+        l `by' method `type' `bsims' `sesims' `bias' `pctbias' `empse' `relprec' `mse' `modelse' `relerror' `cover' `power', sepby(`by' `sep2') noo
     }
 }
 
@@ -955,7 +1089,7 @@ quietly {
     end of data.
 */
     tempvar grp first
-    marksample touse, strok
+    marksample touse, strok novarlist
     if "`missing'"=="" {
         markout `touse' `bylist', strok
         replace `touse'=. if `touse'==0

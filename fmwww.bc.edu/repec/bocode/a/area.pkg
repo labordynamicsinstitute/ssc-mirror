@@ -1,0 +1,19 @@
+d 'AREA': module to modify string variables
+d
+d  area generates the regional dummy variable. 
+d
+d KW: string variables
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20250727
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Wu XinZhuo,  Anhui University of Technology
+d Support: email NA
+d
+f area.ado
+f area.sthlp
+f asure.dta

@@ -1,4 +1,6 @@
 {smcl}
+{* 23Jul2025}{...}
+{* 06Jun2025}{...}
 {* 02Nov2024}{...}
 {* 09Sep2024}{...}
 {* 20Aug2024}{...}
@@ -39,6 +41,8 @@
 {opt low:ess}
 {opt ci}
 {cmdab:shad:e(}{it:{help datetime:date1}} ; {it:{help datetime:date2}}{cmd:)} 
+{opt smin(#)}
+{opt smax(#)}
 {opt posttr:end} 
 {opt repl:ace} 
 {opt pre:fix(string)}
@@ -70,10 +74,13 @@ and {cmd:single} is specified {p_end}
 {synopt:{opt contid}{cmd:(numlist)}}specify a list of identifiers to be used as control units in the multiple-group analysis; default is to use all{p_end}
 {synopt:{opt prais}}fit a {helpb prais} model. Default is to fit a {helpb glm} model with Newey-West standard errors {p_end}
 {synopt:{opt lag}{cmd:(#)}}specify the maximum lag to be considered when a glm model with Newey-West standard errors is estimated{p_end}
-{synopt:{opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]}produce an interrupted time-series plot. Specifying {cmd:figure} without options uses the default graph settings {p_end}
+{synopt:{opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]}produce an interrupted time-series plot. Specifying {cmd:figure} without options uses the default 
+graph settings {p_end}
 {synopt:{opt low:ess}}plot a lowess smoothed line of {it:depvar} on {it:timevar} on the figure{p_end}
 {synopt:{opt ci}}plot the confidence interval(s) on the figure {p_end}
 {synopt:{opt shade}{cmd:(}{it:date1} ; {it:date2}{cmd:)}}plot a shaded area on the figure between two dates, separated by a semicolon (e.g. {cmd:shade(21jan2020 ; 08feb2020)}) {p_end}
+{synopt:{opt smin}{cmd:(#)}}specify the minimum value displayed on {cmd:ylabel()} when {cmd:shade()} is specified {p_end}
+{synopt:{opt smax}{cmd:(#)}}specify the maximum value displayed on {cmd:ylabel()} when {cmd:shade()} is specified {p_end}
 {synopt:{opt posttr:end}}produce post-intervention trend estimates using {helpb lincom}, for the specified model {p_end}
 {synopt:{opt repl:ace}}replace variables created by {cmd:itsa} if they already exist {p_end}
 {synopt:{opt pre:fix}{cmd:(}{it:string}{cmd:)}}add a prefix to the names of variables created by {cmd:itsa}. Short prefixes are recommended {p_end}
@@ -121,7 +128,7 @@ intervention begins. The value(s) entered for time period(s) must be in the same
 units as the panel time variable specified in {helpb tsset}. Dates should be 
 specified using the respective pseudofunction (see {helpb datetime:datetime}), 
 such as {cmd:trperiod(2020)} for a four-digit year, {cmd:trperiod(2019m11)} for 
-quarterly data or {cmd:trperiod(20jan2021)} for daily data. Multiple periods 
+monthly data or {cmd:trperiod(20jan2021)} for daily data. Multiple periods 
 may be specified, separated by a semicolon, as {cmd:trperiod(2019m6 ; 2019m11)}; 
 {cmd:trperiod() is required}.
 
@@ -179,11 +186,21 @@ between two dates, specified by the user and separated by a semicolon. The value
 entered for time periods must be in the same units as the panel time variable 
 specified in {helpb tsset}. Dates should be specified using the respective 
 pseudofunction (see {helpb datetime:datetime}), such as {cmd:shade(2020 ; 2021)} 
-for a four-digit year, {cmd:shade(2019m11 ; 2020m3)} for quarterly data or 
+for a four-digit year, {cmd:shade(2019m11 ; 2020m3)} for monthly data or 
 {cmd:shade(20jan2021 ; 30jan2021)} for daily data. Shading may be helpful to 
 highlight a "washout" period before introduction of the intervention, or 
 to highlight some other event worthy of note.
- 
+
+{phang}
+{cmd:smin(}{it:#}{cmd:)} specifies the minimum value of the {cmd:ylabel()} when the {cmd:shade()} option is 
+specified. {cmd:smin()} is most relevant when the user overrides the default {cmd:ylabel()} settings,
+leaving the shading section misaligned with the bottom of the graph. 
+
+{phang}
+{cmd:smax(}{it:#}{cmd:)} specifies the maximum value of the {cmd:ylabel()} when the {cmd:shade()} option is 
+specified. {cmd:smax()} is most relevant when the user overrides the default {cmd:ylabel()} settings,
+leaving the shading section misaligned with the top of the graph. 
+
 {phang}
 {cmd:posttrend} produces posttreatment trend estimates using {helpb lincom},
 for the specified model. In the case of a single-group ITSA, one estimate is
@@ -365,9 +382,15 @@ that {cmd:xlabel()} shows 5-year increments. We also add a lowess smoother to th
 {phang3}{bf:{stata "itsa cigsale, single treat(3) trperiod(1982; 1989) shade(1982; 1989) lag(1) fig low replace":. itsa cigsale, single treatid(3) trperiod(1982; 1989) shade(1982; 1989) lag(1) figure(xlabel(1970(5)2000)) low replace}}{p_end}
 
 {pmore}
+Here we specify shading, but manually override the {cmd:ylabel()} settings and specify a range between 0 and 140 in increments of 20. We now need to set the {cmd:smin()} value to 0 
+to align with the minimum value that we specified in {cmd:ylabel()}. If we do not specify {cmd:smin()}, the shaded section will not reach the bottom of the graph. 
+
+{phang3}{bf:{stata "itsa cigsale, single treat(3) trperiod(1989) shade(1988;1989) lag(1) fig(ylabel(0(20)140)) smin(0) repl":. itsa cigsale, single treatid(3) trperiod(1989) shade(1988;1989) lag(1) fig(ylabel(0(20)140)) smin(0) repl}}{p_end}
+
+{pmore}
 Here we limit the range of observations to the period 1975 to 1995 and add CIs to the graph.
 
-{phang3}{bf:{stata "itsa cigsale if inrange(year, 1975, 1995), single treatid(3) trperiod(1982; 1989) lag(1) fig ci posttr replace":. itsa cigsale if inrange(year, 1975, 1995), single treatid(3) trperiod(1982; 1989) lag(1) fig ci posttr replace}} 
+{phang3}{bf:{stata "itsa cigsale if inrange(year, 1975, 1995), single treatid(3) trperiod(1982; 1989) lag(1) fig ci posttr repl":. itsa cigsale if inrange(year, 1975, 1995), single treatid(3) trperiod(1982; 1989) lag(1) fig ci posttr repl}} 
 
 
 {pstd}
@@ -532,6 +555,11 @@ A matching framework to improve causal inference in interrupted time series anal
 {it:Stata Journal}
 22: 231-233. 
 
+{phang}
+------. 2025. 
+{browse "https://journals.sagepub.com/doi/10.1177/01632787251361514":A Comprehensive Simulation Study to Evaluate the Effect Size and Study Length Relationship in Single-Group Interrupted Time Series Analysis}. 
+{it:Evaluation & the Health Professions} 
+
 {phang} 
 Linden, A., and J. L. Adams. 2011. 
 Applying a propensity-score based weighting model to interrupted time
@@ -586,5 +614,5 @@ Simonton, D. K. 1977b. Erratum to Simonton. {it:Psychological Bulletin}
                     {it:Stata Journal}, volume 15, number 2: {browse "http://www.stata-journal.com/article.html?article=st0389":st0389}
 
 
-{p 7 14 2}Help: {helpb glm}, {helpb newey}, {helpb prais}, {helpb actest} (if installed), {helpb itsamatch} (if installed), {helpb itsaperm} (if installed), {helpb xtitsa} (if installed)
- {p_end}
+{p 7 14 2}Help: {helpb glm}, {helpb newey}, {helpb prais}, {helpb actest} (if installed), {helpb itsamatch} (if installed), {helpb itsaperm} (if installed), 
+{helpb power_itsa} (if installed), {helpb xtitsa} (if installed) {p_end}

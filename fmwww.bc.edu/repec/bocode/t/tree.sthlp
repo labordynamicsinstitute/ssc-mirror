@@ -1,5 +1,5 @@
 {smcl}
-{* 2022july15, 2023jun27, sep26, oct18, 2024may13}
+{* 2022july15, 2023jun27, sep26, oct18, 2024may13, aug13, 2025jul25}
 {hline}
 help for {hi:tree}
 {hline}
@@ -15,6 +15,13 @@ This suite of commands enables you to...{p_end}
 {p 6 6 2}{c 149} extract payoff values at a specified node;{p_end}
 {p 6 6 2}{c 149} take differences in payoff values between a specified pair of nodes.{p_end}
 
+{title:A Brief Note on Compatibility}
+
+{p 4 4 2}
+With Version 2 there has been a change in the data format which is unlikely to
+have any impact on your work if you are continuing work that began under Version 1.
+See {help tree##data_compatibility:Data Compatibility}
+
 {title:Preliminary Disucssion}
 
 {p 4 4 2}
@@ -22,7 +29,7 @@ This facility provides the capability to construct a representation of decision 
 or, more generally, directed, rooted trees. These are
 abstract structures that can be used for modeling decision processes or hierarchical relationships.
 While this facility was initially developed for use with decision processes,
-it may also find use in modeling hierarchical relationships.
+it may also be useful in modeling hierarchical relationships.
 See {help tree##sums_and_means:Raw Sums and Means} for details on this matter.
 
 {p 4 4 2}
@@ -40,11 +47,12 @@ The following discussion relies on an understanding of certain concepts:{p_end}
 {p 6 6 2}{c 149} Interior node{p_end}
 {p 6 6 2}{c 149} Terminal node{p_end}
 {p 6 6 2}{c 149} Parent node{p_end}
-{p 6 6 2}{c 149} Child node (or branch){p_end}
+{p 6 6 2}{c 149} Child node{p_end}
 {p 6 6 2}{c 149} Sibling nodes and sibling set{p_end}
 {p 6 6 2}{c 149} Path{p_end}
 {p 6 6 2}{c 149} Directed (forward) path, or path of descendancy{p_end}
 {p 6 6 2}{c 149} Reverse path, or path of parentage{p_end}
+{p 6 6 2}{c 149} Subtree (or branch){p_end}
 {p 6 6 2}{c 149} Directed Acyclic Graph (DAG){p_end}
 
 {p 4 4 2}
@@ -56,29 +64,49 @@ You can {help tree##syntax:click here to jump to the section on syntax}.
 
 {p 4 4 2}
 The trees are constructed in the current dataset, which must be empty
-prior to the start of the construction phase. Such trees will contain user-defined "payoff" variables,
-which carry numeric quantities that are of interest to the analyst,
-and a probability variable, which contains values of a discrete distribution function,
+prior to the start of the construction phase. Such trees will contain{p_end}
+{p 6 6 2}{c 149} "payoff" variables,{p_end}
+{p 6 6 2}{c 149} a probability variable.{p_end}
+
+{p 4 4 2}
+The payoff variables, are user-defined, and carry numeric quantities that are of interest to the analyst.
+The probability variable contains values of a discrete distribution function,
 as will be explained below.
 
 {p 4 4 2}
 Trees can model decision processes in that each interior node (or root) corresponds to a
 juncture in a decision process; the forward links and the nodes that they lead to
 (the children) correspond to the choices that one might take as one passes through that juncture.
-That is, a decision juncture corresponds to an interior node or root; the possible choices are the
-children. There are other places in the decision process where there are no more
-choices to be made; those correspond to terminal nodes. (There may be places where there
+That is, a decision juncture is modeled by an interior node or root; the possible choices are
+modeled by the children. There are other places in the decision process where there are no more
+choices to be made; those correspond to terminal nodes.
+
+{col 12}{hline}
+{p 12 12 12}
+There may be places where there
 is a next step in the decisions process, but where there is only one available "choice".
 In the corresponding tree, such a node is not terminal; it is an interior node with
-just one child. You can, optionally, reduce the parent and child to one node, or you may elect to keep them
-as separate nodes, to model the various stages of the decision process.)
+just one child. You can, optionally, reduce the parent and child to one teminal node,
+or you may elect to keep them
+as separate nodes, to model the various stages of the decision process.{p_end}
+{col 12}{hline}
 
 {p 4 4 2}
 Another way to view the decision process is that there is a starting
 population which divides into several sub-populations according to some particular characteristic,
-and the sub-populations divide further, and so on, until they stop dividing.
-The root corresponds to the point at which the initial population divides.
-An interior node corresponds to a point at which a sub-population divides.
+thus, partitioning the initial population.
+In similar fashion, the sub-populations divide further, and so on, until they stop dividing.
+The root corresponds to the initial population, but it also represents the 
+point at which that initial population divides;
+each child of the root corresponds to
+one of the initial sub-populations.
+Similarly, an interior node corresponds to a sub-population,
+but it also represents the 
+point at which that sub-population divides.
+The children of that node correspond to
+the sub-populations of the sub-population corresponding to the given node.
+A terminal node corresponds to a sub-population, but one which does not divide
+further.
 
 {p 4 4 2}
 The probability value can be considered as...{p_end}
@@ -91,13 +119,19 @@ particular child node.
 
 {p 4 4 2}
 The probability values ostensibly belong to the links. But each link leads to a
-unique child node, so we can associate the probability with the child node.
-(That is, in a directed, rooted tree, there is a one-to-one correspondence between links and
-child nodes; this does not hold in a DAG.)
+unique child node, so that there is a one-to-one correspondnce between links and
+children. Thus, we can associate the probability with the child node.
+That is, we consider the probability as an attribute of the child node,
+rather than the link.
+(This holds in a directed rooted tree. It breaks down in a DAG, where the mapping
+from link to child node may be many-to-one. While the use of repeatable branches
+makes for a DAG structure, it remains valid to associate the probability with the
+child node. See {help tree##rptbr:Repeatable Branches} for an explanantion of
+this matter.)
 
 {p 4 4 2}
 Payoff variables are assigned values in the terminal nodes; probability values are
-assigned to all nodes, though usually not the roots. (See {help tree##superroot:Superroot}
+assigned to all nodes except for roots, usually not the roots. (See {help tree##superroot:Superroot}
 for an exception.) The purpose of the
 {cmd:tree} facility is to facilitate the propagation of payoff values toward the roots of the
 trees, according to the probability values encountered along the way as the
@@ -108,7 +142,8 @@ at two selected nodes.
 
 {p 4 4 2}
 The {cmd:tree} facility is capable of modeling a multitude of trees taken together,
-that is, a forest.
+that is, a forest. In this case, all trees in the forest have the same set of
+payoff variables.
 
 {p 4 4 2}
 In this facility, there are two types of names that you will be concerned with:
@@ -130,30 +165,57 @@ Presumably, one may use non-plain-ASCII Unicode characters such as {cmd:é}, how
 this has not been tested.
 
 {p 4 4 2}Node names are case-sensitive, and are "locally unique", which will be explained below.
-Also, the name {cmd:superroot} is not allowed as a root name.
-(It is allowed in other nodes, though there is probably no need for such a node name, and
-may prove confusing to the user. See {help tree##superroot:Superroot} for more on
-this matter.)
+Also, the names {cmd:superroot} and {cmd:rptbr} are not allowed as root names.
+(They are allowed in other nodes, though there is probably no need for such node names, and
+may prove confusing to the user. See {help tree##superroot:Superroot} and {help tree##rptbr:Repeatable Branches}
+for more on this matter.)
 
 {p 4 4 2}
 We may sometimes speak of the "tree name", which is the name of the root node.
 
 {p 4 4 2}
-Every node is designated as {ul:root}, {ul:interior} or {ul:terminal}, a distinction known as
-the {ul:node type}, which is a fixed attribute of every node.
+Every node is designated as {ul:root}, {ul:interior}, {ul:rlink}, or {ul:terminal},
+a distinction known as
+the {ul:node type}, which is a fixed attribute of every node. That is, a node's
+type is determined when the node is created, and is unalterable.
+This differs from the graph-theoretic notion of a node type, which is determined
+by its connections to other nodes. See {help tree##further_remarks:Further Remarks}
+for more on this matter.
+
+{p 4 4 2}
 A root is a distinct node type, but, aside from its role as the entry point
 of a tree, functions like an interior node.
-A root or an interior node may have forward connections to other nodes {c -} interior or
-terminal, but never to a root. For a given node, the set of other nodes that it
-directly connects to in the forward direction is known as its {ul:children}. You can also
+
+{p 4 4 2}
+An rlink is like an interior node, but has a special purpose: to link to a repeatable
+branch. See {help tree##rptbr:Repeatable Branches} for more on this topic.
+
+{col 12}{hline}
+{p 12 12 12}
+There are other node types: {ul:superroot} and {ul:surrogate}, which are used internally,
+though there are situations in which you may access a superroot.
+See {help tree##superroot:Superroot}.{p_end}
+{col 12}{hline}
+
+{p 4 4 2}
+A root or an interior node may have forward connections to other nodes {c -} interior,
+rlink, or terminal, but never to a root. For a given node, a node that it
+directly connects to in the forward direction is known as a {ul:child} of that node;
+there may be a multitude of such nodes, known as the {ul:children}.
+You can also
 follow connections in the reverse direction, leading to the {ul:parent} of a given
 node, which may be an interior node or a root. The parent relation is unique; a node may have
-many children, but only one parent; a root has no parent; every non-root node has a parent.
+many children, but only one parent (but see below); a root has no parent; every non-root node has a parent.
 Since the parent relation
 is unique, you can trace a unique path of parentage (backward) from any non-root node to a root.
 If you trace that path in the opposite direction (which is forward), you get the
 unique forward path from a root to any given node. Call this a {ul:path of descendancy};
 every node has its own unique path of descendancy.
+
+{p 4 4 2}
+Starting at a root, if you trace any path in the forward direction, you should eventually
+get to a node with no children, ostensibly, a terminal node. This is a consequence of the
+trees being acyclic and finite.
 
 {col 12}{hline}
 {p 12 12 12}
@@ -161,18 +223,47 @@ every node has its own unique path of descendancy.
 We just noted that a root has no parent. This statement is correct in the study
 of topological trees, however, in the implementation of trees in the present program,
 root nodes do have a parent: the {help tree##superroot:superroot}. But it is true that
-the superroot has no parent.{p_end}
+the superroot has no parent.
+
+{p 12 12 12}
+Also, we stated that the parent relation is unique.
+This restriction is relaxed in
+the case of Repeatable Branches, though it is done in a limited
+fashion so as to minimize confusion. In particular, within a repeatable branch,
+the parent relation is unique, and any parental chain (reverse sequence) leads back
+to the root of that repeatable branch. Similarly, within a repeatable branch,
+every node has its own unique path of descendancy starting from the root of the
+repeatable branch. Thus, the claims of unique parentage and unique path of
+descendancy hold if you regard a repeatable branch as a tree, and ignore the
+references via rlink nodes. See {help tree##rptbr:Repeatable Branches} for more on
+this matter.{p_end}
 {col 12}{hline}
 
 {p 4 4 2}
-A child node, especially an interior child node, may also be referred to as a branch,
-as it potentially leads to more nodes, which can be considered as a tree in itself {c -}
-a "sub-tree".
+Any interior node, along with all of its descendant nodes, may be seen as a
+tree in its own right, with the given starting node as its root. 
+Thus, it is a subtree of the larger tree. (We are using the
+term "root" loosely here, as it relates to the present program, since the node
+in question does not have its node type as {ul:root}. But in terms of graph theory,
+it is a root.)
 
 {p 4 4 2}
-In the case of multiple trees, every node belongs to a unique tree,
-identified by the root that its parentage path leads to. Thus, we may speak of the
-root that a given node belongs to.
+A subtree may also be referred to as a {ul:branch}.
+
+{p 4 4 2}
+A subtree (or branch) is often identified with its root node. That is, we may speak of
+the branch rooted at {cmd:x}. Similarly, in the case of multiple trees,
+we may speak of the tree rooted at {cmd:y}. A given tree or branch is the set of
+nodes that have {cmd:y} or {cmd:x} as their common ancestor.
+(The parentage paths of these nodes lead back to {cmd:y} or {cmd:x}.)
+Loosely speaking, we might refer to tree {cmd:y} or branch {cmd:x}, when we really
+mean the tree or branch rooted at those nodes.
+
+{p 4 4 2}
+It's worth noting that every node belongs to a unique tree,
+identified by the root that its parentage path leads to.
+(In the case of a repeatable branch, this holds if we limit the scope to rlink
+nodes.)
 
 {p 4 4 2}
 While we define a tree as a graph with certain properties, it is helpful to think
@@ -197,17 +288,24 @@ user-specified (in {cmd:tree init}); the name of the probabilty variable is fixe
 as {cmd:prob}.
 
 {p 4 4 2}
-When we speak of payoff variables, as well as {cmd:prob}, each of these is actually
-a family of variables with a common "basename". There are always at least two
-manifestations of each such variable:{p_end}
-{p 6 6 2}{c 149} a textual (string-type) variable, to hold expressions;{p_end}
-{p 6 6 2}{c 149} a numeric variable to receive the evaluation of those expressions.{p_end}
+When we speak of payoff variables, each of these is actually
+a family of variables with a common "basename", where the basenames are what you specify in
+{cmd:tree init}. {cmd:prob} is also a basename.
 
 {p 4 4 2}
-For each payoff variable, plus {cmd:prob},...{p_end}
-{p 6 6 2}{c 149} The textual variables use the basenames as their names;{p_end}
-{p 6 6 2}{c 149} the corresponding numeric variables are
-named {cmd:R_}{it:basename}, that is they acquire an {cmd:R_} prefix.
+Each basename becomes a variable, but one or more additional related variables
+are generated; their names are modified versions of the basename, by applying various prefixes.
+Additionally, certain
+commands (e.g., {cmd:tree diffs}) will generate scalars with names derived from the basename.
+
+{p 4 4 2}
+Each basename is the name of a textual ({help datatypes:strL}) variable which holds expressions to
+be evaluated for that payoff variable or {cmd:prob}.
+Additionally, there is always at least one related variable generated:
+a numeric ({help double}) variable to receive the evaluation of those expressions.
+The latter variable is named {cmd:R_}{it:basename}, that is, it acquires an {cmd:R_} prefix.
+Thus, if there is a payoff variable with basename {cmd:cost}, the corresponding numeric
+numeric variable is {cmd:R_cost}. You also get {cmd:R_prob} along with {cmd:prob}, automatically.
 
 {p 4 4 2}There may be additional manifestations of payoff variables, depending on commands that the
 user may issue; see {help tree##sums_and_means:Raw Sums and Means}.
@@ -268,13 +366,21 @@ to the node's path of descendancy. It may or may not end at a terminal node, dep
 context.
 
 {p 4 4 2}
+Some of these syntax descriptions include references to {cmd:rptbr} or {cmd:rlink},
+which pertain to repeatable branches.
+This will be described under {help tree##rptbr:Repeatable Branches}.
+We will use the term {ul:regular tree} to refer to all a tree that is not
+a repeatable branch. A regular tree may have a node that links to a repeatable branch,
+but the tree itself is not a repeatable branch.
+
+{p 4 4 2}
 Some of the options to these commands will be explained below.
 
 {p 4 4 2}
 Initialize the current (empty) dataset to hold decision trees
 
 {p 8 10 2}
-{cmd:tree init} {it:payoffvarlist} [{opt ver:bose}]
+{cmd:tree init} {it:payoffvarlist} [{cmd:,} {opt ver:bose}]
 
 {p 6 6 2}
 where {it:payoffvarlist} establishes the basenames of payoff variables to be included
@@ -294,6 +400,7 @@ Establish one or more nodes to be attached at a specified tree or interior node
 
 {p 8 10 2}
 {cmd:tree node,} {opt at(treepath)} [{opt int:erior(intnodenamelist)} {opt term:inal(termnodenamelist)}
+{opt rlink(rlinknodenamelist)}
 {opt ver:bose}]
 
 {p 6 6 2}
@@ -301,6 +408,7 @@ Alternative syntax
 
 {p 8 10 2}
 {cmd:tree node} {it:treepath} [{cmd:,} {opt int:erior(intnodenamelist)} {opt term:inal(termnodenamelist)}
+{opt rlink(rlinknodenamelist)}
 {opt ver:bose}]
 
 
@@ -308,14 +416,33 @@ Alternative syntax
 Where {it:treepath} (described above) identifies an existing tree or interior node.
 
 {p 6 6 2}
-{it:intnodenamelist} and {it:termnodenamelist} are names of interior and terminal
-nodes to be established as children of the node identified in {it:treepath}.
+{it:intnodenamelist}, {it:termnodenamelist}, and {it:rlinknodenamelist} are names of interior, terminal,
+and rlink nodes to be established as children of the node identified in {it:treepath}.
+
+{p 4 4 2}
+Establish one or more repeatable branches
+
+{p 8 10 2}
+{cmd:tree rptbr} {it:rptbrnamelist} [{cmd:,} {opt ver:bose}]
+
+{p 6 6 2}
+Where {it:rptbrnamelist} is a list of root names of repeatable branches to be created.
+
+{p 4 4 2}
+Establish a link to a repeatable branch
+
+{p 8 10 2}
+{cmd:tree rlink} {it:treepath} {cmd:,} {opt to(rptbrrootname)} [replace]
+
+{p 6 6 2}
+Where {it:treepath} identifies an rlink node, and {it:rptbrrootname} names an
+existing repeatable branch.
 
 {p 4 4 2}
 Draw a textual diagram of the tree structure
 
 {p 8 10 2}
-{cmd:tree draw} [{it:varlist}] 
+{cmd:tree draw} [{it:varlist}] [{cmd:,} {opt surr:ogates}]
 
 {p 4 4 2}
 Draw an image of the tree using Stata graphics capabilities
@@ -326,6 +453,8 @@ Draw an image of the tree using Stata graphics capabilities
 {opt gphsav:ing(gphfilename)}
 {opt gphasis} {opt gphreplace}
 {opt dosave(dofilename)} {opt doreplace} {opt prob_places(#)} {opt noprob}
+{opt base:names}
+{opt rptbr}
 ]
 
 {p 6 6 2}
@@ -334,12 +463,12 @@ Due to the way this is programmed, you can also write{p_end}
 {cmd:tree_plot} ...
 
 {p 6 6 2}
-Either way, this is not to be confused with {cmd:treeplot}, a separate user-generated program,
-which does a much different task.
+Either way, this is not to be confused with {cmd:treeplot}, a separate user-written program,
+which does a much different task. ({cmd:ssc des treeplot})
 
-{p 6 6 2}
-{it:varlist} specifies variables to be displayed in the plot. The plot can become crowded if
-too many variables are specified.
+{p 4 4 2}
+See {help tree##draw_and_plot:Draw and Plot} for more on the use of the
+{cmd:draw} and {cmd:plot} subcommands.
 
 {p 4 4 2}
 List the payoff variables and trees
@@ -400,13 +529,17 @@ For a given node, you may set all the payoff variables and {cmd:prob} in one com
 or spread these actions over several commands. You may also change the values by issuing additional
 {cmd:tree setvals} commands for the same node and payoff variables and/or {cmd:prob}.
 
+{p 6 6 2}
+When setting values in repeatable branches, certain considerations are pertinent.
+See {help tree##rptbr:Repeatable Branches}.
+
 {p 4 4 2}
 Evaluate the payoff and probability values; propagate payoff values toward the roots;
 optionally compute raw sums or means
 
 {p 8 10 2}
 {cmd:tree eval} [{help weight}] [{cmd:,} {opt rawsum(rawsumvars)} {opt mean:s(meansvars)}
-{opt retain} {opt ver:bose}]
+{opt rptbr} {opt retain} {opt ver:bose}]
 
 {p 6 6 2}
 The {help weight} feature applies to the {opt mean:s} option only.
@@ -497,6 +630,10 @@ from 0 to 99, with 0 being the default.
 values may overwrite existing values in the indicated channel.
 
 {p 4 4 2}
+For the {cmd:tree rlink} command, it specifies that you are replacing an existing
+link to a repeatable branch.
+
+{p 4 4 2}
 {opt nosub} for the {cmd:setvals} subcommand: prevent the substitution of {cmd:$}
 for {cmd:@}.
 
@@ -560,11 +697,6 @@ the plot; the file may be replaced if it already exists.
 under the specified name. If {it:dofilename} is specified without an extension,
 {cmd:.do} is assumed.
 
-{p 6 6 2}
-To create a plot, a do-file is generated containing Stata graphing commands.
-By default, this is a {help tempfile}; thus, it is deleted after is is run.
-With this option, you can, instead, save the file.
-
 {p 4 4 2}
 {opt doreplace} used with {opt dosave(dofilename)}, specifies that {it:dofilename}
 may be replaced if it already exists.
@@ -574,16 +706,49 @@ may be replaced if it already exists.
 to report probability values. The default is 3.
 
 {p 6 6 2}
-The plot will include probability values after the node names, in parentheses. Note that
-this is R_prob, that is, the numeric value, rather than the prob expression. Therefore,
-you will not get values unless you have already called {cmd:tree eval}.
-(You will not get updated values unless you have called {cmd:tree eval} since any
-changes to prob values (via {cmd:tree setvals}) have occurred.)
+The plot will, by default, display probability values after the node names, in parentheses. Note that
+this is R_prob {c -} the numeric value, rather than the prob expression. Therefore,
+you will not get correct R_prob values unless you have called {cmd:tree eval} after
+the most recent setting of {cmd:prob} (via {cmd:tree setvals}).
+
+{p 6 6 2}
+Note that{p_end}
+{p 8 10 2}
+{cmd:tree setvals} {it:treepath}{cmd:, prob(}{it:probexp}{cmd:)} {opt check}{p_end}
+{p 6 6 2}
+will suffice to evaluate R_prob, but that is node-specific.
 
 {p 4 4 2}
-{opt noprob}  for the {cmd:plot} subcommand: suppress the reporting of probability
+{opt noprob} for the {cmd:plot} subcommand: suppress the reporting of probability
 values.
 
+{p 4 4 2}
+{opt base:names} for the {cmd:plot} subcommand: the variables listed in {it:varlist}
+are taken as basenames of payoff variables, and the {cmd:R_} versions are substituted.
+
+{p 6 6 2}
+Prior to Version 2.0, this was the treatment of {it:varlist} in {cmd:tree plot}.
+See {help tree##draw_and_plot:Draw and Plot} for more on this matter.
+
+{p 4 4 2}
+{opt rptbr} for the {cmd:plot} subcommand: draw the repeatable branches, rather
+than the regular trees.
+
+{p 4 4 2}
+{opt rptbr} for the {cmd:eval} subcommand: evaluate all repeatable branches
+before evaluating the regular trees. This assures that all repeatable branches
+get evaluated, whereas the default procedure is to evaluate repeatable branches
+on an as-needed basis {c -} that is, evaluate only those repeatable branches
+that are linked to nodes in the regular trees.
+
+{p 4 4 2}
+This may be useful if you want to obtain values or differences of payoff variables
+in repeatble branches regardless of whether they are actually used.
+
+{p 4 4 2}
+{opt surr:ogates} for the {cmd:draw} subcommand: show the nodename and values
+of specified variables of surrogate nodes, rather than those of the referent nodes;
+programmer's/debugging option.
 
 {hline}
 
@@ -603,7 +768,7 @@ conveyed into the tree(s). See {help tree##pract:Practical Considerations}.
 {p 5 10 2}(1) Construction; defining the shape of the tree or forest:{p_end}
 {p 10 10 2}{c 149} Establish the tree (or forest) structure; call {cmd:tree init} (once).{p_end}
 {p 10 10 2}{c 149} Establish roots and nodes; call {cmd:tree create} and {cmd:tree node}
-(typically many times).{p_end}
+(typically many times); you may optionally also call {cmd:tree rptbr}.{p_end}
 {p 5 10 2}(2) Populating the payoff and probability values:{p_end}
 {p 10 10 2}{c 149} Call {cmd:tree setvals} to populate the payoff values in terminal nodes,
 and the probability values in all nodes.{p_end}
@@ -619,8 +784,8 @@ your choice of calculations.{p_end}
 {p 4 4 2}
 {cmd:tree init} initializes the dataset to model a set of decision trees.
 The current dataset must be empty prior to calling this; it is called just once
-in a tree-analysis session, whereas, any other {cmd:tree} command may be called
-multiple times.
+as the first {cmd:tree} command in a tree-analysis session. Subsequently, any other
+{cmd:tree} command may be called multiple times.
 
 {p 4 4 2}
 As there may be a multitude of trees, {cmd:tree init} actually enables you to
@@ -632,9 +797,10 @@ These names are limited to a length of 30, with certain other restrictions;
 see {help tree##further_remarks:Further Remarks}.
 
 {p 4 4 2}
-Each name in {it:payoffvarlist} will establish a string and a numeric (double)
-variable, as noted above, which are common to all nodes in all trees. More on this below, under
-{help tree##further_remarks:Further Remarks}.
+As noted above, each name in {it:payoffvarlist}, as well as {cmd:prob}
+(provided automatically) will establish two variables:
+a string and a numeric variable, which are common to all nodes in all trees. 
+More on this below, under{help tree##further_remarks:Further Remarks}.
 
 {p 4 4 2}
 {cmd:tree create} will create one or more directed rooted trees.
@@ -738,7 +904,7 @@ assuming that {cmd:cost_lr_mm70} is a global macro containing a number or a nume
 {p 4 4 2}
 As the expression is captured and stored, {cmd:@} characters will be converted to {cmd:$}.
 Then at {cmd:eval} time, the {cmd:$} will trigger the evaluation of a global macro.
-This is done to enable that deferred evaluation. If you were to specify{p_end}
+This is done to enable that deferred evaluation. If, instead, you were to specify{p_end}
 {p 6 6 2}
 {cmd:tree setvals} {it:treepath}{cmd:, cost($cost_lr_mm70)}{p_end}
 {p 4 4 2}
@@ -854,32 +1020,11 @@ The {cmd:preserve} subcommands have a {cmd:replace} option. This is used if you 
 done a preserve (using the same channel), and want to overwrite the previously-preserved values.
 
 {p 4 4 2}
-At any point, you may view the tree structure in a textual graphic form by calling
-{cmd:tree draw}. It will display one line for each node, with
-connecting lines and indentation to indicate the hirearchical relations, similar
-to the output of the {cmd:tree} command in the Windows command prompt.
-Integers will be displayed on the left side; these are the Stata observation numbers,
-which may help you in diagnosing data problems that may arise.
-(You can {help list} a given observation, though {cmd:tree draw} can give you the
-same information. You can use the observation number to index a variable to retrieve
-a value from a specific observation, though {cmd:tree values} can also do that.)
-Terminal nodes are marked with an asterisk to the right of the node name.
+At any point, you may view the tree structure in a textual representation by calling
+{cmd:tree draw}, or in graphic form with {cmd:tree plot}.
+See {help tree##draw_and_plot:Draw and Plot} for more on this matter.
 
-{p 4 4 2}
-The observation numbers will not necessarily be in sequential order.
-The order diplayed reflects the tree structure, whereas the observation
-numbers reflect the order in which the tree was built (the order in which nodes
-were added).
 
-{p 4 4 2}
-The optional varlist is a set of variables that will be displayed
-in the output. It is best not to specify too many variables, as the display will
-get crowded.
-
-{p 4 4 2}
-Note that there are two methods of obtaining a visual representation of the tree:
-{cmd:tree draw} and {cmd:tree plot}. The latter gives a more natural image of the
-tree, while {cmd:tree draw} may be better for viewing values of selected variables. 
 
 {hline}
 
@@ -910,7 +1055,7 @@ The children of an interior nodes might be...{p_end}
 
 {p 4 4 2}
 Whether a mixture of types occurs will depend on the structure of the decision process being modeled.
-Probably, most sibling sets are exclusively of one type, but mixtures do occur, in which case the
+Probably, most sibling sets are exclusively of one type, but mixtures can occur, in which case the
 {cmd:tree node} command would have both the {opt int(intnodenamelist)}
 and {opt term(termnodenamelist)} options.
 
@@ -945,7 +1090,7 @@ two Stata variables will be generated: a string (strL) and a
 (i.e., the basename) (or {cmd:prob}); the double has the same name, but with an {cmd:R_} prefix.
 For example, if you specify {cmd:cost} as a payoff variable, then you will have
 {cmd:cost} (strL) and {cmd:R_cost} (double). You also automatically get {cmd:R_prob}.
-The string variable is for expressions that you specify in {cmd:tree setvals};
+The string variable is for `expressions that you specify in {cmd:tree setvals};
 the double variable holds the numeric evaluation of those expressions.
 The {cmd:tree eval} command performs the evaluation of the expressions
 prior to propagating payoff values toward the roots.
@@ -1000,13 +1145,16 @@ to be chosen by the user; the complete list is{p_end}
 {cmd:__residprob},
 {cmd:__residual},
 {cmd:__weight},
+{cmd:__n_parents},
+{cmd:__ypos},
+{cmd:__surr},
 {cmd:prob},
 {cmd:R_prob},
 {cmd:setvals_qui},
 {cmd:setvals_node_id},
 {cmd:setvals_varstoset},
 {cmd:setvals_vval},
-{cmd:setvals_vars_affected),
+{cmd:setvals_vars_affected},
 {cmd:verbose},
 {cmd:check},
 {cmd:sub}.
@@ -1120,6 +1268,129 @@ or they may be useful in further calculations, but that is for the user to work 
 One commonly used calculation is an icer (Incremental Cost-Effectiveness Ratio):{p_end}
 {p 6 6 2}scalar(d_cost)/scalar(d_qaly)
 
+
+{hline}
+
+{marker draw_and_plot}{title:Draw and Plot}
+
+{p 4 4 2}
+There are two methods for producing a visual image of the trees:
+{cmd:tree draw} and {cmd:tree plot}.
+
+{p 6 6 2}
+{cmd:tree draw} produces a represenatation of the trees by displaying textual
+characters in the results window, using connecting lines and indentation to
+indicate the hirearchical relations; this is similar to the output of the
+{cmd:tree} command in the Windows command prompt.
+
+{p 6 6 2}
+{cmd:tree plot} will draw an image using Stata graphics capabilities.
+
+{p 4 4 2}
+{cmd:tree draw} is the faster of the two, and it may be a better choice for
+viewing values of selected variables. {cmd:tree plot} may provide a 
+more natural image of the tree.
+
+{p 4 4 2}
+For both {cmd:tree draw} and {cmd:tree plot}, {it:varlist} specifies variables
+to be displayed in the drawing or plot. But be aware that the resulting image
+can become crowded if too many variables are specified.
+
+{p 4 4 2}
+{cmd:tree draw} will display one line for each node.
+Integer numerals will be displayed on the left side; these are the Stata observation numbers,
+or "node numbers", which may be helpful in diagnosing data problems that may arise.
+
+{p 4 4 2}
+{cmd:tree plot} can also display the node numbers, but this feature is turned off
+by default. Use the {opt numbers} option to turn this on; numbers will appear
+before the node name, 
+
+{p 6 6 2}
+For both {cmd:draw} and {cmd:plot}, the node numbers will not necessarily
+appear in sequential order.
+Instead, the order diplayed reflects the tree structure, whereas the node (observation)
+numbers reflect the order in which the tree was built {c -} the order in which nodes
+were added during the construction phase.
+
+{p 6 6 2}
+You can use the node number to {help list} a given observation, though {cmd:tree draw} can give you the
+same information. You can also use it to index a variable to retrieve
+a value from a specific observation, though {cmd:tree values} can also do that.
+
+{p 4 4 2}
+In {cmd:tree draw}, terminal nodes are marked with an asterisk to the right of the node name.
+rlink nodes are marked with two asterisks; the rptbr nodes that they link to
+are marked with three asterisks.
+
+{p 4 4 2}
+In {cmd:tree plot}, terminal nodes appear as left-facing triangles.
+rlink nodes appear as blue circles; the rptbr nodes that they link to appear as
+light blue diamonds.
+
+{p 4 4 2}
+With {cmd:tree plot}, values of {it:varlist} variables will appear below and to the
+left of the node symbol for most nodes; for terminal nodes, they appear to the right.
+
+{p 4 4 2}
+For both {cmd:draw} and {cmd:plot}, rptbr nodes appear as often as they are linked.
+That is, a given rptbr node may appear multiple times; they will be labeled with the
+same name and they represent the same node, appearing more than once. (Actually, they
+are surrogate nodes, but you don't need to know that.)
+
+{p 4 4 2}
+But the branches that emanate from rptbr nodes are not shown directly in the drawing
+or plot. Instead,...
+
+{p 6 6 2}
+For {cmd:tree draw}, they are shown separately, below the regular trees.
+
+{p 6 6 2}
+For {cmd:tree plot}, they are displayed when you use the 
+{opt rptbr} option, in which case they are displayed instead of the regular
+trees.
+
+{p 4 4 2}
+{cmd:tree plot} produces a Stata graph, which can be printed using the Print
+option in the Graph window (File-Print, or Ctrl+P).
+
+{p 4 4 2}
+To produce this graph, {cmd:tree plot} creates a do-file containing Stata graphing commands,
+which is subsequently executed (via {cmd:do}).
+By default, this is a {help tempfile}; it is deleted after is is executed.
+With the {opt dosave(dofilename)} option, you can, instead, save the file,
+which can be executed at a later time.
+
+{p 4 4 2}
+You can also use the {opt gphsav:ing(gphfilename)} option, which saves the
+graph as a {cmd:.gph} file, which can be subsequently reinvoked using {help graph use}.
+
+{p 4 4 2}
+For {cmd:tree draw}, you can {help log} the output, which you can subsequently
+{help print}.
+
+{p 4 4 2}
+For {cmd:tree plot}, the {opt base:names} option restores the Version-1 treatment
+of {it:varlist}. Under this option, the variables of {it:varlist}
+are taken as (required to be) basenames of payoff variables, and the {cmd:R_} versions are substituted.
+For example, if you specify{p_end}
+{p 6 6 2}
+{cmd:tree plot cost, basenames}{p_end}
+{p 4 4 2}
+then the values of {cmd:R_cost} are displayed, assuming that {cmd:cost} is a payoff
+variable.
+
+{p 4 4 2}
+Without this option, any variable is permitted and taken as-is. Thus,{p_end}
+{p 6 6 2}
+{cmd:tree plot cost}{p_end}
+{p 4 4 2}
+will display {cmd:cost} {c -} the payoff variable.
+
+{p 4 4 2}
+This is done for consistency with the action of {cmd:tree draw}.
+
+
 {hline}
 
 {marker sums_and_means}{title:Raw Sums and Means}
@@ -1218,7 +1489,7 @@ pop (population) and pcinc (per-capita income).
 (We used the postal abbreviations for the states)
 
 {p 6 6 2}{cmd:tree node, at(usa al) term(jefferson montgomery chilton bibb morgan calhoun autauga)}{p_end}
-{p 4 4 2}etc., for all the countines in Alabama, then for Alaska, etc..
+{p 4 4 2}etc., for all the counties in Alabama, then for Alaska, etc..
 
 {p 6 6 2}{cmd:tree setvals usa al jefferson, pop(660) pcinc(20892)}{p_end}
 {p 6 6 2}{cmd:tree setvals usa al montgomery, pop(230) pcinc(19385)}{p_end}
@@ -1262,7 +1533,7 @@ The construction would go like this:
 {p 6 6 2}{cmd:tree create al ak az ar ca co ct de}{p_end}
 {p 4 4 2}etc.. 
 
-{p 6 6 2}{cmd:tree node, at(al) term(jefferson montgomery chilton bibb morgan calhoun autauga){p_end}
+{p 6 6 2}{cmd:tree node, at(al) term(jefferson montgomery chilton bibb morgan calhoun autauga)}{p_end}
 {p 4 4 2}etc.. 
 
 {p 6 6 2}{cmd:tree setvals al jefferson, pop(660) pcinc(20892)}{p_end}
@@ -1342,6 +1613,126 @@ generally included in the subject of topological trees.
 
 {hline}
 
+{marker rptbr}{title:Repeatable Branches}
+
+{p 4 4 2}
+Repeatable branches, introduced in Version 2.0, is a feature that may simplify the
+construction and setvals operations in certain situations. It may also make the
+{cmd: tree eval} operation more efficient, though the gain may be imperceptible
+in most cases.
+
+{p 4 4 2}
+The use of repeatable branches is optional; you can get along
+without them, even in situations where they would be appropriate. 
+But they offer an advantage in applicable situations.
+
+{p 4 4 2}
+Repeatable branches can be used when the tree (or forest) contains a multitude of same-shaped branches.
+In order to be considered as a repeatable branch, every instance of the branch
+must have the same structure, as well as the same
+payoff values (in terminal nodes) and prob values.
+
+{p 4 4 2}
+A repeatable branch is specified and stored once, instead of multiple times.
+You can then refer to it (via an {cmd:rlink} node) in multiple locations in the tree or forest.
+Each reference to the repeatable branch
+serves as a virtual copy of the repeatable branch, but it really exists just once..
+This takes the place of declaring a multitude of same-shaped branches,
+thereby eliminating redundant code (in both the construction ({cmd:tree node})
+and the {cmd:tree setvals} operations);
+it will also eliminate redundant calculation in the {cmd:tree eval} process
+
+{col 12}{hline}
+{p 12 12 12}
+With repeatable branches, the graph structure is a DAG. However, the use of 
+rlink nodes enables us to maintain the one-to-one correspondence of
+links and relevant (rlink) nodes. Therefore, it still valid to store prob values 
+with the child nodes.{p_end}
+{col 12}{hline}
+
+{p 4 4 2}
+To create a repeatable branch, use the {cmd:tree rptbr} command. For example,{p_end}
+{p 6 6 2}
+{cmd:tree rptbr disease_outcomes}
+
+{p 4 4 2}
+You then build a repeatable branch as you would for any regular tree, but you
+refer to the {it:treepath} with {cmd:rptbr} as the initial element:{p_end}
+{p 6 6 2}
+{cmd:tree node rptbr disease_outcomes, term(recovery st_disab lt_disab death)}
+
+{p 4 4 2}
+Then, you can populate the payoff variables and {cmd:prob} with {cmd:tree setvals}:{p_end}
+{p 6 6 2}
+{cmd:tree setvals rptbr disease_outcomes recovery, cost(1600) prob(.65)}{p_end}
+{p 6 6 2}
+{cmd:tree setvals rptbr disease_outcomes st_disab, cost(22000) prob(.15)}{p_end}
+{p 6 6 2}
+{cmd:tree setvals rptbr disease_outcomes lt_disab, cost(36000) prob(.1)}{p_end}
+{p 6 6 2}
+{cmd:tree setvals rptbr disease_outcomes death, cost(2000) prob(*)}{p_end}
+
+{p 4 4 2}
+For the {cmd:tree node} and {cmd:tree setvals} commands, 
+it may seem as if {cmd:rptbr} is part of the syntax, and you may think of it that way,
+but it is actually the leading name in {it:treepath}. That is, to refer to any
+node in a repeatable branch, {it:treepath} starts with {cmd:rptbr}, followed by
+the root name of the repeatable branch.
+
+{p 4 4 2}
+To place a reference to the branch, you first specify an {cmd:rlink} node in a
+{cmd:tree node} command. For example,{p_end}
+{p 6 6 2}
+{cmd:tree node treatment_avail age_ge60, rlink(untreated)}{p_end}
+{p 6 6 2}
+{cmd:tree node treatment_avail age_ge60, rlink(treated)}{p_end}
+
+{p 6 6 2}
+(We suppose that we have already established a tree named {cmd:treatment_avail}
+with a child interior node {cmd:age_ge60}.)
+
+{p 4 4 2}
+The forefoing commands specify only that{p_end}
+{p 6 6 2}
+{cmd:treatment_avail age_ge60 untreated}{p_end}
+{p 4 4 2}and{p_end}
+{p 6 6 2}
+{cmd:treatment_avail age_ge60 treated}{p_end}
+{p 4 4 2}are rlink nodes; it does not connect them to any particlar repeatable branch.
+To make that connection, you use the {cmd:tree rlink} command, with the {cmd:to}
+option.{p_end}
+
+{p 6 6 2}
+{cmd:tree rlink treatment_avail age_ge60 untreated, to(disease_outcomes)}{p_end}
+{p 6 6 2}
+{cmd:tree rlink treatment_avail age_ge60 treated, to(disease_outcomes)}{p_end}
+
+{p 4 4 2}
+Once this is established, the branch of {cmd:disease_outcomes} is attached as
+a child of both of those rlink nodes.
+
+{p 4 4 2}
+Given that structure and linkage, you may notice that there can be more than one way to refer
+to a particular node in a repeatable branch: directly via a 
+{it:treepath} starting with {cmd:rptbr}, or indirectly through an rlink node.
+Thus, in our example, we might have{p_end}
+{p 6 6 2}
+{cmd:rptbr disease_outcomes recovery}{p_end}
+{p 6 6 2}
+{cmd:treatment_avail age_ge60 untreated recovery}{p_end}
+{p 6 6 2}
+{cmd:treatment_avail age_ge60 treated recovery}{p_end}
+{p 4 4 2}
+all as equivalent; the first is direct; the others are indirect references.
+
+{p 4 4 2}
+Because of this possibility of aliases for some nodes, and the potential confusion
+that may ensue, commands that
+alter data ({cmd:tree node}, {cmd:tree setvals}, {cmd:tree rlink}) allow only
+a direct reference.
+
+{hline}
+
 {marker pract}{title:Practical considerations}
 
 {p 4 4 2}
@@ -1356,7 +1747,7 @@ that dataset out; then bring in, or construct, the tree(s).
 
 {p 4 4 2}
 If you need to run that process just once, then you can...{p_end}
-{p 6 8 2}{c 149} run the input_generation process, yielding scalars or global macros;
+{p 6 8 2}{c 149} run the input-generation process, yielding scalars or global macros;
 presumably, this involves the use of other data;{p_end}
 {p 6 8 2}{c 149} {help clear} the dataset;{p_end}
 {p 6 8 2}{c 149} constuct the tree(s), populate the payoff variables with references to
@@ -1373,7 +1764,7 @@ and {help save} it. Then, your procedure would be...{p_end}
 {p 6 8 2}{c 149} construct the tree dataset, including {cmd:tree setvals} to populate the
 expressions for payoff variables and {cmd:prob}, with references to scalars or global macros;{p_end}
 {p 6 8 2}{c 149} {cmd:save} the dataset;{p_end}
-{p 6 8 2}{c 149} run the input_generation process, yielding scalars or global macros;{p_end}
+{p 6 8 2}{c 149} run the input-generation process, yielding scalars or global macros;{p_end}
 {p 6 8 2}{c 149} {cmd:clear};{p_end}
 {p 6 8 2}{c 149} {help use} the tree dataset and run the {cmd:tree eval} and analysis steps.{p_end}
 
@@ -1410,6 +1801,24 @@ out and back in. But note that the author has not yet tried these techniques.
 
 {hline}
 
+{marker data_compatibility}{title:Data Compatibility}
+
+{p 4 4 2}
+As of Version 2, with the introduction of Repeatable Branches, there has been a
+change in the data format. This should have no impact on your work if you are
+rerunning legacy Version 1 {cmd:tree} commands that begin with the construction
+phase. However,
+if you {help use} a tree dataset that was created and {help save}d under Version 1, many of the
+Version 2 tree commands will not work. Thus, it is best to start over from the 
+beginning phase, and reconstruct the tree dataset.
+
+{p 4 4 2}
+Note that it is possible to go in the other direction, with one constraint.
+It is possible for Version 1 to use a tree dataset that was created by Version 2,
+as long as it contains no repeatable branches.
+
+{hline}
+
 {marker about_trees}{title:About trees}
 
 {p 4 4 2}
@@ -1424,13 +1833,16 @@ For more info, see
 
 {p 4 4 2}
 An important feature is that one may construct a sequence of nodes
-in which each sequential pair of nodes has a link joining them.
-Call this a connected path. A link connects "neighboring" (aka "adjacent") nodes; a connected path
+in which each consecutive pair of nodes has a link joining them.
+Call this a {ul:connected path} (often just called a "path" if the meaning
+is clear). A link connects "neighboring" (or "adjacent") nodes; a connected path
 of more than one link connects a more distant pair of nodes.
+We often consider a connected path as corresponding to a process of {ul:visiting}
+the nodes in the specified sequence.
 
 {p 4 4 2}
 Note that a connected path has a corresponding sequence of
-links, in which each sequential pair of links shares a common node.
+links, in which each consecutive pair of links shares a common node.
 So you can think of a connected path as either a sequence of nodes or a sequence
 of links.
 
@@ -1537,7 +1949,7 @@ For further reading on trees, see
 {marker misc}{title:Miscellaneous Remarks}
 
 {p 4 4 2}
-In {cmd:tree eval}, the evaluation of {cmd:R_}{it:basename} occurs for all payoff variables,
+In {cmd:tree eval}, the evaluation of {cmd:R_}{it:basename} occurs for all payoff variables
 every time {cmd:tree eval} is invoked, but {cmd:S_}{it:basename}, {cmd:T_}{it:basename},
 and {cmd:M_}{it:basename} are evaluated only when {opt rawsum} or {opt means} are
 specified, and only for the specified payoff variables.

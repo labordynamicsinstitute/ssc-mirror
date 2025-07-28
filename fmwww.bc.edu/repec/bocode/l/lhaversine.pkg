@@ -1,0 +1,23 @@
+d 'LHAVERSINE': module to compute great-circle distances with Haversine formula
+d
+d   lhaversine is a Mata library containing functions to compute
+d geographical distance matrices between locations and matrices
+d indicating which locations are within a given range. The
+d functions take latitudes and longitudes as inputs and use the
+d haversine formula for great-circle distances. Lhaversine is based
+d on geodist written by Robert Picard. 
+d
+d KW: haversine
+d KW: Mata
+d KW: great-circle distances
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20250727
+d
+d Author: Lars Zeigermann, NA
+d Support: email lars.zeigermann@@posteo.de
+d
+f lhaversine.sthlp
+f lhaversine_source.sthlp
+f lhaversine.mlib

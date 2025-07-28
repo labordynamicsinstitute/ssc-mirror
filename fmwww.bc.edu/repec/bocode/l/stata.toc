@@ -53,6 +53,7 @@ p lfk module to compute LFK index and Doi plot for detection of publication bias
 p lfsum modules to describe variables located by name fragments
 p lgamma2 module to estimate two-parameter log-gamma regression
 p lgraph module to draw line graphs with optional error bars
+p lhaversine module to compute great-circle distances with Haversine formula
 p lianxh module to Search and share Stata resources and blogs within Stata Command Window
 p libd3 module providing D3js Mata library
 p libhtml module providing an object oriented implementation of HTML in Mata

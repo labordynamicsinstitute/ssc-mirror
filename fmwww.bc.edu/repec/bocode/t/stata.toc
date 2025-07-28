@@ -1,5 +1,6 @@
 p t2docx module to report Mean Comparison for variables between two groups with formatted table output in DOCX file
 p t2way5 module to perform Tukey's Two-Way Analysis by Medians
+p tab2diag module to compute diagnostic metrics and predictive values from 2-by-2 tables
 p tab2mat module to produce a one-way table as a matrix
 p tab2way module to handle two-way tables with percentages
 p tab3way module to handle three-way tables with percentages

@@ -94,6 +94,7 @@ p distill module to assess heterogeneous treatment effects in randomized control
 p distinct module to display distinct values of variables
 p distmatch module to perform distance matching based on latitudes and longitudes
 p distplot module to generate distribution function plot
+p distprobmat module to ompute distance/similarity measures between two probability density matrices
 p distrate module to compute direct standardized rates with improved confidence interval
 p divcat module to calculate five measures of diversity for multiple categories
 p divratio module for estimating diversion ratios and willingness-to-pay from a semiparametric choice model 

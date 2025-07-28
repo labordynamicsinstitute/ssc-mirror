@@ -12,11 +12,12 @@ d KW: payoff values
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20240611
+d Distribution-Date: 20250727
 d
 d Author: David Kantor
 d Support: email kantor.d@@att.net
 d
 f tree.ado
 f tree_plot.ado
+f tree_traverse.ado
 f tree.sthlp

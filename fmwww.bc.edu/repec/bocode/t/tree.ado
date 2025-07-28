@@ -1,7 +1,67 @@
+**~~~~2025mar24: need debug: do treetest04_2 -- gen option VERBose not allowed.
+**~~~~~--apparently fixed, 2025apr29.
+
+**~~ 2024july21: We will need to change the terminology of link to rlink, to
+**avoid confusion with "link" being the term for all connections fro node to node.
+**--Done, 2024aug13.
+
+**~~~Also maybe have a nodetype for rptbr_root
+
+
+**~~~2024july16 late at night.
+**tree_draw needs special consideration for links.
+**As it stands now, it goes INTO the linked rptbr just once.
+**Maybe tree_traverse_00 needs an option to go into already-visited nodes.
+
+** july16: later, attempting to fix this. delete this note if successful.
+
+
+**~~~~Need: tree_draw -- to distinguish link nodes.
+**~~~~Also, tree_traverse will need to adapt to handle links to repeatable branches
+**-- to NOT go down those descendant branches.
+**~~~Prohibit linking from one rptbr to another; prohibit link nodetpes inside an
+** rptbr.
+**Propagate __rptbr down the tree.  ~~irrelevant 2024july1
+
+** ~~~ presently (2024jun25), tree_traverse follows a link to a given rptbr root
+** AND ALL OF ITS "next" siblings, i.e., other rptbr roots.
+**2024july1: fixed, but may be adjusted to respond to options.
+
+**~~Consolidate the "required" options; create a program to do it.[DONE]
+
+**~~~~ Operation not allowed indirectly via a link.  -- error being erroneously issued.
+**-- fixed 2024july1
+
+**~~ "node not found" error; make it say "tree" or "rptbr" instead of node, as
+**appropriate.  PS (2024july09) This may be more trouble than it's worth.
+
+
+**~~2024july09: is the is_rptbr set an all possible situations. What if we are
+**entering via `:char _dta[rptbr]' ??
+
+**~~2024july19: __rptbr is unused. We can remove it. --Done 2024aug6.
+
+
+
 /*
+2024may20: This began as tree2.ado; began as a copy of tree.ado.
+Enhnacements are being made: repeatable branches, which are actually trees,
+but on a separate superroot.
+
+Once this is established, it should be renamed tree.ado, and the old version archived.
+--doing this, 2025jul25.
+
+
+
 tree.ado
 Decision-Tree facility.
 David Kantor, began 2021may03
+
+
+~~~~2024may20: check references to superroot; treat rptbr similarly.
+
+~~~~2024jun17: adapt tree_plot to handle the rptbr.
+
 */
 
 prog def tree
@@ -10,14 +70,15 @@ prog def tree
 * 2023jun28: public release.
 * version 1.3.1 2023jun28
 * version 1.3.2 2023oct10
-* version 1.4.0 2023oct18
-*! version 1.5.0 2024jun10
-
+* version 1.4.0
+*! version 2.0.0, 2024may20
 
 /*
 2023oct02: edited comments.
-3032oct18: tree-traversal is now coded in its own ado file: tree_traverse.ado.
-PS: later putting it back in!
+2023oct18: tree-traversal is now coded in its own ado file: tree_traverse.ado.
+PS: later putting it back in! It didn't work as expected; it couldn't access the
+action routines.
+2024nov05: restoring the use of tree_traverse.ado.
 */
 
 
@@ -29,10 +90,10 @@ version 14
 local allowable_subcmd
  "init create node draw verify eval check setvals diffs
  values a_minus_b preserveprob preservepayoff restoreprob restorepayoff
- preserveall restoreall des plot";
+ preserveall restoreall des plot rptbr rlink";
 #delimit cr
 
-/* Note that "plot" invokes tree_plot, which is defined in a separate filr:
+/* Note that "plot" invokes tree_plot, which is defined in a separate file:
 tree_plot.ado.
 */
 
@@ -75,8 +136,37 @@ end /* assert_tree_data_present */
 
 
 
+
+prog def create_superroot, sclass
+/* This creates "a superroot". It might be THE superroot (for all regular trees),
+or it could be the rptbr root.
+*/
+syntax name, [VERbose]
+
+if "`verbose'" == "" {
+	local qui "qui"
+}
+
+local node_id = _N+1
+`qui' set obs `node_id'
+
+replace __nodetype = "superroot":nodetype in `node_id'
+replace __nodename = "`namelist'" in `node_id'
+/* replace __nodelabel = "superroot" in `node_id' */
+
+/* A moot point, but... that assignment of __nodelabel is a default; other uses of
+this should subsequently replace values as appropriate.
+*/
+`qui' replace prob = "*" in `node_id'
+
+sreturn local superroot_id = `node_id'
+
+end
+/* end create_superroot */
+
+
 prog def tree_init
-/* This creates the superroot node. Its __nodename is set to "superroot". */
+/* This does the initialization of the dataset and creates the superroot node. */
 syntax namelist, [VERbose]
 if "`verbose'" == "" {
 	local qui "qui"
@@ -109,6 +199,11 @@ __n_starprobs
 __residprob
 __residual
 __weight
+
+__n_parents
+__surr
+__ypos
+
 prob R_prob
 setvals_qui
 setvals_node_id
@@ -125,6 +220,9 @@ The ones beginning with "setvals_" are locals used in tree_setvals.
 "verbose", "check", and "sub" are options to tree_setvals, and are thus,
 locals therein as well. Since payoff varnames become options to tree_setvals,
 using such names would cause a conflict.
+
+__rptbr -- removed 2024aug6.
+
 */
 
 local namelist_reserved: list namelist & reserved_names
@@ -163,13 +261,43 @@ if "`len_29'" ~= "" {
 	/* But not fatal at this point. */
 }
 
-`qui' set obs 1
 
-gen str32 __nodename = "superroot" 
-/* gen str40 __nodelabel = "superroot" */
-label def nodetype 0 "superroot" 1 "root" 2 "interior" 3 "terminal"
+/* Create vars, even though _N ==0. */
+gen str32 __nodename = "" 
+/* gen str40 __nodelabel = "" */
+label def nodetype 0 "superroot" 1 "root" 2 "interior" 3 "terminal" 4 "rlink" 5 "surrogate"
 
-gen byte __nodetype = "superroot":nodetype
+/* Note that rptbr is...
+	a subcommand;
+	a root name for all repeatable branches, analogous to superroot;
+	an option name in some programs.
+
+We will use "root":nodetype as the type for the (super) root of a repeatable branch;
+no need to have a distinct type. But we will have ways to determine when you go
+into a repeatable branch.
+
+Also, "superroot":nodetype will serve for all regular trees, plus the set of repeatable
+branches.
+
+nodetype "rlink" is for a link to a rptbr. It is a special type of interior node.
+I would make it come before "terminal", but I need to maintain backward compatibility,
+and not change existing values.
+
+surrogte: introduced 2025mar24. Such a node takes the place of an rptbr in plotting and
+drawing. A surrogate is tied to the rlink -- not the rptbr; there will be a __surr
+variable for that. __surr functions in place of __branch_head in those cases.
+A surrogate may have no descendants.
+
+In an rlink node, __surr shall point ot the surrogate.
+In a surrogate node, __surr shall point to the rptbr node -- same __beanch_head
+of its parent. So it does double duty, i.e., it is overloaded, which may be confusing.
+
+(In a surrogate node, the value in __surr ought to have a different name, but
+there's no need to have a separate variable for it.)
+
+*/
+
+gen byte __nodetype = .
 label val __nodetype nodetype
 /*
 Prior to 2022oct18, __nodetype did not have a label. Also, the numbering scheme was
@@ -180,13 +308,19 @@ lower by 1. Notes regarding these values are being rewritten, even if dated prio
 	gen int __branch_head = .
 	gen int __branch_tail = .
 	gen int __next = .
+	gen int __surr = .
+	** gen byte __rptbr = 0
 	gen double __probsum = . /* sum of non-residual probs in child nodes */
 	gen int __n_starprobs = . /* num child nodes with residual probs */
 	gen double __residprob = . /* apportioned residual probability in child nodes */
 	gen byte __residual = 0  /* whether prob is specified as residual; see note below */
+	gen byte __n_parents = 0
+	gen float __ypos = .
 }
 /* __branch_head and __branch_tail are for the child nodes;
 __next is for the chain that the present node may be in.
+
+No need to gen n_visits or __n_visits; it will be done as needed in tree_traverse.
 */
 
 gen strL prob = "*"
@@ -256,6 +390,12 @@ global tree_meansvars_prior
 
 `qui' gen double __weight=.
 
+create_superroot superroot, `verbose'
+if `s(superroot_id)' ~= 1 {
+	disp as err "initial superroot not at obs 1"
+	exit 459
+	/* An internal error. */
+}
 end /* tree_init */
 
 
@@ -264,19 +404,32 @@ prog def find_child_node, sclass
 /* Look for a given named node among the children of a given node.
 Look in only that one level.
 */
-syntax name(name= nodename), id(integer) [require(string)]
+syntax name(name= nodename), id(integer) [require(passthru) start_at_id]
 
-if `id' == 0 {
-	/* `id' 0 is a phantom pre-superroot node.
-	This allows you to search for superroot.
-	*/
-	local jj "1"
+/* 2024may28, based on notes from 2024may21:
+Previously, we used magic values for `id' to signify to set jj = 1 (superroot).
+Now we will use a start_at_id option. This is more general, and removes the use of
+magic values.
+
+`start_at_id' shall indicate to begin the search at `id', rather than __branch_head[`id'].
+Normally, we look at the children of `id'; this option says to look at `id' and all
+of its siblings. More accurately, look at `id' and all its downstream
+siblings. If `id' is the lead node in its sibling group, then this will bw the whole
+sibling group. That's equivalent to applying the default action on a parent node of `id',
+whether such as node exists or not.
+
+BUT in actual use, this would typically apply to a superroot, so the sibling group
+would be a singleton set.
+*/
+
+if "`start_at_id'" ~= "" {
+	local jj "`id'"
 }
 else {
 	local jj = __branch_head[`id']
 }
 
-local node_id = 0
+local node_id = 0 
 
 while ~mi(`jj') {
 	if __nodename[`jj'] == "`nodename'" {
@@ -287,26 +440,8 @@ while ~mi(`jj') {
 }
 sreturn local node_id = `node_id'
 
-if `id' == 1 {
-	local nodeortree "tree"
-}
-else {
-	local nodeortree "node"
-}
-
-
-if "`require'" == "exist" {
-	if ~`s(node_id)' {
-		disp as err "`nodeortree'`nodename' not found"
-		exit 198
-	}
-}
-else if "`require'" == "noexist" {
-	if `s(node_id)' {
-		disp as err "`nodeortree' `nodename' already exists."
-		exit 198
-	}
-}
+/*~~~~debug: disp "point 1, `nodename'" */
+deal_with_require_option `nodename', node_id(`node_id') `require'
 
 end /* find_child_node */
 
@@ -314,82 +449,181 @@ end /* find_child_node */
 
 prog def find_node_via_path, sclass
 /* Look for node as named by its complete path through the forest. */
-syntax namelist(name= path),[require(string)]
-/* require: exist or noexist; any other value is ignored. */
+syntax namelist(name= path), [norlink]
+
+/*2024july21: This had a -require(passthru)- option. But it was noticed that ALL
+invocations of this program had been using the require(exist) option. And it is
+natural that all such invocations should be that way. So we are eliminating that
+option. Furthermore, require(noexist) makes no sense in this context.
+(It does make sense for find_child_node.)
+Therefore we eliminate that option, and pass require(exist) to find_child_node.
+
+`rlink', from the norlink option: don't allow a path that comes through an rlink.
+Not to be confused with the rlink option in tree_node.
+*/
+
+/* 2024may21: check for "rptbr" in addition to "superroot".
+Pass the actual value for startingnode, not a magic value.
+See notes in find_child_node.
+*/
+
+local startingnode "1"  // default
+local is_rptbr "0"
 
 gettoken leadname path: path /* path is now the remaining part of the path. */
 if "`leadname'" == "superroot" {
-	local startingnode "0"
+	local start_at_id "start_at_id"
 }
-else {
-	local startingnode "1"
+else if "`leadname'" == "rptbr" {
+	if "`:char _dta[rptbr]'" == "" {
+		disp as err "No rptbr established"
+		exit 459
+	}
+	local startingnode "`:char _dta[rptbr]'"
+	local start_at_id "start_at_id"
+	local is_rptbr "1"
 }
 
+/* Note that start_at_id applies to to the initial find_child_node only,
+as does startingnode.
 
+2024july19: Channge this so that via_rlink is sensitive to only the parental chain;
+EXCLUDES the final node. Do this by evaluating via_rlink BEFORE find_child_node in
+the loop, so it refers to the parent.
+*/
 
-find_child_node `leadname', id(`startingnode')
+find_child_node `leadname', id(`startingnode') `start_at_id' require(exist)
+local via_rlink = 0
+/* -- Properly, that should be local via_rlink = __nodetype[`startingnode'] == "rlink":nodetype
+But `startingnode' should never be an rlink.
+*/
+
 while `s(node_id)' & "`path'" ~= "" {
+	local via_rlink = `via_rlink' | __nodetype[`s(node_id)'] == "rlink":nodetype
 	gettoken leadname path: path
-	find_child_node `leadname', id(`s(node_id)')
+	find_child_node `leadname', id(`s(node_id)') require(exist)
 }
+
 
 sreturn local node_id = `s(node_id)'
+sreturn local is_rptbr "`is_rptbr'"
+sreturn local via_rlink "`via_rlink'"
 
-if "`require'" == "exist" {
-	if ~`s(node_id)' {
-		disp as err "node `leadname' not found"
-		exit 198
-	}
+if (`via_rlink' | __nodetype[`s(node_id)'] == "rlink":nodetype) & `is_rptbr' {
+	disp as err "rlink detected within an rptbr; node `s(node_id)' or the path leading there"
+	exit 459
 }
-else if "`require'" == "noexist" {
-	if `s(node_id)' {
-		disp as err "node `leadname' already exists."
-		exit 198
-	}
+
+
+if "`rlink'" ~= "" & `via_rlink' {
+	/* Prior to 2024july29, there was the additional condition,
+	"rptbr" ~= "", which is erroneous (always true); maybe it was supposed to be
+	~`is_rptbr' ??
+	Notes indicating that it was to prevent the somewhat confusing/erroneous
+	issue of tbis message if you start in rptbr, and go through an rlink.
+	BUT THIS SHOULD NEVER HAPPEN, as we a prevented from establishing an rlink
+	within an rptbr. It has occurred in testing, prior to the prohibition on
+	rlinks within rptbrs.
+	
+	Also this was in place prior to the "rlink detected" trap, above, est 2024july29.
+	*/
+	disp as err "Operation not allowed indirectly via an rlink."
+	exit 198
 }
 
 end /* find_node_via_path */
 
 
+prog def deal_with_require_option
+syntax name, node_id(integer) [require(string)]
 
-
-
-
-
-
-prog def tree_create
-assert_tree_data_present
-syntax namelist(name= treename), [/*label(string)*/ VERbose]
-if "`verbose'" ~= "" {
-	disp "you called tree_create `0'"
+if "`require'" == "exist" {
+	if ~`node_id' {
+		disp as err "node `namelist' not found"
+		exit 198
+	}
+}
+else if "`require'" == "noexist" {
+	if `node_id' {
+		disp as err "node `namelist' already exists."
+		exit 198
+	}
 }
 
-if "`treename'" == "superroot" {
-	disp as err "superroot is not allowed as a tree name."
+/* Any other value is ignored. */
+
+end /* deal_with_require_option */
+
+
+
+
+
+prog def tree_create_00
+/* This is the internal routine for creating a tree -- or a repeatable
+branch.
+Formerly, prior to 2024may20, this was tree_create, but with no rptbr option.
+
+tree_create is now a front end; prevents user from specifying tree_create with
+the rptbr option. tree_rptbr is another front end.
+*/
+
+assert_tree_data_present
+syntax namelist(name= treenames), [/*label(string)*/ rptbr VERbose]
+/* 2024may20: add the rptbr option. */
+if "`verbose'" ~= "" {
+	disp "you invoked tree_create_00 `0'"
+}
+
+local prohibited_names "superroot rptbr"
+
+local treenames_prohibited: list prohibited_names & treenames
+if "`treenames_prohibited'" ~= "" {
+	disp as err "`treenames_prohibited' not allowed as tree name."
+	disp `"prohibited tree names: `prohibited_names'"'
 	exit 198
 	/*
-	Actually, this is just to avoid confusion to the users.
-	BUT, we  may later implement the possibility of referring to the superroot
-	node in diffs and value extraction; THEN, it will be important to prohibit
+	Originally, this is just to avoid confusion to the users.
+	BUT, we later implemented the possibility of referring to the superroot
+	node in diffs and value extraction; THUS, it is important to prohibit
 	superroot as a tree name. (2022sep16)
-	PS: a wild idea: prohibit a child from having the same name as its parent.
-	That would cover this condition. (Actually, it would require programming
-	changes both here and in tree_node_00.) Just a wild idea; no need to take it
-	seriously.
+	(Similarly, for rptbr, but values from that node are usually meaningless.)
 	*/
 }
+
+if "`rptbr'" ~= "" {
+	if "`:char _dta[rptbr]'" == "" {
+		create_superroot rptbr, `verbose'
+		char _dta[rptbr] "`s(superroot_id)'"
+	}
+	local id "`:char _dta[rptbr]'"
+	/* See note below regarding why we create_superroot rptbr only as needed. */
+	local rptbr1 "rptbr1"
+}
+else {
+	/* Ordinary tree */
+	local id 1
+	/* superroot is always 1. */
+}
+
+
 /* Prior to 2022oct11, there was...
 find_tree `treename', require(noexist)
 create_node `treename', attach_id(1) nodetype("root":nodetype) label(`label')
 -- That was limited to a single tree at a time.
 
-Starting 2022oct11, we do this using create_and_attach_nodes:
+Starting3 2022oct11, we do this using create_and_attach_nodes:
+
+And why do we create_superroot rptbr only as needed? Why not just do it as part
+of tree_init?
+The reason is to make the datast compatible with the older (pre-version-2.0)
+version -- for testing, and in case a user uses a dataset created in an older version.
 */
 
-create_and_attach_nodes, nodelist1(`treename') nodetype1(`="root":nodetype') ///
-		tag1(treename)  id(1) `verbose'
 
-/* Also prior to 2022oct11, there was...
+create_and_attach_nodes, nodelist1(`treenames') nodetype1(`="root":nodetype') ///
+		tag1(treenames) id(`id') `rptbr1' `verbose'
+
+/* Also prior to 2022oct11, there was... [pertaining to regular trees]...
 local node_id "`s(node_id)'"
 replace prob = "*" in `node_id'
 
@@ -404,8 +638,31 @@ that are not worthwhile.
 So we don't do this any more.
 */
 
-end /* tree_create */
+end /* tree_create_00 */
 
+
+
+prog def tree_create
+syntax namelist, [/*label(string)*/ VERbose]
+tree_create_00 `0'
+end /* tree_creatre */
+
+
+
+prog def tree_rptbr
+syntax namelist, [/*label(string)*/ VERbose]
+
+count_commas, s(`"`0'"')
+if ~mod(`=s(commacount)', 2) {
+	local comma ","
+}
+tree_create_00 `0' `comma' rptbr
+
+/*2024may20, 14:07 -- that call to tree_create_00 in had been faulty if verbose
+was specified (or any option, but that's the only one).
+2024jun17: we fixed it via the use of count_commas.
+*/
+end /* tree_rptbr */
 
 
 
@@ -459,7 +716,7 @@ Note that payoff values should be settable in terminal nodes only;
 probs should be settable in terminal or interior nodes.
 */
 
-find_node_via_path `namelist', require(exist)
+find_node_via_path `namelist', norlink
 local setvals_node_id "`s(node_id)'"
 
 local setvals_varstoset `: char _dta[payoffvars]' prob
@@ -476,9 +733,13 @@ foreach v of local setvals_varstoset {
 		disp "setvals_vval: <`setvals_vval'>"
 	}
 	if `"`setvals_vval'"' ~= "" {
-		if "`v'" ~= "prob" & __nodetype[`setvals_node_id'] < "terminal":nodetype {
+		if "`v'" ~= "prob" & __nodetype[`setvals_node_id'] ~= "terminal":nodetype {
 			disp as err "payoff vars are settable in terminal nodes only"
 			disp as text "var `v'; node_id `setvals_node_id'"
+			exit 198
+		}
+		if "`v'" == "prob" & __nodetype[`setvals_node_id'] == "root":nodetype & `s(is_rptbr)' {
+			disp as err "You may not set prob for an rptbr root"
 			exit 198
 		}
 		if "`sub'" == "" {
@@ -493,7 +754,12 @@ foreach v of local setvals_varstoset {
 }
 
 if "`setvals_vars_affected'" ~= "" & "`check'" ~= "" {
-	assign_Rvals `setvals_vars_affected', id(`setvals_node_id') location(`namelist') `verbose'
+	/* This invocation of tree_traverse just calls assign_Rvals; it does not
+	do a traversal. See notes in tree_traverse.ado.
+	*/
+	tree_traverse, assign_Rvals rvals_vars(`setvals_vars_affected') ///
+		id(`setvals_node_id') location(`namelist') parent(0) depth(0) `verbose'
+	/* parent and depth are dummy values; required but irrelevant in this call. */
 }
 
 if "$tree_eval_errors" ~= "" {
@@ -501,7 +767,7 @@ if "$tree_eval_errors" ~= "" {
 }
 
 if "`setvals_vars_affected'" == "" {
-	disp "(no settings specified)"
+	disp "(No settings specified.)"
 }
 /*
 Note: setvals_vval is subject to the trim operation; this value then goes into `v'.
@@ -512,30 +778,29 @@ I'm removing those trim operations, 2022nov17.
 end /* setvals */
 
 
+prog def attach_node /* introduced 2025mar13 */
+syntax, id(integer) parent(integer) [solitary replace VERbose]
+/*
+`id' will become the child of `parent'.
+
+`solitary': expect there to be 0 or 1 existing children of `parent'.
+If there was 1 to begin with, then you also need `replace'.
+When done, there will be just 1 child.
+
+`replace': takes effect only under `solitary'; if there is 1 existing child of
+`parent', then allow it to be replaced by `id'.
 
 
+Note that both "attach" and "link" refer to connecting one node to another.
+"Attach" is connecting a node to its parent;
+"link" is connecting a node to a child.
 
-
-prog def create_node, sclass
-syntax name(name= nodename), attach_id(integer) nodetype(integer) [/*label(string)*/ VERbose]
+*/
 if "`verbose'" == "" {
 	local qui "qui"
 }
-/*
-Many other programs in this ad-file have an attach option which is of type
-name. Here, it is an integer; thus, we give it a distinct name: attach_id.
-This is the obsno of the node to which to attach the new node.
 
-The idea is that, if you are creating a node, you better have a place in mind to
-attach it. (The superroot could be an exception, but we don't plan to use this
-for the superroot -- though we could.)
-
-Distinguish the nodetype option and the __nodetype variable.
-
-*/
-
-local node_id = _N+1
-if `attach_id' == `node_id' {
+if `parent' == `id' {
 	disp as err "You may not attach a node to itself."
 	exit 198
 	/* We prevent a node from attaching to itself,
@@ -544,16 +809,99 @@ if `attach_id' == `node_id' {
 	*/
 }
 
-if __nodetype[`attach_id'] == "terminal":nodetype {
+if __nodetype[`parent'] == "terminal":nodetype {
 	disp as err "You may not attach to a terminal node."
 	exit 198
 }
+/* If we ever adopt a scheme of storing the children directly in the nodes
+(child1, child2, etc), much of this may become much simpler.
+Esp the multiple children detection.
+Also, the inconsistent __branch_tail value situation will go away.
+*/
 
+if mi(__branch_head[`parent']) {
+	/* See note below. */
+	if ~mi(__branch_tail[`parent']) {
+		disp as err "inconsistent __branch_tail value"
+		exit 459
+	}
+	`qui' replace __branch_head = `id' in `parent'
+}
+else /* ~mi(__branch_head[`parent']) */ {
+	if mi(__branch_tail[`parent']) {
+		disp as err "inconsistent __branch_tail value"
+		exit 459
+	}
+	if "`solitary'" ~= "" {
+		if __branch_head[`parent'] ~= __branch_tail[`parent'] {
+			disp as err "multiple children present; require just one."
+			exit 459
+		}
+		if "`replace'" == "" {
+			disp as err "node is already linked."
+			exit 198
+		}
+		local old_head = __branch_head[`parent'] // also equals __branch_tail[`parent']
+		local tobereplaced "Y"
+		`qui' replace __branch_head = `id' in `parent'  // see note about detached node.
+		`qui' replace __n_parents = __n_parents -1 in `old_head'
+	}
+	else {
+		local old_tail = __branch_tail[`parent']
+		`qui' replace __next = `id' in `old_tail'
+	}
+}
+
+`qui' replace __branch_tail = `id' in `parent'
+if "`tobereplaced'" ~= "" {
+	disp "linkage replaced"
+}
+`qui' replace __n_parents = __n_parents +1 in `id'
+
+/* Note about testing whether mi(__branch_head[`parent']);
+applies to any node of interest, and to __branch_tail as well:
+The more specific valid range of these variables is 1 .. _N-1.
+But we use missing as standing for "not valid".
+
+About detached node: Yes, that node (at `old_head') becomes detached -- at least,
+from the parent. But presumably, it is a rptbr root, and is still accessable as
+such.
+*/
+
+end /* attach_node */
+
+
+
+
+
+prog def create_node, sclass
+syntax name(name= nodename), attach_id(integer) nodetype(integer) [/*label(string)*/ VERbose surrogate]
+if "`verbose'" == "" {
+	local qui "qui"
+}
+/*
+This creates one node and attaches it.
+This could have been called create_and_attach_node, but that could cause
+confusion with create_and_attach_nodes.
+
+attach_id is an integer -- the obsno of the node to which to attach the new node.
+
+The idea is that, if you are creating a node, you better have a place in mind to
+attach it. (The superroot could be an exception, but we don't plan to use this
+for the superroot -- though we could.)
+
+Distinguish the nodetype option and the __nodetype variable.
+
+`surrogate': attach this as a surrogate node, rather than a child.
+*/
+
+local node_id = _N+1
 `qui' set obs `node_id'
 
 `qui' replace __nodename = "`nodename'" in `node_id'
 `qui' replace __residual = 0 in `node_id'
-
+`qui' replace __nodetype = `nodetype' in `node_id'
+`qui' replace __n_parents = 0 in `node_id'
 /*
 if "`label'" ~= "" {
 	`qui' replace __nodelabel = `"`label'"' in `node_id'
@@ -564,19 +912,16 @@ if "`label'" ~= "" {
 This is especially important for __branch_head, __branch_tail, and __next.
 */
 
-if mi(__branch_head[`attach_id']) {
-	/* Really, we want only 1 .. _N-1. */
-	`qui' replace __branch_head = `node_id' in `attach_id'
-	`qui' replace __branch_tail = `node_id' in `attach_id'
+if "`surrogate'" ~= "" {
+	if `nodetype' ~= "surrogate":nodetype {
+		disp as err "Improper nodetype option"
+		exit 198
+	}
+	`qui' replace __surr = `node_id' in `attach_id'
 }
 else {
-	local old_tail = __branch_tail[`attach_id']
-	`qui' replace __next = `node_id' in `old_tail'
-	`qui' replace __branch_tail = `node_id' in `attach_id'
+	attach_node, id(`node_id') parent(`attach_id') `verbose'
 }
-
-`qui' replace __nodetype = `nodetype' in `node_id'
-
 sreturn local node_id "`node_id'"
 end /* create_node */
 
@@ -585,12 +930,15 @@ end /* create_node */
 prog def create_and_attach_nodes
 /* Began 2022sep28. This replaces tree_node_00. */
 
-syntax, [nodelist1(namelist) nodelist2(namelist) nodetype1(integer -2) nodetype2(integer -2) ///
-	tag1(string) tag2(string) verbose] id(integer)
+syntax, [ ///
+	nodelist1(namelist) nodetype1(integer -2) tag1(string) rptbr1 ///
+	nodelist2(namelist) nodetype2(integer -2) tag2(string) rptbr2 ///
+	nodelist3(namelist) nodetype3(integer -2) tag3(string) rptbr3 ///
+	verbose] id(integer)
 /* We use -2 to signify unspecified nodetype1 or nodetype2. Actually, 2 ought to be the lowest value
 allowed.
 */
-local max_nodelists 2
+local max_nodelists 3
 forvalues jj = 1 / `max_nodelists' {
 	if "`nodelist`jj''" ~= "" {
 		local nodelistb`jj': list uniq nodelist`jj'
@@ -598,7 +946,7 @@ forvalues jj = 1 / `max_nodelists' {
 			disp "Nodelist `tag`jj'' has duplicates; reducing to unique names."
 		}
 		if `nodetype`jj'' <= -2 {
-			disp as err "nodetype`jj' absent or incorrectly specified"
+			disp as err "nodetype`jj' absent or incorrectly specified."
 			/* This would be a programming error, not a user error. */
 			exit 198
 		}
@@ -627,7 +975,11 @@ forvalues jj = 1 / `max_nodelists' {
 	}
 	foreach node of local nodelistb`jj' {
 		create_node `node', attach_id(`id') nodetype(`nodetype`jj'') `verbose'
-		/* don't bother with label */
+		local node_id = s(node_id)
+		if "`rptbr`jj''" ~= "" {
+			** replace __rptbr = 1 in `node_id'
+			replace prob = "1" in `node_id'
+		}
 	}
 }
 end /* create_and_attach_nodes */
@@ -639,7 +991,7 @@ end /* create_and_attach_nodes */
 
 prog def tree_node
 assert_tree_data_present
-syntax [namelist], [at(namelist) INTerior(namelist) TERMinal(namelist) VERbose]
+syntax [namelist], [at(namelist) INTerior(namelist) TERMinal(namelist) rlink(namelist) VERbose]
 
 one_or_the_other_not_both, a(`namelist') b(`at') aname(a namelist) bname(an at() option)
 if "`namelist'" ~= "" {
@@ -652,20 +1004,38 @@ if "`verbose'" ~= "" {
 }
 
 if "`at'" == "superroot" {
-	disp as err "You may not attach an interior or terminal node to superroot."
+	disp as err "You may not attach an interior, terminal, or rlink node to superroot."
 	disp "Only tree roots may attach to superroot; use " as inp "tree create"
 	exit 198
 }
+if "`at'" == "rptbr" {
+	disp as err "You may not attach an interior, terminal, or rlink node to rptbr."
+	disp "Only tree roots may attach to rptbr; use " as inp "tree rptbr"
+	exit 198
+}
 
-if "`terminal'" =="" & "`interior'" == "" {
-	disp "(No interior or terminal nodes specified.)"
+if "`terminal'" =="" & "`interior'" == "" & "`rlink'" == "" {
+	disp "(No interior or terminal or rlink nodes specified.)"
 	/* So no meaningful action will occur. */
 }
-find_node_via_path `at', require(exist)
+
+find_node_via_path `at', norlink
 local parent_id `s(node_id)'
+if "`rlink'" ~= "" & `s(is_rptbr)' {
+	disp as err "You may not declare an rlink within an rptbr."
+	exit 198
+}
+if __nodetype[`parent_id'] == "rlink":nodetype & ///
+	("`interior'" ~= "" | "`terminal'" ~= "" | "`rlink'" ~= "") {
+	disp as err "You may not declare nodes on an rlink."
+	disp as text "Use " as inp "tree rlink"
+	exit 198
+}
 create_and_attach_nodes, ///
-	nodelist1(`interior') nodetype1(`="interior":nodetype') nodelist2(`terminal') nodetype2(`="terminal":nodetype') ///
-	tag1(interior) tag2(terminal) id(`parent_id') `verbose'
+	nodelist1(`interior') nodetype1(`="interior":nodetype') ///
+	nodelist2(`terminal') nodetype2(`="terminal":nodetype') ///
+	nodelist3(`rlink') nodetype3(`="rlink":nodetype') ///
+	tag1(interior) tag2(terminal) tag3(rlink) id(`parent_id') `verbose'
 
 
 /* This seeks the `at' node, regardless of whether `interior' and `terminal' are present.
@@ -676,117 +1046,97 @@ end /* tree_node */
 
 
 
-prog def draw_node_prefix
-syntax, depth(integer)
-forvalues jj = 1 / `=`depth'-1' {
-	if "${tree_depth_`jj'_has_more_children}" ~= "" {
-		disp "{c |} "   /*"| "*/ _cont
-	}
-	else {
-		disp "  " _cont
-	}
-}
-end /* draw_node_prefix */
-
-
-
-prog def draw_node
-/* An action1 routine. */
-syntax, id(integer) parent(integer) depth(integer) [location(string) verbose]
-/* We don't use the verbose option, but all action routines are required to have one. */
-
-if ~mi(__next[`id']) {
-	global tree_depth_`depth'_has_more_children "Y"
-}
-else {
-	global tree_depth_`depth'_has_more_children
-}
-
-disp %6.0g `id' " " _cont
-draw_node_prefix, depth(`depth')
-if `depth' > 0 {
-	if ~mi(__next[`id']) {
-		disp "{c LT}{c -}" /*"+-"*/ _cont
-	}
-	else {
-		disp "{c BLC}{c -}" /*"\-"*/ _cont
-	}
-}
-disp __nodename[`id'] _cont
-
-if __nodetype[`id'] == "terminal":nodetype {
-	disp "*" _cont
-}
-/*if __nodelabel[`id'] ~= "" {
-	disp " [" __nodelabel[`id'] "]" _cont
-}
-*/
-
-if "$tree_drawvars" ~= "" {
-	disp _col(35) _cont
-}
-
-local sep
-
-foreach v of global tree_drawvars {
-	disp "`sep'" `v'[`id'] _cont
-	/* values separated by ";". If this is ambiguous, then we can implement an
-	option to quote string values.
-	*/
-	local sep "; "
-}
-
-
-
-
-disp /* end line */
-
-end /* draw_node */
-
 
 prog def tree_draw
 assert_tree_data_present
-syntax [varlist(default=none)]
-/* -- really should do no more than, say, 4 vars. */
+syntax [varlist(default=none)] [, SURRogates]
+/* -- really should do no more than, say, 4 vars.
+
+Note that the present surrogates option is different from the surrogate option to
+tree_traverse.
+The present surrogates option indicates to show the surrogates attributes, rather
+than the referent rptbr; it is for debugging.
+The surrogate option to tree_traverse indicates that the traversal should follow
+surrogate nodes, rather than the regular children.
+
+*/
+
 global tree_drawvars "`varlist'"
-tree_traverse, depth(0) id(1) parent(0) action1(draw_node)
+
+if "`surrogates'" ~= "" {
+	global tree_show_surrogates "Y"
+}
+else {
+	global tree_show_surrogates
+}
+
+tree_traverse, depth(0) id(1) parent(0) ///
+	action1(draw_node) /*action2(draw_node_first_child)*/ surrogate
+
+if "`:char _dta[rptbr]'" ~= "" {
+	disp _n "repeatable branches"
+	tree_traverse, depth(0) id(`:char _dta[rptbr]') parent(0) ///
+		action1(draw_node)
+}
+
 end /* tree_draw */
 
 
 
-prog def verify_node
-/* an action1 routine */
-syntax, id(integer) parent(integer) depth(integer) [location(string) verbose] 
-/* We don't use the verbose option, but all action routines are required to have one. */
+
+prog def tree_rlink
+syntax namelist, to(name) [replace verbose]
+
+/* Note that `s(node_id)' gets assigned by find_node_via_path and
+find_child_node, at different points, yielding different values.
+*/
+if "`verbose'" == "" {
+	local qui "qui"
+}
 
 
-if __nodetype[`id'] == "terminal":nodetype {
-	if ~mi(__branch_head[`id']) {
-		disp as err "Terminal node `id' (" __nodename[`id'] ") has branches."
-		local errors "Y"
-		/* This condition should not happen, assuming that all tree construction
-		operations are done by the programs in this do-file.
-		*/
-	}
+find_node_via_path `namelist', norlink
+
+if `s(via_rlink)' & `s(is_rptbr)' {
+	disp as err "You may not set an rlink within an rptbr."
+	/* This should not occur, as rlink nodes are prohibited within an rptbr.
+	But is has occurred in testing.
+	*/
+	exit 198
+}
+
+/* That prior error msg might be off-the-mark, as we have not tested
+__nodetype[`from_id'] to see if it is an rlink.
+Also, can `s(via_rlink)' & `s(is_rptbr)' occur ???, given that s(via_rlink)
+does not test the final node in `namelist' ??
+But all this is moot.
+*/
+
+local from_id `s(node_id)'
+
+if __nodetype[`from_id'] ~= "rlink":nodetype {
+	disp as err "node (`namelist') is not an rlink"
+	exit 198  /* or 459 ? */
+	/* A possible alternative action: if it is interior, and has no descendants,
+	convert it to rlink.
+	*/
+}
+
+if "`:char _dta[rptbr]'" == "" {
+	disp as err "No rptbr established"
+	exit 459
 }
 else {
-	if mi(__branch_head[`id']) {
-		disp as err "Nonterminal node `id' (" __nodename[`id'] ") has no branches."
-		local errors "Y"
-	}
+	find_child_node `to', id(`:char _dta[rptbr]') require(exist)
+	local rptbrnode `s(node_id)'
+	attach_node, id(`rptbrnode') parent(`from_id') solitary `replace' `verbose'
+	create_node noname /* dummy value */, attach_id(`from_id') nodetype(`="surrogate":nodetype') `verbose' surrogate
+	local surrnode `s(node_id)'
+	`qui' replace __surr = `rptbrnode' in `surrnode'
+	`qui' replace __n_parents = 1 in `surrnode'
 }
 
-**~~~Other things to check...?
-
-if "`errors'" ~= "" {
-	global tree_eval_errors "Y"
-	if "`location'" ~= "" {
-		disp as text "location: `location'"
-	}
-}
-
-
-end /* verify_node */
+end / tree_rlink */
 
 
 prog def tree_verify
@@ -801,295 +1151,6 @@ end /* tree_verify */
 
 
 
-prog def init_payoffvars
-/* Prior to 2023may05, this was an action1 routine;
-2023may09: restoring it to be action1.
-*/
-syntax, id(integer) parent(integer) depth(integer) [location(string) verbose]
-if "`verbose'" == "" {
-	local qui "qui"
-}
-else {
-	disp "init_payoffvars, node `id'" _cont
-		/* We could display location. */
-}
-
-local payoffvars: char _dta[payoffvars]
-if __nodetype[`id'] < "terminal":nodetype {
-	/* nonterminal; see note 2 */
-	if "`verbose'" ~= "" {
-		disp " -- clearing"
-	}
-	foreach v of local payoffvars {
-		`qui' replace R_`v' = 0 in `id'
-	}
-	foreach v of global tree_rawsumvars {
-		`qui' replace S_`v' = 0 in `id'
-	}
-	`qui' replace __weight = 0 in `id'
-	foreach v of global tree_meansvars {
-		`qui' replace T_`v' = 0 in `id'
-	}
-}
-else /* terminal */ {
-	if "`verbose'" ~= "" {
-		disp " -- initializing"
-	}
-
-	assign_Rvals `payoffvars', id(`id') location(`location') `verbose'
-
-	foreach v of global tree_rawsumvars {
-		`qui' replace S_`v' = R_`v' in `id'
-	}
-	`qui' replace __weight $tree_weight in `id'
-	foreach v of global tree_meansvars {
-		`qui' replace T_`v' = R_`v' * __weight in `id'
-	}
-}
-
-/* We previously tried real(`v'), rather than `=`v'[`id']'. */ 
-
-/* Note 2:
-We believe that it is correct to do the clearing of values in nonterminal nodes here,
-because such nodes will be visited BEFORE the children.
-*/
-
-end /* init_payoffvars */
-
-
-
-prog def add_payoff_vals_to_parent
-/* An action4 routine; new, 2023may09.
-A reworking of the prior version add_child_vals_to_payoffvars.
-Now it is an action4 routine; needs -parent- option.
-(Now all action4 routines will require parent.)
-*/
-syntax, id(integer) parent(integer) depth(integer) [location(string) verbose]
-if "`verbose'" == "" {
-	local qui "qui"
-}
-local payoffvars: char _dta[payoffvars]
-
-/* If there is a parent...*/
-if `parent'>0 & ~mi(`parent') {
-	foreach v of local payoffvars {
-		`qui' replace R_`v' = R_`v' + R_`v'[`id'] * R_prob[`id'] in `parent'
-	}
-	foreach v of global tree_rawsumvars {
-		`qui' replace S_`v' = S_`v' + S_`v'[`id'] in `parent'
-	}
-	`qui' replace __weight = __weight + __weight[`id'] in `parent'
-	foreach v of global tree_meansvars {
-		`qui' replace T_`v' = T_`v' + T_`v'[`id'] in `parent'
-	}
-}
-end /* add_payoff_vals_to_parent */
-
-
-
-prog def adjust_probtallys
-/*
-2023may05: converting this from an action3 to an action1 routine.
-We expect that init_probs (setting R_prob) shall have been invoked, as well as
-the clearing of __probsum and __n_starprobs prior to calling this.
-
-See notes in tree_eval.
-
-*/
-syntax, id(integer) parent(integer) depth(integer) [location(string) verbose]
-if "`verbose'" == "" {
-	local qui "qui"
-}
-else {
-	disp "adjust_probtallys, parent `parent', id `id'"
-}
-
-
-/* If there is a parent...*/
-if `parent'>0 & ~mi(`parent') {
-	if __residual[`id'] {
-		`qui' replace __n_starprobs = __n_starprobs + 1 in `parent'
-	}
-	else {
-		`qui' replace __probsum = __probsum + R_prob[`id'] in `parent'
-		/* __probsum can become missing if one or more terms ( R_prob[`id']) is missing. */
-	}
-}
-end /* adjust_probtallys */
-
-
-
-prog def init_probs
-/* 
-An action1 routine.
-Initialize the _prob vars; note the leading underscore.
-
-I was tempting to try to do this in a one-line replace command, which might apply
-to all records together. But it doesn't work to reference prob -- to extract the
-numerical value from an expression as a plain assignment.
-Instead, we need the `=prob[`id']' construct. Note that we need to index prob;
-otherwise, you get prob[1]. Also note that each invocation applies to ONE observation.
-
-We do this in the context of an action routine to be used in tree_traverse. But it
-could also be done by looping through all obs.
-*/
-syntax, id(integer) parent(integer) depth(integer) [location(string) verbose]
-
-assign_Rvals prob, id(`id') location(`location') `verbose'
-
-/*
-Clear __probsum and __n_starprobs. {Inserted 2023may18)
-Properly, we want this to apply to the parent. But (1) in a traversal, you will have
-visited the parent prior to any child node, so the parent is covered;
-(2) doing the parent would cause repeated action multiple times on the same parent,
-unnecessarily.
-
-See notes regarding these vars in tree_eval.
-*/
-
-if "`verbose'" == "" {
-	local qui "qui"
-}
-
-`qui' replace __probsum = 0 in `id'
-`qui' replace __n_starprobs = 0 in `id'
-
-end /* init_probs */
-
-
-
-prog def assign_Rvals
-/* Set the R-values for a set of payoff vars or prob.
-Created 1023oct14. Factor-out some code that was common to init_payoffvars and
-init_probs. Later use this in the -check- option to tree_setvals.
-*/
-syntax varlist(string), id(integer) [location(string) verbose]
-if "`verbose'" == "" {
-	local qui "qui"
-}
-
-local allowedvars `: char _dta[payoffvars]' prob
-/* -- those are the payoff vars (base names) and prob. */
-
-local varlist_excess: list varlist-allowedvars
-if "`varlist_excess'" ~= "" {
-	disp as err "assign_Rvals: invalid varlist elements: `varlist_excess'"
-	exit 198
-}
-
-foreach v of local varlist {
-	local textval = trim(`v'[`id'])
-	if `"`textval'"' == "" {
-		if "`v'" ~= "prob" |  __nodetype[`id'] > "root":nodetype {
-			/* Blank `v' value; possible problem, but non-fatal; issue a warning.
-			But we don't get alarmed for root or superroot.
-			It is normal (or optional) for prob to be unassigned there.
-			*/
-			disp as err "Note: " as txt "`v'[`id'] is unassigned"
-			if "`location'" ~= "" {
-				disp as text "location: `location'"
-			}
-			`qui' replace R_`v' = . in `id'
-		}
-	}
-	else {
-		/* non-blank `v' value */
-		if "`v'" == "prob" & `"`textval'"' ~= "*" {
-			capture local qqq = `textval'
-			if (~_rc) & (`"`qqq'"' == "*") {
-				local textval "*"
-				/* This is to handle the case in which `textval' is an expression
-				(e.g., a scalar) that evaluates to "*". We change it to an actual "*".
-				Otherwise, we would get an error in evaluating R_prob;
-				we'd issue a command like
-				- replace R_prob = * in 37 -.
-				You get the response "*in invalid name".
-				2023oct09 & 15.
-				*/
-			}
-		}
-		/*~~~*/ /* disp "assign_Rvals, point 1, textval: <`textval'>" */
-		if "`v'" == "prob" & `"`textval'"' == "*" {
-			`qui' replace R_prob = .z in `id'
-		}
-		else {
-			capture replace R_`v' = (`textval') in `id'
-			/* prior to 2024jun6, this was `=`textval''.
-			That did not work correctly for non-simple expressios, esp ones
-			that reference other variables. Such references would take values from
-			obs 1.
-			*/
-			if _rc {
-				global tree_eval_errors "Y"
-				disp as err "error evaluating R_`v', node `id'"
-				if "`location'" ~= "" {
-					disp as text "location: `location'"
-				}
-			}
-		}
-	}
-	if "`v'" == "prob" {
-		`qui' replace __residual = `"`textval'"' == "*" in `id'
-	}
-}
-end /* assign_Rvals */
-
-
-
-
-
-prog def set_resid_probs
-/* 
-An action1 routine.
-Previously named set_probs, before 2022july02.
-
-Replace R_prob in the case of a residual specification.
-
-We PRESUME that init_probs has already been called.
-That will have taken care of the normal prob values.
-Furthermore, __residprob should have been calculated, which relies on the initial
-clearing of __probsum and __n_starprobs, and the running of adjust_probtallys under tree_traverse.
-*/
-
-syntax, id(integer) parent(integer) depth(integer) [location(string) verbose]
-if "`verbose'" == "" {
-	local qui "qui"
-}
-else {
-	disp "set_resid_probs, id `id', parent `parent'"
-}
-
-if __residual[`id'] {
-	`qui' replace R_prob = __residprob[`parent'] in `id'
-}
-
-/* When `id' == 1, `parent' would be 0, yielding a missing value. But that's okay. */
-end /* set_resid_probs */
-
-
-prog def check_probsum
-/*
-An action4 routine.
-*/
-syntax, id(integer) depth(integer) parent(integer) [location(string) verbose]
-/* We don't use the verbose option, but all action routines are required to have one.
-Same for parent.
- */
-
-if __probsum[`id'] <0 | __probsum[`id'] >1  {
-	if __nodetype[`id'] > "superroot":nodetype {
-		/* We don't get alarmed for superroot.
-		It is normal for __probsum to be unassigned in superroot.
-		*/
-		disp as err "__probsum out of range or missing; obs `id', node " __nodename[`id'] ", __probsum: " __probsum[`id']
-		/* Not fatal. */
-		if "`location'" ~= "" {
-			disp as text "location: `location'"
-		}
-	}
-}
-
-end /* check_probsum */
 
 
 
@@ -1110,7 +1171,7 @@ if "`varlist'" ~= "" {
 	}
 	local varlist_valid: list payoffvars & varlist
 	if "`varlist_valid'" == "" {
-		disp "no valid `listname' vars specified"
+		disp "No valid `listname' vars specified."
 	}
 }
 
@@ -1147,7 +1208,7 @@ foreach vv of local varlist {
 		}
 	}
 }
-end
+end /* note_remove */
 
 
 prog def tree_eval
@@ -1155,8 +1216,12 @@ assert_tree_data_present
 /* ~~~Potentially, this could be targeted to a subtree, using either an id (number) or
 namelist (tree path).
 As of 2022jun27, it remains to do the whole forest.
+
+Much of the complexity here pertains to rawsum and means, which may be rarely
+used.
 */
-syntax [iweight] , [rawsum(varlist) MEANs(varlist) VERbose retain debug]
+
+syntax [iweight] , [rawsum(varlist) MEANs(varlist) VERbose rptbr retain debug]
 if "`verbose'" == "" {
 	local qui "qui"
 }
@@ -1259,29 +1324,25 @@ foreach v of local means_newvars {
 }
 
 foreach v of local rawsum_commonvars {
-	note_remove S_`v', note(`retention_note') `debug'
+	note_remove S_`v', note(`retention_note') `debug'nodes 
 }
 foreach v of local means_commonvars {
 	note_remove T_`v' M_`v', note(`retention_note') `debug'
 }
 
-
-tree_traverse, depth(0) id(1) parent(0) action1(init_probs) `verbose'
-
-tree_traverse, depth(0) id(1) parent(0) action1(adjust_probtallys) ///
-	action4(check_probsum) `verbose'
-`qui' replace __residprob = (1-__probsum)/__n_starprobs
-tree_traverse, depth(0) id(1) parent(0) action1(set_resid_probs) `verbose'
-
-
-/*
-At this point, we could clear all payoff vars.
-But, as noted for __probsum and __n_starprobs, we choose to do it
-node-by-node in init_payoffvars, for the same reasons.
-*/
-
-tree_traverse, depth(0) id(1) parent(0) action1(init_payoffvars) ///
-	action4(add_payoff_vals_to_parent) `verbose'
+if "`rptbr'" ~= "" {
+	/* rptbr specifies to do the rptbr trees first.
+	Thereby, ALL rptbr trees are evaluated -- not just the ones that are
+	actually referenced by other nodes.
+	*/
+	if "`:char _dta[rptbr]'" == "" {
+		disp as err "No rptbr established; rptbr option has no effect"
+	}
+	else {
+		tree_eval_traversals, id(`:char _dta[rptbr]')
+	}
+}
+tree_eval_traversals, id(1)
 
 foreach v of local means_newvars {
 	`qui' gen double M_`v' = T_`v' / __weight
@@ -1305,6 +1366,30 @@ if "$tree_eval_errors" ~= "" {
 }
 
 end /* tree_eval */
+
+
+prog def tree_eval_traversals
+/* This is the section of tree_eval that does the traversals.
+It is done as a program so that we might call it multiple times.
+*/
+syntax, id(integer)
+tree_traverse, depth(0) id(`id') parent(0) ///
+	action1(init_probs) action3(adjust_probtallys) action4(check_probsum__set_residprob) `verbose'
+
+tree_traverse, depth(0) id(`id') parent(0) action1(set_residual_R_prob) `verbose'
+
+
+/*
+At this point, we could clear all payoff vars.
+But, as noted for __probsum and __n_starprobs, we choose to do it
+node-by-node in init_payoffvars, for the same reasons.
+*/
+
+tree_traverse, depth(0) id(`id') parent(0) action1(init_payoffvars) ///
+	action3(add_child_vals_to_payoffvars) `verbose'
+
+end /* tree_eval_traversals */
+
 
 
 
@@ -1373,10 +1458,10 @@ check_pref_length, pref(`prefix')
 
 disp "tree_diffs; using prefix `prefix'"
 
-find_node_via_path `minuend', require(exist)
+find_node_via_path `minuend'
 local minu_id `s(node_id)'
 
-find_node_via_path `subtrahend', require(exist)
+find_node_via_path `subtrahend'
 local subtra_id `s(node_id)'
 
 local varstodiff `: char _dta[payoffvars]'
@@ -1399,7 +1484,7 @@ foreach v of global tree_meansvars_prior {
 
 /* Note that in the scalar names, the underscore after S or M or T is removed.
 Also, we reference tree_rawsumvars_prior, rather than tree_rawsumvars,
-and tree_meansvars_prior, rathern than tree_meansvars.
+and tree_meansvars_prior, rather than tree_meansvars.
 These "prior" versions are relevant because they contain the basenames of the
 most recently-generated S_, M_, & T_ variables. The non-prior versions do not
 include the retained variables. This was a bug, discovered 2023jun27.
@@ -1434,7 +1519,7 @@ check_pref_length, pref(`prefix')
 
 disp "tree_values: using prefix `prefix'"
 
-find_node_via_path `at', require(exist)
+find_node_via_path `at'
 local at_id `s(node_id)'
 
 
@@ -1485,6 +1570,20 @@ else {
 		local jj = __next[`jj']
 	}
 }
+
+disp _n as text "{ul:repeatable branches}"
+if "`:char _dta[rptbr]'" ~= "" {
+	local jj = __branch_head[`:char _dta[rptbr]']
+	while ~mi(`jj') {
+		disp as res __nodename[`jj']
+		local jj = __next[`jj']
+	}
+}
+else {
+	disp "(No repeatable branches defined.)"
+}
+
+
 
 disp _n as text "{ul:payoff variables}"
 local payoffvars "`: char _dta[payoffvars]'"
@@ -1621,85 +1720,17 @@ if `channel' < 0 | `channel'>99 {
 end /* check_channel */
 
 
-prog def tree_traverse
 
-/* This shall do recursive calling! */
-syntax, id(integer) parent(integer) depth(integer) ///
-	[location(string) action1(name) action4(name) VERbose]
-
-/*
-id: the obs no of the node that is visited; all of the children of this node are
-then visited -- recursively.
-
-Presumably, when this is first called, id is the root of the tree being traversed.
-
-action1,4 program names -- to be called at various points.
-
-Prior to 2023may05, we had action2 & 3; eliminating them.
-Previous Action3 rotines will be blended into action1 routines, but reverse the parent-child roles.
-See tree.ado_save021 for historical reference.
-
-action1 is what is to be DONE at each node as it is visited, prior to
-traversing the descendant nodes.
-
-[action3 is done immediately after traversing a child node, for passing info from
-child back to the present node.]
-
-action4 is done after traversing all child nodes.
-(action4 added 2022mar01.)
-Keep the name action4 as historical legacy.
-
-These are the options that action routines must take:
-action1: id, parent, depth, location
-action4: id, parent, depth, location
-
-All take optional verbose; added 2022oct27.
-In action1, parent was added 2022feb28.
-[child, for action3, is locally generated -- not passed in.]
-
-Adding a probno option; 2022feb28, 21:57. Removed, 2022jun27.
-
-
-Each of these is expected to have the options shown above.
-BUT because of the generality, an instance of a given species of action routine
-must take all the options, but might not use them all.
-
-Similarly, not every call to tree_traverse needs all the options.
-*/
-
-if _N <1 {
-	disp "(no tree)"
-	exit 0
+prog def count_commas, sclass
+syntax, s(string)
+local len = length(`"`s'"')
+local c = 0
+forvalues jj = 1 / `len' {
+	if substr(`"`s'"', `jj', 1) == "," {
+		local ++c
+	}
 }
+sreturn local commacount "`c'"
+end /* count_commas */
 
-/*~~*/  /*disp "tree_traverse; id `id', depth `depth'" */
-
-local location "`location' `=__nodename[`id']'"
-/* Note that location initially comes in as the parent's location, but
-it now pertains to the present node.
-*/
-
-/*~~debug: disp "tree_traverse; location `location'" */
-
-
-if "`action1'" ~= "" {
-	`action1', id(`id') parent(`parent') depth(`depth') location(`location') `verbose'
-}
-
-local jj = __branch_head[`id']
-
-/* action2 would go here, conditionally; but never needed it. */
-
-while ~mi(`jj') {
-	/* Recursive call: */
-	tree_traverse, id(`jj') parent(`id') depth(`=`depth'+1') ///
-		location(`location') ///
-		action1(`action1') action4(`action4') `verbose'
-	local jj = __next[`jj']
-}
-
-if "`action4'" ~= "" {
-	`action4', id(`id') parent(`parent') depth(`depth') location(`location') `verbose'
-}
-end /* tree_traverse */
 
