@@ -19,6 +19,7 @@ p variog module to calculate and graph semi-variograms
 p varlab module to save and load variable labels
 p varlabdef module to define a value label with values corresponding to variables
 p varlag module to determine the appropriate lag length in VARs, ECMs
+p varlmhet module to calculate heterokedasticity tests for VAR, VEC
 p varlocal module to transform values of a variable in local
 p varmi module to create a dummy variable that takes 1 when all the variable in the varlist are missing
 p varprod module to Generate Row Product of Variables

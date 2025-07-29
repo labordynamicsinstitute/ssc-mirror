@@ -7691,6 +7691,7 @@ fmwww.bc.edu/repec/bocode/v/vlist.html
 fmwww.bc.edu/repec/bocode/v/vgettoken.ado
 fmwww.bc.edu/repec/bocode/v/vclose.html
 fmwww.bc.edu/repec/bocode/v/vcemway.ado
+fmwww.bc.edu/repec/bocode/v/varlmhet.ado
 fmwww.bc.edu/repec/bocode/v/var_nr_hd.sthlp
 fmwww.bc.edu/repec/bocode/v/vonhippelbellows2018.do
 fmwww.bc.edu/repec/bocode/v/vectlist.hlp
@@ -7704,6 +7705,7 @@ fmwww.bc.edu/repec/bocode/v/Verardi_Debarsy_12.pdf
 fmwww.bc.edu/repec/bocode/v/vallabdef.sthlp
 fmwww.bc.edu/repec/bocode/v/vce2way.pkg
 fmwww.bc.edu/repec/bocode/v/var_nr_options_display.sthlp
+fmwww.bc.edu/repec/bocode/v/varlmhet.pkg
 fmwww.bc.edu/repec/bocode/v/vreverse.pkg
 fmwww.bc.edu/repec/bocode/v/var_nr_options_display.ado
 fmwww.bc.edu/repec/bocode/v/vgettoken.html
@@ -7736,11 +7738,13 @@ fmwww.bc.edu/repec/bocode/v/vanelteren.html
 fmwww.bc.edu/repec/bocode/v/validarcae.pkg
 fmwww.bc.edu/repec/bocode/v/narr_sign_restrict.sthlp
 fmwww.bc.edu/repec/bocode/v/variog2.ado
+fmwww.bc.edu/repec/bocode/v/veclmhet.sthlp
 fmwww.bc.edu/repec/bocode/v/vlist.pkg
 fmwww.bc.edu/repec/bocode/v/varlab.pkg
 fmwww.bc.edu/repec/bocode/v/var_nr_irf.ado
 fmwww.bc.edu/repec/bocode/v/vecar.html
 fmwww.bc.edu/repec/bocode/v/valuesof.ado
+fmwww.bc.edu/repec/bocode/v/veclmhet.ado
 fmwww.bc.edu/repec/bocode/v/veracrypt.pkg
 fmwww.bc.edu/repec/bocode/v/vallabdef.pkg
 fmwww.bc.edu/repec/bocode/v/vectorof.hlp
@@ -7854,6 +7858,7 @@ fmwww.bc.edu/repec/bocode/v/vioplot.html
 fmwww.bc.edu/repec/bocode/v/var_nr_shock_name.sthlp
 fmwww.bc.edu/repec/bocode/v/vif2.ado
 fmwww.bc.edu/repec/bocode/v/vennbar.sthlp
+fmwww.bc.edu/repec/bocode/v/varlmhet.sthlp
 fmwww.bc.edu/repec/bocode/v/validarcae.ado
 fmwww.bc.edu/repec/bocode/v/valcuofon_afc.ado
 fmwww.bc.edu/repec/bocode/v/var_nr_sign_restrict.sthlp
@@ -11686,6 +11691,7 @@ fmwww.bc.edu/repec/bocode/m/mrgraph.hlp
 fmwww.bc.edu/repec/bocode/m/metasim.ado
 fmwww.bc.edu/repec/bocode/m/mf_mz_stdc.hlp
 fmwww.bc.edu/repec/bocode/m/map.ado
+fmwww.bc.edu/repec/bocode/m/mvnorm.mata
 fmwww.bc.edu/repec/bocode/m/mpitb_gafvars.sthlp
 fmwww.bc.edu/repec/bocode/m/mkomega.sthlp
 fmwww.bc.edu/repec/bocode/m/mmregress.html
@@ -22764,6 +22770,7 @@ fmwww.bc.edu/repec/bocode/p/power_cmd_itsa_init.ado
 fmwww.bc.edu/repec/bocode/p/pcmodel.sthlp
 fmwww.bc.edu/repec/bocode/p/pschset_f_5.dlg
 fmwww.bc.edu/repec/bocode/p/pvfix.ado
+fmwww.bc.edu/repec/bocode/p/pretrends_mvnorm_unix.plugin
 fmwww.bc.edu/repec/bocode/p/pip_gh.ado
 fmwww.bc.edu/repec/bocode/p/pretty_linear.ado
 fmwww.bc.edu/repec/bocode/p/pgamma4.ado
@@ -22778,6 +22785,7 @@ fmwww.bc.edu/repec/bocode/p/pdslasso.ado
 fmwww.bc.edu/repec/bocode/p/pdplot.pkg
 fmwww.bc.edu/repec/bocode/p/parallel_bs.ado
 fmwww.bc.edu/repec/bocode/p/plssemcmat.ado
+fmwww.bc.edu/repec/bocode/p/pretrends_mvnorm_windows.plugin
 fmwww.bc.edu/repec/bocode/p/pr_prob_cub.sthlp
 fmwww.bc.edu/repec/bocode/p/parplot.html
 fmwww.bc.edu/repec/bocode/p/pwmc_version.ado
@@ -23045,6 +23053,7 @@ fmwww.bc.edu/repec/bocode/p/path_el.sthlp
 fmwww.bc.edu/repec/bocode/p/power_step.pkg
 fmwww.bc.edu/repec/bocode/p/palettes.zip
 fmwww.bc.edu/repec/bocode/p/pfs.ado
+fmwww.bc.edu/repec/bocode/p/pretrends_mvnorm_macosxarm64.plugin
 fmwww.bc.edu/repec/bocode/p/power_cmd_twosens_init.ado
 fmwww.bc.edu/repec/bocode/p/pcm010503_lf.ado
 fmwww.bc.edu/repec/bocode/p/predictu.ado
@@ -23550,6 +23559,7 @@ fmwww.bc.edu/repec/bocode/p/psmatch.hlp
 fmwww.bc.edu/repec/bocode/p/partially_sharp_ordered_or_not.ado
 fmwww.bc.edu/repec/bocode/p/plognorm.html
 fmwww.bc.edu/repec/bocode/p/pipe.pkg
+fmwww.bc.edu/repec/bocode/p/pretrends.mata
 fmwww.bc.edu/repec/bocode/p/pyramid_chart.ado
 fmwww.bc.edu/repec/bocode/p/predictms.ado
 fmwww.bc.edu/repec/bocode/p/pyconvertu.ado
@@ -23649,6 +23659,7 @@ fmwww.bc.edu/repec/bocode/p/panelhetero.pkg
 fmwww.bc.edu/repec/bocode/p/propcnsasl.ado
 fmwww.bc.edu/repec/bocode/p/pairedta.dta
 fmwww.bc.edu/repec/bocode/p/plot_confidently.sthlp
+fmwww.bc.edu/repec/bocode/p/pretrends_mvnorm_macosx86_64.plugin
 fmwww.bc.edu/repec/bocode/p/pschini.dlg
 fmwww.bc.edu/repec/bocode/p/povdeco5.hlp
 fmwww.bc.edu/repec/bocode/p/pobrezaECU.ado

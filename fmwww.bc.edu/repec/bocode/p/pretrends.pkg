@@ -11,7 +11,7 @@ d KW: causal inference
 d
 d Requires: Stata version 15.1
 d
-d Distribution-Date: 20230515
+d Distribution-Date: 20250728
 d
 d Author: Mauricio Caceres Bravo, Brown University
 d Support: email mauricio.caceres.bravo@@gmail.com
@@ -22,3 +22,8 @@ d
 f pretrends.ado
 f pretrends.sthlp
 f ../l/lpretrends.mlib
+f ../m/mvnorm.mata
+f pretrends_mvnorm_macosx86_64.plugin
+f pretrends_mvnorm_macosxarm64.plugin
+f pretrends_mvnorm_unix.plugin
+f pretrends_mvnorm_windows.plugin

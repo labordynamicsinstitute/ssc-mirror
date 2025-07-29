@@ -1,20 +1,27 @@
-*! version 0.3.1 20Mar2023 Mauricio Caceres Bravo, mauricio.caceres.bravo@gmail.com
+*! version 0.5.1 20Apr2024 Mauricio Caceres Bravo, mauricio.caceres.bravo@gmail.com
 *! Power calculations and visualization for pre-trends tests (translation of R package)
 
-* xx add timeVec and reference period
+* xx need more unit testing for pre/post and time/ref combinations
 capture program drop pretrends
 program pretrends, rclass
     version 15.1
 
+    global PRETRENDS_MVNORM_WARN=1
     local powermain power(passthru)            //  target power for pre-test: reject if any pre-treatment coef is significant at alpha
     local poweropts b(str)                     /// name of coefficient vector; default is e(b)
                     Vcov(str)                  /// name of vcov matrix; default is e(V)
                                                ///
+                    _skip_plugin               /// do not use plugin
+                    _debug_plugin              /// debug plugin
                     omit                       /// Omit levels parsing b vector column names
                     alpha(passthru)            /// significance level
                     NUMPREperiods(int 0)       /// number of pre-treatment periods
                     PREperiodindices(numlist)  /// pre-period indices
-                    POSTperiodindices(numlist) //  post-period indices
+                    POSTperiodindices(numlist) /// post-period indices
+                    TIMEvector(numlist)        /// time vector
+                    REFerenceperiod(str)       /// reference period
+                    customreference            /// ignored unless both pre/post and time/ref are specified.
+                                               /// allows the reference period to be in pre or post.
     local fullopts  slope(passthru)            /// hypothesized difference in trends
                     DELTAtrue(str)             /// name of matrix with hypothesized trend
                                                ///
@@ -46,6 +53,8 @@ program pretrends, rclass
             *           /// Options for coefplot
         ]
     }
+    global PRETRENDS_MVNORM_SKIP  = ("`_skip_plugin'"  == "_skip_plugin")
+    global PRETRENDS_MVNORM_DEBUG = ("`_debug_plugin'" == "_debug_plugin")
 
     if "`matasave'" == "" local results PreTrendsResults
     else local results: copy local matasave
@@ -55,6 +64,7 @@ program pretrends, rclass
         cap mata mata desc `results'
         if ( _rc ) {
             disp as err "Cached results not found"
+            clean_exit
             exit 198
         }
     }
@@ -67,14 +77,32 @@ program pretrends, rclass
     *
     *     preperiodindices() and postperiodindices()
     *
-    * If numpreperiods() is specified, then
+    * OR
+    *
+    *     timevector() and referenceperiod()
+    *
+    *
+    * numpre() cannot be combined with either but time()/ref() and
+    * pre()/post() may be combined with each other.  If numpreperiods() is
+    * specified, then
     *
     *     preperiodindices(1 to numpreperiods)
     *     postperiodindices(numpreperiods+1 to length(e(b)))
     *
-    * are assumed.
+    *     timevector(preperiodindices, numpreperiods+1, postperiodindices)
+    *     referenceperiod(numpreperiods+1)
+    *
+    * are assumed. If timevector() and referenceperiod() are specified, then
+    *
+    *     numpreperiods  = # time vector < referenceperiod
+    *     numpostperiods = # time vector > referenceperiod
+    *     preperiodindices(1 to numpreperiods)
+    *     postperiodindices(numpreperiods+1 to numpreperiods+numpostperiods+1)
+    *
+    * are assumed. You can force pre/post to be taken as reference and for time/ref
+    * via the -customreference- option
 
-    local dopretrends = ("`b'`v'`alpha'`preperiodindices'`postperiodindices'`power'`slope'`deltatrue'" != "")
+    local dopretrends = ("`b'`v'`alpha'`preperiodindices'`postperiodindices'`timevector'`referenceperiod'`power'`slope'`deltatrue'" != "")
     local dopretrends = `dopretrends' | (`numpreperiods' != 0)
     if ( `dopretrends' & ("`cached'" != "") ) {
         disp as txt "{bf:warning:} cached results ignored if modifications are specified"
@@ -82,8 +110,14 @@ program pretrends, rclass
     }
 
     if ( `dopretrends' | ("`cached'" == "") ) {
-        PreTrendsSanityChecks, b(`b') vcov(`vcov') deltatrue(`deltatrue') `alpha' `power' `slope' ///
-            numpre(`numpreperiods') pre(`preperiodindices') post(`postperiodindices')
+        cap noi PreTrendsSanityChecks, b(`b') vcov(`vcov') deltatrue(`deltatrue') ///
+            `alpha' `power' `slope' numpre(`numpreperiods')                       ///
+            pre(`preperiodindices') post(`postperiodindices')                     ///
+            time(`timevector') ref(`referenceperiod') `customreference'
+        if ( _rc ) {
+            clean_exit
+            exit _rc
+        }
     }
     else {
         local alpha = 0.05
@@ -99,6 +133,8 @@ program pretrends, rclass
                                   `numpreperiods',       ///
                                   "`preperiodindices'",  ///
                                   "`postperiodindices'", ///
+                                  "`timevector'",        ///
+                                  "`referenceperiod'",   ///
                                   `alpha', `power', `slope', "`deltatrue'", "`omit'", `poweronly')
         }
     }
@@ -110,6 +146,7 @@ program pretrends, rclass
         return scalar Power = `power'
         return scalar slope = `slope'
         mata mata drop `results'
+        clean_exit
         exit 0
     }
 
@@ -119,6 +156,7 @@ program pretrends, rclass
         cap which coefplot
         if ( _rc ) {
             disp as err "-coefplot- not found; please install or use option -nocoefplot-"
+            clean_exit
             exit _rc
         }
     }
@@ -160,6 +198,8 @@ program pretrends, rclass
     return local PreTrendsResults = "`results'"
     mata PreTrendsPost(`results')
     return add
+    clean_exit
+    exit 0
 end
 
 capture program drop PreTrendsSanityChecks
@@ -175,6 +215,10 @@ program PreTrendsSanityChecks
         NUMPREperiods(int 0)       /// number of pre-treatment periods
         PREperiodindices(numlist)  /// pre-period indices
         POSTperiodindices(numlist) /// post-period indices
+        TIMEvector(numlist)        /// time vector
+        REFerenceperiod(str)       /// reference period
+        customreference            /// ignored unless both pre/post and time/ref are specified.
+                                   /// allows the reference period to be in pre or post.
     ]
 
     if ( "`slope'`power'`deltatrue'" == "" ) {
@@ -219,8 +263,35 @@ program PreTrendsSanityChecks
         exit 198
     }
 
-    if ((`numpreperiods' == 0) & (("`preperiodindices'" == "") | ("`postperiodindices'" == "")) ) {
-        disp as err "Specify either numpre() or both pre() and post()"
+    if ((`numpreperiods' != 0) & "`timevector'`referenceperiod'" != "") {
+        disp as err "Specify only one of numpre() or time() and ref()"
+        exit 198
+    }
+
+    local indices = ("`preperiodindices'" != "") & ("`postperiodindices'" != "")
+    local timevec = ("`timevector'"       != "") & ("`referenceperiod'"   != "")
+    if ((`numpreperiods' == 0) & (!`indices') & (!`timevec') ) {
+        disp as err "Specify either numpre(), both pre() and post(), or both timevector() and referenceperiod()"
+        exit 198
+    }
+
+    if ( ("`preperiodindices'" != "") & ("`postperiodindices'" == "") ) {
+        disp as err "pre() can only be used with post()"
+        exit 198
+    }
+
+    if ( ("`preperiodindices'" == "") & ("`postperiodindices'" != "") ) {
+        disp as err "post() can only be used with pre()"
+        exit 198
+    }
+
+    if ( ("`timevector'" != "") & ("`referenceperiod'" == "") ) {
+        disp as err "time() can only be used with ref()"
+        exit 198
+    }
+
+    if ( ("`timevector'" == "") & ("`referenceperiod'" != "") ) {
+        disp as err "ref() can only be used with time()"
         exit 198
     }
 
@@ -230,11 +301,17 @@ program PreTrendsSanityChecks
     }
 
     tempname bb VV
-    if ( "`b'" == "" ) {
+    local withoutb = ( "`b'" == "" )
+    local withoutV = ( "`vcov'" == "" )
+
+    if `withoutb' {
+        if ( "`vcov'" != "" ) {
+            disp as txt "{bf:warning:} option vcov() detected without option b()"
+        }
         local b e(b)
         cap confirm matrix e(b)
         if ( _rc ) {
-            disp as err "Last estimation coefficients not found; please specify vector."
+            disp as err "Last estimation coefficients not found; please specify vector via b()."
             exit 198
         }
         matrix `bb' = e(b)
@@ -247,11 +324,14 @@ program PreTrendsSanityChecks
         local colsb = colsof(`b')
     }
 
-    if ( "`vcov'" == "" ) {
+    if `withoutV' {
+        if ( "`b'" != "" ) {
+            disp as txt "{bf:warning:} option b() detected without option vcov()"
+        }
         local vcov e(V)
         cap confirm matrix e(V)
         if ( _rc ) {
-            disp as err "Last estimation vcov matrix not found; please specify matrix."
+            disp as err "Last estimation vcov matrix not found; please specify matrix via vcov()."
             exit 198
         }
         matrix `VV' = e(V)
@@ -279,11 +359,44 @@ program PreTrendsSanityChecks
         exit 198
     }
 
-    if ( (`numpreperiods' == 0) & ("`preperiodindices'" != "") & ("`postperiodindices'" != "") ) {
+    if ( (`numpreperiods' == 0) & `indices' ) {
         local npre:  list sizeof preperiodindices
         local npost: list sizeof postperiodindices
         if ( max(`rowsb', `colsb') < (`npre' + `npost') ) {
             disp as err "Coefficient vector must be at least # pre + # post"
+            exit 198
+        }
+    }
+
+    if ( (`numpreperiods' == 0) & `timevec' ) {
+        cap confirm number `referenceperiod'
+        if ( _rc ) {
+            disp as err "ref() reference period must be a number"
+            exit 198
+        }
+        mata st_local("npre",  strofreal(sum(strtoreal(tokens("`timevector'")) :< `referenceperiod')))
+        mata st_local("npost", strofreal(sum(strtoreal(tokens("`timevector'")) :> `referenceperiod')))
+        if ( `npre' <= 0 ) {
+            disp as err "No time periods in time vector less than referenceperiod `referenceperiod' found"
+            exit 198
+        }
+        if ( `npost' <= 0 ) {
+            disp as err "No time periods in time vector greater than referenceperiod `referenceperiod' found"
+            exit 198
+        }
+        if ( max(`rowsb', `colsb') < (`npre' + `npost') ) {
+            disp as err "Coefficient vector must be at least # pre + # post"
+            exit 198
+        }
+    }
+
+    if ( (`numpreperiods' == 0) & `indices' & `timevec' & ("`customreference'" == "") ) {
+        local npreA:  list sizeof preperiodindices
+        local npostA: list sizeof postperiodindices
+        mata st_local("npreB",  strofreal(sum(strtoreal(tokens("`timevector'")) :< `referenceperiod')))
+        mata st_local("npostB", strofreal(sum(strtoreal(tokens("`timevector'")) :> `referenceperiod')))
+        if ( (`npreA' != `npreB') | (`npostA' != `npostB') ) {
+            disp as err "Shape implied by pre()/post() does not match shape implied by time()/ref()"
             exit 198
         }
     }
@@ -303,3 +416,25 @@ program PreTrendsSanityChecks
     c_local power: copy local power
     c_local slope: copy local slope
 end
+
+capture program drop clean_exit
+program clean_exit
+    mac drop PRETRENDS_MVNORM_WARN
+    mac drop PRETRENDS_MVNORM_SKIP
+    mac drop PRETRENDS_MVNORM_DEBUG
+end
+
+if ( inlist("`c(os)'", "MacOSX") | strpos("`c(machine_type)'", "Mac") ) {
+    local c_os_ macosxarm64
+    cap program drop pretrends_mvnorm_plugin
+    cap program pretrends_mvnorm_plugin, plugin using("pretrends_mvnorm_`c_os_'.plugin")
+    if _rc {
+        local c_os_ macosx86_64
+        cap program pretrends_mvnorm_plugin, plugin using("pretrends_mvnorm_`c_os_'.plugin")
+    }
+}
+else {
+    local c_os_: di lower("`c(os)'")
+    cap program drop pretrends_mvnorm_plugin
+    cap program pretrends_mvnorm_plugin, plugin using("pretrends_mvnorm_`c_os_'.plugin")
+}

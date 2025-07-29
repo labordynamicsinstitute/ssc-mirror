@@ -1,4 +1,4 @@
-d 'DISTPROBMAT': module to ompute distance/similarity measures between two probability density matrices
+d 'DISTPROBMAT': module to compute distance/similarity measures between two probability density matrices
 d
 d  distprobmat computes 46 different distance/similarity measures
 d between probability density functions, as surveyed in Cha (2007).

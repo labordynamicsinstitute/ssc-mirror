@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.3.1 20Mar2023}{...}
+{* *! version 0.5.1 20Apr2024}{...}
 {viewerdialog pretrends "dialog pretrends"}{...}
 {vieweralsosee "[R] pretrends" "mansection R pretrends"}{...}
 {viewerjumpto "Syntax" "pretrends##syntax"}{...}
@@ -24,7 +24,7 @@ Stata version of the pretrends R package, which implements power calculations an
 [{it:{help pretrends##table_options:options}} {it:{help coefplot:coefplot_options}}]
 
 {pstd}
-At least one of {opt numpre()} or {opt pre()} and {opt post()} are required options to indicate which portion of the vector correspond to the pre and post periods; at least one of {opt slope()} or {opt delta()} must be specified as well. In addition, power calculations can be done sepparately (computes the slope of a linear trend for which pre-trends tests have a given power level):
+At least one of {opt numpre()}, {opt pre()} and {opt post()}, or {opt time()} and {opt ref()} are required options to indicate which portion of the vector correspond to the pre and post periods; at least one of {opt slope()} or {opt delta()} must be specified as well. In addition, power calculations can be done sepparately (computes the slope of a linear trend for which pre-trends tests have a given power level):
 
 {p 8 15 2}
 {cmd:pretrends} power #.#
@@ -38,9 +38,12 @@ At least one of {opt numpre()} or {opt pre()} and {opt post()} are required opti
 {syntab :Power or Test}
 {synopt :{opth b(str)}} name of coefficient matrix; default is e(b){p_end}
 {synopt :{opth v:cov(str)}} name of vcov matrix; default is e(V){p_end}
-{synopt :{opth numpre:periods(int)}} number of pre-treatment periods; rest vector entries are assumed to be post-treatment (required or specify pre()/post()){p_end}
-{synopt :{opth pre:periodindex(numlist)}} pre-period indices (required or specify numpreperiods()){p_end}
-{synopt :{opth post:periodindex(numlist)}} post-period indices (required or specify numpreperiods()){p_end}
+{synopt :{opth numpre:periods(int)}} number of pre-treatment periods; rest vector entries are assumed to be post-treatment (required or specify pre()/post() or time()/ref()){p_end}
+{synopt :{opth pre:periodindex(numlist)}} pre-period indices (required or specify numpreperiods() or time()/ref()){p_end}
+{synopt :{opth post:periodindex(numlist)}} post-period indices (required or specify numpreperiods() or time()/ref()){p_end}
+{synopt :{opth time:vector(numlist)}} time vector to use (required or specify numpreperiods() or pre()/post()){p_end}
+{synopt :{opth ref:erenceperiod(numlist)}} reference period for time vec (required or specify numpreperiods() or pre()/post()){p_end}
+{synopt :{opth customreference}} allows ref() to be in pre or post when both time()/ref() and pre()/post() are specified{p_end}
 {synopt :{opt omit}} omit dropped levels from {cmd:b} and {cmd:vcov} parsing names of {cmd:b} (e.g. omitted variables in regression) {p_end}
 {synopt :{opth alpha(real)}} 1 - confidence level; default 0.05{p_end}
 
@@ -59,7 +62,7 @@ At least one of {opt numpre()} or {opt pre()} and {opt post()} are required opti
 {title:Description}
 
 {pstd}
-See the {browse "https://github.com/mcaceresb/stata-pretrends#readme":online examples} for details or refer to the examples below.
+See the {browse "https://github.com/mcaceresb/stata-pretrends#readme":package Github page} for detailed examples, including how to import results from common packages such as reghdfe. Below are some stylized examples using saved results from the example on the Github page.
 
 {marker examples}{...}
 {title:Example 1: Slope with power}
