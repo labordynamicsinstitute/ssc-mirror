@@ -1,20 +1,19 @@
 d 'WEAKIVTEST2': module to compute Robust Test for Weak Instruments with Multiple Endogenous Regressors
 d
-d     weakivtest2 implements the weak instrument test with multiple
-d endogenous regressors in Two-Stage Least Squares    (Lewis and
-d Mertens, 2022).  It is a postestimation command for ivreg2 and
-d xtivreg2 (fixed effect only).    weakivtest2 tests the null
-d hypothesis of weak instruments.  The test rejects the null
-d hypothesis when the test    statistic exceeds a critical value,
-d which depends on the estimator, the significance level, and the
-d desired    weak instrument threshold tau.  weakivtest2 extends
-d the Stock and Yogo's (2005) test by allowing	 
-d heteroskedasticity and autocorrelation, and extends Montiel Olea
-d and Pflueger's (2013) test by allowing    multiple endogenous
-d regressors. 
+d   weakivtest2 implements the robust bias-based test for weak
+d instruments for two-stage least squares (2SLS) with multiple
+d endogenous regressors proposed by Lewis and Mertens (2024,
+d accepted by the Review of Economic Studies). weakivtest2 allows
+d for absolute and relative bias criteria, local-to-zero and
+d local-to-rank-reduction-of-one asymptotics, and testing for
+d either the full vector or individual elements of the 2SLS
+d estimator. The command serves as a post-estimation command for
+d ivreg2, xtivreg2, and ivreghdfe. 
 d
 d KW: instrumental variables
 d KW: weak instruments
+d KW: heteroskedasticity
+d KW: autocorrelation
 d KW: Lewis
 d KW: Mertens
 d KW: Stock
@@ -24,12 +23,12 @@ d KW: Pflueger
 d
 d Requires: Stata version 17 and ivreg2, xtivreg2, avar from SSC (q.v.)
 d
-d Distribution-Date: 20240329
+d Distribution-Date: 20250730
 d
-d Author:   Lingyun Zhou,  PBC School of Finance, Tsinghua University.
+d Author:   Lingyun Zhou,  PBC School of Finance, Tsinghua University
 d Support: email  zhouly.23@@pbcsf.tsinghua.edu.cn
 d
 f weakivtest2.ado
 f weakivtest2.sthlp
 f weakivtest2_demo.do
-f weakivtest2.dta
+f ../d/dataFiscal.dta

@@ -12547,6 +12547,7 @@ fmwww.bc.edu/repec/bocode/w/wb2010.csv
 fmwww.bc.edu/repec/bocode/w/wordy.sthlp
 fmwww.bc.edu/repec/bocode/w/wgtcellcollapse.sthlp
 fmwww.bc.edu/repec/bocode/w/weeklyclaims.ado
+fmwww.bc.edu/repec/bocode/w/wekivtest2_demo.do
 fmwww.bc.edu/repec/bocode/w/writeinput.html
 fmwww.bc.edu/repec/bocode/w/wooldid.pkg
 fmwww.bc.edu/repec/bocode/w/winratiotest.ado
