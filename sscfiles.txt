@@ -2438,6 +2438,7 @@ fmwww.bc.edu/repec/bocode/s/subsave.pkg
 fmwww.bc.edu/repec/bocode/s/stnet.ado
 fmwww.bc.edu/repec/bocode/s/stata.toc
 fmwww.bc.edu/repec/bocode/s/stjm_d0_e.ado
+fmwww.bc.edu/repec/bocode/s/stackbar.pkg
 fmwww.bc.edu/repec/bocode/s/stpm2cif.pkg
 fmwww.bc.edu/repec/bocode/s/stcband.ado
 fmwww.bc.edu/repec/bocode/s/sampicc.ado
@@ -2484,6 +2485,7 @@ fmwww.bc.edu/repec/bocode/s/spwmatrix.ado
 fmwww.bc.edu/repec/bocode/s/spregxt19.ado
 fmwww.bc.edu/repec/bocode/s/statsmat.hlp
 fmwww.bc.edu/repec/bocode/s/scheme-plotplainblind.scheme
+fmwww.bc.edu/repec/bocode/s/stackbar.ado
 fmwww.bc.edu/repec/bocode/s/survey.csv
 fmwww.bc.edu/repec/bocode/s/stdtable_foot.sthlp
 fmwww.bc.edu/repec/bocode/s/stcapture.pkg
@@ -2610,6 +2612,7 @@ fmwww.bc.edu/repec/bocode/s/spec_stand.html
 fmwww.bc.edu/repec/bocode/s/sctomedia.sthlp
 fmwww.bc.edu/repec/bocode/s/subjob11.ado
 fmwww.bc.edu/repec/bocode/s/sqclustermat.hlp
+fmwww.bc.edu/repec/bocode/s/stackbar.sthlp
 fmwww.bc.edu/repec/bocode/s/stockcapit.sthlp
 fmwww.bc.edu/repec/bocode/s/svrtab.hlp
 fmwww.bc.edu/repec/bocode/s/stockcapit.pkg

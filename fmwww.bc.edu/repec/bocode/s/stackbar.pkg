@@ -1,0 +1,24 @@
+d 'STACKBAR': module to produce stacked bar charts
+d
+d  stackbar creates stacked percentage bar charts (ideally suited
+d for visualization of survey data). The command automatically
+d handles two distinct types of survey questions: single
+d categorical variables (showing percentage distributions within
+d each group with bars totaling 100%) and multiple binary variables
+d (showing independent response rates that are particularly
+d relevant for "select all that apply" questions). 
+d
+d KW: graphics
+d KW: bar
+d KW: charts
+d KW: stacked bar charts
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250801
+d
+d Author:   Kabira Namit,  World Bank
+d Support: email   knamit@@worldbank.org
+d
+f stackbar.ado
+f stackbar.sthlp

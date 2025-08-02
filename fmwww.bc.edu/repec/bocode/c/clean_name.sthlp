@@ -1,5 +1,5 @@
 {smcl}
-{* *!version 1.2.0 5/13/2020}{...}
+{* *!version 1.2.0 7/31/2025}{...}
 {cmd:help clean_name}
 {hline}
 
@@ -10,7 +10,7 @@
 {title:Syntax}
 {p 8 17 3}
 {cmdab:clean_name}
- {varlist}  
+ {varname}
 {cmd:,} {it:options}
 
 
@@ -18,12 +18,13 @@
 {synopthdr}
 {synoptline}
 {syntab:Main}
+{synopt:{opth gen(string)}} generate a new string variable without uncommun characters. {p_end}
 {synopt:{opth case(upper|proper|lower)}} specify whether the variable should be returned with proper or upper case. By default, lower case variable is returned. {p_end} 
 {synoptline}
 
 
 {phang}
-{bf:clean_name} {hline 2} Cleans string variables by removing all uncommun characters. 
+{bf:clean_name} {hline 2} Cleans string variables by removing all uncommun characters i.e. accents, dash, spaces, special characters
 {p2colset 5 22 26 2}{...}
 
 
@@ -43,11 +44,11 @@
 {marker examples}{...}
 {title:Examples}
 
-{phang} clean_name first_name first_name2, case(proper)
+{pstd}
+clean_name first_name, case(proper) gen(first_name_cleaned) {break}
+clean_name last_name, case(upper) gen(last_name_cleaned) {break}
 
-
-
-
+{marker author}{...}
 {title:Author}
 {pstd}
 Adrien Bouguen, Santa Clara University

@@ -36,6 +36,7 @@ p splinefit module for smooth connected line plots
 p splitit module to split chronological overlapping spells in spell data
 p spsfe module for estimation of spatial stochastic frontier models
 p sq module for sequence analysis
+p stackbar module to produce stacked bar charts
 p stackdid module to estimate Stacked Difference-in-Differences Regression
 p stackedev module to implement stacked event study estimator
 p staggered module implementing R staggered package based on Roth and Sant'Anna (2023)

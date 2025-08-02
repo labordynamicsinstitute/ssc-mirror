@@ -1,84 +1,92 @@
-* clean_name 5/13/2020 Bouguen Adrien
+* clean_name 7/31/2025 Bouguen Adrien
 cap program drop clean_name
 program clean_name
 version 16.0
-syntax varlist [, case(string)]
+syntax varname, gen(string) [case(string)]
+
+capture confirm variable `gen'
+    if !_rc {
+        di as error "Variable `gen' already exists."
+        exit 198
+    }
 quiet {
-	foreach i in `varlist' {
-	replace `i'=lower(`i')
+dis "`varlist'"
+	gen strL `gen'=lower(`varlist')
 	* a
-	replace `i'=subinstr(`i',"à","a",.)
-	replace `i'=subinstr(`i',"À","a",.)
-	replace `i'=subinstr(`i',"Á","a",.)
-	replace `i'=subinstr(`i',"á","a",.)
-	replace `i'=subinstr(`i',"â","a",.)
-	replace `i'=subinstr(`i',"Â","a",.)
-	replace `i'=subinstr(`i',"Á","A",.)
-	replace `i'=subinstr(`i',"Â","A",.)
-	replace `i'= subinstr(`i', "`=char(224)'","a",. )
+	replace `gen'=subinstr(`gen',"à","a",.)
+	replace `gen'=subinstr(`gen',"À","a",.)
+	replace `gen'=subinstr(`gen',"Á","a",.)
+	replace `gen'=subinstr(`gen',"á","a",.)
+	replace `gen'=subinstr(`gen',"â","a",.)
+	replace `gen'=subinstr(`gen',"Â","a",.)
+	replace `gen'=subinstr(`gen',"Á","A",.)
+	replace `gen'=subinstr(`gen',"Â","A",.)
+	replace `gen'= subinstr(`gen', "`=char(224)'","a",. )
 
 	* u
-	replace `i'=subinstr(`i',"Ù","u",.)
-	replace `i'=subinstr(`i',"Ú","u",.)
-	replace `i'=subinstr(`i',"Ü","u",.)
-	replace `i'=subinstr(`i',"ü","u",.)
-	replace `i'=subinstr(`i',"Ù","u",.)
-	replace `i'=subinstr(`i',"Ú","u",.)
-	replace `i'=subinstr(`i',"Ü","u",.)
+	replace `gen'=subinstr(`gen',"Ù","u",.)
+	replace `gen'=subinstr(`gen',"Ú","u",.)
+	replace `gen'=subinstr(`gen',"Ü","u",.)
+	replace `gen'=subinstr(`gen',"ü","u",.)
+	replace `gen'=subinstr(`gen',"Ù","u",.)
+	replace `gen'=subinstr(`gen',"Ú","u",.)
+	replace `gen'=subinstr(`gen',"Ü","u",.)
 	
 	* e
-	replace `i'=subinstr(`i',"È","e",.)
-	replace `i'=subinstr(`i',"Ê","e",.)
-	replace `i'=subinstr(`i',"É","e",.)
-	replace `i'=subinstr(`i',"Ë","e",.)
-	replace `i'=subinstr(`i',"è","e",.)
-	replace `i'=subinstr(`i',"ê","e",.)
-	replace `i'=subinstr(`i',"é","e",.)
-	replace `i'=subinstr(`i',"ç","c",.)
-	replace `i'=subinstr(`i',"è","e",.)
-	replace `i'=subinstr(`i',"ê","e",.)
-	replace `i'=subinstr(`i',"é","e",.)
-	replace `i'=subinstr(`i',"ë","e",.)
-	replace `i'=subinstr(`i',"Ê","e",.)
-	replace `i'=subinstr(`i',"Ë","e",.)
-	replace `i'=subinstr(`i',"É","e",.)
-	replace `i'=subinstr(`i',"È","e",.)
- 	replace `i'=subinstr(`i', "`=char(234)'","e",. )
-	replace `i'=subinstr(`i', "`=char(233)'","e",. )
-	replace `i'=subinstr(`i', "`=char(232)'","e",. )
+	replace `gen'=subinstr(`gen',"È","e",.)
+	replace `gen'=subinstr(`gen',"Ê","e",.)
+	replace `gen'=subinstr(`gen',"É","e",.)
+	replace `gen'=subinstr(`gen',"Ë","e",.)
+	replace `gen'=subinstr(`gen',"è","e",.)
+	replace `gen'=subinstr(`gen',"ê","e",.)
+	replace `gen'=subinstr(`gen',"é","e",.)
+	replace `gen'=subinstr(`gen',"ç","c",.)
+	replace `gen'=subinstr(`gen',"è","e",.)
+	replace `gen'=subinstr(`gen',"ê","e",.)
+	replace `gen'=subinstr(`gen',"é","e",.)
+	replace `gen'=subinstr(`gen',"ë","e",.)
+	replace `gen'=subinstr(`gen',"Ê","e",.)
+	replace `gen'=subinstr(`gen',"Ë","e",.)
+	replace `gen'=subinstr(`gen',"É","e",.)
+	replace `gen'=subinstr(`gen',"È","e",.)
+ 	replace `gen'=subinstr(`gen', "`=char(234)'","e",. )
+	replace `gen'=subinstr(`gen', "`=char(233)'","e",. )
+	replace `gen'=subinstr(`gen', "`=char(232)'","e",. )
 	* i 
-	replace `i'=subinstr(`i',"Ï","i",.)
-	replace `i'=subinstr(`i',"Ï","i",.)
-	replace `i'=subinstr(`i',"ï","i",.)
+	replace `gen'=subinstr(`gen',"Ï","i",.)
+	replace `gen'=subinstr(`gen',"Ï","i",.)
+	replace `gen'=subinstr(`gen',"ï","i",.)
 	
 	* o
-	replace `i'=subinstr(`i',"ô","o",.)
-	replace `i'= subinstr(`i', "`=char(244)'","o",. )
-	replace `i'=subinstr(`i',"ñ","n",.)
-	replace `i'=subinstr(`i',"ç","c",.)
-	replace `i'= subinstr(`i', "`=char(231)'","c",. )	
+	replace `gen'=subinstr(`gen',"ô","o",.)
+	replace `gen'= subinstr(`gen', "`=char(244)'","o",. )
+	replace `gen'=subinstr(`gen',"ñ","n",.)
+	replace `gen'=subinstr(`gen',"ç","c",.)
+	replace `gen'= subinstr(`gen', "`=char(231)'","c",. )	
 		
 	* space 
-	replace `i'=subinstr(`i',"`=char(160)'","",.)
-	replace `i'=subinstr(`i',"'"," ",.)
-	replace `i'=subinstr(`i',"-"," ",.)
-	replace `i'=trim(`i') 
-	replace `i'=subinstr(`i',"    "," ",.)
-	replace `i'=subinstr(`i',"   "," ",.)
-	replace `i'=subinstr(`i',"  "," ",.)
-	replace `i'="" if `i'=="."
+	replace `gen'=ustrtrim(`gen')
+	replace `gen'=subinstr(`gen',"`=char(160)'","",.)
+	replace `gen'=subinstr(`gen',"'"," ",.)
+	replace `gen'=subinstr(`gen',"-"," ",.)
+	replace `gen'=trim(`gen') 
+	replace `gen'=subinstr(`gen',"    "," ",.)
+	replace `gen'=subinstr(`gen',"   "," ",.)
+	replace `gen'=subinstr(`gen',"  "," ",.)
+	replace `gen'=subinstr(`gen',"-"," ",.)
+	replace `gen'="" if `gen'=="."
+	* labels
+
+	local l: variable label  `varlist'
+	label var `gen' "`l' (cleaned)"
+
+	* case
 	if "`case'"=="proper" {
-		replace `i'=proper(`i')
+		replace `gen'=proper(`gen')
 	}
 	if "`case'"=="upper" {
-		replace `i'=upper(`i')
-	}
-	if "`case'"=="lower" {
-		replace `i'=lower(`i')
+		replace `gen'=upper(`gen')
 	}
 }	
 
-
-}
 end
-

@@ -1,3 +1,4 @@
+*! 3.4.0 Ariel Linden 30Jul2025						// added -cf- (counterfactual) option for single-group ITSA
 *! 3.3.0 Ariel Linden 23Jul2025						// added smin() and smax() options to allow user to manually set ylabel() for shading 
 *! 3.2.5 Ariel Linden 05Jun2025						// fixed bug in ylabel() that didn't allow user to overwrite existing settings 
 													// implemented _natscale to get ylabels using shading to replicate standard Stata
@@ -40,19 +41,20 @@ version 11.0
 
 	/* obtain settings */
 	syntax varlist(min=1 numeric ts fv) [if] [in] [aweight] ,  	/// weight only relevant for -newey-
-	TRPeriod(string)                          			     	///	
-	[ TREATid(numlist min=1 max=1 int sort)          		   	///
-	SINGle                                                     	///
-	CONTid(numlist int sort)		       						///
+	TRPeriod(string)                          			     	///	when the intervention began
+	[ TREATid(numlist min=1 max=1 int sort)          		   	/// the ID of the treated unit
+	SINGle                                                     	/// specify single group ITSA
+	CONTid(numlist int sort)		       						/// IDs of controls
 	LAG(int -1)          	                                   	/// lag only relevant for -newey-
-	PRAIS        												///
-    POSTTRend                                                   ///
-	FIGure   FIGure2(str asis)                              	///
-	SHADe(string)	                          			     	///
-	SMIN(numlist min=1 max=1)									///
-	SMAX(numlist min=1 max=1)									///	
-	LOWess														///
-	CI															///
+	PRAIS        												/// estimate Prais-Winsten model
+    POSTTRend                                                   /// produce post-trend estimates
+	FIGure   FIGure2(str asis)                              	/// generate figure
+	SHADe(string)	                          			     	/// shading area of graph (for wash-out)
+	SMIN(numlist min=1 max=1)									/// manually adjust min y-label for shade
+	SMAX(numlist min=1 max=1)									///	manually adjust max y-label for shade
+	LOWess														/// lowess line
+	CI															/// confidence interval
+	CF															/// counterfactual (single-group only)
 	NAT(int 5)													/// UNDOCUMENTED change _natscale #_n (for shade())
 	REPLace PREfix(str) *]
 
@@ -191,22 +193,29 @@ version 11.0
 			exit 498
 		}
 
-		/* New error 2 */
+		/* new error 2 */
 		if `multi_pnl'==0 & "`contid'"!="" {
-			di as err "Only one panel in data: contid not allowed "
+			di as err "only one panel in data: contid not allowed "
 			exit 498
 		}
 
-		/* New error 3 */
+		/* new error 3 */
 		if `multi_pnl'== 1 & "`treatid'"==""{
 			di as error "treatid required when there is more than 1 panel"
 			exit 498
 		}
-		/* New error 4 */
+		/* new error 4 */
 		if "`single'" !="" & "`contid'"!="" {
-			di as error " single & contid options may not combined"
+			di as error "single & contid options may not combined"
 			exit 498
 		}
+		
+		/* verify that CF is specified with single */
+		if "`cf'" != "" & "`single'" =="" {
+			di as error "{bf:single} must be specified together with the {bf:cf} option"
+			exit 198
+		}			
+		
 
 	 /********************* SET ANALYSIS TYPES ******************
 	  *		  Type 1: Single panel in data set					 *
@@ -305,18 +314,32 @@ version 11.0
 			}
 
 		}  // end quietly
-		
+	
 		/* run Prais or Newey regression */
 		tsset
 		if "`prais'" != "" {
 			prais `dvar' `rhs' `xvar' if `touse' , `options'
 			/* create matrix of r(table) to ensure it is available */
-			matrix table =r(table)
-			return matrix table = table 					
+			matrix table = r(table)
 			
 			local z_t t
-			local z_t_p P>|t|	
-		}
+			local z_t_p P>|t|
+			
+			/* capture level specified in estimation model */
+			local clv `r(level)'		
+			local cil `=length("`clv'")'			
+			
+			if "`ci'" == "" {
+				quietly predictnl `prefix'_s_`dvar1'_pred = predict() if e(sample)
+			}
+			else {
+				tempvar lcl ucl
+				quietly predictnl `prefix'_s_`dvar1'_pred = predict() if e(sample), ci(`lcl' `ucl')  df(`e(df_r)') level(`clv')	
+			}
+			local itsavars `dvar' `rhs' `prefix'_s_`dvar1'_pred
+			char def _dta[`prefix'_itsavars] "`itsavars'"
+		} // end prais
+		/* run a GLM model */
 		else {
 			* first run is to get values for vfactor
 			qui glm2 `dvar' `rhs' `xvar'  if `touse' [`weight' `exp'], force nodisplay `options'
@@ -324,16 +347,33 @@ version 11.0
 			* rerun it again, now with adjustment for autocorrelation
 			glm2 `dvar' `rhs' `xvar'  if `touse' [`weight' `exp'], force vce(hac nwest `lag') vfactor(`vfac') `options'	
 			/* create matrix of r(table) to ensure it is available */
-			matrix table =r(table)
-			return matrix table = table			
+			matrix table = r(table)
 			
 			local z_t z			
 			local z_t_p P>|z|
-		}
+			
+			/* capture level specified in estimation model */
+			local clv `r(level)'		
+			local cil `=length("`clv'")'			
+			
+			if "`ci'" == "" {
+				quietly predictnl `prefix'_s_`dvar1'_pred = predict() if e(sample)
+			}
+			else {
+				tempvar lcl ucl
+				quietly predictnl `prefix'_s_`dvar1'_pred = predict() if e(sample), ci(`lcl' `ucl') level(`clv') 
+			}
+			local itsavars `dvar' `rhs' `prefix'_s_`dvar1'_pred
+			char def _dta[`prefix'_itsavars] "`itsavars'"
+		} // end glm	
 		
-		/* capture level specified in estimation model */
-		local clv `r(level)'		
-		local cil `=length("`clv'")'
+		if "`cf'" != "" {
+			local colnames: colnames table
+			gen_cf , cmdlne(`colnames') prefix(`prefix')
+			local text = r(expr)
+			tempvar _cf
+			qui gen `_cf' = `text' if `touse'
+		}
 
 		/*********************************************************
 		*  LINCOM: SINGLE GROUP SINGLE PANEL                     *
@@ -381,24 +421,6 @@ version 11.0
 	
 		} /* END IF POSTTREND & LINCOM BLOCK */
 
-		/* generating CI values depending on whether the model was prais or GLM */
-		if "`ci'" == "" {
-			quietly predictnl `prefix'_s_`dvar'_pred = predict() if e(sample)
-			local itsavars `dvar' `rhs' `prefix'_s_`dvar'_pred
-			char def _dta[`prefix'_itsavars] "`itsavars'"
-		}
-		else {
-			tempvar lcl ucl
-			if "`prais'" != "" {
-				quietly predictnl `prefix'_s_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl')  df(`e(df_r)') level(`clv')	
-			}
-			else {
-				quietly predictnl `prefix'_s_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl') level(`clv') 
-			}
-			local itsavars `dvar' `rhs' `prefix'_s_`dvar'_pred
-			char def _dta[`prefix'_itsavars] "`itsavars'"
-		} // end CI
-
 		/*************************************************************
 		 *                PLOT SECTION FOR TYPE 1                    *
 		 *************************************************************/
@@ -406,7 +428,7 @@ version 11.0
 		if `"`figure'`figure2'"' != "" {   /* Start Figure Loop */
 			/* graph; get variable labels if they exist */
 			local ydesc : var label `dvar'
-			if `"`ydesc'"' == "" local ydesc "`dvar'"
+			if `"`ydesc'"' == "" local ydesc "`dvar1'"
 			local tdesc : var label `tvar'
 			if `"`tdesc'"' == "" local tdesc "`tvar'"
 			if "`prais'" !="" {
@@ -419,7 +441,7 @@ version 11.0
 		/* CREATE PREDICTED VALUE FOR PLOTS */
 		qui{
 			tempvar ypred_t
-			gen `ypred_t' = `prefix'_s_`dvar'_pred
+			gen `ypred_t' = `prefix'_s_`dvar1'_pred
 			local tct: word count `trperiod'
 			local tmax: word `tct' of `trperiod'
 			local k = 0
@@ -558,78 +580,37 @@ version 11.0
 			local shhh (area `upy' `tvar' if inrange(`tvar', `shade1',`shade2') & `touse', base(`r(min)') bcolor(gs14) plotregion(margin(b=0 t=0)))	
 			
 		}	// end shade		
-		/* set up legend when lowess and/or CI and/or shades are specified */
-		if "`lowess'" != "" {
+		
+		/* CF graph */
+		if "`cf'" != "" {
+			local cf (line `_cf' `tvar' if `touse', lcolor(gs8) lpattern(longdash))		
+		}
+	
+		/* lowess graph */
+		if "`lowess'" != "" {		
 			local low (lowess `dvar' `tvar' if `touse', lcolor(red))
-			if "`ci'" != "" {
-				if "`shade'" == "" {
-					local x = `tct' - 1	
-					local act1 = `tct' + 5 + `x'
-					local pred1 = `tct' + 6 + `x'
-					local ci1 = 2
-					local low1 = 1
-					local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `low1' `ci1') label(`act1' "Actual") ///
-					label(`pred1' "Predicted") label(`low1' "Lowess") label(`ci1' "`clv'% CI") position(6))),
-				} // yes low, yes ci, no shade
-				else {
-					local x = `tct' - 1	
-					local act1 = `tct' + 6 + `x'
-					local pred1 = `tct' + 7 + `x'
-					local ci1 = 3
-					local low1 = 2
-					local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `low1' `ci1') label(`act1' "Actual") ///
-					label(`pred1' "Predicted") label(`low1' "Lowess") label(`ci1' "`clv'% CI") position(6))),					
-				} // yes low, yes ci, yes shade
-			} // end ci
-			if "`ci'" == "" {
-				if "`shade'" == "" {
-					local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1)  region(lcolor(black)) order(2 3 1) label(1 "Lowess") label(2 "Actual") ///
-					label(3 "Predicted") position(6))),
-				} // yes low, no ci, no shade
-				else {
-					local shading = 8
-					local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(3 4 2) label(3 "Actual") label(4 "Predicted") ///
-					label(2 "Lowess") position(6))),					
-				} // yes low, no ci, yes shade
-			} // end ci	
-		} // end lowess
-		else if "`lowess'" == "" {
-			if "`ci'" != "" {
-				if "`shade'" == "" {				
-					local x = `tct' - 1	
-					local act1 = `tct' + 4 + `x'
-					local pred1 = `tct' + 5 + `x'
-					local ci1 = 1
-					local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `ci1') label(`act1' "Actual") ///
-					label(`pred1' "Predicted") label(`ci1' "`clv'% CI") position(6))),
-				} // no low, yes ci, no shade
-				else {
-					local x = `tct' - 1	
-					local act1 = `tct' + 5 + `x'
-					local pred1 = `tct' + 6 + `x'
-					local ci1 = 2
-					local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `ci1') label(`act1' "Actual") ///
-					label(`pred1' "Predicted") label(`ci1' "`clv'% CI") position(6))),					
-				} // no low, yes ci, yes shade
-			} // end ci
-			else if "`ci'" == "" {			
-				local nolow subtitle("Intervention starts: `tperlist'")  legend(rows(1) region(lcolor(black)) order(1 2) label(1 "Actual")label(2 "Predicted") ///
-				position(6))), 
-			} // no low, no ci, no shade
-		} // end no low	
-
+		}
+		
+		/* CI graph */
 		if "`ci'" != "" {
 			local lcl (line `plotvarsL' `tvar' if `touse' [`weight' `exp'], `lc2') 
 			local ucl (line `plotvarsU' `tvar' if `touse' [`weight' `exp'], `lc2') 	
 		}
 		
+		/* get legend specs */
+		get_leg , tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade') cf(`cf')
+		local leg = r(leg)
+		
+		**************
 		/* graph it */
+		**************
 		#delim ;
 		tw 
 		`shhh'			
 		`low'
 		`lcl'
 		`ucl'
+		`cf'
  		(scatter  `dvar' `plotvars' `tvar' if `touse' [`weight' `exp'],		
 			`cpart' `mspart' `lc'
 			xline(`trperiod', lpattern(shortdash) lcolor(black))
@@ -639,8 +620,7 @@ version 11.0
 			xtitle("`tdesc'")
 			title("`treatdesc'")
 			`ylab' ///
-			`nolow'
-			`lowleg'
+			`leg'
             `figure2'
 		;
 		#delim cr
@@ -674,17 +654,32 @@ version 11.0
 
 		} // end quietly
 
-		/* run Prais or Newey regression */
+		/* run Prais or GLM (Newey) regression */
 		tsset
 		if "`prais'" != "" {
 			prais `dvar' `rhs' `xvar' if `touse' & `pvar'==`treatid' , `options'
 			/* create matrix of r(table) to ensure it is available */
 			matrix table =r(table)
-			return matrix table = table 					
 			
 			local z_t t
-			local z_t_p P>|t|			
-		}
+			local z_t_p P>|t|
+			
+			/* capture level specified in estimation model */
+			local clv `r(level)'		
+			local cil `=length("`clv'")'
+			
+			if "`ci'" == "" {
+				quietly predictnl `prefix'_s_`dvar1'_pred = predict() if e(sample)
+			}
+			else {
+				tempvar lcl ucl
+				quietly predictnl `prefix'_s_`dvar1'_pred = predict() if e(sample), ci(`lcl' `ucl')  df(`e(df_r)') level(`clv')	
+			}
+			local itsavars `dvar' `rhs' `prefix'_s_`dvar1'_pred
+			char def _dta[`prefix'_itsavars] "`itsavars'"
+		
+		} // end prais
+		/* GLM */
 		else {
 			* first run is to get values for vfactor
 			qui glm2 `dvar' `rhs' `xvar' if `touse' & `pvar'==`treatid' [`weight' `exp'], force nodisplay `options'
@@ -693,15 +688,33 @@ version 11.0
 			glm2 `dvar' `rhs' `xvar' if `touse' & `pvar'==`treatid' [`weight' `exp'], force vce(hac nwest `lag') vfactor(`vfac') `options'	
 			/* create matrix of r(table) to ensure it is available */
 			matrix table =r(table)
-			return matrix table = table 			
 			
 			local z_t z
-			local z_t_p P>|z|				
+			local z_t_p P>|z|
+			
+			/* capture level specified in estimation model */
+			local clv `r(level)'		
+			local cil `=length("`clv'")'
+			
+			if "`ci'" == "" {
+				quietly predictnl `prefix'_s_`dvar1'_pred = predict() if e(sample)
+			}
+			else {
+				tempvar lcl ucl
+				quietly predictnl `prefix'_s_`dvar1'_pred = predict() if e(sample), ci(`lcl' `ucl') level(`clv') 
+			}
+			local itsavars `dvar' `rhs' `prefix'_s_`dvar1'_pred
+			char def _dta[`prefix'_itsavars] "`itsavars'"
+		
 		}
 		
-		/* capture level specified in estimation model */
-		local clv `r(level)'
-		local cil `=length("`clv'")'		
+		if "`cf'" != "" {
+			local colnames: colnames table
+			gen_cf , cmdlne(`colnames') prefix(`prefix')
+			local text = r(expr)
+			tempvar _cf
+			qui gen `_cf' = `text' if `touse'
+		}
 
 		/**************************************************************
 		*  LINCOM: SINGLE GROUP MULTIPLE PANELS                     *
@@ -749,32 +762,14 @@ version 11.0
 		
 		} /* end if posttrend and lincom block */
 		
-		/* generating CI values depending on whether the model was prais or GLM */
-		if "`ci'" == "" {
-			quietly predictnl `prefix'_s_`dvar'_pred = predict() if e(sample)
-			local itsavars `dvar' `rhs' `prefix'_s_`dvar'_pred
-			char def _dta[`prefix'_itsavars] "`itsavars'"
-		}
-		else {
-			tempvar lcl ucl
-			if "`prais'" != "" {
-				quietly predictnl `prefix'_s_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl')  df(`e(df_r)') level(`clv')	
-			}
-			else {
-				quietly predictnl `prefix'_s_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl') level(`clv') 
-			}
-			local itsavars `dvar' `rhs' `prefix'_s_`dvar'_pred
-			char def _dta[`prefix'_itsavars] "`itsavars'"			
-		} // end CI		
 		
 		/************************************************
 		*             PLOT SECTION FOR TYPE 2           *
 		*************************************************/
-
 		if `"`figure'`figure2'"' != "" {   /* Start Figure Loop */
 			/* graph; get variable labels if they exist */
 			local ydesc : var label `dvar'
-			if `"`ydesc'"' == "" local ydesc "`dvar'"
+			if `"`ydesc'"' == "" local ydesc "`dvar1'"
 			local tdesc : var label `tvar'
 			if `"`tdesc'"' == "" local tdesc "`tvar'"
 
@@ -791,7 +786,7 @@ version 11.0
 			/* CREATE PREDICTED VALUES FOR PLOTS */
 			qui{
 				tempvar ypred_t
-				gen `ypred_t' = `prefix'_s_`dvar'_pred
+				gen `ypred_t' = `prefix'_s_`dvar1'_pred
 
 				local tct: word count `trperiod'
 				local tmax: word `tct' of `trperiod'
@@ -933,76 +928,37 @@ version 11.0
 				local shhh (area `upy' `tvar' if `pvar'==`treatid' & inrange(`tvar', `shade1',`shade2') & `touse', base(`r(min)') bcolor(gs14) plotregion(margin(b=0 t=0)))	
 			}	// end shade		
 		
-			/* set up legend when lowess and/or CI and/or shades are specified */
+			/* CF graph */
+			if "`cf'" != "" {
+				local cf (line `_cf' `tvar' if `pvar'==`treatid' & `touse', lcolor(gs8) lpattern(longdash))		
+			}
+
+			/* lowess graph */			
 			if "`lowess'" != "" {
 				local low (lowess `dvar' `tvar' if `pvar'==`treatid' & `touse', lcolor(red))
-				if "`ci'" != "" {
-					if "`shade'" == "" {
-						local x = `tct' - 1	
-						local act1 = `tct' + 5 + `x'
-						local pred1 = `tct' + 6 + `x'
-						local ci1 = 2
-						local low1 = 1
-						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black))  order(`act1' `pred1' `low1' `ci1') label(`act1' "Actual") ///
-						label(`pred1' "Predicted") label(`low1' "Lowess") label(`ci1' "`clv'% CI") position(6))),
-					} // yes low, yes ci, no shade
-					else {
-						local x = `tct' - 1	
-						local act1 = `tct' + 6 + `x'
-						local pred1 = `tct' + 7 + `x'
-						local ci1 = 3
-						local low1 = 2
-						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black))  order(`act1' `pred1' `low1' `ci1') label(`act1' "Actual") ///
-						label(`pred1' "Predicted") label(`low1' "Lowess") label(`ci1' "`clv'% CI") position(6))),					
-					} // yes low, yes ci, yes shade
-					
-				} // end ci
-				if "`ci'" == "" {
-					if "`shade'" == "" {
-						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black))  order(2 3 1) label(1 "Lowess") label(2 "Actual") ///
-						label(3 "Predicted") position(6))),
-					} // yes low, no ci, no shade
-					else {
-						local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black))  order(3 4 2) label(3 "Actual") label(4 "Predicted") ///
-						label(2 "Lowess") position(6))),					
-					} // yes low, no ci, yes shade
-				} // end ci	
-			} // end lowess
-			else if "`lowess'" == "" {
-				if "`ci'" != "" {
-					if "`shade'" == "" {				
-						local x = `tct' - 1	
-						local act1 = `tct' + 4 + `x'
-						local pred1 = `tct' + 5 + `x'
-						local ci1 = 1
-						local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black))  order(`act1' `pred1' `ci1') label(`act1' "Actual") ///
-						label(`pred1' "Predicted") label(`ci1' "`clv'% CI") position(6))),
-					} // no low, yes ci, no shade
-					else {
-						local x = `tct' - 1	
-						local act1 = `tct' + 5 + `x'
-						local pred1 = `tct' + 6 + `x'
-						local ci1 = 2
-						local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black))  order(`act1' `pred1' `ci1') label(`act1' "Actual") ///
-						label(`pred1' "Predicted") label(`ci1' "`clv'% CI") position(6))),					
-					} // no low, yes ci, yes shade
-				} // end ci
-				else if "`ci'" == "" {			
-					local nolow subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black))  order(1 2) label(1 "Actual") label(2 "Predicted") position(6))),
-				} // no low, no ci, no shade
-			}	
+			}
+			
+			/* CI graph */			
 			if "`ci'" != "" {
 				local lcl (line `plotvarsL' `tvar' if `pvar'==`treatid' & `touse' [`weight' `exp'], `lc2') 
 				local ucl (line `plotvarsU' `tvar' if `pvar'==`treatid' & `touse' [`weight' `exp'], `lc2') 	
 			}
 			
-			/* graph it */			
+			/* get legend specs */
+			get_leg , tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade') cf(`cf')
+			local leg = r(leg)
+			
+			
+			**************
+			/* graph it */
+			**************
 			#delim ;
 			noi tw  
 			`shhh'
 			`low'
 			`lcl'
-			`ucl'			
+			`ucl'
+			`cf'
 			(scatter  `dvar' `plotvars' `tvar' if `pvar'==`treatid' & `touse' [`weight' `exp'],
 			`cpart' `mspart' `lc'
 			xline(`trperiod', lpattern(shortdash) lcolor(black))
@@ -1012,8 +968,7 @@ version 11.0
 			xtitle("`tdesc'")
 			title("`treatdesc'")
 			`ylab'
-			`lowleg'
-			`nolow'
+			`leg'
 			`figure2'
 			;
 			#delim cr
@@ -1052,7 +1007,6 @@ version 11.0
 			prais `dvar' `rhs' `xvar' if `touse' `if2' , `options'
 			/* create matrix of r(table) to ensure it is available for -itsamatch- */
 			matrix table =r(table)
-			return matrix table = table 
 			
 			local z_t t
 			local z_t_p P>|t|				
@@ -1066,7 +1020,6 @@ version 11.0
 			
 			/* create matrix of r(table) to ensure it is available for -itsamatch- */
 			matrix table =r(table)
-			return matrix table = table 
 			
 			local z_t z
 			local z_t_p P>|z|			
@@ -1191,7 +1144,7 @@ version 11.0
 
 			/* graph; get variable labels if they exist */
 			local ydesc : var label `dvar'
-					if `"`ydesc'"' == "" local ydesc "`dvar'"
+					if `"`ydesc'"' == "" local ydesc "`dvar1'"
 			local tdesc : var label `tvar'
 			if `"`tdesc'"' == "" local tdesc "`tvar'"
 
@@ -1205,7 +1158,7 @@ version 11.0
 				local note "GLM model: family(`e(varfunct)'), link(`e(linkt)') with Newey-West standard errors - lag(`lag')"
 			}
 
-			 preserve
+			preserve
 
 			 /* Collapse actual & predicted for treat/control means */
 			collapse (mean) `dvar' `prefix'_m_`dvar'_pred `lcl' `ucl' ///
@@ -1730,5 +1683,240 @@ version 11.0
 			} // end xvars
 		}   /* End of Figure Block */
 	}   /* End of Type 3 */
+	
+	// save estimation table
+	return matrix table = table	
 
 end
+
+
+program define gen_cf, rclass
+version 11.0
+    syntax, cmdlne(string) [prefix(string)]
+
+    // loop to filter command line list
+    foreach var in `cmdlne' {
+        // skip _cons
+        if "`var'" == "_cons" continue
+
+        // handle interaction terms (e.g., c.var1#c.var2)
+        if strpos("`var'", "#") {
+            local cmdlne_filtered `cmdlne_filtered' `var'
+            continue
+        }
+
+        // extract clean (base) variable name (after last . if any)
+        local base = "`var'"
+        while strpos("`base'", ".") {
+            local base = substr("`base'", strpos("`base'", ".") + 1, .)
+        }
+
+        // remove user-defined prefix from base (if any)
+        local base_noprefix = "`base'"
+        if strpos("`base'", "`prefix'") == 1 {
+            local base_noprefix = substr("`base'", length("`prefix'") + 1, .)
+        }
+
+        // Skip _x* and _y
+        if "`base_noprefix'" != "_y" & substr("`base_noprefix'", 1, 2) != "_x" {
+            local cmdlne_filtered `cmdlne_filtered' `var'
+        }
+    }
+
+    // Build expression
+    local first = 1
+    foreach var of local cmdlne_filtered {
+        // keep interaction terms as-is
+        if strpos("`var'", "#") {
+            local term "_b[`var'] * `var'"
+        }
+        else {
+            // get clean (base) variable name (after last .)
+            local base = "`var'"
+            while strpos("`base'", ".") {
+                local base = substr("`base'", strpos("`base'", ".") + 1, .)
+            }
+
+            // apply user-defined prefix only to _t
+            if "`base'" == "_t" {
+                local base_with_prefix "`prefix'`base'"
+            }
+            else {
+                local base_with_prefix "`base'"
+            }
+
+            // reapply operator(s) stripped earlier
+            local final_var "`var'"
+            if strpos("`var'", ".") {
+                local operator = substr("`var'", 1, strpos("`var'", "."))
+                local final_var "`operator'`base_with_prefix'"
+            }
+            else {
+                local final_var "`base_with_prefix'"
+            }
+
+            local term "_b[`var'] * `final_var'"
+        }
+
+        // ensure that the expression doesn't start with "+"
+        if `first' {
+            local expr "`term'"
+            local first = 0
+        }
+        else {
+            local expr "`expr' + `term'"
+        }
+    }
+
+    // add constant term at the end
+    local expr "`expr' + _b[_cons]"
+	
+	// save the local
+	ret local expr `expr'
+end
+
+
+program define get_leg, rclass
+version 11.0
+    syntax, [ tperlist(string) tct(string) LOWess(string) clv(string) ci(string) SHade(string) cf(string) ] 
+
+		// [1,1,1,1]
+		if "`lowess'" != "" & "`ci'" != "" & "`shade'" != "" & "`cf'" != "" {		
+			local x = `tct' - 1	
+			local act1 = `tct' + 7 + `x'
+			local pred1 = `tct' + 8 + `x'
+			local ci1 = 3
+			local low1 = 2
+			local cf1 = `act1' - 1
+			local leg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `low1' `ci1' `cf1') label(`act1' "Actual") ///
+				label(`pred1' "Predicted") label(`low1' "Lowess") label(`ci1' "`clv'% CI") label(`cf1' "Counterfactual") position(6))),	
+		}
+		// [1,1,0,1]
+		if "`lowess'" != "" & "`ci'" != "" & "`shade'" == "" & "`cf'" != "" {	
+			local x = `tct' - 1	
+			local act1 = `tct' + 6 + `x'
+			local pred1 = `tct' + 7 + `x'
+			local ci1 = 3
+			local low1 = 1
+			local cf1 = `act1' - 1
+			local leg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `low1' `ci1' `cf1') label(`act1' "Actual") ///
+				label(`pred1' "Predicted") label(`low1' "Lowess") label(`ci1' "`clv'% CI") label(`cf1' "Counterfactual") position(6))),	
+		}
+		// [1,0,1,1]
+		if "`lowess'" != "" & "`ci'" == "" & "`shade'" != "" & "`cf'" != "" {	
+			local act1 = 4
+			local pred1 = 5
+			local low1 = 2
+			local cf1 = 3
+			local leg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `low1' `cf1') label(`act1' "Actual") ///
+				label(`pred1' "Predicted") label(`low1' "Lowess") label(`cf1' "Counterfactual") position(6))),	
+		}
+		// [1,0,0,1]
+		if "`lowess'" != "" & "`ci'" == "" & "`shade'" == "" & "`cf'" != "" {	
+			local act1 = 3
+			local pred1 = 4
+			local low1 = 1			
+			local cf1 = 2
+			local leg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `low1' `cf1') label(`act1' "Actual") ///
+				label(`pred1' "Predicted") label(`low1' "Lowess") label(`cf1' "Counterfactual") position(6))),	
+		}
+		// [1,1,1,0]
+		if "`lowess'" != "" & "`ci'" != "" & "`shade'" != "" & "`cf'" == "" {
+			local x = `tct' - 1	
+			local act1 = `tct' + 6 + `x'
+			local pred1 = `tct' + 7 + `x'
+			local ci1 = 3
+			local low1 = 2
+			local leg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `low1' `ci1') label(`act1' "Actual") ///
+				label(`pred1' "Predicted") label(`low1' "Lowess") label(`ci1' "`clv'% CI") position(6))),				
+		}
+		// [1,1,0,0]
+		if "`lowess'" != "" & "`ci'" != "" & "`shade'" == "" & "`cf'" == "" {
+			local x = `tct' - 1	
+			local act1 = `tct' + 5 + `x'
+			local pred1 = `tct' + 6 + `x'
+			local ci1 = 2
+			local low1 = 1
+			local leg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `low1' `ci1') label(`act1' "Actual") ///
+				label(`pred1' "Predicted") label(`low1' "Lowess") label(`ci1' "`clv'% CI") position(6))),
+		}			
+		// [1,0,0,0]
+		if "`lowess'" != "" & "`ci'" == "" & "`shade'" == "" & "`cf'" == "" {
+			local leg subtitle("Intervention starts: `tperlist'") legend(rows(1)  region(lcolor(black)) order(2 3 1) label(1 "Lowess") label(2 "Actual") ///
+				label(3 "Predicted") position(6))),
+		}
+		// [1,0,1,0]		
+		if "`lowess'" != "" & "`ci'" == "" & "`shade'" != "" & "`cf'" == "" {		
+			local shading = 8
+			local leg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(3 4 2) label(3 "Actual") label(4 "Predicted") ///
+				label(2 "Lowess") position(6))),
+		}
+		// [0,1,0,0]
+		if "`lowess'" == "" & "`ci'" != "" & "`shade'" == "" & "`cf'" == "" {		
+			local x = `tct' - 1	
+			local act1 = `tct' + 4 + `x'
+			local pred1 = `tct' + 5 + `x'
+			local ci1 = 1
+			local leg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `ci1') label(`act1' "Actual") ///
+				label(`pred1' "Predicted") label(`ci1' "`clv'% CI") position(6))),
+		}
+		// [0,1,0,1]
+		if "`lowess'" == "" & "`ci'" != "" & "`shade'" == "" & "`cf'" != "" {
+			local x = `tct' - 1	
+			local act1 = `tct' + 5 + `x'
+			local pred1 = `tct' + 6 + `x'
+			local ci1 = `pred1' - 3
+			local cf1 = `pred1' - 2
+			local leg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `ci1' `cf1') label(`act1' "Actual") ///
+				label(`pred1' "Predicted") label(`ci1' "`clv'% CI") label(`cf1' "Counterfactual") position(6))),
+		}			
+		// [0,1,1,1]
+		if "`lowess'" == "" & "`ci'" != "" & "`shade'" != "" & "`cf'" != "" {
+			local x = `tct' - 1	
+			local act1 = `tct' + 6 + `x'
+			local pred1 = `tct' + 7 + `x'
+			local ci1 = `pred1' - 3
+			local cf1 = `pred1' - 2
+			local leg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `ci1' `cf1') label(`act1' "Actual") ///
+				label(`pred1' "Predicted") label(`ci1' "`clv'% CI") label(`cf1' "Counterfactual") position(6))),
+		}				
+		// [0,0,1,1]
+		if "`lowess'" == "" & "`ci'" == "" & "`shade'" != "" & "`cf'" != "" {
+			local act1 = 3
+			local pred1 = 4
+			local cf1 = 2
+			local leg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `cf1') label(`act1' "Actual") ///
+				label(`pred1' "Predicted") label(`cf1' "Counterfactual") position(6))),
+		}	
+		// [0,0,0,1]
+		if "`lowess'" == "" & "`ci'" == "" & "`shade'" == "" & "`cf'" != "" {
+			local act1 = 2
+			local pred1 = 3
+			local cf1 = 1
+			local leg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `cf1') label(`act1' "Actual") ///
+				label(`pred1' "Predicted") label(`cf1' "Counterfactual") position(6))),
+		}				
+		// [0,1,1,0]
+		if "`lowess'" == "" & "`ci'" != "" & "`shade'" != "" & "`cf'" == "" {				
+			local x = `tct' - 1	
+			local act1 = `tct' + 5 + `x'
+			local pred1 = `tct' + 6 + `x'
+			local ci1 = 2
+			local leg subtitle("Intervention starts: `tperlist'") legend(rows(1) region(lcolor(black)) order(`act1' `pred1' `ci1') label(`act1' "Actual") ///
+				label(`pred1' "Predicted") label(`ci1' "`clv'% CI") position(6))),					
+		}	
+		// [0,0,1,0]		
+		if "`lowess'" == "" & "`ci'" == "" & "`shade'" != "" & "`cf'" == "" {
+			local leg subtitle("Intervention starts: `tperlist'")  legend(rows(1) region(lcolor(black)) order(2 4) label(2 "Actual")label(4 "Predicted") ///
+				position(6))), 		
+		}
+		// [0,0,0,0]			
+		if "`lowess'" == "" & "`ci'" == "" & "`shade'" == "" & "`cf'" == "" {		
+			local leg subtitle("Intervention starts: `tperlist'")  legend(rows(1) region(lcolor(black)) order(1 2) label(1 "Actual")label(2 "Predicted") ///
+				position(6))), 
+		}
+	
+		// save the local
+		ret local leg `leg'
+		
+end	

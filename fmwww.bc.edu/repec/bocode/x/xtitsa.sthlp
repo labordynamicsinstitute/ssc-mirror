@@ -1,4 +1,5 @@
 {smcl}
+{* 31Jul2025}{...}
 {* 23Jul2025}{...}
 {* 07Nov2024}{...}
 {* 09Sep2024}{...}
@@ -41,6 +42,7 @@ and {cmd:single} is specified {p_end}
 {synopt:{opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]}plot the average actual and predicted {it:depvar} variable over time. Specifying {cmd:figure} without options uses the default graph settings {p_end}
 {synopt:{opt low:ess}}plots a lowess smoothed line of {it:depvar} on {it:timevar} {p_end}
 {synopt:{opt ci}}plots the confidence interval(s) on the {cmd:figure} {p_end}
+{synopt:{opt cf}}plot the counterfactual for the intervention period of a single-group ITSA on the figure {p_end}
 {synopt:{opt shad:e}({it:{help datetime:date1}} ; {it:{help datetime:date2}})}plot a shaded area on the figure between two dates, separated by a semicolon (e.g. {cmd:shade(21jan2020 ; 08feb2020)}) 
 {p_end}
 {synopt:{opt smin}{cmd:(#)}}specify the minimum value displayed on {cmd:ylabel()} when {cmd:shade()} is specified {p_end}
@@ -129,6 +131,10 @@ without options uses the default graph settings.
 {cmd:ci} plots the confidence interval(s) on the {cmd:figure}. By default,
 95% CIs are presented but can be changed by specifying {cmd:level()} as 
 a model option. 
+
+{phang}
+{cmd:cf} plots the counterfactual for the intervention period in a single-group ITSA 
+on the {cmd:figure}. In a multiple-group ITSA, the control(s) serve as the counterfactual. 
 
 {phang}
 {cmd:shade(}{it:date1} ; {it:date2}{cmd:)} plots a shaded area on the figure 
@@ -258,6 +264,11 @@ We see from the output that there is autocorrelation up to lag 9, so we reestima
 {phang3}{bf:{stata "xtitsa y, single trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9) low": . xtitsa y, single trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9) low}}{p_end}
 
 {pmore}
+Same as above but we add the counterfactual for the intervention period to the graph.{p_end}
+
+{phang3}{bf:{stata "xtitsa y, single trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9) low cf": . xtitsa y, single trperiod(2019m11) vce(robust) posttrend figure replace corr(ar 9) low cf}}{p_end}
+
+{pmore}
 We specify two treatment periods and shade the area between them {p_end}
 
 {phang3}{bf:{stata "xtitsa y, single trperiod(2019m9 ; 2019m11) shade(2019m9 ; 2019m11) vce(robust) fig repl corr(ar 9) low": . xtitsa y, single trperiod(2019m9 ; 2019m11) shade(2019m9 ; 2019m11) vce(robust) fig repl corr(ar 9) low}} {p_end}
@@ -288,6 +299,11 @@ the results, and produce a table of the posttreatment trend estimates.
 Same as above, but we add a lowess smoother to the graph.
 
 {phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace low": . xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace low}}{p_end}
+
+{pmore}
+Same as above, but we now add the counterfactual to the graph.
+
+{phang3}{bf:{stata "xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace low cf": . xtitsa y, single treat(z) trperiod(2019m11) vce(robust) posttrend figure replace low cf }}{p_end}
 
 {pmore}
 Same as above, but we add a confidence interval to the graph.

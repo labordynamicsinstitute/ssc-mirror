@@ -1,4 +1,5 @@
 {smcl}
+{* 31Jul2025}{...}
 {* 23Jul2025}{...}
 {* 06Jun2025}{...}
 {* 02Nov2024}{...}
@@ -32,7 +33,7 @@
 {p 8 12 2}
 {cmd:itsa} {depvar} [{indepvars}] {ifin} {weight}{cmd:,}
 {cmdab:trp:eriod(}{it:{help datetime:date}}{cmd:)} 
-[{opt sing:le} 
+[ {opt sing:le} 
 {opt treat:id(#)}
 {cmdab:cont:id(}{it:{help numlist:numlist}}{cmd:)} 
 {opt prais} 
@@ -40,13 +41,14 @@
 {opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]
 {opt low:ess}
 {opt ci}
+{opt cf}
 {cmdab:shad:e(}{it:{help datetime:date1}} ; {it:{help datetime:date2}}{cmd:)} 
 {opt smin(#)}
 {opt smax(#)}
 {opt posttr:end} 
 {opt repl:ace} 
 {opt pre:fix(string)}
-[{it:model_options}]
+[{it:model_options}] ]
 
 {pstd}
 {it:indepvars} may contain factor variables; see {helpb fvvarlist}.
@@ -78,6 +80,7 @@ and {cmd:single} is specified {p_end}
 graph settings {p_end}
 {synopt:{opt low:ess}}plot a lowess smoothed line of {it:depvar} on {it:timevar} on the figure{p_end}
 {synopt:{opt ci}}plot the confidence interval(s) on the figure {p_end}
+{synopt:{opt cf}}plot the counterfactual for the intervention period of a single-group ITSA on the figure {p_end}
 {synopt:{opt shade}{cmd:(}{it:date1} ; {it:date2}{cmd:)}}plot a shaded area on the figure between two dates, separated by a semicolon (e.g. {cmd:shade(21jan2020 ; 08feb2020)}) {p_end}
 {synopt:{opt smin}{cmd:(#)}}specify the minimum value displayed on {cmd:ylabel()} when {cmd:shade()} is specified {p_end}
 {synopt:{opt smax}{cmd:(#)}}specify the maximum value displayed on {cmd:ylabel()} when {cmd:shade()} is specified {p_end}
@@ -179,6 +182,10 @@ default graph settings.
 {cmd:ci} plots the confidence interval(s) on the {cmd:figure}. By default,
 95% CIs are presented but can be changed by specifying {cmd:level()} as 
 a model option.
+
+{phang}
+{cmd:cf} plots the counterfactual for the intervention period in a single-group ITSA 
+on the {cmd:figure}. In a multiple-group ITSA, the control(s) serve as the counterfactual. 
 
 {phang}
 {cmd:shade(}{it:date1} ; {it:date2}{cmd:)} plots a shaded area on the figure 
@@ -317,14 +324,19 @@ Load single panel data and declare the dataset as time series: {p_end}
 We specify a single-group ITSA and 1989 as the first year of the intervention,
 plot the results, and produce a table of the posttreatment trend estimates.
 We then run {helpb actest} to test for autocorrelation over the past 12
-periods. (See Linden and Yarnold [2016] for a comprehensive
-discussion.){p_end}
+periods.{p_end}
 
 {phang3}{bf:{stata "itsa cigsale, single trperiod(1989) lag(1) fig posttrend": . itsa cigsale, single trperiod(1989) lag(1) fig posttrend}}{p_end}
 {phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
 
 {pmore}
+Same as above but we now specify that the counterfactual for the intervention period be added to the graph {p_end}
+
+{phang3}{bf:{stata "itsa cigsale, single trperiod(1989) lag(1) fig posttrend cf replace": . itsa cigsale, single trperiod(1989) lag(1) fig posttrend cf replace}}{p_end}
+
+{pmore}
 Same as above but we now specify that the confidence interval and lowess smoother be added to the graph {p_end}
+
 {phang3}{bf:{stata "itsa cigsale, single trperiod(1989) lag(1) fig posttrend ci low replace": . itsa cigsale, single trperiod(1989) lag(1) fig posttrend ci low replace}}{p_end}
 
 {pmore}
@@ -342,6 +354,7 @@ lowess smoother to the graph {p_end}
 
 {pmore}
 We now specify two treatment periods and shade the area between them on the graph, We also add the confidence interval and lowess smoother to the graph {p_end}
+
 {phang3}{bf:{stata "itsa cigsale, single trperiod(1986; 1989) shade(1986; 1989) lag(1) fig posttrend ci low replace": . itsa cigsale, single trperiod(1986 ; 1989) shade(1986; 1989) lag(1) fig posttrend ci low replace}}{p_end}
 
 
@@ -365,7 +378,12 @@ periods.
 {phang3}{bf:{stata "actest, lags(12)": . actest, lags(12)}}{p_end}
 
 {pmore}
-Same as above, but we now specify that CIs be presented on the graph instead of the lowess smoother.
+Same as above, but we now specify that the counterfactual for the intervention period be presented on the graph instead of the lowess smoother.
+
+{phang3}{bf:{stata "itsa cigsale, single treat(3) trperiod(1989) lag(1) fig posttrend replace cf": . itsa cigsale, single treatid(3) trperiod(1989) lag(1) fig posttrend replace cf}}{p_end}
+
+{pmore}
+Same as above, but we now specify that CIs be presented on the graph instead of the cf or lowess smoother.
 
 {phang3}{bf:{stata "itsa cigsale, single treat(3) trperiod(1989) lag(1) fig posttrend replace ci": . itsa cigsale, single treatid(3) trperiod(1989) lag(1) fig posttrend replace ci}}{p_end}
 
@@ -545,19 +563,20 @@ A matching framework to improve causal inference in interrupted time series anal
 24: 408-415.
 
 {phang}
-------. 2018c. Using permutation tests to enhance causal inference in interrupted time series analysis. 
+------. 2018c.
+Using permutation tests to enhance causal inference in interrupted time series analysis. 
 {it:Journal of Evaluation in Clinical Practice}
 24: 496-501.
 
 {phang}
 ------. 2022.
-{browse "https://journals.sagepub.com/doi/full/10.1177/1536867X221083929":Erratum: A comprehensive set of postestimation measures to enrich interrupted time-series analysis}.
+{browse "https://journals.sagepub.com/doi/full/10.1177/1536867X221083929": Erratum: A comprehensive set of postestimation measures to enrich interrupted time-series analysis}.
 {it:Stata Journal}
 22: 231-233. 
 
 {phang}
 ------. 2025. 
-{browse "https://journals.sagepub.com/doi/10.1177/01632787251361514":A Comprehensive Simulation Study to Evaluate the Effect Size and Study Length Relationship in Single-Group Interrupted Time Series Analysis}. 
+{browse "https://journals.sagepub.com/doi/10.1177/01632787251361514": A Comprehensive Simulation Study to Evaluate the Effect Size and Study Length Relationship in Single-Group Interrupted Time Series Analysis}. 
 {it:Evaluation & the Health Professions} 
 
 {phang} 
