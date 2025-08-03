@@ -1,0 +1,23 @@
+d 'SUMBAR': module to produce bar charts showing sums of multiple numeric variables with proper labels
+d
+d  sumbar creates bar charts showing sums of multiple numeric
+d variables with proper labels. It can display results as either
+d raw sums or percentage distributions, and when used with the by()
+d option, creates color-coded grouped bars with clean legends. The
+d command is particularly useful for visualizing aggregate data
+d across multiple variables where standard approaches may require
+d data reshaping and complex syntax. 
+d
+d KW: graphics
+d KW: bar
+d KW: charts
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250802
+d
+d Author:   Kabira Namit,  World Bank
+d Support: email   knamit@@worldbank.org
+d
+f stackbar.ado
+f stackbar.sthlp

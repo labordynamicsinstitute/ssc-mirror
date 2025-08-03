@@ -1,6 +1,6 @@
 {smcl}
 
-help for {hi:varlmhet}                            (Version 1.0.0, 27 July 2025)
+help for {hi:varlmhet}                            (Version 1.0.1, 01 Aug 2025)
 
 
 {title: White test for heteroscedasticity in time-series VAR model}
@@ -8,13 +8,13 @@ help for {hi:varlmhet}                            (Version 1.0.0, 27 July 2025)
 {p 8 16 2}    {cmd: varlmhet} {cmd:,} [{cmdab:n:ocross}] 
 
 
-{cmd:varlmhet} is for use with time-series data, following use of  ^var^ and requiring 
+{cmd:varlmhet} is for use with time-series data, following use of  {cmd:var} and requiring 
 prior use of {cmd:tsset}.
 
 
 {title:Description}
 
-{cmd:varlmhet} calculates the LM statistic for heteroscedasticity in the residuals of a 
+{cmd:varlmhet} calculates the White statistic for heteroscedasticity in the residuals of a 
 time-series VAR model, following Doornik (1996).
  
 A fundamental assumption of time series VAR models is that the error variances and 
@@ -44,7 +44,7 @@ The test statistic, degrees of freedom and p-value are placed in the return arra
 
 	{p 4 8 2} . varlmhet, nocross
 
-	{p 4 8 2} . var dln_inv dln_inc dln_consump, lags(1/2) exog(t)	
+	{p 4 8 2} . var dln_inv dln_inc dln_consump, lags(1/2) exog(l(0/1).t)	
 
 	{p 4 8 2} . varlmhet
 	
@@ -59,7 +59,7 @@ The test statistic, degrees of freedom and p-value are placed in the return arra
 
 {title:Authors}
 
-Manh Hoang Ba, Eureka Uni, VNM
+Manh Hoang Ba, Eureka Uni Team, VNM
 hbmanh9492@gmail.com
 
 

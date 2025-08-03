@@ -1,5 +1,5 @@
 {smcl}
-help for {cmd: veclmhet}                           (Version 1.0.0, 28 July 2025)
+help for {cmd: veclmhet}                           (Version 1.0.1, 01 Aug 2025)
 
 {title: White test for heteroscedasticity in time-series VEC model}
 
@@ -13,7 +13,7 @@ prior use of {cmd: tsset}.
 {title:Description}
 -----------
 
-{cmd: veclmhet} calculates the LM statistic for heteroscedasticity in the residuals of a 
+{cmd: veclmhet} calculates the White statistic for heteroscedasticity in the residuals of a 
 time-series VEC model, following Doornik (1996).
  
 {cmd: veclmhet} tests the null hypothesis that the error variances and covariances are constant 
@@ -33,13 +33,17 @@ The test statistic, degrees of freedom and p-value are placed in the return arra
 	
 	{p 4 8 2} . gen t=_n
 	
-	{p 4 8 2} . vec ln_inv ln_inc ln_consump, lags(1/1)
+	{p 4 8 2} . gen q=mod(t-1,4)+1
+
+	{p 4 8 2} . tab q, gen(q)
+
+	{p 4 8 2} . vec ln_inv ln_inc ln_consump, lags(1)
 	
 	{p 4 8 2} . veclmhet
 		
 	{p 4 8 2} . veclmhet, nocross
 	
-	{p 4 8 2} . vec ln_inv ln_inc ln_consump, lags(1/2) exog(t)
+	{p 4 8 2} . vec ln_inv ln_inc ln_consump, lags(2) rank(2) si(q1-q3)
 		
 	{p 4 8 2} . veclmhet
 		
@@ -55,11 +59,11 @@ Doornik, J. A. (1996). Testing vector error autocorrelation and heteroscedastici
 
 {title:Authors}
 
-Manh Hoang Ba, Eureka Uni, VNM
+Manh Hoang Ba, Eureka Uni Team, VNM
 hbmanh9492@gmail.com
 
 
 {title:Also see}
 
 
-Online:  help for {help varlmhet} {if installed}, {help vec}, {help veclmar}, {help vecnorm}, {help vecstable}.
+On-line:  help for {help varlmhet} {help vec}, {help veclmar}, {help vecnorm}, {help vecstable}.

@@ -2640,6 +2640,7 @@ fmwww.bc.edu/repec/bocode/s/syncmrates_1.ado
 fmwww.bc.edu/repec/bocode/s/spmstar4_lf.ado
 fmwww.bc.edu/repec/bocode/s/spundir.pkg
 fmwww.bc.edu/repec/bocode/s/strmst2.ado
+fmwww.bc.edu/repec/bocode/s/sumbar.ado
 fmwww.bc.edu/repec/bocode/s/senspec.html
 fmwww.bc.edu/repec/bocode/s/synlight.ado
 fmwww.bc.edu/repec/bocode/s/spregcs34.ado
@@ -2973,6 +2974,7 @@ fmwww.bc.edu/repec/bocode/s/spmstardh.pkg
 fmwww.bc.edu/repec/bocode/s/shufflevar.ado
 fmwww.bc.edu/repec/bocode/s/stfform.pkg
 fmwww.bc.edu/repec/bocode/s/smileplot.ado
+fmwww.bc.edu/repec/bocode/s/sumbar.pkg
 fmwww.bc.edu/repec/bocode/s/sbbq.html
 fmwww.bc.edu/repec/bocode/s/seldum.html
 fmwww.bc.edu/repec/bocode/s/spmstarh.do
@@ -3803,6 +3805,7 @@ fmwww.bc.edu/repec/bocode/s/safedrop.ado
 fmwww.bc.edu/repec/bocode/s/spmat_summarize.sthlp
 fmwww.bc.edu/repec/bocode/s/svyatk.html
 fmwww.bc.edu/repec/bocode/s/stfform.sthlp
+fmwww.bc.edu/repec/bocode/s/sumbar.sthlp
 fmwww.bc.edu/repec/bocode/s/Stereotype_Regression.pdf
 fmwww.bc.edu/repec/bocode/s/spregcs02.ado
 fmwww.bc.edu/repec/bocode/s/stsurvimpute.sthlp

@@ -36,25 +36,26 @@ program define power_sim_multi_itsa, rclass
 			save `dgp1', replace
 
 			// controls dataset
-			forvalues i = 2/`contcnt' {
+			local contmax = `contcnt' + 1
+			forvalues i = 2/`contmax' {
 				itsadgp, ntime(`n') trperiod(`trperiod') intercept(`cintercept') pretrend(`cpretrend') posttrend(`cposttrend') step(`cstep') sd(`csd') rho(`cacorr')
 				gen z = 0	
-				gen id = `i' 
+				gen id = `i'
 				
 				tempfile dgp`i'
 				save `dgp`i'', replace
 			}
 				
 			use `dgp1', replace	
-				forvalues i = 2/`contcnt' { 
+				forvalues i = 2/`contmax' { 
 				append using "`dgp`i''"
 			}
 
 			tsset id t
 			
 			itsa y , treat(1) trperiod(`trperiod') lag(1)
-			test _z_x_t`trperiod' 
 			
+		
 			// choose the desired outcome - change in level or change in trend
 			if "`level'" == "" {
 				test _z_x_t`trperiod'			

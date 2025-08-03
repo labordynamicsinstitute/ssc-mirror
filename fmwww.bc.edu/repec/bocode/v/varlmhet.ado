@@ -1,73 +1,78 @@
-*! 	Version 1.0.0	Manh H. B. (hbmanh9492@gmail.com) 27/07/2025
 *	VAR Residual Heteroskedasticity Tests
+* 	Version 1.0.1	Manh H. B. 01/08/2025
+*	Following Doornik (1996)
+* 	Mod 1.0.1 to allow time series operator in VAR: exog() option
+*				and replace all global macros by local macros
+
 
 cap program drop varlmhet
 program define varlmhet, rclass
 	version 11.0
 	
 	syntax , [Nocross]
-	
-		
+			
 	if "`e(cmd)'" != "var" {
         display in red as error "Last estimates not var"
         exit 301
     }
-	
-		
+			
 	tempname var_res model_f model_r omega omega0 LM lm lm_df lm_p
 
 	* Predict e_i, e_ij
 	qui estimates store `var_res'	
 	forvalues i=1/`e(k_dv)' {
 		tempvar _e`i'
-			qui predict `_e`i'' if e(sample), r eq(#`i')
+		qui predict `_e`i'' if e(sample), r eq(#`i')
 	}	
 
-	global sigma_ij
+	local sigma_ij
 	forvalues i=1/`e(k_dv)' {
 		forvalues j=1/`e(k_dv)' {
 			if `j'>=`i' {
 				tempvar _e`i'`j'
 				qui gen `_e`i'`j''=`_e`i''*`_e`j'' if e(sample)
-				global sigma_ij $sigma_ij `_e`i'`j''
+				local sigma_ij `sigma_ij' `_e`i'`j''
 			}
 		}
 	}
 	
 	* Generating right hand-side variables
+* 1.0.1 Allow time series operator in exog() option!
+	qui tsrevar `e(exog)'
+	
 	*		Linear term
-	global yvar `e(exog)'
+	local yvar "`r(varlist)'"
 	forvalues i=1/`e(mlag)' {
 		foreach var of varlist `e(endog)' {
 			tempvar l`i'_`var'
 			qui gen `l`i'_`var'' = 0
 			qui replace `l`i'_`var'' = `var'[_n-`i'] if _n>`i' & `var'[_n-`i']<.
-			global yvar $yvar `l`i'_`var''
+			local yvar `yvar' `l`i'_`var''
 		}
 	}
 	
 	*		Squared term
-	global yvar_sq
-	foreach var of varlist $yvar {
+	local yvar_sq
+	foreach var of varlist `yvar' {
 		tempvar `var'_sq
-		gen ``var'_sq' = `var'^2
-		global yvar_sq $yvar_sq ``var'_sq'
+		qui gen ``var'_sq' = `var'^2
+		local yvar_sq `yvar_sq' ``var'_sq'
 	}
 	
 	* Auxiliary regression (White, 1980)
 	*		Cross-term
 	if "`nocross'"=="" {
-		qui reg3 ($sigma_ij = c.($yvar)##c.($yvar)) ///
+		qui reg3 (`sigma_ij' = c.(`yvar')##c.(`yvar')) ///
 			if e(sample), ols small
 	}
 	
 	else {
-		qui reg3 ($sigma_ij = $yvar $yvar_sq) ///
+		qui reg3 (`sigma_ij' = `yvar' `yvar_sq') ///
 			if e(sample), ols small
 	}
 			
 	qui estimates store `model_f'
-	qui reg3 ($sigma_ij = ) if e(sample), ols small
+	qui reg3 (`sigma_ij' = ) if e(sample), ols small
 	qui estimates store `model_r'
 
 	*	LM test for heteroscedasticity (~ EViews version)
@@ -82,8 +87,9 @@ program define varlmhet, rclass
 	scalar `lm_p' = 1-chi2(`lm_df', `lm')
 	
 	qui estimates restore `var_res'
-			
-	di
+	
+	*	Display
+ 	
 	if "`nocross'"=="" {
 		di as txt "VAR Residual Heteroscedasticity Tests (Includes Cross Terms)"
 	}

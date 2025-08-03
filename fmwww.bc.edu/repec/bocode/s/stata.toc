@@ -57,6 +57,7 @@ p stute_test module to compute Stute (1997) linearity test
 p stvarcom module to generate subset combinations of a string variable
 p styletextab module to style LaTeX tables exported by collect suite of commands
 p submatrix module to perform advanced matrix subscripting
+p sumbar module to produce bar charts showing sums of multiple numeric variables with proper labels
 p sumdocx module to generate comprehensive summary statistics and comparison tables
 p summclust module to compute cluster level measures of leverage, influence, and a cluster jackknife variance estimator
 p summtab module to compute summary statistics overall and/or across levels of a categorical variable 
