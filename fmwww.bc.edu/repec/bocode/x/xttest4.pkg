@@ -1,0 +1,19 @@
+d 'XTTEST4': module to calculate heterokedasticity tests for fixed effects models
+d
+d   This package provides new commands for calculating statistics
+d for heteroscedasticity in the residuals of fixed effects models
+d on panel data. 
+d
+d KW: heteroskedasticity
+d KW: LM statistic
+d KW: fixed effects
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250804
+d
+d Author: Hoàng Bá Mạnh , Eureka Uni Team, Vietnam
+d Support: email hbmanh9492@@gmail.com
+d
+f xttest4.ado
+f xttest4.sthlp

@@ -193,6 +193,7 @@ p psidtools module to facilitate access to Panel Study of Income Dynamics (PSID)
 p psiduse module providing easy PSID access
 p psmatch2 module to perform full Mahalanobis and propensity score matching, common support graphing, and covariate imbalance testing
 p pspline module providing a penalized spline scatterplot smoother based on linear mixed model technology
+p psr module to perform propensity score residual regression for overlap-weight average treatment effect
 p psreg module for blocking with regression adjustments
 p pstrata module for optimal propensity score stratification
 p psweight module to perform IPW- and CBPS-type propensity score reweighting, with various extensions

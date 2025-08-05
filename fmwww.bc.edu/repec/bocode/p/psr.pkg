@@ -1,0 +1,24 @@
+d 'PSR': module to perform propensity score residual regression for overlap-weight average treatment effect
+d
+d      psr implements OLS with propensity score residual and IV
+d regression with instrument score residual.	The first syntax
+d fits OLS and the second the IV regression. The covariates should
+d be exogenous	  always. 
+d
+d KW: propensity score
+d KW: regression
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20250804
+d
+d Author:     Chirok Han, Korea University
+d Support: email   chirokhan@@korea.ac.kr
+d
+d Author:    Myoung-jae Lee, Korea University
+d Support: email   myoungjae@@korea.ac.kr
+d
+f psr.ado
+f psr.sthlp
+f ../f/flu.dta
+f ../n/nlsdat.dta
