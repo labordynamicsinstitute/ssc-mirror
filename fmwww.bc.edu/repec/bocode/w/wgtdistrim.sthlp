@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  15nov2023}{...}
+{* *! version 1.1.0  05aug2025}{...}
 {vieweralsosee "[U] weight" "help weight"}{...}
 {vieweralsosee "[SVY] Survey" "help svy"}{...}
 {viewerjumpto "Syntax" "wgtdistrim##syntax"}{...}
@@ -52,6 +52,8 @@ default is {cmd:iterate(10)}
 {synopt:{opt tol:erance(#)}}tolerance for trimmed sampling weights; 
 default is {cmd:tolerance(0)}
 {p_end}
+{synopt:{opt momvar:inace}}use method of moments estimator for variance
+{p_end}
 {synopt:{opt norm:alize}}normalize trimmed sampling weights 
 to sum to number of observations
 {p_end}
@@ -75,9 +77,9 @@ using the weight distribution approach suggested by Potter (1990).
 The reciprocal of the sampling weights are assumed to follow a (scaled) 
 {help ibeta:beta} distribution. 
 The parameters of the beta distribution are estimated from the sampling weights 
-and the trimming levels (cut-offs) are computed for the specified percentiles. 
-Sampling weights that are more extreme than the specified percentiles 
-are trimmed to these percentiles and the excess is distributed equally 
+and the trimming levels (cut-offs) are computed for the specified quantiles. 
+Sampling weights that are more extreme than the specified quantiles 
+are trimmed to these quantiles and the excess is distributed equally 
 among the untrimmed sampling weights 
 so that the sum of the trimmed sampling weights 
 equals the sum of the untrimmed sampling weights. 
@@ -103,7 +105,7 @@ specifies the probability of occurrence
 of large sampling weights to be trimmed. 
 Large sampling weights with probability of occurence 
 less than {it:#}, where 0 < {it:#} < 1, are trimmed
-to the 1-{it:#} percentile of the beta distribution.
+to the 1-{it:#} quantile of the beta distribution.
 Option {opt upper()} is required.
 
 {phang}
@@ -112,7 +114,7 @@ specifies the probability of occurrence
 of small sampling weights to be trimmed. 
 Small sampling weights with probability of occurence 
 less than {it:#}, where 0 < {it:#} < 1, are trimmed
-to the {it:#} percentile of the beta distribution.
+to the {it:#} quantile of the beta distribution.
 Default is {cmd:lower(0)}.
 
 {phang}
@@ -127,14 +129,21 @@ specifies the tolerance for trimmed sampling weights.
 When the relative difference in sampling weights 
 from one iteration to the next is less than or equal to {it:#}, 
 convergence is achieved. 
-The default {opt tolerance()} is 0.
+Default is {cmd:tolerance(0)}.
+
+{phang}
+{opt momvariance}
+specifies that the variance of the sampling weights 
+is estimated using the method of moments estimator, dividing by {it:n}.  
+This is the approach used by Potter (1990, p. 227). 
+By default, the variance is estimated using {it:n}-1 as the divisor.
 
 {phang}
 {opt normalize}
 specifies that the trimmed sampling weights be normalized 
 to sum to the number of observations 
 (with non-missing positive sampling weights).
-Normalization is done once, after the trimming procedure.
+The trimmed weights are normalized only once, after the last iteration.
 
 
 {...}
@@ -159,7 +168,7 @@ if the probability of occurence is less than 0.01 (1 percent) on either tail.
 {p_end}
 
 {pstd}
-Same as above, but also normalize the the trimmed sampling 
+Same as above, but also normalize the trimmed sampling 
 weights to sum to the number of observations.
 
 {phang2}
@@ -191,7 +200,7 @@ Statistical Science, 32(2), 227--248.
 
 {pstd}
 Lang, S., & Klein, D. (2023). WGTDISTRIM: Stata module to trim extreme sampling weights. doi: {browse "https://doi.org/10.7802/2641":10.7802/2641}{break}
-Available from {browse "https://raw.githubusercontent.com/se-lang/wgtdistrim/main"}
+Available from {browse "https://github.com/se-lang/wgtdistrim/tree/main"}
 
 
 {...}
