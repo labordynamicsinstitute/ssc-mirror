@@ -1182,6 +1182,7 @@ fmwww.bc.edu/repec/bocode/s/spregcs16.ado
 fmwww.bc.edu/repec/bocode/s/sutex2.sthlp
 fmwww.bc.edu/repec/bocode/s/sctorezone.sthlp
 fmwww.bc.edu/repec/bocode/s/scheme-black_viridis.scheme
+fmwww.bc.edu/repec/bocode/s/sumtex_demo.do
 fmwww.bc.edu/repec/bocode/s/sptobitsarxt.do
 fmwww.bc.edu/repec/bocode/s/scoregrp.ado
 fmwww.bc.edu/repec/bocode/s/sginicorr.sthlp
@@ -2200,6 +2201,7 @@ fmwww.bc.edu/repec/bocode/s/seqlogit.hlp
 fmwww.bc.edu/repec/bocode/s/sptobitsacxt.do
 fmwww.bc.edu/repec/bocode/s/swapval.hlp
 fmwww.bc.edu/repec/bocode/s/seq.pkg
+fmwww.bc.edu/repec/bocode/s/sumtex.ado
 fmwww.bc.edu/repec/bocode/s/seqfind.ado
 fmwww.bc.edu/repec/bocode/s/simsum.sthlp
 fmwww.bc.edu/repec/bocode/s/seqlogitdecomp.html
@@ -2890,6 +2892,7 @@ fmwww.bc.edu/repec/bocode/s/stnet.sthlp
 fmwww.bc.edu/repec/bocode/s/sqmc.sthlp
 fmwww.bc.edu/repec/bocode/s/sampsi_rho.pkg
 fmwww.bc.edu/repec/bocode/s/sizefx.hlp
+fmwww.bc.edu/repec/bocode/s/sumtex.pkg
 fmwww.bc.edu/repec/bocode/s/sptobitmstarxt02.ado
 fmwww.bc.edu/repec/bocode/s/svygei.ado
 fmwww.bc.edu/repec/bocode/s/stopwords_sv.txt
@@ -3476,6 +3479,7 @@ fmwww.bc.edu/repec/bocode/s/scdcor.hlp
 fmwww.bc.edu/repec/bocode/s/scoregof.html
 fmwww.bc.edu/repec/bocode/s/sequence.sthlp
 fmwww.bc.edu/repec/bocode/s/sppack_examples.do
+fmwww.bc.edu/repec/bocode/s/sumtex.sthlp
 fmwww.bc.edu/repec/bocode/s/sdhamming.ado
 fmwww.bc.edu/repec/bocode/s/sqdes.sthlp
 fmwww.bc.edu/repec/bocode/s/spglsxt.dlg
@@ -21817,6 +21821,7 @@ fmwww.bc.edu/repec/bocode/r/z/zipappend.html
 fmwww.bc.edu/repec/bocode/r/z/zipuse.html
 fmwww.bc.edu/repec/bocode/r/z/zerouse.ado
 fmwww.bc.edu/repec/bocode/r/z/zip_ll.ado
+fmwww.bc.edu/repec/bocode/r/regtex.pkg
 fmwww.bc.edu/repec/bocode/r/repkit.sthlp
 fmwww.bc.edu/repec/bocode/r/rowranks.html
 fmwww.bc.edu/repec/bocode/r/randomizr.html
@@ -22281,6 +22286,7 @@ fmwww.bc.edu/repec/bocode/r/renfiles.sthlp
 fmwww.bc.edu/repec/bocode/r/rndpod.ado
 fmwww.bc.edu/repec/bocode/r/rrr.ado
 fmwww.bc.edu/repec/bocode/r/rbiprobit.pkg
+fmwww.bc.edu/repec/bocode/r/regtex.sthlp
 fmwww.bc.edu/repec/bocode/r/rddensity_illustration.do
 fmwww.bc.edu/repec/bocode/r/reweight.dta
 fmwww.bc.edu/repec/bocode/r/rwg.ado
@@ -22421,6 +22427,7 @@ fmwww.bc.edu/repec/bocode/r/rangestat_test.do
 fmwww.bc.edu/repec/bocode/r/remr.ado
 fmwww.bc.edu/repec/bocode/r/rewrite.hlp
 fmwww.bc.edu/repec/bocode/r/rmvnormal.sthlp
+fmwww.bc.edu/repec/bocode/r/regtex.ado
 fmwww.bc.edu/repec/bocode/r/rcl.pkg
 fmwww.bc.edu/repec/bocode/r/rowsort.pkg
 fmwww.bc.edu/repec/bocode/r/reghdfe3.sthlp

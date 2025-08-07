@@ -1,0 +1,25 @@
+d 'SUMTEX': module to generate publication-ready descriptive statistics tables in LaTeX format
+d
+d  sumtex generates publication-quality descriptive statistics
+d tables in standalone LaTeX format.  The    command automatically
+d processes numeric variables, applies variable labels, escapes
+d special LaTeX    characters, and produces a complete compilable
+d .tex document. 
+d
+d KW: descriptive statistics
+d KW: LaTeX
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20250806
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Yang Lu,  Anhui University of Technology
+d Support: email  1026835594@@qq.com
+d
+f sumtex.ado
+f sumtex.sthlp
+f sumtex_demo.dta
+f ../a/asure.dta

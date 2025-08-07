@@ -125,6 +125,7 @@ p regresby module to generate regression residuals by byvarlist
 p regsave module to save regression results to a Stata-formatted dataset 
 p regsensitivity module for regression sensitivity analysis
 p regtable module to produce file of conditional average treatment effects
+p regtex module to Export regression results to publication-ready LaTeX tables
 p regwls module to estimate Weighted Least Squares with factor variables
 p regxfe module to fit a linear high-order fixed-effects model
 p rel_clust module to compute indices of relative clusterability of variables 

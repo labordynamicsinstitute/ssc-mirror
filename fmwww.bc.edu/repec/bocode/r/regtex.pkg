@@ -1,0 +1,27 @@
+d 'REGTEX': module to Export regression results to publication-ready LaTeX tables
+d
+d   regtex exports regression results from multiple models to a
+d publication-ready LaTeX table.  It	automatically handles
+d coefficient formatting, significance stars, standard errors, and
+d model    statistics.	The output is a complete .tex file with
+d proper LaTeX document structure. 
+d
+d KW: regression
+d KW: output
+d KW: LaTeX
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20250806
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:    Wu Hanyan,  2325476320@qq.com
+d Support: email   Nanjing University of Aeronautics and Astronautics
+d
+d Author:  Wu Xinzhuo,  University of Bristol
+d Support: email   2957833979@@qq.com
+d
+f regtex.ado
+f regtex.sthlp
