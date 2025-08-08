@@ -1,0 +1,35 @@
+d 'KMSENSPEC': module to estimate sensitivity, specificity and predictive values from Kaplan-Meier curves
+d
+d      kmsenspec is intended for use in a survival time dataset set
+d up by stset.	    It inputs a binary variable indicating a
+d positive test result, and	 estimates positive and negative
+d predictive values from Kaplan-Meier	   survival probabilities
+d at a time specified by the user in positive and      negative
+d observations, and then estimates the sensitivity and specificity 
+d     of the test using the Bayes theorem, with delta-Greenwood
+d variances	 estimated from the Greenwood standard errors of
+d the positive and negative	 predictive values.  The estimation
+d results are estimates of the	    sensitivity, specificity,
+d negative predictive power, and positive      predictive power,
+d with a covariance matrix for the untransformed      estimates. 
+d Alternatively, kmsenspec can be used with the SSC packages	 
+d parmest and esetran to compute delta-Greenwood confidence
+d intervals using      a variety of Normalizing transforms.  The
+d kmsenspec package uses the SSC      package kmest, which must be
+d installed in order for kmsenspec to work. 
+d
+d KW: Kaplan-Meier
+d KW: sensitivity
+d KW: specificity
+d
+d Requires: Stata version 16 and kmest from SSC (q.v.)
+d
+d Distribution-Date: 20250807
+d
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
+d
+f kmsenspec.sthlp
+f kmsenspec.ado
+f kmsenspec_p.ado
+f kmsenspec.pdf

@@ -13619,6 +13619,7 @@ fmwww.bc.edu/repec/bocode/k/kountrybackup.hlp
 fmwww.bc.edu/repec/bocode/k/ksi.hlp
 fmwww.bc.edu/repec/bocode/k/keyby.hlp
 fmwww.bc.edu/repec/bocode/k/koenker.ado
+fmwww.bc.edu/repec/bocode/k/kmsenspec.pkg
 fmwww.bc.edu/repec/bocode/k/k_penn.ado
 fmwww.bc.edu/repec/bocode/k/kountrynames.html
 fmwww.bc.edu/repec/bocode/k/kweight.sthlp
@@ -13751,6 +13752,7 @@ fmwww.bc.edu/repec/bocode/k/ky_estat.sthlp
 fmwww.bc.edu/repec/bocode/k/kernreg1.html
 fmwww.bc.edu/repec/bocode/k/khbtab.sthlp
 fmwww.bc.edu/repec/bocode/k/khb.pkg
+fmwww.bc.edu/repec/bocode/k/kmsenspec.sthlp
 fmwww.bc.edu/repec/bocode/k/ky_ll_3.ado
 fmwww.bc.edu/repec/bocode/k/keyby.html
 fmwww.bc.edu/repec/bocode/k/kernreg1.hlp
@@ -13770,6 +13772,7 @@ fmwww.bc.edu/repec/bocode/k/ky_fit.pkg
 fmwww.bc.edu/repec/bocode/k/kappci.ado
 fmwww.bc.edu/repec/bocode/k/ky_star.ado
 fmwww.bc.edu/repec/bocode/k/kitchensink.pkg
+fmwww.bc.edu/repec/bocode/k/kmsenspec_p.ado
 fmwww.bc.edu/repec/bocode/k/k_geo_un.ado
 fmwww.bc.edu/repec/bocode/k/ky_ll_1.ado
 fmwww.bc.edu/repec/bocode/k/kmatch.sthlp
@@ -13799,6 +13802,8 @@ fmwww.bc.edu/repec/bocode/k/koenker.pkg
 fmwww.bc.edu/repec/bocode/k/kwstat.hlp
 fmwww.bc.edu/repec/bocode/k/kernreg2.pkg
 fmwww.bc.edu/repec/bocode/k/kinkyreg.ado
+fmwww.bc.edu/repec/bocode/k/kmsenspec.pdf
+fmwww.bc.edu/repec/bocode/k/kmsenspec.ado
 fmwww.bc.edu/repec/bocode/k/kr20.pkg
 fmwww.bc.edu/repec/bocode/k/ksmirnov2var.ado
 fmwww.bc.edu/repec/bocode/k/kpss.html
