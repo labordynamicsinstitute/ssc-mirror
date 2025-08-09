@@ -67,6 +67,7 @@ p xtfixedcoeftvcu module to estimate Panel Data Models with Coefficients that Va
 p xtfmb module to execute Fama-MacBeth two-step panel regression
 p xtgcause module to test for Granger non-causality in heterogeneous panels
 p xtgeebcv module to compute bias-corrected (small-sample) standard errors for generalized estimating equations
+p xtgls2 module to estimate GLS estimator for large N, small T panel data models
 p xtglsr module to calculate robust, or cluster-robust variance after xtgls
 p xtgps module to estimate Hoechle, Schmid, and Zimmermann's (2024) GPS regression model for analyzing asset returns
 p xtgrangert module for improved Granger non-causality testing in heterogeneous and homogeneous panel data

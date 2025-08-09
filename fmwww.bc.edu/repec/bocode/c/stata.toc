@@ -230,6 +230,7 @@ p copydesc module to copy description of variable
 p coranal module to perform simple correspondence analysis
 p corescore module to produce Comorbid Operative Risk Evaluation (CORE) Score macro
 p corr2docx module to report Pearson & Spearman correlation coefficients to formatted table in DOCX file
+p corr2tex module to export publication-ready correlation matrices to LaTeX with significance stars
 p corr_svy module to compute correlation tables for survey data
 p correlationchords module to produce a circular chord diagram of correlations
 p corrtab module to display correlation coefficients in a formatted tabular output

@@ -1,0 +1,31 @@
+d 'XTGLS2': module to estimate GLS estimator for large N, small T panel data models
+d
+d     xtgls2 estimates General GLS estimator for large N, small T
+d linear panel data models (Pooled, FE,    FD), aiming to obtain
+d (asymptotically) efficient estimates in the context of
+d non-spherical    characteristic errors.    Specifically, in each
+d estimator, the error covariance matrix is assumed to have a
+d general (or	 restricted) form within panels, and to be the same
+d across panels. These assumptions can be relaxed,    for example,
+d there is no correlation between observations within panels. In
+d the context of    heteroscedastic errors across panels,
+d panelvar-clustered standard errors (Arellano, 1987) can be   
+d used. For more details, see Kiefer (1980) and Wooldridge (2002,
+d 2010).    In summary, xtgls2 allows researchers to control for
+d heteroscedasticity across panels, over time	 periods, and
+d general correlation within panels. xtgls2 is used for balanced
+d panel data with N>>T and    data must be xtset. 
+d
+d KW: GLS
+d KW: panel data
+d KW: heteroskedasticity
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250808
+d
+d Author: Hoàng Bá Mạnh , Eureka Uni Team, Vietnam
+d Support: email hbmanh9492@@gmail.com
+d
+f xtgls2.ado
+f xtgls2.sthlp
