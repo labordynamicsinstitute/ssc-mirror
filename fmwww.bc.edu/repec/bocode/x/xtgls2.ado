@@ -1,7 +1,6 @@
-* Version 1: 07 Aug 2025, Manh Hoang Ba (hbmanh9492@gmail.com)
-* General FGLS Regression (Kiefer, 1980; Wooldridge, 2002)
-*	Large N, small T panel data context.
-*	Handling serial correlation and heteroscedasticity in e_it.
+* Version 1.1 09 Aug 2025, Manh Hoang Ba (hbmanh9492@gmail.com)
+* Following by Kiefer (1980); Wooldridge (2002, 2010)
+* Version 1.1 to allow iterated GLS
 
 cap program drop xtgls2
 program define xtgls2, eclass
@@ -13,8 +12,12 @@ program define xtgls2, eclass
 			CLuster(varname) ///			
 			nmk minus(integer 0) ///
 			Level(cilevel) ///
+			igls ///
+			ITERate(int 50) ///
+			TOLerance(real 1e-7) ///
+			NOLOg LOg ///
 			]
-    
+			
 	// Mark sample
 	tempvar touse
 	mark `touse' `if' `in'
@@ -37,7 +40,7 @@ program define xtgls2, eclass
 		di in red "{bf:minus()} and {bf:cluster()} must be specified together"
 		exit 198
 	}
-	
+		
 	//	Store panel/time variables
 	local ivar "`r(panelvar)'"
 	local tvar "`r(timevar)'"
@@ -110,14 +113,66 @@ program define xtgls2, eclass
     }
     
 	// Covariance option
-	if "`cov'"=="i" {
+	if `"`cov'"'!=`"c"' & `"`cov'"'!=`"h"' {
 		di in red "option {bf:cov()} incorrectly specified"
 		exit 198
 	}
 	
+*	//	Check for iterated GLS		********** <--- iterated GLS!
+	if `iterate' <= 1 {
+		noi di in red `"iterate() must be positive and > 1"'
+		exit 198
+	}
+
+	local tol `tolerance'
+	local diff = `tol' + 1
+	local iter = 1
+	tempname bold beta
+	
+	_parse_iterlog, `log' `nolog'
+	local log "`s(nolog)'"
+	local qqq = cond("`log'"!="", "quietly", "noisily")
+	
     // Perform Gerneral GLS
 	qui xtset `tvar' `ivar'
-    qui xtgls `varlist2' if `touse', p(`cov') `noconstant' `nmk'
+	
+	*		Iterated GLS
+
+	while `iter' < `iterate' & `diff' > `tol' {
+		
+		if `"`igls'"' == `""' {
+			local diff = 0
+		}
+		
+		if `iter'==1 {
+			qui xtgls `varlist2' if `touse', p(`cov') `noconstant' `nmk'
+			mat `bold'=e(b)
+		}
+		else {
+			qui xtgls `varlist2' if `touse', p(`cov') `noconstant' `nmk' ///
+				tolerance(`tol') iter(`iter') `igls'
+			local diff = mreldif(e(b), `bold')
+			mat `bold' = e(b)
+			
+			if `iter' < 11 local space " "
+			else local space ""
+			
+			if `iter' == 2 {
+				`qqq' di
+			}
+			`qqq' di in gr "Iteration " `=`iter'-1' ///
+				":`space' Tolerance = " in ye `diff'
+		}
+		local iter = `iter'+1
+	}
+	
+	if `diff' > `tol' {
+		noi di in red "Convergence not achieved!"
+	}
+	else {
+		di _n in ye "Convergenced after `=`iter'-1' iterations"
+	}
+	
 	*		Cluster-robust COV
 	if "`cluster'" != "" {
 		qui xtglsr_modified, cluster(`cluster') minus(`minus')
@@ -131,10 +186,10 @@ program define xtgls2, eclass
 	
 	qui predict `xb' if `touse'
 	qui sort `ivar' `tvar'
-	by `ivar': egen `xb_m'=mean(`xb') if `touse'
-	by `ivar': egen `y_m'=mean(`depvar') if `touse'
-	gen `xb_dm' = `xb' - `xb_m' if `touse'
-	gen `y_dm' = `depvar' - `y_m' if `touse'
+	qui by `ivar': egen `xb_m'=mean(`xb') if `touse'
+	qui by `ivar': egen `y_m'=mean(`depvar') if `touse'
+	qui gen `xb_dm' = `xb' - `xb_m' if `touse'
+	qui gen `y_dm' = `depvar' - `y_m' if `touse'
 	
 	*		Overall
 	qui corr `depvar' `xb' if `touse'
@@ -216,9 +271,18 @@ program define xtgls2, eclass
     }
 	
 	// Display results
-	if "`e(model)'"=="ols" local model_ "Pooled"
-	else if "`e(model)'"=="fe" local model_ "Fixed-effects"
-	else local model_ "First-difference"
+	if "`e(model)'"=="ols" {
+		local model_ "Pooled"
+		local model_sf "PGLS"
+	} 
+	else if "`e(model)'"=="fe" {
+		local model_ "Fixed-effects"
+		local model_sf "FEGLS"
+	} 
+	else {
+		local model_ "First-difference"
+		local model_sf "FDGLS"
+	}
 	
 	local h "Heteroskedasticity"
 	if "`cov'" == "c" local c `"and serial correlation"'
@@ -230,10 +294,10 @@ program define xtgls2, eclass
 	else	local cfmt `"%10.3f"'	
 	
 	di
-	di in gr "`model_' Generalized Least Squares (FDGLS) regression" _n
+	di in gr "`model_' Generalized Least Squares (`model_sf') regression" _n
 	di in gr "Error covariance structure"
-	di in gr _col(6) "Time series:" in ye _col(21) "`h' `c'"
-	di in gr _col(6) "Cross-section:" in ye _col(21) "Homoskedasticity"
+	di in gr _col(6) "Time series:" in ye _col(23) "`h' `c'"
+	di in gr _col(6) "Cross-section:" in ye _col(23) "Homoskedasticity"
 	di
 	di in gr "Estimated covariances:"   ///
 		in ye _col(25) %3.0fc e(n_cv) ///

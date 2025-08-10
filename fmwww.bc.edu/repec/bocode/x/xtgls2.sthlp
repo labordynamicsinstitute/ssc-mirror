@@ -1,7 +1,7 @@
 
 {smcl}
-{* *! version 1.0.0, 08 Aug 2025}{...}
-{cmd:help xtgls2}
+{* *! version 1.1, 09 Aug 2025}{...}
+{cmd:help xtgls2}			Version 1.1, 09 Aug 2025, by Manh Hoang Ba
 {hline}
 
 {title:Title}
@@ -13,8 +13,8 @@
 
 {title:Syntax}
 
-{pstd}{cmd:xtgls2} {varlist} {ifin} [{cmd:,} {cmdab:nocon:stant} {cmd:ols} {cmd:fe} {cmd:fd} {cmdab:c:ov(c|h)} {cmdab:cl:uster(varname)} {cmd:nmk} {cmd:minus(#)}
-{cmdab:l:evel(}{it:num}{cmd:)}]
+{pstd}{cmd:xtgls2} {varlist} {ifin} [{cmd:,} {cmdab:nocon:stant} {cmd:ols} {cmd:fe} {cmd:fd} {cmdab:c:ov(c|h)} {cmdab:cl:uster(varname)} {cmd:nmk} {cmd:minus(}{it:num}{cmd:)}
+{cmdab:l:evel(}{it:num}{cmd:)} {cmd:igls} {cmdab:iter:ate(}{it:num}{cmd:)} {cmdab:tol:erance(}{it:num}{cmd:)} {cmdab:nolo:g} {cmdab:lo:g}]
 
 
 {title:Description}
@@ -23,7 +23,7 @@
 
 {pstd}Specifically, in each estimator, the error covariance matrix is assumed to have a general (or restricted) form within panels, and to be the same across panels. These assumptions can be relaxed, for example, there is no correlation between observations within panels. In the context of heteroscedastic errors across panels, panelvar-clustered standard errors (Arellano, 1987) can be used. For more details, see Kiefer (1980) and Wooldridge (2002, 2010).
 
-{pstd}In summary, {cmd:xtgls2} allows researchers to control for heteroscedasticity across panels, over time periods, and general correlation within panels. {cmd:xtgls2} is used for balanced panel data with {cmd:N>>T} and data must be {cmd:xtset}.
+{pstd}In summary, {cmd:xtgls2} allows researchers to control for heteroscedasticity across panels, over time periods, and general correlation within panels. {cmd:xtgls2} is appropriate for balanced panel data with {cmd:N >> T} and data must be {help xtset} before using this command.
 
 {synoptset 25 tabbed}{...}
 {synopthdr}
@@ -36,14 +36,22 @@
 {synopt :{opt fd}}use feasible first-difference GLS estimator.{p_end}
 {synopt :{cmdab:c:ov(c)}}use heteroskedastic and correlated error structure within panels.{p_end}
 {synopt :{cmdab:c:ov(h)}}use heteroskedastic error structure within panels.{p_end}
+{synopt :{cmd:igls}}use iterated GLS estimator instead of two-step GLS estimator.{p_end}
 
 {syntab:SE}
 {synopt :{cmdab:cl:uster(varname)}}use varname-clustered standard errors, required when {opt minus(#)} is specified.{p_end}
 {synopt :{opt nmk}}normalize standard error by N-k instead of N.{p_end}
-{synopt :{opt minus(#)}}controls the degrees of freedom adjustment factor in the robust, or cluster-robust variance calculation. Default value is minus(0).{p_end}
+{synopt :{opt minus(#)}}controls the degrees of freedom adjustment factor in the robust, or cluster-robust variance calculation. Default value is {opt minus(0)}.{p_end}
 
 {syntab:Reporting}
 {synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}.{p_end}
+
+{syntab:Optimization}
+{synopt :{opt iter:ate(#)}}specifies the maximum number of iterations; default is {cmd:iterate(50)}.{p_end}
+{synopt :{opt tol:erance(#)}}specifies the tolerance for the coefficient vector; default is {cmd:tolerance(1e-7)}.{p_end}
+{synopt :{opt lo:g}}display the iteration log. This is default.{p_end}
+{synopt :{opt nolo:g}}does not display the iteration log.{p_end}
+
 {synoptline}
 {p2colreset}{...}
 
@@ -99,8 +107,8 @@
 
 {title:Authors}
 
-	Manh Hoang Ba, Eureka Uni Team, VNM
-	Email: hbmanh9492@gmail.com
+	Manh Hoang Ba, Eureka Uni Team, Vietnam
+	hbmanh9492@gmail.com
 
 {title:Also see}
 
