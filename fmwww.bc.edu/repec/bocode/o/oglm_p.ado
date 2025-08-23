@@ -1,4 +1,4 @@
-*! version 2.3.2 16feb2025  Richard Williams, rwilliam@nd.edu
+*! version 2.3.3 13aug2025  Richard Williams, rwilliam@nd.edu
 
 * Adapted from ologit_p version 1.2.5  30mar2005
 program define oglm_p 

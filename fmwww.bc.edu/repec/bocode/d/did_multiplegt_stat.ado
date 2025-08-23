@@ -1,77 +1,31 @@
 *This program estimates the three estimators (as, was, iv-as) developped in 
-**de Chaisemartin, Clément and d'Haultfoeuille, Xavier and Pasquier, Félix and Vazquez‐Bare, Gonzalo,
-** Difference-in-Differences Estimators for Treatments Continuously Distributed at Every Period (January 18, 2022). 
-**Available at SSRN: https://ssrn.com/abstract=4011782 or http://dx.doi.org/10.2139/ssrn.4011782
+**de Chaisemartin, Clément and d'Haultfoeuille, Xavier and Pasquier, Félix and Vazquez‐Bare, Doulo Sow, Gonzalo,
+** Difference-in-Differences Estimators for Treatments Continuously Distributed at Every Period (2025). 
+**https://arxiv.org/pdf/2201.06898
 
-//Doulo: on Jan, 4: this versions compute the as - was - iwas estimators, and theirs variances with options (polynom, switchers)
-
-//1. The simulations made with this version look good: ~96% of coverage, with 100 simulations (test_simu_madeupData1.do)
-
-//2. At this date, Janv 4, the command does not consider the logit, and the doubly_robust option,  appraoches yet.
-
-//3. The number of periods is >=2
-
-//4. Missing values problem is solved - unbalanced data
-
-//Main options: estimator(as|was|iwas), estimation_method(ra|ps|dr), order(), switchers(up|down), noextrapolation, placebo, disaggregate
-
-
-*The aggregation is done, and is well working: as test I tried to also to test whether I have the same variance if T=2 for both the aggregated and the simple case. 
-*noextrapolation coded
-		
-//To be added checked: Consider the difference combination (as, was, iwas) in if conditions //solved
-
-//Janv, 15: the new versions of the IFs are implemented
-
-//panel data with gaps or one type cases are also coded
-
-//Janv, 17 I started coding the ps-based approach for the was, starting from the ra-based approach version
-//I added the dr-based approach
-
-//Janv, 29: Some adjustements to wrap up: 
-	/* 1. For the as, \hat{E}(S|D_1) in the influence function is no longer estimated by a linear regression but by a logit 
-	/All the methods (ra, ps, dr) are computed for as, was, and iwas as well. Need to do the aggreagation for iwas (done!).
-	*/
-//Janv 30, the aggregated and disaggregated placebos versions are computed.
-
-///FEBRUARY, 1: This version computes all the options provided in the syntax, except only the aggreagation of IWAS.
-//FEB, 8: The command is more or less done, I made several checks (coverage rate, influence functions, points estimate, sanity-checks etc.) and we are find so far.
-
-//Feb, 19: Option cluster is computed. 
-
-//Feb 21: The weights option: The idea is (i) to exploit the command {sum varlist [iw = weights_XX]}, (ii) put the option weights in all the regressions (logit and linear), (iii) instead of usingg r(N) use r(sum_w) etc.
-
-//Feb, 23: Shut down the option weights and cluster: local weights = "" and local cluster = ""
-
-//The program is now byable and produces a graph of the effects and the placebos (see bys_graph_off)
-
-
-//Next: Add the baseline|FD by option (done):  pctile newvar = oldvar, nq(#) 
-// March 11, FD and baseline option computed 
-//Multiple treatment option computed. 
-//Cluster option ok
-//Adding controls ok
-//weighs ok
-//Add Placebo FS placebo : okay, the program shows the FS whenever IV is requested ok
-//Adding cross_validation ok
-
-
-//// TO DO LIST
-// 1. Different tables for each version of placebo
-// 2. Graph like in did_multiplegt_dyn showing placebos and Effect_0, with x-axis being the periods.
-
+*VERSION AS OF AUGUST 2025.
+*----------------------------------------------------------------------------------------------------------------------------------------------------------
+*
+* MAIN PROGRAM 1: THIS PROGRAM MAKES SOME SANITY CHECKS, DEFINES VARIABLES, CHECKS IF WE NEEED TO CALL THE FIRST STAGE, DOES IF SO ETC.
+*
+*----------------------------------------------------------------------------------------------------------------------------------------------------------
 capture program drop did_multiplegt_stat
 program did_multiplegt_stat, eclass sortpreserve byable(recall)
 	version 12.0
-	syntax varlist(min=4 max=5 numeric) [if] [in] [, estimator(string) estimation_method(string) ORder(integer 1) NOEXTRApolation placebo(integer 0) switchers(string) DISAGgregate as_vs_was exact_match bys_graph_off by_fd(integer 1) by_baseline(integer 1) other_treatments(varlist numeric) cluster(varlist max=1) controls(varlist numeric) weights(varlist numeric max=1)  bootstrap(integer 0) seed(integer 0) twfe(string) cross_validation(string) graph_off ] 
+	syntax varlist(min=4 max=5 numeric) [if] [in] [, estimator(string) estimation_method(string) ORder(string) NOEXTRApolation placebo(integer 0) switchers(string) DISAGgregate as_vs_was exact_match bys_graph_off by_fd(integer 1) by_baseline(integer 1) other_treatments(varlist numeric) cluster(varlist max=1) controls(varlist numeric) weights(varlist numeric max=1)  bootstrap(integer 0) seed(integer 0) twfe(string) cross_validation(string) cross_fitting(integer 0) graph_off trimming(integer 0) on_placebo_sample] 
 
-	marksample touse // Felix This causes the program to crash with weightss
+	marksample touse 
 	if _by() {
 		quietly replace `touse' = 0 if `_byindex' != _byindex()
 	}
-	
-/// Modif Felix: Add some kind of preamble to ensure "meaningful" inputs ///
+// Add some kind of preamble to ensure "meaningful" inputs ///
 
+ if (`cross_fitting'<2&`cross_fitting'!=0) {
+ 	di as error 
+	di as error "option cross_fitting incorrectly specified: "
+	di as error "The number of subsamples must be higher than 1."
+	exit
+ }
 // bootstrap has to be POSITIVE integer
 if `bootstrap'<0{
 	di ""
@@ -99,11 +53,28 @@ if ("`switchers'"!="up" & "`switchers'"!="down" & "`switchers'"!=""){
 	//tokenize the varlist
 tokenize `varlist'
 
+/*******************************************************************************
+//Drop missing values to avoid errors: (Dec, 2024)
+*******************************************************************************/
+foreach var of varlist `1' `2' `3' `4' `5' `controls' `weights' `other_treatments' `cluster' {
+	cap drop if `var' == .
+	cap drop if `var' == ""
+ }
+ 
+//Count number of arguments in order option
+local order_count: word count `order'
+//di as error  "`order_count'"
+if (`order_count'==0) {
+	local order = 1 //default
+	local order_count = 1
+	
+}
+
 if ("`5'"!=""&"`5'"!=","){
 local IV_feed_XX = "yes"
 local IV_var_XX  `5' 
 
-// Modif Felix: add warning at the beginning
+// Add warning at the beginning
 if "`estimator'"!="iv-was"{
 		di ""
 		di as error "You specified the 5th input variable (Instrumental variable) which is only compatible with the iv-was estimator."
@@ -112,18 +83,63 @@ if "`estimator'"!="iv-was"{
 	}
 
 //Show the First Stage
+
+		local first_stage_specification `4' `2' `3' `5'
+		
+		if (`order_count'==8){
+			//Take the first for as order of the first stage
+			tokenize `order'
+			local first_stage_orders `1' `2' `3' `4'
+			local reduced_form_orders `5' `6' `7' `8'
+		}
+		else{
+			if (`order_count'==4){
+			//Take the first for as order of the first stage
+			tokenize `order'
+			local first_stage_orders `1' `2' `3' `4'
+			local reduced_form_orders `first_stage_orders'
+			}
+			else{
+				if (`order_count'==1) {
+					local first_stage_orders `order'
+					local reduced_form_orders `order'
+					}
+					else {
+						di as error "Error with the option order: only 1, 4, or 8 (with iv-was) arguments are allowed."
+						exit
+					}
+			}
+		}
 		di as input "{hline 80}"
 		di as input _skip(30) "First stage estimation"
 		di as input "{hline 80}"
+		
 		//if strpos("`5'", ",") != 0 local 5 = strtrim(substr("`5'", 1, strpos("`5'", ",") - 1))
 		local estimator = "was"
-		did_multiplegt_stat2 `4' `2' `3' `5' if `touse' == 1,  estimator(`estimator') estimation_method(`estimation_method') order(`order') `noextrapolation' placebo(`placebo') switchers(`switchers') `disagregate' `as_vs_was' `exact_match' `bys_graph_off' by_fd(`by_fd') by_baseline(`by_baseline') other_treatments(`other_treatments') cluster(`cluster') controls(`controls') weights(`weights') cross_validation(`cross_validation') `graph_off' //twfe(`twfe')
+		if ("`if'"!="") local if_touse = "`if'&`touse' == 1"
+		else local if_touse = "if `touse' == 1"
+		
+		did_multiplegt_stat2 `first_stage_specification'  `if_touse',  estimator(`estimator') estimation_method(`estimation_method') order(`first_stage_orders') `noextrapolation' placebo(`placebo') switchers(`switchers') `disagregate' `as_vs_was' `exact_match' `bys_graph_off' by_fd(`by_fd') by_baseline(`by_baseline') other_treatments(`other_treatments') cluster(`cluster') controls(`controls') weights(`weights') cross_validation(`cross_validation') `graph_off' `disaggregate' first_stage  cross_fitting(`cross_fitting') trimming(`trimming')
 }
 
 
-//Show the main results
-		local cmd = subinstr("`0'", ",", " if `touse' == 1,", 1)
-		did_multiplegt_stat2 `cmd'
+//Show the main results:
+if ("`if'"!="") {
+	local if_touse = "`if'&`touse' == 1"
+	local cmd = subinstr("`0'", "`if'", " `if_touse'", 1)
+	
+	if (strpos("`0'", ",")>0)  did_multiplegt_stat2 `cmd' reduced_form_orders(`reduced_form_orders')
+	else did_multiplegt_stat2 `cmd' , reduced_form_orders(`reduced_form_orders') 
+}
+else {
+		local if_touse = "if `touse' == 1"
+		local cmd = subinstr("`0'", ",", " `if_touse' , ", 1)
+		
+		if (strpos("`0'", ",")>0) did_multiplegt_stat2 `cmd' reduced_form_orders(`reduced_form_orders') 
+		else did_multiplegt_stat2 `cmd' `if_touse' , reduced_form_orders(`reduced_form_orders') 
+} //(Dec, 2024) DS: The if here conflicts with the if of the main command, if any. Corrected above.
+		
+
 				
 		//Drop scalar created by the program
 		cap scalars_to_drop  //a subprogram dropping all scalars with the pattern _XX
@@ -135,11 +151,19 @@ if "`estimator'"!="iv-was"{
 end 
 
 
+*----------------------------------------------------------------------------------------------------------------------------------------------------------
+*
+* MAIN PROGRAM 2: THIS IS THE MAIN PROGRAM COMPUTING ALL THE AGGREGATED ESTIMATORS AND DISPAYS THE RESULTS. IT CALLS THE SECONDARY PAIRWISE PROGRAM MULTIPLE TIMES.
+*
+*----------------------------------------------------------------------------------------------------------------------------------------------------------
 capture program drop did_multiplegt_stat2
 program did_multiplegt_stat2, eclass sortpreserve byable(recall)
 	version 12.0
-	syntax varlist(min=4 max=5 numeric) [if] [in] [, estimator(string) estimation_method(string) ORder(integer 1) NOEXTRApolation placebo(integer 0) switchers(string) DISAGgregate as_vs_was exact_match bys_graph_off by_fd(integer 1) by_baseline(integer 1) other_treatments(varlist numeric) cluster(varlist max=1) controls(varlist numeric) weights(varlist numeric max=1)  bootstrap(integer 0) seed(integer 0) twfe(string) cross_validation(string) graph_off ] // FIRST_stage   twfe(percentile same_sample)
+	syntax varlist(min=4 max=5 numeric) [if] [in] [, estimator(string) estimation_method(string) ORder(string) NOEXTRApolation placebo(integer 0) switchers(string) DISAGgregate as_vs_was exact_match bys_graph_off by_fd(integer 1) by_baseline(integer 1) other_treatments(varlist numeric) cluster(varlist max=1) controls(varlist numeric) weights(varlist numeric max=1)  bootstrap(integer 0) seed(integer 0) twfe(string) cross_validation(string) graph_off FIRST_stage reduced_form_orders(string) cross_fitting(integer 0)  trimming(integer 0) on_placebo_sample ] // FIRST_stage   twfe(percentile same_sample)
 
+	if ("`reduced_form_orders'"!="") {
+		local order = "`reduced_form_orders'"
+	}
 	
 	// Felix: Do not show "event-study" graph with by_baseline or by_fd
 	if (`by_baseline'!=1 | `by_fd'!=1){
@@ -156,7 +180,8 @@ program did_multiplegt_stat2, eclass sortpreserve byable(recall)
 	
 	//If the user specify twfe without setting the bootstrap, take 100 as default.
 	//And store all the suboptions of twfe: percentile, same_sample (default are normal and maybe different samples.)
-	if ("`twfe'"!=""){ // Felix: This is a problem as twfe is a string (this wont get triggered then with twfe() plus for the same reason an error with the bootstrap option will be triggered because it is only allowed with twfe(which the command thinks is not specified)), what are you supposed to input as default -> force user to specify something, see helpfile
+	if ("`twfe'"!=""){
+	// Felix: This is a problem as twfe is a string (this wont get triggered then with twfe() plus for the same reason an error with the bootstrap option will be triggered because it is only allowed with twfe(which the command thinks is not specified)), what are you supposed to input as default -> force user to specify something, see helpfile
 		parse_select_twfe_suboptions, `twfe'
 		if (`bootstrap'==0) local bootstrap = 100
 		local percentile "`s(percentile)'"
@@ -184,10 +209,14 @@ if _rc{
 
 //tokenize the varlist
 tokenize `varlist'
-
+ 
 //dropping observations not included in the if condition
 	if "`if'" !=""{
 	keep `if'
+	count 
+	if (r(N)==0){
+		mata: exit(error(2000))
+	}
 	}
 // dropping observations not included in the in condition
 	if "`in'" !=""{
@@ -244,10 +273,11 @@ if scalar(aggregated_data)==0{
 */
 
 //gen main varlist
-gen Y_XX = `1'
-gen ID_XX =  `2'
-gen T_OG_XX = `3'
-gen D_XX = `4' 
+//Doulo: (Dec, 2024)
+clonevar Y_XX = `1'
+clonevar ID_XX =  `2'
+clonevar T_OG_XX = `3'
+clonevar D_XX = `4' 
 local depname  = "`1'" //for estout
 local OG_nameID_XX = "`2'"
 //2. IV method:
@@ -257,14 +287,15 @@ if ("`5'"!=""&"`5'"!=","){
 local IV_feed_XX = "yes"
 local IV_var_XX  `5' 
 
-// Modif Felix: Replace the estimator we are actually using
+// Replace the estimator we are actually using
 	if "`estimator'"!="iv-was"{		
 		local estimator = "iv-was" 
 	}
 
 }
 
- xtset `2'  `3' //make the quietly skip that to show the characteristics of the panel: balanced/unbalanced/w|o gaps etc.
+ xtset `2'  `3' 
+
 /*******************************************************************************
 //Check all the estimators that are requested - to customize the display
 *******************************************************************************/
@@ -330,6 +361,7 @@ if (`total_estimator'!=`nb_estimatorts_XX'){ // Modif Felix, see above
 }
 //1. Estimation method:
 
+/*
 if ("`estimation_method'" == "ps"|"`estimation_method'" == "dr"){
 	if ("`was_XX'"=="0"&"`iwas_XX'"=="0"){
 		di as error "The propensity/doubly-robust -based approach is only available for the was and the iv-was."
@@ -344,6 +376,8 @@ if (`req_est_method' == 0){
 		exit
 
 }
+*/
+if ("`exact_match'" =="") local estimation_method = "dr" //By default, the command estimates now the doubly-robust estimator for all estimators.
 
 //2. IV
 if ("`IV_feed_XX'"=="no"&("`iwas_XX'" == "1")){
@@ -367,9 +401,47 @@ if ("`as_vs_was'"!=""&`a_vs_w'!=2){
 	exit
 }
 
-if !(mod(`order', 1)  == 0 & `order' > 0) {
+
+//Count number of arguments in order option
+local order_count: word count `order'
+
+if (`order_count'==0) {
+	local order = 1 //default
+	local order_count = 1	
+}
+
+if (`order_count'!=4&`order_count'!=1&`order_count'!=8) {
+	di as error "Error with the option order: only 1, 4, or 8 (with iv-was) arguments are allowed."
+	exit
+}
+
+if (`order_count'==1){
+if (!(mod(`order', 1)  == 0 & `order' > 0)) {
 	di as error "Order should be a positive integer"
 	exit
+}
+else{
+	forvalues num_order = 1/4{
+		local order_`num_order' = `num_order'
+	}
+}
+
+}
+
+if (`order_count'==4|`order_count'==8) {
+	local num_order = 0
+	foreach level of local order{
+		if (!(mod(`level', 1)  == 0 & `level' > 0)) {
+			di as error "Each order should be a positive integer"
+			exit
+		}
+		else{
+			local num_order = `num_order' + 1
+			local order_`num_order' = `level'
+		}
+			
+	}
+
 }
 
 //5.
@@ -387,21 +459,33 @@ if ("`exact_match'"!=""&"`noextrapolation'"!=""){
 }
 
 //7. Order and cross_validation
-if (`order'>1&"`cross_validation'"!=""){
-	di as error ""
-	di as error "The option order is not allowed along with cross-validation."
-	di as error "The command will ignore the option order()."
-	local order = 1
+if (`order_count'==1) {
+	if (`order'>1&"`cross_validation'"!=""){
+		di as error ""
+		di as error "The option order is not allowed along with cross-validation."
+		di as error "The command will ignore the option order()."
+		local order = 1
+		}
+}
+else{
+		if ("`cross_validation'"!=""){
+			di as error ""
+			di as error "The option order is not allowed along with cross-validation."
+			di as error "The command will ignore the option order()."
+			local order = 1
+			}		
 }
 
 //8. exact_match and [order, estimation_method, order]
 if ("`exact_match'"!=""){
+	/*Deprecated because we shut down the option estimation_method
 	if ("`estimation_method'"!=""){
 		di as error "As the exact_match option is specified,"
 		di as error "the estimation_method option is ignored."
 	}
+	*/
 	
-	if (`order'!=1){ //The values are then set within the pairwise program.  To se where search local order = r(r)
+	if ("`order'"!="1"){ //The values are then set within the pairwise program.  To se where search local order = r(r)
 		di as error "As the exact_match option is specified,"
 		di as error "the order option is ignored."
 	}
@@ -447,9 +531,38 @@ if (`bootstrap'!=0&`iwas_XX'==0&"`twfe'"==""){
 }
 if (`seed'!=0&`bootstrap'==0){
 	di as error ""
-	di as test "Warning: The seed option is only relevant when specified with bootstrap."
+	di as text "Warning: The seed option is only relevant when specified with bootstrap."
 }	
 
+//11.  have an error message saying that only one estimator (as was or iv-was) can be requested with twfe option, as in the help file, and then the command should stop.
+if ("`twfe'"!=""&(`nb_estimatorts_XX'>1)){
+	di as error ""
+	di as error "Only one estimator (as was or iv-was) can be requested with twfe option."
+	exit
+}
+
+if ("`twfe'"!=""&(`as_XX'==1)){
+	di as error ""
+	di as error "The option twfe is only compatible with the estimators was and iv-was."
+	exit
+}
+
+/*Deprecated because we shut down the option estimation_method
+//12. Default estimqtor when cross-fitting is DR:
+if ("`cross_fitting'"!="0"&!inlist("`estimation_method'", "", "dr")){
+	di as error ""
+	di as error "When the option cross_fitting is specified,"
+	di as error "by default, the command uses the doubly-robust estimator."
+	local estimation_method = "dr"
+	}
+*/	
+//13. exact_match vs cross_fitting:
+if ("`cross_fitting'"!="0"&"`exact_match'"!=""){
+	di as error ""
+	di as error "The options exact_match and cross_fitting are not compatible."
+	exit
+	}
+	
 ********************************************************************************
 
 //Handle missing values i)
@@ -461,21 +574,39 @@ if ("`iwas_XX'" == "1"){
 }
 //Handle missing values iii)END
 //drop if to_drop_XX
+//13.
+if (`iwas_XX' == 1&"`on_placebo_sample'"!=""){
+	di as error ""
+	di as error "The option on_placebo_sample is not allowed with iv-was."
+	exit
+}
+if (`placebo' != 0&"`on_placebo_sample'"!=""){
+	di as error ""
+	di as error "The option on_placebo_sample is not allowed with ithe option placebo(#)."
+	exit
+}
+
+//14.
+if(`trimming'<0|`trimming'>100) {
+	di as error "Error (trimming) : This option takes an integer between 0 and 100."
+	exit
+}
 
 
 //****************************If there is gap
 gen tsfilled_XX = 0
 
-xtset ID_XX T_OG_XX
+gegen T_XX =  group(T_OG_XX) //Added here to avoid problem with time gaps.
+
+xtset ID_XX  T_XX //T_OG_XX
+
 tsfill, full
 replace tsfilled_XX = 1 if tsfilled_XX==.
 sum tsfilled_XX
 
 ********************************************//
 
-gegen T_XX =  group(T_OG_XX)
-//save "Tsfilled.dta"
-
+**# Bookmark #1
 // Creating the weights variable. //weights OPTION //CLUSTER OPTION 
 
 
@@ -503,17 +634,6 @@ sum T_XX
 scalar max_T = r(max)
 local max_T = r(max)
 
-if ("`placebo'"!="0"&scalar(max_T)==2){
-	di as error "Placebo cannot be estimated with only two periods."
-	di as error "The command will then ignore the option placebo."
-	local placebo ""
-	
-}
-if (scalar(max_T)<2){
-	di as error "Your time variable takes less than two values."
-	exit
-}
-
 //// Modif Felix: generate upper bound for number of placebos
 cap drop fk_deltaD_glob_XX
 cap drop fk_Q_XX
@@ -539,7 +659,23 @@ if `placebo'>`=`fk_max_used_period_XX'-2'{
 	di as input _continue ""
 	
 	local placebo = `=`fk_max_used_period_XX'-2'
+	
+	if ("`placebo'"=="0") di as error "The command will then ignore the option placebo."
 }
+
+
+if ("`placebo'"!="0"&scalar(max_T)==2){
+	di as error "Placebo cannot be estimated with only two periods."
+	di as error "The command will then ignore the option placebo."
+	local placebo = 0
+	
+}
+
+if (scalar(max_T)<2){
+	di as error "Your time variable takes less than two values."
+	exit
+}
+
 
 
 **# Bookmark #2 AGGREGATION TO OBTAIN delta_1, delta_2, and delta_3 and their variances
@@ -750,12 +886,16 @@ cap drop S0bist_XX
 
 xtset ID_XX T_XX
 gen deltaDt_XX = D.D_XX
+**To estimate the model on placebos: 
+if ("`on_placebo_sample'"!="") drop if deltaDt_XX==.
+
 gen Sbist_XX   = deltaDt_XX!=0 if deltaDt_XX!=.
 gen S0bist_XX  = 1-Sbist_XX
 gen StPlus_XX  = deltaDt_XX>0  if  deltaDt_XX!=.
 gen StMinus_XX = deltaDt_XX<0  if  deltaDt_XX!=.
 
 if ("`iwas_XX'"=="1"){
+cap drop Z_XX
 cap drop SIt_XX
 cap drop deltaZt_XX
 cap drop SIbist_XX 
@@ -763,11 +903,13 @@ cap drop SItPlus_XX
 cap drop SItMinus_XX
 cap drop SI0bist_XX
 
-gen deltaZt_XX = D.`IV_var_XX'
+gen Z_XX = `IV_var_XX'
+gen deltaZt_XX = D.Z_XX
 gen SIbist_XX   = deltaZt_XX!=0 if deltaZt_XX!=.
 gen SI0bist_XX  = 1-SIbist_XX
 gen SItPlus_XX  = deltaZt_XX>0  if  deltaZt_XX!=.
 gen SItMinus_XX = deltaZt_XX<0  if  deltaZt_XX!=.
+
 }
 
 //This part here is to ensure that twfe is an in the same sample as the estimators. When requested by user.
@@ -796,82 +938,75 @@ else{
 
 
 /*******************************************************************************
-CROSS-VALIDATION TO SELECT THE OPTIMAL ORDER : Only with WAS
+CROSS-VALIDATION TO SELECT THE OPTIMAL ORDER : Only with WAS (DS: and with IV-WAS)
 *******************************************************************************/
-if ("`cross_validation'"!=""&`was_XX'==1){
+if ("`cross_validation'"!=""&(`was_XX'==1|`iwas_XX'==1)){
 _dots 0, title(`algorithm'(`kfolds'): Cross validation running) reps(`max_k')
 
 //Need to store the suboptions in cross_validation
 parse_select_cv_suboptions, `cross_validation'
 local cross_validation_logit = "algorithm(kfolds) tolerance(`s(tolerance)') max_k(`s(max_k)') seed(`s(seed)') kfolds(`s(kfolds)')"
-
+local same_order_all_logits = "`s(same_order_all_logits)'"
 // Modif Felix: shut down anything in algo() that is not kfolds
 if "`s(algorithm)'"!="kfolds"{
 	di as error "The option algo() only allows kfolds as input."
 	exit
 }
-
+if (`iwas_XX'==1){
+	local reduced_form = "reduced_form"
+	local IV = "I"
+}
 
 cap drop T_XX_FE_* 
 tab T_XX, gen(T_XX_FE_)
 
-cap drop St_XX
-cap drop deltaDt_XX
-cap drop Sbist_XX // Modif Felix: spelling error corrected
-cap drop StPlus_XX
-cap drop StMinus_XX
-cap drop S0bist_XX
-
-gen deltaDt_XX = D.D_XX
-gen Sbist_XX   = deltaDt_XX!=0 if deltaDt_XX!=.
-gen S0bist_XX  = 1-Sbist_XX
-gen StPlus_XX  = deltaDt_XX>0  if  deltaDt_XX!=.
-gen StMinus_XX = deltaDt_XX<0  if  deltaDt_XX!=.
 
 //1. Regression E(Y_t-Y_{t-1}|D_{t-1}) = \sum_{s=2}^{T}1{t=s}PD^{k}_{s-1} with PD^{k}_{s-1} = a_0 + a_1D{s-1} + ... + a_kD_{s-1}^k
-
 	cap drop deltaYt_XX
 	xtset ID_XX T_XX
 	gen deltaYt_XX = D.Y_XX
-
+	
 //RUN THE CROSS-VALIDATION command
-cross_validation deltaYt_XX if Sbist_XX==0 , `cross_validation' 
-
+cross_validation deltaYt_XX if S`IV'bist_XX==0 , `cross_validation' `first_stage' `reduced_form' cv_covariates(`controls') //`first_stage' is just for the display
 local reg_order  = `s(chosen_order)'
 //di as error "test chosen reg_order  = `reg_order'"
 
 //2. Logit P(S_{t}=0|D_{t-1}) = LOGIT[\sum_{s=2}^{T}1{t=s}PD^{k}_{s-1} with PD^{k}_{s-1} = a_0 + a_1D{s-1} + ... + a_kD_{s-1}^k]
-
-
 //RUN THE CROSS-VALIDATION command
-//di as error "`cross_validation_logit'"
-//save "data_cv.dta", replace
-cross_validation S0bist_XX , `cross_validation_logit' model(logit)
-
-if (`s(set_chosen_order_linear)' == 1) local logit_bis_order  = `reg_order'
+cross_validation S`IV'0bist_XX , `cross_validation_logit' model(logit) `first_stage' `reduced_form' cv_covariates(`controls') 
+//di as red "Here: `same_order_all_logits'"
+if (`s(set_chosen_order_linear)' == 1) local logit_bis_order  = `reg_order' 
 else local logit_bis_order  = `s(chosen_order)'
-//di as error "test chosen logit_bis_order  = `logit_bis_order'"
 
-count if StPlus_XX==1
+if ("`same_order_all_logits'" == ""){
+//3. Logit P(S_{+t}=0|D_{t-1})
+count if S`IV'tPlus_XX==1
 if (r(N)>0){
-cross_validation StPlus_XX , `cross_validation_logit' model(logit)
+if ("`switchers'"!="down") cross_validation S`IV'tPlus_XX , `cross_validation_logit' model(logit) `first_stage' `reduced_form' cv_covariates(`controls') 
 if (`s(set_chosen_order_linear)' == 1) local logit_Plus_order  = `reg_order'
 else local logit_Plus_order  = `s(chosen_order)'
-//di as error "test chosen logit_Plus_order  = `logit_Plus_order'"
+
 }
-count if StMinus_XX==1
+else local logit_Plus_order  = 0 //If no switcher-up
+//4. Logit P(S_{-t}=0|D_{t-1})
+count if S`IV'tMinus_XX==1
 if (r(N)>0){
-cross_validation StMinus_XX , `cross_validation_logit' model(logit)
-if (`s(set_chosen_order_linear)' == 1) local logit_Minus_order  = `reg_order'
+if ("`switchers'"!="up") cross_validation S`IV'tMinus_XX , `cross_validation_logit' model(logit) `first_stage' `reduced_form' cv_covariates(`controls') 
+if (`s(set_chosen_order_linear)' == 1) local logit_Minus_order  = 1 `reg_order' 
 else local logit_Minus_order  = `s(chosen_order)'
-//di as error "test chosen logit_Minus_order  = `logit_Minus_order'"
+}
+else local logit_Minus_order  = 0 //If no switcher-down
+}
+else{
+	local logit_Minus_order = `logit_bis_order'
+	local logit_Plus_order  = `logit_bis_order'
 }
 }
 else{
-	local reg_order         = `order'
-	local logit_bis_order   = `order'
-	local logit_Plus_order  = `order'
-	local logit_Minus_order = `order'
+	local reg_order         = `order_1'
+	local logit_bis_order   = `order_2'
+	local logit_Plus_order  = `order_3'
+	local logit_Minus_order = `order_4'
 }
 		//preserve quantile
 	tempfile OG_dataPathq
@@ -905,7 +1040,7 @@ else{
 forvalues p = 2/`=max_T'{
 	
 	//i) Calling the command for each pair of time periods
-	did_multiplegt_stat_pairwise Y_XX ID_XX T_XX D_XX `IV_var_XX' `if' `in' , estimator(`estimator') or(`order') `noextrapolation' weights(weights_XX) switchers(`switchers') pairwise(`p') data_1XX($data_1XX) as(`as_XX') was(`was_XX') iwas(`iwas_XX') estimation_method(`estimation_method') `exact_match' cluster(`cluster') quantile(`q') by_fd(`by_fd') by_baseline(`by_baseline') other_treatments(`other_treatments') controls(`controls') reg_order(`reg_order') logit_bis_order(`logit_bis_order')  logit_Plus_order(`logit_Plus_order') logit_Minus_order(`logit_Minus_order') cross_validation(`cross_validation')
+	did_multiplegt_stat_pairwise Y_XX ID_XX T_XX D_XX `IV_var_XX' `if' `in' , estimator(`estimator') or(`order') `noextrapolation' weights(weights_XX) switchers(`switchers') pairwise(`p') data_1XX($data_1XX) as(`as_XX') was(`was_XX') iwas(`iwas_XX') estimation_method(`estimation_method') `exact_match' cluster(`cluster') quantile(`q') by_fd(`by_fd') by_baseline(`by_baseline') other_treatments(`other_treatments') controls(`controls') reg_order(`reg_order') logit_bis_order(`logit_bis_order')  logit_Plus_order(`logit_Plus_order') logit_Minus_order(`logit_Minus_order') cross_validation(`cross_validation') cross_fitting(`cross_fitting')  trimming(`trimming') `on_placebo_sample'
 
 	//i) Aggregation as the loop goes
 	
@@ -1008,9 +1143,9 @@ forvalues p = 2/`=max_T'{
 if ("`cluster'"!=""){ 
 	//Compute E(N_c)
 bysort `cluster': gen N_c_XX = _N if _n==1
+replace N_c_XX = . if S_XX == . //Dec, 24
 sum N_c_XX
 scalar N_bar_c_XX = r(mean)
-//di as error N_bar_c_XX
 }
 	//as
 	if (`as_XX' == 1){
@@ -1024,6 +1159,7 @@ scalar N_bar_c_XX = r(mean)
 		replace Phi1_XX=. if not_to_use1_XX==0
 		
 		sum Phi1_XX 
+
 		//scalar mean_IF1 = r(mean) //for test 
 		
 		if ("`cluster'"!=""){ // Clustering the variance //CLUSTER OPTION
@@ -1032,15 +1168,9 @@ scalar N_bar_c_XX = r(mean)
 		bysort `cluster': replace Phi1_cXX=. if _n!=1
 		replace Phi1_cXX = Phi1_cXX/scalar(N_bar_c_XX)
 		
-			if ("`weights'"!=""){
-			sum Phi1_cXX  // use the weights of the cluster, which is the total of the weightss of groups in that cluster.
-			}
-			else{
-			sum Phi1_cXX 
-			}
+		sum Phi1_cXX 
 
 		}
-		
 		scalar sd_delta1_1XX = r(sd)/sqrt(r(sum_w)) //Doulo: In case of unbalanced panel, some units do not contribute to the influence function at some dates, what about the N, in the asymptotic normal distribution?
 		
 		scalar LB1_1XX = delta1_1XX - 1.96*sd_delta1_1XX
@@ -1063,7 +1193,7 @@ scalar N_bar_c_XX = r(mean)
 		if ("`cluster'"!=""){ // Clustering the variance //CLUSTER OPTION
 		cap drop Phi2_cXX
 		bysort `cluster': gegen Phi2_cXX = total(Phi2_XX)
-		bysort `cluster': replace Phi2_cXX=. if _n!=1
+		bysort `cluster': replace Phi2_cXX=. if _n!=1|S_XX==.
 		replace Phi2_cXX = Phi2_cXX/scalar(N_bar_c_XX)
 		
 				if ("`weights'"!=""){
@@ -1095,7 +1225,7 @@ scalar N_bar_c_XX = r(mean)
 		replace Phi3_XX=. if not_to_use3_XX==0
 		
 		sum Phi3_XX 
-		scalar mean_IF3 = r(mean) //for test
+		//scalar mean_IF3 = r(mean) //for test
 		
 		if ("`cluster'"!=""){ // Clustering the variance //CLUSTER OPTION
 		cap drop Phi3_cXX
@@ -1157,7 +1287,7 @@ if ("`as_vs_was'"!=""&`a_vs_w'==2){
 /*****************************************************************************************************/
 	if("`placebo'"!="0"){
 	
-	forvalues placebo_index = 1/`placebo'{
+forvalues placebo_index = 1/`placebo'{
 cap macro drop data_1plaXX 
 		
 use "`OG_dataPath1'.dta", clear
@@ -1202,7 +1332,7 @@ use "`OG_dataPathq'.dta", clear
 	forvalues p = `=2+`placebo_index''/`=max_T'{
 	
 	//i) Calling the command for each pair of time periods
-	did_multiplegt_stat_pairwise Y_XX ID_XX T_XX D_XX `IV_var_XX' `if' `in' , estimator(`estimator') or(`order') `noextrapolation' weights(weights_XX) switchers(`switchers') pairwise(`p') data_1XX(${data_1plaXX}) as(`as_XX') was(`was_XX') iwas(`iwas_XX') estimation_method(`estimation_method') placebo(`placebo_index') `exact_match' cluster(`cluster')  quantile(`q') by_fd(`by_fd') by_baseline(`by_baseline') other_treatments(`other_treatments') controls(`controls') reg_order(`reg_order') logit_bis_order(`logit_bis_order')  logit_Plus_order(`logit_Plus_order') logit_Minus_order(`logit_Minus_order') cross_validation(`cross_validation')
+	did_multiplegt_stat_pairwise Y_XX ID_XX T_XX D_XX `IV_var_XX' `if' `in' , estimator(`estimator') or(`order') `noextrapolation' weights(weights_XX) switchers(`switchers') pairwise(`p') data_1XX(${data_1plaXX}) as(`as_XX') was(`was_XX') iwas(`iwas_XX') estimation_method(`estimation_method') placebo(`placebo_index') `exact_match' cluster(`cluster')  quantile(`q') by_fd(`by_fd') by_baseline(`by_baseline') other_treatments(`other_treatments') controls(`controls') reg_order(`reg_order') logit_bis_order(`logit_bis_order')  logit_Plus_order(`logit_Plus_order') logit_Minus_order(`logit_Minus_order') cross_validation(`cross_validation') cross_fitting(`cross_fitting')  trimming(`trimming') 
 
 	//i) Aggregation as the loop goes
 	
@@ -1311,18 +1441,20 @@ use "`OG_dataPathq'.dta", clear
 			//scalar mean_IF1pla = r(mean) //for test 
 			
 			if ("`cluster'"!=""){ // Clustering the variance //CLUSTER OPTION
-			cap drop Phi1_cXX
+			cap drop Phi1_placXX
 			gegen Phi1_placXX = total(Phi1_plaXX) , by(`cluster')
-			bysort `cluster': replace Phi1_placXX=. if _n!=1
+			//bysort `cluster': replace Phi1_placXX=. if _n!=1
 		    replace Phi1_placXX = Phi1_placXX/scalar(N_bar_c_XX)
+			
 				if ("`weights'"!=""){
 				sum Phi1_placXX // use the weights of the cluster, which is the total of the weightss of groups in that cluster.
 				}
 				else{
 				sum Phi1_placXX 
 				}
+				
 			}
-		
+			
 			scalar sd_delta1_1plaXX = r(sd)/sqrt(r(sum_w)) 
 			
 			scalar LB1_1plaXX = delta1_1plaXX - 1.96*sd_delta1_1plaXX
@@ -1367,7 +1499,7 @@ use "`OG_dataPathq'.dta", clear
 			replace Phi3_plaXX=. if not_to_use3_plaXX==0
 			
 			sum Phi3_plaXX 
-			scalar mean_IF3pla = r(mean) //for test 
+			//scalar mean_IF3pla = r(mean) //for test 
 			
 		if ("`cluster'"!=""){ // Clustering the variance //CLUSTER OPTION
 		cap drop Phi3_placXX
@@ -1430,6 +1562,9 @@ forvalues p = 1/`=max_T'{
 	if (`iwas_XX' == 1&`P'==3){
 
 	if ((`p'==1|`p'>`=`placebo_index'+1')){
+		
+		
+		
 
 			**********************************************************	
 			matrix res_mat_plaXX[`=index_XX' + `p',1] = scalar(delta`P'_`p'plaXX)
@@ -1578,8 +1713,8 @@ matrix bootstrap_order[`i',1] = `i'
 	
 forvalues p = 2/`=max_T'{	
 	// Calling the command for each pair of time periods
-	did_multiplegt_stat_pairwise Y_XX ID_XX T_XX D_XX `IV_var_XX' `if' `in' , estimator(`estimator') or(`order') `noextrapolation' weights(weights_XX) switchers(`switchers') pairwise(`p') data_1XX($data_1XX) as(`as_XX') was(`was_XX') iwas(`iwas_XX') estimation_method(`estimation_method') `exact_match' cluster(`cluster') quantile(`q') by_fd(`by_fd') by_baseline(`by_baseline') other_treatments(`other_treatments') controls(`controls')  bootstrap(`bootstrap') reg_order(`reg_order') logit_bis_order(`logit_bis_order')  logit_Plus_order(`logit_Plus_order') logit_Minus_order(`logit_Minus_order') cross_validation(`cross_validation')
-	
+	did_multiplegt_stat_pairwise Y_XX ID_XX T_XX D_XX `IV_var_XX' `if' `in' , estimator(`estimator') or(`order') `noextrapolation' weights(weights_XX) switchers(`switchers') pairwise(`p') data_1XX($data_1XX) as(`as_XX') was(`was_XX') iwas(`iwas_XX') estimation_method(`estimation_method') `exact_match' cluster(`cluster') quantile(`q') by_fd(`by_fd') by_baseline(`by_baseline') other_treatments(`other_treatments') controls(`controls')  bootstrap(`bootstrap') reg_order(`reg_order') logit_bis_order(`logit_bis_order')  logit_Plus_order(`logit_Plus_order') logit_Minus_order(`logit_Minus_order') cross_validation(`cross_validation') cross_fitting(`cross_fitting')  trimming(`trimming') `on_placebo_sample'
+	 
 // Put results into a matrix 
 if ("`iwas_XX'"=="1") matrix IVeffects_bootstrap[`i',`p'] = scalar(delta3_`p'XX)
 if ("`was_XX'"=="1")  matrix WASeffects_bootstrap[`i',`p'] = scalar(delta2_`p'XX)
@@ -1617,14 +1752,13 @@ if ("`as_XX'"=="1")   matrix ASeffects_bootstrap[`i',`p'] = scalar(delta1_`p'XX)
 cap matrix IVeffects_bootstrap[`i',1]    = scalar(bt_delta3_1XX)
 cap matrix WASeffects_bootstrap[`i',1] = scalar(bt_delta2_1XX)
 cap matrix ASeffects_bootstrap[`i',1]  = scalar(bt_delta1_1XX)
-
 if ("`placebo'"!="0"){
 	forvalues p = `=2+`placebo''/`=max_T'{
 	//Store the point estimates obtained from the whole sample from the estimation above
 	//scalar delta3_`p'OGplaXX = scalar(delta3_`p'plaXX)
 	
 		//i) Calling the command for each pair of time periods
-		did_multiplegt_stat_pairwise Y_XX ID_XX T_XX D_XX `IV_var_XX' `if' `in' , estimator(`estimator') or(`order') `noextrapolation' weights(weights_XX) switchers(`switchers') pairwise(`p') data_1XX($data_1XX) as(`as_XX') was(`was_XX') iwas(`iwas_XX') estimation_method(`estimation_method') placebo(`placebo') `exact_match' cluster(`cluster')  quantile(`q') by_fd(`by_fd') by_baseline(`by_baseline') other_treatments(`other_treatments') controls(`controls') bootstrap(`bootstrap') reg_order(`reg_order') logit_bis_order(`logit_bis_order')  logit_Plus_order(`logit_Plus_order') logit_Minus_order(`logit_Minus_order') cross_validation(`cross_validation')
+		did_multiplegt_stat_pairwise Y_XX ID_XX T_XX D_XX `IV_var_XX' `if' `in' , estimator(`estimator') or(`order') `noextrapolation' weights(weights_XX) switchers(`switchers') pairwise(`p') data_1XX($data_1XX) as(`as_XX') was(`was_XX') iwas(`iwas_XX') estimation_method(`estimation_method') placebo(`placebo') `exact_match' cluster(`cluster')  quantile(`q') by_fd(`by_fd') by_baseline(`by_baseline') other_treatments(`other_treatments') controls(`controls') bootstrap(`bootstrap') reg_order(`reg_order') logit_bis_order(`logit_bis_order')  logit_Plus_order(`logit_Plus_order') logit_Minus_order(`logit_Minus_order') cross_validation(`cross_validation') cross_fitting(`cross_fitting')  trimming(`trimming') 
 				
 // Put results into a matrix 
 cap matrix IVplacebos_bootstrap[`i',`p'] = scalar(delta3_`p'plaXX)\
@@ -1661,8 +1795,7 @@ if (`as_XX' == 1){
 // Put results into a matrix 
 cap matrix IVplacebos_bootstrap[`i',1]    = scalar(bt_delta3_1plaXX)
 cap matrix WASplacebos_bootstrap[`i',1] = scalar(bt_delta2_1plaXX)
-cap matrix ASplacebos_bootstrap[`i',1]  = scalar(bt_delta1_1plaXX)
-		
+cap matrix ASplacebos_bootstrap[`i',1]  = scalar(bt_delta1_1plaXX)	
 }
 
 use "`OG_dataPathq'.dta", clear
@@ -1672,7 +1805,7 @@ use "`OG_dataPathq'.dta", clear
 }
 }
 /*******************************************************************************
-END OF BOOTSTRAPING and Restore the original point estimates from estimation using the whole sanmple
+END OF BOOTSTRAPING and Restore the original point estimates from estimation using the whole sample
 *******************************************************************************/
 	forvalues p = 1/`=max_T'{
 		if (`iwas_XX' == 1){
@@ -1793,6 +1926,7 @@ scalar pval_twfe_ivwas = 2*(1-normal(abs(tsta_twfe_ivwas)))
 if (`iwas_XX' == 1){
 if ("`placebo'"!="0"){
 	clear 
+	//di as red "Placebo+Bootstrap issue"
 	svmat IVplacebos_bootstrap	
 	forvalues p = 1/`=max_T'{
 	_pctile IVplacebos_bootstrap`p', nq(40)
@@ -1800,6 +1934,16 @@ if ("`placebo'"!="0"){
 	scalar UB3_`p'plaXX = r(r39)
 	sum IVplacebos_bootstrap`p'
 	scalar sd_delta3_`p'plaXX = r(sd)
+	
+	forvalues p = 1/`=max_T'{ //"DS: Solving Placebo+Bootstrap issue"
+	if (`p'==1|`p'>`=`placebo'+1'){
+	
+	matrix V`placebo'res_mat_plaXX[2*max_T+ `p',2] = sd_delta3_`p'plaXX
+	matrix V`placebo'res_mat_plaXX[2*max_T+`p',3] = LB3_`p'plaXX
+	matrix V`placebo'res_mat_plaXX[2*max_T+`p',4] = UB3_`p'plaXX
+	}
+	}
+	
 }
 }
 }
@@ -1930,23 +2074,23 @@ local nb_obs_XX = round(`nb_obs_XX', 0.001)
 local nb_obs_adj_XX = strlen("`nb_obs_XX'")
 	di as text _skip(34) "{it: Number of observations}"_skip(4) " =" _skip(`=17-`nb_obs_adj_XX'') "`nb_obs_XX'"
 //Estimation method
-if (`was_XX'==1){
+if (`was_XX'==1|`as_XX'==1){
 if ("`estimation_method'" =="" | "`estimation_method'" =="ra"){
-	di as text _skip(34) "{it: WAS Estimation method }" "     =  {it:reg. adjustment}"
+	di as text _skip(35) "{it:Estimation method     }" "     =  {it:reg. adjustment}"
 }
 
 if ("`estimation_method'" =="ps"){
-di as text _skip(34) "{it: WAS Estimation method }" "     = {it:propensity-score}"
+di as text _skip(35) "{it:Estimation method     }" "     = {it:propensity-score}"
 }
 
 if ("`estimation_method'" =="dr"){
-	di as text _skip(34) "{it: WAS Estimation method  }" "    = {it:   doubly-robust}"
+	di as text _skip(35) "{it:Estimation method      }" "    = {it:   doubly-robust}"
 }
 }
 
 if (`iwas_XX'==1){
 if ("`estimation_method'" =="" | "`estimation_method'" =="ra"){
-	di as text _skip(34) "{it: IV-WAS Estimation method}" "     =  {it:reg. adjustment}"
+	di as text _skip(35) "{it: IV-WAS Estimation method}" "     =  {it:reg. adjustment}"
 }
 
 if ("`estimation_method'" =="ps"){
@@ -1962,11 +2106,22 @@ if ("`estimation_method'" =="dr"){
 if ("`exact_match'"==""){
 if ("`cross_validation'"==""){
 local pol_adj_XX = strlen("`reg_order'")
-di as text _skip(34) "{it: Polynomial order   }"_skip(8)"=" _skip(`=17-`pol_adj_XX'')"`reg_order'"
+local order_adjust_XX = strlen("`order'")
+di as text _skip(34) "{it: Polynomial order   }"_skip(8)"=" _skip(`=17-`pol_adj_XX' - `order_adjust_XX' -1')"(`order')"
+
+local pol_orders = "`order'"
+
 }
 else{
 	local pol_adj_XX = strlen("(`reg_order', `logit_bis_order',`logit_Minus_order', `logit_Plus_order')")
-di as text _skip(34) "{it: CV Polynomials' orders   }"_skip(2)"=" _skip(`=16-`pol_adj_XX'')"(`reg_order', `logit_bis_order', `logit_Plus_order', `logit_Minus_order')"
+if (`iwas_XX'==0) di as text _skip(34) "{it: CV Polynomials' orders   }"_skip(2)"=" _skip(`=16-`pol_adj_XX'')"(`reg_order', `logit_bis_order', `logit_Plus_order', `logit_Minus_order')"
+else{
+	if ("`first_stage'"!=="") di as text _skip(34) "{it: CV Polynomials' orders(RF)}"_skip(1)"=" _skip(`=16-`pol_adj_XX'')"(`reg_order', `logit_bis_order', `logit_Plus_order', `logit_Minus_order')"
+	else 	di as text _skip(34) "{it: CV Polynomials' orders(FS)}"_skip(1)"=" _skip(`=16-`pol_adj_XX'')"(`reg_order', `logit_bis_order', `logit_Plus_order', `logit_Minus_order')"
+}
+
+local pol_orders = "(`reg_order', `logit_bis_order', `logit_Plus_order', `logit_Minus_order')"
+
 }
 }
 
@@ -2033,20 +2188,20 @@ forvalues i = 1/3{
 			// Modif Felix: instead of printing many one line matrices generate one matix combining all those and outputting just one matrix (keep disaggregated as it is)
 		
 	forvalues placebo_index = 1/`placebo'{
-		matrix res_mat_1plaXX`q' = V`placebo_index'res_mat_plaXX[ 1..max_T,....]
+		matrix V`placebo_index'res_mat_1plaXX`q' = V`placebo_index'res_mat_plaXX[ 1..max_T,....]
 		
 		if `placebo_index'==1{
-			matrix mat_combined1_pl_`q'=res_mat_1plaXX`q'[1..1,....]
+			matrix mat_combined1_pl_`q'=V`placebo_index'res_mat_1plaXX`q'[1..1,....]
 		}
 		if `placebo_index'>1{
-			matrix mat_combined1_pl_`q'=mat_combined1_pl_`q'\res_mat_1plaXX`q'[1..1,....]
+			matrix mat_combined1_pl_`q'=mat_combined1_pl_`q'\V`placebo_index'res_mat_1plaXX`q'[1..1,....]
 		}
 
 		if ("`disaggregate'" !=""){
 		di as input "{hline 80}"
 		di as input _skip(33) "Placebo(s) AS"
 		di as input "{hline 80}"
-			noisily matlist res_mat_1plaXX`q'
+			noisily matlist V`placebo_index'res_mat_1plaXX`q'
 		}
 		
 	}
@@ -2079,20 +2234,20 @@ forvalues i = 1/3{
 		//Placebos
 		if ("`placebo'"!="0"){
 		forvalues placebo_index = 1/`placebo'{
-			matrix res_mat_2plaXX`q' = V`placebo_index'res_mat_plaXX[max_T+1..2*max_T,....]
+			matrix V`placebo_index'res_mat_2plaXX`q' = V`placebo_index'res_mat_plaXX[max_T+1..2*max_T,....]
 			
 			if `placebo_index'==1{
-			matrix mat_combined2_pl_`q'=res_mat_2plaXX`q'[1..1,....]
+			matrix mat_combined2_pl_`q'=V`placebo_index'res_mat_2plaXX`q'[1..1,....]
 		}
 		if `placebo_index'>1{
-			matrix mat_combined2_pl_`q'=mat_combined2_pl_`q'\res_mat_2plaXX`q'[1..1,....]
+			matrix mat_combined2_pl_`q'=mat_combined2_pl_`q'\V`placebo_index'res_mat_2plaXX`q'[1..1,....]
 		}
 
 			if ("`disaggregate'" !=""){
 				di as input "{hline 80}"
 				di as input _skip(33) "Placebo(s) WAS"
 				di as input "{hline 80}"
-				noisily matlist res_mat_2plaXX`q'
+				noisily matlist V`placebo_index'res_mat_2plaXX`q'
 			}	
 		}
 			if ("`disaggregate'" ==""){
@@ -2123,20 +2278,20 @@ forvalues i = 1/3{
 			//Placebos
 		if ("`placebo'"!="0"){
 		forvalues placebo_index = 1/`placebo'{
-	    matrix res_mat_3plaXX`q' = V`placebo_index'res_mat_plaXX[2*max_T+1...,....]
+	    matrix V`placebo_index'res_mat_3plaXX`q' = V`placebo_index'res_mat_plaXX[2*max_T+1...,....]
 		
 		if `placebo_index'==1{
-			matrix mat_combined3_pl_`q'=res_mat_3plaXX`q'[1..1,....]
+			matrix mat_combined3_pl_`q'=V`placebo_index'res_mat_3plaXX`q'[1..1,....]
 		}
 		if `placebo_index'>1{
-			matrix mat_combined3_pl_`q'=mat_combined3_pl_`q'\res_mat_3plaXX`q'[1..1,....]
+			matrix mat_combined3_pl_`q'=mat_combined3_pl_`q'\V`placebo_index'res_mat_3plaXX`q'[1..1,....]
 		}
 		
 		if ("`disaggregate'" !=""){
 				di as input "{hline 80}"
 				di as input _skip(33) "Placebo(s) IV-WAS"
 				di as input "{hline 80}"
-				noisily matlist res_mat_3plaXX`q'
+				noisily matlist V`placebo_index'res_mat_3plaXX`q'
 			}	
 		}
 		if ("`disaggregate'" ==""){
@@ -2339,6 +2494,7 @@ matrix colnames b = `colnames'
 matrix colnames V = `colnames'
 matrix rownames V = `colnames'
 cap ereturn post b V, obs(`nb_obs_XX') depname("`depname'")
+ereturn local pol_orders = "`pol_orders'"
 if _rc!=0{
 	di ""
 	di as error "Some of the effects/placebos or their standard errors could not be computed so e(b)/e(V) will not be defined."
@@ -2368,9 +2524,11 @@ if (_by()){
 	if (`iwas_XX'==1) matrix  IWAS_`by_index_XX'XX`q'  = res_mat_3XX`q'
 	
 	if ("`placebo'"!="0"){
-		if (`as_XX'==1)   matrix  PlaceboAS_`by_index_XX'XX`q'   = res_mat_1plaXX`q'
-		if (`was_XX'==1)  matrix  PlaceboWAS_`by_index_XX'XX`q'  = res_mat_2plaXX`q'
-		if (`iwas_XX'==1) matrix  PlaceboIWAS_`by_index_XX'XX`q' = res_mat_3plaXX`q'
+		forvalues placebo_index = 1/`placebo'{
+		if (`as_XX'==1)   matrix  Placebo_`placebo_index'_AS_`by_index_XX'XX`q'   = V`placebo_index'res_mat_1plaXX`q'
+		if (`was_XX'==1)  matrix  Placebo_`placebo_index'_WAS_`by_index_XX'XX`q'  = V`placebo_index'res_mat_2plaXX`q'
+		if (`iwas_XX'==1) matrix  Placebo_`placebo_index'_IWAS_`by_index_XX'XX`q' = V`placebo_index'res_mat_3plaXX`q'
+		}
 	}
 	}
 	
@@ -2389,9 +2547,11 @@ if (_by()){
 		if (`iwas_XX'==1) ereturn matrix IWAS_`level'  = IWAS_`level'XX1
 
 		if ("`placebo'"!="0"){
-			if (`as_XX'==1)   ereturn matrix  PlaceboAS_`level'   =   PlaceboAS_`level'XX1
-			if (`was_XX'==1)  ereturn matrix  PlaceboWAS_`level'  =  PlaceboWAS_`level'XX1
-			if (`iwas_XX'==1) ereturn matrix  PlaceboIWAS_`level' = PlaceboIWAS_`level'XX1
+			forvalues placebo_index = 1/`placebo'{
+			if (`as_XX'==1)   ereturn matrix  Placebo_`placebo_index'_AS_`level'   =   Placebo`placebo_index'AS_`level'XX1
+			if (`was_XX'==1)  ereturn matrix  Placebo_`placebo_index'_WAS_`level'  =  Placebo`placebo_index'WAS_`level'XX1
+			if (`iwas_XX'==1) ereturn matrix  Placebo_`placebo_index'_IWAS_`level' = Placebo`placebo_index'IWAS_`level'XX1
+			}
 		}
 		}
 		else{
@@ -2401,9 +2561,11 @@ if (_by()){
 						if (`iwas_XX'==1) ereturn matrix IWAS_`level'_`q'  = IWAS_`level'XX`q' 
 
 						if ("`placebo'"!="0"){
-							if (`as_XX'==1)   ereturn matrix  PlaceboAS_`level'_`q'   =   PlaceboAS_`level'XX`q'
-							if (`was_XX'==1)  ereturn matrix  PlaceboWAS_`level'_`q'  =  PlaceboWAS_`level'XX`q'
-							if (`iwas_XX'==1) ereturn matrix  PlaceboIWAS_`level'_`q' = PlaceboIWAS_`level'XX`q'
+							forvalues placebo_index = 1/`placebo'{
+							if (`as_XX'==1)   ereturn matrix  Placebo_`placebo_index'_AS_`level'_`q'   =   Placebo`placebo_index'AS_`level'XX`q'
+							if (`was_XX'==1)  ereturn matrix  Placebo_`placebo_index'_WAS_`level'_`q'  =  Placebo`placebo_index'WAS_`level'XX`q'
+							if (`iwas_XX'==1) ereturn matrix  Placebo_`placebo_index'_IWAS_`level'_`q' = Placebo`placebo_index'IWAS_`level'XX`q'
+							}
 						}
 				}
 		}
@@ -2428,10 +2590,13 @@ if (`by_quantile'>1){
 						if (`iwas_XX'==1) ereturn matrix IWAS_`q'  = res_mat_3XX`q'
 
 						if ("`placebo'"!="0"){
-							if (`as_XX'==1)   ereturn matrix  PlaceboAS_`q'   =    res_mat_1plaXX`q'
-							if (`was_XX'==1)  ereturn matrix  PlaceboWAS_`q'  =   res_mat_2plaXX`q'
-							if (`iwas_XX'==1) ereturn matrix  PlaceboIWAS_`q' =  res_mat_3plaXX`q'
+							forvalues placebo_index = 1/`placebo'{
+							if (`as_XX'==1)   ereturn matrix  Placebo_`placebo_index'_AS_`q'   =    V`placebo_index'res_mat_1plaXX`q'
+							if (`was_XX'==1)  ereturn matrix  Placebo_`placebo_index'_WAS_`q'  =   V`placebo_index'res_mat_2plaXX`q'
+							if (`iwas_XX'==1) ereturn matrix  Placebo_`placebo_index'_IWAS_`q' =  V`placebo_index'res_mat_3plaXX`q'
+							}
 						}
+						
 				}	
 }
 else{
@@ -2441,9 +2606,11 @@ if (`was_XX' == 1) ereturn matrix WAS  = res_mat_2XX1
 if (`iwas_XX' == 1) ereturn matrix WAS = res_mat_3XX1
 
 		if ("`placebo'"!="0"){
-			if (`as_XX' == 1) ereturn matrix PlaceboAS    = res_mat_1plaXX1
-			if (`was_XX' == 1) ereturn matrix PlaceboWAS  = res_mat_2plaXX1
-			if (`iwas_XX' == 1) ereturn matrix PlaceboWAS = res_mat_3plaXX1			
+			forvalues placebo_index = 1/`placebo'{
+			if (`as_XX' == 1) ereturn matrix Placebo_`placebo_index'_AS    = V`placebo_index'res_mat_1plaXX1
+			if (`was_XX' == 1) ereturn matrix Placebo_`placebo_index'_WAS  = V`placebo_index'res_mat_2plaXX1
+			if (`iwas_XX' == 1) ereturn matrix Placebo_`placebo_index'_WAS = V`placebo_index'res_mat_3plaXX1	
+			}
 		}
 }
 
@@ -2480,6 +2647,7 @@ quietly{
 			local e_p_XX "" "Placebo"
 		}
         foreach e_p in "`e_p_XX'"{
+		if ("`e_p'" == "Placebo") local last_placebo = "_`placebo'_"
 		preserve 
 		//// Storing the information we need
 		matrix `e_p'AS_XX = J(`nb_level_XX', 4,.)
@@ -2488,9 +2656,10 @@ quietly{
 
 		forvalues level=1/`nb_level_XX'{
 			forvalues i=1/4{
-         if (`as_XX'==1) matrix `e_p'AS_XX[`level',`i'] = e(`e_p'AS_`level')[1,`i']
-         if (`was_XX'==1) matrix `e_p'WAS_XX[`level',`i'] = e(`e_p'WAS_`level')[1,`i']
-         if (`iwas_XX'==1) matrix `e_p'IWAS_XX[`level',`i'] = e(`e_p'IWAS_`level')[1,`i']
+				///We show the last placebo version if multiple placebo requested.
+         if (`as_XX'==1) matrix `e_p'AS_XX[`level',`i'] = e(`e_p'`last_placebo'AS_`level')[1,`i']
+         if (`was_XX'==1) matrix `e_p'WAS_XX[`level',`i'] = e(`e_p'`last_placebo'WAS_`level')[1,`i']
+         if (`iwas_XX'==1) matrix `e_p'IWAS_XX[`level',`i'] = e(`e_p'`last_placebo'IWAS_`level')[1,`i']
 			}	
 		}
 		//Keep only the by vars for a matter of labelling the graph
@@ -2648,9 +2817,9 @@ local col6 "lime"
 		
 		forvalues level=1/`nb_level_XX'{
 			forvalues i=1/4{
-         if (`as_XX'==1) matrix `e_p'AS_`by_level'XX[`level',`i'] = e(`e_p'AS_`by_level'_`level')[1,`i']
-         if (`was_XX'==1) matrix `e_p'WAS_`by_level'XX[`level',`i'] = e(`e_p'WAS_`by_level'_`level')[1,`i']
-         if (`iwas_XX'==1) matrix `e_p'IWAS_`by_level'XX[`level',`i'] = e(`e_p'IWAS_`by_level'_`level')[1,`i']
+         if (`as_XX'==1) matrix `e_p'AS_`by_level'XX[`level',`i'] = e(`e_p'`placebo'AS_`by_level'_`level')[1,`i']
+         if (`was_XX'==1) matrix `e_p'WAS_`by_level'XX[`level',`i'] = e(`e_p'`placebo'WAS_`by_level'_`level')[1,`i']
+         if (`iwas_XX'==1) matrix `e_p'IWAS_`by_level'XX[`level',`i'] = e(`e_p'`placebo'IWAS_`by_level'_`level')[1,`i']
 			}
 		}	
 		if (`as_XX'==1) {
@@ -2858,19 +3027,25 @@ twoway `graph_input', xlabel(`=-`placebo''[1]1) xtitle("Relative time", size(lar
 	
 end
 
-*******************************************************************************************
-//Program 2 : This program compute the estimators for each two successive time periods
-*******************************************************************************************
+
+*----------------------------------------------------------------------------------------------------------------------------------------------------------
+*
+* PAIRWISE PROGRAM: THIS IS THE CORE. IT COMPUTES THE ESTIMATORS PER PAIR OF TIME-PERIODS AND HANDS IT TO MAIN PROGRAM 2. 
+*
+*----------------------------------------------------------------------------------------------------------------------------------------------------------
 
 capture program drop did_multiplegt_stat_pairwise
 program did_multiplegt_stat_pairwise, eclass
 	version 12.0
-	syntax varlist(min=4 max=5 numeric) [if] [in] [, estimator(string) ORder(integer 1) NOEXTRApolation weights(varlist numeric) switchers(string) pairwise(integer 2) data_1XX(string) as(integer 0) was(integer 0) iwas(integer 0) estimation_method(string) placebo(integer 0) exact_match cluster(varlist max=1) quantile(integer 1) by_fd(integer 1) by_baseline(integer 1) other_treatments(varlist numeric) controls(varlist numeric)  bootstrap(integer 0) reg_order(integer 1) logit_bis_order(integer 1)  logit_Plus_order(integer 1) logit_Minus_order(integer 1) cross_validation(string)]
+	syntax varlist(min=4 max=5 numeric) [if] [in] [, estimator(string) ORder(string) NOEXTRApolation weights(varlist numeric) switchers(string) pairwise(integer 2) data_1XX(string) as(integer 0) was(integer 0) iwas(integer 0) estimation_method(string) placebo(integer 0) exact_match cluster(varlist max=1) quantile(integer 1) by_fd(integer 1) by_baseline(integer 1) other_treatments(varlist numeric) controls(varlist numeric)  bootstrap(integer 0) reg_order(integer 1) logit_bis_order(integer 1)  logit_Plus_order(integer 1) logit_Minus_order(integer 1) cross_validation(string) cross_fitting(integer 0) trimming(integer 0) on_placebo_sample]
 	
 quietly{
 //> CORE preserve
 tempfile OG_dataPathcore
 	save "`OG_dataPathcore'.dta", replace
+	
+	//Trimming: 
+	local trimming  = `=`trimming'/100'
 	
 //IV method:
 local IV_feed_XX = "no"
@@ -2887,19 +3062,28 @@ if ("`IV_feed_XX'"=="no"&(`iwas' == 1|"`estimator'" == "")){
 
 **# Bookmark #1: Format the data: Subselect the two times we are interested in
 if ("`placebo'"=="0"){
-keep if inlist(T_XX,  `pairwise'-1, `pairwise')
+keep if inlist(T_XX,  `pairwise'-1,  `pairwise')
 
+**To estimate the model on placebos: comment it out.
+if ("`on_placebo_sample'"!="") {
+replace deltaDt_XX = . if T_XX == `pairwise'
+bysort ID_XX: egen temp_deltaDt_XX = mean(deltaDt_XX)
+}
 
 }
 else{
 	
-	//keep if inlist(T_XX,  `pairwise'-2, `pairwise'-1, `pairwise')
+keep if inlist(T_XX,  `pairwise'-`placebo' -1, `pairwise'-`placebo', `pairwise'-1, `pairwise')
 //Controls: Take X_{t-1} (automatically done since we drop if t==2) if Effect and X_{t-2} if Placebo1 and X_{t-3} if Placebo2
 if ("`controls'"!=""){
 	foreach control in `controls'{
 		cap drop temp_`control'XX temp_`control'2XX
 xtset ID_XX T_XX
-		bysort ID_XX: gen temp_`control'2XX  = L.`control'
+		//bysort ID_XX: gen temp_`control'2XX  = L.`control'
+
+		//gen temp_`control'2XX  = L.`control' if T_XX == `pairwise' - `placebo' - 1
+		gen temp_`control'2XX  = `control' if T_XX == `pairwise' - `placebo' - 1 //(Dec, 2024)
+		
 		bysort ID_XX: egen temp_`control'XX = mean(temp_`control'2XX )
 		replace `control' = temp_`control'XX
 	}
@@ -2907,18 +3091,14 @@ xtset ID_XX T_XX
 //keep if inlist(T_XX,  `pairwise'-2, `pairwise'-1, `pairwise')
 keep if inlist(T_XX,  `pairwise'-`placebo' -1, `pairwise'-`placebo', `pairwise'-1, `pairwise')
 local pla = "pla"
-//di as error "inlist(T_XX,  `pairwise'-`placebo' -1, `pairwise'-`placebo', `pairwise'-1, `pairwise')"
+
 }
  
-//di as error "inlist(T_XX,  `pairwise'-1, `pairwise')"
 
 //Check if one of the two periods was a gap:
 bysort T_XX: gegen tsfilled_minXX = min(tsfilled_XX)
 sum tsfilled_minXX
 scalar gap_`pairwise'`pla'XX =  r(max) 
-
-
-*/
 
 sort T_XX
 gegen Tbis_XX = group(T_XX)
@@ -3160,10 +3340,10 @@ if (_N>0){ //In this section we use bysort ..: gen . If the dataset is empty (e.
 
 ***************************************************************************************/
 if(`was'==1|`as'==1){
-local vars_to_set_to_missing S_XX deltaD_XX deltaY_XX D1_XX absdeltaD_XX `cluster' `controls'	
+local vars_to_set_to_missing S_XX deltaD_XX deltaY_XX D1_XX absdeltaD_XX  `controls'	//`cluster'
 }
 else{
-local vars_to_set_to_missing S_XX deltaD_XX deltaY_XX D1_XX `cluster' `controls'
+local vars_to_set_to_missing S_XX deltaD_XX deltaY_XX D1_XX  `controls' //`cluster'
 }
 
 /***********************************************/		
@@ -3216,7 +3396,7 @@ if("`noextrapolation'"!=""){
 	//di as error "No extrapolation:" N_drop_`pairwise'`pla'XX " switcher(s) dropped for t = `pairwise':" //test
 	scalar N_drop_noextra_`pla'XX = scalar(N_drop_noextra_`pla'XX) + scalar(N_drop_`pairwise'`pla'XX)
 	}
-	drop if outOfBounds_XX==1
+		drop if outOfBounds_XX==1
 	}
 	
 	if(`iwas'==1){
@@ -3225,9 +3405,9 @@ if("`noextrapolation'"!=""){
 	scalar min_Z1_`pla'XX = r(min)
 	gen outOfBoundsiV_XX = (Z1_XX<scalar(min_Z1_`pla'XX)|Z1_XX>scalar(max_Z1_`pla'XX))
 	
-	count if outOfBoundsiV_XX==1
+	count if outOfBoundsiV_XX==1 //|outOfBounds_XX==1
 	scalar N_IVdrop_`pairwise'`pla'XX = r(N) //Just keep the number of switchers that violate the noextrapolation condition ; I display the nummber in the outputs of the command as a way to let the users know the consequences of the nonextra option.
-	drop if outOfBoundsiV_XX==1
+	drop if outOfBoundsiV_XX==1 //|outOfBounds_XX==1
 	if (scalar(N_IVdrop_`pairwise'`pla'XX)>0&scalar(gap_`pairwise'`pla'XX)==0&scalar(N_IVdrop_`pairwise'`pla'XX)<_N-1){
 		scalar N_drop_noextra_`pla'XX = scalar(N_drop_noextra_`pla'XX) + scalar(N_IVdrop_`pairwise'`pla'XX)
 	}
@@ -3289,9 +3469,7 @@ if ("`exact_match'"!=""){
 		}
 		
 /***************************************************************************************/
-	//drop if s_has_match_XX==0 //
-	//drop if c_has_match_XX==0 //
-	
+
 	//Very important to correct for both imbalanced panel and dropping switchers
 		
 	foreach var in `vars_to_set_to_missing'{
@@ -3335,10 +3513,15 @@ if ("`cluster'"!=""){
 	//Compute E(N_c)
 cap drop N_c_XX
 bysort `cluster': gen N_c_XX = _N if _n==1
-sum N_c_XX
+cap gen N_c_XX = . //In case of no observations because of the option switchers (up/down)
+replace N_c_XX = . if S_XX == . //Dec, 24
+sum N_c_XX 
 scalar N_bar_c_`pairwise'`pla'XX = r(mean)
-//di as error N_bar_c_`pairwise'`pla'XX
+
 }
+
+**To estimate the model on placebos: comment it out.
+if ("`on_placebo_sample'"!="") keep if deltaDt_XX ==0 
 
 *******Here I handle two related problems: Panel with gaps (using tsfilled_XX) and cases where we have only switchers or only stayers (using count)
 if (`was'==1|`as'==1){
@@ -3358,7 +3541,7 @@ scalar Nstayers2_`pairwise'`pla'XX  = scalar(n_stayers_`pla'XX)
 scalar N_Switchers1_`pairwise'`pla'XX = scalar(n_switchers_`pla'XX)
 scalar N_Switchers2_`pairwise'`pla'XX = scalar(n_switchers_`pla'XX)
 
-//Test weightsed numbers: to be added in the rest of the code.
+//Test weighted numbers: to be added in the rest of the code.
 sum weights_XX if S_XX==0
 scalar Nstayers1_`pairwise'`pla'XX  = round(r(sum), 0.001)
 scalar Nstayers2_`pairwise'`pla'XX  = round(r(sum), 0.001)
@@ -3384,14 +3567,30 @@ scalar Nstayers3_`pairwise'`pla'XX  = round(r(sum), 0.001)
 
 sum weights_XX if SI_XX!=0&SI_XX!=. 
 scalar N_Switchers3_`pairwise'`pla'XX = round(r(sum), 0.001)
-
-
-
 }
 **************************************************************************	
 	if ("`exact_match'"!=""){ //Take the number of distinct values of the baseline treatment: ok
 		levelsof D1_XX
 		local order = r(r)
+		forvalues num_order = 1/4{
+			local order_`num_order' = `order'
+		}
+	}
+	else{
+		local order_count : word count `order'
+		if (`order_count'==1){
+		forvalues num_order = 1/4{
+			local order_`num_order' = `order'
+		}
+		}
+		else{
+			local num_order = 0
+			foreach level of local order{
+				local num_order = `num_order' + 1
+				local order_`num_order' = `level'
+			}
+		}
+		
 	}
 
 	//Option weights. For interaction and covariates terms in the regressions
@@ -3402,11 +3601,23 @@ if (r(sd)!=0){
 
 
 if (`was' == 1 | `as' == 1 ){	
+	  // Sample splitting : Cross-fitting.
+	if ("`cross_fitting'"!="0"){
+	//Cross-fitting samples splitting: 
+	set seed 1234 //To ensure that the sample does not change when the code is ran multiple times. 
+	cap drop rnd_sorter 
+	gen rnd_sorter_XX = rnormal()
+	*Sort by D1_XX and then the random variable to break ties
+	sort D1_XX rnd_sorter_XX
+	*Generate a new variable equal to 1 if the order is odd, 2 if even
+	gen cf_sample_id = 1 + mod(_n, `cross_fitting')
+	}
+	
 if (scalar(gap_`pairwise'`pla'XX)==0&scalar(n_switchers_`pla'XX)>0&scalar(n_stayers_`pla'XX)>1){ //Start of feasible estimation //I Need to do it for the IV as well.
 
 **# Bookmark #0 Preliminaries
 	cap drop predicted_XX
-	cap drop mean_pred_XX
+	cap drop *mean_pred_XX
 	cap drop trimmed_out_XX
 	cap drop inner_sumdelta1_XX
 
@@ -3417,11 +3628,16 @@ if (scalar(gap_`pairwise'`pla'XX)==0&scalar(n_switchers_`pla'XX)>0&scalar(n_stay
 	Call polynomials_generator here: Start
 	*******************************************************************/
 if ("`cross_validation'" == ""){
-polynomials_generator, order(`order')         prefix(reg)         controls(`controls') other_treatments(`other_treatments')	`pla'
+polynomials_generator, order(`order_1')         prefix(reg)         controls(`controls') other_treatments(`other_treatments')	`pla'
 	local reg_vars_pol_XX        "`s(reg_pol_XX)'"
-	local logit_bis_pol_XX       "`s(reg_pol_XX)'"
-	local logit_Plus_pol_XX      "`s(reg_pol_XX)'"
-	local logit_Minus_pol_XX     "`s(reg_pol_XX)'"
+	
+polynomials_generator, order(`order_2')         prefix(logit_bis)   controls(`controls') other_treatments(`other_treatments')	`pla'
+	local logit_bis_pol_XX       "`s(logit_bis_pol_XX)'"
+polynomials_generator, order(`order_3')         prefix(logit_Plus)  controls(`controls') other_treatments(`other_treatments')	`pla'
+	local logit_Plus_pol_XX      "`s(logit_Plus_pol_XX)'"
+	
+polynomials_generator, order(`order_4')         prefix(logit_Minus) controls(`controls') other_treatments(`other_treatments')	`pla'
+	local logit_Minus_pol_XX     "`s(logit_Minus_pol_XX)'"
 }
 else{
 	
@@ -3455,34 +3671,97 @@ Perfom here the main logit regressions that are needed for the three estimators
 	// Performing the regression (polynomial series) estimation to estimate \hat{E}(deltaY|D1, S=0)
 	
 	     // \hat{E}(deltaY|D1, S=0): actually it is \hat{E}(deltaY|D1, S=0, H_t=1) since S_XX is only defined among {i: Hit=1}, all the expectations/probabilities that follow are conditioned on Ht=1.
-		 
-	reg deltaY_XX `reg_vars_pol_XX'   if S_XX==0 //This regression can generated an error when the polynomial order is very high and lead to values >  1e+38 (the upper bound of float in stata.).
-	predict mean_pred_XX , xb 
-	
+	//di as red "test_`pairwise'.dta: reg deltaY_XX `reg_vars_pol_XX'   if S_XX==0 "
+		reg deltaY_XX `reg_vars_pol_XX'   if S_XX==0 //This regression can generated an error when the polynomial order is very high and lead to values >  1e+38 (the upper bound of float in stata.).
+		predict mean_pred_XX , xb 
 		 // deltaY_i - \hat{E}(deltaY|D_{1i}|S = 0)
-	gen inner_sumdelta12_XX  = deltaY_XX - mean_pred_XX //WILL BE USED FOR AS AND WAS AS WELL
-
+		gen inner_sumdelta12_XX  = deltaY_XX - mean_pred_XX //WILL BE USED FOR AS AND WAS AS WELL
+	
+	if ("`cross_fitting'" != "0" ){
+		reg deltaY_XX `reg_vars_pol_XX'   if S_XX==0 & cf_sample_id != 1 // \delta Y  - \mu^{(1)}(D_1)
+		tempvar mean_pred_1XX
+		predict `mean_pred_1XX' if cf_sample_id == 1 , xb // Remark: We do cf_sample_id == 2, instead of cf_sample_id == 1, because we do cross-fitting. We want to use \mu^{(1)}(D_1) when we estimate \delta^{(2)}.
+		gen cf_inner_sumdelta12_XX  = deltaY_XX - `mean_pred_1XX' // \mu^{(1)}(D_1)
+		
+		forvalues cf_id = 2/`cross_fitting'{
+		reg deltaY_XX `reg_vars_pol_XX'   if S_XX==0 & cf_sample_id != `cf_id' // \mu^{(2)}(D_1)
+		tempvar mean_pred_`cf_id'XX
+		predict `mean_pred_`cf_id'XX' if cf_sample_id == `cf_id' , xb 
+		replace cf_inner_sumdelta12_XX  = deltaY_XX - `mean_pred_`cf_id'XX' if cf_sample_id == `cf_id' // \delta Y -  \mu^{(2)}(D_1)
+		}
+		
+	}
 // 1. Estimate P(S = 0|D_1) 
 	cap drop S0_XX
 	gen S0_XX = 1-Sbis_XX
     if ("`exact_match'"==""){
-	capture logit S0_XX `logit_bis_pol_XX'   , asis
-	if (_rc==430){
-	//di as error "Warning: convergence not achieved." //To be dropped after?
-	}
-	predict PS0D1_XX, pr asif
-	//Convention Logit STATA R to match
-	replace PS0D1_XX=0 if PS0D1_XX<=10^(-10)
+
+			capture logit S0_XX `logit_bis_pol_XX'   , asis
+			if (_rc==430){
+			//di as error "Warning: convergence not achieved." //To be dropped after?
+			}
+			predict PS0D1_XX, pr asif
+			//Convention Logit STATA R to match
+			replace PS0D1_XX=0 if PS0D1_XX<=10^(-10)
+			
+		if ("`cross_fitting'" != "0" ){
+			capture logit S0_XX `logit_bis_pol_XX' if cf_sample_id != 1  , asis
+			predict cf_PS0D1_XX if cf_sample_id == 1 , pr asif // p^{(1)}(D_1) if k=2
+			
+			forvalues cf_id = 2/`cross_fitting'{
+			capture logit S0_XX `logit_bis_pol_XX' if cf_sample_id != `cf_id'  , asis
+			tempvar PS0D1_`cf_id'XX
+			predict `PS0D1_`cf_id'XX' if cf_sample_id == `cf_id'  , pr asif // p^{(2)}(D_1) if k=1
+			replace cf_PS0D1_XX = `PS0D1_`cf_id'XX' if cf_sample_id == `cf_id' 
+			}
+			replace cf_PS0D1_XX=0 if cf_PS0D1_XX<=10^(-10)
+					**Trimming
+			gen trimmed_out_XX = 1 if cf_PS0D1_XX<`trimming'&cf_PS0D1_XX!=.
+			//di as red "`r(N)'"
+			replace cf_PS0D1_XX         =. if trimmed_out_XX ==1
+		}
+		else{
+		**Trimming
+			gen trimmed_out_XX = 1 if (PS0D1_XX<`trimming')&PS0D1_XX!=.
+			replace PS0D1_XX                =. if trimmed_out_XX ==1
+		}
+			
 	}
 	else{ 		//This is for the IF and point estimate of the was when we have discrete treatment, instead of using logit use regressions
-	
-		//Estimation of 1-E(S|D1) = P(S = 0|D_1) in exact_match case
-		reg Sbis_XX `reg_vars_pol_XX'   
-		predict ESbis_XX_D1, xb
+
+			//Estimation of 1-E(S|D1) = P(S = 0|D_1) in exact_match case
+			reg Sbis_XX `reg_vars_pol_XX'   
+			predict ESbis_XX_D1, xb
+			
+			//Estimation of  \hat{E}(S+-S-|D1) for both \Phi_2 : Remember S_XX = S+ - S-, i.e (deltaD_XX>0)-(deltaD_XX<0) in line 79,  so do:
+			reg S_XX `reg_vars_pol_XX'   
+			predict ES_XX_D1 , xb  
 		
-		//Estimation of  \hat{E}(S+-S-|D1) for both \Phi_2 : Remember S_XX = S+ - S-, i.e (deltaD_XX>0)-(deltaD_XX<0) in line 79,  so do:
-		reg S_XX `reg_vars_pol_XX'   
-		predict ES_XX_D1 , xb  
+		if ("`cross_fitting'" != "0" ){
+			
+			reg Sbis_XX `reg_vars_pol_XX' if cf_sample_id != 1 
+			predict cf_ESbis_XX_D1 if cf_sample_id == 1 , xb
+			
+			reg S_XX `reg_vars_pol_XX' if cf_sample_id != 1    
+			predict cf_ES_XX_D1 if cf_sample_id == 1 , xb  
+			
+			forvalues cf_id = 2/`cross_fitting'{
+				
+			reg Sbis_XX `reg_vars_pol_XX' if cf_sample_id != `cf_id'
+			tempvar ESbis_XX_`cf_id'D1
+			predict `ESbis_XX_`cf_id'D1' if cf_sample_id == `cf_id' , xb
+			replace cf_ESbis_XX_D1 = `ESbis_XX_`cf_id'D1' if cf_sample_id == `cf_id'
+			
+			reg S_XX `reg_vars_pol_XX' if cf_sample_id != `cf_id'
+			tempvar cf_ES_XX_`cf_id'D1
+			predict `cf_ES_XX_`cf_id'D1' if cf_sample_id == `cf_id' , xb
+			replace cf_ES_XX_D1 = `cf_ES_XX_`cf_id'D1' if cf_sample_id == `cf_id'		
+			
+			}
+			
+		}
+
+		
 
 	}
 
@@ -3507,6 +3786,7 @@ if (`as' == 1){
 	
 	cap drop Phi1_`pairwise'`pla'XX //This influence function Phi1_{1,t}
 ************************************************	
+
 	// 0) Compute P_t = P(S_t = 1) = E(S_t) for the aggregation afterward
 	
 	// + Imbalanced panel adjustment
@@ -3516,24 +3796,87 @@ if (`as' == 1){
 	scalar P_`pairwise'`pla'XX = scalar(P_`pairwise'`pla'XX)*scalar(PHt`pairwise'`pla'XX)
 	
 	scalar PS_sum_`pla'XX = scalar(PS_sum_`pla'XX) + scalar(P_`pairwise'`pla'XX) //PS_sum is initialized outside of this program
-	scalar ES_`pla'XX = r(mean)  // We fo not do the adjustment here, but will do it directly in the expression of the IF.
+	scalar ES_`pairwise'`pla'XX = r(mean)  // We do not do the adjustment here, but will do it directly in the expression of the IF.
+	
+	gen S_over_deltaD_XX = Sbis_XX/deltaD_XX // = V/\DeltaD
+	//The convention 0/0 = 0
+	replace S_over_deltaD_XX = 0 if Sbis_XX==0
+	
+		
+	//i. estimation of  \hat{E}(S/deltaD|D1)
+	reg S_over_deltaD_XX `reg_vars_pol_XX'   
+	predict meanS_over_deltaD_XX , xb  
+	
+	
+	//Adding cross-fitting & if exact_match
+	if ("`exact_match'"!=""){
+		
+		// 1) Compute \hat{delta}_1
+		gen inner_sumdelta1_XX  = inner_sumdelta12_XX/deltaD_XX // =SV*(\DeltaY - E(\DeltaY|S=0, D1, V))/\DeltaD
+		replace inner_sumdelta1_XX = 0 if deltaD_XX==0 //The convention 0*missing = 0.
+		gen inner_sumdelta1_VXX = inner_sumdelta1_XX*weights_XX
+		sum inner_sumdelta1_VXX //inner_sumdelta1_XX 
+		scalar delta1_`pairwise'`pla'XX = r(mean)/scalar(ES_`pairwise'`pla'XX) // = E[SV*(\DeltaY - E(\DeltaY|S=0, D1, V))/\DeltaD]/E[SV]
+	}
+	else{
 
-	// 1) Compute \hat{delta}_1
-	gen inner_sumdelta1_XX  = weights_XX*inner_sumdelta12_XX/deltaD_XX // =SV*(\DeltaY - E(\DeltaY|S=0, D1, V))/\DeltaD
-	replace inner_sumdelta1_XX = 0 if deltaD_XX==0 //The convention 0*missing = 0.
-	sum inner_sumdelta1_XX 
-	scalar delta1_`pairwise'`pla'XX = r(mean)/scalar(ES_`pla'XX) // = E[SV*(\DeltaY - E(\DeltaY|S=0, D1, V))/\DeltaD]/E[SV]
+		if ("`cross_fitting'"!="0"){
+		//Compute g^{(k)}(D_1) = E(S/\deltaD | D_1) for k=1, 2 : For now I use order of the regression estimating E(\deltaY|D_1)
+		reg S_over_deltaD_XX `reg_vars_pol_XX'  if cf_sample_id != 1 
+		//di as red "reg S_over_deltaD_XX `reg_vars_pol_XX'   if S_XX==0 & cf_sample_id != 1 "
+		predict cf_meanS_over_deltaD_XX if cf_sample_id == 1 , xb		
+		
+		forvalues cf_id = 2/`cross_fitting'{
+			reg S_over_deltaD_XX `reg_vars_pol_XX'   if  cf_sample_id != `cf_id' 
+			tempvar cf_meanS_over_deltaD_`cf_id'XX
+			predict `cf_meanS_over_deltaD_`cf_id'XX' if cf_sample_id == `cf_id' , xb
+			replace cf_meanS_over_deltaD_XX = `cf_meanS_over_deltaD_`cf_id'XX' if cf_sample_id == `cf_id'	
+		}
+		sum cf_inner_sumdelta12_XX
+		//di as red "cf_inner_sumdelta12_XX = `r(mean)'"
+		
+		//gen cf_delta1_DR_XX = weights_XX*[S_over_deltaD_XX - (cf_meanS_over_deltaD_XX/cf_PS0D1_XX)*(1-Sbis_XX)]*cf_inner_sumdelta12_XX
+		gen      cf_delta1_DR_XX = [0 - (cf_meanS_over_deltaD_XX/cf_PS0D1_XX)]*cf_inner_sumdelta12_XX if Sbis_XX==0
+		replace  cf_delta1_DR_XX = [S_over_deltaD_XX]*cf_inner_sumdelta12_XX if Sbis_XX==1		
+		
+		//Initialize the point estimate's components
+		scalar cf_sum_w_delta1_`pairwise'`pla'XX = 0
+		scalar delta1_num_`pairwise'`pla'XX     = 0
+		forvalues cf_id = 1/`cross_fitting'{
+		sum SbisV_XX if cf_sample_id == `cf_id'&cf_delta1_DR_XX!=.
+		scalar  cf_ES_`pairwise'`pla'`cf_id'XX = r(mean) 
+		scalar cf_N_`pairwise'`pla'`cf_id'XX = r(sum)
+		
+		if (scalar(cf_ES_`pairwise'`pla'`cf_id'XX)==0){
+			scalar cf_delta1_`pairwise'`pla'`cf_id'_XX = 0 //convention in the paper.
+		}
+		else{
+		sum cf_delta1_DR_XX [iw = weights_XX] if cf_sample_id == `cf_id' //&  Sbis_XX==1		
+		scalar cf_delta1_`pairwise'`pla'`cf_id'_XX = r(sum)/scalar(cf_N_`pairwise'`pla'`cf_id'XX)
+		}
+		scalar cf_sum_w_delta1_`pairwise'`pla'XX = scalar(cf_sum_w_delta1_`pairwise'`pla'XX) + scalar(cf_N_`pairwise'`pla'`cf_id'XX)
+		scalar delta1_num_`pairwise'`pla'XX    = scalar(delta1_num_`pairwise'`pla'XX) + scalar(cf_N_`pairwise'`pla'`cf_id'XX)*scalar(cf_delta1_`pairwise'`pla'`cf_id'_XX)
+		}
+				
+		scalar delta1_`pairwise'`pla'XX = scalar(delta1_num_`pairwise'`pla'XX)/scalar(cf_sum_w_delta1_`pairwise'`pla'XX) 
+	}
+	else{
+
+		reg S_over_deltaD_XX `reg_vars_pol_XX'   //No! if S_XX==0 
+		predict dr_meanS_over_deltaD_XX , xb
+		
+		//gen dr_delta1_DR_XX = weights_XX*[S_over_deltaD_XX - (meanS_over_deltaD_XX/PS0D1_XX)*(1-Sbis_XX)]*inner_sumdelta12_XX
+		gen dr_delta1_DR_XX = [0 - (meanS_over_deltaD_XX/PS0D1_XX)]*inner_sumdelta12_XX if Sbis_XX==0
+		replace dr_delta1_DR_XX = [S_over_deltaD_XX]*inner_sumdelta12_XX if Sbis_XX==1
+		sum dr_delta1_DR_XX [iw = weights_XX] //if Sbis_XX==1	
+		scalar delta1_`pairwise'`pla'XX = r(mean) //scalar(ES_`pairwise'`pla'XX)
+	}
+	}
+
 
 /**************************************************************************
           2. COMPUTING THE VARIANCE  of \hat{delta}_1
 **************************************************************************/
-	gen S_over_deltaD_XX = Sbis_XX/deltaD_XX // = V/\DeltaD
-	//The convention 0/0 = 0
-	replace S_over_deltaD_XX =0 if Sbis_XX==0
-	
-		//i. estimation of  \hat{E}(S/deltaD|D1)
-	reg S_over_deltaD_XX `reg_vars_pol_XX'   
-	predict meanS_over_deltaD_XX , xb  
 	
 	//Doulo: The Influence function is indexed by t to ease the aggregation after the loop is over by using successive merging of datasets
 	
@@ -3545,21 +3888,22 @@ if (`as' == 1){
 	}
 	// + Imbalanced panel adjustment:
 		//a.  Deviding by scalar(PHt`pairwise'`pla'XX)
-	replace Phi1_`pairwise'`pla'XX  = [Phi1_`pairwise'`pla'XX - scalar(delta1_`pairwise'`pla'XX)*Sbis_XX]/[scalar(ES_`pla'XX)*scalar(PHt`pairwise'`pla'XX)]
+	replace Phi1_`pairwise'`pla'XX  = [Phi1_`pairwise'`pla'XX - scalar(delta1_`pairwise'`pla'XX)*SbisV_XX]/[scalar(ES_`pairwise'`pla'XX)*scalar(PHt`pairwise'`pla'XX)]
 		//b. Replace the IF by 0 if Ht_XX==0
 	replace Phi1_`pairwise'`pla'XX = 0 if Ht_XX==0
+	replace Phi1_`pairwise'`pla'XX = . if S_XX==.
 	
 	sum Phi1_`pairwise'`pla'XX 
-	
 	if ("`cluster'"!=""){ // Clustering the variance //CLUSTER OPTION //weights OPTION
+
 		cap drop Phi1_`pairwise'`pla'_cXX //I create a new variable, because I need the one without clustering in the aggregation
 		bysort `cluster': egen Phi1_`pairwise'`pla'_cXX = total(Phi1_`pairwise'`pla'XX)
-		bysort `cluster': replace Phi1_`pairwise'`pla'_cXX=. if _n!=1
+		bysort `cluster': replace Phi1_`pairwise'`pla'_cXX=. if _n!=1|S_XX==.
 		replace Phi1_`pairwise'`pla'_cXX = Phi1_`pairwise'`pla'_cXX/scalar(N_bar_c_`pairwise'`pla'XX)
-		sum Phi1_`pairwise'`pla'_cXX	
+		sum Phi1_`pairwise'`pla'_cXX [iw = weights_cXX] 	
 	}
 
-	scalar sd_delta1_`pairwise'`pla'XX = r(sd)/sqrt(r(sum_w))  //sqrt(r(N)) same
+	scalar sd_delta1_`pairwise'`pla'XX = r(sd)/sqrt(r(N)) 
 	
 	scalar LB1_`pairwise'`pla'XX = scalar(delta1_`pairwise'`pla'XX) - 1.96*scalar(sd_delta1_`pairwise'`pla'XX)
 	scalar UB1_`pairwise'`pla'XX = scalar(delta1_`pairwise'`pla'XX) + 1.96*scalar(sd_delta1_`pairwise'`pla'XX)
@@ -3570,7 +3914,7 @@ if (`as' == 1){
 	
 	// + Imbalanced panel adjustment: replace S_t by S_t*H_t in the aggreagation of the point estimates formula
 	replace  S_`pairwise'`pla'XX = Ht_XX if Ht_XX==0 //(=S_t*H_t)
-	replace  S_`pairwise'`pla'XX = S_`pairwise'`pla'XX*weights_XX //S_t*V_t
+	replace  S_`pairwise'`pla'XX = S_`pairwise'`pla'XX //S_t*V_t
 }
 
 ********************************************************************************
@@ -3594,7 +3938,7 @@ gen absdeltaDV_XX = absdeltaD_XX*weights_XX //sgn(\DeltaD)*V
             1. COMPUTING THE POINT ESTIMATE \hat{delta}_2: START
 **************************************************************************/
 	foreach suffix in  "Minus" "Plus"{
-	
+		cap drop trimmed_out2_XX
 		//i)compute \hat{delta}_2+ and \hat{delta}_2-, and w+
 
 		if ("`suffix'" =="Plus"){
@@ -3608,22 +3952,11 @@ gen absdeltaDV_XX = absdeltaD_XX*weights_XX //sgn(\DeltaD)*V
 			//replace Ster_XX =. if S_XX==1
 		}
 		
-/**************************************************************************
-       i. COMPUTING THE contribution-weightsS (wPlus and wMinus)
-**************************************************************************/
-		cap drop prod_sgndeltaDdeltaD_XX
-		gen prod_sgndeltaDdeltaD_XX = S_XX*deltaD_XX
-		sum prod_sgndeltaDdeltaD_XX if Ster_XX==1
-		//scalar w`suffix'_`pairwise'`pla'XX = r(sum)/scalar(N_`pla'XX)
-		scalar w`suffix'_`pairwise'`pla'XX = r(sum)/scalar(N_`pla'XX) //scalar(W_`pla'XX) // because of the weights option 
-//The sum at the denominator of \hat{\delta}_2`suffix'
-
 		//use r(sum) instead of r(mean) since in case there is no observation r(mean) gives ., wheras r(sum) will give 0: this is for the r-based approach.
 		cap drop deltaDV_XX
 		gen deltaDV_XX = deltaD_XX*weights_XX
 		sum deltaDV_XX  if Ster_XX==1
 		scalar denom_delta2`suffix'_`pairwise'`pla'XX = r(sum)
-		
 
 /**************************************************************************
 		           IF REGRESSION-BASED APPROACH 
@@ -3659,19 +3992,39 @@ if ("`exact_match'"==""){ //We only do the logit regression if we have continuou
 		   
 		   cap drop PS1`suffix'D1_XX //create it and set it to zero, since I will call it outside this loop for the dr method.
 		   gen PS1`suffix'D1_XX = 0
+		   	if ("`cross_fitting'"!="0"){
+				gen cf_PS1`suffix'D1_XX = 0
+			}
+		   
 		   }
 		   else{ 
 		   	//2. Estimate P(S`suffix' = 1|D_1) 
-			capture logit Ster_XX `logit_`suffix'_pol_XX'     , asis
-			if (_rc==430){
-				//di as error "Warning: convergence not achieved."
-			}
 			
-			predict PS1`suffix'D1_XX , pr asif
+				capture logit Ster_XX `logit_`suffix'_pol_XX'     , asis
+				predict PS1`suffix'D1_XX , pr asif
+			if ("`cross_fitting'"!="0"){
+				
+				capture logit Ster_XX `logit_`suffix'_pol_XX' if cf_sample_id != 1     , asis
+				predict cf_PS1`suffix'D1_XX  if cf_sample_id == 1 , pr asif
+				
+				forvalues cf_id = 2/`cross_fitting'{
+				tempvar cf_PS1`suffix'D1_`cf_id'XX
+				capture logit Ster_XX `logit_`suffix'_pol_XX' if cf_sample_id != `cf_id'     , asis
+				predict `cf_PS1`suffix'D1_`cf_id'XX' if cf_sample_id == `cf_id', pr asif
+				replace cf_PS1`suffix'D1_XX = `cf_PS1`suffix'D1_`cf_id'XX'  if cf_sample_id == `cf_id'
+				}
+				
+			*gen trimmed_out2_XX = 1 if (cf_PS1`suffix'D1_XX<`trimming_down'|cf_PS1`suffix'D1_XX>`trimming_up')&cf_PS1`suffix'D1_XX!=.
+			*replace cf_PS1`suffix'D1_XX = . if trimmed_out2_XX == 1
+			}
+			/*else{
+			gen trimmed_out2_XX = 1 if (PS1`suffix'D1_XX<`trimming_down'|PS1`suffix'D1_XX>`trimming_up')&PS1`suffix'D1_XX!=.
+			replace PS1`suffix'D1_XX = . if trimmed_out2_XX == 1
+			}*/
 			//Convention Logit STATA R
 			replace PS1`suffix'D1_XX=0 if PS1`suffix'D1_XX<=10^(-10)
 			
-		
+
 /**************************************************************************
 			               IF PS-based APPROACH
 **************************************************************************/
@@ -3693,11 +4046,23 @@ if ("`exact_match'"==""){ //We only do the logit regression if we have continuou
 		}
 		} //End of the else
 } //End of the if with exact_match
-	} //End of the suffix loop
 
+/**************************************************************************
+       i. COMPUTING THE contribution-weightsS (wPlus and wMinus)
+**************************************************************************/
+		cap drop prod_sgndeltaDdeltaD_XX
+		gen prod_sgndeltaDdeltaD_XX = S_XX*deltaD_XX
+		sum prod_sgndeltaDdeltaD_XX if Ster_XX==1
+		//scalar w`suffix'_`pairwise'`pla'XX = r(sum)/scalar(N_`pla'XX)
+		scalar w`suffix'_`pairwise'`pla'XX = r(sum)/scalar(N_`pla'XX) //scalar(W_`pla'XX) // because of the weights option 
+//The sum at the denominator of \hat{\delta}_2`suffix'
+
+	} //End of the suffix loop
+		
 /**************************************************************************
       ii. COMPUTING THE FINAL weightsS WPLus = wPlus/(wPlus+wMinus)
 **************************************************************************/
+		
 if ("`estimation_method'" == ""|"`estimation_method'" == "ps"|"`estimation_method'" == "ra"){
 	scalar W_Plus_`pairwise'`pla'XX = scalar(wPlus_`pairwise'`pla'XX)/(scalar(wPlus_`pairwise'`pla'XX)+scalar(wMinus_`pairwise'`pla'XX))
 }
@@ -3708,27 +4073,64 @@ if ("`estimation_method'" == ""|"`estimation_method'" == "ps"|"`estimation_metho
 **************************************************************************/
 if ("`exact_match'"==""){
 	    cap drop dr_deltaYV_XX
-	    gen dr_deltaYV_XX = weights_XX*(S_XX - [(PS1PlusD1_XX - PS1MinusD1_XX)/PS0D1_XX]*(1-Sbis_XX))*inner_sumdelta12_XX if Sbis_XX == 0
+		gen dr_deltaYV_XX = weights_XX*(S_XX - [(PS1PlusD1_XX - PS1MinusD1_XX)/PS0D1_XX]*(1-Sbis_XX))*inner_sumdelta12_XX if Sbis_XX == 0
 		
 		replace dr_deltaYV_XX = weights_XX*(S_XX)*inner_sumdelta12_XX if Sbis_XX == 1 // Modif Doulo: RF or FS giving 0.
-		
-		sum dr_deltaYV_XX  //WIll use it for the dr point estimate and for the estimation of the variance!
+	
+		if ("`cross_fitting'"=="0"){
+		sum dr_deltaYV_XX //if Sbis_XX==1 //WIll use it for the dr point estimate and for the estimation of the variance!
 		scalar num_dr_delta2_`pla'XX = r(sum)
+		}
+		else{
+		cap drop cf_dr_deltaYV_XX
+	    gen cf_dr_deltaYV_XX = weights_XX*(S_XX - [(cf_PS1PlusD1_XX - cf_PS1MinusD1_XX)/cf_PS0D1_XX]*(1-Sbis_XX))*cf_inner_sumdelta12_XX if Sbis_XX == 0
+		replace cf_dr_deltaYV_XX = weights_XX*(S_XX)*cf_inner_sumdelta12_XX if Sbis_XX == 1 
+		
+		//Initialize the poit estimate's components:
+		scalar cf_sum_w_delta2_`pairwise'`pla'XX = 0
+		scalar delta2_num_`pairwise'`pla'XX    = 0		
+		
+		forvalues cf_id = 1/`cross_fitting'{
+		sum cf_dr_deltaYV_XX if cf_sample_id == `cf_id' //&Sbis_XX==1
+		
+		scalar num_dr_delta2_`cf_id'_`pla'XX = r(sum)
+
+		sum absdeltaDV_XX if cf_sample_id == `cf_id'&cf_dr_deltaYV_XX!=.
+		scalar cf_deltaD_`cf_id'_`pairwise'`pla'XX = r(sum)
+		if (scalar(cf_deltaD_`cf_id'_`pairwise'`pla'XX)==0){
+			scalar cf_delta2_`cf_id'_`pairwise'`pla'XX = 0 //convention in the paper.
+		}
+		else{
+		scalar cf_delta2_`cf_id'_`pairwise'`pla'XX = scalar(num_dr_delta2_`cf_id'_`pla'XX)/scalar(cf_deltaD_`cf_id'_`pairwise'`pla'XX)
+		
+		scalar cf_sum_w_delta2_`pairwise'`pla'XX = scalar(cf_sum_w_delta2_`pairwise'`pla'XX) + scalar(cf_deltaD_`cf_id'_`pairwise'`pla'XX)
+		scalar delta2_num_`pairwise'`pla'XX   = scalar(delta2_num_`pairwise'`pla'XX) + scalar(cf_deltaD_`cf_id'_`pairwise'`pla'XX)*scalar(cf_delta2_`cf_id'_`pairwise'`pla'XX)
+		}
+		}
+		}
 }		
 		if ("`estimation_method'" == ""|"`estimation_method'" == "ps"|"`estimation_method'" == "ra"){
 		scalar delta2_`pairwise'`pla'XX = scalar(W_Plus_`pairwise'`pla'XX)*scalar(delta2Plus_`pairwise'`pla'XX) + (1 - scalar(W_Plus_`pairwise'`pla'XX))*scalar(delta2Minus_`pairwise'`pla'XX ) 
+		
 		}
 	
 		if ("`estimation_method'" == "dr"){
-		sum absdeltaDV_XX 
-		scalar delta2_`pairwise'`pla'XX = scalar(num_dr_delta2_`pla'XX)/r(sum)
+			if ("`cross_fitting'"=="0"){
+				sum absdeltaDV_XX 
+
+				scalar delta2_`pairwise'`pla'XX = scalar(num_dr_delta2_`pla'XX)/r(sum)
+			}
+			else{
+								
+				scalar delta2_`pairwise'`pla'XX = scalar(delta2_num_`pairwise'`pla'XX)/scalar(cf_sum_w_delta2_`pairwise'`pla'XX)
+				
+			}
 		}
-	
 /**************************************************************************
           2. COMPUTING THE VARIANCE (The variance is not method-specific) // but we use linear regression if exact_match, and logit otherwise
 **************************************************************************/
         if ("`exact_match'"==""){
-		gen Phi2_`pairwise'`pla'XX = (dr_deltaYV_XX -scalar(delta2_`pairwise'`pla'XX)*absdeltaDV_XX)
+		gen Phi2_`pairwise'`pla'XX = weights_XX*(dr_deltaYV_XX -scalar(delta2_`pairwise'`pla'XX)*absdeltaDV_XX)
 		}
 		else{
 		gen Phi2_`pairwise'`pla'XX = weights_XX*[(S_XX - ES_XX_D1*(1-Sbis_XX)/(1-ESbis_XX_D1))*inner_sumdelta12_XX -scalar(delta2_`pairwise'`pla'XX)*absdeltaD_XX]
@@ -3738,15 +4140,15 @@ if ("`exact_match'"==""){
 		replace Phi2_`pairwise'`pla'XX = Phi2_`pairwise'`pla'XX/[scalar(PHt`pairwise'`pla'XX)*scalar(EabsdeltaD_`pla'XX)]
 			//b. Replace the IF by 0 if Ht_XX==0
 		replace Phi2_`pairwise'`pla'XX = 0 if Ht_XX==0	
-		
+		replace Phi2_`pairwise'`pla'XX = . if S_XX==.	//Jan,25: mismatch between se of placebos with and without cluster(ID) solved.
+				
 		
 		//save "dr_`pairwise'.dta", replace
 		sum  Phi2_`pairwise'`pla'XX 
-
 		if ("`cluster'"!=""){ // Clustering the variance
 		cap drop Phi2_`pairwise'`pla'_cXX //I create a new variable, because I need the one without clustering in the aggregation
 		bysort `cluster': egen Phi2_`pairwise'`pla'_cXX = total(Phi2_`pairwise'`pla'XX)
-		bysort `cluster': replace Phi2_`pairwise'`pla'_cXX=. if _n!=1
+		bysort `cluster': replace Phi2_`pairwise'`pla'_cXX=. if _n!=1|S_XX==.
 		replace Phi2_`pairwise'`pla'_cXX = Phi2_`pairwise'`pla'_cXX/scalar(N_bar_c_`pairwise'`pla'XX)
 		sum Phi2_`pairwise'`pla'_cXX   
 		}
@@ -3762,6 +4164,28 @@ if ("`exact_match'"==""){
 		replace absdeltaD_`pairwise'`pla'XX  = 0 if Ht_XX == 0
 		replace absdeltaD_`pairwise'`pla'XX =  absdeltaD_`pairwise'`pla'XX*weights_XX //AbsDelta_t*V_t
 }
+
+if ("`exact_match'"==""&(`trimming'!=0)){
+**************************************************************
+*Adjust N switchers and N stayers when trimming
+sum Sbis_XX [w = weights_XX] if trimmed_out_XX==1&Sbis_XX==0
+local adj_nb_stayers = `r(sum_w)'
+
+sum Sbis_XX [w = weights_XX] if trimmed_out_XX==1&Sbis_XX==1
+local adj_nb_switchers = `r(sum_w)'
+
+if (`as' == 1){
+scalar Nstayers1_`pairwise'`pla'XX = scalar(Nstayers1_`pairwise'`pla'XX) - `adj_nb_stayers'
+
+scalar N_Switchers1_`pairwise'`pla'XX = scalar(N_Switchers1_`pairwise'`pla'XX) - `adj_nb_switchers'
+}
+
+if (`was' == 1){
+scalar Nstayers2_`pairwise'`pla'XX = scalar(Nstayers2_`pairwise'`pla'XX) - `adj_nb_stayers'
+scalar N_Switchers2_`pairwise'`pla'XX = scalar(N_Switchers2_`pairwise'`pla'XX) - `adj_nb_switchers'
+}
+}
+
 }
 //End of non-IV feasible estimation
 else{
@@ -3800,67 +4224,66 @@ else{
 **# Bookmark #3 IWAS
 ********************************************************************************
 if (`iwas' == 1){
-if (scalar(gap_`pairwise'`pla'XX)==0&scalar(n_switchersIV_`pla'XX)>0&scalar(n_stayersIV_`pla'XX)>1){ //Start of IV feasible estimation
+cap drop absdeltaZV_XX
+gen absdeltaZV_XX = absdeltaZ_XX*weights_XX 
+	  // Sample splitting : Cross-fitting.
+	if ("`cross_fitting'"!="0"){
+	//Cross-fitting samples splitting: 
+	set seed 1234 //To ensure that the sample does not change when the code is ran multiple times. 
+	cap drop rnd_sorter 
+	gen rnd_sorter_XX = rnormal()
+	*Sort by D1_XX and then the random variable to break ties
+	sort Z1_XX rnd_sorter_XX
+	*Generate a new variable equal to 1 if the order is odd, 2 if even
+	gen cf_sample_id = 1 + mod(_n, `cross_fitting')
+	}
+	
+if (scalar(gap_`pairwise'`pla'XX)==0&scalar(n_switchersIV_`pla'XX)>0&scalar(n_stayersIV_`pla'XX)>10){ //Start of IV feasible estimation
 ************************************************
 
-		//polynomial for Z if IV requested
-		
-			local varsIV_pol_XX = "`other_treatments'"
-			forvalues pol_level = 1/`order'{
-			scalar pol_level_`pla'XX = `pol_level'
-			capture drop Z1_XX_`pol_level'_XX 
-			gen Z1_XX_`pol_level'_XX = Z1_XX^scalar(pol_level_`pla'XX)
-			local varsIV_pol_XX = "`varsIV_pol_XX' Z1_XX_`pol_level'_XX"
-			
-			//Controls: Generate the polynomial order of each control
-			
-			if ("`controls'"!=""){
-				foreach control in `controls'{
-					cap drop `control'_`pol_level'_XX
-					gen `control'_`pol_level'_XX = `control'^scalar(pol_level_`pla'XX)
-					local vars_pol_controlsXX = "`vars_pol_controlsXX' `control'_`pol_level'_XX"
-				}
-			}
-			}
-					//Add the interaction control#Z1_XX
-			if ("`controls'"!=""&`order'>1){
-				foreach control in `controls'{
-					local vars_pol_controlsXX = "`vars_pol_controlsXX' c.`control'#c.Z1_XX"
-				}
-			}
-			//Add the interaction control#control only zhen order>=2
-			if (`order'>1){
-			if ("`controls'"!=""){
-				local i = 0
-				foreach control1 in `controls'{
-					local i = `i'+1
-					local j = 0
-					foreach control2 in `controls'{
-						local j = `j'+1
-						if (`j'>`i') {
-							local vars_pol_controlsXX = "`vars_pol_controlsXX' c.`control1'#c.`control2'"
-						}
-					}
-				}
-			}	
-			}
-			//// Other treatments option: More general and inclusive way of doing the interaction.
-			
-			if ("`other_treatments'"!=""){
-				foreach var in `other_treatments'{
-					if ("`interact'"==""){
-						local interact  = "c.`var'##c.Z1_XX"
-					}
-					else{
-						local interact  = "c.`interact'##c.`var'"
-					}
-			local varsIV_pol_XX = "`varsIV_pol_XX' `interact'"
-				}
-			}
-			//All controls
-			local varsIV_pol_XX = "`varsIV_pol_XX' `vars_pol_controlsXX'"
-			//di as error "`varsIV_pol_XX'"
-		
+
+/*******************************************************************
+	Call polynomials_generator here: Start
+	*******************************************************************/
+if ("`cross_validation'" == ""){
+polynomials_generator, order(`order_1')   /* order(`order_1')*/      prefix(reg)         controls(`controls') other_treatments(`other_treatments')	`pla' reduced_form
+	local reg_vars_pol_XX        "`s(reg_pol_XX)'"
+	
+polynomials_generator, order(`order_2')         prefix(logit_bis)         controls(`controls') other_treatments(`other_treatments')	`pla' reduced_form
+	local logit_bis_pol_XX       "`s(logit_bis_pol_XX)'"
+polynomials_generator, order(`order_3')         prefix(logit_Plus)         controls(`controls') other_treatments(`other_treatments')	`pla' reduced_form
+	local logit_Plus_pol_XX      "`s(logit_Plus_pol_XX)'"
+	
+polynomials_generator, order(`order_4')         prefix(logit_Minus)         controls(`controls') other_treatments(`other_treatments')	`pla' reduced_form
+	local logit_Minus_pol_XX     "`s(logit_Minus_pol_XX)'"
+	
+polynomials_generator, order(`order_2')         prefix(reg)                 controls(`controls') other_treatments(`other_treatments') `pla' first_stage
+	local reg_vars_pol_FSXX        "`s(reg_pol_XX)'"
+}
+else{
+	
+polynomials_generator, order(`reg_order')         prefix(reg)         controls(`controls') other_treatments(`other_treatments') `pla' reduced_form
+polynomials_generator, order(`logit_bis_order')   prefix(logit_bis)   controls(`controls') other_treatments(`other_treatments') `pla' reduced_form
+polynomials_generator, order(`logit_Plus_order')  prefix(logit_Plus)  controls(`controls') other_treatments(`other_treatments') `pla' reduced_form
+polynomials_generator, order(`logit_Minus_order') prefix(logit_Minus) controls(`controls') other_treatments(`other_treatments') `pla' reduced_form
+
+	local reg_vars_pol_XX        "`s(reg_pol_XX)'"
+	local logit_bis_pol_XX       "`s(logit_bis_pol_XX)'"
+	local logit_Plus_pol_XX      "`s(logit_Plus_pol_XX)'"
+	local logit_Minus_pol_XX     "`s(logit_Minus_pol_XX)'"
+
+	//For FS
+	local reg_order_FS = scalar(reg_order_FS)
+polynomials_generator, order(`reg_order_FS')         prefix(reg)         controls(`controls') other_treatments(`other_treatments') `pla' first_stage
+	local reg_vars_pol_FSXX        "`s(reg_pol_XX)'"
+	
+//di as red "order reg FS: " scalar(reg_order_FS)
+}
+
+	/*******************************************************************
+	Call polynomials_generator here: End
+******************************************************************************/	
+	
 cap drop innerSumIV_num_XX
 //cap drop absdeltaZ_XX
 
@@ -3869,7 +4292,7 @@ cap drop SIPlus_XX
 cap drop SIMinus_XX
 
 	//gen absdeltaZ_XX = SI_XX*deltaZ_XX
-	sum absdeltaZ_XX 
+	sum absdeltaZV_XX //Weights
 	scalar EabsdeltaZ_`pairwise'`pla'XX = r(mean)
 	
     gen SIbis_XX = (SI_XX!=0&SI_XX!=.) 
@@ -3889,21 +4312,46 @@ o. Preliminaries: Perform the logit regressions
 	cap drop S_IV0_XX
 	gen S_IV0_XX = 1-SIbis_XX
 if ("`exact_match'"==""){
-	cap logit S_IV0_XX `varsIV_pol_XX'    , asis
+
+	cap logit S_IV0_XX `logit_bis_pol_XX'     , asis // `varsIV_pol_XX'
 	if (_rc==430){
 				//di as error "Warning: convergence not achieved."
 			}
 	predict PS_IV0Z1_XX , pr asif
 	//Convention Logit STATA R
 	replace PS_IV0Z1_XX=0 if PS_IV0Z1_XX<=10^(-10)
+	
+	if ("`cross_fitting'" != "0"){
+			cap logit S_IV0_XX `logit_bis_pol_XX'   if  cf_sample_id != 1 , asis
+			predict cf_PS_IV0Z1_XX if cf_sample_id == 1, pr asif
+			
+			forvalues cf_id = 2/`cross_fitting'{
+				cap logit S_IV0_XX `logit_bis_pol_XX'   if  cf_sample_id != `cf_id' , asis
+				tempvar PS_IV0Z1_`cf_id'XX
+				predict `PS_IV0Z1_`cf_id'XX' if cf_sample_id == `cf_id', pr asif
+				
+				replace cf_PS_IV0Z1_XX = `PS_IV0Z1_`cf_id'XX'  if cf_sample_id == `cf_id'
+			}
+		
+			//Convention Logit STATA R
+	        replace cf_PS_IV0Z1_XX=0 if cf_PS_IV0Z1_XX<=10^(-10)
+			//Trimming
+			gen trimmed_out_XX = 1 if (cf_PS_IV0Z1_XX <`trimming')&cf_PS_IV0Z1_XX!=.
+			replace cf_PS_IV0Z1_XX =. if trimmed_out_XX == 1 
+	}
+	else{
+		//Trimming
+			gen trimmed_out_XX = 1 if (PS_IV0Z1_XX <`trimming')&PS_IV0Z1_XX!=.
+			replace PS_IV0Z1_XX =. if trimmed_out_XX == 1 
+	}
 }
 else{ 		//This is for the IF and point estimate of the was when we have discrete treatment, instead of using logit use regressions
 	
 		//Estimation of 1-E(SI|Z1) = P(SI = 0|Z_1) in exact_match case
-		reg SIbis_XX `varsIV_pol_XX'   
+		reg SIbis_XX `reg_vars_pol_XX'   
 		predict ESIbis_XX_Z1, xb
 		//Estimation of  \hat{E}(SI+-SI-|Z1) 
-		reg SI_XX `varsIV_pol_XX'   
+		reg SI_XX `reg_vars_pol_XX'   
 		predict ESI_XX_Z1 , xb  
 	}	
 	//2. P(SI=0) //For PS and DR-BASED APPROACHES
@@ -3916,6 +4364,7 @@ else{ 		//This is for the IF and point estimate of the was when we have discrete
 	   cap drop  PSIMinus1Z1_XX
 		   
 	   foreach suffix in  "Minus" "Plus"{
+	   	cap drop trimmed_out2_XX
 	   	cap drop  PSI`suffix'1Z1_XX
 	       //1. Estimate P(SI`suffix'=1)
 		   count if SI`suffix'_XX ==1
@@ -3929,42 +4378,107 @@ else{ 		//This is for the IF and point estimate of the was when we have discrete
 		   		   
              //create it and set it to zero, since I will call it outside this loop for the dr method.
 		   gen PSI`suffix'1Z1_XX = 0
+		   gen cf_PSI`suffix'1Z1_XX = 0
 		   }
 		   else{ 
 			if ("`exact_match'"==""){
 			
- capture logit SI`suffix'_XX `varsIV_pol_XX'     , asis
-			if (_rc==430){
-				//di as error "Warning: convergence not achieved."
+
+				capture logit SI`suffix'_XX `logit_`suffix'_pol_XX'    , asis
+				if (_rc==430){
+					//di as error "Warning: convergence not achieved."
+				}
+				
+				predict PSI`suffix'1Z1_XX , pr asif //P(SI+=1|Z_1) and P(SI-=1|Z_1)
+				//Convention Logit STATA R
+				replace PSI`suffix'1Z1_XX=0 if PSI`suffix'1Z1_XX<=10^(-10)
+			
+			if ("`cross_fitting'" != "0"){
+				cap drop cf_PSI`suffix'1Z1_XX
+				
+				cap logit SI`suffix'_XX `logit_`suffix'_pol_XX'   if  cf_sample_id !=1 , asis
+				predict cf_PSI`suffix'1Z1_XX if cf_sample_id ==1, pr asif  
+				
+				forvalues cf_id = 2/`cross_fitting'{
+				cap logit SI`suffix'_XX `logit_`suffix'_pol_XX'   if  cf_sample_id != `cf_id' , asis
+				tempvar PSI`suffix'1Z1_`cf_id'XX
+				predict `PSI`suffix'1Z1_`cf_id'XX' if cf_sample_id == `cf_id', pr asif  
+				replace cf_PSI`suffix'1Z1_XX = `PSI`suffix'1Z1_`cf_id'XX' if cf_sample_id == `cf_id'
 			}
-			
-			predict PSI`suffix'1Z1_XX , pr asif //P(SI+=1|Z_1) and P(SI-=1|Z_1)
+		
 			//Convention Logit STATA R
+	        replace cf_PSI`suffix'1Z1_XX =0 if cf_PSI`suffix'1Z1_XX <=10^(-10)
 			
-			replace PSI`suffix'1Z1_XX=0 if PSI`suffix'1Z1_XX<=10^(-10)
-		   } //end of if exact_match
+			*gen trimmed_out2_XX = 1 if ( cf_PSI`suffix'1Z1_XX<`trimming_down'| cf_PSI`suffix'1Z1_XX>`trimming_up')& cf_PSI`suffix'1Z1_XX!=.
+			*replace  cf_PSI`suffix'1Z1_XX = . if trimmed_out2_XX == 1
+			}
+			/*else{
+			gen trimmed_out2_XX = 1 if (PSI`suffix'1Z1_XX<`trimming_down'| PSI`suffix'1Z1_XX>`trimming_up')& PSI`suffix'1Z1_XX!=.
+			replace  PSI`suffix'1Z1_XX = . if trimmed_out2_XX == 1
+			}*/
+			} //end of if exact_match
 		   }
 	   }
+	   
 /**************************************************************************
             1. COMPUTING THE POINT ESTIMATE \hat{delta}_IV: START
 **************************************************************************/
  	//i. Estimation of  \hat{E}(deltaY|Z1, SI=0)
 	cap drop meandeltaY_predIV_XX
-	reg deltaY_XX `varsIV_pol_XX'     if SI_XX==0
+	reg deltaY_XX `reg_vars_pol_XX'     if SI_XX==0
 	predict meandeltaY_predIV_XX , xb 
 	//scalar Nstayers3_`pairwise'XX  = e(N) 
 	
 	cap drop innerSumIV_num_XX
 	gen innerSumIV_num_XX = deltaY_XX - meandeltaY_predIV_XX
 	
+	//The nuisance function E(\deltaY - \mu^Y_0(Z_1, D_1)) when cross-fitting is requested.
+	if ("`cross_fitting'" !="0") {
+		cap drop cf_innerSumIV_num_XX
+		gen cf_innerSumIV_num_XX = . 
+		
+		reg deltaY_XX `reg_vars_pol_XX'   if SI_XX==0 & cf_sample_id != 1
+		tempvar mean_pred_1XX
+		predict `mean_pred_1XX' if cf_sample_id ==1, xb
+		replace cf_innerSumIV_num_XX = deltaY_XX - `mean_pred_1XX' if cf_sample_id ==1 
+		
+		forvalues cf_id = 2/`cross_fitting'{
+			reg deltaY_XX `reg_vars_pol_XX'   if SI_XX==0 & cf_sample_id != `cf_id'
+			tempvar mean_pred_`cf_id'XX
+			predict `mean_pred_`cf_id'XX' if cf_sample_id == `cf_id', xb // Remark: We do cf_sample_id == 2, instead of cf_sample_id == 1, because we do cross-fitting. We want to use \deltaY - \mu^Y(1)_0(Z_1, D_1) when we estimate \delta^{(2)}.
+			replace cf_innerSumIV_num_XX = deltaY_XX - `mean_pred_`cf_id'XX' if cf_sample_id == `cf_id' // {\deltaY - \mu^Y_0(Z_1, D_1)}^(2) or  {\deltaY - \mu^Y_0(Z_1, D_1)}^(1)				
+		}		
+	}
 	//ii. Estimation of \hat{E}(deltaD|Z1, SI=0)
 	cap drop meandeltaD_predIV_XX
-	reg deltaD_XX `varsIV_pol_XX'      if SI_XX==0
+	reg deltaD_XX `reg_vars_pol_FSXX'      if SI_XX==0
 	predict meandeltaD_predIV_XX , xb 
 	
 	cap drop innerSumIV_denom_`pairwise'`pla'XX
 	gen innerSumIV_denom_`pairwise'`pla'XX = deltaD_XX - meandeltaD_predIV_XX
 	
+	//The nuisance function E(\deltaD - \mu^D_0(Z_1, D_1)) when cross-fitting is requested.
+	if ("`cross_fitting'" !="0") {
+		cap drop cf_innerSumIV_denom_`pairwise'`pla'XX
+		gen cf_innerSumIV_denom_`pairwise'`pla'XX = . 
+		
+		// {\deltaD - \mu^D_0(Z_1, D_1)}^(2)
+		// {\deltaD - \mu^D_0(Z_1, D_1)}^(1)	
+			reg deltaD_XX `reg_vars_pol_FSXX'      if SI_XX==0 & cf_sample_id !=1
+			tempvar meandeltaD_predIV_1XX
+			predict `meandeltaD_predIV_1XX' if cf_sample_id ==1, xb 
+			replace cf_innerSumIV_denom_`pairwise'`pla'XX = deltaD_XX - `meandeltaD_predIV_1XX' if cf_sample_id ==1 
+			
+		forvalues cf_id = 2/`cross_fitting'{
+			reg deltaD_XX `reg_vars_pol_FSXX'      if SI_XX==0 & cf_sample_id != `cf_id'
+			tempvar meandeltaD_predIV_`cf_id'XX
+			predict `meandeltaD_predIV_`cf_id'XX' if cf_sample_id == `cf_id', xb // Remark: We do cf_sample_id == 2, instead of cf_sample_id == 1, because we do cross-fitting. We want to use \deltaY - \mu^Y(1)_0(Z_1, D_1) when we estimate \delta^{(2)}.
+			replace cf_innerSumIV_denom_`pairwise'`pla'XX = deltaD_XX - `meandeltaD_predIV_`cf_id'XX' if cf_sample_id ==`cf_id'
+		}
+		
+			
+	}	
+
 /**************************************************************************
 		           1.1 IF REGRESSION-BASED APPROACH 
 **************************************************************************/
@@ -4022,27 +4536,87 @@ if ("`estimation_method'" == ""|"`estimation_method'" == "ra"){
 		
 		if ("`estimation_method'" == "dr"){
 			
+			//2. The denominatoR: We need it even when cross-fitting is specified.
+			cap drop dr_IVdeltaD_XX
+	        gen dr_IVdeltaD_XX = (SI_XX - [(PSIPlus1Z1_XX - PSIMinus1Z1_XX)/PS_IV0Z1_XX]*(1-SIbis_XX))*innerSumIV_denom_`pairwise'`pla'XX if SIbis_XX == 0
+			replace  dr_IVdeltaD_XX = (SI_XX)*innerSumIV_denom_`pairwise'`pla'XX if SIbis_XX == 1
+			
+			
+			sum dr_IVdeltaD_XX //if SIbis_XX == 1
+			scalar denom_deltaIV`pairwise'`pla'XX = r(sum)
+			
+			if ("`cross_fitting'" == "0"){
 			//1. The numerator	
 			cap drop dr_IVdeltaY_XX
 	        gen dr_IVdeltaY_XX = (SI_XX - [(PSIPlus1Z1_XX - PSIMinus1Z1_XX)/PS_IV0Z1_XX]*(1-SIbis_XX))*innerSumIV_num_XX if SIbis_XX == 0
 			replace dr_IVdeltaY_XX = (SI_XX)*innerSumIV_num_XX if SIbis_XX == 1
 			
-			sum dr_IVdeltaY_XX 
-			scalar num_deltaIV`pairwise'`pla'XX = r(mean) 
+			sum dr_IVdeltaY_XX  //if SIbis_XX == 1
+			scalar num_deltaIV`pairwise'`pla'XX = r(sum) 
 
-			//2. The denominator	
-			cap drop dr_IVdeltaD_XX
-	        gen dr_IVdeltaD_XX = (SI_XX - [(PSIPlus1Z1_XX - PSIMinus1Z1_XX)/PS_IV0Z1_XX]*(1-SIbis_XX))*innerSumIV_denom_`pairwise'`pla'XX if SIbis_XX == 0
-			replace  dr_IVdeltaD_XX = (SI_XX)*innerSumIV_denom_`pairwise'`pla'XX if SIbis_XX == 1
-			
-			sum dr_IVdeltaD_XX 
-			scalar denom_deltaIV`pairwise'`pla'XX = r(mean)
+			}
+			else{
+					//1. The numerator	
+				cap drop cf_dr_IVdeltaY_XX
+				gen cf_dr_IVdeltaY_XX = (SI_XX - [(cf_PSIPlus1Z1_XX - cf_PSIMinus1Z1_XX)/cf_PS_IV0Z1_XX]*(1-SIbis_XX))*cf_innerSumIV_num_XX if SIbis_XX == 0
+				replace cf_dr_IVdeltaY_XX = (SI_XX)*cf_innerSumIV_num_XX if SIbis_XX == 1
+
+				//2. The denominator	
+				cap drop dr_IVdeltaD_XX
+				gen cf_dr_IVdeltaD_XX = (SI_XX - [(cf_PSIPlus1Z1_XX - cf_PSIMinus1Z1_XX)/cf_PS_IV0Z1_XX]*(1-SIbis_XX))*cf_innerSumIV_denom_`pairwise'`pla'XX if SIbis_XX == 0
+				replace  cf_dr_IVdeltaD_XX = (SI_XX)*cf_innerSumIV_denom_`pairwise'`pla'XX if SIbis_XX == 1
+				
+				
+				//Initialize the point estimate's components: 
+						scalar RF_`pairwise'`pla'XX = 0
+						scalar FS_`pairwise'`pla'XX = 0
+						scalar cf_sum_weights_`pairwise'`pla'XX = 0 
+						
+				forvalues cf_id = 1/`cross_fitting'{
+					
+				sum cf_dr_IVdeltaY_XX if cf_sample_id == `cf_id' //&SIbis_XX == 1
+				scalar num_deltaIV_`cf_id'_`pairwise'`pla'XX = r(sum) 
+				
+				sum cf_dr_IVdeltaD_XX if cf_sample_id == `cf_id' //&SIbis_XX == 1
+				scalar denom_deltaIV_`cf_id'_`pairwise'`pla'XX = r(sum)
+				
+				//The point estimates : (\delta_3^{(k)})_{k=1, 2}
+				//scalar delta3_`cf_id'_`pairwise'`pla'XX = scalar(num_deltaIV_`cf_id'_`pairwise'`pla'XX)/scalar(denom_deltaIV_`cf_id'_`pairwise'`pla'XX)		
+				
+				//The weights components : None.
+				sum absdeltaZV_XX /*SIbis_XX*/ if cf_sample_id == `cf_id'
+				scalar cf_deltaZ_`cf_id'_`pairwise'`pla'XX = r(sum)
+				
+				if (scalar(cf_deltaZ_`cf_id'_`pairwise'`pla'XX) == 0){
+					scalar RF_`cf_id'_`pairwise'`pla'XX  = 0 
+					scalar FS_`cf_id'_`pairwise'`pla'XX  = 0 
+				}
+				else{
+					scalar RF_`cf_id'_`pairwise'`pla'XX = scalar(num_deltaIV_`cf_id'_`pairwise'`pla'XX) // /scalar(cf_deltaZ_`cf_id'_`pairwise'`pla'XX)		
+					scalar FS_`cf_id'_`pairwise'`pla'XX = scalar(denom_deltaIV_`cf_id'_`pairwise'`pla'XX) // /scalar(cf_deltaZ_`cf_id'_`pairwise'`pla'XX)		the division is simplified by the weighting.
+										
+				}
+				
+				//Increment the point estimate's components: 
+				scalar cf_sum_weights_`pairwise'`pla'XX = scalar(cf_sum_weights_`pairwise'`pla'XX) + scalar(cf_deltaZ_`cf_id'_`pairwise'`pla'XX)
+				scalar RF_`pairwise'`pla'XX = scalar(RF_`pairwise'`pla'XX) + scalar(RF_`cf_id'_`pairwise'`pla'XX) 
+				scalar FS_`pairwise'`pla'XX = scalar(FS_`pairwise'`pla'XX) + scalar(FS_`cf_id'_`pairwise'`pla'XX) 
+				}
+			}
 	
 		}
 
  
  //Compute the point estimate by scalar(num_deltaIV)/scalar(denom_deltaIV)
- scalar delta3_`pairwise'`pla'XX = scalar(num_deltaIV`pairwise'`pla'XX)/scalar(denom_deltaIV`pairwise'`pla'XX)
+	if ("`cross_fitting'" == "0"){ 
+		scalar delta3_`pairwise'`pla'XX = scalar(num_deltaIV`pairwise'`pla'XX)/scalar(denom_deltaIV`pairwise'`pla'XX)
+	}
+	else{
+		scalar delta3_`pairwise'`pla'XX = scalar(RF_`pairwise'`pla'XX)/scalar(FS_`pairwise'`pla'XX) //  = DR_RF/DR_FS
+		//di as error "FS `pairwise'`pla' = " scalar(FS)
+		
+		scalar denom_deltaIV`pairwise'`pla'XX = scalar(FS_`pairwise'`pla'XX) //Use the DR_FS as weights.
+	}
  //For aggreagation + correcting imbalance panels
  scalar denom_deltaIV`pairwise'`pla'XX  = scalar(denom_deltaIV`pairwise'`pla'XX)*scalar(PHt`pairwise'`pla'XX)
  scalar denom_deltaIV_sum_`pla'XX = scalar(denom_deltaIV_sum_`pla'XX ) + scalar(denom_deltaIV`pairwise'`pla'XX) //denom_deltaIV_sum_`pla'XX is initialized outside of this program
@@ -4051,14 +4625,15 @@ if ("`estimation_method'" == ""|"`estimation_method'" == "ra"){
  /**************************************************************************
             2. COMPUTING the variance of \hat{delta}_IV: START
 **************************************************************************/
-	
+		//save "test_IV.dta", replace
+		//exit
 	 //i. Compute phi_Y
 	 sum innerSumIV_num_XX 
 	 scalar delta_Y_`pairwise'`pla'XX = r(mean)
 	 //scalar delta_Y_`pairwise'`pla'XX = r(mean)/scalar(EabsdeltaZ_`pairwise'`pla'XX)
 
 	 //reg deltaY_XX `vars_pol_XX' if SI_XX==0 
-	 reg deltaY_XX `varsIV_pol_XX'     if SI_XX==0 // meandeltaY_predIV_XX
+	 reg deltaY_XX `reg_vars_pol_XX'     if SI_XX==0 // meandeltaY_predIV_XX
 	 predict mean_pred_Y_IV_XX , xb 
 	 
 	 if ("`exact_match'"==""){
@@ -4075,7 +4650,7 @@ if ("`estimation_method'" == ""|"`estimation_method'" == "ra"){
 
 	 
 	 //reg deltaD_XX `vars_pol_XX' if SI_XX==0 
-	 reg deltaD_XX `varsIV_pol_XX'     if SI_XX==0 
+	 reg deltaD_XX `reg_vars_pol_FSXX'     if SI_XX==0 
 	 predict mean_pred_D_IV_XX , xb 
 	 
 	 if ("`exact_match'"==""){	 
@@ -4087,24 +4662,38 @@ if ("`estimation_method'" == ""|"`estimation_method'" == "ra"){
 	 replace Phi_D_XX = Phi_D_XX/scalar(EabsdeltaZ_`pairwise'`pla'XX)*scalar(PHt`pairwise'`pla'XX )
 	 
 	 //iii. Now compute Phi_IV
-	 gen Phi3_`pairwise'`pla'XX = (Phi_Y_XX - scalar(delta3_`pairwise'`pla'XX)*Phi_D_XX)/scalar(delta_D_`pairwise'`pla'XX )
+	 gen Phi3_`pairwise'`pla'XX = weights_XX*(Phi_Y_XX - scalar(delta3_`pairwise'`pla'XX)*Phi_D_XX)/scalar(delta_D_`pairwise'`pla'XX )
 	 replace Phi3_`pairwise'`pla'XX = 0 if Ht_XX == 0 
+	 replace Phi3_`pairwise'`pla'XX = . if SI_XX == . 
 	 
 	sum Phi3_`pairwise'`pla'XX 
-	scalar mean_IF3`pairwise'`pla' = r(mean) //check if the mean is close to zero when I will output the simulations (to be drop in the final version)
+	//scalar mean_IF3`pairwise'`pla' = r(mean) //check if the mean is close to zero when I will output the simulations (to be drop in the final version)
 	
 	if ("`cluster'"!=""){ // Clustering the variance //CLUSTER OPTION
 		cap drop Phi3_`pairwise'`pla'_cXX //I create a new variable, because I need the one without clustering in the aggregation
 		bysort `cluster': egen Phi3_`pairwise'`pla'_cXX = total(Phi3_`pairwise'`pla'XX)
-		bysort `cluster': replace Phi3_`pairwise'`pla'_cXX=. if _n!=1
+		bysort `cluster': replace Phi3_`pairwise'`pla'_cXX=. if _n!=1|SI_XX==.
 		replace Phi3_`pairwise'`pla'_cXX = Phi3_`pairwise'`pla'_cXX/scalar(N_bar_c_`pairwise'`pla'XX)
 		sum Phi3_`pairwise'`pla'_cXX   //we use the weights of the cluster here
 	}
 		
-	scalar sd_delta3_`pairwise'`pla'XX = r(sd)/sqrt(r(sum_w)) //sqrt(scalar(N_XX)) // Clustering change the N_XX by r(N)
+	scalar sd_delta3_`pairwise'`pla'XX = r(sd)/sqrt(r(sum_w))
 
 	scalar LB3_`pairwise'`pla'XX = scalar(delta3_`pairwise'`pla'XX) - 1.96*scalar(sd_delta3_`pairwise'`pla'XX)
 	scalar UB3_`pairwise'`pla'XX = scalar(delta3_`pairwise'`pla'XX) + 1.96*scalar(sd_delta3_`pairwise'`pla'XX)
+	
+**************************************************************
+if ("`exact_match'"==""){
+*Adjust N switchers and N stayers in cases of trimming  (2025)
+sum SIbis_XX [w = weights_XX] if trimmed_out_XX==1&SIbis_XX==0
+local adj_nb_stayers = `r(sum_w)'
+
+sum SIbis_XX [w = weights_XX] if trimmed_out_XX==1&SIbis_XX==1
+local adj_nb_switchers = `r(sum_w)'
+
+scalar Nstayers3_`pairwise'`pla'XX = scalar(Nstayers3_`pairwise'`pla'XX) - `adj_nb_stayers'
+scalar N_Switchers3_`pairwise'`pla'XX = scalar(N_Switchers3_`pairwise'`pla'XX) - `adj_nb_switchers'
+}
 }
 //End of IV feasible estimation
 else{
@@ -4178,9 +4767,11 @@ use "`OG_dataPathcore'.dta", clear
 
 end
 
-/******************************************************************************
-								  SUBPROGRAMS
-******************************************************************************/
+*----------------------------------------------------------------------------------------------------------------------------------------------------------
+*
+* THE FOLLOWING PARTS COMPRISES ALL THE OTHERS SECONDARY PROGRAMS. 
+*
+*----------------------------------------------------------------------------------------------------------------------------------------------------------
 //.
 cap program drop parse_select_twfe_suboptions
 program parse_select_twfe_suboptions , sclass
@@ -4243,7 +4834,7 @@ SUBPROGRAMS FOR CROSS-VALIDATION
 //1.
 cap program drop parse_select_cv_suboptions
 program parse_select_cv_suboptions , sclass
-    syntax [, ALGOrithm(string) TOLErance(real 0.01) max_k(integer 5) seed(integer 0) kfolds(integer 5)] // Felix: should it be max_k(integer 1) or actually max_k(integer 5) here? -> Modif: using default 5 makes it run and is consistent with what we say in the help file!
+    syntax [, ALGOrithm(string) TOLErance(real 0.01) max_k(integer 5) seed(integer 0) kfolds(integer 5) same_order_all_logits] // Felix: should it be max_k(integer 1) or actually max_k(integer 5) here? -> Modif: using default 5 makes it run and is consistent with what we say in the help file!
     
 	// Felix: In the help file now we say that algorithm has to be specified!	
 	
@@ -4252,13 +4843,14 @@ program parse_select_cv_suboptions , sclass
     sreturn local max_k     `max_k'
     sreturn local seed      `seed'
 	sreturn local kfolds    `kfolds'
+	sreturn local same_order_all_logits  `same_order_all_logits'
 end
 
 
 capture program drop cross_validation
 program define cross_validation, sclass
 	version 12.0
-	syntax  anything [if] [in] [, ALGOrithm(string) TOLErance(real 0) max_k(integer 5) seed(integer 0) kfolds(integer 5) model(string) cv_covariates(string)] // FIRST_stage  weights(varlist numeric max=1) 
+	syntax  anything [if] [in] [, ALGOrithm(string) TOLErance(real 0) max_k(integer 5) seed(integer 0) kfolds(integer 5) model(string) cv_covariates(varlist) FIRST_stage reduced_form same_order_all_logits] 
 	
 	scalar set_chosen_order_linear = 0
 	tokenize `anything'
@@ -4276,11 +4868,26 @@ if ("`algorithm'"=="loocv") {
 				di as error "logit regression not allowed with loocv."
 				exit
 			}
+			
 //Display 
-			if ("`1'" == "deltaYt_XX") local name = "E(Y_t - Y_{t-1}|D_{t-1})"
-			if ("`1'" == "S0bist_XX")  local name = "P(S_t = 0|D_{t-1})"
-			if ("`1'" == "StPlus_XX")  local name = "P(S+_t = 0|D_{t-1})"
-			if ("`1'" == "StMinus_XX") local name = "P(S-_t = 0|D_{t-1})"
+if ("`first_stage'"=="") {
+	local outcomeYorD = "Y"
+	local treatmentDorZ = "D"
+}
+else{
+	local outcomeYorD = "D"
+	local treatmentDorZ = "Z"
+}
+if ("`reduced_form'"!=""){
+	local outcomeYorD = "Y"
+	local treatmentDorZ = "Z"
+	local IV "I"
+}
+//di as red "`outcomeYorD' = outcome"
+			if ("`1'" == "deltaYt_XX") local name = "E(`outcomeYorD'_t - `outcomeYorD'_{t-1}|`treatmentDorZ'_{t-1})"
+			if ("`1'" == "S`IV'0bist_XX")  local name = "P(S_t = 0|`treatmentDorZ'_{t-1})"
+			if ("`1'" == "S`IV'tPlus_XX")  local name = "P(S+_t = 0|`treatmentDorZ'_{t-1})"
+			if ("`1'" == "S`IV'tMinus_XX") local name = "P(S-_t = 0|`treatmentDorZ'_{t-1})"
 	
 di as input " "
 di as input "{hline 80}"
@@ -4293,7 +4900,7 @@ quietly{
 	
 	//dropping observations not included in the if condition
 	if "`if'" !=""{
-	keep `if'
+	//keep `if'
 	}
 //mata: mata clear
 //Test
@@ -4324,10 +4931,11 @@ quietly{
 local cv_covariates0
 local PolK0 
 forvalues k=1/`max_k'{
-	
+	if ("`reduced_form'"!="") local VAR = "Z"
+	else local VAR = "D"
 	xtset ID_XX T_XX
 	cap drop LD_XX 
-	gen LD_XX = L.D_XX
+	gen LD_XX = L.`VAR'_XX
 	
 cap drop Lag1Dt_`k'XX
 gen Lag1Dt_`k'XX = LD_XX^`k'
@@ -4356,8 +4964,25 @@ forvalues k2 =1/`k'{
 //local controls_cv "(c.T_XX_FE_*)#(`PolK')"
 
 //list of covariates for order k: kfolds
-local controls_cv`k' "(c.T_XX_FE_*)#(`PolK`k'')"
+local add_controls 
 
+if ("`cv_covariates'"!=""){
+	
+	foreach var of local cv_covariates{
+		cap drop lag_`var'_XX
+		
+		xtset ID_XX T_XX
+		gen lag_`var'_XX = L.`var'
+		
+		local add_controls = "`add_controls' c.lag_`var'_XX"
+		//di as red "Test = `add_controls'"
+	}
+}
+
+// t*d t*x 
+local controls_cv`k' "(c.T_XX_FE_*)#(`PolK`k'')" //`add_controls'
+
+//di as red "`controls_cv`k''"
 //di as error "`controls_cv`k''"
 //di as error "`cv_covariates`k''"
 ********************************************************************************
@@ -4370,12 +4995,19 @@ local controls_cv`k' "(c.T_XX_FE_*)#(`PolK`k'')"
 				gen e_sq_XX = . 
 				local counter = 0
 				forvalues test_sample_id = 1/`kfolds'{
-					if ("`model'"==""|"`model'"=="reg") cap reg `anything' `controls_cv`k'' if fold_identifier_XX!=`test_sample_id'
+					if ("`model'"==""|"`model'"=="reg") {
+						
+						 cap reg `anything' `controls_cv`k'' `if'&fold_identifier_XX!=`test_sample_id'
+						 
+						//matrix first_stage_orders = J(4, 1, .) //This to initialize the matrix that will be used to store orders of FS for the IV-WAS routine, and will be use by polynomials_generator	
+						}
 					else {
 						 cap `model' `anything' `controls_cv`k'' if fold_identifier_XX!=`test_sample_id', asis
-						//di as error "`model' `anything' if fold_identifier_XX!=`test_sample_id'"
+						
 					}
-					if (_rc==0|_rc==430|_rc==2000){ //convergence not achieved, keep going?
+					//di as error "`model' `anything' `controls_cv`k'' if fold_identifier_XX!=`test_sample_id'"
+					
+					if (_rc==0|_rc==430){ //convergence not achieved, keep going? |_rc==2000) (Dec, 2024)
 					if (_rc==430) local counter = `counter'+1
 					cap drop e_`test_sample_id'_XX
 					if ("`model'"==""|"`model'"=="reg") {
@@ -4508,6 +5140,10 @@ else{
 		cap scalar drop CV_`k'
 	}
 	scalar drop stoper
+	
+	if ("`first_stage'"!=""&("`model'"==""|"`model'"=="reg")) {
+		scalar reg_order_FS = `opt_k'
+	}
 
 end
 /*******************************************************************************
@@ -4515,16 +5151,18 @@ SUBPROGRAM POLYNOMIALS GENERATOR
 *******************************************************************************/
 cap program drop polynomials_generator
 program define polynomials_generator, sclass
-    syntax [, order(integer 1) pla prefix(string) controls(varlist numeric) other_treatments(varlist numeric)]
+    syntax [, order(integer 1) pla prefix(string) controls(varlist numeric) other_treatments(varlist numeric) FIRST_stage reduced_form]
     
-	// Generating polynomials of the baseline treatement	
+	if ("`first_stage'"!=""|"`reduced_form'"!="") local VAR = "Z"
+	else local VAR = "D"
+	// Generating polynomials of the baseline treatement/instrument	
 		//i for D
 			local vars_pol_XX =""  //"`other_treatments'" 
 			local vars_pol_controlsXX ="" 
 			forvalues pol_level = 1/`order'{
 			scalar pol_level_`pla'XX = `pol_level'
 			capture drop D1_XX_`pol_level'_XX 
-			gen D1_XX_`pol_level'_XX = D1_XX^scalar(pol_level_`pla'XX)
+			gen D1_XX_`pol_level'_XX = `VAR'1_XX^scalar(pol_level_`pla'XX)
 			local vars_pol_XX = "`vars_pol_XX' D1_XX_`pol_level'_XX"
 			
 			//Controls: Generate the polynomial order of each control
@@ -4540,7 +5178,7 @@ program define polynomials_generator, sclass
 			//Add the interaction control#D1
 			if ("`controls'"!=""&`order'>1){
 				foreach control in `controls'{
-					local vars_pol_controlsXX = "`vars_pol_controlsXX' c.`control'#c.D1_XX"
+					local vars_pol_controlsXX = "`vars_pol_controlsXX' c.`control'#c.`VAR'1_XX"
 				}
 			}
 			//Add the interaction control#control if order>=2
@@ -4565,7 +5203,7 @@ program define polynomials_generator, sclass
 			if ("`other_treatments'"!=""){
 				foreach var in `other_treatments'{
 					if ("`interact'"==""){
-						local interact  = "c.`var'##c.D1_XX"
+						local interact  = "c.`var'##c.`VAR'1_XX"
 					}
 					else{
 						local interact  = "c.`interact'##c.`var'"
@@ -4579,7 +5217,7 @@ program define polynomials_generator, sclass
 			local vars_pol_XX = "`vars_pol_XX' `vars_pol_controlsXX'"
 			
 //prefix in {logit_Plus, logit_Minus, logit_bis, reg}
-
+	
     sreturn local `prefix'_pol_XX `vars_pol_XX'
 	//di as error "`s(`prefix'_pol_XX)'"
 

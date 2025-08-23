@@ -1,0 +1,41 @@
+TITLE
+      'gologit2': module to estimate generalized logistic regression models for ordinal dependent variables
+
+DESCRIPTION/AUTHOR(S)
+
+gologit2 estimates generalized ordered logit models for ordinal
+dependent variables. A major strength of gologit2 is that it can also
+estimate three special cases of the generalized model: the proportional
+odds/parallel lines model, the partial proportional odds model, and the
+logistic regression model. Hence, gologit2 can estimate models that are
+less restrictive than the proportional odds /parallel lines models
+estimated by ologit (whose assumptions are often violated) but more
+parsimonious and interpretable than those estimated by a non-ordinal
+method, such as multinomial logistic regression (i.e. mlogit). The svy:
+prefix, as well as factor variables and post-estimation commands such as
+margins, are supported. Other key strengths of gologit2 include options
+for linear constraints, alternative model parameterizations, automated
+model fitting, alternative link functions (logit, probit, complementary
+log-log, log-log & cauchit), and the computation of estimated
+probabilities via the predict command. gologit2 works under Stata 11.2
+or higher. Those with older versions of Stata should use gologit29
+instead. gologit2 is inspired by Vincent Fu's gologit program and is
+backward compatible with both it and gologit29 but offers several
+additional powerful options.
+
+KW: logistic regression
+KW: generalized logit
+KW: proportional odds
+KW: partial proportional odds
+KW: logit
+KW: probit
+KW: cloglog
+KW: loglog
+KW: cauchit
+
+      
+Requires: Stata version 11.2
+      
+Author: Richard Williams, University of Notre Dame
+Support: email rwilliam@ND.edu
+

@@ -1,7 +1,7 @@
 {smcl}
-{* Last revised Feb 16, 2025}{...}
+{* Last revised Aug 13, 2025}{...}
 {hline}
-help for {hi:oglm} version 2.3.2 released Feb 16, 2025
+help for {hi:oglm} version 2.3.3 released August 13, 2025
 {hline}
 
 {title:Ordinal Generalized Linear Models}
@@ -358,7 +358,7 @@ category, etc.
 models as {cmd:ologit}.  The {opt store} option is convenient for saving results if you
 want to contrast different models.
 
-{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
+{p 8 12 2}{cmd:. use https://academicweb.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. oglm  warm i.yr89 i.male i.white age ed prst}{p_end}
 {p 8 12 2}{cmd:. oglm  warm i.yr89 i.male i.white age ed prst, store(m1)}{p_end}
 {p 8 12 2}{cmd:. oglm  warm i.yr89 i.male i.white age ed prst, robust}{p_end}
@@ -371,7 +371,7 @@ want to contrast different models.
 
 {p 4 4 2} {it}Example 3.  The {cmd:predict} command. {sf} 
 
-{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
+{p 8 12 2}{cmd:. use https://academicweb.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. quietly oglm  warm i.yr89 i.male i.white age ed prst}{p_end}
 {p 8 12 2}{cmd:. predict p1 p2 p3 p4}{p_end}
 
@@ -383,7 +383,7 @@ currently supports the use of linear constraints, such as two
 variables having equal effects.  {cmd:oglm} can be used for this
 purpose.  For example,
 
-{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
+{p 8 12 2}{cmd:. use https://academicweb.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. recode warm (1 2  = 0)(3 4 = 1), gen(agree)}{p_end}
 {p 8 12 2}{cmd:. * Constrain the effects of male and white to be equal}{p_end}
 {p 8 12 2}{cmd:. constraint 1 1.male = 1.white}{p_end}
@@ -398,7 +398,7 @@ specify probit, complementary log log, log log or log links.  In the following e
 same model is estimated using each of the links supported by oglm (note that {opt link(log)}
 is considered experimental and possibly wrong.}
 
-{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
+{p 8 12 2}{cmd:. use https://academicweb.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. oglm warm i.yr89 i.male i.white age ed prst, link(l)}{p_end}
 {p 8 12 2}{cmd:. oglm warm i.yr89 i.male i.white age ed prst, link(p)}{p_end}
 {p 8 12 2}{cmd:. oglm warm i.yr89 i.male i.white age ed prst, link(c)}{p_end}
@@ -410,7 +410,7 @@ is considered experimental and possibly wrong.}
 Stata's prefix commands. But remember that many prefix commands do not support
 factor variables. For example,
 
-{p 8 12 2}{cmd:. use use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear, clear}{p_end}
+{p 8 12 2}{cmd:. use use https://academicweb.nd.edu/~rwilliam/statafiles/ordwarm2, clear, clear}{p_end}
 {p 8 12 2}{cmd:. sw, pe(.05): oglm warm yr89 male}{p_end}
 {p 8 12 2}{cmd:. nestreg: oglm warm (yr89 male  white age) (ed prst)}{p_end}
 
@@ -426,7 +426,7 @@ equations. Note that it is possible to estimate a heteroskedasticity-only
 model, and that the variables in the two equations do not need to
 be the same.
 
-{p 8 12 2}{cmd:. use use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
+{p 8 12 2}{cmd:. use use https://academicweb.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. oglm warm i.yr89 i.male i.white age ed prst, het(i.yr89) hc}{p_end}
 {p 8 12 2}{cmd:. oglm warm i.yr89 i.male white age ed prst, scale(i.male i.white) ls link(p)}{p_end}
 {p 8 12 2}{cmd:. oglm warm, eq2(i.male)}{p_end}
@@ -448,30 +448,20 @@ the following examples, because of the {opt flip} option, the choice
 variables are yr89, male, white, age, ed, and prst, while the hetero variables
 are yr89, male, and white.
 
-{p 8 12 2}{cmd:. use use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear, clear}{p_end}
+{p 8 12 2}{cmd:. use use https://academicweb.nd.edu/~rwilliam/statafiles/ordwarm2, clear, clear}{p_end}
 {p 8 12 2}{cmd:. sw, pe(.05) lr: oglm warm yr89 male white, eq2(yr89 male white age ed prst) flip}{p_end}
 {p 8 12 2}{cmd:. nestreg, lr: oglm warm yr89 male white, eq2(yr89 male white age ed prst) flip}{p_end}
 
 {p 4 4 2} {it}Example 9.  Factor variables and the margins command. {sf} {cmd:oglm} works with
 factor variables and the {cmd:margins} command. Like {cmd:ologit}, {cmd:oglm} is a multiple 
-outcome command, so you have to tell {cmd:margins} which outcome you want the predictive margins
-or marginal effects for. Also, keep in mind that not all prefix commands work when factor
-variables are used.
+outcome command.
 
-{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
+{p 8 12 2}{cmd:. use https://academicweb.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. recode warm (1 2  = 0)(3 4 = 1), gen(agree)}{p_end}
 {p 8 12 2}{cmd:. oglm agree i.yr89 i.male i.white age ed prst}{p_end}
-{p 8 12 2}{cmd:. margins yr89 male white, predict(outcome(1))}{p_end}
-{p 8 12 2}{cmd:. margins, dydx(*) predict(outcome(1))}{p_end}
-{p 8 12 2}{cmd:. oglm  warm i.yr89 i.male i.white age ed prst}{p_end}
-{p 8 12 2}{cmd:. margins yr89 male white, predict(outcome(1))}{p_end}
-{p 8 12 2}{cmd:. margins yr89 male white, predict(outcome(2))}{p_end}
-{p 8 12 2}{cmd:. margins yr89 male white, predict(outcome(3))}{p_end}
-{p 8 12 2}{cmd:. margins yr89 male white, predict(outcome(4))}{p_end}
-{p 8 12 2}{cmd:. margins, dydx(*) predict(outcome(1))}{p_end}
-{p 8 12 2}{cmd:. margins, dydx(*) predict(outcome(2))}{p_end}
-{p 8 12 2}{cmd:. margins, dydx(*) predict(outcome(3))}{p_end}
-{p 8 12 2}{cmd:. margins, dydx(*) predict(outcome(4))}{p_end}
+{p 8 12 2}{cmd:. margins yr89 male white }{p_end}
+{p 8 12 2}{cmd:. margins, dydx(*) }{p_end}
+
 
 {title:Author}
 
@@ -479,7 +469,7 @@ variables are used.
 Richard Williams{break}
 Notre Dame Department of Sociology{break}
 Richard.A.Williams.5@ND.Edu{break}
-{browse "http://www.nd.edu/~rwilliam/oglm/"}{p_end}
+{browse "http://academicweb.nd.edu/~rwilliam/oglm/"}{p_end}
 
 
 {title:Acknowledgements}
@@ -528,7 +518,7 @@ as such.
 Compare Logit and Probit Coefficients Across Groups" 
 Sociological Methods & Research 37(4): 531-559. A pre-publication version
 is available at {break} 
-{browse "http://www.nd.edu/~rwilliam/oglm/RW_Hetero_Choice.pdf"}.
+{browse "http://academicweb.nd.edu/~rwilliam/oglm/RW_Hetero_Choice.pdf"}.
 
 {p 5 5}Williams, Richard.  2010. "Fitting Heterogeneous Choice 
 Models with oglm."  The Stata Journal 10(4):540-567.  
@@ -539,7 +529,7 @@ The published article can be found at {break}
 Proportional Odds Models for Ordinal Dependent Variables." The Stata 
 Journal 6(1):58-82.  A pre-publication version that includes information on
 updates to the program since the article was published is available at {break}
-{browse "http://www.nd.edu/~rwilliam/gologit2/gologit2.pdf"}. 
+{browse "http://academicweb.nd.edu/~rwilliam/gologit2/gologit2.pdf"}. 
 {break}The published article can be found at {break}
 {browse "http://www.stata-journal.com/article.html?article=st0097"}
 

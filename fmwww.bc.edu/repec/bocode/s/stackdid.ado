@@ -1,7 +1,7 @@
-*! version 1.2.1 17feb2025
+*! version 1.4.0 16aug2025
 capture program drop stackdid
 program define stackdid, rclass
-        version 11
+        version 15
         
 /* SYNTAX */
         
@@ -18,8 +18,8 @@ program define stackdid, rclass
         */      clear                   /*
         */      saving(string)          /*
         */      noLOG                   /* 
-        */      absorb(varlist fv)      /*
-		*/		sw 						/*
+        */      Absorb(varlist fv)      /*
+	*/	sw 			/*
         */      *                       /* estimator-specific options other than absorb()
         */      ]
   
@@ -29,181 +29,243 @@ program define stackdid, rclass
                 exit 198
         }
 		
-		* Confirm dependencies installed
-		if ("`regress'"=="") {
-			if ("`poisson'"!="") {
-				cap which ppmlhdfe 
-				if (_rc) {
-					di as err "package ppmlhdfe required: " as smcl "{bf:{stata ssc describe ppmlhdfe}}"
-					exit 199
-				}
-				else	local cmd "ppmlhdfe"
+	* Confirm dependencies installed
+	if ("`regress'"=="") {
+		if ("`poisson'"!="") {
+			cap which ppmlhdfe 
+			if (_rc) {
+				di as err "package ppmlhdfe required: " as smcl "{bf:{stata ssc describe ppmlhdfe}}"
+				exit 199
 			}
-			else {
-				cap which reghdfe 
-				if (_rc) {
-					di as err "package reghdfe required: " as smcl "{bf:{stata ssc describe reghdfe}}"
-					exit 199
-				}
-				else	local cmd "reghdfe"
-			}
+			else	local cmd "ppmlhdfe"
 		}
+		else {
+			cap which reghdfe 
+			if (_rc) {
+				di as err "package reghdfe required: " as smcl "{bf:{stata ssc describe reghdfe}}"
+				exit 199
+			}
+			else	local cmd "reghdfe"
+		}
+	}
+	
+	* Catch incompatible syntax 
+	if ("`weight'`exp'"!="") {
+		if ("`sw'"!="") {
+			di as err "weights are not allowed with sw"
+			exit 198
+		}
+		else	local w [`weight'`exp']
+	}
+	if ("`sw'"!="")	local w [aweight=_sw]
+	
+	* Interact fixed effects with _cohort
+	if ("`absorb'"!="") {
+		while ("`absorb'"!="") {
+			gettoken a absorb: absorb
+			local absorb_cohort `absorb_cohort' `a'#_cohort
+		}
+	} 
+	else	local absorb_cohort _cohort
+	local abs absorb(`absorb_cohort')
+
         
 /* BUILD */
 
         if ("`build'"=="") {
 			
-				* Assert data is xtset'ed
-                capture xtset
+		* Assert data is xtset'ed
+                capture xtset // sorts data too.
                 if (_rc) | inlist("","`r(panelvar)'","`r(timevar)'") {
                         di as err "must xtset data with panelvar and timevar"
                         exit 198
                 }
                 local unit `r(panelvar)'
                 local time `r(timevar)'
+		
+                * Parse window()
+		if ("`window'"!="") {
+			gettoken pre post: window
+			capture assert `pre'<`post' & inrange(0,`pre',`post'-1)
+			if (_rc) {
+				di as err "option window() specified incorrectly"
+				exit 198
+			}
+		}
                 
-				* Note to self: Is the following check worth it?
+                * Assert varnames are available
+		capture ds _cohort
+		if (!_rc) {
+			di as err "varname _cohort must be available"
+			exit 110 
+                }
+		
+		* Note to self: Is the following check worth it?
                 * Assert treatment takes values {0,1,.}
-                capture assert inlist(`treatment',0,1,.) `if' `in'
+                capture assert inlist(`treatment',0,1,.) `if' `in', fast
                 if (_rc) { 
                         di as err "`treatment' is not a 0/1/. variable"
                         exit 450
                 }
-
-                * Parse window()
-				if ("`window'"!="") {
-					gettoken pre post: window
-					capture assert `pre'<`post' & inrange(0,`pre',`post'-1)
-					if (_rc) {
-							di as err "option window() specified incorrectly"
-							exit 198
-					}
-				}
-                
-                * Assert varnames are available
-                foreach vname in _cohort _cohort_time _cohort_group {
-                        capture ds `vname'
-                        if (!_rc) {
-                                di as err "varname `vname' must be available"
-                                exit 110 
-                        }
-                }
-                tempvar treat_prev treat_event nevertreated tostack treated latest_treat lost_treat gained_treat stacked
+		
+		* Preserve and filter
+		preserve
+		if ("`if'`in'"!="") {
+			qui keep `if' `in'
+			local if 
+			local in 
+		}
 
                 * Helper macros 
                 local ttype: type `time' // `time' datatype
                 local tfmt : format `time' // `time' format
                 if ("`log'"!="") local nolog "quietly" // suppress build log
-                if ("`if'"!="") local ampif = subinstr("`if'","if","&",1) // replace if w/ ampersand
-
-                * Preserve
-				preserve
+		local N_original = _N 
+		local N_fmt = strlen("`N_original'") + (floor(strlen("`N_original'") / 3))
+		tempvar treat_prev treat_event nevertreated treated latest_treat lost_treat gained_treat stacked reps
 				
-				* Find event times
+		* Find event times
                 sort `group' `time'
                 qui gen byte `treat_prev' = `treatment'[_n-1] if (`group'[_n-1]==`group' & `time'[_n-1]+1==`time')
                 qui gen byte `treat_event' = (`treatment'==1 & `treat_prev'==0)
                 qui levelsof `time' if (`treat_event'==1), local(cohorts)
-                `nolog' di _n as text "treatment cohorts: " as result "`cohorts'"
-                drop `treat_prev'
-                
+		
+		* Find event times v2
+		qui egen byte `treat_prev' = max()
+		
+		* Issue warning if treatment is impermanent 
+		capture assert (`treatment'==1) if (`treat_prev'==1), fast
+		local permanent = (_rc==0)
+		if (!`permanent') di as txt "impermanent treatment detected"
+		drop `treat_prev'
+		
+		* Print event times
+		`nolog' di _n as text "treatment cohorts: " as result "`cohorts'"		
+		
                 * Initialize cohort identifier and nevertreated identifier
                 qui gen `ttype' _cohort = . // missing means original, nonmissing means stacked...
+		format _cohort `tfmt'
+                label var _cohort "-stackdid- treatment cohort"
                 if ("`nevertreat'"!="") qui egen byte `nevertreated' = min(`treatment'==0), by(`group')
                 
                 * For each cohort...
-                foreach co of local cohorts {                
+                foreach co in `cohorts' {     
                         
                         * (helper: treated/control ... {1:treatment cohort, 0:control, .:neither})
                         qui egen byte `treated' = max(cond(`time'==`co',`treat_event'==1,.)), by(`group')
                         qui replace `treated' = 0 if (missing(`treated') & `treatment'==0) // recover controls where cohort year is not observed
                         if ("`nevertreat'"!="") qui replace `treated' = . if (`treated'==0 & `nevertreated'==0)
+			
+			* (helper: to-stack marker)
+			tempvar tostack`co'
+			local tostacks `tostacks' `tostack`co''
 
                         * (1): grab everything within window of event
-						if ("`window'"!="") {
-								qui gen byte `tostack' = inrange(`time',`pre'+`co',`post'+`co'-1) if missing(_cohort) & !missing(`treated') `ampif' `in'
-						}
-						else {
-								qui gen byte `tostack' = (missing(_cohort) & !missing(`treated')) `ampif' `in'
-						}
-						
-                        * (2): remove latest treatment and prior
-                        qui egen `ttype' `latest_treat' = max(cond(`treatment'==1,`time',.)) if (`tostack'==1 & `time'<`co'), by(`group')
-                        qui replace `tostack' = 0 if (`tostack'==1 & `treatment'==1 & `time'<=`latest_treat' & !missing(`latest_treat'))
-
-                        * (3): remove if treated group loses treatment status post-event
-                        qui egen `ttype' `lost_treat' = min(cond(`treatment'==0,`time',.)) if (`treated'==1 & `co'<`time'), by(`group')
-                        qui replace `tostack' = 0 if (`treated'==1 & `lost_treat'<=`time' & !missing(`lost_treat'))
-
+			if ("`window'"!="") {
+				qui gen byte `tostack`co'' = inrange(`time',`pre'+`co',`post'+`co'-1) if !missing(`treated')
+			}
+			else {
+				qui gen byte `tostack`co'' = !missing(`treated')
+			}
+			
+			if (!`permanent') {
+				* (2): remove latest treatment and prior
+				qui egen `ttype' `latest_treat' = max(cond(`treatment'==1,`time',.)) if (`tostack`co''==1 & `time'<`co'), by(`group')
+				qui replace `tostack`co'' = 0 if (`tostack`co''==1 & `treatment'==1 & `time'<=`latest_treat' & !missing(`latest_treat'))
+				drop `latest_treat'
+				
+				* (3): remove if treated group loses treatment status post-event
+				qui egen `ttype' `lost_treat' = min(cond(`treatment'==0,`time',.)) if (`treated'==1 & `co'<`time'), by(`group')
+				qui replace `tostack`co'' = 0 if (`treated'==1 & `lost_treat'<=`time' & !missing(`lost_treat'))
+				drop `lost_treat'
+			}
+				
                         * (4): remove if control group gains treatment status post-event
                         if ("`nevertreat'"=="") {
                                 qui egen `ttype' `gained_treat' = min(cond(`treatment'==1,`time',.)) if (`treated'==0 & `co'<=`time'), by(`group')
-                                qui replace `tostack' = 0 if (`treated'==0 & `gained_treat'<=`time' & !missing(`gained_treat'))
+                                qui replace `tostack`co'' = 0 if (`treated'==0 & `gained_treat'<=`time' & !missing(`gained_treat'))
                                 drop `gained_treat'
                         }
-
-                        * (5): create stack using -expand-
-                        drop `treated' `latest_treat' `lost_treat'
-                        `nolog' di as text "cohort " as result "`co'" as text " stacked " _cont
-                        `nolog' expand 2 if (`tostack'==1), gen(`stacked')
-                        qui replace _cohort = `co' if (`stacked'==1)
-                        drop `tostack' `stacked'
-                }
-				di
-				
-				* Generate fixed effects
-                qui egen _cohort_time = group(_cohort `time') if !missing(_cohort), autotype
-                qui egen _cohort_unit = group(_cohort `unit') if !missing(_cohort), autotype 
-				
-				* Generate sample weight (inverse frequency)
-				if ("`clear'"!="") | ("`sw'"!="") {
-						qui bysort `unit' `time': gen _sw = 1/(_N-1) 
-						label var _sw "-stackdid- sample weight"
-				}
-                
-                * Label saved (non-temporary) variables 
-                format _cohort `tfmt'
-                label var _cohort "-stackdid- treatment cohort"
-                label var _cohort_time "-stackdid- cohort-time fixed effect"
-                label var _cohort_unit "-stackdid- unit-cohort fixed effect"
-                
-                * Clean up & grab N
-                qui count if missing(_cohort)
-                local N_orig = r(N)
-                qui count if !missing(_cohort)
-                local N_stacked = r(N)
-                
+			drop `treated'
+			
+			* Print description
+			qui sum `treatment' if (`tostack`co''==1 & `time'>=`co'), meanonly
+			if (r(mean)==1) {
+				local cohorts: list cohorts - co
+				local res ": omitted (no valid controls)"
+			}
+			else {
+				qui count if `tostack`co''
+				local res ": " %`N_fmt'.0fc r(N) " obs"
+			}
+			`nolog' di as text "cohort " as result "`co'" as text "`res'"
+		}
+		if ("`nevertreat'"!="") drop `nevertreated'
+		drop `treat_event'
+		
+		* Generate sample weight (inverse frequency)
+		if ("`clear'"!="") | ("`saving'"!="") | ("`sw'"!="") {
+			qui egen `reps' = rownonmiss(`tostacks')
+			qui gen _sw = 1/`reps'
+			label var _sw "-stackdid- sample weight"
+			drop `reps'
+		}
+		
+		* Create stacks using -expand-
+		if ("`cohorts'"!="") {
+			`nolog' di as text "stacking" _cont
+			foreach co of local cohorts {
+				qui expand 2 if (`tostack`co''==1) in 1/`N_original', gen(`stacked')
+				qui replace _cohort = `co' if (`stacked'==1)
+				drop `tostack`co'' `stacked'
+				`nolog' di as text "." _cont
+			}
+			local N_stacked = _N - `N_original'
+			`nolog' di
+		}
+		else {
+			`nolog' di as text "nothing to stack"
+			local N_stacked 0
+		}
         }
         
 /* ESTIMATE */
         
         if ("`regress'"=="") {
-                local abs absorb(`absorb' _cohort_time _cohort_unit)
-				local w = cond(("`sw'"!=""), "[aweight=_sw]", "[`weight'`exp']")
+		di
+		
+		* Confirm data are stacked
+		cap ds _cohort
+		if (_rc>0) & ("`build'"!="") {
+			di as err "_cohort not found; data do not appear to be stacked"
+			exit 111
+		}
+		
+		* Executes regression
                 `cmd' `anything' `w' `if' `in', `abs' `options'
                 return local regline "`e(cmdline)'"
         }
         
 /* CLEAN UP */
         
-		* Apply clear/saving options
-		if ("`build'"=="") {
-				if ("`clear'"!="") {
-						restore, not
-						qui drop if missing(_cohort)
-						if ("`saving'"!="") {
-								di 
-								save `saving'
-						}
-				}
-				else if ("`saving'"!="") {
-						qui drop if missing(_cohort)
-						di
-						save `saving'
-						restore
-				}
-				else	restore
+	* Apply clear/saving options
+	if ("`build'"=="") {
+		if ("`clear'"!="") {
+			restore, not
+			qui drop in 1/`N_original'
+			if ("`saving'"!="") {
+				di 
+				save `saving'
+			}
 		}
+		else if ("`saving'"!="") {
+			qui drop in 1/`N_original'
+			di
+			save `saving'
+			restore
+		}
+		else	restore
+	}
 
         
 /* RETURNS + MESSAGES */
@@ -212,7 +274,7 @@ program define stackdid, rclass
                 return local treatment "`treatment'"
                 return local group "`group'"
                 return local window "`window'"
-                return scalar N_orig = `N_orig'
+                return scalar N_original = `N_original'
                 return scalar N_stacked = `N_stacked'
         }
         return local cmdline "stackdid `0'"

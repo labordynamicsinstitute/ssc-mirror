@@ -1,6 +1,6 @@
-d 'CORR2TEX': module to export publication-ready correlation matrices to LaTeX with significance stars
+d 'CORRTEX2': module to export publication-ready correlation matrices to LaTeX with significance stars
 d
-d    corr2tex generates publication-quality correlation matrices in
+d    corrtex2 generates publication-quality correlation matrices in
 d LaTeX format.  The command	automatically calculates Pearson
 d correlation coefficients, formats them with specified decimal   
 d places, and adds significance stars when requested. 
@@ -11,17 +11,21 @@ d KW: LaTeX
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20250808
+d Distribution-Date: 20250822
 d
 d Author: Wu LiangHai,  Anhui University of Technology
 d Support: email agd2010@@yeah.net
 d
-d Author:    Wu Hanyan,  2325476320@qq.com
-d Support: email   Nanjing University of Aeronautics and Astronautics
-d
 d Author:   Hu Fangfang,  Wanjiang University of Technology
 d Support: email    huff470@@163.com
 d
-f corr2tex.ado
-f corr2tex.sthlp
+d Author:    Wu Hanyan,  Nanjing University of Aeronautics and Astronautics
+d Support: email   2325476320@qq.com
+d
+d Author:      Zhao Xin,  Anhui University of Technology
+d Support: email    1980124145@qq.com
+d
+f corrtex2.ado
+f corrtex2.sthlp
 f ../s/sunny_nanjing.do
+f ../a/asure.dta

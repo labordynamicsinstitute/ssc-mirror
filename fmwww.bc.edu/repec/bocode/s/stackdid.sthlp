@@ -1,11 +1,11 @@
 {smcl}
-{* *! version 1.2.1 17feb2025}{...}
-{viewerjumpto "Syntax" "examplehelpfile##syntax"}{...}
-{viewerjumpto "Description" "examplehelpfile##description"}{...}
-{viewerjumpto "Options" "examplehelpfile##options"}{...}
-{viewerjumpto "Remarks" "examplehelpfile##remarks"}{...}
-{viewerjumpto "Examples" "examplehelpfile##examples"}{...}
-{viewerjumpto "References" "references##references"}{...}
+{* *! version 1.4.0 16aug2025}{...}
+{viewerjumpto "Syntax" "stackdid##syntax"}{...}
+{viewerjumpto "Description" "stackdid##description"}{...}
+{viewerjumpto "Options" "stackdid##options"}{...}
+{viewerjumpto "Remarks" "stackdid##remarks"}{...}
+{viewerjumpto "Examples" "stackdid##examples"}{...}
+{viewerjumpto "References" "stackdid##references"}{...}
 
 {title:Title}
 
@@ -32,7 +32,7 @@
 {synopt:{opth w:indow(numlist)}}window of time to consider relative to treatment{p_end}
 {synopt:{opt nevertreat}}use only never-treated observations as controls; default
 behavior is to use never-treated and not-yet-treated observations{p_end}
-{synopt:{opth absorb(varlist)}}fixed effects to be absorbed{p_end}
+{synopt:{opth a:bsorb(varlist)}}fixed effects to be absorbed within cohort{p_end}
 {synopt:{opt sw}}apply sample weights{p_end}
 {synopt:{opt poisson}}estimate a Poisson regression instead of a linear regression{p_end}
 {synopt:{opt nobuild}}do not build stacked data{p_end}
@@ -63,7 +63,7 @@ behavior is to use never-treated and not-yet-treated observations{p_end}
 
 {pstd}
 {cmd:stackdid} performs a stacked difference-in-differences regression for 
-staggered treatment settings, as described in Gormley and Matsa (2011).  
+staggered treatment settings, as described in Gormley and Matsa (2011, 2016).  
 It offers three primary advantages compared to a standard 
 difference-in-differences approach in such settings:{p_end}
 
@@ -73,15 +73,10 @@ difference-in-differences approach in such settings:{p_end}
 
 {pstd}This method generally requires restructuring the data in memory into "stacks"
 of "cohorts" centered on treatment events.  {cmd:stackdid} will create these stacks 
-and perform the specified regression.  The typical specification is{p_end}
+and perform the specified regression.{p_end}
 
-{phang2}y = beta*D + delta + alpha + epsilon{p_end}
-
-{pstd}
-where D is a treatment indicator, delta is a cohort-time fixed effect,
-and alpha is a unit-cohort fixed effect, and epsilon is a random disturbance.  
-Since {cmd:stackdid} creates the stacks of cohorts, it also creates the 
-cohort-time fixed effect and the unit-cohort fixed effect.{p_end}
+{pstd}See {help stackdid##remarks:Remarks} for more discussion and 
+{help stackdid##examples:Examples} for examples.{p_end}
 
 
 {marker options}{...}
@@ -107,7 +102,7 @@ consists of 1994-2013 data.  However, not all cohort observations in this window
 necessarily enter the stack: first, a treated group exits the stack if its 
 treatment status subsequently turns off again.  Second, a control group exits 
 the stack if it becomes treated (or, if {cmd:nevertreat} is specified, such 
-groups will not be controls in the first place).
+groups will not be controls in the first place).  See {help stackdid##remarks:Remarks}.
 
 {phang}
 {opt nevertreat} specifies that only never-treated groups be controls.  This reduces
@@ -116,8 +111,9 @@ is not specified, controls consist of never-treated groups {it:and} not-yet-trea
 groups.
 
 {phang}
-{opth absorb(varlist)} specifies fixed effects to include in addition to 
-{it:cohort#time} and {it:unit#cohort} automatically included by {bf:stackdid}.
+{opth absorb(varlist)} specifies fixed effects to be absorbed within cohorts. 
+Hence, fixed effects are interacted with the cohort identifier {bf:_cohort}. 
+If this option is omitted, {bf:_cohort} becomes the only fixed effect.
 
 {phang}
 {opt sw} applies a sample weighting scheme. This adjusts for the repeated use of 
@@ -143,7 +139,7 @@ See {help stackdid##remarks:remarks} for the intended use case.
 
 {pstd}
 Linear regressions and Poisson regressions are allowed by {cmd:stackdid} thanks
-to the {it:excellent} estimation commands {cmd:reghdfe} and {cmd:ppmlhdfe} contributed
+to the excellent estimation commands {cmd:reghdfe} and {cmd:ppmlhdfe} contributed
 by Sergio Correia et al.  Thus, {cmd:stackdid} "inherits" these commands' options;
 see their help files for full documentation.{p_end}
 
@@ -177,8 +173,20 @@ is not specified, the original data in memory are restored after estimation.
 {title:Remarks}
 
 {pstd}
+Treatment may be considered permanent or impermanent.  I will elaborate on that here.
+In the case of Gormley & Matsa (2011), treatment is permanent, meaning it remains 
+on once on.  For data like this, {cmd:stackdid} executes exactly as described in that paper.
+In the case of Gormley & Matsa (2016), treatment is impermanent, meaning it may 
+turn off after being on.  Once again, {cmd:stackdid} executes exactly as described in that paper,
+and issues the notice "impermanent treatment detected".  There is no need to tell
+{cmd:stackdid} what type the data are--it is automatically detected. 
+Finally, in the most general case of impermanent treatment (where treatment may
+turn on and off any number of times), {cmd:stackdid} executes in the style of the 
+papers above, selecting valid pre and post observations for each treatment event.
+
+{pstd}
 {cmd:stackdid} has two primary features.  Options are provided to isolate either 
-of these.  If both of these options are specified, {cmd:stackdid} does nothing.
+of these.  If both are turned off, {cmd:stackdid} does nothing.
 
 {phang2}{space 4}{it:feature}{space 32}{it:optionally off}{p_end}
 {phang2}{hline 57}{p_end}
@@ -194,6 +202,10 @@ when the required options ({cmd:treatment()} and {cmd:group()}), {cmd:window()} 
 option in the first specification and the {cmd:nobuild} option in subsequent 
 specifications.
 
+{pstd}
+{cmd:stackdid} requires the data to be a panel set by {cmd:xtset}. 
+There is no requirement to be strongly balanced.
+
 
 {marker examples}{...}
 {title:Examples}
@@ -203,8 +215,8 @@ Generically, adapting specifications to stacked regressions can be as simple as
 replacing {cmd:reghdfe} (or {cmd:ppmlhdfe}) with {cmd:stackdid} and specifying the 
 two required options, {opt tr:eatment()} and {opt gr:oup()}.
 
-{phang2}{cmd: . reghdfe {space 1}{it:y x1 x2 x3}, absorb({it:w1#w2}) cluster(w1)}{p_end}
-{phang2}{cmd: . {ul:stackdid} {it:y x1 x2 x3}, absorb({it:w1#w2}) cluster(w1) {ul:tr({it:x1}) gr({it:g1})}}{p_end}
+{phang2}{cmd: . reghdfe {space 1}{it:y x1 x2 x3}, absorb({it:w1#w2}) cluster({it:w1})}{p_end}
+{phang2}{cmd: . {ul:stackdid} {it:y x1 x2 x3}, absorb({it:w1#w2}) cluster({it:w1}) {ul:tr({it:x1}) gr({it:g1})}}{p_end}
 
 {pstd}
 Specific examples are illustrated using simulated data.  In it, a balanced panel of 500 fictional firms 
@@ -212,7 +224,7 @@ Specific examples are illustrated using simulated data.  In it, a balanced panel
 ({it:sector}) with three treatment events.  The outcome variable ({it:y}) has 
 an autoregressive component persistent in continuous treatment, 
 encouraging the application of {cmd:stackdid}.  The sample of firms is bisected
-by characteristic {it:char}.  A window of three years before 
+by binary characteristic {it:char}.  A window of three years before 
 and after treatment events is to be specified.
 
 {pstd}Load the example data and apply {cmd:xtset}{p_end}
@@ -245,7 +257,7 @@ and after treatment events is to be specified.
 
 {synoptset 23 tabbed}{...}
 {p2col 5 23 26 2: Scalars}{p_end}
-{synopt:{cmd:r(N_orig)}}number of observations in original data{p_end}
+{synopt:{cmd:r(N_original)}}number of observations in original data{p_end}
 {synopt:{cmd:r(N_stacked)}}number of observations in stacked data (also see {cmd:e(N)}){p_end}
 
 {p2col 5 23 26 2: Macros}{p_end}

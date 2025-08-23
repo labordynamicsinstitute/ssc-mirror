@@ -1,7 +1,7 @@
 
 {smcl}
-{* *! version 1.1, 09 Aug 2025}{...}
-{cmd:help xtgls2}			Version 1.1, 09 Aug 2025, by Manh Hoang Ba
+{* *! version 1.3, 15 Aug 2025}{...}
+{cmd:help xtgls2}		Version 1.3, 15 Aug 2025, Manh Hoang Ba (hbmanh9492@gmail.com)
 {hline}
 
 {title:Title}
@@ -13,17 +13,19 @@
 
 {title:Syntax}
 
-{pstd}{cmd:xtgls2} {varlist} {ifin} [{cmd:,} {cmdab:nocon:stant} {cmd:ols} {cmd:fe} {cmd:fd} {cmdab:c:ov(c|h)} {cmdab:cl:uster(varname)} {cmd:nmk} {cmd:minus(}{it:num}{cmd:)}
+{p 4 8 2}{cmd:xtgls2} {varlist} {ifin} [{cmd:,} {cmdab:nocon:stant} {cmd:ols} {cmd:fe} {cmd:fd} {cmdab:c:ov(c|h)} {cmdab:cl:uster(varname)} {cmd:nmk} {cmd:minus(}{it:num}{cmd:)}
 {cmdab:l:evel(}{it:num}{cmd:)} {cmd:igls} {cmdab:iter:ate(}{it:num}{cmd:)} {cmdab:tol:erance(}{it:num}{cmd:)} {cmdab:nolo:g} {cmdab:lo:g}]
 
 
 {title:Description}
 
-{pstd}{cmd:xtgls2} estimates General GLS estimator for large {cmd:N}, small {cmd:T} linear panel data models (Pooled, FE, FD), aiming to obtain (asymptotically) efficient estimates in the context of non-spherical characteristic errors.
+{pstd}{cmd:xtgls2} estimates General GLS estimator for large {cmd:N}, small {cmd:T} linear panel data models (Pooled, FE, FD), aiming to obtain (asymptotically) efficient estimators in the context of non-spherical idiosyncratic errors.{p_end}
 
-{pstd}Specifically, in each estimator, the error covariance matrix is assumed to have a general (or restricted) form within panels, and to be the same across panels. These assumptions can be relaxed, for example, there is no correlation between observations within panels. In the context of heteroscedastic errors across panels, panelvar-clustered standard errors (Arellano, 1987) can be used. For more details, see Kiefer (1980) and Wooldridge (2002, 2010).
+{pstd}Specifically, in each estimator, the error covariance matrix is assumed to have a general form within panels, and identical across panels. For more details, see Kiefer (1980) and Wooldridge (2002, 2010).{p_end}
 
-{pstd}In summary, {cmd:xtgls2} allows researchers to control for heteroscedasticity across panels, over time periods, and general correlation within panels. {cmd:xtgls2} is appropriate for balanced panel data with {cmd:N >> T} and data must be {help xtset} before using this command.
+{pstd}{cmd:xtgls2} is appropriate for balanced panel data with {cmd:N >> T} and data must be {help xtset}.{p_end}
+
+{p 4 8 2}The latest version of {cmd:xtgls2} can be found at the following link: {browse "https://github.com/ManhHB94/":https://github.com/ManhHB94/}{p_end}
 
 {synoptset 25 tabbed}{...}
 {synopthdr}
@@ -35,13 +37,13 @@
 {synopt :{opt fe}}use feasible fixed-effects GLS estimator.{p_end}
 {synopt :{opt fd}}use feasible first-difference GLS estimator.{p_end}
 {synopt :{cmdab:c:ov(c)}}use heteroskedastic and correlated error structure within panels.{p_end}
-{synopt :{cmdab:c:ov(h)}}use heteroskedastic error structure within panels.{p_end}
+{synopt :{cmdab:c:ov(h)}}use heteroskedastic error structure within panels, this cannot be specified together with {opt fe} or {opt fd} option.{p_end}
 {synopt :{cmd:igls}}use iterated GLS estimator instead of two-step GLS estimator.{p_end}
 
 {syntab:SE}
 {synopt :{cmdab:cl:uster(varname)}}use varname-clustered standard errors, required when {opt minus(#)} is specified.{p_end}
 {synopt :{opt nmk}}normalize standard error by N-k instead of N.{p_end}
-{synopt :{opt minus(#)}}controls the degrees of freedom adjustment factor in the robust, or cluster-robust variance calculation. Default value is {opt minus(0)}.{p_end}
+{synopt :{opt minus(#)}}controls the degrees of freedom adjustment factor in the robust, or cluster-robust variance calculation. Default value is {cmd:minus(0)}.{p_end}
 
 {syntab:Reporting}
 {synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}.{p_end}
@@ -54,6 +56,12 @@
 
 {synoptline}
 {p2colreset}{...}
+
+{title:Citation}
+{p 4 8 2}{cmd:xtgls2} is not an official Stata command.
+It is a free contribution to the research community.
+Please cite it as such: {p_end}
+{p 8 8 2}Hoang Ba Manh, 2025. "XTGLS2: Stata module to estimate GLS estimator for large N, small T panel data models," Statistical Software Components S459497, Boston College Department of Economics, revised 15 Aug 2025.{p_end}
 
 {title:Postestimation}
 
@@ -80,9 +88,9 @@
 
 {pstd}. xtgls2 n w c.(k ys)##c.(k ys) i.ind i.year, cov(c)
 
-{pstd}. xtgls2 n w c.(k ys)##c.(k ys) i.ind i.year, c(h) fe nocons
+{pstd}. xtgls2 n w c.(k ys)##c.(k ys) i.ind i.year, c(c) fe nocons
 
-{pstd}. xtgls2 n w c.(k ys)##c.(k ys) i.ind i.year, c(h) fe nocons cl(id)
+{pstd}. xtgls2 n w c.(k ys)##c.(k ys) i.ind i.year, c(c) fe nocons cl(id)
 
 {pstd}. xtgls2 n l(1/2).w c.(k ys)##c.(k ys) i.ind i.year, c(c) fd nocons
 
@@ -107,8 +115,8 @@
 
 {title:Authors}
 
-	Manh Hoang Ba, Eureka Uni Team, Vietnam
-	hbmanh9492@gmail.com
+    Manh Hoang Ba, Eureka Uni Team, Vietnam
+    hbmanh9492@gmail.com
 
 {title:Also see}
 

@@ -1,4 +1,4 @@
-*! version 3.2.6 15feb2025 Richard Williams, rwilliam@nd.edu
+*! version 3.2.8 9aug2025 Richard Williams, rwilliam@nd.edu
 
 * Copied from Stata 11.2 lincom because Stata 15.1 lincom was zapping gologit2
 * renamed gologit2_lincom

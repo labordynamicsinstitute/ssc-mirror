@@ -1,5 +1,8 @@
-*	Version 1.0		04 Aug 2025 by Manh H. B. (hbmanh9492@gmail.com)
-*	Kézdi (2003) test for heteroscedasticity in FE model
+*	Version 1.2		15 Aug 2025 by Manh H. B. (hbmanh9492@gmail.com)
+*	Kezdi (2003) test for heteroscedasticity in FE model
+*	Version 1.1 Correct degrees of freedom of tests 
+*				in the presence of perfect multicollinearity
+*	Version 1.2 works without vech() matrix function
 
 cap program drop xttest4
 program define xttest4, rclass
@@ -136,43 +139,83 @@ program define xttest4, rclass
 	
 	*	vj = vech(Vj) =============
 	tempname v0 v1 v2 v3
-	forvalues i=0/3 {
-		mat `v`i'' = vech(`V`i'')
-	}
 	
-	*	Cj ========================
-	tempname m C1 C2 C3 X c1i c2i c3i
+	if c(version) >= 18 {
+		forvalues i=0/3 {
+			mat `v`i'' = vech(`V`i'')
+		}	    
+	}
+	else {
+		forvalues i=0/3 {
+			vec_h `V`i''
+			mat `v`i'' = r(v)
+		}
+	}	
 
-	scalar `m'=rowsof(`v1')
+	*	Cj ========================
+	tempname m C1 C2 C3 X c1i c2i c3i M1 M2 M3
+
+	scalar `m'=rowsof(`v1')	
 	mat `C1' = J(`m',`m',0)
 	mat `C2' = J(`m',`m',0)
 	mat `C3' = J(`m',`m',0)
 
-	forvalues i=1/`=`N'' {
-		mkmat `e' if `id'==`i', mat(`E')
-		mkmat `xvar_dm' if `id'==`i', mat(`X')
+	if c(version) >= 18 {
+		forvalues i=1/`=`N'' {
+			mkmat `e' if `id'==`i', mat(`E')
+			mkmat `xvar_dm' if `id'==`i', mat(`X')
 
-		* C1
-		mat `c1i' = vech(`X''*`E'*`E''*`X'-`X''*`Omega'*`X')
-		mat `C1' = `C1' + `c1i'*`c1i''
-		
-		* C2
-		mat `c2i' = vech(`X''*`E'*`E''*`X'-`X''*diag(vecdiag(`E'*`E''))*`X')
-		mat `C2' = `C2' + `c2i'*`c2i''
+			* C1
+			mat `M1' = `X''*`E'*`E''*`X'-`X''*`Omega'*`X'
+			mat `c1i' = vech(`M1')
+			mat `C1' = `C1' + `c1i'*`c1i''
 			
-		* C3
-		mat `c3i' = vech(`X''*`E'*`E''*`X'-`X''*`s2'*`X')
-		mat `C3' = `C3' + `c3i'*`c3i''
-			
+			* C2
+			mat `M2' = `X''*`E'*`E''*`X'-`X''*diag(vecdiag(`E'*`E''))*`X'
+			mat `c2i' = vech(`M2')
+			mat `C2' = `C2' + `c2i'*`c2i''
+				
+			* C3
+			mat `M3' = `X''*`E'*`E''*`X'-`X''*`s2'*`X'
+			mat `c3i' = vech(`M3')
+			mat `C3' = `C3' + `c3i'*`c3i''
+				
+		}	    
 	}
 	
+	else {
+		forvalues i=1/`=`N'' {
+			mkmat `e' if `id'==`i', mat(`E')
+			mkmat `xvar_dm' if `id'==`i', mat(`X')
+
+			* C1
+			mat `M1' = `X''*`E'*`E''*`X'-`X''*`Omega'*`X'
+			vec_h `M1'
+			mat `c1i' = r(v)
+			mat `C1' = `C1' + `c1i'*`c1i''
+			
+			* C2
+			mat `M2' = `X''*`E'*`E''*`X'-`X''*diag(vecdiag(`E'*`E''))*`X'
+			vec_h `M2'
+			mat `c2i' = r(v)
+			mat `C2' = `C2' + `c2i'*`c2i''
+				
+			* C3
+			mat `M3' = `X''*`E'*`E''*`X'-`X''*`s2'*`X'
+			vec_h `M3'
+			mat `c3i' = r(v)
+			mat `C3' = `C3' + `c3i'*`c3i''
+				
+		}	    
+	}
+		
 	mat `C1' = `C1'/`N'
 	mat `C2' = `C2'/`N'
 	mat `C3' = `C3'/`N'
 	
 	*	Test 
 	tempname df h1 h2 h3 h1_p h2_p h3_p
-	scalar `df'=`m'+1
+	scalar `df'=`K'*(`K'+1)/2+1
 
 	forvalues i=1/3 {
 		tempname _h`i'
@@ -220,3 +263,45 @@ program define xttest4, rclass
 	ret scalar h3_p   = `h3_p'
 	
 end
+
+
+*	Define vec_h() for STATA versions not allow vech()
+
+capture program drop vec_h
+program define vec_h, rclass
+	syntax name(name=matname)
+	
+	// Check if matrix exists
+	capture matrix list `matname'
+	if _rc {
+	    di as error "Matrix `matname' not found"
+		exit 198
+	}
+
+	// Get row/col number
+	local n = rowsof(`matname')
+	local k = colsof(`matname')
+
+	// Check square matrix
+	if `n' != `k' {
+		di as error "Matrix must be square"
+		exit 198
+	}
+
+	// Create empty column vector
+	tempname v
+	matrix `v' = J(`=(`n'*(`n'+1))/2', 1, .)
+
+	// Get the lower triangle elements
+	local idx = 1
+	forvalues i = 1/`n' {
+		forvalues j = 1/`i' {
+			matrix `v'[`idx',1] = `matname'[`i',`j']
+			local idx = `idx' + 1
+		}
+	}
+
+    // Return in r()
+    return matrix v = `v'
+end
+

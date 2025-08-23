@@ -4,7 +4,8 @@
 // Version 03/29/2024: The first version: test based on relative bias criterion
 // Version 07/31/2024: incorporating ivreghdfe
 // Version 07/19/2025: incorporating functions in the accepted version of Lewis and Mertens (2025), including 1. test based on absolute bias criterion; 2. test for individual coefficients; 3. test under local-to-rank-reduction-to-1.
-// This version: 07/19/2025
+// Version 08/15/2025: 1. fixing the dof adjustment and variable indexing when N > 2 for the LRR1 test; 2. allow for the partial option in ivreg2.
+// This version: 08/15/2025
 
 program weakivtest2, rclass
 	version 17
@@ -254,7 +255,7 @@ program weakivtest2, rclass
 			if (`i' != `index') loc v2_nind `v2_nind' `var'
 			else if (`i' == `index') loc v2_ind `v2_ind' `var'
 		}
-		
+
 		* project out PYo_nind from Yo_ind
 		tempvar Ystar 
 		tempname dtilde
@@ -288,6 +289,7 @@ program weakivtest2, rclass
 				loc Zstar `Zstar' `Zstar`var''
 			}
 		}
+		loc Kstar = `K' - `N' + 1
 		
 		* project Ystar on Zstar
 		tempvar Ystaro
@@ -299,7 +301,6 @@ program weakivtest2, rclass
 		qui orthog `Zstar' if `touse' `addweight', gen(`Zstars'*)
 		fvrevar `Zstars'*
 		local Zstar "`r(varlist)'"
-		
 		
 		* Transform variables to mata
 		preserve
@@ -328,8 +329,10 @@ program weakivtest2, rclass
 		mata: `Sstar' = st_matrix("r(S)") * `T' / (`T' - `K' - `L')
 		qui avar (`v2') (`constant') `addweight' if `touse', `vcet' noconstant
 		mata: `S_full' = st_matrix("r(S)")
-		mata: `stat1' = Ystaro' * Ystaro / trace(`Wstar'[`K'..2*(`K'-1),`K'..2*(`K'-1)])
-		mata: `stat2'  = Ystaro' * Ystaro / ((`K' - 1) * v2star' * v2star / `T')
+// 		mata: `stat1' = Ystaro' * Ystaro / trace(`Wstar'[`K'..2*(`K'-1),`K'..2*(`K'-1)])
+// 		mata: `stat2'  = Ystaro' * Ystaro / ((`K' - 1) * v2star' * v2star / `T')
+		mata: `stat1' = Ystaro' * Ystaro / trace(`Wstar'[`Kstar'+1..2*`Kstar',`Kstar'+1..2*`Kstar'])
+		mata: `stat2'  = Ystaro' * Ystaro / (`Kstar' * (v2star - J(`T',1,mean(v2star)))' * (v2star - J(`T',1,mean(v2star))) / `T')
 		mata: cvresult = gweakivtest_critical_valuesLRR1(`Wstar',`K'-`N'+1,`Sstar',`S_full',alphalist,taulist,`points',`target',"`criterion'",`fast',`record')
 		mata: `cv1' = cvresult.cv1
 		mata: `cv2' = cvresult.cv2
@@ -418,6 +421,18 @@ end
 
 program adjust_ereturn2, eclass
 	version 17
+	
+	if `"`e(cmd)'"' == "ivreg2" {
+		local pos_2 = strpos("`e(cmdline)'", "partial")
+		if `pos_2' > 0 {
+			* Update for e(inexog_ct): When we use the partial option in the ivreg2 case, we delete the varlist specified (including the constant) in this option. So now we update the number of included exogenous regressors as the number of this deleted variables minus 1.
+			ereturn scalar inexog_ct = `e(partial_ct)' - 1
+			* Update for e(cons): Activate the option for a constant in each regression (because when we use partial option we delete the constant of the
+>  regression).
+			ereturn scalar cons = 1
+		}
+	}       
+
 
 	if( inlist(`"`e(cmd)'"', "reghdfe", "ivreghdfe") & `"`e(model)'"' == "iv") {
 		* Update for e(inexog): Create labels of all feasible fixed effects in each regression (weakivtest command need this to count the number of feasible fixed effects in each regression).

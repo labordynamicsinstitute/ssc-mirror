@@ -1,4 +1,4 @@
-*! xtdpdml.ado version 2.50 Richard Williams 07/06/2019
+*! xtdpdml.ado version 2.60 Richard Williams 08/14/2025
 * Version history is at bottom of program
 *
 * Syntax:
@@ -9,13 +9,13 @@ program xtdpdml, eclass byable(recall)
 	// Replay results if that is all that is requested. 
 
 	if replay() {
-			if "`e(semcmd)'" == "" & "`e(cmd)'" != "xxtdpdml" {
-				display as error "xxtdpdml was not the last estimation command"
+			if "`e(semcmd)'" == "" & "`e(cmd)'" != "xtdpdml" {
+				display as error "xtdpdml was not the last estimation command"
 				exit 301
 			}
 			if _by() {
 					display as error "You cannot use the by command " ///
-							"when replaying xxtdpdml results"
+							"when replaying xtdpdml results"
 					exit 190
 			}
 			*hilites will handle replaying results
@@ -104,7 +104,7 @@ program xtdpdml, eclass byable(recall)
 	}
 	
 	* Set the stub for the store option if not already specified
-	if "`store'" == "" local store xxtdpdml
+	if "`store'" == "" local store xtdpdml
 	
 	* Set cformat if decimals is specified
 	if "`decimals'" != "" local cformat cformat(%9.`decimals'f)
@@ -1042,7 +1042,7 @@ program xtdpdml, eclass byable(recall)
 	}
 	else `svyprefix' `scmd'
 	
-	* Ereturn additional xxtdpdml values
+	* Ereturn additional xtdpdml values
 	ereturn local semcmd `scmd'	
 	ereturn scalar Tstart = `Tstart'
 	ereturn scalar T = `T'
@@ -1518,7 +1518,7 @@ program hilites, eclass
 		ereturn local vcetype `vcetype'
 
 		ereturn local hilitesonly Yes
-		ereturn local cmd xxtdpdml
+		ereturn local cmd xtdpdml
 		* Store the hilites only file if not already stored
 		* local store will be empty if this is a replay
 		if "`store'" != "" {
@@ -1579,6 +1579,8 @@ program hilites, eclass
 
 end
 
+* 2.60   Help file updated to reflect new web pages; fix some bugs
+*        where xxtdpdml was used instead of xtdpdml
 * 2.50   fixed bug with re option. Alpha should load on exogenous y
 *        even if re is specified. Example 4.3 in 2018 SJ paper is wrong.
 *        Undocumented v16 option added -- May solve compatibility
@@ -1600,9 +1602,9 @@ end
 *        for use with the cluster option. Not fully supported yet.
 *        BETA code added to make it work with svy -- not fully supported yet.
 * 2.11   added e(N_g) to ereturned results. Equals e(N) but useful
-*        for comparing xtabond and xxtdpdml
+*        for comparing xtabond and xtdpdml
 * 2.10 - Support for replay and esttab added with hilites results.
-*        store option added. default is xxtdpdml_f and xxtdpdml_h.
+*        store option added. default is xtdpdml_f and xtdpdml_h.
 *        altstart added as shortcut for skipcfatransform skipconditional.
 *        method() option added. vce() option added.
 *        BIC and AIC statistics automatically stored, as are
@@ -1638,7 +1640,7 @@ end
 *        use the tsoff option. Only works when free options have not
 *        been specified and lags do not exceed 9. (1.40 was never
 *        officially released.)
-* 1.30 - xxtdpdml now issues warning messages and/or aborts when there
+* 1.30 - xtdpdml now issues warning messages and/or aborts when there
 *        are problems with reshape wide. This would occur if, say,
 *        the inv option was not specified correctly.
 * 1.25 - Fixed a bug that resulted in fatal errors if a record had

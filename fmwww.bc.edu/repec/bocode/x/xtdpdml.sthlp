@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 2.50  05jul2019}{...}
+{* *! version 2.60  14aug2025}{...}
 {hline}
-help for {hi:xtdpdml} version 2.50
+help for {hi:xtdpdml} version 2.60
 {hline}
 
 
@@ -568,7 +568,7 @@ Run these commands before trying the other examples. NOTE: Some of the examples 
 that {opt estout} (available from SSC) be installed to run the full example. You may also need
 to specify {opt set matsize} for bigger problems.{p_end}
 {phang2}{cmd}
-use https://www3.nd.edu/~rwilliam/statafiles/wages, clear{p_end}
+use https://academicweb.nd.edu/~rwilliam/statafiles/wages, clear{p_end}
 {phang2}xtset id t{p_end}
 {txt}
 
@@ -644,7 +644,7 @@ hand tweaking of the code may be required in a few cases). Sometimes xtdpdml yie
 a modestly different model chi-square value than what they reported but we believe the xtdpdml value is
 the correct one. Here we present the fixed effects model 2 from their Table 3.{p_end}
 {phang2}{cmd}* Bollen & Brand Social Forces 2010 Fixed Effects Table 3 Model 2 p. 15 {p_end}
-{phang2}use https://www3.nd.edu/~rwilliam/statafiles/bollenbrand, clear {p_end}
+{phang2}use https://academicweb.nd.edu/~rwilliam/statafiles/bollenbrand, clear {p_end}
 {phang2}xtdpdml lnwg hchild marr div, ylag(0) fiml tfix errorinv gof {p_end}
 {txt}
 
@@ -675,7 +675,7 @@ want the Mplus files. The Mplus output will
 include the Modification Indices and the descriptive sample statistics. Be sure
 to use semicolons if you have multiple options for either analysis or output.
 {p_end}{cmd}
-{phang2}use https://www3.nd.edu/~rwilliam/statafiles/wages, clear{p_end}
+{phang2}use https://academicweb.nd.edu/~rwilliam/statafiles/wages, clear{p_end}
 {phang2}xtset id t{p_end}
 {phang2}xtdpdml wks L.lwage, inv(ed) pre(L.union) dryrun ti(Baseline Model) mplus(m1, r out(mod; sampstat)){p_end}
 {phang2}* View or edit the mplus .inp file if you want {p_end}
@@ -696,7 +696,7 @@ Stata from actually estimating the model, which can be a good idea if you only
 want the lavaan files. You will of course need to install R (and probably Rstudio)
 and know how to run it, but that is pretty easy to do.
 {p_end}{cmd}
-{phang2}use https://www3.nd.edu/~rwilliam/statafiles/wages, clear{p_end}
+{phang2}use https://academicweb.nd.edu/~rwilliam/statafiles/wages, clear{p_end}
 {phang2}xtset id t{p_end}
 {phang2}xtdpdml wks L.lwage, inv(ed) pre(L.union) dryrun ti(Baseline Model) lavaan(m1, r){p_end}
 {phang2}* View or edit the lavaan .R file if you want {p_end}
@@ -710,7 +710,7 @@ mytry.do is created and (because the r option is specified)
 any existing file by that name is
 overwritten. The staywide option keeps the data in the wide format
 that is required by sem. {p_end}{cmd}
-{phang2}use https://www3.nd.edu/~rwilliam/statafiles/wages, clear{p_end}
+{phang2}use https://academicweb.nd.edu/~rwilliam/statafiles/wages, clear{p_end}
 {phang2}xtset id t{p_end}
 {phang2}xtdpdml wks L.lwage, inv(ed) pre(L.union) staywide semfile(mytry, r){p_end}
 {txt}
@@ -723,7 +723,7 @@ Richard Williams, University of Notre Dame, Department of Sociology{break}
 Paul Allison, University of Pennsylvania, Department of Sociology{break}
 Enrique Moral Benito, Banco de Espana, Madrid {break}
 Support: Richard.A.Williams.5@ND.Edu{break}
-Web Page: {browse "https://www3.nd.edu/~rwilliam/dynamic/index.html"}{break}
+Web Page: {browse "https://academicweb.nd.edu/~rwilliam/dynamic/index.html"}{break}
 
 {marker acknowledgments}{...}
 {title:Acknowledgments}
@@ -745,34 +745,34 @@ more quickly.
 
 {p 5 5} Allison, Paul D., Richard Williams and Enrique Moral-Benito. 2017. "Maximum 
 Likelihood for Cross-Lagged Panel Models with Fixed Effects." Socius 3: 1-17.
-{browse "http://journals.sagepub.com/doi/suppl/10.1177/2378023117710578"} {break}
+{browse "https://journals-sagepub-com.proxy.library.nd.edu/doi/10.1177/2378023117710578"} {break}
 
 {p 5 5}Williams, Richard, Paul D. Allison and Enrique Moral-Benito. 2018.
 "Linear Dynamic Panel-Data Estimation using Maximum Likelihood and 
-Structural Equation Modeling." The Stata Journal 18(2): 293-326. A pre-publication
-version is at 
-{browse "https://www3.nd.edu/~rwilliam/dynamic/SJPaper.pdf"}{break}
+Structural Equation Modeling." The Stata Journal 18(2): 293-326. 
+{browse "https://www.stata-journal.com/article.html?article=st0523"}{break}
 
-{p 5 5} Moral-Benito, Enrique, Paul Allison & Richard Williams (2018): Dynamic panel
-data modelling using maximum likelihood: an alternative to Arellano-Bond.
-Applied Economics, DOI: 10.1080/00036846.2018.1540854. A pre-publication version is at
-{browse "https://www3.nd.edu/~rwilliam/dynamic/Benito_Allison_Williams.pdf"}{break}
+{p 5 5} Moral-Benito, Enrique, Paul Allison & Richard Williams (2018). "Dynamic panel
+data modelling using maximum likelihood: an alternative to Arellano-Bond."
+Applied Economics, 51(20), 2221–2232.
+{browse "https://doi.org/10.1080/00036846.2018.1540854"}{break}
 
 {p 5 5}Williams, Richard, Paul D. Allison and Enrique Moral-Benito. 2015.
 "Linear Dynamic Panel-Data Estimation using Maximum Likelihood and
 Structural Equation Modeling". Presented July 30, 2015 at the 2015 Stata
 Users Conference in Columbus, Ohio. 
-{browse "https://www3.nd.edu/~rwilliam/dynamic/xtdpdml_Stata2015.pdf"}{break}
+{browse "https://academicweb.nd.edu/~rwilliam/dynamic/xtdpdml_Stata2015.pdf"}{break}
 
 {p 5 5}Allison, Paul D. 2015. "Don't Put Lagged Dependent Variables in Mixed Models."
 {browse "http://statisticalhorizons.com/lagged-dependent-variables"} {break}
 
 {p 5 5}Moral-Benito, Enrique. 2013. "Likelihood-based Estimation of
 Dynamic Panels with Predetermined Regressors." Journal of Business and
-Economic Statistics 31:4, 451-472.
+Economic Statistics 31:4, 451-472. {browse "https://doi.org/10.1080/07350015.2013.818003" }
 
 {p 5 5}Bollen, Kenneth, and Jennie Brand. 2010. "A General Panel Model with Random
 and Fixed Effects: A Structural Equations Approach." Social Forces 89:1, 1-34.
+{browse "https://academic.oup.com/sf/article-abstract/89/1/1/2235097"} {break}
 
 {marker "suggested citation"}{...}
 
@@ -784,21 +784,20 @@ as such. The suggested citations are
 
 {p 5 5}Williams, Richard, Paul D. Allison and Enrique Moral-Benito. 2018.
 "Linear Dynamic Panel-Data Estimation using Maximum Likelihood and 
-Structural Equation Modeling." The Stata Journal 18(2): 293-326. A pre-publication
-version is at 
-{browse "https://www3.nd.edu/~rwilliam/dynamic/SJPaper.pdf"}{break}
+Structural Equation Modeling." The Stata Journal 18(2): 293-326.  
+{browse "https://www.stata-journal.com/article.html?article=st0523"}{break}
 
 {p 5 5} Allison, Paul D., Richard Williams and Enrique Moral-Benito. 2017. "Maximum 
 Likelihood for Cross-Lagged Panel Models with Fixed Effects." Socius 3: 1-17.
-{browse "http://journals.sagepub.com/doi/suppl/10.1177/2378023117710578"} {break}
+{browse "https://journals-sagepub-com.proxy.library.nd.edu/doi/10.1177/2378023117710578"} {break}
 
 {p 5 5} Moral-Benito, Enrique, Paul Allison & Richard Williams (2018): Dynamic panel
 data modelling using maximum likelihood: an alternative to Arellano-Bond.
-Applied Economics, DOI: 10.1080/00036846.2018.1540854. A pre-publication version is at
-{browse "https://www3.nd.edu/~rwilliam/dynamic/Benito_Allison_Williams.pdf"}{break}
+Applied Economics, 51(20), 2221–2232.
+{browse "https://doi.org/10.1080/00036846.2018.1540854"}{break}
 
 {p 5 5}Williams, Richard, Paul D. Allison and Enrique Moral-Benito. 2015.
 "Linear Dynamic Panel-Data Estimation using Maximum Likelihood and
 Structural Equation Modeling". Presented July 30, 2015 at the 2015 Stata
 Users Conference in Columbus, Ohio. 
-{browse "https://www3.nd.edu/~rwilliam/dynamic/xtdpdml_Stata2015.pdf"}{break}
+{browse "https://academicweb.nd.edu/~rwilliam/dynamic/xtdpdml_Stata2015.pdf"}{break}

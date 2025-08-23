@@ -1,7 +1,7 @@
 {smcl}
-{* Last revised Feb 15, 2025}{...}
+{* Last revised Aug 9, 2025}{...}
 {hline}
-help for {hi:gologit2} version 3.2.6
+help for {hi:gologit2} version 3.2.8
 {hline}
 
 {title:Generalized Ordered Logit Models for Ordinal Dependent Variables}
@@ -141,7 +141,7 @@ about other cautions when using Stata prefix commands.{p_end}
 
 {p 4 4 2} More information on the statistical theory behind
 {cmd:gologit2} as well as several worked examples and a troubleshooting
-FAQ can be found at {browse "https://www3.nd.edu/~rwilliam/gologit2/"}.
+FAQ can be found at {browse "https://academicweb.nd.edu/~rwilliam/gologit2/"}.
 
 {title:Options}
 
@@ -466,7 +466,7 @@ in which no variables are constrained to meet the assumption and
 contrasting it with a model in which all are so constrained (the
 latter is equivalent to the {cmd:ologit} model).
 
-{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
+{p 8 12 2}{cmd:. use https://academicweb.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. gologit2 warm i.yr89 i.male i.white age ed prst, store(unconstrained)}{p_end}
 {p 8 12 2}{cmd:. gologit2 warm i.yr89 i.male i.white age ed prst, pl store(constrained)}
 {p_end}
@@ -496,7 +496,7 @@ variable is met. Using the {cmd:autofit} and {cmd:gamma} options, we can (a)
 confirm that Lall came up with the correct partial proportional odds
 model, and (b) replicate the results from his Table 5.
 
-{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/lall.dta, clear}{p_end}
+{p 8 12 2}{cmd:. use https://academicweb.nd.edu/~rwilliam/statafiles/lall.dta, clear}{p_end}
 {p 8 12 2}{cmd:. gologit2 hstatus i.heart  i.smoke, gamma autofit}{p_end}
 
 {p 4 4 2} {it}Example 3: Complex survey data estimation.{sf} By using the
@@ -517,7 +517,7 @@ command supports the {cmd:pr} option (abbreviated {cmd:p}) for predicted
 probabilities; {cmd:pr} is the default option if nothing else is specified.
 For example,
 
-{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
+{p 8 12 2}{cmd:. use https://academicweb.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. quietly gologit2  warm i.yr89 i.male i.white age ed prst, pl(i.yr89 i.male)}{p_end}
 {p 8 12 2}{cmd:. predict p1 p2 p3 p4}{p_end}
 {p 8 12 2}{cmd:. list p1 p2 p3 p4 in 1/10}{p_end}
@@ -525,7 +525,7 @@ For example,
 {p 4 4 2} {it}Example 5.  Constrained logistic regression. {sf} 
 Here is an example of how you can impose your own linear constraints on variables.
 
-{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
+{p 8 12 2}{cmd:. use https://academicweb.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. recode warm (1 2  = 0)(3 4 = 1), gen(agree)}{p_end}
 {p 8 12 2}{cmd:. * Constrain the effects of male and white to be equal}{p_end}
 {p 8 12 2}{cmd:. constraint 1 1.male = 1.white}{p_end}
@@ -536,12 +536,12 @@ as its name implies. {cmd:gologit2} uses the logit link. If you
 prefer, however, you can specify probit, complementary log log, 
 log log, or cauchit links.  For example, to estimate a goprobit model,
 
-{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
+{p 8 12 2}{cmd:. use https://academicweb.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. gologit2 warm i.yr89 i.male i.white age ed prst, link(p)}{p_end}
 
 {p 4 4 2} {it}Example 7.  The margins command. {sf}
 
-{p 8 12 2}{cmd:. use https://www3.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
+{p 8 12 2}{cmd:. use https://academicweb.nd.edu/~rwilliam/statafiles/ordwarm2, clear}{p_end}
 {p 8 12 2}{cmd:. gologit2 warm i.yr89 i.male i.white age ed prst, pl}{p_end}
 {p 8 12 2}{cmd:. margins yr89 male white}{p_end}
 {p 8 12 2}{cmd:. margins yr89 male white, predict(outcome(1))}{p_end}
@@ -555,12 +555,12 @@ and multinomial models. Here is one simple example.
 
 {p 8 12 2}{cmd:. webuse nhanes2f, clear}{p_end}
 {p 8 12 2}{cmd:. gologit2 health i.female i.black c.age, auto(.01)}{p_end}
-{p 8 12 2}{cmd:. quietly mtable, at (black = 0 age = 20 ) rown(20 year old white) dec(4)}{p_end}
-{p 8 12 2}{cmd:. quietly mtable, at (black = 1 age = 20 ) rown(20 year old black) dec(4) below} {p_end}
-{p 8 12 2}{cmd:. quietly mtable, at (black = 0 age = 47 ) rown(47 year old white) dec(4) below} {p_end}
-{p 8 12 2}{cmd:. quietly mtable, at (black = 1 age = 47 ) rown(47 year old black) dec(4) below} {p_end}
-{p 8 12 2}{cmd:. quietly mtable, at (black = 0 age = 74 ) rown(74 year old white) dec(4) below} {p_end}
-{p 8 12 2}{cmd:. mtable, at (black = 1 age = 74 ) rown(74 year old black) dec(4) below} {p_end}
+{p 8 12 2}{cmd:. quietly mtable, at (black = 0 age = 20 ) rown(20 year old White) dec(4)}{p_end}
+{p 8 12 2}{cmd:. quietly mtable, at (black = 1 age = 20 ) rown(20 year old Black) dec(4) below} {p_end}
+{p 8 12 2}{cmd:. quietly mtable, at (black = 0 age = 47 ) rown(47 year old White) dec(4) below} {p_end}
+{p 8 12 2}{cmd:. quietly mtable, at (black = 1 age = 47 ) rown(47 year old Black) dec(4) below} {p_end}
+{p 8 12 2}{cmd:. quietly mtable, at (black = 0 age = 74 ) rown(74 year old White) dec(4) below} {p_end}
+{p 8 12 2}{cmd:. mtable, at (black = 1 age = 74 ) rown(74 year old Black) dec(4) below} {p_end}
 
 {title:Author}
 
@@ -568,7 +568,7 @@ and multinomial models. Here is one simple example.
 Richard Williams{break}
 Notre Dame Department of Sociology{break}
 rwilliam@ND.Edu{break}
-{browse "https://www3.nd.edu/~rwilliam/gologit2/"}{p_end}
+{browse "https://academicweb.nd.edu/~rwilliam/gologit2/"}{p_end}
 
 
 {title:Acknowledgements}
@@ -631,7 +631,7 @@ Sociology, 40:1, 7-20,
 
 {p 5 5}Updates to the program that have been made since the 2006 Stata
 Journal article are summarized at
-{browse "https://www3.nd.edu/~rwilliam/gologit2/gologit2.pdf"}. 
+{browse "https://academicweb.nd.edu/~rwilliam/gologit2/gologit2.pdf"}. 
 
 
 

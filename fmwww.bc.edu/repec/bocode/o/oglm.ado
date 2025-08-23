@@ -1,4 +1,4 @@
-*! version 2.3.2 16feb2025  Richard Williams, rwilliam@nd.edu
+*! version 2.3.3 13aug2025  Richard Williams, rwilliam@nd.edu
 
 * 1.0.0 - Initial release 
 * 1.0.1 - BETA experimental log link added
@@ -32,6 +32,7 @@
 *         initial values via the STARTVALS option
 * 2.3.1 - ordwarm2.dta added as an ancilliary file
 * 2.3.2 - e(cmdline) added to the ereturns
+* 2.3.3 - Help file updated to reflect new web pages
 
 program oglm, eclass byable(recall) sortpreserve properties(swml svyr svyb svyj or irr rrr hr eform mi fvaddcons)
 	version 11.2
