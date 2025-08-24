@@ -63,6 +63,7 @@ p summclust module to compute cluster level measures of leverage, influence, and
 p summtab module to compute summary statistics overall and/or across levels of a categorical variable 
 p sumtex module to generate publication-ready descriptive statistics tables in LaTeX format
 p sunburst module for (half) sunburst plots
+p surveycluster module to calculate sample size for cluster-based surveys to achieve desired precision
 p surveyspan module to analyze timestamp metadata from field surveys to monitor data quality.
 p susoapi module to provide Survey Solutions API client class for Stata
 p svr module to compute estimates with survey replication (SVR) based standard errors

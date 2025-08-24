@@ -1,0 +1,24 @@
+d 'BDIFFV': module to extend bdiff, visualizing differences (Bootstrap and Permutaion tests) between two groups
+d
+d   Yujun, Lian (arlionn) released a package called bdiff on
+d November 24, 2020, which can perform	  between-group difference
+d analysis.    However, existing research can no longer simply be
+d satisfied with displaying the differences between    two sets of
+d regression specific explanatory variables in digital form.
+d Therefore, we urgently need a    visual solution.    Based on the
+d above background, I rewrote a visual solution based on the bdiff
+d package and named it	   bdiffv. In addition to helping us
+d perform intergroup difference tests after regression, this
+d package    can also display the differences graphically. 
+d
+d KW: group comgraphicsparisons
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20250823
+d
+d Author: Shutter Zor	 , Xiamen University
+d Support: email Shutter_Z@@outlook.com
+d
+f bdiffv.ado
+f bdiffv.sthlp

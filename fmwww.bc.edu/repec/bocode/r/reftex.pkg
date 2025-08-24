@@ -1,0 +1,30 @@
+d 'REFTEX': module providing enhanced bibliography processor with LaTeX escaping and mixed language support
+d
+d   reftex converts plain text bibliographies into formatted LaTeX
+d bibliographies with proper escaping	 of special characters.  It
+d supports Chinese, English, and mixed-language bibliographies with
+d    intelligent formatting rules for each language. 
+d
+d KW: references
+d KW: bibliography
+d KW: LaTeX
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20250822
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:    Wu Hanyan,  Nanjing University of Aeronautics and Astronautics
+d Support: email   2325476320@@qq.com 
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+f reftex.ado
+f reftex.sthlp
+f ../s/sunny_reftex.do
+f ../c/cash_mix.txt
+f ../c/cash_en.txt
+f ../c/cash_ch.txt

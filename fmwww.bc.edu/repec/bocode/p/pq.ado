@@ -1,5 +1,6 @@
 *! pq - read/write parquet files with stata
-*! Version 1.5.0 - fix append when columns don't fully overlap
+*! Version 1.7.1 - fix bug where variables that contain another variable in them not loading with *
+*! Version 1.7.0 - upgrade to rust polars 0.49, add option to save labels rather than numeric value
 
 capture program drop pq
 program define pq
@@ -243,7 +244,6 @@ program pq_use_append
 		local sql_if
 	}
 	
-	//	di `"if: `sql_if'"'
 	//	Initialize "mapping" to tell plugin to read from macro variables
 	local mapping from_macros
 	local b_quiet = 1
@@ -613,7 +613,6 @@ program pq_gen_or_recast
 	}
 	else if ("`type_new'" == "binary") {
 		di "Dropping `name' as cannot process binary columns"
-		di "HELLO"
 	}
 	else {
 		if `b_gen' {
@@ -706,8 +705,8 @@ program pq_match_variables, rclass
             foreach v of local against {
                 if match("`v'", "`name'") {
                     // Avoid duplicates
-                    if strpos("`matched'", "`v'") == 0 {
-                        local matched `matched' `v'
+                    if strpos(" `matched '", " `v' ") == 0 {
+                        local matched = `" `matched' `v' "'
                     }
                     local found = 1
                 }
@@ -717,8 +716,8 @@ program pq_match_variables, rclass
             // Exact match
             foreach v of local against {
                 if "`v'" == "`name'" {
-                    if strpos("`matched'", "`v'") == 0 {
-                        local matched `matched' `v'
+                    if strpos(" `matched '", " `v' ") == 0 {
+                        local matched = `" `matched' `v' "'
                     }
                     local found = 1
                 }
@@ -775,7 +774,8 @@ program pq_save
 						   compression_level(integer -1)	///
 						   NOPARTITIONOVERWRITE				///
 						   compress							///
-						   compress_string_to_numeric		///	
+						   compress_string_to_numeric		///
+						   label 							///	
 						   ]	//	in(string) 
         
 	//	if "`partition_by'" != "" {
@@ -838,6 +838,33 @@ program pq_save
 	local var_count = 0
 	local n_rename = 0
 	
+
+
+	local vars_labeled	
+	local original_order
+	if ("`label'" == "label") {
+		quietly ds
+		local original_order `r(varlist)'
+		
+		//	Do any variables have labels?
+		foreach vari in `varlist' {
+			local labeli : value label `vari'
+			if "`labeli'" != "" {
+				local vars_labeled `vars_labeled' `vari'
+				tempvar `vari'
+
+				//	Move the "true" value to a tempvar
+				quietly rename `vari' ``vari''
+
+				//	Create a decoded value in the original variable name
+				decode ``vari'', gen(`vari')
+				//	tab ``vari'' `vari'
+			}
+		}
+
+		quietly order `original_order'
+	}
+
 	foreach vari in `varlist' {
 		local var_count = `var_count' + 1
 		local typei: type `vari'
@@ -912,9 +939,21 @@ program pq_save
 	local overwrite_partition = "`nopartitionoverwrite'" == ""
 	local b_compress = "`compress'" != ""
 	local b_compress_string_to_numeric = "`compress_string_to_numeric'" != ""
-
+	
 	//	di `"plugin call polars_parquet_plugin, save "`using'" "from_macro" `n_rows' `offset' "`sql_if'" "`StataColumnInfo'" "`partition_by'" "`compression'" "`compression_level'" `overwrite_partition' `b_compress' `b_compress_string_to_numeric'"'
 	plugin call polars_parquet_plugin, save "`using'" "from_macro" `n_rows' `offset' `"`sql_if'"' `"`StataColumnInfo'"' "`partition_by'" "`compression'" "`compression_level'" `overwrite_partition' `b_compress' `b_compress_string_to_numeric'
+
+
+
+	//	Reset the labeled variables to their original value
+	if ("`vars_labeled'" != "") {
+		foreach vari in `vars_labeled' {
+			quietly drop `vari'
+			quietly rename ``vari'' `vari'
+		}
+
+		quietly order `original_order'
+	}
 end
 
 

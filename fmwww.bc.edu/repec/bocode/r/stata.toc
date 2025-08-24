@@ -96,6 +96,7 @@ p redi module providing a Random Empirical Distribution Imputation method for es
 p reffadjust module  to estimate adjusted regression coefficients for the association between two random effects variables
 p reffect module to compute Pearson's r Effect Size Computation for Analysis of Variance (ANOVA)
 p reformat module to reformat regression output
+p reftex module providing enhanced bibliography processor with LaTeX escaping and mixed language support
 p reg2docx module to report regression results to formatted table in DOCX file.
 p reg2hdfe module to estimate a Linear Regression Model with two High Dimensional Fixed Effects
 p reg2logit module to approximate logistic regression parameters using OLS linear regression

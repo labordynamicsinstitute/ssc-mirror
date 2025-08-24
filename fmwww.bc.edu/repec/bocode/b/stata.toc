@@ -26,6 +26,7 @@ p bcstats module to analyze back check (field audit) data and compare it to the 
 p bctobit module to produce a test of the tobit specification
 p bcuse module to access instructional datasets on Boston College server 
 p bdiff module to compute Bootstrap and Permutation tests for difference in coefficients between two groups
+p bdiffv module to extend bdiff, visualizing differences (Bootstrap and Permutaion tests) between two groups
 p beamplot module to draw horizontal dotplots using beams
 p benford module to test Benford's Law on a variable
 p betacoef module to calculate beta coefficients from regression

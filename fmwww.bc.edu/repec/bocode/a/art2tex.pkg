@@ -1,0 +1,48 @@
+d 'ART2TEX': module to automatically generate structured academic paper in the LaTeX framework 
+d
+d    art2tex is a professional Stata program designed for empirical
+d researchers in economics, management,    and related fields.	It
+d automatically generates LaTeX paper frameworks that comply with  
+d  international academic standards, with support for both Chinese
+d and English papers.  The program    creates complete document
+d structures, preset table environments, mathematical formulas,
+d reference    formats, and generates accompanying Stata table
+d export commands and BibTeX reference templates. 
+d
+d KW: articles
+d KW: theses
+d KW: dissertations
+d KW: LaTeX
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20250823
+d
+d Author: Wu Lianghai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+d Author: Liu Changyun,  Anhui University of Technology
+d Support: email   2437563124@@qq.com
+d
+d Author:  Zhao Xin,  Anhui University of Technology
+d Support: email   1980124145@@qq.com
+d
+d Author:      Hu Fangfang,   Wanjiang University of Technology
+d Support: email    huff470@@163.com 
+d
+d Author:    Wu Hanyan,  Nanjing University of Aeronautics and Astronautics
+d Support: email   2325476320@@qq.com 
+d
+d Author:  Wu Xinzhuo,  University of Bristol
+d Support: email   2957833979@@qq.com
+d
+f art2tex.ado
+f art2tex.sthlp
+f asure.dta
+f ../c/cash_holding.do
+f ../c/correlation_matrix.txt
+f ../m/main_regression.txt
+f ../d/descriptive_stats.txt

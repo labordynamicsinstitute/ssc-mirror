@@ -1,0 +1,29 @@
+d 'SURVEYCLUSTER': module to calculate sample size for cluster-based surveys to achieve desired precision
+d
+d  surveycluster calculates the required sample size and number of
+d clusters for single-arm surveys with nested data where the goal
+d is to estimate a population mean with specified precision (margin
+d of error). Unlike clustersampsi which is designed for cluster
+d randomized controlled trials comparing two groups, surveycluster
+d focuses on achieving desired precision for estimating a single
+d population parameter. The command accounts for design effects due
+d to clustering, applies finite population correction when
+d relevant, and reports both the requested and actual margin of
+d error achieved. 
+d
+d KW: sample size
+d KW: clusters
+d KW: surveys
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20250823
+d
+d Author:   Kabira Namit,  World Bank
+d Support: email   knamit@@worldbank.org
+d
+d Author: Cooper Allton,   Samaritan's Purse
+d Support: email NA
+d
+f surveycluster.ado
+f surveycluster.sthlp
