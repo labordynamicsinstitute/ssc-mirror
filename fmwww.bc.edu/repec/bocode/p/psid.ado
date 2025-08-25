@@ -1,4 +1,4 @@
-*! version 3.01  November 1, 2023 @ 15:09:45 UK
+*! version 4.00  august 18, 2025 @ 15:44:24 UK
 
 * 1.01 Re-design - psiduse/psidadd -> -psid use- -psid add-/alpha tester version
 * 1.02 Various Bug fixes, subprograms vardoc and long added -> First published on SSC
@@ -15,6 +15,7 @@
 * 2.15 Bug fix
 * 3.00 Updated to PSID delivery 2021
 * 3.01 Wrong identifiers for CAH files. Fixed
+* 4.00 Update to PSID deliver 2023
 
 * Selector Program
 program psid
@@ -943,7 +944,7 @@ program _SET_DELIVERY, rclass
 	local s =cond("`lower'" == "","S","s")
 
 	// I try to find the users delivery by myself ...
-	local stop 2021
+	local stop 2027
 	while `stop' > 1968 {
 		capture confirm file `"`using'/ind`stop'er.dta"'
 		if !_rc {
@@ -965,7 +966,7 @@ program _SET_DELIVERY, rclass
 	  [96] `er'33301 [97] `er'33401 [99] `er'33501 [01] `er'33601  /// 
 	  [03] `er'33701 [05] `er'33801 [07] `er'33901 [09] `er'34001  ///
 	  [11] `er'34101 [13] `er'34201 [15] `er'34301 [17] `er'34501  ///
-	  [19] `er'34701 [21] `er'34901
+	  [19] `er'34701 [21] `er'34901 [23] `er'35101
 	
 	local idfam ///
 	  [68] `v'3      [69] `v'442    [70] `v'1102   [71] `v'1802   [72] `v'2402  [73] `v'3002    ///  
@@ -976,7 +977,7 @@ program _SET_DELIVERY, rclass
 	  [94] `er'2002  [95] `er'5002  [96] `er'7002  [97] `er'10002 [99] `er'13002  /// 
 	  [01] `er'17002 [03] `er'21002 [05] `er'25002 [07] `er'36002 [09] `er'42002  ///
 	  [11] `er'47302 [13] `er'53002 [15] `er'60002 [17] `er'66002 [19] `er'72002 ///
-	  [21] `er'78002 
+	  [21] `er'78002 [23] `er'82002
 
 	local sqind ///
 	  [69] `er'30021 [70] `er'30044 [71] `er'30068 [72] `er'30092 [73] `er'30118 [74] `er'30139  ///
@@ -985,7 +986,7 @@ program _SET_DELIVERY, rclass
 	  [87] `er'30536 [88] `er'30571 [89] `er'30607 [90] `er'30643 [91] `er'30690 [92] `er'30734  /// 
 	  [93] `er'30807 [94] `er'33102 [95] `er'33202 [96] `er'33302 [97] `er'33402 [99] `er'33502  /// 
 	  [01] `er'33602 [03] `er'33702 [05] `er'33802 [07] `er'33902 [09] `er'34002 [11] `er'34102  ///
-	  [13] `er'34202 [15] `er'34302 [17] `er'34502 [19] `er'34702 [21] `er'34902 
+	  [13] `er'34202 [15] `er'34302 [17] `er'34502 [19] `er'34702 [21] `er'34902 [23] `er'35102
 	
 	foreach macname in indfile idfam idind sqind delivery {
 
