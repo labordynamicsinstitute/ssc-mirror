@@ -1,5 +1,5 @@
 ﻿{smcl}
-{* version 9.5  17aug2025 *}
+{* version 9.6  25aug2025 *}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "reftex" "help reftex"}{...}
 {viewerjumpto "Title" "reftex##title"}{...}
@@ -7,6 +7,7 @@
 {viewerjumpto "Description" "reftex##description"}{...}
 {viewerjumpto "Options" "reftex##options"}{...}
 {viewerjumpto "Input Format" "reftex##input"}{...}
+{viewerjumpto "Output Format" "reftex##output"}{...}
 {viewerjumpto "Examples" "reftex##examples"}{...}
 {viewerjumpto "Version History" "reftex##history"}{...}
 {viewerjumpto "Authors" "reftex##authors"}{...}
@@ -28,7 +29,7 @@
 {synopthdr:Options}
 {synoptline}
 {syntab:Required}
-{synopt:{opt out:file(filename)}}output LaTeX file{p_end}
+{synopt:{opt out:file(filename)}}output LaTeX bibliography file{p_end}
 
 {syntab:Optional}
 {synopt:{opt lang(language)}}processing language: {it:chn}, {it:eng}, or {it:mix}{p_end}
@@ -45,6 +46,10 @@
 It supports Chinese, English, and mixed-language bibliographies with intelligent formatting rules for each language.
 
 {pstd}
+The generated .tex file contains only the {cmd:thebibliography} environment and is compatible with {cmd:natbib} package.
+You can use {cmd:\cite}, {cmd:\citet}, {cmd:\citep} and other citation commands in your main document.
+
+{pstd}
 {ul:Key features}:{p_end}
 {p2colset 9 28 30 2}{...}
 {p2col :•} Automatic LaTeX character escaping (e.g., &, %, $, #){p_end}
@@ -52,14 +57,14 @@ It supports Chinese, English, and mixed-language bibliographies with intelligent
 {p2col :•} English format: Authors (Year) Title, {it:Journal}, {bf:Volume}(Issue), Pages{p_end}
 {p2col :•} Mixed language auto-detection (Chinese characters){p_end}
 {p2col :•} Double period prevention system{p_end}
-{p2col :•} Complete LaTeX document generation{p_end}
+{p2col :•} natbib-compatible output with citation keys{p_end}
 {p2colreset}{...}
 
 {marker options}{...}
 {title:Options}
 
 {phang}
-{opt outfile(filename)} specifies the output LaTeX file path. This option is required.
+{opt outfile(filename)} specifies the output LaTeX bibliography file path. This option is required.
 
 {phang}
 {opt lang(language)} sets the processing language:
@@ -87,6 +92,23 @@ Input files must follow these specifications:{p_end}
 {p2col :4.} {ul:English format}: Authors, Year, Title, Journal, Volume, Pages{p_end}
 {p2colreset}{...}
 
+{marker output}{...}
+{title:Output Format}
+
+{pstd}
+The generated .tex file contains only the {cmd:thebibliography} environment with properly formatted entries.
+Each entry includes a citation key based on first author and year (e.g., "Chen2021"), allowing you to use:
+
+{pmore}{cmd:\citet{entry_key}} for textual citations (e.g., Chen et al., 2021){p_end}
+{pmore}{cmd:\citep{entry_key}} for parenthetical citations (e.g., (Chen et al., 2021)){p_end}
+
+{pstd}
+To use the generated bibliography in your LaTeX document:
+
+{pmore}1. Add to preamble: {cmd:\usepackage[round]{natbib}}{p_end}
+{pmore}2. Set bibliography style: {cmd:\bibliographystyle{plainnat}}{p_end}
+{pmore}3. Add to the end of the document: {cmd:\input{bib_mix}}{p_end}
+
 {marker examples}{...}
 {title:Examples}
 
@@ -101,6 +123,12 @@ Input files must follow these specifications:{p_end}
 
 {marker history}{...}
 {title:Version History}
+
+{pstd}
+{bf:v9.6} (25aug2025){p_end}
+{pmore}- Added natbib compatibility with citation keys{p_end}
+{pmore}- Removed full document structure from output{p_end}
+{pmore}- Updated help file with usage instructions{p_end}
 
 {pstd}
 {bf:v9.5} (17aug2025){p_end}
