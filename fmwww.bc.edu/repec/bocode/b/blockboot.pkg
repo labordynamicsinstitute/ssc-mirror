@@ -1,0 +1,26 @@
+d 'BLOCKBOOT': module to implement four bootstrap schemes for dependent timeseries data
+d
+d	blockboot implements four bootstrap schemes for dependent
+d timeseries data: nbb: Nonoverlapping block bootstrap of
+d observations; see Carlstein (Ann. Stat., 1986) mbb: Moving block
+d bootstrap of observations; see Künsch (Ann. Stat., 1989) and Liu
+d and Singh (1992) cbb: Circular block bootstrap of observations;
+d see Politis and Romano (1992) sbb: Stationary block bootstrap of
+d observations; see Politis and Romano (JASA, 1994) 
+d
+d KW: bootstrap
+d KW: block bootstrap
+d KW: time series
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20250826
+d
+d Author: Christopher F Baum, Boston College 
+d Support: email baum@@bc.edu
+d
+d Author: Jesús Otero, Universidad del Rosario
+d Support: email jesus.otero@@urosario.edu.co
+d
+f blockboot.ado
+f blockboot.sthlp
