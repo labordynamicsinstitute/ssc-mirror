@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 21 Oct 2024}{...}
+{* *! version 0.4 22 Jul 2025}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Install nca" "ssc install nca"}{...}
 {vieweralsosee "Help nca (if installed)" "help nca"}{...}
@@ -10,7 +10,7 @@
 {viewerjumpto "Examples" "nca_power##examples"}{...}
 {title:Title}
 {phang}
-{bf:nca_power} {hline 2} NCA power
+{bf:nca_power} {hline 2} Power evaluation under a necessity framework. Calculates the power of a NCA approximate permutation test given the sample size, the ceiling, the distributions of Y and X, and the signficance level.
 
 {marker syntax}{...}
 {title:Syntax}
@@ -24,33 +24,33 @@
 {synoptline}
 
 {syntab:Optional}
-{synopt:{opt n(numlist integer  >0)}} number of observations to be simulated. The default is{bf: 20 50 100}.
+{synopt:{opt n(numlist integer  >0)}} number of observations to be simulated. 
 
-{synopt:{opt r:ep(#)}} the number of simulated datasets to be created for each value of {opt n}.   The default value is 100.
+{synopt:{opt r:ep(#)}} the number of simulated datasets to be created for each value of {opt n}.   
 
-{synopt:{opt e:ffect(#)}}  the postulated effect size. The default values is 0.1.
+{synopt:{opt e:ffect(#)}}  the postulated effect size. 
 
-{synopt:{opt s:lope(#)}}  The postulated slope of the ceiling line. The default values is 1. 
+{synopt:{opt s:lope(#)}}  The postulated slope of the ceiling line.  
 
-{synopt:{opt c:eiling(string)}}   Ceiling method to be used in each simulation. The allowed ceilings are ce_fdh, cr_fdh, ce_vrs and cr_vrs. The default are ce_fdh and cr_fdh.
+{synopt:{opt ce:iling(string)}}   Ceiling method to be used in each simulation. 
 
-{synopt:{opt xd:istribution(string)}}  The distribution to be used to simulate the conditions.
+{synopt:{opt xd:istribution(string)}}  The distribution to be used to simulate the conditions. Only used if {bf: xdistribution}(normal) is specified.
 
-{synopt:{opt yd:istribution(string)}}  The distribution to be used to simulate the outcomes.
+{synopt:{opt yd:istribution(string)}}  The distribution to be used to simulate the outcomes. Only used if {bf: ydistribution}(normal) is specified.
 
-{synopt:{opt xm:ean(#)}}  Mean of the condition variables to be generated. 
+{synopt:{opt xm:ean(#)}}  Mean of the condition variables to be generated.  Only used if {bf: xdistribution}(normal) is specified.
 
-{synopt:{opt xs:d(#)}}  Standard deviation of the condition variables to be generated.
+{synopt:{opt xs:d(#)}}  Standard deviation of the condition variables to be generated. Only used if {bf: xdistribution}(normal) is specified.
 
-{synopt:{opt ym:ean(#)}}  Mean of the outcome variable to be generated.
+{synopt:{opt ym:ean(#)}}  Mean of the outcome variable to be generated. Only used if {bf: ydistribution}(normal) is specified.
 
-{synopt:{opt ys:d(#)}}  Standard deviation of the outcome variable to be generated.
+{synopt:{opt ys:d(#)}}  Standard deviation of the outcome variable to be generated. Only used if {bf: ydistribution}(normal) is specified.
 
-{synopt:{opt cor:ner(#)}}  Define which corner should be empty.
+{synopt:{opt co:rner(#)}}  Define which corner should be empty.
 
-{synopt:{opt t:estrep(#)}}  The number of permutations to be used in the approximate premutation test. The default value is 200.
+{synopt:{opt t:estrep(#)}}  The number of permutations to be used in the approximate premutation test.
 
-{synopt:{opt sig:nificance(#)}} specifies the significance level to be considered during for the the approximate premutation test. The default is 0.01*(100 - {it:  $S_level}), where {it:  $S_level} is the default confidence level for confidence intervals for all commands that report confidence intervals (see also {bf: help set level} and {bf: macro dir}).
+{synopt:{opt p(#)}} specifies the significance level to be considered during for the the approximate premutation test. 
 
 {synoptline}
 {p2colreset}{...}
@@ -59,6 +59,7 @@
 {marker description}{...}
 {title:Description}
 {pstd}
+Power evaluation under a necessity framework. Calculates the power of a NCA approximate permutation test given the sample size, the ceiling, the distributions of Y and X, and the signficance level.
 
 {marker options}{...}
 {title:Options}
@@ -74,44 +75,44 @@
 {opt e:ffect(#)}  the postulated effect size. The default values is 0.1.
 
 {phang}
-{opt s:lope(#)}  The postulated slope of the ceiling line. The default values is 1. 
+{opt s:lope(#)}  the postulated slope of the ceiling line. The default values is 1. 
 
 {phang}
-{opt c:eiling(string)}   Ceiling method to be used in each simulation. The allowed ceilings are ce_fdh, cr_fdh, ce_vrs and cr_vrs. The default are ce_fdh and cr_fdh.
+{opt ce:iling(string)}   Ceiling method to be used in each simulation. The allowed ceilings are ce_fdh, cr_fdh, ce_vrs and cr_vrs. The default is ce_fdh.
 
 {phang}
-{opt xd:istribution(string)}  The distribution to be used to simulate the conditions.
+{opt xd:istribution(string)}  The distribution to be used to simulate the conditions. Only used if {bf: xdistribution}(normal) is specified.
 
 {phang}
-{opt yd:istribution(string)}  The distribution to be used to simulate the outcomes.
+{opt yd:istribution(string)}  The distribution to be used to simulate the outcomes. Only used if {bf: ydistribution}(normal) is specified.
 
 {phang}
-{opt xm:ean(#)}  Mean of the condition variables to be generated. 
+{opt xm:ean(#)}  Mean of the condition variables to be generated. Only used if {bf: xdistribution}(normal) is specified. 
 
 {phang}
-{opt xs:d(#)}  Standard deviation of the condition variables to be generated.
+{opt xs:d(#)}  Standard deviation of the condition variables to be generated. Only used if {bf: xdistribution}(normal) is specified.
 
 {phang}
-{opt ym:ean(#)}  Mean of the outcome variable to be generated.
+{opt ym:ean(#)}  Mean of the outcome variable to be generated. Only used if {bf: ydistribution}(normal) is specified.
 
 {phang}
-{opt ys:d(#)}  Standard deviation of the outcome variable to be generated.
+{opt ys:d(#)}  Standard deviation of the outcome variable to be generated. Only used if {bf: ydistribution}(normal) is specified.
 
 {phang}
-{opt cor:ner(#)}  Define which corner should be empty.
+{opt co:rner(#)}  Define which corner should be empty. The default is 1. Corner 1 is the upper-left corner, corner 2 is the upper-right corner, corner 3 is the lower-left corner, and corner 4 is the lower-right corner. 
 
 {phang}
 {opt t:estrep(#)}  The number of permutations to be used in the approximate premutation test. The default value is 200.
 
 {phang}
-{opt sig:nificance(#)} specifies the significance level to be considered during for the the approximate premutation test. The default is 0.01*(100 - {it:  $S_level}), where {it:  $S_level} is the default confidence level for confidence intervals for all commands that report confidence intervals (see also {bf: help set level} and {bf: macro dir}).
-
-
-
+{opt p(#)} specifies the significance level to be considered during for the the approximate premutation test. The default is 0.05.
 
 {marker examples}{...}
 {title:Examples}
- nca_power, n(100 200 300) rep(100) 
+
+{pstd} Power calculation based on 1000 simulation for uniform X and Y, CE-FDH ceiling.  {p_end}
+{phang2}{cmd:.  set seed 123456789} {p_end}
+{phang2}{cmd:.  nca_power, n(100 200 300) rep(1000) }{p_end}
 
 {title:Author}
 {pstd}Daniele Spinelli{p_end}

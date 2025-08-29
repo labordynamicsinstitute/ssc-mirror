@@ -9941,6 +9941,7 @@ fmwww.bc.edu/repec/bocode/n/nearest.hlp
 fmwww.bc.edu/repec/bocode/n/nbinreg.ado
 fmwww.bc.edu/repec/bocode/n/nbercycles.html
 fmwww.bc.edu/repec/bocode/n/normd.ado
+fmwww.bc.edu/repec/bocode/n/nca_outliers.ado
 fmwww.bc.edu/repec/bocode/n/nvars.hlp
 fmwww.bc.edu/repec/bocode/n/nbinreg.hlp
 fmwww.bc.edu/repec/bocode/n/nehurdle_truncnb2_het.ado
@@ -10334,6 +10335,7 @@ fmwww.bc.edu/repec/bocode/n/network_forest.ado
 fmwww.bc.edu/repec/bocode/n/nrow_example.dta
 fmwww.bc.edu/repec/bocode/n/ncf.hlp
 fmwww.bc.edu/repec/bocode/n/npresent.html
+fmwww.bc.edu/repec/bocode/n/nca_outliers.sthlp
 fmwww.bc.edu/repec/bocode/n/normalbvr.sthlp
 fmwww.bc.edu/repec/bocode/n/niceloglabels.sthlp
 fmwww.bc.edu/repec/bocode/n/ncfn.html
@@ -20278,6 +20280,7 @@ fmwww.bc.edu/repec/bocode/_/_ddml_use.ado
 fmwww.bc.edu/repec/bocode/_/_cwfcn_kldb92_4d_to_kldb10_5d.sthlp
 fmwww.bc.edu/repec/bocode/_/_welcom_inst.ado
 fmwww.bc.edu/repec/bocode/_/_ex_drdecomp.ado
+fmwww.bc.edu/repec/bocode/_/_lmoments.ado
 fmwww.bc.edu/repec/bocode/_/_gilast.ado
 fmwww.bc.edu/repec/bocode/_/_incomelevelname.ado
 fmwww.bc.edu/repec/bocode/_/_sspecialreg.ado

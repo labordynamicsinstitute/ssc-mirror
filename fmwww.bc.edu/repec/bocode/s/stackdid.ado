@@ -1,4 +1,4 @@
-*! version 1.4.0 16aug2025
+*! version 1.4.1 27aug2025
 capture program drop stackdid
 program define stackdid, rclass
         version 15
@@ -124,14 +124,18 @@ program define stackdid, rclass
 		local N_fmt = strlen("`N_original'") + (floor(strlen("`N_original'") / 3))
 		tempvar treat_prev treat_event nevertreated treated latest_treat lost_treat gained_treat stacked reps
 				
-		* Find event times
+		* Assert treatment is consistent within group-time
                 sort `group' `time'
+		capture assert `treatment'==`treatment'[_n-1] if (`group'==`group'[_n-1]) & (`time'==`time'[_n-1])
+		if (_rc) {
+			di as err "treatment must be consistent within group-time"
+			exit 198
+		}
+		
+		* Find event times
                 qui gen byte `treat_prev' = `treatment'[_n-1] if (`group'[_n-1]==`group' & `time'[_n-1]+1==`time')
                 qui gen byte `treat_event' = (`treatment'==1 & `treat_prev'==0)
                 qui levelsof `time' if (`treat_event'==1), local(cohorts)
-		
-		* Find event times v2
-		qui egen byte `treat_prev' = max()
 		
 		* Issue warning if treatment is impermanent 
 		capture assert (`treatment'==1) if (`treat_prev'==1), fast
@@ -221,7 +225,7 @@ program define stackdid, rclass
 				`nolog' di as text "." _cont
 			}
 			local N_stacked = _N - `N_original'
-			`nolog' di
+			`nolog' di as text "done"
 		}
 		else {
 			`nolog' di as text "nothing to stack"

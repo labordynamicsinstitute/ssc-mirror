@@ -1,5 +1,5 @@
 {smcl}
-{* NJC 10apr2025}{...}
+{* NJC 10apr2025/1may2025/14aug2025}{...}
 
 {cmd:help lmomentsets}
 {hline}
@@ -419,9 +419,8 @@ L-moment diagrams should replace product moment diagrams.
 {it:Water Resources Research} 29: 1745{c -}1752. 
  
 {phang}Vogel, R. M., S. M. Papalexiou, J. R. Lamontagne and F. C. Dolan. 
-2024. When heavy tails disrupt statistical inference. 
-{it:The American Statistician} 1{c -}15. 
-{browse "https://doi.org/10.1080/00031305.2024.2402898":https://doi.org/10.1080/00031305.2024.2402898}
+2025. When heavy tails disrupt statistical inference. 
+{it:The American Statistician} 79: 221{c -}235. 
 
 {phang}Wang, Q. J. 1996. Direct sample estimators of L-moments. 
 {it:Water Resources Research} 32: 2617{c -}2619. 

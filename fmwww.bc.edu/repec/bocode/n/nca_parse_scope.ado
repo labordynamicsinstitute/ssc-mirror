@@ -4,7 +4,7 @@ pro def nca_parse_scope, rclass
 syntax varlist [if] [in], [scope(numlist missingokay)]
 tempname scopemat scopeX scopeY empirical_scopemat
 if ("`scope'"=="") {
-	quietly tabstat  `varlist', stat(min max)  save
+	quietly tabstat  `varlist' `if' `in', stat(min max)  save
 	matrix `scopemat' =r(StatTotal)'
 	matrix `empirical_scopemat' =`scopemat'
 }
@@ -29,7 +29,7 @@ else {
 				exit 144
 			}
 			
-			sum `v' ,meanonly
+			sum `v' `if' `in',meanonly
 			matrix `empirical_scopemat'[ rownumb(`empirical_scopemat',"`v'"),1]=r(min)
 			matrix `empirical_scopemat'[ rownumb(`empirical_scopemat',"`v'"),2]=r(max)
 			local min=min( `min', r(min))

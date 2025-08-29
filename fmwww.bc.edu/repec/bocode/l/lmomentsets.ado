@@ -130,6 +130,9 @@ program lmomentsets_g
 	}
 end 
 
+* the following code needs to be in a separate ado, 
+* but is included here for documentation 
+
 *! 1.0.0 NJC 27 February 2025
 * lmoments 6.0.0 NJC 3 October 2012 
 * 1.0.0 NJC 17 September 1997

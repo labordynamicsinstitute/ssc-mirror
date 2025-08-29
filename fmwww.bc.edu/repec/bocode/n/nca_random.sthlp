@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 11 Oct 2024}{...}
+{* *! version 0.7 09 Jul 2025}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Install nca" "ssc install nca"}{...}
 {vieweralsosee "Help nca (if installed)" "help nca"}{...}
@@ -28,24 +28,26 @@
 {syntab:Required }
 {synopt:{opt n(#)}} Number of observations.
 
-{synopt:{opt s:lopes(numlist)}} A list of slopes. 
-
 {synopt:{opt i:ntercepts(numlist)}} A list of intercepts.
 
+{synopt:{opt s:lopes(numlist)}} A list of slopes. 
+
 {syntab:Optional}
+{synopt:{opt c:orner(#)}} Define which corner should be empty, default is 1 (upper left).
+
 {synopt:{opt xd:istribution(string)}}  The distribution to be used to simulate the conditions.
 
 {synopt:{opt yd:istribution(string)}}  The distribution to be used to simulate the outcomes.
 
+{synopt:{opt xm:ean(#)}}  Mean of the condition variables to be generated. Only used if {bf: xdistribution}(normal) is specified.
+
+{synopt:{opt ym:ean(#)}}  Mean of the outcome variable to be generated. Only used if {bf: ydistribution}(normal) is specified. 
+
+{synopt:{opt xs:d(#)}}  Standard deviation of the condition variables to be generated. Only used if {bf: xdistribution}(normal) is specified.
+
+{synopt:{opt ys:d(#)}}  Standard deviation of the outcome variable to be generated. Only used if {bf: ydistribution}(normal) is specified.
+
 {synopt:{opt clear}} Clear the current dataset
-
-{synopt:{opt xm:ean(#)}}  Mean of the condition variables to be generated. 
-
-{synopt:{opt xs:d(#)}}  Standard deviation of the condition variables to be generated.
-
-{synopt:{opt ym:ean(#)}}  Mean of the outcome variable to be generated.
-
-{synopt:{opt ys:d(#)}}  Standard deviation of the outcome variable to be generated.
 
 {synoptline}
 {p2colreset}{...}
@@ -65,10 +67,13 @@ Generates random datapoints for Y and X to be used for necessary condition analy
 {opt n(#)}  The number of observations to be generated.
 
 {phang}
+{opt i:ntercepts(numlist)} A list of real numbers containing the intercepts. Users can choose to specify {bf: intercepts} with the same length as {bf: slopes} or to specify a single intercept, that will be replicated to match the lenght of {bf: slopes}.  The number of conditions to be generated is equal to the length of {bf: slopes} and {bf: intercepts}. 
+
+{phang}
 {opt s:lopes(numlist)}  A list of real numbers containing the slopes. Users can choose to specify {bf: slopes} with the same length as {bf: intercepts} or to specify a single intercept, that will be replicated to match the lenght of {bf: intercepts}. The number of conditions to be generated is equal to the length of {bf: slopes} and {bf: intercepts}.
 
 {phang}
-{opt i:ntercepts(numlist)} A list of real numbers containing the intercepts. Users can choose to specify {bf: intercepts} with the same length as {bf: slopes} or to specify a single intercept, that will be replicated to match the lenght of {bf: slopes}.  The number of conditions to be generated is equal to the length of {bf: slopes} and {bf: intercepts}. 
+{opt c:orner(#)} Define which corner should be empty, default is 1 (upper left).
 
 {phang}
 {opt xd:istribution(string)}  the distribution to be used for the conditions. Specify {bf: uniform} or {bf: normal}. The default is {bf: uniform}.
@@ -77,19 +82,19 @@ Generates random datapoints for Y and X to be used for necessary condition analy
 {opt yd:istribution(string)}  the distribution to be used for the outcome. Specify {bf: uniform} or {bf: normal}. The default is {bf: uniform}.
 
 {phang}
-{opt clear} 
+{opt xm:ean(#)}  Mean of the condition variables to be generated. The default is 0.5. Only used if {bf: xdistribution}(normal) is specified.
 
 {phang}
-{opt xm:ean(#)}  Mean of the condition variables to be generated. The default is 0.5.
+{opt ym:ean(#)}  Mean of the outcome variable to be generated. The default is 0.5. Only used if {bf: ydistribution}(normal) is specified.
 
 {phang}
-{opt xs:d(#)}  Standard deviation of the condition variables to be generated. The default is 0.2.
+{opt xs:d(#)}  Standard deviation of the condition variables to be generated. The default is 0.2. Only used if {bf: xdistribution}(normal) is specified.
 
 {phang}
-{opt ym:ean(#)}  Mean of the outcome variable to be generated. The default is 0.5.
+{opt ys:d(#)}  Standard deviation of the outcome variable to be generated. The default is 0.2. Only used if {bf: ydistribution}(normal) is specified.
 
 {phang}
-{opt ys:d(#)}  Standard deviation of the outcome variable to be generated. The default is 0.2.
+{opt clear} Clear the current dataset.
 
 {marker examples}{...}
 {title:Examples}
@@ -102,13 +107,13 @@ Generates random datapoints for Y and X to be used for necessary condition analy
 
 {pstd} Generate 1000 observations. y is bounded by the y=x1 and y=0.1+0.5x2 line. {p_end}
 {phang2}{cmd:. clear} {p_end}
-{phang2}{cmd:. nca_random, n(1000) slopes(1 0.5) intercepts(0 0.1) }{p_end}
+{phang2}{cmd:. nca_random, n(1000) intercepts(0 0.1) slopes(1 0.5) }{p_end}
 {phang2}{cmd:. twoway (scatter Y X1) (function y=x), legend(off) }{p_end}
 {phang2}{cmd:. twoway (scatter Y X2) (function y=0.1+0.5*x), legend(off) }{p_end}
 
 {pstd}Generate 1000 observations from the normal distribution (both x and y). The x has mean 0.4 and standard deviation equal to 0.1, y is bounded by the y=0.1+0.4x line and has 0.5 mean and 0.2 standard devation. {p_end}
 {phang2}{cmd:. clear} {p_end}
-{phang2}{cmd:. nca_random, n(1000)  xdistribution(normal) xmean(0.4) xsd(0.1) ydistribution(normal)  intercepts(0.1) slopes(0.4) }{p_end}
+{phang2}{cmd:. nca_random, n(1000)  intercepts(0.1) slopes(0.4) xdistribution(normal) xmean(0.4) xsd(0.1) ydistribution(normal)}{p_end}
 {phang2}{cmd:. twoway (scatter Y X) (function y=0.4*x + 0.1 ), legend(off) }{p_end}
 
 {pstd} Generate 1000 observations from the uniform distribution. y is bounded from below by the y=1-x line. {p_end}

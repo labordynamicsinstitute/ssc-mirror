@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.4.0 16aug2025}{...}
+{* *! version 1.4.1 27aug2025}{...}
 {viewerjumpto "Syntax" "stackdid##syntax"}{...}
 {viewerjumpto "Description" "stackdid##description"}{...}
 {viewerjumpto "Options" "stackdid##options"}{...}
@@ -76,7 +76,7 @@ of "cohorts" centered on treatment events.  {cmd:stackdid} will create these sta
 and perform the specified regression.{p_end}
 
 {pstd}See {help stackdid##remarks:Remarks} for more discussion and 
-{help stackdid##examples:Examples} for examples.{p_end}
+{help stackdid##examples:Examples} for a quick-start.{p_end}
 
 
 {marker options}{...}
@@ -111,9 +111,9 @@ is not specified, controls consist of never-treated groups {it:and} not-yet-trea
 groups.
 
 {phang}
-{opth absorb(varlist)} specifies fixed effects to be absorbed within cohorts. 
-Hence, fixed effects are interacted with the cohort identifier {bf:_cohort}. 
-If this option is omitted, {bf:_cohort} becomes the only fixed effect.
+{opth absorb(varlist)} specifies fixed effects to be absorbed within cohorts.
+This means fixed effects in {it:varlist} are interacted with the cohort identifier 
+{bf:_cohort}.  If this option is omitted, {bf:_cohort} becomes the only fixed effect.  Factor variables are allowed in {it:varlist}.
 
 {phang}
 {opt sw} applies a sample weighting scheme. This adjusts for the repeated use of 
@@ -129,7 +129,7 @@ estimation command from {cmd:reghdfe} to {cmd:ppmlhdfe}; see
 {phang}
 {opt nobuild} does not build stacked data and proceeds directly to estimation.  
 This option assumes the data in memory are stacked data already built by {cmd:stackdid}.  
-See {help stackdid##remarks:remarks} for the intended use case.
+See {help stackdid##remarks:Remarks} for the intended use case.
 
 {phang}
 {opt noreg:ress} does not perform the estimation step.
@@ -240,10 +240,6 @@ and after treatment events is to be specified.
 
 {pstd}Triple difference{p_end}
 {phang2}{cmd:. stackdid y treatXpost treatXpostXchar, nobuild absorb(year#char)}{p_end}
-
-{pstd}If {opt group()} is needed for {it:estimator}{p_end}
-{phang2}{cmd:. stackdid, tr(treatXpost) gr(sector) w(-3 3) clear noreg}{p_end}
-{phang2}{cmd:. {it:estimator} y treatXpost, group(...)}{p_end}
 
 {pstd}Suggested: visually decompose cohorts{p_end}
 {phang2}{cmd:. table (sector) (year) (_cohort), statistic(firstnm treatXpost) nototal}{p_end}

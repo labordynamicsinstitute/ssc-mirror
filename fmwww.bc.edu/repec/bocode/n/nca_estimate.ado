@@ -1,8 +1,7 @@
-
+*! nca_estimate v1.0 08/28/2025
 ************START NCA_ESTIMATE
-
 pro def nca_estimate, eclass 
-syntax varlist (numeric min=2) [if] [in], [CEILings(string asis) nograph  TESTrep(integer 0)  GRAPHNAmes(string) nocombine BOTtlenecks(numlist sort) BOTtlenecks_default SCOpe(numlist missingokay)  flipx flipy CORner(numlist integer missingokay) steps(integer 10) stepsize(numlist max=1 >=0) XBOTtlenecks(string) YBOTtlenecks(string) cutoff(integer 0) noSummaries Version(integer 3)]
+syntax varlist (numeric min=2) [if] [in], [CEILings(string asis) nograph  TESTrep(integer 0)  GRAPHNAmes(string) nocombine BOTtlenecks(numlist sort) BOTtlenecks_default SCOpe(numlist missingokay)  flipx flipy CORner(numlist integer missingokay) steps(integer 10) stepsize(numlist max=1 >=0) XBOTtlenecks(string) YBOTtlenecks(string) cutoff(integer 0) noSummaries Version(integer 3) peers(name max=1) scopeobs(name max=1) ]
 marksample touse //setting the estimation sample
 
 local version "v`version'"
@@ -24,7 +23,7 @@ else {
 }
 //parsing scopes (scopeX and ScopeY are the extremes of the empirical scope)
 tempname scopeX scopeY scopemat empirical_scopemat
-nca_parse_scope `varlist', scope(`scope')
+nca_parse_scope `varlist' if `touse', scope(`scope')
 matrix `scopeY'=r(scopeY)
 matrix `scopeX'=r(scopeX)
 matrix `scopemat'=r(scopematrix)
@@ -59,6 +58,8 @@ else {
 }
 // I need a copy of the corner list to be returned at the end of the program
 local corners `corner'
+
+
 
 
 //parsing y and X (dependent variable last)
@@ -134,7 +135,21 @@ if ("`bottlenecks_default'" !="" & "`bottlenecks'"=="") {
 	} 
 	*/
 
-
+// scopeobs and peers: hidden options to be used by nca_outliers
+if ("`peers'`scopeobs'" != "") {
+	confirm new variable `peers' `scopeobs'
+	if (`:word count `ceilings''>1 | `:word count `X''>1 ) {
+		di as error "nca_outliers can be applied to a single ceiling at a time"
+		exit 144
+	}
+	quie gen byte `scopeobs'=0 if `touse'
+	quie summarize `y' if `touse'
+	quie replace `scopeobs'=1 if inlist(`y', r(min), r(max)) & `touse'
+	quie summarize `X'  if `touse'
+	quie replace `scopeobs'=1 if inlist(`X', r(min), r(max)) & `touse'	
+}
+	
+	
 local plotcmd
 tempname result_x scopex bottlenecks_x results bnecks_table
 _rmcoll `X', expand
@@ -144,7 +159,7 @@ foreach x of local X {
 	local plotcmd 
 	matrix `scopex'=`scopeX'[rownumb(`scopeX',"`x'"),1..2]
 	gettoken corner_x corner : corner
-	 m: _nca_main("`y'", "`x'" ,"`touse'", "`scopeY'", "`scopex'", `corner_x', "`ceilings'" , "`bottlenecks'", "`graphnames'" , `cutoff')
+	 m: _nca_main("`y'", "`x'" ,"`touse'", "`scopeY'", "`scopex'", `corner_x', "`ceilings'" , "`bottlenecks'", "`graphnames'" , `cutoff',"`peers'")
 
 	matrix colnames `result_x'=`ceilings'
 	matrix coleq `result_x'=`x'
