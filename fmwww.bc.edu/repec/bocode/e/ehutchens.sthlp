@@ -12,34 +12,32 @@
 
 	{cmdab:ehutchens} is an extension of {help hutchens} command, which computes the `square root' segregation index proposed by Hutchens (2004) from individual-level data. 
 	The Hutchens' segregation index, {it:S}, is an entropy-based index of inequality in the distribution of individuals across social units, defined for the two-group case. The Hutchens segregation index satisfies several desirable 
-	properties for a good numerical measure of segregation, it is is additively decomposable by population subgroup as the sum of within-group segregation (a weighted sum of local {it:S} index values across subgroups) plus 
-	between-group segregation. The {it:S} is a distributional measure around the marginal distribution of units, defined as the extent of inequality between the social group proportions across social units
-	and the proportion of social groups in the entire population ("units given groups" notion). The {it:S} index is normalized in the unit interval, with zero representing complete integration, and one representing 
-	complete segregation. Moreover, as an additive index, the {it:S} can written as a sum of the contribution of each non-overlapping subgroup to the total segregation, an unique feature across entropy-based indices. 
-	See Hutchens (2001, 2004), Jenkins et al. (2006), Mora & Ruiz-Castillo (2008, 2009), Alonso-Villar & Del Río (2010).
+	properties for a good numerical measure of segregation: it is additively decomposable by population subgroup into a within-group component (a weighted sum of subgroup-specific indices, or local {it:S}) and a  
+	between-group component. 
+	Substantively, it:S} measures the extent to which social group proportions differ in each social unit from the overall population proportions ("units given groups" notion). The {it:S} index is normalized in the unit interval, 
+	with zero representing complete integration and one representing complete segregation. Moreover, as an additive index, the {it:S} can be written as a sum of the contribution of each non-overlapping subgroup to total segregation, 
+	a unique feature across entropy-based indices. See Hutchens (2001, 2004), Jenkins et al. (2006), Mora & Ruiz-Castillo (2008, 2009), Alonso-Villar & Del Río (2010).
 	
-	{cmdab:ehutchens} allows the calculation of the S index and its decomposition across supergroups (e.g. countries), it stores results in matrices, which can be saved as a new dataset that replaces the current dataset in memory. 
-	The distribution of the main results across subsamples can also be calculated by resampling using the bootstrap option. These extensions are incremental so that they generate results from the original decompositon by 
-	subgroup. Similarly, the bootstrap option is an extension of the supergroup option. All options store results in matrices. The save option, in turn, generates new datasets from stored results for either the 
-	bygroup option (entire sample) or supergroup option (subsamples). Last, the clear option replaces the current data by the new saved dataset.
+	{cmdab:ehutchens} allows the calculation of the S index and its decomposition across user-specified subsamples ({it:supergroup}). Results can be saved as a new dataset that replaces the current dataset in memory. 
+	The {it:bootstrap} option extends this by resampling units within supergroups to approximate sampling variability. These extensions are incremental so they build on the original decomposition by 
+	subgroup {it:groupvar}. Similarly, the {it:bootstrap} option is an extension of the {it:supergroup} option. All options store results as matrices. The {it:save} option generates new datasets from stored results for either the 
+	{it:bygroup} option (entire sample) or {it:supergroup} option (subsamples). Last, the {it:clear} option replaces the current data with the new saved dataset.
 	
-	{it:unitvar} is the categorical variable that maps social units and {it:segvar} is the categorical binary variable (0/1) defining the social groups membership of individuals who are segregated across social units, where 
-	the value 1 is the social group of interest. The decomposition of {it:S} by population subgroup is defined by {it:groupvar}, the categorical variable that cluster the social units. The overall {it:S} and its decomposition 
-	can be calculated across the {it:supergroup} categorical variable, which maps especific subsamples. Results are stored as matrices, and the option {it:save} creates the new dataset for the subgroup decomposition for 
-	the entire sample and across subsamples, which can replace the original dataset if {it:clear} option is specified. The option {it:bootstrap} calculates the estimates across supergroups by resampling the social units to approximate 
-	the distribution of the estimates to deal with sampling variation in survey data. All calculations are based on the subset of observations with valid values on unitvar and segvar.
+	Required inputs:{it:unitvar} is the categorical variable that maps social units; {it:segvar} is the binary variable (0/1) defining social group membership of interest of individuals (1) who are segregated across social units;
+	and {it:groupvar} the categorical variable defining a higher-level cluster where the social units are nested, used for decomposition of {it:S}. 
+	All calculations are based on the subset of observations with valid values on {it:unitvar} and {it:segvar}.
 
 {title: Options}
 
-        {cmdab:bygroup}({it:groupvar}) specifies the decomposition by population subgroups defined by {it:groupvar}. This option generate the local index values for each subgroup, their additive contribution, and the decompositon of 
+        {cmdab:bygroup}({it:groupvar}) specifies the decomposition by population subgroups defined by {it:groupvar}. This option generates the local index values for each subgroup, their additive contribution, and the decomposition of 
 	the total segregation as the sum of the within-segregation and between-segregation components.
 		
-	{cmdab:missing} option treat missing values as a different category in the subgroup ({it:groupvar}) variable. Cases with missing values form a separate subgroup when decompositions are done. It is then a suboption of the bygroup option as
-	in the original command. If missing option is not specified, then all calculations (including aggregate statistics) are based on the subset of observations with valid values on unitvar, segvar, and groupvar.
+	{cmdab:missing} option treats missing values as a different category in the subgroup ({it:groupvar}) variable. Cases with missing values form a separate subgroup when decompositions are done. It is then a suboption of the bygroup 
+	option as in the original command. If the missing option is not specified, then all calculations (including aggregate statistics) are based on the subset of observations with valid values on unitvar, segvar, and groupvar.
 
         {cmdab:format}(%fmt) specifies the format to be used to display the results. The default is format(%10.0g).
 		
-	{cmdab:supergroup}({it:varname}) specifies the abovementioned decomposition across subsamples defined by {it:varname}. The supergroup option generate results if option bygroup is specified, yielding the complete 
+	{cmdab:supergroup}({it:varname}) specifies the abovementioned decomposition across subsamples defined by {it:varname}. The supergroup option generates results if the option bygroup is specified, yielding the complete 
 	decomposition of {it:S} across subsamples.
 		
 	{cmdab:save} ({it:string}) save index values and statistics from the stored matrices in a Stata data file {it:string} defined as {it:mydatafile.dta}, in the working directory previously set up by the user.
@@ -49,7 +47,7 @@
 	{cmdab:bootstrap} {cmdab:reps}(integer 400){cmdab:seed}(integer 12345){cmdab:cluster}({it:varname}) sets the number of bootstrap samples in {cmdab:reps} (400 by default), sets the random-number seed in {cmdab:seed} (12345 by default)
 	and {cmdab:cluster} specifies the social units defined in {it:unitvar} as resampling clusters. This option is defined from the built-in bootstrap Stata command, allowing sample weights and storing estimations, but its usage is 
 	restricted to the three suboptions already mentioned. It runs the original hutchens command slightly modified, as an internal program, for each bootstrap replication after the supergroup calculations are completed. 
-	Estimations are stored in a matrix. This option cannot be used with save option.
+	Estimations are stored in a matrix. This option cannot be combined with the save option.
 
 
 {title: Examples} 
@@ -72,11 +70,11 @@
 	
 	. ehutchens schoolid sex, by(stype) supergroup(region)
 
-    Sex segregation in schools, with a decomposition by school type across regions (supergroup option), saving results as new dataset:
+    Sex segregation in schools, with a decomposition by school type across regions (supergroup option), saving results as a new dataset:
 	
 	. ehutchens schoolid sex, by(stype) supergroup(region) save(mydata.dta)
 	
-    Sex segregation in schools, with a decomposition by school type across regions (supergroup option), saving results as new dataset and replacing current dataset by the saved results dataset:
+    Sex segregation in schools, with a decomposition by school type across regions (supergroup option), saving results as a new dataset and replacing the current dataset with the saved results dataset:
 	
 	. ehutchens schoolid sex, by(stype) supergroup(region) save(mydata.dta) clear
 
@@ -110,7 +108,7 @@ References
 		
         Jenkins, S. P., Micklewright, J., & Schnepf, S. V. (2008). Social segregation in secondary schools: how does England compare with other countries?. Oxford review of education, 34(1), 21-37.
 	
-	Mora, R., Ruiz-Castillo, J., (2008). A defense of an entropy based index of multigroup segregation. Working Paper 07-76, Economic Series 45. Universidad Carlos III de Madrid.
+	Mora, R., Ruiz-Castillo, J., (2008). A defense of an entropy-based index of multigroup segregation. Working Paper 07-76, Economic Series 45. Universidad Carlos III de Madrid.
 	
 	Mora, R., & Ruiz-Castillo, J. (2009). The invariance properties of the mutual information index of multigroup segregation. In Occupational and residential segregation (pp. 33-53). Emerald Group Publishing Limited.
  
@@ -121,9 +119,9 @@ Author
 
 Acknowledgements
 
-	Much of the code for ehutchens is based on {help hutchens} written by prof. S.P.Jenkins (LSE). Ehutchens was developed as part of the project `Private privileges and public consequences: Inequality of educational 
-	opportunity and learning dynamics in Chile and Latin America'. This projects was conducted at the Amsterdam Institute for Social Science Research (AISSR), University of Amsterdam, and was supported by grant 72140619, awarded 
-	to F. Ceron by the Programme of Advance Human Capital, National Commission of Scientific and Technological Research of Chile (CONICYT PFCHA).
+	Much of the code for ehutchens is based on {help hutchens} written by Prof. S.P.Jenkins (LSE). Ehutchens was developed as part of the project `Private privileges and public consequences: Inequality of educational 
+	opportunity and learning dynamics in Chile and Latin America'. This project was conducted at the Amsterdam Institute for Social Science Research (AISSR), University of Amsterdam, and was supported by grant 72140619, awarded 
+	to F. Ceron by the Programme of Advanced Human Capital, National Commission of Scientific and Technological Research of Chile (CONICYT PFCHA).
 
 Also see
 

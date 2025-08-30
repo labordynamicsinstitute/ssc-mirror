@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1  10feb2025}{...}
+{* *! version 2.0.1  28aug2025}{...}
 {vieweralsosee "loevh2_boot" "help loevh2_boot"}{...}
 {viewerjumpto "Syntax" "loevh2##syntax"}{...}
 {viewerjumpto "Description" "loevh2##description"}{...}
@@ -10,6 +10,7 @@
 
 {phang}
 {bf:loevh2} {hline 2} Calculate Loevinger's H for two dichotomous variables
+
 
 {marker syntax}{...}
 {title:Syntax}
@@ -23,13 +24,14 @@
 {syntab:Main}
 {synopt:{opt t:able}}display cross-tabulation with expected frequencies{p_end}
 {synopt:{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}{p_end}
-{synopt:{opt ab:breviate(#)}}abbreviate variable names to # characters; default is {cmd:abbreviate(8)}{p_end}
+{synopt:{opt a:bbreviate(#)}}abbreviate variable names to # characters; default is {cmd:abbreviate(8)}{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
 {cmd:by} is allowed; see {manhelp by D}.{p_end}
 {p 4 6 2}
 {cmd:aweight}s and {cmd:fweight}s are allowed; see {help weight}.
+
 
 {marker description}{...}
 {title:Description}
@@ -48,15 +50,19 @@ The program provides standard errors, z-statistics, p-values, and confidence int
 (van der Ark et al., 2008).
 
 {pstd}
-Loevinger's H is a key coefficient in Mokken scale analysis (Mokken, 1971), used to assess the scalability
-of items. For a pair of items, H > 0.3 suggests sufficient scalability for Mokken scale analysis.
+Loevinger's H (Loevinger, 1947, pp. 29-31) is a key coefficient in Mokken scale analysis (Mokken, 1971), used
+to assess the scalability of items. For a pair of dichotomous items, H > 0.3 suggests sufficient scalability
+for Mokken scale analysis.
 
 {pstd}
-Warrens (2008) demonstrates that Loevinger's H is uniquely suited for this purpose, being "the only linear
+Warrens (2008) demonstrates that Loevinger's H is uniquely suited for the purpose, being "the only linear
 transformation of the observed proportion of agreement that has zero value under independence and maximum
 unity independent of the marginal distributions." This makes it particularly appropriate "in cases where
 positive association needs to be distinguished from zero association, e.g., analyzing test items"
-(Warrens, 2008, p. 787).
+(Warrens, 2008, p. 787). Therefore, it also can be used as a measure of overlap of the positive answers
+of two dichotomous items without being affected by its probability which is especially useful
+when comparing this association measure across groups (see also Yule, 1912).
+
 
 {marker options}{...}
 {title:Options}
@@ -72,6 +78,7 @@ The default is {cmd:level(95)} or as set by {helpb set level}.
 {opt abbreviate(#)} specifies the number of characters to which variable names are abbreviated in the output.
 The default is {cmd:abbreviate(8)}.
 
+
 {marker examples}{...}
 {title:Examples}
 
@@ -86,6 +93,7 @@ The default is {cmd:abbreviate(8)}.
 
 {pstd}By-group analysis{p_end}
 {phang2}{cmd:. bysort group: loevh2 item1 item2}{p_end}
+
 
 {marker results}{...}
 {title:Stored results}
@@ -109,6 +117,7 @@ The default is {cmd:abbreviate(8)}.
 {synopt:{cmd:r(weight)}}weight variable name (if weights were used){p_end}
 {synopt:{cmd:r(group)}}by-group variables (if by: used){p_end}
 
+
 {marker seealso}{...}
 {title:See also}
 
@@ -117,26 +126,34 @@ The default is {cmd:abbreviate(8)}.
 when sample sizes are small or asymptotic assumptions are not met.
 
 {pstd}
-{help loevh} (if installed) by Jean-Benoit Hardouin provides Loevinger's H coefficient for multiple items.
-Install using {stata "net describe loevh, from(http://fmwww.bc.edu/RePEc/bocode/l)"}.
+{help loevh} (if installed) by Jean-Benoit Hardouin provides Loevinger's H coefficient for multiple
+items (see {stata ssc describe loevh}).
+
 
 {marker author}{...}
 {title:Author}
 
-{pstd}Dirk Enzmann{p_end}
-{pstd}Version 1.0  {p_end}
-{pstd}09 Feb 2025{p_end}
+{pstd}Dirk Enzmann (University of Hamburg) with AI assistance (Claude/Anthropic){p_end}
+
 
 {marker references}{...}
 {title:References}
 
 {phang}
-Mokken, R. J. (1971). A Theory and Procedure of Scale Analysis. The Hague: Mouton.
+Loevinger, J. A. (1947). A systematic approach to the construction and evaluation of
+tests of ability. {it:Psychological Monographs}, {it:61}(4), i–49. {browse "https://doi.org/10.1037/h0093565":https://doi.org/10.1037/h0093565}
 
 {phang}
-van der Ark, L. A., Croon, M. A., & Sijtsma, K. (2008). Mokken scale analysis for dichotomous items using marginal models.
-{it:Psychometrika}, 73(2), 183-208. {browse "https://doi.org/10.1007/s11336-007-9034-z":https://doi.org/10.1007/s11336-007-9034-z}
+Mokken, R. J. (1971). {it:A Theory and Procedure of Scale Analysis}. The Hague: Mouton.
 
 {phang}
-Warrens, M. J. (2008). On association coefficients for 2×2 tables and properties that do not depend on the marginal distributions.
-{it:Psychometrika}, 73(4), 777-789. {browse "https://doi.org/10.1007/s11336-008-9070-3":https://doi.org/10.1007/s11336-008-9070-3}
+van der Ark, L. A., Croon, M. A., & Sijtsma, K. (2008). Mokken scale analysis for dichotomous items using marginal
+models.{it:Psychometrika}, {it:73}(2), 183-208. {browse "https://doi.org/10.1007/s11336-007-9034-z":https://doi.org/10.1007/s11336-007-9034-z}
+
+{phang}
+Warrens, M. J. (2008). On association coefficients for 2×2 tables and properties that do not depend on the marginal
+distributions. {it:Psychometrika}, {it:73}(4), 777-789. {browse "https://doi.org/10.1007/s11336-008-9070-3":https://doi.org/10.1007/s11336-008-9070-3}
+
+{phang}
+Yule, G. U. (1912). On the methods of measuring association between two
+attributes. {it:Journal of the Royal Statistical Society}, {it:75}, 579–642. {browse "https://doi.org/10.2307/2340126":https://doi.org/10.2307/2340126}
