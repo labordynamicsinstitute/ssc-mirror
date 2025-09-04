@@ -1,0 +1,29 @@
+d 'ROLLBOOK': module to provide student sampling for class roll management
+d
+d	 rollbook is a Stata program designed to facilitate student
+d sampling from class roll Excel files.  It    provides multiple
+d sampling methods including random sampling, sampling by serial
+d number, sampling by	 student ID parity (odd/even), and sampling
+d by major. The program reads Excel files with specific    column
+d names (序号, 学号, 姓名, 专业) and displays the sampling
+d results in a formatted output. 
+d
+d KW: sampling
+d KW: data management
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20250903
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+d Author:   Hu Fangfang,  Wanjiang University of Technology
+d Support: email    huff470@@163.com
+d
+f rollbook.ado
+f rollbook.sthlp
+f rollbook.xlsx

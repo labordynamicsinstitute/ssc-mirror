@@ -1,0 +1,18 @@
+d 'CNCLEAN': module to standardize Chinese text in Stata
+d
+d   This command provides functions to normalize and standardize
+d Chinese text strings in Stata, facilitating data cleaning and
+d text analysis involving Chinese characters. 
+d
+d KW: data management
+d KW: Chinese language
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20250903
+d
+d Author:   Xiaokang Wu,  Nanjing University of Science and Technology
+d Support: email   wuxk@@njust.edu.cn
+d
+f cnclean.ado
+f cnclean.sthlp

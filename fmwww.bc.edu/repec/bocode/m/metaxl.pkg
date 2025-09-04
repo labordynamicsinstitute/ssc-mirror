@@ -1,0 +1,43 @@
+d 'METAXL': module providing tools to handle metadata
+d
+d   metaxl is a Stata package that provides a set of tools to help
+d users handling metadata. Almost every subcommand of this package
+d uses an Excel file to store or retrieve metadata. 
+d
+d KW: metadata
+d KW: data management
+d
+d Requires: Stata version 16 and gtools, filelist from SSC (q.v.)
+d
+d Distribution-Date: 20250903
+d
+d Author:   BPLIM Team,  Bank of Portugal
+d Support: email   bplim@@bportugal.pt
+d
+f metaxl.ado
+f metaxl_apply.ado
+f metaxl_check.ado
+f metaxl_clear.ado
+f metaxl_cmp.ado
+f metaxl_combine.ado
+f metaxl_diff.ado
+f metaxl_extract.ado
+f metaxl_morph.ado
+f metaxl_setdefaultfmt.ado
+f metaxl_stats.ado
+f metaxl_truncate.ado
+f metaxl_uniform.ado
+f ../b/bpencode.ado
+f ../b/bp_get_type.ado
+f metaxl.sthlp
+f metaxl_apply.sthlp
+f metaxl_check.sthlp
+f metaxl_clear.sthlp
+f metaxl_cmp.sthlp
+f metaxl_combine.sthlp
+f metaxl_diff.sthlp
+f metaxl_extract.sthlp
+f metaxl_morph.sthlp
+f metaxl_stats.sthlp
+f metaxl_uniform.sthlp
+f ../b/bpencode.sthlp

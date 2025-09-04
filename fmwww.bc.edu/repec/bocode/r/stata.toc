@@ -220,6 +220,7 @@ p robustpf module for robust estimation of production functions with errors in p
 p rocmic module to estimate minimally important change (MIC) thresholds for continuous clinical outcome measures using ROC curves
 p rocss module to calculate ROC curve and other statistics for any classification method
 p roctabi module for performing nonparametric ROC analysis using summarized data
+p rollbook module to provide student sampling for class roll management
 p rolling2 module to perform rolling window and recursive estimation 
 p rolling3 module to compute predicted values for rolling regressions
 p rollreg module to perform rolling regression estimation

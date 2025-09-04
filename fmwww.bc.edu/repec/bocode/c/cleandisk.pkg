@@ -1,0 +1,27 @@
+d 'CLEANDISK': module to clean Windows disk space 
+d
+d	cleandisk is a Windows utility command that helps clean up
+d disk space by removing temporary and unnecessary    files from
+d specified drives.  By default, it cleans all default drives (C,
+d D, E, F) unless specified    otherwise. 
+d
+d KW: disk management
+d
+d Requires: Stata version 16 for Windows
+d
+d Distribution-Date: 20250903
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+d Author:   Hu Fangfang,  Wanjiang University of Technology
+d Support: email    huff470@@163.com
+d
+d Author: Ma Defang,  Capital Normal University (CNU)
+d Support: email 6346@@cnu.edu.cn
+d
+f cleandisk.ado
+f cleandisk.sthlp

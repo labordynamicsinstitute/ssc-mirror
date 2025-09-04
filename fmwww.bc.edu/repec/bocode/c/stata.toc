@@ -113,7 +113,7 @@ p circstat modules to calculate circular statistics
 p circular module for circular statistics
 p circularkde module to perform kernel density estimation for circular data
 p cisd module to compute confidence intervals for standard deviations
-p cisets module for for confidence interval sets 
+p cisets module for confidence interval sets 
 p cistat module to produce confidence intervals in matrix form
 p civplot module to plot confidence intervals vertically
 p ciw module for binomial confidence intervals for proportions using Wilson scores
@@ -131,6 +131,7 @@ p clean_fname module to clean firstname variables
 p clean_lname module to clean lastname variables
 p clean_name module to clean name variables
 p cleanchars module to replace specific characters or strings in variable names and/or variable labels and/or string variable values and/or value label names and levels with stated characters/strings (using 1-1 or m-1 match)
+p cleandisk module to clean Windows disk space 
 p cleanlog module to clean log files
 p cleanplots module providing graphics scheme for easy and effective data visualizations
 p clemao_io module to perform unit root tests with one or two structural breaks
@@ -162,6 +163,7 @@ p cmp module to implement conditional (recursive) mixed process estimator
 p cnar module to retrieve Chinese listed firms' financial data
 p cnborder module to analyze locations in China vs geography
 p cnbreg module to estimate negative binomial regression - canonical parameterization
+p cnclean module to standardize Chinese text in Stata
 p cndnmb3 module to calculate condition number of regressor matrix
 p cnevent module to carry out an event study with Chinese publicly listed firms
 p cngcode module to geocode Chinese addresses 

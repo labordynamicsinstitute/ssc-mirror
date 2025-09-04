@@ -1,5 +1,5 @@
 {smcl}
-{* NJC 1nov2024}{...}
+{* NJC 1nov2024/13aug2025}{...}
 
 {cmd:help momentsets}
 {hline}
@@ -155,7 +155,8 @@ is a standard for considering distribution shape.
 for automating axis labels. 
 
 {pstd}The approach to correlation confidence intervals of Cox (2008) is 
-broadly similar. See also {help cisets} or {help pctilesets} if installed. 
+broadly similar. See also {help cisets} or {help pctilesets} or 
+{help lmomentsets} if installed. 
 
 
 {title:Options}

@@ -1,4 +1,4 @@
-d 'CISETS': module for for confidence interval sets 
+d 'CISETS': module for confidence interval sets 
 d
 d  cisets computes confidence interval sets for population means,
 d proportions, variances, standard deviations, geometric means,
@@ -18,7 +18,7 @@ d KW: graphics
 d
 d Requires: Stata version 14.1
 d
-d Distribution-Date: 20241105
+d Distribution-Date: 20250903
 d
 d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk

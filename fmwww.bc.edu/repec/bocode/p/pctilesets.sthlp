@@ -1,5 +1,5 @@
 {smcl}
-{* NJC 1nov2024/11nov2024}{...}
+{* NJC 1nov2024/11nov2024/13aug2025}{...}
 
 {cmd:help pctilesets}
 {hline}
@@ -151,7 +151,8 @@ plotting particular percentiles.
 for automating axis labels. 
 
 {pstd}The approach to correlation confidence intervals of Cox (2008) is 
-broadly similar. See also {help cisets} or {help momentsets} if installed. 
+broadly similar. See also {help cisets} or {help momentsets} or 
+{help lmomentsets} if installed. 
 
 {pstd}The command {cmd:qplot} is used in examples: see Cox (1999, 2005) 
 and search for updates. By default the horizontal axis is a probability 

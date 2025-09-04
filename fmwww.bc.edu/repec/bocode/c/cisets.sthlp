@@ -1,5 +1,5 @@
 {smcl}
-{* NJC 27oct2024/1nov2024/5nov2024}{...}
+{* NJC 27oct2024/1nov2024/5nov2024/13aug2025}{...}
 
 {cmd:help cisets}
 {hline}
@@ -337,8 +337,8 @@ commands otherwise:
 for one or more variables {it:varlist}. This is called the 
 {it:variables syntax}.  
 
-{p 8 8 2}{cmd:cisets} {it:subcommand} {it:varname} {cmd:,} {opt
-over(groupvar)} calculates results for one variable {it:varname} for
+{p 8 8 2}{cmd:cisets} {it:subcommand} {it:varname} {cmd:,} 
+{opt over(groupvar)} calculates results for one variable {it:varname} for
 each distinct value of {it:groupvar}. This is called the 
 {it:groups syntax}.  
 
@@ -454,8 +454,8 @@ for the point estimates within.
 for automating axis labels.  
 
 {pstd}The approach to correlation confidence intervals of Cox (2008) is 
-broadly similar. See also {help pctilesets} or {help momentsets} if
-installed.
+broadly similar. See also {help pctilesets} or {help momentsets} or 
+{help lmomentsets} if installed.
 
 {pstd}In statistical graphics, showing confidence intervals {c -} or their 
 antecedents and relatives under various names such as error bars {c -} has 

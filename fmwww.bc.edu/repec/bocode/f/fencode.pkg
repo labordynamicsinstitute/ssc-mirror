@@ -1,0 +1,24 @@
+d 'FENCODE': module to provide frequency-based encoding of string and numeric variables
+d
+d   fencode provides frequency-based encoding of string and numeric
+d variables. Unlike encode which assigns codes alphabetically,
+d fencode assigns numeric codes ordered by frequency (descending or
+d ascending). The command accepts both string variables and labeled
+d numeric variables with non-sequential codes, standardizing them
+d to sequential order. This functionality is particularly valuable
+d for creating tables and graphs where frequency ordering improves
+d interpretability, and for regression analysis where the most
+d frequent category serves as a more meaningful base category. 
+d
+d KW: data management
+d KW: frequencies
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20250903
+d
+d Author:   Kabira Namit,  World Bank
+d Support: email   knamit@@worldbank.org
+d
+f fencode.ado
+f fencode.sthlp
