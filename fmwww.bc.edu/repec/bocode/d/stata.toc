@@ -35,7 +35,7 @@ p des2 module to describe current dataset with clickable output
 p descgen module to add Stata dataset attribute variables to a xdir resultsset
 p desclong module to create and save a dataset holding variable information while including long variable labels
 p descogini module  to perform Gini decomposition by income source
-p descriptive_table module to produce  Descriptive table with suppression of small cell counts in an active Word (.docx) document
+p descriptive_table module to produce descriptive table with suppression of small cell counts in an active Word (.docx) document
 p descsave module to export data set and machine-readable codebook
 p designplot module to produce a graphical summary of response given one or more factors  
 p desma module to design and simulate (adaptive) multi-arm clinical trials

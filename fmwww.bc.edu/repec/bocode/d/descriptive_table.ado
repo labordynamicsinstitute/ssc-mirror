@@ -2,13 +2,14 @@
 *! Author(s) Christiaan Righolt & Colton Poitras
 *! Orthopaedic Innovation Centre, Winnipeg, MB
 *! Version history
+*! 2.1 Aug 2025		Allow for percentages of non-missing (and minor changes)
 *! 2.0 Dec 2024		Mata suppression
 *! 1.1 Sep 2024		Initial suppression
 *! 1.0 Dec 2022		Initial version
 
 program define descriptive_table
 	version 18.0 // Do not have lower version to test this on, but may work
-	syntax varlist(fv) [if/] [in], [COL_var(varname) title(string) footnote(string) suppression_threshold(int 0) med_iqr minmax nomeansd]
+	syntax varlist(fv) [if/] [in], [COL_var(varname) title(string) footnote(string) suppression_threshold(int 0) med_iqr minmax nomeansd nomiss_percent]
 
 	local fmt_num %12.0fc
 	local fmt_perc %12.1f
@@ -17,6 +18,8 @@ program define descriptive_table
 	local print_median_row = !missing("`med_iqr'")
 	local print_minmax_row = !missing("`minmax'")
 	if !`print_mean_row' & !`print_median_row' & !`print_minmax_row' di as error "Continuous variables not printed, nomeansd selected" 
+	local percent_exclude_missing = !missing("`miss_percent'") // See help syntax for inverted meaning of nomiss_percent
+	local any_cat_missing_flag = 0
 
 	local suppression_flag = 0
 	local primary_supp_str = "<" + string(`suppression_threshold', "`fmt_num'")
@@ -91,17 +94,15 @@ program define descriptive_table
 			char `var_base_name'[__bin] 0
 
 			local n_rows = `n_rows' + `print_mean_row' + `print_median_row' + `print_minmax_row'
-			count if missing(`var') `if_from_function_call' `in'
+			quietly count if missing(`var') `if_from_function_call' `in'
 			if r(N)>0 local n_rows = `n_rows' + 1 // Add an extra row for unknowns if needed
 		}
 	}
 
-	if !missing("`footnote'") local n_rows = `n_rows' + 1
-
 	putdocx table t_desc = (`n_rows',`n_cols'), border(all, nil) layout(autofitcontents) headerrow(`headerrow')
 
 	// Print header and overall
-	tabulate `col_var' `if_from_function_call' `in', missing matcell(N_per_col)
+	quietly tabulate `col_var' `if_from_function_call' `in', missing matcell(N_per_col)
 	matrix _supp_data = N_per_col
 	if `has_col_var' {
 		mata: do_suppression()
@@ -152,7 +153,7 @@ program define descriptive_table
 				local i_col = 1
 				foreach col of local col_levels {
 					local ++i_col
-					summarize `var' if `col_var'==`col' `and_if_from_function_call' `in', detail
+					quietly summarize `var' if `col_var'==`col' `and_if_from_function_call' `in', detail
 					local cell_str = string(r(mean),"`fmt_var'") + " ("+ string(r(sd),"`fmt_var'") + ")"
 					putdocx table t_desc(`i_row',`i_col') = ("`cell_str'")
 				}
@@ -163,7 +164,7 @@ program define descriptive_table
 				local i_col = 1
 				foreach col of local col_levels {
 					local ++i_col
-					summarize `var' if `col_var'==`col' `and_if_from_function_call' `in', detail
+					quietly summarize `var' if `col_var'==`col' `and_if_from_function_call' `in', detail
 					local cell_str = string(r(p50),"`fmt_var'") + " (" + string(r(p25),"`fmt_var'") + "-" + string(r(p75),"`fmt_var'") + ")"
 					putdocx table t_desc(`i_row',`i_col') = ("`cell_str'")
 				}
@@ -174,14 +175,14 @@ program define descriptive_table
 				local i_col = 1
 				foreach col of local col_levels {
 					local ++i_col
-					summarize `var' if `col_var'==`col' `and_if_from_function_call' `in', detail
+					quietly summarize `var' if `col_var'==`col' `and_if_from_function_call' `in', detail
 					local cell_str = string(r(min),"`fmt_var'") + "-" + string(r(max),"`fmt_var'")
 					putdocx table t_desc(`i_row',`i_col') = ("`cell_str'")
 				}
 				local ++i_row
 			}
 			// Print missing row if some are missing
-			qui count if missing(`var') `if_from_function_call' `in'
+			quietly count if missing(`var') `if_from_function_call' `in'
 			if r(N)>0 {
 				// Tabulate on the missing won't work as one of the columns may not have missing values
 				putdocx table t_desc(`i_row',1) = ("    Missing")
@@ -223,8 +224,18 @@ program define descriptive_table
 				}
 			}
 
-			tabulate `base_name' `col_var' `if_from_function_call' `in', missing matcell(_supp_data)
+			quietly tabulate `base_name' `col_var' `if_from_function_call' `in', missing matcell(_supp_data)
 			mata: do_suppression()
+
+			// Need percentage of non-missing if option turned on and any missing
+			if `percent_exclude_missing' {
+				quietly tabulate `base_name' `col_var' `if_from_function_call' `in', matcell(non_missing_data)
+				quietly tabulate `col_var' if !missing(`base_name') `and_if_from_function_call' `in', matcell(N_per_col_no_missing)
+				quietly count if missing(`base_name') `if_from_function_call' `in'
+				if r(N)>0 {
+					local any_cat_missing_flag = 1
+				}
+			}
 
 			// Values, loop over matrices
 			local n_row_levels : list sizeof row_levels
@@ -247,14 +258,23 @@ program define descriptive_table
 			foreach r of numlist `row_start'/`n_row_levels' {
 				foreach c of numlist 1/`n_col_levels' {
 					// Print cells
-					local cell_count = _supp_data[`r',`c']
 					local cell_suppression = _supp_suppression[`r',`c']
-					local col_count = N_per_col[`c',1]
 					if `cell_suppression' == 0 {
+						local cell_count = _supp_data[`r',`c']
+						local col_count = N_per_col[`c',1]
+						local perc_suffix
+						if `percent_exclude_missing' {
+							// Only exclude missings from non-missing values, these missings will be missing from the non-missing results (stata has missing as + infinity so indices will be correct)
+							if !missing(non_missing_data[`r',`c']) {
+								local cell_count = non_missing_data[`r',`c']
+								local col_count = N_per_col_no_missing[`c',1]
+							}
+							else local perc_suffix " *"
+						}
 						// Actual print value
 						local N_str = string(`cell_count', "`fmt_num'")
 						local perc_str = string(`=`cell_count'/`col_count'*100', "`fmt_perc'")
-						local cell_str = "`N_str' (`perc_str'%)"
+						local cell_str = "`N_str' (`perc_str'%)`perc_suffix'"
 					}
 					else if `cell_suppression' == 1 {
 						local cell_str "`primary_supp_str'"
@@ -275,15 +295,25 @@ program define descriptive_table
 		local suppression_note "`secondary_supp_str' indicates the cell's value is suppressed to avoid deriving cells with values <`suppression_threshold'."
 		if !missing("`footnote'") local footnote "`footnote' `suppression_note'"
 		else {
-			// Add a footnote row to accomodate this footnote
-			putdocx table t_desc(`n_rows',.), addrows(1, after)
-			local ++n_rows
 			local footnote "`suppression_note'"
 		}
 	}
-	if !missing("`footnote'") putdocx table t_desc(`n_rows',1) = ("`footnote'"), border(top, single) colspan(`n_cols')
-	else putdocx table t_desc(`n_rows',.), border(bottom, single)
+
+	if `any_cat_missing_flag' & `percent_exclude_missing' {
+		local nonmissing_perc_note "* Missing values; missing values are excluded from the non-missing percentages (%)"
+		if !missing("`footnote'") local footnote "`footnote' `nonmissing_perc_note'"
+		else {
+			local footnote "`nonmissing_perc_note'"
+		}
+	}
 	
+	if !missing("`footnote'") {
+		// Add row for footnote (does not count toward n_rows)
+		putdocx table t_desc(`n_rows',.), addrows(1, after)
+		putdocx table t_desc(`=`n_rows'+1',1) = ("`footnote'"), colspan(`n_cols')
+	}
+	
+	putdocx table t_desc(`n_rows',.), border(bottom, single)
 	putdocx table t_desc(., .), halign(center)
 	putdocx table t_desc(., 1), halign(left)
 end

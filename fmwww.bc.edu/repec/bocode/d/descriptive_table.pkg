@@ -1,4 +1,4 @@
-d 'DESCRIPTIVE_TABLE': module to produce  Descriptive table with suppression of small cell counts in an active Word (.docx) document
+d 'DESCRIPTIVE_TABLE': module to produce descriptive table with suppression of small cell counts in an active Word (.docx) document
 d
 d      descriptive_table creates a descriptive table, optionally
 d with suppression in an active    Word document generated using
@@ -13,7 +13,7 @@ d KW: Word
 d
 d Requires: Stata version 18
 d
-d Distribution-Date: 20250501
+d Distribution-Date: 20250904
 d
 d Author:  Christiaan Righolt,  University of Manitoba
 d Support: email crigholt@@orthoinno.com

@@ -1,0 +1,22 @@
+d 'PPP': module to plot pre- and post-test probabilities after diagnostic testing
+d
+d  ppp is an immediate command to plot a nomogram-like graph
+d showing how pre-test probability evolves    to post-test
+d probability after one or more diagnostic tests. The method is
+d based on Bayes’ theorem    and is similar in spirit to the
+d fagan plot, but allows sequential tests (“triages”). 
+d
+d KW: probability
+d KW: tests
+d KW: Bayes
+d KW: graphics
+d
+d Requires: Stata version 10.1
+d
+d Distribution-Date: 20250904
+d
+d Author: Victoria Nyawira Nyaga, Belgian Cancer Center, Brussels
+d Support: email Victoria.NyawiraNyaga@@sciensano.be
+d
+f ppp.ado
+f ppp.sthlp

@@ -1,6 +1,7 @@
  
 * Next step Integrate all into csdid.mata <- so Do not need to play with many files
-*! v1.72  by FRA. Drops always treated
+*! v1.8  by FRA. Trim
+* v1.72  by FRA. Drops always treated
 * v1.71  by FRA. adds weights back
 * v1.7  by FRA. Changes on Datacheks. This should avoid time gaps problems.
 * Adds asinr for pretreatmetn
@@ -143,8 +144,8 @@ program csdid, sortpreserve eclass
 		syntax [anything(everything)] [iw aw pw], [* version]
 
 		if  "`version'"!="" {
-			display "version: 1.72"
-			addr scalar version = 1.72
+			display "version: 1.8"
+			addr scalar version = 1.8
 			exit
 		}
 		
@@ -155,7 +156,7 @@ program csdid, sortpreserve eclass
 			*exit 101
 		}
 		if _rc==0 {
-			if r(version)<1.71 			display in red "Program DRDID is outdated. Please update" as text
+			if r(version)<1.8 			display in red "Program DRDID is outdated. Please update" as text
 			*exit 101
 		}
 
@@ -370,6 +371,7 @@ program csdid_r, sortpreserve eclass
 							WBOOT(str) 				///
 							WBOOT1					///
 							*reps(int 999) 			///
+							pscoretrim(real 1.0)    ///
 							*wbtype(str)  			/// Hidden option
 							rseed(str)				/// set seed
 							Level(int 95)			/// CI level
@@ -586,7 +588,7 @@ program csdid_r, sortpreserve eclass
 								 & inlist(`time',`time1',`j') ///
 								 & `touse' [`weight'`exp'],   ///
 								ivar(`ivar') time(`time') treatment(`tr') ///
-								`method' stub(__) replace `dryrun' 
+								`method' stub(__) replace `dryrun'  pscoretrim(`pscoretrim')
 								*binit(`bii' )
 					*tempname bii
 					
@@ -668,7 +670,8 @@ program csdid_r, sortpreserve eclass
 								 & inlist(`time',`time1',`j') ///
 								 & `touse' [`weight'`exp'],   ///
 								ivar(`ivar') time(`time') treatment(`tr') ///
-								`method' stub(__) replace `dryrun' noisily
+								`method' stub(__) replace `dryrun' ///
+								pscoretrim(`pscoretrim') noisily 
 								*binit(`bii',skip)
 								*tempname bii			
 											 

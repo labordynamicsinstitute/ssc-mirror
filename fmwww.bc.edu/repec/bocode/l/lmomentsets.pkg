@@ -15,11 +15,12 @@ d KW: graphics
 d
 d Requires: Stata version 10
 d
-d Distribution-Date: 20250828
+d Distribution-Date: 20250903
 d
 d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk
 d
 f lmomentsets.ado
+f ../_/lmoments.ado
 f lmomentsets.sthlp
 f lmoments_explain.do

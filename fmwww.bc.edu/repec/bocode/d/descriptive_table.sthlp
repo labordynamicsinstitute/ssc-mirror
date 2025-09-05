@@ -21,6 +21,7 @@
 {synopt:{opt nomeansd}}Do not display mean and standard deviation for continuous variables{p_end}
 {synopt:{opt med_iqr}}Display median and interquartile range for continuous variables{p_end}
 {synopt:{opt minmax}}Display minimum and maximum for continuous variables{p_end}
+{synopt:{opt nomiss_percent}}Do not include missing values in the calculation of percentages{p_end}
 {synoptline}
 
 {marker description}{...}

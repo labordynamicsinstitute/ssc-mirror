@@ -17346,6 +17346,7 @@ fmwww.bc.edu/repec/bocode/p/posw.sthlp
 fmwww.bc.edu/repec/bocode/p/psiduse.html
 fmwww.bc.edu/repec/bocode/p/parallel.ado
 fmwww.bc.edu/repec/bocode/p/povcalnet_info.ado
+fmwww.bc.edu/repec/bocode/p/ppp.pkg
 fmwww.bc.edu/repec/bocode/p/pbpredict.ado
 fmwww.bc.edu/repec/bocode/p/plausexog.ado
 fmwww.bc.edu/repec/bocode/p/pr1nx_lf.ado
@@ -17400,6 +17401,7 @@ fmwww.bc.edu/repec/bocode/p/pinocchio.sthlp
 fmwww.bc.edu/repec/bocode/p/pdfHeston.m
 fmwww.bc.edu/repec/bocode/p/plotbeta.hlp
 fmwww.bc.edu/repec/bocode/p/ppssampford.sthlp
+fmwww.bc.edu/repec/bocode/p/ppp.sthlp
 fmwww.bc.edu/repec/bocode/p/pvvar.pkg
 fmwww.bc.edu/repec/bocode/p/pcm010301_lf.ado
 fmwww.bc.edu/repec/bocode/p/pcorrmat.html
@@ -17635,6 +17637,7 @@ fmwww.bc.edu/repec/bocode/p/project_examples_v9.zip
 fmwww.bc.edu/repec/bocode/p/product.dta
 fmwww.bc.edu/repec/bocode/p/pooledsd.pkg
 fmwww.bc.edu/repec/bocode/p/pollute.dta
+fmwww.bc.edu/repec/bocode/p/ppp.ado
 fmwww.bc.edu/repec/bocode/p/pyramid_chart.ado
 fmwww.bc.edu/repec/bocode/p/pvwcalc.ado
 fmwww.bc.edu/repec/bocode/p/powerq/powerq.hlp

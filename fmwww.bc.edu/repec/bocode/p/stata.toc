@@ -146,6 +146,7 @@ p ppml module to perform Poisson pseudo-maximum likelihood estimation
 p ppml_fe_bias module to provide bias corrections for Poisson Pseudo-Maximum Likelihood (PPML) gravity models with two-way and three-way fixed effects
 p ppml_panel_sg module to estimate "structural gravity" models via Poisson PML
 p ppmlhdfe module for Poisson pseudo-likelihood regression with multiple levels of fixed effects
+p ppp module to plot pre- and post-test probabilities after diagnostic testing
 p ppplot module for P-P plots
 p ppschromy module to draw sample with probability proportionate to size, using Chromy's method of sequential random sampling
 p ppssampford module to draw sample with probability proportionate to size, without replacement, using Sampford's method
