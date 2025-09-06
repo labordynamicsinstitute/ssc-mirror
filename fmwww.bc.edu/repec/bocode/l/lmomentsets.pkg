@@ -21,6 +21,6 @@ d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk
 d
 f lmomentsets.ado
-f ../_/lmoments.ado
+f ../_/_lmoments.ado
 f lmomentsets.sthlp
 f lmoments_explain.do
