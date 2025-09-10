@@ -35,6 +35,7 @@ p spider module for spider plots
 p splinefit module for smooth connected line plots
 p splitit module to split chronological overlapping spells in spell data
 p spsfe module for estimation of spatial stochastic frontier models
+p spsiv module to generate Synthetic Instrumental Variables (SIV) for spatial regression
 p sq module for sequence analysis
 p stackbar module to produce stacked bar charts
 p stackdid module to estimate Stacked Difference-in-Differences Regression

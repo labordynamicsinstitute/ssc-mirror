@@ -115,6 +115,7 @@ p circularkde module to perform kernel density estimation for circular data
 p cisd module to compute confidence intervals for standard deviations
 p cisets module for confidence interval sets 
 p cistat module to produce confidence intervals in matrix form
+p citytoprovince module to standardize Chinese city names and generate corresponding provinces in Stata
 p civplot module to plot confidence intervals vertically
 p ciw module for binomial confidence intervals for proportions using Wilson scores
 p ciwidth_proportions_mc module to calculate precision and power for a CI-based comparison of two independent proportions (RD, RR, or OR)

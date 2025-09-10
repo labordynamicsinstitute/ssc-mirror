@@ -1082,6 +1082,7 @@ fmwww.bc.edu/repec/bocode/c/Ch04_3way_Example_5.do
 fmwww.bc.edu/repec/bocode/c/calibr.pkg
 fmwww.bc.edu/repec/bocode/c/cprd_referral.ado
 fmwww.bc.edu/repec/bocode/c/correlationchords.ado
+fmwww.bc.edu/repec/bocode/c/citytoprovince.ado
 fmwww.bc.edu/repec/bocode/c/covbal.pkg
 fmwww.bc.edu/repec/bocode/c/centpow.pkg
 fmwww.bc.edu/repec/bocode/c/clipgeo.sthlp
@@ -1519,6 +1520,8 @@ fmwww.bc.edu/repec/bocode/c/conservatism.dta
 fmwww.bc.edu/repec/bocode/c/concordance.sthlp
 fmwww.bc.edu/repec/bocode/c/crm.ado
 fmwww.bc.edu/repec/bocode/c/contrasi.html
+fmwww.bc.edu/repec/bocode/c/citytoprovince.pkg
+fmwww.bc.edu/repec/bocode/c/citytoprovince.sthlp
 fmwww.bc.edu/repec/bocode/c/ckvarclear.ado
 fmwww.bc.edu/repec/bocode/c/clocktominb.sthlp
 fmwww.bc.edu/repec/bocode/c/cseplist.ado
@@ -13366,6 +13369,7 @@ fmwww.bc.edu/repec/bocode/s/sccenslope.ado
 fmwww.bc.edu/repec/bocode/s/stmix.pkg
 fmwww.bc.edu/repec/bocode/s/stata_linter_utils.py
 fmwww.bc.edu/repec/bocode/s/stowcmd.hlp
+fmwww.bc.edu/repec/bocode/s/spsiv.ado
 fmwww.bc.edu/repec/bocode/s/strdate.pkg
 fmwww.bc.edu/repec/bocode/s/smgfit.hlp
 fmwww.bc.edu/repec/bocode/s/spread.ado
@@ -14848,6 +14852,7 @@ fmwww.bc.edu/repec/bocode/s/spmstarhxt4.ado
 fmwww.bc.edu/repec/bocode/s/subjob21.ado
 fmwww.bc.edu/repec/bocode/s/savastata.txt
 fmwww.bc.edu/repec/bocode/s/selectvars.html
+fmwww.bc.edu/repec/bocode/s/spsiv.pkg
 fmwww.bc.edu/repec/bocode/s/spellmerge.html
 fmwww.bc.edu/repec/bocode/s/smwoodbury.mata
 fmwww.bc.edu/repec/bocode/s/stjm_pred.ado
@@ -15685,6 +15690,7 @@ fmwww.bc.edu/repec/bocode/s/sae_data_import.ado
 fmwww.bc.edu/repec/bocode/s/svalue.sthlp
 fmwww.bc.edu/repec/bocode/s/survtime.ado
 fmwww.bc.edu/repec/bocode/s/spreg.sthlp
+fmwww.bc.edu/repec/bocode/s/spsiv.sthlp
 fmwww.bc.edu/repec/bocode/s/spautolaghm.ado
 fmwww.bc.edu/repec/bocode/s/sentinel.pkg
 fmwww.bc.edu/repec/bocode/s/stfform.ado

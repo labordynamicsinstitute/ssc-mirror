@@ -1,5 +1,5 @@
-﻿{smcl}
-{* *! version 2.3 19-Aug-2025}{...}
+{smcl}
+{* *! version 2.4 09-Sep-2025}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Related commands" "help art2tex"}{...}
 {viewerjumpto "Syntax" "art2tex##syntax"}{...}
@@ -33,6 +33,8 @@ Key features include:{p_end}
 {p 6 6 2}• Preconfigured variable definition tables, empirical model formulas, and regression table templates{p_end}
 {p 6 6 2}• Automatic creation of tables and figures directories{p_end}
 {p 6 6 2}• Generation of accompanying Stata table export command scripts{p_end}
+{p 6 6 2}• Generation of accompanying Stata figure export command scripts{p_end}
+{p 6 6 2}• Pre-built figure environments in introduction, theoretical analysis, and robustness sections{p_end}
 {p 6 6 2}• Support for XeLaTeX compilation and BibTeX reference management{p_end}
 {p 6 6 2}• Bilingual support for both Chinese and English papers{p_end}
 
@@ -108,11 +110,11 @@ Recommended environment: TeX Live 2023 or later, with a LaTeX-supported editor (
 
 {pstd}
 {bf:Wu Xinzhuo}{p_end}
-{pstd}Shenzhen MSU-BIT University (Undergraduate) / University of Bristol (Postgraduate){p_end}
+{pstd}University of Bristol(UB){p_end}
 {pstd}{browse "mailto:2957833979@qq.com":2957833979@qq.com}{p_end}
 
 {title:Also see}
 
 {p 4 4 2}
-Related commands: {help esttab}, {help estout}, {help latex}, {help corr2tex}, {help sumtex}, {help regtex}{p_end}
+Related commands: {help esttab}, {help estout}, {help latex}, {help sumtex}, {help corrtex2}, {help regtex}, {help reg2tex}, {help reftex}{p_end}
 {*}

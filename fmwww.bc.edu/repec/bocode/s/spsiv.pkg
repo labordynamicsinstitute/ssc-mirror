@@ -1,0 +1,25 @@
+d 'SPSIV': module to generate Synthetic Instrumental Variables (SIV) for spatial regression
+d
+d   spsiv generates synthetic instrumental variables from
+d endogenous variables and spatial filters	  derived from a
+d symmetric connectivity matrix. The synthetic instruments satisfy
+d the conditions	of a standard instrumental variable and
+d generally avoid the weak instrumental variable problem	due
+d to relatively high correlation with the endogenous variable.
+d spsiv works for both	      cross-sectional and panel data,
+d provides IV-type instruments for use with spivreg, spivregress,  
+d	xtdpdp, xtabond2, etc. For details, see Gallo & Paez (2013)
+d and Fingleton (2023). 
+d
+d KW: spatial
+d KW: instrumental variables
+d
+d Requires: Stata version 11.1
+d
+d Distribution-Date: 20250909
+d
+d Author:   Manh Hoang Ba,  Eureka Uni Team, Vietnam
+d Support: email   hbmanh9492@@gmail.com
+d
+f spsiv.ado
+f spsiv.sthlp

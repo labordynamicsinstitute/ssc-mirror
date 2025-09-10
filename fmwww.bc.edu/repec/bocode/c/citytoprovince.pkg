@@ -1,0 +1,22 @@
+d 'CITYTOPROVINCE': module to standardize Chinese city names and generate corresponding provinces in Stata
+d
+d   This package provides functions to standardize Chinese city
+d names and map them to their corresponding provinces, autonomous
+d regions, municipalities, or special administrative regions in
+d Stata. It handles both full city names and common variations,
+d supporting more than 330 prefecture-level cities and above. The
+d command facilitates data cleaning and regional analysis involving
+d Chinese geographic information. 
+d
+d KW: data management
+d KW: China
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20250909
+d
+d Author:  Xiaokang Wu,  Nanjing University of Science and Technology
+d Support: email   wuxk@@njust.edu.cn
+d
+f citytoprovince.ado
+f citytoprovince.sthlp
