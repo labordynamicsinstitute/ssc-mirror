@@ -2275,6 +2275,7 @@ fmwww.bc.edu/repec/bocode/m/multipurt.ado
 fmwww.bc.edu/repec/bocode/m/mvnorm.mata
 fmwww.bc.edu/repec/bocode/m/madot_code_example.do
 fmwww.bc.edu/repec/bocode/m/mf_mm_colrunsum.html
+fmwww.bc.edu/repec/bocode/m/markobs.pkg
 fmwww.bc.edu/repec/bocode/m/mivcausal.pkg
 fmwww.bc.edu/repec/bocode/m/mict_prep.ado
 fmwww.bc.edu/repec/bocode/m/multicoefplot.ado
@@ -2755,6 +2756,7 @@ fmwww.bc.edu/repec/bocode/m/minmse.pkg
 fmwww.bc.edu/repec/bocode/m/msdeco.hlp
 fmwww.bc.edu/repec/bocode/m/mhl.ado
 fmwww.bc.edu/repec/bocode/m/mltrsq.sthlp
+fmwww.bc.edu/repec/bocode/m/markobs.sthlp
 fmwww.bc.edu/repec/bocode/m/missings.sthlp
 fmwww.bc.edu/repec/bocode/m/mixregls_plugin.lin32
 fmwww.bc.edu/repec/bocode/m/matprint.ado
@@ -3320,6 +3322,7 @@ fmwww.bc.edu/repec/bocode/m/makematrix.ado
 fmwww.bc.edu/repec/bocode/m/multibar.pkg
 fmwww.bc.edu/repec/bocode/m/mtefe_movestay_lf2.ado
 fmwww.bc.edu/repec/bocode/m/mdesc.pkg
+fmwww.bc.edu/repec/bocode/m/markobs.ado
 fmwww.bc.edu/repec/bocode/m/mf_rpnint.hlp
 fmwww.bc.edu/repec/bocode/m/mltcooksd.html
 fmwww.bc.edu/repec/bocode/m/mydatelabels.ado

@@ -33,6 +33,7 @@ p marimekko module for marikmekko charts
 p mark_changes module to generate a variable indicating where one or more variables changes value
 p markdoc module for literate programming
 p marker module to generate indicator variable marking desired sample
+p markobs module to mark observations for inclusion
 p markov module to generate Markov probabilities
 p markovci module for computing nonparametric bootstrapped confidence intervals for discrete time Markov chains
 p markovfirstorder module for ssessing whether a sequence follows an independent state model or a first-order Markov chain model

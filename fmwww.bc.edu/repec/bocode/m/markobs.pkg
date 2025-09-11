@@ -1,0 +1,21 @@
+d 'MARKOBS': module to mark observations for inclusion
+d
+d  markobs is a wrapper for official Stata's mark and markout
+d commands.  It creates and modifies a 0/1 to-use variable that
+d records which observations are to be used in subsequent code. 
+d
+d KW: sample
+d KW: sample restriction
+d KW: indicator variable
+d KW: observations
+d KW: mark
+d
+d Requires: Stata version 11.2
+d
+d Distribution-Date: 20250910
+d
+d Author: Daniel Klein, Universität Kassel
+d Support: email klein.daniel.81@@gmail.com
+d
+f markobs.ado
+f markobs.sthlp
