@@ -6470,6 +6470,7 @@ fmwww.bc.edu/repec/bocode/r/rosssekh.pkg
 fmwww.bc.edu/repec/bocode/r/ralloc.html
 fmwww.bc.edu/repec/bocode/r/rddensity.sthlp
 fmwww.bc.edu/repec/bocode/r/relogitq.sthlp
+fmwww.bc.edu/repec/bocode/r/reg2tex.ado
 fmwww.bc.edu/repec/bocode/r/rsens.pkg
 fmwww.bc.edu/repec/bocode/r/regoprob2_autofit.ado
 fmwww.bc.edu/repec/bocode/r/rotate2.ado
@@ -7569,6 +7570,7 @@ fmwww.bc.edu/repec/bocode/r/randtreat.pkg
 fmwww.bc.edu/repec/bocode/r/rbiprobit_tmeffects.sthlp
 fmwww.bc.edu/repec/bocode/r/robjb.pkg
 fmwww.bc.edu/repec/bocode/r/rcd.ado
+fmwww.bc.edu/repec/bocode/r/reg2tex.sthlp
 fmwww.bc.edu/repec/bocode/r/ros.sthlp
 fmwww.bc.edu/repec/bocode/r/resp.ado
 fmwww.bc.edu/repec/bocode/r/reggae_music.sthlp

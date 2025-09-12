@@ -9,7 +9,7 @@
 {title:General syntax}
 
 {p 4 18 10}
-{cmdab:plotrpys [varlist]} [if] [in], color(col|mono) curve(both|median) [TWOptions(string)]
+{cmdab:plotrpys [varlist]} [if] [in], color(col|mono) curve(both|median|exp) [TWOptions(string)]
 
 {marker overview}
 {title:Overview}
@@ -23,12 +23,15 @@ If both graphs are required by the user (annual cited references counts and medi
 {pstd}
 If only median deviations are required to be plotted, the positive median deviations are shown to identify the most important peaks in the spectrogram. Additionally, two dotted lines are included in the graph. These lines going back to Turkey's fences are intended to support the identification of the most important peaks. Tukey (1977) proposes a method for detecting outliers, which can be used here to flag important peaks based on the interquartile range of the median deviations (with positive values). If Q1 and Q3 define this range with lower and upper quartiles, the following formula can be used to detect "outlier" peaks above this range: [Q3 + k (Q3 – Q1)]. According to Tukey (1977), k = 1.5 indicates "outliers" and k = 3 cases, which are "far out". The "outlier" reference publication years are labeled in the spectrogram. {p_end}
 
+{pstd}
+Baum and Otero (2022) introduce an enhanced Stata implementation for testing and dating explosive episodes in time-series data. Building on the right-tail augmented Dickey–Fuller (ADF) framework, their paper presents the {cmd:radf} command. With {cmd:radf}, you can test whether a time series ever enters a phase of explosive growth rather than following a persistent but non-explosive (unit-root) pattern. With yearly counts of cited references (exported as CSV exports from CRExplorer) {cmd:radf} can identify years in which citation activity "exploded". {p_end}
+
 {marker options}
 {title:Options}
 {p2colset 5 12 13 0}
 {synopt:{opt color(col|mono)}} specifies whether the graph is colored or monochrome.
 
-{synopt:{opt curve(both|median)}} specifies whether both cited references counts and deviations from the median or  only deviations from the median are plotted.
+{synopt:{opt curve(both|median|exp)}} specifies whether both cited references counts and deviations from the median or only deviations from the median are plotted. exp identifies explosive episodes in time-series data.
 
 {synopt:{opt twoptions(string)}} several options from the twoway command can be used such as xlabel.
 
@@ -44,7 +47,7 @@ If only median deviations are required to be plotted, the positive median deviat
 {p_end}
 
 {pstd}
-{cmd: . plotrpys year ncr median5, color(mono) curve(median)}
+{cmd: . plotrpys year ncr median5, color(mono) curve(exp)}
 {p_end}
 
 {pstd}
@@ -65,7 +68,10 @@ If only median deviations are required to be plotted, the positive median deviat
 
 {title:Literature}
 
-{phang} Tukey, J. W. (1977). Exploratory Data Analysis: Addison-Wesley Publishing Company
+{pstd} Tukey, J. W. (1977). Exploratory Data Analysis: Addison-Wesley Publishing Company. {p_end}
+
+{pstd} Baum, C. F., & Otero, J. (2021). Unit-root tests for explosive behavior. Stata Journal, 21(4), 999-1020. doi: 10.1177/1536867x211063405. {p_end}
+
 
 {title:Author}
 
