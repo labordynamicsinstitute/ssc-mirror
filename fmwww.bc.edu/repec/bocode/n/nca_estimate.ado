@@ -1,10 +1,9 @@
-*! nca_estimate v1.0 08/28/2025
+*! nca_estimate v1.0 09/07/2025
 ************START NCA_ESTIMATE
 pro def nca_estimate, eclass 
-syntax varlist (numeric min=2) [if] [in], [CEILings(string asis) nograph  TESTrep(integer 0)  GRAPHNAmes(string) nocombine BOTtlenecks(numlist sort) BOTtlenecks_default SCOpe(numlist missingokay)  flipx flipy CORner(numlist integer missingokay) steps(integer 10) stepsize(numlist max=1 >=0) XBOTtlenecks(string) YBOTtlenecks(string) cutoff(integer 0) noSummaries Version(integer 3) peers(name max=1) scopeobs(name max=1) ]
+syntax varlist (numeric min=2) [if] [in], [CEILings(string asis) nograph  TESTrep(integer 0)  GRAPHNAmes(string) nocombine BOTtlenecks(numlist sort) BOTtlenecks_default SCOpe(numlist missingokay)  flipx flipy CORner(numlist integer missingokay) steps(integer 10) stepsize(numlist max=1 >=0) XBOTtlenecks(string) YBOTtlenecks(string) cutoff(integer 0) noSummaries peers(name max=1) scopeobs(name max=1) ]
 marksample touse //setting the estimation sample
-
-local version "v`version'"
+nca_dependencies
 if (`cutoff'>2) {
 	di as error "invalid {bf: cutoff}"
 	exit 144
@@ -119,22 +118,6 @@ if ("`ybottlenecks'"=="perc_range") {
 }
 	}	
 
-/*VECCHIA SINTASSI FUNZIONANTE
-if ("`bottlenecks_default'" !="" & "`bottlenecks'"=="") {
-	if ("`stepsize'"=="") {
-		*if ("`ybottlenecks'"=="actual") {
-			local stepsize=(`ymax'-`ymin')/`steps'
-			quie numlist "`ymin'(`stepsize')`ymax'"
-			local bottlenecks=r(numlist)	
-		/*}
-		if ("`ybottlenecks'"=="percentile") {
-			quie centile `y', centile(0(`=100/`steps'')100) 
-		}*/
-		
-	 }
-	} 
-	*/
-
 // scopeobs and peers: hidden options to be used by nca_outliers
 if ("`peers'`scopeobs'" != "") {
 	confirm new variable `peers' `scopeobs'
@@ -142,11 +125,12 @@ if ("`peers'`scopeobs'" != "") {
 		di as error "nca_outliers can be applied to a single ceiling at a time"
 		exit 144
 	}
+	
+	local xmin=`scopeX'[1,1]
+	local xmax=`scopeX'[1,2]
 	quie gen byte `scopeobs'=0 if `touse'
-	quie summarize `y' if `touse'
-	quie replace `scopeobs'=1 if inlist(`y', r(min), r(max)) & `touse'
-	quie summarize `X'  if `touse'
-	quie replace `scopeobs'=1 if inlist(`X', r(min), r(max)) & `touse'	
+	quie replace `scopeobs'=1 if inlist(`y', `ymin', `ymin') & `touse'
+	quie replace `scopeobs'=1 if inlist(`X', `xmin', `xmax') & `touse'	
 }
 	
 	
@@ -155,6 +139,7 @@ tempname result_x scopex bottlenecks_x results bnecks_table
 _rmcoll `X', expand
 _rmdcoll `y' `X'
 	quie cap gen ______ToUsE=`touse'
+	local version "v3"
 foreach x of local X {
 	local plotcmd 
 	matrix `scopex'=`scopeX'[rownumb(`scopeX',"`x'"),1..2]
@@ -246,7 +231,7 @@ ereturn matrix scopeX=`scopeX'
 ereturn hidden local indepvars = "`X'"
 ereturn local conditions = "`X'"
 ereturn local ceilings=  "`ceilings'" 
-ereturn local cmd="nca"
+ereturn local cmd="nca_analysis"
 ereturn local corners="`corners'"
 ereturn local cutoff=`cutoff'
 ereturn local ybottlenecks="`ybottlenecks'"

@@ -121,10 +121,22 @@ Generates random datapoints for Y and X to be used for necessary condition analy
 {phang2}{cmd:. nca_random, n(1000) slopes(-1) intercepts(1) corner(3) }{p_end}
 {phang2}{cmd:. twoway (scatter Y X) (function y=1-x), legend(off) }{p_end}
 
-{title:Author}
+{title:Authors}
 {pstd}Daniele Spinelli{p_end}
 {pstd}Department of Statistics and Quantitative Methods {p_end}
 {pstd}University of Milano-Bicocca{p_end}
 {pstd}Milan, Italy{p_end}
 {pstd}daniele.spinelli@unimib.it{p_end}
 
+{pstd}Jan Dul{p_end}
+{pstd}Department of Technology & Operations Management{p_end}
+{pstd}Rotterdam School of Management{p_end}
+{pstd}Rotterdam, The Netherlands{p_end}
+{pstd}jdul@rsm.nl{p_end}
+
+{title:Contributors}
+{pstd}Govert Buijs{p_end}
+{pstd}Department of Technology & Operations Management{p_end}
+{pstd}Rotterdam School of Management{p_end}
+{pstd}Rotterdam, The Netherlands{p_end}
+{pstd}buijs@rsm.nl{p_end}

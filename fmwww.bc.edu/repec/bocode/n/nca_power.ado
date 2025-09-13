@@ -52,7 +52,7 @@ frame `df' {
 	quie forvalues r=1/`rep' {
 		local iter=`iter'+1
 		 noi _dots `iter' 0
-		cap nca __Xx`nobs'_`r' __Yy`nobs'_`r', ceilings(`ceiling') testrep(`testrep') nograph nosummaries
+		cap nca_analysis __Xx`nobs'_`r' __Yy`nobs'_`r', ceilings(`ceiling') testrep(`testrep') nograph nosummaries
 		if (!_rc) {
 			//matrix res`nobs'=nullmat(res`nobs')\cond(e(testres)[1,1]<= `alpha',1,0 )
 			matrix `res'[`r',`i'] = cond(e(testres)[1,1]<= `alpha',1,0 )

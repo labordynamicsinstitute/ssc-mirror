@@ -15,6 +15,7 @@ p sdid module to perform synthetic difference-in-differences estimation, inferen
 p sdid_event module providing Synthetic Difference-in-Differences (SDID) event-study estimators
 p sequences module for generating versatile numeric sequences
 p setroot module to find the root path of a project and set it as a global variable
+p shapowen module to provide a generic Shapley-Owen value calculator
 p shuffle module to shuffle a list
 p sicff module to create Fama French Industry Variable from SIC Code
 p side_histogram module to plot side by side histograms 

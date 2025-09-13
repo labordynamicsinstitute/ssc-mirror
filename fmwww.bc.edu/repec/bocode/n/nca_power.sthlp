@@ -114,11 +114,22 @@ Power evaluation under a necessity framework. Calculates the power of a NCA appr
 {phang2}{cmd:.  set seed 123456789} {p_end}
 {phang2}{cmd:.  nca_power, n(100 200 300) rep(1000) }{p_end}
 
-{title:Author}
+{title:Authors}
 {pstd}Daniele Spinelli{p_end}
 {pstd}Department of Statistics and Quantitative Methods {p_end}
 {pstd}University of Milano-Bicocca{p_end}
 {pstd}Milan, Italy{p_end}
 {pstd}daniele.spinelli@unimib.it{p_end}
 
+{pstd}Jan Dul{p_end}
+{pstd}Department of Technology & Operations Management{p_end}
+{pstd}Rotterdam School of Management{p_end}
+{pstd}Rotterdam, The Netherlands{p_end}
+{pstd}jdul@rsm.nl{p_end}
 
+{title:Contributors}
+{pstd}Govert Buijs{p_end}
+{pstd}Department of Technology & Operations Management{p_end}
+{pstd}Rotterdam School of Management{p_end}
+{pstd}Rotterdam, The Netherlands{p_end}
+{pstd}buijs@rsm.nl{p_end}

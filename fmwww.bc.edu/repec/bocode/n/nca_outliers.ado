@@ -1,14 +1,17 @@
 *! nca_outliers v0.1 08/27/2025
 pro def nca_outliers
-syntax varlist (numeric min=2 max=2) [if] [in], IDvar(varlist  numeric  min=1 max=1) [CEILing(string) CORner(integer 1) flipx flipy k(integer 1) MINDif(real 0.01)  MAXResults(integer 25) save(string asis) verbose]
+syntax varlist (numeric min=2 max=2) [if] [in], IDvar(varlist  numeric  min=1 max=1) [CEILing(string) CORner(integer 1) flipx flipy k(integer 1) MINDif(real 0.01)  MAXResults(integer 25) save(string asis) verbose SCOpe(numlist missingokay)]
+version 17
 if ("`ceiling'"=="") local ceiling ce_fdh
 isid `idvar'
 tempname  scopeout1 peers1 scopeout peers
 tempvar pv
 marksample touse
- nca_estimate `varlist' if `touse', ceil(`ceiling') corner(`corner') `flipx' `flipy' nograph peers(`peers1') scopeobs(`scopeout1')
- //list `idvar' `peers1' `scopeout1' if `peers1' | `scopeout1'
- //exit
+if ("`scope'"!="") {
+	local scope scope(`scope')
+}
+ nca_estimate `varlist' if `touse', ceil(`ceiling') corner(`corner') `flipx' `flipy' nograph peers(`peers1') scopeobs(`scopeout1') `scope'
+
 local ES=e(results)["Effect size",1]
 
 quie gen `pv'=((`peers1'==1) | (`scopeout1'==1)) if e(sample)
@@ -19,7 +22,7 @@ local droplist   `peers1' `scopeout1'
 quie forval j=1/`k' {
 if (`j'==1 | `k'==1) continue
 	tempname  scopeout`j' peers`j'
-    nca_estimate `varlist' if `touse' & !`pv', ceil(`ceiling') corner(`corner') `flipx' `flipy' nograph peers(`peers`j'') scopeobs(`scopeout`j'')
+    nca_estimate `varlist' if `touse' & !`pv', ceil(`ceiling') corner(`corner') `flipx' `flipy' nograph peers(`peers`j'') scopeobs(`scopeout`j'') `scope'
 	replace `pv'=1 if (`peers`j''==1) | (`scopeout`j''==1)
 	local droplist `droplist'  `peers`j'' `scopeout`j''
 	 }
@@ -71,7 +74,7 @@ quie forval i=1/`Ncombs' {
 	frame `_temp': local ll= _l2[`i']
 	if ("`verbose'"!="") di in red "excluding combination `ll' ... "
 	if (`Ncombs'>49) noi _dots `i' 0
-	cap nca_estimate `varlist' if !inlist(`idvar',`ll'), ceil(`ceiling') corner(`corner') `flipx' `flipy' nograph 
+	cap nca_estimate `varlist' if !inlist(`idvar',`ll'), ceil(`ceiling') corner(`corner') `flipx' `flipy' nograph `scope'
 	if (!_rc) frame `_temp': {
 		replace eff_size=e(results)["Effect size",1] in `i'
 		}

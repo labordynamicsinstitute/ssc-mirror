@@ -10020,6 +10020,7 @@ fmwww.bc.edu/repec/bocode/n/numodes.ado
 fmwww.bc.edu/repec/bocode/n/nca_examples.do
 fmwww.bc.edu/repec/bocode/n/ncf.pkg
 fmwww.bc.edu/repec/bocode/n/nearmrg.sthlp
+fmwww.bc.edu/repec/bocode/n/nca_dependencies.ado
 fmwww.bc.edu/repec/bocode/n/network_components.ado
 fmwww.bc.edu/repec/bocode/n/nopo_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/n/network_map.ado
@@ -10385,6 +10386,7 @@ fmwww.bc.edu/repec/bocode/n/nw_projection.pkg
 fmwww.bc.edu/repec/bocode/n/nct.html
 fmwww.bc.edu/repec/bocode/n/nca_random.sthlp
 fmwww.bc.edu/repec/bocode/n/nysiis.ado
+fmwww.bc.edu/repec/bocode/n/nca_analysis.sthlp
 fmwww.bc.edu/repec/bocode/n/nb_adjust.sthlp
 fmwww.bc.edu/repec/bocode/n/nehurdle_truncp.ado
 fmwww.bc.edu/repec/bocode/n/nharvey.pkg
@@ -10430,6 +10432,7 @@ fmwww.bc.edu/repec/bocode/n/ndbci.pkg
 fmwww.bc.edu/repec/bocode/n/nnest.html
 fmwww.bc.edu/repec/bocode/n/ngram.pkg
 fmwww.bc.edu/repec/bocode/n/neigh.ado
+fmwww.bc.edu/repec/bocode/n/nca_analysis.ado
 fmwww.bc.edu/repec/bocode/n/nicedates.pkg
 fmwww.bc.edu/repec/bocode/n/nwspgr.ado
 fmwww.bc.edu/repec/bocode/n/nstagemenu.sthlp
@@ -12724,6 +12727,7 @@ fmwww.bc.edu/repec/bocode/s/spxtivdfreg.sthlp
 fmwww.bc.edu/repec/bocode/s/spautoc5.html
 fmwww.bc.edu/repec/bocode/s/streg_predict_ch.ado
 fmwww.bc.edu/repec/bocode/s/sls.pkg
+fmwww.bc.edu/repec/bocode/s/shapowen.ado
 fmwww.bc.edu/repec/bocode/s/sqr.ado
 fmwww.bc.edu/repec/bocode/s/spautosacnw.ado
 fmwww.bc.edu/repec/bocode/s/swapval.pkg
@@ -15364,6 +15368,7 @@ fmwww.bc.edu/repec/bocode/s/surface7.hlp
 fmwww.bc.edu/repec/bocode/s/skilmack.ado
 fmwww.bc.edu/repec/bocode/s/spmstar7.ado
 fmwww.bc.edu/repec/bocode/s/sfcross.pkg
+fmwww.bc.edu/repec/bocode/s/shapowen.pkg
 fmwww.bc.edu/repec/bocode/s/subinfile.ado
 fmwww.bc.edu/repec/bocode/s/sslope.html
 fmwww.bc.edu/repec/bocode/s/skprobit.sthlp
@@ -15765,6 +15770,7 @@ fmwww.bc.edu/repec/bocode/s/spregxt1.dta
 fmwww.bc.edu/repec/bocode/s/svycanonNYTS2021example.dta
 fmwww.bc.edu/repec/bocode/s/spregxt33.ado
 fmwww.bc.edu/repec/bocode/s/songbl.ado
+fmwww.bc.edu/repec/bocode/s/shapowen.sthlp
 fmwww.bc.edu/repec/bocode/s/sqmodalplot.ado
 fmwww.bc.edu/repec/bocode/s/spellsplit.ado
 fmwww.bc.edu/repec/bocode/s/sproper.ado

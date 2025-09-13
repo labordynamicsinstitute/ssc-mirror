@@ -1,0 +1,19 @@
+d 'SHAPOWEN': module to provide a generic Shapley-Owen value calculator
+d
+d  shapowen is a generic Shapley-Owen value calculator. It is
+d designed as a generic prefix command to allow for a broad
+d spectrum of implementations of Shapley value decompositions. 
+d
+d KW: Shapley
+d KW: Owen
+d KW: value decomposition 
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20250912
+d
+d Author: Philippe Van Kerm, Luxembourg Institute of Socio-Economic Research
+d Support: email philippe.vankerm@@liser.lu
+d
+f shapowen.ado
+f shapowen.sthlp

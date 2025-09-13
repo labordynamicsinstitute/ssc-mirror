@@ -39,6 +39,8 @@ max=2)
 
 {synopt:{opt flipy}} reverse the direction of the outcome variable.
 
+{synopt:{opt sco:pe(numlist)}} a theoretical scope in format : (x.low, x.high, y.low, y.high).  {p_end}
+
 {synopt:{opt k(#)}} use combinations of observations. Default value is 1.
 
 {synopt:{opt mind:if(#)}} set the threshold for the minimum relative difference in the effect size to be considered as outlier. Default value is 0.01.
@@ -77,6 +79,9 @@ By default the upper left corner is analysed for all independent variables and c
 {opt flipy} reverse the direction of the outcome variable.  
 
 {phang}
+{opt scope} a theoretical scope in format : (x.low, x.high, y.low, y.high). The default is to use the empirical scope.
+
+{phang}
 {opt k(#)} use combinations of observations. Default value is 1. 
 
 {phang}
@@ -86,20 +91,29 @@ By default the upper left corner is analysed for all independent variables and c
 {opt maxr:esults(#)} maximum number of outliers to be shown. Default value is 25. 
 
 {phang}
-{opt save(string asis)} saves the results in a data set whith the name given by filename. 
-  
-
-
-
+{opt save(filename)} saves the results in a data set whith the name given by filename. 
+ 
 {marker examples}{...}
 {title:Examples}
+{phang2}{cmd:. use ncaexample, clear}{p_end}
 {phang2}{cmd:. nca_outliers individualism innovationperformance, id(country) ceiling(ce_fdh)}{p_end}
 
-
-{title:Author}
+{title:Authors}
 {pstd}Daniele Spinelli{p_end}
 {pstd}Department of Statistics and Quantitative Methods {p_end}
 {pstd}University of Milano-Bicocca{p_end}
 {pstd}Milan, Italy{p_end}
 {pstd}daniele.spinelli@unimib.it{p_end}
 
+{pstd}Jan Dul{p_end}
+{pstd}Department of Technology & Operations Management{p_end}
+{pstd}Rotterdam School of Management{p_end}
+{pstd}Rotterdam, The Netherlands{p_end}
+{pstd}jdul@rsm.nl{p_end}
+
+{title:Contributors}
+{pstd}Govert Buijs{p_end}
+{pstd}Department of Technology & Operations Management{p_end}
+{pstd}Rotterdam School of Management{p_end}
+{pstd}Rotterdam, The Netherlands{p_end}
+{pstd}buijs@rsm.nl{p_end}
