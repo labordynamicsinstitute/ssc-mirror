@@ -6,17 +6,18 @@ d the level (step) of the series (McLeod and Vingilis 2008). The
 d results are computed in terms of the size of the intervention
 d effect in units corresponding to standard deviations of the
 d pre-intervention series (presented as the scaled intervention
-d parameter δ). The power estimates assume that the intervention
-d analysis will be performed using an autoregressive moving-average
-d (ARMA) model. The computations and output of power_step largely
-d mirror those found at
+d effect parameter δ). The power estimates assume that the
+d intervention analysis will be performed using an autoregressive
+d moving-average (ARMA) model. The computations and output of
+d power_step largely mirror those found at
 d https://www.stats.uwo.ca/faculty/aim/2007/OnlinePower/TwoSided.ht
 d ml.  However, there are cases in which the results between the
 d online calculator and power_step slightly differ. This is due to
 d the fact that Javascript does not naturally compute the
 d cumulative standard distribution function (CDF) and therefore the
 d author uses an approximation. Conversely, power_step uses
-d normal() to compute the CDF. 
+d normal() to compute the CDF. Moreover, power_step offers a
+d one-sided test. 
 d
 d KW:  interrupted time series analysis
 d KW: ITSA
@@ -26,7 +27,7 @@ d KW: sample size
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20250208
+d Distribution-Date: 20250913
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org

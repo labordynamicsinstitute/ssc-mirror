@@ -272,6 +272,7 @@ p cqiv module to perform censored quantile instrumental variables regression
 p cquad module to perform conditional maximum likelihood estimation of quadratic exponential models
 p cquadr module to estimate Quadratic Exponential models running the cquad R package
 p cquantile module to generate corresponding quantiles
+p crash module to calculate stock crash risk measures 
 p crater module to calculate computer scorer vs. human rater agreement statistics
 p creplace module to exchange values cyclically between variables
 p crhdreg module to estimate high-dimensional regressions based on cluster-robust double/debiased machine learning

@@ -104,6 +104,7 @@ fmwww.bc.edu/repec/bocode/c/clemao2.ado
 fmwww.bc.edu/repec/bocode/c/collist.hlp
 fmwww.bc.edu/repec/bocode/c/clustergram.sthlp
 fmwww.bc.edu/repec/bocode/c/cpoissone.sthlp
+fmwww.bc.edu/repec/bocode/c/crash.pkg
 fmwww.bc.edu/repec/bocode/c/clr_p.ado
 fmwww.bc.edu/repec/bocode/c/ci_marg_mu.sthlp
 fmwww.bc.edu/repec/bocode/c/cs_cvlasso.do
@@ -146,6 +147,7 @@ fmwww.bc.edu/repec/bocode/c/coranal.ado
 fmwww.bc.edu/repec/bocode/c/cprd_browser_medical.ado
 fmwww.bc.edu/repec/bocode/c/clustpop.html
 fmwww.bc.edu/repec/bocode/c/color-mrcgreen.style
+fmwww.bc.edu/repec/bocode/c/crash.sthlp
 fmwww.bc.edu/repec/bocode/c/color-ply3.style
 fmwww.bc.edu/repec/bocode/c/concord.ado
 fmwww.bc.edu/repec/bocode/c/colrspace_library_palettes.sthlp
@@ -280,6 +282,7 @@ fmwww.bc.edu/repec/bocode/c/color-538rs3.style
 fmwww.bc.edu/repec/bocode/c/cospectdens_demo1.do
 fmwww.bc.edu/repec/bocode/c/cs_pdslasso.do
 fmwww.bc.edu/repec/bocode/c/chardel.ado
+fmwww.bc.edu/repec/bocode/c/crash.ado
 fmwww.bc.edu/repec/bocode/c/cureregr.sthlp
 fmwww.bc.edu/repec/bocode/c/clustse.ado
 fmwww.bc.edu/repec/bocode/c/circdiff.hlp
@@ -12983,6 +12986,7 @@ fmwww.bc.edu/repec/bocode/s/spmap_label.ado
 fmwww.bc.edu/repec/bocode/s/spearman2.ado
 fmwww.bc.edu/repec/bocode/s/scheme-burd6.scheme
 fmwww.bc.edu/repec/bocode/s/sptobitsar.pkg
+fmwww.bc.edu/repec/bocode/s/sunny_crash.do
 fmwww.bc.edu/repec/bocode/s/spweightcs.pkg
 fmwww.bc.edu/repec/bocode/s/silhouette.sthlp
 fmwww.bc.edu/repec/bocode/s/spautosacnn.ado

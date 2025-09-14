@@ -1,4 +1,5 @@
 {smcl}
+{* 12Sep2025}{...}
 {* 05Feb2025}{...}
 
 
@@ -16,7 +17,9 @@
 {cmdab:nt:ime(}{it:#}{cmd:)}
 {cmdab:trp:eriod(}{it:#}{cmd:)}
 {cmdab:phi(}{it:#}{cmd:)}
-[ {cmdab:a:lpha(}{it:#}{cmd:)} ]
+[ {cmdab:a:lpha(}{it:#}{cmd:)} 
+{cmdab:onesid:ed}
+{opt for:mat}{it:({help format:%fmt})} ]
 
 
 
@@ -27,6 +30,8 @@
 {p2coldent:* {opt trp:eriod}{cmd:(}{it:#}{cmd:)}}specify the time period when the intervention begins {p_end}
 {p2coldent:* {opt phi}{cmd:(}{it:#}{cmd:)}}specify the correlation coefficient between adjacent (autoregressive) error terms {p_end}
 {synopt:{opt a:lpha}{cmd:(}{it:#}{cmd:)}}significance level; default is {cmd:alpha(0.05)}{p_end}
+{synopt:{opt onesid:ed}}one-sided test; default is two-sided{p_end}
+{synopt:{opt for:mat}{cmd:(}{it:{help format:%fmt}}{cmd:)}}display numeric format for power in the output; default is format({opt %5.0f}){p_end}
 {synoptline}
 {p 4 6 2}* {opt ntime()}, {opt trperiod()}, {opt phi()} are required. {p_end}
 {p2colreset}{...}
@@ -38,14 +43,14 @@
 {pstd}
 {cmd:power_step} computes power for an interrupted time series analysis (ITSA) in which the intervention is expected to change the level (step) of 
 the series (McLeod and Vingilis 2008). The results are computed in terms of the size of the intervention effect in units corresponding to 
-standard deviations of the pre-intervention series (presented as the scaled intervention parameter δ). The power estimates assume that the intervention 
+standard deviations of the pre-intervention series (presented as the scaled intervention effect parameter δ). The power estimates assume that the intervention 
 analysis will be performed using an autoregressive moving-average (ARMA) model.
 
 {pstd}
 The computations and output of {cmd:power_step} largely mirror those found at {browse "https://www.stats.uwo.ca/faculty/aim/2007/OnlinePower/TwoSided.html"}. 
 However, there are cases in which the results between the online calculator and {cmd:power_step} slightly differ. This is due to the fact that 
 Javascript does not naturally compute the cumulative standard distribution function (CDF) and therefore the author uses an approximation. Conversely, 
-{cmd:power_step} uses {cmd:normal()} to compute the CDF.
+{cmd:power_step} uses {cmd:normal()} to compute the CDF. Moreover, {cmd:power_step} offers a one-sided test.
 
 
 
@@ -63,6 +68,12 @@ Javascript does not naturally compute the cumulative standard distribution funct
 {phang}
 {cmd:alpha(}{it:#}{cmd:)} sets the significance level of the test. The default is {cmd:alpha(0.05)}. 
 
+{phang}
+{cmd:onesided} one-sided test; default is two-sided. 
+
+{phang}
+{opth format(%fmt)} specifies the numeric format for displaying power in the output. The default is {cmd:format(%5.0f)}.
+
 
 
 {title:Examples}
@@ -72,6 +83,11 @@ This example is taken from McLeod and Vingilis (2008). The results show that the
 standard deviation level change from the pre-intervention is 51%
 
 {pmore2}{cmd:. power_step , nt(40) trp(20) phi(0.50)}{p_end}
+
+{pstd}
+Same as above but specify a one-sided test
+
+{pmore2}{cmd:. power_step , nt(40) trp(20) phi(0.50) onesided}{p_end}
 
 {pstd}
 Increasing the lengths of the pre-intervention and post-intervention series to 50 results in a substantial increase

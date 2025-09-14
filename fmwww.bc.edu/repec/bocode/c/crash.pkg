@@ -1,0 +1,31 @@
+d 'CRASH': module to calculate stock crash risk measures 
+d
+d	crash calculates two measures of stock crash risk -
+d Negative Coefficient of Skewness (NCSKEW) and    Down-to-Up
+d Volatility (DUVOL) - following the methodology described in Chen,
+d Hong, and Stein (2001)    and Kim, Li, and Zhang (2011a,b).	
+d The command processes individual stock return data and market
+d return data from Excel files, performs    necessary data
+d transformations, estimates regressions to calculate residual
+d returns, and finally	  computes the crash risk measures. 
+d
+d KW: stock market
+d KW: probability
+d KW: risk
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20250913
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:    Wu Hanyan,  Nanjing University of Aeronautics and Astronautics
+d Support: email   2325476320@@qq.com 
+d
+d Author:     Ding Ming,   Anhui University of Technology
+d Support: email    dingming0417@@163.com
+d
+f crash.ado
+f crash.sthlp
+f ../s/sunny_crash.do
