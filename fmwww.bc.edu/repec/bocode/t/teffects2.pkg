@@ -1,0 +1,55 @@
+d 'TEFFECTS2': module to estimate average treatment effects with observational data
+d
+d    teffects2 estimates average treatment effects (ATEs) and
+d average treatment effects on the treated    (ATTs) using
+d observational data.  As in Stata's official teffects command,
+d inverse probability	 weighting (IPW), augmented inverse
+d probability weighting (AIPW), and inverse probability weighted   
+d regression adjustment (IPWRA) estimators are supported.  However,
+d unlike teffects, teffects2	supports covariate balancing
+d estimation of the propensity score. 
+d
+d KW: average treatment effect
+d KW: average treatment effect on the treated
+d KW: propensity score
+d KW: covariate balancing
+d KW: difference-in-differences
+d KW: double robustness
+d KW: inverse probability tilting
+d KW: treatment effects
+d KW: weighting
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20250914
+d
+d Author:  Derya Uysal, LMU Munich
+d Support: email derya.uysal@@econ.lmu.de 
+d
+d Author:  Tymon Słoczyński , Brandeis University
+d Support: email tslocz@@brandeis.edu
+d
+d Author: Jeffrey M. Wooldridge, Michigan State University
+d Support: email  wooldri1@@msu.edu
+d
+f teffects2.ado
+f teffects2.sthlp
+f teffects2_aipw.sthlp
+f teffects2_ipw.sthlp
+f teffects2_ipwra.sthlp
+f ../_/_teffects2_aipw.ado
+f ../_/_teffects2_count_obs.ado
+f ../_/_teffects2_error_msg.ado
+f ../_/_teffects2_getstatsaipw.ado
+f ../_/_teffects2_getstatsipw.ado
+f ../_/_teffects2_getstatsipwra.ado
+f ../_/_teffects2_gmmopts.ado
+f ../_/_teffects2_ipw.ado
+f ../_/_teffects2_ipwra.ado
+f ../_/_teffects2_parse_canonicalize.ado
+f ../_/_teffects2_parse_dvarlist.ado
+f ../_/_teffects2_parse_tvar.ado
+f ../_/_teffects2_parse_tvarlist.ado
+f ../_/_teffects2_replay.ado
+f ../_/_teffects2_vlist_exclusive2.ado
+f ../l/lalonde.dta

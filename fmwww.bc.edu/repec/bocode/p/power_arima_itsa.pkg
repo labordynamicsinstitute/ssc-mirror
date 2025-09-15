@@ -1,0 +1,29 @@
+d 'POWER_ARIMA_ITSA': module to compute power for an interrupted time series intervention evaluated using ARIMA with AR(1) errors
+d
+d  power_arima_itsa computes power for a single-group interrupted
+d time series analysis (ITSA) that will ultimately be evaluated
+d using an Autoregressive Integrated Moving Average (ARIMA) model
+d (McLeod and Vingilis 2005). Power is determined for an
+d intervention that is expected have a "step" (level), "pulse"
+d (single-period), or "ramp" (trend) effect. The results can be
+d computed for actual effects, or as standardized effects (the
+d intervention effect in units corresponding to standard deviations
+d of the pre-intervention series). 
+d
+d KW: interrupted time series analysis
+d KW: ITSA. ARIMA
+d KW: step
+d KW: pulse
+d KW: power
+d KW: ramp
+d KW: sample size
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20250914
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f power_arima_itsa.ado
+f power_arima_itsa.sthlp

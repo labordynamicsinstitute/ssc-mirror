@@ -60,6 +60,7 @@ p fixedrho module to estimate treatment and selection models with fixed rho
 p fixsort module to sort variables and align in sorted order, with others fixed  
 p flagout module to flag outliers using a robust Z-score
 p flex module for flexible pseudo maximum likelihood estimation of models for doubly-bounded data
+p flexdid module for flexible estimation of difference-in-differences regression with staggered implementation
 p flexmat module to create flexible matrices / tables of text, numbers or both
 p flexpaneldid module to perform causal analysis of treatments with varying start dates and durations
 p floatplot module to draw Floating or sliding stacked bar plot

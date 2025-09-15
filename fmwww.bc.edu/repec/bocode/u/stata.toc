@@ -9,6 +9,7 @@ p ultimatch module to implement Nearest Neighbor, Radius, Coarsened Exact, Perce
 p umbrella module to perform O'Brien's Umbrella test
 p umeta module for u-statistic-based univariate and multivariate random-effects meta-analysis
 p underid module producing postestimation tests of under- and over-identification after linear IV estimation
+p undid module to compute Difference-in-differences with unpoolable data
 p unemp module module to compute aggregate households employment deprivation (or unemployment) measures
 p unicode2ascii modules to translate between Unicode and ASCII
 p unique module to report number of unique values in variable(s)

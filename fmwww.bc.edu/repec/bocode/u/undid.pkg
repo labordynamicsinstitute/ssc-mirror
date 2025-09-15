@@ -1,0 +1,32 @@
+d 'UNDID': module to compute Difference-in-differences with unpoolable data
+d
+d  undid provides a framework for estimating
+d difference-in-differences with unpoolable data, based on Karim,
+d Webb, Austin, and Strumpf (2024). Supports common or staggered
+d adoption, multiple groups, and the inclusion of covariates. Also
+d computes p-values for the aggregate average treatment effect on
+d the treated via the randomization inference procedure described
+d in MacKinnon and Webb (J. Econometrics, 2020). 
+d
+d KW: unpoolable data
+d KW: difference in differences
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20250914
+d
+d Author: Eric Jamieson, NA
+d Support: email ericbrucejamieson@@gmail.com
+d
+f undid_diff.ado
+f undid_diff.sthlp
+f undid_init.ado
+f undid_init.sthlp
+f undid_plot.ado
+f undid_plot.sthlp
+f undid_stage_three.ado
+f undid_stage_three.sthlp
+f undid_stage_two.ado
+f undid_stage_two.sthlp
+f ../_/_parse_date_to_string.ado
+f ../_/_parse_string_to_date.ado

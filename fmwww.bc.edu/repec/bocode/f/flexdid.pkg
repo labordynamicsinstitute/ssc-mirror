@@ -1,0 +1,36 @@
+d 'FLEXDID': module for flexible estimation of difference-in-differences regression with staggered implementation
+d
+d      flexdid estimates average treatment effects on the treated
+d (ATETs) in difference-in-differences	  designs with staggered
+d implementation of treatment using a flexible linear model
+d estimated by pooled	 OLS with covariates, (FLEX), as described
+d in Deb et al. (2025). In the design, there must be at    least
+d one time-period in which all units are untreated, i.e., there
+d cannot be any always-treated	  units. In addition, the typical
+d design includes a set of never-treated units. FLEX can be
+d specified    using lags only parameters. In this case, the FLEX
+d regression produces group by time effects that    are identical
+d to those producted by the estimator described in Borusyak et al.
+d (2021).  FLEX can    also be specified using lags and leads
+d parameters. In this case, when there are no covariates, the	
+d FLEX regression produces cohort by time effects that are
+d identical to those produced by the	regression adjustment
+d estimator described in Callaway and Sant'Anna (2021). 
+d
+d KW: difference in differences
+d KW: average treatment effect on the treated
+d KW: staggered treatment
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20250914
+d
+d Author: Partha Deb,  Hunter College, CUNY
+d Support: email  partha.deb@@hunter.cuny.edu
+d
+f flexdid.ado
+f flexdid_atet.ado
+f flexdid_estat.ado
+f flexdid.sthlp
+f flexdid_postestimation.sthlp
+f flexdid-examples.do
