@@ -1,13 +1,12 @@
 {smcl}
-help for {cmd: veclmhet}                           (Version 1.0.1, 01 Aug 2025)
+help for {cmd: veclmhet}                           (Version 1.0.2, 15 Sep 2025)
 
 {title: White test for heteroscedasticity in time-series VEC model}
 
 {p 8 16 2}    {cmd: veclmhet} {cmd:,} [{cmdab:n:ocross}] 
 
 
-{cmd: veclmhet} is for use with time-series data, following use of {cmd: vec} and requiring 
-prior use of {cmd: tsset}.
+{cmd: veclmhet} is a post-estimation command, used after fitting a VEC model using the {help vec} command.
 
 
 {title:Description}

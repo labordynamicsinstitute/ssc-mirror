@@ -1,7 +1,8 @@
 *	VEC Residual Heteroskedasticity Tests
-* 	Version 1.0.1	Manh H. B. 01/08/2025
+* 	Version 1.0.2	Manh H. B. 15/09/2025
 *	Following Doornik (1996)
 * 	Mod 1.0.1 to replace all global macros by local macros
+* 	Mod 1.0.2 to replace allow time series operator in e(endog)
 
 cap program drop veclmhet
 program define veclmhet, rclass
@@ -32,14 +33,14 @@ program define veclmhet, rclass
 	qui estimates store `vec_res'	
 	forvalues i=1/`e(k_dv)' {
 		tempvar _e`i'
-		qui predict `_e`i'' if e(sample), r eq(#`i')
+		qui predict double `_e`i'' /*if e(sample)*/, r eq(#`i')
 	}	
 	
 	* Predict _ce_i
 	forvalues i=1/`e(k_ce)' {
 		tempvar _ce`i' l_ce`i'
-		qui predict `_ce`i'' if e(sample), ce eq(#`i')
-		qui gen `l_ce`i'' = 0
+		qui predict double `_ce`i'' /*if e(sample)*/, ce eq(#`i')
+		qui gen double `l_ce`i'' = 0
 		qui replace `l_ce`i'' = `_ce`i''[_n-1] if `_ce`i''[_n-1]<. 
 		local yvar `yvar' `l_ce`i''
 	}
@@ -49,7 +50,7 @@ program define veclmhet, rclass
 		forvalues j=1/`e(k_dv)' {
 			if `j'>=`i' {
 				tempvar _e`i'`j'
-				qui gen `_e`i'`j''=`_e`i''*`_e`j'' if e(sample)
+				qui gen double `_e`i'`j''=`_e`i''*`_e`j'' /*if e(sample)*/
 				local sigma_ij `sigma_ij' `_e`i'`j''
 			}
 		}
@@ -58,23 +59,21 @@ program define veclmhet, rclass
 	* Generating right hand-side variables
 	*		Linear term
 	*local yvar `yvar'
+
+* 1.0.2 Allow time series operator in e(endog)
+	qui tsrevar `e(endog)'
+	local endo_var "`r(varlist)'"
+	
 	scalar `veclag' = e(n_lags) - 1
 	local mlag = `veclag'
 	forvalues i=1/`mlag' {
-		foreach var of varlist `e(endog)' {
+		foreach var of varlist `endo_var' {
 			tempvar dl`i'_`var'
-			qui gen `dl`i'_`var'' = dl`i'.`var'
+			qui gen double `dl`i'_`var'' = dl`i'.`var'
 			local yvar `yvar' `dl`i'_`var''
 		}
 	}
 	
-	*		Squared term
-	local yvar_sq
-	foreach var of varlist `yvar' {
-		tempvar `var'_sq
-		qui gen ``var'_sq' = `var'^2
-		local yvar_sq `yvar_sq' ``var'_sq'
-	}
 	
 	* Auxiliary regression (White, 1980)
 	*		Cross-term
@@ -84,6 +83,15 @@ program define veclmhet, rclass
 	}
 	
 	else {
+		
+		*		Squared term
+		local yvar_sq
+		foreach var of varlist `yvar' {
+			tempvar `var'_sq
+			qui gen double ``var'_sq' = `var'^2
+			local yvar_sq `yvar_sq' ``var'_sq'
+		}
+		
 		qui reg3 (`sigma_ij' = `yvar' `yvar_sq' `e(sindicators)') ///
 			if e(sample), ols small
 	}

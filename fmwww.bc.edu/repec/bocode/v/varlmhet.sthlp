@@ -1,6 +1,6 @@
 {smcl}
 
-help for {hi:varlmhet}                            (Version 1.0.1, 01 Aug 2025)
+help for {hi:varlmhet}                            (Version 1.0.2, 15 Sep. 2025)
 
 
 {title: White test for heteroscedasticity in time-series VAR model}
@@ -8,8 +8,7 @@ help for {hi:varlmhet}                            (Version 1.0.1, 01 Aug 2025)
 {p 8 16 2}    {cmd: varlmhet} {cmd:,} [{cmdab:n:ocross}] 
 
 
-{cmd:varlmhet} is for use with time-series data, following use of  {cmd:var} and requiring 
-prior use of {cmd:tsset}.
+{cmd:varlmhet} is a post-estimation command, used after fitting a VAR model using the {help var} command.
 
 
 {title:Description}

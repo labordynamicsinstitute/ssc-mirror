@@ -1,9 +1,5 @@
+*! 	Version 1.0.2	Manh H. B. (hbmanh9492@gmail.com) 15/09/2025
 *	VAR Residual Heteroskedasticity Tests
-* 	Version 1.0.1	Manh H. B. 01/08/2025
-*	Following Doornik (1996)
-* 	Mod 1.0.1 to allow time series operator in VAR: exog() option
-*				and replace all global macros by local macros
-
 
 cap program drop varlmhet
 program define varlmhet, rclass
@@ -22,7 +18,7 @@ program define varlmhet, rclass
 	qui estimates store `var_res'	
 	forvalues i=1/`e(k_dv)' {
 		tempvar _e`i'
-		qui predict `_e`i'' if e(sample), r eq(#`i')
+			qui predict double `_e`i'' if e(sample), r eq(#`i')
 	}	
 
 	local sigma_ij
@@ -30,7 +26,7 @@ program define varlmhet, rclass
 		forvalues j=1/`e(k_dv)' {
 			if `j'>=`i' {
 				tempvar _e`i'`j'
-				qui gen `_e`i'`j''=`_e`i''*`_e`j'' if e(sample)
+				qui gen double `_e`i'`j''=`_e`i''*`_e`j'' if e(sample)
 				local sigma_ij `sigma_ij' `_e`i'`j''
 			}
 		}
@@ -39,24 +35,21 @@ program define varlmhet, rclass
 	* Generating right hand-side variables
 * 1.0.1 Allow time series operator in exog() option!
 	qui tsrevar `e(exog)'
+	local yvar "`r(varlist)'"
+
+* 1.0.2 Allow time series operator in e(endog)
+	qui tsrevar `e(endog)'
+	local endo_var "`r(varlist)'"
 	
 	*		Linear term
-	local yvar "`r(varlist)'"
+
 	forvalues i=1/`e(mlag)' {
-		foreach var of varlist `e(endog)' {
+		foreach var of varlist `endo_var' {
 			tempvar l`i'_`var'
-			qui gen `l`i'_`var'' = 0
+			qui gen double `l`i'_`var'' = 0
 			qui replace `l`i'_`var'' = `var'[_n-`i'] if _n>`i' & `var'[_n-`i']<.
 			local yvar `yvar' `l`i'_`var''
 		}
-	}
-	
-	*		Squared term
-	local yvar_sq
-	foreach var of varlist `yvar' {
-		tempvar `var'_sq
-		qui gen ``var'_sq' = `var'^2
-		local yvar_sq `yvar_sq' ``var'_sq'
 	}
 	
 	* Auxiliary regression (White, 1980)
@@ -67,6 +60,13 @@ program define varlmhet, rclass
 	}
 	
 	else {
+		*		Squared term
+		local yvar_sq
+		foreach var of varlist `yvar' {
+			tempvar `var'_sq
+			qui gen double ``var'_sq' = `var'^2
+			local yvar_sq `yvar_sq' ``var'_sq'
+		}		
 		qui reg3 (`sigma_ij' = `yvar' `yvar_sq') ///
 			if e(sample), ols small
 	}
