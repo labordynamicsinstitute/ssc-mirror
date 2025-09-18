@@ -1,4 +1,5 @@
-*! shapowen v1.1, 2025-09-11, P Van Kerm  
+*! shapowen v1.2, 2025-09-16, P Van Kerm  
+* shapowen v1.1, 2025-09-11, P Van Kerm  
 * shapowen v1.0, 2025-09-09, P Van Kerm  
 pr def shapowen  , rclass
     version 16
@@ -18,6 +19,8 @@ pr def shapowen  , rclass
 		ERRorvalue(string) ///
 		frame ///
 		trace ///
+		showfull showempty ///
+		treemap treemapopts(string asis) ///
 		nodots ///
 		shownodes /// undocumented -- for debugging
 		]
@@ -43,21 +46,80 @@ pr def shapowen  , rclass
 		exit 198
 	}
 	if ("`separator'"=="") loc separator = " "
+	if ("`treemap'"!="")  _treemapcheck
 	mata : ShapleyValueCalculation()
+	
+	if ("`treemap'"!="") {
+		tempname A B C
+		mat def `A' = return(ShapOw) 
+		mat def `B' = return(Sequence) 
+		mat def `C' = return(Depth)
+		forvalues i = 1/`=rowsof(`A')' {
+			loc names   `names'  "@ `=return(item`i')'" 
+		}
+		noi  qui _treemapplot `A' `B' `C' , names(`names') `treemapopts'  
+	}	
 end
+
+pr def _treemapcheck 
+	cap which treemap 
+	if (_rc>0) {
+		di as error "A Naqvi's {stata findit treemap:treemap package} needs to be installed."
+		exit 198
+	}
+end
+	
+pr def _treemapplot 
+	syntax anything [ , names(string) * ]
+	loc fname "_shapowen_treemap"
+	cap frame drop `fname' 
+	frame create `fname'
+	frame `fname' {
+		svmat `: word 1 of `anything'' , names(ShapOw)		
+		svmat `: word 2 of `anything'' , names(Seq)		
+		svmat `: word 3 of `anything'' , names(Depth)
+		gen str20 Label = ""
+		forvalues i = 1/`=_N' {
+			gettoken junk names : names , parse(`"@"')
+  		    gettoken name names : names , parse(`"@"')
+			replace Label  = `"`name'"' in `i' 
+		}
+		gen newdepth = Depth 
+		su Depth , mean
+		loc maxd = r(max)
+		replace newdepth = `maxd' if (newdepth<`maxd') & (newdepth[_n+1]==newdepth) 
+		list 
+		loc bys 
+		forvalues d=1/`maxd' {
+			if (`d'<=3) loc bys `bys' Label`d' 
+			gen str20 Label`d' = Label 
+			replace Label`d' = Label`d'[_n-1] if Depth>`d' 
+		}		
+		keep if newdepth == `maxd' 
+		drop Depth1 newdepth Label 
+		treemap ShapOw1 , by(`bys')  `options' 
+	}
+end
+
+
+// shorthand notations
+loc NODE		struct Node scalar 
+loc TREE 		pointer(`NODE')  scalar 
+loc BRANCHES	pointer(`NODE')  colvector 
+loc SS			string scalar 
 
 mata:
 	// ---------------------------------------------------------------------
 	// 1.  Convenience and parsing functions
 	// ---------------------------------------------------------------------
-	void StripBrackets (string scalar Entry, string scalar Local) {
+	void StripBrackets (`SS' Entry, `SS' Local) {
 		s = subinstr(subinstr(Entry,  "(" ,""),  ")" ,"")
 		st_local(Local,s)
 	}
 
 	// receives a string and splits it in blocks separated by brackets 
 	// parses on whitespace, or double quotes or ( )  
-	string colvector   Parser(string scalar Entree) {
+	string colvector   Parser(`SS'  Entree) {
 		t = tokeninit(" ", "", (`""""',"()"), 0, 0)
 		tokenset(t, Entree)
 		tokens = tokengetall(t)
@@ -91,55 +153,50 @@ mata:
 	// ---------------------------------------------------------------------
 	// Definition of structure for Nodes
 	struct Node {
-		string 							scalar		Content
-		real 							scalar		Size
-		real							colvector	Indices
-		real 							colvector  	GridIndx
-		real							colvector	GridInvIndx
-		real							matrix		GridIn
-		real							matrix		GridOut
-		real							matrix		GridWeights
-		real							matrix		ValIn
-		real							matrix		ValOut
-		real 							colvector	ShapVal
-		real 							colvector	BanzVal
-		real 							colvector	FirstVal
-		real 							colvector	LastVal
-		pointer(struct Node scalar)		colvector 	Branches
+		string 	scalar		Content
+		real 	scalar		Size
+		real    scalar 		DepthLevel
+		real	colvector	Indices
+		real 	colvector  	GridIndx, 	GridInvIndx
+		real	matrix		GridIn, 	GridOut, 	GridWeights
+		real	matrix		ValIn, 	ValOut
+		real 	colvector	ShapVal, BanzVal, FirstVal, LastVal, SeqVal
+		`BRANCHES' 			Branches
 	}		
 	
 	class Shapley {
 		private: 
-		string 	scalar 	Cmd 				
-		string 	scalar 	InputString, Separator, EmptySub, EmptyValue, ErrorValue		  
+		string 	scalar 	Cmd, 	InputString
+		string 	scalar 	Candidates, Substitutes
+		string  scalar  Separator, EmptySub, EmptyValue, ErrorValue		  
 		string 	matrix 	MatRes, ScaRes, StatsLabels
-		string 	scalar 	Candidates 
-		string 	scalar 	Substitutes
-		real 	scalar  Mode, Echo, ShowNodes, Shown, StatsLabelsSet, ShowDots
+		real 	scalar  Mode, Echo, ShowNodes, Shown, StatsLabelsSet, ShowDots, ShowEmpty, ShowFull
 		real   	scalar 	K, NStats, NNodes  // Number of Items, Number of stats, Number of Nodes
-		pointer(struct Node scalar)  scalar  Tree
+		`TREE' 			Tree
 		real 	matrix 	LookUp
 		//
-		void 								new()
-		pointer(struct Node scalar) scalar 	GrowTree()
-		void								GetIndices()
-		real 	matrix						Build()
-		void								BuildGrids()
-		real	rowvector					Evaluate()
-		void								EvaluateGrids()
-		void								EvaluateShapley()
-		void								StoreAndDisplay()
-		void								DisplayResults()
-		void								PostFrame()
-		void								Traverse()
+		void 				new()
+		`TREE'				GrowTree()
+		void				GetIndices()
+		real 	matrix		Build()
+		void				BuildGrids()
+		real	rowvector 	Evaluate()
+		void				EvaluateGrids()
+		void				EvaluateShapley()
+		void				StoreAndDisplay()
+		void				DisplayResults()
+		void				PostFrame()
+		void				Traverse()
 	}
 
-	// The constructor reads arguments, builds tree, and launches the evaluation.
+	// The constructor reads arguments, builds tree, and launches the evaluation, shows results
 	void Shapley::new() {
 		this.Cmd = st_local("cmd")
 		this.Echo = strlen(st_local("trace"))==0 ? 1 : 0
 		this.ShowNodes = strlen(st_local("shownodes"))==0 ? 0 : 1
 		this.ShowDots = strlen(st_local("dots"))==0 ? 1 : 0 
+		this.ShowEmpty = strlen(st_local("showempty"))==0 ? 0 : 1 
+		this.ShowFull = strlen(st_local("showfull"))==0 ? 0 : 1 
 		this.InputString = st_local("anything")
 		this.Separator = st_local("separator")
 		this.EmptySub = st_local("emptysubstitute")
@@ -156,7 +213,7 @@ mata:
 		this.ScaRes = tokens(st_local("scalarexpressions"))
 		this.LookUp = J(0,this.K,.)
 		this.Shown = 0
-		this.Tree = this.GrowTree(this.InputString)	
+		this.Tree = this.GrowTree(this.InputString, 0)	
 		this.GetIndices(this.Tree,0)
 		this.BuildGrids(this.Tree, J(0,0,0), J(0,2,0), J(1,0,0))  
 		this.EvaluateGrids(this.Tree)
@@ -167,24 +224,25 @@ mata:
 	}
 	
 	// Tree creation -- receives string and returns pointer to tree (root node))
-	pointer(struct Node scalar)  scalar  Shapley::GrowTree(string scalar Entree) {
-		struct Node scalar Block
+	`TREE'  Shapley::GrowTree(string scalar Entree, real scalar depth) {
+		`NODE' Block
 		this.NNodes = this.NNodes + 1 
 		vecEntree = Parser(Entree) 
 		Block.Content = Entree
 		s = subinstr(subinstr(Entree,  "(" ,"") ,  ")" ,"")
+		Block.DepthLevel = depth
 		Block.Size = cols(tokens(s))
 		Block.Branches = J(0,1,NULL) 
 		if (rows(vecEntree)>1) {
 			for (i=1; i<=rows(vecEntree); i++) {
-				Block.Branches = Block.Branches \  this.GrowTree(vecEntree[i])
+				Block.Branches = Block.Branches \  this.GrowTree(vecEntree[i],depth+1)
 			}
 		}  		
 		return(&Block)	
 	}
 
 	// Determines the index vector of each element of each node in a tree (indices are according to initial unbracketed list of items) 
-	void Shapley::GetIndices(pointer(struct Node scalar) Tree, real scalar Debut) {
+	void Shapley::GetIndices(`TREE' Tree,  real scalar Debut) {
 		(*Tree).Indices = ( (Debut+1) .. (Debut+(*Tree).Size))
 		DebutStart = Debut 
 		for (i=1; i<=rows((*Tree).Branches); i++) {
@@ -195,11 +253,11 @@ mata:
 	}		
 
 	// Takes set of branches and returns a matrix with all possible combinations of in/out and the weight of each row
-	real matrix Shapley::Build(pointer(struct Node scalar) colvector Branches) {
+	real matrix Shapley::Build(`BRANCHES' Branches) {
 		real matrix Output
 		Output = J(0,0, .) 
 		n = rows(Branches)
-		for (i=1; i<=rows(Branches); i++) {
+		for (i=1; i<=n; i++) {
 			if (rows(Output)==0)  {
 				Output = J(1,(*Branches[i]).Size,0) \ J(1,(*Branches[i]).Size,1)  
 				Weights = (0 \ 1)  
@@ -214,7 +272,7 @@ mata:
 		return((Weights, Output)) 
 	}
 	
-	void Shapley::BuildGrids(pointer(struct Node scalar) Tree , real matrix From, real matrix FromWeights, real rowvector FromIndx ) {
+	void Shapley::BuildGrids(`TREE' Tree , real matrix From, real matrix FromWeights, real rowvector FromIndx ) {
 		// Set current node 
 		if (cols(From)==0) {
 			(*Tree).GridIn = J(1,(*Tree).Size,1)   
@@ -272,7 +330,8 @@ mata:
 			newargs = (cols(items)==0) ? this.EmptySub : newargs 
 			cmd =  subinstr(this.Cmd, "@" , newargs)
 			if (this.ShowDots) printf("{res}%s", ".")
-			rc = _stata(cmd, this.Echo)
+			showoutput = (( this.Echo==0 + (this.ShowFull*(rows(this.LookUp)==0)) + (this.ShowEmpty*(rows(this.LookUp)==1)) )>0 )  ? 0 : 1 
+			rc = _stata(cmd, showoutput)
 			if (rc>0) {
 				display("{break}{error}Execution of -- " + cmd + " -- failed (error " + strofreal(rc) + ")")
 				if (this.ErrorValue != "") {
@@ -307,7 +366,7 @@ mata:
 	}
 
 	// Run the evaluations 
-	void Shapley::EvaluateGrids(pointer(struct Node scalar) Tree) {
+	void Shapley::EvaluateGrids(`TREE' Tree) {
 		real scalar j 
 		// in initial run LookUp is empty. collect info about length of output
 		if (rows(this.LookUp)==0) {
@@ -348,23 +407,31 @@ mata:
 	}
 
 	// Run Shapley-OWen and Banzhaf weights
-	void Shapley::EvaluateShapley(pointer(struct Node scalar) Tree) {
-		(*Tree).ShapVal = mean(((*Tree).ValIn :- (*Tree).ValOut) , (*Tree).GridWeights[,2])
-		(*Tree).BanzVal = mean(((*Tree).ValIn :- (*Tree).ValOut) , (*Tree).GridWeights[,1])
+	void Shapley::EvaluateShapley(`TREE' Tree) {
+		(*Tree).ShapVal = mean(((*Tree).ValIn :- (*Tree).ValOut ) , (*Tree).GridWeights[,2])
+		(*Tree).BanzVal = mean(((*Tree).ValIn :- (*Tree).ValOut ) , (*Tree).GridWeights[,1])
 		// First marginal weight
 		min = min(rowsum((*Tree).GridIn))
-		(*Tree).FirstVal = mean(((*Tree).ValIn :- (*Tree).ValOut) , (rowsum((*Tree).GridIn):==min) )
+		//(*Tree).FirstVal = mean(((*Tree).ValIn :- (*Tree).ValOut) , (rowsum((*Tree).GridIn):==min) )
+		(*Tree).FirstVal = select( ((*Tree).ValIn :- (*Tree).ValOut ) , (rowsum((*Tree).GridIn):==min) )
 		// Last marginal weight 
 		max = max(rowsum((*Tree).GridIn))
-		(*Tree).LastVal = mean(((*Tree).ValIn :- (*Tree).ValOut) , (rowsum((*Tree).GridIn):==max) )
+		//	(*Tree).LastVal = mean(((*Tree).ValIn :- (*Tree).ValOut) , (rowsum((*Tree).GridIn):==max) )
+		(*Tree).LastVal = select( ((*Tree).ValIn :- (*Tree).ValOut ) , (rowsum((*Tree).GridIn):==max) )
+		// Input sequence
+		minindx = min((*Tree).Indices)
+		(*Tree).SeqVal =  select( 
+			( (*Tree).ValIn :- (*Tree).ValOut ) , 
+			(rowsum( (*Tree).GridOut :== ((*Tree).GridIndx:<minindx) ) :== this.K) 
+			)
 		// iterate over branches
 		for (i=1;i<=rows((*Tree).Branches); i++) {
 			this.EvaluateShapley((*Tree).Branches[i])
 		}
 	}
 
-	void Shapley::StoreAndDisplay(pointer(struct Node scalar) Tree, real scalar InSize) {
-		external CNT, MatShap , MatBanz , MatFirst, MatLast, MatRowNames, EmptySet, FullSet
+	void Shapley::StoreAndDisplay(`TREE' Tree, real scalar InSize) {
+		external CNT, MatShap , MatBanz , MatFirst, MatLast, MatSeq, MatDepth, MatRowNames, EmptySet, FullSet
 		this.NStats = cols((*Tree).ShapVal)
 		if (InSize==0) {
 			CNT = 1
@@ -373,14 +440,18 @@ mata:
 			MatBanz = J(0,this.NStats, .)
 			MatFirst = J(0,this.NStats, .)
 			MatLast = J(0,this.NStats, .)
+			MatSeq =  J(0,this.NStats, .)
 			EmptySet = (*Tree).ValOut 
 			FullSet = (*Tree).ValIn
+			MatDepth = J(0,1,.)
 		}
 		MatRowNames = MatRowNames \ (*Tree).Content
+		MatDepth = MatDepth \ (*Tree).DepthLevel		
 		MatShap  = MatShap  \ (*Tree).ShapVal
 		MatBanz  = MatBanz  \ (*Tree).BanzVal
 		MatFirst = MatFirst \ (*Tree).FirstVal
 		MatLast  = MatLast  \ (*Tree).LastVal
+		MatSeq   = MatSeq   \ (*Tree).SeqVal 	
 		for (i=1;i<=rows((*Tree).Branches); i++) {
 			CNT = CNT+1
 			StoreAndDisplay((*Tree).Branches[i], rows(MatShap))
@@ -390,37 +461,40 @@ mata:
 			this.Shown = 1
 			// Display
 	        ls = st_numscalar("c(linesize)") - 5
-			max = max((15,max(strlen(abbrev(MatRowNames[|2,1 \ . , 1|],32)))))
+			max = max((24,max(strlen(abbrev(MatRowNames[|2,1 \ . , 1|],24)))))
+			nc = 46
 			printf("\n")	
 			display("{txt}Instruction:{space 2}{res}" + strtrim(this.Cmd))
 			display("{txt}Items list:{space 3}{res}" + strtrim(this.InputString))
+			display("{txt}Number of evaluations required:{space 3}{res}" + strofreal(rows(this.LookUp)))
 			for (i=1; i<=this.NStats; i++) {
 				printf("\n")	
 				printf("{txt}{bf: %-28s }", "---  " + this.StatsLabels[i] + " ---")	
-				printf("{txt}{space 2}Empty set value: {res}%9.0g{space 18}" , EmptySet[1,i]  ) 
-				printf("{txt}Full set value: {res}%9.0g\n" , FullSet[1,i] ) 
-				printf("{txt}{hline " + strofreal(max+2) + "}{c TT}{hline " + strofreal(41) + "}{c TT}{hline " + strofreal(41) + "}\n")
-				printf("{txt}{space " + strofreal(max+2) + "}{c |}%40s {c | } %40s \n" , "Nominal contribution", "Relative contribution")
-				printf("{txt}{hline " + strofreal(max+2) + "}{c +}{hline " + strofreal(41) + "}{c +}{hline " + strofreal(41) + "}\n")
-				printf("{txt}{space " + strofreal(max+2) + "}{c |} %9s %9s %9s %9s {c |} %9s %9s %9s %9s \n", "Shapley", "Banzhaf", "First", "Last", "Shapley", "Banzhaf", "First", "Last")
-				printf("{txt}{space " + strofreal(max+2) + "}{c |} %9s %9s %9s %9s {c |} %9s %9s %9s %9s \n", "-Owen", "", "", "","-Owen", "", "", "")
-				printf("{txt}{hline " + strofreal(max+2) + "}{c +}{hline " + strofreal(41) + "}{c +}{hline " + strofreal(41) + "}\n")
+				printf("{txt}{space 2}Empty set value: {res}%8.0g{space 22}" , EmptySet[1,i]  ) 
+				printf("{txt}Full set value: {res}%8.0g\n" , FullSet[1,i] ) 
+				printf("{txt}{hline " + strofreal(max+6) + "}{c TT}{hline " + strofreal(nc) + "}{c TT}{hline " + strofreal(nc) + "}\n")
+				printf("{txt}{space " + strofreal(max+6) + "}{c |}%" + strofreal(nc-1) + "s {c | } %" + strofreal(nc-1) + "s \n" , "Nominal contribution", "Relative contribution")
+				printf("{txt}{hline " + strofreal(max+6) + "}{c +}{hline " + strofreal(nc) + "}{c +}{hline " + strofreal(nc) + "}\n")
+				printf("{txt}{space " + strofreal(max+6) + "}{c |} %8s %8s %8s %8s %8s {c |} %8s %8s %8s %8s %8s \n", "Shapley", "Banzhaf", "First", "Last", "Seq.", "Shapley", "Banzhaf", "First", "Last", "Seq.")
+				printf("{txt}{space " + strofreal(max+6) + "}{c |} %8s %8s %8s %8s %8s {c |} %8s %8s %8s %8s %8s \n", "-Owen", "", "", "", "" ,"-Owen", "", "", "", "" )
+				printf("{txt}{hline " + strofreal(max+6) + "}{c +}{hline " + strofreal(nc) + "}{c +}{hline " + strofreal(nc) + "}\n")
 				for (j=1; j<=this.NNodes; j++) {
 					if (j==1) {
 						itemlabel = "FULL"
-						printf("{txt}%" + strofreal(max+1) + "s {c |} {res}%9.0g %9s %9s %9s {c |} {res}%9.0g %9s %9s %9s\n", 
-							itemlabel , MatShap[j,i], "", "", "" , MatShap[j,i]:/MatShap[1,i], "" , "", "")	
-						printf("{txt}{hline " + strofreal(max+2) + "}{c +}{hline " + strofreal(41) + "}{c +}{hline " + strofreal(41) + "}\n")
+						printf("{txt}[%1s] %" + strofreal(max+1) + "s {c |} {res}%8.0g %8s %8s %8s %8s {c |} {res}%8.0g %8s %8s %8s %8s \n", 
+							strofreal(MatDepth[j,1]), itemlabel , MatShap[j,i], "", "", "" ,"" , MatShap[j,i]:/MatShap[1,i], "" , "", "","")	
+						printf("{txt}{hline " + strofreal(max+6) + "}{c +}{hline " + strofreal(nc) + "}{c +}{hline " + strofreal(nc) + "}\n")
 					}
 					else {
-						itemlabel = abbrev(MatRowNames[j,1], 32) 
-						printf("{txt}%" + strofreal(max+1) + "s {c |} {res}%9.0g %9.0g %9.0g %9.0g {c |} {res}%9.0g %9.0g %9.0g %9.0g\n", 
-							itemlabel , 
-							MatShap[j,i], MatBanz[j,i], MatFirst[j,i], MatLast[j,i], 
-							MatShap[j,i]:/MatShap[1,i], MatBanz[j,i]:/MatBanz[1,i], MatFirst[j,i]:/MatFirst[1,i], MatLast[j,i]:/MatLast[1,i])
+						itemlabel = abbrev(MatRowNames[j,1], 24) 
+						printf("{txt}[%1s] %" + strofreal(max+1) + "s {c |} {res}%8.0g %8.0g %8.0g %8.0g %8.0g {c |} {res}%8.0g %8.0g %8.0g %8.0g %8.0g \n",
+							strofreal(MatDepth[j,1]), itemlabel , 
+							MatShap[j,i], MatBanz[j,i], MatFirst[j,i], MatLast[j,i], MatSeq[j,i] ,
+							MatShap[j,i]:/MatShap[1,i], MatBanz[j,i]:/MatBanz[1,i], MatFirst[j,i]:/MatFirst[1,i], MatLast[j,i]:/MatLast[1,i], MatSeq[j,i]:/MatSeq[1,i]
+							)
 					}
 				}	
-				printf("{txt}{hline " + strofreal(max+2) + "}{c BT}{hline " + strofreal(41) + "}{c BT}{hline " + strofreal(41) + "}\n")
+				printf("{txt}{hline " + strofreal(max+6) + "}{c BT}{hline " + strofreal(nc) + "}{c BT}{hline " + strofreal(nc) + "}\n")
 			}
 			// Store
 			resname = "ShapOw"
@@ -443,24 +517,33 @@ mata:
 			stata("return matrix " + resname + "  r_" + resname)
 				st_matrix("r_r"+resname , MatLast:/MatLast[1,])
 				stata("return matrix rel" + resname + "  r_r" + resname)
+			resname = "Sequence" 
+			st_matrix("r_"+resname , MatSeq)
+			stata("return matrix " + resname + "  r_" + resname)
+				st_matrix("r_r"+resname , MatSeq:/MatSeq[1,])
+				stata("return matrix rel" + resname + "  r_r" + resname)
 			for (i=1; i<=this.NNodes; i++) {
 				stata("return local item"+strofreal(i) + " " + MatRowNames[i])
 			}
+			resname = "Depth" 
+			st_matrix("r_"+resname , MatDepth)
+			stata("return matrix " + resname + "  r_" + resname)
 			stata("return local cmd " + this.Cmd)
 			stata("return local items " + this.InputString)
 			stata("return local stats " + invtokens(this.StatsLabels))
 			stata("return scalar K = " + strofreal(this.K))
+			stata("return scalar neval = " + strofreal(rows(this.LookUp)))
 		}
 	}
 	
-	void Shapley::PostFrame(pointer(struct Node scalar) Tree) {
+	void Shapley::PostFrame(`TREE' Tree) {
 		fname = st_framecurrent() 
-		rc = _st_framecreate("ShapOwen", 0)
+		rc = _st_framecreate("_shapowen", 0)
 		if (rc!=0) {
-			st_framedrop("ShapOwen")
-			st_framecreate("ShapOwen")
+			st_framedrop("_shapowen")
+			st_framecreate("_shapowen")
 		}	
-		st_framecurrent("ShapOwen")
+		st_framecurrent("_shapowen")
 		st_addobs(rows(this.LookUp))
 		names = J(1,0,"")
 		for (i=1;i<=this.K;i++) {
@@ -482,8 +565,11 @@ mata:
 		st_framecurrent(fname)
 	}
 
-	void Shapley::Traverse(pointer(struct Node scalar) Chose) {
+	void Shapley::Traverse(`TREE' Chose) {
+		(*Chose).DepthLevel 
 		(*Chose).Content
+		(*Chose).Indices
+		(*Chose).GridIndx		
 		( ((*Chose).GridWeights \ (*Chose).GridWeights ) , ((*Chose).GridIn[,(*Chose).GridInvIndx] \ (*Chose).GridOut[,(*Chose).GridInvIndx] ) , (		(*Chose).ValIn \ (*Chose).ValOut   )) 
 		for (i=1; i<=rows((*Chose).Branches); i++) {
 			Traverse((*Chose).Branches[i]) 

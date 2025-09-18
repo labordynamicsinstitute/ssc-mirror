@@ -14,6 +14,7 @@ p capass module to wrap Stata's assert command, throws error messages
 p care module to randomly generate helpful tips to keep you on top of your mental wellbeing
 p carryforward module to carry forward previous observations
 p cart module to perform Classification And Regression Tree analysis
+p case2tex module to create a case study paper framework following international journal publication standards
 p casefat module for estimating the case fatality ratio of a new infectious disease 
 p catdev modules for interpretation of categorical dependent variable models
 p catenate module to concatenate variables into string variable

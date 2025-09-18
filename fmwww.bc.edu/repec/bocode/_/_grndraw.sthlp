@@ -87,11 +87,11 @@ Only one option can be specified.
 	
 {phang2}{cmd:. set obs 1000}
 
-{phang2}{cmd:. egen double ysm = rnddraw() , sm(5 100 1.2) }
+{phang2}{cmd:. egen double ysm = rndraw() , sm(5 100 1.2) }
 
-{phang2}{cmd:. egen double ygb2 = rnddraw() , gb2(5 100 0.8 1.2) }
+{phang2}{cmd:. egen double ygb2 = rndraw() , gb2(5 100 0.8 1.2) }
 
-{phang2}{cmd:. egen double ypareto = rnddraw() , pareto(100 2.5) }
+{phang2}{cmd:. egen double ypareto = rndraw() , pareto(100 2.5) }
 
 {phang2}{cmd:. graph twoway (kdensity ysm) (kdensity ygb2) (kdensity ypareto)}
 

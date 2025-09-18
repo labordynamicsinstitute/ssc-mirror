@@ -19,24 +19,29 @@ d
 d Author: Daniele Spinelli, University of Milano Bicocca
 d Support: email daniele.spinelli@@unimib.it
 d
-d Author: Jan Dul, Rotterdam School of Management, Erasmus University Rotterdam
+d Author: Jan Dul , Rotterdam School of Management,  Erasmus University Rotterdam
 d Support: email jdul@@rsm.nl
 d
 f nca.ado
+f nca_analysis.ado
 f nca_centiles.ado
+f nca_dependencies.ado
 f nca_display.ado
 f nca_display_bottleneck_table.ado
 f nca_estimate.ado
 f nca_get_centiles.ado
+f nca_outliers.ado
 f nca_parse_scope.ado
 f nca_random.ado
 f nca_perm.ado
 f nca_power.ado
 f nca_test.ado
-f nca_examples.do
 f nca.sthlp
+f nca_analysis.sthlp
+f nca_outliers.sthlp
 f nca_power.sthlp
 f nca_random.sthlp
 f ../l/lnca.mlib
+f nca_examples.do
 f ncaexample.dta
 f ncaexample2.dta

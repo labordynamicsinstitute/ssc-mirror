@@ -1,5 +1,5 @@
 {smcl}
-{* Help file update 2025-09-11}{...}
+{* Help file update 2025-09-15}{...}
 {hline}
 help file for {hi:shapowen}{right:P. Van Kerm (September 2025)}
 {hline}
@@ -35,7 +35,12 @@ Nested structures of any depth are allowed: brackets can be embedded in brackets
 {synopt: {bf:{ul:err}orvalue}({it:string})}Use {it:string} as output value (for all output expressions) if execution of {it:cmd} fails after substitution{p_end}
 {synopt: {bf:frame}}Store estimates of all combinations of items in new frame called ShapOwen{p_end}
 {synopt: {bf:trace}}Display output of all calls to {it:cmd}{p_end}
+{synopt: {bf:showfull}}Display output of call to {it:cmd} with the full set of elements{p_end}
+{synopt: {bf:showempty}}Display output of call to {it:cmd} with the empty set{p_end}
+{synopt: {bf:trace}}Display output of all calls to {it:cmd}{p_end}
 {synopt: {bf:nodots}}Suppress display of progression dots{p_end}
+{synopt: {bf:treemap}}Plot results as tree map{p_end}
+{synopt: {bf:treemapopts(string)}}Tree map plot options{p_end}
 {synoptline}
 
 
@@ -56,6 +61,14 @@ Items can be anything (strings, numbers). At each iteration, scalar-valued or ma
 
 {pstd}
 Pre-defined coalitions in {it:itemlist} for calculation of Owen values are specified by grouping elements in brackets. Nested structures of arbitrary depth are allowed: any number of sub-coalitions can be formed within any coalition by using nested bracket groupings.
+{p_end}
+
+{pstd}
+{hi:shapowen} calculates and reports the Shapley value for all elements in {it:itemlist}. If a nested structure is given, what is reported is the Owen value of all individual elements as well as the value of all preset coalitions. 
+{p_end}
+
+{pstd}
+For the sake of completeness, {hi:shapowen} also reports the Banzhaf value of all elements (Banzhaf, 1965), their marginal contribution to an empty set (under {it:First}), their marginal contribution to a complete set (under {it:Last}), and their marginal contribution in the particular sequence formed by {it:itemlist}. The right panel shows all estimates divided by the value of the {c 39}Grand coalition{c 39} (formed by all elements in the set). The relative values under the Shapley-Owen column therefore provide a measure of the share of each element to the total and sum up to 1. 
 {p_end}
 
 
@@ -79,11 +92,19 @@ At least one of {bf:scalarexpressions(}{it:string}{bf:)} or {bf:matrixexpression
 {p_end}
 
 {phang}
-{bf:frame} requests that estimates of all stored expressions for all combinations of items needed to evaluate the Shapley-Owen value are stored in a new frame called ShapOwen.
+{bf:frame} requests that estimates of all stored expressions for all combinations of items needed to evaluate the Shapley-Owen value are stored in a new frame called {bf: _shapowen}.
 {p_end}
 
 {phang}
 {bf:trace} requests that the output of all calls to {it:cmd} are shown.
+{p_end}
+
+{phang}
+{bf:showfull} requests display of the output of call to {it:cmd} with the full set of elements.
+{p_end}
+
+{phang}
+{bf:showempty} requests display of the output of call to {it:cmd} with the empty set.
 {p_end}
 
 {phang}
@@ -106,6 +127,10 @@ At least one of {bf:scalarexpressions(}{it:string}{bf:)} or {bf:matrixexpression
 {bf:nodots} suppresses display of progression dots.
 {p_end}
 
+{phang}
+{bf:treemap} plots resulting Shapley-Owen decomposition as a tree map. Only the first outcome expression is plotted (see 'Saved results' for plotting additional outcomes). Results are formatted and passed directly to A Naqvi's {stata findit treemap:treemap} plotting commmand (which needs to be pre-installed). {bf:treemapopts(}{it:string}{bf:)} contains options passed directly to {cmd:treemap}. 
+{p_end}
+
 
 {title:Saved results}
 
@@ -122,6 +147,7 @@ At least one of {bf:scalarexpressions(}{it:string}{bf:)} or {bf:matrixexpression
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: Scalars}{p_end}
 {synopt: {bf:r(K)}}cardinality of the grand coalition (number of individual items){p_end}
+{synopt: {bf:r(neval)}}number of evaluations{p_end}
 
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: Matrices}{p_end}
@@ -133,8 +159,16 @@ At least one of {bf:scalarexpressions(}{it:string}{bf:)} or {bf:matrixexpression
 {synopt: {bf:r(relFirst)}}Marginal contribution of items when entered first relative to total (grand coalition) value{p_end}
 {synopt: {bf:r(Last)}}Marginal contribution of items when entered last{p_end}
 {synopt: {bf:r(relLast)}}Marginal contribution of items when entered last relative to total (grand coalition) value{p_end}
+{synopt: {bf:r(Sequence)}}Marginal contribution of items when entered in the order of {it:itemlist}{p_end}
+{synopt: {bf:r(relSequence)}}Marginal contribution of items when entered in the order of {it:itemlist}{p_end}
+{synopt: {bf:r(depth)}}Depth level of items in the (nested) Shapley-Owen structure{p_end}
 
-{pstd}If the option {bf:frame} is specified, a new frame named ShapOwen is created and contains estimates of scalar and matrix expressions for all necessary coalitions.
+{pstd}
+If the option {bf:frame} is specified, a new frame named {bf:_shapowen} is created and contains estimates of scalar and matrix expressions for all necessary coalitions.
+{p_end}
+
+{pstd}
+If the option {bf:treemap} is specified, a new frame named {bf:_shapowen_treemap} is created and contains estimates formatted so as to be plotted directly with {bf:treemap}. This can be used for plotting multiple outcomes or for alternative plotting designs.
 {p_end}
 
 
@@ -155,7 +189,7 @@ At least one of {bf:scalarexpressions(}{it:string}{bf:)} or {bf:matrixexpression
 
 {p 8 12 2}{inp:. shapowen  "i.race i.collgrad c.age##c.age" "i.industry i.occupation" "i.south i.smsa" , sca(e(r2_a)) :  regress lnw @}{p_end}
 
-{p 8 12 2}{inp:. shapowen  (i.race i.collgrad c.age##c.age) (i.industry i.occupation) (i.south i.smsa)  , sca(e(r2_a)):  regress lnw @}{p_end}
+{p 8 12 2}{inp:. shapowen  (i.race i.collgrad c.age##c.age) (i.industry i.occupation) (i.south i.smsa)  , sca(e(r2_a)) showfull treemap :  regress lnw @}{p_end}
 
 {p 8 12 2}{inp:. ssc install sgini}{p_end}
 {p 8 12 2}{inp:. shapowen   1 2 3 4 5 6 7 8 9 10 11 12 , sca(r(coeff)) sep(,) emptyvalue(0) : sgini wage if inlist(industry,@)}{p_end}
@@ -170,7 +204,8 @@ Online:
 {helpb adecomp} (if installed), 
 {helpb drdecomp} (if installed),
 {helpb hoishapley} (if installed),
-{helpb iop} (if installed)
+{helpb iop} (if installed),
+{helpb treemap} (if installed)
 
 
 {title:Acknowledgements}
@@ -191,15 +226,23 @@ Online:
 {title:Suggested citation}
 
 {pstd}
-Van Kerm, P. (2025). shapowen: A generic Shapley-Owen value calculator. Statistical Software Components, Boston College Department of Economics. 
+Van Kerm, P. (2025).{browse "https://ideas.repec.org/c/boc/bocode/s459513.html":shapowen: A generic Shapley-Owen value calculator}. Statistical Software Components S459513, Boston College Department of Economics. 
 {p_end}
 
 
 {title:References}
 
 {pstd}
+Banzhaf III, J. F. (1965). Weighted voting doesn't work: A mathematical analysis, {it:Rutgers Law Review} 19, pp. 317–343.
+{p_end}
+
+{pstd}
 Kolenikov, S. (2000). SHAPLEY: Stata module to perform additive decomposition of sample statistic.
 Statistical Software Components S411401, Boston College Department of Economics. 
+{p_end}
+
+{pstd}
+Naqvi, A. (2024). Stata package "treemap" version 1.6. Release date 09 October 2024. https://github.com/asjadnaqvi/stata-treemap.
 {p_end}
 
 {pstd}

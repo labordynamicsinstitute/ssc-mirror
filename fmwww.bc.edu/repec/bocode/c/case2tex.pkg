@@ -1,0 +1,36 @@
+d 'CASE2TEX': module to create a case study paper framework following international journal publication standards
+d
+d	  case2tex creates a LaTeX template for case study papers
+d that conforms to international journal    publication standards. 
+d The template includes flexible abstract formatting, configurable
+d keyword    separators, support for figures and tables,
+d mathematical equations, and options for both .tex and    .bib
+d reference formats. The template supports both Chinese and English
+d languages. 
+d
+d KW: document preparation
+d KW: case study
+d KW: LaTeX 
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20250903
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+d Author:   Zhao Xin,  Wanjiang University of Technology
+d Support: email    1980124145@@qq.com
+d
+d Author: Liu Rui,  Wanjiang University of Technology
+d Support: email  3221241855@@qq.com
+d
+d Author:   Wu Hanyan,  Wanjiang University of Technology
+d Support: email    2325476320@@qq.com
+d
+f case2tex.ado
+f case2tex.sthlp
+f ../s/sunny_case2tex.do

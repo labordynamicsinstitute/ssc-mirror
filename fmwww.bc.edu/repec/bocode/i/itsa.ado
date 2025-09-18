@@ -1,3 +1,4 @@
+*! 3.5.0 Ariel Linden 16Sep2025						// fixed -cf- to account for different link() types
 *! 3.4.0 Ariel Linden 30Jul2025						// added -cf- (counterfactual) option for single-group ITSA
 *! 3.3.0 Ariel Linden 23Jul2025						// added smin() and smax() options to allow user to manually set ylabel() for shading 
 *! 3.2.5 Ariel Linden 05Jun2025						// fixed bug in ylabel() that didn't allow user to overwrite existing settings 
@@ -368,13 +369,95 @@ version 11.0
 		} // end glm	
 		
 		if "`cf'" != "" {
+			// get xvars from r(table)
 			local colnames: colnames table
 			gen_cf , cmdlne(`colnames') prefix(`prefix')
 			local text = r(expr)
 			tempvar _cf
-			qui gen `_cf' = `text' if `touse'
-		}
+			
+			// GLM model
+			if e(cmd) == "glm" {
+			
+				// if logit link, predict probabilities
+				if e(linkt) == "Logit" {
+					qui gen `_cf' = exp(`text') if `touse'
+					qui replace `_cf' =  `_cf' / (1 + `_cf') if `touse'				
+				}
+			
+				// if probit link, predict probabilities
+				else if e(linkt) == "Probit" {
+					qui gen `_cf' = normal(`text') if `touse'				
+				}
+	
+				// if log link, predict count
+				else if e(linkt) == "Log" {
+					qui gen `_cf' = exp(`text') if `touse'				
+				}	
+			
+				// if cloglog link, predict probabilities
+				else if e(linkt) == "Complementary log–log" {
+					qui gen `_cf' = 1 - exp(-exp(`text')) if `touse'
+				}
+			
+				// if nbinomial link, predict probabilities
+				else if e(linkt) == "Neg. Binomial" {
+					qui gen `_cf' = exp(`text') if `touse'
+					qui replace `_cf' = 1 * `_cf' / (1 - `_cf') if `touse'
+				}
+			
+				// if log-log link, predict probabilities
+				else if e(linkt) == "Log-log" {
+					qui gen `_cf' = `text' if `touse'				
+					qui replace `_cf' = exp(-exp(-`_cf')) if `touse'
+				}
+			
+				// if reciprical (power -1) link, predict probabilities
+				else if e(linkt) == "Reciprocal" {	
+					qui gen `_cf' = `text' if `touse'	
+					qui replace `_cf' = 1 / `_cf' if `touse'
+				}
+			
+				// if (power -2) link, predict probabilities
+				else if e(linkt) == "Power(-2)" {	
+					qui gen `_cf' = 1/sqrt(`text') if `touse'	
+				}
+			
+				// if another power is specified as the link, predict probabilities
+				else if e(linkt) == "Power" {
+					if ustrregexm(e(linkf), "\(([-0-9]+)\)") {
+						local power = ustrregexs(1)
+						qui gen `_cf' = `text' if `touse'
+						qui replace `_cf' = `_cf'^(1/`power') if `touse'
+					}
+				}
+			
+				// if odds power link, predict probabilities
+				else if e(linkt) == "Odds power" {
+					if ustrregexm(e(linkf), "\(([-0-9]+)\)") {
+						local power = ustrregexs(1)		
+						qui gen `_cf' = `text' if `touse'	
+						replace `_cf' = 1 / (1 + (1 + `power' * `_cf')^(-1 / `power'))
+					}
+				}	
 
+				// if log complement link, predict probabilities
+				else if e(linkt) ==	"Log complement" {
+					qui gen `_cf' = 1-exp(`text') if `touse'				
+				}
+
+				// if identity link, predict xb
+				else if e(linkt) == "Identity" {
+					qui gen `_cf' = `text' if `touse'
+				}
+			} // end glm
+			
+			// Prais model
+			else {
+				qui gen `_cf' = `text' if `touse'				
+			}
+			
+		} // end "cf"
+	
 		/*********************************************************
 		*  LINCOM: SINGLE GROUP SINGLE PANEL                     *
 		**********************************************************/
@@ -709,12 +792,94 @@ version 11.0
 		}
 		
 		if "`cf'" != "" {
+			// get xvars from r(table)
 			local colnames: colnames table
 			gen_cf , cmdlne(`colnames') prefix(`prefix')
 			local text = r(expr)
 			tempvar _cf
-			qui gen `_cf' = `text' if `touse'
-		}
+			
+			// GLM model
+			if e(cmd) == "glm" {
+			
+				// if logit link, predict probabilities
+				if e(linkt) == "Logit" {
+					qui gen `_cf' = exp(`text') if `touse'
+					qui replace `_cf' =  `_cf' / (1 + `_cf') if `touse'				
+				}
+			
+				// if probit link, predict probabilities
+				else if e(linkt) == "Probit" {
+					qui gen `_cf' = normal(`text') if `touse'				
+				}
+	
+				// if log link, predict count
+				else if e(linkt) == "Log" {
+					qui gen `_cf' = exp(`text') if `touse'				
+				}	
+			
+				// if cloglog link, predict probabilities
+				else if e(linkt) == "Complementary log–log" {
+					qui gen `_cf' = 1 - exp(-exp(`text')) if `touse'
+				}
+			
+				// if nbinomial link, predict probabilities
+				else if e(linkt) == "Neg. Binomial" {
+					qui gen `_cf' = exp(`text') if `touse'
+					qui replace `_cf' = 1 * `_cf' / (1 - `_cf') if `touse'
+				}
+			
+				// if log-log link, predict probabilities
+				else if e(linkt) == "Log-log" {
+					qui gen `_cf' = `text' if `touse'				
+					qui replace `_cf' = exp(-exp(-`_cf')) if `touse'
+				}
+			
+				// if reciprical (power -1) link, predict probabilities
+				else if e(linkt) == "Reciprocal" {	
+					qui gen `_cf' = `text' if `touse'	
+					qui replace `_cf' = 1 / `_cf' if `touse'
+				}
+			
+				// if (power -2) link, predict probabilities
+				else if e(linkt) == "Power(-2)" {	
+					qui gen `_cf' = 1/sqrt(`text') if `touse'	
+				}
+			
+				// if another power is specified as the link, predict probabilities
+				else if e(linkt) == "Power" {
+					if ustrregexm(e(linkf), "\(([-0-9]+)\)") {
+						local power = ustrregexs(1)
+						qui gen `_cf' = `text' if `touse'
+						qui replace `_cf' = `_cf'^(1/`power') if `touse'
+					}
+				}
+			
+				// if odds power link, predict probabilities
+				else if e(linkt) == "Odds power" {
+					if ustrregexm(e(linkf), "\(([-0-9]+)\)") {
+						local power = ustrregexs(1)		
+						qui gen `_cf' = `text' if `touse'	
+						replace `_cf' = 1 / (1 + (1 + `power' * `_cf')^(-1 / `power'))
+					}
+				}	
+
+				// if log complement link, predict probabilities
+				else if e(linkt) ==	"Log complement" {
+					qui gen `_cf' = 1-exp(`text') if `touse'				
+				}
+
+				// if identity link, predict xb
+				else if e(linkt) == "Identity" {
+					qui gen `_cf' = `text' if `touse'
+				}
+			} // end glm
+			
+			// Prais model
+			else {
+				qui gen `_cf' = `text' if `touse'				
+			}
+			
+		} // end "cf"
 
 		/**************************************************************
 		*  LINCOM: SINGLE GROUP MULTIPLE PANELS                     *
