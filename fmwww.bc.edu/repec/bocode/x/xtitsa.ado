@@ -1,4 +1,5 @@
-*! 23.0 Ariel Linden 31Jul2025		// added -cf- (counterfactual) option for single-group ITSA
+*! 2.4.0 Ariel Linden 16Sep2025		// fixed -cf- to account for different link() types
+*! 2.3.0 Ariel Linden 31Jul2025		// added -cf- (counterfactual) option for single-group ITSA
 *! 2.2.0 Ariel Linden 23Jul2025 	// added smin() and smax() options to allow user to manually set ylabel() for shading 
 *! 2.1.2 Ariel Linden 06Jun2025 	// hardcoded lines around the legend box to work with Stata v19 
 									// fixed bug in ylabel() that didn't allow user to overwrite existing settings
@@ -30,13 +31,6 @@ version 11.0
 	CF																			/// counterfactual (single-group only)	
 	NAT(int 5)																	/// UNDOCUMENTED change _natscale #_n (forshade())
 	REPLace PREfix(str) *]
-	
-	
-	/* ensure that "eform" was not specified */
-	if regexm("`0'", substr(" ef", 1, 3))==1 {
-		di as err "eform cannot be used in xtitsa" 
-		exit 198
-	}
 	
 	gettoken dvar1 xvar : varlist
 	
@@ -258,12 +252,79 @@ version 11.0
 		} // end CI		
 		
 		if "`cf'" != "" {
+			// get xvars from r(table)
 			local colnames: colnames table
 			gen_cf , cmdlne(`colnames') prefix(`prefix')
 			local text = r(expr)
 			tempvar _cf
-			qui gen `_cf' = `text'  if `touse'
-		}
+			
+			// if logit link, predict probabilities
+			if e(link) == "logit" {
+				qui gen `_cf' = exp(`text') if `touse'
+				qui replace `_cf' =  `_cf' / (1 + `_cf') if `touse'				
+			}
+			
+			// if probit link, predict probabilities
+			else if e(link) == "probit" {
+				qui gen `_cf' = normal(`text') if `touse'				
+			}
+	
+			// if log link, predict count
+			else if e(link) == "log" {
+				qui gen `_cf' = exp(`text') // if `touse'
+			}	
+			
+			// if cloglog link, predict probabilities
+			else if e(link) == "cloglog" {
+				qui gen `_cf' = 1 - exp(-exp(`text')) if `touse'
+			}
+			
+			// if nbinomial link, predict probabilities
+			else if e(link) == "negative binomial" {
+				qui gen `_cf' = exp(`text') if `touse'
+				qui replace `_cf' = 1 * `_cf' / (1 - `_cf') if `touse'
+			}
+			
+			// if log-log link, predict probabilities
+			else if e(link) == "loglog" {
+				qui gen `_cf' = `text' if `touse'				
+				qui replace `_cf' = exp(-exp(-`_cf')) if `touse'
+			}
+			
+			// if reciprical (power -1) link, predict probabilities
+			else if e(link) == "reciprocal" | e(link) == "power(-1)" {	
+				qui gen `_cf' = `text' if `touse'	
+				qui replace `_cf' = 1 / `_cf' if `touse'
+			}
+			
+			// if (power -2) link, predict probabilities
+			else if e(link) == "power(-2)" {	
+				qui gen `_cf' = 1/sqrt(`text') if `touse'	
+			}
+			
+			// if another power is specified as the link, predict probabilities			
+			if bsubstr(e(link),1,5) == "power" {
+				local power = e(power)
+				if !inlist(`power', -2 , -1) {
+					qui gen `_cf' = `text' if `touse'
+					qui replace `_cf' = `_cf'^(1/`power') if `touse'					
+					
+				}
+			}
+			
+			// if odds power link, predict probabilities
+			if bsubstr(e(link),1,4) == "odds" {				
+				local power = e(power)
+				qui gen `_cf' = `text' if `touse'	
+				replace `_cf' = 1 / (1 + (1 + `power' * `_cf')^(-1 / `power')) if `touse'
+			}
+
+			// if identity link, predict xb
+			else if e(link) == "identity" {
+				qui gen `_cf' = `text' if `touse'
+			}
+
+		} // end "cf"
 
 		
 		/*********************************************************
@@ -564,12 +625,80 @@ version 11.0
 		} // end CI		
 		
 		if "`cf'" != "" {
+			// get xvars from r(table)
 			local colnames: colnames table
 			gen_cf , cmdlne(`colnames') prefix(`prefix')
 			local text = r(expr)
 			tempvar _cf
-			qui gen `_cf' = `text'  if `touse'
-		}
+			
+			// if logit link, predict probabilities
+			if e(link) == "logit" {
+				qui gen `_cf' = exp(`text') if `touse'
+				qui replace `_cf' =  `_cf' / (1 + `_cf') if `touse'				
+			}
+			
+			// if probit link, predict probabilities
+			else if e(link) == "probit" {
+				qui gen `_cf' = normal(`text') if `touse'				
+			}
+	
+			// if log link, predict count
+			else if e(link) == "log" {
+				qui gen `_cf' = exp(`text') // if `touse'
+			}	
+			
+			// if cloglog link, predict probabilities
+			else if e(link) == "cloglog" {
+				qui gen `_cf' = 1 - exp(-exp(`text')) if `touse'
+			}
+			
+			// if nbinomial link, predict probabilities
+			else if e(link) == "negative binomial" {
+				qui gen `_cf' = exp(`text') if `touse'
+				qui replace `_cf' = 1 * `_cf' / (1 - `_cf') if `touse'
+			}
+			
+			// if log-log link, predict probabilities
+			else if e(link) == "loglog" {
+				qui gen `_cf' = `text' if `touse'				
+				qui replace `_cf' = exp(-exp(-`_cf')) if `touse'
+			}
+			
+			// if reciprical (power -1) link, predict probabilities
+			else if e(link) == "reciprocal" | e(link) == "power(-1)" {	
+				qui gen `_cf' = `text' if `touse'	
+				qui replace `_cf' = 1 / `_cf' if `touse'
+			}
+			
+			// if (power -2) link, predict probabilities
+			else if e(link) == "power(-2)" {	
+				qui gen `_cf' = 1/sqrt(`text') if `touse'	
+			}
+			
+			// if another power is specified as the link, predict probabilities			
+			if bsubstr(e(link),1,5) == "power" {
+				local power = e(power)
+				if !inlist(`power', -2 , -1) {
+					qui gen `_cf' = `text' if `touse'
+					qui replace `_cf' = `_cf'^(1/`power') if `touse'					
+					
+				}
+			}
+			
+			// if odds power link, predict probabilities
+			if bsubstr(e(link),1,4) == "odds" {				
+				local power = e(power)
+				qui gen `_cf' = `text' if `touse'	
+				replace `_cf' = 1 / (1 + (1 + `power' * `_cf')^(-1 / `power')) if `touse'
+			}
+
+			// if identity link, predict xb
+			else if e(link) == "identity" {
+				qui gen `_cf' = `text' if `touse'
+			}
+
+		} // end "cf"
+
 		
 		/**************************************************************
 		*  LINCOM: SINGLE GROUP MULTIPLE PANELS                     *

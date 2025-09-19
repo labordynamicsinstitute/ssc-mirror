@@ -152,20 +152,36 @@ Create an English template with specific formatting:
 {title:Authors}
 
 {pstd}
-{bf:Wu Lianghai, Chen Liwen, Zhao Xin, Liu Rui, Wu Hanyan}{p_end}
-{pstd}School of Business, Anhui University of Technology(AHUT){p_end}
-{pstd}School of Economics and Management, Nanjing University of Aeronautics and Astronautics(NUAA){p_end}
-{pstd}Ma'anshan/Nanjing, China{p_end}
+Wu Lianghai{p_end}
+{pstd}School of Business, Anhui University of Technology, Ma'anshan, China{p_end}
 {pstd}{browse "mailto:agd2010@yeah.net":agd2010@yeah.net}{p_end}
+
+{pstd}
+Chen Liwen{p_end}
+{pstd}School of Business, Anhui University of Technology, Ma'anshan, China{p_end}
 {pstd}{browse "mailto:2184844526@qq.com":2184844526@qq.com}{p_end}
+
+{pstd}
+Zhao Xin{p_end}
+{pstd}School of Business, Anhui University of Technology, Ma'anshan, China{p_end}
 {pstd}{browse "mailto:1980124145@qq.com":1980124145@qq.com}{p_end}
+
+{pstd}
+Liu Rui{p_end}
+{pstd}School of Business, Anhui University of Technology, Ma'anshan, China{p_end}
 {pstd}{browse "mailto:3221241855@qq.com":3221241855@qq.com}{p_end}
+
+{pstd}
+Wu Hanyan{p_end}
+{pstd}School of Economics and Management, Nanjing University of Aeronautics and Astronautics(NUAA){p_end}
 {pstd}{browse "mailto:2325476320@qq.com":2325476320@qq.com}{p_end}
+
+{pstd}Ma'anshan/Nanjing, China{p_end}
 
 {title:Acknowledgments}
 
 {p 4 4 2}
-We sincerely appreciate Kit Baum and Christopher F. Baum for their prompt guidance and revision suggestions!
+We sincerely appreciate Christopher F. Baum for your prompt guidance and revision suggestions!
 
 {title:Also see}
 
