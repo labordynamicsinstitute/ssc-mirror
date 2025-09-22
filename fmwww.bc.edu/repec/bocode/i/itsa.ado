@@ -1,3 +1,4 @@
+*! 3.5.1 Ariel Linden 19Sep2025						// added bwidth option for lowess smoother 
 *! 3.5.0 Ariel Linden 16Sep2025						// fixed -cf- to account for different link() types
 *! 3.4.0 Ariel Linden 30Jul2025						// added -cf- (counterfactual) option for single-group ITSA
 *! 3.3.0 Ariel Linden 23Jul2025						// added smin() and smax() options to allow user to manually set ylabel() for shading 
@@ -53,7 +54,8 @@ version 11.0
 	SHADe(string)	                          			     	/// shading area of graph (for wash-out)
 	SMIN(numlist min=1 max=1)									/// manually adjust min y-label for shade
 	SMAX(numlist min=1 max=1)									///	manually adjust max y-label for shade
-	LOWess														/// lowess line
+	LOWess														/// lowess smoother line
+	BWidth(string)												/// adjust bandwidth for lowess smoother
 	CI															/// confidence interval
 	CF															/// counterfactual (single-group only)
 	NAT(int 5)													/// UNDOCUMENTED change _natscale #_n (for shade())
@@ -436,7 +438,7 @@ version 11.0
 					if ustrregexm(e(linkf), "\(([-0-9]+)\)") {
 						local power = ustrregexs(1)		
 						qui gen `_cf' = `text' if `touse'	
-						replace `_cf' = 1 / (1 + (1 + `power' * `_cf')^(-1 / `power'))
+						replace `_cf' = 1 / (1 + (1 + `power' * `_cf')^(-1 / `power')) if `touse'
 					}
 				}	
 
@@ -668,10 +670,15 @@ version 11.0
 		if "`cf'" != "" {
 			local cf (line `_cf' `tvar' if `touse', lcolor(gs8) lpattern(longdash))		
 		}
-	
+
 		/* lowess graph */
-		if "`lowess'" != "" {		
-			local low (lowess `dvar' `tvar' if `touse', lcolor(red))
+		if "`lowess'" != "" {
+			if "`bwidth'" != "" {
+				local low (lowess `dvar' `tvar' if `touse', lcolor(red) bw(`bwidth'))
+			}
+			else {
+				local low (lowess `dvar' `tvar' if `touse', lcolor(red))				
+			}
 		}
 		
 		/* CI graph */
@@ -1098,11 +1105,16 @@ version 11.0
 				local cf (line `_cf' `tvar' if `pvar'==`treatid' & `touse', lcolor(gs8) lpattern(longdash))		
 			}
 
-			/* lowess graph */			
+			/* lowess graph */
 			if "`lowess'" != "" {
-				local low (lowess `dvar' `tvar' if `pvar'==`treatid' & `touse', lcolor(red))
-			}
-			
+				if "`bwidth'" != "" {
+					local low (lowess `dvar' `tvar' if `pvar'==`treatid' & `touse', lcolor(red) bw(`bwidth'))				
+				}
+				else {
+					local low (lowess `dvar' `tvar' if `pvar'==`treatid' & `touse', lcolor(red))			
+				}
+			}			
+	
 			/* CI graph */			
 			if "`ci'" != "" {
 				local lcl (line `plotvarsL' `tvar' if `pvar'==`treatid' & `touse' [`weight' `exp'], `lc2') 
@@ -1642,19 +1654,20 @@ version 11.0
 				local uclc (line `plotvars_c_U' `tvar', `lc3')				
 			}
 			
-			if "`lowess'" != "" {
-				local lowt (lowess `dvar_t'  `tvar', lcolor(red)) 
-				local lowc (lowess `dvar_c'  `tvar', lcolor(orange))
-			}	
-			
 		} // end quietly	
 			
 			/* if no covariates */
 			if "`xvar'" == "" {
 				/* set up legend when lowess and/or CIs are specified */
 				if "`lowess'" != "" {
+					if "`bwidth'" != "" {
+						local lowt (lowess `dvar_t'  `tvar', lcolor(red) bw(`bwidth')) 
+						local lowc (lowess `dvar_c'  `tvar', lcolor(orange) bw(`bwidth'))	
+					}
+				else {
 					local lowt (lowess `dvar_t'  `tvar', lcolor(red)) 
-					local lowc (lowess `dvar_c'  `tvar', lcolor(orange))
+					local lowc (lowess `dvar_c'  `tvar', lcolor(orange))		
+				}
 					if "`ci'" == "" {
 						if "`shade'" == "" {
 							local ctrl1 = `tct' + 3				
@@ -1770,8 +1783,14 @@ version 11.0
 			if "`xvar'" != "" {
 				/* set up legend when lowess and/or CIs are specified */
 				if "`lowess'" != "" {
+					if "`bwidth'" != "" {
+						local lowt (lowess `dvar_t'  `tvar', lcolor(red) bw(`bwidth')) 
+						local lowc (lowess `dvar_c'  `tvar', lcolor(orange) bw(`bwidth'))	
+					}
+				else {
 					local lowt (lowess `dvar_t'  `tvar', lcolor(red)) 
-					local lowc (lowess `dvar_c'  `tvar', lcolor(orange))
+					local lowc (lowess `dvar_c'  `tvar', lcolor(orange))		
+				}					
 					if "`ci'" == "" {
 						if "`shade'" == "" {
 							local lowleg subtitle("Intervention starts: `tperlist'") legend(rows(2) region(lcolor(black)) ///

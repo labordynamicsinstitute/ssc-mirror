@@ -1,4 +1,5 @@
 {smcl}
+{* 19Sep2025}{...}
 {* 31Jul2025}{...}
 {* 23Jul2025}{...}
 {* 06Jun2025}{...}
@@ -18,7 +19,7 @@
 {* 06Aug2014}{...}
 {* 24Mar2014}{...}
 {* 11Feb2014}{...}
-{cmd:help itsa}{right: ({browse "https://doi.org/10.1177/1536867X241258015":SJ24-2: st0389_9})}
+{cmd:help itsa}{right: ({browse "https://doi.org/10.1177/1536867X251322975":SJ25-1: st0389_11})}
 {hline}
 
 {title:Title}
@@ -33,30 +34,8 @@
 {p 8 12 2}
 {cmd:itsa} {depvar} [{indepvars}] {ifin} {weight}{cmd:,}
 {cmdab:trp:eriod(}{it:{help datetime:date}}{cmd:)} 
-[ {opt sing:le} 
-{opt treat:id(#)}
-{cmdab:cont:id(}{it:{help numlist:numlist}}{cmd:)} 
-{opt prais} 
-{opt lag(#)}
-{opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]
-{opt low:ess}
-{opt ci}
-{opt cf}
-{cmdab:shad:e(}{it:{help datetime:date1}} ; {it:{help datetime:date2}}{cmd:)} 
-{opt smin(#)}
-{opt smax(#)}
-{opt posttr:end} 
-{opt repl:ace} 
-{opt pre:fix(string)}
-[{it:model_options}] ]
+[{it:options}] 
 
-{pstd}
-{it:indepvars} may contain factor variables; see {helpb fvvarlist}.
-{it:depvar} and {it:indepvars} may contain time-series operators; see 
-{helpb tsvarlist}. {opt aweight}s are allowed with the {cmd:newey} option; see {helpb weight}. See
-{manhelp glm_postestimation R:glm postestimation} and 
-{manhelp prais_postestimation TS:prais postestimation} for features available
-after estimation.{p_end}
 
 {pstd}
 A dataset for a single panel must be declared to be time-series data by using
@@ -65,23 +44,23 @@ strongly balanced panel dataset using {cmd:tsset} {it:panelvar} {it:timevar}
 must be declared. See {helpb tsset}.
 
 
-
 {synoptset 30 tabbed}{...}
 {synopthdr}
 {synoptline}
-{p2coldent:* {opt trp:eriod}{cmd:(}{it:datelist}{cmd:)}}specify the time period(s) when the intervention begins (e.g. {cmd:trperiod(2020)} or {cmd:trperiod(2001q2)} or {cmd:trperiod(21jan2020 ; 08feb2020)})  {p_end}
+{p2coldent:* {opt trp:eriod}{cmd:(}{it:{help datetime:datelist}}{cmd:)}}specify the time period(s) when the intervention begins (e.g. {cmd:trperiod(2020)} or {cmd:trperiod(2001q2)} or {cmd:trperiod(21jan2020 ; 08feb2020)})  {p_end}
 {synopt:{opt sing:le}}indicates that {cmd:itsa} will be used for a single-group analysis {p_end}
-{synopt:{opt treatid}{cmd:(#)}}specify the treated unit's identifier. Not required when only the treated unit is in the data 
-and {cmd:single} is specified {p_end}
-{synopt:{opt contid}{cmd:(numlist)}}specify a list of identifiers to be used as control units in the multiple-group analysis; default is to use all{p_end}
+{synopt:{opt treat:id}{cmd:(#)}}specify the treated unit's identifier. Not required when only the treated unit is in the data 
+and {cmd:sing:le} is specified {p_end}
+{synopt:{opt cont:id}{cmd:({it:{help numlist:numlist}}})}}specify a list of identifiers to be used as control units in the multiple-group analysis; default is to use all{p_end}
 {synopt:{opt prais}}fit a {helpb prais} model. Default is to fit a {helpb glm} model with Newey-West standard errors {p_end}
 {synopt:{opt lag}{cmd:(#)}}specify the maximum lag to be considered when a glm model with Newey-West standard errors is estimated{p_end}
 {synopt:{opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]}produce an interrupted time-series plot. Specifying {cmd:figure} without options uses the default 
 graph settings {p_end}
 {synopt:{opt low:ess}}plot a lowess smoothed line of {it:depvar} on {it:timevar} on the figure{p_end}
+{synopt:{opt bw:idth}{cmd:(#)}}smoothing parameter for lowess {p_end}
 {synopt:{opt ci}}plot the confidence interval(s) on the figure {p_end}
 {synopt:{opt cf}}plot the counterfactual for the intervention period of a single-group ITSA on the figure {p_end}
-{synopt:{opt shade}{cmd:(}{it:date1} ; {it:date2}{cmd:)}}plot a shaded area on the figure between two dates, separated by a semicolon (e.g. {cmd:shade(21jan2020 ; 08feb2020)}) {p_end}
+{synopt:{opt shad:e}{cmd:(}{it:{help datetime:date1}} ; {it:{help datetime:date2}}{cmd:)}}plot a shaded area on the figure between two dates, separated by a semicolon (e.g. {cmd:shade(21jan2020 ; 08feb2020)}) {p_end}
 {synopt:{opt smin}{cmd:(#)}}specify the minimum value displayed on {cmd:ylabel()} when {cmd:shade()} is specified {p_end}
 {synopt:{opt smax}{cmd:(#)}}specify the maximum value displayed on {cmd:ylabel()} when {cmd:shade()} is specified {p_end}
 {synopt:{opt posttr:end}}produce post-intervention trend estimates using {helpb lincom}, for the specified model {p_end}
@@ -90,6 +69,15 @@ graph settings {p_end}
 {synopt:[{it:model_options}]}specify all available options for {helpb prais} or {helpb glm}, depending on model chosen {p_end}
 {synoptline}
 {p 4 6 2}* {opt trperiod()} is required. {p_end}
+{pstd}
+{it:indepvars} may contain factor variables; see {helpb fvvarlist}.{p_end}
+{pstd}
+{it:depvar} and {it:indepvars} may contain time-series operators; see {helpb tsvarlist}. {p_end}
+{pstd}
+{opt aweight}s are allowed with the {cmd:glm} option; see {helpb weight}. {p_end}
+{pstd}
+See {manhelp glm_postestimation R:glm postestimation} and 
+{manhelp prais_postestimation TS:prais postestimation} for features available after estimation.{p_end}
 {p2colreset}{...}
 
 
@@ -126,7 +114,7 @@ available model options are allowed. {p_end}
 {title:Options}
 
 {phang}
-{cmd:trperiod(}{it:date}{cmd:)} specifies the time period when the
+{cmd:trperiod(}{it:datelist}{cmd:)} specifies the time period when the
 intervention begins. The value(s) entered for time period(s) must be in the same
 units as the panel time variable specified in {helpb tsset}. Dates should be 
 specified using the respective pseudofunction (see {helpb datetime:datetime}), 
@@ -177,6 +165,11 @@ default graph settings.
 
 {phang}
 {cmd:lowess} plots a lowess smoothed line of {it:depvar} on {it:timevar}.
+
+{phang}
+{cmd:bwidth(#)} specifies the bandwidth.  {cmd:bwidth(.8)} is the default.
+Centered subsets of N*{cmd:bwidth()} observations, {it:N} = number of observations, are used for calculating smoothed values for
+each point in the data except for endpoints, where smaller, uncentered subsets are used. The greater the {cmd:bwidth()}, the greater the smoothing.
 
 {phang}
 {cmd:ci} plots the confidence interval(s) on the {cmd:figure}. By default,
@@ -620,8 +613,10 @@ Simonton, D. K. 1977b. Erratum to Simonton. {it:Psychological Bulletin}
 
 {title:Also see}
 
-{p 4 13 2}	
-          Article: {it:Stata Journal}, volume 24, number 2: {browse "https://doi.org/10.1177/1536867X241258015":st0389_9},{break}
+{p 4 13 2}															
+          Article: {it:Stata Journal}, volume 25, number 1: {browse "https://doi.org/10.1177/1536867X251322975":st0389_11},{break}
+					{it:Stata Journal}, volume 24, number 4: {browse "https://doi.org/10.1177/1536867X241297954":st0389_10},{break}
+					{it:Stata Journal}, volume 24, number 2: {browse "https://doi.org/10.1177/1536867X241258015":st0389_9},{break}
                     {it:Stata Journal}, volume 22, number 1: {browse "https://doi.org/10.1177/1536867X221083929":st0389_8},{break}
                     {it:Stata Journal}, volume 21, number 3: {browse "https://doi.org/10.1177/1536867X211045584":st0389_7},{break}
                     {it:Stata Journal}, volume 21, number 2: {browse "https://doi.org/10.1177/1536867X211025840":st0389_6},{break}
