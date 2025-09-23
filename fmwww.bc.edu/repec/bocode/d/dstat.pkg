@@ -21,7 +21,7 @@ d
 d KW: distribution function
 d KW: density estimation
 d KW: histogram
-d KW: quantiles
+d KW: quantiles,
 d
 d Requires: Stata version 14 and moremata, coefplot from SSC (q.v.)
 d

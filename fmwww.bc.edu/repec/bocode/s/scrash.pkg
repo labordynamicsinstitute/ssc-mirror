@@ -1,0 +1,28 @@
+d 'SCRASH': module to calculate quarterly stock crash risk measures (NCSKEW and DUVOL)
+d
+d     scrash calculates quarterly stock crash risk measures (NCSKEW
+d and DUVOL) using daily return data.	 The command processes
+d individual stock returns and market returns from Excel files,
+d performs    required data transformations, and outputs quarterly
+d crash risk measures. 
+d
+d KW: stock market
+d KW: crash
+d KW: risk
+d
+d Requires: Stata version 18 
+d
+d Distribution-Date: 20250922
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+d Author:     Ding Ming,   Anhui University of Technology
+d Support: email    dingming0417@@163.com
+d
+f scrash.ado
+f scrash.sthlp
+f ../r/returns.xlsx

@@ -1,0 +1,27 @@
+d 'BF': module to create directory structure for Dingyuan Accounting academic projects on Windows
+d
+d	 bf creates a standardized directory structure for Dingyuan
+d Accounting academic projects.  The	command automatically
+d detects available hard drives and prioritizes E drive, then D
+d drive, avoiding    the system C drive (unless only C drive is
+d available).	 The language() option allows creating directory
+d structures with either English or Chinese names. 
+d
+d KW: data management
+d KW: directory structure
+d
+d Requires: Stata version 18 for Windows
+d
+d Distribution-Date: 20250922
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+f bf.ado
+f bf.sthlp

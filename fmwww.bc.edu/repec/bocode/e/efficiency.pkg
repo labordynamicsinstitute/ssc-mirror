@@ -1,0 +1,34 @@
+d 'EFFICIENCY': module to calculate investment efficiency based on Richardson (2006) model with data import functionality
+d
+d      efficiency calculates investment efficiency measures based
+d on the Richardson (Rev. Acct. Studies, 2006) model.	 This
+d version includes functionality to import and merge Excel data
+d files before estimation.    The program automatically imports 10
+d Excel files (d1.xlsx to d10.xlsx) from the specified folder,	 
+d merges them into a panel dataset, and then estimates the
+d investment efficiency model. 
+d
+d KW: efficiency
+d KW: accounting measures
+d KW: investment
+d
+d Requires: Stata version 18 
+d
+d Distribution-Date: 20250922
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+d Author: Liu Changyun,  Anhui University of Technology
+d Support: email   2437563124@@qq.com
+d
+f efficiency.ado
+f efficiency.sthlp
+f ../s/sunny_efficiency.do
+f efficiency.zip

@@ -19,6 +19,7 @@ p eefanalytics module for Evaluating Educational Interventions using Randomised 
 p efetch_tools module to retrieve genetic data from NCBI
 p effcon module to calculate confidence limits for effect size estimated from one or two samples from normal distribution 
 p effects module to provide a graphical interface for estimation commands
+p efficiency module to calculate investment efficiency based on Richardson (2006) model with data import functionality
 p efolder module to easily create folders and/or subfolders
 p egen_inequal module providing extensions to generate inequality and poverty measures 
 p egenmisc module to provide various egen functions
