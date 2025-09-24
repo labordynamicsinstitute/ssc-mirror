@@ -39,20 +39,20 @@ set scheme white_tableau
 
 if "`color'" == "mono" & "`curve'" == "both" {
 twoway /*
-*/ (rcap low high `year', yaxis(1) msize(small) mfcolor(black) mlcolor(black) lcolor(black)) /*
-*/ (scatter `ncr' `year', yaxis(1) connect(l .) msize(small) mfcolor(black) mlcolor(black) lcolor(black)) /*
-*/ (scatter `devmed' `year', yaxis(2) connect(l .) msize(small) mfcolor(gs11) mlcolor(gs11) lcolor(gs11)),  /*
-*/ ytitle("Cited references counts with confidence interval (black line)", axis(1)) ytitle("Deviation from median (grey line)", axis(2)) /*
+*/ (rcap low high `year', yaxis(1) msize(small) mfcolor(black%40) mlcolor(black%40) lcolor(black%40)) /*
+*/ (bar `ncr' `year', yaxis(1) fcolor(black%20) lcolor(black%20)) /*
+*/ (scatter `devmed' `year', yaxis(2) connect(l .) msize(small) mfcolor(black) mlcolor(black) lcolor(black)),  /*
+*/ ytitle("Cited references counts with confidence interval (grey bars)", axis(1)) ytitle("Deviation from median (black line)", axis(2)) /*
 */ xtitle("Reference publication year") /*
 */ legend(off) `twoptions'
 }
 
 if "`color'" == "col" & "`curve'" == "both" {
 twoway /*
-*/ (rcap low high `year', yaxis(1) msize(small) mfcolor(orange) mlcolor(orange) lcolor(orange)) /*
-*/ (scatter `ncr' `year', yaxis(1) connect(l .) msize(small) mfcolor(orange) mlcolor(orange) lcolor(orange)) /*
+*/ (rcap low high `year', yaxis(1) msize(small) mfcolor(orange%40) mlcolor(orange%40) lcolor(orange%40)) /*
+*/ (bar `ncr' `year', yaxis(1) fcolor(orange%20) lcolor(orange%20)) /*
 */ (scatter `devmed' `year', yaxis(2) lcolor(green%40) mfcolor(green%40) mlcolor(green%40) connect(l .) msize(small)),  /*
-*/ ytitle("Cited references counts (orange line)", axis(1)) ytitle("Deviation from median (green line)", axis(2)) /*
+*/ ytitle("Cited references counts with confidence interval (orange line)", axis(1)) ytitle("Deviation from median (green line)", axis(2)) /*
 */ xtitle("Reference publication year") /*
 */ legend(off) `twoptions'
 }
