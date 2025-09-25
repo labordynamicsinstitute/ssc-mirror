@@ -1,15 +1,15 @@
-d 'MSWTABLE': module to provide wrapper for putdocx table
+d 'MSWTABLE': module to produce MSWord tables of descriptive statistics and regression estimates
 d
-d  mswtable is a wrapper for putdocx table, producing a table in
-d MSWord format.  As input, mswtable requires either: 1. Stata
-d matrix; 2. Equations stored via estimates store.  These can be
-d augmented with additional matrix or Excel spreadsheet.  Among the
-d features the user can control: width of columns; row and column
-d titles; number of decimal points; inclusion of statistics
-d (r-squared, AIC, etc.); inclusion of coefficient tests (asterisks
-d and/or standard errors and/or confidence intervals); title and
-d subtitle; footnotes; font (type and size).  Multiple-panel tables
-d can be constructed. 
+d  mswtable produces a table in MSWord format.	As input, mswtable
+d requires either:  1. Stata matrix; 2. Equations stored via
+d estimates store.  These can be augmented with an additional
+d matrix and/or Excel spreadsheet.  Among the features the user can
+d control:  width of columns; row titles; column titles (multiple
+d levels); number of decimal points; inclusion of statistics
+d (r-squared, AIC, etc.); inclusion of coefficient tests (standard
+d errors and/or confidence intervals and/or t-statistics and/or
+d p-values and/or asterisks); title and subtitle; footnotes; font
+d (type and size).  Multiple-panel tables can be constructed. 
 d
 d KW: table
 d KW: putdocx
@@ -17,7 +17,7 @@ d KW: MSWord
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20250103
+d Distribution-Date: 20250924
 d
 d Author:   John Casterline, Ohio State University
 d Support: email casterline.10@@osu.edu
