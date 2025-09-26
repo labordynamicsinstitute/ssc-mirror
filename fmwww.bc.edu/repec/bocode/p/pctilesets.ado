@@ -1,4 +1,5 @@
-*! 1.0.0 NJC 28 October 2024 
+*! 1.0.1 NJC 23 September 2025
+* 1.0.0 NJC 28 October 2024 
 program pctilesets 
 	version 8.1 
 	
@@ -129,6 +130,15 @@ program pctilesets_g
 	quietly statsby , by(`over') clear `total' : ///
 	summarize `varlist' [`weight' `exp'], detail 
 	
+	/// work-around if -group- is an existing variable name 
+	if "`over'" == "group" { 
+		gen groupvar = "group"
+		tempname work 
+		rename group `work'
+		local over `work'
+	}
+	else gen groupvar = "`over'"
+	
 	quietly egen group = group(`over'), label 
 	_crcslbl group `over'
 
@@ -149,7 +159,6 @@ program pctilesets_g
 	
 	gen varname = "`varlist'"
 	gen varlabel = cond(missing("`varlabel'"), varname, "`varlabel'")
-	gen groupvar = "`over'"
 	gen gvarlabel = cond(missing("`gvarlabel'"), groupvar, "`gvarlabel'")
 
 	if "`weight'" != "" gen weight = "`weight' `exp'"

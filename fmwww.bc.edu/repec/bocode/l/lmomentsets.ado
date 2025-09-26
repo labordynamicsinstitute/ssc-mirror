@@ -1,4 +1,5 @@
-*! 1.0.0 NJC 1 March 2025 
+*! 1.0.1 NJC 23 September 2025
+* 1.0.0 NJC 1 March 2025 
 program lmomentsets 
 	version 10 
 	
@@ -86,6 +87,15 @@ program lmomentsets_g
 	quietly statsby , by(`over') clear `total' : ///
 	_lmoments `varlist', lmax(`lmax')
 	
+	/// work-around if -group- is an existing variable name 
+	if "`over'" == "group" { 
+		gen groupvar = "group"
+		tempname work 
+		rename group `work'
+		local over `work'
+	}
+	else gen groupvar = "`over'"
+	
 	quietly egen group = group(`over'), label 
 	_crcslbl group `over'
 
@@ -101,7 +111,6 @@ program lmomentsets_g
 	
 	gen varname = "`varlist'"
 	gen varlabel = cond(missing("`varlabel'"), varname, "`varlabel'")
-	gen groupvar = "`over'"
 	gen gvarlabel = cond(missing("`gvarlabel'"), groupvar, "`gvarlabel'")
 
 	foreach v in n {

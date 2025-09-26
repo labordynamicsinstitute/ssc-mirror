@@ -1,3 +1,4 @@
+*! 3.5.2 Ariel Linden 24Sep2025						// fixed code for treated unit that prevented the CI from appearing on the graph in the second treatment period 
 *! 3.5.1 Ariel Linden 19Sep2025						// added bwidth option for lowess smoother 
 *! 3.5.0 Ariel Linden 16Sep2025						// fixed -cf- to account for different link() types
 *! 3.4.0 Ariel Linden 30Jul2025						// added -cf- (counterfactual) option for single-group ITSA
@@ -534,20 +535,20 @@ version 11.0
 					local k = `k' + 1
 					tempvar tp_t`k' plt_t`k'
 					if `k'== 1 {
-						gen `tp_t`k'' = `ypred_t' if `tvar'<=`t' & e(sample)
+						gen `tp_t`k'' = `ypred_t' if `tvar'<=`t'
 						replace `tp_t`k''=. if `tvar'==`t'
 						ipolate `tp_t`k'' `tvar' if `tvar' <=`t', gen(`plt_t`k'') epolate
 					}
 					if `k'> 1 & `k'<=`tct' {
 						local klast = `k'-1
 						local tlast: word `klast' of `trperiod'
-						gen `tp_t`k'' = `ypred_t' if `tvar'>=`tlast' & `tvar'<=`t' & e(sample)
+						gen `tp_t`k'' = `ypred_t' if `tvar'>=`tlast' & `tvar'<=`t' // & e(sample)
 						replace `tp_t`k'' = . if `tvar'==`t'
 						ipolate `tp_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t', gen(`plt_t`k'') epolate
 					}
 					if `k' ==`tct' {
 						tempvar pltx
-						gen `pltx' = `ypred_t' if `tvar'>=`tmax' & e(sample)
+						gen `pltx' = `ypred_t' if `tvar'>=`tmax'
 						}
 				}  /* end of TRPERIOD LOOP */
 				
@@ -563,27 +564,27 @@ version 11.0
 					local k = `k' + 1
 					tempvar lp_t`k' llt_t`k' up_t`k' ult_t`k'
 					if `k'== 1 {
-						gen `lp_t`k'' = `lcl_t' if `tvar'<=`t' & e(sample)
+						gen `lp_t`k'' = `lcl_t' if `tvar'<=`t'
 						replace `lp_t`k''=. if `tvar'==`t'
 						ipolate `lp_t`k'' `tvar' if `tvar' <=`t', gen(`llt_t`k'') epolate
-						gen `up_t`k'' = `ucl_t' if `tvar'<=`t' & e(sample)
+						gen `up_t`k'' = `ucl_t' if `tvar'<=`t'
 						replace `up_t`k''=. if `tvar'==`t'
 						ipolate `up_t`k'' `tvar' if `tvar' <=`t', gen(`ult_t`k'') epolate						
 					}
 					if `k'> 1 & `k'<=`tct' {
 						local klast = `k'-1
 						local tlast: word `klast' of `trperiod'
-						gen `lp_t`k'' = `lcl_t' if `tvar'>=`tlast' & `tvar'<=`t' & e(sample)
+						gen `lp_t`k'' = `lcl_t' if `tvar'>=`tlast' & `tvar'<=`t'
 						replace `lp_t`k'' = . if `tvar'==`t'
 						ipolate `lp_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t', gen(`llt_t`k'') epolate
-						gen `up_t`k'' = `ucl_t' if `tvar'>=`tlast' & `tvar'<=`t' & e(sample)
+						gen `up_t`k'' = `ucl_t' if `tvar'>=`tlast' & `tvar'<=`t'
 						replace `up_t`k'' = . if `tvar'==`t'
 						ipolate `up_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t', gen(`ult_t`k'') epolate						
 					}
 					if `k' ==`tct' {
 						tempvar lltx ultx
-						gen `lltx' = `lcl_t' if `tvar'>=`tmax' & e(sample)
-						gen `ultx' = `ucl_t' if `tvar'>=`tmax' & e(sample)						
+						gen `lltx' = `lcl_t' if `tvar'>=`tmax' 
+						gen `ultx' = `ucl_t' if `tvar'>=`tmax' 						
 						}
 				}  /* end of TRPERIOD LOOP */
 			}	// end CI	
@@ -968,20 +969,20 @@ version 11.0
 					local k = `k' + 1
 					tempvar tp_t`k' plt_t`k'
 					if `k'== 1 {
-						gen `tp_t`k'' = `ypred_t' if `tvar'<=`t' & `touse'
+						gen `tp_t`k'' = `ypred_t' if `tvar'<=`t' 
 						replace `tp_t`k''=. if `tvar'==`t'
 						ipolate `tp_t`k'' `tvar' if `tvar' <=`t', gen(`plt_t`k'') epolate
 					}
 					if `k'> 1 & `k'<=`tct' {
 						local klast = `k'-1
 						local tlast: word `klast' of `trperiod'
-						gen `tp_t`k'' = `ypred_t' if `tvar'>=`tlast' & `tvar'<=`t' & `touse'
+						gen `tp_t`k'' = `ypred_t' if `tvar'>=`tlast' & `tvar'<=`t'
 						replace `tp_t`k'' = . if `tvar'==`t'
 						ipolate `tp_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t', gen(`plt_t`k'') epolate
 					}
 					if `k' ==`tct' {
 						tempvar pltx
-						gen `pltx' = `ypred_t' if `tvar'>=`tmax' & `touse'
+						gen `pltx' = `ypred_t' if `tvar'>=`tmax'
 					}
 				}  /* end of TRPERIOD LOOP */
 				
@@ -997,27 +998,27 @@ version 11.0
 						local k = `k' + 1
 						tempvar lp_t`k' llt_t`k' up_t`k' ult_t`k'
 						if `k'== 1 {
-							gen `lp_t`k'' = `lcl_t' if `tvar'<=`t' & `touse'
+							gen `lp_t`k'' = `lcl_t' if `tvar'<=`t'
 							replace `lp_t`k''=. if `tvar'==`t'
 							ipolate `lp_t`k'' `tvar' if `tvar' <=`t', gen(`llt_t`k'') epolate
-							gen `up_t`k'' = `ucl_t' if `tvar'<=`t' & `touse'
+							gen `up_t`k'' = `ucl_t' if `tvar'<=`t' 
 							replace `up_t`k''=. if `tvar'==`t'
 							ipolate `up_t`k'' `tvar' if `tvar' <=`t', gen(`ult_t`k'') epolate						
 						}
 						if `k'> 1 & `k'<=`tct' {
 							local klast = `k'-1
 							local tlast: word `klast' of `trperiod'
-							gen `lp_t`k'' = `lcl_t' if `tvar'>=`tlast' & `tvar'<=`t' & `touse'
+							gen `lp_t`k'' = `lcl_t' if `tvar'>=`tlast' & `tvar'<=`t'
 							replace `lp_t`k'' = . if `tvar'==`t'
 							ipolate `lp_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t', gen(`llt_t`k'') epolate
-							gen `up_t`k'' = `ucl_t' if `tvar'>=`tlast' & `tvar'<=`t' & `touse'
+							gen `up_t`k'' = `ucl_t' if `tvar'>=`tlast' & `tvar'<=`t'
 							replace `up_t`k'' = . if `tvar'==`t'
 							ipolate `up_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t', gen(`ult_t`k'') epolate						
 						}
 						if `k' ==`tct' {
 							tempvar lltx ultx
-							gen `lltx' = `lcl_t' if `tvar'>=`tmax' & `touse'
-							gen `ultx' = `ucl_t' if `tvar'>=`tmax' & `touse'						
+							gen `lltx' = `lcl_t' if `tvar'>=`tmax' 
+							gen `ultx' = `ucl_t' if `tvar'>=`tmax'						
 						}
 					}  /* end of TRPERIOD LOOP */
 				}	// end CI	
@@ -1130,8 +1131,8 @@ version 11.0
 			/* graph it */
 			**************
 			#delim ;
-			noi tw  
-			`shhh'
+			noi tw 
+			`shhh'					
 			`low'
 			`lcl'
 			`ucl'
@@ -1418,12 +1419,12 @@ version 11.0
 							if `k' ==`tct' {
 								tempvar lltx ultx
 								gen `lltx' = `lcl_t' if `tvar'>=`tmax' & `istreat'
-								gen `ultx' = `ucl_t' if `tvar'>=`tmax' & `istreat'						
+								gen `ultx' = `ucl_t' if `tvar'>=`tmax' & `istreat'	
 							}
+
 						}  /* end of TRPERIOD LOOP */
 					}	// end CI	
 				
-
 					/* Set up plot variables for Treated */
 					forvalues k = 1/`tct' {
 						local plotvars_t `plotvars_t'  `plt_t`k''
@@ -1512,7 +1513,7 @@ version 11.0
 							if `k' ==`tct' {
 								tempvar llcon ulcon
 								gen `llcon' = `lcl_c' if `tvar'>=`tmax' & `iscontrol'
-								gen `ulcon' = `ucl_c' if `tvar'>=`tmax' & `iscontrol'						
+								gen `ulcon' = `ucl_c' if `tvar'>=`tmax' & `iscontrol'	
 							}
 						}  /* end of TRPERIOD LOOP */
 					}	// end CI	

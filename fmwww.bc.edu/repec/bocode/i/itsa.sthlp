@@ -33,7 +33,7 @@
 
 {p 8 12 2}
 {cmd:itsa} {depvar} [{indepvars}] {ifin} {weight}{cmd:,}
-{cmdab:trp:eriod(}{it:{help datetime:date}}{cmd:)} 
+{cmdab:trp:eriod(}{it:{help datetime:datelist}}{cmd:)} 
 [{it:options}] 
 
 
@@ -51,7 +51,7 @@ must be declared. See {helpb tsset}.
 {synopt:{opt sing:le}}indicates that {cmd:itsa} will be used for a single-group analysis {p_end}
 {synopt:{opt treat:id}{cmd:(#)}}specify the treated unit's identifier. Not required when only the treated unit is in the data 
 and {cmd:sing:le} is specified {p_end}
-{synopt:{opt cont:id}{cmd:({it:{help numlist:numlist}}})}}specify a list of identifiers to be used as control units in the multiple-group analysis; default is to use all{p_end}
+{synopt:{opt cont:id}{cmd:({it:{help numlist:numlist}}})}specify a list of identifiers to be used as control units in the multiple-group analysis; default is to use all{p_end}
 {synopt:{opt prais}}fit a {helpb prais} model. Default is to fit a {helpb glm} model with Newey-West standard errors {p_end}
 {synopt:{opt lag}{cmd:(#)}}specify the maximum lag to be considered when a glm model with Newey-West standard errors is estimated{p_end}
 {synopt:{opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]}produce an interrupted time-series plot. Specifying {cmd:figure} without options uses the default 
@@ -167,7 +167,7 @@ default graph settings.
 {cmd:lowess} plots a lowess smoothed line of {it:depvar} on {it:timevar}.
 
 {phang}
-{cmd:bwidth(#)} specifies the bandwidth.  {cmd:bwidth(.8)} is the default.
+{cmd:bwidth(#)} specifies the bandwidth. {cmd:bwidth(.8)} is the default.
 Centered subsets of N*{cmd:bwidth()} observations, {it:N} = number of observations, are used for calculating smoothed values for
 each point in the data except for endpoints, where smaller, uncentered subsets are used. The greater the {cmd:bwidth()}, the greater the smoothing.
 

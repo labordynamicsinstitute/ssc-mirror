@@ -1,4 +1,5 @@
-*! 1.1.2 NJC 31 October 2024
+*! 1.1.3 NJC 23 September 2025
+* 1.1.2 NJC 31 October 2024
 * 1.1.1 NJC 26 October 2024
 * 1.1.0 NJC 25 October 2024 
 * 1.0.0 NJC 21 October 2024 
@@ -132,7 +133,7 @@ program _mean_g
 	quietly count if `touse'
 	if r(N) == 0 error 2000
 	if r(N) == 1 error 2001 
-	
+		
 	preserve 
 	quietly keep if `touse' 
 		
@@ -141,6 +142,15 @@ program _mean_g
 	
 	quietly statsby , by(`over') clear `total' : ///
 	ci means `varlist' [`weight' `exp'], `poisson' `exposure' level(`level')
+	
+	/// work-around if -group- is an existing variable name 
+	if "`over'" == "group" { 
+		gen groupvar = "group"
+		tempname work 
+		rename group `work'
+		local over `work'
+	}
+	else gen groupvar = "`over'"
 	
 	quietly egen group = group(`over'), label 
 	_crcslbl group `over'
@@ -156,7 +166,6 @@ program _mean_g
 	
 	gen varname = "`varlist'"
 	gen varlabel = cond(missing("`varlabel'"), varname, "`varlabel'")
-	gen groupvar = "`over'"
 	gen gvarlabel = cond(missing("`gvarlabel'"), groupvar, "`gvarlabel'")
 	gen statname = "mean"
 	
@@ -287,6 +296,15 @@ program _prop_g
 	quietly statsby , by(`over') clear `total' : ///
 	ci prop `varlist' [`weight' `exp'],  level(`level') `exact' `wald' `wilson' `agresti' `jeffreys'
 	
+	/// work-around if -group- is an existing variable name 
+	if "`over'" == "group" { 
+		gen groupvar = "group"
+		tempname work 
+		rename group `work'
+		local over `work'
+	}
+	else gen groupvar = "`over'"
+	
 	quietly egen group = group(`over'), label 
 	_crcslbl group `over'
 	
@@ -302,7 +320,6 @@ program _prop_g
 	
 	gen varname = "`varlist'"
 	gen varlabel = cond(missing("`varlabel'"), varname, "`varlabel'")
-	gen groupvar = "`over'"
 	gen gvarlabel = cond(missing("`gvarlabel'"), groupvar, "`gvarlabel'")
 	gen statname = "proportion"
 	
@@ -410,6 +427,15 @@ program _var_g
 	
 	quietly statsby , by(`over') clear `total' : ///
 	ci var `varlist' [`weight' `exp'],  level(`level') `sd' `bonett'
+	
+	/// work-around if -group- is an existing variable name 
+	if "`over'" == "group" { 
+		gen groupvar = "group"
+		tempname work 
+		rename group `work'
+		local over `work'
+	}
+	else gen groupvar = "`over'"
 
 	quietly egen group = group(`over'), label 
 	_crcslbl group `over'
@@ -428,7 +454,6 @@ program _var_g
 	
 	gen varname = "`varlist'"
 	gen varlabel = cond(missing("`varlabel'"), varname, "`varlabel'")
-	gen groupvar = "`over'"
 	gen gvarlabel = cond(missing("`gvarlabel'"), groupvar, "`gvarlabel'")
 	gen statname =  cond("`sd'" == "sd", "SD", "variance")
 	
@@ -542,6 +567,15 @@ program _gmean_g
 	ameans `varlist' [`weight' `exp'], level(`level')
 	
 	drop N mean lb ub *_h Var* 
+	
+	/// work-around if -group- is an existing variable name 
+	if "`over'" == "group" { 
+		gen groupvar = "group"
+		tempname work 
+		rename group `work'
+		local over `work'
+	}
+	else gen groupvar = "`over'"
 
 	quietly egen group = group(`over'), label 
 	_crcslbl group `over'
@@ -557,7 +591,6 @@ program _gmean_g
 	
 	gen varname = "`varlist'"
 	gen varlabel = cond(missing("`varlabel'"), varname, "`varlabel'")
-	gen groupvar = "`over'"
 	gen gvarlabel = cond(missing("`gvarlabel'"), groupvar, "`gvarlabel'")
 	gen statname = "geometric mean"
 	
@@ -666,6 +699,15 @@ program _hmean_g
 	ameans `varlist' [`weight' `exp'], level(`level')
 	
 	drop N mean lb ub *_g Var* 
+	
+	/// work-around if -group- is an existing variable name 
+	if "`over'" == "group" { 
+		gen groupvar = "group"
+		tempname work 
+		rename group `work'
+		local over `work'
+	}
+	else gen groupvar = "`over'"
 
 	quietly egen group = group(`over'), label 
 	_crcslbl group `over'
@@ -681,7 +723,6 @@ program _hmean_g
 	
 	gen varname = "`varlist'"
 	gen varlabel = cond(missing("`varlabel'"), varname, "`varlabel'")
-	gen groupvar = "`over'"
 	gen gvarlabel = cond(missing("`gvarlabel'"), groupvar, "`gvarlabel'")
 	gen statname = "harmonic mean"
 	
@@ -788,6 +829,15 @@ program _centile_g
 	quietly statsby , by(`over') clear `total' :       ///
 	centile `varlist', centile(`centile') level(`level') ///
 	`cci' `normal' `meansd'
+	
+	/// work-around if -group- is an existing variable name 
+	if "`over'" == "group" { 
+		gen groupvar = "group"
+		tempname work 
+		rename group `work'
+		local over `work'
+	}
+	else gen groupvar = "`over'"
 		
 	quietly egen group = group(`over'), label 
 	_crcslbl group `over'
@@ -804,7 +854,6 @@ program _centile_g
 	
 	gen varname = "`varlist'"
 	gen varlabel = cond(missing("`varlabel'"), varname, "`varlabel'")
-	gen groupvar = "`over'"
 	gen gvarlabel = cond(missing("`gvarlabel'"), groupvar, "`gvarlabel'")
 	gen statname = "`centile' pctile"
 	gen level = `level'
