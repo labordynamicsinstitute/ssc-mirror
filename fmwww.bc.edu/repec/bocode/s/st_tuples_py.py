@@ -1,8 +1,8 @@
 """Implement Stata/Mata -tuples- in Python.
 
-This script is supposed to be called by tuples.ado.
+This Python script is called by tuples.ado.
 
-version 2.0.0 09aug2021 Joseph N. Luchman & daniel klein
+*! version 2.2.0  25sep2025
 """
 import sys
 from itertools import combinations 
@@ -11,99 +11,86 @@ from sfi       import SFIToolkit as Stata
 
 
 def st_tuples(
-        min, 
-        max, 
-        conditionals, 
-        display, 
+        min,
+        max,
+        conditionals,
+        display,
         sort,
         lmacname,
         anything
         ):
-    """Create the tuples and set the respective locals in Stata."""
-    if len(conditionals) > 0:
-        # conditionals are implemented in terms of positional arguments.
-        # We enumerate the items in the list (anything) and later use the 
-        # resulting numeric tuples as indices for the original list items.
-        conditionals = rpn_to_infix(conditionals)
-        anything_cpy = anything.copy()
+    """Select tuples and define local macros in Stata."""
+    if bool(conditionals):
+        conditionals_tokens = conditionals.split()
+        # We enumerate the list items in anything to create numeric tuples.
+        # We later use these tuples as indices into the original list items.
+        anything_cc = anything.copy()
         anything = list(range(len(anything)))
-    
+        
     count = 0
     for r in range(min, max+1):
         tuples = list(combinations(anything, r))
         
-        if len(conditionals) > 0:
-            tuples = eval("[tuple for tuple in tuples if "+conditionals+"]")
+        if bool(conditionals):
+            tuples = [
+                tuple for tuple in tuples 
+                if satisfies_conditionals(tuple, conditionals_tokens)
+            ]
             
-        if sort:
+        if bool(sort):
             tuples.reverse()
             
         for tuple in tuples:
             
-            if len(conditionals) > 0:
-                tuple = [anything_cpy[t] for t in tuple]
+            if bool(conditionals):
+                tuple = [anything_cc[t] for t in tuple]
                 
             count+=1
-            mac_name = lmacname+str(count)
-            mac_str  = " ".join(tuple)
-            st_c_local(mac_name, mac_str)
+            macro_name = lmacname+str(count)
+            macro_contents = " ".join(tuple)
+            st_c_local(macro_name, macro_contents)
             
-            if display:
-                Stata.displayln("{res}" + mac_name + ": {txt}" + mac_str)
+            if bool(display):
+                Stata.displayln("{res}" + macro_name + ": {txt}" + macro_contents)
+            
+            Stata.pollstd()
         
     st_c_local("n"+lmacname+"s", str(count))
 
 
-def st_c_local(mac_name, mac_str):
-    """Mimic Stata's -c_local-."""
-    # We use (extended) Macro functions to deal with awkward nested
-    # double and single quotes in the tuples.  We use an awkward name 
-    # for the local that we set in tuples.ado to avoid name conflicts.
-    Macro.setLocal("t_u_p_l_e", mac_str)
-    Stata.stata("c_local " + mac_name + " : copy local t_u_p_l_e")
+def st_c_local(macro_name, macro_contents):
+    """Mimic Stata's non-documented -c_local- command."""
+    Macro.setLocal("tuple_py", macro_contents)
+    Stata.stata("c_local " + macro_name + " : copy local tuple_py")
 
 
-def rpn_to_infix(conditionals):
-    """Built logical statement to select the tuples.
-    
-    Input:
-    string, -tuples- option -conditionals() ,
-    space separated, reverse polish notation, checked for errors
-    
-    Return:
-    string, logical statement in terms of tuple
-    e.g., (4 in tuple & 2 in tuple)
-    """
+def satisfies_conditionals(tuple, conditionals_tokens):
+    """Evaluate postfix (Reverse Polish Notation) conditionals for a tuple."""
     stack = []
-    for el in conditionals.split():
-        if el.isnumeric():
-            # Python indices run from 0 to n-1
-            stack.append(str(int(el)-1)+" in tuple")
-        elif el == "&":
-            stack.append(pop_append(stack, "and"))
-        elif el == "|":
-            stack.append(pop_append(stack, "or"))
-        elif el == "!":
-            stack.append("(not "+stack.pop()+")")
+    for token in conditionals_tokens:
+        if token.isnumeric():
+            stack.append(int(token)-1 in tuple) # Python indices run from 0 to n-1
+        elif token == "&":
+            second_last, last = stack.pop(), stack.pop()
+            stack.append(second_last and last)
+        elif token == "|":
+            second_last, last = stack.pop(), stack.pop()
+            stack.append(second_last or last)
+        elif token == "!":
+            stack.append(not stack.pop())
         else:
             Stata.errprintln("unexpected error in st_tuples_py")
             Stata.exit(499)
-    return "".join(stack)
+    return stack.pop()
 
 
-def pop_append(stack, op):
-    return "("+stack.pop(-2)+" "+op+" "+stack.pop(-1)+")"
-
-
-# This is the entry point for -tuples.ado- to this Python script.
-# We implement this as a script to avoid parsing awkward nested 
-# double and single quotes in the supplied arguments.
+# Entry point for tuples.ado
 st_tuples(
-    int(sys.argv[1]),           # min
-    int(sys.argv[2]),           # max
-    sys.argv[3],                # conditionals
+    int(sys.argv[1]),               # min
+    int(sys.argv[2]),               # max
+    Macro.getLocal(sys.argv[3]),    # conditionals; postfix notation
     sys.argv[4] == "display",   
     sys.argv[5] != "nosort",
-    sys.argv[6],                # lmacname
-    sys.argv[7:len(sys.argv)]   # anything
+    sys.argv[6],                    # lmacname
+    sys.argv[7:len(sys.argv)]       # anything
     )

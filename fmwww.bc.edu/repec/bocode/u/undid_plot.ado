@@ -1,7 +1,7 @@
 /*------------------------------------*/
 /*undid_plot*/
 /*written by Eric Jamieson */
-/*version 1.0.0 2025-09-14 */
+/*version 1.1.0 2025-09-30 */
 /*------------------------------------*/
 cap program drop undid_plot
 program define undid_plot
@@ -207,17 +207,22 @@ program define undid_plot
 
     // Select mean_outcome or mean_outcome_residualized based on covariates option
     if `covariates' == 0 {
-        qui drop if mean_outcome == "NA" | mean_outcome == "missing"
+        qui count if mean_outcome == "NA" | mean_outcome == "missing" | mean_outcome == ""
+        if r(N) > 0 {
+            di as error "Found silos with missing values for mean_outcome. Dropping those observations:"
+            list silo_name time if mean_outcome == "NA" | mean_outcome == "missing" | mean_outcome == ""
+            qui drop if mean_outcome == "NA" | mean_outcome == "missing" | mean_outcome == ""
+        }
         qui gen double y =  real(mean_outcome)
     }
     else if `covariates' == 1 {
-        qui replace mean_outcome_residualized = "" if mean_outcome_residualized == "NA" | mean_outcome_residualized == "missing"
-        qui gen double y = real(mean_outcome_residualized)
-        qui count if missing(y)
+        qui count if  mean_outcome_residualized == "" | mean_outcome_residualized == "NA" | mean_outcome_residualized == "missing"
         if r(N) > 0 {
-            di as err "Error: Values of mean_outcome_residualized are missing, try setting covariates(0)."
-            exit 9
+            di as error "Found silos with missing values for mean_outcome_residualized. Dropping those observations:"
+            list silo_name time if mean_outcome_residualized == "" | mean_outcome_residualized == "NA" | mean_outcome_residualized == "missing"
+            qui drop if mean_outcome_residualized == "" | mean_outcome_residualized == "NA" | mean_outcome_residualized == "missing"
         }
+        qui gen double y = real(mean_outcome_residualized)
     }
     qui format y %20.15g
 
@@ -411,4 +416,5 @@ end
 /*--------------------------------------*/
 /* Change Log */
 /*--------------------------------------*/
-*0.0.1 - created function
+*1.1.0 - now shows which silo-year combinations have missing values of mean_outcome or mean_outcome_residualized before dropping them
+*1.0.0 - created function

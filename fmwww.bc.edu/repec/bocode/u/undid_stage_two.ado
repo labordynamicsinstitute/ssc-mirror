@@ -1,7 +1,7 @@
 /*------------------------------------*/
 /*undid_stage_two*/
 /*written by Eric Jamieson */
-/*version 1.0.0 2025-06-16 */
+/*version 1.1.0 2025-09-30 */
 /*------------------------------------*/
 cap program drop undid_stage_two
 program define undid_stage_two
@@ -141,13 +141,13 @@ program define undid_stage_two
         }
     }
     else {
-        levelsof treat if RI == "0", local(levels_treat)
+        qui levelsof treat if RI == "0", local(levels_treat)
         local first_treat : word 1 of `levels_treat'
         if "`first_treat'" == "0" {
             local treatment_time_trends "control"
         }
         else if "`first_treat'" == "1" {
-            levelsof gvar if RI == "0", local(levels_gvar)
+            qui levelsof gvar if RI == "0", local(levels_gvar)
             local first_gvar : word 1 of `levels_gvar'
             local treatment_time_trends "`first_gvar'"
         }
@@ -390,6 +390,14 @@ program define undid_stage_two
     		}
         }
 
+        // Take out the last value from list_of_dates
+        local num_dates = wordcount("`list_of_dates'")
+        local list_of_dates_trimmed ""
+        forvalues i = 1/`=`num_dates'-1' {
+            local list_of_dates_trimmed "`list_of_dates_trimmed' `: word `i' of `list_of_dates''"
+        }
+        local list_of_dates "`list_of_dates_trimmed'"
+
         // Match dates from the local silo to the most recently passed date in the list_of_dates local
         qui frame change default
         qui tempvar matched_date
@@ -410,7 +418,7 @@ program define undid_stage_two
 
         // Compute conditional means
         qui levelsof `matched_date', local(matched_dates) clean
-        foreach m_date of local matched_dates {
+        foreach m_date of local list_of_dates {
             qui summarize `outcome_column' if `matched_date' == `m_date'
             qui local mean_outcome = r(mean)
             if inlist("`weight'", "diff", "att", "both") {
@@ -425,17 +433,24 @@ program define undid_stage_two
             local mean_outcome_trends "`mean_outcome_trends' `mean_outcome'"
             local mean_outcome_count "`mean_outcome_count' `n_outcome'"
             if "`covariates'" != "none" {
-                qui reg `outcome_column' `covariates' if `matched_date' == `m_date', noconstant
-                tempvar resid_trends
-                qui predict double `resid_trends' if `matched_date' == `m_date', residuals
-                qui summarize `resid_trends'
-                qui local mean_outcome_resid = r(mean)
-                qui drop `resid_trends'
-                local mean_outcome_resid_trends "`mean_outcome_resid_trends' `mean_outcome_resid'"
+                qui count if `matched_date' == `m_date'
+                if r(N) > 1 {
+                    qui reg `outcome_column' `covariates' if `matched_date' == `m_date', noconstant
+                    tempvar resid_trends
+                    qui predict double `resid_trends' if `matched_date' == `m_date', residuals
+                    qui summarize `resid_trends'
+                    qui local mean_outcome_resid = r(mean)
+                    qui drop `resid_trends'
+                    local mean_outcome_resid_trends "`mean_outcome_resid_trends' `mean_outcome_resid'"
+                }
+                else {
+                    local mean_outcome_resid_trends "`mean_outcome_resid_trends' ."
+                }
             }
         }
 
         // Create trends frame
+        // Re-casting, for some reason, was the only way I could end up with accurate floating point values
         if "`covariates'" == "none" {
             tempname trends_frame
             qui cap frame drop `trends_frame'
@@ -443,13 +458,13 @@ program define undid_stage_two
             strL silo_name ///
             strL treatment_time ///
             double time_numeric int ///
-            double mean_outcome /// 
+            str25 mean_outcome /// 
             strL mean_outcome_residualized ///
             strL covariates ///
             strL date_format ///
             strL freq ///
             strL n
-
+            qui frame `trends_frame': recast str25 mean_outcome, force
         }
         else if "`covariates'" != "none"{
             tempname trends_frame
@@ -458,30 +473,32 @@ program define undid_stage_two
             strL silo_name ///
             strL treatment_time ///
             double time_numeric int ///
-            double mean_outcome /// 
-            double mean_outcome_residualized ///
+            str25 mean_outcome /// 
+            str25 mean_outcome_residualized ///
             strL covariates ///
             strL date_format ///
             strL freq ///
             strL n
+            qui frame `trends_frame': recast str25 mean_outcome, force
+            qui frame `trends_frame': recast str25 mean_outcome_residualized, force
         }
         
         // Populate trends frame
         qui frame change `trends_frame'
-        local N : word count `matched_dates'
+        local N : word count `list_of_dates'
         local covariates = subinstr("`covariates'", " ", ";", .)
         forvalues i = 1/`N' {
-            local time : word `i' of `matched_dates'
+            local time : word `i' of `list_of_dates'
             local mean_outcome : word `i' of `mean_outcome_trends'
             local n_count : word `i' of `mean_outcome_count'
             local n_count = cond("`n_count'" == "." | "`n_count'" == "", "NA", string(real("`n_count'"), "%12.0f"))
             if "`covariates'" == "none" {
-                qui frame post `trends_frame' ("`silo_name'") ("`treatment_time_trends'") (`time') (`mean_outcome') ("NA") ("`covariates'") ("`empty_diff_date_format'") ("`freq_string'") ("`n_count'")
+                qui frame post `trends_frame' ("`silo_name'") ("`treatment_time_trends'") (`time') (cond("`mean_outcome'" == "." | "`mean_outcome'" == "", "NA", string(real("`mean_outcome'"), "%21.18f"))) ("NA") ("`covariates'") ("`empty_diff_date_format'") ("`freq_string'") ("`n_count'")
             }
             else if "`covariates'" != "none" {
                 local mean_outcome_resid : word `i' of `mean_outcome_resid_trends'
-                qui frame post `trends_frame' ("`silo_name'") ("`treatment_time_trends'") (`time') (`mean_outcome') (`mean_outcome_resid') ("`covariates'") ("`empty_diff_date_format'") ("`freq_string'") ("`n_count'")
-            }    
+                qui frame post `trends_frame' ("`silo_name'") ("`treatment_time_trends'") (`time') (cond("`mean_outcome'" == "." | "`mean_outcome'" == "", "NA", string(real("`mean_outcome'"), "%21.18f"))) (cond("`mean_outcome_resid'" == "." | "`mean_outcome_resid'" == "", "NA", string(real("`mean_outcome_resid'"), "%21.18f"))) ("`covariates'") ("`empty_diff_date_format'") ("`freq_string'") ("`n_count'")
+            }   
         }
         
         // Convert numeric time in the trends data to a readable format 
@@ -565,6 +582,14 @@ program define undid_stage_two
             qui gen `temp_date' = real("`date_str'")
             qui replace `matched_date' = `temp_date' if `temp_date' <= `date' & (`matched_date' < `temp_date' | `matched_date' == .)
         }
+
+        // Take out the last value from list_of_dates
+        local num_dates = wordcount("`list_of_dates'")
+        local list_of_dates_trimmed ""
+        forvalues i = 1/`=`num_dates'-1' {
+            local list_of_dates_trimmed "`list_of_dates_trimmed' `: word `i' of `list_of_dates''"
+        }
+        local list_of_dates "`list_of_dates_trimmed'"
                   
         // Start running regressions 
         local coef_list ""
@@ -693,7 +718,7 @@ program define undid_stage_two
 
         // Compute conditional means
         qui levelsof `matched_date', local(matched_dates) clean
-        foreach m_date of local matched_dates {
+        foreach m_date of local list_of_dates {
             qui summarize `outcome_column' if `matched_date' == `m_date'
             qui local mean_outcome = r(mean)
             local mean_outcome_trends "`mean_outcome_trends' `mean_outcome'"
@@ -708,17 +733,24 @@ program define undid_stage_two
             }
             local mean_outcome_count "`mean_outcome_count' `n_outcome'"
             if "`covariates'" != "none" {
-                qui reg `outcome_column' `covariates' if `matched_date' == `m_date', noconstant
-                tempvar resid_trends
-                qui predict double `resid_trends' if `matched_date' == `m_date', residuals
-                qui summarize `resid_trends'
-                qui local mean_outcome_resid = r(mean)
-                qui drop `resid_trends'
-                local mean_outcome_resid_trends "`mean_outcome_resid_trends' `mean_outcome_resid'"
+                qui count if `matched_date' == `m_date'
+                if r(N) > 1 {
+                    qui reg `outcome_column' `covariates' if `matched_date' == `m_date', noconstant
+                    tempvar resid_trends
+                    qui predict double `resid_trends' if `matched_date' == `m_date', residuals
+                    qui summarize `resid_trends'
+                    qui local mean_outcome_resid = r(mean)
+                    qui drop `resid_trends'
+                    local mean_outcome_resid_trends "`mean_outcome_resid_trends' `mean_outcome_resid'"
+                }
+                else {
+                    local mean_outcome_resid_trends "`mean_outcome_resid_trends' ."
+                }
             }
         }
         
         // Create trends frame
+        // Re-casting, for some reason, was the only way I could end up with accurate floating point values
         if "`covariates'" == "none" {
             tempname trends_frame
             qui cap frame drop `trends_frame'
@@ -726,12 +758,13 @@ program define undid_stage_two
             strL silo_name ///
             strL treatment_time ///
             double time_numeric int ///
-            double mean_outcome /// 
+            str25 mean_outcome /// 
             strL mean_outcome_residualized ///
             strL covariates ///
             strL date_format ///
             strL freq ///
             strL n
+            qui frame `trends_frame': recast str25 mean_outcome, force
         }
         else if "`covariates'" != "none"{
             tempname trends_frame
@@ -740,29 +773,31 @@ program define undid_stage_two
             strL silo_name ///
             strL treatment_time ///
             double time_numeric int ///
-            double mean_outcome /// 
-            double mean_outcome_residualized ///
+            str25 mean_outcome /// 
+            str25 mean_outcome_residualized ///
             strL covariates ///
             strL date_format ///
             strL freq ///
             strL n
+            qui frame `trends_frame': recast str25 mean_outcome, force
+            qui frame `trends_frame': recast str25 mean_outcome_residualized, force
         }
         
         // Populate trends frame
         qui frame change `trends_frame'
-        local N : word count `matched_dates'
+        local N : word count `list_of_dates'
         local covariates = subinstr("`covariates'", " ", ";", .)
         forvalues i = 1/`N' {
-            local time : word `i' of `matched_dates'
+            local time : word `i' of `list_of_dates'
             local mean_outcome : word `i' of `mean_outcome_trends'
             local n_count : word `i' of `mean_outcome_count'
             local n_count = cond("`n_count'" == "." | "`n_count'" == "", "NA", string(real("`n_count'"), "%12.0f"))
             if "`covariates'" == "none" {
-                qui frame post `trends_frame' ("`silo_name'") ("`treatment_time_trends'") (`time') (`mean_outcome') ("NA") ("`covariates'") ("`empty_diff_date_format'") ("`freq_string'") ("`n_count'")
+                qui frame post `trends_frame' ("`silo_name'") ("`treatment_time_trends'") (`time') (cond("`mean_outcome'" == "." | "`mean_outcome'" == "", "NA", string(real("`mean_outcome'"), "%21.18f"))) ("NA") ("`covariates'") ("`empty_diff_date_format'") ("`freq_string'") ("`n_count'")
             }
             else if "`covariates'" != "none" {
                 local mean_outcome_resid : word `i' of `mean_outcome_resid_trends'
-                qui frame post `trends_frame' ("`silo_name'") ("`treatment_time_trends'") (`time') (`mean_outcome') (`mean_outcome_resid') ("`covariates'") ("`empty_diff_date_format'") ("`freq_string'") ("`n_count'")
+                qui frame post `trends_frame' ("`silo_name'") ("`treatment_time_trends'") (`time') (cond("`mean_outcome'" == "." | "`mean_outcome'" == "", "NA", string(real("`mean_outcome'"), "%21.18f"))) (cond("`mean_outcome_resid'" == "." | "`mean_outcome_resid'" == "", "NA", string(real("`mean_outcome_resid'"), "%21.18f"))) ("`covariates'") ("`empty_diff_date_format'") ("`freq_string'") ("`n_count'")
             }    
         }
         
@@ -793,4 +828,6 @@ end
 /*--------------------------------------*/
 /* Change Log */
 /*--------------------------------------*/
+*1.1.0 - added rows in the trends_data CSV files to indicate NA (missing) values, this aligns with undidR procedure
+*1.0.1 - made two levelsof commands quiet 
 *1.0.0 - created function

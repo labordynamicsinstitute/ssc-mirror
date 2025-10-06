@@ -38,7 +38,6 @@ fmwww.bc.edu/repec/bocode/t/tabcond.ado
 fmwww.bc.edu/repec/bocode/t/ltihtest11.mlib
 fmwww.bc.edu/repec/bocode/t/testcase_test.mata
 fmwww.bc.edu/repec/bocode/t/tryem.html
-fmwww.bc.edu/repec/bocode/t/tuples.html
 fmwww.bc.edu/repec/bocode/t/tolower.pkg
 fmwww.bc.edu/repec/bocode/t/torumm.html
 fmwww.bc.edu/repec/bocode/t/tabby.hlp
@@ -578,6 +577,7 @@ fmwww.bc.edu/repec/bocode/t/twitter2stata-1.0.4.jar
 fmwww.bc.edu/repec/bocode/t/trauma.hlp
 fmwww.bc.edu/repec/bocode/t/transint.html
 fmwww.bc.edu/repec/bocode/t/tgraph.pkg
+fmwww.bc.edu/repec/bocode/t/tuplesget.mata
 fmwww.bc.edu/repec/bocode/t/torats.hlp
 fmwww.bc.edu/repec/bocode/t/tr.html
 fmwww.bc.edu/repec/bocode/t/tvpplot.ado
@@ -7952,6 +7952,7 @@ fmwww.bc.edu/repec/bocode/l/lmnwhite.dta
 fmwww.bc.edu/repec/bocode/l/logitfe.ado
 fmwww.bc.edu/repec/bocode/l/lmfreg.dta
 fmwww.bc.edu/repec/bocode/l/lorintegration.mo
+fmwww.bc.edu/repec/bocode/l/ltuples.mlib
 fmwww.bc.edu/repec/bocode/l/lmnwhitenl.sthlp
 fmwww.bc.edu/repec/bocode/l/lmaz.ado
 fmwww.bc.edu/repec/bocode/l/lmhharv2.dta
@@ -10878,6 +10879,7 @@ fmwww.bc.edu/repec/bocode/m/meresc_var_u.mo
 fmwww.bc.edu/repec/bocode/m/mf_mz_pancolshape.hlp
 fmwww.bc.edu/repec/bocode/m/marg_zinbhangroot_prep.ado
 fmwww.bc.edu/repec/bocode/m/misplit.html
+fmwww.bc.edu/repec/bocode/m/mf_tuplesget.sthlp
 fmwww.bc.edu/repec/bocode/m/mf_elabel_rename.sthlp
 fmwww.bc.edu/repec/bocode/m/mp_course.mpp
 fmwww.bc.edu/repec/bocode/m/MV-ARCH.txt
