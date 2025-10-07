@@ -28,6 +28,7 @@ p onespell module to generate single longest spell for each unit in panel data, 
 p onetext module to perform simple Chinese text analysis
 p onewayplot module for oneway plots
 p onewplot module for oneway plots
+p opacity module to calculate information opacity measures following Bhattacharya et al. (2003)
 p oparallel module providing post-estimation command for testing the parallel regression assumption
 p openall module to open all specified files with append
 p opencagegeo module for forward and reverse geocoding using the OpenCage Geocoder API

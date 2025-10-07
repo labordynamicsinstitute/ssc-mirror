@@ -1,8 +1,8 @@
-{smcl}
-{* *! version 1.2 29Aug2025}{...}
-{hline}
+﻿{smcl}
+{title:Title}
+
+{phang}
 {cmd:rollbook} {hline 2} Student sampling program for class roll management
-{hline}
 
 {title:Description}
 
@@ -15,7 +15,7 @@ with specific column names (序号, 学号, 姓名, 专业) and displays the sam
 {title:Syntax}
 
 {p 8 15 2}
-{cmd:rollbook} {cmd:using} {it:filename}{cmd:,} [{cmd:n(}{it:integer}{cmd:)} {cmd:serial(}{it:string}{cmd:)} {cmd:even(}{it:string}{cmd:)} {cmd:major(}{it:string}{cmd:)}]
+{cmd:rollbook} {cmd:using} {it:filename}{cmd:,} [{cmd:n(}{it:integer}{cmd:)} {cmd:serial(}{it:string}{cmd:)} {cmd:even(}{it:string}{cmd:)} {cmd:major(}{it:string}{cmd:)} {cmd:sheet(}{it:string}{cmd:)}]
 
 {synoptset 20 tabbed}{...}
 {synopthdr}
@@ -24,6 +24,7 @@ with specific column names (序号, 学号, 姓名, 专业) and displays the sam
 {synopt:{cmd:serial(}{it:string}{cmd:)}}Specifies serial numbers to select (space-separated){p_end}
 {synopt:{cmd:even(}{it:string}{cmd:)}}Selects students based on student ID parity ("odd" or "even"){p_end}
 {synopt:{cmd:major(}{it:string}{cmd:)}}Selects students from a specific major{p_end}
+{synopt:{cmd:sheet(}{it:string}{cmd:)}}Specifies the worksheet name to read from Excel file{p_end}
 {synoptline}
 
 {title:Options}
@@ -42,6 +43,10 @@ of their student ID. Valid values are "odd" or "even".
 
 {phang}
 {cmd:major(}{it:string}{cmd:)} selects all students from a specified major.
+
+{phang}
+{cmd:sheet(}{it:string}{cmd:)} specifies the worksheet name to read from the Excel file. If not specified,
+the program will read the first worksheet by default. This is useful when the Excel file contains multiple worksheets.
 
 {title:Examples}
 
@@ -64,10 +69,22 @@ Selects students with serial numbers 8 and 18.
 Selects students whose student ID ends with an odd digit.
 
 {phang}
-{cmd:. rollbook using "rollbook.xlsx", major("会计学")}
+{cmd:. rollbook using "rollbook.xlsx", major("Accounting")}
 
 {pstd}
-Selects all students from the "会计学" major.
+Selects all students from the "Accounting" major.
+
+{phang}
+{cmd:. rollbook using "rollbook.xlsx", sheet("ClassA") n(3)}
+
+{pstd}
+Randomly samples 3 students from the "ClassA" worksheet in the Excel file.
+
+{phang}
+{cmd:. rollbook using "rollbook.xlsx", sheet("ClassB") major("Finance")}
+
+{pstd}
+Selects all Finance major students from the "ClassB" worksheet.
 
 {title:Required Excel Format}
 
@@ -79,6 +96,12 @@ The Excel file must contain the following columns with these exact names (in Chi
 {p 8 8}{it:姓名} (Name){p_end}
 {p 8 8}{it:专业} (Major){p_end}
 
+{title:File Location}
+
+{pstd}
+The program expects the rollbook.xlsx file to be located in the current working directory.
+If the file is not found, the program will display an error message with instructions.
+
 {title:Authors}
 
 {pstd}
@@ -88,7 +111,7 @@ School of Business, Anhui University of Technology (AHUT){p_end}
 {pstd}
 Ma'anshan, China{p_end}
 {pstd}
-Email: agd2010@yeah.net{p_end}
+E-mail: {browse "agd2010@yeah.net":agd2010@yeah.net}{p_end}
 
 {pstd}
 Chen Liwen{p_end}
@@ -97,7 +120,7 @@ School of Business, Anhui University of Technology (AHUT){p_end}
 {pstd}
 Ma'anshan, China{p_end}
 {pstd}
-Email: 2184844526@qq.com{p_end}
+E-mail: {browse "2184844526@qq.com":2184844526@qq.com}{p_end}
 
 {pstd}
 Hu Fangfang{p_end}
@@ -106,7 +129,16 @@ School of Finance and Economics, Wanjiang University of Technology (WJUT){p_end}
 {pstd}
 Ma'anshan, China{p_end}
 {pstd}
-Email: huff470@163.com{p_end}
+E-mail: {browse "huff470@163.com":huff470@163.com}{p_end}
+
+{pstd}
+Jin Xuening{p_end}
+{pstd}
+School of Business, Anhui University of Technology (AHUT){p_end}
+{pstd}
+Ma'anshan, China{p_end}
+{pstd}
+E-mail: {browse "1418924481@qq.com":1418924481@qq.com}{p_end}
 
 {title:Also see}
 
@@ -114,3 +146,4 @@ Email: huff470@163.com{p_end}
 {help import excel} for importing Excel files into Stata{p_end}
 {pstd}
 {help sample} for Stata's built-in sampling command{p_end}
+[file content end]

@@ -14,7 +14,7 @@ d KW: investment
 d
 d Requires: Stata version 18 
 d
-d Distribution-Date: 20250922
+d Distribution-Date: 20251006
 d
 d Author: Wu LiangHai,  Anhui University of Technology
 d Support: email agd2010@@yeah.net
@@ -31,4 +31,4 @@ d
 f efficiency.ado
 f efficiency.sthlp
 f ../s/sunny_efficiency.do
-f efficiency.zip
+f ../r/rawdata.xlsx

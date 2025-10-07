@@ -1,0 +1,28 @@
+d 'OPACITY': module to calculate information opacity measures following Bhattacharya et al. (2003)
+d
+d	 opacity calculates information opacity measures for listed
+d companies following the methodology of    Bhattacharya, Daouk,
+d and Welker (2003).  The program computes three components of
+d information	 opacity and combines them into a comprehensive
+d opacity index. 
+d
+d KW: opacity
+d KW: information content
+d KW: listed companies
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20251006
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Liu Rui,  Anhui University of Technology
+d Support: email  NA
+d
+d Author:   Jin Xuening,  Anhui University of Technology
+d Support: email    NA
+d
+f opacity.ado
+f opacity.sthlp
+f opacity.xlsx

@@ -15,7 +15,7 @@ d KW: selection
 d
 d Requires: Stata version 8 (version 10 for some options; version 16 and Python versions 3.6-3.8 for others)
 d
-d Distribution-Date: 20210815
+d Distribution-Date: 20251005
 d
 d Author: Joseph N. Luchman, Fors Marsh Group LLC
 d Support: email   jluchman@@forsmarshgroup.com 
@@ -30,3 +30,7 @@ f tuples.ado
 f ../s/st_tuples_py.py
 f tuples.hlp
 f tuples.sthlp
+f tuplesget.mata
+f ../m/mf_tuplesget.sthlp
+f ../l/ltuples.mlib
+
