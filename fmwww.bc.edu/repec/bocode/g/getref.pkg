@@ -1,0 +1,27 @@
+d 'GETREF': module to simulate academic references from CNKI and Google Scholar 
+d
+d      The getref.ado program simulates retrieval of academic
+d references from CNKI and Google Scholar by	generating
+d placeholder reference data. This is a demonstration version that
+d shows the program    structure and output formats without
+d connecting to actual academic databases. 
+d
+d KW: references
+d KW: bibliography
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20251007
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+f getref.ado
+f getref.sthlp
+f ../s/sunny_getref.do

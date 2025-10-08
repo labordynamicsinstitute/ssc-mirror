@@ -1,0 +1,28 @@
+d 'GET2REF': module to retrieve published academic articles from academic databases
+d
+d     The get2ref command retrieves published academic articles
+d from various academic databases using    reliable simulation mode
+d for reference generation.    This program demonstrates how
+d researchers could create academic paper references in multiple
+d formats    and is part of the suite supporting efficient
+d operation of art2tex.ado and case2tex.ado programs. 
+d
+d KW: references
+d KW: bibliography
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20251007
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+f get2ref.ado
+f get2ref.sthlp
+f ../s/sunny_get2ref.do

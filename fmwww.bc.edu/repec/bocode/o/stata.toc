@@ -34,6 +34,7 @@ p openall module to open all specified files with append
 p opencagegeo module for forward and reverse geocoding using the OpenCage Geocoder API
 p opendf module to work with Open Data Format files in Stata
 p opl module for optimal policy learning
+p opl_ma module for multi-action optimal policy learning
 p oplabdata module to load data from the Equality of Opportunity Project
 p opplot module to generate a vertical bar chart to summarize a binary outcome in cluster survey data
 p oprobpr module to display predicted probabilities from ordered probit and logit

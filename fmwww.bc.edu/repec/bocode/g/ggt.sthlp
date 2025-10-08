@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 2.0  23jul2021}{...}
+{* *! version 5.0.0 11aug2025}{...}
 
-{cmd: help ggt}
+{cmd:help ggt}
 {hline}
 
 {title:Title}
@@ -13,214 +13,169 @@
 {title:Syntax}
 
 {p 8 18 2}
-{cmdab:ggt,} 
+{cmdab:ggt,}
 outcomevar({it:varname})
-orgchar({it:varname})
+orgchoice({it:varname})
 indID({it:varname})
 orgID({it:varname})
 choicechar({it:varlist})
-[
-{it:options}]
-
+[{it:options}]
+{p_end}
 
 {title:Description}
 
 {pstd}
-This program estimates the parameters of the Geweke, Gowrisankaran, and Town (2003), "GGT," model.
-The GGT model estimates the posterior distribution of organizational performance where there are 
-many organizations from which individuals can choose to receive services. In this framework, individuals 
-may select organizations based, in part, on information that is unobserved to the researcher and is 
-correlated with the binary outcome. If this is the case, then standard approaches to inferring 
-organization performance will yield biased estimates. The GGT model corrects for this unobserved selection 
-allowing for flexible correlation in the error structure across the organizational choice and outcome equations. 
-The estimation approach is Bayesian. In sum, the model combines an organization choice multinomial probit model 
-with an individual outcome binary probit model, allowing for correlation across equations for each individual. As noted in GGT,
-some possible applications for this model include: hospital quality based on mortality, school performance based on graduation 
-rates, prison rehabilitation programs based on recidivism rates, and job training programs based on incidence of harassment complaints. 
+The GGT model estimates the posterior distribution of organizational performance in settings where many organizations provide services that individuals can choose among.
+Individuals may select organizations based, in part, on information unobserved to the researcher that is correlated with the binary outcome.
+In such cases, standard approaches to measuring organizational performance yield biased estimates.
+The GGT model corrects for this unobserved selection, allowing flexible correlation in the error structure across the organizational choice and outcome equations.
+The estimation approach is Bayesian. 
+{p_end}
 
 {pstd}
-The parameters are estimated using Bayesian inference through Markov chain Monte Carlo techniques to simulate 
-parameters and latent variables conditional on data to determine the posterior distribution of parameters. 
-While we present the basics of the model in the associated auxiliary file "{bf:ggt_methods.pdf}," (accessed via the command: {cmd: ssc desc ggt}), 
-we encourage all users of this Stata function to read the GGT 
-paper to fully understand the model, assumptions underneath the model, and parameters used in the estimation. 
+In short, the model combines an organizational choice multinomial probit with an individual outcome binary probit, allowing for correlation across equations at the individual level.
+Applications include estimating hospital quality (mortality), school performance (graduation rates), prison rehabilitation programs (recidivism rates), and job training programs (harassment complaint rates).
+{p_end}
 
 {pstd}
-To speed up the computation process, the program code calls an included C plugin file which estimates the 
-parameters via MCMC Gibbs Sampling. 
+Parameters are estimated using Bayesian inference via Markov chain Monte Carlo (MCMC) methods.
+For details of the model and understanding of program output, see the auxiliary file {bf:ggt_documentation.pdf} (accessible with {cmd:ssc desc ggt} or at {bf:www.kellimarquardt.com/research}).
+Users are strongly encouraged to read the original GGT paper for full understanding of the model, assumptions, and estimation parameters.
+{p_end}
 
-
+{pstd}
+To improve computational speed, the program calls a bundled C plugin that performs MCMC Gibbs sampling.
+{p_end}
 
 {title:Methods and Equations}
 
 {pstd}
-We include a brief, yet important, explanation of the appropriate GGT model in the auxiliary file "{bf:ggt_methods.pdf,}" which can be obtained
-via command {cmd: ssc desc ggt}. This file shows which variables and parameters are references in the calling for the ggt Stata function. 
+A concise description of the GGT model is provided in {bf:ggt_documentation.pdf} (accessible with {cmd:ssc desc ggt} or at {bf:www.kellimarquardt.com/research}).
+This file explains the variables and parameters referenced when calling the {cmd:ggt} program.
+{p_end}
 
-{pstd} 
-{bf:Technical Note:} Users may notice some slight differences in the model description of prior 
-distributions from that in GGT Section 2.2. These do not change the model but do make the Stata 
-code more tractable. We also describe these changes in the {bf:"ggt_methods.pdf"} file. 
-
+{pstd}
+{bf:Technical note:} Prior distribution descriptions differ slightly from those in GGT Section 2.2.
+These modifications make the Stata code more tractable but do not change the model.
+Details are in {bf:ggt_documentation.pdf}.
+{p_end}
 
 {title:Options}
 
-{dlgtab:Required Model Variables}
+{dlgtab:Required model variables}
 
 {phang}
-{opt outcomevar(varname)} is required. It is the name of the variable that indicates the individual outcomes
-in the binary probit model. This variable needs to be 0 or 1 for each individual. 
+{opt outcomevar(varname)} specifies the binary outcome variable. Must take values 0 or 1.
 
 {phang}
-{opt orgchoice(varname)} is required. It is the name of the variable that indicates the organization 
-that each individual selects/chooses. This variable should be 0,1 and should sum to 1 for each 
-individual.
- 
-{phang}
-{opt indID(varname)} is required. It provides a unique identifier for each individual.
- 
-{phang}
-{opt orgID(varname)} is required. It provides a unique identifier for each organization.
+{opt orgchoice(varname)} specifies the organizational choice variable. It should equal 1 for the chosen organization and 0 otherwise, with each individual choosing exactly one organization. 
 
 {phang}
-{opt choicechar(varlist)} is required. It specifies the name of the variables that should be 
-included in the choice equation. These are the Z variables referenced in {bf:"ggt_methods.pdf"} auxiliary file. 
-
-
-{dlgtab:Optional Model Variables}
+{opt indID(varname)} specifies a unique identifier for each individual.
 
 {phang}
-{opt orgchar(varlist)} specifies the name of the variables that hold the different organization 
-characteristics. These are the k and l variables referenced in {bf:"ggt_methods.pdf"} auxiliary file.
-The maximum number of variables in this varlist is 10. The variables must be categorical in nature 
-and can either be of Stata type string or factor. 
-	
-{phang}
-{opt indchar(varlist)} specifies the name of the variables that should be included in the individual 
-outcome probit equation. These are the X variables referenced in {bf:"ggt_methods.pdf"} auxiliary file.
-The maximum number of variables in this varlist is 20. 
- 
-{dlgtab:Optional Model Parameters}
+{opt orgID(varname)} specifies a unique identifier for each organization.
 
 {phang}
-{opt niter(integer)} is the number of iterations for Gibbs sampling. The default is 100000. 
+{opt choicechar(varlist)} specifies variables included in the choice equation (the Z variables in {bf:ggt_documentation.pdf}). Must be numeric. Less than 10 variables recommended. 
 
-{phang} 
-{opt alphapriorvar(real)} is the diagonal elements of the alpha prior variance-covariance matrix. 
-The default is 1. 
+{dlgtab:Optional model variables}
 
 {phang}
-{opt gammapriorvar(real)} is the diagonal elements of the gamma prior variance-covariance matrix. 
-The default is 1.		
+{opt orgchar(varlist)} specifies organization characteristics (the k and l variables in {bf:ggt_documentation.pdf}). Up to 10 variables may be provided. Must be string categorical, with consistent values within each organization.
 
 {phang}
-{opt deltapriorvar(real)} is the sigma_gamma^2 term in the prior distribution of delta. See footnote 17 in GGT for information 
-on choosing this value. The default is 0.038416.
+{opt indchar(varlist)} specifies variables for the individual outcome equation (the X variables in {bf:ggt_documentation.pdf}). Up to 100 numeric variables may be provided. Must be consistent within each individual.
+
+{dlgtab:Optional model specifications}
 
 {phang}
-{opt priortau(real, integer)} is the hyper-parameters for the organization characteristic variance 
-hierarchical prior distributions. ggt allows users to specify the s2 and v terms in the hierarchical prior, 		
-s2 / tauo2 ~ chi2(v) for organization characteristic, o. These terms are all referenced in referenced in {bf:"ggt_methods.pdf}" auxiliary file. 
-The first and second numbers in priortau() are s2 and v respectively. The default is priortau(1.25,5). Users must specify both elements 
-if choosing to use this option. 
+{opt niter(integer)} specifies the number of Gibbs sampling iterations. Default is 100000. Must be a multiple of 100.
 
 {phang}
-{opt noselection} option should be specified if the user does not want to apply the selection 
-correction. In this case, the program 	will simply estimate the parameters in GGT equation (1). Note: 
-The code will also estimate alpha solely for the purpose of comparison. 
+{opt alphapriorvar(real)} sets the diagonal elements of the alpha prior variance-covariance matrix. Default is 1.
 
 {phang}
-{opt noconstant} option should be specified if the user does not want to include a constant in 
-the outcome probit equation, i.e. gamma will not include a constant term. 
-
-{dlgtab:Reporting}
+{opt gammapriorvar(real)} sets the diagonal elements of the gamma prior variance-covariance matrix. Default is 1.
 
 {phang}
-{opt savedraws} option will save a .csv file in the directory which holds every 100 draws of each parameter 
-via the MCMC Gibbs Sampling routine. 
+{opt deltapriorvar(real)} specifies sigma_gamma^2 in the prior distribution of delta (see GGT footnote 17). Default is 0.038416.
 
+{phang}
+{opt priortau(numlist)} sets the hyperparameters (s2, v) of the hierarchical prior distribution for organization characteristics: s2 / tau_o^2 ~ chi2(v). Default is priortau(1.25,5). Both elements must be specified if used.
 
+{phang}
+{opt noselection} suppresses the selection correction, i.e. restricting delta=0.
+
+{phang}
+{opt noconstant} omits the constant from the outcome probit equation.
+
+{dlgtab:Output naming option}
+
+{phang}
+{opt savedraws(str)} specifies the name of the CSV file to save every 100th MCMC draw. Default is ''temp_GGT_output.csv''.
 
 {title:Examples}
 
 {pstd}
-In this section, we present the data structure necessary to run {cmd:ggt} along with 
-3 examples to demonstrate different calls to the program. Please see the auxiliary file {bf:"ggt_examples.pdf"} for more 
-detailed explanation of the following data and examples. We provide the sample data, {bf:"ggt_test_data.dta"} 
-as an additional auxiliary file as well. 
+This section outlines required data structure and examples. Note that {bf:ggt_documentation.pdf} has additional details, summary of program output, and quality calculations. 
+Sample data are in {bf:ggt_test_data.dta}. The full documentation and sample data are available for download with {cmd:ssc desc ggt} or at {bf:www.kellimarquardt.com/research}.
+{p_end}
 
-{bf:Data Structure}
-
-{pstd}
-Assume we are interested in hospital quality. The dataset {bf:"ggt_test_data.dta"} contains data on 
-300 patients and 8 hospitals. The variables include the individual patient identifier, {it:indnumber}, and the hospital identifier,
-{it:hospnum}. The patient specific variables are {it:mortality} and {it:severity}.
-The individual choice variables are {it:dist} and {it:dist2} representing the distance from each patient to each 
-hospital along with its square (normalized to have similar scales, necessary since the priors are the same).  We also have 
-hospital characteristic variables, {it:hosp_size} and {it:hosp_ownership}.
+{bf:Data structure}
 
 {pstd}
-In the Stata dataset, there should be an observation for each individual-hospital pair, even if the 
-individual did not choose that hospital. For example, with 300 patients and 8 hospitals, we have 
-300*8=2400 observations in the data. Please see the {bf:"ggt_test_data.dta"} auxiliary file to explore the appropriate dataset format. 
+Example: hospital quality. {bf:ggt_test_data.dta} contains 300 patients and 8 hospitals.
+Variables include patient ID ({it:indnumber}), hospital ID ({it:hospnum}), patient outcomes ({it:mortality}), patient risk score ({it:risk_score}), and choice variables ({it:dist}, {it:dist2}).
+Hospital characteristics are {it:hosp_size} and {it:hosp_ownership}.
+{p_end}
+
+{pstd}
+Each patient-hospital pair must be observed (e.g. 300x8=2400 rows).
+{p_end}
 
 {pstd}{cmd:. use ggt_test_data.dta}{p_end}
 
 {bf:Example 1}
 
 {pstd}
-Suppose we want to estimate the selection-correction hospital quality measures using all the default settings. 
+Estimate selection-corrected hospital quality with default settings:
+{p_end}
 
 {pstd}{cmd:. ggt, outcomevar(mortality) orgchoice(hosp_choice) indID(indnumber) orgID(hospnum) choicechar(dist dist2)}{p_end}
-{pstd}{txt}complete
+{pstd}{txt}complete. Success=1 {p_end}
 
 {pstd}
-This will apply the selection model using {it:dist} and {it:dist2} as the choice characteristics. 
-Since we did not specify the {opt indchar} option, the code will assume only a constant and the hospital choice 
-for the individual probit model. Additionally, since we did not specify {opt orgchar}, the code will assume 
-no correlation across hospitals via hospital size or ownership. The sampling algorithm will assume the 
-default prior variance options and number of iterations.
-
-{pstd}
-The output on the screen will be the summary statistics for the estimated beta draws via the MCMC Gibbs 
-sampler. The variable "q_n" respresents the quality for hospital ID, 'n'. The number of observations in 
-this example is 900- this comes from the default 100000 iterations, saving only every 100th draw, and 
-deleting the first 10000 draws as burn-in. 
-
-{pstd}
-{bf:Note:} The code may take several minutes to complete running due to its computational complexity. Once the 
-code is complete, the word "complete" will display on the Stata screen. 
+This estimates the full selection model with {it:dist} and {it:dist2} as choice variables.
+Defaults are used for priors and iterations. Output is saved to user's directory with the default file name, ''temp_GGT_output.csv''.
+See {bf:ggt_documentation.pdf} (accessible with {cmd:ssc desc ggt} or at {bf:www.kellimarquardt.com/research}) for description of program output.
+{p_end}
 
 {bf:Example 2}
 
 {pstd}
-Now, suppose we want to include the severity measure in the morality equation and we also want to allow hospital correlation based on size and ownership. 
-Additionally, we want to rescale the prior variances based on the structure of the data. Specifically, we want the prior variance of alpha to be 5, 
-the prior variance of gamma to be 3, selection term for delta to be .1, and the parameters for the hyperpriors to be 1 and 5.  Finally, we want to save 
-the draws for each of the parameters in a csv file to the directory. 
+Add patient risk score to the outcome equation, allow correlation based on hospital size and ownership, and rescale priors. Use 50000 iterations and save to ggt_example2.csv:
+{p_end}
 
-{pstd}{cmd:. ggt, outcomevar(mortality) orgchoice(hosp_choice) indID(indnumber) orgID(hospnum) choicechar(dist dist2) indchar(severity) orgchar(hosp_size hosp_ownership) alphapriorvar(5) gammapriorvar(3) deltapriorvar(.1) priortau(1,5) savedraws }{p_end}
+{pstd}{cmd:. ggt, outcomevar(mortality) orgchoice(hosp_choice) indID(indnumber) orgID(hospnum) choicechar(dist dist2)}
+{cmd: indchar(risk_score) orgchar(hosp_size hosp_ownership) alphapriorvar(5) gammapriorvar(3) deltapriorvar(.1) priortau(1,5) niter(50000) savedraws(''ggt_example2.csv'')}{p_end}
+{pstd}{txt}complete. Success=1 {p_end}
 
-{pstd}complete
+
 
 {bf:Example 3}
 
 {pstd}
-Finally, suppose we wish to compare the results to the case where we do not apply the selection 
-correction. In this case, the program simply estimates equation (1) in GGT. We can still specify all the 
-options, but the code will only use those that are necessary. e.g., since the nonselection model assumes 
-that delta=0, then specifying deltapriorvar is unnecessary. 
+Estimate without selection correction, saving results to ggt_example3.csv:
+{p_end}
 
-{pstd}
-Note: Even though the equation we wish to estimate does not depend on patient-organization choice 
-characteristics, the code will still require choice characteristics in its estimation of alpha. 
-
-{pstd}{cmd:. ggt, outcomevar(mortality) orgchoice(hosp_choice) indID(indnumber) orgID(hospnum) choicechar(dist dist2) indchar(severity) orgchar(hosp_size hosp_ownership) alphapriorvar(5) gammapriorvar(3) priortau(1,5) noselection}{p_end}
-{pstd}{txt}complete
+{pstd}{cmd:. ggt, outcomevar(mortality) orgchoice(hosp_choice) indID(indnumber) orgID(hospnum) choicechar(dist dist2)}
+{cmd: indchar(risk_score) orgchar(hosp_size hosp_ownership) alphapriorvar(5) gammapriorvar(3) priortau(1,5) niter(50000) savedraws(''ggt_example3.csv'') noselection}{p_end}
+{pstd}{txt}complete. Success=1 {p_end}
 
 
 {title:References}
 
-Geweke, J., Gowrisankaran, G., & Town, R. J. (2003). Bayesian inference for hospital quality in a selection model. Econometrica, 71(4), 1215-1238.
+Geweke, J., Gowrisankaran, G., & Town, R. J. (2003). Bayesian inference for hospital quality in a selection model. {it:Econometrica}, 71(4), 1215–1238.
 
 {p2colreset}{...}

@@ -1,0 +1,36 @@
+d 'FEJIV': module to perform fixed effect jackknife IV (FEJIV) estimation
+d
+d	fejiv implements the fixed effect jackknife IV (FEJIV)
+d estimator of Chao, Swanson, and Woutersen (2023), which enables
+d consistent IV estimation with many (possibly weak) instruments,
+d cluster fixed effects, heteroskedastic errors, and possibly many
+d exogenous explanatory variables. Słoczyński (2024) recommends
+d the FEJIV estimator as an alternative to two-stage least squares
+d (2SLS) when estimating the fully interacted specification of
+d Angrist and Imbens (1995). Within the local average treatment
+d effect (LATE) framework, when strong monotonicity is doubtful but
+d weak monotonicity is plausible, the fully interacted
+d specification eliminates the problem of "negative weights." 
+d
+d KW: fixed effects
+d KW: instrumental variables
+d KW: interacted instruments
+d KW: jackknife
+d KW: local average treatment effects
+d KW: many weak instruments
+d KW: monotonicity
+d KW: negative weights
+d KW: treatment effects
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20251007
+d
+d Author:   Qihui Lei, University of Wisconsin
+d Support: email  qlei9@@wisc.edu
+d
+d Author:  Tymon Słoczyński , Brandeis University
+d Support: email tslocz@@brandeis.edu
+d
+f fejiv.ado
+f fejiv.sthlp

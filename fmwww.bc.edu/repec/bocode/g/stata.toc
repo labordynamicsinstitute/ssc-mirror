@@ -55,6 +55,7 @@ p geoinpoly module to match geographic locations to shapefile polygons
 p geonear module to find nearest neighbors using geodetic distances
 p geoplot module to draw maps
 p georoute module to calculate travel distance and travel time between two addresses or two geographical points
+p get2ref module to retrieve published academic articles from academic databases
 p get_pwmse module to execute PWMSE-based model evaluation
 p getcensus module to load American Community Survey data from the U.S. Census Bureau API into Stata
 p getdata module to import SDMX data from several providers
@@ -64,6 +65,7 @@ p getmstatistic module to Quantify Systematic Heterogeneity in Meta-Analysis
 p getmxdata module to import Mexican economic data 
 p getnhs module to download NHANES data
 p getprime module to get the prime number closer to the specified number
+p getref module to simulate academic references from CNKI and Google Scholar 
 p getregstats module for computing all values in a regression table when only the coefficient and one other statistic is available
 p gets module to implement a General-to-Specific modelling algorithm
 p getsymbols module to collect and integrate one or more series from Quandl.com, Google Finance, Yahoo Finance, and Alpha Vantage
