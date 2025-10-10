@@ -1,0 +1,26 @@
+d 'SPLITVARLABELS': module to split variable labels for multiline graph display
+d
+d      splitvarlabels allows you to include variable labels in
+d graphs on multiple lines produced directly or    indirectly by
+d graph bar, graph hbar or graph dot.	 It does so by splitting
+d the variable labels into smaller pieces and returning those
+d pieces in a form    appropriate for specification as part of a
+d graph command, typically with the ascategory option. A   
+d multiline format reduces how often variable labels overlap or are
+d truncated. The variable labels    themselves are unchanged. 
+d
+d KW: data management
+d KW: variable labels
+d
+d Requires: Stata version 8.2
+d
+d Distribution-Date: 20251009
+d
+d Author:   Kabira Namit,  World Bank
+d Support: email   knamit@@worldbank.org
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f splitvarlabels.ado
+f splitvarlabels.sthlp

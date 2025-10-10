@@ -1,5 +1,5 @@
 {smcl}
-{* 16may2004/7jun2010/23sep2024}{...}
+{* 16may2004/7jun2010/23sep2024/8oct2025}{...}
 {hline}
 help for {hi:catplot}
 {hline}
@@ -21,6 +21,7 @@ help for {hi:catplot}
 {break} 
 {c -(}{cmdab:fr:action}{c |}{cmdab:fr:action(}{it:varlist}{cmd:)}{c |}{cmdab:perc:ent}{c |}{cmdab:perc:ent(}{it:varlist}{cmd:)}{c )-} {break} 
 {cmd:recast(}{it:plottype}{cmd:)} 
+{cmdab:miss:ing} 
 {it:graph_options}
 ]
 
@@ -130,6 +131,12 @@ way to produce these and many other changes.
 Note for experienced users: although the name is suggested by another
 {help advanced_options:recast()} option, this is not a back door to recasting
 to a {cmd:twoway} plot. 
+
+{p 4 8 2}
+{cmd:missing} allows display of categories that are missing in any variable
+fed to an {cmd:over()} or {cmd:by()} option. The default is to ignore any such missing categories. 
+If you wish to ignore missing values in one or more of those variables but to show missing values 
+for one or more others, use this option together with an exclusion with {cmd:if}. 
 
 {p 4 8 2}
 {it:graph_options} refers to other options of 
@@ -403,7 +410,8 @@ values, not just frequencies or percents.
 2003 and 2004.  At that time, Vince Wiggins provided very helpful
 comments, Fred Wolfe asked for sorting and David Schwappach provided
 feedback on limitations. During revision in 2010, Vince Wiggins and 
-Ron{c a'}n Conroy made encouraging noises. 
+Ron{c a'}n Conroy made encouraging noises. In 2025 Nils Enevoldsen 
+helpfully provoked addition of support for missing values.  
 
 
 {title:References}
