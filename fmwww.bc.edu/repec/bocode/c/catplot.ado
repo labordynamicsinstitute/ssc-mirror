@@ -1,3 +1,4 @@
+*! 3.0.2 NJC 7 October 2025
 *! 3.0.1 NJC 19 October 2024 
 *! 3.0.0 NJC 23 September 2024 
 *! 2.0.2 NJC 10 December 2010 
@@ -13,26 +14,26 @@ program catplot
 	
 	syntax [if] [in] [fweight aweight iweight/] ///
 	, OVER1(str asis) [PERCent(varlist) PERCent2 FRaction(varlist) FRaction2   ///
-	YTItle(str asis) OVER2(str asis) by(str asis) recast(str) * ]
+	YTItle(str asis) OVER2(str asis) by(str asis) MISSing recast(str) * ]
 
 	// which observations? 
 	marksample touse
 	
 	Parseopt 1 `"`over1"'  
 	local opt1 over(`over1')
-   	markout `touse' `over1var', strok 
+   	if "`missing'" == "" markout `touse' `over1var', strok 
 	
 	if `"`over2'"' != ""  { 
 		Parseopt 2 `"`over2"'  
 		local opt2 over(`over2')
 	}
 	
-	markout `touse' `over2var', strok 
+	if "`missing'" == "" markout `touse' `over2var', strok 
 	
 	if `"`by'"' != "" { 
 		Parseopt 3 `"`by'"' 
 		local opt3 by(`by')
-		markout `touse' `byvar', strok 
+		if "`missing'" == "" markout `touse' `byvar', strok 
 	}
 
 	quietly count if `touse' 
@@ -107,7 +108,7 @@ program catplot
 
 	// draw graph 
 	graph `recast' (sum) `toshow' if `touse', /// 
-	`opt1' `opt2' `opt3' ytitle(`ytitle') `options' 
+	`opt1' `opt2' `opt3' `missing' ytitle(`ytitle') `options' 
 end
 
 program Parseopt 

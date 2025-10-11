@@ -1,24 +1,25 @@
 d 'STEP3': module to relate latent class membership to external variables
 d
-d  step3 relates latent class membership to external variables
-d (either covariates or distal outcomes), taking into account
-d misclassification errors.  For the analysis of covariates, the
-d command performs the third step of the ML procedure described by
-d Vermunt (2010), whereas for distal outcomes the command uses the
-d BCH method (Bolck et al., 2004), which is more robust for
-d continuous and count outcomes (Bakk & Kuha, 2021). Although step3
-d also executes the second step of these stepwise procedures (with
-d modal assignment), the first step (i.e., latent class or latent
-d profile analysis without covariates/distal outcomes) must be
-d performed separately. This can be done with any command, as long
-d as it produces membership posterior probabilities. 
+d  step3 performs two bias-adjusted three-step methods to relate
+d latent class membership to external variables: Maximum Likelihood
+d (ML; Vermunt, 2010) and Bolck-Croon-Hagenaars (BCH; Bolck et al.,
+d 2004). The external variables can be either covariates
+d (predictors of class membership) or distal outcomes (predicted by
+d class membership). The command adjusts for misclassification
+d errors that arise in three-step approaches when observations are
+d assigned to classes based on posterior probabilities from an
+d initial latent class model. The first step (estimating the latent
+d class model and predicting posterior probabilities) must be done
+d separately (e.g., with  gsem or fmm). step3 uses these predicted
+d probabilities to construct a classification error matrix and fits
+d the structural model via ML or BCH correction. 
 d
 d KW: latent class analysis
 d KW: stepwise procedure
 d
 d Requires: Stata version 15.1
 d
-d Distribution-Date: 20240215
+d Distribution-Date: 20251011
 d
 d Author: Giovanbattista Califano, University of Naples Federico II
 d Support: email giovanbattista.califano@@unina.it

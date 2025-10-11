@@ -1,0 +1,32 @@
+d 'EM': module to calculate earnings management measures using the Modified Jones Model
+d
+d	em implements the Modified Jones Model (Dechow, Sloan, and
+d Sweeney, 1995) for measuring earnings    management through
+d discretionary accruals. The command processes financial statement
+d data from Excel    files, estimates model parameters by
+d year-industry groups, and calculates both discretionary and	
+d non-discretionary accruals. 
+d
+d KW: earnings
+d KW: management
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20251011
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+d Author: Liu Rui,  Anhui University of Technology
+d Support: email  3221241855@@qq.com
+d
+d Author: Yang Lu,  Anhui University of Technology
+d Support: email  1026835594@@qq.com
+d
+f em.ado
+f em.sthlp
+f ../s/sunny_em.do
+f ../r/rawdata.xlsx

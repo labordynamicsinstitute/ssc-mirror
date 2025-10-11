@@ -126,3 +126,27 @@ program define menger, rclass
     }
 	
 end
+rn matrix results = `menger_results'
+    
+		noi di " " 
+		noi di "Max curvature:  " %8.5f `max_curvature' " at `xvar' = " %`fmt_clean' `elbow'
+	
+	} // end qui
+	
+	// Optional graph
+    if "`graph'" != "" {
+		* get var labels for graph	
+		local yl : variable label `yvar'
+		if `"`yl'"' == "" local yl "`yvar'"  
+		local xl : variable label `xvar'
+		if `"`xl'"' == "" local xl "`xvar'"  
+	
+        twoway (connected `yvar' `xvar', lwidth(medthick) msymbol(o)) ///
+               (scatter `yvar' `xvar' if `xvar'==`elbow', ///
+					msymbol(O) mcolor(red) msize(large) mlabel(`xvar') mlabposition(2) mlabsize(medium)),  ///
+					title("Menger Curvature") ///
+					xtitle(`xl') ytitle("`yl'") ///
+					legend(off)
+    }
+	
+end

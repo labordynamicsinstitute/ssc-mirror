@@ -9,8 +9,8 @@ d curvature point indicates where the curve becomes more "flat" --
 d generally referred to as the "elbow" or "knee". menger_estat
 d computes the Menger curvature as a post-estimation command
 d following factor, as a means of finding an alternative number of
-d factors to that used in native factor or "eye-balled" with
-d screeplot. 
+d factors to that used in Stata’s official factor or "eye-balled"
+d with screeplot. 
 d
 d KW: Menger curvature
 d KW: inflection point
@@ -21,7 +21,7 @@ d KW: factor
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20251009
+d Distribution-Date: 20251011
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org

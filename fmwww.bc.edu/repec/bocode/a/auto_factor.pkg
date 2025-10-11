@@ -1,0 +1,38 @@
+d 'AUTO_FACTOR': module to automate data and method checks for factor analysis
+d
+d  auto_factor automates all of the steps typically performed as
+d part of a factor analysis, including (1) initial checks of the
+d data (Kaiser-Meyer-Olkin measure of sampling adequacy, testing
+d that all variables have variance, testing that there are no
+d perfect linear dependencies among variables, Bartlett's test of
+d sphericity, and the Doornik-Hansen omnibus test of multivariate
+d normality for the ML method), (2) determining the number of
+d factors to retain (using Stata's default of all positive
+d eigenvalues, Menger's maximum curvature, and screeplot), (3) test
+d for uniqueness of variables, and (4) generating predictions.
+d While auto_factor is not a replacement for content expertise, it
+d can assist in determining whether the data are appropriate for
+d factor analysis and which method (or methods) may be most
+d suitable. 
+d
+d KW:  factor analysis
+d KW: Menger curvature
+d KW: screeplot
+d KW: Kaiser-Meyer-Olkin measure of sampling adequacy
+d KW: Bartlett's test of sphericity
+d KW: Doornik-Hansen omnibus test of multivariate normality
+d KW: uniqueness
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20251011
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f auto_factor.ado
+f auto_factor.sthlp
+f ../m/menger.ado
+f ../m/menger.sthlp
+f ../m/menger_estat.ado
+f ../m/menger_estat.sthlp

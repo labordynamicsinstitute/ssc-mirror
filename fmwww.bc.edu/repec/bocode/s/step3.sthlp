@@ -1,105 +1,137 @@
 {smcl}
-{* *! version 1.2 21oct2023}{...}
+{* *! version 2.0 10oct2025}{...}
 {viewerdialog step3 "dialog step3"}{...}
 {viewerjumpto "Syntax" "step3##syntax"}{...}
 {viewerjumpto "Description" "step3##description"}{...}
 {viewerjumpto "Options" "step3##options"}{...}
 {viewerjumpto "Example" "step3##example"}{...}
-{viewerjumpto "Reference" "step3##reference"}{...}
-{viewerjumpto "Author" "step3##author"}{...}
- 
-{p2col:{bf:step3}} Bias-Adjusted 3Step Latent Class Analysis
- 
+{viewerjumpto "Stored results" "step3##results"}{...}
+{viewerjumpto "References" "step3##references"}{...}
+{viewerjumpto "Authors" "step3##authors"}{...}
+
+{p2colset 1 14 16 2}{...}
+{p2col:{bf:step3} {hline 2}}Relating latent class membership to covariates and outcomes{p_end}
+
 {marker syntax}{...}
 {title:Syntax}
-{p}
 
-{cmd:step3} {varlist}{cmd:,} {opt posterior(stub)} {opt id(varname)} [{opt distal} {opt uneq} {opt base(#)} {opt rrr} {opt pval} {opt diff} {opt iter(#)}]
- 
+{p 8 15 2}
+{cmd:step3} {it:{help varlist:varlist}}
+{ifin},
+{opt pr(stub)}
+{opt lc:lass(newvar)}
+[{opt bch}
+{opt out:come}
+{opt id(varname)}
+{opt eqvar}
+{opt b:ase(#)}
+{opt rrr}
+{opt l:evel(#)}
+{opt d:etail}]
+
 {marker description}{...}
 {title:Description}
 
 {pstd}
-{cmd:step3} is a bias-adjusted method to relate latent class membership to external variables, which can be either covariates or distal outcomes.
+{cmd:step3} performs two bias-adjusted three-step methods to relate latent class membership to external variables: Maximum Likelihood (ML; Vermunt, 2010) and Bolck-Croon-Hagenaars (BCH; Bolck et al., 2004). The external variables can be either covariates (predictors of class membership) or distal outcomes (predicted by class membership).
 
 {pstd}
-The command performs the ML three-step procedure described by Vermunt (2010) with modal assignment.
-The first step - latent class analysis without covariates/distal outcomes - must be performed separately.
-This can be done with any command, as long as it produces membership posterior probabilities.
+The command adjusts for misclassification errors that arise in three-step approaches when observations are assigned to classes based on posterior probabilities from an initial latent class model.
 
 {pstd}
-In addition, the program quietly runs a test to ensure that the composition of the classes does not change after adding covariates/distal outcomes to the model.
-If the composition does change, the command will execute the analysis with classical proportional assignment, estimating the variances with the sandwich estimator.
+The first step (estimating the latent class model and predicting posterior probabilities) must be done separately (e.g., with {help gsem_lclass_options:gsem} or {help fmm:fmm}). {cmd:step3} uses these predicted probabilities to construct a classification error matrix and fits the structural model via ML or BCH correction.
 
 {marker options}{...}
 {title:Options}
 
-{phang}{opt posterior(stub)} is required. It specifies the prefix for the membership posterior probabilities estimated in the first step.
-To avoid errors, it is advisable to choose a prefix that only returns the posterior probability variables when followed by {it:*}.
+{phang}{opt pr(stub)} is required. It specifies the stub name of the posterior class membership probabilities from Step 1. Variables must be named as {it:stub}1, {it:stub}2, etc.
 
-{phang}{opt id(varname)} is required. It specifies the identifier variable for observations.
+{phang}{opt lc:lass(newvar)} is required. The program will generate a new variable to store the modal class assignment.
 
-{phang}{opt distal} specifies that the variable in {varlist} is the outcome of latent classes rather than a covariate.
-In {varlist} it is advisable to use the appropriate {it:i.} operator before a factor variable to prevent errors.
+{phang}{opt bch} specifies to use the BCH method; default is ML.
 
-{phang}{opt uneq} specifies to relax the assumption of equal variances across classes.
+{phang}{opt out:come} specifies that the variables in {it:varlist} are distal outcomes. By default, they are treated as covariates. Categorical outcomes must be introduced by the {it:"i."} prefix.
 
-{phang}{opt base(#)} specifies the reference class that will be used as the base outcome; default is {opt base(1)}.
- 
-{phang}{opt rrr} will report the results in relative risk ratios.
+{phang}{opt id(varname)} specifies the identifier variable for clustered standard errors.
 
-{phang}{opt pval} will report the exact p-value instead of stars.
+{phang}{opt eqvar} assumes equal variance across classes (for ML with continuous outcomes); default is to assume unequal variance.
 
-{phang}{opt diff} specifies to use a different stepping algorithm in nonconcave regions.
+{phang}{opt b:ase(#)} sets the reference class; default is {opt b:ase(1)}.
 
-{phang}{opt iter(#)} specifies the maximum number of iterations; default is {opt iter(20)}.
+{phang}{opt rrr} reports results as relative risk ratios.
+
+{phang}{opt l:evel(#)} sets the confidence level; default is {opt l:evel(95)}.
+
+{phang}{opt d:etail} displays additional information, including how many observations switch class from Step 1 to Step 3 (ML only).
 
 {marker example}{...}
 {title:Example}
 
-{phang}Setup
+{pstd}
+In this example, we aim to infer an unobserved binary sex variable using height as a proxy, and examine its relationship with a continuous outcome variable, {cmd:y}.
 
-{phang2}{cmd:. webuse gsem_lca2.dta, clear}
+{phang}{bf:1. Setup}
 
-{phang}Three categories of diabetes based on glucose, insulin, and sspg
+{phang2}{cmd:. webuse set https://califano.xyz/data}
 
-{phang2}{cmd:. gsem (glucose insulin sspg <-), lclass(C 3) lcinvariant(none) covstructure(e._OEn, un)}
+{phang2}{cmd:. webuse height}
 
-{phang}Posterior class membership probabilities
+{phang}{bf:2. Estimate a 2-class mixture model on height (Step 1)}
 
-{phang2}{cmd:. predict pr_*, classposteriorpr}
+{phang2}{cmd:. fmm 2: regress height}
 
-{phang}Use relwgt as predictor of class membership with classic modal assignment
+{phang}{bf:3. Predict posterior class membership probabilities}
 
-{phang2}{cmd:. egen max = rowmax(pr_*)}
+{phang2}{cmd:. predict cpost*, classposteriorpr}
 
-{phang2}{cmd:. generate modal_class = 1}
+{phang}{bf:4. Use the BCH method to assign each individual to their most likely class and estimate class-specific means of {cmd:y} (Steps 2 and 3)}
 
-{phang2}{cmd:. replace modal_class = 2 if max == pr_2}
+{phang2}{cmd:. step3 y, pr(cpost) lclass(W) outcome bch}
 
-{phang2}{cmd:. replace modal_class = 3 if max == pr_3}
+{phang}{bf:5. Use the ML method for the same task and inspect class stability}
 
-{phang2}{cmd:. mlogit modal_class relwgt}
+{phang2}{cmd:. step3 y, pr(cpost) lclass(W) outcome detail}
 
-{phang}Use relwgt as predictor of class membership with step3
+{phang}{bf:6. Use {cmd:y} as a covariate to predict latent class membership, reporting results as odds ratios}
 
-{phang2}{cmd:. step3 relwgt, posterior(pr_) id(patient)}
+{phang2}{cmd:. step3 y, pr(cpost) lclass(W) rrr}
 
-{phang}Although the latent profiles are well differentiated (Entropy > 0.8), the results of the analysis using the classic modal assignment are slightly underestimated.
-This phenomenon is more evident and problematic at lower entropy levels.
+{marker results}{...}
+{title:Stored results}
 
-{marker reference}{...}
-{title:Reference}
+{pstd}
+{cmd:step3} stores the following in {cmd:e()}:
 
-{phang}Vermunt, J. K. (2010).
-{browse "https://jeroenvermunt.nl/lca_three_step.pdf":Latent class modeling with covariates: Two improved three-step approaches}.
-{it:Political Analysis}, {it:18}, 450–469.
+{synoptset 20 tabbed}
+{synopt:{cmd:e(N)}}number of observations{p_end}
+{synopt:{cmd:e(changed)}}= 1 if more than 20% of observations switched classes between Step 1 and Step 3, 0 otherwise (ML only){p_end}
+{synopt:{cmd:e(cmd)}}{cmd:step3}{p_end}
+{synopt:{cmd:e(analysis)}}combination of ML/BCH and covariate/distal outcome{p_end}
+{synopt:{cmd:e(variance)}}equal/unequal variance assumed across classes (ML with continuous outcome only){p_end}
+{synopt:{cmd:e(b)}}coefficient vector{p_end}
+{synopt:{cmd:e(V)}}variance–covariance matrix{p_end}
+{synopt:{cmd:e(D)}}classification error matrix{p_end}
+{synopt:{cmd:e(invD)}}inverse of classification error matrix{p_end}
+{synopt:{cmd:e(sample)}}marks estimation sample{p_end}
 
-{marker author}{...}
-{title:Author}
+{marker references}{...}
+{title:References}
+
+{phang}
+Bolck, A., Croon, M., & Hagenaars, J. (2004). Estimating latent structure models with categorical variables: One-step versus three-step estimators. {it:Political Analysis}, {it:12}(1), 3-27.
+
+{phang}
+Vermunt, J. K. (2010). Latent class modeling with covariates: Two improved three-step approaches. {it:Political Analysis}, {it:18}(4), 450–469.
+
+{marker authors}{...}
+{title:Authors}
 
 {pstd}Giovanbattista Califano{p_end}
 {pstd}University of Naples Federico II{p_end}
-{pstd}Dept. Agricultural Sciences – Economics and Policy Group{p_end}
+{pstd}Dept. of Agricultural Sciences{p_end}
 {pstd}giovanbattista.califano@unina.it{p_end}
 
+{pstd}Rosa Fabbricatore{p_end}
+{pstd}University of Naples Federico II{p_end}
+{pstd}Dept. of Economics and Statistics{p_end}
+{pstd}rosa.fabbricatore@unina.it{p_end}  
