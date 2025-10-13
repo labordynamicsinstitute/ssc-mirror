@@ -1,4 +1,6 @@
-*! 1.0.0 Ariel Linden 07Oct2025
+*! 1.1.0 Ariel Linden 10oct2025		// changed code to display xvar values rather than sequential numbering
+									// fixed width of table columns
+*! 1.0.0 Ariel Linden 07oct2025
 
 program define menger, rclass
     version 11
@@ -59,7 +61,14 @@ program define menger, rclass
 		local row = 1
 		forvalues i = 2/`=`N'-1' {
 			if `curvature'[`i'] != . {
-				local rname `rname' `i' 
+				// Get the format of xvar
+				local fmt : format `xvar'
+				local fmt_clean = substr("`fmt'", 2, .)
+				// Extract the value of xvar[`i`] formatted
+				quietly {
+					local xi : display %`fmt_clean' `xvar'[`i']
+				}
+				local rname `rname' `xi'
 				matrix `menger_results'[`row', 1] = `yvar'[`i']
 				matrix `menger_results'[`row', 2] = `curvature'[`i']
 				local row = `row' + 1
@@ -74,8 +83,15 @@ program define menger, rclass
 		* if detail is specified *
 		if "`detail'" != "" {
 			* get rspec() values
-			local ylen = strlen("`yvar'")
-			local xlen = strlen("`xvar'")
+			local ylablen = strlen("`yvar'")
+			local yvalen : format `yvar'
+			local yvalen = substr(substr("`yvalen'", 2, .), 1, strpos(substr("`yvalen'", 2, .), ".") - 1)
+			local ylen = max(`ylablen', `yvalen' )
+			local xlablen = strlen("`xvar'")
+			local xvalen : format `xvar'
+			local xvalen = substr(substr("`xvalen'", 2, .), 1, strpos(substr("`xvalen'", 2, .), ".") - 1)
+			local xlen = max(`xlablen', `xvalen')
+
 			local nrows = rowsof(`menger_results')
 			local rspec_str "&-"
 			forvalues i = 1/`=`nrows'-1' {
@@ -103,30 +119,6 @@ program define menger, rclass
 		return scalar max_curv = `max_curvature'
 		return scalar elbow = `elbow'
 		return matrix results = `menger_results'
-    
-		noi di " " 
-		noi di "Max curvature:  " %8.5f `max_curvature' " at `xvar' = " `elbow'
-	
-	} // end qui
-	
-	// Optional graph
-    if "`graph'" != "" {
-		* get var labels for graph	
-		local yl : variable label `yvar'
-		if `"`yl'"' == "" local yl "`yvar'"  
-		local xl : variable label `xvar'
-		if `"`xl'"' == "" local xl "`xvar'"  
-	
-        twoway (connected `yvar' `xvar', lwidth(medthick) msymbol(o)) ///
-               (scatter `yvar' `xvar' if `xvar'==`elbow', ///
-					msymbol(O) mcolor(red) msize(large) mlabel(`xvar') mlabposition(2) mlabsize(medium)),  ///
-					title("Menger Curvature") ///
-					xtitle(`xl') ytitle("`yl'") ///
-					legend(off)
-    }
-	
-end
-rn matrix results = `menger_results'
     
 		noi di " " 
 		noi di "Max curvature:  " %8.5f `max_curvature' " at `xvar' = " %`fmt_clean' `elbow'

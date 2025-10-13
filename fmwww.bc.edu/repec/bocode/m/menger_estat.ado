@@ -11,6 +11,7 @@ program define menger_estat, rclass
         tempname ev
         confirm matrix `eig'
         matrix `ev' = `eig'
+		local cmd = e(cmd)
         local k = colsof(`ev')
 
 		tempvar yvar xvar
@@ -18,8 +19,12 @@ program define menger_estat, rclass
         quietly gen byte `xvar' = _n in 1/`k'
 		
 		local ytitle "Eigenvalues"
-		local title "Scree plot of eigenvalues after factor"
-		
+		if "`cmd'" == "pca" {
+			local title "Scree plot of eigenvalues after pca"
+		}
+		else {
+			local title "Scree plot of eigenvalues after factor"			
+		}
 		qui menger `xvar' `yvar'
 		local elbow =  r(elbow)
 

@@ -11,7 +11,7 @@
 {title:Syntax}
 
 {pstd}
-Using data with a discrete (ordered) {it:X} variable and a continuous {it:Y} variable 
+Using data with an ordered {it:X} variable and a continuous {it:Y} variable 
 
 {p 8 14 2}
 {cmd:menger}
@@ -23,7 +23,7 @@ Using data with a discrete (ordered) {it:X} variable and a continuous {it:Y} var
 
 
 {pstd}
-Post-estimation after {helpb factor}
+Post-estimation after {helpb factor} and {helpb pca}
 
 {p 8 14 2}
 {cmd:menger_estat}
@@ -50,8 +50,8 @@ how "curved" a triplet of points is, based on the circle that passes through the
 {browse "https://en.wikipedia.org/wiki/Menger_curvature":wikipedia} entry for greater detail). {opt menger} iterates 
 through each triplet of values in {it:yvar} and finds the curvature value. The maximum curvature point indicates 
 where the curve becomes more "flat" -- generally referred to as the "elbow" or "knee". {opt menger_estat} computes 
-the Menger curvature as a post-estimation command following {helpb factor}, as a means of finding an alternative number 
-of factors to that used in native {helpb factor} or "eye-balled" with {helpb screeplot}.
+the Menger curvature as a post-estimation command following {helpb factor} and {helpb pca}, as a means of finding an alternative number 
+of factors (components) to that used in Stata's official {helpb factor} or "eye-balled" with {helpb screeplot}.
 
 
 
