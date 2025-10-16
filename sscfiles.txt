@@ -9471,7 +9471,6 @@ fmwww.bc.edu/repec/bocode/m/medsem.pkg
 fmwww.bc.edu/repec/bocode/m/mrtab.html
 fmwww.bc.edu/repec/bocode/m/mhtexp.pkg
 fmwww.bc.edu/repec/bocode/m/mPwmc.mo
-fmwww.bc.edu/repec/bocode/m/mi_impute_wmlogit.sthlp
 fmwww.bc.edu/repec/bocode/m/ms_parse_vce.ado
 fmwww.bc.edu/repec/bocode/m/matstat.ado
 fmwww.bc.edu/repec/bocode/m/misum.pkg
@@ -9747,7 +9746,6 @@ fmwww.bc.edu/repec/bocode/m/mergemany.html
 fmwww.bc.edu/repec/bocode/m/mp_main.mpb
 fmwww.bc.edu/repec/bocode/m/metacum.dlg
 fmwww.bc.edu/repec/bocode/m/msboxes.sthlp
-fmwww.bc.edu/repec/bocode/m/mi_impute_cmd_wlogit_parse.ado
 fmwww.bc.edu/repec/bocode/m/mundlak.pkg
 fmwww.bc.edu/repec/bocode/m/ms_fvunab.ado
 fmwww.bc.edu/repec/bocode/m/msdeco.pkg
@@ -10268,7 +10266,6 @@ fmwww.bc.edu/repec/bocode/m/muxyplot.pkg
 fmwww.bc.edu/repec/bocode/m/mp_excer.mpb
 fmwww.bc.edu/repec/bocode/m/mbitobit_lf.ado
 fmwww.bc.edu/repec/bocode/m/milincom.ado
-fmwww.bc.edu/repec/bocode/m/mi_impute_wlogit.pkg
 fmwww.bc.edu/repec/bocode/m/mp_dta_g.mpb
 fmwww.bc.edu/repec/bocode/m/matchit.sthlp
 fmwww.bc.edu/repec/bocode/m/mkspline2.sthlp
@@ -10332,7 +10329,6 @@ fmwww.bc.edu/repec/bocode/m/mkprofile.ado
 fmwww.bc.edu/repec/bocode/m/mclgen.ado
 fmwww.bc.edu/repec/bocode/m/margdistfit_mata_beta.do
 fmwww.bc.edu/repec/bocode/m/medsens.ado
-fmwww.bc.edu/repec/bocode/m/mi_impute_wlogit.sthlp
 fmwww.bc.edu/repec/bocode/m/msp.html
 fmwww.bc.edu/repec/bocode/m/mfpi.pkg
 fmwww.bc.edu/repec/bocode/m/mtefe_secondstage.ado
@@ -10410,7 +10406,6 @@ fmwww.bc.edu/repec/bocode/m/manyweakivpretest.ado
 fmwww.bc.edu/repec/bocode/m/mseffect.pkg
 fmwww.bc.edu/repec/bocode/m/marg_nb1pp_prep.ado
 fmwww.bc.edu/repec/bocode/m/markstat.ado
-fmwww.bc.edu/repec/bocode/m/mi_impute_cmd_wmlogit_return.ado
 fmwww.bc.edu/repec/bocode/m/mint.ado
 fmwww.bc.edu/repec/bocode/m/mibmi.sthlp
 fmwww.bc.edu/repec/bocode/m/modplot.pkg
@@ -10514,7 +10509,6 @@ fmwww.bc.edu/repec/bocode/m/mvprob_ll.ado
 fmwww.bc.edu/repec/bocode/m/margdistfit_mata_discr.do
 fmwww.bc.edu/repec/bocode/m/margeff8.ado
 fmwww.bc.edu/repec/bocode/m/mscatter.ado
-fmwww.bc.edu/repec/bocode/m/mi_impute_cmd_wmlogit_parse.ado
 fmwww.bc.edu/repec/bocode/m/mf_mm_ipolate.html
 fmwww.bc.edu/repec/bocode/m/mergegz.sthlp
 fmwww.bc.edu/repec/bocode/m/matchk.ado
@@ -10808,7 +10802,6 @@ fmwww.bc.edu/repec/bocode/m/mif2dta.hlp
 fmwww.bc.edu/repec/bocode/m/metatrend.pkg
 fmwww.bc.edu/repec/bocode/m/mvtest.ado
 fmwww.bc.edu/repec/bocode/m/mvmetademo_run.sthlp
-fmwww.bc.edu/repec/bocode/m/mi_impute_cmd_wlogit_return.ado
 fmwww.bc.edu/repec/bocode/m/minmse.ado
 fmwww.bc.edu/repec/bocode/m/mkstrsn.ado
 fmwww.bc.edu/repec/bocode/m/mf_rtnorm.sthlp
@@ -10827,7 +10820,6 @@ fmwww.bc.edu/repec/bocode/m/maxi_bootX.ado
 fmwww.bc.edu/repec/bocode/m/metapreg_examples.ado
 fmwww.bc.edu/repec/bocode/m/mpitb_set.sthlp
 fmwww.bc.edu/repec/bocode/m/mf_mm_jk.html
-fmwww.bc.edu/repec/bocode/m/mi_impute_cmd_wmlogit.ado
 fmwww.bc.edu/repec/bocode/m/makehlp.pkg
 fmwww.bc.edu/repec/bocode/m/makediagram.ado
 fmwww.bc.edu/repec/bocode/m/mstdize.html
@@ -11144,7 +11136,6 @@ fmwww.bc.edu/repec/bocode/m/midas.sthlp
 fmwww.bc.edu/repec/bocode/m/multisite_varlate.ado
 fmwww.bc.edu/repec/bocode/m/motivate.ado
 fmwww.bc.edu/repec/bocode/m/moments.pkg
-fmwww.bc.edu/repec/bocode/m/mi_impute_cmd_wlogit_init.ado
 fmwww.bc.edu/repec/bocode/m/msboxes_examples.ado
 fmwww.bc.edu/repec/bocode/m/mtreatreg_gamma_lf.ado
 fmwww.bc.edu/repec/bocode/m/matmps.hlp
@@ -11480,7 +11471,6 @@ fmwww.bc.edu/repec/bocode/m/mergevirtual.ado
 fmwww.bc.edu/repec/bocode/m/multivrs.sthlp
 fmwww.bc.edu/repec/bocode/m/mkomega.ado
 fmwww.bc.edu/repec/bocode/m/metamiss.ado
-fmwww.bc.edu/repec/bocode/m/mi_impute_cmd_wmlogit_init.ado
 fmwww.bc.edu/repec/bocode/m/merlin_parse.ado
 fmwww.bc.edu/repec/bocode/m/mf_bcsf_bracketing.sthlp
 fmwww.bc.edu/repec/bocode/m/mail.hlp
@@ -11558,7 +11548,6 @@ fmwww.bc.edu/repec/bocode/m/mlowess.html
 fmwww.bc.edu/repec/bocode/m/mvnormalden.sthlp
 fmwww.bc.edu/repec/bocode/m/mstdize.ado
 fmwww.bc.edu/repec/bocode/m/mixreg_lib.lin64
-fmwww.bc.edu/repec/bocode/m/mi_impute_cmd_wlogit.ado
 fmwww.bc.edu/repec/bocode/m/mergevirtual.html
 fmwww.bc.edu/repec/bocode/m/mstfreq.sthlp
 fmwww.bc.edu/repec/bocode/m/mcmcreg.ado
