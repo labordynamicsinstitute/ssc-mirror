@@ -1,0 +1,28 @@
+d 'SPLITHALF': module to compute split-half reliability
+d
+d  splithalf computes split-half reliability to assess the internal
+d consistency of a scale or test composed of multiple items. It
+d involves dividing the items into two halves (which can be
+d performed either deterministically or randomly) and computing the
+d correlation between the total scores for each half. A high
+d correlation suggests that the items are measuring the same
+d underlying construct. splithalf computes (1) the correlation
+d between the two half scores, (2) the Spearman-Brown prophecy
+d formula to estimate full-scale reliability from the half-test
+d correlation and (3) the Horst reliability coefficient which
+d adjusts for unequal-length halves. 
+d
+d KW: split half reliability
+d KW: correlation
+d KW: Spearman-Brown prophecy
+d KW: Horst coefficient
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20251018
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f splithalf.ado
+f splithalf.sthlp

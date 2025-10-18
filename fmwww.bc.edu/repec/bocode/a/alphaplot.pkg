@@ -1,0 +1,27 @@
+d 'ALPHAPLOT': module to plot Cronbach's alpha for increasing subsets of a variable list
+d
+d  alphaplot produces a plot of Cronbach's alpha coefficients for
+d increasing subsets of items (k) in the varlist ranging from 2 to
+d k.  The variables specified in varlist should represent the items
+d loaded onto a factor, ordered by their loading values from high
+d to low. alphaplot is a useful tool to visualize the diminishing
+d returns of reliability with an increasing number of items loaded
+d on a factor. However, alphaplot is not a substitute for content
+d expertise, and it is possible that a different subset of items
+d may represent the construct better than that based on sequential
+d loading values alone. 
+d
+d KW: Cronbach's alpha
+d KW: internal consistency
+d KW: reliability
+d KW: factor analysis
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20251018
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f alphaplot.ado
+f alphaplot.sthlp

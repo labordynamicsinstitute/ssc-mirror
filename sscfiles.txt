@@ -19494,6 +19494,7 @@ fmwww.bc.edu/repec/bocode/a/aggrvar.ado
 fmwww.bc.edu/repec/bocode/a/artcat_test_consistency.do
 fmwww.bc.edu/repec/bocode/a/aaniv.ado
 fmwww.bc.edu/repec/bocode/a/adostore.sthlp
+fmwww.bc.edu/repec/bocode/a/alphaplot.pkg
 fmwww.bc.edu/repec/bocode/a/ardl.pkg
 fmwww.bc.edu/repec/bocode/a/attitude_indicators.dta
 fmwww.bc.edu/repec/bocode/a/arch.m
@@ -19550,6 +19551,7 @@ fmwww.bc.edu/repec/bocode/a/Asym_Caus.cpp
 fmwww.bc.edu/repec/bocode/a/ad-src-tests-README.md
 fmwww.bc.edu/repec/bocode/a/artbin_testing_2_double.log
 fmwww.bc.edu/repec/bocode/a/autolog.ado
+fmwww.bc.edu/repec/bocode/a/alphaplot.sthlp
 fmwww.bc.edu/repec/bocode/a/adf.mtx
 fmwww.bc.edu/repec/bocode/a/adoinstall.sthlp
 fmwww.bc.edu/repec/bocode/a/adjmean.html
@@ -19700,6 +19702,7 @@ fmwww.bc.edu/repec/bocode/a/archqq.ado
 fmwww.bc.edu/repec/bocode/a/addplot.hlp
 fmwww.bc.edu/repec/bocode/a/airnet.pkg
 fmwww.bc.edu/repec/bocode/a/asubini.dlg
+fmwww.bc.edu/repec/bocode/a/alphaplot.ado
 fmwww.bc.edu/repec/bocode/a/artbin_whatsnew.sthlp
 fmwww.bc.edu/repec/bocode/a/apcd.sthlp
 fmwww.bc.edu/repec/bocode/a/addtex.hlp
@@ -21687,6 +21690,7 @@ fmwww.bc.edu/repec/bocode/s/subwordexample.txt
 fmwww.bc.edu/repec/bocode/s/sqr.ado
 fmwww.bc.edu/repec/bocode/s/sliceplot.pkg
 fmwww.bc.edu/repec/bocode/s/stbrier.ado
+fmwww.bc.edu/repec/bocode/s/splithalf.pkg
 fmwww.bc.edu/repec/bocode/s/sptobitsem3.ado
 fmwww.bc.edu/repec/bocode/s/sampsi_reg.pkg
 fmwww.bc.edu/repec/bocode/s/survsim_msm_mataf.mata
@@ -22956,6 +22960,7 @@ fmwww.bc.edu/repec/bocode/s/stddiff.sthlp
 fmwww.bc.edu/repec/bocode/s/setx.ado
 fmwww.bc.edu/repec/bocode/s/sankey_plot.ado
 fmwww.bc.edu/repec/bocode/s/sptobitsac.dta
+fmwww.bc.edu/repec/bocode/s/splithalf.sthlp
 fmwww.bc.edu/repec/bocode/s/scatterfit.pkg
 fmwww.bc.edu/repec/bocode/s/sto.hlp
 fmwww.bc.edu/repec/bocode/s/stselpre.html
@@ -23439,6 +23444,7 @@ fmwww.bc.edu/repec/bocode/s/SPWmcs3.dta
 fmwww.bc.edu/repec/bocode/s/scores.dta
 fmwww.bc.edu/repec/bocode/s/spmstarxt1_lf.ado
 fmwww.bc.edu/repec/bocode/s/sutex.ado
+fmwww.bc.edu/repec/bocode/s/splithalf.ado
 fmwww.bc.edu/repec/bocode/s/stpm2_ml_odds.ado
 fmwww.bc.edu/repec/bocode/s/seqlogit_uh_lf.ado
 fmwww.bc.edu/repec/bocode/s/selectvars.html
