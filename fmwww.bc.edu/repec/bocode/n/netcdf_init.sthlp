@@ -6,21 +6,21 @@ help for {hi:netcdf_init}
 
 {title:Initializes the environment for ncread/ncdisp}
 
-{cmd:netcdf_init } initializes the environment for reading NetCDF files using the netcdfAll-5.6.0.java library. 
+{cmd:netcdf_init } initializes the environment for reading NetCDF files using the netcdfAll-5.9.1.java library. 
 {marker syntax}{...}
 {title:Syntax}
 
 {p 4 10 2}
-{cmd:readnc_init }[{it:pathofjar}] 
+{cmd:netcdf_init }[{it:pathofjar}] 
 [,{it:options}]
 
 {synoptset 24 tabbed}{...}
 {synopthdr}
 {synoptline}
 
-{synopt :{opt download}}specify downloading netcdfALL-5.6.0.jar{p_end}
-{synopt :{opt dir(string)}}specify the target directory for downloading netcdfALL-5.6.0.jar{p_end}
-{synopt :{opt plus(string)}}copy netcdfALL-5.6.0.jar to the specified folder in sysdir_plus{p_end}
+{synopt :{opt download}}specify downloading netcdfALL-5.9.1.jar{p_end}
+{synopt :{opt dir(string)}}specify the target directory for downloading netcdfALL-5.9.1.jar{p_end}
+{synopt :{opt plus(string)}}copy netcdfALL-5.9.1.jar to the specified folder in sysdir_plus{p_end}
 
 {synoptline}
  
@@ -29,28 +29,28 @@ help for {hi:netcdf_init}
 {title:Examples}
 
 {phang}
-1. Manually downloading netcdfALL-5.6.0.jar and add the current directory into Stata adopath:
+1. Manually downloading netcdfALL-5.9.1.jar and add the current directory into Stata adopath:
 
 {p 12 16 2}
-{cmd:.copy https://downloads.unidata.ucar.edu/netcdf-java/5.6.0/netcdfAll-5.6.0.jar .}{break}
+{cmd:.copy https://downloads.unidata.ucar.edu/netcdf-java/5.9.1/netcdfAll-5.9.1.jar .}{break}
 
 {p 12 16 2}
 {cmd:.netcdf_init}{break}
 
 {phang}
-2. Manually downloading netcdfALL-5.6.0.jar into D:/jars and add D:/jars into Stata adopath:
+2. Manually downloading netcdfALL-5.9.1.jar into D:/jars and add D:/jars into Stata adopath:
 
 {p 12 16 2}
 {cmd:.mkdir D:/jars}{break}
 
 {p 12 16 2}
-{cmd:.copy https://downloads.unidata.ucar.edu/netcdf-java/5.6.0/netcdfAll-5.6.0.jar D:/jars/netcdfAll-5.6.0.jar}{break}
+{cmd:.copy https://downloads.unidata.ucar.edu/netcdf-java/5.9.1/netcdfAll-5.9.1.jar D:/jars/netcdfAll-5.9.1.jar}{break}
 
 {p 12 16 2}
 {cmd:.netcdf_init D:/jars}{break}
 
 {phang}
-3. Automatically downloading netcdfALL-5.6.0.jar into sysdir_plus/jar:
+3. Automatically downloading netcdfALL-5.9.1.jar into sysdir_plus/jar:
 
 {p 12 16 2}
 {cmd:.netcdf_init, download plus(jar)}{break}

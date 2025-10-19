@@ -1,8 +1,7 @@
-
 cap program drop gzonalstats_core
 program define gzonalstats_core
-version 18.0
-syntax anything using/, [STATs(string) band(integer 1) clear]
+version 17
+syntax anything using/, [STATs(string) band(integer 1) clear crs(string)]
 
 // Check if clear option is provided when data is in memory
 if "`clear'"=="" {
@@ -22,7 +21,7 @@ local band = `band' - 1
 
 // Default value for stats if not provided
 if missing("`stats'") {
-    local stats "count avg min max"
+    local stats "avg"
 }
 
 //check stats in supported list
@@ -63,12 +62,15 @@ local shpfile = subinstr(`"`shpfile'"',"\","/",.)
 // Use the arguments passed to the program
 local tifffile `"`using'"'
 
+// Prepare CRS option
+local usercrs "`crs'"
+
 // Clear data in Stata directly if needed
 if "`clear'" == "clear" {
     clear
 }
 
-java: zonalstatics.main("`shpfile'", "`tifffile'", `band', "`stats'")
+java: zonalstatics.main("`shpfile'", "`tifffile'", `band', "`stats'", "`usercrs'")
 
 // Add variable labels in Stata code after Java execution
 cap confirm var count
@@ -189,13 +191,15 @@ public class zonalstatics {
         }
     }
 
-    public static void main(String shpPath, String tiffPath, int bandIndex, String statsParam) throws Exception {
+    public static void main(String shpPath, String tiffPath, int bandIndex, String statsParam, String userCrs) throws Exception {
         // Declare resources outside the try block so we can close them in finally
         ShapefileDataStore shapefileDataStore = null;
         AbstractGridCoverage2DReader reader = null;
         SimpleFeatureIterator featureIterator = null;
         SimpleFeatureCollection featureCollection = null;
         
+        String rasterCRSName = "Unknown CRS"; // 先声明
+
         try {
             // Disable excessive logging
             Logger.getGlobal().setLevel(Level.SEVERE);
@@ -266,9 +270,20 @@ public class zonalstatics {
             
             // Get coordinate systems for comparison
             CoordinateReferenceSystem rasterCRS = reader.getCoordinateReferenceSystem();
-            String rasterCRSName = rasterCRS.getName().toString();
-            System.out.println("Raster CRS: " + rasterCRSName);
-            System.out.println("Raster CRS WKT: " + rasterCRS.toWKT());
+            if (rasterCRS != null) {
+                rasterCRSName = rasterCRS.getName().toString(); // 赋值
+                System.out.println("GeoTIFF CRS detected: " + rasterCRSName + ". User-provided CRS is ignored.");
+                /* System.out.println("Raster CRS WKT: " + rasterCRS.toWKT()); */
+            } else {
+                if (userCrs != null && !userCrs.trim().isEmpty()) {
+                    System.out.println("GeoTIFF CRS not detected. Using user-provided CRS: " + userCrs);
+                    rasterCRS = CRS.decode(userCrs, true);
+                    rasterCRSName = rasterCRS.getName().toString(); // 这里也赋值
+                } else {
+                    System.out.println("Error: GeoTIFF file does not contain CRS information and no CRS was provided. Please specify a CRS using the crs() option.");
+                    return;
+                }
+            }
 
             CoordinateReferenceSystem vectorCRS = shapefileDataStore.getSchema().getCoordinateReferenceSystem();
             
@@ -278,7 +293,7 @@ public class zonalstatics {
             
             
             System.out.println("Shapefile CRS: " + vectorCRSName);
-            System.out.println("Vector CRS WKT: " + vectorCRS.toWKT());
+            /* System.out.println("Vector CRS WKT: " + vectorCRS.toWKT()); */
             
             
             // Check if we need to reproject
@@ -300,7 +315,7 @@ public class zonalstatics {
             GeneralParameterValue[] readParams = null;
 
             if (shpBounds != null && !shpBounds.isEmpty()) {
-                System.out.println("Optimizing raster read to only cover shapefile extent");
+                /* System.out.println("Optimizing raster read to only cover shapefile extent"); */
                 
                 try {
                     // Get the raster extent first to ensure we don't request outside its bounds
@@ -426,13 +441,15 @@ public class zonalstatics {
                 SimpleFeature firstFeature = allFeatures.get(0);
                 for (int i = 0; i < firstFeature.getType().getAttributeCount(); i++) {
                     String attributeName = firstFeature.getType().getDescriptor(i).getLocalName();
+                    /* System.out.println("Feature attribute: " + attributeName); */
+                    
                     Object value = firstFeature.getAttribute(attributeName);
                     
                     if (attributeName.equals("count")) {
                         if (showCount) {  // Only store if requested
                             countAttrName = attributeName;
                         }
-                    } else if (attributeName.equals("mean")) {
+                    } else if (attributeName.equals("avg")) {
                         if (showAvg) {  // Only store if requested
                             avgAttrName = attributeName;
                         }

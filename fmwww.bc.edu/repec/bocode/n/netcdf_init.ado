@@ -1,4 +1,4 @@
-
+*! version 3.0.1 2025-10-07
 program define netcdf_init
 version 16.0
 syntax [anything] , [download dir(string) plus(string)]
@@ -15,9 +15,9 @@ if "`download'"!=""{
 		}
 	}
 	if `"`dir'"'=="" local dir = c(pwd)
-	di `"Downloading netcdfAll-5.6.0.jar into {browse "`dir'":`dir'}..."'
+	di `"Downloading netcdfAll-5.9.1.jar into {browse "`dir'":`dir'}..."'
 	di  "Please wait..."
-	copy https://downloads.unidata.ucar.edu/netcdf-java/5.6.0/netcdfAll-5.6.0.jar `"`dir'/netcdfAll-5.6.0.jar"'
+	copy https://downloads.unidata.ucar.edu/netcdf-java/5.9.1/netcdfAll-5.9.1.jar `"`dir'/netcdfAll-5.9.1.jar"'
 	if `"`anything'"'!="" & "`plus'"==""{
         di as  `"Warning: {`anything'} is ignored as the jar file is downloaded to {`dir'}"'
 	}
@@ -29,11 +29,12 @@ if "`download'"!=""{
 }
 
 if "`plus'"!=""{
-	di "Copying netcdfAll-5.6.0.jar to {browse `c(sysdir_plus)'/`plus'} ..."
-	pjar2plus `anything'/netcdfAll-5.6.0.jar, to(`plus')
+	di "Copying netcdfAll-5.9.1.jar to {browse `c(sysdir_plus)'/`plus'} ..."
+	pjar2plus `anything'/netcdfAll-5.9.1.jar, to(`plus')
+	wrtjarpath `c(sysdir_plus)'/`plus', jar(netcdfAll-5.9.1.jar) adoname(ncreadjar)
 }
 else{
-	wrtjarpath `anything', jar(netcdfAll-5.6.0.jar) adoname(ncreadjar)
+	wrtjarpath `anything', jar(netcdfAll-5.9.1.jar) adoname(ncreadjar)
 }
 
 end

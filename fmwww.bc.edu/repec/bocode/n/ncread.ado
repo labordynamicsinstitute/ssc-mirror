@@ -1,28 +1,38 @@
-
+*! version 3.0.1 2025-10-07
 cap program drop ncread 
 program define ncread 
-version 18
-//stgeocominit
+version 17
+
 syntax [anything] using/,  [Size(numlist integer) Origin(numlist integer >0) CLEAR CSV(string) display]
 
-// local pluspath = c(sysdir_plus)
-// cap findfile netcdfAll-5.6.0.jar
-// if _rc{
-//     di as error "netcdfAll-5.6.0.jar not found"
-//     di as error "Please download it from https://www.unidata.ucar.edu/software/netcdf"
-//     di as error "and put it in `pluspath' via"
-//     di as error "   pjar2plus yourpath/netcdfAll-5.6.0.jar, to(netcdf)"
-//     exit 198
-// }
+
+    // cap findfile NetCDFUtils-complete.jar
+    // if _rc {
+    //     display as "installing the jar file, please wait..."
+    //      cap net install netcdfutil.pkg, from(https://raw.githubusercontent.com/kerrydu/readraster/refs/heads/main/)
+    //      if _rc {
+    //         cap cnssc install netcdfutil.pkg
+    //      }
+    //      sleep 1000
+
+    // }
+    // cap findfile NetCDFUtils-complete.jar
+    // if _rc {
+    //     di as error "downloading NetCDFUtils-complete.jar failed"
+    //     di `"please go to {browse "https://github.com/kerrydu/readraster": Github/kerrydu/readraster} to download it and put it in your adopath"'
+    //     exit
+    // }
+    // local jarfiles `r(filename)'
 
 
 
-cap findfile netcdfAll-5.6.0.jar
+cap findfile netcdfAll-5.9.1.jar
 
 if _rc{
     cap findfile path_ncreadjar.ado 
     if _rc {
-        di as error "jar path NOT specified, use ncread_init for setting up"
+        di as error "jar path NOT specified, use netcdf_init for setting up"
+        disp "see " `"{help netcdf_init:help netcdf_init}"'
         exit
         
     }
@@ -30,11 +40,11 @@ if _rc{
     path_ncreadjar
     local path `r(path)'
 
-    cap findfile netcdfAll-5.6.0.jar, path(`"`path'"')
+    cap findfile netcdfAll-5.9.1.jar, path(`"`path'"')
     if _rc {
-        di as error "netcdfAll-5.6.0.jar NOT found"
-        di as error "use netcdf_init for re-initializing Java environment"
-        di as error "make sure netcdfAll-5.6.0.jar exists in your specified directory"
+        di as error "Missing Java dependencies, netcdfAll-5.9.1.jar NOT found"
+        di as error "make sure netcdfAll-5.9.1.jar exists in your specified directory"
+		disp "see " `"{help netcdf_init:help netcdf_init}"' " for setting up"
         exit
     }
 
@@ -61,9 +71,6 @@ if "`ext'" != ".nc" {
 }
 
 if `"`anything'"'==""{
-    // removequotes,file(`using')
-    // local file `r(file)'
-    // local file = subinstr(`"`file'"',"\","/",.)
     ncinfo `"`file'"'
     exit
 }
@@ -94,25 +101,10 @@ if `"`origin'"'!=""{
 removequotes,file(`anything')
 local varname `r(file)'
 confirm new var `varname'
-// removequotes,file(`using')
-// local file `r(file)'
-// local file = subinstr(`"`file'"',"\","/",.)
-di _n 
 
-qui findfile NCtoStata.java
-
-//////////java//////////////////////
-java clear
-java: /cp "netcdfAll-5.6.0.jar"
-java: /open "NCtoStata.java"
-java: NCtoStata.main("`file'","`varname'")
-
-/////////////////////////////////////
-// if "`keepmissing'"==""{
-//     qui sum `anything',meanonly
-//     qui drop if `anything'> `=r(max)+1000'
-
-// }
+// 使用javacall调用NetCDFUtils
+// javacall NetCDFUtils readToStataEntry, jars(NetCDFUtils-complete.jar) args("`file'" "`varname'")
+netcdfutils NetCDFUtils.readToStata("`file'", "`varname'")
 
 if `=_N'>0 {
     disp "Sucessfully import `=_N' Obs into Stata."
@@ -128,12 +120,25 @@ syntax, file(string)
 return local file `file'
 end
 
+/////////////////////////////////////////////////
+cap program drop ncinfo
+program define ncinfo
+    version 17
+    syntax anything,[display]
 
-///////////////////////////////////////////
-cap program drop ncreadbysec 
+    removequotes,file(`"`anything'"')
+    local file `r(file)'
+    local file = subinstr(`"`file'"',"\","/",.)
+    
+    // // 使用javacall调用新的JAR文件
+    // javacall NetCDFUtils printNetCDFStructureEntry, jars(NetCDFUtils-complete.jar) args("`file'")
+    netcdfutils NetCDFUtils.printNetCDFStructure("`file'")
+
+end
+
 program define ncreadbysec 
-version 18
-syntax anything using/,  [Size(numlist integer) clear] Origin(numlist integer >0)
+version 17
+syntax anything using/,  [Size(numlist integer) clear ] Origin(numlist integer >0)
 
 removequotes,file(`anything')
 local varname `r(file)'
@@ -144,6 +149,12 @@ local file = subinstr(`"`file'"',"\","/",.)
 di _n 
 
 local no: word count `origin'
+
+forv i=1/`no'{
+    local oi: word `i' of `origin'
+    local origin0 `origin0' `=`oi'-1'
+}
+
 if "`size'"==""{
     forv j=1/`no'{
         local size `size' -1
@@ -157,43 +168,16 @@ if `nc' != `no' {
 }
 
 ////////////import java////////////
-java clear
-java: /cp "netcdfAll-5.6.0.jar"
-java: /open "NetCDFReader.java"
-java: /open "NCtoStatabySection.java"
+// 使用javacall调用NetCDFUtils
+// javacall NetCDFUtils readToStataBySectionEntry, jars(NetCDFUtils-complete.jar) args("`file'" "`varname'" "`origin0'" "`size'")
 
-qui java: NetCDFReader.printVarStructure("`file'","`varname'")
-local nd: word count `dimensions'
-if `nc' != `nd' {
-    di as error "The number of origin and count should be equal # of axises in nc file."
-    exit
-}
+netcdfutils NetCDFUtils.readToStataBySection("`file'", "`varname'", "`origin0'", "`size'")
 
-local size2 
-forv i =1/`no'{
-    local oi: word `i' of `origin'
-    local di : word `i' of `dimensions'
-    if  `di' < `oi' {
-        di as error "The origin excesses the corresponding dimension lenth."
-        exit
-    }
-    // java is zoro-based, so the origin should be minus 1
-    local origin0 `origin0' `=`oi'-1'
-    local ci: word `i' of `size'
-    local endi = `oi' + `ci'-1
-    if (`endi'> `di'){
-        di as error "Requested section is out of range"
-        di as error "(`origin') + (`size') - 1 > (`dimensions')" 
-        exit
-    }
-    if (`ci'==-1) local size2 `size2' `=`di'-`oi'+1'
-    else local size2 `size2' `ci'
+local dimensions `dimensions'
+local coordAxes `coordAxes'
 
-}
-
- local size `size2'
- java: NCtoStatabySection.main("`file'","`varname'","`origin0'","`size'")
-
+// The Java code will have already performed the dimension validation
+// We can still access the dimension information through the macros set by Java
 
 if `=_N'>0 {
     disp "Sucessfully import `=_N' Obs into Stata."
@@ -202,23 +186,10 @@ if `=_N'>0 {
  end
 
 
-cap program drop ncinfo
-program define ncinfo
-version 18
-syntax anything,[display]
-removequotes,file(`"`anything'"')
-local file `r(file)'
-local file = subinstr(`"`file'"',"\","/",.)
-java clear
-java: /cp "netcdfAll-5.6.0.jar"
-java: /open "NetCDFReader.java"
-java: NetCDFReader.printNetCDFStructure("`file'");
-
-end
-
-cap program drop ncreadtocsv
+///////////////////////////////////////////
 program define ncreadtocsv
-syntax anything using/,  csv(string) [Size(numlist integer) Origin(numlist integer >0) clear]
+version 17
+syntax anything using/,  csv(string) [Size(numlist integer) Origin(numlist integer >0) clear ]
 local varname `anything'
 confirm name `varname'
 parsecsvopt `csv'
@@ -250,15 +221,58 @@ local ncfile = usubinstr(`"`ncfile'"',"\","/",.)
 local csvfile = usubinstr(`"`csvfile'"',"\","/",.)
 cap qui findfile NCtoCSV.java
 di 
-//////////java//////////////////////
-java clear
-java: /cp "netcdfAll-5.6.0.jar"
-java: /open "NCtoCSV.java"
-java: NCtoCSV.main("`ncfile'","`csvfile'","`varname'")
+//////////javacall//////////////////////
+// javacall NetCDFUtils exportToCSVEntry, jar(`NetCDFUtils-complete.jar') args(`"`ncfile'"' `"`csvfile'"' `"`varname'"')
+netcdfutils NetCDFUtils.exportToCSV("`ncfile'", "`csvfile'", "`varname'")
 
 
 end
 
+
+/////////////////////////////////////////
+
+program define ncreadtocsvbysec
+version 17
+syntax anything using/,  csv(string) [Size(numlist integer) Origin(numlist integer >0)]
+
+local varname `anything'
+confirm name `varname'
+local csvfile `csv'
+removequotes,file(`using')
+local ncfile `r(file)'
+
+local ncfile = usubinstr(`"`ncfile'"',"\","/",.)
+local csvfile = usubinstr(`"`csvfile'"',"\","/",.)
+
+local no: word count `origin'
+if "`size'"==""{
+    forv j=1/`no'{
+        local size `size' -1
+    }
+}
+
+local nc: word count `size'
+if `nc' != `no' {
+    di as error "The number of origin and size should be the same."
+    exit
+}
+
+// Convert Stata 1-based indices to Java 0-based indices
+local origin0
+forv i=1/`no'{
+    local oi: word `i' of `origin'
+    local origin0 `origin0' `=`oi'-1'
+}
+
+// No need for any other validation - Java will handle it all
+di
+// javacall NetCDFUtils exportToCSVBySectionEntry, jar(`NetCDFUtils-complete.jar') args(`"`ncfile'"' `"`csvfile'"' `"`varname'"' `"`origin0'"' `"`size'"')
+netcdfutils NetCDFUtils.exportToCSVBySection("`ncfile'", "`csvfile'", "`varname'", "`origin0'", "`size'")
+
+end
+
+
+//////////////////////////////////////////
 
 cap program drop parsecsvopt
 program define parsecsvopt,rclass
@@ -280,77 +294,3 @@ if "`replace'"=="" & `flag'{
 return local file `file'
 
 end
-
-
-cap program drop ncreadtocsvbysec
-program define ncreadtocsvbysec
-syntax anything using/,  csv(string) [Size(numlist integer) Origin(numlist integer >0)]
-local varname `anything'
-confirm name `varname'
-local csvfile `csv'
-removequotes,file(`using')
-local ncfile `r(file)'
-
-local ncfile = usubinstr(`"`ncfile'"',"\","/",.)
-local csvfile = usubinstr(`"`csvfile'"',"\","/",.)
-
-
-
-local no: word count `origin'
-if "`size'"==""{
-    forv j=1/`no'{
-        local size `size' -1
-    }
-}
-
-local nc: word count `size'
-if `nc' != `no' {
-    di as error "The number of origin and size should be the same."
-    exit
-}
-
-
-qui findfile NCtoCSVbySection.java
-
-
-
-////////////import java////////////
-java clear
-java: /cp "netcdfAll-5.6.0.jar"
-java: /open "NetCDFReader.java"
-java: /open "NCtoCSVbySection.java"
-
-qui java: NetCDFReader.printVarStructure("`ncfile'","`varname'")
-local nd: word count `dimensions'
-if `nc' != `nd' {
-    di as error "The number of origin and count should be equal # of axises in nc file."
-    exit
-}
-
-local size2 
-forv i =1/`no'{
-    local oi: word `i' of `origin'
-    local di : word `i' of `dimensions'
-    if  `di' < `oi' {
-        di as error "The origin excesses the corresponding dimension lenth."
-        exit
-    }
-    // java is zoro-based, so the origin should be minus 1
-    local origin0 `origin0' `=`oi'-1'
-    local ci: word `i' of `size'
-    local endi = `oi' + `ci'-1
-    if (`endi'> `di'){
-        di as error "Requested section is out of range"
-        di as error "(`origin') + (`size') - 1 > (`dimensions')" 
-        exit
-    }
-    if (`ci'==-1) local size2 `size2' `=`di'-`oi'+1'
-    else local size2 `size2' `ci'
-
-}
- di
- local size `size2'
- java: NCtoCSVbySection.main("`ncfile'","`csvfile'","`varname'","`origin0'","`size'") //
-
-
-end 

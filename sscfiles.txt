@@ -7266,6 +7266,7 @@ fmwww.bc.edu/repec/bocode/k/k_pwt5n.ado
 fmwww.bc.edu/repec/bocode/k/kdens2.html
 fmwww.bc.edu/repec/bocode/z/zicenlc.ado
 fmwww.bc.edu/repec/bocode/z/zicen3_lf.ado
+fmwww.bc.edu/repec/bocode/z/zonalstats.sthlp
 fmwww.bc.edu/repec/bocode/z/zipffit.sthlp
 fmwww.bc.edu/repec/bocode/z/zicen2_p.ado
 fmwww.bc.edu/repec/bocode/z/zinb_ll.ado
@@ -7290,6 +7291,7 @@ fmwww.bc.edu/repec/bocode/z/zoib_beta_lf.ado
 fmwww.bc.edu/repec/bocode/z/zippkg.ado
 fmwww.bc.edu/repec/bocode/z/zipmerge.ado
 fmwww.bc.edu/repec/bocode/z/zscore06.pkg
+fmwww.bc.edu/repec/bocode/z/zonalstats.ado
 fmwww.bc.edu/repec/bocode/z/zipsave.html
 fmwww.bc.edu/repec/bocode/z/zandrews.ado
 fmwww.bc.edu/repec/bocode/z/zscore06.hlp
@@ -16592,6 +16594,7 @@ fmwww.bc.edu/repec/bocode/r/rddensity_h.mo
 fmwww.bc.edu/repec/bocode/r/rsource.sthlp
 fmwww.bc.edu/repec/bocode/r/rndglog.html
 fmwww.bc.edu/repec/bocode/r/rcl_functions_equilibrium.do
+fmwww.bc.edu/repec/bocode/r/readraster_setup.do
 fmwww.bc.edu/repec/bocode/r/resize.sthlp
 fmwww.bc.edu/repec/bocode/r/runmplus.hlp
 fmwww.bc.edu/repec/bocode/r/robreg10.ado
@@ -23580,6 +23583,7 @@ fmwww.bc.edu/repec/bocode/n/nonparmde.html
 fmwww.bc.edu/repec/bocode/n/network_map.ado
 fmwww.bc.edu/repec/bocode/n/network_table.sthlp
 fmwww.bc.edu/repec/bocode/n/nca_examples.do
+fmwww.bc.edu/repec/bocode/n/netcdfutils.ado
 fmwww.bc.edu/repec/bocode/n/nehurdle_heckman_het.ado
 fmwww.bc.edu/repec/bocode/n/npss.ado
 fmwww.bc.edu/repec/bocode/n/ncfprob.html
@@ -23729,6 +23733,7 @@ fmwww.bc.edu/repec/bocode/n/niceest.sthlp
 fmwww.bc.edu/repec/bocode/n/normi.sthlp
 fmwww.bc.edu/repec/bocode/n/nwcluster.ado
 fmwww.bc.edu/repec/bocode/n/newey2.html
+fmwww.bc.edu/repec/bocode/n/nzonalstats_core.ado
 fmwww.bc.edu/repec/bocode/n/nnipolate.ado
 fmwww.bc.edu/repec/bocode/n/nlcorr.mata
 fmwww.bc.edu/repec/bocode/n/normd.ado

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  03jun2025}{...}
+{* *! version 1.2.0  10oct2025}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Install readraster" "ssc install readraster"}{...}
 {viewerjumpto "Syntax" "readraster##syntax"}{...}
@@ -45,8 +45,33 @@ automatically handling coordinate system transformations and spatial operations.
 {dlgtab:System Requirements}
 
 {phang}
-{bf:Stata Version}: Stata 18 or later version is required
+{bf:Stata Version}: Stata 17 or later version is required
 {p_end}
+
+{marker installization}{...}
+{title:Installization}
+
+
+{phang}
+Installing the package from SSC:
+{p_end}
+
+{phang2}{cmd:. ssc install readraster}{p_end}
+
+
+{phang}
+Installing the latest developed version from Github:
+{p_end}
+
+{phang2}{cmd:. net install readraster, from(https://raw.githubusercontent.com/kerrydu/readraster/refs/heads/main/)}{p_end}
+
+
+{phang}
+Downloading demo code and data from Github:
+{p_end}
+
+{phang2}{cmd:. net get readraster, from(https://raw.githubusercontent.com/kerrydu/readraster/refs/heads/main/)}{p_end}
+
 
 
 {marker commands}{...}
@@ -58,23 +83,24 @@ The {cmd:readraster} package includes the following commands organized by functi
 {dlgtab:GeoTIFF Operations}
 
 {phang2}
-{help gtiffread:gtiffread} - Read pixel values and coordinates from GeoTIFF files
+{help gtiffdisp:gtiffdisp} - Display metadata information from GeoTIFF files
 
 {phang2}
-{help gtiffdisp:gtiffdisp} - Display metadata information from GeoTIFF files
+{help gtiffread:gtiffread} - Read pixel values and coordinates from GeoTIFF files
 
 {dlgtab:NetCDF Operations}
 
 {phang2}
-{help ncread:ncread} - Read variables from NetCDF files with support for multi-dimensional data
+{help ncdisp:ncdisp} - Display structure and metadata of NetCDF files
 
 {phang2}
-{help ncdisp:ncdisp} - Display structure and metadata of NetCDF files
+{help ncread:ncread} - Read variables from NetCDF files with support for multi-dimensional data
 
 {dlgtab:Spatial Analysis}
 
+
 {phang2}
-{help gzonalstats:gzonalstats} - Calculate zonal statistics from raster data using polygon zones
+{help zonalstats:zonalstats} - Calculate zonal statistics from raster data in Stata for areas of interest
 
 {phang2}
 {help matchgeop:matchgeop} - Match datasets based on geographic proximity and location
@@ -85,31 +111,104 @@ The {cmd:readraster} package includes the following commands organized by functi
 {dlgtab:Setup Commands}
 
 {phang2}
-{help geotools_init:geotools_init} - Initialize GeoTools Java library for GeoTIFF operations
+{help geotools_init:geotools_init} - Configurate GeoTools Java library for GeoTIFF operations
 
 {phang2}
-{help netcdf_init:netcdf_init} - Initialize NetCDF Java library for NetCDF operations
-
+{help netcdf_init:netcdf_init} - Configurate NetCDF Java library for GeoTIFF operations
 
 {marker setup}{...}
 {title:Setup Java dependencies}
 
-{pstd}
-Before using the package commands, you must initialize the required Java libraries:
-
-{phang}
-{bf:For GeoTIFF operations} (gtiffread, gtiffdisp, gzonalstats, crsconvert):
-{p_end}
-{phang2}{cmd:. geotools_init, download}{p_end}
-
-{phang}
-{bf:For NetCDF operations} (ncread, ncdisp):
-{p_end}
-{phang2}{cmd:. netcdf_init, download}{p_end}
+{dlgtab:Java JDK Configuration}
 
 {pstd}
-These setup commands only need to be run once per Stata installation.
+{browse "Java JDK configuration requirements:"}
+{p_end}
 
+{phang2}• {bf:Stata 17}: Requires manual Java JDK 17+ installation and configuration{p_end}
+{phang2}• {bf:Stata 18+}: Uses built-in Java runtime (no additional configuration needed){p_end}
+
+{dlgtab:For Stata 17 Users: Configure Java JDK 17+}
+
+{pstd}
+If you are using Stata 17, you need to download and install Java JDK 17 or later, then configure it in Stata.
+{p_end}
+
+{dlgtab:Step 1: Download and Install Java JDK 17+}
+
+{pstd}
+Download and install Java JDK 17 or later from the official Oracle website or OpenJDK distributions:
+{p_end}
+
+{phang2}• Oracle JDK: {browse "https://www.oracle.com/java/technologies/downloads/"}{p_end}
+{phang2}• OpenJDK: {browse "https://openjdk.org/"}{p_end}
+
+{dlgtab:Step 2: Configure Java in Stata 17}
+
+{pstd}
+After installing Java JDK, configure the Java home directory in Stata by running:
+{p_end}
+
+{phang2}{cmd:. java set home "path_to_java_home_dir"}{p_end}
+
+{pstd}
+Replace {it:path_to_java_home_dir} with the actual path to your Java JDK installation directory (e.g., {cmd:"C:\Program Files\Java\jdk-17"} on Windows or {cmd:"/usr/lib/jvm/java-17-openjdk-amd64"} on Linux).
+{p_end}
+
+{pstd}
+You can verify the Java configuration by running:
+{p_end}
+
+{phang2}{cmd:. java query}{p_end}
+
+{dlgtab:For Stata 18+ Users}
+
+{pstd}
+Stata 18 and later versions include a compatible Java runtime environment. No additional Java JDK installation or configuration is required.
+{p_end}
+
+{dlgtab:GeoTools Library Setup}
+
+{pstd}
+Before using the commands {cmd:gtiffdisp}, {cmd:gtiffread}, {cmd:gtiffwrite}, {cmd:gzonalstats}, and {cmd:crsconvert}, you first need to download the GeoTools Version 32.0 Java library.
+Once downloaded, place this library in Stata's adopath—or add the library's file path to Stata's adopath.
+{p_end}
+
+{pstd}
+For a simplified setup, we provide a dedicated command: {cmd:geotools_init}.
+To configure the environment automatically, simply run the following line in Stata:
+{p_end}
+
+{phang2}{cmd:. geotools_init, download plus(geotools)}{p_end}
+
+{pstd}
+Note that this process may take dozens of minutes—Stata’s speed for copying large files from the internet is relatively slow.
+{p_end}
+
+{pstd}
+As a faster alternative, we recommend manually downloading the GeoTools library from {browse "https://master.dl.sourceforge.net/project/geotools/GeoTools%2032%20Releases/32.0/geotools-32.0-bin.zip"} and unzipping the downloaded file. After doing so, initialize the environment by running:
+{p_end}
+
+{phang2}{cmd:. geotools_init} {it:path_to_geotools-32.0/lib}{cmd:, plus(geotools)}{p_end}
+
+{pstd}
+Note that you should replace {it:path_to_geotools-32.0/lib} with the actual file path to your unzipped GeoTools 32.0 lib folder.
+{p_end}
+
+{pstd}
+Before using the commands {cmd:ncdisp} and {cmd:ncread}, you first need to download the NetCDF Version 5.9.1 Java library.
+{p_end}
+
+{pstd}
+For a simplified setup, we provide a dedicated command: {cmd:netcdf_init}.
+To configure the environment automatically, simply run the following line in Stata:
+{p_end}
+
+{phang2}{cmd:. netcdf_init, download plus(netcdf)}{p_end}
+
+{pstd}
+* The configuration described above is only required the first time you use the package.
+{p_end}
 
 {marker examples}{...}
 {title:Examples}
@@ -136,24 +235,31 @@ Read subset of GeoTIFF:
 {phang}
 Display NetCDF file structure:
 {p_end}
-{phang2}{cmd:. ncdisp using "climate_data.nc"}{p_end}
+{phang2}{cmd:. local url = "https://nex-gddp-cmip6.s3-us-west-2.amazonaws.com/NEX-GDDP-CMIP6/BCC-CSM2-MR/ssp245/r1i1p1f1/tas/tas_day_BCC-CSM2-MR_ssp245_r1i1p1f1_gn_2050.nc"}{p_end}
+{phang2}{cmd:. ncdisp using `url'}{p_end}
 
 {phang}
-Read specific variable:
+Read a the first day section:
 {p_end}
-{phang2}{cmd:. ncread temperature using "climate_data.nc", clear}{p_end}
+{phang2}{cmd:. local url = "https://nex-gddp-cmip6.s3-us-west-2.amazonaws.com/NEX-GDDP-CMIP6/BCC-CSM2-MR/ssp245/r1i1p1f1/tas/tas_day_BCC-CSM2-MR_ssp245_r1i1p1f1_gn_2050.nc"}{p_end}
+{phang2}{cmd:. ncread tas using `url', origin(1 1 1) size(1 -1 -1)}{p_end}
 
 {dlgtab:Spatial Analysis}
 
 {phang}
 Calculate zonal statistics:
 {p_end}
-{phang2}{cmd:. gzonalstats DMSP-like2020.tif, shpfile(admin_boundaries.shp) stats("sum avg") clear}{p_end}
+{phang2}{cmd:. zonalstats DMSP-like2020.tif, shpfile(hunan.shp) stats("sum avg") clear}{p_end}
+
+{phang}
+Convert the coordinate system of the hunan.shp to the coordinate system of the DMSP-like2020.tif:
+{p_end}
+{phang2}{cmd:. crsconvert _CX _CY, gen(alber) from(hunan.shp) to(DMSP-like2020.tif)}{p_end}
 
 {phang}
 Match geographic datasets:
 {p_end}
-{phang2}{cmd:. matchgeop city_id lat lon using grid_data.dta, neighbors(grid_id lat lon) within(10) gen(distance)}{p_end}
+{phang2}{cmd:. matchgeop ORIG_FID lat lon using light_china.dta, neighbors(n wsg84_y wsg84_x) within(80) gen(distance)}{p_end}
 
 
 {title:Source Code and Documentation}

@@ -9,7 +9,7 @@ d KW: GeoTIFF
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20250602
+d Distribution-Date: 20251018
 d
 d Author: Kerry Du, School of Management, Xiamen University
 d Support: email kerrydu@@xmu.edu.cn
@@ -62,4 +62,7 @@ f ../n/ncreadtocsv.ado
 f ../n/ncreadtocsvbysec.ado
 f ../n/netcdf_init.ado
 f ../n/netcdf_init.sthlp
-f readraster.sthlp
+f ../n/nzonalstats_core.ado
+f readraster_setup.do
+f ../z/zonalstats.ado
+f ../z/zonalstats.sthlp

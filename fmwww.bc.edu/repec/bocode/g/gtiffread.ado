@@ -1,7 +1,7 @@
-* gtifftoStata.ado
+*! version 2.0.1 2025-10-05
 cap program drop gtiffread
 program define gtiffread
-version 18.0
+version 17
 
 checkdependencies
 gtiffread_core `0'
@@ -10,7 +10,7 @@ end
 
 
 program define checkdependencies
-version 18 
+version 17 
 
 local jars gt-main-32.0.jar gt-referencing-32.0.jar gt-epsg-hsql-32.0.jar gt-process-raster-32.0.jar
 local jars `jars' gt-epsg-extension-32.0.jar gt-geotiff-32.0.jar gt-coverage-32.0.jar
@@ -24,7 +24,12 @@ foreach jar in `jars'{
 }
 
 if `rc'{
-
+    capture which path_geotoolsjar
+    if _rc {
+        di as error "Missing Java dependencies"
+        disp "see " `"{help geotools_init:help geotools_init}"' 
+        exit 198
+    }
     
 	path_geotoolsjar
     local path `r(path)'
@@ -33,9 +38,9 @@ if `rc'{
 	
 	    cap findfile `jar', path(`"`path'"')
 	    if _rc {
-        di as error "`jar' NOT found"
-        di as error "use geotools_init for reuinizing Java envronment,help geotools_init"
-        di as error "make su,help geotools_initre `jar' exists in yourmspecified directory"
+        di as error "Missing Java dependencies, `jar' NOT found"
+        di as error "make sure `jar' exists in your specified directory"
+		disp "see " `"{help geotools_init:help geotools_init}"' " for setting up"
         exit
       }
 	

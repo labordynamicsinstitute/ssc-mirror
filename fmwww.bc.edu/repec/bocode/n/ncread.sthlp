@@ -33,11 +33,11 @@
 {pstd}
 The {cmd:ncread} command is used to read data for a specified variable from a NetCDF file into Stata. It can read the entire variable or a specified section of data. If varname is not specified, ncread displays the meta information of the NetCDF file.
 
-{marker Dependencies}{...}
+{marker dependencies}{...}
 {title:Dependencies}
 
 {pstd}
-The {cmd:ncread} command requires the NetCDF Java library. Use ncread_init for setting up.
+The {cmd:ncread} command requires the netcdfAll-5.9.1.jar. Use {cmd:netcdf_init} for setting up.
 
 
 {marker options}{...}
@@ -60,16 +60,20 @@ The {cmd:ncread} command requires the NetCDF Java library. Use ncread_init for s
 {title:Examples}
 
 {pstd}Display the meta information of the NetCDF file:{p_end}
-{phang2}{cmd:. ncread using "Hunan.nc"}{p_end}
+{phang2}{cmd:. local url = "https://nex-gddp-cmip6.s3-us-west-2.amazonaws.com/NEX-GDDP-CMIP6/BCC-CSM2-MR/ssp245/r1i1p1f1/tas/tas_day_BCC-CSM2-MR_ssp245_r1i1p1f1_gn_2050.nc"}{p_end}
+{phang2}{cmd:. ncread using `url'}{p_end}
 
 {pstd}Read the entire variable:{p_end}
-{phang2}{cmd:. ncread tas using "Hunan.nc"}{p_end}
+{phang2}{cmd:. local url = "https://nex-gddp-cmip6.s3-us-west-2.amazonaws.com/NEX-GDDP-CMIP6/BCC-CSM2-MR/ssp245/r1i1p1f1/tas/tas_day_BCC-CSM2-MR_ssp245_r1i1p1f1_gn_2050.nc"}{p_end}
+{phang2}{cmd:. ncread tas using `url'}{p_end}
 
 {pstd}Read a specified section:{p_end}
-{phang2}{cmd:. ncread tas using "Hunan.nc", origin(1 1 1) size(10 20 30)}{p_end}
+{phang2}{cmd:. local url = "https://nex-gddp-cmip6.s3-us-west-2.amazonaws.com/NEX-GDDP-CMIP6/BCC-CSM2-MR/ssp245/r1i1p1f1/tas/tas_day_BCC-CSM2-MR_ssp245_r1i1p1f1_gn_2050.nc"}{p_end}
+{phang2}{cmd:. ncread tas using `url', origin(1 1 1) size(10 20 30)}{p_end}
 
 {pstd}Read a the first day section:{p_end}
-{phang2}{cmd:. ncread tas using "Hunan.nc", origin(1 1 1) size(1 -1 -1)}{p_end}
+{phang2}{cmd:. local url = "https://nex-gddp-cmip6.s3-us-west-2.amazonaws.com/NEX-GDDP-CMIP6/BCC-CSM2-MR/ssp245/r1i1p1f1/tas/tas_day_BCC-CSM2-MR_ssp245_r1i1p1f1_gn_2050.nc"}{p_end}
+{phang2}{cmd:. ncread tas using `url', origin(1 1 1) size(1 -1 -1)}{p_end}
 
 {title:Author}
 
@@ -96,5 +100,5 @@ The {cmd:ncread} command requires the NetCDF Java library. Use ncread_init for s
 {title:Also see}
 
 {psee}
-Online:  {manhelp import D:import}, {help ncdisp}
+Online:  {manhelp import D:import}, {help netcdf_init}, {help ncdisp}
 {p_end}

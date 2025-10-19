@@ -23,11 +23,11 @@ To view metadata for a specific variable in a NetCDF file:
 {cmd:ncdisp} is used to display the information about 
 a specific variable in a nc file. It reads the file path provided as an argument.
 
+{marker dependencies}{...}
 {title:Dependencies}
 
 {pstd}
-The {cmd:ncdisp} command requires the NetCDF Java library. Use ncread_init for setting up.
-
+The {cmd:ncdisp} command requires the netcdfAll-5.9.1.jar. Use {cmd:netcdf_init} for setting up.
 
 {title:Options}
 
@@ -61,10 +61,12 @@ local
 {title:Examples}
 
 {pstd}Display the meta information of the entrie NetCDF file:{p_end}
-{phang2}{cmd:. ncdisp using "Hunan.nc"}{p_end}
+{phang2}{cmd:. local url = "https://nex-gddp-cmip6.s3-us-west-2.amazonaws.com/NEX-GDDP-CMIP6/BCC-CSM2-MR/ssp245/r1i1p1f1/tas/tas_day_BCC-CSM2-MR_ssp245_r1i1p1f1_gn_2050.nc"}{p_end}
+{phang2}{cmd:. ncdisp using `url'}{p_end}
 
 {pstd}Display the meta information of the variable:{p_end}
-{phang2}{cmd:. ncdisp tas using "Hunan.nc"}{p_end}
+{phang2}{cmd:. local url = "https://nex-gddp-cmip6.s3-us-west-2.amazonaws.com/NEX-GDDP-CMIP6/BCC-CSM2-MR/ssp245/r1i1p1f1/tas/tas_day_BCC-CSM2-MR_ssp245_r1i1p1f1_gn_2050.nc"}{p_end}
+{phang2}{cmd:. ncdisp tas using `url'}{p_end}
 
 {title:Author}
 
@@ -92,5 +94,5 @@ local
 {title:Also see}
 
 {psee}
-Online:  {help ncread}
+Online: {help netcdf_init} {help ncread}
 {p_end}
