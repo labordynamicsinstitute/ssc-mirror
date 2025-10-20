@@ -1,5 +1,5 @@
-{smcl}
-{* *! version 2.4 09-Sep-2025}{...}
+﻿{smcl}
+{* *! version 2.4 19-Oct-2025}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Related commands" "help art2tex"}{...}
 {viewerjumpto "Syntax" "art2tex##syntax"}{...}
@@ -16,7 +16,7 @@
 {marker syntax}{...}
 {title:Syntax}
 
-{p 8 8 2} {cmd:art2tex} [{cmd:,} {cmd:LANGuage}({it:string}) {cmd:filename}({it:string}) {cmd:Title}({it:string}) {cmd:Author}({it:string})]{p_end}
+{p 8 8 2} {cmd:art2tex} [{cmd:,} {cmd:Language}({it:string}) {cmd:Filename}({it:string}) {cmd:Replace} {cmd:Title}({it:string}) {cmd:Author}({it:string})]{p_end}
 
 {marker description}{...}
 {title:Description}
@@ -37,21 +37,25 @@ Key features include:{p_end}
 {p 6 6 2}• Pre-built figure environments in introduction, theoretical analysis, and robustness sections{p_end}
 {p 6 6 2}• Support for XeLaTeX compilation and BibTeX reference management{p_end}
 {p 6 6 2}• Bilingual support for both Chinese and English papers{p_end}
+{p 6 6 2}• Includes comment package for easy annotation and draft management{p_end}
 
 {marker options}{...}
 {title:Options}
 
 {phang}
-{opt LANGuage(string)} specifies document language, defaults to "chinese". Supports "chinese" or "english".{p_end}
+{opt Language(str)} (minimal abbreviation: {bf:l}) specifies document language, defaults to "chinese". Supports "chinese" or "english".{p_end}
 
 {phang}
-{opt filename(string)} specifies output LaTeX filename, defaults to "paper.tex".{p_end}
+{opt Filename(str)} (minimal abbreviation: {bf:f}) specifies output LaTeX filename, defaults to "paper.tex".{p_end}
 
 {phang}
-{opt Title(string)} specifies paper title. Defaults to "论文标题" for Chinese or "Paper Title" for English.{p_end}
+{opt Replace} (minimal abbreviation: {bf:r}) specifies that existing files can be overwritten. If this option is not specified and the output file already exists, the command will display an error and exit.{p_end}
 
 {phang}
-{opt Author(string)} specifies author names, multiple authors separated by spaces. Defaults to "作者姓名" for Chinese or "Author Name" for English.{p_end}
+{opt Title(str)} (minimal abbreviation: {bf:t}) specifies paper title. Defaults to "论文标题" for Chinese or "Paper Title" for English.{p_end}
+
+{phang}
+{opt Author(str)} (minimal abbreviation: {bf:a}) specifies author names, multiple authors separated by spaces. Defaults to "作者姓名" for Chinese or "Author Name" for English.{p_end}
 
 {marker examples}{...}
 {title:Examples}
@@ -60,13 +64,16 @@ Key features include:{p_end}
 {phang2}{cmd:. art2tex}{p_end}
 
 {p 4 4 2}Generate English paper framework:{p_end}
-{phang2}{cmd:. art2tex, language(english)}{p_end}
+{phang2}{cmd:. art2tex, l(english)}{p_end}
 
-{p 4 4 2}Custom title and authors:{p_end}
-{phang2}{cmd:. art2tex, title("ESG Performance and Corporate Green Innovation") author("John Zhang Mary Li") language(english)}{p_end}
+{p 4 4 2}Overwrite existing template files:{p_end}
+{phang2}{cmd:. art2tex, r}{p_end}
 
-{p 4 4 2}Specify filename and language:{p_end}
-{phang2}{cmd:. art2tex, filename("my_paper") language("chinese")}{p_end}
+{p 4 4 2}Custom title and authors with replace option:{p_end}
+{phang2}{cmd:. art2tex, t("ESG Performance and Corporate Green Innovation") a("John Zhang Mary Li") l(english) r}{p_end}
+
+{p 4 4 2}Specify filename and language with replace option:{p_end}
+{phang2}{cmd:. art2tex, f("my_paper") l("chinese") r}{p_end}
 
 {marker compilation}{...}
 {title:Compilation Instructions}
@@ -80,6 +87,12 @@ Generated LaTeX documents require compilation with XeLaTeX and BibTeX. Recommend
 
 {p 4 4 2}
 For Chinese papers, ensure your TeX distribution includes Chinese font support.{p_end}
+
+{p 4 4 2}
+The framework includes the comment package, allowing you to use comment environments for annotations and draft management:{p_end}
+{p 6 6 2}{cmd:\begin{comment}}{p_end}
+{p 6 6 2}{cmd:This text will not appear in the final document.}{p_end}
+{p 6 6 2}{cmd:\end{comment}}{p_end}
 
 {p 4 4 2}
 Recommended environment: TeX Live 2023 or later, with a LaTeX-supported editor (TeXstudio, VS Code, etc.).{p_end}
@@ -116,5 +129,5 @@ Recommended environment: TeX Live 2023 or later, with a LaTeX-supported editor (
 {title:Also see}
 
 {p 4 4 2}
-Related commands: {help esttab}, {help estout}, {help latex}, {help sumtex}, {help corrtex2}, {help regtex}, {help reg2tex}, {help reftex}{p_end}
+Related commands: {help esttab}, {help estout}, {help latex}, {help sumtex}, {help corrtex2}, {help regtex}, {help reg2tex}, {help reftex}, {help getref}, {help get2ref}{p_end}
 {*}

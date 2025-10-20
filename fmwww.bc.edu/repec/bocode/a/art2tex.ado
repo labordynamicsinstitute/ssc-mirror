@@ -3,7 +3,7 @@
 
 program define art2tex
     version 16
-    syntax [, LANGuage(string) filename(string) Title(string) Author(string)]
+    syntax [, Language(str) Filename(str) Replace Title(str) Author(str)]
     
     // Default settings
     if "`language'" == "" local language "chinese"
@@ -25,6 +25,13 @@ program define art2tex
         }
     }
     
+	// Check if file exists and handle replace option
+    capture confirm file "`filename'.tex"
+    if _rc == 0 & "`replace'" == "" {
+        di as error "File `filename'.tex already exists. Use replace option to overwrite."
+        exit 602
+    }
+	
     // Handle file extension
     if !strpos("`filename'", ".tex") local filename "`filename'.tex"
     
@@ -61,6 +68,7 @@ program define art2tex
     file write `fh' `"\usepackage{amssymb}"' _n
     file write `fh' `"\usepackage[round]{natbib}"' _n 
     file write `fh' `"\bibliographystyle{plainnat}"' _n  
+    file write `fh' `"\usepackage{comment}"' _n
     
     file write `fh' `"\usepackage{hyperref}"' _n
     file write `fh' `"\hypersetup{colorlinks=true, linkcolor=blue, citecolor=red}"' _n
@@ -191,10 +199,10 @@ program define art2tex
                 file write `fh' `" & 成长性 & Growth & 营业收入增长率 \\\\"' _n
                 file write `fh' `" & 股权集中度 & Top1 & 第一大股东持股比例 \\\\"' _n
                 file write `fh' `" & 董事会规模 & BoardSize & 董事会人数 \\\\"' _n
-                file write `fh' `" & 独立董事比例 & Indep & 独立董事占比 \\//"' _n
-                file write `fh' `" & 两职合一 & Dual & CEO与董事长是否兼任 \\//"' _n
-                file write `fh' `" & 行业固定效应 & Industry & 行业虚拟变量 \\//"' _n
-                file write `fh' `" & 年度固定效应 & Year & 年度虚拟变量 \\//"' _n
+                file write `fh' `" & 独立董事比例 & Indep & 独立董事占比 \\\\"' _n
+                file write `fh' `" & 两职合一 & Dual & CEO与董事长是否兼任 \\\\"' _n
+                file write `fh' `" & 行业固定效应 & Industry & 行业虚拟变量 \\\\"' _n
+                file write `fh' `" & 年度固定效应 & Year & 年度虚拟变量 \\\\"' _n
                 file write `fh' `"\bottomrule"' _n
                 file write `fh' `"\end{tabular}"' _n
                 file write `fh' `"\begin{tablenotes}"' _n
@@ -209,7 +217,7 @@ program define art2tex
                 file write `fh' `"基准回归模型如下所示："' _n
                 file write `fh' `"\begin{align}"' _n
                 file write `fh' `"    \text{EnvInv}_{it} &= \beta_0 + \beta_1 \text{CEOChange}_{it} + \beta_2 \text{CashHold}_{it} \\\\"' _n
-                file write `fh' `"    & \quad + \beta_3 (\text{CEOChange} \times \text{CashHold})_{it} + \gamma \mathbf{X}_{it} \\//"' _n
+                file write `fh' `"    & \quad + \beta_3 (\text{CEOChange} \times \text{CashHold})_{it} + \gamma \mathbf{X}_{it} \\\\"' _n
                 file write `fh' `"    & \quad + \mu_i + \lambda_t + \varepsilon_{it}"' _n
                 file write `fh' `"\end{align}"' _n
                 file write `fh' `"其中，$\mathbf{X}_{it}$，控制变量向量"' _n
@@ -229,24 +237,24 @@ program define art2tex
                 file write `fh' `"\begin{threeparttable}"' _n
                 file write `fh' `"\begin{tabular}{llll}"' _n
                 file write `fh' `"\toprule"' _n
-                file write `fh' `"Variable Type & Variable Name & Symbol & Definition \\//"' _n
+                file write `fh' `"Variable Type & Variable Name & Symbol & Definition \\\\"' _n
                 file write `fh' `"\midrule"' _n
-                file write `fh' `"Dependent Variable & Environmental Investment & EnvInv & Corporate environmental investment (10K RMB) \\//"' _n
-                file write `fh' `"Independent Variable & CEO Change & CEOChange & 1=CEO changed, 0=otherwise \\//"' _n
-                file write `fh' `"Moderator & Cash Holdings & CashHold & Cash and equivalents/Total assets \\//"' _n
-                file write `fh' `"Mediator & Green Innovation & GreenInnov & Number of green patent applications \\//"' _n
-                file write `fh' `"Mediator & Environmental Management & EnvMgmt & Environmental management system certification score \\//"' _n
+                file write `fh' `"Dependent Variable & Environmental Investment & EnvInv & Corporate environmental investment (10K RMB) \\\\"' _n
+                file write `fh' `"Independent Variable & CEO Change & CEOChange & 1=CEO changed, 0=otherwise \\\\"' _n
+                file write `fh' `"Moderator & Cash Holdings & CashHold & Cash and equivalents/Total assets \\\\"' _n
+                file write `fh' `"Mediator & Green Innovation & GreenInnov & Number of green patent applications \\\\"' _n
+                file write `fh' `"Mediator & Environmental Management & EnvMgmt & Environmental management system certification score \\\\"' _n
                 file write `fh' `"\midrule"' _n
-                file write `fh' `"\multirow{10}{*}{Control Variables} & Firm Size & Size & Natural logarithm of total assets \\//"' _n
-                file write `fh' `" & Leverage & Lev & Total debt/Total assets \\//"' _n
-                file write `fh' `" & Profitability & ROA & Net income/Total assets \\//"' _n
-                file write `fh' `" & Growth & Growth & Revenue growth rate \\//"' _n
-                file write `fh' `" & Ownership Concentration & Top1 & Shareholding ratio of the largest shareholder \\//"' _n
-                file write `fh' `" & Board Size & BoardSize & Number of board members \\//"' _n
-                file write `fh' `" & Independent Director Ratio & Indep & Proportion of independent directors \\//"' _n
-                file write `fh' `" & CEO Duality & Dual & Whether CEO also serves as chairman \\//"' _n
-                file write `fh' `" & Industry Fixed Effects & Industry & Industry dummy variables \\//"' _n
-                file write `fh' `" & Year Fixed Effects & Year & Year dummy variables \\//"' _n
+                file write `fh' `"\multirow{10}{*}{Control Variables} & Firm Size & Size & Natural logarithm of total assets \\\\"' _n
+                file write `fh' `" & Leverage & Lev & Total debt/Total assets \\\\"' _n
+                file write `fh' `" & Profitability & ROA & Net income/Total assets \\\\"' _n
+                file write `fh' `" & Growth & Growth & Revenue growth rate \\\\"' _n
+                file write `fh' `" & Ownership Concentration & Top1 & Shareholding ratio of the largest shareholder \\\\"' _n
+                file write `fh' `" & Board Size & BoardSize & Number of board members \\\\"' _n
+                file write `fh' `" & Independent Director Ratio & Indep & Proportion of independent directors \\\\"' _n
+                file write `fh' `" & CEO Duality & Dual & Whether CEO also serves as chairman \\\\"' _n
+                file write `fh' `" & Industry Fixed Effects & Industry & Industry dummy variables \\\\"' _n
+                file write `fh' `" & Year Fixed Effects & Year & Year dummy variables \\\\"' _n
                 file write `fh' `"\bottomrule"' _n
                 file write `fh' `"\end{tabular}"' _n
                 file write `fh' `"\begin{tablenotes}"' _n
@@ -260,8 +268,8 @@ program define art2tex
                 file write `fh' `"\subsection{Empirical Model}"' _n
                 file write `fh' `"The baseline regression model is specified as follows:"' _n
                 file write `fh' `"\begin{align}"' _n
-                file write `fh' `"    \text{EnvInv}_{it} &= \beta_0 + \beta_1 \text{CEOChange}_{it} + \beta_2 \text{CashHold}_{it} \\//"' _n
-                file write `fh' `"    & \quad + \beta_3 (\text{CEOChange} \times \text{CashHold})_{it} + \gamma \mathbf{X}_{it} \\//"' _n
+                file write `fh' `"    \text{EnvInv}_{it} &= \beta_0 + \beta_1 \text{CEOChange}_{it} + \beta_2 \text{CashHold}_{it} \\\\"' _n
+                file write `fh' `"    & \quad + \beta_3 (\text{CEOChange} \times \text{CashHold})_{it} + \gamma \mathbf{X}_{it} \\\\"' _n
                 file write `fh' `"    & \quad + \mu_i + \lambda_t + \varepsilon_{it}"' _n
                 file write `fh' `"\end{align}"' _n
                 file write `fh' `"where $\mathbf{X}_{it}$ is a vector of control variables,"' _n
@@ -334,8 +342,8 @@ program define art2tex
     file close `fh'
     
     // Create necessary directories
-    capture mkdir tables
-    capture mkdir figures
+    capture mkdir ./tables
+    capture mkdir ./figures
     
     // Create example references file
     quietly {
@@ -381,6 +389,7 @@ program define art2tex
         di as text "使用\citet{key}进行文本引用"
         di as text "编译顺序: xelatex -> bibtex -> xelatex -> xelatex"
         di as text "   (特别注意：必须运行bibtex编译参考文献)"
+        di as text "已添加comment宏包支持，可在文档中使用comment环境进行注释"
     }
     else {
         di as text _n "LaTeX framework generated to: `filename'"
@@ -401,6 +410,7 @@ program define art2tex
         di as text "Use \citet{key} for citations in text"
         di as text "Compile sequence: xelatex -> bibtex -> xelatex -> xelatex"
         di as text "   (Important: must run bibtex for reference compilation)"
+        di as text "Added comment package support, use comment environment for annotations"
     }
     
     // Generate example table commands

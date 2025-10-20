@@ -1,4 +1,5 @@
-*! version 1.0.0  10sep2025
+*! version 1.5  18oct2025
+** version 1.0  10sep2025
 
 program flexdid
 	version 17.0
@@ -31,12 +32,12 @@ program Estimate, eclass sortpreserve
 	if "`specification'" == "" local specification "lagsonly" // specify lagsonly or lagsandleads.
 	// If they gave weird strings as the specification
 	if "`specification'"!="lagsonly" & "`specification'"!="lagsandleads" {
-		display as erroror `"Value for {bf:specification()} must be "lagsonly" or "lagsandleads"."'
+		display as error `"Value for {bf:specification()} must be "lagsonly" or "lagsandleads"."'
 		exit 198
 	}
 
 	if "`noxinteract'"=="noxinteract" & "`xinteract'"!="" {
-		display as erroror `"Noxinteract and xinteract cannot be specified together."'
+		display as error `"Noxinteract and xinteract cannot be specified together."'
 		exit 198
 	}
 
@@ -53,7 +54,7 @@ program Estimate, eclass sortpreserve
 	// VCE
 	if "`vce'"=="" local vce "cluster `group'"
 	if word("`vce'",1) != "cluster" & word("`vce'",1) != "robust" {
-		display as erroror "vce must be either robust or cluster clustvar"
+		display as error "vce must be either robust or cluster clustvar"
 		exit 198
 	}
 	if word("`vce'",1) == "cluster" local clustvar `=word("`vce'",2)'
@@ -70,7 +71,7 @@ program Estimate, eclass sortpreserve
 	local nvals = r(r)
 	if (`min'!=0 | `max'!=1 | `nvals'!=2) {
 		display as text "{p 0 6 0 78}"
-		display as erroror "Invalid treatment variable - {bf:tx()} must be binary with 0 for control observations and 1 for treated observations"
+		display as error "Invalid treatment variable - {bf:tx()} must be binary with 0 for control observations and 1 for treated observations"
 		display as text "{p_end}"
 		exit 450
 	}
@@ -260,7 +261,7 @@ program Aggregate, rclass sortpreserve
 	return matrix table = `table'
 	return matrix b     = `beta'
 	return matrix V     = `Var'
-	ret local atettype "overall"
+	return local atettype "overall"
 	return add
 
 end

@@ -1,4 +1,4 @@
-*! case2tex v1.7.3 17Sep2025
+*! case2tex v1.7.4 19Oct2025
 *! Authors: Wu Lianghai, Chen Liwen, Zhao Xin, Liu Rui, Wu Hanyan
 *! School of Business, Anhui University of Technology(AHUT)
 *! School of Economics and Management, Nanjing University of Aeronautics and Astronautics(NUAA)
@@ -7,8 +7,8 @@
 
 program define case2tex
     version 18.0
-    syntax [, LANGuage(str) FILEName(str) TITle(str) AUTHor(str) ///
-              ABStractalign(str) KEYwordseparator(str) FONT(str) FONTsize(str) LINEspacing(str)]
+    syntax [, Language(str) Filename(str) Replace Title(str) Author(str) ///
+              ABStractalign(str) Keywordseparator(str) FONT(str) FONTSize(str) LINEspacing(str)]
     
     * Set default values
     if "`language'" == "" local language "chinese"
@@ -27,6 +27,13 @@ program define case2tex
     if "`fontsize'" == "" local fontsize "12pt"
     if "`linespacing'" == "" local linespacing "1.5"
     
+	// Check if file exists and handle replace option
+    capture confirm file "`filename'"
+    if _rc == 0 & "`replace'" == "" {
+        di as error "File `filename' already exists. Use replace option to overwrite."
+        exit 602
+    }
+	
     * Create subdirectories
     capture mkdir figures
     capture mkdir tables
@@ -50,6 +57,7 @@ program define case2tex
     file write `texfile' "\usepackage{caption}" _n
     file write `texfile' "\usepackage{float}" _n
     file write `texfile' "\usepackage{natbib}" _n
+    file write `texfile' "\usepackage{comment}" _n
     file write `texfile' "\setmainfont{`font'}" _n
     file write `texfile' "\linespread{`linespacing'}" _n
     file write `texfile' _n
@@ -66,10 +74,20 @@ program define case2tex
     if "`language'" == "chinese" {
         file write `texfile' "% 编译顺序: XeLaTeX -> BibTeX -> XeLaTeX -> XeLaTeX" _n
         file write `texfile' "% 注意: 编译前请确保figures目录下存在所需的图片文件" _n
+        file write `texfile' "% 提示: 可以使用comment环境添加多行注释，例如：" _n
+        file write `texfile' "% \begin{comment}" _n
+        file write `texfile' "% 这里是被注释的内容" _n
+        file write `texfile' "% 不会出现在最终文档中" _n
+        file write `texfile' "% \end{comment}" _n
     }
     else {
         file write `texfile' "% Compilation sequence: XeLaTeX -> BibTeX -> XeLaTeX -> XeLaTeX" _n
         file write `texfile' "% Note: Make sure the required image files exist in the figures directory before compilation" _n
+        file write `texfile' "% Tip: You can use the comment environment to add multi-line comments, for example:" _n
+        file write `texfile' "% \begin{comment}" _n
+        file write `texfile' "% This is commented content" _n
+        file write `texfile' "% It will not appear in the final document" _n
+        file write `texfile' "% \end{comment}" _n
     }
     file write `texfile' _n
     
@@ -465,6 +483,7 @@ program define case2tex
         di as text "已在figures目录中创建README.txt文件，请按照说明添加图片文件"
         di as text "编译顺序: XeLaTeX -> BibTeX -> XeLaTeX -> XeLaTeX"
         di as text "注意: 编译前请确保figures目录中存在所需的图片文件"
+        di as text "新增: 已添加comment包支持，可在文档中使用comment环境添加多行注释"
     }
     else {
         di as text "LaTeX template created: " as result "`filename'.tex"
@@ -474,5 +493,6 @@ program define case2tex
         di as text "README.txt file created in figures directory, please follow the instructions to add image files"
         di as text "Compilation sequence: XeLaTeX -> BibTeX -> XeLaTeX -> XeLaTeX"
         di as text "Note: Make sure the required image files exist in the figures directory before compilation"
+        di as text "New: Added comment package support for multi-line comments using the comment environment"
     }
 end

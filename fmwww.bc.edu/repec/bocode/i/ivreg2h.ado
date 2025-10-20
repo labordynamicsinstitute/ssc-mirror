@@ -1,4 +1,4 @@
-*! ivreg2h  1.1.08  26sep2024  cfb/mes
+*! ivreg2h  1.1.09  16oct2025   cfb/mes
 *! cloned from
 *! xtivreg2 1.0.13 28Aug2011
 *! author mes
@@ -26,6 +26,7 @@
 *! 1.1.06: fe option disabled. Should be implemented in ivreg2hfe.
 *! 1.1.07: correct handling of excluded insts in genextinst code
 *! 1.1.08: changed all tsunab, tsrevar to fvunab, fvrevar to permit FV syntax
+*! 1.1.09: Manh Hoang Ba identified bug in using constructed instruments
 
 program define ivreg2h, eclass byable(recall)
 	version 9
@@ -661,6 +662,8 @@ di as err "pv `pv'"
 				loc i 0		
 				foreach e of local endo_t {
 //					qui reg `e' `inexog_t' if `touse'
+// Manh Hoang Ba bug: should refer to zlist_t, not zlist
+//					qui reg `e' `zlist_t' if `touse'
 					qui reg `e' `zlist' if `touse'
 					tempvar `e'_eps
 					qui predict double ``e'_eps' if e(sample), residual

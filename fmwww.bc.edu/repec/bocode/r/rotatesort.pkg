@@ -1,0 +1,22 @@
+d 'ROTATESORT': module to sort factors in descending order of loadings after rotate
+d
+d  rotatesort is a convenience tool for researchers who prefer to
+d review the results of rotate in descending order of the factor
+d loadings. Sorting the factor loadings in descending order serves
+d two purposes. It more clearly highlights: (1) which loadings
+d belong to which factors, and (2) which items in a factor have the
+d highest loadings. This is helpful for choosing which items to
+d retain in the item reduction process. 
+d
+d KW: factor analysis
+d KW: rotation
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20251019
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f rotatesort.ado
+f rotatesort.sthlp

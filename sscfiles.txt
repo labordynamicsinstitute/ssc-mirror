@@ -4944,7 +4944,6 @@ fmwww.bc.edu/repec/bocode/f/fbep.pkg
 fmwww.bc.edu/repec/bocode/f/fromroman.sthlp
 fmwww.bc.edu/repec/bocode/f/fsc2cigraph.gph
 fmwww.bc.edu/repec/bocode/f/frontierhtail_p.ado
-fmwww.bc.edu/repec/bocode/f/fmlogit_postestimation.html
 fmwww.bc.edu/repec/bocode/f/for211.html
 fmwww.bc.edu/repec/bocode/f/factorn.pkg
 fmwww.bc.edu/repec/bocode/f/fmlogit_postestimation.hlp
@@ -5128,7 +5127,6 @@ fmwww.bc.edu/repec/bocode/f/fuzzydid_gentzkowappli.do
 fmwww.bc.edu/repec/bocode/f/ftest.pkg
 fmwww.bc.edu/repec/bocode/f/frm_pe.sthlp
 fmwww.bc.edu/repec/bocode/f/funnelcompar.html
-fmwww.bc.edu/repec/bocode/f/fmiss.html
 fmwww.bc.edu/repec/bocode/f/stata.toc
 fmwww.bc.edu/repec/bocode/f/fi_fgp_graph.sthlp
 fmwww.bc.edu/repec/bocode/f/ftree.html
@@ -13477,6 +13475,7 @@ fmwww.bc.edu/repec/bocode/g/grby.html
 fmwww.bc.edu/repec/bocode/g/gmmcovearn.html
 fmwww.bc.edu/repec/bocode/g/ggtaxonomy.ado
 fmwww.bc.edu/repec/bocode/g/growthdata.dta
+fmwww.bc.edu/repec/bocode/g/global_data_growth.png
 fmwww.bc.edu/repec/bocode/g/geo2xy_lambert_sphere.hlp
 fmwww.bc.edu/repec/bocode/g/gs3sls1.dta
 fmwww.bc.edu/repec/bocode/g/gbgfit.ado
@@ -16791,6 +16790,7 @@ fmwww.bc.edu/repec/bocode/r/readwind.sthlp
 fmwww.bc.edu/repec/bocode/r/rxdose.ado
 fmwww.bc.edu/repec/bocode/r/rqrs.pkg
 fmwww.bc.edu/repec/bocode/r/ridgeline.pkg
+fmwww.bc.edu/repec/bocode/r/rotatesort.ado
 fmwww.bc.edu/repec/bocode/r/rndpodx.html
 fmwww.bc.edu/repec/bocode/r/robjb.pkg
 fmwww.bc.edu/repec/bocode/r/readreplace.sthlp
@@ -16798,6 +16798,7 @@ fmwww.bc.edu/repec/bocode/r/revv.html
 fmwww.bc.edu/repec/bocode/r/reghdfe_p.ado
 fmwww.bc.edu/repec/bocode/r/reshape3.pkg
 fmwww.bc.edu/repec/bocode/r/rd.hlp
+fmwww.bc.edu/repec/bocode/r/rotatesort.sthlp
 fmwww.bc.edu/repec/bocode/r/robit8.sthlp
 fmwww.bc.edu/repec/bocode/r/regen.pkg
 fmwww.bc.edu/repec/bocode/r/rrp.sthlp
@@ -17035,6 +17036,7 @@ fmwww.bc.edu/repec/bocode/r/regdis.pkg
 fmwww.bc.edu/repec/bocode/r/reweight.pkg
 fmwww.bc.edu/repec/bocode/r/rrlogit_postestimation.html
 fmwww.bc.edu/repec/bocode/r/reghdfe3.ado
+fmwww.bc.edu/repec/bocode/r/rotatesort.pkg
 fmwww.bc.edu/repec/bocode/r/rbounds.html
 fmwww.bc.edu/repec/bocode/r/r2reg3.ado
 fmwww.bc.edu/repec/bocode/r/rccount.ado
@@ -21996,6 +21998,7 @@ fmwww.bc.edu/repec/bocode/s/strsrcs_pred.ado
 fmwww.bc.edu/repec/bocode/s/scheme_538w.sthlp
 fmwww.bc.edu/repec/bocode/s/SPWxt1.dta
 fmwww.bc.edu/repec/bocode/s/srform.ado
+fmwww.bc.edu/repec/bocode/s/scatter_plot.png
 fmwww.bc.edu/repec/bocode/s/svrest.html
 fmwww.bc.edu/repec/bocode/s/spregxt27.ado
 fmwww.bc.edu/repec/bocode/s/surloads.ado

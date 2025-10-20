@@ -16,7 +16,7 @@ d KW: LaTeX
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20250909
+d Distribution-Date: 20251019
 d
 d Author: Wu Lianghai,  Anhui University of Technology
 d Support: email agd2010@@yeah.net
@@ -46,3 +46,6 @@ f ../c/cash_holding.do
 f ../c/correlation_matrix.txt
 f ../m/main_regression.txt
 f ../d/descriptive_stats.txt
+f ../g/global_data_growth.png
+f ../s/scatter_plot.png
+

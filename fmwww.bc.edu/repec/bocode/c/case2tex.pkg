@@ -14,7 +14,7 @@ d KW: LaTeX
 d
 d Requires: Stata version 18
 d
-d Distribution-Date: 20250903
+d Distribution-Date: 20251019
 d
 d Author: Wu LiangHai,  Anhui University of Technology
 d Support: email agd2010@@yeah.net
@@ -34,3 +34,6 @@ d
 f case2tex.ado
 f case2tex.sthlp
 f ../s/sunny_case2tex.do
+f ../g/global_data_growth.png
+f ../s/scatter_plot.png
+

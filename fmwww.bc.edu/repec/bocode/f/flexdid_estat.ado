@@ -1,4 +1,5 @@
-*! version 1.0.0  10sep2025
+*! version 1.5  18oct2025
+*! version 1.0  10sep2025
 
 program flexdid_estat
 	version 17.0
@@ -12,6 +13,7 @@ program flexdid_estat
 	mata: st_global("e(inestat)", "in", "hidden")
 
 	if (`"`subcmd'"' == "atet") flexdid_atet `0'
+	else if (`"`subcmd'"' == "test") flexdid_test `0'
 
 	else {
 			display as error "{bf:estat `subcmd'} not allowed"

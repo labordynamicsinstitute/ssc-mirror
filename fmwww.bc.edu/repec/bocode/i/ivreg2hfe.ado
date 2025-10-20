@@ -1,4 +1,4 @@
-*! ivreg2hfe  1.1.07  25aug2024  cfb/mes
+*! ivreg2hfe  1.1.09 19oct2025 cfb/mes
 *! cloned from
 *! ivreg2h    1.1.06 25aug2024
 *! author mes
@@ -25,6 +25,8 @@
 *!         gen insts can be recovered.
 *! 1.1.06: fe option disabled. Should be implemented in ivreg2hfe.
 *! 1.1.07: centering before estimation now reversed by adding means to centered variables
+*! 1.1.08: changed all tsunab, tsrevar to fvunab, fvrevar to permit FV syntax
+*! 1.1.09: Manh Hoang Ba identified bug in using constructed instruments
 
 program define ivreg2hfe, eclass byable(recall)
 	version 9
@@ -638,7 +640,8 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 				loc i 0		
 				foreach e of local endo_t {
 //					qui reg `e' `inexog_t' if `touse'
-					qui reg `e' `zlist' if `touse'
+// Manh Hoang Ba bug: should be zlist_t rather than zlist
+					qui reg `e' `zlist_t' if `touse'
 					tempvar `e'_eps
 					qui predict double ``e'_eps' if e(sample), residual
 					loc ++i
@@ -651,13 +654,15 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 // Federico: added (and some lines commented) to allows correct naming 
 // 			 in the case of more endo vars and to allow the -gen- option to work properly
 // 						local vn: word `j' of `l_inexog' 
-//						local vn: word `j' of `zlist_t'
+// Oct 2025 revert for hyphenated list handling
+						local vn: word `j' of `zlist_t'
+// Oct 2025 disable 
 						loc vn: word `j' of `zts'
  						tempvar z_`e'_`v'_eps
 						su `v' if `touse', mean
 						qui g double `z_`e'_`v'_eps' = (`v' - r(mean)) * ``e'_eps' if `touse'
 						loc geninst_t "`geninst_t' `z_`e'_`v'_eps'"
-// 1.0.6: pull name from zts
+// 1.0.6: pull name from zts DISABLED
 						loc geninst "`geninst' `en'_`vn'_g"
 						local j = `j'+1 
 					}
