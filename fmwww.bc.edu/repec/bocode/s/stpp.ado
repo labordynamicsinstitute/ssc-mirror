@@ -1,4 +1,4 @@
-*! version 1.3.6 2025-03-17
+*! version 1.3.9 2025-10-20
   
 program define stpp, rclass sortpreserve
   version 16.0
@@ -1303,7 +1303,6 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
         if(S.hascrudeprob | S.hasallcause) {
           if(!S.haspopmort2) { 
             sumatrisk             =  quadcolsum(indweights_by[atrisk_index])
-
             if(sum(died_tj_select)) {
               Ndied_tj  =  quadcolsum((indweights_by[atrisk_index])[died_tj_select])
               v2        =  quadcolsum((indweights_by[atrisk_index])[died_tj_select]:^2)
@@ -1317,11 +1316,10 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
             lambda_pop1_tmp[j]    =  quadcolsum(exprates[exprates_index]:*indweights_by[atrisk_index])/sumatrisk
           }
           else {
-            sumatrisk             =  quadcolsum(indweights_by[atrisk_index])
             lambda_all_tmp[j]     =  N_wt/Y_wt
             lambda_all_tmp_var[j] =  v1/((Y_wt:^2))
-            lambda_pop1_tmp[j]    =  quadcolsum(wt_atrisk:*exprates[exprates_index]:*indweights_by[atrisk_index])/Y_wt
-            lambda_pop2_tmp[j]    =  quadcolsum(wt_atrisk:*exprates2[exprates_index]:*indweights_by[atrisk_index])/Y_wt
+            lambda_pop1_tmp[j]    =  quadcolsum(wt_atrisk:*exprates[exprates_index])/Y_wt
+            lambda_pop2_tmp[j]    =  quadcolsum(wt_atrisk:*exprates2[exprates_index])/Y_wt
           }
         }
       }
@@ -1379,11 +1377,12 @@ real matrix PP_gen_exprates(struct stpp_info scalar   S,
 
     // some speed gains counting backwards
     tmpattyear_pmo = tmpattyear[pmotherselect]
+
     for(b=ymax;b>=ymin;b--) {
        rateindex = selectindex((tmpattyear_pmo:==b))
        if(cols(rateindex)) tmpexprates[rateindex] = asarray(pm,asarray(S.pmoth_levels,pmnumber)[p,])[tmpattage[rateindex] , b]
      } 
-   
+ 
     exprates[pmotherselect] = tmpexprates
    } 
   return(exprates)
@@ -1393,7 +1392,6 @@ real matrix PP_gen_exprates(struct stpp_info scalar   S,
 /*
 Note - pmotherselect is slow - could form an array and just update using S.atrisk_all
 Some speed gains by 
-  -- counting backwards in loop
   -- select subset of exprates (tmpexprates)
 */
 
@@ -1530,6 +1528,7 @@ void function PP_Gen_cumulative_indweights(struct stpp_info scalar S)
       if(S.haspopmort2) lambda_c = asarray(S.lambda_all_t, (1,S.bylevels[k,])) :- asarray(S.lambda_pop1_t,(1,S.bylevels[k,]))
       
       asarray(S.AC_var,k,quadrunningsum(asarray(S.lambda_all_t_var,(1,S.bylevels[k,]))))
+
       if(S.hasflemhar) {
         if(S.haspopmort2) allcause = quadrunningsum(lambda_c :+ asarray(S.lambda_pop2_t,(1,S.bylevels[k,])))
         else allcause   = quadrunningsum(asarray(S.lambda_all_t,(1,S.bylevels[k,])))
@@ -1562,6 +1561,7 @@ void function PP_Gen_cumulative_indweights(struct stpp_info scalar S)
       for(j=1;j<=Nuniq;j++) {
         tmpmat_v[j]=quadsum((allcause_lag[1::j,.]):^2 :*(1:-((tmpmat[j]:-tmpmat[1::j,.]):/allcause_lag[1::j,.])):^2:*lambda_all_t_var[1::j,.]) 
        }        
+	   
       asarray(S.CP_can_var,k,tmpmat_v) 
       asarray(S.CP_can, k, PP_loglog_tran_var(tmpmat,asarray(S.CP_can_var,k),zz))
 
@@ -1578,8 +1578,6 @@ void function PP_Gen_cumulative_indweights(struct stpp_info scalar S)
     }
   }
 }
-
-
 
 
 // PP_log_tran_var

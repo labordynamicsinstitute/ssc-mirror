@@ -24,9 +24,10 @@ d
 d Author: Joao Pedro Azevedo, World Bank
 d Support: email jazevedo@@worldbank.org
 d
-d Distribution-Date: 20140803
+d Distribution-Date: 20251020
 d
 f outtable.ado
+f outtable2.ado
 f outtable.hlp
 f outtable7.ado
 f outtable7.hlp

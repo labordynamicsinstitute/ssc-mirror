@@ -31,6 +31,7 @@
 {synopt:{opt refext:ernal(string)}}reference weights defined externally{p_end}
 {synopt:{opt reffr:ame(framename)}}reference weights stored in frame{p_end}
 {synopt:{opt refp:roportion(framename)}}save reference proportion{p_end}
+{synopt:{opt restrict(exp)}}restict to {it:exp} for by groups{p_end}
 {synopt:{opt savereffr:ame(newframename)}}save reference weights to new frame{p_end}
 {synopt:{opt stig:nore}}do not do survival data checks{p_end}
 {synopt:{opt nosum:mary}}do not display summary table{p_end}
@@ -70,7 +71,14 @@ but cannot be used when using {cmd:refframe()} or {cmd:refconditional()}.
 defined by {it:varlist}.
 
 {phang}
-{opt byrestrict(exp)} when calculating weights stratified when using the {bf:by()}
+{opt byrestrict(expression)} this restricts calculation of the the observed proportions
+to those defined by {it:expression}. Note that values are still obtained for individuals not satisfying 
+the expression, but they are not included in the calculation.
+It is generally more useful to use the {cmd:restrict()} option, 
+which also places restrictions when calculation the reference proportions (where appropriate).
+
+
+this options  calculating weights stratified when using the {bf:by()}
 option this will restriced the observed proportion with in strata to be based
 on expression {it:exp}. An example of its use is when implementing period 
 analysis in survival analysis: here we want the observed proportions to be defined
@@ -129,6 +137,17 @@ By default, this variable is named {cmd:refp}.
 
 {phang}
 {opt refproportion(newvarname)} save the reference proportions in a new variable.
+
+
+{phang}
+{opt restrict(expression)} this restricts calculation of the the observed and reference 
+proportions (when using the {cmd: refconditional()} option) to those defined by 
+{it:expression}. Note that values are still obtained for individuals not satisfying 
+the expression, but they are not included in the calculation.
+The most common use is when implementing period analysis in survival analysis: 
+here we want the observed proportions to be defined based on those diagnosed in a calendar period window,
+as well as the reference proportions when using {cmd:refconditional()}.
+
 
 {phang}
 {opt saverefframe(newframename)}{bf:, [replace refwtname({it:varname}))} gives the name of a new frame to save the
@@ -239,7 +258,7 @@ end{p_end}
 {phang2}
 . genindweights wt2, by(sex) {bind:                              } ///{p_end}
 {p 16 20 2}
-refframe(ageweights, strata(ICSSagegrp) wtname(wt)){p_end}
+refframe(ageweights, strata(ICSSagegrp) refwtname(wt)){p_end}
 {phang2}
 . stpp R_pp using "https://pclambert.net/data/popmort.dta", ///{p_end}
 {p 16 20 2}
@@ -274,7 +293,7 @@ The individual weights are the ratio of reference/observed probabilities.
 . egen agegrp10 = cut(age), group(10){p_end}
 {phang2}
 . genindweights wt3, by(sex) refconditional(sex==1, strata(agegrp10)){p_end}
-{pmore}
+{phang2}
 . stpp R_pp using "https://pclambert.net/data/popmort.dta", ///{p_end}
 {p 16 20 2}
 agediag(age) datediag(dx){bind:                           }///{p_end}
@@ -318,6 +337,44 @@ saverefframe(age10ref){p_end}
 {txt}{...}
 {pmore}
 {it:({stata genindweights_egs 4:click to run})}{p_end}
+
+
+{dlgtab:Example 5}
+
+{pstd}
+This example shows the use of the {cmd:restrict()} option.
+In period analysis only risktime within in a defined calendar period window is considered.
+This creates left truncation (delayed entry) for those diagnosed before the start
+of the window who survive into the window. When standardizing to the age distribution
+in a recent calendnar period, we want to consider only those diagnosed in a particlar
+period (often the same as the period window), not all those at risk. This can be achieved
+using the {cmd:restrict()} option by resticting to those with {cmd:_t0==0}.
+
+{cmd}{...}
+{phang2}
+. use https://pclambert.net/data/colon.dta , clear{p_end}
+{phang2}
+. stset exit,failure(status=1,2) id(id) origin(dx) enter(time mdy(1,1,1991)) scale(365.241){p_end} 
+{phang2}
+. egen agegrp10 = cut(age), group(10){p_end}
+{phang2}
+. genindweights wt5 if _st, by(sex) refconditional(sex==1, strata(agegrp10)) ///{p_end}
+{p 16 20 2}
+                            restrict(_t0==0)   {p_end}   
+{pmore}
+. stpp R_pp using "https://pclambert.net/data/popmort.dta", ///{p_end}
+{p 16 20 2}
+agediag(age) datediag(dx)  {bind:                         } ///{p_end}
+{p 16 20 2}
+pmother(sex) list(1 5)     {bind:                            } ///{p_end}
+{p 16 20 2}
+by(sex)         {bind:                                           } ///{p_end}
+{p 16 20 2}
+indweights(wt5)                         
+
+{txt}{...}
+{pmore}
+{it:({stata genindweights_egs 5:click to run})}{p_end}
 
 {title:Author}
 

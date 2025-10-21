@@ -1,4 +1,4 @@
-*! version 0.4 2025-02-08
+*! version 0.41 2025-04-11
 program define genindweights, rclass sortpreserve
   syntax newvarlist(max=1)  [if][in], [                            ///
                                         AGEGroup(varname)          ///
@@ -10,6 +10,7 @@ program define genindweights, rclass sortpreserve
                                         REFEXTernal(string)        ///
                                         REFFRame(string)           /// 
                                         REFProportion(string)      ///
+                                        RESTrict(string)           ///
                                         SAVEREFFrame(string)       ///
                                         STIGnore                   ///
                                         noSUMmary                  ///
@@ -25,7 +26,7 @@ program define genindweights, rclass sortpreserve
     qui count if _st==0 & `touse'
     if `r(N)'>0 {
       di as error "You have values of _st=0." ///
-                  "Either drop these of use an if statement."
+                  "Either drop these or use an if statement."
                   exit 198
     }
   }
@@ -59,10 +60,22 @@ program define genindweights, rclass sortpreserve
       exit 198
     }
   }
+  
+  
   if "`byrestrict'" != "" & "`by'" == "" {
-    di as error "You have specified byrestict() without using the by() option"
+    di as error "You have specified byrestrict() without using the by() option"
     exit 198
   }
+  
+  if "`restrict'" != "" & "`byrestrict'" != "" {
+    di as error "You can't specify both the restrict() and byrestrict() options."
+    exit 198
+  }  
+  if "`restrict'" != "" {
+    local byrestrict & `restrict'
+    local refcondrestrict & `restrict' 
+  }
+ 
   
   if "`obsproportion'" != "" {
     confirm new var `obsproportion'
@@ -111,6 +124,8 @@ program define genindweights, rclass sortpreserve
   tempname refframetmp
   if "`refexternal'" != "" {
     frame create `refframetmp'  
+    
+   
     GetExternalRef, agegroup(`agegroup')  reftype(`refexternal') ///
                     nagegroups(`Nagegroups') agegrouplevels(`agegroup_levels') ///
                     refframetmp(`refframetmp')
@@ -127,9 +142,10 @@ program define genindweights, rclass sortpreserve
   }
 
   if "`refconditional'" != "" {
+    
     // check for comma or do some parsing first?  
-    GetRefcond `refconditional' touse(`touse')  ///
-                         refframetmp(`refframetmp')
+    GetRefcond  `refconditional' touse(`touse')  ///
+                         refframetmp(`refframetmp') refcondrestrict(`refcondrestrict')
     qui frlink m:1 `refcond_strata', frame(`refframetmp')
     local refwtname refp
   }
@@ -137,7 +153,15 @@ program define genindweights, rclass sortpreserve
 // calculate observed proportions in by/agegroup combinations
 
   tempvar bygrouptotal bygrouptotal_agegrp obsby_proportion
-  if "`byrestrict'" != "" local byrestrict & `byrestrict'
+  //if "`byrestrict'" != "" local byrestrict & `byrestrict'
+  
+  // check if values of _t0>0
+  qui count if `touse'  `byrestrict' & _t0>0
+  if `r(N)'>0 {
+    di as result "** WARNING: You have values of _t0 >0 for the observed proportions."
+    di as result "            Check if you should be using the restrict() option."
+  }  
+  
   qui bysort `by':  egen `bygrouptotal' = total(`touse' `byrestrict') if `touse'   
   qui bysort `by' `refframe_strata' `refcond_strata' `agegroup':  egen `bygrouptotal_agegrp' = total(`touse' `byrestrict') if `touse'   
   qui gen double `obsby_proportion' = `bygrouptotal_agegrp'/`bygrouptotal' if `touse'
@@ -320,10 +344,12 @@ end
 ///  GetRefcond ///
 ///////////////////
 program define GetRefcond, rclass sortpreserve
-  syntax [anything(name=refcondexp everything)],  strata(varlist)       ///
-                                                  touse(string)         ///
-                                                  refframetmp(string)   
-                                                                       
+  syntax [anything(name=refcondexp everything)],  [                       ///
+                                                  strata(varlist)         ///
+                                                  touse(string)           ///
+                                                  refcondrestrict(string) ///
+                                                  refframetmp(string)     ///
+                                                  ]
                                                 
   foreach var in `strata' {
     CheckInteger `var'
@@ -341,16 +367,23 @@ program define GetRefcond, rclass sortpreserve
     local Nrefexp `r(N)'
   }
   else {
-    capture count if `refcondexp' & `touse'
+    capture count if `refcondexp' & `touse' `refcondrestrict'
     if _rc {
-       di as error "Illegal refconditional() expression."
+       di as error "Illegal expression."
        exit 198
     }
     local Nrefexp `r(N)'
   }
+  // check if value of _t0>0
+  qui count if `refcondexp' & `touse' `refcondrestrict' & _t0>0
+  if `r(N)'>0 {
+    di as result "** WARNING: You have values of _t0 >0 for the group defined by refconditional()."
+    di as result "            Check if you should be using the restrict() option."
+  }  
+  
   
   tempvar bygrouptotal refproportion firstrow tousereverse
-  qui bysort `strata': egen `bygrouptotal' = total(`refcondexp' & `touse') if  `touse'  
+  qui bysort `strata': egen `bygrouptotal' = total(`refcondexp'  `refcondrestrict' & `touse') if  `touse'  
   qui gen double `refproportion' = `bygrouptotal'/`Nrefexp' if `touse'
   qui gen byte `tousereverse' = 1 - `touse'
   qui bysort `strata' (`tousereverse'): gen `firstrow' = _n==1
