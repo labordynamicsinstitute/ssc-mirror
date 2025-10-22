@@ -23220,7 +23220,6 @@ fmwww.bc.edu/repec/bocode/e/exeqdata.dta
 fmwww.bc.edu/repec/bocode/e/eaalogit.ado
 fmwww.bc.edu/repec/bocode/e/expandihlp.dlg
 fmwww.bc.edu/repec/bocode/e/excelsave.ado
-fmwww.bc.edu/repec/bocode/e/esli.html
 fmwww.bc.edu/repec/bocode/e/elzspelladd.linux.plugin
 fmwww.bc.edu/repec/bocode/e/elzspelladd.plugin.arm64
 fmwww.bc.edu/repec/bocode/e/est2vec.html
@@ -23616,7 +23615,6 @@ fmwww.bc.edu/repec/bocode/e/est2one.hlp
 fmwww.bc.edu/repec/bocode/e/estoutold.pkg
 fmwww.bc.edu/repec/bocode/e/eperiod.sthlp
 fmwww.bc.edu/repec/bocode/e/egb2reg.ado
-fmwww.bc.edu/repec/bocode/e/est2one.html
 fmwww.bc.edu/repec/bocode/e/ExpRelSurv.pdf
 fmwww.bc.edu/repec/bocode/e/elasticregress.ihlp
 fmwww.bc.edu/repec/bocode/e/encoder.sthlp
@@ -23764,7 +23762,6 @@ fmwww.bc.edu/repec/bocode/e/etime.pkg
 fmwww.bc.edu/repec/bocode/e/educationdata.sthlp
 fmwww.bc.edu/repec/bocode/e/estwrite.html
 fmwww.bc.edu/repec/bocode/e/examples_estudy.dta
-fmwww.bc.edu/repec/bocode/e/est2rowlbl.html
 fmwww.bc.edu/repec/bocode/e/example_hom.dta
 fmwww.bc.edu/repec/bocode/e/exportunbal.dta
 fmwww.bc.edu/repec/bocode/e/elfs_outemail.sthlp

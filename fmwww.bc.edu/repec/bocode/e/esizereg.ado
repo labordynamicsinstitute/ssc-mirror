@@ -1,3 +1,7 @@
+*! 3.1.0 Ariel Linden 20Oct2025 // fixed bug in gettoken to deal with ","
+								// added labels to table header (if value labels are available)
+								// added reverse option to reverse sign of estimate (group order)
+								// program now restores regression estimates so that user does not have to re-estimate regression
 *! 3.0.1 Ariel Linden 20Mar2024 // added z-distribution option (default is t-distribution with noncentrality parameter)
 *! 3.0.0 Ariel Linden 07Mar2024 // added Hedges g option
 								// -esizereg- now uses variance produced by margins to compute pooled std. dev. 
@@ -6,37 +10,32 @@
 *! 2.0.0 Ariel Linden 29May2019 // made esizereg a postestimation command and converted version 1.0.0 to an immediate command (esizeregi)
 *! 1.0.0 Ariel Linden 02Feb2019
 
-capture program drop esizereg
 program define esizereg, rclass
 version 11.0
 
-			syntax anything [, COHensd HEDgesg Zdistribution LEVel(cilevel) ] 
+			syntax anything [, COHensd HEDgesg Zdistribution LEVel(cilevel) REVerse  ] 
 			
-			gettoken treat : 0
-			// * store model estimates * //
-			if "`e(cmd)'" == "margins" {
-				di as err "You must re-estimate the regression model"
-				exit 198				
-			}
-			else estimates store results
+			gettoken treat 0 : 0, parse(",")
+			local treat = trim("`treat'")			
 
+			// supported models
 			if !inlist("`e(cmd)'", "regress", "tobit", "truncreg", "hetregress", "xtreg", "intreg") & !inlist("`e(cmd2)'", "meintreg", "metobit") {
 				di as err `"`e(cmd)' is not supported by {bf:esizereg}"'
 				exit 198
-			}	
-			
-			// * verify that the previous model estimates are available * //
-			capture assert matrix list r(table)
-				if _rc { 
-					qui estimates restore results
-					qui estimates replay results
-				}
+			}
 	
-			// * save table of estimates as matrix * //
+			// replay estimates to grab regression table
+			capture local cmd2 "`e(cmd2)'"
+			if inlist("`e(cmd)'", "regress", "tobit", "truncreg", "hetregress", "xtreg", "intreg") ///
+				| (inlist("`e(cmd)'", "meglm") & inlist("`cmd2'", "meintreg", "metobit")) {
+				qui estimates store results
+				qui estimates replay results
+			}
+			
+			// save table of estimates as matrix //
 			qui matrix b = r(table)
-			
-			
-			// * generate error if treat(name) is not in regression table * //  
+
+			// generate error if treat(name) is not in regression table //  
 			local colnames : colnames b
 			if !`: list treat in colnames' {
 				di as err "The regressor {bf:`treat'} is not found." ///
@@ -47,32 +46,48 @@ version 11.0
 			tempname est
 			scalar `est' = b[1,colnumb(matrix(b),"`treat'")]
 			
+			// if reverse, flip sign of estimate
+			if "`reverse'" != "" {
+				scalar `est' = -`est'
+			}	
+			
 			local weightexp `e(wtype)' `e(wexp)'
 				
 			// extract treat varname from that produced in -regress- using factor variables (e.g. 1.treat) 
 			local treatvar = substr("`treat'", strpos("`treat'", ".") + 1, .)
 				
-			// * ensure binary variable *
+			// ensure binary traetment variable
 			qui tabulate `treatvar' if e(sample) 
 				if r(r) != 2 { 
 					di as err "With a binary treatment, {bf:`treatvar'} must have exactly two values (coded 0 or 1)."
 					exit 420  
 				} 
 			else if r(r) == 2 { 
-				capture assert inlist(`treat', 0, 1) if e(sample)
+				capture assert inlist(`treatvar', 0, 1) if e(sample)
 				if _rc { 
 					di as err "With a binary treatment, {bf:`treatvar'} must be coded as either 0 or 1."
 					exit 450 
 				}
 			}
 			
-			// * get N per group * //
-			qui count if `treatvar' == 1 & e(sample)
-			local n1 = r(N)
+			// get N per group 
 			qui count if `treatvar' == 0 & e(sample)
 			local n0 = r(N)
+			qui count if `treatvar' == 1 & e(sample)
+			local n1 = r(N)
+			
+			// value labels
+			local vallab : value label `treatvar'
+			local group0 "Group 0"
+			local group1 "Group 1"
+			if "`vallab'" != "" {
+				capture local lab0 : label `vallab' 0
+				capture local lab1 : label `vallab' 1
+					if "`lab0'" != "" local group0 "`lab0'"
+					if "`lab1'" != "" local group1 "`lab1'"
+			}
 
-			// * get variance of model using margins * //
+			// get variance of model using margins
 			tempname V  N sdpooled CohensD v se iz CohensD_Lower CohensD_Upper 
 			
 			if "`e(cmd)'" == "meglm" {
@@ -126,11 +141,11 @@ version 11.0
 			// ====================================================================
 			// SET DEFAULT OUTPUT
 			if "`cohensd'"== "" & "`hedgesg'"== "" {                       
-				local cohensd "cohensd"
-				local hedgesg "hedgesg"
+				local cohensd cohensd
+				local hedgesg hedgesg
 			}
 			
-			// Display Title (weighted or unweighted)
+			// display Title (weighted or unweighted)
 			if "`weightexp'" == "" {
 				disp _newline as text "Effect size based on the regression coefficient of the treatment (exposure) variable"
             }
@@ -138,12 +153,12 @@ version 11.0
 				disp _newline as text "{bf:Weighted} effect size based on the regression coefficient of the treatment (exposure) variable"
 			}
 			
-			// Display table header information 
-			disp _newline %45s "Obs per group:"
-			disp %47s "Group 1 = " %10.0fc `n1'
-			disp %47s "Group 2 = " %10.0fc `n0'
-      
-			// Display output table
+			// display table header information 
+			di _n %45s "Obs per group:"
+				di %47s "`group0' = " %10.0fc `n0'
+				di %47s "`group1' = " %10.0fc `n1'				
+
+ 			// display output table
 			tempname mytab
 			.`mytab' = ._tab.new, col(5) lmargin(0)
 			.`mytab'.width    20   |11  12  12    12
@@ -176,7 +191,7 @@ version 11.0
 			}
 				.`mytab'.sep, bottom
 
-			// Return results
+			// return results
 			if "`hedgesg'" != "" {
                 return scalar ub_g = `HedgesG_Upper'
                 return scalar lb_g = `HedgesG_Lower'
@@ -199,5 +214,9 @@ version 11.0
 			c_local d = `CohensD'
 			c_local g = `HedgesG'			
 			c_local se = `se'
+			
+			// restore regression estimates
+			qui estimates restore results
+			qui estimates replay results
 
 end

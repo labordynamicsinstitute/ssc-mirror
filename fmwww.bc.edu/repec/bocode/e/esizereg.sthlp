@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 2.0.5 20Oct2025}{...}
 {* *! version 2.0.4 21Mar2024}{...}
 {* *! version 2.0.3 07Mar2024}{...}
 {* *! version 2.0.2 29Feb2024}{...}
@@ -28,6 +29,7 @@ Postestimation version of esizereg
 {opt hed:gesg}
 {opt z:distribution}
 {opt lev:el(#)}
+{opt rev:erse}
 ]
 
 
@@ -68,6 +70,7 @@ In either version of {cmd:esizereg}, the coefficient must be for binary level va
 {synopt:{opt hed:gesg}}report Hedges's {it:g} (1981) {p_end}
 {synopt:{opt z:distribution}}compute confidence limits using {it:z} test instead of default {it:t} test (with non-centrality parameter) {p_end}
 {synopt:{opt lev:el(#)}}set confidence level; default is {cmd:level(95)}{p_end}
+{synopt:{opt rev:erse}}reverse sign of estimate (equivalent to changing group order for mean difference computation){p_end}
 {synoptline}
 
 
@@ -138,14 +141,14 @@ treatment variable; {cmd: n1() is required for esizeregi}.
 {pmore}Setup{p_end}
 {pmore2}{bf:{stata "webuse cattaneo2": . webuse cattaneo2}} {p_end}
 
-{pmore} A simple case with no covariate adjustment. We estimate the treatment effect of {cmd: mbsmoke} on {cmd: bweight}. {p_end}
+{pmore} We first use official Stata's {cmd:esize} to compute effect sizes for a simple case (no covariates). {p_end}
+{pmore2}{bf:{stata "esize twosample bweight, by(mbsmoke)": . esize twosample bweight, by(mbsmoke)}} {p_end}
+
+{pmore} We now estimate the simple model (no covariates) using regression. {p_end}
 {pmore2}{bf:{stata "regress bweight mbsmoke": . regress bweight mbsmoke}} {p_end}
 
-{pmore} Compute the effect size for {cmd: mbsmoke}. {p_end}
-{pmore2}{bf:{stata "esizereg mbsmoke": . esizereg mbsmoke}} {p_end}
-
-{pmore} Compare the results with those produced by {cmd:esize}. {p_end}
-{pmore2}{bf:{stata "esize twosample bweight, by(mbsmoke)": . esize twosample bweight, by(mbsmoke)}} {p_end}
+{pmore} We now use {cmd:esizereg} for comparison to {cmd:esize} (we specify the {cmd:reverse} option to display the effects in the same way. {p_end}
+{pmore2}{bf:{stata "esizereg mbsmoke, reverse": . esizereg mbsmoke, reverse}} {p_end}
 
 {pmore} We now estimate the treatment effect of {cmd: mbsmoke} on {cmd: bweight}, controlling for several covariates (which {cmd:esize} cannot do). {p_end}
 {pmore2}{bf:{stata "regress bweight mbsmoke mmarried mage fbaby medu": . regress bweight mbsmoke mmarried mage fbaby medu}} {p_end}
@@ -154,7 +157,6 @@ treatment variable; {cmd: n1() is required for esizeregi}.
 {pmore2}{bf:{stata "esizereg mbsmoke": . esizereg mbsmoke}} {p_end}
 
 {pmore} Use a {it:z} distribution to compute confidence limits instead of the default {it:t} distribution (with a non-centrality parameter). {p_end}
-{pmore2}{bf:{stata "regress bweight mbsmoke mmarried mage fbaby medu": . regress bweight mbsmoke mmarried mage fbaby medu}} {p_end}
 {pmore2}{bf:{stata "esizereg mbsmoke , z": . esizereg mbsmoke , z}} {p_end}
 
 {pmore} Re-estimate the model, now specifying {cmd:mbsmoke} as a factor variable, and adding a pweight. {p_end}
