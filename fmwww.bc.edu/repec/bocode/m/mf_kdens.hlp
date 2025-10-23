@@ -1,5 +1,5 @@
 {smcl}
-{* 03aug2007}{...}
+{* 21oct2025}{...}
 {cmd:help mata kdens()}
 {hline}
 
@@ -42,7 +42,7 @@ See {browse "http://fmwww.bc.edu/RePEc/bocode/k/kdens.pdf"}.
 
 {title:Author}
 
-{pstd} Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+{pstd} Ben Jann, University of Bern, ben.jann@unibe.ch
 
 
 {title:Aknowledgements}

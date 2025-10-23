@@ -3,6 +3,8 @@
    A parser for kdens -- Kernel density estimator.  Works with twoway.ado.
 
 */
+*! version 1.0.3  21oct2025  Ben Jann
+*! - twoway kdens crashed in Stata 19; this is fixed
 *! version 1.0.2  18sep2007  Ben Jann
 *! based on official twoway_kdensity_parse.ado  version 1.0.13  13mar2007
 
@@ -151,6 +153,10 @@ program log_create_serset
     }
     else    .varlist = "`.kde_x' `.kde_y'"
 
+end
+
+program get_plot_count
+    .nplots = 1
 end
 
 exit

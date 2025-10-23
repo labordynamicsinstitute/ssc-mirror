@@ -1,6 +1,6 @@
 {smcl}
 
-help for {hi:spsiv}			Version 1.0, 02 Sep 25
+help for {hi:spsiv}			Version 1.1, 22 Oct 25
 
 {title:{cmd:spsiv} - Create synthetic instrumental variables in spatial regression}
 

@@ -4,8 +4,12 @@
 *					-----------
 *	According to Le Gallo & Paez (2013) and Fingleton (2022)
 *					-----------
-*	Version 1.0		Manh Hoang Ba (hbmanh9492@gmail.com)
+*	Version 1.1		Manh Hoang Ba (hbmanh9492@gmail.com)
 *					
+********************************************************************
+*	Version history
+*		02 Sep 25: 1.0 - first time contribution
+*		22 Oct 25: 1.1 - upspeed and modify results
 ********************************************************************
 
 cap program drop spsiv
@@ -83,7 +87,13 @@ program define spsiv
 	qui _eigvecvars, w(`mmat')
 
 *	Calculate Synthetic instrument for varlist
-	local siv_vars
+//	local siv_vars
+
+*	MATA:
+qui	mata: select_vars("`bf_vars'", `T', `N', `alpha', "E")
+	
+*	STATA
+/*	
 	qui foreach name in `bf_vars' {
 		forvalues t=1/`T' {
 			
@@ -107,6 +117,8 @@ program define spsiv
 		}
 		local siv_vars `siv_vars' siv_`name'
 	}
+*/
+
 	qui drop E*
 
 *	Reshape long data
@@ -122,13 +134,14 @@ program define spsiv
 		qui cap confirm v `name'
 		if _rc==0 qui drop `name'
 	}
+	
 	qui merge 1:1 `id_t' using `siv_data', nogen
 	foreach name in `bf_vars' {
 		qui corr `name' siv_`name' if `touse'
 		scalar corr_`name' = r(rho)
 	}
 
-
+	
 *	Display results
 	di _n in ye "Correlation between X and synthetic intrumental variables"
 
@@ -163,7 +176,8 @@ program define spsiv
 			local col = `col' + 12
 		}
 		di ""
-		
+
+/*		version 1.1 - display number of Eigenvectors		
 		// Third line: "Eigvectors" and number of eigenvectors
 		di _column(1) as text "Eig. vector" _continue
 		local col = 13
@@ -172,7 +186,8 @@ program define spsiv
 			di _column(`col') %9.0g in ye noE_`var' _continue
 			local col = `col' + 12
 		}
-		di "" 
+		di ""
+*/		
 		di as text "{hline `hline'}"
 		
 		// If not the last group, print a blank line to space the next table.
@@ -230,3 +245,123 @@ program define _eigvecvars
 	}
 	svmat `E_m', names(E)
 end
+
+
+*********************************************************************
+*	Program define seclect_vars() in MATA
+*********************************************************************
+
+mata:
+mata clear
+	void select_vars( /*
+*/		string scalar bf_vars_str, /*
+*/		real scalar T, /*
+*/		real scalar N, /*
+*/		real scalar alpha, /*
+*/		string scalar E_prefix /*
+*/	) {
+		
+		bf_vars = tokens(bf_vars_str)
+		n_vars = length(bf_vars)
+		n_obs = st_nobs()
+		
+		// Get data Ei
+		E_varnames = J(1, N, "")
+		for (i = 1; i <= N; i++) {
+			E_varnames[i] = E_prefix + strofreal(i)
+		}
+		E_data = st_data(., E_varnames)
+		
+		// Make siv_vars
+		siv_vars_list = ""
+
+		for (v = 1; v <= n_vars; v++) {
+			name = bf_vars[v]
+			
+			// Get data for all t
+			varnames_t = J(1, T, "")
+			for (t = 1; t <= T; t++) {
+				varnames_t[t] = name + strofreal(t)
+			}
+			X_all = st_data(., varnames_t)
+			
+//			n_selected = 0
+			
+			siv_name = "siv_" + name
+			
+			for (t = 1; t <= T; t++) {
+				x = X_all[., t]
+				
+				// Mean and Std
+				mean_x = mean(x)
+				sd_x = sqrt(diag(variance(x)))
+				x_centered = x :- mean_x
+
+				E_means = colsum(E_data) / n_obs
+				E_sds = sqrt(diag(colsum((E_data :- E_means):^2) / (n_obs-1)))
+				
+				// Vectorized correlation calculation
+				E_centered = E_data :- E_means
+				corr_vec = (x_centered' * E_centered) * invsym(sd_x) * invsym(E_sds) / (n_obs-1) 
+				corr_vec = corr_vec[1, .] 
+				
+				// Vectorized p-value calculation
+				t_stats = corr_vec :* sqrt(n_obs - 2) :/ sqrt(1 :- corr_vec:^2 :+ 1e-10)
+//				p_vals = 2 :* (1 :- normal(abs(t_stats)))
+				p_vals = 2 :* (1 :- t(n_obs - 2, abs(t_stats)))
+				
+				// Mark index with p-value < alpha
+				idx_sig = selectindex(p_vals :< alpha)
+			
+				// Number of E_i selected
+//				n_selected = length(idx_sig)
+				
+				// Collect E_i
+				if (length(idx_sig) > 0) {
+					E_sig = E_prefix :+ strofreal(idx_sig')		
+//					Vit = invtokens(E_sig')
+				} 
+			
+				// OLS in MATA
+				varname_t = name + strofreal(t)
+				siv_namet = "siv_" + varname_t
+				
+				y = st_data(., varname_t)
+				
+				if (length(idx_sig) > 0) {
+					X_reg = st_data(., E_sig')
+					X_reg = (J(n_obs, 1, 1), X_reg)
+//					n_cols = cols(X_reg)
+				} else {
+					X_reg = J(n_obs, 1, 1)
+//					n_cols = 1
+				}
+				
+				beta = invsym(X_reg' * X_reg) * X_reg' * y
+				yhat = X_reg * beta
+				
+				// Store to Stata		
+				st_addvar("double", siv_namet)				
+				st_store(., siv_namet, yhat)
+				
+				// Lưu hệ số tự do (bậc tự do = số biến ngoài constant)
+//				n_selected = n_cols - 1				
+			}
+			
+//			st_numscalar("noE_" + name, n_selected)
+			
+			// Add to siv_vars
+			if (siv_vars_list == "") {
+				siv_vars_list = siv_name
+			} else {
+				siv_vars_list = siv_vars_list + " " + siv_name
+			}			
+		}
+		
+		// Return local siv_vars to Stata
+		st_local("siv_vars", siv_vars_list) 
+		
+	}
+end
+
+// Gọi hàm từ Stata

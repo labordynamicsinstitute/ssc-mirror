@@ -2949,14 +2949,12 @@ fmwww.bc.edu/repec/bocode/k/k_pwt5n.ado
 fmwww.bc.edu/repec/bocode/k/kappa2.dlg
 fmwww.bc.edu/repec/bocode/k/kountryregions.html
 fmwww.bc.edu/repec/bocode/k/kulback.dta
-fmwww.bc.edu/repec/bocode/k/kdbox.html
 fmwww.bc.edu/repec/bocode/k/ky_ll_5.ado
 fmwww.bc.edu/repec/bocode/k/k_marc.ado
 fmwww.bc.edu/repec/bocode/k/ky_example.log
 fmwww.bc.edu/repec/bocode/k/kitli_exampledata.dta
 fmwww.bc.edu/repec/bocode/k/kappa2.sthlp
 fmwww.bc.edu/repec/bocode/k/ksmirnov2var.sthlp
-fmwww.bc.edu/repec/bocode/k/kdens.html
 fmwww.bc.edu/repec/bocode/k/kappaci.hlp
 fmwww.bc.edu/repec/bocode/k/kappaetc.ado
 fmwww.bc.edu/repec/bocode/k/k_other_extras.txt
@@ -3006,7 +3004,6 @@ fmwww.bc.edu/repec/bocode/k/kitli_compare2bm.sthlp
 fmwww.bc.edu/repec/bocode/k/kapgof.html
 fmwww.bc.edu/repec/bocode/k/ksi.hlp
 fmwww.bc.edu/repec/bocode/k/ky_sim.ado
-fmwww.bc.edu/repec/bocode/k/kapssi.html
 fmwww.bc.edu/repec/bocode/k/kernreg2.ado
 fmwww.bc.edu/repec/bocode/k/ky_estat.ado
 fmwww.bc.edu/repec/bocode/k/kappci.ado
@@ -15364,7 +15361,6 @@ fmwww.bc.edu/repec/bocode/s/stgenreg_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/s/sunny_nanjing.do
 fmwww.bc.edu/repec/bocode/s/switchr.hlp
 fmwww.bc.edu/repec/bocode/s/surloads.sthlp
-fmwww.bc.edu/repec/bocode/s/spspc.html
 fmwww.bc.edu/repec/bocode/s/spdir.pkg
 fmwww.bc.edu/repec/bocode/s/synth2.ado
 fmwww.bc.edu/repec/bocode/s/stmixed.sthlp
@@ -16711,7 +16707,6 @@ fmwww.bc.edu/repec/bocode/s/sae_proc_stats.sthlp
 fmwww.bc.edu/repec/bocode/s/spread.sthlp
 fmwww.bc.edu/repec/bocode/s/spmstar.dlg
 fmwww.bc.edu/repec/bocode/s/side_histogram.ado
-fmwww.bc.edu/repec/bocode/s/spsurv.html
 fmwww.bc.edu/repec/bocode/s/sqr.html
 fmwww.bc.edu/repec/bocode/s/sql_do_script.sthlp
 fmwww.bc.edu/repec/bocode/s/simuped.pkg
@@ -21165,7 +21160,6 @@ fmwww.bc.edu/repec/bocode/b/btyesno.sthlp
 fmwww.bc.edu/repec/bocode/b/badiag.hlp
 fmwww.bc.edu/repec/bocode/b/bdiffv.sthlp
 fmwww.bc.edu/repec/bocode/b/bg2hba1ci.sthlp
-fmwww.bc.edu/repec/bocode/b/betaprior.html
 fmwww.bc.edu/repec/bocode/b/bayesqual15_mac.plugin
 fmwww.bc.edu/repec/bocode/b/brrmean.ado
 fmwww.bc.edu/repec/bocode/b/biprobit_fixedrho_lf.ado
@@ -23239,6 +23233,7 @@ fmwww.bc.edu/repec/bocode/e/elapse.pkg
 fmwww.bc.edu/repec/bocode/e/example_dot_summ2.dta
 fmwww.bc.edu/repec/bocode/e/epitable3.ado
 fmwww.bc.edu/repec/bocode/e/excelclean_demo.ado
+fmwww.bc.edu/repec/bocode/e/ewm.ado
 fmwww.bc.edu/repec/bocode/e/excelsave.sthlp
 fmwww.bc.edu/repec/bocode/e/elixhaus.hlp
 fmwww.bc.edu/repec/bocode/e/epicheck1.ado
@@ -23260,6 +23255,7 @@ fmwww.bc.edu/repec/bocode/e/exitma_example_data.dta
 fmwww.bc.edu/repec/bocode/e/env_set_unix_v3.plugin
 fmwww.bc.edu/repec/bocode/e/est2one.ado
 fmwww.bc.edu/repec/bocode/e/egranger.pkg
+fmwww.bc.edu/repec/bocode/e/ewm.sthlp
 fmwww.bc.edu/repec/bocode/e/em.sthlp
 fmwww.bc.edu/repec/bocode/e/ellipticity.ado
 fmwww.bc.edu/repec/bocode/e/example_stata.dta
@@ -23425,6 +23421,7 @@ fmwww.bc.edu/repec/bocode/e/estfe.ado
 fmwww.bc.edu/repec/bocode/e/enwei.sthlp
 fmwww.bc.edu/repec/bocode/e/ellip7.hlp
 fmwww.bc.edu/repec/bocode/e/ehutchens.ado
+fmwww.bc.edu/repec/bocode/e/ewm.pkg
 fmwww.bc.edu/repec/bocode/e/estout.html
 fmwww.bc.edu/repec/bocode/e/excelclean.sthlp
 fmwww.bc.edu/repec/bocode/e/elasticregress.pkg

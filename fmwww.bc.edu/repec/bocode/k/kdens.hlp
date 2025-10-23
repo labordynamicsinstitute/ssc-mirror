@@ -1,5 +1,5 @@
 {smcl}
-{* 19feb2008}{...}
+{* 21oct2025}{...}
 {cmd:help kdens}
 {hline}
 
@@ -586,7 +586,7 @@ Hall, P. and M. P. Wand. 1996. On the Accuracy of Binned Kernel
 
 {title:Author}
 
-{pstd} Ben Jann, ETH Zurich, jann@soz.gess.ethz.ch
+{pstd} Ben Jann, University of Bern, ben.jann@unibe.ch
 
 {pstd}Thanks for citing this software as follows:
 
