@@ -1,9 +1,11 @@
-*! 1.0.0 Ariel Linden 08Oct2025
+*! 1.0.1 Ariel Linden 17oct2025		// changed "interpretations" to print as err when they are negative
+									// changed predictions to become an option
+*! 1.0.0 Ariel Linden 080ct2025
 
 program define auto_factor, rclass
     version 11
     syntax varlist(numeric) [if] [in]  [aw fw], ///
-        [ METHod(string) COMPare SCREEplot * ]
+        [ METHod(string) COMPare SCREEplot PRedict * ]
 
     * Error if both method() and compare are specified
     if "`method'" != "" & "`compare'" != "" {
@@ -117,15 +119,24 @@ program define auto_factor, rclass
 	*****************
     * Bartlett's test
 	*****************
-    tempname B
-    quietly matrix accum `B' = `varlist' if `touse', nocons dev
-    matrix `B' = corr(`B')
-    local p = `nvars'
-    local n = r(N)
-    local df = (1/2)*`p'*(`p'-1)
-    local chi2 = -(`n'-1-(1/6)*(2*`p'+5))*ln(det(`B'))
-    local pval = chi2tail(`df', `chi2')
-    di as text "Bartlett's test of sphericity: chi2("as result `df' as text") = " as result %9.3f `chi2' as text", p = " as result %6.4f `pval'
+	tempname B
+	local p = `nvars'
+	local n = `nobs'	
+	quietly corr `varlist' if `touse'
+	mat `B' = r(C)
+	local chi2 = -(`n' - 1 - (2 * `p' + 5)/6) * ln(det(`B'))
+	local df = `p' * (`p' - 1) / 2
+	local pval = chi2tail(`df', `chi2')
+
+    di as text "Bartlett's test of sphericity: chi2("as result `df' as text") = " as result %9.3f `chi2' as text", Prob>chi2 = " as result %6.4f `pval'
+	
+	* Additional Z-value calculation for large df
+	if `df' > 30 {
+		local zval = (`chi2' - `df') / sqrt(2 * `df')
+		local zpval = 2 * normal(-abs(`zval'))
+		di as text "Bartlett's test with normal approximation: Z = " as result %6.3f `zval' as text ", Prob>|Z| = " as result %6.4f `zpval'
+	}
+	
     if `pval' < 0.05 {
         di as text "{ul:Interpretation}: Factor model likely appropriate"
 	}	
@@ -146,8 +157,8 @@ program define auto_factor, rclass
 		di as result "=================================="
 		
 		if "`weight'" == "aweight" {
-			di as text "{ul:NOTE}: the test for multivariate normality does not allow aweights (only fweights), therefore"
-			di as text "         normality will be tested without weights"
+			di as err "{ul:NOTE}: the test for multivariate normality does not allow aweights (only fweights), therefore"
+			di as err "         normality will be tested without weights"
 			di " "
 			qui mvtest normal `varlist' if `touse'
 		}
@@ -163,7 +174,7 @@ program define auto_factor, rclass
 			di as text "{ul:Interpretation}: Multivariate normality assumption satisfied for ML"
 		}
 		else {
-			di as text "{ul:Interpretation}: Multivariate normality assumption violated for ML"
+			di as err "{ul:Interpretation}: Multivariate normality assumption violated for ML"
 		}
 		di " "
 	} // end ML_needed
@@ -187,12 +198,12 @@ program define auto_factor, rclass
         }
         matrix rownames `results' = PF IPF PCF ML
         matrix colnames `results' = Stata Menger
-        di as result "NUMBER OF FACTORS BY METHOD"
-        di as result "==========================="
+        di as result "NUMBER OF RETAINED FACTORS BY METHOD"
+        di as result "===================================="
         matlist `results', twidth(8) format(%7.0f) rowtitle("Method") border(top bottom)
         di ""
-		di as text "{ul:note}: Stata uses the count of positive eigenvalues as the default number of factors" 
-		di as text "      Menger refers to the Menger curvature where the curve becomes more flat (the elbow)"
+		di as text "{ul:note}: Stata uses the count of positive eigenvalues as the default number of retained factors" 
+		di as text "      The Menger curvature identifies the point where the curve flattens (the elbow)"
 		
 		// save results
 		return matrix results = `results'
@@ -212,37 +223,37 @@ program define auto_factor, rclass
 		di as result "================"
 
         di as text "Selected method: `method'"
-        di as text "Number of factors determined by Stata's -factor-  : " as result `factors'
-        di as text "Number of factors determined by Menger's curvature: " as result `elbow'		
-		di ""		
-		
-		di as result "UNIQUENESS CHECK"
-		di as result "================"
-		matrix `uniq' = e(Psi)
-		local high_uniq_count = 0
-
-		forvalues i = 1/`nvars' {
-		local u = `uniq'[1, `i']
-			if `u' > 0.70 {
-				local high_uniq_count = `high_uniq_count' + 1
-			}
-		}
-
-		if `high_uniq_count' > 0 {
-			if `high_uniq_count' == 1 {
-				di as result `high_uniq_count' as text " variable has high uniqueness (> 0.70)"
-				di as text "{ul:Interpretation}: This variable is poorly explained by the factor solution. Consider removing it from the analysis"	
-			}
-			else {
-				di as result "`high_uniq_count' as text " variable(s) have high uniqueness (> 0.70)
-				di as text "{ul:Interpretation}: These variables are poorly explained by the factor solution. Consider removing them from the analysis"	
-			}
-		} 
-		else {
-			di as text "All variables are adequately represented by the factor solution (uniqueness ≤ 0.70)."
-		}
+        di as text "Number of retained factors determined by Stata's factor: " as result `factors'
+        di as text "Number of retained factors determined by Menger's curvature: " as result `elbow'		
 		di ""
 		
+		*******************    
+		* Uniqueness check
+		*******************		
+		di as result "UNIQUENESS CHECK"
+		di as result "================"
+		
+		matrix `uniq' = e(Psi)
+		local high_uniq_vars
+		local i = 1
+
+		foreach var of varlist `varlist' {			
+			local u = `uniq'[1, `i']
+			if `u' > 0.70 {
+				local high_uniq_vars "`high_uniq_vars' `var'"
+			}
+			local ++i
+		}
+
+		if "`high_uniq_vars'" != "" {
+			di as result "The following variable(s) have high uniqueness (> 0.70):`high_uniq_vars'"
+			di as err "{ul:Interpretation}: These variable(s) are poorly explained by the factor solution. Consider removing them from the analysis"
+		}
+		else {
+			di as text "All variables are adequately represented by the factor solution (uniqueness ≤ 0.70)"
+		}	
+		di ""
+	
 		************
         * Scree plot
 		************
@@ -253,31 +264,34 @@ program define auto_factor, rclass
 		***********************
 		* Predict factor scores
 		***********************
-        quietly factor `varlist' `wght' if `touse', `method' `options'
+        if "`predict'" != "" {
+			quietly factor `varlist' `wght' if `touse', `method' `options'
 
-		* drop predicted scores in the data
-		local score_names : char _dta[score_names]
-		if "`score_names'" != "" {
-			foreach v of local score_names {
-				capture drop `v'
+			* drop predicted scores in the data
+			local score_names : char _dta[score_names]
+			if "`score_names'" != "" {
+				foreach v of local score_names {
+					capture drop `v'
+				}
 			}
-		}
-        di as result "PREDICTIONS"
-        di as result "==========="		
-		qui predict _score*
-		qui ds _score*, has(type numeric)
-		local score_names `r(varlist)'
-		char def _dta[score_names] "`score_names'"
+			di as result "PREDICTIONS"
+			di as result "==========="		
+			qui predict _score*
+			qui ds _score*, has(type numeric)
+			local score_names `r(varlist)'
+			char def _dta[score_names] "`score_names'"
 		
-        di as text "Predicted factor values added to the data for " as result `factors' as text " factors"		
+			di as text "Predicted factor values added to the data for " as result `factors' as text " factors"		
 
-        local factor_names
-        forvalues i = 1/`factors' {
-            local fname _score`i'
-            local factor_names "`factor_names' `fname'"
-        }
+			local factor_names
+			forvalues i = 1/`factors' {
+				local fname _score`i'
+				local factor_names "`factor_names' `fname'"
+			}
 
-        di as text "{ul:Predicted factor values created}: `factor_names'"
-    }
+			di as text "{ul:Predicted factor values created}: `factor_names'"
+		} // end predict
+	
+	} // end selected method
 
 end

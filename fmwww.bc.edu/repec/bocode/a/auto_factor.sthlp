@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 1.1.0 23Oct2025}{...}
 {* *! version 1.0.0 08Oct2025}{...}
 {title:Title}
 
@@ -18,6 +19,7 @@
 {opt meth:od(string)} 
 {opt comp:are} 
 {opt scree:plot} 
+{opt pr:edict}
 [{it:factor_options}] ]
 
 
@@ -28,6 +30,7 @@
 {synopt :{opt meth:od(string)}}specify the factor method to implement (pf, pcf, ipf, ml); default is to iterate through all methods {p_end}
 {synopt :{opt comp:are}}iterate through all methods; same as not specifying {opt method()}{p_end}
 {synopt :{opt scree:plot}}produce a screeplot; available only when {opt method()} is specified{p_end}
+{synopt :{opt pr:edict}}add predictions to dataset in memory; available only when {opt method()} is specified{p_end}
 {synopt :[{it:factor_options}]}specify all available options for {helpb factor} {p_end}
 {synoptline}
 {p2colreset}{...}
@@ -64,6 +67,9 @@ through all methods and produces a table showing the number of factors determine
 {opt scree:plot} produces a screeplot. {opt screeplot} is only available when a specific {opt method()} is specified.
 
 {p 4 8 2} 
+{opt pr:edict} produces predictions for each factor. {opt predict} is only available when a specific {opt method()} is specified.
+
+{p 4 8 2} 
 {cmd:{it:factor_options}} specify all available options for {helpb factor}. 
 
 
@@ -79,9 +85,9 @@ through all methods and produces a table showing the number of factors determine
 
 {phang2}{cmd:. auto_factor ghp31- ghp05}{p_end}
 
-{pstd}implement {opt auto_factor} for a specific method (ipf) and specify the optional screeplot{p_end}
+{pstd}implement {opt auto_factor} for a specific method (ipf) and specify the optional screeplot and add predictions to dataset{p_end}
 
-{phang2}{cmd:. auto_factor ghp31- ghp05, meth(ipf) scree}{p_end}
+{phang2}{cmd:. auto_factor ghp31- ghp05, meth(ipf) scree predict}{p_end}
 
 
 
