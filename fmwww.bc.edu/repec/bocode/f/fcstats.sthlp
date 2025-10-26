@@ -20,7 +20,15 @@ one unit of a panel.
 
 {p}{cmd:fcstats} calculates several measures of forecast accuracy for one or two forecast
 series. The measures include root mean squared error (RMSE), mean absolute error (MAE), 
-mean absolute percent error (MAPE) and Theil's U. 
+mean absolute percent error (MAPE), quasi-likelihood loss function (QLIKE) and Theil's U. 
+
+{p}The name QLIKE is derived from the similarity to the (negative) Gaussian
+log-likelihood and its use as a quasi-likelihood in misspecified models
+The QLIKE function has become very popular in evaluating variance forecasts.
+The major reason for this popularity is the fact that the QLIKE criterion is not
+symmetric. It penalises underestimating volatility more heavily than overestimating
+it. This may be a desirable characteristic in a loss function if the risk manager is
+particularly conservative. See Hurn et al., 2020.
 
 {p}Theil's U statistic (1966), sometimes termed U2, is based on the concept of information entropy.
 It can be considered as the RMSE of the forecast divided by the RMSE of the naive model, 
@@ -56,11 +64,16 @@ used in the calculations. The names of the series are also returned as local mac
 
 {title:References}
 
+Hurn, S., Martin, V., Phillips, P.C.B., Yu, J. (2020), Financial Econometric Modeling.
+Oxford: Oxford University Press. 
+
 Theil, H. (1966), Applied Economic Forecasting. Chicago: Rand McNally.
 
-{title:Author}
+{title:Authors}
 
 Christopher F Baum, Boston College, USA, baum@bc.edu
+
+Jesús Otero, Universidad del Rosario, Colombia, jotero1@gmail.com
 
 {title:Acknowledgements}
 Development of this routine was stimulated by an engagement at the Asian Development Bank.

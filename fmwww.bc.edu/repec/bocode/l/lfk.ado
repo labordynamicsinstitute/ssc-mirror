@@ -1,9 +1,10 @@
-* LFK version 1.3 - 15 October 2021
+* LFK version 1.4 - 25 October 2025
 * Authors: Luis Furuya-Kanamori (l.furuya@uq.edu.au) & Suhail AR Doi
 
 	*v1.1 revised help file
 	*v1.2 added rsample to generate _lfk and _z variables
 	*v1.3 keep all data after if/in selected
+	*v1.4 fixed CC when OR is selected
 
 
 program define lfk, rclass
@@ -81,7 +82,7 @@ if "`3'" != "" & "`4'" != "" & "`or'" == "" & "`rr'" == "" {
 								noisily display as text "Note: Number of studies excluded = " __drop_study_num[1]
 					}
 				drop if __a==0 & __c==0
-				gen __continuity = 1 if __a==0 | __c==0 
+				gen __continuity = 1 if __a==0 | __b==0 | __c==0 | __d==0 
 				replace __a = __a+0.5 if __continuity ==1
 				replace __b = __b+0.5 if __continuity ==1
 				replace __c = __c+0.5 if __continuity ==1
@@ -116,7 +117,7 @@ if "`3'" != "" & "`4'" != "" & "`or'" != "" & "`rr'" == "" {
 						noisily display as text "Note: Number of studies excluded = " __drop_study_num[1]
 					}
 				drop if __a==0 & __c==0
-				gen __continuity = 1 if __a==0 | __c==0 
+				gen __continuity = 1 if __a==0 | __b==0 | __c==0 | __d==0 
 				replace __a = __a+0.5 if __continuity ==1
 				replace __b = __b+0.5 if __continuity ==1
 				replace __c = __c+0.5 if __continuity ==1

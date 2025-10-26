@@ -1,5 +1,5 @@
 {smcl}
-{* 15oct2021}{...}
+{* 25oct2025}{...}
 {cmd:help lfk}{right: ({browse "https://www.epigear.com/index_files/metaxl.html"})}
 {hline}
 
@@ -83,6 +83,8 @@ LFK index values outside the interval between -1 and +1 are deemed consistent wi
 {title:Reference}
 
 {pstd} Furuya-Kanamori L, Barendregt JJ, Doi SAR. 2018.  A new improved graphical and quantitative method for detecting bias in meta-analysis. {it:Int J Evid Based Healthc} 16: 195-203.
+
+{pstd} Furuya-Kanamori L, Rousou X, Kostoulas P, Doi SAR. 2025.  Examining and interpreting Doi plot asymmetry in meta-analyses of randomized controlled trials. {it:J Evid Based Med} 18: e70063.
 
 
 

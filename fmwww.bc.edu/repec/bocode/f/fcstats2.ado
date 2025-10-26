@@ -1,5 +1,7 @@
+*! version 1.1.0  24oct2025  CFBaum, JOtero
 *! version 1.0.0  14jul2018  CFBaum
 // based on fcstats.ado 1.0.0
+// 1.1.0: sign fix for MAPE, add QLIKEfc
 prog drop _all
 program define fcstats2, rclass
         version 13
@@ -63,7 +65,7 @@ program define fcstats2, rclass
 				sca `mae`j'' = `mae'[`mx'] / `r(N)'
 				mat fcs[2,`j'] = `mae`j''
 				capt drop `mape'
-				g double `mape' = sum(abs(`fc`j'' -`actual') / `actual') if `touse'
+				g double `mape' = sum(abs((`fc`j'' -`actual') / `actual')) if `touse'
 				sca `mape`j'' = `mape'[`mx'] / `r(N)'
 				mat fcs[3,`j'] = `mape`j''
 				capt drop `num'

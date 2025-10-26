@@ -3,7 +3,8 @@ d
 d  fcstats calculates several measures of forecast accuracy for one
 d or two forecast series. The measures include root mean squared
 d error (RMSE), mean absolute error (MAE),  mean absolute percent
-d error (MAPE) and Theil's U. 
+d error (MAPE), quasi-likelihood loss function (QLIKE) and Theil's
+d U. 
 d
 d KW: time series
 d KW: forecasting
@@ -11,14 +12,18 @@ d KW: accuracy
 d KW: RMSE
 d KW: MAE
 d KW: MAPE
+d KW: QLIKE
 d KW: Theil's U
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20180714
+d Distribution-Date: 20251024
 d
 d Author: Christopher F Baum, Boston College 
 d Support: email baum@@bc.edu
+d
+d Author: Jesús Otero, Universidad del Rosario
+d Support: email jesus.otero@@urosario.edu.co
 d
 f fcstats.ado
 f fcstats2.ado

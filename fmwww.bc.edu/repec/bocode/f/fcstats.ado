@@ -1,5 +1,8 @@
+*! version 1.1.0  24oct2025  CFBaum, JOtero
 *! version 1.0.0  10jun2017  CFBaum
 // based on dmariano.ado 1.0.3
+// 1.1.0: sign fix for MAPE, add QLIKE
+
 
 program define fcstats, rclass
 	version 13
@@ -13,10 +16,10 @@ program define fcstats, rclass
 	}
 	qui tsset
 	
-	tempvar actual forecast vrmse vmae vmape num den en fc
-	tempvar forecast2 vrmse2 vmae2 vmape2 num2 den2
-	tempname rmse mae mape theilu
-	tempname rmse2 mae2 mape2 theilu2
+	tempvar actual forecast vrmse vmae vmape vqlike num den en fc
+	tempvar forecast2 vrmse2 vmae2 vmape2 vqlike2 num2 den2
+	tempname rmse mae mape theilu qlike
+	tempname rmse2 mae2 mape2 theilu2 qlike2
 	tokenize `varlist'
 	local actual `1'
 	local forecast `2'
@@ -24,18 +27,20 @@ program define fcstats, rclass
 	markout `touse' `actual' `forecast' `forecast2'
 	
 	qui {
-	g double `vrmse' = sum((`forecast' - `actual')^2) if `touse'
-	g double `vmae' = sum(abs(`forecast' -`actual')) if `touse'
-	g double `vmape' = sum(abs(`forecast' -`actual') / `actual') if `touse'
-	g double `num' = sum(((`forecast' - `actual') / L.`actual')^2) if `touse'
+	g double `vrmse' = sum((`actual' - `forecast')^2) if `touse'
+	g double `vmae' = sum(abs(`actual' - `forecast')) if `touse'
+	g double `vmape' = sum(abs((`actual' - `forecast') / `actual')) if `touse'
+	g double `vqlike' = sum((`actual'/`forecast') - log(`actual'/`forecast') - 1) if `touse'
+	g double `num' = sum(((`actual' - `forecast') / L.`actual')^2) if `touse'
 	g double `den' = sum((D.`actual' / L.`actual')^2) if `touse'
 	}
 	if "`forecast2'" != "" {
 			qui {
-			g double `vrmse2' = sum((`forecast2' - `actual')^2) if `touse'
-			g double `vmae2' = sum(abs(`forecast2' -`actual')) if `touse'
-			g double `vmape2' = sum(abs(`forecast2' -`actual') / `actual') if `touse'
-			g double `num2' = sum(((`forecast2' - `actual') / L.`actual')^2) if `touse'
+			g double `vrmse2' = sum((`actual' - `forecast')^2) if `touse'
+			g double `vmae2' = sum(abs(`actual' - `forecast')) if `touse'
+			g double `vmape2' = sum(abs((`actual' - `forecast') / `actual')) if `touse'
+			g double `vqlike2' = sum((`actual'/`forecast') - log(`actual'/`forecast') - 1) if `touse'
+			g double `num2' = sum(((`actual' - `forecast') / L.`actual')^2) if `touse'
 			g double `den2' = sum((D.`actual' / L.`actual')^2) if `touse'
 			}
 	}
@@ -46,11 +51,13 @@ program define fcstats, rclass
 	sca `rmse' = sqrt(`vrmse'[`mx'] / `r(N)')
 	sca `mae'  = `vmae'[`mx'] / `r(N)'
 	sca `mape' = `vmape'[`mx'] / `r(N)'
+	sca `qlike' = `vqlike'[`mx'] / `r(N)'
 	sca `theilu' = sqrt(`num'[`mx'] / `den'[`mx'])
 	if "`forecast2'" != "" {
 		sca `rmse2' = sqrt(`vrmse2'[`mx'] / `r(N)')
 		sca `mae2'  = `vmae2'[`mx'] / `r(N)'
 		sca `mape2' = `vmape2'[`mx'] / `r(N)'
+		sca `qlike2' = `vqlike2'[`mx'] / `r(N)'
 		sca `theilu2' = sqrt(`num2'[`mx'] / `den2'[`mx'])
 	}
 	
@@ -60,6 +67,7 @@ program define fcstats, rclass
 		di    "RMSE  " _col(15) `rmse' 
 		di    "MAE   " _col(15) `mae' 
 		di    "MAPE  " _col(15) `mape' 
+		di    "QLIKE " _col(15) `qlike'
 		di    "Theil's U " _col(15) `theilu' 
 	} 	
 	else {
@@ -67,17 +75,20 @@ program define fcstats, rclass
 		di    "RMSE  " _col(15) `rmse'       _col(30) `rmse2' 
 		di    "MAE   " _col(15) `mae'        _col(30) `mae2'
 		di    "MAPE  " _col(15) `mape'       _col(30) `mape2'
+		di    "QLIKE " _col(15) `qlike'      _col(30) `qlike2'
 		di    "Theil's U " _col(15) `theilu' _col(30) `theilu2'
 	}
 	
 	return scalar rmse    = `rmse'
 	return scalar mae     = `mae'
 	return scalar mape    = `mape'
+	return scalar qlike   = `qlike'
 	return scalar theilu  = `theilu'
 	if "`forecast2'" != "" {
 		return scalar rmse    = `rmse'
 		return scalar mae     = `mae'
 		return scalar mape    = `mape'
+		return scalar qlike   = `qlike'
 		return scalar theilu  = `theilu'
 		return local forecast2 = "`forecast2'"
 	}
@@ -93,4 +104,3 @@ program define fcstats, rclass
 		tsline `actual' `forecast' `forecast2' if `touse', `leg') `options'
 	}
 end
-
