@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 5.5.0 12Feb2025}
+{* *! version 5.6.0 28Oct2025}
 {cmd:help xtgeebcv}
 {hline}
 

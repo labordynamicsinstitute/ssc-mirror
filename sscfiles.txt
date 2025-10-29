@@ -14158,6 +14158,7 @@ fmwww.bc.edu/repec/bocode/s/stregmat.ado
 fmwww.bc.edu/repec/bocode/s/sdmxuse.ado
 fmwww.bc.edu/repec/bocode/s/Stereotype_Regression.pdf
 fmwww.bc.edu/repec/bocode/s/stcband.ado
+fmwww.bc.edu/repec/bocode/s/stattotex.sthlp
 fmwww.bc.edu/repec/bocode/s/sptobitmstarxt.ado
 fmwww.bc.edu/repec/bocode/s/setup_epidata30.zip
 fmwww.bc.edu/repec/bocode/s/spregsar.sthlp
@@ -14385,6 +14386,7 @@ fmwww.bc.edu/repec/bocode/s/sqom.hlp
 fmwww.bc.edu/repec/bocode/s/stak.html
 fmwww.bc.edu/repec/bocode/s/survey_fieldname.csv
 fmwww.bc.edu/repec/bocode/s/spmat_note.sthlp
+fmwww.bc.edu/repec/bocode/s/stattotex.pkg
 fmwww.bc.edu/repec/bocode/s/somersd.pdf
 fmwww.bc.edu/repec/bocode/s/staft.sthlp
 fmwww.bc.edu/repec/bocode/s/spmstarxt3_lf.ado
@@ -16296,6 +16298,7 @@ fmwww.bc.edu/repec/bocode/s/survbound.ado
 fmwww.bc.edu/repec/bocode/s/smcl2do.sthlp
 fmwww.bc.edu/repec/bocode/s/stackreg.pkg
 fmwww.bc.edu/repec/bocode/s/stpm2_standsurv.pkg
+fmwww.bc.edu/repec/bocode/s/savestats.ado
 fmwww.bc.edu/repec/bocode/s/seqlogit_sensitivity.html
 fmwww.bc.edu/repec/bocode/s/spmstardhxt.ado
 fmwww.bc.edu/repec/bocode/s/spregsar.pkg
@@ -16316,6 +16319,7 @@ fmwww.bc.edu/repec/bocode/s/sptobitmstarxt.sthlp
 fmwww.bc.edu/repec/bocode/s/subjobineq.ado
 fmwww.bc.edu/repec/bocode/s/synth2_example.do
 fmwww.bc.edu/repec/bocode/s/scale.mo
+fmwww.bc.edu/repec/bocode/s/stattotex_SYMLIST.txt
 fmwww.bc.edu/repec/bocode/s/skewreg.pkg
 fmwww.bc.edu/repec/bocode/s/svmachines.pkg
 fmwww.bc.edu/repec/bocode/s/stpiece.html
@@ -17009,6 +17013,7 @@ fmwww.bc.edu/repec/bocode/s/sptobitmstarh4.ado
 fmwww.bc.edu/repec/bocode/s/stackedcount.sthlp
 fmwww.bc.edu/repec/bocode/s/strip.pkg
 fmwww.bc.edu/repec/bocode/s/SPWmxt3.dta
+fmwww.bc.edu/repec/bocode/s/stattotex.ado
 fmwww.bc.edu/repec/bocode/s/spglsxt.sthlp
 fmwww.bc.edu/repec/bocode/s/sqstatsum.hlp
 fmwww.bc.edu/repec/bocode/s/sankeyplot.ado

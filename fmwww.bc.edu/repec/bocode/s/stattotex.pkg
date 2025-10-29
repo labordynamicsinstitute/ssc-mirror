@@ -1,0 +1,22 @@
+d 'STATTOTEX': module to export values for inclusion in LaTeX
+d
+d   stattotex is a simple Stata program to name and export a value
+d from Stata into a LaTeX document, for    easy entry, updating,
+d checking and replicating with minimal errors.  In order to
+d utilize the output of stattotex, you must include the file called
+d in using filename at the    beginning of your LaTeX document. 
+d
+d KW: LaTeX
+d KW: weaving
+d KW: dynamic documents
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20251028
+d
+d Author:  Ian Sapollnik, MIT
+d Support: email  ian_s@@mit.edu
+d
+f stattotex.ado
+f stattotex.sthlp
+F stattotex_SYMLIST.txt

@@ -1,4 +1,5 @@
 {smcl}
+{* 19Sep2025}{...}
 {* 31Jul2025}{...}
 {* 23Jul2025}{...}
 {* 07Nov2024}{...}
@@ -20,10 +21,6 @@
 {cmdab:trp:eriod(}{it:datelist}{cmd:)}
 [{cmd:}{it:options}]
 
-{pstd}
-{it:indepvars} may contain factor variables; see {helpb fvvarlist}.
-{it:depvar} and {it:indepvars} may contain time-series operators; see 
-{helpb tsvarlist}.  {opt iweight}, {opt fweight}, and {opt pweight}s are allowed; see {helpb weight}.{p_end}
 
 {pstd}
 The panel data must be strongly balanced and be declared to be time-series data by using either {cmd:tsset} {it:panelvar} {it:timevar} or {cmd:xtset} {it:panelvar} {it:timevar}.  See {helpb tsset} or {helpb xtset}.
@@ -32,7 +29,7 @@ The panel data must be strongly balanced and be declared to be time-series data 
 {synoptset 25 tabbed}{...}
 {synopthdr}
 {synoptline}
-{p2coldent:* {opt trp:eriod}{cmd:(}{it:datelist}{cmd:)}}specify the time period(s) when the intervention begins (e.g. {cmd:trperiod(2020)} or {cmd:trperiod(2001q2)} or {cmd:trperiod(21jan2020; 08feb2020)})  {p_end}
+{p2coldent:* {opt trp:eriod}{cmd:(}{it:{help datetime:datelist}}{cmd:)}}specify the time period(s) when the intervention begins (e.g. {cmd:trperiod(2020)} or {cmd:trperiod(2001q2)} or {cmd:trperiod(21jan2020; 08feb2020)})  {p_end}
 {synopt:{opt sing:le}}indicate that {cmd:xtitsa} will be used for a single-group analysis {p_end}
 {synopt:{opt treat}{cmd:(}{it:{help varname:varname}}{cmd:)}}specify the binary treatment group variable. Not required when only the treatment group is in the data 
 and {cmd:single} is specified {p_end}
@@ -41,6 +38,7 @@ and {cmd:single} is specified {p_end}
 {synopt:{opt repl:ace}}replace variables created by {cmd:xtitsa} if they already exist {p_end}
 {synopt:{opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]}plot the average actual and predicted {it:depvar} variable over time. Specifying {cmd:figure} without options uses the default graph settings {p_end}
 {synopt:{opt low:ess}}plots a lowess smoothed line of {it:depvar} on {it:timevar} {p_end}
+{synopt:{opt bw:idth}{cmd:(#)}}smoothing parameter for lowess {p_end}
 {synopt:{opt ci}}plots the confidence interval(s) on the {cmd:figure} {p_end}
 {synopt:{opt cf}}plot the counterfactual for the intervention period of a single-group ITSA on the figure {p_end}
 {synopt:{opt shad:e}({it:{help datetime:date1}} ; {it:{help datetime:date2}})}plot a shaded area on the figure between two dates, separated by a semicolon (e.g. {cmd:shade(21jan2020 ; 08feb2020)}) 
@@ -49,9 +47,16 @@ and {cmd:single} is specified {p_end}
 {synopt:{opt smax}{cmd:(#)}}specify the maximum value displayed on {cmd:ylabel()} when {cmd:shade()} is specified {p_end}
 {synopt:[{it:model_options}]}specify all available options for {helpb xtgee}{p_end}
 {synoptline}
-{p 4 6 2}
+{p 4 6 2}* {opt trperiod()} is required. {p_end}
+{pstd}
+{it:indepvars} may contain factor variables; see {helpb fvvarlist}.{p_end}
+{pstd}
+{it:depvar} and {it:indepvars} may contain time-series operators; see {helpb tsvarlist}.  {p_end}
+{pstd}
+{opt iweight}, {opt fweight}, and {opt pweight}s are allowed; see {helpb weight}.{p_end}
+{pstd}
+See {manhelp xtgee_postestimation R:xtgee postestimation} for features available after estimation.{p_end}
 {p2colreset}{...}
-
 
 
 {title:Description}
@@ -126,6 +131,12 @@ without options uses the default graph settings.
 
 {phang}
 {cmd:lowess} plots a lowess smoothed line of {it:depvar} on {it:timevar}.
+
+{phang}
+{cmd:bwidth(#)} specifies the bandwidth. {cmd:bwidth(.8)} is the default. Centered subsets of {it:N}*{cmd:bwidth()} observations, 
+{it:N} = number of observations, are used for calculating smoothed values for
+each point in the data except for endpoints, where smaller, uncentered subsets are used. The greater the {cmd:bwidth()}, 
+the greater the smoothing.
 
 {phang}
 {cmd:ci} plots the confidence interval(s) on the {cmd:figure}. By default,

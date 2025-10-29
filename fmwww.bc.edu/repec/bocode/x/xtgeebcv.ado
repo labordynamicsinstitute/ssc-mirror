@@ -1,9 +1,9 @@
-*!version5.5 12Feb2025
+*!version5.6 28Oct2025
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: xtgeebcv
-** VERSION: 5.5
-** DATE: FEBRUARY 12, 2025
+** VERSION: 5.6
+** DATE: OCTOBER 28, 2025
 ** -----------------------------------------------------------------------------
 ** CREATED BY: JOHN GALLIS, FAN LI, LIZ TURNER
 ** -----------------------------------------------------------------------------
@@ -34,6 +34,7 @@
 			Aug 03, 2023 - Updating program to allow for abbreviations in the family and link names, and abbreviations of options
 			Sep 07, 2023 - Program updated to re-output scalars and macros necessary for proper functioning of postestimation commands such as margins
 			Feb 12, 2025 - Added a new error message, because xtgeebcv was having a conformability error in Mata if any level of a covariate was completely dropped because of another covariate's missing values. This is because xtgeebcv takes for the design matrix all levels of every variable, but doesn't know if levels are dropped in the regression. This leads to the design matrix and the Beta matrix not being conformable.
+			Oct 28, 2025 - Fixed a line of code causing a minor error because of odd Stata behavior.
 **			
 ** -----------------------------------------------------------------------------
 ** OPTIONS: SEE HELP FILE
@@ -350,7 +351,9 @@ program define xtgeebcv, eclass
 			/* \\\\\\ UPDATE STANDARD ERRORS WITH BIAS CORRECTION \\\\\\ */
 			
 			*ADD ONE ROW TO POSITIONLIST FOR THE LAST ROW IN THE MATRIX
-			local last = rowsof(e(V))+1
+			* update Oct 28, 2025 - rowsof() was sometimes treating the single number returned as a 1x1 matrix, causing an error.
+			*local last = rowsof(e(V))+1
+			mata: st_local("last", strofreal(rows(st_matrix("e(V)"))+1))
 			local positionlist `"`positionlist' `last'"'
 			local positionsize: list sizeof positionlist
 		
@@ -596,6 +599,7 @@ end
 /* |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |||||||||||||||||||| MATA PROGRAM ||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 |||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||| */
+
 mata:
 matrix gee(string scalar newvarlist, string scalar beginend, string scalar cluster, string scalar Beta, string scalar Beta2, scalar wcorr, scalar phi, string scalar famlink) {
 	
