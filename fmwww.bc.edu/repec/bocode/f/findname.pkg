@@ -25,10 +25,10 @@ d KW: all
 d
 d Requires: Stata version 9
 d
-d Distribution-Date: 20120314
+d Distribution-Date: 20251030
 d
 d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk
 d
 f findname.ado
-f findname.hlp
+f findname.sthlp

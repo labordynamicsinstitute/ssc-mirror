@@ -1,20 +1,39 @@
-*! 1.0.3 NJC 27 February 2012 
-*! 1.0.2 NJC 22 November 2010 
-*! 1.0.1 NJC 28 April 2010 
-*! 1.0.0 NJC 30 March 2010 
+*! 1.1.2 NJC 30 October 2025
+*! 1.1.1 NJC 5 September 2023 
+*! 1.1.0 NJC 21 January 2020 
+* 1.0.4 NJC 24 March 2014 
+* 1.0.3 NJC 27 February 2012 
+* 1.0.2 NJC 22 November 2010 
+* 1.0.1 NJC 28 April 2010 
+* 1.0.0 NJC 30 March 2010 
 program findname, rclass   
 	version 9 
 
-	syntax [varlist] [if] [in]                              ///
-	[, INSEnsitive LOCal(str) NOT PLACEholder(str)          /// 
-	Alpha Detail INDENT(int 0) Skip(int 2) Varwidth(int 12) ///
-	Type(str) all(str asis) any(str asis) Format(str)       ///
-	VARLabel VARLabeltext(str asis)                         ///
-	VALLabel VALLabelname(str) VALLABELText(str asis)       ///
+	syntax [varlist] [if] [in]                                  ///
+	[, INSEnsitive LOCal(str) CSLOCal(str) NOT PLACEholder(str) /// 
+	Alpha Detail INDENT(int 0) Skip(int 2) Varwidth(int 12)     ///
+	Type(str) all(str asis) any(str asis) Format(str)           ///
+	COLumns(numlist int)                                        ///
+	VARLabel VARLabeltext(str asis)                             ///
+	VALLabel VALLabelname(str)                                  ///
+	VALLABELText(str asis)                                      /// 
+	VALLABELTEXTDef(str asis)                                   /// 
+	VALLABELTEXTUse(str asis)                                   /// 
+    VALLABELCOUNTDef(numlist min=1 max=2 int >-1 missingok sort) ///
+    VALLABELCOUNTUse(numlist min=1 max=2 int >-1 missingok sort) ///
 	Char Charname(str) CHARText(str asis) ]
 
-	// -if- and -in- only affect -any()- and -all()- and -vallabeltext()
-	quietly if `"`if'`in'"' != "" { 
+	// -if- and -in- affect 
+	// 	-any()- 
+	// 	-all()- 
+	// 	-vallabeltext()        [undocumented as from 1.1.0] 
+	// 	-vallabeltextuse()     [introduced in 1.1.0] 
+	// 	-vallabelcountuse()    [introduced in 1.1.0] 
+
+	local useopts = ///
+	`"`vallabeltext'`vallabeltextuse'`vallabellcountuse'"' != ""  
+
+	quietly if `"`if'`in'"' != "" | `useopts' { 
 		marksample touse, novarlist 
 		count if `touse' 
 		if r(N) == 0 error 2000 
@@ -33,6 +52,20 @@ program findname, rclass
 		exit 198
 	}
 
+	// columns 
+	if "`columns'" != "" {
+		unab varlist : * 
+		local nvars : word count `varlist' 
+		local vlist 
+		foreach col of local columns { 
+			if `col' < 0 local col = `nvars' + (`col') + 1 
+			if `col' > 0 local v : word `col' of `varlist' 
+			local vlist `vlist' `v'
+		} 
+				
+		local varlist `vlist'           
+	} 
+
 	// check -type()-
 	// We remove allowed type names from the argument. 
 	// Whatever remains should be the elements of a numlist. 
@@ -41,7 +74,8 @@ program findname, rclass
 	//
 	// New over -ds-: indulge e.g. str18, str1-str2 
 	if "`type'" != "" {  
-		local words "byte int long float double string numeric"
+		if c(stata_version) >= 13 local strL "strL" 
+		local words "byte int long float double string `strL' numeric"
 		local numbers : list type - words 
 		local numbers : subinstr local numbers "str" "", all 
 		local numbers : subinstr local numbers "-" "/", all 
@@ -61,7 +95,7 @@ program findname, rclass
 	// check -any()- or -all()-
 	// if condition doesn't work with either a numeric or a string 
 	// test variable as input, it is rejected 
-	qui if `"`any'"' != "" { 
+	quietly if `"`any'"' != "" { 
 		tempvar ntest stest 
 		local At = cond("`placeholder'" != "","`placeholder'","@") 
 		gen `ntest' = 42 
@@ -79,7 +113,7 @@ program findname, rclass
 		} 
 	}
 
-	qui if `"`all'"' != "" { 
+	quietly if `"`all'"' != "" { 
 		tempvar ntest stest 
 		local At = cond("`placeholder'" != "","`placeholder'","@") 
 		gen `ntest' = 42 
@@ -99,46 +133,46 @@ program findname, rclass
 
 	// preparation 
 	local inse = "`insensitive'" != "" 
-	tempname found 
 
 	// variable types 
 	if "`type'" != "" { 
+		local vlist 
 		foreach v of local varlist {
-                	foreach w of local type {
-	                	if `"`w'"' == "string" | `"`w'"' == "numeric" { 
-        	                	capture confirm `w' variable `v'
-	        	                if _rc == 0 { 
-                        	    		local vlist `vlist' `v' 
+        	foreach w of local type {
+               	if `"`w'"' == "string" | `"`w'"' == "numeric" { 
+                	capture confirm `w' variable `v'
+   	                if _rc == 0 { 
+           	    		local vlist `vlist' `v' 
 						continue, break 
-	                        	}    
-	                        }
-        	                else {
-                	        	local t : type `v' 
-                        		if "`t'" == `"str`w'"' | "`t'" == `"`w'"' { 
-                            			local vlist `vlist' `v'
+                   	}    
+                }
+                else {
+       	        	local t : type `v' 
+               		if "`t'" == `"str`w'"' | "`t'" == `"`w'"' { 
+               			local vlist `vlist' `v'
 						continue, break 
-		                        } 
-        	                }     
-	               } 
-        	}
+                    } 
+                }     
+            } 
+       	}
 		local varlist `vlist' 
 	}
 
 	// variable formats 
 	if "`format'" != "" {
 		local vlist 
-        	foreach v of local varlist { 
-                	local fmt : format `v' 
-			mata : find_match("`fmt'", "`format'", `inse', "`found'") 
+       	foreach v of local varlist { 
+           	local fmt : format `v' 
+			mata : find_match("`fmt'", "`format'", `inse') 
 			if `found' { 
-               	        	local vlist `vlist' `v' 
-		      	} 
-	        }
+   	        	local vlist `vlist' `v' 
+	      	} 
+        }
 		local varlist `vlist'
 	} 
 
 	// condition satisfied by any values? 
-	qui if `"`any'"' != "" { 
+	quietly if `"`any'"' != "" { 
 		local vlist 
 		foreach v of local varlist { 
 			local cond : subinstr local any "`At'" "`v'", all 
@@ -151,7 +185,7 @@ program findname, rclass
 	}
 
 	// condition satisfied by all values? 
-	qui if `"`all'"' != "" { 
+	quietly if `"`all'"' != "" { 
 		count `if' 
 		local N = r(N) 
 		local vlist 
@@ -168,112 +202,201 @@ program findname, rclass
 	// variable labels assigned? 
 	if "`varlabel'" != "" {
 		local vlist 
-        	foreach v of local varlist { 
-                	local lbl : var label `v' 
-	                if `"`lbl'"' != "" { 
-                        	local vlist `vlist' `v' 
-                	} 
-            	}
+        foreach v of local varlist { 
+           	local lbl : var label `v' 
+	        if `"`lbl'"' != "" { 
+               	local vlist `vlist' `v' 
+           	} 
+        }
 		local varlist `vlist' 
  	} 
 
 	// variable labels matching patterns? 
 	if `"`varlabeltext'"' != "" {
 		local vlist 
-        	foreach v of local varlist { 
-                	local lbl : var label `v' 
-			mata : find_match(`"`lbl'"', `"`varlabeltext'"', `inse', "`found'") 
-                	if `found' { 
-                    		local vlist `vlist' `v' 
-                	} 
-            	}
+        foreach v of local varlist { 
+           	local lbl : var label `v' 
+			mata : find_match(`"`lbl'"', `"`varlabeltext'"', `inse') 
+           	if `found' { 
+           		local vlist `vlist' `v' 
+           	} 
+       	}
 		local varlist `vlist' 
-        } 
+    } 
 
 	// value labels assigned? 
 	if "`vallabel'" != "" {
 		local vlist 
-        	foreach v of local varlist { 
-                	local lbl : val label `v' 
-	                if `"`lbl'"' != "" { 
-                        	local vlist `vlist' `v'
-                	} 
-            	}
+       	foreach v of local varlist { 
+           	local lbl : val label `v' 
+            if `"`lbl'"' != "" { 
+               	local vlist `vlist' `v'
+           	} 
+       	}
 		local varlist `vlist' 
  	} 	
 
 	// value label names matching patterns? 
 	if "`vallabelname'" != "" {
 		local vlist 
-        	foreach v of local varlist { 
-                	local lbl : val label `v' 
-			mata : find_match("`lbl'", "`vallabelname'", `inse', "`found'") 
-                	if `found' { 
-                    		local vlist `vlist' `v' 
-                	} 
-            	}
+       	foreach v of local varlist { 
+           	local lbl : val label `v' 
+			mata : find_match("`lbl'", "`vallabelname'", `inse') 
+           	if `found' { 
+           		local vlist `vlist' `v' 
+           	} 
+       	}
 		local varlist `vlist' 
-        } 
+    } 
+
+	// value label text defined matching patterns? 
+	quietly if `"`vallabeltextdef'"' != "" {
+		local vlist 
+
+       	foreach v of local varlist { 
+           	local lbl : val label `v' 
+			if "`lbl'" != "" { 
+				mata : ///
+				find_label_text_def("`lbl'", `"`vallabeltextdef'"', `inse') 
+				if `found' { 
+               		local vlist `vlist' `v'
+               	}
+            } 
+		} 
+		local varlist `vlist' 
+ 	} 
+
+	/// value label text used matching patterns? 
+	quietly if "`vallabeltextuse'" != "" {
+		local vlist 
+
+		foreach v of local varlist { 
+			local lbl : val label `v' 
+			if "`lbl'" != "" { 
+				mata : ///
+				find_label_text_use("`lbl'", "`v'", "`touse'", "`vallabeltextuse'", `inse') 
+
+				if `found' { 
+					local vlist `vlist' `v' 
+				}
+			}
+		}
+		 
+		local varlist `vlist' 
+	} 
 
 	// value label text matching patterns? 
-	qui if `"`vallabeltext'"' != "" {
+    // left undocumented from 1.1.0 
+	quietly if `"`vallabeltext'"' != "" {
 		local vlist 
-        	foreach v of local varlist { 
-                	local lbl : val label `v' 
+       	foreach v of local varlist { 
+           	local lbl : val label `v' 
 			if "`lbl'" != "" { 
 				levelsof `v' `if', local(levels) 
 				foreach l of local levels { 
 					local txt : label `lbl' `l', strict 
-					mata : find_match(`"`txt'"', `"`vallabeltext'"', `inse', "`found'") 
+					mata : find_match(`"`txt'"', `"`vallabeltext'"', `inse') 
 					if `found' { 
-	                        		local vlist `vlist' `v'
-			                	continue, break 
-                	        	} 
+                   		local vlist `vlist' `v'
+	                	continue, break 
+       	        	} 
 				} 
-                	}
-	       	}
+            }
+	    }
 		local varlist `vlist' 
  	} 
+
+	/// count value labels defined 
+	if "`vallabelcountdef'" != "" {
+		local args `vallabelcountdef' 
+		if `: word count `args'' == 1 local args `args' `args' 
+		tokenize `args'
+		args min max 
+
+		local vlist 
+
+		foreach v of local varlist { 
+			local lbl : val label `v' 
+			if "`lbl'" != "" { 
+				quietly capture label list `lbl'
+
+				if _rc { 
+					if inrange(0, `min', `max') {
+						local vlist `vlist' `v' 
+					} 
+				}
+				else if inrange(r(k), `min', `max') { 
+					local vlist `vlist' `v' 
+				}
+			}
+		}
+		 
+		local varlist `vlist' 
+	} 
+
+	/// count value labels used 
+	if "`vallabelcountuse'" != "" {
+		local args `vallabelcountuse' 
+		if `: word count `args'' == 1 local args `args' `args' 
+		tokenize `args'
+		args min max 
+
+		local vlist 
+
+		foreach v of local varlist { 
+			local lbl : val label `v' 
+			if "`lbl'" != "" { 
+				mata : ///
+				count_labels_used("`lbl'", "`v'", "`touse'") 
+
+				if inrange(`count', `min', `max') { 
+					local vlist `vlist' `v' 
+				}
+			}
+		}
+		 
+		local varlist `vlist' 
+	} 
 
 	// characteristics assigned?
 	if "`char'" != "" {
 		local vlist 
-                foreach v of local varlist { 
-                	local chr : char `v'[] 
-                        if `"`chr'"' != "" { 
-                        	local vlist  `vlist' `v'
-                    	} 
-                }
+        foreach v of local varlist { 
+           	local chr : char `v'[] 
+            if `"`chr'"' != "" { 
+               	local vlist  `vlist' `v'
+           	} 
+        }
 		local varlist `vlist' 
 	}
 
 	// characteristic names match patterns?
 	if "`charname'" != "" {
 		local vlist 
-                foreach v of local varlist { 
-                	local chr : char `v'[] 
-                    	foreach c of local chr { 
-				mata : find_match("`c'", "`charname'", `inse', "`found'") 
+        foreach v of local varlist { 
+           	local chr : char `v'[] 
+           	foreach c of local chr { 
+				mata : find_match("`c'", "`charname'", `inse') 
 				if `found' { 
-	                                local vlist `vlist' `v' 
-       		                        continue, break 
+	            	local vlist `vlist' `v' 
+       		        continue, break 
 				} 
-                    	}    
+            }    
 		}    
 		local varlist `vlist'
-        } 
+    } 
 
 	// characteristic text matches patterns? 
 	if `"`chartext'"' != "" {
 		local vlist
-                foreach v of local varlist { 
-                	local chr : char `v'[] 
-                    	foreach c of local chr { 
+        foreach v of local varlist { 
+           	local chr : char `v'[] 
+           	foreach c of local chr { 
 				local txt : char `v'[`c'] 
-				mata : find_match(`"`txt'"', `"`chartext'"', `inse', "`found'") 
-                        	if `found' { 
+				mata : find_match(`"`txt'"', `"`chartext'"', `inse') 
+                if `found' { 
 					local vlist `vlist' `v' 
-       		                        continue, break 
+       		        continue, break 
 				} 
 			} 
 		}    
@@ -307,7 +430,16 @@ program findname, rclass
 	}    
 
 	return local varlist `varlist'
+	
 	if "`local'" != "" c_local `local' `varlist' 
+	
+	if "`cslocal'" != "" {
+		if "`cslocal'" == "`local'" {
+			noisily di _n "note: cslocal() result overwrites local() result"
+		}
+		local varlist : subinstr local varlist " " ",", all 
+		c_local `cslocal' `varlist'
+	}
 end
 
 program DisplayInCols /* sty #indent #pad #wid <list>*/
@@ -321,7 +453,7 @@ program DisplayInCols /* sty #indent #pad #wid <list>*/
 	local wid    = cond(`wid'==. | `wid'<0, 0, `wid')
 	
 	local n : list sizeof 0
-	if `n'==0 { 
+	if `n' == 0 { 
 		exit
 	}
 
@@ -371,34 +503,145 @@ end
 mata: 
 
 void find_match(
-string scalar mystring, 
-string scalar mypatternlist, 
-numeric scalar inse,
-string scalar scname)
+	string scalar mystring, 
+	string scalar mypatternlist, 
+	numeric scalar inse)
 {
-real scalar found, i 
-string rowvector mypatterns 
+	real scalar found, i 
+	string rowvector mypatterns 
 
-mypatterns = tokens(mypatternlist) 
-found = 0 
+	mypatterns = tokens(mypatternlist) 
+	found = 0 
 
-if (inse) { 
-	for(i = 1; i <= length(mypatterns); i++) { 
-		if (strmatch(strlower(mystring), strlower(mypatterns[i]))) { 
-			found = 1 
-			break 
+	if (inse) { 
+		for(i = 1; i <= length(mypatterns); i++) { 
+			if (strmatch(strlower(mystring), strlower(mypatterns[i]))) { 
+				found = 1 
+				break 
+			}
 		}
 	}
+	else { 
+		for(i = 1; i <= length(mypatterns); i++) { 
+			if (strmatch(mystring, mypatterns[i])) { 
+				found = 1 
+				break 
+			}
+		}	 
+	}
+	st_local("found", strofreal(found)) 
 }
-else { 
-	for(i = 1; i <= length(mypatterns); i++) { 
-		if (strmatch(mystring, mypatterns[i])) { 
-			found = 1 
-			break 
-		}
-	}	 
+
+void count_labels_used(
+	string scalar lblname, 
+	string scalar varname, 
+	string scalar tousename) 
+{ 
+   // get the labels 	
+   real vector values 
+   string vector text   
+   st_vlload(lblname, values = ., text = "") 
+
+   // which labels are used 	
+   real vector X 	
+   real scalar i, count  
+   st_view(X, ., varname, tousename) 
+   count = 0 	
+   for(i = 1; i <= length(values); i++) { 
+        count = count + (sum(X :== values[i]) > 0)
+   }
+ 	
+   st_local("count", strofreal(count))  
+} 
+
+void find_label_text_def(
+	string scalar lblname, 
+	string scalar mytext, 
+	real scalar inse) 
+{ 
+   // get the labels 	
+   real vector values 
+   string vector text   
+   st_vlload(lblname, values = ., text = "") 
+
+   real scalar found, i 
+   string rowvector mypatterns 
+
+   mypatterns = tokens(mytext) 
+   found = 0 
+
+   if (inse) { 
+        for(i = 1; i <= length(text); i++) { 
+	        for(j = 1; j <= length(mypatterns); j++) { 
+				if (strmatch(strlower(text[i]), strlower(mypatterns[j]))) { 
+			    	found = 1 
+		    		break 
+				}
+	    	}
+            if (found) break 
+        }
+   }
+   else { 
+        for(i = 1; i <= length(text); i++) { 
+	    	for(j = 1; j <= length(mypatterns); j++) { 
+	        	if (strmatch(text[i], mypatterns[j])) { 
+				    found = 1 
+				    break 
+				}
+	    	}
+            if (found) break 
+        }
+    }
+	
+   st_local("found", strofreal(found)) 
 }
-st_numscalar(scname, found) 
+
+void find_label_text_use(
+	string scalar lblname, 
+	string scalar varname, 
+	string scalar tousename, 
+	string scalar mytext, 
+	real scalar inse) 
+{ 
+   // get the labels 	
+   real vector values 
+   string vector text   
+   st_vlload(lblname, values = ., text = "") 
+
+   // get the data 	
+   real vector X 	
+   st_view(X, ., varname, tousename) 
+
+   // patterns to look for 	
+   string rowvector mypatterns 
+   mypatterns = tokens(mytext) 
+   
+   // does the value occur in the data? 
+   // does the text occur in the label? 	
+   real scalar i, j, n, count  
+   found = 0 
+   for(i = 1; i <= length(values); i++) { 
+        n = sum(X :== values[i]) 
+        
+        if (n > 0 & inse) {   
+	        for(j = 1; j <= length(mypatterns); j++) { 
+				if (strmatch(strlower(text[i]), strlower(mypatterns[j]))) { 
+			    	found = 1 
+		    		break 
+				}
+	    	}
+        }
+   		else if (n > 0) { 
+	    	for(j = 1; j <= length(mypatterns); j++) { 
+	        	if (strmatch(text[i], mypatterns[j])) { 
+				    found = 1 
+				    break 
+				}
+	    	}
+        }
+    }
+
+	st_local("found", strofreal(found)) 
 }
 
 end 

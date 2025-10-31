@@ -19178,13 +19178,12 @@ fmwww.bc.edu/repec/bocode/f/fairlie.hlp
 fmwww.bc.edu/repec/bocode/f/floattolong.ado
 fmwww.bc.edu/repec/bocode/f/fastcc.html
 fmwww.bc.edu/repec/bocode/f/ftree.hlp
-fmwww.bc.edu/repec/bocode/f/fixsort.html
 fmwww.bc.edu/repec/bocode/f/factortest.pkg
 fmwww.bc.edu/repec/bocode/f/favara_imbs_did_multiplegt_dyn.dta
+fmwww.bc.edu/repec/bocode/f/findname.sthlp
 fmwww.bc.edu/repec/bocode/f/fbep.dlg
 fmwww.bc.edu/repec/bocode/f/fre.ado
 fmwww.bc.edu/repec/bocode/f/favplot.sthlp
-fmwww.bc.edu/repec/bocode/f/fitint.html
 fmwww.bc.edu/repec/bocode/f/fs.pkg
 fmwww.bc.edu/repec/bocode/f/fraclogit.html
 fmwww.bc.edu/repec/bocode/f/filei.pkg
@@ -19195,14 +19194,12 @@ fmwww.bc.edu/repec/bocode/f/fsum.hlp
 fmwww.bc.edu/repec/bocode/f/frwei.ado
 fmwww.bc.edu/repec/bocode/f/funnel_tjs.dlg
 fmwww.bc.edu/repec/bocode/f/factorn.pkg
-fmwww.bc.edu/repec/bocode/f/find.html
 fmwww.bc.edu/repec/bocode/f/factorn.ado
 fmwww.bc.edu/repec/bocode/f/fdarfc.src
 fmwww.bc.edu/repec/bocode/f/fastmic.html
 fmwww.bc.edu/repec/bocode/f/frontier_teci.ado
 fmwww.bc.edu/repec/bocode/f/fxbcr.ado
 fmwww.bc.edu/repec/bocode/f/fmlogit_ex.ado
-fmwww.bc.edu/repec/bocode/f/findname.html
 fmwww.bc.edu/repec/bocode/f/fndmtch.ado
 fmwww.bc.edu/repec/bocode/f/fmm_postestimation.html
 fmwww.bc.edu/repec/bocode/f/findsysmis.pkg
@@ -19270,14 +19267,12 @@ fmwww.bc.edu/repec/bocode/f/for211.pkg
 fmwww.bc.edu/repec/bocode/f/ftruncreg.ado
 fmwww.bc.edu/repec/bocode/f/ftocci.pkg
 fmwww.bc.edu/repec/bocode/f/fdma1fc.src
-fmwww.bc.edu/repec/bocode/f/fitstat_ers.html
 fmwww.bc.edu/repec/bocode/f/flowchart.pkg
 fmwww.bc.edu/repec/bocode/f/frontierhtail.ado
 fmwww.bc.edu/repec/bocode/f/filelist.hlp
 fmwww.bc.edu/repec/bocode/f/frause.sthlp
 fmwww.bc.edu/repec/bocode/f/fmlogit_postestimation.hlp
 fmwww.bc.edu/repec/bocode/f/flower.ado
-fmwww.bc.edu/repec/bocode/f/floattolong.html
 fmwww.bc.edu/repec/bocode/f/full_palette.pkg
 fmwww.bc.edu/repec/bocode/f/ftools.sthlp
 fmwww.bc.edu/repec/bocode/f/fiscal_impoverishment.pkg
@@ -19341,9 +19336,7 @@ fmwww.bc.edu/repec/bocode/f/findunique.ado
 fmwww.bc.edu/repec/bocode/f/frontier_teci.sthlp
 fmwww.bc.edu/repec/bocode/f/frm.html
 fmwww.bc.edu/repec/bocode/f/fbar.pkg
-fmwww.bc.edu/repec/bocode/f/fmmlc.html
 fmwww.bc.edu/repec/bocode/f/fileutils.pkg
-fmwww.bc.edu/repec/bocode/f/fiskfit.html
 fmwww.bc.edu/repec/bocode/f/frcount.pkg
 fmwww.bc.edu/repec/bocode/f/fpcata.ado
 fmwww.bc.edu/repec/bocode/f/fagani.sthlp
@@ -19370,7 +19363,6 @@ fmwww.bc.edu/repec/bocode/f/fsum.html
 fmwww.bc.edu/repec/bocode/f/fqreg_ml0.ado
 fmwww.bc.edu/repec/bocode/f/fastreshape.pkg
 fmwww.bc.edu/repec/bocode/f/fastgini.ado
-fmwww.bc.edu/repec/bocode/f/fitmacro.html
 fmwww.bc.edu/repec/bocode/f/funnel.ado
 fmwww.bc.edu/repec/bocode/f/fieller.ado
 fmwww.bc.edu/repec/bocode/f/fairlie.html
@@ -19413,7 +19405,6 @@ fmwww.bc.edu/repec/bocode/f/fndmtch2.html
 fmwww.bc.edu/repec/bocode/f/finddata.sthlp
 fmwww.bc.edu/repec/bocode/f/funnelinst.ado
 fmwww.bc.edu/repec/bocode/f/flexcurv.ado
-fmwww.bc.edu/repec/bocode/f/fmlogit.html
 fmwww.bc.edu/repec/bocode/f/favplot.hlp
 fmwww.bc.edu/repec/bocode/f/findsysmis.sthlp
 fmwww.bc.edu/repec/bocode/f/funnel.html
@@ -19483,7 +19474,6 @@ fmwww.bc.edu/repec/bocode/f/fbep.pkg
 fmwww.bc.edu/repec/bocode/f/fitmacro.pkg
 fmwww.bc.edu/repec/bocode/f/filesearch.ado
 fmwww.bc.edu/repec/bocode/f/fredusex.sthlp
-fmwww.bc.edu/repec/bocode/f/fitstat.html
 fmwww.bc.edu/repec/bocode/f/fractileplot.pkg
 fmwww.bc.edu/repec/bocode/f/fvvar.sthlp
 fmwww.bc.edu/repec/bocode/f/fsx.pkg
@@ -19555,7 +19545,6 @@ fmwww.bc.edu/repec/bocode/f/frameappend.pkg
 fmwww.bc.edu/repec/bocode/f/fejiv.ado
 fmwww.bc.edu/repec/bocode/f/fitstat_ers.hlp
 fmwww.bc.edu/repec/bocode/f/findval.ado
-fmwww.bc.edu/repec/bocode/f/firthlogit.html
 fmwww.bc.edu/repec/bocode/f/fnn.m
 fmwww.bc.edu/repec/bocode/f/fracdydx.ado
 fmwww.bc.edu/repec/bocode/f/findname.ado
@@ -19596,7 +19585,6 @@ fmwww.bc.edu/repec/bocode/f/flex.ado
 fmwww.bc.edu/repec/bocode/f/fsort.sthlp
 fmwww.bc.edu/repec/bocode/f/findval.pkg
 fmwww.bc.edu/repec/bocode/f/fracdiff.pkg
-fmwww.bc.edu/repec/bocode/f/finddup.html
 fmwww.bc.edu/repec/bocode/f/fbep.dta
 fmwww.bc.edu/repec/bocode/f/far5.html
 fmwww.bc.edu/repec/bocode/f/fndmtch.html
@@ -19621,7 +19609,6 @@ fmwww.bc.edu/repec/bocode/f/fagan.html
 fmwww.bc.edu/repec/bocode/f/flexpaneldid.pkg
 fmwww.bc.edu/repec/bocode/f/fi_fgp_graph.ado
 fmwww.bc.edu/repec/bocode/f/floattolong.pkg
-fmwww.bc.edu/repec/bocode/f/fmm.html
 fmwww.bc.edu/repec/bocode/f/florindjp.pkg
 fmwww.bc.edu/repec/bocode/f/fmm_studentt_p.ado
 fmwww.bc.edu/repec/bocode/f/fren.html
@@ -19652,7 +19639,6 @@ fmwww.bc.edu/repec/bocode/f/fpcata-example.do
 fmwww.bc.edu/repec/bocode/f/fasterxtile.sthlp
 fmwww.bc.edu/repec/bocode/f/fndmtch2.hlp
 fmwww.bc.edu/repec/bocode/f/forec_instab.pkg
-fmwww.bc.edu/repec/bocode/f/flower.html
 fmwww.bc.edu/repec/bocode/f/ftest.hlp
 fmwww.bc.edu/repec/bocode/f/factref.html
 fmwww.bc.edu/repec/bocode/f/fegen.ado
@@ -19681,7 +19667,6 @@ fmwww.bc.edu/repec/bocode/f/fedistr.sthlp
 fmwww.bc.edu/repec/bocode/f/fmtlist.ado
 fmwww.bc.edu/repec/bocode/f/fairlie.zip
 fmwww.bc.edu/repec/bocode/f/fmm_studentt_lf.ado
-fmwww.bc.edu/repec/bocode/f/findname.hlp
 fmwww.bc.edu/repec/bocode/f/funcdep.hlp
 fmwww.bc.edu/repec/bocode/f/freduse.ado
 fmwww.bc.edu/repec/bocode/f/fitstat_ers.pkg
@@ -19744,7 +19729,6 @@ fmwww.bc.edu/repec/bocode/f/fgtest.pkg
 fmwww.bc.edu/repec/bocode/f/f_able_cov.ado
 fmwww.bc.edu/repec/bocode/f/fulltab.hlp
 fmwww.bc.edu/repec/bocode/f/fixsort.hlp
-fmwww.bc.edu/repec/bocode/f/flexcurv.html
 fmwww.bc.edu/repec/bocode/f/frm.ado
 fmwww.bc.edu/repec/bocode/f/fredusex.pkg
 fmwww.bc.edu/repec/bocode/f/flowchart_example1.do
@@ -19762,7 +19746,6 @@ fmwww.bc.edu/repec/bocode/f/fracirf.html
 fmwww.bc.edu/repec/bocode/f/faces.dta
 fmwww.bc.edu/repec/bocode/f/fre.html
 fmwww.bc.edu/repec/bocode/f/ftocci.hlp
-fmwww.bc.edu/repec/bocode/f/firstdigit.html
 fmwww.bc.edu/repec/bocode/f/fdfc.src
 fmwww.bc.edu/repec/bocode/f/fmm_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/f/fsdet.pkg
@@ -19798,7 +19781,6 @@ fmwww.bc.edu/repec/bocode/f/factortest.ado
 fmwww.bc.edu/repec/bocode/f/factmerg.pkg
 fmwww.bc.edu/repec/bocode/f/fhsae.sthlp
 fmwww.bc.edu/repec/bocode/f/fmtlist.html
-fmwww.bc.edu/repec/bocode/f/findval.html
 fmwww.bc.edu/repec/bocode/f/fiscal_impoverishment.ado
 fmwww.bc.edu/repec/bocode/f/fsdet.ado
 fmwww.bc.edu/repec/bocode/f/frmt_opts.html
