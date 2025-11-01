@@ -1,0 +1,35 @@
+d 'QTA': module to implement Quantitative Text Analysis (qta) for ESG Disclosures
+d
+d	qta performs quantitative text analysis on ESG
+d (Environmental, Social, and Governance) disclosure	reports.
+d The command analyzes text content to measure the extent and
+d quality of ESG disclosure based on	different text analysis
+d methods and languages.    The command generates multiple ESG
+d disclosure metrics including dimension-specific scores, total   
+d disclosure score, disclosure quality index, diversity measure,
+d and completeness indicator. 
+d
+d KW: quantitative text analysis
+d KW: disclosures
+d KW: ESG
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20251031
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+d Author: Shen Yongxu,  Anhui University of Technology
+d Support: email  3010760031@@qq.com
+d
+f qta.ado
+f qta.sthlp
+f qta_dictionary.do
+f ../s/sunny_esg.do

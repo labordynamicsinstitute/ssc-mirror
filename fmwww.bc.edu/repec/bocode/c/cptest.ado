@@ -1,9 +1,9 @@
-*!version2.1 27Mar2020
+*!version3.0 28Oct2025
 
 /* -----------------------------------------------------------------------------
 ** PROGRAM NAME: CPTEST
-** VERSION: 2.1
-** DATE: March 27, 2020
+** VERSION: 3.0
+** DATE: OCTOBER 28, 2025
 ** -----------------------------------------------------------------------------
 ** CREATED BY: JOHN GALLIS, LIZ TURNER, FAN LI, HENGSHI YU
 ** -----------------------------------------------------------------------------
@@ -15,6 +15,10 @@
 **						   - Program now returns p-value to r(pval)
 **						   - Updated Marksample so that missing values are removed
 ** 			March 27, 2020 - Minor update to give more detailed warning when string variable is included as a predictor
+**			October 28, 2025 - Harmonizing Stata Journal and SSC versions of the program
+**							 - Instead of a "categorical" option, varlist now allows for factor variables directly in Stata Journal version (already done in SSC version)
+**							 - Fixing matrix conformability error in Stata Journal version
+**							 - Added functionality for a Poisson offset term
 ** -----------------------------------------------------------------------------
 */
 
@@ -24,7 +28,7 @@ program define cptest, rclass
 	
 	#delimit ;
 	syntax varlist(fv min=1),
-		 clustername(varname) directory(string) cspacedatname(string) outcometype(string)
+		 clustername(varname) directory(string) cspacedatname(string) outcometype(string) [offset(varname)]
 	;
 	
 	#delimit cr
@@ -48,9 +52,14 @@ program define cptest, rclass
 	}
 
 	di " "
-	di " "
-	di as error "Note: Make sure the ordering of clusters matches the ordering during randomization!"
-	
+	di as result "Note: Make sure the ordering of clusters matches the ordering during randomization!"
+	qui tempfile _tmp
+    qui save "`_tmp'"
+	egen tagid = tag(`clustername')
+	qui keep if tagid
+	di as result "Current ordering of clusters:"
+	list `clustername'
+	use "`_tmp'", clear
 	
 	/* for error checking */
 	local outcome `: word 1 of `varlist''
@@ -89,7 +98,12 @@ program define cptest, rclass
 			di as error "Error: Outcome does not have enough variability!"
 			exit 198
 		}
-		quietly poisson `varlist'
+		if "`offset'" != "" {
+			quietly poisson `varlist', offset(`offset')
+		}
+		else {
+			quietly poisson `varlist'
+		}
 		predict double _resid, residuals
 		di as result "Poisson regression was performed"
 	}
@@ -153,8 +167,8 @@ teststat=abs(cspace*res)
 stata(spacedat)
 stata("quietly keep if chosen_scheme==1")
 stata("quietly drop chosen_scheme RzSpaceRow Bscores")
-chosen=st_data(1,.)'
-printf("Final chosen scheme used by the cptest program:")
+chosen=st_data(1,.)
+printf("Randomization scheme used by the cptest program:")
 printf(" \n")
 printf(" \n")
 chosen
@@ -172,8 +186,8 @@ indmat = teststat :> null
 
 pval = mean(indmat)
 printf(" \n")
-printf("Clustered permutation test p-value = %9.4f\n",pval)
-printf("Note: test may be anti-conservative if number of intervention clusters does not equal number of control clusters")
+printf("{res}Clustered permutation test p-value = %9.4f\n",pval)
+printf("{res}Note: test may be anti-conservative if number of intervention clusters does not equal number of control clusters")
 
 st_matrix("pval",pval)
 

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0 23Mar2020}
+{* *! version 3.0 28Oct2025}
 {cmd:help cptest}
 {hline}
 
@@ -14,7 +14,7 @@
 
 
 {p 8 17 2}
-{cmd:cptest} {it:{help varlist}}{cmd:, }{cmd:clustername(}{it:{help varname}}) {cmd:directory(}{it:string}) {cmd:outcometype(}{it:integer}) [{cmd:cspacedatname(}{it:string})}]
+{cmd:cptest} {it:{help varlist}}{cmd:, }{cmd:clustername(}{it:{help varname}}) {cmd:directory(}{it:string}) {cmd:cspacedatname(}{it:string})} {cmd:outcometype(}{it:integer}) [{cmd:offset(}{it:varname})}]
 
 {synoptset 27 tabbed}{...}
 {synopthdr}
@@ -25,10 +25,12 @@
 {synopt :{cmd:cspacedatname(}{it:string})}name of Stata dataset containing the saved constrained randomization space{p_end}
 {synopt :{cmd:outcometype(}{it:string})}specifies the type of regression to run, either "continuous" for linear regression with identity link, "binary" for logistic regression with logit link, or 
 "count" for Poisson regression without count outcomes{p_end}
+{synopt :{cmd:offset(}{it:varname})}specifies an offset variable if Poisson regression is chosen.{p_end}
 {synoptline}
 {p2colreset}{...}
 
-{it:{help varlist}} is passed to a regression function, and thus should contain an outcome (dependent variable) followed by independent variables
+{pstd}
+{it:{help varlist}} is passed to a regression function, and thus should contain an outcome (dependent variable) followed by independent variables. This variable list allows for factor variables, so all categorical variables should be specified with i. notation.
 
 {marker description}{...}
 {title:Description}
@@ -77,6 +79,9 @@ Options are "continuous" for linear regression fit by Stata's {help regress} com
 Stata's  {help logit} command (suitable for binary outcomes), and "count" for Poisson
 regression fit by Stata's {help poisson} command (suitable for count outcomes).
 
+{dlgtab:Optional}
+
+{synopt :{cmd:offset(}{it:varname})} If Poisson regression is chosen for a count outcome, the user may wish to specify an offest term. This can be accomplished with this option.{p_end}
 
 {marker example}{...}
 {title:Example}

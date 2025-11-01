@@ -11566,6 +11566,7 @@ fmwww.bc.edu/repec/bocode/q/qrprocess.ado
 fmwww.bc.edu/repec/bocode/q/qcount.hlp
 fmwww.bc.edu/repec/bocode/q/qvgraph.sthlp
 fmwww.bc.edu/repec/bocode/q/qcount.pkg
+fmwww.bc.edu/repec/bocode/q/qta_dictionary.do
 fmwww.bc.edu/repec/bocode/q/qinvgamma.ado
 fmwww.bc.edu/repec/bocode/q/qregpd.ado
 fmwww.bc.edu/repec/bocode/q/qweibull.hlp
@@ -11650,6 +11651,7 @@ fmwww.bc.edu/repec/bocode/q/quantilereg.m
 fmwww.bc.edu/repec/bocode/q/qbplot.pkg
 fmwww.bc.edu/repec/bocode/q/qsim.pkg
 fmwww.bc.edu/repec/bocode/q/qbeta.pkg
+fmwww.bc.edu/repec/bocode/q/qta.ado
 fmwww.bc.edu/repec/bocode/q/qqvalue.html
 fmwww.bc.edu/repec/bocode/q/qcolname.hlp
 fmwww.bc.edu/repec/bocode/q/qqplotg.pkg
@@ -11662,6 +11664,7 @@ fmwww.bc.edu/repec/bocode/q/quickicc.sthlp
 fmwww.bc.edu/repec/bocode/q/qrkd.sthlp
 fmwww.bc.edu/repec/bocode/q/qgumbel.ado
 fmwww.bc.edu/repec/bocode/q/qfactor.ado
+fmwww.bc.edu/repec/bocode/q/qta.pkg
 fmwww.bc.edu/repec/bocode/q/quandl.pkg
 fmwww.bc.edu/repec/bocode/q/quadas.dta
 fmwww.bc.edu/repec/bocode/q/qgamma.pkg
@@ -11720,6 +11723,7 @@ fmwww.bc.edu/repec/bocode/q/qenv.pkg
 fmwww.bc.edu/repec/bocode/q/quaidsce_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/q/quantiles.hlp
 fmwww.bc.edu/repec/bocode/q/qrkd.pkg
+fmwww.bc.edu/repec/bocode/q/qta.sthlp
 fmwww.bc.edu/repec/bocode/q/qhapipf.pkg
 fmwww.bc.edu/repec/bocode/q/qbplot_test.do
 fmwww.bc.edu/repec/bocode/q/qenvbeta.ado
@@ -15731,6 +15735,7 @@ fmwww.bc.edu/repec/bocode/s/sqstattabsum.sthlp
 fmwww.bc.edu/repec/bocode/s/screen.pkg
 fmwww.bc.edu/repec/bocode/s/stns_list.sthlp
 fmwww.bc.edu/repec/bocode/s/sortrows.html
+fmwww.bc.edu/repec/bocode/s/sunny_esg.do
 fmwww.bc.edu/repec/bocode/s/starjas.hlp
 fmwww.bc.edu/repec/bocode/s/singleb.ado
 fmwww.bc.edu/repec/bocode/s/scheme_rbn3mono.sthlp
