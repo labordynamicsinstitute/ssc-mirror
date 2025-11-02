@@ -18370,7 +18370,6 @@ fmwww.bc.edu/repec/bocode/d/ddml_example_extract.sthlp
 fmwww.bc.edu/repec/bocode/d/deci.pkg
 fmwww.bc.edu/repec/bocode/d/diptest.ado
 fmwww.bc.edu/repec/bocode/d/ddml_overview.sthlp
-fmwww.bc.edu/repec/bocode/d/dep4asm.html
 fmwww.bc.edu/repec/bocode/d/dfgls2.dlg
 fmwww.bc.edu/repec/bocode/d/diagtest.ado
 fmwww.bc.edu/repec/bocode/d/drarea.html
@@ -18436,7 +18435,6 @@ fmwww.bc.edu/repec/bocode/d/dotemplate.ado
 fmwww.bc.edu/repec/bocode/d/doubletofloat.html
 fmwww.bc.edu/repec/bocode/d/ddml_interactiveiv.sthlp
 fmwww.bc.edu/repec/bocode/d/ddf2dct.hlp
-fmwww.bc.edu/repec/bocode/d/dentonmq.ado
 fmwww.bc.edu/repec/bocode/d/distinct.hlp
 fmwww.bc.edu/repec/bocode/d/dotemplate.pkg
 fmwww.bc.edu/repec/bocode/d/ds2.ado
@@ -18601,7 +18599,6 @@ fmwww.bc.edu/repec/bocode/d/data_new_y.dta
 fmwww.bc.edu/repec/bocode/d/dummieslab.ado
 fmwww.bc.edu/repec/bocode/d/df.dta
 fmwww.bc.edu/repec/bocode/d/ddt.ado
-fmwww.bc.edu/repec/bocode/d/dentonmq7.html
 fmwww.bc.edu/repec/bocode/d/dobatch.pkg
 fmwww.bc.edu/repec/bocode/d/ddml.ado
 fmwww.bc.edu/repec/bocode/d/dyndoc.dlg
@@ -18648,13 +18645,11 @@ fmwww.bc.edu/repec/bocode/d/doubmass.ado
 fmwww.bc.edu/repec/bocode/d/ddml_cert.do
 fmwww.bc.edu/repec/bocode/d/ddml_describe.sthlp
 fmwww.bc.edu/repec/bocode/d/dolog13.ado
-fmwww.bc.edu/repec/bocode/d/dentonmq.hlp
 fmwww.bc.edu/repec/bocode/d/dthaz.sthlp
 fmwww.bc.edu/repec/bocode/d/diplot.html
 fmwww.bc.edu/repec/bocode/d/ddml_example_overlap.sthlp
 fmwww.bc.edu/repec/bocode/d/dstat.ado
 fmwww.bc.edu/repec/bocode/d/des_gs.ado
-fmwww.bc.edu/repec/bocode/d/dentonmq.html
 fmwww.bc.edu/repec/bocode/d/drarea.hlp
 fmwww.bc.edu/repec/bocode/d/diff_plot.pkg
 fmwww.bc.edu/repec/bocode/d/deseasonalize.m
@@ -18762,7 +18757,6 @@ fmwww.bc.edu/repec/bocode/d/ddml_example_flexiv_anylearner_basic.sthlp
 fmwww.bc.edu/repec/bocode/d/dbetafit.ado
 fmwww.bc.edu/repec/bocode/d/dataplink.sthlp
 fmwww.bc.edu/repec/bocode/d/dobatch_wait.ado
-fmwww.bc.edu/repec/bocode/d/denton7.html
 fmwww.bc.edu/repec/bocode/d/datmat.html
 fmwww.bc.edu/repec/bocode/d/dta2kml.ado
 fmwww.bc.edu/repec/bocode/d/discrates.ado
@@ -18892,7 +18886,6 @@ fmwww.bc.edu/repec/bocode/d/did_multiplegt_stat.ado
 fmwww.bc.edu/repec/bocode/d/dolog.pkg
 fmwww.bc.edu/repec/bocode/d/depthplot.ado
 fmwww.bc.edu/repec/bocode/d/did_imputation.ado
-fmwww.bc.edu/repec/bocode/d/denton.html
 fmwww.bc.edu/repec/bocode/d/devnplot.do
 fmwww.bc.edu/repec/bocode/d/dotex.ado
 fmwww.bc.edu/repec/bocode/d/drug.dta
@@ -19057,7 +19050,6 @@ fmwww.bc.edu/repec/bocode/d/dta2sav.sthlp
 fmwww.bc.edu/repec/bocode/d/delaunay.sthlp
 fmwww.bc.edu/repec/bocode/d/ddml_fiv.sthlp
 fmwww.bc.edu/repec/bocode/d/dd.ado
-fmwww.bc.edu/repec/bocode/d/denton.hlp
 fmwww.bc.edu/repec/bocode/d/dashln.html
 fmwww.bc.edu/repec/bocode/d/datacheck.pkg
 fmwww.bc.edu/repec/bocode/d/ddml_install_ref_auth.ihlp

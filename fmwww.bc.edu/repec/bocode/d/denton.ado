@@ -1,7 +1,9 @@
 prog drop _all
-*! denton  1.2.1   sh/cfb 26sep2021
+*! denton  1.3.0   sh/cfb 1nov2025
 *! 1.2.1: correct definition of orimin
 *! 1.2.2: ensure interp variable is double
+*! 1.3.0: add scale factor to prevent underflow
+
 program define denton
 	version 11.1
 	syntax varname(numeric ts) using/ [if] [in], INTerp(string) from(string) GENerate(string) [stock old] 
@@ -274,8 +276,6 @@ program define denton
 		exit _rc
 	}
 	
-
-	
 	qui tsset `h_timevar', `h_unit'	
 
 * If stock : Change high freq data from stock to flow;	
@@ -285,10 +285,15 @@ program define denton
    }
 	
 // cfb Sep2021: recast `interp' to double to prevent overflows, scale
+// cfb Nov2025: per Léonard Mouillet, introduce scale factor to prevent underflows 
 
 	recast double `interp', force
-	replace `interp' = `interp'/1e3
-	
+//	replace `interp' = `interp'/1e3
+	sum `interp', meanonly
+	local scale_factor = 10^(floor(log10(`r(mean)')) - 2)
+	if `scale_factor' < 1 local scale_factor = 1
+	replace `interp' = `interp'/`scale_factor'
+
 	qui keep if `h_timevar' >= `h_ofd'(`l_mindate') & `h_timevar' <= `h_ofd'(`l_maxdate')
 	qui keep `varlist' `interp' `h_timevar' `touse' `l_timevar' `vlist'
 	

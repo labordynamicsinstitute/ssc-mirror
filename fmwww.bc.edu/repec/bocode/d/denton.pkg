@@ -20,13 +20,13 @@ d KW: interpolation
 d
 d Requires: Stata version 11.1 (7.0 for denton7, dentonmq7)
 d
-d Distribution-Date: 20210926
+d Distribution-Date: 20251101
 d
 d Author: Christopher F Baum, Boston College
 d Support: email baum@@bc.edu
 d
-d Author: Sylvia Hristakeva, Boston College
-d Support: email hristakeva@@gmail.com
+d Author: Sylvia Hristakeva, Cornell University
+d Support: email sylvia.hristakeva@@gmail.com
 d
 f denton.ado
 f denton.sthlp

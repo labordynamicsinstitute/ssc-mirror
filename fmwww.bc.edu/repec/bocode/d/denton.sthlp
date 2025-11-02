@@ -69,9 +69,12 @@ Because of differencing, the new variable is not interpolated for the first low-
 
 {p 8 12}Christopher F Baum, Boston College, USA{p_end}
 {p 8 12}baum@bc.edu{p_end}
-{p 8 12}Sylvia Hristakeva, Boston College, USA{p_end}
-{p 8 12}hristakeva@gmail.com{p_end}
+{p 8 12}Sylvia Hristakeva, Cornell University, USA{p_end}
+{p 8 12}sylvia.hristakeva@gmail.com{p_end}
 
+{title: Acknowledgements}
+
+{p 8 12}Thanks to Léonard Mouillet of the EU Tax Observatory for identifying a computational problem and suggesting a solution.{p_end}
 
 {title: Also see}
 
