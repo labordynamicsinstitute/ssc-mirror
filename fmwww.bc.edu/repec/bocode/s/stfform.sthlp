@@ -46,6 +46,10 @@ If {it:varlist} is specified {cmd: stfform} discards variables not included in t
 
 {synopt:{opt graphnames(stub)}}  sets the prefix of the graph names to be saved for future use. 
 
+{synopt:{opt obscolor(string)}}  sets the line color of observed process in the graphs. 
+
+{synopt:{opt simcolor(string)}}  sets the line color of simulated process in the graphs.
+
 {synoptline}
 {p2colreset}{...}
 {p 8 15 2}
@@ -85,6 +89,12 @@ If {it:varlist} is specified {cmd: stfform} discards variables not included in t
 
 {phang}
 {opt graphnames(stub)} sets the prefix of the graph names to be saved for future use. {cmd: stfform} saves one graph for each of the requested tests. This option is overridden if {opt nograph} is specified, the default is {it:_stff_}. Existing graphs are overwritten.
+
+{phang}
+{opt obsc:olor(string)}  sets the line color of observed process in the graphs. The default is {bf: orange}.
+
+{phang}
+{opt simc:olor(string)}  sets the line color of simulated process in the graphs. The default is {bf: gs7}.
 
 {marker examples}{...}
 {title:Examples}

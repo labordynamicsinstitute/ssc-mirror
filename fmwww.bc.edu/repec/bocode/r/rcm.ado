@@ -1,4 +1,4 @@
-*! rcm 4.0.0 Guanpeng Yan and Qiang Chen Jan. 07 2023
+*! rcm 4.1.0 Guanpeng Yan and Qiang Chen Nov. 03 2025
 
 cap program drop rcm
 program rcm, eclass sortpreserve
@@ -132,12 +132,12 @@ program rcm, eclass sortpreserve
 		exit 198
 	}
 	/* Check criterion() */
-	if("`criterion'" != "aicc" & "`criterion'" != "aic" & "`criterion'" != "bic" & "`criterion'" != "mbic" & "`criterion'" != "cv"){
-		di as err "invaild criterion() -- sel_criterion must be one of {bf:aicc aic bic mbic cv}"
+	if("`criterion'" != "aicc" & "`criterion'" != "aic" & "`criterion'" != "bic" & "`criterion'" != "mbic" & "`criterion'" != "cv" & "`criterion'" != "plugin" & "`criterion'" != "cvpost"){
+		di as err "invaild criterion() -- sel_criterion must be one of {bf:aicc aic bic mbic cv plugin cvpost}"
 		exit 198
 	}
-	if("`criterion'" == "cv" & "`method'" != "lasso"){
-		di as err "invaild criterion() or estimate() -- criterion({bf:cv})} is only suitable for method({bf:lasso})"
+	if(("`criterion'" == "cv"|"`criterion'" == "plugin"|"`criterion'" == "cvpost") & "`method'" != "lasso"){
+		di as err "invaild criterion() or estimate() -- criterion({bf:cv})}, criterion({bf:plugin})}  or criterion({bf:cvpost})} is only suitable for method({bf:lasso})"
 		exit 198
 	}
 	if("`estimate'" != "ols" & "`estimate'" != "lasso"){
@@ -985,12 +985,12 @@ mata:
 		if(method == "lasso"){
 			if(detail >= 0) printf("Selecting the suboptimal model...\n")
 			error = _stata(sprintf("qui lasso linear %uds in 1/%g, %uds sel(%uds) rseed(%g)", 
-				invtokens((respo, preds')), T0, grid, (criterion == "cv" ? sprintf("cv, fold(%g) alllambdas gridminok", fold) : "none"), seed), 1)
+				invtokens((respo, preds')), T0, grid, (criterion == "cv" ? sprintf("cv, fold(%g) alllambdas gridminok", fold) : (criterion == "plugin" ?"plugin": (criterion == "cvpost" ? sprintf("cv, postsel fold(%g) alllambdas gridminok", fold): "none"))), seed), 1)
 			if(error == 198){
 			   exit(_stata(sprintf("qui lasso linear %uds in 1/%g, %uds sel(%uds) rseed(%g)", 
-				invtokens((respo, preds')), T0, grid, (criterion == "cv" ? sprintf("cv, fold(%g) alllambdas gridminok", fold) : "none"), seed), 0))
+				invtokens((respo, preds')), T0, grid, (criterion == "cv" ? sprintf("cv, fold(%g) alllambdas gridminok", fold) : (criterion == "plugin" ?"plugin": (criterion == "cvpost" ? sprintf("cv, postsel fold(%g) alllambdas gridminok", fold): "none"))), seed), 0))
 			}
-			if (criterion == "cv"){
+			if (criterion == "cv" | criterion == "cvpost"){
 				stata("qui lassoknots, di(nonzero cvmpe r2 )")
 				head = ("K", " AICc", "AIC", "BIC", " MBIC", "CVMSE", "R-squared", " lambda", "Operation")
 			}else{
@@ -1002,8 +1002,11 @@ mata:
 			bestS = &J(rows(tmp), 1, "")
 			for(i = 1; i<= rows(tmp); i++){
 				id = tmp[i, 1]
-				stata(sprintf("qui lassoselect id = %g", id))
-				stata(sprintf("qui lassogof in 1/%g", T0))
+				if(criterion != "plugin"){
+					stata(sprintf("qui lassoselect id = %g", id))
+				}else{
+					stata(sprintf("qui lassogof in 1/%g", T0))
+				}
 				(*bestR)[i, 1] = tmp[i, 3]
 				(*bestR)[i, 2] = st_matrix("r(table)")[1, 1] * T0
 				(*bestS)[i, 1] = st_global("e(allvars_sel)")
@@ -1031,7 +1034,7 @@ mata:
 					rcm_print_info((*S)[., 2..3], ("K", "RSS", "Operation"), (*R), 10, 30, 1, 0)
 					expand = rcm_sortMSIorR(M, S, R, "rss", (., .), 1)
 					printf(stritrim(sprintf("{txt}Among models with {res}%g{txt} predictors, the suboptimal model with {res}RSS = %10.4f{txt} %uds.\n\n",
-						(*R)[1, 1], (*R)[1, 2], ((*S)[1, 2] != "" ? sprintf("(add {res}%uds{txt})", (*S)[1, 2]): ((*S)[1, 3] != "" ? sprintf("(drop {res}%uds{txt})", (*S)[1, 3]) : "")))))
+				(*R)[1, 1], (*R)[1, 2], ((*S)[1, 2] != "" ? sprintf("(add {res}%uds{txt})", (*S)[1, 2]): ((*S)[1, 3] != "" ? sprintf("(drop {res}%uds{txt})", (*S)[1, 3]) : "")))))
 				}else expand = rcm_sortMSIorR(M, S, R, "rss", (., .), 1)
 				(*bestM) = ((*bestM) \ (*M)[1, .])
 				(*bestS) = ((*bestS) \ (*S)[1, .])
@@ -1064,7 +1067,7 @@ mata:
 			expand = rcm_sortMSIorR(bestM, bestS, bestI, criterion, scope, 1) //
 			if(expand == 1) scope = (1, K)
 			if(detail >= 0){
-				printf(stritrim(sprintf("{p 0 0 2}{txt}Among models with {res}%g-%g{txt} predictors, the optimal model contains {res}%g{txt} %uds with {res}%uds = %10.4f.{p_end}\n", scope[1], scope[2], (*bestI)[1, 1], ((*bestI)[1, 1] > 1 ? "predictors" : "predictor"), (criterion == "cv" ? "CVMSE" : ((criterion == "aicc") ? "AICc" : strupper(criterion))), (*bestI)[1, criterion == "aicc" ? 2 : (criterion == "aic" ? 3 : (criterion == "bic" ? 4 : (criterion == "mbic" ? 5 : 6)))])))
+				printf(stritrim(sprintf("{p 0 0 2}{txt}Among models with {res}%g-%g{txt} predictors, the optimal model contains {res}%g{txt} %uds with {res}%uds = %10.4f.{p_end}\n", scope[1], scope[2], (*bestI)[1, 1], ((*bestI)[1, 1] > 1 ? "predictors" : "predictor"), (criterion == "cv" | criterion == "cvpost"? "CVMSE" : ((criterion == "aicc") ? "AICc" : ((criterion == "plugin") ? "R-squared" : strupper(criterion)))), (*bestI)[1, criterion == "aicc" ? 2 : (criterion == "aic" ? 3 : (criterion == "bic" ? 4 : (criterion == "mbic" ? 5 : 6)))])))
 				if(expand == 1) printf("{txt}Note: {res}scope{txt} is automatically changed to {res}%g-%g{txt} for expanding selection.\n", scope[1], scope[2])
 				printf("\n")
 				tmp = (method == "lasso" ? (estimate == "lasso" ? " using {res}lasso{txt}" : " using {res}post-lasso OLS{txt}") : " using {res}OLS{txt}")
@@ -1112,6 +1115,7 @@ mata:
 end
 
 * Version history
+* 4.0.0 Add the "plugin" and "cvpost" options for criterion()
 * 4.0.0 Add the functionality of saving graphs, and fix some bugs
 * 3.0.0 
 * 2.0.0 Optimize the result displayed

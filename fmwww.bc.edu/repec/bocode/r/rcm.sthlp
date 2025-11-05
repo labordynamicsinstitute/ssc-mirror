@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.0.0 07 Jan 2023}{...}
+{* *! version 4.1.0 03 Nov 2025}{...}
 {cmd:help rcm} 
 {hline}
 {vieweralsosee "" "--"}{...}
@@ -64,7 +64,7 @@
 {p 4 4 2}
 {cmd:rcm} efficently implements regression control method (RCM), aka panel data approach for program evaluation (Hsiao et al., 2012), 
 which exploits cross-sectional correlation to construct counterfactual outcomes for a single treated unit by linear regression (OLS), lasso or post-lasso OLS. 
-Available methods for model selection include best subset, lasso, forward stepwise and backward stepwise regression, while available selection criteria include AICc, AIC, BIC, MBIC and CV (cross-validation).
+Available methods for model selection include best subset, lasso, forward stepwise and backward stepwise regression, while available selection criteria include AICc, AIC, BIC, MBIC , CV (cross-validation), PLUGIN and CVPOST.
 Covariates ({indepvars}) are allowed to further improve counterfactual prediction as proposed by Hsiao and Zhou (2019). 
 The {cmd:rcm} command produces a series of graphs for visualization along the way. 
 For statistical inference, both in-space placebo test using fake treatment units and in-time placebo test using a fake treatment time can be implemented. 
@@ -162,7 +162,7 @@ drops a predictor in each iteration of OLS estimation, and selects the model wit
 If {bf:method(best)} is feasible, then {bf:method(backward)} is NOT recommended. Note that {bf:method(backward)} is not applicable in the high-dimensional case, where the number of predictors exceeds the number of pre-treatment periods. 
 
 {phang}
-{opt criterion(sel_criterion)} specifies the criterion for selecting the optimal model from all suboptimal models, which may be{bf: aicc} (the default), {bf: aic}, {bf: bic}, {bf: mbic} or {bf: cv}.
+{opt criterion(sel_criterion)} specifies the criterion for selecting the optimal model from all suboptimal models, which may be{bf: aicc} (the default), {bf: aic}, {bf: bic}, {bf: mbic}, {bf: cv}, {bf: plugin} or {bf: cvpost}.
 
 {phang2} 
 {bf:aicc} is the defalut, which specifies the corrected Akaike information criterion (AICc) as the criterion for selecting the optimal model; see Hsiao et al. (2012) for details.
@@ -180,6 +180,15 @@ If {bf:method(best)} is feasible, then {bf:method(backward)} is NOT recommended.
 {bf:cv} specifies cross-validation mean squared error (CVMSE) as the selection criterion.
 Note that {bf:criterion(cv)} only applies to {bf:method(lasso)}, and the option {opt fold(#)} determines the the number of folds for cross-validation (see details below). 
 
+{phang2} 
+{bf:plugin} specifies the selection of penalty parameter lambda based on a theoretically justified "plugin" iterative formula dependent on the data. 
+See {manhelp lasso LASSO:lasso} for details. 
+
+{phang2} 
+{bf:cvpost} specifies minimization of cross-validation mean squared error (CVMSE) of the overall post-Lasso OLS estimtion process. 
+The option cvpost is recommended over the option {bf:criterion(cv)}.
+Note that {bf:criterion(cvpost)} only applies to {bf:method(lasso)}, and the option {opt fold(#)} determines the the number of folds for cross-validation (see details below).  
+
 {phang}
 {opt estimate(est_method)} specifies the method used to estimate the optimal model for counterfactual prediction, which may be {bf:ols} (the default) or {bf: lasso}.
 
@@ -196,7 +205,7 @@ These parameters are transmitted to the Stata command {helpb lasso}; see {manhel
 Note that this option only applies to {bf:method(lasso)}.
 
 {phang}
-{opt fold(#_k)} specifies cross-validation with {it:#_k} folds, where {it:#_k} must be an integer >= 3 and <= T0 (the number of pre-treatment periods).  This option only applies to the combination of {bf:method(lasso)} and {bf:criterion(cv)}. 
+{opt fold(#_k)} specifies cross-validation with {it:#_k} folds, where {it:#_k} must be an integer >= 3 and <= T0 (the number of pre-treatment periods).  This option only applies to the combination of {bf:method(lasso)} with {bf:criterion(cv)} or {bf:criterion(cvpost)}. 
 The default is {bf:fold(}T0{bf:)}, which corresponds to leave-one-out cross-validation (LOOCV).
 
 {phang}
