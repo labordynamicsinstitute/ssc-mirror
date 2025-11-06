@@ -14684,7 +14684,6 @@ fmwww.bc.edu/repec/bocode/s/solve.pkg
 fmwww.bc.edu/repec/bocode/s/switchoprobitsim_work.ado
 fmwww.bc.edu/repec/bocode/s/svcom.sthlp
 fmwww.bc.edu/repec/bocode/s/spweightxt.pkg
-fmwww.bc.edu/repec/bocode/s/swblock.html
 fmwww.bc.edu/repec/bocode/s/sampsi_fleming.html
 fmwww.bc.edu/repec/bocode/s/scheme-rbn1mono.scheme
 fmwww.bc.edu/repec/bocode/s/setroot.pkg
@@ -14816,7 +14815,6 @@ fmwww.bc.edu/repec/bocode/s/spmstardhxt.do
 fmwww.bc.edu/repec/bocode/s/sdtest.pkg
 fmwww.bc.edu/repec/bocode/s/spsfe1.dta
 fmwww.bc.edu/repec/bocode/s/scheme-black_cividis.scheme
-fmwww.bc.edu/repec/bocode/s/swapval.hlp
 fmwww.bc.edu/repec/bocode/s/sspecialreg.html
 fmwww.bc.edu/repec/bocode/s/seqlogitdecomp.ado
 fmwww.bc.edu/repec/bocode/s/sivreg.sthlp
@@ -15940,6 +15938,7 @@ fmwww.bc.edu/repec/bocode/s/stpm2cm.sthlp
 fmwww.bc.edu/repec/bocode/s/stackdid.sthlp
 fmwww.bc.edu/repec/bocode/s/stopwords_de.txt
 fmwww.bc.edu/repec/bocode/s/sumtex.sthlp
+fmwww.bc.edu/repec/bocode/s/swapval.sthlp
 fmwww.bc.edu/repec/bocode/s/sptobitmstarh.ado
 fmwww.bc.edu/repec/bocode/s/svmatf.ado
 fmwww.bc.edu/repec/bocode/s/sctostreamcsv.ado
@@ -16021,7 +16020,6 @@ fmwww.bc.edu/repec/bocode/s/symmetry.pkg
 fmwww.bc.edu/repec/bocode/s/scls.sthlp
 fmwww.bc.edu/repec/bocode/s/sccenslope.html
 fmwww.bc.edu/repec/bocode/s/spregxt1.dta
-fmwww.bc.edu/repec/bocode/s/svytabs.html
 fmwww.bc.edu/repec/bocode/s/sreweight.pkg
 fmwww.bc.edu/repec/bocode/s/stcoxgof.pkg
 fmwww.bc.edu/repec/bocode/s/spregcs.sthlp
@@ -17373,7 +17371,6 @@ fmwww.bc.edu/repec/bocode/s/spmstard.pkg
 fmwww.bc.edu/repec/bocode/s/stsurvimpute.ado
 fmwww.bc.edu/repec/bocode/s/subjob45.ado
 fmwww.bc.edu/repec/bocode/s/seqlogit.sthlp
-fmwww.bc.edu/repec/bocode/s/swapval.html
 fmwww.bc.edu/repec/bocode/s/spmstar.ado
 fmwww.bc.edu/repec/bocode/s/sptobitmstardhxt.do
 fmwww.bc.edu/repec/bocode/s/spregdhp.html
