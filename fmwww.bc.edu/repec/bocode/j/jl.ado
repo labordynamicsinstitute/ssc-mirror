@@ -1,4 +1,4 @@
-*! jl 1.1.10 17 August 2025
+*! jl 1.2.1 8 November 2025
 *! Copyright (C) 2023-25 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
@@ -83,6 +83,7 @@ program define assure_julia_started
         di "This will not affect which version of Julia runs by default when you call it from outside of Stata."
         di "To learn more about the Julia version manager, type or click on {stata !juliaup --help}."
         di "This version of the {cmd:julia} Stata package is only guaranteed stable with Julia $JULIA_COMPAT_VERSION." _n
+        qui !`bindir'juliaup rm `channel'  // in case channel existed and was incompletely uninstalled
         !`bindir'juliaup add `channel'  
         !`bindir'juliaup up  `channel'  
       }
@@ -129,14 +130,17 @@ end
 cap program drop AddPkg
 program define AddPkg
   version 14.1
-  syntax name, [MINver(string)]
+  syntax name, [MINversion(string) VERsion(string)]
+  _assert `"`minversion'"'=="" | `"`ver'"'=="", msg("Specify version() or minversion() but not both.") rc(198) 
   plugin call _julia, eval `"Int(!("`namelist'" in keys(Pkg.project().dependencies)))"'
   local notinstalled: copy local __jlans
-  if !`notinstalled' & "`minver'"!="" plugin call _julia, eval `"length([1 for v in values(Pkg.dependencies()) if v.name=="`namelist'" && v.version<v"`minver'"])"'
+  if !`notinstalled' & "`minversion'"!="" plugin call _julia, eval `"length([1 for v in values(Pkg.dependencies()) if v.name=="`namelist'" && v.version<v"`minversion'"])"'
+  if !`notinstalled' & "`version'"!=""    plugin call _julia, eval `"length([1 for v in values(Pkg.dependencies()) if v.name=="`namelist'" && v.version!=v"`version'"])"'
   if `notinstalled' | 0`__jlans' {
     di as txt _n "The Julia package `namelist' is not installed and up-to-date in this package environment. Attempting to update it. This could take a few minutes."
     mata displayflush() 
-    cap plugin call _julia, evalqui `"Pkg.add(PackageSpec(name=String(:`namelist') `=cond("`minver'"=="", "", `", version=VersionNumber(`:subinstr local minver "." ",", all') "')'))"'
+    local version `version' `minversion'
+    cap plugin call _julia, evalqui `"Pkg.add(PackageSpec(name=String(:`namelist') `=cond("`version'"=="", "", `", version=VersionNumber(`:subinstr local version "." ",", all') "')'))"'
     if _rc {
       di as err _n "Failed to update the Julia package `namelist'."
       di as err "You should be able to install it by running Julia and typing:" _n `"{cmd:using Pkg; Pkg.update("`namelist'")}"'
@@ -245,7 +249,7 @@ program define jl, rclass
   version 14.1
 
   if `"`0'"'=="version" {
-    return local version 1.2.0
+    return local version 1.2.1
     exit
   }
 
@@ -276,17 +280,18 @@ program define jl, rclass
 
     if inlist(`"`cmd'"',"SetEnv","GetEnv") {
       qui if "`cmd'"=="SetEnv" {
-        plugin call _julia, evalqui `"Pkg.activate(joinpath(dirname(Base.load_path_expand("@v#.#")), "`1'"))"'  // move to an environment specific to this package
-        AddPkg DataFrames
-        AddPkg CategoricalArrays
+        if `"`1'"'=="" plugin call _julia, evalqui "Pkg.activate()"  // return to default environment
+                  else plugin call _julia, evalqui `"Pkg.activate("`1'", shared=true)"'  // named, shared environment
+//         plugin call _julia, evalqui `"Pkg.activate(joinpath(dirname(Base.load_path_expand("@v#.#")), "`1'"))"'  // move to an environment specific to this package
+        AddPkg DataFrames, ver(1.8.1)
+        AddPkg CategoricalArrays, ver(1.0.2)
       }
-      return local env: subinstr local __jlans "\\" "\", all
       plugin call _julia, eval `"dirname(Base.active_project())"'
       local __jlans `__jlans'  // strip quotes
-      return local envdir: subinstr local __jlans "\\" "\", all
+      local envdir: subinstr local __jlans "\\" "\", all
       plugin call _julia, eval `"dirname(Base.load_path_expand("@v#.#"))"'
       local __jlans: subinstr local __jlans "\\" "\", all
-      if "`return(envdir)'" == `__jlans' return local env .
+      if "`envdir'" == `__jlans' return local env @v$JULIA_COMPAT_VERSION
       else {
         plugin call _julia, eval `"splitpath(Base.active_project())[end-1]"'
         return local env `__jlans'  // strip quotes
@@ -502,4 +507,5 @@ program _julia, plugin using(jl.plugin)
 * 1.1.7 Automatically load InteractiveUtils
 * 1.1.8 Error if running under Rosetta
 * 1.1.9 Fix st_data() crash in macOS.Made st_data() and st_view() accept varname for sample marker
-* 1.1.10 Strip backticks from returned errors messages to prevent "unmatched quote" error. Updat
+* 1.1.10 Strip backticks from returned errors messages to prevent "unmatched quote" error.
+* 1.2.0  Add version() option to AddPkg to give complete control of installed version.

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.4.1 27aug2025}{...}
+{* *! version 1.4.2 06nov2025}{...}
 {viewerjumpto "Syntax" "stackdid##syntax"}{...}
 {viewerjumpto "Description" "stackdid##description"}{...}
 {viewerjumpto "Options" "stackdid##options"}{...}
@@ -206,7 +206,6 @@ specifications.
 {cmd:stackdid} requires the data to be a panel set by {cmd:xtset}. 
 There is no requirement to be strongly balanced.
 
-
 {marker examples}{...}
 {title:Examples}
 
@@ -243,6 +242,14 @@ and after treatment events is to be specified.
 
 {pstd}Suggested: visually decompose cohorts{p_end}
 {phang2}{cmd:. table (sector) (year) (_cohort), statistic(firstnm treatXpost) nototal}{p_end}
+
+{pstd}
+Subsetting via {ifin} applies {it:before} identifying cohorts. 
+Accordingly, be aware that {cmd:nevertreat} is identified within-subset. 
+If you want {cmd:nevertreat} identified on all data but only to regress a subset, then proceed in two steps:{p_end}
+{phang2}{cmd:. stackdid, ... nevertreat noreg clear}{p_end}
+{phang2}{cmd:. stackdid ... {ifin}, nobuild}{p_end}
+
 
 
 {marker results}{...}
@@ -283,6 +290,10 @@ and Todd Gormley and David Matsa for invaluable guidance during its development.
 
 {marker references}{...}
 {title:References}
+
+{phang}
+If you use this program in your research, please cite its {browse "https://papers.ssrn.com/abstract=5421535":SSRN entry}.
+It also has a {browse "https://github.com/jacobwtriplett/stackdid":github repo}.
 
 {phang}
 Sergio Correia, Paulo Guimarães, Thomas Zylkin: "ppmlhdfe: Fast Poisson Estimation with High-Dimensional Fixed Effects", 2019; arXiv:1903.01690.

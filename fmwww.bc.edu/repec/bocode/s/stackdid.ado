@@ -1,4 +1,6 @@
-*! version 1.4.1 27aug2025
+*! version 1.4.2 06nov2025
+*! fixed log counts (superficial bug only)
+*! fixed skipping step 2
 capture program drop stackdid
 program define stackdid, rclass
         version 15
@@ -172,12 +174,12 @@ program define stackdid, rclass
 				qui gen byte `tostack`co'' = !missing(`treated')
 			}
 			
-			if (!`permanent') {
-				* (2): remove latest treatment and prior
-				qui egen `ttype' `latest_treat' = max(cond(`treatment'==1,`time',.)) if (`tostack`co''==1 & `time'<`co'), by(`group')
-				qui replace `tostack`co'' = 0 if (`tostack`co''==1 & `treatment'==1 & `time'<=`latest_treat' & !missing(`latest_treat'))
-				drop `latest_treat'
+			* (2): remove latest treatment and prior
+			qui egen `ttype' `latest_treat' = max(cond(`treatment'==1,`time',.)) if (`tostack`co''==1 & `time'<`co'), by(`group')
+			qui replace `tostack`co'' = 0 if (`tostack`co''==1 & `treatment'==1 & `time'<=`latest_treat' & !missing(`latest_treat'))
+			drop `latest_treat'
 				
+			if (!`permanent') {
 				* (3): remove if treated group loses treatment status post-event
 				qui egen `ttype' `lost_treat' = min(cond(`treatment'==0,`time',.)) if (`treated'==1 & `co'<`time'), by(`group')
 				qui replace `tostack`co'' = 0 if (`treated'==1 & `lost_treat'<=`time' & !missing(`lost_treat'))
@@ -199,7 +201,7 @@ program define stackdid, rclass
 				local res ": omitted (no valid controls)"
 			}
 			else {
-				qui count if `tostack`co''
+				qui count if (`tostack`co''==1)
 				local res ": " %`N_fmt'.0fc r(N) " obs"
 			}
 			`nolog' di as text "cohort " as result "`co'" as text "`res'"

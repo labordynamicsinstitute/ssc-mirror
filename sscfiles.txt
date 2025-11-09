@@ -49,6 +49,7 @@ fmwww.bc.edu/repec/bocode/t/tmvnormalden.ado
 fmwww.bc.edu/repec/bocode/t/tabel_options2v.ihlp
 fmwww.bc.edu/repec/bocode/t/tcod.ado
 fmwww.bc.edu/repec/bocode/t/tabmult.ado
+fmwww.bc.edu/repec/bocode/t/twoway_dstat_parse.class
 fmwww.bc.edu/repec/bocode/t/tabstat2excel.pkg
 fmwww.bc.edu/repec/bocode/t/tvdiff.sthlp
 fmwww.bc.edu/repec/bocode/t/textbarplot.html
@@ -883,6 +884,7 @@ fmwww.bc.edu/repec/bocode/t/theilr2.pkg
 fmwww.bc.edu/repec/bocode/t/texteditors.pkg
 fmwww.bc.edu/repec/bocode/t/ttab.ado
 fmwww.bc.edu/repec/bocode/t/traindata.dta
+fmwww.bc.edu/repec/bocode/t/twoway_dstat.sthlp
 fmwww.bc.edu/repec/bocode/t/tsti.pkg
 fmwww.bc.edu/repec/bocode/t/tkdensity.ado
 fmwww.bc.edu/repec/bocode/t/twc_inf.sthlp
@@ -13818,7 +13820,6 @@ fmwww.bc.edu/repec/bocode/r/raltest6.zip
 fmwww.bc.edu/repec/bocode/r/runmlwin_mcmcdiagnostics32.plugin
 fmwww.bc.edu/repec/bocode/r/Rcall_interactive.ado
 fmwww.bc.edu/repec/bocode/r/repcmd6.ado
-fmwww.bc.edu/repec/bocode/r/reg2hdfe.html
 fmwww.bc.edu/repec/bocode/r/rtm_calc.ado
 fmwww.bc.edu/repec/bocode/r/rotatesort.pkg
 fmwww.bc.edu/repec/bocode/r/rlasso.ado

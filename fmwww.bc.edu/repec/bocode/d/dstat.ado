@@ -1,4 +1,4 @@
-*! version 1.5.0  26sep2025  Ben Jann
+*! version 1.5.2  07nov2025  Ben Jann
 
 capt mata: assert(mm_version()>=205)
 if _rc {
@@ -21,6 +21,10 @@ program dstat, eclass
     }
     if `"`subcmd'"'=="predict" {
         `version' Predict `00'
+        exit
+    }
+    if `"`subcmd'"'=="save" {
+        Save `00'
         exit
     }
     if `"`subcmd'"'==substr("frequency",1,max(4,strlen(`"`subcmd'"'))) {
@@ -136,8 +140,12 @@ program Parse_subcmd
         c_local subcmd lorenz
         exit
     }
-    if `"`0'"'==substr("share",1,max(2,strlen(`"`0'"'))) {
-        c_local subcmd share
+    if `"`0'"'==substr("pshare",1,max(3,strlen(`"`0'"'))) {
+        c_local subcmd pshare
+        exit
+    }
+    if `"`0'"'==substr("share",1,max(2,strlen(`"`0'"'))) { // old syntax
+        c_local subcmd pshare
         exit
     }
     if `"`0'"'=="tip" {
@@ -315,7 +323,7 @@ program Obtain_bwat // may update bwidth, bwadjust, n, at
     gettoken subcmd 0 : 0
     if "`subcmd'"=="quantile" exit
     if "`subcmd'"=="lorenz" exit
-    if "`subcmd'"=="share" exit
+    if "`subcmd'"=="pshare" exit
     if "`subcmd'"=="tip" exit
     if "`subcmd'"=="pw" exit
     if "`subcmd'"=="summarize" local bwopt bwidth(str)
@@ -732,7 +740,7 @@ program _Replay, rclass
             else               local qdef "qdef(`qdef')"
             di as txt _col(`c1') "Quantile type" _col(`c2') "= " as res %10s "`qdef'"
         }
-        else if "`subcmd'"=="lorenz" | "`subcmd'"=="share" {
+        else if "`subcmd'"=="lorenz" | "`subcmd'"=="pshare" {
             if `"`e(byvar)'"'!="" {
                 di as txt _col(`c1') "Sort variable" _col(`c2') "= " as res %10s e(byvar)
             }
@@ -964,7 +972,7 @@ program Graph
         if "`CI'"!="" {
             if `"`contrast'"'!="" mata: ds_drop_cref("`CI'", 0, 1)
             local ci ci(`CI')
-            if inlist(`"`subcmd'"', "histogram", "share") {
+            if inlist(`"`subcmd'"', "histogram", "pshare") {
                 tempname BCI ATCI
                 mat `BCI' = `B'
                 mat `ATCI' = `AT'[2,1...] // bin midpoints
@@ -1138,7 +1146,7 @@ program Graph
         if "`noci'"=="" local cipos -1 // print CIs separately upfront
         else            local cipos 0
     }
-    else if inlist(`"`subcmd'"', "histogram", "share") {
+    else if inlist(`"`subcmd'"', "histogram", "pshare") {
         if `"`recast'"'=="" {
             local recast recast(bar) bartype(spanning)
             if `"`contrast'"'=="" {
@@ -1449,6 +1457,233 @@ program _Graph_Get_CI, eclass
     mata: ds_Get_CI("`CI'", `level', "`citype'", `scale')
 end
 
+program Save, rclass
+    if `"`e(cmd)'"'!="dstat" {
+        di as err "last dstat results not found"
+        exit 301
+    }
+    local subcmd `"`e(subcmd)'"'
+    
+    // syntax
+    syntax [anything(equalok)] [, Prefix(name) Replace Level(passthru)/*
+        */ citype(passthru) eform rescale(real 1) cref SELect(str) wide/*
+        */ twoway HORizontal LABels(str asis) ] // undocumented
+    if "`twoway'"=="" {
+        local horizontal
+        local labels
+    }
+    local nms
+    local j 0
+    while (`"`anything'"'!="") {
+        gettoken el anything : anything, parse(" =")
+        if `: list sizeof el'!=1 error 198
+        confirm name `prefix'`el'
+        local ++j
+        local nms `nms' `prefix'`el'
+        local el`j' = strlower("`el'")
+        gettoken el : anything, parse(" =")
+        if `"`el'"'!="=" continue
+        gettoken el anything : anything, parse(" =") // skip "="
+        gettoken el anything : anything, parse(" =")
+        if `: list sizeof el'!=1 error 198
+        local el`j' = strlower(`"`el'"')
+    }
+    local J `j'
+    if !`J' {
+        di as txt "(nothing to do; must specify at least one element to save)"
+        exit
+    }
+    if `:list sizeof nms'!=`J' exit 198
+    if "`:list dups nms'"!="" {
+        di as error "names must be unique"
+        exit 198
+    }
+    
+    // collect results
+    local els
+    tempname D table tmp
+    qui dstat, noheader cref `level' `eform' // make r(table) available
+    mat `table' = r(table)
+    mat `D' = e(b)' * . // initialize with missing column
+    forv j=1/`J' {
+        local l = strlen(`"`el`j''"')
+        if `"`el`j''"'=="b" {
+            local el`j'lab `"`e(title)'"'
+            local el`j'lab: subinstr local el`j'lab "Survey: " ""
+            local r = rownumb(`table', "b")
+            if `r'<. mat `D' = `D', `table'[`r',1...]' * `rescale'
+            else     mat `D' = `D', `D'[1...,1]
+        }
+        else if `"`el`j''"'=="se" {
+            local el`j'lab "Standard error"
+            local r = rownumb(`table', "se")
+            if `r'<. mat `D' = `D', `table'[`r',1...]' * `rescale'
+            else     mat `D' = `D', `D'[1...,1]
+        }
+        else if inlist(`"`el`j''"',"t","z") {
+            local el`j'lab "`el`j'' statistic"
+            local el`j' "t"
+            local r = rownumb(`table', "t")
+            if `r'>=. local r = rownumb(`table', "z")
+            if `r'<. mat `D' = `D', `table'[`r',1...]'
+            else     mat `D' = `D', `D'[1...,1]
+        }
+        else if `"`el`j''"'==substr("pvalue", 1, max(1,`l')) {
+            local el`j' "pvalue"
+            local el`j'lab "p-value"
+            local r = rownumb(`table', "pvalue")
+            if `r'<. mat `D' = `D', `table'[`r',1...]'
+            else     mat `D' = `D', `D'[1...,1]
+        }
+        else if inlist(`"`el`j''"',"ll","lb","ci_l","ci_ll","ci_lb") {
+            local el`j' "lb"
+            local r = rownumb(`table', "ll")
+            if `r'<. {
+                local el`j'lab "`e(level)'% CI"
+                if "`twoway'"=="" local el`j'lab "Lower bound of `el`j'lab'"
+                mat `D' = `D', `table'[`r',1...]' * `rescale'
+            }
+            else mat `D' = `D', `D'[1...,1]
+        }
+        else if inlist(`"`el`j''"',"ul","ub","ci_u","ci_ul","ci_ub") {
+            local el`j' "ub"
+            local r = rownumb(`table', "ul")
+            if `r'<. {
+                local el`j'lab "`e(level)'% CI"
+                if "`twoway'"=="" local el`j'lab "Upper bound  of `el`j'lab'"
+                mat `D' = `D', `table'[`r',1...]' * `rescale'
+            }
+            else mat `D' = `D', `D'[1...,1]
+        }
+        else if substr(`"`el`j''"',1,2)=="at" {
+            // check existence and type of e(at)
+            capt confirm matrix e(at)
+            if _rc==1 exit 1
+            local hasat = _rc==0
+            if `hasat' {
+                mat `tmp' = e(at)'
+                local atbin = colsof(`tmp')!=1
+            }
+            else {
+                mat `D' = `D', `D'[1...,1]
+                local atbin 0
+            }
+            // check el
+            local el `"`el`j''"'
+            if      inlist(`"`el'"',"at_l","at_ll","at_lb") local el "at_ll"
+            else if inlist(`"`el'"',"at_u","at_ul","at_ub") local el "at_ul"
+            else if inlist(`"`el'"',"at_m","at_mid")        local el "at_mid"
+            else if !inlist(`"`el'"', "at", "at_h") {
+                di as err `"{bf:`el'} is not a valid element"'
+                exit 198
+            }
+            local el`j' `el'
+            // labels
+            if "`twoway'"!="" {
+                if "`horizontal'"!="" {
+                    local el`j'lab `"`e(title)'"'
+                    local el`j'lab: subinstr local el`j'lab "Survey: " ""
+                }
+                else if inlist(`"`subcmd'"',"quantile","lorenz","pshare")/*
+                    */ local el`j'lab "Population proportion"
+                else local el`j'lab "" // set later
+            }
+            else {
+                if      "`el'"=="at_ll"  local el`j'lab "Lower bin limit"
+                else if "`el'"=="at_mid" local el`j'lab "Bin midpoint"
+                else if "`el'"=="at_ul"  local el`j'lab "Upper bin limit"
+                else if "`el'"=="at_h"   local el`j'lab "Bin width"
+                else                     local el`j'lab "Evaluation point"
+            }
+            // collect results
+            if `hasat' {
+                if `atbin' {
+                    if "`el'"=="at_ul" mat `tmp' = `tmp'[1...,1] + `tmp'[1...,3]
+                    else if "`el'"=="at_mid" mat `tmp' = `tmp'[1...,2]
+                    else if "`el'"=="at_h"   mat `tmp' = `tmp'[1...,3]
+                    else /* at_ll */         mat `tmp' = `tmp'[1...,1]
+                }
+                else if "`el`j''"=="at_h"  mat `tmp' = `tmp' * 0
+                mat `D' = `D', `tmp'
+            }
+        }
+        else if `"`el`j''"'=="id" {
+            local el`j'lab "Subpopulation ID"
+            capt confirm matrix e(id)
+            if _rc==1 exit 1
+            if _rc mat `D' = `D', `D'[1...,1]
+            else   mat `D' = `D', e(id)'
+        }
+        else if `"`el`j''"'=="omit" {
+            local el`j'lab "Omitted coefficient flag"
+            mat `D' = `D', e(omit)'
+        }
+        else if `"`el`j''"'=="sumw" {
+            local el`j'lab "Sum of weights"
+            mat `D' = `D', e(sumw)'
+        }
+        else if `"`el`j''"'==substr("nobs", 1, max(1,`l')) {
+            local el`j' "nobs"
+            local el`j'lab "Number of observations"
+            mat `D' = `D', e(nobs)'
+        }
+        else if `"`el`j''"'=="name" {
+            local el`j'lab "Coefficient name"
+            mat `D' = `D', `D'[1...,1]
+        }
+        else if `"`el`j''"'==substr("eqname", 1, max(2,`l')) {
+            local el`j' "eqname"
+            local el`j'lab "Equation name"
+            mat `D' = `D', `D'[1...,1]
+        }
+        else if inlist(`"`el`j''"',"eqnum","eqid") {
+            local el`j' "eqid"
+            local el`j'lab "Equation number"
+            mata: st_matrix("`tmp'",/*
+                */ runningsum(_mm_unique_tag(st_matrixrowstripe("`D'")[,1])))
+            mat `D' = `D', `tmp'
+        }
+        else {
+            di as err `"{bf:`el`j''} is not a valid element"'
+            exit 198
+        }
+        local els `els' `el`j''
+    }
+    mat `D' = `D'[1...,2...] // remove initialization column
+    
+    // select and cref
+    if `"`select'"'!="" {
+        mata: ds_save_select("`D'", tokens(st_local("select")))
+    }
+    else if "`cref'"=="" {
+        capt confirm matrix e(cref)
+        if _rc==1 exit 1
+        if !_rc {
+            mata: ds_drop_cref("`D'", 1, 0)
+        }
+    }
+    
+    // store results
+    mata: ds_save() // if wide: returns K, nms#, and eq#
+    
+    // returns
+    if "`wide'"!="" {
+        local nms
+        return scalar k = `K'
+        forv k = 1/`K' {
+            return local names`k' "`nms`k''"
+            return local eq`k' "`eq`k''"
+            local nms `nms' `nms`k''
+        }
+    }
+    return local names "`nms'"
+    return local elements "`els'"
+    return local wide "`wide'"
+
+    // display
+    describe `nms'
+end
+
 program Estimate
     gettoken subcmd 0 : 0
     if "`subcmd'"=="pw" {
@@ -1463,9 +1698,17 @@ end
 
 program _Estimate_PW, eclass
     // syntax
+    gettoken STAT : 0, match(PAR)
+    if `"`PAR'"'=="(" {
+        gettoken STAT 0 : 0, match(PAR)
+        local STAT = strtrim(`"`STAT'"')
+    }
+    else local STAT
     syntax varlist(numeric) [if] [in] [fw iw pw] [, ///
         Statistic(str) LOwer UPper DIAGonal Over(str asis) * ]
+    if `"`STAT'"'!="" local statistic `"`STAT'"' // statistic() is old syntax
     if `"`statistic'"'=="" local statistic correlation // default
+    else local statistic: subinstr local statistic " " "", all // remove blanks
     if `"`over'"'!="" {
         di as err "{bf:over()} not allowed for {bf:dstat pw}"
         exit 198
@@ -1486,11 +1729,23 @@ program _Estimate_PW, eclass
     }
     local stat `"`statistic'"'
     if strpos(`"`stat'"',"(") {
+        // parse stat(arg)
         local rest = substr(`"`stat'"', strpos(`"`stat'"',"(")+1, .)
         local rest `",`rest'"'
         local stat = substr(`"`stat'"', 1, strpos(`"`stat'"',"(")-1)
     }
+    else if regexm(`"`stat'"', "[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?$") {
+        // parse stat#, where # is a (floating point) number 
+        local rest = regexs(0)
+        local stat = substr(`"`stat'"', 1,/*
+            */strlen(`"`stat'"')-strlen(`"`rest'"'))
+        local rest `",`rest')"'
+    }
     else local rest ")"
+    if `"`stat'"'=="" {
+        di as err `"{bf:`statistic'} invalid; statistic not found"'
+        exit 198
+    }
     local stats
     local cnames
     forv i = 1/`n' {
@@ -1637,7 +1892,7 @@ program _Estimate, eclass
             */ gap sum GENERALized ABSolute PERcent /*
             */ BYvar(varname numeric) Zvar(varname numeric) // zvar() is old syntax
     }
-    else if "`subcmd'"=="share" {
+    else if "`subcmd'"=="pshare" {
         local opts n(numlist int >=1 max=1) at(str) /*
             */ PROPortion PERcent sum AVErage GENERALized /*
             */ BYvar(varname numeric) Zvar(varname numeric) // zvar() is old syntax
@@ -1779,7 +2034,7 @@ program _Estimate, eclass
         }
         local yvars `byvar'
     }
-    else if "`subcmd'"=="share" {
+    else if "`subcmd'"=="pshare" {
         if `"`at'`n'"'=="" local n 20
         local tmp `proportion' `percent' `sum' `average' `generalized'
         if `:list sizeof tmp'>1 {
@@ -2258,7 +2513,7 @@ program _Estimate, eclass
         }
         if "`percent'"!="" local title "`title' (percent)"
     }
-    else if "`subcmd'"=="share" {
+    else if "`subcmd'"=="pshare" {
         if "`byvar'"!="" local title "Concentration shares"
         else             local title "Percentile shares"
         if "`proportion'"!=""       local title "`title' (proportion)"
@@ -2438,7 +2693,7 @@ program Parse_at // returns atmat="matrix" if at is matrix, else expands numlist
     else if "`subcmd'"=="histogram" local args "numlist min=2 ascending"
     else if "`subcmd'"=="quantile"  local args "numlist >=0 <=1"
     else if "`subcmd'"=="lorenz"    local args "numlist >=0 <=1"
-    else if "`subcmd'"=="share"     local args "numlist min=2 >=0 <=1 ascending"
+    else if "`subcmd'"=="pshare"    local args "numlist min=2 >=0 <=1 ascending"
     else if "`subcmd'"=="tip"       local args "numlist >=0 <=1"
     else                            local args "numlist"
     syntax [, at(`args') ]
@@ -2955,7 +3210,7 @@ void ds_parse_stats(`Int' n)
     asarray(A, "gini"       , "0")       // Gini coefficient
     asarray(A, "agini"      , "0")       // absolute Gini coefficient
     asarray(A, "mld"        , "")        // mean log deviation (MLD)
-    asarray(A, "theil"      , "")        // Theil index
+    asarray(A, "theil"      , "1")       // Theil index
     asarray(A, "ge"         , "1")       // generalized entropy
     asarray(A, "atkinson"   , "1,0,.")   // Atkinson inequality measure
     asarray(A, "cv"         , "1")       // coefficient of variation
@@ -2974,6 +3229,7 @@ void ds_parse_stats(`Int' n)
     asarray(A, "alorenz"    , ".,0,100") // absolute lorenz ordinate
     asarray(A, "elorenz"    , ".,0,100") // equality gap lorenz ordinate
     asarray(A, "share"      , ".,0,100;.,0,100") // percentile share (proportion)
+    asarray(A, "pshare"     , ".,0,100;.,0,100") // percentile share (proportion)
     asarray(A, "dshare"     , ".,0,100;.,0,100") // percentile share (density)
     asarray(A, "tshare"     , ".,0,100;.,0,100") // percentile share (total/sum)
     asarray(A, "gshare"     , ".,0,100;.,0,100") // percentile share (generalized)
@@ -2984,9 +3240,9 @@ void ds_parse_stats(`Int' n)
     asarray(A, "gw_mld"     , "bys")     // weighted avg of within-group MLD
     asarray(A, "w_mld"      , "bys")     // within MLD
     asarray(A, "b_mld"      , "bys")     // between MLD
-    asarray(A, "gw_theil"   , "bys")     // weighted avg of within-group Theil
-    asarray(A, "w_theil"    , "bys")     // within Theil index
-    asarray(A, "b_theil"    , "bys")     // between Theil index
+    asarray(A, "gw_theil"   , "bys;1")   // weighted avg of within-group Theil
+    asarray(A, "w_theil"    , "bys;1")   // within Theil index
+    asarray(A, "b_theil"    , "bys;1")   // between Theil index
     asarray(A, "gw_ge"      , "bys;1")   // weighted avg of within-group GE
     asarray(A, "w_ge"       , "bys;1")   // within generalized entropy
     asarray(A, "b_ge"       , "bys;1")   // between generalized entropy
@@ -3001,7 +3257,8 @@ void ds_parse_stats(`Int' n)
     asarray(A, "gccurve"    , ".,0,100;by") // generalized concentration ordinate
     asarray(A, "accurve"    , ".,0,100;by") // absolute concentration ordinate
     asarray(A, "eccurve"    , ".,0,100;by") // equality gap concentration ordinate
-    asarray(A, "cshare"     , ".,0,100;.,0,100;by") // concentration share
+    asarray(A, "cshare"     , ".,0,100;.,0,100;by") // concentration share (proportion)
+    asarray(A, "pcshare"    , ".,0,100;.,0,100;by") // concentration share (proportion)
     asarray(A, "dcshare"    , ".,0,100;.,0,100;by") // concentration share as density
     asarray(A, "gcshare"    , ".,0,100;.,0,100;by") // generalized concentration share
     asarray(A, "tcshare"    , ".,0,100;.,0,100;by") // concentration share as total
@@ -3767,6 +4024,202 @@ void ds_graph_select(`SS' list, `SS' select)
     }
     L = L[p]
     st_local(list, invtokens(L))
+}
+
+// --------------------------------------------------------------------------
+// helper functions for save
+// --------------------------------------------------------------------------
+
+void ds_save()
+{
+    `Bool' replace, wide, hor
+    `Int'  n, N, j, J, k, K, a, b
+    `IntC' p
+    `SS'   dv, over, subpop, var
+    `SR'   els, nms, lbls
+    `SM'   cstripe, OVER, TMP, NMS
+    `RM'   D
+    
+    // setup
+    replace = st_local("replace")!=""
+    wide    = st_local("wide")!=""
+    els     = tokens(st_local("els"))
+    nms     = tokens(st_local("nms"))
+    dv      = st_global("e(depvar)")
+    if (length(tokens(dv))!=1) dv = "" // omit if multiple vars
+    D = st_matrix(st_local("D"))
+    cstripe = st_matrixrowstripe(st_local("D"))
+    if (wide) {
+        over = st_global("e(over)")
+        if (over!="") {
+            OVER = tokens(st_global("e(over_namelist)"))',
+                   tokens(st_global("e(over_labels)"))'
+            if (OVER[,1]==OVER[,2]) OVER = OVER[,1]
+        }
+        p = selectindex(_mm_unique_tag(cstripe[,1], 1))
+        K = rows(p)
+        st_local("K", strofreal(K))
+        for (k=1;k<=K;k++) st_local("eq"+strofreal(k), cstripe[p[k],1])
+    }
+    else K = 1
+    hor  = st_local("horizontal")!=""
+    lbls = tokens(st_local("labels"))
+    if (length(lbls)<K) lbls = lbls, J(1, K-length(lbls), "")
+    
+    // check names
+    J = length(nms)
+    if (wide) {
+        NMS = TMP = J(K, J, "")
+        for (k=1;k<=K;k++) {
+            NMS[k,] = nms :+ strofreal(k)
+            st_local("nms" + strofreal(k), invtokens(NMS[k,]))
+            _ds_save_confirm("name", NMS[k,])
+            TMP[k,] = st_tempname(J)
+        }
+        for (k=1;k<=K;k++) {
+            if (!replace) _ds_save_confirm("new variable", NMS[k,])
+        }
+    }
+    else {
+        NMS = nms
+        TMP = st_tempname(J)
+        if (!replace) _ds_save_confirm("new variable", NMS)
+    }
+    
+    // set number of obs
+    if (wide) n = max(mm_diff(0\p))
+    else      n = rows(D)
+    N = st_nobs()
+    if (N<n) {
+        st_addobs(n-N)
+        printf("{txt}(%g observations added)\n", n-N)
+    }
+    
+    // generate variables (using tempnames)
+    if (wide) {
+        b = 0
+        for (k=1;k<=K;k++) {
+            a = b + 1; b = p[k]
+            _ds_save_parse_eq(cstripe[b,1], over, OVER, subpop="", var="")
+            if (var=="") var = dv
+            _ds_save(D[|a,1\b,.|], cstripe[|a,1\b,2|], TMP[k,], els,
+                subpop, var, hor, lbls[k])
+        }
+    }
+    else _ds_save(D, cstripe, TMP, els, "", dv, hor, lbls[1])
+    
+    // rename variables
+    for (k=1;k<=K;k++) {
+        for (j=1;j<=J;j++) {
+            if (_st_varindex(NMS[k,j])<.) st_dropvar(NMS[k,j])
+            st_varrename(TMP[k,j], NMS[k,j])
+        }
+    }
+}
+
+void _ds_save(`RM' D, `SM' cstripe, `SR' nms, `SR' els, `SS' subpop, `SS' var,
+    `Bool' hor, `SS' lbl0)
+{
+    `Int' n, j, J, l
+    `SS'  lbl
+    
+    n = rows(D)
+    J = length(els)
+    for (j=1;j<=J;j++) {
+        if (els[j]=="name") {
+            l = min((2045,max(1\strlen(cstripe[,2]))))
+            st_sstore((1,n), st_addvar(l, nms[j]), cstripe[,2])
+        }
+        else if (els[j]=="eqname") {
+            l = min((2045,max(1\strlen(cstripe[,1]))))
+            st_sstore((1,n), st_addvar(l, nms[j]), cstripe[,1])
+        }
+        else st_store((1,n), st_addvar("double", nms[j]), D[,j])
+        lbl = st_local("el"+strofreal(j)+"lab")
+        if (hor ? substr(els[j],1,2)=="at" : els[j]=="b") {
+            if (lbl0!="") lbl = lbl0
+            else {
+                if (subpop!="") lbl = subpop + ": " + lbl
+                if (var!="")    lbl = lbl + " of " + var
+            }
+        }
+        else if (substr(els[j],1,2)=="at") {
+            if (lbl=="") {
+                if (var!="") {
+                    if (_st_varindex(var)) lbl = st_varlabel(var)
+                    if (lbl=="") lbl = var
+                }
+                else lbl = "Evaluation point"
+            }
+        }
+        else if (hor ? 0 : (els[j]=="lb" | els[j]=="ub")) {
+            if (lbl0!="") lbl = lbl0
+        }
+        st_varlabel(nms[j], lbl)
+    }
+}
+
+void _ds_save_confirm(`SS' spec, `SR' nms)
+{
+    `Int' j, J, rc
+    
+    J = length(nms)
+    for (j=1;j<=J;j++) {
+        rc = _stata("confirm " + spec + " " + nms[j])
+        if (rc) exit(rc)
+    }
+}
+
+void _ds_save_parse_eq(`SS' eq, `SS' over, `SM' OVER, `SS' subpop, `SS' var)
+{   // set subpop and var
+    `SS'  o
+    `Int' l
+    
+    if (eq=="") {
+        subpop = var = ""
+        return
+    }
+    if (over!="") {
+        if (l = strpos(eq, "~")) { // eq = subpop~varname
+            var = substr(eq, l+1, .)
+            o   = substr(eq, 1, l-1)
+        }
+        else { // eq = subpop
+            var = ""
+            o   = eq
+        }
+        if (o=="total") subpop = o
+        else if (cols(OVER)==2) {
+            l = selectindex(OVER[,1]:==o)
+            if (length(l)==1) subpop = OVER[l,2]
+            else              subpop = over + "=" + o
+        }
+        else subpop = over + "=" + o
+    }
+    else { // eq = varname
+        subpop = ""
+        var    = eq
+    }
+}
+
+void ds_save_select(`SS' d, `SR' sel)
+{
+    `Int'  j
+    `IntC' p, pj
+    `SM'   rstripe
+    `RM'   D
+    
+    D = st_matrix(d)
+    rstripe = st_matrixrowstripe(d)
+    p = J(rows(D),1,0)
+    for (j=length(sel);j;j--) p = p :| strmatch(rstripe[,1], sel[j])
+    p = selectindex(p)
+    if (!length(p)) {
+        errprintf("select(): no match found; specified selection is empty\n")
+        exit(111)
+    }
+    st_matrix(d, D[p,])
+    st_matrixrowstripe(d, rstripe[p,])
 }
 
 // --------------------------------------------------------------------------
@@ -4732,19 +5185,19 @@ struct `DATA' {
     `Bool'  floor      // use lower-than definition (cdf/ccdf)
     `Bool'  discr      // discrete (cdf/ccdf)
     `Bool'  cat        // categorical (prop)
-    `Bool'  prop       // report proportions (histogram, share)
-    `Bool'  pct        // report percent (histogram, proportion, cdf, ccdf, share, lorenz)
+    `Bool'  prop       // report proportions (histogram, pshare)
+    `Bool'  pct        // report percent (histogram, proportion, cdf, ccdf, pshare, lorenz)
     `Bool'  uncond     // condition on total sample (density, histogram, proportion, cdf, ccdf)
     `Bool'  freq       // report frequencies (histogram, proportion, cdf, ccdf)
     `Bool'  ep         // use equal probability bins (histogram)
-    `Bool'  gl         // generalized lorenz ordinates (lorenz, share)
+    `Bool'  gl         // generalized lorenz ordinates (lorenz, pshare)
     `Bool'  gap        // equality gap curve (lorenz)
-    `Bool'  sum        // total (lorenz, share)
+    `Bool'  sum        // total (lorenz, pshare)
     `Bool'  abs        // absolute (lorenz)
-    `Bool'  ave        // average (share)
+    `Bool'  ave        // average (pshare)
     `Bool'  relax      // relax option (summarize)
-    `SR'    yvars      // names of auxiliary variables (summarize, lorenz, share)
-    `RM'    Y          // view on auxiliary variables (summarize, lorenz, share)
+    `SR'    yvars      // names of auxiliary variables (summarize, lorenz, pshare)
+    `RM'    Y          // view on auxiliary variables (summarize, lorenz, pshare)
     `Bool'  pstrong    // use strong poverty definition (summarize, tip)
     `RS'    pline      // default poverty line (summarize, tip)
     // `RR'    hcr, pgi   // containers to store HCR and PGI (tip)
@@ -4891,7 +5344,7 @@ void dstat()
     else if (D.cmd=="ccdf")       dstat_cdf(D, 1)
     else if (D.cmd=="quantile")   dstat_quantile(D)
     else if (D.cmd=="lorenz")     dstat_lorenz(D)
-    else if (D.cmd=="share")      dstat_share(D)
+    else if (D.cmd=="pshare")     dstat_pshare(D)
     else if (D.cmd=="tip")        dstat_tip(D)
     else if (D.cmd=="summarize")  dstat_sum(D)
     
@@ -4938,7 +5391,7 @@ void dstat()
         st_local("k_eq", strofreal(length(D.eqs)))
         st_matrix(st_local("AT"), D.at')
         st_matrixcolstripe(st_local("AT"), D.cstripe)
-        if (D.cmd=="histogram" | D.cmd=="share") {
+        if (D.cmd=="histogram" | D.cmd=="pshare") {
             st_matrixrowstripe(st_local("AT"), (J(3,1,""), ("ll", "mid", "h")'))
         }
     }
@@ -5366,7 +5819,7 @@ void ds_get_at(`Data' D)
         if (!length(r)) r = (0,1)
         D.AT = &(rangen(r[1], r[2], D.n))
     }
-    else if (D.cmd=="share") {
+    else if (D.cmd=="pshare") {
         D.n  = strtoreal(st_local("n"))
         D.AT = &((0::D.n) / D.n)
         D.n  = D.n + 1 // one additional point for upper limit
@@ -5386,7 +5839,7 @@ void _ds_get_atmat(`Data' D, `SS' matnm)
         assert(M==trunc(M)) // integer
         assert(all(M:>=0))  // positive
     }
-    else if (anyof(("quantile", "lorenz", "share", "tip"), D.cmd)) {
+    else if (anyof(("quantile", "lorenz", "pshare", "tip"), D.cmd)) {
         assert(all(M:>=0 :& M:<=1))  // within [0,1]
     }
     eqs = st_matrixcolstripe(matnm)[.,1]'
@@ -5400,7 +5853,7 @@ void _ds_get_atmat(`Data' D, `SS' matnm)
     i    = length(from)
     D.AT = J(1, i, NULL)
     for (;i;i--) {
-        if (D.cmd=="histogram" | D.cmd=="share") {
+        if (D.cmd=="histogram" | D.cmd=="pshare") {
             // ul must not be smaller than ll
             assert(all(mm_diff(M[|from[i] \ to[i]|]):>=0))
         }
@@ -5619,8 +6072,8 @@ void ds_set_K(`Data' D)
     D.omit = J(D.K, 1, 0)
     D.IFtot = J(D.K, 1, 0)
     if (D.cmd!="summarize") {
-        if (D.cmd=="histogram" | D.cmd=="share") D.at = J(D.K, 3, .)
-        else                                     D.at = J(D.K, 1, .)
+        if (D.cmd=="histogram" | D.cmd=="pshare") D.at = J(D.K, 3, .)
+        else                                      D.at = J(D.K, 1, .)
     }
     D.cstripe = J(D.K, 2, "")
     D.eqs = J(1, D.nover*D.nvars, "")
@@ -6812,10 +7265,10 @@ void ds_lorenz_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Int' t, | `Int' y)
 }
 
 // --------------------------------------------------------------------------
-// dstat share
+// dstat pshare
 // --------------------------------------------------------------------------
 
-void dstat_share(`Data' D)
+void dstat_pshare(`Data' D)
 {
     `Int' i, j, a, b, d, t, y
     `RC'  L, AT, B, h
@@ -6849,21 +7302,21 @@ void dstat_share(`Data' D)
                 B = mm_diff(L)
                 if (d) B = B :* editmissing(1 :/ h, 0)
                 D.b[|a \ b|]  = B \ B[rows(B)]
-                if (D.noIF==0) ds_share_IF(D, G, a, b, t, d, L, y)
+                if (D.noIF==0) ds_pshare_IF(D, G, a, b, t, d, L, y)
             }
         }
     }
 }
 
-void ds_share_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Int' t, `Int' d, 
+void ds_pshare_IF(`Data' D, `Grp' G, `Int' a, `Int' b, `Int' t, `Int' d, 
     `RC' L, | `Int' y)
 {
     if (t==2) D.IFtot[|a \ b-1|] = D.b[|a \ b-1|] // total
-    D.IF[|1,a \ .,b-1|] = _ds_share_IF(D, G, D.at[|a,1 \ b,1|], t, d, L, y)
+    D.IF[|1,a \ .,b-1|] = _ds_pshare_IF(D, G, D.at[|a,1 \ b,1|], t, d, L, y)
     D.IF[,b] = J(D.N, 1, 0)
 }
 
-`RM' _ds_share_IF(`Data' D, `Grp' G, `RC' at, `Int' t, `Int' d, `RC' L, 
+`RM' _ds_pshare_IF(`Data' D, `Grp' G, `RC' at, `Int' t, `Int' d, `RC' L, 
     | `Int' y)
 {
     `Int' i, n
@@ -7089,14 +7542,11 @@ void _dstat_sum(`Data' D, `Grp' G, `Int' j, `Int' i, `SS' s, `T' I)
 
 `Bool' _ds_sum_omit(`Data' D, `Int' i)
 {
-    if (D.b[i]>=.) {
-        D.omit[i] = 1
-        D.b[i] = 0
-        if (D.noIF) return(1)
-        D.IF[,i] = J(D.N, 1, 0)
-        return(1)
-    }
-    return(0)
+    if (D.b[i]<.) return(0)
+    D.omit[i] = 1
+    D.b[i] = 0
+    if (!D.noIF) D.IF[,i] = J(D.N, 1, 0)
+    return(1)
 }
 
 void _ds_sum_fixed(`Data' D, `Int' i, `RS' b)
@@ -8253,6 +8703,7 @@ void ds_sum_hoover(`Data' D, `Grp' G, `Int' i)
     z  = G.X() :- t
     z2 = abs(z)
     D.b[i] = ds_mean(z2, G.w(), G.W) / (2 * t)
+    if (_ds_sum_omit(D, i)) return
     if (D.noIF) return
     ds_set_IF(D, G, i, ((z2 / (2 * t) :- D.b[i])
         - ds_mean(sign(z) * t + z2, G.w(), G.W) / (2 * t^2) * z) / G.W)
@@ -8301,6 +8752,13 @@ void ds_sum_gw_gini(`Data' D, `Grp' G, `Int' i, `RS' df)
     else c = 1
     if (abs) b = c * (cp * 2 - m)     // = c * (2 * cov)  with cov = cp - m/2
     else     b = c * (cp * 2 / m - 1) // = c * (2 * cov / m)
+    if (b>=.) {
+        if (!any(X)) { // X all zero
+            b = 0
+            if (!noIF) h = J(rows(X), 1, 0)
+            return(b)
+        }
+    }
     if (noIF) return(b)
     // The main moment condition of the Gini coefficient can be written as
     // h = (2*F - 1)*X - G*X (see Binder & Kovacevic 1995)
@@ -8332,6 +8790,13 @@ void ds_sum_b_gini(`Data' D, `Grp' G, `Int' i, `RS' df)
     }
     else c = 1
     D.b[i] = c * (cp * 2 / m - 1)
+    if (D.b[i]>=.) {
+        if (!any(G.X())) { // X all zero
+            D.b[i] = 0
+            if (!D.noIF) ds_set_IF(D, G, i, J(G.N, 1, 0))
+            return
+        }
+    }
     if (_ds_sum_omit(D, i)) return
     if (D.noIF) return
     B  = ds_invp(G.N, p, _ds_sum_ccdf(mg, mg:*w, G.W))
@@ -8421,99 +8886,127 @@ void ds_sum_b_mld(`Data' D, `Grp' G, `Int' i)
     return(_ds_sum_invalid(D, j, "b_mld", ln(X)))
 }
 
-void ds_sum_theil(`Data' D, `Grp' G, `Int' i)
+void ds_sum_theil(`Data' D, `Grp' G, `Int' i, `RS' nozero)
 {
     `RC' h
     
-    D.b[i] = _ds_sum_theil(G.X(), G.w(), G.W, D.noIF, h=.)
+    D.b[i] = _ds_sum_theil(G.X(), G.w(), G.W, D.noIF, h=., &nozero)
     if (_ds_sum_omit(D, i)) return
     if (D.noIF) return
     ds_set_IF(D, G, i, h / G.W)
 }
 
-`BoolC' _ds_sum_theil_invalid(`Data' D, `Int' j, `RC' X)
+`BoolC' _ds_sum_theil_invalid(`Data' D, `Int' j, `RC' X, `RS' nozero)
 {   // registered in _ds_sum_invalid_dict()
-    return(_ds_sum_invalid(D, j, "theil", ln(X)))
+    return(__ds_sum_theil_invalid(D, j, "theil", X, nozero))
 }
 
-void ds_sum_gw_theil(`Data' D, `Grp' G, `Int' i)
+`BoolC' __ds_sum_theil_invalid(`Data' D, `Int' j, `SS' s, `RC' X, `RS' nozero)
 {
-    _ds_sum_gw(D, G, i, &_ds_sum_theil())
+    return(_ds_sum_invalid(D, j, s, ln(nozero ? X : editvalue(X, 0, 1))))
 }
 
-`BoolC' _ds_sum_gw_theil_invalid(`Data' D, `Int' j, `RC' X)
+void ds_sum_gw_theil(`Data' D, `Grp' G, `Int' i, `RS' nozero)
+{
+    _ds_sum_gw(D, G, i, &_ds_sum_theil(), &nozero)
+}
+
+`BoolC' _ds_sum_gw_theil_invalid(`Data' D, `Int' j, `RC' X, `RS' nozero)
 {   // registered in _ds_sum_invalid_dict()
-    return(_ds_sum_invalid(D, j, "gw_theil", ln(X)))
+    return(__ds_sum_theil_invalid(D, j, "gw_theil", X, nozero))
 }
 
-`RS' _ds_sum_theil(`RC' X, `RC' w, `RS' W, `Bool' noIF, `RC' h, | `PR' o)
+`RS' _ds_sum_theil(`RC' X, `RC' w, `RS' W, `Bool' noIF, `RC' h, `PR' o)
 {
-    `RS' b, m, delta
+    `RS' b, m, delta, nozero
     `RC' z
     pragma unused W
-    pragma unused o
     
+    nozero = *o
     m = ds_mean(X, w, W)
-    z = X :* ln(X)
+    z = X :* ln(nozero ? X : editvalue(X, 0, 1))
     b = ds_mean(z, w, W)/m - ln(m)
+    if (b>=. & !nozero) {
+        if (!any(X)) { // X all zero
+            b = 0
+            if (!noIF) h = J(rows(X), 1, 0)
+            return(b)
+        }
+    }
     if (noIF) return(b)
     delta = ds_mean(z, w, W)/m^2 + 1/m
     h = ((z/m:-ln(m)) :- b) - delta*(X :- m)
     return(b)
 }
 
-void ds_sum_w_theil(`Data' D, `Grp' G, `Int' i)
+void ds_sum_w_theil(`Data' D, `Grp' G, `Int' i, `RS' nozero)
 {
     `RS' m
-    `RC' mg, z, h
+    `RC' mg, lnmg, z, h
     
-    z = ln(G.X())
     m = G.mean()
     mg = J(G.N, 1, .)
     mg[G.pY()] = _mm_collapse2(G.XsY(), G.wsY(), G.Ys())
-    z = G.X() :* z - mg:*ln(mg)
+    lnmg = ln(nozero ? mg : editvalue(mg, 0, 1))
+    z = G.X() :* ln(nozero ? G.X() : editvalue(G.X(), 0, 1)) - mg:*lnmg
     D.b[i] = ds_mean(z, G.w(), G.W) / m
+    if (D.b[i]>=. & !nozero) {
+        if (!any(G.X())) { // X all zero
+            D.b[i] = 0
+            if (!D.noIF) ds_set_IF(D, G, i, J(G.N, 1, 0))
+            return
+        }
+    }
     if (_ds_sum_omit(D, i)) return
     if (D.noIF) return
     h = (z/m :- D.b[i]) - (ds_mean(z, G.w(), G.W) / m^2) :* (G.X() :- m) -
-        (ln(mg):+1)/m :* (G.X() - mg)
+        (lnmg:+1)/m :* (G.X() - mg)
     ds_set_IF(D, G, i, h / G.W)
 }
 
-`BoolC' _ds_sum_w_theil_invalid(`Data' D, `Int' j, `RC' X)
+`BoolC' _ds_sum_w_theil_invalid(`Data' D, `Int' j, `RC' X, `RS' nozero)
 {   // registered in _ds_sum_invalid_dict()
-    return(_ds_sum_invalid(D, j, "w_theil", ln(X)))
+    return(__ds_sum_theil_invalid(D, j, "w_theil", X, nozero))
 }
 
-void ds_sum_b_theil(`Data' D, `Grp' G, `Int' i)
+void ds_sum_b_theil(`Data' D, `Grp' G, `Int' i, `RS' nozero)
 {
     `RS' m, mz
-    `RC' mg, z, h
+    `RC' mg, lnmg, z, h
+    pragma unused nozero
     
     m = G.mean()
     mg = J(G.N, 1, .)
     mg[G.pY()] = _mm_collapse2(G.XsY(), G.wsY(), G.Ys())
-    z = mg:*ln(mg)
+    lnmg = ln(nozero ? mg : editvalue(mg, 0, 1))
+    z = mg :* lnmg
     mz = ds_mean(z, G.w(), G.W)
     D.b[i] = mz/m - ln(m)
+    if (D.b[i]>=. & !nozero) {
+        if (!any(G.X())) { // X all zero
+            D.b[i] = 0
+            if (!D.noIF) ds_set_IF(D, G, i, J(G.N, 1, 0))
+            return
+        }
+    }
     if (_ds_sum_omit(D, i)) return
     if (D.noIF) return
     h = (z/m :- (ln(m) + D.b[i])) - ((mz/m + 1)/m) :* (G.X() :- m) +
-        (ln(mg):+1)/m :* (G.X() - mg)
+        (lnmg:+1)/m :* (G.X() - mg)
     ds_set_IF(D, G, i, h / G.W)
 }
 
-`BoolC' _ds_sum_b_theil_invalid(`Data' D, `Int' j, `RC' X)
+`BoolC' _ds_sum_b_theil_invalid(`Data' D, `Int' j, `RC' X, `RS' nozero)
 {   // registered in _ds_sum_invalid_dict()
-    return(_ds_sum_invalid(D, j, "b_theil", ln(X)))
+    return(__ds_sum_theil_invalid(D, j, "b_theil", X, nozero))
 }
 
 void ds_sum_ge(`Data' D, `Grp' G, `Int' i, `RS' a)
 {
     `RC' h
     
-    if (a==0) {; ds_sum_mld(D, G, i);   return; }
-    if (a==1) {; ds_sum_theil(D, G, i); return; }
+    if (a==0) {; ds_sum_mld(D, G, i);      return; }
+    if (a==1) {; ds_sum_theil(D, G, i, 1); return; }
     D.b[i] = _ds_sum_ge(G.X(), G.w(), G.W, D.noIF, h=., &a)
     if (_ds_sum_omit(D, i)) return
     if (D.noIF) return
@@ -8529,8 +9022,8 @@ void ds_sum_ge(`Data' D, `Grp' G, `Int' i, `RS' a)
 
 void ds_sum_gw_ge(`Data' D, `Grp' G, `Int' i, `RS' a)
 {
-    if (a==0) {; ds_sum_gw_mld(D, G, i);   return; }
-    if (a==1) {; ds_sum_gw_theil(D, G, i); return; }
+    if (a==0) {; ds_sum_gw_mld(D, G, i);      return; }
+    if (a==1) {; ds_sum_gw_theil(D, G, i, 1); return; }
     _ds_sum_gw(D, G, i, &_ds_sum_ge(), &a)
 }
 
@@ -8553,6 +9046,13 @@ void ds_sum_gw_ge(`Data' D, `Grp' G, `Int' i, `RS' a)
     mz = ds_mean(z, w, W)
     c  = 1 / (a * (a - 1))
     b  = c * (mz/m^a - 1)
+    if (b>=.) {
+        if (!any(X)) { // X all zero
+            b = 0
+            if (!noIF) h = J(rows(X), 1, 0)
+            return(b)
+        }
+    }
     if (noIF) return(b)
     delta = 1 / ((a - 1) * m^(a + 1)) * mz
     h = (c*(z/m^a:-1) :- b) - delta * (X :- m)
@@ -8564,17 +9064,24 @@ void ds_sum_w_ge(`Data' D, `Grp' G, `Int' i, `RS' a)
     `RS' m
     `RC' z, mg, delta, h
     
-    if (a==0) {; ds_sum_w_mld(D, G, i);   return; }
-    if (a==1) {; ds_sum_w_theil(D, G, i); return; }
+    if (a==0) {; ds_sum_w_mld(D, G, i);      return; }
+    if (a==1) {; ds_sum_w_theil(D, G, i, 1); return; }
     z = G.X():^a
     m = G.mean()
     mg = J(G.N, 1, .)
     mg[G.pY()] = _mm_collapse2(G.XsY(), G.wsY(), G.Ys())
-    h = (1/(a*(a-1)*m^a)) * (z :- mg:^a)
-    D.b[i] = ds_mean(h, G.w(), G.W)
+    h = z :- mg:^a
+    D.b[i] = (1/(a*(a-1)*m^a)) * ds_mean(h, G.w(), G.W)
+    if (D.b[i]>=.) {
+        if (!any(G.X())) { // X all zero
+            D.b[i] = 0
+            if (!D.noIF) ds_set_IF(D, G, i, J(G.N, 1, 0))
+            return
+        }
+    }
     if (_ds_sum_omit(D, i)) return
     if (D.noIF) return
-    h = h :- D.b[i]
+    h = (1/(a*(a-1)*m^a)) * h :- D.b[i]
     h = h - mg:^(a-1)/((a-1)*m^a) :* (G.X() - mg)
     delta = ds_mean((1/((a-1)*m^(a+1))) * (z :- mg:^a), G.w(), G.W)
     h = h - delta * (G.X() :- m)
@@ -8593,13 +9100,20 @@ void ds_sum_b_ge(`Data' D, `Grp' G, `Int' i, `RS' a)
     `RS' c, m
     `RC' mg, delta, h
     
-    if (a==0) {; ds_sum_b_mld(D, G, i);   return; }
-    if (a==1) {; ds_sum_b_theil(D, G, i); return; }
+    if (a==0) {; ds_sum_b_mld(D, G, i);      return; }
+    if (a==1) {; ds_sum_b_theil(D, G, i, 1); return; }
     c = 1 / (a * (a - 1))
     m = G.mean()
     mg = J(G.N, 1, .)
     mg[G.pY()] = _mm_collapse2(G.XsY(), G.wsY(), G.Ys())
     D.b[i] = c * (ds_mean(mg:^a, G.w(), G.W) / m^a - 1)
+    if (D.b[i]>=.) {
+        if (!any(G.X())) { // X all zero
+            D.b[i] = 0
+            if (!D.noIF) ds_set_IF(D, G, i, J(G.N, 1, 0))
+            return
+        }
+    }
     if (_ds_sum_omit(D, i)) return
     if (D.noIF) return
     h = (c * (mg:^a/m^a :- 1) :- D.b[i]) + 
@@ -8824,17 +9338,17 @@ void ds_sum_sdlog(`Data' D, `Grp' G, `Int' i, `RS' df)
 
 void ds_sum_top(`Data' D, `Grp' G, `Int' i, `RS' p)
 {
-    _ds_sum_share(D, G, i, (1-p/100) \ 1)
+    _ds_sum_pshare(D, G, i, (1-p/100) \ 1)
 }
 
 void ds_sum_bottom(`Data' D, `Grp' G, `Int' i, `RS' p)
 {
-    _ds_sum_share(D, G, i, 0 \ p/100)
+    _ds_sum_pshare(D, G, i, 0 \ p/100)
 }
 
 void ds_sum_mid(`Data' D, `Grp' G, `Int' i, `RR' o)
 {
-    _ds_sum_share(D, G, i, o'/100)
+    _ds_sum_pshare(D, G, i, o'/100)
 }
 
 void ds_sum_palma(`Data' D, `Grp' G, `Int' i)
@@ -8842,10 +9356,10 @@ void ds_sum_palma(`Data' D, `Grp' G, `Int' i)
     `RS' b1, b2
     `RC' IF1
     
-    _ds_sum_share(D, G, i, 0\.4) // bottom 40%
+    _ds_sum_pshare(D, G, i, 0\.4) // bottom 40%
     b1 = D.b[i]
     if (D.noIF==0) IF1 = D.IF[,i]
-    _ds_sum_share(D, G, i, .9\1) // top 10%
+    _ds_sum_pshare(D, G, i, .9\1) // top 10%
     b2 = D.b[i]
     D.b[i] = b2 / b1
     if (_ds_sum_omit(D, i)) return
@@ -8875,10 +9389,10 @@ void ds_sum_sratio(`Data' D, `Grp' G, `Int' i, `RR' o)
     else if (o[3]==.z) p = (0,o[1],o[2],100)' // two arguments
     else               p = o'                 // four arguments
     p = p / 100
-    _ds_sum_share(D, G, i, p[|1\2|]) // lower share
+    _ds_sum_pshare(D, G, i, p[|1\2|]) // lower share
     b1 = D.b[i]
     if (D.noIF==0) IF1 = D.IF[,i]
-    _ds_sum_share(D, G, i, p[|3\4|]) // upper share
+    _ds_sum_pshare(D, G, i, p[|3\4|]) // upper share
     b2 = D.b[i]
     D.b[i] = b2 / b1
     if (_ds_sum_omit(D, i)) return
@@ -8921,10 +9435,15 @@ void ds_sum_elorenz(`Data' D, `Grp' G, `Int' i, `RS' p)
 
 void ds_sum_share(`Data' D, `Grp' G, `Int' i, `RR' o)
 {
-    _ds_sum_share(D, G, i, o'/100)
+    _ds_sum_pshare(D, G, i, o'/100)
 }
 
-void _ds_sum_share(`Data' D, `Grp' G, `Int' i, `RC' at, | `Int' t, `Bool' d)
+void ds_sum_pshare(`Data' D, `Grp' G, `Int' i, `RR' o)
+{
+    _ds_sum_pshare(D, G, i, o'/100)
+}
+
+void _ds_sum_pshare(`Data' D, `Grp' G, `Int' i, `RC' at, | `Int' t, `Bool' d)
 {
     `RC' L
     
@@ -8939,27 +9458,27 @@ void _ds_sum_share(`Data' D, `Grp' G, `Int' i, `RC' at, | `Int' t, `Bool' d)
     if (_ds_sum_omit(D, i)) return
     if (D.noIF) return
     if (t==2) D.IFtot[i] = D.b[i] // total
-    D.IF[,i] = _ds_share_IF(D, G, at, t, d, L)
+    D.IF[,i] = _ds_pshare_IF(D, G, at, t, d, L)
 }
 
 void ds_sum_dshare(`Data' D, `Grp' G, `Int' i, `RR' o)
 {
-    _ds_sum_share(D, G, i, o'/100, 0, 1)
+    _ds_sum_pshare(D, G, i, o'/100, 0, 1)
 }
 
 void ds_sum_tshare(`Data' D, `Grp' G, `Int' i, `RR' o)
 {
-    _ds_sum_share(D, G, i, o'/100, 2, 0)
+    _ds_sum_pshare(D, G, i, o'/100, 2, 0)
 }
 
 void ds_sum_gshare(`Data' D, `Grp' G, `Int' i, `RR' o)
 {
-    _ds_sum_share(D, G, i, o'/100, 3, 0)
+    _ds_sum_pshare(D, G, i, o'/100, 3, 0)
 }
 
 void ds_sum_ashare(`Data' D, `Grp' G, `Int' i, `RR' o)
 {
-    _ds_sum_share(D, G, i, o'/100, 3, 1)
+    _ds_sum_pshare(D, G, i, o'/100, 3, 1)
 }
 
 void ds_sum_gci(`Data' D, `Grp' G, `Int' i, `RS' df)
@@ -9048,6 +9567,11 @@ void ds_sum_cshare(`Data' D, `Grp' G, `Int' i, `RR' o)
     _ds_sum_cshare(D, G, i, 0, 0, o[1], o[2])
 }
 
+void ds_sum_pcshare(`Data' D, `Grp' G, `Int' i, `RR' o)
+{
+    _ds_sum_cshare(D, G, i, 0, 0, o[1], o[2])
+}
+
 void _ds_sum_cshare(`Data' D, `Grp' G, `Int' i, `Int' t, `Bool' d,
     `RS' p1, `RS' p2)
 {
@@ -9063,7 +9587,7 @@ void _ds_sum_cshare(`Data' D, `Grp' G, `Int' i, `Int' t, `Bool' d,
     if (_ds_sum_omit(D, i)) return
     if (D.noIF) return
     if (t==2) D.IFtot[i] = D.b[i] // total
-    D.IF[,i] = _ds_share_IF(D, G, at, t, d, L, 1)
+    D.IF[,i] = _ds_pshare_IF(D, G, at, t, d, L, 1)
 }
 
 void ds_sum_dcshare(`Data' D, `Grp' G, `Int' i, `RR' o)
