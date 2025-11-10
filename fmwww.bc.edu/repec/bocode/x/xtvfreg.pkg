@@ -1,0 +1,28 @@
+d 'XTVFREG': module for estimating variance function panel regression
+d
+d   xtvfreg implements an iterative mean-variance panel regression
+d estimator that allows both the mean and    variance of the
+d dependent variable to be functions of covariates. The method is
+d based on Mooi-Reci & Liao    (2025) and consists of iteratively
+d estimating (1) A mean equation using generalized linear models
+d (GLM) with Gaussian family and identity link	  and  (2) A
+d variance equation using GLM with Gamma family and log link,
+d applied to squared within-group (fixed	    effects)
+d residuals.	The algorithm alternates between these two steps,
+d using the estimated variance from step (2) as analytic    weights
+d in step (1), until the change in the log-likelihood of the
+d variance equation falls below the    convergence criterion. 
+d
+d KW: variance function
+d KW: panel data
+d KW: regression
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20251109
+d
+d Author: Tim Liao, University of Illinois
+d Support: email  tfliao@@illinois.edu
+d
+f xtvfreg.ado
+f xtvfreg.sthlp

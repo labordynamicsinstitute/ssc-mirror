@@ -108,7 +108,7 @@ In the rare instance, you may not have a reasonable grouping variable to use but
 {title:Author}
 
 {p 4 4 2}Tim F. Liao <tfliao@illinois.edu>{break}
-Center for Advanced Studies in the Behaviorial Sciences & University of Illinois at Urbana-Champaign
+University of Illinois Urbana-Champaign
 
 {title:Acknowledgements}
 
@@ -118,7 +118,8 @@ Center for Advanced Studies in the Behaviorial Sciences & University of Illinois
 {title:References}
 
 {p 4 8 2} 
-Tim F. Liao. Forthcoming. 
+Tim F. Liao. 2022. 
 "Individual Components of Three Inequality Measures for Analyzing Shapes of Inequality." 
-{it:Sociological Methods & Research}
- : in press.
+{it:Sociological Methods & Research} 51(3): 1325-1356.
+{browse "https://doi.org/10.1177/0049124119875961"}	
+

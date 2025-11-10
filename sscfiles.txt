@@ -20346,6 +20346,7 @@ fmwww.bc.edu/repec/bocode/x/xtiletest.sthlp
 fmwww.bc.edu/repec/bocode/x/xtregcluster.sthlp
 fmwww.bc.edu/repec/bocode/x/xtstfetchcovid19.pkg
 fmwww.bc.edu/repec/bocode/x/xbrcspline.ado
+fmwww.bc.edu/repec/bocode/x/xtvfreg.ado
 fmwww.bc.edu/repec/bocode/x/xtregtwo.pkg
 fmwww.bc.edu/repec/bocode/x/xdatelist.pkg
 fmwww.bc.edu/repec/bocode/x/xtregsam.html
@@ -20609,6 +20610,7 @@ fmwww.bc.edu/repec/bocode/x/xtmixed_corr.html
 fmwww.bc.edu/repec/bocode/x/xtregsam.ado
 fmwww.bc.edu/repec/bocode/x/xfrac_dis.ado
 fmwww.bc.edu/repec/bocode/x/xtmod.html
+fmwww.bc.edu/repec/bocode/x/xtvfreg.pkg
 fmwww.bc.edu/repec/bocode/x/xtspecialreg.ado
 fmwww.bc.edu/repec/bocode/x/xtmrho.hlp
 fmwww.bc.edu/repec/bocode/x/xttrans2.html
@@ -20990,6 +20992,7 @@ fmwww.bc.edu/repec/bocode/x/xtbunitroot.pkg
 fmwww.bc.edu/repec/bocode/x/xtbreak_estimate.sthlp
 fmwww.bc.edu/repec/bocode/x/xtistest.sthlp
 fmwww.bc.edu/repec/bocode/x/xttest3.hlp
+fmwww.bc.edu/repec/bocode/x/xtvfreg.sthlp
 fmwww.bc.edu/repec/bocode/x/xtivreg2.html
 fmwww.bc.edu/repec/bocode/x/xttest4.ado
 fmwww.bc.edu/repec/bocode/x/xtfeis.pkg
