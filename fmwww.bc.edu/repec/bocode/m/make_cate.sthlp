@@ -1,5 +1,5 @@
 {smcl}
-{* 24July2024}{...}
+{* 09nov2025}{...}
 {cmd:help make_cate}
 {hline}
 
@@ -26,7 +26,7 @@
 
 {phang} {it:outcome}: numerical variable    
 
-{phang} {it:features}: list of numerical variables representing the features.   
+{phang} {it:features}: list of numerical and categorical variables representing the features   
 
 
 {dlgtab:Description}
@@ -53,16 +53,20 @@ linear-combination policy), {helpb opl_lc_c} (optimal policy learning of a linea
 {dlgtab:Returns}
 
 {synoptset 24 tabbed}{...}
-{syntab:Macros}
-{synopt:{cmd:e(cate_new)}}Name of the CATE in the new policy data{p_end}
-{synopt:{cmd:e(cate_train)}}Name of the CATE in the old (training) policy data{p_end}
+{syntab: Scalars}
+{synopt:{cmd:e(Em0_train)}}Mean potential outcome of the treated in the training dataset{p_end}
+{synopt:{cmd:e(Em0_new)}}Mean potential outcome of the treated in the new dataset {p_end}
 
 {syntab:Variables}
 {synopt:{cmd:_train_new_index}}Flag variable indicating the training (i.e., old-policy) and the new-policy observations{p_end}
-{synopt:{cmd:cate_train}}Variable containing training (i.e., old-policy) predictions for CATE{p_end}
-{synopt:{cmd:cate_new}}Variable containing new (i.e., new-policy) predictions for CATE{p_end}
-{synoptline}
 
+{syntab: Macros}
+{synopt:{cmd:e(cate_train)}}Name of the CATE in the old (training) policy data{p_end}
+{synopt:{cmd:e(cate_new)}}Name of the CATE in the new policy data{p_end}
+{synopt:{cmd:e(xvars)}}Name of the control variables{p_end}
+{synopt:{cmd:e(treatment)}}Name of the treatment variable{p_end}
+{synopt:{cmd:e(dep_var)}}Name of the outcome variable{p_end}
+{synoptline}
 
 {dlgtab:Remarks}
 

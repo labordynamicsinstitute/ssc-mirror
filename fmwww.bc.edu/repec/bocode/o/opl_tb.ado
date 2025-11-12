@@ -1,11 +1,11 @@
 ********************************************************************************
 * PROGRAM "opl_tb"
 ********************************************************************************
-*! opl_tb, v2, GCerulli, 16oct2024
+*! opl_tb, v7, GCerulli, 09nov2025
 program opl_tb , eclass
 version 16
 syntax  ,  ///
-xlist(varlist max=2 min=2) cate(varlist max=1 min=1)
+xlist(varlist max=2 min=2) cate(varlist max=1 min=1) pom0(numlist max=1)
 marksample touse
 markout `touse' `xlist'
 ********************************************************************************
@@ -31,10 +31,13 @@ foreach x of local xlist{
 cap drop `x'_std
 }
 ********************************************************************************
-opl_tb_c , xlist(`xlist') c1(`k') c2(`j') cate(`cate')
+opl_tb_c , xlist(`xlist') c1(`k') c2(`j') cate(`cate') pom0(`pom0')
+cap drop _units_to_be_treated_uop
+cap drop _units_to_be_treated_cop
+********************************************************************************
 mat `A'[`i',1] =`k'  // value of "X1" in the grid
 mat `A'[`i',2] =`j'  // value of "X2" in the grid
-mat `A'[`i',3] =e(W_constr) // optimal welfare at c=j
+mat `A'[`i',3] =e(I_cop) // optimal impact at c=j
 local i=`i'+1
 }
 }
@@ -42,16 +45,16 @@ local i=`i'+1
 preserve
 ereturn clear
 svmat `A'
-tempname max_w
-egen `max_w'=max(`A'3)
-qui sum `max_w'
-ereturn scalar Max_W=round(r(mean),0.01)
-
+tempname max_I
+egen `max_I'=max(`A'3)
+qui sum `max_I'
+ereturn scalar Max_I=round(r(mean),0.01)
+********************************************************************************
 * List maximands (multiple solutions)
 tempname W
-mkmat `A'1 `A'2 `A'3 if `A'3==`max_w' , matrix(`W') 
-matname `W' c1 c2 W_max , columns(1..3) explicit
-
+mkmat `A'1 `A'2 `A'3 if `A'3==`max_I' , matrix(`W') 
+matname `W' c1 c2 I_max , columns(1..3) explicit
+********************************************************************************
 noi{
 di " "
 di "{hline 55}"
@@ -59,17 +62,17 @@ noi di in gr "{bf:Main results}"
 di "{hline 55}"
 di in gr "{bf:Policy class: Threshold-based}"
 di "{hline 55}"
-
+********************************************************************************
 matlist `W' , ///
 border(rows) rowtitle(Maximand) title("{bf: Welfare maximands. Optimal thresholds: c1, c2}") 
-ereturn matrix W=`W'
+ereturn matrix M=`W'
 }
-
-qui sum `A'1 if `A'3==`max_w' 
+********************************************************************************
+qui sum `A'1 if `A'3==`max_I' 
 ereturn scalar best_c1=round(r(mean),0.01)
-qui sum `A'2 if `A'3==`max_w'
+qui sum `A'2 if `A'3==`max_I'
 ereturn scalar best_c2=round(r(mean),0.01)
-
+********************************************************************************
 noi{
 tempname C
 mat `C'=(e(best_c1)\e(best_c2))
@@ -83,6 +86,5 @@ restore
 ********************************************************************************
 } // end quietly
 ********************************************************************************
-cap drop _units_to_be_treated
-********************************************************************************
 end
+********************************************************************************

@@ -1,10 +1,11 @@
 ********************************************************************************
 * PROGRAM "opl_dt"
 ********************************************************************************
-*! opl_dt, v4, GCerulli, 16oct2024
+*! opl_dt, v7, GCerulli, 09nov2025
 program opl_dt , eclass
 version 16
-syntax , xlist(varlist max=2 min=2) cate(varlist max=1 min=1)
+syntax  ,  ///
+xlist(varlist max=2 min=2) cate(varlist max=1 min=1) pom0(numlist max=1)
 marksample touse
 markout `touse' `xlist'
 ********************************************************************************
@@ -32,7 +33,9 @@ foreach y1 of local xlist{
 foreach y2 of local xlist{
 foreach y3 of local xlist{
 ********************************************************************************
-opl_dt_c  , xlist(`xlist') x1(`y1') x2(`y2') x3(`y3') c1(`k') c2(`j') c3(`h') cate(`cate')
+opl_dt_c  , xlist(`xlist') x1(`y1') x2(`y2') x3(`y3') c1(`k') c2(`j') c3(`h') cate(`cate') pom0(`pom0')
+cap drop _units_to_be_treated_uop 
+cap drop _units_to_be_treated_cop
 ********************************************************************************
 local yname1: word 1 of `xlist'
 local yname2: word 2 of `xlist'
@@ -64,7 +67,7 @@ mat `A'[`i',3] =`_var3'  // value of "x3" in the grid
 mat `A'[`i',4] =`k'  // value of "c1" in the grid
 mat `A'[`i',5] =`j'  // value of "c2" in the grid
 mat `A'[`i',6] =`h'  // value of "c3" in the grid
-mat `A'[`i',7] =e(W_constr) // optimal welfare at c
+mat `A'[`i',7] =e(I_cop) // optimal welfare at c
 local i=`i'+1
 }
 }
@@ -76,20 +79,19 @@ local i=`i'+1
 preserve
 ereturn clear
 svmat `A'
-tempvar max_w
+tempvar max_I
 drop if `A'7==.
-egen `max_w'=max(`A'7)
-
-qui sum `max_w'  //
-ereturn scalar Max_W=round(r(mean),0.01)  //
-
-keep if `A'7 ==`max_w'
-keep `A'1 `A'2 `A'3 `A'4 `A'5 `A'6 `A'7 `max_w'
+egen `max_I'=max(`A'7)
+qui sum `max_I'  //
+ereturn scalar Max_I=round(r(mean),0.01)  //
+********************************************************************************
+keep if `A'7 ==`max_I'
+keep `A'1 `A'2 `A'3 `A'4 `A'5 `A'6 `A'7 `max_I'
 
 * List maximands (multiple solutions)
 tempname W //
-mkmat `A'1 `A'2 `A'3 `A'4 `A'5 `A'6 `A'7 if `A'7==`max_w' , matrix(`W') //
-noi matname `W' x1 x2 x3 c1 c2 c3 W_max , columns(1..7) explicit //
+mkmat `A'1 `A'2 `A'3 `A'4 `A'5 `A'6 `A'7 if `A'7==`max_I' , matrix(`W') //
+noi matname `W' x1 x2 x3 c1 c2 c3 I_max , columns(1..7) explicit //
 
 noi{
 di " "
@@ -103,11 +105,11 @@ matlist `W' , ///
 border(rows) rowtitle(Maximand) ///
 title("{bf:Welfare maximands. Optimal splitting variables: x1, x2, x3. Optimal thresholds: c1, c2, c3}") 
 
-ereturn matrix W=`W'
+ereturn matrix M=`W'
 }
 
 ********************************************************************************
-qui sum `A'1 if `A'7==`max_w'
+qui sum `A'1 if `A'7==`max_I'
 if r(mean)<=1.5{
 	ereturn local best_x1 "`yname1'"
 }
@@ -115,7 +117,7 @@ else{
 	ereturn local best_x1 "`yname2'"
 }
 ********************************************************************************
-qui sum `A'2 if `A'7==`max_w'
+qui sum `A'2 if `A'7==`max_I'
 if r(mean)<=1.5{
 	ereturn local best_x2 "`yname1'"
 }
@@ -123,7 +125,7 @@ else{
 	ereturn local best_x2 "`yname2'"
 }
 ********************************************************************************
-qui sum `A'3 if `A'7==`max_w'
+qui sum `A'3 if `A'7==`max_I'
 if r(mean)<=1.5{
 	ereturn local best_x3 "`yname1'"
 }
@@ -131,14 +133,13 @@ else{
 	ereturn local best_x3 "`yname2'"
 }
 ********************************************************************************
-qui sum `A'4 if `A'7==`max_w' 
+qui sum `A'4 if `A'7==`max_I' 
 ereturn scalar best_c1=round(r(mean),0.01)
-qui sum `A'5 if `A'7==`max_w'
+qui sum `A'5 if `A'7==`max_I'
 ereturn scalar best_c2=round(r(mean),0.01)
-qui sum `A'6 if `A'7==`max_w'
+qui sum `A'6 if `A'7==`max_I'
 ereturn scalar best_c3=round(r(mean),0.01)
-
-
+********************************************************************************
 noi{
 tempname D
 mat `D'=(e(best_c1)\e(best_c2)\e(best_c3))
@@ -151,14 +152,6 @@ di "{hline 55}"
 restore
 ********************************************************************************
 } // end quietly
-********************************************************************************
-rename _units_to_be_treated _optimal_to_be_treated
-********************************************************************************
-preserve
-qui contract _optimal_to_be_treated
-local p = _freq[2]/(_freq[1]+_freq[2])
-ereturn scalar opt_perc_treat=100*round(`p',0.001)
-restore
 ********************************************************************************
 end
 ********************************************************************************

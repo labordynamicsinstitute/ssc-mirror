@@ -1,5 +1,5 @@
 {smcl}
-{* 24July2024}{...}
+{* 09nov2025}{...}
 {cmd:help opl_lc_c}
 {hline}
 
@@ -18,9 +18,13 @@
 {cmd:c1}{cmd:(}{it:number}{cmd:)}
 {cmd:c2}{cmd:(}{it:number}{cmd:)}
 {cmd:c3}{cmd:(}{it:number}{cmd:)}
+{cmd:pom0}{cmd:(}{it:number}{cmd:)}
 [
+{cmd:custom_policy}{cmd:(}{it:varname}{cmd:)}
 {cmd:depvar}{cmd:(}{it:name}{cmd:)}
 {cmd:graph}
+{cmd:save_gr_op}{cmd:(}{it:graphname}{cmd:)}
+{cmd:save_gr_cp}{cmd:(}{it:graphname}{cmd:)}
 ]
 
 
@@ -44,10 +48,17 @@ for the linear-combination of variables {it:var1} and {it:var2}: c1*var1+c2*var2
 {p_end}
 {synopt :{opt c3(number)}}puts into {it:number} the value of the parameter value {it:c3} of the linear-combination. This number must be chosen between 0 and 1.
 {p_end}
+{synopt :{opt pom0(number)}}stores in {it:number} the potential outcome mean for untreated units. This value is returned as a scalar by the {helpb make_cate} command.
+{p_end}
+{synopt :{opt custom_policy(varname)}}specifies a user-defined policy to be evaluated in terms of its impact and welfare. This policy variable must be provided as a binary 0/1 variable. 
+{p_end}
 {synopt :{opt depvar(name)}}assigns the specified {it:name} to the dependent variable for display in the results table. While this option does not impact computations, it ensures a meaningful label for the dependent variable in the results table.
 {p_end}
-{synopt :{opt graph}}visualizes treated and untreated within the {it:var1} and {it:var2} quadrant.
+{synopt :{opt graph}}visualizes selected treated and untreated within the {it:var1} and {it:var2} quadrant.
 {p_end}
+{synopt :{opt save_gr_op()}}save in the current directory the graph that visualizes selected treated and untreated within the {it:var1} and {it:var2} quadrant for the optimal policy.
+{p_end}
+{synopt :{opt save_gr_cp()}}save in the current directory the graph that visualizes selected treated and untreated within the {it:var1} and {it:var2} quadrant for the customized policy.
 {synoptline}
 
 
@@ -58,12 +69,47 @@ for the linear-combination of variables {it:var1} and {it:var2}: c1*var1+c2*var2
 {synopt:{cmd:e(c1)}}Parameter of {it:var1} in the linear-combination{p_end}
 {synopt:{cmd:e(c2)}}Parameter of {it:var2} in the linear-combination{p_end}
 {synopt:{cmd:e(c3)}}Third parameter of the linear-combination{p_end}
-{synopt:{cmd:e(W_unconstr)}}Value of the unconstrained welfare at parameters' values {it:c1}, {it:c2}, and {it:c3}{p_end}
-{synopt:{cmd:e(W_constr)}}Value of the constrained welfare at parameters' values {it:c1}, {it:c2}, and {it:c3}{p_end}
-{synopt:{cmd:e(perc_treat)}}Percentage over the entire sample of the beneficiaries to treat at parameters' values {it:c1}, {it:c2}, and {it:c3}{p_end}
+{synopt:{cmd:e(I_uop)}}Impact (i.e., ATET) under the unconstrained optimal policy{p_end}
+{synopt:{cmd:e(Ntreat_uop)}}Number of units assigned to treatment under the unconstrained optimal policy{p_end}
+{synopt:{cmd:e(Nuntreat_uop)}}Number of units assigned to no treatment under the unconstrained optimal policy{p_end}
+{synopt:{cmd:e(N_uop)}}Total number of units evaluated under the unconstrained optimal policy{p_end}
+{synopt:{cmd:e(perc_treat_uop)}}Percentage of treated units under the unconstrained optimal policy{p_end}
+{synopt:{cmd:e(I_cop)}}Impact (i.e., ATET) under the constrained optimal policy, at parameters {it:c1}, {it:c2}, and {it:c3}{p_end}
+{synopt:{cmd:e(N_cop)}}Total number of units evaluated under the constrained optimal policy{p_end}
+{synopt:{cmd:e(perc_treat_cop)}}Percentage of treated units under the constrained optimal policy{p_end}
+{synopt:{cmd:e(Ntreat_cop)}}Number of units assigned to treatment under the constrained optimal policy{p_end}
+{synopt:{cmd:e(Nuntreat_cop)}}Number of units assigned to no treatment under the constrained optimal policy{p_end}
+{synopt:{cmd:e(TTET_uop)}}Total treatment effect on treated units under the unconstrained optimal policy{p_end}
+{synopt:{cmd:e(AW_uop)}}Average welfare under the unconstrained optimal policy; as computed by the command's welfare function{p_end}
+{synopt:{cmd:e(TW_uop)}}Total welfare under the unconstrained optimal policy; as computed by the command's welfare function{p_end}
+{synopt:{cmd:e(TTET_cop)}}Total treatment effect on treated units under the constrained optimal policy{p_end}
+{synopt:{cmd:e(AW_cop)}}Average welfare under the constrained optimal policy; as computed by the command's welfare function{p_end}
+{synopt:{cmd:e(TW_cop)}}Total welfare under the constrained optimal policy; as computed by the command's welfare function{p_end}
+{synopt:{cmd:e(I_ucp)}}Impact (i.e., ATET) under the unconstrained customized policy provided via {opt custom_policy()}{p_end}
+{synopt:{cmd:e(_N)}}Total sample size used in the evaluation{p_end}
+{synopt:{cmd:e(TW_ccp)}}Total welfare under the constrained customized policy; as computed by the command's welfare function{p_end}
+{synopt:{cmd:e(AW_ccp)}}Average welfare under the constrained customized policy; as computed by the command's welfare function{p_end}
+{synopt:{cmd:e(TTET_ccp)}}Total treatment effect on treated units under the constrained customized policy{p_end}
+{synopt:{cmd:e(TW_ucp)}}Total welfare under the unconstrained customized policy; as computed by the command's welfare function{p_end}
+{synopt:{cmd:e(AW_ucp)}}Average welfare under the unconstrained customized policy; as computed by the command's welfare function{p_end}
+{synopt:{cmd:e(TTET_ucp)}}Total treatment effect on treated units under the unconstrained customized policy{p_end}
+{synopt:{cmd:e(Nuntreat_ccp)}}Number of units assigned to no treatment under the constrained customized policy{p_end}
+{synopt:{cmd:e(Ntreat_ccp)}}Number of units assigned to treatment under the constrained customized policy{p_end}
+{synopt:{cmd:e(perc_treat_ccp)}}Percentage of treated units under the constrained customized policy{p_end}
+{synopt:{cmd:e(N_ccp)}}Total number of units evaluated under the constrained customized policy{p_end}
+{synopt:{cmd:e(I_ccp)}}Impact (i.e., ATET) under the constrained customized policy{p_end}
+{synopt:{cmd:e(perc_treat_ucp)}}Percentage of treated units under the unconstrained customized policy{p_end}
+{synopt:{cmd:e(N_ucp)}}Total number of units evaluated under the unconstrained customized policy{p_end}
+{synopt:{cmd:e(Nuntreat_ucp)}}Number of units assigned to no treatment under the unconstrained customized policy{p_end}
+{synopt:{cmd:e(Ntreat_ucp)}}Number of units assigned to treatment under the unconstrained customized policy{p_end}
 
 {syntab:Variables}
-{synopt:{cmd:_units_to_be_treated}}Flag variable indicating the policy beneficiaries at parameters' values {it:c1}, {it:c2}, and {it:c3}{p_end}
+{synopt:{cmd:_units_to_be_treated_uop}}Flag variable indicating the policy beneficiaries at the unconstrained optimal policy{p_end}
+{synopt:{cmd:_units_to_be_treated_cop}}Flag variable indicating the policy beneficiaries at parameters {it:c1}, {it:c2}, and {it:c3} (i.e., constrained optimal policy){p_end}
+
+{syntab:Macros}
+{synopt:{cmd:e(dep_var)}}Name of the dependent variable used in the analysis (as specified in the {opt depvar()} option){p_end}
+{synopt:{cmd:e(sel_vars)}}List of selection variables ({it:var1 var2}) used to define the policy parameters{p_end}
 {synoptline}
 
 {dlgtab:Remarks}
@@ -96,17 +142,23 @@ for the linear-combination of variables {it:var1} and {it:var2}: c1*var1+c2*var2
 {phang3} {stata keep if _train_new_index=="new"}{p_end}
 {phang2} Drop "my_cate_train" as in the new dataset treatment assignment and outcome performance are unknown{p_end}
 {phang3} {stata drop my_cate_train $w $y}{p_end}
+{phang2} Save into a global macro the mean potential outcome model for untreated{p_end}
+{phang3} {stata global Em0 = e(Em0_new)}{p_end}
 {phang2} Run "opl_lc" to find the optimal linear-combination parameters{p_end}
-{phang3} {stata opl_lc  ,  xlist($z) cate($T)}{p_end}
+{phang3} {stata opl_lc  ,  xlist($z) cate($T) pom0($Em0)}{p_end}
 {phang2} Save the optimal linear-combination parameters into three global macros{p_end}
 {phang3} {stata global c1_opt=e(best_c1)}{p_end}
 {phang3} {stata global c2_opt=e(best_c2)}{p_end}
 {phang3} {stata global c3_opt=e(best_c3)}{p_end}
+{phang2} Generate randomly a customized policy{p_end}
+{phang3} {stata set seed 1010}{p_end}
+{phang3} {stata gen x = runiform()}{p_end}
+{phang3} {stata gen cp = (x > 0.5)}{p_end}
 {phang2} Run "opl_lc_c" at optimal linear-combination parameters and generate the graph{p_end}
-{phang3} {stata opl_lc_c , xlist($z) cate($T) c1($c1_opt) c2($c2_opt) c3($c3_opt) graph depvar("re78")}{p_end}
-{phang2} Tabulate the variable "_units_to_be_treated"{p_end}
-{phang3} {stata tab _units_to_be_treated , mis}{p_end}
-
+{phang3} {stata opl_lc_c , xlist($z) cate($T) c1($c1_opt) c2($c2_opt) c3($c3_opt) graph depvar("re78") pom0($Em0) custom_policy(cp)}{p_end}
+{phang2} Tabulate the variable "_units_to_be_treated_uop" and "_units_to_be_treated_cop"{p_end}
+{phang3} {stata tab _units_to_be_treated_uop , mis}{p_end}
+{phang3} {stata tab _units_to_be_treated_cop , mis}{p_end}
 
 {dlgtab:References}
 

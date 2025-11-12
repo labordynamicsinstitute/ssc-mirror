@@ -1,5 +1,5 @@
 {smcl}
-{* 24July2024}{...}
+{* 09nov2025}{...}
 {cmd:help opl_lc}
 {hline}
 
@@ -15,11 +15,11 @@
 {hi:opl_lc} ,
 {cmd:xlist}{cmd:(}{it:var1 var2}{cmd:)}
 {cmd:cate}{cmd:(}{it:varname}{cmd:)}
+{cmd:pom0}{cmd:(}{it:number}{cmd:)}
 
 {dlgtab:Description}
 
-{pstd} {cmd:opl_lc} is a command implementing optimal ex-ante treatment assignment using as policy 
-class a linear-combination of variables {it:var1} and {it:var2}: c1*var1+c2*var2=c3.        
+{pstd} {cmd:opl_lc} is a command implementing optimal ex-ante treatment assignment using as policy class a linear-combination of variables {it:var1} and {it:var2}: c1*var1+c2*var2=c3.        
 
 
 {dlgtab: Options}
@@ -29,6 +29,7 @@ class a linear-combination of variables {it:var1} and {it:var2}: c1*var1+c2*var2
 {synoptline}
 {synopt :{opt xlist(var1 var2)}}defines the two variables the policymaker decide to use for selecting policy beneficiaries.{p_end}
 {synopt :{opt cate(varname)}}puts into {it:varname} a variable already present in the dataset containing the conditional average treatment effect (CATE). This variable can be generate using the command {helpb make_cate}.{p_end}
+{synopt :{opt pom0(number)}}stores in {it:number} the potential outcome mean for untreated units. This value is returned as a scalar by the {helpb make_cate} command.{p_end}
 {synoptline}
 
 
@@ -36,9 +37,12 @@ class a linear-combination of variables {it:var1} and {it:var2}: c1*var1+c2*var2
 
 {synoptset 24 tabbed}{...}
 {syntab:Scalars}
-{synopt:{cmd:e(best_c1)}}Linear-combination parameter for {it:var1} which maximizes the welfare{p_end}
-{synopt:{cmd:e(best_c2)}}Linear-combination parameter for {it:var2} which maximizes the welfare{p_end}
-{synopt:{cmd:e(best_c3)}}Third linear-combination parameter which maximizes the welfare{p_end}
+{synopt:{cmd:e(best_c1)}}Linear-combination parameter for {it:var1} which maximizes the impact{p_end}
+{synopt:{cmd:e(best_c2)}}Linear-combination parameter for {it:var2} which maximizes the impact{p_end}
+{synopt:{cmd:e(best_c3)}}Third linear-combination parameter which maximizes the impact{p_end}
+{synopt:{cmd:e(Max_I)}}Maximum impact at optimal parameters{p_end}
+{syntab:Matrices}
+{synopt:{cmd:e(M)}}Matrix of impact maximization results{p_end}
 {synoptline}
 
 
@@ -68,12 +72,14 @@ class a linear-combination of variables {it:var1} and {it:var2}: c1*var1+c2*var2
 {phang3} {stata make_cate $y $x , treatment($w) type("ra") model("linear") new_cate("my_cate_new") train_cate("my_cate_train") new_data("jtrain_test")}{p_end}
 {phang2} Generate a global macro containing the name of the variable "cate_new"{p_end}
 {phang3} {stata global T `e(cate_new)'}{p_end}
+{phang2} Save into a global macro the mean potential outcome model for untreated{p_end}
+{phang3} {stata global Em0 = e(Em0_new)}{p_end}
 {phang2} Select only the "new data"{p_end}
 {phang3} {stata keep if _train_new_index=="new"}{p_end}
 {phang2} Drop "my_cate_train" as in the new dataset treatment assignment and outcome performance are unknown{p_end}
 {phang3} {stata drop my_cate_train $w $y}{p_end}
 {phang2} Run "opl_lc" to find the optimal linear-combination parameters{p_end}
-{phang3} {stata opl_lc , xlist($z) cate($T)}{p_end}
+{phang3} {stata opl_lc , xlist($z) cate($T) pom0($Em0)}{p_end}
 {phang2} Display the optimal parameters' values{p_end}
 {phang3} {stata di e(best_c1)}{p_end}
 {phang3} {stata di e(best_c2)}{p_end}

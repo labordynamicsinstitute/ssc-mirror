@@ -1,13 +1,21 @@
 ********************************************************************************
 * PROGRAM "make_cate"
 ********************************************************************************
-*! make_cate, v3, GCerulli, 17Jul2024
+*! make_cate, v.7, GCerulli, 09Nov2025
 program make_cate , eclass
 version 16
 syntax varlist [if] [in] , type(string) treatment(varlist max=1)  ///
 train_cate(name) new_cate(name) [model(string) new_data(name)]
 marksample touse
 markout `touse' `treatment'
+********************************************************************************
+* Check variable pre-existence of new generated variables
+********************************************************************************
+capture confirm variable _train_new_index
+if !_rc {
+    display as error "variable '_train_new_index' already exists"
+    error 110
+}
 ********************************************************************************
     if ("`type'" != "ra") & ("`type'" != "dr"){
 		di _newline
@@ -96,11 +104,14 @@ markout `touse' `treatment'
 		predict `Ey0_x1' if _train_new_index=="train" , cmean tlevel(0)
 		gen `train_cate'=(`Ey1_x1' - `Ey0_x1') if _train_new_index=="train"
 		ereturn local cate_train "`train_cate'"
-		*
+		qui sum `Ey0_x1' if _train_new_index=="train" 
+		local Em0_train=r(mean)
 		predict `Ey1_x2' if _train_new_index=="new" , cmean tlevel(1)
 		predict `Ey0_x2' if _train_new_index=="new" , cmean tlevel(0)
 		gen `new_cate'=(`Ey1_x2' - `Ey0_x2') if _train_new_index=="new"
 		ereturn local cate_new "`new_cate'"
+		qui sum `Ey0_x2' if _train_new_index=="new" 
+		local Em0_new=r(mean)
 		}
 		************************************************************************
 		ereturn clear
@@ -109,6 +120,8 @@ markout `touse' `treatment'
 		ereturn local dep_var "`y'"
 		ereturn local treatment "`w'"
 		ereturn local xvars "`xvars'"
+		ereturn scalar Em0_train=`Em0_train' 
+		ereturn scalar Em0_new=`Em0_new' 
 		************************************************************************ 
     }
 ********************************************************************************
@@ -125,6 +138,25 @@ markout `touse' `treatment'
 		local w "`treatment'" 
 		************************************************************************
 		local A `w'
+		************************************************************************
+		* Create Em0_train = E{E(y|w=0,X)} for OPL to generate the Welfare
+		************************************************************************
+qui{	
+		tempvar split
+		splitsample, generate(`split') nsplit(2) rseed(101)
+		forvalues i=1/2{
+		qui regress `y' `xvars' if `A'==0 & `split'==`i'
+		tempname MU1_`i'
+		estimate store `MU1_`i''
+		tempvar m0`i'
+		predict `m0`i''
+		qui sum `m0`i''
+		local Em0`i'=r(mean) 
+		}
+		local Em0_train=(`Em01'+`Em02')/2
+}
+		************************************************************************
+		* Develop the main "make_cate" code
 		************************************************************************
 qui{
 		* Split the sample 
@@ -149,7 +181,7 @@ qui{
 		predict `mu1'
 
 		* regression mu0=E(Y|X,A=0) over split=i
-		qui qui regress `y' `xvars' if `A'==0 & `split'==`i'
+		qui regress `y' `xvars' if `A'==0  & `split'==`i'
 		tempname MU0_`i'
 		estimate store `MU0_`i''
 		tempvar mu0
@@ -171,14 +203,35 @@ qui{
 		local j=`j'-1
 		}
 		gen `train_cate'=(`tau_1'+`tau_2')/2
+		
 	****************************************************************************
 		if "`new_data'"!=""{
 	****************************************************************************
-			cap drop _train_new_index
-			gen _train_new_index="train"
-			append using `new_data' 
-			replace _train_new_index="new" if _train_new_index==""
-			
+				cap drop _train_new_index
+				gen _train_new_index="train"
+				append using `new_data' 
+				replace _train_new_index="new" if _train_new_index==""
+				
+				****************************************************************
+				* Create Em0_new = E{E(y|w=0,X)} for OPL to generate the Welfare
+				****************************************************************		
+				preserve
+				keep if _train_new_index=="new" 	
+				tempvar split
+				splitsample, generate(`split') nsplit(2) rseed(101)
+				forvalues i=1/2{
+				estimates restore `MU1_`i''
+				tempvar m0`i'
+				predict `m0`i''
+				sum `m0`i''
+				local Em0`i'=r(mean) 
+				}
+				local Em0_new=(`Em01'+`Em02')/2
+				restore
+				
+				****************************************************************
+			    * Main code for the "new" data
+				****************************************************************		
 				* Split the sample 
 				tempvar split2
 				splitsample, generate(`split2') nsplit(2) rseed(101)
@@ -195,13 +248,17 @@ qui{
 				gen `new_cate'=(`tau_1'+`tau_2')/2 if _train_new_index=="new"
 				}	
 }
-	****************************************************************************
+	            ****************************************************************
 				ereturn clear
 				ereturn local cate_train "`train_cate'"		
 				ereturn local cate_new "`new_cate'"
 				ereturn local dep_var "`y'"
 				ereturn local treatment "`w'"
 				ereturn local xvars "`xvars'"
-	****************************************************************************
+				ereturn scalar Em0_train= `Em0_train'
+				ereturn scalar Em0_new= `Em0_new'
+	            ****************************************************************
     }
+********************************************************************************
 end
+********************************************************************************

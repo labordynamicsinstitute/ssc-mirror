@@ -1,11 +1,11 @@
 ********************************************************************************
 * PROGRAM "opl_lc"
 ********************************************************************************
-*! opl_lc, v2, GCerulli, 16oct2024
+*! opl_lc, v7, GCerulli, 09nov2025
 program opl_lc , eclass
 version 16
 syntax  ,  ///
-xlist(varlist max=2 min=2) cate(varlist max=1 min=1)
+xlist(varlist max=2 min=2) cate(varlist max=1 min=1) pom0(numlist max=1)
 marksample touse
 markout `touse' `xlist'
 ********************************************************************************
@@ -34,11 +34,14 @@ foreach x of local xlist{
 cap drop `x'_std
 }
 ********************************************************************************
-opl_lc_c , xlist(`xlist') c1(`k') c2(`j') c3(`h') cate(`cate')
+opl_lc_c , xlist(`xlist') c1(`k') c2(`j') c3(`h') cate(`cate') pom0(`pom0')
+cap drop _units_to_be_treated_uop 
+cap drop _units_to_be_treated_cop
+********************************************************************************
 mat `A'[`i',1] =`k'  // value of "c1" in the grid
 mat `A'[`i',2] =`j'  // value of "c2" in the grid
 mat `A'[`i',3] =`h'  // value of "c3" in the grid
-mat `A'[`i',4] =e(W_constr) // optimal welfare at c
+mat `A'[`i',4] =e(I_cop) // optimal impact at c
 local i=`i'+1
 }
 }
@@ -47,16 +50,16 @@ local i=`i'+1
 preserve
 ereturn clear
 svmat `A'
-tempname max_w
-egen `max_w'=max(`A'4)
-qui sum `max_w'
-ereturn scalar Max_W=round(r(mean),0.01)
-
+tempname max_I
+egen `max_I'=max(`A'4)
+qui sum `max_I'
+ereturn scalar Max_I=round(r(mean),0.01)
+********************************************************************************
 * List maximands (multiple solutions)
 tempname W
-mkmat `A'1 `A'2 `A'3 `A'4 if `A'4==`max_w' , matrix(`W') 
-matname `W' c1 c2 c3 W_max , columns(1..4) explicit
-
+mkmat `A'1 `A'2 `A'3 `A'4 if `A'4==`max_I' , matrix(`W') 
+matname `W' c1 c2 c3 I_max , columns(1..4) explicit
+********************************************************************************
 noi{
 di " "
 di "{hline 55}"
@@ -64,20 +67,20 @@ noi di in gr "{bf:Main results}"
 di "{hline 55}"
 di in gr "{bf:Policy class: Linear-combination}"
 di "{hline 55}"
-
+********************************************************************************
 matlist `W' , ///
 border(rows) rowtitle(Maximand) ///
 title("{bf: Welfare maximands. Optimal parameters: c1, c2, c3}") 
-ereturn matrix W=`W'
+ereturn matrix M=`W'
 }
-
-qui sum `A'1 if `A'4==`max_w' 
+********************************************************************************
+qui sum `A'1 if `A'4==`max_I' 
 ereturn scalar best_c1=round(r(mean),0.01)
-qui sum `A'2 if `A'4==`max_w'
+qui sum `A'2 if `A'4==`max_I'
 ereturn scalar best_c2=round(r(mean),0.01)
-qui sum `A'3 if `A'4==`max_w'
+qui sum `A'3 if `A'4==`max_I'
 ereturn scalar best_c3=round(r(mean),0.01)
-
+********************************************************************************
 tempname C
 mat `C'=(e(best_c1)\e(best_c2)\e(best_c3))
 matrix rownames `C' = c1 c2 c3
@@ -91,12 +94,5 @@ restore
 ********************************************************************************
 } // end quietly
 ********************************************************************************
-rename _units_to_be_treated _optimal_to_be_treated
-********************************************************************************
-preserve
-qui contract _optimal_to_be_treated
-local p = _freq[2]/(_freq[1]+_freq[2])
-ereturn scalar opt_perc_treat=100*round(`p',0.001)
-restore
-********************************************************************************
 end
+********************************************************************************
