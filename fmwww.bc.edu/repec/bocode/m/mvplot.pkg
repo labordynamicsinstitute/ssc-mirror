@@ -1,0 +1,31 @@
+d 'MVPLOT': module to plot results from multiverse analysis
+d
+d    mvplot visualizes results from multiverse analysis. The
+d command produces a plot with two panels: an upper panel
+d displaying the multiverse distribution of the    target
+d coefficient as a density function, and a lower panel showing the
+d multiverse's analytical composition	 alongside results from an
+d influence regression quantifying the impact of each researcher
+d decision on the    target coefficient.    Note that mvplot itself
+d does not conduct multiverse analyses. Instead, it requires users
+d to provide a	  results dataset from an already completed
+d multiverse analysis. Hence, the command is best used in   
+d conjunction with the multivrs command (Young & Holsteen, 2021). 
+d
+d KW: multiverse
+d KW: graphics
+d KW: plot
+d KW: regression
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20251113
+d
+d Author: Daniel Krähmer, University of Munich
+d Support: email Daniel.Kraehmer@@soziologie.uni-muenchen.de
+d
+d Author: Cristobal Young , Cornell University
+d Support: email cristobal.young@@cornell.edu
+d
+f mvplot.ado
+f mvplot.sthlp

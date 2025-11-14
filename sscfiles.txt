@@ -9547,6 +9547,7 @@ fmwww.bc.edu/repec/bocode/m/mcqscore.pkg
 fmwww.bc.edu/repec/bocode/m/metandi_postestimation.html
 fmwww.bc.edu/repec/bocode/m/meta.ado
 fmwww.bc.edu/repec/bocode/m/mgof.hlp
+fmwww.bc.edu/repec/bocode/m/mvplot.pkg
 fmwww.bc.edu/repec/bocode/m/margfx.pkg
 fmwww.bc.edu/repec/bocode/m/mixreg_plugin.arm64
 fmwww.bc.edu/repec/bocode/m/mladutil.py
@@ -10561,6 +10562,7 @@ fmwww.bc.edu/repec/bocode/m/metapow.ado
 fmwww.bc.edu/repec/bocode/m/mstat.sthlp
 fmwww.bc.edu/repec/bocode/m/myticks.hlp
 fmwww.bc.edu/repec/bocode/m/msdecode.sthlp
+fmwww.bc.edu/repec/bocode/m/mvplot.ado
 fmwww.bc.edu/repec/bocode/m/metaprop.sthlp
 fmwww.bc.edu/repec/bocode/m/mvmetademo_setup.sthlp
 fmwww.bc.edu/repec/bocode/m/mean_change.m
@@ -11007,6 +11009,7 @@ fmwww.bc.edu/repec/bocode/m/metaninf.dlg
 fmwww.bc.edu/repec/bocode/m/miinc.ado
 fmwww.bc.edu/repec/bocode/m/mmqreg.pkg
 fmwww.bc.edu/repec/bocode/m/metabias.ado
+fmwww.bc.edu/repec/bocode/m/mvplot.sthlp
 fmwww.bc.edu/repec/bocode/m/markovci_bs.sthlp
 fmwww.bc.edu/repec/bocode/m/margdistfit_mata_invert.do
 fmwww.bc.edu/repec/bocode/m/mcib.sthlp
