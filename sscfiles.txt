@@ -3247,6 +3247,7 @@ fmwww.bc.edu/repec/bocode/i/itsp_ado.pkg
 fmwww.bc.edu/repec/bocode/i/ivreg_ss.pkg
 fmwww.bc.edu/repec/bocode/i/invgausscf.html
 fmwww.bc.edu/repec/bocode/i/irr.pkg
+fmwww.bc.edu/repec/bocode/i/i_ineq.ado
 fmwww.bc.edu/repec/bocode/i/_ivcrc_estimator.ado
 fmwww.bc.edu/repec/bocode/i/ivreg2.pkg
 fmwww.bc.edu/repec/bocode/i/ingap.ado
@@ -3574,6 +3575,7 @@ fmwww.bc.edu/repec/bocode/i/isco6888.html
 fmwww.bc.edu/repec/bocode/i/ineqord.ado
 fmwww.bc.edu/repec/bocode/i/ieboilsave.ado
 fmwww.bc.edu/repec/bocode/i/isa_xplots.ado
+fmwww.bc.edu/repec/bocode/i/i_ineq.pkg
 fmwww.bc.edu/repec/bocode/i/icc23.pkg
 fmwww.bc.edu/repec/bocode/i/icalc.sthlp
 fmwww.bc.edu/repec/bocode/i/iefieldkit.sthlp
@@ -4019,6 +4021,7 @@ fmwww.bc.edu/repec/bocode/i/ivgauss2.hlp
 fmwww.bc.edu/repec/bocode/i/imwsub_cob_doug.ado
 fmwww.bc.edu/repec/bocode/i/ineqdecgini.pkg
 fmwww.bc.edu/repec/bocode/i/invcise.pkg
+fmwww.bc.edu/repec/bocode/i/i_ineq.sthlp
 fmwww.bc.edu/repec/bocode/i/iefieldkit.ado
 fmwww.bc.edu/repec/bocode/i/ieddtab.ado
 fmwww.bc.edu/repec/bocode/i/irrepro.hlp

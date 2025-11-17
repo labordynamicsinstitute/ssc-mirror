@@ -1,0 +1,35 @@
+d 'I_INEQ': module to provide individual decomposition of inequality measures
+d
+d	i_ineq computes individual components of three inequality
+d measures (Gini index, Theil's L, and Theil's T)    and their
+d group-based decompositions.  The function takes as input an
+d outcome variable (such as income), a	  grouping variable, and an
+d optional sampling weight. It returns three new variables
+d containing individual    contributions and their between-group
+d and within-group components.	  The Gini index (or Gini
+d coefficient) is a widely used measure of inequality that ranges
+d from 0 (perfect    equality) to 1 (maximum inequality). Theil's L
+d (also known as Theil's second measure or mean log deviation)	 
+d and Theil's T (also known as Theil's first measure or Theil
+d entropy index) are members of the generalized    entropy family
+d of inequality measures.    This command implements the individual
+d decomposition methods described in Liao (Sociological Methods &
+d Research, 2022), which allow	  researchers to examine the
+d contribution of each individual to overall inequality and to
+d decompose these    contributions into between-group and
+d within-group components. 
+d
+d KW: inequality
+d KW: Gini
+d KW: Theil's L
+d KW: Theil's T
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20251116
+d
+d Author: Tim Liao, University of Illinois
+d Support: email  tfliao@@illinois.edu
+d
+f i_ineq.ado
+f i_ineq.sthlp

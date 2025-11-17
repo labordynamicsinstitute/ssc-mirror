@@ -14,7 +14,7 @@
 	The Hutchens' segregation index, {it:S}, is an entropy-based index of inequality in the distribution of individuals across social units, defined for the two-group case. The Hutchens segregation index satisfies several desirable 
 	properties for a good numerical measure of segregation: it is additively decomposable by population subgroup into a within-group component (a weighted sum of subgroup-specific indices, or local {it:S}) and a  
 	between-group component. 
-	Substantively, it:S} measures the extent to which social group proportions differ in each social unit from the overall population proportions ("units given groups" notion). The {it:S} index is normalized in the unit interval, 
+	Substantively, {it:S} measures the extent to which social group proportions differ in each social unit from the overall population proportions ("units given groups" notion). The {it:S} index is normalized in the unit interval, 
 	with zero representing complete integration and one representing complete segregation. Moreover, as an additive index, the {it:S} can be written as a sum of the contribution of each non-overlapping subgroup to total segregation, 
 	a unique feature across entropy-based indices. See Hutchens (2001, 2004), Jenkins et al. (2006), Mora & Ruiz-Castillo (2008, 2009), Alonso-Villar & Del Río (2010).
 	
