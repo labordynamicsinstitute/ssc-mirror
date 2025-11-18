@@ -10,6 +10,7 @@
 {synopthdr}
 {synoptline}
 {synopt:{opt li:st(list_spec)}}List output dataset to Stata log and/or Results window{p_end}
+{synopt:{cmdab:fra:me}{cmd:(}{it:framename}[,replace {cmdab:cha:nge}]{cmd:)}}Save output dataset to a data frame{p_end}
 {synopt:{cmdab:sa:ving}{cmd:(}{it:filename}[{cmd:,replace}]{cmd:)}}Save output dataset to a disk file{p_end}
 {synopt:{cmdab::no}{cmdab:re:store}}Write output dataset to memory{p_end}
 {synopt:{opt fast}}Write output dataset to memory without precautions{p_end}
@@ -59,6 +60,15 @@ to produce a list of heterogeneity-test statistics,
 with user-specified numbers of decimal places or significant figures.
 The user may optionally also specify {helpb if} or {helpb in} clauses to list subsets of parameters,
 or change the display style using a list of {it:list_options} allowed as options by the {helpb list} command.
+
+{p 4 8 2}
+{cmd:frame(} {it:name}, [ {cmd:replace} {cmd:change} ] {cmd:)} specifies an output {help frame:data frame},
+to be generated to contain the output dataset.
+If {cmd:replace} is specified, then any existing data frame of the same name is overwritten. 
+If {cmd:change} is specified,
+then the current data frame will be changed to the output data frame after the execution of {cmd:parmhet}.
+The {cmd:frame()} option may not specify the current data frame.
+To do this, use one of the options {cmd:norestore} or {cmd:fast}.
 
 {p 4 8 2}
 {cmd:saving(}{it:filename}[{cmd:,replace}]{cmd:)} saves the output dataset to a disk file.

@@ -29,7 +29,7 @@ and outputs an output dataset (or resultsset) with one observation,
 or one observation per by-group,
 and data on heterogeneity test statistics on the input parameters
 in the dataset or by-group.
-The output dataset can be listed to the Stata log, saved to a disk file,
+The output dataset can be listed to the Stata log, saved to a data frame, saved to a disk file,
 or written to memory, overwriting the existing dataset.
 Optionally, {cmd:parmhet} may also add variables to the existing dataset,
 containing inverse-variance weights and/or semi-weights and/or semi-weight-based standard errors.
@@ -90,6 +90,7 @@ See {it:{help parmhet_basic_opts}} for details of these options.
 {synopthdr}
 {synoptline}
 {synopt:{opt li:st(list_spec)}}List output dataset to Stata log and/or Results window{p_end}
+{synopt:{cmdab:fra:me}{cmd:(}{it:framename}[,replace {cmdab:cha:nge}]{cmd:)}}Save output dataset to a data frame{p_end}
 {synopt:{cmdab:sa:ving}{cmd:(}{it:filename}[{cmd:,replace}]{cmd:)}}Save output dataset to a disk file{p_end}
 {synopt:{cmdab::no}{cmdab:re:store}}Write output dataset to memory{p_end}
 {synopt:{opt fast}}Write output dataset to memory without precautions{p_end}
@@ -352,7 +353,7 @@ and also the total number of subjects in the trial (in variable {cmd:N}).
 {pstd}
 Set-up
 
-{phang2}{inp:. use "http://www.imperial.ac.uk/nhli/r.newson/stata10/parmhet_example1.dta", clear}{p_end}
+{phang2}{inp:. use "http://www.qmul.ac.uk/nhli/r.newson/stata10/parmhet_example1.dta", clear}{p_end}
 {phang2}{inp:. describe}{p_end}
 {phang2}{inp:. parmby "blogit deaths number vitamina, or", by(studyseq doseiu dosefreq) eform norestore escal(N) rename(es_1 N)}{p_end}
 {phang2}{inp:. keep if parm=="vitamina"}{p_end}
@@ -457,7 +458,7 @@ using {cmd:parmhet} without the {cmd:eform} option.
 {pstd}
 Set-up
 
-{phang2}{inp:. use "http://www.imperial.ac.uk/nhli/r.newson/stata10/parmhet_example1.dta", clear}{p_end}
+{phang2}{inp:. use "http://fmwww.bc.edu/repec/bocode/p/parmhet_example1.dta", clear}{p_end}
 {phang2}{inp:. describe}{p_end}
 {phang2}{inp:. parmby "blogit deaths number vitamina", by(studyseq doseiu dosefreq) norestore escal(N) rename(es_1 N)}{p_end}
 {phang2}{inp:. keep if parm=="vitamina"}{p_end}
@@ -516,8 +517,8 @@ Examples
 {title:Author}
 
 {pstd}
-Roger Newson, National Heart and Lung Institute, Imperial College London, UK.
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, Queen Mary University of London, UK.
+Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@qmul.ac.uk}
 
 
 {title:References}

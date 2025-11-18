@@ -28,9 +28,9 @@ d
 d KW: resultssets
 d KW: heterogeneity
 d
-d Requires: Stata version 10.0
+d Requires: Stata version 16
 d
-d Distribution-Date: 20130314
+d Distribution-Date: 20251117
 d
 d Author: Roger Newson,  King's College London
 d Support: email roger.newson@@kcl.ac.uk

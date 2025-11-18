@@ -1,6 +1,6 @@
 #delim ;
 prog def parmhet;
-version 10.0;
+version 16.0;
 /*
  Input a varlist containing an estimates variable, a standard error variable,
  and (optionally) a  degrees of freedom variable,
@@ -12,14 +12,14 @@ version 10.0;
  containing inverse-variance weights and/or semi-weights
  and/or semiweight-based standard errors.
 *!Author: Roger Newson
-*!Date: 23 September 2010.
+*!Date: 16 November 2025.
 */
 
 
 syntax varlist(numeric min=2 max=3) [if] [in] [,
   BY(varlist) EForm FLOAT DFCombine(passthru)
   IVWeight(name) SWeight(name) SSTderr(name)
-  LIst(string asis) SAving(string asis) noREstore FAST FList(string)
+  LIst(string asis) FRAme(string asis) SAving(string asis) noREstore FAST FList(string)
   IDNum(string) NIDNum(name) IDStr(string) NIDStr(name)
   SUmvar(varlist numeric) FOrmat(string) KEep(namelist)
   CHI2het(name) DFhet(name) I2het(name) TAU2het(name)
@@ -44,6 +44,7 @@ list contains a varlist of variables to be listed,
   expected to be present in the output resultsset,
   together with optional if and/or in subsetting clauses and/or list_options
   as allowed by the list command.
+frame() specifies a frame in which to save the resultsset.
 saving() specifies a file in which to save the resultsset.
 norestore specifies that the pre-existing dataset
   is not restored after the output resultsset has been produced
@@ -126,27 +127,58 @@ foreach H in `hetvaropts' {;
 *
  Set maximum numeric type according to float option
 *;
-if "`float'"=="" {;local maxntype "double";};
-else {;local maxntype "float";};
+if "`float'"=="" {;
+  local maxntype "double";
+};
+else {;
+  local maxntype "float";
+};
 
 
 *
  Set -restore- to -norestore- if -fast- is present
- and check that the user has specified one of the four options:
- -list()- and/or -saving()- and/or -norestore- and/or -fast-.
+ and check that the user has specified one of the five options:
+ -list()- and/or -reame()- and/ot  -saving()- and/or -norestore- and/or -fast-.
 *;
 if "`fast'"!="" {;
     local restore="norestore";
 };
-if (`"`list'"'=="")&(`"`saving'"'=="")&("`restore'"!="norestore")&("`fast'"=="") {;
-    disp as error "You must specify at least one of the four options:"
-      _n "list(), saving(), norestore, and fast."
+if (`"`list'"'=="")&(`"`frame'"'=="")&(`"`saving'"'=="")&("`restore'"!="norestore")&("`fast'"=="") {;
+    disp as error "You must specify at least one of the five options:"
+      _n "list(), frame(), saving(), norestore, and fast."
       _n "If you specify list(), then the output variables specified are listed."
-      _n "If you specify saving(), then the new dataset is output to a disk file."
-      _n "If you specify norestore and/or fast, then the new dataset is created in the memory,"
-      _n "and any existing dataset in the memory is destroyed."
-      _n "For more details, see {help parmhet:on-line help for parmhet.";
+      _n "f you specify frame(), then the new data set is output to a data frame."
+      _n "If you specify saving(), then the new data set is output to a disk file."
+      _n "If you specify norestore and/or fast, then the new data set is created in the current ata frame,"
+      _n "and any existing data set in the current data frame is destroyed."
+      _n "For more details, see {help parmest:on-line help for parmby and parmest}.";
     error 498;
+};
+
+
+*
+ Parse frame() option if present
+*;
+if `"`frame'"'!="" {;
+  cap frameoption `frame';
+  if _rc {;
+    disp as error `"Illegal frame option: `frame'"';
+    error 498;
+  };
+  local framename "`r(namelist)'";
+  local framereplace "`r(replace)'";
+  local framechange "`r(change)'";
+  if `"`framename'"'=="`c(frame)'" {;
+    disp as error "frame() option may not specify current frame."
+      _n "Use norestore or fast instead.";
+    error 498;
+  };
+  if "`framereplace'"=="" {;
+    cap noi conf new frame `framename';
+    if _rc {;
+      error 498;
+    };
+  };
 };
 
 
@@ -336,6 +368,14 @@ if `"`list'"'!="" {;
 
 
 *
+ Save to frame (if frame is specified)
+*;
+if "`framename'"!="" {;
+  frame copy `c(frame)' `framename', `framereplace';
+};
+
+
+*
  Save dataset if requested
 *;
 if(`"`saving'"'!=""){;
@@ -367,7 +407,7 @@ if(`"`saving'"'!=""){;
 *;
 if "`fast'"=="" {;
     if "`restore'"=="norestore" {;
-        restore,not;
+        restore, not;
     };
     else {;
         restore;
@@ -384,5 +424,31 @@ foreach A in `addvaropts' {;
   };
 };
 
+
+*
+ Change current frame to frame name (if requested)
+*;
+if "`framename'"!="" {;
+  if "`framechange'"!="" {;
+    frame change `framename';
+  };
+};
+
+
+
+end;
+
+
+prog def frameoption, rclass;
+version 16.0;
+*
+ Parse frame() option
+*;
+
+syntax name [, replace CHange ];
+
+return local change "`change'";
+return local replace "`replace'";
+return local namelist "`namelist'";
 
 end;
