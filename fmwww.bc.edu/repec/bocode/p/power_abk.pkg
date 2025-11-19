@@ -1,0 +1,35 @@
+d 'POWER_ABK': module  to perform power analysis for a balanced (AB)^k design with multiple cases
+d
+d  power abk computes power, sample size and effect size for tests
+d that compare treatment and control means in a balanced (AB)^k
+d design with multiple cases, using the calculations given in
+d Hedges, Shadish, and Batley (2022). In the balanced (AB)^k
+d design, A refers to a baseline (control or reference) phase, B
+d refers to a treatment phase, and k indicates the number of times
+d (phases) the AB pair is repeated. During each phase, M
+d measurements are taken. For example, (AB)^2 indicates an ABAB
+d design in which 4M measurements are taken on each subject. 2M of
+d these are control measurements and 2M are treatment measurements
+d (i.e., the design is balanced with 2M measurements in each
+d phase). See the PASS Sample Size Software entry for greater
+d detail. Also, the paper by Hedges, Shadish, and Batley (2022)
+d comes with an R program. The results produced by power abk are
+d identical to those produced by the R code. 
+d
+d KW: power
+d KW: sample size
+d KW: effect size
+d KW: single case experimental designs
+d KW: single case designs
+d KW: ABAB designs
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20251118
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f power_cmd_abk.ado
+f power_cmd_abk_init.ado
+f power_abk.sthlp

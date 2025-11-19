@@ -21793,7 +21793,6 @@ fmwww.bc.edu/repec/bocode/p/pcorr2.pkg
 fmwww.bc.edu/repec/bocode/p/power_cmd_itsa.ado
 fmwww.bc.edu/repec/bocode/p/povdeco.pkg
 fmwww.bc.edu/repec/bocode/p/plognorm.html
-fmwww.bc.edu/repec/bocode/p/povguide.html
 fmwww.bc.edu/repec/bocode/p/pcm000203_lf.ado
 fmwww.bc.edu/repec/bocode/p/pam.sthlp
 fmwww.bc.edu/repec/bocode/p/poverty.dta
@@ -21825,7 +21824,6 @@ fmwww.bc.edu/repec/bocode/p/powercal.pdf
 fmwww.bc.edu/repec/bocode/p/python_plugin.pdf
 fmwww.bc.edu/repec/bocode/p/pcm010303_lf.ado
 fmwww.bc.edu/repec/bocode/p/pandoc.ado
-fmwww.bc.edu/repec/bocode/p/predxcat.html
 fmwww.bc.edu/repec/bocode/p/probcalc.sthlp
 fmwww.bc.edu/repec/bocode/p/partpred.pkg
 fmwww.bc.edu/repec/bocode/p/povtime.ado
@@ -21947,7 +21945,6 @@ fmwww.bc.edu/repec/bocode/p/pwcorrs.ado
 fmwww.bc.edu/repec/bocode/p/prob1nx.hlp
 fmwww.bc.edu/repec/bocode/p/postlist.hlp
 fmwww.bc.edu/repec/bocode/p/plssemcmat.ado
-fmwww.bc.edu/repec/bocode/p/printgph.html
 fmwww.bc.edu/repec/bocode/p/ptvtools.sthlp
 fmwww.bc.edu/repec/bocode/p/power_cmd_twosens.ado
 fmwww.bc.edu/repec/bocode/p/pdfplot.sthlp
@@ -21977,6 +21974,7 @@ fmwww.bc.edu/repec/bocode/p/power_oneroc.sthlp
 fmwww.bc.edu/repec/bocode/p/parmparse.pkg
 fmwww.bc.edu/repec/bocode/p/python.pkg
 fmwww.bc.edu/repec/bocode/p/ptvtools.hlp
+fmwww.bc.edu/repec/bocode/p/power_abk.sthlp
 fmwww.bc.edu/repec/bocode/p/pisaoaxaca.ado
 fmwww.bc.edu/repec/bocode/p/predcalc.hlp
 fmwww.bc.edu/repec/bocode/p/percentmatch.ado
@@ -22081,7 +22079,6 @@ fmwww.bc.edu/repec/bocode/p/pcm010401_lf.ado
 fmwww.bc.edu/repec/bocode/p/pathof.sthlp
 fmwww.bc.edu/repec/bocode/p/pullin.ado
 fmwww.bc.edu/repec/bocode/p/percat.ado
-fmwww.bc.edu/repec/bocode/p/primes.html
 fmwww.bc.edu/repec/bocode/p/punaf_p.ado
 fmwww.bc.edu/repec/bocode/p/pshare.ado
 fmwww.bc.edu/repec/bocode/p/pip_countries.sthlp
@@ -22145,7 +22142,6 @@ fmwww.bc.edu/repec/bocode/p/pieplot.ado
 fmwww.bc.edu/repec/bocode/p/pv.hlp
 fmwww.bc.edu/repec/bocode/p/paran.ado
 fmwww.bc.edu/repec/bocode/p/patientyear.do
-fmwww.bc.edu/repec/bocode/p/pperron2.html
 fmwww.bc.edu/repec/bocode/p/pshare.sthlp
 fmwww.bc.edu/repec/bocode/p/pccmtoolkit.sthlp
 fmwww.bc.edu/repec/bocode/p/psave.sthlp
@@ -22244,7 +22240,6 @@ fmwww.bc.edu/repec/bocode/p/prepar.pkg
 fmwww.bc.edu/repec/bocode/p/pc_simulate.ado
 fmwww.bc.edu/repec/bocode/p/pctilesets_examples.do
 fmwww.bc.edu/repec/bocode/p/pyramid.pkg
-fmwww.bc.edu/repec/bocode/p/prob1nx.html
 fmwww.bc.edu/repec/bocode/p/paramed.html
 fmwww.bc.edu/repec/bocode/p/povdeco.ado
 fmwww.bc.edu/repec/bocode/p/projdo.ado
@@ -22283,7 +22278,6 @@ fmwww.bc.edu/repec/bocode/p/pperron2.ado
 fmwww.bc.edu/repec/bocode/p/povdeco5.hlp
 fmwww.bc.edu/repec/bocode/p/pca2_table1.dta
 fmwww.bc.edu/repec/bocode/p/plotsgpv.dlg
-fmwww.bc.edu/repec/bocode/p/povdeco5.html
 fmwww.bc.edu/repec/bocode/p/pschset_i_5.dlg
 fmwww.bc.edu/repec/bocode/p/pmvalsampsize.sthlp
 fmwww.bc.edu/repec/bocode/p/power_tworoc.sthlp
@@ -22418,7 +22412,6 @@ fmwww.bc.edu/repec/bocode/p/predxcat.pkg
 fmwww.bc.edu/repec/bocode/p/pnrcheck.html
 fmwww.bc.edu/repec/bocode/p/peerreview.ado
 fmwww.bc.edu/repec/bocode/p/panelthin.ado
-fmwww.bc.edu/repec/bocode/p/povdeco.html
 fmwww.bc.edu/repec/bocode/p/pschini2.ado
 fmwww.bc.edu/repec/bocode/p/prem.ado
 fmwww.bc.edu/repec/bocode/p/pariv.sthlp
@@ -22569,7 +22562,6 @@ fmwww.bc.edu/repec/bocode/p/panelexample.dta
 fmwww.bc.edu/repec/bocode/p/pcacoefsave.ado
 fmwww.bc.edu/repec/bocode/p/propcnsasl.ado
 fmwww.bc.edu/repec/bocode/p/povcalnet_aggquery.ado
-fmwww.bc.edu/repec/bocode/p/powerq.html
 fmwww.bc.edu/repec/bocode/p/petpoisson.html
 fmwww.bc.edu/repec/bocode/p/paverage.hlp
 fmwww.bc.edu/repec/bocode/p/persuasio4ytz2lpr.sthlp
@@ -22589,7 +22581,6 @@ fmwww.bc.edu/repec/bocode/p/postrri.hlp
 fmwww.bc.edu/repec/bocode/p/pac2.ado
 fmwww.bc.edu/repec/bocode/p/pwploti.pkg
 fmwww.bc.edu/repec/bocode/p/partgam.hlp
-fmwww.bc.edu/repec/bocode/p/powercal.html
 fmwww.bc.edu/repec/bocode/p/pexp5.hlp
 fmwww.bc.edu/repec/bocode/p/prtab.ado
 fmwww.bc.edu/repec/bocode/p/pocock_simon_v2_rand.dta
@@ -22645,6 +22636,7 @@ fmwww.bc.edu/repec/bocode/p/povimp.sthlp
 fmwww.bc.edu/repec/bocode/p/PyDDOP.txt
 fmwww.bc.edu/repec/bocode/p/prevent10.sthlp
 fmwww.bc.edu/repec/bocode/p/power_cmd_swgee_init.ado
+fmwww.bc.edu/repec/bocode/p/power_cmd_abk.ado
 fmwww.bc.edu/repec/bocode/p/pooledsd.ado
 fmwww.bc.edu/repec/bocode/p/psweight_class.sthlp
 fmwww.bc.edu/repec/bocode/p/pollute.spmat
@@ -22702,6 +22694,7 @@ fmwww.bc.edu/repec/bocode/p/panelview.ado
 fmwww.bc.edu/repec/bocode/p/plotmatrix.html
 fmwww.bc.edu/repec/bocode/p/pvfix.pkg
 fmwww.bc.edu/repec/bocode/p/pip_cite.ado
+fmwww.bc.edu/repec/bocode/p/power_abk.pkg
 fmwww.bc.edu/repec/bocode/p/parsefilename.sthlp
 fmwww.bc.edu/repec/bocode/p/pwcorrf.ado
 fmwww.bc.edu/repec/bocode/p/pmidfetch.ado
@@ -22743,7 +22736,6 @@ fmwww.bc.edu/repec/bocode/p/pdplot.pkg
 fmwww.bc.edu/repec/bocode/p/panels.hlp
 fmwww.bc.edu/repec/bocode/p/power_cmd_single_itsa.ado
 fmwww.bc.edu/repec/bocode/p/path.sthlp
-fmwww.bc.edu/repec/bocode/p/predcalc.html
 fmwww.bc.edu/repec/bocode/p/predictms_stms_model.ado
 fmwww.bc.edu/repec/bocode/p/ppmlhdfe_separation_relu.mata
 fmwww.bc.edu/repec/bocode/p/psmatch.html
@@ -22829,7 +22821,6 @@ fmwww.bc.edu/repec/bocode/p/psbayes.pkg
 fmwww.bc.edu/repec/bocode/p/parmhet_basic_opts.sthlp
 fmwww.bc.edu/repec/bocode/p/pcmtest.sthlp
 fmwww.bc.edu/repec/bocode/p/pmsampsize.sthlp
-fmwww.bc.edu/repec/bocode/p/prepar.html
 fmwww.bc.edu/repec/bocode/p/pschset_f_1.dlg
 fmwww.bc.edu/repec/bocode/p/power_sim_itsa.ado
 fmwww.bc.edu/repec/bocode/p/predsurv.sthlp
@@ -22929,9 +22920,9 @@ fmwww.bc.edu/repec/bocode/p/psemail.pkg
 fmwww.bc.edu/repec/bocode/p/pdbvrar0.gss
 fmwww.bc.edu/repec/bocode/p/pctrim.ado
 fmwww.bc.edu/repec/bocode/p/propcnsreg.hlp
-fmwww.bc.edu/repec/bocode/p/prelist.html
 fmwww.bc.edu/repec/bocode/p/paverage.pkg
 fmwww.bc.edu/repec/bocode/p/pathutil.ado
+fmwww.bc.edu/repec/bocode/p/power_cmd_abk_init.ado
 fmwww.bc.edu/repec/bocode/p/pcm010102_lf.ado
 fmwww.bc.edu/repec/bocode/p/pddami.ado
 fmwww.bc.edu/repec/bocode/p/parseuas.ado
@@ -23020,7 +23011,6 @@ fmwww.bc.edu/repec/bocode/p/pam.pkg
 fmwww.bc.edu/repec/bocode/p/parmhet.ado
 fmwww.bc.edu/repec/bocode/p/pathutil.pkg
 fmwww.bc.edu/repec/bocode/p/power_cmd_icc.ado
-fmwww.bc.edu/repec/bocode/p/preparation.html
 fmwww.bc.edu/repec/bocode/p/pstest.ado
 fmwww.bc.edu/repec/bocode/p/parseloc.ado
 fmwww.bc.edu/repec/bocode/p/pstrata.ado
