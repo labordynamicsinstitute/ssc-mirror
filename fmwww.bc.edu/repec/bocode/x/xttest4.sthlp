@@ -1,13 +1,13 @@
 {smcl}
 
-help for {hi:xttest4}                            (Version 1.2, 15 Aug 2025)
+help for {hi:xttest4}                            (Version 1.3, 19 Nov 2025)
 
 
-{title: Kezdi (2003) test for heteroscedasticity in Fixed Effects Model with large N, small T}
+{title: Kezdi (2003) test for heteroscedasticity in Fixed Effects models with large N, small T}
 
 {p 8 16 2}    {cmd: xttest4} 
 
-{p 4 8 2}{cmd:xttest4} is a post-estimation command used to test the heteroscedasticity of errors after estimating a Fixed-effects model. Data must be {help xtset} and {cmd: xtbalance2} command ({cmd:ssc install xtbalance2}) are also required.
+{p 4 8 2}{cmd:xttest4} is a post-estimation command used to test the heteroscedasticity of errors after estimating a Fixed-effects model. Data must be {help xtset}.
 
 {title:Description}
 
@@ -40,14 +40,14 @@ help for {hi:xttest4}                            (Version 1.2, 15 Aug 2025)
 {p 4 8 2}{cmd:xttest4} is not an official Stata command.
 It is a free contribution to the research community.
 Please cite it as such: {p_end}
-{p 8 8 2}Hoang Ba Manh, 2025. "XTTEST4: Stata module to calculate heterokedasticity tests for fixed effects models," Statistical Software Components S459492, Boston College Department of Economics, revised 15 Aug 2025.{p_end}
+{p 8 8 2}Manh Hoang Ba, 2025. "XTTEST4: Stata module to calculate heterokedasticity tests for fixed effects models," Statistical Software Components S459492, Boston College Department of Economics, revised 15 Aug 2025.{p_end}
 
 
 {title:Examples}
 
 	. webuse abdata, clear
 
-	. xtreg n k w ys, fe
+	. xtreg n k w ys if id <=100, fe
 
 	. xttest4
 

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.4.5  08nov2025}{...}
+{* *! version 0.5.0  08nov2025}{...}
 {viewerjumpto "Syntax" "xtvfreg##syntax"}{...}
 {viewerjumpto "Description" "xtvfreg##description"}{...}
 {viewerjumpto "Options" "xtvfreg##options"}{...}
@@ -172,7 +172,27 @@ of the variance equation is less than the convergence tolerance.{p_end}
 
 {pstd}
 For each group, convergence information is displayed showing the number of 
-iterations and the initial and final log-likelihood values.
+iterations and the initial and final log-likelihood values. The command also 
+reports a variance decomposition that partitions the total variance of the 
+dependent variable into three components:
+
+{p 8 12}1. {bf:Variance explained by mean model} - The variance of fitted values 
+from the weighted mean equation. This represents systematic variation captured by 
+the mean predictors (covariates).{p_end}
+
+{p 8 12}2. {bf:Variance explained by variance model} - The mean of the estimated 
+variance function (S²). This represents the average level of heteroscedasticity 
+modeled by the variance equation predictors.{p_end}
+
+{p 8 12}3. {bf:Unexplained variance} - The remaining variance not accounted for 
+by the mean and variance models. This includes individual fixed effects and 
+idiosyncratic variation not captured by the models.{p_end}
+
+{pstd}
+Each component is expressed both in absolute terms (variance units) and as a 
+percentage of total variance. These proportions help assess the relative 
+importance of the mean structure and heteroscedasticity in explaining variation 
+in the outcome.
 
 {pstd}
 {bf:Stored estimates}: The command stores three sets of estimates for each group 
@@ -191,6 +211,16 @@ and can be used with {helpb esttab}, {helpb etable}, or the {helpb collect} syst
 standard linear regression. Coefficients in the variance equation are on the log 
 scale (due to the log link): positive coefficients indicate that the variable 
 increases variance, while negative coefficients indicate that it decreases variance.
+An effect of an X variable in the variance model on the Y scale of the mean model 
+can be interpreted as follows: A one-unit increase in X is associated with an exp(beta_x) 
+times change in the expected variance of the prediction errors (residuals) of the Y variable 
+in the mean model. This implies that the X variable is influencing the heteroscedasticity of 
+the mean model. A positive beta_x (i.e., exp(beta_x) > 1) suggests that as X increases, 
+the spread of the residuals around the predicted Y values tends to increase, while a negative 
+beta_x (i.e., exp(beta_x) < 1) suggests the spread tends to decrease. Put differently and 
+succinctly (in terms of inequality), an X variable in the variance model has a multiplicative 
+effect on within-group inequality whereas an X variable in the mean model has an additive 
+effect on between-group inequality.
 
 
 {marker examples}{...}
@@ -235,9 +265,9 @@ increases variance, while negative coefficients indicate that it decreases varia
 {phang2}{cmd:. esttab mean_*, se star(* 0.10 ** 0.05 *** 0.01)}{p_end}
 {phang2}{cmd:. esttab var_*, se star(* 0.10 ** 0.05 *** 0.01)}{p_end}
 
-{pstd}Use with etable{p_end}
-{phang2}{cmd:. estimates replay mean_0}{p_end}
-{phang2}{cmd:. etable}{p_end}
+{pstd}Use with etable, which only output one set of the model results{p_end}
+{phang2}{cmd:. etable, replay stars(.05 * .01 ** .001 ***, prefix(Note:))}{p_end}
+{phang2}{cmd:. etable, replay title(Table 2. Regression Estimates) export(RegResults.docx, replace)}{p_end}
 
 {pstd}Completely silent execution{p_end}
 {phang2}{cmd:. xtvfreg ln_wage [pweight=sampwgt] if race==1, groupvar(south) panelid(idcode) meanvars(collgrad mage mhours mtenure dage dhours dtenure) varvars(collgrad mage mhours mtenure dage dhours dtenure) table combined}{p_end}

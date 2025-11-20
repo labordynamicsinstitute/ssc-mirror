@@ -1,24 +1,25 @@
 *! a Stata program for estimating variance function panel regression
-* version 0.4.5, Tim Liao, University of Illinois
+* xtvfreg version 0.4.8
+* Tim Liao, University of Illinois
+* Variance decomposition + combined tables working
 
-program define xtvfreg, rclass
+program define xtvfreg, eclass
     version 18.0
 
     // -------------------------------
     // Parse syntax
     // -------------------------------
-    syntax varname(min=1 max=1) [if] [in] [pweight], ///
+    syntax varlist(min=1 max=1) [if] [in] [pweight], ///
         GROUPVAR(varname) PANELID(varname) ///
         MEANVARS(varlist) VARVARS(varlist) ///
         [TVAR(varname) CONVERGE(real 1e-6) MAXITER(integer 100) TABLE NOLOg COMbined]
     
-    // Check if output should be displayed (1 = show output, 0 = suppress)
+    // Check if output should be displayed
     local show_output = c(noisily)
     
     // Handle weights
     if "`weight'" != "" {
         local wgt "[`weight' `exp']"
-        // Extract variable name from exp (remove the leading "=")
         local pwgt = subinstr("`exp'", "=", "", 1)
     }
     else {
@@ -27,7 +28,7 @@ program define xtvfreg, rclass
     }
 
     // -------------------------------
-    // Mark sample
+    // Mark sample - but DON'T use preserve/restore
     // -------------------------------
     marksample touse
     markout `touse' `groupvar' `panelid' `meanvars' `varvars'
@@ -83,17 +84,20 @@ program define xtvfreg, rclass
     // -------------------------------
     // Setup
     // -------------------------------
-    preserve
-    quietly keep if `touse'
     quietly xtset `fevar'
 
-    levelsof `groupvar', local(groups)
+    levelsof `groupvar' if `touse', local(groups)
     local ngroups : word count `groups'
     local i = 0
+    
+    // Build list of clean group names
+    local mean_est_list ""
+    local var_est_list ""
+    local beta_est_list ""
 
     // Display header
     if `show_output' {
-        di as text _n "Varying Fixed Effects Panel Regression"
+        di as text _n "Varying Fixed Effects Panel Regression (Version 0.4.7)"
         di as text "Dependent variable: " as result "`yvar'"
         di as text "Panel ID: " as result "`fevar'"
         di as text "Group variable: " as result "`groupvar'"
@@ -112,12 +116,19 @@ program define xtvfreg, rclass
         if `show_output' {
             di as text _n "Group `g' (`i' of `ngroups')" _n "{hline 78}"
         }
-        local obscond "`groupvar'==`g'"
+        local obscond "`groupvar'==`g' & `touse'"
 
         // Unique suffix for this group
         local gname = subinstr("`g'", " ", "", .)
+        local gname = subinstr("`gname'", ".", "_", .)
+        local gname = subinstr("`gname'", "-", "_", .)
         local R2_var "R2_`gname'"
         local S2_var "S2_`gname'"
+        
+        // Add to estimation lists
+        local mean_est_list "`mean_est_list' mean_`gname'"
+        local var_est_list "`var_est_list' var_`gname'"
+        local beta_est_list "`beta_est_list' beta_`gname'"
 
         // Drop any leftovers
         capture drop Ra_temp R_temp `R2_var' `S2_var' LOGLIK_temp LL0_temp LLN_temp DLL_temp
@@ -192,7 +203,7 @@ program define xtvfreg, rclass
             quietly replace `R2_var' = R_temp^2 if `obscond'
 
             // Re-estimate variance
-            quietly glm `R2_var' `dev_eq_vars' if `obscond', family(gamma) link(log)
+            quietly glm `R2_var' `var_eq_vars' if `obscond', family(gamma) link(log)
             capture drop `S2_var'
             quietly predict double `S2_var' if `obscond', mu
 
@@ -220,6 +231,10 @@ program define xtvfreg, rclass
             di as text "{hline 50}"
         }
 
+        // Store final log-likelihood
+        quietly summarize LL0_temp if `obscond', meanonly
+        local ll_final = r(mean)
+
         // Display convergence status
         if `show_output' {
             if `converged' {
@@ -230,40 +245,11 @@ program define xtvfreg, rclass
             }
         }
 
-        // Store final log-likelihood
-        quietly summarize LL0_temp if `obscond', meanonly
-        local ll_final = r(mean)
-
         // -------------------------------
-        // Display mean equation results
+        // Final estimation and storage
         // -------------------------------
-        if `show_output' {
-            di as text _n "Mean Equation (Weighted GLS):"
-            di as text "{hline 78}"
-            if "`pwgt'" != "" {
-                tempvar combined_wgt
-                quietly gen double `combined_wgt' = (`pwgt') / `S2_var' if `obscond'
-                glm `yvar' `mean_eq_vars' [aw=`combined_wgt'] if `obscond', family(gaussian) link(identity)
-            }
-            else {
-                glm `yvar' `mean_eq_vars' [aw=1/`S2_var'] if `obscond', family(gaussian) link(identity)
-            }
-        }
-        else {
-            if "`pwgt'" != "" {
-                tempvar combined_wgt
-                quietly gen double `combined_wgt' = (`pwgt') / `S2_var' if `obscond'
-                quietly glm `yvar' `mean_eq_vars' [aw=`combined_wgt'] if `obscond', family(gaussian) link(identity)
-            }
-            else {
-                quietly glm `yvar' `mean_eq_vars' [aw=1/`S2_var'] if `obscond', family(gaussian) link(identity)
-            }
-        }
-        estimates store mean_`gname'
         
-        // -------------------------------
-        // Display variance equation results
-        // -------------------------------
+        // Variance equation
         if `show_output' {
             di as text _n "Variance Equation (Gamma GLM):"
             di as text "{hline 78}"
@@ -274,29 +260,96 @@ program define xtvfreg, rclass
         }
         estimates store var_`gname'
         
-        // Store combined results with metadata
+        // Mean equation
+        if `show_output' {
+            di as text _n "Mean Equation (Weighted GLS):"
+            di as text "{hline 78}"
+        }
+        
         if "`pwgt'" != "" {
             tempvar combined_wgt
             quietly gen double `combined_wgt' = (`pwgt') / `S2_var' if `obscond'
-            quietly glm `yvar' `mean_eq_vars' [aw=`combined_wgt'] if `obscond', family(gaussian) link(identity)
+            if `show_output' {
+                glm `yvar' `mean_eq_vars' [aw=`combined_wgt'] if `obscond', family(gaussian) link(identity)
+            }
+            else {
+                quietly glm `yvar' `mean_eq_vars' [aw=`combined_wgt'] if `obscond', family(gaussian) link(identity)
+            }
         }
         else {
-            quietly glm `yvar' `mean_eq_vars' [aw=1/`S2_var'] if `obscond', family(gaussian) link(identity)
+            if `show_output' {
+                glm `yvar' `mean_eq_vars' [aw=1/`S2_var'] if `obscond', family(gaussian) link(identity)
+            }
+            else {
+                quietly glm `yvar' `mean_eq_vars' [aw=1/`S2_var'] if `obscond', family(gaussian) link(identity)
+            }
         }
-        estadd scalar group = `g'
-        estadd scalar n_iter = `iter'
-        estadd scalar vf_converged = `converged'
-        estadd scalar ll_init = `ll_init'
-        estadd scalar ll_final = `ll_final'
-        estadd local vf_groupvar "`groupvar'"
-        estadd local vf_groupval "`g'"
-        estadd local vf_cmd "xtvfreg"
-        quietly estimates store beta_`gname'
+        
+        // Add metadata to mean equation estimates
+        quietly estadd scalar group = `g'
+        quietly estadd scalar n_iter = `iter'
+        quietly estadd scalar vf_converged = `converged'
+        quietly estadd scalar ll_init = `ll_init'
+        quietly estadd scalar ll_final = `ll_final'
+        quietly estadd local vf_groupvar "`groupvar'"
+        quietly estadd local vf_groupval "`g'"
+        quietly estadd local vf_cmd "xtvfreg"
+        
+        estimates store mean_`gname'
+        
+        // Store again as beta for combined tables with variance decomposition
+        estimates store beta_`gname'
+        
+        // -------------------------------
+        // Calculate and display variance decomposition
+        // -------------------------------
+        
+        // Total variance of outcome
+        quietly summarize `yvar' if `obscond', detail
+        local var_total = r(Var)
+        
+        // Variance of fitted values from mean model
+        capture drop fitted_temp
+        quietly predict double fitted_temp if `obscond'
+        quietly summarize fitted_temp if `obscond', detail
+        local var_fitted = r(Var)
+        capture drop fitted_temp
+        
+        // Mean of estimated variance function
+        quietly summarize `S2_var' if `obscond', meanonly
+        local var_heterosced = r(mean)
+        
+        // Proportions
+        local prop_mean = `var_fitted' / `var_total'
+        local prop_var = `var_heterosced' / `var_total'
+        local prop_unexplained = 1 - `prop_mean' - `prop_var'
+        
+        // Display variance decomposition
+        if `show_output' {
+            di as text _n "Variance Decomposition:"
+            di as text "{hline 78}"
+            di as text "Total variance of " as result "`yvar'" as text ": " as result %9.6f `var_total'
+            di as text "  Variance explained by mean model: " as result %9.6f `var_fitted' as text " (" as result %5.1f =`prop_mean'*100 as text "%)"
+            di as text "  Variance explained by variance model: " as result %9.6f `var_heterosced' as text " (" as result %5.1f =`prop_var'*100 as text "%)"
+            di as text "  Unexplained variance: " as result %9.6f =`var_total'-`var_fitted'-`var_heterosced' as text " (" as result %5.1f =`prop_unexplained'*100 as text "%)"
+        }
+        
+        // Add variance decomposition to stored estimates
+        estimates restore beta_`gname'
+        estadd scalar var_total = `var_total'
+        estadd scalar var_fitted = `var_fitted'
+        estadd scalar var_heterosced = `var_heterosced'
+        estadd scalar prop_mean = `prop_mean'
+        estadd scalar prop_var = `prop_var'
+        estimates store beta_`gname'
         
         // Return values for this group
-        return scalar group`i'_iter = `iter'
-        return scalar group`i'_converged = `converged'
-        return scalar group`i'_ll = `ll_final'
+        ereturn scalar group`i'_iter = `iter'
+        ereturn scalar group`i'_converged = `converged'
+        ereturn scalar group`i'_ll = `ll_final'
+        ereturn scalar group`i'_var_total = `var_total'
+        ereturn scalar group`i'_prop_mean = `prop_mean'
+        ereturn scalar group`i'_prop_var = `prop_var'
 
         // Clean up temps
         capture drop Ra_temp R_temp LOGLIK_temp LL0_temp LLN_temp DLL_temp
@@ -319,8 +372,8 @@ program define xtvfreg, rclass
         if _rc == 0 {
             di as text _n _n "Combined Estimation Results:"
             di as text "{hline 78}"
-            esttab beta_*, p star(* 0.10 ** 0.05 *** 0.01) ///
-                wide scalars(n_iter vf_converged ll_final) ///
+            esttab `beta_est_list', p star(* 0.10 ** 0.05 *** 0.01) ///
+                wide scalars(n_iter vf_converged ll_final var_total prop_mean prop_var) ///
                 mtitles
         }
         else {
@@ -336,28 +389,25 @@ program define xtvfreg, rclass
         if _rc == 0 {
             di as text _n _n "Mean Equation Results (All Groups):"
             di as text "{hline 78}"
-            esttab mean_*, se star(* 0.10 ** 0.05 *** 0.01) ///
+            esttab `mean_est_list', se star(* 0.10 ** 0.05 *** 0.01) ///
                 b(%9.4f) se(%9.4f) ///
                 mtitles
             
             di as text _n _n "Variance Equation Results (All Groups):"
             di as text "{hline 78}"
-            esttab var_*, se star(* 0.10 ** 0.05 *** 0.01) ///
+            esttab `var_est_list', se star(* 0.10 ** 0.05 *** 0.01) ///
                 b(%9.4f) se(%9.4f) ///
                 mtitles
         }
         else {
             di as error "Note: esttab not installed. Install with: ssc install estout"
-            di as error "      Combined tables require esttab from: ssc install estout"
         }
     }
     
-    // -------------------------------
-    // Return and cleanup
-    // -------------------------------
-    restore
-    return local groups "`groups'"
-    return scalar ngroups = `ngroups'
-    return scalar maxiter = `maxiter'
-    return scalar converge = `tol'
+    ereturn local groups "`groups'"
+    ereturn scalar ngroups = `ngroups'
+    ereturn scalar maxiter = `maxiter'
+    ereturn scalar converge = `tol'
+	// Clean up temporary variables
+   capture drop R2_* S2_*
 end

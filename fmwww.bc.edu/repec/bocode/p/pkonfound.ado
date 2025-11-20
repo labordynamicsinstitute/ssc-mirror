@@ -3104,6 +3104,416 @@ program define benchmark_value_specific, rclass
     return scalar benchmark_value_logodds = benchmark_value_logodds
 end
 
+// #30
+* test_VAM.do
+* Beta version of VAM function with exact text format and plotting
+*************************************************************************
+
+capture program drop test_VAM
+program define test_VAM, rclass
+    version 16.0
+
+    /* 1) Parse inputs */
+    syntax anything
+    local est_str     : word 1 of `anything'
+    local replace_str : word 2 of `anything'
+    local nobs_str    : word 3 of `anything'
+    local thr_str     : word 4 of `anything'
+    local peerpi_str  : word 5 of `anything'
+
+    /* 2) Convert & validate */
+    scalar est_eff        = real("`est_str'")
+    scalar replace_stu    = real("`replace_str'")
+    scalar n_obs          = real("`nobs_str'")
+    scalar eff_thr        = real("`thr_str'")
+    scalar peer_effect_pi = real("`peerpi_str'")
+
+    if missing(est_eff) {
+        di as error "est_eff must be a single numeric value."
+        exit 198
+    }
+    if missing(replace_stu) {
+        di as error "replace_stu must be a single numeric value."
+        exit 198
+    }
+    if missing(n_obs) | n_obs<=0 | mod(n_obs,1)!=0 {
+        di as error "n_obs must be a single positive integer."
+        exit 198
+    }
+    if missing(eff_thr) {
+        di as error "eff_thr must be a single numeric value."
+        exit 198
+    }
+    if peer_effect_pi<0 | peer_effect_pi>0.5 {
+        di as error "peer_effect_pi must be between 0 and 0.5."
+        exit 198
+    }
+    /* NEW: Under-identification check */
+    if (est_eff >= replace_stu) & (replace_stu > eff_thr) {
+        di as error "The est_eff >= replace_stu > eff_thr. Therefore, one would have to replace more than the entire sample to reduce the VAM below the threshold. In this context the replacement % is greater than 1 and is under identified."
+        exit 198
+    }
+
+    /* 3) Compute metrics */
+    scalar below       = (est_eff < eff_thr)
+    /* FIXED: Correct denominator for above-threshold case */
+    scalar pi_replace  = cond(below, ///
+        (eff_thr - est_eff)/(replace_stu - est_eff), ///
+        (est_eff - eff_thr)/(replace_stu - eff_thr))  // CHANGED DENOMINATOR
+    scalar rir_count   = round(n_obs * pi_replace)
+    scalar raw_peer    = cond(below, ///
+        (eff_thr - est_eff)/(n_obs*peer_effect_pi*(1-peer_effect_pi)), ///
+        (est_eff - eff_thr)/(n_obs*peer_effect_pi*(1-peer_effect_pi)))
+    scalar signed_peer = cond(below, -abs(raw_peer), abs(raw_peer))
+
+	/* Peer-effect scenario summary */
+	local peer_abs = string(abs(signed_peer), "%9.3f")
+	local peer_signed = string(signed_peer, "%9.3f")
+	
+    /* 4) Labels */
+    if (below) {
+        local dir_word    "below"
+        local action_word "increase"
+        local move_word   "above"
+        local bias_word   "distracting"
+    }
+    else {
+        local dir_word    "above"
+        local action_word "reduce"
+        local move_word   "below"
+        local bias_word   "supporting"
+    }
+
+    /* 5) Build graph data quietly */
+    quietly {
+        preserve
+        set obs 200
+        gen double p_seq = 0.01 + (_n-1)*(0.4999-0.01)/199
+        gen double y_abs  = abs(cond(below, ///
+            (eff_thr - est_eff)/(n_obs*p_seq*(1-p_seq)), ///
+            (est_eff - eff_thr)/(n_obs*p_seq*(1-p_seq))))
+
+        twoway ///
+            (line    y_abs p_seq,    lcolor(navy) lwidth(medium)) ///
+            (scatteri `=abs(signed_peer)' `=peer_effect_pi',    ///
+                mcolor(red)       msymbol(O)    msize(medsmall)), ///
+            title("Size of peer effect by proportion to be replaced (pi)", size(medsmall)) ///
+            ytitle("Absolute value of the peer effect") ///
+            xtitle("Proportion to be replaced") ///
+            legend(off) name(peerplot, replace)
+        restore
+    }
+
+    /* 6) Narrative output: exact R-style and order */
+        di "This is beta version of the VAM function."
+    di ""
+
+    di "The reported VAM score is " %6.3f est_eff ///
+       " with evaluation threshold of " %4.2f eff_thr "."
+    di "The VAM score is " "`dir_word'" " the threshold. Therefore, the RIR indicates replacement required to " "`action_word'" " the VAM " "`move_word'" " the threshold."
+    di ""
+
+    /* Replacement scenario summary */
+    if (below) {
+        di "If there are no peer effects, then " as result rir_count as text " (" as result round(100*pi_replace) as text "%) students must be replaced with students whose score is " as result %4.2f replace_stu as text " (as specified) to move the VAM " as result "`move_word'" as text " the threshold (RIR = " as result round(100*pi_replace) as text "% * " as result n_obs as text " = " as result rir_count as text ")."
+    }
+    else {
+        di "If there are no peer effects, then " as result rir_count as text " (" as result round(100*pi_replace) as text "%) students whose score is " as result %4.2f replace_stu as text " (as specified) must be replaced with students whose score is at the threshold level " as result %4.2f eff_thr as text " to move the VAM " as result "`move_word'" as text " the threshold (RIR = " as result round(100*pi_replace) as text "% * " as result n_obs as text " = " as result rir_count as text ")."
+    }
+    di ""
+
+    /* Peer‐effect scenario summary */
+    di "If all of the bias comes from peer spillover effects, and we assume " round(100*peer_effect_pi) "% (as specified) students are " "`bias_word'" " the others, then a peer effect of " `peer_abs' " is needed to change the evaluation."
+    display "Each replaced student must have a " _continue
+    display `peer_signed' _continue
+    display " effect (compared to their replacements) on each of the non-replaced students to cross the threshold for evaluation."
+    di ""
+
+    di "See the figure for combinations of size of peer effect by proportion to be replaced (pi) to change the evaluation. The red point marks the value reported above."
+    di ""
+
+    di "The calculations and interpretation depend on your VAM model specification and estimation. See the paper for more details."
+    di ""
+
+    graph display peerplot
+
+    /* 7) Return values */
+    return scalar pi_replace  = pi_replace
+    return scalar rir_count   = rir_count
+    return scalar peer_effect = signed_peer
+	
+	* ---- Examples ----
+	*
+	* 1) VAM below threshold:
+	*    test_VAM 0.14 0.16 20 0.15 0.3
+	*
+	* 2) VAM above threshold:
+	*    test_VAM 0.16 0.14 20 0.15 0.4
+	*
+	* 3) Invalid peer_effect_pi:
+	*    test_VAM 0.14 0.16 20 0.15 0.6
+	*
+	* 4) Under-identification case:
+	*    test_VAM 1.5 1.2 30 1.0 0.5
+	*************************************************************************
+	
+end
+
+// #31
+capture program drop konfound_footer
+program define konfound_footer, rclass
+version 16.0
+    di ""
+	di as text "For more information, visit https://konfound-it.org"
+    di as text "To explore examples and interpretation tips,"
+    di as text "see our Practical Guide at https://konfound-it.org/page/guide/"
+end
+
+// #32
+capture program drop konfound_ci
+program define konfound_ci, rclass
+version 16.0
+// Required: lb, ub, nobs, ncov
+// Optional: nu (df override), alpha, tails
+syntax , LB(real) UB(real) NOBS(real) NCOV(real) ///
+[ NU(real -1) ALPHA(real 0.05) TAILS(integer 2) ]
+
+    if (`ub' <= `lb') {
+        di as err "upper bound must be greater than lower bound."
+        exit 198
+    }
+
+    tempname df tcrit
+	
+    // degrees of freedom
+    scalar `df' = `nu'
+	
+    if (`df' <= 0) {
+        // If ncov excludes intercept, subtract 1
+        scalar `df' = `nobs' - `ncov' - 3
+    }
+    if (`df' <= 0) {
+        di as err "Computed degrees of freedom nonpositive. Check nobs, ncov, or set nu()."
+        exit 198
+    }
+
+    // critical value
+    if (`tails' == 2) { // two tail
+        scalar `tcrit' = invttail(`df', `alpha'/2)
+    }
+    else if (`tails' == 1) { // one tail
+        scalar `tcrit' = invttail(`df', `alpha')
+    }
+    else {
+        di as err "tails() must be 1 or 2."
+        exit 198
+    }
+	
+    // point estimate and SE from CI input
+    scalar r_est  = (`ub' + `lb')/2
+    scalar r_se   = (`ub' - `lb')/(2*`tcrit')
+
+    // return
+    return scalar est_eff = r_est
+    return scalar std_err = r_se
+end
+
+// #32 cop_pse_aux: calculating statistical signifiance threshold of delta JC0
+capture program drop delta_statsig
+program define delta_statsig, rclass
+    version 16.0
+    // ---- 1) Parse & validate
+    syntax , RXYZ(real) RMAX(real) RXZ(real) DF(real) ///
+        [ ALPHA(real 0.05) TOL(real 1e-8) ]
+
+    // basic checks (soft—function will prefer returning intermediates)
+    if (`df' <= 0) {
+        return local error "df must be > 0"
+        return local status "fail"
+        exit
+    }
+    if !(`alpha' > 0 & `alpha' < 1) {
+        return local error "alpha must be in (0,1)"
+        return local status "fail"
+        exit
+    }
+    if abs(`rxyz') >= 1 {
+        return local error "r_xy_z must be in (-1,1)"
+        return local status "fail"
+        exit
+    }
+    if abs(`rxz') >= 1 {
+        return local error "r_xz must be in (-1,1)"
+        return local status "fail"
+        exit
+    }
+
+    // ---- 2) Critical values
+    // R: tcrit = qt(1 - alpha/2, df)  <->  Stata: invttail(df, alpha/2)
+    tempname tcrit rcrit
+    scalar `tcrit' = invttail(`df', `alpha'/2)
+    scalar `rcrit' = `tcrit' / sqrt(`tcrit'^2 + `df')
+
+    // Early exits that still return criticals
+    if (`rxyz' < `rcrit' - `tol') {
+        return scalar t_crit = `tcrit'
+        return scalar r_crit = `rcrit'
+        return local  error  "Effect is not significant: rxyGz < critical r." _newline "COP statistical significance threshold is not defined for this case"
+        return local  status "fail"
+        exit
+    }
+    if (1 - `rmax' < `tol') {
+        return scalar t_crit = `tcrit'
+        return scalar r_crit = `rcrit'
+        return local  error  "R_max ≈ 1 yields zero SE; t and significance are not defined. Use R_max < 1."
+        return local  status "fail"
+        exit
+    }
+
+    // ---- 3) Aliases
+    tempname a m r
+    scalar `a' = `rxyz'
+    scalar `m' = `rmax'
+    scalar `r' = `rcrit'
+
+    // ---- 4) Algebraic pieces (p1..p5)
+    tempname den1 num1 p1 p2 p3 p4 p5
+    scalar `den1' = (`m' * (`r'^2 - 1))^2
+    scalar `num1' = `a'^2 * ( 2*`r'^4 - `m'*`r'^4 - 2*`r'^2 + `m' )
+    scalar `p1'   = `num1' / `den1'
+
+    // simplified p2, p3, p4 as in R
+    scalar `p2' = ( 2*(`r'^2 - 1) * ( `a'^2 * (`m'*`r'^2 + `m' - 2*`r'^2) ///
+                    - (`m' - 1)*`m'*`r'^2 ) )^2
+
+    scalar `p3' = 4*`den1' * ( `a'^4*`r'^4 - 2*`a'^4*`r'^2 + `a'^4 ///
+                    - 2*`a'^2*`m'*`r'^4 + 2*`a'^2*`m'*`r'^2 ///
+                    + 2*`a'^2*`r'^4 - 2*`a'^2*`r'^2 ///
+                    + `m'^2*`r'^4 - 2*`m'*`r'^4 + `r'^4 )
+
+    scalar `p4' = 2*`den1'
+    scalar `p5' = (`r'^2/(1-`r'^2)) / (`m'/(1-`m'))
+
+    // return pieces now for diagnostics
+    return scalar t_crit = `tcrit'
+    return scalar r_crit = `rcrit'
+    return scalar p1     = `p1'
+    return scalar p2     = `p2'
+    return scalar p3     = `p3'
+    return scalar p4     = `p4'
+    return scalar p5     = `p5'
+
+    // ---- 5) Discriminant & Q
+    tempname disc Q
+    scalar `disc' = `p2' - `p3'
+    return scalar disc = `disc'
+
+    if (`disc' < -`tol') {
+        return local  error "Discriminant < 0; no real solution."
+        return local  status "fail"
+        exit
+    }
+    // numeric guard
+    if (abs(`disc') <= `tol') scalar `disc' = 0
+
+    scalar `Q' = sqrt(`disc')/`p4'
+    return scalar Q = `Q'
+
+    // ---- 6) Roots -> candidates for r_xc|z
+    tempname root1 root2
+    scalar `root1' = `p1' - sqrt(`disc')/`p4' + `p5'
+    scalar `root2' = `p1' + sqrt(`disc')/`p4' + `p5'
+
+    // admissible: 0 < root < 1
+    local candlist
+    if ( `root1' > `tol' & `root1' < 1 - `tol' ) local candlist `candlist' `root1'
+    if ( `root2' > `tol' & `root2' < 1 - `tol' ) local candlist `candlist' `root2'
+
+    if ("`candlist'" == "") {
+        return local  error "No admissible root for r_xc|z in (0,1)."
+        return local  status "fail"
+        exit
+    }
+
+    // ---- 7) Verify (rx, ry) pairs against r_crit and R_max; keep min |rx|
+    tempname rx_best ry_best rchk_best R2chk_best best_abs
+    scalar `rx_best'   = .
+    scalar `ry_best'   = .
+    scalar `rchk_best' = .
+    scalar `R2chk_best'= .
+    scalar `best_abs'  = .
+
+    local keepers = 0
+
+    foreach rt of local candlist {
+        tempname rx
+        scalar `rx' = sqrt(`rt')
+
+        // sgn in {+1, -1}
+        foreach s of numlist 1 -1 {
+            // ry = a*rx ± sqrt((m - a^2)*(1 - rx^2))
+            tempname inner ry
+            scalar `inner' = (`m' - `a'^2) * (1 - `rx'^2)
+            if (`inner' < -`tol') continue
+            if (abs(`inner') <= `tol') scalar `inner' = 0
+
+            scalar `ry' = `a'*`rx' + `s'*sqrt(`inner')
+            // bounds
+            if (`ry' < -1 - `tol' | `ry' > 1 + `tol') continue
+
+            // checks
+            tempname rchk R2chk denom
+            scalar `denom' = sqrt( (1 - `rx'^2) * (1 - `ry'^2) )
+            if (`denom' <= 0) continue
+            scalar `rchk'  = (`a' - `rx'*`ry') / `denom'
+            scalar `R2chk' = (`a'^2 + `ry'^2 - 2*`a'*`ry'*`rx') / (1 - `rx'^2)
+
+            if (abs(`rchk' - `r') < `tol' & abs(`R2chk' - `m') < `tol') {
+                local ++keepers
+
+                // conservative: pick smaller |rx|
+                tempname ab
+                scalar `ab' = abs(`rx')
+                if (missing(`best_abs') | `ab' < `best_abs') {
+                    scalar `best_abs'   = `ab'
+                    scalar `rx_best'    = `rx'
+                    scalar `ry_best'    = `ry'
+                    scalar `rchk_best'  = `rchk'
+                    scalar `R2chk_best' = `R2chk'
+                }
+            }
+        }
+    }
+
+    return scalar keepers = `keepers'
+    if (`keepers' == 0) {
+        return local  error "No (r_xc|z, r_yc|z) pair reproduces both R_max and r_crit."
+        return local  status "fail"
+        exit
+    }
+
+    // ---- 8) Transform and delta
+    // rx_cv = sqrt(1 - r_xz^2) * r_xc|z
+    tempname rx_cv delta
+    scalar `rx_cv' = sqrt(1 - `rxz'^2) * `rx_best'
+    if (abs(`rxz') < `tol') {
+        scalar `delta' = .
+        return local note "delta undefined when r_xz ≈ 0"
+    }
+    else {
+        scalar `delta' = `rx_cv' / `rxz'
+    }
+
+    // ---- 9) Return all
+    return scalar rxcvGz       = `rx_best'
+    return scalar rycvGz       = `ry_best'
+    return scalar r_check      = `rchk_best'
+    return scalar R2_check     = `R2chk_best'
+    return scalar rx_cv        = `rx_cv'
+    return scalar delta_sig    = `delta'
+    return local  status       "ok"
+end
+
 
 // Main Function
 * pkonfound_v2 (now its most updated pkonfound) with 3 types
@@ -3114,7 +3524,33 @@ version 16.0
 
 // please run fisher_p.ado, fisher_oddsratio.ado, chisqp.ado, chisq_value.ado, getswitch_fisher.ado (fisher_oddsratio.ado; fisher_p.ado; gettkfnl.ado; taylorexp.ado), getswitch_chisq.ado prior to run this file with model_type == 2!!!
 
-syntax anything, [if] [in] [sig(real 0.05) nu(real 0) onetail(real 0) model_type(real 0) switch_trm(real 1) replace(real 1) rep_0(real 0) test1(real 0) far_bound(real 0) sdx(real -98765432123456789.987654321) sdy(real -98765432123456789.987654321) rs(real -98765432123456789.987654321) eff_thr(real -98765432123456789.987654321) fr2max_multiplier(real 1.3) fr2max(real 0) alpha(real 0.05) tails(integer 2) raw_treatment_success(real -98765432123456789.987654321) indx(str) ]
+* define the NA
+local NA = -98765432123456789.987654321
+
+syntax [anything] [if] [in], ///
+        [sig(real 0.05)] [nu(real 0)] [onetail(real 0)] ///
+        [model_type(real 0)] [switch_trm(real 1)] [replace(real 1)] [rep_0(real 0)] ///
+        [test1(real 0)] [far_bound(real 0)] ///
+        [sdx(real -98765432123456789.987654321)] ///
+        [sdy(real -98765432123456789.987654321)] ///
+        [rs(real -98765432123456789.987654321)] ///
+        [eff_thr(real -98765432123456789.987654321)] ///
+        [fr2max_multiplier(real 1.3)] [fr2max(real 0)] [alpha(real 0.05)] ///
+		[tails(integer 2)] ///
+        [raw_treatment_success(real -98765432123456789.987654321)] ///
+        [replace_stu(real 0)] [peer_effect_pi(real 0.5)] ///
+        [lb(real -98765432123456789.987654321)] ///
+        [ub(real -98765432123456789.987654321)] ///
+        [indx(string)] ///
+        [est_eff(real -98765432123456789.987654321)] ///
+        [std_err(real -98765432123456789.987654321)] ///
+        [n_obs(real -98765432123456789.987654321)] ///
+        [n_covariates(real -98765432123456789.987654321)] ///
+        [n_treat(real -98765432123456789.987654321)] ///
+        [a1(real -98765432123456789.987654321)] ///
+        [b1(real -98765432123456789.987654321)] ///
+        [c1(real -98765432123456789.987654321)] ///
+        [d1(real -98765432123456789.987654321)]
 
 // replace: 0 = entire //1 = control
 // switch_trm: default = True
@@ -3125,39 +3561,158 @@ syntax anything, [if] [in] [sig(real 0.05) nu(real 0) onetail(real 0) model_type
 ** 1 = test_sensitivity_ln
 ** 2 = tkonfound
 
+* default index
 if "`indx'" == "" {
     local indx "RIR"
 }
 
+* define raw positionals
+local p1 : word 1 of `anything'
+local p2 : word 2 of `anything'
+local p3 : word 3 of `anything'
+local p4 : word 4 of `anything'
+local p5 : word 5 of `anything'
+local p6 : word 6 of `anything'
+local p7 : word 7 of `anything'
+local tol = 1e-12
+
 if `model_type'== 0 { 
 	dis ""
 	
-	*changed:: coef >> est_eff, sd >> std_err, N >> n_obs, Ncov >> n_covariates
-	local est_eff : word 1 of `anything'
-	local std_err : word 2 of `anything'
-	local n_obs : word 3 of `anything'
-	local n_covariates : word 4 of `anything'
-	
-	*if ("`indx'" == "COP" | "`indx'" == "PSE") 
+	// Special handling for VAM index - different positional structure
+    if "`indx'" == "VAM" {
+        // For VAM: p1 = est_eff, p2 = n_obs
+        if `est_eff' == `NA' {
+            if "`p1'" != "" & "`p1'" != "." {
+                local est_eff = `p1'
+            }
+        }
+        if `n_obs' == `NA' {
+            if "`p2'" != "" & "`p2'" != "." {
+                local n_obs = `p2'
+            }
+        }
+    }
+	else {
+	// est_eff
+    local est_eff = `est_eff'
+    if `est_eff' == `NA' {
+        if "`p1'" != "" & "`p1'" != "." {
+            local est_eff = `p1'
+        }
+    }
 
-	*local sdx : word 5 of `anything'
-	*local sdy : word 6 of `anything'
-	*local rs : word 7 of `anything'
-	
-	if ("`indx'" == "COP" | "`indx'" == "PSE") {
-		local sdx : word 5 of `anything'
-		local sdy : word 6 of `anything'
-		local rs : word 7 of `anything'
+    // std_err
+    local std_err = `std_err'
+    if `std_err' == `NA' {
+        if "`p2'" != "" & "`p2'" != "." {
+            local std_err = `p2'
+        }
+    }
+
+    // n_obs
+    local n_obs = `n_obs'
+    if `n_obs' == `NA' {
+        if "`p3'" != "" local n_obs = `p3'
+    }
+
+    // n_covariates
+    local n_covariates = `n_covariates'
+    if `n_covariates' == `NA' {
+        if "`p4'" != "" local n_covariates = `p4'
+    }
 	}
 	
-	*define the NA
-	local NA = -98765432123456789.987654321
-	
-	
+    // allow positional 5, 6 and 7 only for COP or PSE when their options are not set
+    if inlist("`indx'", "COP", "PSE") {
+        if `sdx' == `NA' & "`p5'" != "" local sdx = `p5'
+        if `sdy' == `NA' & "`p6'" != "" local sdy = `p6'
+        if `rs'  == `NA' & "`p7'" != "" local rs  = `p7'
+    }
 
+    if "`indx'" == "VAM" {
+        test_VAM `est_eff' `replace_stu' `n_obs' `eff_thr' `peer_effect_pi'
+		
+        // Capture the return values from test_VAM before calling konfound_footer
+        local saved_pi_replace = r(pi_replace)
+        local saved_rir_count = r(rir_count)
+        local saved_peer_effect = r(peer_effect)
+        
+        konfound_footer
+
+        // Now restore the saved values to pkonfound's return space
+        return scalar pi_replace  = `saved_pi_replace'
+        return scalar rir_count   = `saved_rir_count'
+        return scalar peer_effect = `saved_peer_effect'
+        exit
+    }
 	
+    // CI vs direct inputs using proper sentinel checks
+    local have_pos = (`est_eff' != `NA') & (`std_err' != `NA')
+    local have_ci  = (`lb' != `NA') & (`ub' != `NA')
+
+	if `have_pos' & `have_ci' {
+        di as txt "note: est_eff and std_err provided. Ignoring lb() and ub()."
+        di
+    }
+    else if !`have_pos' & `have_ci' {
+        if (`n_obs' == `NA' | `n_covariates' == `NA') {
+            di as err "Provide n_obs and n_covariates when using lb()/ub()."
+            exit 198
+        }
+        // calculate est_eff and std_err from CI
+        quietly konfound_ci, lb(`lb') ub(`ub') nobs(`n_obs') ncov(`n_covariates') ///
+            nu(`nu') alpha(`alpha') tails(`tails')
+        local est_eff = r(est_eff)
+        local std_err = r(std_err)
+        di as txt "Using CI input, est_eff = `=trim(string(`est_eff',"%9.3f"))', std_err = `=trim(string(`std_err',"%9.3f"))'"
+        di
+    }
+    else if !`have_pos' & !`have_ci' {
+        di as err "Provide est_eff and std_err or provide lb() and ub()."
+        exit 198
+    }
+    
+    // CRITICAL ADDITION: Validate that est_eff and std_err are now defined
+    if `est_eff' == `NA' | `std_err' == `NA' {
+        di as err "Error: est_eff or std_err not properly defined"
+        exit 198
+    }
+   	
 	* JC
-	*warning messages for potential confusion
+	
+	* warning messages for neagtive n_cov, sdx, sdy, and rs
+	if (`n_covariates' != `NA') {
+        if (`n_covariates' < 0) {
+            di as error "WARNING: NUMBER OF COVARIATES ENTERED IS NEGATIVE. THIS IS HIGHLY UNUSUAL. DID YOU INTEND A POSITIVE VALUE?"
+        }
+    }
+
+    // sdx: warn and convert to positive
+    if (`sdx' != `NA') {
+        if (`sdx' < 0) {
+            di as error "WARNING: NEGATIVE STANDARD DEVIATION DETECTED FOR SD_X. CONVERTING TO POSITIVE FOR CALCULATIONS."
+            local sdx = abs(`sdx')
+        }
+    }
+
+    // sdy: warn and convert to positive
+    if (`sdy' != `NA') {
+        if (`sdy' < 0) {
+            di as error "WARNING: NEGATIVE STANDARD DEVIATION DETECTED FOR SD_Y. CONVERTING TO POSITIVE FOR CALCULATIONS."
+            local sdy = abs(`sdy')
+        }
+    }
+
+    // rs: warn only
+    if (`rs' != `NA') {
+        if (`rs' < 0) {
+            di as error "WARNING: R-SQUARED ENTERED IS NEGATIVE. THIS IS HIGHLY UNUSUAL. DID YOU INTEND A POSITIVE VALUE?"
+        }
+    }
+	
+	
+	* warning messages for potential confusion
     if (`far_bound' == 1){
 		display as error "Warning: far_bound is defined by whether the estimated effect is moved to the" _newline "boundary closer(0) or further away(1)."
 		dis ""
@@ -3776,6 +4331,57 @@ if `model_type'== 0 {
 	* calculate delta_star_restricted
 	local delta_star_restricted = ((`est_eff' - `eff_thr')/(`eff_x_m1' - `est_eff')) * ((`r2_m2' - `r2_m1')/(`r2_m3' - `r2_m2'))
 
+	* JC0 calculate statistical-significance COP
+
+	* 1) partial R2 target for the full model (Y ~ X + Z + CV), conditional on Z
+	local Rmax_partial = (`fr2max' - `ryz'^2) / (1 - `ryz'^2) // = R2{YX|Z} target
+	local df_sig = `n_obs' - `n_covariates' - 2 // df for M2
+	local abs_ryxGz = abs(`ryxgz')
+	
+	* 2) Call delta_statsig (non-terminating; returns r(status) & r(error) on failure)
+	capture noisily delta_statsig , rxyz(`abs_ryxGz') rmax(`Rmax_partial') rxz(`rxz') df(`df_sig') alpha(`alpha')
+
+	local sig_status = r(status)
+	local sig_error  = r(error)
+
+	if ("`sig_status'" != "ok") {
+		* Graceful: record error and set boundary outputs missing
+		return local  sig_error      "`sig_error'"
+		return scalar delta_sig      = .
+		return scalar rxcvGz_sig     = .
+		return scalar rycvGz_sig     = .
+		return scalar eff_x_M3_sig   = .
+		return scalar se_x_M3_sig    = .
+		return scalar t_x_M3_sig     = .
+		return scalar R2_partial_sig = .
+		return scalar R2_full_sig    = .
+		return scalar tcrit_sig      = r(t_crit)   // still useful to expose
+	}
+	else {
+		* 3) Store core "stat-sig COP" objects
+		local delta_sig   = r(delta_sig)
+		local rxcvGz_sig  = r(rxcvGz)
+		local rycvGz_sig  = r(rycvGz)
+		local tcrit_sig   = r(t_crit)
+		local rcrit_sig   = r(r_crit)
+
+		* 4) Boundary regression quantities (Appendix G mapping)
+		tempname betax_sig est_sig R2p_sig sex_sig t_sig R2full_sig
+		scalar `betax_sig' = (abs(`ryxgz') - r(rxcvGz)*r(rycvGz)) / (1 - r(rxcvGz)^2)
+		scalar `est_sig'   = (`sdygz'/`sdxgz') * `betax_sig'
+		scalar `R2p_sig'   = (abs(`ryxgz')^2 + r(rycvGz)^2 - 2 * abs(`ryxgz')*r(rycvGz)*r(rxcvGz)) / (1 - r(rxcvGz)^2)
+		scalar `sex_sig'   = (`sdygz'/`sdxgz') * sqrt((1 - `R2p_sig')/`df_sig') / sqrt(1 - r(rxcvGz)^2)
+		scalar `t_sig'     = `est_sig' / `sex_sig'
+		scalar `R2full_sig'= `ryz'^2 + (1 - `ryz'^2) * `R2p_sig'
+
+		local est_eff_sig    = `est_sig'
+		local se_x_M3_sig    = `sex_sig'
+		local t_x_M3_sig     = `t_sig'
+		local R2_partial_sig = `R2p_sig'
+		local R2_full_sig    = `R2full_sig'
+	}
+	
+	
 	* constructing the final table matrix
 	matrix ftable = (`r2_m1', `r2_m2', `r2_m3', `r2_m3_oster' \ ///
 					`eff_x_m1', `eff_x_m2', `eff_x_m3', `eff_x_m3_oster' \ ///
@@ -4034,6 +4640,8 @@ if `model_type'== 0 {
 	// mat list fTable	
 	}
 		
+		
+		
 	* Output language part	
 
 	if ("`indx'" == "IT"){ 	
@@ -4282,28 +4890,53 @@ if `model_type'== 0 {
 	
 	}
 	else if ("`indx'" == "COP") {
-    if (`negest' == 1) {
-        display "Using the absolute value of the estimated effect, result can be interpreted by symmetry."
-		dis ""
-    }
 	dis "Coefficient of Proportionality (COP):"
 	dis ""
-	dis "This function calculates a correlation-based coefficient of proportionality (delta)"
-	dis "which is exact even in finite samples as well as Oster's delta*."
+	dis "This function calculates a correlation-based coefficient of proportionality (COP)"
+	dis "along with Oster's delta*. The correlation-based COP provides an exact measure"
+	dis "even in finite samples and does not depend on the specification of a baseline model."
 	dis ""
-	dis "Delta* is " string(`delta_star', "%9.3f") " (assuming no covariates in the baseline model M1),"
-	dis "the correlation-based delta is " string(`delta_exact', "%9.3f") ", with a bias of " string(`delta_pctbias', "%9.3f") "%."
-	dis "Note that %bias = (delta* - delta) / delta."
+	 // Symmetry note for negative estimates
+    if (`negest' == 1) {
+        di "Using the absolute value of the estimated effect, result can be interpreted by symmetry."
+        di ""
+    }
+
+	dis "The correlation-based delta (delta_Correlation) is " string(`delta_exact', "%9.3f") ", and delta* is " string(`delta_star', "%9.3f")
+    dis "(assuming no covariates in the baseline model M1), indicating a relative bias of " string(`delta_pctbias', "%9.3f") "%."
+    dis "Note that %bias = (delta* - delta) / delta."
 	dis ""
-	dis "With delta*, the coefficient in the final model will be " string(`eff_x_m3_oster', "%9.3f")
-	dis "With the correlation-based delta, the coefficient will be " string(`eff_x_m3', "%9.3f")
-	dis ""
+	
+	
+    // Significance-threshold COP (if available)
+    if ("`sig_status'" == "ok") {
+        // format df with commas
+        local df_sig_fmt = string(`df_sig', "%9.0fc")
+        dis "Using alpha = " string(`alpha', "%4.2f") " and df = " "`df_sig_fmt'" " (so critical r = " string(`rcrit_sig', "%9.4f") "), the delta threshold"
+        dis "for statistical significance is " string(`delta_sig', "%9.3f")  "."
+        dis "This corresponds to a CV (omitted confounder) with partial correlations"
+        dis "r_xcv|z ~ " string(`rxcvGz_sig', "%9.4f") " (between X and CV given Z) and r_ycv|z ~ " string(`rycvGz_sig', "%9.4f") " (between Y and CV given Z)."
+        dis ""
+    }
+    else {
+        di "Statistical-significance COP could not be computed (" "`sig_error'" ")."
+        di ""
+    }
+	
+	// Coefficients under delta_exact and delta*
+    dis "With the correlation-based delta, the coefficient of X in the final model will be " string(`eff_x_m3', "%9.3f") "."
+    dis "With delta*, the coefficient of X in the final model will be " string(`eff_x_m3_oster', "%9.3f") "."
+    dis ""
+
+    // Boundary (tipping-point) regression quantities, if available
+    if ("`sig_status'" == "ok") {
+        dis "Using the delta threshold for statistical significance and the corresponding partial correlations,"
+        dis "the coefficient of X in the final model will be " string(`est_eff_sig', "%9.4f") " with standard error of " string(`se_x_M3_sig', "%9.4f")
+        dis "with t-ratio of " string(`t_x_M3_sig', "%9.4f") " and the final R2 will be " string(`R2_full_sig', "%9.3f") "."
+        dis ""
+    }
+	
 	di "Include 'return list' following the pkonfound command to see more specific results" _newline "and graphic presentation of the result."
-	di ""
-	di "This function also calculates conditional RIR that nullifies the statistical inference."
-	di "If the replacement cases have a fixed value, then RIR = " string(`cond_rir_fixedy', "%9.3f") "."
-	di "If the replacement cases follow a null distribution, then RIR = " string(`cond_rir_null', "%9.3f") "."
-	di "If the replacement cases satisfy rxy|Z = 0, then RIR = " string(`cond_rir_rxyz', "%9.3f") "."  
 	
 	}
 	else if ("`indx'" == "PSE") {
@@ -4337,6 +4970,7 @@ if `model_type'== 0 {
 	dis `"          index = "PSE")"'
 	}	
 
+	
 	* raw_output for model_type = 0 and 1
 	
 	* return raw_output for RIR & ITCV
@@ -4379,8 +5013,18 @@ if `model_type'== 0 {
 		return scalar var_cv = `sdcv'^2
 		return scalar var_x = `sdx'^2
 		return scalar var_y = `sdy'^2
+		if "`sig_status'" == "ok" {
+			return scalar rycvGz_sig = `rycvGz_sig'
+			return scalar rxcvGz_sig = `rxcvGz_sig'
+			return scalar delta_sig = `delta_sig'
+		}
+		else {
+			return scalar rycvGz_sig = .
+			return scalar rxcvGz_sig = .
+			return scalar delta_sig = .
+		}
 		return scalar delta_pctbias = `delta_pctbias'
-		return scalar delta_exact = `delta_exact'
+		return scalar delta_Correlation = `delta_exact'
 		return scalar delta_star_restricted = `delta_star_restricted'
 		return scalar delta_star = `delta_star'
 		dis ""
@@ -4414,20 +5058,36 @@ if `model_type'== 0 {
 		matlist fTable
 	}
 	
-	
-	
+	* konfound footer
+	konfound_footer
 }
 
 if `model_type'== 1 {
 	dis ""
-	local est_eff :word 1 of `anything'
-	local std_err :word 2 of `anything'
-	local n_obs :word 3 of `anything'
-	local n_covariates :word 4 of `anything'
-	local n_treat :word 5 of `anything'
-	//local tails :word 6 of `anything' //== onetail=0 ==> two tail; onetail = 1 ==> one tail
-	// removed to_return variable due to STATA's restriction
-	local NA = -98765432123456789.987654321
+    // core five inputs
+    local est_eff = `est_eff'
+    if `est_eff' == `NA' & "`p1'" != "" local est_eff = `p1'
+
+    local std_err = `std_err'
+    if `std_err' == `NA' & "`p2'" != "" local std_err = `p2'
+
+    local n_obs = `n_obs'
+    if `n_obs' == `NA' & "`p3'" != "" local n_obs = `p3'
+
+    local n_covariates = `n_covariates'
+    if `n_covariates' == `NA' & "`p4'" != "" local n_covariates = `p4'
+
+    local n_treat = `n_treat'
+    if `n_treat' == `NA' & "`p5'" != "" local n_treat = `p5'
+
+    // sanity check
+    if (`est_eff' == `NA' | `std_err' == `NA' | `n_obs' == `NA' | `n_covariates' == `NA' | `n_treat' == `NA') {
+        di as err "Need est_eff, std_err, n_obs, n_covariates, and n_treat."
+        exit 198
+    }
+   
+   //JC0
+   *di "You entered raw_treatment_success = `raw_treatment_success'"
 
 	// assign `tails' use the existing/user-inserted `onetail' value
 	if (`onetail' == 0){
@@ -4453,11 +5113,34 @@ if `model_type'== 1 {
 		exit
 	}
 
+    // CI vs direct inputs using proper sentinel checks
+    local have_pos = (`est_eff' != `NA') & (`std_err' != `NA')
+    local have_ci  = (`lb' != `NA') & (`ub' != `NA')
+
+    if `have_pos' & `have_ci' {
+        di as txt "note: est_eff and std_err provided. Ignoring lb() and ub()."
+        di
+    }
+    else if !`have_pos' & `have_ci' {
+        if (`n_obs' == `NA' | `n_covariates' == `NA') {
+            di as err "Provide n_obs and n_covariates when using lb()/ub()."
+            exit 198
+        }
+        quietly konfound_ci, lb(`lb') ub(`ub') nobs(`n_obs') ncov(`n_covariates') ///
+            nu(`nu') alpha(`alpha') tails(`tails')
+        local est_eff = r(est_eff)
+        local std_err = r(std_err)
+        di as txt "Using CI input, est_eff = `=trim(string(`est_eff',"%9.3f"))', std_err = `=trim(string(`std_err',"%9.3f"))'"
+        di
+    }
+    else if !`have_pos' & !`have_ci' {
+        di as err "Provide est_eff and std_err or provide lb() and ub()."
+        exit 198
+    }
 
 	if (`thr_t' ==.){
 		dis "please enter valid value make, 0 < 1 - (`sig' / `tails')< 1; and (`n_obs' - `n_covariates' - 1)>=1"
 	}
-
 
 	local odds_ratio = exp(`est_eff')
 	
@@ -5152,20 +5835,36 @@ if `model_type'== 1 {
 	return scalar RIR_perc = `RIR_pi'
 	return scalar RIR_primary = `RIR'
 	
+	*konfound footer
+	konfound_footer
+	
 }
 
 if `model_type'== 2 {
-	local a1 :word 1 of `anything'
-	local b1 :word 2 of `anything'
-	local c1 :word 3 of `anything'
-	local d1 :word 4 of `anything'
-	if (`a1' < 0 | `b1' < 0 | `c1' < 0 | `d1' < 0){
-		dis "Please enter non-negative integers for each cell."
-		exit
-	} 
+    local a1 = `a1'
+    if `a1' == `NA' & "`p1'" != "" local a1 = `p1'
+
+    local b1 = `b1'
+    if `b1' == `NA' & "`p2'" != "" local b1 = `p2'
+
+    local c1 = `c1'
+    if `c1' == `NA' & "`p3'" != "" local c1 = `p3'
+
+    local d1 = `d1'
+    if `d1' == `NA' & "`p4'" != "" local d1 = `p4'
+
+    if (`a1' < 0 | `b1' < 0 | `c1' < 0 | `d1' < 0) {
+        di as err "Please enter non-negative integers for each cell."
+        exit
+    }
+	
+    if (`a1' == `NA' | `b1' == `NA' | `c1' == `NA' | `d1' == `NA') {
+        di as err "Please enter a1, b1, c1, d1 as counts."
+        exit 198
+    }
 
 	if (`a1' != round(`a1') | `b1' != round(`b1') | `c1' != round(`c1') | `d1' != round(`d1')){
-		dis "Please enter non-negative integers for each cell."
+		dis as err "Please enter non-negative integers for each cell."
 		exit
 	}
 
@@ -5713,6 +6412,9 @@ if `model_type'== 2 {
 	return scalar RIR_primary = `RIR'
 	
 	quietly capture drop row col pop
+	
+	*konfound footer
+	konfound_footer
 }
   
   end

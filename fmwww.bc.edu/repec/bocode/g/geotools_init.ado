@@ -1,7 +1,48 @@
 *! version 1.1, 2025-09-21
 program define geotools_init
-version 16.0
-syntax [anything] , [download dir(string) plus(string)]
+version 17.0
+syntax [anything] , [download dir(string) plus(string) compiled]
+
+if `c(version)'<18{
+	java query
+	local jdk `r(version)'
+	if "`jdk'"=="" | "`jdk'"=="." {
+		java initialize
+		java query
+		local jdk `r(version)'
+	}
+	gettoken jv : jdk, p(.)
+    if `jv'<17 {
+      di as error "Stata 17 requires manually installing JDK 17"
+	  di "See " `"{help readraster:help readraster}"' " for configuring JDK 17 before using this command"
+	  exit
+    }
+}
+else if `c(version)'>=19{
+	java query
+	local jdk `r(version)'
+	if "`jdk'"=="" | "`jdk'"=="." {
+		java initialize
+		java query
+		local jdk `r(version)'
+	}
+	gettoken jv : jdk, p(.)
+    if `jv'>=21 &  "`compiled'"=="" {
+      di as error "For Stata 19 there are two ways to use this package"
+      di  "(1) Manually install JDK 17 and set it as the JAVA_HOME in Stata"
+	  di       "See " `"{help readraster:help readraster}"' " for configuring JDK 17 before using this command"
+	  di   "(2) Download the precompiled Jar file by the following command"
+				"geotools_init, compiled"
+	  exit
+    }
+
+}
+
+
+if "`compiled'"!=""{
+	net install readrasterjar, from(https://raw.githubusercontent.com/kerrydu/readraster/refs/heads/develop/)
+	exit
+}
 
 if "`download'"!=""{
 
@@ -16,10 +57,10 @@ if "`download'"!=""{
 	if `"`dir'"'=="" local dir = c(pwd)
     local pwd `c(pwd)'
     qui cd "`dir'"
-	di `"Downloading geotools-32.0-bin.zip into {browse "`dir'":`dir'}"'
+	di `"Downloading geotools-34.0-bin.zip into {browse "`dir'":`dir'}"'
     di `"Please wait for a while..."'
-	copy https://jaist.dl.sourceforge.net/project/geotools/GeoTools%2032%20Releases/32.0/geotools-32.0-bin.zip geotools-32.0-bin.zip
-    unzipfile geotools-32.0-bin.zip
+	copy https://master.dl.sourceforge.net/project/geotools/GeoTools%2034%20Releases/34.0/geotools-34.0-bin.zip geotools-34.0-bin.zip
+    unzipfile geotools-34.0-bin.zip
 
 	if `"`anything'"'!="" & "`plus'"==""{
         di as  `"Warning: {`anything'} is ignored as the jar file is downloaded to {`dir'}"'
@@ -27,17 +68,17 @@ if "`download'"!=""{
 	if `"`anything'"'!="" & "`plus'"!=""{
         di as  "Warning: {`anything'} is ignored as the jar file is downloaded to {plus/`plus'}"
 	}
-	local anything `dir'/geotools-32.0/lib/
+	local anything `dir'/geotools-34.0/lib/
 	qui cd "`pwd'"
 }
 
 if "`plus'"!=""{
-    di "Copying geotools jars to {browse `c(sysdir_plus)'/`plus'} ..."
-	pjar2plus `anything', to(`plus') jar(gt-main-32.0.jar)
-    wrtjarpath `c(sysdir_plus)'/`plus', jar(gt-main-32.0.jar) adoname(geotoolsjar)
+    di "Copying geotools jars to {browse `c(sysdir_plus)'`plus'} ..."
+	pjar2plus `anything', to(`plus') jar(gt-main-34.0.jar)
+    wrtjarpath `c(sysdir_plus)'/`plus', jar(gt-main-34.0.jar) adoname(geotoolsjar)
 }
 else{
-	wrtjarpath `anything', jar(gt-main-32.0.jar) adoname(geotoolsjar)
+	wrtjarpath `anything', jar(gt-main-34.0.jar) adoname(geotoolsjar)
 }
 
 end
@@ -77,7 +118,7 @@ if `"`jar'"'!=""{
 }
 
 
-
+cap mkdir `"`c(sysdir_plus)'p"'
 local filename =  c(sysdir_plus) + "p/path_`adoname'.ado"
 
 local pdir = c(sysdir_plus) + "p"
@@ -149,7 +190,8 @@ if `direxist' == 0 & `fileexist' == 0 {
 if `direxist' {
     local files : dir `"`anything'"' files "*.jar"
     foreach file in `files' {
-        copy `"`anything'/`file'"' `"`to'/`file'"', `replace'
+		cap confirm file  `"`to'/`file'"'
+        if _rc copy `"`anything'/`file'"' `"`to'/`file'"', `replace'
     }
 }
 

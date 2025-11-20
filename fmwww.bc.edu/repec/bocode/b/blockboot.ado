@@ -2,6 +2,7 @@
 *! modified  v1.1 cfb 04dec2024
 *! modified  v1.2 jotero 4jun2025
 *! modified  v1.3 cfb 27aug2025 for tsset checks
+*! modified  v1.4 jotero 11nov2025 for nbb fix
 *! This routine implements the stationary bootstrap for bootstrapping stationary, dependent series
 *! The code draws on the MATLAB function stationary_bootstrap developed by Kevin Sheppard
 
@@ -177,9 +178,15 @@ void nbbindx(
 	//nobs, lbck, maxval
 	numbck = trunc(nobs/lbck)	// Total  number of blocks
 	obsbck = numbck*lbck		// Total number of observations in complete blocks
+	idxini = J(nobs,1,.)
 	indices = J(nobs,1,.)
 	for (i=1;i<=obsbck;i=i+lbck) {
-		indices[i,1] = runiformint(1,1, iniobs, nobs-lbck+1)
+		idxini[i,1] = i
+	}
+	idx = select(idxini, rowmissing(idxini):==0)
+	for (i=1;i<=obsbck;i=i+lbck) {
+		pick = runiformint(1,1,1,numbck)
+		indices[i,1] = idx[pick]
 	}
 	for (i=1;i<=obsbck;i++) {
 		indices[i,1] = indices[i,1]:!=. ? indices[i,1] : indices[i-1,1]+1

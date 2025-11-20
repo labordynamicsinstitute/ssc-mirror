@@ -149,6 +149,48 @@ RIR as % of total sample (for linear regression)
 
 
 {phang}
+{bf:VAM model (Beta-version)} 
+
+{pstd}
+Value-added measures (VAM) model evaluates how many students would need to be replaced with a specified average student score to move a teacher's value-added measure across a user-defined threshold. It also reports the size of a peer spillover effect that, by itself, would change the evaluation when a proportion of students exert peer effects.
+
+{p 8 17 2}
+{cmdab:pkonfound}
+[{# #}]
+[,{cmd:model_type(0) replace_stu(#) eff_thr(#) peer_effect_pi(#) indx("VAM")}]
+
+{synoptset 20 tabbed}{...}
+{syntab: {ul:Main}}
+{synopt:{opt est_eff}} the estimated effect size of the observed value-added measure{p_end}
+{synopt:{opt n_obs}} the number of students used to estimate the value-added measure{p_end}
+
+{syntab: {ul:Options}}
+
+{phang}
+{opt eff_thr(#)} The evaluation threshold.
+
+{phang}
+{opt peer_effect_pi(#)} The proportion of students that exert peer effects. Valid range is [0, 0.5]. Default is 0.5.
+
+{phang}
+{opt replace_stu(#)} The specified score for the hypothetical average replacement student.
+
+{syntab: {ul:Values}}
+
+{phang}
+{opt peer_effect}
+Peer effect of each replaced student (compared to their replacements) on each of the non-replaced students.
+
+{phang}
+{opt RIR}
+Number of students needed to be replaced.
+
+{phang}
+{opt RIR_perc}
+RIR as % of students needed to be replaced.
+
+
+{phang}
 {bf:Coefficient of Proportionality} 
 
 {pstd}
@@ -198,10 +240,10 @@ To view these stored results, use the {cmd:return list} command immediately afte
 {opt delta_star_restricted} Delta calculated using Oster's restricted estimator
 
 {phang}
-{opt delta_exact} Precise delta value, providing a more accurate assessment
+{opt delta_Correlation} Precise delta value, providing a more accurate assessment
 
 {phang}
-{opt delta_pctbias} Percent of bias when comparing delta_star with delta_exact
+{opt delta_pctbias} Percent of bias when comparing delta_star with delta_Correlation
 
 {phang}
 {opt var_y} Variance of the dependent variable 
@@ -234,7 +276,7 @@ To view these stored results, use the {cmd:return list} command immediately afte
 {opt cor_oster} Correlation matrix implied by delta_star
 
 {phang}
-{opt cor_exact} Correlation matrix implied by delta_exact
+{opt cor_exact} Correlation matrix implied by delta_Correlation
 
 
 {phang}
@@ -465,6 +507,29 @@ The 2 by 2 table after replacement and switching
 {pstd}
 {cmd:pkonfound} this command calculates (1) how much bias there must be in an estimate to nullify/sustain an inference. The bias necessary to nullify/sustain an inference is interpreted in terms of sample replacement; (2) the impact of an omitted variable necessary to nullify/sustain an inference for a regression coefficient. It also assesses how strong an omitted variable has to be correlated with the outcome and the predictor of interest to nullify/sustain the inference.
 
+{marker syntax}{...}
+{title:Syntax}
+
+{pstd}
+{cmd:pkonfound} supports both positional and named argument syntax for flexibility:
+
+{pstd}
+{bf:1) Positional syntax (traditional):}
+{break}
+
+{pstd}
+pkonfound {it:#} {it:#} {it:#} {it:#} [...], {it:options}
+
+{pstd}
+{bf:2) Named argument syntax (idiomatic):}
+{break}
+
+{pstd}
+pkonfound, est_eff({it:#}) std_err({it:#}) n_obs({it:#}) n_covariates({it:#}) {it:options}
+
+{pstd}
+The named argument syntax allows parameters in any order and improves code readability. Specific argument requirements vary by model type. See examples below for detailed usage.
+
 {marker note}{...}
 {title:Note}
 
@@ -477,37 +542,71 @@ For a thoughtful background on benchmark options for ITCV, see {browse "https://
 {pstd}
 ## Assume in a linear model, the estimate is 10, the standard error of the estimate is 2, the sample size is 100, and the number of covariates is 5
 
-{phang}For the result of RIR: {p_end}
+{phang}For the result of RIR (positional syntax): {p_end}
 {phang}{cmd:. pkonfound 10 2 100 5, indx("RIR")}{p_end}
 
-{phang}For the result of ITCV: {p_end}
+{phang}For the result of RIR (named syntax): {p_end}
+{phang}{cmd:. pkonfound, est_eff(10) std_err(2) n_obs(100) n_covariates(5) indx("RIR")}{p_end}
+
+{phang}For the result of ITCV (positional syntax): {p_end}
 {phang}{cmd:. pkonfound 10 2 100 5, indx("IT")}{p_end}
+
+{phang}For the result of ITCV (named syntax): {p_end}
+{phang}{cmd:. pkonfound, est_eff(10) std_err(2) n_obs(100) n_covariates(5) indx("IT")}{p_end}
 
 {pstd}
 ## Assume in a linear model, the estimate is 10, the standard error of the estimate is 2, the sample size is 100, the number of covariates is 5, the standard deviation of X is 0.3, the standard deviation of Y is 0.5, and the R-squared of the regression is 0.7. To calculate unconditional ITCV and benchmark correlation for ITCV:
 
+{phang}Positional syntax: {p_end}
 {phang}{cmd:. pkonfound 10 2 100 5, sdx(0.3) sdy(0.5) rs(0.7) indx("IT")}{p_end}
+
+{phang}Named syntax: {p_end}
+{phang}{cmd:. pkonfound, est_eff(10) std_err(2) n_obs(100) n_covariates(5) sdx(0.3) sdy(0.5) rs(0.7) indx("IT")}{p_end}
 
 {pstd}
 ## Assume in a study that the estimate is 0.125, the standard error of the estimate is 0.1, the sample size is 6174, and the number of covariates is 7. The standard deviation of the independent variable is 0.217, and the standard deviation of the dependent variable is 0.991. The R-squared value from the regression model is 0.251, with a specified threshold of 0 and a specified maximum R-squared of 0.61, using a significance level of 0.05 and a two-tailed test to calculate coefficient of proportionality.
 
+{phang}Positional syntax: {p_end}
 {phang}{cmd:. pkonfound 0.125 0.1 6174 7 0.217 0.991 0.251, eff_thr(0) fr2max(0.61) sig(0.05) onetail(0) indx("COP")}{p_end}
+
+{phang}Named syntax: {p_end}
+{phang}{cmd:. pkonfound, est_eff(0.125) std_err(0.1) n_obs(6174) n_covariates(7) sdx(0.217) sdy(0.991) rs(0.251) eff_thr(0) fr2max(0.61) sig(0.05) onetail(0) indx("COP")}{p_end}
 
 {pstd}
 ## Assume in a study that the estimate is 0.5, the standard error of the estimate is 0.056, the sample size is 6174, and the number of covariates is 1. The standard deviation of the independent variable is 0.22, and the standard deviation of the dependent variable is 1. The R-squared value from the regression model is 0.3, with a specified threshold of 0.1. This setup calculates the correlation between a confounding variable (CV) and both the independent variable (X) and the dependent variable (Y), where the CV is strong enough to reduce the estimated effect size to the threshold while preserving the standard error.
 
+{phang}Positional syntax: {p_end}
 {phang}{cmd:. pkonfound 0.5 0.056 6174 1 0.22 1 0.3, eff_thr(0.1) indx("PSE")}{p_end}
+
+{phang}Named syntax: {p_end}
+{phang}{cmd:. pkonfound, est_eff(0.5) std_err(0.056) n_obs(6174) n_covariates(1) sdx(0.22) sdy(1) rs(0.3) eff_thr(0.1) indx("PSE")}{p_end}
 
 {pstd}
 ## Assume in a logistic regression, the estimate is -0.2, the standard error of the estimate is 0.103, the sample size is 20888, the number of covariates is 3, and the number of cases in the treatment condition is 17888.
 
+{phang}Positional syntax: {p_end}
 {phang}{cmd:. pkonfound -0.2 0.103 20888 3 17888, model_type(1)}{p_end}
+
+{phang}Named syntax: {p_end}
+{phang}{cmd:. pkonfound, est_eff(-0.2) std_err(0.103) n_obs(20888) n_covariates(3) n_treat(17888) model_type(1)}{p_end}
 
 {pstd}
 ## In a binary outcome - binary treatment scenario, we have 35 participants in the control group showing unsuccessful results, 17 in the control group showing successful results, 10 in the treatment group showing unsuccessful results, and 5 in the treatment group showing successful results.
 
+{phang}Positional syntax: {p_end}
 {phang}{cmd:. pkonfound 35 17 10 5, model_type(2)}{p_end}
 
+{phang}Named syntax: {p_end}
+{phang}{cmd:. pkonfound, a1(35) b1(17) c1(10) d1(5) model_type(2)}{p_end}
+
+{pstd}
+## Value-added measures (VAM) model index evaluates how many students would need to be replaced with a specified average student score to move a teacher's value-added measure across a user-defined threshold. Assume a class has 20 students. The observed value-added is 0.14, the evaluation threshold is 0.15, the hypothetical replacement student's score is 0.16, and 30 percent of students exert peer effects.
+
+{phang}Positional syntax: {p_end}
+{phang}{cmd:. pkonfound 0.14 20, replace_stu(0.16) eff_thr(0.15) peer_effect_pi(0.3) indx("VAM")}{p_end}
+
+{phang}Named syntax: {p_end}
+{phang}{cmd:. pkonfound, est_eff(0.14) n_obs(20) replace_stu(0.16) eff_thr(0.15) peer_effect_pi(0.3) indx("VAM")}{p_end}
 
 {marker authors}{...}
 {title:Authors}

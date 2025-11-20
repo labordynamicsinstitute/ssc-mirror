@@ -13,7 +13,7 @@
 {title:Title}
 
 {phang}
-{bf:konfound} {hline 2} For user's model, this command calculates (1) how much bias there must be in an estimate to nullify/sustain an inference; (2) the impact of an omitted variable necessary to nullify/sustain an inference for a regression coefficient.
+{bf:konfound} {hline 2} For user's model, this command calculates (1) how much bias there must be in an estimate to nullify/sustain an inference; (2) the impact of an omitted variable necessary to nullify/sustain an inference for a regression coefficient. For a full description of the command's usage and additional examples, please refer to our {browse "https://konfound-it.org/page/guide/":practical guide}.
 
 
 {marker syntax}{...}

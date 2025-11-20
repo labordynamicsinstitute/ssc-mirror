@@ -9,7 +9,13 @@ program define konfound, rclass
 
 	if "`indx'" == "" {
     local indx "RIR"
-}
+	}
+	
+	* If user supplied the deprecated uncond(), route to ITCV
+    local cmdline = lower("`0'")
+    if regexm("`cmdline'","\buncond\(") {
+        local indx "IT"
+    }
 	
 	if "`indx'" == "RIR" {
         di ""
@@ -632,6 +638,10 @@ dis ""
  dis "What would it take to change an inference?"
  dis "Using Rubin's causal model to interpret the robustness of causal inferences."
  dis "Education, Evaluation and Policy Analysis, 35, 437-460."	
+ dis ""
+ dis "For more information, visit https://konfound-it.org"
+ dis "To explore examples and interpretation tips,"
+ dis "see our Practical Guide at https://konfound-it.org/page/guide/"
  
 end
 

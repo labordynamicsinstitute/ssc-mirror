@@ -1,7 +1,47 @@
 *! version 3.0.1 2025-10-07
 program define netcdf_init
-version 16.0
-syntax [anything] , [download dir(string) plus(string)]
+version 17.0
+syntax [anything] , [download dir(string) plus(string) compiled]
+
+if `c(version)'<18{
+	java query
+	local jdk `r(version)'
+	if "`jdk'"=="" | "`jdk'"=="."  {
+		java initialize
+		java query
+		local jdk `r(version)'
+	}
+	gettoken jv : jdk, p(.)
+    if `jv'<17 {
+      di as error "Stata 17 requires manually installing JDK 17"
+	  di "See " `"{help readraster:help readraster}"' " for configuring JDK 17 before using this command"
+	  exit
+    }
+}
+else if `c(version)'>=19{
+	java query
+	local jdk `r(version)'
+	if "`jdk'"=="" | "`jdk'"=="."  {
+		java initialize
+		java query
+		local jdk `r(version)'
+	}
+	gettoken jv : jdk, p(.)
+    if `jv'>=21 &  "`compiled'"=="" {
+      di as error "For Stata 19 there are two ways to use this package"
+      di  "(1) Manually install JDK 17 and set it as the JAVA_HOME in Stata"
+	  di       "See " `"{help readraster:help readraster}"' " for configuring JDK 17 before using this command"
+	  di   "(2) Download the precompiled Jar file by the following command"
+				"netcdf_init, compiled"
+	  exit
+    }
+
+}
+
+if "`compiled'"!=""{
+	net install NetCDFUtils.pkg, from("https://raw.githubusercontent.com/kerrydu/readraster/refs/heads/develop/")
+	exit
+}
 
 if "`download'"!=""{
 
@@ -29,8 +69,9 @@ if "`download'"!=""{
 }
 
 if "`plus'"!=""{
-	di "Copying netcdfAll-5.9.1.jar to {browse `c(sysdir_plus)'/`plus'} ..."
-	pjar2plus `anything'/netcdfAll-5.9.1.jar, to(`plus')
+	di "Copying netcdfAll-5.9.1.jar to {browse `c(sysdir_plus)'`plus'} ..."
+	cap confirm file `c(sysdir_plus)'`plus'/netcdfAll-5.9.1.jar
+	if _rc pjar2plus `anything'/netcdfAll-5.9.1.jar, to(`plus')
 	wrtjarpath `c(sysdir_plus)'/`plus', jar(netcdfAll-5.9.1.jar) adoname(ncreadjar)
 }
 else{
@@ -72,7 +113,7 @@ if `"`jar'"'!=""{
 	
 }
 
-
+cap mkdir `"`c(sysdir_plus)'p"'
 
 local filename =  c(sysdir_plus) + "p/path_`adoname'.ado"
 file open myfile using `"`filename'"', write text replace

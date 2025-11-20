@@ -2621,7 +2621,6 @@ fmwww.bc.edu/repec/bocode/v/irf_plot.sthlp
 fmwww.bc.edu/repec/bocode/v/vbkwbstrap.ado
 fmwww.bc.edu/repec/bocode/v/var_nr_irf_plot.ado
 fmwww.bc.edu/repec/bocode/v/vselect.sthlp
-fmwww.bc.edu/repec/bocode/v/variog2.html
 fmwww.bc.edu/repec/bocode/v/vallabsave.pkg
 fmwww.bc.edu/repec/bocode/v/valuesof.pkg
 fmwww.bc.edu/repec/bocode/v/vmatch.ado
@@ -2635,7 +2634,6 @@ fmwww.bc.edu/repec/bocode/v/hd_funct.sthlp
 fmwww.bc.edu/repec/bocode/v/varlmhet.pkg
 fmwww.bc.edu/repec/bocode/v/varprod.html
 fmwww.bc.edu/repec/bocode/v/vlist.ado
-fmwww.bc.edu/repec/bocode/v/varlab.html
 fmwww.bc.edu/repec/bocode/v/var_nr_sign_restrict.ado
 fmwww.bc.edu/repec/bocode/v/vc_bw.ado
 fmwww.bc.edu/repec/bocode/v/var_nr_options.ado
@@ -2740,9 +2738,7 @@ fmwww.bc.edu/repec/bocode/v/vorter.sthlp
 fmwww.bc.edu/repec/bocode/v/vsave.ado
 fmwww.bc.edu/repec/bocode/v/varrets.sthlp
 fmwww.bc.edu/repec/bocode/v/violin.pkg
-fmwww.bc.edu/repec/bocode/v/varflist.html
 fmwww.bc.edu/repec/bocode/v/vartyp.html
-fmwww.bc.edu/repec/bocode/v/varlocal.html
 fmwww.bc.edu/repec/bocode/v/Verardi_Debarsy_12.pdf
 fmwww.bc.edu/repec/bocode/v/vcf.html
 fmwww.bc.edu/repec/bocode/v/vc_graph.ado
@@ -2813,13 +2809,11 @@ fmwww.bc.edu/repec/bocode/v/vallabload.sthlp
 fmwww.bc.edu/repec/bocode/v/vce2way.ado
 fmwww.bc.edu/repec/bocode/v/varsearch.html
 fmwww.bc.edu/repec/bocode/v/vartyp.pkg
-fmwww.bc.edu/repec/bocode/v/variog.html
 fmwww.bc.edu/repec/bocode/v/vbkw.pkg
 fmwww.bc.edu/repec/bocode/v/vorter.html
 fmwww.bc.edu/repec/bocode/v/v2seats.hlp
 fmwww.bc.edu/repec/bocode/v/fevd_plot.sthlp
 fmwww.bc.edu/repec/bocode/v/votex.dta
-fmwww.bc.edu/repec/bocode/v/variancemat.html
 fmwww.bc.edu/repec/bocode/v/nr_create.sthlp
 fmwww.bc.edu/repec/bocode/v/varextrema.ado
 fmwww.bc.edu/repec/bocode/v/var_nr_shock_set.sthlp
@@ -2880,7 +2874,6 @@ fmwww.bc.edu/repec/bocode/v/vectorof.hlp
 fmwww.bc.edu/repec/bocode/v/var_nr_irf.sthlp
 fmwww.bc.edu/repec/bocode/v/nr_set.sthlp
 fmwww.bc.edu/repec/bocode/v/var_nr_stata_functions.sthlp
-fmwww.bc.edu/repec/bocode/v/varlabdef.html
 fmwww.bc.edu/repec/bocode/v/vecar.html
 fmwww.bc.edu/repec/bocode/v/vlgen.html
 fmwww.bc.edu/repec/bocode/v/venndiag.hlp
@@ -2919,7 +2912,6 @@ fmwww.bc.edu/repec/bocode/v/vplplot.pkg
 fmwww.bc.edu/repec/bocode/v/vif2.ado
 fmwww.bc.edu/repec/bocode/v/validarcae_solve.ado
 fmwww.bc.edu/repec/bocode/v/vgettoken.hlp
-fmwww.bc.edu/repec/bocode/v/varlag.html
 fmwww.bc.edu/repec/bocode/v/vce_mcov.pkg
 fmwww.bc.edu/repec/bocode/v/vplplot.html
 fmwww.bc.edu/repec/bocode/v/varrets-test.do
@@ -12527,7 +12519,6 @@ fmwww.bc.edu/repec/bocode/r/reghdfe_old_footnote.ado
 fmwww.bc.edu/repec/bocode/r/ranvar2.hlp
 fmwww.bc.edu/repec/bocode/r/rebus_cm.mo
 fmwww.bc.edu/repec/bocode/r/robit7.ado
-fmwww.bc.edu/repec/bocode/r/readreplace.html
 fmwww.bc.edu/repec/bocode/r/repsample.sthlp
 fmwww.bc.edu/repec/bocode/r/r2reg3.dlg
 fmwww.bc.edu/repec/bocode/r/read_parameterestimates.hlp
@@ -12804,7 +12795,6 @@ fmwww.bc.edu/repec/bocode/r/reghdfe5.mata
 fmwww.bc.edu/repec/bocode/r/rowranks.pkg
 fmwww.bc.edu/repec/bocode/r/rvlrplot7.html
 fmwww.bc.edu/repec/bocode/r/rcl_functions_shares.do
-fmwww.bc.edu/repec/bocode/r/readlog.html
 fmwww.bc.edu/repec/bocode/r/rforest_examples.ihlp
 fmwww.bc.edu/repec/bocode/r/r2sem.html
 fmwww.bc.edu/repec/bocode/r/rangestat.pkg
@@ -13029,7 +13019,6 @@ fmwww.bc.edu/repec/bocode/r/rfl.ado
 fmwww.bc.edu/repec/bocode/r/robustate.ado
 fmwww.bc.edu/repec/bocode/r/runcd.sthlp
 fmwww.bc.edu/repec/bocode/r/regresby.pkg
-fmwww.bc.edu/repec/bocode/r/reclink.html
 fmwww.bc.edu/repec/bocode/r/rolling2.ado
 fmwww.bc.edu/repec/bocode/r/reg_sandwich.sthlp
 fmwww.bc.edu/repec/bocode/r/runmlwin_mcmcdiag.ado
@@ -13273,7 +13262,6 @@ fmwww.bc.edu/repec/bocode/r/regdis.ado
 fmwww.bc.edu/repec/bocode/r/renfiles.hlp
 fmwww.bc.edu/repec/bocode/r/replacen.ado
 fmwww.bc.edu/repec/bocode/r/rsort.sthlp
-fmwww.bc.edu/repec/bocode/r/recast2.html
 fmwww.bc.edu/repec/bocode/r/rdrobust_functions.do
 fmwww.bc.edu/repec/bocode/r/rrcalc.ado
 fmwww.bc.edu/repec/bocode/r/rndbinx.ado
@@ -13294,7 +13282,6 @@ fmwww.bc.edu/repec/bocode/r/recol.pkg
 fmwww.bc.edu/repec/bocode/r/rndlgn.ado
 fmwww.bc.edu/repec/bocode/r/reghdfe_header.ado
 fmwww.bc.edu/repec/bocode/r/r2_mlm.pkg
-fmwww.bc.edu/repec/bocode/r/reclass.html
 fmwww.bc.edu/repec/bocode/r/reffect.html
 fmwww.bc.edu/repec/bocode/r/regtable.ado
 fmwww.bc.edu/repec/bocode/r/read_parameterestimates.sthlp
@@ -13589,7 +13576,6 @@ fmwww.bc.edu/repec/bocode/r/rwolf2.pkg
 fmwww.bc.edu/repec/bocode/r/rdcont_example.do
 fmwww.bc.edu/repec/bocode/r/reg_sandwich.ado
 fmwww.bc.edu/repec/bocode/r/raschpower.ado
-fmwww.bc.edu/repec/bocode/r/read_convergence.html
 fmwww.bc.edu/repec/bocode/r/rensheet.hlp
 fmwww.bc.edu/repec/bocode/r/rnbinom.mo
 fmwww.bc.edu/repec/bocode/r/rtnorm.pkg
@@ -13656,7 +13642,6 @@ fmwww.bc.edu/repec/bocode/r/rdecompose.sthlp
 fmwww.bc.edu/repec/bocode/r/rtfsect.ado
 fmwww.bc.edu/repec/bocode/r/reldist.pkg
 fmwww.bc.edu/repec/bocode/r/resizec1leg.ado
-fmwww.bc.edu/repec/bocode/r/read_parameterestimates.html
 fmwww.bc.edu/repec/bocode/r/regsave.hlp
 fmwww.bc.edu/repec/bocode/r/rangejoin.sthlp
 fmwww.bc.edu/repec/bocode/r/regsensitivity_breakdown.sthlp
@@ -13792,6 +13777,7 @@ fmwww.bc.edu/repec/bocode/r/reset2.sthlp
 fmwww.bc.edu/repec/bocode/r/reweight.dta
 fmwww.bc.edu/repec/bocode/r/renfiles.html
 fmwww.bc.edu/repec/bocode/r/RR_monetary_shock_quarterly.dta
+fmwww.bc.edu/repec/bocode/r/readraster.ado
 fmwww.bc.edu/repec/bocode/r/rsz.ado
 fmwww.bc.edu/repec/bocode/r/reu.ado
 fmwww.bc.edu/repec/bocode/r/rctmiss.do
@@ -13801,7 +13787,6 @@ fmwww.bc.edu/repec/bocode/r/gsadf.mtx
 fmwww.bc.edu/repec/bocode/r/rddsga.ado
 fmwww.bc.edu/repec/bocode/r/roblpr.pkg
 fmwww.bc.edu/repec/bocode/r/remr.ado
-fmwww.bc.edu/repec/bocode/r/recap.html
 fmwww.bc.edu/repec/bocode/r/r2c.pkg
 fmwww.bc.edu/repec/bocode/r/r_neuralnet.py
 fmwww.bc.edu/repec/bocode/r/ranktest.hlp

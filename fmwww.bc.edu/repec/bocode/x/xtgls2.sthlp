@@ -1,7 +1,7 @@
 
 {smcl}
-{* *! version 1.4, 30 Sep 2025}{...}
-{cmd:help xtgls2}		Version 1.4, 30 Sep 2025, Manh Hoang Ba (hbmanh9492@gmail.com)
+{* *! version 1.5, 19 Nov 2025}{...}
+{cmd:help xtgls2}		Version 1.5, 19 Nov 2025, Manh Hoang Ba (hbmanh9492@gmail.com)
 {hline}
 
 {title:Title}
@@ -13,12 +13,12 @@
 
 {title:Syntax}
 
-{p 12 8 2}{cmd:xtgls2} {depvar} [{indepvars}] {ifin} {cmd:,} {it:options}
+{p 12 8 2}{cmd:xtgls2} {depvar} [{indepvars}] {ifin} [{cmd:,} {it:options}]
 
 
 {title:Description}
 
-{pstd}{cmd:xtgls2} estimates General GLS estimator for large N, small T linear panel data models (Pooled, FE, FD), aiming to obtain (asymptotically) efficient estimators in the context of non-spherical idiosyncratic errors.{p_end}
+{pstd}{cmd:xtgls2} estimates General GLS estimator for large N, small T linear panel data models (Pooled, FE, FD, RE), aiming to obtain (asymptotically) efficient estimators in the context of non-spherical idiosyncratic errors.{p_end}
 
 {pstd}Specifically, in each estimator, the error covariance matrix is assumed to have a general form within panels, and identical across panels. For more details, see Kiefer (1980) and Wooldridge (2002, 2010).{p_end}
 
@@ -32,13 +32,15 @@
 {syntab:Model}
 {synopt :{opt nocons:tant}}suppress constant term, required when {opt fe} or {opt fd} option is specified.{p_end}
 {synopt :{opt ols}}use feasible pooled GLS estimator, default.{p_end}
-{synopt :{opt fe}}use feasible fixed-effects GLS estimator.{p_end}
-{synopt :{opt fd}}use feasible first-difference GLS estimator.{p_end}
+{synopt :{opt fe}}use feasible fixed-effects GLS estimator, {opt nocons:tant} is required.{p_end}
+{synopt :{opt fd}}use feasible first-difference GLS estimator, {opt nocons:tant} is required.{p_end}
+{synopt :{opt re}}use feasible first-difference GLS estimator, {cmdab:c:ov(c)} is required.{p_end}
 {p2coldent:* {cmdab:c:ov(c)}}use heteroskedastic and correlated error structure within panels.{p_end}
 {p2coldent:* {cmdab:c:ov(h)}}use heteroskedastic error structure within panels, this cannot be specified together with {opt fe} or {opt fd} option.{p_end}
 {synopt :{cmd:igls}}use iterated GLS estimator instead of two-step GLS estimator.{p_end}
 
 {syntab:SE}
+{synopt :{cmdab:r:obust}}use panelvar-clustered standard errors, required when {opt minus(#)} is specified..{p_end}
 {synopt :{cmdab:cl:uster(varname)}}use varname-clustered standard errors, required when {opt minus(#)} is specified.{p_end}
 {synopt :{opt nmk}}normalize standard error by N-k instead of N.{p_end}
 {synopt :{opt minus(#)}}controls the degrees of freedom adjustment factor in the robust, or cluster-robust variance calculation. Default value is {cmd:minus(0)}.{p_end}
@@ -49,18 +51,18 @@
 {syntab:Optimization}
 {synopt :{opt iter:ate(#)}}specifies the maximum number of iterations; default is {cmd:iterate(50)}.{p_end}
 {synopt :{opt tol:erance(#)}}specifies the tolerance for the coefficient vector; default is {cmd:tolerance(1e-7)}.{p_end}
-{synopt :{opt lo:g}}display the iteration log. This is default.{p_end}
-{synopt :{opt nolo:g}}does not display the iteration log.{p_end}
 
 {synoptline}
 {p2colreset}{...}
 {p 4 8 2}* You must specify either {cmd:cov(c)} or {cmd:cov(h)}.{p_end}
+
 
 {title:Citation}
 {p 4 8 2}{cmd:xtgls2} is not an official Stata command.
 It is a free contribution to the research community.
 Please cite it as such: {p_end}
 {p 8 8 2}Manh Hoang Ba, 2025. "XTGLS2: Stata module to estimate GLS estimator for large N, small T panel data models," Statistical Software Components S459497, Boston College Department of Economics.{p_end}
+
 
 {title:Postestimation}
 
@@ -82,6 +84,7 @@ Please cite it as such: {p_end}
 {p2colreset}{...}
 {p 4 8 2}* {cmd:estat ic} and {cmd:lrtest} are available only if {cmd:igls} is specified at estimation.{p_end}
 
+
 {title:Examples}
 
 {phang2} {stata . webuse abdata, clear}{p_end}
@@ -97,6 +100,55 @@ Please cite it as such: {p_end}
 {phang2} {stata `". xtgls2 n l(0/2).w k ys i.year, c(c) fd nocons"'}{p_end}
 
 {phang2} {stata `". xtgls2 n l(0/2).w k ys i.year, c(c) fd nocons cl(id)"'}{p_end}
+
+
+{marker results}{...}
+{title:Stored results}
+
+{pstd}
+{cmd:xtgls2} stores the following in {cmd:e()}:
+
+{synoptset 23 tabbed}{...}
+{p2col 5 23 26 2: Scalars}{p_end}
+{synopt:{cmd:e(N)}}number of observations{p_end}
+{synopt:{cmd:e(N_ic)}}number of observations used to compute information criteria{p_end}
+{synopt:{cmd:e(N_g)}}number of groups{p_end}
+{synopt:{cmd:e(N_t)}}number of periods{p_end}
+{synopt:{cmd:e(n_cv)}}number of estimated covariances{p_end}
+{synopt:{cmd:e(df)}}degrees of freedom{p_end}
+{synopt:{cmd:e(df_pear)}}degrees of freedom for Pearson chi-squared{p_end}
+{synopt:{cmd:e(df_ic)}}degrees of freedom for information criteria{p_end}
+{synopt:{cmd:e(ll)}}log likelihood{p_end}
+{synopt:{cmd:e(chi2)}}chi-squared{p_end}
+{synopt:{cmd:e(rank)}}rank of {cmd:e(V)}{p_end}
+{synopt:{cmd:e(level)}}confidence level{p_end}
+{synopt:{cmd:e(r2_o)}}R-squared overall{p_end}
+{synopt:{cmd:e(r2_w)}}R-squared within{p_end}
+{synopt:{cmd:e(r2_b)}}R-squared between{p_end}
+{synopt:{cmd:e(rc)}}return code{p_end}
+{synopt:{cmd:e(N_clust)}}number of clusters{p_end}
+
+{p2col 5 23 26 2: Macros}{p_end}
+{synopt:{cmd:e(clustvar)}}name of cluster variable{p_end}
+{synopt:{cmd:e(vcetype)}}title used to label Std. err.{p_end}
+{synopt:{cmd:e(model)}}name of model{p_end}
+{synopt:{cmd:e(tvar)}}variable denoting time within groups{p_end}
+{synopt:{cmd:e(ivar)}}variable denoting groups{p_end}
+{synopt:{cmd:e(depvar)}}name of dependent variable{p_end}
+{synopt:{cmd:e(cmdline)}}command as typed{p_end}
+{synopt:{cmd:e(cmd)}}{cmd:xtgls2}{p_end}
+{synopt:{cmd:e(properties)}}{cmd:b V}{p_end}
+
+{p2col 5 23 26 2: Matrices}{p_end}
+{synopt:{cmd:e(b)}}coefficient vector{p_end}
+{synopt:{cmd:e(V)}}variance-covariance matrix of the estimators{p_end}
+{synopt:{cmd:e(Sigma)}}Sigma hat matrix{p_end}
+
+{p2col 5 23 26 2: Functions}{p_end}
+{synopt:{cmd:e(sample)}}marks estimation sample{p_end}
+{p2colreset}{...}
+
+INCLUDE help rtable
 
 
 {title:Acknowledgements}
