@@ -4466,6 +4466,7 @@ fmwww.bc.edu/repec/bocode/c/Ch04_Fig_Examples_1_and_2.do
 fmwww.bc.edu/repec/bocode/c/ceqextpop.ado
 fmwww.bc.edu/repec/bocode/c/char2fmt.sas
 fmwww.bc.edu/repec/bocode/c/cpoissone.sthlp
+fmwww.bc.edu/repec/bocode/c/cno11isco08.pkg
 fmwww.bc.edu/repec/bocode/c/csv2xml.py
 fmwww.bc.edu/repec/bocode/c/codensity.ado
 fmwww.bc.edu/repec/bocode/c/ciwi.ado
@@ -4579,6 +4580,7 @@ fmwww.bc.edu/repec/bocode/c/create.do
 fmwww.bc.edu/repec/bocode/c/capacity.dta
 fmwww.bc.edu/repec/bocode/c/colrspace_source.sthlp
 fmwww.bc.edu/repec/bocode/c/cf3.ado
+fmwww.bc.edu/repec/bocode/c/cno11isco08.ado
 fmwww.bc.edu/repec/bocode/c/cs_egranger.smcl
 fmwww.bc.edu/repec/bocode/c/combomarginsplot12.ado
 fmwww.bc.edu/repec/bocode/c/cquadequr.ado
@@ -5847,6 +5849,7 @@ fmwww.bc.edu/repec/bocode/c/cprdentcode.ado
 fmwww.bc.edu/repec/bocode/c/cmogram.ado
 fmwww.bc.edu/repec/bocode/c/civplot.pkg
 fmwww.bc.edu/repec/bocode/c/cs_weakiv_1.0.10.do
+fmwww.bc.edu/repec/bocode/c/cno11isco08.sthlp
 fmwww.bc.edu/repec/bocode/c/crtfreq.sthlp
 fmwww.bc.edu/repec/bocode/c/cprdhes_hospital.sthlp
 fmwww.bc.edu/repec/bocode/c/ciwidth_proportions_mc.sthlp
@@ -11691,6 +11694,7 @@ fmwww.bc.edu/repec/bocode/q/qcolname.html
 fmwww.bc.edu/repec/bocode/q/qexp5.ado
 fmwww.bc.edu/repec/bocode/q/qlognorm.hlp
 fmwww.bc.edu/repec/bocode/q/quadas.pkg
+fmwww.bc.edu/repec/bocode/q/quantilesets.pkg
 fmwww.bc.edu/repec/bocode/q/quadas.html
 fmwww.bc.edu/repec/bocode/q/qgamma4.hlp
 fmwww.bc.edu/repec/bocode/q/qbeta4.ado
@@ -11716,6 +11720,7 @@ fmwww.bc.edu/repec/bocode/q/qv.pkg
 fmwww.bc.edu/repec/bocode/q/qconvert.ado
 fmwww.bc.edu/repec/bocode/q/qgamma.hlp
 fmwww.bc.edu/repec/bocode/q/stata.toc copy.3B12
+fmwww.bc.edu/repec/bocode/q/quantilesets.ado
 fmwww.bc.edu/repec/bocode/q/qsub.pkg
 fmwww.bc.edu/repec/bocode/q/qlognorm.pkg
 fmwww.bc.edu/repec/bocode/q/qog.html
@@ -11747,6 +11752,7 @@ fmwww.bc.edu/repec/bocode/q/quandl.ado
 fmwww.bc.edu/repec/bocode/q/qddml_cert.log
 fmwww.bc.edu/repec/bocode/q/qrkd.ado
 fmwww.bc.edu/repec/bocode/q/quaidsce.ado
+fmwww.bc.edu/repec/bocode/q/quantilesets.sthlp
 fmwww.bc.edu/repec/bocode/q/qn.pkg
 fmwww.bc.edu/repec/bocode/q/quine.ado
 fmwww.bc.edu/repec/bocode/q/qlogn.hlp

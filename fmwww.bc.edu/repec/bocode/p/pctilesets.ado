@@ -1,4 +1,5 @@
-*! 1.0.1 NJC 23 September 2025
+*! 1.0.2 NJC 20 November 2025
+* 1.0.1 NJC 23 September 2025
 * 1.0.0 NJC 28 October 2024 
 program pctilesets 
 	version 8.1 
@@ -76,15 +77,12 @@ program pctilesets
 	gettoken filename rest : saving, parse(,) 
 	use "`filename'", clear 
 		
-	capture label data `"`0'"'
-	
 	if "`weight'" != "" gen weight = "`weight' `exp'"
 	
 	list, noobs `options'
 	
 	if `wantsave' {
 		quietly compress
-		capture label data `"`0'"'
 		display  
 		save "`filename'", replace
 	} 
@@ -172,7 +170,7 @@ program pctilesets_g
 	list, noobs `options'
 
 	if `"`saving'"' != "" { 
-		capture label data `"`0'"'
+		label data 
 		display 
 		save `saving'
 	}

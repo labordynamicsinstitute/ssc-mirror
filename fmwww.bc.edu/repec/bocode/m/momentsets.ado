@@ -1,4 +1,5 @@
-*! 1.0.1 NJC 23 September 2025
+*! 1.0.2 NJC 20 November 2025
+* 1.0.1 NJC 23 September 2025
 * 1.0.0 NJC 1 November 2024 
 program momentsets 
 	version 8.1 
@@ -65,15 +66,12 @@ program momentsets
 	gettoken filename rest : saving, parse(,) 
 	use "`filename'", clear 
 		
-	capture label data `"`0'"'
-	
 	if "`weight'" != "" gen weight = "`weight' `exp'"
 	
 	list, noobs `options'
 	
 	if `wantsave' {
 		quietly compress
-		capture label data `"`0'"'
 		display  
 		save "`filename'", replace
 	} 
@@ -181,7 +179,7 @@ program momentsets_g
 
 	if `"`saving'"' != "" { 
 		quietly compress 
-		capture label data `"`0'"'
+		label data 
 		display 
 		save `saving'
 	}

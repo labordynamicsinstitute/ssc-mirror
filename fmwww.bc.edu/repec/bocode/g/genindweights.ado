@@ -1,4 +1,4 @@
-*! version 0.41 2025-04-11
+*! version 0.5 2025-11-16
 program define genindweights, rclass sortpreserve
   syntax newvarlist(max=1)  [if][in], [                            ///
                                         AGEGroup(varname)          ///
@@ -25,8 +25,8 @@ program define genindweights, rclass sortpreserve
     
     qui count if _st==0 & `touse'
     if `r(N)'>0 {
-      di as error "You have values of _st=0." ///
-                  "Either drop these or use an if statement."
+      di as error "You have values of _st=0." 
+      di as error "Either drop these, use the stignore option or use an if statement."
                   exit 198
     }
   }
@@ -134,9 +134,9 @@ program define genindweights, rclass sortpreserve
   }
   if "`refframe'" != "" {
     Parse_refframe `refframe'
-    local refframetmp `r(refframename)'
     local refwtname `r(refframe_refwtname)'
     local refframe_strata `r(refframe_strata)'
+    frame copy `r(refframename)' `refframetmp'
     qui frlink m:1 `refframe_strata', frame(`refframetmp')
 
   }
@@ -169,7 +169,20 @@ program define genindweights, rclass sortpreserve
   
   tempvar refproportion
   qui frget `refproportion' = `refwtname', from(`refframetmp')
-  qui gen double `newvarname' = `refproportion'/`obsby_proportion' if `touse'
+  capture drop `refframetmp'
+  tempvar iwtmp
+  
+  qui gen double `iwtmp' = `refproportion'/`obsby_proportion' if `touse'
+ 
+ // check if missing values
+  quietly count if missing(`iwtmp') & `touse'
+  if `r(N)'>0 {
+    di as error "Missing values generated for the individual weights. " ///
+                "This is likely due to missing values or no individuals at risk" ///
+                "in certain agegroups or strata"
+    exit 198            
+  }
+  qui gen `newvarname' = `iwtmp'
  
   if "`summary'" == "" {
     tempvar first
@@ -259,7 +272,7 @@ end
 program define GetExternalRef
   syntax , agegroup(varname) reftype(string) NAGEGROUPS(string) ///
            agegrouplevels(numlist) refframetmp(string)
-  local extreflist ICSS1_5 ICSS1_5N ICSS2_5 ICSS2_5N ICSS3_5
+  local extreflist ICSS1_5 ICSS1_5N ICSS2_5 ICSS2_5N ICSS3_5 ICSS3_5N
   foreach type in `extreflist' {
     if "`type'" == "`reftype'" local refok ok
   }
@@ -339,6 +352,17 @@ program define getICSS3_5
   mata st_store(.,"refp",(0.60,0.10,0.10,0.10,0.10)')
 end
 
+////////////////////
+///  getICSS3_5N ///
+////////////////////
+program define getICSS3_5N
+  syntax , refproportion(varname) nagegroups(string)
+  if `nagegroups' != 5 {
+    di as error "ICCS3_5 should have 5 levels for agegroup"
+    exit 198
+  }  
+  mata st_store(.,"refp",(0.31085,0.21265,0.12974,0.19743,0.14933)')
+end
 
 ///////////////////
 ///  GetRefcond ///

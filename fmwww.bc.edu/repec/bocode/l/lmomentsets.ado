@@ -1,4 +1,5 @@
-*! 1.0.1 NJC 23 September 2025
+*! 1.0.2 NJC 19 November 2025
+* 1.0.1 NJC 23 September 2025
 * 1.0.0 NJC 1 March 2025 
 program lmomentsets 
 	version 10 
@@ -133,6 +134,7 @@ program lmomentsets_g
 	list, noobs `options'
 
 	if `"`saving'"' != "" { 
+		label data 
 		quietly compress 
 		display 
 		save `saving'

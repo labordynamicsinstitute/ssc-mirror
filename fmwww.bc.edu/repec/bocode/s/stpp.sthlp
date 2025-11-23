@@ -3,6 +3,7 @@
 {vieweralsosee "strs" "help strs"}{...}
 {vieweralsosee "stnet" "help stnet"}{...}
 {vieweralsosee "stns " "help stns"}{...}
+{vieweralsosee "genindweights " "help genindweights"}{...}
 
 {hline}
 
@@ -25,6 +26,7 @@
 {syntab:Options}
 {synopt :{opt aged:iag(varname)}}age at diagnosis (in years){p_end}
 {synopt :{opt dated:iag(varname)}}date at diagnosis{p_end}
+{synopt :{opt disp:lay(display option)}}different output options{p_end}
 {synopt :{opt allcause(newvarlist)}}calculate all-cause probabilities{p_end}
 {synopt :{opt by(varlist)}}calculate separately in groupes defined in {varlist}{p_end}
 {synopt :{opt contrast(contrasttype, suboptions)}}calculate contrasts{p_end}
@@ -97,10 +99,17 @@ Confidence intervals are also calculated and named {it: newvar}{cmd:_lci} and {i
 {title:Options}
 
 {phang}
-{opt agediag(varname)} names the variable containing age at diagnosis. This should be in years. Note that if possible it is best to avoid using truncated (integer) age as this assumes that each person was diagnosed on their birthday.
+{opt agediag(varname)} names the variable containing age at diagnosis. This should be in years. It is best to avoid using truncated (integer) age as this assumes that each person was diagnosed on their birthday.
 
 {phang}
 {opt datediag(varname)} names the variable containing the date at diagnosis. 
+
+{phang}
+{opt display(display option)} By default {cmd:stpp} will display marginal relative survival ({bf:rs}) estimates on screen,
+even if using the {bf:allcause()} or {bf:crudeprob()} options. You can display instead allcause ({bf:ac}) 
+or crude probabilities ({bf:cp}). Using {bf:none} will not display any results on screen.
+Note that this option only controls what is displayed on screen, results are still saved to matrices and
+potentially a frame if using the {bf:frame()} option.
 
 {phang}
 {opt allcause(newvarname)} calculates all-cause probabilities.
@@ -282,7 +291,7 @@ by(sex){p_end}
 {title:Example 3: }
 
 Estimate age-standardize marginal relative survival separately for males and females.
-This uses the ICSS1 age standard with traditional standardiation through obtaining
+This uses the ICSS1 age standard with traditional standardization through obtaining
 a weighted average of age group-specific estimates.
 
 
@@ -330,8 +339,14 @@ by(sex) {space 45 }///{p_end}
 {p 16 20 2}
 indweights(wt_age) graphname(R_pp4, replace) {p_end}
 
+
 {pmore}
 {it:({stata "stpp_example, egnumber(4)":click to run})}
+
+{phang}
+This example shows how to calculate individual weights, but
+see {help genindweights} for more advanced calculation
+of individual weights.
 
 
 {title:Stored results}
@@ -355,7 +370,7 @@ as the combined results.
 
 {pstd}
 Paul C Lambert, Cancer Registry of Norway, NIPH, Norway & Karolinska Institutet, Sweden.
-({browse "mailto:pclt@kreftregisteret.no":pclt@kreftregisteret.no})
+({browse "mailto:paul.lambert@fhi.no":pclt@kreftregisteret.no})
 
 {pstd}
 Mark J Rutherford
@@ -369,19 +384,19 @@ E. Coviello, P.W. Dickman, K. Seppä, A. Pokhrel. Estimating net survival using 
 {it: The Stata Journal} 2015;15:173-185
 
 {phang}
-P.W. Dickman, E. Coviello, M.Hills, M. Estimating and modelling relative survival. {it: The Stata Journal} 2015;{bf:15}:186-215
+P.W. Dickman, E. Coviello, M. Hills. Estimating and modelling relative survival. {it: The Stata Journal} 2015;{bf:15}:186-215
 
 {phang}
 M. Pohar Perme, J. Stare, J. Estève. On estimation in relative survival 
 {it:Biometrics} 2012;{bf:68}:113-120 
 
 {phang}
-MJ Rutherford MJ, TM-L Andersson, TÅ Myklebust, B Møller, PC Lambert PC. Non-parametric estimation of reference adjusted, 
+MJ Rutherford, TM-L Andersson, TÅ Myklebust, B Møller, PC Lambert. Non-parametric estimation of reference adjusted, 
 standardised probabilities of all-cause death and death due to cancer for population group comparisons. 
 {it: BMC Medical Research Methodology} 2022;{bf: 22}:2
 
 {phang}
-P. Sasieni, A.R. Brentnall. On standardized relative Survival 
+P. Sasieni, A.R. Brentnall. On standardized relative Survival.
 {it:Biometrics} 2016;{bf:73}:473-482 
 
 

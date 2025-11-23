@@ -1,0 +1,17 @@
+d 'QUANTILESETS': module 
+d
+d
+d KW: summary statistics
+d KW: percentiles
+d KW: quantiles
+d KW: graphics 
+d
+d Requires: Stata version 8.1
+d
+d Distribution-Date: 20251122
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f quantilesets.ado
+f quantilesets.sthlp

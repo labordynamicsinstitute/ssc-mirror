@@ -10,6 +10,10 @@ EXAMPLES AND DATA ARE AVAILABLE BELOW. IT IS RECOMMENDED TO FRIST GET THESE EXAM
 
 NEW IN THIS VERSION:
 
+1) New syntax for CAR windows that is compatible with Stata19. Thanks to Eric Jean de Bodt and Jean-Gabriel Cousin for having provided this Stata19 compatible version. The syntax had to be modified from car[days relative to event date]LB and car[days relative to event date]UB to car[days relative to event date]lb and car[days relative to event date]ub, respectively.
+
+REVISIONs IN THE PRIOR VERSION:
+
 1) Built-in version of nearmrg, which solves the problem of unstable sorts (see Statalist)
 2) Correction of a minor error in the calculation of the Kolari + Pynnonen (2010 ) adjustment; the prior version slightly overestimated the cross-correlation by not disregarding the i = j = 1.00 cross-correlations.
 3) Option KOLBlock (see below)
@@ -33,13 +37,13 @@ NEW IN THIS VERSION:
 {cmdab:garch} {cmdab:archo:ption:(}{it:arch_option}{cmd:)} {cmdab:garcho:ption:(}{it:garch_option}{cmd:)} {cmdab:archi:terate:(}{it:iterations}{cmd:)}
 {cmdab:para:llel} {cmdab:pclus:ters:(}{it:clusters}{cmd:)} {cmdab:proc:essors:(}{it:processors_StataMP}{cmd:)} {cmdab:prap:ath:(}{it:path_eventstudy2_parallel}{cmd:)}
 {cmdab:arfillev:ent} {cmdab:arfilles:timation}
-{cmdab:car1LB(}{it:CAR_window_1_lower_boundary}{cmd:)} {cmdab:car1UB(}{it:CAR_window_1_upper_boundary}{cmd:)} {cmdab:car2LB(}{it:CAR_window_2_lower_boundary}{cmd:)}
-{cmdab:car2UB(}{it:CAR_window_2_upper_boundary}{cmd:)} {cmdab:car3LB(}{it:CAR_window_3_lower_boundary}{cmd:)} {cmdab:car3UB(}{it:CAR_window_3_upper_boundary}{cmd:)}
-{cmdab:car4LB(}{it:CAR_window_4_lower_boundary}{cmd:)} {cmdab:car4UB(}{it:CAR_window_4_upper_boundary}{cmd:)} {cmdab:car5LB(}{it:CAR_window_5_lower_boundary}{cmd:)}
-{cmdab:car5UB(}{it:CAR_window_5_upper_boundary}{cmd:)} {cmdab:car6LB(}{it:CAR_window_6_lower_boundary}{cmd:)} {cmdab:car6UB(}{it:CAR_window_6_upper_boundary}{cmd:)}
-{cmdab:car7LB(}{it:CAR_window_7_lower_boundary}{cmd:)} {cmdab:car7UB(}{it:CAR_window_7_upper_boundary}{cmd:)} {cmdab:car8LB(}{it:CAR_window_8_lower_boundary}{cmd:)}
-{cmdab:car8UB(}{it:CAR_window_8_upper_boundary}{cmd:)} {cmdab:car9LB(}{it:CAR_window_9_lower_boundary}{cmd:)} {cmdab:car9UB(}{it:CAR_window_9_upper_boundary}{cmd:)}
-{cmdab:car10LB(}{it:CAR_window_10_lower_boundary}{cmd:)} {cmdab:car10UB(}{it:CAR_window_10_upper_boundary}{cmd:)}]
+{cmdab:car1lb(}{it:CAR_window_1_lower_boundary}{cmd:)} {cmdab:car1ub(}{it:CAR_window_1_upper_boundary}{cmd:)} {cmdab:car2lb(}{it:CAR_window_2_lower_boundary}{cmd:)}
+{cmdab:car2ub(}{it:CAR_window_2_upper_boundary}{cmd:)} {cmdab:car3lb(}{it:CAR_window_3_lower_boundary}{cmd:)} {cmdab:car3ub(}{it:CAR_window_3_upper_boundary}{cmd:)}
+{cmdab:car4lb(}{it:CAR_window_4_lower_boundary}{cmd:)} {cmdab:car4ub(}{it:CAR_window_4_upper_boundary}{cmd:)} {cmdab:car5lb(}{it:CAR_window_5_lower_boundary}{cmd:)}
+{cmdab:car5ub(}{it:CAR_window_5_upper_boundary}{cmd:)} {cmdab:car6lb(}{it:CAR_window_6_lower_boundary}{cmd:)} {cmdab:car6ub(}{it:CAR_window_6_upper_boundary}{cmd:)}
+{cmdab:car7lb(}{it:CAR_window_7_lower_boundary}{cmd:)} {cmdab:car7ub(}{it:CAR_window_7_upper_boundary}{cmd:)} {cmdab:car8lb(}{it:CAR_window_8_lower_boundary}{cmd:)}
+{cmdab:car8ub(}{it:CAR_window_8_upper_boundary}{cmd:)} {cmdab:car9lb(}{it:CAR_window_9_lower_boundary}{cmd:)} {cmdab:car9ub(}{it:CAR_window_9_upper_boundary}{cmd:)}
+{cmdab:car10lb(}{it:CAR_window_10_lower_boundary}{cmd:)} {cmdab:car10ub(}{it:CAR_window_10_upper_boundary}{cmd:)}]
 
 {p 4 4 2}
 where

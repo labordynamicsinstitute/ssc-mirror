@@ -1,5 +1,5 @@
 {smcl}
-{* NJC 1nov2024/13aug2025}{...}
+{* NJC 1nov2024/15nov2024/27feb2025/13aug2025/20nov2025}{...}
 
 {cmd:help momentsets}
 {hline}
@@ -155,7 +155,7 @@ is a standard for considering distribution shape.
 for automating axis labels. 
 
 {pstd}The approach to correlation confidence intervals of Cox (2008) is 
-broadly similar. See also {help cisets} or {help pctilesets} or 
+broadly similar. See also {help cisets} or {help pctilesets} or {help quantilesets} or
 {help lmomentsets} if installed. 
 
 
@@ -177,7 +177,6 @@ may be specified to tune listing of the results set.
 Stata dataset. The suboption {cmd:, replace} must be specified to overwrite
 an existing dataset. 
 
-
 {it:Option allowed with the variables syntax}
 
 {phang}
@@ -192,14 +191,12 @@ As a convenience for people familiar with that term, or with other
 syntax used to this effect, {cmd:cw} and {cmd:allobs} are allowed 
 as synonyms. 
 
-
-{it:Option compulsory with the groups syntax}
+{it:Option required with the groups syntax}
 
 {phang}
 {opt over(groupvar)} must be specified to name the group variable. 
 Distinct groups of observations on {it:groupvar} will be used 
 to produce separate results for the main variable specified. 
-
 
 {it:Option allowed with the groups syntax}
 
@@ -218,9 +215,9 @@ to output for each group, output be added for all groups combined.
 {phang}{cmd:. momentsets *, mean sd skewness kurtosis}{p_end}
 
 {phang}* For this dataset and some Stata uses: see Hosking and Wallis (1997) and Cox (2010b, 2021a){p_end}
-{phang}{cmd:. u https://www.stata-journal.com/software/sj10-4/gr0046/windspeed.dta, clear}{p_end}
+{phang}{cmd:. use https://www.stata-journal.com/software/sj10-4/gr0046/windspeed.dta, clear}{p_end}
 {phang}{cmd:. momentsets windspeed, over(place) mean sd skewness kurtosis saving(foo, replace)}{p_end}
-{phang}{cmd:. u foo, clear}{p_end}
+{phang}{cmd:. use foo, clear}{p_end}
 {phang}{cmd:. gen where = cond(mean < 51, 3, 9)}{p_end}
 {phang}{cmd:. scatter sd mean, mla(group) mlabvpos(where) name(MO1, replace)}{p_end}
 {phang}{cmd:. scatter kurt skew, mla(group) mlabvpos(where) name(MO2, replace)}{p_end}
@@ -276,5 +273,6 @@ Cambridge: Cambridge University Press.
 
 {title:Also see}
 
-{p 4 4 2}help for {help summarize}
+{p 4 4 2}help for {help summarize}, 
+{help moments} (if installed) 
 

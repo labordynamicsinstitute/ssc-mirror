@@ -41,7 +41,7 @@
 {title:Description}
 
 {pstd}
-{cmd:genindweights} calculate individual weights that are needed for standardization
+{cmd:genindweights} calculates individual weights that are needed for standardization
 to a reference population. It will commonly be used for age standardization of
 (relative) survival (Rutherford {it:et al. 2020}), but can also be used more generally.
 Individuals are upweighted or downweighted relative to a reference population.
@@ -75,14 +75,10 @@ defined by {it:varlist}.
 to those defined by {it:expression}. Note that values are still obtained for individuals not satisfying 
 the expression, but they are not included in the calculation.
 It is generally more useful to use the {cmd:restrict()} option, 
-which also places restrictions when calculation the reference proportions (where appropriate).
-
-
-this options  calculating weights stratified when using the {bf:by()}
-option this will restriced the observed proportion with in strata to be based
-on expression {it:exp}. An example of its use is when implementing period 
+which also places restrictions when calculating the reference proportions (where appropriate).
+An example of its use is when implementing period 
 analysis in survival analysis: here we want the observed proportions to be defined
-based on those diagnosed in a calendar period window.
+based on those diagnosed in a calendar period window, not all those at risk in the window.
 
 {phang}
 {opt obsproportion(newvarname)} save the observed proportions in a new variable.
@@ -101,7 +97,7 @@ standardization.
 {phang2}
 For the traditional ICSS five age groups (Corazziari {et al.} 2004) the weights, and correspnding options, are defined as follows:
 
-                  {c |} ICSS1_5    ICSS2_5    ICSS3_5 
+                  {c |} ICSS1_5    ICSS2_5    ICSS3_5              
            {hline 7}{c +}{hline 30}
            15-44  {c |}  0.07       0.28         0.6
            45-54  {c |}  0.12       0.17         0.1
@@ -116,14 +112,15 @@ Note that often the youngest group is defined for ages 18-44.
 For the adapted ICSS five age group weights used in the NORDCAN survival studies (Lundberg {it:et al.} 2020),
 the weights, and corresponding options, are defined as follows:
 
-                  {c |} ICSS1_5N      ICSS2_5N   
-           {hline 7}{c +}{hline 30}
-           18-49  {c |}  0.11906       0.36283       
-           50-59  {c |}  0.16735       0.18611       
-           60-69  {c |}  0.27593       0.22098       
-           70-79  {c |}  0.28897       0.16262       
-           80+    {c |}  0.14869       0.06746       
+                  {c |} ICSS1_5N      ICSS2_5N                    {c |}  ICSS2_5N 
+           {hline 7}{c +}{hline 30}      {hline 7}{c +}{hline 15}
+           18-49  {c |}  0.11906       0.36283             18-29  {c |}  0.31085    
+           50-59  {c |}  0.16735       0.18611             30-39  {c |}  0.21265
+           60-69  {c |}  0.27593       0.22098             40-49  {c |}  0.12974
+           70-79  {c |}  0.28897       0.16262             50-69  {c |}  0.19743
+           80+    {c |}  0.14869       0.06746             70+    {c |}  0.14933
 
+         
 {phang2}           
 Note that it is the responsibility of the user to define age groups appropriately.           
            
@@ -140,10 +137,10 @@ By default, this variable is named {cmd:refp}.
 
 
 {phang}
-{opt restrict(expression)} this restricts calculation of the the observed and reference 
+{opt restrict(expression)} this restricts calculation of the observed and reference 
 proportions (when using the {cmd: refconditional()} option) to those defined by 
-{it:expression}. Note that values are still obtained for individuals not satisfying 
-the expression, but they are not included in the calculation.
+{it:expression}. Note that weights are still obtained for individuals not satisfying 
+the expression, but they are not included in the calculation of the weights.
 The most common use is when implementing period analysis in survival analysis: 
 here we want the observed proportions to be defined based on those diagnosed in a calendar period window,
 as well as the reference proportions when using {cmd:refconditional()}.
@@ -386,7 +383,7 @@ indweights(wt5)
 {p 5 12 2}Department of Medical Epidemiology and Biostatistics{p_end}
 {p 5 12 2}Karolinska Institutet{p_end}
 {p 5 12 2}Stockholm, Sweden{p_end}
-{p 5 12 2}pclt@kreftregisteret.no{p_end}
+{p 5 12 2}paul.lambet@fhi.no{p_end}
 
 
 {title:References}

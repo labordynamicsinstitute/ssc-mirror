@@ -1,5 +1,5 @@
 {smcl}
-{* NJC 27oct2024/1nov2024/5nov2024/13aug2025}{...}
+{* NJC 27oct2024/1nov2024/5nov2024/15nov2024/13aug2025/28sep2025/11oct2025/19nov2025}{...}
 
 {cmd:help cisets}
 {hline}
@@ -454,31 +454,37 @@ for the point estimates within.
 for automating axis labels.  
 
 {pstd}The approach to correlation confidence intervals of Cox (2008) is 
-broadly similar. See also {help pctilesets} or {help momentsets} or 
-{help lmomentsets} if installed.
+broadly similar. See also {help pctilesets} or {help quantilesets} or 
+{help momentsets} or {help lmomentsets} if installed.
 
-{pstd}In statistical graphics, showing confidence intervals {c -} or their 
-antecedents and relatives under various names such as error bars {c -} has 
-a history over decades, if not centuries. That history does not seem well 
-documented. 
+{pstd}In statistical graphics, showing confidence intervals {c -} or
+their antecedents and relatives under various names such as error bars
+{c -} has a history over decades, if not centuries. That history does
+not seem well documented. The accompanying paper flags display of
+intervals based on probable errors on a combined histogram and dot or
+strip plot by Wood and Stratton (1910, p.427).  A similar device with
+intervals of one probable error on histograms was used by Brunt (1917,
+1931),
 
-{pstd}In terms of Stata's own {cmd:twoway} commands, use of something like 
-{help scatter} to show a point estimate as a point or marker symbol is very 
-common, but not universal. Some authors argue that the importance of showing 
-estimates as intervals means that a point symbol should be suppressed. More 
-frequently, bars usually starting at zero are used to show point estimates. 
-When combined with capped or uncapped spikes, as mentioned just below, such 
-plots have been described pejoratively as dynamite, detonator or plunger plots 
-and often deplored. 
+{pstd}In terms of Stata's own {cmd:twoway} commands, use of something
+like {help scatter} to show a point estimate as a point or marker symbol
+is very common, but not universal. Some authors argue that the
+importance of showing estimates as intervals means that a point symbol
+should be suppressed. More frequently, bars usually starting at zero are
+used to show point estimates.  When combined with capped or uncapped
+spikes, as mentioned just below, such plots have been described
+pejoratively as dynamite, detonator or plunger plots and often deplored. 
 
-{pstd}Otherwise, showing the intervals with capped spikes using something 
-like {help twoway rcap} seems the most common style; showing uncapped spikes 
-using something like {help twoway rspike} next most common; and showing range bars, 
-whether coloured or blank, using something like {help twoway rbar} seems less 
-common than either of those. The choice may seem a matter of style or personal
-preference unless there is evidence that any form is most effective. 
-Wilkinson (1999, 2005) gives examples of all, including range bars. 
-See also Wilkinson (2006) on Pareto dot plots. 
+{pstd}Otherwise, showing the intervals with capped spikes using
+something like {help twoway rcap} seems the most common style; showing
+uncapped spikes using something like {help twoway rspike} next most
+common; and showing range bars, whether coloured or blank, using
+something like {help twoway rbar} seems less common than either of
+those. The choice may seem a matter of style or personal preference
+unless there is evidence that any form is most effective.  Wilkinson
+(1999, 2005) gives examples of all, including range bars.  See also
+Wilkinson (2006) on Pareto dot plots and Wilkinson (2023) more
+generally. 
 
 {pstd}The command {cmd:qplot} is used in examples: see Cox (1999, 2005) 
 and search for updates. By default the horizontal axis is a probability 
@@ -516,7 +522,6 @@ may be specified to tune listing of the confidence interval set.
 Stata dataset. The suboption {cmd:, replace} must be specified to overwrite
 an existing dataset. 
 
-
 {it:Option allowed with the variables syntax}
 
 {phang}
@@ -531,21 +536,18 @@ As a convenience for people familiar with that term, or with other
 syntax used to this effect, {cmd:cw} and {cmd:allobs} are allowed 
 as synonyms. 
 
-
-{it:Option compulsory with the groups syntax}
+{it:Option required with the groups syntax}
 
 {phang}
 {opt over(groupvar)} must be specified to name the group variable. 
 Distinct groups of observations on {it:groupvar} will be used 
 to determine confidence intervals for the main variable specified. 
 
-
 {it:Option allowed with the groups syntax}
 
 {phang}
 {opt total} may be used with {opt over(groupvar)}. It specifies that in addition
 to output for each group, output be added for all groups combined.
-
 
 {it:Options allowed with} {cmd:cisets mean}
 
@@ -561,7 +563,6 @@ to specify {opt poisson} if you specify {opt exposure()};
 {opt poisson} is assumed. {it:varname} contains the total exposure (typically a
 time or an area) during or over which the number of events recorded was
 observed.
-
 
 {it:Options allowed with} {cmd:cisets proportions}
 
@@ -586,7 +587,6 @@ as Clopper-Pearson) binomial confidence intervals.
 {phang}
 {opt jeffreys} specifies calculation of Jeffreys confidence intervals.
 
-
 {it:Options allowed with} {cmd:cisets variances}
 
 {phang}
@@ -597,7 +597,6 @@ calculated. The default is to compute confidence intervals for variances.
 {opt bonett} specifies that Bonett confidence intervals be calculated.
 The default is to compute normal-based confidence intervals, which assume
 normality for the data.
-
 
 {it:Options allowed with} {cmd:cisets centile}
 
@@ -630,47 +629,47 @@ on the sample mean and standard deviation, and it assumes normality.
 
 {phang}{cmd:. sysuse auto, clear}{p_end}
 
-{phang}{cmd:. cisets mean mpg, over(rep78) saving(foo, replace)}{p_end}
-{phang}{cmd:. d using foo}{p_end}
+{phang}{cmd:. cisets mean mpg, over(rep78) saving(results, replace)}{p_end}
+{phang}{cmd:. d using results}{p_end}
 
-{phang}{cmd:. cisets mean mpg price weight, saving(foo, replace)}{p_end}
-{phang}{cmd:. d using foo}{p_end}
+{phang}{cmd:. cisets mean mpg price weight, saving(results, replace)}{p_end}
+{phang}{cmd:. d using results}{p_end}
 
-{phang}{cmd:. cisets prop foreign, over(rep78) jeffreys saving(foo, replace)}{p_end}
-{phang}{cmd:. d using foo}{p_end}
+{phang}{cmd:. cisets prop foreign, over(rep78) jeffreys saving(results, replace)}{p_end}
+{phang}{cmd:. d using results}{p_end}
 
-{phang}{cmd:. cisets prop foreign, jeffreys saving(foo, replace)}{p_end}
-{phang}{cmd:. d using foo}{p_end}
+{phang}{cmd:. cisets prop foreign, jeffreys saving(results, replace)}{p_end}
+{phang}{cmd:. d using results}{p_end}
 
-{phang}{cmd:. cisets var mpg, over(rep78) saving(foo, replace)}{p_end}
-{phang}{cmd:. d using foo}{p_end}
+{phang}{cmd:. cisets var mpg, over(rep78) saving(results, replace)}{p_end}
+{phang}{cmd:. d using results}{p_end}
 
-{phang}{cmd:. cisets var mpg price weight, saving(foo, replace)}{p_end}
-{phang}{cmd:. d using foo}{p_end}
+{phang}{cmd:. cisets var mpg price weight, saving(results, replace)}{p_end}
+{phang}{cmd:. d using results}{p_end}
 
-{phang}{cmd:. cisets gmean mpg, over(rep78) saving(foo, replace)}{p_end}
-{phang}{cmd:. d using foo}{p_end}
+{phang}{cmd:. cisets gmean mpg, over(rep78) saving(results, replace)}{p_end}
+{phang}{cmd:. d using results}{p_end}
 
-{phang}{cmd:. cisets gmean mpg price weight, saving(foo, replace)}{p_end}
-{phang}{cmd:. d using foo}{p_end}
+{phang}{cmd:. cisets gmean mpg price weight, saving(results, replace)}{p_end}
+{phang}{cmd:. d using results}{p_end}
 
-{phang}{cmd:. cisets hmean mpg, over(rep78) saving(foo, replace)}{p_end}
-{phang}{cmd:. d using foo}{p_end}
+{phang}{cmd:. cisets hmean mpg, over(rep78) saving(results, replace)}{p_end}
+{phang}{cmd:. d using results}{p_end}
 
-{phang}{cmd:. cisets hmean mpg price weight, saving(foo, replace)}{p_end}
-{phang}{cmd:. d using foo}{p_end}
+{phang}{cmd:. cisets hmean mpg price weight, saving(results, replace)}{p_end}
+{phang}{cmd:. d using results}{p_end}
 
-{phang}{cmd:. cisets centile mpg, over(rep78) saving(foo, replace)}{p_end}
-{phang}{cmd:. d using foo}{p_end}
+{phang}{cmd:. cisets centile mpg, over(rep78) saving(results, replace)}{p_end}
+{phang}{cmd:. d using results}{p_end}
 
-{phang}{cmd:. cisets centile mpg price weight, saving(foo, replace)}{p_end}
-{phang}{cmd:. d using foo}{p_end}
+{phang}{cmd:. cisets centile mpg price weight, saving(results, replace)}{p_end}
+{phang}{cmd:. d using results}{p_end}
 
-{phang}{cmd:. cisets centile mpg price weight, centile(75) saving(foo, replace)}{p_end}
-{phang}{cmd:. d using foo}{p_end}
+{phang}{cmd:. cisets centile mpg price weight, centile(75) saving(results, replace)}{p_end}
+{phang}{cmd:. d using results}{p_end}
 
-{phang}{cmd:. cisets centile mpg, over(rep78) total saving(foo, replace)}{p_end}
-{phang}{cmd:. u foo, clear}{p_end}
+{phang}{cmd:. cisets centile mpg, over(rep78) total saving(results, replace)}{p_end}
+{phang}{cmd:. u results, clear}{p_end}
 
 {phang}{cmd:. replace statname = "median"}{p_end}
 
@@ -699,8 +698,8 @@ on the sample mean and standard deviation, and it assumes normality.
 {pstd}{cmd:  xla(1/6, valuelabel) xsc(r(0.5, 6.5)) legend(off) ytitle("`=varlabel'") subtitle("`=statname's: `=level'% confidence intervals", place(w)) name(CI4, replace)}{p_end}
 
 {phang}{cmd:. webuse citytemp, clear}{p_end}
-{phang}{cmd:. cisets mean heatdd, over(division) saving(foo, replace)}{p_end}
-{phang}{cmd:. u foo}{p_end}
+{phang}{cmd:. cisets mean heatdd, over(division) saving(results, replace)}{p_end}
+{phang}{cmd:. u results}{p_end}
 
 {phang}{cmd:. myaxis group2=group, sort(mean point)}{p_end}
 {pstd}{cmd:. twoway rspike ub lb group2 || scatter point group2, pstyle(p1) xla(1/9, valuelabel tlc(none))}{p_end}
@@ -708,11 +707,11 @@ on the sample mean and standard deviation, and it assumes normality.
 
 {phang}{cmd:. sysuse auto, clear}{p_end}
 
-{phang}{cmd:. cisets gmean price, over(foreign) saving(foo, replace)}{p_end}
+{phang}{cmd:. cisets gmean price, over(foreign) saving(results, replace)}{p_end}
 
 {phang}{cmd:. clonevar origgvar=foreign}{p_end}
 
-{phang}{cmd:. merge m:1 origgvar using foo}{p_end}
+{phang}{cmd:. merge m:1 origgvar using results}{p_end}
 
 {phang}{cmd:. gen where = 1}{p_end}
 
@@ -730,6 +729,14 @@ n.j.cox@durham.ac.uk
 
 
 {title:References}
+
+{phang}Brunt, D. 1917. 
+{it:The Combination of Observations.} 
+London: Cambridge Unversity Press. 
+
+{phang}Brunt, D. 1931. 
+{it:The Combination of Observations.} 
+London: Cambridge Unversity Press. 
 
 {phang}Cox, N. J. 1999. 
 Quantile plots, generalized.
@@ -765,6 +772,15 @@ New York: Springer. See pp.102, 131, 218, 220, 461, 470, 478, 479, 480, 481, 522
 
 {phang}Wilkinson, L. 2006. 
 Revising the Pareto chart.  {it:American Statistician} 60: 332{c -}334.
+
+{phang}Wilkinson, L. 2023. 
+Graphic displays of data. 
+In Cooper, H. (ed.) {it:APA Handbook of Research Methods in Psychology. Volume 3: Data Analysis and Research Publication.}
+Washington, DC: American Psychological Association, 77{c -}110. 
+
+{phang}Wood, T. B. and F. J. M. Stratton. 1910. 
+The interpretation of statistical results. 
+{it:Journal of Agricultural Science} 3: 417{c -}440. 
 
 
 {title:Also see}

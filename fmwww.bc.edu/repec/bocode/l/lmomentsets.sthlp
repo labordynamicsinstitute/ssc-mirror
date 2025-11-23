@@ -1,5 +1,5 @@
 {smcl}
-{* NJC 10apr2025/1may2025/14aug2025}{...}
+{* NJC 10apr2025/1may2025/14aug2025/31aug2025/19nov2025}{...}
 
 {cmd:help lmomentsets}
 {hline}
@@ -255,7 +255,8 @@ is a standard for considering distribution shape.
 for automating axis labels. 
 
 {pstd}The approach to correlation confidence intervals of Cox (2008) is 
-broadly similar. See also {help cisets}, {help momentsets} or {help pctilesets} if installed. 
+broadly similar. See also {help cisets}, {help momentsets}, {help pctilesets} 
+or {help quantilesets} if installed. 
 
 {title:{it:Leads to the literature}} 
 
@@ -281,7 +282,6 @@ may be specified to tune listing of the results set.
 Stata dataset. The suboption {cmd:, replace} must be specified to overwrite
 an existing dataset. 
 
-
 {it:Option allowed with the variables syntax}
 
 {phang}
@@ -296,14 +296,12 @@ As a convenience for people familiar with that term, or with other
 syntax used to this effect, {cmd:cw} and {cmd:allobs} are allowed 
 as synonyms. 
 
-
-{it:Option compulsory with the groups syntax}
+{it:Option required with the groups syntax}
 
 {phang}
 {opt over(groupvar)} must be specified to name the group variable. 
 Distinct groups of observations on {it:groupvar} will be used 
 to produce separate results for the main variable specified. 
-
 
 {it:Option allowed with the groups syntax}
 
@@ -344,6 +342,11 @@ n.j.cox@durham.ac.uk
 Allenby, R. B. J. T., and A. Slomson. 2011.
 {it:How to Count: An Introduction to Combinatorics}. 
 Boca Raton, FL: CRC Press.
+
+{phang}
+Clarke, R. T. 1994. 
+{it:Statistical Modelling in Hydrology.}
+Chichester: John Wiley.
 
 {phang}Cox, N. J. 2008. 
 Speaking Stata: Correlation with confidence, or Fisher's z revisited.

@@ -1,4 +1,4 @@
-*! version 1.3.9 2025-10-20
+*! version 1.4.1 2025-11-20
   
 program define stpp, rclass sortpreserve
   version 16.0
@@ -112,8 +112,8 @@ program define stpp, rclass sortpreserve
       }
     }
     if "`crudeprob'`allcause'" != "" {
-      di as error "You can't use the standstrata option with all-cause or crude probabilities"       
-      di as error "You could use the indweight() options as an alternative"
+      di as error "You can't use the standstrata() option with all-cause or crude probabilities"       
+      di as error "You could use the indweights() option as an alternative"
       exit 198
     }
     if `: list standstrata in by' {
@@ -193,7 +193,6 @@ program define stpp, rclass sortpreserve
       exit 198
     }
   }
-
 // frames
   if "`frame'" != "" {
     if "`list'" == "" {
@@ -207,7 +206,6 @@ program define stpp, rclass sortpreserve
     frame drop `resframe'
   }  
   
-
 *******************	
 // popmort file ///
 *******************
@@ -236,7 +234,7 @@ program define stpp, rclass sortpreserve
 
     mata: st_local("using2exists",strofreal(fileexists(st_local("using2filename"))))
     if !`using2exists' {
-      di as error "File `using2' does not exist"
+      di as error "File `using2filename' does not exist"
       exit 198
     }
     local pmage2 = cond("`pmage2'"== ".","",cond("`pmage2'"== "","`pmage'","`pmage2'")) 
@@ -295,7 +293,7 @@ program define stpp, rclass sortpreserve
 	                     inrange(`pmage2',`minage',`maxattage') `inrangepmyear2'
     frame `popmort2frame': qui count
     if `r(N)'==0 {
-      di as error "popmort2() file has no observation after restrictions - check syntax."
+      di as error "popmort2() file has no observations after restrictions - check syntax."
       di as error "You may want to use pmyear2(.) and/or pmother2(.) if"              
       di as error "popmort file does not vary by year / other covariates."
       exit 198
@@ -304,9 +302,7 @@ program define stpp, rclass sortpreserve
       Check_popmort_levels if `touse', pmother(`pmother2') popmortframe(`popmort2frame')
     }
   } 
-	
   mata: stpp()
-
   return add
   
   if "`list'" != ""  {
@@ -327,7 +323,6 @@ program define stpp, rclass sortpreserve
 	    }
 	  }
   }  
-  
 
   // merge in results  
   tempvar tmplink
@@ -338,37 +333,10 @@ program define stpp, rclass sortpreserve
     frame drop stpp_tmpdataframe
   }
   
-  
-  
 // add further details to frame
 if "`frame'" != "" {
-  tempfile Natrisk
-  
-  summ _t if `touse', meanonly
-  local tmax `r(max)'
-  foreach n in `list' {
-    if `n'<=`tmax' local list2 `list2' `n'
-  }
-  qui sts list if `touse', by(`by') atrisk0 risktable(`list2') saving(`Natrisk')
-  
-  tempname Natrisk_frame
-  frame create `Natrisk_frame'
-  frame `Natrisk_frame' {
-    use `Natrisk'
-    qui replace time = float(time)
-    keep `by' time at_risk
-  }  
-  frame `resframe' {    
-    qui replace time = float(time)
-    qui frlink 1:1 `by' time, frame(`Natrisk_frame')
-    qui frget Natrisk = at_risk, from(`Natrisk_frame')
-    qui replace Natrisk = 0 if Natrisk ==.
-    order `by' time Natrisk
-  }
   char _dta[cmd] stpp `0'
-  qui findfile stpp.ado
 }  
-  
   
 
 *******************
@@ -396,7 +364,6 @@ if "`inccens'"=="" {
     quietly bysort `by' `touse'  (_t `d0'): replace `v' = `v'[_n-1] if `v' >= . & `touse' 
   }
 }
-
 
   
 *******************
@@ -784,8 +751,8 @@ struct stpp_info {
                         lambda_all_t,          // contribution to all cause each time
                         lambda_all_t_var,      // contribution to all cause var each time
                         lambda_pop1_t,         // contribution to exp mort each time (popmort1)
-                        lambda_pop2_t          // contribution to exp mort each time (popmort2)
-                        
+                        lambda_pop2_t,         // contribution to exp mort each time (popmort2)
+                        Nrisk_s_t              // Number at risk at each time point
 
 // Needed by other functions
   real         matrix   attage,                // attained agediag
@@ -803,6 +770,7 @@ struct stpp_info {
   
   transmorphic matrix   RS_PP,                 // PP results
                         RS_PP_var,             // PP variance
+                        Nrisk,                 // Number at risk
                         AC,                    // AC results
                         AC_var,                // AC variance
                         CP_can,                // Crude Prob (cancer) results
@@ -813,6 +781,7 @@ struct stpp_info {
 // Results for list
   transmorphic matrix   RS_list_matrix,        // RS results at list values
                         RS_list_var,           // RS var at list values
+                        Nrisk_list,            // Number at risk at list values
                         AC_list_matrix,        // AC results at list values
                         AC_list_var,           // RS var at list values
                         CP_can_list_matrix,    // CP_can results at list values
@@ -1037,6 +1006,7 @@ function PP_Get_stpp_info()
   S.lambda_all_t_var = asarray_create("real",S.Nbyvars:+1)
   S.lambda_pop1_t    = asarray_create("real",S.Nbyvars:+1)
   S.lambda_pop2_t    = asarray_create("real",S.Nbyvars:+1)
+  S.Nrisk_s_t        = asarray_create("real",S.Nbyvars:+1)
 
   if(S.verbose) display("Finished setting up structure")
   return(S)  
@@ -1177,18 +1147,19 @@ void function PP_read_popmort(struct stpp_info scalar S)
 void function PP_Gen_estimates(struct stpp_info scalar   S)
 {
   real matrix byselect, byselect_ind, lambda_e_tmp, lambda_e_tmp_var,
-              lambda_all_tmp, lambda_all_tmp_var, lambda_pop1_tmp_var,
+              lambda_all_tmp, lambda_all_tmp_var, 
               lambda_pop1_tmp, lambda_pop2_tmp,
+              Nrisk_j,
               t_rates_start, y, 
               expcumhaz, expcumhaz2,
               t_by, t0_by, d_by, agediag_by, datediag_by,
               indweights_by, 
               exprates,exprates2,
               expsurv_tj, expsurv2_tj,
-              died_tj, atrisk, atrisk_index, exprates_index,
+              died_tj, atrisk_index, exprates_index,
               wt_atrisk, N_wt, Y_wt, v1, v2,
               died_tj_select, Ndied_tj,
-              tmpattyear, tmpselect, bob
+              tmpattyear, tmpselect, tmp
  
   real scalar Nuniq, tj, tstart_j,
               s, k, j, sumatrisk 
@@ -1207,7 +1178,6 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
         lambda_all_tmp      = J(S.Nunique_t_sk[s,k],1,.)
         lambda_all_tmp_var  = J(S.Nunique_t_sk[s,k],1,.)
         lambda_pop1_tmp     = J(S.Nunique_t_sk[s,k],1,.)
-        lambda_pop1_tmp_var = J(S.Nunique_t_sk[s,k],1,.)
       }
       if(S.haspopmort2) lambda_pop2_tmp = J(S.Nunique_t_sk[s,k],1,.)
       else expsurv2_tj = 1
@@ -1215,6 +1185,7 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
       if(S.Nunique_t_sk[s,k]:==1) t_rates_start = 0
       else t_rates_start = (0\asarray(S.unique_t_sk,(s,k))[|1 \ (S.Nunique_t_sk[s,k]:-1)|])
       y = asarray(S.unique_t_sk,(s,k)) :- t_rates_start
+      Nrisk_j       = J(S.Nobs_by_sk[s,k],1,.)
       expcumhaz     = J(S.Nobs_by_sk[s,k],1,0)
       if(S.haspopmort2) expcumhaz2 = J(S.Nobs_by_sk[s,k],1,0)
 
@@ -1282,9 +1253,13 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
         if(!S.ederer2) wt_atrisk = (indweights_by[atrisk_index]:*expsurv2_tj):/expsurv_tj        
         else wt_atrisk = indweights_by[atrisk_index]:*expsurv2_tj     
 
+        
+        Nrisk_j[j] = rows(wt_atrisk)
+        
         if(cols(died_tj_select)) {
-          N_wt = quadcolsum(wt_atrisk[died_tj_select])
-          v1   = quadcolsum((wt_atrisk[died_tj_select]:^2))
+          tmp = wt_atrisk[died_tj_select]
+          N_wt = quadcolsum(tmp)
+          v1   = quadcolsum(tmp:^2)
         }
         else {
           N_wt = 0
@@ -1295,15 +1270,13 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
         if(!S.dropexpected) lambda_e_tmp[j] = (N_wt - quadcolsum(wt_atrisk:*exprates[exprates_index]))/Y_wt
         else lambda_e_tmp[j] = (N_wt)/Y_wt
 
-        if(!S.dropexpected) lambda_e_tmp[j] = (N_wt - quadcolsum(wt_atrisk:*exprates[exprates_index]))/Y_wt
-        else lambda_e_tmp[j] = (N_wt)/Y_wt
         lambda_e_tmp_var[j] = (v1/(Y_wt:^2))
 
 // Crude probabilities and allcause
         if(S.hascrudeprob | S.hasallcause) {
           if(!S.haspopmort2) { 
             sumatrisk             =  quadcolsum(indweights_by[atrisk_index])
-            if(sum(died_tj_select)) {
+            if(any(died_tj_select)) {
               Ndied_tj  =  quadcolsum((indweights_by[atrisk_index])[died_tj_select])
               v2        =  quadcolsum((indweights_by[atrisk_index])[died_tj_select]:^2)
             }
@@ -1324,9 +1297,10 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
         }
       }
 
-// Store contribution to cumulative hazards      
+// Store contribution to cumulative hazards    
       asarray(S.lambda_e_t,    (s,S.bylevels[k,]),(lambda_e_tmp))
       asarray(S.lambda_e_t_var,(s,S.bylevels[k,]),(lambda_e_tmp_var))
+      asarray(S.Nrisk_s_t,(s,S.bylevels[k,]),Nrisk_j)
       if(S.hascrudeprob | S.hasallcause) {
       	asarray(S.lambda_all_t, (s,S.bylevels[k,]),(lambda_all_tmp))
       	asarray(S.lambda_all_t_var, (s,S.bylevels[k,]),(lambda_all_tmp_var))
@@ -1356,7 +1330,7 @@ real matrix PP_gen_exprates(struct stpp_info scalar   S,
                             real             matrix   tmpattyear)
 
 {  
-  real matrix  exprates, rateindex, pmotherselect 
+  real matrix  exprates, rateindex, pmotherselect, tmppm 
   real scalar  p, b, yminmax, ymin, ymax
   
   real matrix tmpexprates, tmpattage, tmpattyear_pmo
@@ -1369,7 +1343,7 @@ real matrix PP_gen_exprates(struct stpp_info scalar   S,
 
   for(p=1;p<=S.Npmoth_levels[1,pmnumber];p++) {
     pmotherselect = rowsum(asarray(S.pmothervars_by,pmnumber)[S.atrisk_all_index,] :== 
-                    asarray(S.pmoth_levels,pmnumber)[p,]):==S.Npmother[pmnumber] //:& S.atrisk_all[S.atrisk_all_index]
+                    asarray(S.pmoth_levels,pmnumber)[p,]):==S.Npmother[pmnumber] 
 
     pmotherselect = selectindex(pmotherselect) 
     tmpexprates = exprates[pmotherselect] 
@@ -1377,14 +1351,14 @@ real matrix PP_gen_exprates(struct stpp_info scalar   S,
 
     // some speed gains counting backwards
     tmpattyear_pmo = tmpattyear[pmotherselect]
-
+    tmppm = asarray(pm,asarray(S.pmoth_levels,pmnumber)[p,])
     for(b=ymax;b>=ymin;b--) {
        rateindex = selectindex((tmpattyear_pmo:==b))
-       if(cols(rateindex)) tmpexprates[rateindex] = asarray(pm,asarray(S.pmoth_levels,pmnumber)[p,])[tmpattage[rateindex] , b]
+       if(cols(rateindex)) tmpexprates[rateindex] = tmppm[tmpattage[rateindex] , b]
      } 
- 
-    exprates[pmotherselect] = tmpexprates
+     exprates[pmotherselect] = tmpexprates
    } 
+ 
   return(exprates)
 }   
 
@@ -1422,11 +1396,9 @@ void function PP_Gen_cumulative_standstrata(struct stpp_info scalar S)
 {
   real scalar zz, k, s, Nuniq, j, tj
   
-  real matrix allcause, 
-              tmpmat, tmpmat_v, closesttindex, RS_tmp, RS_tmp_v,
-              allcause_lag, lambda_c,
-              tmp_CP_t_s, lambda_all_t_var  
+  real matrix tmpmat, tmpmat_v, closesttindex, RS_tmp, RS_tmp_v
               
+  S.Nrisk      = asarray_create("real",1)
   S.RS_PP      = asarray_create("real",1)
   S.RS_PP_var  = asarray_create("real",1)
   S.AC     = asarray_create("real",1)
@@ -1444,12 +1416,14 @@ void function PP_Gen_cumulative_standstrata(struct stpp_info scalar S)
         closesttindex = selectindex(asarray(S.unique_t_sk,(s,k)):==tj)
         if(rows(closesttindex)!=0) {
           tmpmat[j,s]   = asarray(S.lambda_e_t,(s,S.bylevels[k,]))[closesttindex] 
-          tmpmat_v[j,s] = asarray(S.lambda_e_t_var,(s,S.bylevels[k,]))[closesttindex]  
+          tmpmat_v[j,s] = asarray(S.lambda_e_t_var,(s,S.bylevels[k,]))[closesttindex]
         }
       }
       tmpmat[,s]   = quadrunningsum(tmpmat[,s])
       tmpmat_v[,s] = ((exp(-tmpmat[,s]):^2):*quadrunningsum(tmpmat_v[,s]))
-  }
+    }
+    
+
   // ADD AC AND CP HERE??
   
   RS_tmp   = J(Nuniq,1,0)
@@ -1472,16 +1446,17 @@ void function PP_Gen_cumulative_standstrata(struct stpp_info scalar S)
 ///////////////////////////////////
 void function PP_Gen_cumulative_indweights(struct stpp_info scalar S)
 {
-  real scalar zz, k, s, Nuniq, j, tj
+  real scalar zz, k, Nuniq, j
   
   real matrix allcause, 
-              tmpmat, tmpmat_v, qqq, RS_tmp, RS_tmp_v,
+              tmpmat, tmpmat_v, 
               allcause_lag, lambda_c,
-              tmp_CP_t_s, lambda_all_t_var
+              lambda_all_t_var
 
               
   S.RS_PP      = asarray_create("real",1)
   S.RS_PP_var  = asarray_create("real",1)
+  S.Nrisk      = asarray_create("real",1)
   S.AC         = asarray_create("real",1)
   S.AC_var     = asarray_create("real",1)
   S.CP_can     = asarray_create("real",1)
@@ -1492,6 +1467,7 @@ void function PP_Gen_cumulative_indweights(struct stpp_info scalar S)
   
 
   for(k=1;k<=S.Nbylevels;k++) {
+    asarray(S.Nrisk,k,asarray(S.Nrisk_s_t,(1,S.bylevels[k,])))
     asarray(S.RS_PP_var,k,quadrunningsum(asarray(S.lambda_e_t_var,(1,S.bylevels[k,]))))
     
     // Marginal RS
@@ -1620,21 +1596,21 @@ real matrix function PP_loglog_tran_var(real matrix x,
 
 void function PP_Write_list_results(struct stpp_info scalar   S)
 {
-  real matrix         RS_tmplist, AC_tmplist, CP_can_tmplist, CP_oth_tmplist, 
+  real matrix         RS_tmplist, AC_tmplist, 
+                      CP_can_tmplist, CP_oth_tmplist, 
                       tindex, tminindex, tmp,
                       RS_tmplist_var, AC_tmplist_var, 
                       CP_can_tmplist_var, CP_oth_tmplist_var
 
-  real scalar         i, k, j, zz
+  real scalar         i, k, Natrisk_time0, tj, Natrisktmp, Natrisk_time_tj
   
-  string matrix       newvars
- 
   if(!S.haslist) return
-  zz = invnormal(0.5*(1+S.level))              
 
 // create output list
   S.RS_list_matrix = asarray_create("real",1)
   S.RS_list_var    = asarray_create("real",1)
+  S.Nrisk_list     = asarray_create("real",1)
+  
   if(S.hasallcause)  {
     S.AC_list_matrix     = asarray_create("real",1)
     S.AC_list_var    = asarray_create("real",1)
@@ -1658,44 +1634,56 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
 // create upper and lower bounds at list times
 // Note variance is stored, so can be used later for contrasts
   for(k=1;k<=S.Nbylevels;k++) {
-    RS_tmplist         = J(S.Nlist,4,.)
+    RS_tmplist         = J(S.Nlist,5,.)
     RS_tmplist_var     = J(S.Nlist,1,.)
-    AC_tmplist         = J(S.Nlist,4,.)
+    AC_tmplist         = J(S.Nlist,5,.)
     AC_tmplist_var     = J(S.Nlist,1,.)
-    CP_can_tmplist     = J(S.Nlist,4,.)
+    CP_can_tmplist     = J(S.Nlist,5,.)
     CP_can_tmplist_var = J(S.Nlist,1,.)
-    CP_oth_tmplist     = J(S.Nlist,4,.)
+    CP_oth_tmplist     = J(S.Nlist,5,.)
     CP_oth_tmplist_var = J(S.Nlist,1,.)
+    
+    // get Number at risk at time 0
+    Natrisk_time0 = PP_Natrisk_time0(S,k)
+  
     for(i=1;i<=S.Nlist;i++) {
       tindex = selectindex(asarray(S.unique_t_k,k):<=S.list[i])
-      minindex(S.list[i]:-asarray(S.unique_t_k,k)[tindex],1,tminindex,tmp=.)
+      tj = asarray(S.unique_t_k,k)[tindex]
+      if(S.hasstandstrata) {
+        Natrisk_time_tj = PP_Natrisk_time_tj(S,k,S.list[i])
+      }
+      minindex(S.list[i]:-asarray(S.unique_t_k,k)[tindex],1,tminindex=.,tmp=.)
+      if(S.hasstandstrata) Natrisktmp = Natrisk_time_tj
+      else Natrisktmp = asarray(S.Nrisk,k)[tminindex,]
+      
       if(S.list[i]<=asarray(S.maxt_k,k) & S.list[i]>=asarray(S.mint_k,k)) {
-        RS_tmplist[i,]    = (S.list[i],asarray(S.RS_PP, k)[tminindex,])
+        
+        RS_tmplist[i,]    = (S.list[i],Natrisktmp,asarray(S.RS_PP, k)[tminindex,])
         RS_tmplist_var[i] = asarray(S.RS_PP_var, k)[tminindex,]
         if(S.hasallcause)  {
-          AC_tmplist[i,]     = (S.list[i],asarray(S.AC, k)[tminindex,])    
+          AC_tmplist[i,]     = (S.list[i],Natrisktmp,asarray(S.AC, k)[tminindex,])    
           AC_tmplist_var[i] = asarray(S.AC_var, k)[tminindex,]
         }
         if(S.hascrudeprob) {
-          CP_can_tmplist[i,] = (S.list[i],asarray(S.CP_can, k)[tminindex,])  
+          CP_can_tmplist[i,] = (S.list[i],Natrisktmp,asarray(S.CP_can, k)[tminindex,])  
           CP_can_tmplist_var[i] = asarray(S.CP_can_var, k)[tminindex,]
         }
         if(S.CP_calcother) {
-          CP_oth_tmplist[i,]    = (S.list[i],asarray(S.CP_oth, k)[tminindex,])
+          CP_oth_tmplist[i,]    = (S.list[i],Natrisktmp,asarray(S.CP_oth, k)[tminindex,])
           CP_oth_tmplist_var[i] = asarray(S.CP_oth_var, k)[tminindex,]
         }
       }
       else if(S.list[i]<asarray(S.mint_k,k)) {
-        if(S.hasdeathprob) RS_tmplist[i,] = (S.list[i],0,0,0)
-        else RS_tmplist[i,] = (S.list[i],1,1,1)
+        if(S.hasdeathprob) RS_tmplist[i,] = (S.list[i],Natrisk_time0,0,0,0)
+        else RS_tmplist[i,] = (S.list[i],Natrisk_time0,1,1,1)
         RS_tmplist_var[i] = 0
         if(S.hasallcause)  {
           AC_tmplist_var[i] = 0
-          if(S.hasdeathprob) AC_tmplist[i,] = (S.list[i],0,0,0)    
-          else AC_tmplist[i,] = (S.list[i],1,1,1)    
+          if(S.hasdeathprob) AC_tmplist[i,] = (S.list[i],Natrisk_time0,0,0,0)    
+          else AC_tmplist[i,] = (S.list[i],Natrisk_time0,1,1,1)    
         }
-        if(S.hascrudeprob) CP_can_tmplist[i,] = (S.list[i],0,0,0)  
-        if(S.CP_calcother) CP_oth_tmplist[i,] = (S.list[i],0,0,0)        
+        if(S.hascrudeprob) CP_can_tmplist[i,] = (S.list[i],Natrisk_time0,0,0,0)  
+        if(S.CP_calcother) CP_oth_tmplist[i,] = (S.list[i],Natrisk_time0,0,0,0)        
       }
       else {
         RS_tmplist[i,1] = (S.list[i])
@@ -1721,22 +1709,22 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
         }
       }
     }
-    
+
     asarray(S.RS_list_matrix,k,RS_tmplist)
     if(S.hasallcause)  asarray(S.AC_list_matrix ,k,AC_tmplist)
     if(S.hascrudeprob) asarray(S.CP_can_list_matrix,k,CP_can_tmplist)
     if(S.CP_calcother) asarray(S.CP_oth_list_matrix,k,CP_oth_tmplist)
     if(S.hascontrast) {
       if(S.contrasttype=="difference") {
-        asarray(S.RS_list_var,k,((asarray(S.RS_list_matrix,k)[,2]):^2):*RS_tmplist_var)
+        asarray(S.RS_list_var,k,((asarray(S.RS_list_matrix,k)[,3]):^2):*RS_tmplist_var)
         if(S.hasallcause) {
-          asarray(S.AC_list_var,k,((asarray(S.AC_list_matrix,k)[,2]):^2):*AC_tmplist_var)
+          asarray(S.AC_list_var,k,((asarray(S.AC_list_matrix,k)[,3]):^2):*AC_tmplist_var)
         }
         if(S.hascrudeprob)  {
-          asarray(S.CP_can_list_var,k,((asarray(S.CP_can_list_matrix,k)[,2]):^2):*CP_can_tmplist_var)          
+          asarray(S.CP_can_list_var,k,((asarray(S.CP_can_list_matrix,k)[,3]):^2):*CP_can_tmplist_var)          
         }
         if(S.CP_calcother)  {
-          asarray(S.CP_oth_list_var,k,((asarray(S.CP_oth_list_matrix,k)[,2]):^2):*CP_oth_tmplist_var)          
+          asarray(S.CP_oth_list_var,k,((asarray(S.CP_oth_list_matrix,k)[,3]):^2):*CP_oth_tmplist_var)          
         }        
       }
     }    
@@ -1744,7 +1732,6 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
 
 // Calc contrasts
   if(S.hascontrast) PP_calc_list_contrast(S)
-
 
 // List results
 // Also creates results to store in matrices/frame
@@ -1784,27 +1771,27 @@ void function PP_calc_list_contrast(struct stpp_info scalar S)
       if(S.CP_calcother) asarray(S.CP_oth_list_contrast,k,J(S.Nlist,3,.))     
     }
     else {
-      diff     = asarray(S.RS_list_matrix ,k)[,2] :- asarray(S.RS_list_matrix ,tmprefindex)[,2]
+      diff     = asarray(S.RS_list_matrix ,k)[,3] :- asarray(S.RS_list_matrix ,tmprefindex)[,3]
       diff_se  = sqrt(asarray(S.RS_list_var ,k) :+ asarray(S.RS_list_var ,tmprefindex))
       diff_lci = diff :- zz:*diff_se
       diff_uci = diff :+ zz:*diff_se
       asarray(S.RS_list_contrast,k,(diff,diff_lci,diff_uci))
       if(S.hasallcause) {
-        diff     = asarray(S.AC_list_matrix ,k)[,2] :- asarray(S.AC_list_matrix ,tmprefindex)[,2]
+        diff     = asarray(S.AC_list_matrix ,k)[,3] :- asarray(S.AC_list_matrix ,tmprefindex)[,3]
         diff_se  = sqrt(asarray(S.AC_list_var ,k) :+ asarray(S.AC_list_var ,tmprefindex))
         diff_lci = diff :- zz:*diff_se
         diff_uci = diff :+ zz:*diff_se
         asarray(S.AC_list_contrast,k,(diff,diff_lci,diff_uci))        
       }
       if(S.hascrudeprob) {
-        diff     = asarray(S.CP_can_list_matrix ,k)[,2] :- asarray(S.CP_can_list_matrix ,tmprefindex)[,2]
+        diff     = asarray(S.CP_can_list_matrix ,k)[,3] :- asarray(S.CP_can_list_matrix ,tmprefindex)[,3]
         diff_se  = sqrt(asarray(S.CP_can_list_var ,k) :+ asarray(S.CP_can_list_var ,tmprefindex))
         diff_lci = diff :- zz:*diff_se
         diff_uci = diff :+ zz:*diff_se
         asarray(S.CP_can_list_contrast,k,(diff,diff_lci,diff_uci))              
       }
       if(S.CP_calcother) {
-        diff     = asarray(S.CP_oth_list_matrix ,k)[,2] :- asarray(S.CP_oth_list_matrix ,tmprefindex)[,2]
+        diff     = asarray(S.CP_oth_list_matrix ,k)[,3] :- asarray(S.CP_oth_list_matrix ,tmprefindex)[,3]
         diff_se  = sqrt(asarray(S.CP_oth_list_var ,k) :+ asarray(S.CP_oth_list_var ,tmprefindex))
         diff_lci = diff :- zz:*diff_se
         diff_uci = diff :+ zz:*diff_se
@@ -1822,7 +1809,7 @@ void function PP_calc_list_contrast(struct stpp_info scalar S)
 /////////////////////////////
 void function PP_calc_return_matrices(struct stpp_info scalar S)
 {
-  string scalar  rmatname, bytext
+  string scalar  rmatname
   
   real matrix tempPP, tempAC, tempCP_can, tempCP_oth
   real matrix tempPP_contrast, tempAC_contrast, 
@@ -1833,10 +1820,10 @@ void function PP_calc_return_matrices(struct stpp_info scalar S)
   
   st_rclear()
   
-  tempPP = J(0,S.Nbyvars+4,.)
-  if(S.hasallcause) tempAC = J(0,S.Nbyvars+4,.)
-  if(S.hascrudeprob) tempCP_can = J(0,S.Nbyvars+4,.)
-  if(S.CP_calcother) tempCP_oth = J(0,S.Nbyvars+4,.)       
+  tempPP = J(0,S.Nbyvars+5,.)
+  if(S.hasallcause) tempAC = J(0,S.Nbyvars+5,.)
+  if(S.hascrudeprob) tempCP_can = J(0,S.Nbyvars+5,.)
+  if(S.CP_calcother) tempCP_oth = J(0,S.Nbyvars+5,.)       
   if(S.hascontrast) {
     tempPP_contrast = J(0,3,.)    
     if(S.hasallcause) tempAC_contrast = J(0,3,.)    
@@ -1941,10 +1928,7 @@ void function PP_print_list_results(struct stpp_info scalar S)
     }
     title1 = "Marginal Relative Survival (" + method + ")"
   }  
-  
-  
-  
-  
+ 
 
   else if(S.display=="AC") {
     outtype = &S.AC_list_matrix
@@ -1989,25 +1973,26 @@ void function PP_print_list_results(struct stpp_info scalar S)
   	printf("{txt}-> %s\n\n",bytext)
     }
    
-    printf("{txt}{space   2}Time{space   5}{c |}   " + methodshort+"{space 3}(%s{txt}%% CI)" ,strofreal(S.level*100))
+    printf("{txt}{space   2}Time{space   5}{c |}{space 2}Natrisk{space 5}" + methodshort+"{space 5}(%s{txt}%% CI)" ,strofreal(S.level*100))
     if(S.hascontrast) printf("{space 9} {c |}{space 3}Difference (%s{txt}%% CI)",strofreal(S.level*100))
     printf("\n")
-    printf("{hline 11}{c +}{hline 26}")		
+    printf("{hline 11}{c +}{hline 39}")		
     if(S.hascontrast) printf("{c +}{hline 30}")
     printf("\n")
     
     for(i=1;i<=S.Nlist;i++) {
-      printf("{res}%6.3g{space 5}{txt}{c |}{space 2}{res}%5.3f (%5.3f to %5.3f)",
+      printf("{res}%6.3g{space 5}{txt}{c |}{space 1}{res}%8.0fc{res}{space 5}%5.3f (%5.3f to %5.3f)",
       asarray(*outtype,k)[i,1],
       asarray(*outtype,k)[i,2],
       asarray(*outtype,k)[i,3],
-      asarray(*outtype,k)[i,4])
+      asarray(*outtype,k)[i,4],
+      asarray(*outtype,k)[i,5])
       if(S.hascontrast) {
         if(sum(k:==S.bylevel_isref)) {
-          printf("{space 2}{txt}{c |}{space 10}-")
+          printf("{space 3}{txt}{c |}{space 10}-")
         }
         else {
-          printf("{space 2}{txt}{c |}{space 3}{res}%6.3f (%6.3f to %6.3f)",
+          printf("{space 3}{txt}{c |}{space 3}{res}%6.3f (%6.3f to %6.3f)",
                   asarray(*conttype,k)[i,1],
                   asarray(*conttype,k)[i,2],
                   asarray(*conttype,k)[i,3])
@@ -2016,7 +2001,7 @@ void function PP_print_list_results(struct stpp_info scalar S)
       printf("\n")
   
     }
-    printf("{txt}{hline 11}{c +}{hline 26}")
+    printf("{txt}{hline 11}{c +}{hline 39}")
     if(S.hascontrast) printf("{c +}{hline 30}")
     printf("\n\n")  
   }
@@ -2040,7 +2025,7 @@ void function PP_write_frame_results(struct stpp_info scalar S)
     else if(S.ederer2) RSname = "E2"
     else RSname = "PP"
 
-    newvars = (S.byvars,"time",RSname,RSname+"_lci",RSname+"_uci")
+    newvars = (S.byvars,"time","Natrisk",RSname,RSname+"_lci",RSname+"_uci")
     (void) st_addvar("double", newvars)
     st_addobs(rows(S.RS_frame_results)) 
     st_store(.,newvars,.,S.RS_frame_results)
@@ -2048,16 +2033,16 @@ void function PP_write_frame_results(struct stpp_info scalar S)
     if(S.hasallcause) {
       newvars = ("AC","AC_lci","AC_uci")
       (void) st_addvar("double", newvars)
-      st_store(.,newvars,.,S.AC_frame_results[,(2+S.Nbyvars:*S.hasby)..cols(S.RS_frame_results)])
+      st_store(.,newvars,.,S.AC_frame_results[,(3+S.Nbyvars:*S.hasby)..cols(S.RS_frame_results)])
     }
     if(S.hascrudeprob) {
       newvars = ("CP_can","CP_can_lci","CP_can_uci")
       (void) st_addvar("double", newvars)
-      st_store(.,newvars,.,S.CP_can_frame_results[,(2+S.Nbyvars:*S.hasby)..cols(S.RS_frame_results)])
+      st_store(.,newvars,.,S.CP_can_frame_results[,(3+S.Nbyvars:*S.hasby)..cols(S.RS_frame_results)])
       if(S.CP_calcother) {
         newvars = ("CP_oth","CP_oth_lci","CP_oth_uci")
         (void) st_addvar("double", newvars)        
-        st_store(.,newvars,.,S.CP_oth_frame_results[,(2+S.Nbyvars:*S.hasby)..cols(S.RS_frame_results)])
+        st_store(.,newvars,.,S.CP_oth_frame_results[,(3+S.Nbyvars:*S.hasby)..cols(S.RS_frame_results)])
       }
     } 
     
@@ -2083,6 +2068,29 @@ void function PP_write_frame_results(struct stpp_info scalar S)
     }
     st_framecurrent(currentframe)
   }
+}
+
+// calculate number at risk at time 0 (for by group k)
+real function PP_Natrisk_time0(struct stpp_info scalar S, real scalar k)
+{
+  real matrix byselect, byselect_ind  
+  
+  byselect     = rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars 
+  byselect_ind = selectindex(byselect)
+  
+  return(sum(S.t0[byselect_ind]:==0))
+}
+
+// calculate number at risk at time tj (for by group k)
+// Only used for standstrata
+real function PP_Natrisk_time_tj(struct stpp_info scalar S, real scalar k, real scalar tj)
+{
+  real matrix byselect, byselect_ind  
+  
+  byselect     = rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars 
+  byselect_ind = selectindex(byselect)
+
+  return(sum(tj:>S.t0[byselect_ind] :& tj:<=S.t[byselect_ind]))
 }
 
 

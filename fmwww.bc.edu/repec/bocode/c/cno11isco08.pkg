@@ -1,0 +1,23 @@
+d 'CNO11ISCO08': module to convert Spanish CNO-11 occupational codes into ISCO-08 (2, 3, and 4 digits)
+d
+d  This package provides harmonisation routines to convert
+d Spain’s CNO-11 occupational classification (INE) into ISCO-08
+d at different digit levels (2, 3, and 4 digits), using the
+d official crosswalk tables published by INE.  The aim is to make
+d it easier for applied researchers working with Spanish survey or
+d administrative data to derive ISCO-based class schemes (EGP,
+d ISEI, SIOPS, Oesch/OEPS, etc.). 
+d
+d KW: data management
+d KW: occupation codes
+d KW: ISCO
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20251122
+d
+d Author: José David López Blanco, University of Bologna
+d Support: email jose.lopezblanco@@unibo.it
+d
+f cn011isco08.ado
+f cn011isco08.sthlp
