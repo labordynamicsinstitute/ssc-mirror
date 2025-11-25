@@ -8794,6 +8794,7 @@ fmwww.bc.edu/repec/bocode/_/_svm_setenv_MACINTEL64.plugin
 fmwww.bc.edu/repec/bocode/_/_svm_setenv_mac64.plugin
 fmwww.bc.edu/repec/bocode/_/_cwfcn_isco88_to_isco68.sthlp
 fmwww.bc.edu/repec/bocode/_/_svmachines_linux64.plugin
+fmwww.bc.edu/repec/bocode/_/_quantile.ado
 fmwww.bc.edu/repec/bocode/_/_isograph.ado
 fmwww.bc.edu/repec/bocode/_/_region_iso2.ado
 fmwww.bc.edu/repec/bocode/_/_cwfcn_isco88_to_siops.sthlp
@@ -11586,7 +11587,6 @@ fmwww.bc.edu/repec/bocode/q/qgamma.ado
 fmwww.bc.edu/repec/bocode/q/qqplot2.pkg
 fmwww.bc.edu/repec/bocode/q/qenvgamma.ado
 fmwww.bc.edu/repec/bocode/q/quantil2.ado
-fmwww.bc.edu/repec/bocode/q/quantil2.html
 fmwww.bc.edu/repec/bocode/q/qexp5.hlp
 fmwww.bc.edu/repec/bocode/q/qbeta4.html
 fmwww.bc.edu/repec/bocode/q/qenv_sim_chi2.ado
@@ -11598,12 +11598,10 @@ fmwww.bc.edu/repec/bocode/q/qlabel.sthlp
 fmwww.bc.edu/repec/bocode/q/qogmerge.ado
 fmwww.bc.edu/repec/bocode/q/qinvgamma.hlp
 fmwww.bc.edu/repec/bocode/q/qpfit.pkg
-fmwww.bc.edu/repec/bocode/q/qweibull4.html
 fmwww.bc.edu/repec/bocode/q/qreg2.pkg
 fmwww.bc.edu/repec/bocode/q/qcount.ado
 fmwww.bc.edu/repec/bocode/q/quantiles.pkg
 fmwww.bc.edu/repec/bocode/q/qic.pkg
-fmwww.bc.edu/repec/bocode/q/stata.toc copy 3529
 fmwww.bc.edu/repec/bocode/q/qqplot3.pkg
 fmwww.bc.edu/repec/bocode/q/qoguse.html
 fmwww.bc.edu/repec/bocode/q/qlist.hlp
@@ -11611,7 +11609,6 @@ fmwww.bc.edu/repec/bocode/q/qgb2.hlp
 fmwww.bc.edu/repec/bocode/q/qenv_ex.ado
 fmwww.bc.edu/repec/bocode/q/qll.pkg
 fmwww.bc.edu/repec/bocode/q/qlqc15.sthlp
-fmwww.bc.edu/repec/bocode/q/quickicc.html
 fmwww.bc.edu/repec/bocode/q/qqvalue.sthlp
 fmwww.bc.edu/repec/bocode/q/qlist.html
 fmwww.bc.edu/repec/bocode/q/quandl.hlp
@@ -11719,7 +11716,6 @@ fmwww.bc.edu/repec/bocode/q/qfrplot7.hlp
 fmwww.bc.edu/repec/bocode/q/qv.pkg
 fmwww.bc.edu/repec/bocode/q/qconvert.ado
 fmwww.bc.edu/repec/bocode/q/qgamma.hlp
-fmwww.bc.edu/repec/bocode/q/stata.toc copy.3B12
 fmwww.bc.edu/repec/bocode/q/quantilesets.ado
 fmwww.bc.edu/repec/bocode/q/qsub.pkg
 fmwww.bc.edu/repec/bocode/q/qlognorm.pkg
@@ -11781,7 +11777,6 @@ fmwww.bc.edu/repec/bocode/q/quaidsce_p.ado
 fmwww.bc.edu/repec/bocode/q/qsm.ado
 fmwww.bc.edu/repec/bocode/q/qexp.ado
 fmwww.bc.edu/repec/bocode/q/qexp.pkg
-fmwww.bc.edu/repec/bocode/q/stata.toc copy.3B03
 fmwww.bc.edu/repec/bocode/q/qregplot.pkg
 fmwww.bc.edu/repec/bocode/q/qv_example.ado
 fmwww.bc.edu/repec/bocode/q/qsm.hlp
@@ -11792,7 +11787,6 @@ fmwww.bc.edu/repec/bocode/q/quine.pkg
 fmwww.bc.edu/repec/bocode/q/quine.sthlp
 fmwww.bc.edu/repec/bocode/q/qhapipf.hlp
 fmwww.bc.edu/repec/bocode/q/qap.ado
-fmwww.bc.edu/repec/bocode/q/qweibull.html
 fmwww.bc.edu/repec/bocode/q/qbplot.sthlp
 fmwww.bc.edu/repec/bocode/q/qpair.sthlp
 fmwww.bc.edu/repec/bocode/q/qrprocess_p.ado
@@ -11807,7 +11801,6 @@ fmwww.bc.edu/repec/bocode/q/quaidsce_estat.ado
 fmwww.bc.edu/repec/bocode/q/qenvchi2.sthlp
 fmwww.bc.edu/repec/bocode/q/qcm.ado
 fmwww.bc.edu/repec/bocode/q/qog.sthlp
-fmwww.bc.edu/repec/bocode/q/stata.toc copy 4211
 fmwww.bc.edu/repec/bocode/q/qrowname.ado
 fmwww.bc.edu/repec/bocode/q/stata.toc
 fmwww.bc.edu/repec/bocode/q/qinvgauss.html
@@ -11823,7 +11816,6 @@ fmwww.bc.edu/repec/bocode/q/qll.html
 fmwww.bc.edu/repec/bocode/q/qll.hlp
 fmwww.bc.edu/repec/bocode/q/qvgraph.ado
 fmwww.bc.edu/repec/bocode/q/qqplotg.sthlp
-fmwww.bc.edu/repec/bocode/q/quantiles.html
 fmwww.bc.edu/repec/bocode/q/qgumbel.hlp
 fmwww.bc.edu/repec/bocode/q/qbeta.ado
 fmwww.bc.edu/repec/bocode/q/qexp5.html
@@ -21988,7 +21980,6 @@ fmwww.bc.edu/repec/bocode/p/prevent30.sthlp
 fmwww.bc.edu/repec/bocode/p/pvw.ado
 fmwww.bc.edu/repec/bocode/p/pip_cleanup.ado
 fmwww.bc.edu/repec/bocode/p/prsnperd.html
-fmwww.bc.edu/repec/bocode/p/pre.html
 fmwww.bc.edu/repec/bocode/p/petpoisson.ado
 fmwww.bc.edu/repec/bocode/p/ppssampford.sthlp
 fmwww.bc.edu/repec/bocode/p/pdfplot.ado
@@ -22053,7 +22044,6 @@ fmwww.bc.edu/repec/bocode/p/parmest_resultssets.sthlp
 fmwww.bc.edu/repec/bocode/p/propcnspoisson_e2.ado
 fmwww.bc.edu/repec/bocode/p/proprcspline_ex.ado
 fmwww.bc.edu/repec/bocode/p/panell.pkg
-fmwww.bc.edu/repec/bocode/p/pre7.html
 fmwww.bc.edu/repec/bocode/p/prodest.ado
 fmwww.bc.edu/repec/bocode/p/povimp.pdf
 fmwww.bc.edu/repec/bocode/p/pagetrend.ado
