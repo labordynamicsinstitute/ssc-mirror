@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2 || 10.06.2025 || Gordey Yastrebov}{...}
+{* *! version 1.3 || 25.11.2025 || Gordey Yastrebov}{...}
 {hi:help apcest}{...}
 {right:also see: {helpb apcbound}, {helpb apcplot}}
 {hline}
@@ -102,7 +102,8 @@ ratios instead of regular logits:
 
 {pstd}{cmd:apcest} stores all estimation results in a container called {bf:__apcest}, 
 from which {helpb apcbound} and {helpb apcplot} commands will extract all relevant
-information in post-estimation.
+information in postestimation. It also creates {bf:__apcsample} variable in the currently
+active dataset to identify the estimation sample (used by {cmd:apcplot}), analogous to {helpb estimates store} command.
 
 
 {title:Author}

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2 || 10.06.2025 || Gordey Yastrebov}{...}
+{* *! version 1.3 || 25.11.2025 || Gordey Yastrebov}{...}
 {hi:help apcbound}{...}
 {right:also see: {helpb apcest}, {helpb apcplot}}
 {hline}
@@ -127,7 +127,7 @@ but using a custom set of estimates {bf:θ₁ = α + π = -.5} and {bf:θ₂ = �
 {pstd} {cmd:apcbound} stores the following in {cmd:e()}:
 
 {p 4}Scalars{p_end}
-{p2colset 7 17 25 2}{...}
+{p2colset 7 30 25 2}{...}
 {p2col : {cmd:e(Amin)}} lower bound of the linear component of {cmd:age} effects{p_end}
 {p2col : {cmd:e(Amax)}} upper bound of the linear component of {cmd:age} effects{p_end}
 {p2col : {cmd:e(Pmin)}} lower bound of the linear component of {cmd:period} effects{p_end}
@@ -140,6 +140,8 @@ but using a custom set of estimates {bf:θ₁ = α + π = -.5} and {bf:θ₂ = �
 {p2col : {cmd:e(ciPmax)}} same as {cmd:e(Pmax)} but CI-adjusted{p_end}
 {p2col : {cmd:e(ciCmin)}} same as {cmd:e(Cmin)} but CI-adjusted{p_end}
 {p2col : {cmd:e(ciCmax)}} same as {cmd:e(Cmax)} but CI-adjusted{p_end}
+{p2col : {cmd:e(pe_bounded_solution)}} a binary for whether a fully bounded solution exists{p_end}
+{p2col : {cmd:e(se_bounded_solution)}} same as above but using CI-adjusted estimates{p_end}
 
 
 {title:Author}

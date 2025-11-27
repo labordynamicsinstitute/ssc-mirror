@@ -2,12 +2,12 @@
 APCPLOT: A tool for visualizing APC effects to facilitate Fosse-Winship bounding 
 approach to APC analysis.
 ********************************************************************************
-Version: 1.2 (10.06.2025)
+Version: 1.3 (25.11.2025)
 Author: Gordey Yastrebov, University of Cologne
 License: GPL-3.0
 *******************************************************************************/
 	
-	version 18
+	version 14
 	
 	pr de apcplot
 		syntax [anything(name=graphs)], /// APC effect selection option
@@ -158,7 +158,7 @@ License: GPL-3.0
 			loc letter a
 			loc a_value = `a'
 			loc p_value = `e(theta1)' - `a'
-			loc c_value = `e(theta2)' - `e(theta1)' + `a'
+			loc c_value = `a' - `e(theta1)' + `e(theta2)'
 			loc remaining p c
 		}
 		if "`p'" != "" {
@@ -170,8 +170,8 @@ License: GPL-3.0
 		}
 		if "`c'" != "" {
 			loc letter c
-			loc a_value = `e(theta1)' - `c'
-			loc p_value = `e(theta1)' - `e(theta2)' + `c'
+			loc a_value =  `e(theta1)' - `e(theta2)' + `c'
+			loc p_value = `e(theta2)' - `c'
 			loc c_value = `c'
 			loc remaining a p
 		}
@@ -222,7 +222,7 @@ License: GPL-3.0
 		loc ncols = 14
 	* polynomial specification:
 		if strpos("`specification'", "#") > 0 {
-			default_range_of_values `variable'
+			default_range_of_values `variable' if __apcsample
 			loc xvalues = r(xvalues)
 			mat ests = J(`:word count `xvalues'', `ncols', .)
 			forv i=1/`=rowsof(ests)' {
@@ -268,7 +268,7 @@ License: GPL-3.0
 		}
 	* linear specification
 		else if "`specification'" == "" {
-			default_range_of_values `variable'
+			default_range_of_values `variable' if __apcsample
 			loc xvalues = r(xvalues)
 			mat ests = J(`:word count `xvalues'', `ncols', .)
 			forv i=1/`=rowsof(ests)' {
@@ -289,11 +289,11 @@ License: GPL-3.0
 		forv i=1/`=rowsof(ests)' {
 			loc letter = strupper("`apcvar'")
 			loc x = ests[`i', 2]
-			loc L_coef_min = `=e(pe`letter'min)'
-			loc L_coef_max = `=e(pe`letter'max)'
+			loc L_coef_min = `=e(`letter'min)'
+			loc L_coef_max = `=e(`letter'max)'
 			if "`apcvar'" == "p" { // a master flipper for period effects
-				loc L_coef_min = `=e(pe`letter'max)'
-				loc L_coef_max = `=e(pe`letter'min)'
+				loc L_coef_min = `=e(`letter'max)'
+				loc L_coef_max = `=e(`letter'min)'
 			}
 			mat ests[`i', 6] = ests[`i', 3] + `baseline' * `x' // NLshift (PE)
 			mat ests[`i', 7] = ests[`i', 4] + `baseline' * `x' // NLlbCIshift (CI)
@@ -399,8 +399,8 @@ License: GPL-3.0
 			}
 			foreach apcvar in `selection' {
 				mat estimates = `apcvar'_estimates
-				loc step = (`e(pe`=strupper("`apcvar'")'max)' - ///
-					`e(pe`=strupper("`apcvar'")'min)') / (`grades' - 1)
+				loc step = (`e(`=strupper("`apcvar'")'max)' - ///
+					`e(`=strupper("`apcvar'")'min)') / (`grades' - 1)
 				if "`apcvar'" == "p" loc step = -`step'
 				produce_gradient estimates lb `step' `grades' grad 1
 				mat `apcvar'_gradient_matrix = r(gradient_matrix)
@@ -409,8 +409,8 @@ License: GPL-3.0
 		else {
 			foreach apcvar in `selection' {
 				mat estimates = `apcvar'_estimates
-				loc step = (`e(pe`=strupper("`apcvar'")'max)' - ///
-					`e(pe`=strupper("`apcvar'")'min)')
+				loc step = (`e(`=strupper("`apcvar'")'max)' - ///
+					`e(`=strupper("`apcvar'")'min)')
 				produce_gradient estimates lb `step' 2 grad 1
 				mat `apcvar'_gradient_matrix = r(gradient_matrix)
 			}
@@ -505,8 +505,8 @@ License: GPL-3.0
 
 /////// Routines: //////////////////////////////////////////////////////////////
 	pr de default_range_of_values, rclass
-		syntax varlist(min=1 max=1)
-		qui sum `varlist'
+		syntax varlist(min=1 max=1) [if]
+		qui sum `varlist' `if'
 		loc step = (r(max) - r(min)) / 20
 		numlist "`r(min)'(`step')`r(max)'", sort
 		loc values = r(numlist)

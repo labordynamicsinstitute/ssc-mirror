@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2 || 10.06.2025 || Gordey Yastrebov}{...}
+{* *! version 1.3 || 25.11.2025 || Gordey Yastrebov}{...}
 {hi:help apcplot}{...}
 {right:also see: {helpb apcest}, {helpb apcbound}}
 {hline}

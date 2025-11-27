@@ -2,11 +2,10 @@
 APCBOUND: A tool for optimizing the identificaiton bounds on APC effects to 
 facilitate Fosse-Winship bounding approach to APC analysis.
 ********************************************************************************
-Version: 1.2 (10.06.2025)
+Version: 1.3 (25.11.2025)
 Author: Gordey Yastrebov, University of Cologne
 License: GPL-3.0
 *******************************************************************************/
-
 
 	pr de apcbound, eclass
 		version 14
@@ -125,6 +124,7 @@ License: GPL-3.0
 		"{p 1 10}(3. {bf:Δθ = α - γ = `=string(`theta3point', "`format'")'}`theta2ci'){p_end}" _n
 		
 *** Optimize point estimate bounds:
+	loc pe_error = 0
 	loc Amin = max(`lba', `theta1point' - `ubp', `lbc' + `theta1point' - `theta2point')
 	loc Pmin = max(`lbp', `theta1point' - `uba', `theta2point' - `ubc')
 	loc Cmin = max(`lbc', `lba' - `theta1point' + `theta2point', `theta2point' - `ubp')
@@ -134,12 +134,14 @@ License: GPL-3.0
 	foreach v in A P C {
 		if ``v'min' > ``v'max' {
 			di as err "Implausible/contradictory bound assumptions!"
-			exit
+			loc pe_error = 1
 		}
 	}
 	
 *** Optimize bounds integrating CIs:
+	loc ci_error = 0
 	if !`no_ci' {
+		loc ci_error = 0
 		loc ciAmin = max(`lba', `theta1lower' - `ubp', `lbc' + `theta3lower')
 		loc ciPmin = max(`lbp', `theta1lower' - `uba', `theta2lower' - `ubc')
 		loc ciCmin = max(`lbc', `lba' - `theta3upper', `theta2lower' - `ubp')
@@ -149,7 +151,7 @@ License: GPL-3.0
 		foreach v in ciA ciP ciC {
 			if ``v'min' > ``v'max' {
 				di as err "Implausible/contradictory bound assumptions!"
-				exit
+				loc ci_error = 1
 			}
 		}
 	}
@@ -172,11 +174,13 @@ License: GPL-3.0
 	loc c_cibounds = "`ciCminlab' < {bf:γ (β-Cohort)} < `ciCmaxlab'"
 		
 *** Print solutions:
-	di as txt ///
-		"{bf:{ul:Optimized solution ranges using point estimate information only:}}" _n ///
-		"{p 2 10}1. `a_pebounds'{p_end}" "{p 2 10}2. `p_pebounds'{p_end}" ///
-		"{p 2 10}3. `c_pebounds'" _n
-	if !`no_ci' {
+	if !`pe_error' {
+		di as txt ///
+			"{bf:{ul:Optimized solution ranges using point estimate information only:}}" _n ///
+			"{p 2 10}1. `a_pebounds'{p_end}" "{p 2 10}2. `p_pebounds'{p_end}" ///
+			"{p 2 10}3. `c_pebounds'" _n
+	}
+	if !`no_ci' & !`ci_error' {
 	di as txt ///
 		"{bf:{ul:Optimized solution ranges taking `ci_lvl'% confidence " ///
 			"intervals into account:}}" _n ///
@@ -188,7 +192,7 @@ License: GPL-3.0
 *** Store estimates as return:
 	foreach v in A P C {
 		foreach bound in min max {
-			eret sca pe`v'`bound' = . // wipe clean first
+			eret sca `v'`bound' = . // wipe clean first
 			eret sca ci`v'`bound' = . // wipe clean first
 		}
 	}
@@ -200,10 +204,14 @@ License: GPL-3.0
 				loc `v'`bound' = .
 				loc ci`v'`bound' = .
 			}
-			eret sca pe`v'`bound' = ``v'`bound''
+			if !`pe_error' eret sca `v'`bound' = ``v'`bound''
+			else eret sca `v'`bound' = .
+			if !`no_ci' {
+				if !`ci_error' eret sca ci`v'`bound' = `ci`v'`bound''
+				else eret sca ci`v'`bound' = .
+			}
 			if mi(``v'`bound'') loc pe_bounded_solution = 0
 			if mi(`ci`v'`bound'') loc ci_bounded_solution = 0
-			if !`no_ci' eret sca ci`v'`bound' = `ci`v'`bound''
 		}
 	}
 	foreach v in a p c {
@@ -212,6 +220,8 @@ License: GPL-3.0
 		}
 		eret loc `v'_assumptions = "``v'_assumptions'"
 	}
+	if `pe_error' loc pe_bounded_solution = 0
+	if `ci_error' loc ci_bounded_solution = 0
 	eret sca pe_bounded_solution = `pe_bounded_solution'
 	eret sca ci_bounded_solution = `ci_bounded_solution'
 	if !`no_ci' eret sca apcboundCI = `ci_lvl'

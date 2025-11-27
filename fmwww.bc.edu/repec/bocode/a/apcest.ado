@@ -2,26 +2,35 @@
 APCEST: An estimation wrapper command to facilitate Fosse-Winship bounding 
 approach to APC analysis.
 ********************************************************************************
-Version: 1.2 (10.06.2025)
+Version: 1.3 (25.11.2025)
 Author: Gordey Yastrebov, University of Cologne
 License: GPL-3.0
 *******************************************************************************/
-
 	
 	pr define apcest
-		version 18
-		preserve
-		n _apcest `0'
+		version 14
+		cap drop __apcsample
+		n _apcest `0' // runs the main command
 		loc rc = _rc
 		if `rc' {
-			restore
+			cap ds __apccache*
+			foreach v in `r(varlist)' {
+				qui uncache_var `v' // uncache variables
+			}
 			exit `rc'
+		}
+		cap ds __apccache*
+		foreach v in `r(varlist)' {
+			qui uncache_var `v' // uncache variables
 		}
 	end
 	
 	pr de _apcest, eclass
 	syntax anything(name=estimation_cmd) [if] [in] [aw fw pw iw], ///
 		a(string) p(string) c(string) [*]
+
+*** Parse conditions for the estimation sample
+	marksample esample
 
 *** Parse estimation command
 	gettoken cmd vars : estimation_cmd
@@ -76,9 +85,9 @@ License: GPL-3.0
 	}
 	
 *** Scale consistency check
-	qui g __apcacheck = `pvar' - `cvar'
-	qui g __apcpcheck = `cvar' + `avar'
-	qui g __apcccheck = `pvar' - `avar'
+	qui g __apcacheck = `pvar' - `cvar' if `esample'
+	qui g __apcpcheck = `cvar' + `avar' if `esample'
+	qui g __apcccheck = `pvar' - `avar' if `esample'
 	foreach apcvar in a p c {
 		qui reg ``apcvar'var' __apc`apcvar'check
 		if !inrange(_b[__apc`apcvar'check], .95, 1.05) {
@@ -88,16 +97,14 @@ License: GPL-3.0
 		drop __apc`apcvar'check
 	}
 	
-*** Define estimation sample to bypass the problem with [if] (when conditioning on APC variabels)
-	qui cap reg `depvar' `aspec' `pspec' `cspec' `indepvars' `if' `in'
-	
 *** Continuous variable transformations
 	foreach apcvar in a p c {
 		if ``apcvar'continuous' {
 			qui clonevar __apccache``apcvar'var' = ``apcvar'var'
-			qui center_var ``apcvar'var' mean
+			qui sum ``apcvar'var' if `esample', d
+			replace ``apcvar'var' = ``apcvar'var' - r(mean)
 			loc `apcvar'ref = 0
-			loc `apcvar'center = r(center)
+			loc `apcvar'center = r(mean)
 		}
 		else if "``apcvar'numlist'" != "" {
 			qui clonevar __apccache``apcvar'var' = ``apcvar'var'
@@ -110,7 +117,7 @@ License: GPL-3.0
 	}
 		
 *** Run estimation command and store estimates
-	n `cmd' `depvar' `avar' `cvar' `aspec' `pspec' `cspec' `indepvars' if e(sample) `in' [`weight'`exp'], `options'
+	n `cmd' `depvar' `avar' `cvar' `aspec' `pspec' `cspec' `indepvars' if `esample' [`weight'`exp'], `options'
 	foreach apcvar in a p c {
 		if !``apcvar'continuous' {
 			loc colnames : colnames r(table)
@@ -130,12 +137,9 @@ License: GPL-3.0
 		}
 	}
 	est sto __apcestimate
+	ren _est___apcestimate __apcsample
+	la var __apcsample "APCPLOT estimation sample (from the last call)"
 	
-*** Uncache everything
-	foreach v of varlist __apccache* {
-		qui uncache_var `v'
-	}
-
 	end
 
 /////// Routines: //////////////////////////////////////////////////////////////
@@ -146,14 +150,6 @@ License: GPL-3.0
 			di as error "Variable {bf:`varlist'} not found."
 			exit
 		}
-	end
-	pr de center_var, rclass
-		args var value
-		qui sum `var', d
-		if real("`value'") < . loc center = `value'
-		else loc center = r(`value')
-		replace `var' = `var' - `center'
-		ret loc center = `center'
 	end
 	pr de check_power
 		args power
