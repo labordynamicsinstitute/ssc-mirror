@@ -1,12 +1,14 @@
 
 {smcl}
-{* *! version 0.2 2024-02-16}{...}
+{* *! version 0.25 2024-12-10}{...}
 {vieweralsosee "" "--"}{...}
 {viewerjumpto "Syntax" "cpt##syntax"}{...}
 {viewerjumpto "Description" "cpt##description"}{...}
 {viewerjumpto "ROC curves, AUC, Cross-validation, and repetions" "cpt##explantions"}{...}
 {viewerjumpto "Author and support" "cpt##author"}{...}
 {viewerjumpto "Examples" "cpt##examples"}{...}
+{viewerjumpto "Authors and support" "cpt##author"}{...}
+{viewerjumpto "References" "cpt##reference"}{...}
 {title:Title}
 {phang}
 {bf:cpt} {hline 2} Optimal cut-points for empirical ROC curves and other ROC/AUC calculations
@@ -36,16 +38,6 @@ and specificity
 
 {synopt:{opt bi:nomial}}  calculate exact binomial confidence intervals. See {help roctab:roctab}
 
-{synopt:{opt cv:(#)}}  do cross-validation in # subgroups by predicting ROC values
-in each group by the groups. 
-CV must be an integer greater than or equal to 2 or zero.
-Default value is 0, i.e., no cross-validation.{p_end}
-
-{synopt:{opt reps:(#)}}  average # repetions of the predictions for the ROC.
-Default value is 1, i.e., no averaging.{p_end}
-
-{synopt:{opt seed:}} Set seed value for the options {opt cv:} and {opt reps:}.{p_end}
-
 {synopt:{opt gr:aph}} Generate a default graph.{p_end}
 
 {synopt:{opt twoway options:}} Generate a default graph with the twoway options.
@@ -58,6 +50,9 @@ Option {opt gr:aph} is not necessary in this case.{p_end}
 {marker description}{...}
 {title:Description}
 {pstd}The command {cmdab:cpt} is a wrapper for {help roctab:roctab}.
+The arguments for {help roctab:roctab} are the binary dependent variable and 
+the predicted probability from a {help logit:logit} regression on the variables 
+for the {cmdab:cpt} command.
 
 {pstd}It generates three matrices: A AUC estimation report; 
 The sensitivity, the specificity, the accuracy, the lr+,  and the lr- from 
@@ -67,23 +62,23 @@ the AUC in each cut-point value.
 {pstd}AUC is the average of sensitivity and specificity and is the AUC in the 
 cut-point values.
 
-{pstd}PPV is the prevalence weighted average of the sensitivity and the 1 - -specificity. 
+{pstd}PPV is a function of the prevalence, the sensitivity and the 1 - specificity. 
 
-{pstd}NPV is the prevalence weighted average of the 1 - sensitivity and the specificity. 
+{pstd}NPV is a function of the prevalence, the 1 - sensitivity and the specificity. 
 
-{pstd}The {cmdab:cpt} command marks the optimal cut-point values by Youden (J) and 
+{pstd}The {cmdab:cpt} command marks the optimal cut-point(s) values by Youden (J) and 
 Liu(L) in the returned ROC matrix row names and the submatrix of the ROC matrix 
 containing only the optimal cut-point values.
 
-{pstd}Finally, variables (prefix tpr_) for sensitivity and false positive rates 
+{pstd}Finally, variables (prefix tpr_) for sensitivity and false Prediction rates 
 (prefix fpr_) are saved to make one or more curves.
 
 {marker explantions}{...}
-{title:ROC curves, AUC, Cross-validation, and repetions}
+{title:ROC curves and AUCs}
 
 {pstd}An ROC curve is a graphical representation that illustrates the 
 performance of a binary classification model across different thresholds.
-It plots the True Positive Rate (TPR) on the Y-axis against the False Positive 
+It plots the True Prediction Rate (TPR) on the Y-axis against the False Prediction 
 Rate (FPR) on the X-axis. The top-left corner of the ROC plot represents the 
 "ideal" point (TPR = 1, FPR = 0), which is not very realistic but indicates 
 better performance.
@@ -91,25 +86,6 @@ A larger Area Under the Curve (AUC) usually indicates better model performance.
 The "steepness" of the ROC curve matters: We aim to maximize TPR while 
 minimizing FPR. Methods like Youden and Liu are ways of finding these 
 optimal pairs of FPR and TPR.
-
-{pstd}Cross-validation is a technique used to assess the performance of a model 
-by dividing the dataset into multiple subsets (folds), typically of equal sizes. 
-We use each fold in shifts as a validation set while we use the remaining folds 
-for training.
-Repeating this process with different subsets, we get a more robust estimate 
-of model performance.
-Cross-validation helps estimate the variance of model performance metrics 
-(such as AUC) due to variations in training data.
-It provides insights into how well the model generalizes to unseen data.
-Cross-validation helps prevent overfitting by assessing model performance on 
-different data subsets.
-
-{pstd}Using a single cross-validation once is affected by random variations in 
-data splitting.
-We reduce bias and obtain more precise estimates by repeating cross-validation 
-multiple times (e.g., 100 repeats of 10-fold cross-validation).
-In summary, ROC curves, cross-validation, and repetition are essential tools 
-for evaluating and understanding the performance of classification models. 
 
 
 {marker examples}{...}
@@ -130,22 +106,15 @@ for evaluating and understanding the performance of classification models.
 {phang}A simple ROC curve:{p_end}
 {phang}{stata `"line tpr_p_disease fpr_p_disease, name(crude, replace)"'}{p_end}
 {phang}Calling {cmdab:cpt} with cross-validation in 10 random groups:{p_end}
-{phang}{stata `"cpt disease rating, replace cv(10)"'}{p_end}
-{phang}Calling {cmdab:cpt} using the average of 20 cross-validations in 10 random groups:{p_end}
-{phang}{stata `"cpt disease rating, replace cv(10) reps(20)"'}{p_end}
-{phang}The ROC curve based on cross-validation and reptions:{p_end}
-{phang}{stata `"line tpr_p_disease fpr_p_disease, name(cv10reps20, replace)"'}{p_end}
+
 
 {title:Stored results}
 
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: Scalars:}{p_end}
 {synopt:{cmd:r(Youden_p)}} Youden's optimal p-value.{p_end}
-{synopt:{cmd:r(Youden_v)}} If there is one explanatory variable. 
-Youden's optimal p-value converted back to the variable.{p_end}
 {synopt:{cmd:r(Liu_p)}} Liu's optimal p-value.{p_end}
-{synopt:{cmd:r(Liu_v)}} If there is one explanatory variable. 
-Liu's optimal p-value converted back to the variable.{p_end}
+{synopt:{cmd:r(aucvalue)}} The AUC.{p_end}
 
 {p2col 5 15 19 2: Macros:}{p_end}
 {synopt:{cmd:r(auctext)}} AUC report from {help roctab:roctab} {p_end}
@@ -176,3 +145,9 @@ optimal cut-point values {p_end}
 {phang}{bf:Support:} {break}
 	{browse "mailto:niels.henrik.bruun@gmail.com":niels.henrik.bruun@gmail.com}
 {p_end}
+
+{marker reference}{...}
+{title:References}
+
+{phang}2012 Liu - Classification accuracy and cut point selection{p_end}
+{phang}2017 Unal - Defining an Optimal Cut-Point Value in ROC Analysis; An Alternative Approach{p_end}
