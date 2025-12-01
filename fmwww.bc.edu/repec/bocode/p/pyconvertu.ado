@@ -1,4 +1,4 @@
-*! version 1.2.6  07oct2022  I I Bolotov
+*! version 1.3.0  20nov2025  I I Bolotov
 program def pyconvertu
 	version 16.0
 	/*
@@ -50,7 +50,8 @@ program def pyconvertu
 			exit 198
 		}
 		/* ado + python                                                       */
-		cap python: l = _pyconvertu(r'`from'', Data.get('`name''), '`to'')
+		cap python: l = _cconv(json_file=r'`from'', to='`to'',              ///
+		                       text=Data.get('`name''))
 		if _rc {
 			di as err "JSON file does not contain valid entry/dictionary"
 			exit 7102
@@ -82,7 +83,12 @@ program def pyconvertu
 			exit 198
 		}
 		/* ado + python                                                       */
-		cap python: l = _pyconvertu_list(r'`from'', '`to''); l.sort()
+		cap python: l = [str(x)            for x                            ///
+		                 in [d.get('`to'') for d                            ///
+		                 in _cconv(json_file=r'`from'', to='`to'',          ///
+		                           dump=True) if isinstance(d, dict)        ///
+		                 and '`to'' in d]     if x      is not None]
+		cap python: l.sort()
 		if _rc {
 			di as err "JSON file does not contain valid entry/dictionary"
 			exit 7102
@@ -103,7 +109,9 @@ program def pyconvertu
 	}
 	// print metadata and sources                                               
 	if trim(`"`name'"') == "__info" {
-		cap python: l = _pyconvertu_info(r'`from'')
+		cap python: l = [str(x) for x in _cconv(json_file=r'`from'',        ///
+		                                        to='`to'', info=True)       ///
+		                 if x   is not None]
 		if _rc {
 			di as err "JSON file does not contain valid entry/dictionary"
 			exit 7102
@@ -160,7 +168,7 @@ program def pyconvertu
 				}
 			}
 		}
-		python: _pyconvertu_dump(r'`to'', Scalar.getString('`json''))
+		python: _cconv(data=Scalar.getString('`json''), json_file=r'`from'')
 		exit 0
 	}
 	// or display error                                                         
@@ -174,114 +182,105 @@ version 16.0
 python:
 # Stata Function Interface
 from sfi import Data, Scalar
-
 # Python Modules
-import json
-import os
-import re
+from   os        import path
+from   re        import sub, compile, Pattern, I, M, error as RegexError
+from   typing    import Any
+from   json      import loads, load, dump as save, JSONDecodeError
 
-# User-defined Functions
-def _pyconvertu(
-	source_file=r'', from_list=[], to_classification='', *args, **kwargs
+class ConvertuError(Exception):
+    """
+    Exception class for ConvertU-related errors.
+    """
+    def __init__(self, message="An error occurred in _cconv", code=None):
+        self.message = message
+        self.code    = code
+        if code is not None:
+            full_message = "{} (Code: {})".format(message, code)
+        else:
+            full_message = message
+        Exception.__init__(self, full_message)
+
+def _cconv(
+    data=None, json_file=None, info=False, dump=False, to='', text=None,
+    *args, **kwargs
 ):
-	"""
-	/*
-		Converts a list of strings (from_list) to classification.               
-		(to_classification) based on a JSON file (source_file),                 
-		unmatched strings are returned unchanged.                               
-	*/
-	"""
-	try:
-		#// load classification                                                 
-		with open(os.path.expanduser(source_file)) as f:
-			classification = list(filter(
-				lambda d: not d.get('metadata') and not d.get('sources'),
-				json.load(f)
-			))
-		#// convert list                                                        
-		return list(map(
-			lambda s:
-				(lambda l, s: 
-					l[1].get(to_classification) if len(l) > 1 else l[0]
-				)(
-					[s] + list(filter(
-						lambda d: re.search(
-							r'' + d.get('regex') + r'', s, flags=re.I|re.M
-						),
-						classification
-					)),
-					str(s)
-				),
-			from_list
-		))
-	except:
-		raise PyConvertUError
+    """
+    Convert text into a target classification using a JSON mapping, or
+    return mapping/metadata (info/dump modes).
+    """
+    # retrieve the metadata/sources and classification
+    json_file = path.expanduser(json_file)
+    if data is not None:                               # read from the argument
+        try:
+            with open(json_file, "w", encoding="utf-8") as f:
+                save(loads(sub(r'\\(?!["\\/bfnrtu])', r'\\\\',
+                         '[' + data.rstrip(', ') + ']')),  f,
+                     ensure_ascii=False, indent=2)
+        except OSError as e:
+            raise ConvertuError(f"Unable to write to {json_file}: {e}")
+        return json_file
+    else:                                              # read from the file
+        try:
+            with open(json_file, encoding="utf-8") as f:
+                data = load(f)
+        except JSONDecodeError as e:
+            raise ConvertuError(f"Invalid JSON in {json_file}: {e}")
+        except OSError as e:
+            raise ConvertuError(f"Unable to read {json_file}: {e}")
+        if  not isinstance(data, list):
+            raise ConvertuError("Mapping JSON must be a list of objects")
+    metadata                             = [
+        d for d in data
+        if isinstance(d, dict) and ('metadata'     in d or
+                                    'sources'      in d)
+    ]
+    classification: list[dict[str, Any]] = [
+        d for d in data
+        if isinstance(d, dict) and ('metadata' not in d and
+                                    'sources'  not in d)
+    ]
 
-def _pyconvertu_list(
-	source_file=r'', from_classification='', *args, **kwargs
-):
-	"""
-	/*
-		Creates a list of strings from classification                           
-		(from_classification) based on a JSON file (source_file).               
-	*/
-	"""
-	try:
-		#// load classification                                                 
-		with open(os.path.expanduser(source_file)) as f:
-			classification = list(filter(
-				lambda d: not d.get('metadata') and not d.get('sources'),
-				json.load(f)
-			))
-		#// create list                                                         
-		return list(map(
-			lambda d: d.get(from_classification),
-			classification
-		))
-	except:
-		raise PyConvertUError
+    # return metadata/sources or classification
+    if  info:
+        return metadata                                # return metadata
+    if  dump:
+        return classification                          # return classification
 
-def _pyconvertu_info(
-	source_file=r'', *args, **kwargs
-):
-	"""
-	/*
-		Returns a list based on a JSON file (source_file).                      
-	*/
-	"""
-	try:
-		#// load classification metadata                                        
-		with open(os.path.expanduser(source_file)) as f:
-			metadata = list(filter(
-				lambda d: d.get('metadata') or d.get('sources'),
-				json.load(f)
-			))
-		#// create list                                                         
-		return list(map(
-			lambda d: str(d),
-			metadata
-		))
-	except:
-		raise PyConvertUError
+    # process arguments
+    if   text is None:
+        items: list[str] = []
+        single_input = False
+    elif isinstance(text, str):
+        items = [text]
+        single_input = True
+    elif isinstance(text, list) and all(isinstance(s, str) for s in text):
+        items = text
+        single_input = False
+    else:
+        raise ConvertuError("text must be str, list[str], or None")
 
-def _pyconvertu_dump(
-	target_file=r'', json_string='', *args, **kwargs
-):
-	"""
-	/*
-		Writes JSON string to a JSON file (target_file).                        
-	*/
-	"""
-	target_file = target_file.replace('.json', '') + '.json'
-	with open(os.path.expanduser(target_file), 'w') as f:
-		#// dump classification and print message                               
-		json.dump(
-			json.loads('[' + json_string[0:-2].replace('\\', '\\\\') + ']'),
-			f
-		)
-		print(
-			'JSON file \'' + target_file.replace('.json', '') + '.json' +
-			'\' created'
-		)
+    # precompile regex patterns once
+    compiled: list[tuple[Pattern[str], dict[str, Any]]] = []
+    for r in classification:
+        p = r.get('regex')
+        if  to in r and isinstance(p, str) and p:
+            try:
+                compiled.append((compile(p, I | M), r))
+            except RegexError:
+                continue
+    if  items and not compiled:
+        return text if single_input else items
 
+    # convert compiled
+    def convert_one(s: str) -> str:
+        s = str(s)
+        for p, r in compiled:
+            if  p.search(s):
+                val = r.get(to)
+                return s if val is None else val       # return converted text
+        return s                                       # return original  text
+
+    result = [convert_one(s) for s in items]
+    return result[0] if single_input else result
 end

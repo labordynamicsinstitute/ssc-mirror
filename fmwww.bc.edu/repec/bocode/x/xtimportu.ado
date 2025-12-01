@@ -1,4 +1,4 @@
-*! version 1.1.3  07oct2022  I I Bolotov
+*! version 1.2.0  20nov2025  I I Bolotov
 program def xtimportu, rclass
 	version 14.0
 	/*
@@ -8,8 +8,7 @@ program def xtimportu, rclass
 		in encode()), allowing the user to export and/or save the result.       
 		Wide (pivoted) data must be imported in a way that the time values      
 		are located in _n == 1 (use cellrange() for excel and preformat()       
-		for other filetypes) and are transposed with (SSC) sxpose2.             
-		Unicode characters are fully supported for Stata 14 and newer versions. 
+		for other filetypes) and are transposed with (SSC) sxpose2.
 
 		Author: Ilya Bolotov, MBA, Ph.D.                                        
 		Date: 20 November 2020                                                  
@@ -25,7 +24,7 @@ program def xtimportu, rclass
 	[/* preformat */ PREformat(string asis)]								///
 	[PANELvar(string) REgex(string) ENcode(string)]							///
 	[TIMEvar(string) TFORmat(string)] TFREQuency(string) [drop TDEstring]	///
-	[GENerate(string) float Ignore(string asis) percent dpcomma TOstring]	///
+	[Generate(string) float Ignore(string asis) percent dpcomma TOstring]	///
 	[clear export(string asis) SAving(string asis) *]
 	// adjust and preprocess options                                            
 	local regex  = ustrregexra(`"`regex'"',  "\s", "\\s")
@@ -125,21 +124,21 @@ program def xtimportu, rclass
 			tempvar dt
 			g `dt' = `tfrequency'ly(`timevar', `"`tformat'"')
 			drop `timevar'
-			rename `dt' `timevar'
+			ren `dt' `timevar'
 			order `timevar'
 			destring `timevar', replace force
 		}
 		if trim("`timevar'") == "_var1" {	// transpose data (if required)
 			foreach `var' of varlist * {
-				cap rename ``var'' `=subinstr("``var''", "_var", "v", .)'
+				cap ren ``var'' `=subinstr("``var''", "_var", "v", .)'
 			}
 			sxpose2, clear force
 			ds _var1, not					// reshape data
 			foreach `var' of varlist `r(varlist)' {
-				cap rename ``var'' value`=``var''[1]'
+				cap ren ``var'' value`=``var''[1]'
 			}
 			drop if _n == 1
-			rename _var1 `panelvar'
+			ren _var1 `panelvar'
 			reshape long value, string i(`panelvar') j(`timevar')
 			destring `timevar', replace force
 		}
@@ -154,7 +153,7 @@ program def xtimportu, rclass
 			string(`tfrequency'(dof`=lower(substr("`tfrequency'", 1, 1))'(	///
 			`timevar'))), "")
 			drop `timevar'
-			rename `dt' `timevar'
+			ren `dt' `timevar'
 		}
 	}
 	// prepare the variable                                                     
@@ -162,11 +161,11 @@ program def xtimportu, rclass
 		qui destring value, replace force `float' `ignore' `percent' `dpcomma'
 	}
 	// rename dimensions and the variable, order and sort                       
-	rename `panelvar' unit
-	rename `timevar' `tfrequency'
+	ren `panelvar' unit
+	ren `timevar' `tfrequency'
 	if trim(`"`generate'"') != "" {
 		confirm new var `generate'
-		rename value `generate'
+		ren value `generate'
 	}
 	order unit `tfrequency'
 	sort  unit `tfrequency'

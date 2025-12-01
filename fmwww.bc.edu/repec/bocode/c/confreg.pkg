@@ -1,0 +1,30 @@
+d 'CONFREG': module to compute confusion matrix (Accuracy measures) estimated by mixed regression and nlcom
+d
+d   Sensitivity and specificity for a single modality is estimated
+d by regressing the binary values from the    modality on the gold
+d standard using mixed regression and robust variance estimation.  
+d  The AUC is the mean of the sensitivity and the specificity.	 
+d There are non-linear formulas for estimating the PPV, NPV, and
+d accuracy using prevalence, sensitivity, and	 specificity.	 To
+d model more modalities measured on the same patients, we stack the
+d values of each modality and the    pathology and add a
+d categorical modality variable.    Sensitivity and specificity are
+d estimated using the stacked dataset by regressing the modality
+d values on    the pathology values and the categorical modality
+d variable, with robust variance estimation and random	 
+d intercepts by patient.    The AUC, PPV, NPV, and accuracy are
+d estimated from the prevalence, sensitivity, and specificity as   
+d described before. 
+d
+d KW: confusion matrix
+d KW: accuracy measures
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20251130
+d
+d Author: Niels Henrik Bruun, Aalborg University Hospital
+d Support: email niels.henrik.bruun@@gmail.com
+d
+ ../i/icc2.ado
+ ../i/icc2.sthlp

@@ -1,0 +1,17 @@
+d 'CCONV': module to  Convert a string variable to a classification from a built-in or user-defined JSON file using libjson 
+d
+d
+d KW: data management
+d KW: country codes
+d KW: ISO
+d
+d Requires: Stata version 15 
+d
+d Distribution-Date: 20251130
+d
+d Author: Ilya Bolotov, Prague University of Economics and Business
+d Support: email ilya.bolotov@@vse.cz
+d
+f cconv.ado
+F cconv_classification.json
+f cconv.sthlp

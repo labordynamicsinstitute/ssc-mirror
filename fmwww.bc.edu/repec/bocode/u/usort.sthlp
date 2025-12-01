@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.2  07oct2024}{...}
+{* *! version 1.2.0  20nov2025}{...}
 {viewerjumpto "Syntax" "usort##syntax"}{...}
 {viewerjumpto "Description" "usort##description"}{...}
 {viewerjumpto "Methods and formulas" "usort##methods"}{...}
@@ -181,9 +181,6 @@ store interim results in a temporary file.
 {title:Examples}
 {pstd}Setup:{p_end}
 {phang2}{cmd:. sysuse auto}
-
-{pstd}Sort observations in ascending order by {cmd:price}:{p_end}
-{phang2}{cmd:. usort price}
 
 {pstd}Sort observations in ascending order by {cmd:rep78}, missing first:{p_end}
 {phang2}{cmd:. usort rep78, mfirst}

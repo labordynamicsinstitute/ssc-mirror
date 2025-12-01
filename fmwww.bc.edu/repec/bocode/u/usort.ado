@@ -1,4 +1,4 @@
-*! version 1.1.2  07oct2024  I I Bolotov
+*! version 1.2.0  20nov2025  I I Bolotov
 program def usort, sclass byable(onecall)
 	version 14
 	/*
@@ -15,17 +15,19 @@ program def usort, sclass byable(onecall)
 	*/
 	// syntax                                                                   
 	qui desc
+	// check for the number of observations and variable limits                 
+	if ! _N  exit 0
 	if c(maxvar) - r(k) < 2 error 900
 	****
 	tempfile tmpf
 	tempvar  byid n p s
 
 	// sort the entire dataset at once or by groups and add the data-sorted flag
-	if       !  _by()                       _sort `0'
+	if ! _by() _sort `0'
 	else {   /* Use preserve, keep, and append to prepare the final dataset. */
-		egen    `byid' =  group(`_byvars'), m autotype // use .-.z/"" as values 
+		egen    `byid' = group(`_byvars'),  m autotype // use .-.z/"" as values 
 		qui sum `byid'
-		forv     i  = `=r(min)'/`=r(max)'             {
+		forv i = `=r(min)'/`=r(max)' {
 			preserve
 			qui  keep if `byid' == `i'
 		   `=cond("`_byrc0'"!="","cap","")' _sort `0'  // (ignore) group errors 
@@ -35,6 +37,8 @@ program def usort, sclass byable(onecall)
 			qui  append  using  `tmpf',     force
 		}    /* Do sort on the by- and sortvars to set the data-sorted flag. */
 		qui drop         `byid'
+	}
+	if "`_byvars'`s(varlist)'" != "" {
 		/* Save each sortvar into a string (`svl`) or numeric (`nvl`) macro. */
 		foreach  var of  varl `_byvars'  `s(varlist)' {
 			cap conf str var  `var'
@@ -54,11 +58,11 @@ program def usort, sclass byable(onecall)
 			                   ( `p' #        J(1,ustrwordcount("`nvl'"),1)));;
 		sort `_byvars'  `s(varlist)'				   // sort and add the flag 
 		if ("`svl'" != "") {
-			mata:  _collate(`s', `p'); st_sstore(.,       tokens("`svl'"), `s')
+			mata:                      st_sstore(.,      tokens("`svl'"), `s')
 			mata: mata drop `s'                        // minimize memory usage 
 		}
 		if ("`nvl'" != "") {
-			mata:  _collate(`n', `p');  st_store(.,       tokens("`nvl'"), `n')
+			mata:                       st_store(.,      tokens("`nvl'"), `n')
 			mata: mata drop `n'                        // minimize memory usage 
 		}
 		sret loc  varlist   ""						   // drop the sclass macro 
@@ -76,36 +80,38 @@ program def _sort, sclass
 	]
 	// adjust and preprocess options                                            
 	if ustrregexm("`anything'", "[+-]\s+") error 100
-	loc anything    = subinstr("`anything'", "+", "", .) /* strip plus signs */
+	loc anything  = subinstr("`anything'", "+", "", .) /* strip plus signs */
 	foreach s in   `anything' {							 /* expand wildcards */
-		loc sign    = cond(ustrregexm("`s'", "^\s*-\s*"), "-", "")
-		qui ds     `=     ustrregexrf("`s'", "^\s*-\s*",  "",  . )'
-		mata:         st_local("signlist", st_local("signlist") + " "     + ///
-			         invtokens( "`sign'" :+  tokens(st_global("r(varlist)")) ))
-		mata:         st_local("varlist",  st_local("varlist" ) + " "     + ///
-			                                        st_global("r(varlist)"))
+		loc sign  = cond(ustrregexm("`s'", "^\s*-\s*"), "-", "")
+		qui ds   `=     ustrregexrf("`s'", "^\s*-\s*",  "",  . )'
+		mata:       st_local("signlist", st_local("signlist") + " "       + ///
+			       invtokens( "`sign'" :+  tokens(st_global("r(varlist)"))))
+		mata:       st_local("varlist",  st_local("varlist" ) + " "       + ///
+			                                      st_global("r(varlist)"))
+		mata:      st_global("s(varlist)",                                  ///
+			                                      st_local("varlist"    ))
 	}
-	loc anything    "`signlist'"
+	loc anything  "`signlist'"
 	if ("`mfirst'" != ""                          )  & "`ignorem'" == ""	///
-	mata:             st_local("first",invtokens("." :+ (tokens(            ///
-		                 /* sort .-.z first */ c("alpha"))) )  +      " .")
+	mata:           st_local("first",invtokens("." :+ (tokens(              ///
+		               /* sort .-.z first */ c("alpha"))) )  +      " .")
 	if ("`mlast'"  != "" | `"`first'`last'"' == "")  & "`ignorem'" == ""	///
-	mata:             st_local( "last",invtokens("." :+ (tokens(strreverse(	///
-		                 /* sort .-.z  last */ c("alpha")))))  +      " .")
-	loc format      =     cond("`format'"  != "",   "`format'",  "%32.16f")
+	mata:           st_local( "last",invtokens("." :+ (tokens(strreverse(	///
+		               /* sort .-.z  last */ c("alpha")))))  +      " .")
+	loc format      =   cond("`format'"  != "",   "`format'",  "%32.16f")
 	conf form      `format'
-	loc locale      =     cond("`locale'"  != "",   "`locale'",				///
-													c(locale_functions)   )
+	loc locale      =   cond("`locale'"  != "",   "`locale'",				///
+													 c(locale_functions))
 	****
 	tempvar  select
 	tempname n p s
 
 	// obtain the permutation vector `p' in Mata from sorting the sortvar matrix
 	/* Generate a selectvar to use in Mata st_sdata()/st_sstore() functions. */
-	g   byte     `select'  =  0
-	qui replace  `select'  =  1 `if' `in'			   // all rows or [if] [in] 
+	g   byte    `select' =  0
+	qui replace `select' =  1 `if' `in'				   // all rows or [if] [in] 
 	preserve
-	foreach  var of  varl  `varlist'  {
+	foreach var  of   varl `varlist' {
 		/* Since non-numeric string values cannot be 'destringed', the sortvars
 		   type must be str#/strL to allow sorting them as a single matrix with
 		   the help of Mata `sort()` function. The precision of sorting numeric
@@ -121,7 +127,7 @@ program def _sort, sclass
 			  st_numscalar("`n'", max(strlen( ustrregexrf(                  ///
 			                 st_sdata(., "`var'"), "^(\d+)[.,]\d+$", "$1"))));;
 		/* Equate string missing values "" and the 'tostringed' sysmiss ".". */
-		qui replace `var' = "."      if mi(`var' )
+		qui replace `var' = "." if mi(`var')
 		/* To ensure that substrings from the `first()` option are sorted first
 		   in the specified order, they are replaced in each sortvar with " #",
 		   where " " is a string of whitespaces, the Unicode character from the
@@ -129,25 +135,25 @@ program def _sort, sclass
 		   This action is not performed for already 'tostringed' missing values
 		   (., .a, ..., .z) if the `ignorem` option is specified.            */
 		if `"`first'"' != "" {
-			loc  f      = lower(ustrregexrf(`"`first'"',					///
+			loc f       = lower(ustrregexrf(`"`first'"',					///
 								".+,\s*([ustr]*regex[m]*|[ustr]*pos)$", "$1"))
 						if `"`f'"' == lower(`"`first'"'    ) loc f "strmatch"
 						else if  ustrregexm("`f'",  "regex") loc f "ustrregexm"
 						else if  ustrregexm("`f'", "[r]pos") loc f "ustrrpos"
 						else if  ustrregexm("`f'",    "pos") loc f "ustrpos"
 						if "`ignorec'" != ""                 loc t "ustrlower"
-			loc  first  =   `t'(ustrregexrf(`"`first'"',					///
+			loc wrds    =   `t'(ustrregexrf(`"`first'"',					///
 								",\s*([ustr]*regex[m]*|[ustr]*pos)$",     ""))
-			forv     i  = 1(1)  `: word count `first''       {
-				loc  w  : word  `i'                                  of `first'
+			forv    i   = 1(1)  `: word count `wrds'' {
+				loc w   : word  `i' of `wrds'
 				mata:              st_local("i", "0"                      * ///
-				(max(strlen(tokens(st_local("first")))) - strlen("`i'" )) + ///
+				(max(strlen(tokens(st_local("wrds"))))  - strlen("`i'" )) + ///
 					/* natural sorting requires leading zeros */ "`i'" )
-				qui  replace    `var' = " "                * `s' +			///
+				qui replace  `var' = " " * `s' +							///
 																`"`i'"'		///
-				if   cond("`ignorem'"                      == "",     1,	///
+				if  cond("`ignorem'" == "", 1,								///
 								!  ustrregexm(`var',  `"^[.a-z]{0,2}$"')) &	///
-					 cond("`f'" != "strmatch" , `f'(`t'(`var'), `"`w'"'),	///
+					cond("`f'" != "strmatch" ,  `f'(`t'(`var'), `"`w'"'),	///
 												`t'(`var') ==   `"`w'"')
 			}
 		}
@@ -158,22 +164,22 @@ program def _sort, sclass
 		   is specified in the `codepoint()` option, also with a length of `s'.
 		   This action is not performed for already 'tostringed' missing values
 		   (., .a, ..., .z) if the `ignorem` option is specified.            */
-		if  `"`last'"' != "" {
-			loc  f      = lower(ustrregexrf( `"`last'"',					///
+		if `"`last'"'  != "" {
+			loc f       = lower(ustrregexrf( `"`last'"',					///
 								".+,\s*([ustr]*regex[m]*|[ustr]*pos)$", "$1"))
 						if `"`f'"' == lower( `"`last'"'    ) loc f "strmatch"
 						else if  ustrregexm("`f'",  "regex") loc f "ustrregexm"
 						else if  ustrregexm("`f'", "[r]pos") loc f "ustrrpos"
 						else if  ustrregexm("`f'",    "pos") loc f "ustrpos"
 						if "`ignorec'" != ""                 loc t "ustrlower"
-			loc   last  =   `t'(ustrregexrf(  `"`last'"',					///
-								",\s*([ustr]*regex[m]*|[ustr]*pos)$",     ""))
-			forv     i  =         `: word count `last''(-1)1 {
-				loc  w  : word  `=`: word count `last'' - `i'  + 1' of  `last'
+			loc wrds    =   `t'(ustrregexrf(  `"`last'"',					///
+								",\s*([ustr]*regex[m]*|[ustr]*pos)$",   ""  ))
+			forv    i   =         `: word count `wrds''(-1)1 {
+				loc w   : word  `=`: word count `wrds'' - `i' + 1' of `wrds'
 				mata:              st_local("i", "0"                      * ///
-				(max(strlen(tokens(st_local( "last")))) - strlen("`i'" )) + ///
+				(max(strlen(tokens(st_local("wrds"))))  - strlen("`i'" )) + ///
 					/* natural sorting requires leading zeros */ "`i'" )
-				qui  replace    `var' = uchar(`codepoint') * `s' +			///
+				qui  replace `var' =  uchar(`codepoint') * `s' +			///
 																`"`i'"'		///
 				if   cond("`ignorem'"                      == "",     1,	///
 								!  ustrregexm(`var',  `"^[.a-z]{0,2}$"')) &	///
@@ -202,28 +208,27 @@ program def _sort, sclass
 		          st_sdata(., tokens("`varlist'"), "`select'")),            ///
 		          (2..(cols(tokens("`varlist'")) + 1))                   :* ///
 		          strtoreal(tokens(ustrregexra(ustrregexra("`anything'",    ///
-		          "(^|\s+)\w+", " 1"), "(^|\s+)-\w+", " -1")))              ///
-		     )[.,1])
+		          "(^|\s+)\w+", " 1"), "(^|\s+)-\w+", " -1"))))[.,1])
 
 	// collate for all rows with or a subset without adding the data-sorted flag
 	restore
 	/* Collate the rows of all variables in the dataset, selected with the help
 	   of the selectvar, on the permutation vector                           */
-	foreach  var of  varl *  {
+	foreach var  of  varl  * {
 		cap conf str var  `var'
 		if  ! _rc {
-			mata:    _collate((`s'=  st_sdata(., "`var'", "`select'")), `p')
-			mata:                   st_sstore(., "`var'", "`select'",   `s')
-			mata:    mata drop `s'                     // minimize memory usage 
+			mata: _collate((`s'=  st_sdata(., "`var'", "`select'")), `p')
+			mata:                st_sstore(., "`var'", "`select'",   `s')
+			mata: mata drop `s'                        // minimize memory usage 
 		}
 		else      {
-			mata:    _collate((`n'=   st_data(., "`var'", "`select'")), `p')
-			mata:                    st_store(., "`var'", "`select'",   `n')
-			mata:    mata drop `n'                     // minimize memory usage 
+			mata: _collate((`n'=   st_data(., "`var'", "`select'")), `p')
+			mata:                 st_store(., "`var'", "`select'",   `n')
+			mata: mata drop `n'                        // minimize memory usage 
 		}
 	}
 
 	// set a data-have-changed flag if `p' results in collation of variable rows
-	mata: if (`p' != sort(`p', 1))      st_updata(1);;
+	mata: if (`p' != sort(`p', 1)) st_updata(1);;
 	mata: mata drop `p'                                // minimize memory usage 
 end

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.3  07oct2022}{...}
+{* *! version 1.2.0  20nov2025}{...}
 {viewerjumpto "Syntax" "xtimportu##syntax"}{...}
 {viewerjumpto "Description" "xtimportu##description"}{...}
 {viewerjumpto "Options" "xtimportu##options"}{...}
@@ -254,33 +254,8 @@ For detailed information on {cmd:sxpose2}, see {helpb sxpose2}.
 {title:Examples}
 
         ****
-        * Example 1. Population time series for the Czech Republic
-        * (a country in Central Europe, EU member since 2004)
-        ****
-
-        * RegEx for the indicator, case sensitive!
-        * unoptimized, illustration only
-        {cmd:. local regex "Počet"}
-
-        * ČSÚ's (Czech Statistical Office) file URL for Population
-        {cmd:. local url "https://www.czso.cz/documents/10180/123502877/"}
-        {cmd:. local url "`url'32018120_0101.xlsx/"}
-        {cmd:. local url "`url'd60b89c8-980c-4f3a-bc0c-46f38b0b8681"}
-        {cmd:. local url "`url'?version=1.0"}
-
-        * import the time series data to memory, unit: thousand
-        {cmd:. xtimportu excel "`url'", cellrange(A3) regex(`regex')} ///
-        {cmd:      encode("Czech Republic") tfreq(Y) tde clear}
-
-        * revert underscores to spaces in the unit
-        {cmd:. replace unit = ustrregexra(unit, "_", " ")}
-
-        * tsset data
-        {cmd:. tsset year}
-
-        ****
-        * Example 2. FDI matrix from UNCTAD's Bilateral FDI statistics
-        * (historical data, 2000–2014)
+        * Example: FDI matrix from UNCTAD's Bilateral FDI statistics
+        * (historical data, 2000–2014). To be run as a DO file
         ****
 
         * RegEx for the EU-28, case sensitive! "{c -(}0,{c )-}$"
