@@ -26,5 +26,6 @@ d
 d Author: Niels Henrik Bruun, Aalborg University Hospital
 d Support: email niels.henrik.bruun@@gmail.com
 d
- ../i/icc2.ado
- ../i/icc2.sthlp
+f confreg.ado
+f confreg.sthlp
+
