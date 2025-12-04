@@ -1,0 +1,26 @@
+d 'GPSMD': module for or the estimation of the dose-response function when the treatment is multidimensional
+d
+d  Estimator of the dose-response function when the treatment is
+d multidimensional. The package implements Egger, P. H., & von
+d Ehrlich, M. (2013). Generalized propensity scores for multiple
+d continuous treatment variables. Economics Letters, 119(1),
+d 32–34. https://doi.org/10.1016/j.econlet.2013.01.006 
+d
+d KW: dose-response function
+d KW: generalized propensity scores
+d
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 20251203
+d
+d Author: Enrico Cristofoletti,  Università di Trento
+d Support: email enrico.cristofoletti@@unitn.it
+d
+f gpsmd.ado
+f gpsmdbal.ado
+f gpsmdcomsup.ado
+f gpsmdpolest.ado
+f gpsmd.sthlp
+f gpsmdbal.sthlp
+f gpsmdcomsup.sthlp
+f gpsmdpolest.sthlp

@@ -119,6 +119,7 @@ p reglike module to calculate log-likelihood function value from regress
 p regmain module to perform Quasi-Maximum Likelihood Regression
 p regoprob module to estimate random effects generalized ordered probit models
 p regoprob2 module to estimate random effects generalized ordered probit models (update)
+p regoptwt module to produce optimal population weighting for regressions and instrumental variables
 p regpar module to compute population attributable risks from binary regression models
 p regplot module to plot regression fit 
 p regpred module to calculate linear regression predictions

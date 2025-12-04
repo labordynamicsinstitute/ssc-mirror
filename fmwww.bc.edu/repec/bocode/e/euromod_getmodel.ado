@@ -1,4 +1,9 @@
-
+global EUROMOD_COMMAND_VERSION = "1.1.0"
+/*#####################################################
+#  Version 1.1.0
+#  Author: Hannes Serruys
+#  Last updated: 11/30/2025
+#####################################################*/
 capture program drop euromod_getmodel 
 program define euromod_getmodel 
 	syntax , [folder(string)]

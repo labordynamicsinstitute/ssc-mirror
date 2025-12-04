@@ -1,8 +1,8 @@
 {smcl}
-{* *! version 1.1.0  January 22, 2024 @ 12:00:00}{...}
+{* *! version 1.1.1  1 December, 2025 @ 12:00:00}{...}
 {viewerjumpto "Requirements" "euromod####Requirements"}
 {viewerjumpto "Description" "euromod####description"}{viewerjumpto "Examples" "euromod####examples"}
-{viewerjumpto "Authors" "euromod####authors"}{cmd:euromod} {it:(EUROMOD Connector v1.0.4)}
+{viewerjumpto "Authors" "euromod####authors"}{cmd:euromod} {it:(EUROMOD Connector v1.1.1)}
 
 {hline}
 {marker description}{title:Requirements}
@@ -12,6 +12,7 @@ This can be downloaded from {browse "https://euromod-web.jrc.ec.europa.eu/downlo
 {marker description}{title:Description} The euromod command allows the user to interact with the EUROMOD microsimulation software from Stata. 
 The user is able to 
 {p 10} - Run the model, see {help euromod run} {p_end}
+{p 10} - Download the latest public model, see {help euromod getmodel} {p_end}
 {p 10} - Retrieve information about the model, see {help euromod getinfo} {p_end}
 {p 10} - Retrieve information about the model change the model, see {help euromod setinfo} {p_end}
 {p 10} - Load the data into memory, see {help euromod getdata}{p_end}

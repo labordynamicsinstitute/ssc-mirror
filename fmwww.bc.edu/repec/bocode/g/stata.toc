@@ -119,6 +119,7 @@ p gprefscode module to report on graphics preferences
 p gpreg module to estimate regressions with two dimensional fixed effects
 p gpreset module to reset preferences for a custom graphics scheme to their original values
 p gpscore2 module to estimate the parameters of the conditional distribution of the treatment via GLM
+p gpsmd module for or the estimation of the dose-response function when the treatment is multidimensional
 p grand modules to compute grand mean and dummies for differences
 p grand2 module to compute an estimate of the grand mean/intercept and differences
 p graph3d module to draw colored, scalable, rotatable 3D plots

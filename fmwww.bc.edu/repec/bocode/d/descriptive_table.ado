@@ -2,6 +2,7 @@
 *! Author(s) Christiaan Righolt & Colton Poitras
 *! Orthopaedic Innovation Centre, Winnipeg, MB
 *! Version history
+*! 2.2 Dec 2025		Minor bugfix from if in function call
 *! 2.1 Aug 2025		Allow for percentages of non-missing (and minor changes)
 *! 2.0 Dec 2024		Mata suppression
 *! 1.1 Sep 2024		Initial suppression
@@ -94,7 +95,7 @@ program define descriptive_table
 			char `var_base_name'[__bin] 0
 
 			local n_rows = `n_rows' + `print_mean_row' + `print_median_row' + `print_minmax_row'
-			quietly count if missing(`var') `if_from_function_call' `in'
+			quietly count if missing(`var') `and_if_from_function_call' `in'
 			if r(N)>0 local n_rows = `n_rows' + 1 // Add an extra row for unknowns if needed
 		}
 	}
@@ -182,7 +183,7 @@ program define descriptive_table
 				local ++i_row
 			}
 			// Print missing row if some are missing
-			quietly count if missing(`var') `if_from_function_call' `in'
+			quietly count if missing(`var') `and_if_from_function_call' `in'
 			if r(N)>0 {
 				// Tabulate on the missing won't work as one of the columns may not have missing values
 				putdocx table t_desc(`i_row',1) = ("    Missing")
@@ -231,7 +232,7 @@ program define descriptive_table
 			if `percent_exclude_missing' {
 				quietly tabulate `base_name' `col_var' `if_from_function_call' `in', matcell(non_missing_data)
 				quietly tabulate `col_var' if !missing(`base_name') `and_if_from_function_call' `in', matcell(N_per_col_no_missing)
-				quietly count if missing(`base_name') `if_from_function_call' `in'
+				quietly count if missing(`base_name') `and_if_from_function_call' `in'
 				if r(N)>0 {
 					local any_cat_missing_flag = 1
 				}

@@ -1,35 +1,13 @@
 /*#####################################################
-#  Version 1.0.4
+#  Version 1.1.1
 #  Author: Hannes Serruys
-#  Last updated: 12/12/2024
+#  Last updated: 11/30/2025
 #####################################################*/
-
+global EUROMOD_COMMAND_VERSION = "1.1.0"
 
 
 if "$EUROMOD_PATH" == "" {
 	global EUROMOD_PATH = "C:/Program Files/EUROMOD/Executable"
-}
-capture mata: mata drop get_latest_version()
-capture mata: 
-	void get_latest_version(string dirPath)
-	{
-		real col, row
-		string matrix dirList
-
-		// Get the list of directories and files
-		dirList = sort(dir(dirPath,"dirs","v*.*.*"),1)
-
-
-		if (rows(dirList) > 0) {
-			st_local("latest_version",dirList[rows(dirList)])
-		}
-	}
-
-end
-mata: get_latest_version("$EUROMOD_PATH")
-
-if "`latest_version'" != "" {
-	global EUROMOD_PATH = "$EUROMOD_PATH/`latest_version'"
 }
 adopath + "$EUROMOD_PATH"
 local wd = c(pwd)

@@ -90,6 +90,7 @@ p eth2grecal module to convert dates from the Ethiopian calendar to the Gregoria
 p ethiodate module to p[rovide Ethiopian Date Conversion Utilities]
 p etime module to time how long a program runs
 p etr module to calculate the cost of capital and forward-looking effective tax rates
+p eui module to compute Environmental Uncertainty Index Calculator
 p euromod module to connect to EUROMOD (Windows only)
 p eurostatuse module to import data from Eurostat repository into Stata
 p eurouse module to import data from Eurostat

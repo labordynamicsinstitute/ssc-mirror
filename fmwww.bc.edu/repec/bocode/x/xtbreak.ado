@@ -1,6 +1,10 @@
-*! xtbreak version 2.0 - 20.01.2025
+*! xtbreak version 2.2 - 03.12.2025
 /*
 Changelog
+version 2.2
+- 03.12.2025 - bug fix in estimation of break points when using python fixed. Data was not demeaned!
+version 2.1
+- 25.02.2025 - bug fix in breaks(min max) using h(2)
 version 2.0
 - 02.05.2024 - additional check if time series used, then csa option ignored
 - 06.11.2024 - bug fixed in xtbreak_listbreaks()
@@ -18,14 +22,12 @@ version 1.4
 version 1.1
 - 15.11.2021 - bug when variable name contained "est". 
 - 07.02.2021 - error when using Stata 15 and xtbreak, local cannot access r() matrix.
-
 */
 
-capture program drop xtbreak
 
 program define xtbreak, rclass
 	syntax [anything] [if], [* version update ] 
-		timer on 1 
+		
 		version 14.2
 
 		local cmd "`*'"
@@ -61,8 +63,8 @@ program define xtbreak, rclass
 		}
 
 		if "`version'" != "" {
-			local version 2.0
-			noi disp "This is version `version' - 20.01.2025"
+			local version 2.2
+			noi disp "This is version `version' - 03.12.2025"
 			return local version "`version'"
 			exit
 		}
@@ -76,7 +78,7 @@ program define xtbreak, rclass
 			exit
  		}
  		else {
-			if `mataversion' < 1.01 {
+			if `mataversion' < 2.2 {
 				noi disp "mata library outdated. Pleae update xtbreak:"
 				noi disp as smcl "{stata:xtbreak, update}"
 				exit
@@ -86,18 +88,21 @@ program define xtbreak, rclass
 		*** now start main program
 
 		tokenize `anything' 
-				
-		if "`1'" == "test" { 
+		timer on 1		
+		if "`1'" == "test" | "`1'" == "tests" { 
 			macro shift
-			xtbreak_tests `*' `if' , `options'
-			return add
+			xtbreak_test `*' `if' , `options'	
+			return add		
 		}
 		else if regexm("`1'","^est") {
+			
 			macro shift
 			xtbreak_estimate `*' `if', `options'
 			return add
+			
 		}
 		else {
+			
 			local 0 `*' `if' , `options'
 			syntax anything [if] , [Breaks(string) BREAKPoints(string) cvalue(string) level(real 0.95) skiph2 strict MAXbreaks(passthru) wdmax *]  
 
@@ -129,12 +134,12 @@ program define xtbreak, rclass
 			
 			local deplagchk 
 			if "`skiph2'" == "" {
-				xtbreak_tests `anything' `if' ,`options' donotdisptrim h(2) `maxbreaks' `wdmax' level(`level')
+				xtbreak_test `anything' `if' ,`options' donotdisptrim h(2) `maxbreaks' `wdmax' level(`level')
 				if `r(DepLagMsg)' == 1 local LagDepWarningMSG "Warning: lagged dependent variables not allowed in the panel case. Remove the lagged dependent variable and specify an appropriate vce option. Serial correlation in panels is dealt through the error variance-covariance matrix."
 
 				local deplagchk nodeplag
 			}
-			xtbreak_tests `anything' `if' ,`options' donotdisptrim h(3) sequential `maxbreaks' `strict' cvalue(`cvalue') `deplagchk'
+			xtbreak_test `anything' `if' ,`options' donotdisptrim h(3) sequential `maxbreaks' `strict' cvalue(`cvalue') `deplagchk'
 			if "`deplagchk'" == "" & `r(DepLagMsg)' == 1 local LagDepWarningMSG "Warning: lagged dependent variables not allowed in the panel case. Remove the lagged dependent variable and specify an appropriate vce option. Serial correlation in panels is dealt through the error variance-covariance matrix."
 
 			tempname estBreak Nbreaksmat
@@ -195,9 +200,11 @@ program define xtbreak, rclass
 			
 			return local cmd "xtbreak `cmd'"
 			return hidden local seq "1"
-		}
 
+			
+		}
 		timer off 1
+		
 	
 end
 

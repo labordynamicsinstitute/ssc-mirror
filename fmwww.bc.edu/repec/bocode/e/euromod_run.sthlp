@@ -1,12 +1,12 @@
 {smcl}
-{* *! version 1.1.0  January 10, 2023 @ 12:00:00}{...}
+{* *! version 1.1.1  1 December, 2025 @ 12:00:00}{...}
 {viewerjumpto "Syntax" "euromod run####syntax"} 
 {viewerjumpto "Description" "euromod run####description"} 
 {viewerjumpto "Options" "euromod run####options"} 
 {viewerjumpto "Examples" "euromod run####examples"} 
 {viewerjumpto "Requirements" "euromod run####requirements"}
 {viewerjumpto "Authors" "euromod run####authors"}
-{cmd:help euromod run} {it:(EUROMOD Connector v1.0.4)}
+{cmd:help euromod run} {it:(EUROMOD Connector v1.1.1)}
 
 {hline}
 
@@ -37,7 +37,9 @@
 {opt il_output (income lists)}
 {opt vars_output (variables)}
 {opt extrainfo_output (Additional Information)}
-{opt keep} ] {p_end}
+{opt suppress_output}
+{opt keep}
+{opt breakfun_id (breakfun_id)} ] {p_end}
 
 {title:Description} {marker description}
 
@@ -104,20 +106,18 @@ Enables the specification of a prefix that will be added to the variable names o
 
 {p 8 2 1}{it:euromod run, … prefix(“sim1_”)}{p_end}
 
-{pstd}{opt useLogger} This option will open a Logger window which portrays the advancement of the simulation. 
-Note that the Logger is designed to stay open in case an Error has been produced while running EUROMOD.{p_end}
-
 {pstd}{opt publiccomponentsonly} This option will run the model with only the public components and ignoring the private components. {p_end}
 
 {pstd}{opt sequentialoutput} This option forces EUROMOD to let the spine run sequentially instead of in a parallelised way over all Households. {p_end}
 
 {pstd}{opt keep} This option keeps the output of the simulation in memory and passes it to other simulation. One can keep only one simulation at a time in memory. {p_end}
 
-{pstd}{opt repository(string)} This options accepts a string as a path. When provided, the connector will attempt to load the input-dataset specified by the dataset parameter from the path provided {p_end}
-
 
 {pstd}{opt outputdataset(string)} In case there are multiple output dataset returned by the EUROMOD simulation, one can pass the filename in advance to the command such that the respective dataset will be loaded into memory afterwards. 
 Otherwise the data can be loaded in a second step by the {help euromod getdata} command. {p_end}
+
+{pstd}{opt breakfun_id(string)} Allows the user to interrupt the simulation at a function of their choice in the spine. The user needs to provide the Function Identifier, which can be retrieved to the user interface.
+All outputdata in memory (excluding constants) is returned and concatenated to the active Stata dataframe. {p_end}
 
 {pstd}{opt outputpath(string)} In case this path is provided, the output will not only be passed through memory, but also generated as a text file stored on the specified path. {p_end}
 
@@ -146,6 +146,11 @@ Below one finds a working example that would run EUROMOD and retrieve the IsDepe
  and the HeadID for every individual according to the tax unit definition of tu_bcheydc_bg. {p_end}
 
 {p 8 4 2}{it: euromod run, system("BG_2023") country("BG") dataset("BG_2021_c1") extrainfo_output("'tu_bmaycct_bg':'IsDependentChild', 'tu_bcheydc_bg':'IsDependentChild,HeadID'")} {p_end}
+
+{pstd}{opt sequentialoutput} This option should only be used when a custom output is demanded through the il_output option or the vars_output option. 
+It will suppress the original DefOutput and only return the custom output. 
+This can lead to considerable speed gains. {p_end}
+
 
 {title:Global variables}
 

@@ -1,6 +1,7 @@
 {smcl}
+{* *! version 1.1.1  1 December, 2025 @ 12:00:00}{...}
 {viewerjumpto "Syntax" "euromod setinfo##syntax"} {viewerjumpto "Description" "euromod setinfo####description"}{viewerjumpto "Examples" "euromod setinfo####examples"}
-{viewerjumpto "Authors" "euromod setinfo####authors"}{cmd:help euromod setinfo} {it:(EUROMOD Connector v1.0.4)}
+{viewerjumpto "Authors" "euromod setinfo####authors"}{cmd:help euromod setinfo} {it:(EUROMOD Connector v1.1.1)}
 
 {hline}
 

@@ -184,6 +184,7 @@ p prolist module to list programs, help files, dialogs
 p propcnsreg module fitting a measurement model with causal indicators
 p proprcspline module for restricted cubic spline smoothing of proportions
 p prosperity module to compute Shared Prosperity Convergence Index
+p province_devcat module to generate development level variable for Chinese A-share listed companies based on provincial GDP per capita
 p prtab module to compute Precision-recall curves 
 p prwe module to calculate the PRWE scores from your records
 p psacalc module to calculate treatment effects and relative degree of selection under proportional selection of observables and unobservables

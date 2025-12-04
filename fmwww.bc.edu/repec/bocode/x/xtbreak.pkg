@@ -21,7 +21,7 @@ d KW: panel data
 d
 d Requires: Stata version 15.1
 d
-d Distribution-Date: 20250122
+d Distribution-Date: 20251203
 d
 d Author: Jan Ditzen, Free University of Bozen-Bolzano
 d Support: email jan.ditzen@@unibz.it
@@ -37,12 +37,12 @@ f xtbreak.sthlp
 f xtbreak_auxiliary.ado
 f xtbreak_estat.ado
 f xtbreak_estimate.ado
-f xtbreak_tests.ado
+f xtbreak_test.ado
 f xtbreak_about.ihlp
 f xtbreak_estimate.sthlp
 f xtbreak_options_detail.ihlp
 f xtbreak_options.ihlp
 f xtbreak_PanelVarCov.ihlp
-f xtbreak_tests.sthlp
+f xtbreak_test.sthlp
 f ../l/lxtbreak.mlib
 f xtbreak_example.do

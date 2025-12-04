@@ -1,0 +1,26 @@
+d 'PROVINCE_DEVCAT': module to generate development level variable for Chinese A-share listed companies based on provincial GDP per capita
+d
+d      province_devcat is a specialized Stata program designed to
+d analyze the development level of Chinese    A-share listed
+d companies based on provincial GDP per capita data. 
+d
+d KW: development
+d KW: provincial geography
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20251203
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+f province_devcat.ado
+f province_devcat.sthlp
+f ../a/asure.dta
+f pcgdp2010-2024.dta

@@ -1,32 +1,11 @@
 /*#####################################################
-#  Version 1.0.4
+#  Version 1.1.1
 #  Author: Hannes Serruys
-#  Last updated: 12/12/2024
+#  Last updated: 11/30/2025
 #####################################################*/
-
-capture mata: mata drop get_latest_version()
-capture mata: 
-	void get_latest_version(string dirPath)
-	{
-		real col, row
-		string matrix dirList
-
-		// Get the list of directories and files
-		dirList = sort(dir(dirPath,"dirs","v*.*.*"),1)
-
-
-		if (rows(dirList) > 0) {
-			st_local("latest_version",dirList[rows(dirList)])
-		}
-	}
-
-end
-mata: get_latest_version("$EUROMOD_PATH")
+global EUROMOD_COMMAND_VERSION = "1.1.0"
 if "$EUROMOD_PATH" == "" {
 	global EUROMOD_PATH = "C:/Program Files/EUROMOD/Executable"
-}
-if "`latest_version'" != "" {
-	global EUROMOD_PATH = "$EUROMOD_PATH/`latest_version'"
 }
 quietly adopath + "$EUROMOD_PATH"
 local wd = c(pwd)
@@ -34,6 +13,14 @@ quietly cd "$EUROMOD_PATH"
 capture program drop EM_StataPlugin
 program EM_StataPlugin, plugin using ("$EUROMOD_PATH/StataPlugin.plugin")
 quietly cd "`wd'"
+
+//once plugin is loaded, get software version of EUROMOD
+if "$EUROMOD_SOFTWARE_VERSION" == "" {
+		capture plugin call EM_StataPlugin , "setVersion"
+		if (_rc != 0) {
+			global EUROMOD_SOFTWARE_VERSION = "3.7.10"
+		}
+	}
 capture program drop euromod_run
 program define euromod_run, rclass
 	// change working directory to path for plugin for plugin to function correctly. Problem with linking of CLR library with stata plugin, because lib file needs to be in the working directory.
@@ -49,7 +36,7 @@ program define euromod_run, rclass
 		exit
 	}
     version 15.1
-	syntax [if] [in], SYStem(string) DATAset(string) MODel(string) country(string) [ REPository(string)  TU_output(string) VARs_output(string) il_output(string) constants(string) PREFix(string) SETtings(string) EXTRAinfo_output(string) SUPPress_output)  uselogger outputdataset(string) EXTensions(string) ADDons(string) replace euro sequentialrun PUBLICcomponentsonly outputpath(string) keep]
+	syntax [if] [in], SYStem(string) DATAset(string) MODel(string) country(string) [ REPository(string)  TU_output(string) VARs_output(string) il_output(string) constants(string) PREFix(string) SETtings(string) EXTRAinfo_output(string) SUPPress_output)  uselogger outputdataset(string) EXTensions(string) ADDons(string) replace euro sequentialrun PUBLICcomponentsonly outputpath(string) keep breakfun_id(string)]
 	
 //DO NOT touch name of varlist_input_EM, plugin is hardcoded on the name #####
 	if ("`euro'" == "euro") {
@@ -90,7 +77,7 @@ program define euromod_run, rclass
 		    local varlist_input_EM9870 = "`varlist_input_EM9870' `var'"
 		}	
 	}
-    capture noisily plugin call EM_StataPlugin `varlist_input_EM9870' if `touse', "simulate" "`system'" "`model'" "`dataset'" "`repository'" "`outputdataset'" "`country'" "`vars_output'" "`il_output'" "`extrainfo_output'" "`suppress_output'" "`constants'" "`settings'" "`disableLogger'" "`extensions'" "`addons'" "`outputpath'" "`keep'"
+    capture noisily plugin call EM_StataPlugin `varlist_input_EM9870' if `touse', "simulate" "`system'" "`model'" "`dataset'" "`repository'" "`outputdataset'" "`country'" "`vars_output'" "`il_output'" "`extrainfo_output'" "`suppress_output'" "`constants'" "`settings'" "`disableLogger'" "`extensions'" "`addons'" "`outputpath'" "`keep'" "`breakfun_id'"
 	if (_rc != 0) {
 		quietly plugin call EM_StataPlugin, "setReturnList"
 		foreach local_connector in `return_list_locals_connector' {
@@ -120,4 +107,5 @@ program define euromod_run, rclass
 			return local `local_connector' = "`rlm`local_connector''"
 		}
 	}
+	exit
 end

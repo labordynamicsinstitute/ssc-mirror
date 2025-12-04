@@ -1,0 +1,25 @@
+d 'REGOPTWT': module to produce optimal population weighting for regressions and instrumental variables
+d
+d	 regoptwgt estimates regression coefficients based on an
+d optimal weighting that takes into account    both (1) variance in
+d the error term that is correlated with the inverse of the
+d weighting variable,	 and (2) variance in the error term that is
+d independent of the weighting variable.  Estimates are   
+d calculated using limited information maximum likelihood. 
+d
+d KW: weights
+d KW: regression
+d KW: instrumental variables
+d
+d Requires: Stata version 13.1
+d
+d Distribution-Date: 20251203
+d
+d Author:  David J. Price,  University of Toronto
+d Support: email davidjonathanprice.com
+d
+f regoptwt.sthlp
+f regoptwt.ado
+f regoptwgt_loglik1endog.ado
+f regoptwgt_loglik2endog.ado
+f regoptwgt_loglik3plusendog.ado

@@ -1,0 +1,28 @@
+d 'EUI': module to compute Environmental Uncertainty Index Calculator
+d
+d	eui calculates the Environmental Uncertainty Index (EUI)
+d using the standard deviation of industry    sales growth rates
+d over a specified time window (3-5 years). The program implements
+d a comprehensive    data processing pipeline including data
+d cleaning, industry classification, growth rate calculation,	
+d and uncertainty measurement. 
+d
+d KW: environmental index
+d KW: uncertainty
+d KW: sales
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20251203
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+f eui.ado
+f eui.sthlp
