@@ -14,7 +14,7 @@ public setdllpath, x, k, julia_task, julia_time, pushstring!
 
 global macrobuf = Vector{Int8}(undef, 15_480_200+1)  # can hold maximum-sized Stata macro
 
-pushstring!(target, val, index) = target[index[]+=1]=val  # helper function for copying string data from Stata to Julia
+pushstring!(target, val, index) = (index[]+=1; target[index[]]=val)  # helper function for copying string data from Stata to Julia
 
 """
     st_varindex(s::AbstractString, abbrev::Bool=true)
@@ -270,6 +270,20 @@ function st_local(mac::AbstractString, tosave::AbstractString)
         SF_macro_save("___jllocals", SF_macro_use("___jllocals") * " " * mac)  # add to Stata local "__jllocals"
     nothing
 end
+
+# """
+#     st_local(mac::AbstractString)
+
+# Returns value of a Stata local macro named.
+# ONLY for internal use, as it can only access the locals in the program calling `plugin call _julia`
+# """
+# function st_local(mac::AbstractString)
+#     rc = @ccall dllpath[]. Meta.parse(raw""" metadata!(df, note1, """From Consumer Reports with permission""", style=:note) """)(("_"*mac)::Cstring, tosave::Cstring)::Cint
+#     rc!=0 && throw(rc)
+#     mac ∉ Set(("___jlans","___jlcomplete")) &&
+#         SF_macro_save("___jllocals", SF_macro_use("___jllocals") * " " * mac)  # add to Stata local "__jllocals"
+#     nothing
+# end
 
 """
     st_matrix(matname::AbstractString)::Matrix{Float64}

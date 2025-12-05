@@ -1,4 +1,4 @@
-d 'REGOPTWT': module to produce optimal population weighting for regressions and instrumental variables
+d 'REGOPTWGT': module to produce optimal population weighting for regressions and instrumental variables
 d
 d	 regoptwgt estimates regression coefficients based on an
 d optimal weighting that takes into account    both (1) variance in
@@ -18,8 +18,8 @@ d
 d Author:  David J. Price,  University of Toronto
 d Support: email davidjonathanprice.com
 d
-f regoptwt.sthlp
-f regoptwt.ado
+f regoptwgt.sthlp
+f regoptwgt.ado
 f regoptwgt_loglik1endog.ado
 f regoptwgt_loglik2endog.ado
 f regoptwgt_loglik3plusendog.ado

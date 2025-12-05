@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-index of NJC's best Stata stuff (version 17 November 2024)  
+index of NJC's best Stata stuff (version 4 December 2025)  
 {hline}
 
 {title:Description} 
@@ -43,6 +43,7 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help aaplot}              scatter plot with linear and/or quadratic fit, automatically annotated
 {space 4}{help binsm}               bin smoothing and summary on scatter plots
 {space 4}{help catplot}             plots of categorical data
+{space 4}{help codensity}           kernel density estimation for one or more variables or groups
 {space 4}{help combineplot}         combine similar plots for different variables 
 {space 4}{help corrtable}           correlation matrix as graphical table
 {space 4}{help crossplot}           scatter (twoway) plots for each y vs each x 
@@ -150,16 +151,17 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help hsmode}              half-sample modes
 {space 4}{help iquantile}           interpolated quantiles 
 {space 4}{help lmoments}            L-moments and derived statistics 
+{space 4}{help lmomentsets}         L-moment-based measures collected as datasets
 {space 4}{help lvalues}             letter value calculation
 {space 4}{help modes}               tabulation of modes 
 {space 4}{help moments}             moment-based statistics
 {space 4}{help momentsets}          moment-based statistics sets 
-{space 4}{help multidensity}        kernel density estimation for one or more variables or groups
 {space 4}{help nruns}               number of runs compared with random shuffles
 {space 4}{help omninorm}            omnibus test for univariate or multivariate normality 
 {space 4}{help pcacoefsave}         save results of PCA to new dataset 
 {space 4}{help pctilesets}          percentile sets 
 {space 4}{help qsbayes}, {help qsbayesi}   quasi-Bayes smoothing of categorical frequencies 
+{space 4}{help quantilesets}        quantile sets for selected probability levels
 {space 4}{help rangerun}            run commands on observations within range
 {space 4}{help rangestat}           generate statistics using observations within range
 {space 4}{help shorth}              descriptive statistics based on shortest halves
@@ -187,6 +189,7 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help moss}                multiple occurrences of substrings 
 {space 4}{help multencode}          encode multiple string variables into numeric
 {space 4}{help myaxis}              reorder categorical variable by specified sort criterion
+{space 4}{help myrank}              generate axis variable based on ranks
 {space 4}{help myweeks}             numbered weeks from daily dates
 {space 4}{help numdate}             generate numeric date-time variable
 {space 4}{help panelthin}           observations for thinned panel dataset
@@ -223,6 +226,7 @@ available at {help njc_stuff:NJC stuff}.
 {bind:J.N. Luchman,} 
 {bind:S. Merryman,}
 {bind:T. Morris,}
+{bind:K. Namit,}
 {bind:R. Picard,} 
 {bind:B. Rising,} 
 {bind:G. Rossman,} 

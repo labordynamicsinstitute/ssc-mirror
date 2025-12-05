@@ -1,20 +1,23 @@
 d 'PZMS': module to implement the Placebo Zone optimal Model Selection algorithm for regression discontinuity and kink designs
 d
-d    pzms implements the placebo zone model selection algorithm for
-d regression discontinuity (RDD) and kink (RKD) designs proposed   
-d in Kettlewell & Siminski (2022). It also reports regression
-d estimates using the model specification selected by the
-d algorithm.	The pzms algorithm works by estimating treatment
-d effects for candidate RDD or RKD specifications at various
-d 'placebo    thresholds'. These placebo thresholds are cut-off
-d points along the range of the running variable where there is no
-d actual    discrete change in treatment (this region is described
-d as the placebo zone). Treatment effects are assumed to be zero at
-d these    thresholds. Candidate models can vary by combinations of
-d bandwidth, polynomial order, kernel weighting, analytical
-d weighting    and covariates. The candidate specification with the
-d lowest root mean squared error of placebo estimates is selected
-d as the    preferred specification. 
+d   pzms implements the placebo zone model selection algorithm for
+d regression discontinuity (RDD) and kink (RKD) designs proposed in
+d Kettlewell & Siminski (Forthcoming, Economic Inquiry). It also
+d reports regression estimates using the model specification
+d selected by the algorithm. The pzms algorithm works by estimating
+d treatment effects for candidate RDD or RKD specifications at
+d various 'placebo thresholds'. These placebo thresholds are
+d cut-off points along the range of the running variable where
+d there is no actual discrete change in treatment (this region is
+d described as the placebo zone). Treatment effects are assumed to
+d be zero at these thresholds. Candidate models can vary by
+d combinations of bandwidth, polynomial order, kernel weighting,
+d analytical weighting and covariates. The candidate specification
+d with the lowest root mean squared error of placebo estimates is
+d selected as the preferred specification. Performance of the pzms
+d algorithm using simulations tailored to the given application,
+d including against leading alternative model selection approaches,
+d can be done using the companion command pzms_sim. 
 d
 d KW: placebo zone
 d KW: regression discontinuity
@@ -22,7 +25,7 @@ d KW: treatment effects
 d
 d Requires: Stata version 12.1
 d
-d Distribution-Date: 20230515
+d Distribution-Date: 20251204
 d
 d Author:   Nathan Kettlewell, University of Technology Sydney
 d Support: email  Nathan.Kettlewell@@uts.edu.au
@@ -31,7 +34,10 @@ d Author:  Peter Siminski, University of Technology Sydney
 d Support: email   Peter.Siminski@@uts.edu.au
 d
 f pzms.ado
+f pzms_sim.ado
 f pzms_custom.ado
 f pzms.sthlp
+f pzms_sim.sthlp
+f pzms.do
+f pzms_sim.do
 f pzms_example_data.dta
-f ../k/kettlewell_siminski_pzms_paper.pdf

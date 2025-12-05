@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.1.1  2025-11-27}{...}
+{* *! version 1.0.0  2025-11-30}{...}
 {title:Title}
 
 {phang}{cmd:regoptwgt} {hline 2} Optimal population weighting for regressions and instrumental variables{p_end}

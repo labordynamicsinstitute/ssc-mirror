@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-index of NJC's Stata stuff (version 17 November 2024)
+index of NJC's Stata stuff (version 4 December 2025)
 {hline}
 
 {title:Description}
@@ -45,7 +45,7 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}sup means superseded
 {space 4}psup means partially superseded
 {space 4}+ means good
-{space 4}judgements assume availability of Stata 18
+{space 4}judgements assume availability of Stata 19
 
 {space 4}{help aaplot}
 {space 4}SSC (NJC)
@@ -250,6 +250,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}binomial confidence intervals using Wilson scores
 {space 4}obs(OS ci)
 
+{space 4}{help codensity} 
+{space 4}SSC (NJC) 
+{space 4}Kernel density estimation for one or more variables or groups
+{space 4}+
+
 {space 4}{help collfreq}
 {space 4}dm59 stb44 (NJC)
 {space 4}collapsing datasets to frequencies
@@ -414,12 +419,16 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help cycleplot}
 {space 4}SSC (NJC)
 {space 4}cycle plots (month plots or seasonal subseries plots)
-{space 4}see also SJ 6-3
+{space 4}see also SJ 24-4
 
 {space 4}{help cycleplot}, {help sliceplot}
 {space 4}gr0025 sj6-3 (NJC)
 {space 4}cycle plot, slice plot
-{space 4}+
+{space 4}sup(sj24-4)
+
+{space 4}{help cycleplot}, {help sliceplot}
+{space 4}gr0025_1 sj24-4 (NJC)
+{space 4}cycle plot, slice plot
 
 {space 4}{help dataex} 
 {space 4}SSC (R. Picard, NJC) 
@@ -439,26 +448,31 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help designplot}
 {space 4}SSC (NJC) 
 {space 4}graphical summary of response given one or more factors (1)  
-{space 4}sup(SJ 19-3)
+{space 4}sup(SJ 24-4)
 
 {space 4}{help designplot}
 {space 4}gr0061 sj14-4 (NJC) 
 {space 4}graphical summary of response given one or more factors (2) 
-{space 4}sup(SJ 19-3) 
+{space 4}sup(SJ 24-4) 
 
 {space 4}{help designplot}
 {space 4}gr0061_1 sj15-2 (NJC) 
 {space 4}graphical summary of response given one or more factors (3) 
-{space 4}sup(SJ 19-3) 
+{space 4}sup(SJ 24-4) 
 
 {space 4}{help designplot}
 {space 4}gr0061_2 sj17-3 (NJC) 
 {space 4}graphical summary of response given one or more factors (4) 
-{space 4}sup(SJ 19-3)
+{space 4}sup(SJ 24-4)
 
 {space 4}{help designplot}
 {space 4}gr0061_3 sj19-3 (NJC) 
 {space 4}graphical summary of response given one or more factors (5) 
+{space 4}sup(SJ 24-4)
+
+{space 4}{help designplot}
+{space 4}gr0061_4 sj24-4 (NJC) 
+{space 4}graphical summary of response given one or more factors (6) 
 {space 4}+
 
 {space 4}{help destring}
@@ -781,37 +795,42 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help findname}
 {space 4}SSC (NJC)
 {space 4}list variables matching name patterns or other properties
-{space 4}sup(SJ 23-4)
+{space 4}sup(SJ 25-4)
 
 {space 4}{help findname}
 {space 4}dm0048 sj10-2 (NJC) 
 {space 4}list variables matching name patterns or other properties
-{space 4}sup(SJ 23-4)
+{space 4}sup(SJ 25-4)
 
 {space 4}{help findname}
 {space 4}dm0048_1 sj10-4 (NJC) 
 {space 4}list variables matching name patterns or other properties
-{space 4}sup(SJ 23-4)
+{space 4}sup(SJ 25-4)
 
 {space 4}{help findname}
 {space 4}dm0048_2 sj12-1 (NJC) 
 {space 4}list variables matching name patterns or other properties
-{space 4}sup(SJ 23-4) 
+{space 4}sup(SJ 25-4) 
 
 {space 4}{help findname}
 {space 4}dm0048_3 sj15-2 (NJC) 
 {space 4}list variables matching name patterns or other properties
-{space 4}sup(SJ 23-4) 
+{space 4}sup(SJ 25-4) 
 
 {space 4}{help findname}
 {space 4}dm0048_4 sj20-2 (NJC) 
 {space 4}list variables matching name patterns or other properties
-{space 4}sup(SJ 23-4)
+{space 4}sup(SJ 25-4)
 
 {space 4}{help findname}
 {space 4}dm0048_5 sj23-4 (NJC) 
 {space 4}list variables matching name patterns or other properties
-{space 4}+             
+{space 4}sup(SJ 25-4) 
+ 
+{space 4}{help findname}
+{space 4}dm0048_6 sj25-4 (NJC) 
+{space 4}list variables matching name patterns or other properties
+{space 4}+ 
 
 {space 4}{help firstdigit}
 {space 4}SSC (NJC)
@@ -1048,6 +1067,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}L-moments and derived statistics
 {space 4}+
 
+{space 4}{help lmomentsets}
+{space 4}SSC (NJC)
+{space 4}L-moment-based measures collected as datasets
+{space 4}+
+
 {space 4}{help localp}
 {space 4}SSC (NJC) 
 {space 4}kernel-weighted local polynomial smoothing 
@@ -1140,7 +1164,7 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help mdensity}
 {space 4}SSC (NJC)
 {space 4}univariate kernel density estimation, for variables or groups
-{space 4}sup(SSC multidensity}
+{space 4}sup(SSC codensity}
 
 {space 4}{help mipolate}
 {space 4}SSC (NJC) 
@@ -1263,11 +1287,6 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}encode multiple string variables into numeric 
 {space 4}+
 
-{space 4}{help multidensity} 
-{space 4}SSC (NJC) 
-{space 4}Kernel density estimation for one or more variables or groups
-{space 4}+
-
 {space 4}{help multidot}
 {space 4}SSC (NJC)
 {space 4}multiple panel dot charts and similar 
@@ -1342,6 +1361,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}SSC (NJC)
 {space 4}inform on packages installed over net
 
+{space 4}{help myrank}
+{space 4}SSC (NJC)
+{space 4}generate axis variable based on ranks
+{space 4}+
+
 {space 4}{help myweeks}
 {space 4}SSC (NJC)
 {space 4}numbered weeks from daily dates
@@ -1372,17 +1396,22 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help niceloglabels}
 {space 4}SSC (NJC)
 {space 4}nice axis labels for logarithmic scales (1)
-{space 4}sup(SJ 20-4)
+{space 4}sup(SJ 25-4)
 
 {space 4}{help niceloglabels}
 {space 4}gr0072 sj18-1 (NJC)
 {space 4}nice axis labels for logarithmic scales (2)
-{space 4}sup(SJ 20-4)
+{space 4}sup(SJ 25-4)
 
 {space 4}{help niceloglabels}
 {space 4}gr0072_1 sj20-4 (NJC)
 {space 4}nice axis labels for logarithmic scales (3)
-{space 4}+         
+{space 4}sup(SJ 25-4) 
+
+{space 4}{help niceloglabels}
+{space 4}gr0072_2 sj25-4 (NJC)
+{space 4}nice axis labels for logarithmic scales (4)
+{space 4}+            
 
 {space 4}{help nmissing}
 {space 4}dm67 stb49 (NJC)
@@ -1580,37 +1609,42 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help qplot}
 {space 4}gr42_2 sj4-1 (NJC)
 {space 4}quantile plots, generalized (4)
-{space 4}sup(SJ 19-3)
+{space 4}sup(SJ 24-4)
 
 {space 4}{help qplot}
 {space 4}gr42_3 sj5-3 (NJC)
 {space 4}quantile plots, generalized (5)
-{space 4}sup(SJ 19-3)
+{space 4}sup(SJ 24-4)
 
 {space 4}{help qplot}
 {space 4}gr42_4 sj6-4 (NJC)
 {space 4}quantile plots, generalized (6) 
-{space 4}sup(SJ 19-3)
+{space 4}sup(SJ 24-4)
 
 {space 4}{help qplot}
 {space 4}gr42_5 sj10-4 (NJC)
 {space 4}quantile plots, generalized (7) 
-{space 4}sup(SJ 19-3)         
+{space 4}sup(SJ 24-4)         
 
 {space 4}{help qplot}
 {space 4}gr42_6 sj12-1 (NJC)
 {space 4}quantile plots, generalized (8) 
-{space 4}sup(SJ 19-3)         
+{space 4}sup(SJ 24-4)         
 
 {space 4}{help qplot}
 {space 4}gr42_6 sj16-3 (NJC)
 {space 4}quantile plots, generalized (9) 
-{space 4}sup(SJ 19-3)
+{space 4}sup(SJ 24-4)
 
 {space 4}{help qplot}
 {space 4}gr42_7 sj19-3 (NJC)
 {space 4}quantile plots, generalized (10) 
-{space 4}+                    
+{space 4}sup(SJ 24-4)     
+
+{space 4}{help qplot}
+{space 4}gr42_8 sj24-4 (NJC)
+{space 4}quantile plots, generalized (11) 
+{space 4}+                 
 
 {space 4}{help qqplot2}
 {space 4}SSC (NJC)
@@ -1635,17 +1669,22 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help quantil2}
 {space 4}gr42 stb51 (NJC) 
 {space 4}quantile plots, generalized (1)
-{space 4}sup(SJ 12-1 qplot)
+{space 4}sup(SJ 24-4 qplot)
 
 {space 4}{help quantil2}
 {space 4}gr42_1 stb61 (NJC)
 {space 4}quantile plots, generalized (2)
-{space 4}sup(SJ 12-1 qplot)
+{space 4}sup(SJ 24-4 qplot)
 
 {space 4}{help quantil2}
 {space 4}SSC (NJC)
 {space 4}quantile plots, generalized (3)
-{space 4}sup(SJ 12-1 qplot)
+{space 4}sup(SJ 24-4 qplot)
+
+{space 4}{help quantilesets}
+{space 4}SSC (NJC)
+{space 4}quantilesets for selected probability levels 
+{space 4}+
 
 {space 4}{help qweibull}
 {space 4}SSC (NJC)
@@ -1818,7 +1857,7 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help sliceplot}
 {space 4}SSC (NJC)
 {space 4}time series or other plot in slices
-{space 4}see also SJ 6-3
+{space 4}see also SJ 24-4
 
 {space 4}{help slideplot}
 {space 4}SSC (NJC)
@@ -1878,6 +1917,10 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}SSC (NJC)
 {space 4}splitting string variables into parts
 {space 4}sup(OS split)
+
+{space 4}{help splitvarlabels}
+{space 4}SSC (K. Namit, NJC)
+{space 4}split variable labels for multiline graph display
 
 {space 4}{help sqr}
 {space 4}SSC (NJC)
@@ -2021,6 +2064,7 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help tableplot}
 {space 4}SSC (NJC)
 {space 4}graphical display in two-way table format
+{space 4}pobs(tabplot)
 
 {space 4}{help tabmerge}
 {space 4}SSC (NJC)
@@ -2039,12 +2083,12 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help tabplot}
 {space 4}SSC (NJC)
 {space 4}one-, two- and three-way bar charts for tables (3) 
-{space 4}+
+{space 4}sup(SJ 22=2)
 
 {space 4}{help tabplot}
 {space 4}gr0066_2 sj20-3 (NJC)
 {space 4}one-, two- and three-way bar charts for tables (4) 
-{space 4}+
+{space 4}sup(SJ 22-2)
 
 {space 4}{help tabplot}
 {space 4}gr0066_3 sj22-2 (NJC)
@@ -2067,7 +2111,7 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help tkdensity}
 {space 4}SSC (NJC) 
 {space 4}kernel density estimation, calculation on transformed scale
-{space 4}sup(SSC multidensity) 
+{space 4}sup(SSC codensity) 
 
 {space 4}{help todate}
 {space 4}SSC (NJC)
@@ -2275,5 +2319,4 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 
 {p 4 4 2}Nicholas J. Cox, Durham University{break} 
 n.j.cox@durham.ac.uk
-
 

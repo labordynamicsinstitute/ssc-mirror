@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.1  31mar2022}{...}
+{* *! version 1.2  2dec2025}{...}
 {findalias asfradohelp}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[R] help" "help help"}{...}
@@ -13,7 +13,7 @@
 {title:Title}
 
 {phang}
-{bf:pzms} {hline 2} implements the Placebo Zone optimal Model Selection algorithm for regression discontinuity and kink designs proposed in Kettlewell & Siminski (2022).
+{bf:pzms} {hline 2} implements the placebo zone model selection algorithm for regression discontinuity and kink designs proposed in Kettlewell & Siminski (forthcoming).
 
 
 {marker syntax}{...}
@@ -50,6 +50,7 @@
 {synopt:{opt bwrfix:(#)}}fixes the bandwidth on the right of the cut-off to this value{p_end}
 {synopt:{opt donut:(# #)}}drops observations within the specified range of the cut-off{p_end}
 {synopt:{opt pzplot:}}generate a kernel density plot of the placebo zone estimates{p_end}
+{synopt:{opt level(#):}}control the level for the confidence intervals{p_end}
 {synopt:{opt mcustom#:(# #, mcustom_options)}}allows the user to specify custom candidate specifications{p_end}
 {synoptline}
 {p2colreset}{...}
@@ -59,19 +60,19 @@
 
 {pstd}
 {cmd:pzms} implements the placebo zone model selection algorithm for regression discontinuity (RDD) and kink (RKD) designs proposed in 
-{browse "https://drive.google.com/file/d/1V4KmmPs_DX8Iv8p-eYYapXEoUd1LflgW/view":Kettlewell & Siminski (2022)}. It also reports regression estimates using the model specification selected by the algorithm.
+Kettlewell & Siminski (forthcoming). It also reports regression estimates using the model specification selected by the algorithm.
 The pzms algorithm works by estimating treatment effects for candidate RDD or RKD specifications at various 'placebo thresholds'. These placebo 
 thresholds are cut-off points along the range of the running variable where there is no actual discrete change in treatment (this region is described 
 as the placebo zone). Treatment effects are assumed to be zero at these thresholds. Candidate models can vary by combinations of bandwidth, polynomial 
 order, kernel weighting, analytical weighting and covariates. The candidate specification with the lowest root mean squared error of placebo estimates 
-is selected as the preferred specification.
+is selected as the preferred specification. Performance of the {cmd:pzms} algorithm using simulations tailored to the given application, including against leading alternative model selection approaches, can be done using the companion command {cmd:pzms_sim}.
 {p_end}   
 
 {marker options}{...}
 {title:Options}
 
 {phang}
-{opt maxbw(#)} the maximum bandwidth considered when comparing specifications throughout the placebo zone. There is no default.
+{opt maxbw(#)} the maximum bandwidth considered when comparing specifications throughout the placebo zone. There is no default. If {bf:maxbw(#)} is left unspecified, the resulting error message will display the 'rule of thumb' maxbw (Kettlewell & Siminski, forthcoming) for the user's consideration.
 
 {phang}
 {opt c(#)} the cut-off threshold for the treatment. The default is zero.
@@ -94,7 +95,7 @@ and 1 is for sharp RKD.
 {phang}
 {opt pzstepnum(#)} specifies the number of placebo zone iterations to be performed. There may be less iterations than specified by {bf:pzstepnum(#)} if some 
 steps are too small to move to a new placebo threshold (this may occur when the running variable is sparse, or when {bf:pzstepnum} is very high). It is 
-therefore a maximum number of iterations. {bf:pzstepnum} cannot be used if {bf:pzstepsize} is also specified.  The default is 50 if neither {bf:pzstepnum} or {bf:pzstepsize} 
+therefore a maximum number of iterations. {bf:pzstepnum} cannot be used if {bf:pzstepsize} is also specified. The default is 50 if neither {bf:pzstepnum} or {bf:pzstepsize} 
 are specified.
 
 {phang}
@@ -102,8 +103,7 @@ are specified.
 See also {bf:pzstepnum}.
 
 {phang}
-{opt bwstepnum(#)} the number of bandwidths to be considered between {bf:minbw} and {bf:maxbw}. The default is 20 if neither {bf:bwstepnum} or 
-{bf:bwstepsize} are specified.
+{opt bwstepnum(#)} the number of bandwidths to be considered between {bf:minbw} and {bf:maxbw}. {bf:bwstepsize} cannot be used if {bf:bwstepnum} is also specified. The default is 20 if neither {bf:bwstepnum} or {bf:bwstepsize} are specified.
 
 {phang}
 {opt bwstepsize(#)} the increase in bandwidth (in units of the running variable) between the candidate estimators considered. See also {bf:bwstepnum}. 
@@ -121,8 +121,7 @@ will estimate a model for each level of polynomial {bf:p(#)}, with and without t
 four models compared – linear without covariates, linear with covariates, quadratic without covariates and quadratic with covariates.
 
 {phang}
-{opt kernel(kernel type)} allows the user to choose what sort of kernel weights to apply. {bf:uniform} and {bf:triangular} are 
-supported. The default is uniform.
+{opt kernel(kernel type)} allows the user to choose what sort of kernel weights to apply. {bf:uniform} and {bf:triangular} are supported. The default is uniform.
 
 {phang}
 {opt weight(varname)} is used to specify {stata help weight:analytical weights} [aweights]. The weights will apply to every model considered 
@@ -150,9 +149,10 @@ explore the performance of asymmetric bandwidths.
 uses Stata's {cmd:kdensity} command with default settings.
 
 {phang}
-{opt donut(# #)} drops observations within the specified range of the cut-off. The first # specifies that observations within this value of the running 
-variable to the left of the cut-off be dropped. The second # specifies that observations within this value of therunning variable to the right of the 
-cut-off be dropped. This option can be used as an ad hoc solution to threshold bunching or other non-compliance issues.
+{opt donut(# #)} drops observations within the specified range (# #) relative to the placebo threshold for each placebo estimate (as well as relative to the true threshold when estimating the treatment effect). This option can be used as an ad hoc solution to threshold bunching or other non-compliance issues.
+
+{phang}
+{opt level(#)} this option allows the user to select the level for the construction of confidence intervals. Default is 95 for 95% confidence intervals.
 
 {phang}
 {opt mcustom#:(# #, mcustom_options)} this allows the user to include additional specifications in the candidate set with custom features. You can 
@@ -217,11 +217,11 @@ thresholds. You may also want to apply the same criteria in specifying {bf:bwste
 {synopt:{opt e(pz_est):}}the treatment effect estimate from the optimal specification{p_end}
 {synopt:{opt e(pz_se):}}the conventional standard error for the treatment effect estimate{p_end}
 {synopt:{opt e(pz_p):}}the p-value for the treatment effect using conventional standard error{p_end}
-{synopt:{opt e(pz_ess):}}the lower bound estimated effective sample size of the placebo estimates{p_end}
-{synopt:{opt e(pz_ess_sum):}}the upper bound estimated effective sample size of the placebo estimates{p_end}
-{synopt:{opt e(pz_altp):}}lower bound p-value using Kettlewell & Siminksi (2022) randomization inference method{p_end}
-{synopt:{opt e(pz_alt_se):}}the standard error using Kettlewell & Siminksi (2022) randomization inference method{p_end}
-{synopt:{opt e(pz_altp_sum):}}upper bound p-value using Kettlewell & Siminksi (2022) randomization inference method{p_end}
+{synopt:{opt e(pz_ess):}}the estimated effective sample size of the placebo estimates for the optimal specification{p_end}
+{synopt:{opt e(pz_altt):}}the t-statistic for the randomization inference{p_end}
+{synopt:{opt e(pz_altdf):}}the degrees of freedom for the randomization inference{p_end}
+{synopt:{opt e(pz_altp):}}p-value using Kettlewell & Siminski (forthcoming) randomization inference method{p_end}
+{synopt:{opt e(pz_alt_se):}}the standard error using Kettlewell & Siminski (forthcoming) randomization inference method{p_end}
 {synopt:{opt e(pz_rmse):}}RMSE of optimal specification in the placebo trials{p_end}
 {synopt:{opt e(pz_winbw):}}the bandwidth of the optimal specification{p_end}
 {synopt:{opt e(pz_bwstepsize):}}the value used for {bf:bwstepsize}{p_end}
@@ -236,7 +236,7 @@ thresholds. You may also want to apply the same criteria in specifying {bf:bwste
 {marker references}{...}
 {title:References}
 
-{phang}Kettlewell N. & Siminski P. (2022). {browse "https://drive.google.com/file/d/1V4KmmPs_DX8Iv8p-eYYapXEoUd1LflgW/view":Optimal Model Selection in RDD and Related Settings Using Placebo Zones}, mimeo{p_end}
+{phang}Kettlewell N. & Siminski P (forthcoming). Placebo Zones in Discontinuity-Based Designs: Estimation, Inference, and Implementation, {it:Economic Inquiry}{p_end}
 
 {marker references}{...}
 {title:Authors}
