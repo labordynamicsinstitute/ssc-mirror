@@ -1661,69 +1661,67 @@ version 11.0
 						local lowt (lowess `dvar_t'  `tvar', lcolor(red) bw(`bwidth')) 
 						local lowc (lowess `dvar_c'  `tvar', lcolor(orange) bw(`bwidth'))	
 					}
-				else {
-					local lowt (lowess `dvar_t'  `tvar', lcolor(red)) 
-					local lowc (lowess `dvar_c'  `tvar', lcolor(orange))		
-				}
-			
-			} // end quietly	
-			
-			/* if no covariates */
-			if "`xvar'" == "" {
-			
-				/* get legend specs */
-				get_leg_multi , treatdesc(`treatdesc')  tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade')
-				local mleg = r(mleg)
-
-				// * graph it - no xvars * //
-				twoway ///
-					`shhh' ///				
-					(scatter  `dvar_t' `plotvars_t' `tvar', `cpart' `tmspart' `lc' `mc') ///
-					(scatter  `dvar_c' `plotvars_c' `tvar', `cpart' `cmspart' `lc' `mc' `clp') ///
-					`lowt' ///
-					`lowc' ///
-					`lclt' ///
-					`uclt' ///	
-					`lclc' ///
-					`uclc' ///	
-					, xline(`trperiod', lpattern(shortdash) lcolor(black)) ///
-					`ylab' ///						
-					`mleg' ///
-					 `titlesec' note(`"`note'"') `figure2'
-				} // end no xvars
-			} // ?
-
-			/* with covariates */
-			if "`xvar'" != "" {
+					else {
+						local lowt (lowess `dvar_t'  `tvar', lcolor(red)) 
+						local lowc (lowess `dvar_c'  `tvar', lcolor(orange))		
+					}
+				} // end lowess	
 				
-				/* get legend specs */
-				get_leg_multi2 , treatdesc(`treatdesc')  tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade')
-				local mleg2 = r(mleg2)	
+			} // end quietly
+			
+				/* if no covariates */
+				if "`xvar'" == "" {
+					/* get legend specs */
+					get_leg_multi , treatdesc(`treatdesc')  tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade')
+					local mleg = r(mleg)
 
-				// * graph it - xvars * //		
-				twoway ///
-					`shhh' ///						
-					(scatter `dvar_t' `ypred_t' `dvar_c' `ypred_c'  `tvar', c(. l . l) ms(O none Oh none) mcolor(black black black black) ///
-						lcolor(black black black black) lpattern(blank solid blank dash) xline(`trperiod', lpattern(shortdash) lcolor(black))) ///
-					`lowt' ///
-					`lowc' ///
-					`lclt' ///
-					`uclt' ///	
-					`lclc' ///
-					`uclc' ///	
-					, `mleg2' ///
-					`ylab' ///					
-					`titlesec' note(`"`note'"') `figure2'	
-			} // end xvars
+					// * graph it - no xvars * //
+					twoway ///
+						`shhh' ///				
+						(scatter  `dvar_t' `plotvars_t' `tvar', `cpart' `tmspart' `lc' `mc') ///
+						(scatter  `dvar_c' `plotvars_c' `tvar', `cpart' `cmspart' `lc' `mc' `clp') ///
+						`lowt' ///
+						`lowc' ///
+						`lclt' ///
+						`uclt' ///	
+						`lclc' ///
+						`uclc' ///	
+						, xline(`trperiod', lpattern(shortdash) lcolor(black)) ///
+						`ylab' ///						
+						`mleg' ///
+						`titlesec' note(`"`note'"') `figure2'
+				} // end no xvars
+
+				/* with covariates */
+				if "`xvar'" != "" {
+					/* get legend specs */
+					get_leg_multi2 , treatdesc(`treatdesc')  tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade')
+					local mleg2 = r(mleg2)	
+
+					// * graph it - xvars * //		
+					twoway ///
+						`shhh' ///						
+						(scatter `dvar_t' `ypred_t' `dvar_c' `ypred_c'  `tvar', c(. l . l) ms(O none Oh none) mcolor(black black black black) ///
+							lcolor(black black black black) lpattern(blank solid blank dash) xline(`trperiod', lpattern(shortdash) lcolor(black))) ///
+						`lowt' ///
+						`lowc' ///
+						`lclt' ///
+						`uclt' ///	
+						`lclc' ///
+						`uclc' ///	
+						, `mleg2' ///
+						`ylab' ///					
+						`titlesec' note(`"`note'"') `figure2'	
+				} // end xvars
 		}   /* End of Figure Block */
 	}   /* End of Type 3 */
 	
-	// save estimation table
-	return matrix table = table	
+		// save estimation table
+		return matrix table = table	
 
 end
 
-// program drop generate the counterfactual
+// program to generate the counterfactual
 program define gen_cf, rclass
 version 11.0
     syntax, cmdlne(string) [prefix(string)]
@@ -2018,8 +2016,6 @@ version 11.0
 
 end			
 							
-	
-
 // program to get legend for multiple groups - no covariates
 program define get_leg_multi, rclass
 version 11.0

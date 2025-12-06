@@ -23,7 +23,8 @@ program define power_cmd_multi_itsa, rclass
 			Alpha(real 0.05)	/// alpha level				
 			LEVel				/// specify level change and not trend change
 			NOIsily				/// show the simulations dots
-			reps(integer 100) ]	//  number of repetitions      
+			reps(integer 100)	/// set initial seed 
+			seed(string) ]		//  number of repetitions      
 
 			preserve
 			
@@ -35,7 +36,15 @@ program define power_cmd_multi_itsa, rclass
 				local trperiod = ceil(`n' / 2)
 			}
 			
-			`quietly' simulate reject=r(reject), reps(`reps'): power_sim_multi_itsa, ///
+			
+			// Initial seed
+			if "`seed'"!="" {
+				set seed `seed'
+			}
+			local inis `=c(seed)'
+
+			
+			`quietly' simulate reject=r(reject), reps(`reps') seed(`seed'): power_sim_multi_itsa, ///
 				n(`n') contcnt(`contcnt') ///
 				tintercept(`tintercept') cintercept(`cintercept') ///
 				tpretrend(`tpretrend') cpretrend(`cpretrend') ///

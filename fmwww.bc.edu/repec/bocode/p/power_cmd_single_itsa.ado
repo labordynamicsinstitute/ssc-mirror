@@ -15,7 +15,8 @@ program define power_cmd_single_itsa, rclass
 			acorr(real 0)		/// autocorrelation
 			LEVel				/// specify level change and not trend change
 			NOIsily				/// show the simulations dots
-			REPs(integer 100) ]	//  number of repetitions      
+			REPs(integer 100)	///
+			seed(string) ]		//  number of repetitions       
 
 			preserve
 			
@@ -27,7 +28,13 @@ program define power_cmd_single_itsa, rclass
 				local trperiod = ceil(`n' / 2)
 			}
 			
-			`quietly' simulate reject=r(reject), reps(`reps'): power_sim_single_itsa, n(`n') intercept(`intercept') pretrend(`pretrend') ///
+			// Initial seed
+			if "`seed'"!="" {
+				set seed `seed'
+			}
+			local inis `=c(seed)'			
+			
+			`quietly' simulate reject=r(reject), reps(`reps') seed(`seed'): power_sim_single_itsa, n(`n') intercept(`intercept') pretrend(`pretrend') ///
 				posttrend(`posttrend') step(`step') trperiod(`trperiod') sd(`sd') acorr(`acorr') alpha(`alpha') `level'
     
 			summarize reject, meanonly

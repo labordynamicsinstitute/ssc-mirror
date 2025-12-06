@@ -10,6 +10,9 @@ program r2_mlm, rclass sortpreserve
 	else if strpos("`e(cmdline)'","R.") != 0 {
 		di as err "r2_mlm cannot currently be used with cross-classified models."
 	}
+	else if !mi("`e(wtype)'") {
+		di as err "r2_mlm cannot currently be used with models that include weights."
+	}
 	else {
 		loc nlevels = colsof(e(N_g))+1
 		//TWO-LEVEL

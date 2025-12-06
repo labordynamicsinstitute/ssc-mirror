@@ -5016,6 +5016,7 @@ fmwww.bc.edu/repec/bocode/c/cacheit_examples.ado
 fmwww.bc.edu/repec/bocode/c/color-tflorange.style
 fmwww.bc.edu/repec/bocode/c/cdist.ado
 fmwww.bc.edu/repec/bocode/c/cprd_patient.sthlp
+fmwww.bc.edu/repec/bocode/c/cleandisk.ado
 fmwww.bc.edu/repec/bocode/c/correlationchords.pkg
 fmwww.bc.edu/repec/bocode/c/charutil.pkg
 fmwww.bc.edu/repec/bocode/c/crosswalk.sthlp
@@ -5408,6 +5409,7 @@ fmwww.bc.edu/repec/bocode/c/cauchyden.ado
 fmwww.bc.edu/repec/bocode/c/cprdhes_procedures_epi.ado
 fmwww.bc.edu/repec/bocode/c/cprdhes_patient.sthlp
 fmwww.bc.edu/repec/bocode/c/cmogram.html
+fmwww.bc.edu/repec/bocode/c/cleandisk.sthlp
 fmwww.bc.edu/repec/bocode/c/color-tflyellow.style
 fmwww.bc.edu/repec/bocode/c/citybudget.dta
 fmwww.bc.edu/repec/bocode/c/cs_ranktest_1.3.02.do

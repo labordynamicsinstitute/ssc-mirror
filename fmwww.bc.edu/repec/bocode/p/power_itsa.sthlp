@@ -30,6 +30,7 @@ Power for a single-group interrupted time series analysis:
 {opt lev:el} 
 {opt noi:sily}  {p_end}
 {p 12 14 2}
+{opt seed(#)} 
 {opth rep:s(numlist)} {opt ]} 
 
 
@@ -56,7 +57,8 @@ Power for a multiple-group interrupted time series analysis:
 {opth cac:orr(numlist)} 
 {opth a:lpha(numlist)}
 {opt lev:el} 
-{opt noi:sily}  
+{opt noi:sily}
+{opt seed(#)}   
 {opth rep:s(numlist)} {opt ]} 
 
 
@@ -80,6 +82,7 @@ In the syntax for {cmd:power multi_itsa}, all options beginning with the letter 
 {synopt :{opth a:lpha(numlist)}}significance level; default is {cmd:alpha(0.05)}{p_end}
 {synopt :{opt lev:el}}specify that power is based on a change in level; default is that power is based on a difference in pre- and post-intervention trends{p_end}
 {synopt :{opt noi:sily}}show the simulation progress (dots); default is to suppress the simulation progress (dots) {p_end}
+{synopt :{opt seed(#)}}set random-number seed to {it:#}{p_end}
 {synopt :{opth rep:s(numlist)}}the number of replications to be performed; default is {cmd:reps(100)} {p_end}
 
 {syntab:Multiple-group ITSA}
@@ -100,6 +103,7 @@ In the syntax for {cmd:power multi_itsa}, all options beginning with the letter 
 {synopt :{opth ac:orr(numlist)}}control's autocorrelation (rho); default is {cmd:cacorr(0)}{p_end}
 {synopt :{opt lev:el}}specify that power is based on changes in level; default is that power is based on differences in pre- and post-intervention trends{p_end}
 {synopt :{opt noi:sily}}show the simulation progress (dots); default is to suppress the simulation progress (dots) {p_end}
+{synopt :{opt seed(#)}}set random-number seed to {it:#}{p_end}
 {synopt :{opth rep:s(numlist)}}the number of replications to be performed; default is {cmd:reps(100)} {p_end}
 {synoptline}
 {p2colreset}{...}
@@ -233,8 +237,12 @@ on a difference in pre- and post-intervention trends (Beta_3 in model 1 above).
 {opt noi:sily} show the simulation progress (dots). The default is to suppress the simulation progress (dots).
 
 {p 6 8 2} 
+{opt seed(#)} sets the random-number seed for the simulations.
+
+{p 6 8 2} 
 {opth rep:s(numlist)} specifies the number of replications to be performed. The default is {cmd:reps(100)} but a much higher number of repetitions should
 be used to improve the accuracy of the estimates (at minimum 1000).
+
 
 
 {pstd}
@@ -305,6 +313,9 @@ computed based on a difference in differences of pre- and post-intervention tren
 
 {p 6 8 2} 
 {opt noi:sily} show the simulation progress (dots). The default is to suppress the simulation progress (dots).
+
+{p 6 8 2} 
+{opt seed(#)} sets the random-number seed for the simulations.
 
 {p 6 8 2} 
 {opth rep:s(numlist)} specifies the number of replications to be performed. The default is {cmd:reps(100)} but a much higher number of repetitions should
