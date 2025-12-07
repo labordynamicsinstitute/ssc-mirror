@@ -1,5 +1,5 @@
 {smcl}
-{* *! Version 6, G. Cerulli, September 30, 2025}{...}
+{* *! Version 6, G. Cerulli, 24nov2025}{...}
 
 {title:Title}
 
@@ -150,36 +150,76 @@ and treatment effects. It allows for different risk preferences in decision-maki
 
 {dlgtab:References}
 
-{phang}
-Athey, S., and Wager S. 2021. Policy Learning with Observational Data, {it:Econometrica}, 89, 1, 133–161.
+{title:References}
 
 {phang}
-Cerulli, G. 2021. Improving econometric prediction by machine learning, {it:Applied Economics Letters}, 28, 16, 1419-1425.
+Athey, S., and S. Wager. 2021.
+Policy learning with observational data.
+{it:Econometrica} 89(1): 133–161.
+{p_end}
 
 {phang}
-Cerulli, G. 2022. Optimal treatment assignment of a threshold-based policy: empirical protocol and related issues, {it:Applied Economics Letters}, 30, 8, 1010-1017. 
+Cerulli, G. 2021.
+Improving econometric prediction by machine learning.
+{it:Applied Economics Letters} 28(16): 1419–1425.
+{p_end}
 
 {phang}
-Cerulli, G. 2023. {it:Fundamentals of Supervised Machine Learning: With Applications in Python, R, and Stata}, Springer, 2023. 
+Cerulli, G. 2022.
+Optimal treatment assignment of a threshold-based policy: Empirical protocol and related issues.
+{it:Applied Economics Letters} 30(8): 1010–1017.
+{p_end}
 
 {phang}
-Cerulli, G. 2024. Optimal policy learning with observational data in multi-action scenarios: Estimation, risk preference, and potential failures. {it:arXiv preprint}, arXiv:2403.20250. https://arxiv.org/abs/2403.20250.
+Cerulli, G. 2023.
+{it:Fundamentals of Supervised Machine Learning: With Applications in Python, R, and Stata}.
+Springer.
+{p_end}
 
 {phang}
-Cerulli, G. 2025. Optimal policy learning using Stata. {it:The Stata Journal}, 25, 2, 309-343.
+Cerulli, G. 2024.
+Optimal policy learning with observational data in multi-action scenarios:
+Estimation, risk preference, and potential failures.
+{it:arXiv preprint} arXiv:2403.20250.
+{browse "https://arxiv.org/abs/2403.20250"}
+{p_end}
 
 {phang}
-Gareth, J., Witten, D., Hastie, D.T., Tibshirani, R. 2013. {it:An Introduction to Statistical Learning : with Applications in R}. New York, Springer.
+Cerulli, G. 2025.
+Optimal policy learning using Stata.
+{it:The Stata Journal} 25(2): 309–343.
+{p_end}
 
 {phang}
-Kennedy, E. H. 2023. Towards optimal doubly robust estimation of heterogeneous causal effects. {it:Electronic Journal of Statistics}, 17, 2, 3008-3049.
+Gareth, J., D. Witten, T. Hastie, and R. Tibshirani. 2013.
+{it:An Introduction to Statistical Learning: With Applications in R}.
+Springer.
+{p_end}
 
 {phang}
-Kitagawa, T., and A. Tetenov. 2018. Who Should Be Treated? Empirical Welfare Maximization Methods for Treatment Choice, {it:Econometrica}, 86, 2, 591–616.
+Kennedy, E. H. 2023.
+Towards optimal doubly robust estimation of heterogeneous causal effects.
+{it:Electronic Journal of Statistics} 17(2): 3008–3049.
+{p_end}
 
 {phang}
-Kunzel, S. R., Sekhon, J. S., Bickel, P. J., Yu, B. (2019). Metalearners for estimating heterogeneous treatment effects using machine learning. 
-{it:Proceedings of the National Academy of Sciences of the United States of America}, 116, 10, 4156-4165.
+Kitagawa, T., and A. Tetenov. 2018.
+Who should be treated? Empirical welfare maximization methods for treatment choice.
+{it:Econometrica} 86(2): 591–616.
+{p_end}
+
+{phang}
+Kunzel, S. R., J. S. Sekhon, P. J. Bickel, and B. Yu. 2019.
+Metalearners for estimating heterogeneous treatment effects using machine learning.
+{it:Proceedings of the National Academy of Sciences} 116(10): 4156–4165.
+{p_end}
+
+{phang}
+Zhou, Z., S. Athey, and S. Wager. 2023.
+Offline multi-action policy learning: Generalization and optimization.
+{it:Operations Research} 71(1): 148–183.
+{p_end}
+
 
 {dlgtab:Acknowledgment}
 

@@ -1,10 +1,10 @@
 ********************************************************************************
 * PROGRAM "make_cate"
 ********************************************************************************
-*! make_cate, v.7, GCerulli, 09Nov2025
+*! make_cate , v.7, GCerulli, 02Dec2025
 program make_cate , eclass
 version 16
-syntax varlist [if] [in] , type(string) treatment(varlist max=1)  ///
+syntax varlist(fv ts) [if] [in] , type(string) treatment(varlist fv ts max=1)  ///
 train_cate(name) new_cate(name) [model(string) new_data(name)]
 marksample touse
 markout `touse' `treatment'
@@ -115,6 +115,8 @@ if !_rc {
 		}
 		************************************************************************
 		ereturn clear
+		ereturn local cmd "make_cate"
+		ereturn local type "ra"
 		ereturn local cate_train "`train_cate'"		
 		ereturn local cate_new "`new_cate'"
 		ereturn local dep_var "`y'"
@@ -250,6 +252,8 @@ qui{
 }
 	            ****************************************************************
 				ereturn clear
+				ereturn local cmd "make_cate"
+				ereturn local type "dr"
 				ereturn local cate_train "`train_cate'"		
 				ereturn local cate_new "`new_cate'"
 				ereturn local dep_var "`y'"

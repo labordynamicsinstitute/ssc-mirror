@@ -5,7 +5,6 @@
 * September 16, 2025
 ********************************************************************************
 program opl_ma_fb , eclass
-version 16
 syntax varlist(fv ts) , policy_train(varlist max=1) /// 
                  model(string) ///
 				 name_opt_policy(name) ///

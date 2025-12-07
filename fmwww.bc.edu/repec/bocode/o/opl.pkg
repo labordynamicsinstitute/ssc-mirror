@@ -1,4 +1,4 @@
-d 'OPL': module for optimal policy learning
+d 'OPL': module for optimal policy learning and multi-action optimal policy learning
 d
 d    OPL is a package for learning optimal policies from data for
 d empirical welfare maximization.  Specifically, OPL allows to find
@@ -14,7 +14,20 @@ d estimation of the Conditional Average Treatment Effect (CATE) of
 d the past policy. Currently, OPL estimates CATE via linear    and
 d non-linear Regression Adjustment (RA), allowing for the target
 d outcome to be continuous, binary, count, or fractional.  The
-d treatment variable of reference must be    binary 0/1. 
+d treatment variable of reference must be    binary 0/1.    
+d opl_ma_fb implements first-best Optimal Policy Learning (OPL)
+d algorithm to estimate the best    treatment assignment given an
+d outcome and a set of observed covariates and treatment effects.
+d It	allows for different risk preferences in decision-making
+d (i.e., risk-neutral, risk-averse linear,    risk-averse
+d quadratic). This command uses linear regression for estimating
+d nuisance conditional	  means.    opl_ma_vf estimates the
+d value-function for multi-action Optimal Policy Learning via three
+d different    methods:    1. Regression Adjustment (RA): estimates
+d expected outcomes for each action using regression models.	2.
+d Inverse Probability Weighting (IPW): uses estimated propensity
+d scores to reweigh observations.    3. Doubly Robust (DR):
+d combines RA and IPW for a more robust estimator. 
 d
 d KW: optimal policy learning
 d KW: welfare maximization
@@ -22,7 +35,7 @@ d KW: regression adjustment
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20251111
+d Distribution-Date: 20251206
 d
 d Author: Giovanni Cerulli, IRCrES-CNR
 d Support: email giovanni.cerulli@@ircres.cnr.it
@@ -30,6 +43,8 @@ d
 f opl.sthlp
 f ../m/make_cate.ado
 f ../m/make_cate.sthlp
+f opl_best_treat.ado
+f opl_best_treat.sthlp
 f opl_dt_c.ado
 f opl_dt_c.sthlp
 f opl_dt.ado
@@ -39,9 +54,16 @@ f opl_lc_c.sthlp
 f opl_lc.ado
 f opl_lc.sthlp
 f opl_ma_fb.ado
-f opl_ma.ado
+f opl_ma_fb.sthlp
+f opl_ma_vf.ado
+f opl_ma_vf.sthlp
+f opl_overlap.ado
+f opl_overlap.sthlp
+f opl_plot_best.ado
+f opl_plot_best.sthlp
 f opl_tb_c.ado
 f opl_tb_c.sthlp
 f opl_tb.ado
 f opl_tb.sthlp
+f ../s/spmdata.dta
 f OptimalPolicyLearning.pdf

@@ -1,5 +1,5 @@
 {smcl}
-{* 09nov2025}{...}
+{* 23nov2025}{...}
 {cmd:help make_cate}
 {hline}
 
@@ -54,8 +54,8 @@ linear-combination policy), {helpb opl_lc_c} (optimal policy learning of a linea
 
 {synoptset 24 tabbed}{...}
 {syntab: Scalars}
-{synopt:{cmd:e(Em0_train)}}Mean potential outcome of the treated in the training dataset{p_end}
-{synopt:{cmd:e(Em0_new)}}Mean potential outcome of the treated in the new dataset {p_end}
+{synopt:{cmd:e(Em0_train)}}Mean potential outcome of the untreated in the training dataset{p_end}
+{synopt:{cmd:e(Em0_new)}}Mean potential outcome of the untreated in the new dataset {p_end}
 
 {syntab:Variables}
 {synopt:{cmd:_train_new_index}}Flag variable indicating the training (i.e., old-policy) and the new-policy observations{p_end}
@@ -66,6 +66,8 @@ linear-combination policy), {helpb opl_lc_c} (optimal policy learning of a linea
 {synopt:{cmd:e(xvars)}}Name of the control variables{p_end}
 {synopt:{cmd:e(treatment)}}Name of the treatment variable{p_end}
 {synopt:{cmd:e(dep_var)}}Name of the outcome variable{p_end}
+{synopt:{cmd:e(cmd)}}Name of the command{p_end}
+{synopt:{cmd:e(type)}}Name of the model type{p_end}
 {synoptline}
 
 {dlgtab:Remarks}
