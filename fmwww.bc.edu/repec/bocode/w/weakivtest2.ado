@@ -5,7 +5,8 @@
 // Version 07/31/2024: incorporating ivreghdfe
 // Version 07/19/2025: incorporating functions in the accepted version of Lewis and Mertens (2025), including 1. test based on absolute bias criterion; 2. test for individual coefficients; 3. test under local-to-rank-reduction-to-1.
 // Version 08/15/2025: 1. fixing the dof adjustment and variable indexing when N > 2 for the LRR1 test; 2. allow for the partial option in ivreg2.
-// This version: 08/15/2025
+// Version 09/25/2025: 1. fixing the dof adjustment for clustering; 2. unadjusted variance covariance matrix of the errors for clustering
+// This version: 09/25/2025
 
 program weakivtest2, rclass
 	version 17
@@ -107,12 +108,17 @@ program weakivtest2, rclass
 	else if ( `noconst_flag' == 0) local L = `L' + 1
 	local N = e(endog_ct)  // Endogenous Regressors
 	local T = e(N)
+	*Save vce type to be used in "avar" command to compute variance-covariance matrices. 
+	local clustdfadj = 1
 	if strpos("`e(vce)'","bw"){
 		local vcet=regexr("`e(vce)'","ac bartlett", "")
 		local vcet=regexr("`vcet'","h", "")
 		local vcet=regexr("`vcet'","=", "(")+")"
 	}
-	else if strpos("`e(vce)'","cluster") local vcet "robust cluster(`e(clustvar)')"
+	else if strpos("`e(vce)'","cluster"){
+		local vcet "robust cluster(`e(clustvar)')"
+		local clustdfadj = (`e(N)'/(`e(N)'-1))*(`e(N_clust)'-1)/(`e(N_clust)')
+	}				
 	else local vcet `e(vce)'
 	fvrevar `e(depvar)'
 	local y  "`r(varlist)'" 
@@ -215,12 +221,20 @@ program weakivtest2, rclass
 		cv3: stock_yogo_critical_values_nagar
 		*/
 		qui avar (`v1' `v2') (`Zo') `addweight' if `touse', `vcet' noconstant
-		mata: `W' = st_matrix("r(S)") * `T' / (`T' - `K' - `L')
-		tempvar constant
-		gen `constant' = 1
-		qui avar (`v1' `v2') (`constant') `addweight' if `touse', `vcet' noconstant
-		mata: `Sig' = st_matrix("r(S)") * `T' / (`T' - `K' - `L')
+		mata: `W' = st_matrix("r(S)") * `T' / (`T' - `K' - `L') / `clustdfadj'
 		mata: `W2' = `W'[`K'+1..`K'*(`N'+1),`K'+1..`K'*(`N'+1)]
+		if (`clustdfadj' == 1) {
+			* Sig matrix is the variance covariance matrix adjusted by the degree of freedom.
+			tempvar constant
+			gen `constant' = 1
+			qui avar (`v1' `v2') (`constant') `addweight' if `touse', `vcet' noconstant
+			mata: `Sig' = st_matrix("r(S)") * `T' / (`T' - `K' - `L')
+		}
+		else {
+			* Sig matrix is the unadjusted variance covariance matrix adjusted by the degree of freedom.
+			mat accum `Sig' = `v1' `v2' `addweight', nocons
+			mata: `Sig' = st_matrix("`Sig'") / (`T' - `K' - `L')
+		}
 		mata: `RNK' = I(`N') # vec(I(`K'))
 		mata: `Phi' = `RNK'' * (`W2' # I(`K')) * `RNK'
 		mata: `Phi' = pinv(sqrtmat(`Phi'))
@@ -322,13 +336,22 @@ program weakivtest2, rclass
 		cv3: stock_yogo_critical_values_nagar
 		*/		
 		qui avar (`v1' `v2star') (`Zstar') `addweight' if `touse', `vcet' noconstant
-		mata: `Wstar' = st_matrix("r(S)") * `T' / (`T' - `K' - `L')
-		tempvar constant
-		gen `constant' = 1
-		qui avar (`v1' `v2star') (`constant') `addweight' if `touse', `vcet' noconstant
-		mata: `Sstar' = st_matrix("r(S)") * `T' / (`T' - `K' - `L')
-		qui avar (`v2') (`constant') `addweight' if `touse', `vcet' noconstant
-		mata: `S_full' = st_matrix("r(S)")
+		mata: `Wstar' = st_matrix("r(S)") * `T' / (`T' - `K' - `L') / `clustdfadj'
+		if (`clustdfadj' == 1) {
+			tempvar constant
+			gen `constant' = 1
+			qui avar (`v1' `v2star') (`constant') `addweight' if `touse', `vcet' noconstant
+			mata: `Sstar' = st_matrix("r(S)") * `T' / (`T' - `K' - `L')
+			qui avar (`v2') (`constant') `addweight' if `touse', `vcet' noconstant
+			mata: `S_full' = st_matrix("r(S)")
+		}
+		else {
+			* Sig matrix is the unadjusted variance covariance matrix adjusted by the degree of freedom.
+			mat accum `Sstar' = `v1' `v2star' `addweight', nocons
+			mata: `Sstar' = st_matrix("`Sstar'") / (`T' - `K' - `L')
+			mat accum `S_full' = `v2' `addweight', nocons
+			mata: `S_full' = st_matrix("`S_full'") / `T'
+		}
 // 		mata: `stat1' = Ystaro' * Ystaro / trace(`Wstar'[`K'..2*(`K'-1),`K'..2*(`K'-1)])
 // 		mata: `stat2'  = Ystaro' * Ystaro / ((`K' - 1) * v2star' * v2star / `T')
 		mata: `stat1' = Ystaro' * Ystaro / trace(`Wstar'[`Kstar'+1..2*`Kstar',`Kstar'+1..2*`Kstar'])
@@ -572,7 +595,6 @@ mata
 		Phi = RNK' * (W2 # I(K)) * RNK
 		S = (pinv(sqrtmat(Phi / K)) # I(K)) * sqrtmat(W2)
 		Sigma = S * S'
-		
 		Psibar = (((pinv(sqrtmat(Phi / K)) # I(K)) * (W12 \ W2)') # I(K)) * RNpK
 		if (criterion == "relative") Psi = Psibar * invsym(sqrtmat(RNpK' * (W # I(K)) * RNpK))
 		else if (criterion == "absolute") Psi = Psibar * pinv(sqrtmat(Sig)) * norm(pinv(sqrtmat(Phi))*sqrtmat(Sig[2..N+1,2..N+1]))
@@ -679,7 +701,7 @@ mata
 	}
 	
 	struct CVresult scalar gweakivtest_critical_valuesLRR1(W, K, Sig, Sigv, alphalist, taulist, points, target, criterion, fast, record) {
-		real scalar N, j, lmin, n, ome, nu, cc, iter, mxitr, xtol, gtol, ftol, eta, gamma, nt, crit, tiny, ttau, rhols, i1, i2, tau, alpha
+		real scalar N, j, lmin, n, ome, nu, cc, iter, mxitr, xtol, gtol, ftol, eta, gamma, nt, crit, tiny, ttau, rhols, i1, i2, tau, alpha, kt_cond1, kt_cond2, kt_cond3, kt_cond
 		real matrix RNK, RNN, RNpK, M1, M2, W1, W2, W12, Phi, iPhi, S, Sigma, Psibar, Psi, X1, M2PsiM2, Bmax, Bmax_iters, Q, R, L0, k, knew
 		struct CVresult scalar result
 		
@@ -1055,7 +1077,7 @@ mata
 	}
 	
 	real matrix argminCV2fun(k, alfa) {
-		real matrix knew
+		real matrix knew, deltas
 		real scalar errcode
 		transmorphic S
 

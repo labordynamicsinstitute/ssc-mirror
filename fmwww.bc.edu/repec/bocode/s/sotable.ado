@@ -1,6 +1,8 @@
-*! version 14.1.0 02Mar2023
-//  changed supw to maxt
+*! version 15.0.1 24Oct2025
+// 15.0.1 use _coef_table for results  
+//  15.0.1 added noFVLABEL option  add other display options
 // version 14.0.0 07Sep2022
+//  changed supw to maxt
 //    documented alternative and made default level
 //       c(level) if alternative=="two"
 //       c(level) + (100-c(level))/2 if alternative!="two"
@@ -37,6 +39,7 @@ program define sotable, rclass
 		NORMAL							/// 
 		method(string) 					/// NOT DOCUMENTED
 		nmethod(string)				    /// SIMulation or GBretz (NOT DOCUMENTED)
+		noFVLABEL						///
 		]
 
 
@@ -196,7 +199,9 @@ program define sotable, rclass
 	matrix colnames `results' = `colnames'
 	matrix rownames `results' = b se `distribution' pvalues low up
 
-	tempname rm 
+	tempname rm bc Vc
+	matrix `bc' = `b'
+	matrix `Vc' = `V'
 	matrix `rm' = `results'
 	return clear
 	return matrix results = `results'
@@ -220,7 +225,13 @@ program define sotable, rclass
 	return scalar p = `overall_p' 
 
 	Header , method(`method') c(`c') p(`overall_p') df_r(`df_r')
-	_my_tab2, rm(`rm') distribution(`distribution') level(`level')
+	tempname pmatrix cimatrix
+	matrix `pmatrix'  = `rm'[4, 1...]
+	matrix `cimatrix' = `rm'[5..6,1...]
+//	local cititle "[`level'% Conf. Band]"
+	_coef_table , bmatrix(`bc') vmatrix(`Vc') pmatrix(`pmatrix')		///
+		cimatrix(`cimatrix') cititle(`cititle') `fvlabel'
+//	_my_tab2, rm(`rm') distribution(`distribution') level(`level')
 	if `hascons'>=1 {
 		di "{p 4 4}One of the included parameters may be a constant term{p_end}"
 	}

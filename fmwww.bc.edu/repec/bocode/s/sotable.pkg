@@ -14,10 +14,10 @@ d KW: simultaneous tests
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20230415
+d Distribution-Date: 20251209
 d
-d Author: David M. Drukker, Sam Houston State University
-d Support: email dxd070@@shsu.edu
+d Author: David M. Drukker, Clemson University
+d Support: email ddrukke@@clemson.edu
 d
 f sotable.ado
 f sotable.sthlp
