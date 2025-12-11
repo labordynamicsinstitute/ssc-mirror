@@ -1,11 +1,13 @@
 {smcl}
-{* 20Nov2024}{...}
-{hi:help arc}{...}
+{* 19Nov2025}{...}
+{hi:help arc (v1.3): 19 Nov 2025}{...}
 {right:{browse "https://github.com/asjadnaqvi/stata-graphfunctions":graphfunctions (GitHub)}}
 
 {hline}
 
-{title:arc}: A program for generating arcs between two points. 
+{it:(back to {stata help graphfunctions})}
+
+{title:arc}: {it:A program for generating custom arcs.}
 
 The program inputs two pairs of coordinates ({it:x1, y1}) and ({it:x2, y2}) and outputs points for the arc segment in variables {it:_x, _y}.
 The program is {stata help return:r-class} so type {stata return list} after running the command to see the stored locals.
@@ -13,7 +15,7 @@ The program is {stata help return:r-class} so type {stata return list} after run
 {marker syntax}{title:Syntax}
 
 {p 8 15 2}
-{cmd:arc}, {cmd:x1}({it:num}) {cmd:y1}({it:num}) {cmd:x2}({it:num}) {cmd:y2}({it:num}) {cmd:[} {cmdab:rad:ius}({it:num}) {cmd:n}({it:int}) {cmd:swap} {cmd:major} {cmdab:genx}({it:newvar}) {cmdab:geny}({it:newvar}) genid(string) genorder(string) {cmd:replace} {cmd:]}
+{cmd:arc}, {cmd:x1}({it:num}) {cmd:y1}({it:num}) {cmd:x2}({it:num}) {cmd:y2}({it:num}) {cmd:[} {cmdab:rad:ius}({it:num}) {cmd:n}({it:int}) {cmd:swap} {cmd:major} {opt dropbase} {cmdab:genx}({it:newvar}) {cmdab:geny}({it:newvar}) genid(string) genorder(string) {cmd:replace} {cmd:]}
 
 
 {synoptset 36 tabbed}{...}
@@ -30,6 +32,8 @@ The program is {stata help return:r-class} so type {stata return list} after run
 Or the arc circumcenter is to the left of the line.{p_end}
 
 {p2coldent : {opt major}}Draw a major arc around the circumcenter rather than the default minor arc.{p_end}
+
+{p2coldent : {opt dropbase}}Drops the base. This is to ensure that arc segments are inserted into figure rather than being standalone shapes.{p_end}
 
 {p2coldent : {opt genx(newvar)} {opt geny(newvar)}}Custom names for the generated coordinates. Defaults are {it: _x, _y}.{p_end}
 
@@ -56,8 +60,8 @@ More examples on {browse "https://github.com/asjadnaqvi/stata-graphfunctions":Gi
 
 {title:Package details}
 
-Version      : {bf:arc} v1.2 in {stata help graphfunctions:graphfunctions}
-This release : 20 Nov 2024
+Version      : {bf:arc} v1.3 in {stata help graphfunctions:graphfunctions}
+This release : 19 Nov 2025
 First release: 08 Oct 2024
 Repository   : {browse "https://github.com/asjadnaqvi/stata-graphfunctions":GitHub}
 Keywords     : Stata, graph, arcs
@@ -75,7 +79,7 @@ Please submit bugs, errors, feature requests on {browse "https://github.com/asja
 
 {title:Citation guidelines}
 
-See {stata help graphfunctions:graphfunctions}.
+See {browse "https://github.com/asjadnaqvi/stata-graphfunctions":GitHub} for a comprehensive set of examples.
 
 
 {title:Other packages}
