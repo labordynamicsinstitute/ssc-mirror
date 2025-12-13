@@ -1,0 +1,18 @@
+d 'LRASVAR': module to label or rename varlist as the contents of the specified variable in turn
+d
+d  lrasvar labels or renames varlist as the contents of the
+d specified variable in turn 
+d
+d KW: data managament
+d KW: labels
+d KW: rename
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20251212
+d
+d Author:  Dejin Xie, School of Economics and Management, Nanchang University
+d Support: email xiedejin@@ncu.edu.cn
+d
+f lrasvar.ado
+f lrasvar.sthlp

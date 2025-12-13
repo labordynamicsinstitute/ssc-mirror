@@ -1,0 +1,26 @@
+d 'TABBIT': module to produce sets of weighted and unweighted crosstabulation tables 
+d
+d    tabbit produces sets of weighted and unweighted
+d crosstabulation tables and writes them directly to Excel using
+d Stata’s putexcel command. It is designed for survey researchers
+d who need fast, consistent production of large numbers of
+d breakdown tables across many outcome and stratifier variables.
+d The command handles weighted percentages, unweighted counts, row
+d or column distributions, optional disclosure control, multiple
+d sheets, and transparent reporting of missing values. It supports
+d automated report production for survey waves, countries, sample
+d groups, or exploratory analysis workflows. 
+d
+d KW: crosstabulations
+d KW: data management
+d KW: Excel
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20251212
+d
+d Author: Siobhan McAndrew,  Sheffield Methods Institute, University of Sheffield
+d Support: email siobhan.mcandrew@@gmail.com 
+d
+f tabbit.ado
+f tabbit.sthlp

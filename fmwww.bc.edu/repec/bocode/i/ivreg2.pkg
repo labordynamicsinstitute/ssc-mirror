@@ -34,7 +34,7 @@ d KW: robust estimation
 d KW: orthogonality
 d KW: GMM
 d KW: Hansen's J
-d KW: heteroskedastic OLS,
+d KW: heteroskedastic OLS
 d
 d Requires: Stata version 11.2 and ranktest from SSC
 d
@@ -53,7 +53,7 @@ f ivreg2.ado
 f ivreg2.sthlp
 f ivreg2_p.ado
 f ../l/livreg2.mlib
-f ../c/cs_ivreg2_4.1.11.do
+f ../c/cs_ivreg2_4.1.12.do
 f ivreg210.ado
 f ivreg210.sthlp
 f ivreg210_p.ado

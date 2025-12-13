@@ -1,0 +1,32 @@
+d 'TAB2EXCEL': module to export tabstat results to Excel with enhanced features
+d
+d     tab2excel exports descriptive statistics from tabstat to an
+d Excel file with enhanced formatting	 features.  The command
+d provides bilingual support (Chinese/English) and automatically
+d formats    statistics with appropriate number formats. 
+d
+d KW:  descriptive statistics
+d KW: data management
+d KW: Excel
+d
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 20251212
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Liu Rui,  Anhui University of Technology
+d Support: email  3221241855@@qq.com
+d
+d Author: Li Min,  Anhui University of Technology
+d Support: email  748726942@@qq.com
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+d Author:  Wu Xinzhuo,  University of Bristol
+d Support: email   2957833979@@qq.com
+d
+f tab2excel.ado
+f tab2excel.sthlp
