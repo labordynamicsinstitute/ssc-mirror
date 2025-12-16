@@ -12635,6 +12635,7 @@ fmwww.bc.edu/repec/bocode/r/robscale.src
 fmwww.bc.edu/repec/bocode/r/rtfsect.html
 fmwww.bc.edu/repec/bocode/r/rtmcii.ado
 fmwww.bc.edu/repec/bocode/r/rndbb.hlp
+fmwww.bc.edu/repec/bocode/r/randomid.ado
 fmwww.bc.edu/repec/bocode/r/runmplus_load_savedata.sthlp
 fmwww.bc.edu/repec/bocode/r/repadolog.sthlp
 fmwww.bc.edu/repec/bocode/r/robbox.sthlp
@@ -13710,6 +13711,7 @@ fmwww.bc.edu/repec/bocode/r/robit8.sthlp
 fmwww.bc.edu/repec/bocode/r/rdmses2s.ado
 fmwww.bc.edu/repec/bocode/r/randomize.sthlp
 fmwww.bc.edu/repec/bocode/r/raschpower.sthlp
+fmwww.bc.edu/repec/bocode/r/randomid.sthlp
 fmwww.bc.edu/repec/bocode/r/rtfinsert.ado
 fmwww.bc.edu/repec/bocode/r/rctmiss_smlik.ado
 fmwww.bc.edu/repec/bocode/r/raltest6.dta
