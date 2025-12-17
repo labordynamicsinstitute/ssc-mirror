@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0  05dec2025}{...}
+{* *! version 1.1  15dec2025}{...}
 {vieweralsosee "[D] generate" "help generate"}{...}
 {vieweralsosee "[D] encode" "help encode"}{...}
 {viewerjumpto "Syntax" "sic_to_ff##syntax"}{...}
@@ -278,8 +278,8 @@ Chips becomes 37, LabEq becomes 38, etc., and Other becomes industry 49.
 {phang}1. Both numeric and string SIC variables are accepted. String values are 
 converted using Stata's {cmd:real()} function.{p_end}
 
-{phang}2. SIC codes outside the valid range (0-9999) or non-numeric strings 
-result in missing industry classifications.{p_end}
+{phang}2. SIC codes outside the valid range (0-9999), non-integer values, or 
+non-numeric strings result in missing industry classifications.{p_end}
 
 {pstd}
 {bf:Notable classification decisions}
@@ -303,6 +303,39 @@ where industries correspond roughly to SIC major groups (e.g., Food = 2000-2099,
 Chemicals = 2800-2899). This is distinct from the more detailed FF48 scheme 
 that uses precise 4-digit SIC ranges.{p_end}
 
+
+{marker installation}{...}
+{title:Installation}
+
+{pstd}
+To install {cmd:sic_to_ff}, place both files in your personal ado directory:
+
+{phang}1. Find your personal ado directory by typing in Stata:{p_end}
+{phang2}{cmd:. sysdir}{p_end}
+
+{pstd}
+Look for the {bf:PLUS} or {bf:PERSONAL} directory path.
+
+{phang}2. Copy the files to that directory:{p_end}
+{phang3}{cmd:sic_to_ff.ado}{p_end}
+{phang3}{cmd:sic_to_ff.sthlp}{p_end}
+
+{pstd}
+Typical locations:
+
+{p2colset 5 20 22 2}{...}
+{p2col:Windows}C:\ado\plus\s\{p_end}
+{p2col:Mac}/Users/{it:username}/Library/Application Support/Stata/ado/plus/s/{p_end}
+{p2col:Linux}~/ado/plus/s/{p_end}
+{p2colreset}{...}
+
+{pstd}
+Note: Place files in the {bf:s} subdirectory (first letter of the command name). 
+Create the subdirectory if it does not exist.
+
+{phang}3. Verify installation:{p_end}
+{phang2}{cmd:. which sic_to_ff}{p_end}
+{phang2}{cmd:. help sic_to_ff}{p_end}
 
 
 {marker references}{...}
