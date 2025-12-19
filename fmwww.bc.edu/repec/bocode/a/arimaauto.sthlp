@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.8  31oct2024}{...}
+{* *! version 1.1.0  20nov2025}{...}
 {vieweralsosee "[TS] arima" "mansection TS arima"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[TS] arima postestimation" "help arima postestimation"}{...}
@@ -343,7 +343,7 @@ is a transposed copy, i.e. {it:r(limits) = AA.get("L")'}
 {break}{bind:{bf:T} } is a {bind:(. x 6)} matrix of which {bf:r(tests)} is
 a copy, i.e. {it:r(tests) = AA.get("T")}
 {break}{bf:MS} is a {bind:(. x 12)} matrix of which {bf:r(models)} is
-a reduced copy, i.e. {it:r(tests) = AA.get("MS")[,(1,3,4,6,8,10,11,12)]}. The
+a reduced copy, i.e. {it:r(models) = AA.get("MS")[,(1,3,4,6,8,10,11,12)]}. The
 left out columns are {it:#d}, {it:#D}, {it:#s}, and {it:constant} (in the given
 order).
 
@@ -369,6 +369,7 @@ for unit root tests other than {helpb hegy}, {helpb dfgls:[TS] dfgls}, and
 
         quarterly data:
         {cmd:. sysuse gnp96.dta, clear}
+        {cmd:. arimaauto gnp96, noseasonal}
         {cmd:. arimaauto gnp96}
         {cmd:. arimaauto gnp96, nostep maxm(15)}
 

@@ -1,4 +1,4 @@
-*! version 1.0.0  20aug2025  I I Bolotov
+*! version 1.1.0  20nov2025  I I Bolotov
 program def cconv
 	version 15
 	/*
@@ -185,7 +185,7 @@ mata set matastrict on
                 dummy = libjson::webcall(tmpf, J(0,2,""))
                 for (i = 1; i <= classification->arrayLength(); i++) {
                     element = classification->getArrayValue(i)
-                    s       = ustrunescape(element->getAttributeScalar(to, ""))
+                    s       = element->getAttributeScalar(to, "")
                     if (s == "") {
                         errprintf("Missing attribute '%s' in JSON\n", to)
                         exit(error(7102))
@@ -210,7 +210,7 @@ mata set matastrict on
     for (i = 1; i <= classification->arrayLength(); i++) {
         element = classification->getArrayValue(i)
         re[i]   = ustrunescape(element->getAttributeScalar("regex", ""))
-        v[i]    = ustrunescape(element->getAttributeScalar(to,      ""))
+        v[i]    = element->getAttributeScalar(to, "")
         if (v[i] == "") {
             errprintf("Missing attribute '%s' in JSON\n", to)
             exit(error(7102))

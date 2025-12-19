@@ -1,4 +1,4 @@
-*! version 1.3.0  20nov2025  I I Bolotov
+*! version 1.3.2  20nov2025  I I Bolotov
 program def pyconvertu
 	version 16.0
 	/*
@@ -151,7 +151,7 @@ program def pyconvertu
 					scalar `json' = `json' + r(levels) + ", "
 				}
 				if regexm(`=word("``vars''", 1)'[1], "^\s*Meta") {
-					drop if _n <= 2			// Metadata
+					drop if _n == 1			// Metadata
 					g `converted' = `"""' + `=word("``vars''", 1)' + 		///
 					`"": ""' + `=word("``vars''", 2)' + `"""'
 					levelsof `converted', clean s(", ")
@@ -159,7 +159,7 @@ program def pyconvertu
 					r(levels) + "}}, "
 				}
 				if regexm(`=word("``vars''", 1)'[1], "^\s*Sources") {
-					drop if _n <= 2			// Sources
+					drop if _n == 1			// Sources
 					g `converted' = `""["' + `=word("``vars''", 2)' + 		///
 					"](" + `=word("``vars''", 1)' + `")""'
 					levelsof `converted', clean s(", ")

@@ -15,8 +15,8 @@
 
 {title:Syntax}
 {p 8 16 2}{cmd:stpp}  {newvar} {cmd:using} {it:filename} {ifin}, 
-{opt agediag(varname)} 
 {opt datediag(varname)}
+[{opt agediag(varname)} or {opt datebirth(varname)}]
 [{it:options}]
 
 {marker options}{...}
@@ -25,6 +25,7 @@
 {synoptline}
 {syntab:Options}
 {synopt :{opt aged:iag(varname)}}age at diagnosis (in years){p_end}
+{synopt :{opt dateb:irth(varname)}}date of birth{p_end}
 {synopt :{opt dated:iag(varname)}}date at diagnosis{p_end}
 {synopt :{opt disp:lay(display option)}}different output options{p_end}
 {synopt :{opt allcause(newvarlist)}}calculate all-cause probabilities{p_end}
@@ -72,7 +73,7 @@ Standardized estimates (usually age standardization) can be obtained in two ways
 This can done using the {cmd:standstrata(varname)} and {cmd:standweights(numlist)} options.
 
 {phang2}
-2) Using individual weights. An individual in a particular (age) group is up or down weighted relative to a reference population (ref Rutherforsd). This is implemented using the {cmd:indweights(varname)} option.
+2) Using individual weights. An individual in a particular (age) group is up or down weighted relative to a reference population (Rutherford {it:et al.} 2020). This is implemented using the {cmd:indweights(varname)} option.
 
 {pstd}
 In addition {cmd:stpp} will calculate all-cause and crude probabilities of death, which can also be standardized
@@ -85,13 +86,12 @@ The data must be {cmd:stset} before using {cmd:stpp}. There should only be 1 row
 {cmd:using} {it:filename} specifies a file containing general-population mortality rates typically stratified by age, sex, calendar year and potentially other variables. In the {cmd:using} file, age must be specified in one-year increments and calendar year in one-year intervals.
 
 {pstd}
-The {cmd:popmort2({it:filename})} option specifies a scecond file containing general-population mortality rates, 
-which enables alternative weights to be used. 
-This includes the methods descibed by Sasieni and Brentnall (2016) for net survival and 
+The {cmd:popmort2({it:filename})} option specifies a second file containing general-population mortality rates, 
+which enables the weights to depend on two sets of expected rates. 
+This enables the methods descibed by Sasieni and Brentnall (2016) for net survival and 
 reference adjusted measures for all-cause and crude probabilties (Rutherford {it: et al.} 2022). 
 The aim of these methods is to estimate the survival that would be observed in a population 
 with the expected survival defined by the rates in the {cmd:popmort2()} file.
-
 
 {pstd}
 Confidence intervals are also calculated and named {it: newvar}{cmd:_lci} and {it: newvar}{cmd:_uci}
@@ -100,6 +100,9 @@ Confidence intervals are also calculated and named {it: newvar}{cmd:_lci} and {i
 
 {phang}
 {opt agediag(varname)} names the variable containing age at diagnosis. This should be in years. It is best to avoid using truncated (integer) age as this assumes that each person was diagnosed on their birthday.
+
+{phang}
+{opt datebirth(varname)} names the variable containing the date of birth. Only one of the {bf:agediag()} and {bf:datebirth} options can be specified.
 
 {phang}
 {opt datediag(varname)} names the variable containing the date at diagnosis. 
@@ -160,6 +163,7 @@ The default is the product integral (Kaplan-Meier type) method.
 
 {phang}
 {opt indweights(varname)} incorporates individual level weights to up- or down-weight individuals relative to a reference population. This is useful for external age standardization.
+See {help genindweights} for various ways to calculate the individual weights.
 
 {phang}
 {opt level(#)} specifies the confidence level, as a percentage, for confidence intervals.  The default is level(95) or as set by set level.
@@ -343,10 +347,37 @@ indweights(wt_age) graphname(R_pp4, replace) {p_end}
 {pmore}
 {it:({stata "stpp_example, egnumber(4)":click to run})}
 
+
+
+
 {phang}
-This example shows how to calculate individual weights, but
-see {help genindweights} for more advanced calculation
-of individual weights.
+This example shows code to calculate individual weights, but
+since this is now easier using {help genindweights}, Example 5 
+is the same analysis, but with weights calculated using {help genindweights}.
+
+{title:Example 5: }
+
+ICSS reference weights can be used to calculate individual weights using the
+{bf:refexternal()} option of {bf:genindweights()}.
+
+
+{phang2}
+stpp R_pp5 using "https://pclambert.net/data/popmort.dta", ///{p_end}
+{p 16 20 2}
+agediag(age) datediag(dx)   {space 24 }             ///{p_end}
+{p 16 20 2}
+pmother(sex) list(0 1 5 10)   {space 22 }           ///{p_end}
+{p 16 20 2}
+by(sex)        {space 42 }                          ///{p_end}
+{p 16 20 2}
+indweights(iw)    {space 35 }                       ///{p_end}
+{p 16 20 2}
+frame(stpp_results, replace){p_end}
+
+{phang2}
+frame stpp_results: list, noobs sepby(sex){p_end}                  
+{pmore}
+{it:({stata "stpp_example, egnumber(5)":click to run})}
 
 
 {title:Stored results}
@@ -355,6 +386,10 @@ of individual weights.
 If the {cmd:list} option is used then the output is saved to matrix. 
 When using the {cmd:by()} option multiple matrices will be saved as well
 as the combined results.
+
+{pstd}
+Also see the {bf:frame()} option. We find it more convenient to save the 
+summary estimates to a frame.
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Matrices}{p_end}
@@ -370,7 +405,7 @@ as the combined results.
 
 {pstd}
 Paul C Lambert, Cancer Registry of Norway, NIPH, Norway & Karolinska Institutet, Sweden.
-({browse "mailto:paul.lambert@fhi.no":pclt@kreftregisteret.no})
+({browse "mailto:paul.lambert@fhi.no":paul.lambert@fhi.no})
 
 {pstd}
 Mark J Rutherford
@@ -391,7 +426,12 @@ M. Pohar Perme, J. Stare, J. Estève. On estimation in relative survival
 {it:Biometrics} 2012;{bf:68}:113-120 
 
 {phang}
-MJ Rutherford, TM-L Andersson, TÅ Myklebust, B Møller, PC Lambert. Non-parametric estimation of reference adjusted, 
+MJ Rutherford, P.W. Dickman, E. Coviello, P.C Lambert. NEstimation of age-standardized net survival, 
+even when age-specific data are sparse.
+{it: Cancer Epidemiology} 2020;{bf:67}:101745
+
+{phang}
+M.J. Rutherford, T.M.-L. Andersson, T.Å. Myklebust, B. Møller, P.C. Lambert. Non-parametric estimation of reference adjusted, 
 standardised probabilities of all-cause death and death due to cancer for population group comparisons. 
 {it: BMC Medical Research Methodology} 2022;{bf: 22}:2
 

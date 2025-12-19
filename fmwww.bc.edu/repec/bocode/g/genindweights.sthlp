@@ -28,6 +28,7 @@
 {synopt:{opt byrestrict(exp)}}restict to {it:exp} for by groups{p_end}
 {synopt:{opt obsp:roportion(newvar)}}save observed proportions{p_end}
 {synopt:{opt refc:onditional(expression)}}reference weights defined by conditioning on data{p_end}
+{synopt:{opt refd:ata(filename)}}reference weights stored in dta file{p_end}
 {synopt:{opt refext:ernal(string)}}reference weights defined externally{p_end}
 {synopt:{opt reffr:ame(framename)}}reference weights stored in frame{p_end}
 {synopt:{opt refp:roportion(framename)}}save reference proportion{p_end}
@@ -89,6 +90,15 @@ For example, it is sometimes useful to age standardize to the most recent
 calendar period when investigating time trends. 
 The {cmd:strata()} option is compulsory and gives the variables that defines the groups
 to standardize over. 
+
+{phang}
+{opt refdata(filename, strata(varlist) refwtname(varname))} gives the name of the data file 
+where external weights are stored.
+The {cmd:strata()} option is compulsory and gives the variables that defines the groups
+to standardize over. These variables must exist in both the active frame and the
+dta file containing the weights. 
+The {cmd:refwtname()} option gives the name of the variable containing the reference weights.
+By default, this variable is named {cmd:refp}.
 
 {phang}
 {opt refexternal(external_weights)} gives the name of the external weights used for age

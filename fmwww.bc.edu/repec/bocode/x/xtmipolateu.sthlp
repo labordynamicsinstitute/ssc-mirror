@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.2  07oct2022}{...}
+{* *! version 1.2.0  20nov2025}{...}
 {viewerjumpto "Syntax" "xtmipolateu##syntax"}{...}
 {viewerjumpto "Description" "xtmipolateu##description"}{...}
 {viewerjumpto "Options" "xtmipolateu##options"}{...}
@@ -51,7 +51,6 @@ and prepare a corresponding report document
 {cmd:by} is not allowed; see {manhelp by D}.{p_end}
 {p 4 6 2}
 {cmd:weight}s are not allowed; see {help weight}.
-
 
 {marker description}{...}
 {title:Description}

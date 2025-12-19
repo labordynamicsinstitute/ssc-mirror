@@ -284,7 +284,7 @@ d3(groupmember), sex(sex) female(2) hhid(hhid) details{p_end}
 
 {pmore} {cmd: set scheme} weai{p_end}
 {pmore} {cmd: weai} d1(autonomy_inc never_violence) d2(feelinputdecagr assetownership credit_accdec incomecontrol work_balance) d3(groupmember), 
-cutoff(0.75) sex(sex) female(2) hhid(ID) graph{p_end}
+cutoff(0.75) sex(sex) female(2) hhid(ID) graph(weai_example){p_end}
 
 {p 2 2 2} Pro-WEAI, disagreggated by group:{p_end}
  
@@ -357,4 +357,9 @@ Hazel Malapit, International Food Policy Research Institute{p_end}
 {p 2 2 2} 
 {browse "mailto:IFPRI-WEAI@cgiar.org":IFPRI-WEAI@cgiar.org}{p_end}
 
+
+{title:Version history}
+
+{p 2 2 2}
+Version 2.0.0 (16dec2025): Fixed calculation error where relative contributions to disempowerment did not sum to 100%. Results differ from v.1.1. {p_end}
 

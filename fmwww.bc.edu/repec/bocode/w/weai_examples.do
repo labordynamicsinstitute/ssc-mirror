@@ -4,6 +4,7 @@
 clear all
 capture clear matrix
 set more off
+capt log close
 
 *Use example data 
 
@@ -24,7 +25,7 @@ list hhid sex emp_score empowered hh_ineq gender_parity in 1/6, separator(6)
 
 *4.2 Pro-WEAI with 8 indicators and graph option
 
-weai d1(autonomy_inc never_violence) d2(feelinputdecagr assetownership credit_accdec incomecontrol work_balance) d3(groupmember), cutoff(0.75) sex(sex) female(2) hhid(hhid) graph
+weai d1(autonomy_inc never_violence) d2(feelinputdecagr assetownership credit_accdec incomecontrol work_balance) d3(groupmember), cutoff(0.75) sex(sex) female(2) hhid(hhid) graph(weai_example)
 
 
 *4.3 Pro-WEAI, disaggregated by group

@@ -1,3 +1,4 @@
+*! 3.6.1 Ariel Linden 16Dec2025						// fixed CI lines on graphs to consistently display as solid lines
 *! 3.6.0 Ariel Linden 24Oct2025						// wrote new programs to create graph legend for multiple group with and without covariates
 *! 3.5.2 Ariel Linden 24Sep2025						// fixed code for treated unit that prevented the CI from appearing on the graph in the second treatment period 
 *! 3.5.1 Ariel Linden 19Sep2025						// added bwidth option for lowess smoother 
@@ -526,7 +527,7 @@ version 11.0
 			} 
 
 		/* CREATE PREDICTED VALUE FOR PLOTS */
-		qui{
+		quietly {
 			tempvar ypred_t
 			gen `ypred_t' = `prefix'_s_`dvar1'_pred
 			local tct: word count `trperiod'
@@ -590,23 +591,22 @@ version 11.0
 				}  /* end of TRPERIOD LOOP */
 			}	// end CI	
 				
-				/* Set up Plot Variables */
+			/* Set up Plot Variables */
+			forvalues k = 1/`tct' {
+				local plotvars `plotvars' `plt_t`k'' 
+				local cpart `cpart' l
+				local mspart `mspart' none
+				local lblack `lblack' black
+			}
+				
+			if "`ci'" != "" {
 				forvalues k = 1/`tct' {
-					local plotvars `plotvars' `plt_t`k'' 
-					local cpart `cpart' l
-					local mspart `mspart' none
-					local lblack `lblack' black
+					local plotvarsU `plotvarsU' `ult_t`k''
+					local plotvarsL `plotvarsL' `llt_t`k'' 
+					local lp `lp' solid
+					local lblue `lblue' blue
 				}
-				if "`ci'" != "" {
-					forvalues k = 1/`tct' {
-						local plotvarsL `plotvarsL' `llt_t`k'' 
-						local lblue `lblue' blue
-					}
-					forvalues k = 1/`tct' {
-						local plotvarsU `plotvarsU' `ult_t`k''
-						local lblue `lblue' blue
-					}
-				} // end CI
+			} // end CI
 		} /* end of quietly loop */
 
 		/* connect and msymbol options (affects post-intervention periods) */
@@ -617,11 +617,12 @@ version 11.0
 		
 		/* affects post-intervention periods */
 		if "`ci'" != "" {
+			local lp lp(solid `lp' solid)
 			local lc2 lcolor(blue `lblue' blue)
 			local plotvarsL `plotvarsL' `lltx'
 			local plotvarsU `plotvarsU' `ultx'
 		}
-		
+	
 		/* separate multiple trperiods for subtitle */
 		foreach t in `trperiod' {
 			local tper = strofreal(`t',"`tsf'")
@@ -676,17 +677,17 @@ version 11.0
 		/* lowess graph */
 		if "`lowess'" != "" {
 			if "`bwidth'" != "" {
-				local low (lowess `dvar' `tvar' if `touse', lcolor(red) bw(`bwidth'))
+				local low (lowess `dvar' `tvar' if `touse', lcolor(red) lpattern(solid) bw(`bwidth'))
 			}
 			else {
-				local low (lowess `dvar' `tvar' if `touse', lcolor(red))				
+				local low (lowess `dvar' `tvar' if `touse', lcolor(red) lpattern(solid))				
 			}
 		}
-		
+	
 		/* CI graph */
 		if "`ci'" != "" {
-			local lcl (line `plotvarsL' `tvar' if `touse' [`weight' `exp'], `lc2') 
-			local ucl (line `plotvarsU' `tvar' if `touse' [`weight' `exp'], `lc2') 	
+			local lcl (line `plotvarsL' `tvar' if `touse' [`weight' `exp'],  `lc2' `lp')
+			local ucl (line `plotvarsU' `tvar' if `touse' [`weight' `exp'],  `lc2' `lp')
 		}
 		
 		/* get legend specs */
@@ -958,7 +959,7 @@ version 11.0
 			}
 
 			/* CREATE PREDICTED VALUES FOR PLOTS */
-			qui{
+			quietly {
 				tempvar ypred_t
 				gen `ypred_t' = `prefix'_s_`dvar1'_pred
 
@@ -1031,102 +1032,102 @@ version 11.0
 					local mspart `mspart' none
 					local lblack `lblack' black
 				}
+				
 				if "`ci'" != "" {
 					forvalues k = 1/`tct' {
-						local plotvarsL `plotvarsL' `llt_t`k'' 
-						local lblue `lblue' blue
-					}
-					forvalues k = 1/`tct' {
 						local plotvarsU `plotvarsU' `ult_t`k''
+						local plotvarsL `plotvarsL' `llt_t`k'' 
+						local lp `lp' solid
 						local lblue `lblue' blue
 					}
 				} // end CI
-			} /* end of quietly loop */
 
-			/* connect and msymbol options (affects post-intervention periods) */
-			local cpart c(. l `cpart')
-			local lc lcolor(black `lblack' black)
-			local mspart  ms(O none `mspart')
-			local plotvars `plotvars' `pltx' 
-		
-			/* affects post-intervention periods */
-			if "`ci'" != "" {
-				local lc2 lcolor(blue `lblue' blue)
-				local plotvarsL `plotvarsL' `lltx'
-				local plotvarsU `plotvarsU' `ultx'
-			}
-		
-			/* separate multiple trperiods for subtitle */
-			foreach t in `trperiod' {
-				local tper = strofreal(`t',"`tsf'")
-				local tperlist `tperlist' `tper'
-			}
+				/* connect and msymbol options (affects post-intervention periods) */
+				local cpart c(. l `cpart')
+				local lc lcolor(black `lblack' black)
+				local mspart  ms(O none `mspart')
+				local plotvars `plotvars' `pltx' 
 			
-			if "`shade'" != "" {
-				if "`ci'" != "" { 
-					sum `dvar' if `pvar'==`treatid' & `touse', meanonly
-					local mindvar_t = r(min)
-					local maxdvar_t = r(max)
-					sum `ypred_t' if `pvar'==`treatid' & `touse', meanonly
-					local minypred_t = r(min)			
-					local maxypred_t = r(max)
-					sum `ucl_t' if `pvar'==`treatid' & `touse', meanonly
-					local maxucl = r(max)
-					sum `lcl_t' if `pvar'==`treatid' & `touse', meanonly
-					local minlcl = r(min)	
-					local down = min(`mindvar_t', `minypred_t',`minlcl')			
-					local up = max(`maxdvar_t', `maxypred_t', `maxucl')				
-				}
-				else if "`ci'" == "" {
-					sum `dvar' if `pvar'==`treatid' & `touse', meanonly
-					local mindvar_t = r(min)
-					local maxdvar_t = r(max)
-					sum `ypred_t' if `pvar'==`treatid' & `touse', meanonly
-					local minypred_t = r(min)			
-					local maxypred_t = r(max)
-					local down = min(`mindvar_t', `minypred_t')			
-					local up = max(`maxdvar_t', `maxypred_t')
-				}
-				/* if user specifies smin and/or smax */
-				if "`smin'" != "" {
-					local down = `smin'
-				}
-				if "`smax'" != "" {
-					local up = `smax'
-				}				
-				/* use _natscale to get "nice" lower and upper values for the shading */			
-				 _natscale `down' `up' `nat'
-				local ylab ylabel(`r(min)'(`r(delta)')`r(max)') 
-				tempvar upy
-				gen `upy' = `r(max)' if `touse'
-				local shhh (area `upy' `tvar' if `pvar'==`treatid' & inrange(`tvar', `shade1',`shade2') & `touse', base(`r(min)') bcolor(gs14) plotregion(margin(b=0 t=0)))	
-			}	// end shade		
-		
-			/* CF graph */
-			if "`cf'" != "" {
-				local cf (line `_cf' `tvar' if `pvar'==`treatid' & `touse', lcolor(gs8) lpattern(longdash))		
-			}
+				/* affects post-intervention periods */
+				if "`ci'" != "" {
+					local lp lp(solid `lp' solid)
+					local lc2 lcolor(blue `lblue' blue)
+					local plotvarsL `plotvarsL' `lltx'
+					local plotvarsU `plotvarsU' `ultx'
+				}			
 
-			/* lowess graph */
-			if "`lowess'" != "" {
-				if "`bwidth'" != "" {
-					local low (lowess `dvar' `tvar' if `pvar'==`treatid' & `touse', lcolor(red) bw(`bwidth'))				
+				/* separate multiple trperiods for subtitle */
+				foreach t in `trperiod' {
+					local tper = strofreal(`t',"`tsf'")
+					local tperlist `tperlist' `tper'
 				}
-				else {
-					local low (lowess `dvar' `tvar' if `pvar'==`treatid' & `touse', lcolor(red))			
+			
+				if "`shade'" != "" {
+					if "`ci'" != "" { 
+						sum `dvar' if `pvar'==`treatid' & `touse', meanonly
+						local mindvar_t = r(min)
+						local maxdvar_t = r(max)
+						sum `ypred_t' if `pvar'==`treatid' & `touse', meanonly
+						local minypred_t = r(min)			
+						local maxypred_t = r(max)
+						sum `ucl_t' if `pvar'==`treatid' & `touse', meanonly
+						local maxucl = r(max)
+						sum `lcl_t' if `pvar'==`treatid' & `touse', meanonly
+						local minlcl = r(min)	
+						local down = min(`mindvar_t', `minypred_t',`minlcl')			
+						local up = max(`maxdvar_t', `maxypred_t', `maxucl')				
+					}
+					else if "`ci'" == "" {
+						sum `dvar' if `pvar'==`treatid' & `touse', meanonly
+						local mindvar_t = r(min)
+						local maxdvar_t = r(max)
+						sum `ypred_t' if `pvar'==`treatid' & `touse', meanonly
+						local minypred_t = r(min)			
+						local maxypred_t = r(max)
+						local down = min(`mindvar_t', `minypred_t')			
+						local up = max(`maxdvar_t', `maxypred_t')
+					}
+					/* if user specifies smin and/or smax */
+					if "`smin'" != "" {
+						local down = `smin'
+					}
+					if "`smax'" != "" {
+						local up = `smax'
+					}				
+					/* use _natscale to get "nice" lower and upper values for the shading */			
+					_natscale `down' `up' `nat'
+					local ylab ylabel(`r(min)'(`r(delta)')`r(max)') 
+					tempvar upy
+					gen `upy' = `r(max)' if `touse'
+					local shhh (area `upy' `tvar' if `pvar'==`treatid' & inrange(`tvar', `shade1',`shade2') & `touse', base(`r(min)') bcolor(gs14) plotregion(margin(b=0 t=0)))	
+				}	// end shade		
+		
+				/* CF graph */
+				if "`cf'" != "" {
+					local cf (line `_cf' `tvar' if `pvar'==`treatid' & `touse', lcolor(gs8) lpattern(longdash))		
 				}
-			}			
-	
-			/* CI graph */			
-			if "`ci'" != "" {
-				local lcl (line `plotvarsL' `tvar' if `pvar'==`treatid' & `touse' [`weight' `exp'], `lc2') 
-				local ucl (line `plotvarsU' `tvar' if `pvar'==`treatid' & `touse' [`weight' `exp'], `lc2') 	
-			}
+
+				/* lowess graph */
+				if "`lowess'" != "" {
+					if "`bwidth'" != "" {
+						local low (lowess `dvar' `tvar' if `pvar'==`treatid' & `touse', lcolor(red) lpattern(solid) bw(`bwidth'))				
+					}
+					else {
+						local low (lowess `dvar' `tvar' if `pvar'==`treatid' & `touse', lcolor(red) lpattern(solid))			
+					}
+				}			
 			
-			/* get legend specs */
-			get_leg_single , tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade') cf(`cf')
-			local leg = r(leg)
+				/* CI graph */			
+				if "`ci'" != "" {
+					local lcl (line `plotvarsL' `tvar' if `pvar'==`treatid' & `touse' [`weight' `exp'], `lc2' `lp') 
+					local ucl (line `plotvarsU' `tvar' if `pvar'==`treatid' & `touse' [`weight' `exp'], `lc2' `lp') 	
+				}
 			
+				/* get legend specs */
+				get_leg_single , tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade') cf(`cf')
+				local leg = r(leg)
+			
+			} // end quietly
 			
 			**************
 			/* graph it */
@@ -1360,7 +1361,6 @@ version 11.0
 					gen `lcl_c' = `lcl' if `iscontrol'					
 					gen `ucl_c' = `ucl' if `iscontrol'					
 				}
- 
 				
 				/* TREATMENT GROUP */
 				/* PREDICT no xvars */
@@ -1442,25 +1442,24 @@ version 11.0
 
 					local tmspart  ms(O none `mspart')
 					local plotvars_t `plotvars_t' `pltx_t'		
-				
+********************************************************************************************				
 					if "`ci'" != "" {
 						forvalues k = 1/`tct' {
-							local plotvars_t_L `plotvars_t_L' `llt_t`k'' 
-							local lblue `lblue' blue
-						}
-						forvalues k = 1/`tct' {
+							local plotvars_t_L `plotvars_t_L' `llt_t`k''
 							local plotvars_t_U `plotvars_t_U' `ult_t`k''
 							local lblue `lblue' blue
+							local lp `lp' solid
 						}
-					} // end CI
+					} // end CI					
 
 					/* affects post-intervention periods */
 					if "`ci'" != "" {
 						local lc2 lcolor(blue `lblue' blue)
+						local lp lp(solid `lp' solid)						
 						local plotvars_t_L `plotvars_t_L' `lltx'
 						local plotvars_t_U `plotvars_t_U' `ultx'
 					}
-					
+
 					/* New CONTROLS plot section */
 					/* PREDICT no xvars */
 					local k = 0
@@ -1530,24 +1529,24 @@ version 11.0
 					local clp lpattern(blank `clp' dash)
 
 					local plotvars_c `plotvars_c' `pltx_c'
-					
+			
 					if "`ci'" != "" {
 						forvalues k = 1/`tct' {
-							local plotvars_c_L `plotvars_c_L' `llt_c`k'' 
-							local lgreen `lgreen' green
-						}
-						forvalues k = 1/`tct' {
+							local plotvars_c_L `plotvars_c_L' `llt_c`k''
 							local plotvars_c_U `plotvars_c_U' `ult_c`k''
 							local lgreen `lgreen' green
+							local lp3 `lp3' solid
 						}
-					} // end CI
-
+					} // end CI	
+					
 					/* affects post-intervention periods */
 					if "`ci'" != "" {
 						local lc3 lcolor(green `lgreen' green)
+						local lp3 lp(solid `lp3' solid)		
 						local plotvars_c_L `plotvars_c_L' `llcon'
 						local plotvars_c_U `plotvars_c_U' `ulcon'
-					}					
+					}
+				
 				} /* end no xvars  */				
 			
 				/* if xvars */
@@ -1558,8 +1557,10 @@ version 11.0
 					local plotvars_c_U `ucl_c'
 					local plotvars_t_L `lcl_t' 
 					local plotvars_t_U `ucl_t'
-					local lc2 lcolor(blue `lblue' blue)					
-					local lc3 lcolor(green `lgreen' green)
+					local l_clt (line `plotvars_t_L' `tvar', lcolor(blue) lpattern(solid)) 
+					local u_clt (line `plotvars_t_U' `tvar', lcolor(blue) lpattern(solid))
+					local l_clc (line `plotvars_c_L' `tvar', lcolor(green) lpattern(solid)) 
+					local u_clc (line `plotvars_c_U' `tvar', lcolor(green) lpattern(solid))
 				}
 				tempvar dvar_t dvar_c
 				gen `dvar_t' = `dvar' if `istreat'
@@ -1648,71 +1649,70 @@ version 11.0
 				subtitle("Intervention starts: `tperlist'")
 				;
 				#delim cr
-			
+		
 				if "`ci'" != "" {
-					local lclt (line `plotvars_t_L' `tvar', `lc2') 
-					local uclt (line `plotvars_t_U' `tvar', `lc2')
-					local lclc (line `plotvars_c_L' `tvar', `lc3') 
-					local uclc (line `plotvars_c_U' `tvar', `lc3')				
+					local lclt (line `plotvars_t_L' `tvar', `lc2' `lp') 
+					local uclt (line `plotvars_t_U' `tvar', `lc2' `lp')
+					local lclc (line `plotvars_c_L' `tvar', `lc3' `lp3') 
+					local uclc (line `plotvars_c_U' `tvar', `lc3' `lp3')				
 				}
-			
 				if "`lowess'" != "" {
 					if "`bwidth'" != "" {
-						local lowt (lowess `dvar_t'  `tvar', lcolor(red) bw(`bwidth')) 
-						local lowc (lowess `dvar_c'  `tvar', lcolor(orange) bw(`bwidth'))	
+						local lowt (lowess `dvar_t'  `tvar', lcolor(red) lpattern(solid) bw(`bwidth')) 
+						local lowc (lowess `dvar_c'  `tvar', lcolor(orange) lpattern(solid) bw(`bwidth'))	
 					}
 					else {
-						local lowt (lowess `dvar_t'  `tvar', lcolor(red)) 
-						local lowc (lowess `dvar_c'  `tvar', lcolor(orange))		
+						local lowt (lowess `dvar_t'  `tvar', lcolor(red) lpattern(solid)) 
+						local lowc (lowess `dvar_c'  `tvar', lcolor(orange) lpattern(solid))		
 					}
 				} // end lowess	
 				
 			} // end quietly
 			
-				/* if no covariates */
-				if "`xvar'" == "" {
-					/* get legend specs */
-					get_leg_multi , treatdesc(`treatdesc')  tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade')
-					local mleg = r(mleg)
+			/* if no covariates */
+			if "`xvar'" == "" {
+				/* get legend specs */
+				get_leg_multi , treatdesc(`treatdesc')  tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade')
+				local mleg = r(mleg)
 
-					// * graph it - no xvars * //
-					twoway ///
-						`shhh' ///				
-						(scatter  `dvar_t' `plotvars_t' `tvar', `cpart' `tmspart' `lc' `mc') ///
-						(scatter  `dvar_c' `plotvars_c' `tvar', `cpart' `cmspart' `lc' `mc' `clp') ///
-						`lowt' ///
-						`lowc' ///
-						`lclt' ///
-						`uclt' ///	
-						`lclc' ///
-						`uclc' ///	
-						, xline(`trperiod', lpattern(shortdash) lcolor(black)) ///
-						`ylab' ///						
-						`mleg' ///
-						`titlesec' note(`"`note'"') `figure2'
-				} // end no xvars
+				// * graph it - no xvars * //
+				twoway ///
+					`shhh' ///				
+					(scatter  `dvar_t' `plotvars_t' `tvar', `cpart' `tmspart' `lc' `mc') ///
+					(scatter  `dvar_c' `plotvars_c' `tvar', `cpart' `cmspart' `lc' `mc' `clp') ///
+					`lowt' ///
+					`lowc' ///
+					`lclt' ///
+					`uclt' ///	
+					`lclc' ///
+					`uclc' ///	
+					, xline(`trperiod', lpattern(shortdash) lcolor(black)) ///
+					`ylab' ///						
+					`mleg' ///
+					`titlesec' note(`"`note'"') `figure2'
+			} // end no xvars
 
-				/* with covariates */
-				if "`xvar'" != "" {
-					/* get legend specs */
-					get_leg_multi2 , treatdesc(`treatdesc')  tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade')
-					local mleg2 = r(mleg2)	
+			/* with covariates */
+			if "`xvar'" != "" {
+				/* get legend specs */
+				get_leg_multi2 , treatdesc(`treatdesc')  tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade')
+				local mleg2 = r(mleg2)	
 
-					// * graph it - xvars * //		
-					twoway ///
-						`shhh' ///						
-						(scatter `dvar_t' `ypred_t' `dvar_c' `ypred_c'  `tvar', c(. l . l) ms(O none Oh none) mcolor(black black black black) ///
-							lcolor(black black black black) lpattern(blank solid blank dash) xline(`trperiod', lpattern(shortdash) lcolor(black))) ///
-						`lowt' ///
-						`lowc' ///
-						`lclt' ///
-						`uclt' ///	
-						`lclc' ///
-						`uclc' ///	
-						, `mleg2' ///
-						`ylab' ///					
-						`titlesec' note(`"`note'"') `figure2'	
-				} // end xvars
+				// * graph it - xvars * //		
+				twoway ///
+					`shhh' ///						
+					(scatter `dvar_t' `ypred_t' `dvar_c' `ypred_c'  `tvar', c(. l . l) ms(O none Oh none) mcolor(black black black black) ///
+						lcolor(black black black black) lpattern(blank solid blank dash) xline(`trperiod', lpattern(shortdash) lcolor(black))) ///
+					`lowt' ///
+					`lowc' ///
+					`l_clt' ///
+					`u_clt' ///	
+					`l_clc' ///
+					`u_clc' ///	
+					, `mleg2' ///
+					`ylab' ///					
+					`titlesec' note(`"`note'"') `figure2'	
+			} // end xvars
 		}   /* End of Figure Block */
 	}   /* End of Type 3 */
 	

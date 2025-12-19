@@ -1,4 +1,4 @@
-*! version 1.0.3  07oct2022  I I Bolotov
+*! version 1.1.0  20nov2025  I I Bolotov
 program define xtarimau, rclass
 	version 16.0
 	/*
@@ -10,11 +10,14 @@ program define xtarimau, rclass
 		Author: Ilya Bolotov, MBA, Ph.D.                                        
 		Date: 15 January 2022                                                   
 	*/
-	tempname timevar panelvar panelval ictests icarima limits models		///
-			 title rspec cspec tmp
+	tempname timevar panelvar panelval limits models
 	tempfile tmpf
 	// check for third-party packages from SSC                                  
-	qui which arimaauto
+	cap which arimaauto
+	if _rc {
+		di as err "arimaauto not found; install from SSC"
+		exit 499
+	}
 	// replay last result                                                       
 	if replay() {
 		if _by() {
@@ -26,22 +29,22 @@ program define xtarimau, rclass
 			exit 301
 		}
 		/* copy return values                                                 */
-		loc `ictests' `=r(ictests)'
-		loc `icarima' `=r(icarima)'
+		loc ictests  `=r(ictests)'
+		loc icarima  `=r(icarima)'
 		mat `limits'  = r(limits)
 		mat `models'  = r(models)
 		/* print output                                                       */
 		cap confirm mat `models'
 		if ! _rc {
 			di as res _n "Best models for each time series:"
-			loc `rspec' = "& - `= "& " * rowsof(`models')'"
-			loc `cspec' = "& %12s | %5.0f & %5.0f & %5.0f & %5.0f & " +		///
+			loc rspec = "& - `= "& " * rowsof(`models')'"
+			loc cspec = "& %12s | %5.0f & %5.0f & %5.0f & %5.0f & " +		///
 						  "%5.0f & %5.0f & %6.0f | %12.4f &"
-			matlist `models', title(``title'') rspec(``rspec'') cspec(``cspec'')
+			matlist `models', title(`title') rspec(`rspec') cspec(`cspec')
 		}
 		/* return output                                                      */
-		cap ret        loc ictests  ``ictests''
-		cap ret        loc icarima  ``icarima''
+		cap ret        loc ictests  `ictests'
+		cap ret        loc icarima  `icarima'
 		cap ret hidden mat limits = `limits'
 		cap ret        mat models = `models'
 		exit 0
@@ -53,8 +56,8 @@ program define xtarimau, rclass
 		export(string asis) SDtest *										///
 	]
 	// adjust and preprocess options                                            
-	loc `tmp' = ustrregexm(`"`options'"', ".*ic\((\w+)\).*", 1)
-	loc ic    = cond(ustrregexs(1) == "", "aic", ustrregexs(1))
+	loc tmp = ustrregexm(`"`options'"', ".*ic[(](\w+)[)].*", 1)
+	loc ic  = cond(ustrregexs(1) == "", "aic", ustrregexs(1))
 	// get timevar, panelvar and panelval                                       
 	qui tsset, noq
 	if "`r(panelvar)'" == "" {						 // examine data
@@ -64,17 +67,17 @@ program define xtarimau, rclass
 	loc `timevar'  = r(timevar)
 	loc `panelvar' = r(panelvar)
 	qui levelsof ``panelvar'', matrow(`panelval')
-	loc `tmp'      = r(r) 
+	loc tmp      = r(r) 
 	// check if system limit is not exceeded                                    
 	qui estimates dir
-	if (`: word count `r(names)'' + ``tmp'') > 300 & trim(`"`export'"') == "" {
+	if (`: word count `r(names)'' + `tmp') > 300 & trim(`"`export'"') == "" {
 		di as err															///
 		"operation will exceed system limit, please add an export() option"
 		exit 1000
 	}
 	// perform estimation                                                       
 	qui ds ``panelvar'' ``timevar'', not			 // get the initial varlist
-	loc `tmp' = r(varlist)
+	loc tmp = r(varlist)
 	cap estimates drop ts_*							 // drop xtarimau estimates
 	mata: MS = J(0,8,.)								 // MS -> r(models)
 	preserve
@@ -87,7 +90,7 @@ program define xtarimau, rclass
 		/* preserve, reduce the dataset to 1 time series and re-set the data  */
 		preserve
 		qui {
-			keep ``panelvar'' ``timevar'' ``tmp''	 // the initial dataset
+			keep ``panelvar'' ``timevar'' `tmp'	 // the initial dataset
 			keep if ``panelvar'' == `panelval'[`i',1]
 			if `=_N' {								 // continue or break loop
 				tsset, clear
@@ -112,10 +115,10 @@ program define xtarimau, rclass
 		         : (0,0)
 		mata: c  = ("`ic'":==("llf", "aic","sic")) * (6::8)
 		mata: r  = selectindex(ms[,c] :== (c == 6 ? max(ms[,c])             ///
-		                                          : min(ms[,c])))
+		                                          : min(ms[,c])))[1]
 		mata: MS = MS\(ms[r,1],u[1],ms[r,2..3],u[2],ms[r,4..5],ms[r,c])
-		loc `ictests' `=r(ictests)'					 // read from r(...)
-		loc `icarima' `=r(icarima)'
+		loc ictests `=r(ictests)'					 // read from r(...)
+		loc icarima `=r(icarima)'
 		mat `limits'  = r(limits)
 		if trim(`"`export'"') == "" {
 			qui estimates store ts_`i'
@@ -131,8 +134,8 @@ program define xtarimau, rclass
 		}
 		/* pass eventual new variables to the dataset                         */
 		qui {
-			drop ``tmp''
-			ds ``panelvar'' ``timevar'', not
+			drop `tmp'
+			ds  ``panelvar'' ``timevar'', not
 			save `tmpf', replace
 		}
 		/* draw a dot                                                         */
@@ -157,10 +160,10 @@ program define xtarimau, rclass
 	cap confirm mat `models'
 	if ! _rc {
 		di as res _n "Best models for each time series:"
-		loc `rspec' = "& - `= "& " * rowsof(`models')'"
-		loc `cspec' = "& %12s | %5.0f & %5.0f & %5.0f & %5.0f & " +			///
+		loc rspec = "& - `= "& " * rowsof(`models')'"
+		loc cspec = "& %12s | %5.0f & %5.0f & %5.0f & %5.0f & " +			///
 					  "%5.0f & %5.0f & %6.0f | %12.4f &"
-		matlist `models', title(``title'') rspec(``rspec'') cspec(``cspec'')
+		matlist `models', title(`title') rspec(`rspec') cspec(`cspec')
 	}
 	// print tests
 	if trim(`"`sdtest'"') != "" {
@@ -181,8 +184,8 @@ program define xtarimau, rclass
 		mata: mata drop p i
 	}
 	// return output                                                            
-	cap ret        loc ictests  ``ictests''
-	cap ret        loc icarima  ``icarima''
+	cap ret        loc ictests  `ictests'
+	cap ret        loc icarima  `icarima'
 	cap ret hidden mat limits = `limits'
 	cap ret        mat models = `models'
 	// clear memory                                                             

@@ -1,4 +1,4 @@
-*! version 1.0.8  31oct2024  I I Bolotov
+*! version 1.1.0  20nov2025  I I Bolotov
 program define arimaauto, rclass byable(recall)
 	version 15.1
 	/*
@@ -11,18 +11,17 @@ program define arimaauto, rclass byable(recall)
 		Author: Ilya Bolotov, MBA, Ph.D.                                        
 		Date: 15 January 2022                                                   
 	*/
-	tempname ictests icarima limits tests models vmaxLLF vminAIC vminSIC	///
-			 title rspec cspec
+	tempname limits tests models vmaxLLF vminAIC vminSIC
 	// check for third-party packages from SSC                                  
 	cap which hegy
 	if _rc {
-		di as err "click to install {net sj 16-3 st0453:hegy} (dependency)"
-		error 111
+		di as err "hegy not found; click to install {net sj 16-3 st0453:hegy}"
+		exit 499
 	}
 	cap which kpss
 	if _rc {
-		di as err "installing {helpb kpss} (dependency)"
-		ssc install kpss
+		di as err "kpss not found; install from SSC"
+		exit 499
 	}
 	// replay last result                                                       
 	if replay() {
@@ -35,8 +34,9 @@ program define arimaauto, rclass byable(recall)
 			exit 301
 		}
 		/* copy return values                                                 */
-		loc `ictests' `=r(ictests)'
-		loc `icarima' `=r(icarima)'
+		loc  best    `=r(best)'
+		loc  ictests `=r(ictests)'
+		loc  icarima `=r(icarima)'
 		mat `limits'  = r(limits)
 		mat `tests'   = r(tests)
 		mat `models'  = r(models)
@@ -46,28 +46,29 @@ program define arimaauto, rclass byable(recall)
 		/* print output                                                       */
 		cap confirm mat `tests'
 		if ! _rc {
-			loc `title' = "Unit root tests:"
-			loc `rspec' = "& - `= "& " * rowsof(`tests')'"
-			loc `cspec' = "& %12s | %10.0f | %5.0f | %9.6f & %9.6f & " +	///
+			loc title = "Unit root tests:"
+			loc rspec = "& - `= "& " * rowsof(`tests')'"
+			loc cspec = "& %12s | %10.0f | %5.0f | %9.6f & %9.6f & " +	///
 						  "%9.6f & %9.6f &"
-			matlist `tests', title(``title'') rspec(``rspec'') cspec(``cspec'')
+			matlist `tests', title(`title') rspec(`rspec') cspec(`cspec')
 		}
 		cap confirm mat `models'
 		if ! _rc {
-			loc `title' = "Model space:"
-			loc `rspec' = "& - `= "& " * rowsof(`models')'"
-			loc `cspec' = "& %12s | %4.0f & %4.0f & %4.0f & %4.0f & " +		///
+			loc title = "Model space:"
+			loc rspec = "& - `= "& " * rowsof(`models')'"
+			loc cspec = "& %12s | %4.0f & %4.0f & %4.0f & %4.0f & " +		///
 						  "%5.0f | %9.4f & %9.4f & %9.4f &"
-			matlist `models', title(``title'') rspec(``rspec'') cspec(``cspec'')
+			matlist `models', title(`title') rspec(`rspec') cspec(`cspec')
 		}
 		di as res _n "Max LLF: Model `=`vmaxLLF''"
 		di as res    "Min AIC: Model `=`vminAIC''"
 		di as res    "Min SIC: Model `=`vminSIC''"
-		di as res _n "Best selected based on `=ustrupper("``icarima''")':"
+		di as res _n "Best selected based on `=ustrupper("`icarima'")':"
 		arima
 		/* return output                                                      */
-		cap ret        loc ictests  ``ictests''
-		cap ret        loc icarima  ``icarima''
+		cap ret        loc best     `best'
+		cap ret        loc ictests  `ictests'
+		cap ret        loc icarima  `icarima'
 		cap ret hidden mat limits = `limits'
 		cap ret        mat tests  = `tests'
 		cap ret        mat models = `models'
@@ -136,8 +137,8 @@ program define arimaauto, rclass byable(recall)
 	// run ARIMAAuto                                                            
 	mata: AA.start()
 	/* get information criteria                                               */
-	mata: st_local("`ictests'", AA.get("mode")                                 )
-	mata: st_local("`icarima'", AA.get("ic")                                   )
+	mata: st_local("ictests", AA.get("mode")                                   )
+	mata: st_local("icarima", AA.get("ic")                                     )
 	/* get limits                                                             */
 	mata: st_matrix("`limits'", AA.get("L")'                                   )
 	mata: if (length(AA.get("L"))) st_matrixrowstripe(                      ///
@@ -175,43 +176,51 @@ program define arimaauto, rclass byable(recall)
 		                        "AIC","SIC")')                              ///
 	);;
 	/* get the best [S]ARIMA[X] model based on LLF, AIC, SIC                  */
+	mata: bm = AA.get("MS")[selectindex(AA.get("MS")[,(j=(AA.get("ic")  :== ///
+		       ("llf","aic","sic")) * (10::12))] :== (*((j==10)? &max() :   ///
+		       &min()))(AA.get("MS")[,j]))[1],];                            ///
+		  st_local("best", "ARIMA"                                        + ///
+		                   "(" + invtokens(strofreal(bm[1..3]),",") + ")" + ///
+		  (AA.get("f_s") ? "(" + invtokens(strofreal(bm[4..7]),",") + ")" : ///
+		  "")  + (bm[8]  ? " with constant" :  " without constant"))
 	mata: st_numscalar(                                                     ///
 		"`vmaxLLF'",                                                        ///
-		selectindex(AA.get("MS")[,10] :== max(AA.get("MS")[,10]))           ///
+		selectindex(AA.get("MS")[,10] :== max(AA.get("MS")[,10]))[1]        ///
 	)
 	mata: st_numscalar(                                                     ///
 		"`vminAIC'",                                                        ///
-		selectindex(AA.get("MS")[,11] :== min(AA.get("MS")[,11]))           ///
+		selectindex(AA.get("MS")[,11] :== min(AA.get("MS")[,11]))[1]        ///
 	)
 	mata: st_numscalar(                                                     ///
 		"`vminSIC'",                                                        ///
-		selectindex(AA.get("MS")[,12] :== min(AA.get("MS")[,12]))           ///
+		selectindex(AA.get("MS")[,12] :== min(AA.get("MS")[,12]))[1]        ///
 	)
 	// print output                                                             
 	cap confirm mat `tests'
 	if ! _rc {
 		di as res _n "Unit root tests:"
-		loc `rspec' = "& - `= "& " * rowsof(`tests')'"
-		loc `cspec' = "& %12s | %10.0f | %5.0f | %9.6f & %9.6f & " +		///
+		loc rspec = "& - `= "& " * rowsof(`tests')'"
+		loc cspec = "& %12s | %10.0f | %5.0f | %9.6f & %9.6f & " +		///
 					  "%9.6f & %9.6f &"
-		matlist `tests', title(``title'') rspec(``rspec'') cspec(``cspec'')
+		matlist `tests', title(`title') rspec(`rspec') cspec(`cspec')
 	}
 	cap confirm mat `models'
 	if ! _rc {
 		di as res _n "Model space:"
-		loc `rspec' = "& - `= "& " * rowsof(`models')'"
-		loc `cspec' = "& %12s | %4.0f & %4.0f & %4.0f & %4.0f & " +			///
+		loc rspec = "& - `= "& " * rowsof(`models')'"
+		loc cspec = "& %12s | %4.0f & %4.0f & %4.0f & %4.0f & " +			///
 					  "%5.0f | %9.4f & %9.4f & %9.4f &"
-		matlist `models', title(``title'') rspec(``rspec'') cspec(``cspec'')
+		matlist `models', title(`title') rspec(`rspec') cspec(`cspec')
 	}
 	di as res _n "Max LLF: Model `=`vmaxLLF''"
 	di as res    "Min AIC: Model `=`vminAIC''"
 	di as res    "Min SIC: Model `=`vminSIC''"
-	di as res _n "Best model based on `=ustrupper("``icarima''")':"
+	di as res _n "Best model based on `=ustrupper("`icarima'")':"
 	arima
 	// return output                                                            
-	cap ret        loc ictests  ``ictests''
-	cap ret        loc icarima  ``icarima''
+	cap ret        loc best     `best'
+	cap ret        loc ictests  `ictests'
+	cap ret        loc icarima  `icarima'
 	cap ret hidden mat limits = `limits'
 	cap ret        mat tests  = `tests'
 	cap ret        mat models = `models'
@@ -221,5 +230,5 @@ program define arimaauto, rclass byable(recall)
 	cap ret        sca N      = e(N)
 	cap ret        sca np     = e(df_m) + 1
 	// clear memory                                                             
-	mata: mata drop AA
+	mata: mata drop AA bm
 end

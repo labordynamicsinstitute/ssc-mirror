@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3.0  20nov2025}{...}
+{* *! version 1.3.2  20nov2025}{...}
 {viewerjumpto "Syntax" "pyconvertu##syntax"}{...}
 {viewerjumpto "Description" "pyconvertu##description"}{...}
 {viewerjumpto "Options" "pyconvertu##options"}{...}

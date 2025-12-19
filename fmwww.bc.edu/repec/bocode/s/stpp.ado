@@ -1,4 +1,4 @@
-*! version 1.4.1 2025-11-20
+*! version 1.4.2 2025-12-17
   
 program define stpp, rclass sortpreserve
   version 16.0
@@ -6,9 +6,11 @@ program define stpp, rclass sortpreserve
                                                                         ///
                    [if] [in]                                            ///
                    ,                                                    ///
-                   AGEDiag(varname)                                     ///
                    DATEDiag(varname)                                    ///
+                   PMOTHER(string)                                      ///
                    [                                                    /// 
+                   AGEDiag(varname)                                     ///
+                   DATEBirth(varname)                                   ///                   
                    ALLCause(namelist max=1)                             ///
                    BY(varlist)                                          ///
                    CONTrast(passthru)                                   ///
@@ -25,7 +27,6 @@ program define stpp, rclass sortpreserve
                    LIST(numlist ascending >=0)                          ///
                    MINEXPsurv(string)                                   ///
                    PMAGE(string)                                        ///
-                   PMOTHER(string)                                      ///
                    PMRATE(string)                                       ///
                    PMYEAR(string)                                       ///
                    pmmaxage(real 99)                                    ///
@@ -40,6 +41,8 @@ program define stpp, rclass sortpreserve
                    GRAPHCode(string)                                    ///
                    *                                                    ///
                    ]
+                   
+  local cmd = stritrim(`"`0'"')                   
   st_is 2 analysis
   marksample touse, novarlist
   qui replace `touse' = 0  if _st==0 | _st==. 	
@@ -71,14 +74,28 @@ program define stpp, rclass sortpreserve
 ************
 // Checks //	
 ************
-  confirm var `agediag' `datediag'
+  if wordcount("`agediag' `datebirth'")>1 {
+    di as error "Only one of the agediag() and datebirth() options can be used."
+    exit 198
+  }
+  confirm var `agediag' `datediag' `datebirth'
+  //if "`pmother'" == "" {
+  //  di as error "You need to specify at list one va"
+  //}
   confirm var `pmother'
   foreach var in `agediag' `datediag' `pmother' {
     qui count if missing(`var') & `touse'
     if `r(N)' >0 {
       di as error "`var' has missing values"
+      exit 198
     }
   }
+  if "`datebirth'" != "" {
+    tempvar tempagediag
+    gen `tempagediag' = age_frac(`datebirth',`datediag')
+    local agediag `tempagediag'
+  }
+  
   local RS_newvarname `varlist'
 
   if "`indweights'" != "" {
@@ -88,9 +105,8 @@ program define stpp, rclass sortpreserve
       di as err "You have missing values in `indweights'"
       exit 198
     }
-    di as error
   }
-  if "`by'"         != "" confirm var `by'    
+  if "`by'" != "" confirm numeric var `by'    
 
   if "`standstrata'" != "" {
   	qui count if missing(`standstrata') & `touse'
@@ -133,7 +149,6 @@ program define stpp, rclass sortpreserve
       confirm new var `v' `v'_lci	`v'_uci
     }
   }
-
   
   if "`popmort2'" != "" & "`using2'" != ""{
     di as error "You can't use both the using2() and popmort2() options."
@@ -202,8 +217,14 @@ program define stpp, rclass sortpreserve
     getframeoptions `frame'    
   } 
   mata: st_local("frameexists",strofreal(st_frameexists(st_local("resframe"))))
-  if `frameexists' & "`framereplace'" != "" {
-    frame drop `resframe'
+  if `frameexists' {
+    if "`framereplace'" != "" {
+      frame drop `resframe'
+    }
+    else {
+      di as error "frame `resframe' already exists"
+      exit 198
+    }
   }  
   
 *******************	
@@ -222,7 +243,7 @@ program define stpp, rclass sortpreserve
       exit 198
     }
   }
-  // using2 for time-dependent weights
+  // using2 for second popmort file
   if "`using2'" != "" {
     local 0 `using2'
     syntax anything(id="filename" name=using2filename), [   ///
@@ -231,12 +252,7 @@ program define stpp, rclass sortpreserve
       pmrate2(string)  ///
       pmyear2(string)  ///
       ]
-
-    mata: st_local("using2exists",strofreal(fileexists(st_local("using2filename"))))
-    if !`using2exists' {
-      di as error "File `using2filename' does not exist"
-      exit 198
-    }
+    qui describe using "`using2filename'", varlist short
     local pmage2 = cond("`pmage2'"== ".","",cond("`pmage2'"== "","`pmage'","`pmage2'")) 
     local pmyear2 = cond("`pmyear2'"== ".","",cond("`pmyear2'"== "","`pmyear'","`pmyear2'"))
     local pmother2 = cond("`pmother2'"== ".","",cond("`pmother2'"== "","`pmother'","`pmother2'"))
@@ -302,9 +318,23 @@ program define stpp, rclass sortpreserve
       Check_popmort_levels if `touse', pmother(`pmother2') popmortframe(`popmort2frame')
     }
   } 
+  
+  // store info for labels
+  if "`resframe'" != "" {
+    foreach byvar in `by' {
+      local tmpbylabel: value label `byvar'
+      if "`tmpbylabel'" != "" {
+        mata st_local("labelexists",strofreal(st_vlexists("`tmpbylabel'")))
+        if `labelexists' local bylabels `bylabels' `tmpbylabel'
+      }
+    }
+    tempfile tempbylabels
+    qui label save `bylabels' using `tempbylabels' 
+  }
+  
   mata: stpp()
   return add
-  
+
   if "`list'" != ""  {
   	quietly {
   	  matrix colnames PP=`by' time PP PP_lci PP_uci	
@@ -335,7 +365,35 @@ program define stpp, rclass sortpreserve
   
 // add further details to frame
 if "`frame'" != "" {
-  char _dta[cmd] stpp `0'
+  // version number
+  quietly findfile stpp.ado
+  tempname fh
+  file open `fh' using "`r(fn)'", read
+  file read `fh' firstline
+  local stpp_version = substr("`firstline'",4,.)
+  file close `fh'
+  
+  // data labels
+  local datalabel: data label
+  local data_file =  "`c(filename)'"
+  local starting_folder 
+  
+  // called from path
+  
+  frame `resframe' {
+    
+    char _dta[data_label] `datalabel'
+    char _dta[data_file]  `data_file'
+    if "`popmort2'" != "" {
+      char _dta[popmort2_file]  `using2'
+    }
+    char _dta[popmort_file] `usingfilename'
+    char _dta[starting_folder] `=c(pwd)'
+    char _dta[date_created]   `=c(current_date)'
+    char _dta[stpp_version] `stpp_version'
+    char _dta[cmd] stpp `cmd'
+  }
+  
 }  
   
 
@@ -364,6 +422,9 @@ if "`inccens'"=="" {
     quietly bysort `by' `touse'  (_t `d0'): replace `v' = `v'[_n-1] if `v' >= . & `touse' 
   }
 }
+
+// label variables	
+
 
   
 *******************
@@ -663,7 +724,8 @@ struct stpp_info {
                         pmyear2,               // year variable in popmort2 file
                         pmrate2,               // rate vatriable in popmort2 file                  
                         resframe,              // name of results frame
-                        display                // displat option 
+                        display,               // display option 
+                        bylabels_filename      // filename where bylabels are stored
                   
   real         matrix   list                   // list of times to display                  
   
@@ -952,6 +1014,9 @@ function PP_Get_stpp_info()
     S.bylevels   = uniqrows(S.by)
     S.Nbylevels  = rows(S.bylevels)
     S.Nbyvars    = cols(S.by)
+    if(S.hasframe) {
+      S.bylabels_filename = st_local("tempbylabels")
+    }
   }
   else {
     S.byvars     = J(1,0,"")
@@ -1645,7 +1710,7 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
     
     // get Number at risk at time 0
     Natrisk_time0 = PP_Natrisk_time0(S,k)
-  
+ 
     for(i=1;i<=S.Nlist;i++) {
       tindex = selectindex(asarray(S.unique_t_k,k):<=S.list[i])
       tj = asarray(S.unique_t_k,k)[tindex]
@@ -1655,7 +1720,7 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
       minindex(S.list[i]:-asarray(S.unique_t_k,k)[tindex],1,tminindex=.,tmp=.)
       if(S.hasstandstrata) Natrisktmp = Natrisk_time_tj
       else Natrisktmp = asarray(S.Nrisk,k)[tminindex,]
-      
+     
       if(S.list[i]<=asarray(S.maxt_k,k) & S.list[i]>=asarray(S.mint_k,k)) {
         
         RS_tmplist[i,]    = (S.list[i],Natrisktmp,asarray(S.RS_PP, k)[tminindex,])
@@ -1693,18 +1758,21 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
       }
 
       if(S.list[i]>asarray(S.maxt_k,k) & S.list[i]<=asarray(S.maxtall_k,k)) {
-        RS_tmplist[i,] = (S.list[i],asarray(S.RS_PP, k)[tminindex,])
+        RS_tmplist[i,] = (S.list[i],Natrisktmp,asarray(S.RS_PP, k)[tminindex,])
         RS_tmplist_var[i] = asarray(S.RS_PP_var, k)[tminindex,]
+
         if(S.hasallcause)  {
-          AC_tmplist[i,]     = (S.list[i],asarray(S.AC, k)[tminindex,])  
+          AC_tmplist[i,]     = (S.list[i],Natrisktmp,asarray(S.AC, k)[tminindex,])  
           AC_tmplist_var[i] = asarray(S.AC_var, k)[tminindex,]
         }
+
         if(S.hascrudeprob) {
-          CP_can_tmplist[i,] = (S.list[i],asarray(S.CP_can, k)[tminindex,])  
+          CP_can_tmplist[i,] = (S.list[i],Natrisktmp,asarray(S.CP_can, k)[tminindex,])  
           CP_can_tmplist_var[i] = asarray(S.CP_can_var, k)[tminindex,]
         }
+
         if(S.CP_calcother) {
-          CP_oth_tmplist[i,] = (S.list[i],asarray(S.CP_oth, k)[tminindex,])
+          CP_oth_tmplist[i,] = (S.list[i],Natrisktmp,asarray(S.CP_oth, k)[tminindex,])
           CP_oth_tmplist_var[i] = asarray(S.CP_oth_var, k)[tminindex,]          
         }
       }
@@ -1740,7 +1808,10 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
     PP_print_list_results(S)
   }
 // Write results to a frame  
-  if(S.hasframe) PP_write_frame_results(S)
+  if(S.hasframe) {
+    PP_write_frame_results(S)
+    PP_write_frame_labels(S)
+  }
 }
 
 
@@ -2016,59 +2087,182 @@ void function PP_write_frame_results(struct stpp_info scalar S)
   string   scalar     currentframe, RSname
   string rowvector    newvars
   
-  if(S.hasframe) {
-    currentframe = st_framecurrent()
-    st_framecreate(S.resframe)
-    st_framecurrent(S.resframe)
-    
-    if(S.haspopmort2) RSname = "SB"
-    else if(S.ederer2) RSname = "E2"
-    else RSname = "PP"
+  currentframe = st_framecurrent()
+  st_framecreate(S.resframe)
+  st_framecurrent(S.resframe)
+  
+  if(S.haspopmort2) RSname = "SB"
+  else if(S.ederer2) RSname = "E2"
+  else RSname = "PP"
 
-    newvars = (S.byvars,"time","Natrisk",RSname,RSname+"_lci",RSname+"_uci")
+  newvars = (S.byvars,"time","Natrisk",RSname,RSname+"_lci",RSname+"_uci")
+  (void) st_addvar("double", newvars)
+  st_addobs(rows(S.RS_frame_results)) 
+  st_store(.,newvars,.,S.RS_frame_results)
+
+  if(S.hasallcause) {
+    newvars = ("AC","AC_lci","AC_uci")
     (void) st_addvar("double", newvars)
-    st_addobs(rows(S.RS_frame_results)) 
-    st_store(.,newvars,.,S.RS_frame_results)
-
+    st_store(.,newvars,.,S.AC_frame_results[,(3+S.Nbyvars:*S.hasby)..cols(S.RS_frame_results)])
+  }
+  if(S.hascrudeprob) {
+    newvars = ("CP_can","CP_can_lci","CP_can_uci")
+    (void) st_addvar("double", newvars)
+    st_store(.,newvars,.,S.CP_can_frame_results[,(3+S.Nbyvars:*S.hasby)..cols(S.RS_frame_results)])
+    if(S.CP_calcother) {
+      newvars = ("CP_oth","CP_oth_lci","CP_oth_uci")
+      (void) st_addvar("double", newvars)        
+      st_store(.,newvars,.,S.CP_oth_frame_results[,(3+S.Nbyvars:*S.hasby)..cols(S.RS_frame_results)])
+    }
+  } 
+  
+  if(S.hascontrast) {
+    newvars = (RSname+"_diff",RSname+"_diff_lci",RSname+"_diff_uci")
+    (void) st_addvar("double", newvars)
+    st_store(.,newvars,.,S.RS_frame_contrast:*S.contrast_per)
     if(S.hasallcause) {
-      newvars = ("AC","AC_lci","AC_uci")
+      newvars = ("AC_diff","AC_diff_lci","AC_diff_uci")
       (void) st_addvar("double", newvars)
-      st_store(.,newvars,.,S.AC_frame_results[,(3+S.Nbyvars:*S.hasby)..cols(S.RS_frame_results)])
+      st_store(.,newvars,.,S.AC_frame_contrast:*S.contrast_per)        
+    }
+    if(S.hascrudeprob) {      
+      newvars = ("CP_can_diff","CP_can_diff_lci","CP_can_diff_uci")
+      (void) st_addvar("double", newvars)
+      st_store(.,newvars,.,S.CP_can_frame_contrast:*S.contrast_per)                
+    }
+    if(S.CP_calcother) {      
+      newvars = ("CP_oth_diff","CP_oth_diff_lci","CP_oth_diff_uci")
+      (void) st_addvar("double", newvars)
+      st_store(.,newvars,.,S.CP_oth_frame_contrast:*S.contrast_per)    
+    }
+  }
+  st_framecurrent(currentframe)
+}
+
+////////////////////////////
+// PP_write_frame_labels  //
+////////////////////////////
+void function PP_write_frame_labels(struct stpp_info scalar S)
+{
+  string   scalar     currentframe, RSname, addrefadj, survdeath
+  string   rowvector  byvarlabels, byvaluelabels 
+  real     scalar     b
+
+  currentframe = st_framecurrent()
+  
+  // extract labels etc
+  
+  if(S.hasby) {
+    byvaluelabels    = J(1,S.Nbyvars,"")
+    byvarlabels      = J(1,S.Nbyvars,"")
+    for(b=1;b<=S.Nbyvars;b++) {
+      byvaluelabels[b] = st_varvaluelabel(S.byvars[b])
+      byvarlabels[b]   = st_varlabel(S.byvars[b])
+    }
+  }
+  
+  st_framecurrent(S.resframe)
+
+  if(S.haspopmort2) RSname = "SB"
+  else if(S.ederer2) RSname = "E2"
+  else RSname = "PP"  
+  
+  st_varlabel("time","Time") 
+  st_varlabel("Natrisk","Number at risk") 
+
+  if(S.hasdeathprob) survdeath="probability of death"
+  else survdeath = "survival"
+  
+// PP, E2 and SB measures  
+  if(RSname=="PP") {
+    st_varlabel("PP","Pohar Perme net " + survdeath) 
+    st_varlabel("PP_lci","Pohar Perme net " + survdeath + " lower bound") 
+    st_varlabel("PP_uci","Pohar Perme net " + survdeath + " upper bound") 
+  }
+  else if(RSname=="E2") {
+    st_varlabel("E2","Ederer II net " + survdeath) 
+    st_varlabel("E2_lci","Ederer II net " + survdeath + " lower bound") 
+    st_varlabel("E2_uci","Ederer II net " + survdeath + " upper bound")     
+  }
+  else if(RSname=="SB") {
+    st_varlabel("SB","Sasieni & Brentnall survival index") 
+    st_varlabel("SB_lci","Sasieni & Brentnall survival index lower bound") 
+    st_varlabel("SB_uci","Sasieni & Brentnall survival index upper bound")     
+  }  
+  
+  if(S.hasallcause) {
+    if(S.hasdeathprob) survdeath="probability of death"
+    else survdeath = "survival"    
+    
+    if(S.haspopmort2) addrefadj = " (Ref adj)"
+    else addrefadj = ""
+    
+    st_varlabel("AC","All cause " + survdeath + strrtrim(addrefadj)) 
+    st_varlabel("AC_lci","All cause " + survdeath + addrefadj + " lower bound") 
+    st_varlabel("AC_uci","All cause " + survdeath + addrefadj + " upper bound") 
+  }
+  
+  if(S.hascrudeprob) {
+    if(S.haspopmort2) addrefadj = " (Ref adj)"
+    else addrefadj = ""
+    st_varlabel("CP_can","Crude probability of death (cancer)" + addrefadj) 
+    st_varlabel("CP_can_lci","Crude probability of death (cancer)" + addrefadj + " lower bound")
+    st_varlabel("CP_can_uci","Crude probability of death (cancer)" + addrefadj + " upper bound") 
+    if(S.CP_calcother) {
+      st_varlabel("CP_oth","Crude probability of death (other)" + addrefadj) 
+      st_varlabel("CP_oth_lci","Crude probability of death (other)" + addrefadj + " lower bound")
+      st_varlabel("CP_oth_uci","Crude probability of death (other)" + addrefadj + " upper bound")       
+    }
+  } 
+  
+  if(S.hascontrast) {
+    if(RSname=="PP") {
+       st_varlabel("PP_diff","Pohar Perme difference") 
+       st_varlabel("PP_diff_lci","Pohar Perme difference lower bound") 
+       st_varlabel("PP_diff_uci","Pohar Perme difference upper bound") 
+    }
+    else if(RSname=="E2") {
+      st_varlabel("E2_diff","Ederer II difference") 
+      st_varlabel("E2_diff_lci","Ederer II difference lower bound") 
+      st_varlabel("E2_diff_uci","Ederer II difference upper bound")     
+    }  
+    else if(RSname=="SB") {
+      st_varlabel("SB_diff","Sasieni & Brentnall difference") 
+      st_varlabel("SB_diff_lci","Sasieni & Brentnall difference lower bound") 
+      st_varlabel("SB_diff_uci","Sasieni & Brentnall difference upper bound")     
+    }    
+    if(S.hasallcause) {
+      st_varlabel("AC_diff","All cause difference" + addrefadj) 
+      st_varlabel("AC_diff_lci","All cause difference lower bound" + addrefadj) 
+      st_varlabel("AC_diff_uci","All cause difference upper bound" + addrefadj)       
     }
     if(S.hascrudeprob) {
-      newvars = ("CP_can","CP_can_lci","CP_can_uci")
-      (void) st_addvar("double", newvars)
-      st_store(.,newvars,.,S.CP_can_frame_results[,(3+S.Nbyvars:*S.hasby)..cols(S.RS_frame_results)])
+      st_varlabel("CP_can_diff","Crude prob cancer difference" + addrefadj) 
+      st_varlabel("CP_can_diff_lci","Crude prob cancer difference lower bound" + addrefadj) 
+      st_varlabel("CP_can_diff_uci","Crude prob cancer difference upper bound" + addrefadj)             
       if(S.CP_calcother) {
-        newvars = ("CP_oth","CP_oth_lci","CP_oth_uci")
-        (void) st_addvar("double", newvars)        
-        st_store(.,newvars,.,S.CP_oth_frame_results[,(3+S.Nbyvars:*S.hasby)..cols(S.RS_frame_results)])
-      }
-    } 
-    
-    if(S.hascontrast) {
-      newvars = (RSname+"_diff",RSname+"_diff_lci",RSname+"_diff_uci")
-      (void) st_addvar("double", newvars)
-      st_store(.,newvars,.,S.RS_frame_contrast:*S.contrast_per)
-      if(S.hasallcause) {
-        newvars = ("AC_diff","AC_diff_lci","AC_diff_uci")
-        (void) st_addvar("double", newvars)
-        st_store(.,newvars,.,S.AC_frame_contrast:*S.contrast_per)        
-      }
-      if(S.hascrudeprob) {      
-        newvars = ("CP_can_diff","CP_can_diff_lci","CP_can_diff_uci")
-        (void) st_addvar("double", newvars)
-        st_store(.,newvars,.,S.CP_can_frame_contrast:*S.contrast_per)                
-      }
-      if(S.CP_calcother) {      
-        newvars = ("CP_oth_diff","CP_oth_diff_lci","CP_oth_diff_uci")
-        (void) st_addvar("double", newvars)
-        st_store(.,newvars,.,S.CP_oth_frame_contrast:*S.contrast_per)    
+        st_varlabel("CP_oth_diff","Crude prob other causes difference" + addrefadj) 
+        st_varlabel("CP_oth_diff_lci","Crude prob other cause difference lower bound" + addrefadj) 
+        st_varlabel("CP_oth_diff_uci","Crude prob other cause difference upper bound" + addrefadj)                     
       }
     }
-    st_framecurrent(currentframe)
   }
-}
+  
+  // ****
+  // Need to add contrasts
+  // ****
+  
+  if(S.hasby) {
+    stata("run " + S.bylabels_filename,1)
+    for(b=1;b<=S.Nbyvars;b++) {
+      st_varvaluelabel(S.byvars[b],byvaluelabels[b])
+      st_varlabel(S.byvars[b],byvarlabels[b])
+    }
+  }
+  
+  // Back to data frame
+  st_framecurrent(currentframe)
+}  
 
 // calculate number at risk at time 0 (for by group k)
 real function PP_Natrisk_time0(struct stpp_info scalar S, real scalar k)

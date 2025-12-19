@@ -1,14 +1,14 @@
 {smcl}
-{* *! version 1.0.3  07oct2022}{...}
+{* *! version 1.1.0  20nov2025}{...}
 {vieweralsosee "[TS] arima" "mansection TS arima"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "[TS] arima postestimation" "help arima postestimation"}{...}
 {vieweralsosee "" "--"}{...}
-{viewerjumpto "Syntax" "arimaauto##syntax"}{...}
-{viewerjumpto "Description" "arimaauto##description"}{...}
-{viewerjumpto "Options" "arimaauto##options"}{...}
-{viewerjumpto "Examples" "arimaauto##examples"}{...}
-{viewerjumpto "References" "arimaauto##references"}{...}
+{viewerjumpto "Syntax" "xtarimau##syntax"}{...}
+{viewerjumpto "Description" "xtarimau##description"}{...}
+{viewerjumpto "Options" "xtarimau##options"}{...}
+{viewerjumpto "Examples" "xtarimau##examples"}{...}
+{viewerjumpto "References" "xtarimau##references"}{...}
 {p2colset 1 15 17 2}{...}
 
 {title:Title}
@@ -129,7 +129,8 @@ available after estimation.{p_end}
 {title:Description}
 
 {pstd}
-{cmd:xtarimau} is a panel wrapper for {cmd:arimaauto} which is {it:de facto} an "augmented" Mata-written sister program to Christopher F. Baum's ARMA-limited
+{cmd:xtarimau} is a panel wrapper for {cmd:arimaauto} which is {it:de facto} an
+"augmented" Mata-written sister program to Christopher F. Baum's ARMA-limited
 {helpb arimasel} with mutually consistent output, allowing for ARIMA({it:p,d,q})
 and multiplicative seasonal ARIMA({it:p,d,q})({it:P,D,Q}) models, selecting the
 best model based on the LLF, AIC or SIC, and returning its estimates at the same

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  20aug2025}{...}
+{* *! version 1.1.0  20nov2025}{...}
 {viewerjumpto "Syntax" "cconv##syntax"}{...}
 {viewerjumpto "Description" "cconv##description"}{...}
 {viewerjumpto "Options" "cconv##options"}{...}
@@ -204,3 +204,9 @@ For a Python-based Stata alternative, consult {helpb pyconvertu}.
 
 {pstd}
     Thanks for citing this software and my works on the topic.
+
+{p 8 8 2}
+Bolotov, I. (2020). CCONV: Stata module to convert a string variable to a
+    classification from a built-in or user-defined JSON file using
+    libjson. Available from
+    {browse "https://ideas.repec.org/c/boc/bocode/s459544.html"}.

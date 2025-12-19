@@ -1,5 +1,8 @@
 *! weai
-*! version 1.1 08/Aug/2022
+*! version 2.0.0 16dec2025
+*! IMPORTANT: Bug fix - relative contribution of each indicator to disempowerment 
+*!            now correctly sum to 100%. Results will differ from v1.1
+*! version 1.1: Previous version (contained calucation error)
 *! Author: WEAI index team
 
 *-------------------------
@@ -422,7 +425,6 @@ quietly {
 		}	            
 	}
 }		
-		
 		
 *Check if "sex" variable has more than two values
 	levelsof `sex', local(sex_count)
@@ -861,7 +863,6 @@ quietly {
 *-------------------------------------------------------------------------------
 *Computing Main Indicators
 *-------------------------------------------------------------------------------
-    
     *Check if all individuals are non-disempowered, as this requires additional messages below.
 	
       cap assert `_H' == 0
@@ -1186,7 +1187,6 @@ restore
 		putdocx table Table1(11,.), nformat(%9.0f)		
 		putdocx table Table1(1,.),  bold	 														
 ********************************************************************************		
-		
 *-------------------------------------------------------------------------------
 *    by decomposition of Main Indicators:
 *-------------------------------------------------------------------------------		
@@ -1994,19 +1994,17 @@ if "`details'" != "" {
 *---------------------------------------------------------------------------
 *Decomposition of M_alpha by Indicator
 *---------------------------------------------------------------------------
-
 tempname disp_sex disp_C_sex
-				
-	    			
+			    			
 		local sexs `female' `male'
      	foreach s of local sexs {
 		     
    preserve		    		
-		keep if `sex'==`s' & `touse'
+		keep if `sex'==`s'  & `touse'
 	
             if `ni' != 1 {
                 *Variables for output
-                tempname decomb_ind_`s' decomb_dom_`s' decomb_ind_C_`s' decomb_ind_V_`s' decomb_dom_V_`s' mat_transform_`s'
+                tempname decomb_ind_`s' decomb_dom_`s' decomb_ind_C_`s' decomb_ind_V_`s' decomb_dom_V_`s' mat_transform_`s'  rel_from_abs_`s' rel__from_abs_`s' coltotal_`s'
 
                 *Variables for display
                 tempname disp_`s' decomb_ind_disp_`s' decomb_dom_disp_`s'
@@ -2017,8 +2015,14 @@ tempname disp_sex disp_C_sex
                 matrix `decomb_ind_C_`s'' = r(weai_decomposed_C)				
                 matrix `decomb_ind_V_`s'' = r(weai_decomposed_V)
 				
+				*matrix `decomb_ind_C_`s'' = `decomb_ind_C_`s'''
 				matrix `decomb_ind_C_`s'' = `decomb_ind_C_`s'''
-
+				matrix `rel_from_abs_`s'' =  `decomb_ind_C_`s''  
+				
+				mata: st_numscalar("`coltotal_`s''", sum(st_matrix("`rel_from_abs_`s''")))
+                scalar list  `coltotal_`s''
+                
+				mata: st_matrix("`rel_from_abs_`s''", (st_matrix("`rel_from_abs_`s''") :/ st_numscalar("`coltotal_`s''")) :*100)				
 				
                 local ncol = `=1 + wordcount("`alpha'")*`use_thresholds''
 
@@ -2065,7 +2069,7 @@ tempname disp_sex disp_C_sex
        *Prepare for display and do consistency checks.
            if `ni' != 1 {
    			
-                matrix `disp_`s'' = (`decomb_ind_disp_`s'')
+                matrix `disp_`s'' = (`rel_from_abs_`s'') 
                 matrix rownames `disp_`s'' = `lb_ind' 							
                 matrix rownames `decomb_ind_C_`s'' = `lb_ind' 				
 				
@@ -2121,49 +2125,69 @@ if "`details'" != "" {
 				putdocx table Table4a(1,.), bold	 				
 									
 } // End details
-			 			   	
-				tempname var_colnames
-				gen `var_colnames' = ""
-				tokenize "`: colnames `disp_C_sex''"
-				local labdf ""
-				
-				qui forval i = 1/`= rowsof(`disp_C_sex')' {
+	
+	tempvar var_colnames
+	gen `var_colnames' = ""
 
-				gen ind_`i' = .	
-				qui forval j = 1/`= colsof(`disp_C_sex')' {
-				
-				replace ind_`i' = `disp_C_sex'[`i',`j'] in `j'
-				lab var ind_`i' 
-				replace `var_colnames' = "``j''" in `j'
-				}
-				 
-				getRowName `disp_C_sex' `i'
-				local lab_ind_`i'=r(rowname)
-				rename ind_`i' c_`lab_ind_`i''	
-		} 
-				
-if "`graph'" != "" {	
-    graph bar  c_* , over(`var_colnames', sort(1) descending) stack ///
-        yreverse xalternate graphregion(color(white)) scale(.95) ///
-		bar(1, fc("186 228 179")  lc(white) lw(vvthin)) ///   
-		bar(2, fc("116 196 118")  lc(none) lw(vvthin)) ///
-		bar(3, fc("49 163 84")    lc(none) lw(vvthin)) ///
-		bar(4, fc("254 237 222")  lc(none) lw(vvthin)) ///   
-		bar(5, fc("253 208 162")  lc(none) lw(vvthin)) ///
-		bar(6, fc("253 174 107")  lc(none) lw(vvthin)) ///   
-		bar(7, fc("253 141 60")   lc(none) lw(vvthin)) ///
-		bar(8, fc("230 85 13")    lc(none) lw(vvthin)) ///
-		bar(9, fc("166 54 3")     lc(none) lw(vvthin)) ///  
-		bar(10, fc("188 189 220") lc(none) lw(vvthin)) ///
-		legend(cols(1) pos(3) si(vsmall)   lw(vvthin) region(lwidth(none))) nolabel ///
-		title("{bf:Absolute contribution of each indicator to disempowerment}", span si(medium) position(11) margin(b=5)) ///
-		ytitle("Disempowerment index", si(small)) yla(, format(%9.1f)) yscale(titlegap(*2.5)) ///
-		note("NOTE: `ni' indicators calculated. The absolute contribution to each indicator to disempowerment reflects how much each indicator" "contributes to disempowerment among respondents who have not achieved empowerment.", si(vsmall) margin(medium)) name(weai, replace)		
-		
- 	    graph save "`graph'",  replace				
-		cap drop c_*				
+	local legend_order   ""   
+	local vlist_c        ""   
+
+tokenize "`: colnames `disp_C_sex''"
+qui forval i = 1/`= rowsof(`disp_C_sex')' {
+
+    gen ind_`i' = .
+    qui forval j = 1/`= colsof(`disp_C_sex')' {
+        replace ind_`i' = `disp_C_sex'[`i',`j'] in `j'
+        replace `var_colnames' = "``j''" in `j'
+    }
+
+    * row name -> legend text
+    getRowName `disp_C_sex' `i'
+    local raw = r(rowname)  
+
+*make a safe varname
+    local safe = subinstr("`raw'", " ", "_", .)
+    rename ind_`i' c_`safe'
+	
+	
+    * legend label WITHOUT the c_ and (optionally) without "Domain X:"
+    local legendlab "`raw'"
+    if strpos("`legendlab'", ":") {
+        local legendlab = substr("`legendlab'", strpos("`legendlab'", ":")+2, .)
+    }
+    label var c_`safe' "`legendlab'"
+
+    * build legend(order())
+    local idx = `i'
+    local legend_order `legend_order' `idx' "`legendlab'"
+    local vlist_c      `vlist_c'      c_`safe'
 }
-        cap drop c_*	
+
+
+if "`graph'" != "" {	
+* Now plot using the labels; legend will show `legendlab`, not varnames
+graph bar `vlist_c' , over(`var_colnames', sort(1) descending) stack ///
+    yreverse xalternate graphregion(color(white)) scale(.95) ///
+    bar(1,  fc("186 228 179")  lc(white) lw(vvthin)) ///
+    bar(2,  fc("116 196 118")  lc(none)  lw(vvthin)) ///
+    bar(3,  fc("49 163 84")    lc(none)  lw(vvthin)) ///
+    bar(4,  fc("254 237 222")  lc(none)  lw(vvthin)) ///
+    bar(5,  fc("253 208 162")  lc(none)  lw(vvthin)) ///
+    bar(6,  fc("253 174 107")  lc(none)  lw(vvthin)) ///
+    bar(7,  fc("253 141 60")   lc(none)  lw(vvthin)) ///
+    bar(8,  fc("230 85 13")    lc(none)  lw(vvthin)) ///
+    bar(9,  fc("166 54 3")     lc(none)  lw(vvthin)) ///
+    bar(10, fc("188 189 220")  lc(none)  lw(vvthin)) ///	
+	legend(order(`legend_order') cols(1) pos(3) si(vsmall) lw(vvthin) region(lwidth(none))) ///
+    title("{bf:Absolute contribution of each indicator to disempowerment}", span si(medium) position(11) margin(b=5)) ///
+    ytitle("Disempowerment index", si(small)) yla(, format(%9.1f)) yscale(titlegap(*2.5)) ///
+    note("NOTE: `ni' indicators calculated. The absolute contribution to each indicator to disempowerment reflects how much each indicator" "contributes to disempowerment among respondents who have not achieved empowerment.", si(vsmall) margin(medium)) ///
+    name(weai, replace)
+ 	    
+	graph save "`graph'",  replace				
+	cap drop c_*				
+}
+    cap drop c_*		
 *---------------------------------------------------------------------------
 *Decomposition of M_alpha by BY
 *---------------------------------------------------------------------------
@@ -2181,7 +2205,7 @@ if "`graph'" != "" {
 			
             if `ni' != 1 {
                 *Variables for output
-                tempname decomb_ind_f_`by_s' decomb_dom_f_`by_s' decomb_ind_V_f_`by_s' decomb_dom_V_f_`by_s' mat_transform_f_`by_s' decomb_ind_C_f_`by_s'
+                tempname decomb_ind_f_`by_s' decomb_dom_f_`by_s' decomb_ind_V_f_`by_s' decomb_dom_V_f_`by_s' mat_transform_f_`by_s' decomb_ind_C_f_`by_s' rel_from_abs_f_`by_s' coltotal_f_`by_s'
 
                 *Variables for display
                 tempname disp_f_`by_s' decomb_ind_disp_f_`by_s' decomb_dom_disp_f_`by_s' 
@@ -2190,12 +2214,18 @@ if "`graph'" != "" {
 
                 matrix `decomb_ind_f_`by_s''   = r(weai_decomposed)
                 matrix `decomb_ind_C_f_`by_s'' = r(weai_decomposed_C)				
-                matrix `decomb_ind_V_f_`by_s'' = r(weai_decomposed_V)
-				
+                matrix `decomb_ind_V_f_`by_s'' = r(weai_decomposed_V)				
 				matrix `decomb_ind_C_f_`by_s''= `decomb_ind_C_f_`by_s'''
-								
-                local ncol = `=1 + wordcount("`alpha'")*`use_thresholds''
-
+				
+				matrix `rel_from_abs_f_`by_s'' =  `decomb_ind_C_f_`by_s''
+			
+				mata: st_numscalar("`coltotal_f_`by_s''", sum(st_matrix("`rel_from_abs_f_`by_s''")))
+                scalar list  `coltotal_f_`by_s''
+                
+				mata: st_matrix("`rel_from_abs_f_`by_s''", (st_matrix("`rel_from_abs_f_`by_s''") :/ st_numscalar("`coltotal_f_`by_s''")) :*100)
+				
+                local ncol = `=1 + wordcount("`alpha'")*`use_thresholds''				
+				
                 mata: `A' = st_matrix("r(weai_decomposed)")
                 mata: cols = strtoreal(st_local("ncol"))
                 mata: `A' = colshape(`A', cols)
@@ -2239,7 +2269,7 @@ if "`graph'" != "" {
           *Prepare for display and do consistency checks.          
            if `ni' != 1 {
   
-                matrix `disp_f_`by_s'' = (`decomb_ind_disp_f_`by_s'')
+                matrix `disp_f_`by_s'' = (`rel_from_abs_f_`by_s'')
 				
 				*Prepare subpopulation labels
 				local levels ""
@@ -2281,7 +2311,7 @@ if "`graph'" != "" {
 			keep if `sex'==`male'			
             if `ni' != 1 {
                 *Variables for output
-                tempname decomb_ind_m_`by_s' decomb_dom_m_`by_s' decomb_ind_V_m_`by_s' decomb_dom_V_m_`by_s' mat_transform_m_`by_s' decomb_ind_C_m_`by_s'
+                tempname decomb_ind_m_`by_s' decomb_dom_m_`by_s' decomb_ind_V_m_`by_s' decomb_dom_V_m_`by_s' mat_transform_m_`by_s' decomb_ind_C_m_`by_s' rel_from_abs_m_`by_s' coltotal_m_`by_s'
 
                 *Variables for display
                 tempname disp_m_`by_s' decomb_ind_disp_m_`by_s' decomb_dom_disp_m_`by_s' 
@@ -2291,7 +2321,14 @@ if "`graph'" != "" {
                 matrix `decomb_ind_C_m_`by_s'' = r(weai_decomposed_C)								
                 matrix `decomb_ind_V_m_`by_s'' = r(weai_decomposed_V)
 				
-				matrix `decomb_ind_C_m_`by_s''=`decomb_ind_C_m_`by_s'''
+				matrix `decomb_ind_C_m_`by_s''=`decomb_ind_C_m_`by_s'''				
+				matrix `rel_from_abs_m_`by_s'' =  `decomb_ind_C_m_`by_s''
+
+				
+				mata: st_numscalar("`coltotal_m_`by_s''", sum(st_matrix("`rel_from_abs_m_`by_s''")))
+                scalar list  `coltotal_m_`by_s''
+                
+				mata: st_matrix("`rel_from_abs_m_`by_s''", (st_matrix("`rel_from_abs_m_`by_s''") :/ st_numscalar("`coltotal_m_`by_s''")) :*100)				
 				
                 local ncol = `=1 + wordcount("`alpha'")*`use_thresholds''
 
@@ -2337,7 +2374,7 @@ if "`graph'" != "" {
 		
            *Prepare for display and do consistency checks.           
            if `ni' != 1 {
-                matrix `disp_m_`by_s'' = (`decomb_ind_disp_m_`by_s'')
+                matrix `disp_m_`by_s'' = (`rel_from_abs_m_`by_s'')
 				
 				*Prepare subpopulation labels
 				local levels ""
@@ -2429,7 +2466,8 @@ if "`details'" != "" {
 	  }				
 	
 *end details
-} 		
+} 	
+
 	 *graph by options
      levelsof `by' `l_if', local(by_levels)      
 	 foreach by_s of local by_levels {				
@@ -2438,48 +2476,70 @@ if "`details'" != "" {
 		local vl_`male': label `vlname' `male'
 		local vl_`female': label `vlname' `female'
 		
-		tempname var_colnames_`by_s'
-		gen `var_colnames_`by_s'' = ""
-		tokenize "`: colnames `graph_disemp_`by_s'''"
-		
-	    qui forval i = 1/`= rowsof(`graph_disemp_`by_s'')' {
 
-		gen ind_`i' = .	
-		qui forval j = 1/`= colsof(`graph_disemp_`by_s'')'   {
-		
-		replace ind_`i' = `graph_disemp_`by_s''[`i',`j'] in `j'
-		replace `var_colnames_`by_s'' = "``j''" in `j'
-		}
-		 
-		getRowName `graph_disemp_`by_s'' `i'
-		local lab_ind_`i'=r(rowname)
-		rename ind_`i' c_`lab_ind_`i''	
-	    }
+	tempvar var_colnames_`by_s'
+	gen `var_colnames_`by_s'' = ""
 
-if "`graph'" != "" {  
-	    graph bar  c_* , over(`var_colnames_`by_s'', sort(1) descending) stack ///
+	local vlist_c ""
+	local legend_order ""
+
+	tokenize "`: colnames `graph_disemp_`by_s'''"
+
+    qui forval i = 1/`= rowsof(`graph_disemp_`by_s'')' {
+    gen ind_`i' = .
+    qui forval j = 1/`= colsof(`graph_disemp_`by_s'')' {
+        replace ind_`i' = `graph_disemp_`by_s''[`i',`j'] in `j'
+        replace `var_colnames_`by_s'' = "``j''" in `j'
+    }
+
+    getRowName `graph_disemp_`by_s'' `i'
+    local raw = r(rowname)
+
+    * Make a safe varname
+    local safe = subinstr("`raw'", " ", "_", .)
+    rename ind_`i' c_`safe'
+
+    * Legend label WITHOUT the "Domain X:" prefix
+    local legendlab "`raw'"
+    if strpos("`legendlab'", ":") {
+        local legendlab = substr("`legendlab'", strpos("`legendlab'", ":")+2, .)
+    }
+
+    * IMPORTANT: use compound double quotes so the label is really set
+    label var c_`safe' `"`legendlab'"'
+
+    local idx = `i'
+    local legend_order `legend_order' `idx' `"`legendlab'"'
+    local vlist_c `vlist_c' c_`safe'
+}
+	 
+if "`graph'" != "" {
+    graph bar `vlist_c' , ///
+        over(`var_colnames_`by_s'', sort(1) descending) stack ///
         yreverse xalternate graphregion(color(white)) scale(0.91) ///
-		bar(1, fc("186 228 179") lc(white) lw(vvthin)) ///
-		bar(2, fc("116 196 118")  lc(none) lw(vvthin)) ///
-		bar(3, fc("49 163 84")    lc(none) lw(vvthin)) ///
-		bar(4, fc("254 237 222")  lc(none) lw(vvthin)) ///
-		bar(5, fc("253 208 162")  lc(none) lw(vvthin)) ///
-		bar(6, fc("253 174 107") lc(none)  lw(vvthin)) ///
-		bar(7, fc("253 141 60")   lc(none) lw(vvthin)) /// 
-		bar(8, fc("230 85 13")    lc(none) lw(vvthin)) ///
-		bar(9, fc("166 54 3")   lc(none)   lw(vvthin)) ///
-		bar(10, fc("188 189 220") lc(none) lw(vvthin)) ///
-		legend(cols(1) pos(3) si(vsmall)   lw(vvthin) region(lwidth(none)) ) nolabel ///
-		title("{bf:Absolute contribution of each indicator to disempowerment (`by'= `by_s')}", span si(medium) position(11) margin(b=5)) /// 
-		subtitle("") ytitle("Disempowerment index", si(small)) yla(, format(%9.1f)) yscale(titlegap(*2.5)) ///
-		note("NOTE: `ni' indicators calculated. The absolute contribution to each indicator to disempowerment reflects how much each indicator" "contributes to disempowerment among respondents who have not achieved empowerment." , si(vsmall) margin(medium)) name(weai_by_`by_s', replace)	
- 	    
+        bar(1,  fc("186 228 179") lc(white) lw(vvthin)) ///
+        bar(2,  fc("116 196 118")  lc(none)  lw(vvthin)) ///
+        bar(3,  fc("49 163 84")    lc(none)  lw(vvthin)) ///
+        bar(4,  fc("254 237 222")  lc(none)  lw(vvthin)) ///
+        bar(5,  fc("253 208 162")  lc(none)  lw(vvthin)) ///
+        bar(6,  fc("253 174 107")  lc(none)  lw(vvthin)) ///
+        bar(7,  fc("253 141 60")   lc(none)  lw(vvthin)) ///
+        bar(8,  fc("230 85 13")    lc(none)  lw(vvthin)) ///
+        bar(9,  fc("166 54 3")     lc(none)  lw(vvthin)) ///
+        bar(10, fc("188 189 220")  lc(none)  lw(vvthin)) ///
+        legend(order(`legend_order') cols(1) pos(3) si(vsmall) lw(vvthin) region(lwidth(none))) ///
+        title("{bf:Absolute contribution of each indicator to disempowerment (`by'=`by_s')}", ///
+              span si(medium) position(11) margin(b=5)) ///
+        ytitle("Disempowerment index", si(small)) yla(, format(%9.1f)) yscale(titlegap(*2.5)) ///
+        note("NOTE: `ni' indicators calculated. The absolute contribution to each indicator to disempowerment reflects how much each indicator" "contributes to disempowerment among respondents who have not achieved empowerment." , si(vsmall) margin(medium)) ///
+        name(weai_by_`by_s', replace)
+
 	    graph save "`graph'_by_`by_s'",  replace				
 		cap drop c_*
-} 		
-	    cap drop c_*		
+}
+        cap drop c_*
 *end graph by options			
-} 
+}
 
 *end by option
 } 

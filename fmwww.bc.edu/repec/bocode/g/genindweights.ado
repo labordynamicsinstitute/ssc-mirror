@@ -7,6 +7,7 @@ program define genindweights, rclass sortpreserve
                                         NAGEGroups(integer 5)      ///
                                         OBSproportion(string)      ///
                                         REFConditional(string)     ///
+                                        REFData(string)            ///
                                         REFEXTernal(string)        ///
                                         REFFRame(string)           /// 
                                         REFProportion(string)      ///
@@ -38,20 +39,22 @@ program define genindweights, rclass sortpreserve
   } 
   
 
-  if "`agegroup'" !="" & ("`refconditional'`refframe'" != "") {
-    di as error "Do not use the agegroup() option when using refconditional() or refframe()."
+  if "`agegroup'" !="" & ("`refconditional'`refframe'`refdata'" != "") {
+    di as error "Do not use the agegroup() option when using refconditional(), refframe() or refdata() options."
     exit 198
   }   
   
-  if (("`refframe'"!="") +  ("`refconditional'"!="") +  ("`refexternal'"!=""))>1 {
-    di as error "Only one of the refframe(), refconditional() and refexternal() can be specified."
+  if (("`refframe'"!="") + ("`refconditional'"!="") + ///
+          ("`refexternal'"!="") + ("`refdata'"!=""))>1 {
+    di as error "Only one of the refframe(), refdata(), refconditional() and refexternal() can be specified."
     exit 198
   }  
 
-  if wordcount("`refframe' `refconditional' `refexternal'")==0 {
-    di as error "You must use one of the refframe(), refconditional() and refexternal() options."
+  if wordcount("`refframe' `refconditional' `refexternal'`refdata'")==0 {
+    di as error "You must use one of the refframe(), refdata(), refconditional() and refexternal() options."
     exit 198
-  }    
+  }
+  
   
   if "`resframe'" != "" {
     mata: st_local("frameexists",frameexists(st_local("resframe")))
@@ -124,28 +127,32 @@ program define genindweights, rclass sortpreserve
   tempname refframetmp
   if "`refexternal'" != "" {
     frame create `refframetmp'  
-    
-   
     GetExternalRef, agegroup(`agegroup')  reftype(`refexternal') ///
                     nagegroups(`Nagegroups') agegrouplevels(`agegroup_levels') ///
                     refframetmp(`refframetmp')
     qui frlink m:1 `agegroup', frame(`refframetmp')
     local refwtname refp
   }
+  
   if "`refframe'" != "" {
     Parse_refframe `refframe'
     local refwtname `r(refframe_refwtname)'
     local refframe_strata `r(refframe_strata)'
     frame copy `r(refframename)' `refframetmp'
     qui frlink m:1 `refframe_strata', frame(`refframetmp')
-
   }
+  
+  if "`refdata'" != "" {
+    Parse_refdata `refdata'  refframetmp(`refframetmp')
+    local refwtname `r(refdata_refwtname)'
+    local refdata_strata `r(refdata_strata)'
+    qui frlink m:1 `refdata_strata', frame(`refframetmp')
+  }  
 
   if "`refconditional'" != "" {
-    
     // check for comma or do some parsing first?  
     GetRefcond  `refconditional' touse(`touse')  ///
-                         refframetmp(`refframetmp') refcondrestrict(`refcondrestrict')
+                         refframetmp(`refframetmp') refcondrestrict(`refcondrestrict') `stignore'
     qui frlink m:1 `refcond_strata', frame(`refframetmp')
     local refwtname refp
   }
@@ -156,14 +163,16 @@ program define genindweights, rclass sortpreserve
   //if "`byrestrict'" != "" local byrestrict & `byrestrict'
   
   // check if values of _t0>0
-  qui count if `touse'  `byrestrict' & _t0>0
-  if `r(N)'>0 {
-    di as result "** WARNING: You have values of _t0 >0 for the observed proportions."
-    di as result "            Check if you should be using the restrict() option."
-  }  
+  if "`stignore'" == "" {
+    qui count if `touse'  `byrestrict' & _t0>0
+    if `r(N)'>0 {
+      di as result "** WARNING: You have values of _t0 >0 for the observed proportions."
+      di as result "            Check if you should be using the restrict() option."
+    }  
+  }
   
   qui bysort `by':  egen `bygrouptotal' = total(`touse' `byrestrict') if `touse'   
-  qui bysort `by' `refframe_strata' `refcond_strata' `agegroup':  egen `bygrouptotal_agegrp' = total(`touse' `byrestrict') if `touse'   
+  qui bysort `by' `refdata_strata' `refframe_strata' `refcond_strata' `agegroup':  egen `bygrouptotal_agegrp' = total(`touse' `byrestrict') if `touse'   
   qui gen double `obsby_proportion' = `bygrouptotal_agegrp'/`bygrouptotal' if `touse'
   // Now merge in reference proportions & calculate indweight
   
@@ -171,7 +180,7 @@ program define genindweights, rclass sortpreserve
   qui frget `refproportion' = `refwtname', from(`refframetmp')
   capture drop `refframetmp'
   tempvar iwtmp
-  
+ 
   qui gen double `iwtmp' = `refproportion'/`obsby_proportion' if `touse'
  
  // check if missing values
@@ -187,14 +196,14 @@ program define genindweights, rclass sortpreserve
   if "`summary'" == "" {
     tempvar first
     tempname summframe
-    qui bysort `touse' `by' `refframe_strata' `refcond_strata' `agegroup': gen `first'=_n==1
-    frame put `by' `refframe_strata' `refcond_strata' `agegroup' `obsby_proportion' `refproportion' `newvarname' if `first' & `touse', into(`summframe')
+    qui bysort `touse' `by' `refdata_strata' `refframe_strata' `refcond_strata' `agegroup': gen `first'=_n==1
+    frame put `by' `refdata_strata' `refframe_strata' `refcond_strata' `agegroup' `obsby_proportion' `refproportion' `newvarname' if `first' & `touse', into(`summframe')
     frame `summframe' {
       qui rename `obsby_proportion' obs
       qui rename `refproportion' ref
-      di "Summary of weights" _continue
+      di as text "--Summary of weights--" _continue
       local addby = cond("`nobyoption'"=="","`by'","")
-      list `addby' `refframe_strata' `refcond_strata' `agegroup' obs ref `newvarname', noobs abbrev(30) sepby(`by')
+      list `addby' `refdata_strata' `refframe_strata' `refcond_strata' `agegroup' obs ref `newvarname', noobs abbrev(30) sepby(`by')
       di as result  "Observed proportions (obs): reference proportions (ref) and relative weights (`newvarname')"
     }
   }
@@ -252,6 +261,36 @@ program define Parse_refframe, rclass
   return local refframename `refframe'
   return local refframe_refwtname `refwtname'
   return local refframe_strata `strata'
+end
+
+////////////////////////
+///   Parse_refdata ///
+////////////////////////
+program define Parse_refdata, rclass
+  syntax anything(name=refdata id="frame data"), strata(string)      ///
+                                                 refframetmp(string) ///
+                                                 [refwtname(string)]
+  if "`refwtname'" == "" local refwtname refp
+
+  frame create `refframetmp'
+  frame `refframetmp' {
+    qui use "`refdata'"
+    capture confirm var `refwtname'
+    if _rc {
+      di as err "Variable `refwtname' not found in refdata() file."
+      exit 198
+    }
+    
+    qui duplicates report `strata'
+    if `r(unique_value)' != `r(N)' {
+      di as error "Variables listed in strata() suboption of refdata()" ///
+         _newline "do not uniquely identify observations in the refdata() file."
+      exit 198
+    }
+  }
+  
+  return local refdata_refwtname `refwtname'
+  return local refdata_strata `strata'
 end
 
 ////////////////////////
@@ -373,6 +412,7 @@ program define GetRefcond, rclass sortpreserve
                                                   touse(string)           ///
                                                   refcondrestrict(string) ///
                                                   refframetmp(string)     ///
+                                                  stignore                ///
                                                   ]
                                                 
   foreach var in `strata' {
@@ -399,11 +439,13 @@ program define GetRefcond, rclass sortpreserve
     local Nrefexp `r(N)'
   }
   // check if value of _t0>0
-  qui count if `refcondexp' & `touse' `refcondrestrict' & _t0>0
-  if `r(N)'>0 {
-    di as result "** WARNING: You have values of _t0 >0 for the group defined by refconditional()."
-    di as result "            Check if you should be using the restrict() option."
-  }  
+  if "`stignore'" == "" {
+    qui count if `refcondexp' & `touse' `refcondrestrict' & _t0>0
+    if `r(N)'>0 {
+      di as result "** WARNING: You have values of _t0 >0 for the group defined by refconditional()."
+      di as result "            Check if you should be using the restrict() option."
+    }
+  }
   
   
   tempvar bygrouptotal refproportion firstrow tousereverse
