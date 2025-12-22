@@ -1,4 +1,4 @@
-*! ivreg2hfe  1.1.09 19oct2025 cfb/mes
+*! ivreg2hfe  1.1.10 21dec2025 cfb/mes
 *! cloned from
 *! ivreg2h    1.1.06 25aug2024
 *! author mes
@@ -27,10 +27,11 @@
 *! 1.1.07: centering before estimation now reversed by adding means to centered variables
 *! 1.1.08: changed all tsunab, tsrevar to fvunab, fvrevar to permit FV syntax
 *! 1.1.09: Manh Hoang Ba identified bug in using constructed instruments
+*! 1.1.10: reverted change to disallow factor variables, like xtivreg2, pending solution for base values
 
 program define ivreg2hfe, eclass byable(recall)
 	version 9
-	local lversion 01.1.07
+	local lversion 01.1.10
 // will be overridden by ivreg2 e(version) for ivreg2_p
 
 // Needed for call to ivreg2

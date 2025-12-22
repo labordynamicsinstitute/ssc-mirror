@@ -361,21 +361,25 @@ ICSS reference weights can be used to calculate individual weights using the
 {bf:refexternal()} option of {bf:genindweights()}.
 
 
+
+
 {phang2}
-stpp R_pp5 using "https://pclambert.net/data/popmort.dta", ///{p_end}
+. genindweights iw, by(sex) agegroup(ICSSagegrp) refexternal(ICSS1_5){p_end}
+{phang2}
+. stpp R_pp5 using "https://pclambert.net/data/popmort.dta", ///{p_end}
 {p 16 20 2}
-agediag(age) datediag(dx)   {space 24 }             ///{p_end}
+agediag(age) datediag(dx)   {space 26 }               ///{p_end}
 {p 16 20 2}
-pmother(sex) list(0 1 5 10)   {space 22 }           ///{p_end}
+pmother(sex) list(0 1 5 10)   {space 24 }             ///{p_end}
 {p 16 20 2}
-by(sex)        {space 42 }                          ///{p_end}
+by(sex)        {space 44 }                            ///{p_end}
 {p 16 20 2}
-indweights(iw)    {space 35 }                       ///{p_end}
+indweights(iw)    {space 37 }                         ///{p_end}
 {p 16 20 2}
 frame(stpp_results, replace){p_end}
 
 {phang2}
-frame stpp_results: list, noobs sepby(sex){p_end}                  
+. frame stpp_results: list, noobs sepby(sex){p_end}                  
 {pmore}
 {it:({stata "stpp_example, egnumber(5)":click to run})}
 
@@ -408,9 +412,8 @@ Paul C Lambert, Cancer Registry of Norway, NIPH, Norway & Karolinska Institutet,
 ({browse "mailto:paul.lambert@fhi.no":paul.lambert@fhi.no})
 
 {pstd}
-Mark J Rutherford
+Mark J Rutherford, d)	Division of Public Health & Epidemiology, School of Medical Sciences, University of Leicester, UK.
 ({browse "mailto:mark.rutherford@leicester.ac.uk":mark.rutherford@leicester.ac.uk})
-
 
 {title:References}
 

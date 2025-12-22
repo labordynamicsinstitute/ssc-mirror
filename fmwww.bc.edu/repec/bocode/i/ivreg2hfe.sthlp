@@ -36,7 +36,9 @@ and {cmd:ivreg2} (Baum, Schaffer, Stillman) routines. It can be used on panel da
 within transformation of a fixed effects model: see the {cmd:fe} option described below. 
 As {cmd:ivreg2hfe} is a variant of {cmd:ivreg2}, essentially
 all of the features and options of that program are available in {cmd:ivreg2h}. For that
-reason, you should consult {help ivreg2:help ivreg2} for details of the available options.
+reason, you should consult {help ivreg2:help ivreg2} for details of the available options.  At present,
+{cmd:ivreg2h} does not support factor variables. Categorical variables' levels can be constructed
+with {cmd:tab{}} using its {\tt gen} option. The base level should be excluded.
 
 {p}{cmd:ivreg2hfe} provides three additional options: {cmd:gen}, {cmd:gen(}{it:string}{cmd:[,replace])}, and {cmd:z()}.
 If the {cmd:gen} option is given, the generated instruments are saved, with names built from

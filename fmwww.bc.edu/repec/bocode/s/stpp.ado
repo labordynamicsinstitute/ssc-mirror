@@ -1,4 +1,4 @@
-*! version 1.4.2 2025-12-17
+*! version 1.4.3 2025-12-21
   
 program define stpp, rclass sortpreserve
   version 16.0
@@ -296,7 +296,10 @@ program define stpp, rclass sortpreserve
                      
   // check pm other levels
   if "`pmother'" != "" {
-    Check_popmort_levels if `touse', pmother(`pmother') popmortframe(`popmortframe')
+    Check_popmort_levels if `touse', pmother(`pmother') pmage(`pmage') pmyear(`pmyear') ///
+                                     popmortframe(`popmortframe')                       ///
+                                     minyear(`minyear') maxattyear(`maxattyear')         ///
+                                     minage(`minage')  maxattage(`maxattage')      
   }
                    
   if "`using2'" != "" {
@@ -417,10 +420,22 @@ if "`inccens'"=="" {
     qui gen `cons' = 1
     local by `cons'
   }
-	
+
+// make sure traditional standardized estimates are missing beyond the 
+// maximum potential time.	
+  if "`standstrata'" != "" {
+    tempvar tmax_by_standstrata tmax_by
+    qui bysort `by' `standstrata': egen `tmax_by_standstrata' = max(_t) if `touse'
+    qui bysort `by': egen `tmax_by' = max(`tmax_by_standstrata') if `touse'
+    local restrictt & _t>=`tmax_by'
+  }  
+  
   foreach v in `newvarlist' {
-    quietly bysort `by' `touse'  (_t `d0'): replace `v' = `v'[_n-1] if `v' >= . & `touse' 
+    quietly bysort `by' `touse'  (_t `d0'): replace `v' = `v'[_n-1] if `v' >= . `restrictt' & `touse' 
   }
+  
+  
+  
 }
 
 // label variables	
@@ -512,8 +527,9 @@ if "`inccens'"=="" {
              local legend legend(off)
            }
 		 }
-         tempvar new
-         bys `by': gen `new'=1 if _n==1
+     tempvar new
+     if "`by'" != ""  bysort `by': gen `new'=1 if _n==1
+     else gen `new'=1 if _n==1
 		 expand 2 if `new'==1, gen(new)
 		 replace _t=0 if new==1
 		 local repvalue = cond("`deathprob'"=="",1,0)
@@ -583,9 +599,17 @@ end
 
 
 program define Check_popmort_levels
-  syntax [if], popmortframe(string) [pmother(varlist)]
+  syntax [if], popmortframe(string)    ///
+               pmother(varlist)        ///
+               pmage(string)          ///
+               pmyear(string)         ///
+               minyear(string)    ///
+               maxattyear(string) ///
+               minage(string)     ///
+               maxattage(string)      
   marksample touse
   
+// Check cam merge with pmother variables
   foreach v in `pmother' {
     qui levelsof `v' if `touse'
     local levelsindata `r(levels)'
@@ -598,8 +622,32 @@ program define Check_popmort_levels
       }
     }
   }
+  
+// can we merge on year?
+  qui frame `popmortframe': summ `pmyear', meanonly
+  local pmyearmin `r(min)'
+  local pmyearmax `r(max)'
+  if `minyear'<`pmyearmin' {
+    di as error "Minimum calendar year in data (`minyear') not in popmort file"
+    exit 198
+  }
+  if `maxattyear'>`pmyearmax' {
+    di as error "Maximum attained calendar year in data (`maxattyear') not in popmort file"
+    exit 198
+  }
+// can we merge on age?
+  qui frame `popmortframe': summ `pmage', meanonly
+  local pmagemin `r(min)'
+  local pmagemax `r(max)'
+  if `minage'<`pmagemin' {
+    di as error "Minimum age in data (`minage') not in popmort file"
+    exit 198
+  }
+  if `maxattage'>`pmagemax' {
+    di as error "Maximum attained age in data (`maxattage') not in popmort file"
+    exit 198
+  }  
 end
-
 
 
 program define getframeoptions
@@ -801,7 +849,8 @@ struct stpp_info {
   transmorphic matrix   unique_t_sk,           // unique values of t by stand and by levels
                         unique_t_k,            // unique values of t by by levels
                         mint_k,                // minimum value of t by by levels
-                        maxt_k ,               // maximum value of t by by levels
+                        maxt_k,                // maximum value of t by by levels
+                        maxt_sk,               // maximum value of t by by/stand levels
                         maxtall_k              // maximum value of t (all) by by levels
   
   real         matrix   Nunique_t_sk,          // No. of unique t for stand and by levels
@@ -1036,6 +1085,7 @@ function PP_Get_stpp_info()
   S.maxt_k       = asarray_create("real",1)
   S.mint_k       = asarray_create("real",1)
   S.maxtall_k    = asarray_create("real",1)
+  S.maxt_sk      = asarray_create("real",2) 
  
 
   for(k=1;k<=S.Nbylevels;k++) {
@@ -1048,6 +1098,7 @@ function PP_Get_stpp_info()
       }
       S.Nunique_t_sk[s,k] = rows(asarray(S.unique_t_sk,(s,k)))
       S.Nobs_by_sk[s,k]   = sum(S.by:==S.bylevels[k,] :& S.standstrata:==S.standlevels[s])
+      asarray(S.maxt_sk,(s,k),max(S.t[selectindex(rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars :& S.standstrata:==S.standlevels[s])]))
     }
     if(S.hasinccens) {
       asarray(S.unique_t_k,(k),uniqrows(S.t[selectindex(rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars)]))
@@ -1260,7 +1311,7 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
       agediag_by     = S.agediag[byselect_ind] 
       datediag_by    = S.datediag[byselect_ind]
       indweights_by  = S.indweights[byselect_ind]
-
+      
       S.pmothervars_by = asarray_create("real",1)
       asarray(S.pmothervars_by,1,asarray(S.pmothervars,1)[byselect_ind,])
       if(S.haspopmort2) asarray(S.pmothervars_by,2,asarray(S.pmothervars,2)[byselect_ind,])
@@ -1319,7 +1370,7 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
         else wt_atrisk = indweights_by[atrisk_index]:*expsurv2_tj     
 
         
-        Nrisk_j[j] = rows(wt_atrisk)
+        //Nrisk_j[j] = rows(wt_atrisk)
         
         if(cols(died_tj_select)) {
           tmp = wt_atrisk[died_tj_select]
@@ -1365,7 +1416,7 @@ void function PP_Gen_estimates(struct stpp_info scalar   S)
 // Store contribution to cumulative hazards    
       asarray(S.lambda_e_t,    (s,S.bylevels[k,]),(lambda_e_tmp))
       asarray(S.lambda_e_t_var,(s,S.bylevels[k,]),(lambda_e_tmp_var))
-      asarray(S.Nrisk_s_t,(s,S.bylevels[k,]),Nrisk_j)
+      //asarray(S.Nrisk_s_t,(s,S.bylevels[k,]),Nrisk_j)
       if(S.hascrudeprob | S.hasallcause) {
       	asarray(S.lambda_all_t, (s,S.bylevels[k,]),(lambda_all_tmp))
       	asarray(S.lambda_all_t_var, (s,S.bylevels[k,]),(lambda_all_tmp_var))
@@ -1461,7 +1512,8 @@ void function PP_Gen_cumulative_standstrata(struct stpp_info scalar S)
 {
   real scalar zz, k, s, Nuniq, j, tj
   
-  real matrix tmpmat, tmpmat_v, closesttindex, RS_tmp, RS_tmp_v
+  real matrix tmpmat, tmpmat_v, closesttindex, RS_tmp, RS_tmp_v,
+              selectmissindex
               
   S.Nrisk      = asarray_create("real",1)
   S.RS_PP      = asarray_create("real",1)
@@ -1470,27 +1522,37 @@ void function PP_Gen_cumulative_standstrata(struct stpp_info scalar S)
   S.CP_can = asarray_create("real",1)
   S.CP_oth = asarray_create("real",1)
   zz = invnormal(0.5*(1+S.level))              
-              
+
   for(k=1;k<=S.Nbylevels;k++) {
     Nuniq  = S.Nunique_t_k[k]
     tmpmat   = J(Nuniq,S.Nstandlevels,.)
     tmpmat_v = J(Nuniq,S.Nstandlevels,.)
+
     for(s=1;s<=S.Nstandlevels;s++) {
       for(j=1;j<=Nuniq;j++) {
         tj = asarray(S.unique_t_k,k)[j]
         closesttindex = selectindex(asarray(S.unique_t_sk,(s,k)):==tj)
-        if(rows(closesttindex)!=0) {
+
+        if(length(closesttindex)) {
           tmpmat[j,s]   = asarray(S.lambda_e_t,(s,S.bylevels[k,]))[closesttindex] 
           tmpmat_v[j,s] = asarray(S.lambda_e_t_var,(s,S.bylevels[k,]))[closesttindex]
         }
       }
+
       tmpmat[,s]   = quadrunningsum(tmpmat[,s])
       tmpmat_v[,s] = ((exp(-tmpmat[,s]):^2):*quadrunningsum(tmpmat_v[,s]))
+
+      // select missing here ** replace with maximum censoring time **
+      selectmissindex = selectindex(asarray(S.unique_t_k,k):>asarray(S.maxt_sk,(s,k)))
+
+      if(rows(selectmissindex)) {
+        tmpmat[selectmissindex,s] = J(length(selectmissindex),1,.)
+        tmpmat_v[selectmissindex,s] = J(length(selectmissindex),1,.)
+      }
     }
     
 
   // ADD AC AND CP HERE??
-  
   RS_tmp   = J(Nuniq,1,0)
   RS_tmp_v = J(Nuniq,1,0)
 
@@ -1498,6 +1560,7 @@ void function PP_Gen_cumulative_standstrata(struct stpp_info scalar S)
     RS_tmp   = RS_tmp   :+ S.standweights[s]:*exp(-(tmpmat[,s]))
     RS_tmp_v = RS_tmp_v :+ S.standweights[s]:^2:*(tmpmat_v[,s])
    }
+
    // transform to log scale
    asarray(S.RS_PP_var,k,RS_tmp_v:/(RS_tmp:^2))
    asarray(S.RS_PP,k,(RS_tmp, 
@@ -1697,7 +1760,7 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
   }
 
 // create upper and lower bounds at list times
-// Note variance is stored, so can be used later for contrasts
+// variance is stored, so can be used later for contrasts
   for(k=1;k<=S.Nbylevels;k++) {
     RS_tmplist         = J(S.Nlist,5,.)
     RS_tmplist_var     = J(S.Nlist,1,.)
@@ -1714,27 +1777,24 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
     for(i=1;i<=S.Nlist;i++) {
       tindex = selectindex(asarray(S.unique_t_k,k):<=S.list[i])
       tj = asarray(S.unique_t_k,k)[tindex]
-      if(S.hasstandstrata) {
-        Natrisk_time_tj = PP_Natrisk_time_tj(S,k,S.list[i])
-      }
+      Natrisk_time_tj = PP_Natrisk_time_tj(S,k,S.list[i])
       minindex(S.list[i]:-asarray(S.unique_t_k,k)[tindex],1,tminindex=.,tmp=.)
-      if(S.hasstandstrata) Natrisktmp = Natrisk_time_tj
-      else Natrisktmp = asarray(S.Nrisk,k)[tminindex,]
+
      
       if(S.list[i]<=asarray(S.maxt_k,k) & S.list[i]>=asarray(S.mint_k,k)) {
         
-        RS_tmplist[i,]    = (S.list[i],Natrisktmp,asarray(S.RS_PP, k)[tminindex,])
+        RS_tmplist[i,]    = (S.list[i],Natrisk_time_tj,asarray(S.RS_PP, k)[tminindex,])
         RS_tmplist_var[i] = asarray(S.RS_PP_var, k)[tminindex,]
         if(S.hasallcause)  {
-          AC_tmplist[i,]     = (S.list[i],Natrisktmp,asarray(S.AC, k)[tminindex,])    
+          AC_tmplist[i,]     = (S.list[i],Natrisk_time_tj,asarray(S.AC, k)[tminindex,])    
           AC_tmplist_var[i] = asarray(S.AC_var, k)[tminindex,]
         }
         if(S.hascrudeprob) {
-          CP_can_tmplist[i,] = (S.list[i],Natrisktmp,asarray(S.CP_can, k)[tminindex,])  
+          CP_can_tmplist[i,] = (S.list[i],Natrisk_time_tj,asarray(S.CP_can, k)[tminindex,])  
           CP_can_tmplist_var[i] = asarray(S.CP_can_var, k)[tminindex,]
         }
         if(S.CP_calcother) {
-          CP_oth_tmplist[i,]    = (S.list[i],Natrisktmp,asarray(S.CP_oth, k)[tminindex,])
+          CP_oth_tmplist[i,]    = (S.list[i],Natrisk_time_tj,asarray(S.CP_oth, k)[tminindex,])
           CP_oth_tmplist_var[i] = asarray(S.CP_oth_var, k)[tminindex,]
         }
       }
@@ -1813,7 +1873,6 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
     PP_write_frame_labels(S)
   }
 }
-
 
 ///////////////////////////
 // PP_calc_list_contrast //

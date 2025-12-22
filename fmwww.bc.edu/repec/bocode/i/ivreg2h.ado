@@ -1,4 +1,4 @@
-*! ivreg2h  1.1.09  16oct2025   cfb/mes
+*! ivreg2h  1.1.10  21dec2025   cfb/mes
 *! cloned from
 *! xtivreg2 1.0.13 28Aug2011
 *! author mes
@@ -27,6 +27,7 @@
 *! 1.1.07: correct handling of excluded insts in genextinst code
 *! 1.1.08: changed all tsunab, tsrevar to fvunab, fvrevar to permit FV syntax
 *! 1.1.09: Manh Hoang Ba identified bug in using constructed instruments
+*! 1.1.10: reverted inclusion of fvunab, fvrevar pending handling of base values (note xtivreg2 does not allow fv)
 
 program define ivreg2h, eclass byable(recall)
 	version 9
@@ -147,11 +148,11 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 			loc qnoout nooutput
 			marksample touse
 			markout `touse' `lhs' `inexog' `exexog' `endo' `cluster' /* `tvar' */, strok
-//			tsrevar `lhs', substitute
-			fvrevar `lhs', substitute
+			tsrevar `lhs', substitute
+//			fvrevar `lhs', substitute
 			local lhs_t "`r(varlist)'"
-//			tsrevar `inexog', substitute
-			fvrevar `inexog', substitute
+			tsrevar `inexog', substitute
+//			fvrevar `inexog', substitute
 			local inexog_t "`r(varlist)'"
 // di in r "inexog_t `inexog_t'"
 			loc n_inex : word count `inexog_t'
@@ -164,33 +165,33 @@ di as err "Error - must have ivreg2 version 2.1.15 or greater installed"
 			local zts : subinstr local zts "." "_", all	
 // di in r "z: `z'"
 // di in r "`zts: `zts'"
-//			tsrevar `z', substitute
-			fvrevar `z', substitute
+			tsrevar `z', substitute
+//			fvrevar `z', substitute
 //			local z_t "`r(varlist)'"
 			local zlist_t "`r(varlist)'"
 // di in r "zlist_t: `zlist_t'"
 // di in r "n_inex `n_inex'" _n
-//			tsrevar `endo', substitute
-			fvrevar `endo', substitute
+			tsrevar `endo', substitute
+//			fvrevar `endo', substitute
 			local endo_t "`r(varlist)'"
 			loc n_endo : word count `endo_t'
 // di in r "n_endo `n_endo'"
-//			tsrevar `exexog', substitute
-			fvrevar `exexog', substitute
+			tsrevar `exexog', substitute
+//			fvrevar `exexog', substitute
 			local exexog_t "`r(varlist)'"
 			loc n_exex : word count `exexog_t'
 // di in r "n_exex `n_exex'"
-//			tsrevar `orthog', substitute
-			fvrevar `orthog', substitute
+			tsrevar `orthog', substitute
+//			fvrevar `orthog', substitute
 			local orthog_t "`r(varlist)'"
-//			tsrevar `endogtest', substitute
-			fvrevar `endogtest', substitute
+			tsrevar `endogtest', substitute
+//			fvrevar `endogtest', substitute
 			local endogtest_t "`r(varlist)'"
-//			tsrevar `redundant', substitute
-			fvrevar `redundant', substitute
+			tsrevar `redundant', substitute
+//			fvrevar `redundant', substitute
 			local redundant_t "`r(varlist)'"
-//			tsrevar `partial', substitute
-			fvrevar `partial', substitute
+			tsrevar `partial', substitute
+//			fvrevar `partial', substitute
 			local partial_t "`r(varlist)'"
 			local npan1 0
 // cfb ivreg2h: switch off noconstant for non-FE models

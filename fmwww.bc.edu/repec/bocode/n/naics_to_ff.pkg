@@ -1,0 +1,30 @@
+d 'NAICS_TO_FF': module to convert NAICS codes to Fama-French industry classifications
+d
+d	 sic_to_ff converts NAICS
+d codes to Fama-French	industry classifications. The
+d command supports all major Fama-French industry    classification
+d schemes: FF5, FF10, FF12, FF17, FF30, FF38, FF48, and FF49.	
+d The command accepts both numeric and string NAICS codes. String NAICS
+d codes are    automatically converted to numeric values.
+d Non-numeric strings (e.g., "XXXX") are    treated as missing.   
+d The Fama-French industry classifications are widely used in
+d empirical accounting and    finance research to group firms by
+d industry. These classifications are based on	  four-digit SIC
+d codes and are maintained by Kenneth R. French on his data library
+d    website. 
+d
+d KW: data management
+d KW: NAICS codes
+d KW: SIC codes
+d KW: Fama
+d KW: French
+d
+d Requires: Stata version 14 and sic_to_ff from SSC (q.v.)
+d
+d Distribution-Date: 20251221
+d
+d Author: Kelvin Law,   Nanyang Technological University
+d Support: email klaw@@ntu.edu.sg
+d
+f naics_to_ff.ado
+f naics_to_ff.sthlp

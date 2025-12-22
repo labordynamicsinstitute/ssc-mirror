@@ -1092,6 +1092,7 @@ fmwww.bc.edu/repec/bocode/n/nct.pkg
 fmwww.bc.edu/repec/bocode/n/nlls.pkg
 fmwww.bc.edu/repec/bocode/n/niceest.sthlp
 fmwww.bc.edu/repec/bocode/n/network.ado
+fmwww.bc.edu/repec/bocode/n/naics_to_ff.sthlp
 fmwww.bc.edu/repec/bocode/n/nearstat.ado
 fmwww.bc.edu/repec/bocode/n/nehurdle.sthlp
 fmwww.bc.edu/repec/bocode/n/neweyvif.hlp
@@ -1112,6 +1113,7 @@ fmwww.bc.edu/repec/bocode/n/nrunsi.hlp
 fmwww.bc.edu/repec/bocode/n/nsplit.html
 fmwww.bc.edu/repec/bocode/n/ncread.ado
 fmwww.bc.edu/repec/bocode/n/numids5.hlp
+fmwww.bc.edu/repec/bocode/n/naics_to_ff.ado
 fmwww.bc.edu/repec/bocode/n/nbinreg.html
 fmwww.bc.edu/repec/bocode/n/nlsur__quaidsce.ado
 fmwww.bc.edu/repec/bocode/n/npsynth.pkg
@@ -1534,6 +1536,7 @@ fmwww.bc.edu/repec/bocode/n/ngram.pkg
 fmwww.bc.edu/repec/bocode/n/normd.ado
 fmwww.bc.edu/repec/bocode/n/network.pkg
 fmwww.bc.edu/repec/bocode/n/network_convert.ado
+fmwww.bc.edu/repec/bocode/n/naics_to_ff.pkg
 fmwww.bc.edu/repec/bocode/n/normalrir.pkg
 fmwww.bc.edu/repec/bocode/n/nb_adjust.bak
 fmwww.bc.edu/repec/bocode/n/npiv.ado
