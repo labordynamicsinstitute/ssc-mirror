@@ -1,7 +1,7 @@
 ********************************************************************************
 * PROGRAM "opl_dt_c"
 ********************************************************************************
-*! opl_dt_c, v7, GCerulli, 09nov2025, 15:09
+*! opl_dt_c, v9, GCerulli, 21dec2025
 program opl_dt_c , eclass
 version 16
 syntax , ///
@@ -144,7 +144,7 @@ note("Expected unconstrained average impact = `w2'" ///
 "Percentage of treated units (unconstrained) = `w5'%" ///
 "Expected constrained average impact = `w3'" ///
 "Percentage of treated units (constrained) = `w4'%" , size(vsmall)) ///
-title(Optimal policy assignment) subtitle(Policy class: fixed-depth decision-tree)
+title(Optimal policy assignment) subtitle(Policy class: fixed-depth decision-tree) name(gr_op , replace)
 }
 ********************************************************************************
 if ("`graph'" != "") & ("`save_gr_op'" != ""){	
@@ -235,17 +235,11 @@ qui count if `touse'
 ereturn scalar N_ucp=r(N)
 qui count if `touse'
 ereturn scalar perc_treat_ucp=e(Ntreat_ucp)/r(N)*100
-
 ********************************************************************************
 * Constrained Customized Policy (CCP)
 ********************************************************************************
-gettoken X1 X2 : xlist
-tempvar Z1
-tempvar Z2
-gen `Z1'=(`X1'>`c1') // theshold 1 constrain ("X1") 
-gen `Z2'=(`X2'>`c2') // theshold 2 constrain ("X2")
 tempvar D_cpt_c_new
-gen `D_cpt_c_new' = `D_cpt'*`Z1'*`Z2' if `touse'
+gen `D_cpt_c_new' = `D_cpt'*`Z' if `touse'
 tempvar Impact_cpt_c
 gen `Impact_cpt_c'=`cate'*`D_cpt_c_new' if `D_cpt_c_new'==1 & `touse'
 qui sum `Impact_cpt_c' if `touse'
@@ -267,9 +261,9 @@ local w3 = round(e(I_ccp),0.01)
 local w4 = round(e(perc_treat_ccp),0.01)
 local w5 = round(e(perc_treat_ucp),0.01)
 ********************************************************************************	
-tw (scatter `X2' `X1'  if `Z_star'==1  , ///
+tw (scatter `X2' `X1'  if `D_cpt_c_new'==1  , ///
 mcolor(orange) mlabsize(small) msize(small) msymbol(circle)) || /// 
-(scatter `X2' `X1'  if `Z_star'==0  ,    ///
+(scatter `X2' `X1'  if `D_cpt_c_new'==0  ,    ///
 mcolor(green) mlabsize(small) msize(small) msymbol(Oh)) , ///
 plotregion(style(none)) scheme(s1mono) ///
 legend(label(1 "Treated") label(2 "Untreated")) ///
@@ -277,7 +271,7 @@ note("Expected unconstrained average impact = `w2'" ///
 "Percentage of treated units (unconstrained) = `w5'%" ///
 "Expected constrained average impact = `w3'" ///
 "Percentage of treated units (constrained) = `w4'%" , size(vsmall)) ///
-title(Customized policy assignment) subtitle(Policy class: fixed-depth decision-tree)
+title(Customized policy assignment) subtitle(Policy class: fixed-depth decision-tree) name(gr_cp , replace)
 ********************************************************************************
 }
 ********************************************************************************

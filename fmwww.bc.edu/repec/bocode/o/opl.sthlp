@@ -1,5 +1,7 @@
 {smcl}
-{* 23November2025}{...}
+{* 11dec2025}{...}
+{cmd:help opl}
+{hline}
 
 {p2colset 5 16 21 2}{...}
 {p2col :{hi:OPL} {hline 1}}Stata package for optimal policy learning{p_end}
@@ -26,6 +28,7 @@
 {synopt :{helpb opl_lc_c:opl_lc_c}}Linear-combination policy learning at specific parameters' values{p_end}
 {synopt :{helpb opl_dt:opl_dt}}Decision-tree optimal policy learning{p_end}
 {synopt :{helpb opl_dt_c:opl_dt_c}}Decision-tree policy learning at specific splitting variables and threshold values{p_end}
+{synopt :{helpb opl_budget:opl_budget}}Optimal policy learning under budget constraint and minimum number of treated units{p_end}
 {synoptline}
 {p2colreset}{...}
 

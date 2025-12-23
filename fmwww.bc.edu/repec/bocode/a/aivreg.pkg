@@ -1,0 +1,22 @@
+d 'AIVREG': module to perform Anti-IV regression
+d
+d      aivreg implements the anti-IV estimator outlined in Bell,
+d Billings, Calder-Wang, & Zhong (2024).    The method allows the
+d user to estimate implicit amenity prices in the presence of an
+d unobservable	  confounder. 
+d
+d KW: regression
+d KW: instrumental variables
+d KW: anti-IV
+d
+d Requires: Stata version 17 and ivreg2, ranktest, reghdfe, ivreghdfe, ftools from SSC (q.v.)
+d
+d Distribution-Date: 20251221
+d
+d Author: Alex Bell,  Georgia State University
+d Support: email ambell@@gsu.edu
+d
+f aivreg.ado
+f aivreg.sthlp
+f ../h/housing_aivreg_example.dta
+f ../s/safety_aivreg_example.dta

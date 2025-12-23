@@ -12,11 +12,11 @@ d KW: high dimension fixed effects
 d
 d Requires: Stata version 11.2
 d
-d Distribution-Date: 20230821
+d Distribution-Date: 20231227
 d
 d Author: Sergio Correia, Board of Governors of the Federal Reserve System
 d Support: email sergio.correia@@gmail.com
-d
+d Author: Noah Constantine, Board of Governors of the Federal Reserve System
 f reghdfe.ado
 f reghdfe.mata
 f reghdfe3.ado

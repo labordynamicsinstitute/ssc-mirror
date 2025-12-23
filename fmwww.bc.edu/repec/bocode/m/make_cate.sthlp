@@ -1,5 +1,5 @@
 {smcl}
-{* 23nov2025}{...}
+{* 21dec2025}{...}
 {cmd:help make_cate}
 {hline}
 
@@ -78,20 +78,25 @@ linear-combination policy), {helpb opl_lc_c} (optimal policy learning of a linea
 {dlgtab:Example}
 
 {pstd}{bf:Example}: Predicting CATE for a binary policy{p_end}
+
 {phang2} Load initial dataset{p_end}
 {phang3} {stata sysuse JTRAIN2, clear}{p_end}
+
 {phang2} Split the original data into a "old" (training) and "new" (testing) dataset{p_end}
 {phang3} {stata get_train_test, dataname(jtrain) split(0.60 0.40) split_var(svar) rseed(101)}{p_end}
+
 {phang2} Use the "old" dataset (i.e. policy) for training{p_end}
 {phang3} {stata use jtrain_train , clear}{p_end}
+
 {phang2} Set the outcome{p_end}
 {phang3} {stata global y "re78"}{p_end}
+
 {phang2} Set the features{p_end}
 {phang3} {stata global x "re74 re75 age agesq nodegree"}{p_end}
+
 {phang2} Set the treatment variable{p_end}
 {phang3} {stata global w "train"}{p_end}
-{phang2} Set the selection variables{p_end}
-{phang3} {stata global z "age mostrn"}{p_end}
+
 {phang2} Run "make_cate" and generate training (old policy) and testing (new policy) CATE predictions{p_end}
 {phang3} {stata make_cate $y $x , treatment($w) type("ra") model("linear") new_cate("my_cate_new") train_cate("my_cate_train") new_data("jtrain_test")}{p_end}
 
@@ -139,5 +144,5 @@ The development of this software was supported by FOSSR (Fostering Open Science 
 {dlgtab:Also see}
 
 {psee}
-Online: {helpb opl_tb}, {helpb opl_tb_c}, {helpb opl_lc}, {helpb opl_lc_c}, {helpb opl_dt}, {helpb opl_dt_c}
+Online: {helpb opl_tb}, {helpb opl_tb_c}, {helpb opl_lc}, {helpb opl_lc_c}, {helpb opl_dt}, {helpb opl_dt_c}, {helpb opl_overlap}, {helpb opl_budget}
 {p_end}

@@ -121,7 +121,7 @@ note("Expected unconstrained average impact = `w2'" ///
 "Percentage of treated units (unconstrained) = `w5'%" ///
 "Expected constrained average impact = `w3'" ///
 "Percentage of treated units (constrained) = `w4'%",size(vsmall)) ///
-title(Optimal policy assignment) subtitle(Policy class: threshold-based)
+title(Optimal policy assignment) subtitle(Policy class: threshold-based) name(gr_op , replace)
 ********************************************************************************
 }
 ********************************************************************************
@@ -255,7 +255,7 @@ note("Expected unconstrained average impact = `w2'" ///
 "Percentage of treated units (unconstrained) = `w5'%" ///
 "Expected constrained average impact = `w3'" ///
 "Percentage of treated units (constrained) = `w4'%" , size(vsmall)) ///
-title(Customized policy assignment) subtitle(Policy class: threshold-based)
+title(Customized policy assignment) subtitle(Policy class: threshold-based) name(gr_cp , replace)
 ********************************************************************************
 }
 ********************************************************************************

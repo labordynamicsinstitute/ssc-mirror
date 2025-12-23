@@ -1,7 +1,7 @@
 ********************************************************************************
 * PROGRAM "opl_lc_c"
 ********************************************************************************
-*! opl_lc_c, v7, GCerulli, 09nov2025
+*! opl_lc_c, v9, GCerulli, 21dec2025
 program opl_lc_c , eclass
 version 16
 syntax  ,  ///
@@ -123,7 +123,7 @@ note("Expected unconstrained average impact = `w2'" ///
 "Percentage of treated units (unconstrained) = `w5'%" ///
 "Expected constrained average impact = `w3'" ///
 "Percentage of treated units (constrained) = `w4'%",size(vsmall)) ///
-title(Optimal policy assignment) subtitle(Policy class: linear combination)
+title(Optimal policy assignment) subtitle(Policy class: linear combination) name(gr_op,replace)
 ********************************************************************************
 }
 ********************************************************************************
@@ -217,17 +217,14 @@ qui count if `touse'
 ereturn scalar N_ucp=r(N)
 qui count if `touse'
 ereturn scalar perc_treat_ucp=e(Ntreat_ucp)/r(N)*100
-
 ********************************************************************************
 * Constrained Customized Policy (CCP)
 ********************************************************************************
 gettoken X1 X2 : xlist
-tempvar Z1
-tempvar Z2
-gen `Z1'=(`X1'>`c1') // theshold 1 constrain ("X1") 
-gen `Z2'=(`X2'>`c2') // theshold 2 constrain ("X2")
+tempvar Z
+gen `Z' = (`c1'*`X1'+`c2'*`X2'>=`c3')  // linear combination
 tempvar D_cpt_c_new
-gen `D_cpt_c_new' = `D_cpt'*`Z1'*`Z2' if `touse'
+gen `D_cpt_c_new' = `D_cpt'*`Z' if `touse'
 tempvar Impact_cpt_c
 gen `Impact_cpt_c'=`cate'*`D_cpt_c_new' if `D_cpt_c_new'==1 & `touse'
 qui sum `Impact_cpt_c' if `touse'
@@ -262,7 +259,7 @@ note("Expected unconstrained average impact = `w2'" ///
 "Percentage of treated units (unconstrained) = `w5'%" ///
 "Expected constrained average impact = `w3'" ///
 "Percentage of treated units (constrained) = `w4'%" , size(vsmall)) ///
-title(Customized policy assignment) subtitle(Policy class: linear combination)
+title(Customized policy assignment) subtitle(Policy class: linear combination) name(gr_cp,replace)
 ********************************************************************************
 }
 ********************************************************************************
