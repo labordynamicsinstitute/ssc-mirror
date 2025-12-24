@@ -1,0 +1,30 @@
+d 'SJIVE': module providing Shrunken Jackknife instrumental variables estimator (SJIVE)
+d
+d	sjive implements the Shrunken Jackknife Instrumental
+d Variables Estimator (SJIVE) developed by    Frandsen, Lefgren,
+d Leslie, and McIntyre (2025). Two-stage least squares is
+d well-known to be biased and inconsistent when there are many
+d instruments. JIVE eliminates many-instruments bias, but is often
+d excessively noisy. SJIVE employs empirical Bayes-style shrinkage
+d to the JIVE fitted values, improving the precision of the IV
+d estimator. SJIVE improves upon standard JIVE estimation by   
+d applying empirical Bayes shrinkage to first-stage fitted values,
+d consequently improving the	second-stage precision of treatment
+d effect estimates. This is particularly beneficial in	 
+d many-instrument designs like judge fixed effects. 
+d
+d KW: regression
+d KW: instrumental variables
+d KW: jackknife
+d KW: shrinkage
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20251223
+d
+d Author: Brigham Frandsen,  Brigham Young University
+d Support: email brigham.frandsen@@gmail.com
+d
+f sjive.ado
+f sjive.sthlp
+f sjiveexample.dta

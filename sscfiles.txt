@@ -14090,6 +14090,7 @@ fmwww.bc.edu/repec/bocode/s/sf12.sthlp
 fmwww.bc.edu/repec/bocode/s/sortobs.pkg
 fmwww.bc.edu/repec/bocode/s/slideviewer.pkg
 fmwww.bc.edu/repec/bocode/s/svcom.ado
+fmwww.bc.edu/repec/bocode/s/sjive.ado
 fmwww.bc.edu/repec/bocode/s/stcrprep.sthlp
 fmwww.bc.edu/repec/bocode/s/statax.sthlp
 fmwww.bc.edu/repec/bocode/s/sptobitmstardh.dlg
@@ -14232,6 +14233,7 @@ fmwww.bc.edu/repec/bocode/s/sgpv.ado
 fmwww.bc.edu/repec/bocode/s/stpm2cm.ado
 fmwww.bc.edu/repec/bocode/s/spechist.pkg
 fmwww.bc.edu/repec/bocode/s/spglsxt1.dta
+fmwww.bc.edu/repec/bocode/s/sjive.sthlp
 fmwww.bc.edu/repec/bocode/s/stsurvdiff.ado
 fmwww.bc.edu/repec/bocode/s/sgtreg.ado
 fmwww.bc.edu/repec/bocode/s/survsim.ado
@@ -15501,6 +15503,7 @@ fmwww.bc.edu/repec/bocode/s/statacmds.pkg
 fmwww.bc.edu/repec/bocode/s/svrologit_p.ado
 fmwww.bc.edu/repec/bocode/s/spregsac1.ado
 fmwww.bc.edu/repec/bocode/s/scheme-burd.scheme
+fmwww.bc.edu/repec/bocode/s/sjiveexample.dta
 fmwww.bc.edu/repec/bocode/s/sqdes.ado
 fmwww.bc.edu/repec/bocode/s/spregsacxt2.ado
 fmwww.bc.edu/repec/bocode/s/scheme-black2.scheme
@@ -15631,6 +15634,7 @@ fmwww.bc.edu/repec/bocode/s/spregsdm4.ado
 fmwww.bc.edu/repec/bocode/s/spregrext.sthlp
 fmwww.bc.edu/repec/bocode/s/strdate.pkg
 fmwww.bc.edu/repec/bocode/s/sadf.mtx
+fmwww.bc.edu/repec/bocode/s/sjive.pkg
 fmwww.bc.edu/repec/bocode/s/spreg_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/s/sampsi_mcc.ado
 fmwww.bc.edu/repec/bocode/s/ssm.html
