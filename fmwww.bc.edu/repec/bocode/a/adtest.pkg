@@ -1,0 +1,25 @@
+d 'ADTEST': module to perform a two-sample Cramer-von Mises equality-of-distributions test
+d
+d  adtest performs a two-sample Anderson-Darling (AD) permutation
+d test to assess whether two samples come from the same
+d distribution. The AD statistic weights discrepancies between
+d empirical cumulative distribution functions (ECDFs) by the
+d inverse of their variance, making it more sensitive to
+d differences in the distribution tails compared to other EDF-based
+d tests. The permutation test provides an exact p-value by
+d comparing the observed statistic to its distribution under random
+d reassignment of group labels. 
+d
+d KW: equality of distributions
+d KW: two-sample
+d KW: comparisons
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20251224
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f adtest.ado
+f adtest.sthlp
