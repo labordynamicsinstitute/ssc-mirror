@@ -1,0 +1,23 @@
+d 'KUIPERTEST': module to perform a two-sample Cramer-von Mises equality-of-distributions test
+d
+d  kuipertest performs a two-sample Kuiper permutation test to
+d assess whether two samples come from the same distribution. The
+d Kuiper statistic measures the maximum positive and negative
+d deviations between empirical cumulative distribution functions
+d (ECDFs). The permutation test provides an exact p-value by
+d comparing the observed statistic to its distribution under random
+d reassignment of group labels. 
+d
+d KW: equality of distributions
+d KW: two-sample
+d KW: comparisons
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20251225
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f kuipertest.ado
+f kuipertest.sthlp

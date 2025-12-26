@@ -3053,6 +3053,7 @@ fmwww.bc.edu/repec/bocode/k/keybygen.html
 fmwww.bc.edu/repec/bocode/k/kr20.ado
 fmwww.bc.edu/repec/bocode/k/kwallis2.html
 fmwww.bc.edu/repec/bocode/k/kdens2.ado
+fmwww.bc.edu/repec/bocode/k/kuipertest.ado
 fmwww.bc.edu/repec/bocode/k/kapgof.hlp
 fmwww.bc.edu/repec/bocode/k/kobo2stata.ado
 fmwww.bc.edu/repec/bocode/k/k_unstatn.ado
@@ -3064,6 +3065,7 @@ fmwww.bc.edu/repec/bocode/k/k_iso2c.ado
 fmwww.bc.edu/repec/bocode/k/keepvar.hlp
 fmwww.bc.edu/repec/bocode/k/k_iso3c.ado
 fmwww.bc.edu/repec/bocode/k/knapsack.ado
+fmwww.bc.edu/repec/bocode/k/kuipertest.pkg
 fmwww.bc.edu/repec/bocode/k/kdens.pkg
 fmwww.bc.edu/repec/bocode/k/kitli_gap2bm.ado
 fmwww.bc.edu/repec/bocode/k/keyby.ado
@@ -3117,6 +3119,7 @@ fmwww.bc.edu/repec/bocode/k/keybygen.ado
 fmwww.bc.edu/repec/bocode/k/keyby.hlp
 fmwww.bc.edu/repec/bocode/k/kdens2.html
 fmwww.bc.edu/repec/bocode/k/kwallis2.ado
+fmwww.bc.edu/repec/bocode/k/kuipertest.sthlp
 fmwww.bc.edu/repec/bocode/k/kotlarski.ado
 fmwww.bc.edu/repec/bocode/k/kernreg1.ado
 fmwww.bc.edu/repec/bocode/i/ic.pkg
