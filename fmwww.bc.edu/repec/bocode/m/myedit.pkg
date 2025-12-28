@@ -1,0 +1,24 @@
+d 'MYEDIT': module to provide smart Stata ado-file editor
+d
+d	 myedit is an intelligent command that locates and opens
+d Stata ado files for editing.	It    automatically identifies
+d whether a command is built-in, from the official base library,
+d from SSC    (Statistical Software Components), or from your
+d personal ado directory.  It provides appropriate    warnings and
+d restoration instructions based on the source of the file. 
+d
+d KW:  editing
+d KW: ado-files
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20251227
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+f myedit.ado
+f myedit.sthlp

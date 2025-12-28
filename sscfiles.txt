@@ -9531,6 +9531,7 @@ fmwww.bc.edu/repec/bocode/m/mint.sthlp
 fmwww.bc.edu/repec/bocode/m/muxplot.hlp
 fmwww.bc.edu/repec/bocode/m/markovfutureprob.pkg
 fmwww.bc.edu/repec/bocode/m/marhis.ado
+fmwww.bc.edu/repec/bocode/m/myedit.ado
 fmwww.bc.edu/repec/bocode/m/mtreatreg.sthlp
 fmwww.bc.edu/repec/bocode/m/map.ado
 fmwww.bc.edu/repec/bocode/m/mtab2.ado
@@ -10136,6 +10137,7 @@ fmwww.bc.edu/repec/bocode/m/mtreatreg_gamma_lf.mo
 fmwww.bc.edu/repec/bocode/m/muxyplot.pkg
 fmwww.bc.edu/repec/bocode/m/mp_excer.mpb
 fmwww.bc.edu/repec/bocode/m/mbitobit_lf.ado
+fmwww.bc.edu/repec/bocode/m/myedit.sthlp
 fmwww.bc.edu/repec/bocode/m/milincom.ado
 fmwww.bc.edu/repec/bocode/m/mp_dta_g.mpb
 fmwww.bc.edu/repec/bocode/m/matchit.sthlp
@@ -10603,6 +10605,7 @@ fmwww.bc.edu/repec/bocode/m/mces.pkg
 fmwww.bc.edu/repec/bocode/m/metaxl_combine.sthlp
 fmwww.bc.edu/repec/bocode/m/mkheader.ado
 fmwww.bc.edu/repec/bocode/m/matsave.ado
+fmwww.bc.edu/repec/bocode/m/myedit.pkg
 fmwww.bc.edu/repec/bocode/m/mf_mm_locate.html
 fmwww.bc.edu/repec/bocode/m/mf_range_mv.sthlp
 fmwww.bc.edu/repec/bocode/m/mvsampsi.pkg
