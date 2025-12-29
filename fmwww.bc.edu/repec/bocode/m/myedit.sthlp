@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.4 25Dec2025}{...}
+{* *! version 1.8 28Dec2025}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "help doedit" "help doedit"}{...}
 {vieweralsosee "help findfile" "help findfile"}{...}
@@ -85,7 +85,8 @@ The command is particularly useful for:{p_end}
 {phang}{cmd:. myedit summarize}{p_end}
 {phang}Shows that {cmd:summarize} is a built-in command (no ado file).{p_end}
 {phang}{cmd:. myedit regress}{p_end}
-{phang}Opens {cmd:regress.ado} from base directory with strong warnings.{p_end}
+{phang}Opens a copy of {cmd:regress.ado} from base directory with strong warnings.{break}
+The original file is preserved, and a copy named {cmd:regress2.ado} is opened for editing.{p_end}
 
 {phang}{ul:{bf:Example 4: Using with .ado extension}}{p_end}
 {phang}{cmd:. myedit myprogram.ado}{p_end}
@@ -100,6 +101,7 @@ The command is particularly useful for:{p_end}
 {ul:{bf:File Sources and Warnings:}}{p_end}
 
 {pmore}{bf:Base Directory:} Contains official Stata commands. {bf:Editing these files is risky.}{break}
+For base files, {cmd:myedit} automatically creates a copy with a "2" suffix inserted before the extension (e.g., regress2.ado) to prevent accidental modification of original files.{break}
 Always create backups before modification.{p_end}
 
 {pmore}{bf:Personal Directory:} Contains user-defined ado files.{break}
@@ -112,7 +114,7 @@ The command shows how to reinstall the original version if needed.{p_end}
 {ul:{bf:Large Files:}}{p_end}
 
 {pstd}
-Files larger than 1MB trigger a warning as Stata's editor may struggle with them.
+Files larger than 1MB trigger a warning as Stata's editor may not handle them well.
 Consider using an external editor for such files.{p_end}
 
 {pstd}
@@ -139,7 +141,24 @@ Nanjing, China{p_end}
 {pmore}Email: {browse "mailto:2325476320@qq.com":2325476320@qq.com}{p_end}
 
 {pstd}
+{bf:Chen Liwen}{p_end}
+{pmore}School of Business, Anhui University of Technology (AHUT){break}
+Ma'anshan, China{p_end}
+{pmore}Email: {browse "mailto:2184844526@qq.com":2184844526@qq.com}{p_end}
+
+{marker acknowledgments}{...}
+{title:Acknowledgments}
+
+{pstd}
+The authors would like to express their sincere gratitude to {bf:Christopher F. Baum} for his constructive suggestions that helped improve this program.{break}
+His advice ensured the safety of ado files from Stata's distribution base file library by implementing proper file copying mechanisms.{p_end}
+
+{pstd}
 {bf:Version History:}{p_end}
+{pmore}Version 1.8 (28 Dec 2025): Fixed Chinese text in version history, updated date{p_end}
+{pmore}Version 1.7 (25 Dec 2025): All comments translated to English; added acknowledgments section{p_end}
+{pmore}Version 1.6 (25 Dec 2025): Fixed _request() issue, using sleep command for pause{p_end}
+{pmore}Version 1.5 (25 Dec 2025): Fixed more command issue, added user interaction prompt{p_end}
 {pmore}Version 1.4 (25 Dec 2025): Improved user interface and warnings{p_end}
 {pmore}Version 1.3 (15 Nov 2024): Added cross-platform path handling{p_end}
 {pmore}Version 1.2 (10 Aug 2024): Enhanced SSC package detection{p_end}
@@ -151,6 +170,6 @@ Type {cmd:help myedit} to view this help file.{p_end}
 
 {hline}
 {pstd}
-{it:This help file was generated on 25 Dec 2025.}
+{it:This help file was generated on 28 Dec 2025.}
 {p_end}
 {*}

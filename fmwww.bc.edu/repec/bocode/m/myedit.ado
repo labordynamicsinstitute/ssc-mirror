@@ -1,6 +1,6 @@
-*! myedit.ado version 1.4 
-*! Author: Wu Lianghai(AHUT); Wu Hanyan(NUAA)  
-*! Date: 25Dec2025
+*! myedit.ado version 1.8
+*! Author: Wu Lianghai(AHUT); Wu Hanyan(NUAA); Chen Liwen(AHUT)
+*! Date: 28Dec2025
 
 program define myedit
     version 18.0
@@ -140,16 +140,42 @@ program define myedit
     // Check if in base directory
     if regexm(`"`file_path'"', "[\\/]base[\\/]") {
         display as error "Note: This file is a core file of Stata distribution, located in base directory."
-        display as text "It is recommended to back up before editing, in case recovery is needed."
-        display as text "The ado file has been opened and is ready for editing..."
-		more
+        display as text "The program name should be changed accordingly before editing."
+        display as text "Copied and renamed ado file has been opened and is ready for editing..."
+        
+        // Create new filename: add "2" before the .ado extension
+        // Break file path into directory and filename
+        local path_parts : subinstr local file_path "\" "/", all
+        local last_slash = strrpos(`"`path_parts'"', "/")
+        local dir_path = substr(`"`path_parts'"', 1, `last_slash')
+        local file_name = substr(`"`path_parts'"', `last_slash' + 1, .)
+        
+        // Break filename into base name and extension
+        local dot_pos = strrpos("`file_name'", ".")
+        if `dot_pos' > 0 {
+            local base_name = substr("`file_name'", 1, `dot_pos' - 1)
+            local ext_name = substr("`file_name'", `dot_pos', .)
+        }
+        else {
+            local base_name "`file_name'"
+            local ext_name ""
+        }
+        
+        // Construct new filename
+        local new_file_name = "`base_name'2`ext_name'"
+        local new_file_path = `"`dir_path'`new_file_name'"'
+        
+        // Create copy and open
+        copy `"`file_path'"' `"`new_file_path'"', replace
+        display as text "File copied to: " as result `"`new_file_path'"'
+        doedit `"`new_file_path'"'
     }
     // Check if in personal directory
     else if regexm(`"`file_path'"', "[\\/]personal[\\/]") {
         display as error "Note: This file is in personal directory, likely a user-defined file."
         display as text "It is recommended to back up before editing, in case recovery is needed."
         display as text "The ado file has been opened and is ready for editing..."
-        more
+        doedit `"`file_path'"'
     }
     // Check if from SSC (plus directory)
     else if regexm(`"`file_path'"', "[\\/]plus[\\/]") {
@@ -176,9 +202,11 @@ program define myedit
             display as text "To restore original file, please check SSC website to find corresponding package name."
         }
         display as text "The ado file has been opened and is ready for editing..."
-        more
+        doedit `"`file_path'"'
     }
-    
-    // Open file for editing
-    doedit `"`file_path'"'
+    else {
+        // For other files (e.g., in current directory or other locations)
+        display as text "The ado file has been opened and is ready for editing..."
+        doedit `"`file_path'"'
+    }
 end

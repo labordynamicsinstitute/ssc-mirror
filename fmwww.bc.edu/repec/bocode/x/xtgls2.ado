@@ -1,5 +1,5 @@
-* Version 1.5 in 19 Nov 2025, Manh Hoang Ba (hbmanh9492@gmail.com)
-* Following by Kiefer (1980); Wooldridge (2002, 2010)
+* Version 1.6 in 28 Dec 2025, Manh Hoang Ba (hbmanh9492@gmail.com)
+* Ref.: Kiefer (1980); Wooldridge (2002, 2010)
 
 * Version 1.1 to allow iterated GLS.
 * Version 1.2 cov(h) and (fe or fd) are not specified together,
@@ -8,6 +8,7 @@
 * Version 1.4 to speed up IGLS; allow IC and lrtest after IGLS; 
 *				and fix rounding error in FEGLS and FDGLS.
 * Version 1.5 to allow robust and re options.
+* Version 1.6 return data whenever an error arises.
 
 cap program drop xtgls2
 program define xtgls2, eclass
@@ -39,7 +40,7 @@ program define xtgls2, eclass
 		tempvar touse
 		mark `touse' `if' `in'
 		markout `touse' `varlist'
-
+preserve
 		// Check for xtset
 		quietly xtset
 		local panelvar "`r(panelvar)'"
@@ -55,6 +56,18 @@ program define xtgls2, eclass
 			di in red "{bf:minus()} and {bf:cluster()} or {bf:cluster()} must be specified together"
 			exit 198
 		}	
+
+		if "`fe'`fd'`re'" == "fefdre" | ///
+			"`fe'`fd'" == "fefd" | ///
+			"`fe'`re'" == "fere" | ///
+			"`fd'`re'" == "fdre" {
+				di as err "Specify only one of {bf:fe}, {bf:re} or {bf:fd}."
+				exit 198
+		}		
+		
+		if "`fe'" != "" | "`fd'" != "" {
+			local noconstant "noconstant"
+		}
 		
 		//	Store panel/time variables
 		tempvar ivar tvar
@@ -90,7 +103,7 @@ program define xtgls2, eclass
 		gettoken first rest: varlist1_name
 		
 		local depvar_name "`first'"
-		if "`fe'" != "" | "`fd'" != "" {
+		if "`noconstant'" != "" {
 			local indepvar_name "`rest'"
 		}
 		else {
@@ -100,6 +113,7 @@ program define xtgls2, eclass
 		fvrevar `varlist'
 		local varlist1 "`r(varlist)'"
 		local varlist2
+
 		
 		//	Transform data
 		*		1. ols option - Original data
@@ -107,21 +121,11 @@ program define xtgls2, eclass
 			local varlist2 `varlist2' `varlist1'
 		}
 			
-		* 		2. fe option - Within tranformation
+		* 		2. fe option - Within transformation
 		if "`fe'" != "" {
 			
 			if "`cov'"=="h" {
 				di in red "{bf:fe} and {bf:cov(h)} may not be specified together"
-				exit 198
-			}
-			
-			if "`fd'"!="" {
-				di in red "{bf:fe} and {bf:fd} may not be specified together"
-				exit 198
-			}
-			
-			if "`noconstant'" == "" {
-				di in red "{bf:fe} and {bf:noconstant} must be specified together"
 				exit 198
 			}
 		
@@ -139,16 +143,6 @@ program define xtgls2, eclass
 			
 			if "`cov'"=="h" {
 				di in red "{bf:fd} and {bf:cov(h)} may not be specified together"
-				exit 198
-			}
-			
-			if "`fe'"!="" {
-				di in red "{bf:fe} and {bf:fd} may not be specified together"
-				exit 198
-			}
-			
-			if "`noconstant'" == "" {
-				di in red "{bf:fd} and {bf:noconstant} must be specified together"
 				exit 198
 			}
 
@@ -234,8 +228,8 @@ program define xtgls2, eclass
 		qui corr `y_m' `xb_m' if `touse'
 		scalar `r2_b'=r(rho)^2
 		
-		qui xtset `panelvar' `timevar'
-		
+//		qui xtset `panelvar' `timevar'
+restore		
 		// Save resuls
 		*	-	Scalars
 		tempname N N_ic N_g N_t n_cv df df_pear df_ic ll chi2 rank N_clust rc Sigma
@@ -322,7 +316,7 @@ program define xtgls2, eclass
 		}
 		
 	
-	}		// End of reply else command
+	}		// End of replay else command
 	
 	// Display results
 	if "`e(model)'"=="ols" {
@@ -380,7 +374,12 @@ program define xtgls2, eclass
 	di
 	
 	ereturn display, l(`level') /*noomitted*/ noemptycells
-	qui xtset `panelvar' `timevar'
+//	qui xtset `panelvar' `timevar'
+	
+	di as txt "{it:Note:} Reported R-squared values are not used for model comparison"
+	di as txt "      and serve only as measures of predictive ability on the original data."
+
+
 end
 
 
