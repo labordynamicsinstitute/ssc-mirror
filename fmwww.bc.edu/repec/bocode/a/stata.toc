@@ -34,6 +34,7 @@ p adoinstall module to install Stata packages in a specified path
 p adolist module to manage lists of ado packages
 p adostore module to store and restore the current ado-path
 p adotype module to type ado file
+p adtest module to perform a two-sample Cramer-von Mises equality-of-distributions test
 p aedot module to produce dot plot for adverse event data
 p aefdr module to perform false discovery rate p-value adjustment for adverse event data
 p aevolcano module to produce volcano plot for adverse event data

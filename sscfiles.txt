@@ -6125,6 +6125,7 @@ fmwww.bc.edu/repec/bocode/g/ginilma.ado
 fmwww.bc.edu/repec/bocode/g/getdata_imf_num.ado
 fmwww.bc.edu/repec/bocode/g/greek_in_word.sthlp
 fmwww.bc.edu/repec/bocode/g/getdata.sthlp
+fmwww.bc.edu/repec/bocode/g/gpsmdpolest.ado
 fmwww.bc.edu/repec/bocode/g/glcurve7.hlp
 fmwww.bc.edu/repec/bocode/g/ghansen.pkg
 fmwww.bc.edu/repec/bocode/g/gologit2.pkg
@@ -6309,6 +6310,7 @@ fmwww.bc.edu/repec/bocode/g/geocircles.hlp
 fmwww.bc.edu/repec/bocode/g/group3hdfe.sthlp
 fmwww.bc.edu/repec/bocode/g/gologit2_svy_check.ado
 fmwww.bc.edu/repec/bocode/g/gformula_.ado
+fmwww.bc.edu/repec/bocode/g/gpsmd.ado
 fmwww.bc.edu/repec/bocode/g/gs2slsarxt.dlg
 fmwww.bc.edu/repec/bocode/g/gr_options.idlg
 fmwww.bc.edu/repec/bocode/g/geocodehere.pkg
@@ -6441,6 +6443,7 @@ fmwww.bc.edu/repec/bocode/g/getsymbols.pkg
 fmwww.bc.edu/repec/bocode/g/group1d.ado
 fmwww.bc.edu/repec/bocode/g/gph_seas.src
 fmwww.bc.edu/repec/bocode/g/group-fm-pedroni.prg
+fmwww.bc.edu/repec/bocode/g/gpsmd.sthlp
 fmwww.bc.edu/repec/bocode/g/ginireg.pkg
 fmwww.bc.edu/repec/bocode/g/geocode.hlp
 fmwww.bc.edu/repec/bocode/g/genyhats.ado
@@ -6462,6 +6465,7 @@ fmwww.bc.edu/repec/bocode/g/gengroup.html
 fmwww.bc.edu/repec/bocode/g/gsreg.ado
 fmwww.bc.edu/repec/bocode/g/glm_exp.ado
 fmwww.bc.edu/repec/bocode/g/GR_demo.do
+fmwww.bc.edu/repec/bocode/g/gpsmdpolest.sthlp
 fmwww.bc.edu/repec/bocode/g/grpvars.sthlp
 fmwww.bc.edu/repec/bocode/g/getdata.pkg
 fmwww.bc.edu/repec/bocode/g/gboxplot.pkg
@@ -6753,6 +6757,7 @@ fmwww.bc.edu/repec/bocode/g/genvars.pkg
 fmwww.bc.edu/repec/bocode/g/genspec.sthlp
 fmwww.bc.edu/repec/bocode/g/gb2pred.html
 fmwww.bc.edu/repec/bocode/g/goprobit2_normal_llf.ado
+fmwww.bc.edu/repec/bocode/g/gpsmdcomsup.sthlp
 fmwww.bc.edu/repec/bocode/g/gprefscode.ado
 fmwww.bc.edu/repec/bocode/g/grouplabs.hlp
 fmwww.bc.edu/repec/bocode/g/gendist.sthlp
@@ -6836,6 +6841,7 @@ fmwww.bc.edu/repec/bocode/g/grstest.hlp
 fmwww.bc.edu/repec/bocode/g/gs2slsarxt.ado
 fmwww.bc.edu/repec/bocode/g/graphbinary.pkg
 fmwww.bc.edu/repec/bocode/g/gssage.dta
+fmwww.bc.edu/repec/bocode/g/gpsmdbal.ado
 fmwww.bc.edu/repec/bocode/g/gzmerge.ado
 fmwww.bc.edu/repec/bocode/g/glcurve.hlp
 fmwww.bc.edu/repec/bocode/g/grubbs.pkg
@@ -6959,10 +6965,12 @@ fmwww.bc.edu/repec/bocode/g/guttmanl.sthlp
 fmwww.bc.edu/repec/bocode/g/gb2reg.pkg
 fmwww.bc.edu/repec/bocode/g/garbage_mixl.sthlp
 fmwww.bc.edu/repec/bocode/g/gpreset.hlp
+fmwww.bc.edu/repec/bocode/g/gpsmdbal.sthlp
 fmwww.bc.edu/repec/bocode/g/gzsave.ado
 fmwww.bc.edu/repec/bocode/g/gensplines.sthlp
 fmwww.bc.edu/repec/bocode/g/gologit2.sthlp
 fmwww.bc.edu/repec/bocode/g/get_train_test.ado
+fmwww.bc.edu/repec/bocode/g/gpsmdcomsup.ado
 fmwww.bc.edu/repec/bocode/g/gph.m
 fmwww.bc.edu/repec/bocode/g/gologit2_ll.ado
 fmwww.bc.edu/repec/bocode/g/gipf.ado
