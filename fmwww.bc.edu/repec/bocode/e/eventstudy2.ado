@@ -1,6 +1,8 @@
 *eventstudy2.ado - performs state-of-the art event studies with raw returns or (multi)factor models and calculates various test statistics in Mata
 
-*New in this version 3.2:
+*New in this version 3.2b:
+* New syntax for CAR windows that is compatible with Stata19. Thanks to Eric Jean de Bodt and Jean-Gabriel Cousin for having provided this Stata19 compatible version. The syntax had to be modified from car[days relative to event date]LB and car[ative to event date]UB to car[days relative to event date]lb and car[days relative to event date]ub, respectively.
+
 *1) Built-in version of nearmrg, which solves the problem of unstable sorts (see Statalist)
 *2) Correction of a minor error in the calculation of the Kolari + Pynnonen (2010) adjustment; the prior version slightly overestimated the cross-correlation by not disregarding the i = j = 1.00 cross-correlations.
 *3) Option KOLBlock (see below)
@@ -156,14 +158,14 @@ quietly{
 	
 	scalar `CAR_modified' = 0
 	forvalues i = 1/10 {
-		if `car`i'LB' < `evwlb' | `car`i'UB' > `evwub'{
+		if `car`i'lb' < `evwlb' | `car`i'ub' > `evwub'{
 			scalar `CAR_modified' = 1 
 		}
-		if `car`i'LB' < `evwlb' {
-			local car`i'LB = `evwlb'
+		if `car`i'lb' < `evwlb' {
+			local car`i'lb = `evwlb'
 		}
-		if `car`i'UB' > `evwub'	{	
-			local car`i'UB = `evwub' 
+		if `car`i'ub' > `evwub'	{	
+			local car`i'ub = `evwub' 
 		}
 
 	}
@@ -178,8 +180,8 @@ quietly{
 		local model = "RAW"
 	}
 
-	local car0LB = `evwlb'
-	local car0UB = `evwub'
+	local car0lb = `evwlb'
+	local car0ub = `evwub'
 
 	tostring `1', replace
 	replace `1' = rtrim(ltrim(`1'))
@@ -884,14 +886,14 @@ quietly{
 
 	if "`model'" != "BHAR" & "`model'" != "BHAR_raw" {
 		forvalues i = 1/10 {
-			by `_id': egen CAR`i' = sum(AR) if `dif' >= `car`i'LB' & `dif' <= `car`i'UB' 		
+			by `_id': egen CAR`i' = sum(AR) if `dif' >= `car`i'lb' & `dif' <= `car`i'ub' 		
 		
 			if "`arfillevent'" != "arfillevent" {
-				gen `last_AR' = AR if `dif' == `car`i'UB'
+				gen `last_AR' = AR if `dif' == `car`i'ub'
 				by `_id': egen `last_AR_min' = min(`last_AR')
 				by `_id': replace `last_AR' = `last_AR_min'
 				
-				gen `first_cum_periods' = `cum_periods' if `dif' == `car`i'LB'
+				gen `first_cum_periods' = `cum_periods' if `dif' == `car`i'lb'
 				by `_id': egen `first_cum_periods_min' = min(`first_cum_periods')
 				by `_id': replace `first_cum_periods' = `first_cum_periods_min'
 					
@@ -913,7 +915,7 @@ quietly{
 		gen `retp1' = `returns' + 1
 		forvalues i = 1/10 {
 			tempvar Cret`i'
-			by `_id': egen `Cret`i'' = prod(`retp1') if `dif' >= `car`i'LB' & `dif' <= `car`i'UB' 
+			by `_id': egen `Cret`i'' = prod(`retp1') if `dif' >= `car`i'lb' & `dif' <= `car`i'ub' 
 		}
 	}
 
@@ -921,7 +923,7 @@ quietly{
 		gen `MKTp1' = `marketreturns' + 1
 		forvalues i = 1/10 {
 			tempvar CMKT`i'
-			by `_id': egen `CMKT`i'' = prod(`MKTp1') if `dif' >= `car`i'LB' & `dif' <= `car`i'UB' 
+			by `_id': egen `CMKT`i'' = prod(`MKTp1') if `dif' >= `car`i'lb' & `dif' <= `car`i'ub' 
 		}
 
 	}
@@ -970,8 +972,8 @@ quietly{
 	format original_event_date %d
 	
 	forvalues i = 1/10{
-		capture: label var CAR`i' "CAR[`car`i'LB';`car`i'UB']"
-		capture: label var BHAR`i' "BHAR[`car`i'LB';`car`i'UB']"
+		capture: label var CAR`i' "CAR[`car`i'lb';`car`i'ub']"
+		capture: label var BHAR`i' "BHAR[`car`i'lb';`car`i'ub']"
 	}
 	
 	save `crossfile', `replace'
@@ -1040,7 +1042,7 @@ quietly{
 		save "`__temp'"
 		
 		if "`model'" != "RAW" & "`model'" != "COMEAN" & "`model'" != "BHAR_raw" {
-			keep if `dif' >= `car`cari'LB' & `dif' <= `car`cari'UB' 
+			keep if `dif' >= `car`cari'lb' & `dif' <= `car`cari'ub' 
 			gen `difp' = `dif' - `evwlb'
 			keep `_id' `marketreturns' `difp' 
 			reshape wide `marketreturns', i(`_id') j(`difp')
@@ -1052,7 +1054,7 @@ quietly{
 		
 		if "`model'" == "RAW" | "`model'" == "COMEAN" | "`model'" == "MA" | "`model'" == "FM" {
 		
-			keep if `dif' >= `car`cari'LB' & `dif' <= `car`cari'UB'
+			keep if `dif' >= `car`cari'lb' & `dif' <= `car`cari'ub'
 			
 			gen AR_for_GRAPH = AR
 			replace AR_for_GRAPH = 0 if AR_for_GRAPH == .
@@ -1068,11 +1070,11 @@ quietly{
 			use `preserve2', clear
 			
 			if `cari' != 0 & "`arfillevent'" != "arfillevent" {
-				gen `last_AR' = AR if `dif' == `car`cari'UB'
+				gen `last_AR' = AR if `dif' == `car`cari'ub'
 				by `_id': egen `last_AR_min' = min(`last_AR')
 				by `_id': replace `last_AR' = `last_AR_min'
 				
-				gen `first_cum_periods' = `cum_periods' if `dif' == `car`cari'LB'
+				gen `first_cum_periods' = `cum_periods' if `dif' == `car`cari'lb'
 				by `_id': egen `first_cum_periods_min' = min(`first_cum_periods')
 				by `_id': replace `first_cum_periods' = `first_cum_periods_min'
 							
@@ -1100,7 +1102,7 @@ quietly{
 			}
 			
 			use "`__temp'", clear
-			keep if `dif' >= `car`cari'LB' & `dif' <= `car`cari'UB' 
+			keep if `dif' >= `car`cari'lb' & `dif' <= `car`cari'ub' 
 			gen `difp' = `dif' - `evwlb'
 			keep `_id' `STDF' `difp' 
 			reshape wide `STDF', i(`_id') j(`difp')
@@ -1118,7 +1120,7 @@ quietly{
 			mata: TESTSTATS = TESTSTATS(df,AR,ARE,ARE_for_GRAPH,MR,MRE,KolariADJ,STDFE,NOMARKET)
 			
 			clear
-			local obs = -`car`cari'LB' + `car`cari'UB' + 1
+			local obs = -`car`cari'lb' + `car`cari'ub' + 1
 			set obs `obs'
 			
 			foreach v in "NoFirms" "AARE" "NAAREt_test" "PAAREt_test" "NAARECDA" "PAARECDA" "NAAREPatell" "PAAREPatell" "NAAREPatellADJ" "PAAREPatellADJ" "NAAREBoehmer" "PAAREBoehmer" "NAAREKolari" "PAAREKolari" "NAARECorrado" "PAARECorrado" "NAAREZivney" "PAAREZivney" "NAAREGenSign" "PAAREGenSign"  "NAAREWilcox" "PAAREWilcox"  "CAARE" "CAARE_for_GRAPH" "NCAAREt_test" "PCAAREt_test" "NCAARECDA" "PCAARECDA" "NCAAREPatell" "PCAAREPatell" "NCAAREPatellADJ" "PCAAREPatellADJ" "NCAAREBoehmer" "PCAAREBoehmer" "NCAAREKolari" "PCAAREKolari" "NCAARECorrado_Cowan" "PCAARECorrado_Cowan" "NCAAREZivney_Cowan" "PCAAREZivney_Cowan" "NCAAREGenSign" "PCAAREGenSign" "NCAAREGRANKT" "PCAAREGRANKT" "NCAAREWilcox" "PCAAREWilcox"{
@@ -1129,7 +1131,7 @@ quietly{
 			
 			mata: r[.,.] = TESTSTATS
 			
-			gen t= `car`cari'LB'
+			gen t= `car`cari'lb'
 				replace t= t[_n-1]+1 if _n != 1
 			sort t
 			order t
@@ -1197,7 +1199,7 @@ quietly{
 		}
 		
 		if "`model'" == "BHAR" | "`model'" == "BHAR_raw" {
-			keep if `dif' >= `car`cari'LB' & `dif' <= `car`cari'UB'
+			keep if `dif' >= `car`cari'lb' & `dif' <= `car`cari'ub'
 			gen `difp' = `dif' - `evwlb'
 			keep `_id' `returns' `difp'
 			reshape wide `returns', i(`_id') j(`difp')
@@ -1211,7 +1213,7 @@ quietly{
 			mata: SkewAdjtCI = BHAR(BHRE,MRE,fill)
 			
 			clear
-			local obs = -`car`cari'LB' + `car`cari'UB' + 1
+			local obs = -`car`cari'lb' + `car`cari'ub' + 1
 			set obs `obs'
 			
 			foreach v in "NoFirms" "BHAR" "SkewAdjT" "Sig90Low" "Sig90Up" "Sig95Low" "Sig95Up" "Sig99Low" "Sig99Up" {
@@ -1221,7 +1223,7 @@ quietly{
 			mata: st_view(r,.,.)
 			mata: r[.,.] = SkewAdjtCI
 			
-			gen t= `car`cari'LB'
+			gen t= `car`cari'lb'
 				replace t= t[_n-1]+1 if _n != 1
 			sort t
 			order t
@@ -1257,7 +1259,7 @@ quietly{
 	forvalues i = 0/9{
 		scalar `In' = `i' +1
 		local Inl = `In'
-		replace `tstr' = "[" + "`car`Inl'LB'" +  ";" + "`car`Inl'UB'" + "]" in `Inl'
+		replace `tstr' = "[" + "`car`Inl'lb'" +  ";" + "`car`Inl'ub'" + "]" in `Inl'
 	}
 	drop t 
 	rename `tstr' t
@@ -1318,7 +1320,7 @@ quietly{
 log using `diagnosticsfile', `replace'
 	display ""
 	if `CAR_modified' == 1 {
-		di as error "Warning: Some CAR window definitions (options car{it:X}LB and car{it:X}UB) have been changed because they were outside the event window." 
+		di as error "Warning: Some CAR window definitions (options car{it:X}lb and car{it:X}ub) have been changed because they were outside the event window." 
 	}
 	display as text ""
 	display "Number of events in the event file: " `NoOfEntriesEventfile'

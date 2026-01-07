@@ -243,12 +243,12 @@ This option requires the presense of "eventstudy2_parallel.do" in the path speci
 {p 4 8 2}{cmdab:arfilles:timation} forces eventstudy2 to fill any missing abnormal returns in the estimation window with zeros before calculating test statistics. Nevertheless, the benchmark model 
 will still be estimated based on trade-to-trade returns. 
 
-{p 4 8 2}{cmdab:car1LB(}{it:CAR_window_1_lower_boundary}{cmd:)} to {cmdab:car10LB(}{it:CAR_window_10_lower_boundary}{cmd:)} specifies the lower boundary of the window over which cumulative (average) abnormal
-returns are to be calcuated. It is possible to specifiy up to 10 different windows. The default value is -20. The lower boundaries and upper boundaries (see option {cmdab:car1UB(}{it:CAR_window_1_upper_boundary}{cmd:)} to
-{cmdab:car10UB(}{it:CAR_window_10_upper_boundary}{cmd:)}) build pairs. For instance, specifying car1LB(-5) and car1UB(3) makes {hi:eventstudy2} calculating and reporting cumulative (average) abnormal returns or buy-and hold abnormal returns
+{p 4 8 2}{cmdab:car1lb(}{it:CAR_window_1_lower_boundary}{cmd:)} to {cmdab:car10lb(}{it:CAR_window_10_lower_boundary}{cmd:)} specifies the lower boundary of the window over which cumulative (average) abnormal
+returns are to be calcuated. It is possible to specifiy up to 10 different windows. The default value is -20. The lower boundaries and upper boundaries (see option {cmdab:car1ub(}{it:CAR_window_1_upper_boundary}{cmd:)} to
+{cmdab:car10ub(}{it:CAR_window_10_upper_boundary}{cmd:)}) build pairs. For instance, specifying car1LB(-5) and car1ub(3) makes {hi:eventstudy2} calculating and reporting cumulative (average) abnormal returns or buy-and hold abnormal returns
 for the window [-5;3] relative to the event date.
 
-{p 4 8 2}{cmdab:car1UB(}{it:CAR_window_1_upper_boundary}{cmd:)} to {cmdab:car10UB(}{it:CAR_window_10_upper_boundary}{cmd:)} specifies the upper boundary of the window over which cumulative (average)
+{p 4 8 2}{cmdab:car1ub(}{it:CAR_window_1_upper_boundary}{cmd:)} to {cmdab:car10ub(}{it:CAR_window_10_upper_boundary}{cmd:)} specifies the upper boundary of the window over which cumulative (average)
 abnormal returns are to be calculated. It is possible to specifiy up to 10 different windows. The default value is 20.
 
 {title:Examples}
@@ -271,11 +271,11 @@ abnormal returns are to be calculated. It is possible to specifiy up to 10 diffe
 
 {p 4 8 2} Sample event study using buy-and-hold abnormal returns:
 
-{p 4 8 2}{stata "eventstudy2 Security_id Date using Security_returns if Ea > 0.05, ret(Return) car1LB(-1) car1UB(1) car2LB(-5) car2UB(-3) mod(BHAR) marketfile(Factor_returns) mar(MKT) idmar(Market_reference)"}{p_end}
+{p 4 8 2}{stata "eventstudy2 Security_id Date using Security_returns if Ea > 0.05, ret(Return) car1lb(-1) car1ub(1) car2lb(-5) car2ub(-3) mod(BHAR) marketfile(Factor_returns) mar(MKT) idmar(Market_reference)"}{p_end}
 
 {p 4 8 2} Sample event study using the Fama-French multi-factor model:
 
-{p 4 8 2}{stata "eventstudy2 Security_id Date using Security_returns if Ea > 0.05, ret(Return) car1LB(-1) car1UB(1) mod(FM) marketfile(Factor_returns) mar(MKT) idmar(Market_reference) factor1(SMB) factor2(HML) risk(risk_free_rate)"}{p_end}
+{p 4 8 2}{stata "eventstudy2 Security_id Date using Security_returns if Ea > 0.05, ret(Return) car1lb(-1) car1ub(1) mod(FM) marketfile(Factor_returns) mar(MKT) idmar(Market_reference) factor1(SMB) factor2(HML) risk(risk_free_rate)"}{p_end}
 
 {p 4 8 2} Sample event study using the Fama-French multi-factor model with (G)ARCH terms and parallel computing capabilities:
   

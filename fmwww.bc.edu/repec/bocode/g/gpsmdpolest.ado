@@ -1,5 +1,6 @@
 *! command: gpsmdpolest; version: 18 26 November 2025
 *! Enrico Cristofoletti
+*! The following code is distributed under GNU General Public License version 3 (GPL-3)
 ***************************	
 *VERSION HISTORY
 *gpsMDPolEst18 is the same as gpsMDPolEst17 but it is converted to a r-class command (before e-class but it was the wrong class)
@@ -504,9 +505,9 @@ end
 *--------------------------------------------------------------------------------
 *+++++++++++++++++++++++++++++++MATA START++++++++++++++++++++++++++++++++++++++
 *--------------------------------------------------------------------------------
-mata: mata drop LinReg()
+*mata: mata drop LinReg()
 
-mata: mata drop LinRegS()
+*mata: mata drop LinRegS()
 
 mata:
 
