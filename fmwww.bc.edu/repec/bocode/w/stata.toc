@@ -1,6 +1,7 @@
 p waffle module to produce waffle charts using percent or proportion variables
 p waffle_plot module to produce waffle plots
 p wald_mse module to calculate the maximum mean square error (MSE) of a point estimator of the mean
+p wasstest module to perform a two-sample Wasserstein Distance test for equality of distributions 
 p wbdata module to access World Bank databases
 p wbopendata module to access World Bank databases
 p wbull module to fit Weibull distribution by maximum likelihood

@@ -1,3 +1,5 @@
+p naics_to_ff module to convert NAICS codes to Fama-French industry classifications
+p namecheck module to generate Excel list of name mismatches
 p nb_adjust module to identify and adjust outliers of a variable assumed to follow a negative binomial distribution
 p nbercycles module to generate graph command (and optionally graph) timeseries vs. NBER recession dating
 p nbfit module for fitting negative binomial distribution by maximum likelihood

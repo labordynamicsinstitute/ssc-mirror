@@ -1,0 +1,29 @@
+d 'NAMECHECK': module to generate Excel list of name mismatches
+d
+d	namecheck compares the text in namevar with the text in the
+d same variable in an existing file    names.dta in the same
+d directory.  You first need to create names.dta.  namecheck
+d creates an Excel    file (namelist.xlsx) with unmatched names and
+d generates an error code stopping .do file execution.	  Column A
+d is unmatched names from names.dta; column B is unmatched names
+d from the data in memory.    namecheck is useful to compare names
+d (e.g., country names) across data sources to standardize them   
+d prior to merging datasets.	names.dta must include only one
+d variable with a variable named varname.  For example, names.dta  
+d  might be derived from the World Bank's WDI data with the one
+d variable "countryname".  You might have    data from another
+d source and want to merge it with WDI data.  To do this, you need
+d to first    standardize on the country names the WDI uses. 
+d
+d KW: data management
+d KW: text analysis
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20260107
+d
+d Author:   Christopher Kilby, Villanova University
+d Support: email  christopher.kilby@@villanova.edu
+d
+f namecheck.ado
+f namecheck.sthlp

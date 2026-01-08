@@ -12,8 +12,8 @@ d Requires: Stata version 13, reghdfe, ivreg2 and ranktest from SSC (q.v.)
 d
 d Distribution-Date: 20251222
 d
-d Author: Sergio Correia, Duke University
-d Support: email sergio.correia@@duke.edu
+d Author: Sergio Correia, Board of Governors of the Federal Reserve System
+d Support: email sergio.correia@@gmail.com
 d
 f ivreghdfe.ado
 f ivreghdfe.sthlp

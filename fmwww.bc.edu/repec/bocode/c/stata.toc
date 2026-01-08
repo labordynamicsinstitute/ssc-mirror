@@ -27,6 +27,7 @@ p cbarplot module for centred bar plots of absolute or relative frequencies
 p cc_xd_didtextbook module to provide do-files and datafiles for textbook
 p ccmatch module to match cases and controls using specified  variables
 p ccmpre module to compute PRE Measures for Cultural Consensus Models
+p cconv module to  Convert a string variable to a classification from a built-in or user-defined JSON file using libjson 
 p cctable module to calculate summary table for case-control study
 p ccv module to implement the causal cluster variance estimator
 p ccweight module to generate inverse sampling probability weights
@@ -313,6 +314,7 @@ p cv_regress module to estimate the leave-one-out error for linear regression mo
 p cvauroc module to compute Cross-validated Area Under the Curve for ROC Analysis after Predictive Modelling for Binary Outcomes
 p cvcrand module for efficient design and analysis of Cluster Randomized Trials
 p cvequal module to compute the equality of coefficients of variation (CV) from k populations
+p cvmtest module to perform a two-sample Cramer-von Mises equality-of-distributions test
 p cvxhull module to compute and plot convex hulls of bivariate data
 p cwmglm module to estimate Cluster Weighted Models (CWM)
 p cycleplot module for cycle plot (month plot or seasonal subseries plot)

@@ -44,6 +44,7 @@ p find_index module to determine the index (observation number) of an observatio
 p finddup module to find non-unique values or observations
 p findname module to list variables matching name patterns or other properties
 p findregex module to find variable names matching a regular expression pattern
+p findsj module to search and cite Stata Journal articles with interactive buttons
 p findsysmis module to find system missing values in a list of variables
 p findunique module to display combinations of unique identifiers in a dataset.
 p findval module to find a specific value
@@ -114,6 +115,7 @@ p frontier_teci module to generate technical efficiency confidence intervals
 p frontierhtail module to estimate stochastic production frontier models for heavy tail data 
 p fs module to show names of files in compact form
 p fsdet module to compute Factor score determinacy coefficient
+p fshare module to create course folder structure with syllabus and multiple modules
 p fsreg module for forward search regression
 p fsum module to generate and format summary statistics
 p fsx module to show names of files in compact form (Unix-friendly defaults)

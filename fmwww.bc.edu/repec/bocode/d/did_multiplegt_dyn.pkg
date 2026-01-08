@@ -18,9 +18,9 @@ d KW: multiple periods
 d KW: event study
 d KW: non-binary treatment
 d
-d Requires: Stata version 12 and gtools from SSC (q.v.avity2)
+d Requires: Stata version 12 and gtools from SSC (q.v.)
 d
-d Distribution-Date: 20251009
+d Distribution-Date: 20260107
 d
 d Author:  Clément de Chaisemartin,  Economics Department, Sciences Po
 d Support: email  chaisemartin.packages@@gmail.com

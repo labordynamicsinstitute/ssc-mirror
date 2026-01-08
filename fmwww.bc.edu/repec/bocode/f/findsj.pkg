@@ -1,0 +1,27 @@
+d 'FINDSJ': module to search and cite Stata Journal articles with interactive buttons
+d
+d	  findsj searches articles published in the Stata Journal
+d (2001-present) and Stata Technical Bulletin	 (1991-2000). It
+d provides an integrated workflow for finding, reading, citing, and
+d installing Stata    packages from journal articles. 
+d
+d KW: Stata Journal
+d KW: Stata Technical Bulletin
+d KW: search
+d KW: articles
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260107
+d
+d Author:      Yujun Lian,   Lingnan College, Sun Yat-sen University
+d Support: email   arlionn@@163.com
+d
+d Author:       Chucheng Wan,   Lingnan College, Sun Yat-sen University
+d Support: email    chucheng.wan@@outlook.com
+d
+f findsj.ado
+f findsj.sthlp
+f findsj.dta
+f findsj_version.dta
+f findsj_examples.do

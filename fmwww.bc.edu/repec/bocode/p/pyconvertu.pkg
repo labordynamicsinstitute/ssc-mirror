@@ -19,8 +19,8 @@ d Author: Ilya Bolotov, Prague University of Economics and Business
 d Support: email ilya.bolotov@@vse.cz
 d
 f pyconvertu.ado
-F pyconvertu_classification.json
+f pyconvertu_classification.json
 f pyconvertu.sthlp
-F ../i/iso0639-2_all.json
-F ../i/iso3166-1_all.json
-F ../i/iso4217-2022_all.json
+f ../i/iso0639-2_all.json
+f ../i/iso3166-1_all.json
+f ../i/iso4217-2022_all.json

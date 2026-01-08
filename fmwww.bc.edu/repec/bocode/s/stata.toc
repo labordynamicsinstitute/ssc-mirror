@@ -18,6 +18,7 @@ p sequences module for generating versatile numeric sequences
 p setroot module to find the root path of a project and set it as a global variable
 p shapowen module to provide a generic Shapley-Owen value calculator
 p shuffle module to shuffle a list
+p sic_to_ff module to convert SIC codes to Fama-French industry classifications
 p sicff module to create Fama French Industry Variable from SIC Code
 p side_histogram module to plot side by side histograms 
 p simsum module to perform analyses of simulation studies including Monte Carlo error
@@ -25,6 +26,7 @@ p simufe module to simulate panel data with fixed effects and generate scatter p
 p simulate2 module enhancing and parallelising simulate
 p sivqr module to perform smoothed IV quantile regression
 p sj1 module providing Enhanced Stata Journal Navigator 
+p sjive module providing Shrunken Jackknife instrumental variables estimator (SJIVE)
 p skewreg module to estimate skewness and kurtosis regressions
 p smcl2do module to convert log files to do-files in a robust fashion
 p socstrat module to compute and analyze social stratification variables

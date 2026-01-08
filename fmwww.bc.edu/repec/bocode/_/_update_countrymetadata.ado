@@ -1,4 +1,6 @@
 *******************************************************************************
+*! v 16.4  	04Jan2026               by Joao Pedro Azevedo
+*		fix: new sthlp files now saved to same directory as wbopendata.ado
 *! v 16.3  	8Jul2020               by Joao Pedro Azevedo
 * 	change to HTTPS
 *******************************************************************************
@@ -27,6 +29,15 @@ program define _update_countrymetadata , rclass
 	tempname out
 
 	local date: disp %td date("`c(current_date)'", "DMY")
+	
+	* Find the directory where wbopendata.ado is installed (for saving new files)
+	cap: findfile wbopendata.ado
+	if _rc == 0 {
+		local wbopendata_dir = reverse(substr(reverse("`r(fn)'"), 15, .))
+	}
+	else {
+		local wbopendata_dir ""
+	}
 	
 quietly {
 	
@@ -380,10 +391,10 @@ quietly {
 					
 			cap: findfile _`variable'.ado, `path'
 			if _rc == 0 {
-				copy  `tmp`variable''  `r(fn)' , replace
+				copy  `tmp`variable''  "`r(fn)'" , replace
 			}
 			else {
-				copy `tmp`variable'' _`variable'.ado
+				copy `tmp`variable'' "_`variable'.ado"
 			}
 			
 		}
@@ -426,10 +437,10 @@ quietly {
 			cap: findfile `country' , `path'
 					
 			if _rc == 0 {
-				copy `tmpCTRYtmp'  `r(fn)' , replace
+				copy `tmpCTRYtmp'  "`r(fn)'" , replace
 			}
 			else {
-				copy `tmpCTRYtmp' `indicator'
+				copy `tmpCTRYtmp' "`indicator'"
 			}
 			
 			noi di in smcl in g "{bf: Processing country list... COMPLETED!}"
@@ -528,10 +539,10 @@ quietly {
 			
 			cap: findfile wbopendata_`variable'.sthlp , `path'
 			if _rc == 0 {
-				copy `help`variable''  `r(fn)' , replace
+				copy `help`variable''  "`r(fn)'" , replace
 			}
 			else {
-				copy `help`variable'' wbopendata_`variable'.sthlp
+				copy `help`variable'' "`wbopendata_dir'wbopendata_`variable'.sthlp"
 			}
 			
 			noi di in g in smcl "	See {bf:{help wbopendata##`variable':`title'}}"

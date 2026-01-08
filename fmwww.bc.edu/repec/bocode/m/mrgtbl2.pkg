@@ -1,0 +1,35 @@
+d 'MRGTBL2': module to provide a margin-based approach to table 2 from a regression
+d
+d    The output from the mrgtbl2 command is based on margins from
+d the regression model: outcome =    constant +
+d i.exposure[#i.by1][#i.by2] + adjustment variables.	The user
+d specifies the regression method as one of regress, cnsreg, mixed,
+d glm, poisson, nbreg,	  logit, probit, cloglog, binreg, meprobit,
+d melogit, mepoisson, menbreg, meglm, or mecloglog    Margins
+d calculates metrics, such as linear predictions, probabilities, or
+d risk differences, based on	a fitted model's response over a
+d dataset where some or all covariates are fixed at specific
+d values.    Margins answers the question: "What does my model have
+d to say about such-and-such scenario?" The    scenario in mrgtbl2
+d is the standard table 2, including confounding by the option
+d adjustments and    stratification by the options by1 and by2.   
+d There is a conceptual and numerical relationship between the
+d margins command and the Mantel–Haenszel    method, as both
+d tools are used to adjust for confounding factors and provide
+d comparable estimates	  across stratified groups.    In the
+d absence of adjustments and stratifications, the output table is
+d applicable for reporting in	 RCTs. 
+d
+d KW: margins
+d KW: regression
+d KW: table 2 
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20260107
+d
+d Author: Niels Henrik Bruun, Aalborg University Hospital
+d Support: email niels.henrik.bruun@@gmail.com
+d
+f mrgtbl2.ado
+f mrgtbl2.sthlp

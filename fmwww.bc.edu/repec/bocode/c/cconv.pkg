@@ -1,5 +1,11 @@
 d 'CCONV': module to  Convert a string variable to a classification from a built-in or user-defined JSON file using libjson 
 d
+d   cconv converts a string variable to a classification from a
+d built-in or user-defined JSON file using    libjson (regular
+d expressions with Unicode support).	By default, country names
+d (in English) or codes are converted to ISO 3166-1 codes (alpha-2,
+d alpha-3, and	  numeric) and to full names (in English and in
+d French). 
 d
 d KW: data management
 d KW: country codes
@@ -13,5 +19,5 @@ d Author: Ilya Bolotov, Prague University of Economics and Business
 d Support: email ilya.bolotov@@vse.cz
 d
 f cconv.ado
-F cconv_classification.json
+f cconv_classification.json
 f cconv.sthlp

@@ -42,6 +42,7 @@ p ksi module to compute Krugman specialization index
 p ksmirnov2var module to perform the Kolmogorov-Smirnov test of the equality of distributions for two variables. 
 p kssur module to calculate Kapetanios, Shin & Snell unit root test statistic along with critical values and p-values
 p ksur module to calculate Kapetanios & Shin unit root test statistic along with finite-sample critical values and p-values
+p kuipertest module to perform a two-sample Cramer-von Mises equality-of-distributions test
 p kwallis2 module to perform Kruskal-Wallis Test for equality of populations
 p kwstat module to compute kernel weighted sample statistics
 p ky_fit module to fit mixture models of the Kapteyn-Ypma type to linked survey and administrative data

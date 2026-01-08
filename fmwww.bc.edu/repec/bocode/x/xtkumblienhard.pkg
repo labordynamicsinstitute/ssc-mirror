@@ -1,0 +1,42 @@
+d 'XTKUMBLIENHARD': module to Estimate Generalized Four-Component Panel Data Stochastic Frontier Models
+d
+d  xtkumblienhard is a powerful and user-friendly Stata command
+d designed to estimate Generalized Four-Component Panel Data
+d Stochastic Frontier Models, all in a single line of code. This
+d package streamlines the estimation of a sophisticated stochastic
+d frontier framework where the composite error term is decomposed
+d into four distinct components: unobserved individual
+d heterogeneity, persistent inefficiency, transitory inefficiency
+d and random noise. By clearly separating these sources of
+d variation, xtkumblienhard enables researchers to gain deeper
+d insights into performance dynamics across panel data settings.
+d This model builds on the influential and excellent works of
+d Kumbhakar, Lien and Hardaker (Journal of Productivity Analysis,
+d 2014), Kumbhakar, Wang and Horncastle (Cambridge University
+d Press, 2015), and Nguyen, Sickles and Zelenyuk (Springer, 2022),
+d who originally implemented it through multi-step procedures. The
+d innovation of xtkumblienhard lies in its simplicity: it brings
+d the full power of this four-component framework to Stata users
+d with native ADO language syntax, eliminating the need for complex
+d coding or external scripts. Rather than replacing these
+d foundational and outstanding contributions, xtkumblienhard
+d democratizes access to advanced stochastic frontier analysis,
+d making it faster, easier, and more intuitive for applied
+d researchers, analysts, and students alike. Whether you are
+d studying firm-level productivity, benchmarking efficiency, or
+d exploring heterogeneity in performance, xtkumblienhard is your
+d go-to tool for robust and elegant estimation. 
+d
+d KW: panel data
+d KW: stochastic frontier model
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20260107
+d
+d Author: Diallo Ibrahima Amadou
+d Support: email zavren@@gmail.com
+d
+f xtkumblienhard.ado
+f xtkumblienhard.sthlp
+f xtkumblienharddata.dta

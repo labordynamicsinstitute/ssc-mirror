@@ -236,6 +236,7 @@ p mpovline module to calculate FGT0, FGT1 and FGT2 by intervals of multiple thre
 p mpr module for computing the Medication Possession Ratio
 p mqgamma module to estimate quantiles of potential-outcome distributions
 p mrdum module to create dummy variables and summary table for multiple response data
+p mrgtbl2 module to provide a margin-based approach to table 2 from a regression
 p mrobust module to estimate model robustness and model influence
 p mrprobit module to estimate probit with Misclassification of the Dependent Variable
 p mrsprep module to estimate marginal relative survival models
@@ -298,6 +299,7 @@ p myaxis module to reorder categorical variable by specified sort criterion
 p mycd10 module to process ICD-10 diagnosis and procedure codes
 p mycolours module for setting a palette of colours through local macros
 p mydatelabels module to generate axis labels with a label every time a component changes
+p myedit module to provide smart Stata ado-file editor
 p mylabels module for axis labels or ticks on transformed scales or for daily dates
 p mypkg module to inform on packages installed over net
 p myrank module to generate axis variable base on ranks 

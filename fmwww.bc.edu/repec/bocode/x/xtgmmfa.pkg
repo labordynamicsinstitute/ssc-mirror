@@ -1,0 +1,24 @@
+d 'XTGMMFA': module to perform GMM estimation for fixed-T factor-augmented panel data model
+d
+d	xtgmmfa performs GMM estimation for fixed-T panel data
+d model with multifactor structural errors and	  the presence of
+d endogenous variables.  The underlying methodology involves
+d approximating the    unobserved common factors using observed
+d factor proxies. The resulting moment conditions are linear	in
+d the parameters. See Joudis and Sarafidis (JBES, 2022) for more
+d details. 
+d
+d KW: GMM
+d KW: panel data
+d KW: endogeneity
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20260107
+d
+d Author:   Manh Hoang Ba,  Eureka Uni Team, Vietnam
+d Support: email   hbmanh9492@@gmail.com
+d
+f xtgmmfa.ado
+f xtgmmfa.sthlp
+f ../j/js22data.dta
