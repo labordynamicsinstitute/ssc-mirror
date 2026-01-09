@@ -11946,7 +11946,6 @@ fmwww.bc.edu/repec/bocode/w/wosload.html
 fmwww.bc.edu/repec/bocode/w/waffle.ado
 fmwww.bc.edu/repec/bocode/w/wtd.sthlp
 fmwww.bc.edu/repec/bocode/w/whichpkg.ado
-fmwww.bc.edu/repec/bocode/w/wbopendata
 fmwww.bc.edu/repec/bocode/w/webdoc.zip
 fmwww.bc.edu/repec/bocode/w/wbopendata_sourceid_indicators27.sthlp
 fmwww.bc.edu/repec/bocode/w/wbopendata_sourceid_indicators22.sthlp
