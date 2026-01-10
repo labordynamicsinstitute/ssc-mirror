@@ -154,5 +154,6 @@ p xtusreg module to estimate dynamic panel models under irregular time spacing
 p xtvar module to compute panel vector autoregression 
 p xtvar2 module to compute panel vector autoregression 
 p xtvc module to compute confidence intervals for the variance component of random-intercept linear models
+p xtvfreg module for estimating variance function panel regression
 p xtwest module for testing for cointegration in heterogeneous panels
 p xvalols module to crossvalidate an OLS regression

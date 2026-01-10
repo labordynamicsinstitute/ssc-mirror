@@ -1,7 +1,3 @@
-0
-1
-2
-3
 p s2s module to provide survey to survey imputation tool
 p sadi Sequence analysis distance measures
 p samregc module to perform Sensitivity Analysis of Main Regression Coefficients
@@ -62,6 +58,7 @@ p stute_test module to compute Stute (1997) linearity test
 p stvarcom module to generate subset combinations of a string variable
 p styletextab module to style LaTeX tables exported by collect suite of commands
 p submatrix module to perform advanced matrix subscripting
+p sum2docx module to report summary statistics to formatted table in DOCX file
 p sumbar module to produce bar charts showing sums of multiple numeric variables with proper labels
 p sumdocx module to generate comprehensive summary statistics and comparison tables
 p summclust module to compute cluster level measures of leverage, influence, and a cluster jackknife variance estimator

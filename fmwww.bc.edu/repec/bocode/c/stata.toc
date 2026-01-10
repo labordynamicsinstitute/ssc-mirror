@@ -1,6 +1,4 @@
-p c_ml_stata module to implement machine learning classification in Stata
 p c_ml_stata_cv module to implement machine learning classification in Stata
-p cache module to cache all other Stata commands
 p cacheit module to cache all other Stata commands
 p cal module to generate calendar
 p calibest module to estimate proportions and means after survey data have been calibrated to population totals
@@ -108,7 +106,6 @@ p cihplot module to show horizontally labelled plots showing confidence interval
 p cij module for binomial confidence intervals for proportions using Jeffreys prior
 p ciplot module for plots of confidence intervals
 p cipolate module for cubic interpolation
-p circkde module to perform kernel density estimation for circular data
 p circlebar module to produce polar bar graphs
 p circlepack module for hierarchical circle packing
 p circstat modules to calculate circular statistics
@@ -130,8 +127,6 @@ p classplot module to plot predicted probability and empirical values after a bi
 p classtab module or computing diagnostic accuracy statistics and classification table
 p classtabi module for generating classification statistics and table using summarized data 
 p clean_class module to clean classroom variables
-p clean_fname module to clean firstname variables
-p clean_lname module to clean lastname variables
 p clean_name module to clean name variables
 p cleanchars module to replace specific characters or strings in variable names and/or variable labels and/or string variable values and/or value label names and levels with stated characters/strings (using 1-1 or m-1 match)
 p cleandisk module to clean Windows disk space 

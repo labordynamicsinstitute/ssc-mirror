@@ -45,6 +45,7 @@ p bibrep module to produce a bibliometric report on a single senior researcher
 p bic module to evaluate the statistical significance of variables in a model
 p bicdrop1 module to estimate the probability a model is more likely without each explanatory variable
 p bidensity module to produce and graph bivariate density estimates
+p bigtab module to produce frequency tables for "too many values"
 p bihist module to produce bihistograms
 p bimap module to produce bivariate maps
 p bineq module to analyze multidimensional inequality in two dimensions of wellbeing
@@ -102,6 +103,7 @@ p bumpline module to produce bump line graphs
 p bunching module to use bunching to partially and point identify the elasticity of income with respect to tax rates
 p bundle module to bundle image files in a web page using base64 encoding
 p butterworth module to implement Butterworth square-wave highpass filter for timeseries data
+p bygap module to insert by-gap observation at the start of each by-group
 p byhist module to produce interlaced histograms
 p bynote module to create a note with a user-specified format for use with the by option
 p bys module to automatically sort on the bylist (version 5)

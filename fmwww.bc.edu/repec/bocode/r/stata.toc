@@ -7,7 +7,6 @@ p r2o module to calculate an ordinal explained variation statistic
 p r2reg3 module to compute System R2, Adj. R2,  F-Test, and Chi2-Test after reg3 or sureg
 p r2sem module to perform Overall System Structural Equation Modeling (SEM) R2, Adj. R2, F-Test, and Chi2-Test
 p r2var Module to Compute (VAR) Overall System R2, F-Test, and Chi2-Test
-p r_ml_stata module to implement machine learning regression in Stata
 p r_ml_stata_cv module to implement machine learning regression in Stata
 p r_to_d module for converting Pearson's r to Cohen's d
 p radar module to draw radar (spider) plots
@@ -50,7 +49,6 @@ p rbounds module to perform Rosenbaum sensitivity analysis for average treatment
 p rc2 module to estimate Goodman's Row and Columns model 2
 p rc_spline module to generate restricted cubic splines
 p rca module to compute various revealed comparative advantage (RCA) indices
-p rcall module to provide seamless R in Stata
 p rcd module to run commands recursively
 p rcentile module to compute robust confidence intervals for percentiles
 p rcl module for estimation and simulation of random coefficient logit models
@@ -119,9 +117,8 @@ p reglike module to calculate log-likelihood function value from regress
 p regmain module to perform Quasi-Maximum Likelihood Regression
 p regoprob module to estimate random effects generalized ordered probit models
 p regoprob2 module to estimate random effects generalized ordered probit models (update)
-p regoptwt module to produce optimal population weighting for regressions and instrumental variables
+p regoptwgt module to produce optimal population weighting for regressions and instrumental variables
 p regpar module to compute population attributable risks from binary regression models
-p regplot module to plot regression fit 
 p regpred module to calculate linear regression predictions
 p regresby module to generate regression residuals by byvarlist
 p regsave module to save regression results to a Stata-formatted dataset 

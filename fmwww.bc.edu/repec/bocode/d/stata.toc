@@ -8,7 +8,6 @@ p dashgph module to construct dashed lines in scatterplots
 p dashln module to add dashed lines to graphs
 p datacheck module to perform data checks and produce informative output
 p dataex module to generate a properly formatted data example for Statalist
-p dataframe module to store/restore multiple Stata datasets to/from memory
 p datanet module to facilitate dataset organization for network analysis purposes
 p dataout module to export a dataset or tab-delimited file into various formats
 p dataplink module to import data from plink
@@ -101,7 +100,6 @@ p divratio module for estimating diversion ratios and willingness-to-pay from a 
 p dkdensity module for deconvolution kernel density estimation and construction of its uniform confidence band
 p dkobs module to drop or keep a range of observations
 p dlagif Module to Estimate Irving Fisher Arithmetic Distributed Lag Model
-p dldq module to compute treatment effects under alternative Parallel-q assumptions
 p dlist module to list with variable labels
 p dlogit2 modules to compute marginal effects for logit, probit, and mlogit 
 p dltable module to produce regression tables for Randomized Controlled Trials Using Double LASSO

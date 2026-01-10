@@ -90,7 +90,6 @@ p pipe module to perform a curve-free dual-agent dose-escalation design
 p pisareg module to perform linear regression with PISA data and plausible values
 p pisatools module to facilitate analysis of the data from the PISA OECD study
 p plausexog module to implement Conley et al's plausibly exogenous bounds
-p plot3d module to draw colored, scalable, rotatable 3D plots
 p plot_confidently module to visualize the mean and confidence interval of a specified variable
 p plotbeta module to plot linear combinations of coefficients
 p plotmatrix module to plot values of a matrix as different coloured blocks 
@@ -145,7 +144,7 @@ p powerq module to calculates posterior probabilities for heterogeneity in a met
 p powersim module  for simulation-based power analysis for linear and generalized linear models
 p ppml module to perform Poisson pseudo-maximum likelihood estimation
 p ppml_fe_bias module to provide bias corrections for Poisson Pseudo-Maximum Likelihood (PPML) gravity models with two-way and three-way fixed effects
-p ppml_panel_sg module to estimate "structural gravity" models via Poisson PML
+p ppml_panel_sg module to estimate structural gravity models via Poisson PML
 p ppmlhdfe module for Poisson pseudo-likelihood regression with multiple levels of fixed effects
 p ppp module to plot pre- and post-test probabilities after diagnostic testing
 p ppplot module for P-P plots

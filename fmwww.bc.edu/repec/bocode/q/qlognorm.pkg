@@ -1,1 +1,25 @@
-d 'QLOGNORM': module for diagnostic plots for lognormal distributiondd qlognorm plots the quantiles of varname against the quantiles ofd the corresponding lognormal distribution. plognorm graphs ad standardized lognormal probability plot for varname. Thed (two-parameter) lognormal distribution fitted corresponds to ad normal distribution with the mean and standard deviation ofd log(varname). dd Distribution-Date: 20020803dd Author: Nicholas J. Cox, University of Durhamd Support: email N.J.Cox@@durham.ac.ukdf qlognorm.adof qlognorm.hlpf ../p/plognorm.adof ../p/plognorm.hlp
+d 'QLOGNORM': module for diagnostic plots for lognormal distribution
+d
+d  qlognorm plots the quantiles of varname against the quantiles of
+d the corresponding lognormal distribution. plognorm graphs a
+d standardized lognormal probability plot for varname. The
+d (two-parameter) lognormal distribution fitted corresponds to a
+d normal distribution with the mean and standard deviation of
+d log(varname). 
+d
+d KW: graphics
+d KW: diagnostic plots
+d KW: transformation
+d KW: lognormal distribution
+d
+d Requires: Stata version 7.0
+d
+d Distribution-Date: 20020803
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f qlognorm.ado
+f qlognorm.hlp
+f ../p/plognorm.ado
+f ../p/plognorm.hlp

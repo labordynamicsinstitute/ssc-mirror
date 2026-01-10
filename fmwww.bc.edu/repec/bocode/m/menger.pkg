@@ -8,9 +8,9 @@ d values in yvar and finds the curvature value. The maximum
 d curvature point indicates where the curve becomes more "flat" --
 d generally referred to as the "elbow" or "knee". menger_estat
 d computes the Menger curvature as a post-estimation command
-d following factor, as a means of finding an alternative number of
-d factors to that used in Stata’s official factor or "eye-balled"
-d with screeplot. 
+d following factor and pca, as a means of finding an alternative
+d number of factors (components) to that used in Stata’s official
+d factor or "eye-balled" with screeplot. 
 d
 d KW: Menger curvature
 d KW: inflection point

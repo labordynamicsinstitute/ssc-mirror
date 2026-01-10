@@ -1,11 +1,13 @@
-*! version 1.4  6Jan2023
+*! version 1.5  9Jan2026
 * Authors:
-* Chuntao Li, Ph.D. , China Stata Club(爬虫俱乐部)(chtl@hust.edu.cn)
-* Yuan Xue, China Stata Club(爬虫俱乐部)(xueyuan19920310@163.com)
+* Chuntao Li, Ph.D., China Stata Club(爬虫俱乐部)(chtl@henu.edu.cn)
+* Yuan Xue, Ph.D., China Stata Club(爬虫俱乐部)(yuanxue@henu.edu.cn)
 * July 13rd, 2017
 * Updated on December 27th, 2018
 * Updated on November 12th, 2020
 * Updated on June 10th, 2022
+* Updated on January 6th, 2023
+* Updated on January 9th, 2026
 * Program written by Dr. Chuntao Li and Yuan Xue
 * Report regression table to formatted table in DOCX file.
 * Can only be used in Stata version 15.0 or above

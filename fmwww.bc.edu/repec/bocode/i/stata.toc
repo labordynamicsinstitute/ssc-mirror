@@ -1,3 +1,4 @@
+p i_ineq module to provide individual decomposition of inequality measures
 p iati module to import International Aid Transparency Initiative data
 p ic module to compute measures of interaction contrast (biological interaction) 
 p icalc module to compute Interaction Effects in Linear and Generalized Linear Models
@@ -40,7 +41,6 @@ p inccat module to concatenate one or more input files to an output file inserti
 p inclusion_economics_scheme module to provide a graphic scheme for Inclusion Economics branded data
 p indeplist module to returns lists of independent variables from the active estimation command
 p index Module to Estimate Price, Quantity, and Value Index Numbers
-p indexplot module for index plots of estimation results
 p ineq module to calculate measures of inequality
 p ineqdec0 module to calculate inequality indices with decomposition by subgroup
 p ineqdecgini module to estimate Gini coefficient with optional decomposition by subgroups
@@ -59,7 +59,6 @@ p insheetjson module for importing tabular data from JSON sources on the interne
 p inshell module to send commands to the shell as well as capture and print their standard output, standard error, and native shell return codes
 p insingap module to insert a single gap observation at the top of each by-group
 p insob module to insert empty observations
-p instabilitycerdi module for Calculating the Instability or the Volatility of a Variable by the CERDI Method in some Time Window
 p installpkg module to install Stata packages by specifying zipfile/pkgfile or local directory
 p int_utils module to perform interval computations in Mata
 p intcens module to perform interval-censored survival analysis
@@ -102,7 +101,6 @@ p isa module to perform Imbens' (2003) sensitivity analysis
 p isco module to recode 4 digit ISCO-68 occupational codes
 p iscogen module to translate ISCO codes
 p iscoil module to recode Israeli CBS occupation standard classification into ISCO-08 occupational classification
-p iscooesch module to recode ISCO codes into Oesch class scheme
 p isko module to recode 4 digit ISCO-88 occupational codes
 p isocodes module to generate standardized country codes and names
 p isogini module to estimate isogini measures at different percentiles
@@ -149,6 +147,5 @@ p ivreg_ss module to compute confidence intervals, standard errors, and p-values
 p ivreghdfe module for extended instrumental variable regressions with multiple levels of fixed effects
 p ivregress2 module to export first and second-stage results similar to ivregress
 p ivreset module to perform Ramsey/Pesaran-Taylor/Pagan-Hall RESET specification test after IV/GMM/OLS estimation
-p ivrobust module to perform weak instrument test for a single endogenous regressor in TSLS and LIML 
 p ivtreatreg module to estimate binary treatment models with idiosyncratic average effect
 p ivvif module to report variance inflation factors after IV

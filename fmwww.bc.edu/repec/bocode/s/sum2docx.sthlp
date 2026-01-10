@@ -69,7 +69,7 @@ Use font("", size) to specify font size only. Use font("", "", color) to specify
 {opt varlabel} output variables' labels instead of names in the first column of the table. {p_end}
 
 {phang}
-{opt stats()} specifies the statistics to be output. Including N, {opt mean}{opt [}{opt (fmt)}{opt ]}, {opt var}{opt [}{opt (fmt)}{opt ]}, {opt sd}{opt [}{opt (fmt)}{opt ]}, {opt skewness}{opt [}{opt (fmt)}{opt ]}, 
+{opt stats()} specifies the statistics to be output. Including {opt N}{opt [}{opt (fmt)}{opt ]}, {opt mean}{opt [}{opt (fmt)}{opt ]}, {opt var}{opt [}{opt (fmt)}{opt ]}, {opt sd}{opt [}{opt (fmt)}{opt ]}, {opt skewness}{opt [}{opt (fmt)}{opt ]}, 
 {opt kurtosis}{opt [}{opt (fmt)}{opt ]}, {opt sum}{opt [}{opt (fmt)}{opt ]}, {opt sum_w}{opt [}{opt (fmt)}{opt ]}, {opt min}{opt [}{opt (fmt)}{opt ]}, {opt median}{opt [}{opt (fmt)}{opt ]}, {opt max}{opt [}{opt (fmt)}{opt ]}, 
 {opt p1}{opt [}{opt (fmt)}{opt ]}, {opt p5}{opt [}{opt (fmt)}{opt ]}, {opt p10}{opt [}{opt (fmt)}{opt ]}, {opt p25}{opt [}{opt (fmt)}{opt ]}, {opt p75}{opt [}{opt (fmt)}{opt ]}, {opt p90}{opt [}{opt (fmt)}{opt ]}, 
 {opt p95}{opt [}{opt (fmt)}{opt ]}, {opt p99}{opt [}{opt (fmt)}{opt ]}. The default format is %9.3f. {p_end}
@@ -120,7 +120,7 @@ Use all variables
 {p_end}
 
 {phang}
-{stata `"sum2docx _all using d:/temp5.docx, replace stats(N mean(%9.2f) sd min(%9.0g) median(%9.0g) max(%9.0g)) title("Table 1: this is the summary statistics")"'}
+{stata `"sum2docx _all using d:/temp5.docx, replace stats(N(%9.0fc) mean(%9.2f) sd min(%9.0g) median(%9.0g) max(%9.0g)) title("Table 1: this is the summary statistics")"'}
 {p_end}
 
 {pstd}
@@ -142,13 +142,13 @@ We can also use the option append to append the output to an existing file
 
 {pstd}Chuntao LI{p_end}
 {pstd}China Stata Club(爬虫俱乐部){p_end}
-{pstd}Wuhan, China{p_end}
-{pstd}chtl@zuel.edu.cn{p_end}
+{pstd}Zhengzhou, China{p_end}
+{pstd}chtl@henu.edu.cn{p_end}
 
 {pstd}Yuan XUE{p_end}
 {pstd}China Stata Club(爬虫俱乐部){p_end}
-{pstd}Wuhan, China{p_end}
-{pstd}xueyuan19920310@163.com{p_end}
+{pstd}Zhengzhou, China{p_end}
+{pstd}yuanxue@@henu.edu.cn{p_end}
 
 
 {title:Also see}

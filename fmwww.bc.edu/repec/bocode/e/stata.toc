@@ -14,7 +14,6 @@ p econsig module to quickly calculate six types of economic significance to simp
 p edfreg module to make corrections for statistical inference with robust or clustered covariance matrices
 p edm module to implement empirical dynamic modeling
 p educationdata module to download data from the Urban Institute Education Data Portal
-p eealogit module to estimate endogenous attribute attendance models
 p eefanalytics module for Evaluating Educational Interventions using Randomised Controlled Trial Designs
 p efetch_tools module to retrieve genetic data from NCBI
 p effcon module to calculate confidence limits for effect size estimated from one or two samples from normal distribution 

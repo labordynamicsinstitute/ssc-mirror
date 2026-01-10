@@ -31,7 +31,6 @@ p margprev module to compute marginal prevalences from binary regression models
 p marhis module to produce predictive margins and marginal effects plots with histogram after regress, logit, xtmixed and mixed
 p marimekko module for marikmekko charts
 p mark_changes module to generate a variable indicating where one or more variables changes value
-p markdoc module for literate programming
 p marker module to generate indicator variable marking desired sample
 p markobs module to mark observations for inclusion
 p markov module to generate Markov probabilities
@@ -95,6 +94,7 @@ p medsurv module to calculate the median survival time after Cox/Poisson regress
 p mehetprob module to compute marginal effects at means and their standard errors after hetprob 
 p meloreg2 module to perform Minimum Expected Loss (MELO) Instrumental Variables Regression
 p melt module to melt variables into a dataset containing aggregated data by variable
+p menger module to compute the Menger curvature
 p meoprobit module to compute marginal effects after estimation of ordered probit 
 p mequate module to calculate equating constants using the Mean/Mean and Mean/Sigma methods
 p meresc module to rescale the results of mixed nonlinear probability models 
@@ -147,12 +147,10 @@ p mhl module to compute Hodges and Lehman (1963) robust measure of location
 p mhtexp module to perform multiple hypothesis testing correction procedure
 p mhtreg module for multiple hypothesis testing controlling for FWER
 p mi_impute_from module to impute using an external imputation model
-p mi_impute_wlogit module to perform weighted multiple imputation for binary/categorical variables
-p mi_mvncat module to assign "final" values to (mvn) imputed categorical variables
+p mi_mvncat module to assign final values to (mvn) imputed categorical variables
 p mi_twoway module  for computing scores on questionnaires containing missing item responses
 p mibmi module for cleaning and multiple imputation algorithm for body mass index (BMI) in longitudinal datasets
 p mice module for multiple imputation of missing values
-p mice7 module for multiple imputation of missing values (version 7)
 p mict module to provide Multiple imputation for Categorical Time-series
 p midas module for meta-analytical integration of diagnostic test accuracy studies 
 p miesize module to estimate effect sizes from multiply imputed data
@@ -286,6 +284,7 @@ p mvfiles module to provide  a convenient way to move/copy matched files from a 
 p mvfilter module to compute multivariate time-series filter 
 p mvmeta module to perform multivariate random-effects meta-analysis
 p mvnxpb module for  computation of multivariate normal probabilities using bivariate conditioning 
+p mvplot module to plot results from multiverse analysis
 p mvport module for Collection, Optimization and Backtest of Financial Portfolios
 p mvprobit module to calculate multivariate probit regression using simulated maximum likelihood
 p mvsamp1i module to determine sample size and power for multivariate regression

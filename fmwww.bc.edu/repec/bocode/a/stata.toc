@@ -4,7 +4,6 @@ p aaplot module for scatter plot with linear and/or quadratic fit, automatically
 p ab2022 module to provide Gradient Solver for Ahlfeldt & Barr (2022): The economics of skyscrapers
 p abar module to perform Arellano-Bond test for autocorrelation 
 p abg module to implement the Alpha-Beta-Gamma Method of Distributional Analysis
-p aboutreg module providing tutorial on regression diagnostics
 p abrs module to provide Toolkit for counterfactuals based on a spatial equilibrium framework with heterogenous preferences by Ahlfeldt, Bald, Roth, Seidel: “Measuring quality of life under spatial frictions"    
 p abrsqol module providing Quality-of-life solver for "Measuring quality of life under spatial frictions"
 p absdid module to estimate treatment effect with Abadie semiparametric DID estimator
@@ -34,7 +33,7 @@ p adoinstall module to install Stata packages in a specified path
 p adolist module to manage lists of ado packages
 p adostore module to store and restore the current ado-path
 p adotype module to type ado file
-p adtest module to perform a two-sample Cramer-von Mises equality-of-distributions test
+p adtest module to perform a two-sample Anderson-Darling equality-of-distributions test
 p aedot module to produce dot plot for adverse event data
 p aefdr module to perform false discovery rate p-value adjustment for adverse event data
 p aevolcano module to produce volcano plot for adverse event data
@@ -63,13 +62,13 @@ p almon Module to Estimate Shirley Almon Generalized Polynomial Distributed Lag 
 p almon1 module to estimate Shirley Almon Polynomial Distributed Lag Model
 p alogit module to estimate (In)attentive logit regression from Abaluck and Adams 
 p alorenz module to produce Pen's Parade, Lorenz and Generalised Lorenz curve
+p alphaplot module to plot Cronbach's alpha for increasing subsets of a variable list
 p alphawgt module to compute Cronbach's alpha for weighted data
 p alsmle module to perform Beach-Mackinnon AR(1) Autoregressive Maximum Likelihood Estimation
 p amcmc module to provide Mata functions and structures for adaptive Markov chain Monte Carlo sampling
 p ameta module to perform alternative and Bayesian meta-analysis
 p anketest module to perform diagnostic tests for spatial autocorrelation in the residuals of OLS, SAR, IV, and IV-SAR models
 p anogi module to generate Analysis of Gini 
-p anovaplot module for plots of anova fit, including interaction plots
 p anymatch module to perform distance matching based on any metric
 p anythingtodate module to convert all types of date variables to Stata date variables
 p apc module for estimating age-period-cohort effects
@@ -114,6 +113,7 @@ p atkplot module to generate Atkinson residual normality plots
 p attcic module to implement the attrition corrections from Ghanem et al. (2024b) and comparator approaches
 p attregtest module to implement the regression-based attrition tests proposed in  Ghanem et al. (2022)
 p audit_cc module for analysis of matched case-control audits of cervical cancer screening
+p auto_factor module to automate data and method checks for factor analysis
 p autofill module to fill missing values with existing values
 p autofmt module to automatically format a significant number of digits
 p autolog module to generate dialog to create log files
@@ -122,7 +122,6 @@ p autosum module to produce automatic generation of a comparison table
 p avar module to perform asymptotic covariance estimation for iid and non-iid data robust to heteroskedasticity, autocorrelation, 1- and 2-way clustering, and common cross-panel autocorrelated disturbances
 p avciplot module to produce added-variable plot with confidence intervals
 p avg_effect module to calculate mean (standardized) effect size across multiple outcomes 
-p avicplot module to produce added-variable plot with confidence intervals
 p avplot2 modules for added variable plots
 p avplot3 module to generate partial regression plots for subsamples
 p avplots4 module to graph added-variable plots for specified regressors in a single image

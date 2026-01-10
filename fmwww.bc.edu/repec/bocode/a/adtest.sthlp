@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  23dec2025}{...}
+{* *! version 1.0.1  08jan2026}{...}
 
 {title:Title}
 
@@ -142,7 +142,8 @@ K-sample Anderson-Darling tests.
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden A. (2025). ADTEST: Stata module to perform a two-sample Anderson-Darling equality-of-distributions test
+Linden A. (2025). ADTEST: Stata module to perform a two-sample Anderson-Darling equality-of-distributions test. Statistical Software Components S459559, 
+Boston College Department of Economics. 
 
 
 
@@ -157,7 +158,8 @@ alinden@lindenconsulting.org{break}
 
 {title:Also see}
 
-{p 4 8 2} {helpb ksmirnov}, {helpb ranksum}, {helpb permute}, {helpb cvmtest} (if installed), {helpb escftest} (if installed), {helpb distcomp} (if installed) {p_end}
+{p 4 8 2} {helpb ksmirnov}, {helpb ranksum}, {helpb permute}, {helpb cvmtest} (if installed), {helpb kuipertest} (if installed), {helpb wasstest} (if installed), {helpb escftest} (if installed), 
+{helpb distcomp} (if installed) {p_end}
 
 
 

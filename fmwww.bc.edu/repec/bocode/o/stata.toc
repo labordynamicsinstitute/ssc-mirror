@@ -14,11 +14,9 @@ p odkmeta module to import ODK data
 p odksplit module to split and label multiple response variables generated from ODK or SurveyCTO
 p oeratio module to calculate ratio of observed to expected outcomes 
 p oesch module to recode ISCO codes into Oesch class scheme
-p ofrtplot module to plot observed, fitted and residuals versus time variable
 p oga module to perform estimation and inference for high-dimensional regressions without imposing the sparsity restriction
 p oglm module to estimate Ordinal Generalized Linear Models
 p oglm9 module to estimate Ordinal Generalized Linear Models
-p omega module to calculate the omega reliability coefficient
 p omegacoef module to calculate the omega reliability coefficient
 p omninorm module to calculate omnibus test for univariate/multivariate normality
 p omodel modules to perform tests on ordered probit and ordered logit models
@@ -34,7 +32,6 @@ p openall module to open all specified files with append
 p opencagegeo module for forward and reverse geocoding using the OpenCage Geocoder API
 p opendf module to work with Open Data Format files in Stata
 p opl module for optimal policy learning and multi-action optimal policy learning
-p opl_ma module for multi-action optimal policy learning
 p oplabdata module to load data from the Equality of Opportunity Project
 p opplot module to generate a vertical bar chart to summarize a binary outcome in cluster survey data
 p oprobpr module to display predicted probabilities from ordered probit and logit
@@ -66,4 +63,3 @@ p overdisp module to detect overdispersion in count-data models using Stata
 p overfit module to calculate shrinkage statistics to measure overfitting as well as out- and in-sample predictive bias
 p overid module to conduct postestimation tests of overidentification
 p overlay module to overlay multiple x vs y graphs
-p ovfplot module for plots of observed vs fitted 

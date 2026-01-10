@@ -242,20 +242,20 @@ Use font("", size) to specify font size only. Use font("", "", color) to specify
 {p_end}
 
 {phang}
-{stata `"reg2docx m1 m2 m3 m4 using d:/mytable2.docx, append newsection keep(x1 x4 x5 x6) addfe("ind = Yes") scalars(N r2(%9.3f)) order(x6 x5) b(%9.3f) t(%7.2f) title(table2: OLS regression results) mtitles("model 1" "model 2" "" "model 4")"'}
+{stata `"reg2docx m1 m2 m3 m4 using d:/mytable2.docx, append newsection keep(x1 x4 x5 x6) addfe("ind = Yes") scalars(N(%9.0fc) r2(%9.3f)) order(x6 x5) b(%9.3f) t(%7.2f) title(table2: OLS regression results) mtitles("model 1" "model 2" "" "model 4")"'}
 {p_end}
 
 {title:Author}
 
 {pstd}Chuntao LI{p_end}
 {pstd}China Stata Club(爬虫俱乐部){p_end}
-{pstd}Wuhan, China{p_end}
-{pstd}chtl@zuel.edu.cn{p_end}
+{pstd}Zhengzhou, China{p_end}
+{pstd}chtl@henu.edu.cn{p_end}
 
 {pstd}Yuan XUE{p_end}
 {pstd}China Stata Club(爬虫俱乐部){p_end}
-{pstd}Wuhan, China{p_end}
-{pstd}xueyuan19920310@163.com{p_end}
+{pstd}Zhengzhou, China{p_end}
+{pstd}yuanxue@henu.edu.cn{p_end}
 
 
 

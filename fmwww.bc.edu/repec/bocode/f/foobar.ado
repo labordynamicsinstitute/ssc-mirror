@@ -1,1 +1,0 @@
-*! version 1.0.0 program define foobar  version 7.0  di in r "test"  end

@@ -1,4 +1,4 @@
-d 'KUIPERTEST': module to perform a two-sample Cramer-von Mises equality-of-distributions test
+d 'KUIPERTEST': module to perform a two-sample Kuiper test for equality of distributions
 d
 d  kuipertest performs a two-sample Kuiper permutation test to
 d assess whether two samples come from the same distribution. The
@@ -14,7 +14,7 @@ d KW: comparisons
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20251225
+d Distribution-Date: 20260109
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org

@@ -1,4 +1,4 @@
-d 'ADTEST': module to perform a two-sample Cramer-von Mises equality-of-distributions test
+d 'ADTEST': module to perform a two-sample Anderson-Darling equality-of-distributions test
 d
 d  adtest performs a two-sample Anderson-Darling (AD) permutation
 d test to assess whether two samples come from the same
@@ -16,7 +16,7 @@ d KW: comparisons
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20251224
+d Distribution-Date: 20260109
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org

@@ -24,7 +24,6 @@ p tablemat module to produce and export table of results in a matricial format
 p tablepc module for percent calculation prior to table
 p tableplot module giving graphical display in two-way table format 
 p tabletutorial module to provide tutorial on automated table generation and reporting with Stata
-p tabm module to extend tabulate and produce XML format
 p tabmerge module to tabulate report on merge
 p tabmult module to produce multiple two-way tabulations
 p tabone module for exporting single or multiple one-way tabulations into various formats
@@ -114,7 +113,6 @@ p tpvar module to generate turning-point variable for graphics labelling
 p tr module providing prefix command to trace program execution
 p traces module to display traces of items
 p trackobs module to keep a record of the number of observations in the current dataset.
-p trans_unicode module to convert files to and from Unicode
 p transint help files for transformations
 p translog module to create new variables for a translog function
 p transplot module producing plots for trying out transformations

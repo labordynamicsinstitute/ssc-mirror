@@ -1,10 +1,12 @@
 *! version 1.3  6Jan2023
 * Authors:
-* Chuntao Li, Ph.D. , China Stata Club(爬虫俱乐部)(chtl@hust.edu.cn)
-* Yuan Xue, China Stata Club(爬虫俱乐部)(xueyuan19920310@163.com)
+* Chuntao Li, Ph.D., China Stata Club(爬虫俱乐部)(chtl@henu.edu.cn)
+* Yuan Xue, Ph.D., China Stata Club(爬虫俱乐部)(yuanxue@henu.edu.cn)
 * July 13rd, 2017
 * Updated on November 27th, 2018
 * Updated on June 10th, 2022
+* Updated on January 6th, 2023
+* Updated on January 9th, 2026
 * Program written by Dr. Chuntao Li and Yuan Xue
 * Report summary statistics to formatted table in DOCX file.
 * Can only be used in Stata version 15.0 or above
@@ -56,11 +58,6 @@ program define sum2docx
 	local stats_list = "N sum_w mean var sd skewness kurtosis sum min max p1 p5 p10 p25 median p75 p90 p95 p99"
 
 	if `"`stats'"' == "" local stats = "N mean"
-
-	if ustrregexm(`"`stats'"', "N\(.*?\)") {
-		disp as error "you could not specify the format of N in option stats()"
-		exit 198
-	}
 
 	scalar error_num = 0
 
@@ -136,12 +133,7 @@ program define sum2docx
 			}
 			
 			forvalues col = 2/`colnum' {
-				if "`stat_`=`col'-1''" != "N" {
-					putdocx table sumtable(`i', `col') = (`"`=subinstr("`: disp `stat_`=`col'-1'_fmt' `=r(`stat_`=`col'-1'')''", " ", "", .)'"'), halign(right) valign(center)
-				}
-				else {
-					putdocx table sumtable(`i', `col') = (`=r(`stat_`=`col'-1'')'), halign(right) valign(center)
-				}
+				putdocx table sumtable(`i', `col') = (`"`=subinstr("`: disp `stat_`=`col'-1'_fmt' `=r(`stat_`=`col'-1'')''", " ", "", .)'"'), halign(right) valign(center)
 			}
 			local i = `i' + 1
 		}

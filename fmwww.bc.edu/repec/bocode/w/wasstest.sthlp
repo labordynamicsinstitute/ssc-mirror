@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  23dec2025}{...}
+{* *! version 1.0.1  08jan2026}{...}
 
 {title:Title}
 
@@ -138,7 +138,7 @@ On Wasserstein two-sample testing and related families of nonparametric tests.
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden A. (2025). WASSTEST: Stata module to perform a two-sample Wasserstein Distance test for equality of distributions
+Linden A. (2025). WASSTEST: Stata module to perform a two-sample Wasserstein Distance test for equality of distributions. Statistical Software Components S459557, Boston College Department of Economics. 
 
 
 
@@ -153,7 +153,7 @@ alinden@lindenconsulting.org{break}
 
 {title:Also see}
 
-{p 4 8 2} {helpb ksmirnov}, {helpb ranksum}, {helpb permute}, {helpb cvmtest} (if installed), {helpb adtest} (if installed) {helpb escftest} (if installed), {helpb distcomp} (if installed) {p_end}
+{p 4 8 2} {helpb ksmirnov}, {helpb ranksum}, {helpb permute}, {helpb cvmtest} (if installed), {helpb adtest} (if installed), {helpb kuipertest} (if installed), {helpb escftest} (if installed), {helpb distcomp} (if installed) {p_end}
 
 
 

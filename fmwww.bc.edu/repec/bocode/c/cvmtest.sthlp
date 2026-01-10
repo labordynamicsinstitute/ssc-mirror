@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  23dec2025}{...}
+{* *! version 1.0.1  08jan2026}{...}
 
 {title:Title}
 
@@ -141,7 +141,8 @@ Modified randomization tests for nonparametric hypotheses.
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden A. (2025). CVMTEST: Stata module to perform a two-sample Cramer-von Mises equality-of-distributions test
+Linden A. (2025). CVMTEST: Stata module to perform a two-sample Cramer-von Mises equality-of-distributions test.
+Statistical Software Components S459558, Boston College Department of Economics. 
 
 
 
@@ -156,7 +157,7 @@ alinden@lindenconsulting.org{break}
 
 {title:Also see}
 
-{p 4 8 2} {helpb ksmirnov}, {helpb ranksum}, {helpb permute}, {helpb adtest} (if installed), {helpb escftest} (if installed), {helpb distcomp} (if installed) {p_end}
+{p 4 8 2} {helpb ksmirnov}, {helpb ranksum}, {helpb permute}, {helpb adtest} (if installed), {helpb kuipertest} (if installed), {helpb wasstest} (if installed), {helpb escftest} (if installed), {helpb distcomp} (if installed) {p_end}
 
 
 
