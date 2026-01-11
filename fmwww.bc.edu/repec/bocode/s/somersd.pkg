@@ -26,8 +26,8 @@ d test. Full documentation of the programs (including	   methods
 d and formulas) can be found in the ancillary files somersd.pdf,   
 d   cendif.pdf and censlope.pdf. 
 d
-d KW: sensitivity
-d KW: specificity
+d KW: equation solver
+d KW: bisection method
 d
 d Requires: Stata 16
 d

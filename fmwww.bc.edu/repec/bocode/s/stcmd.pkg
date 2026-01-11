@@ -16,6 +16,11 @@ d of stcmd.ado to change the setting of the local macro path, which
 d contains the path for the Stat/Transfer st command (see on-line
 d help for details). 
 d
+d KW: survival function
+d KW: confidence band
+d KW: equal precision confidence band
+d KW: Nair
+d KW: Hall-Wellner confidence band
 d
 d Requires: Stata version 13.0 and Stat/Transfer
 d

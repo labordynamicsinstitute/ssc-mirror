@@ -1,6 +1,6 @@
 d 'SAVASAS': module to save your dataset as a SAS dataset
 d
-d savasas saves the Stata dataset in memory as a SAS file.  By
+d  savasas saves the Stata dataset in memory as a SAS file.  By
 d default  the output dataset will have the same name and be in the
 d same directory,  but with the .sas7bdat file name extension and
 d contain all observations and	every variable in the Stata data
@@ -22,11 +22,10 @@ d KW: transfer
 d
 d Requires: Stata version 8.1 (updated with the fdasave command)
 d
+d Distribution-Date: 20120719
 d
 d Author: Dan Blanchette, The Carolina Population Center, UNC-CH
 d Support: email dan_blanchette@@unc.edu
-d
-d Distribution-Date: 20120719
 d
 f savasas.ado
 f savasas.hlp

@@ -1,1 +1,26 @@
-d 'SPELL': module for identification of spells or runs of similar valuesdd spell is a fairly general tool for dividing sequential  data intod spells, according to changes of a variable or  some conditiond defining the start of a spell or defining  whatever remains trued during a spell. This is version  1.7.1 of the software.   dd Author: Nicholas J. Cox, University of Durhamd Support: email N.J.Cox@@durham.ac.ukdd Author: Richard Goldsteind Support: email  richgold@@ix.netcom.comdd Distribution-Date: 20001122f spell.adof spell.hlp
+d 'SPELL': module for identification of spells or runs of similar values
+d
+d  spell is a fairly general tool for dividing sequential  data
+d into spells, according to changes of a variable or  some
+d condition defining the start of a spell or defining  whatever
+d remains true during a spell. This is version	1.7.1 of the
+d software.  
+d
+d KW: time series
+d KW: longitudinal data
+d KW: panel data
+d KW: spells
+d KW: runs
+d
+d Requires: Stata version 6
+d
+d Distribution-Date: 20001122
+d
+d Author: Nicholas J. Cox, University of Durham
+d Support: email N.J.Cox@@durham.ac.uk
+d
+d Author: Richard Goldstein
+d Support: email  richgold@@ix.netcom.com
+d
+f spell.ado
+f spell.hlp

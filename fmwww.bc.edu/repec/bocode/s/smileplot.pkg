@@ -1,6 +1,6 @@
 d 'SMILEPLOT': module to create plots for use with multiple significance tests
 d
-d This package contains the programs multproc, smileplot and
+d  This package contains the programs multproc, smileplot and
 d smileplot7.	    multproc inputs a data set with 1 observation
 d for each of a set of multiple       significance tests and data
 d on the P-values, and carries out a multiple test	 procedure
@@ -32,11 +32,10 @@ d KW: multiple significance tests
 d
 d Requires: Stata version 10.0 
 d
+d Distribution-Date: 20121011
 d
 d Author: Roger Newson, National Heart and Lung Institute, Imperial College London
 d Support: email r.newson@@imperial.ac.uk
-d
-d Distribution-Date: 20121011
 d
 f smileplot.ado
 f smileplot.sthlp

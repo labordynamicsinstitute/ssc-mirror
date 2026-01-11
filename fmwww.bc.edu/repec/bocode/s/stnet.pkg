@@ -30,6 +30,6 @@ d Support: email
 d
 f stnet.ado
 f stnet.sthlp
-f stnet_simulationresults.txt
+F stnet_simulationresults.txt
 f stnet_examples.do
 f ../i/it13_coviello.pdf

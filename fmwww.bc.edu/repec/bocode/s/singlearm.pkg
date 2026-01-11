@@ -38,8 +38,8 @@ f ../e/est_fixed.ado
 f ../e/est_fixed.sthlp
 f ../e/est_gs.ado
 f ../e/est_gs.sthlp
-f ../o/opchar_curtailed.ado
-f ../o/opchar_curtailed.sthlp
+f ../_/curtailed.ado
+f ../_/curtailed.sthlp
 f ../o/opchar_fixed.ado
 f ../o/opchar_fixed.sthlp
 f ../o/opchar_gs.ado

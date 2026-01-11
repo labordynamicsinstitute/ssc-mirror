@@ -1,4 +1,4 @@
-d 'SUPERCOMPRESS': module to to run compress on all datasets in a folder and its subfolders
+d 'SUPERCOMPRESS': module to run compress on all datasets in a folder and its subfolders
 d
 d  supercompress is a command designed for organizations that 1)
 d work with very large datasets and 2) experience data constraints.

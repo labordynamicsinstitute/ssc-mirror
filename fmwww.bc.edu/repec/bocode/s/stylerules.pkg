@@ -1,6 +1,6 @@
 d 'STYLERULES': module -- suggestions on programming style
 d
-d This is a stand-alone help file containing suggestions on Stata
+d  This is a stand-alone help file containing suggestions on Stata
 d programming style. It is designed to encourage reflection on and
 d discussion of what constitutes good style. There are no linked
 d programs. 
@@ -11,10 +11,9 @@ d KW: ado files
 d
 d Requires: Stata version 7.0
 d
+d Distribution-Date: 20050412
 d
 d Author: Nicholas J. Cox, Durham University
-d Support: email  N.J.Cox@@durham.ac.uk
+d Support: email N.J.Cox@@durham.ac.uk
 d
-d Distribution-Date: 20050412
-
 f stylerules.hlp

@@ -1,6 +1,6 @@
 d 'STEXPECT': module to compute expected survival
 d
-d stexpect implements computation of expected survival probability
+d  stexpect implements computation of expected survival probability
 d after merging the data with a suitable file of "standard" rates.
 d You must specify in ratevar(varname)	a reference rate variable
 d and in output(filename) a file where the estimates  will be
@@ -11,12 +11,11 @@ d KW: expected survival
 d
 d Requires: Stata version 8.0
 d
+d Distribution-Date: 20050410
 d
 d Author: Enzo Coviello, Dipartimento di Prevenzione Az. USL Ba/1
-d Support: email  enzo.coviello@@tin.it
+d Support: email enzo.coviello@@tin.it
 d
-d Distribution-Date: 20050410
-
 f stexpect.ado
 f stexpect.hlp
 f ../r/revlist.ado

@@ -78,7 +78,7 @@ d KW: Total Marginal Effects
 d KW: Panel Error Component Tests  
 d KW: Panel Unit Roots Tests Requires: Stata version 11.2
 d
-d Requires: Stata version 10
+d Requires: Stata version 11
 d
 d Distribution-Date: 20160719
 d

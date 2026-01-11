@@ -14,7 +14,7 @@ d variables. For each dummy/indicator variable	  smrfmn will
 d generate a table row of statistics filtered by that indicator.
 d smrfmn places the indicator variable label (or    variable name)
 d in column one, the number of observations where the indicator is
-d equal to 1 in column two, the mean meadian and    standard
+d equal to 1 in column two, the mean median and    standard
 d deviation in column three, the 25th and 75th percentile in column
 d four, the trimmed mean, median, and standard	  deviation in
 d column five, and the overall minumum and maximum in column six. 

@@ -1,6 +1,6 @@
 d 'STATSMAT': module to place descriptive statistics in matrix
 d
-d statsmat computes descriptive statistics for varlist and places
+d  statsmat computes descriptive statistics for varlist and places
 d them in any specified matrix matname. By default, the statistics
 d are minimum, quartiles, maximum, mean and standard deviation:
 d these and/or other statistics returned by summarize, or easily
@@ -17,14 +17,13 @@ d KW: matrices
 d
 d Requires: Stata version 7.0 
 d
+d Distribution-Date: 20051107
 d
 d Author: Nicholas J. Cox, Durham University
-d Support: email  N.J.Cox@@durham.ac.uk
+d Support: email N.J.Cox@@durham.ac.uk
 d
 d Author: Christopher F Baum, Boston College
-d Support: email  baum@@bc.edu
+d Support: email baum@@bc.edu
 d
-d Distribution-Date: 20051107
-
 f statsmat.ado
 f statsmat.hlp

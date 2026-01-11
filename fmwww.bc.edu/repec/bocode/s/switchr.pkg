@@ -1,16 +1,24 @@
 d 'SWITCHR': module to estimate switching regression models
 d
-d This revised version of switchr calculates switching regression 
+d  This revised version of switchr calculates switching regression 
 d estimates for a two-component model in which observations are
 d drawn from two different regression regimes (or components), but
 d separation into the separate regimes is unobserved. Such a
 d situation is also called a mixture model. 
 d
+d KW: treatment
+d KW: ordered probit
+d KW: endogenous treatment
+d KW: switching regression
+d KW: latent factor
+d
+d Requires: Stata version 5.0
+d
+d Distribution-Date: 20031221
+d
 d Author: Fred Zimmerman, Stanford University
 d Support: email zimmer@@leland.Stanford.EDU
 d
-d Distribution-Date: 20031221
-
 f switchr.ado
 f ../_/_sw_lik.ado
 f ../_/_sw_lik2.ado

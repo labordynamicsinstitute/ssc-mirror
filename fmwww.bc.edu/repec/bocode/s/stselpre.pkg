@@ -1,6 +1,6 @@
 d 'STSELPRE': module to fit proportional hazards model to case-cohort data
 d
-d stselpre returns estimates and standard errors from proportional
+d  stselpre returns estimates and standard errors from proportional
 d hazards fit to case-cohort data. Coefficients are estimated
 d according to two methods: Self-Prentice scheme. Risk sets uses
 d just the sub-cohort member at risk, or Prentice scheme. Risk sets
@@ -16,12 +16,11 @@ d KW: cohort analysis
 d
 d Requires: Stata version 6.0
 d
+d Distribution-Date: 20100216
 d
 d Author: Enzo Coviello, Dipartimento di Prevenzione Az. USL Ba/1
-d Support: email  coviello@@mythnet.it
+d Support: email coviello@@mythnet.it
 d
-d Distribution-Date: 20100216
-
 f stselpre.ado
 f stselpre.hlp
 f stcascoh.ado

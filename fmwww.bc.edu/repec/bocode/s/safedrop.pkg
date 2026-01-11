@@ -1,12 +1,16 @@
 d 'SAFEDROP': module to drop variables if and only if varnames specified in full
 d
-d safedrop drops the variable(s) named if and only if every
+d  safedrop drops the variable(s) named if and only if every
 d variable name is fully spelled out; that is, even unambiguous
 d abbreviations are not indulged. 
 d
+d KW: drop
+d
+d Requires: Stata version 8.0
+d
 d Distribution-Date: 20031022
 d
-d Author: Nicholas J. Cox, University of Durham
+d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk
 d
 f safedrop.ado

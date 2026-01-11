@@ -1,9 +1,14 @@
 d 'SORTLISTBY': module to sort by random or by ancillary numlist
 d
-d   sortlistby will sort the items in list at random or by the
+d    sortlistby will sort the items in list at random or by the
 d values of an ancillary numlist. sortlistby2 does the same;
 d however, it is a little bit faster if the number of items in list
 d is small (and much slower if the number is large). 
+d
+d KW: regression
+d KW: ordinal measures
+d
+d Requires: Stata version 8.2
 d
 d Distribution-Date: 20040714
 d

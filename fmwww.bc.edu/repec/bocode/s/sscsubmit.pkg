@@ -9,6 +9,8 @@ d KW: ado files
 d KW: SSC
 d KW: Boston College archive
 d
+d Requires: Stata version 10 
+d
 d Distribution-Date: 20220502
 d
 d Author: Christopher F Baum, Boston College

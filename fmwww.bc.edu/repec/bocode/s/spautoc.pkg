@@ -1,6 +1,6 @@
 d 'SPAUTOC': modules to calculate spatial autocorrelation (Moran and Geary measures)
 d
-d The program spautoc calculates Moran and Geary measures of
+d  The program spautoc calculates Moran and Geary measures of
 d spatial autocorrelation given a spatial variable and
 d neighbourhood  information. Optionally numeric weights may be
 d specified reflecting e.g. distance between locations. The package
@@ -17,12 +17,11 @@ d KW: Geary c
 d
 d Requires: Stata version 8 (or Stata version 5 for commands with suffix 5)
 d
+d Distribution-Date: 20060316
 d
 d Author: Nicholas J. Cox, Durham University
-d Support: email  N.J.Cox@@durham.ac.uk
+d Support: email N.J.Cox@@durham.ac.uk
 d
-d Distribution-Date: 20060316
-
 f ../n/numids5.hlp
 f ../n/neigh5.hlp
 f ../d/dupneigh5.hlp

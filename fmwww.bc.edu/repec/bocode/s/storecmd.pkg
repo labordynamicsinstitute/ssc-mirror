@@ -1,6 +1,6 @@
 d 'STORECMD': modules to store and repeat commands using characteristics
 d
-d storecmd executes a command line. If successful, meaning that
+d  storecmd executes a command line. If successful, meaning that
 d there were no  errors, that command line is stored as a named
 d characteristic.  stowcmd stows  away a command line in a
 d characteristic  for future use. repcmd executes  the command
@@ -13,12 +13,11 @@ d KW: characteristics
 d
 d Requires: Stata version 7.0 (6.0 for repcmd6, storecmd6, stowcmd6)
 d
+d Distribution-Date: 20051207
 d
 d Author: Nicholas J. Cox, University of Durham
-d Support: email  N.J.Cox@@durham.ac.uk
+d Support: email N.J.Cox@@durham.ac.uk
 d
-d Distribution-Date: 20051207
-
 f storecmd.ado
 f storecmd.hlp
 f storecmd6.ado

@@ -13,6 +13,10 @@ d and delayed entry/left truncation is supported. Keywords:
 d survival analysis, mixed models, multilevel models, parametric
 d survival 
 d
+d KW: survival analysis
+d KW: mixture models
+d KW: Weibull distribution
+d KW: exponential distribution
 d
 d Requires: Stata version 14.2 and merlin from SSC (q.v.)
 d

@@ -29,11 +29,11 @@ d
 d Author:  Qinghua Zhao, World Bank
 d Support: email qzhao@@worldbank.org
 d
-f ../l/lsae_povmap.mata
-f ../l/lsae_povmap.mlib
-f ../p/povmap.ado
-f ../p/PovcPlugin32.dll
-f ../p/PovcPlugin64.dll
+ ../l/lsae_povmap.mata
+ ../l/lsae_povmap.mlib
+ ../p/povmap.ado
+ ../p/PovcPlugin32.dll
+ ../p/PovcPlugin64.dll
 f sae.ado
 f sae_closefiles.ado
 f sae_data_export.ado

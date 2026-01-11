@@ -1,7 +1,7 @@
 d 'STCASCOH': module to create dataset suitable for case-cohort analysis 
 d
-d stcascoh is used to create an appropriate dataset for analysis as
-d case-cohort study, sampling the cohort  at time of entry and
+d  stcascoh is used to create an appropriate dataset for analysis
+d as case-cohort study, sampling the cohort  at time of entry and
 d including all failures whether they occur in the random sample or
 d not. To this aim stcascoh expands observations who fail in two
 d parts: (1) time interval (t0,t-eps]  and  (2) time interval
@@ -13,11 +13,10 @@ d KW: cohort analysis
 d
 d Requires: Stata version 6.0
 d
+d Distribution-Date: 20081123
 d
 d Author: Enzo Coviello, Dipartimento di Prevenzione Az. USL Ba/1
-d Support: email  coviello@@mythnet.it
+d Support: email coviello@@mythnet.it
 d
-d Distribution-Date: 20081123
-
 f stcascoh.ado
 f stcascoh.hlp

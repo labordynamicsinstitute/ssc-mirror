@@ -1,7 +1,7 @@
 d 'SKEWPLOT': module to draw skewness plots
 d
-d  skewplot produces by default a plot of the midsummary versus the
-d spread  for the variables in varlist, also known as the mid
+d   skewplot produces by default a plot of the midsummary versus
+d the spread  for the variables in varlist, also known as the mid
 d versus spread plot.  With the skew option, it produces a plot of
 d the skewness function versus the spread function. This is version
 d 3.0.0 of the software, updated for Stata 8. (Version	2.0.0,
@@ -14,12 +14,11 @@ d KW: skewness
 d
 d Requires: Stata version 8.0 (or 6.0 for skewplot6)
 d
+d Distribution-Date: 20041116
 d
 d Author: Nicholas J. Cox, University of Durham
-d Support: email  N.J.Cox@@durham.ac.uk
+d Support: email N.J.Cox@@durham.ac.uk
 d
-d Distribution-Date: 20041116
-
 f skewplot.ado
 f skewplot.hlp
 f skewplot6.ado
