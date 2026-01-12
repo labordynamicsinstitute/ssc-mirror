@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 2025-12-31}{...}
+{* *! version 1.1 2025-12-31}{...}
 {vieweralsosee "" "--"}{...}
 {viewerjumpto "Syntax" "mrgtbl2##syntax"}{...}
 {viewerjumpto "Description" "mrgtbl2##description"}{...}
@@ -122,7 +122,7 @@ age using bootstrap with 100 replications in the long report format{p_end}
 with low birthweight based on a probit regression adjusted for the mother's 
 age, stratified by race, and using robust variance estimation{p_end}
 {phang}{stata `". mrgtbl2 probit, o(low) e(smoke) by(race) a(age) vce(robust)"'}{p_end}
-{phang}The same as above, using binreg andstratifying further for the prevalence 
+{phang}The same as above, using binreg and stratifying further for the prevalence 
 of hypertension{p_end}
 {phang}{stata `". mrgtbl2 binreg, o(low) e(smoke) by(race) by2(ht) a(age) vce(robust)"'}{p_end}
 

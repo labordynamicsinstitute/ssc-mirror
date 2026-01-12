@@ -1,3 +1,4 @@
+*! 3.6.2 Ariel Linden 06Jan2026						// fixed bug in multigroup graph with xvars without CI.
 *! 3.6.1 Ariel Linden 16Dec2025						// fixed CI lines on graphs to consistently display as solid lines
 *! 3.6.0 Ariel Linden 24Oct2025						// wrote new programs to create graph legend for multiple group with and without covariates
 *! 3.5.2 Ariel Linden 24Sep2025						// fixed code for treated unit that prevented the CI from appearing on the graph in the second treatment period 
@@ -1362,8 +1363,8 @@ version 11.0
 					gen `ucl_c' = `ucl' if `iscontrol'					
 				}
 				
-				/* TREATMENT GROUP */
 				/* PREDICT no xvars */
+				/* TREATMENT GROUP */				
 				if "`xvar'" == "" {   
 					local tct: word count `trperiod'
 					local tmax: word `tct' of `trperiod'
@@ -1442,7 +1443,7 @@ version 11.0
 
 					local tmspart  ms(O none `mspart')
 					local plotvars_t `plotvars_t' `pltx_t'		
-********************************************************************************************				
+			
 					if "`ci'" != "" {
 						forvalues k = 1/`tct' {
 							local plotvars_t_L `plotvars_t_L' `llt_t`k''
@@ -1545,10 +1546,16 @@ version 11.0
 						local lp3 lp(solid `lp3' solid)		
 						local plotvars_c_L `plotvars_c_L' `llcon'
 						local plotvars_c_U `plotvars_c_U' `ulcon'
+					
+						local lclt (line `plotvars_t_L' `tvar', `lc2' `lp') 
+						local uclt (line `plotvars_t_U' `tvar', `lc2' `lp')
+						local lclc (line `plotvars_c_L' `tvar', `lc3' `lp3') 
+						local uclc (line `plotvars_c_U' `tvar', `lc3' `lp3')
+					
 					}
 				
 				} /* end no xvars  */				
-			
+		
 				/* if xvars */
 				if "`xvar'" != "" {   
 					local plotvars_t `ypred_t'
@@ -1557,10 +1564,6 @@ version 11.0
 					local plotvars_c_U `ucl_c'
 					local plotvars_t_L `lcl_t' 
 					local plotvars_t_U `ucl_t'
-					local l_clt (line `plotvars_t_L' `tvar', lcolor(blue) lpattern(solid)) 
-					local u_clt (line `plotvars_t_U' `tvar', lcolor(blue) lpattern(solid))
-					local l_clc (line `plotvars_c_L' `tvar', lcolor(green) lpattern(solid)) 
-					local u_clc (line `plotvars_c_U' `tvar', lcolor(green) lpattern(solid))
 				}
 				tempvar dvar_t dvar_c
 				gen `dvar_t' = `dvar' if `istreat'
@@ -1650,11 +1653,17 @@ version 11.0
 				;
 				#delim cr
 		
-				if "`ci'" != "" {
+				if "`xvar'" != "" &  "`ci'" != "" {
+					local lclt (line `plotvars_t_L' `tvar', lcolor(blue) lpattern(solid)) 
+					local uclt (line `plotvars_t_U' `tvar', lcolor(blue) lpattern(solid))
+					local lclc (line `plotvars_c_L' `tvar', lcolor(green) lpattern(solid)) 
+					local uclc (line `plotvars_c_U' `tvar', lcolor(green) lpattern(solid))
+				}
+				else if "`xvar'" == "" &  "`ci'" != "" {
 					local lclt (line `plotvars_t_L' `tvar', `lc2' `lp') 
 					local uclt (line `plotvars_t_U' `tvar', `lc2' `lp')
 					local lclc (line `plotvars_c_L' `tvar', `lc3' `lp3') 
-					local uclc (line `plotvars_c_U' `tvar', `lc3' `lp3')				
+					local uclc (line `plotvars_c_U' `tvar', `lc3' `lp3')	
 				}
 				if "`lowess'" != "" {
 					if "`bwidth'" != "" {
@@ -1674,7 +1683,6 @@ version 11.0
 				/* get legend specs */
 				get_leg_multi , treatdesc(`treatdesc')  tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade')
 				local mleg = r(mleg)
-
 				// * graph it - no xvars * //
 				twoway ///
 					`shhh' ///				
@@ -1705,10 +1713,10 @@ version 11.0
 						lcolor(black black black black) lpattern(blank solid blank dash) xline(`trperiod', lpattern(shortdash) lcolor(black))) ///
 					`lowt' ///
 					`lowc' ///
-					`l_clt' ///
-					`u_clt' ///	
-					`l_clc' ///
-					`u_clc' ///	
+					`lclt' ///
+					`uclt' ///	
+					`lclc' ///
+					`uclc' ///						
 					, `mleg2' ///
 					`ylab' ///					
 					`titlesec' note(`"`note'"') `figure2'	

@@ -569,7 +569,7 @@ Using permutation tests to enhance causal inference in interrupted time series a
 
 {phang}
 ------. 2025. 
-{browse "https://journals.sagepub.com/doi/10.1177/01632787251361514": A Comprehensive Simulation Study to Evaluate the Effect Size and Study Length Relationship in Single-Group Interrupted Time Series Analysis}. 
+{browse "https://journals.sagepub.com/doi/10.1177/01632787251361514": A comprehensive simulation study to evaluate the effect size and study length relationship in single-group interrupted time series analysis}. 
 {it:Evaluation & the Health Professions} 
 
 {phang} 

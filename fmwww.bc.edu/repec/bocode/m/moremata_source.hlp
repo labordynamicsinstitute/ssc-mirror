@@ -370,27 +370,29 @@ end
 
 *! {smcl}
 *! {marker mm_quantile}{bf:mm_quantile.mata}{asis}
-*! version 2.0.6  14jan2022  Ben Jann
+*! version 2.0.7  21dec2025  Ben Jann
 version 9.2
 mata:
 
-real matrix mm_quantile(real matrix X, | real colvector w,
-    real matrix P, real scalar d, real scalar fw, real scalar wd)
+real matrix mm_quantile(real matrix X, | real colvector w, real matrix P,
+    transmorphic scalar method, real scalar fw, real scalar wd)
 {
+    real scalar    d
     real colvector o
     pointer (real matrix) scalar XX, ww
     
     if (args()<2) w = 1
     if (args()<3) P = (0, .25, .50, .75, 1)'
-    if (args()<4) d = 2
+    if (args()<4) method = 2
     if (args()<5) fw = 0
-    if (!anyof(0::11, d)) {
-        display("{err}{it:def} must be an integer in [0,11]")
+    if (isstring(method))  d = _mm_quantile_method(method)
+    else if (!anyof(0::16, d = method)) {
+        errprintf("{bf:%g} is not a valid {it:method}\n", d)
         _error(3300)
     }
     if (missing(X) | missing(w)) _error(3351)
     if (any(w:<0)) {
-        display("{err}{it:w} must not be negative")
+        errprintf("{it:w} must not be negative\n")
         _error(3300)
     }
     // handle weights
@@ -420,6 +422,29 @@ real matrix mm_quantile(real matrix X, | real colvector w,
         return(_mm_quantile_sort(*XX, *ww, P', d, fw, wd)')
     if (cols(X)!=1 & cols(P)!=1 & cols(X)!=cols(P)) _error(3200)
     return(_mm_quantile_sort(*XX, *ww, P, d, fw, wd))
+}
+
+real scalar _mm_quantile_method(string scalar s)
+{
+    if      (s=="high")         return(0)
+    else if (s=="inv_cdf")      return(1)
+    else if (s=="avg_inv_cdf")  return(2)
+    else if (s=="closest")      return(3)
+    else if (s=="parzen")       return(4)
+    else if (s=="hazen")        return(5)
+    else if (s=="weibull")      return(6)
+    else if (s=="gumbel")       return(7)
+    else if (s=="tukey")        return(8)
+    else if (s=="blom")         return(9)
+    else if (s=="hd")           return(10)
+    else if (s=="mid")          return(11)
+    else if (s=="california")   return(12)
+    else if (s=="beard")        return(13)
+    else if (s=="benard")       return(14)
+    else if (s=="cooper")       return(15)
+    else if (s=="gringorten")   return(16)
+    errprintf("{bf:%s} is not a valid {it:method}\n", s)
+    _error(3300)
 }
 
 real matrix _mm_quantile_sort(real matrix X, real colvector w,
@@ -502,18 +527,23 @@ real matrix _mm_quantile_sort(real matrix X, real colvector w,
 }
 
 real matrix _mm_quantile(real colvector X, | real colvector w, 
-    real matrix P, real scalar d, real scalar fw, real scalar wd)
+    real matrix P, transmorphic scalar method, real scalar fw, real scalar wd)
 {   // X assumed sorted and non-missing
     // w assumed non-negative and non-missing
-    real scalar    i
+    real scalar    i, d
     real colvector o
     real matrix    Q
     pointer (real matrix) scalar XX, ww
     
     if (args()<2) w = 1
     if (args()<3) P = (0, .25, .50, .75, 1)'
-    if (args()<4) d = 2
+    if (args()<4) method = 2
     if (args()<5) fw = 0
+    if (isstring(method))  d = _mm_quantile_method(method)
+    else if (!anyof(0::16, d = method)) {
+        errprintf("{bf:%g} is not a valid {it:method}\n", d)
+        _error(3300)
+    }
     // handle weights
     XX = &X; ww = &w
     if (rows(w)!=1) {
@@ -572,21 +602,22 @@ real colvector _mm_quantile_d(real colvector X, real colvector p,
     if (n==1)           return(J(rows(p), 1, X))   // only one obs
     if (d==10) return(_mm_quantile_d_hd(X, p, wd)) // Harrell-Davis
     if (d==11) return(_mm_quantile_11(X, 1, p))    // mid-quantile by Ma et al.
-    if      (d==0) pn = p * n
-    else if (d==1) pn = p * n
-    else if (d==2) pn = p * n
-    else if (d==3) pn = p * n :- .5
-                                               // pn = a + p*(n + 1 - a - b)
-    else if (d==4) pn = p * n                  //      a = 0, b = 1
-    else if (d==5) pn = p * n :+ .5            //      a = b = 0
-    else if (d==6) pn = p * (n + 1)            //      a = b = 0 
-    else if (d==7) pn = 1   :+ p * (n - 1)     //      a = b = 1
-    else if (d==8) pn = 1/3 :+ p * (n + 1/3)   //      a = b = 1/3
-    else if (d==9) pn = 3/8 :+ p * (n + 1/4)   //      a = b = 3/8
-    else {
-        display("{err}{it:def} must be an integer in [0,11]")
-        _error(3300)
-    }
+    if      (d==0)  pn = p * n
+    else if (d==1)  pn = p * n
+    else if (d==2)  pn = p * n
+    else if (d==3)  pn = p * n :- .5
+    else if (d==4)  pn = p * n // pn = a + p*(n + 1 - a - b), a = 0, b = 1
+    else if (d==5)  pn = .5    :+ p * n                    // a = b = .5
+    else if (d==6)  pn =          p * (n + 1)              // a = b = 0 
+    else if (d==7)  pn = 1     :+ p * (n - 1)              // a = b = 1
+    else if (d==8)  pn = 1/3   :+ p * (n + 1/3)            // a = b = 1/3
+    else if (d==9)  pn = 3/8   :+ p * (n + 1/4)            // a = b = 3/8
+    else if (d==12) pn = 1     :+ p * n                    // a = 1, b = 0
+    else if (d==13) pn = .31   :+ p * (n + .38)            // a = b = .31
+    else if (d==14) pn = .3    :+ p * (n + .4)             // a = b = .3
+    else if (d==15) pn = .4075 :+ p * (n + .185)           // a = b = .4075
+    else if (d==16) pn = .44   :+ p * (n + .12)            // a = b = .44
+    else _error(3300)
     if (d==0) return(X[mm_clip(floor(pn):+1, 1, n)])
     if (d==1) return(X[mm_clip(ceil(pn), 1, n)])
     if (d<=3) {
@@ -638,15 +669,8 @@ real colvector _mm_quantile_w(real colvector X, real colvector w, real colvector
     if (d==1)  return(_mm_quantile_w_1(W[,1], W[,2], p))
     if (d==2)  return(_mm_quantile_w_2(W[,1], W[,2], p))
     if (d==3)  return(_mm_quantile_w_3(W[,1], W[,2], p))
-    if (d==4)  return(_mm_quantile_w_d(W[,1], W[,2], p, d))
-    if (d==5)  return(_mm_quantile_w_d(W[,1], W[,2], p, d))
-    if (d==6)  return(_mm_quantile_w_d(W[,1], W[,2], p, d))
-    if (d==7)  return(_mm_quantile_w_d(W[,1], W[,2], p, d))
-    if (d==8)  return(_mm_quantile_w_d(W[,1], W[,2], p, d))
-    if (d==9)  return(_mm_quantile_w_d(W[,1], W[,2], p, d))
     if (d==10) return(_mm_quantile_w_hd(W[,1], W[,2], p, wd))
-    display("{err}{it:def} must be an integer in [0,11]")
-    _error(3300)
+    return(_mm_quantile_w_d(W[,1], W[,2], p, d))
 }
 
 real colvector _mm_quantile_w_0(real colvector x, real colvector W, real colvector p)
@@ -805,12 +829,18 @@ real colvector _mm_quantile_w_d(real colvector x, real colvector W,
     
     N = rows(x)
     n = W[N]
-    if      (d==4) h = p * n
-    else if (d==5) h = p * n :+ .5
-    else if (d==6) h = p * (n + 1)
-    else if (d==7) h = 1   :+ p * (n - 1)
-    else if (d==8) h = 1/3 :+ p * (n + 1/3)
-    else if (d==9) h = 3/8 :+ p * (n + 1/4)
+    if      (d==4)  h =          p * n
+    else if (d==5)  h = .5    :+ p * n
+    else if (d==6)  h =          p * (n + 1)
+    else if (d==7)  h = 1     :+ p * (n - 1)
+    else if (d==8)  h = 1/3   :+ p * (n + 1/3)
+    else if (d==9)  h = 3/8   :+ p * (n + 1/4)
+    else if (d==12) h = 1     :+ p * n 
+    else if (d==13) h = .31   :+ p * (n + .38)
+    else if (d==14) h = .3    :+ p * (n + .4)
+    else if (d==15) h = .4075 :+ p * (n + .185)
+    else if (d==16) h = .44   :+ p * (n + .12)
+    else _error(3300)
     r = rows(h)
     if (r) {
         if ((h[1]-1)<=W[1]) {
@@ -901,7 +931,7 @@ real scalar __mm_quantile_hd(real colvector X, real colvector W, real scalar p,
     if      (a<1e-10) return(X[1])
     else if (b<1e-10) return(X[rows(X)])
     if (a>1e+17 | b>1e+17) {
-        display("{err}sample size too large; cannot evaluate {bf:ibeta()}")
+        errprintf("sample size too large; cannot evaluate {bf:ibeta()}\n")
         _error(3498)
     }
     // trimmed estimator (Akinshin 2021)
@@ -1003,27 +1033,27 @@ end
 
 *! {smcl}
 *! {marker mm_median}{bf:mm_median.mata}{asis}
-*! version 1.1.3  Ben Jann  14jan2022
+*! version 1.1.4  Ben Jann  21dec2025
 version 9.2
 mata:
 
-real rowvector mm_median(real matrix X, | real colvector w, real scalar def, 
-    real scalar fw, real scalar wd)
+real rowvector mm_median(real matrix X, | real colvector w,
+    transmorphic scalar method, real scalar fw, real scalar wd)
 {
     if (args()<2) w = 1
-    if (args()<3) def = 2
+    if (args()<3) method = 2
     if (args()<4) fw = 0
-    return(mm_quantile(X, w, .5, def, fw, wd))
+    return(mm_quantile(X, w, .5, method, fw, wd))
 }
 
-real scalar _mm_median(real colvector X, | real colvector w, real scalar def, 
-    real scalar fw, real scalar wd)
+real scalar _mm_median(real colvector X, | real colvector w,
+    transmorphic scalar method, real scalar fw, real scalar wd)
 {   // X assumed sorted and non-missing
     // w assumed non-missing and non-negative
     if (args()<2) w = 1
-    if (args()<3) def = 2
+    if (args()<3) method = 2
     if (args()<4) fw = 0
-    return(_mm_quantile(X, w, .5, def, fw, wd))
+    return(_mm_quantile(X, w, .5, method, fw, wd))
 }
 
 end
@@ -1031,32 +1061,32 @@ end
 
 *! {smcl}
 *! {marker mm_iqrange}{bf:mm_iqrange.mata}{asis}
-*! version 1.1.1  Ben Jann  14jan2022
+*! version 1.1.2  Ben Jann  21dec2025
 version 9.2
 mata:
 
-real matrix mm_iqrange(real matrix X, | real colvector w, real scalar def, 
-    real scalar fw, real scalar wd)
+real matrix mm_iqrange(real matrix X, | real colvector w,
+    transmorphic scalar method, real scalar fw, real scalar wd)
 {
     real matrix q
 
     if (args()<2) w = 1
-    if (args()<3) def = 2
+    if (args()<3) method = 2
     if (args()<4) fw = 0
-    q = mm_quantile(X, w, (.25 \ .75), def, fw, wd)
+    q = mm_quantile(X, w, (.25 \ .75), method, fw, wd)
     return(q[2,] - q[1,])
 }
 
-real scalar _mm_iqrange(real colvector X, | real colvector w, real scalar def, 
-    real scalar fw, real scalar wd)
+real scalar _mm_iqrange(real colvector X, | real colvector w,
+    transmorphic scalar method, real scalar fw, real scalar wd)
 {   // X assumed sorted and non-missing
     // w assumed non-missing and non-negative
     real matrix q
 
     if (args()<2) w = 1
-    if (args()<3) def = 2
+    if (args()<3) method = 2
     if (args()<4) fw = 0
-    q = _mm_quantile(X, w, (.25 \ .75), def, fw, wd)
+    q = _mm_quantile(X, w, (.25 \ .75), method, fw, wd)
     return(q[2] - q[1])
 }
 
@@ -8777,11 +8807,11 @@ end
 
 *! {smcl}
 *! {marker mm_version}{bf:mm_version.mata}{asis}
-*! version 2.0.5  16jun2025  Ben Jann
+*! version 2.0.6  11jan2026  Ben Jann
 
 version 9.1
 mata:
 
-real scalar mm_version() return(205)
+real scalar mm_version() return(206)
 
 end

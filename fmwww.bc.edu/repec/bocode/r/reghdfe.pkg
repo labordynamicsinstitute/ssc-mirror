@@ -10,15 +10,19 @@ d KW: instrumental variables
 d KW: fixed effects
 d KW: high dimension fixed effects
 d
-d Requires: Stata version 11.2
+d Requires: Stata version 11.2 and ftools from SSC (q.v.)
 d
-d Distribution-Date: 20231227
+d Distribution-Date: 20260111
 d
 d Author: Sergio Correia, Board of Governors of the Federal Reserve System
 d Support: email sergio.correia@@gmail.com
+d
 d Author: Noah Constantine, Board of Governors of the Federal Reserve System
+d Support: email 
+d
 f reghdfe.ado
 f reghdfe.mata
+f reghdfe5.mata
 f reghdfe3.ado
 f reghdfe_p.ado
 f reghdfe3_p.ado
@@ -27,7 +31,6 @@ f reghdfe5_p.ado
 f reghdfe_estat.ado
 f reghdfe3_estat.ado
 f reghdfe5_estat.ado
-f reghdfe_parse.ado
 f reghdfe5_parse.ado
 f reghdfe_footnote.ado
 f reghdfe3_footnote.ado

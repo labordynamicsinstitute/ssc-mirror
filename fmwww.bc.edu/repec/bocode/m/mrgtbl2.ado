@@ -1,7 +1,8 @@
-*! Package mrgtbl2 v. 1.0
+*! Package mrgtbl2 v. 1.1
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*! 2025-12-31 1.0 Revised and send
-*! 2025-12-17 1.0 Created
+*! 2026-01-11 1.1 naming bugs fixed
+* 2025-12-31 1.0 Revised and send
+* 2025-12-17 1.0 Created
 
 program define mrgtbl2, rclass
 
@@ -235,9 +236,9 @@ program define _mrgtbl2, rclass
 			matrix _brow = r(btbl)
 			_dtbl `varlist', btext(`btext') by(#`lvl1'.`by1') `label' `wide' `eform'
 			matrix _drow = r(dtbl)
-			mata: st_replacematrix("drow", st_matrix("drow") ///
-				:/ (rowmissing(st_matrix("brow")) :== 0))
-			if `=brow[1,2]== .' mata: st_replacematrix("drow", st_matrix("drow") :/ 0)
+			mata: st_replacematrix("_drow", st_matrix("_drow") ///
+				:/ (rowmissing(st_matrix("_brow")) :== 0))
+			if `=_brow[1,2]== .' mata: st_replacematrix("_drow", st_matrix("_drow") :/ 0)
 			matrix _row = _brow, _drow
 			local lbl1 `:label (`by1') `lvl1''
 			if "`lbl1'" == "`lvl1'" & "`label'" == "" local lbl1 `by1'(`lvl1')
@@ -257,14 +258,14 @@ program define _mrgtbl2, rclass
 			foreach lvl1 in `r(levels)' {
 				_btbl `varlist', btext(`btext') by(#`lvl1'.`by1'#`lvl2'.`by2') ///
 					`label' `wide' `eform'
-				matrix brow = r(btbl)
+				matrix _brow = r(btbl)
 				_dtbl `varlist', btext(`btext') by(#`lvl1'.`by1'#`lvl2'.`by2') ///
 					`label' `wide' `eform'
-				matrix drow = r(dtbl)
-				mata: st_replacematrix("drow", st_matrix("drow") ///
-					:/ (rowmissing(st_matrix("brow")) :== 0))
-				if `=brow[1,2]== .' mata: st_replacematrix("drow", st_matrix("drow") :/ 0)
-				matrix _row = brow, drow
+				matrix _drow = r(dtbl)
+				mata: st_replacematrix("_drow", st_matrix("_drow") ///
+					:/ (rowmissing(st_matrix("_brow")) :== 0))
+				if `=_brow[1,2]== .' mata: st_replacematrix("_drow", st_matrix("_drow") :/ 0)
+				matrix _row = _brow, _drow
 				local lbl1 `:label (`by1') `lvl1''
 				if "`lbl1'" == "`lvl1'" & "`label'" == "" local lbl1 `by1'(`lvl1')
 				if "`wide'" == "" matrix roweq _row = "`lbl2'&`lbl1'"

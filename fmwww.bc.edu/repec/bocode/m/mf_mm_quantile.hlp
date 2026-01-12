@@ -1,222 +1,245 @@
 {smcl}
-{* 14jan2022}{...}
+{* 21dec2025}{...}
 {cmd:help mata mm_quantile()}
 {hline}
 
 {title:Title}
 
 {p 4 4 2}
-{bf:mm_quantile() -- Empirical quantile function}
+    {bf:mm_quantile() -- Empirical quantile function}
 
 
 {title:Syntax}
 
 {p 8 23 2}
-{it:real matrix}{bind:    }
-{cmd:mm_quantile(}{it:X} [{cmd:,} {it:w}{cmd:,} {it:P}{cmd:,} {it:def}{cmd:,} {it:fw}{cmd:,} {it:wd}]{cmd:)}
+    {it:real matrix}{bind:    }
+    {cmd:mm_quantile(}{it:X} [{cmd:,} {it:w}{cmd:,} {it:P}{cmd:,}
+    {help mf_mm_quantile##method:{it:method}}{cmd:,} {it:fw}{cmd:,} {it:wd}]{cmd:)}
 
 {p 8 23 2}
-{it:real rowvector}{bind: }
-{cmd:mm_median(}{it:X} [{cmd:,} {it:w}{cmd:,} {it:def}{cmd:,} {it:fw}{cmd:,} {it:wd}]{cmd:)}
+    {it:real rowvector}{bind: }
+    {cmd:mm_median(}{it:X} [{cmd:,} {it:w}{cmd:,}
+    {help mf_mm_quantile##method:{it:method}}{cmd:,} {it:fw}{cmd:,} {it:wd}]{cmd:)}
 
 {p 8 23 2}
-{it:real rowvector}{bind: }
-{cmd:mm_iqrange(}{it:X} [{cmd:,} {it:w}{cmd:,} {it:def}{cmd:,} {it:fw}{cmd:,} {it:wd}]{cmd:)}
+    {it:real rowvector}{bind: }
+    {cmd:mm_iqrange(}{it:X} [{cmd:,} {it:w}{cmd:,}
+    {help mf_mm_quantile##method:{it:method}}{cmd:,} {it:fw}{cmd:,} {it:wd}]{cmd:)}
 
 {p 8 23 2}
-{it:real colvector}{bind: }
-{cmd:_mm_quantile(}{it:x} [{cmd:,} {it:w}{cmd:,} {it:P}{cmd:,} {it:def}{cmd:,} {it:fw}{cmd:,} {it:wd}]{cmd:)}
+    {it:real colvector}{bind: }
+    {cmd:_mm_quantile(}{it:x} [{cmd:,} {it:w}{cmd:,} {it:P}{cmd:,}
+    {help mf_mm_quantile##method:{it:method}}{cmd:,} {it:fw}{cmd:,} {it:wd}]{cmd:)}
 
 {p 8 23 2}
-{it:real scalar}{bind:    }
-{cmd:_mm_median(}{it:x} [{cmd:,} {it:w}{cmd:,} {it:def}{cmd:,} {it:fw}{cmd:,} {it:wd}]{cmd:)}
+    {it:real scalar}{bind:    }
+    {cmd:_mm_median(}{it:x} [{cmd:,} {it:w}{cmd:,}
+    {help mf_mm_quantile##method:{it:method}}{cmd:,} {it:fw}{cmd:,} {it:wd}]{cmd:)}
 
 {p 8 23 2}
-{it:real scalar}{bind:    }
-{cmd:_mm_iqrange(}{it:x} [{cmd:,} {it:w}{cmd:,} {it:def}{cmd:,} {it:fw}{cmd:,} {it:wd}]{cmd:)}
+    {it:real scalar}{bind:    }
+    {cmd:_mm_iqrange(}{it:x} [{cmd:,} {it:w}{cmd:,}
+    {help mf_mm_quantile##method:{it:method}}{cmd:,} {it:fw}{cmd:,} {it:wd}]{cmd:)}
 
 {p 4 8 2}
 where
 
-{p 14 18 2}{it:X}:  {it:real matrix} containing data (rows are observations, columns variables)
+{p 14 18 2}{it:X}:  {it:real matrix} containing data (rows are observations,
+    columns variables)
 
 {p 14 18 2}{it:x}:  {it:real colvector} containing data (single variable)
 
 {p 14 18 2}{it:w}:  {it:real colvector} containing weights
 
-{p 14 18 2}{it:P}:  {it:real matrix} containing evaluation probabilities; default is {it:P} = (0, .25, .5, .75, 1)'
+{p 14 18 2}{it:P}:  {it:real matrix} containing evaluation probabilities; default
+    is {it:P} = {cmd:(0, .25, .5, .75, 1)'}
 
-{p 12 18 2}{it:def}:  {it:real scalar} selecting quantile definition; {it:def} in {c -(}0,...,11{c )-}; default is {it:def} = 2
+{p 9 18 2}{it:method}: {it:transmorphic scalar} selecting the type of quantile
+    estimator, either specified as an integer in [0,16] or as one of the
+    {help mf_mm_quantile##method:keywords listed below}; default is
+    {it:method} = {cmd:2}
 
-{p 13 18 2}{it:fw}:  {it:real scalar} causing weights to be interpreted as frequency weights
+{p 13 18 2}{it:fw}:  {it:real scalar} causing weights to be interpreted as
+    frequency weights
 
-{p 13 18 2}{it:wd}:  {it:real scalar} setting width of evaluation interval for trimmed Harrell-Davis
-estimator; argument {it:wd} is only relevant with {it:def}=10; 
-{it:wd}<=0 sets the width to 1/sqrt(n), where n is the effective sample size; 
-0<{it:wd}<1 sets the width to {it:wd}; {it:wd}>=1 uses the untrimmed estimator;
-the untrimmed estimator is also used if {it:wd} is omitted or set to missing
+{p 13 18 2}{it:wd}:  {it:real scalar} setting the width of the evaluation
+    interval for the trimmed Harrell-Davis estimator; argument {it:wd} is only
+    relevant if {it:method} = {cmd:10}; {it:wd}<=0 sets the width to 1/sqrt(n),
+    where n is the effective sample size; 0<{it:wd}<1 sets the width to
+    {it:wd}; {it:wd}>=1 uses the untrimmed estimator; the untrimmed estimator
+    is also used if {it:wd} is omitted or set to missing
 
 
 {title:Description}
 
 {pstd}
-{cmd:mm_quantile()} applies to {it:P} the inverse
-empirical cumulative distribution function of {it:X} (the
-so called quantile function). That is, {cmd:mm_quantile()}
-returns the quantiles of {it:X} corresponding to the
-probabilities provided by {it:P}. For example,
+    {cmd:mm_quantile()} applies to {it:P} the inverse empirical cumulative
+    distribution function of {it:X} (the so called quantile function). That is,
+    {cmd:mm_quantile()} returns the quantiles of {it:X} corresponding to the
+    probabilities provided by {it:P}. For example,
 
 {p 8 8 2}
-{cmd:mm_quantile(x, 1, 0.25)}
+    {cmd:mm_quantile(x, 1, 0.25)}
 
 {pstd}
-returns the first quartile (i.e. the 0.25-quantile) of {cmd:x}. Missing values
-in {it:X} are not allowed.
+    returns the first quartile (i.e. the 0.25-quantile) of {cmd:x}. Missing
+    values in {it:X} are not allowed. {cmd:mm_quantile()} is similar to
+    official Mata function {helpb mf_quantile:quantile()}, which has been
+    introduced in Stata 19.5, but it supports weights and provides additional
+    types of quantile estimators. Furthermore, if multiple quantiles are
+    requested, {cmd:mm_quantile()} is computationally more efficient than
+    {cmd:quantile()}.
 
 {pstd}
-{cmd:mm_quantile()} works column by column. If
-{it:P} has one column and {it:X} has several columns, then the
-quantiles corresponding to {it:P} are computed for each column of
-{it:X}. If {it:X} has one column and {it:P} has several columns, then the
-quantile function of {it:X} is applied to each column of {it:P}. If
-{it:X} and {it:P} both have several columns, then the number of
-columns is required to be the same and quantiles are
-computed column by column.
+    {cmd:mm_quantile()} works column by column. If {it:P} has one column and
+    {it:X} has several columns, then the quantiles corresponding to {it:P} are
+    computed for each column of {it:X}. If {it:X} has one column and {it:P} has
+    several columns, then the quantile function of {it:X} is applied to each
+    column of {it:P}. If {it:X} and {it:P} both have several columns, then the
+    number of columns is required to be the same and quantiles are computed
+    column by column.
 
 {pstd}
-Argument {it:w} specifies weights associated with the observations (rows) in
-{it:X}. Omit {it:w}, or specify {it:w} as 1 to obtain unweighted results. Missing
-values or negative values in {it:w} are not allowed.
+    Argument {it:w} specifies weights associated with the observations (rows)
+    in {it:X}. Omit {it:w}, or specify {it:w} as 1 to obtain unweighted
+    results. Missing values or negative values in {it:w} are not allowed.
 
+{marker method}{...}
 {pstd}
-Argument {it:def} selects the quantile definition to be used. Let Q(p) denote
-the p-quantile of X. N is the sample size (number of observations), X_(j)
-is the j-th observation from sorted X, w_j is the weight associated with
-observation j (equal to 1 if weights are omitted), and W is the total sum of
-weights. The quantile definitions then are as follows:
+    Argument {it:method} selects the type of quantile estimator to be used. Let
+    Q(p) denote the p-quantile of X. N is the sample size (number of
+    observations), X_(j) is the j-th observation from sorted X, w_j is the
+    weight associated with observation j (equal to 1 if weights are omitted),
+    and W is the total sum of weights. The available methods are then as
+    follows.
 
-{phang2}
-    {it:def}=0: The "high" quantile defined as Q(p) = X_(j) with j selected
-    such that W_(j-1) <= p*W < W_(j), where W_(j) is running sum of weights
-    across the sorted data up to and including observation j (sorting of ties
-    does not matter).
+{p2colset 9 30 30 2}{...}
+{p2col:{cmd:0} or {cmd:"high"}}The "high" quantile defined as Q(p) = X_(j) with
+    j selected such that W_(j-1) <= p*W < W_(j), where W_(j) is running sum of
+    weights across the sorted data up to and including observation j.
 
-{phang2}
-    {it:def}=1: Inverse of the empirical cumulative distribution function
-    (ECDF), or "low" quantile, defined as Q(p) = X_(j) with j selected such
-    that W_(j-1) < p*W <= W_(j).
+{p2col:{cmd:1} or {cmd:"inv_cdf"}}The "low" quantile, i.e. the inverse of the
+    empirical cumulative distribution function (ECDF), defined as Q(p) = X_(j)
+    with j selected such that W_(j-1) < p*W <= W_(j).
 
-{phang2}
-    {it:def}=2: Like definition 1 but using averages where the ECDF is flat.
-    Again, select j set such that W_(j-1) < p*W <= W_(j). Then Q(p) = X_(j) if
-    W_(j-1) < p*W < W_(j) and Q(p) = (X_(j) + X_(j+1))/2 if p*W = W_(j).
+{p2col:{cmd:2} or {cmd:"avg_inv_cdf"}}Like method 1 but using averages
+    where the ECDF is flat. Again, select j set such that W_(j-1) < p*W <=
+    W_(j). Then Q(p) = X_(j) if W_(j-1) < p*W < W_(j) and Q(p) = (X_(j) +
+    X_(j+1))/2 if p*W = W_(j).
 
-{phang2}
-    {it:def}=3: Nearest order statistic. Again, select j set such that W_(j-1)
-    < p*W <= W_(j). Then Q(p) = X_(j-1) if p*W is closer to W_(j-1) and Q(p) =
-    X_(j) if p*W is closer to W_(j). If p*W lies exactly in the middle between
-    W_(j-1) and W_(j), then Q(p) = X_(j) if j is even and Q(p) = X_(j-1) if j
-    is odd. For definition 3, the sorting of ties in X matters if {it:fw}=0 and
-    the weights are not constant; to obtain stable results, {cmd:mm_quantile()}
-    sorts the data in ascending order of the weights within ties of X. If
-    weights are constant or if {it:fw}!=0, the sort order of ties does not
-    matter.
+{p2col:{cmd:3} or {cmd:"closest"}}The nearest order statistic. Again, select j
+    such that W_(j-1) < p*W <= W_(j). Then Q(p) = X_(j-1) if p*W is closer to
+    W_(j-1) and Q(p) = X_(j) if p*W is closer to W_(j). If p*W lies exactly in
+    the middle between W_(j-1) and W_(j), then Q(p) = X_(j) if j is even and
+    Q(p) = X_(j-1) if j is odd. The sorting of ties in X matters if {it:fw}=0
+    and the weights are not constant; to obtain stable results,
+    {cmd:mm_quantile()} sorts the data in ascending order of the weights within
+    ties of X. If weights are constant or if {it:fw}!=0, the sort order of ties
+    does not matter.
 
-{phang2}
-    {it:def}=4: Linear interpolation of the EDCF. Let h = p*n where n is the
-    "effective" sample size defined as n = W^2 / sum(w_j^2) (or as n = W if
-    {it:fw}!=0). Q(p) is then computed by integration of the empirical
-    distribution of X between p0 = (h-1)/n and p1 = h/n. In the unweighted case
-    (or if all weights are equal), this boils down to Q(p) = X_(l) +
-    (h-l)*(X_(l+1) - X_l) with n = N and l = foor(h).
+{p2col:{cmd:4} or {cmd:"parzen"}}Linear interpolation of the EDCF. Let h = p*n
+    where n is the "effective" sample size defined as n = W^2 / sum(w_j^2) (or
+    as n = W if {it:fw}!=0). Q(p) is then computed by integration of the
+    empirical distribution of X between p0 = (h-1)/n and p1 = h/n. In the
+    unweighted case (or if all weights are equal), this boils down to Q(p) =
+    X_(l) + (h-l)*(X_(l+1) - X_l) with n = N and l = foor(h).
 
-{phang2}
-    {it:def}=5: Like {it:def}=4, but with h = p*n + 0.5.
+{p2col:{cmd:5} or {cmd:"hazen"}}Like method {cmd:4}, but with h = p*n + 0.5.
 
-{phang2}
-    {it:def}=6: Like {it:def}=4, but with h = p*(n + 1).
+{p2col:{cmd:6} or {cmd:"weibull"}}Like method {cmd:4}, but with h = p*(n + 1).
 
-{phang2}
-    {it:def}=7: Like {it:def}=4, but with h = p*(n - 1) + 1.
+{p2col:{cmd:7} or {cmd:"gumbel"}}Like method {cmd:4}, but with h = p*(n - 1) + 1.
 
-{phang2}
-    {it:def}=8: Like {it:def}=4, but with h = p*(n + 1/3) + 1/3.
+{p2col:{cmd:8} or {cmd:"tukey"}}Like method {cmd:4}, but with h = p*(n + 1/3) + 1/3.
 
-{phang2}
-    {it:def}=9: Like {it:def}=4, but with h = p*(n + 1/4) + 3/8.
+{p2col:{cmd:9} or {cmd:"blom"}}Like method {cmd:4}, but with h = p*(n + 1/4) + 3/8.
 
-{phang2}
-    {it:def}=10: Harrell-Davis quantile estimator based on integration of the
-    Beta function with shape parameters p*(n+1) and (1-p)(n+1). Specify argument
-    {it:wd} to use the trimmed Harrell-Davis estimator as suggested by 
-    Akinshin (2021).
+{p2col:{cmd:10} or {cmd:"hd"}}The Harrell-Davis quantile estimator based on
+    integration of the Beta function with shape parameters p*(n+1) and
+    (1-p)(n+1). Specify argument {it:wd} to use the trimmed Harrell-Davis
+    estimator as suggested by Akinshin (2021).
 
-{phang2}
-    {it:def}=11: Mid-quantile by Ma, Genton, and Parzen (2011). The quantile
-    is obtained by linear interpolation of the empirical mid-distribution
-    function at unique values of X. The mid-distribution
+{p2col:{cmd:11} or {cmd:"mid"}}The mid-quantile by Ma, Genton, and Parzen
+    (2011). The quantile is obtained by linear interpolation of the empirical
+    mid-distribution function at unique values of X. The mid-distribution
     function is defined as F_mid(x) = Pr(X<=x) - 0.5*Pr(X=x).
 
-{pmore}
-    Definition 2 is the default definition used by {cmd:mm_quantile()},
-    {cmd:mm_iqrange()}, and {cmd:mm_median()}. Definition 2 is also the
-    definition that is used by Stata commands {helpb summarize} and
-    {helpb _pctile}, whereas Stata command {helpb centile} (as well as
-    {helpb _pctile} with option {cmd:altdef}) uses definition 6. Note that
-    quantile functions based on definitions 0-3 are discontinuous; quantile
-    functions based on definitions 4-11 are continuous (but note that quantile
-    functions according to definitions 4-9 may have flat regions). Based on an
-    analysis of various properties of the different definitions, Hyndman and
-    Fan (1996) suggest definition 8 as the best choice. However, note that
-    definition 5 is the only definition that satisfies all 6 properties
-    considered by Hyndman and Fan (1996). Moreover, the Harrell-Davis estimator
-    (definition 10), which has not been considered in the analysis by Hyndman
-    and Fan (1996), may have better small-sample properties than the other
-    estimators. Furthermore, Ma et al. (2011) suggest definition 11 for
-    data with heaping or discrete data.
+{p2col:{cmd:12} or {cmd:"california"}}Like method {cmd:4}, but with h = p*n + 1.
+
+{p2col:{cmd:13} or {cmd:"beard"}}Like method {cmd:4}, but with h = p*(n + 0.38) + 0.31.
+
+{p2col:{cmd:14} or {cmd:"benard"}}Like method {cmd:4}, but with h = p*(n + 0.4) + 0.3.
+
+{p2col:{cmd:15} or {cmd:"cooper"}}Like method {cmd:4}, but with h = p*(n + 0.185) + 0.4075.
+
+{p2col:{cmd:16} or {cmd:"gringorten"}}Like method {cmd:4}, but with h = p*(n + 0.12) + 0.44.
 
 {pmore}
-    If weights are all equal to 1, definitions 1-9 are equivalent to the
-    quantile definitions provided by Hyndman and Fan (1996), definition 10 is
-    as proposed by Harrell and Davis (1982), and definition 11 is as proposed
-    by Ma et al. (2011). The extension to incorporate weights is
-    straightforward for quantile definitions 0-2 and 11, but somewhat arbitrary
-    for quantile definition 3. For quantile definitions 4-10, the extension to
-    weighted data is based on the approach by Akinshin (2020).
+    Method {cmd:2} ({cmd:"avg_inv_cdf"}) is the default used by
+    {cmd:mm_quantile()}, {cmd:mm_iqrange()}, and {cmd:mm_median()}. It is also
+    the method used by Stata commands {helpb summarize} and {helpb _pctile},
+    whereas Stata command {helpb centile} (as well as {helpb _pctile} with
+    option {cmd:altdef}) uses method {cmd:6} ({cmd:"weibull"}). Note that
+    quantile functions based on methods {cmd:0} to {cmd:3} are discontinuous;
+    quantile functions based on methods {cmd:4} to {cmd:16} are continuous
+    (but may still have flat regions). Based on an analysis of various
+    properties of the methods {cmd:1} to {cmd:9}, Hyndman and Fan (1996)
+    suggest methods {cmd:8} ({cmd:"tukey"}) as the best choice. However, note
+    that method {cmd:5} ({cmd:"hazen"}) is the only method that satisfies
+    all 6 properties considered by Hyndman and Fan (1996). Moreover, the
+    Harrell-Davis estimator (method {cmd:10}), which has not been considered in
+    the analysis by Hyndman and Fan (1996), may have better small-sample
+    properties than the other estimators. Furthermore, Ma et al. (2011) suggest
+    method {cmd:11} ({cmd:"mid"}) for discrete data or for data affected by
+    heaping.
+
+{pmore}
+    If weights are all equal to 1, methods {cmd:1} to {cmd:9} are equivalent to
+    the quantile definitions provided by Hyndman and Fan (1996), method
+    {cmd:10} is as proposed by Harrell and Davis (1982), and method {cmd:11} is
+    as proposed by Ma et al. (2011); for methods {cmd:12} to {cmd:16} see the
+    documentation of {helpb mf_quantile:quantile()}. Incorporating weights is
+    straightforward for methods {cmd:0}, {cmd:1}, {cmd:2}, and {cmd:11}, but
+    somewhat arbitrary for method {cmd:3}. For methods {cmd:4} to {cmd:10} and
+    {cmd:12} to {cmd:16}, weights are treated as suggested by Akinshin
+    (2020).
 
 {pstd}
-Argument {it:fw}!=0 requests that the weights are to be treated as frequency
-weights (this is only relevant for definitions 3-10; for definitions 0-2 and
-11, the distinction between frequency weights and other types of weights is
-irrelevant). If {it:fw}!=0 is specified, the quantiles are computed in a way
-such that results from the weighted data are identical to the results you would
-obtain from expanded data (i.e., from data in which the observations are
-duplicated {it:w} times and the weights are set to 1; naturally, such an
-analogy only makes sense if {it:w} is integer, although non-integer weights are
-allowed). For definitions 4-10, argument {it:fw} also determines how the
-"effective" sample size that determines the width of the integration window is
-defined. If {it:fw}!=0, the sample size is set to the sum of weights (n = W);
-if {it:fw} is omitted or if {it:fw}==0, the effective sample size is set to n =
-W^2 / sum(w_j^2) (Kish's formula). If you want to use another effective sample
-size, rescale the weights such that their sum is equal to the desired sample
-size and then specify {it:fw}!=0 when calling {cmd:mm_quantile()}.
+    Argument {it:fw}!=0 indicates that the weights are frequency weights (this
+    is relevant for methods {cmd:3} to {cmd:10} and {cmd:12} to {cmd:16} only;
+    for methods {cmd:0}, {cmd:1}, {cmd:2}, and {cmd:11} the the distinction
+    between frequency weights and other types of weights is irrelevant). If
+    {it:fw}!=0 is specified, the quantiles are computed in a way such that
+    results from the weighted data are identical to the results you would
+    obtain from expanded data (i.e., from data in which the observations are
+    duplicated {it:w} times and the weights are set to 1; naturally, such an
+    analogy only makes sense if {it:w} is integer, although non-integer weights
+    are allowed). For methods {cmd:4} to {cmd:10} and {cmd:12} to {cmd:16},
+    argument {it:fw} also affects the definition of the "effective" sample size
+    that determines the width of the integration window. If {it:fw}!=0, the
+    sample size is set to the sum of weights (n = W); if {it:fw} is omitted or
+    if {it:fw}==0, the effective sample size is set to n = W^2 / sum(w_j^2)
+    (Kish's formula). If you want to use another effective sample size, rescale
+    the weights such that their sum is equal to the desired sample size and
+    then specify {it:fw}!=0 when calling {cmd:mm_quantile()}.
 
 {pstd}
-{cmd:mm_median()} and {cmd:mm_iqrange()} are wrappers for {cmd:mm_quantile()}
-that return the median (the 0.5-quantile, using quantile definition 2) and the
-inter-quartile range (IQR = 0.75-quantile - 0.25-quantile).
+    {cmd:mm_median()} and {cmd:mm_iqrange()} are wrappers for
+    {cmd:mm_quantile()} that return the median (the 0.5-quantile) and the
+    inter-quartile range (IQR = 0.75-quantile - 0.25-quantile).
 
 {pstd}
-{cmd:_mm_quantile()}, {cmd:_mm_median()}, and {cmd:_mm_iqrange()} are
-like {cmd:mm_quantile()}, {cmd:mm_median()}, and {cmd:mm_iqrange()}, but assume
-that the data is sorted (in ascending order) and non-missing and that the
-weights are non-negative and non-missing. The functions are fast, especially
-in the unweighted case for definitions 0-9 (once the data is sorted,
-unweighted quantiles of definition 0-9 can be taken in practically no time;
-Harrell-Davis quantiles are more expensive to compute). However, the functions
-will return invalid results if applied to unsorted data (or if any of the other
-assumptions is violated). Only a single column of data is allowed as input to
-these functions.
+    {cmd:_mm_quantile()}, {cmd:_mm_median()}, and {cmd:_mm_iqrange()} are like
+    {cmd:mm_quantile()}, {cmd:mm_median()}, and {cmd:mm_iqrange()}, but assume
+    that the data is sorted (in ascending order) and non-missing and that the
+    weights are non-negative and non-missing. The functions are fast,
+    especially in the unweighted case for definitions methods {cmd:0} to
+    {cmd:9} and {cmd:12} to {cmd:16} (once the data is sorted, unweighted
+    quantiles can be taken in practically no time in these cases; Harrell-Davis
+    quantiles are more expensive to compute). However, the functions will
+    return invalid results if applied to unsorted data (or if any of the other
+    assumptions is violated). Only a single column of data is allowed as input
+    to these functions.
 
 
 {title:Example}
@@ -240,52 +263,52 @@ these functions.
 
 {title:Conformability}
 
-    {cmd:mm_quantile(}{it:X}{cmd:,} {it:w}{cmd:,} {it:P}{cmd:,} {it:def}{cmd:,} {it:fw}{cmd:,} {it:wd}{cmd:)}:
+    {cmd:mm_quantile(}{it:X}{cmd:,} {it:w}{cmd:,} {it:P}{cmd:,} {it:method}{cmd:,} {it:fw}{cmd:,} {it:wd}{cmd:)}:
              {it:X}:  {it:r1 x c1}
              {it:w}:  {it:r1 x} 1 or 1 {it:x} 1
              {it:P}:  {it:r2 x c2}
-           {it:def}:  1 {it:x} 1
+        {it:method}:  1 {it:x} 1
             {it:fw}:  1 {it:x} 1
             {it:wd}:  1 {it:x} 1
         {it:result}:  {it:r2 x c2} or {it:r2 x c1}
 
-    {cmd:mm_median(}{it:X}{cmd:,} {it:w}{cmd:,} {it:def}{cmd:,} {it:fw}{cmd:,} {it:wd}{cmd:)}:
+    {cmd:mm_median(}{it:X}{cmd:,} {it:w}{cmd:,} {it:method}{cmd:,} {it:fw}{cmd:,} {it:wd}{cmd:)}:
              {it:X}:  {it:r x c}
              {it:w}:  {it:r x} 1 or 1 {it:x} 1
-           {it:def}:  1 {it:x} 1
+        {it:method}:  1 {it:x} 1
             {it:fw}:  1 {it:x} 1
             {it:wd}:  1 {it:x} 1
         {it:result}:  1 {it:x c}
 
-    {cmd:mm_iqrange(}{it:X}{cmd:,} {it:w}{cmd:,} {it:def}{cmd:,} {it:fw}{cmd:,} {it:wd}{cmd:)}:
+    {cmd:mm_iqrange(}{it:X}{cmd:,} {it:w}{cmd:,} {it:method}{cmd:,} {it:fw}{cmd:,} {it:wd}{cmd:)}:
              {it:X}:  {it:r x c}
              {it:w}:  {it:r x} 1 or 1 {it:x} 1
-           {it:def}:  1 {it:x} 1
+        {it:method}:  1 {it:x} 1
             {it:fw}:  1 {it:x} 1
             {it:wd}:  1 {it:x} 1
         {it:result}:  1 {it:x c}
 
-    {cmd:_mm_quantile(}{it:x}{cmd:,} {it:w}{cmd:,} {it:P}{cmd:,} {it:def}{cmd:,} {it:fw}{cmd:,} {it:wd}{cmd:)}:
+    {cmd:_mm_quantile(}{it:x}{cmd:,} {it:w}{cmd:,} {it:P}{cmd:,} {it:method}{cmd:,} {it:fw}{cmd:,} {it:wd}{cmd:)}:
              {it:x}:  {it:r1 x} 1
              {it:w}:  {it:r1 x} 1 or 1 {it:x} 1
              {it:p}:  {it:r2 x c2}
-           {it:def}:  1 {it:x} 1
+        {it:method}:  1 {it:x} 1
             {it:fw}:  1 {it:x} 1
             {it:wd}:  1 {it:x} 1
         {it:result}:  {it:r2 x c2}
 
-    {cmd:_mm_median(}{it:x}{cmd:,} {it:w}{cmd:,} {it:def}{cmd:,} {it:fw}{cmd:,} {it:wd}{cmd:)}:
+    {cmd:_mm_median(}{it:x}{cmd:,} {it:w}{cmd:,} {it:method}{cmd:,} {it:fw}{cmd:,} {it:wd}{cmd:)}:
              {it:X}:  {it:r x} 1
              {it:w}:  {it:r x} 1 or 1 {it:x} 1
-           {it:def}:  1 {it:x} 1
+        {it:method}:  1 {it:x} 1
             {it:fw}:  1 {it:x} 1
             {it:wd}:  1 {it:x} 1
         {it:result}:  1 {it:x} 1
 
-    {cmd:_mm_iqrange(}{it:x}{cmd:,} {it:w}{cmd:,} {it:def}{cmd:,} {it:fw}{cmd:,} {it:wd}{cmd:)}:
+    {cmd:_mm_iqrange(}{it:x}{cmd:,} {it:w}{cmd:,} {it:method}{cmd:,} {it:fw}{cmd:,} {it:wd}{cmd:)}:
              {it:x}:  {it:r x} 1
              {it:w}:  {it:r x} 1 or 1 {it:x} 1
-           {it:def}:  1 {it:x} 1
+        {it:method}:  1 {it:x} 1
             {it:fw}:  1 {it:x} 1
             {it:wd}:  1 {it:x} 1
         {it:result}:  1 {it:x} 1
@@ -294,28 +317,30 @@ these functions.
 {title:Diagnostics}
 
 {pstd}
-Evaluation probabilities below 0 and above 1 (including missing) are allowed,
-resulting in the observed minimum or maximum, respectively.
+    Evaluation probabilities below 0 and above 1 (including missing) are
+    allowed, resulting in the observed minimum or maximum, respectively.
 
 {pstd}
-{cmd:mm_quantile()}, {cmd:mm_median()}, and {cmd:mm_iqrange()} return error if
-{it:X} contains missing values or if {it:w} contains negative values or missing
-values (zero weights are allowed, but will be omitted from the
-computations). Missing is returned if {it:X} is void. Void is returned if {it:P} is void.
+    {cmd:mm_quantile()}, {cmd:mm_median()}, and {cmd:mm_iqrange()} return error
+    if {it:X} contains missing values or if {it:w} contains negative values or
+    missing values (zero weights are allowed, but will be omitted from the
+    computations). Missing is returned if {it:X} is void. Void is returned if
+    {it:P} is void.
 
 {pstd}
-{cmd:_mm_quantile()}, {cmd:_mm_median()}, and {cmd:_mm_iqrange()} assume {it:x} to be
-non-missing and sorted (in ascending order) and assume {it:w} to be non-missing
-and non-negative. The functions return invalid results if these assumptions
-are violated. Missing is returned if {it:x} is void. Void is returned if {it:p} is void.
+    {cmd:_mm_quantile()}, {cmd:_mm_median()}, and {cmd:_mm_iqrange()} assume
+    {it:x} to be non-missing and sorted (in ascending order) and assume {it:w}
+    to be non-missing and non-negative. The functions return invalid results if
+    these assumptions are violated. Missing is returned if {it:x} is void. Void
+    is returned if {it:p} is void.
 
 
 {title:Source code}
 
 {pstd}
-{help moremata_source##mm_quantile:mm_quantile.mata},
-{help moremata_source##mm_median:mm_median.mata},
-{help moremata_source##mm_iqrange:mm_iqrange.mata}
+    {help moremata_source##mm_quantile:mm_quantile.mata},
+    {help moremata_source##mm_median:mm_median.mata},
+    {help moremata_source##mm_iqrange:mm_iqrange.mata}
 
 
 {title:References}
@@ -347,7 +372,7 @@ are violated. Missing is returned if {it:x} is void. Void is returned if {it:p} 
 {title:Author}
 
 {pstd}
-Ben Jann, University of Bern, ben.jann@unibe.ch
+    Ben Jann, University of Bern, ben.jann@unibe.ch
 
 
 {title:Also see}

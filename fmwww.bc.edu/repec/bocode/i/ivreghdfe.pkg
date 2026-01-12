@@ -10,7 +10,7 @@ d KW: high dimension fixed effects
 d
 d Requires: Stata version 13, reghdfe, ivreg2 and ranktest from SSC (q.v.)
 d
-d Distribution-Date: 20251222
+d Distribution-Date: 20260111
 d
 d Author: Sergio Correia, Board of Governors of the Federal Reserve System
 d Support: email sergio.correia@@gmail.com

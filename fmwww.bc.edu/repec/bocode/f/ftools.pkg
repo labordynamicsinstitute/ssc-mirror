@@ -20,9 +20,9 @@ d KW: sort
 d KW: factor variables
 d KW: Mata
 d
-d Requires: Stata version 11.2
+d Requires: Stata version 11.2 (Stata 12 or older also require boottest from SSC)
 d
-d Distribution-Date: 20230821
+d Distribution-Date: 20260111
 d
 d Author: Sergio Correia, Board of Governors of the Federal Reserve System
 d Support: email sergio.correia@@gmail.com
@@ -66,6 +66,10 @@ f ../m/ms_fvstrip.sthlp
 f ../m/ms_fvunab.ado
 f ../m/ms_get_version.ado
 f ../m/ms_parse_absvars.ado
+f ../m/ms_parse_depvar.ado
 f ../m/ms_parse_varlist.ado
 f ../m/ms_parse_vce.ado
 f ../m/ms_add_comma.ado
+f ../p/parallel_map_template.do.ado
+f ../p/parallel_map.ado
+f ../p/parallel_map.sthlp
