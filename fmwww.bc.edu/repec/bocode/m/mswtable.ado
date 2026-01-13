@@ -1,11 +1,10 @@
-*! version 16.30   17Aug2025   
+*! version 16.34   12Dec2025   
 *! John Casterline
 capture program drop mswtable
 program define mswtable, rclass
 version 16
 
 set adosize 60
-
 
 #d ;
 
@@ -19,7 +18,10 @@ syntax , COLWidth(string)
            est_stat(string) 
            est_stat1(string) est_stat2(string) est_stat3(string) est_stat4(string)
            est_stat5(string) est_stat6(string) est_stat7(string)
-           est_star  est_star(string)   est_se  est_se(string)   est_no(string)  
+           est_star  est_star(string)   est_se  est_se(string)   est_no(string) 
+           est_vars(string)
+           est_vars1(string) est_vars2(string) est_vars3(string) est_vars4(string)
+           est_vars5(string) est_vars6(string) est_vars7(string) 
            add_cols(string) add_means(string)  add_mat(string)  add_excel(string)
            title(string asis) SUBTitle(string asis)  
            title1(string asis) title2(string asis)
@@ -27,7 +29,8 @@ syntax , COLWidth(string)
            note6(string) note7(string) note8(string) note9(string)
            font(passthru)
            tline(string) bline(string)   firstX lastX   extra_place
-           DECimals(string) 
+           DECimals(string)  
+           dec1(string) dec2(string) dec3(string) dec4(string) dec5(string) dec6(string) dec7(string)
            ct_set(string)
            ct(string)
            cst_set(string)  cst_set1(string) cst_set11(string)
@@ -42,19 +45,19 @@ syntax , COLWidth(string)
            rst1(string asis)  rst2(string asis)  rst3(string asis)  rst4(string asis)  rst5(string asis)
            rst6(string asis)  rst7(string asis)  rst8(string asis)  rst9(string asis)  rst10(string asis)
            rst11(string asis)  rst12(string asis)  rst13(string asis)  rst14(string asis)  rst15(string asis)
-           rst16(string asis)  rst17(string asis)  rst18(string asis)  rst19(string asis)  rst110(string asis)
+           rst16(string asis)  rst17(string asis)  rst18(string asis)  rst19(string asis)
            rst21(string asis)  rst22(string asis)  rst23(string asis)  rst24(string asis)  rst25(string asis)
-           rst26(string asis)  rst27(string asis)  rst28(string asis)  rst29(string asis)  rst210(string asis)
+           rst26(string asis)  rst27(string asis)  rst28(string asis)  rst29(string asis)
            rst31(string asis)  rst32(string asis)  rst33(string asis)  rst34(string asis)  rst35(string asis)
-           rst36(string asis)  rst37(string asis)  rst38(string asis)  rst39(string asis)  rst310(string asis)
+           rst36(string asis)  rst37(string asis)  rst38(string asis)  rst39(string asis)
            rst41(string asis)  rst42(string asis)  rst43(string asis)  rst44(string asis)  rst45(string asis)
-           rst46(string asis)  rst47(string asis)  rst48(string asis)  rst49(string asis)  rst410(string asis)
+           rst46(string asis)  rst47(string asis)  rst48(string asis)  rst49(string asis)
            rst51(string asis)  rst52(string asis)  rst53(string asis)  rst54(string asis)  rst55(string asis)
-           rst56(string asis)  rst57(string asis)  rst58(string asis)  rst59(string asis)  rst510(string asis)
+           rst56(string asis)  rst57(string asis)  rst58(string asis)  rst59(string asis)
            rst61(string asis)  rst62(string asis)  rst63(string asis)  rst64(string asis)  rst65(string asis)
-           rst66(string asis)  rst67(string asis)  rst68(string asis)  rst69(string asis)  rst610(string asis)
+           rst66(string asis)  rst67(string asis)  rst68(string asis)  rst69(string asis)
            rst71(string asis)  rst72(string asis)  rst73(string asis)  rst74(string asis)  rst75(string asis)
-           rst76(string asis)  rst77(string asis)  rst78(string asis)  rst79(string asis)  rst710(string asis)
+           rst76(string asis)  rst77(string asis)  rst78(string asis)  rst79(string asis)
            pt_set(string)
            pt1(string) pt2(string) pt3(string) pt4(string) pt5(string) pt6(string) pt7(string)
            pline  pspace(string)  
@@ -62,41 +65,36 @@ syntax , COLWidth(string)
            extra6(string) extra7(string) extra8(string) extra9(string) 
            extra11(string) extra12(string) extra13(string) extra14(string)
            extra15(string) extra16(string) extra17(string) extra18(string)
-           extra19(string)
            extra21(string) extra22(string) extra23(string) extra24(string)
            extra25(string) extra26(string) extra27(string) extra28(string)
-           extra29(string)
            extra31(string) extra32(string) extra33(string) extra34(string)
            extra35(string) extra36(string) extra37(string) extra38(string)
-           extra39(string)
            extra41(string) extra42(string) extra43(string) extra44(string)
            extra45(string) extra46(string) extra47(string) extra48(string)
-           extra49(string)
            extra51(string) extra52(string) extra53(string) extra54(string)
            extra55(string) extra56(string) extra57(string) extra58(string)
-           extra59(string) 
            extra61(string) extra62(string) extra63(string) extra64(string)
            extra65(string) extra66(string) extra67(string) extra68(string)
-           extra69(string) 
            extra71(string) extra72(string) extra73(string) extra74(string)
            extra75(string) extra76(string) extra77(string) extra78(string)
-           extra79(string) 
            slim
            tabname(string)  
            OUTFile(string) ];  
 
 #d cr
 
-*  n = 239 options  (max allowed = 256)
+*  n = 249 options  (max allowed = 256)
+*
+*  di 1+1+7+1+7+1+7+5+4+2+2+9+1+5+1+7+1+1+3+15+1+1+7+1+19+(6*9)+1+7+2+9+(7*9)+1+1+1
 
 
 if "`mat'"~="" & "`mat1'"~=""     {
-   di _n(1) _col(3) in y  "ERROR:  mat or mat1 can be specified but not both"  _n(1) " "
+   noi di _n(1) _col(3) in y  "ERROR:  mat or mat1 can be specified but not both"  _n(1) " "
    exit
 }
 
 if "`est'"~="" & "`est1'"~=""     {
-   di _n(1) _col(3) in y  "ERROR:  est or est1 can be specified but not both"  _n(1) " "
+   noi di _n(1) _col(3) in y  "ERROR:  est or est1 can be specified but not both"  _n(1) " "
    exit
 }
 
@@ -146,27 +144,29 @@ if "`add_means'"~=""  &  "`add_mat'"~=""  {
 *  ***********************************************************
 
 
-local n_pn = 0
+local n_p = 0
 forvalues p = 1/7           {
    if "`mat`p''" ~= ""      {
       local n_mat = `n_mat' + 1
-      local n_pn  = `n_pn'  + 1
+      local n_p   = `n_p'   + 1
    }
 }
 forvalues p = 1/7           {
    if "`est`p''" ~= ""      {
       local n_est = `n_est' + 1
-      local n_pn  = `n_pn'  + 1
+      local n_p   = `n_p'   + 1
    }
 }
 
 if "`mat'" ~= ""            {
    local mat1 "`mat'"
+   local n_p = 1
    macro drop _mat
 }
 
 if "`est'" ~= ""            {
    local est1 "`est'"
+   local n_p = 1
    macro drop _est
 }
 
@@ -180,8 +180,18 @@ if "`est_stat'" ~= ""       {
    }
 }
 
+if "`est_vars'" ~= ""       {
+   local est_vars1 "`est_vars'"
+   macro drop _est_vars
+   forvalues p = 2/7        {
+      if "`est`p''"~=""     {
+         local est_vars`p' "`est_vars1'"
+      }
+   }
+}
+
 if "`rt'" ~= ""             {
-   forvalues p = 1/7        {
+   forvalues p = 1/`n_p'    {
       if "`rt`p''"==""      {
          local rt`p' "`rt'"
       }
@@ -189,26 +199,24 @@ if "`rt'" ~= ""             {
    macro drop _rt
 }
 
-if `"`rst1'"' ~= ""                    {
-   if `n_pn'<2                         {
-      forvalues r = 16(-1)1            {
-         if `"`rst`r''"' ~= ""         {
+if `"`rst1'"' ~= ""                  {
+   if `n_p'==1                       {
+      forvalues r = 15(-1)1          {
+         if `"`rst`r''"' ~= ""       {
             local rst1`r' `"`rst`r''"'  
             capture macro drop _rst`r'
          }
       }
    }
-   if `n_pn' > 1                       {
-      forvalues p = 1/7                {
-         if `p'<=`n_pn'                {
-            forvalues r = 10(-1)1      {
-               if `"`rst`r''"' ~= ""   {
-                  local rst`p'`r' `"`rst`r''"'  
-               }
+   if `n_p' > 1                      {
+      forvalues p = 1/`n_p'          {
+         forvalues r = 9(-1)1        {
+            if `"`rst`r''"' ~= ""    {
+               local rst`p'`r' `"`rst`r''"'  
             }
          }
       }
-      forvalues r = 1/10               {
+      forvalues r = 1/9              {
          capture macro drop _rst`r'
       }
    }
@@ -242,7 +250,7 @@ local l_fsize  "12"      //  column labels, row labels
 local b_fsize  "11.5"    //  body of table
 local st_fsize "11"      //  statistics 
 local ex_fsize "11"      //  extra information
-local se_fsize "10.5"    //  standard errors (including t and p)
+local se_fsize "10.5"    //  se, z, p
 local ci_fsize "10.0"    //  confidence intervals
 local a_fsize  "10.5"    //  asterisks
 local n_fsize  "10.5"    //  notes
@@ -264,13 +272,13 @@ if `"`font'"' ~= ""  {                     //  font is reset
       local s_fsize  "`font2'"             //  sub-title
       local l_fsize  "`font3'"             //  column labels, row labels
       local b_fsize  "`font4'"             //  body of table
+      local n_fsize  "`font5'"             //  notes
       local b_fsizeX = real("`b_fsize'")
       local st_fsize = `b_fsizeX' - 0.5    //  statistics
       local ex_fsize = `b_fsizeX' - 0.5    //  extra information
-      local se_fsize = `b_fsizeX' - 1.0    //  standard errors (including t and p)
+      local se_fsize = `b_fsizeX' - 1.0    //  se, z, p
       local ci_fsize = `b_fsizeX' - 1.5    //  confidence intervals
       local a_fsize  = `b_fsizeX' - 1.5    //  asterisks
-      local n_fsize  "`font5'"             //  notes
    }
    tokenize `"`FONT2'"', parse("(")
    local FONT "`2'"
@@ -351,34 +359,34 @@ local sttitles
 
 
 
-**# sets:  rt_set, ct_set, cst_set, pt_set, rst_set
+**# rt_set, ct_set, cst_set, pt_set, rst_set
 
 *  rt_set
 
 local rt_format ""
 local rt_just "left"
-if "`rt_set'" ~= ""            {
+if "`rt_set'" ~= ""                  {
    tokenize "`rt_set'", parse(" ,")
-   while "`1'" ~= ""           {
-      if "`1'" == "bold"       {
+   while "`1'" ~= ""                 {
+      if "`1'" == "bold"             {
          local rt_format "bold"
       }
-      if "`1'" == "underline"  {
+      if "`1'" == "underline"        {
          local rt_format "underline"
       }
       if "`1'"=="italic" | "`1'"=="italics"  {
          local rt_format "italic"
       }
-      if "`1'" == "left"       {
+      if "`1'" == "left"             {
          local rt_just "left"
       }
-      if "`1'" == "center"     {
+      if "`1'" == "center"           {
          local rt_just "center"
       }
-      if "`1'" == "int_right"  {
+      if "`1'" == "intercept_right"  {
          local INT_RIGHT "yes"
       }
-      if "`1'" == "tot_right"  {
+      if "`1'" == "total_right"      {
          local TOT_RIGHT "yes"
       }
       mac shift
@@ -569,8 +577,7 @@ if "`rst_set'" ~= ""                      {
 
 
 
-**# other default settings:  add_cols, est_se, est_star, title/subtitle
-
+**# default settings:  add_cols, est_se, est_star, title/subtitle
 *  add_cols
 
 local extra_width = 0
@@ -618,6 +625,10 @@ while `"`1'"' ~= ""          {
 *  title & subtitle
 
 if `"`title'"' ~= ""              {
+   if "`title1'"~="" | "`title2'"~=""             {
+      noi di _n(2) _col(3) in y  `"ERROR:  "title" and "title1/title2" cannot both be specified"'   _n(1) " "
+      exit  
+   }
    local title_just   "center"
    local title_format ""
    tokenize `"`title'"', parse(" ,")
@@ -643,6 +654,10 @@ if `"`title'"' ~= ""              {
    }
 }
 if `"`title1'"'~="" | `"`title2'"'~=""            {
+   if "`title'" ~= ""                             {
+      noi di _n(2) _col(3) in y  `"ERROR:  "title1/title2" and "title" cannot both be specified"'   _n(1) " "
+      exit  
+   }
    local title1_width "0.8"
    forvalues t = 1/2                              {
       if `"`title`t''"' ~= ""                     {          
@@ -732,7 +747,7 @@ quietly  {
 ******************************************************************************************
 ******************************************************************************************
 
-**# processing add_excel
+**# add_excel
 
 *  **********************************
 *
@@ -790,18 +805,18 @@ if `"`add_excel'"' ~= ""         {
 local n_mat   = 0
 local n_est   = 0
 local n_pstat = 0
-local n_pn    = 0
+local n_p     = 0
 local n_rt    = 0
 forvalues p = 1/7           {
    if "`mat`p''" ~= ""      {    //  repeat above counts (for clarity)
       local n_mat = `n_mat' + 1
-      local n_pn  = `n_pn'  + 1
+      local n_p   = `n_p'   + 1
    }
 }
 forvalues p = 1/7           {
    if "`est`p''" ~= ""      {    //  repeat above counts (for clarity)
       local n_est = `n_est' + 1
-      local n_pn  = `n_pn'  + 1
+      local n_p   = `n_p'   + 1
    }
    if "`est_stat`p''" ~= "" {
       local n_pstat = `n_pstat' + 1
@@ -810,7 +825,7 @@ forvalues p = 1/7           {
       local n_rt  = `n_rt' + 1
    }
 }
-local n_p = `n_mat' + `n_est'
+
 
 
 if "`mat1'" ~= ""  {
@@ -832,7 +847,7 @@ if "`est1'" ~= ""       {
 
 
 
-**# processing mat
+**# mat processing
 *
 *  ****  PROCESSING MAT  ****
 *
@@ -880,58 +895,35 @@ local mat "XxYyZz"
 
 
 
-**# processing est
+**# est processing
 *
 *  ****  PROCESSING EST  ****
 *
 
 if "`est1'" ~= ""  {
 
-   forvalues p = 1/`n_est'  {
+   forvalues p = 1/`n_est'         {
       local eqs`p' " "
       tokenize "`est`p''", parse(", ")
       local k = 1
-      while "`1'" ~= ""     {
-         if "`1'" ~= ","    {
+      while "`1'" ~= ""            {
+         if "`1'" ~= ","           {
             local eq`p'`k' "`1'"
             local eqs`p' "`eqs`p'' `eq`p'`k''"
             local ++k
          }
          mac shift
       }
-    } 
+   } 
 
-    forvalues p = 1/`n_est'      {
-       qui estimates table `eqs`p''
-       matrix EQ`p' = r(coef)             //  for labeling, retrieve coefficient vector
-       if `p'==1 & "`ct'" == ""  {        //  if ct NOT specified
-         local ct " "
-         local COLNAME : colnames EQ`p', quoted
-         tokenize `"`COLNAME'"'
-         while "`1'" ~= ""       {
-            local ct "`ct' `1' !"
-            mac shift
-         }
-      } 
-      if "`rt`p''" == ""    {             //  if rt NOT specified
-         local rt`p' " "
-         local ROWNAME : rownames EQ`p', quoted
-         tokenize `"`ROWNAME'"'
-         while "`1'" ~= ""  {
-            local rt`p' "`rt`p'' `1' !"
-            mac shift
-         }
-      } 
-   }
-
-   forvalues p = 1/`n_est'    {
+   forvalues p = 1/`n_est'         {
       local stats`p' " "
-      if "`est_stat`p''" ~= ""   {
+      if "`est_stat`p''" ~= ""     {
          tokenize "`est_stat`p''", parse("!")
          local s = 0
          local N_STAT = 0
-         while "`1'" ~= ""    {
-            if "`1'" ~= "!"   {
+         while "`1'" ~= ""         {
+            if "`1'" ~= "!"        {
                local ++s
                local ++N_STAT
                local STAT`s' "`1'"
@@ -955,7 +947,7 @@ if "`est1'" ~= ""  {
    local pv1 = 0.05
    local pv2 = 0.01
    local pv3 = 0.001
-   if "`est_star'" ~= ""   {
+   if "`est_star'" ~= ""     {
       local num_es = 3
       local pv1 = 0.05
       local pv2 = 0.01
@@ -968,7 +960,7 @@ if "`est1'" ~= ""  {
          local pv3 ""
          local k = 0
       }
-      while "`1'" ~= ""    {
+      while "`1'" ~= ""      {
          if real("`1'")>=.00001 & real("`1'")<=.99   {
             local ++num_es
             local ++k
@@ -978,74 +970,102 @@ if "`est1'" ~= ""  {
       }    
    }
 
-   local ci_p = .05
-   if "`est_se'" ~= ""  {
-      tokenize "`est_se'", parse("!")
+
+**# est:  est_se processing
+   local ci_p = .025
+   if `"`est_se'"' ~= ""     {
+      tokenize `"`est_se'"', parse("!")
       local k = 1
-      while "`1'" ~= ""   {
-         if "`1'" ~= "!"  {
-            local est_seX`k' "`1'"
+      while `"`1'"' ~= ""    {
+         if `"`1'"' ~= "!"   {
+            local est_seX`k' = subinstr(`"`1'"',","," ",5)
             local ++k
          }
          mac shift
       }
-      tokenize "`est_seX1'", parse(" ,()")
       local hit1 = 0
-      while "`1'" ~= ""        {
-         if "`1'" == "beside"  {
-            local est_se2 "`est_seX1'"
+      tokenize `"`est_seX1'"', parse(" ()")
+      while `"`1'"' ~= ""    {
+         if "`1'"=="beside"  {
+            local est_se2 `"`est_seX1'"'
             local hit1 = 1
          }
          mac shift
       }
+      tokenize `"`est_seX1'"'
+      local j = 1
+      while `"`1'"' ~= ""    {
+         local X`j' "`1'"
+         local ++j
+         mac shift
+      }
+      forvalues i = 1/`j'    {
+         tokenize `X`i'', parse("(")
+         if "`1'"=="beside"  {
+            local est_se2 `"`est_seX1'"'
+            local beside_lab "`3'"
+            local hit1 = 1
+         }
+      } 
       local hit2 = 9
-      if "`est_seX2'" ~= ""        {
-         tokenize "`est_seX2'", parse(" ,()")
+      if `"`est_seX2'"' ~= ""                    {
          local hit2 = 0
-         while "`1'" ~= ""         {
-            if "`1'" == "beside"   {
-               if `hit1'==1        {
+         tokenize `"`est_seX2'"', parse(" ()")
+         while `"`1'"' ~= ""                     {
+            if "`1'"=="beside"                   {
+               if `hit1'==1                      {
                   noi di _n(2) _col(3) in y  `"ERROR:  est_se "beside" specified twice"'   _n(1) " "
-                  forvalues p = 1/`n_pn'   {
-                     capture matrix drop EQ`p'
-                  }
                   exit
                }
                local est_se2 "`est_seX2'"
                local hit2 = 1
             }
+
             mac shift
          }
-      }
-      if `hit1'==0 & `hit2'==0  {
-         noi di _n(2) _col(3) in y  `"ERROR:  est_se "below" specified twice"'   _n(1) " "
-         forvalues p = 1/`n_pn'   {
-            capture matrix drop EQ`p'
+         tokenize `"`est_seX2'"'
+         local j = 1
+         while `"`1'"' ~= ""         {
+            local X`j' "`1'"
+            local ++j
+            mac shift
          }
+         forvalues i = 1/`j'         {
+            tokenize `X`i'', parse("(")
+            if "`1'"=="beside"       {
+               if `hit1'==1                      {
+                  noi di _n(2) _col(3) in y  `"ERROR:  est_se "beside" specified twice"'   _n(1) " "
+                  exit
+               }
+               local est_se2 "`est_seX2'"
+               local beside_lab "`3'"
+               local hit2 = 1
+            }
+         } 
+      }
+      if `hit1'==0 & `hit2'==0       {
+         noi di _n(2) _col(3) in y  `"ERROR:  est_se "below" specified twice"'   _n(1) " "
          exit
       }
-      if `hit1'==0 | `hit2'==0  {
-         if `hit1'==0           {
+      if `hit1'==0 | `hit2'==0       {
+         if `hit1'==0                {
             local est_se1 "`est_seX1'"
          }
-         if `hit2'==0           {
+         if `hit2'==0                {
             local est_se1 "`est_seX2'"
          } 
       }
 
       forvalues k = 1/2              {
-         if "`est_se`k''" ~= ""      {
+         if `"`est_se`k''"' ~= ""    {
             if `k'==2 & "`est_star'"~=""  {
-               noi di _n(2) _col(3) in y  `"ERROR:  est_star and se/t/p/ci "beside" are incompatible"'   _n(1) " "
-               forvalues p = 1/`n_pn'   {
-                  capture matrix drop EQ`p'
-               }
+               noi di _n(2) _col(3) in y  `"ERROR:  est_star and se/z/p/ci "beside" are incompatible"'   _n(1) " "
                exit
             }  
-            local PAREN`k'  "no"
-            local STPC`k'   "se"
+            local PAREN`k'    "no"
+            local STPC`k'     "se"
             local CI_SEP "comma"
-            tokenize "`est_se`k''", parse(" ,()")
+            tokenize `"`est_se`k''"', parse(" ()")
             while "`1'" ~= ""  {
                if "`1'" == "paren"   {
                   local PAREN`k' "paren"
@@ -1053,8 +1073,8 @@ if "`est1'" ~= ""  {
                if "`1'" == "bracket" {
                   local PAREN`k' "bracket"
                }  
-               if "`1'" == "t"       {
-                  local STPC`k' "t"
+               if "`1'" == "z"       {
+                  local STPC`k' "z"
                }
                if "`1'" == "p"       {
                   local STPC`k' "p"
@@ -1062,15 +1082,21 @@ if "`est1'" ~= ""  {
                if "`1'" == "ci"      {
                   local STPC`k' "ci"
                }
-               if real("`1'")>=.0001 & real("`1'")<=.50  {     //  next three assume "ci" specified just once
-                  local ci_p = `1'
+               if real("`1'")>=.0001 & real("`1'")<.40   {     //  next three assume "ci" specified just once
+                  local ci_p = `1'/2
                }
-               if real("`1'")>=2 & real("`1'")<30        {
+               if real("`1'")>5 & real("`1'")<30         {
                   local ci_fsize "`1'"    
                }
                if "`1'" == "dash"    {
                   local CI_SEP "dash"
                }  
+               if real("`1'")>=.40 & real("`1'")<2       {
+                  local beside_width "`1'"    
+               }
+               if real("`1'")>=2 & real("`1'")<=5        {
+                  local beside_spaces "`1'"    
+               }
                mac shift
             }
          }
@@ -1078,47 +1104,237 @@ if "`est1'" ~= ""  {
    }
 
 
-*  matrix EQ:  coefficients and variances 
-
-   forvalues p = 1/`n_est'  {
+   forvalues p = 1/`n_est'               {
       qui estimates table `eqs`p''
-      matrix EQ`p' = r(coef)        //  matrix of coefficients (col1) and variances (col2)
+      matrix xX_eQ`p' = r(coef)          //  for labeling, retrieve coefficient vector
+      if `p'==1 & "`ct'" == ""     {     //  if ct NOT specified
+         local ct " "
+         local COLNAMES : colnames xX_eQ`p', quoted
+         tokenize `"`COLNAMES'"'
+         while "`1'" ~= ""         {
+            local ct "`ct' `1' !"
+            mac shift
+         }
+      } 
+      if "`rt`p''" == ""           {      //  if rt NOT specified
+         local rt`p' " "
+         local ROWNAMES : rownames xX_eQ`p', quoted
+         local ROWNAMESX = subinstr("`ROWNAMES'","_cons","intercept",1)
+         tokenize `"`ROWNAMESX'"'
+         while "`1'" ~= ""         {
+            local rt`p' "`rt`p'' `1' !"
+            mac shift
+         }
+      }
+      capture matrix drop xX_eQ`p' 
    }
-   local n_colD : colsof EQ1
-   local n_colDX = `n_colD'         //  n columns - coefficients and variances
-   local n_colD  = `n_colD'/2       //  n columns - coefficients only
 
+*  matrix xX_`p'_*:  matrices:  coefficients, standard errors, z-statistics, p-values
+*     obtained from r(table) 
 
-*  model degrees of freedom (for t-distribution)
+**# est:  matrices:  coeff, se, z, p
+   forvalues p = 1/`n_est'         {
 
-   forvalues p = 1/`n_est'  {
+      tokenize `eqs`p'', parse(" ")
       local k = 1
-      foreach e of local eqs`p'  {
-         estimates restore `e'
-         local DF`p'`k' = `e(df_r)'
+      while "`1'" ~= ""            {
+         qui estimates restore `1'
+         qui estimates replay
+         matrix xXqQ`k' = r(table)
+         capture local DF`p'`k' = r(table)["df",1]
+         if _rc~=0  | (`DF`p'`k''==.) {
+            local DF`p'`k' = e(N) - (e(df_m) + 1)     //  df
+         }
          local ++k
+         mac shift
+      }
+      local K = `k' - 1
+     
+      forvalues k = 1/`K'              {
+         matrix xX_`p'`k'_b  = xXqQ`k'["b",1...]               //  coefficients
+         matrix xX_`p'`k'_se = xXqQ`k'["se",1...]              //  standard errors
+         capture matrix xX_`p'`k'_z  = xXqQ`k'["z",1...]       //  z statistics
+         if _rc~=0    {
+            capture matrix xX_`p'`k'_z  = xXqQ`k'["t",1...]    //  t statistics
+         }
+         matrix xX_`p'`k'_p      = xXqQ`k'["pvalue",1...]      //  p values
+         matrix drop xXqQ`k'
+         local ++k
+      }
+      local item "b se z p"
+      foreach i of local item      {
+         forvalues k = 1/`K'       {
+            matrix colnames xX_`p'`k'_`i' = _:
+            local allvars : colnames xX_`p'`k'_`i'
+            local allvars = subinstr("`allvars'","b.",".",30)
+            local allvars = subinstr("`allvars'","bn.",".",30)
+            local allvars = subinstr("`allvars'","bo.",".",30)
+            matrix colnames xX_`p'`k'_`i' = `allvars'
+         }           
+         matrix xX_`p'_`i' = xX_`p'1_`i'                       //  matrices fixed 
+         forvalues k = 2/`K'       {
+            matrix rowjoinbyname xX_`p'_`i' = xX_`p'_`i' xX_`p'`k'_`i'
+         }
+         forvalues k = 1/`K'       {
+            matrix drop xX_`p'`k'_`i'
+         }
+      }
+
+      if "`est_vars`p''" ~= ""            {
+         local allvars : colnames xX_`p'_b
+         local allvarsX " "
+         foreach v of local allvars       {      //  strip factor notation
+            tokenize "`v'", parse(".")
+            if "`3'"==""                  {
+               local allvarsX "`allvarsX' `1'"
+            }
+            if "`3'"~=""                  {
+               local allvarsX "`allvarsX' `3'"
+            }
+         }
+         tokenize "`allvarsX'", parse(" ")
+         local j = 1
+         while "`1'" ~= ""                {      //  locals for all vars
+            local av`j' "`1'"
+            local ++j
+            mac shift
+         }
+         local AJ = `j' - 1
+         local keepvars "`est_vars`p''"  
+         local keepvarsX = subinstr("`keepvars'","i."," ",30)      //  strip factor notation
+         tokenize "`keepvarsX'", parse(", ")
+         local j = 1
+         while "`1'" ~= ""                {      //  locals for keep vars
+            if "`1'"~=","                 {
+               local kv`j' "`1'"
+               local ++j
+            }
+            mac shift
+         }
+         local KJ = `j' - 1
+         forvalues j = 1/`AJ'             {
+            local C`j' = 0
+            forvalues v = 1/`KJ'          {
+               if "`kv`v''"=="`av`j''"    {
+                  local C`j' = 1                 //  columns to keep 
+               }
+            }
+         }
+         foreach i of local item          {      //  single-column matrices - keep vars
+            local kc = 0
+            forvalues j = 1/`AJ'          {
+               if `C`j''== 1              {
+                  local ++kc
+                  matrix cCcC_`i'_`kc' = xX_`p'_`i'[1...,`j']
+               }
+            }
+         }
+         local KC = `kc'
+         foreach i of local item          {      //  join columns for keep vars
+            matrix gGgGgG = cCcC_`i'_1
+            matrix drop cCcC_`i'_1
+            forvalues kc = 2/`KC'         {
+               matrix gGgGgG = gGgGgG,cCcC_`i'_`kc'
+               matrix drop cCcC_`i'_`kc'
+            }
+            matrix xX_`p'_`i' = gGgGgG           //  matrices fixed, reduced
+            matrix drop gGgGgG
+         }
+      }
+
+   }
+
+
+**# est:  matrices final:  coeff, se, z, p, ci
+*  matrix xX_C#:    coefficients
+*  matrix xX_SE#:   standard errors
+*  matrix xX_ZV#:   z-statistics
+*  matrix xX_PV#:   p-values
+
+   forvalues p = 1/`n_est'   {
+      matrix xX_C`p'  = xX_`p'_b'
+      matrix xX_SE`p' = xX_`p'_se'
+      matrix xX_ZV`p' = xX_`p'_z'
+      matrix xX_PV`p' = xX_`p'_p'
+      if `p' == 1            {
+         local n_colD : colsof xX_C`p'
+      }
+      local n_rowD`p' : rowsof xX_C`p'
+      matrix drop xX_`p'_b  xX_`p'_se  xX_`p'_z  xX_`p'_p
+   }
+
+
+*  matrices pvx#:  vector of p-values ( "1" "2" "3" according to p-value thresholds; miss = -99 )
+*  matrices ci_l#: vector of confidence interval lower value  [computed: se,DF,p] 
+*  matrices ci_u#: vector of confidence interval upper value  [computed: se,DF,p] 
+
+   forvalues p = 1/`n_est'             {
+      forvalues c = 1/`n_colD'         {
+         matrix pvx`p'`c'  = J(`n_rowD`p'',1,0)
+         matrix ci_l`p'`c' = J(`n_rowD`p'',1,0)
+         matrix ci_u`p'`c' = J(`n_rowD`p'',1,0)
+         forvalues r = 1/`n_rowD`p''   {
+            scalar coef_`r'_`c' = xX_C`p'[`r',`c']
+            scalar se_`r'_`c'   = xX_SE`p'[`r',`c']
+            scalar pv_`r'_`c'   = xX_PV`p'[`r',`c']
+            tempvar pvx_`r'_`c'
+            gen `pvx_`r'_`c'' = -99
+            forvalues PVX = 1/`num_es'  {
+               replace `pvx_`r'_`c'' = `PVX'  if (pv_`r'_`c'<=`pv`PVX'')
+            }
+            scalar ci_l_`r'_`c' = coef_`r'_`c' - (invttail(`DF`p'`c'',`ci_p')*se_`r'_`c')
+            scalar ci_u_`r'_`c' = coef_`r'_`c' + (invttail(`DF`p'`c'',`ci_p')*se_`r'_`c')
+            matrix ci_l`p'`c'[`r',1] = ci_l_`r'_`c'
+            matrix ci_u`p'`c'[`r',1] = ci_u_`r'_`c'
+            sum `pvx_`r'_`c'', meanonly
+            matrix pvx`p'`c'[`r',1]  = `r(mean)'
+            scalar drop coef_`r'_`c'  se_`r'_`c'  pv_`r'_`c'
+            scalar drop ci_l_`r'_`c' ci_u_`r'_`c'
+            capture macro drop _pvx_`r'_`c'
+         }
       }
    }
-  
 
-*  matrices C#:  coefficients only
 
-   forvalues p = 1/`n_est'          {
-      local C "coef1"
-      capture matrix drop coef1
-      matrix coef1 = EQ`p'[1...,1]
-      local k = 2
-      forvalues c = 3(2)`n_colDX'   {
-         capture matrix drop coef`k'
-         matrix coef`k' = EQ`p'[1...,`c']
-         local C "`C',coef`k'"
-         local ++k
+*  matrix xX_PVX#:  p-values  ( "1" "2" "3" according to p-value thresholds; miss = -99 )
+*  matrix xX_CI#:   confidence interval bounds - lower and upper
+
+   forvalues p = 1/`n_est'      {
+
+      local PVX "pvx`p'1"
+      forvalues c = 2/`n_colD'  {
+         local PVX "`PVX',pvx`p'`c'"
       }
-      matrix C`p' = `C'
-      local n_rowD`p' : rowsof C`p'            //  # data/coeff rows in each panel
-      local ROWNAMES  : rownames C`p'
-      local ROWNAMESX = subinstr("`ROWNAMES'","_cons","intercept",1)
-      matrix rownames C`p' = `ROWNAMESX'
+      matrix xX_PVX`p' = `PVX'
+
+      local CI "ci_l`p'1,ci_u`p'1"
+      forvalues c = 2/`n_colD'  {
+         local CI "`CI',ci_l`p'`c',ci_u`p'`c'"
+      }
+      matrix xX_CI`p' = `CI'
+
+   }
+
+
+*  define matrices for standard errors (or t-statistic or p-value or confidence-interval):
+
+   forvalues k = 1/2                {
+      if `"`est_se`k''"' ~= ""      {
+         forvalues p = 1/`n_est'    {
+            if "`STPC`k''" == "se"  {
+               matrix xX_STPC`k'`p' = xX_SE`p'
+            }
+            if "`STPC`k''" == "z"   {
+               matrix xX_STPC`k'`p' = xX_ZV`p' 
+            }
+            if "`STPC`k''" == "p"   {
+               matrix xX_STPC`k'`p' = xX_PV`p'
+            }
+            if "`STPC`k''" == "ci"  {
+               matrix xX_STPC`k'`p' = xX_CI`p'
+            }
+         }
+      }
    }
 
 
@@ -1151,131 +1367,9 @@ if "`est1'" ~= ""  {
    }
 
 
-*  matrices V#:  variances
-
-   forvalues p = 1/`n_est'          {
-      local V "var1"
-      capture matrix drop var1
-      matrix var1 = EQ`p'[1...,2]
-      local k = 2
-      forvalues c = 4(2)`n_colDX'   {
-         capture matrix drop var`k'
-         matrix var`k' = EQ`p'[1...,`c']
-         local V "`V',var`k'"
-         local ++k
-      }
-      matrix V`p' = `V'
-   }
 
 
-*  matrices se#:   vector of se for each coefficient (including z and p)
-*  matrices tv#:   vector of t-statistics for each coefficient  [computed: coeff/se]
-*  matrices pv#:   vector of p-values for each coefficient  [computed: tv,df]
-*  matrices pvx#:  vector of p-values ( "1" "2" "3" according to p-value thresholds; miss = -99 )
-*  matrices ci_l#: vector of confidence interval lower value  [computed: se,p] 
-*  matrices ci_u#: vector of confidence interval upper value  [computed: se,p] 
-
-   forvalues p = 1/`n_est'             {
-      forvalues c = 1/`n_colD'         {
-         matrix se`p'`c'   = J(`n_rowD`p'',1,0)
-         matrix tv`p'`c'   = J(`n_rowD`p'',1,0)
-         matrix pv`p'`c'   = J(`n_rowD`p'',1,0)
-         matrix pvx`p'`c'  = J(`n_rowD`p'',1,0)
-         matrix ci_l`p'`c' = J(`n_rowD`p'',1,0)
-         matrix ci_u`p'`c' = J(`n_rowD`p'',1,0)
-         forvalues r = 1/`n_rowD`p''  {
-            scalar coef_`r'_`c' = C`p'[`r',`c']
-            scalar var_`r'_`c'  = V`p'[`r',`c']
-            scalar se_`r'_`c'   = sqrt(var_`r'_`c')
-            scalar tv_`r'_`c'   = abs(coef_`r'_`c'/se_`r'_`c')
-            scalar pv_`r'_`c'   = 2*(ttail(`DF`p'`c'',tv_`r'_`c'))
-            gen pvx_`r'_`c' = -99
-            forvalues PVX = 1/`num_es'  {
-               replace pvx_`r'_`c' = `PVX'  if (pv_`r'_`c'<=`pv`PVX'')
-            }
-            scalar ci_l_`r'_`c' = coef_`r'_`c' - ((invttail(`DF`p'`c'',`ci_p')*se_`r'_`c'))
-            scalar ci_u_`r'_`c' = coef_`r'_`c' + ((invttail(`DF`p'`c'',`ci_p')*se_`r'_`c'))
-            matrix se`p'`c'[`r',1]   = se_`r'_`c'
-            matrix tv`p'`c'[`r',1]   = tv_`r'_`c'
-            matrix pv`p'`c'[`r',1]   = pv_`r'_`c'
-            matrix ci_l`p'`c'[`r',1] = ci_l_`r'_`c'
-            matrix ci_u`p'`c'[`r',1] = ci_u_`r'_`c'
-            sum pvx_`r'_`c', meanonly
-            matrix pvx`p'`c'[`r',1]  = `r(mean)'
-            scalar drop coef_`r'_`c'  var_`r'_`c'  se_`r'_`c'  tv_`r'_`c'  pv_`r'_`c'
-            scalar drop ci_l_`r'_`c' ci_u_`r'_`c'
-            capture drop pvx_`r'_`c'
-         }
-      }
-   }
-
-
-*  matrix SE#:   standard errors
-*  matrix TV#:   t-statistics
-*  matrix PV#:   p-values
-*  matrix PVX#:  p-values  ( "1" "2" "3" according to p-value thresholds; miss = -99 )
-*  matrix CI#:   confidence interval bounds - lower and upper
-
-   forvalues p = 1/`n_est'      {
-
-      local SE "se`p'1"
-      forvalues c = 2/`n_colD'  {
-         local SE "`SE',se`p'`c'"
-      }
-      matrix SE`p' = `SE'
-
-      local TV "tv`p'1"
-      forvalues c = 2/`n_colD'  {
-         local TV "`TV',tv`p'`c'"
-      }
-      matrix TV`p' = `TV'
-
-      local PV "pv`p'1"
-      forvalues c = 2/`n_colD'  {
-         local PV "`PV',pv`p'`c'"
-      }
-      matrix PV`p' = `PV'
-
-      local PVX "pvx`p'1"
-      forvalues c = 2/`n_colD'  {
-         local PVX "`PVX',pvx`p'`c'"
-      }
-      matrix PVX`p' = `PVX'
-
-      local CI "ci_l`p'1,ci_u`p'1"
-      forvalues c = 2/`n_colD'  {
-         local CI "`CI',ci_l`p'`c',ci_u`p'`c'"
-      }
-      matrix CI`p' = `CI'
-
-   }
-
-
-*  define matrices for standard errors (or t-statistic or p-value or confidence-interval):
-
-   forvalues k = 1/2                {
-      if "`est_se`k''" ~= ""        {
-         forvalues p = 1/`n_est'    {
-            if "`STPC`k''" == "se"  {
-               matrix STPC`k'`p' = SE`p'
-            }
-            if "`STPC`k''" == "t"   {
-               matrix STPC`k'`p' = TV`p' 
-            }
-            if "`STPC`k''" == "p"   {
-               matrix STPC`k'`p' = PV`p'
-            }
-            if "`STPC`k''" == "ci"  {
-               matrix STPC`k'`p' = CI`p'
-            }
-         }
-      }
-   }
-
-
-
-
-**# add_means 
+**# est:  add_means 
 *  **********************************
 *
 *  ****  ADD_MEANS OPTION  ****
@@ -1294,12 +1388,12 @@ if "`est1'" ~= ""  {
             local ++k
             estimates restore `1'
             qui margins, atmeans          //  or, could employ estat summarize
-            matrix MEANS`k' = r(at)'
+            matrix xX_MEANS`k' = r(at)'
             local n_colM = 1
          }
          mac shift
       }
-      if `k' ~= `n_pn'             {
+      if `k' ~= `n_p'              {
          noi di _n(2) _col(3) in y  "ERROR:  add_means - number of equation names unequal to number of panels"   _n(1) " "
          exit  
       }
@@ -1308,7 +1402,7 @@ if "`est1'" ~= ""  {
 
 
 
-**# add_mat
+**# est:  add_mat
 *  **************************
 *
 *  ****  ADD_MAT OPTION  ****
@@ -1322,20 +1416,21 @@ if "`est1'" ~= ""  {
       while "`1'" ~= ""          {
          if "`1'"~="left" & "`1'"~="right" & "`1'" ~= ","   {
             local ++k
-            matrix MAT`k' = `1'
-            local n_rowM`k' : rowsof MAT`k'
-            local n_colM`k' : colsof MAT`k'
+            matrix xX_MAT`k' = `1'
+            local n_rowM`k' : rowsof xX_MAT`k'
+            local n_colM`k' : colsof xX_MAT`k'
          }
          mac shift
       }
-      if `k' ~= `n_pn'           {
+      if `k' ~= `n_p'            {
          noi di _n(2) _col(3) in y  "ERROR:  add_mat - number of matrix names unequal to number of panels"   _n(1) " "
          exit  
       }
-      forvalues p = 1/`n_pn'     { 
-         forvalues P = 1/`n_pn'  {
+      forvalues p = 1/`n_p'      { 
+         forvalues P = 1/`n_p'   {
             if `n_colM`p'' ~= `n_colM`P''  {
-               noi di _n(2) _col(3) in y  "ERROR:  add_mat - number of matrix columns must be the same in all panels"   _n(1) " "
+               noi di _n(2) _col(3) in y  "ERROR:  add_mat - number of matrix columns must be the same in all panels"
+               noi di _n(1) " "
                exit
             }
          }
@@ -1346,7 +1441,7 @@ if "`est1'" ~= ""  {
 
 
 
-**# construct matrix for putdocx table
+**# matrix for putdocx table
 *  **********************************************
 *
 *  ****  CONSTRUCT MATRIX FOR PUTDOCX TABLE  ****
@@ -1354,68 +1449,68 @@ if "`est1'" ~= ""  {
 *  **********************************************
 
 *  matrix for input to putdocx table:
-*      C    if no statistics have been requested
-*      CM   if no statistics, but means or matrix have been requested
-*      CZ   if statistics have been requested [ CZ = C + STAT ]
-*      CZM  if statistics and means/matrix have been requested  [ CZM = CM + STAT ] 
+*      xX_C    if no statistics have been requested
+*      xX_CM   if no statistics, but means or matrix have been requested
+*      xX_CZ   if statistics have been requested [ xX_CZ = xX_C + STAT ]
+*      xX_CZM  if statistics and means/matrix have been requested  [ xX_CZM = xX_CM + STAT ] 
 
-   matrix C = C1
+   matrix xX_C = xX_C1
    forvalues p = 2/`n_est'      {
-      matrix C = C \ C`p'
+      matrix xX_C = xX_C \ xX_C`p'
    }
-   local mat "C"
+   local mat "xX_C"
    if "`est_stat1'" ~= ""       {
-      matrix CZ1 = C1 \ STAT1
-      matrix CZ = CZ1
+      matrix xX_CZ1 = xX_C1 \ STAT1
+      matrix xX_CZ = xX_CZ1
       forvalues p = 2/`n_est'   { 
-         matrix CZ`p' = C`p' \ STAT`p'
-         matrix CZ = CZ \ CZ`p'
+         matrix xX_CZ`p' = xX_C`p' \ STAT`p'
+         matrix xX_CZ = xX_CZ \ xX_CZ`p'
       }
-      local mat "CZ"
+      local mat "xX_CZ"
    } 
    if "`add_means'"~="" & "`est_stat1'"==""   {
       if "`ADD_SIDE'" == "left"               {
-         matrix coljoinbyname CM1 = MEANS1 C1
-         matrix CM = CM1
+         matrix coljoinbyname xX_CM1 = xX_MEANS1 xX_C1
+         matrix xX_CM = xX_CM1
          forvalues p = 2/`n_est'              {
-            matrix coljoinbyname CM`p' = MEANS`p' C`p'
-            matrix CM = CM \ CM`p'
+            matrix coljoinbyname xX_CM`p' = xX_MEANS`p' xX_C`p'
+            matrix xX_CM = xX_CM \ xX_CM`p'
          }
       }
       if "`ADD_SIDE'" == "right"              {
-         matrix coljoinbyname CM1 = C1 MEANS1
-         matrix CM = CM1
+         matrix coljoinbyname xX_CM1 = xX_C1 xX_MEANS1
+         matrix xX_CM = xX_CM1
          forvalues p = 2/`n_est'              {
-            matrix coljoinbyname CM`p' = C`p' MEANS`p'
-            matrix CM = CM \ CM`p'
+            matrix coljoinbyname xX_CM`p' = xX_C`p' xX_MEANS`p'
+            matrix xX_CM = xX_CM \ xX_CM`p'
          }
       }
-      local mat "CM"
+      local mat "xX_CM"
    }
    if "`add_means'"~="" & "`est_stat1'"~=""   {
       if "`ADD_SIDE'" == "left"               {
-         matrix coljoinbyname CZM1 = MEANS1 CZ1
-         matrix CZM = CZM1
+         matrix coljoinbyname xX_CZM1 = xX_MEANS1 xX_CZ1
+         matrix xX_CZM = xX_CZM1
          forvalues p = 2/`n_est'              {
-            matrix coljoinbyname CZM`p' = MEANS`p' CZ`p'
-            matrix CZM = CZM \ CZM`p'
+            matrix coljoinbyname xX_CZM`p' = xX_MEANS`p' xX_CZ`p'
+            matrix xX_CZM = xX_CZM \ xX_CZM`p'
          }
       }
       if "`ADD_SIDE'" == "right"              {
-         matrix coljoinbyname CZM1 = CZ1 MEANS1
-         matrix CZM = CZM1
+         matrix coljoinbyname xX_CZM1 = xX_CZ1 xX_MEANS1
+         matrix xX_CZM = xX_CZM1
          forvalues p = 2/`n_est'              {
-            matrix coljoinbyname CZM`p' = CZ`p' MEANS`p'
-            matrix CZM = CZM \ CZM`p'
+            matrix coljoinbyname xX_CZM`p' = xX_CZ`p' xX_MEANS`p'
+            matrix xX_CZM = xX_CZM \ xX_CZM`p'
          }
       }
-      local mat "CZM"
+      local mat "xX_CZM"
    }
-   if "`add_mat'"~=""                         {     //  truncate rows if exceeds rows in C matrix 
+   if "`add_mat'"~=""                         {     //  truncate rows if exceeds rows in xX_C matrix 
       forvalues p = 1/`n_est'                 {
-         matrix M`p' = MAT`p'
+         matrix xX_M`p' = xX_MAT`p'
          if `n_rowM`p'' > `n_rowD`p''         {
-            matrix M`p' = MAT`p'[1..`n_rowD`p'', 1..`n_colM`p'']
+            matrix xX_M`p' = xX_MAT`p'[1..`n_rowD`p'', 1..`n_colM`p'']
          }
       }      
    }
@@ -1424,21 +1519,21 @@ if "`est1'" ~= ""  {
       local leftX  = `n_colM1' + 1
       local rightX = `n_colD'  + 1
       forvalues p = 1/`n_est'                 {     
-         matrix CM`p' = J(`n_rowD`p'',`n_colCM',.)   //  create empty matrix
+         matrix xX_CM`p' = J(`n_rowD`p'',`n_colCM',.)   //  create empty matrix
          if "`ADD_SIDE'" == "left"            {
-            matrix CM`p'[1,1] = M`p'
-            matrix CM`p'[1,`leftX'] = C`p'
+            matrix xX_CM`p'[1,1] = xX_M`p'
+            matrix xX_CM`p'[1,`leftX'] = xX_C`p'
          }
          if "`ADD_SIDE'" == "right"           {
-            matrix CM`p'[1,1] = C`p'
-            matrix CM`p'[1,`rightX'] = M`p'
+            matrix xX_CM`p'[1,1] = xX_C`p'
+            matrix xX_CM`p'[1,`rightX'] = xX_M`p'
          }
       }
-      matrix CM = CM1
+      matrix xX_CM = xX_CM1
       forvalues p = 2/`n_est'                 {
-         matrix CM = CM \ CM`p'
+         matrix xX_CM = xX_CM \ xX_CM`p'
       }
-      local mat "CM"
+      local mat "xX_CM"
    }
    if "`add_mat'"~="" & "`est_stat1'"~=""     {
       local n_colCM = `n_colD' + `n_colM1'
@@ -1446,21 +1541,21 @@ if "`est1'" ~= ""  {
       local rightX = `n_colD'  + 1
       forvalues p = 1/`n_est'                 {     
          local n_rowDS`p' = `n_rowD`p'' + `n_rowS`p''
-         matrix CZM`p' = J(`n_rowDS`p'',`n_colCM',.)   //  create empty matrix
+         matrix xX_CZM`p' = J(`n_rowDS`p'',`n_colCM',.)   //  create empty matrix
          if "`ADD_SIDE'" == "left"            {
-            matrix CZM`p'[1,1] = M`p'
-            matrix CZM`p'[1,`leftX'] = CZ`p'
+            matrix xX_CZM`p'[1,1] = xX_M`p'
+            matrix xX_CZM`p'[1,`leftX'] = xX_CZ`p'
          }
          if "`ADD_SIDE'" == "right"           {
-            matrix CZM`p'[1,1] = CZ`p'
-            matrix CZM`p'[1,`rightX'] = M`p'
+            matrix xX_CZM`p'[1,1] = xX_CZ`p'
+            matrix xX_CZM`p'[1,`rightX'] = xX_M`p'
          }
       }
-      matrix CZM = CZM1
+      matrix xX_CZM = xX_CZM1
       forvalues p = 2/`n_est'                 {
-         matrix CZM = CZM \ CZM`p'
+         matrix xX_CZM = xX_CZM \ xX_CZM`p'
       }
-      local mat "CZM"
+      local mat "xX_CZM"
    }
   
   
@@ -1468,28 +1563,27 @@ if "`est1'" ~= ""  {
 
 
 
+**# add_excel - finishing
+*  **************************
 *
-*  ****  ADD_EXCEL - FINISHING  ****
+*  ****  ADD_EXCEL - FINISHING
 *
+*  ***************************
 
 if `"`add_excel'"' ~= ""         {
-
    local n_rows : rowsof `mat'
-
-   matrix EXC = J(`n_rows',`n_colE',.)
-
+   matrix xX_EXC = J(`n_rows',`n_colE',.)
    if "`EXC_SIDE'" == "left"     {
-      matrix `mat' = EXC,`mat'
+      matrix `mat' = xX_EXC,`mat'
    }
    if "`EXC_SIDE'" == "right"    {
-      matrix `mat' = `mat',EXC
+      matrix `mat' = `mat',xX_EXC
    }
-
 }
 
 
 
-**# est_no option
+**# est:  est_no
 *  *************************
 *
 *  ****  EST_NO OPTION  ****
@@ -1518,7 +1612,11 @@ if `"`add_excel'"' ~= ""         {
                   local d = `c' + `n_colE' + `n_colM'
                   local est_no`d' "no"
                }
-               if ("`EXC_SIDE'"=="right" & `n_colE'>0) & ("`ADD_SIDE'"=="right" & `n_colM'>0)  { 
+               if "`ADD_SIDE'"=="right" & ("`EXC_SIDE'"=="right" | `n_colE'==0)  { 
+                  local d = `c' 
+                  local est_no`d' "no"
+               }
+               if "`EXC_SIDE'"=="right" & ("`ADD_SIDE'"=="right" | `n_colM'==0)  { 
                   local d = `c' 
                   local est_no`d' "no"
                }
@@ -1543,7 +1641,7 @@ if `"`add_excel'"' ~= ""         {
 
 if "`est1'" ~= ""  {
    forvalues p = 1/`n_est'  {
-      capture matrix drop EQ`p'
+      capture matrix drop xX_eQ`p'
       capture matrix drop STAT`p'
       capture matrix drop V`p'
    }
@@ -1568,12 +1666,12 @@ if "`est1'" ~= ""  {
 ******************************************************************************************
 
 
-**# initializing rows and columns
-*  **********************************
+**# initialize rows and columns
+*  ********************************
 *
-*  **** INITIALIZING DIMENSIONS  ****
+*  **** INITIALIZE DIMENSIONS  ****
 *
-*  **********************************
+*  ********************************
 
 
 *  Guide to rows and columns
@@ -1683,24 +1781,6 @@ forvalues p = 1/`n_p'      {                 //  panel-specific first and last d
 *  *******************
 
 
-*  Guide to columns
-*
-*     n_colD   number of data columns (equations or matrix elements), excluding means/matrices
-*     n_colM   number of means/matrix columns
-*     n_colE   number of excel columns
-*     n_colT   number of data/means/matrix/excel columns
-*     n_colTX  number of columns:  row title + data/means/matrix/excel columns
-*
-*     col_DF   first data column (accounting for row title column = 1)
-*     col_DL   last data column (accounting for extra columns: row title, stars, se)
-*     col_MF   first means/matrix column (accounting for row title column = 1)
-*     col_ML   last means/matrix column (accounting for row title column = 1) 
-*     col_EF   first excel column (accounting for row title column = 1)
-*     col_EL   last excel column (accounting for row title column = 1) 
-*     col_F    first data/means/matrix/excel column (accounting for row title column = 1)
-*     col_L    last data/means/matrix/excel column (accounting for row title column = 1)
-*
-
 local n_colT  = `n_colD' + `n_colM' + `n_colE'
 local n_colTX = `n_colT' + 1
 
@@ -1716,7 +1796,7 @@ if `n_colM'==0 | "`ADD_SIDE'"=="right"           {    //  add NOT on left (right
    if `n_colE'==0                                {    //  excel missing
       local col_DF = 1 + 1 
       local col_DL = `col_DF' + (`n_colD' - 1)
-      if "`est_star'"~="" | "`est_se2'"~=""      {
+      if "`est_star'"~="" | `"`est_se2'"'~=""    {
          local col_DL = `col_DF' + ((2*`n_colD') - 1)
       }
       if "`add_means'"~="" | "`add_mat'"~=""     {
@@ -1729,7 +1809,7 @@ if `n_colM'==0 | "`ADD_SIDE'"=="right"           {    //  add NOT on left (right
       local col_DL  = `col_DF'  + (`n_colD' - 1)
       local col_DLX = `col_DF'  + (`n_colD' - 1)      //  for use when inputting excel cell values
       local col_EFX = `col_DL'  + 1                
-      if "`est_star'"~="" | "`est_se2'"~=""      {
+      if "`est_star'"~="" | `"`est_se2'"'~=""    {
          local col_DL = `col_DF' + ((2*`n_colD') - 1)
       }
       local col_EF = `col_DL' + 1
@@ -1745,7 +1825,7 @@ if `n_colM'==0 | "`ADD_SIDE'"=="right"           {    //  add NOT on left (right
    if `n_colE'>0 & "`EXC_SIDE'" == "left"        {    //  excel on left
       local col_DF = 1 + `n_colE' + 1 
       local col_DL = `col_DF' + (`n_colD' - 1)
-      if "`est_star'"~="" | "`est_se2'"~=""      {
+      if "`est_star'"~="" | `"`est_se2'"'~=""    {
          local col_DL = `col_DF' + ((2*`n_colD') - 1)
       }
       local col_EF = 1 + 1
@@ -1761,7 +1841,7 @@ if `n_colM'>0 & "`ADD_SIDE'"=="left"             {    //  add on left
    if `n_colE'==0                                {    //  excel missing
       local col_DF = 1 + `n_colM' + 1
       local col_DL = `col_DF' + (`n_colD' - 1)
-      if "`est_star'"~="" | "`est_se2'"~=""      {
+      if "`est_star'"~="" | `"`est_se2'"'~=""    {
          local col_DL = `col_DF' + ((2*`n_colD') - 1)
       }
       local col_MF = 1 + 1
@@ -1771,7 +1851,7 @@ if `n_colM'>0 & "`ADD_SIDE'"=="left"             {    //  add on left
       local col_DF  = 1 + `n_colM' + 1
       local col_DL  = `col_DF'  + (`n_colD' - 1)
       local col_EFX = `col_DL'  + 1                   //  for use when inputting excel cell values
-      if "`est_star'"~="" | "`est_se2'"~=""      {
+      if "`est_star'"~="" | `"`est_se2'"'~=""    {
          local col_DL = `col_DF' + ((2*`n_colD') - 1)
       }
       local col_MF = 1 + 1
@@ -1782,7 +1862,7 @@ if `n_colM'>0 & "`ADD_SIDE'"=="left"             {    //  add on left
    if `n_colE'>0 & "`EXC_SIDE'" == "left"        {    //  excel on left
       local col_DF = 1 + `n_colE' + `n_colM' + 1 
       local col_DL = `col_DF' + (`n_colD' - 1)
-      if "`est_star'"~="" | "`est_se2'"~=""      {
+      if "`est_star'"~="" | `"`est_se2'"'~=""    {
          local col_DL = `col_DF' + ((2*`n_colD') - 1)
       }
       local col_EF = 1 + 1
@@ -1813,6 +1893,25 @@ local col_L = cond(`col_EL'>`col_L',`col_EL',`col_L')
 *  ****  FORMATTING COLUMNS  ****
 *
 *  ******************************
+
+
+*  Guide to columns  (reprise)
+*
+*     n_colD   number of data columns (equations or matrix elements), excluding means/matrices
+*     n_colM   number of means/matrix columns
+*     n_colE   number of excel columns
+*     n_colT   number of data/means/matrix/excel columns
+*     n_colTX  number of columns:  row title + data/means/matrix/excel columns
+*
+*     col_DF   first data column (accounting for row title column = 1)
+*     col_DL   last data column (accounting for extra columns: row title, stars, se)
+*     col_MF   first means/matrix column (accounting for row title column = 1)
+*     col_ML   last means/matrix column (accounting for row title column = 1) 
+*     col_EF   first excel column (accounting for row title column = 1)
+*     col_EL   last excel column (accounting for row title column = 1) 
+*     col_F    first data/means/matrix/excel column (accounting for row title column = 1)
+*     col_L    last data/means/matrix/excel column (accounting for row title column = 1)
+*
 
 
 *  width of columns  ( allowing extra columns for est_star and est_se "beside" )
@@ -1894,10 +1993,10 @@ forvalues c = 1/`n_colTX'    {
    }
 }   
                        
-if "`est_star'"=="" & "`est_se2'"==""   {
+if "`est_star'"=="" & `"`est_se2'"'==""   {
    forvalues c = 1/`n_colTX'     {
       local colwidth`c' "1in"
-      if "`cw`c'" ~= ""   {
+      if "`cw`c''" ~= ""         {
          local colwidth`c' "`cw`c''in"
       }
    }
@@ -1959,7 +2058,7 @@ if "`est_star'" ~= ""            {
    } 
 }
 
-if "`est_se2'" ~= ""                    {
+if `"`est_se2'"' ~= ""                  {
    local colwidth1 "`cw1'in"
    local k = `col_DF'
    forvalues c = `col_DF'(2)`col_DL'    {
@@ -1973,14 +2072,17 @@ if "`est_se2'" ~= ""                    {
    local k = `col_DF'
    forvalues c = `col_DFX'(2)`col_DL'  {
       local colwidth`c' "0.9in"
-      if "`STPC2'" ~= "ci"      {
-         if "`cw`k''" ~= ""     {
+      if "`STPC2'" ~= "ci"             {
+         if "`cw`k''" ~= ""            {
             local cwX = 0.75*`cw`k''
-            local colwidth`c' "`cwX'in"     
+            local colwidth`c' "`cwX'in"
+            if "`beside_width'"~= ""   {
+               local colwidth`c' "`beside_width'in"
+            }     
          }
       }
-      if "`STPC2'" == "ci"      {
-         if "`cw`k''" ~= ""     {
+      if "`STPC2'" == "ci"             {
+         if "`cw`k''" ~= ""            {
             local cwX = 1.4*`cw`k''
             local colwidth`c' "`cwX'in"     
          }
@@ -2037,6 +2139,51 @@ if "`add_cols'" ~= ""  {
 }
 
 
+*  Guide to rows and columns  (reprise)
+*
+*     n_rowD   number data rows (coefficients or matrix elements):        all panels
+*     n_rowS   number statistics rows (N, r-squared, BIC, etc):           all panels
+*
+*     n_colD   number of data columns (equations or matrix elements), excluding means/matrices
+*     n_colM   number of means/matrix columns
+*     n_colE   number of excel columns
+*     n_colT   number of data/means/matrix/excel columns
+*     n_colTX  number of columns:  row title + data/means/matrix/excel columns
+*
+*     col_DF   first data column (accounting for row title column = 1)
+*     col_DL   last data column (accounting for extra columns: row title, stars, se)
+*     col_MF   first means/matrix column (accounting for row title column = 1)
+*     col_ML   last means/matrix column (accounting for row title column = 1) 
+*     col_EF   first excel column (accounting for row title column = 1)
+*     col_EL   last excel column (accounting for row title column = 1) 
+*     col_F    first data/means/matrix/excel column (accounting for row title column = 1)
+*     col_L    last data/means/matrix/excel column (accounting for row title column = 1)
+*
+*     row_SP   column spanning title row
+*     row_C    column title row
+*
+*     row_F    first data row                                       first row, first panel
+*     row_L    last data/coeff row:                                 last row, last panel
+*     row_LS   last data/coeff/stat row:                            after all panels
+*     row_LSE  last data/coeff/stat/extra row:                      after all panels
+*     row_N    first row of notes                                   after all panels
+*
+*     n_rowD#  number data rows (coefficients or matrix elements):  panel-specific
+*     n_rowS#  number statistics rows (N, r-squared, BIC, etc):     panel-specific
+*
+*     row_F#   first data row:                                      panel-specific
+*     row_L#   last data/coeff row:                                 panel-specific
+*     row_LS#  last data/coeff/stat row:                            panel-specific
+*
+*     note:  panel-specific are absolute -- based on row_F, not renumbered panel-by-panel
+
+
+**# number of decimals
+*  ******************************
+*
+*  ****  NUMBER OF DECIMALS  ****
+*
+*  ******************************
 
 *  format of data columns: number of decimals
 *     ( allowing extra columns for est_star and est_se "beside" )
@@ -2045,283 +2192,180 @@ if "`add_cols'" ~= ""  {
 *  default = %10.1fc
 
 
-*  replicating values
-tokenize "`decimals'", parse(" ,")
-local C = 1
-while "`1'"~=""              {
-   local SDX`C' "`1'"
-   local ++C
-   mac shift
-}
-local C = `C' - 1
-local DEC " "
-forvalues c = 1/`C'          {
-   tokenize "`SDX`c''", parse("*")
-   local hit`c' = 0
-   while "`1'"~=""           {
-      if "`1'"=="*"          {
-         local hit`c' = 1    
+if "`dec1'" == ""               {
+   if "`decimals'" ~= ""        {
+      forvalues p = 1/`n_p'     {
+         local DECIMAL`p' "`decimals'"
       }
-      mac shift
    }
-   if `hit`c''==0            {
-      if "`SDX`c''" ~= ","   {
-         if `c'<`C'          {
-            local SDZ`c' "`SDX`c'',"
-         }
-         if `c'==`C'         {
-            local SDZ`c' "`SDX`c''"
-         }
-      } 
-   }     
-   if `hit`c''==1            {
-      tokenize "`SDX`c''", parse("*")
-      local SDZ`c' "`3',"
-      forvalues r = 2/20     {
-         if `1'>`r'          {
-            local SDZ`c' "`SDZ`c''`3',"
-         }
-         if `1'==`r'         {
-            if `c'<`C'       {
-               local SDZ`c' "`SDZ`c''`3',"
-            }
-            if `c'==`C'      {
-               local SDZ`c' "`SDZ`c''`3'"
-            }
-         }
-         if `1'<`r'          {
-            continue, break
-         }
-      }
-   }  
-   local DEC "`DEC'`SDZ`c''"
 }
-local dec "`DEC'"
-
-local WISE "cols"
-if "`dec'" ~= ""           {
-   tokenize "`dec'", parse(" ,")
-   local k = 1
-   if "`1'"=="rows" | "`1'"=="row" | "`1'"=="Rows" | "`1'"=="Row"   {
-      if `n_p' > 1         {
-         noi di _n(1) _col(3) in y  `"ERROR:  dec "rows" not allowed with multiple panels"'       _n(1) " "
+if "`dec1'" ~= ""               {
+   forvalues p = 1/`n_p'        {
+      if "`dec`p''"~=""         {
+        local DECIMAL`p' "`dec`p''"
+      }
+      if "`dec`p''"==""         {
+         noi di _n(1) _col(3) in y  "ERROR:  dec`p' not specified"   _n(1) " "
          exit 
       }
-      if "`STPC1'"=="se" | "`STPC2'"=="se"   {
-         noi di _n(1) _col(3) in y  `"ERROR:  dec "rows" cannot be specified with est_se "se" "'  _n(1) " "
-         exit
+   }
+}
+
+
+*  replicating values
+forvalues p = 1/`n_p'                  {
+   tokenize "`DECIMAL`p''", parse(" ,")
+   local C = 1
+   while "`1'"~=""                     {
+      local SDX`C' "`1'"
+      local ++C
+      mac shift
+   }
+   local C = `C' - 1
+   local DEC " "
+   forvalues c = 1/`C'                 {
+      tokenize "`SDX`c''", parse("*")
+      local hit`c' = 0
+      while "`1'"~=""                  {
+         if "`1'"=="*"                 {
+            local hit`c' = 1    
+         }
+         mac shift
       }
-      if "`STPC1'"=="ci" | "`STPC2'"=="ci"   {
-         noi di _n(1) _col(3) in y  `"ERROR:  dec "rows" cannot be specified with est_se "ci" "'  _n(1) " "
-         exit
-      }
+      if `hit`c''==0                   {
+         if "`SDX`c''" ~= ","          {
+            if `c'<`C'                 {
+               local SDZ`c' "`SDX`c'',"
+            }
+            if `c'==`C'                {
+               local SDZ`c' "`SDX`c''"
+            }
+         } 
+      }     
+      if `hit`c''==1                   {
+         tokenize "`SDX`c''", parse("*")
+         local SDZ`c' "`3',"
+         forvalues r = 2/20            {
+            if `1'>`r'                 {
+               local SDZ`c' "`SDZ`c''`3',"
+            }
+            if `1'==`r'                {
+               if `c'<`C'              {
+                  local SDZ`c' "`SDZ`c''`3',"
+               }
+               if `c'==`C'             {
+                  local SDZ`c' "`SDZ`c''`3'"
+               }
+            }
+            if `1'<`r'                 {
+               continue, break
+            }
+         }
+      }  
+      local DEC "`DEC'`SDZ`c''"
+   }
+   local dec`p' "`DEC'"
+}
+
+local WISE "cols"
+if "`dec1'" ~= ""                      {
+   tokenize "`dec1'", parse(" ,")
+   if "`1'"=="rows" | "`1'"=="row" | "`1'"=="Rows" | "`1'"=="Row"   {
       local WISE "rows"
-      mac shift
    }
-   if "`1'"=="cols" | "`1'"=="col" | "`1'"=="Cols" | "`1'"=="Col"   {
-      local WISE "cols"
-      mac shift
-   }
-   while "`1'"~=""                 {
-      if "`1'" ~= ","              {
-         local nf`k' "`1'"
-         local D = `1' + 1                 //  set additional decimals (if any) for standard error
-         local sef`k' "`D'"
-         local NF "`nf`k''"
-         local ++k
+}
+forvalues p = 1/`n_p'                  {
+   if "`dec`p''" ~= ""                 {
+      tokenize "`dec`p''", parse(" ,")
+      if "`1'"=="rows" | "`1'"=="row" | "`1'"=="Rows" | "`1'"=="Row"   {
+         mac shift
       }
-      mac shift
-   }
-   if "`WISE'" == "cols"           {
-      forvalues j = `k'/`n_colT'   {      //  extend through all data columns
-         local nf`j' "`NF'"
-         local sef`j' "`D'"
+      if "`1'"=="cols" | "`1'"=="col" | "`1'"=="Cols" | "`1'"=="Col"   {
+         mac shift
       }
-   }  
-   if "`WISE'" == "rows"           {
-      forvalues j = `k'/`n_rowD'   {      //  extend through all data rows
-         local nf`j' "`NF'"
-         local sef`j' "`D'"
+      local k = 1
+      while "`1'"~=""                  {
+         if "`1'" ~= ","               {
+            local nf`p'`k' "`1'"
+            local NF "`nf`p'`k''"
+            local D = `1' + 1                 //  set additional decimals (if any) for standard error
+            local sef`p'`k' "`D'"
+            local ++k
+         }
+         mac shift
+      }
+      if "`WISE'" == "cols"            {
+         forvalues j = `k'/`n_colT'    {      //  extend through all data columns
+            local nf`p'`j' "`NF'"
+            local sef`p'`j' "`D'"
+         }
+      }  
+      if "`WISE'" == "rows"            {
+         forvalues j = `k'/`n_rowD`p'' {      //  extend through all data rows
+            local nf`p'`j' "`NF'"
+            local sef`p'`j' "`D'"
+         }
       }
    }      
 }
 
-local k = 1
-if "`WISE'" == "cols"                     {
-   if "`est_se2'"=="" & "`est_star'"==""  {
-      forvalues c = `col_F'/`col_L'       {
-         local nform`c' "nformat(%10.1fc)"
-         local CIFORM`c' "%10.1fc"
-         if "`dec'" ~= ""                 {
-            if "`nf`k''" ~= ""            {
-               local NFORM "%10.`nf`k''fc"
+if "`WISE'" == "cols"                           {
+   forvalues p = 1/`n_p'                        {
+      local k = 1
+      forvalues c = 1/`n_colT'                  {
+         forvalues r = 1/`n_rowD`p''            {
+            local nform`p'`r'`c' "nformat(%10.1fc)"
+            local ciform`p'`r'`c' "%10.1fc"
+            local seform`p'`r'`c' "%8.2f"
+            local zform`p'`r'`c'  "%3.2f"
+            local pform`p'`r'`c'  "%4.3f"
+            if "`dec`p''" ~= ""                 {
+               if "`nf`p'`k''" ~= ""            {
+                  local NFORM "%10.`nf`p'`k''fc"
+               }
+               local nform`p'`r'`c' "nformat(`NFORM')"
+               local ciform`p'`r'`c' "`NFORM'"
+               if "`sef`p'`k''" ~= ""           {
+                  local seform`p'`r'`c' "%10.`sef`p'`k''fc"
+               }
             }
-            local nform`c' "nformat(`NFORM')"
-            local CIFORM`c' "`NFORM'"
          }
          local ++k
       }
    } 
-   if "`est_se2'"~="" | "`est_star'"~=""  {
-      local k = `col_DF' - 1
-      forvalues c = `col_DF'(2)`col_DL'   {
-         local nform`c' "nformat(%10.1fc)"
-         local CIFORM`c' "%10.1fc"
-         if "`dec'" ~= ""                 {
-            if "`nf`k''" ~= ""            {
-               local NFORM "%10.`nf`k''fc"
-            }
-            local nform`c' "nformat(`NFORM')"
-            local CIFORM`c' "`NFORM'"
-         }
-         local ++k
-      }  
-   }
 } 
 
-if "`WISE'" == "rows"                     {
-   forvalues r = `row_F'/`row_L'          {
-      local nform`r' "nformat(%10.1fc)"
-      if "`dec'" ~= ""                    {
-         if "`nf`k''" ~= ""               {
-            local NFORM "%10.`nf`k''fc"
-         }
-         local nform`r' "nformat(`NFORM')"
-      }
-      local ++k
-   }
-} 
-
-if "`est_se1'" ~= ""                       {
-   if "`est_se2'"=="" & "`est_star'"==""   {
-      local k = `col_DF' - 1
-      forvalues c = `col_DF'/`col_DL'      {
-         if "`STPC1'" == "se"              {
-            local stpcform`c' "%8.2f"
-            if "`dec'" ~= ""               {
-               if "`sef`k''" ~= ""         {
-                  local STPCFORM "%8.`sef`k''f"
+if "`WISE'" == "rows"                           {
+   forvalues p = 1/`n_p'                        {
+      forvalues c = 1/`n_colT'                  {
+         local k = 1
+         forvalues r = 1/`n_rowD`p''            {
+            local nform`p'`r'`c' "nformat(%10.1fc)"
+            local ciform`p'`r'`c' "%10.1fc"
+            local seform`p'`r'`c' "%8.2f"
+            local zform`p'`r'`c'  "%3.2f"
+            local pform`p'`r'`c'  "%4.3f"
+            if "`dec`p''" ~= ""                 {
+               if "`nf`p'`k''" ~= ""            {
+                  local NFORM "%10.`nf`p'`k''fc"
                }
-               local stpcform`c' "`STPCFORM'"
-            }
-         }
-         if "`STPC1'"=="t"                 {
-            local stpcform`c' "%3.2f"
-         }
-         if "`STPC1'"=="p"                 {
-            local stpcform`c' "%4.3f"
-         }
-         if "`WISE'" == "cols"             {
-            if "`STPC1'"=="ci"             {
-               local stpcform`c' "`CIFORM`c''"
-            }
-         }
-         local ++k
-      }
-   }
-   if "`est_se2'"~="" | "`est_star'"~=""   {
-      local k = `col_DF' - 1
-      forvalues c = `col_DF'(2)`col_DL'     {
-         if "`STPC1'" == "se"               {
-            local stpcform`c' "%8.2f"
-            if "`dec'" ~= ""                {
-               if "`sef`k''" ~= ""          {
-                  local STPCFORM "%8.`sef`k''f"
+               local nform`p'`r'`c' "nformat(`NFORM')"
+               local ciform`p'`r'`c' "`NFORM'"
+               if "`sef`p'`k''" ~= ""           {
+                  local seform`p'`r'`c' "%10.`sef`p'`k''fc"
                }
-               local stpcform`c' "`STPCFORM'"
             }
+            local ++k
          }
-         if "`STPC1'"=="t"                  {
-            local stpcform`c' "%3.2f"
-         }
-         if "`STPC1'"=="p"                  {
-            local stpcform`c' "%4.3f"
-         }
-         if "`WISE'" == "cols"              {
-            if "`STPC1'"=="ci"              {
-               local stpcform`c' "`CIFORM`c''"
-            }
-         }
-         local ++k
-      }
-   }
-}
-
-if "`est_se2'" ~= ""                        {
-   local k = `col_DF' - 1
-   local col_DFX = `col_DF' + 1
-   forvalues c = `col_DFX'(2)`col_DL'       {
-      if "`STPC2'" == "se"                  {
-         local stpcform`c' "%8.2f"
-         if "`dec'" ~= ""                   {
-            if "`sef`k''" ~= ""             {
-               local STPCFORM "%8.`sef`k''f"
-            }
-            local stpcform`c' "`STPCFORM'"
-         }
-      }
-      if "`STPC2'"=="t"                     {
-         local stpcform`c' "%3.2f"
-      }
-      if "`STPC2'"=="p"                     {
-         local stpcform`c' "%4.3f"
-      }
-      if "`WISE'" == "cols"                 {
-         if "`STPC2'"=="ci"                 {
-            local b = `c' - 1
-            local stpcform`c' "`CIFORM`b''"
-         }
-      }
-      local ++k
-   }
-}
-
-if "`WISE'" == "cols"                       {
-   if `n_colM' > 0                          {
-      local k = 1
-      if "`ADD_SIDE'"=="right" & "`EXC_SIDE'"=="right"  {
-         local k = `n_colD' + 1
-      }
-      if "`ADD_SIDE'"=="right" & "`EXC_SIDE'"=="left"   {
-         local k = `n_colD' + `n_colE' + 1
-      }
-      forvalues c = `col_MF'/`col_ML'       {
-         local nform`c' "nformat(%10.1fc)"
-         if "`dec'" ~= ""                   {
-            if "`nf`k''" ~= ""              {
-               local NFORM "%10.`nf`k''fc"
-            }
-            local nform`c' "nformat(`NFORM')"
-         }
-         local ++k
       }
    } 
-   if `n_colE' > 0                         {
-      local k = 1
-      if "`EXC_SIDE'"=="right" & "`ADD_SIDE'"=="right"  {
-         local k = `n_colD' + 1
-      }
-      if "`EXC_SIDE'"=="right" & "`ADD_SIDE'"=="left"   {
-         local k = `n_colD' + `n_colM' + 1
-      }
-      forvalues c = `col_EF'/`col_EL'      {
-         local nform`c' "nformat(%10.1fc)"
-         if "`dec'" ~= ""                  {
-            if "`nf`k''" ~= ""             {
-               local NFORM "%10.`nf`k''fc"
-            }
-            local nform`c' "nformat(`NFORM')"
-         }
-         local ++k
-      }
-   }
-}
+} 
 
-if "`WISE'" == "cols"                      {
-   if `col_EF' > 0                         {
+if "`WISE'" == "cols"                           {
+   if `col_EF' > 0                              {
       local c = `col_EF'
-      foreach a in A B                     {
-         if "`EXC_TYPE`a''"=="str"         {
+      foreach a in A B                          {
+         if "`EXC_TYPE`a''"=="str"              {
             local nform`c' ""
          }
          local ++c
@@ -2359,15 +2403,9 @@ if "`TITLE1'"~="" | "`TITLE2'"~=""  {
    local MEMTABLE "memtable"
    local LAYOUT "autofitcontents"
 }
-local cellmargL "cellmargin(left, 0.01in)"
+local cellmargL "cellmargin(left, 0.04in)"
 local cellmargR "cellmargin(right, 0.05in)"
 local cellmargB "cellmargin(bottom, 0.01in)"
-if "`est_se'"~="" & "`est_se2'"~=""  {
-   local cellmargL "cellmargin(left, 0.02in)"
-   if "`STPC'" == "ci"  {
-      local cellmargL "cellmargin(left, 0.03in)"
-   }
-}
 
 #d ;
 putdocx table `tabname' = mat(`mat'),
@@ -2423,13 +2461,14 @@ putdocx table `tabname' = mat(`mat'),
 *  replacing missing values with " "
 
 local ROWS = `n_rowD' + `n_rowS'
-qui gen VVV = .
+tempvar VVV
+qui gen `VVV' = .
 local r = `row_F'
 forvalues RR = 1/`ROWS'         {
    local c = 2
    forvalues CC = 1/`n_colT'    {
-      qui replace VVV = `mat'[`RR',`CC']
-      sum VVV, meanonly
+      qui replace `VVV' = `mat'[`RR',`CC']
+      sum `VVV', meanonly
       if "`r(mean)'" == ""      {
          putdocx table `tabname'(`r',`c') = (" "), font(`font',`b_fsize')
       }
@@ -2440,7 +2479,7 @@ forvalues RR = 1/`ROWS'         {
    }
    local ++r
 }
-capture drop VVV
+capture drop `VVV'
 
 
 
@@ -2464,13 +2503,13 @@ foreach a of local EXC_VARS     {
 
 
 
-**# column titles
 *  column titles and data cells: horizontal right align, vertical bottom align
 
 putdocx table `tabname'(`row_C'/`row_LS',2/`n_colTX'), halign(right) valign(bottom)
 
 
 
+**# column titles
 *  column titles
 *  (syntax assumes four lines maximum, separated by slashes)
 
@@ -2742,25 +2781,9 @@ forvalues p = 1/`n_p'      {
 
 *  width of columns
 
-if "`est_star'"=="" & "`est_se2'"==""  {
+if "`est_star'"=="" & `"`est_se2'"'==""  {
    forvalues c = 1/`col_L'   {
       putdocx table `tabname'(.,`c'), width(`colwidth`c'')
-   }
-}
-
-
-
-**# est_star or est_se "beside": insert columns
-*  est_star or est_se "beside":  insert columns, set width
-
-if "`est_star'"~="" | "`est_se2'"~=""    {
-   local c = `col_DF'
-   forvalues CC = 1/`n_colD'             {
-      putdocx table `tabname'(.,`c'), addcols(1, after)          
-      local c = `c' + 2
-   }
-   forvalues c = 1/`col_L'               {
-      putdocx table `tabname'(.,`c'), width(`colwidth`c'') border(all,nil) 
    }
 }
 
@@ -2770,53 +2793,62 @@ if "`est_star'"~="" | "`est_se2'"~=""    {
 *  format data cells:  numeric format, row height  
 *  (note:  statistics formatting corrected later)
 
-local R = 1
-local C = 1
-forvalues c = 2/`col_L'              {
-   if "`WISE'" == "cols"             {
-      local NF "`nform`c''"
-      scalar X = el(`mat',`R',`C')
-      if X < 10000                   {
-         local NF = subinstr("`nform`c''","fc","f",1)
-      }
-      putdocx table `tabname'(`row_F'/`row_LS',`c'), `NF' font(`font',`b_fsize')
-   }
-   if "`WISE'" == "rows"             {
-      forvalues r = `row_F'/`row_L'  {
-         local NF "`nform`r''"
+forvalues p = 1/`n_p'                       {                 
+   local C = 1
+   forvalues c = `col_F'/`col_L'            {
+      local R = 1
+      forvalues r = `row_F`p''/`row_L`p''   {
+         local NF "`nform`p'`R'`C''"
          scalar X = el(`mat',`R',`C')
-         if X < 10000                {
-            local NF = subinstr("`nform`r''","fc","f",1)
+         if X < 10000                       {
+            local NF = subinstr("`nform`p'`R'`C''","fc","f",1)
          }
          putdocx table `tabname'(`r',`c'), `NF' font(`font',`b_fsize')
+         local ++R
+         capture scalar drop X
       }
+      local ++C
    }
-   local ++R
-   local ++C
-   capture scalar drop X
 }
 
-forvalues r = `row_F'/`row_LS'            {
+forvalues r = `row_F'/`row_LS'              {
    putdocx table `tabname'(`r',.), height(`bf125'pt, exact)
-   if "`est_star'"~="" | "`est_se2'"~=""  {
+   if "`est_star'"~="" | `"`est_se2'"'~=""  {
       putdocx table `tabname'(`r',.), height(`bf133'pt, exact)
    }
 }
 
 
 
-**# asterisks
+**# est_star / est_se "beside": insert columns
+*  est_star or est_se "beside":  insert columns, set width
+
+if "`est_star'"~="" | `"`est_se2'"'~=""     {
+   local c = `col_DF'
+   forvalues CC = 1/`n_colD'                {
+      putdocx table `tabname'(.,`c'), addcols(1, after)          
+      local c = `c' + 2
+   }
+   forvalues c = 1/`col_L'                  {
+      putdocx table `tabname'(.,`c'), width(`colwidth`c'') border(all,nil) 
+   }
+}
+
+
+
+**# est_star
 *  setting the asterisks in column to right of coefficients 
 
 if "`est_star'" ~= ""               {
-   qui gen AST = .
+   tempvar AST
+   qui gen `AST' = .
    forvalues p = 1/`n_p'            {
       local r = `row_F`p''
       forvalues RR = 1/`n_rowD`p''  {
          local c = `col_DF' + 1
          forvalues CC = 1/`n_colD'  {
-            qui replace AST = PVX`p'[`RR',`CC']
-            sum AST, meanonly
+            qui replace `AST' = xX_PVX`p'[`RR',`CC']
+            sum `AST', meanonly
             if "`r(mean)'" == "-99" {
                putdocx table `tabname'(`r',`c') = (" "), font(`font', `a_fsize')
             }
@@ -2838,102 +2870,130 @@ if "`est_star'" ~= ""               {
          local ++r
       }
    }
-   capture drop AST
+   capture drop `AST'
 }
 
 
 
-**# standard errors, t-statistics, p-values:  beside
-*  standard errors or t_statistics or p-values in column to right of coefficients:  add values, format 
+**# se, z, p:  beside
+*  standard errors or z_statistics or p-values in column to right of coefficients:  add values, format 
 *  adjust vertical alignment to center (to achieve visual alignment despite different font sizes)
 
-if "`est_se2'"~="" & "`STPC2'"~="ci"      {
-   qui gen STPC = .
-   forvalues p = 1/`n_p'                  {
+local SPACES_BE ""
+if "`PAREN2'"=="no" & "`beside_spaces'"=="" {
+   local SPACES_BE " "
+}
+if "`beside_spaces'" ~= ""                  {
+   forvalues j = 1/`beside_spaces'          {
+      local SPACES_BE " `SPACES_BE'"
+   }
+}
+
+if `"`est_se2'"'~="" & "`STPC2'"~="ci"      {
+   tempvar xX_STPC
+   qui gen `xX_STPC' = .
+   forvalues p = 1/`n_p'                    {
       local r = `row_F`p''
-      forvalues RR = 1/`n_rowD`p''        {
+      forvalues R = 1/`n_rowD`p''           {
          local c = `col_DF' + 1
-         forvalues CC = 1/`n_colD'        {
+         local CX = 1
+         local fs = `col_DF' - 1
+         local fe = `fs' + (`n_colD' - 1)
+         forvalues C = `fs'/`fe'            {
             local b = `c' - 1
-            qui replace STPC = STPC2`p'[`RR',`CC']
-            sum STPC, meanonly
-            if "`r(mean)'" ~= ""          {
-               local stpc : display `stpcform`c'' `r(mean)'
+            qui replace `xX_STPC' = xX_STPC2`p'[`R',`CX']
+            sum `xX_STPC', meanonly
+            if "`r(mean)'" ~= ""            {
+               local stpc : display ``STPC2'form`p'`R'`C'' `r(mean)'
                local stpc = strtrim("`stpc'")
-               if "`PAREN2'" == "no"      {
-                  putdocx table `tabname'(`r',`c') = ("`stpc'"), font(`font', `se_fsize')
+               if "`PAREN2'" == "no"        {
+                  putdocx table `tabname'(`r',`c') = ("`SPACES_BE'`stpc'"), font(`font', `se_fsize')
                }
-               if "`PAREN2'" == "paren"   {
-                  putdocx table `tabname'(`r',`c') = ("(`stpc')"), font(`font', `se_fsize')
+               if "`PAREN2'" == "paren"     {
+                  putdocx table `tabname'(`r',`c') = ("`SPACES_BE'(`stpc')"), font(`font', `se_fsize')
                }
-               if "`PAREN2'" == "bracket" {
-                  putdocx table `tabname'(`r',`c') = ("[`stpc']"), font(`font', `se_fsize')
+               if "`PAREN2'" == "bracket"   {
+                  putdocx table `tabname'(`r',`c') = ("`SPACES_BE'[`stpc']"), font(`font', `se_fsize')
                }
                putdocx table `tabname'(`r',`c'), halign(left) valign(center)
                putdocx table `tabname'(`r',`b'), valign(center)
             }
             local c = `c' + 2
+            local ++CX
          }
          putdocx table `tabname'(`r',1), valign(center)
          local ++r
       }
    }
-   capture drop STPC
+   if "`beside_lab'" ~= ""                  {
+      local CF = `col_DF' + 1
+      forvalues c = `CF'(2)`col_DL'         {
+         putdocx table `tabname'(`row_C',`c') = ("`SPACES_BE'`beside_lab'"), font(`font', `se_fsize')
+         putdocx table `tabname'(`row_C',`c'), halign(left) valign(bottom)
+      }
+   }
+   capture drop `xX_STPC'
 }
 
 
 
-**# confidence intervals:  beside
+**# ci:  beside
 *  confidence intervals in column to right of coefficients:  add values, format 
-*  adjust vertical alignment to center (to achieve visual alignment despite different font sizes)
+*  three indexings:  location in ci matrix [R,CX,CZ]; decimals local macro [R,C]; 
+*                    location in table [r,c] 
+*  adjust vertical alignment to center (for visual alignment despite different font sizes)
 
-if "`est_se2'"~="" & "`STPC2'"=="ci"        {
+if `"`est_se2'"'~="" & "`STPC2'"=="ci"      {
    local n_colCI = 2*`n_colD'
-   qui gen STPC_L = .
-   qui gen STPC_U = .
+   tempvar xX_STPC_L xX_STPC_U
+   qui gen `xX_STPC_L' = .
+   qui gen `xX_STPC_U' = .
    forvalues p = 1/`n_p'                    {
       local r = `row_F`p''
-      forvalues RR = 1/`n_rowD`p''          {
+      forvalues R = 1/`n_rowD`p''           {
          local c = `col_DF' + 1
-         forvalues CC = 1(2)`n_colCI'       {
+         local CX = 1
+         local fs = `col_DF' - 1
+         local fe = `fs' + (`n_colD' - 1)
+         forvalues C = `fs'/`fe'            {
             local b = `c' - 1
-            local CCX = `CC' + 1
-            qui replace STPC_L = STPC2`p'[`RR',`CC']
-            qui replace STPC_U = STPC2`p'[`RR',`CCX']
-            sum STPC_L, meanonly
+            local CZ = `CX' + 1
+            qui replace `xX_STPC_L' = xX_STPC2`p'[`R',`CX']
+            qui replace `xX_STPC_U' = xX_STPC2`p'[`R',`CZ']
+            sum `xX_STPC_L', meanonly
             if "`r(mean)'" ~= ""            {
-               local stpc_l : display `stpcform`c'' `r(mean)'
+               local stpc_l : display ``STPC2'form`p'`R'`C'' `r(mean)'
                local stpc_l = strtrim("`stpc_l'")
-               sum STPC_U, meanonly
-               local stpc_u : display `stpcform`c'' `r(mean)'
+               sum `xX_STPC_U', meanonly
+               local stpc_u : display ``STPC2'form`p'`R'`C'' `r(mean)'
                local stpc_u = strtrim("`stpc_u'")
                if "`PAREN2'" == "no"        {
                   if "`CI_SEP'" == "comma"  {
-                     putdocx table `tabname'(`r',`c') = ("`stpc_l', `stpc_u'"),      ///
+                     putdocx table `tabname'(`r',`c') = ("`SPACES_BE'`stpc_l', `stpc_u'"),      ///
                              font(`font', `ci_fsize')
                   }
                   if "`CI_SEP'" == "dash"   {
-                     putdocx table `tabname'(`r',`c') = ("`stpc_l' - `stpc_u'"),     ///
+                     putdocx table `tabname'(`r',`c') = ("`SPACES_BE'`stpc_l' - `stpc_u'"),     ///
                              font(`font', `ci_fsize')
                   }
                }
                if "`PAREN2'" == "paren"     {
                   if "`CI_SEP'" == "comma"  {
-                     putdocx table `tabname'(`r',`c') = ("(`stpc_l', `stpc_u')"),     ///
+                     putdocx table `tabname'(`r',`c') = ("`SPACES_BE'(`stpc_l', `stpc_u')"),     ///
                              font(`font', `ci_fsize')
                   }
                   if "`CI_SEP'" == "dash"   {
-                     putdocx table `tabname'(`r',`c') = ("(`stpc_l' - `stpc_u')"),    ///
+                     putdocx table `tabname'(`r',`c') = ("`SPACES_BE'(`stpc_l' - `stpc_u')"),    ///
                              font(`font', `ci_fsize')
                   }
                }
                if "`PAREN2'" == "bracket"   {
                   if "`CI_SEP'" == "comma"  {
-                     putdocx table `tabname'(`r',`c') = ("[`stpc_l', `stpc_u']"),     ///
+                     putdocx table `tabname'(`r',`c') = ("`SPACES_BE'[`stpc_l', `stpc_u']"),     ///
                              font(`font', `ci_fsize')
                   }
                   if "`CI_SEP'" == "dash"   {
-                     putdocx table `tabname'(`r',`c') = ("[`stpc_l' - `stpc_u']"),    ///
+                     putdocx table `tabname'(`r',`c') = ("`SPACES_BE'[`stpc_l' - `stpc_u']"),    ///
                              font(`font', `ci_fsize')
                   }
                }
@@ -2941,21 +3001,32 @@ if "`est_se2'"~="" & "`STPC2'"=="ci"        {
                putdocx table `tabname'(`r',`b'), valign(center)
             }
             local c = `c' + 2
+            local CX = `CX' + 2
          }
          putdocx table `tabname'(`r',1), valign(center)
+         local ++R
          local ++r
       }
    }
-   capture drop STPC_L STPC_U
+   if "`beside_lab'" ~= ""                  {
+      local CF = `col_DF' + 1
+      forvalues c = `CF'(2)`col_DL'         {
+         putdocx table `tabname'(`row_C',`c') = ("`SPACES_BE'`beside_lab'"), font(`font', `se_fsize')
+         putdocx table `tabname'(`row_C',`c'), halign(left) valign(bottom)
+      }
+   }
+   capture drop `xX_STPC_L' `xX_STPC_U'
 }
 
 
 
-**# standard errors or t-statistics or p_values or confidence intervals:  below
-*  standard errors or t_statistics or p-values in row below coefficients:  add rows, add values, format
+**# se, z, p, ci:  below
+*  standard errors or z_statistics or p-values in row below coefficients:  add rows, add values, format
 *  OR
 *  confidence interval in row below coefficients:  add rows, add values, format
-*  (est_no cells are set to " ")
+*     with three indexings:  location in ci matrix [R,C,CX]; decimals local macro [R,C]; 
+*                            location in table [r,c] 
+*  est_no cells are set to " "
 
 if "`est_se1'" ~= ""        {
 
@@ -2984,16 +3055,20 @@ if "`est_se1'" ~= ""        {
       local row_LSE = `row_LSE' + `n_extra'
 
       if "`STPC1'" ~= "ci"                    {
-         qui gen STPC = .
+         tempvar xX_STPC
+         qui gen `xX_STPC' = .
          local r = `row_F`p'' + 1
-         forvalues RR = 1/`n_rowD`p''         {
+         forvalues R = 1/`n_rowD`p''          {
             local c = `col_DF'
+            local CX = 1
             local k = cond("`ADD_SIDE'"=="left",1 + `n_colM',1)
-            forvalues CC = 1/`n_colD'         {
-               qui replace STPC = STPC1`p'[`RR',`CC']
-               sum STPC, meanonly
+            local fs = `col_DF' - 1
+            local fe = `fs' + (`n_colD' - 1)
+            forvalues C = `fs'/`fe'           {
+               qui replace `xX_STPC' = xX_STPC1`p'[`R',`CX']
+               sum `xX_STPC', meanonly
                if "`r(mean)'" ~= ""           {
-                  local stpc : display `stpcform`c'' `r(mean)'
+                  local stpc : display ``STPC1'form`p'`R'`C'' `r(mean)'
                   local stpc = strtrim("`stpc'")
                   if "`PAREN1'" == "no"       {
                      putdocx table `tabname'(`r',`c') = ("`stpc'"), font(`font', `se_fsize')
@@ -3009,37 +3084,41 @@ if "`est_se1'" ~= ""        {
                   }
                   putdocx table `tabname'(`r',`c'), halign(right) valign(top)
                }
-               if "`est_star'"=="" & "`est_se2'"==""    {
+               if "`est_star'"=="" & `"`est_se2'"'==""  {
                   local c = `c' + 1
                }
-               if "`est_star'"~="" | "`est_se2'"~=""    {
+               if "`est_star'"~="" | `"`est_se2'"'~=""  {
                   local c = `c' + 2
                }
+               local ++CX
                local ++k
             }
             local r = `r' + 2
          }
-         capture drop STPC
+         capture drop `xX_STPC'
       } 
 
       if "`STPC1'" == "ci"                      {
-         local n_colCI = 2*`n_colD'
-         qui gen STPC_L = .
-         qui gen STPC_U = .
+         tempvar xX_STPC_L xX_STPC_U
+         qui gen `xX_STPC_L' = .
+         qui gen `xX_STPC_U' = .
          local r = `row_F`p'' + 1
-         forvalues RR = 1/`n_rowD`p''           {
+         forvalues R = 1/`n_rowD`p''            {
             local c = `col_DF'
+            local CX = 1
             local k = cond("`ADD_SIDE'"=="left",1 + `n_colM',1)
-            forvalues CC = 1(2)`n_colCI'        {
-               local CCX = `CC' + 1
-               qui replace STPC_L = STPC1`p'[`RR',`CC']
-               qui replace STPC_U = STPC1`p'[`RR',`CCX']
-               sum STPC_L, meanonly
+            local fs = `col_DF' - 1
+            local fe = `fs' + (`n_colD' - 1)
+            forvalues C = `fs'/`fe'             {
+               local CZ = `CX' + 1
+               qui replace `xX_STPC_L' = xX_STPC1`p'[`R',`CX']
+               qui replace `xX_STPC_U' = xX_STPC1`p'[`R',`CZ']
+               sum `xX_STPC_L', meanonly
                if "`r(mean)'" ~= ""             {
-                  local stpc_l : display `stpcform`c'' `r(mean)'
+                  local stpc_l : display ``STPC1'form`p'`R'`C'' `r(mean)'
                   local stpc_l = strtrim("`stpc_l'")
-                  sum STPC_U, meanonly
-                  local stpc_u : display `stpcform`c'' `r(mean)'
+                  sum `xX_STPC_U', meanonly
+                  local stpc_u : display ``STPC1'form`p'`R'`C'' `r(mean)'
                   local stpc_u = strtrim("`stpc_u'")
                   if "`PAREN1'" == "no"         {
                      if "`CI_SEP'" == "comma"   {
@@ -3076,24 +3155,26 @@ if "`est_se1'" ~= ""        {
                   }
                   putdocx table `tabname'(`r',`c'), halign(right) valign(top)
                }
-               if "`est_star'"=="" & "`est_se2'"==""    {
+               local CX = `CX' + 2
+               if "`est_star'"=="" & `"`est_se2'"'==""  {
                   local c = `c' + 1
                }
-               if "`est_star'"~="" | "`est_se2'"~=""    {
+               if "`est_star'"~="" | `"`est_se2'"'~=""  {
                   local c = `c' + 2
                }
                local ++k
             }
+            local ++R
             local r = `r' + 2
          }
-         capture drop STPC_L STPC_U
+         capture drop `xX_STPC_L' `xX_STPC_U'
       } 
    }
 }
 
 
 
-**# firstX and lastX additional lines
+**# firstX / lastX additional lines
 *  linespaces:  add line between  (i)  first and next row ("firstX")
 *                                 (ii) last and previous row ("lastX")
 
@@ -3233,7 +3314,6 @@ if "`est_stat1'"~=""       {
 
 if "`extra1'"~="" & `n_p'>1        {
    local n_extra = 0
-   local max_col = 0
    forvalues x = 1/9   {
       if "`extra`x''" ~= ""        {
          local ++n_extra
@@ -3259,11 +3339,11 @@ if "`extra1'"~="" & `n_p'>1        {
             }
             mac shift
          }
-         local max_col = `k'
       } 
    }
-   if `max_col' > `n_colTX'        {
-      di _n(1) _col(3) in y  "ERROR:  too many elements in one or more extra rows"   _n(1) " "
+   if `k' > `n_colTX'              {
+      noi di _n(1) _col(3) in y  "ERROR:  too many elements in one or more extra rows"
+      noi di _n(1) " "
       exit
    }
    if "`slim'" == ""               {
@@ -3282,12 +3362,16 @@ if "`extra1'"~="" & `n_p'>1        {
    }      
    putdocx table `tabname'(`row_LS_1',.), addrows(`n_extra', after)
    forvalues r = 1/`n_extra'  {
+      local extra_empty "yes"
       local R = `row_LS_1' + `r'
-      if "`est_star'"=="" & "`est_se2'"==""          {
-         forvalues c = 1/`max_col'                   {
+      if "`est_star'"=="" & `"`est_se2'"'==""        {
+         forvalues c = 1/`n_colTX'                   {
             local C = `c'
             if "`ex`r'_`c''"~=""                     {
-               putdocx table `tabname'(`R',`C') = ("`ex`r'_`c''"), font(`font', `ex_fsize')  
+               putdocx table `tabname'(`R',`C') = ("`ex`r'_`c''"), font(`font', `ex_fsize')
+               if "`ex`p'`r'_`c''" ~= " "            {
+                  local extra_empty "no" 
+               }
             }
             if "`ex`r'_`c''" == " "                  {
                putdocx table `tabname'(`R',`C') = (" "), font(`font', `ex_fsize')  
@@ -3295,14 +3379,17 @@ if "`extra1'"~="" & `n_p'>1        {
             putdocx table `tabname'(`R',`C'), halign(right) 
          }
       }
-      if "`est_star'"~="" | "`est_se2'"~=""          {
+      if "`est_star'"~="" | `"`est_se2'"'~=""        {
          local k = 1
          local m = 1
-         forvalues c = 1/`max_col'                   {
+         forvalues c = 1/`n_colTX'                   {
             if `c' <= `col_DF'                       {
                local C = `c'
                if "`ex`r'_`c''"~=""                  {
-                  putdocx table `tabname'(`R',`C') = ("`ex`r'_`c''"), font(`font', `ex_fsize')  
+                  putdocx table `tabname'(`R',`C') = ("`ex`r'_`c''"), font(`font', `ex_fsize')
+                  if "`ex`p'`r'_`c''"~=" "           {
+                     local extra_empty "no" 
+                  }
                }
                if "`ex`r'_`c''" == " "               {
                   putdocx table `tabname'(`R',`C') = (" "), font(`font', `ex_fsize')  
@@ -3312,7 +3399,10 @@ if "`extra1'"~="" & `n_p'>1        {
             if `c'>`col_DF' & `c'<=(`col_DF' + (`n_colD' - 1))    {
                local C = `col_DF' + (2*`k')
                if "`ex`r'_`c''"~=""                  {
-                  putdocx table `tabname'(`R',`C') = ("`ex`r'_`c''"), font(`font', `ex_fsize')  
+                  putdocx table `tabname'(`R',`C') = ("`ex`r'_`c''"), font(`font', `ex_fsize')
+                  if "`ex`p'`r'_`c''"~=" "           {
+                     local extra_empty "no" 
+                  }
                }
                if "`ex`r'_`c''" == " "               {
                   putdocx table `tabname'(`R',`C') = (" "), font(`font', `ex_fsize')  
@@ -3323,7 +3413,10 @@ if "`extra1'"~="" & `n_p'>1        {
             if `c' > (`col_DF' + (`n_colD' - 1))     {
                local C = `col_DL' + `m'
                if "`ex`r'_`c''"~=""                  {
-                  putdocx table `tabname'(`R',`C') = ("`ex`r'_`c''"), font(`font', `ex_fsize')  
+                  putdocx table `tabname'(`R',`C') = ("`ex`r'_`c''"), font(`font', `ex_fsize') 
+                  if "`ex`p'`r'_`c''"~=" "           {
+                     local extra_empty "no" 
+                  }
                }
                if "`ex`r'_`c''" == " "               {
                   putdocx table `tabname'(`R',`C') = (" "), font(`font', `ex_fsize')  
@@ -3334,6 +3427,9 @@ if "`extra1'"~="" & `n_p'>1        {
          }
       }
       putdocx table `tabname'(`R',.), height(`bf100'pt, exact)
+      if "`extra_empty'"=="yes"    {
+         putdocx table `tabname'(`R',.), height(`bf033'pt, exact)
+      }
    }
    local row_LSE  = `row_LSE'  + `n_extra'     //  last data/coeff/stat/extra row 
 }  
@@ -3346,45 +3442,44 @@ if "`extra1'"~="" & `n_p'>1        {
 if ("`extra1'"~="" & `n_p'==1) |                                             ///
    ("`extra11'"~="" | "`extra21'"~="" | "`extra31'"~="" | "`extra41'"~="" |  ///
     "`extra51'"~="" | "`extra61'"~="" | "`extra71'"~="")      {
-   if "`extra1'"~="" & `n_p'==1           {
-      forvalues x = 1/9                   {
+   if "`extra1'"~="" & `n_p'==1        {
+      forvalues x = 1/9                {
          local extra1`x' = "`extra`x''"
       }
    }
-   forvalues p = 1/`n_p'                  {
-      if "`extra`p'1'" ~= ""              {
+   forvalues p = 1/`n_p'               {
+      if "`extra`p'1'" ~= ""           {
          local n_extra = 0
-         local max_col = 0
          forvalues x = 1/9  {
-            if "`extra`p'`x''" ~= ""      {
+             if "`extra`p'`x''" ~= ""  {
                local ++n_extra
                tokenize "`extra`p'`x''", parse("!")
                local k  = 0
                local EX = 0
-               while "`1'" ~= ""    {
-                  if "`1'" == "!"   {
-                     if `k' == 0   { 
+               while "`1'" ~= ""       {
+                  if "`1'" == "!"      {
+                     if `k' == 0       { 
                         local ++k
                         local ex`p'`x'_`k' " "
                      }
                      local EX = `EX' + 1
-                     if `EX' >= 2   {
+                     if `EX' >= 2      {
                         local ++k
                         local ex`p'`x'_`k' " "
                      }
                   }
-                  if "`1'" ~= "!"   {
+                  if "`1'" ~= "!"      {
                      local EX = 0
                      local ++k
                      local ex`p'`x'_`k' "`1'"
                   }
                   mac shift
                }
-               local max_col = `k'
-            } 
+            }
          }
-         if `max_col' > `n_colTX'        {
-            di _n(1) _col(3) in y  "ERROR:  too many elements in one or more extra rows"   _n(1) " "
+         if `k' > `n_colTX'            {
+            noi di _n(1) _col(3) in y  "ERROR:  too many elements in one or more extra rows"
+            noi di _n(1) " "
             exit
          }
          local ZZZ = cond("`extra_place'"=="","LS","L")
@@ -3400,13 +3495,17 @@ if ("`extra1'"~="" & `n_p'==1) |                                             ///
             }
          }
          putdocx table `tabname'(`row_ZZZ_1',.), addrows(`n_extra', after)
-         forvalues r = 1/`n_extra'   {
+         forvalues r = 1/`n_extra'                      {
+            local extra_empty "yes"
             local R = `row_ZZZ_1' + `r'
-            if "`est_star'"=="" & "`est_se2'"==""       {
-               forvalues c = 1/`max_col'                {
+            if "`est_star'"=="" & `"`est_se2'"'==""     {
+               forvalues c = 1/`n_colTX'                {
                   local C = `c'
                   if "`ex`p'`r'_`c''"~=""               {
-                     putdocx table `tabname'(`R',`C') = ("`ex`p'`r'_`c''"), font(`font', `ex_fsize')  
+                     putdocx table `tabname'(`R',`C') = ("`ex`p'`r'_`c''"), font(`font', `ex_fsize')
+                     if "`ex`p'`r'_`c''"~=" "           {
+                        local extra_empty "no" 
+                     }
                   }
                   if "`ex`p'`r'_`c''" == " "            {
                      putdocx table `tabname'(`R',`C') = (" "), font(`font', `ex_fsize')  
@@ -3414,14 +3513,17 @@ if ("`extra1'"~="" & `n_p'==1) |                                             ///
                   putdocx table `tabname'(`R',`C'), halign(right)
                }
             }
-            if "`est_star'"~="" | "`est_se2'"~=""       {
+            if "`est_star'"~="" | `"`est_se2'"'~=""     {
                local k = 1
                local m = 1
-               forvalues c = 1/`max_col'                {
+               forvalues c = 1/`n_colTX'                {
                   if `c' <= `col_DF'                    {
                      local C = `c'
                      if "`ex`p'`r'_`c''"~=""            {
-                        putdocx table `tabname'(`R',`C') = ("`ex`p'`r'_`c''"), font(`font', `ex_fsize')  
+                        putdocx table `tabname'(`R',`C') = ("`ex`p'`r'_`c''"), font(`font', `ex_fsize') 
+                        if "`ex`p'`r'_`c''"~=" "        {
+                           local extra_empty "no" 
+                        }
                      }
                      if "`ex`p'`r'_`c''" == " "         {
                         putdocx table `tabname'(`R',`C') = (" "), font(`font', `ex_fsize')  
@@ -3431,7 +3533,10 @@ if ("`extra1'"~="" & `n_p'==1) |                                             ///
                   if `c'>`col_DF' & `c'<=(`col_DF' + (`n_colD' - 1))    {
                      local C = `col_DF' + (2*`k')
                      if "`ex`p'`r'_`c''"~=""            {
-                        putdocx table `tabname'(`R',`C') = ("`ex`p'`r'_`c''"), font(`font', `ex_fsize')  
+                        putdocx table `tabname'(`R',`C') = ("`ex`p'`r'_`c''"), font(`font', `ex_fsize')
+                        if "`ex`p'`r'_`c''"~=" "        {
+                           local extra_empty "no" 
+                        }
                      }
                      if "`ex`p'`r'_`c''" == " "         {
                         putdocx table `tabname'(`R',`C') = (" "), font(`font', `ex_fsize')  
@@ -3442,7 +3547,10 @@ if ("`extra1'"~="" & `n_p'==1) |                                             ///
                   if `c' > (`col_DF' + (`n_colD' - 1))  {
                      local C = `col_DL' + `m'
                      if "`ex`p'`r'_`c''"~=""            {
-                        putdocx table `tabname'(`R',`C') = ("`ex`p'`r'_`c''"), font(`font', `ex_fsize')  
+                        putdocx table `tabname'(`R',`C') = ("`ex`p'`r'_`c''"), font(`font', `ex_fsize')
+                        if "`ex`p'`r'_`c''"~=" "        {
+                           local extra_empty "no" 
+                        }
                      }
                      if "`ex`p'`r'_`c''" == " "         {
                         putdocx table `tabname'(`R',`C') = (" "), font(`font', `ex_fsize')  
@@ -3453,6 +3561,9 @@ if ("`extra1'"~="" & `n_p'==1) |                                             ///
                }
             }
             putdocx table `tabname'(`R',.), font(`font', `ex_fsize') height(`bf100'pt, exact)
+            if "`extra_empty'"=="yes"   {
+               putdocx table `tabname'(`R',.), font(`font', `ex_fsize') height(`bf033'pt, exact)
+            }
          }
          local n_ext   = cond("`slim'"~="",`n_extra',`n_extra' + 1)
          local row_LS  = `row_LS'   + `n_ext'           //  last data/coeff/stat row
@@ -3465,7 +3576,7 @@ if ("`extra1'"~="" & `n_p'==1) |                                             ///
          }
       }
    }
-}  
+} 
 
 
 
@@ -3524,7 +3635,7 @@ if ("`extra1'"~="" & `n_p'==1) |                                             ///
 
 local DB   "/"
 local PLUS ""
-if "`est_star'"~="" | "`est_se2'"~=""       {
+if "`est_star'"~="" | `"`est_se2'"'~=""     {
    local DB   "(2)"
    local PLUS "+ 1"
 }
@@ -3671,7 +3782,7 @@ if `n_colE'>0  &  `n_colM'>0                {   //  both excel and add
 *  2.  column deletion 
 *      
 
-if "`est_star'"~="" | "`est_se2'"~=""      {
+if "`est_star'"~="" | `"`est_se2'"'~=""    {
    local highK = `k' - 1
    if "`est_no'" ~= ""                     {
       local k = `lastD'
@@ -3811,62 +3922,100 @@ if "`slim'" == ""        {
 if `"`rst11'"' ~= "" |  `"`rst21'"' ~= "" |  `"`rst31'"' ~= "" |  `"`rst41'"' ~= "" |   ///
    `"`rst51'"' ~= "" |  `"`rst61'"' ~= "" |  `"`rst71'"' ~= ""     {
 
-   forvalues p = 1/`n_p'              {
-      local Q = `p' + 1
-      local MAX = cond(`p'==1,16,12)
-      local extra = 0
-      forvalues r = 1/`MAX'           {
-         if `"`rst`p'`r''"' ~= ""     {
+   forvalues p = 1/`n_p'                 {
+      local max = cond(`p'==1,15,9)
+      local RST_MAX = 0
+      forvalues r = 1/`max'              {
+         if `"`rst`p'`r''"' ~= ""        {
+            local ++RST_MAX
             local RST ""
             tokenize `"`rst`p'`r''"', parse(" ,")
-            while "`1'" ~= ""         {
-               if "`1'" ~= ","        {
+            while "`1'" ~= ""            {
+               if "`1'" ~= ","           {
                   local RST "`RST'`1',"
                }
                mac shift
             }
             tokenize `"`RST'"', parse(",")
             local lab_rst`r' "`1'"
-            if "`est_se1'"==""          {
-               local row_rst`r' = `3' + (`row_F`p'' - 1) + `extra'
+            if "`est_se1'"==""           {
+               local row_rst_first`r' = `3' + (`row_F`p'' - 1) 
+               local row_rst_last`r'  = `row_rst_first`r'' + (`5' - 1)
                local alignV "bottom"
             }
-            if "`est_se1'"~=""          {
-               local row_rst`r' = `3' + (`3'-1) + (`row_F`p'' - 1) + `extra'
+            if "`est_se1'"~=""           {
+               local row_rst_first`r' = `3' + (`3'-1) + (`row_F`p'' - 1) 
+               local row_rst_last`r'  = `row_rst_first`r'' + ((`5'*2) - 1)
                local alignV "center"
             }
-            local HT  "bf125"
-            local HTX "bf025"
-            if "`est_se1'"~=""          {
-               local HTX "bf016"
+            local q = `r' - 1
+            if `r'>1                     {
+               if `row_rst_first`r'' == (`row_rst_last`q'') + 1    {
+                  local row_rst_next`q' "yes"
+               }
             }
-            if `3'~=1 & "`slim'"~=""    {
-               local HTX "bf016"
-            }
-            putdocx table `tabname'(`row_rst`r'',.), addrows(1, before)
-            putdocx table `tabname'(`row_rst`r'',1), colspan(`col_L')
-            putdocx table `tabname'(`row_rst`r'',.), height(``HT''pt, exact) valign(`alignV')
-            putdocx table `tabname'(`row_rst`r'',1) = ("`SPACES_PT'`lab_rst`r''"),   ///
-               font(`font', `l_fsize') `rst_format' halign(left)
-            local ADD = 1
-            local ++extra
-            if "`slim'"=="" & `3' ~= 1  {
-               putdocx table `tabname'(`row_rst`r'',.), addrows(1, before)
-               putdocx table `tabname'(`row_rst`r'',.), height(``HTX''pt, exact) valign(`alignV')
-               local ADD = 2
-               local ++extra
-            }
-            local row_L      = `row_L'   + `ADD'        //  last data/coeff row
-            local row_LS     = `row_LS'  + `ADD'        //  last data/coeff/stat row
-            local row_LSE    = `row_LSE' + `ADD'        //  last data/coeff/stat/extra row
-            local row_L`p'   = `row_L`p''  + `ADD'      //  last data/coeff row, panel-specific
-            local row_LS`p'  = `row_LS`p'' + `ADD'      //  last data/coeff/stat row, panel-specific
-            forvalues q = `Q'/`n_p'  {
-               local row_F`q'   = `row_F`q''  + `ADD'   //  first data/coeff row, subsequent panels
-               local row_L`q'   = `row_L`q''  + `ADD'   //  last data/coeff row, subsequent panels 
-               local row_LS`q'  = `row_LS`q'' + `ADD'   //  last data/coeff/stat row, subsequent panels
+            if "`firstX'"~=""            {
+               local ++row_rst_first`r'
+               local ++row_rst_last`r'
             }
          }
+      }
+      local HT  "bf125"
+      local HTX "bf033"
+      local HTZ "bf016"
+      if "`est_se1'"~=""                 {
+         local HT  "bf150"
+         local HTX "bf016"
+         local HTZ "bf025"
+      }
+      local ADD = 0
+      forvalues r = 1/`RST_MAX'          {
+         local extra = 0
+         if "`row_rst_first`r''" ~= ""   {                    //  insert row title 
+            putdocx table `tabname'(`row_rst_first`r'',.), addrows(1, before)
+            putdocx table `tabname'(`row_rst_first`r'',1), colspan(`col_L')
+            putdocx table `tabname'(`row_rst_first`r'',.), height(``HT''pt, exact) valign(`alignV')
+            putdocx table `tabname'(`row_rst_first`r'',1) = ("`SPACES_PT'`lab_rst`r''"),     ///
+               font(`font', `l_fsize') `rst_format' halign(left)
+            local ++row_rst_last`r'
+            local ++ADD
+            local ++extra
+            if "`slim'"=="" & `row_rst_first`r''~=2 {         //  insert empty row before row title
+               putdocx table `tabname'(`row_rst_first`r'',.), addrows(1, before)
+               putdocx table `tabname'(`row_rst_first`r'',.), height(``HTX''pt, exact) valign(`alignV')
+               local ++row_rst_first`r'
+               local ++row_rst_last`r'
+               local ++ADD
+               local ++extra
+            }
+            if "`slim'"=="" & "`row_rst_next`r''"~="yes"   {  //  insert empty row after block of row-title rows
+                if "`lastX'"=="" |   ///
+                  ("`lastX'"~="" & (`row_rst_last`r'' + 2)~=(`row_L`p'' + `extra'))   { 
+                   putdocx table `tabname'(`row_rst_last`r'',.), addrows(1, after)
+                   local row_rst_LAST`r' = `row_rst_last`r'' + 1
+                   putdocx table `tabname'(`row_rst_LAST`r'',1), colspan(`col_L')
+                   putdocx table `tabname'(`row_rst_LAST`r'',.), height(``HTZ''pt, exact) valign(center)
+                   local ++ADD
+                   local ++extra
+               }
+            }
+            if `r' < `RST_MAX'           {
+               local s = `r' + 1
+               local row_rst_first`s' = `row_rst_first`s'' + `ADD'
+               local row_rst_last`s'  = `row_rst_last`s''  + `ADD'
+            }
+         }
+         local row_L      = `row_L'   + `extra'      //  last data/coeff row
+         local row_LS     = `row_LS'  + `extra'      //  last data/coeff/stat row
+         local row_LSE    = `row_LSE' + `extra'      //  last data/coeff/stat/extra row
+         local row_L`p'   = `row_L`p''  + `extra'    //  last data/coeff row, panel-specific
+         local row_LS`p'  = `row_LS`p'' + `extra'    //  last data/coeff/stat row, panel-specific
+      }
+      local Q = `p' + 1
+      forvalues q = `Q'/`n_p'      {
+         local row_F`q'   = `row_F`q''  + `ADD'      //  first data/coeff row, subsequent panels
+         local row_L`q'   = `row_L`q''  + `ADD'      //  last data/coeff row, subsequent panels 
+         local row_LS`q'  = `row_LS`q'' + `ADD'      //  last data/coeff/stat row, subsequent panels
       }
    }
 
@@ -3896,6 +4045,12 @@ forvalues p = 1/`n_p'      {
 
    if `p' == 1  {
       if "`pt1'" ~= ""  {
+         local X = 1
+         if "`slim'" == ""      {
+            putdocx table `tabname'(`row_F`p'',.), addrows(1,before) border(top, nil)
+            putdocx table `tabname'(`row_F`p'',.), height(`bf033'pt, exact)
+            local ++X
+         }
          putdocx table `tabname'(`row_F`p'',.), addrows(1,before)
          putdocx table `tabname'(`row_F`p'',1), colspan(`col_L')
          tokenize "`pt`p''", parse("\")
@@ -3912,14 +4067,14 @@ forvalues p = 1/`n_p'      {
             putdocx table `tabname'(`row_F`p'',1) = ("`3'"),                      ///
                     font(`font', `l_fsize')  `pt_format'  halign(`pt_just') valign(center) append
          }
-         local row_F   = `row_F'  + 1                //  first data/coeff row
-         local row_L   = `row_L'  + 1                //  last data/coeff row
-         local row_LS  = `row_LS' + 1                //  last data/coeff/stat row
-         local row_LSE = `row_LSE' + 1               //  last data/coeff/stat/extra row
+         local row_F   = `row_F'  + `X'                //  first data/coeff row
+         local row_L   = `row_L'  + `X'                //  last data/coeff row
+         local row_LS  = `row_LS' + `X'                //  last data/coeff/stat row
+         local row_LSE = `row_LSE' + `X'               //  last data/coeff/stat/extra row
          forvalues PP = `p'/`n_p'   {
-            local row_F`PP'   = `row_F`PP''   + 1    //  first data/coeff row:           panel-specific
-            local row_L`PP'   = `row_L`PP''   + 1    //  last data/coeff row:            panel-specific
-            local row_LS`PP'  = `row_LS`PP''  + 1    //  last data/coeff/stat row:       panel-specific
+            local row_F`PP'   = `row_F`PP''   + `X'    //  first data/coeff row:           panel-specific
+            local row_L`PP'   = `row_L`PP''   + `X'    //  last data/coeff row:            panel-specific
+            local row_LS`PP'  = `row_LS`PP''  + `X'    //  last data/coeff/stat row:       panel-specific
          }
       }
    }
@@ -4124,7 +4279,8 @@ if "`note1'" ~= ""           {
 if `"`cst11'"' ~= ""    {
 
    if `"`cst1'"' == ""  {
-      di _n(2) _col(3) in y  "ERROR:  cannot have cst1# without cst# - higher-level presumes lower-level"   _n(1) " "
+      noi di _n(2) _col(3) in y  "ERROR:  cannot have cst1# without cst# - higher-level presumes lower-level"
+      noi di _n(1) " "
       exit
    }
 
@@ -4489,32 +4645,32 @@ if "`outfile'" ~= ""  {
 *  clean-up
 
 capture matrix drop XxYyZz
-capture matrix drop C
-capture matrix drop CZ
-capture matrix drop CM
-capture matrix drop CZM
-capture matrix drop SE
-capture matrix drop TV
-capture matrix drop PV
-capture matrix drop PVX
-capture matrix drop CI
-capture matrix drop STPC
-forvalues p = 1/`n_pn'   {
-   capture matrix drop EQ`p'
-   capture matrix drop MEANS`p'
-   capture matrix drop MAT`p'
-   capture matrix drop M`p'
-   capture matrix drop C`p'
-   capture matrix drop CZ`p'
-   capture matrix drop CM`p'
-   capture matrix drop CZM`p'
-   capture matrix drop SE`p'
-   capture matrix drop TV`p'
-   capture matrix drop PV`p'
-   capture matrix drop PVX`p'
-   capture matrix drop CI`p'
-   capture matrix drop STPC1`p'
-   capture matrix drop STPC2`p'
+capture matrix drop xX_C
+capture matrix drop xX_CZ
+capture matrix drop xX_CM
+capture matrix drop xX_CZM
+capture matrix drop xX_SE
+capture matrix drop xX_ZV
+capture matrix drop xX_PV
+capture matrix drop xX_PVX
+capture matrix drop xX_CI
+capture matrix drop xX_STPC
+capture matrix drop xX_EXC
+forvalues p = 1/`n_p'    {
+   capture matrix drop xX_MEANS`p'
+   capture matrix drop xX_MAT`p'
+   capture matrix drop xX_M`p'
+   capture matrix drop xX_C`p'
+   capture matrix drop xX_CZ`p'
+   capture matrix drop xX_CM`p'
+   capture matrix drop xX_CZM`p'
+   capture matrix drop xX_SE`p'
+   capture matrix drop xX_ZV`p'
+   capture matrix drop xX_PV`p'
+   capture matrix drop xX_PVX`p'
+   capture matrix drop xX_CI`p'
+   capture matrix drop xX_STPC1`p'
+   capture matrix drop xX_STPC2`p'
 }
 
 
