@@ -1,4 +1,4 @@
-*! version 1.4.3 2025-12-21
+*! version 1.4.4 2026-01-13
   
 program define stpp, rclass sortpreserve
   version 16.0
@@ -284,7 +284,7 @@ program define stpp, rclass sortpreserve
   qui gen `yeardiag' = year(`datediag') if `touse'
   summ `yeardiag'  if `touse', meanonly
   local minyear = `r(min)'
-  qui gen `attyear' = year(`datediag' + (_t+1)*365.241)  if `touse'
+  qui gen `attyear' = year(`datediag' + (_t)*365.241)  if `touse'
   summ `attyear' if `touse', meanonly
   local maxattyear = min(`r(max)',`pmmaxyear')	
 

@@ -29,9 +29,10 @@ f synth_ll.ado
 f synth.sthlp
 f ../l/lsynth_mata_subr.mlib
 f synth_smoking.dta
-f synthopt.plugin
-f synthopt.win32
-f synthopt.win64   
-f synthopt.linux32
-f synthopt.linux64
-f synthopt.mac
+G WIN32      synthopt.win32   synthopt.plugin
+G WIN64      synthopt.win64   synthopt.plugin
+G LINUX32    synthopt.linux32 synthopt.plugin
+G LINUX64    synthopt.linux64 synthopt.plugin
+G MACARM64   synthopt.mac     synthopt.plugin
+G MACINTEL64 synthopt.mac.x86 synthopt.plugin
+h synthopt.plugin
