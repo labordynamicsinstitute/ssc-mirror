@@ -3,13 +3,13 @@
 		Performs GMM estimation for factor-augmented panel data model 
 								with fixed T
 
-			Author: 	Manh Hoang Ba
+			Author: 	Manh Hoang-Ba
 			Support:	hbmanh9492@gmail.com
 
-			Ref.: 		Joudis & Sarafidis (2022)
+			Ref.: 		Juodis & Sarafidis (2022)
 
-
-	31/12/25 - Version 1.0: the first contribution
+	Draft 2.1:
+		- Small sample adjustment	--> Done!
 									
 ******************************************************************************/
 
@@ -1059,7 +1059,7 @@ real matrix estimate(
 	k  = k1 - 1
 	M_vars = data2MataMat(vars, k1, T)
 			
-	// Truy xu?t M_vars_i Tx(k+1) matrix for individual i
+	// Truy xuất M_vars_i Tx(k+1) matrix for individual i
 	//M_vars_i = get_MataMat_i(M_vars, i, k1)
 	
 	
@@ -1832,7 +1832,7 @@ real matrix estimate(
 	
 //	Wald test
 	if (cons==1) {
-		R = I(n_c)              // R = ma tr?n don v?
+		R = I(n_c)              // R = ma trận đơn vị
 		R[k, k]=0				// intercept
 		q = J(n_c, 1, 0)        // q = vector 0
 				
@@ -1847,7 +1847,7 @@ real matrix estimate(
 		}	
 	}
 	else {
-		R = I(n_c)              // R = ma tr?n don v?
+		R = I(n_c)              // R = ma trận đơn vị
 		q = J(n_c, 1, 0)        // q = vector 0
 
 		df_m = r_ga

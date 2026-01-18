@@ -1,4 +1,4 @@
-* Version 1.6 in 28 Dec 2025, Manh Hoang Ba (hbmanh9492@gmail.com)
+* Version 1.7 in 17 Jan 2026, Manh Hoang-Ba (hbmanh9492@gmail.com)
 * Ref.: Kiefer (1980); Wooldridge (2002, 2010)
 
 * Version 1.1 to allow iterated GLS.
@@ -9,6 +9,8 @@
 *				and fix rounding error in FEGLS and FDGLS.
 * Version 1.5 to allow robust and re options.
 * Version 1.6 return data whenever an error arises.
+* Version 1.7 correct Wald statistic when cluster/robust specified
+*			  and disable minus option
 
 cap program drop xtgls2
 program define xtgls2, eclass
@@ -28,7 +30,7 @@ program define xtgls2, eclass
 				Cov(string) ///
 				Robust		///
 				CLuster(varname) ///			
-				nmk minus(integer 0) ///
+				nmk /*minus(integer 0)*/ /// // v1.7 disable minus()
 				Level(cilevel) ///
 				igls ///
 				ITERate(int 50) ///
@@ -51,12 +53,13 @@ preserve
 			exit 459
 		}
 		
+/* v1.7 
 		// Check for minus option
 		if `minus'>0 & "`cluster'`robust'"=="" {
 			di in red "{bf:minus()} and {bf:cluster()} or {bf:cluster()} must be specified together"
 			exit 198
 		}	
-
+*/
 		if "`fe'`fd'`re'" == "fefdre" | ///
 			"`fe'`fd'" == "fefd" | ///
 			"`fe'`re'" == "fere" | ///
@@ -78,7 +81,7 @@ preserve
 
 		// Check for unbalnced panel
 		tempvar checkbl
-		qui egen `checkbl' = sum(`touse') if `touse', by(`ivar')
+		qui egen long `checkbl' = sum(`touse') if `touse', by(`ivar')
 		qui sum `checkbl' if `touse'
 		if r(min) != r(max) {
 			display in red "Panels must be balanced"
@@ -133,7 +136,7 @@ preserve
 			foreach var of varlist `varlist1' {
 				tempvar `var'_m `var'_dm
 				qui by `ivar': egen double ``var'_m' = mean(`var') if `touse'
-				qui gen ``var'_dm' double = `var' - ``var'_m' if `touse'
+				qui gen double ``var'_dm' = `var' - ``var'_m' if `touse'
 				local varlist2 `varlist2' ``var'_dm'
 			}
 		}
@@ -195,14 +198,28 @@ preserve
 		else if "`igls'" != "" {
 			di _n in ye "Convergenced achieved!"
 		}
-		
+	
 		*		Cluster-robust COV
 		if "`robust'" != "" {
-			qui xtglsr_modified, cluster(`panelvar') minus(`minus')
+			if "`nmk'" == "" {
+				qui xtglsr_modified, cluster(`panelvar')
+			}
+			else {
+				qui xtglsr_modified, cluster(`panelvar') minus(`e(n_cf)')
+			}
+			qui test `rest'
+			local wald = r(chi2)
 		}
 		
 		if "`cluster'" != "" & "`robust'" == "" {
-			qui xtglsr_modified, cluster(`cluster') minus(`minus')
+			if "`nmk'" == "" {
+				qui xtglsr_modified, cluster(`cluster')
+			}
+			else {
+				qui xtglsr_modified, cluster(`cluster') minus(`e(n_cf)')
+			}
+			qui test `rest'
+			local wald = r(chi2)		
 		}
 		
 		// Calculate R-squared
@@ -243,7 +260,8 @@ restore
 		scalar `df_pear' = e(df_pear)
 		scalar `df_ic' = e(df_ic)
 		scalar `ll' = e(ll)
-		scalar `chi2'=e(chi2)
+		if "`robust'`cluster'" == "" scalar `chi2'=e(chi2)
+		else scalar `chi2'=`wald'
 		scalar `rank'=e(rank)
 		scalar `N_clust'=e(N_clust)
 		scalar `rc'=e(rc)

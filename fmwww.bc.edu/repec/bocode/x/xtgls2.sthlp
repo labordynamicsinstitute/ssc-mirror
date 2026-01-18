@@ -1,7 +1,7 @@
 
 {smcl}
-{* *! version 1.5, 19 Nov 2025}{...}
-{cmd:help xtgls2}		Version 1.5, 19 Nov 2025, Manh Hoang Ba (hbmanh9492@gmail.com)
+{* *! version 1.7, 17 Jan 2026}{...}
+{cmd:help xtgls2}		Version 1.7, 17 Jan 2026, Manh Hoang-Ba (hbmanh9492@gmail.com)
 {hline}
 
 {title:Title}
@@ -26,6 +26,10 @@
 
 {p 4 8 2}The latest version of {cmd:xtgls2} can be found at the following link: {browse "https://github.com/ManhHB94/":https://github.com/ManhHB94/}{p_end}
 
+{pstd}To update the {cmd:xtgls2} package to the latest version, run either of the following commands{p_end}
+{phang2}. {stata `"ssc install xtgls2, replace"'}{p_end}
+{phang2}. {stata `"net install xtgls2, from("https://raw.githubusercontent.com/ManhHB94/xtgls2/main/") replace"'}{p_end}
+
 {synoptset 25 tabbed}{...}
 {synopthdr}
 {synoptline}
@@ -34,16 +38,15 @@
 {synopt :{opt ols}}use feasible pooled GLS estimator, default.{p_end}
 {synopt :{opt fe}}use feasible fixed-effects GLS estimator, {opt nocons:tant} is required.{p_end}
 {synopt :{opt fd}}use feasible first-difference GLS estimator, {opt nocons:tant} is required.{p_end}
-{synopt :{opt re}}use feasible first-difference GLS estimator, {cmdab:c:ov(c)} is required.{p_end}
+{synopt :{opt re}}use feasible random-effects GLS estimator, {cmdab:c:ov(c)} is required.{p_end}
 {p2coldent:* {cmdab:c:ov(c)}}use heteroskedastic and correlated error structure within panels.{p_end}
 {p2coldent:* {cmdab:c:ov(h)}}use heteroskedastic error structure within panels, this cannot be specified together with {opt fe} or {opt fd} option.{p_end}
 {synopt :{cmd:igls}}use iterated GLS estimator instead of two-step GLS estimator.{p_end}
 
 {syntab:SE}
-{synopt :{cmdab:r:obust}}use panelvar-clustered standard errors, required when {opt minus(#)} is specified..{p_end}
-{synopt :{cmdab:cl:uster(varname)}}use varname-clustered standard errors, required when {opt minus(#)} is specified.{p_end}
+{synopt :{cmdab:r:obust}}use panelvar-clustered standard errors.{p_end}
+{synopt :{cmdab:cl:uster(varname)}}use varname-clustered standard errors.{p_end}
 {synopt :{opt nmk}}normalize standard error by N-k instead of N.{p_end}
-{synopt :{opt minus(#)}}controls the degrees of freedom adjustment factor in the robust, or cluster-robust variance calculation. Default value is {cmd:minus(0)}.{p_end}
 
 {syntab:Reporting}
 {synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}.{p_end}
@@ -61,7 +64,7 @@
 {p 4 8 2}{cmd:xtgls2} is not an official Stata command.
 It is a free contribution to the research community.
 Please cite it as such: {p_end}
-{p 8 8 2}Manh Hoang Ba, 2025. "XTGLS2: Stata module to estimate GLS estimator for large N, small T panel data models," Statistical Software Components S459497, Boston College Department of Economics.{p_end}
+{p 8 8 2}Manh Hoang-Ba, 2025. "XTGLS2: Stata module to estimate GLS estimator for large N, small T panel data models," Statistical Software Components S459497, Boston College Department of Economics.{p_end}
 
 
 {title:Postestimation}
@@ -148,8 +151,6 @@ Please cite it as such: {p_end}
 {synopt:{cmd:e(sample)}}marks estimation sample{p_end}
 {p2colreset}{...}
 
-INCLUDE help rtable
-
 
 {title:Acknowledgements}
 
@@ -169,11 +170,11 @@ INCLUDE help rtable
 
 {title:Authors}
 
-    Manh Hoang Ba, Eureka Uni Team, Vietnam
+    Manh Hoang-Ba, Eureka Uni Team, Vietnam
     hbmanh9492@gmail.com
 
 {title:Also see}
 
-{pstd}Online: help for {help xtgls}, {help xtglsr} {if installed}, {help xttest3} (if installed), {help xttest4} (if installed).
+{pstd}Online: help for {help xtgls}, {help xttest4} (if installed).
 
 

@@ -1,6 +1,6 @@
 {smcl}
-{* *! version 1.0  30dec2025}{...}
-{* *! Manh Hoang Ba, hbmanh9492@gmail.com}{...}
+{* *! version 1.0  05jan2026}{...}
+{* *! Manh Hoang-Ba, hbmanh9492@gmail.com}{...}
 
 {title:Title}
 
@@ -20,7 +20,7 @@
 
 {pstd}
 {cmd:xtgmmfa} performs GMM estimation for fixed-T panel data model with multifactor structural errors and the presence of endogenous variables.
-The underlying methodology involves approximating the unobserved common factors using observed factor proxies. The resulting moment conditions are linear in the parameters. See Joudis and Sarafidis (2022) for more details.
+The underlying methodology involves approximating the unobserved common factors using observed factor proxies. The resulting moment conditions are linear in the parameters. See Juodis and Sarafidis (2022) for more details.
 
 
 {synoptset 20 tabbed}{...}
@@ -58,8 +58,8 @@ The underlying methodology involves approximating the unobserved common factors 
 {synoptset 20 tabbed}{...}
 {synopthdr:unof_spec}
 {synoptline}
-{synopt:{it:Vlist}}includes time-varying variables, assumed to be drived by factors inside (as well as outside) the model. These variables are used to construct the vector v_i in equation (11) and V_i in equation (17) in Joudis and Sarafidis (2022). In addition, {cmd:xtgmmfa} automatically adds time-varying regressors (y, X) after {it:Vlist}. Therefore, {it:Vlist} can be empty.{p_end}
-{synopt:{opt wvar(varname)}}specifies a variable to be used in constructing the weight vector wi in formulas (12) and (16) in Joudis and Sarafidis (2022). When wvar is empty, xtgmmfa automatically uses the dependent variable.{p_end}
+{synopt:{it:Vlist}}includes time-varying variables, assumed to be drived by factors inside (as well as outside) the model. These variables are used to construct the vector v_i in equation (11) and V_i in equation (17) in Juodis and Sarafidis (2022). In addition, {cmd:xtgmmfa} automatically adds time-varying regressors (y, X) after {it:Vlist}. Therefore, {it:Vlist} can be empty.{p_end}
+{synopt:{opt wvar(varname)}}specifies a variable to be used in constructing the weight vector wi in formulas (12) and (16) in Juodis and Sarafidis (2022). When wvar is empty, xtgmmfa automatically uses the dependent variable.{p_end}
 {synopt:{opt regu}}uses the Regularization method to estimate the number of factor proxies. This is default.{p_end}
 {synopt:{opt bss}}uses the Best-Subset Selection method (BSS) instead of the Regularization. {cmd:bss} selects the factor proxies vector and the number of factor proxies from a set of available factors, by estimating feasible models and finding the model with the smallest BIC. This procedure is time-consuming when using {cmd:type(3)} options.{p_end}
 {synopt:{opt type}{cmd:(}#{cmd:)}}specifies how to combines V_i and W_i in constructing the set of available factors. {cmd:type(1)} uses the first variable in {it:Vlist} and multiple weights w_i, {cmd:type(2)} uses all variables in {it:Vlist} and single weight, {cmd:type(3)} combines both.{p_end}
@@ -85,13 +85,13 @@ All {it:varlists} may contain factor variables; see {help fvvarlist}.{p_end}
 
 {title:Example}
 
-{pstd}Water data (Joudis and Sarafidis, 2022){p_end}
+{pstd}Water data (Juodis and Sarafidis, 2022){p_end}
 {phang2}. {stata use js22data, clear}{p_end}
 
-{pstd}Regularization: column M_F of table 1 in Joudis and Sarafidis (2022){p_end}
+{pstd}Regularization: column M_F of table 1 in Juodis and Sarafidis (2022){p_end}
 {phang2}. {stata xtgmmfa l(0/1).lcons price rain temp, gmm(l.lcons l.price rain temp) unof(smi, type(1)) nocons wmat(1)}{p_end}
 
-{pstd}Best-Subset Selection: column M1_c of table 1 in Joudis and Sarafidis (2022){p_end}
+{pstd}Best-Subset Selection: column M1_c of table 1 in Juodis and Sarafidis (2022){p_end}
 {phang2}. {stata xtgmmfa l(0/1).lcons price rain temp, gmm(l.lcons l.price rain temp) unof(smi, bss type(1) lmax(4)) nocons wmat(1)}{p_end}
 
 {pstd} Arellano-Bond data{p_end}
@@ -178,7 +178,7 @@ All {it:varlists} may contain factor variables; see {help fvvarlist}.{p_end}
 {title:Author}
 
 {pstd}
-Manh Hoang Ba, {browse "https://manhb94econometrics.wordpress.com/"}
+Manh Hoang-Ba, {browse "https://manhb94econometrics.wordpress.com/"}
 
 {pstd}
 hbmanh9492@gmail.com
@@ -195,17 +195,7 @@ I would like to express my sincere gratitude to Arturas Joudis and Vasilis Saraf
 {title:References}
 
 {phang}
-Arellano, M., and S. R. Bond. 1991.
-Some tests of specification for panel data: Monte Carlo evidence and an application to employment equations.
-{it:Review of Economic Studies} 58: 277-297.
-
-{phang}
 Juodis, A., & Sarafidis, V. (2022). A linear estimator for factor-augmented fixed-T panels with endogenous regressors. {it:Journal of Business & Economic Statistics}, 40(1), 1-15.
-
-{phang}
-Roodman, D. 2009.
-A note on the theme of too many instruments.
-{it:Oxford Bulletin of Economics and Statistics} 71: 135-158.
 
 {phang}
 Windmeijer, F. 2005.

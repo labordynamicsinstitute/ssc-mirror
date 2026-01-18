@@ -148,7 +148,7 @@ p xttacce module to compute Time Averaged Common Correlated Effects estimator (T
 p xtteifeci module to provide Estimation and Inference of Treatment Effects through a Factor-Based Approach
 p xttest2 module to perform Breusch-Pagan LM test for cross-sectional correlation in panel data model
 p xttest3 module to compute Modified Wald statistic for groupwise heteroskedasticity
-p xttest4 module to calculate heterokedasticity tests for fixed effects models
+p xttest4 module to calculate heterokedasticity tests for fixed-T panel data models
 p xttrans2 module to compute tables of transition probabilities 
 p xtusreg module to estimate dynamic panel models under irregular time spacing
 p xtvar module to compute panel vector autoregression 
