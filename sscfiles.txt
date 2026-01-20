@@ -11706,6 +11706,7 @@ fmwww.bc.edu/repec/bocode/j/jnsn.ado
 fmwww.bc.edu/repec/bocode/j/jl.pluginMACINTEL64
 fmwww.bc.edu/repec/bocode/j/jar.zip
 fmwww.bc.edu/repec/bocode/j/jquery-latest.js
+fmwww.bc.edu/repec/bocode/j/jl_manifest.toml
 fmwww.bc.edu/repec/bocode/j/jackson-core-2.6.7.jar
 fmwww.bc.edu/repec/bocode/j/jnsn.html
 fmwww.bc.edu/repec/bocode/j/jhgeo_cln_ll.ado
@@ -11800,6 +11801,7 @@ fmwww.bc.edu/repec/bocode/j/jsonio.jar
 fmwww.bc.edu/repec/bocode/j/jwdid_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/j/joyplot.pkg
 fmwww.bc.edu/repec/bocode/j/joinvars.html
+fmwww.bc.edu/repec/bocode/j/jl_project.toml
 fmwww.bc.edu/repec/bocode/j/jhpoi_cln_ll.ado
 fmwww.bc.edu/repec/bocode/j/jce.sthlp
 fmwww.bc.edu/repec/bocode/j/jfile.ico
@@ -13130,6 +13132,7 @@ fmwww.bc.edu/repec/bocode/r/regpred.pkg
 fmwww.bc.edu/repec/bocode/r/runmlwin_getversion.win32
 fmwww.bc.edu/repec/bocode/r/rndbin.ado
 fmwww.bc.edu/repec/bocode/r/robbox.zip
+fmwww.bc.edu/repec/bocode/r/reghdfejl_manifest.toml
 fmwww.bc.edu/repec/bocode/r/rddensity_fun.do
 fmwww.bc.edu/repec/bocode/r/ralloc.hlp
 fmwww.bc.edu/repec/bocode/r/robit3.ado
@@ -13577,6 +13580,7 @@ fmwww.bc.edu/repec/bocode/r/reu.ado
 fmwww.bc.edu/repec/bocode/r/rctmiss.do
 fmwww.bc.edu/repec/bocode/r/randid.ado
 fmwww.bc.edu/repec/bocode/r/rlasso.sthlp
+fmwww.bc.edu/repec/bocode/r/reghdfejl_project.toml
 fmwww.bc.edu/repec/bocode/r/gsadf.mtx
 fmwww.bc.edu/repec/bocode/r/rddsga.ado
 fmwww.bc.edu/repec/bocode/r/roblpr.pkg

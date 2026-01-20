@@ -236,8 +236,8 @@ bootstrap. In expectation, {cmd: reghdfejl ..., ... vce(bs,} {it:bsoptions}{cmd:
 first is faster because it avoids copying data from Stata to Julia on every replication and can exploit mulitasking. {it:bsoptions} 
 may include any of the following suboptions: {opt r:obust}, {opt cl:uster(varname)}, {opt seed(#)}, {opt reps(#)}, {opt mse}, {opt size(#)}, 
 {cmdab:sav:ing(}{it:filename} {cmd:[, {ul:doub}le replace])}, and 
-{opt proc:s(#)}. All but the last are standard {help bootstrap:bootstrap options}. The last instructs {cmd:reghdfejl} to launch several
-copies of Julia in order to run the bootstrap in parallel. The {opt proc:s(#)} suboption is semantically distinct from {cmd:reghdfejl}'s {opt threads()}
+{opt proc:s(#)}. All but the last are standard {help bootstrap:bootstrap options}. The last instructs {cmd:reghdfejl} to use multithreading--splitting work 
+across multiple CPU cores on a chip--in order to speed up the bootstrap. The {opt proc:s(#)} suboption is semantically distinct from {cmd:reghdfejl}'s {opt threads()}
 option. The latter triggers low-level multitasking: the Julia package FixedEffectModels.jl spreads certain loops across multiple threads within one Julia 
 instance. The former splits the work at a higher level, which is more efficient. On each thread, FixedEffectModels.jl is run in single-thread mode,
 repeatedly running the model on bootstrapped data. While 
@@ -423,8 +423,8 @@ This benchmark creates a data set with 100 million observations and runs regress
 effects using {help areg}, {help reghdfe}, and {cmd:reghdfejl} in Stata/MP. The number of processors is set to 1 or 8. THe script is run on a Windows 
 laptop with an NVIDIA RTX 4070 GPU and an Intel i9-13900H, the latter having 6 performance and 8 (slower) efficiency cores. The log is lightly edited for parsimony.
 
-{pstd}With 1 set of FE, {cmd:reghdfe} is 2-7 times faster than {cmd:areg}, and {cmd:reghdfejl} is 3-4 faster again, slightly more so with the {cmd:gpu} 
-option. With 2 sets of FE, {cmd:reghdfejl} is 10 times faster than {cmd:reghdfe} without {cmd:gpu} and 12 times faster with.
+{pstd}With 1 set of FE, {cmd:reghdfe} is 2-7 times faster than {cmd:areg}, and {cmd:reghdfejl} is 2-3 faster again, slightly more so with the {cmd:gpu} 
+option. With 2 sets of FE, {cmd:reghdfejl} is 4-7 times faster than {cmd:reghdfe} without {cmd:gpu} and 5-9 times faster with.
 
 {pstd}
 On a Mac with an M2 Pro chip--with 8 performance cores and 4 efficiency cores--the absolute times are somewhat higher and the ratios slightly lower (not shown).
@@ -463,48 +463,55 @@ On a Mac with an M2 Pro chip--with 8 performance cores and 4 efficiency cores--t
 {phang}. set processors 1{p_end}
 
 {phang}. qui areg      y x1 x2, a(id1) cluster(id1){p_end}
-{phang}t=490.93{p_end}
+{phang}r; t=404.52{p_end}
 
-{phang}. qui reghdfe   y x1 x2, a(id1) cluster(id1) dof(none){p_end}
-{phang}t=68.74{p_end}
+{phang}. qui reghdfe   y x1 x2, a(id1) cluster(id1){p_end}
+{phang}r; t=54.23{p_end}
 
 {phang}. qui reghdfejl y x1 x2, a(id1) cluster(id1){p_end}
-{phang}t=16.86{p_end}
+{phang}r; t=15.08{p_end}
 
 {phang}. qui reghdfejl y x1 x2, a(id1) cluster(id1) gpu{p_end}
-{phang}t=15.92{p_end}
+{phang}r; t=12.98{p_end}
 
-{phang}. qui reghdfe   y x1 x2, a(id1 id2) cluster(id1 id2) dof(none){p_end}
-{phang}t=315.05{p_end}
+{phang}. qui areg      y x1 x2, a(id1 id2) cluster(id1){p_end}
+{phang}r; t=91.47{p_end}
 
-{phang}. qui reghdfejl y x1 x2, a(id1 id2) cluster(id1 id2){p_end}
-{phang}t=29.70{p_end}
+{phang}. qui reghdfe   y x1 x2, a(id1 id2) cluster(id1){p_end}
+{phang}r; t=152.29{p_end}
 
-{phang}. qui reghdfejl y x1 x2, a(id1 id2) cluster(id1 id2) gpu{p_end}
-{phang}t=24.48{p_end}
+{phang}. qui reghdfejl y x1 x2, a(id1 id2) cluster(id1){p_end}
+{phang}r; t=23.30{p_end}
+
+{phang}. qui reghdfejl y x1 x2, a(id1 id2) cluster(id1) gpu{p_end}
+{phang}r; t=14.59{p_end}
 
 {phang}. set processors 6{p_end}
 
 {phang}. qui areg      y x1 x2, a(id1) cluster(id1){p_end}
-{phang}t=99.24 {p_end}
+{phang}r; t=110.36{p_end}
 
-{phang}. qui reghdfe   y x1 x2, a(id1) cluster(id1) dof(none){p_end}
-{phang}t=44.69{p_end}
+{phang}. qui reghdfe   y x1 x2, a(id1) cluster(id1){p_end}
+{phang}r; t=45.60{p_end}
 
 {phang}. qui reghdfejl y x1 x2, a(id1) cluster(id1){p_end}
-{phang}t=14.00{p_end}
+{phang}r; t=12.75{p_end}
 
 {phang}. qui reghdfejl y x1 x2, a(id1) cluster(id1) gpu{p_end}
-{phang}t=12.23{p_end}
+{phang}r; t=10.92{p_end}
 
-{phang}. qui reghdfe   y x1 x2, a(id1 id2) cluster(id1 id2) dof(none){p_end}
-{phang}t=243.90{p_end}
+{phang}. qui areg      y x1 x2, a(id1 id2) cluster(id1){p_end}
+{phang}r; t=73.53{p_end}
 
-{phang}. qui reghdfejl y x1 x2, a(id1 id2) cluster(id1 id2){p_end}
-{phang}t=27.88{p_end}
+{phang}. qui reghdfe   y x1 x2, a(id1 id2) cluster(id1){p_end}
+{phang}r; t=114.73{p_end}
 
-{phang}. qui reghdfejl y x1 x2, a(id1 id2) cluster(id1 id2) gpu{p_end}
-{phang}t=19.77{p_end}
+{phang}. qui reghdfejl y x1 x2, a(id1 id2) cluster(id1){p_end}
+{phang}r; t=20.82{p_end}
+
+{phang}. qui reghdfejl y x1 x2, a(id1 id2) cluster(id1) gpu{p_end}
+{phang}r; t=12.67{p_end}
+
 
 {title:Author}
 

@@ -1,5 +1,5 @@
-*! jl 1.2.4 4 December 2025
-*! Copyright (C) 2023-25 David Roodman
+*! jl 2.0.0 18 January 2026
+*! Copyright (C) 2023-26 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -15,8 +15,8 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 * Version history at bottom
-  
-global JULIA_COMPAT_VERSION 1.11
+
+global JULIA_COMPAT_VERSION 1.12
 
 // Take 1 argument, possible path for julia executable, return workable path, if any, in caller's libpath and libname locals; error otherwise
 cap program drop wheresjulia
@@ -127,11 +127,55 @@ end
 
 cap program drop SetEnv
 program define SetEnv
-  local 1: subinstr local 1 "@" ""
-  if `"`1'"'=="" plugin call _julia, evalqui `"Pkg.activate("Stata", shared=true)"'  // return to default environment
-            else plugin call _julia, evalqui `"Pkg.activate("`1'", shared=true)"'  // named, shared environment
-  AddPkg DataFrames, ver(1.8.1)
-  AddPkg CategoricalArrays, ver(1.0.2)
+  syntax [anything], [project(string) manifest(string) UPdate replace pin]
+  _assert `"`manifest'"'=="" | `"`project'"'!="", msg(Must specify {cmd:project()} too when specifying {cmd:manifest()}) rc(198)
+  if `"`project'`manifest'"'=="" & "`update'`replace'`pin'"!="" di as txt _n "{cmd:`update' `replace' `pin'} ignored for lack of {cmd:project()} option"
+
+  if inlist("`anything'", "", ".", "@Stata") {
+    _assert `"`manifest'`project'`update'`replace'`pin'"'=="", msg(Options not accepted when switching to the default environment) rc(198)
+    local anything @Stata
+    qui findfile jl_project.toml
+    local project `r(fn)'
+    qui findfile jl_manifest.toml
+    local manifest `r(fn)'
+    local update update
+    local pin pin
+  }
+
+  if substr(`"`anything'"',1,1)=="@" {
+    local anything = substr(`"`anything'"',2,.)
+    local sharedopt , shared=true
+  }
+
+  plugin call _julia, evalqui `"Pkg.activate("`anything'" `sharedopt')"'
+
+  if `"`project'"'=="" {
+    AddPkg DataFrames, ver(1.8.1)
+    AddPkg CategoricalArrays, ver(1.0.2)
+  }
+  else {
+    plugin call _julia, eval `"dirname(Base.active_project())"'
+    local envdir `__jlans'  // strip quotes
+    local envdir: subinstr local envdir "\\" "\", all
+    
+    plugin call _julia, eval `"isdir(raw"`envdir'")"'
+    if `"`__jlans'"'=="false" {
+      plugin call _julia, evalqui "Pkg.instantiate()"  // force creation of directory for brand new package environment
+      local replace replace
+    }
+    else if "`update'"!="" {  // are current .toml files either missing or older?
+      plugin call _julia, eval `"!isfile(raw"`envdir'/Project.toml") || !isfile(raw"`envdir'/Manifest.toml") || (isfile(raw"`project'") && mtime(raw"`envdir'/Project.toml") < mtime(raw"`project'")) || (isfile(raw"`manifest'") && mtime(raw"`envdir'/Manifest.toml") < mtime(raw"`manifest'"))"'
+      if `"`__jlans'"'=="true" local replace replace
+        else exit
+    }
+
+    qui copy "`project'" "`envdir'/Project.toml", `replace'
+    qui copy "`manifest'" "`envdir'/Manifest.toml", `replace'
+    di as txt _n "Instatiating a newly imported package environment. This could take a few minutes."
+    mata displayflush()
+    plugin call _julia, evalqui "Pkg.instantiate()"
+  }
+  if "`pin'"!="" plugin call _julia, evalqui "Pkg.pin(all_pkgs = true)"
 end
 
 cap program drop AddPkg
@@ -265,7 +309,8 @@ program define jl, rclass
   version 14.1
 
   if `"`0'"'=="version" {
-    return local version 1.2.1
+    di as txt "jl version 2.0.0"
+    return local version 2.0.0
     exit
   }
 
@@ -296,19 +341,11 @@ program define jl, rclass
 
     if inlist(`"`cmd'"',"SetEnv","GetEnv") {
       qui if "`cmd'"=="SetEnv" {
-        SetEnv `1'
+        SetEnv `0'
       }
       plugin call _julia, eval `"dirname(Base.active_project())"'
       local __jlans `__jlans'  // strip quotes
-      local envdir: subinstr local __jlans "\\" "\", all
-      plugin call _julia, eval `"dirname(Base.load_path_expand("@v#.#"))"'
-      local __jlans: subinstr local __jlans "\\" "\", all
-      if "`envdir'" == `__jlans' return local env @v$JULIA_COMPAT_VERSION
-      else {
-        plugin call _julia, eval `"splitpath(Base.active_project())[end-1]"'
-        return local env `__jlans'  // strip quotes
-      }
-      di as txt `"Current environment: `=cond("`return(env)'"==".","(default)","`return(env)'")', at `return(envdir)'"' _n
+      return local envdir: subinstr local __jlans "\\" "\", all
       jlcmd: Pkg.status()
     }
     else if `"`cmd'"'=="AddPkg" AddPkg `0'
@@ -406,8 +443,8 @@ program define jl, rclass
         }
       }
     }
+    return local ans: copy local ans
   }
-  return local ans: copy local ans
 end
 
 cap program drop jlcmd
@@ -525,3 +562,6 @@ program _julia, plugin using(jl.plugin)
 * 1.2.2  Fix bug in GetVarsFromDF causing loss of type info and in particular loss of string var values
 * 1.2.3  Fix bug with PutVarsToDF and multiple string columns
 * 1.2.4  Default to environment named "Stata". Check for Rosetta on ARM Macs, not Intel Macs, duh.
+* 2.0.0  Add project(), manifest(), update, replace, and pin options to SetEnv. Move to Julia 1.12.
+*        Breaking change require "@" prefix in SetEnv to refer to shared package environment.
+*        Add jl_project.toml and jl_manifest.toml.

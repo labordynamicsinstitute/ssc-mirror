@@ -14,9 +14,9 @@ d
 d KW: Julia
 d KW: plugins
 d
-d Requires: Stata version 14.1 and Julia 1.11
+d Requires: Stata version 14.1 and Julia 1.12 (autoinstalled)
 d
-d Distribution-Date: 20251204
+d Distribution-Date: 20260119
 d
 d Author: David Roodman
 d Support: email david@@davidroodman.com
@@ -24,6 +24,8 @@ d
 f jl.ado
 f ../_/_jl.ado
 f jl.sthlp
+F jl_project.toml
+F jl_manifest.toml
 F ../s/stataplugininterface.jl
 G LINUX64 jl.pluginLINUX64 jl.plugin
 G MACARM64 jl.pluginMACARM64 jl.plugin

@@ -1,5 +1,5 @@
 {smcl}
-{* *! jl 1.2.1 8nov2025}{...}
+{* *! jl 2.0.0 18jan2026}{...}
 {help jl:jl}
 {hline}{...}
 
@@ -34,8 +34,8 @@ where {it:juliaexpr} is an expression to be evaluated in Julia.
 {synopt:{opt GetVarsFromMat}}Copy Stata variables from Julia matrix, mapping NaN to missing{p_end}
 {synopt:{opt PutMatToMat}}Copy Stata matrix to Julia matrix, mapping missing to NaN{p_end}
 {synopt:{opt GetMatFromMat}}Copy Stata matrix from Julia matrix, mapping NaN to missing{p_end}
-{synopt:{opt SetEnv}}Switch to named package environment{p_end}
-{synopt:{opt GetEnv}}Get name of current package environment{p_end}
+{synopt:{opt SetEnv}}Switch package environments{p_end}
+{synopt:{opt GetEnv}}Get path of current package environment{p_end}
 {synopt:{opt AddPkg}}Install Julia package if not installed, or update if version below threshold{p_end}
 {synopt:{opt version}}Get version of installed {cmd:jl} package{p_end}
 {synoptline}
@@ -70,7 +70,7 @@ where {it:juliaexpr} is an expression to be evaluated in Julia.
 {cmd:jl GetMatFromMat} {it:matname}, [{opt source(string)}]
 
 {phang}
-{cmd:jl SetEnv} [{it:name}]
+{cmd:jl SetEnv} [{it:path} | @{it:name} | .}, [{opt project(filename)} {opt manifest(filename)} {opt up:date} {opt replace} {opt pin}]
 
 {phang}
 {cmd:jl GetEnv}
@@ -156,12 +156,26 @@ can be prevented with the {opt nolab:el} option.
 The {cmd:SetEnv} subcommand switches to a package environment associated with the supplied 
 name. This is useful when writing Julia-based Stata programs that need to install certain Julia
 packages. Switching to a dedicated environment minimizes version conflicts with packages
-downloaded for other purposes. The environment will be a "{browse "https://pkgdocs.julialang.org/v1/environments/#Shared-environments":shared environment},"
-meaning that it will be a 
-subdirectory of Julia's main environment directory, for example,
-"`~/.julia/environments/MyEnvironment". If it does not exist, it will be created,
-and populated with the DataFrames and CategoricalArrays packages. Calling {cmd:SetEnv} without any arguments reverts to
-the default package environment.
+downloaded for other purposes. You can specify the environment as the absolute or relative path to any folder to which you have write access. Or it can be a simple name prefixed by "@",
+meaning that will be a {browse "https://pkgdocs.julialang.org/v1/environments/#Shared-environments":{it:shared} environment}. This will make it a 
+subdirectory of Julia's main environment directory. For example, the default environment is "@Stata", which in macOS and Linux is typically stored at
+"`~/.julia/environments/Stata" and in Windows at "C:\Users\[username]\.julia\environments\Stata". If the environment name in the {cmd: jl SetEnv} command line is empty, or if it 
+is ".", then this default environment is implied. If the new environment does not exist, it will be created,
+and populated with the DataFrames and CategoricalArrays packages.
+
+{pstd}
+A Julia package environment is nothing more that a {browse "https://pkgdocs.julialang.org/v1/toml-files/":folder with two files in it}, named Project.toml and Manifest.toml. Project.toml is a human-readable text file that provides
+a high-level description of the environment, including which packages, in which versions, have been installed in it. Manifest.toml, though also a text file, is meant to be written
+and read by Julia. It contains an exact record of the packages a user has installed, as well as all the dependency packages required thereby, which can number in the hundreds. Collectively, 
+these dependencies are updated almost every week by their maintainers on GitHub. As a result, it is easy for two users at two different times to seemingly install the same packages, yet 
+create package environments with subtle differences. Sometimes the "subtle" differences will cause dramatic crashes. By distributing
+Project.toml and Manifest.toml, you can prevent this failure mode and ensure exact replicability of a Julia-based project. You can also make a Julia-based Stata program more reliable by nailing down the contents of the package 
+environment the program runs in. In the {cmd:jl SetEnv} subcommand, the {opt project(filename)} and {opt manifest(filename)} options allow you to inject these files into a new or existing package 
+environment. Appending the {opt replace} option forces
+overwriting of the existing .toml files, while {opt up:date} will only copy the files if the environment's current ones are older or missing. After the copying, {cmd:jl SetEnv} will call the Julia
+package manager's {browse "https://pkgdocs.julialang.org/v1/api/#Pkg.instantiate":instantiate()} function to locally install all packages according to the new .toml files. In addition, the {opt pin} option will
+instruct {cmd:jl SetEnv} to run the {browse "https://pkgdocs.julialang.org/v1/api/#Pkg.pin":pin()} function to lock down current package versions in this environment. None of these changes will affect other
+package environments on the same computer.
 
 {pstd}
 The {cmd:GetEnv} displays the name and location of the current package environment and
@@ -180,25 +194,25 @@ at or above the minimum specified. The {cmd:AddPkg} subcommand operates within t
 
 {pstd}
 This package is designed for 64-bit Windows, Linux, and macOS, the last on an Intel or Apple CPU. It requires--and is
-currently only guaranteeed to be stable with---Julia 1.11 ("guaranteed" in air quotes). Historically, to install Julia,
+currently only guaranteeed to be stable with---Julia 1.12 ("guaranteed" in air quotes). Historically, to install Julia,
 you would directly download the version you wanted. Now, the standard method, which you must
 follow to use this Stata package, installs the latest Julia version along with the {cmd:Juliaup} version manager. {cmd:Juliaup}
 helps you manage multiple versions of Julia on your computer. It does so through the construct of {it:channels}. The
-{cmd:release} channel will hold the latest stable version of Julia available. A channel such as {cmd:1.11} would hold the latest update of Julia 1.11, say, 1.11.2---even
+{cmd:release} channel will hold the latest stable version of Julia available. A channel such as {cmd:1.12} would hold the latest update of Julia 1.12, say, 1.12.2---even
 after Julia 1.12 was released. (Though, probably if you are reading this, 1.12 hasn't been released. I expect to update this package as
 Julia changes.) 
 
 {pstd}
-In fact, because {cmd:jl} requires Julia 1.11 for stability, by default it will use the 1.11 channel. And it
+In fact, because {cmd:jl} requires Julia 1.12 for stability, by default it will use the 1.12 channel. And it
 will create that channel if it doesn't exits. The underlying issue is that while Julia versions in the 1.X series guarantee backward compatibility
 with earlier 1.X versions, this guarantee does not extend to the low-level, C-based interface through which
-{cmd:jl} accesses Julia. When {cmd:jl} sets up the 1.11 branch, this will not interfere with any other 
+{cmd:jl} accesses Julia. When {cmd:jl} sets up the 1.12 branch, this will not interfere with any other 
 channels or versions that are on your computer, nor with any copy of Julia installed outside of {cmd:Juliaup}.
 
 {pstd}
-When first launched in a Stata session, {cmd:jl} will attempt to access {cmd:Juliaup} and the 1.11 channel. If these components are missing,
+When first launched in a Stata session, {cmd:jl} will attempt to access {cmd:Juliaup} and the 1.12 channel. If these components are missing,
 it will attempt to install them. This automatic setup can fail,
-since it requires an Internet connection and certain permissions on youur computer. In case it does, 
+since it requires an Internet connection and certain permissions on your computer. In case it does, 
 and you need to do it manually, here
 are the terminal commands. To install Juliaup and the latest Julia release, follow the 
 {browse "https://github.com/JuliaLang/juliaup#installation":official Julia download instructions}. In particular, in
@@ -210,9 +224,9 @@ Windows, the (clickable) command line is
 
 {pin}{stata "! curl -fsSL https://install.julialang.org | sh -s -- -y"}
 
-{pstd}Then, in any operating system, set up the 1.11 channel with
+{pstd}Then, in any operating system, set up the 1.12 channel with
 
-{pin}{stata "! juliaup add 1.11"}
+{pin}{stata "! juliaup add 1.12"}
 
 {pstd}On Intel Macs, 
 {cmd:jl} seems to require at least macOS 11 (Big Sur) or 12 (Monterey). On computers not officially supported by those editions, you can use 

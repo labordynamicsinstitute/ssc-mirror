@@ -8,9 +8,9 @@ d KW: reghdfe
 d KW: Julia
 d KW: plugins
 d
-d Requires: Stata version 15, julia from SSC, Julia 1.11
+d Requires: Stata version 15, julia from SSC, Julia 1.12 (autoinstalled)
 d
-d Distribution-Date: 20251108
+d Distribution-Date: 20260119
 d
 d Author: David Roodman
 d Support: email david@@davidroodman.com
@@ -23,3 +23,5 @@ f reghdfejl_masker.ado
 f reghdfejl_parse_absorb.ado
 f ../p/partialhdfejl.ado
 f reghdfejl.sthlp
+F reghdfejl_project.toml
+F reghdfejl_manifest.toml

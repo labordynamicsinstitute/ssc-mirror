@@ -1,8 +1,8 @@
-*! reghdfejl 1.1.7 4 November 2025
+*! reghdfejl 1.1.8 12 January 2026
 
 // The MIT License (MIT)
 //
-// Copyright (c) 2023-25 David Roodman
+// Copyright (c) 2023-26 David Roodman
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -27,10 +27,20 @@
 cap program drop reghdfejl
 program define reghdfejl
   version 15
+  
+  if replay() {
+    if "`e(cmd)'" != "reghdfejl" error 301
+    if _by() error 190
+    Display `0'
+    exit 0
+  }
+
   qui jl GetEnv
   local env `r(env)'
-  qui jl SetEnv reghdfejl
+  reghdfejl_load
+
   cap noi _reghdfejl `0'
+
   local rc = _rc
   qui jl SetEnv `env'
   
@@ -45,13 +55,6 @@ end
 cap program drop _reghdfejl
 program define _reghdfejl, eclass
   version 15
-
-  if replay() {
-		if "`e(cmd)'" != "reghdfejl" error 301
-		if _by() error 190
-		Display `0'
-		exit 0
-	}
 
   local cmdline: copy local 0
 
@@ -127,8 +130,6 @@ program define _reghdfejl, eclass
   if `threads' local threadsopt , nthreads = `threads'
 
   if "`keepsingletons'"!="" local singletonopt , drop_singletons = false
-
-  reghdfejl_load
 
   local haswt = `"`exp'"' != ""
   if `haswt' {
@@ -926,3 +927,4 @@ cap program _julia_reghdfejl, plugin using(jl.plugin)  // create an extra handle
 * 1.1.5  Fix stupid partialhdfejl crash
 * 1.1.6  Change default tolerance() from 1e-6 to 1e-8. Tidy up display of KP F stat.
 * 1.1.7  BLISBLAS 0.2.0 causing crash, so switch to MKL/OpenBLAS
+* 1.1.8  Switch to downloading and instantiating package environment defined by Project.toml & Manifest.toml
