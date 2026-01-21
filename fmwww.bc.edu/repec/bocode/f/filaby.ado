@@ -1,4 +1,4 @@
-*! Part of package matrixtools v. 0.31
+*! Part of package matrixtools v. 0.32
 *! Support: Niels Henrik Bruun, nbru@rn.dk
 
 *capture program drop filaby

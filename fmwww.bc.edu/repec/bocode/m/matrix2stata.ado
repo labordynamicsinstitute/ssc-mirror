@@ -1,5 +1,7 @@
-*! Part of package matrixtools v. 0.31
+*! Part of package matrixtools v. 0.32
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+*TODO add estimate 95%ci and pvalue to ylabel
+*TODO return yvalues with labels 
 * 2019-03-13 nhb >	Zipsettings added
 * 2019-03-12 nhb >	Label on blank separator line
 program matrix2stata, rclass

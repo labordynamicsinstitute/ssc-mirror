@@ -109,8 +109,12 @@ specify a csv file to save the csv output in.{p_end}
 	{synopt :{opt pc:tformat}}Alter the format used for the percentages for the 
         categorical summary variables. The argument must be a numeric format{p_end}
 	{synopt :{opt pv:format}}Alter the format used for the P value.
-        The argument must be in a numeric format. There is sub-option {opt t:op} placing 
-        the p-value at the top{p_end}
+		The default is the APA style, i.e., p-values above 0.1 are rounded to 2 
+		decimals, p-values above 0.001 are rounded to 3 decimals, other p-values 
+		are set to < 0.001.
+		An asterisk (*) is for the APA style with suffixes * (< 5%) and ** (< 1%).
+        The argument can also be in a numeric format for rounding in that format. 
+		There is sub-option {opt t:op} placing the p-value at the top{p_end}
 	{synopt:{opt e:xact}{opt (#)}}report Fisher's exact test instead of 
         chi-square tests. 
         The recommended value is 1 and 0 means no exact test.{break}

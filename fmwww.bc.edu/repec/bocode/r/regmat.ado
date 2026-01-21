@@ -1,5 +1,7 @@
-*! Part of package matrixtools v. 0.31
+*! Part of package matrixtools v. 0.32
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+*TODO add R
+*TODO handle xt-commands
 *! 2024-02-29	> Bugfix: double if
 *! 2024-02-25 > Handling mixed regression
 *! 2024-02-23 > Option todocx added

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.31}{...}
+{* *! version 0.32}{...}
 {viewerjumpto "Syntax" "filaby##syntax"}{...}
 {viewerjumpto "Description" "filaby##description"}{...}
 {viewerjumpto "Examples" "filaby##examples"}{...}

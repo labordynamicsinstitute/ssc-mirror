@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.31}{...}
+{* *! version 0.32}{...}
 {viewerjumpto "Syntax" "mat2xl##syntax"}{...}
 {viewerjumpto "Description" "mat2xl##description"}{...}
 {viewerjumpto "Examples" "mat2xl##examples"}{...}

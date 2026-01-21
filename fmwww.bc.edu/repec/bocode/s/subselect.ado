@@ -1,4 +1,4 @@
-*! Part of package matrixtools v. 0.31
+*! Part of package matrixtools v. 0.32
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 * 2022-06-20 > generate + replace
 * 2022-06-20 > using(use) + clear

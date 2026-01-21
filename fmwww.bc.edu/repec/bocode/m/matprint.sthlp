@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.31}{...}
+{* *! version 0.32}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Help matlist" "help matlist"}{...}
 {vieweralsosee "Help log2markup (if installed)" "help log2markup"}{...}

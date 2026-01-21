@@ -1,131 +1,132 @@
-*! version 1.0.1  20feb2024  I I Bolotov
+*! version 1.0.0  20aug2025  I I Bolotov
 program define tmpinvi, eclass byable(recall)
 	version 16.0
 	/*
-		The program implements an iterated (multistep) Transaction Matrix (TM)- 
-		specific LPLS estimator for linear programming with the help of the     
-		Moore-Penrose inverse (pseudoinverse), calculated using singular value  
-		decomposition (SVD). Estimation using 2x2 to 50x50 contiguous           
-		submatrices, repeated with compensatory slack variables until NRMSE is  
-		minimized in a given number of iterations, is followed by an F-test from
-		linear regression/t-test of mean NRMSE from a pre-simulated distribution
-		(Monte-Carlo, 50,000 iterations with matrices consisting of normal      
-		random variates). The result is adjusted for extreme values to match the
-		RHS via shares of estimated row/column sums if the corresponding option 
-		is specified.                                                           
+		This program is a wrapper for the TMPinv-estimator commands tmpinv and  
+		tmpinvl2 with options extending its functionality to pre/postestimation.
+		The Tabular Matrix Problems via Pseudoinverse Estimation (TMPinv) is a  
+		two-stage estimation method that reformulates structured table-based    
+		systems - such as allocation problems, transaction matrices, and        
+		input–output tables - as structured least-squares problems. Based on the
+		Convex Least Squares Programming (CLSP) framework, TMPinv solves systems
+		with row and column constraints, block structure, and optionally reduced
+		dimensionality by (1) constructing a canonical constraint form and      
+		applying a pseudoinverse-based projection, followed by (2) a            
+		convex-programming refinement stage to improve fit, coherence, and      
+		regularization (e.g., via Lasso, Ridge, or Elastic Net).                
 
 		Author: Ilya Bolotov, MBA, Ph.D.                                        
-		Date: 30 September 2022                                                 
+		Date: 20 August 2025                                                    
 	*/
-	tempname t F v s title rspec cspec
-	// check for third-party packages from SSC                                  
-	cap which moremata.hlp
-	if _rc {
-		di as err "installing {helpb moremata} (dependency)"
-		ssc install moremata
+	tempfile tmpf
+	tempname M bval solution
+	tempvar  id
+	// replay last result                                                       
+	if replay() {
+		if _by() {
+			error 190
+		}
+		cap conf mat e(x)
+		if _rc {
+			di as err "results of tmpinv not found"
+			exit 301
+		}
+		syntax, [REDuced(numlist int max=1 >=-`e(model_n)' <=`e(model_n)')]
+		_update `reduced'							   // switch result
+		_summary									   // print summary
+		exit 0
 	}
-	cap which tmpinv
-	if _rc {
-		di as err "installing {helpb tmpinv} (dependency)"
-		ssc install tmpinv
-	}
-	// syntax
+	// syntax                                                                   
 	syntax																	///
-	anything [if] [in] [,													///
-		Values(string) Slackvars(string) ZERODiagonal						///
-		SUBMatrix(int 2)													///
-		Lowerbound(numlist max=1 miss) Upperbound(numlist max=1 miss)		///
-		Round(real 8e-307) PENalization										///
-		STEPNumber(int 2)  *												///
+	[anything] [if] [in], [													///
+		PYthon L2 IVAL(varlist) ILOWERbound(name) IUPPERbound(name)			///
+		PREestimation(string asis) POSTestimation(string asis) LOOP			///
+		Get(namelist) DOUBLE UPdate REPLACE FORCE FORmat(string) *			///
 	]
 	// adjust and preprocess options                                            
-	if "`lowerbound'" == "" loc lowerbound = .
-	if "`upperbound'" == "" loc upperbound = .
-	// perform the pinv estimation via SVD                                      
-	mata: printf("\n----+--- 1 ---+--- 2 ---+--- 3 ---+--- 4 ---+--- 5\n"); ///
-		  f  = (f=trunc(floatround(log10(`stepnumber'))))                 + ///
-		          trunc(floatround(f / 3)) + 2
-	sca  `t' = clock(c(current_date) + " " + c(current_time), "DMYhms")
-	forv  i  = 0/`stepnumber' {						   /* break if converged */
-		if `i' >= 1 {
-			mata: printf("."); displayflush();                              ///
-				  if (! mod(`i', 50)) printf("%"+strofreal(f)+".0fc\n", `i');;
-			if `i' == 1 mata: r2 = J(                               1,0,.); ///
-							  v  = J(length(st_matrix("r(solution)")),0,.)
-			mata: r2 = r2,st_numscalar("r(r2_c)");                          ///
-				  if ("`zerodiagonal'" != "")                 {;            ///
-				  x  = st_matrix("r(solution)"); _diag(x, 0);               ///
-				       st_matrix("r(solution)",           x); };            ///
-				  v  = v ,colshape(st_matrix("r(solution)"), 1);            ///
-				  if ((r2[1] + r2[cols(r2)]) < . & r2[cols(r2)] <= r2[1]  & ///
-				     `i' > 1 | `i' == `stepnumber') {;                      ///
-				  st_matrix("r(solution)",                                  ///
-				            colshape(v[.,selectindex(r2 :== max(r2))[1]],   ///
-				            cols(st_matrix("r(solution)"))));               ///
-				   st_local("`F'", "True");         };                      ///
-				  st_matrix("`v'", colshape(st_matrix("r(solution)"), 1));  ///
-				  if ("`penalization'" !=  ""                             & ///
-				      missing(st_matrix("r(solution)"))) {;                 ///
-				  st_matrix("`s'", ((rowmissing(st_matrix("r(solution)")) \ ///
-				                    J(max((rows(st_matrix("r(solution)")),  ///
-				                           cols(st_matrix("r(solution)")))) ///
-				                    -      rows(st_matrix("r(solution)")),  ///
-				                    1,.)),                                  ///
-				                    (colmissing(st_matrix("r(solution)"))'\ ///
-				                    J(max((rows(st_matrix("r(solution)")),  ///
-				                           cols(st_matrix("r(solution)")))) ///
-				                    -      cols(st_matrix("r(solution)")),  ///
-				                    1,.))));                                ///
-				   st_local("slackvars", "`s'");         };
-			loc values      `v'
+	if ("`python'"   != ""       &  "`l2'"       != ""    )                   {
+		di as err "must specify either {bf:python} or {bf:l2} option"
+		exit 198
+	}
+	if ("`ilowerbound'"                          != ""    )					///
+	loc   ilowerbound = "=`ilowerbound'"
+	if ("`iupperbound'"                          != ""    )					///
+	loc   iupperbound = "=`iupperbound'"
+	if ("`format'"   != ""                                )                   {
+		conf fo `format'
+	}
+	// generate merge index and preserve for eventual changes in data           
+	if ("`get'"      != ""                                )					///
+	g `id'     = _n
+	if ("`get'"      != ""       |  "`_byvars'"  != ""    )					///
+	preserve
+	// manually process _byindex() in the absence of marksample                 
+	if ("`_byvars'"                              != ""    )					///
+	qui keep   if  `_byindex'    == _byindex()
+	// run preestimation command/program (= multiple commands)                  
+	if trim(`"`preestimation'"'  )               != ""    {
+			  `preestimation'
+	}
+	// perform estimation                                                       
+	if ("`ival'"                                 != ""    )                   {
+		mata: `M'   =  I(rows((`bval' = vec(st_data(.,  "`ival'" )' )      ) ))
+		mata:       st_matrix("`M'",    ustrregexm( `"`options'"',  "miss") ///
+			                 ? `M'    : select(`M',    rownonmissing(`bval') ))
+		mata:       st_matrix("`bval'", ustrregexm( `"`options'"',  "miss") ///
+			                 ? `bval' : select(`bval', rownonmissing(`bval') ))
+		mata:       mata drop  `M'             `bval'
+		loc options =ustrregexrf(`"`options'"',  "mod[^)]+[)]", ""   )    + ///
+											"     mod(`M'            )"
+		loc options =ustrregexrf(`"`options'"', "bval[^)]+[)]", ""   )    + ///
+											"    bval(`bval'         )"
+	}
+	if ("`ilowerbound'"                          != ""    )                   {
+		conf    sca     `=substr( "`ilowerbound'",   2,  .)'
+		loc options =ustrregexrf(`"`options'"',"lower[^)]+[)]", ""   )    + ///
+											"   lower(``ilowerbound'')"
+	}
+	if ("`iupperbound'"                          != ""    )                   {
+		conf    sca     `=substr( "`iupperbound'",   2,  .)'
+		loc options =ustrregexrf(`"`options'"',"upper[^)]+[)]", ""   )    + ///
+											"   upper(``iupperbound'')"
+	}
+	loc tmpinv = cond("`python'" == ""         & ("`l2'"     != ""        | ///
+					  ustrregexm(`"`options'"',"alpha[(]\s*1[.0]*\s*[)]")), ///
+					  "tmpinvl2", "tmpinv"                                )
+	qui which `tmpinv'
+			  `tmpinv' `anything'  `if' `in',  `options'
+	cap conf mat e(X)
+	// run postestimation command/program (= multiple commands)                 
+	if trim(`"`postestimation'"')                != ""    {
+		if ( "`loop'"     != ""  &  "`e(full)'"  != "True")                   {
+			forval i =  1/`e(model_n)'  {
+			   qui tmpinv,   red(`i')
+			  `postestimation'
+			}
 		}
-		qui tmpinv `anything' `if' `in',       v(`values')  s(`slackvars')	///
-										 `=cond(! `i',"`zerodiagonal'","")'	///
-										 subm(`submatrix')  `options'
-		****
-		if `lowerbound' < . {
-			mata: st_matrix("r(solution)", mm_cond(                         ///
-				  round(st_matrix("r(solution)"), `round')               :< ///
-				  J(rows(st_matrix("r(solution)")), 1, `lowerbound'), .,    ///
-				         st_matrix("r(solution)")))
+		else  `postestimation'
+	}
+	// generate, update, or replace a varlist from e(X)                         
+	if ("`get'"      != ""                                )                   {
+		loc  n :    word count     `get'
+		if (`n'  >  1            & `n'  != `: colsof e(X)')                   {
+			di as err  "get() varlist must match the number of columns in e(X)"
+			error 198
 		}
-		if `upperbound' < . {
-			mata: st_matrix("r(solution)", mm_cond(                         ///
-				  round(st_matrix("r(solution)"), `round')               :> ///
-				  J(rows(st_matrix("r(solution)")), 1, `upperbound'), .,    ///
-				         st_matrix("r(solution)")))
-		}
-		if `i' >= 1 & "``F''" != "" continue, break
+		if (`n'  == 1                                     )					///
+		mata: st_local("get",                                               ///
+			           substr(invtokens(((tmp=cols(st_matrix("e(X)"))) - 1) ///
+			           * "`get'0" :+ strofreal(1..tmp)), -tmp, .)    )
+		mata:    `solution' = st_matrix("e(X)")
+		qui keep  if e(sample)
+		getmata   (`get')=`solution', `double' `update' `replace' `force'
+		mata:     mata drop                  `solution'
+		if (    "`format'" != "") format `format' `get'
+		qui save `tmpf', replace
 	}
-	sca `t' = clock(c(current_date) + " " + c(current_time), "DMYhms") - `t'
-	mata: mata drop f r2 v x
-	// print output                                                             
-	if r(r2_c) < . {
-		di _n as txt														///
-		   _n "Converged in `=round(`t'/1000, 0.001)'s, solution stored"	///
-		   _c " in{stata ret li: r(solution)}" _n
-	}
-	else {
-		di _n as err														///
-		   _n "Not converged, solution stored"								///
-		   _c " in{stata ret li: r(solution)}" _n
-	}
-	cap confirm mat r(tests)
-	if ! _rc {
-		loc `title' = cond(`submatrix' <= 2, "F-test, linear regression:",	///
-			"t-tests of mean NRMSE in submatrices, MC sample (50,000):")
-		loc `rspec' = "& - `= "& " * rowsof(r(tests))'"
-		loc `cspec' = "& %2.0f & %2.0f | %9.0g | " + cond(`submatrix' <= 2,	///
-					  "%12.8f | %8.4f & %10.2g & %5.0f & %5.0f & %5.4f &",	///
-					  "%12.8f | %8.4f & %8.0g  & %5.4f & %5.4f & %5.4f &")
-		di as res _n "``title''"
-		matlist r(tests),      names(col) rspec(``rspec'') cspec(``cspec'')
-	}
-	cap confirm mat r(nrmse_dist)
-	if ! _rc & "`distribution'" != "" {
-		di as res _n "percentiles, MC sample (50,000):"
-		loc `rspec' = "& - `= "& " * rowsof(r(nrmse_dist))'"
-		loc `cspec' = "`= "& %6.2f " * 10'&"
-		matlist r(nrmse_dist), names(col) rspec(``rspec'') cspec(``cspec'')
-	}
+	// restore and make eventual changes in data with the help of merge         
+	if ("`get'"      != ""       |  "`_byvars'"  != ""    )					///
+	restore
+	if ("`get'"      != ""                                )					///
+	qui merge 1:1   `id' using   `tmpf',  update replace nogen
 end

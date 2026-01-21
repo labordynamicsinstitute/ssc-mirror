@@ -88,8 +88,8 @@ p tkdensity module for univariate kernel density estimation with calculation on 
 p tknz module to tokenize string into named macros
 p tmap module for simple thematic mapping
 p tmpdir module to indicate the directory Stata is using for a temporary directory
-p tmpinv module to providing a non-iterated Transaction Matrix (TM)-specific implementation of the LPLS estimator
-p tmpinvi module providing an iterated (multistep) Transaction Matrix (TM)-specific implementation of the LPLS estimator
+p tmpinv module solving Tabular Matrix Problems via Pseudoinverse Estimation (TMPinv) is a modular two-step estimator for solving underdetermined, ill-posed, or structurally constrained allocation problems using least-squares and convex optimization
+p tmpinvi module solving Interactive Tabular Matrix Problems via Pseudoinverse Estimation (TMPinvI) program is a wrapper for the TMPinv-estimator commands tmpinv and tmpinvl2 with options extending its functionality to pre/postestimation
 p tmpm module to implement Trauma Mortality Prediction Model using AIS, ICD-9 or ICD-10 codes
 p tmpm2 module to implement Trauma Mortality Prediction Model using AIS, ICD-9 or ICD-10 codes
 p tobithetm module to estimate Tobit Multiplicative Heteroscedasticity Regression

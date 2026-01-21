@@ -137,6 +137,7 @@ p clipgeo module for polyline and polygon clipping
 p clogithet module to estimate heteroscedastic conditional logit model
 p clorenz module to estimate Lorenz and concentration curves
 p clrbound module to perform estimation and inference on intersection bounds
+p clsp module providing Convex Least Squares Programming (CLSP) is a modular two-step estimator for solving underdetermined, ill-posed, or structurally constrained least-squares problems
 p clstop_lbt module to add stopping rule in cluster analysis
 p cltest modules for performing cluster-adjusted chi-square and t-tests
 p clump module to compute permutation test approach to assessing genetic associations with case/control status

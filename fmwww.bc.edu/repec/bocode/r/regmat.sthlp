@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.31}{...}
+{* *! version 0.32}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Help log2markup (Is installed with matprint" "help log2markup"}{...}
 {vieweralsosee "Help basetable (Is installed with matprint" "help basetable"}{...}

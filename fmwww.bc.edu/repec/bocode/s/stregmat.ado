@@ -1,4 +1,4 @@
-*! Part of package matrixtools v. 0.31
+*! Part of package matrixtools v. 0.32
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 *! 2024-02-29	> Bugfix: double if
 *! 2024-02-25 > Handling mixed regression

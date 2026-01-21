@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.31}{...}
+{* *! version 0.32}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "strtonum" "help strtonum"}{...}
 {viewerjumpto "Syntax" "strofnum##syntax"}{...}

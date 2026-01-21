@@ -1,16 +1,39 @@
-*! Part of package matrixtools v. 0.31
+*! Part of package matrixtools v. 0.32
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
 *TODO lookfor option: If the argument isn't a varlist then the varlist generated from using -lookfor- on the argument should be the argument 
 *TODO Long and short versions = with and without opening the datasets
+*TODO varlist not working with using
 /*
+2025-03-04 >	nhb_msa_oswalk is modified
 2020-05-24 >	nhb_msa_variable_description() has been modified
 2019-06-11 >	Caption/Title added
 2017-08-31 >	When the dataset changed it is saved 
 2017-07-21 >	Bug in metadata regarding value labels fixed
 */
+* TODO: select columns/info to show
+* TODO: add type info
 * TODO: To have a short version with opening the datasets based on -describe using-
 * TODO: Filters such as max filesize
 * TODO: Undgå at ikke gemte tilføjelser slettes med metadata
+
+/*
+tempfile varinfo
+postfile handle str50 varname str200 varlabel str20 varformat str10 vartype using `varinfo'
+
+* Loop over variables and post info
+ds
+foreach v of varlist `r(varlist)' {
+    local lbl = "`: var label `v''"
+    local fmt = "`: format `v''"
+    local t = cond("`: type `v''" == "str", "string", "numeric")
+    post handle ("`v'") ("`lbl'") ("`fmt'") ("`t'")
+}
+
+postclose handle
+
+* Use the posted dataset
+use `varinfo', clear
+*/
 program define metadata
 	version 12.1
 	syntax [anything(name=vlst)] [using/], /*

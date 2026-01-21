@@ -1,5 +1,10 @@
-*! Part of package matrixtools v. 0.31
+*! Part of package matrixtools v. 0.32
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
+* TODO if on rowby/colby variables not working
+*TODO fix coleq and roweq and move to matprint
+*TODO if no rowby no output matrix, bug from 2025-03-27 > Option rowby is now a varlist
+*TODO total for each var in varlist there should be only one, bug from 2025-03-27 > Option rowby is now a varlist
+*! 2025-03-27 > Option rowby is now a varlist
 *! 2024-02-23 > Option todocx added
 *! 2024-02-23 > lookfor option: If the argument isn't a varlist then the varlist generated from using -lookfor- on the argument should be the argument 
 *2023-01-01 > Option nozero added
@@ -23,7 +28,7 @@ program define sumat, rclass
 			*/coleq(string) /*
 			*/roweq(string) /*
 			*/Ppct(integer 95)/*
-			*/ROWby(varname) /*
+			*/ROWby(varlist) /*
 			*/COLby(varname) /*
 			*/Total /*
 			*/Full /*
@@ -64,11 +69,19 @@ program define sumat, rclass
 	local __N `=r(sum)'
 	
 	mata: __add_quietly = !(__verbose=("`verbose'" != ""))
-	mata: __sumat = lmtable("`rowby'", "`colby'", "`total'" != "", "`varlist'", "`statistics'", ///
-		`ppct', `__N', `hide', `hide', "`label'" != "", __verbose, __add_quietly)
+	
+	mata: __sumat = nhb_mt_labelmatrix()
+	foreach var in `rowby' {
+		mata: __sumat.append(lmtable("`var'", "`colby'", "`total'" != "", ///
+			"`varlist'", "`statistics'", `ppct', `__N', `hide', `hide', ///
+			"`label'" != "", __verbose, __add_quietly))
+	}
+	if "`rowby'" == "" mata: __sumat = lmtable("", "`colby'", "`total'" != "", ///
+			"`varlist'", "`statistics'", `ppct', `__N', `hide', `hide', ///
+			"`label'" != "", __verbose, __add_quietly)
 
-	if "`roweq'" != "" mata: __sumat.row_equations(`"`roweq'"')
-	if "`coleq'" != "" mata: __sumat.column_equations(`"`coleq'"')
+	if "`roweq'" != "" mata: __sumat.row_equations(`roweq')
+	if "`coleq'" != "" mata: __sumat.column_equations(`coleq')
 
 	mata: st_rclear()
 	if "`transpose'" == "" mata: __sumat.to_matrix("r(sumat)")

@@ -1,24 +1,35 @@
 {smcl}
 {* *! version 1.0.0  20nov2025}{...}
-{viewerjumpto "Syntax" "tmpinvi##syntax"}{...}
-{viewerjumpto "Description" "tmpinvi##description"}{...}
-{viewerjumpto "Postestimation" "tmpinvi##postestimation"}{...}
-{viewerjumpto "Remarks" "tmpinvi##remarks"}{...}
-{viewerjumpto "Examples" "tmpinvi##examples"}{...}
-{viewerjumpto "Stored results" "tmpinvi##results"}{...}
+{viewerjumpto "Syntax" "clsp##syntax"}{...}
+{viewerjumpto "Description" "clsp##description"}{...}
+{viewerjumpto "Postestimation" "clsp##postestimation"}{...}
+{viewerjumpto "Remarks" "clsp##remarks"}{...}
+{viewerjumpto "Examples" "clsp##examples"}{...}
+{viewerjumpto "Stored results" "clsp##results"}{...}
 
 {title:Title}
 {phang}
-{cmd:tmpinvi} {hline 2} Interactive Tabular Matrix Problems via Pseudoinverse
-Estimation (TMPinvI) program is a wrapper for the TMPinv-estimator commands
-{helpb tmpinv} and {helpb tmpinvl2} with options extending its functionality to
-pre/postestimation
+{cmd:clsp} {hline 2} Convex Least Squares Programming (CLSP) is a modular
+two-step estimator for solving underdetermined, ill-posed, or structurally
+constrained least-squares problems
+
+{title:Requirements}
+{phang}
+Because Stata does not provide native convex optimization tools, estimation is
+performed using the Python 3 module {bf:pyclsp}, which must be installed and
+available to Stata's Python integration. Installation can be performed from the
+system shell:
+
+{phang}
+{cmd:. shell pip {space 1} install {space 18}pyclsp}{p_end}
+{phang}
+{cmd:. shell conda install -c ilyabolotov -y pyclsp}{p_end}
 
 {marker syntax}{...}
 {title:Syntax}
 
 {p 8 17 2}
-{cmdab:tmpinvi}
+{cmdab:clsp}
 {help strings:{it:string}}
 {ifin}
 [{cmd:,} {it:options}]
@@ -28,118 +39,46 @@ pre/postestimation
 {synoptline}
 
 {syntab:Problem definition}
-{synopt :{it:string}}One of: {bf:full}/{bf:general} - full model or {bf: # #} -
-        reduced model with given matrix dimensions (rows columns), so that the
-        problem is estimated as a set of reduced problems constructed from
-        contiguous submatrices of the original table. For example, reduced =
-        (6, 6) implies 5×5 data blocks with 1 slack row and 1 slack column each
-        (edge blocks may be smaller). The minimum is {bf:3 3}.{p_end}
-{synopt :{opth red:uced(#)}}Position within the reduced model, from which the
-        respective reduced solution's results are loaded into {cmd:e()}, with
-        possible values ranging between {bf:-number of reduced problems}
-        (equivalent to {bf:1}) and {bf:number of reduced problems} (equivalent
-        to {bf:-1}) (default {bf:-1}). Requires reduced model.{p_end}
-
-{syntab:Solver}
-{synopt :{opt py:thon}}Invoke the Python-based {helpb tmpinv} regardless of
-        {opth alpha:(real)}. By default, {helpb tmpinvl2} is selected instead of
-        {helpb tmpinv} when {bf:α} = {bf:1} because it is faster; {cmd:python}
-        overrides this rule.{p_end}
-{synopt :{opt l2:}}Invoke the Mata-based {helpb tmpinvl2}, ignoring {bf:Step 2}
-        for {bf:α} = {bf:-1} and for {bf:α} in [{bf:0}, {bf:1}). Because
-        Stata lacks native convex-optimization capabilities, {bf:Step 2} is only
-        feasible under Mata when {bf:α} = {bf:1}.{p_end}
+{synopt :{it:string}}Problem type, a structural template for matrix
+        construction. One of: {bf:ap}/{bf:tm} - allocation (tabular) matrix
+        problem (AP), {bf:cmls}/{bf:rp} - constrained-model least squares
+        (regression) problem, or {bf:anything else} - general CLSP problem
+        (user-defined {bf:constraints({help strings:{it:string}})} and/or
+        {bf:model({help strings:{it:string}}}).{p_end}
 
 {syntab:Right-hand side}
-{synopt :{opth brow:(strings:string)}}Right-hand side vector of row totals,
-        {help varname:{it:varname}} or {it:name of an existing matrix}. Please
-        note that both {bf:brow({help strings:{it:string}})} and
-        {bf:bcol({help strings:{it:string}})} must be provided. Required.{p_end}
-{synopt :{opth bcol:(strings:string)}}Right-hand side vector of column totals,
-        {help varname:{it:varname}} or {it:name of an existing matrix}. Please
-        note that both {bf:brow({help strings:{it:string}})} and
-        {bf:bcol({help strings:{it:string}})} must be provided. Required.{p_end}
-{synopt :{opth bval:(strings:string)}}Right-hand side vector of known cell
-        values, {help varname:{it:varname}} or
-        {it:name of an existing matrix}. If
-        {bf:ival({help varlist:{it:varlist}})} is specified, this option is
-        overridden.{p_end}
+{synopt :{opth b:(strings:string)}}Right-hand side vector,
+        {help varname:{it:varname}} or {it:name of an existing matrix}. Must
+        have as many rows as the design matrix {bf:A} = [{bf:C}, {bf:S}\
+        {bf:M}, {bf:Q}] in {bf:A}{bf:z} = {bf:b} (please note that for AP, it
+        should start with row sums). Required.{p_end}
 
 {syntab:Left-hand side}
-{synopt :{opth s:lackvars(strings:string)}}Block {bf:S}, of shape
-        (m + p)×(m + p), of the design matrix {bf:A} = [{bf:C}, {bf:S}\ {bf:M},
-        {bf:Q}], {help varlist:{it:varlist}} or
-        {it:name of an existing matrix}. A diagonal sign slack (surplus) matrix
-        with entries in {{bf:0},{bf:±1}}: {bf:0} enforces equality (==
-        {bf:brow({help strings:{it:string}})} or
-        {bf:bcol({help strings:{it:string}})}), {bf:1} enforces a
-        lower-than-or-equal (≤) condition, {bf:-1} enforces a
-        greater-than-or-equal (≥) condition. The first m diagonal entries
-        correspond to row constraints, and the remaining p to column
-        constraints. Please note that, in the reduced model, {bf:S} is
-        ignored: slack behavior is derived implicitly from block-wise marginal
-        totals.{p_end}
+{synopt :{opth c:onstraints(strings:string)}}Block {bf:C} of the design matrix
+        {bf:A} = [{bf:C}, {bf:S}\ {bf:M}, {bf:Q}], {help varlist:{it:varlist}}
+        or {it:name of an existing matrix}. If {bf:C} and/or {bf:M} are
+        provided, the matrix {bf:A} is constructed accordingly (please note
+        that for APs/TMs, {bf:C} is constructed automatically and known values
+        are specified in {bf:M}).{p_end}
+{synopt :{opth s:lackvars(strings:string)}}Block {bf:S} of the design matrix
+        {bf:A} = [{bf:C}, {bf:S}\ {bf:M}, {bf:Q}], {help varlist:{it:varlist}}
+        or {it:name of an existing matrix}.{p_end}
 {synopt :{opth mod:el(strings:string)}}Block {bf:M} of the design matrix
         {bf:A} = [{bf:C}, {bf:S}\ {bf:M}, {bf:Q}], {help varlist:{it:varlist}}
-        or {it:name of an existing matrix}. Each row defines a linear
-        restriction on the flattened solution matrix. The corresponding
-        right-hand side values must be provided in
-        {bf:bval({help strings:{it:string}})}. This block is used to encode
-        known cell values. Please note that, in the reduced model, {bf:M} must
-        be a unique row subset of an identity matrix (i.e.,
-        diagonal-only). Arbitrary or non-diagonal model matrices cannot be
-        mapped to reduced blocks, making the model infeasible. If
-        {bf:ival({help varlist:{it:varlist}})} is specified, this option is
-        overridden.{p_end}
+        or {it:name of an existing matrix}. If {bf:C} and/or {bf:M} are
+        provided, the matrix {bf:A} is constructed accordingly (please note
+        that for APs/TMs, {bf:C} is constructed automatically and known values
+        are specified in {bf:M}).{p_end}
+{synopt :{opth m:(#)}}Number of rows    in the problem {bf:X} ∈ ℝ^{m×p} in
+        APs/TMs.{p_end}
+{synopt :{opth p:(#)}}Number of columns in the problem {bf:X} ∈ ℝ^{m×p} in
+        APs/TMs.{p_end}
 {synopt :{opth i:(#)}}Grouping size for row    sum constraints in
         APs/TMs.{p_end}
 {synopt :{opth j:(#)}}Grouping size for column sum constraints in
         APs/TMs.{p_end}
 {synopt :{opt zerod:iagonal}}Enforce structural zero diagonals in
         APs/TMs.{p_end}
-{synopt :{opt sym:metric}}Enforce symmetry of the estimated solution matrix
-        as: {bf:e(X)} = {bf:0.5} * ({bf:e(X)} + {bf:e(X)}'). Applies to
-        {bf:e(X)} only. For proper model symmetry, please add explicit symmetry
-        constraints to {bf:M} in a full-model solve instead of using this
-        option.{p_end}
-
-{syntab:Prior information}
-{synopt :{opth ival:(varlist)}}Source known cell values from the dataset,
-        dynamically constructing {bf:bval({help strings:{it:string}})} and
-        {bf:model({help strings:{it:string}})} (including under the
-        {cmd:by:} prefix). Missing observations are omitted unless
-        {bf:missingokay} is specified. Overrides any existing
-        {bf:bval({help strings:{it:string}})} or
-        {bf:model({help strings:{it:string}})} settings.{p_end}
-{synopt :{opth ilower:bound(name)}}Set a dynamic lower bound on cell
-        values (including under the {cmd:by:} prefix) using a string scalar
-        stored in {it:name}. The scalar may be generated in
-        {bf:preestimation({help strings:{it:string asis}})} (see
-        {ul:{bf:Examples}}). Overrides any
-        {bf:lowerbound({help numlist:{it:numlist}})} setting.{p_end}
-{synopt :{opth iupper:bound(name)}}Set a dynamic upper bound on cell
-        values (including under the {cmd:by:} prefix) using a string scalar
-        stored in {it:name}. The scalar may be generated in
-        {bf:preestimation({help strings:{it:string asis}})} (see
-        {ul:{bf:Examples}}). Overrides any
-        {bf:upperbound({help numlist:{it:numlist}})} setting.{p_end}
-{synopt :{opth lower:bound(numlist)}}Lower bounds on cell values. If a single
-        value is given (please use missing values {bf:.} or {bf:.a-z} for
-        {bf:-∞}), it is applied to all m×p cells. If
-        {bf:ilowerbound({help name:{it:name}})} is specified, this option
-        is overridden.{p_end}
-{synopt :{opth upper:bound(numlist)}}Upper bounds on cell values. If a single
-        value is given (please use missing values {bf:.} or {bf:.a-z} for
-        {bf:∞}), it is applied to all m×p cells. If
-        {bf:iupperbound({help name:{it:name}})} is specified, this option
-        is overridden.{p_end}
-{synopt :{opth replace:value(numlist)}}Final replacement value (real or missing
-        {bf:.} or {bf:.a-z}) for any cell in the solution matrix that violates
-        the bounds specified in {bf:ilowerbound({help name:{it:name}})} or
-        {bf:lowerbound({help numlist:{it:numlist}})} and
-        {bf:iupperbound({help name:{it:name}})} or
-        {bf:upperbound({help numlist:{it:numlist}})} by more than a
-        tolerance equal to {bf:tolerance({help real:{it:real}})}.{p_end}
 
 {syntab:Estimation (first step)}
 {synopt :{opth r:(#)}}Number of refinement iterations for the
@@ -179,53 +118,23 @@ pre/postestimation
         provided, each candidate is evaluated via a full solve, and the {bf:α}
         with the smallest NRMSE is selected (default {bf:-1}).{p_end}
 {synopt :{opth cvx:opt(string asis)}}Python keyword arguments passed to the
-        CVXPY solver in {bf:pytmpinv} in {helpb tmpinv}.{p_end}
+        CVXPY solver in {bf:pyclsp}.
 
 {syntab:Other}
 {synopt :{opt miss:ingokay}}Treat Stata missing values {bf:.} and {bf:.a-z} as
-        observations (and forward them to {bf:pytmpinv} as {cmd:numpy.nan}
-        in {helpb tmpinv}). For example, when at least two of
-        {bf:brow({help strings:{it:string}})},
-        {bf:bcol({help strings:{it:string}})},
-        {bf:bval({help strings:{it:string}})},
-        {bf:slackvars({help strings:{it:string}})}, and
-        {bf:model({help strings:{it:string}})} are sourced from the dataset
+        observations and forward them to {bf:pyclsp} as {cmd:numpy.nan}. For
+        example, when at least two of {bf:b({help strings:{it:string}})},
+        {bf:constraints({help strings:{it:string}})}, and
+        {bf:slackvars({help strings:{it:string}})} are sourced from the dataset
         and do not share the same number of rows.{p_end}
-
-{syntab:Utilities}
-{synopt:{opth pre:estimation(strings:string asis)}}Any command or program,
-        defined with {cmd:program define}, including a series of commands,
-        which will run prior to the model estimation.{p_end}
-{synopt:{opth post:estimation(strings:string asis)}}Any command or program,
-        defined with {cmd:program define}, including a series of commands,
-        which will run after the model estimation.{p_end}
-{synopt:{opt loop:}}Repeat {bf:postestimation({help strings:{it:string asis}})}
-        for each reduced problem. Requires reduced model.{p_end}
-{synopt:{opth g:et(varlist:{it:varlist})}}Create, update, or replace variables
-        from the estimated solution matrix {bf:e(X)}. A single name is expanded
-        to the number of columns of {bf:e(X)}; otherwise the
-        {help varlist:{it:varlist}} must be exactly that long. Only
-        observations in {bf:e(sample)} are filled.{p_end}
-{synopt:{opt double:}}Create Stata variables as {cmd:double}s. Requires
-        {bf:get({help varlist:{it:varlist}})}.{p_end}
-{synopt:{opt up:date}}Update existing Stata variables. Requires
-        {bf:get({help varlist:{it:varlist}})}.{p_end}
-{synopt:{opt replace:}}Replace existing Stata variables. Requires
-        {bf:get({help varlist:{it:varlist}})}.{p_end}
-{synopt:{opt force:}}Allow nonconformable matrices. Requires
-        {bf:get({help varlist:{it:varlist}})}.{p_end}
-{synopt :{opth for:mat(%fmt)}}Specify numeric {help format:{it:format}}
-        for new Stata variables. Requires
-        {bf:get({help varlist:{it:varlist}})}.{p_end}
 
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
-{help varname} and {help varlist} in {bf:brow({help strings:{it:string}})},
-{bf:bcol({help strings:{it:string}})}, {bf:bval({help strings:{it:string}})},
-{bf:slackvars({help strings:{it:string}})},
-{bf:model({help strings:{it:string}})}, and
-{bf:get({help varlist:{it:varlist}})} may not contain time-series operators
+{help varname} and {help varlist} in {bf:b({help strings:{it:string}})},
+{bf:constraints({help strings:{it:string}})},
+{bf:slackvars({help strings:{it:string}})}, and
+{bf:model({help strings:{it:string}})} may not contain time-series operators
 or factor variables and are filtered by {ifin} with missing values being
 excluded by default; see {help tsvarlist} and {help fvvarlist}.{p_end}
 {p 4 6 2}
@@ -242,7 +151,7 @@ See {ul:{bf:Postestimation}} for features available after estimation.{p_end}
 {title:Description} 
 
 {pstd}
-{cmd:tmpinvi} implements the
+{cmd:clsp} implements the
 {bf:Convex Least Squares Programming (CLSP) estimator}, a modular two-step
 convex optimization framework, capable of addressing ill-posed and
 underdetermined problems. After reformulating a problem in its canonical form,
@@ -263,13 +172,22 @@ second step guarantees a unique solution for {bf:α} ∈ ({bf:0}, {bf:1}] and
 coincides with the Minimum-Norm BLUE (MNBLUE) when {bf:α} = {bf:1}.
 
 {pstd}
-{cmd:tmpinvi} focuses on a special case of the CLSP estimation, allocation
-problems ({bf:AP}s) (or, for flow variables, tabular matrix problems, {bf:TM}s)
-- in most cases, underdetermined problems involving matrices {bf:X} ∈ ℝ^{m×p}
-to be estimated, subject to known row and column sums, manifested as a block
-submatrix [(({bf:I}_{m/i} ⊗ {bf:1}_i) ⊗ {bf:1}_p)^{c TT}, ({bf:1}_m ⊗
-({bf:I}_{p/j} ⊗ {bf:1}_j)^{c TT})]^{c TT} in {bf:C} and a [row sums\
-column sums^{c TT}] subvector in {bf:b}.
+{bf:Special cases:}
+
+{pstd}
+1. allocation problems ({bf:AP}s) (or, for flow variables, tabular
+matrix problems, {bf:TM}s) - in most cases, underdetermined problems involving
+matrices {bf:X} ∈ ℝ^{m×p} to be estimated, subject to known row and column
+sums, manifested as a block submatrix [(({bf:I}_{m/i} ⊗ {bf:1}_i) ⊗
+{bf:1}_p)^{c TT}, ({bf:1}_m ⊗ ({bf:I}_{p/j} ⊗ {bf:1}_j)^{c TT})]^{c TT} in
+{bf:C} and a [row sums\ column sums^{c TT}] subvector in {bf:b};
+
+{pstd}
+2. constrained-model least squares ({bf:CMLS}) (or, more generally, regression
+problems, {bf:RP}s) - (over)determined problems to be estimated, subject to,
+among others, linear(ized) data matrix {bf:D}-related (in)equality constraints,
+such as the i-th difference or shift (lag/lead) of specific signs, manifested
+as submatrices of transformed {bf:D} in {bf:C} and {bf:b}.
 
 {pstd}
 {bf:Numerical stability of {bf:A}:}
@@ -312,18 +230,13 @@ considered to be uniform).
 {pstd}
 For total RMSA and sensitivity of [{bf:C}, {bf:S}] to dropping one row:
 {break}
-{cmdab:. tmpinvi estat corr}
+{cmdab:. clsp estat corr}
 [{cmd:,} {it:options}]
 
 {synoptset 35 tabbed}{...}
 {synopthdr}
 {synoptline}
 
-{synopt :{opth red:uced(#)}}Position within the reduced model, from which the
-        respective reduced solution's results are loaded into {cmd:e()}, with
-        possible values ranging between {bf:-number of reduced problems}
-        (equivalent to {bf:1}) and {bf:number of reduced problems} (equivalent
-        to {bf:-1}) (default {bf:e(model_i)}).{p_end}
 {synopt :{opt reset:}}Force recomputation of all diagnostic values instead of
         replaying previously stored results.{p_end}
 {synopt :{opth thresh:old(real)}}If positive, limits the output to constraints
@@ -331,14 +244,13 @@ For total RMSA and sensitivity of [{bf:C}, {bf:S}] to dropping one row:
 {synopt :{opt bar}}Display a vertical bar chart for {bf:e(rmsa_i)} or for the
         stored result named in {bf:matrix({help strings:{it:string}})}. If the
         stored result is a matrix, a panel of bar charts is produced, with the
-        number of columns controlled by {bf:ncols({help #:{it:#}})}.
-        Mutually exclusive with {bf:hbar}.{p_end}
+        number of columns controlled by {bf:ncols({help #:{it:#}})}. Mutually
+        exclusive with {bf:hbar}.{p_end}
 {synopt :{opt hbar}}Display a horizontal bar chart for {bf:e(rmsa_i)} or for
         the stored result named in {bf:matrix({help strings:{it:string}})}. If
         the stored result is a matrix, a panel of horizontal bar charts is
         produced, with the number of columns controlled by
-        {bf:ncols({help #:{it:#}})}.  
-        Mutually exclusive with {bf:bar}.{p_end}
+        {bf:ncols({help #:{it:#}})}. Mutually exclusive with {bf:bar}.{p_end}
 {synopt :{opth mat:rix(string)}}Stored result in e() to graph
         (default {bf:rmsa_i}). Requires {bf:bar} or {bf:hbar}.{p_end}
 {synopt :{opth ncol:s(#)}}Number of columns in the graph panel when plotting
@@ -350,18 +262,13 @@ For total RMSA and sensitivity of [{bf:C}, {bf:S}] to dropping one row:
 {pstd}
 For the bootstrap/Monte Carlo t-test for the mean of NRMSE:
 {break}
-{cmdab:. tmpinvi estat ttest}
+{cmdab:. clsp estat ttest}
 [{cmd:,} {it:options}]
 
 {synoptset 35 tabbed}{...}
 {synopthdr}
 {synoptline}
 
-{synopt :{opth red:uced(#)}}Position within the reduced model, from which the
-        respective reduced solution's results are loaded into {cmd:e()}, with
-        possible values ranging between {bf:-number of reduced problems}
-        (equivalent to {bf:1}) and {bf:number of reduced problems} (equivalent
-        to {bf:-1}) (default {bf:e(model_i)}).{p_end}
 {synopt :{opt reset:}}Force a new generation of the t-test sample instead of
         replaying previously stored results.{p_end}
 {synopt :{opth sample:size(#)}}Size of the Monte Carlo simulated sample under
@@ -387,96 +294,99 @@ For the bootstrap/Monte Carlo t-test for the mean of NRMSE:
 {title:Remarks}
 
 {pstd}
-{helpb tmpinv} requires an executable of a Python 3 installation
-(Python 3.10 or higher) set with the help of {cmd:python set exec} command! For
-detailed information on {cmd:python set exec}, consult {helpb python}.
+{cmd:clsp} requires an executable of a Python 3 installation
+(Python 3.10 or higher) set with the help of {cmd:python set exec} command!
+{break}For Python users, there is a standalone Python implementation {browse "https://pypi.org/project/pyclsp/"} with the same functionality.
+{break}Likewise, for R users, there is an R equivalent {browse "https://cran.r-project.org/web/packages/rclsp/"}.
+
+{pstd}
+For a pure Stata alternative, with reduced second step functionality, consult
+{helpb clspl2}.
+
+{pstd}
+For detailed information on {cmd:python set exec}, consult {helpb python}.
 
 {marker examples}{...}
 {title:Examples}
 
-        * AP (TM) trade matrix with missing values (10 years × 5 countries),
-        * simulated, where EX and IM are export and import totals, and
-        * confidence intervals are obtained from a varying-coefficients model
-        {cmd:. clear all}
+        * AP (TM), based on a symmetric input-output table, with 10% of
+        * known values
+        {cmd:. clear}
         {cmd:. local seed = 123456789}
         {cmd:. set   seed  `seed'}
 
         * sample (dataset)
-        {cmd:. local iso2    "CN DE JP NL US RoW "}
-        {cmd:. local T    =  10}
-        {cmd:. local t0   =  real(substr(c(current_date), -4, .)) - `T'}
-        {cmd:. local m    :  word count `iso2'}
-        {cmd:. local p    = `m'}
-        {cmd:. local mn   = `m'*`p'}
-        {cmd:. set obs `=`T' * `: word count `iso2'''}
-        {cmd:. quiet mata: st_addvar("int",  "year")}
-        {cmd:. quiet mata: st_addvar("str3", "iso2")}
-        {cmd:. quiet mata: st_addvar("float",(("EX_":+tokens("`iso2'")), "EX","IM"))}
-        {cmd:. quiet mata:  st_store(., "year", sort(J(`m',1,(`t0'::`t0'+`T'-1)),1))}
-        {cmd:. quiet mata: st_sstore(., "iso2", tokens(`T'*"`iso2'")')}
-        {cmd:. forvalues t = `t0'/`=`t0'+(`T'-1)' {c -(}}
-        {cmd:.     local X   "X`t'"}
-        {cmd:.     quiet mata: `X'  =    runiform(`m',`p', 0, 1000  * 1.05^(`t'-`t0'))}
-        {cmd:.     quiet mata:  for (i=1; i<`m'; i++) `X'[i,i] = 0}
-        {cmd:.     quiet mata:  r   = `=`t'-`t0''*`m'+1::`=`t'-`t0''*`m'+`m'}
-        {cmd:.     quiet mata:           st_store( r, "EX", rowsum(`X') )}
-        {cmd:.     quiet mata:           st_store( r, "IM", colsum(`X')')}
-        {cmd:.     quiet mata:  idx = selectindex( runiform(1,`mn'):>0.5)}
-        {cmd:.     quiet mata: `X'  = vec(`X''); `X'[idx]=J(cols(idx),1,.)}
-        {cmd:.     quiet mata: `X'  = colshape( `X',`p')}
-        {cmd:.     quiet mata:           st_store( r, "EX_":+tokens("`iso2'"), `X'')}
-        {cmd:. {c )-}}
+        {cmd:. local m      = 20}
+        {cmd:. local p      = 20}
+        {cmd:. mata: X_true =   rnormal(`m', `p',  0,  1 )}
+        {cmd:. mata: X_true =       abs( X_true + X_true') / 2.0}
+        {cmd:. mata: st_matrix("X_true", X_true)}
+        {cmd:. mata: idx    = runiformint(trunc(0.1 * (`m' * `p')), 1, 1, `m' * `p')}
 
-        * model and results
-        * -- Stata variables to be updated
-        {cmd:. quiet mata:   st_local("g", "g("+invtokens("EX_":+tokens("`iso2'"))+")")}
-        * -- postestimation within by()
-        {cmd:. local post  "postestimation(print_result)"}
-        {cmd:. program define print_result}
-        {cmd:.     display "true X:"}
-        {cmd:.     matlist X_true, format(%9.4f)}
-        {cmd:.     display "X_hat: "}
-        {cmd:.     matlist e(X),   format(%9.4f)}
-        {cmd:.     estat ttest,   samplesize(30)}
-        {cmd:. end}
-        * -- preestimation within by()
-        {cmd:. local pre   "preestimation(prepare_ci)"}
-        {cmd:. program define prepare_ci}
-        {cmd:.     quiet mata:     st_matrix("X_true",     st_data(., "EX_*" ))}
-        {cmd:.     quiet mata: _ = invtokens(strofreal(vec(st_data(., "_*_lb")'))')}
-        {cmd:.     quiet mata:  st_strscalar("lb", _)}
-        {cmd:.     quiet mata: _ = invtokens(strofreal(vec(st_data(., "_*_ub")'))')}
-        {cmd:.     quiet mata:  st_strscalar("ub", _)}
-        {cmd:. end}
-        * -- prior information, dynamically generated
-        {cmd:. local pi "ival(EX_*) ilowerbound(lb) iupperbound(ub)"}
-        {cmd:. encode    iso2,   g(iso2id)}
-        {cmd:. order     year      iso2id}
-        {cmd:. local cv  =         invnormal(1 - (1 - c(level)/100) / 2)}
-        {cmd:. foreach   var of    varlist  EX_* {c -(}}
-        {cmd:.     quiet reg      `var' c.year##i.iso2id, vce(cluster iso2id)}
-        {cmd:.     quiet predict _`var'_xb, xb}
-        {cmd:.     quiet predict _`var'_se, stdp}
-        {cmd:.     quiet g       _`var'_lb  =  0}
-        {cmd:.     quiet g       _`var'_ub  =  _`var'_xb + `cv' * _`var'_se}
-        {cmd:.     quiet replace _`var'_ub  =  . if  _`var'_ub  < 0}
-        {cmd:.     quiet drop    _`var'_xb     _`var'_se}
-        {cmd:. {c )-}}
-        * -- estimation options
-        {cmd:. local opt "python ival(EX_*) brow(EX) bcol(IM) alpha(1.0)"}
-        * -- two-step estimation
-        {cmd:. forvalues  i=1/2 {c -(}}
-        {cmd:.     di as  err "{bf:Step `i'}:"}
-        {cmd:.     bysort year: tmpinvi full,`opt' `pi' `pre' `post' `g' update}
-        {cmd:. {c )-}}
-        * -- clean-up
-        {cmd:. drop  _EX_*}
+        * model
+        {cmd:. mata: M      = I(`m' * `p')[idx,.]}
+        {cmd:. mata: st_matrix("M",      M)}
+        {cmd:. mata: b_row  = quadrowsum(X_true) }
+        {cmd:. mata: b_col  = quadcolsum(X_true)'}
+        {cmd:. mata: b_val  =        vec(X_true)[idx,.]}
+        {cmd:. mata: st_matrix("rhs",    b_row\b_col\b_val)}
+        {cmd:. quiet clsp ap, b(rhs) model(M) m(`m') p(`p')}
+        {cmd:. quiet estat corr,  bar}
+
+        * results
+        {cmd:. display "true X:"}
+        {cmd:. matlist X_true}
+        {cmd:. display "X_hat: "}
+        {cmd:. matlist e(x)}
+        {cmd:. mata: ss_res = sum((st_matrix("X_true")  - st_matrix("e(x)"))         :^2)}
+        {cmd:. mata: ss_tot = sum((st_matrix("X_true") :- mean(st_matrix("X_true"))) :^2)}
+        {cmd:. mata: st_numscalar("r2_user", 1 - ss_res/ss_tot)}
+        {cmd:. di as res %-32s "R2_user_defined:" %5.4f r2_user}
+        {cmd:. estat ttest, samplesize(30) seed(`seed') distribution(normal)}
+
+        * CMLS (RP), based on known stationary points for y = Dx + e,
+        * x to be estimated (x is labeled beta in regression analysis)
+        {cmd:. clear}
+        {cmd:. local seed = 123456789}
+        {cmd:. set   seed  `seed'}
+
+        * sample (dataset)
+        {cmd:. local k      = 10}
+        {cmd:. local p      = 6}
+        {cmd:. local c      = 1}
+        {cmd:. set obs `k'}
+        {cmd:. mata: D      = J(`k', 1, 1)}
+        {cmd:. mata: D      = D, rnormal(`k', `p'-1, 0, 1)}
+        {cmd:. mata: b_true =    rnormal(`p',     1, 0, 1)}
+        {cmd:. mata: b_true = ( b_true :/ colsum( b_true)) :* `c'}
+        {cmd:. mata: st_matrix("b_true",  b_true)}
+        {cmd:. mata: e      =    rnormal(`k',     1, 0, 1)}
+        {cmd:. mata: y      = D * b_true + e}
+        {cmd:. mata: st_addvar("float", (("D" :+ strofreal(1..`p')), "y"))}
+        {cmd:. mata:  st_store(1::`k', 1..`p'+1,   (D, y))}
+
+        * model
+        {cmd:. mata: st_matrix("b",      `c'       \ J(`k'-2, 1, 0)  \ J(`k'-1, 1, 0) \ y)}
+        {cmd:. mata: d1D    =   D[2::rows(  D), .] :-   D[1::rows(  D)-1, .]}
+        {cmd:. mata: d2D    = d1D[2::rows(d1D), .] :- d1D[1::rows(d1D)-1, .]}
+        {cmd:. mata: st_matrix("C", J(1, `p',   1) \ d2D             \ d1D               )}
+        {cmd:. mata: d1y    =   y[2::rows(  y), .] :-   y[1::rows(  y)-1, .]}
+        {cmd:. mata: d2y    = d1y[2::rows(d1y), .] :- d1y[1::rows(d1y)-1, .]}
+        {cmd:. mata: st_matrix("S", J(1, `k'-2, 0) \ diag(sign(d2y)) \ J(`k'-1, `k'-2, 0))}
+        {cmd:. quiet clsp cmls, b(b) c(C) s(S) mod(D*) r(1) alpha(1.0)}
+
+        * results
+        {cmd:. display "true beta (x_M):"}
+        {cmd:. matlist b_true'}
+        {cmd:. display "beta hat (x_M hat):"}
+        {cmd:. matlist e(x)'}
+        {cmd:. estat ttest, samplesize(30) seed(`seed') distribution(normal) partial}
 
 {marker results}{...}
 {title:Stored results}
 
 {pstd}
-{cmd:tmpinvi} stores the following in {cmd:e()}:
+{cmd:clsp} stores the following in {cmd:e()}:
 {break}(developers may be interested in {cmd:. ereturn list, all})
 
 {synoptset 23 tabbed}{...}
@@ -500,11 +410,9 @@ detailed information on {cmd:python set exec}, consult {helpb python}.
 
 {p2col 5 23 26 2: Macros}{p_end}
 {synopt:{cmd:e(cmdline)}}command as typed{p_end}
-{synopt:{cmd:e(cmd)}}{cmd:pytmpinvi}{p_end}
+{synopt:{cmd:e(cmd)}}{cmd:clsp}{p_end}
 {synopt:{cmd:e(estat_cmd)}}program used to implement {cmd:estat}{p_end}
 {synopt:{cmd:e(title)}}estimator title{p_end}
-{synopt:{cmd:e(model_i)}}position within the reduced model{p_end}
-{synopt:{cmd:e(model_n)}}number of reduced problems{p_end}
 {synopt:{cmd:e(final)}}presence of the second step in estimation, {bf:True} or
        {bf:False}{p_end}
 {synopt:{cmd:e(seed)}}random seed in the Monte Carlo-based t-test{p_end}
@@ -512,11 +420,11 @@ detailed information on {cmd:python set exec}, consult {helpb python}.
             vectors in the Monte Carlo-based t-test{p_end}
 
 {p2col 5 23 26 2: Matrices}{p_end}
-{synopt:{cmd:e(X)}}m×p matrix of the full solution{p_end}
 {synopt:{cmd:e(zhat)}}vector of the first-step estimate{p_end}
 {synopt:{cmd:e(z)}}vector of the final solution. If the second step is
        disabled, it equals {bf:zhat}{p_end}
-{synopt:{cmd:e(x)}}m×p matrix containing the variable component of {bf:z}{p_end}
+{synopt:{cmd:e(x)}}m×p matrix or vector containing the variable component of
+       {bf:z}{p_end}
 {synopt:{cmd:e(y)}}vector containing the slack component of {bf:z}{p_end}
 {synopt:{cmd:e(z_lower)}}lower bound of the diagnostic interval (confidence
        band) based on kappa({bf:A}) for {bf:z}{p_end}

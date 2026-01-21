@@ -1,29 +1,31 @@
-d 'TMPINVI': module providing an iterated (multistep) Transaction Matrix (TM)-specific implementation of the LPLS estimator
+d 'TMPINVI': module solving Interactive Tabular Matrix Problems via Pseudoinverse Estimation (TMPinvI) program is a wrapper for the TMPinv-estimator commands tmpinv and tmpinvl2 with options extending its functionality to pre/postestimation
 d
-d  The program implements an iterated (multistep) Transaction
-d Matrix (TM)-specific LPLS estimator for linear programming with
-d the help of the Moore-Penrose inverse (pseudoinverse), calculated
-d using singular value decomposition (SVD). Estimation using 2x2 to
-d 50x50 contiguous submatrices, repeated with compensatory slack
-d variables until NRMSE is minimized in a given number of
-d iterations, is followed by an F-test from linear
-d regression/t-test of mean NRMSE from a pre-simulated distribution
-d (Monte-Carlo, 50,000 iterations with matrices consisting of
-d normal random variates). The result is adjusted for extreme
-d values to match the RHS via shares of estimated row/column sums
-d if the corresponding option is specified. 
+d	 This program is a wrapper for the TMPinv-estimator
+d commands tmpinv and  tmpinvl2 with options extending its
+d functionality to pre/postestimation. The Tabular Matrix Problems
+d via Pseudoinverse Estimation (TMPinv) is a  two-stage estimation
+d method that reformulates structured table-based systems - such as
+d allocation problems, transaction matrices, and input–output
+d tables - as structured least-squares problems. Based on the
+d Convex Least Squares Programming (CLSP) framework, TMPinv solves
+d systems with row and column constraints, block structure, and
+d optionally reduced dimensionality by (1) constructing a canonical
+d constraint form and applying a pseudoinverse-based projection,
+d followed by (2) a convex-programming refinement stage to improve
+d fit, coherence, and regularization (e.g., via Lasso, Ridge, or
+d Elastic Net). 
 d
 d KW: linear programming
 d KW: least squares
 d KW: pseudoinverse
 d KW: singular value decomposition
 d
-d Requires: Stata version 16, moremata and tmpinv from SSC (q.v.)
+d Requires: Stata version 16, tmpinv from SSC (q.v.)
 d
-d Distribution-Date: 20240222
+d Distribution-Date: 20260120
 d
 d Author: Ilya Bolotov, Prague University of Economics and Business
 d Support: email ilya.bolotov@@vse.cz
 d
-f tmpinv.ado
-f tmpinv.sthlp
+f tmpinvi.ado
+f tmpinvi.sthlp

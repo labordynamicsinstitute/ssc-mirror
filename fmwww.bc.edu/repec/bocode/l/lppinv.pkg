@@ -20,9 +20,9 @@ d KW: least squares
 d KW: pseudoinverse
 d KW: singular value decomposition
 d
-d Requires: Stata version 16
+d Requires: Stata version 16 and Python modules pylppinv, numpy, cvxpy
 d
-d Distribution-Date: 20240221
+d Distribution-Date: 20260120
 d
 d Author: Ilya Bolotov, Prague University of Economics and Business
 d Support: email ilya.bolotov@@vse.cz

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.31}{...}
+{* *! version 0.32}{...}
 {viewerjumpto "Syntax" "subselect##syntax"}{...}
 {viewerjumpto "Description" "subselect##description"}{...}
 {viewerjumpto "Examples" "subselect##examples"}{...}

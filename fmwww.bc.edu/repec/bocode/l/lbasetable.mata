@@ -1,6 +1,7 @@
-*!version 0.2.9  2024-02-25 > Option todocx added
-*!version 0.2.9  2023-08-02 > Option for column order is added
-*!version 0.2.9  2023-04-26 > cleanup in mata must be specific in "mata mata drop __* __*()". A capture is added preliminary
+*!version 0.3.0  2024-02-25 > Option todocx added
+*!version 0.3.0	2024-03-18 > Error message instead faulty table content when cell blocks are all missing, see lmatrixtools: if ( st_matrix("__lblr") >= . ) 
+* version 0.2.9  2023-08-02 > Option for column order is added
+* version 0.2.9  2023-04-26 > cleanup in mata must be specific in "mata mata drop __* __*()". A capture is added preliminary
 * version 0.2.8  2022-04-20 > Option noTOPcount now only for first row
 * version 0.2.6  2021-05-24 > Bug in basetable_parser(): basetable::n_pct_by_value() not called when value ends on r. Thanks to Kasper Norman
 * version 0.2.6  2021-04-15 > NoTotal and NoPvalue now also for toxl
@@ -53,17 +54,17 @@ mata:
 			counts = lm.values()
 			if ( counts[1] < this.no_small & counts[1]  > 0 ) {
 				/*
-                txt = sprintf(". / %1.0f (.)", counts[1] + counts[2]) 
-                */
-                txt = sprintf(". / %s (.)", strofreal(counts[1] + counts[2], this.nfmt)) 
+				txt = sprintf(". / %1.0f (.)", counts[1] + counts[2]) 
+				*/
+				txt = sprintf(". / %s (.)", strofreal(counts[1] + counts[2], this.nfmt)) 
 			} else {
-                /*
+				/*
 				txt = sprintf("%1.0f / %1.0f (%4.2f)", counts[2], 
 							counts[1] + counts[2], 
 							counts[2] / (counts[1] + counts[2]) * 100)
-                */
+				*/
 				txt = sprintf("%s / %s (%s)", 
-                            strofreal(counts[2], this.nfmt), 
+							strofreal(counts[2], this.nfmt), 
 							strofreal(counts[1] + counts[2], this.nfmt), 
 							strofreal(counts[2] / (counts[1] + counts[2]) * 100, this.pctfmt))
 			}
@@ -92,7 +93,7 @@ mata:
 									real scalar missing,
 									| string scalar str_if, 
 									string scalar str_in,
-                  real scalar exact,
+									real scalar exact,
 									string scalar categorical_report
 									)
 		{
@@ -106,7 +107,7 @@ mata:
 			col_by = st_varlabel(this.colvar)
 			if ( col_by == "" ) col_by = this.colvar
 			if ( col_by != "  " ) col_by = sprintf("Columns by: %s", col_by)
-      else col_by = "Variables"
+			else col_by = "Variables"
 			this.output = col_by, nhb_sae_labelsof(colvar), "Total", "P-value"
 			this.valuewidth = cols(this.output) - 2
 			this.no_small = no_small
@@ -116,7 +117,7 @@ mata:
 			this.str_if_base = str_if
 			this.str_if = str_if
 			this.str_in = str_in
-      this.exact = exact < . ? exact : 0
+			this.exact = exact < . ? exact : 0
 			this.categorical_report = rowsum(categorical_report :== ("n", "p")) ? categorical_report : ""
 		}
 
@@ -129,7 +130,7 @@ mata:
 									string vector bottom,
 									real scalar show_pv,
 									real scalar show_total,
-									real rowvector order)
+									real rowvector col_order)
 		{
 			real rowvector slct_columns
 			real colvector slct
@@ -147,8 +148,7 @@ mata:
 			if (style == "md" & slct != J(0, 1, .) ) {
 				to_print[slct,1] = "*" :+ substr(to_print[slct,1],3,.) :+ "*"
 			}
-			if ( order == J(0, 1, .) ) order = .
-			lines = nhb_mt_mata_string_matrix_styled(to_print[., order], 
+			lines = nhb_mt_mata_string_matrix_styled(to_print[., col_order], 
 				style, ("-", ""), 1, caption, top, undertop, bottom, filename, replace)
 		}
 
@@ -188,13 +188,13 @@ mata:
 						+ strofreal(prp, this.pctfmt) + J(1, C, ")"), "")
 			}
 			row = this.missing ? row, this.missings(this.colvar) : row
-      this.output =  this.output \ row
+	  this.output =  this.output \ row
 		}
 
 		string matrix basetable::n_pct_by_base( string scalar varname, 
 												real scalar colpct)
 		{
-			real scalar r, c, R, C, p_index
+			real scalar r, c, R, C, p_index, pv
 			real matrix has_small
 			rowvector n, prp, tmp_n, tmp_p
 			string scalar vnm, headertitle
@@ -203,66 +203,67 @@ mata:
 			string matrix out
 			class nhb_mt_chi2tabulate scalar tbl
 
-            tbl.set(varname, this.colvar, this.str_if, this.str_in, "", this.exact)
-            n = tbl.counts_with_totals().values()
-            R = rows(n) - 1	//Ignore bottom total
-            n = n[1..R,.]
-            C = cols(n)
-            if ( colpct ) {
-                prp = 100 * tbl.column_proportions().values()[1..R,.]
-            } else {
-                prp = 100 * tbl.row_proportions().values()[1..R,.]
-            }
-            if ( C != this.valuewidth ) {
-                tmp_n = n
-                tmp_p = prp
-                names = tbl.counts().column_names() \ "Total"
-                n = prp = J(R, this.valuewidth, 0)
-                for (c=1;c<=rows(names);c++) {
-                    for(r=1;r<=cols(n);r++) {
-                        if ( names[c] == this.output[1,r+1] ) {
-                            n[.,r] = tmp_n[.,c]
-                            prp[.,r] = tmp_p[.,c]
-                        }
-                    }
-                }
-                C = this.valuewidth
-            }
-            if ( this.no_small ) {
-                n = n[.,1..C-1]
-                has_small = n :> 0 :& n :< this.no_small
-                n = n :* !has_small + this.no_small :* has_small
-                n = n, rowsum(n)
-                has_small = has_small, rowsum(has_small) :> 0
-            } else {
-                has_small = J(R, this.valuewidth, 0)
-            }
-            n = ("" :* !has_small + "< " :* has_small) :+ strofreal(n, this.nfmt)
-            prp = prp :/ !has_small
-            prp = strofreal(prp, this.pctfmt)
-            if ( this.categorical_report == "p" ) {
-                names = "  " :+ tbl.counts().row_names()
-                headertitle = ", %"
-                out = (names, prp, J(R, 1, ""))
-            } else if ( this.categorical_report == "n" ) {
-                names = "  " :+ tbl.counts().row_names()
-                headertitle = ", n"
-                out = (names, n, J(R, 1, ""))
-            } else {
-                names = "  " :+ tbl.counts().row_names()
-                headertitle = ", n (%)"
-                out = (names, n + J(R, C, " (") + prp + J(R, C, ")"), J(R, 1, ""))
-            }
-            C = cols(out)
-            p_index = this.exact ? 3 : 1
-            out[R,C] = strofreal(tbl.tests().values()[p_index,3], this.pvfmt)
-            header = J(1, C, "")
-            vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
-            header[1] = sprintf("%s%s", vnm, headertitle)
-            out = header \ out
-            if ( this.missing ) {
-                out = out, (J(R, 1, "") \ this.missings(varname))
-            }
+			tbl.set(varname, this.colvar, this.str_if, this.str_in, "", this.exact)
+			n = tbl.counts_with_totals().values()
+			R = rows(n) - 1	//Ignore bottom total
+			n = n[1..R,.]
+			C = cols(n)
+			if ( colpct ) {
+				prp = 100 * tbl.column_proportions().values()[1..R,.]
+			} else {
+				prp = 100 * tbl.row_proportions().values()[1..R,.]
+			}
+			if ( C != this.valuewidth ) {
+				tmp_n = n
+				tmp_p = prp
+				names = tbl.counts().column_names() \ "Total"
+				n = prp = J(R, this.valuewidth, 0)
+				for (c=1;c<=rows(names);c++) {
+					for(r=1;r<=cols(n);r++) {
+						if ( names[c] == this.output[1,r+1] ) {
+							n[.,r] = tmp_n[.,c]
+							prp[.,r] = tmp_p[.,c]
+						}
+					}
+				}
+				C = this.valuewidth
+			}
+			if ( this.no_small ) {
+				n = n[.,1..C-1]
+				has_small = n :> 0 :& n :< this.no_small
+				n = n :* !has_small + this.no_small :* has_small
+				n = n, rowsum(n)
+				has_small = has_small, rowsum(has_small) :> 0
+			} else {
+				has_small = J(R, this.valuewidth, 0)
+			}
+			n = ("" :* !has_small + "< " :* has_small) :+ strofreal(n, this.nfmt)
+			prp = prp :/ !has_small
+			prp = strofreal(prp, this.pctfmt)
+			if ( this.categorical_report == "p" ) {
+				names = "  " :+ tbl.counts().row_names()
+				headertitle = ", %"
+				out = (names, prp, J(R, 1, ""))
+			} else if ( this.categorical_report == "n" ) {
+				names = "  " :+ tbl.counts().row_names()
+				headertitle = ", n"
+				out = (names, n, J(R, 1, ""))
+			} else {
+				names = "  " :+ tbl.counts().row_names()
+				headertitle = ", n (%)"
+				out = (names, n + J(R, C, " (") + prp + J(R, C, ")"), J(R, 1, ""))
+			}
+			C = cols(out)
+			p_index = this.exact ? 3 : 1
+			pv = tbl.tests().values()[p_index,3]
+			out[R,C] = nhb_sae_format_p_value(pv, this.pvfmt)
+			header = J(1, C, "")
+			vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
+			header[1] = sprintf("%s%s", vnm, headertitle)
+			out = header \ out
+			if ( this.missing ) {
+				out = out, (J(R, 1, "") \ this.missings(varname))
+			}
 			return(out)
 		}
 		
@@ -279,10 +280,10 @@ mata:
 		txt_if = (str_if != "" ? sprintf("%s & !missing(%s)", str_if, this.colvar) 
 								: sprintf("if !missing(%s)", this.colvar))
 		lbl_name = st_varvaluelabel(this.colvar)
-        if ( lbl_name != "" ) {
-        	lbl_name = sprintf(`"":%s"', lbl_name)
-            strslct = `" & %s == "%s%s"'
-        } else strslct = `" & %s == %s%s"'
+		if ( lbl_name != "" ) {
+			lbl_name = sprintf(`"":%s"', lbl_name)
+			strslct = `" & %s == "%s%s"'
+		} else strslct = `" & %s == %s%s"'
 		lbls = nhb_sae_labelsof(this.colvar)
 		C = cols(lbls)
 		lm = nhb_sae_summary_row(variable, statistics, "", txt_if, this.str_in, 
@@ -336,7 +337,7 @@ mata:
 				if ( this.categorical_report == "p" ) headertitle = ", %"
 				else if ( this.categorical_report == "n" ) headertitle = ", n"
 				else headertitle = ", n (%)"
-                vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
+				vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
 				n_pct_row[1] = sprintf("%s (%s)%s", vnm, rowvalue, headertitle)
 				this.output = this.output \ n_pct_row
 			}
@@ -348,7 +349,7 @@ mata:
 			|real scalar colpct)
 		{
 			real scalar ppct, z, R, C
-            string scalar vnm, header
+			string scalar vnm, header
 			real colvector slct
 			real matrix n, p, sd
 			string scalar test
@@ -369,7 +370,7 @@ mata:
 				p = chi2tbl.row_proportions().values()[1..(R-1),.]
 				sd = sqrt(p :* (1:-p) :/ n[1..(R-1),C])
 			}
-            vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
+			vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
 			header = vnm :+ " (" :+ chi2tbl.counts_with_totals().row_names()[1..(R-1),.] :+ "), % (95% CI)"
 			str_mat = header, (strofreal(100 * p, this.pctfmt) 
 				:+ " (" :+ strofreal(100 * (p :- z :* sd), this.pctfmt) 
@@ -390,26 +391,26 @@ mata:
 			string rowvector rows
 			string scalar label, p_value, vnm
 			
-            data = this.summarize_by(varname, "mean sd")
-            C = cols(data)
-            vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
-            label = sprintf("%s, mean (sd)", vnm)
-            p_value = ""
-            rc = nhb_sae_logstatacode(sprintf("oneway %s %s %s %s", varname, 
-                                this.colvar, this.str_if, this.str_in), 1, 0)
-            if ( !rc ) {
-                df_m = st_numscalar("r(df_m)")
-                df_r = st_numscalar("r(df_r)")
-                F = st_numscalar("r(F)")
-                if ( F != . )  p_value = strofreal(Ftail(df_m, df_r, F), this.pvfmt)
-            }
-            rows = (label, strofreal(data[1,.], fmt)
-                        + J(1, C, " (")
-                        + strofreal(data[2,.], fmt) 
-                        + J(1, C, ")"), 
-                        p_value)
-            rows = this.missing ? rows, this.missings(varname) : rows
-            this.output = this.output \ rows
+			data = this.summarize_by(varname, "mean sd")
+			C = cols(data)
+			vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
+			label = sprintf("%s, mean (sd)", vnm)
+			p_value = ""
+			rc = nhb_sae_logstatacode(sprintf("oneway %s %s %s %s", varname, 
+								this.colvar, this.str_if, this.str_in), 1, 0)
+			if ( !rc ) {
+				df_m = st_numscalar("r(df_m)")
+				df_r = st_numscalar("r(df_r)")
+				F = st_numscalar("r(F)")
+				if ( F != . )  p_value = nhb_sae_format_p_value(Ftail(df_m, df_r, F), this.pvfmt)
+			}
+			rows = (label, strofreal(data[1,.], fmt)
+						+ J(1, C, " (")
+						+ strofreal(data[2,.], fmt) 
+						+ J(1, C, ")"), 
+						p_value)
+			rows = this.missing ? rows, this.missings(varname) : rows
+			this.output = this.output \ rows
 		}
 
 		void basetable::median_iqr(string scalar varname, fmt)
@@ -419,28 +420,28 @@ mata:
 			string rowvector rows
 			string scalar statacode, label, p_value, vnm
 
-            data = this.summarize_by(varname, "p50 p25 p75")
-            data = data[1,.] \ (data[3,.] - data[2,.])
-            C = cols(data)
-            vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
-            label = sprintf("%s, median (iqr)", vnm)
-            p_value = ""
-            if ( this.valuewidth > 2 ) {
-                statacode = sprintf("kwallis %s %s %s, by(%s)", varname, 
-                                this.str_if, this.str_in, this.colvar)
-                if ( !nhb_sae_logstatacode(statacode, 1, 0) ) {
-                    df = st_numscalar("r(df)")
-                    F = st_numscalar("r(chi2)")
-                    p_value = strofreal(chi2tail(df, F), this.pvfmt)
-                }
-            }
-            rows = (label, strofreal(data[1,.], fmt)
-                        + J(1, C, " (")
-                        + strofreal(data[2,.], fmt) 
-                        + J(1, C, ")"), 
-                        p_value)
-            rows = this.missing ? rows, this.missings(varname) : rows
-            this.output = this.output \ rows
+			data = this.summarize_by(varname, "p50 p25 p75")
+			data = data[1,.] \ (data[3,.] - data[2,.])
+			C = cols(data)
+			vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
+			label = sprintf("%s, median (iqr)", vnm)
+			p_value = ""
+			if ( this.valuewidth > 2 ) {
+				statacode = sprintf("kwallis %s %s %s, by(%s)", varname, 
+								this.str_if, this.str_in, this.colvar)
+				if ( !nhb_sae_logstatacode(statacode, 1, 0) ) {
+					df = st_numscalar("r(df)")
+					F = st_numscalar("r(chi2)")
+					p_value = nhb_sae_format_p_value(chi2tail(df, F), this.pvfmt)
+				}
+			}
+			rows = (label, strofreal(data[1,.], fmt)
+						+ J(1, C, " (")
+						+ strofreal(data[2,.], fmt) 
+						+ J(1, C, ")"), 
+						p_value)
+			rows = this.missing ? rows, this.missings(varname) : rows
+			this.output = this.output \ rows
 		}
 
 		void basetable::median_iqi(string scalar varname, fmt)
@@ -450,30 +451,30 @@ mata:
 			string rowvector rows
 			string scalar statacode, label, p_value, vnm
 
-            data = this.summarize_by(varname, "p50 p25 p75")
-            C = cols(data)
-            vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
-            label = sprintf("%s, median (iqi)", vnm)
-            p_value = ""
-            this.valuewidth
-            if ( this.valuewidth > 2 ) {
-                statacode = sprintf("kwallis %s %s %s, by(%s)", varname, 
-                                this.str_if, this.str_in, this.colvar)
-                if ( !nhb_sae_logstatacode(statacode, 1, 0) ) {
-                    df = st_numscalar("r(df)")
-                    F = st_numscalar("r(chi2)")
-                    p_value = strofreal(chi2tail(df, F), this.pvfmt)
-                }
-            }
-            rows = (label, strofreal(data[1,.], fmt)
-                        + J(1, C, " (")
-                        + strofreal(data[2,.], fmt) 
-                        + J(1, C, "; ")
-                        + strofreal(data[3,.], fmt) 
-                        + J(1, C, ")"), 
-                        p_value)
-            rows = this.missing ? rows, this.missings(varname) : rows
-            this.output = this.output \ rows
+			data = this.summarize_by(varname, "p50 p25 p75")
+			C = cols(data)
+			vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
+			label = sprintf("%s, median (iqi)", vnm)
+			p_value = ""
+			this.valuewidth
+			if ( this.valuewidth > 2 ) {
+				statacode = sprintf("kwallis %s %s %s, by(%s)", varname, 
+								this.str_if, this.str_in, this.colvar)
+				if ( !nhb_sae_logstatacode(statacode, 1, 0) ) {
+					df = st_numscalar("r(df)")
+					F = st_numscalar("r(chi2)")
+					p_value = nhb_sae_format_p_value(chi2tail(df, F), this.pvfmt)
+				}
+			}
+			rows = (label, strofreal(data[1,.], fmt)
+						+ J(1, C, " (")
+						+ strofreal(data[2,.], fmt) 
+						+ J(1, C, "; ")
+						+ strofreal(data[3,.], fmt) 
+						+ J(1, C, ")"), 
+						p_value)
+			rows = this.missing ? rows, this.missings(varname) : rows
+			this.output = this.output \ rows
 		}
 
 		void basetable::median_idr(string scalar varname, fmt)
@@ -483,28 +484,28 @@ mata:
 			string rowvector rows
 			string scalar statacode, label, p_value, vnm
 
-            data = this.summarize_by(varname, "p50 p10 p90")
-            data = data[1,.] \ (data[3,.] - data[2,.])
-            C = cols(data)
-            vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
-            label = sprintf("%s, median (idr)", vnm)
-            p_value = ""
-            if ( this.valuewidth > 2 ) {
-                statacode = sprintf("kwallis %s %s %s, by(%s)", varname, 
-                                this.str_if, this.str_in, this.colvar)
-                if ( !nhb_sae_logstatacode(statacode, 1, 0) ) {
-                    df = st_numscalar("r(df)")
-                    F = st_numscalar("r(chi2)")
-                    p_value = strofreal(chi2tail(df, F), this.pvfmt)
-                }
-            }
-            rows = (label, strofreal(data[1,.], fmt)
-                        + J(1, C, " (")
-                        + strofreal(data[2,.], fmt) 
-                        + J(1, C, ")"), 
-                        p_value)
-            rows = this.missing ? rows, this.missings(varname) : rows
-            this.output = this.output \ rows
+			data = this.summarize_by(varname, "p50 p10 p90")
+			data = data[1,.] \ (data[3,.] - data[2,.])
+			C = cols(data)
+			vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
+			label = sprintf("%s, median (idr)", vnm)
+			p_value = ""
+			if ( this.valuewidth > 2 ) {
+				statacode = sprintf("kwallis %s %s %s, by(%s)", varname, 
+								this.str_if, this.str_in, this.colvar)
+				if ( !nhb_sae_logstatacode(statacode, 1, 0) ) {
+					df = st_numscalar("r(df)")
+					F = st_numscalar("r(chi2)")
+					p_value = nhb_sae_format_p_value(chi2tail(df, F), this.pvfmt)
+				}
+			}
+			rows = (label, strofreal(data[1,.], fmt)
+						+ J(1, C, " (")
+						+ strofreal(data[2,.], fmt) 
+						+ J(1, C, ")"), 
+						p_value)
+			rows = this.missing ? rows, this.missings(varname) : rows
+			this.output = this.output \ rows
 		}
 
 		void basetable::median_idi(string scalar varname, fmt)
@@ -514,30 +515,30 @@ mata:
 			string rowvector rows
 			string scalar statacode, label, p_value, vnm
 
-            data = this.summarize_by(varname, "p50 p10 p90")
-            C = cols(data)
-            vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
-            label = sprintf("%s, median (idi)", vnm)
-            p_value = ""
-            this.valuewidth
-            if ( this.valuewidth > 2 ) {
-                statacode = sprintf("kwallis %s %s %s, by(%s)", varname, 
-                                this.str_if, this.str_in, this.colvar)
-                if ( !nhb_sae_logstatacode(statacode, 1, 0) ) {
-                    df = st_numscalar("r(df)")
-                    F = st_numscalar("r(chi2)")
-                    p_value = strofreal(chi2tail(df, F), this.pvfmt)
-                }
-            }
-            rows = (label, strofreal(data[1,.], fmt)
-                        + J(1, C, " (")
-                        + strofreal(data[2,.], fmt) 
-                        + J(1, C, "; ")
-                        + strofreal(data[3,.], fmt) 
-                        + J(1, C, ")"), 
-                        p_value)
-            rows = this.missing ? rows, this.missings(varname) : rows
-            this.output = this.output \ rows
+			data = this.summarize_by(varname, "p50 p10 p90")
+			C = cols(data)
+			vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
+			label = sprintf("%s, median (idi)", vnm)
+			p_value = ""
+			this.valuewidth
+			if ( this.valuewidth > 2 ) {
+				statacode = sprintf("kwallis %s %s %s, by(%s)", varname, 
+								this.str_if, this.str_in, this.colvar)
+				if ( !nhb_sae_logstatacode(statacode, 1, 0) ) {
+					df = st_numscalar("r(df)")
+					F = st_numscalar("r(chi2)")
+					p_value = nhb_sae_format_p_value(chi2tail(df, F), this.pvfmt)
+				}
+			}
+			rows = (label, strofreal(data[1,.], fmt)
+						+ J(1, C, " (")
+						+ strofreal(data[2,.], fmt) 
+						+ J(1, C, "; ")
+						+ strofreal(data[3,.], fmt) 
+						+ J(1, C, ")"), 
+						p_value)
+			rows = this.missing ? rows, this.missings(varname) : rows
+			this.output = this.output \ rows
 		}
 
 		void basetable::median_mrr(string scalar varname, fmt)
@@ -547,28 +548,28 @@ mata:
 			string rowvector rows
 			string scalar statacode, label, p_value, vnm
 
-            data = this.summarize_by(varname, "median min max")
-            data = data[1,.] \ (data[3,.] - data[2,.])
-            C = cols(data)
-            vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
-            label = sprintf("%s, median (range)", vnm)
-            p_value = ""
-            if ( this.valuewidth > 2 ) {
-                statacode = sprintf("kwallis %s %s %s, by(%s)", varname, 
-                                this.str_if, this.str_in, this.colvar)
-                if ( !nhb_sae_logstatacode(statacode, 1, 0) ) {
-                    df = st_numscalar("r(df)")
-                    F = st_numscalar("r(chi2)")
-                    p_value = strofreal(chi2tail(df, F), this.pvfmt)
-                }
-            }
-            rows = (label, strofreal(data[1,.], fmt)
-                        + J(1, C, " (")
-                        + strofreal(data[2,.], fmt) 
-                        + J(1, C, ")"), 
-                        p_value)
-            rows = this.missing ? rows, this.missings(varname) : rows
-            this.output = this.output \ rows
+			data = this.summarize_by(varname, "median min max")
+			data = data[1,.] \ (data[3,.] - data[2,.])
+			C = cols(data)
+			vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
+			label = sprintf("%s, median (range)", vnm)
+			p_value = ""
+			if ( this.valuewidth > 2 ) {
+				statacode = sprintf("kwallis %s %s %s, by(%s)", varname, 
+								this.str_if, this.str_in, this.colvar)
+				if ( !nhb_sae_logstatacode(statacode, 1, 0) ) {
+					df = st_numscalar("r(df)")
+					F = st_numscalar("r(chi2)")
+					p_value = nhb_sae_format_p_value(chi2tail(df, F), this.pvfmt)
+				}
+			}
+			rows = (label, strofreal(data[1,.], fmt)
+						+ J(1, C, " (")
+						+ strofreal(data[2,.], fmt) 
+						+ J(1, C, ")"), 
+						p_value)
+			rows = this.missing ? rows, this.missings(varname) : rows
+			this.output = this.output \ rows
 		}
 
 		void basetable::median_mri(string scalar varname, fmt)
@@ -578,30 +579,30 @@ mata:
 			string rowvector rows
 			string scalar statacode, label, p_value, vnm
 
-            data = this.summarize_by(varname, "median min max")
-            C = cols(data)
-            vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
-            label = sprintf("%s, median (min; max)", vnm)
-            p_value = ""
-            this.valuewidth
-            if ( this.valuewidth > 2 ) {
-                statacode = sprintf("kwallis %s %s %s, by(%s)", varname, 
-                                this.str_if, this.str_in, this.colvar)
-                if ( !nhb_sae_logstatacode(statacode, 1, 0) ) {
-                    df = st_numscalar("r(df)")
-                    F = st_numscalar("r(chi2)")
-                    p_value = strofreal(chi2tail(df, F), this.pvfmt)
-                }
-            }
-            rows = (label, strofreal(data[1,.], fmt)
-                        + J(1, C, " (")
-                        + strofreal(data[2,.], fmt) 
-                        + J(1, C, "; ")
-                        + strofreal(data[3,.], fmt) 
-                        + J(1, C, ")"), 
-                        p_value)
-            rows = this.missing ? rows, this.missings(varname) : rows
-            this.output = this.output \ rows
+			data = this.summarize_by(varname, "median min max")
+			C = cols(data)
+			vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
+			label = sprintf("%s, median (min; max)", vnm)
+			p_value = ""
+			this.valuewidth
+			if ( this.valuewidth > 2 ) {
+				statacode = sprintf("kwallis %s %s %s, by(%s)", varname, 
+								this.str_if, this.str_in, this.colvar)
+				if ( !nhb_sae_logstatacode(statacode, 1, 0) ) {
+					df = st_numscalar("r(df)")
+					F = st_numscalar("r(chi2)")
+					p_value = nhb_sae_format_p_value(chi2tail(df, F), this.pvfmt)
+				}
+			}
+			rows = (label, strofreal(data[1,.], fmt)
+						+ J(1, C, " (")
+						+ strofreal(data[2,.], fmt) 
+						+ J(1, C, "; ")
+						+ strofreal(data[3,.], fmt) 
+						+ J(1, C, ")"), 
+						p_value)
+			rows = this.missing ? rows, this.missings(varname) : rows
+			this.output = this.output \ rows
 		}
 
 		void basetable::mean_ci(string scalar varname, fmt)
@@ -611,30 +612,30 @@ mata:
 			string rowvector rows
 			string scalar label, p_value, vnm
 
-            data = this.summarize_by(varname, "mean sd N")
-            data = data[1,.] \ (data[2,.] :/ sqrt(data[3,.]))
-            C = cols(data)
-            vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
-            label = sprintf("%s, mean (95%% ci)", vnm)
-            p_value = ""
-            rc = nhb_sae_logstatacode(sprintf("oneway %s %s %s %s", varname, 
-                                this.colvar, this.str_if, this.str_in), 1, 0)
-            if ( !rc ) {
-                df_m = st_numscalar("r(df_m)")
-                df_r = st_numscalar("r(df_r)")
-                F = st_numscalar("r(F)")
-                if ( F != . )  p_value = strofreal(Ftail(df_m, df_r, F), this.pvfmt)
-            }
-            z = invnormal(0.975)
-            rows = (label, strofreal(data[1,.], fmt)
-                        + J(1, C, " (")
-                        + strofreal(data[1,.] :- z :* data[2,.], fmt) 
-                        + J(1, C, "; ")
-                        + strofreal(data[1,.] :+ z :* data[2,.], fmt)
-                        + J(1, C, ")"), 
-                        p_value)
-            rows = this.missing ? rows, this.missings(varname) : rows
-            this.output = this.output \ rows
+			data = this.summarize_by(varname, "mean sd N")
+			data = data[1,.] \ (data[2,.] :/ sqrt(data[3,.]))
+			C = cols(data)
+			vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
+			label = sprintf("%s, mean (95%% ci)", vnm)
+			p_value = ""
+			rc = nhb_sae_logstatacode(sprintf("oneway %s %s %s %s", varname, 
+								this.colvar, this.str_if, this.str_in), 1, 0)
+			if ( !rc ) {
+				df_m = st_numscalar("r(df_m)")
+				df_r = st_numscalar("r(df_r)")
+				F = st_numscalar("r(F)")
+				if ( F != . )  p_value = nhb_sae_format_p_value(Ftail(df_m, df_r, F), this.pvfmt)
+			}
+			z = invnormal(0.975)
+			rows = (label, strofreal(data[1,.], fmt)
+						+ J(1, C, " (")
+						+ strofreal(data[1,.] :- z :* data[2,.], fmt) 
+						+ J(1, C, "; ")
+						+ strofreal(data[1,.] :+ z :* data[2,.], fmt)
+						+ J(1, C, ")"), 
+						p_value)
+			rows = this.missing ? rows, this.missings(varname) : rows
+			this.output = this.output \ rows
 		}
 
 		void basetable::gmean_ci(string scalar varname, fmt)
@@ -644,32 +645,32 @@ mata:
 			string rowvector rows
 			string scalar label, p_value, log_var, vnm
 
-            data = this.summarize_by(varname, "gmean gse")
-            C = cols(data)
-            vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
-            label = sprintf("%s, geo. mean (95%% ci)", vnm)
-            p_value = ""
-            log_var = st_tempname()
-            rc = nhb_sae_logstatacode(sprintf("generate %s = log(%s) %s %s", 
-                log_var, varname, this.str_if, this.str_in), 1, 0)
-            rc = nhb_sae_logstatacode(sprintf("oneway %s %s %s %s", log_var, 
-                                this.colvar, this.str_if, this.str_in), 1, 0)
-            if ( !rc ) {
-                df_m = st_numscalar("r(df_m)")
-                df_r = st_numscalar("r(df_r)")
-                F = st_numscalar("r(F)")
-                if ( F != . )  p_value = strofreal(Ftail(df_m, df_r, F), this.pvfmt)
-            }
-            z = invnormal(0.975)
-            rows = (label, strofreal(data[1,.], fmt)
-                        + J(1, C, " (")
-                        + strofreal(exp(log(data[1,.]) :- z :* log(data[2,.])), fmt) 
-                        + J(1, C, "; ")
-                        + strofreal(exp(log(data[1,.]) :+ z :* log(data[2,.])), fmt) 
-                        + J(1, C, ")"), 
-                        p_value)
-            rows = this.missing ? rows, this.missings(varname) : rows
-            this.output = this.output \ rows
+			data = this.summarize_by(varname, "gmean gse")
+			C = cols(data)
+			vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
+			label = sprintf("%s, geo. mean (95%% ci)", vnm)
+			p_value = ""
+			log_var = st_tempname()
+			rc = nhb_sae_logstatacode(sprintf("generate %s = log(%s) %s %s", 
+				log_var, varname, this.str_if, this.str_in), 1, 0)
+			rc = nhb_sae_logstatacode(sprintf("oneway %s %s %s %s", log_var, 
+								this.colvar, this.str_if, this.str_in), 1, 0)
+			if ( !rc ) {
+				df_m = st_numscalar("r(df_m)")
+				df_r = st_numscalar("r(df_r)")
+				F = st_numscalar("r(F)")
+				if ( F != . )  p_value = nhb_sae_format_p_value(Ftail(df_m, df_r, F), this.pvfmt)
+			}
+			z = invnormal(0.975)
+			rows = (label, strofreal(data[1,.], fmt)
+						+ J(1, C, " (")
+						+ strofreal(exp(log(data[1,.]) :- z :* log(data[2,.])), fmt) 
+						+ J(1, C, "; ")
+						+ strofreal(exp(log(data[1,.]) :+ z :* log(data[2,.])), fmt) 
+						+ J(1, C, ")"), 
+						p_value)
+			rows = this.missing ? rows, this.missings(varname) : rows
+			this.output = this.output \ rows
 		}
 
 		void basetable::mean_pi(string scalar varname, fmt)
@@ -679,29 +680,29 @@ mata:
 			string rowvector rows
 			string scalar label, p_value, vnm
 
-            data = this.summarize_by(varname, "mean sd")
-            C = cols(data)
-            vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
-            label = sprintf("%s, mean (95%% pi)", vnm)
-            p_value = ""
-            rc = nhb_sae_logstatacode(sprintf("oneway %s %s %s %s", varname, 
-                                this.colvar, this.str_if, this.str_in), 1, 0)
-            if ( !rc ) {
-                df_m = st_numscalar("r(df_m)")
-                df_r = st_numscalar("r(df_r)")
-                F = st_numscalar("r(F)")
-                if ( F != . )  p_value = strofreal(Ftail(df_m, df_r, F), this.pvfmt)
-            }
-            z = invnormal(0.975)
-            rows = (label, strofreal(data[1,.], fmt)
-                        + J(1, C, " (")
-                        + strofreal(data[1,.] :- z :* data[2,.], fmt) 
-                        + J(1, C, "; ")
-                        + strofreal(data[1,.] :+ z :* data[2,.], fmt)
-                        + J(1, C, ")"), 
-                        p_value)
-            rows = this.missing ? rows, this.missings(varname) : rows
-            this.output = this.output \ rows
+			data = this.summarize_by(varname, "mean sd")
+			C = cols(data)
+			vnm = st_varlabel(varname) == "" ? varname : st_varlabel(varname)
+			label = sprintf("%s, mean (95%% pi)", vnm)
+			p_value = ""
+			rc = nhb_sae_logstatacode(sprintf("oneway %s %s %s %s", varname, 
+								this.colvar, this.str_if, this.str_in), 1, 0)
+			if ( !rc ) {
+				df_m = st_numscalar("r(df_m)")
+				df_r = st_numscalar("r(df_r)")
+				F = st_numscalar("r(F)")
+				if ( F != . )  p_value = nhb_sae_format_p_value(Ftail(df_m, df_r, F), this.pvfmt)
+			}
+			z = invnormal(0.975)
+			rows = (label, strofreal(data[1,.], fmt)
+						+ J(1, C, " (")
+						+ strofreal(data[1,.] :- z :* data[2,.], fmt) 
+						+ J(1, C, "; ")
+						+ strofreal(data[1,.] :+ z :* data[2,.], fmt)
+						+ J(1, C, ")"), 
+						p_value)
+			rows = this.missing ? rows, this.missings(varname) : rows
+			this.output = this.output \ rows
 		}
 
 		void basetable::header(string scalar headertext,| separator)
@@ -740,7 +741,7 @@ mata:
 												real scalar missing,
 												string scalar str_if, 
 												string scalar str_in,
-                        real scalar exact,
+												real scalar exact,
 												string scalar categorical_report,
 												real scalar topcount
 												)
@@ -748,7 +749,7 @@ mata:
 		class basetable scalar tbl
 		transmorphic t
 		real scalar r, v, n_pct
-        string scalar ifin_var, strvarlst
+		string scalar ifin_var, strvarlst
 		string rowvector varlst, lst, arguments
 		
 		t = tokeninit(" ", "", (`"()"', `"[]"'))
@@ -756,19 +757,19 @@ mata:
 		lst = tokengetall(t)
 		if ( regexm(lst[1], "^\[|^\(") ) _error("Arguments must not start with a [ or a (")
 		
-        if ( lst[1] == "_none" ) {
-        	lst[1] = st_tempname()
-        	stata(sprintf("generate %s = 1", lst[1]))
-            st_varlabel(lst[1], "  ")
-            st_vlmodify(lst[1], 1, "Summary")
-            st_varvaluelabel(lst[1], lst[1])
-            st_local("pvalue", "pvalue")
-            st_local("total", "total")
-        }
-        
+		if ( lst[1] == "_none" ) {
+			lst[1] = st_tempname()
+			stata(sprintf("generate %s = 1", lst[1]))
+			st_varlabel(lst[1], "  ")
+			st_vlmodify(lst[1], 1, "Summary")
+			st_varvaluelabel(lst[1], lst[1])
+			st_local("pvalue", "pvalue")
+			st_local("total", "total")
+		}
+		
 		if ( _st_varindex(lst[1]) >= . ) _error(sprintf(`"First part in arguments "%s" must be variable."', lst[1]))
-    tbl.setup_tbl(lst[1], nfmt, pctfmt, pvfmt, pv_on_top, no_small, ///
-      smooth_width, missing, str_if, str_in, exact, categorical_report)
+		tbl.setup_tbl(lst[1], nfmt, pctfmt, pvfmt, pv_on_top, no_small, ///
+		smooth_width, missing, str_if, str_in, exact, categorical_report)
 		if ( topcount ) tbl.n_pct()
 		for(r=2;r<=cols(lst);r++){
 			if ( regexm(lst[r], "^\[(.*)\]") ) {			// header, handles local if
@@ -781,11 +782,11 @@ mata:
 					n_pct = 0
 				}
 				if ( regexm(arguments[2], "^ *(.*) *if *(.+) *$") ) {
-                    if ( tbl.str_if_base == "" ) {
-                        tbl.str_if = "if " + stritrim(regexs(2))
-                    } else {
-                        tbl.str_if = tbl.str_if_base + " & " + stritrim(regexs(2))
-                    }
+					if ( tbl.str_if_base == "" ) {
+						tbl.str_if = "if " + stritrim(regexs(2))
+					} else {
+						tbl.str_if = tbl.str_if_base + " & " + stritrim(regexs(2))
+					}
 					tbl.header(arguments[1], stritrim(regexs(1)))
 				} else if ( regexm(arguments[2], "^ *(.*) *$") ) {
 					tbl.header(arguments[1], stritrim(regexs(1)))
@@ -793,9 +794,9 @@ mata:
 				} else {
 					tbl.header(arguments[1], "")
 				}
-                if ( !sum(st_data(., nhb_sae_markrows(tbl.str_if, tbl.str_in))) ) {
-                    _error(sprintf(`"Nothing selected with if: "%s" and in: "%s""', tbl.str_if, tbl.str_in))
-                }
+				if ( !sum(st_data(., nhb_sae_markrows(tbl.str_if, tbl.str_in))) ) {
+					_error(sprintf(`"Nothing selected with if: "%s" and in: "%s""', tbl.str_if, tbl.str_in))
+				}
 				if ( n_pct ) tbl.n_pct()
 			} else {										// variable
 				if ( cols(lst) == r - 1 ) {
@@ -803,65 +804,65 @@ mata:
 				} else if ( !regexm(lst[r+1], "^\((.*)\)") ) {
 					_error(sprintf("Arguments in braces () must follow variable '%s'", lst[r]))
 				} else arguments = strtrim(tokensplit(regexs(1), ","))
-                strvarlst = nhb_msa_unab(lst[r])
-                if ( strvarlst == "" ) _error(sprintf("Arguments part '%s' is no varlist", lst[r]))
-                varlst = tokens(strvarlst)
-                for (v=1;v<=cols(varlst);v++) {
-                    //if ( _st_varindex(varlst[v]) == . ) _error(sprintf("%s is no variable name", varlst[v]))
-                	if ( regexm(varlst[v], "^__" ) ) continue   // Temporary variables ignored
-                    if ( st_isnumfmt(arguments[1]) == 1 ) {		// continous variable
-                        continousreport = (continousreport == "" ? "sd" : continousreport)
-                        arguments = length(arguments) == 1 ? arguments, continousreport : arguments
-                        if ( arguments[2] == "sd" ) {
-                            tbl.mean_sd(varlst[v], arguments[1])
-                        } else if ( regexm(arguments[2],"^iqr$") ) {
-                            tbl.median_iqr(varlst[v], arguments[1])
-                        } else if ( regexm(arguments[2],"^iqi$") ) {
-                            tbl.median_iqi(varlst[v], arguments[1])
-                        } else if ( regexm(arguments[2],"^idr$") ) {
-                            tbl.median_idr(varlst[v], arguments[1])
-                        } else if ( regexm(arguments[2],"^idi$") ) {
-                            tbl.median_idi(varlst[v], arguments[1])
-                        } else if ( regexm(arguments[2],"^imr$") ) {
-                            tbl.median_mrr(varlst[v], arguments[1])
-                        } else if ( regexm(arguments[2],"^imi$") ) {
-                            tbl.median_mri(varlst[v], arguments[1])
-                        } else if ( regexm(arguments[2],"^ci$") ) {
-                            tbl.mean_ci(varlst[v], arguments[1])
-                        } else if ( regexm(arguments[2],"^gci$") ) {
-                            tbl.gmean_ci(varlst[v], arguments[1])
-                        } else if ( regexm(arguments[2],"^pi$") ) {
-                            tbl.mean_pi(varlst[v], arguments[1])
-                        }					
-                    } else {									// categorical variable
-                        // input: r,c,ci/c or value+,+r,c,ci/c
-                        if ( regexm(strlower(arguments[1]), "^ci|^[rc]$") ) {	// all row values
-                            // 0 = row pct, 1 = column pct
-                            if ( length(arguments) == 1 ) {
-                                if ( regexm(strlower(arguments[1]), "^ci$") ) arguments = "c", arguments[1] 
-                                else arguments = arguments, ""
-                            }
-                            if ( regexm(strlower(arguments[2]), "^ci$") ) {
-                                // string scalar variable, string scalar rowvalue, |real scalar colpct
-                                tbl.n_bin_by_value(varlst[v], "", regexm(arguments[1], "[cC]$"))
-                            } else {
-                                // string scalar variable, real scalar colpct
-                                tbl.n_pct_by(varlst[v], regexm(arguments[1], "^[cC]$"))
-                            }
-                        } else {	// By row value
-                            arguments = length(arguments) == 1 ? arguments, "c" : arguments
-                            if ( regexm(strlower(arguments[2]), "^ci$") ) {
-                            	/*r++*/
-                                // string scalar variable, string scalar rowvalue, |real scalar colpct
-                                tbl.n_bin_by_value(varlst[v], arguments[1], 1)	// Single value ci only by column
-                            } else {
-                                // string scalar variable, string scalar rowvalue, real scalar colpct
-                                tbl.n_pct_by_value(varlst[v], arguments[1], regexm(arguments[2], "[cC]$"))
-                            }
-                        }
-                    }
-                }
-                r++
+				strvarlst = nhb_msa_unab(lst[r])
+				if ( strvarlst == "" ) _error(sprintf("Arguments part '%s' is no varlist", lst[r]))
+				varlst = tokens(strvarlst)
+				for (v=1;v<=cols(varlst);v++) {
+					//if ( _st_varindex(varlst[v]) == . ) _error(sprintf("%s is no variable name", varlst[v]))
+					if ( regexm(varlst[v], "^__" ) ) continue   // Temporary variables ignored
+					if ( st_isnumfmt(arguments[1]) == 1 ) {		// continous variable
+						continousreport = (continousreport == "" ? "sd" : continousreport)
+						arguments = length(arguments) == 1 ? arguments, continousreport : arguments
+						if ( arguments[2] == "sd" ) {
+							tbl.mean_sd(varlst[v], arguments[1])
+						} else if ( regexm(arguments[2],"^iqr$") ) {
+							tbl.median_iqr(varlst[v], arguments[1])
+						} else if ( regexm(arguments[2],"^iqi$") ) {
+							tbl.median_iqi(varlst[v], arguments[1])
+						} else if ( regexm(arguments[2],"^idr$") ) {
+							tbl.median_idr(varlst[v], arguments[1])
+						} else if ( regexm(arguments[2],"^idi$") ) {
+							tbl.median_idi(varlst[v], arguments[1])
+						} else if ( regexm(arguments[2],"^imr$") ) {
+							tbl.median_mrr(varlst[v], arguments[1])
+						} else if ( regexm(arguments[2],"^imi$") ) {
+							tbl.median_mri(varlst[v], arguments[1])
+						} else if ( regexm(arguments[2],"^ci$") ) {
+							tbl.mean_ci(varlst[v], arguments[1])
+						} else if ( regexm(arguments[2],"^gci$") ) {
+							tbl.gmean_ci(varlst[v], arguments[1])
+						} else if ( regexm(arguments[2],"^pi$") ) {
+							tbl.mean_pi(varlst[v], arguments[1])
+						}					
+					} else {									// categorical variable
+						// input: r,c,ci/c or value+,+r,c,ci/c
+						if ( regexm(strlower(arguments[1]), "^ci|^[rc]$") ) {	// all row values
+							// 0 = row pct, 1 = column pct
+							if ( length(arguments) == 1 ) {
+								if ( regexm(strlower(arguments[1]), "^ci$") ) arguments = "c", arguments[1] 
+								else arguments = arguments, ""
+							}
+							if ( regexm(strlower(arguments[2]), "^ci$") ) {
+								// string scalar variable, string scalar rowvalue, |real scalar colpct
+								tbl.n_bin_by_value(varlst[v], "", regexm(arguments[1], "[cC]$"))
+							} else {
+								// string scalar variable, real scalar colpct
+								tbl.n_pct_by(varlst[v], regexm(arguments[1], "^[cC]$"))
+							}
+						} else {	// By row value
+							arguments = length(arguments) == 1 ? arguments, "c" : arguments
+							if ( regexm(strlower(arguments[2]), "^ci$") ) {
+								/*r++*/
+								// string scalar variable, string scalar rowvalue, |real scalar colpct
+								tbl.n_bin_by_value(varlst[v], arguments[1], 1)	// Single value ci only by column
+							} else {
+								// string scalar variable, string scalar rowvalue, real scalar colpct
+								tbl.n_pct_by_value(varlst[v], arguments[1], regexm(arguments[2], "[cC]$"))
+							}
+						}
+					}
+				}
+				r++
 			}
 		}
 		return(tbl)

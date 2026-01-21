@@ -1,60 +1,73 @@
 *! version 1.0.0  20aug2025  I I Bolotov
-program define tmpinv, eclass byable(recall)
+program define clsp, eclass byable(recall)
 	version 16.0
 	/*
-		The Tabular Matrix Problems via Pseudoinverse Estimation (TMPinv) is a  
-		two-stage estimation method that reformulates structured table-based    
-		systems - such as allocation problems, transaction matrices, and        
-		input–output tables - as structured least-squares problems. Based on the
-		Convex Least Squares Programming (CLSP) framework, TMPinv solves systems
-		with row and column constraints, block structure, and optionally reduced
-		dimensionality by (1) constructing a canonical constraint form and      
-		applying a pseudoinverse-based projection, followed by (2) a            
-		convex-programming refinement stage to improve fit, coherence, and      
-		regularization (e.g., via Lasso, Ridge, or Elastic Net).                
+		Convex Least Squares Programming (CLSP) is a modular two-step estimator 
+		for solving underdetermined, ill-posed, or structurally constrained     
+		least-squares problems. It combines pseudoinverse-based estimation with 
+		convex-programming correction methods inspired by Lasso, Ridge, and     
+		Elastic Net to ensure numerical stability, constraint enforcement, and  
+		interpretability. The package also provides numerical stability analysis
+		and CLSP-specific diagnostics, including partial R^2, normalized RMSE   
+		(NRMSE), Monte Carlo t-tests for mean NRMSE, and condition-number-based 
+		confidence bands.                                                       
 
 		Author: Ilya Bolotov, MBA, Ph.D.                                        
 		Date: 20 August 2025                                                    
 	*/
-	tempname vars TMPinv warnings error
+	tempname vars CLSP warnings error
 	// replay last result                                                       
 	if replay() {
 		if _by() {
 			error 190
 		}
-		cap conf mat e(x)
+		cap conf mat e(z)
 		if _rc {
-			di as err "results of tmpinv not found"
+			di as err "results of clsp not found"
 			exit 301
 		}
-		syntax, [REDuced(numlist int max=1 >=-`e(model_n)' <=`e(model_n)')]
-		_update `reduced'							   // switch result
 		_summary									   // print summary
 		exit 0
 	}
 	// syntax                                                                   
 	syntax																	///
 	[anything] [if] [in], [													///
-		REDuced(int -1) BROW(string) BCOL(string) BVAL(string)				///
-		Slackvars(string) MODel(string) i(int 1) j(int 1) ZERODiagonal		///
-		SYMmetric LOWERbound(numlist miss) UPPERbound(numlist miss)			///
-		REPLACEvalue(numlist miss max=1) r(int 1) Z(name) RCOND(real 0)		///
-		TOLerance(real -1) ITERationlimit(int 0) noFINAL					///
+		b(string) Constraints(string) Slackvars(string) MODel(string)		///
+		m(int 0) p(int 0) i(int 1) j(int 1) ZERODiagonal r(int 1) Z(name)	///
+		RCOND(real  0) TOLerance(real -1) ITERationlimit(int 0) noFINAL		///
 		alpha(numlist >=-1 <=1 sort) CVXopt(string asis) MISSingokay *		///
 	]
-	// adjust and preprocess options for Python's TMPinv module                 
-	loc reduced =      cond(  "`reduced'"   != "", "`reduced'", "")
-	loc options              `"`options'    reduced(`reduced')"'
+	// adjust and preprocess options for Python's CLSP module                   
 	if           ustrregexm( `"`anything'"',       "^estat",     1)           {
 		_estat `=ustrregexrf(`"`anything'"',       "^estat", "", 1)', `options'
 		exit 0
 	}
-	else if      ustrregexm( `"`anything'"',       "\d+",        1)           {
-		numlist              `"`anything'"',       int range(>=3) min(2) max(2)
-		loc      rm_list  =  "[" +											///
-							  ustrregexra("`r(numlist)'", "\s+", ", ") + "]"
+	if ("`b'"                                                == "")           {
+		di as err "option b() required"
+		exit 198
 	}
-	else    loc  rm_list  "None"
+	if ("`b'"                                                != "")           {
+			   cap unab varlist :     `b',         max(1)
+		loc rc =   _rc
+		if _rc cap conf mat           `b'
+		else       loc  b             `varlist'
+		if _rc     &  `rc' != 103 {
+			di as err                 "b: `b'"
+			di as err                 "invalid varname or matrix"
+			exit cond(`rc' == 103, 103, 198)
+		}
+		else       if `rc' == 103 error 103
+	}
+	if ("`constraints'"                                      != "")           {
+			   cap unab varlist :     `constraints'
+		if _rc cap conf mat           `constraints'
+		else       loc  constraints   `varlist'
+		if _rc                                                                {
+			di as err                 "constraints: `constraints'"
+			di as err                 "invalid varlist or matrix"
+			exit 198
+		}
+	}
 	if ("`slackvars'"                                        != "")           {
 			   cap unab varlist :     `slackvars'
 		if _rc cap conf mat           `slackvars'
@@ -75,64 +88,10 @@ program define tmpinv, eclass byable(recall)
 			exit 198
 		}
 	}
-	if ("`brow'" == ""            &  "`bcol'"                == "")           {
-		di as err "options brow() and bcol() required"
+	if (`m' <  0 | `p' <  0 | `i' <  0 | `j' <  0)                            {
+		di as err "m(), p(), i(), and j() must be non-negative"
 		exit 198
 	}
-	if ("`brow'"                                             != "")           {
-			   cap unab varlist :     `brow',      max(1)
-		loc rc =   _rc
-		if _rc cap conf mat           `brow'
-		else       loc  brow          `varlist'
-		if _rc     &  `rc' != 103 {
-			di as err                 "brow: `brow'"
-			di as err                 "invalid varname or matrix"
-			exit cond(`rc' == 103, 103, 198)
-		}
-		else       if `rc' == 103 error 103
-	}
-	if ("`bcol'"                                             != "")           {
-			   cap unab varlist :     `bcol',      max(1)
-		loc rc =   _rc
-		if _rc cap conf mat           `bcol'
-		else       loc  bcol          `varlist'
-		if _rc     &  `rc' != 103 {
-			di as err                 "bcol: `bcol'"
-			di as err                 "invalid varname or matrix"
-			exit cond(`rc' == 103, 103, 198)
-		}
-		else       if `rc' == 103 error 103
-	}
-	if ("`bval'"                                             != "")           {
-			   cap unab varlist :     `bval',      max(1)
-		loc rc =   _rc
-		if _rc cap conf mat           `bval'
-		else       loc  bval          `varlist'
-		if _rc     &  `rc' != 103 {
-			di as err                 "bval: `bval'"
-			di as err                 "invalid varname or matrix"
-			exit cond(`rc' == 103, 103, 198)
-		}
-		else       if `rc' == 103 error 103
-	}
-	if (`i' <  0            | `j'            <  0)                            {
-		di as err "i() and j() must be non-negative"
-		exit 198
-	}
-	if ("`lowerbound'"                                       != "")           {
-		numlist " `lowerbound'", miss
-		loc        lowerbound =  "[" +										///
-								 ustrregexra(ustrregexra("`r(numlist)'",    ///
-								 "[.][a-z]*(\s|$)","None$1"),"\s+",", ") + "]"
-	}
-	else    loc    lowerbound    "[None]"
-	if ("`upperbound'"                                       != "")           {
-		numlist " `upperbound'", miss
-		loc        upperbound =  "[" +										///
-								 ustrregexra(ustrregexra("`r(numlist)'",    ///
-								 "[.][a-z]*(\s|$)","None$1"),"\s+",", ") + "]"
-	}
-	else    loc    upperbound    "[None]"
 	if (`r' <  0 | `iterationlimit'          <  0)                            {
 		di as err "r() and iterationlimit() must be at least 1"
 		exit 198
@@ -164,7 +123,19 @@ program define tmpinv, eclass byable(recall)
 			loc alpha =      "[" + ustrregexra("`alpha'", "\s+", ", ") + "]"
 	}
 	else    loc alpha     "None"
+	loc   problem "'general'"
+	mata: if (ustrregexm(`"`anything'"',                       "ap|tm", 1)) ///
+		  st_local("problem",                                 "'ap'"      );;
+	mata: if (ustrregexm(`"`anything'"',                     "cmls|rp", 1)) ///
+		  st_local("problem",                               "'cmls'"      );;
 	loc   _a       ", selectvar='`touse'', missingval=nan), dtype=float64"
+	loc   C_array  "None"
+	if  "`constraints'"  != ""                                                {
+		mata: if (! hasmissing( _st_varindex(tokens("`constraints'"    )))) ///
+			  st_local("C_array", "_(array(Data.get('`constraints''`_a'))");;
+		mata: if (J(0,0,.)        !=      st_matrix("`constraints'"      )) ///
+			  st_local("C_array", "array(Matrix.get('`constraints''    ))");;
+	}
 	loc   S_array  "None"
 	if  "`slackvars'"    != ""                                                {
 		mata: if (! hasmissing( _st_varindex(tokens("`slackvars'"      )))) ///
@@ -179,44 +150,28 @@ program define tmpinv, eclass byable(recall)
 		mata: if (J(0,0,.)        !=      st_matrix("`model'"            )) ///
 			  st_local("M_array", "array(Matrix.get('`model''          ))");;
 	}
-	loc   b_array1 "None"
-	if  "`brow'"         != ""                                                {
-		mata: if (! hasmissing( _st_varindex(tokens("`brow'"           )))) ///
-			  st_local("b_array1","_(array(Data.get('`brow''       `_a'))");;
-		mata: if (J(0,0,.)        !=      st_matrix("`brow'"             )) ///
-			  st_local("b_array1","array(Matrix.get('`brow''           ))");;
+	loc   b_array  "None"
+	if  "`b'"            != ""                                                {
+		mata: if (! hasmissing( _st_varindex(tokens("`b'"              )))) ///
+			  st_local("b_array", "_(array(Data.get('`b''          `_a'))");;
+		mata: if (J(0,0,.)        !=      st_matrix("`b'"                )) ///
+			  st_local("b_array", "array(Matrix.get('`b''              ))");;
 	}
-	loc   b_array2 "None"
-	if  "`bcol'"         != ""                                                {
-		mata: if (! hasmissing( _st_varindex(tokens("`bcol'"           )))) ///
-			  st_local("b_array2","_(array(Data.get('`bcol''       `_a'))");;
-		mata: if (J(0,0,.)        !=      st_matrix("`bcol'"             )) ///
-			  st_local("b_array2","array(Matrix.get('`bcol''           ))");;
-	}
-	loc   b_array3 "None"
-	if  "`bval'"         != ""                                                {
-		mata: if (! hasmissing( _st_varindex(tokens("`bval'"           )))) ///
-			  st_local("b_array3","_(array(Data.get('`bval''       `_a'))");;
-		mata: if (J(0,0,.)        !=      st_matrix("`bval'"             )) ///
-			  st_local("b_array3","array(Matrix.get('`bval''           ))");;
-	}
+	loc   m              =cond( `m',                "`m'",            "None")
+	loc   p              =cond( `p',                "`p'",            "None")
 	loc   i              =cond( `i',                 `i',                  1)
 	loc   j              =cond( `j',                 `j',                  1)
 	loc   zerodiagonal   =cond("`zerodiagonal'"!= "",        "True", "False")
-	loc   symmetric      =cond("`symmetric'"   != "",        "True", "False")
-	loc   replacevalue   =cond("`replacevalue'"!= "","`replacevalue'","None")
 	loc   r              =cond( `r',                 `r',                  1)
 	loc   Z_array  "None"
 	if  "`z'"            != ""                                                {
-		mata: if (! hasmissing( _st_varindex(tokens("`z'"              )))) ///
-			  st_local("Z_array", "_(array(Data.get('`z''          `_a'))");;
 		mata: if (J(0,0,.)          !=    st_matrix("`z'"                )) ///
 			  st_local("Z_array", "array(Matrix.get('`z''              ))");;
 	}
 	loc   rcond          =cond( `rcond'        >   0,     "`rcond'",		///
 						  cond( `rcond'        <   0,        "True", "False"))
-	loc   tolerance      =cond( `tolerance'    >=  0, "`tolerance'",      "")
-	loc   iterationlimit =cond( `iterationlimit',"`iterationlimit'",      "")
+	loc   tolerance      =cond( `tolerance'    >=  0, "`tolerance'",  "None")
+	loc   iterationlimit =cond( `iterationlimit',"`iterationlimit'",  "None")
 	loc   final          =cond("`final'"       == "",        "True", "False")
 	if `"`cvxopt'"'      != ""												///
 	loc   cvxopt         =", " + ustrregexrf(`"`cvxopt'"',  "^\s*,",      "")
@@ -228,64 +183,71 @@ program define tmpinv, eclass byable(recall)
 	}
 	tempvar              touse
 	mark                `touse'  `if' `in'
-	if ("`missingokay'"  == ""                                 )			///
+	if ("`missingokay'"  == "")												///
 	markout             `touse'  `=   `vars''
-	if ("`b_array1'" == "None"  &        "`b_array2'" == "None")               {
-		di as err "RHS error: brow() and bcol() are misspecified"
+	if ("`b_array'"  == "None")                                               {
+		di as err "RHS error: b() is misspecified"
 		error 7102
 	}
-	python: `TMPinv', `warnings', `error' = _(None, False,                  ///
-	                                           fun=tmpinv,                  ///
-	                                      **dict(S=`S_array',               ///
-	                                             M=`M_array',               ///
-	                                         b_row=`b_array1',              ///
-	                                         b_col=`b_array2',              ///
-	                                         b_val=`b_array3',              ///
-	                                             i=`i',                     ///
-	                                             j=`j',                     ///
-	                                 zero_diagonal=`zerodiagonal',          ///
-	                                       reduced=`rm_list',               ///
-	                                     symmetric=`symmetric',             ///
-	                                        bounds=_b(`lowerbound',         ///
-	                                                  `upperbound'),        ///
-	                                 replace_value=`replacevalue',          ///
-	                                             r=`r',                     ///
-	                                             Z=`Z_array',               ///
-	                                         rcond=`rcond',                 ///
-	`=cond("`tolerance'"     !="",      "tolerance=`tolerance',",     "")'  ///
-	`=cond("`iterationlimit'"!="","iteration_limit=`iterationlimit',","")'  ///
-	                                         final=`final',                 ///
-	                                         alpha=`alpha'    `cvxopt'    ))
-	python:           `warnings' = [SFIToolkit.displayln('{txt}note: '+k  ) ///
-	                                for k in dict.fromkeys(str(w.message  ) ///
-	                                for w in `warnings'                   )]
-	python:                         Macro.setLocal("`error'", `error'     )
+	if ("`C_array'"  == "None"  &        "`M_array'"  == "None"  &			///
+		"`m'"        == "None"  &        "`p'"        == "None")              {
+		di as err "LHS error: all of constraints(), model(), m(), and p() " ///
+							 "are misspecified"
+		error 7102
+	}
+	python: `CLSP', `warnings', `error' = _(None, False,                    ///
+	                                         fun=CLSP().solve,              ///
+	                              **dict(problem=`problem',                 ///
+	                                           C=`C_array',                 ///
+	                                           S=`S_array',                 ///
+	                                           M=`M_array',                 ///
+	                                           b=`b_array',                 ///
+	                                           m=`m',                       ///
+	                                           p=`p',                       ///
+	                                           i=`i',                       ///
+	                                           j=`j',                       ///
+	                               zero_diagonal=`zerodiagonal',            ///
+	                                           r=`r',                       ///
+	                                           Z=`Z_array',                 ///
+	                                       rcond=`rcond',                   ///
+	                                   tolerance=`tolerance',               ///
+	                             iteration_limit=`iterationlimit',          ///
+	                                       final=`final',                   ///
+	                                       alpha=`alpha'    `cvxopt'      ))
+	python:         `warnings' = [SFIToolkit.displayln('{txt}note: '+k    ) ///
+	                              for k in dict.fromkeys(str(w.message    ) ///
+	                              for w in `warnings'                     )]
+	python:                       Macro.setLocal("`error'", `error'       )
 	if "``error''"  != ""                                                     {
 		di as err   "``error''"
 		exit 7102
 	}
-	python:  del      `warnings', `error'
-	mata:    st_eclear()                               // store results
+	mata: st_eclear()                                  // store results
 	eret post,         esample(`touse')
 	qui  count   if    e(sample)
 	eret sca N      =  r(N)
-	loc      code                                         "`TMPinv'.full "
-	_store   full,     py(`code', True ) r(e) t(macro )
-	python:            Macro.setGlobal(   "s(tmpinv)",    "`TMPinv'.model"    )
-	if "`e(full)'"  == "True"												///
-			 python:   Macro.setGlobal(   "s(clsp)",      "`TMPinv'.model"    )
-	else     python:   Macro.setGlobal(   "e(reduced)",b64encode(compress(  ///
-	                                   dumps(           _s(`TMPinv'.model), ///
-	                                   protocol=HIGHEST_PROTOCOL),9)).decode())
-	loc      code   =  cond("`e(full)'" == "True","1","len(`TMPinv'.model)"   )
-	_store   model_n,  py(`code', True ) r(e) t(macro )
-	loc      code                                         "`TMPinv'.x"
-	_store   X,        py(`code'       ) r(e) t(matrix)
-	eret loc cmdline   tmpinv  `0'
-	eret loc cmd       tmpinv
-	eret loc estat_cmd tmpinv estat
-	eret loc title     TMPinv estimation
-	_update `reduced'								   // switch result
+	foreach  s   in    iteration_limit r tolerance alpha kappaC kappaB		///
+					   kappaA r2_partial nrmse nrmse_partial                  {
+		loc  code             "`CLSP'.`s'"
+		_store  `s',   py(`code'       ) r(e) t(scalar)
+	}
+	eret loc cmdline   clsp  `0'
+	eret loc cmd       clsp
+	eret loc estat_cmd clsp estat
+	eret loc title     CLSP estimation
+	foreach  s   in    final seed distribution                                {
+		loc  code   =  cond(! inlist("`s'", "distribution"      ),			///
+							  "`CLSP'.`s'",									///
+							  "`CLSP'.`s'.__code__.co_names[-1]")
+		_store  `s',   py(`code', True ) r(e) t(macro )
+	}
+	foreach  s   in    A C_idx b Z zhat z x y z_lower z_upper x_lower		///
+											  x_upper y_lower y_upper         {
+		loc  code             "`CLSP'.`s'"
+		_store  `s',   py(`code'       ) r(e) t(matrix)
+	}
+	python:  del   `warnings', `error'
+	mata: st_global("s(clsp)","`CLSP'" )
 	_summary, noread								   // store summary
 end
 
@@ -294,13 +256,12 @@ program define _estat, eclass
 	// assert last result                                                       
 	cap conf mat e(z)
 	if _rc {
-		di as err "results of tmpinv not found"
+		di as err "results of clsp not found"
 		exit 301
 	}
 	// syntax                                                                   
 	syntax																	///
 	[anything], [															///
-		REDuced(int -1)														///
 		RESET THRESHold(real 0) BAR HBAR MATrix(name) NCOLs(int 1)			///
 		SAMPLEsize(int 50) SEED(int 0) DISTribution(string) PARTial			///
 		SIMulate Level(cilevel)												///
@@ -327,8 +288,7 @@ program define _estat, eclass
 	loc   simulate       =cond("`simulate'"    != "",        "True", "False")
 	// compute the structural correlogram of the CLSP constraint system         
 	if  ustrregexm( `"`anything'"',                "^corr",      1)           {
-		_update  `reduced'							   // switch result
-		if     ("`e(full)'"                 ==     "True"         )  _read
+		_read
 		python:  `tmp', `warnings', `error' = _(None, False,                ///
 		                                         fun=`s(clsp)'.corr,        ///
 		                                **dict(reset=`reset',               ///
@@ -351,8 +311,8 @@ program define _estat, eclass
 			loc  code      "  `CLSP'.`s'"
 			_store  `s',   py(`code'       ) r(e) t(matrix)
 		}
-		python:  del    `warnings', `error'
-		mata: st_global("s(clsp)", "`CLSP'")
+		python:  del   `warnings', `error'
+		mata: st_global("s(clsp)","`CLSP'" )
 		_summary, noread							   // store summary
 		if "`bar'"      != ""  |											///
 		   "`hbar'"     != ""                                                 {
@@ -365,8 +325,8 @@ program define _estat, eclass
 			loc j    = 1							   // plot result
 			frame   `f':   foreach var of varl               `matrix'*        {
 				graph `b' `var', over(constraint) title("`var'")			///
-								 name(_tmpinv`j', replace) nodraw
-				loc  g "`g' _tmpinv`j'"
+								 name(_clsp`j', replace) nodraw
+				loc  g "`g' _clsp`j'"
 				loc  ++j
 			}
 			graph combine   `g', cols(`ncols'   )							///
@@ -379,8 +339,7 @@ program define _estat, eclass
 	// perform bootstrap or Monte Carlo t-tests on the NRMSE statistic from the 
 	// CLSP estimator                                                           
 	if  ustrregexm( `"`anything'"',                "^ttest",     1)           {
-		_update  `reduced'							   // switch result
-		if     ("`e(full)'"                 ==     "True"         )  _read
+		_read
 		python:  `tmp', `warnings', `error' = _(None, False,                ///
 		                                         fun=`s(clsp)'.ttest,       ///
 		                                **dict(reset=`reset',               ///
@@ -412,8 +371,8 @@ program define _estat, eclass
 		frame   `f':   ren            nrmse_ttest*    nrmse_ttest
 		frame   `f':   qui sum
 		loc t   `r(N)' `r(mean)' `r(sd)' `e(nrmse)'
-		python:  del    `warnings', `error'
-		mata: st_global("s(clsp)", "`CLSP'")
+		python:  del   `warnings', `error'
+		mata: st_global("s(clsp)","`CLSP'" )
 		_summary, noread							   // store summary
 		ttesti  `t', l(`level')						   // print ttest
 		exit 0
@@ -454,8 +413,7 @@ program define _read, sclass
 		else																///
 		cap python: `tmp'.`s'  =     array(Matrix.get('e(`s')'), dtype=float64)
 	}
-	cap sret loc tmpinv   `tmp'						   // store object
-	cap sret loc clsp     `tmp'
+	cap sret loc clsp   `tmp'						   // store object
 end
 
 program define _reorder, eclass
@@ -466,34 +424,35 @@ program define _reorder, eclass
 	foreach  s   in    N iteration_limit r tolerance alpha kappaC kappaB	///
 					   kappaA rmsa r2_partial nrmse nrmse_partial             {
 		mata:          st_numscalar("e(`s')",      st_numscalar("e(`s')"),  ///
-									anyof(("iteration_limit"),    "`s'" )   ///
+									anyof(("iteration_limit"    ),"`s'" )   ///
 									?      "hidden" :"visible"          )
 	}
-	foreach  s   in    distribution seed final model_n model_i reduced		///
-					   full title estat_cmd cmd cmdline                       {
+	foreach  s   in    distribution seed final title estat_cmd cmd cmdline    {
 		mata:             st_global("e(`s')",         st_global("e(`s')"),  ///
-									anyof(("full", "reduced"),    "`s'" )   ///
+									anyof(("N/A"                ),"`s'" )   ///
 									?      "hidden" :"visible"          )
 	}
 	foreach  s   in    y_upper y_lower x_upper x_lower z_upper z_lower		///
 					   nrmse_ttest rmsa_dx rmsa_dz rmsa_dzhat rmsa_dnrmse	///
 					   rmsa_dkappaA rmsa_dkappaB rmsa_dkappaC rmsa_i y x z	///
-					   zhat X Z rhs C_idx A                                   {
+					   zhat Z rhs C_idx A                                     {
 		mata:             st_matrix("e(`s')",         st_matrix("e(`s')"),  ///
 									anyof(("Z","rhs","C_idx","A"),"`s'" ) | ///
 									ustrregexm("`s'","(rmsa|ttest)",   1)   ///
 									?      "hidden" :"visible"          )
 		cap conf mat e(`s')
-		if      _rc                                                       |	///
-				inlist(  "`s'",            "X","x","x_lower","x_upper"  )	///
-		continue       /* skip if non-vector                                 */
+		if      _rc                   continue
+		if      inlist(  "`s'",            "x","x_lower","x_upper"      )	///
+		mata:   st_local( "x" ,     cols(st_matrix("e(`s')")) ==  1         ///
+			                               ?      `","`s'""'      :  "" )
+		if               "`x'" == ""  continue   /* skip if non-vector       */
 		mata:   tmp =           st_matrixrowstripe("e(`s')"             )
 			 if inlist(  "`s'", "A","rhs"                               )	///
 		mata:   tmp[.,          1] =             J( rows(tmp),    1, "M");  ///
 			    tmp[1..`rows',  1] =             J(`rows',        1, "C");
 		else if inlist(  "`s'", "C_idx"                                 )	///
 		mata:   tmp =                             ("",               "C");
-		else if inlist(  "`s'", "Z","zhat","z","z_lower","z_upper"      )	///
+		else if inlist(  "`s'", "Z","zhat","z","z_lower","z_upper"   `x')	///
 		mata:   tmp[.,          1] =             J( rows(tmp),    1, "S");  ///
 			    tmp[1..`cols',  1] =             J(`cols',        1, "C");
 		else if inlist(  "`s'", "y","y_lower","y_upper"                 )	///
@@ -585,17 +544,11 @@ program define _summary, sclass
 		loc  code      "`tmp'['`s'']"
 		cap _store `s', py(`code'       ) r(r) t(matrix)
 	}
-	foreach  v   in           `s(tmpinv)' `s(clsp)' `tmp' `warnings' `error'  {
+	foreach  v   in           `s(clsp)' `tmp' `warnings' `error'              {
 		cap  python:    del   `v'
 	}
-	cap sret loc tmpinv  ""
-	cap sret loc clsp    ""
+	cap sret loc clsp  ""
 	_reorder
-	if ("`e(full)'" != "True")												///
-	di as  res  _n                                               "Reduced "	///
-	   ustrregexrf(strproper("`e(title)'"), "tm\w+", "TMPinv", 1) " Model:"	///
-	   as  txt  _n  %-20s                                     "  Position:"	///
-	   as  res      %18s                    " `e(model_i)' of `e(model_n)'"
 	loc p  "partial"
 	di as  res  _n "Estimator Configuration:"		   // print results
 	mata:  display(_sprint("Generalized inverse",  st_global("r(inverse)"  )))
@@ -626,55 +579,6 @@ program define _summary, sclass
 	if ! _rc																///
 	foreach s in   z_lower z_upper x_lower x_upper y_lower y_upper            {
 		mata: display(_sprint("`s'",               st_matrix("r(`s')"      )))
-	}
-end
-
-program define _update, eclass
-	version 16.0
-	args reduced
-	tempname tmp
-	if ("`e(full)'" != "True"                                        )        {
-		if (                               "`s(tmpinv)'" == "") {
-			python:              `tmp'= _l(loads(decompress(b64decode(      ///
-			                               Macro.getGlobal("e(reduced)"   )))))
-			python:                        Macro.setGlobal("s(tmpinv)","`tmp'")
-		}
-		if ("`reduced'" != "" & "`reduced'" != "`e(model_i)'" ) {
-			if               abs(`reduced') >   `e(model_n)'  {
-				di as err  "list index out of range"
-				exit 7102
-			}
-			mata:  st_global("e(model_i)",   strofreal(  `reduced' < 0    ? ///
-				                            `e(model_n)'+`reduced' + 1    : ///
-				                                         `reduced'           ))
-		}
-		mata:      st_global("s(clsp)",    "`s(tmpinv)'[`e(model_i)'-1]"      )
-		if ("`e(distribution)'"             != ""             ) {
-			loc      s         "rng"
-			python: `s(clsp)'.`s'= random.default_rng(   `s(clsp)'.seed       )
-			loc      s         "distribution"
-			python: `s(clsp)'.`s'= lambda n:`s(clsp)'.rng.`e(`s')'(size=(n, 1))
-		}
-	}
-	if ("`e(full)'" == "True" &            "`e(final)'"  != "") exit 0
-	foreach  s   in    iteration_limit r tolerance alpha kappaC kappaB		///
-					   kappaA r2_partial nrmse nrmse_partial                  {
-		loc  code             "`s(clsp)'.`s'"
-		_store  `s',   py(`code'       ) r(e) t(scalar)
-	}
-	mata:          st_global("e(cmdline)", ustrregexrf(                     ///
-		           st_global("e(cmdline)"),"(res[ult]*)[(][^)]+[)]",        ///
-		                                   "$1(`e(normal_i)')"    ))
-	foreach  s   in    final seed distribution                                {
-		loc  code   =  cond( !   inlist("`s'", "distribution"      ),		///
-							  "`s(clsp)'.`s'",								///
-							  "`s(clsp)'.`s'.__code__.co_names[-1]")
-		_store  `s',   py(`code', True ) r(e) t(macro )
-	}
-	foreach  s   in    A C_idx b Z zhat z x y z_lower z_upper x_lower		///
-											  x_upper y_lower y_upper         {
-		loc  code             "`s(clsp)'.`s'"
-		_store  `s',   py(`code'       ) r(e) t(matrix)
 	}
 end
 
@@ -728,16 +632,11 @@ python:
 from sfi import  Data, Macro, Matrix, Scalar, SFIToolkit
 # Python Modules
 from   warnings  import catch_warnings, simplefilter
-from   itertools import zip_longest
-from   pickle    import dumps,   loads, HIGHEST_PROTOCOL
-from   base64    import b64encode,      b64decode
-from   bz2       import compress,       decompress
 try:
-    from  numpy  import nan, array, ndarray, float64, random
-    from  clsp   import CLSP
-    from  tmpinv import tmpinv
+    from   numpy import nan, array, ndarray, float64, random
+    from   clsp  import CLSP
 except:
-    SFIToolkit.errprint('pytmpinv not found; install from PyPI')
+    SFIToolkit.errprint('pyclsp not found; install from PyPI')
     SFIToolkit.error(7102)
 
 def _(x, flag=False, fun=None, **kwargs):              # preprocess output
@@ -762,33 +661,4 @@ def _(x, flag=False, fun=None, **kwargs):              # preprocess output
             except Exception as e:
                 error  = str(   e)
         return  result, warnings, error
-
-def _b(l, u):                                          # preprocess bounds
-    bounds         =  [(a,b) for a,b in zip_longest(l, u, fillvalue=None)]
-    if bounds      == [(None, None)]:
-        return None
-    if len(bounds) == 1:
-        return bounds[0]
-    else:
-        return bounds
-
-def _s(m):                                             # clear for storing
-    result  = []
-    for obj in m:
-        d   = {}
-        for k, v in vars(obj).items():
-            if k in ('rng',) or k.startswith('_') or callable(v):
-                continue
-            d[k] = v
-        result.append(d)
-    return  result
-
-def _l(l):                                             # clear for loading
-    result  = []
-    for d   in l:
-        obj = CLSP()
-        for k, v in d.items():
-            setattr(obj, k, v)
-        result.append(obj)
-    return  result
 end

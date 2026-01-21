@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.31}{...}
+{* *! version 0.32}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Help statsby" "help statsby"}{...}
 {vieweralsosee "Help table" "help table"}{...}

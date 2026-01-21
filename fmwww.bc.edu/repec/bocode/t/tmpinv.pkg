@@ -1,30 +1,28 @@
-d 'TMPINV': module to providing a non-iterated Transaction Matrix (TM)-specific implementation of the LPLS estimator
+d 'TMPINV': module solving Tabular Matrix Problems via Pseudoinverse Estimation (TMPinv) is a modular two-step estimator for solving underdetermined, ill-posed, or structurally constrained allocation problems using least-squares and convex optimization
 d
-d  The program implements a non-iterated Transaction Matrix
-d (TM)-specific LPLS estimator for linear programming with the help
-d of the Moore-Penrose inverse (pseudoinverse), calculated using
-d singular value decomposition (SVD). Estimation using 2x2 to 50x50
-d contiguous submatrices, repeated with compensatory slack
-d variables until NRMSE is minimized in a given number of
-d iterations, is followed by an F-test from linear
-d regression/t-test of mean NRMSE from a pre-simulated distribution
-d (Monte-Carlo,  50,000 iterations with matrices consisting of
-d normal random variates). The result is adjusted for extreme
-d values to match the RHS via shares of estimated row/column sums
-d if the corresponding option is specified.  
+d  The Tabular Matrix Problems via Pseudoinverse Estimation
+d (TMPinv) is a  two-stage estimation method that reformulates
+d structured table-based systems - such as allocation problems,
+d transaction matrices, and input–output tables - as structured
+d least-squares problems. Based on the Convex Least Squares
+d Programming (CLSP) framework, TMPinv solves systems with row and
+d column constraints, block structure, and optionally reduced
+d dimensionality by (1) constructing a canonical constraint form
+d and applying a pseudoinverse-based projection, followed by (2) a
+d convex-programming refinement stage to improve fit, coherence,
+d and regularization (e.g., via Lasso, Ridge, or Elastic Net). 
 d
 d KW: linear programming
 d KW: least squares
 d KW: pseudoinverse
 d KW: singular value decomposition
 d
-d Requires: Stata version 16
+d Requires: Stata version 16 and Python packages pytmpinv, numpy, cvxppy
 d
-d Distribution-Date: 20240221
+d Distribution-Date: 20260120
 d
 d Author: Ilya Bolotov, Prague University of Economics and Business
 d Support: email ilya.bolotov@@vse.cz
 d
 f tmpinv.ado
-F tmpinv.mmat
 f tmpinv.sthlp

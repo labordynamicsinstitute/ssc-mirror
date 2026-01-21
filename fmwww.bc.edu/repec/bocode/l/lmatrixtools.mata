@@ -1,15 +1,18 @@
-*! Part of package matrixtools v. 0.31
+*! Part of package matrixtools v. 0.32
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*!2023-08-04 > nhb_mt_tolabels() modified
-*!2022-12-23 > Bug in nhb_sae_summary_row() for idi
-*!2022-12-29 > nhb_mt_tolabels() added
-*!2022-12-29 > nhb_mt_run_regressions() added
-*!2022-09-01 > nhb_mc_post_ci_table() set to handle t-dist fpr p-value
-*!2022-04-19 > fixed minor bug for caption in cl_mt_mata_string_matrix_styled 
-*!2021-07-06 > nhb_mc_post_ci_table() modified, if and following line in one, base ci set to missing
-*!2021-05-10 > nhb_mt_labelmatrix::append() handles being empty at start
-*!2021-05-10 > nhb_mt_labelmatrix::add_sideways() handles being empty at start
-*!2021-03-01 > function nhb_muf_xlcolumn_nbr() added
+*! 2025-06-25 > nhb_sae_format_p_value() added
+*! 2025-03-04 >	nhb_msa_oswalk is modified
+*2024-03-18 > Error message instead faulty table content when cell blocks are all missing, see lmatrixtools: if ( st_matrix("__lblr") >= . )  - not woriking
+*2023-08-04 > nhb_mt_tolabels() modified
+*2022-12-23 > Bug in nhb_sae_summary_row() for idi
+*2022-12-29 > nhb_mt_tolabels() added
+*2022-12-29 > nhb_mt_run_regressions() added
+*2022-09-01 > nhb_mc_post_ci_table() set to handle t-dist fpr p-value
+*2022-04-19 > fixed minor bug for caption in cl_mt_mata_string_matrix_styled 
+*2021-07-06 > nhb_mc_post_ci_table() modified, if and following line in one, base ci set to missing
+*2021-05-10 > nhb_mt_labelmatrix::append() handles being empty at start
+*2021-05-10 > nhb_mt_labelmatrix::add_sideways() handles being empty at start
+*2021-03-01 > function nhb_muf_xlcolumn_nbr() added
 *2021-02-27 > class nhb_mt_onewai() added
 *2021-11-10 > nhb_sae_str2varlabels() added
 *2021-02-17 > nhb_mt_chi2tabulate::set() making error for string variables
@@ -249,37 +252,37 @@ mata:
 				this.column_names(st_matrixcolstripe(matrixname)[.,2])
 				this.row_equations(st_matrixrowstripe(matrixname)[.,1])
 				this.row_names(st_matrixrowstripe(matrixname)[.,2])
-                if ( all(regexm(this.row_names(), "^r[0-9]+$")) ) {
-                    this.row_names("")
-                    this.row_equations("")
-                }
-                if ( all(regexm(this.column_names(), "^c[0-9]+$")) ) {
-                    this.column_names("")
-                    this.column_equations("")
-                }
+				if ( all(regexm(this.row_names(), "^r[0-9]+$")) ) {
+					this.row_names("")
+					this.row_equations("")
+				}
+				if ( all(regexm(this.column_names(), "^c[0-9]+$")) ) {
+					this.column_names("")
+					this.column_equations("")
+				}
 			}
 		}
 		
 		void nhb_mt_labelmatrix::to_matrix(string scalar matrixname,| real scalar keep_old)
 		{
-        	real scalar R
+			real scalar R
 			string colvector roweq, rownm, coleq, colnm
-            
+			
 			if ( this.values() != J(0,0,.) ) {
 				if ( !keep_old ) st_matrix(matrixname, J(0,0,.))
-                roweq = this.row_equations()
-                rownm = this.row_names()
-                coleq = this.column_equations()
-                colnm = this.column_names()
-                R = rows(roweq)
-                if ( all(roweq :== "") ) roweq = J(R, 1, " ")
-                if ( all(rownm :== "") ) rownm = J(R, 1, " ")
-                R = rows(coleq)
-                if ( all(coleq :== "") ) coleq = J(R, 1, " ")
-                if ( all(colnm :== "") ) colnm = J(R, 1, " ")
-                st_matrix(matrixname, this.values())
-                st_matrixcolstripe(matrixname,  abbrev((coleq, colnm), 32))
-                st_matrixrowstripe(matrixname,  abbrev((roweq, rownm), 32))
+				roweq = this.row_equations()
+				rownm = this.row_names()
+				coleq = this.column_equations()
+				colnm = this.column_names()
+				R = rows(roweq)
+				if ( all(roweq :== "") ) roweq = J(R, 1, " ")
+				if ( all(rownm :== "") ) rownm = J(R, 1, " ")
+				R = rows(coleq)
+				if ( all(coleq :== "") ) coleq = J(R, 1, " ")
+				if ( all(colnm :== "") ) colnm = J(R, 1, " ")
+				st_matrix(matrixname, this.values())
+				st_matrixcolstripe(matrixname,  abbrev((coleq, colnm), 32))
+				st_matrixrowstripe(matrixname,  abbrev((roweq, rownm), 32))
 			}
 		}
 		
@@ -378,7 +381,7 @@ mata:
 				nm = this.row_names()
 				this.values(this.values() \ m.values())
 				this.row_equations(eq \ m.row_equations())
-				this.row_names(nm \ m.row_names())			    
+				this.row_names(nm \ m.row_names())				
 			}
 		}
 
@@ -388,9 +391,9 @@ mata:
 			if ( this.empty() ) {
 				this.values(m.values())
 				this.row_equations(m.row_equations())
-				this.row_names(m.row_names())			    		
+				this.row_names(m.row_names())						
 				this.column_equations(m.column_equations())
-				this.column_names(m.column_names())			    
+				this.column_names(m.column_names())				
 			} else {
 				eq = this.column_equations()
 				nm = this.column_names()
@@ -500,14 +503,14 @@ mata:
 					coleq = "" \ coleq
 					colnm = "" \ colnm
 				}
-                
+				
 				R = rows(coleq)
-                this.hh = 0
-                if ( colnm != J(R, 1, "") ) {
+				this.hh = 0
+				if ( colnm != J(R, 1, "") ) {
 					m = colnm' \ m
 					this.hh = 1
 				} 
-                if ( coleq != J(R, 1, "") ) {
+				if ( coleq != J(R, 1, "") ) {
 					m = coleq' \ m
 					this.hh = 2
 				}
@@ -599,17 +602,18 @@ mata:
 
 			strmiss = any(missing :== (0, .)) ? "" : "missing"
 			showcode = showcode == . ? 0 : showcode
-            if ( !st_isnumvar(var1) ) _error(sprintf("Variable %s must be numeric", var1))
+	  if ( !st_isnumvar(var1) ) _error(sprintf("Variable %s must be numeric", var1))
 			if ( var2 == "" ) {
 				statacode = sprintf("tabulate %s %s %s %s, matcell(__mc) matrow(__lblr) %s", 
 								var1, str_if, str_in, str_weight, strmiss)
 			} else {
-            	if ( !st_isnumvar(var2) ) _error(sprintf("Variable %s must be numeric", var2))
+				if ( !st_isnumvar(var2) ) _error(sprintf("Variable %s must be numeric", var2))
 				exact = ( 0 < exactno & exactno < . ? sprintf("exact(%f)", exactno) : "")
 				statacode = sprintf("tabulate %s %s %s %s %s, %s all matcell(__mc) matrow(__lblr) matcol(__lblc) %s", 
 								var1, var2, str_if, str_in, str_weight, exact, strmiss)
 			}
 			rc = nhb_sae_logstatacode(statacode, showcode, addquietly)
+			//if ( st_matrix("__lblr") >= . ) _error(sprintf("Variable %s has cell blocks with all missing values", var1))
 			this.isset = 0
 			if ( !rc & st_matrix("__mc") != J(0,0,.) ) {
 				this.isset = 1
@@ -1080,162 +1084,162 @@ mata:
 			}
 			return(lm)
 		}
-        
-    class nhb_mt_onewai
-    {
-    	private:
-            real colvector n, m, sd
-            class nhb_mt_labelmatrix scalar anova
-        public:
-            counts(), means(), sds()
-            void nmsmatrix(), do_anova()
-            class nhb_mt_labelmatrix scalar anova(), bartletts(), totalmean(), table(), icc()
-    }
+		
+	class nhb_mt_onewai
+	{
+		private:
+			real colvector n, m, sd
+			class nhb_mt_labelmatrix scalar anova
+		public:
+			counts(), means(), sds()
+			void nmsmatrix(), do_anova()
+			class nhb_mt_labelmatrix scalar anova(), bartletts(), totalmean(), table(), icc()
+	}
 
-        function nhb_mt_onewai::counts(|real rowvector n)
-        {
-        	if ( n == J(1,0,.) ) return(this.n)
-            else {
-            	this.n = n'
-            }
-        }
-    
-        function nhb_mt_onewai::means(|real rowvector m)
-        {
-        	if ( m == J(0,1,.) ) return(this.m)
-            else {
-            	this.m = m'
-            }
-        }
-    
-        function nhb_mt_onewai::sds(|real rowvector sd)
-        {
-        	if ( sd == J(0,1,.) ) return(this.sd)
-            else {
-            	this.sd = sd'
-            }
-        }
-    
-        void nhb_mt_onewai::nmsmatrix(
-            string scalar matrixname, 
-            |real scalar transpose)
-        {
-        	real matrix mat
-            
-            mat = st_matrix(matrixname)
-            if ( mat == J(0,0,.) ) _error("Matrix does not exist")
-            mat =  transpose == 0 | transpose >= . ? mat : mat'
-            if ( cols(mat) != 3 ) _error("Matrix must have 3 columns. Or 3 rows if transpose is set")
-            this.n = mat[.,1]
-            this.m = mat[.,2]
-            this.sd = mat[.,3]
-        }
-    
-        void nhb_mt_onewai::do_anova()
-        {
-        	real scalar R, N, M, F, p
-            real matrix ss
-            
-            R = rows(this.m)             
-        	if ( rows(this.n) != R ) this.n = nhb_mt_resize_matrix(this.n, R, 1)
-        	if ( rows(this.sd) != R ) this.sd = nhb_mt_resize_matrix(this.sd, R, 1)
-            
-            N = sum(this.n)
-            M = sum(this.n :* this.m) / N
-            
-            ss = colsum(this.n:*(this.m :- M) :^2), rows(this.n) - 1 \
-                 sum((this.sd :^ 2) :* (this.n :- 1)), N - rows(this.n) \
-                 sum((this.sd :^ 2) :* (this.n :- 1) :+ this.n :* this.m :^ 2) - N * M^2, N - 1
-            ss = ss, ss[.,1] :/ ss[.,2], J(3,2,.) 
-            F = ss[1,3] / ss[2,3]
-            p = Ftail(ss[1,2], ss[2,2], F)
-            ss[1,4..5] = (F, p)
-            this.anova.values(ss)
-            this.anova.row_names(("Between groups", "Within groups (Error)", "Total")')
-            this.anova.column_names(("SS", "df", "MS", "F", "Prob > F")')
-        }
-        
-        class nhb_mt_labelmatrix scalar nhb_mt_onewai::anova()
-        {
-            return(this.anova)
-        }
+		function nhb_mt_onewai::counts(|real rowvector n)
+		{
+			if ( n == J(1,0,.) ) return(this.n)
+			else {
+				this.n = n'
+			}
+		}
+	
+		function nhb_mt_onewai::means(|real rowvector m)
+		{
+			if ( m == J(0,1,.) ) return(this.m)
+			else {
+				this.m = m'
+			}
+		}
+	
+		function nhb_mt_onewai::sds(|real rowvector sd)
+		{
+			if ( sd == J(0,1,.) ) return(this.sd)
+			else {
+				this.sd = sd'
+			}
+		}
+	
+		void nhb_mt_onewai::nmsmatrix(
+			string scalar matrixname, 
+			|real scalar transpose)
+		{
+			real matrix mat
+			
+			mat = st_matrix(matrixname)
+			if ( mat == J(0,0,.) ) _error("Matrix does not exist")
+			mat =  transpose == 0 | transpose >= . ? mat : mat'
+			if ( cols(mat) != 3 ) _error("Matrix must have 3 columns. Or 3 rows if transpose is set")
+			this.n = mat[.,1]
+			this.m = mat[.,2]
+			this.sd = mat[.,3]
+		}
+	
+		void nhb_mt_onewai::do_anova()
+		{
+			real scalar R, N, M, F, p
+			real matrix ss
+			
+			R = rows(this.m)			 
+			if ( rows(this.n) != R ) this.n = nhb_mt_resize_matrix(this.n, R, 1)
+			if ( rows(this.sd) != R ) this.sd = nhb_mt_resize_matrix(this.sd, R, 1)
+			
+			N = sum(this.n)
+			M = sum(this.n :* this.m) / N
+			
+			ss = colsum(this.n:*(this.m :- M) :^2), rows(this.n) - 1 \
+				 sum((this.sd :^ 2) :* (this.n :- 1)), N - rows(this.n) \
+				 sum((this.sd :^ 2) :* (this.n :- 1) :+ this.n :* this.m :^ 2) - N * M^2, N - 1
+			ss = ss, ss[.,1] :/ ss[.,2], J(3,2,.) 
+			F = ss[1,3] / ss[2,3]
+			p = Ftail(ss[1,2], ss[2,2], F)
+			ss[1,4..5] = (F, p)
+			this.anova.values(ss)
+			this.anova.row_names(("Between groups", "Within groups (Error)", "Total")')
+			this.anova.column_names(("SS", "df", "MS", "F", "Prob > F")')
+		}
+		
+		class nhb_mt_labelmatrix scalar nhb_mt_onewai::anova()
+		{
+			return(this.anova)
+		}
 
-        class nhb_mt_labelmatrix scalar nhb_mt_onewai::bartletts()
-        {
-        	class nhb_mt_labelmatrix scalar lm
-            real scalar N, k, sp2, p
-            
-            N = sum(this.n)
-            k = rows(this.n)
-            sp2 = (this.n :- 1)' * this.sd :^ 2 / (N - k)
-            chi2 = ((N - k) * ln(sp2) - 2 :* (this.n :- 1)' * ln(this.sd)) / 
-                    (1 + (sum(1 :/ (this.n :- 1)) - 1 / (N-k)) / 3 / (k - 1))
-            p = chi2tail(k-1, chi2)
-            lm.values((chi2, k-1, p))
-            lm.row_names(("Bartlett's test"))
-            lm.column_names(("Chi2", "df", "Prob > chi2")')
-            return(lm)            
-        }
-        
-        class nhb_mt_labelmatrix scalar nhb_mt_onewai::totalmean()
-        {
-        	class nhb_mt_labelmatrix scalar lm
-            real scalar N, M, SD, SE, t
-            
-            N = sum(this.n)
-            M = sum(this.n :* this.m) / N
-            t = invttail(N-1, (100-c("level"))/200)
-            SD = sqrt(this.anova.values()[3,3])
-            SE = SD / sqrt(N)
-            lm.values((N, M, SD, SE, M - t * SE, M + t * SE))
-            lm.row_names(("Total"))
-            lm.column_names(("N", "Mean", "Std Dev", "Std Error", 
-                sprintf("[%2.0f%% Conf",c("level")), "Interval]")')
-        	return(lm)
-        }
-        
-        class nhb_mt_labelmatrix scalar nhb_mt_onewai::table()
-        {
-        	class nhb_mt_labelmatrix scalar lm
-        	real scalar R
-            real colvector t, se
-            
-            R = rows(this.m)
-            t = invttail(this.n:-1, (100-c("level"))/200)
-            se = sd :/ sqrt(n)
-            lm.values((this.n, this.m, this.sd, se, this.m :- t :* se, this.m :+ t :* se))
-            lm.row_names(strofreal(1::R))
-            lm.column_names(("N", "Mean", "Std Dev", "Std Error", 
-                sprintf("[%2.0f%% Conf",c("level")), "Interval]")')
-            lm.append(this.totalmean())
-            return(lm)
-        }
-        
-        class nhb_mt_labelmatrix scalar nhb_mt_onewai::icc()
-        {
-        	class nhb_mt_labelmatrix scalar lm
-        	real scalar k, N, N2, N3, F, g, rho, A, B, C, SD_rho, z, sd_t, sd_e 
-            
-            k = rows(this.n)
-            N = sum(this.n)
-            N2 = sum(this.n :^ 2)
-            N3 = sum(this.n :^ 3)
-            F = this.anova().values()[1,4]
-            g = (N - N2 / N) / (k - 1)
-            rho = F > 1 ? (F - 1) / (F - 1 + g) : 0
-            A = (1 + rho * (g - 1))^2 / (N - k)
-            B = (1 - rho) * (1 + rho * (2 * g - 1)) / (k - 1)
-            C = rho^2 * (N2 - 2 * N3 / N + (N2 / N)^2) / (k - 1)^2
-            sd_rho = (1 - rho) * sqrt(2 * (A + B + C)) / g
-            z = invnormal((100+c("level"))/200)
-            sd_e = sqrt(this.anova().values()[2,3])
-            sd_t = sqrt((this.anova().values()[1,3] - sd_e) / g)
-            lm.values((rho, sd_rho, rho - z * sd_rho, rho + z * sd_rho \ sd_t, ., ., . \  sd_e, ., ., .))
-            lm.row_names( ("ICC", "Treatment std dev", "Error within std dev")')
-            lm.column_names(("Estimate", "Std Error", 
-                sprintf("[%2.0f%% Conf",c("level")), "Interval]")')
-            return(lm)
-        }
+		class nhb_mt_labelmatrix scalar nhb_mt_onewai::bartletts()
+		{
+			class nhb_mt_labelmatrix scalar lm
+			real scalar N, k, sp2, p
+			
+			N = sum(this.n)
+			k = rows(this.n)
+			sp2 = (this.n :- 1)' * this.sd :^ 2 / (N - k)
+			chi2 = ((N - k) * ln(sp2) - 2 :* (this.n :- 1)' * ln(this.sd)) / 
+					(1 + (sum(1 :/ (this.n :- 1)) - 1 / (N-k)) / 3 / (k - 1))
+			p = chi2tail(k-1, chi2)
+			lm.values((chi2, k-1, p))
+			lm.row_names(("Bartlett's test"))
+			lm.column_names(("Chi2", "df", "Prob > chi2")')
+			return(lm)			
+		}
+		
+		class nhb_mt_labelmatrix scalar nhb_mt_onewai::totalmean()
+		{
+			class nhb_mt_labelmatrix scalar lm
+			real scalar N, M, SD, SE, t
+			
+			N = sum(this.n)
+			M = sum(this.n :* this.m) / N
+			t = invttail(N-1, (100-c("level"))/200)
+			SD = sqrt(this.anova.values()[3,3])
+			SE = SD / sqrt(N)
+			lm.values((N, M, SD, SE, M - t * SE, M + t * SE))
+			lm.row_names(("Total"))
+			lm.column_names(("N", "Mean", "Std Dev", "Std Error", 
+				sprintf("[%2.0f%% Conf",c("level")), "Interval]")')
+			return(lm)
+		}
+		
+		class nhb_mt_labelmatrix scalar nhb_mt_onewai::table()
+		{
+			class nhb_mt_labelmatrix scalar lm
+			real scalar R
+			real colvector t, se
+			
+			R = rows(this.m)
+			t = invttail(this.n:-1, (100-c("level"))/200)
+			se = sd :/ sqrt(n)
+			lm.values((this.n, this.m, this.sd, se, this.m :- t :* se, this.m :+ t :* se))
+			lm.row_names(strofreal(1::R))
+			lm.column_names(("N", "Mean", "Std Dev", "Std Error", 
+				sprintf("[%2.0f%% Conf",c("level")), "Interval]")')
+			lm.append(this.totalmean())
+			return(lm)
+		}
+		
+		class nhb_mt_labelmatrix scalar nhb_mt_onewai::icc()
+		{
+			class nhb_mt_labelmatrix scalar lm
+			real scalar k, N, N2, N3, F, g, rho, A, B, C, SD_rho, z, sd_t, sd_e 
+			
+			k = rows(this.n)
+			N = sum(this.n)
+			N2 = sum(this.n :^ 2)
+			N3 = sum(this.n :^ 3)
+			F = this.anova().values()[1,4]
+			g = (N - N2 / N) / (k - 1)
+			rho = F > 1 ? (F - 1) / (F - 1 + g) : 0
+			A = (1 + rho * (g - 1))^2 / (N - k)
+			B = (1 - rho) * (1 + rho * (2 * g - 1)) / (k - 1)
+			C = rho^2 * (N2 - 2 * N3 / N + (N2 / N)^2) / (k - 1)^2
+			sd_rho = (1 - rho) * sqrt(2 * (A + B + C)) / g
+			z = invnormal((100+c("level"))/200)
+			sd_e = sqrt(this.anova().values()[2,3])
+			sd_t = sqrt((this.anova().values()[1,3] - sd_e) / g)
+			lm.values((rho, sd_rho, rho - z * sd_rho, rho + z * sd_rho \ sd_t, ., ., . \  sd_e, ., ., .))
+			lm.row_names( ("ICC", "Treatment std dev", "Error within std dev")')
+			lm.column_names(("Estimate", "Std Error", 
+				sprintf("[%2.0f%% Conf",c("level")), "Interval]")')
+			return(lm)
+		}
 end
 
 
@@ -1245,7 +1249,7 @@ end
 mata:
 	class cl_mt_mata_string_matrix_styled
 	{
-    // properties
+	// properties
 		private:
 			void new(), reset()
 			real scalar headerheight
@@ -1253,24 +1257,24 @@ mata:
 			string scalar caption, style
 			string colvector top, undertop, bottom
 		public:
-      string_matrix()
+	  string_matrix()
 			justify(), headerheight(), style()
 			caption(), top(), undertop(), bottom()
-    // methods
+	// methods
 		private:
 			string colvector matrix_to_colvector()
-      string matrix justified_matrix()
+	  string matrix justified_matrix()
 			string colvector to_smcl_lines(), to_csv_lines(), to_latex_lines(), to_html_lines(), to_md_lines()
 		public:
-      string colvector styled_lines()
+	  string colvector styled_lines()
 			void print()
 	}
 
 		void cl_mt_mata_string_matrix_styled::new()
 		{
 			this.reset()
-      this.style = ""
-      this.string_matrix = J(0, 0, "")
+	  this.style = ""
+	  this.string_matrix = J(0, 0, "")
 		}
 
 		void cl_mt_mata_string_matrix_styled::reset()
@@ -1284,10 +1288,10 @@ mata:
 		}
 		
 		function cl_mt_mata_string_matrix_styled::justify(|string matrix strmat)
-        {
-            if ( strmat == J(0,0,"") ) return(this.justify)
-            else this.justify = strmat
-        }
+		{
+			if ( strmat == J(0,0,"") ) return(this.justify)
+			else this.justify = strmat
+		}
 		
 		function cl_mt_mata_string_matrix_styled::caption(|string scalar caption)
 		{
@@ -1314,11 +1318,11 @@ mata:
 		}
 		
 		function cl_mt_mata_string_matrix_styled::string_matrix(|string matrix strmat)
-        {
-            if ( strmat == J(0,0,"") ) return(this.string_matrix)
-            else this.string_matrix = strmat
-        }
-        
+		{
+			if ( strmat == J(0,0,"") ) return(this.string_matrix)
+			else this.string_matrix = strmat
+		}
+		
 		function cl_mt_mata_string_matrix_styled::headerheight(|real scalar headerheight)
 		{
 			if ( headerheight >= . ) return(this.headerheight)
@@ -1331,16 +1335,16 @@ mata:
 		
 		function cl_mt_mata_string_matrix_styled::style(|string scalar style, real scalar headerheight)
 		{
-        	//When style is set, all other properties are reset
+			//When style is set, all other properties are reset
 			if ( style != "" ) {
-        if ( ! any(style :== ("smcl", "csv", "html", "htm", "latex", "tex", "md")) ) {
-            printf(`"{error:The value of "style" must be one of smcl, csv, html, latex or tex, or md. Not %s}\n"', style)
-            printf(`"{error:"style" is set to smcl}\n"')
-            this.style = "smcl"
-        }
-        this.style = style
-        this.reset()
-        if ( headerheight != . ) this.headerheight(headerheight)
+		if ( ! any(style :== ("smcl", "csv", "html", "htm", "latex", "tex", "md")) ) {
+			printf(`"{error:The value of "style" must be one of smcl, csv, html, latex or tex, or md. Not %s}\n"', style)
+			printf(`"{error:"style" is set to smcl}\n"')
+			this.style = "smcl"
+		}
+		this.style = style
+		this.reset()
+		if ( headerheight != . ) this.headerheight(headerheight)
 			} else return(this.style)
 		}
 		
@@ -1368,49 +1372,49 @@ mata:
 		}
 		
 		string matrix cl_mt_mata_string_matrix_styled::justified_matrix(|real rowvector columnwidth)
-        /* For text-based prints */
+		/* For text-based prints */
 		{
 			real scalar C, R, r, c
 			string matrix fmt, justified, strmat
 			
-      strmat = this.string_matrix()
-      if ( columnwidth == J(1,0,.) ) columnwidth = colmax(strlen(strmat))
-      
-      R = rows(strmat)
-      C = cols(strmat)
-      columnwidth = nhb_mt_resize_matrix(columnwidth, R, C)
-      this.justify = nhb_mt_resize_matrix(justify, R, C)
-      fmt = "%" :+ this.justify :+ strofreal(columnwidth) :+ (stataversion() > 1400 ? "us" : "s")
-      justified = J(R, C, "")
-      for(c=1; c <= C; c++){
-          for(r=1; r <= R; r++){
-              justified[r,c] = sprintf(fmt[r,c], strmat[r,c])
-          }
-      }
-      return(justified)
+	  strmat = this.string_matrix()
+	  if ( columnwidth == J(1,0,.) ) columnwidth = colmax(strlen(strmat))
+	  
+	  R = rows(strmat)
+	  C = cols(strmat)
+	  columnwidth = nhb_mt_resize_matrix(columnwidth, R, C)
+	  this.justify = nhb_mt_resize_matrix(justify, R, C)
+	  fmt = "%" :+ this.justify :+ strofreal(columnwidth) :+ (stataversion() > 1400 ? "us" : "s")
+	  justified = J(R, C, "")
+	  for(c=1; c <= C; c++){
+		  for(r=1; r <= R; r++){
+			  justified[r,c] = sprintf(fmt[r,c], strmat[r,c])
+		  }
+	  }
+	  return(justified)
 		}
 		
 		string colvector cl_mt_mata_string_matrix_styled::to_smcl_lines()
 		{
 			real scalar R, hh
-      string colvector top, undertop, bottom, lines
+	  string colvector top, undertop, bottom, lines
 
-      lines = this.matrix_to_colvector(this.justified_matrix(), "", "  ", "")
+	  lines = this.matrix_to_colvector(this.justified_matrix(), "", "  ", "")
 			if ( this.top() == J(0,1,"") ) top = strlen(lines[1]) * "{c -}"
 			if ( this.caption() != "" ) top = sprintf("{bf:%s}:", this.caption()) \ top
 			if ( this.undertop() == J(0,1,"") ) undertop = strlen(lines[1]) * "{c -}"
 			if ( this.bottom() == J(0,1,"") ) bottom = strlen(lines[1]) * "{c -}"
-      R = rows(lines)
-      hh = this.headerheight()
+	  R = rows(lines)
+	  hh = this.headerheight()
 			if ( undertop != "" & hh ) lines = lines[1..hh] \ undertop \ lines[hh+1..R]
 			if ( top != "" ) lines = top \ lines
 			if ( bottom != "" ) lines = lines \ bottom
-      return(lines)
+	  return(lines)
 		}
 
 		string colvector cl_mt_mata_string_matrix_styled::to_csv_lines(|string scalar separator)
 		{
-      if ( separator == "" ) separator = ";"
+	  if ( separator == "" ) separator = ";"
 			return(this.matrix_to_colvector(this.justified_matrix(), "", separator, ""))
 		}
 
@@ -1418,37 +1422,37 @@ mata:
 		{
 			// http://texblog.net/latex-archive/uncategorized/symbols/
 			// backslash \ and ampersand & not included due to tables
-      //DONE: headerheight
-      //TODO: two blanks indention replaced with \quad 
-      real scalar r, R, hh
+	  //DONE: headerheight
+	  //TODO: two blanks indention replaced with \quad 
+	  real scalar r, R, hh
 			string colvector top, undertop, bottom, lines
 			string matrix justify, special_chars, strmat
-            
-      strmat = this.justified_matrix()
+			
+	  strmat = this.justified_matrix()
 
 			special_chars = "#", "$", "%", "_", "{", "}", "^"
 			special_chars = special_chars', "\" :+ special_chars'
-            
+			
 			lines = this.matrix_to_colvector(strmat, "", " & ", " \\")
-            lines = regexr(lines, "^(  )", "\quad ")
+			lines = regexr(lines, "^(  )", "\quad ")
 			for(r=1;r<=rows(special_chars);r++) {
 				lines = subinstr(lines, special_chars[r,1], special_chars[r,2])
 			}
 
-      if ( this.top() == J(0,1,"") ) {
-          top = "\begin{table}[h]" \ "\centering"
-          if ( this.caption() != "" ) top = top \ sprintf("\caption{%s}", this.caption())
-          justify = nhb_mt_resize_matrix(this.justify(), 1, cols(strmat))
-          justify = editvalue(justify, "", "r")
-          justify = editvalue(justify, "-", "l")
-          justify = editvalue(justify, "~", "c")
-          justify =  this.matrix_to_colvector(justify, "", "", "")
-          top = top \ sprintf("\begin{tabular}{%s}", justify) \ "\hline" \ "\hline" 
-      }
+	  if ( this.top() == J(0,1,"") ) {
+		  top = "\begin{table}[h]" \ "\centering"
+		  if ( this.caption() != "" ) top = top \ sprintf("\caption{%s}", this.caption())
+		  justify = nhb_mt_resize_matrix(this.justify(), 1, cols(strmat))
+		  justify = editvalue(justify, "", "r")
+		  justify = editvalue(justify, "-", "l")
+		  justify = editvalue(justify, "~", "c")
+		  justify =  this.matrix_to_colvector(justify, "", "", "")
+		  top = top \ sprintf("\begin{tabular}{%s}", justify) \ "\hline" \ "\hline" 
+	  }
 			if ( this.undertop() == J(0,1,"") ) undertop = "\hline"
 			if ( this.bottom() == J(0,1,"") ) bottom = "\hline" \ "\hline" \ "\end{tabular}" \ "\end{table}"
-      R = rows(lines)
-      hh = this.headerheight()
+	  R = rows(lines)
+	  hh = this.headerheight()
 			if ( undertop != "" & hh ) lines = lines[1..hh] \ undertop \ lines[hh+1..R]
 			if ( top != "" ) lines = top \ lines
 			if ( bottom != "" ) lines = lines \ bottom
@@ -1457,66 +1461,66 @@ mata:
 
 		string colvector cl_mt_mata_string_matrix_styled::to_html_lines()
 		{
-      //DONE: headerheight
-      real scalar r, c, R, C, hh, adjust
-      string scalar id, htxt
+	  //DONE: headerheight
+	  real scalar r, c, R, C, hh, adjust
+	  string scalar id, htxt
 			string colvector style, top, undertop, bottom, lines
 			string matrix justify, strmat
-            
-      hh = this.headerheight()
-      strmat = this.justified_matrix()
-      R = rows(strmat)
-      C = cols(strmat)
-      justify = nhb_mt_resize_matrix(this.justify(), R, C)
-      
-      id = "tbl" + strofreal(
-              date(c("current_date"), "DMY") * 10e7 
-              + clock(c("current_time"), "hms") 
-              + hash1(strmat) 
-              + hash1(this.caption)
-              , "%18.0f")
-      style = J(R, 1, "")
-      for(r=1;r<=R;r++){
-          if ( r <= hh ) {
-              htxt = "tbody"
-              adjust = 0
-          } else {
-              htxt = "tbody"
-              adjust = hh
-          }
-          for(c=1;c<=C;c++){
-              if ( justify[r,c] == "" ) {
-                  style[r] = style[r] + sprintf(`" #%s %s>tr:nth-child(%f)>td:nth-child(%f){text-align: right;}"',
-                                          id, htxt, r - adjust, c)
-              } else if ( justify[r,c] == "-" ) {
-                  style[r] = style[r] + sprintf(`" #%s %s>tr:nth-child(%f)>td:nth-child(%f){text-align: left;}"', 
-                                          id, htxt, r - adjust, c)
-              } else if ( justify[r,c] == "~" ) {
-                  style[r] = style[r] + sprintf(`" #%s %s>tr:nth-child(%f)>td:nth-child(%f){text-align: center;}"', 
-                                          id, htxt, r - adjust, c)
-              }
-          }
-      }
+			
+	  hh = this.headerheight()
+	  strmat = this.justified_matrix()
+	  R = rows(strmat)
+	  C = cols(strmat)
+	  justify = nhb_mt_resize_matrix(this.justify(), R, C)
+	  
+	  id = "tbl" + strofreal(
+			  date(c("current_date"), "DMY") * 10e7 
+			  + clock(c("current_time"), "hms") 
+			  + hash1(strmat) 
+			  + hash1(this.caption)
+			  , "%18.0f")
+	  style = J(R, 1, "")
+	  for(r=1;r<=R;r++){
+		  if ( r <= hh ) {
+			  htxt = "tbody"
+			  adjust = 0
+		  } else {
+			  htxt = "tbody"
+			  adjust = hh
+		  }
+		  for(c=1;c<=C;c++){
+			  if ( justify[r,c] == "" ) {
+				  style[r] = style[r] + sprintf(`" #%s %s>tr:nth-child(%f)>td:nth-child(%f){text-align: right;}"',
+										  id, htxt, r - adjust, c)
+			  } else if ( justify[r,c] == "-" ) {
+				  style[r] = style[r] + sprintf(`" #%s %s>tr:nth-child(%f)>td:nth-child(%f){text-align: left;}"', 
+										  id, htxt, r - adjust, c)
+			  } else if ( justify[r,c] == "~" ) {
+				  style[r] = style[r] + sprintf(`" #%s %s>tr:nth-child(%f)>td:nth-child(%f){text-align: center;}"', 
+										  id, htxt, r - adjust, c)
+			  }
+		  }
+	  }
 			if ( hh ) style[1..hh] = subinstr(style[1..hh], "td", "th")
-            style = `"<style>"' \
-                        style \
-                        sprintf(`"#%s {width: 95%%; margin-left: auto; margin-right: auto;}"', id) \ 
-                        sprintf(`"#%s tr:last-child>th{border-bottom: 2px solid black;}"', id) \ 
-                        `"</style>"'
-            if ( hh ) { 		
-                if ( this.top() == J(0,1,"") ) top = style \ sprintf(`"<table id=%s width="95%%">"', id) \ `"<thead>"'
-                if ( this.undertop() == J(0,1,"") ) undertop = `"</thead>"' \ `"<tbody>"'
-            } else {
-                if ( this.top() == J(0,1,"") ) top = style \ sprintf(`"<table id=%s width="95%%">"', id)  \ `"<tbody>"'
-            }
+			style = `"<style>"' \
+						style \
+						sprintf(`"#%s {width: 95%%; margin-left: auto; margin-right: auto;}"', id) \ 
+						sprintf(`"#%s tr:last-child>th{border-bottom: 2px solid black;}"', id) \ 
+						`"</style>"'
+			if ( hh ) { 		
+				if ( this.top() == J(0,1,"") ) top = style \ sprintf(`"<table id=%s width="95%%">"', id) \ `"<thead>"'
+				if ( this.undertop() == J(0,1,"") ) undertop = `"</thead>"' \ `"<tbody>"'
+			} else {
+				if ( this.top() == J(0,1,"") ) top = style \ sprintf(`"<table id=%s width="95%%">"', id)  \ `"<tbody>"'
+			}
 			if (this.caption() != "" ) top = top \ sprintf("<caption>%s</caption>", this.caption())
 			if ( this.bottom() == J(0,1,"") ) bottom = `"</tbody>"' \ "</table>" 
 
 			lines = this.matrix_to_colvector(strmat, "<tr><td>", "</td><td>", "</td></tr>")
-      lines = regexr(lines, "<tr><td>  ", "<tr><td>&nbsp;&nbsp; ")
+	  lines = regexr(lines, "<tr><td>  ", "<tr><td>&nbsp;&nbsp; ")
 			if ( hh ) lines[1..hh] = subinstr(lines[1..hh], "td>", "th>")
-      //R = rows(lines)
-      hh = this.headerheight()
+	  //R = rows(lines)
+	  hh = this.headerheight()
 			if ( undertop != "" & hh ) lines = lines[1..hh] \ undertop \ lines[hh+1..R]
 			if ( top != "" ) lines = top \ lines
 			if ( bottom != "" ) lines = lines \ bottom
@@ -1526,74 +1530,74 @@ mata:
 		string colvector cl_mt_mata_string_matrix_styled::to_md_lines()
 		{
 			real scalar r, c, R, C, hh, hh2
-      real rowvector cw
-      string scalar innerline, outerline
-      string rowvector header
+	  real rowvector cw
+	  string scalar innerline, outerline
+	  string rowvector header
 			string colvector lines, top, undertop, bottom, tmp
 			string matrix M, original
 			
-      original = this.string_matrix()
+	  original = this.string_matrix()
 			M = this.string_matrix()
 			R = rows(M)
 			C = cols(M)
 		
 			if ( hh2 = (this.headerheight() == 2) ) {	// Q&D: md do not show/handle coleq
-        header = J(1,C,"")
-        for(c=1;c<=C;c++) {
-            header[c] = M[1,c] != "" ? M[1,c] :+ ": " :+ M[2,c] : M[2,c]
-        }
+		header = J(1,C,"")
+		for(c=1;c<=C;c++) {
+			header[c] = M[1,c] != "" ? M[1,c] :+ ": " :+ M[2,c] : M[2,c]
+		}
 				this.headerheight(1)
 				M = M[2..R, .]
 				R = R - 1
-        M[1,.] = header
+		M[1,.] = header
 			}
-      this.string_matrix(M)
-      M = this.justified_matrix(J(1,0,.))
-      cw = strlen(M[1,.])
+	  this.string_matrix(M)
+	  M = this.justified_matrix(J(1,0,.))
+	  cw = strlen(M[1,.])
 			// Left align strip columns
 			M = nhb_mt_resize_matrix(nhb_sae_str_mult_matrix("  ", this.justify() :== ""), R, C) :+ M
 			M = M :+ nhb_mt_resize_matrix(nhb_sae_str_mult_matrix("  ", this.justify() :== "-"), R, C)
 
 			lines = this.matrix_to_colvector(M, "", 4*" ", "")
 			tmp = lines[1]
-      if ( !this.headerheight() ) tmp = tmp \ "" 
+	  if ( !this.headerheight() ) tmp = tmp \ "" 
 			for(r=2;r<=R;r++) {
 				tmp = tmp \ lines[r] 
 				if ( r < R ) tmp = tmp \ ""
 			}
 
 			lines = tmp
-      innerline = "" \ this.matrix_to_colvector((cw :+ 2) :* "-", "", 4*" ", "")
-      outerline = "" \ strlen(lines[1]) * "-"
+	  innerline = "" \ this.matrix_to_colvector((cw :+ 2) :* "-", "", 4*" ", "")
+	  outerline = "" \ strlen(lines[1]) * "-"
 			if ( this.top() == J(0,1,"") ) {
-          if (this.headerheight() ) top = outerline
-          else top = innerline
-      }
+		  if (this.headerheight() ) top = outerline
+		  else top = innerline
+	  }
 			if ( this.undertop() == J(0,1,"") ) undertop = innerline
 			if ( this.bottom() == J(0,1,"") ) {
-          if (this.headerheight() ) bottom = outerline
-          else bottom = innerline
-      }
+		  if (this.headerheight() ) bottom = outerline
+		  else bottom = innerline
+	  }
 			if ( this.caption() != "" ) bottom = bottom \ sprintf("Table: %s\n", this.caption())
-      R = rows(lines)
-      hh = this.headerheight()
+	  R = rows(lines)
+	  hh = this.headerheight()
 			if ( undertop != "" & hh ) lines = lines[1..hh] \ undertop \ lines[hh+1..R]
 			if ( top != "" ) lines = top \ lines
 			if ( bottom != "" ) lines = lines \ bottom
-      
-      if ( hh2 ) {
-        this.string_matrix(original)
-        this.headerheight(2)        
-      }
+	  
+	  if ( hh2 ) {
+		this.string_matrix(original)
+		this.headerheight(2)		
+	  }
 			return(lines)
 		}
 
 		void cl_mt_mata_string_matrix_styled::print()
 		{
 			real scalar r
-      string scalar lines
+	  string scalar lines
 
-      lines = this.styled_lines()
+	  lines = this.styled_lines()
 			for(r=1;r<=rows(lines);r++){
 				printf("%s\n", lines[r])
 			}
@@ -1615,7 +1619,7 @@ mata:
 			} else if ( this.style() == "md" ) {
 				lines = this.to_md_lines()
 			} else lines = J(0,1,"")
-      return(lines)
+	  return(lines)
 		}
 
 	
@@ -1637,23 +1641,23 @@ mata:
 		return( strofreal(M, fmt) )
 	}
 
-    void nhb_msa_string_colvector_to_file(
-        string scalar filename,
-        string colvector lines,
-        |real scalar overwrite
-        )
-    {
-        real scalar rc, fh, r
-        
-        if ( fileexists(filename) & overwrite ) rc = _unlink(filename)
-        fh = _fopen(filename, fileexists(filename) ? "a" : "w")
-        if ( fh >= 0 ) {
-            for(r=1;r<=rows(lines);r++) fput(fh, lines[r])
-            fclose(fh)
-        } else {
-            printf("{error:fopen error %f}", fh)
-        }
-    }
+	void nhb_msa_string_colvector_to_file(
+		string scalar filename,
+		string colvector lines,
+		|real scalar overwrite
+		)
+	{
+		real scalar rc, fh, r
+		
+		if ( fileexists(filename) & overwrite ) rc = _unlink(filename)
+		fh = _fopen(filename, fileexists(filename) ? "a" : "w")
+		if ( fh >= 0 ) {
+			for(r=1;r<=rows(lines);r++) fput(fh, lines[r])
+			fclose(fh)
+		} else {
+			printf("{error:fopen error %f}", fh)
+		}
+	}
 
 
 	function nhb_mt_resize_matrix(matrix mat, real scalar R, C)
@@ -1675,7 +1679,7 @@ mata:
 		M = M[1..R, 1..C]
 		return(M)
 	}
-    
+	
 	class cl_mt_mata_string_matrix_styled scalar nhb_mt_mata_string_matrix_styled(
 		string matrix M,
 		string scalar style,
@@ -1692,23 +1696,23 @@ mata:
 		class cl_mt_mata_string_matrix_styled scalar sms
 		
 		sms.string_matrix(M)
-    sms.style(style)
-    sms.justify(justify)
+		sms.style(style)
+		sms.justify(justify)
 		sms.headerheight(headerheight == . ? 1 : headerheight)
 		if (caption != `""') sms.caption(caption)
 		if (top != `""') sms.top(strtrim(top) != "" ? tokens(top)' : top)
 		if (undertop != `""') sms.undertop(strtrim(undertop) != "" ? tokens(undertop)' : undertop)
 		if (bottom != `""') sms.bottom(strtrim(bottom) != "" ? tokens(bottom)' : bottom)
-    if ( savefile != `""' ) nhb_msa_string_colvector_to_file(savefile, sms.styled_lines(), overwrite)
-    sms.print()
+		if ( savefile != `""' ) nhb_msa_string_colvector_to_file(savefile, sms.styled_lines(), overwrite)
+		sms.print()
 		return(sms)
 	}
 
-   class nhb_mt_labelmatrix nhb_mt_tolabels(	
-     class nhb_mt_labelmatrix mat_tbl,
-    |real scalar uselbl,
-    real scalar userows
-    )
+	class nhb_mt_labelmatrix nhb_mt_tolabels(	
+		class nhb_mt_labelmatrix mat_tbl,
+		|real scalar uselbl,
+		real scalar userows
+	)
 	{
 		real scalar c, C
 		string scalar varnametxt, varvaluetxt
@@ -1860,7 +1864,7 @@ mata:
 						} else if ( regexm(strtrim(strlower(stats[c])), "^[var|variance]$") ) {
 							values[c] = nhb_sae_num_scalar("r(Var)")
 						} else if ( regexm(strtrim(strlower(stats[c])), "^cv$") ) {
-                            stats[c] = "CV(%)"
+							stats[c] = "CV(%)"
 							values[c] = nhb_sae_num_scalar("r(sd)") / nhb_sae_num_scalar("r(mean)") * 100
 						} else if ( regexm(strtrim(strlower(stats[c])), "^semean$") ) {
 							values[c] = nhb_sae_num_scalar("r(sd)") / sqrt(nhb_sae_num_scalar("r(N)"))
@@ -1882,7 +1886,7 @@ mata:
 							}
 						} else if ( regexm(strtrim(strlower(stats[c])), "^idr$") ) {
 							values[c] = pct_tiles[90] - pct_tiles[10]
-            } else if ( regexm(strtrim(strlower(stats[c])), "^idi$") ) {
+			} else if ( regexm(strtrim(strlower(stats[c])), "^idi$") ) {
 							stats[c] = "idi 10%"
 							values[c] = pct_tiles[10]
 							if ( c == C ) {
@@ -2052,25 +2056,25 @@ mata:
 			string rowvector names, 
 			matrix values, 
 			| real scalar returnnames,
-            string scalar type,
-            real scalar compress)
+			string scalar type,
+			real scalar compress)
 	{
 		real scalar rc, obs
 		real rowvector vars
 		
 		names = strtoname(strtrim(names))
-        if ( (obs=rows(values) - st_nobs()) > 0 ) st_addobs(obs)
+		if ( (obs=rows(values) - st_nobs()) > 0 ) st_addobs(obs)
 		if ( isreal(values) ) {
-        	if ( type == "" ) type = "double"
+			if ( type == "" ) type = "double"
 			rc = _st_addvar(type, names)[1]
 			if ( rc < 0 ) exit(_error(-rc))
 				st_store(1::rows(values), names, values)
 		} else {
 			if ( stataversion() > 1300 ) {
-                if ( type == "" ) type = "strL"
+				if ( type == "" ) type = "strL"
 				rc = _st_addvar(type, names)[1]
 			} else {
-            	if ( type == "" ) type = "str244"
+				if ( type == "" ) type = "str244"
 				rc = _st_addvar(type, names)[1]
 			}
 			if ( rc < 0 ) exit(_error(-rc))
@@ -2235,65 +2239,63 @@ mata:
 	
 	string colvector nhb_sae_isnumvarvector(string colvector varnames)
 	{
-    real scalar r, R
-    real colvector slct
+	real scalar r, R
+	real colvector slct
 
-    R = rows(varnames)
-    slct = J (R,1,.)
-    for(r=1;r<=R;r++) slct[r] = st_isnumvar(varnames[r])
-    return(select(varnames, slct))
+	R = rows(varnames)
+	slct = J (R,1,.)
+	for(r=1;r<=R;r++) slct[r] = st_isnumvar(varnames[r])
+	return(select(varnames, slct))
 	}
-    
+	
   colvector nhb_sae_outliers(
-      /*
-          top outliers sorted descending by value counts (highest first)
-          bottom outliers sorted ascending by value counts (lowest first)
-      */
-      string scalar vn,
-      | real scalar slct,
-      string scalar str_if,
-      string scalar str_in
-      )
+	  /*
+		  top outliers sorted descending by value counts (highest first)
+		  bottom outliers sorted ascending by value counts (lowest first)
+	  */
+	  string scalar vn,
+	  | real scalar slct,
+	  string scalar str_if,
+	  string scalar str_in
+	  )
   {
-      real scalar R
-    real colvector values, uniqvalues
-      
-      if (slct >= . ) slct = 5
-      values = nhb_sae_variable_data(vn, str_if, str_in)
-      uniqvalues = select(uniqvalues=uniqrows(values), uniqvalues :< .)
-      R = rows(uniqvalues)
-      if (abs(slct) < R) {
-        count = rowsum(J(R, 1, values') :== uniqvalues)
-        if (slct > 0 ) return(sort((uniqvalues, count), 2)[R..(R-slct+1), 1])
-        else return(sort((uniqvalues, count), 2)[1..(-slct), 1])
-      } else return(.)
+	  real scalar R
+	real colvector values, uniqvalues
+	  
+	  if (slct >= . ) slct = 5
+	  values = nhb_sae_variable_data(vn, str_if, str_in)
+	  uniqvalues = select(uniqvalues=uniqrows(values), uniqvalues :< .)
+	  R = rows(uniqvalues)
+	  if (abs(slct) < R) {
+		count = rowsum(J(R, 1, values') :== uniqvalues)
+		if (slct > 0 ) return(sort((uniqvalues, count), 2)[R..(R-slct+1), 1])
+		else return(sort((uniqvalues, count), 2)[1..(-slct), 1])
+	  } else return(.)
   }
-    
+	
   string colvector nhb_sae_str2varlabels(string colvector nms, |string scalar out_tmplt)
   {
-    real scalar c, C
-    string scalar varnametxt, varvaluetxt
-    string colvector lbls
+	real scalar c, C
+	string scalar varnametxt, varvaluetxt
+	string colvector lbls
 
-    if ( out_tmplt == "" ) out_tmplt = "%s[%s]"
-    C = rows(nms)
-    lbls = J(C,1,"")
-    for(c=1;c<=C;c++) {
-      if ( regexm(nms[c], "^([0-9]+)b?n?\.(.+)$") ) {
-      if ( _st_varindex(regexs(2)) < . ) {
-        varnametxt = st_varlabel(regexs(2))
-        if ( st_varvaluelabel(regexs(2)) != "" ) {
-          varvaluetxt = nhb_sae_labelsof(regexs(2),strtoreal(regexs(1)))
-        } else varvaluetxt = regexs(2)
-          lbls[c] = sprintf(out_tmplt, varnametxt, varvaluetxt)
-        }
-      } else lbls[c] = _st_varindex(nms[c]) < . ? st_varlabel(nms[c]) : "Not var."
-    }
-    return(lbls)
+	if ( out_tmplt == "" ) out_tmplt = "%s[%s]"
+	C = rows(nms)
+	lbls = J(C,1,"")
+	for(c=1;c<=C;c++) {
+	  if ( regexm(nms[c], "^([0-9]+)b?n?\.(.+)$") ) {
+	  if ( _st_varindex(regexs(2)) < . ) {
+		varnametxt = st_varlabel(regexs(2))
+		if ( st_varvaluelabel(regexs(2)) != "" ) {
+		  varvaluetxt = nhb_sae_labelsof(regexs(2),strtoreal(regexs(1)))
+		} else varvaluetxt = regexs(2)
+		  lbls[c] = sprintf(out_tmplt, varnametxt, varvaluetxt)
+		}
+	  } else lbls[c] = _st_varindex(nms[c]) < . ? st_varlabel(nms[c]) : "Not var."
+	}
+	return(lbls)
   }
 end
-
-
 /*******************************************************************************
 *** mata system api ************************************************************
 *******************************************************************************/
@@ -2331,27 +2333,29 @@ mata:
 		return(vd)
 	}
 
-	function nhb_msa_oswalk(string scalar root, dirfilter, filefilter)
+	string matrix nhb_msa_oswalk(
+		string scalar root,
+		string rowvector filefilters
+	)
 	{
-		real scalar r, R
+		real scalar r, R, f, F
 		string colvector files, dirs
 		string matrix osw
 		
+		root = subinstr(root, "\", "/")
+		root = subinstr(root, "//", "/")
 		osw = J(0,2,"")
-		dirs = dir(root, "dirs", dirfilter)
+		dirs = dir(root, "dirs", "")
 		R = rows(dirs)
-		if ( R > 0 ) {
-			for(r=1;r<=R;r++) {
-				osw = osw \ nhb_msa_oswalk(	sprintf(`"%s/%s"', root, dirs[r]), 
-									dirfilter, 
-									filefilter)
-			}
+		for(r=1;r<=R;r++) {
+			osw = osw \ nhb_msa_oswalk(	sprintf(`"%s/%s"', root, dirs[r]), 
+								filefilters)
 		}
-		files = dir(root, "files", filefilter)
-		if ( rows(files) > 0 ) osw = osw \ (J(rows(files), 1, root), files)
-		for(r=1;r<=rows(osw);r++) {
-			osw[r,1] = subinstr(osw[r,1], "\", "/")
-			osw[r,1] = subinstr(osw[r,1], "//", "/")
+		F = cols(filefilters)
+		for(f=1;f<=F;f++) {
+			files = dir(root, "files", filefilters[f])
+			R = rows(files)
+			if ( R > 0 ) osw = osw \ (J(R, 1, root), files)		
 		}
 		return(osw)
 	}
@@ -2380,9 +2384,48 @@ mata:
 		st_local("0", tmp0)
 		return(out)
 	}
+	
+	string rowvector nhb_sae_format_p_value(
+		real rowvector pv,
+		|string scalar fmt,
+		real scalar nd
+	)
+	{
+		real scalar c, C
+		string scalar fmt2
+		string rowvector fpv
+		
+		if ( missing(nd) ) nd = 2
+		if ( fmt != "" & fmt != "*" ) fpv = strofreal(pv, fmt)
+		else {
+			C = cols(pv)
+			fpv = J(1, C, "")
+			for(c=1; c <= C; c++){
+				if ( missing(pv[c]) | round(pv[c], 1e-6) < 0 | round(pv[c], 1e-6) > 1 ) continue
+				else if ( pv[c] > 10^-(nd-1) ) {
+					fmt2 = sprintf("%%9.%ff", nd)
+					fpv[c] = strofreal(pv[c], fmt2)
+				} else if ( pv[c] >= 10^-nd ) {
+					fmt2 = sprintf("%%9.%ff", nd + 1)
+					fpv[c] = strofreal(pv[c], fmt2)
+				} else if ( pv[c] >= 10^-(nd+1) ) {
+					fmt2 = sprintf("%%9.%ff",-round(floor(log10(abs(pv[c])))) + (nd - 2))
+					fpv[c] = strofreal(pv[c], fmt2)
+				} else {
+					fmt2 = sprintf("%%9.%ff", nd + 1)
+					fpv[c] = "< " + strofreal(10^-(nd+1), fmt2)
+				}
+				if ( fmt == "*" ) {
+					if ( pv[c] < 0.05) fpv[c] = fpv[c] + "*"
+					else  fpv[c] = fpv[c] + " "
+					if ( pv[c] < 0.01) fpv[c] = fpv[c] + "*"
+					else  fpv[c] = fpv[c] + " "					
+				}
+			}
+		}
+		return(fpv)
+	}
 end
-
-
 ********************************************************************************
 *** Mata calculations **********************************************************
 ********************************************************************************
@@ -2556,8 +2599,8 @@ mata:
 		b = st_matrix("e(b)")'
 		se_b = sqrt(diagonal(st_matrix("e(V)")))
 		test = b :/ se_b
-    df = nhb_sae_num_scalar("e(df_r)")
-    zt = df == . ? invnormal(1-cip) : invttail(df, cip)
+	df = nhb_sae_num_scalar("e(df_r)")
+	zt = df == . ? invnormal(1-cip) : invttail(df, cip)
 		//if ( (df = nhb_sae_num_scalar("e(df_r)")) != . ) zt = invttail(df, cip)
 		//else zt = invnormal(1-cip)
 		se_b = se_b :/ (se_b :!= 0)
@@ -2618,8 +2661,8 @@ end
 *** Containers *****************************************************************
 ********************************************************************************
 mata:
-    class nhb_List {
-        private:
+	class nhb_List {
+		private:
 			real scalar cursor
 			transmorphic colvector lst
 		public:
@@ -2640,92 +2683,92 @@ mata:
 			transmorphic colvector union_unique()
 			transmorphic colvector intersection_unique()
 			transmorphic colvector less_unique()
-    }
-        
-        void nhb_List::reset() {
+	}
+		
+		void nhb_List::reset() {
 			this.cursor = 0
 			this.lst = J(0,1,.)
-        }
+		}
 
 		string scalar nhb_List::type() return(eltype(this.content())) 
 	
-        transmorphic colvector nhb_List::content() 
+		transmorphic colvector nhb_List::content() 
 			return( !this.is_empty() ? this.lst : J(0,1,.) )
 
-        void nhb_List::next_init()
-        {
-            this.cursor = 0
-        }
-        
-        transmorphic scalar nhb_List::next()
+		void nhb_List::next_init()
+		{
+			this.cursor = 0
+		}
+		
+		transmorphic scalar nhb_List::next()
 			return( this.has_next() ? this.lst[++this.cursor] : . )
-        
-        real scalar nhb_List::has_next() 
+		
+		real scalar nhb_List::has_next() 
 			return( !this.is_empty() ? this.cursor < this.len() : 0 )
-        
-        real scalar nhb_List::len()
+		
+		real scalar nhb_List::len()
 			return( rows(this.lst) )
-        
-        real nhb_List::find(value)
+		
+		real nhb_List::find(value)
 			return(  !this.is_empty() ? select((1::rows(this.lst)), this.lst :== value) : J(0,1,.) )
-        
-        transmorphic colvector nhb_List::apply(f)
+		
+		transmorphic colvector nhb_List::apply(f)
 			return( !this.is_empty() ? nhb_fp_map(&(*f), this.lst) : J(1,0,.))
-        
-        void nhb_List::append(transmorphic colvector value)
-        {
-            this.lst = this.is_empty() ? value : this.lst \ value
-        }
-        
-        void nhb_List::remove(scalar value) {
-            this.lst = select(this.lst, this.lst :!= value)
-        }
-        
-        real scalar nhb_List::is_empty() return( !this.len() )
+		
+		void nhb_List::append(transmorphic colvector value)
+		{
+			this.lst = this.is_empty() ? value : this.lst \ value
+		}
+		
+		void nhb_List::remove(scalar value) {
+			this.lst = select(this.lst, this.lst :!= value)
+		}
+		
+		real scalar nhb_List::is_empty() return( !this.len() )
 
-        transmorphic colvector nhb_List::unique_values() return( sort(uniqrows(this.lst), 1) )
-        
-        real colvector nhb_List::frequency(|colvector vals)
-        {
+		transmorphic colvector nhb_List::unique_values() return( sort(uniqrows(this.lst), 1) )
+		
+		real colvector nhb_List::frequency(|colvector vals)
+		{
 			transmorphic colvector values
 		
-            values = args() ? vals : this.unique_values()
-            return(rowsum(J(rows(values), 1, this.lst') :== values))
-        }
+			values = args() ? vals : this.unique_values()
+			return(rowsum(J(rows(values), 1, this.lst') :== values))
+		}
 
-        transmorphic colvector nhb_List::union_unique(colvector set_b) {
+		transmorphic colvector nhb_List::union_unique(colvector set_b) {
 			transmorphic colvector a_unique, b_unique
 			
-            a_unique = sort(uniqrows(this.lst), 1)
-            b_unique = sort(uniqrows(set_b), 1)
-            return( sort(uniqrows(a_unique \ b_unique), 1) )
-        }
-        
-        transmorphic colvector nhb_List::intersection_unique(colvector set_b) {
+			a_unique = sort(uniqrows(this.lst), 1)
+			b_unique = sort(uniqrows(set_b), 1)
+			return( sort(uniqrows(a_unique \ b_unique), 1) )
+		}
+		
+		transmorphic colvector nhb_List::intersection_unique(colvector set_b) {
 			real scalar a, A
 			real colvector slct
 			transmorphic colvector a_unique, b_unique
 			
-            a_unique = sort(uniqrows(this.lst), 1)
-            b_unique = sort(uniqrows(set_b), 1)
-            A = rows(a_unique)
-            slct = J(A,1,.)
-            for(a=1;a<=A;a++) slct[a] = anyof(b_unique, a_unique[a])
-            return( select(a_unique, slct) )
-        }
-        
-        transmorphic colvector nhb_List::less_unique(colvector set_b) {
+			a_unique = sort(uniqrows(this.lst), 1)
+			b_unique = sort(uniqrows(set_b), 1)
+			A = rows(a_unique)
+			slct = J(A,1,.)
+			for(a=1;a<=A;a++) slct[a] = anyof(b_unique, a_unique[a])
+			return( select(a_unique, slct) )
+		}
+		
+		transmorphic colvector nhb_List::less_unique(colvector set_b) {
 			real scalar a, A
 			real colvector slct
 			transmorphic colvector a_unique, b_unique
 			
-            a_unique = sort(uniqrows(this.lst), 1)
-            b_unique = sort(uniqrows(set_b), 1)
-            A = rows(a_unique)
-            slct = J(A,1,.)
-            for(a=1;a<=A;a++) slct[a] = !anyof(b_unique, a_unique[a])
-            return( select(a_unique, slct) )
-        }
+			a_unique = sort(uniqrows(this.lst), 1)
+			b_unique = sort(uniqrows(set_b), 1)
+			A = rows(a_unique)
+			slct = J(A,1,.)
+			for(a=1;a<=A;a++) slct[a] = !anyof(b_unique, a_unique[a])
+			return( select(a_unique, slct) )
+		}
 end
 
 
@@ -2733,30 +2776,30 @@ end
 *** Mata Utility functions *****************************************************
 ********************************************************************************
 mata:
-    string rowvector nhb_muf_tokensplit(string scalar txt, string scalar delimiter)
-    {
-        string vector  row
-        string scalar filter
-        row = J(1,0,"")
-        filter = sprintf("(.*)%s(.*)", delimiter)
-        while (regexm(txt, filter)) {
-            txt = regexs(1)
-            row = regexs(2), row
-        }
-        row = txt, row
-        return(row)
-    }
+	string rowvector nhb_muf_tokensplit(string scalar txt, string scalar delimiter)
+	{
+		string vector  row
+		string scalar filter
+		row = J(1,0,"")
+		filter = sprintf("(.*)%s(.*)", delimiter)
+		while (regexm(txt, filter)) {
+			txt = regexs(1)
+			row = regexs(2), row
+		}
+		row = txt, row
+		return(row)
+	}
 
-    real scalar nhb_muf_xlcolumn_nbr(string scalar cname)
-    {
-        class nhb_List scalar lst
-        real scalar lname, col_nbr
-        
-        if ( (lname = strlen(cname)) > 2 & lname > 0 ) _error("XL column name must have length 1 or 2")
-        cname = strlower(cname)
-        lst.append(tokens("a b c d e f g h i j k l m n o p q r s t u v w x y z")')
-        if ( lname == 1 ) col_nbr = lst.find(cname)
-        else col_nbr = 26 * lst.find(substr(cname,1,1)) + lst.find(substr(cname,2,1))
-        return(col_nbr)
-    }
+	real scalar nhb_muf_xlcolumn_nbr(string scalar cname)
+	{
+		class nhb_List scalar lst
+		real scalar lname, col_nbr
+		
+		if ( (lname = strlen(cname)) > 2 & lname > 0 ) _error("XL column name must have length 1 or 2")
+		cname = strlower(cname)
+		lst.append(tokens("a b c d e f g h i j k l m n o p q r s t u v w x y z")')
+		if ( lname == 1 ) col_nbr = lst.find(cname)
+		else col_nbr = 26 * lst.find(substr(cname,1,1)) + lst.find(substr(cname,2,1))
+		return(col_nbr)
+	}
 end

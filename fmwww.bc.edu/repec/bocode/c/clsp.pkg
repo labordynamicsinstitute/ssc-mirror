@@ -1,0 +1,27 @@
+d 'CLSP': module providing Convex Least Squares Programming (CLSP) is a modular two-step estimator for solving underdetermined, ill-posed, or structurally constrained least-squares problems
+d
+d    Convex Least Squares Programming (CLSP) is a modular two-step
+d estimator for solving underdetermined, ill-posed, or structurally
+d constrained least-squares problems. It combines
+d pseudoinverse-based estimation with convex-programming correction
+d methods inspired by Lasso, Ridge, and Elastic Net to ensure
+d numerical stability, constraint enforcement, and
+d interpretability. The package also provides numerical stability
+d analysis and CLSP-specific diagnostics, including partial R^2,
+d normalized RMSE (NRMSE), Monte Carlo t-tests for mean NRMSE, and
+d condition-number-based confidence bands. 
+d
+d KW: linear programming
+d KW: least squares
+d KW: pseudoinverse
+d KW: singular value decomposition
+d
+d Requires: Stata version 16 and Python modules pyclsp, numpy, cvxpy
+d
+d Distribution-Date: 20260120
+d
+d Author: Ilya Bolotov, Prague University of Economics and Business
+d Support: email ilya.bolotov@@vse.cz
+d
+f clsp.ado
+f clsp.sthlp

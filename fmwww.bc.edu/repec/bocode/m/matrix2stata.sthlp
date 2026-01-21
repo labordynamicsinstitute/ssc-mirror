@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.31}{...}
+{* *! version 0.32}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Help svmat" "help svmat"}{...}
 {vieweralsosee "Help sumat (Is installed with matprint" "help sumat"}{...}

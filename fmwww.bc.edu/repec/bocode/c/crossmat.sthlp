@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.31}{...}
+{* *! version 0.32}{...}
 {viewerjumpto "Syntax" "crossmat##syntax"}{...}
 {viewerjumpto "Description" "crossmat##description"}{...}
 {viewerjumpto "Examples" "crossmat##examples"}{...}

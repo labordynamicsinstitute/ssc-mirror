@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.31}{...}
+{* *! version 0.32}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "Install log2markup" "ssc install log2markup"}{...}
 {vieweralsosee "Help log2markup (if installed)" "help log2markup"}{...}
@@ -10,6 +10,7 @@
 {vieweralsosee "Help filaby" "help filaby"}{...}
 {vieweralsosee "Help marktop" "help marktop"}{...}
 {vieweralsosee "Help matprint" "help matprint"}{...}
+{vieweralsosee "Help matslct" "help matslct"}{...}
 {vieweralsosee "Help mat2xl" "help matprint"}{...}
 {vieweralsosee "Help matrix2stata" "help matrix2stata"}{...}
 {vieweralsosee "Help metadata" "help metadata"}{...}
@@ -60,7 +61,11 @@ last value for second variable within a frame of maxdist.{p_end}
 A categorical variable is collapsed into a new variable keeping the {opt top} 
 most frequent and/or a subsample of old variable values as single values while 
 collapsing the remaining values into one value with a common label.
- 
+
+{pstd}The {help matslct:matslct} select a sub matrix from a matrix expression using 
+the Mata row and column notation for selection and ordering.
+The only difference is that selected rows and selected columns are separated by 
+semicolon (;) instead of a comma(,).
 
 {pstd}{help matprint:matprint} presents Stata matrices in the log.
 It has a simple but powerfull way of setting decimals cellwise.

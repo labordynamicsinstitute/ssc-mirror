@@ -1,12 +1,14 @@
-*! Package basetable v 0.2.9
+*! Package basetable v 0.3.0
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*!version 0.2.9  2024-02-25 > Option todocx added
-*!version 0.2.9  2023-08-02 > Option for column order is added
-*!version 0.2.9  2023-04-26 > cleanup in mata must be specific in "mata mata drop __* __*()". A capture is added preliminary
+*!version 0.3.0	2024-03-18 > Error message instead faulty table content when cell blocks are all missing, see lmatrixtools: if ( st_matrix("__lblr") >= . ) 
+*TODO show empty columns based on value labels
+*TODO: Count unique by
+*version 0.2.9  2024-02-25 > Option todocx added
+*version 0.2.9  2023-08-02 > Option for column order is added
+*version 0.2.9  2023-04-26 > cleanup in mata must be specific in "mata mata drop __* __*()". A capture is added preliminary
 *version 0.2.8  2022-12-28 > category row titles in italics for style markdown see code in ::log_print()
 *version 0.2.8  2022-12-22 > Bug in option toxl fixed. Now more tables can be saved in the same sheet 
 *version 0.2.8  2022-04-20 > Option noTOPcount now only for first row
-* TODO: Count unique by
 *version 0.2.7  2021-11-19 > number format and pct format for missing report too 
 *version 0.2.7  2021-11-19 > Help rewritten 
 *version 0.2.6  2021-05-24 > Bug in basetable_parser(): basetable::n_pct_by_value() not called when value ends on r. Thanks to Kasper Norman
@@ -131,18 +133,18 @@ program define basetable
 	mata: __pvformat = `"`pvformat'"'
 	mata: __pv_to_top = regexm(__pvformat, "^(.*), *to?p?$")
 	mata: __pvformat = __pv_to_top ? regexs(1) : __pvformat
-	mata: st_local(`"pvformat"', st_isnumfmt(__pvformat) ? __pvformat : "%6.2f")
+	mata: st_local(`"pvformat"', st_isnumfmt(__pvformat) ? __pvformat : __pvformat == "*" ? __pvformat : "")
 
 	`QUIETLY' mata: tbl = basetable_parser(`"`input_list'"', `"`nformat'"', `"`pctformat'"', ///
 		`"`pvformat'"', __pv_to_top, `"`continuousreport'"', __hide, __smooth_width, ///
 		`"`missing'"' == "missing", `"`if'"', `"`in'"', `exact', ///
 		`"`categoricalreport'"', `"`topcount'"' == "")
 
-	if `"`columnorder'"' != "" mata order = 1, strtoreal(tokens("`columnorder'"))
-	else mata order = .
+	if `"`columnorder'"' != "" mata columnorder = 1, strtoreal(tokens("`columnorder'"))
+	else mata columnorder = .
 	mata: tbl.log_print(`"`style'"', `"`fn'"', `"`replace'"' != "", ///
 						`"`caption'"', `"`top'"', `"`undertop'"', `"`bottom'"', ///
-						`"`pvalue'"' != "", `"`total'"' != "", order)
+						`"`pvalue'"' != "", `"`total'"' != "", columnorder)
 
 	if "`toxl'" != "" { 
 		if `c(stata_version)' >= 13 {
@@ -193,7 +195,13 @@ program define basetable
 	******************************************************************************
 	capture mata mata drop __* __*()
 end
+/*
+mata st_local( "__fn", findfile("lbasetable.mata"))
+include "`__fn'"
 
+mata st_local( "__fn", findfile("lmatrixtools.mata"))
+include "`__fn'"
+*/
 if `c(stata_version)' >= 13 {
 	mata st_local( "__fn", findfile("ltoxl_v13.mata"))
 	include "`__fn'"

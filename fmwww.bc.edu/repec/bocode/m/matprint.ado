@@ -1,6 +1,7 @@
-*! Part of package matrixtools v. 0.31
+*! Part of package matrixtools v. 0.32
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*! 2024-02-23 > Option todocx added
+*! 2024-12-19 > decimals in todocx now working
+* 2024-02-23 > Option todocx added
 * 2023-01-01 > Option nozero added
 * 2021-01-03 > toxl added
 * 2020-03-05 > empty rownames not printet
@@ -8,7 +9,7 @@
 * 2019-06-11 > Caption/Title added
 * 2018-09-09 > Option for removing row header from print
 * 2017-01-06 > Rewritten 
-* TODO: To word?
+* TODO: Do not show values in intervals
 * TODO: Option order as basetable
 program define matprint
 	version 12.1
@@ -54,19 +55,18 @@ program define matprint
 							"`using'", "`replace'" == "replace")
     capture mata: mata drop __decimals
     
-	if `"`decimals'"' != "" local decimals decimals(`decimals')
-	if `"`hidesmall'"' != "." local hidesmall hidesmall(`hidesmall')
-	else local hidesmall 
-	
 	*** mat2xl *******************************************************************
 	if `"`toxl'"' != "" {
+		if `"`decimals'"' != "" local decimals decimals(`decimals')
+		if `"`hidesmall'"' != "." local hidesmall hidesmall(`hidesmall')
+		else local hidesmall 
 		if `c(stata_version)' >= 13 mat2xl `matrixname', `toxl' `eqstrip' `hidesmall' `decimals' 
 	}
 	******************************************************************************
 	
 	*** mat2docx *****************************************************************
 	if "`todocx'" != "" {
-		if `c(stata_version)' >= 13 mata: msm2d("`todocx'", __mp_lm.to_strings(), "`title'")
+		if `c(stata_version)' >= 13 mata: msm2d("`todocx'", __mp_lm.to_strings(`decimals'), "`title'")
 		else display "{error:Option todocx do not work in version 12 for Stata.}" 
 	}
 	******************************************************************************
