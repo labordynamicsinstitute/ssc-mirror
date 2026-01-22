@@ -1,0 +1,25 @@
+d 'ARIMA_FORECAST': module to compute ARIMA forecast standard errors and generate dynamic forecasts 
+d
+d  arima_forecast is a post-estimation command for arima that
+d computes forecast standard errors for ARIMA models and generates
+d dynamic forecasts with confidence interval using the theoretical
+d variance formula for ARIMA models, following the approach
+d implemented in R's predict.Arima function from the stats package.
+d These standard errors lead to wider (and more realistic)
+d confidence intervals than those produced in Stata using manual
+d computation with predict ..., mse as standard errors. 
+d arima_forecast optionally generates a forecast plot similar to
+d that produced by the forecast package in R. 
+d
+d KW: ARIMA
+d KW: forecasts
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20251221
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f arima_forecast.ado
+f arima_forecast.sthlp

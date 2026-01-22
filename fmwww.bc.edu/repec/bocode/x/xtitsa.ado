@@ -1,3 +1,4 @@
+*! 2.6.0 Ariel Linden 21Jan2026		// streamlined graphing section of MG-XTITSA. Now when xvar is specified, graph will be consistent with SG-XTITSA
 *! 2.5.1 Ariel Linden 17Dec2025		// fixed CI lines to ensure they are solid lines across all periods
 *! 2.5.0 Ariel Linden 27Oct2025		// wrote new programs to create graph legend for multiple group with and without covariates
 *! 2.4.1 Ariel Linden 19Sep2025		// added bwidth option for lowess smoother 
@@ -1153,205 +1154,193 @@ version 11.0
 					gen `ucl_c' = `ucl' if `iscontrol'					
 				}
 				
-				/* TREATMENT GROUP */
-				/* PREDICT no xvars */
-				if "`xvar'" == "" {   
+				local tct: word count `trperiod'
+				local tmax: word `tct' of `trperiod'
+
+				local k = 0
+				foreach t in `trperiod' {
+					local k = `k' + 1
+					tempvar tp_t`k' plt_t`k'
+					if `k'== 1 {
+						gen `tp_t`k'' = `ypred_t' if `tvar'<=`t' & `istreat'
+						replace `tp_t`k''=. if `tvar'==`t' & `istreat'
+						ipolate `tp_t`k'' `tvar' if `tvar' <=`t' & `istreat', gen(`plt_t`k'') epolate
+					}
+					if `k'> 1 & `k'<=`tct' {
+						local klast = `k'-1
+						local tlast: word `klast' of `trperiod'
+						gen `tp_t`k'' = `ypred_t' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat'
+						replace `tp_t`k'' = . if `tvar'==`t' & `istreat'
+						ipolate `tp_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat', gen(`plt_t`k'') epolate
+					}
+					if `k' ==`tct' {
+						tempvar pltx_t
+						gen `pltx_t' = `ypred_t' if `tvar'>=`tmax' &  `istreat'
+					}
+				} /* end "predict" trperiod loop - treatment */
+					
+	
+				/* CREATE CI VALUES FOR PLOTS - TREATMENT */				
+				if "`ci'" != "" {	
 					local tct: word count `trperiod'
 					local tmax: word `tct' of `trperiod'
-
 					local k = 0
 					foreach t in `trperiod' {
 						local k = `k' + 1
-						tempvar tp_t`k' plt_t`k'
+						tempvar lp_t`k' llt_t`k' up_t`k' ult_t`k'
 						if `k'== 1 {
-							gen `tp_t`k'' = `ypred_t' if `tvar'<=`t' & `istreat'
-							replace `tp_t`k''=. if `tvar'==`t' & `istreat'
-							ipolate `tp_t`k'' `tvar' if `tvar' <=`t' & `istreat', gen(`plt_t`k'') epolate
+							gen `lp_t`k'' = `lcl_t' if `tvar'<=`t' & `istreat'
+							replace `lp_t`k''=. if `tvar'==`t' & `istreat'
+							ipolate `lp_t`k'' `tvar' if `tvar' <=`t' & `istreat', gen(`llt_t`k'') epolate
+							gen `up_t`k'' = `ucl_t' if `tvar'<=`t' & `istreat'
+							replace `up_t`k''=. if `tvar'==`t' & `istreat'
+							ipolate `up_t`k'' `tvar' if `tvar' <=`t' & `istreat', gen(`ult_t`k'') epolate						
 						}
 						if `k'> 1 & `k'<=`tct' {
 							local klast = `k'-1
 							local tlast: word `klast' of `trperiod'
-							gen `tp_t`k'' = `ypred_t' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat'
-							replace `tp_t`k'' = . if `tvar'==`t' & `istreat'
-							ipolate `tp_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat', gen(`plt_t`k'') epolate
+							gen `lp_t`k'' = `lcl_t' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat'
+							replace `lp_t`k'' = . if `tvar'==`t'
+							ipolate `lp_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat', gen(`llt_t`k'') epolate
+							gen `up_t`k'' = `ucl_t' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat'
+							replace `up_t`k'' = . if `tvar'==`t' & `istreat'
+							ipolate `up_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat', gen(`ult_t`k'') epolate						
 						}
 						if `k' ==`tct' {
-							tempvar pltx_t
-							gen `pltx_t' = `ypred_t' if `tvar'>=`tmax' &  `istreat'
+							tempvar lltx ultx
+							gen `lltx' = `lcl_t' if `tvar'>=`tmax' & `istreat'
+							gen `ultx' = `ucl_t' if `tvar'>=`tmax' & `istreat'	
 						}
-					} /* end "predict" trperiod loop - treatment */
-
-					/* CREATE CI VALUES FOR PLOTS - TREATMENT */				
-					if "`ci'" != "" {	
-						local tct: word count `trperiod'
-						local tmax: word `tct' of `trperiod'
-						local k = 0
-						foreach t in `trperiod' {
-							local k = `k' + 1
-							tempvar lp_t`k' llt_t`k' up_t`k' ult_t`k'
-							if `k'== 1 {
-								gen `lp_t`k'' = `lcl_t' if `tvar'<=`t' & `istreat'
-								replace `lp_t`k''=. if `tvar'==`t' & `istreat'
-								ipolate `lp_t`k'' `tvar' if `tvar' <=`t' & `istreat', gen(`llt_t`k'') epolate
-								gen `up_t`k'' = `ucl_t' if `tvar'<=`t' & `istreat'
-								replace `up_t`k''=. if `tvar'==`t' & `istreat'
-								ipolate `up_t`k'' `tvar' if `tvar' <=`t' & `istreat', gen(`ult_t`k'') epolate						
-							}
-							if `k'> 1 & `k'<=`tct' {
-								local klast = `k'-1
-								local tlast: word `klast' of `trperiod'
-								gen `lp_t`k'' = `lcl_t' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat'
-								replace `lp_t`k'' = . if `tvar'==`t'
-								ipolate `lp_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat', gen(`llt_t`k'') epolate
-								gen `up_t`k'' = `ucl_t' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat'
-								replace `up_t`k'' = . if `tvar'==`t' & `istreat'
-								ipolate `up_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat', gen(`ult_t`k'') epolate						
-							}
-							if `k' ==`tct' {
-								tempvar lltx ultx
-								gen `lltx' = `lcl_t' if `tvar'>=`tmax' & `istreat'
-								gen `ultx' = `ucl_t' if `tvar'>=`tmax' & `istreat'						
-							}
-						}  /* end of TRPERIOD LOOP */
-					}	// end CI	
+					}  /* end of TRPERIOD LOOP */
+				}	// end CI	
 				
+				/* Set up plot variables for Treated */
+				forvalues k = 1/`tct' {
+					local plotvars_t `plotvars_t'  `plt_t`k''
+					local cpart `cpart' l
+					local mspart `mspart' none
+					local lblack `lblack' black
+					local mblack `mblack' black
+				}
 
-					/* Set up plot variables for Treated */
+				/* connect and msymbol options */
+				local cpart c(. l `cpart')
+				local lc lcolor(black `lblack' black)
+				local mc mcolor(black `mblack' black)
+
+				local tmspart  ms(O none `mspart')
+				local plotvars_t `plotvars_t' `pltx_t'		
+			
+				if "`ci'" != "" {
 					forvalues k = 1/`tct' {
-						local plotvars_t `plotvars_t'  `plt_t`k''
-						local cpart `cpart' l
-						local mspart `mspart' none
-						local lblack `lblack' black
-						local mblack `mblack' black
+						local plotvars_t_L `plotvars_t_L' `llt_t`k''
+						local plotvars_t_U `plotvars_t_U' `ult_t`k''
+						local lblue `lblue' blue
+						local lp `lp' solid
 					}
+				} // end CI					
 
-					/* connect and msymbol options */
-					local cpart c(. l `cpart')
-					local lc lcolor(black `lblack' black)
-					local mc mcolor(black `mblack' black)
+				/* affects post-intervention periods */
+				if "`ci'" != "" {
+					local lc2 lcolor(blue `lblue' blue)
+					local lp lp(solid `lp' solid)						
+					local plotvars_t_L `plotvars_t_L' `lltx'
+					local plotvars_t_U `plotvars_t_U' `ultx'
+				}
 
-					local tmspart  ms(O none `mspart')
-					local plotvars_t `plotvars_t' `pltx_t'		
-				
-					if "`ci'" != "" {
-						forvalues k = 1/`tct' {
-							local plotvars_t_L `plotvars_t_L' `llt_t`k''
-							local plotvars_t_U `plotvars_t_U' `ult_t`k''
-							local lblue `lblue' blue
-							local lp `lp' solid
-						}
-					} // end CI					
-
-					/* affects post-intervention periods */
-					if "`ci'" != "" {
-						local lc2 lcolor(blue `lblue' blue)
-						local lp lp(solid `lp' solid)						
-						local plotvars_t_L `plotvars_t_L' `lltx'
-						local plotvars_t_U `plotvars_t_U' `ultx'
-					}					
+				/* New CONTROLS plot section */
+				/* PREDICT no xvars */
+				local k = 0
+				foreach t in `trperiod' {
+					local k = `k' + 1
+					tempvar tp_c`k' plt_c`k'
+					if `k'== 1 {
+						gen `tp_c`k'' = `ypred_c' if `tvar'<=`t' & `iscontrol'
+						replace `tp_c`k''=. if `tvar'==`t' & `iscontrol'
+						ipolate `tp_c`k'' `tvar' if `tvar' <=`t' & `iscontrol', gen(`plt_c`k'') epolate
+					}
+					if `k'> 1 & `k'<=`tct' {
+						local klast = `k'-1
+						local tlast: word `klast' of `trperiod'
+						gen `tp_c`k'' = `ypred_c' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol'
+						replace `tp_c`k'' = . if `tvar'==`t' & `iscontrol'
+						ipolate `tp_c`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol', gen(`plt_c`k'') epolate
+					}
+					if `k' ==`tct' {
+						tempvar pltx_c
+						gen `pltx_c' = `ypred_c' if `tvar'>=`tmax' &  `iscontrol'
+					}
+				} /* end trperiod loop - controls */
 					
-					/* New CONTROLS plot section */
-					/* PREDICT no xvars */
+				/* CREATE CI VALUES FOR PLOTS - CONTROLS */				
+				if "`ci'" != "" {	
+					local tct: word count `trperiod'
+					local tmax: word `tct' of `trperiod'
 					local k = 0
 					foreach t in `trperiod' {
 						local k = `k' + 1
-						tempvar tp_c`k' plt_c`k'
+						tempvar lp_c`k' llt_c`k' up_c`k' ult_c`k'
 						if `k'== 1 {
-							gen `tp_c`k'' = `ypred_c' if `tvar'<=`t' & `iscontrol'
-							replace `tp_c`k''=. if `tvar'==`t' & `iscontrol'
-							ipolate `tp_c`k'' `tvar' if `tvar' <=`t' & `iscontrol', gen(`plt_c`k'') epolate
+							gen `lp_c`k'' = `lcl_c' if `tvar'<=`t' & `iscontrol'
+							replace `lp_c`k''=. if `tvar'==`t' & `iscontrol'
+							ipolate `lp_c`k'' `tvar' if `tvar' <=`t' & `iscontrol', gen(`llt_c`k'') epolate
+							gen `up_c`k'' = `ucl_c' if `tvar'<=`t' & `iscontrol'
+							replace `up_c`k''=. if `tvar'==`t' & `iscontrol'
+							ipolate `up_c`k'' `tvar' if `tvar' <=`t' & `iscontrol', gen(`ult_c`k'') epolate						
 						}
 						if `k'> 1 & `k'<=`tct' {
 							local klast = `k'-1
 							local tlast: word `klast' of `trperiod'
-							gen `tp_c`k'' = `ypred_c' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol'
-							replace `tp_c`k'' = . if `tvar'==`t' & `iscontrol'
-							ipolate `tp_c`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol', gen(`plt_c`k'') epolate
+							gen `lp_c`k'' = `lcl_c' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol'
+							replace `lp_c`k'' = . if `tvar'==`t'
+							ipolate `lp_c`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol', gen(`llt_c`k'') epolate
+							gen `up_c`k'' = `ucl_c' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol'
+							replace `up_c`k'' = . if `tvar'==`t' & `iscontrol'
+							ipolate `up_c`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol', gen(`ult_c`k'') epolate						
 						}
 						if `k' ==`tct' {
-							tempvar pltx_c
-							gen `pltx_c' = `ypred_c' if `tvar'>=`tmax' &  `iscontrol'
+							tempvar llcon ulcon
+							gen `llcon' = `lcl_c' if `tvar'>=`tmax' & `iscontrol'
+							gen `ulcon' = `ucl_c' if `tvar'>=`tmax' & `iscontrol'	
 						}
-					} /* end trperiod loop - controls */
-					
-					/* CREATE CI VALUES FOR PLOTS - CONTROLS */				
-					if "`ci'" != "" {	
-						local tct: word count `trperiod'
-						local tmax: word `tct' of `trperiod'
-						local k = 0
-						foreach t in `trperiod' {
-							local k = `k' + 1
-							tempvar lp_c`k' llt_c`k' up_c`k' ult_c`k'
-							if `k'== 1 {
-								gen `lp_c`k'' = `lcl_c' if `tvar'<=`t' & `iscontrol'
-								replace `lp_c`k''=. if `tvar'==`t' & `iscontrol'
-								ipolate `lp_c`k'' `tvar' if `tvar' <=`t' & `iscontrol', gen(`llt_c`k'') epolate
-								gen `up_c`k'' = `ucl_c' if `tvar'<=`t' & `iscontrol'
-								replace `up_c`k''=. if `tvar'==`t' & `iscontrol'
-								ipolate `up_c`k'' `tvar' if `tvar' <=`t' & `iscontrol', gen(`ult_c`k'') epolate						
-							}
-							if `k'> 1 & `k'<=`tct' {
-								local klast = `k'-1
-								local tlast: word `klast' of `trperiod'
-								gen `lp_c`k'' = `lcl_c' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol'
-								replace `lp_c`k'' = . if `tvar'==`t'
-								ipolate `lp_c`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol', gen(`llt_c`k'') epolate
-								gen `up_c`k'' = `ucl_c' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol'
-								replace `up_c`k'' = . if `tvar'==`t' & `iscontrol'
-								ipolate `up_c`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol', gen(`ult_c`k'') epolate						
-							}
-							if `k' ==`tct' {
-								tempvar llcon ulcon
-								gen `llcon' = `lcl_c' if `tvar'>=`tmax' & `iscontrol'
-								gen `ulcon' = `ucl_c' if `tvar'>=`tmax' & `iscontrol'						
-							}
-						}  /* end of TRPERIOD LOOP */
-					}	// end CI	
-
-					/* Set up plot variables - CONTROLS */
-					forvalues k = 1/`tct' {
+					}  /* end of TRPERIOD LOOP */
+				}	// end CI	
+		
+				/* Set up plot variables - CONTROLS */
+				forvalues k = 1/`tct' {
 					local plotvars_c `plotvars_c' `plt_c`k''
 					local clp `clp' dash
-					}
-
-					/* connect and msymbol options for controls */
-					local cmspart  ms(Oh `mspart' none)
-					local clp lpattern(blank `clp' dash)
-
-					local plotvars_c `plotvars_c' `pltx_c'
-
-					if "`ci'" != "" {
-						forvalues k = 1/`tct' {
-							local plotvars_c_L `plotvars_c_L' `llt_c`k''
-							local plotvars_c_U `plotvars_c_U' `ult_c`k''
-							local lgreen `lgreen' green
-							local lp3 `lp3' solid
-						}
-					} // end CI	
-					
-					/* affects post-intervention periods */
-					if "`ci'" != "" {
-						local lc3 lcolor(green `lgreen' green)
-						local lp3 lp(solid `lp3' solid)		
-						local plotvars_c_L `plotvars_c_L' `llcon'
-						local plotvars_c_U `plotvars_c_U' `ulcon'
-					}
-									
-				} /* end no xvars  */				
-				
-				/* if xvars */
-				if "`xvar'" != "" {   
-					local plotvars_t `ypred_t'
-					local plotvars_c `ypred_c'
-					local plotvars_c_L `lcl_c' 
-					local plotvars_c_U `ucl_c'
-					local plotvars_t_L `lcl_t' 
-					local plotvars_t_U `ucl_t'
-					local l_clt (line `plotvars_t_L' `tvar', lcolor(blue) lpattern(solid)) 
-					local u_clt (line `plotvars_t_U' `tvar', lcolor(blue) lpattern(solid))
-					local l_clc (line `plotvars_c_L' `tvar', lcolor(green) lpattern(solid)) 
-					local u_clc (line `plotvars_c_U' `tvar', lcolor(green) lpattern(solid))
 				}
+
+				/* connect and msymbol options for controls */
+				local cmspart  ms(Oh `mspart' none)
+				local clp lpattern(blank `clp' dash)
+
+				local plotvars_c `plotvars_c' `pltx_c'
+			
+				if "`ci'" != "" {
+					forvalues k = 1/`tct' {
+						local plotvars_c_L `plotvars_c_L' `llt_c`k''
+						local plotvars_c_U `plotvars_c_U' `ult_c`k''
+						local lgreen `lgreen' green
+						local lp3 `lp3' solid
+					}
+				} // end CI	
+					
+				/* affects post-intervention periods */
+				if "`ci'" != "" {
+					local lc3 lcolor(green `lgreen' green)
+					local lp3 lp(solid `lp3' solid)		
+					local plotvars_c_L `plotvars_c_L' `llcon'
+					local plotvars_c_U `plotvars_c_U' `ulcon'
+					
+					local lclt (line `plotvars_t_L' `tvar', `lc2' `lp') 
+					local uclt (line `plotvars_t_U' `tvar', `lc2' `lp')
+					local lclc (line `plotvars_c_L' `tvar', `lc3' `lp3') 
+					local uclc (line `plotvars_c_U' `tvar', `lc3' `lp3')
+					
+				}
+				
 				tempvar dvar_t dvar_c
 				gen `dvar_t' = `dvar' if `istreat'
 				gen `dvar_c' = `dvar' if `iscontrol'
@@ -1421,13 +1410,13 @@ version 11.0
 					}
 					if "`smax'" != "" {
 						local up = `smax'
-					}					
+					}				
 					/* use _natscale to get "nice" lower and upper values for the shading */				
 					_natscale `down' `up' `nat'
 					local ylab ylabel(`r(min)'(`r(delta)')`r(max)') 
 					tempvar upy
 					gen `upy' = `r(max)' 
-					local shhh (area `upy' `tvar' if inrange(`tvar', `shade1',`shade2'), base(`r(min)')  bcolor(gs14) plotregion(margin(b=0 t=0)))							
+					local shhh (area `upy' `tvar' if inrange(`tvar', `shade1',`shade2'), base(`r(min)')  bcolor(gs14) plotregion(margin(b=0 t=0)))				
 				}	// end shade		
 
 				#delim ;
@@ -1439,76 +1428,47 @@ version 11.0
 				subtitle("Intervention starts: `tperlist'")
 				;
 				#delim cr
-			
-				if "`ci'" != "" {
-					local lclt (line `plotvars_t_L' `tvar', `lc2' `lp') 
-					local uclt (line `plotvars_t_U' `tvar', `lc2' `lp')
-					local lclc (line `plotvars_c_L' `tvar', `lc3' `lp3') 
-					local uclc (line `plotvars_c_U' `tvar', `lc3' `lp3')
-				}
-			
+
 				if "`lowess'" != "" {
 					if "`bwidth'" != "" {
-						local lowt (lowess `dvar' `tvar', lcolor(red) lpattern(solid) bw(`bwidth'))
-						local lowc (lowess `dvar_c'  `tvar', lcolor(orange) lpattern(solid) bw(`bwidth'))
+						local lowt (lowess `dvar_t'  `tvar', lcolor(red) lpattern(solid) bw(`bwidth')) 
+						local lowc (lowess `dvar_c'  `tvar', lcolor(orange) lpattern(solid) bw(`bwidth'))	
 					}
 					else {
-						local lowt (lowess `dvar' `tvar', lcolor(red) lpattern(solid))
-						local lowc (lowess `dvar_c'  `tvar', lcolor(orange) lpattern(solid))
+						local lowt (lowess `dvar_t'  `tvar', lcolor(red) lpattern(solid)) 
+						local lowc (lowess `dvar_c'  `tvar', lcolor(orange) lpattern(solid))		
 					}
 				} // end lowess	
-			} // end quietly				
+				
 
-				/* if no covariates */
-				if "`xvar'" == "" {
-					/* get legend specs */
-					get_leg_multi , treatdesc(`treatdesc')  tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade')
-					local mleg = r(mleg)				
-	
-					// * graph it - no xvars *//
-					twoway ///
-						`shhh' ///				
-						(scatter  `dvar_t' `plotvars_t' `tvar', `cpart' `tmspart' `lc' `mc') ///
-						(scatter  `dvar_c' `plotvars_c' `tvar', `cpart' `cmspart' `lc' `mc' `clp') ///
-						`lowt' ///
-						`lowc' ///
-						`lclt' ///
-						`uclt' ///	
-						`lclc' ///
-						`uclc' ///	
-						, xline(`trperiod', lpattern(shortdash) lcolor(black)) ///
-						`ylab' ///						
-						`mleg' ///
-						`titlesec' note(`"`note'"') `figure2'
-				} // end no xvars	
 			
-				/* with covariates */
-				if "`xvar'" != "" {
-					/* get legend specs */
-					get_leg_multi2 , treatdesc(`treatdesc')  tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade')
-					local mleg2 = r(mleg2)	
-
-					// * graph it - xvars * //		
-					twoway ///
-						`shhh' ///						
-						(scatter `dvar_t' `ypred_t' `dvar_c' `ypred_c'  `tvar', c(. l . l) ms(O none Oh none) mcolor(black black black black) ///
-							lcolor(black black black black) lpattern(blank solid blank dash) xline(`trperiod', lpattern(shortdash) lcolor(black))) ///
-						`lowt' ///
-						`lowc' ///
-						`l_clt' ///
-						`u_clt' ///	
-						`l_clc' ///
-						`u_clc' ///	
-						, `mleg2' ///
-						`ylab' ///					
-						`titlesec' note(`"`note'"') `figure2'	
-				} // end xvars
+				/* get legend specs */
+				get_leg_multi , treatdesc(`treatdesc')  tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade')
+				local mleg = r(mleg)
+				
+			} // end quietly				
+				
+			// * graph it * //
+			twoway ///
+				`shhh' ///				
+				(scatter  `dvar_t' `plotvars_t' `tvar', `cpart' `tmspart' `lc' `mc') ///
+				(scatter  `dvar_c' `plotvars_c' `tvar', `cpart' `cmspart' `lc' `mc' `clp') ///
+				`lowt' ///
+				`lowc' ///
+				`lclt' ///
+				`uclt' ///	
+				`lclc' ///
+				`uclc' ///	
+				, xline(`trperiod', lpattern(shortdash) lcolor(black)) ///
+				`ylab' ///						
+				`mleg' ///
+				`titlesec' note(`"`note'"') `figure2'
 		}   /* End of Figure Block */
 	}   /* End of Type 3 */
-			
+	
 	// save estimation table
 	return matrix table = table	
-		
+
 end
 
 program define gen_cf, rclass
@@ -1596,7 +1556,7 @@ version 11.0
 	ret local expr `expr'
 end
 
-
+// program to get legend for single group
 program define get_leg, rclass
 version 11.0
     syntax, [ tperlist(string) tct(string) LOWess(string) clv(string) ci(string) SHade(string) cf(string) ] 
@@ -1742,70 +1702,7 @@ version 11.0
 		
 end	
 
-// program to get legend for multiple groups - with covariates
-program define get_leg_multi2, rclass
-version 11.0
-    syntax, [ treatdesc(string) tperlist(string) tct(string) LOWess(string) clv(string) ci(string) SHade(string) ] 
-		// [1,1,1]
-		if "`lowess'" != "" & "`ci'" != "" & "`shade'" != "" {
-			local mleg2 subtitle("Intervention starts: `tperlist'") legend(rows(2) region(lcolor(black))  ///
-			order(- "`treatdesc': " 2 3 6 8 - "Controls average:" 4 5 7 10) ///
-			label(2 "Actual") label(3 "Predicted") label(6 "Lowess") label(4 "Actual") ///					
-			label(5 "Predicted") label(7 "Lowess") label(8 "`clv'% CI") label(10 "`clv'% CI") symxsize(8) position(6))					
-		}
-		// [1,1,0]
-		if "`lowess'" != "" & "`ci'" != "" & "`shade'" == "" {
-			local mleg2 subtitle("Intervention starts: `tperlist'") legend(rows(2) region(lcolor(black)) ///
-			order(- "`treatdesc': " 1 2 5 7 - "Controls average:" 3 4 6 9) ///
-			label(1 "Actual") label(2 "Predicted") label(3 "Actual") label(4 "Predicted") ///					
-			label(5 "Lowess") label(6 "Lowess") label(7 "`clv'% CI") label(9 "`clv'% CI") symxsize(8) position(6))			
-		}
-		// [1,0,1]
-		if "`lowess'" != "" & "`ci'" == "" & "`shade'" != "" {
-			local mleg2 subtitle("Intervention starts: `tperlist'") legend(rows(2) region(lcolor(black)) ///
-			order(- "`treatdesc': " 2 3 6 - "Controls average:" 4 5 7) ///
-			label(2 "Actual") label(3 "Predicted") label(6 "Lowess") ///
-			label(4 "Actual") label(5 "Predicted") label(7 "Lowess") symxsize(8) position(6))			
-		}
-		// [1,0,0]
-		if "`lowess'" != "" & "`ci'" == "" & "`shade'" == "" {
-			local mleg2 subtitle("Intervention starts: `tperlist'") legend(rows(2) region(lcolor(black)) ///
-			order(- "`treatdesc': " 1 2 5 - "Controls average:" 3 4 6) ///
-			label(1 "Actual") label(2 "Predicted") label(3 "Actual") ///
-			label(4 "Predicted") label(5 "Lowess") label(6 "Lowess") symxsize(8) position(6))			
-		}
-		// [0,1,1]
-		if "`lowess'" == "" & "`ci'" != "" & "`shade'" != "" {
-			local mleg2 subtitle("Intervention starts: `tperlist'") legend(rows(2) region(lcolor(black)) ///
-			order(- "`treatdesc': " 2 3 6 - "Controls average:" 4 5 8) ///
-			label(2 "Actual") label(3 "Predicted") label(4 "Actual") label(5 "Predicted") ///					
-			label(6 "`clv'% CI") label(8 "`clv'% CI") symxsize(8) position(6))						
-		}
-		// [0,1,0]
-		if "`lowess'" == "" & "`ci'" != "" & "`shade'" == "" {
-			local mleg2 subtitle("Intervention starts: `tperlist'") legend(rows(2) region(lcolor(black)) ///
-			order(- "`treatdesc': " 1 2 5 - "Controls average:" 3 4 7) ///
-			label(1 "Actual") label(2 "Predicted") label(3 "Actual") label(4 "Predicted") ///					
-			label(5 "`clv'% CI") label(7 "`clv'% CI") symxsize(8) position(6))			
-		}
-		// [0,0,1]
-		if "`lowess'" == "" & "`ci'" == "" & "`shade'" != "" {
-			local mleg2 subtitle("Intervention starts: `tperlist'") legend(rows(2) region(lcolor(black)) ///
-			order(- "`treatdesc': " 2 3 - "Controls average:" 4 5) ///
-			label(2 "Actual") label(3 "Predicted") label(4 "Actual") label(5 "Predicted") symxsize(8) position(6))	
-		}
-		// [0,0,0]
-		if "`lowess'" == "" & "`ci'" == "" & "`shade'" == "" {
-			local mleg2 subtitle("Intervention starts: `tperlist'") legend(rows(2) region(lcolor(black)) ///
-			order(- "`treatdesc': " 1 2 - "Controls average:" 3 4) ///
-			label(1 "Actual") label(2 "Predicted") label(3 "Actual") label(4 "Predicted") symxsize(8) position(6))							
-		}
-		// save the local
-		ret local mleg2 `mleg2'			
-
-end			
-							
-// program to get legend for multiple groups - no covariates
+// program to get legend for multiple groups
 program define get_leg_multi, rclass
 version 11.0
     syntax, [ treatdesc(string) tperlist(string) tct(string) LOWess(string) clv(string) ci(string) SHade(string) ] 

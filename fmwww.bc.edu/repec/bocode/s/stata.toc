@@ -424,6 +424,7 @@ p suregr module to calculate robust, or cluster-robust variance after sureg
 p surface module to draw a 3D wireform surface plot
 p surloads module to calculate simple scores
 p surrog module to compute surrogate variables after factor analysis
+p survcollapse module to collapse surveillance data over a chosen time unit, completes the series
 p surveybias module to compute the B and B_w multinomial accuracy measures for polling bias
 p surveycluster module to calculate sample size for cluster-based surveys to achieve desired precision
 p surveyspan module to analyze timestamp metadata from field surveys to monitor data quality.

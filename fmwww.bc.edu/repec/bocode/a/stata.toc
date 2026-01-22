@@ -85,6 +85,7 @@ p arcplot module for arc plots
 p ardl module to perform autoregressive distributed lag model estimation
 p area module to modify string variables
 p arhomme module to estimate Arellano and Bonhomme quantile selection model 
+p arima_forecast module to compute ARIMA forecast standard errors and generate dynamic forecasts 
 p arimaauto module to find the best ARIMA model with the help of a Stata-adjusted Hyndman-Khandakar (2008) algorithm 
 p arimafit module to calculate AIC, SIC for ARIMA model
 p arimasel module to compute selection criteria for ARMA(p,q) models
