@@ -1,0 +1,22 @@
+d 'URALL': module to unify unit root tests (ADF, PP, ERS, and Zivot-Andrews) into a single, publication-quality table format with standardized output
+d
+d	urall performs unit root tests for a list of variables and
+d displays the results in a single, compact    table.  The table
+d includes results for Level (Intercept, Intercept+Trend) and First
+d Difference	(Intercept, Intercept+Trend). 
+d
+d KW: unit rot tests
+d KW: Dickey-Fuller
+d KW: Phillips-Perron
+d KW: DFGLS
+d KW: Zivot-Ansrews
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20251222
+d
+d Author:   Imadeddin Almosabbeh, Arab East Colleges, Saudi Arabia, Riyadh
+d Support: email msbbh68@@hotmail.com
+d
+f urall.ado
+f urall.sthlp

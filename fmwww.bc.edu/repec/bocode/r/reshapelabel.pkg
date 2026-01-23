@@ -1,0 +1,20 @@
+d 'RESHAPELABEL': module to reshape long to wide using a string j-variable and apply j-variable values as column labels
+d
+d   reshapelabel reshapes data from long to wide when the
+d j-variable is a string (including strings with    spaces) and
+d applies the string values of the j-variable as variable labels on
+d the reshaped wide    variables. 
+d
+d KW: reshape
+d KW: variable labels
+d
+d Requires: Stata version 18.5
+d
+d Distribution-Date: 20251222
+d
+d Author:  Arthi Thiruppathi, NA
+d Support: email arthi.sahana05@@gmail.com
+d
+f reshapelabel.ado
+f reshapelabel.sthlp
+f test-reshapelabel.do
