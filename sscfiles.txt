@@ -2856,6 +2856,7 @@ fmwww.bc.edu/repec/bocode/v/validateit.ado
 fmwww.bc.edu/repec/bocode/k/ky_p.ado
 fmwww.bc.edu/repec/bocode/k/kinkyreg.sthlp
 fmwww.bc.edu/repec/bocode/k/kapprevi.hlp
+fmwww.bc.edu/repec/bocode/k/kmtest.pkg
 fmwww.bc.edu/repec/bocode/k/k_stuck.ado
 fmwww.bc.edu/repec/bocode/k/kobo2stata.pkg
 fmwww.bc.edu/repec/bocode/k/kappaAux.ado
@@ -2884,6 +2885,7 @@ fmwww.bc.edu/repec/bocode/k/kappaetc.ado
 fmwww.bc.edu/repec/bocode/k/k_other_extras.txt
 fmwww.bc.edu/repec/bocode/k/khb.html
 fmwww.bc.edu/repec/bocode/k/kdens.hlp
+fmwww.bc.edu/repec/bocode/k/kmtest.sthlp
 fmwww.bc.edu/repec/bocode/k/kinkyreg2dta.ado
 fmwww.bc.edu/repec/bocode/k/k_pwt6n.ado
 fmwww.bc.edu/repec/bocode/k/konfound.pkg
@@ -2958,10 +2960,12 @@ fmwww.bc.edu/repec/bocode/k/kldbrecode.sthlp
 fmwww.bc.edu/repec/bocode/k/krippalpha.ado
 fmwww.bc.edu/repec/bocode/k/kdens2.hlp
 fmwww.bc.edu/repec/bocode/k/kldbrecode.pkg
+fmwww.bc.edu/repec/bocode/k/kmtest.ado
 fmwww.bc.edu/repec/bocode/k/kweight.sthlp
 fmwww.bc.edu/repec/bocode/k/kitli_gap2bm.sthlp
 fmwww.bc.edu/repec/bocode/k/kernlden2d.m
 fmwww.bc.edu/repec/bocode/k/knapsack.pkg
+fmwww.bc.edu/repec/bocode/k/kmtest_sim.sthlp
 fmwww.bc.edu/repec/bocode/k/kappaci.html
 fmwww.bc.edu/repec/bocode/k/kappa2.ado
 fmwww.bc.edu/repec/bocode/k/kb80.do
@@ -2994,9 +2998,11 @@ fmwww.bc.edu/repec/bocode/k/kappalate.ado
 fmwww.bc.edu/repec/bocode/k/kaplansky.html
 fmwww.bc.edu/repec/bocode/k/kleinI.dta
 fmwww.bc.edu/repec/bocode/k/keyby.html
+fmwww.bc.edu/repec/bocode/k/kmtest_sim.ado
 fmwww.bc.edu/repec/bocode/k/keepvar.ado
 fmwww.bc.edu/repec/bocode/k/k_cown.ado
 fmwww.bc.edu/repec/bocode/k/ksi.pkg
+fmwww.bc.edu/repec/bocode/k/kmtest_cv.ado
 fmwww.bc.edu/repec/bocode/k/kalpha.sthlp
 fmwww.bc.edu/repec/bocode/k/kpss.hlp
 fmwww.bc.edu/repec/bocode/k/klein.do
@@ -3021,6 +3027,7 @@ fmwww.bc.edu/repec/bocode/k/kountry.pkg
 fmwww.bc.edu/repec/bocode/k/ky_ll_1.ado
 fmwww.bc.edu/repec/bocode/k/kssur.sthlp
 fmwww.bc.edu/repec/bocode/k/kssur.ado
+fmwww.bc.edu/repec/bocode/k/kmtest_power.ado
 fmwww.bc.edu/repec/bocode/k/khb.sthlp
 fmwww.bc.edu/repec/bocode/k/kapci.hlp
 fmwww.bc.edu/repec/bocode/k/krippendorff.dta

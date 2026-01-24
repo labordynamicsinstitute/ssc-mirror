@@ -1,0 +1,32 @@
+d 'KMTEST': module to perform Tests of Linear and Logarithmic Transformations for Integrated Processes
+d
+d   The kmtest package implements the non-nested tests developed by
+d Kobayashi and McAleer (Econometric Reviews, 1999) for determining
+d whether a time series should be modeled in levels (linear
+d transformation) or in logarithms (logarithmic transformation)
+d when the series is integrated of order one, I(1). 
+d
+d KW: unit root
+d KW: integrated process
+d KW: data transformation
+d KW: logarithmic transformation
+d KW: non-nested test
+d KW: heteroscedasticity
+d KW: time series
+d KW: I(1) process
+d KW: random walk
+d KW: Brownian motion
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20251223
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f kmtest.ado
+f kmtest.sthlp
+f kmtest_cv.ado
+f kmtest_power.ado
+f kmtest_sim.ado
+f kmtest_sim.sthlp

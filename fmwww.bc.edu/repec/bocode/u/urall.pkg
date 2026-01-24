@@ -5,7 +5,7 @@ d displays the results in a single, compact    table.  The table
 d includes results for Level (Intercept, Intercept+Trend) and First
 d Difference	(Intercept, Intercept+Trend). 
 d
-d KW: unit rot tests
+d KW: unit root tests
 d KW: Dickey-Fuller
 d KW: Phillips-Perron
 d KW: DFGLS

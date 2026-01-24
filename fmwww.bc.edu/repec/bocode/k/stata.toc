@@ -28,6 +28,7 @@ p kldbrecode module that provides crosswalk tables for translations between Germ
 p kmatch module module for multivariate-distance and propensity-score matching, including entropy balancing, inverse probability weighting, (coarsened) exact matching, and regression adjustment
 p kmest module to compute Kaplan-Meier survival probabilities as estimation results
 p kmsenspec module to estimate sensitivity, specificity and predictive values from Kaplan-Meier curves
+p kmtest module to perform Tests of Linear and Logarithmic Transformations for Integrated Processes
 p knapsack module to solve the knapsack problem
 p kobo2stata module to create labelled Stata datasets from KoboToolbox
 p koenker module to perform Koenker/White detailed test for heteroskedasticity 

@@ -1,5 +1,5 @@
 {smcl}
-{* 07nov2025}{...}
+{* 22jan2026}{...}
 {vieweralsosee "twoway dstat" "help twoway_dstat"}{...}
 {viewerjumpto "Syntax" "dstat##syntax"}{...}
 {viewerjumpto "Description" "dstat##description"}{...}
@@ -108,6 +108,12 @@ help for {hi:dstat}{...}
         {it:{help newvar:newvar1}} {it:{help newvar:newvar2}} {cmd:...}{c )-} {ifin}
         [{cmd:,} {it:{help dstat##predict_opts:predict_options}} ]
 
+{pmore}
+    Include distribution estimates from {cmd:dstat} in two-way graph
+
+{p 12 17 2}
+    [{cmdab:gr:aph}] {helpb twoway_dstat:{ul:tw}oway dstat} {it:...}
+
 
 {synoptset 26 tabbed}{...}
 {marker opts}{col 5}{help dstat##options:{it:options}}{col 33}Description
@@ -118,12 +124,19 @@ help for {hi:dstat}{...}
 {synopt:{cmdab:o:ver(}{help dstat##over:{it:spec}}{cmd:)}}compute
     results for subpopulations; not allowed with {cmd:dstat pw}
     {p_end}
-{synopt:{opt tot:al}}include results for total population
+{synopt:{cmdab:tot:al}[{cmd:(}{help dstat##total:{it:totaltype}}{cmd:)}]}include
+    results for total population
     {p_end}
 {synopt:{cmdab:bal:ance(}{help dstat##balance:{it:spec}}{cmd:)}}balance
     covariates using reweighting; requires {cmd:over()}
     {p_end}
+{synopt:{opt gr:aph}[{cmd:(}{help dstat##gropt:{it:spec}}{cmd:)}]}displays
+    results in a graph using {helpb coefplot}
+    {p_end}
 {synopt:{help dstat##repopts:{it:reporting_options}}}reporting options
+    {p_end}
+{synopt:{cmd:order(}{help dstat##order:{it:keywords}}{cmd:)}}set order in which
+    results are arranged; not allowed with {cmd:dstat pw}
     {p_end}
 {synopt:{opt noval:ues}}do not use values as coefficient names
     {p_end}
@@ -151,6 +164,13 @@ help for {hi:dstat}{...}
     {p_end}
 
 {syntab:{help dstat##sum:Subcommand {bf:summarize}}}
+{synopt:{cmd:at(}{it:{help varname:atvar}} [{cmd:=} {it:{help numlist}}]{cmd:)}}compute
+    conditional statistics by levels of {it:atvar}
+    {p_end}
+{synopt:{opt range(a b)}}set range of included levels from {it:atvar}
+    {p_end}
+{synopt:{opt cat:egorical}}treat {it:atvar} as categorical
+    {p_end}
 {synopt:{opt relax}}compute a statistic even if observations are out of support
     {p_end}
 {synopt:{opth by(varname)}}default secondary variable (for association and concentration measures)
@@ -159,9 +179,9 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opt pstr:ong}}use "strong" poverty definition
     {p_end}
-{synopt:{it:{help dstat##densopts:density_options}}}details of density estimation
+{synopt:{cmd:qdef(}{help dstat##qdef:{it:method}}{cmd:)}}quantile estimation method
     {p_end}
-{synopt:{it:{help dstat##quantopts:quantile_options}}}details of quantile estimation
+{synopt:{it:{help dstat##densopts:density_options}}}details of density estimation
     {p_end}
 
 {syntab:{help dstat##pw:Subcommand {bf:pw}}}
@@ -179,10 +199,9 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:[{cmd:l}|{cmd:r}]{cmd:tight}}use tight evaluation grid
     {p_end}
-{synopt:{opt range(a b)}}use grid from {it:a} to {it:b}; default is to determine
-    grid range from data
+{synopt:{opt range(a b)}}set range of evaluation grid
     {p_end}
-{synopt:{opth at(numlist)}}custom grid of evaluation points
+{synopt:{opth at(numlist)}}use custom evaluation grid
     {p_end}
 {synopt:{cmdab:unc:onditional}}rescale results by relative size of subpopulation
     {p_end}
@@ -203,7 +222,9 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opt com:mon}}use common bin definitions across subpopulations
     {p_end}
-{synopt:{opth at(numlist)}}custom bin definitions
+{synopt:{opt range(a b)}}set overall range of histogram bins
+    {p_end}
+{synopt:{opth at(numlist)}}use custom histogram bins
     {p_end}
 {synopt:{opt disc:rete}}treat data as discrete (calls {cmd:dstat proportion})
     {p_end}
@@ -215,7 +236,9 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opt freq:uency}}estimate frequencies instead of proportions
     {p_end}
-{synopt:{opth at(numlist)}}custom list of levels to be included
+{synopt:{opt range(a b)}}set range of included levels
+    {p_end}
+{synopt:{opth at(numlist)}}use custom list of levels
     {p_end}
 {synopt:{opt nocat:egorical}}allow variables that do not comply to Stata's rules
     for factor variables
@@ -236,10 +259,9 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opt com:mon}}use common evaluation points across subpopulations
     {p_end}
-{synopt:{opt range(a b)}}use grid from {it:a} to {it:b}; default is to determine
-    grid range from data
+{synopt:{opt range(a b)}}set range of evaluation grid
     {p_end}
-{synopt:{opth at(numlist)}}custom grid of evaluation points
+{synopt:{opth at(numlist)}}use custom evaluation grid
     {p_end}
 {synopt:{opt disc:rete}}treat data as discrete
     {p_end}
@@ -251,12 +273,11 @@ help for {hi:dstat}{...}
 {syntab:{help dstat##quantile:Subcommand {bf:quantile}}}
 {synopt:{opt n(#)}}size of evaluation grid; default is {cmd:n(99)}
     {p_end}
-{synopt:{opt range(a b)}}use grid within range from {it:a} to {it:b}, {it:a} and {it:b}
-    in [0,1]; default is {cmd:range(0 1)}
+{synopt:{opt range(a b)}}set range of evaluation grid; {it:a} and {it:b} in [0,1]
     {p_end}
-{synopt:{opth at(numlist)}}custom grid of evaluation points
+{synopt:{opth at(numlist)}}use custom evaluation grid
     {p_end}
-{synopt:{it:{help dstat##quantopts:quantile_options}}}details of quantile estimation
+{synopt:{cmd:qdef(}{help dstat##qdef:{it:method}}{cmd:)}}quantile estimation method
     {p_end}
 {synopt:{it:{help dstat##densopts:density_options}}}details of density estimation
     {p_end}
@@ -276,10 +297,9 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opt n(#)}}size of evaluation grid; default is {cmd:n(101)}
     {p_end}
-{synopt:{opt range(a b)}}use grid from {it:a} to {it:b}, {it:a} and {it:b}
-    in [0,1]; default is {cmd:range(0 1)}
+{synopt:{opt range(a b)}}set range of evaluation grid; {it:a} and {it:b} in [0,1]
     {p_end}
-{synopt:{opth at(numlist)}}custom grid of evaluation points
+{synopt:{opth at(numlist)}}use custom evaluation grid
     {p_end}
 
 {syntab:{help dstat##pshare:Subcommand {bf:pshare}}}
@@ -297,7 +317,9 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opt n(#)}}number of bins; default is {cmd:n(20)}
     {p_end}
-{synopt:{opth at(numlist)}}custom bin definitions
+{synopt:{opt range(a b)}}set overall range of bins; {it:a} and {it:b} in [0,1]
+    {p_end}
+{synopt:{opth at(numlist)}}use custom bins
     {p_end}
 
 {syntab:{help dstat##tip:Subcommand {bf:tip}}}
@@ -309,10 +331,9 @@ help for {hi:dstat}{...}
     {p_end}
 {synopt:{opt n(#)}}size of evaluation grid; default is {cmd:n(101)}
     {p_end}
-{synopt:{opt range(a b)}}use grid from {it:a} to {it:b}, {it:a} and {it:b}
-    in [0,1]; default is {cmd:range(0 1)}
+{synopt:{opt range(a b)}}set range of evaluation grid; {it:a} and {it:b} in [0,1]
     {p_end}
-{synopt:{opth at(numlist)}}custom grid of evaluation points
+{synopt:{opth at(numlist)}}use custom evaluation grid
     {p_end}
 {synoptline}
 {pstd}
@@ -385,13 +406,17 @@ help for {hi:dstat}{...}
     account of the uncertainty induced by the balancing.
 
 {pstd}
-    Basic functionality for graphing results is provided through the
-    {cmd:graph()} option or by applying command {cmd:dstat graph}
-    after estimation. {cmd:dstat} employs {helpb coefplot} for
-    graphing, which needs to be installed on the system; see
-    {net "describe coefplot, from(http://fmwww.bc.edu/repec/bocode/c/)":{bf:ssc describe coefplot}}. Furthermore,
-    {cmd:dstat} requires the {helpb moremata} package; see
-    {net "describe moremata, from(http://fmwww.bc.edu/repec/bocode/m/)":{bf:ssc describe moremata}}.
+    Basic functionality for graphing results using {helpb coefplot} is provided through the
+    {helpb dstat##gropt:graph()} option or by applying command {cmd:dstat graph}
+    after estimation. Further graphing functionality is provided by
+    {helpb twoway dstat}.
+
+{pstd}
+    {cmd:dstat} requires the {helpb moremata} package to be installed on the system; see
+    {net "describe moremata, from(http://fmwww.bc.edu/repec/bocode/m/)":{bf:ssc describe moremata}}. Furthermore,
+    {helpb coefplot} needs to be installed if you want to use
+    {cmd:dstat graph} or the {cmd:graph()} option; see
+    {net "describe coefplot, from(http://fmwww.bc.edu/repec/bocode/c/)":{bf:ssc describe coefplot}}.
 
 
 {marker statistics}{...}
@@ -841,17 +866,17 @@ help for {hi:dstat}{...}
     for estimation will always be the total sample including all subpopulations.
 
 {phang2}
-    {opt contr:ast}[{cmd:(}{it:#}|{cmd:lag}|{cmd:lead}{cmd:)}] computes contrasts between
-    subpopulations or between subpopulations and the total population. If
-    {cmd:contrast} is specified without argument, the total population or
-    the first subpopulation (possibly after applying {cmd:select()})
-    will be used as the basis for the contrasts, depending on whether option
-    {cmd:total} has been specified or not. Alternatively, specify
-    the value of the reference subpopulation in parentheses (this may also be
-    a subpopulation that has been excluded by {cmd:select()}) or
-    type {cmd:contrast(lag)} or {cmd:contrast(lead)} to take stepwise contrasts
-    with respect to the previous or next subpopulation, respectively. {cmd:contrast}
-    implies {cmd:common} (if relevant).
+    {opt contr:ast}[{cmd:(}{it:#}|{cmd:lag}|{cmd:lead}{cmd:)}] computes
+    contrasts between subpopulations. If {cmd:contrast} is specified without
+    argument, the results from the first reported subpopulation or,
+    if {helpb dstat##total:total()} is specified, the
+    results from {cmd:total()} will be used as the basis for the
+    contrasts. Alternatively, specify the value of the reference subpopulation
+    in parentheses (this may also be a subpopulation that has been excluded by
+    {cmd:select()}), or type {cmd:contrast(lag)} or {cmd:contrast(lead)} to take
+    stepwise contrasts with respect to the previous or next reported
+    subpopulation, respectively. {cmd:contrast} implies {cmd:common} (if
+    relevant).
 
 {pmore2}
     The estimates from the reference (sub)population will be included among the
@@ -890,10 +915,30 @@ help for {hi:dstat}{...}
 {pmore}
     Option {cmd:over()} is not supported by {cmd:dstat pw}.
 
+{marker total}{...}
 {phang}
-    {cmd:total} reports additional results across all subpopulations, including
-    subpopulations that may have been excluded by {cmd:select()}. {cmd:total}
-    only has an effect if {cmd:over()} is specified.
+    {cmd:total}[{cmd:(}{it:totaltype}{cmd:)}] reports additional results across
+    subpopulations, where {it:totaltype} is as follows.
+
+{p2colset 13 22 24 2}{...}
+{p2col:{opt p:ooled}}results based on pooled sample; this is the default
+    {p_end}
+{p2col:{opt m:ean}}mean of subpopulation results
+    {p_end}
+{p2col:{opt w:mean}}observation-weighted mean of subpopulation results
+    {p_end}
+
+{pmore}
+    Note that {cmd:total(pooled)} will include the observations from all
+    subpopulations, including subpopulations that may have been excluded by
+    {cmd:over()}-suboption {cmd:select()}. In contrast, {cmd:total(mean)}
+    and {cmd:total(wmean)} are based on the results selected by suboption
+    {cmd:select()} only. Furthermore, if {cmd:nocasewise} or {cmd:relax} is
+    applied, the weights used by {cmd:total(wmean)} reflect the relative
+    subpopulation sizes before excluding observations due to missing values or
+    values that are out of support. {cmd:total(mean)} and {cmd:total(wmean)}
+    imply {cmd:common} (if relevant). {cmd:total()} only has an effect if
+    {cmd:over()} is specified.
 
 {marker balance}{...}
 {phang}
@@ -944,6 +989,14 @@ help for {hi:dstat}{...}
     {cmd:casewise} is specified, balancing will be based on the overall estimation
     sample as defined in the description of the {cmd:casewise} option; the weights
     will not be recomputed for each variable individually.
+
+{marker gropt}{...}
+{phang}
+    {opt graph}[{cmd:(}{help dstat##graph_options:{it:graph_options}}{cmd:)}]
+    displays the results in a graph using {helpb coefplot}. The coefficients
+    table will be suppressed in this case (unless option {cmd:table} is
+    specified). Alternatively, use command {cmd:dstat graph} to display the
+    graph after estimation.
 
 {marker repopts}{...}
 {phang}
@@ -1015,18 +1068,28 @@ help for {hi:dstat}{...}
     {cmd:cformat()}, or {cmd:coeflegend}; see {help eform_option:{bf:[R]} {it:eform_option}} and
     the Reporting options in {helpb estimation options:[R] Estimation options}.
 
-{phang2}
-    {opt gr:aph}[{cmd:(}{help dstat##graph_options:{it:graph_options}}{cmd:)}]
-    displays the results in a graph using {helpb coefplot}. The coefficients
-    table will be suppressed in this case (unless option {cmd:table} is
-    specified). Alternatively, use command {cmd:dstat graph} to display the
-    graph after estimation.
+{marker order}{...}
+{phang}
+    {opt order(keywords)} sets the order in which the results are
+    arranged. Available keywords are {cmdab:o:ver}, {cmdab:v:ariables}, and
+    {cmdab:s:tatistics}. Keyword {cmd:statistics} is only relevant for
+    {cmd:dstat summarize}. Option {cmd:order()} is not supported by
+    {cmd:dstat pw}.
+
+{pmore}
+    In most cases the default is {cmd:order(over variables)} which means that
+    results are ordered by subpopulations and then by variables. Type
+    {cmd:order(variables over)} to flip the order. For {cmd:dstat summarize}
+    you could, for example, type {cmd:order(over statistics)} to order the
+    results by subpopulations and then by statistics, and use the variables
+    rather than the statistics as coefficient names.
 
 {phang}
     {opt novalues} prevents using the values of the evaluation points as
-    coefficient names. This is not relevant for {cmd:dstat summarize}. If {cmd:novalues}
+    coefficient names. If {cmd:novalues}
     is specified, the coefficients will be named as {it:stub#}, where
     {it:#} is consecutive number and {it:stub} is
+    {cmd:at} in case of {cmd:dstat summarize} with option {cmd:at()},
     {cmd:d} in case of {cmd:dstat density},
     {cmd:h} in case of {cmd:dstat histogram},
     {cmd:p} in case of {cmd:dstat proportion},
@@ -1039,8 +1102,7 @@ help for {hi:dstat}{...}
 
 {phang}
     {opth vformat(fmt)} sets the display format used to create coefficient names
-    from evaluation points. This is not relevant for {cmd:dstat summarize}. See
-    help {helpb format} for available formats.
+    from evaluation points. See help {helpb format} for available formats.
 
 {marker vce}{...}
 {dlgtab:SE/VCE}
@@ -1144,6 +1206,26 @@ help for {hi:dstat}{...}
 {dlgtab:Subcommand summarize}
 
 {phang}
+    {cmd:at(}{it:{help varname:atvar}} [{cmd:=} {it:{help numlist}}]{cmd:)}
+    computes conditional statistics by levels of {it:atvar}. Use
+    {it:numlist} to specify a custom set of levels to be considered. If {it:numlist}
+    is omitted, all observed levels of {it:atvar} are used. Restricting the
+    considered levels does not change the overall estimation sample.
+
+{phang}
+    {opt range(a [b])} limits the range of levels from {it:atvar} to be
+    considered. Argument {it:a} can be specified as {cmd:.} (missing) to impose no
+    lower limit; argument {it:b} can be omitted or specified as
+    {cmd:.} (missing) to impose no upper limit. Option {cmd:range()} has no effect
+    if {it:numlist} is specified in {cmd:at()}.
+
+{phang}
+    {opt categorical} treats {it:atvar} as categorical. This requires that
+    {it:atvar} complies to Stata's rules for factor variables
+    (no negative or non-integer values) and affects how the coefficients are
+    labeled in the output.
+
+{phang}
     {opt relax} continues computations even if there are observations outside
     of the support for a specific statistic. Some statistics such as the
     geometric mean, the MLD, or the Theil index require observations to be
@@ -1222,14 +1304,16 @@ help for {hi:dstat}{...}
     is specified.
 
 {phang}
-    {opt range(a b)} specifies the range of the evaluation grid. The default is
-    is to determine the range of the grid from the data; see option {cmd:n()}. Option
-    {cmd:range()} overrides {cmd:common}. Only one of {cmd:range()} and
-    {cmd:at()} is allowed.
+    {opt range(a [b])} specifies the range of the evaluation grid. The default
+    is is to determine the range of the grid from the data; see option
+    {cmd:n()}. Argument {it:a} can be specified as {cmd:.} (missing) to select
+    the default lower limit; argument {it:b} can be omitted or specified as
+    {cmd:.} (missing) to select the default upper limit. Only one of
+    {cmd:range()} and {cmd:at()} is allowed.
 
 {phang}
-    {opth at(numlist)} specifies a custom grid of evaluation points. Only
-    one of {cmd:n()} and {cmd:at()} is allowed.
+    {opth at(numlist)} specifies a custom grid of evaluation points. Options
+    {cmd:n()} and {cmd:range()} are not allowed if {cmd:at()} is specified.
 
 {phang}
     {cmd:unconditional} rescales results such that the
@@ -1373,12 +1457,23 @@ help for {hi:dstat}{...}
     specified, the bin definitions will be based on the data in the total population.
 
 {phang}
+    {opt range(a [b])} specifies the overall range of the histogram bins. The
+    default range is from the minimum to the maximum of the data. Argument
+    {it:a} can be specified as {cmd:.} (missing) to select
+    the default lower limit; argument {it:b} can be omitted or specified as
+    {cmd:.} (missing) to select the default upper limit. Option {cmd:range()}
+    does not restrict the data that will be used in the computations, it just
+    restricts the range of reported histogram bins. Only one of
+    {cmd:range()} and {cmd:at()} is allowed.
+
+{phang}
     {opth at(numlist)} specifies custom cutpoints for the bins (in ascending
     order). If {it:numlist} contains {it:n} numbers, {it:n}-1 bins will be
     created. Note that the constructed bins will cover all data only if the first
     cutpoint is smaller than or equal to the minimum of the data and the last
     cutpoint is larger than or equal to the maximum ({cmd:dstat} does {it:not} check
-    this condition and does not display a warning if the condition is violated).
+    this condition and does not display a warning if the condition is violated). Options
+    {cmd:n()}, {cmd:ep}, and {cmd:range()} are not allowed if {cmd:at()} is specified.
 
 {phang}
     {cmd:discrete} treats the data as discrete and estimates the probability of
@@ -1402,9 +1497,19 @@ help for {hi:dstat}{...}
     {opt frequency} estimates frequencies instead of proportions.
 
 {phang}
+    {opt range(a [b])} sets the range of levels for which to estimate
+    proportions. The default range is from the minimum to the maximum of the
+    data. Argument {it:a} can be specified as {cmd:.} (missing) to select
+    the default lower limit; argument {it:b} can be omitted or specified as
+    {cmd:.} (missing) to select the default upper limit. Option {cmd:range()}
+    does not restrict the data that will be used in the computations, it just
+    restricts the range of levels for which results are reported. Only one of
+    {cmd:range()} and {cmd:at()} is allowed.
+
+{phang}
     {opth at(numlist)} provides a custom list of levels for which to estimate
     proportions. The default is to use all levels observed in the data (across
-    subpopulations).
+    subpopulations). Only one of {cmd:at()} and {cmd:range()} is allowed.
 
 {phang}
     {opt nocategorical} allows outcome variables that do not comply to
@@ -1455,14 +1560,17 @@ help for {hi:dstat}{...}
     evaluation points will be based on the data range in the total population.
 
 {phang}
-    {opt range(a b)} specifies the range of the evaluation grid. The default is
-    is to determine the range of the grid from the data; see option {cmd:n()}. Option
-    {cmd:range()} overrides {cmd:common}. Only one of {cmd:range()} and
-    {cmd:at()} is allowed.
+    {opt range(a [b])} specifies the range of the evaluation grid. The default
+    is is to determine the range of the grid from the data; see option
+    {cmd:n()}. Argument {it:a} can be specified as {cmd:.} (missing) to select
+    the default lower limit; argument {it:b} can be omitted or specified as
+    {cmd:.} (missing) to select the default upper limit. Only one of
+    {cmd:range()} and {cmd:at()} is allowed.
 
 {phang}
     {opth at(numlist)} provides a custom list of points at which to evaluate
-    the CDF. Only one of {cmd:n()} and {cmd:at()} is allowed.
+    the CDF. Options {cmd:n()} and {cmd:range()} are not allowed if {cmd:at()}
+    is specified.
 
 {phang}
     {cmd:discrete} treats the data as discrete. In this case, the CDF will
@@ -1495,81 +1603,110 @@ help for {hi:dstat}{...}
     {cmd:n(99)}. Only one of {cmd:n()} and {cmd:at()} is allowed.
 
 {phang}
-    {opt range(a b)} specifies the range of the evaluation grid, {it:a} and
-    {it:b} in [0,1]. The default is {cmd:range(0 1)}. Only one of {cmd:range()}
-    and {cmd:at()} is allowed.
+    {opt range(a b)} specifies the range of the evaluation grid, with arguments
+    {it:a} and {it:b} in [0,1]. The default is {cmd:range(0 1)}. Only one of
+    {cmd:range()} and {cmd:at()} is allowed.
 
 {phang}
     {opth at(numlist)} provides a custom list of probabilities at which to
-    compute quantiles. The specified values must be within [0,1]. Only one of
-    {cmd:n()} and {cmd:at()} is allowed.
+    compute quantiles. The specified values must be within [0,1]. Options
+    {cmd:n()} and {cmd:range()} are not allowed if {cmd:at()} is specified.
 
-{marker quantopts}{...}
+{marker qdef}{...}
 {phang}
-    {it:quantile_options} set the details of quantile estimation. These
-    settings are relevant for command {cmd:dstat quantile} and various
-    statistics in {cmd:dstat summarize}. The options are as follows:
+    {cmd:qdef(}{it:method}[{cmd:,} {it:options}]{cmd:)} selects the method
+    to be used when computing quantiles. This is relevant for command
+    {cmd:dstat quantile} and various statistics in {cmd:dstat summarize}. Argument
+    {it:method} can be one of the following.
+
+{p2colset 14 31 33 2}{...}
+{p2col:{cmd:0} or {cmdab:hi:gh}}high quantile
+    {p_end}
+{p2col:{cmd:1} or {cmdab:inv:cdf}}low quantile (inverse of the ECDF);
+    can also type {cmdab:lo:w};
+    definition 1 in HF96 (Hyndman and Fan 1996)
+    {p_end}
+{p2col:{cmd:2} or {cmdab:avg:invcdf}}averaged quantile;
+    definition 2 in HF96
+    {p_end}
+{p2col:{cmd:3} or {cmd:closest}}nearest order statistic; definition 3 in HF96
+    {p_end}
+{p2col:{cmd:4} or {cmdab:parz:en}}interpolation with a=0 and b=1; definition 4 in HF96
+    {p_end}
+{p2col:{cmd:5} or {cmdab:haz:en}}interpolation with a=1/2 and b=1/2; definition 5 in HF96
+    {p_end}
+{p2col:{cmd:6} or {cmdab:weib:ull}}interpolation with a=0 and b=0; definition 6 in HF96
+    {p_end}
+{p2col:{cmd:7} or {cmdab:gumb:el}}interpolation with a=1 and b=1; definition 7 in HF96
+    {p_end}
+{p2col:{cmd:8} or {cmdab:tuk:ey}}interpolation with a=1/3 and b=1/3; definition 8 in HF96
+    {p_end}
+{p2col:{cmd:9} or {cmd:blom}}interpolation with a=3/8 and b=3/8; definition 9 in HF96
+    {p_end}
+{p2colset 13 31 33 2}{...}
+{p2col:{cmd:10} or {cmd:hd}}Harrell-Davis quantile (Harrell and Davis 1982);
+    the Harrell-Davis estimator typically leads to smoother quantile functions
+    than classical quantile definitions; standard errors do not depend on
+    density estimation and tend to be more reliable than for other quantile
+    definitions if there is heaping in the data
+    {p_end}
+{p2col:{cmd:11} or {cmd:mid}}mid-quantile by Ma et al. (2011); the mid-quantile
+    estimator typically leads to smoother quantile functions than classical
+    quantile definitions; Ma et al. (2011) suggest using the mid-quantile
+    estimator for discrete data
+    {p_end}
+{p2col:{cmd:12} or {cmdab:cali:fornia}}interpolation with a=1 and b=0
+    {p_end}
+{p2col:{cmd:13} or {cmd:beard}}interpolation with a=.31 and b=.31
+    {p_end}
+{p2col:{cmd:14} or {cmd:benard}}interpolation with a=.3 and b=.3
+    {p_end}
+{p2col:{cmd:15} or {cmd:cooper}}interpolation with a=.4075 and b=.4075
+    {p_end}
+{p2col:{cmd:16} or {cmdab:gring:orten}}interpolation with a=.44 and b=.44
+    {p_end}
+
+{pmore}
+    The default {it:method} is {cmd:avginvcdf}; this is also the method used by
+    {helpb summarize}. Methods 4-9 and 12-16 interpoate between points (p_i, X_(i))
+    with p_i = (i - a) / (n - a - b + 1) and i = 1,...,n. Also see help
+    {helpb mf_mm_quantile:mm_quantile()} for more information on the different
+    methods. {it:options} are as follows.
 
 {phang2}
-    {opt qdef(#)} sets the quantile definition to be used when computing
-    quantiles, with {it:#} in {c -(}0,...,11{c )-}. The default is
-    {cmd:qdef(2)} (same as, e.g. {helpb summarize}). Definitions 1-9 are as
-    described in Hyndman and Fan (1996), definition 0 is the "high" quantile,
-    definition 10 is the Harrell-Davis quantile (Harrell and Davis 1982),
-    definition 11 is the mid-quantile (Ma et al. 2011); see
-    {helpb mf_mm_quantile:mm_quantile()} for more information. Apart from the
-    {cmd:dstat quantile} and statistic {cmd:quantile()}, option {cmd:qdef()} affects
-    all statistics that make use of quantiles (e.g. {cmd:trim}, {cmd:winsor},
-    {cmd:huber}, {cmd:biweight}, {cmd:mad}, etc.).
-
-{phang2}
-    {opt hdquantile} is a synonym for {cmd:qdef(10)} (Harrell-Davis
-    quantiles). Only one of {opt hdquantile}, {opt mquantile}, and {opt qdef()}
-    is allowed. The Harrell-Davis estimator typically leads to smoother
-    quantile functions than classical quantile definitions. Furthermore,
-    standard errors do not depend on density estimation and tend to be
-    more reliable than for other quantile definitions if there is heaping in the data.
-
-{phang2}
-    {opt hdtrim}[{cmd:(}{it:width}{cmd:)}] applies trimming to the Harrell-Davis
+    {opt t:rim}[{cmd:(}{it:width}{cmd:)}] applies trimming to the Harrell-Davis
     quantile estimator as suggested by Akinshin (2021). If {cmd:hdtrim} is specified without
-    argument, the width of evaluation interval is set to 1/sqrt(n), where n
+    argument, the width of the evaluation interval is set to 1/sqrt(n), where n
     is the effective sample size. Alternatively, specify a custom {it:width}. Sensible values
     for {it:width} lie between 0 and 1 ({it:width}>=1 uses the untrimmed estimator;
-    {it:width}<=0 sets the width to 1/sqrt(n)).
+    {it:width}<=0 sets the width to 1/sqrt(n)). Option {cmd:trim()} has an effect only if
+    {it:method} is equal to {cmd:10} (or {cmd:hd}).
 
 {phang2}
-    {opt mquantile} is a synonym for {cmd:qdef(11)} (mid-quantiles). Only one
-    of {opt hdquantile}, {opt mquantile}, and {opt qdef()} is allowed. The
-    mid-quantile estimator typically leads to smoother quantile
-    functions than classical quantile definitions. Ma et al. (2011) suggest
-    using the mid-quantile estimator for discrete data.
-
-{phang2}
-    {opt mqopts(options)} provides additional settings for mid-quantiles that
-    are relevant for standard error estimation. {it:options} are as follows:
-
-{phang3}
     {opt us:mooth(#)}, with {it:#}<1, sets the degree of undersmoothing that is
-    applied when determining the sparsity function via density estimation.
-    The default is {cmd:usmooth(0.2)}. The undersmoothing factor is computed as
-    n^(1/5) / n^(1/(5*(1-#)), where n is the effective sample size. Set # to 0
-    to omit undersmoothing; #<0 leads to oversmoothing. Note that
-    {help dstat##densopts:{it:density_options}} have no effect on density estimation
-    for mid-quantiles.
+    applied when determining the sparsity function via density estimation for
+    the standard errors of mid-quantiles. The default is
+    {cmd:usmooth(0.2)}. The undersmoothing factor is computed as n^(1/5) /
+    n^(1/(5*(1-#)), where n is the effective sample size. Set # to 0 to omit
+    undersmoothing; #<0 leads to oversmoothing. Note that {help
+    dstat##densopts:{it:density_options}} have no effect on density estimation
+    for mid-quantiles. Option {cmd:usmooth()} has an effect only if
+    {it:method} is equal to {cmd:11} (or {cmd:mid}).
 
-{phang3}
+{phang2}
     {cmd:cdf}[{cmd:(}{it:#}{cmd:})], with {it:#}>=0, determines the sparsity
-    function by differencing the ECDF instead of employing density
-    estimation. This may lead to somewhat more valid results in discrete data (i.e. data
-    with relatively few distinct levels), but results may be unreliable in
-    continuous data. Optional argument {it:#} sets the width of the integration
-    window that is used to interpolate across jumps in the ECDF ({it:#} is on
-    the probability scale; for example, a value of 0.01 is equivalent to a
-    window covering 1 percent of data mass). The default is {it:#} = 1 /
-    ceil(2 * n^(2/5)), where n is the effective sample size. Set {it:#}=0 to
-    omit integration (this corresponds to the formulas given in Ma et al. 2011;
-    the sparsity function will have sharp jumps).
+    function for the standard errors of mid-quantiles by differencing the ECDF
+    instead of employing density estimation. This may lead to somewhat more
+    valid results in discrete data (i.e. data with relatively few distinct
+    levels), but results may be unreliable in continuous data. Optional
+    argument {it:#} sets the width of the integration window that is used to
+    interpolate across jumps in the ECDF ({it:#} is on the probability scale;
+    for example, a value of 0.01 is equivalent to a window covering 1 percent
+    of data mass). The default is {it:#} = 1 / ceil(2 * n^(2/5)), where n is
+    the effective sample size. Set {it:#}=0 to omit integration (this
+    corresponds to the formulas given in Ma et al. 2011; the sparsity function
+    will then have sharp jumps). Option {cmd:cdf()} has an effect only if
+    {it:method} is equal to {cmd:11} (or {cmd:mid}).
 
 {marker lorenz}{...}
 {dlgtab:Subcommand lorenz}
@@ -1602,14 +1739,14 @@ help for {hi:dstat}{...}
     {cmd:n()} and {cmd:at()} is allowed.
 
 {phang}
-    {opt range(a b)} specifies the range of the evaluation grid, {it:a} and
-    {it:b} in [0,1]. The default is {cmd:range(0 1)}. Only one of {cmd:range()}
-    and {cmd:at()} is allowed.
+    {opt range(a b)} specifies the range of the evaluation grid, with arguments
+    {it:a} and {it:b} in [0,1]. The default is {cmd:range(0 1)}. Only one of
+    {cmd:range()} and {cmd:at()} is allowed.
 
 {phang}
-    {opth at(numlist)} provides a custom list of points at which to
-    estimate Lorenz ordinates. The specified values must be within [0,1]. Only one of
-    {cmd:n()} and {cmd:at()} is allowed.
+    {opth at(numlist)} provides a custom list of points at which to estimate
+    Lorenz ordinates. The specified values must be within [0,1]. Options
+    {cmd:n()} and {cmd:range()} are not allowed if {cmd:at()} is specified.
 
 {marker pshare}{...}
 {dlgtab:Subcommand pshare}
@@ -1635,14 +1772,21 @@ help for {hi:dstat}{...}
 
 {phang}
     {opt n(#)} sets the number of bins. A regular grid of {it:#} bins between
-    0 an 1 will be used. The default is {cmd:n(20)}.
+    {it:a} and {it:b} will be used, with {it:a} and {it:b}
+    as set by option {cmd:range()}. The default is {cmd:n(20)}.
+
+{phang}
+    {opt range(a b)} specifies the overall range of the reported bins, with
+    arguments {it:a} and {it:b} in [0,1]. The default is {cmd:range(0 1)}. Only
+    one of {cmd:range()} and {cmd:at()} is allowed.
 
 {phang}
     {opth at(numlist)} specifies custom cutpoints for the bins (in ascending
     order). The specified values must be within [0,1]. If {it:numlist} contains
     {it:n} numbers, {it:n}-1 bins will be created. Note that the constructed
     bins will cover all data only if the first cutpoint is 0 and the last
-    cutpoint is 1.
+    cutpoint is 1. Options {cmd:n()} and {cmd:range()} are not allowed if
+    {cmd:at()} is specified.
 
 {marker tip}{...}
 {dlgtab:Subcommand tip}
@@ -1669,14 +1813,14 @@ help for {hi:dstat}{...}
     and {cmd:at()} is allowed.
 
 {phang}
-    {opt range(a b)} specifies the range of the evaluation grid, {it:a} and
-    {it:b} in [0,1]. The default is {cmd:range(0 1)}. Only one of {cmd:range()}
-    and {cmd:at()} is allowed.
+    {opt range(a b)} specifies the range of the evaluation grid, with arguments
+    {it:a} and {it:b} in [0,1]. The default is {cmd:range(0 1)}. Only one of
+    {cmd:range()} and {cmd:at()} is allowed.
 
 {phang}
-    {opth at(numlist)} provides a custom list of points at which to
-    estimate the ordinates. The specified values must be within [0,1]. Only one of
-    {cmd:n()} and {cmd:at()} is allowed.
+    {opth at(numlist)} provides a custom list of points at which to estimate
+    the TIP ordinates. The specified values must be within [0,1]. Options
+    {cmd:n()} and {cmd:range()} are not allowed if {cmd:at()} is specified.
 
 {marker graph_options}{...}
 {dlgtab:Graph options}
@@ -1732,16 +1876,17 @@ help for {hi:dstat}{...}
     specified.
 
 {phang}
-    {cmd:bystats}[{cmd:(}{cmdab:m:ain}|{cmdab:s:econdary}{cmd:)}] treats coefficients as equations and
-    equations as coefficients. This is only relevant after
-    {cmd:dstat summarize} and only has an effect if the results contain multiple
-    equations. The effect of {cmd:bystats} typically is that results are grouped
-    by statistics rather than by subpopulations or variables (the option may
-    also have the opposite effect depending on how exactly {cmd:dstat} returned its
+    {cmd:bystats}[{cmd:(}{cmdab:m:ain}|{cmdab:s:econdary}{cmd:)}] treats
+    coefficients as equations and equations as coefficients. This is only
+    relevant after {cmd:dstat summarize} and only has an effect if the results
+    contain multiple equations and if option {cmd:at()} has not been
+    specified. The effect of {cmd:bystats} typically is that results are grouped by
+    statistics rather than by subpopulations or variables (the option may also
+    have the opposite effect depending on how exactly {cmd:dstat} returned its
     results). Optional type {cmd:bystats(main)} (the default) or
     {cmd:bystats(secondary)} to specify wether coefficients should replace the
-    main dimension or the secondary dimension of the equations, respectively. This
-    is only relevant if the equations contain two dimensions
+    main dimension or the secondary dimension of the equations,
+    respectively. This is only relevant if the equations contain two dimensions
     (subpopulations and variables).
 
 {phang}
@@ -2151,7 +2296,7 @@ help for {hi:dstat}{...}
 {synopt:{cmd:e(over_ratio)}}{cmd:ratio} or {cmd:lnratio} or empty{p_end}
 {synopt:{cmd:e(over_accumulate)}}{cmd:accumulate} or empty{p_end}
 {synopt:{cmd:e(over_fixed)}}{cmd:fixed} or empty{p_end}
-{synopt:{cmd:e(total)}}{cmd:total} or empty{p_end}
+{synopt:{cmd:e(total)}}{cmd:pooled}, {cmd:mean}, {cmd:wmean}, or empty{p_end}
 {synopt:{cmd:e(unconditional)}}{cmd:unconditional} or empty{p_end}
 {synopt:{cmd:e(balance)}}list of balancing variables{p_end}
 {synopt:{cmd:e(balmethod)}}balancing method{p_end}
@@ -2161,12 +2306,15 @@ help for {hi:dstat}{...}
 {synopt:{cmd:e(kernel)}}kernel as specified in {cmd:kernel()}{p_end}
 {synopt:{cmd:e(exact)}}{cmd:exact} or empty{p_end}
 {synopt:{cmd:e(boundary)}}boundary correction method{p_end}
-{synopt:{cmd:e(hdtrim)}}{cmd:hdtrim()} as specified{p_end}
-{synopt:{cmd:e(mqopts)}}{cmd:mqopts()} as specified{p_end}
+{synopt:{cmd:e(qdef_trim)}}{cmd:trim()} as specified in {cmd:qdef()}{p_end}
+{synopt:{cmd:e(qdef_usmooth)}}{cmd:usmooth()} as specified in {cmd:qdef()}{p_end}
+{synopt:{cmd:e(qdef_cdf)}}{cmd:cdf()} as specified in {cmd:qdef()}{p_end}
+{synopt:{cmd:e(csinfo)}}list of keywords providing info on column stripe{p_end}
 {synopt:{cmd:e(novalues)}}{cmd:novalues} or empty{p_end}
 {synopt:{cmd:e(vformat)}}display format specified in {cmd:vformat()}{p_end}
 {synopt:{cmd:e(stats)}}list of (unique) summary statistics{p_end}
 {synopt:{cmd:e(slist)}}normalized specification of statistics and variables{p_end}
+{synopt:{cmd:e(atvar)}}name of variable specified in {cmd:at()} or empty{p_end}
 {synopt:{cmd:e(percent)}}{cmd:percent} or empty{p_end}
 {synopt:{cmd:e(proportion)}}{cmd:proportion} or empty{p_end}
 {synopt:{cmd:e(frequency)}}{cmd:frequency} or empty{p_end}

@@ -1,11 +1,13 @@
 {smcl}
-{* 07nov2025}{...}
+{* 23jan2026}{...}
 {vieweralsosee "[G-2] graph twoway" "help twoway"}{...}
 {vieweralsosee "dstat" "help dstat"}{...}
 {viewerjumpto "Syntax" "twoway_dstat##syntax"}{...}
 {viewerjumpto "Description" "twoway_dstat##description"}{...}
 {viewerjumpto "Options" "twoway_dstat##options"}{...}
 {viewerjumpto "Examples" "twoway_dstat##examples"}{...}
+{viewerjumpto "Author" "twoway_dstat##author"}{...}
+{viewerjumpto "Also see" "twoway_dstat##also_see"}{...}
 {hline}
 help for {hi:twoway dstat}{...}
 {right:{browse "http://github.com/benjann/dstat/"}}
@@ -32,6 +34,7 @@ help for {hi:twoway dstat}{...}
     where {it:subcmd} is one of
 
 {p2colset 15 28 30 2}{...}
+{p2col:{opt su:mmarize}}summary statistics; requires option {helpb dstat##sum:at()}{p_end}
 {p2col:{opt d:ensity}}density function{p_end}
 {p2col:{opt pdf}}same as {cmd:density}{p_end}
 {p2col:{opt h:istogram}}histogram{p_end}
@@ -44,6 +47,11 @@ help for {hi:twoway dstat}{...}
 {p2col:{opt sh:are}}percentile shares{p_end}
 {p2col:{opt tip}}TIP curve{p_end}
 
+{pmore}
+    In case of {cmd:summarize}, syntax of {it:varlist} is
+    [{cmd:(}{it:{help dstat##statistics:stats}}{cmd:)}] {varlist}
+    [ {cmd:(}{it:{help dstat##statistics:stats}}{cmd:)} {varlist} {it:...} ].
+    {p_end}
 {pmore}
     {cmd:fweight}s, {cmd:pweight}s, {cmd:iweight}, and {cmd:aweight}s are allowed; see {help weight}.
 
@@ -280,6 +288,13 @@ help for {hi:twoway dstat}{...}
         . {stata dstat cdf tenure}
         . {stata estimates store CDF}
         . {stata twoway (dstat ci PDF) (dstat PDF) (dstat CDF, yaxis(2))}
+
+{pstd}
+    Conditional summary statistics using {cmd:dstat summarize} with option {cmd:at()}:
+
+        . {stata sysuse nlsw88, clear}
+{p 8 12 2}
+        . {stata twoway dstat summarize (mean median) wage, at(grade=10/18) over(union)}
 
 
 {marker author}{...}
