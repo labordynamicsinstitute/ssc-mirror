@@ -1,8 +1,9 @@
 *! kmtest.ado - Tests of Linear and Logarithmic Transformations for Integrated Processes
-*! Version 1.0.0  23jan2026
+*! Version 1.0.2  24jan2026
 *! Based on Kobayashi & McAleer (1999), Econometric Reviews
 *! Implementation by Dr. Merwan Roudane
 *! 
+*! v1.0.2: Fixed local macro syntax for panelvar (thanks to Kit Baum)
 *! This command implements non-nested tests for comparing linear vs logarithmic
 *! transformations of I(1) processes, as proposed by Kobayashi and McAleer.
 
@@ -18,10 +19,9 @@ program define kmtest, rclass
     * Get variable name
     local y `varlist'
     
-    * Check for time series
     qui tsset
-    local timevar = r(timevar)
-    local panelvar = r(panelvar)
+    local timevar `r(timevar)'
+    local panelvar `r(panelvar)'
     
     if "`panelvar'" != "" {
         di as error "Panel data not supported. Please use single time series."

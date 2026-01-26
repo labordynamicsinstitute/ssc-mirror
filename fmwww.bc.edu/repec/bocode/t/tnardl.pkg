@@ -1,0 +1,20 @@
+d 'TNARDL': module to enhances time-series analysis in Stata by automating the estimation of three-regime NARDL models
+d
+d    This program enhances time-series analysis in Stata by
+d automating the estimation of three-regime NARDL models. It uses
+d automatic grid search and a unified workflow with diagnostic
+d visualization. 
+d
+d KW: time-series
+d KW: ARDL
+d KW: nonlinear models
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20251225
+d
+d Author:   Imadeddin Almosabbeh, Arab East Colleges, Saudi Arabia, Riyadh
+d Support: email msbbh68@@hotmail.com
+d
+f tnardl.ado
+f tnardl.sthlp

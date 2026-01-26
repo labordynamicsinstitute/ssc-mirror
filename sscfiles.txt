@@ -239,6 +239,7 @@ fmwww.bc.edu/repec/bocode/t/tabletutorial.hlp
 fmwww.bc.edu/repec/bocode/t/toview.sthlp
 fmwww.bc.edu/repec/bocode/t/title.hlp
 fmwww.bc.edu/repec/bocode/t/trpois0.ado
+fmwww.bc.edu/repec/bocode/t/tnardl.sthlp
 fmwww.bc.edu/repec/bocode/t/tmpinvi.pkg
 fmwww.bc.edu/repec/bocode/t/theildeco.ado
 fmwww.bc.edu/repec/bocode/t/tabmerge.ado
@@ -270,6 +271,7 @@ fmwww.bc.edu/repec/bocode/t/tdpd.pkg
 fmwww.bc.edu/repec/bocode/t/theildeco.sthlp
 fmwww.bc.edu/repec/bocode/t/tabsheet.pkg
 fmwww.bc.edu/repec/bocode/t/traces.html
+fmwww.bc.edu/repec/bocode/t/tnardl.pkg
 fmwww.bc.edu/repec/bocode/t/tobithetm_lfh.ado
 fmwww.bc.edu/repec/bocode/t/twload.ado
 fmwww.bc.edu/repec/bocode/t/twolevelr2.zip
@@ -742,6 +744,7 @@ fmwww.bc.edu/repec/bocode/t/tabchii.hlp
 fmwww.bc.edu/repec/bocode/t/tacts.pkg
 fmwww.bc.edu/repec/bocode/t/tabstatmat.hlp
 fmwww.bc.edu/repec/bocode/t/tarowi.html
+fmwww.bc.edu/repec/bocode/t/tnardl.ado
 fmwww.bc.edu/repec/bocode/t/tiva2023_matainitclass.mata
 fmwww.bc.edu/repec/bocode/t/tmpinv.mmat
 fmwww.bc.edu/repec/bocode/t/tsti.sthlp

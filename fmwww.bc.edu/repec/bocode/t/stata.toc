@@ -92,6 +92,7 @@ p tmpinv module solving Tabular Matrix Problems via Pseudoinverse Estimation (TM
 p tmpinvi module solving Interactive Tabular Matrix Problems via Pseudoinverse Estimation (TMPinvI) program is a wrapper for the TMPinv-estimator commands tmpinv and tmpinvl2 with options extending its functionality to pre/postestimation
 p tmpm module to implement Trauma Mortality Prediction Model using AIS, ICD-9 or ICD-10 codes
 p tmpm2 module to implement Trauma Mortality Prediction Model using AIS, ICD-9 or ICD-10 codes
+p tnardl module to enhances time-series analysis in Stata by automating the estimation of three-regime NARDL models
 p tobithetm module to estimate Tobit Multiplicative Heteroscedasticity Regression
 p tobitiv module to perform instrumental variables tobit
 p todate module to generate Stata date variables from run-together date variables
