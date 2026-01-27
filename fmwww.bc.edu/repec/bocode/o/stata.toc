@@ -5,6 +5,7 @@ p obsdiff module to identify differences in values across observations for a var
 p obsofint module to display observations of interest
 p ocmt module to perform multiple testing approach in high-dimensional linear regression
 p ocratio modules to fit continuation-ratio models on ordinal response data
+p ocsb module to compute the Osborn-Chui-Smith-Birchenhall (OCSB) test for seasonal unit roots
 p oda module for conducting Optimal Discriminant Analysis (Windows only)
 p oddsrisk module to convert Logistic Odds Ratios to Risk Ratios
 p odi module to score Oswestry Disability Index

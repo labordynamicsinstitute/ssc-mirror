@@ -15,7 +15,7 @@ d KW: Income
 d
 d Requires: Stata version 13
 d
-d Distribution-Date: 20250612
+d Distribution-Date: 20260126
 d
 d Author: Ignacio Flores, Paris School of Economics
 d Support: email ignacio.flores@@psemail.eu
@@ -27,7 +27,10 @@ f ../j/json-20180813.jar
 f wid.sthlp
 f wid_example1.ado
 f wid_example1.sthlp
+f wid_example1.png
 f wid_example2.ado
 f wid_example2.sthlp
+f wid_example2.png
 f wid_example3.ado
 f wid_example3.sthlp
+f wid_example3.png

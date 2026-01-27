@@ -130,6 +130,33 @@ It may be {cmd:aic} (Akaike Information Criterion) or {cmd:bic} (Bayesian Inform
 {p2colreset}{...}
 
 
+{marker results}{...}
+{title:Stored results}
+
+{pstd}
+{cmd:tnardl} stores the following in {cmd:e()}:
+
+{synoptset 20 tabbed}{...}
+{p2col 5 20 24 2: Scalars}{p_end}
+{synopt:{cmd:e(s1)}}Lower optimal threshold value{p_end}
+{synopt:{cmd:e(s2)}}Upper optimal threshold value{p_end}
+{synopt:{cmd:e(rss_min)}}Minimum Residual Sum of Squares achieved{p_end}
+
+{p2col 5 20 24 2: Macros}{p_end}
+{synopt:{cmd:e(cmd)}}{cmd:tnardl}{p_end}
+{synopt:{cmd:e(cmdline)}}command as typed{p_end}
+{synopt:{cmd:e(depvar)}}name of dependent variable{p_end}
+
+{p2col 5 20 24 2: Matrices}{p_end}
+{synopt:{cmd:e(b)}}Coefficient vector{p_end}
+{synopt:{cmd:e(V)}}Variance-covariance matrix of the estimators{p_end}
+{synopt:{cmd:e(sym_test)}}Matrix containing Wald test results for asymmetry{p_end}
+{synopt:{cmd:e(diagnostics)}}Matrix containing diagnostic test statistics and p-values{p_end}
+
+{pstd}
+The command creates system variables ({it:target}_POS, {it:target}_MED, {it:target}_NEG) representing the partial sum processes based on the detected thresholds.{p_end}
+
+
 {marker author}{...}
 {title:Author}
 

@@ -1,8 +1,8 @@
 *! version 1.00.00  24jan2026  Prof. Imadeddin A. Almosabbeh
 capture program drop tnardl
 
-program define tnardl
-version 14.0
+program define tnardl, eclass
+version 15.0
     syntax varlist(min=2), TARGET(varname) [MAXlags(integer 2) CRITerion(string) NOGraph TRIM(real 15)]
     
     // 1. Parsing input variables
@@ -274,9 +274,7 @@ version 14.0
            (line `lb' `t_ax' if `es'==1, lpattern(dash) lcolor(red)), ///
            title("CUSUMQ: `dep_var'") name(CUSUMQ_`dep_var', replace) legend(off)
 
-    display as result "{hline 80}"
-    display as result "  TNARDL PROCEDURE COMPLETED SUCCESSFULLY"
-    display as result "{hline 80}"
+    
 	
 	}
     else {
@@ -327,5 +325,32 @@ version 14.0
         name(Multipliers_`dep_var', replace)
 
     display as result "Success: Dynamic Multiplier Graph generated."
-
+	
+	
+// ---------------------------------------------------------
+    // 7. Final Clean-up and Posting Results
+    // ---------------------------------------------------------
+    
+    // 1. Restore final estimation results (Crucial step for e-class)
+    quietly estimates restore final_tnardl
+    
+    // 2. Store threshold values
+    // Add thresholds to the stored results
+    ereturn scalar s1 = b1
+    ereturn scalar s2 = b2
+    ereturn scalar rss_min = min_rss
+    
+    // 3. Store additional matrices (Symmetry tests & Diagnostics)
+    ereturn matrix sym_test = SYMTESS
+    ereturn matrix diagnostics = DIAG
+    
+    // 4. Set command name to tnardl
+    // This informs Stata that the active results belong to tnardl
+    ereturn local cmd "tnardl"
+    ereturn local cmdline "tnardl `0'"
+    
+    // 5. Completion message
+    display _n as result "{hline 80}"
+    display as result "  TNARDL PROCEDURE COMPLETED SUCCESSFULLY"
+    display as result "{hline 80}"
 end

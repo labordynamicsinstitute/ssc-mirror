@@ -1,26 +1,28 @@
 {smcl}
-{* *! version 15.0 11July2024}{...}
-{viewerdialog dietr "dialog dietr"}{...}
+{* *! version 1.0.0 26 Jan 2026}{...}
 {viewerjumpto "Syntax" "dietr##syntax"}{...}
 {viewerjumpto "Menu" "dietr##menu"}{...}
 {viewerjumpto "Description" "dietr##description"}{...}
 {viewerjumpto "Required variables" "dietr##required"}{...}
-{viewerjumpto "Optional Variables" "dietr##optional"}{...}
-{viewerjumpto "Project specific parameters" "dietr##Parameters"}{...}
+{viewerjumpto "Optional variables" "dietr##optional"}{...}
+{viewerjumpto "Project parameters" "dietr##parameters"}{...}
+{viewerjumpto "Pillar Two parameters" "dietr##pillartwo"}{...}
 {viewerjumpto "Examples" "dietr##examples"}{...}
-
+{viewerjumpto "Reference" "dietr##reference"}{...}
 
 {hline}
 {marker menu}{...}
 {title:Menu}
-   
- 	{help dietr##description:Model description}
-	{help dietr##syntax:Syntax} 
-	{help dietr##required:Required Variables}		
-	{help dietr##optional:Optional Variables}
-	{help dietr##Parameters:Project specific parameters}
-	{help dietr##examples:Examples}
-	{help dietr##reference:Reference}
+
+    {help dietr##description:Description}
+    {help dietr##syntax:Syntax}
+    {help dietr##required:Required variables}
+    {help dietr##optional:Optional variables}
+    {help dietr##parameters:Project parameters}
+    {help dietr##pillartwo:Pillar Two parameters}
+    {help dietr##examples:Examples}
+    {help dietr##reference:Reference}
+
 
 {hline}
 
@@ -28,8 +30,7 @@
 {title:Description}
 
 {pstd}
-{cmd:dietr} calculates the cost of capital and the forward-looking average and marginal effective tax rates on a hypothetical investment for specified parameters in a dataset based on Hebous and Mengistu (2024). 
-
+{cmd:dietr} calculates the user cost of capital and the forward-looking marginal and average effective tax rates (METR and AETR) for a hypothetical investment, based on the model in Hebous and Mengistu (2026). The command reads required variables from the dataset and combines them with user-specified parameters to compute the corresponding measures for each observation. It generates the variables {it:ucc} (cost of capital), {it:metr}, {it:metr2}, {it:aetr}, and {it:tax_system}. If any of these variable names already exist in the dataset, the ado-file stops and returns an error to avoid overwriting existing data.
 
 {hline}
 
@@ -37,132 +38,214 @@
 {title:Syntax}
 
 {phang}
-{cmd:dietr} {cmd:,} id(varname) taxrate(varname) inflation(varname) depreciation(varname) deprtype(varname) delta(varname) [{it:options} ]
+{cmd:dietr} {cmd:,}
+    id(varname) taxrate(varname) inflation(varname) ///
+    depreciation(varname) deprtype(varname) delta(varname) ///
+    [{it:options}]
 
 {pstd}
-{cmd:dietr}  requires five variables: a unique identifier, statutory tax rate, inflation rate, depreciation rate for tax purposes, depreciation type (straight-line or declining balance), and the economic depreciation rate. 
-All other variables and parameters have default values, which users can modify as described below.
-
+{cmd:dietr} requires a unique identifier, the statutory tax rate, the inflation rate, the tax depreciation rate, the depreciation method (straight-line or declining-balance), and the economic depreciation rate. All other parameters have default values, which can be modified using the options listed below.
 
 {hline}
+
 {marker required}{...}
-{title:Required Variables}
+{title:Required variables}
 
 {synoptset 30 tabbed}{...}
 {synopthdr}
 {synoptline}
-{synopt :{opth taxrate:(real:real)}} The tax rate in decimal format (e.g., 0.05 if the tax rate is 5% ).  {p_end}
 
-{synopt :{opth inflation:(real:real)}} The inflation rate in decimal format (e.g., 0.05  if the inflation rate is 5%). {p_end}
+{synopt:{opth id:(varname)}}Unit of analysis for the ETR (e.g., country). Useful when multiple records belong to the same ETR unit (e.g., firm-country pairs).{p_end}
 
-{synopt :{opth deprtype:(string:string)}} The depreciation system ('sl' for straight-line and 'db' for declining balance depreciation method). {p_end}
+{synopt:{opth taxrate:(varname)}}Statutory corporate income tax rate (decimal format, e.g., 0.05 = 5%).{p_end}
 
-{synopt :{opth depreciation:(real:real)}}  The depreciation rate for tax purposes in decimal format (e.g., 0.25 if tax depreciation is 25%). {p_end}
+{synopt:{opth inflation:(varname)}}Inflation rate (decimal format, e.g., 0.05 = 5%).{p_end}
 
-{synopt :{opth delta:(real:real)}}  The economic depreciation rate in decimal format (e.g., 0.25 if economic depreciation is 25%). {p_end}
+{synopt:{opth deprtype:(varname)}} Depreciation method.
+{bf:db} (declining balance, default) or {bf:sl} (straight line).
+If {bf:minimumtax=no}, the following additional methods are allowed:
+{bf:initialDB} (initial allowance followed by declining balance),
+{bf:initialSL} (initial allowance followed by straight line), and
+{bf:SLorDB} (maximum of straight-line or declining-balance allowance).
+If {bf:minimumtax=yes}, only {bf:db} and {bf:sl} are permitted. {p_end}
+
+{synopt:{opth inal:(varname numeric)}} Initial allowance.
+Required when {bf:deprtype} is {bf:initialSL} or {bf:initialDB} and {bf:minimumtax=no}.
+The variable specified in {bf:inal()} represents the fraction of the asset’s cost that is immediately deductible in period 0 (0 ≤ inal ≤ 1).
+If {bf:minimumtax=yes}, {bf:inal()} is not permitted and initial depreciation schemes are disallowed. {p_end}
+
+{synopt:{opth depreciation:(varname)}}Tax depreciation rate (decimal format, e.g., 0.25 = 25%).{p_end}
+
+{synopt:{opth delta:(varname)}}Economic depreciation rate (decimal format, e.g., 0.25 = 25%).{p_end}
 
 {pstd}
-The user can assign any name to the tax rate, inflation, deprtype, depreciation, and delta variables in the dataset, provided that the variables in the dataset aer referenced in the correct variable holder in the dietr command. 
-For example,  if the taxrate variable is named xyz in the dataset, it should be included in the dietr command as dietr, taxrate(xyz).
+The variable names in the dataset can be arbitrary. For example, if the tax rate is stored in variable {cmd:abc}, specify {cmd:taxrate(abc)} in the command.
 
 {hline}
 
 {marker optional}{...}
-{title:Optional Variables}
-
-{synoptset 30 tabbed}{...}
-{synopthdr}
-{synoptline}
-{synopt :{opth system:(strings:string)}} The standard corporate income tax ('cit') is the default option. Specify 'cft' for a cashflow tax or 'ace' for the alllowance for equity system. {p_end}
-
-{synopt :{opth realint:(real:real)}}   The real interest rate in decimal format (e.g., 0.05 if real interest rate is 5%). The default is 5%. {p_end}
-
-{synopt :{opth debt:(real:real)}}  The proportion of the investment financed with debt, in decimal format (e.g., 0.5 if 50% of the investment is fianced with debt). The default is 0%. {p_end}
-
-{synopt :{opth newequity:(real:real)}}  The proportion of the investment financed with the issuance of new equity, in decimal format 
-(e.g., 0.5 if 50% of the investment is fianced with new equity). The default is 0%. The combined share of project financing through debt and new equity can not exceed 100%. {p_end}
-
-{synopt :{opth holiday:(real:real)}} The number of years the project benefits from a zero statutory corporate income tax rate (that is, the number of years of the "tax holiday"). The default value is zero. {p_end}
-
-{syntab:Personal Income Tax}
-{synopt :{opth pitint:(real:real)}} The tax rate on interest income at the individual level, in decimal format (e.g., 0.2 if the tax rate is 20%). The default is 0%. {p_end}
-
-{synopt :{opth pitdiv:(real:real)}} The tax rate on dividend income at the individual level, in decimal format (e.g., 0.2 if the tax rate is 20%). The default is 0%. {p_end}
-
-{synopt :{opth pitcgain:(real:real)}} The tax rate on capital gains income at the individual, level, in decimal format (e.g., 0.2 if the tax rate is 20%). The default is 0%. {p_end}
-{hline}
-
-
-{marker Parameters}{...}
-{title: Parameters}
+{title:Optional variables}
 
 {synoptset 30 tabbed}{...}
 {synopthdr}
 {synoptline}
 
-{synopt :{opth p:(real:real)}}  The profitability of the investment in decimal format (e.g., 0.1 if profit is 10%). The default is 10%. {p_end}
+{synopt:{opth systemvar:(varname)}}Tax system specified in a variable: {cmd:cit}, {cmd:cft}, or {cmd:ace}.{p_end}
 
-{synopt :{opth sbie:(real:real)}} The amount of the substance based income exclusion (SBIE) as percentage of the book value of capital in decimal format (e.g., 1.5 if sbie is 150% of the book value of capital), 
-which means 50% reflects payroll and 100% reflects tangible capital.  If, for example, sbie is specified to be 80%, this means the mix of tangible capital and payroll is 80% of the book value of total capital. 
-If the user does not specify a value, the default is 1.5. {p_end}
+{synopt:{opth system:(string)}}Tax system as a parameter: {cmd:cit} (default), {cmd:cft}, or {cmd:ace}. If neither {cmd:system()} nor {cmd:systemvar()} is provided, the default system is the standard CIT.{p_end}
 
-{synopt :{opth qrtc:(real:real)}} The amount of a qualified domestic refundable tax credit, under Pillar Two rules, as a percentage of the book value of capital (e.g., 0.02 if it is 2%). The default is zero. 
-If this option is specified without the minimumtax(yes) option, then it computes the ETRs with a standard refundable tax credit.  {p_end}
+{synopt:{opth realint:(real)}}Real interest rate (decimal format). Default: 0.05.{p_end}
 
-{synopt :{opth nqrtc:(real:real)}}  The amount of non-qualified domestic refundable tax credit, under Pillar Two, as a percentage of the book value of capital (e.g., 0.02 if it is 2%). The default is zero. 
-If this option is specified without the minimumtax(yes) option, then it computes the ETRs with a standard non-refundable tax credit (that is, reduction in the tax liabilities only in periods when the investment is not making losses). {p_end}
+{synopt:{opth debt:(real)}}Share of investment financed with debt (decimal format). Default: 0.{p_end}
 
-{synopt :{opth refund:(strings:string)}} Specify 'no' to generate the ETR under a system without a full loss-offset that allows for loss carry-forward without interest
-(without cash refund of the tax value of losses for loss making companies). 'yes' is the default, that is, full loss offset is assumed. {p_end}
+{synopt:{opth newequity:(real)}}Share financed with newly-issued equity (decimal). Default: 0. The combined share of {cmd:debt()} and {cmd:newequity()} may not exceed 1.{p_end}
 
-{synopt :{opth minimumtax:(strings:string)}} Specify 'yes' to generate the ETR with a top-up tax following the Pillar Two minimum tax GLoBE rules. Otherwise, 'no' is the default, assuming no top-up tax. {p_end}
+{synopt:{opth holiday:(real)}}Years of tax holiday (zero statutory CIT rate). Default: 0.{p_end}
 
-{synopt :{opth minrate:(real:real)}}  The minimum tax rate following the GLoBE rules in decimal format (e.g., 0.2 if the minimum tax rate is 20%). The default is 15% as it is currently the case in Pillar Two. {p_end}
+{syntab:{ul:{bf:Personal income tax}}}
+{synopt:{opth pitint:(real)}}Tax rate on interest income (decimal). Default: 0.{p_end}
+{synopt:{opth pitdiv:(real)}}Tax rate on dividend income (decimal). Default: 0.{p_end}
+{synopt:{opth pitcgain:(real)}}Tax rate on capital gains (decimal). Default: 0.{p_end}
 
 {hline}
+
+{marker parameters}{...}
+{title:Project parameters}
+
+{synoptset 30 tabbed}{...}
+{synopthdr}
+{synoptline}
+
+{synopt:{opth p:(real)}}Profitability of the investment (decimal format, e.g., 0.10 = 10%). Default: 0.10.{p_end}
+
+{synopt:{opth superdeduction:(real)}}Super-deduction on the acquisition cost (decimal). A value of 0.5 implies 150% deductibility. Default: 0. Range: 0–1.5.{p_end}
+
+{synopt:{opth beta:(real)}}Capital share in the Cobb–Douglas production function. Default: 0.4.{p_end}
+
+{synopt:{opth credit:(real)}}Pre-tax credit (share of initial investment) independent of the statutory tax rate. Default: 0.{p_end}
+
+{synopt:{opth taxcredit:(real)}} is a credit against tax liability (so its value scales with the statutory rate). It is expressed as a share of initial investment. Default: 0.{p_end}
+
+{hline}
+
+
+{marker pillartwo}{...}
+{title:Pillar Two parameters}
+
+{synoptset 30 tabbed}{...}
+{synopthdr}
+{synoptline}
+
+{synopt:{opth minimumtax:(string)}}Specify {cmd:yes} to compute ETRs
+including a Pillar Two top-up tax under the GloBE rules.
+Default: {cmd:no}.{p_end}
+
+{synopt:{opth minrate:(real)}}Minimum tax rate under the GloBE rules
+(decimal). Default: 0.15.{p_end}
+
+{synopt:{opth carveout:(real)}}Carve-out rate applied to the SBIE base for
+tangible assets and payroll. Default: 0.05.{p_end}
+
+{synopt:{opth qtil:(real)}}Qualified tax incentive expressed as a share of
+payroll. Must lie in [0,1]. Default: {bf:0}.{p_end}
+
+{synopt:{opth qtik:(real)}}Qualified tax incentive expressed as a share of
+capital depreciation. Must lie in [0,1]. Default: {bf:0}.{p_end}
+
+{synopt:{opth sl:(real)}}Maximum qualified tax incentive expressed as a
+multiple of payroll (e.g., 0.05 = 5%). Default: {bf:0.055}.{p_end}
+
+{synopt:{opth slk:(real)}}Maximum qualified tax incentive expressed as a
+multiple of depreciation (e.g., 0.05 = 5%). Default: {bf:0.055}.{p_end}
+
+
+
+
 
 {marker examples}{...}
 {title:Examples}
-Consider a dataset containing the following variables: 𝑥,𝑧,𝑎,𝑏,𝑐,and 𝑘. Here, 
-𝑥 uniquely identifies each observation, 
-𝑧 denotes the statutory tax rate, 
-𝑎 is the preferred measure of inflation, 
-𝑏 specifies the type of depreciation system, 
-𝑐 indicates the depreciation rate for tax purposes, and 
-𝑘 represents the economic depreciation rate of the asset.
 
-{phang} **Example 1: Calculate the METR and AETR of an equity-financed project without a top-up tax, using default parameters:** 
-{p_end}  
-{cmd:. dietr, id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) delta(k)}
+{pstd}
+Suppose a dataset contains the variables {it:x}, {it:z}, {it:a}, {it:b}, {it:c}, and {it:k}, where:
+{break}
+{it:x} uniquely identifies each observation,
+{break}
+{it:z} is the statutory corporate tax rate,
+{break}
+{it:a} is the inflation rate,
+{break}
+{it:b} specifies the tax depreciation method ({cmd:sl} or {cmd:db}),
+{break}
+{it:c} is the tax depreciation rate, and
+{break}
+{it:k} is the economic depreciation rate of the asset.
+{break}
+{it:inal} is the initial tax depreciation rate of the asset.
 
-{phang} **Example 2: Calculate the METR and AETR of an equity-financed project without a top-up tax and with default parameters, assuming tax losses are non-refundable:** 
-{p_end}  
-{cmd:. dietr, id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) delta(k) refund(no)}
+{phang}
+{bf:Example 1:} Calculate the METR and AETR of an equity-financed project using default parameters and no top-up tax:
+{p_end}
+{cmd:. dietr , id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) inal(inal) delta(k)}
 
-{phang} **Example 3: Calculate the METR and AETR of a project without a top-up tax and with default parameters, assuming a debt variable called 'loan':** 
-{p_end}  
-{cmd:. dietr, id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) delta(k) debt(loan)}
+{phang}
+{bf:Example 2:} Specify a higher rate of return on the investment (profitability {cmd:p(0.3)}):
+{p_end}
+{cmd:. dietr , id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) inal(inal) delta(k) p(0.3)}
 
-{phang} **Example 4: Calculate the METR and AETR of an equity-financed project without a top-up tax, using user-defined parameters:** 
-{p_end}  
-{cmd:. dietr, id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) delta(k) p(0.2)}
+{phang}
+{bf:Example 3:} Calculate METR and AETR for a project with debt financing using variable {it:loan}:
+{p_end}
+{cmd:. dietr , id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) inal(inal) delta(k) debt(loan)}
 
-{phang} **Example 5: Calculate the METR and AETR of an equity-financed project without a top-up tax, assuming the system is a cash flow tax:** 
-{p_end}  
-{cmd:. dietr, id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) delta(k) system(cft)}
+{phang}
+{bf:Example 4:} Calculate ETRs assuming a cash-flow tax system:
+{p_end}
+{cmd:. dietr , id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) delta(k) system(cft)}
 
-{phang} **Example 6: Calculate the METR and AETR of an equity-financed project with a top-up tax:** 
-{p_end}  
+{phang}
+{bf:Example 5:} Calculate ETRs assuming an ACE tax system:
+{p_end}
+{cmd:. dietr , id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) inal(inal) delta(k) system(ace)}
+
+{phang}
+{bf:Example 6:} Calculate ETRs for a debt-financed project with personal income tax on interest, dividends, and capital gains:
+{p_end}
+{cmd:. dietr , id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) inal(inal) delta(k) debt(loan) pitint(pitint) pitdiv(pitdiv) pitcgain(pitcgain)}
+
+{hline}
+
+{phang}
+{bf:Example 7:} Calculate METR and AETR under a standard cit with a Pillar Two top-up tax:
+{p_end}
+{cmd:. dietr, id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) delta(k) system(cit) minimumtax(yes)}
+
+{phang}
+{bf:Example 8:} Calculate METR and AETR under a cash-flow tax with a Pillar Two top-up tax:
+{p_end}
 {cmd:. dietr, id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) delta(k) system(cft) minimumtax(yes)}
 
-{phang} **Example 7: Calculate the METR and AETR with a top-up tax and a qualified refundable tax credit:** {p_end}  
-{cmd:. dietr, id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) delta(k) system(cft) minimumtax(yes) qrtc(1)}
+{phang}
+{bf:Example 9:} Apply a Pillar Two minimum tax rate of 20%:
+{p_end}
+{cmd:. dietr, id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) delta(k) system(cit) minimumtax(yes)  minrate(0.20)}
 
-{phang} **Example 8: Calculate the METR and AETR with a top-up tax and a minimum tax rate of 20%:** {p_end}  
-{cmd:. dietr, id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) delta(k) system(cft) minimumtax(yes) minrate(0.2)}
+{phang}
+{bf:Example 10:} Apply a qualified tax incentive equivalent to 50 percent of
+payroll as a refundable tax credit under Pillar Two.
+{p_end}
+{cmd:. dietr, id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) delta(k) system(cit) minimumtax(yes) qtil(0.5)}
 
-{phang} **Example 9: Calculate the METR and AETR of a debt financed project with personal income tax:** {p_end}  
-{cmd:. dietr, id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) delta(k) debt(loan) pitint(pitint) pitdiv(pitdiv) pitcgain(pitcgain) }
+{phang}
+{bf:Example 11:} Change the payroll tax incentive coefficient from 5.5 percent
+to 4 percent and apply a qualified tax incentive equivalent to 50 percent of
+payroll under Pillar Two.
+{p_end}
+{cmd:. dietr, id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) delta(k) system(cit) minimumtax(yes) qtil(0.5) sl(0.04)}
+
+{phang}
+{bf:Example 12:} Apply a qualified tax incentive equivalent to 50 percent of depreciation under Pillar Two.
+{p_end}
+{cmd:. dietr, id(x) taxrate(z) inflation(a) deprtype(b) depreciation(c) delta(k) system(cit) minimumtax(yes) qtik(0.5)}
 
 
 {hline}
@@ -170,6 +253,6 @@ Consider a dataset containing the following variables: 𝑥,𝑧,𝑎,𝑏,𝑐,
 {marker reference}{...}
 {title:Reference}
 
-Shafik Hebous and Andualem Mengistu (2024). Efficient Economic Rent Taxation under a Global 
-Minimum Corporate Tax. Oxford University Centre for Business Taxation Working Paper 2024-10.
-{browse "https://oxfordtax.sbs.ox.ac.uk/sitefiles/wp2410-hebous-shafik.pdf"}
+{pstd}
+Shafik Hebous and Andualem Mengistu (2026). Forward-Looking Effective Tax Rates under the Global Minimum Corporate Tax.{p_end}
+

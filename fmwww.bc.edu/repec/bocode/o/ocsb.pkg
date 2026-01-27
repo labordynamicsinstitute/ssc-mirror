@@ -1,0 +1,28 @@
+d 'OCSB': module to compute the Osborn-Chui-Smith-Birchenhall (OCSB) test for seasonal unit roots
+d
+d  ocsb implements the Osborn-Chui-Smith-Birchenhall (OCSB) test
+d for seasonal unit roots (JBES, 1988).  The OCSB test is designed
+d to determine whether seasonal differencing is needed for a time
+d series.  The null hypothesis is that the series has a seasonal
+d unit root (needs seasonal differencing), while the alternative is
+d that the series is stationary (does not need seasonal
+d differencing). ocsb_ndiff is a wrapper program that repeatedly
+d applies the OCSB test to determine the optimal number of seasonal
+d differences required to make a time series stationary.  It
+d follows an iterative procedure similar to nsdiffs in R's forecast
+d package. 
+d
+d KW: unit root
+d KW: seasonal differencing
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20251226
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f ocsb.ado
+f ocsb.sthlp
+f ocsb_ndiff.ado
+f ocsb_ndiff.sthlp

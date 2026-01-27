@@ -9,9 +9,9 @@ d KW: time-series
 d KW: ARDL
 d KW: nonlinear models
 d
-d Requires: Stata version 14
+d Requires: Stata version 15
 d
-d Distribution-Date: 20251225
+d Distribution-Date: 20251226
 d
 d Author:   Imadeddin Almosabbeh, Arab East Colleges, Saudi Arabia, Riyadh
 d Support: email msbbh68@@hotmail.com
