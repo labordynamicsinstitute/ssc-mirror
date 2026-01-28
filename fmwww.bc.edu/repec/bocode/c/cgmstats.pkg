@@ -1,0 +1,26 @@
+d 'CGMSTATS': module to summarize data from continuous glucose monitors 
+d
+d  cgmstats is a package designed for the analysis of continuous
+d glucose monitoring (CGM) data.  The cgmstats package generates
+d CGM summary measures for data from a variety of CGM systems and
+d allows the user to flexibly define ranges and generate data
+d visualizations. The cgmstats package supports rigorous and
+d reproducible analyses of CGM data. 
+d
+d KW: data management
+d KW: glocuse monitors
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20251227
+d
+d Author: Natalie Daya Malek , Johns Hopkins University
+d Support: email ndaya1@@jh.edu
+d
+f cgmstats.ado
+f cgmstats.sthlp
+f cgmstats_examples.do
+f cgm15ex1.dta
+f cgm15ex2.dta
+f cgm5ex1.dta
+f cgm5ex2.dta

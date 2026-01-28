@@ -1,4 +1,4 @@
-d 'SURVCOLLAPSE': module to collapse surveillance data over a chosen time unit, completes the series
+d 'SURVCOLLAPSE': module to collapse surveillance data over a chosen time unit and complete the series
 d
 d  survcollapse collapses surveillance data in which each
 d observation may represent a single case or multiple cases

@@ -59,6 +59,7 @@ p cfitzrw module to implement Christiano-Fitzgerald Random Walk band pass filter
 p cflpois module to calculate confidence limits for rates based on Poisson outcome
 p cfout module to compare two datasets, saving a list of differences
 p cfvars module to compare variable name lists in two data sets
+p cgmstats module to summarize data from continuous glucose monitors 
 p cgroup module to group contiguous observations with identical values of a varlist
 p cgssm module implementing the contrasting groups' standard setting method
 p chaid module to conduct chi-square automated interaction detection
