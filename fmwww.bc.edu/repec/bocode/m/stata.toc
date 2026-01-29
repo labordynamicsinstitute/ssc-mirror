@@ -189,6 +189,7 @@ p mkprofile module to create or edit your 'profile.do'
 p mkproject module to create a project folder with some boilerplate code and research log
 p mkstrsn modules to format Social Security number variables
 p mktab module to print table of estimates in delimited or screen-presentation format
+p mktex module to convert Microsoft Word (.docx) documents to LaTeX (.tex) format with complete document structure
 p mlad module to perform maximum likelihood using automatic differentiation
 p mlboolean module to implement Boolean logit and probit
 p mlcoint module to compute Johansen cointegration tests

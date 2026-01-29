@@ -1,0 +1,39 @@
+d 'MKTEX': module to convert Microsoft Word (.docx) documents to LaTeX (.tex) format with complete document structure
+d
+d	mktex converts Microsoft Word (.docx) documents to complete
+d LaTeX (.tex) documents with table of	  contents support.  The
+d command creates a full LaTeX document structure including
+d preamble, packages,	 and proper document formatting.  It is
+d optimized for both Chinese and English documents, with   
+d automatic language detection and appropriate package selection.  
+d  The generated LaTeX document includes a table of contents that
+d is properly linked in the PDF output.    For Chinese documents,
+d the command automatically includes the ctex package and sets
+d appropriate	 fonts. 
+d
+d KW: document
+d KW: docx
+d KW: LaTeX
+d KW: Chinese text
+d
+d Requires: Stata version 18 and pandoc from pandoc.org
+d
+d Distribution-Date: 20260128
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+d Author: Wu Xinzhuo,   University of Bristol 
+d Support: email   2957833979@@qq.com
+d
+d Author: Ma Defang,   Capital Normal University (CNU), Beijing
+d Support: email   6346@@cnu.edu.cn
+d
+f mktex.ado
+f mktex.sthlp

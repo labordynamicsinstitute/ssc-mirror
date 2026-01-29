@@ -19,13 +19,16 @@ d KW: volatility
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20211014
+d Distribution-Date: 20260128
 d
 d Author: Luis Furuya-Kanamori , University of Queensland
 d Support: email l.furuya@@uq.edu.au
 d
 d Author: Polychronis Kostoulas, University of Thessaly
 d Support: email    pkost@@uth.gr
+d
+d Author: Leonelo Bautista, University of Wisconsin-Madison
+d Support: email lebautista@@wisc.edu
 d
 f evi.sthlp
 f evi.ado
