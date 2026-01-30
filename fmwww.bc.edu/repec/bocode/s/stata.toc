@@ -114,6 +114,7 @@ p shp2dta module to converts shape boundary files to Stata datasets
 p shuffle module to shuffle a list
 p shuffle8 module to shuffle a list
 p shufflevar module to shuffle variables relative to the rest of the dataset
+p shwinters_forecast module to compute Holt-Winters seasonal forecasts with confidence intervals
 p sic_to_ff module to convert SIC codes to Fama-French industry classifications
 p sicff module to create Fama French Industry Variable from SIC Code
 p side_histogram module to plot side by side histograms 

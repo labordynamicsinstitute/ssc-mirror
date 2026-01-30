@@ -1,7 +1,7 @@
-*! version 1.1 NS-SEC Full Construction
+*! version 1.2 NS-SEC Full Construction
 program define socstrat
     version 10.0
-    syntax , socstatus(varlist min=2 max=2) generate(name) [float] version(str) strat(str) [nolabel]
+    syntax , socstatus(varlist min=2 max=2) generate(name) version(str) strat(str) [nolabel]
 
     * Parse variable list
     local soc : word 1 of `socstatus'
@@ -12,9 +12,31 @@ program define socstrat
         capture confirm numeric variable `var'
         if _rc {
             di as error "Variable `var' is missing or not numeric."
-            exit
+            exit 198
         }
     }
+	
+* Check if status is always in 1–7 (or missing)
+qui count if !(inrange(`status',1,7) | missing(`status'))
+local nbad_status = r(N)
+if `nbad_status' > 0 {
+    di as error "`status' contains `nbad_status' observation(s) with values outside the valid range (1–7). Aborting."
+    exit 198
+}	
+
+* Check that only one version was supplied
+local nvers : word count `version'
+if `nvers' != 1 {
+    di as error "option version() must contain exactly one value (e.g. version(90))."
+    exit 198
+}
+
+* Check that only one version was supplied
+local nvers : word count `strat'
+if `nvers' != 1 {
+    di as error "option strat() must contain exactly one value (e.g. strat(nssec))."
+    exit 198
+}
 	
 	if "`strat'" == "nssec" {
 	
@@ -29,8 +51,14 @@ program define socstrat
 	
 	* recode SOC 90
 	if "`version'" == "90" {
-		if (`soc'>=100 & `soc'<=999) | (`soc'==.) {
-			
+		qui count if `touse' & !( inrange(`soc',100,999) | missing(`soc') )
+    local nbad = r(N)
+    if `nbad' > 0 {
+        di as error "`soc' contains `nbad' observation(s) with values outside the 3-digit SOC1990 range (100–999). Aborting."
+        exit 198
+    }
+	
+ * If we reach here, all non-missing SOCs are 100-999 => safe to recode			
 			qui {
     * Define nssec based on specified variables
 gen `generate' = .
@@ -248,8 +276,9 @@ foreach soc_code in 900 {
 }
 			}
 
-	* Define and apply value labels for employment status
-    if "`nolabel'" == "" {
+	* Define and apply value labels 
+    if "`label'"!="nolabel" {
+    capture label drop `generate'_nssec_lbl		
     label define `generate'_nssec_lbl ///
         1 "1.1 Large employers and higher managerial and administrative occupations" ///
         2 "1.2 Higher professional occupations" ///
@@ -261,18 +290,23 @@ foreach soc_code in 900 {
 		8 "7 Routine occupations"
     capture label values `generate' `generate'_nssec_lbl
 }
-			
-		}
-		
-				else {
-			di in red "`soc' is not a 3-digit SOC1990"
-		}
-	}
+
+* If we made it this far, success
+    di as txt "NS-SEC variable constructed successfully."	
+* End of version 90 NS-SEC block
 	
+		}		
+		
 	* recode SOC 00
 	else if "`version'" == "00" {
-			if (`soc'>=1000 & `soc'<=9999) | (`soc'==.) {
-				
+		qui count if `touse' & !( inrange(`soc',1111,9259) | missing(`soc') )
+    local nbad = r(N)
+    if `nbad' > 0 {
+        di as error "`soc' contains `nbad' observation(s) with values outside the 4-digit SOC2000 range (1111-9259). Aborting."
+        exit 198
+    }
+	
+ * If we reach here, all non-missing SOCs are 1111-9259 => safe to recode						
 				qui {
 		
     * Define nssec based on specified variables
@@ -376,7 +410,7 @@ foreach soc_code in 9243 9244 {
 }
 
 	* Define and apply value labels for employment status
-    if "`nolabel'" == "" {
+    if "`label'"!="nolabel" {
     label define `generate'_nssec_lbl ///
         1 "1.1 Large employers and higher managerial and administrative occupations" ///
         2 "1.2 Higher professional occupations" ///
@@ -391,20 +425,25 @@ foreach soc_code in 9243 9244 {
 				
 			}
 			
+* If we made it this far, success
+    di as txt "NS-SEC variable constructed successfully."	
+* End of version 00 NS-SEC block			
 			
-			
-					else {
-			di in red "`soc' is not a 4-digit SOC2000"
-		}
 	}
-	}
+	
 	
 
 	
 	* recode SOC 10
 	else if "`version'" == "10" {
-			if (`soc'>=1000 & `soc'<=9999) | (`soc'==.) {
-				
+		qui count if `touse' & !( inrange(`soc',1115,9279) | missing(`soc') )
+    local nbad = r(N)
+    if `nbad' > 0 {
+        di as error "`soc' contains `nbad' observation(s) with values outside the 4-digit SOC2010 range (1115-9279). Aborting."
+        exit 198
+    }
+	
+ * If we reach here, all non-missing SOCs are 1115-9279 => safe to recode					
 				qui {
     * Define nssec based on specified variables
 gen `generate' = .
@@ -519,7 +558,7 @@ foreach soc_code in 8231 {
 				}
 
 	* Define and apply value labels for employment status
-    if "`nolabel'" == "" {
+    if "`label'"!="nolabel" {
     label define `generate'_nssec_lbl ///
         1 "1.1 Large employers and higher managerial and administrative occupations" ///
         2 "1.2 Higher professional occupations" ///
@@ -530,17 +569,29 @@ foreach soc_code in 8231 {
         7 "6 Semi-routine occupations" ///
 		8 "7 Routine occupations"
     capture label values `generate' `generate'_nssec_lbl
-}
-			}
-					else  {
-			di in red "`soc' is not a 4-digit SOC2010"
-	}
-	}
+}	
+
+* If we made it this far, success
+
+    di as txt "NS-SEC variable constructed successfully."	
+	
+* End of version 10 NS-SEC block	
+
+			}	
+			
+	
+	
 	
 		* recode SOC 20
 	else if "`version'" == "20" {
-			if (`soc'>=1000 & `soc'<=9999) | (`soc'==.) {
-				
+		qui count if `touse' & !( inrange(`soc',1111,9269) | missing(`soc') )
+    local nbad = r(N)
+    if `nbad' > 0 {
+        di as error "`soc' contains `nbad' observation(s) with values outside the 4-digit SOC2020 range (1111-9269). Aborting."
+        exit 198
+    }		
+ * If we reach here, all non-missing SOCs are 1111-9269 => safe to recode					
+	
 				qui {
 					
     * Define nssec based on specified variables
@@ -670,10 +721,9 @@ foreach soc_code in 8160 8231 9251 {
 
 					
 				}
-			}
 			
 	* Define and apply value labels for employment status
-    if "`nolabel'" == "" {
+    if "`label'"!="nolabel" {
     label define `generate'_nssec_lbl ///
         1 "1.1 Large employers and higher managerial and administrative occupations" ///
         2 "1.2 Higher professional occupations" ///
@@ -686,17 +736,17 @@ foreach soc_code in 8160 8231 9251 {
     capture label values `generate' `generate'_nssec_lbl
 }
 
-	}
-	
-	
-		else {
-		di in red "No such SOC available"
-	}
+* If we made it this far, success
 
-    * Display success message
-    di in red "NS-SEC variable constructed successfully."
+    di as txt "NS-SEC variable constructed successfully."	
+	
+* End of version 10 NS-SEC block	
+
 	}
 	
+	}
+	
+* Start of RGSC Construction - End of NS-SEC 
 		else if "`strat'" == "rgsc" {
 			
 	*
@@ -710,8 +760,12 @@ foreach soc_code in 8160 8231 9251 {
 	
 	* recode SOC 90
 	if "`version'" == "90" {
-		if (`soc'>=100 & `soc'<=999) | (`soc'==.) {
-			
+		qui count if `touse' & !( inrange(`soc',100,999) | missing(`soc') )
+    local nbad = r(N)
+    if `nbad' > 0 {
+        di as error "`soc' contains `nbad' observation(s) with values outside the 3-digit SOC1990 range (100–999). Aborting."
+        exit 198
+    }			
 			qui {
     * Define rgsc based on specified variables
 gen `generate' = .
@@ -936,10 +990,10 @@ foreach soc_code in 959 {
 }
 			
 		}
-		}
+		
 
 	* Define and apply value labels for employment status
-    if "`nolabel'" == "" {
+    if "`label'"!="nolabel" {
     label define `generate'_rgsc_lbl ///
         1 "1 Professional occupations" ///
         2 "2 Managerial and Technical occupations" ///
@@ -951,19 +1005,24 @@ foreach soc_code in 959 {
     capture label values `generate' `generate'_rgsc_lbl
 }
 
-    * Display success message
-    di in red "RGSC variable constructed successfully."
+* If we made it this far, success
 
-				else {
-			di in red "`soc' is not a 3-digit SOC1990"
-		}
+    di as txt "RGSC variable constructed successfully."	
+	
+* End of version 90 RGSC block	
 
 	}
 	
 	* recode SOC 00
 	else if "`version'" == "00" {
-			if (`soc'>=1000 & `soc'<=9999) | (`soc'==.) {
-				
+		qui count if `touse' & !( inrange(`soc',1111,9259) | missing(`soc') )
+    local nbad = r(N)
+    if `nbad' > 0 {
+        di as error "`soc' contains `nbad' observation(s) with values outside the 4-digit SOC2000 range (1111-9259). Aborting."
+        exit 198
+    }
+	
+ * If we reach here, all non-missing SOCs are 1111-9259 => safe to recode					
 				qui {
 		
     * Define rgsc based on specified variables
@@ -1031,9 +1090,9 @@ foreach soc_code in 8126 8142 8218 9121 9129 9131 9132 9139 9141 9231 9232 9233 
 }
 
 		}
-			}
+			
 	* Define and apply value labels for employment status
-    if "`nolabel'" == "" {
+    if "`label'"!="nolabel" {
     label define `generate'_rgsc_lbl ///
         1 "1 Professional occupations" ///
         2 "2 Managerial and Technical occupations" ///
@@ -1046,19 +1105,24 @@ foreach soc_code in 8126 8142 8218 9121 9129 9131 9132 9139 9141 9231 9232 9233 
     capture label values `generate' `generate'_rgsc_lbl
 }
 
-    * Display success message
-    di in red "RGSC variable constructed successfully."
+* If we made it this far, success
 
-				else {
-			di in red "`soc' is not a 4-digit SOC2000"
-		}
+    di as txt "RGSC variable constructed successfully."	
+	
+* End of version 00 RGSC block	
 
 	}
 	
 	* recode SOC 10
 	else if "`version'" == "10" {
-			if (`soc'>=1000 & `soc'<=9999) | (`soc'==.) {
-				
+		qui count if `touse' & !( inrange(`soc',1115,9279) | missing(`soc') )
+    local nbad = r(N)
+    if `nbad' > 0 {
+        di as error "`soc' contains `nbad' observation(s) with values outside the 4-digit SOC2010 range (1115-9279). Aborting."
+        exit 198
+    }
+	
+ * If we reach here, all non-missing SOCs are 1115-9279 => safe to recode					
 				qui {
 		
     * Define rgsc based on specified variables
@@ -1154,13 +1218,10 @@ foreach soc_code in 9235 {
     replace `generate' = 6 if `soc' == `soc_code' & inlist(`status', 3, 4, 5, 7)
     replace `generate' = 4 if `soc' == `soc_code' & inlist(`status', 6)
 }
-
-
-
 		}
-			}
+			
 	* Define and apply value labels for employment status
-    if "`nolabel'" == "" {
+    if "`label'"!="nolabel" {
     label define `generate'_rgsc_lbl ///
         1 "1 Professional occupations" ///
         2 "2 Managerial and Technical occupations" ///
@@ -1173,23 +1234,34 @@ foreach soc_code in 9235 {
     capture label values `generate' `generate'_rgsc_lbl
 }
 
-    * Display success message
-    di in red "RGSC variable constructed successfully."
+* If we made it this far, success
 
-				else {
-			di in red "`soc' is not a 4-digit SOC2010"
-		}
+    di as txt "RGSC variable constructed successfully."	
+	
+* End of version 10 RGSC block	
 
 	}
 	
-	* recode SOC 00
+	* recode SOC 20
 	else if "`version'" == "20" {
 		di in red "SOC 2020 Version not Availible for RGSC"
+		exit 198
 	}
 	
-					else {
-		di in red "No such SOC available"
+	
 	}
+	
+				else {
+		di in error "Unsupported version: `version'. socstrat only supports Standard Occupational Classification codes 1990, 2000, 2010, and 2020."
+		exit 198
+	}
+			else {
+		di in error "Unsupported stratification measure: `strat'. socstrat only supports social stratification measures NS-SEC and RGSC."
+		exit 198
+	}
+	
+	else {
+		di in error "Unknown error. If problem persists, please contact program author with details."
 	}
 	
 end

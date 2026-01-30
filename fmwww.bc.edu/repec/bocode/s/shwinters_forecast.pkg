@@ -1,0 +1,22 @@
+d 'SHWINTERS_FORECAST': module to compute Holt-Winters seasonal forecasts with confidence intervals
+d
+d  shwinters_forecast fits a Holt-Winters seasonal model using
+d tssmooth shwinters and computes analytic confidence intervals for
+d forecasts following the methodology of Yar & Chatfield (Int.J.
+d Forecasting, 1990) for additive models and Chatfield & Yar
+d (Int.J. Forecasting, 1991) for multiplicative models. 
+d
+d KW:  Holt-Winters seasonal models
+d KW: seasonality
+d KW: forecasting
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20260129
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f shwinters_forecast.ado
+f shwinters_forecast.sthlp
+f ../o/ocsb_ndiff.ado

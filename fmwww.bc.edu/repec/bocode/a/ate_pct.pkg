@@ -1,0 +1,22 @@
+d 'ATE_PCT': module to compute ATE in percentage points under subgroup heterogeneity (post-estimation)
+d
+d  Post-estimation command to compute average treatment effects
+d (ATE) in percentage points under treatment-effect heterogeneity
+d across observable subgroups, accompanying my working paper
+d "Estimation and Inference on Average Treatment Effects in
+d Percentage Points under Heterogeneity." 
+d
+d KW: average treatment effects
+d KW: ATE
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260129
+d
+d Author: Ying Zeng, Xiamen University
+d Support: email zengying17@@xmu.edu.cn
+d
+f ate_pct.ado
+f ate_pct.sthlp
+f ate_pct_example.do
+f ate_pct_example.dta

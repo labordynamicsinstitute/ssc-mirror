@@ -1,0 +1,41 @@
+d 'CHECKSHP': module to provide geometric validation and cleaning of Shapefiles
+d
+d     checkshp validates the geometric validity of shapefiles and
+d detects invalid geometric features. It    can generate detailed
+d or summary reports, and optionally clean invalid features by
+d removing them and    saving the cleaned shapefile to a new file. 
+d   The command checks for common geometric errors such as
+d self-intersections, duplicate vertices,    invalid rings, and
+d other topology issues that may cause problems in spatial analysis
+d or	visualization. 
+d
+d KW: shapefiles
+d KW: data management
+d KW: consistency
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20260129
+d
+d Author:  Chunxia Chen, Xiamen University
+d Support: email triciachen6754@@126.com
+d
+f checkshp.ado
+f checkshp.sthlp
+f ../a/areashp.ado
+f ../a/areashp.sthlp
+f ../i/intershp.ado
+f ../i/intershp.sthlp
+f ../r/reprojshp.ado
+f ../r/reprojshp.sthlp
+f ../e/example_checkshp.do
+f checkshp-0.1.0.jar
+f ../d/DMSP-like2020.tif
+f ../f/fuzhou_building.dbf
+f ../f/fuzhou_building.prj
+f ../f/fuzhou_building.shp
+f ../f/fuzhou_building.shx
+f ../f/fuzhou.dbf
+f ../f/fuzhou.prj
+f ../f/fuzhou.shp
+f ../f/fuzhou.shx

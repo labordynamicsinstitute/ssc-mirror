@@ -110,6 +110,7 @@ p asrol module to generate rolling window / groups descriptive statistics
 p assertky module to assert unique dataset keys
 p astile module to provide a faster and byable alternative for xtile
 p astx module to create a table of descriptive statistics and t-statistics by a grouping variable
+p ate_pct module to compute ATE in percentage points under subgroup heterogeneity (post-estimation)
 p atkplot module to generate Atkinson residual normality plots
 p attcic module to implement the attrition corrections from Ghanem et al. (2024b) and comparator approaches
 p attregtest module to implement the regression-based attrition tests proposed in  Ghanem et al. (2022)

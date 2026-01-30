@@ -1,13 +1,13 @@
-﻿{smcl}
-{* 28Jan2026}{...}
+{smcl}
+{* 30Jan2026}{...}
 {hline}
-help for {hi:mktex} {right:Version 2.0 | 28Jan2026}
+help for {hi:mktex} {right:Version 2.1 | 30Jan2026}
 {hline}
 
 {title:Title}
 
 {p 4 4 2}
-{bf:mktex} - Convert Microsoft Word (.docx) documents to LaTeX (.tex) format with complete document structure
+{bf:mktex} - Convert Microsoft Word (.docx) documents to LaTeX (.tex) format with complete document structure and table of contents
 
 {title:Syntax}
 
@@ -63,22 +63,42 @@ Default is "chinese". Users can specify either {cmd:language(chinese)} or {cmd:l
 {p 4 4 2}
 2. {bf:LaTeX Distribution} (for PDF compilation): TeX Live, MiKTeX, or MacTeX with XeLaTeX.
 
+{title:Cross-Platform Compatibility}
+
+{p 4 4 2}
+mktex is designed to work on multiple operating systems:
+
+{p 6 6 2}
+• {bf:Windows}: Uses system PATH to locate pandoc. Ensure pandoc is in your system PATH.
+
+{p 6 6 2}
+• {bf:macOS}: For best results on macOS, define the pandoc path in your Stata profile.do file:
+
+{p 8 8 2}{cmd:glo pandoc /opt/homebrew/bin/pandoc} (for Homebrew installation){p_end}
+{p 8 8 2}{cmd:glo pandoc /usr/local/bin/pandoc} (for MacPorts installation){p_end}
+
+{p 6 6 2}
+• {bf:Linux}: Uses system PATH. Ensure pandoc is installed and accessible.
+
+{p 4 4 2}
+The program automatically detects the operating system and adjusts its behavior accordingly.
+
 {title:Examples}
 
 {p 4 4 2}
 Basic conversion of a Chinese document (creates .tex with table of contents):
 
-{phang2}{cmd:. mktex using "报告.docx"}{p_end}
+{phang2}{cmd:. mktex using "report.docx"}{p_end}
 
 {p 4 4 2}
 Convert and compile to PDF, overwriting existing files (single-letter options):
 
-{phang2}{cmd:. mktex using "论文.docx", r c}{p_end}
+{phang2}{cmd:. mktex using "thesis.docx", r c}{p_end}
 
 {p 4 4 2}
 Convert a Chinese document with explicit language specification:
 
-{phang2}{cmd:. mktex using "测试.docx", compile l(chinese)}{p_end}
+{phang2}{cmd:. mktex using "test.docx", compile l(chinese)}{p_end}
 
 {p 4 4 2}
 Convert an English document with minimal options:
@@ -97,7 +117,7 @@ The command produces the following output files:
 
 {p 6 6 2}
 1. {bf:.tex file}: A complete LaTeX document with proper document structure including:
-   - Appropriate document class (ctexart for Chinese, article for English)
+   - Appropriate document class (article with ctex for Chinese, article for English)
    - Required packages (geometry, hyperref, booktabs, graphicx, amsmath, amssymb)
    - Table of contents generation command
    - Full document preamble and body structure
@@ -120,6 +140,7 @@ The conversion process consists of five steps:
 
 {p 6 6 2}
 2. {bf:Pandoc Conversion}: Uses pandoc to convert the .docx file to basic LaTeX format.
+   On macOS, the program checks for a global pandoc path defined in profile.do.
 
 {p 6 6 2}
 3. {bf:Complete Document Creation}: Builds a full LaTeX document structure including:
@@ -142,7 +163,7 @@ The conversion process consists of five steps:
 Important technical note regarding Chinese quotation marks in the generated LaTeX files:
 
 {p 6 6 2}
-• The current version (2.0) has a known limitation: Chinese double quotation marks and their surrounding text may be lost during the conversion process.
+• The current version (2.1) has a known limitation: Chinese double quotation marks and their surrounding text may be lost during the conversion process.
 
 {p 6 6 2}
 • Users need to manually edit the generated .tex file to restore any missing Chinese quotation marks and the corresponding text.
@@ -197,6 +218,15 @@ The generated LaTeX document includes a functional table of contents:
 {p 6 6 2}
 • Updated automatically during compilation process
 
+{title:Acknowledgments}
+
+{p 4 4 2}
+The authors gratefully acknowledge the guidance and support of {bf:Christopher F. Baum}.
+His valuable advice on cross-platform compatibility and macOS-specific implementations
+significantly improved the program's functionality across different operating systems.
+His contributions to the Stata community and willingness to share knowledge have been instrumental
+in enhancing the robustness of this tool.
+
 {title:Authors}
 
 {p 4 4 2}
@@ -235,6 +265,10 @@ The generated LaTeX document includes a functional table of contents:
 {help maketex} - Creates a TeXable file from the using file
 
 {title:Version History}
+
+{p 4 4 2}
+2.1 (30Jan2026): Added cross-platform compatibility with macOS support; 
+     users can define pandoc path in profile.do on macOS; added acknowledgment to Christopher F. Baum.
 
 {p 4 4 2}
 2.0 (28Jan2026): Added complete LaTeX document structure with table of contents;
