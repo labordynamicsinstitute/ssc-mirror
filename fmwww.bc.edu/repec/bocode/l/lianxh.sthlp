@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.4  22july2024}{...}
+{* *! version 1.5  30june2026}{...}
 {cmd:help lianxh {stata "help lianxh_cn": 中文版}}
 {hline}
 
@@ -235,5 +235,5 @@ You can also submit your suggestions by filling out {browse "https://github.com/
 {psee} 
 Online:  
 {help songbl} (if installed),  
-{help cnssc} (if installed),  
-{help lxhuse} (if installed)
+{help ihelp} (if installed),  
+{help getiref} (if installed)

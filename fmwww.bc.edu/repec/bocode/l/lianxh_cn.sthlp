@@ -245,4 +245,4 @@ E-mail: {browse "mailto:2428172451@qq.com":2428172451@qq.com} {break}
 Online:  
 {help songbl} (if installed),  
 {help cnssc} (if installed),  
-{help lxhuse} (if installed)
+{help getiref} (if installed)

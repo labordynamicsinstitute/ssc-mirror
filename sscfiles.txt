@@ -91,6 +91,7 @@ fmwww.bc.edu/repec/bocode/t/tobithetm_lf.ado
 fmwww.bc.edu/repec/bocode/t/tryem.ado
 fmwww.bc.edu/repec/bocode/t/tabplot.hlp
 fmwww.bc.edu/repec/bocode/t/timestamp.pkg
+fmwww.bc.edu/repec/bocode/t/tau2ci.pkg
 fmwww.bc.edu/repec/bocode/t/tabout.ado
 fmwww.bc.edu/repec/bocode/t/testSet.csv
 fmwww.bc.edu/repec/bocode/t/tabletutorial_21.ihlp
@@ -756,6 +757,7 @@ fmwww.bc.edu/repec/bocode/t/tscb.sthlp
 fmwww.bc.edu/repec/bocode/t/table1_mc_dta2docx.sthlp
 fmwww.bc.edu/repec/bocode/t/tolerance.hlp
 fmwww.bc.edu/repec/bocode/t/t2t2outerw2.ado
+fmwww.bc.edu/repec/bocode/t/tau2ci.sthlp
 fmwww.bc.edu/repec/bocode/t/tabletutorial_9.html
 fmwww.bc.edu/repec/bocode/t/tmap.pkg
 fmwww.bc.edu/repec/bocode/t/tpvar.hlp
@@ -932,6 +934,7 @@ fmwww.bc.edu/repec/bocode/t/tkdensity.html
 fmwww.bc.edu/repec/bocode/t/tiva2023.pkg
 fmwww.bc.edu/repec/bocode/t/tex2col.pkg
 fmwww.bc.edu/repec/bocode/t/test-reshapelabel.do
+fmwww.bc.edu/repec/bocode/t/tau2ci.ado
 fmwww.bc.edu/repec/bocode/t/tfinsert.ado
 fmwww.bc.edu/repec/bocode/t/tomode.pkg
 fmwww.bc.edu/repec/bocode/t/twoway__whistogram_gen.sthlp
@@ -10934,6 +10937,7 @@ fmwww.bc.edu/repec/bocode/m/markovfutureprob.sthlp
 fmwww.bc.edu/repec/bocode/m/margin6.ado
 fmwww.bc.edu/repec/bocode/m/margin_e.ado
 fmwww.bc.edu/repec/bocode/m/mergevirtual.hlp
+fmwww.bc.edu/repec/bocode/m/makicoint.sthlp
 fmwww.bc.edu/repec/bocode/m/mivif.ado
 fmwww.bc.edu/repec/bocode/m/mstdize6.ado
 fmwww.bc.edu/repec/bocode/m/matewd.hlp
@@ -11368,6 +11372,7 @@ fmwww.bc.edu/repec/bocode/m/mergevirtual.ado
 fmwww.bc.edu/repec/bocode/m/multivrs.sthlp
 fmwww.bc.edu/repec/bocode/m/mkomega.ado
 fmwww.bc.edu/repec/bocode/m/metamiss.ado
+fmwww.bc.edu/repec/bocode/m/makicoint.pkg
 fmwww.bc.edu/repec/bocode/m/merlin_parse.ado
 fmwww.bc.edu/repec/bocode/m/mf_bcsf_bracketing.sthlp
 fmwww.bc.edu/repec/bocode/m/mail.hlp
@@ -11431,6 +11436,7 @@ fmwww.bc.edu/repec/bocode/m/mlogitroc.pkg
 fmwww.bc.edu/repec/bocode/m/mipolate.sthlp
 fmwww.bc.edu/repec/bocode/m/movavg.sthlp
 fmwww.bc.edu/repec/bocode/m/mp_b_dta_g.sthlp
+fmwww.bc.edu/repec/bocode/m/makicoint.ado
 fmwww.bc.edu/repec/bocode/m/micombine.html
 fmwww.bc.edu/repec/bocode/m/mcq2long.ado
 fmwww.bc.edu/repec/bocode/m/multistate.pkg

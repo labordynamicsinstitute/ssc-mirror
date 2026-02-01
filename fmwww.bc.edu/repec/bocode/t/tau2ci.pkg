@@ -1,0 +1,22 @@
+d 'TAU2CI': module to compute standard error and confidence interval for the tau-squared statistic in random-effects meta-analysis
+d
+d  tau2ci is a post-estimation command that computes the standard
+d error and confidence interval for the between-study variance
+d component tau-squared statistic after fitting a random-effects
+d meta-regression model using meta regress with the random()
+d option. It supports all random-effects estimation methods
+d currently available in Stata's meta suite. tau2ci uses the
+d standard error formulas implemented in the metafor package in R. 
+d
+d KW: meta regression
+d KW: tau-squared statistic
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20260131
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f tau2ci.ado
+f tau2ci.sthlp

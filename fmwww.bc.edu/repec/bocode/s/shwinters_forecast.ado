@@ -82,8 +82,10 @@ program define shwinters_forecast, rclass
 		gen `ub_var' = .
 	}
     
-	local z = invnormal((100 + `level') / 200)
-    
+	* compute z-value for confidence interval (two-sided)
+	local crit = (100 - `level')/100
+	local z = invnormal(1 - `crit'/2)		
+	
 	// determine seasonal period
 	local m = 1
 	if "`gamma'" != "0" & "`gamma'" != "." {
@@ -250,7 +252,6 @@ program define shwinters_forecast, rclass
 	return scalar beta = `beta'
 	return scalar gamma = `gamma'
 	return scalar rmse = `rmse'
-	return scalar level = `level'
 	return scalar forecast = `forecast'
 	return scalar is_multiplicative = `is_multiplicative'
 	return scalar m = `m'

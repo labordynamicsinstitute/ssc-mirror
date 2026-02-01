@@ -1,0 +1,24 @@
+d 'MAKICOINT': module to Maki (2012) cointegration test with multiple structural breaks
+d
+d	makicoint performs the Maki (Econ.Modelling, 2012)
+d cointegration test with multiple structural breaks.  The test   
+d allows for an unknown number of breaks in the cointegrating
+d relationship, where the number of breaks    is assumed to be less
+d than or equal to a maximum number specified by the user.    The
+d null hypothesis is no cointegration, and the alternative
+d hypothesis is cointegration with up to    m structural breaks,
+d where m is specified by the maxbreaks() option. 
+d
+d KW: cointegration
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260131
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f makicoint.ado
+f makicoint.sthlp
+f makicoint_example.do

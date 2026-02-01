@@ -109,7 +109,6 @@ to handle the seasonality {p_end}
 {synoptset 22 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
 {synopt:{cmd:r(forecast)}}forecast horizon{p_end}
-{synopt:{cmd:r(level)}}confidence level{p_end}
 {synopt:{cmd:r(cv)}}coefficient of variation{p_end}
 {synopt:{cmd:r(alpha)}}alpha smoothing parameter{p_end}
 {synopt:{cmd:r(beta)}}beta smoothing parameter{p_end}

@@ -1,4 +1,7 @@
-*! version 1.4  22July2024
+*! version 1.5  30June2026
+// syntax [anything], to aviod "lianxh diff in diff" error, 
+//    otherwise, Stata will regard 'in' as [in] option, and 'if' as [if] option
+* version 1.4  22July2024
 // text with link for option 'md', 'text', 'latex'
 *  version 1.2  16nov2023  
 // mirror update 2023/11/17 2:32
@@ -9,7 +12,7 @@
 //  Ruihan Liu  2428172451@qq.com
 //  https://www.lianxh.cn
 
-cap progra drop lianxh
+*cap progra drop lianxh
 program define lianxh, rclass
 
 version 14

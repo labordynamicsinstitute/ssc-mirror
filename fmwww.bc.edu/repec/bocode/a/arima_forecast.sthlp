@@ -155,7 +155,6 @@ is specified.
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
 {synopt:{cmd:r(h)}}forecast horizon{p_end}
-{synopt:{cmd:r(level)}}confidence level (if specified){p_end}
 
 {p2col 5 20 24 2: Matrices}{p_end}
 {synopt:{cmd:r(se)}}forecast standard error matrix {p_end}

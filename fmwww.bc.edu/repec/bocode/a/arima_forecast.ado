@@ -294,8 +294,9 @@ program define arima_forecast, rclass
 	local lb_var "`prefix'll`level_suffix'"
 	local ub_var "`prefix'ul`level_suffix'"
     
-	* compute z-value for confidence interval
-	local z = invnormal(1 - (100 - `level')/200)
+	* compute z-value for confidence interval (two-sided)
+	local alpha = (100 - `level')/100
+	local z = invnormal(1 - `alpha'/2)	
     
 	* get time variable and ensure data is sorted
 	qui tsset
@@ -451,7 +452,6 @@ program define arima_forecast, rclass
 	****************	
 	return matrix se = `se_mat'
     return scalar h = `h'
-	return scalar level = `level'
     
 end
 
