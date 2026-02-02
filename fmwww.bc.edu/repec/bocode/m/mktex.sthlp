@@ -1,59 +1,80 @@
 {smcl}
-{* 30Jan2026}{...}
+{* 31Jan2026}{...}
 {hline}
-help for {hi:mktex} {right:Version 2.1 | 30Jan2026}
+help for {hi:mktex} {right:Version 2.9 | 31Jan2026}
 {hline}
 
 {title:Title}
 
 {p 4 4 2}
-{bf:mktex} - Convert Microsoft Word (.docx) documents to LaTeX (.tex) format with complete document structure and table of contents
+{bf:mktex} - Convert Microsoft Word (.docx) documents to LaTeX (.tex) format with full document structure and optional PDF compilation
 
 {title:Syntax}
 
-{p 4 4 2}
-{cmd:mktex} {cmd:using} {it:filename}.docx [{cmd:,} {ul:{it:r}eplace} {ul:{it:c}ompile} {ul:{it:l}anguage(str)}]
+{p 8 12 2}
+{cmd:mktex} {cmd:using} {it:filename}.docx [{cmd:,} {opt replace} {opt compile} {opt language(str)} {opt noctex} {opt notoc} {opt simple} {opt r} {opt c}]
+
+{p 8 12 2}
+{cmd:mktex} {cmd:,} {opt check}
 
 {p 4 4 2}
 where {it:filename} is a Microsoft Word document with .docx extension.
 
-{synoptset 20 tabbed}{...}
+{synoptset 24 tabbed}{...}
 {synopthdr:options}
 {synoptline}
-{synopt:{opt r}eplace}Overwrite existing .tex file{p_end}
-{synopt:{opt c}ompile}Compile to PDF using XeLaTeX (includes table of contents){p_end}
-{synopt:{opt l}anguage(str)}Document language (e.g., "chinese", "english"){p_end}
+{synopt:{opt replace}}overwrite existing output files{p_end}
+{synopt:{opt compile}}compile the generated LaTeX file to PDF{p_end}
+{synopt:{opt language(str)}}set document language (e.g., "chinese", "english"){p_end}
+{synopt:{opt noctex}}disable automatic ctex package for Chinese documents{p_end}
+{synopt:{opt notoc}}disable table of contents generation{p_end}
+{synopt:{opt simple}}create minimal LaTeX document without full structure{p_end}
+{synopt:{opt r}}short for {opt replace}{p_end}
+{synopt:{opt c}}short for {opt compile}{p_end}
 {synoptline}
 
 {title:Description}
 
 {p 4 4 2}
-{cmd:mktex} converts Microsoft Word (.docx) documents to complete LaTeX (.tex) documents with table of contents support.
-The command creates a full LaTeX document structure including preamble, packages, and proper document formatting.
-It is optimized for both Chinese and English documents, with automatic language detection and appropriate package selection.
+{cmd:mktex} converts Microsoft Word (.docx) documents to LaTeX (.tex) documents. 
+It generates complete LaTeX documents with proper preamble, document structure, 
+and optional table of contents. The command supports both full document generation 
+and minimal ("simple") output for embedding in existing documents.
 
 {p 4 4 2}
-The generated LaTeX document includes a table of contents that is properly linked in the PDF output.
-For Chinese documents, the command automatically includes the ctex package and sets appropriate fonts.
+When the {cmd:compile} option is specified, the command compiles the generated 
+LaTeX file to PDF using available LaTeX engines (pdflatex, xelatex, lualatex, or latex).
 
 {p 4 4 2}
-When the {cmd:compile} option is specified, the command performs two compilations with XeLaTeX to ensure
-proper table of contents generation and cross-references.
+The {cmd:check} option verifies the installation of pandoc and LaTeX, providing 
+system-specific guidance for setup.
 
 {title:Options}
 
-{phang}{opt r} ({ul:r}eplace) overwrites an existing .tex file. Without this option, 
-the command exits with an error if the output file exists. Users can specify either 
-{cmd:replace} or simply {cmd:r}.
+{phang}{opt replace} (or {opt r}) overwrites existing output files. Without this option, 
+the command exits with an error if the output .tex file already exists.
 
-{phang}{opt c} ({ul:c}ompile) compiles the generated .tex file to PDF using XeLaTeX.
-Two compilations are performed to ensure proper table of contents and cross-references.
-Requires a working LaTeX installation (TeX Live, MiKTeX, or MacTeX).
-Users can specify either {cmd:compile} or simply {cmd:c}.
+{phang}{opt compile} (or {opt c}) compiles the generated LaTeX file to PDF. 
+The command automatically detects available LaTeX engines and performs one or two 
+compilations (for proper table of contents when enabled).
 
-{phang}{opt l} ({ul:l}anguage) specifies the document language. For Chinese documents, 
-use "chinese", "zh", or "cn". For English documents, use "english" or "en".
-Default is "chinese". Users can specify either {cmd:language(chinese)} or {cmd:l(chinese)}.
+{phang}{opt language(str)} specifies the document language. For Chinese documents, 
+use "chinese", "zh", or "cn". For English documents, use "english" or "en". 
+Default is "chinese" unless {opt noctex} is specified.
+
+{phang}{opt noctex} disables automatic inclusion of the ctex package for Chinese documents. 
+Use this option when you want to handle Chinese typesetting manually or when using 
+alternative LaTeX packages.
+
+{phang}{opt notoc} disables table of contents generation in full document mode.
+
+{phang}{opt simple} creates a minimal LaTeX document containing only the converted content 
+with basic preamble. This is useful for embedding content in existing LaTeX documents 
+or when experiencing compilation issues with the full document structure.
+
+{phang}{opt check} verifies the installation of pandoc and LaTeX, displays system 
+information, and provides troubleshooting guidance. This option does not require 
+a {cmd:using} specification.
 
 {title:Requirements}
 
@@ -61,7 +82,7 @@ Default is "chinese". Users can specify either {cmd:language(chinese)} or {cmd:l
 1. {bf:Pandoc}: Must be installed from {browse "https://pandoc.org/installing.html"}.
 
 {p 4 4 2}
-2. {bf:LaTeX Distribution} (for PDF compilation): TeX Live, MiKTeX, or MacTeX with XeLaTeX.
+2. {bf:LaTeX Distribution} (for PDF compilation): TeX Live, MiKTeX, or MacTeX.
 
 {title:Cross-Platform Compatibility}
 
@@ -69,163 +90,129 @@ Default is "chinese". Users can specify either {cmd:language(chinese)} or {cmd:l
 mktex is designed to work on multiple operating systems:
 
 {p 6 6 2}
-• {bf:Windows}: Uses system PATH to locate pandoc. Ensure pandoc is in your system PATH.
+• {bf:Windows}: Uses system PATH to locate pandoc and LaTeX.
 
 {p 6 6 2}
-• {bf:macOS}: For best results on macOS, define the pandoc path in your Stata profile.do file:
-
-{p 8 8 2}{cmd:glo pandoc /opt/homebrew/bin/pandoc} (for Homebrew installation){p_end}
-{p 8 8 2}{cmd:glo pandoc /usr/local/bin/pandoc} (for MacPorts installation){p_end}
+• {bf:macOS}: Automatically checks for pandoc. For custom installations, you can 
+define the pandoc path in your Stata profile.do file: {cmd:glo pandoc /path/to/pandoc}
 
 {p 6 6 2}
-• {bf:Linux}: Uses system PATH. Ensure pandoc is installed and accessible.
+• {bf:Linux}: Uses system PATH for both pandoc and LaTeX.
 
 {p 4 4 2}
-The program automatically detects the operating system and adjusts its behavior accordingly.
+The program includes a comprehensive installation checker ({cmd:mktex, check}) 
+that provides OS-specific troubleshooting advice.
 
 {title:Examples}
 
 {p 4 4 2}
-Basic conversion of a Chinese document (creates .tex with table of contents):
+Basic conversion with default settings (Chinese document):
 
-{phang2}{cmd:. mktex using "report.docx"}{p_end}
-
-{p 4 4 2}
-Convert and compile to PDF, overwriting existing files (single-letter options):
-
-{phang2}{cmd:. mktex using "thesis.docx", r c}{p_end}
+{p 8 12 2}{cmd:. mktex using "report.docx"}{p_end}
 
 {p 4 4 2}
-Convert a Chinese document with explicit language specification:
+Convert, compile to PDF, and overwrite existing files:
 
-{phang2}{cmd:. mktex using "test.docx", compile l(chinese)}{p_end}
-
-{p 4 4 2}
-Convert an English document with minimal options:
-
-{phang2}{cmd:. mktex using "paper.docx", c l(english)}{p_end}
+{p 8 12 2}{cmd:. mktex using "thesis.docx", replace compile}{p_end}
+{p 8 12 2}{cmd:. mktex using "thesis.docx", r c} {it:(short form)}{p_end}
 
 {p 4 4 2}
-Using all single-letter abbreviations:
+Create a simple LaTeX document without full structure:
 
-{phang2}{cmd:. mktex using "document.docx", r c l(english)}{p_end}
+{p 8 12 2}{cmd:. mktex using "content.docx", simple}{p_end}
+
+{p 4 4 2}
+Convert an English document without table of contents:
+
+{p 8 12 2}{cmd:. mktex using "paper.docx", language(english) notoc}{p_end}
+
+{p 4 4 2}
+Check installation status:
+
+{p 8 12 2}{cmd:. mktex, check}{p_end}
+
+{p 4 4 2}
+Convert a Chinese document without automatic ctex package:
+
+{p 8 12 2}{cmd:. mktex using "document.docx", noctex}{p_end}
 
 {title:Output Files}
 
 {p 4 4 2}
-The command produces the following output files:
+The command can produce the following output files:
 
 {p 6 6 2}
-1. {bf:.tex file}: A complete LaTeX document with proper document structure including:
-   - Appropriate document class (article with ctex for Chinese, article for English)
-   - Required packages (geometry, hyperref, booktabs, graphicx, amsmath, amssymb)
-   - Table of contents generation command
-   - Full document preamble and body structure
-   - Proper hyperlink configuration for PDF navigation
+1. {bf:.tex file}: A LaTeX document. In full mode (default), this includes complete 
+document structure with preamble, packages, title, optional table of contents, 
+and content. In simple mode, it includes minimal preamble and content only.
 
 {p 6 6 2}
-2. {bf:.pdf file} (with {cmd:compile} option): A compiled PDF document with:
-   - Proper table of contents with clickable links
-   - Correct font rendering for the specified language
-   - Proper page layout and margins
-   - Hyperlinked cross-references
+2. {bf:.pdf file} (with {cmd:compile} option): A compiled PDF document. When table 
+of contents is enabled, two compilation passes are performed for proper TOC generation.
+
+{p 6 6 2}
+3. {bf:Log files}: Various LaTeX auxiliary files (.aux, .log, .toc, etc.) are 
+automatically cleaned up after successful compilation.
 
 {title:Technical Details}
 
 {p 4 4 2}
-The conversion process consists of five steps:
+The conversion process consists of multiple steps:
 
 {p 6 6 2}
-1. {bf:File Validation}: Checks that the input file is a .docx file and exists.
+1. {bf:File Validation}: Checks file existence, extension (.docx), and output file conflicts.
+   Handles Unicode filenames by creating temporary ASCII-named copies.
 
 {p 6 6 2}
-2. {bf:Pandoc Conversion}: Uses pandoc to convert the .docx file to basic LaTeX format.
-   On macOS, the program checks for a global pandoc path defined in profile.do.
+2. {bf:Pandoc Conversion}: Uses pandoc to convert .docx to basic LaTeX format with 
+appropriate command-line options.
 
 {p 6 6 2}
-3. {bf:Complete Document Creation}: Builds a full LaTeX document structure including:
-   - Document class selection based on language
-   - Package imports for formatting and hyperlinks
-   - Table of contents setup
-   - Integration of converted content
+3. {bf:Content Processing}: Cleans the pandoc output, removes duplicate document 
+structure commands, and handles special characters and quotation marks.
 
 {p 6 6 2}
-4. {bf:Content Integration}: Copies the converted content into the document body
-   while preserving all formatting and structure.
+4. {bf:Document Creation}: Builds either a full LaTeX document (with customizable 
+preamble, packages, title, optional TOC) or a simple document (minimal structure).
 
 {p 6 6 2}
-5. {bf:PDF Compilation} (with {cmd:compile} option): Compiles the LaTeX file
-   to PDF using XeLaTeX with two passes for proper table of contents.
+5. {bf:PDF Compilation} (optional): Automatically detects available LaTeX engine 
+(pdflatex, xelatex, lualatex, or latex), performs multiple passes when TOC is enabled, 
+and cleans auxiliary files.
 
-{title:Chinese Quotation Marks Processing}
+{title:Chinese Language Support}
 
 {p 4 4 2}
-Important technical note regarding Chinese quotation marks in the generated LaTeX files:
+By default, mktex assumes Chinese documents and includes the ctex package with UTF8 encoding:
 
 {p 6 6 2}
-• The current version (2.1) has a known limitation: Chinese double quotation marks and their surrounding text may be lost during the conversion process.
+• Automatic ctex package inclusion can be disabled with {opt noctex}
 
 {p 6 6 2}
-• Users need to manually edit the generated .tex file to restore any missing Chinese quotation marks and the corresponding text.
+• Language detection can be overridden with {opt language()} option
 
 {p 6 6 2}
-• To properly typeset Chinese left double quotation marks in LaTeX, use two consecutive backticks (``) in the .tex file.
+• The command handles character encoding issues and quotation mark processing
 
-{p 6 6 2}
-• For Chinese right double quotation marks, use two consecutive apostrophes ('').
-
-{p 6 6 2}
-• Example correction in LaTeX source code:
-   {it:Original missing text} → {it:He said ``This is a Chinese example.''}
-
-{p 6 6 2}
-• Always verify the converted content against the original Word document, especially sections containing Chinese punctuation.
-
-{p 6 6 2}
-• This limitation is due to character encoding issues in the pandoc conversion pipeline and will be addressed in future versions.
-
-{title:Chinese Text Processing}
+{title:Error Handling}
 
 {p 4 4 2}
-For Chinese documents, the command automatically:
+The program includes comprehensive error handling:
 
 {p 6 6 2}
-• Uses ctex package for full Chinese language support
+• File validation with descriptive error messages
 
 {p 6 6 2}
-• Sets appropriate Chinese fonts for proper character rendering
+• Pandoc installation checking with OS-specific guidance
 
 {p 6 6 2}
-• Handles Chinese punctuation and special characters
+• LaTeX compilation error reporting
 
 {p 6 6 2}
-• Ensures proper line breaking and paragraph formatting
-
-{title:Table of Contents}
-
-{p 4 4 2}
-The generated LaTeX document includes a functional table of contents:
+• Temporary file cleanup to prevent file accumulation
 
 {p 6 6 2}
-• Automatically generated from document headings
-
-{p 6 6 2}
-• Properly formatted with LaTeX's native TOC system
-
-{p 6 6 2}
-• Clickable in PDF output when compiled with hyperref package
-
-{p 6 6 2}
-• Updated automatically during compilation process
-
-{title:Acknowledgments}
-
-{p 4 4 2}
-The authors gratefully acknowledge the guidance and support of {bf:Christopher F. Baum}.
-His valuable advice on cross-platform compatibility and macOS-specific implementations
-significantly improved the program's functionality across different operating systems.
-His contributions to the Stata community and willingness to share knowledge have been instrumental
-in enhancing the robustness of this tool.
+• Unicode filename handling with automatic ASCII conversion
 
 {title:Authors}
 
@@ -244,7 +231,7 @@ in enhancing the robustness of this tool.
 {p 4 4 2}
 {bf:Wu Xinzhuo}
 
-{p 8 8 2}University of Bristol (UB), London, UK{p_end}
+{p 8 8 2}University of Bristol (UB), UK{p_end}
 {p 8 8 2}Email: {stata `"copy "2957833979@qq.com""':2957833979@qq.com}
 
 {p 4 4 2}
@@ -253,26 +240,24 @@ in enhancing the robustness of this tool.
 {p 8 8 2}Capital Normal University (CNU), Beijing, China{p_end}
 {p 8 8 2}Email: {stata `"copy "6346@cnu.edu.cn""':6346@cnu.edu.cn}
 
-{title:See Also}
-
-{p 4 4 2}
-{help art2tex} - Convert academic articles to LaTeX format
-
-{p 4 4 2}
-{help case2tex} - Convert case studies to LaTeX format
-
-{p 4 4 2}
-{help maketex} - Creates a TeXable file from the using file
-
 {title:Version History}
 
 {p 4 4 2}
+2.9 (31Jan2026): Fixed display command syntax issues; improved Unicode filename handling; 
+enhanced error messages; fixed variable name inconsistencies; improved cross-platform compatibility.
+
+{p 4 4 2}
+2.5 (31Jan2026): Added {opt simple} mode for minimal LaTeX output; improved error handling; 
+enhanced LaTeX engine detection; added {opt noctex} and {opt notoc} options; updated 
+installation checker with better diagnostics; fixed macOS compatibility issues.
+
+{p 4 4 2}
 2.1 (30Jan2026): Added cross-platform compatibility with macOS support; 
-     users can define pandoc path in profile.do on macOS; added acknowledgment to Christopher F. Baum.
+users can define pandoc path in profile.do on macOS; added acknowledgment to Christopher F. Baum.
 
 {p 4 4 2}
 2.0 (28Jan2026): Added complete LaTeX document structure with table of contents;
-     all options now support single-letter abbreviations; updated documentation.
+all options now support single-letter abbreviations; updated documentation.
 
 {p 4 4 2}
 1.0 (28Jan2026): Initial release as mktex, basic Chinese character handling.
