@@ -9,10 +9,11 @@ d KW: dataset access
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20231118
+d Distribution-Date: 20260131
 d
 d Author: Yujun Lian, Department of Finance, Sun Yat-Sen University, China
 d Support: email arlionn@@163.com
 d
 f lxhuse.ado
 f lxhuse.sthlp
+f lxhuse_cn.sthlp

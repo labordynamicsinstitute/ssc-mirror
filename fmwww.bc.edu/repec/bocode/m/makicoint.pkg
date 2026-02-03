@@ -1,4 +1,4 @@
-d 'MAKICOINT': module to Maki (2012) cointegration test with multiple structural breaks
+d 'MAKICOINT': module to perform Maki (2012) cointegration test with multiple structural breaks
 d
 d	makicoint performs the Maki (Econ.Modelling, 2012)
 d cointegration test with multiple structural breaks.  The test   

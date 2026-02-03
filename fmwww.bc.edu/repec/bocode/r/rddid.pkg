@@ -1,0 +1,30 @@
+d 'RDDID': module to perform Difference-in-Discontinuities estimation by wrapping the rdrobust package
+d
+d      rddid performs a Difference-in-Discontinuities estimation.
+d It estimates the discontinuity in depvar    at the cutoff of
+d runvar for a Treated group and subtracts the discontinuity found
+d in a Control	  group.    It relies on rdrobust for underlying
+d estimation and bandwidth selection.	 Without the bootstrap
+d option, analytic standard errors are computed assuming
+d independence between	  groups.  This assumption is appropriate
+d when groups correspond to distinct units (e.g., different   
+d countries or boundaries).  When groups share the same units
+d (e.g., panel pre/post), use bootstrap to    obtain valid standard
+d errors. 
+d
+d KW: difference-in-discontinuities
+d KW: bandwidth
+d KW: running variable 
+d
+d Requires: Stata version 14 and rdrobust from SSC (q.v.)
+d
+d Distribution-Date: 20260303
+d
+d Author:  Jonathan Dries, LUISS Guido Carli University
+d Support: email jvdries@@luiss.it
+d
+f rddid.ado
+f rddid.sthlp
+f rddidplot.ado
+f rddid_post_bw.ado
+f rddidplot.sthlp

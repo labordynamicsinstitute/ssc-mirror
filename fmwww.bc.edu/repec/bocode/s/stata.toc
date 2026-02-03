@@ -88,6 +88,7 @@ p seq module to generate sequences of integers
 p seqfind module to find the sequence of a numeric character within a variable list
 p seqlogit module to fit a sequential logit model
 p sequences module for generating versatile numeric sequences
+p ses_forecast module to compute simple exponential smoothing forecasts with confidence intervals
 p setpoisson module to estimate a Selection Endogenous Treatment Poisson model by MSL
 p setrngseed module to to set random-number seed using truly random  integer from random.org
 p setroot module to find the root path of a project and set it as a global variable

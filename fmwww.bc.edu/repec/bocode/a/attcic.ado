@@ -1,4 +1,4 @@
-*!   attcic v1.0.0  7July2025
+*!   attcic v1.0.1  31Jan2026
 
 *Section A defines globals and sets warnings
 *Section B reads and prepares the data
@@ -506,14 +506,16 @@ if ("`ytype'" == "continuous") {
 			tempvar sample_ts
 			tempvar ipw_ts
 			
+		if ("`rct'"=="yes") {
+			
 		*	A) Estimate treatment propensity score & predict probabilities
-			if ("`rct'"=="yes" & "`stratavar'"=="") {
+			if ( "`stratavar'"=="") {
 				qui probit  $T $Y_b $X0 if $R==1 & $POST==1 
 				qui predict `treat_pscore' if $POST==1, pr
 				qui assert !missing(`treat_pscore') if $POST==1
 			}
 
-			if ("`rct'"=="yes" & "`stratavar'"!="") {
+			if ("`stratavar'"!="") {
 				qui xi: probit $T $Y_b  $X0 i.$S if $R==1 & $POST==1 
 				qui predict `treat_pscore' if $POST==1, pr
 				qui assert !missing(`treat_pscore') if $POST==1
@@ -549,13 +551,13 @@ if ("`ytype'" == "continuous") {
 			tempvar ipw_all
 			
 		* 	A) Estimate response propensity score & predict probabilities
-			if ("`rct'"=="yes" & "`stratavar'"=="") {
+			if ( "`stratavar'"=="") {
 				qui probit  $R $Y_b $X0 if $POST==1
 				qui predict `resp_pscore' if $POST==1, pr
 				qui assert !missing(`resp_pscore') if $POST==1
 			}
 
-			if ("`rct'"=="yes" & "`stratavar'"!="") {
+			if ( "`stratavar'"!="") {
 				qui xi: probit  $R $Y_b $X0 i.$S if $POST==1
 				qui predict `resp_pscore' if $POST==1, pr
 				qui assert !missing(`resp_pscore') if $POST==1
@@ -582,7 +584,7 @@ if ("`ytype'" == "continuous") {
 			matrix ATE_IPW[`b',1]  = _b[$T]
 			
 
-
+		}
 
 	* ================================================================
 	*	C.2   CiC CORRECTED QTEs - ESTIMATION FOR EACH BOOTS SAMPLE
@@ -1355,6 +1357,8 @@ if ("`ytype'" == "continuous") {
 
 		* If No RCT --> report ATE - Prop 4 (w/o using R.A.)
 		if ("`rct'"=="no") {
+			
+			display "ACAAAAAA"
 			matrix ESTIMATORS = ATE_P4, ATE_R,  ///
 								ATT, ATT_R, ///
 								ATU, ATU_R,  ///
@@ -1902,6 +1906,8 @@ if ("`ytype'" == "continuous") {
 			qui clear
 			qui use "${CiC_output}ate estimators bootstrap samples.dta", clear
 			
+			display "Aqui toy 1"
+			
 			matrix corrections = J(2,3,.)
 
 			* CiC estimators
@@ -1925,9 +1931,12 @@ if ("`ytype'" == "continuous") {
 			* 	MATRIX 2: DIAGNOSTIC MISSING QUANTILES 
 			*-------------------------------------------
 			
-			matrix diagnostics = J(1,6,.)
+			matrix diagnostics = J(6,1,.)
 			
 			qui use "${CiC_output}diagnostic missing quantiles.dta",clear
+			
+			display "Aqui toy 2"
+			
 			qui sum pctg_cfacout_TR if _n==1
 			matrix diagnostics[1,1]=r(mean)
 			
@@ -2031,8 +2040,8 @@ if ("`ytype'" == "binary")  {
 	*  Note: Asymptotic standard errors 
 	* =========================================================
 	
-		** Full or clustered RCT **
-		if ("`rct'"=="yes" & "`stratavar'"=="") {
+		** RCT (Full or clustered) **
+		if ("`rct'"=="yes" & "`stratavar'"=="")  {
 			
 			if ("`clustervar'" == "") {
 				qui reg $Y $T if $POST==1, r 
@@ -2049,7 +2058,7 @@ if ("`ytype'" == "binary")  {
 		}
 		
 		
-		** Stratified RCT **
+		** Stratified RCT  **
 		if ("`rct'"=="yes" & "`stratavar'"!="") {
 			
 			if ("`clustervar'" == "") {
@@ -2992,7 +3001,7 @@ if ("`ytype'" == "binary")  {
 
 		if ("`rct'"=="no") {
 
-			matrix corrections = J(3,2,.)
+			matrix corrections = J(2,3,.)
 
 			
 			*CiC estimators for ATT-R, ATE-R, and ATE
@@ -3002,7 +3011,6 @@ if ("`ytype'" == "binary")  {
 			matrix corrections[2,2] = `UB_ATE_R'
 			matrix corrections[1,3] = `LB_ATT_R'
 			matrix corrections[2,3] = `UB_ATT_R'
-		
 		
 				// Table 1. text format
 				esttab matrix(corrections) using "${CiC_output}correction_results.tab" , replace nomtitles ///

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0 08Nov2023}{...}
+{* *! version 2.0.0 01Feb2026}{...}
 {title:Title}
 
 {p2colset 5 17 18 2}{...}
@@ -24,7 +24,7 @@
 default is {cmd:centile(50)}{p_end}
 
 {syntab:Options}
-{synopt :{opt t:ype(#)}}an integer between 4 and 9 selecting one of six continuous quantile algorithms; default is {cmd:type(6)}{p_end}
+{synopt :{opt t:ype(#)}}an integer between 1 and 9 selecting one of nine quantile algorithms; default is {cmd:type(6)}{p_end}
 {synopt :{opt cc:i}}binomial exact; conservative confidence interval{p_end}
 {synopt :{opt n:ormal}}normal, based on observed centiles{p_end}
 {synopt :{opt m:eansd}}normal, based on mean and standard deviation{p_end}
@@ -40,8 +40,8 @@ default is {cmd:centile(50)}{p_end}
 {title:Description}
 
 {pstd}
-{cmd:centile2} is an enhancement to Stata's official {helpb centile} command that allows the user to select amongst six algorithms 
-for defining the quantile (centile), corresponding to the continuous sample quantile types described in Hyndman and Fan (1996),
+{cmd:centile2} is an enhancement to Stata's official {helpb centile} command that allows the user to select amongst nine algorithms 
+for defining the quantile (centile), corresponding to the sample quantile types described in Hyndman and Fan (1996),
 and likewise implemented in R's {browse "https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/quantile":quantile} function.
 The availability of different definitions for computing sample quantiles ensures that the same result can be reproduced using different software
 packages.
@@ -74,15 +74,21 @@ centiles be reported.
 {dlgtab:Options}
 
 {phang}
-{opt type(#)} specifies which of the six algorithms should be used to compute
-the centile. {opt type(4)} is a linear interpolation of the empirical cdf; 
+{opt type(#)} specifies which of the nine algorithms should be used to compute
+the centile. {opt type(1)} is the inverse of empirical distribution function;
+{opt type(2)} is similar to type 1 but with averaging at discontinuities;
+{opt type(3)} is the nearest even order statistic; 
+{opt type(4)} is a linear interpolation of the empirical cdf; 
 {opt type(5)} is a piecewise linear function where the knots are the values 
-midway through the steps of the empirical cdf; {opt type(6)} is used by {help centile}
-in Stata, as well as by Minitab and SPSS; {opt type(7)} is the default used in R's 
+midway through the steps of the empirical cdf; 
+{opt type(6)} is used by {help centile} in Stata, as well as by Minitab and SPSS; 
+{opt type(7)} is the default used in R's 
 {browse "https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/quantile":quantile}
-function; {opt type(8)} produces quantile estimates that are approximately median-unbiased 
-regardless of the distribution of {varlist}; and {opt type(9)} produces quantile estimates 
-that are approximately unbiased for the expected order statistics if {varlist} is normally distributed.
+function; 
+{opt type(8)} produces quantile estimates that are approximately median-unbiased 
+regardless of the distribution of {varlist}; and 
+{opt type(9)} produces quantile estimates that are approximately unbiased for the expected 
+order statistics if {varlist} is normally distributed.
 {opt The default is type(6)} and will return the same results as {helpb centile}. 
 Hyndman and Fan (1996) recommend using {opt type(8)}. 
 
@@ -175,7 +181,10 @@ London: Griffin.
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden, Ariel (2023). CENTILE2: Enhancement to Stata's official centile command that provides additional definitions for computing sample quantiles {p_end}
+Linden, Ariel (2023). CENTILE2: Enhancement to Stata's official centile command that provides additional definitions for computing sample quantiles.
+Statistical Software Components S459461, Boston College Department of Economics. 
+{browse "https://ideas.repec.org/c/boc/bocode/s459262.html":https://ideas.repec.org/c/boc/bocode/s459262.html} 
+
 
 
 {title:Author}

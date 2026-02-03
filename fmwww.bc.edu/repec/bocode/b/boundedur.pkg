@@ -1,0 +1,28 @@
+d 'BOUNDEDUR': module to perform unit root tests for bounded time series
+d
+d    and Xu (2014, Journal of Econometrics 178: 259-272). The
+d package provides both Augmented Dickey-Fuller (ADF) and M tests
+d with simulation-based p-values that properly account for the
+d effects of bounds on test statistics. Many economic and financial
+d time series are inherently bounded—including interest rates,
+d unemployment rates, capacity utilization rates, and target zone
+d exchange rates. Conventional unit root tests produce unreliable
+d results when applied to such series, as they do not account for
+d the boundary effects. 
+d
+d KW: unit root tests
+d KW: bounded time series
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260202
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f boundedur.ado
+f boundedur.sthlp
+f ../_/_boundedur_adf.ado
+f ../_/_boundedur_m.ado
+f boundedur_examples.do
+f boundedur_cert.do

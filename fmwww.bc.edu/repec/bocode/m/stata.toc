@@ -13,7 +13,7 @@ p makehlp module to automatically create a help file
 p makeid module to create a unique ID for every observation in the dataset.
 p makematrix module to make a matrix of results from other commands
 p maketex module to generate LaTeX code from a text file
-p makicoint module to Maki (2012) cointegration test with multiple structural breaks
+p makicoint module to perform Maki (2012) cointegration test with multiple structural breaks
 p malmq2 module to compute Malmquist Productivity Index 
 p manski_ci module to use Manski type bounds (Manski 2003) to calculate confidence intervals around a treatment variable's regression coefficient in a (covariate-adjusted) regression
 p manyweakiv module to implement the weak-identification robust jackknife AR test from Mikusheva and Sun (2022)

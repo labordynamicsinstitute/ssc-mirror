@@ -1,0 +1,22 @@
+d 'SES_FORECAST': module to compute simple exponential smoothing forecasts with confidence intervals
+d
+d  ses_forecast generates point forecasts, standard errors, and
+d confidence intervals for simple exponential smoothing (SES)
+d models. The procedure uses tssmooth exponential to fit the SES
+d model and then computes forecast standard errors based on the
+d innovation variance.	The implementation mirrors the method used
+d in the R forecast package ses function. 
+d
+d KW: time series
+d KW: Simple exponential smoother
+d KW: forecasts
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20260202
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f ses_forecast.ado
+f ses_forecast.sthlp

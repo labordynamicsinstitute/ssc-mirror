@@ -1,13 +1,19 @@
 d 'CENTILE2': module to enhance centile command and provide additional definitions for computing sample quantiles
 d
 d  centile2 is an enhancement to Stata's official centile command
-d that allows the user to select amongst six algorithms for
-d defining the quantile (centile), corresponding to the continuous
-d sample quantile types described in Hyndman and Fan (1996), and
-d likewise implemented in R's quantile function.  The availability
-d of different definitions for computing sample quantiles ensures
-d that the same result can be reproduced using different software
-d packages. 
+d that allows the user to select amongst nine algorithms for
+d defining the quantile (centile), corresponding to the sample
+d quantile types described in Hyndman and Fan (1996), and likewise
+d implemented in R's quantile function.  The availability of
+d different definitions for computing sample quantiles ensures that
+d the same result can be reproduced using different software
+d packages. centile2 estimates specified centiles and calculates
+d confidence intervals. If no varlist is specified, centile2
+d calculates centiles for all the variables in the dataset. If no
+d centiles are specified, medians are reported. By default,
+d centile2 uses a binomial method for obtaining confidence
+d intervals that makes no assumptions about the underlying
+d distribution of the variable. 
 d
 d KW: quantiles
 d KW: centiles
@@ -15,7 +21,7 @@ d KW: definitions
 d
 d Requires: Stata version 6
 d
-d Distribution-Date: 20231114
+d Distribution-Date: 20260202
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
