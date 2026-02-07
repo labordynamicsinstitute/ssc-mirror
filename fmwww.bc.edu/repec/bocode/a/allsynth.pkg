@@ -23,9 +23,9 @@ d KW: synthetic control
 d KW: treatment effects
 d KW: bias correction
 d
-d Requires: Stata version 16 and synth, distinct, elasticregress from SSC (q.v.)
+d Requires: Stata version 15.1 and synth, distinct, elasticregress from SSC (q.v.)
 d
-d Distribution-Date: 20241110
+d Distribution-Date: 20260206
 d
 d Author: 	  Justin C. Wiltshire,    University of California, Davis
 d Support: email  jcwiltshire@@ucdavis.edu

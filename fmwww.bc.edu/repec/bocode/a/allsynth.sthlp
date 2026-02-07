@@ -1,15 +1,15 @@
 {smcl}
-{* Nov7,2024}{...}
+{* Feb4,2026}{...}
 {cmd:help allsynth} 
 {hline}
 
-{title:Title} {p 19 20 0} {cmd:Version 1.2} - Release date: November 7, 2024. Tested on Stata 15.1 and above. 
+{title:Title} {p 19 20 0} {cmd:Version 1.3} - Release date: February 6, 2026. Tested on Stata 15.1 and above. 
 
 {p2colset 5 20 20 2}{...}
 {p2col :{hi:allsynth} {hline 2}}Automates estimation of (i) bias-corrected synthetic control gaps ("treatment effects"); (ii) RMSPE-ranked {it:p}-values and 
 placebo-variance-based {it:p}-values and 95% confidence intervals from "in-space" treatment permutations; and (iii) "stacked" synthetic controls 
 (with many treated units and potentially staggered treatment timing); and also provides heavily-automated graphing functionality. See 
-{browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire 2024} for a thorough review of {cmd:allsynth} {p_end}
+{browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire 2026} for a thorough review of {cmd:allsynth} {p_end}
 {p2colreset}{...}
 
 
@@ -40,7 +40,7 @@ unit and its donor pool, proposed by {browse "https://www.tandfonline.com/doi/ab
 ({browse "https://onlinelibrary.wiley.com/doi/abs/10.1111/ajps.12116":Abadie, Diamond and Hainmueller 2015}); 
 {cmd:(3)} automated estimation of a "stacked" (or "separate") synthetic control estimator with many treated units and potentially staggered treatment timing
 ({browse "https://ftp.iza.org/dp8944.pdf":Dube and Zipperer 2015}, {browse "https://academic.oup.com/jrsssb/article/84/2/351/7056152":Ben-Michael, Feller and Rothstein 2022}, 
-{browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2023}), 
+{browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2025}), 
 yielding estimates of the average treatment effects and (if desired) associated {it:p}-values and 95% confidence intervals for both classic and bias-corrected specifications; and
 {cmd:(4)} greatly expanded automated graphing capability. {cmd: allsynth} also provides additional diagnostics and warnings to help guide users.
 
@@ -68,7 +68,7 @@ Informative warnings are returned if the specified options need to be changed. P
 {p 8 8 2}{it:At least one} of {cmd:rmspe} or {cmd:variance} is required, and both are permitted, though {cmd:variance} may {it:only} be specified when the {cmd:stacked()} option is also specified. 
 {cmd:rmspe} will calculate RMSPE-ranked {it:p}-values for each post-treatment period. {cmd:variance} will calculate {it:p}-values and 95% confidence intervals for each post 
 treatment period based on the variance of the sample distribution of placebo average gaps, but may only be specified if the {cmd:stacked()} option is also specified (see 
-{browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire 2024} for further discussion).
+{browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire 2026} for further discussion).
 
 {p 8 8 2}If the {cmd:bcorrect()} option is specified, then the bias-corrected placebo gaps and {it:p}-values
 will also be calculated. {cmd:pvalues()} must be specified for the placebos to be estimated and for the placebo gaps to be plotted (see the entry on the {cmd:gapfigure()} option, below). 
@@ -80,13 +80,12 @@ is also specified) will be merged into {it:file} if {cmd:pvalues}(variance) is s
 
 
 {p 4 8 2}
-{cmd: bcorrect}({cmd:nosave|merge }[ {cmd:ridge}|{cmd:lasso}|{cmd:elastic}|{cmd:posonly figure} ]) specifies that the bias-corrected synthetic control estimates should be 
+{cmd: bcorrect}({cmd:merge }[ {cmd:ridge}|{cmd:lasso}|{cmd:elastic}|{cmd:posonly} ] {cmd:figure}) specifies that the bias-corrected synthetic control estimates should be 
 calculated alongside the classic synthetic control estimates.
 
-{p 8 8 2}{it:Exactly one} of {cmd:nosave} or {cmd:merge} is required. If {cmd:merge} is specified, {cmd:keep}({it:file}) must also be specified. 
-With {cmd:merge}, the the variables {it:gap} and {it:gap_bc} containing the classic and bias-corrected gaps, as well as the variables {it:_Y_treated_bc} and {it:_Y_synthetic_bc}
-containing the bias-corrected outcome paths, are merged into {it:file}. With {cmd:nosave}, none of the additional elements from the bias-correction 
-procedure will be saved and {cmd:keep}({it:file}) need not be specified.{p_end}
+{p 8 8 2}{{cmd:merge} is required, and {cmd:keep}({it:file}) must also be specified. 
+With {cmd:merge} and {cmd:keep}({it:file}) specified, the variables {it:gap} and {it:gap_bc} containing the classic and bias-corrected gaps, as well as the variables {it:_Y_treated_bc} and {it:_Y_synthetic_bc}
+containing the bias-corrected outcome paths, are merged into {it:file}.{p_end}
 
 {p 8 8 2}Users may also specify additional {cmd:bcorrect()} options:{p_end}
 
@@ -236,14 +235,14 @@ from {browse "https://www.tandfonline.com/doi/abs/10.1198/jasa.2009.ap08746":Aba
 
 {p 4 4 2}
 Examples 11-13 illustrate the use of {cmd: allsynth} when the {cmd: stacked()} option {it:is} specified, making use of {it:a subset of} the data used in
-{browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2023}; {browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":2024}.{p_end}
+{browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2025}; {browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":2026}.{p_end}
 
 
 {p 0 4 2}{cmd:Examples 1-10:}
 
 {p 4 4 2}Load the example data from {browse "https://www.tandfonline.com/doi/abs/10.1198/jasa.2009.ap08746":Abadie, Diamond and Hainmueller 2010}. 
 This contains panel observations for 39 US states over the years 1970-2000:{p_end}
-{p 8 4 2}{stata "use synth_smoking, clear":use synth_smoking, clear}{p_end}
+{p 8 4 2}{stata "sysuse synth_smoking, clear":sysuse synth_smoking, clear}{p_end}
 
 {p 4 8 2}
 Declare the dataset as a panel:{p_end}
@@ -272,16 +271,12 @@ and e(gaps). Unlike {cmd:synth}, however, {cmd:allsynth} cautions that the estim
 some ad hoc fixes.{p_end}
 
 {p 4 4 2}
-Example 3 - Calculate, display, and save the classic and the bias-corrected gaps between the treated unit outcome and the synthetic control outcome, and plot the bias-corrected outcome paths of the 
-treated unit and its synthetic control:{p_end}
+Example 3 - Calculate, display, and save the classic and the bias-corrected gaps between the treated unit outcome and the synthetic control outcome, and plot the bias-corrected outcome paths of the treated unit and its synthetic control:{p_end}
 {phang}{stata allsynth cigsale beer(1984(1)1988) lnincome retprice age15to24 cigsale(1988) cigsale(1980) cigsale(1975), trunit(3) trperiod(1989) bcorrect(merge figure) keep(smokingresults) replace}
 
 {p 8 8 2}
 This example reproduces the estimation in Example 1, but as {cmd:bcorrect()} and its own {cmd:figure} option are specified, it also calculates
-the classic and the (OLS regression estimated) bias-corrected gaps for each period (for the treated unit, 3, which is California), while plotting the bias-corrected outcome paths of the treated unit 
-and its synthetic control. The classic results are saved in the working directory as {it:smokingresults.dta} as the {cmd:keep()} command is specified, and because {cmd:bcorrect(merge)} is also 
-specified those results are merged and saved to the same file, and the variables _Y_treated and _Y_synthetic are replaced in this saved file by their bias-corrected values (meaningful only for 
-calculating the bias-corrected gap). If {cmd:bcorrect(merge)} had instead been specified, _Y_treated and _Y_synthetic would have been left as their uncorrected values, and the bias-corrected
+the classic and the (OLS regression estimated) bias-corrected gaps for each period (for the treated unit, 3, which is California), while plotting the bias-corrected outcome paths of the treated unit and its synthetic control. The classic results are saved in the working directory as {it:smokingresults.dta} as the {cmd:keep()} command is specified, and because {cmd:bcorrect(merge)} is also specified those results are merged and saved to the same file, and the variables _Y_treated and _Y_synthetic are replaced in this saved file by their bias-corrected values (meaningful only for calculating the bias-corrected gap). If {cmd:bcorrect(merge)} had instead been specified, _Y_treated and _Y_synthetic would have been left as their uncorrected values, and the bias-corrected
 values would have been saved as _Y_treated_bc and _Y_synthetic_bc. The {cmd:replace} option is specified so {it:smokingresults.dta} can be saved even if the file already exists (it will be overwritten). {p_end}
 
 {p 4 4 2}
@@ -291,8 +286,7 @@ and additionally plot the paths of the classic and bias-corrected gaps:{p_end}
 
 {p 8 8 2}
 This example reproduces the estimation in Example 3, but as {cmd:gapfigure()} and its own {cmd:classic} and {cmd:bcorrect} options are specified, 
-it also plots the dynamic paths of the classic and the (OLS regression estimated) bias-corrected gaps against each other. Note how, in this case, the post-treatment bias-corrected gaps are 
-smaller than those produced by classic synthetic control estimation.{p_end}
+it also plots the dynamic paths of the classic and the (OLS regression estimated) bias-corrected gaps against each other. Note how, in this case, the post-treatment bias-corrected gaps are smaller than those produced by classic synthetic control estimation.{p_end}
 
 {p 4 4 2}
 Example 5 - Calculate, display, and save the classic and the bias-corrected gaps between the treated unit outcome and the synthetic control outcome,
@@ -300,9 +294,8 @@ and additionally plot the paths of the classic and bias-corrected gaps with the 
 {phang}{stata allsynth cigsale beer(1984(1)1988) lnincome retprice age15to24 cigsale(1988) cigsale(1980) cigsale(1975), trunit(3) trperiod(1989) bcorrect(merge) gapfigure(classic bcorrect lineback) keep(smokingresults) replace}
 
 {p 8 8 2}
-This example reproduces the estimation in Example 4, but as the {cmd:gapfigure()} option {cmd:lineback} is also specified, the dotted vertical line which by default indicates the specified treatment 
-period (here, 1989) has now been moved to the period immediately preceding the specified treatment period. This produces a figure analogous to Figure 3 in 
-{browse "https://www.tandfonline.com/doi/abs/10.1198/jasa.2009.ap08746":Abadie, Diamond and Hainmueller 2010}, but with the bias-corrected outcome path also added. {p_end}
+This example reproduces the estimation in Example 4, but as the {cmd:gapfigure()} option {cmd:lineback} is also specified, the dotted vertical line which by default indicates the specified treatment period (here, 1989) has now been moved to the period immediately preceding the specified treatment period. This produces a figure analogous to Figure 3 in {browse "https://www.tandfonline.com/doi/abs/10.1198/jasa.2009.ap08746":Abadie, Diamond and Hainmueller 2010}, 
+but with the bias-corrected outcome path also added. {p_end}
 
 {p 4 4 2}
 Example 6 - Calculate, display, and save the classic and the bias-corrected gaps between the treated unit outcome and the synthetic control outcome.
@@ -320,15 +313,12 @@ classic gaps for the treated unit and for each of the donor pool units (placebo 
 
 {p 8 8 2}
 This example reproduces the estimation in Example 1, also calculating and displaying, storing, and saving the RMSPE, RMPSE rank, and the 
-{it:p}-values for the classic estimates (and saving the placebo estimates), and additionally plots the dynamic paths of the classic gaps for the treated unit and each donor pool unit, with the 
-dotted vertical line indicating the period immediately preceding treatment. This produces a figure analogous to Figure 4 in 
-{browse "https://www.tandfonline.com/doi/abs/10.1198/jasa.2009.ap08746":Abadie, Diamond and Hainmueller 2010}. 
+{it:p}-values for the classic estimates (and saving the placebo estimates), and additionally plots the dynamic paths of the classic gaps for the treated unit and each donor pool unit, with the dotted vertical line indicating the period immediately preceding treatment. This produces a figure analogous to Figure 4 in {browse "https://www.tandfonline.com/doi/abs/10.1198/jasa.2009.ap08746":Abadie, Diamond and Hainmueller 2010}.
 Note that {cmd:pvalues()} and {cmd:keep()} must be specified if {cmd:gapfigure(classic placebos)} is specified.{p_end}
 
 {p 4 4 2}
 Example 8 - Calculate, display, and save the classic RMSPE-ranked {it:p}-values from in-space placebo runs, and plot the dynamic paths of 
-classic gaps for the treated unit and for each of the donor pool units (placebo treated units), with the dotted vertical line indicating the period immediately preceding treatment, and with the 
-pre-treatment mean of cigsale and retprice for each unit subtracted from those variable values in each period:{p_end}
+classic gaps for the treated unit and for each of the donor pool units (placebo treated units), with the dotted vertical line indicating the period immediately preceding treatment, and with the pre-treatment mean of cigsale and retprice for each unit subtracted from those variable values in each period:{p_end}
 
 {p 4 8 2}
 Define a local macro of predictor variables (to allow the {cmd:allsynth} command specified below to work interactively on a Windows system):{p_end}
@@ -352,19 +342,12 @@ Estimate, display, and save the bias-corrected average treatment effects (gaps) 
 {phang}{stata allsynth cigsale `preds', trunit(3) trperiod(1989) bcor(merge) gapfig(bcorrect placebos lineback) pvalues(rmspe) keep(smokingresults) replace}
 
 {p 8 8 2}
-This example reproduces the estimation in Example 3, but as {cmd:pvalues(rmspe)} is specified, it additionally estimates, saves, and stores the values for each unit in the donor pool (placebo runs) 
-to calculate the RMSPE {it:p}-values. {cmd:Note} that while the classic gaps (the estimated marginal 
-treatment effects from {browse "https://www.tandfonline.com/doi/abs/10.1198/jasa.2009.ap08746":Abadie, Diamond and Hainmueller 2010}) are all highly statistically significant in all post-treatment 
-periods (for each post-treatment year the RMSPE is larger than that of all the donor pool units), {it:the bias-corrected gaps are not significant} at the 10% level before 1994, and after that the 
-{it:p}-values are only 0.077 (the RMSPEs are ranked third among 39 total runs rather than first). As {cmd:gapfigure()} and its own {cmd:bcorrect}, {cmd:placebos}, and {cmd:lineback} options are 
-specified along with {cmd:bcorrect()}, it also plots the dynamic paths of the the (bias-corrected) gaps for the treated unit against those for each donor pool unit against each other in a figure, 
-with the dotted vertical line indicating the period immediately preceding treatment. Note that all the option abbreviations are used. The resulting plot is the bias-corrected analogue of Figure 4 in 
-{browse "https://www.tandfonline.com/doi/abs/10.1198/jasa.2009.ap08746":Abadie, Diamond and Hainmueller 2010}.{p_end}
+This example reproduces the estimation in Example 3, but as {cmd:pvalues(rmspe)} is specified, it additionally estimates, saves, and stores the values for each unit in the donor pool (placebo runs) to calculate the RMSPE {it:p}-values. {cmd:Note} that while the classic gaps (the estimated marginal 
+treatment effects from {browse "https://www.tandfonline.com/doi/abs/10.1198/jasa.2009.ap08746":Abadie, Diamond and Hainmueller 2010}) are all highly statistically significant in all post-treatment periods (for each post-treatment year the RMSPE is larger than that of all the donor pool units), {it:the bias-corrected gaps are not significant} at the 10% level before 1994, and after that the {it:p}-values are only 0.077 (the RMSPEs are ranked third among 39 total runs rather than first). As {cmd:gapfigure()} and its own {cmd:bcorrect}, {cmd:placebos}, and {cmd:lineback} options are specified along with {cmd:bcorrect()}, it also plots the dynamic paths of the the (bias-corrected) gaps for the treated unit against those for each donor pool unit against each other in a figure, with the dotted vertical line indicating the period immediately preceding treatment. Note that all the option abbreviations are used. The resulting plot is the bias-corrected analogue of Figure 4 in {browse "https://www.tandfonline.com/doi/abs/10.1198/jasa.2009.ap08746":Abadie, Diamond and Hainmueller 2010}.{p_end}
 
 {p 4 4 2}
 Example 10 - Calculate, display, and save and the bias-corrected gaps between the treated unit outcome and the synthetic control outcome, for the
-treated unit and also for each donor pool unit (placebo treatments), and calculate the RMSPE-ranked {it:p}-values. Plot the bias-corrected gaps for the treated unit and for each of the donor pool units 
-(placebo treated units) with the title "Ex10", saving the graph as "ex10.pdf" with replacement:{p_end}
+treated unit and also for each donor pool unit (placebo treatments), and calculate the RMSPE-ranked {it:p}-values. Plot the bias-corrected gaps for the treated unit and for each of the donor pool units (placebo treated units) with the title "Ex10", saving the graph as "ex10.pdf" with replacement:{p_end}
 
 {p 4 8 2}
 Estimate, display, and save the bias-corrected average treatment effects (gaps) and placebo gaps:{p_end}
@@ -377,17 +360,15 @@ save(ex10}{cmd:, replace)} after the comma adds the title "Ex10" and saves the g
 
 {p 0 4 2}{cmd:Examples 11-13:}
 
-{p 4 4 2}Load the example data from {browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2023}; {browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":2024}. 
-This contains panel observations of 605 U.S. counties where Walmart tried to build a Supercenter over the years 1990-2005 
-(see {browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2023} for details):{p_end}
-{p 8 4 2}{stata "use allsynth_walmart, clear":use allsynth_walmart, clear}{p_end}
+{p 4 4 2}Load the example data from {browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2025}; {browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":2026}. This contains panel observations of 605 U.S. counties where Walmart tried to build a Supercenter over the years 1990-2005 (see {browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2025} for details):{p_end}
+{p 8 4 2}{stata "sysuse allsynth_walmart, clear":sysuse allsynth_walmart, clear}{p_end}
 
 {p 4 8 2}
 Declare the dataset as a panel:{p_end}
 {p 8 8 2}{stata "tsset cty_fips year":tsset cty_fips year}{p_end}
 
 {p 4 8 2}
-See {browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire 2024} for discussion of the following examples without defining or calling
+See {browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire 2026} for discussion of the following examples without defining or calling
 the macros (which is done to shorten the commands so that Stata's help file language (SMCL) will recognize them as interactive (clickable on a Windows system).
 
 {p 4 8 2}
@@ -420,23 +401,15 @@ Next, restrict the data to only the untreated counties and treated counties in I
 {p 8 8 2}{stata keep if supercenter == 0 | floor(cty_fips/1000) == 18}{p_end}
 
 {p 4 4 2}
-Estimate, display, and save the classic and bias-corrected average treatment effects (gaps) of Walmart Supercenter entry on employment in treated counties in Indiana, in percentage terms of the 
-employment in each county's final pre-treatment year:{p_end}
+Estimate, display, and save the classic and bias-corrected average treatment effects (gaps) of Walmart Supercenter entry on employment in treated counties in Indiana, in percentage terms of the employment in each county's final pre-treatment year:{p_end}
 {phang}{stata allsynth emps_n10 `depvar_preds', transform(emps_n10 `prednorm', normalize) bcorrect(merge) keep(allsynth_walmart/ex11, replace) stacked(trunits(supercenter) trperiods(super_year), clear figure(classic bcorrect))}
 
 {p 8 8 2}
-As {cmd:stacked()} is specified, this example estimates and plots the classic and bias-corrected average treatment effects of Walmart Supercenter entry on county employment in Indiana. 
-The {it:supercenter} variable identifies with a 1 all the counties in Indiana which got their first Walmart Supercenter over this period, and identifies with a 0 all of the donor pool counties 
-in the sample where Walmart tried to build a Supercenter during this period but was blocked by local efforts. The {it:super_year} variable identifies (in every year) the year of Supercenter entry 
-into the treated counties. Note that {cmd:, clear} is also specified within {cmd:stacked()}, as it is required (because all existing identically-named files are erased when {cmd:stacked()} is specified). 
-The estimated average effects are in percentage terms as {cmd:transform}({cmd:emps_n10 `prednorm', normalize}) was specified, which normalizes employment (and the specified covariates) in each treated 
-county and its donor pool counties to the final pre-treatment period for that treated county. The results are displayed, stored, and saved in event time, as Indiana's counties were treated over several 
-years. The classic and bias-corrected estimated average treatment effects are displayed on the graph, as the {cmd:stacked()} option {cmd:figure}({cmd:classic bcorrect}) is specified.{p_end}
+As {cmd:stacked()} is specified, this example estimates and plots the classic and bias-corrected average treatment effects of Walmart Supercenter entry on county employment in Indiana. The {it:supercenter} variable identifies with a 1 all the counties in Indiana which got their first Walmart Supercenter over this period, and identifies with a 0 all of the donor pool counties in the sample where Walmart tried to build a Supercenter during this period but was blocked by local efforts. The {it:super_year} variable identifies (in every year) the year of Supercenter entry into the treated counties. Note that {cmd:, clear} is also specified within {cmd:stacked()}, as it is required (because all existing identically-named files are erased when {cmd:stacked()} is specified). The estimated average effects are in percentage terms as {cmd:transform}({cmd:emps_n10 `prednorm', normalize}) was specified, which normalizes employment (and the specified covariates) in each treated county and its donor pool counties to the final pre-treatment period for that treated county. The results are displayed, stored, and saved in event time, as Indiana's counties were treated over several years. The classic and bias-corrected estimated average treatment effects are displayed on the graph, as the {cmd:stacked()} option {cmd:figure}({cmd:classic bcorrect}) is specified.{p_end}
 
 {p 4 4 2}
-Example 12 - Calculate the stacked average treatment effects of Supercenter entry on aggregate county employment across the U.S. as in 
-{browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2023}, but without {it:p}-values. 
-Note that the run-time for this example is 35 minutes using Stata MP on a Unix server.{p_end}
+Example 12 - Calculate the stacked average treatment effects of Supercenter entry on aggregate county employment across the U.S. as in {browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2025}, but without {it:p}-values. 
+Note that this example takes 18 seconds to run on StataNow/MP 19.5 for Windows (64-bit x86) with an 8-core license on a system with 64GB total physical memory and a 24-core Intel i9 processor.{p_end}
 
 {p 4 4 2}
 First restore the data to include all treated and all donor pool counties:{p_end}
@@ -451,22 +424,15 @@ And define a macro with the {cmd:donorcond()} and {cmd:donorif()} specifications
 {p 8 8 2}{stata local donor_restrict "donorcond(sum czone if supercenter == 1, gen cz = r(mean)) donorif(czone != cz)"}{p_end}
 
 {p 4 4 2}
-Do as in Example 11, but for all U.S. counties which received their first Supercenter over this period. Weight the estimated effects by 1990 county population, and restrict to those event years in 
-which all treated counties are observed. Restrict the donor pool for each treated county to those donor pool counties in different commuting zones. Set the x-axis title to "Event year", and save the 
-graph as "ex12.pdf" in the "allsynth_walmart" directory:{p_end}
+Do as in Example 11, but for all U.S. counties which received their first Supercenter over this period. Weight the estimated effects by 1990 county population, and restrict to those event years in which all treated counties are observed. Restrict the donor pool for each treated county to those donor pool counties in different commuting zones. Set the x-axis title to "Event year", and save the graph as "ex12.pdf" in the "allsynth_walmart" directory:{p_end}
 {phang}{stata allsynth emps_n10 `allsynth_specifications' stacked(trunits(supercenter) trperiods(super_year), clear avgweights(pop90) balanced `donor_restrict' figure(classic bcorrect, save(allsynth_walmart/ex12, replace) xtitle(Event year)))}
 
 {p 8 8 2}
-This example does as Example 11, but for all treated counties in the U.S. As {cmd:avgweights}({it:pop90}) is specified, the estimated average treatment effects will be calculated by weighting the 
-estimated marginal treatment effects of each treated county by their 1990 population counts. As {cmd:balanced} is specified, the displayed, saved, and plotted estimates will be restricted to those 
-event years in which all treated units are observed (in this case, {cmd:balanced} does nothing as the sample is already balanced over event years {it:e}=[-5,5]). As {cmd:donorcond}(sum czone if 
-supercenter == 1, gen cz = r(mean)) {cmd:donorif}(czone != cz) is specified, the donor pool for each treated unit will be restricted to only those donor pool counties in other commuting zones. 
-As {cmd:, save}(allsynth_walmart/ex12, replace) is specified, the generated plot of classic and bias-corrected estimated average treatment effects will
+This example does as Example 11, but for all treated counties in the U.S. As {cmd:avgweights}({it:pop90}) is specified, the estimated average treatment effects will be calculated by weighting the estimated marginal treatment effects of each treated county by their 1990 population counts. As {cmd:balanced} is specified, the displayed, saved, and plotted estimates will be restricted to those event years in which all treated units are observed (in this case, {cmd:balanced} does nothing as the sample is already balanced over event years {it:e}=[-5,5]). As {cmd:donorcond}(sum czone if supercenter == 1, gen cz = r(mean)) {cmd:donorif}(czone != cz) is specified, the donor pool for each treated unit will be restricted to only those donor pool counties in other commuting zones. As {cmd:, save}(allsynth_walmart/ex12, replace) is specified, the generated plot of classic and bias-corrected estimated average treatment effects will
 be saved to allsynth_walmart/ex12.pdf and will replace any existing file of the same name. As {cmd:xtitle}(Event year) is specified, the x-axis title will be changed to "Event year".{p_end}
 
 {p 4 4 2}
-Example 13 - Do as Example 12, but estimate RMSPE-ranked and placebo-variance {it:p}-values (along with 95% confidence intervals for the latter) and generate the plot for the bias-corrected estimated 
-ATT, 1000 sampled placebo average gaps, and the 95% confidence intervals as in {browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2023}.{p_end} 
+Example 13 - Do as Example 12, but estimate RMSPE-ranked and placebo-variance {it:p}-values (along with 95% confidence intervals for the latter) and generate the plot for the bias-corrected estimated ATT, 1000 sampled placebo average gaps, and the 95% confidence intervals as in {browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2025}.{p_end} 
 
 {p 4 4 2}
 First, define a macro that specifies all the desired options of the {cmd:figure()} option of the {cmd:stacked()} option:{p_end}
@@ -478,15 +444,12 @@ Next, define a macro with all the remaining elements of the {cmd:stacked()} opti
 
 
 {p 4 4 2}
-Note that this example takes over 24 hours to run using Stata MP on a Unix server.{p_end}
+Note that this example takes 14.96 hours to run on StataNow/MP 19.5 for Windows (64-bit x86) with an 8-core license on a system with 64GB total physical memory and a 24-core Intel i9 processor.{p_end}
 {phang}{stata allsynth emps_n10 `allsynth_specifications' pval(rmspe variance) `stacked_option'}{p_end}
 
 {p 8 8 2}
-This example does as Example 12, but also calculates the RMSPE-ranked {it:p}-values, the placebo-variance-based {it:p}-values, and the 95% confidence intervals given {cmd:pvalues}(rmspe variance) is 
-specified. As {cmd:sampleavgs}(1000) is specified, these will be based on 1000 randomly sampled placebo average gaps, but regardless {cmd:allsynth} will always sample exactly 1000 placebo averages when 
-{cmd:pvalues}(variance) is specified. {cmd:figure}(bcorrect placebos ci) is specified, so the generated plot will show the bias-corrected estimated average treatment effect, the sampled placebo average 
-gaps, and the placebo-variance 95% confidence intervals. The default placement of x-labels at a 90 degree angle has been overridden using the {cmd:twoway} option {cmd:xlabel()}, and the y-axis range 
-and labels have been restricted to between -10 and 10 using the {cmd:twoway} options {cmd:yscale()} and {cmd:ylabel()}.{p_end}
+This example does as Example 12, but also calculates the RMSPE-ranked {it:p}-values, the placebo-variance-based {it:p}-values, and the 95% confidence intervals given {cmd:pvalues}(rmspe variance) is specified. As {cmd:sampleavgs}(1000) 
+is specified, these will be based on 1000 randomly sampled placebo average gaps, but regardless {cmd:allsynth} will always sample exactly 1000 placebo averages when {cmd:pvalues}(variance) is specified. {cmd:figure}(bcorrect placebos ci) is specified, so the generated plot will show the bias-corrected estimated average treatment effect, the sampled placebo average gaps, and the placebo-variance 95% confidence intervals. The default placement of x-labels at a 90 degree angle has been overridden using the {cmd:twoway} option {cmd:xlabel()}, and the y-axis range and labels have been restricted to between -10 and 10 using the {cmd:twoway} options {cmd:yscale()} and {cmd:ylabel()}.{p_end}
 
 {title:References}
 
@@ -513,10 +476,10 @@ Ben-Michael, E., Feller, A. and J. Rothstein, 2021. The Augmented Synthetic Cont
 Ben-Michael, E., Feller, A. and J. Rothstein, 2022. Synthetic Controls with Staggered Adoption. {it:Journal of the Royal Statistical Society Series B: Statistical Methodology}, 84(2): 351-381.
 
 {p 4 8 2}
-Wiltshire, J.C., 2023. Walmart Supercenters and Monopsony Power: How a Large, Low-Wage Employer Impacts Local Labor Markets. {it:Working paper}.
+Wiltshire, J.C., 2025. Walmart Supercenters and Monopsony Power: How a Large, Low-Wage Employer Impacts Local Labor Markets. {it:Working paper}.
 
 {p 4 8 2}
-Wiltshire, J.C., 2024. allsynth: (Stacked) Synthetic Control Bias-Correction Utilities for Stata. {it:Working paper}.
+Wiltshire, J.C., 2026. allsynth: (Stacked) Synthetic Control Bias-Correction Utilities for Stata. {it:Working paper}.
 
 
 {marker citation}{...}
@@ -524,7 +487,7 @@ Wiltshire, J.C., 2024. allsynth: (Stacked) Synthetic Control Bias-Correction Uti
 
 {pstd}{opt allsynth} is user-written command made freely-available to the research community. Please cite the associated paper: {p_end}
 
-{phang}Wiltshire, J.C., 2024.
+{phang}Wiltshire, J.C., 2026.
 allsynth: (Stacked) Synthetic Control Bias-Correction Utilities for Stata. {it:Working paper}.
 {browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf"}.
 

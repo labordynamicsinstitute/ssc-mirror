@@ -1,4 +1,4 @@
-*! version 1.2 by Justin Wiltshire. Updated 11/07/2024 - Wrapper adding functionality to -synth- package
+*! version 1.3 by Justin Wiltshire. Updated 02/06/2026 - Wrapper adding functionality to -synth- package
 
 program allsynth, eclass sortpreserve byable(recall)
 	version 15.1 // Not tested on earlier versions
@@ -428,6 +428,12 @@ program allsynth, eclass sortpreserve byable(recall)
 					exit 198
 				}
 				
+				* Ensure stacked(figure(bcorrect)) is not specificed if the allsynth option bcorrect() is not (correctly) specified 
+				if strpos("`_stFigure'", "bcorrect") != 0 & "`bcorrect'" == "" {
+					di as err "`_Entry'(`_stFigure') is specified in the allsynth option stacked(), but the allsynth option bcorrect(merge) is not (or not correctly) specified. The allsynth option bcorrect() must be specified with -merge- if `_Entry'(`_stFigure') is specified in the allsynth option stacked()"
+					exit 198
+				}
+				
 				* Identify the stfigure savefile if defined
 				local stfigureopts2 "`stfigureopts'"
 				local sttwo : list sizeof stfigureopts2
@@ -657,7 +663,6 @@ program allsynth, eclass sortpreserve byable(recall)
 		}
 		
 		* Initialize bcorrect specification locals
-		local bcorrectnosave = 0
 		local bcorrectmerge = 0
 		local bcorrectsave = 0
 		local bcorrectfigure = 0
@@ -668,37 +673,31 @@ program allsynth, eclass sortpreserve byable(recall)
 		
 		* Parse the bcorrect() string
 		foreach s of local bcorrect {
-			capture assert "`s'" == "nosave" | "`s'" == "merge" | "`s'" == "figure" | "`s'" == "posonly" | "`s'" == "ridge" | "`s'" == "lasso" | "`s'" == "elastic"
+			capture assert "`s'" == "merge" | "`s'" == "figure" | "`s'" == "posonly" | "`s'" == "ridge" | "`s'" == "lasso" | "`s'" == "elastic"
 			if _rc != 0 {
-				di as err "bcorrect() contains an invalid specification. Only -nosave- or -merge-, and the options -figure- AND one of -posonly-, -ridge-, -lasso-, and -elastic- are allowed. Specifying bcorrect() without any options will be treated as if bcorrect() is not specified"
+				di as err "bcorrect() contains an invalid specification. Only -merge-, and the options -figure- AND at most one of -posonly-, -ridge-, -lasso-, and -elastic- are allowed. Specifying bcorrect() without -merge- is not allowed."
 				exit 198
 			}
 			local bcorrect`s' = 1
 		}
-		if `bcorrectnosave' == 1 & `bcorrectmerge' == 1 {
-			di as err "bcorrect() contains an invalid specification. Only one of -nosave- or -merge- is allowed. It may be combined with the bcorrect() options -figure- AND one of -posonly-, -ridge-, -lasso-, or -elastic-"
-			exit 198
-		}
-		if (`bcorrectfigure' == 1 | `bcorrectposonly' == 1 | `bcorrectridge' == 1 | `bcorrectlasso' == 1 | `bcorrectelastic' == 1) & (`bcorrectnosave' == 0 & `bcorrectmerge' == 0) {
-			di as err "bcorrect() contains an invalid specification. One of -nosave- or -merge- must be specified if any of -figure-, -posonly-, -ridge-, -lasso-, or -elastic- are specified"
+		if (`bcorrectfigure' == 1 | `bcorrectposonly' == 1 | `bcorrectridge' == 1 | `bcorrectlasso' == 1 | `bcorrectelastic' == 1) & `bcorrectmerge' == 0 {
+			di as err "bcorrect() contains an invalid specification. -merge- must be specified"
 			exit 198
 		}
 		local bcoroptsum = `bcorrectposonly' + `bcorrectridge' + `bcorrectlasso' + `bcorrectelastic'
 		if !inlist(`bcoroptsum', 0, 1) {
-			di as err "bcorrect() contains an invalid option specification. Only one of -posonly-, -ridge-, -lasso-, and -elastic- may be specified. This is in addition to -figure-, which may be specified along with one of these options"
+			di as err "bcorrect() contains an invalid option specification. While -merge- is specified, as required, only one of the options -posonly-, -ridge-, -lasso-, and -elastic- may be specified (in addition to -figure-, which may also be specified)."
 			exit 198
 		}
-		foreach s in nosave merge {
-			if `bcorrect`s'' == 1 {
-				local bcorrect "`s'"
-			}
+		if `bcorrectmerge' == 1 {
+				local bcorrect "merge"
 		}
 		
 		* Alert if bcorrect(merge) is specified but keep() is not specified
 		if "`bcorrect'" == "merge" {
 			capture assert "`keep'" != ""
 			if _rc != 0 {
-				di as err "bcorrect(`bcorrect') is specified, but keep() is not specified. Either specify keep() or change the bcorrect() specification to -nosave-"
+				di as err "bcorrect(`bcorrect') is specified, but keep() is not specified. You must specify -keep()- with bcorrect()"
 				exit 198
 			}
 		}
@@ -802,7 +801,7 @@ program allsynth, eclass sortpreserve byable(recall)
 		if `gapfigbcorrect' == 1 {
 			capture assert "`bcorrect'" != ""
 			if _rc != 0 {
-				di as err "gapfigure(`gapfigure') was specified, but the allsynth option bcorrect() was not specified. bcorrect() must be specified as -nosave- or -merge- in order to graph gapfigure(`gapfigure')"
+				di as err "gapfigure(`gapfigure') was specified, but the allsynth option bcorrect() was not (or not correctly) specified. bcorrect(merge) must be specified in order to graph gapfigure(`gapfigure')"
 				exit 198
 			}
 		}
@@ -964,11 +963,13 @@ program allsynth, eclass sortpreserve byable(recall)
 					di as err "The variable `dmVar' was specified for normalization but is not specified as either an outcome variable or a predictor variable. Remove `dmVar' from varlist in transform(), or add it to the list of predictor variables"
 					exit 198
 				}
-				bysort `pvar': egen _XdmVar = mean(`dmVar') if `tvar' < `trperiod'
-				bysort `pvar': egen _xXdmVar = max(_XdmVar)
-				qui replace `dmVar' = `dmVar' - _xXdmVar
-				qui replace `dmVar' = 0.000001 if `dmVar' == 0
-				qui drop _XdmVar _xXdmVar
+				quietly {
+					bysort `pvar': egen _XdmVar = mean(`dmVar') if `tvar' < `trperiod'
+					bysort `pvar': egen _xXdmVar = max(_XdmVar)
+					replace `dmVar' = `dmVar' - _xXdmVar
+					replace `dmVar' = 0.000001 if `dmVar' == 0
+					drop _XdmVar _xXdmVar
+				}
 			}
 		}
 		
@@ -1550,8 +1551,8 @@ program allsynth, eclass sortpreserve byable(recall)
 						qui replace `dvar' = 100*`dvar'/_xXnormVar
 						qui drop _XnormVar _xXnormVar
 					}
-					quietly {
-						if `transtypedemean' != 0 & `dvardemean' == 1 {
+					if `transtypedemean' != 0 & `dvardemean' == 1 {
+						quietly {
 							bysort `pvar': egen _XdmVar = mean(`dvar') if `tvar' < `trperiod'
 							bysort `pvar': egen _xXdmVar = max(_XdmVar)
 							qui replace `dvar' = `dvar' - _xXdmVar
@@ -1791,7 +1792,7 @@ program allsynth, eclass sortpreserve byable(recall)
 					qui clear
 					mat gap_bc_`i' = gap_bc_`i',uW
 					qui svmat gap_bc_`i', names(v)
-					if "`bcorrect'" == "nosave" | "`bcorrect'" == "" {
+					if "`bcorrect'" == "" {
 						qui rename v1 `pvar'
 						qui rename v2 `tvar'
 						format `tvar' `_tVarformat'
@@ -1899,7 +1900,7 @@ program allsynth, eclass sortpreserve byable(recall)
 				}
 			}
 					
-			* If bcorrect() is specified as -merge-, combine results into one file
+			* If bcorrect() is specified, combine results into one file
 			if "`bcorrect'" == "merge" {
 				di ""
 				di
@@ -1953,7 +1954,7 @@ program allsynth, eclass sortpreserve byable(recall)
 			}
 
 			quietly {
-				if "`pvaluesrmspe'" == "1" & ("`bcorrect'" == "nosave" | "`bcorrect'" == "") {
+				if "`placeboskeep'" != "" & "`bcorrect'" == "" {
 					tempfile ests
 					save "`ests'", replace
 					foreach i of local units {
@@ -1990,62 +1991,49 @@ program allsynth, eclass sortpreserve byable(recall)
 					drop _Co_Number _W_Weight _Y_*
 				}
 				
-				* Return results
-				save "`core2'", replace
-				ereturn clear
-				ereturn mat Y_treated _eY_treated
-				ereturn mat Y_synthetic _eY_synthetic
-				ereturn mat W_weights _eW_weights
-				ereturn mat X_balance _eX_balance
-				ereturn mat V_matrix _eV_matrix
-				ereturn mat RMSPE _eRMSPE
-				mat unW = uW[1,1]
-				mat colnames unW = Unique_W
-				ereturn mat unique_W unW
-				keep if `pvar' == `trunit'
-				if "`pvaluesrmspe'" != "1" & "`bcorrect'" != "" {
-					mkmat gap gap_bc, mat(gaps)
-					mat colnames gaps = Gap BCorr_Gap
-					mat rownames gaps = `_t'
-					ereturn mat gaps gaps
-					mkmat `tvar' gap gap_bc, mat(results)
-					mat results = results,uW
-					mat colnames results = `tvar' Gap BCorr_Gap Unique_W
-					mat rownames results = `_t'
-					ereturn mat results results
+				* Return results if single treated unit
+				if "`stacked'" == "" {
+					save "`core2'", replace
+					ereturn clear
+					ereturn mat Y_treated _eY_treated
+					ereturn mat Y_synthetic _eY_synthetic
+					ereturn mat W_weights _eW_weights
+					ereturn mat X_balance _eX_balance
+					ereturn mat V_matrix _eV_matrix
+					ereturn mat RMSPE _eRMSPE
+					keep if `pvar' == `trunit'
+					if "`bcorrect'" == "" {
+						mkmat gap, mat(gaps)
+						mat colnames gaps = gap
+						mat rownames gaps = `_t'
+						ereturn mat gaps gaps
+						if "`stacked'" == "" & "`pvaluesrmspe'" == "1" {
+							mkmat p, mat(pvals)
+							mat colnames pvals = RMSPE_p
+							mat rownames pvals = `_t'
+							ereturn mat pvals pvals
+						}
+					}
+					if "`bcorrect'" != "" {
+						mkmat gap gap_bc, mat(gaps)
+						mat colnames gaps = gap gap_bc
+						mat rownames gaps = `_t'
+						ereturn mat gaps gaps
+						if "`stacked'" == "" & "`pvaluesrmspe'" == "1" {
+							mkmat p p_bc, mat(pvals)
+							mat colnames pvals = RMSPE_p RMSPE_p_bc
+							mat rownames pvals = `_t'
+							ereturn mat pvals pvals
+						}
+					}
+					use "`core2'", clear
 				}
-				if "`pvaluesrmspe'" == "1" & "`bcorrect'" == "" {
-					mkmat gap, mat(gaps)
-					mat colnames gaps = Gap
-					mat rownames gaps = `_t'
-					ereturn mat gaps gaps
-					mkmat p, mat(inference)
-					mat colnames inference = RMSPE_p
-					mat rownames inference = `_t'
-					ereturn mat inference inference
-					mkmat `tvar' gap p, mat(results)
-					mat results = results,uW
-					mat colnames results = `tvar' Gap RMSPE_p Unique_W
-					mat rownames results = `_t'
-					ereturn mat results results
-				}
-				if "`pvaluesrmspe'" == "1" & "`bcorrect'" != "" {
-					mkmat p p_bc, mat(inference)
-					mat colnames inference = RMSPE_p BCorr_RMSPE_p
-					mat rownames inference = `_t'
-					ereturn mat inference inference
-					mkmat `tvar' gap p gap_bc p_bc, mat(results)
-					mat results = results,uW
-					mat colnames results = `tvar' Gap RMSPE_p BCorr_Gap BCorr_RMSPE_p Unique_W
-					mat rownames results = `_t'
-					ereturn mat results results
-				}
-				use "`core2'", clear
 				
 				* Drop *_bc* results if bcorrect() not specified
 				if "`bcorrect'" == "" {
 					drop *_bc*
 				}
+				di "flag"
 				
 				* Drop trunit, trperiod and avgweights from display
 				capture assert trunit
@@ -2082,7 +2070,7 @@ program allsynth, eclass sortpreserve byable(recall)
 				di "{hline}"
 			}
 			
-			* Indicate if treated-unit weighting matrix is not sparse or not unique
+			* Indicate if treated-unit weighting matrix is not sparse or likely not unique
 			if (`nonzerows' > `predno') & `chzero' != 0 {
 				di ""
 				di "{hline}"
@@ -2209,11 +2197,13 @@ program allsynth, eclass sortpreserve byable(recall)
 					qui drop _XnormVar _xXnormVar
 				}
 				if `transtypedemean' != 0 & `dvardemean' == 1 {
-					bysort `pvar': egen _XdmVar = mean(`dvar') if `tvar' < `trperiod'
-					bysort `pvar': egen _xXdmVar = max(_XdmVar)
-					qui replace `dvar' = `dvar' - _xXdmVar
-					qui replace `dvar' = 0.000001 if `dvar' == 0
-					drop _XdmVar _xXdmVar
+					quietly {
+						bysort `pvar': egen _XdmVar = mean(`dvar') if `tvar' < `trperiod'
+						bysort `pvar': egen _xXdmVar = max(_XdmVar)
+						qui replace `dvar' = `dvar' - _xXdmVar
+						qui replace `dvar' = 0.000001 if `dvar' == 0
+						drop _XdmVar _xXdmVar
+					}
 				}
 				qui merge m:1 `pvar' using "`core4'", nogen norep keep(3)
 				qui collapse (mean) _Y_synthetic=`dvar' [aw=_W_Weight], by(`tvar')
@@ -2293,17 +2283,9 @@ program allsynth, eclass sortpreserve byable(recall)
 			}
 			
 			* Return aditional results
-			mat colnames gap = Gap
+			mat colnames gap = gap
 			ereturn mat gaps gap
-			mat unW = uW[1,1]
-			mat colnames unW = Unique_W
-			ereturn mat unique_W unW
-			mkmat `tvar' gap, mat(results)
-			mat results = results,uW
-			mat colnames results = `tvar' Gap Unique_W
-			mat rownames results = `_t'
-			ereturn mat results results	
-			
+
 			* Indicate if pre-treatment MSPE was 0 (and thus set to 1 for RMSPE calculation)
 			if "`pvalues'" != "" & `mspe_flag' == 1 {
 				di ""
@@ -2315,7 +2297,7 @@ program allsynth, eclass sortpreserve byable(recall)
 				di "{hline}"
 			}
 
-			* Indicate if treated-unit weighting matrix is not sparse or not unique
+			* Indicate if treated-unit weighting matrix is not sparse or likely not unique
 			if (`nonzerows' > `predno') & `chzero' != 0 {
 				di ""
 				di "{hline}"
@@ -2340,10 +2322,8 @@ program allsynth, eclass sortpreserve byable(recall)
 					qui gen _stAvgweights = `avgweights'
 				}
 				mat gap = e(gaps)
-				mat unique_W = e(unique_W)
 				qui svmat gap, names(gap)
-				qui svmat unique_W, names(unique_W)
-				rename (gap1 unique_W1) (gap unique_W)
+				rename gap1 gap
 				qui save "`keep'", `replace'
 			}
 		}
@@ -2353,16 +2333,75 @@ program allsynth, eclass sortpreserve byable(recall)
 	if "`stacked'" != "" {
 		
 		* Stackedsc
-		stackedsc,	tvar(`tvar') pvar(`pvar') filename(`_Filename') tvarformat(`_tVarformat') filepath("`_Filepath'") avgs("`_stSampleavgs'") pvalrmspe("`pvaluesrmspe'") pvalvar("`pvaluesvariance'") emin("`_stEventtimemin'") emax("`_stEventtimemax'") avgwts("_stAvgweights") jackse("`_stJackse'") balance("`_stBalanced'") uW("`_stUnique_w'") figure("`_stFigure'") figureopts("`stfigureopts'") figuresave("`stfigsave'") figurereplace("`stfigsavereplace'") gaptitle("`gaptitle'") gaptitlepct("`gaptitlepct'")
+		stackedsc,	tvar(`tvar') pvar(`pvar') filename(`_Filename') tvarformat(`_tVarformat') filepath("`_Filepath'") avgs("`_stSampleavgs'") pvalrmspe("`pvaluesrmspe'") pvalvar("`pvaluesvariance'") emin("`_stEventtimemin'") emax("`_stEventtimemax'") avgwts("_stAvgweights") balance("`_stBalanced'") uW("`_stUnique_w'") figure("`_stFigure'") figureopts("`stfigureopts'") figuresave("`stfigsave'") figurereplace("`stfigsavereplace'") gaptitle("`gaptitle'") gaptitlepct("`gaptitlepct'")
+		
+		ereturn clear
+		qui keep if _placeboID == 0
+		qui levelsof _tm, local(_t)
+	}
+	else {
+		qui keep if `pvar' == `actreat'
 	}
 		
+	* Store results
+	quietly {		
+		if "`pvaluesrmspe'" == "1" & "`bcorrect'" == "" & "`pvaluesvariance'" == "" {
+			mkmat p, mat(pvals)
+			mat colnames pvals = RMSPE_p
+			mat rownames pvals = `_t'
+			ereturn mat pvals pvals
+		}
+		if "`pvaluesrmspe'" == "1" & "`bcorrect'" != "" & "`pvaluesvariance'" == "" {
+			mkmat p p_bc, mat(pvals)
+			mat colnames pvals = RMSPE_p RMSPE_p_bc
+			mat rownames pvals = `_t'
+			ereturn mat pvals pvals
+		}
+		if "`pvaluesrmspe'" != "1" & "`bcorrect'" == "" & "`pvaluesvariance'" == "1" {
+			mkmat _Pval, mat(pvals)
+			mat colnames pvals = PV_p
+			mat rownames pvals = `_t'
+			ereturn mat pvals pvals
+		}
+		if "`pvaluesrmspe'" != "1" & "`bcorrect'" != "" & "`pvaluesvariance'" == "1" {
+			mkmat _Pval _Pval_bc, mat(pvals)
+			mat colnames pvals = PV_p PV_p_bc
+			mat rownames pvals = `_t'
+			ereturn mat pvals pvals
+		}
+		if "`pvaluesrmspe'" == "1" & "`bcorrect'" == "" & "`pvaluesvariance'" == "1" {
+			mkmat p _Pval, mat(pvals)
+			mat colnames pvals = RMSPE_p PV_p
+			mat rownames pvals = `_t'
+			ereturn mat pvals pvals
+		}
+		if "`pvaluesrmspe'" == "1" & "`bcorrect'" != "" & "`pvaluesvariance'" == "1" {
+			mkmat p p_bc _Pval _Pval_bc, mat(pvals)
+			mat colnames pvals = RMSPE_p RMSPE_p_bc PV_p PV_p_bc
+			mat rownames pvals = `_t'
+			ereturn mat pvals pvals
+		}
+		if "`bcorrect'" == "" {
+			mkmat gap, mat(gaps)
+			mat colnames gaps = gap
+			mat rownames gaps = `_t'
+			ereturn mat gaps gaps
+		}
+		if "`bcorrect'" != "" {
+			mkmat gap gap_bc, mat(gaps)
+			mat colnames gaps = gap gap_bc
+			mat rownames gaps = `_t'
+			ereturn mat gaps gaps
+		}
+	}
+	
 	* Citation reminder
 	di
 	di as smcl "{cmd:________________________________}"
 	di
 	di as smcl "{cmd:allsynth is a user-written command made freely-available to the research community. Please cite the paper:}"
 	di
-	di as smcl `"{browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire, Justin C., 2022.  allsynth: (Stacked) Synthetic Control Bias-Correction Utilities for Stata. Working paper.}"'
+	di as smcl `"{browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire, Justin C., 2026.  allsynth: (Stacked) Synthetic Control Bias-Correction Utilities for Stata. Working paper.}"'
 	di
 	di "{hline}"
 end
@@ -2386,7 +2425,6 @@ program stackedsc, rclass
 		emin(numlist min=1 max=1 <0 integer) 
 		emax(numlist min=1 max=1 >0 integer) 
 		avgwts(string)
-		jackse(string)
 		balance(string)
 		uW(string)
 		figure(string)
@@ -2504,11 +2542,6 @@ program stackedsc, rclass
 	di
 	di as txt "Estimated average treatment effects saved in `filepath'`_Slash'`filename'_ate.dta"
 	di
-		
-	* Drop *_bc* results if bcorrect() not specified
-	if "`bcorrect'" == "" {
-		qui drop *_bc*
-	}
 				
 	* Drop trunit, trperiod and avgweights from display
 	capture assert trunit

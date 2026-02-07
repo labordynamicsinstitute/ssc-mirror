@@ -1,0 +1,22 @@
+d 'HATEMICOINT': module to implement cointegration tests with two unknown regime shifts following the methodology of Hatemi-J (2008)
+d
+d   The hatemicoint package implements three residual-based tests
+d for cointegration in the presence of two unknown structural
+d breaks. The methodology extends the Gregory and Hansen (1996)
+d framework to accommodate two regime shifts, where both the timing
+d and location of the breaks are determined endogenously from the
+d data.
+d
+d KW: unit root tests
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260206
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f hatemicoint.ado
+f hatemicoint.sthlp
+f hatemicoint_examples.do

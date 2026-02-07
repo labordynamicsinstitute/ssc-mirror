@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0 30jan2024}{...}
+{* *! version 1.1.0 05Feb2026}{...}
 {title:Title}
 
 {p 4 4 2}
@@ -35,7 +35,8 @@ after fitting a random-effects meta-regression model using {helpb meta regress}
 with the {cmd:random()} option. It supports all random-effects estimation methods 
 currently available in Stata's meta suite. {cmd:tau2ci} uses the  
 standard error formulas implemented in the {browse "https://www.metafor-project.org/doku.php/metafor":metafor} 
-package in R.
+package in R. Note that the lower limit will be truncated at 0 if it is less than 0, and the upper limit will
+be truncated at 1 if it is greater than 1.
 
 
 
@@ -55,8 +56,12 @@ package in R.
 {phang2}{cmd:. tau2ci}{p_end}
 
 {pstd}meta regress with moderators{p_end}
-{phang2}{cmd:. meta regress latitude year, random(reml)}{p_end}
+{phang2}{cmd:. meta regress latitude_c, random(sjonkman)}{p_end}
 {phang2}{cmd:. tau2ci}{p_end}
+
+{pstd}set level to 90{p_end}
+{phang2}{cmd:. tau2ci, level(90)}{p_end}
+
 
 
 {title:Stored results}
@@ -96,7 +101,8 @@ Viechtbauer, W. 2010. Conducting meta-analyses in R with the metafor package.
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden A. (2026). TAU2CI: Stata module to compute standard error and confidence interval for the tau-squared statistic in random-effects meta-analysis
+Linden A. (2026). TAU2CI: Stata module to compute standard error and confidence interval for the tau-squared statistic in random-effects meta-analysis. 
+Statistical Software Components S459581, Boston College Department of Economics. {browse "https://ideas.repec.org/c/boc/bocode/s459581.html"}
 
 
 

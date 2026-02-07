@@ -2038,6 +2038,7 @@ fmwww.bc.edu/repec/bocode/a/apcd.ado
 fmwww.bc.edu/repec/bocode/a/ajv.hlp
 fmwww.bc.edu/repec/bocode/a/aevolcs.ado
 fmwww.bc.edu/repec/bocode/a/asinhcauchyouterv2.ado
+fmwww.bc.edu/repec/bocode/a/synth_smoking.dta
 fmwww.bc.edu/repec/bocode/a/ari.sthlp
 fmwww.bc.edu/repec/bocode/a/ad-src-dev-description.txt
 fmwww.bc.edu/repec/bocode/a/ANNInputSigTest.docx
@@ -17375,6 +17376,7 @@ fmwww.bc.edu/repec/bocode/h/htmlcode.mata
 fmwww.bc.edu/repec/bocode/h/histbox.html
 fmwww.bc.edu/repec/bocode/h/haif.pkg
 fmwww.bc.edu/repec/bocode/h/hangr_invgamma.ado
+fmwww.bc.edu/repec/bocode/h/hatemicoint.pkg
 fmwww.bc.edu/repec/bocode/h/hestonfftvanilla.m
 fmwww.bc.edu/repec/bocode/h/how_many_imputations.pkg
 fmwww.bc.edu/repec/bocode/h/htmlhead.mata
@@ -17711,6 +17713,7 @@ fmwww.bc.edu/repec/bocode/h/haloperidol.do
 fmwww.bc.edu/repec/bocode/h/hcavar.hlp
 fmwww.bc.edu/repec/bocode/h/htmltable.mata
 fmwww.bc.edu/repec/bocode/h/htmltit.ado
+fmwww.bc.edu/repec/bocode/h/hatemicoint.ado
 fmwww.bc.edu/repec/bocode/h/hangr_zip.ado
 fmwww.bc.edu/repec/bocode/h/haifcomp.html
 fmwww.bc.edu/repec/bocode/h/htmlh4.mata
@@ -17722,6 +17725,7 @@ fmwww.bc.edu/repec/bocode/h/housing.csv
 fmwww.bc.edu/repec/bocode/h/halfnormden.ado
 fmwww.bc.edu/repec/bocode/h/hemkens2016analysis18.dta
 fmwww.bc.edu/repec/bocode/h/hireg.html
+fmwww.bc.edu/repec/bocode/h/hatemicoint_examples.do
 fmwww.bc.edu/repec/bocode/h/hshaz.pkg
 fmwww.bc.edu/repec/bocode/h/hlTex.ado
 fmwww.bc.edu/repec/bocode/h/hmindex.pkg
@@ -17897,6 +17901,7 @@ fmwww.bc.edu/repec/bocode/h/hetprob.html
 fmwww.bc.edu/repec/bocode/h/hpc.sthlp
 fmwww.bc.edu/repec/bocode/h/htmlinput.mata
 fmwww.bc.edu/repec/bocode/h/hettreatreg.pkg
+fmwww.bc.edu/repec/bocode/h/hatemicoint.sthlp
 fmwww.bc.edu/repec/bocode/h/htmlcol.mata
 fmwww.bc.edu/repec/bocode/h/hlist.html
 fmwww.bc.edu/repec/bocode/h/heatmapgraph.pkg
@@ -21027,6 +21032,7 @@ fmwww.bc.edu/repec/bocode/b/bayesqual15_linux.plugin
 fmwww.bc.edu/repec/bocode/b/biplot.ado
 fmwww.bc.edu/repec/bocode/b/bta2score.ado
 fmwww.bc.edu/repec/bocode/b/bivpoisson-example-code.do
+fmwww.bc.edu/repec/bocode/b/binomci.pkg
 fmwww.bc.edu/repec/bocode/b/burr8burr8.ado
 fmwww.bc.edu/repec/bocode/b/bsopm.sthlp
 fmwww.bc.edu/repec/bocode/b/buchinsky.ado
@@ -21057,6 +21063,7 @@ fmwww.bc.edu/repec/bocode/b/bipolate.sthlp
 fmwww.bc.edu/repec/bocode/b/bronch.pkg
 fmwww.bc.edu/repec/bocode/b/bimap.sthlp
 fmwww.bc.edu/repec/bocode/b/bcoeffs.sthlp
+fmwww.bc.edu/repec/bocode/b/binomci.sthlp
 fmwww.bc.edu/repec/bocode/b/betafit_postestimation.html
 fmwww.bc.edu/repec/bocode/b/bayerhanck.sthlp
 fmwww.bc.edu/repec/bocode/b/bdiffv.ado
@@ -21170,6 +21177,7 @@ fmwww.bc.edu/repec/bocode/b/burr7logistic.ado
 fmwww.bc.edu/repec/bocode/b/bcuse.ado
 fmwww.bc.edu/repec/bocode/b/brewviewer.sthlp
 fmwww.bc.edu/repec/bocode/b/betterbar.ado
+fmwww.bc.edu/repec/bocode/b/binomci.ado
 fmwww.bc.edu/repec/bocode/b/boost_win64.plugin
 fmwww.bc.edu/repec/bocode/b/btnumticks.sthlp
 fmwww.bc.edu/repec/bocode/b/btlinewidth.sthlp

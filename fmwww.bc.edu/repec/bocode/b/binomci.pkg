@@ -1,0 +1,26 @@
+d 'BINOMCI': module to compute confidence intervals for binomial proportions using 12 methods
+d
+d  binomci computes confidence intervals for binomial proportions
+d using 12 different methods (including the 5 already offered by
+d ci). The command is designed to provide a comprehensive set of
+d confidence interval methods, including both classical and modern
+d approaches. binomci reports the same 12 methods as those
+d implemented in the R program binomCI, but for several methods,
+d binomci computes the boundary edge cases differently. binomci
+d follows the recommended approaches discussed in Brown et al
+d (2001), Newcombe (1998), and Vollset (1993). 
+d
+d KW: binary
+d KW: binomial
+d KW: dichotomous
+d KW: confidence interval
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20260206
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f binomci.ado
+f binomci.sthlp

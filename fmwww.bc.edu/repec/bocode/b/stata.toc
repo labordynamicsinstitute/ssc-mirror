@@ -49,6 +49,7 @@ p bigtab module to produce frequency tables for "too many values"
 p bihist module to produce bihistograms
 p bimap module to produce bivariate maps
 p bineq module to analyze multidimensional inequality in two dimensions of wellbeing
+p binomci module to compute confidence intervals for binomial proportions using 12 methods
 p binscatter module to generate binned scatterplots
 p binscatterhist module to produce binned scatterplot with marginal histograms
 p bioprobit module for bivariate ordered probit regression

@@ -1,6 +1,6 @@
+*! 1.1.0 Ariel Linden 05Feb2026 // added truncation if LCL < 0 and UCL > 1
 *! 1.0.0 Ariel Linden 30Jan2026
 
-capture program drop tau2ci
 program define tau2ci, rclass
 	version 11
 	syntax [, Level(cilevel)]
@@ -50,12 +50,28 @@ program define tau2ci, rclass
 	local se_tau2 = r(se_tau2)
 	local ci_lb = r(ci_lb)
 	local ci_ub = r(ci_ub)
+	
+	// track if lower CI was truncated
+	local clipped_lower = 0
+	if `ci_lb' < 0 {
+		local ci_lb = 0
+		local clipped_lower = 1
+	}
+	
+	// track if upper CI was truncated at 1
+	local clipped_upper = 0
+	if `ci_ub' > 1 {
+		local ci_ub = 1
+		local clipped_upper = 1
+	}
     
 	// return values
 	return scalar se = `se_tau2'
 	return scalar tau2 = `tau2'
 	return scalar ll = `ci_lb'
 	return scalar ul = `ci_ub'
+	return scalar clipped_lower = `clipped_lower'
+	return scalar clipped_upper = `clipped_upper'
 	return local method "`stmethod'"
     
 	// display output table
@@ -74,17 +90,48 @@ program define tau2ci, rclass
 					"Std. Err."						/// 3
 					"[`level'% Conf. Interval]" ""	// 4 5
 	.`mytab'.sep, middle
-	.`mytab'.strfmt    %24s  .  .  .  .
-	.`mytab'.row    ""			///
-					`tau2'		///
-					`se_tau2'	///
-					`ci_lb'	///
-					`ci_ub'
+	
+	// format values with asterisks if truncated
+	local lb_display = `ci_lb'
+	local ub_display = `ci_ub'
+	local mark = ""
+	
+	if `clipped_lower' == 1 & `clipped_upper' == 1 {
+		local mark "* **"
+	}
+	else if `clipped_lower' == 1 {
+		local mark "*"
+	}
+	else if `clipped_upper' == 1 {
+		local mark "**"
+	}
+	
+	// display the row - we need to manually display the asterisks
+	// first, display the first 4 columns normally
+	di as txt %10s "" "{c |}" _c
+	di as res _col(13) %9.0g `tau2' _c
+	di as res _col(24) %9.0g `se_tau2' _c
+	di as res _col(38) %9.0g `lb_display' _c
+	
+	// display the last column with the asterisk mark
+	di as res _col(50) %9.0g `ub_display' as txt "`mark'"
+	
 	.`mytab'.sep, bottom
     
 	// display method information below the table
 	di as text "Random-effects method: " as result "`rmethod'"
-    
+	
+	// display warning if CI was truncated
+	if `clipped_lower' == 1 | `clipped_upper' == 1 {
+		di
+		if `clipped_lower' == 1 {
+			di as text "(*) The `rmethod' interval was clipped at the lower endpoint"
+		}
+		if `clipped_upper' == 1 {
+			di as text "(**) The `rmethod' interval was clipped at the upper endpoint"
+		}
+	}
+	
 end
 
 // Mata function to compute std err and CIs
