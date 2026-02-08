@@ -1,4 +1,4 @@
-*! version 1.3 by Justin Wiltshire. Updated 02/06/2026 - Wrapper adding functionality to -synth- package
+*! version 1.31 by Justin Wiltshire. Updated 02/06/2026 - Wrapper adding functionality to -synth- package
 
 program allsynth, eclass sortpreserve byable(recall)
 	version 15.1 // Not tested on earlier versions
@@ -2339,7 +2339,7 @@ program allsynth, eclass sortpreserve byable(recall)
 		qui keep if _placeboID == 0
 		qui levelsof _tm, local(_t)
 	}
-	else {
+	if "`stacked'" == "" & ("`bcorrect'" != "" | "`pvalues'" != "") {
 		qui keep if `pvar' == `actreat'
 	}
 		

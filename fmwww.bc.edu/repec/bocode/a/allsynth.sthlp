@@ -1,9 +1,9 @@
 {smcl}
-{* Feb4,2026}{...}
+{* Feb6,2026}{...}
 {cmd:help allsynth} 
 {hline}
 
-{title:Title} {p 19 20 0} {cmd:Version 1.3} - Release date: February 6, 2026. Tested on Stata 15.1 and above. 
+{title:Title} {p 19 20 0} {cmd:Version 1.31} - Release date: February 6, 2026. Tested on Stata 15.1 and above. 
 
 {p2colset 5 20 20 2}{...}
 {p2col :{hi:allsynth} {hline 2}}Automates estimation of (i) bias-corrected synthetic control gaps ("treatment effects"); (ii) RMSPE-ranked {it:p}-values and 
