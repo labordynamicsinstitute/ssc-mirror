@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.5.0  31dec2025}{...}
+{* *! version 3.1  03feb2026}{...}
 {vieweralsosee "[R] search" "help search"}{...}
 {vieweralsosee "[R] net" "help net"}{...}
 {viewerjumpto "Syntax" "findsj##syntax"}{...}
@@ -108,7 +108,7 @@ Configure download path
 {title:Description}
 
 {pstd}
-{cmd:findsj} searches articles published in the {it:Stata Journal} (2001-present) 
+{cmd:findsj} searches and cites articles published in the {it:Stata Journal} (2001-present) 
 and {it:Stata Technical Bulletin} (1991-2000). It provides an integrated workflow 
 for finding, reading, citing, and installing Stata packages from journal articles.
 
@@ -124,7 +124,7 @@ the official Stata Journal website.
 actions with a single click:
 
 {phang3}
-• {bf:Article} - Opens article page in your browser{break}
+• {bf:Web} - Opens article page in your browser{break}
 • {bf:PDF} - Opens full-text PDF in browser (requires DOI){break}
 • {bf:Google} - Searches article on Google Scholar{break}
 • {bf:Install} - Searches for installable Stata packages{break}
@@ -191,7 +191,7 @@ reviews or when exporting complete citation lists.
 {phang}
 {opt nobrowser} suppresses all clickable buttons and links. Use when working in 
 batch mode or when buttons are not needed. By default, seven buttons appear 
-for each result: {bf:Article}, {bf:PDF}, {bf:Google}, {bf:Install}, {bf:Ref}, 
+for each result: {bf:Web}, {bf:PDF}, {bf:Google}, {bf:Install}, {bf:Ref}, 
 {bf:BibTeX}, and {bf:RIS}.
 
 {phang}
@@ -315,7 +315,6 @@ with multiple searches.
 {phang}
 {opt debug} enables trace mode for troubleshooting. Use when reporting issues.
 
-
 {marker examples}{...}
 {title:Examples}
 
@@ -326,25 +325,25 @@ any blue underlined text or button with your mouse to execute the action.
     {hline}
 {pstd}{bf:Basic Search}{p_end}
 
-{phang2}{cmd:. findsj panel data}{p_end}
+{phang2}{inp:.} {stata "findsj panel data":findsj panel data}{p_end}
 {pmore}→ Searches for "panel data", displays 10 results with 7 buttons each{p_end}
 
-{phang2}{cmd:. findsj cox, author}{p_end}
+{phang2}{inp:.} {stata "findsj cox, author":findsj cox, author}{p_end}
 {pmore}→ Finds all articles by Nicholas J. Cox{p_end}
 
-{phang2}{cmd:. findsj propensity score matching, title}{p_end}
+{phang2}{inp:.} {stata "findsj propensity score matching, title":findsj propensity score matching, title}{p_end}
 {pmore}→ Searches article titles only{p_end}
 
-{phang2}{cmd:. findsj instrumental variable, n(20)}{p_end}
+{phang2}{inp:.} {stata "findsj instrumental variable, n(20)":findsj instrumental variable, n(20)}{p_end}
 {pmore}→ Shows first 20 results{p_end}
 
-{phang2}{cmd:. findsj difference-in-differences, allresults}{p_end}
+{phang2}{inp:.} {stata "findsj difference-in-differences, allresults":findsj difference-in-differences, allresults}{p_end}
 {pmore}→ Shows all matching articles{p_end}
 
     {hline}
 {pstd}{bf:Using Interactive Buttons}{p_end}
 
-{phang2}{cmd:. findsj fixed effects}{p_end}
+{phang2}{inp:.} {stata "findsj fixed effects":findsj fixed effects}{p_end}
 {pmore}For each result, click:{p_end}
 {pmore2}• {bf:Article} to read abstract online{p_end}
 {pmore2}• {bf:PDF} to view full text in browser{p_end}
@@ -357,39 +356,39 @@ any blue underlined text or button with your mouse to execute the action.
     {hline}
 {pstd}{bf:Citation Generation - Individual Articles}{p_end}
 
-{phang2}{cmd:. findsj matching, ref}{p_end}
+{phang2}{inp:.} {stata "findsj matching, ref":findsj matching, ref}{p_end}
 {pmore}→ Shows three format buttons (.md, .latex, .txt) below each result{p_end}
 {pmore}→ Click any button to generate and copy that citation format{p_end}
 
-{phang2}{cmd:. findsj st0001, ref}{p_end}
+{phang2}{inp:.} {stata "findsj st0001, ref":findsj st0001, ref}{p_end}
 {pmore}→ Shows citation buttons for specific article ID{p_end}
 {pmore}→ Useful when you already know the article ID{p_end}
 
     {hline}
 {pstd}{bf:Citation Export - Batch Mode}{p_end}
 
-{phang2}{cmd:. findsj causal inference, md}{p_end}
+{phang2}{inp:.} {stata "findsj causal inference, md":findsj causal inference, md}{p_end}
 {pmore}→ Exports first 10 citations in Markdown format{p_end}
 {pmore}→ Saves to _findsj_temp_out_.md{p_end}
 {pmore}→ Copies to clipboard automatically{p_end}
 {pmore}→ Shows View/Open_Mac/Open_Win/dir buttons{p_end}
 
-{phang2}{cmd:. findsj meta-analysis, latex allresults}{p_end}
+{phang2}{inp:.} {stata "findsj meta-analysis, latex allresults":findsj meta-analysis, latex allresults}{p_end}
 {pmore}→ Exports ALL results in LaTeX format{p_end}
 {pmore}→ Perfect for comprehensive literature reviews{p_end}
 
-{phang2}{cmd:. findsj quantile regression, plain noclip}{p_end}
+{phang2}{inp:.} {stata "findsj quantile regression, plain noclip":findsj quantile regression, plain noclip}{p_end}
 {pmore}→ Exports in plain text without clipboard{p_end}
 {pmore}→ Use when you don't want clipboard overwritten{p_end}
 
     {hline}
 {pstd}{bf:Reference File Download}{p_end}
 
-{phang2}{cmd:. findsj st0377, type(bib)}{p_end}
+{phang2}{inp:.} {stata "findsj st0377, type(bib)":findsj st0377, type(bib)}{p_end}
 {pmore}→ Downloads BibTeX file for article st0377{p_end}
 {pmore}→ File saved to configured path and auto-opened{p_end}
 
-{phang2}{cmd:. findsj dm0065, type(ris)}{p_end}
+{phang2}{inp:.} {stata "findsj dm0065, type(ris)":findsj dm0065, type(ris)}{p_end}
 {pmore}→ Downloads RIS file for EndNote/Zotero/Mendeley{p_end}
 
 {phang2}{bf:Tip}: You can also click {bf:BibTeX} or {bf:RIS} buttons in search results{p_end}
@@ -397,45 +396,46 @@ any blue underlined text or button with your mouse to execute the action.
     {hline}
 {pstd}{bf:Database Management}{p_end}
 
-{phang2}{cmd:. findsj, update}{p_end}
+{phang2}{inp:.} {stata "findsj, update":findsj, update}{p_end}
 {pmore}→ Shows clickable buttons for GitHub, Gitee, and both{p_end}
 {pmore}→ Click your preferred source to start download{p_end}
 
-{phang2}{cmd:. findsj, update source(both)}{p_end}
+{phang2}{inp:.} {stata "findsj, update source(both)":findsj, update source(both)}{p_end}
 {pmore}→ Downloads from GitHub, falls back to Gitee if failed{p_end}
 {pmore}→ Recommended for reliability{p_end}
 
-{phang2}{cmd:. findsj, update source(github)}{p_end}
+{phang2}{inp:.} {stata "findsj, update source(github)":findsj, update source(github)}{p_end}
 {pmore}→ Downloads from GitHub only{p_end}
 
-{phang2}{cmd:. findsj, update source(gitee)}{p_end}
+{phang2}{inp:.} {stata "findsj, update source(gitee)":findsj, update source(gitee)}{p_end}
 {pmore}→ Downloads from Gitee (faster for China users){p_end}
 
     {hline}
 {pstd}{bf:Download Path Configuration}{p_end}
 
-{phang2}{cmd:. findsj, setpath(d:/MyPapers/References)}{p_end}
+{phang2}{inp:.} {stata "findsj, setpath(d:/MyPapers/References)":findsj, setpath(d:/MyPapers/References)}{p_end}
 {pmore}→ Sets custom download location{p_end}
 {pmore}→ Applies to all BibTeX and RIS downloads{p_end}
 {pmore}→ Setting persists across sessions{p_end}
 
-{phang2}{cmd:. findsj, querypath}{p_end}
+{phang2}{inp:.} {stata "findsj, querypath":findsj, querypath}{p_end}
 {pmore}→ Shows current download path{p_end}
 
-{phang2}{cmd:. findsj, resetpath}{p_end}
+{phang2}{inp:.} {stata "findsj, resetpath":findsj, resetpath}{p_end}
 {pmore}→ Resets to default (current directory){p_end}
 
     {hline}
 {pstd}{bf:Advanced Usage}{p_end}
 
-{phang2}{cmd:. findsj simulation monte carlo, nopdf nopkg}{p_end}
+{phang2}{inp:.} {stata "findsj simulation monte carlo, nopdf nopkg":findsj simulation monte carlo, nopdf nopkg}{p_end}
 {pmore}→ Minimal output: hides PDF and Install buttons{p_end}
 
-{phang2}{cmd:. findsj bootstrap, nobrowser}{p_end}
+{phang2}{inp:.} {stata "findsj bootstrap, nobrowser":findsj bootstrap, nobrowser}{p_end}
 {pmore}→ No clickable buttons (for batch scripts){p_end}
 
-{phang2}{cmd:. findsj survival analysis, md allresults getdoi}{p_end}
+{phang2}{inp:.} {stata "findsj survival analysis, md allresults getdoi":findsj survival analysis, md allresults getdoi}{p_end}
 {pmore}→ Export all results with complete DOI information{p_end}
+
 
 
 {marker results}{...}

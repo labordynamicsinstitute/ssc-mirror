@@ -1,0 +1,29 @@
+d 'THESIS_DIAGRAM': module to generate LaTeX code for thesis framework diagrams with 5 templates
+d
+d    thesis_diagram generates professional LaTeX code for thesis
+d and dissertation framework diagrams. It    supports 5 different
+d templates suitable for various research designs and
+d methodologies. The program	creates a standalone LaTeX file
+d that can be compiled to produce high-quality vector graphics for 
+d   academic publications. 
+d
+d KW: document
+d KW: LaTeX
+d KW: thesis
+d KW: dissertation
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260209
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+d Author:   Jin Xuening,  Anhui University of Technology
+d Support: email     1418924481@@qq.com
+d
+f thesis_diagram.ado
+f thesis_diagram.sthlp

@@ -1,7 +1,20 @@
-*! version 1.5.0  31Dec2025
+*! version 3.1  03Feb2026
 *! Yujun Lian (arlionn@163.com), Chucheng Wan (chucheng.wan@outlook.com)
 
 * Search Stata Journal and Stata Technical Bulletin articles
+* v2.1.2: Bug fix - hyphenated keywords now supported
+*   - Fixed: Keywords with hyphens (e.g., "difference-in-differences") now work correctly
+*   - Added: "everything" subitem to syntax to prevent "in" range misinterpretation
+* v2.1.1: Bug fixes - BibTeX/RIS download improvements
+*   - Fixed: BibTeX/RIS now correctly downloads to current directory by default
+*   - Fixed: setpath() configuration now properly saved and loaded across sessions
+*   - Fixed: Download path correctly handles Chinese characters in directory names
+*   - Fixed: Path separators normalized for Windows compatibility
+* v2.1.0: Major update - Bug fixes and performance optimization
+*   - Fixed Bug #1: Citation count display (results < n)
+*   - Fixed Bug #3: Author name order (via citation_apa)
+*   - Fixed Bug #4: Added text/txt options as aliases for plain format
+* v1.6.0: Use local citation_apa field for offline citations (no need to call getiref)
 * v1.5.0: 'added by Yujun Lian 2025/12/31', add number list before ref
 * v1.4.0: Auto-check for database updates (monthly reminder with download option)
 * v1.3.0: Direct getiref integration - click .md/.latex/.txt calls getiref with DOI
@@ -18,12 +31,24 @@ program define findsj_download
     version 14
     syntax anything(name=artid), Type(string) [DOWNloadpath(string)]
     
-    * Set download path (use global if set, otherwise current directory)
+    * Set download path (read from config file, use global if set, otherwise current directory)
     if "`downloadpath'" == "" {
-        if "$findsj_download_path" != "" {
+        * First try to read from config file
+        local config_file "`c(sysdir_personal)'findsj_config.txt"
+        capture confirm file "`config_file'"
+        if _rc == 0 {
+            tempname fh
+            file open `fh' using "`config_file'", read text
+            file read `fh' line
+            file close `fh'
+            local downloadpath = strtrim("`line'")
+        }
+        * If still empty, check global variable
+        if "`downloadpath'" == "" & "$findsj_download_path" != "" {
             local downloadpath "$findsj_download_path"
         }
-        else {
+        * If still empty, use current directory
+        if "`downloadpath'" == "" {
             local downloadpath "`c(pwd)'"
         }
     }
@@ -43,7 +68,14 @@ program define findsj_download
     * Determine file extension
     local file_ext = cond("`type'"=="bib", "bib", "ris")
     local file_name "`artid'.`file_ext'"
-    local full_file "`downloadpath'/`file_name'"
+    * Normalize path separators and build full path
+    if "`c(os)'" == "Windows" {
+        local downloadpath = subinstr("`downloadpath'", "/", "\", .)
+        local full_file = "`downloadpath'" + "\" + "`file_name'"
+    }
+    else {
+        local full_file = "`downloadpath'" + "/" + "`file_name'"
+    }
     local url_article "https://www.stata-journal.com/article.html?article=`artid'"
     
     * Generate unique temp script file name in system temp directory
@@ -76,26 +108,22 @@ program define findsj_download
             shell bash "`script_file'" &
         }
         else {
-            * Windows PowerShell script
-            file open `fh' using "`script_file'", write replace
-            file write `fh' "$" "headers = @{" _n
-            file write `fh' "    'Referer' = '`url_article''" _n
-            file write `fh' "    'User-Agent' = 'Mozilla/5.0'" _n
-            file write `fh' "}" _n
-            file write `fh' "try {" _n
-            file write `fh' "    Invoke-WebRequest -Uri '`url'' -Headers $" "headers -OutFile '`full_file''" _n
-            file write `fh' "    if (Test-Path '`full_file'') {" _n
-            file write `fh' "        Write-Host 'Downloaded: `full_file'' -ForegroundColor Green" _n
-            file write `fh' "        Start-Process '`full_file''" _n
-            file write `fh' "    } else {" _n
-            file write `fh' "        Write-Host 'Download failed!' -ForegroundColor Red" _n
-            file write `fh' "    }" _n
-            file write `fh' "} finally {" _n
-            file write `fh' "    Remove-Item -Path '`script_file'' -Force -ErrorAction SilentlyContinue" _n
-            file write `fh' "}" _n
-            file close `fh'
+            * Windows PowerShell: use -Command instead of -File for better encoding support
+            * Escape single quotes and backslashes in paths
+            local full_file_ps = subinstr("`full_file'", "'", "''", .)
+            local script_ps = subinstr("`script_file'", "'", "''", .)
             
-            shell powershell -ExecutionPolicy Bypass -File "`script_file'"
+            local ps_command = "try { " + ///
+                "Invoke-WebRequest -Uri '`url'' " + ///
+                "-Headers @{'Referer'='`url_article'';'User-Agent'='Mozilla/5.0'} " + ///
+                "-OutFile '`full_file_ps''; " + ///
+                "if (Test-Path '`full_file_ps'') { " + ///
+                "Write-Host 'Downloaded: `full_file_ps'' -ForegroundColor Green; " + ///
+                "Start-Process '`full_file_ps'' } " + ///
+                "else { Write-Host 'Download failed!' -ForegroundColor Red } " + ///
+                "} catch { Write-Host " + char(36) + "_.Exception.Message -ForegroundColor Red }"
+            
+            shell powershell -ExecutionPolicy Bypass -Command "`ps_command'"
         }
     }
     
@@ -111,7 +139,7 @@ end
 program define findsj, rclass
 version 14
 
-syntax [anything(name=keywords id="keywords")] [, ///
+syntax [anything(name=keywords id="keywords" everything)] [, ///
     Author  ///
 	  Title ///
 	  Keyword ///
@@ -121,6 +149,8 @@ syntax [anything(name=keywords id="keywords")] [, ///
 	  Latex ///
 	  TEX   ///
 	  Plain  ///
+	  TEXT   ///
+	  TXT    ///
     NOBrowser ///
 	  NOPDF ///
 	  NOPkg ///
@@ -130,16 +160,21 @@ syntax [anything(name=keywords id="keywords")] [, ///
     GETDOI ///
     Clear  ///
 	Debug  ///
+    OFFline ///
+    CHECKdb ///
+    INSTALLdb(string) ///
     SETPath(string) ///
 	  QUERYpath ///
 	  RESETpath ///
     UPdate ///
-	source(string) ///
+    UPdatesource ///
+    SOUrce(string) ///
     Type(string) ///
     ]
 
 	
-* Check if getiref is installed (needed for citation formats)
+* Check if getiref is installed (needed for online citation fetching and individual article buttons)
+* Note: With local database (findsj.dta), citations can be generated without getiref
 capture which getiref
 if _rc != 0 {
     dis as text "{p}command getiref is unrecognized. Installing from SSC...{p_end}"
@@ -151,6 +186,7 @@ if _rc != 0 {
         dis as result "{p}getiref successfully installed!{p_end}"
     }
 }
+
 
 
 * Check for updates (once per day)
@@ -170,17 +206,296 @@ if "`type'" != "" {
 * Handle showref subcommand (findsj artid, ref)
 if "`ref'" != "" & "`keywords'" != "" & "`author'" == "" & "`title'" == "" & "`keyword'" == "" {
     * Check if keywords looks like an article ID (not a search term)
-    * Article IDs are typically alphanumeric strings like "st0001" or "dm0065"
-    if regexm("`keywords'", "^[a-z]+[0-9]+$") | regexm("`keywords'", "^ï»¿[a-z]+[0-9]+$") {
+    * Article IDs are typically alphanumeric strings like "st0001", "dm0065", or "st0136_1"
+    if regexm("`keywords'", "^[a-z]+[0-9_]+$") | regexm("`keywords'", "^ï»¿[a-z]+[0-9_]+$") {
         findsj_show_ref `keywords'
         exit
     }
 }
 
 * Handle database update subcommand
-if "`update'" != "" {
-    * Use source if specified, otherwise empty (will show usage)
+* If user specifies 'update' without 'updatesource', default to 'both'
+if "`update'" != "" & "`updatesource'" == "" {
+    local updatesource "updatesource"
+    local source "both"
+}
+
+* If user specifies 'updatesource' without source(), show menu
+if "`updatesource'" != "" & "`source'" == "" {
+    local source ""  // Empty will trigger menu in findsj_update_db
+}
+
+if "`updatesource'" != "" {
+    * source parameter contains the source choice (empty = show menu)
     findsj_update_db "`source'"
+    exit
+}
+
+* Handle checkdb subcommand - show database location and status
+if "`checkdb'" != "" {
+    dis ""
+    dis as text "{hline 70}"
+    dis as result "  findsj Database Location Check"
+    dis as text "{hline 70}"
+    dis ""
+    
+    * Find findsj.ado location
+    local ado_path = ""
+    capture findfile findsj.ado
+    if _rc == 0 {
+        local ado_fullpath = r(fn)
+        dis as text "findsj.ado: " as result "`ado_fullpath'"
+        
+        * Extract directory
+        local rev_path = reverse("`ado_fullpath'")
+        local pos_slash = strpos("`rev_path'", "/")
+        local pos_backslash = strpos("`rev_path'", "\")
+        local last_sep = 0
+        if `pos_slash' > 0 & `pos_backslash' > 0 {
+            local last_sep = min(`pos_slash', `pos_backslash')
+        }
+        else if `pos_slash' > 0 {
+            local last_sep = `pos_slash'
+        }
+        else if `pos_backslash' > 0 {
+            local last_sep = `pos_backslash'
+        }
+        if `last_sep' > 0 {
+            local ado_path = substr("`ado_fullpath'", 1, length("`ado_fullpath'") - `last_sep' + 1)
+        }
+        
+        * List files in findsj.ado directory
+        dis ""
+        dis as text "Files in findsj.ado directory:"
+        if c(os) == "Windows" {
+            local clean_path = subinstr("`ado_path'", "/", "\", .)
+            shell dir /b "`clean_path'findsj*.*"
+        }
+        else {
+            shell ls -lh "`ado_path'"findsj* 2>/dev/null || echo "No files found or permission denied"
+        }
+    }
+    
+    * Build search paths using numbered locals (to handle paths with spaces)
+    local n_paths = 0
+    
+    if "`ado_path'" != "" {
+        local n_paths = `n_paths' + 1
+        local path`n_paths' `"`ado_path'"'
+    }
+    
+    local plus_f `"`c(sysdir_plus)'f`c(dirsep)'"'
+    local n_paths = `n_paths' + 1
+    local path`n_paths' `"`plus_f'"'
+    
+    local n_paths = `n_paths' + 1
+    local path`n_paths' `"`c(sysdir_plus)'"'
+    
+    local n_paths = `n_paths' + 1
+    local path`n_paths' `"`c(sysdir_personal)'"'
+    
+    local n_paths = `n_paths' + 1
+    local path`n_paths' `"`c(pwd)'"'
+    
+    dis ""
+    dis as text "Search paths:"
+    forvalues i = 1/`n_paths' {
+        dis as text "  - `path`i''"
+    }
+    
+    * Search for database
+    dis ""
+    dis as text "Searching for findsj.dta..."
+    dis ""
+    local found = 0
+    forvalues i = 1/`n_paths' {
+        local p `"`path`i''"'
+        local file_found = 0
+        local rc1 = .
+        local rc2 = .
+        
+        * Try with forward slash (use compound quotes for paths with spaces)
+        capture confirm file `"`p'/findsj.dta"'
+        local rc1 = _rc
+        if `rc1' == 0 {
+            local file_found = 1
+            local file_path `"`p'/findsj.dta"'
+        }
+        
+        * Try without separator
+        if `file_found' == 0 {
+            capture confirm file `"`p'findsj.dta"'
+            local rc2 = _rc
+            if `rc2' == 0 {
+                local file_found = 1
+                local file_path `"`p'findsj.dta"'
+            }
+        }
+        
+        * Debug: show what we tried
+        dis as text "  Checking: " as text `"`p'/findsj.dta"' _c
+        if `rc1' == 0 {
+            dis as result " ✓"
+        }
+        else {
+            dis as error " ✗ (rc=`rc1')"
+            if `rc2' != . {
+                dis as text "  Checking: " as text `"`p'findsj.dta"' _c
+                if `rc2' == 0 {
+                    dis as result " ✓"
+                }
+                else {
+                    dis as error " ✗ (rc=`rc2')"
+                }
+            }
+        }
+        
+        if `file_found' == 1 {
+            * Clean up display path (remove double slashes)
+            local display_path = subinstr(`"`file_path'"', "//", "/", .)
+            local display_path = subinstr(`"`display_path'"', "\\", "/", .)
+            
+            dis ""
+            dis as result "  [FOUND] " as text `"`display_path'"'
+            local found = 1
+            
+            * Get file info
+            capture {
+                use `"`file_path'"', clear
+                local n_records = _N
+                dis as text "          Records: " as result "`n_records'" as text " articles"
+                clear
+            }
+            
+            * Found in this path, skip remaining paths
+            continue, break
+        }
+    }
+    
+    if `found' == 0 {
+        dis as error "  [NOT FOUND] findsj.dta not found"
+        dis ""
+        dis as text "To download the database:"
+        dis as text "  {stata findsj, updatesource source(both):findsj, updatesource source(both)}"
+        dis ""
+        dis as text "If you have findsj.dta file, manually install it:"
+        dis as text "  1. Drag findsj.dta into Stata to get its full path"
+        dis as text "  2. Run: findsj, installdb(" as result "/full/path/to/findsj.dta" as text ")"
+    }
+    
+    dis ""
+    dis as text "{hline 70}"
+    exit
+}
+
+* Handle manual database installation
+if "`installdb'" != "" {
+    dis ""
+    dis as text "{hline 70}"
+    dis as result "  Manual Database Installation"
+    dis as text "{hline 70}"
+    dis ""
+    
+    * Check if source file exists
+    capture confirm file "`installdb'"
+    if _rc != 0 {
+        dis as error "Error: Cannot find file: `installdb'"
+        dis ""
+        dis as text "To get the full path:"
+        dis as text "  1. Drag findsj.dta file into Stata command window"
+        dis as text "  2. Copy the displayed path"
+        dis as text "  3. Use: findsj, installdb(" as result "paste-path-here" as text ")"
+        exit 601
+    }
+    
+    * Verify it's a valid .dta file
+    capture use "`installdb'", clear
+    if _rc != 0 {
+        dis as error "Error: File is not a valid Stata dataset"
+        exit 610
+    }
+    local n_records = _N
+    clear
+    
+    * Find findsj.ado location to install database alongside
+    local ado_path = ""
+    capture findfile findsj.ado
+    if _rc == 0 {
+        local ado_fullpath = r(fn)
+        
+        * Extract directory
+        local rev_path = reverse("`ado_fullpath'")
+        local pos_slash = strpos("`rev_path'", "/")
+        local pos_backslash = strpos("`rev_path'", "\")
+        local last_sep = 0
+        if `pos_slash' > 0 & `pos_backslash' > 0 {
+            local last_sep = min(`pos_slash', `pos_backslash')
+        }
+        else if `pos_slash' > 0 {
+            local last_sep = `pos_slash'
+        }
+        else if `pos_backslash' > 0 {
+            local last_sep = `pos_backslash'
+        }
+        if `last_sep' > 0 {
+            local ado_path = substr("`ado_fullpath'", 1, length("`ado_fullpath'") - `last_sep' + 1)
+        }
+    }
+    
+    if "`ado_path'" == "" {
+        dis as error "Error: Cannot locate findsj.ado directory"
+        exit 601
+    }
+    
+    * Copy file to ado directory
+    local dest_path "`ado_path'findsj.dta"
+    
+    * Check if source and destination are the same
+    local source_clean = subinstr("`installdb'", "\", "/", .)
+    local dest_clean = subinstr("`dest_path'", "\", "/", .)
+    local source_clean = subinstr("`source_clean'", "//", "/", .)
+    local dest_clean = subinstr("`dest_clean'", "//", "/", .)
+    
+    if "`source_clean'" == "`dest_clean'" {
+        dis as result "Database is already in the correct location!"
+        dis as text "Location: " as result "`dest_path'"
+        dis as text "Total articles: " as result "`n_records'"
+        dis ""
+        dis as text "Test offline mode:"
+        dis as text "  {stata findsj machine learning, offline n(3):findsj machine learning, offline n(3)}"
+        dis ""
+        dis as text "{hline 70}"
+        exit
+    }
+    
+    dis as text "Source: " as result "`installdb'"
+    dis as text "Destination: " as result "`dest_path'"
+    dis ""
+    dis as text "Installing..." _c
+    
+    capture copy "`installdb'" "`dest_path'", replace
+    if _rc != 0 {
+        dis as error " Failed! (rc=`_rc')"
+        dis ""
+        dis as error "Error: Cannot copy file. Possible reasons:"
+        dis as text "  - Permission denied"
+        dis as text "  - Destination path not writable"
+        dis as text "  - File in use"
+        exit `_rc'
+    }
+    
+    dis as result " Success!"
+    dis ""
+    dis as text "{hline 70}"
+    dis as result "  Installation Complete!"
+    dis as text "{hline 70}"
+    dis as text "Database installed: " as result "`dest_path'"
+    dis as text "Total articles: " as result "`n_records'"
+    dis ""
+    dis as text "Test offline mode:"
+    dis as text "  {stata findsj machine learning, offline n(3):findsj machine learning, offline n(3)}"
+    dis ""
+    dis as text "{hline 70}"
     exit
 }
 
@@ -213,6 +528,7 @@ if "`querypath'" != "" | "`resetpath'" != "" | "`setpath'" != "" {
     * Reset to default
     if "`resetpath'" != "" {
         capture erase "`config_file'"
+        global findsj_download_path ""
         dis as result "Download path reset to default (current working directory)"
         dis as text "Use " as result "findsj ..., setpath(path)" as text " to set a custom download path"
         exit
@@ -235,6 +551,9 @@ if "`querypath'" != "" | "`resetpath'" != "" | "`setpath'" != "" {
         file write `fh' "`setpath'"
         file close `fh'
         
+        * Also set global variable for immediate effect in current session
+        global findsj_download_path "`setpath'"
+        
         dis as result "Download path set to: " as text "`setpath'"
         dis as text "This setting will be remembered for future sessions."
         exit
@@ -249,6 +568,11 @@ if "`tex'" != "" local latex "latex"
 * Handle MD and Markdown options (both supported)
 if "`md'" != "" | "`markdown'" != "" {
     local md "md"
+}
+
+* Handle TEXT, TXT, and Plain options (all map to plain)
+if "`text'" != "" | "`txt'" != "" | "`plain'" != "" {
+    local plain "plain"
 }
 
 * Validate export format options
@@ -303,13 +627,85 @@ else {
 }
 
 * Check if findsj.dta exists, if not and ref option is used, show one-time reminder
+* Priority 1: Same directory as findsj.ado (ensures version compatibility)
 local dta_found = 0
-local search_paths "`c(pwd)' `c(sysdir_personal)' `c(sysdir_plus)' `c(sysdir_plus)'f"
-foreach p of local search_paths {
-    capture confirm file "`p'/findsj.dta"
+local ado_path = ""
+capture findfile findsj.ado
+if _rc == 0 {
+    local ado_fullpath = r(fn)
+    * Extract directory from full path (cross-platform compatible)
+    * Find the last path separator (/ or \), handle mixed separators
+    local rev_path = reverse("`ado_fullpath'")
+    local pos_slash = strpos("`rev_path'", "/")
+    local pos_backslash = strpos("`rev_path'", "\")
+    local last_sep = 0
+    if `pos_slash' > 0 & `pos_backslash' > 0 {
+        local last_sep = min(`pos_slash', `pos_backslash')
+    }
+    else if `pos_slash' > 0 {
+        local last_sep = `pos_slash'
+    }
+    else if `pos_backslash' > 0 {
+        local last_sep = `pos_backslash'
+    }
+    if `last_sep' > 0 {
+        local ado_path = substr("`ado_fullpath'", 1, length("`ado_fullpath'") - `last_sep' + 1)
+    }
+}
+
+* Build search paths with findsj.ado directory as highest priority
+* Use numbered locals to handle paths with spaces correctly
+local n_paths = 0
+
+if "`ado_path'" != "" {
+    local n_paths = `n_paths' + 1
+    local path`n_paths' `"`ado_path'"'
+}
+
+* Add PLUS/f/ subdirectory (where net install puts files starting with 'f')
+local plus_f `"`c(sysdir_plus)'f`c(dirsep)'"'
+local n_paths = `n_paths' + 1
+local path`n_paths' `"`plus_f'"'
+
+local n_paths = `n_paths' + 1
+local path`n_paths' `"`c(sysdir_plus)'"'
+
+local n_paths = `n_paths' + 1
+local path`n_paths' `"`c(sysdir_personal)'"'
+
+local n_paths = `n_paths' + 1
+local path`n_paths' `"`c(pwd)'"'
+
+* Debug mode: show search paths
+if "`debug'" != "" {
+    dis as text _n "Debug: Searching for findsj.dta in the following paths:"
+    forvalues i = 1/`n_paths' {
+        dis as text "  - `path`i''"
+    }
+}
+
+forvalues i = 1/`n_paths' {
+    local p `"`path`i''"'
+    * Try both path separators for cross-platform compatibility
+    * Use compound quotes for paths with spaces
+    capture confirm file `"`p'/findsj.dta"'
+    if _rc != 0 {
+        capture confirm file `"`p'findsj.dta"'
+    }
     if _rc == 0 {
         local dta_found = 1
+        local dta_found_path `"`p'"'
         continue, break
+    }
+}
+
+* Debug: show result of dta search
+if "`debug'" != "" {
+    if `dta_found' == 1 {
+        dis as result "Debug: Found findsj.dta at: `dta_found_path'"
+    }
+    else {
+        dis as error "Debug: findsj.dta NOT found in any search path"
     }
 }
 
@@ -318,46 +714,275 @@ if `dta_found' == 0 & "`ref'" != "" {
     dis as text " " as result "Notice:" as text " Local database (findsj.dta) not found."
     dis as text " DOI information will be fetched online (may be slower)."
     dis as text _n " For faster performance, update the database:"
-    dis as text "   {stata findsj, update source(github):findsj, update source(github)}  " as text "(international users)"
-    dis as text "   {stata findsj, update source(gitee):findsj, update source(gitee)}   " as text "(China users, faster)"
-    dis as text "   {stata findsj, update source(both):findsj, update source(both)}    " as text "(auto fallback)"
+    dis as text "   {stata findsj, updatesource source(github):findsj, updatesource source(github)}  " as text "(international users)"
+    dis as text "   {stata findsj, updatesource source(gitee):findsj, updatesource source(gitee)}   " as text "(China users, faster)"
+    dis as text "   {stata findsj, updatesource source(both):findsj, updatesource source(both)}    " as text "(auto fallback)"
     dis as text "{hline 70}" _n
 }
 
-dis _n as text "  Searching ... " _c
+*===============================================================================
+* OFFLINE SEARCH: Use local findsj.dta if available
+*===============================================================================
+local use_offline = 0
+local dta_path = ""
 
-preserve //===================preserve begin======
-
-clear   // added by Yujun Lian, 2025/12/31 16:13
-qui {
-    tempfile sj_search_result
-    local url_sj "https://www.stata-journal.com/sjsearch.html?choice=`scope'&q=`keywords_url'"
-    
-    cap copy "`url_sj'" "`sj_search_result'.txt", replace
-    if _rc {
-        noi dis as error "Failed to connect to Stata Journal website."
-        noi dis as error "Please check your internet connection."
-        restore
-        exit 631
-    }
-    
-    * Use import delimited for better encoding handling
-    cap import delimited "`sj_search_result'.txt", delim("@#@") clear varnames(nonames) stringcols(_all)
-    if _rc {
-        * Fallback to infix if import delimited fails
-        cap infix strL v 1-20000 using "`sj_search_result'.txt", clear
-        if _rc {
-            noi dis as error "Failed to parse search results."
-            noi dis as error "Error code: " _rc
-            restore
-            exit 198
+* Find local database path first
+if `dta_found' == 1 {
+    forvalues i = 1/`n_paths' {
+        local p `"`path`i''"'
+        capture confirm file `"`p'/findsj.dta"'
+        if _rc == 0 {
+            local dta_path `"`p'/findsj.dta"'
+            continue, break
+        }
+        * Try without separator (in case path already ends with one)
+        capture confirm file `"`p'findsj.dta"'
+        if _rc == 0 {
+            local dta_path `"`p'findsj.dta"'
+            continue, break
         }
     }
-    else {
-        * Rename first variable to v for consistency
-        rename v1 v
+}
+
+* Check if user explicitly requested offline mode
+if "`offline'" != "" {
+    if `dta_found' == 0 | `"`dta_path'"' == "" {
+        dis as error "Offline mode requested but findsj.dta not found."
+        dis as text "Please download the database first:"
+        dis as text "  {stata findsj, updatesource source(both):findsj, updatesource source(both)}"
+        dis ""
+        dis as text "Run " as result "findsj, checkdb" as text " to diagnose the issue"
+        exit 601
+    }
+    local use_offline = 1
+}
+else if `dta_found' == 1 & `"`dta_path'"' != "" {
+    * Auto-enable offline mode if database is available
+    local use_offline = 1
+}
+
+if `use_offline' == 1 {
+    * ===== OFFLINE SEARCH MODE =====
+    * Removed search progress message for cleaner output
+    
+    preserve //===================preserve begin======
+    
+    qui {
+        use "`dta_path'", clear
+        
+        * Normalize variable names (handle both artid and art_id)
+        cap confirm variable artid
+        if _rc == 0 {
+            rename artid art_id
+        }
+        cap confirm variable DOI
+        if _rc == 0 {
+            rename DOI doi
+        }
+        
+        * Handle authors vs author field name
+        cap confirm variable authors
+        if _rc == 0 {
+            rename authors author
+        }
+        
+        * ========================================
+        * Search Logic (matches Stata Journal website):
+        * 1. Case-insensitive (convert all to lowercase)
+        * 2. Substring matching (strpos > 0)
+        * 3. Multiple words use AND logic (all words must appear)
+        * 4. Author search: only first word is used
+        * 5. Keyword search: searches in title, author, AND abstract
+        * 6. Abbreviation expansion: automatically expands common abbreviations
+        * ========================================
+        
+        * Generate lowercase versions of search fields
+        gen title_lower = lower(title)
+        gen author_lower = lower(author)
+        gen abstract_lower = lower(abstract)
+        
+        * Parse keywords into individual words (use compound quotes for spaces)
+        local keywords_lower = lower(`"`keywords'"')
+        local keywords_clean : subinstr local keywords_lower "  " " ", all
+        local keywords_clean = strtrim("`keywords_clean'")
+        
+        * Check if keyword is a common abbreviation and prepare expanded search
+        local keywords_upper = upper("`keywords_clean'")
+        local expanded_keywords = ""
+        local is_abbreviation = 0
+        
+        if "`keywords_upper'" == "PSM" {
+            local expanded_keywords "propensity score"
+            local is_abbreviation = 1
+        }
+        else if "`keywords_upper'" == "IV" {
+            local expanded_keywords "instrumental variable"
+            local is_abbreviation = 1
+        }
+        else if "`keywords_upper'" == "DID" | "`keywords_upper'" == "DD" {
+            local expanded_keywords "difference in differences"
+            local is_abbreviation = 1
+        }
+        else if "`keywords_upper'" == "RDD" | "`keywords_upper'" == "RD" {
+            local expanded_keywords "regression discontinuity"
+            local is_abbreviation = 1
+        }
+        else if "`keywords_upper'" == "GMM" {
+            local expanded_keywords "generalized method of moments"
+            local is_abbreviation = 1
+        }
+        else if "`keywords_upper'" == "VAR" {
+            local expanded_keywords "vector autoregression"
+            local is_abbreviation = 1
+        }
+        
+        * Count number of words
+        local n_words = wordcount(`"`keywords_clean'"')
+        
+        * Initialize match priority (1=exact match, 2=expanded match)
+        gen match_priority = .
+        gen matched = 0
+        
+        * First pass: exact match with original keywords
+        if "`scope'" == "author" {
+            * Author search: only first word matters
+            local first_word = word(`"`keywords_clean'"', 1)
+            replace matched = 1 if strpos(author_lower, "`first_word'") > 0
+            replace match_priority = 1 if matched == 1
+        }
+        else if "`scope'" == "keyword" {
+            * Keyword search: ALL words must appear somewhere (title/author/abstract)
+            gen temp_match = 1
+            forvalues i = 1/`n_words' {
+                local word = word(`"`keywords_clean'"', `i')
+                replace temp_match = 0 if strpos(title_lower, "`word'") == 0 & ///
+                                          strpos(author_lower, "`word'") == 0 & ///
+                                          strpos(abstract_lower, "`word'") == 0
+            }
+            replace matched = 1 if temp_match == 1
+            replace match_priority = 1 if matched == 1
+            drop temp_match
+        }
+        else if "`scope'" == "title" {
+            * Title search: ALL words must appear in title
+            gen temp_match = 1
+            forvalues i = 1/`n_words' {
+                local word = word(`"`keywords_clean'"', `i')
+                replace temp_match = 0 if strpos(title_lower, "`word'") == 0
+            }
+            replace matched = 1 if temp_match == 1
+            replace match_priority = 1 if matched == 1
+            drop temp_match
+        }
+        
+        * Second pass: expanded keywords (if abbreviation detected and scope is keyword)
+        if `is_abbreviation' == 1 & "`scope'" == "keyword" {
+            local n_expanded = wordcount(`"`expanded_keywords'"')
+            gen temp_match = 1
+            forvalues i = 1/`n_expanded' {
+                local word = word(`"`expanded_keywords'"', `i')
+                replace temp_match = 0 if strpos(title_lower, "`word'") == 0 & ///
+                                          strpos(author_lower, "`word'") == 0 & ///
+                                          strpos(abstract_lower, "`word'") == 0
+            }
+            * Add expanded matches with lower priority
+            replace matched = 1 if temp_match == 1 & matched == 0
+            replace match_priority = 2 if temp_match == 1 & match_priority == .
+            drop temp_match
+        }
+        
+        * Keep only matched results
+        keep if matched == 1
+        drop matched title_lower author_lower abstract_lower
+        
+        * Sort by priority first, then by year (newest first), volume, number
+        gsort match_priority -year -volume -number
+        drop match_priority
+        
+        local n_results = _N
+        
+        if `n_results' == 0 {
+            noi dis as error "No articles found matching: `keywords'"
+            noi dis as text "Try different keywords or search scope."
+            restore
+            exit
+        }
+        
+        * Create variables to match online search format
+        gen selected = 1
+        gen volnum_str = string(volume) + "(" + string(number) + ")"
+        gen volnum_url = string(volume) + "-" + string(number)
+        
+        * Create URL variables
+        local url_base "https://www.stata-journal.com/article.html?article="
+        gen art_id_clean = art_id
+        qui replace art_id_clean = subinstr(art_id_clean, "ï»¿", "%EF%BB%BF", .)
+        gen url_html = "`url_base'" + art_id_clean
+        
+        local url_pdf_base "https://journals.sagepub.com/doi/pdf/"
+        gen url_pdf = "`url_pdf_base'" + doi if doi != "" & doi != "."
+        
+        * Page string (if available)
+        cap confirm variable page
+        if _rc != 0 {
+            gen page = "."
+        }
+        gen page_str = ": " + page if page != "" & page != "."
+        replace page_str = "" if page_str == ": ."
+        
+        * Convert year to string for display
+        gen year_str = string(year)
+        drop year
+        rename year_str year
+        
+        gen volume_str = string(volume)
+        gen number_str = string(number)
+        drop volume number
+        rename volume_str volume
+        rename number_str number
     }
     
+    local total_results = _N
+}
+else {
+    * ===== ONLINE SEARCH MODE =====
+    dis _n as text "  Searching ... " _c
+
+    preserve //===================preserve begin======
+
+    clear   // added by Yujun Lian, 2025/12/31 16:13
+    qui {
+        tempfile sj_search_result
+        local url_sj "https://www.stata-journal.com/sjsearch.html?choice=`scope'&q=`keywords_url'"
+        
+        cap copy "`url_sj'" "`sj_search_result'.txt", replace
+        if _rc {
+            noi dis as error "Failed to connect to Stata Journal website."
+            noi dis as error "Please check your internet connection."
+            restore
+            exit 631
+        }
+        
+        * Use import delimited for better encoding handling
+        cap import delimited "`sj_search_result'.txt", delim("@#@") clear varnames(nonames) stringcols(_all)
+        if _rc {
+            * Fallback to infix if import delimited fails
+            cap infix strL v 1-20000 using "`sj_search_result'.txt", clear
+            if _rc {
+                noi dis as error "Failed to parse search results."
+                noi dis as error "Error code: " _rc
+                restore
+                exit 198
+            }
+        }
+        else {
+            * Rename first variable to v for consistency
+            rename v1 v
+        }
+    } // End of online search qui block
+
+    * Continue processing online search results (inside else block)
+    qui {
     * Clean the data
     cap drop if v == ""
     keep if regexm(v, ".*<d[td]>.*")
@@ -398,13 +1023,20 @@ qui {
     }
     drop n
     
-    * Extract year from author_year_raw (format: "Author. Year.")
+    * Extract year from author_year_raw (format: "Author. Year." or "Author. Year")
+    * First, trim whitespace from author_year_raw to ensure clean matching
+    replace author_year_raw = strtrim(author_year_raw)
     gen year_from_html = ""
-    replace year_from_html = regexs(1) if regexm(author_year_raw, "\.[ ]*([0-9]{4})\.[ ]*$")
+    * Try matching with trailing dot first, then without
+    replace year_from_html = regexs(1) if regexm(author_year_raw, "\.[ ]*([0-9]{4})\.?[ ]*$")
+    * If no match, try alternative pattern (year at end without preceding dot)
+    replace year_from_html = regexs(1) if year_from_html == "" & regexm(author_year_raw, "[ ]([0-9]{4})\.?[ ]*$")
     
     * Clean up extracted data - remove year from author string
-    gen author = regexr(author_year_raw, "\.[ ]*[0-9]{4}\.[ ]*$", ".")
+    gen author = regexr(author_year_raw, "\.?[ ]*[0-9]{4}\.?[ ]*$", "")
     replace author = strtrim(author)
+    * Remove trailing dots and spaces from author
+    replace author = regexr(author, "\.[ ]*$", "")
     replace author = author[_n+1] if author == "" & author[_n+1] != ""
     drop author_year_raw
     
@@ -413,20 +1045,10 @@ qui {
     gen selected = 1
     local n_results = _N
     
-    * Calculate how many results to display
-    if "`allresults'" != "" local n_display = `n_results'
-    else local n_display = min(`n', `n_results')
-}  // Temporarily exit qui block for user messages
-
-* Create clickable link to show all results
-local url_sj "https://www.stata-journal.com/sjsearch.html?choice=`scope'&q=`keywords_url'"
-dis as text "Showing " as result "`n_display'" as text " of " `"{browse "`url_sj'":`n_results' articles}"' _n
-
-qui {  // Resume qui block
     * Use HTML-extracted data as primary source
     gen volume = volume_html
     gen number = number_html
-    gen year = year_from_html
+    gen year = real(year_from_html)
     gen volnum_str = volume + "(" + number + ")" if volume != "" & volume != "."
     gen volnum_url = volume + "-" + number if volume != "" & volume != "."
     
@@ -478,11 +1100,17 @@ qui {  // Resume qui block
     * Page string for display
     gen page_str = ": " + page if page != "" & page != "."
     replace page_str = "" if page_str == ": ."
-}
+    
+    local total_results = _N
+    } // End of online search qui block
+} // End of else (online search mode)
 
-local total_results = _N
+* ===== COMMON DISPLAY CODE FOR BOTH ONLINE AND OFFLINE =====
 if "`allresults'" != "" local n_display = `total_results'
 else local n_display = min(`n', `total_results')
+
+* Display search results summary - removed for cleaner output
+local url_sj "https://www.stata-journal.com/sjsearch.html?choice=`scope'&q=`keywords_url'"
 
 * If export format specified, skip displaying search results
 if `num_export' > 0 {
@@ -591,9 +1219,33 @@ else {
             * Clean art_id for matching (remove BOM if present)
             local art_id_match = subinstr("`art_id_i'", "ï»¿", "", .)
             
-            local search_paths "`c(pwd)' `c(sysdir_personal)' `c(sysdir_plus)' `c(sysdir_plus)'f"
+            * Build search paths (ado directory has highest priority, cross-platform)
+            local search_paths ""
+            capture findfile findsj.ado
+            if _rc == 0 {
+                local ado_fullpath = r(fn)
+                local rev_path = reverse("`ado_fullpath'")
+                local pos_slash = strpos("`rev_path'", "/")
+                local pos_backslash = strpos("`rev_path'", "\")
+                local last_sep = 0
+                if `pos_slash' > 0 & `pos_backslash' > 0 {
+                    local last_sep = min(`pos_slash', `pos_backslash')
+                }
+                else if `pos_slash' > 0 {
+                    local last_sep = `pos_slash'
+                }
+                else if `pos_backslash' > 0 {
+                    local last_sep = `pos_backslash'
+                }
+                if `last_sep' > 0 {
+                    local ado_dir = substr("`ado_fullpath'", 1, length("`ado_fullpath'") - `last_sep' + 1)
+                    local search_paths "`ado_dir'"
+                }
+            }
+            local search_paths "`search_paths' `c(sysdir_plus)'f `c(sysdir_plus)' `c(sysdir_personal)' `c(pwd)'"
             foreach p of local search_paths {
                 capture confirm file "`p'/findsj.dta"
+                if _rc != 0 capture confirm file "`p'findsj.dta"
                 if _rc == 0 & `has_doi' == 0 {
                     * Use frame to avoid nested preserve issue (Stata 16+)
                     * Generate unique frame name to avoid conflicts
@@ -666,7 +1318,7 @@ else {
     
     if "`nobrowser'" == "" {
         dis as text "    " _c
-        dis as text `"{browse "`url_html_i'":Article}"' _c
+        dis as text `"{browse "`url_html_i'":Web}"' _c
         
         * Display PDF link - use DOI-based URL (only if DOI is available)
         if "`nopdf'" == "" & `has_doi' == 1 {
@@ -689,9 +1341,15 @@ else {
             dis as text `"{stata "search `art_id_nobom'":Install}"' _c
         }
         
-        * Add Ref button
-        dis as text " | " _c
-        dis as text `"{stata "findsj `art_id_nobom', ref":Ref}"' _c
+        * Display .md .latex .txt buttons (citation formats) using getiref with DOI
+        if `has_doi' == 1 {
+            dis as text "  |  " _c
+            dis as text `"{stata "getiref `doi_i', md":.md}"' _c
+            dis as text " | " _c
+            dis as text `"{stata "getiref `doi_i', latex":.latex}"' _c
+            dis as text " | " _c
+            dis as text `"{stata "getiref `doi_i', text":.txt}"' _c
+        }
         
         * Display BibTeX and RIS buttons (on-demand download via helper program)
         dis as text " | " _c
@@ -703,26 +1361,7 @@ else {
         dis ""  // End line if nobrowser
     }
     
-    * Display format buttons (.md .latex .txt) if ref option is specified
-    if "`ref'" != "" {
-        dis ""  // End the button line first
-        
-        * Check if we have DOI for generating citations
-        if `has_doi' == 1 & "`getdoi'" != "" {
-            * Display "Cite:" label followed by three format buttons with separator
-            dis as text "    Cite: " _c
-            dis as text `"{stata "getiref `doi_i', md":.md}"' _c
-            dis as text " | " _c
-            dis as text `"{stata "getiref `doi_i', latex":.latex}"' _c
-            dis as text " | " _c
-            dis as text `"{stata "getiref `doi_i', text":.txt}"'
-        }
-        else {
-            * No DOI available - provide helpful guidance
-            dis as text "    " as error "(No DOI found)" as text " - Try: " _c
-            dis as text `"{stata "findsj, update source(both)":Update database}"'
-        }
-    }
+    * ref option is deprecated - citation buttons are now directly available in main button row
     
 }
 
@@ -734,11 +1373,9 @@ quietly set linesize `old_linesize'
 global findsj_n_display `n_display'
 
 if `total_results' > `n_display' {
-    dis _n as text "{hline 60}"
-    dis as text "  Showing " as result "`n_display'" as text " of " as result "`total_results'" as text " results."
-    dis as text "  To see all results, add option: " as result "allresults"
-    dis as text "  Example: " `"{stata "findsj `keywords', allresults":findsj `keywords', allresults}"'
-    dis as text "{hline 60}"
+    dis _n as text "Showing " as result "`n_display'" as text " of " _c
+    dis as text `"{stata "findsj `keywords', allresults":`total_results'}"' as text " results. " _c
+    dis as text "(" `"{browse "`url_sj'":web}"' as text ")"
 }
 
 * Note: Batch clipboard copy removed. Users can click individual "Ref" buttons to copy citations.
@@ -767,18 +1404,294 @@ restore    //==================preserve over=================
 
 
 * Display search completion message only if not exporting
-if `num_export' == 0 {
-    dis _n as text "{hline 60}"
-    dis as text "  Search completed. Found " as result `n_results' as text " article(s)."
-    if "`nobrowser'" == "" {
-        dis as text "  To view full search results online: " _c
-        dis as text `"{browse "`url_sj'":Open in browser}"'
-    }
-    dis as text "{hline 60}" _n
+* Simplified: removed redundant messages per user request
+if `num_export' == 0 & `total_results' <= `n_display' {
+    * Only show summary when all results are displayed
+    dis _n as text "Showing " as result "`n_display'" as text " of " as result "`total_results'" as text " results. " _c
+    dis as text "(" `"{browse "`url_sj'":web}"' as text ")"
 }
 
 * Generate formatted citations if export format specified
 if `num_export' > 0 {
+    
+    * ===== OFFLINE EXPORT: Use local database directly =====
+    if `use_offline' == 1 {
+        preserve
+        qui {
+            use "`dta_path'", clear
+            
+            * Normalize variable names
+            cap confirm variable artid
+            if _rc == 0 {
+                rename artid art_id
+            }
+            cap confirm variable DOI
+            if _rc == 0 {
+                rename DOI doi
+            }
+            cap confirm variable authors
+            if _rc == 0 {
+                rename authors author
+            }
+            
+            * Perform search (same as display mode - includes abstract and abbreviation expansion)
+            gen title_lower = lower(title)
+            gen author_lower = lower(author)
+            gen abstract_lower = lower(abstract)
+            local keywords_lower = lower(`"`keywords'"')
+            local keywords_clean : subinstr local keywords_lower "  " " ", all
+            local keywords_clean = strtrim("`keywords_clean'")
+            
+            * Check for abbreviation expansion
+            local keywords_upper = upper("`keywords_clean'")
+            local expanded_keywords = ""
+            local is_abbreviation = 0
+            
+            if "`keywords_upper'" == "PSM" {
+                local expanded_keywords "propensity score"
+                local is_abbreviation = 1
+            }
+            else if "`keywords_upper'" == "IV" {
+                local expanded_keywords "instrumental variable"
+                local is_abbreviation = 1
+            }
+            else if "`keywords_upper'" == "DID" | "`keywords_upper'" == "DD" {
+                local expanded_keywords "difference in differences"
+                local is_abbreviation = 1
+            }
+            else if "`keywords_upper'" == "RDD" | "`keywords_upper'" == "RD" {
+                local expanded_keywords "regression discontinuity"
+                local is_abbreviation = 1
+            }
+            else if "`keywords_upper'" == "GMM" {
+                local expanded_keywords "generalized method of moments"
+                local is_abbreviation = 1
+            }
+            else if "`keywords_upper'" == "VAR" {
+                local expanded_keywords "vector autoregression"
+                local is_abbreviation = 1
+            }
+            
+            local n_words = wordcount(`"`keywords_clean'"')
+            
+            gen match_priority = .
+            gen matched = 0
+            
+            * First pass: exact match
+            if "`scope'" == "author" {
+                local first_word = word(`"`keywords_clean'"', 1)
+                replace matched = 1 if strpos(author_lower, "`first_word'") > 0
+                replace match_priority = 1 if matched == 1
+            }
+            else if "`scope'" == "keyword" {
+                gen temp_match = 1
+                forvalues i = 1/`n_words' {
+                    local word = word(`"`keywords_clean'"', `i')
+                    replace temp_match = 0 if strpos(title_lower, "`word'") == 0 & ///
+                                              strpos(author_lower, "`word'") == 0 & ///
+                                              strpos(abstract_lower, "`word'") == 0
+                }
+                replace matched = 1 if temp_match == 1
+                replace match_priority = 1 if matched == 1
+                drop temp_match
+            }
+            else if "`scope'" == "title" {
+                gen temp_match = 1
+                forvalues i = 1/`n_words' {
+                    local word = word(`"`keywords_clean'"', `i')
+                    replace temp_match = 0 if strpos(title_lower, "`word'") == 0
+                }
+                replace matched = 1 if temp_match == 1
+                replace match_priority = 1 if matched == 1
+                drop temp_match
+            }
+            
+            * Second pass: expanded keywords
+            if `is_abbreviation' == 1 & "`scope'" == "keyword" {
+                local n_expanded = wordcount(`"`expanded_keywords'"')
+                gen temp_match = 1
+                forvalues i = 1/`n_expanded' {
+                    local word = word(`"`expanded_keywords'"', `i')
+                    replace temp_match = 0 if strpos(title_lower, "`word'") == 0 & ///
+                                              strpos(author_lower, "`word'") == 0 & ///
+                                              strpos(abstract_lower, "`word'") == 0
+                }
+                replace matched = 1 if temp_match == 1 & matched == 0
+                replace match_priority = 2 if temp_match == 1 & match_priority == .
+                drop temp_match
+            }
+            
+            keep if matched == 1
+            drop matched title_lower author_lower abstract_lower
+            gsort match_priority -year -volume -number
+            drop match_priority
+            
+            if _N == 0 {
+                noi dis as error "No articles found."
+                restore
+                exit
+            }
+            
+            * Create URL variables
+            local url_base "https://www.stata-journal.com/article.html?article="
+            gen art_id_clean = art_id
+            qui replace art_id_clean = subinstr(art_id_clean, "ï»¿", "%EF%BB%BF", .)
+            gen url_html = "`url_base'" + art_id_clean
+            
+            local url_pdf_base "https://journals.sagepub.com/doi/pdf/"
+            gen url_pdf = "`url_pdf_base'" + doi if doi != "" & doi != "."
+            
+            gen volnum_str = string(volume) + "(" + string(number) + ")"
+            
+            * Clean HTML entities in title
+            replace title = subinstr(title, "&amp;", "&", .)
+            replace title = subinstr(title, "&ndash;", "-", .)
+            replace title = subinstr(title, "&mdash;", "--", .)
+            replace title = subinstr(title, "&lt;", "<", .)
+            replace title = subinstr(title, "&gt;", ">", .)
+            replace title = subinstr(title, "&quot;", char(34), .)
+            
+            gen title_for_url = subinstr(title, " ", "%20", .)
+            gen url_google = "https://scholar.google.com/scholar?q=" + title_for_url
+            
+            gen title_display = proper(title)
+            
+            * Limit to n results
+            if "`allresults'" == "" {
+                local actual_n = _N
+                if `actual_n' > `n' {
+                    keep in 1/`n'
+                }
+            }
+            
+            * Use citation_apa directly (it exists in the database)
+            cap confirm variable citation_apa
+            local use_citation_apa = 0
+            if _rc == 0 {
+                qui count if citation_apa != "" & citation_apa != "."
+                if r(N) > 0 {
+                    local use_citation_apa = 1
+                }
+            }
+            
+            if `use_citation_apa' == 1 {
+                * Use citation_apa from database
+                if "`md'" != "" {
+                    gen cite_text = citation_apa + " [Link](" + url_html + ")"
+                    if "`nopdf'" == "" replace cite_text = cite_text + ", [PDF](" + url_pdf + ")" if url_pdf != "" & url_pdf != "."
+                    replace cite_text = cite_text + ", [Google](<" + url_google + ">)"
+                }
+                else if "`latex'" != "" {
+                    gen cite_text = citation_apa + " \\href{" + url_html + "}{Link}"
+                    if "`nopdf'" == "" replace cite_text = cite_text + ", \\href{" + url_pdf + "}{PDF}" if url_pdf != "" & url_pdf != "."
+                    replace cite_text = cite_text + ", \\href{" + url_google + "}{Google}"
+                }
+                else if "`plain'" != "" {
+                    gen cite_text = citation_apa + " Link: " + url_html
+                    if "`nopdf'" == "" replace cite_text = cite_text + ", PDF: " + url_pdf if url_pdf != "" & url_pdf != "."
+                    replace cite_text = cite_text + ", Google: " + url_google
+                }
+            }
+            else {
+                * Fallback: generate citations manually
+                tostring year, replace
+                if "`md'" != "" {
+                    gen cite_text = author + " (" + year + "). " + title_display + ". The Stata Journal, " + volnum_str + ". "
+                    replace cite_text = cite_text + "[Link](" + url_html + ")"
+                    if "`nopdf'" == "" replace cite_text = cite_text + ", [PDF](" + url_pdf + ")" if url_pdf != "" & url_pdf != "."
+                    replace cite_text = cite_text + ", [Google](<" + url_google + ">)"
+                }
+                else if "`latex'" != "" {
+                    gen cite_text = author + " (" + year + "). " + title_display + ". The Stata Journal, " + volnum_str + ". "
+                    replace cite_text = cite_text + "\\href{" + url_html + "}{Link}"
+                    if "`nopdf'" == "" replace cite_text = cite_text + ", \\href{" + url_pdf + "}{PDF}" if url_pdf != "" & url_pdf != "."
+                    replace cite_text = cite_text + ", \\href{" + url_google + "}{Google}"
+                }
+                else if "`plain'" != "" {
+                    gen cite_text = author + " (" + year + "). " + title_display + ". The Stata Journal, " + volnum_str + ". "
+                    replace cite_text = cite_text + "Link: " + url_html
+                    if "`nopdf'" == "" replace cite_text = cite_text + ", PDF: " + url_pdf if url_pdf != "" & url_pdf != "."
+                    replace cite_text = cite_text + ", Google: " + url_google
+                }
+            }
+            
+            * Save citations to local macros
+            local n_cite = _N
+            forvalues i = 1/`n_cite' {
+                local cite_`i' = cite_text[`i']
+            }
+            
+            global findsj_n_cite `n_cite'
+            
+            * Combine all citations for clipboard
+            gen cite_combined = "1. " + cite_text[1] if _n == 1
+            forvalues i = 2/`n_cite' {
+                qui replace cite_combined = cite_combined + char(10) + "`i'. " + cite_text[`i'] in 1
+            }
+            local all_cites = cite_combined[1]
+            global findsj_all_citations `"`all_cites'"'
+            
+            * Export to file
+            if "`md'" != "" local fn_suffix ".md"
+            else if "`latex'" != "" local fn_suffix ".txt"
+            else if "`plain'" != "" local fn_suffix ".txt"
+            
+            local saving "_findsj_temp_out_`fn_suffix'"
+            local save_path "`c(pwd)'"
+            local save_path = subinstr("`save_path'", "\", "/", .)
+            
+            qui export delimited cite_text using "`save_path'/`saving'", novar nolabel noq replace
+            
+            global findsj_export_path "`save_path'"
+            global findsj_export_file "`saving'"
+        }
+        
+        * Display results
+        local n_cite = $findsj_n_cite
+        
+        noi dis _n as text "{hline 60}"
+        if "`md'" != "" noi dis as text "  Markdown format:"
+        else if "`latex'" != "" noi dis as text "  LaTeX format:"
+        else if "`plain'" != "" noi dis as text "  Plain text format:"
+        noi dis as text "{hline 60}" _n
+        
+        forvalues i = 1/`n_cite' {
+            noi dis `"`i'. `cite_`i''"'
+        }
+        noi dis ""
+        
+        * Copy to clipboard
+        if "`noclip'" == "" {
+            local all_cites "$findsj_all_citations"
+            findsj_clipout `"`all_cites'"'
+        }
+        
+        * Display file actions
+        local file_path "$findsj_export_path"
+        local file_name "$findsj_export_file"
+        local full_path "`file_path'/`file_name'"
+        
+        noi dis _dup(58) "-"
+        noi dis _col(3) as text `"{stata `"view "`full_path'""':View}"' _col(15) as text `"{stata `"shell open "`file_path'""':Open_Mac}"' _col(30) as text `"{stata `"shell explorer /select,"`full_path'""':Open_Win}"' _c
+        
+        if "`c(os)'" == "Windows" {
+            noi dis _col(48) as text `"{stata `"shell explorer /select,"`full_path'""':dir}"'
+        }
+        else {
+            noi dis _col(48) as text `"{stata `"shell open "`file_path'""':dir}"'
+        }
+        noi dis _dup(58) "-"
+        
+        * Clean up globals
+        global findsj_export_path ""
+        global findsj_export_file ""
+        global findsj_all_citations ""
+        global findsj_n_cite ""
+        
+        restore
+    }
+    else {
+    * ===== ONLINE EXPORT: Fetch from website =====
     preserve
 	clear      // added by Yujun Lian, 2025/12/31 16:14
     qui {
@@ -827,11 +1740,15 @@ if `num_export' > 0 {
                     }
                     drop n
                     
+                    * Extract year - handle both "Author. Year." and "Author. Year" formats
+                    replace author_year_raw = strtrim(author_year_raw)
                     gen year = ""
-                    replace year = regexs(1) if regexm(author_year_raw, "\.[ ]*([0-9]{4})\.[ ]*$")
+                    replace year = regexs(1) if regexm(author_year_raw, "\.[ ]*([0-9]{4})\.?[ ]*$")
+                    replace year = regexs(1) if year == "" & regexm(author_year_raw, "[ ]([0-9]{4})\.?[ ]*$")
                     
-                    gen author = regexr(author_year_raw, "\.[ ]*[0-9]{4}\.[ ]*$", ".")
+                    gen author = regexr(author_year_raw, "\.?[ ]*[0-9]{4}\.?[ ]*$", "")
                     replace author = strtrim(author)
+                    replace author = regexr(author, "\.[ ]*$", "")
                     
                     drop v author_year_raw
                     keep if art_id != ""
@@ -850,11 +1767,35 @@ if `num_export' > 0 {
                     gen page = "."
                     
                     * Simplified DOI lookup: merge with local database if available
-                    local search_paths "`c(pwd)' `c(sysdir_personal)' `c(sysdir_plus)' `c(sysdir_plus)'f"
+                    * Build search paths (ado directory has highest priority, cross-platform)
+                    local search_paths ""
+                    capture findfile findsj.ado
+                    if _rc == 0 {
+                        local ado_fullpath = r(fn)
+                        local rev_path = reverse("`ado_fullpath'")
+                        local pos_slash = strpos("`rev_path'", "/")
+                        local pos_backslash = strpos("`rev_path'", "\")
+                        local last_sep = 0
+                        if `pos_slash' > 0 & `pos_backslash' > 0 {
+                            local last_sep = min(`pos_slash', `pos_backslash')
+                        }
+                        else if `pos_slash' > 0 {
+                            local last_sep = `pos_slash'
+                        }
+                        else if `pos_backslash' > 0 {
+                            local last_sep = `pos_backslash'
+                        }
+                        if `last_sep' > 0 {
+                            local ado_dir = substr("`ado_fullpath'", 1, length("`ado_fullpath'") - `last_sep' + 1)
+                            local search_paths "`ado_dir'"
+                        }
+                    }
+                    local search_paths "`search_paths' `c(sysdir_plus)'f `c(sysdir_plus)' `c(sysdir_personal)' `c(pwd)'"
                     local found_db = 0
                     foreach p of local search_paths {
                         if `found_db' == 0 {
                             capture confirm file "`p'/findsj.dta"
+                            if _rc != 0 capture confirm file "`p'findsj.dta"
                             if _rc == 0 {
                                 tempfile current_data
                                 save "`current_data'", replace
@@ -863,20 +1804,20 @@ if `num_export' > 0 {
                                     use "`p'/findsj.dta", clear
                                     cap confirm variable art_id
                                     if _rc == 0 {
-                                        keep art_id DOI page
+                                        keep art_id DOI page citation_apa
                                         cap rename DOI doi
                                         replace art_id = subinstr(art_id, "ï»¿", "", .)
                                         tempfile doi_data
                                         save "`doi_data'", replace
                                         
                                         use "`current_data'", clear
-                                        merge 1:1 art_id using "`doi_data'", update replace nogen
+                                        merge 1:1 art_id using "`doi_data'", update replace nogen keep(master match)
                                         local found_db = 1
                                     }
                                     else {
                                         cap confirm variable artid
                                         if _rc == 0 {
-                                            keep artid DOI
+                                            keep artid DOI citation_apa
                                             cap rename DOI doi
                                             cap gen page = "."
                                             rename artid art_id
@@ -885,7 +1826,7 @@ if `num_export' > 0 {
                                             save "`doi_data'", replace
                                             
                                             use "`current_data'", clear
-                                            merge 1:1 art_id using "`doi_data'", update replace nogen
+                                            merge 1:1 art_id using "`doi_data'", update replace nogen keep(master match)
                                             local found_db = 1
                                         }
                                         else {
@@ -938,33 +1879,70 @@ if `num_export' > 0 {
                     
                     * Limit to display count
                     if "`allresults'" == "" {
-                        keep in 1/`n'
+                        * Get actual number of results
+                        local actual_n = _N
+                        * Keep only min(n, actual_n) results
+                        if `actual_n' > `n' {
+                            keep in 1/`n'
+                        }
                     }
                     
-                    * Generate formatted citations (getiref style)
-                    if "`md'" != "" {
-                        gen cite_text = author_getiref + " (" + year + "). " + title_display + ". The Stata Journal, " + volnum_str
-                        replace cite_text = cite_text + ", " + page if page != "" & page != "."
-                        replace cite_text = cite_text + ". "
-                        replace cite_text = cite_text + "[Link](" + url_html + ")"
-                        if "`nopdf'" == "" replace cite_text = cite_text + ", [PDF](" + url_pdf + ")" if url_pdf != "" & url_pdf != "."
-                        replace cite_text = cite_text + ", [Google](<" + url_google + ">)"
+                    * Generate formatted citations using local citation_apa field
+                    * Check if citation_apa field exists in database AND has non-empty values
+                    cap confirm variable citation_apa
+                    local use_citation_apa = 0
+                    if _rc == 0 {
+                        * Check if any citation_apa values are non-empty
+                        qui count if citation_apa != "" & citation_apa != "."
+                        if r(N) > 0 {
+                            local use_citation_apa = 1
+                        }
                     }
-                    else if "`latex'" != "" {
-                        gen cite_text = author_getiref + " (" + year + "). " + title_display + ". The Stata Journal, " + volnum_str
-                        replace cite_text = cite_text + ", " + page if page != "" & page != "."
-                        replace cite_text = cite_text + ". "
-                        replace cite_text = cite_text + "\\href{" + url_html + "}{Link}"
-                        if "`nopdf'" == "" replace cite_text = cite_text + ", \\href{" + url_pdf + "}{PDF}" if url_pdf != "" & url_pdf != "."
-                        replace cite_text = cite_text + ", \\href{" + url_google + "}{Google}"
+                    
+                    if `use_citation_apa' == 1 {
+                        * Use citation_apa from database with added links
+                        if "`md'" != "" {
+                            gen cite_text = citation_apa + " [Link](" + url_html + ")"
+                            if "`nopdf'" == "" replace cite_text = cite_text + ", [PDF](" + url_pdf + ")" if url_pdf != "" & url_pdf != "."
+                            replace cite_text = cite_text + ", [Google](<" + url_google + ">)"
+                        }
+                        else if "`latex'" != "" {
+                            gen cite_text = citation_apa + " \\href{" + url_html + "}{Link}"
+                            if "`nopdf'" == "" replace cite_text = cite_text + ", \\href{" + url_pdf + "}{PDF}" if url_pdf != "" & url_pdf != "."
+                            replace cite_text = cite_text + ", \\href{" + url_google + "}{Google}"
+                        }
+                        else if "`plain'" != "" {
+                            gen cite_text = citation_apa + " Link: " + url_html
+                            if "`nopdf'" == "" replace cite_text = cite_text + ", PDF: " + url_pdf if url_pdf != "" & url_pdf != "."
+                            replace cite_text = cite_text + ", Google: " + url_google
+                        }
                     }
-                    else if "`plain'" != "" {
-                        gen cite_text = author_getiref + " (" + year + "). " + title_display + ". The Stata Journal, " + volnum_str
-                        replace cite_text = cite_text + ", " + page if page != "" & page != "."
-                        replace cite_text = cite_text + ". "
-                        replace cite_text = cite_text + "Link: " + url_html
-                        if "`nopdf'" == "" replace cite_text = cite_text + ", PDF: " + url_pdf if url_pdf != "" & url_pdf != "."
-                        replace cite_text = cite_text + ", Google: " + url_google
+                    else {
+                        * Fallback: Generate citations manually (old method)
+                        if "`md'" != "" {
+                            gen cite_text = author_getiref + " (" + year + "). " + title_display + ". The Stata Journal, " + volnum_str
+                            replace cite_text = cite_text + ", " + page if page != "" & page != "."
+                            replace cite_text = cite_text + ". "
+                            replace cite_text = cite_text + "[Link](" + url_html + ")"
+                            if "`nopdf'" == "" replace cite_text = cite_text + ", [PDF](" + url_pdf + ")" if url_pdf != "" & url_pdf != "."
+                            replace cite_text = cite_text + ", [Google](<" + url_google + ">)"
+                        }
+                        else if "`latex'" != "" {
+                            gen cite_text = author_getiref + " (" + year + "). " + title_display + ". The Stata Journal, " + volnum_str
+                            replace cite_text = cite_text + ", " + page if page != "" & page != "."
+                            replace cite_text = cite_text + ". "
+                            replace cite_text = cite_text + "\\href{" + url_html + "}{Link}"
+                            if "`nopdf'" == "" replace cite_text = cite_text + ", \\href{" + url_pdf + "}{PDF}" if url_pdf != "" & url_pdf != "."
+                            replace cite_text = cite_text + ", \\href{" + url_google + "}{Google}"
+                        }
+                        else if "`plain'" != "" {
+                            gen cite_text = author_getiref + " (" + year + "). " + title_display + ". The Stata Journal, " + volnum_str
+                            replace cite_text = cite_text + ", " + page if page != "" & page != "."
+                            replace cite_text = cite_text + ". "
+                            replace cite_text = cite_text + "Link: " + url_html
+                            if "`nopdf'" == "" replace cite_text = cite_text + ", PDF: " + url_pdf if url_pdf != "" & url_pdf != "."
+                            replace cite_text = cite_text + ", Google: " + url_google
+                        }
                     }
                     
                     * Save citations to local macros for later display
@@ -972,6 +1950,9 @@ if `num_export' > 0 {
                     forvalues i = 1/`n_cite' {
                         local cite_`i' = cite_text[`i']
                     }
+                    
+                    * Save n_cite to global for use outside qui block
+                    global findsj_n_cite `n_cite'
                     
                     * Combine all citations for clipboard
                     * Generate a single string with line breaks by concatenating cite_text
@@ -1010,6 +1991,9 @@ if `num_export' > 0 {
     
     * Display formatted citations (outside qui block)
     if `num_export' > 0 {
+        * Get actual citation count from global
+        local n_cite = $findsj_n_cite
+        
         noi dis _n as text "{hline 60}"
         if "`md'" != ""	noi dis as text "  Markdown format:"
         else if "`latex'" != "" noi dis as text "  LaTeX format:"
@@ -1056,10 +2040,12 @@ if `num_export' > 0 {
         global findsj_export_path ""
         global findsj_export_file ""
         global findsj_all_citations ""
+        global findsj_n_cite ""
     }
     
     restore
-}
+    } // End of else (online export mode)
+} // End of if num_export > 0
 
 if "`debug'" != "" set trace off
 
@@ -1086,10 +2072,35 @@ program define findsj_show_ref
     local has_doi = 0
     
     qui {
-        local search_paths "`c(pwd)' `c(sysdir_personal)' `c(sysdir_plus)' `c(sysdir_plus)'f"
+        * Build search paths (ado directory has highest priority)
+        * Build search paths (ado directory has highest priority, cross-platform)
+        local search_paths ""
+        capture findfile findsj.ado
+        if _rc == 0 {
+            local ado_fullpath = r(fn)
+            local rev_path = reverse("`ado_fullpath'")
+            local pos_slash = strpos("`rev_path'", "/")
+            local pos_backslash = strpos("`rev_path'", "\")
+            local last_sep = 0
+            if `pos_slash' > 0 & `pos_backslash' > 0 {
+                local last_sep = min(`pos_slash', `pos_backslash')
+            }
+            else if `pos_slash' > 0 {
+                local last_sep = `pos_slash'
+            }
+            else if `pos_backslash' > 0 {
+                local last_sep = `pos_backslash'
+            }
+            if `last_sep' > 0 {
+                local ado_dir = substr("`ado_fullpath'", 1, length("`ado_fullpath'") - `last_sep' + 1)
+                local search_paths "`ado_dir'"
+            }
+        }
+        local search_paths "`search_paths' `c(sysdir_plus)'f `c(sysdir_plus)' `c(sysdir_personal)' `c(pwd)'"
         foreach p of local search_paths {
             if `has_doi' == 0 {
                 capture confirm file "`p'/findsj.dta"
+                if _rc != 0 capture confirm file "`p'findsj.dta"
                 if _rc == 0 {
                     * Use frame to avoid nested preserve issue (Stata 16+)
                     local framename = "findsj_temp_" + string(floor(runiform()*100000))
@@ -1156,7 +2167,7 @@ program define findsj_show_ref
     }
     else {
         dis as text "" as error "(No DOI found)" as text " - Try: " _c
-        dis as text `"{stata "findsj, update source(both)":Update database}"'
+        dis as text `"{stata "findsj, updatesource source(both)":Update database}"'
     }
     
     dis as text "{hline 70}" _n
@@ -1192,7 +2203,7 @@ preserve
   cap copy "`url_fn'" "`fn'.txt", replace
   if _rc == 0 {
       infix strL `v' 1-1000 using "`fn'.txt", clear
-      local begin   `"<b><a href="/sj"'
+      local begin   `"<b><a href="http://fmwww.bc.edu/sj"'
       local endwith `".html"'
       local regex `"(?<=`begin')(.*)(?=`endwith')"'  
       gen `VolNum' = ustrregexs(1) if ustrregexm(`v', `"`regex'"')
@@ -1305,7 +2316,7 @@ qui{
   local url "https://www.stata-journal.com/archives/"    
   copy "`url'"  "`sjarc'.txt" , replace
   infix strL v 1-1000 using "`sjarc'.txt", clear
-  local begin `"<b><a href="/sj"'
+  local begin `"<b><a href="http://fmwww.bc.edu/sj"'
   local end   `".html"'
   local match ".*"
   local regex `"(?<=`begin')(`match')(?=`end')"'  
@@ -1529,9 +2540,9 @@ program define findsj_update_db
     * Determine source based on argument
     if "`source_choice'" == "" | "`source_choice'" == "auto" {
         dis as text "Download source options:"
-        dis as text "  {stata findsj, update source(github):github} = GitHub"
-        dis as text "  {stata findsj, update source(gitee):gitee}  = Gitee (Fallback when GitHub is unavailable)"
-        dis as text "  {stata findsj, update source(both):both}   = Try both (GitHub first, then Gitee)"
+        dis as text "  {stata findsj, updatesource source(github):github} = GitHub"
+        dis as text "  {stata findsj, updatesource source(gitee):gitee}  = Gitee (Fallback when GitHub is unavailable)"
+        dis as text "  {stata findsj, updatesource source(both):both}   = Try both (auto-detect language)"
         dis as text ""
         dis as text "Click on a source above to download."
         dis as text "{hline 70}"
@@ -1550,8 +2561,20 @@ program define findsj_update_db
         local source_names "Gitee"
     }
     else if "`source_choice'" == "both" {
-        local sources "`github_url' `gitee_url'"
-        local source_names "GitHub Gitee"
+        * Auto-detect user's Stata language setting to determine optimal source order
+        * Chinese users (zh_CN): Gitee first (faster access in China)
+        * Non-Chinese users: GitHub first (global CDN)
+        local locale_ui = c(locale_ui)
+        if "`locale_ui'" == "zh_CN" {
+            local sources "`gitee_url' `github_url'"
+            local source_names "Gitee GitHub"
+            dis as text "Language detected: Chinese (优先使用 Gitee)"
+        }
+        else {
+            local sources "`github_url' `gitee_url'"
+            local source_names "GitHub Gitee"
+            dis as text "Language detected: Non-Chinese (Using GitHub first)"
+        }
     }
     else {
         dis as error "Invalid source: `source_choice'"
@@ -1559,8 +2582,9 @@ program define findsj_update_db
         exit 198
     }
     
-    * Try each source
+    * Try each source (stop after first success)
     local n_sources = wordcount("`sources'")
+    local update_success = 0
     forvalues i = 1/`n_sources' {
         local source_url = word("`sources'", `i')
         local source_name = word("`source_names'", `i')
@@ -1591,6 +2615,8 @@ program define findsj_update_db
                 dis as text "Total articles: " as result "`n_records'"
                 dis as text "Location: " as result "`display_path'"
                 dis as text "{hline 70}"
+                local update_success = 1
+                * Exit immediately after successful update (don't try other sources)
                 exit
             }
             else {
@@ -1641,95 +2667,77 @@ end
 program define findsj_check_update
     version 14
     
-    local today_str = c(current_date)
-    
-    * Try to find findsj_version.dta
-    local version_found = 0
-    local db_date_val = 0
-    local version_file_path = ""
-    
-    * Search in multiple locations (including where findsj.ado is located)
-    capture findfile findsj.ado
-    if !_rc {
-        local ado_dir = subinstr(r(fn), "/findsj.ado", "", .)
-        local ado_dir = subinstr("`ado_dir'", "\findsj.ado", "", .)
-    }
-    else {
-        local ado_dir ""
-    }
-    
-    foreach location in "`c(sysdir_plus)'f" "`c(sysdir_personal)'" "`ado_dir'" "d:\User\private\Desktop\stata\findsj_v3" {
-        if "`location'" == "" continue
-        if `version_found' continue  // Skip if already found
-        capture confirm file "`location'/findsj_version.dta"
+    * Silently check for updates - don't interrupt user workflow
+    capture {
+        local today_str = c(current_date)
+        
+        * Try to find findsj_version.dta
+        local version_found = 0
+        local version_file_path = ""
+        
+        * Search in multiple locations
+        capture findfile findsj.ado
         if !_rc {
-            preserve
-            quietly use "`location'/findsj_version.dta", clear
-            local db_date_val = db_date[1]
-            
-            * Check if already checked today
-            capture confirm variable last_check
+            local ado_dir = subinstr(r(fn), "/findsj.ado", "", .)
+            local ado_dir = subinstr("`ado_dir'", "\findsj.ado", "", .)
+        }
+        else {
+            local ado_dir ""
+        }
+        
+        foreach location in "`c(sysdir_plus)'f" "`c(sysdir_personal)'" "`ado_dir'" "`c(pwd)'" {
+            if "`location'" == "" continue
+            if `version_found' == 1 continue
+            capture confirm file "`location'/findsj_version.dta"
             if !_rc {
-                local last_check = last_check[1]
-                if "`last_check'" == "`today_str'" {
-                    restore
-                    exit  // Already checked today
-                }
+                local version_found = 1
+                local version_file_path = "`location'/findsj_version.dta"
             }
-            restore
-            
-            local version_found = 1
-            local version_file_path = "`location'/findsj_version.dta"
         }
-    }
-    
-    * If version file not found, skip check
-    if !`version_found' | `db_date_val' == 0 {
-        exit
-    }
-    
-    * Parse database date (yyyyMMdd format)
-    local db_year = floor(`db_date_val'/10000)
-    local db_month = floor((`db_date_val' - `db_year'*10000)/100)
-    local db_day = `db_date_val' - `db_year'*10000 - `db_month'*100
-    
-    * Calculate days difference
-    local db_date_num = mdy(`db_month', `db_day', `db_year')
-    local today = date("`today_str'", "DMY")
-    local days_diff = `today' - `db_date_num'
-    
-    * If older than 120 days (about 4 months), show update reminder
-    if `days_diff' > 120 {
-        dis ""
-        dis as text "{hline 70}"
-        dis as result "  📢 Update Available!"
-        dis as text "{hline 70}"
-        dis as text "Your findsj database is " as result "`days_diff'" as text " days old"
-        dis as text "(last updated: " as result "`db_day'/`db_month'/`db_year'" as text ")"
-        dis ""
-        dis as text "You can update findsj, type:"
-        dis as result "  net install findsj, from(https://github.com/BlueDayDreeaming/findsj/raw/main/) replace"
-        dis as text "Or (China users):"
-        dis as result "  net install findsj, from(https://gitee.com/ChuChengWan/findsj/raw/main/) replace"
-        dis as text "{hline 70}"
-        dis ""
-    }
-    
-    * Update last_check date in version file
-    quietly {
+        
+        * If version file not found, skip check silently
+        if `version_found' == 0 {
+            exit
+        }
+        
+        * Check last_update date from version file
         preserve
-        use "`version_file_path'", clear
+        quietly use "`version_file_path'", clear
         
-        * Add last_check variable if it doesn't exist
-        capture confirm variable last_check
+        * Get last_update variable (format: YYYY-MM-DD or similar)
+        capture confirm variable last_update
         if _rc {
-            gen str20 last_check = ""
+            restore
+            exit
         }
         
-        * Update the date
-        replace last_check = "`today_str'" in 1
-        save "`version_file_path'", replace
+        local last_update_str = last_update[1]
         restore
+        
+        * Parse last_update date and compare with today
+        * Format expected: "2025-12-08" or similar
+        if strlen("`last_update_str'") >= 10 {
+            local update_year = substr("`last_update_str'", 1, 4)
+            local update_month = substr("`last_update_str'", 6, 2)
+            local update_day = substr("`last_update_str'", 9, 2)
+            
+            * Calculate days difference
+            local update_date_num = mdy(real("`update_month'"), real("`update_day'"), real("`update_year'"))
+            local today = date("`today_str'", "DMY")
+            local days_diff = `today' - `update_date_num'
+            
+            * If older than 90 days, show update reminder
+            if `days_diff' > 90 {
+                noi dis ""
+                noi dis as text "{hline 70}"
+                noi dis as result "  📢 Database may need updating"
+                noi dis as text "{hline 70}"
+                noi dis as text "Last updated: " as result "`last_update_str'" as text " (" as result "`days_diff'" as text " days ago)"
+                noi dis as text "Update: " `"{stata "findsj, updatesource source(both)":findsj, updatesource source(both)}"`
+                noi dis as text "{hline 70}"
+                noi dis ""
+            }
+        }
     }
 end
 

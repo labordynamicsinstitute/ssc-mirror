@@ -194,6 +194,7 @@ p codensity module for kernel density estimation for one or more variables or gr
 p coefout module to keeps the beta-coefficients for specified variables and labelnames from a regression.
 p coefplot module to plot regression coefficients and other results
 p cohend module to compute Cohen's d
+p cointsmall module to test for cointegration with structural changes in very small sample
 p coldiag module to perform BWK regression collinearity diagnostics
 p coldiag2 module to evaluate collinearity in linear regression
 p colelms module to calculate Cole's LMS values for growth data 

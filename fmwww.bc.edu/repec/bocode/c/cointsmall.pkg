@@ -1,0 +1,26 @@
+d 'COINTSMALL': module to test for cointegration with structural changes in very small sample
+d
+d   The cointsmall package implements a cointegration testing
+d procedure that extends the Gregory and Hansen (1996) framework to
+d the case of very small sample sizes (T < 50) and allows for
+d endogenous structural breaks in the cointegrating relationship.
+d The command is based on the methodology developed by Trinh
+d (2022), which provides finite-sample size-corrected critical
+d values 
+d
+d KW: cointegration
+d KW: structural change
+d KW: sample size
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260209
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f cointsmall.ado
+f cointsmall.sthlp
+f ../_/_cointsmall_crit.ado
+f cointsmall_examples.do
+f cointsmall_cert.do

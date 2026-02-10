@@ -1,0 +1,19 @@
+d 'APPENDALL': module to append all eligible files in the specified folder
+d
+d     appendall is a Stata program that about appending all
+d eligible files (such as Stata, Excel, CSV or Text) in the
+d specified folder. 
+d
+d KW: append
+d KW: folder
+d KW: data management
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20260209
+d
+d Author:  Dejin Xie, School of Economics and Management, Nanchang University
+d Support: email xiedejin@@ncu.edu.cn
+d
+f appendall.ado
+f appendall.sthlp

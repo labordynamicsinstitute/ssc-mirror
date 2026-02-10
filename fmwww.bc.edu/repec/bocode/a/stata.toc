@@ -77,6 +77,7 @@ p apcd module for estimating age-period-cohort effects with detrended coefficien
 p apcgo module to calculate age-period-cohort effects for the gap between two groups (based on a Blinder-Oaxaca decomposition), including trends for each parameter
 p apch module for estimating age-period-cohort and hysteresis effects
 p apoverty module to compute poverty measures
+p appendall module to append all eligible files in the specified folder
 p appendfile module to append text files
 p appmlhdfe module to estimate asymmetric Poisson regression with high dimensional fixed effects
 p archlm module to calculate LM test for ARCH effects
