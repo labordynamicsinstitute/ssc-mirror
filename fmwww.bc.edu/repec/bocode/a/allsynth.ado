@@ -1,4 +1,4 @@
-*! version 1.31 by Justin Wiltshire. Updated 02/06/2026 - Wrapper adding functionality to -synth- package
+*! version 1.32 by Justin Wiltshire. Updated 02/09/2026 - Wrapper adding functionality to -synth- package
 
 program allsynth, eclass sortpreserve byable(recall)
 	version 15.1 // Not tested on earlier versions
@@ -2336,8 +2336,15 @@ program allsynth, eclass sortpreserve byable(recall)
 		stackedsc,	tvar(`tvar') pvar(`pvar') filename(`_Filename') tvarformat(`_tVarformat') filepath("`_Filepath'") avgs("`_stSampleavgs'") pvalrmspe("`pvaluesrmspe'") pvalvar("`pvaluesvariance'") emin("`_stEventtimemin'") emax("`_stEventtimemax'") avgwts("_stAvgweights") balance("`_stBalanced'") uW("`_stUnique_w'") figure("`_stFigure'") figureopts("`stfigureopts'") figuresave("`stfigsave'") figurereplace("`stfigsavereplace'") gaptitle("`gaptitle'") gaptitlepct("`gaptitlepct'")
 		
 		ereturn clear
-		qui keep if _placeboID == 0
-		qui levelsof _tm, local(_t)
+		if "`pvalues'" == "" {
+			use "`_Filepath'/`_Filename'_ate.dta", clear
+			qui levelsof _tm, local(_t)
+		}
+		if "`pvalues'" != "" {
+			use "`_Filepath'/`_Filename'_ate_distn.dta", clear
+			qui keep if _placeboID == 0
+			qui levelsof _tm, local(_t)
+		}
 	}
 	if "`stacked'" == "" & ("`bcorrect'" != "" | "`pvalues'" != "") {
 		qui keep if `pvar' == `actreat'
@@ -2730,6 +2737,8 @@ program stackedsc, rclass
 					qui gen UB_95_bc = gap_bc + 1.96*_Se_bc
 				}
 				qui drop gap*
+				qui replace _Pval = . if `tvar' < `trperiod'
+				qui replace _Pval_bc = . if `tvar' < `trperiod'
 				qui merge 1:1 `tvar' `pvar' using "`core3'", nogen norep
 				qui sort `tvar' `pvar' gap* `pvalrmspevars' _Se* _Pval*
 				local pvalvariancevars "_Se* _Tstat* _Pval* LB* UB*"

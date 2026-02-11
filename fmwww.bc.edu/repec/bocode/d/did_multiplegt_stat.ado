@@ -3,7 +3,7 @@
 ** Difference-in-Differences Estimators for Treatments Continuously Distributed at Every Period (2025). 
 **https://arxiv.org/pdf/2201.06898
 
-*VERSION AS OF AUGUST 2025.
+*VERSION AS OF February 2026.
 *----------------------------------------------------------------------------------------------------------------------------------------------------------
 *
 * MAIN PROGRAM 1: THIS PROGRAM MAKES SOME SANITY CHECKS, DEFINES VARIABLES, CHECKS IF WE NEEED TO CALL THE FIRST STAGE, DOES IF SO ETC.
@@ -3578,6 +3578,9 @@ scalar N_Switchers3_`pairwise'`pla'XX = round(r(sum), 0.001)
 	if ("`exact_match'"!=""){ //Take the number of distinct values of the baseline treatment: ok
 		levelsof D1_XX
 		local order = r(r)
+		//DS TS:
+		//dis as red "Order = `order'"
+		*
 		forvalues num_order = 1/4{
 			local order_`num_order' = `order'
 		}
@@ -3653,7 +3656,9 @@ polynomials_generator, order(`logit_Minus_order') prefix(logit_Minus) controls(`
 ******************************************************************************/	
 
 
-
+//DS TS
+//dis as red "`reg_vars_pol_XX' "
+//save "data_test`pairwise'`pla'.dta", replace
 cap reg deltaY_XX `reg_vars_pol_XX'   if S_XX==0 // Because sometimes this regression mightgenerate errors because of mot positive matrix with exact_match when there is no much variation on the values of D_{t-1}
 
 if (scalar(gap_`pairwise'`pla'XX)==0&scalar(n_switchers_`pla'XX)>0&scalar(n_stayers_`pla'XX)>1&_rc==0){ //Start of feasible estimation //I Need to do it for the IV as well. Done!
@@ -4141,7 +4146,7 @@ if ("`exact_match'"==""){
           2. COMPUTING THE VARIANCE (The variance is not method-specific) // but we use linear regression if exact_match, and logit otherwise
 **************************************************************************/
         if ("`exact_match'"==""){
-		gen Phi2_`pairwise'`pla'XX = weights_XX*(dr_deltaYV_XX -scalar(delta2_`pairwise'`pla'XX)*absdeltaDV_XX)
+		gen Phi2_`pairwise'`pla'XX = (dr_deltaYV_XX -scalar(delta2_`pairwise'`pla'XX)*absdeltaDV_XX) //DS TS weights_XX*(dr_deltaYV_XX -scalar(delta2_`pairwise'`pla'XX)*absdeltaDV_XX) 
 		}
 		else{
 		gen Phi2_`pairwise'`pla'XX = weights_XX*[(S_XX - ES_XX_D1*(1-Sbis_XX)/(1-ESbis_XX_D1))*inner_sumdelta12_XX -scalar(delta2_`pairwise'`pla'XX)*absdeltaD_XX]
