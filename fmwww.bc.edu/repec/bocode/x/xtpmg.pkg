@@ -1,6 +1,6 @@
 d 'XTPMG': module for estimation of nonstationary heterogeneous panels
 d
-d We introduce a new Stata command, xtpmg, for estimating
+d  We introduce a new Stata command, xtpmg, for estimating
 d nonstationary  heterogeneous panels in which the number of groups
 d and number of time-series  observations are both large. Based on
 d recent advances in the nonstationary panel  literature, xtpmg
@@ -22,7 +22,7 @@ d KW: pooled mean-group estimator
 d KW: mean-group estimator
 d KW: panel cointegration 
 d
-d Requires: Stata version 9
+d Requires: Stata version 15.1
 d
 d Distribution-Date: 20070905
 d
@@ -32,8 +32,11 @@ d
 d Author: Mark W. Frank , Sam Houston State University 
 d Support: email mcmarkfrank@@shsu.edu 
 d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
 f xtpmg.ado
 f xtpmg_ml.ado
-f xtpmg.hlp
+f xtpmg.sthlp
 f xtpmg_examples.do
 f ../j/jasa2.dta

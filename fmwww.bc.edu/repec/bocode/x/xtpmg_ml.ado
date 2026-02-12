@@ -1,7 +1,11 @@
+*! version 2.0.0  11feb2026  Dr Merwan Roudane  merwanroudane920@gmail.com
+*! XTPMG ML evaluator: Updated for Stata 15+ compatibility
+*! Original: Ed Blackburne -- Mark Frank, Sam Houston State University
+
 capture program drop xtpmg_ml
 
 program define xtpmg_ml
-  	version 9
+  	version 15.1
       args todo b lnf
       tempname beta ttl touse
 	marksample touse

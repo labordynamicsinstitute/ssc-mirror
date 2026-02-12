@@ -1,0 +1,21 @@
+d 'PNARDL': module to perform Panel Nonlinear ARDL (Panel NARDL) estimation
+d
+d  pnardl implements the Panel Nonlinear ARDL methodology based on
+d Shin, Yu and Greenwood-Nimmo (2014), as applied by Salisu and
+d Isah (2017, Economic Modelling). It automates the complete Panel
+d NARDL workflow: 
+d
+d KW: panel data
+d KW: ARDL model
+d KW: asymmetric cointegration
+d
+d Requires: Stata version 15.1 and xtpmg from SSC (q.v.)
+d
+d Distribution-Date: 20260206
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f pnardl.ado
+f pnardl.sthlp
+f pnardl_examples.do

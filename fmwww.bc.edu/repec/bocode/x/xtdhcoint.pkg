@@ -1,0 +1,23 @@
+d 'XTDHCOINT': module to perform Durbin-Hausman panel cointegration tests
+d
+d  xtdhcoint implements the Durbin-Hausman panel cointegration
+d tests proposed by Westerlund (2008, Journal of Applied
+d Econometrics, 23: 193-233). The command tests the null hypothesis
+d of no cointegration against the alternative of cointegration in
+d panel data, allowing for cross-sectional dependence through
+d common factors. 
+d
+d KW: panel cointegration
+d KW: Durbin
+d KW: Hausman
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260211
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtdhcoint.ado
+f xtdhcoint.sthlp
+f xtdhcoint_examples.do

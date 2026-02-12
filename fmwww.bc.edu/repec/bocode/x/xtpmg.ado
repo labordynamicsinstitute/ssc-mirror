@@ -1,9 +1,12 @@
-*! 1.1.1 Ed Blackburne -- Mark Frank Sam Houston State University 20 February 2007
+*! version 2.0.0  11feb2026  Dr Merwan Roudane  merwanroudane920@gmail.com
+*! XTPMG: Updated xtpmg for Stata 15+ compatibility
+*! Fix: predict eq() naming conflict causing r(110) in Stata 15.1+
+*! Original: 1.1.1 Ed Blackburne -- Mark Frank, Sam Houston State University, 20 February 2007
 *! Fit pooled-mean group, mean group, and dynamic fixed effects panel data models
 
-capture progam drop xtpmg
+capture program drop xtpmg
 program define xtpmg
-	version 9
+	version 15.1
 		if replay() {
 			if (`"`e(cmd)'"' !="xtpmg") error 301
 			Display `0'
@@ -12,9 +15,9 @@ program define xtpmg
 end
 
 program define Estimate, eclass
-	syntax varlist(ts) [if] [in] [,LR(varlist ts) EC(namelist)				///
+	syntax varlist(ts) [if] [in] [,LR(varlist ts) EC(name)				///
       	         	CONSTraints(numlist) noCONStant Level(integer `c(level)')  	///
-			     	CLUster(passthru) 							///
+		     		CLUster(passthru) 							///
 		           	TECHnique(passthru) DIFficult REPLACE FULL MG DFE PMG] 
 
 	if ("`mg'"!="")+("`dfe'"!="")+("`pmg'"!="")>1 { 
@@ -38,7 +41,7 @@ program define Estimate, eclass
 
 	if "`lr'"!=""{
 		if "`ec'"==""{
-      		local ec __ec
+      		local ec ECT
 	      }
 		if "`replace'"!=""{
 			capture drop `ec'
@@ -46,9 +49,9 @@ program define Estimate, eclass
 
 		capture confirm new variable `ec'
 		if _rc!=0{
-			di in ye "Variable " in gr "`ec'" in ye " already exists."
-			di in ye "Either drop the variable or specify another name as EC option."
-			exit
+			di as err "Variable `ec' already exists."
+			di as err "Either drop the variable, use the replace option, or specify another name in ec()."
+			exit 110
 		}
 
 	}
@@ -135,7 +138,7 @@ program define Estimate, eclass
 	tempname ll	
 	scalar `ll'=0
 
-// setup initial matricies
+// setup initial matrices
   
 	tempname G
 	matrix `G'=J(`n'*(`ks'),`n'*(`ks'),0)
@@ -147,7 +150,7 @@ program define Estimate, eclass
 	quie gen double `r'=.
 
 // Loop through all panels for regressions
-// Also, we fix equation lables within this loop
+// Also, we fix equation labels within this loop
 
 	foreach i of global iis{
 		tempvar `r'`i'
@@ -155,7 +158,7 @@ program define Estimate, eclass
 			local names `names' "`ivar'_`i':`ec'"
 		}
 		foreach x in  $SRx{
-           		local names `names' "`ivar'_`i':`x'"
+           	local names `names' "`ivar'_`i':`x'"
 		}
      		if "`constant'"==""{
      			local names `names' "`ivar'_`i':_cons"
@@ -380,7 +383,17 @@ program define EstMG, eclass
 		}
 	}
 	quie gen byte `touse'=e(sample)
-	quie predict double `ec' if `touse', eq(`ec')
+
+	* --- Safe EC prediction (Stata 15+ compatible) ---
+	* The original line was:
+	*   quie predict double `ec' if `touse', eq(`ec')
+	* This fails in Stata 15.1+ because _predict now errors when the
+	* output variable name matches a variable in the estimation results.
+	* Fix: predict into a temporary variable, then copy to requested name.
+	tempvar ectmp
+	quie predict double `ectmp' if `touse', eq(`ec')
+	quie gen double `ec' = `ectmp' if `touse'
+
 	quie replace `ec'=$LRy-`ec'
 	quie replace `r'=`r'^2 if `touse'
 	quie sum `r' if `touse'
@@ -527,9 +540,10 @@ end
 program define Display
 	syntax [,Level(integer `c(level)')]
 	
-	if "`e(model)'"=="pmg" || "`e(model)'"=="PMG"{
+	if "`e(model)'"=="pmg" | "`e(model)'"=="PMG"{
 		#delimit ;
-		di _n in gr "Pooled Mean Group Regression";
+		di _n in gr "Pooled Mean Group Regression"
+		   _col(49) "Version 2.0.0" ;
 		di in gr "(Estimate results saved as " in ye e(model) in gr ")";
       	di _n in gr "Panel Variable (i): " in ye abbrev(e(ivar),12)
                 _col(49) in gr "Number of obs" _col(68) "="
@@ -555,20 +569,21 @@ program define Display
 		}		
 		#delimit ;
 		di in smcl in gr "{hline 78}";
-      	di in gr "Dynamic Fixed Effects Regression: " in ye "Estimated Error Correction Form";
+      	di in gr "Dynamic Fixed Effects Regression: " in ye "Estimated Error Correction Form"
+		   _col(49) "Version 2.0.0" ;
 		di in gr "(Estimate results saved as " in ye "DFE" in gr ")";
 		di in smcl in gr "{hline 78}";
 
 		#delimit cr
 	}
-	if "`e(model)'"=="mg" || "`e(model)'"=="MG"{
+	if "`e(model)'"=="mg" | "`e(model)'"=="MG"{
 		#delimit ;	
 		di _n in smcl in gr "{hline 78}";
-		di in gr "Mean Group Estimation: " in ye "Error Correction Form";
+		di in gr "Mean Group Estimation: " in ye "Error Correction Form"
+		   _col(49) "Version 2.0.0" ;
 		di in gr "(Estimate results saved as " in ye e(model) in gr ")";
 		di in smcl in gr "{hline 78}";
 		#delimit cr
 	}
 	eret disp, level(`level')
 end
-

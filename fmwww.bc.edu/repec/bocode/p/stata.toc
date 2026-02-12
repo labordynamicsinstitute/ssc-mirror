@@ -104,6 +104,7 @@ p pmcalplot module to produce calibration plot of prediction model performance
 p pmsampsize module to calculate the minimum sample size required for developing a multivariable prediction model
 p pmvalsampsize module to calculate the minimum sample size required for external validation of a multivariable prediction model
 p png2rtf module to include PNG graphics in RTF documents
+p pnardl module to perform Panel Nonlinear ARDL (Panel NARDL) estimation
 p pnrcheck module to verify the check digit in Swedish personal identification number
 p pobrezaecu module to predict poverty in Ecuador 
 p poi2hdfe module to estimate a Poisson regression with two high-dimensional fixed effects
