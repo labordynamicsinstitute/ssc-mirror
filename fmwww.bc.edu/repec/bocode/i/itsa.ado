@@ -1349,7 +1349,7 @@ version 11.0
 			local istreat   `prefix'_z==1
 			local iscontrol `prefix'_z==0
 
-*			/* Start quietly loop */			
+			/* Start quietly loop */			
 			quietly {   
 				
 				tempvar ypred_t ypred_c
@@ -1658,7 +1658,7 @@ version 11.0
 				
 			} // end quietly				
 				
-			// * graph it - no xvars * //
+			// * graph it * //
 			twoway ///
 				`shhh' ///				
 				(scatter  `dvar_t' `plotvars_t' `tvar', `cpart' `tmspart' `lc' `mc') ///

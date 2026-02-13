@@ -1,6 +1,6 @@
 {smcl}
 {* 11feb2026}{...}
-{cmd:help pnardl} {right:version 1.0.0}
+{cmd:help pnardl} {right:version 1.1.0}
 {hline}
 
 {title:Title}
@@ -12,7 +12,7 @@
 {title:Version}
 
 {pstd}
-Version 1.0.0, 11 February 2026
+Version 1.1.0, 12 February 2026
 
 {pstd}
 {bf:Author:} Dr Merwan Roudane ({browse "mailto:merwanroudane920@gmail.com":merwanroudane920@gmail.com})
@@ -33,7 +33,15 @@ stock market nexus: A nonlinear Panel ARDL approach.
 {browse "https://doi.org/10.1016/j.econmod.2017.07.010":doi:10.1016/j.econmod.2017.07.010}
 
 {pstd}
-{bf:Requires:} {cmd:xtpmg} version 2.0.0 or later
+{bf:Requires:} {cmd:xtpmg} version 2.0.1 or later
+
+{pstd}
+{bf:What's new in version 1.1.0:}{p_end}
+{p 8 12 2}- {bf:Dynamic Multipliers}: {opt multip()} traces cumulative m+(h) and m-(h) over h periods{p_end}
+{p 8 12 2}- {bf:Asymmetry Table}: {opt asytable} side-by-side beta+/beta- and gamma+/gamma- with Wald tests{p_end}
+{p 8 12 2}- {bf:IRF for +/- Shocks}: {opt irfshock()} separate impulse responses for positive and negative shocks{p_end}
+{p 8 12 2}- {bf:Per-Panel Coefficients}: {opt panelcoef} ECT, half-life, convergence status per panel{p_end}
+{p 8 12 2}- {bf:Graph Visualizations}: {opt graph} publication-quality graphs (ECT bars, LR asymmetry, dynamic multipliers){p_end}
 
 
 {title:Syntax}
@@ -69,6 +77,15 @@ stock market nexus: A nonlinear Panel ARDL approach.
 
 {syntab:Reporting}
 {synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}{p_end}
+{synoptline}
+
+{syntab:Diagnostics (New in 1.1.0)}
+{synopt :{opt multip(#)}}compute dynamic multipliers for +/- shocks over {it:#} periods{p_end}
+{synopt :{opt asytable}}display asymmetry comparison table (LR and SR){p_end}
+{synopt :{opt irfshock(#)}}simulate IRF for positive vs negative shocks over {it:#} periods{p_end}
+{synopt :{opt panelcoef}}display per-panel ECT coefficients, half-life, and convergence{p_end}
+{synopt :{opt gr:aph}}generate publication-quality graphs{p_end}
+
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
@@ -207,6 +224,29 @@ economies.
 
 {phang2}{cmd:. * Oil price-stock market nexus}{p_end}
 {phang2}{cmd:. pnardl d.stock d.oil d.controls, lr(l.stock oil controls) asymmetric(oil) pmg hausman replace}{p_end}
+
+{pstd}
+{bf:{ul:Diagnostics and Graphs (New in 1.1.0):}}{p_end}
+
+{pstd}{bf:Asymmetry comparison table:}{p_end}
+{phang2}{cmd:. pnardl d.y d.x1 d.x2, lr(l.y x1 x2) asymmetric(x1) asytable replace}{p_end}
+
+{pstd}{bf:Per-panel coefficients:}{p_end}
+{phang2}{cmd:. pnardl d.y d.x1 d.x2, lr(l.y x1 x2) asymmetric(x1) panelcoef replace}{p_end}
+
+{pstd}{bf:Dynamic multipliers (20 periods):}{p_end}
+{phang2}{cmd:. pnardl d.y d.x1 d.x2, lr(l.y x1 x2) asymmetric(x1) multip(20) replace}{p_end}
+
+{pstd}{bf:IRF for positive vs negative shocks:}{p_end}
+{phang2}{cmd:. pnardl d.y d.x1 d.x2, lr(l.y x1 x2) asymmetric(x1) irfshock(15) replace}{p_end}
+
+{pstd}{bf:All diagnostics with graphs:}{p_end}
+{phang2}{cmd:. pnardl d.y d.x1 d.x2, lr(l.y x1 x2) asymmetric(x1) asytable panelcoef multip(20) irfshock(20) graph full replace}{p_end}
+
+{pstd}{bf:Exporting graphs:}{p_end}
+{phang2}{cmd:. graph export pnardl_ect.png, name(pnardl_ect) replace width(1200)}{p_end}
+{phang2}{cmd:. graph export pnardl_asym_lr.png, name(pnardl_asym_lr) replace width(1200)}{p_end}
+{phang2}{cmd:. graph export pnardl_multiplier.png, name(pnardl_multiplier) replace width(1200)}{p_end}
 
 
 {title:References}

@@ -1,4 +1,6 @@
 {smcl}
+{* *! version 3.1.0 12Feb2026}{...}
+{* *! version 3.0.0 12Jan2026}{...}
 {* *! version 2.1.0 24Jul2025}{...}
 {* *! version 2.0.0 11June2025}{...}
 {* *! version 1.0.1 08June2025}{...}
@@ -30,7 +32,9 @@ Power for a single-group interrupted time series analysis:
 {opt lev:el} 
 {opt noi:sily}  {p_end}
 {p 12 14 2}
-{opt seed(#)} 
+{opt seed(#)}
+{opt prais}
+{opt perf}
 {opth rep:s(numlist)} {opt ]} 
 
 
@@ -58,7 +62,9 @@ Power for a multiple-group interrupted time series analysis:
 {opth a:lpha(numlist)}
 {opt lev:el} 
 {opt noi:sily}
-{opt seed(#)}   
+{opt seed(#)}
+{opt prais}
+{opt perf}
 {opth rep:s(numlist)} {opt ]} 
 
 
@@ -83,6 +89,8 @@ In the syntax for {cmd:power multi_itsa}, all options beginning with the letter 
 {synopt :{opt lev:el}}specify that power is based on a change in level; default is that power is based on a difference in pre- and post-intervention trends{p_end}
 {synopt :{opt noi:sily}}show the simulation progress (dots); default is to suppress the simulation progress (dots) {p_end}
 {synopt :{opt seed(#)}}set random-number seed to {it:#}{p_end}
+{synopt :{opt prais}}fit a {helpb prais} model (and all available model options). Default is to fit a {helpb glm} model with Newey-West standard errors {p_end}
+{synopt:{opt perf}}present performance measures in table output {p_end}
 {synopt :{opth rep:s(numlist)}}the number of replications to be performed; default is {cmd:reps(100)} {p_end}
 
 {syntab:Multiple-group ITSA}
@@ -104,6 +112,8 @@ In the syntax for {cmd:power multi_itsa}, all options beginning with the letter 
 {synopt :{opt lev:el}}specify that power is based on changes in level; default is that power is based on differences in pre- and post-intervention trends{p_end}
 {synopt :{opt noi:sily}}show the simulation progress (dots); default is to suppress the simulation progress (dots) {p_end}
 {synopt :{opt seed(#)}}set random-number seed to {it:#}{p_end}
+{synopt :{opt prais}}fit a {helpb prais} model. Default is to fit a {helpb glm} model with Newey-West standard errors {p_end}
+{synopt:{opt perf}}present performance measures in table output {p_end}
 {synopt :{opth rep:s(numlist)}}the number of replications to be performed; default is {cmd:reps(100)} {p_end}
 {synoptline}
 {p2colreset}{...}
@@ -117,13 +127,13 @@ In the syntax for {cmd:power multi_itsa}, all options beginning with the letter 
 {opt power itsa} computes power for a specified number of time periods {cmd:n()} in a single-group or multiple-group interrupted time series analysis (ITSA), using simulation. 
 For a single-group ITSA, the process involves (1) generating a time series using {helpb itsadgp}, based on the user-inputs replicating the coefficients of a single-group ITSA 
 regression model (see Remarks section below)-- which may include autocorrelation for an autoregressive AR(1) model; (2) estimating a single-group {helpb itsa:ITSA} model using 
-Newey-West standard errors; (3) testing if the difference in pre- and post-intervention trends = 0, or when {cmd:level} is specified, testing if the change in level in the 
-period immediately following introduction of the intervention (compared to the conterfactual) = 0; and (4) repeating this process the number of times specified in {cmd:reps()}.
-For a multiple-group group ITSA, the process involves (1) generating one time series for the treated unit and one or more time series for the controls, replicating the coefficients of 
-a multiple-group ITSA regression model (see Remarks section below)-- which may include separate autocorrelations for the treated unit and controls; (2) estimating a multiple-group
-{helpb itsa:ITSA} model using Newey-West standard errors; (3) testing if the difference in differences of the pre- and post-intervention trends = 0, or when {cmd:level} is specified, 
-testing if the differences in the change in level in the period immediately following introduction of the intervention (compared to the conterfactual) = 0; and (4) repeating this 
-process the number of times specified in {cmd:reps()}.
+either regression with Newey-West standard errors or Prais-Winsten regression; (3) testing if the difference in pre- and post-intervention trends = 0, or when {cmd:level} is 
+specified, testing if the change in level in the period immediately following introduction of the intervention (compared to the conterfactual) = 0; and (4) repeating this process 
+the number of times specified in {cmd:reps()}. For a multiple-group group ITSA, the process involves (1) generating one time series for the treated unit and one or more time 
+series for the controls, replicating the coefficients of a multiple-group ITSA regression model (see Remarks section below)-- which may include separate autocorrelations for 
+the treated unit and controls; (2) estimating a multiple-group {helpb itsa:ITSA} model using either regression with Newey-West standard errors or Prais-Winsten regression; 
+(3) testing if the difference in differences of the pre- and post-intervention trends = 0, or when {cmd:level} is specified, testing if the differences in the change in level 
+in the period immediately following introduction of the intervention (compared to the conterfactual) = 0; and (4) repeating this process the number of times specified in {cmd:reps()}.
 
 
 {title:Remarks} 
@@ -240,6 +250,16 @@ on a difference in pre- and post-intervention trends (Beta_3 in model 1 above).
 {opt seed(#)} sets the random-number seed for the simulations.
 
 {p 6 8 2} 
+{opt prais} fits a {helpb prais} model (with all available model options). If {cmd:prais} is
+not specified, {cmd:itsa} will use {helpb glm} with Newey-West standard errors, 
+as the default model. 
+
+{p 6 8 2} 
+{opt perf} requests that the following model performance measures be added to the output table: percent bias, root mean squared error, 
+confidence interval coverage, empirical standard errors. The confidence interval coverage will be computed based on the specified alpha level(s). 
+
+
+{p 6 8 2} 
 {opth rep:s(numlist)} specifies the number of replications to be performed. The default is {cmd:reps(100)} but a much higher number of repetitions should
 be used to improve the accuracy of the estimates (at minimum 1000).
 
@@ -318,6 +338,15 @@ computed based on a difference in differences of pre- and post-intervention tren
 {opt seed(#)} sets the random-number seed for the simulations.
 
 {p 6 8 2} 
+{opt prais} fits a {helpb prais} model (with all available model options). If {cmd:prais} is
+not specified, {cmd:itsa} will use {helpb glm} with Newey-West standard errors, 
+as the default model. 
+
+{p 6 8 2} 
+{opt perf} requests that the following model performance measures be added to the output table: percent bias, root mean squared error, 
+confidence interval coverage, empirical standard errors. The confidence interval coverage will be computed based on the specified alpha level(s). 
+
+{p 6 8 2} 
 {opth rep:s(numlist)} specifies the number of replications to be performed. The default is {cmd:reps(100)} but a much higher number of repetitions should
 be used to improve the accuracy of the estimates (at minimum 1000).
 
@@ -346,13 +375,13 @@ will use the default halfway point(s) in the time series (specified as {cmd:n}).
 
 {phang2}{cmd:. power single_itsa, n(32(2)36) intercept(500) step(0) posttrend(0.20) acorr(.20) alpha(0.05) reps(100) table(,labels(N "N-periods")) noi} {p_end}
 
-{pstd}Same as above, but we now specify two autocorrelation values (0.20 and 0.30) {p_end}
+{pstd}Same as above, but we now specify two autocorrelation values (0.20 and 0.30) and specify that a Prais-Winsten model be computed {p_end}
 
-{phang2}{cmd:. power single_itsa, n(32(2)36) intercept(500) step(0) posttrend(0.20) acorr(.20 .30) alpha(0.05) reps(100) table(,labels(N "N-periods")) noi} {p_end}
+{phang2}{cmd:. power single_itsa, n(32(2)36) intercept(500) step(0) posttrend(0.20) acorr(.20 .30) alpha(0.05) reps(100) table(,labels(N "N-periods")) noi prais} {p_end}
 
 {pstd}Same as above, but we now graph the results {p_end}
 
-{phang2}{cmd:. power single_itsa, n(32(2)36) intercept(500) step(0) posttrend(0.20) acorr(.20 .30) alpha(0.05) reps(100) table(,labels(N "N-periods")) graph noi} {p_end}
+{phang2}{cmd:. power single_itsa, n(32(2)36) intercept(500) step(0) posttrend(0.20) acorr(.20 .30) alpha(0.05) reps(100) table(,labels(N "N-periods")) graph noi prais} {p_end}
 
 {pstd}Same as above, but we now add an additional alpha of 0.01 {p_end}
 
@@ -377,9 +406,9 @@ program to use the default halfway marks of the time series for the start of the
 
 {phang2}{cmd:. power single_itsa, n(20 22 24) intercept(120) step(2.4) posttrend(0) acorr(.10) alpha(0.05) reps(100) table(,labels(N "N-periods")) level noi}{p_end}
 
-{pstd}Same as above but we now add an alpha of 0.01. {p_end}
+{pstd}Same as above but we now add an alpha of 0.01 and request model performance data. {p_end}
 
-{phang2}{cmd:. power single_itsa, n(20 22 24) intercept(120) step(2.4) posttrend(0) acorr(.10) alpha(0.01 0.05) reps(100) table(,labels(N "N-periods")) level noi}{p_end}
+{phang2}{cmd:. power single_itsa, n(20 22 24) intercept(120) step(2.4) posttrend(0) acorr(.10) alpha(0.01 0.05) reps(100) table(,labels(N "N-periods")) level noi perf}{p_end}
 
 {pstd}Same as above, but we now graph the results {p_end}
 
@@ -576,7 +605,7 @@ Linden, A. 2015.
 
 {phang}
 ---------. 2025. 
-{browse "https://journals.sagepub.com/doi/10.1177/01632787251361514":A Comprehensive Simulation Study to Evaluate the Effect Size and Study Length Relationship in Single-Group Interrupted Time Series Analysis}. 
+{browse "https://journals.sagepub.com/doi/10.1177/01632787251361514":A comprehensive simulation study to evaluate the effect size and study length relationship in single-group interrupted time series analysis}. 
 {it:Evaluation & the Health Professions} 
 
 

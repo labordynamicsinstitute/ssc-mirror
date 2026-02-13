@@ -1,120 +1,149 @@
-********************************************************************************
-* pnardl: Panel Nonlinear ARDL — Example Do-File
-* Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
-* Date: 11 February 2026
-*
-* This example demonstrates the full Panel NARDL workflow using the 
-* pnardl command with simulated data.
-*
-* Reference: Shin, Yu and Greenwood-Nimmo (2014)
-*            "Modelling Asymmetric Cointegration and Dynamic Multipliers 
-*             in a Nonlinear ARDL Framework"
-********************************************************************************
+* =========================================================================
+* pnardl_example.do — Panel NARDL Examples (Version 1.1.0)
+* Dr Merwan Roudane — merwanroudane920@gmail.com
+* =========================================================================
 
 clear all
 set more off
+discard
 
-* ==============================================================================
-* 1. INSTALL REQUIRED PACKAGES
-* ==============================================================================
-
-* Install xtpmg (version 2.0.0 required for Stata 15+ compatibility)
-* ssc install xtpmg, replace
-
-* ==============================================================================
-* 2. LOAD AND PREPARE DATA
-* ==============================================================================
-
-* Set your panel data (replace with your actual data)
-* use "your_data.dta", clear
-* xtset id year
-
-* --- Example with simulated data ---
-* (Replace this block with your actual data loading)
+* =========================================================================
+* 1. SIMULATE PANEL DATA
+* =========================================================================
 
 set seed 12345
-set obs 500
+set obs 300
 
-* Create panel structure: 10 countries, 50 periods
-gen id = ceil(_n/50)
-bysort id: gen year = _n + 1970
+* 10 panels, 30 time periods each
+gen id = ceil(_n / 30)
+bys id: gen year = 2000 + _n - 1
 xtset id year
 
-* Generate simulated variables
-gen x1 = rnormal(0, 1)
-gen x2 = rnormal(0, 1)
-gen y = 0.5*x1 - 0.3*x2 + rnormal(0, 0.5)
+* Generate variables with asymmetric relationship
+gen x1 = rnormal(0, 2) if year == 2000
+bys id: replace x1 = x1[_n-1] + rnormal(0, 1.5) if _n > 1
 
-* Add persistence (make it look like real macro data)
-sort id year
-by id: replace y = 0.7*l.y + 0.3*x1 - 0.2*x2 + rnormal(0,0.3) if _n > 1
-by id: replace x1 = 0.8*l.x1 + rnormal(0,0.3) if _n > 1
-by id: replace x2 = 0.85*l.x2 + rnormal(0,0.3) if _n > 1
+gen x2 = rnormal(0, 1) if year == 2000
+bys id: replace x2 = x2[_n-1] + rnormal(0, 0.8) if _n > 1
 
-* ==============================================================================
-* 3. BASIC PANEL NARDL — PMG (default)
-* ==============================================================================
+* y has asymmetric response to x1: positive changes = stronger effect
+gen y = 0 if year == 2000
+gen _dx1_pos = max(d.x1, 0) if year > 2000
+gen _dx1_neg = min(d.x1, 0) if year > 2000
+replace _dx1_pos = 0 if _dx1_pos == .
+replace _dx1_neg = 0 if _dx1_neg == .
 
-* Decompose x1 into positive and negative shocks, estimate PMG
+bys id: replace y = 0.85 * y[_n-1] + 0.7 * _dx1_pos + 0.3 * _dx1_neg ///
+    + 0.4 * d.x2 + rnormal(0, 0.5) if _n > 1
+
+drop _dx1_pos _dx1_neg
+
+di ""
+di "============================================"
+di "  Panel NARDL Examples — Version 1.1.0"
+di "============================================"
+di ""
+
+
+* =========================================================================
+* 2. BASIC PNARDL ESTIMATION
+* =========================================================================
+
+di ""
+di ">>> Example 1: Basic Panel NARDL (PMG)"
+di ""
+
 pnardl d.y d.x1 d.x2, lr(l.y x1 x2) asymmetric(x1) replace
 
-* ==============================================================================
-* 4. MEAN GROUP ESTIMATION
-* ==============================================================================
 
-* Same with MG estimator
-pnardl d.y d.x1 d.x2, lr(l.y x1 x2) asymmetric(x1) mg replace
+* =========================================================================
+* 3. WITH ASYMMETRY TABLE
+* =========================================================================
 
-* ==============================================================================
-* 5. PMG WITH HAUSMAN TEST
-* ==============================================================================
+di ""
+di ">>> Example 2: With asymmetry comparison table"
+di ""
 
-* PMG with Hausman test to compare MG vs PMG
-pnardl d.y d.x1 d.x2, lr(l.y x1 x2) asymmetric(x1) pmg hausman replace
+pnardl d.y d.x1 d.x2, lr(l.y x1 x2) asymmetric(x1) asytable replace
 
-* ==============================================================================
-* 6. MULTIPLE ASYMMETRIC VARIABLES
-* ==============================================================================
 
-* Both x1 and x2 decomposed asymmetrically
-pnardl d.y d.x1 d.x2, lr(l.y x1 x2) asymmetric(x1 x2) replace
+* =========================================================================
+* 4. PER-PANEL COEFFICIENTS
+* =========================================================================
 
-* ==============================================================================
-* 7. DFE ESTIMATION (no asymmetry tests)
-* ==============================================================================
+di ""
+di ">>> Example 3: Per-panel coefficients"
+di ""
 
-pnardl d.y d.x1 d.x2, lr(l.y x1 x2) asymmetric(x1) dfe noasymtest replace
+pnardl d.y d.x1 d.x2, lr(l.y x1 x2) asymmetric(x1) panelcoef replace
 
-* ==============================================================================
-* 8. MANUAL APPROACH (for comparison / understanding)
-* ==============================================================================
-* This shows what pnardl does internally:
 
-* Step 1: Generate partial sums manually
-capture drop x1_pos x1_neg
-gen dx1 = d.x1
-gen dx1_pos = max(dx1, 0) if dx1 != .
-gen dx1_neg = min(dx1, 0) if dx1 != .
-replace dx1_pos = 0 if dx1_pos == .
-replace dx1_neg = 0 if dx1_neg == .
-sort id year
-bysort id: gen x1_pos = sum(dx1_pos)
-bysort id: gen x1_neg = sum(dx1_neg)
+* =========================================================================
+* 5. DYNAMIC MULTIPLIERS
+* =========================================================================
 
-* Step 2: Estimate with xtpmg directly
-capture drop ECT
-xtpmg d.y d.x1_pos d.x1_neg d.x2, lr(l.y x1_pos x1_neg x2) pmg replace
-estimates store PMG
+di ""
+di ">>> Example 4: Dynamic multipliers (20 periods)"
+di ""
 
-* Step 3: Test long-run asymmetry
-test [ECT]x1_pos = [ECT]x1_neg
+pnardl d.y d.x1 d.x2, lr(l.y x1 x2) asymmetric(x1) multip(20) replace
 
-* Step 4: Test short-run asymmetry
-test [SR]d.x1_pos = [SR]d.x1_neg
 
-* Clean up
-drop dx1 dx1_pos dx1_neg x1_pos x1_neg
+* =========================================================================
+* 6. IRF FOR POSITIVE VS NEGATIVE SHOCKS
+* =========================================================================
 
-********************************************************************************
-* END OF EXAMPLE
-********************************************************************************
+di ""
+di ">>> Example 5: IRF for positive vs negative shocks"
+di ""
+
+pnardl d.y d.x1 d.x2, lr(l.y x1 x2) asymmetric(x1) irfshock(15) replace
+
+
+* =========================================================================
+* 7. FULL ANALYSIS WITH GRAPHS
+* =========================================================================
+
+di ""
+di ">>> Example 6: Complete analysis with all diagnostics + graphs"
+di ""
+
+pnardl d.y d.x1 d.x2, lr(l.y x1 x2) ///
+    asymmetric(x1) ///
+    asytable panelcoef multip(20) irfshock(20) ///
+    graph full replace
+
+* Export graphs
+capture graph export pnardl_ect.png, name(pnardl_ect) replace width(1200)
+capture graph export pnardl_asym_lr.png, name(pnardl_asym_lr) replace width(1200)
+capture graph export pnardl_multiplier.png, name(pnardl_multiplier) replace width(1200)
+
+
+* =========================================================================
+* 8. MULTIPLE ASYMMETRIC VARIABLES
+* =========================================================================
+
+di ""
+di ">>> Example 7: Multiple asymmetric variables"
+di ""
+
+pnardl d.y d.x1 d.x2, lr(l.y x1 x2) ///
+    asymmetric(x1 x2) asytable multip(15) replace
+
+
+* =========================================================================
+* 9. HAUSMAN TEST
+* =========================================================================
+
+di ""
+di ">>> Example 8: With Hausman test"
+di ""
+
+pnardl d.y d.x1 d.x2, lr(l.y x1 x2) ///
+    asymmetric(x1) hausman asytable replace
+
+
+di ""
+di "============================================"
+di "  All examples completed successfully!"
+di "============================================"

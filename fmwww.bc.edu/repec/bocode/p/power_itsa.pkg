@@ -1,27 +1,30 @@
 d 'POWER_ITSA': module to compute power for single and multiple-group interrupted time series analysis
 d
-d  power itsa computes power for a specified number of time periods
+d  Power_itsa computes power for a specified number of time periods
 d n() in a single-group or multiple-group interrupted time series
 d analysis (ITSA), using simulation.  For a single-group ITSA, the
 d process involves (1) generating a time series using itsadgp,
 d based on the user-inputs replicating the coefficients of a
-d single-group ITSA regression model (see Remarks section below)--
-d which may include autocorrelation for an autoregressive AR(1)
-d model; (2) estimating a single-group ITSA model using Newey-West
-d standard errors; (3) testing if the difference in pre- and
-d post-intervention trends = 0, or when level is specified, testing
-d if the change in level in the period immediately following
-d introduction of the intervention (compared to the conterfactual)
-d = 0; and (4) repeating this process the number of times specified
-d in reps().  For a multiple-group group ITSA, the process involves
-d (1) generating one time series for the treated unit and one or
-d more time series for the controls, replicating the coefficients
-d of a multiple-group ITSA regression model-- which may include
-d separate autocorrelations for the treated unit and controls; (2)
-d estimating a multiple-group ITSA model using Newey-West standard
-d errors; (3) testing if the difference in differences of the pre-
+d single-group ITSA regression model (see Remarks section
+d below)--which may include autocorrelation for an autoregressive
+d AR(1) model; (2) estimating a single-group ITSA model using
+d either regression with Newey-West standard errors or
+d Prais-Winsten regression; (3) testing if the difference in pre-
 d and post-intervention trends = 0, or when level is specified,
-d testing if the differences in the change in level in the period
+d testing if the change in level in the period immediately
+d following introduction of the intervention (compared to the
+d counterfactual) = 0; and (4) repeating this process the number of
+d times specified in reps(). For a     multiple-group group ITSA,
+d the process involves (1) generating one time series for the
+d treated unit and one or more time series for the controls,
+d replicating the coefficients of a multiple-group ITSA regression
+d model (see Remarks section below)-- which may include separate
+d autocorrelations for the treated unit and controls; (2)
+d estimating a multiple-group ITSA model using either regression
+d with Newey-West standard errors or Prais-Winsten regression; (3)
+d testing if the difference in differences of the pre- and
+d post-intervention trends = 0, or when level is specified, testing
+d if the differences in the change in level in the period
 d immediately following introduction of the intervention (compared
 d to the counterfactual) = 0; and (4) repeating this process the
 d number of times specified in reps(). 
@@ -35,7 +38,7 @@ d KW: sample size
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20251205
+d Distribution-Date: 20260212
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org

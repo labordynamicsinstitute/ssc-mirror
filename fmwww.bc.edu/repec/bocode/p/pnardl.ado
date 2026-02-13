@@ -1,7 +1,8 @@
-*! version 1.0.0  11feb2026  Dr Merwan Roudane  merwanroudane920@gmail.com
+*! version 1.1.0  12feb2026  Dr Merwan Roudane  merwanroudane920@gmail.com
 *! pnardl: Panel Nonlinear ARDL (Panel NARDL) estimation
 *! Based on Shin, Yu and Greenwood-Nimmo (2014)
-*! Requires: xtpmg (version 2.0.0+)
+*! Features: Dynamic multipliers, asymmetry tables, IRF for +/- shocks, graphs
+*! Requires: xtpmg (version 2.0.1+)
 
 capture program drop pnardl
 program define pnardl, eclass
@@ -23,6 +24,11 @@ program define pnardl, eclass
 		CLUster(passthru)               ///
 		HAUSman                         ///
 		NOASYMtest                      ///
+		MULTip(integer 0)               ///
+		ASYTable                        ///
+		IRFShock(integer 0)             ///
+		PANELcoef                       ///
+		GRaph                           ///
 		]
 
 	* =========================================================================
@@ -75,9 +81,19 @@ program define pnardl, eclass
 	
 	di
 	di in smcl in gr "{hline 78}"
-	di in gr "Panel NARDL Estimation" _col(49) in ye "Version 1.0.0"
+	di in gr "{bf:Panel NARDL Estimation}" _col(49) in ye "Version 1.1.0"
 	di in gr "{it:Shin, Yu and Greenwood-Nimmo (2014)}"
 	di in smcl in gr "{hline 78}"
+	
+	* Validate new options
+	if `multip' < 0 | `multip' > 50 {
+		di as err "multip() must be between 0 and 50"
+		exit 198
+	}
+	if `irfshock' < 0 | `irfshock' > 50 {
+		di as err "irfshock() must be between 0 and 50"
+		exit 198
+	}
 	di
 	
 	marksample touse
@@ -368,7 +384,68 @@ program define pnardl, eclass
 	}
 	
 	* =========================================================================
-	* 6. STORE RESULTS
+	* 6. POST-ESTIMATION DIAGNOSTICS (new in 1.1.0)
+	* =========================================================================
+	
+	* Asymmetry comparison table
+	if "`asytable'" != "" {
+		capture quie est restore PMG
+		pnardl_AsymTable, ivar(`ivar') ec(`ec') ///
+			posvars(`pos_vars') negvars(`neg_vars') ///
+			asymvars(`asym_vars_display')
+	}
+	
+	* Per-panel coefficients
+	if "`panelcoef'" != "" {
+		capture quie est restore PMG
+		pnardl_PanelCoef, ivar(`ivar') ec(`ec') ///
+			posvars(`pos_vars') negvars(`neg_vars') ///
+			asymvars(`asym_vars_display')
+	}
+	
+	* Dynamic multipliers
+	if `multip' > 0 {
+		capture quie est restore PMG
+		pnardl_DynMultiplier, periods(`multip') ivar(`ivar') ec(`ec') ///
+			posvars(`pos_vars') negvars(`neg_vars') ///
+			asymvars(`asym_vars_display')
+	}
+	
+	* IRF for positive/negative shocks
+	if `irfshock' > 0 {
+		capture quie est restore PMG
+		pnardl_IRFShock, periods(`irfshock') ivar(`ivar') ec(`ec') ///
+			posvars(`pos_vars') negvars(`neg_vars') ///
+			asymvars(`asym_vars_display')
+	}
+	
+	* Graph visualizations
+	if "`graph'" != "" {
+		di
+		di in smcl in gr "{hline 78}"
+		di in gr "{bf:Generating Visualizations}" _col(49) in ye "PNARDL 1.1.0"
+		di in smcl in gr "{hline 78}"
+		
+		capture quie est restore PMG
+		pnardl_PlotECT, ivar(`ivar') ec(`ec')
+		pnardl_PlotAsymLR, ivar(`ivar') ec(`ec') ///
+			posvars(`pos_vars') negvars(`neg_vars') ///
+			asymvars(`asym_vars_display')
+		
+		if `multip' > 0 | `irfshock' > 0 {
+			local mp = max(`multip', `irfshock')
+			if `mp' == 0 local mp = 20
+			pnardl_PlotMultiplier, periods(`mp') ivar(`ivar') ec(`ec') ///
+				posvars(`pos_vars') negvars(`neg_vars') ///
+				asymvars(`asym_vars_display')
+		}
+		
+		di in smcl in gr "{hline 78}"
+		di
+	}
+	
+	* =========================================================================
+	* 7. STORE RESULTS
 	* =========================================================================
 	
 	ereturn local cmd "pnardl"
@@ -387,3 +464,636 @@ program define pnardl, eclass
 	di in smcl in gr "{hline 78}"
 	
 end
+
+
+* =========================================================================
+* NEW IN 1.1.0: pnardl_AsymTable
+* LR/SR asymmetry comparison table
+* =========================================================================
+
+program define pnardl_AsymTable
+	syntax, IVar(string) EC(string) POSvars(string) NEGvars(string) ASYMvars(string)
+	
+	di
+	di in smcl in gr "{hline 78}"
+	di in gr "{bf:Asymmetry Comparison Table}" _col(49) in ye "PNARDL 1.1.0"
+	di in smcl in gr "{hline 78}"
+	di
+	
+	local nasym = wordcount("`asymvars'")
+	
+	* Long-run coefficients
+	di in gr "  {bf:Long-Run Coefficients (from cointegrating vector):}"
+	di
+	di in smcl in gr "  {hline 74}"
+	di in gr %14s "Variable" " {c |}" ///
+		%12s "Beta(+)" " {c |}" ///
+		%12s "Beta(-)" " {c |}" ///
+		%12s "Diff" " {c |}" ///
+		%10s "  Effect" " {c |}" ///
+		%8s " Asym?"
+	di in smcl in gr "  {hline 14}{c +}{hline 13}{c +}{hline 13}{c +}{hline 13}{c +}{hline 11}{c +}{hline 9}"
+	
+	forvalues i = 1/`nasym' {
+		local av : word `i' of `asymvars'
+		local pv : word `i' of `posvars'
+		local nv : word `i' of `negvars'
+		
+		capture local bp = _b[`ec':`pv']
+		capture local bn = _b[`ec':`nv']
+		
+		if !_rc {
+			local diff = `bp' - `bn'
+			
+			local eff_str "Pos/Pos"
+			if `bp' > 0 & `bn' < 0 local eff_str "Pos/Neg"
+			if `bp' < 0 & `bn' > 0 local eff_str "Neg/Pos"
+			if `bp' < 0 & `bn' < 0 local eff_str "Neg/Neg"
+			
+			* Wald test for LR asymmetry
+			local asym_flag "  ---"
+			capture test [`ec']`pv' = [`ec']`nv'
+			if !_rc {
+				if r(p) < 0.01 local asym_flag "  ***"
+				else if r(p) < 0.05 local asym_flag "   **"
+				else if r(p) < 0.10 local asym_flag "    *"
+				else local asym_flag "   No"
+			}
+			
+			di in gr %14s "`av'" " {c |}" ///
+				in ye %12.4f `bp' " {c |}" ///
+				in ye %12.4f `bn' " {c |}" ///
+				in ye %12.4f `diff' " {c |}" ///
+				in ye %10s "`eff_str'" " {c |}" ///
+				in ye "`asym_flag'"
+		}
+	}
+	
+	di in smcl in gr "  {hline 14}{c +}{hline 13}{c +}{hline 13}{c +}{hline 13}{c +}{hline 11}{c +}{hline 9}"
+	di
+	
+	* Short-run coefficients
+	di in gr "  {bf:Short-Run Coefficients (first differences):}"
+	di
+	di in smcl in gr "  {hline 74}"
+	di in gr %14s "Variable" " {c |}" ///
+		%12s "Gamma(+)" " {c |}" ///
+		%12s "Gamma(-)" " {c |}" ///
+		%12s "Diff" " {c |}" ///
+		%10s " |G+|>|G-|" " {c |}" ///
+		%8s " Asym?"
+	di in smcl in gr "  {hline 14}{c +}{hline 13}{c +}{hline 13}{c +}{hline 13}{c +}{hline 11}{c +}{hline 9}"
+	
+	forvalues i = 1/`nasym' {
+		local av : word `i' of `asymvars'
+		local pv : word `i' of `posvars'
+		local nv : word `i' of `negvars'
+		
+		* Try various coefficient name formats
+		local gp = .
+		local gn = .
+		foreach fmt in "[SR]D." "[SR]d." "[SR]D1." "[SR]" "D." "d." "D1." "" {
+			capture local gp = _b[`fmt'`pv']
+			if !_rc {
+				capture local gn = _b[`fmt'`nv']
+				if !_rc continue, break
+			}
+		}
+		
+		if `gp' != . & `gn' != . {
+			local diff = `gp' - `gn'
+			local dom "  Equal"
+			if abs(`gp') > abs(`gn') local dom "    Yes"
+			else if abs(`gp') < abs(`gn') local dom "     No"
+			
+			* Test SR asymmetry
+			local sr_tested 0
+			foreach fmt in "[SR]D." "[SR]d." "[SR]D1." "[SR]" "D." "d." "" {
+				if `sr_tested' == 0 {
+					capture test `fmt'`pv' = `fmt'`nv'
+					if !_rc local sr_tested 1
+				}
+			}
+			local asym_flag "  ---"
+			if `sr_tested' == 1 {
+				if r(p) < 0.01 local asym_flag "  ***"
+				else if r(p) < 0.05 local asym_flag "   **"
+				else if r(p) < 0.10 local asym_flag "    *"
+				else local asym_flag "   No"
+			}
+			
+			di in gr %14s "`av'" " {c |}" ///
+				in ye %12.4f `gp' " {c |}" ///
+				in ye %12.4f `gn' " {c |}" ///
+				in ye %12.4f `diff' " {c |}" ///
+				in ye "`dom'" "  {c |}" ///
+				in ye "`asym_flag'"
+		}
+	}
+	
+	di in smcl in gr "  {hline 14}{c +}{hline 13}{c +}{hline 13}{c +}{hline 13}{c +}{hline 11}{c +}{hline 9}"
+	di in gr "  Significance: *** 1%  ** 5%  * 10%"
+	di
+end
+
+
+* =========================================================================
+* NEW IN 1.1.0: pnardl_PanelCoef
+* Per-panel ECT + asymmetric coefficients
+* =========================================================================
+
+program define pnardl_PanelCoef
+	syntax, IVar(string) EC(string) POSvars(string) NEGvars(string) ASYMvars(string)
+	
+	di
+	di in smcl in gr "{hline 78}"
+	di in gr "{bf:Per-Panel Coefficients}" _col(49) in ye "PNARDL 1.1.0"
+	di in smcl in gr "{hline 78}"
+	di
+	
+	di in smcl in gr "  {hline 72}"
+	di in gr %10s "Panel" " {c |}" ///
+		%10s "ECT(phi)" " {c |}" ///
+		%10s "Half-Life" " {c |}" ///
+		%10s "Adj.Spd%" " {c |}" ///
+		%10s "Converge" " {c |}" ///
+		%8s "Stars"
+	di in smcl in gr "  {hline 10}{c +}{hline 11}{c +}{hline 11}{c +}{hline 11}{c +}{hline 11}{c +}{hline 9}"
+	
+	local sum_phi = 0
+	local n_conv = 0
+	
+	foreach i of global iis {
+		local coefname "`ivar'_`i':`ec'"
+		capture local phi = _b[`coefname']
+		if !_rc {
+			capture local se = _se[`coefname']
+			
+			local hl = .
+			local adj = .
+			local conv "No"
+			local star ""
+			
+			if `phi' < 0 & `phi' > -2 {
+				local hl = ln(2) / abs(`phi')
+				local adj = abs(`phi') * 100
+				local conv "Yes"
+				local sum_phi = `sum_phi' + `phi'
+				local n_conv = `n_conv' + 1
+			}
+			else {
+				local conv "No"
+			}
+			
+			if !_rc & `se' > 0 {
+				local tstat = abs(`phi' / `se')
+				if `tstat' > 2.576 local star "***"
+				else if `tstat' > 1.960 local star " **"
+				else if `tstat' > 1.645 local star "  *"
+			}
+			
+			di in gr %10s "`i'" " {c |}" ///
+				in ye %10.4f `phi' " {c |}" ///
+				in ye %10.2f `hl' " {c |}" ///
+				in ye %9.1f `adj' "% {c |}" ///
+				in ye %10s "`conv'" " {c |}" ///
+				in ye " `star'"
+		}
+	}
+	
+	di in smcl in gr "  {hline 10}{c +}{hline 11}{c +}{hline 11}{c +}{hline 11}{c +}{hline 11}{c +}{hline 9}"
+	
+	if `n_conv' > 0 {
+		local mean_phi = `sum_phi' / `n_conv'
+		local mean_hl = ln(2) / abs(`mean_phi')
+		di in gr "  Convergent panels: " in ye "`n_conv'" ///
+			in gr "  |  Mean phi: " in ye %7.4f `mean_phi' ///
+			in gr "  |  Mean half-life: " in ye %5.2f `mean_hl'
+	}
+	di
+end
+
+
+* =========================================================================
+* NEW IN 1.1.0: pnardl_DynMultiplier
+* Cumulative dynamic multipliers for +/- shocks
+* =========================================================================
+
+program define pnardl_DynMultiplier
+	syntax, Periods(integer) IVar(string) EC(string) ///
+		POSvars(string) NEGvars(string) ASYMvars(string)
+	
+	di
+	di in smcl in gr "{hline 78}"
+	di in gr "{bf:Dynamic Multipliers (Cumulative)}" _col(49) in ye "PNARDL 1.1.0"
+	di in smcl in gr "{hline 78}"
+	
+	* Get mean ECT coefficient
+	local sum_phi = 0
+	local n_valid = 0
+	foreach i of global iis {
+		local coefname "`ivar'_`i':`ec'"
+		capture local phi = _b[`coefname']
+		if !_rc & `phi' < 0 {
+			local sum_phi = `sum_phi' + `phi'
+			local n_valid = `n_valid' + 1
+		}
+	}
+	if `n_valid' == 0 {
+		di in re "  No convergent panels for multiplier computation."
+		exit
+	}
+	local mean_phi = `sum_phi' / `n_valid'
+	
+	* Get LR coefficients for first asymmetric variable
+	local pv : word 1 of `posvars'
+	local nv : word 1 of `negvars'
+	local av : word 1 of `asymvars'
+	
+	capture local beta_p = _b[`ec':`pv']
+	capture local beta_n = _b[`ec':`nv']
+	
+	if _rc {
+		di in re "  Cannot find LR coefficients for `av'."
+		exit
+	}
+	
+	di in gr "  Variable: " in ye "`av'"
+	di in gr "  Mean ECT (phi): " in ye %8.4f `mean_phi'
+	di in gr "  LR coef pos (beta+): " in ye %8.4f `beta_p'
+	di in gr "  LR coef neg (beta-): " in ye %8.4f `beta_n'
+	di
+	
+	di in smcl in gr "  {hline 68}"
+	di in gr %8s "Period" " {c |}" ///
+		%14s "m+(h)" " {c |}" ///
+		%14s "m-(h)" " {c |}" ///
+		%14s "m+ - m-" " {c |}" ///
+		%12s "Asymmetry"
+	di in smcl in gr "  {hline 8}{c +}{hline 15}{c +}{hline 15}{c +}{hline 15}{c +}{hline 13}"
+	
+	* Simulate cumulative multipliers
+	local gap_p = 1
+	local gap_n = -1
+	local cum_p = 0
+	local cum_n = 0
+	
+	forvalues h = 0/`periods' {
+		if `h' == 0 {
+			local m_p = 0
+			local m_n = 0
+		}
+		else {
+			* Error correction toward LR
+			local adj_p = `mean_phi' * (`gap_p' - `beta_p')
+			local adj_n = `mean_phi' * (`gap_n' - `beta_n')
+			local gap_p = `gap_p' + `adj_p'
+			local gap_n = `gap_n' + `adj_n'
+			local m_p = `gap_p'
+			local m_n = `gap_n'
+		}
+		
+		local diff = `m_p' - `m_n'
+		local asym_str ""
+		if abs(`diff') > 0.01 {
+			if `diff' > 0 local asym_str "  {res:m+ > m-}"
+			else local asym_str "  {err:m+ < m-}"
+		}
+		else local asym_str "  ~Symmetric"
+		
+		di in gr %8.0f `h' " {c |}" ///
+			in ye %14.4f `m_p' " {c |}" ///
+			in ye %14.4f `m_n' " {c |}" ///
+			in ye %14.4f `diff' " {c |}" ///
+			"`asym_str'"
+	}
+	
+	di in smcl in gr "  {hline 8}{c +}{hline 15}{c +}{hline 15}{c +}{hline 15}{c +}{hline 13}"
+	
+	di
+	di in gr "  {bf:Long-run multipliers:}"
+	di in gr "    m+(inf) = beta+ = " in ye %8.4f `beta_p'
+	di in gr "    m-(inf) = beta- = " in ye %8.4f `beta_n'
+	di in gr "    Asymmetry (beta+ - beta-) = " in ye %8.4f `beta_p' - `beta_n'
+	di
+end
+
+
+* =========================================================================
+* NEW IN 1.1.0: pnardl_IRFShock
+* IRF for positive vs negative shocks separately
+* =========================================================================
+
+program define pnardl_IRFShock
+	syntax, Periods(integer) IVar(string) EC(string) ///
+		POSvars(string) NEGvars(string) ASYMvars(string)
+	
+	di
+	di in smcl in gr "{hline 78}"
+	di in gr "{bf:IRF: Positive vs Negative Shocks}" _col(49) in ye "PNARDL 1.1.0"
+	di in smcl in gr "{hline 78}"
+	
+	* Get mean ECT
+	local sum_phi = 0
+	local n_valid = 0
+	foreach i of global iis {
+		local coefname "`ivar'_`i':`ec'"
+		capture local phi = _b[`coefname']
+		if !_rc & `phi' < 0 {
+			local sum_phi = `sum_phi' + `phi'
+			local n_valid = `n_valid' + 1
+		}
+	}
+	if `n_valid' == 0 {
+		di in re "  No convergent panels."
+		exit
+	}
+	local mean_phi = `sum_phi' / `n_valid'
+	
+	local av : word 1 of `asymvars'
+	local pv : word 1 of `posvars'
+	local nv : word 1 of `negvars'
+	capture local beta_p = _b[`ec':`pv']
+	capture local beta_n = _b[`ec':`nv']
+	
+	di in gr "  Variable: " in ye "`av'"
+	di in gr "  Mean phi: " in ye %8.4f `mean_phi'
+	di
+	
+	di in smcl in gr "  {hline 68}"
+	di in gr %7s "Period" " {c |}" ///
+		%13s "Y(+shock)" " {c |}" ///
+		%13s "Gap(+)" " {c |}" ///
+		%13s "Y(-shock)" " {c |}" ///
+		%13s "Gap(-)"
+	di in smcl in gr "  {hline 7}{c +}{hline 14}{c +}{hline 14}{c +}{hline 14}{c +}{hline 14}"
+	
+	* Simulate + shock: unit increase -> y adjusts toward beta_p
+	* Simulate - shock: unit decrease -> y adjusts toward beta_n
+	local y_pos = 0
+	local y_neg = 0
+	
+	forvalues h = 0/`periods' {
+		if `h' == 0 {
+			local y_pos = 0
+			local y_neg = 0
+			local gap_p = `beta_p'
+			local gap_n = `beta_n'
+		}
+		else {
+			local adj_p = `mean_phi' * (`y_pos' - `beta_p')
+			local y_pos = `y_pos' + `adj_p'
+			local gap_p = `beta_p' - `y_pos'
+			
+			local adj_n = `mean_phi' * (`y_neg' - `beta_n')
+			local y_neg = `y_neg' + `adj_n'
+			local gap_n = `beta_n' - `y_neg'
+		}
+		
+		di in gr %7.0f `h' " {c |}" ///
+			in ye %13.4f `y_pos' " {c |}" ///
+			in ye %13.4f `gap_p' " {c |}" ///
+			in ye %13.4f `y_neg' " {c |}" ///
+			in ye %13.4f `gap_n'
+	}
+	
+	di in smcl in gr "  {hline 7}{c +}{hline 14}{c +}{hline 14}{c +}{hline 14}{c +}{hline 14}"
+	
+	local hl = ln(2) / abs(`mean_phi')
+	di
+	di in gr "  {bf:Convergence:}"
+	di in gr "    + shock -> Y converges to " in ye %8.4f `beta_p' ///
+		in gr " (half-life: " in ye %4.2f `hl' in gr " periods)"
+	di in gr "    - shock -> Y converges to " in ye %8.4f `beta_n' ///
+		in gr " (half-life: " in ye %4.2f `hl' in gr " periods)"
+	di in gr "    Asymmetric gap = " in ye %8.4f abs(`beta_p' - `beta_n')
+	di
+end
+
+
+* =========================================================================
+* NEW IN 1.1.0: pnardl_PlotECT — ECT bar chart per panel
+* =========================================================================
+
+program define pnardl_PlotECT
+	syntax, IVar(string) EC(string)
+	
+	local n_panels = wordcount("$iis")
+	
+	preserve
+	clear
+	qui set obs `n_panels'
+	qui gen panel_num = _n
+	qui gen phi = .
+	qui gen color_cat = .
+	
+	local idx = 0
+	foreach i of global iis {
+		local idx = `idx' + 1
+		local coefname "`ivar'_`i':`ec'"
+		capture local coef = _b[`coefname']
+		if !_rc {
+			qui replace phi = `coef' in `idx'
+			if `coef' < -0.5 qui replace color_cat = 1 in `idx'
+			else if `coef' < 0 qui replace color_cat = 2 in `idx'
+			else qui replace color_cat = 3 in `idx'
+		}
+	}
+	
+	qui sum phi
+	local mean_phi = r(mean)
+	
+	#delimit ;
+	twoway (bar phi panel_num if color_cat == 1, 
+			color("39 174 96%80") lcolor("39 174 96") barwidth(0.7))
+		   (bar phi panel_num if color_cat == 2, 
+		    color("243 156 18%80") lcolor("243 156 18") barwidth(0.7))
+		   (bar phi panel_num if color_cat == 3, 
+		    color("231 76 60%80") lcolor("231 76 60") barwidth(0.7)),
+		title("{bf:ECT Speed of Adjustment by Panel}", 
+			size(large) color(black))
+		subtitle("Panel NARDL — PNARDL 1.1.0", size(medsmall) color(gs5))
+		ytitle("ECT Coefficient ({&phi}{sub:i})", size(medium))
+		xtitle("Panel", size(medium))
+		ylabel(, format(%5.2f) angle(0) labsize(small) 
+			grid glcolor(gs14) glpattern(dot))
+		xlabel(1/`n_panels', labsize(vsmall) angle(45))
+		yline(0, lcolor(gs8) lwidth(thin))
+		yline(`mean_phi', lcolor("142 68 173") lwidth(medthin) lpattern(dash))
+		legend(order(1 "Strong ({&phi} < -0.5)" 
+					 2 "Moderate" 3 "Non-convergent") 
+			position(6) ring(1) rows(1) size(vsmall)
+			region(lcolor(gs14) fcolor(white%90)))
+		graphregion(fcolor(white) lcolor(white))
+		plotregion(fcolor(white) lcolor(gs14) margin(small))
+		name(pnardl_ect, replace) ;
+	#delimit cr
+	
+	di in gr "  {bf:Graph saved:} " in ye "pnardl_ect"
+	restore
+end
+
+
+* =========================================================================
+* NEW IN 1.1.0: pnardl_PlotAsymLR — LR beta+ vs beta- grouped bar
+* =========================================================================
+
+program define pnardl_PlotAsymLR
+	syntax, IVar(string) EC(string) POSvars(string) NEGvars(string) ASYMvars(string)
+	
+	local nasym = wordcount("`asymvars'")
+	
+	preserve
+	clear
+	qui set obs `= `nasym' * 2'
+	qui gen var_num = .
+	qui gen coef = .
+	qui gen shock_type = .
+	qui gen var_label = ""
+	
+	local row = 0
+	forvalues i = 1/`nasym' {
+		local av : word `i' of `asymvars'
+		local pv : word `i' of `posvars'
+		local nv : word `i' of `negvars'
+		
+		capture local bp = _b[`ec':`pv']
+		capture local bn = _b[`ec':`nv']
+		
+		if !_rc {
+			local row = `row' + 1
+			qui replace var_num = `i' - 0.15 in `row'
+			qui replace coef = `bp' in `row'
+			qui replace shock_type = 1 in `row'
+			qui replace var_label = "`av'" in `row'
+			
+			local row = `row' + 1
+			qui replace var_num = `i' + 0.15 in `row'
+			qui replace coef = `bn' in `row'
+			qui replace shock_type = 2 in `row'
+			qui replace var_label = "`av'" in `row'
+		}
+	}
+	
+	#delimit ;
+	twoway (bar coef var_num if shock_type == 1, 
+			color("46 204 113%80") lcolor("39 174 96") barwidth(0.28))
+		   (bar coef var_num if shock_type == 2, 
+		    color("231 76 60%80") lcolor("192 57 43") barwidth(0.28)),
+		title("{bf:Long-Run Asymmetric Coefficients}", 
+			size(large) color(black))
+		subtitle("{&beta}{sup:+} vs {&beta}{sup:-} — PNARDL 1.1.0", 
+			size(medsmall) color(gs5))
+		ytitle("Long-Run Coefficient", size(medium))
+		xtitle("Variable", size(medium))
+		ylabel(, format(%5.3f) angle(0) labsize(small) 
+			grid glcolor(gs14) glpattern(dot))
+		xlabel(1/`nasym', labsize(small))
+		yline(0, lcolor(gs8) lwidth(thin))
+		legend(order(1 "{&beta}{sup:+} (Positive)" 
+					 2 "{&beta}{sup:-} (Negative)") 
+			position(6) ring(1) rows(1) size(small)
+			region(lcolor(gs14) fcolor(white%90)))
+		graphregion(fcolor(white) lcolor(white))
+		plotregion(fcolor(white) lcolor(gs14) margin(small))
+		name(pnardl_asym_lr, replace) ;
+	#delimit cr
+	
+	di in gr "  {bf:Graph saved:} " in ye "pnardl_asym_lr"
+	restore
+end
+
+
+* =========================================================================
+* NEW IN 1.1.0: pnardl_PlotMultiplier — Dynamic multiplier dual-line
+* =========================================================================
+
+program define pnardl_PlotMultiplier
+	syntax, Periods(integer) IVar(string) EC(string) ///
+		POSvars(string) NEGvars(string) ASYMvars(string)
+	
+	* Get mean ECT
+	local sum_phi = 0
+	local n_valid = 0
+	foreach i of global iis {
+		local coefname "`ivar'_`i':`ec'"
+		capture local phi = _b[`coefname']
+		if !_rc & `phi' < 0 {
+			local sum_phi = `sum_phi' + `phi'
+			local n_valid = `n_valid' + 1
+		}
+	}
+	if `n_valid' == 0 {
+		di in ye "  Cannot plot multiplier: no convergent panels."
+		exit
+	}
+	local mean_phi = `sum_phi' / `n_valid'
+	
+	local pv : word 1 of `posvars'
+	local nv : word 1 of `negvars'
+	local av : word 1 of `asymvars'
+	capture local beta_p = _b[`ec':`pv']
+	capture local beta_n = _b[`ec':`nv']
+	if _rc exit
+	
+	preserve
+	clear
+	qui set obs `= `periods' + 1'
+	qui gen period = _n - 1
+	qui gen m_pos = .
+	qui gen m_neg = .
+	qui gen lr_pos = `beta_p'
+	qui gen lr_neg = `beta_n'
+	qui gen zero = 0
+	
+	local gap_p = 1
+	local gap_n = -1
+	
+	forvalues h = 0/`periods' {
+		if `h' == 0 {
+			qui replace m_pos = 0 in 1
+			qui replace m_neg = 0 in 1
+		}
+		else {
+			local adj_p = `mean_phi' * (`gap_p' - `beta_p')
+			local adj_n = `mean_phi' * (`gap_n' - `beta_n')
+			local gap_p = `gap_p' + `adj_p'
+			local gap_n = `gap_n' + `adj_n'
+			qui replace m_pos = `gap_p' in `= `h' + 1'
+			qui replace m_neg = `gap_n' in `= `h' + 1'
+		}
+	}
+	
+	#delimit ;
+	twoway (line m_pos period, lcolor("46 204 113") lwidth(medthick))
+		   (line m_neg period, lcolor("231 76 60") lwidth(medthick))
+		   (line lr_pos period, lcolor("46 204 113") lwidth(thin) lpattern(dash))
+		   (line lr_neg period, lcolor("231 76 60") lwidth(thin) lpattern(dash))
+		   (line zero period, lcolor(gs10) lwidth(vthin)),
+		title("{bf:Cumulative Dynamic Multipliers}", 
+			size(large) color(black))
+		subtitle("Positive vs Negative Shocks to `av' — PNARDL 1.1.0", 
+			size(medsmall) color(gs5))
+		ytitle("Cumulative Effect on Y", size(medium))
+		xtitle("Periods After Shock", size(medium))
+		ylabel(, format(%5.3f) angle(0) labsize(small) 
+			grid glcolor(gs14) glpattern(dot))
+		xlabel(, labsize(small))
+		legend(order(1 "m{sup:+}(h) Positive" 
+					 2 "m{sup:-}(h) Negative"
+					 3 "{&beta}{sup:+} LR target"
+					 4 "{&beta}{sup:-} LR target") 
+			position(1) ring(0) cols(2) size(vsmall)
+			region(lcolor(gs14) fcolor(white%90)))
+		note("Mean ECT = `: di %6.4f `mean_phi''"
+			 "{&beta}{sup:+} = `: di %6.4f `beta_p'', {&beta}{sup:-} = `: di %6.4f `beta_n''",
+			 size(vsmall) color(gs6))
+		graphregion(fcolor(white) lcolor(white))
+		plotregion(fcolor(white) lcolor(gs14) margin(small))
+		name(pnardl_multiplier, replace) ;
+	#delimit cr
+	
+	di in gr "  {bf:Graph saved:} " in ye "pnardl_multiplier"
+	restore
+end
+

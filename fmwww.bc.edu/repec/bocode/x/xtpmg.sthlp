@@ -1,19 +1,20 @@
 {smcl}
-{* 11feb2026}{...}
-{cmd:help xtpmg} {right:version 2.0.0}
+{* 12feb2026}{...}
+{cmd:help xtpmg} {right:version 2.0.1}
 {hline}
 
 {title:Title}
 
 {p2colset 5 21 23 2}{...}
 {p2col :{hi:xtpmg} {hline 2}}Pooled Mean-Group, Mean-Group, and
-Dynamic Fixed Effects Models{p_end}
+Dynamic Fixed Effects Models with Lag Selection, Short-Run Tables,
+Half-Life & Impulse Response{p_end}
 {p2colreset}{...}
 
 {title:Version}
 
 {pstd}
-Version 2.0.0, 11 February 2026
+Version 2.0.1, 12 February 2026
 
 {pstd}
 {bf:Updated by:} Dr Merwan Roudane ({browse "mailto:merwanroudane920@gmail.com":merwanroudane920@gmail.com})
@@ -22,15 +23,19 @@ Version 2.0.0, 11 February 2026
 {bf:Original authors:} Edward F. Blackburne III and Mark W. Frank, Sam Houston State University (2007)
 
 {pstd}
-{bf:What's new in version 2.0.0:}{p_end}
+{bf:What's new in version 2.0.1:}{p_end}
+{p 8 12 2}- {bf:Automatic Lag Selection}: New {opt maxlag()} and {opt lagsel()} options for optimal ARDL lag order via AIC/BIC{p_end}
+{p 8 12 2}- {bf:Per-Panel Short-Run Table}: New {opt srtable} option displays heterogeneous SR coefficients with significance stars{p_end}
+{p 8 12 2}- {bf:Half-Life of Adjustment}: New {opt halflife} option computes ln(2)/|phi_i| for each panel{p_end}
+{p 8 12 2}- {bf:Impulse Response Simulation}: New {opt irf()} option traces shock propagation through EC mechanism{p_end}
+{p 8 12 2}- {bf:Graph Visualizations}: New {opt graph} option generates publication-quality Stata graphs{p_end}
+{p 8 12 2}- {bf:Enhanced Display}: Box-drawn sections, ARDL order notation, improved formatting{p_end}
+
+{pstd}
+{bf:What was fixed in version 2.0.0:}{p_end}
 {p 8 12 2}- Fixed {err:r(110)} "invalid new variable name" error that occurred in Stata 15.1+{p_end}
 {p 8 12 2}- Root cause: Stata's {cmd:_predict} update (Feb 2019) disallows output variable names matching estimation result names{p_end}
-{p 8 12 2}- Solution: EC term is now predicted into a temporary variable, then copied to the requested name{p_end}
 {p 8 12 2}- Default EC variable name changed from {cmd:__ec} to {cmd:ECT} for readability{p_end}
-{p 8 12 2}- EC option parsing changed from {cmd:namelist} to {cmd:name} (single name only){p_end}
-{p 8 12 2}- Improved error messages for duplicate EC variable names{p_end}
-{p 8 12 2}- Minimum Stata version raised to 15.1{p_end}
-{p 8 12 2}- Version number displayed in estimation output{p_end}
 
 
 {title:Syntax}
@@ -38,12 +43,11 @@ Version 2.0.0, 11 February 2026
 {p 8 16 2}{cmd:xtpmg} {depvar} [{indepvars}] {ifin} [{cmd:,} {it:options}]
 
 
-{synoptset 22 tabbed}{...}
+{synoptset 26 tabbed}{...}
 {synopthdr}
 {synoptline}
 {syntab:Model}
-{synopt :{opth lr:(varlist)}}terms to be included in long-run cointegrating vector (Note the
-difference in sign from Pesaran's specification){p_end}
+{synopt :{opth lr:(varlist)}}terms to be included in long-run cointegrating vector{p_end}
 {synopt :{opt nocons:tant}}suppresses constant term{p_end}
 {synopt :{opth cl:uster(varname)}}adjust standard errors for intragroup
 correlation{p_end}
@@ -51,17 +55,23 @@ correlation{p_end}
 {synopt :{opth const:raints(string)}}constraints to be applied to the model{p_end}
 {synopt :{opt replace}}overwrite error correction term, if it exists{p_end}
 {synopt :{opt full}}display all panel regressions for MG and PMG models{p_end}
-{synopt :{opt pmg|mg|fe}}specifies the panel data specification. {opt pmg} estimates Pesaran's
-Pooled Mean-Group Model, {opt mg} estimates the Mean-Group Model, and {opt fe} estimates
-the Dynamic Fixed Effects Model. {opt pmg} is the default.{p_end}
+{synopt :{opt pmg|mg|fe}}estimation method. Default is {opt pmg}.{p_end}
+
+{syntab:Lag Selection (New in 2.0.1)}
+{synopt :{opt maxlag(#)}}maximum lag order to search; default is {cmd:4}, range 1-8{p_end}
+{synopt :{opt lagsel(string)}}lag selection criterion: {cmd:aic}, {cmd:bic}, or {cmd:both}{p_end}
+
+{syntab:Diagnostics (New in 2.0.1)}
+{synopt :{opt srtable}}display per-panel short-run coefficient table{p_end}
+{synopt :{opt halflife}}compute and display half-life of adjustment per panel{p_end}
+{synopt :{opt irf(#)}}simulate impulse response for {it:#} periods (e.g., {cmd:irf(20)}){p_end}
+{synopt :{opt gr:aph}}generate publication-quality Stata graphs for ECT, half-life, IRF, and SR coefficients{p_end}
 
 {syntab:Maximum Likelihood Options}
 {p 6 6 2} {it:Only valid with} {cmd:pmg}.{p_end}
 {synopt :{opt tech:nique(algorithm)}}specifies the {cmd:ml} maximization technique{p_end}
 {synopt :{opt diff:icult}}will use a different stepping algorithm in non-concave
-regions of the likelihood see{p_end}
-{p 6 6 2 }
-See {helpb ml##model_options:ml model_options} for a description of available options.
+regions of the likelihood{p_end}
 
 {syntab:Reporting}
 {synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}{p_end}
@@ -81,25 +91,53 @@ You must {cmd:tsset} your data before using {cmd:xtpmg}; see {helpb tsset}.{p_en
 {pstd}
 {cmd:xtpmg} aids in the estimation of large {it:N} and large {it:T} panel-data models where
 nonstationarity may be a concern. In addition to the traditional dynamic fixed effects models,
-{cmd:xtpmg} allows for the pooled mean group and mean group estimators. Consider the model
+{cmd:xtpmg} allows for the pooled mean group and mean group estimators.
 
-{p 4 12 2}d.y_it = {bind: phi*(y_(it-1)+beta*x_(it))} + {bind:d.y_(it-1)a_1}+... +
-{bind:y_(it-p)a_p} +
-{bind:d.x_(it)b_1}+...+{bind:d.x_(it-q)b_q} + e_(it) {space 4} i={(1,...,N}; {space 3} t={(1,...,T_i)},
+{pstd}
+{bf:Version 2.0.1} introduces automatic lag selection, per-panel diagnostics, and 
+impulse response analysis — tools frequently needed by researchers working with 
+Panel ARDL models.
 
-where
-{p 4 12 2}phi is the error correction speed of adjustment parameter to be estimated
 
-{p 4 12 2} beta is a (k X 1) vector of parameters{p_end}
+{title:New Features in 2.0.1}
 
-{p 4 12 2}a_1,...,a_p are p parameters to be estimated{p_end}
+{dlgtab:Automatic Lag Selection}
 
-{p 4 12 2}x_(it) is a (1 X k) vector of covariates{p_end}
+{pstd}
+The {opt lagsel()} option automates the process of finding optimal ARDL lag orders 
+using information criteria. For each panel unit, {cmd:xtpmg} tests all lag orders 
+from 1 to {opt maxlag()} and selects the optimal using AIC or BIC (Schwarz criterion).
 
-{p 4 12 2}b_1,...,b_q are q parameters to be estimated{p_end}
+{pstd}
+The selected lag order is reported in {cmd:ARDL(p,q1,q2,...)} notation. The modal 
+(most frequent) lag across panels is used for pooled estimation.
 
-{p 4 12 2}and e_(it) is the error term. The assumed distribution of the error
-term depends on the model estimated.{p_end}
+{dlgtab:Per-Panel Short-Run Table}
+
+{pstd}
+The {opt srtable} option displays a formatted table showing heterogeneous short-run 
+coefficients for each panel unit. In PMG estimation, long-run coefficients are 
+constrained to be equal, but short-run dynamics differ across panels. This table 
+reveals those differences with significance indicators (***, **, *).
+
+{dlgtab:Half-Life of Adjustment}
+
+{pstd}
+The {opt halflife} option computes the half-life of adjustment to long-run equilibrium 
+for each panel using the formula:
+
+{p 8 12 2}half_life_i = ln(2) / |phi_i|{p_end}
+
+{pstd}
+where phi_i is the panel-specific error correction coefficient. Also reports the 
+speed of adjustment (% of disequilibrium corrected per period) and convergence status.
+
+{dlgtab:Impulse Response Simulation}
+
+{pstd}
+The {opt irf(#)} option simulates the dynamic response to a one-unit shock, tracing 
+the adjustment path through the error-correction mechanism for {it:#} periods. Reports 
+cumulative adjustment percentage and remaining gap with a visual ASCII display.
 
 
 {title:Options}
@@ -107,80 +145,114 @@ term depends on the model estimated.{p_end}
 {dlgtab:Model}
 
 {phang}
-{opt constraints(constraints)}, {opt noconstant}; see {help estimation options}. (Note: Constraints are
-applied post-estimation)
+{opt constraints(constraints)}, {opt noconstant}; see {help estimation options}.
 
 {phang}
 {opth lr(varlist)} specifies the variables to be included in the cointegrating vector.
-For identification purposes, the first listed variable will have its coefficient normalized to 1.
 
 {phang}
-{opth ec(name)} specifies the name of a new variable to be created in the dataset to hold the
-error-correction term. The default is {cmd:ECT}.
+{opth ec(name)} specifies the name of the error-correction variable. Default is {cmd:ECT}.
 
 {phang}
-{opth cluster(varname)}; see
-    {help estimation options##robust:estimation options}.
+{opth cluster(varname)}; see {help estimation options##robust:estimation options}.
 
 {phang}
 {opt replace} replaces the error correction variable in memory, if it exists.
 
 {phang}
-{opt full} displays all panel estimation output (for the mean-group and pooled mean-group models).
+{opt full} displays all panel estimation output.
  
 {phang}
-{cmd:pmg|mg|fe} selects the desired estimation procedure. {cmd:pmg} estimates the pooled mean-group
-model where the long-run effects, beta, are constrained to be equal across all panels.
-The short-run coefficients, including phi, are allowed
-to differ across panels. {cmd:mg} estimates the mean-group model where the coefficients
-of the model are calculated from the unweighted average of the unconstrained, fully
-heterogeneous model. {cmd:fe} estimates
-the dynamic fixed effects model where all parameters, except intercepts, are
-constrained to be equal across panels.
-{cmd:pmg} is the default.
+{cmd:pmg|mg|fe} selects the estimation procedure. {cmd:pmg} is the default.
 
-{dlgtab:Maximum Likelihood Options}
+{dlgtab:Lag Selection}
 
 {phang}
-{opt technique(algorithm)} specifies {cmd:ml} optimization technique. 
-See {helpb ml##model_options:ml model_options} 
-for more information.
-The {cmd:bhh} algorithm is not allowed.
-This option is only valid with the
-{cmd:pmg} model.
+{opt maxlag(#)} maximum lag to search. Default is 4, range 1-8.
 
 {phang}
-{opt level(#)}; see {help estimation options##level():estimation options}.
+{opt lagsel(string)} criterion: {cmd:aic} (Akaike), {cmd:bic} (Schwarz/Bayesian), 
+or {cmd:both} (report both, use AIC for selection).
 
-{title:Bug Fix Details (Version 2.0.0)}
+{dlgtab:Diagnostics}
+
+{phang}
+{opt srtable} displays a table of short-run coefficients for each panel ID.
+
+{phang}
+{opt halflife} computes half-life = ln(2)/|phi_i| for each panel.
+
+{phang}
+{opt irf(#)} simulates impulse response for # periods. Typically 10-30.
+
+{dlgtab:Visualization}
+
+{phang}
+{opt graph} generates publication-quality Stata graphs. When specified, the following
+graphs are produced:{p_end}
+
+{p 8 12 2}1. {bf:xtpmg_ect}: Error correction term bar chart by panel, color-coded by convergence strength (green = strong, amber = moderate, red = non-convergent){p_end}
+{p 8 12 2}2. {bf:xtpmg_halflife}: Horizontal bar chart of half-life of adjustment per panel with mean reference line{p_end}
+{p 8 12 2}3. {bf:xtpmg_irf}: Impulse response area chart showing shock adjustment path with half-life marker (requires {opt irf(#)}){p_end}
+{p 8 12 2}4. {bf:xtpmg_sr_combined}: Combined panel of per-panel short-run coefficients with 95% confidence intervals (requires {opt full}){p_end}
 
 {pstd}
-{bf:Problem:} Users running the legacy {cmd:xtpmg} (version 1.1.1, 2007) on Stata 15.1 or
-newer encountered {err:r(110)} "invalid new variable name; variable name ... is in the 
-list of predictors". This error was triggered by a February 2019 update to Stata's 
-internal {cmd:_predict} command, which became stricter about output variable names 
-matching names in estimation results.
-
-{pstd}
-{bf:Affected estimator:} Primarily the {cmd:mg} (Mean Group) estimator, where the 
-{cmd:predict} command was called with {opt eq()} referencing the same name as the 
-output variable.
-
-{pstd}
-{bf:Fix:} The EC prediction now uses a temporary variable as the output target, 
-then copies the result to the user-specified (or default) EC variable name. This 
-eliminates the name/equation conflict entirely.
-
+Graphs are stored in memory and can be saved using {cmd:graph export}. For example:{p_end}
+{phang}{cmd:. graph export xtpmg_irf.png, name(xtpmg_irf) replace}{p_end}
 {title:Examples}
 
-{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) full}
+{pstd}{bf:Basic PMG estimation:}{p_end}
+{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) full}{p_end}
 
-{phang}{cmd:. xtpmg d.c d(1/2).y d.pi if year>1962, ec(ec) lr(l.c y pi) mg replace}
+{pstd}{bf:PMG with automatic lag selection (AIC):}{p_end}
+{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) maxlag(4) lagsel(aic) replace}{p_end}
 
-{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) fe}
+{pstd}{bf:PMG with lag selection (both AIC and BIC):}{p_end}
+{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) maxlag(6) lagsel(both) replace}{p_end}
 
-{phang}{cmd:. cons def 1 [ec]y=.75}{p_end}
-{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) mg const(1) replace ec(ec)}
+{pstd}{bf:PMG with per-panel short-run table:}{p_end}
+{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) srtable replace}{p_end}
+
+{pstd}{bf:PMG with half-life computation:}{p_end}
+{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) halflife replace}{p_end}
+
+{pstd}{bf:PMG with impulse response (20 periods):}{p_end}
+{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) irf(20) replace}{p_end}
+
+{pstd}{bf:Full analysis — all new features:}{p_end}
+{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) maxlag(4) lagsel(aic) srtable halflife irf(20) full replace}{p_end}
+
+{pstd}{bf:Mean Group with diagnostics:}{p_end}
+{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) mg halflife replace}{p_end}
+
+{pstd}{bf:DFE estimation:}{p_end}
+{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) fe replace}{p_end}
+
+{marker graph_examples}{...}
+{pstd}{bf:{ul:Graph Examples}}{p_end}
+
+{pstd}{bf:Basic graphs (ECT + Half-Life charts):}{p_end}
+{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) graph full replace}{p_end}
+{pstd}Produces: {cmd:xtpmg_ect} (ECT bar chart) and {cmd:xtpmg_halflife} (half-life chart).{p_end}
+
+{pstd}{bf:Graphs with impulse response plot:}{p_end}
+{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) irf(20) graph full replace}{p_end}
+{pstd}Produces: {cmd:xtpmg_ect}, {cmd:xtpmg_halflife}, and {cmd:xtpmg_irf} (IRF area chart).{p_end}
+
+{pstd}{bf:All graphs including short-run coefficient plot:}{p_end}
+{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) irf(15) graph full replace}{p_end}
+{pstd}Produces all 4 graphs: {cmd:xtpmg_ect}, {cmd:xtpmg_halflife}, {cmd:xtpmg_irf}, 
+and {cmd:xtpmg_sr_combined} (requires {opt full}).{p_end}
+
+{pstd}{bf:Complete workflow with lag selection, diagnostics, and graphs:}{p_end}
+{phang}{cmd:. xtpmg d.c d.y d.pi, lr(l.c y pi) maxlag(4) lagsel(both) srtable halflife irf(20) graph full replace}{p_end}
+
+{pstd}{bf:Exporting graphs to file:}{p_end}
+{phang}{cmd:. graph export xtpmg_irf.png, name(xtpmg_irf) replace width(1200)}{p_end}
+{phang}{cmd:. graph export xtpmg_ect.png, name(xtpmg_ect) replace width(1200)}{p_end}
+{phang}{cmd:. graph export xtpmg_halflife.pdf, name(xtpmg_halflife) replace}{p_end}
+{phang}{cmd:. graph export xtpmg_sr.png, name(xtpmg_sr_combined) replace width(1600)}{p_end}
+
 
 {title:Stored Results}
 
@@ -203,11 +275,14 @@ eliminates the name/equation conflict entirely.
 {synopt:{cmd:e(depvar)}}name of dependent variable{p_end}
 {synopt:{cmd:e(ivar)}}name of panel variable{p_end}
 {synopt:{cmd:e(tvar)}}name of time variable{p_end}
+{synopt:{cmd:e(ardl_order)}}ARDL order notation (if {opt lagsel()} used){p_end}
 
 {p2col 5 20 24 2: Matrices}{p_end}
 {synopt:{cmd:e(b)}}coefficient vector{p_end}
 {synopt:{cmd:e(V)}}variance-covariance matrix{p_end}
 {synopt:{cmd:e(sig2_i)}}panel-specific variance estimates (PMG only){p_end}
+{synopt:{cmd:e(phi_i)}}panel-specific ECT coefficients (PMG only){p_end}
+{synopt:{cmd:e(irf)}}impulse response function matrix (if {opt irf()} used){p_end}
 
 {title:References}
 
@@ -229,7 +304,7 @@ Estimating long-run relationships from dynamic heterogeneous panels.
 {title:Authors}
 
 {pstd}
-{bf:Version 2.0.0 update:}{p_end}
+{bf:Version 2.0.1 update:}{p_end}
 {pstd}Dr Merwan Roudane{p_end}
 {pstd}{browse "mailto:merwanroudane920@gmail.com":merwanroudane920@gmail.com}{p_end}
 

@@ -1,6 +1,6 @@
+*! 2.0.0 Ariel Linden 12Jan2026 // added prais option; added performance measures
 *! 1.0.0 Ariel Linden 11Jun2025
 
-capture program drop power_cmd_single_itsa
 program define power_cmd_single_itsa, rclass
         version 11
 
@@ -16,7 +16,9 @@ program define power_cmd_single_itsa, rclass
 			LEVel				/// specify level change and not trend change
 			NOIsily				/// show the simulations dots
 			REPs(integer 100)	///
-			seed(string) ]		//  number of repetitions       
+			seed(string) 		/// seed
+			PERF				/// performance measures will get passed on to output table
+			PRAIS * ]			// specify a prais model    
 
 			preserve
 			
@@ -34,13 +36,44 @@ program define power_cmd_single_itsa, rclass
 			}
 			local inis `=c(seed)'			
 			
-			`quietly' simulate reject=r(reject), reps(`reps') seed(`seed'): power_sim_single_itsa, n(`n') intercept(`intercept') pretrend(`pretrend') ///
-				posttrend(`posttrend') step(`step') trperiod(`trperiod') sd(`sd') acorr(`acorr') alpha(`alpha') `level'
+			if "`perf'" == "" {
+				`quietly' simulate reject=r(reject), reps(`reps') seed(`seed'): power_sim_single_itsa, n(`n') intercept(`intercept') pretrend(`pretrend') ///
+					posttrend(`posttrend') step(`step') trperiod(`trperiod') sd(`sd') acorr(`acorr') alpha(`alpha') `level' `prais' `options'
+			}
+			else {
+				`quietly' simulate reject=r(reject) coef=r(coef) rmse=r(rmse) cov=r(cov) se=r(se), reps(`reps') seed(`seed'): power_sim_single_itsa, n(`n') ///
+					intercept(`intercept') pretrend(`pretrend') posttrend(`posttrend') step(`step') trperiod(`trperiod') sd(`sd') acorr(`acorr') ///
+					alpha(`alpha') `level' `prais' `options'				
+			}
+			
     
+			************************
+			* performance measures *
+			************************
 			summarize reject, meanonly
+			return scalar power = r(mean)
+			
+			if "`perf'" ! = "" {
+				summarize rmse, meanonly
+				return scalar rmse = r(mean)
+			
+				summarize cov, meanonly
+				return scalar coverage = r(mean)
+			
+				summarize se, meanonly
+				return scalar se = r(mean)			
+
+				summarize coef, meanonly
+				if "`level'" == "" {
+					local true = (`posttrend' - `pretrend')
+				}
+				else {
+					local true = (`tstep') 
+				}
+				return scalar bias = (( r(mean) - `true') / `true') * 100
+			}
 
 			// return results
-			return scalar power = r(mean)
 			return scalar N = `n'
 			return scalar trperiod = `trperiod'			
 			return scalar alpha = `alpha'
