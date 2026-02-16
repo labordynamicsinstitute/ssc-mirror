@@ -1,4 +1,6 @@
 {smcl}
+{* *! version 2.0  05feb2026}{...}
+{* *! version 1.6  30nov2025}{...}
 {* *! version 1.5  18oct2025}{...}
 {* *! version 1.0  10sep2025}{...}
 {viewerjumpto "Syntax" "flexdid##syntax"}{...}
@@ -50,14 +52,10 @@ which the treatment occurs.{p_end}
 by default, the groups for which which treatment effects are estimated{p_end}
 {p2coldent :* {opth ti:me(varname:timevar)}}specify the time variable for time-fixed effects and
 the time periods for which treatment effects are estimated{p_end}
-{synopt :{opth spec:ification(flexdid##mtype:stype)}}specify the regression; 
+{synopt :{opth spec:ification(flexdid##stype:stype)}}specify the regression; 
 default is {cmd:specification(lagsonly)}{p_end}
-{synopt :{opth txgr:oup(varname:txgroupvar)}}specify an alternative treatment group variable; 
-group fixed effects are estimated at the {it:groupvar} level{p_end}
-{synopt :{opth xint:eract(varlist:xintvarlist)}}specify covariate interactions;
-default is all covariates interacted with treatment, group and time indicators{p_end}
-{synopt :{opt noxint:eract}}specify no covariate interactions; cannot be combined with 
-{opth xint:eract(varlist:xintvarlist)}{p_end}
+{synopt :{opth xnotint:eracted(varlist:xnivarlist)}}specify covariates to enter only additively;
+variables in {it:covarlist} are interacted with treatment, group and time indicators{p_end}
 {synopt :{opth userco:hort(varlist:cohortvar)}}specify the cohort variable if the internally generated cohort 
 variable is inappropriate, e.g., when some time periods are missing{p_end}
 {synopt :{opt ver:bose}}display output of underlying regression{p_end}
@@ -103,7 +101,7 @@ overall ATET.
 In the formal design, there must be at least one time-period in which all units are 
 untreated, i.e., there cannot be any always-treated units. In addition, the typical design includes a set of 
 never-treated units. FLEX can be specified using lags only parameters. In this case, the FLEX regression
-produces group by time effects that are identical to those producted by the estimator described in Borusyak et al. (2021). 
+produces group by time effects that are identical to those produced by the estimator described in Borusyak et al. (2021). 
 FLEX can also be specified using lags and leads parameters. In this case, when there are no covariates, the 
 FLEX regression produces cohort by time effects that are identical to those produced by the regression adjustment
 estimator described in Callaway and Sant'Anna (2021). 
@@ -130,11 +128,11 @@ an observation is treated in a given time period.
 
 {phang}
 {opth gr:oup(varname:groupvar)} specifies a numeric group variable for group-fixed effects and,
-by default, the groups for which which treatment effects are estimated.
+by default, the groups for which treatment effects are estimated.
 
 {phang}
 {opth ti:me(varname:timevar)} specifies a numeric time variable for time-fixed effects and
-the time periods for which which treatment effects are estimated.
+the time periods for which treatment effects are estimated.
 
 {phang}
 {opt spec:ification(stype)} specifies the regression, either {cmd: lagsonly}
@@ -148,21 +146,10 @@ lags and leads specification, only the effect in the period preceding the first 
 for each cohort is set to zero.{p_end}
 
 {phang}
-{opth txgr:oup(varname:txgvar)} specifies an alternative treatment group variable, 
-overriding {opth gr:oup(varlist:groupvar)} as the groups for which treatment effects
-are estimated; fixed effects remain at {it:groupvar} level.
-
-{phang}
-{opth xint:eract(varlist:xintvarlist)} specifies covariate interactions to include
-in the regression. If unspecified the default is to interact all
-the covariates in the model with treatment group, and group and time indicators. 
-Typically, {it:xintvarlist} is a strict subset of {it:covarlist}.
+{opth xnotint:eracted(varlist:xnivarlist)} specifies covariate interactions to include
+in the regression. All the covariates {it:covarlist} are interacted with with treatment group, and group and time indicators. 
+{it:xnivarlist} and {it:covarlist} need to be distinct.
  
-{phang} 
-{opt noxint:eract} specifies no covariate interactions in the regression, covariates are
-only included in the regression additively. It cannot be used if {opth xint:eract(varlist:xintvarlist)}
-is specified.
-
 {phang}
 {opth userco:hort(varname:cohortvar)} specifies a user-defined cohort variable, overriding 
 the internal cohort variable calculated using {opth tx:(varlist:txvar)} and {opth ti:me(varlist:timevar)}. 
@@ -187,7 +174,7 @@ that allows for intragroup correlation, and {cmd:vce(robust)} that allows for he
 
 {pstd}
 Setup{p_end}
-{phang2}{cmd:.  webuse hhabits}
+{phang2}{cmd:. webuse hhabits}
 
 {pstd}
 Estimate the FLEX regression of treatment, {cmd:hhabit}, on outcome body mass index, {cmd:bmi},
@@ -208,21 +195,18 @@ for school districts over year; using the lags and leads specification and
         {cmd:  specification(lagsandleads)}{p_end}
 
 {pstd}
-As above but treatment is estimated at the cohort by year level, {cmd:txgroup(chrt)}, while 
-the regression fixed effects are estimated at the {cmd:group} level and the standard errors 
-are clustered at the {cmd:group}-level, {cmd:group(schools)}. Reports the overall ATET.{p_end}
+As above but groups are now defined by collections of schools into cohorts ({cmd:group(chrt)}), while 
+standard errors are clustered at the schools-level ({cmd:vce(cluster schools)}).{p_end}
 
 {phang2}Setup - manually create cohort variable{p_end}
 {phang2}{cmd:. egen chrt = min(year/hhabit), by(schools)}{p_end}
 {phang2}{cmd:. replace chrt = 0 if chrt==.}{p_end}
 	 
-{phang2}{cmd:. flexdid bmi, tx(hhabit) group(schools) txgroup(chrt) time(year)} 
+{phang2}{cmd:. flexdid bmi, tx(hhabit) group(chrt) time(year)} 
         {cmd:vce(cluster schools) specification(lagsandleads)}{p_end}
 	
 {pstd}
-As above with treatment estimated at the cohort by year level, regression fixed effects at the 
-cohort level and standard errors clustered at the {cmd:group} level. The cohort by year
-effects are identical to those obtained using {cmd: hdidregress ra}{p_end}
+The cohort by year effects are identical to those obtained using {cmd: hdidregress ra}{p_end}
 {phang2}{cmd:. flexdid bmi, tx(hhabit) group(chrt) time(year) vce(cluster schools)} 
         {cmd:specification(lagsandleads) verbose}{p_end}
 	
@@ -260,12 +244,11 @@ effects are identical to those obtained using {cmd: hdidregress ra}{p_end}
 {synopt :{cmd:e(tx)}}name of {it:txvar}, binary treatment variable{p_end}
 {synopt :{cmd:e(group)}}name of {it:groupvar}, group variable{p_end}
 {synopt :{cmd:e(time)}}name of {it:timevar}, time variable{p_end}
-{synopt :{cmd:e(txgroup)}}name of treatment group variable{p_end}
 {synopt :{cmd:e(usercohort)}}name of user-specified cohort variable{p_end}
-{synopt :{cmd:e(title)}}title in estimation output when {cmd:vce()} is not {cmd:ols}{p_end}
+{synopt :{cmd:e(title)}}title in estimation output{p_end}
 {synopt :{cmd:e(vce)}}{it:vcetype} specified by {cmd:vce()}{p_end}
 {synopt :{cmd:e(clustvar)}}name of cluster variable{p_end}
-{synopt :{cmd:e(vcetype)}}title used to label Std. err.{p_end}
+{synopt :{cmd:e(vcetype)}}title used to label standard error{p_end}
 {synopt :{cmd:e(wtype)}}weight type{p_end}
 {synopt :{cmd:e(wexp)}}weight expression{p_end}
 {synopt :{cmd:e(properties)}}{cmd:b V}{p_end}
@@ -298,9 +281,8 @@ In addition to the above, the following are added to the dataset:
 
 {synoptset 23 tabbed}{...}
 {p2col 5 23 26 2:Variables*}{p_end}
-{synopt :{cmd:_Chrt}}internally generated cohort variable{p_end}
-{synopt :{cmd:_Grp}}internally generated group variable{p_end}
-{synopt :{cmd:_Tx}}internally generated treatment variable{p_end}
+{synopt :{cmd:_Cohort}}internally generated cohort variable{p_end}
+{synopt :{cmd:_Tx}}internally generated lags and leads treatment indicator variable{p_end}
 
 {pstd}
 *{cmd:flexdid} will overwrite variables in the dataset with the same names. 

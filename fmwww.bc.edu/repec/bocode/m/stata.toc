@@ -305,4 +305,5 @@ p mylabels module for axis labels or ticks on transformed scales or for daily da
 p mypkg module to inform on packages installed over net
 p myrank module to generate axis variable base on ranks 
 p myreg2 module to export results of regression models to a word document
+p mysuite module providing built-in extensible program suite for empirical research
 p myweeks module for generating numbered weeks from daily date variables

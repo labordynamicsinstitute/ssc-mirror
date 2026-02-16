@@ -1,4 +1,6 @@
-*! version 1.5  18oct2025
+*! version 2.0  05feb2026
+**! version 1.6  30nov2025
+**! version 1.5  18oct2025
 ** version 1.0  10sep2025
 
 program flexdid
@@ -9,16 +11,14 @@ end
 
 program Estimate, eclass sortpreserve
 	syntax varlist(min=1 fv) [if] [in]		///
-		[fweight pweight iweight],			///
+		[fweight pweight aweight iweight],	///
 		TX(varname numeric)					/// 
 		TIme(varname numeric)				///
 		GRoup(varname numeric)				///
 		[									///
 			SPECification(string)			/// 
-			TXGRoup(varname numeric)		///
-			USERCOhort(varname numeric)			///
-			XINTeract(varlist fv)			///
-			NOXINTeract						///
+			USERCOhort(varname numeric)		///
+			XNOTINTeracted(varlist fv)		///
 			VCE(string)						///
 			VERbose							///
 		* ]
@@ -27,17 +27,12 @@ program Estimate, eclass sortpreserve
 	_get_diopts diopts, `options'
 
 	// drop permanent variables created and not dropped if the program ends in error
-	capture drop _Tx _Grp _Chrt
+	capture drop _Tx _Cohort
 
 	if "`specification'" == "" local specification "lagsonly" // specify lagsonly or lagsandleads.
 	// If they gave weird strings as the specification
 	if "`specification'"!="lagsonly" & "`specification'"!="lagsandleads" {
 		display as error `"Value for {bf:specification()} must be "lagsonly" or "lagsandleads"."'
-		exit 198
-	}
-
-	if "`noxinteract'"=="noxinteract" & "`xinteract'"!="" {
-		display as error `"Noxinteract and xinteract cannot be specified together."'
 		exit 198
 	}
 
@@ -90,30 +85,25 @@ program Estimate, eclass sortpreserve
 		exit 451
 	}
 
-	if "`noxinteract'" == "" & "`xinteract'" == "" local xinteract "`xvars'"
+	quietly local xintersection: list xnotinteracted & xvars
+	if "`xintersection'"!="" {
+		display as error "The varlists in xvars and xnotinteracted must be distinct."
+		exit 198
+	}
 
-	quietly local X "`xinteract' `xvars'"
-	quietly local xvars: list uniq X
-
-	// Define treatment groups
-	if "`txgroup'" == "" local txgroup `group' // treatment group variable
-	quietly egen int _Grp = min(`txgroup'/`tx') if `touse', by(`group')
-	quietly replace _Grp = 0 if _Grp==. &  `touse'
-	label variable _Grp "flexdid treated groups"
-	
 	// Define cohorts
 	if "`usercohort'"=="" {
-		quietly egen int _Chrt = min(`time'/`tx')  if `touse', by(`group')
-		quietly replace _Chrt = 0 if _Chrt==. & `touse' 
+		quietly egen long _Cohort = min(`time'/`tx')  if `touse', by(`group')
+		quietly replace _Cohort = 0 if _Cohort==. & `touse' 
 	}
-	else quietly generate _Chrt = `usercohort' if `touse'
-	label variable _Chrt "flexdid treated cohorts"
+	else quietly generate _Cohort = `usercohort' if `touse'
+	label variable _Cohort "flexdid treated cohorts"
 
 	// Check for always treated units
 	quietly sum `time' if `touse', meanonly
 	local tmin = r(min)
 
-	quietly sum _Chrt if _Chrt>0 & `touse', meanonly
+	quietly sum _Cohort if _Cohort>0 & `touse', meanonly
 	local cmin = r(min)
 	if (`cmin'<=`tmin') {
 		display as text "{p 0 6 0 78}"
@@ -123,7 +113,7 @@ program Estimate, eclass sortpreserve
 	}
 
 	// Check for never treated units
-	quietly sum _Chrt if `touse', meanonly
+	quietly sum _Cohort if `touse', meanonly
 	local cmin = r(min)
 	local cmax = r(max)
 	if (`cmin'>0) {
@@ -135,24 +125,24 @@ program Estimate, eclass sortpreserve
 		quietly generate `lc' = (`time'>=`cmax')
 		quietly replace `lc' = . if `lc'==1
 		markout `touse' `lc'
-		quietly replace _Chrt = 0 if _Chrt == `cmax' & `touse'
+		quietly replace _Cohort = 0 if _Cohort == `cmax' & `touse'
 	}
 
 
 	// Define pretreatment indicators by cohort (cohort-1 time is base)
 	quietly generate byte _Tx = `tx' if `touse'
-	quietly levelsof _Chrt if `touse', local(clevels)
+	quietly levelsof _Cohort if `touse', local(clevels)
 	foreach c of local clevels {
-		quietly replace _Tx = 1 if _Chrt>0 & _Chrt == `c' & `time'<`=`c'-1' & `touse'
+		quietly replace _Tx = 1 if _Cohort>0 & _Cohort == `c' & `time'<`=`c'-1' & `touse'
 	}
 	label variable _Tx "flexdid treatment lags & leads indicator"
 
 	// Define exposure time
 	tempvar eventtime ieventtime
-	quietly generate int `eventtime' = `time' - _Chrt if _Chrt>0 & `touse'
-	quietly replace `eventtime' = -1 if _Chrt==0 & `touse'
+	quietly generate int `eventtime' = `time' - _Cohort if _Cohort>0 & `touse'
+	quietly replace `eventtime' = -1 if _Cohort==0 & `touse'
 
-	quietly count if _Chrt>0 & `eventtime'>=0 & `touse'
+	quietly count if _Cohort>0 & `eventtime'>=0 & `touse'
 	local cn = r(N)
 	quietly count if _Tx==1 & `eventtime'>=0 & `touse'
 	local tn = r(N)
@@ -162,72 +152,72 @@ program Estimate, eclass sortpreserve
 		display as text "{p_end}" _n
 	}
 	
-	// Group-qtr treatment coefficients -- lags and leads
+	// Group-time treatment coefficients -- lags and leads
 	foreach c of local clevels {
-		quietly levelsof _Grp if _Chrt==`c' & `c'>0 & `touse', local(glevels)
+		quietly levelsof `group' if _Cohort==`c' & `c'>0 & `touse', local(glevels)
 		foreach g of local glevels {
 			quietly levelsof `time' if `touse', local(tlevels)
 			foreach t of local tlevels {
 				if `t' >= `c' local TxGlags ///
-					`"`TxGlags' `c'._Chrt#`g'._Grp#`t'.`time'#1._Tx"'
+					`"`TxGlags' `c'._Cohort#`g'.`group'#`t'.`time'#1._Tx"'
 			}
 		}
 	}
 
 	foreach c of local clevels {
-		quietly levelsof _Grp if _Chrt==`c' & `c'>0 & `touse', local(glevels)
+		quietly levelsof `group' if _Cohort==`c' & `c'>0 & `touse', local(glevels)
 		foreach g of local glevels {
 			quietly levelsof `time' if `touse', local(tlevels)
 			foreach t of local tlevels {
 				if `t' >= `c' local TxGlagsXX ///
-					`"`TxGlagsXX' `c'._Chrt#`g'._Grp#`t'.`time'#1._Tx#(c.(`xinteract')) "'
+					`"`TxGlagsXX' `c'._Cohort#`g'.`group'#`t'.`time'#1._Tx#(c.(`xvars')) "'
 			}
 		}
 	}
 	
 	foreach c of local clevels {
-		quietly levelsof _Grp if _Chrt==`c' & `c'>0 & `touse', local(glevels)
+		quietly levelsof `group' if _Cohort==`c' & `c'>0 & `touse', local(glevels)
 		foreach g of local glevels {
 			quietly levelsof `time' if `touse', local(tlevels)
 			foreach t of local tlevels {
 				if `t' <=`=`c'-2' local TxGleads ///
-					`"`TxGleads' `c'._Chrt#`g'._Grp#`t'.`time'#1._Tx "'
+					`"`TxGleads' `c'._Cohort#`g'.`group'#`t'.`time'#1._Tx "'
 			}
 		}
 	} 
 
 	foreach c of local clevels {
-		quietly levelsof _Grp if _Chrt==`c' & `c'>0 & `touse', local(glevels)
+		quietly levelsof `group' if _Cohort==`c' & `c'>0 & `touse', local(glevels)
 		foreach g of local glevels {
 			quietly levelsof `time' if `touse', local(tlevels)
 			foreach t of local tlevels {
 				if `t' <=`=`c'-2' local TxGleadsXX ///
-					`"`TxGleadsXX' `c'._Chrt#`g'._Grp#`t'.`time'#1._Tx#(c.(`xinteract')) "'
+					`"`TxGleadsXX' `c'._Cohort#`g'.`group'#`t'.`time'#1._Tx#(c.(`xvars')) "'
 			}
 		}
 	}
 
 	display as text "{p 0 6 0 78}"
-	display as text "Note: Variables {bf:_Grp} containing group identifiers, {bf:_Chrt} containing cohort identifiers, and {bf:_Tx} containing lags and leads treatment indicators, were added to the dataset." 
+	display as text "Note: Variables {bf:_Cohort} containing cohort identifiers and {bf:_Tx} containing lags and leads treatment indicators, were added to the dataset." 
 	display as text "{p_end}" _n
 
 	// Lags only specifications
 	if "`specification'"=="lagsonly" {
 		display as text "Estimating lags only regression parameters"
-		if "`verbose'" == "verbose" regress `yvar' `TxGlags' `TxGlagsXX' `xvars' i.`group' i.`time' i.`group'#(c.(`xinteract')) i.`time'#(c.(`xinteract')) `wgt' if `touse', vce(`vce')
-		else quietly regress `yvar' `TxGlags' `TxGlagsXX' `xvars' i.`group' i.`time' i.`group'#(c.(`xinteract')) i.`time'#(c.(`xinteract')) `wgt' if `touse', vce(`vce')
+		if "`verbose'" == "verbose" regress `yvar' `TxGlags' `TxGlagsXX' `xvars' i.`group' i.`time' i.`group'#(c.(`xvars')) i.`time'#(c.(`xvars')) `xnotinteracted' `wgt' if `touse', vce(`vce')
+		else quietly regress `yvar' `TxGlags' `TxGlagsXX' `xvars' i.`group' i.`time' i.`group'#(c.(`xvars')) i.`time'#(c.(`xvars')) `xnotinteracted' `wgt' if `touse', vce(`vce')
 
-	quietly testparm `TxGlags' `TxGlagsXX' `xvars' i.`group' i.`time' i.`group'#(c.(`xinteract')) i.`time'#(c.(`xinteract')) 
+	quietly testparm `TxGlags' `TxGlagsXX' `xvars' i.`group' i.`time' i.`group'#(c.(`xvars')) i.`time'#(c.(`xvars')) `xnotinteracted' 
 	local F = r(F)
 	}
 
 	// Lags and leads specifications
 	if "`specification'"=="lagsandleads" {
 		display as text "Estimating lags and leads regression parameters"
-		if "`verbose'" == "verbose" regress `yvar' `TxGlags' `TxGleads' `TxGlagsXX' `TxGleadsXX' `xvars' i.`group' i.`time' i.`group'#(c.(`xinteract')) i.`time'#(c.(`xinteract')) `wgt' if `touse', vce(`vce')
-		else quietly regress `yvar' `TxGlags' `TxGleads' `TxGlagsXX' `TxGleadsXX' `xvars' i.`group' i.`time' i.`group'#(c.(`xinteract')) i.`time'#(c.(`xinteract')) `wgt' if `touse', vce(`vce')
+		if "`verbose'" == "verbose" regress `yvar' `TxGlags' `TxGleads' `TxGlagsXX' `TxGleadsXX' `xvars' i.`group' i.`time' i.`group'#(c.(`xvars')) i.`time'#(c.(`xvars')) `xnotinteracted' `wgt' if `touse', vce(`vce')
+		else quietly regress `yvar' `TxGlags' `TxGleads' `TxGlagsXX' `TxGleadsXX' `xvars' i.`group' i.`time' i.`group'#(c.(`xvars')) i.`time'#(c.(`xvars')) `xnotinteracted' `wgt' if `touse', vce(`vce')
 
-	quietly testparm `TxGlags' `TxGleads' `TxGlagsXX' `TxGleadsXX' `xvars' i.`group' i.`time' i.`group'#(c.(`xinteract')) i.`time'#(c.(`xinteract')) 
+	quietly testparm `TxGlags' `TxGleads' `TxGlagsXX' `TxGleadsXX' `xvars' i.`group' i.`time' i.`group'#(c.(`xvars')) i.`time'#(c.(`xvars')) `xnotinteracted' 
 	local F = r(F)
 	}
 
@@ -236,7 +226,6 @@ program Estimate, eclass sortpreserve
 	ereturn local group "`group'"
 	ereturn local time "`time'"
 	ereturn local tx "`tx'"
-	ereturn local txgroup "`txgroup'"
 	ereturn local usercohort "`usercohort'"
 	ereturn local specification "`specification'"
 

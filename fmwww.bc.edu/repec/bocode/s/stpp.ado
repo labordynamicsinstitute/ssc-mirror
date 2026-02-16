@@ -1,4 +1,4 @@
-*! version 1.4.4 2026-01-13
+*! version 1.4.6 2026-02-10
   
 program define stpp, rclass sortpreserve
   version 16.0
@@ -14,7 +14,7 @@ program define stpp, rclass sortpreserve
                    ALLCause(namelist max=1)                             ///
                    BY(varlist)                                          ///
                    CONTrast(passthru)                                   ///
-                   CRUDEProb(namelist min=1 max=2)                      ///
+                   CRUDEProb(string)                                    ///
                    DEATHProb                                            ///
                    DISPLay(string)                                      ///
                    dropexpected                                         ///
@@ -144,10 +144,7 @@ program define stpp, rclass sortpreserve
   }
   
   if "`crudeprob'" != "" {
-  	local CP_newvarnames `crudeprob'
-    foreach v in `CP_newvarnames' {
-      confirm new var `v' `v'_lci	`v'_uci
-    }
+    PP_parse_crudeprob `crudeprob'
   }
   
   if "`popmort2'" != "" & "`using2'" != ""{
@@ -187,12 +184,20 @@ program define stpp, rclass sortpreserve
   }
   
   
-  /// checks that at least one observation and 1 event. (within standstrata???)
+  // Check any events  
+  qui count if `touse' & _d
+  if `r(N)' == 0 {
+    display in red "No events"
+    exit 198
+  }  
+  
+  /// checks that at least one observation and 1 event.
   if "`by'" != "" | "`standstrata'" != "" {
     tempvar bygroups eventtab
     qui egen `bygroups' = group(`by' `standstrata') if `touse'
     qui tab `bygroups' _d if `touse', matcell(`eventtab')
-    matrix `eventtab' =  `eventtab'[1...,2]
+    qui levelsof _d  if `touse'
+    matrix `eventtab' =  `eventtab'[1...,`r(r)']
     mata:st_local("zeroevents",strofreal(sum(st_matrix("`eventtab'"):==0):>0))
     if `zeroevents' {
     	di as error "There are zero events in one of the groups defined by the"
@@ -318,7 +323,10 @@ program define stpp, rclass sortpreserve
       exit 198
     }
     if "`pmother2'" != "" {
-      Check_popmort_levels if `touse', pmother(`pmother2') popmortframe(`popmort2frame')
+      Check_popmort_levels if `touse', pmother(`pmother2') pmage(`pmage2') pmyear(`pmyear2') ///
+                                       popmortframe(`popmort2frame') ///
+                                       minyear(`minyear') maxattyear(`maxattyear')         ///
+                                       minage(`minage')  maxattage(`maxattage')                                        
     }
   } 
   
@@ -349,7 +357,7 @@ program define stpp, rclass sortpreserve
 	    if "`crudeprob'" != "" {
 	      matrix colnames CP_can=`by' time CP_can CP_can_lci CP_can_uci	
 	      return matrix CP_can=CP_can
-	  	  if wordcount("`crudeprob'")>1 {
+	  	  if wordcount("`CP_newvarnames'")>1 {
 	  	    matrix colnames CP_oth=`by' time CP_oth CP_oth_lci CP_oth_uci	
 	        return matrix CP_oth=CP_oth		
 	  	  }
@@ -407,7 +415,7 @@ if "`inccens'"=="" {
   local newvarlist `RS_newvarname' `RS_newvarname'_lci `RS_newvarname'_uci
   if "`allcause'"  != "" local newvarlist `newvarlist' `AC_newvarname' `AC_newvarname'_lci `AC_newvarname'_uci
   if "`crudeprob'" != "" {
-  	tokenize "`crudeprob'"
+  	tokenize "`CP_newvarnames'"
     local newvarlist `newvarlist' `1' `1'_lci `1'_uci
     if "`2'" != "" {
       local newvarlist `newvarlist' `2' `2'_lci `2'_uci
@@ -597,6 +605,16 @@ if "`inccens'"=="" {
   }
 end
 
+program define PP_parse_crudeprob
+  syntax anything, [CIUNTRANSformed]
+  local CP_newvarnames `anything'
+  foreach v in `CP_newvarnames' {
+    confirm new var `v' `v'_lci	`v'_uci
+  } 
+  c_local CP_newvarnames   `anything'
+  c_local crudeprob_ciuntransformed `ciuntransformed'
+end
+
 
 program define Check_popmort_levels
   syntax [if], popmortframe(string)    ///
@@ -763,7 +781,8 @@ struct stpp_info {
                         haspmother2,           // popmort2 file straified by other
                         haspmyear2,            // popmort2 file straified by year
                         Nlist,                 // Number of time points to display
-                        CP_calcother           // calc CP for other causes                        
+                        CP_calcother,          // calc CP for other causes                        
+                        hascrudeprob_untrans   // use untransformed for variance of CPs
                   
   string       scalar   pmage,                 // age variable in popmort file
                         pmyear,                // year variable in popmort file
@@ -1003,6 +1022,7 @@ function PP_Get_stpp_info()
   if(S.hasallcause) S.AC_newvarname = st_local("AC_newvarname")
   if(S.hascrudeprob) {
     S.CP_newvarnames = tokens(st_local("CP_newvarnames"))
+    S.hascrudeprob_untrans = st_local("crudeprob_ciuntransformed") != ""
   }
   S.CP_calcother = cols(S.CP_newvarnames)==2 :& S.hascrudeprob
 
@@ -1667,7 +1687,13 @@ void function PP_Gen_cumulative_indweights(struct stpp_info scalar S)
        }        
 	   
       asarray(S.CP_can_var,k,tmpmat_v) 
-      asarray(S.CP_can, k, PP_loglog_tran_var(tmpmat,asarray(S.CP_can_var,k),zz))
+      if(S.hascrudeprob_untrans) {
+        asarray(S.CP_can, k, (tmpmat,tmpmat-zz:*sqrt(asarray(S.CP_can_var,k)),
+                                     tmpmat+zz:*sqrt(asarray(S.CP_can_var,k))))
+      }
+      else {
+        asarray(S.CP_can, k, PP_loglog_tran_var(tmpmat,asarray(S.CP_can_var,k),zz))
+      }
 
       if(S.CP_calcother) {
         tmpmat_v = J(Nuniq,1,0)        
@@ -1711,6 +1737,22 @@ real matrix function PP_loglog_tran_var(real matrix x,
 
   return(exp(-exp((lnlnx, lnlnx:-zz:*lnlnx_se, lnlnx:+zz:*lnlnx_se))))
 }
+// PP_CP_log_tran_var
+real matrix function PP_CP_log_tran_var(real matrix x,
+                                        real matrix x_var,
+                                        real scalar zz)
+{
+  real matrix lnx, lnx_se  
+  
+  lnx    = x // ln(1:-x)
+  lnx_se = sqrt(x_var) //sqrt(x_var):/x
+
+//  return(1:-exp((lnx, lnx:+zz:*lnx_se, lnx:-zz:*lnx_se)))
+  return((lnx, lnx:+zz:*lnx_se, lnx:-zz:*lnx_se))
+}
+
+
+//      1:-(tmpmat,exp(ln(tmpmat):-1.96:*sqrt(asarray(S.CP_can_var,k)):/tmpmat),exp(ln(tmpmat):+1.96:*sqrt(asarray(S.CP_can_var,k)):/tmpmat)))
 
 
 
@@ -1730,7 +1772,7 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
                       RS_tmplist_var, AC_tmplist_var, 
                       CP_can_tmplist_var, CP_oth_tmplist_var
 
-  real scalar         i, k, Natrisk_time0, tj, Natrisktmp, Natrisk_time_tj
+  real scalar         i, k, Natrisk_time0, tj, Natrisk_time_tj
   
   if(!S.haslist) return
 
@@ -1818,21 +1860,21 @@ void function PP_Write_list_results(struct stpp_info scalar   S)
       }
 
       if(S.list[i]>asarray(S.maxt_k,k) & S.list[i]<=asarray(S.maxtall_k,k)) {
-        RS_tmplist[i,] = (S.list[i],Natrisktmp,asarray(S.RS_PP, k)[tminindex,])
+        RS_tmplist[i,] = (S.list[i],Natrisk_time_tj,asarray(S.RS_PP, k)[tminindex,])
         RS_tmplist_var[i] = asarray(S.RS_PP_var, k)[tminindex,]
 
         if(S.hasallcause)  {
-          AC_tmplist[i,]     = (S.list[i],Natrisktmp,asarray(S.AC, k)[tminindex,])  
+          AC_tmplist[i,]     = (S.list[i],Natrisk_time_tj,asarray(S.AC, k)[tminindex,])  
           AC_tmplist_var[i] = asarray(S.AC_var, k)[tminindex,]
         }
 
         if(S.hascrudeprob) {
-          CP_can_tmplist[i,] = (S.list[i],Natrisktmp,asarray(S.CP_can, k)[tminindex,])  
+          CP_can_tmplist[i,] = (S.list[i],Natrisk_time_tj,asarray(S.CP_can, k)[tminindex,])  
           CP_can_tmplist_var[i] = asarray(S.CP_can_var, k)[tminindex,]
         }
 
         if(S.CP_calcother) {
-          CP_oth_tmplist[i,] = (S.list[i],Natrisktmp,asarray(S.CP_oth, k)[tminindex,])
+          CP_oth_tmplist[i,] = (S.list[i],Natrisk_time_tj,asarray(S.CP_oth, k)[tminindex,])
           CP_oth_tmplist_var[i] = asarray(S.CP_oth_var, k)[tminindex,]          
         }
       }
@@ -2342,7 +2384,6 @@ real function PP_Natrisk_time_tj(struct stpp_info scalar S, real scalar k, real 
   
   byselect     = rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars 
   byselect_ind = selectindex(byselect)
-
   return(sum(tj:>S.t0[byselect_ind] :& tj:<=S.t[byselect_ind]))
 }
 

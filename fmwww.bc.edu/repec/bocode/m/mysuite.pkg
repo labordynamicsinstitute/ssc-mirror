@@ -1,0 +1,25 @@
+d 'MYSUITE': module providing built-in extensible program suite for empirical research
+d
+d     mysuite is a comprehensive Stata program suite designed for
+d empirical research, teaching management,    and academic writing.
+d It provides access to 30 specialized programs organized into
+d three main	categories. 
+d
+d KW: program management
+d KW: research tools
+d
+d Requires: Stata version 18 
+d
+d Distribution-Date: 20260215
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+f mysuite.ado
+f mysuite.sthlp

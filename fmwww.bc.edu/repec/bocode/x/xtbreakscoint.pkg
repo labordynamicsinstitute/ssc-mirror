@@ -1,0 +1,24 @@
+d 'XTBREAKSCOINT': module to implement the panel cointegration test with structural breaks developed by Banerjee and Carrion-i-Silvestre (2015, Journal of Applied Econometrics)
+d
+d  This test accounts for: 1. Cross-sectional dependence via factor
+d models (up to 5 common factors). 2. Heterogeneous structural
+d breaks (level, trend, or regime shifts) estimated endogenously.
+d 3. Common stochastic trends via the MQ test (Bai & Ng, 2004). The
+d package is particularly useful for macro-panel research where
+d structural breaks and cross-section dependence are concerns. 
+d
+d KW: panel cointegration
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260215
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtbreakscoint.ado
+f xtbreakscoint.sthlp
+f ../_/_xtbreakscoint_engine.ado
+f xtbreakscoint_example.do
+f xtbreakscoint_example.xlsx

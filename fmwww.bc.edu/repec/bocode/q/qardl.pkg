@@ -1,0 +1,35 @@
+d 'QARDL': module to perform Quantile Autoregressive Distributed-Lag (QARDL) estimation
+d
+d  The qardl command implements the Quantile Autoregressive
+d Distributed-Lag (QARDL) model proposed by Cho, Kim, and Shin
+d (2015, Journal of Econometrics, 188(2), 281-300). The QARDL model
+d extends the classical Pesaran and Shin (1998) ARDL cointegration
+d framework to the quantile regression setting, enabling
+d researchers to examine how long-run equilibrium relationships and
+d short-run dynamics between I(1) variables vary across different
+d quantiles of the conditional distribution. 
+d
+d KW: ARDL
+d KW: quantile
+d KW: autoregressive
+d KW: distributed lag
+d
+d Requires: Stata version 
+d
+d Distribution-Date: 20260215
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f qardl.ado
+f qardl.sthlp
+f ../_/_qardl_ecm.ado
+f ../_/_qardl_estimate.ado
+f ../_/_qardl_icmean.ado
+f ../_/_qardl_rolling.ado
+f ../_/_qardl_simulate.ado
+f ../_/_qardl_waldtest.ado
+f qardl_analysis.ado
+f qardl_graph.ado
+f qardl_makedata.ado
+f ../t/test_qardl.do

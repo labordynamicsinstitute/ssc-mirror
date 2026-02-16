@@ -1,4 +1,6 @@
 {smcl}
+{* *! version 2.0  05feb2026}{...}
+{* *! version 1.6  30nov2025}{...}
 {* *! version 1.5  18oct2025}{...}
 {* *! version 1.0  10sep2025}{...}
 {viewerjumpto "Syntax" "flexdid_postestimation##syntax"}{...}
@@ -58,6 +60,8 @@ be specified{p_end}
 {p2coldent :+ {opth graph:(marginsplot:graph_opts)}} affects rendition of the ATET plot{p_end}
 {synopt :{opt dydx}} estimates ATETs using the {cmd:dydx} option in {cmd:{help margins}}; 
 useful when the default procedure fails to produce standard errors of the ATETs{p_end}
+{synopt :{opth agg:regationweight(flexdid_postestimation##wtype:wtype)}}specify the aggregation weights; 
+default is {cmd:aggregationweight(obslevel)}{p_end}
 {synoptline}
 
 {marker nulltype}{...}
@@ -67,6 +71,16 @@ useful when the default procedure fails to produce standard errors of the ATETs{
 {synopt :{opt zero}}specifies the null hypothesis that all the ATETs are equal to zero{p_end}
 {synopt :{opt equal}}specifies the null hypothesis that all the ATETs are equal to each other{p_end}
 {synoptline}
+
+{marker wtype}{...}
+{synoptset 28}{...}
+{synopthdr:wtype}
+{synoptline}
+{synopt :{opt obslevel}}specifies that observation-level ATETs are aggregated using simple averaging; the default{p_end}
+{synopt :{opt grouplevel}}specifies that observation-level ATETs are first aggregated to the group-time level
+and then aggregated using weighted means where the weights are the group-level sample sizes{p_end}
+{synoptline}
+
 {p 4 6 2}
 * One of these options is required.{p_end}
 {p 4 6 2}
@@ -124,7 +138,7 @@ Specifying {opt bygroup} without arguments estimates ATETs for each treated grou
 {cmd:if exp} is a proper expression such as age<65 or age<65 & sex==1. 
 
 {phang} 
-{opt test(ttype)} estimates an F test of a hypothesis of the ATETs specified by {cmd:nulltype} which 
+{opt test(nulltype)} estimates an F test of a hypothesis of the ATETs specified by {cmd:nulltype} which 
 is either {cmd: zero} or {cmd: equal}.
 
 {phang2}{cmd: zero} specifies the null hypothesis that all the ATETs are equal to zero.
@@ -144,6 +158,19 @@ procedure is to use {cmd:{help margins_contrast}}. Although {cmd:{help margins_c
 substantially faster, on occasion it fails to produce standard errors of the estimates. 
 {cmd:dydx} is useful in those cases.
 
+{phang}
+{opt agg:regationweight(wtype)} specifies the aggregaton wights, either {cmd: obslevel}
+or {cmd: grouplevel}; the default is {cmd:aggregationweight(obslevel)}.  
+
+{phang2}{cmd: obslevel} specifies that observation-level ATETs, computed using {cmd:{help margins}},
+are aggregated using simple averaging over the treated observations or over the treated observations 
+in the subsamples of interest, as appropriate.{p_end}
+
+{phang2}{cmd: grouplevel} specifies that observation-level ATETs, computed using {cmd:{help margins}},
+are first aggregated to the group-time level and then aggregated using weighted means where the weights 
+are the group-level sample sizes over all time periods.{p_end}
+
+
 {marker remarks}{...}
 {title:Remarks}
 {phang}
@@ -162,7 +189,7 @@ substantially greater computation time.
 
 {pstd}
 Setup{p_end}
-{phang2}{cmd:.  webuse hhabits}{p_end}
+{phang2}{cmd:. webuse hhabits}{p_end}
 {phang2}{cmd:. egen chrt = min(year/hhabit), by(schools)}{p_end}
 {phang2}{cmd:. replace chrt = 0 if chrt==.}{p_end}
 

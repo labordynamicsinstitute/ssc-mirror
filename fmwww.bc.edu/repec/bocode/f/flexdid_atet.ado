@@ -1,5 +1,7 @@
-*! version 1.5  18oct2025
-*! version 1.0  10sep2025
+*! version 2.0  05feb2026
+**! version 1.6  30nov2025
+**! version 1.5  18oct2025
+**! version 1.0  10sep2025
 
 program flexdid_atet 
         version 17.0
@@ -10,26 +12,26 @@ end
 
 program Compute, rclass sortpreserve
 	syntax [anything], [					///
-		 OVERALL1							///
-		 OVERALL(numlist min=1)				///
-		 BYGET1						///
-		 BYGET(numlist min=1)			///
-		 BYEXPOSURE1						///
-		 BYEXPOSURE(numlist min=1)			///
-		 BYCALENDAR1						///
-		 BYCALENDAR(numlist min=1)			///
-		 BYCOHORT1							///
-		 BYCOHORT(numlist min=1)			///
-		 BYGROUP1							///
-		 BYGROUP(numlist min=1)				///
-		 FOR(string)						///
-		 DYDX								///
-		 NOGRaph							///
-		 GRAPHoptions(string)				///
-		 TEst(string)						///
-		 Level(cilevel)						///
-		 fromestimation						///
-		 * ]
+		OVERALL1							///
+		OVERALL(numlist min=1)				///
+		BYGET1								///
+		BYGET(numlist min=1)				///
+		BYEXPOSURE1							///
+		BYEXPOSURE(numlist min=1)			///
+		BYCALENDAR1							///
+		BYCALENDAR(numlist min=1)			///
+		BYCOHORT1							///
+		BYCOHORT(numlist min=1)				///
+		BYGROUP1							///
+		BYGROUP(numlist min=1)				///
+		FOR(string)							///
+		DYDX								///
+		NOGRaph								///
+		GRAPHoptions(string)				///
+		TEst(string)						///
+		AGGregationweight(string)			///
+		Level(cilevel)						///
+		* ]
         
 	tempname _flexdid
 	quietly estimates store `_flexdid'
@@ -39,6 +41,7 @@ program Compute, rclass sortpreserve
 				opts_exclusive "overall {bf:overall()}" 
 		}
 		_ATET_Overall `0'
+		return add
 	}
 	else if ("`byget'"!=""|"`byget1'"!="") {
 		if ("`byget1'"!="" & "`byget'"!="") {
@@ -103,12 +106,11 @@ end
 
 program define _ATET_Overall, rclass
 	syntax [anything], [overall OVERALL(numlist min=1) FOR(string) ///
-		DYDX Level(cilevel) *]
+		DYDX AGGregationweight(string) Level(cilevel) *]
         
 	local group `e(group)'
 	local time `e(time)'
 	local tx `e(tx)'
-	local txgroup `e(txgroup)'
 	local usercohort `e(usercohort)'
 	local clustvar `e(clustvar)'
 	local wexp `e(wexp)'
@@ -122,8 +124,16 @@ program define _ATET_Overall, rclass
 	marksample touse
 	markout `touse' `clustvar' `wt' `tx' `group' `time', strok
 
+	// Incorporate aggregation weights
+	if "`aggregationweight'" == "" local aggregationweight "obslevel" // specify obslevel or grouplevel
+	// If they gave weird strings as the specification
+	if "`aggregationweight'"!="obslevel" & "`aggregationweight'"!="grouplevel" {
+		display as error `"Value for {bf:aggregationweight()} must be "obslevel" or "grouplevel"."'
+		exit 198
+	}
+
 	// If there are no never-treated units
-	quietly sum _Chrt if `touse', meanonly
+	quietly sum _Cohort if `touse', meanonly
 	local cmin = r(min)
 	local cmax = r(max)
 	if (`cmin'>0) {
@@ -131,12 +141,12 @@ program define _ATET_Overall, rclass
 		quietly generate `lc' = (`time'>=`cmax')
 		quietly replace `lc' = . if `lc'==1
 		markout `touse' `lc'
-		quietly replace _Chrt = 0 if _Chrt == `cmax' & `touse'
+		quietly replace _Cohort = 0 if _Cohort == `cmax' & `touse'
 	}
 
 	tempvar eventtime
-	quietly generate `eventtime' = `time' - _Chrt if _Chrt>0 & `touse'
-	quietly replace `eventtime' = -1 if _Chrt==0 & `touse'
+	quietly generate `eventtime' = `time' - _Cohort if _Cohort>0 & `touse'
+	quietly replace `eventtime' = -1 if _Cohort==0 & `touse'
 
 	tempvar expsubset meventtime
 	quietly generate `expsubset' = .
@@ -151,16 +161,32 @@ program define _ATET_Overall, rclass
 
 	tempvar ttx
 	quietly generate byte `ttx' = _Tx if `touse'
-	quietly replace `ttx' = 1 if _Chrt>0 & `eventtime'==-1 & `touse'
+	quietly replace `ttx' = 1 if _Cohort>0 & `eventtime'==-1 & `touse'
 
 	if "`for'"!="" local andfor "& (`for')"
 
 	if "`for'"!="" local ttl "Overall ATET for `for'"
 	else local ttl "Overall ATET"
 
-	if "`dydx'"=="dydx" quietly margins, dydx(_Tx) subpop(if `ttx'==1 & inlist(`eventtime', `overall')==1 `andfor') vce(unconditional) noomit `options' post
+	if "`aggregationweight'"=="grouplevel" {
+		tempvar ngt ng aggwt
+		quietly egen `ngt' = count(`group') if _Cohort>0, by(`group' `time')
+		quietly egen `ng' = count(`group') if _Cohort>0, by(`group')
+		quietly tab `time'
+		quietly generate double `aggwt' = `ng'/r(r)/`ngt'
+		quietly sum `aggwt' if `ttx'==1 & inlist(`eventtime', `overall')==1 `andfor',d
+		quietly replace `aggwt' = `aggwt'/r(mean)
 
-	else quietly margins r._Tx, subpop(if `ttx'==1 & inlist(`eventtime', `overall')==1 `andfor') contrast(effects nowald) vce(unconditional) noomit `options' post
+		if "`dydx'"=="dydx" quietly margins, expr(predict(xb)*`aggwt') dydx(_Tx) subpop(if `ttx'==1 & inlist(`eventtime', `overall')==1 `andfor') vce(unconditional) noomit post `options'
+
+		else quietly margins r._Tx, expr(predict(xb)*`aggwt') subpop(if `ttx'==1 & inlist(`eventtime', `overall')==1 `andfor') contrast(effects nowald) vce(unconditional) noomit post `options'
+	}
+
+	else if "`aggregationweight'"=="obslevel" {
+		if "`dydx'"=="dydx" quietly margins, dydx(_Tx) subpop(if `ttx'==1 & inlist(`eventtime', `overall')==1 `andfor') vce(unconditional) noomit post `options'
+
+		else quietly margins r._Tx, subpop(if `ttx'==1 & inlist(`eventtime', `overall')==1 `andfor') contrast(effects nowald) vce(unconditional) noomit post `options'
+	}
 
 	tempname beta Var nm 
 	matrix `beta' = r(b)
@@ -196,12 +222,11 @@ end
 
 program define _ATET_Byget, rclass
 	syntax [anything], [byget BYGET(numlist min=1) FOR(string) ///
-		TEst(string) DYDX Level(cilevel) *]
+		TEst(string) DYDX AGGregationweight(string)Level(cilevel) *]
       
 	local group `e(group)'
 	local time `e(time)'
 	local tx `e(tx)'
-	local txgroup `e(txgroup)'
 	local usercohort `e(usercohort)'
 	local clustvar `e(clustvar)'
 	local wexp `e(wexp)'
@@ -221,7 +246,7 @@ program define _ATET_Byget, rclass
 	markout `touse' `clustvar' `wt' `tx' `group' `time', strok
 
 	// If there are no never-treated units
-	quietly sum _Chrt if `touse', meanonly
+	quietly sum _Cohort if `touse', meanonly
 	local cmin = r(min)
 	local cmax = r(max)
 	if (`cmin'>0) {
@@ -229,12 +254,12 @@ program define _ATET_Byget, rclass
 		quietly generate `lc' = (`time'>=`cmax')
 		quietly replace `lc' = . if `lc'==1
 		markout `touse' `lc'
-		quietly replace _Chrt = 0 if _Chrt == `cmax'
+		quietly replace _Cohort = 0 if _Cohort == `cmax'
 	}
 
 	tempvar eventtime
-	quietly generate `eventtime' = `time' - _Chrt if _Chrt>0 & `touse'
-	quietly replace `eventtime' = -1 if _Chrt==0 & `touse'
+	quietly generate `eventtime' = `time' - _Cohort if _Cohort>0 & `touse'
+	quietly replace `eventtime' = -1 if _Cohort==0 & `touse'
 
 	tempvar expsubset meventtime
 	quietly generate `expsubset' = .
@@ -246,16 +271,16 @@ program define _ATET_Byget, rclass
 
 	tempvar ttx
 	quietly generate byte `ttx' = _Tx if `touse'
-	quietly replace `ttx' = 1 if _Chrt>0 & `eventtime'==-1 & `touse'
+	quietly replace `ttx' = 1 if _Cohort>0 & `eventtime'==-1 & `touse'
 
 	if "`for'"!="" local andfor "& (`for')"
 
 	tempvar gt
-	quietly egen `gt' = group(`txgroup' `expsubset') if _Tx==1 `andfor', label
+	quietly egen `gt' = group(`group' `expsubset') if _Tx==1 `andfor', label
 
-	quietly levelsof `txgroup' if _Chrt>0 `andfor', local(lofg)
+	quietly levelsof `group' if _Cohort>0 `andfor', local(lofg)
 	foreach g of local lofg {
-		quietly levelsof `expsubset' if `txgroup'==`g' & _Tx==1 `andfor', local(loft)
+		quietly levelsof `expsubset' if `group'==`g' & _Tx==1 `andfor', local(loft)
 		foreach t of local loft {
 			local lofgt `"`lofgt' "`g' `t'""'
 		}
@@ -267,9 +292,9 @@ program define _ATET_Byget, rclass
 	if "`for'"!="" local ttl "ATET by group and exposure time for `for'"
 	else local ttl "ATET by group and exposure time"
 
-	if "`dydx'"=="dydx" quietly margins, dydx(_Tx) subpop(if `ttx'==1 & inlist(`eventtime', `byget')==1 `andfor') over(`gt') vce(unconditional) `options' post
+	if "`dydx'"=="dydx" quietly margins, dydx(_Tx) subpop(if `ttx'==1 & inlist(`eventtime', `byget')==1 `andfor') over(`gt') vce(unconditional) post `options'
 
-	else quietly margins r._Tx, subpop(if `ttx'==1 & inlist(`eventtime', `byget')==1 `andfor') over(`gt') contrast(effects nowald) vce(unconditional) `options' post
+	else quietly margins r._Tx, subpop(if `ttx'==1 & inlist(`eventtime', `byget')==1 `andfor') over(`gt') contrast(effects nowald) vce(unconditional) post `options'
 
 	tempname beta Var nm 
 	matrix `beta' = r(b)
@@ -306,12 +331,11 @@ end
 
 program define _ATET_Byexposure, rclass
 	syntax [anything], [byexposure BYEXPOSURE(numlist min=1) FOR(string) ///
-		NOGraph GRAPHoptions(string) TEst(string) DYDX Level(cilevel) *]
+		NOGraph GRAPHoptions(string) TEst(string) DYDX AGGregationweight(string)Level(cilevel) *]
         
 	local group `e(group)'
 	local time `e(time)'
 	local tx `e(tx)'
-	local txgroup `e(txgroup)'
 	local usercohort `e(usercohort)'
 	local clustvar `e(clustvar)'
 	local wexp `e(wexp)'
@@ -330,8 +354,16 @@ program define _ATET_Byexposure, rclass
 	marksample touse
 	markout `touse' `clustvar' `wt' `tx' `group' `time', strok
 
+	// Incorporate aggregation weights
+	if "`aggregationweight'" == "" local aggregationweight "obslevel" // specify obslevel or grouplevel
+	// If they gave weird strings as the specification
+	if "`aggregationweight'"!="obslevel" & "`aggregationweight'"!="grouplevel" {
+		display as error `"Value for {bf:aggregationweight()} must be "obslevel" or "grouplevel"."'
+		exit 198
+	}
+
 	// If there are no never-treated units
-	quietly sum _Chrt if `touse', meanonly
+	quietly sum _Cohort if `touse', meanonly
 	local cmin = r(min)
 	local cmax = r(max)
 	if (`cmin'>0) {
@@ -339,12 +371,12 @@ program define _ATET_Byexposure, rclass
 		quietly generate `lc' = (`time'>=`cmax')
 		quietly replace `lc' = . if `lc'==1
 		markout `touse' `lc'
-		quietly replace _Chrt = 0 if _Chrt == `cmax'
+		quietly replace _Cohort = 0 if _Cohort == `cmax'
 	}
 
 	tempvar eventtime
-	quietly generate `eventtime' = `time' - _Chrt if _Chrt>0 & `touse'
-	quietly replace `eventtime' = -1 if _Chrt==0 & `touse'
+	quietly generate `eventtime' = `time' - _Cohort if _Cohort>0 & `touse'
+	quietly replace `eventtime' = -1 if _Cohort==0 & `touse'
 
 	tempvar expsubset meventtime
 	quietly generate `expsubset' = .
@@ -358,7 +390,7 @@ program define _ATET_Byexposure, rclass
 
 	tempvar ttx
 	quietly generate byte `ttx' = _Tx if `touse'
-	quietly replace `ttx' = 1 if _Chrt>0 & `eventtime'==-1 & `touse'
+	quietly replace `ttx' = 1 if _Cohort>0 & `eventtime'==-1 & `touse'
 
 	if "`for'"!="" local andfor "& (`for')"
 
@@ -368,9 +400,25 @@ program define _ATET_Byexposure, rclass
 	if "`for'"!="" local ttl "ATET by exposure time for `for'"
 	else local ttl "ATET by exposure time"
 
-	if "`dydx'"=="dydx" quietly margins, dydx(_Tx) subpop(if `ttx'==1 & inlist(`eventtime', `byexposure')==1 `andfor') over(`meventtime') vce(unconditional) `options' post
+	if "`aggregationweight'"=="grouplevel" {
+		tempvar ngt ng aggwt
+		quietly egen `ngt' = count(`group') if _Cohort>0, by(`group' `time')
+		quietly egen `ng' = count(`group') if _Cohort>0, by(`group')
+		quietly tab `time'
+		quietly generate double `aggwt' = `ng'/r(r)/`ngt'
+		quietly sum `aggwt' if `ttx'==1 & inlist(`eventtime', `byexposure')==1 `andfor',d
+		quietly replace `aggwt' = `aggwt'/r(mean)
 
-	else quietly margins r._Tx, subpop(if `ttx'==1 & inlist(`eventtime', `byexposure')==1 `andfor') over(`meventtime') contrast(effects nowald) vce(unconditional) `options' post
+		if "`dydx'"=="dydx" quietly margins, expr(predict(xb)*`aggwt') dydx(_Tx) subpop(if `ttx'==1 & inlist(`eventtime', `byexposure')==1 `andfor') over(`meventtime') vce(unconditional) noomit post `options'
+
+		else quietly margins r._Tx, expr(predict(xb)*`aggwt') subpop(if `ttx'==1 & inlist(`eventtime', `byexposure')==1 `andfor') contrast(effects nowald) over(`meventtime') vce(unconditional) noomit post `options'
+	}
+
+	else if "`aggregationweight'"=="obslevel" {
+		if "`dydx'"=="dydx" quietly margins, dydx(_Tx) subpop(if `ttx'==1 & inlist(`eventtime', `byexposure')==1 `andfor') over(`meventtime') vce(unconditional) noomit post `options'
+
+		else quietly margins r._Tx, subpop(if `ttx'==1 & inlist(`eventtime', `byexposure')==1 `andfor') contrast(effects nowald) over(`meventtime') vce(unconditional) noomit post `options'
+	}
 
 	if "`nograph'"=="" quietly marginsplot, xtitle(Exposure `time') ytitle({&Delta} `yvar') title("`ttl'") yline(0) `graphoptions'
 	tempname beta Var nm 
@@ -406,12 +454,11 @@ end
 
 program define _ATET_Bycalendar, rclass
 	syntax [anything], [bycalendar BYCALENDAR(numlist min=1) FOR(string) ///
-		NOGraph GRAPHoptions(string) TEst(string) DYDX Level(cilevel) *]
+		NOGraph GRAPHoptions(string) TEst(string) DYDX AGGregationweight(string)Level(cilevel) *]
         
 	local group `e(group)'
 	local time `e(time)'
 	local tx `e(tx)'
-	local txgroup `e(txgroup)'
 	local usercohort `e(usercohort)'
 	local clustvar `e(clustvar)'
 	local wexp `e(wexp)'
@@ -430,8 +477,16 @@ program define _ATET_Bycalendar, rclass
 	marksample touse
 	markout `touse' `clustvar' `wt' `tx' `group' `time', strok
 
+	// Incorporate aggregation weights
+	if "`aggregationweight'" == "" local aggregationweight "obslevel" // specify obslevel or grouplevel
+	// If they gave weird strings as the specification
+	if "`aggregationweight'"!="obslevel" & "`aggregationweight'"!="grouplevel" {
+		display as error `"Value for {bf:aggregationweight()} must be "obslevel" or "grouplevel"."'
+		exit 198
+	}
+
 	// If there are no never-treated units
-	quietly sum _Chrt if `touse', meanonly
+	quietly sum _Cohort if `touse', meanonly
 	local cmin = r(min)
 	local cmax = r(max)
 	if (`cmin'>0) {
@@ -439,12 +494,12 @@ program define _ATET_Bycalendar, rclass
 		quietly generate `lc' = (`time'>=`cmax')
 		quietly replace `lc' = . if `lc'==1
 		markout `touse' `lc'
-		quietly replace _Chrt = 0 if _Chrt == `cmax' & `touse'
+		quietly replace _Cohort = 0 if _Cohort == `cmax' & `touse'
 	}
 
 	tempvar eventtime
-	quietly generate `eventtime' = `time' - _Chrt if _Chrt>0 & `touse'
-	quietly replace `eventtime' = -1 if _Chrt==0 & `touse'
+	quietly generate `eventtime' = `time' - _Cohort if _Cohort>0 & `touse'
+	quietly replace `eventtime' = -1 if _Cohort==0 & `touse'
 
 	tempvar calsubset
 	quietly generate `calsubset' = .
@@ -462,9 +517,25 @@ program define _ATET_Bycalendar, rclass
 	if "`for'"!="" local ttl "ATET by calendar time for `for'"
 	else local ttl "ATET by calendar time"
 
-	if "`dydx'"=="dydx" quietly margins, dydx(_Tx) subpop(if _Tx==1 & inlist(`time', `bycalendar')==1 `andfor') over(`calsubset') vce(unconditional) noomit `options' post
+	if "`aggregationweight'"=="grouplevel" {
+		tempvar ngt ng aggwt
+		quietly egen `ngt' = count(`group') if _Cohort>0, by(`group' `time')
+		quietly egen `ng' = count(`group') if _Cohort>0, by(`group')
+		quietly tab `time'
+		quietly generate double `aggwt' = `ng'/r(r)/`ngt'
+		quietly sum `aggwt' if _Tx==1 & inlist(`time', `bycalendar')==1 `andfor',d
+		quietly replace `aggwt' = `aggwt'/r(mean)
 
-	else quietly margins r._Tx, subpop(if _Tx==1 & inlist(`time', `bycalendar')==1 `andfor') over(`calsubset') contrast(effects nowald) vce(unconditional) noomit `options' post
+		if "`dydx'"=="dydx" quietly margins, expr(predict(xb)*`aggwt') dydx(_Tx) subpop(if _Tx==1 & inlist(`time', `bycalendar')==1 `andfor') over(`calsubset') vce(unconditional) noomit post `options'
+
+		else quietly margins r._Tx, expr(predict(xb)*`aggwt') subpop(if _Tx==1 & inlist(`time', `bycalendar')==1 `andfor') contrast(effects nowald) over(`calsubset') vce(unconditional) noomit post `options'
+	}
+
+	else if "`aggregationweight'"=="obslevel" {
+		if "`dydx'"=="dydx" quietly margins, dydx(_Tx) subpop(if _Tx==1 & inlist(`time', `bycalendar')==1 `andfor') over(`calsubset') vce(unconditional) noomit post `options'
+
+		else quietly margins r._Tx, subpop(if _Tx==1 & inlist(`time', `bycalendar')==1 `andfor') contrast(effects nowald) over(`calsubset') vce(unconditional) noomit post `options'
+	}
 
 	if "`nograph'"=="" quietly marginsplot, recast(scatter) xtitle(Calendar time) ytitle({&Delta} `yvar') title("`ttl'") yline(0)  `graphoptions'
 	tempname beta Var nm 
@@ -499,12 +570,11 @@ end
 
 program define _ATET_Bycohort, rclass
 	syntax [anything], [bycohort BYCOHORT(numlist min=1) FOR(string) ///
-		NOGraph GRAPHoptions(string) TEst(string) DYDX Level(cilevel) *]
+		NOGraph GRAPHoptions(string) TEst(string) DYDX AGGregationweight(string)Level(cilevel) *]
         
 	local group `e(group)'
 	local time `e(time)'
 	local tx `e(tx)'
-	local txgroup `e(txgroup)'
 	local usercohort `e(usercohort)'
 	local clustvar `e(clustvar)'
 	local wexp `e(wexp)'
@@ -523,8 +593,16 @@ program define _ATET_Bycohort, rclass
 	marksample touse
 	markout `touse' `clustvar' `wt' `tx' `group' `time', strok
 
+	// Incorporate aggregation weights
+	if "`aggregationweight'" == "" local aggregationweight "obslevel" // specify obslevel or grouplevel
+	// If they gave weird strings as the specification
+	if "`aggregationweight'"!="obslevel" & "`aggregationweight'"!="grouplevel" {
+		display as error `"Value for {bf:aggregationweight()} must be "obslevel" or "grouplevel"."'
+		exit 198
+	}
+
 	// If there are no never-treated units
-	quietly sum _Chrt if `touse', meanonly
+	quietly sum _Cohort if `touse', meanonly
 	local cmin = r(min)
 	local cmax = r(max)
 	if (`cmin'>0) {
@@ -532,23 +610,23 @@ program define _ATET_Bycohort, rclass
 		quietly generate `lc' = (`time'>=`cmax')
 		quietly replace `lc' = . if `lc'==1
 		markout `touse' `lc'
-		quietly replace _Chrt = 0 if _Chrt == `cmax' & `touse'
+		quietly replace _Cohort = 0 if _Cohort == `cmax' & `touse'
 	}
 
 	tempvar eventtime mcohort
-	quietly generate `eventtime' = `time' - _Chrt if _Chrt>0 & `touse'
-	quietly replace `eventtime' = -1 if _Chrt==0 & `touse'
+	quietly generate `eventtime' = `time' - _Cohort if _Cohort>0 & `touse'
+	quietly replace `eventtime' = -1 if _Cohort==0 & `touse'
 
 	// marginsplot is nicer if cohort is defined as sequential integers (mcohort)
 	tempvar chrtsubset
 	local bycohort "`=subinstr(trim("`bycohort'")," ",",",.)'"
 	quietly generate `chrtsubset' = .
 	if "`bycohort'"!="" {
-		quietly replace `chrtsubset' = _Chrt if inlist(_Chrt, `bycohort') & `touse'
+		quietly replace `chrtsubset' = _Cohort if inlist(_Cohort, `bycohort') & `touse'
 	}
-	else quietly replace `chrtsubset' = _Chrt if _Chrt>0 & `touse'
+	else quietly replace `chrtsubset' = _Cohort if _Cohort>0 & `touse'
 	quietly egen `mcohort' = group(`chrtsubset'), label
-	quietly replace `mcohort' = . if _Chrt == 0 & `touse'
+	quietly replace `mcohort' = . if _Cohort == 0 & `touse'
 	quietly levelsof `mcohort', local(lofm)
 	quietly levelsof `chrtsubset', local(lofby)
 
@@ -557,9 +635,25 @@ program define _ATET_Bycohort, rclass
 	if "`for'"!="" local ttl "ATET by treated cohort for `for'"
 	else local ttl "ATET by treated cohort"
 
-	if "`dydx'"=="dydx" quietly margins, dydx(_Tx) subpop(if _Tx==1 & `eventtime'>=0 `andfor') over(`mcohort') vce(unconditional)  noomit `options' post
+	if "`aggregationweight'"=="grouplevel" {
+		tempvar ngt ng aggwt
+		quietly egen `ngt' = count(`group') if _Cohort>0, by(`group' `time')
+		quietly egen `ng' = count(`group') if _Cohort>0, by(`group')
+		quietly tab `time'
+		quietly generate double `aggwt' = `ng'/r(r)/`ngt'
+		quietly sum `aggwt' if _Tx==1 & `eventtime'>=0 `andfor')==1 `andfor',d
+		quietly replace `aggwt' = `aggwt'/r(mean)
 
-	else quietly margins r._Tx, subpop(if _Tx==1 & `eventtime'>=0 `andfor') over(`mcohort') contrast(effects nowald) vce(unconditional)  noomit `options' post
+		if "`dydx'"=="dydx" quietly margins, expr(predict(xb)*`aggwt') dydx(_Tx) subpop(if _Tx==1 & `eventtime'>=0 `andfor') over(`mcohort') vce(unconditional) noomit post `options'
+
+		else quietly margins r._Tx, expr(predict(xb)*`aggwt') subpop(if _Tx==1 & `eventtime'>=0 `andfor') contrast(effects nowald) over(`mcohort') vce(unconditional) noomit post `options'
+	}
+
+	else if "`aggregationweight'"=="obslevel" {
+		if "`dydx'"=="dydx" quietly margins, dydx(_Tx) subpop(if _Tx==1 & `eventtime'>=0 `andfor') over(`mcohort') vce(unconditional) noomit post `options'
+
+		else quietly margins r._Tx, subpop(if _Tx==1 & `eventtime'>=0 `andfor') contrast(effects nowald) over(`mcohort') vce(unconditional) noomit post `options'
+	}
 
 	if "`nograph'"=="" quietly marginsplot, recast(scatter) xtitle(Cohort by entry time) ytitle({&Delta} `yvar') title("`ttl'") yline(0)  xlabel(`lofm') `graphoptions'
 	tempname beta Var nm 
@@ -595,12 +689,11 @@ end
 
 program define _ATET_Bygroup, rclass
 	syntax [anything], [bygroup BYGROUP(numlist min=1) FOR(string) ///
-		NOGraph GRAPHoptions(string) TEst(string) DYDX Level(cilevel) *]
+		NOGraph GRAPHoptions(string) TEst(string) DYDX AGGregationweight(string)Level(cilevel) *]
         
 	local group `e(group)'
 	local time `e(time)'
 	local tx `e(tx)'
-	local txgroup `e(txgroup)'
 	local usercohort `e(usercohort)'
 	local clustvar `e(clustvar)'
 	local wexp `e(wexp)'
@@ -619,8 +712,16 @@ program define _ATET_Bygroup, rclass
 	marksample touse
 	markout `touse' `clustvar' `wt' `tx' `group' `time', strok
 
+	// Incorporate aggregation weights
+	if "`aggregationweight'" == "" local aggregationweight "obslevel" // specify obslevel or grouplevel
+	// If they gave weird strings as the specification
+	if "`aggregationweight'"!="obslevel" & "`aggregationweight'"!="grouplevel" {
+		display as error `"Value for {bf:aggregationweight()} must be "obslevel" or "grouplevel"."'
+		exit 198
+	}
+
 	// If there are no never-treated units
-	quietly sum _Chrt if `touse', meanonly
+	quietly sum _Cohort if `touse', meanonly
 	local cmin = r(min)
 	local cmax = r(max)
 	if (`cmin'>0) {
@@ -628,23 +729,23 @@ program define _ATET_Bygroup, rclass
 		quietly generate `lc' = (`time'>=`cmax')
 		quietly replace `lc' = . if `lc'==1
 		markout `touse' `lc'
-		quietly replace _Chrt = 0 if _Chrt == `cmax' & `touse'
+		quietly replace _Cohort = 0 if _Cohort == `cmax' & `touse'
 	}
 
 	tempvar eventtime mgroup
-	quietly generate `eventtime' = `time' - _Chrt if _Chrt>0 & `touse'
-	quietly replace `eventtime' = -1 if _Chrt==0 & `touse'
+	quietly generate `eventtime' = `time' - _Cohort if _Cohort>0 & `touse'
+	quietly replace `eventtime' = -1 if _Cohort==0 & `touse'
 
 	// marginsplot is nicer if group is defined as sequential integers (mgroup)
 	tempvar grpsubset
 	local bygroup "`=subinstr(trim("`bygroup'")," ",",",.)'"
 	quietly generate `grpsubset' = .
 	if "`bygroup'"!="" {
-		quietly replace `grpsubset' = _Grp if inlist(_Grp, `bygroup') & `touse'
+		quietly replace `grpsubset' = `group' if inlist(`group', `bygroup') & `touse'
 	}
-	else quietly replace `grpsubset' = _Grp if _Chrt>0 & `touse'
+	else quietly replace `grpsubset' = `group' if _Cohort>0 & `touse'
 	quietly egen `mgroup' = group(`grpsubset'), label
-	quietly replace `mgroup' = . if _Chrt == 0 & `touse'
+	quietly replace `mgroup' = . if _Cohort == 0 & `touse'
 	quietly levelsof `mgroup', local(lofm)
 	quietly levelsof `grpsubset', local(lofby)
 
@@ -653,9 +754,25 @@ program define _ATET_Bygroup, rclass
 	if "`for'"!="" local ttl "ATET by treated group for `for'"
 	else local ttl "ATET by treated group"
 
-	if "`dydx'"=="dydx" quietly margins, dydx(_Tx) subpop(if _Tx==1 & `eventtime'>=0 `andfor') over(`mgroup') vce(unconditional)  noomit `options' post
+	if "`aggregationweight'"=="grouplevel" {
+		tempvar ngt ng aggwt
+		quietly egen `ngt' = count(`group') if _Cohort>0, by(`group' `time')
+		quietly egen `ng' = count(`group') if _Cohort>0, by(`group')
+		quietly tab `time'
+		quietly generate double `aggwt' = `ng'/r(r)/`ngt'
+		quietly sum `aggwt' if _Tx==1 & `eventtime'>=0 `andfor')==1 `andfor',d
+		quietly replace `aggwt' = `aggwt'/r(mean)
 
-	else quietly margins r._Tx, subpop(if _Tx==1 & `eventtime'>=0 `andfor') over(`mgroup') contrast(effects nowald) vce(unconditional)  noomit `options' post
+		if "`dydx'"=="dydx" quietly margins, expr(predict(xb)*`aggwt') dydx(_Tx) subpop(if _Tx==1 & `eventtime'>=0 `andfor') over(`mgroup') vce(unconditional) noomit post `options'
+
+		else quietly margins r._Tx, expr(predict(xb)*`aggwt') subpop(if _Tx==1 & `eventtime'>=0 `andfor') contrast(effects nowald) over(`mgroup') vce(unconditional) noomit post `options'
+	}
+
+	else if "`aggregationweight'"=="obslevel" {
+		if "`dydx'"=="dydx" quietly margins, dydx(_Tx) subpop(if _Tx==1 & `eventtime'>=0 `andfor') over(`mgroup') vce(unconditional) noomit post `options'
+
+		else quietly margins r._Tx, subpop(if _Tx==1 & `eventtime'>=0 `andfor') contrast(effects nowald) over(`mgroup') vce(unconditional) noomit post `options'
+	}
 
 	if "`nograph'"=="" quietly marginsplot, recast(scatter) xtitle(Treated group) ytitle({&Delta} `yvar') title("`ttl'") yline(0)  xlabel(`lofm') `graphoptions'
 	tempname beta Var nm 

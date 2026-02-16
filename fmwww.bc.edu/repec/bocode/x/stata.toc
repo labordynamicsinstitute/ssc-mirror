@@ -35,7 +35,9 @@ p xtbalance module to transform the dataset into balanced Panel Data
 p xtbalance2 module to create a balanced subsample from unbalanced panel data
 p xtbcfe module to perform bootstrap-corrected Fixed Effects estimation and inference in dynamic panel models
 p xtbreak module for detecting and dating multiple structural breaks in time series and panel data
+p xtbreakscoint module to implement the panel cointegration test with structural breaks developed by Banerjee and Carrion-i-Silvestre (2015, Journal of Applied Econometrics)
 p xtbunitroot module to perform unit root tests for panel data with structural breaks
+p xtcadfcoint module to perform Panel CADF cointegration test with structural breaks and cross-section dependence
 p xtcaec module to estimate heterogeneous error correction models in cross-sectional dependent panel data
 p xtcbfe module to perform bootstrap-corrected Fixed Effects estimation and inference in dynamic panel models
 p xtcce module to implement the Common Correlated Effects estimator
@@ -50,8 +52,8 @@ p xtcse2 module to estimate the exponent of cross-sectional dependence in large 
 p xtcsi module to investigate Residual Cross-Section Independence 
 p xtdcce module to estimate heterogeneous coefficient models using common correlated effects in a dynamic panel
 p xtdcce2 module to estimate heterogeneous coefficient models using common correlated effects in a dynamic panel
-p xtdhcoint module to perform Durbin-Hausman panel cointegration tests
 p xtdhazard module to perform Own-Differences IV/CF Estimation of the Discrete-Time Hazard Model
+p xtdhcoint module to perform Durbin-Hausman panel cointegration tests
 p xtdolshm module to perform panel data cointegration 
 p xtdpdbc module to perform bias-corrected estimation of linear dynamic panel data models
 p xtdpdgmm module to perform generalized method of moments estimation of linear dynamic panel data models

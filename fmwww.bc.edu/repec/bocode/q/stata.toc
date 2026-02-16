@@ -1,4 +1,5 @@
 p qap module to perform quadratic assignment procedure
+p qardl module to perform Quantile Autoregressive Distributed-Lag (QARDL) estimation
 p qbeta module to generate quantile-quantile plot for data vs fitted beta distribution
 p qbplot module for quantile plot with box flavour 
 p qcm module to implement quantile control method (QCM) via Random Forest

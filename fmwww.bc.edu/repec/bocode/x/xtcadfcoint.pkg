@@ -1,0 +1,31 @@
+d 'XTCADFCOINT': module to perform Panel CADF cointegration test with structural breaks and cross-section dependence
+d
+d  xtcadfcoint implements the panel cointegration test proposed by
+d Banerjee and Carrion-i-Silvestre (2025, Journal of Business &
+d Economic Statistics). The test extends the Cross-sectionally
+d Augmented IPS (CIPS) framework to test the null hypothesis of no
+d cointegration in heterogeneous panels, allowing for Cross-section
+d dependence via Common Correlated Effects (CCE); Multiple
+d structural breaks (0, 1, or 2) with endogenous break dates; Five
+d deterministic specifications (constant, trend, level shifts,	 
+d level and slope shifts);  Breaks in cointegrating vectors and
+d factor loadings;  and Automatic lag selection (AIC, BIC, MAIC,
+d MBIC) 
+d
+d KW: panel cointegration
+d KW: CIPS
+d KW: CCE
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260215
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtcadfcoint.ado
+f xtcadfcoint.sthlp
+f xtcadfcoint_mata.ado
+f xtcadfcoint_example.do
+f xtcadfcoint_makedata.do

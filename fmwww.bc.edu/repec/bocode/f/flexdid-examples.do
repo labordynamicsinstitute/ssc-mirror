@@ -2,35 +2,47 @@ clear all
 
 webuse hhabits
 
-// manually create the cohort variable - to use as the treatment group if desired
-egen chrt = min(year/hhabit), by(schools)
-replace chrt = 0 if chrt==.
-
-preserve
-bysort schools: keep if _n==1
-tab chrt
-restore
-
 // basic setup
-flexdid bmi, tx(hhabit) group(schools) time(year)
+flexdid bmi girl medu, tx(hhabit) group(schools) time(year)
 
 // post-estimation aggregation
 estat atet, byexposure
 estat atet, bycalendar
 estat atet, bycohort
 estat atet, bygroup
+estat atet, byget
 
-// Adding tests, options and refining aggregation
+// adding tests, options and refining aggregation
 estat atet, overall(0/3)
 estat atet, byexposure test(zero)
 estat atet, byexposure test(equal) nograph
 
-
 // how to use sampling weights
 flexdid bmi [pw=parksd], tx(hhabit) group(schools) time(year)
 
+// manually create a cohort variable - to use as the group variable in more
+// "aggregate" flexdid specifications
+// cohort is the most aggregate definition of group that yields appropriate ATETs
+egen chrt = min(year/hhabit), by(schools)
+replace chrt = 0 if chrt==.
 
-// lags and leads specification using chrt as the group
+// check the distribution of schools across cohorts
+preserve
+bysort schools: keep if _n==1
+tab chrt
+restore
+
+// cohort is the group now but vce clustering is still at the schools level - needs to be specified explicitly
+flexdid bmi girl medu, tx(hhabit) group(chrt) time(year) vce(cluster schools)
+
+// post-estimation aggregation
+estat atet, byexposure
+estat atet, bycalendar
+
+// this specification is "fully interacted" in chrt year and covariates but, in addition, includes school indicators as additive "fixed effects"
+flexdid bmi girl medu, tx(hhabit) group(chrt) time(year) vce(cluster schools) xnotinteracted(i.schools)
+
+// lags and leads specification using chrt as the group - note vce specification
 flexdid bmi, tx(hhabit) gr(chrt) ti(year) specification(lagsandleads) vce(cluster schools)
 
 // this is a parallel pre-trend test
@@ -46,11 +58,6 @@ estat atet, byexposure(-6/-2) test(zero)
 estat atet, byexposure(0/6) test(zero) nograph
 estat atet, byexposure(0/6) test(equal) nograph
 
-
-// FLEX allows estimating treatment at cohortXyear level and fixed effects at the group level
-flexdid bmi, tx(hhabit) gr(schools) txgr(chrt) ti(year) vce(cluster schools) specification(lagsandleads) verbose
-
-
 // include covariates
 flexdid bmi medu, tx(hhabit) group(chrt) time(year) vce(cluster schools)
 
@@ -58,10 +65,10 @@ flexdid bmi medu, tx(hhabit) group(chrt) time(year) vce(cluster schools)
 estat atet, byexposure for(girl==0) nograph
 estat atet, bycohort for(medu<10) nograph
 
-
 // include covariates with options to include no interactions or only some interactions
-flexdid bmi medu sports i.girl, tx(hhabit) gr(schools) ti(year) noxinteract
-flexdid bmi medu sports i.girl, tx(hhabit) group(schools) time(year) xinteract(medu)
+flexdid bmi, tx(hhabit) gr(schools) ti(year) xnotinteracted(medu sports i.girl) 
+
+flexdid bmi sports i.girl, tx(hhabit) group(schools) time(year) xnotinteracted(medu)
 
 // what if some years of data are missing - especially cohort years
 preserve
@@ -75,7 +82,6 @@ flexdid bmi, tx(hhabit) gr(chrt) ti(year) vce(cluster schools) usercohort(chrt) 
 estat atet, byexposure graph(name(exwmiss, replace))
 
 restore
-
 
 // what if treatment is not always 0 or always 1 in some groups and/or in some years
 preserve
