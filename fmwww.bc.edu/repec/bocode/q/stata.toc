@@ -1,3 +1,4 @@
+p qadf module to perform the Quantile Autoregression (QAR) unit root test proposed by Koenker and Xiao (JASA, 2004)
 p qap module to perform quadratic assignment procedure
 p qardl module to perform Quantile Autoregressive Distributed-Lag (QARDL) estimation
 p qbeta module to generate quantile-quantile plot for data vs fitted beta distribution

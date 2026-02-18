@@ -338,7 +338,7 @@ quietly {
 			******************************************************
 			
 			findfile _`variable'.ado, `path'
-			copy  `tmp`variable''  "`r(fn)'" , replace
+			copy  `tmp`variable''  `r(fn)' , replace
 
 		}
 		*/
@@ -371,8 +371,9 @@ end
 *		topicname
 *
 /*******************************************************************************
+* EXAMPLE/TEST CODE (run from your local wbopendata/src directory)
 
-cd "C:\GitHub_myados\wbopendata\src"
+* cd "<your-path-to>/wbopendata/src"
 
 ! git checkout dev
 

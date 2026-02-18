@@ -1,0 +1,89 @@
+d 'UNICEFDATA': module to download indicators from UNICEF Data Warehouse
+d
+d    unicefData downloads indicator data from the UNICEF Data
+d Warehouse using the SDMX REST API. It provides access to 748+
+d indicators covering child health, nutrition, education,
+d protection, HIV/AIDS, WASH, and more. 
+d
+d KW: UNICEF
+d KW: child health
+d KW: nutrition
+d KW: education
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260217
+d
+d Author: Joao Pedro Azevedo, World Bank
+d Support: email jazevedo@@worldbank.org
+d
+f unicefdata.ado
+f unicefdata.sthlp
+f ../_/__unicef_fetch_paged.ado
+f ../_/__unicef_get_indicator_dataflow.ado
+f ../_/__unicef_get_indicator_filters.ado
+f ../_/__unicef_parse_indicator_yaml.ado
+f ../_/_dataflow_fallback_sequences.yaml
+f ../_/_dataflow_index.yaml
+f ../_/_dataflow_indicators_list.txt
+f ../_/_get_dataflow_direct.ado
+f ../_/_get_sdmx_rename_year_columns.ado
+f ../_/_indicator_dataflow_map.yaml
+f ../_/_linewrap.ado
+f ../_/_metadata_linewrap.ado
+f ../_/_query_indicators.ado
+f ../_/_query_metadata.ado
+f ../_/_set_default_dataflows.ado
+f ../_/_unicef_build_schema_key.ado
+f ../_/_unicef_dataflow_info.ado
+f ../_/_unicef_fetch_with_fallback.ado
+f ../_/_unicef_get_disagg_totals.ado
+f ../_/_unicef_indicator_info.ado
+f ../_/_unicef_list_dataflows.ado
+f ../_/_unicef_list_indicators.ado
+f ../_/_unicef_search_indicators.ado
+f ../_/_unicefdata_codelists.yaml
+f ../_/_unicefdata_countries.dta
+f ../_/_unicefdata_countries.yaml
+f ../_/_unicefdata_dataflow_metadata.yaml
+f ../_/_unicefdata_dataflows.yaml
+f ../_/_unicefdata_indicators.yaml
+f ../_/_unicefdata_indicators_metadata.yaml
+f ../_/_unicefdata_regions.yaml
+f ../_/_unicefdata_sync_dataflow_index.ado
+f ../_/_unicefdata_sync_df_schema.ado
+f ../_/_unicefdata_sync_history.yaml
+f ../_/_unicefdata_sync_ind_meta.ado
+f ../_/_unicefdata_update_sync_history.ado
+f ../_/_xmltoyaml_get_schema.ado
+f ../_/_xmltoyaml_parse.ado
+f ../_/_xmltoyaml_parse_lines.ado
+f ../_/_xmltoyaml_parse_python.ado
+f ../_/_xmltoyaml_parse_stata.ado
+f ../b/build_dataflow_metadata.py
+f ../b/build_indicator_dataflow_map.py
+f ../e/enrich_indicators_metadata.py
+f ../e/enrich_stata_metadata_complete.py
+f ../g/get_sdmx.ado
+f ../g/get_sdmx.sthlp
+f ../p/python_xml_helper.py
+f ../s/stata_schema_sync.py
+F unicefdata_README.md
+f unicefdata_examples.ado
+f unicefdata_examples.sthlp
+f unicefdata_refresh_all.ado
+f unicefdata_setup.ado
+f unicefdata_setup.sthlp
+f unicefdata_sync.ado
+f unicefdata_sync.sthlp
+f unicefdata_template.do
+f unicefdata_whatsnew.sthlp
+f unicefdata_xml2yaml.cpython-311.pyc
+f unicefdata_xml2yaml.py
+f unicefdata_xmltoyaml.ado
+f unicefdata_xmltoyaml.sthlp
+f unicefdata_xmltoyaml_py.ado
+f unicefdata_xmltoyaml_py.sthlp
+f ../v/validate_yaml_schema.py
+f ../y/yaml.ado
+f ../y/yaml.sthlp

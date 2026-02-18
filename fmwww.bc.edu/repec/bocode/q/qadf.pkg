@@ -1,0 +1,25 @@
+d 'QADF': module to perform the Quantile Autoregression (QAR) unit root test proposed by Koenker and Xiao (JASA, 2004)
+d
+d  The qadf package provides a comprehensive Stata implementation
+d of the quantile unit root testing framework, offering significant
+d advantages over standard ADF and Phillips-Perron tests,
+d particularly for data with non-Gaussian disturbances and
+d asymmetric persistence patterns. 
+d
+d KW: quantile
+d KW: autoregression
+d KW: unit root test
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260217
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f qadf.ado
+f qadf.sthlp
+f qadf_boot.ado
+f qadf_graph.ado
+f qadf_process.ado
+f ../_/_qadf_mata.ado

@@ -1,14 +1,15 @@
 /*------------------------------------*/
 /*undid_stage_three*/
 /*written by Eric Jamieson */
-/*version 1.0.0 2025-09-14 */
+/*version 2.0.1 2026-02-17 */
 /*------------------------------------*/
 cap program drop undid_stage_three
 program define undid_stage_three, rclass
     version 16
     syntax, dir_path(string) /// 
-            [agg(string) weights(string) covariates(int 0) use_pre_controls(int 0) ///
-            nperm(int 1000) verbose(int 0) seed(int 0) max_attempts(int 100) check_anon_size(int 0)]
+            [agg(string) weights(string) covariates(int 0) notyet(int 0) ///
+            nperm(int 999) verbose(int 250) seed(int 0) max_attempts(int 100) check_anon_size(int 0) hc(int 3) ///
+            omit(string) only(string)]
 
     // ---------------------------------------------------------------------------------------- //
     // ---------------------------- PART ONE: Basic Input Checks ------------------------------ // 
@@ -25,9 +26,9 @@ program define undid_stage_three, rclass
         di as error "Error: verbose must be set to 0 (off) or a positive integer denoting how often to print progress messages for randomization inference."
         exit 4
     }
-    // Check use_pre_controls
-    if !inlist(`use_pre_controls', 0, 1) {
-        di as error "Error: use_pre_controls must be set to either 0 (false) or 1 (true)."
+    // Check notyet
+    if !inlist(`notyet', 0, 1) {
+        di as error "Error: notyet must be set to either 0 (false) or 1 (true)."
         exit 8
     }
 
@@ -42,9 +43,7 @@ program define undid_stage_three, rclass
         di as error "Error: nperm must be greater than 0" 
         exit 5
     }
-    else {
-        local nperm = `nperm' + 1
-    }
+
     // Process seed
     if "`seed'" != "0" {
         set seed `seed'
@@ -53,6 +52,11 @@ program define undid_stage_three, rclass
     if `max_attempts' < 1 {
         di as error "Error: 'max_attempts' must be > 0!"
         exit 16
+    }
+    // Check hc
+    if !inlist(`hc', 0, 1, 2, 3, 4) {
+        di as error "Error: 'hc' options are: 0, 1, 2, 3, or 4."
+        exit 19
     }
 
     // Check string inputs
@@ -139,6 +143,27 @@ program define undid_stage_three, rclass
         exit 9
     }
 
+    // Remove any whitespace from state names 
+    qui replace silo_name = subinstr(silo_name, " ", "", .)
+
+    // Apply the only arg
+    if "`only'" != "" {
+        tempvar keep_flag
+        qui gen byte `keep_flag' = 0
+        foreach silo in `only' {
+            qui replace `keep_flag' = 1 if silo_name == "`silo'"
+        }
+        qui keep if `keep_flag' == 1
+        drop `keep_flag'
+    }
+    
+    // Apply the omit arg
+    if "`omit'" != "" {
+        foreach silo in `omit' {
+            qui drop if silo_name == "`silo'"
+        }
+    }
+
     // Process columns with potential NA/missing to be missing strings then convert to numeric columns
     foreach var in treat n n_t {
         qui replace `var' = "" if `var' == "NA" | `var' == "missing"
@@ -205,35 +230,27 @@ program define undid_stage_three, rclass
         }
     }
 
-    // If use_pre_controls is toggled on, rearrange the data as necessary
+    // If notyet is toggled on, rearrange the data as necessary
     if `check_staggered' == 1 {
         qui gen t_str = substr(gt, strpos(gt, ";") + 1, .)
         qui _parse_string_to_date, varname(t_str) date_format("`date_format'") newvar(t) 
         qui _parse_string_to_date, varname(gvar) date_format("`date_format'") newvar(gvar_date) 
     }
-    if `check_staggered' == 1 & `use_pre_controls' == 1 {
+    if `check_staggered' == 1 & `notyet' == 1 {
         qui egen double treated_time_silo = min(cond(treat==1, gvar_date, .)), by(silo_name)
         qui replace treat = 0 if treat == -1 & t < treated_time_silo
         qui drop treated_time_silo
     }
 
+    // Ensure that agg option of "none" isn't selected for staggered adoption
+    if `check_staggered' == 1 & "`agg'" == "none" {
+        di as error "Error: Cannot use 'none' aggregation for staggered adoption."
+        exit 18
+    }
+    
     // Check that at least one treat and untreated diff exist for each sub-agg ATT computation, drop that sub-agg ATT if not
     // Also do some extra processing if agg == "time" then create the time column which indicates periods since treatment
     if `check_staggered' == 1 {
-        if "`agg'" == "none" {
-            if inlist("`weights'", "att", "both") {
-                di as err "Warning: weighting methods 'att' and 'both' are not applicable to aggregation method of 'none' as they apply weights to sub-aggregate ATTs which are not caluclated with 'agg = none'. Overwriting weights to 'diff'."
-                local weights "diff"
-            }
-            qui count if treat == 1
-            local treated_count = r(N)
-            qui count if treat == 0
-            local control_count = r(N)
-            if `treated_count' < 1 | `control_count' < 1 {
-                di as err "Error: Need at least one treated and one control observation."
-                exit 11
-            }
-        }
         if inlist("`agg'", "g", "silo") {
             qui levelsof gvar, local(gvars)
             foreach g of local gvars {
@@ -464,6 +481,28 @@ program define undid_stage_three, rclass
         }
     }
 
+    // Check if randomization inference should be done
+    local randomize = 1 // Always possible for common adoption
+    if `check_staggered' == 1 {
+        tempvar has_treat0 has_treat1
+        qui bysort gt: egen `has_treat0' = max(treat == 0)
+        qui bysort gt: egen `has_treat1' = max(treat == 1)
+        
+        qui levelsof gt if `has_treat0' == 1 & `has_treat1' == 1, local(gts)
+        qui levelsof silo_name, local(silo_names)
+
+        foreach g of local gts {
+            foreach s of local silo_names {
+                qui count if gt == "`g'" & silo_name == "`s'"
+                if r(N) == 0 {
+                    local randomize = 0
+                    continue, break
+                }
+            }
+            if `randomize' == 0 continue, break
+        }
+    }
+
     // If common treatment scenario and gvar doesnt exist, create it 
     if `check_common' == 1 & "`agg'" != "silo" {
         qui rename common_treatment_time gvar
@@ -489,184 +528,36 @@ program define undid_stage_three, rclass
         restore
     }
 
-    // After all the pre-processing checks are done, can finally move on to regressions
+    // Sort data and create id columns as needed
+    if "`agg'" == "g" {
+        qui sort gvar_date
+    }
+    else if "`agg'" == "gt" {
+        qui sort gvar_date t
+        qui encode gt, gen(gt_id)
+        qui order gt_id, last
+    }
+    else if "`agg'" == "silo" {
+        qui sort silo_id
+    }
+    else if "`agg'" == "sgt" {
+        qui sort silo_id gvar_date t
+        qui egen sgt_id = group(silo_name gt)
+        qui order sgt_id, last
+    }
+    else if "`agg'" == "time" {
+        qui sort time
+    }
 
-    // ---------------------------------------------------------------------------------------- //
-    // ---------------------------- PART THREE: Compute Results ------------------------------- // 
-    // ---------------------------------------------------------------------------------------- //
-
-    // Create a column of ones for the regressions
-    qui gen byte const = 1
-
-    // Define some tempnames for scalars for the aggregate levels results 
-    qui tempname agg_att 
-    qui tempname agg_att_se 
-    qui tempname agg_att_jknife_se 
-    qui tempname agg_att_pval 
-    qui tempname agg_att_jknife_pval
-    qui tempname agg_att_tstat
-    qui tempname agg_att_tstat_jknife
-    qui tempname agg_att_dof
-    
-    // For storing counts and other scalars
-    qui tempname total_n
-    qui tempname total_n_t
-    qui tempname sub_agg_dof
-    qui tempname sub_agg_tstat
-
-    // For edge cases
-    qui tempname trt0_var
-    qui tempname trt0_weight
-    qui tempname trt1_var
-    qui tempname trt1_weight
-
-    // Define some locals to store the sub-aggregate level results
+    // Store the sub_agg_label
     local sub_agg_label ""
-    local sub_agg_atts ""
-    local sub_agg_atts_se ""
-    local sub_agg_atts_pval ""
-    local sub_agg_atts_jknife ""
-    local sub_agg_atts_jknife_pval ""
-    local sub_agg_atts_ri_pval ""
-    local sub_agg_weights ""
-
-    if "`agg'" == "none" {
-        // Still need to add functionality with common adoption (and its edge case)
-        // Basically, should manually calculate the edge case for common adoption
-        preserve
-        qui keep if treat >= 0
-        if "`weights'" == "diff" {
-            qui sum n 
-            qui scalar `total_n' = r(sum)
-            qui gen w = n / `total_n'
-            qui gen double sw = sqrt(w)
-            qui replace y = y * sw
-            qui replace treat = treat * sw
-            qui replace const = const * sw
-        }
-        qui reg y const treat if treat >= 0, noconstant vce(robust)
-        qui scalar `agg_att' = _b[treat]
-        qui scalar `agg_att_se' = _se[treat]
-        qui scalar `agg_att_dof' = e(df_r)
-        qui count if treat > 0
-        local treated_obs = r(N)
-        qui count if treat == 0 
-        local control_obs = r(N)
-        if `treated_obs' + `control_obs' == 2 { //Only two obs - can't compute standard errors for staggered
-            if `check_staggered' == 1 {
-                qui scalar `agg_att_se' = .
-                qui scalar `agg_att_pval' = .
-                qui scalar `agg_att_jknife_se' = .
-                qui scalar `agg_att_jknife_pval' = .
-            }
-            else if `check_common' == 1 {
-                // Can manually compute standard error here, but not pval
-                qui count if missing(yvar)
-                local nmiss = r(N)
-                if `nmiss' > 0 {
-                    di as error "Warning: Missing values of variance estimate, could not compute the standard error!"
-                    local sub_agg_att_se "."
-                }
-                else {
-                    qui summ yvar if treat == 0, meanonly
-                    qui scalar `trt0_var' = r(min)
-                    qui summ yvar if treat > 0, meanonly
-                    qui scalar `trt1_var' = r(min)
-                    if "`weights'" == "diff" {
-                        qui sum n if treat >= 0 
-                        qui scalar `total_n' = r(sum)
-                        qui sum n if treat == 0 
-                        qui scalar `trt0_weight' = (r(min) / `total_n')^2
-                        qui sum n if treat > 0 
-                        qui scalar `trt1_weight' = (r(min) / `total_n')^2
-                        qui scalar `agg_att_se' = sqrt((`trt1_var' * `trt1_weight' + `trt0_var' * `trt0_weight')/(`trt0_weight' + `trt1_weight'))
-                    } 
-                    else {
-                        qui scalar `agg_att_se' = sqrt(`trt1_var' + `trt0_var')
-                    }
-                }
-                qui scalar `agg_att_pval' = .
-                qui scalar `agg_att_jknife_se' = .
-                qui scalar `agg_att_jknife_pval' = .
-            }
-        }
-        else if `treated_obs' == 1 | `control_obs' == 1 { // If only one of treated_obs or control_obs, can't compute jackknife
-                qui scalar `agg_att_tstat' = `agg_att' / `agg_att_se'
-                qui scalar `agg_att_pval' = 2 * ttail(`agg_att_dof', abs(`agg_att_tstat'))
-                qui scalar `agg_att_jknife_se' = .
-                qui scalar `agg_att_jknife_pval' = .
-        }
-        else {
-            qui scalar `agg_att_tstat' = `agg_att' / `agg_att_se'
-            qui scalar `agg_att_pval' = 2 * ttail(`agg_att_dof', abs(`agg_att_tstat'))
-            qui reg y const treat if treat >= 0, noconstant vce(jackknife)
-            qui scalar `agg_att_dof' = e(N) - 1
-            qui scalar `agg_att_jknife_se' = _se[treat]
-            qui scalar `agg_att_tstat_jknife' = `agg_att' / `agg_att_jknife_se'
-            qui scalar `agg_att_jknife_pval' = 2 * ttail(`agg_att_dof', abs(`agg_att_tstat_jknife'))
-        }
-        restore
-    } 
-    else if "`agg'" == "g" {
+    if "`agg'" == "g" {
         qui levelsof gvar_date, local(gvars)
         foreach g of local gvars {
             preserve 
             qui keep if gvar_date == `g' & treat >= 0
-            if inlist("`weights'", "diff", "both") {
-                qui sum n
-                qui scalar `total_n' = r(sum)
-                qui gen w = n / `total_n'
-                qui gen double sw = sqrt(w)
-                qui replace y = y * sw
-                qui replace treat = treat * sw
-                qui replace const = const * sw
-            }
-
-            if inlist("`weights'", "att", "both") {
-                qui sum n_t if treat > 0 
-                qui scalar `total_n_t' = r(sum)
-                local sub_agg_weights "`sub_agg_weights' `=scalar(`total_n_t')'"
-            }
-            else {
-                local sub_agg_weights "`sub_agg_weights' ."
-            }
-            
-            qui reg y const treat if treat >= 0, noconstant vce(robust)
-            local sub_agg_att = _b[treat]
-            qui scalar `sub_agg_dof' = e(df_r)
-            if `sub_agg_dof' > 0 {
-                local sub_agg_att_se = _se[treat]
-                qui scalar `sub_agg_tstat' = _b[treat] / _se[treat]
-                local sub_agg_att_pval = 2 * ttail(`sub_agg_dof', abs(`sub_agg_tstat'))
-            }
-            else {
-                local sub_agg_att_se "."
-                local sub_agg_att_pval "."
-            }
-            
-            qui count if treat > 0
-            local treated_obs = r(N)
-            qui count if treat == 0
-            local control_obs = r(N)
-            if `treated_obs' == 1 | `control_obs' == 1 {
-                local sub_agg_att_jknife "."
-                local sub_agg_att_jknife_pval "."
-            }
-            else {
-                qui reg y const treat if treat >= 0, noconstant vce(jackknife)
-                local sub_agg_att_jknife = _se[treat]
-                qui scalar `sub_agg_tstat' = _b[treat] / _se[treat]
-                qui scalar `sub_agg_dof' = e(N) - 1
-                local sub_agg_att_jknife_pval = 2 * ttail(`sub_agg_dof', abs(`sub_agg_tstat'))
-            }      
-
             qui levelsof(gvar), local(g_label)
             local sub_agg_label "`sub_agg_label' `g_label'"
-            local sub_agg_atts "`sub_agg_atts' `sub_agg_att'"
-            local sub_agg_atts_se "`sub_agg_atts_se' `sub_agg_att_se'"
-            local sub_agg_atts_pval "`sub_agg_atts_pval' `sub_agg_att_pval'"
-            local sub_agg_atts_jknife "`sub_agg_atts_jknife' `sub_agg_att_jknife'"
-            local sub_agg_atts_jknife_pval "`sub_agg_atts_jknife_pval' `sub_agg_att_jknife_pval'"
             restore
         }
     }
@@ -679,85 +570,9 @@ program define undid_stage_three, rclass
             foreach t of local time {
                 tempfile gt_temp
                 qui save `gt_temp', replace
-                qui keep if t == `t' & treat >= 0
-                if inlist("`weights'", "diff", "both") {
-                    qui sum n
-                    qui scalar `total_n' = r(sum)
-                    qui gen w = n / `total_n'
-                    qui gen double sw = sqrt(w)
-                    qui replace y = y * sw
-                    qui replace treat = treat * sw
-                    qui replace const = const * sw
-                }
-
-                if inlist("`weights'", "att", "both") {
-                    qui sum n_t if treat > 0
-                    qui scalar `total_n_t' = r(sum)
-                    local sub_agg_weights "`sub_agg_weights' `=scalar(`total_n_t')'"
-                }
-                else {
-                    local sub_agg_weights "`sub_agg_weights' ."
-                }
-
-                qui reg y const treat if treat >= 0, noconstant vce(robust)
-                local sub_agg_att = _b[treat]
-                qui scalar `sub_agg_dof' = e(df_r)
-                if `sub_agg_dof' > 0 {
-                    local sub_agg_att_se = _se[treat]
-                    qui scalar `sub_agg_tstat' = _b[treat] / _se[treat]
-                    local sub_agg_att_pval = 2 * ttail(`sub_agg_dof', abs(`sub_agg_tstat'))
-                }
-                else {
-                    qui count if missing(yvar)
-                    local nmiss = r(N)
-                    if `nmiss' > 0 {
-                        di as error "Warning: Missing values of variance estimate, could not compute the standard error for gt: `gt'"
-                        local sub_agg_att_se "."
-                    }
-                    else {
-                        qui summ yvar if treat == 0, meanonly
-                        qui scalar `trt0_var' = r(min)
-                        qui summ yvar if treat > 0, meanonly
-                        qui scalar `trt1_var' = r(min)
-                        if inlist("`weights'", "diff", "both") {
-                            qui sum n if treat >= 0 
-                            qui scalar `total_n' = r(sum)
-                            qui sum n if treat == 0 
-                            qui scalar `trt0_weight' = (r(min) / `total_n')^2
-                            qui sum n if treat > 0 
-                            qui scalar `trt1_weight' = (r(min) / `total_n')^2
-                            local sub_agg_att_se = sqrt((`trt1_var' * `trt1_weight' + `trt0_var' * `trt0_weight')/(`trt0_weight' + `trt1_weight'))
-                        } 
-                        else {
-                            local sub_agg_att_se = sqrt(`trt1_var' + `trt0_var')
-                        }
-                    }
-                    local sub_agg_att_pval "."
-                }
-
-                qui count if treat > 0
-                local treated_obs = r(N)
-                qui count if treat == 0
-                local control_obs = r(N)
-                if `treated_obs' == 1 | `control_obs' == 1 {
-                        local sub_agg_att_jknife "."
-                        local sub_agg_att_jknife_pval "."
-                }
-                else {
-                    qui reg y const treat if treat >= 0, noconstant vce(jackknife)
-                    local sub_agg_att_jknife = _se[treat]
-                    qui scalar `sub_agg_tstat' = _b[treat] / _se[treat]
-                    qui scalar `sub_agg_dof' = e(N) - 1
-                    local sub_agg_att_jknife_pval = 2 * ttail(`sub_agg_dof', abs(`sub_agg_tstat'))
-                }            
-
+                qui keep if t == `t' & treat >= 0       
                 qui levelsof gt if treat > 0, local(gt_label)
                 local sub_agg_label "`sub_agg_label' `gt_label'"
-                local sub_agg_atts "`sub_agg_atts' `sub_agg_att'"
-                local sub_agg_atts_se "`sub_agg_atts_se' `sub_agg_att_se'"
-                local sub_agg_atts_pval "`sub_agg_atts_pval' `sub_agg_att_pval'"
-                local sub_agg_atts_jknife "`sub_agg_atts_jknife' `sub_agg_att_jknife'"
-                local sub_agg_atts_jknife_pval "`sub_agg_atts_jknife_pval' `sub_agg_att_jknife_pval'"
                 qui use `gt_temp', clear
             }
             restore
@@ -768,62 +583,9 @@ program define undid_stage_three, rclass
         foreach s of local silos {
             preserve
             qui levelsof gvar_date if silo_id == `s' & treat == 1, local(g)
-            qui keep if ((silo_id == `s' & treat == 1) | (treat == 0 & gvar_date == `g' & silo_id != `s'))
-            if inlist("`weights'", "diff", "both") {
-                qui sum n
-                qui scalar `total_n' = r(sum)
-                qui gen w = n / `total_n'
-                qui gen double sw = sqrt(w)
-                qui replace y = y * sw
-                qui replace treat = treat * sw
-                qui replace const = const * sw
-            }
-
-            if inlist("`weights'", "att", "both") {
-                qui sum n_t if treat > 0
-                qui scalar `total_n_t' = r(sum)
-                local sub_agg_weights "`sub_agg_weights' `=scalar(`total_n_t')'"
-            }
-            else {
-                local sub_agg_weights "`sub_agg_weights' ."
-            }
-            
-            qui reg y const treat if treat >= 0, noconstant vce(robust)
-            local sub_agg_att = _b[treat]
-            qui scalar `sub_agg_dof' = e(df_r)
-            if `sub_agg_dof' > 0 {
-                local sub_agg_att_se = _se[treat]
-                qui scalar `sub_agg_tstat' = _b[treat] / _se[treat]
-                local sub_agg_att_pval = 2 * ttail(`sub_agg_dof', abs(`sub_agg_tstat'))
-            }
-            else {
-                local sub_agg_att_se "."
-                local sub_agg_att_pval "."
-            }
-            
-            qui count if treat > 0
-            local treated_obs = r(N)
-            qui count if treat == 0
-            local control_obs = r(N)
-            if `treated_obs' == 1 | `control_obs' == 1 {
-                    local sub_agg_att_jknife "."
-                    local sub_agg_att_jknife_pval "."
-            }
-            else {
-                qui reg y const treat if treat >= 0, noconstant vce(jackknife)
-                local sub_agg_att_jknife = _se[treat]
-                qui scalar `sub_agg_tstat' = _b[treat] / _se[treat]
-                qui scalar `sub_agg_dof' = e(N) - 1
-                local sub_agg_att_jknife_pval = 2 * ttail(`sub_agg_dof', abs(`sub_agg_tstat'))
-            }          
-
+            qui keep if ((silo_id == `s' & treat == 1) | (treat == 0 & gvar_date == `g' & silo_id != `s'))   
             qui levelsof(silo_name) if treat > 0, local(s_label)
             local sub_agg_label "`sub_agg_label' `s_label'"
-            local sub_agg_atts "`sub_agg_atts' `sub_agg_att'"
-            local sub_agg_atts_se "`sub_agg_atts_se' `sub_agg_att_se'"
-            local sub_agg_atts_pval "`sub_agg_atts_pval' `sub_agg_att_pval'"
-            local sub_agg_atts_jknife "`sub_agg_atts_jknife' `sub_agg_att_jknife'"
-            local sub_agg_atts_jknife_pval "`sub_agg_atts_jknife_pval' `sub_agg_att_jknife_pval'"
             restore
         }        
     }
@@ -836,86 +598,11 @@ program define undid_stage_three, rclass
                 foreach t of local times {
                 preserve
                     qui keep if ((silo_id == `s' & treat == 1 & gvar_date == `gvar' & t == `t') | (treat == 0 & gvar_date == `gvar' & t == `t' & silo_id != `s'))
-                    if inlist("`weights'", "diff", "both") {
-                        qui sum n
-                        qui scalar `total_n' = r(sum)
-                        qui gen w = n / `total_n'
-                        qui gen double sw = sqrt(w)
-                        qui replace y = y * sw
-                        qui replace treat = treat * sw
-                        qui replace const = const * sw
-                    }
-
-                    if inlist("`weights'", "att", "both") {
-                        qui sum n_t if treat > 0 
-                        qui scalar `total_n_t' = r(sum)
-                        local sub_agg_weights "`sub_agg_weights' `=scalar(`total_n_t')'"
-                    }
-                    else {
-                        local sub_agg_weights "`sub_agg_weights' ."
-                    }
-
-                    qui reg y const treat if treat >= 0, noconstant vce(robust)
-                    local sub_agg_att = _b[treat]
-                    qui scalar `sub_agg_dof' = e(df_r)
-                    if `sub_agg_dof' > 0 {
-                        local sub_agg_att_se = _se[treat]
-                        qui scalar `sub_agg_tstat' = _b[treat] / _se[treat]
-                        local sub_agg_att_pval = 2 * ttail(`sub_agg_dof', abs(`sub_agg_tstat'))
-                    }
-                    else {
-                        qui count if missing(yvar)
-                        local nmiss = r(N)
-                        if `nmiss' > 0 {
-                            di as error "Warning: Missing values of variance estimate, could not compute the standard error for gt: `gt'"
-                            local sub_agg_att_se "."
-                        }
-                        else {
-                            qui summ yvar if treat == 0, meanonly
-                            qui scalar `trt0_var' = r(min)
-                            qui summ yvar if treat > 0, meanonly
-                            qui scalar `trt1_var' = r(min)
-                            if inlist("`weights'", "diff", "both") {
-                                qui sum n if treat >= 0 
-                                qui scalar `total_n' = r(sum)
-                                qui sum n if treat == 0 
-                                qui scalar `trt0_weight' = (r(min) / `total_n')^2
-                                qui sum n if treat > 0 
-                                qui scalar `trt1_weight' = (r(min) / `total_n')^2
-                                local sub_agg_att_se = sqrt((`trt1_var' * `trt1_weight' + `trt0_var' * `trt0_weight')/(`trt0_weight' + `trt1_weight'))
-                            } 
-                            else {
-                                local sub_agg_att_se = sqrt(`trt1_var' + `trt0_var')
-                            }
-                        }
-                        local sub_agg_att_pval "."
-                    }
-
-                    qui count if treat > 0
-                    local treated_obs = r(N)
-                    qui count if treat == 0
-                    local control_obs = r(N)
-                    if `treated_obs' == 1 | `control_obs' == 1 {
-                        local sub_agg_att_jknife "."
-                        local sub_agg_att_jknife_pval "."
-                    }
-                    else {
-                        qui reg y const treat if treat >= 0, noconstant vce(jackknife)
-                        local sub_agg_att_jknife = _se[treat]
-                        qui scalar `sub_agg_tstat' = _b[treat] / _se[treat]
-                        qui scalar `sub_agg_dof' = e(N) - 1
-                        local sub_agg_att_jknife_pval = 2 * ttail(`sub_agg_dof', abs(`sub_agg_tstat'))
-                    }            
                     qui levelsof silo_name if treat > 0, local(s_label)
                     local clean_s_label : word 1 of `s_label'
                     qui levelsof gt if treat > 0, local(gt_label)
                     local clean_gt_label : word 1 of `gt_label'
                     local sub_agg_label "`sub_agg_label' "`clean_s_label': `clean_gt_label'""
-                    local sub_agg_atts "`sub_agg_atts' `sub_agg_att'"
-                    local sub_agg_atts_se "`sub_agg_atts_se' `sub_agg_att_se'"
-                    local sub_agg_atts_pval "`sub_agg_atts_pval' `sub_agg_att_pval'"
-                    local sub_agg_atts_jknife "`sub_agg_atts_jknife' `sub_agg_att_jknife'"
-                    local sub_agg_atts_jknife_pval "`sub_agg_atts_jknife_pval' `sub_agg_att_jknife_pval'"
                 restore
                 }
             }  
@@ -926,232 +613,112 @@ program define undid_stage_three, rclass
         foreach t of local times {
             preserve
             qui keep if time == `t' & treat >= 0
-            if inlist("`weights'", "diff", "both") {
-                qui sum n
-                qui scalar `total_n' = r(sum)
-                qui gen w = n / `total_n'
-                qui gen double sw = sqrt(w)
-                qui replace y = y * sw
-                qui replace treat = treat * sw
-                qui replace const = const * sw
-            }
-
-            if inlist("`weights'", "att", "both") {
-                qui sum n_t if treat > 0
-                qui scalar `total_n_t' = r(sum)
-                local sub_agg_weights "`sub_agg_weights' `=scalar(`total_n_t')'"
-            }
-            else {
-                local sub_agg_weights "`sub_agg_weights' ."
-            }
-
-            qui count if treat > 0
-            local treated_obs = r(N)
-            qui count if treat == 0
-            local control_obs = r(N)
-
-            qui sum gvar_date, meanonly
-            local min_gvar = r(min)
-            
-            if inlist("`weights'", "diff", "both") {
-                qui reg y const treat c.sw#ib`min_gvar'.(gvar_date) if treat >= 0, noconstant vce(robust)
-            }
-            else {
-                qui reg y const treat ib`min_gvar'.(gvar_date) if treat >= 0, noconstant vce(robust)
-            }
-            
-            local sub_agg_att = _b[treat]
-            qui scalar `sub_agg_dof' = e(df_r)
-            if `sub_agg_dof' > 0 {
-                qui scalar `sub_agg_tstat' = _b[treat] / _se[treat]
-                local sub_agg_att_se = _se[treat]
-                local sub_agg_att_pval = 2 * ttail(`sub_agg_dof', abs(`sub_agg_tstat'))
-            }
-            else {
-                local sub_agg_att_se "."
-                local sub_agg_att_pval "."
-            }
-
-            if `treated_obs' == 1 | `control_obs' == 1 {
-                local sub_agg_att_jknife "."
-                local sub_agg_att_jknife_pval "."
-            }
-            else {
-                if inlist("`weights'", "diff", "both") {
-                    qui reg y const treat c.sw#ib`min_gvar'.(gvar_date) if treat >= 0, noconstant vce(jackknife)
-                }
-                else {
-                    qui reg y const treat ib`min_gvar'.(gvar_date) if treat >= 0, noconstant vce(jackknife)
-                }                
-                local sub_agg_att_jknife = _se[treat]
-                qui scalar `sub_agg_tstat' = _b[treat] / _se[treat]
-                qui scalar `sub_agg_dof' = e(N) - 1
-                    local sub_agg_att_jknife_pval = 2 * ttail(`sub_agg_dof', abs(`sub_agg_tstat'))
-            }            
-
             local sub_agg_label "`sub_agg_label' `t'"
-            local sub_agg_atts "`sub_agg_atts' `sub_agg_att'"
-            local sub_agg_atts_se "`sub_agg_atts_se' `sub_agg_att_se'"
-            local sub_agg_atts_pval "`sub_agg_atts_pval' `sub_agg_att_pval'"
-            local sub_agg_atts_jknife "`sub_agg_atts_jknife' `sub_agg_att_jknife'"
-            local sub_agg_atts_jknife_pval "`sub_agg_atts_jknife_pval' `sub_agg_att_jknife_pval'"
             restore
         }
     }
 
+    // After all the pre-processing checks are done, can finally move on to computation
+
     // ---------------------------------------------------------------------------------------- //
-    // ------------------------- PART FOUR: Compute Aggregate Values -------------------------- // 
+    // ---------------------------- PART THREE: Compute Results ------------------------------- // 
     // ---------------------------------------------------------------------------------------- //
 
-    if "`agg'" != "none" {
-
-        // Initialize a temporary matrix to store the numeric results
-        tempname weight_total
-        qui scalar `weight_total' = 0
-        tempname table_matrix
-        local nrows : word count `sub_agg_label'  
+    // Create the table matrix 
+    if "`agg'" != "none" {        
+        qui tempname table_matrix
+        // Calculate number of rows based on aggregation method
+        local nrows : word count `sub_agg_label'
         local num_cols = 7
         qui matrix `table_matrix' = J(`nrows', `num_cols', .)
 
-        forvalues i = 1/`nrows' {
-            local lbl     : word `i' of `sub_agg_label'
-            local att     : word `i' of `sub_agg_atts'
-            local se      : word `i' of `sub_agg_atts_se'
-            local pval    : word `i' of `sub_agg_atts_pval'
-            local jse     : word `i' of `sub_agg_atts_jknife'
-            local jpval   : word `i' of `sub_agg_atts_jknife_pval'
-            local sub_agg_weight : word `i' of `sub_agg_weights'
-
-            // Fill the matrix with numeric values, note that randomization inference p-val can't be assigned yet
-            matrix `table_matrix'[`i', 1] = real("`att'")
-            matrix `table_matrix'[`i', 2] = real("`se'")
-            matrix `table_matrix'[`i', 3] = real("`pval'")
-            matrix `table_matrix'[`i', 4] = real("`jse'")
-            matrix `table_matrix'[`i', 5] = real("`jpval'")
-            matrix `table_matrix'[`i', 7]  = .
-            
-            qui scalar `weight_total' = `weight_total' + `sub_agg_weight'
-
-        }
-
-        if inlist("`weights'", "att", "both") {
-            forvalues i = 1/`nrows' {
-                local sub_agg_weight : word `i' of `sub_agg_weights'
-                matrix `table_matrix'[`i', 7] = `sub_agg_weight' / `weight_total'
-            } 
-        }
-
-		// Set column names for the matrix
+        // Set column names for the matrix
         matrix colnames `table_matrix' = ATT SE pval JKNIFE_SE JKNIFE_pval RI_pval W
-        
+    
         // Set row names for the matrix using the labels
         matrix rownames `table_matrix' = `sub_agg_label'
+    }
 
-        // Compute aggregate results
-        preserve
-            clear
-            qui svmat double `table_matrix', names(col)
-            qui gen byte const = 1
-            if inlist("`weights'", "att", "both") {
-                qui gen double sw = sqrt(W)
-                qui replace ATT = ATT * sw
-                qui replace const = const * sw
+    // Define some tempnames for scalars for the aggregate levels results 
+    qui tempname agg_att 
+    qui tempname agg_att_se 
+    qui tempname agg_att_jknife_se 
+    qui tempname agg_att_pval 
+    qui tempname agg_att_jknife_pval
+    qui scalar `agg_att' = .
+    qui scalar `agg_att_se' = .
+    qui scalar `agg_att_jknife_se' = .
+    qui scalar `agg_att_pval' = .
+    qui scalar `agg_att_jknife_pval' = .
+
+    mata : undid_stage_three_compute(`hc', "`agg'", "`weights'", "`agg_att'", "`agg_att_se'", "`agg_att_pval'", "`agg_att_jknife_se'", "`agg_att_jknife_pval'", `check_common', "`table_matrix'")
+
+    // ---------------------------------------------------------------------------------------- //
+    // ------------------------- PART FOUR: Randomization Inference! -------------------------- // 
+    // ---------------------------------------------------------------------------------------- //
+    qui tempname ri_pval_aggregate
+    qui tempname actual_perms_scalar
+    qui scalar `ri_pval_aggregate' = .
+    qui scalar `actual_perms_scalar' = .
+    if `randomize' == 1 {
+        // Part 5a : Compute n_unique_assignments
+
+        // Compute numerator
+        qui levelsof silo_name, local(unique_silos)
+        local n_silos: word count `unique_silos'
+        local ln_num = lnfactorial(`n_silos')
+
+        // Grab all of the gvar assignments and treated silos and compute denominator
+        preserve 
+            qui keep if treat == 1
+            qui bysort silo_name: egen min_gvar= min(gvar_date)
+            qui keep if gvar_date == min_gvar
+            qui drop min_gvar
+            qui contract gvar silo_name
+
+            local gvar_assignments ""
+            qui count
+             forvalues i = 1/`r(N)' {
+                local current_gvar = gvar[`i']
+                local gvar_assignments "`gvar_assignments' `current_gvar'"
             }
 
-            // Compute aggregate ATT and robust SE
-            if `nrows'  > 1 {
-                qui reg ATT const, noconstant vce(robust)
-                qui scalar `agg_att' = _b[const]
-                qui scalar `agg_att_se' = _se[const]
-                qui scalar `agg_att_dof' = e(df_r)
-                qui scalar `agg_att_tstat' = `agg_att' / `agg_att_se'
-                qui scalar `agg_att_pval' = 2 * ttail(`agg_att_dof', abs(`agg_att_tstat'))
-            }
-            else {
-                qui scalar `agg_att' = ATT
-                qui scalar `agg_att_se' = .
-                qui scalar `agg_att_pval' = .
-            }
+            // Compute first part of the denominator
+            local n_gvar_assignments: word count `gvar_assignments'
+            local ln_den = lnfactorial(`n_silos' - `n_gvar_assignments')
 
-            // Compute jackknife SE
-            if `nrows' > 2 {
-                qui reg ATT const, noconstant vce(jackknife)
-                qui scalar `agg_att_jknife_se' = _se[const]
-                qui scalar `agg_att_tstat_jknife' = `agg_att' / `agg_att_jknife_se'
-                qui scalar `agg_att_jknife_pval' = 2 * ttail(`agg_att_dof', abs(`agg_att_tstat_jknife'))
-            }
-            else if `nrows' == 2 { // Manually compute since vce(jackknife) fails for n = 2
-                qui scalar `agg_att_jknife_se' = sqrt( ((2-1)/2) * ((ATT[1] - `agg_att')^2 + (ATT[2] - `agg_att')^2))
-                qui scalar `agg_att_tstat_jknife' = `agg_att' / `agg_att_jknife_se'
-                qui scalar `agg_att_jknife_pval' = 2 * ttail(`agg_att_dof', abs(`agg_att_tstat_jknife'))
-            }
-            else {
-                qui scalar `agg_att_jknife_se' = .
-                qui scalar `agg_att_jknife_pval' = .
+            // Compute frequencies of unique gvar values and their factorial contributions
+            qui levelsof gvar, local(unique_gvars)
+            foreach m in `unique_gvars' {
+                qui count if gvar == "`m'"
+                local n_m = r(N)
+                local ln_den = `ln_den' + lnfactorial(`n_m')
             }
         restore
-        
-    }
 
-    // ---------------------------------------------------------------------------------------- //
-    // ------------------------- PART FIVE: Randomization Inference! -------------------------- // 
-    // ---------------------------------------------------------------------------------------- //
-
-    // Part 5a : Compute n_unique_assignments
-
-    // Compute numerator
-    qui levelsof silo_name, local(unique_silos)
-    local n_silos: word count `unique_silos'
-    local ln_num = lnfactorial(`n_silos')
-
-    // Grab all of the gvar assignments and treated silos and compute denominator
-    preserve 
-        qui keep if treat == 1
-        qui bysort silo_name: egen min_gvar= min(gvar_date)
-        qui keep if gvar_date == min_gvar
-        qui drop min_gvar
-        qui contract gvar silo_name
-
-        local gvar_assignments ""
-        qui count
-         forvalues i = 1/`r(N)' {
-            local current_gvar = gvar[`i']
-            local gvar_assignments "`gvar_assignments' `current_gvar'"
+        // Compute the final permutation result and return scalar
+        // Note that this calculation may end up being different from Julia's due to floating point precision... 
+        // e.g. for 51 states (10 treated), Julia gives 5795970104231798 while Stata gives 5795970104232000 (difference of less than 0.000000001%)
+        local n_unique_assignments = round(exp(`ln_num' - `ln_den'))
+        if `nperm' > `n_unique_assignments' {
+            di as error "Warning: 'nperm' = `nperm' is greater than the number of unique permutations (`n_unique_assignments'). Setting 'nperm' to `n_unique_assignments'."
+            local nperm = `n_unique_assignments'
         }
-    
-        // Compute first part of the denominator
-        local n_gvar_assignments: word count `gvar_assignments'
-        local ln_den = lnfactorial(`n_silos' - `n_gvar_assignments')
-    
-        // Compute frequencies of unique gvar values and their factorial contributions
-        qui levelsof gvar, local(unique_gvars)
-        foreach m in `unique_gvars' {
-            qui count if gvar == "`m'"
-            local n_m = r(N)
-            local ln_den = `ln_den' + lnfactorial(`n_m')
+        if `nperm' < 399 {
+            di as error "Warning: 'nperm' is less than 399."
         }
-    restore
-    
-    // Compute the final permutation result and return scalar
-    // Note that this calculation may end up being different from Julia's due to floating point precision... 
-    // e.g. for 51 states (10 treated), Julia gives 5795970104231798 while Stata gives 5795970104232000 (difference of less than 0.000000001%)
-    local n_unique_assignments = round(exp(`ln_num' - `ln_den'))
-    if `nperm' > `n_unique_assignments' {
-        di as error "'nperm' = `nperm' is greater than the number of unique permutations (`n_unique_assignments'). Setting 'nperm' to `n_unique_assignments'."
-        local nperm = `n_unique_assignments'
-    }
 
-     // Part 5b : Do randomization inference
-     qui tempname ri_pval_aggregate
-     qui tempname actual_perms_scalar
-     qui scalar `ri_pval_aggregate' = .
-     qui scalar `actual_perms_scalar' = .
-
-     // Call the Mata function and capture the results
-     mata: undid_randomize_treatment(`nperm', `seed', `use_pre_controls', `max_attempts', `check_common', "`agg'", "`weights'", `verbose', "`ri_pval_aggregate'", "`actual_perms_scalar'", "`agg_att'", "`table_matrix'")
+         // Part 5b : Do randomization inference
+         // Call the Mata function and capture the results
+     
+        mata: undid_randomize_treatment(`nperm', `seed', `notyet', `max_attempts', `check_common', "`agg'", "`weights'", `verbose', "`ri_pval_aggregate'", "`actual_perms_scalar'", "`agg_att'", "`table_matrix'")
+     }
+     else {
+        di as error "Warning: Missing some differences required for randomization inference."
+     }
  
     // ---------------------------------------------------------------------------------------- //
-    // -------------------------- PART SIX: Return and Display Results ------------------------ // 
+    // ------------------------- PART FIVE: Return and Display Results ------------------------ // 
     // ---------------------------------------------------------------------------------------- //
 
     if "`agg'" != "none" {
@@ -1163,12 +730,12 @@ program define undid_stage_three, rclass
 		
 		forvalues i = 1/`nrows' {
             local lbl     : word `i' of `sub_agg_label'
-            local att     : word `i' of `sub_agg_atts'
-            local se      : word `i' of `sub_agg_atts_se'
-            local pval    : word `i' of `sub_agg_atts_pval'
-            local jse     : word `i' of `sub_agg_atts_jknife'
-            local jpval   : word `i' of `sub_agg_atts_jknife_pval'
-            local sub_agg_weight : word `i' of `sub_agg_weights'
+            local att = el(`table_matrix',`i',1)
+            local se = el(`table_matrix',`i',2)
+            local pval = el(`table_matrix',`i',3)
+            local jse = el(`table_matrix',`i',4)
+            local jpval = el(`table_matrix',`i',5)
+            local sub_agg_weight = el(`table_matrix',`i',7)
             local ri_pval = el(`table_matrix',`i',6)
 			di as text %-25s "`lbl'" as text " |" as result %-16.7f real("`att'") as text " | " as result  %-7.3f real("`se'") as text "| " as result %-7.3f real("`pval'") as text "| " as result  %-11.3f real("`jse'") as text "| " as result %-13.3f real("`jpval'") as text "|" as result %-9.3f `ri_pval' as text "|"
     
@@ -1216,6 +783,375 @@ program define undid_stage_three, rclass
 
 end
 
+// Mata functions for third stage computations:
+qui cap mata: mata which undid_stage_three_compute()
+if _rc {
+mata:
+void undid_stage_three_compute(
+    real scalar hc,
+    string agg,
+    string weighting,
+    string scalar agg_att,
+    string scalar agg_att_se,
+    string scalar agg_att_pval,
+    string scalar agg_att_jknife_se,
+    string scalar agg_att_jknife_pval,
+    real scalar common_flag, | string scalar undid_matrix
+)
+{
+    // Get ordering of columns
+    if (common_flag == 1) {
+        M = st_data(., ("silo_id", "gvar_date", "treat", "n", "n_t", "y"))
+        nrows = rows(M)
+        treat_col = 3
+        n_col = 4
+        n_t_col = 5
+        y_col = 6
+    } 
+    else if (agg == "time") {
+        M = st_data(., ("silo_id", "gvar_date", "t", "treat", "n", "n_t", "y", "time"))
+        nrows = rows(M)
+        t_col = 3
+        treat_col = 4
+        n_col = 5
+        n_t_col = 6
+        y_col = 7
+        time_col = 8
+    }
+    else {
+        if (agg == "gt" | agg == "sgt") {
+            M = st_data(., ("silo_id", "gvar_date", "t", "treat", "n", "n_t", "y", agg + "_id"))
+        }
+        else {
+            M = st_data(., ("silo_id", "gvar_date", "t", "treat", "n", "n_t", "y"))
+        }
+        nrows = rows(M)
+        t_col = 3
+        treat_col = 4
+        n_col = 5
+        n_t_col = 6
+        y_col = 7
+    }
+    gvar_col = 2
+    silo_col = 1
+    last_col = cols(M)
+
+    // Define the iterable based on the aggregation type
+    if (agg == "silo") {
+        iterable = uniqrows(select(M, M[.,treat_col] :== 1)[.,silo_col])
+    }
+    else if (agg == "g") {
+        iterable = uniqrows(select(M, M[.,treat_col] :== 1)[.,gvar_col])
+    }
+    else if (agg == "gt") {
+        gt_col = last_col
+        iterable = uniqrows(select(M, M[.,treat_col] :== 1)[.,gt_col])
+    }
+    else if (agg == "sgt") {
+        sgt_col = last_col
+        iterable = uniqrows(select(M, M[.,treat_col] :== 1)[.,sgt_col])
+    }
+    else if (agg == "time") {
+        iterable = uniqrows(select(M, M[.,treat_col] :== 1)[.,time_col])
+    }
+
+    // Grab the table for storing subaggregate results
+    // And compute aggregate results directly if aggregation is none
+    if (agg != "none") {
+        sub_agg_results = st_matrix(undid_matrix)
+    }
+    else if (agg == "none") {
+        subset = select(M, M[.,treat_col] :!= -1)
+        X = J(rows(subset), 1, 1), subset[., treat_col]
+        Y = subset[., y_col]
+        W = J(0,0,.)
+        if (weighting == "both" | weighting == "diff") {
+            W = subset[., n_col]
+            W = W :/ sum(W)
+        }
+        regresults = undid_regress_ols(X, Y, W, hc)
+        st_numscalar(agg_att, regresults[1,1])
+        st_numscalar(agg_att_se, regresults[2,1])
+        st_numscalar(agg_att_pval, regresults[3,1])
+        undid_jackknife_procedure(agg_att_jknife_se, agg_att_jknife_pval, subset, agg, weighting, regresults[1,1])
+        return
+    }
+
+    // Loop thru the iterable and compute subaggregate results
+    for (i=1; i<=rows(iterable); i++) {
+        subgroup = iterable[i]
+        mask = undid_stage_three_mask(agg, M, subgroup)
+        subset = select(M, mask)
+        X = J(rows(subset), 1, 1), subset[., treat_col]
+        Y = subset[., y_col]
+
+        // Add dummies for time since treatment aggregation
+        if (agg == "time") {
+            X = X, subset[., gvar_col]
+            X = design_matrix_time_agg(X, 3)
+        }
+
+        // Record weights
+        W = J(0,0,.)
+        if (weighting == "diff" | weighting == "both") {
+            W = subset[., n_col]
+            W = W :/ sum(W)
+        }
+        if (weighting == "att" | weighting == "both") {
+            sub_agg_results[i, 7]= sum(select(subset[.,n_t_col], subset[., treat_col] :== 1))
+        }
+
+        // Run regression, store results
+        regresults = undid_regress_ols(X, Y, W, hc)
+        sub_agg_results[i, 1] = regresults[1,1]
+        sub_agg_results[i, 2] = regresults[2,1]
+        sub_agg_results[i, 3] = regresults[3,1]
+
+    }
+
+    // Decide whether to use weights for aggregate ATT
+    W = J(0,0,.)
+    if (weighting == "att" | weighting == "both") {
+        W = sub_agg_results[., 7]
+        W = W :/ sum(W)
+        sub_agg_results[., 7] = W
+    }
+
+    // Run aggregate regression
+    n = rows(sub_agg_results)
+    regresults = undid_regress_ols(J(n, 1, 1), sub_agg_results[., 1], W, hc)
+    st_numscalar(agg_att, regresults[1,1])
+    st_numscalar(agg_att_se, regresults[2,1])
+    st_numscalar(agg_att_pval, regresults[3,1])
+    sub_agg_results = undid_jackknife_procedure(agg_att_jknife_se, agg_att_jknife_pval, M, agg, weighting, regresults[1,1], sub_agg_results, iterable)
+    st_matrix(undid_matrix, sub_agg_results)
+
+}
+end
+}
+
+qui cap mata: mata which undid_jackknife_procedure()
+if _rc {
+mata:
+real matrix undid_jackknife_procedure(
+    string scalar agg_att_jknife_se,
+    string scalar agg_att_jknife_pval,
+    real matrix data,
+    string scalar agg,
+    string scalar weighting,
+    real scalar agg_att,
+    | real matrix sub_agg_results,
+    real colvector iterable
+)
+{
+    real scalar silo_col, gvar_col, t_col, treat_col, n_col, n_t_col, y_col
+    real scalar time_col, gt_col, sgt_col
+    real matrix results
+    
+    // Define column indexes based on matrix structure
+    silo_col = 1
+    gvar_col = 2
+    
+    if (cols(data) == 6) {
+        // Common adoption
+        treat_col = 3
+        n_col = 4
+        n_t_col = 5
+        y_col = 6
+    }
+    else if (cols(data) == 8) {
+        // staggered, either agg is time, gt, or sgt
+        t_col = 3
+        treat_col = 4
+        n_col = 5
+        n_t_col = 6
+        y_col = 7
+        if (agg == "time") {
+            time_col = 8
+        }
+        else {
+            gt_col = 8
+            sgt_col = 8
+        }
+    }
+    else if (cols(data) == 7) {
+        // standard case without extra columns
+        t_col = 3
+        treat_col = 4
+        n_col = 5
+        n_t_col = 6
+        y_col = 7
+    }
+
+    // Filter out any differences that were only meant for RI procedure
+    data = select(data, data[.,treat_col] :!= -1)
+
+    // Get all states, and assign a dummy value to iterable when agg is none
+    all_states = uniqrows(data[.,silo_col])
+    if (agg == "none") {
+        iterable = J(1,1, 1)
+    }
+
+    // Make jackdf preallocation matrix
+    // Columns: [without, sub_group, att, weights]
+    n_states = rows(all_states)
+    n_iter = rows(iterable)
+    n_jack = n_states * n_iter
+    jackdf = J(n_jack, 4, .)
+    
+    // Fill in without and sub_group columns
+    idx = 1
+    for (i=1; i<=n_states; i++) {
+        for (j=1; j<=n_iter; j++) {
+            jackdf[idx, 1] = all_states[i]      // without
+            jackdf[idx, 2] = iterable[j]        // sub_group
+            idx = idx + 1
+        }
+    }
+
+    idx_jack = 1
+    for (i=1; i<=n_states; i++) {
+        without = all_states[i]
+        without_mask = data[.,silo_col] :!= without
+        for (j=1; j<=n_iter; j++) {
+            sg = iterable[j]
+            mask = undid_stage_three_mask(agg, data, sg) :& without_mask
+            temp = select(data, mask)
+            X = temp[.,treat_col]
+            Y = temp[., y_col]
+
+            // Record att as missing if temp is blank or or no variation in treatment
+            if (rows(temp) == 0 | rows(uniqrows(temp[.,treat_col])) < 2) {
+                att = .
+            }
+            else if (agg == "time") {
+                // Handle the time aggregation edge case
+                X = J(rows(X), 1, 1), X
+                X = X, temp[.,gvar_col]
+                X = design_matrix_time_agg(X, 3)
+
+                // Record weights
+                if (weighting == "diff" | weighting == "both") {
+                    W = temp[.,n_col]
+                }
+                else if (weighting == "none" | weighting == "att") {
+                    W = J(0,0,.)
+                }
+                time_regress_results = undid_regress_ols(X, Y, W, 0)
+                att = time_regress_results[1,1]
+            }
+            else {
+                // Do computation using weighted dot product otherwise
+                att = compute_ri_sub_agg_att(temp, treat_col, n_col, y_col, weighting)
+            }
+
+            // Record weights
+            if (weighting == "att" | weighting == "both") {
+                if (att == .) {
+                    W_agg = 0
+                }
+                else {
+                    W_agg = sum(select(temp[.,n_t_col], temp[.,treat_col] :== 1))
+                }
+            }
+            else {
+                W_agg = .
+            }
+
+            // Assign values to jackdf
+            jackdf[idx_jack, 3] = att
+            jackdf[idx_jack, 4] = W_agg
+            idx_jack = idx_jack + 1
+
+        }
+    }
+
+    // Use jackknife computations to compute aggregate standard errors and pvals
+    agg_jacks = J(n_states, 1, .)
+    for (i=1; i<=n_states; i++) {
+        without = all_states[i]
+        mask = jackdf[.,1] :== without :& jackdf[.,3] :!= .
+        temp = select(jackdf, mask)
+        if (rows(temp) == 0) {
+            agg_jacks[i] = .
+        }
+        else {
+            if (weighting == "att" | weighting == "both") {
+                agg_jacks[i] = sum((temp[., 4] :/ sum(temp[., 4])) :* temp[.,3])
+            }
+            else if (weighting == "diff" | weighting == "none") {
+                agg_jacks[i] = mean(temp[.,3])
+            }
+        }
+    }
+    agg_jacks = select(agg_jacks, agg_jacks :!= .)
+    n = rows(agg_jacks)
+    if (n >= 2) {
+        jknife_se = sqrt(sum((agg_jacks :- agg_att):^2) * ((n-1) / n))
+    }
+    else {
+        jknife_se = .
+    }
+    dof_jack = n - 1
+    if ((dof_jack > 0) & (jknife_se != .)) {
+        pval_jknife = 2 * (1 - t(dof_jack, abs(agg_att / jknife_se)))
+    }
+    else {
+        pval_jknife = .
+    }
+    st_numscalar(agg_att_jknife_se, jknife_se)
+    st_numscalar(agg_att_jknife_pval, pval_jknife)
+
+    // If aggregation was none, at this point we can exit the function
+    if (agg == "none") {
+        return(J(0,0,.))
+    }
+
+    // Use jackknife computations to compute subaggregate standard errors and pvals
+    if (agg == "sgt" | agg == "silo") {
+        // Note that for sgt or silo aggregation we cannot compute subaggregate jackknife SE or pvals
+        return(sub_agg_results)
+    }
+
+    // Then for aggregations of g, gt, or time it is possible to compute the subaggregate jackknifes
+    for (i=1; i<=n_iter; i++) {
+        sg = iterable[i]
+        sub_jacks = select(jackdf[.,3], jackdf[.,2] :== sg)
+        n_sub = rows(sub_jacks)
+        sg_att = sub_agg_results[i, 1]
+
+        if (hasmissing(sub_jacks)) {
+            dof_jack_sub = 0
+        }
+        else {
+            dof_jack_sub = n_sub - 1
+        }
+
+        if ((n_sub >= 2) & (!hasmissing(sub_jacks))) {
+            jknife_se_sub = sqrt(sum((sub_jacks :- sg_att):^2) * ((n_sub-1) / n_sub))
+        }
+        else {
+            jknife_se_sub = .
+        }
+
+        if ((dof_jack_sub > 0) & (jknife_se_sub != .)) {
+            pval_att_jknife_sub = 2 * (1 - t(dof_jack_sub, abs(sg_att / jknife_se_sub)))
+        }
+        else {
+            pval_att_jknife_sub = .
+        }
+
+        sub_agg_results[i,4] = jknife_se_sub
+        sub_agg_results[i,5] = pval_att_jknife_sub
+
+    }
+
+    return(sub_agg_results)
+    
+}
+end
+}
+
 // Mata functions for randomization inference:
 qui cap mata: mata which undid_randomize_treatment()
 if _rc {
@@ -1223,7 +1159,7 @@ mata:
 void undid_randomize_treatment(
     real scalar nperm,
     real scalar seed,
-    real scalar use_pre_controls,
+    real scalar notyet,
     real scalar max_attempts,
     real scalar common_flag,
     string agg,
@@ -1283,7 +1219,7 @@ void undid_randomize_treatment(
     silo_col = 1
     
     // Initialize results matrix: nrows x nperm
-    results = J(nrows, nperm-1, .)
+    results = J(nrows, nperm, .)
     
     // Extract unique treated units (where treat == 1)
     original_treated = select(M, M[.,treat_col] :== 1)
@@ -1318,7 +1254,7 @@ void undid_randomize_treatment(
     attempts = 0
 
     // Randomization assignment loop
-    while (i < nperm & attempts < max_attempts) {
+    while (i <= nperm & attempts < max_attempts) {
         attempts++
 
         // Shuffle states and select k of them
@@ -1370,7 +1306,7 @@ void undid_randomize_treatment(
                 if (trt_time == assigned_time) {
                     new_treat[row_idx] = 1
                 } else {
-                    if (use_pre_controls & !common_flag) {
+                    if (notyet & !common_flag) {
                         t = M[row_idx, 3]
                         if (t < assigned_time) {
                             new_treat[row_idx] = 0
@@ -1590,7 +1526,7 @@ void undid_randomize_treatment(
                     X = X :* sq_W_diff
                     Y = Y :* sq_W_diff
                 }
-                beta = invsym(X' * X) * (X' * Y)
+                beta = luinv(X' * X) * (X' * Y)
                 att_ri_time[j,i] = beta[2]
                 if (weighting == "att" | weighting == "both") {
                     W[i] = sum(select(temp[.,n_t_col], temp[.,j+col_adj] :== 1))
@@ -1660,17 +1596,265 @@ real matrix design_matrix_time_agg(
     real scalar gvar_col
 )
 {
-    gvars = sort(uniqrows(temp[.,gvar_col]),1)
-    if (rows(gvars) == 1) {
-        return(temp[.,(1,2)])
+    real matrix gvars, D, x
+    real scalar i, rank_val, ncolx
+    
+    // Get unique group values
+    gvars = sort(uniqrows(temp[.,gvar_col]), 1)
+    
+    // Start with base columns (1 and 2)
+    x = temp[., (1,2)]
+    
+    // Add indicator columns for each unique gvar
+    for (i=1; i<=rows(gvars); i++) {
+        x = (x, (temp[.,gvar_col] :== gvars[i]))
     }
     
-    D = J(rows(temp), rows(gvars)-1, .)
-    for (i=2; i<=rows(gvars); i++) {
-        D[.,i-1] = (temp[.,gvar_col] :== gvars[i])
+    // Check rank and remove columns if needed
+    rank_val = rank(x)
+    ncolx = cols(x)
+    
+    // Remove columns from the right while rank < ncol and ncol >= 4
+    while ((rank_val < ncolx) & (ncolx >= 4)) {
+        // Keep columns 1, 2, and from ncolx down to 4 (removing column 3)
+        x = x[., (1, 2, (4..ncolx))]
+        ncolx = cols(x)
+        rank_val = rank(x)
     }
-    return((temp[.,(1,2)], D))
+    
+    // If still not full rank, return only first two columns
+    if (rank_val < ncolx) {
+        x = x[., (1,2)]
+    }
+    
+    return(x)
+}
+end
+}
 
+qui cap mata: mata which undid_compute_hc_covariance()
+if _rc {
+mata:
+real matrix undid_compute_hc_covariance(
+    real matrix x,
+    real colvector resid,
+    real scalar hc
+)
+{
+    real scalar n, k, i, h_bar
+    real matrix XXinv, omega, h, delta, omega_diag
+    
+    n = rows(x)
+    k = cols(x)
+    
+    // Compute (X'X)^-1 using LU decomposition (like solve() in R)
+    XXinv = luinv(cross(x, x))
+    if (hasmissing(XXinv)) {
+        return(J(0, 0, .))
+    }
+    
+    // Compute hat matrix diagonal if needed for HC2/HC3/HC4
+    if (hc == 2 | hc == 3 | hc == 4) {
+        h = J(n, 1, .)
+        for (i=1; i<=n; i++) {
+            h[i] = x[i,.] * XXinv * x[i,.]'
+        }
+    }
+    
+    // Construct omega based on HC type
+    if (hc == 0) {
+        omega_diag = resid :^ 2
+    }
+    else if (hc == 1) {
+        omega_diag = (n / (n - k)) :* (resid :^ 2)
+    }
+    else if (hc == 2) {
+        omega_diag = (resid :^ 2) :/ (1 :- h)
+    }
+    else if (hc == 3) {
+        omega_diag = (resid :^ 2) :/ ((1 :- h) :^ 2)
+    }
+    else if (hc == 4) {
+        h_bar = mean(h)
+        delta = rowmin((J(n, 1, 4), h :/ h_bar))
+        omega_diag = (resid :^ 2) :/ ((1 :- h) :^ delta)
+    }
+    
+    // Sandwich estimator
+    return(XXinv * cross(x, omega_diag :* x) * XXinv)
+}
+end
+}
+
+qui cap mata: mata which undid_regress_ols()
+if _rc {
+mata:
+real matrix undid_regress_ols(
+    real matrix x,
+    real colvector y,
+    real matrix w,
+    real scalar hc
+)
+{
+    real scalar n, ncolx, extract, dof
+    real matrix valid_mask, beta_hat_cov, XXinv
+    real colvector beta_hat, resid, resid_w, sw
+    real matrix xw
+    real colvector yw
+    real scalar beta_hat_se, pval
+    
+    // Check for and remove missing values
+    valid_mask = rowmissing(x) :== 0 :& rowmissing(y) :== 0
+    if (w != J(0,0,.)) {
+        valid_mask = valid_mask :& (rowmissing(w) :== 0)
+    }
+    
+    x = select(x, valid_mask)
+    y = select(y, valid_mask)
+    if (w != J(0,0,.)) {
+        w = select(w, valid_mask)
+    }
+    
+    // Make sure we have enough observations
+    n = rows(y)
+    ncolx = cols(x)
+    if (n < ncolx) {
+        return((. \ . \ .))
+    }
+    
+    // Computations without weights
+    if (w == J(0,0,.)) {
+        XXinv = luinv(cross(x, x))
+        if (hasmissing(XXinv)) {
+            return((. \ . \ .))
+        }
+        beta_hat = XXinv * cross(x, y)
+        if (n > ncolx) {
+            resid = y - (x * beta_hat)
+            beta_hat_cov = undid_compute_hc_covariance(x, resid, hc)
+        }
+    }
+    else {
+        w = w :/ sum(w)
+        sw = sqrt(w)
+        xw = x :* sw
+        yw = y :* sw
+        XXinv = luinv(cross(xw, xw))
+        if (hasmissing(XXinv)) {
+            return((. \ . \ .))
+        }
+        beta_hat = XXinv * cross(xw, yw)
+        if (n > ncolx) {
+            resid_w = yw - (xw * beta_hat)
+            beta_hat_cov = undid_compute_hc_covariance(xw, resid_w, hc)
+        }
+    }
+    
+    // Extract the appropriate coefficient
+    if (ncolx == 1) {
+        extract = 1
+    }
+    else {
+        extract = 2
+    }
+    
+    beta_hat = beta_hat[extract]
+    
+    if ((n > ncolx) && (beta_hat_cov != J(0,0,.))) {
+        beta_hat_se = sqrt(diagonal(beta_hat_cov)[extract])
+    }
+    else {
+        beta_hat_se = .
+    }
+    
+    // Get p-value if possible
+    dof = n - ncolx
+    if (dof > 0 & beta_hat_se != .) {
+        pval = 2 * (1 - t(dof, abs(beta_hat / beta_hat_se)))
+    }
+    else {
+        pval = .
+    }
+    
+    return((beta_hat \ beta_hat_se \ pval))
+}
+end
+}
+
+qui cap mata: mata which undid_stage_three_mask()
+if _rc {
+mata:
+real colvector undid_stage_three_mask(
+    string scalar agg,
+    real matrix M,
+    real scalar subgroup
+)
+{
+    real colvector mask, treated_mask, control_mask, sgt_mask
+    real scalar gvar_treated, gvar_val, time_val, silo_val
+    real scalar silo_col, gvar_col, t_col, treat_col, gt_col, sgt_col, time_col
+    
+    // Define column indexes based on matrix structure
+    silo_col = 1
+    gvar_col = 2
+    
+    if (cols(M) == 6) {
+        // Common adoption
+        treat_col = 3
+    }
+    else if (cols(M) == 8) {
+        // staggered, either agg is time, gt, or sgt
+        t_col = 3
+        treat_col = 4
+        if (agg == "time") {
+            time_col = 8
+        }
+        else {
+            // gt_col or sgt_col is last column
+            gt_col = 8
+            sgt_col = 8
+        }
+    }
+    else if (cols(M) == 7) {
+        // standard case without extra columns
+        t_col = 3
+        treat_col = 4
+    }
+    
+    if (agg == "silo") {
+        treated_mask = (M[.,silo_col] :== subgroup) :& (M[.,treat_col] :== 1)
+        gvar_treated = select(M[.,gvar_col], treated_mask)[1]
+        control_mask = (M[.,treat_col] :== 0) :& (M[.,gvar_col] :== gvar_treated)
+        mask = treated_mask :| control_mask
+    }
+    else if (agg == "g") {
+        mask = (M[.,treat_col] :!= -1) :& (M[.,gvar_col] :== subgroup)
+    }
+    else if (agg == "gt") {
+        mask = (M[.,treat_col] :!= -1) :& (M[.,gt_col] :== subgroup)
+    }
+    else if (agg == "sgt") {
+        sgt_mask = M[.,sgt_col] :== subgroup
+        gvar_val = select(M[.,gvar_col], sgt_mask)[1]
+        time_val = select(M[.,t_col], sgt_mask)[1]
+        silo_val = select(M[.,silo_col], sgt_mask)[1]
+        
+        mask = (M[.,treat_col] :!= -1) :& 
+               (M[.,gvar_col] :== gvar_val) :& 
+               (M[.,t_col] :== time_val) :&
+               ((M[.,silo_col] :== silo_val) :| (M[.,treat_col] :== 0))
+    }
+    else if (agg == "time") {
+        mask = (M[.,time_col] :== subgroup) :& (M[.,treat_col] :!= -1)
+    }
+    else if (agg == "none") {
+        mask = M[.,treat_col] :!= -1
+    }
+    
+    // Final filter: ensure treat != -1
+    mask = mask :& (M[.,treat_col] :!= -1)
+    
+    return(mask)
 }
 end
 }
@@ -1679,4 +1863,6 @@ end
 /*--------------------------------------*/
 /* Change Log */
 /*--------------------------------------*/
+*2.0.1 - made the HCCME computation more efficient
+*2.0.0 - added additional check for RI procedure, disallowed none aggregation for staggered adoption, added HCCME options via the hc arg, fixed issue with jackknife calculation, moved computation to Mata, changed use_pre_controls arg to notyet
 *1.0.0 - created function

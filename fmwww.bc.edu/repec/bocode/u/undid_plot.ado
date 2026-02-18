@@ -1,18 +1,24 @@
 /*------------------------------------*/
 /*undid_plot*/
 /*written by Eric Jamieson */
-/*version 1.1.0 2025-09-30 */
+/*version 2.0.1 2025-02-17 */
 /*------------------------------------*/
 cap program drop undid_plot
 program define undid_plot
     version 16
     syntax, dir_path(string) /// 
-            [plot(string) weights(int 1) covariates(int 0) omit_silos(string) include_silos(string) ///
-            treated_colours(string) control_colours(string) ci(real 0.95) event_window(numlist min=2 max=2)]
+            [plot(string) weights(int 1) covariates(int 0) omit(string) only(string) ///
+            treated_colours(string) control_colours(string) ci(real 0.95) event_window(numlist min=2 max=2) hc(int 3)]
 
     // ---------------------------------------------------------------------------------------- //
     // ---------------------------- PART ONE: Basic Input Checks ------------------------------ // 
     // ---------------------------------------------------------------------------------------- //
+
+    // Check hc
+    if !inlist(`hc', 0, 1, 2, 3, 4) {
+        di as error "Error: 'hc' options are: 0, 1, 2, 3, or 4."
+        exit 12
+    }
 
     if "`plot'" == "" {
         local plot "agg"
@@ -83,28 +89,31 @@ program define undid_plot
     }
     qui use "`master'", clear
 
-    // Omit or restrict based on omit_silos and include_silos options
+    // Remove any whitespace from state names 
+    qui replace silo_name = subinstr(silo_name, " ", "", .)
+    
+    // Omit or restrict based on omit and only options
     local omit_toggled = 0
     local include_toggled = 0
-    if "`omit_silos'" != "" {
-        local nsilo_omit : list sizeof omit_silos
+    if "`omit'" != "" {
+        local nsilo_omit : list sizeof omit
         local omit_toggled = 1
     }
-    if "`include_silos'" != "" {
-        local nsilo_include : list sizeof include_silos
+    if "`only'" != "" {
+        local nsilo_include : list sizeof only
         local include_toggled = 1
     }
     if `include_toggled' == 1 & `omit_toggled' == 1 {
-        local overlap : list omit_silos & include_silos
+        local overlap : list omit & only
         if "`overlap'" != "" {
-            di as error "The following silos appear in both 'omit_silos' and 'include_silos': `overlap'"
+            di as error "The following silos appear in both 'omit' and 'only': `overlap'"
             exit 6
         }
     }
     qui levelsof silo_name, local(data_silos) clean
     if `omit_toggled' == 1 {
         local missing_omit ""
-        foreach omit_silo of local omit_silos {
+        foreach omit_silo of local omit {
             local found = 0
             foreach data_silo of local data_silos {
                 local clean_data_silo = subinstr(`"`data_silo'"', `"""', "", .)
@@ -118,14 +127,14 @@ program define undid_plot
             }
         }
         if "`missing_omit'" != "" {
-            di as error "The following silos in 'omit_silos' do not exist in the data: `missing_omit'"
+            di as error "The following silos in 'omit' do not exist in the data: `missing_omit'"
             di as error "Available silos in data: `data_silos'"
             exit 7
         }
     }
     if `include_toggled' == 1 {
         local missing_include ""
-        foreach include_silo of local include_silos {
+        foreach include_silo of local only {
             local found = 0
             foreach data_silo of local data_silos {
                 local clean_data_silo = subinstr(`"`data_silo'"', `"""', "", .)
@@ -139,14 +148,14 @@ program define undid_plot
             }
         }
         if "`missing_include'" != "" {
-            di as error "The following silos in 'include_silos' do not exist in the data: `missing_include'"
+            di as error "The following silos in 'only' do not exist in the data: `missing_include'"
             di as error "Available silos in data: `data_silos'"
             exit 8
         }
     }
     if `include_toggled' == 1 {
         local keep_condition ""
-        foreach include_silo of local include_silos {
+        foreach include_silo of local only {
             if "`keep_condition'" == "" {
                 local keep_condition `"silo_name == "`include_silo'""'
             }
@@ -158,7 +167,7 @@ program define undid_plot
     }
     if `omit_toggled' == 1 {
         local drop_condition ""
-        foreach omit_silo of local omit_silos {
+        foreach omit_silo of local omit {
             if "`drop_condition'" == "" {
                 local drop_condition `"silo_name != "`omit_silo'""'
             }
@@ -290,11 +299,28 @@ program define undid_plot
         foreach et of local ev_times {
             qui count if event_time == `et'
             if r(N) > 1 {
-                qui reg y intercept if event_time == `et', noconstant vce(robust) 
-                qui replace se = _se[intercept] if event_time == `et'
-                local t_crit = invttail(e(df_r), ((1-`ci')/2))  
-                qui replace ci_lower = _b[intercept] - `t_crit' * _se[intercept] if event_time == `et'
-                qui replace ci_upper = _b[intercept] + `t_crit' * _se[intercept] if event_time == `et'
+                qui reg y intercept if event_time == `et', noconstant
+
+                // Get regression components for HC covariance
+                tempname b V
+                matrix `b' = e(b)
+                mata: event_time_all = st_data(., "event_time")
+                mata: mask = (event_time_all :== `et')
+                mata: x = select(st_data(., "intercept"), mask)
+                mata: y_vals = select(st_data(., "y"), mask)
+                mata: resid = y_vals - x * st_matrix("`b'")
+                mata: V_hc = undid_compute_hc_covariance(x, resid, `hc')
+                mata: st_matrix("`V'", V_hc)
+
+
+                local se_hc = sqrt(`V'[1,1])
+                qui replace se = `se_hc' if event_time == `et'
+
+                // Use HC standard error for confidence intervals
+                local df = e(df_r)
+                local t_crit = invttail(`df', ((1-`ci')/2))
+                qui replace ci_lower = _b[intercept] - `t_crit' * `se_hc' if event_time == `et'
+                qui replace ci_upper = _b[intercept] + `t_crit' * `se_hc' if event_time == `et'
             }
         }
         qui collapse (sum) y = weighted_y (first) se = se ci_lower = ci_lower ci_upper, by(event_time)
@@ -326,7 +352,7 @@ program define undid_plot
                scheme(s1mono)
     }
     else if inlist("`plot'", "dis", "silo") {
-        levelsof silo_name, local(silos)
+        qui levelsof silo_name, local(silos)
         local n_silos : word count `silos'
         local ncols = min(5, max(2, ceil(`n_silos'/10)))
         if "`treated_colours'" == "" {
@@ -413,8 +439,65 @@ program define undid_plot
 
 end 
 
+qui cap mata: mata which undid_compute_hc_covariance()
+if _rc {
+mata:
+real matrix undid_compute_hc_covariance(
+    real matrix x,
+    real colvector resid,
+    real scalar hc
+)
+{
+    real scalar n, k, i, h_bar
+    real matrix XXinv, omega, h, delta, omega_diag
+    
+    n = rows(x)
+    k = cols(x)
+    
+    // Compute (X'X)^-1 using LU decomposition (like solve() in R)
+    XXinv = luinv(cross(x, x))
+    if (hasmissing(XXinv)) {
+        return(J(0, 0, .))
+    }
+    
+    // Compute hat matrix diagonal if needed for HC2/HC3/HC4
+    if (hc == 2 | hc == 3 | hc == 4) {
+        h = J(n, 1, .)
+        for (i=1; i<=n; i++) {
+            h[i] = x[i,.] * XXinv * x[i,.]'
+        }
+    }
+    
+    // Construct omega based on HC type
+    if (hc == 0) {
+        omega_diag = resid :^ 2
+    }
+    else if (hc == 1) {
+        omega_diag = (n / (n - k)) :* (resid :^ 2)
+    }
+    else if (hc == 2) {
+        omega_diag = (resid :^ 2) :/ (1 :- h)
+    }
+    else if (hc == 3) {
+        omega_diag = (resid :^ 2) :/ ((1 :- h) :^ 2)
+    }
+    else if (hc == 4) {
+        h_bar = mean(h)
+        delta = rowmin((J(n, 1, 4), h :/ h_bar))
+        omega_diag = (resid :^ 2) :/ ((1 :- h) :^ delta)
+    }
+    
+    // Sandwich estimator
+    return(XXinv * cross(x, omega_diag :* x) * XXinv)
+}
+end
+}
+
+
 /*--------------------------------------*/
 /* Change Log */
 /*--------------------------------------*/
+*2.0.1 - made the HCCME computation more efficient
+*2.0.0 - changed the args include_silos and omit_silos to only and omit, respectively, to better align with the undid_stage_three Stata function (as well as the R package). Also added hc arg.
 *1.1.0 - now shows which silo-year combinations have missing values of mean_outcome or mean_outcome_residualized before dropping them
 *1.0.0 - created function

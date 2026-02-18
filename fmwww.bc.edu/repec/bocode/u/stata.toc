@@ -11,6 +11,7 @@ p umeta module for u-statistic-based univariate and multivariate random-effects 
 p underid module producing postestimation tests of under- and over-identification after linear IV estimation
 p undid module to compute Difference-in-differences with unpoolable data
 p unemp module module to compute aggregate households employment deprivation (or unemployment) measures
+p unicefdata module to download indicators from UNICEF Data Warehouse
 p unicode2ascii modules to translate between Unicode and ASCII
 p unique module to report number of unique values in variable(s)
 p uniquestrata module to abort the program if the specified variables don't collectively account for every observation
