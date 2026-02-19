@@ -1,4 +1,4 @@
-*! version 2.0.8  18sep2021  Ben Jann
+*! version 2.1.2  14jan2026  Ben Jann
 
 capt findfile lmoremata.mlib
 if _rc {
@@ -132,8 +132,7 @@ program Display
             di as txt `c1' "M-estimate: k "  `c2' "= " as res %`w2'.0g e(k)
             di as txt `c1' "S-estimate: k"   `c2' "= " as res %`w2'.0g e(kS)
         }
-        else if inlist(`"`subcmd'"',"lms","lqs","lts") {
-            if `"`subcmd'"'!="lms" ///
+        else if inlist(`"`subcmd'"',"lqs","lts") {
             di as txt `c1' "Breakdown point" `c2' "= " as res %`w2'.0g e(bp)
         }
         if "`all'"=="" di as txt `c1' "Scale" `c2' "= " as res %`w2'.0g e(scale)
@@ -191,7 +190,7 @@ program Predict
     local opts xb Residuals RStandard /*
         */ OUTlier OUTlier2(numlist >=0 <=100 max=1) /*
         */ INlier  INlier2(numlist >=0 <=100 max=1)
-    if !inlist("`subcmd'","lms","lts","lqs") {
+    if !inlist("`subcmd'","lms","lqs") {
         if inlist("`subcmd'","m","s","mm") {
             local opts `opts' Weights
         }
@@ -199,6 +198,9 @@ program Predict
             local opts `opts' xbu u ue
         }
         local opts `opts' SCores IFs RIFs
+        if "`subcmd'"=="lts" {
+            local opts `opts' SUBset
+        }
     }
     else {
         local opts `opts' SUBset
@@ -732,7 +734,7 @@ program Estimate, eclass
         local clustopt cluster(`cluster')
     }
     if "`novce'"=="" {
-        if inlist("`subcmd'","lts","lqs","lms") {
+        if inlist("`subcmd'","lqs","lms") {
             if `"`vce'"'!="" {
                 di as err "{bf:vce()} not supported by {bf:robreg `subcmd'}"
                 exit 198
@@ -817,7 +819,7 @@ program Estimate, eclass
             Panels_not_nested_in_clusters `ivar' `cluster' `touse'
         }
     }
-    if inlist("`subcmd'","lqs","lts","lms") local cmd "lqs"
+    if inlist("`subcmd'","lqs","lms") local cmd "lqs"
     else local cmd "`subcmd'"
     Estimate_`cmd' `subcmd' `refit' `wgt', y(`y') xvars(`xvars') `xvars0' ///
         touse(`touse') n(`n') `ivaropt' `constant' `r2' `clustopt' `ftest' ///
@@ -875,7 +877,8 @@ program Estimate_ls, eclass
         tolerance(str) iterate(str) relax noquad nolog ]
     if `"`ivar'`absorb'"'!="" {
         if "`weight'"=="iweight" {
-            di as err "{bf:iweight}s not allowed"
+            di as err "options {bf:ivar()} and {bf:absorb()} not supported"/*
+                */ " with {bf:svy} prefix or with {bf:iweight}s"
             exit 101
         }
         if "`usave'"=="" local nousave nousave // do not store FEs by default
@@ -918,7 +921,8 @@ program Estimate_m, eclass
         init(str) ]
     if "`weight'"=="iweight" {
         if `"`ivar'`absorb'"'!="" {
-            di as err "{bf:iweight}s not allowed"
+            di as err "options {bf:ivar()} and {bf:absorb()} not supported"/*
+                */ " with {bf:svy} prefix or with {bf:iweight}s"
             exit 101
         }
     }
@@ -973,7 +977,7 @@ program Estimate_s, eclass
     // syntax
     gettoken subcmd 0 : 0
     gettoken refit 0 : 0    // not used
-    syntax [pw fw/], y(str) touse(str) n(str) [ xvars(str) xvars0(str) ///
+    syntax [pw fw iw/], y(str) touse(str) n(str) [ xvars(str) xvars0(str) ///
         noconstant nor2 cluster(str) ftest nose level(cilevel) ///
         ivar(str) absorb(str) ugen(str) NOUsave Usave ///
         tolerance(str) iterate(str) relax noquad nolog ///
@@ -984,6 +988,19 @@ program Estimate_s, eclass
         RSTEPs(numlist int >=0 max=1) ///
         NKeep(numlist int >0 max=1) ///
         naive alt nostd ]
+    if "`weight'"=="iweight" {
+        if c(stata_version)<17 {
+            di as err "{bf:svy} prefix or {bf:iweight}s not allowed with" /*
+                */ " {bf:robreg s} in Stata `c(stata_version)';"/*
+                */ " Stata 17 or newer is required"
+            exit 101
+        }
+        if `"`ivar'`absorb'"'!="" {
+            di as err "options {bf:ivar()} and {bf:absorb()} not supported"/*
+                */ " with {bf:svy} prefix or with {bf:iweight}s"
+            exit 101
+        }
+    }
     if "`bp'"!="" & "`k'"!="" {
         di as err "{bf:bp()} and {bf:k()} not both allowed"
         exit 198
@@ -1079,11 +1096,24 @@ program Estimate_mm, eclass
     // syntax
     gettoken subcmd 0 : 0
     gettoken refit 0 : 0
-    syntax [pw fw/], y(str) touse(str) n(str) [ xvars(str) xvars0(passthru) ///
+    syntax [pw fw iw/], y(str) touse(str) n(str) [ xvars(str) xvars0(passthru) ///
         noconstant nor2 cluster(str) ftest nose level(cilevel) ///
         tolerance(str) iterate(str) relax noquad nolog ///
         EFFiciency(numlist max=1) K(numlist >0 max=1) ///
         noHAUSman bp(passthru) Sopts(str asis) ]
+    if "`weight'"=="iweight" {
+        if c(stata_version)<17 {
+            di as err "{bf:svy} prefix or {bf:iweight}s not allowed with" /*
+                */ " {bf:robreg mm} in Stata `c(stata_version)';"/*
+                */ " Stata 17 or newer is required"
+            exit 101
+        }
+        // if `"`ivar'`absorb'"'!="" {
+        //     di as err "options {bf:ivar()} and {bf:absorb()} not supported"/*
+        //         */ " with {bf:svy} prefix or with {bf:iweight}s"
+        //     exit 101
+        // }
+    }
     if "`efficiency'"!="" & "`k'"!="" {
         di as err "{bf:efficiency()} and {bf:k()} not both allowed"
         exit 198
@@ -1202,20 +1232,138 @@ program ReEstimate_mm // returns diopts
     Estimate _mm `anything', `options'
 end
 
+program Estimate_lts, eclass
+    // syntax
+    gettoken subcmd 0 : 0 // not used
+    gettoken refit 0 : 0  // not used
+    syntax [pw fw iw/], y(str) touse(str) n(str) [ xvars(str) ///
+        noconstant nor2 cluster(str) ftest nose level(cilevel) ///
+        tolerance(str) iterate(str) relax noquad nolog ///
+        bp(numlist >=1 <=50 max=1) Nsamp(numlist max=2) ///
+        CSTEPs(numlist int >=0 max=1) NKeep(numlist int >0 max=1) ///
+        outlier(varname numeric) /// undocumented
+        naive alt nostd * ]
+    if "`weight'"=="iweight" {
+        if c(stata_version)<17 {
+            di as err "{bf:svy} prefix or {bf:iweight}s not allowed with" /*
+                */ " {bf:robreg lts} in Stata `c(stata_version)';"/*
+                */ " Stata 17 or newer is required"
+            exit 101
+        }
+    }
+    if "`bp'"=="" local bp 50
+    if "`outlier'"!="" {
+        /* the subsampling algorithm is skipped if variable outlier is provided;
+           the algorithm will then draw a random h-subset from the inliers
+           and refine the estimate from there; variable outlier is assumed to
+           be non-missing in the estimation sample */
+        local nsamp 1
+        local nkeep 1
+    }
+    else {
+        parse_nsamp `nsamp'
+        if "`csteps'"=="" local csteps 2
+        if "`nkeep'"==""  local nkeep  10
+    }
+    if "`naive'"!="" & "`alt'"!="" {
+        di as err "{bf:naive} and {bf:alt} not both allowed"
+        exit 198
+    }
+    parse_densityopts, `options'
+    
+    // estimate
+    mata: rr_lts()
+end
+
+program parse_densityopts
+    syntax [, BWidth(str) KERNel(string) ADAPTive(numlist int >=0 max=1) ]
+    parse_bwopt `bwidth'
+    if `"`kernel'"'=="" local kernel "epan2"
+    else {
+        capt mata: st_local("kernel", _mm_unabkern(st_local("kernel")))
+        if _rc==1 exit 1
+        if _rc {
+            di as err `"{bf:kernel()}: '{bf:`kernel'}' not allowed"'
+            exit 198
+        }
+    }
+    if "`adaptive'"=="" local adaptive 0
+    c_local bwidth `bwidth'
+    c_local bwmethod `bwmethod'
+    c_local bwdpi `bwdpi'
+    c_local bwadjust `bwadjust'
+    c_local bwclip `bwclip'
+    c_local kernel `"`kernel'"'
+    c_local adaptive `adaptive'
+end
+
+program parse_bwopt
+    // bwidth(numlist) => returns bwidth
+    capt numlist `"`0'"'
+    if _rc==1 exit _rc
+    if _rc==0 {
+        local 0 `", bwidth(`0')"'
+        syntax, bwidth(numlist >0 max=1)
+        c_local bwidth `"`bwidth'"'
+        exit
+    }
+    // bwidth(method, adjust(#)) => returns bwmethod bwdpi bwadjust
+    _parse comma bwidth 0 : 0
+    capt n syntax [, ADJust(numlist >0 max=1)/*
+        */ NOCLip CLip(numlist >1 max=1 missingok) ]
+    if _rc==1 exit _rc
+    if _rc {
+        di as err "error in option {bf:bwidth()}"
+        exit 198
+    }
+    parse_bwmethod, `bwidth'
+    if "`adjust'"=="" local adjust 1
+    if "`noclip'"!=""     local clip .
+    else if "`clip'"==""  local clip 10
+    c_local bwidth
+    c_local bwmethod `bwmethod'
+    c_local bwdpi `bwdpi'
+    c_local bwadjust `adjust'
+    c_local bwclip `clip'
+end
+
+program parse_bwmethod  // returns: bwmethod bwdpi
+    capt n syntax [, Silverman Normalscale Oversmoothed SJpi ///
+        Dpi Dpi2(numlist int >=0 max=1) ISJ ]
+    if _rc==1 exit _rc
+    if _rc {
+        di as err "error in option {bf:bwidth()}"
+        exit 198
+    }
+    if "`dpi2'"!="" local dpi dpi
+    local bwmethod `silverman' `normalscale' `oversmoothed' `sjpi' `dpi' `isj'
+    if `: list sizeof bwmethod'>1 {
+        di as err "too many methods specified"
+        di as err "error in option {bf:bwidth()}"
+        exit 198
+    }
+    if "`bwmethod'"==""                   local bwmethod "dpi"
+    if "`bwmethod'"=="dpi" & "`dpi2'"=="" local dpi2 2
+    c_local bwmethod `bwmethod'
+    c_local bwdpi `dpi2'
+end
+
 program Estimate_lqs, eclass
     // syntax
     gettoken subcmd 0 : 0
     gettoken refit 0 : 0  // not used
-    if "`subcmd'"=="lts" {
-        local ltsopts CSTEPs(numlist int >=0 max=1) NKeep(numlist int >0 max=1)
-    }
     if "`subcmd'"!="lms" {
         local bp bp(numlist >=1 <=50 max=1)
     }
-    syntax [pw fw/], y(str) touse(str) n(str) [ xvars(str) ///
+    syntax [pw fw iw/], y(str) touse(str) n(str) [ xvars(str) ///
         noconstant nor2 cluster(str) ftest nose level(cilevel) ///
         tolerance(str) iterate(str) relax noquad nolog ///
-        `bp' Nsamp(numlist max=2) `ltsopts' naive alt nostd ]
+        `bp' Nsamp(numlist max=2) naive alt nostd ]
+    if "`weight'"=="iweight" {
+        di as err "{bf:svy} prefix or {bf:iweight}s not allowed with" /*
+            */ " {bf:robreg `subcmd'}"
+        exit 101
+    }
     if "`bp'"==""     local bp 50
     parse_nsamp `nsamp'
     if "`csteps'"=="" local csteps 2
@@ -1224,9 +1372,7 @@ program Estimate_lqs, eclass
         di as err "{bf:naive} and {bf:alt} not both allowed"
         exit 198
     }
-    
-    // deactivate VCE
-    local se nose
+    local se nose // deactivate VCE
     
     // estimate
     mata: rr_lqs()
@@ -1649,7 +1795,9 @@ struct rr {
     real scalar      kS, effS, b0S
     real matrix      bS
     // additional objects for robreg lms/lqs/lts
-    real scalar      h, q_h, h0, c, s0 
+    real scalar      h, q_h, h0, c, s0
+    real scalar      adaptive, bwdpi, bwadjust, bwclip
+    string scalar    bwmethod
 }
 
 struct rr_fit {
@@ -1923,6 +2071,12 @@ void rr_post(struct rr scalar S)
         cstripe = (J(rows(cstripe), 1, "S"), cstripe) \
                   ("scale", "_cons")
     }
+    else if (S.cmd=="lts") {
+        S.omit = (S.omit, 0)
+        st_matrix(bnm, (S.f.b \ sqrt(S.q_h))')
+        cstripe = (J(rows(cstripe), 1, "LTS"), cstripe) \
+                  ("tau", "_cons")
+    }
     else {
         st_matrix(bnm, S.f.b')
         cstripe = (J(rows(cstripe), 1, ""), cstripe)
@@ -1953,8 +2107,8 @@ void rr_post(struct rr scalar S)
     }
     
     // standard scalars and macros
-    st_numscalar("e(k_eq)", 1 + (S.cmd=="s") + 2*(S.cmd=="mm"))
-    st_numscalar("e(k_eform)", 1 + (S.cmd=="s") + 2*(S.cmd=="mm"))
+    st_numscalar("e(k_eq)", _mm_nunique(cstripe[,1]))
+    st_numscalar("e(k_eform)", st_numscalar("e(k_eq)"))
     st_numscalar("e(scale)", S.f.scale)
     st_numscalar("e(df_m)", S.p)
     if (S.N_clust<.) {
@@ -2108,6 +2262,18 @@ void rr_post(struct rr scalar S)
         if (S.cmd=="lts") {
             st_numscalar("e(csteps)", S.csteps)
             st_numscalar("e(nkeep)", S.nkeep)
+            if (S.se) {
+                st_global("e(kernel)", S.kernel)
+                st_numscalar("e(adaptive)", S.adaptive)
+                st_numscalar("e(bwidth)", S.bwidth)
+                if (S.bwmethod!="") {
+                    if (S.bwmethod!="dpi") st_global("e(bwmethod)", S.bwmethod)
+                    else st_global("e(bwmethod)", S.bwmethod+"("+
+                        strofreal(S.bwdpi)+")")
+                    st_numscalar("e(bwadjust)", S.bwadjust)
+                    st_numscalar("e(bwclip)", S.bwclip)
+                }
+            }
         }
         if (S.r2) {
             st_matrix("e(b0)", S.b0)
@@ -2222,17 +2388,24 @@ real scalar rr_r2_rho(real colvector r, real colvector y, real colvector w,
 // note that w is assumed to be a vector here, i.e. not a scalar; scalar w
 // needs to be specified as J(n,1,w)
 
-real matrix rr_XXinv(real matrix X, real colvector w, real scalar cons)
+real matrix rr_XXinv(real matrix X, real colvector w, real scalar cons,
+    | real scalar lu)
 {
     real colvector k
     real rowvector means
     real matrix    XXinv
     
-    if (cons==0) return(invsym(quadcross(X, cons, w, X, cons)))
+    if (args()<4) lu = 0
+    if (cons==0) {
+        if (lu) XXinv =  luinv(quadcross(X, cons, w, X, cons))
+        else    XXinv = invsym(quadcross(X, cons, w, X, cons))
+        return(XXinv)
+    }
     k = cols(X)
     if (k==0) return(1/quadsum(w)) // w assumed non-scalar!!!
     means = mean(X, w)
-    XXinv = invsym(quadcrossdev(X, means, w, X, means))
+    if (lu) XXinv =  luinv(quadcrossdev(X, means, w, X, means))
+    else    XXinv = invsym(quadcrossdev(X, means, w, X, means))
     XXinv = XXinv \ -(means * XXinv)
     XXinv = (XXinv, (XXinv[k+1,]' \ 1/quadsum(w) - means*XXinv[k+1,]'))
     return(XXinv)
@@ -3776,7 +3949,7 @@ void rr_mm_hm(struct rr scalar S)
 }
 
 /*---------------------------------------------------------------------------*/
-// robreg lqs/lms/lts
+// robreg lqs/lms
 /*---------------------------------------------------------------------------*/
 
 void rr_lqs()
@@ -3787,17 +3960,11 @@ void rr_lqs()
     
     // setup
     S = rr_setup(y=., X=., w=.)
-    
-    // subset size for LTS and LQS
     rr_lqs_h(S)
-    
-    // number of subsamples
-    if (S.nsamp>=.) rr_nsamp(S.p, (S.cmd=="lts" ? 50 : 500), 10000, S)
-    if (S.nkeep>S.nsamp) S.nkeep = S.nsamp // only relevant for lts
+    if (S.nsamp>=.) rr_nsamp(S.p, 500, 10000, S)
     
     // estimation
-    if (S.cmd=="lts") S.f = _rr_lts(y, X, w, S)
-    else              S.f = _rr_lqs(y, X, w, S)
+    S.f = _rr_lqs(y, X, w, S)
     rr_lqs_scale(y, X, w, S)
     
     // post results
@@ -3856,7 +4023,7 @@ struct rr_fit scalar _rr_lqs(real colvector y0, real matrix X0, real colvector w
         // full model
         b = rr_smpl(t)
         e2 = (y - rr_xb(X, b, S.cons)):^2
-        c = mm_quantile(e2, w, S.h)
+        c = mm_quantile(e2, w, S.h, 1) // low quantile
         if (c < f.scale) {
             f.W = rr_smpl_i(t) // indices of subset
             f.b = b; f.scale = c
@@ -3865,7 +4032,7 @@ struct rr_fit scalar _rr_lqs(real colvector y0, real matrix X0, real colvector w
         if (null) {
             b = y[rr_smpl_i(t)[1]] // (only need single obs)
             e2 = (y :- b):^2
-            c = mm_quantile(e2, w, S.h0)
+            c = mm_quantile(e2, w, S.h0, 1) // low quantile
             if (c < f0.scale) {; f0.b = b; f0.scale = c; }
         }
         if (S.dots) rr_progress(i, doti, S.nsamp)
@@ -3878,8 +4045,8 @@ struct rr_fit scalar _rr_lqs(real colvector y0, real matrix X0, real colvector w
     f.scale = f.scale * std.ymadn^2
     S.c = f.scale // copy optimization criterion
     S.s0 = rr_lqs_s0(S.cmd, f.scale, S.h, S.N - S.p - S.cons)
-    // store h-quantile of squared residuals
-    S.q_h = mm_quantile((y0 - rr_xb(X0, f.b, S.cons)):^2, w, S.h)
+    // store h-quantile of squared residuals (using low quantile)
+    S.q_h = mm_quantile((y0 - rr_xb(X0, f.b, S.cons)):^2, w, S.h, 1)
     
     // R-squared (Rousseeuw/Hubert 1997)
     if (S.r2) {
@@ -3909,8 +4076,48 @@ real scalar rr_lqs_s0(string scalar cmd, real scalar c, real scalar h, real scal
     return(sqrt(c) / sqrt(1 - 2*z/h * normalden(z)))
 }
 
-struct rr_fit scalar _rr_lts(real colvector y0, real matrix X0, real colvector w,
-    struct rr scalar S)
+/*---------------------------------------------------------------------------*/
+// robreg lts
+/*---------------------------------------------------------------------------*/
+
+void rr_lts()
+{
+    real colvector   y, w, outlier
+    real matrix      X
+    struct rr scalar S
+    
+    // setup
+    S = rr_setup(y=., X=., w=.)
+    rr_lqs_h(S)
+    if (S.nsamp>=.) rr_nsamp(S.p, 50, 10000, S)
+    if (S.nkeep>S.nsamp) S.nkeep = S.nsamp
+    S.kernel   = st_local("kernel")
+    S.adaptive = strtoreal(st_local("adaptive"))
+    S.bwidth   = strtoreal(st_local("bwidth"))
+    if (S.bwidth>=.) {
+        S.bwmethod = st_local("bwmethod")
+        S.bwadjust = strtoreal(st_local("bwadjust"))
+        S.bwdpi    = strtoreal(st_local("bwdpi"))
+        S.bwclip   = strtoreal(st_local("bwclip"))
+    }
+    
+    // option outlier()
+    if (st_local("outlier")!="") {
+        outlier = st_data(., st_local("outlier"), st_local("touse"))
+    }
+    
+    // estimation
+    S.f = _rr_lts(y, X, w, outlier, S)
+    rr_lqs_scale(y, X, w, S)
+    if (S.se) rr_lts_V(y, X, w, S)
+    
+    // post results
+    rr_isrtomitted(S)
+    rr_post(S)
+}
+
+struct rr_fit scalar _rr_lts(real colvector y0, real matrix X0,
+    real colvector w, real colvector outlier, struct rr scalar S)
 {
     real scalar    i, j, k, k0, c, doti, n, null
     real colvector y, b, b0, e2, h, Indx
@@ -3927,48 +4134,55 @@ struct rr_fit scalar _rr_lts(real colvector y0, real matrix X0, real colvector w
     std = rr_std(y, X, w, S.cons, S.nostd)
     
     // enumerate candidates
-    if (S.dots) doti = rr_progress_init(S.nsamp)
     n = rows(y); Indx = 1::n
-    t = rr_smpl_init(y, X, S.p, S.cons, S.smpl)
-    f = rr_fit(S.nkeep); f0 = rr_fit(S.nkeep);
-    k = k0 = 1 // index of worst candidate
-    for (i=1; i<=S.nsamp; i++) {
-        // full model
-        b = rr_smpl(t)
-        e2 = (y - rr_xb(X, b, S.cons)):^2
-        for (j=1;j<=S.csteps;j++) {
-            b0 = b
-            h = select(Indx, e2:<=mm_quantile(e2, w, S.h))
-            b = mm_ls_b(mm_ls(y[h], X[h,], (w==1 ? w : w[h]), S.cons, 0, 0))
+    f = rr_fit(S.nkeep); f0 = rr_fit(S.nkeep)
+    if (rows(outlier)==0) {
+        if (S.dots) doti = rr_progress_init(S.nsamp)
+        t = rr_smpl_init(y, X, S.p, S.cons, S.smpl)
+        k = k0 = 1 // index of worst candidate
+        for (i=1; i<=S.nsamp; i++) {
+            // full model
+            b = rr_smpl(t)
             e2 = (y - rr_xb(X, b, S.cons)):^2
-            if (mreldif(b,b0)<S.tol) break
-        }
-        c = mean(e2, w:*(e2:<=mm_quantile(e2, w, S.h)))
-        if (c < f[k].scale) {
-            //f[k].W = (S.csteps ? h : rr_smpl_i(t)) // indices of subset
-            f[k].b = b; f[k].scale = c
-            for (j=S.nkeep;j;j--) {; if (f[j].scale>f[k].scale) k = j; }
-        }
-        // empty model
-        if (null) {
-            b = y[rr_smpl_i(t)[1]] // (only need single obs)
-            e2 = (y :- b):^2
             for (j=1;j<=S.csteps;j++) {
                 b0 = b
-                h = select(Indx, e2:<=mm_quantile(e2, w, S.h0))
-                b = mean(y[h], (w==1 ? w : w[h]))
+                h = select(Indx, e2:<=mm_quantile(e2, w, S.h))
+                b = mm_ls_b(mm_ls(y[h], X[h,], (w==1 ? w : w[h]), S.cons, 0, 0))
+                e2 = (y - rr_xb(X, b, S.cons)):^2
+                if (mreldif(b,b0)<S.tol) break
+            }
+            c = mean(e2, w:*(e2:<=mm_quantile(e2, w, S.h)))
+            if (c < f[k].scale) {
+                //f[k].W = (S.csteps ? h : rr_smpl_i(t)) // indices of subset
+                f[k].b = b; f[k].scale = c
+                for (j=S.nkeep;j;j--) {; if (f[j].scale>f[k].scale) k = j; }
+            }
+            // empty model
+            if (null) {
+                b = y[rr_smpl_i(t)[1]] // (only need single obs)
                 e2 = (y :- b):^2
-                if (reldif(b,b0)<S.tol) break
+                for (j=1;j<=S.csteps;j++) {
+                    b0 = b
+                    h = select(Indx, e2:<=mm_quantile(e2, w, S.h0))
+                    b = mean(y[h], (w==1 ? w : w[h]))
+                    e2 = (y :- b):^2
+                    if (reldif(b,b0)<S.tol) break
+                }
+                c = mean(e2, w:*(e2:<=mm_quantile(e2, w, S.h0)))
+                if (c < f0[k0].scale) {
+                    f0[k0].b = b; f0[k0].scale = c
+                    for (j=S.nkeep;j;j--) {; if (f0[j].scale>f0[k0].scale) k0 = j; }
+                }
             }
-            c = mean(e2, w:*(e2:<=mm_quantile(e2, w, S.h0)))
-            if (c < f0[k0].scale) {
-                f0[k0].b = b; f0[k0].scale = c
-                for (j=S.nkeep;j;j--) {; if (f0[j].scale>f0[k0].scale) k0 = j; }
-            }
+            if (S.dots) rr_progress(i, doti, S.nsamp)
         }
-        if (S.dots) rr_progress(i, doti, S.nsamp)
+        if (S.dots) rr_progress_done(S.nsamp)
     }
-    if (S.dots) rr_progress_done(S.nsamp)
+    else {
+        h = _rr_lts_hsamp(Indx, outlier, w, S)
+        f[1].b = mm_ls_b(mm_ls(y[h], X[h,], (w==1 ? w : w[h]), S.cons, 0, 0))
+        if (null) f0[1].b = mean(y[h], (w==1 ? w : w[h]))
+    }
     
     // refine selected candidates
     if (S.dots) rr_printf("{txt}refining {res}%g{txt} best candidates ", S.nkeep)
@@ -4013,8 +4227,8 @@ struct rr_fit scalar _rr_lts(real colvector y0, real matrix X0, real colvector w
     f[k].scale = f[k].scale * std.ymadn^2
     S.c = f[k].scale // copy optimization criterion
     S.s0 = rr_lqs_s0(S.cmd, f[k].scale, S.h, S.N - S.p - S.cons)
-    // store h-quantile of squared residuals
-    S.q_h = mm_quantile((y0 - rr_xb(X0, f[k].b, S.cons)):^2, w, S.h)
+    // store h-quantile of squared residuals (use low quantile!)
+    S.q_h = mm_quantile((y0 - rr_xb(X0, f[k].b, S.cons)):^2, w, S.h, 1)
     
     // R-squared (Rousseeuw/Hubert 1997)
     if (S.r2) {
@@ -4029,6 +4243,93 @@ struct rr_fit scalar _rr_lts(real colvector y0, real matrix X0, real colvector w
         S.R2 = 1 - editmissing(S.s0^2 / S.scale0^2,0)
     }
     return(f[k])
+}
+
+real colvector _rr_lts_hsamp(real colvector Indx, real colvector outlier,
+    real colvector w, struct rr scalar S)
+{   // draw a random h-subset from the inliers (if there are not enough
+    // inliers, S.h should be adjusted; this is currently ignored)
+    real scalar    n
+    real colvector h
+    
+    h = jumble(select(Indx, !outlier)) // inliers in random order
+    if (w==1) n = min((floor(S.h * rows(Indx)), rows(h)))
+    else      n = sum(runningsum(w[h]) :<= (S.h*sum(w)))
+    return(h[|1 \ (n<1 ? 1 : n)|])
+}
+
+void rr_lts_V(real colvector y, real matrix X, real colvector w,
+    struct rr scalar S)
+{
+    real scalar    d, e, tau
+    real colvector r, t, B
+    real rowvector C, aw
+    real matrix    W, IF, Ainv
+    
+    if (S.dots) rr_printf("{txt}computing standard errors ...")
+    r    = rr_resid(y, X, S.f.b, S.cons)
+    t    = (r:^2 :<= S.q_h)
+    tau  = sqrt(S.q_h)
+    W    = _rr_lts_V_W(r, w, tau, S) // kernel weights
+    aw   = w :* t - tau * (W[,1] + W[,2])
+    Ainv = rr_XXinv(X, aw, S.cons)
+    C    = -quadcross(W[,2] - W[,1], 0, X, S.cons)
+    B    = tau * C'
+    d    = -quadsum(W[,1] + W[,2])
+    // computing Ginv using blockwise inversion:
+    //     Ginv = (A^-1 + A^-1*B*C*A^-1/e, -A^-1*B/e) \
+    //            (-C*A^-1/e,              1/e)
+    //            with e = d - C*A^-1*B
+    //  if G = (A, B) \ (C, d)
+    e = d - C*Ainv*B
+    S.Ginv = (Ainv + Ainv*B*C*Ainv/e, -Ainv*B/e) \ (-C*Ainv/e, 1/e)
+    if (S.vce) {
+        IF = ((r :* t) :* (X, J(rows(X), S.cons, 1)), t :- S.h) * S.Ginv'
+        S.V = rr_VCE(IF, w, S.fw, S.p+S.cons, S.N, S.clust, S.N_clust)
+    }
+    if (S.dots) rr_printf("{txt} done\n")
+}
+
+real matrix _rr_lts_V_W(real colvector y, real colvector w,
+    real scalar at, struct rr scalar S)
+{
+    real scalar    pw
+    real colvector p
+    class mm_density scalar D
+    
+    pw = (w!=1 & S.fw==0)
+    D.kernel(S.kernel, S.adaptive)
+    if (S.bwidth>=.) {
+        D.bw(S.bwmethod, S.bwadjust, S.bwdpi)
+        if (S.bwclip<.) {
+            p = (abs(y) :> at * S.bwclip)
+            if (any(p)) { // exclude outliers from bandwidth estimation
+                p = selectindex(!p)
+                D.data(y[p], (rows(w)!=1 ? w[p] : w), pw)
+                D.bw(D.h())
+            }
+        }
+    }
+    else D.bw(S.bwidth)
+    D.data(y, w, pw)
+    S.bwidth = D.h()
+    return(w :* (D.K(y, -at, D.h()*D.l()), D.K(y, at, D.h()*D.l())))
+}
+
+void rr_lts_scores()
+{
+    real scalar      q_h, h
+    real colvector   r, t
+    string rowvector v
+    
+    v = tokens(st_local("varlist"))
+    q_h = st_numscalar("e(q_h)")
+    h   = st_numscalar("e(h)")
+    r = (st_data(., st_global("e(depvar)"), st_local("touse"))
+          - st_data(., v[1], st_local("touse")))
+    t = (r:^2 :<= q_h)
+    st_store(., v[1], st_local("touse"), r :* t)
+    st_store(., v[2], st_local("touse"), t :- h)
 }
 
 end
