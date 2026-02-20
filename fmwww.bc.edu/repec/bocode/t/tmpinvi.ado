@@ -1,4 +1,4 @@
-*! version 1.0.0  20aug2025  I I Bolotov
+*! version 1.0.2  20aug2025  I I Bolotov
 program define tmpinvi, eclass byable(recall)
 	version 16.0
 	/*
@@ -31,9 +31,15 @@ program define tmpinvi, eclass byable(recall)
 			di as err "results of tmpinv not found"
 			exit 301
 		}
-		syntax, [REDuced(numlist int max=1 >=-`e(model_n)' <=`e(model_n)')]
-		_update `reduced'							   // switch result
-		_summary									   // print summary
+		syntax, [REDuced(numlist int max=1 >=-`e(model_n)' <=`e(model_n)')	///
+				 PYthon L2]
+		if (              "`python'" != ""  & "`l2'" != ""               ) {
+			di as err "must specify either {bf:python} or {bf:l2} option"
+			exit 198
+		}
+		// switch result and print summary
+		loc tmpinv = cond("`python'" == "", "tmpinvl2",          "tmpinv")
+		`tmpinv', `= cond("`reduced'"!= "", "reduced(`reduced')",      "")'
 		exit 0
 	}
 	// syntax                                                                   
@@ -69,16 +75,19 @@ program define tmpinvi, eclass byable(recall)
 	}
 	// perform estimation                                                       
 	if ("`ival'"                                 != ""    )                   {
-		mata: `M'   =  I(rows((`bval' = vec(st_data(.,  "`ival'" )' )      ) ))
-		mata:       st_matrix("`M'",    ustrregexm( `"`options'"',  "miss") ///
-			                 ? `M'    : select(`M',    rownonmissing(`bval') ))
-		mata:       st_matrix("`bval'", ustrregexm( `"`options'"',  "miss") ///
-			                 ? `bval' : select(`bval', rownonmissing(`bval') ))
-		mata:       mata drop  `M'             `bval'
-		loc options =ustrregexrf(`"`options'"',  "mod[^)]+[)]", ""   )    + ///
-											"     mod(`M'            )"
-		loc options =ustrregexrf(`"`options'"', "bval[^)]+[)]", ""   )    + ///
-											"    bval(`bval'         )"
+		mata:  st_local("f_mi", strofreal(all(missing(st_data(., "`ival'"))) ))
+		if ("`f_mi'"                             == "0"   )               {
+			mata:  `M' = I(rows((`bval' = vec(st_data(.,  "`ival'" )' )    ) ))
+			mata:   st_matrix("`M'",    ustrregexm( `"`options'"',  "miss") ///
+				             ? `M'    : select(`M',    rownonmissing(`bval') ))
+			mata:   st_matrix("`bval'", ustrregexm( `"`options'"',  "miss") ///
+				             ? `bval' : select(`bval', rownonmissing(`bval') ))
+			mata:   mata drop  `M'             `bval'
+			loc options =ustrregexrf(`"`options'"',  "mod[^)]+[)]", "")   + ///
+												"     mod(`M'         )"
+			loc options =ustrregexrf(`"`options'"', "bval[^)]+[)]", "")   + ///
+												"    bval(`bval'      )"
+		}
 	}
 	if ("`ilowerbound'"                          != ""    )                   {
 		conf    sca     `=substr( "`ilowerbound'",   2,  .)'
@@ -128,5 +137,5 @@ program define tmpinvi, eclass byable(recall)
 	if ("`get'"      != ""       |  "`_byvars'"  != ""    )					///
 	restore
 	if ("`get'"      != ""                                )					///
-	qui merge 1:1   `id' using   `tmpf',  update replace nogen
+	qui merge 1:1   `id' using   `tmpf',       `update' `replace'  nogen
 end

@@ -1,6 +1,7 @@
-*! version 10 February 19 2026
+*! version 10 February 10 2026
 * First Version May 10 2023
-qui program locproj, eclass
+*program drop locproj_str
+qui program locproj_str, eclass
 version 13.0:
 
 	syntax varlist (fv ts) [if] [in] [fweight aweight pweight iweight], [Hor(numlist integer) Shock(varlist fv ts) Controls(varlist fv ts) /*
@@ -166,11 +167,6 @@ local qreg=regexm("`met'","qreg")+regexm("`met'","xtabsorb")
 
 *********************************************************************************************************************************************
 *********************************************************************************************************************************************
-local nums=wordcount("`s'")
-if `nums'>1 & "`shtransf'"=="shtransf" {
-	di as err "The transformation option for the shock can be applied to only one variable"
-	exit 0005
-}
 
 * levels
 if "`transf'"==""|"`transf'"=="level" {
@@ -250,7 +246,7 @@ else if "`transf'"=="cmlt"|"`transf'"=="long-diff" {
 		tempvar y_h`hstr'
 		if `h'<0 {
 			loc ah = abs(`h')
-			qui gen `y_h`hstr'' = l`ah'.`y' - l.`y'
+			qui gen `y_h`hstr'' = l.l`ah'.`y' - l.`y'
 			}				
 		else qui gen `y_h`hstr'' = f`h'.`y' - l.`y' 
 		loc trn`hstr' "cml_`y'_h(`m')"
@@ -258,7 +254,7 @@ else if "`transf'"=="cmlt"|"`transf'"=="long-diff" {
 			tempvar s_h`hstr'
 			if `h'<0 {
 				loc ah = abs(`h')
-				qui gen `s_h`hstr'' = l`ah'.`s' - l.`s'
+				qui gen `s_h`hstr'' = l.l`ah'.`s' - l.`s'
 				}				
 			else qui gen `s_h`hstr'' = f`h'.`s' - l.`s' 
 			fvexpand `s_h`hstr'' 
@@ -285,11 +281,7 @@ else if "`transf'"=="cmlt sum" {
 		loc hstrl = `hstr' - 1
 		loc m = `h'+`chl'
 		tempvar y_h`hstr'
-		if `h'<0 {
-			di as err "Cumulative sum transformation cannot be estimated with negative horizons"
-			exit 0005
-		}
-		else if `h'==0 qui gen `y_h`hstr'' = `y' 
+		if `h'==0 qui gen `y_h`hstr'' = `y' 
 		else if `h'>0 qui gen `y_h`hstr'' = `y_h`hstrl'' + f`h'.`y' 
 		loc trn`hstr' "cmlsum_`y'_h(`m')"
 		if "`shtransf'"=="shtransf" {
@@ -389,8 +381,8 @@ else if "`transf'"=="logs diff" {
 	}
 }
 
-* Cumulative logs (long differeces in logs)
-else if "`transf'"=="logs cmlt"|"`transf'"=="logs long diff" {
+* Cumulative logs
+else if "`transf'"=="logs cmlt" {
 	tempvar dlny dlns
 	qui gen `dlny' = ln(`y') - ln(l.`y')
 	fvexpand `dlny' 
@@ -408,7 +400,7 @@ else if "`transf'"=="logs cmlt"|"`transf'"=="logs long diff" {
 		tempvar y_h`hstr'
 		if `h'<0 {
 			loc ah = abs(`h')
-			qui gen `y_h`hstr'' = ln(l`ah'.`y') - ln(l.`y')
+			qui gen `y_h`hstr'' = ln(l.l`ah'.`y') - ln(l.`y')
 			}				
 		else qui gen `y_h`hstr'' = ln(f`h'.`y') - ln(l.`y')
 		loc trn`hstr' "cml_ln`y'_h(`m')"
@@ -416,7 +408,7 @@ else if "`transf'"=="logs cmlt"|"`transf'"=="logs long diff" {
 			tempvar s_h`hstr'
 			if `h'<0 {
 				loc ah = abs(`h')
-				qui gen `s_h`hstr'' = ln(l`ah'.`s') - ln(l.`s')
+				qui gen `s_h`hstr'' = ln(l.l`ah'.`s') - ln(l.`s')
 				}				
 			else qui gen `s_h`hstr'' = ln(f`h'.`s') - ln(l.`s') 
 			fvexpand `s_h`hstr'' 
@@ -434,53 +426,6 @@ else if "`transf'"=="logs cmlt"|"`transf'"=="logs long diff" {
 		if `slags'==0 loc ls
 		else loc ls L(1/`slags').`dlns'
 	}
-}
-
-* Cumulative Sum Logs
-else if "`transf'"=="logs cmlt sum" {
-	tempvar dlny dlns
-	qui gen `dlny' = ln(`y') - ln(l.`y')
-	fvexpand `dlny' 
-	loc ltr=r(varlist)
-	loc ltrn "D.ln`y'"
-	if "`shtransf'"=="shtransf" {
-		qui gen `dlns' = ln(`s') - ln(l.`s')
-		fvexpand `dlns' 
-		loc sltr=r(varlist)
-		loc sltrn "D.ln`s'"
-	}
-	forvalues h = `hran' {
-		loc hstr = `h' - `hs'
-		loc hstrl = `hstr' - 1
-		loc m = `h'+`chl'
-		tempvar y_h`hstr'
-		if `h'<0 {
-			di as err "Logs cumulative sum transformation cannot be estimated with negative horizons"
-			exit 0006
-		}
-		else if `h'==0 qui gen `y_h`hstr'' = `dlny' 
-		else if `h'>0 qui gen `y_h`hstr'' = `y_h`hstrl'' + f`h'.`dlny' 
-		loc trn`hstr' "cmlsum_`y'_h(`m')"
-		if "`shtransf'"=="shtransf" {
-			tempvar s_h`hstr'
-			if `h'==0 qui gen `s_h`hstr'' = `dlns'
-			else if `h'>0 qui gen `s_h`hstr'' = `s_h`hstrl'' + f`h'.`dlns'
-			fvexpand `s_h`hstr'' 
-			loc sltr`hstr'=r(varlist)
-			loc sltrn`hstr' "cml_dln_sum_`s'_h(`m')"
-		}
-		else {
-			loc s_h`hstr' `s'
-		}
-	}
-	if `ylags'==0 loc ly
-	if `ylags'>0 loc ly L(1/`ylags').`dlny'
-	loc y y_h
-	if "`shtransf'"=="shtransf" {
-		if `slags'==0 loc ls
-		else loc ls L(1/`slags').`dlns'
-	}
-	
 }
 
 *********************************************************************************************************************************************
@@ -787,6 +732,7 @@ if "`graph'"!="nograph" {
 		(line `birf' `_t', lcolor(`lcolor') lpattern(solid)) if _n<=`h1', ///
 		legend(`legend') title(`title') `gropt' tlabel(`tlabel') ttitle(`ttitle') ///
 		name(`grname', replace) `xzero'
+
 	}
 }
 if "`grsave'"!="" {

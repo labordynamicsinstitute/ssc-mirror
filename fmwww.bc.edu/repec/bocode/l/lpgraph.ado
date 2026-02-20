@@ -1,12 +1,12 @@
-* First Version June 26 2023
-* This Version February 07 2025
+*! First Version June 26 2023
+* This Version February 19 2026
 
 program lpgraph
 version 13.0:
 
-syntax anything [if] [in], [Hor(numlist integer) Zero TItle(string) TTItle(string) YTItle(string) ti1(string) ti2(string) ti3(string) ti4(string) /*
-*/ lab1(string) lab2(string) lab3(string) lab4(string) LColor(string) lc1(string) lc2(string) lc3(string) lc4(string) SEParate nolegend /*
-*/ GRName(string) GRSave(string) as(string) COMBine(string) *]
+syntax anything [if] [in], [Hor(numlist integer) Zero XZero TItle(string) TTItle(string asis) YTItle(string) ti1(string) ti2(string) ti3(string) ti4(string) /*
+*/ lab1(string) lab2(string) lab3(string) lab4(string) LColor(string) lc1(string) lc2(string) lc3(string) lc4(string) SEParate /*
+*/ GRName(string) GRSave(string) as(string) COMBine(string) legend(string) tlabel(string) *]
 
 *********************************************************************************************************************************************
 *********************************************************************************************************************************************
@@ -69,12 +69,14 @@ else {
 tempvar t _zero
 if `hs'<=0 qui gen `t' =_n-1+`hs'
 else  qui gen `t' =_n
+label var `t' "Period"
 if "`zero'"=="zero" qui gen `_zero' = 0
 else qui gen `_zero' = .
 loc linezero (line `_zero' `t', lcolor(gs5) lpattern(dash)) 
 
-if "`ttitle'"=="" loc ttitle Period
-if "`legend'"=="nolegend" loc off off
+if "`xzero'"=="xzero" loc xzero xline(-1, lc(gray))
+else loc xzero 
+
 
 loc areas
 loc lines
@@ -94,23 +96,26 @@ forval i=1/`n' {
 	loc lines `lines' `line`i''
 	loc o`i'=`i'+`n'+1
 	loc order `order' `o`i''
-	loc s`i' 0.1
+	loc s`i' 0.05
 	loc size=`size'-`s`i''
 }
 
+if "`legend'"=="" loc legend order(`order') rows(1) position(6)
+else loc legend `legend' order(`order') position(6)
+
+if "`tlabel'"=="" loc tlabel `hs'(`p')`hor'
 
 if "`separate'"=="" {
 	twoway `areas' `linezero' `lines' if _n<=`h1', ///
-	legend(order(`order') rows(1) position(6)) ///
-	title(`title') tlabel(`hs'(`p')`hor') xtitle(`ttitle') ytitle(`ytitle') `options' name(`grname', replace)
+	legend(`legend') title(`title') tlabel(`tlabel') xtitle(`ttitle') ytitle(`ytitle') `options' name(`grname', replace) `xzero'
 }
 
 if "`separate'"=="separate" {
 	forval i=1/`n' {
-		twoway `area`i'' `linezero' `line`i'' if _n<=`h1', legend(`off' order(3) rows(1) position(6)) ///
-		title(`ti`i'', size(*`size')) tlabel(`hs'(`p')`hor') xtitle(`ttitle') ytitle(`ytitle') name(``i'', replace) `options' nodraw
+		twoway `area`i'' `linezero' `line`i'' if _n<=`h1', legend(`legend')  `xzero' ///
+		title(`ti`i'', size(*`size')) tlabel(`tlabel') xtitle(`ttitle') ytitle(`ytitle') name(``i'', replace) `options' nodraw
 	}	
-gr combine `names', title(`title') name(`grname', replace) `combine'
+gr combine `names', title(`title') name(`grname', replace) `combine' `combopt' 
 }
 
 if "`grsave'"!="" {

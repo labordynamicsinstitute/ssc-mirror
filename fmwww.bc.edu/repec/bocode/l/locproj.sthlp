@@ -1,6 +1,6 @@
 {smcl}
 {* First Version May 10 2023}{...}
-{* This Version July 17 2025}{...}
+{* This Version February 19 2026}{...}
 {viewerdialog locproj "dialog locproj"}{...}
 {vieweralsosee "[R] lincom" "help lincom"}{...}
 {vieweralsosee "[R] margins" "help margins"}{...}
@@ -24,25 +24,29 @@ The user can easily choose different options for the desired IRF graph, as well 
 
 {p}{cmd:locproj} allows the user to choose different estimation methods for both time series and panel data, including some instrumental variables methods currently available in Stata such as {cmd:ivregress} or {cmd:xtivreg}, or quantile regressions methods such as  {cmd:qreg} or {cmd:ivqregress}.{p_end}
 
-{p}{cmd:locproj} uses the Stata command {cmd:lincom} to estimate the response to the shock variable or variables, allowing to estimate responses to linear
-combinations of variables, including interactions with factor or continuous variables. Importantly, it also allows the use of marginal effects instead of 
-regression coefficients, which is highly convenient when the response variable is binary and the user wants to estimate the response as a probability.
-In the latter case, {cmd:locproj} makes use of the Stata command {cmd:margins}, which could further facilitate the estimation of responses when 
-the shock corresponds to an interaction of variables (factor or continuous) instead of just a single variable.{p_end}
+{p}{cmd:locproj} uses the Stata command {cmd:lincom} to estimate the response to the shock variable or variables,
+allowing to estimate responses to linear combinations of variables, including interactions with factor or continuous 
+variables. Importantly, it also allows the use of marginal effects instead of regression coefficients, which is highly 
+convenient when the response variable is binary and the user wants to estimate the response as a probability.
+In the latter case, {cmd:locproj} makes use of the Stata command {cmd:margins}, which could further facilitate the 
+estimation of responses when the shock corresponds to an interaction of variables (factor or continuous) instead of just 
+a single variable.{p_end}
 
-{p}{cmd:locproj} also allows different options regarding the horizon and the response starting period. For instance, it allows having initial steps 
-different from zero, including negative starting horizons, automatically adjusting the output and the way in which the lags of the 
-dependent variable are included. {p_end}
+{p}{cmd:locproj} also includes several options for transforming both the dependent variable and the shock variable, 
+(logs, differences, long differences, cumulative sum) that are not available in the Stata native commands for local 
+projections.{p_end} 
+{p}The possibility of using a cumulative sum transformation is particularly useful if one is interested in computing the ratio of the overall outcome and intervention response, often referred to as the multiplier.{p_end}
+
+{p}{cmd:locproj} also allows different options regarding the horizon and the response starting period. For instance, it allows having initial steps different from zero, including negative starting horizons, automatically adjusting the output and the way in which the lags of the dependent variable are included. {p_end}
+
+{p}{cmd:locproj} generates temporary variables with the necessary transformations of the response variable in order to 
+estimate the IRF in the desired transformation option. For every option, the procedure also generates temporary variables
+with the corresponding transformation of the dependent variable needed in case the user wants to include lags of the
+dependent variable that are consistent with the chosen transformation.{p_end}
 
 {p}We can also use {cmd:locproj} to estimate an Event Study based on the DiD estimator in the case where the treatment period is the same for all treated individuals.{p_end}
 
-{p}{cmd:locproj} generates temporary variables with the necessary transformations of the response variable in order to estimate the IRF 
-in the desired transformation option, such as levels, logs, differences, log-differences, cumulative changes or cumulative log-differences.
- 
-{p}For every option, the procedure also generates temporary variables with the corresponding transformation of the dependent variable 
-needed in case the user wants to include lags of the dependent variable that are consistent with the chosen transformation.{p_end}
-
-{p}The options allow defining the desired specification in a fully automatic or in a more explicit way, with many alternatives in between. {p_end}
+{p}The options allow defining the desired specification in a fully automatic or in a more explicit way, with many alternatives in between.{p_end}
 
 {p}If the user chooses the automatic specification, the syntax is very close to a typical regression command in Stata, 
 with the only restriction that {cmd:locproj} interprets the variable that corresponds to the shock (impulse) as the one just after 
@@ -58,10 +62,6 @@ or an interaction with another variable.
 
 {p 4 8 2}{bf:Remark:} {cmd:aweight}s, {cmd:fweight}s, {cmd:iweight}s, and {cmd:pweight}s are allowed; see {help weight}.{p_end}
 
-
-{title:Proceedings USA Stata Conference 2023} 
-
-https://www.stata.com/meeting/us23/slides/US23_Ugarte-Ruiz.pdf
 
 
 {synoptline}
@@ -92,9 +92,10 @@ https://www.stata.com/meeting/us23/slides/US23_Ugarte-Ruiz.pdf
 {synopt :{helpb locproj##example1_4:Example 1.4}} Estimation method options{p_end}
 {synopt :{helpb locproj##example1_5:Example 1.5}} Displaying all the regression outputs from each step{p_end}
 {synopt :{helpb locproj##example1_6:Example 1.6}} Use of the transformation options{p_end}
-{synopt :{helpb locproj##example1_7:Example 1.7}} Changing the confidence level or using more than one level{p_end}
-{synopt :{helpb locproj##example1_8:Example 1.8}} Saving the IRF results into new variables{p_end}
-{synopt :{helpb locproj##example1_9:Example 1.9}} Options for plotting the IRF {p_end}
+{synopt :{helpb locproj##example1_7:Example 1.7}} Multipliers{p_end}
+{synopt :{helpb locproj##example1_7:Example 1.8}} Changing the confidence level or using more than one level{p_end}
+{synopt :{helpb locproj##example1_8:Example 1.9}} Saving the IRF results into new variables{p_end}
+{synopt :{helpb locproj##example1_9:Example 1.10}} Options for plotting the IRF {p_end}
 
 {synopt :{helpb locproj##example2:Example 2}} Interaction of a dummy variable with the shock (State-dependent IRF){p_end}
 {synopt :{helpb locproj##example3:Example 3}} Non-linear effects and interactions: Using the option lcs() {p_end}
@@ -106,7 +107,8 @@ https://www.stata.com/meeting/us23/slides/US23_Ugarte-Ruiz.pdf
 {synopt :{helpb locproj##example5:Example 5}} Example using Quantile Regression and LPGRAPH command{p_end}
 {synopt :{helpb locproj##example6:Example 6}} Using instrumental variables methods {p_end}
 {synopt :{helpb locproj##example7:Example 7}} Binary dependent variable: Using the option margins{p_end}
-{synopt :{helpb locproj##example8:Example 8}} D-i-D Event Study{p_end}
+{synopt :{helpb locproj##example8:Example 8}} Split-Jack-Knife Panel data estimator {p_end}
+{synopt :{helpb locproj##example9:Example 9}} D-i-D Event Study{p_end}
 
 {synoptline}
 
@@ -203,31 +205,43 @@ the command {cmd:lincom}{p_end}
 {marker transformation}{...}
 {syntab:{bf:Transformation Options:}}
 
-{synopt:{opt tr:ansf(string)}}Specifies the type of transformation that should be applied to the dependent variable when generating the forecasts that are used for each 
-horizon of the local projection. The available transformations available are the ones in the following list, and they should be written exactly as they are shown:{p_end}
+{synopt:{opt shtr:ansf}}Specifies that the same type of transformation applied to the dependent variable is also applied to the shock variable, 
+including its lags if they are required. The default is that the transformation is applied only to the dependent variable.
+This option does not work if more than one variable is introduced in the option {opt shock()}.{p_end}
 
-{p 39 42 2}1. {bf:(level)}: {it:Levels: }It keeps the dependent variable as originally specified and uses its forecast {it:h} periods ahead 
+{synopt:{opt tr:ansf(string)}}Specifies the type of transformation that should be applied to the dependent variable when generating the forecasts 
+that are used for each horizon of the local projection. The available transformations available are the ones in the following list, and they should 
+be written exactly as they are shown as they are shown in the parenthesis:{p_end}
+
+{p 39 42 2}1. {bf:(level)}: {it:Levels}: It keeps the dependent variable as originally specified and uses its forecast {it:h} periods ahead 
 for each horizon of the IRF, i.e. {it:y(t+h)} with {it:h = 0...hor}. It is the default option in case no transformation is specified. 
 When the option {opt yl:ags()} is specified, it includes lags of the variable in levels, i.e. {it:y(t-l)} with {it:l = 1,...,ylags}.{p_end}
 
-{p 39 42 2}2. {bf:(diff)}: {it:Differences: }It uses forecasts of the dependent variable in simple "differences", i.e. {it:y(t+h) - y(t+h-1)} 
+{p 39 42 2}2. {bf:(diff)}: {it:Differences}: It uses forecasts of the dependent variable in simple "differences", i.e. {it:y(t+h) - y(t+h-1)} 
 with {it:h = 0...hor}. When the option {opt yl:ags()} is specified, it includes lags of the variable in differences, i.e. {it:y(t)-y(t-l)} 
 with {it:l = 1,...,ylags}.{p_end}
 
-{p 39 42 2}3. {bf:(cmlt)}: {it:Cumulative differences: }It uses forecasts of the dependent varible in cumulative differences, 
+{p 39 42 2}3. {bf:(cmlt)}: {it:Cumulative (long) differences}: It uses forecasts of the dependent varible in cumulative differences, 
 i.e. {it:y(t+h) - y(t-1)} with {it:h = 0...hor}. When the option {opt yl:ags()} is specified, it includes lags of the variable 
 in differences, i.e. {it:y(t)-y(t-l)} with {it:l = 1,...,ylags}.{p_end}
 
-{p 39 42 2}4. {bf:(logs)}: {it:Logs: }It uses forecasts of the logarithm of the dependent varible, i.e. {it:ln(y(t+h))} with {it:h = 0...hor}. 
+{p 39 42 2}4. {bf:(cmlt sum)}: {it:Cumulative sum}: It uses the cumulative sum of the dependent variable, i.e. {it:Σ_{k=0, k=h} y{t+k}} with 
+{it:h = 0...hor}. When the option {opt yl:ags()} is specified, it includes lags of the dependent variable, i.e. {it:y(t-l)} 
+with {it:l = 1,...,ylags}.{p_end}
+
+{p 39 42 2}5. {bf:(logs)}: {it:Logs}: It uses forecasts of the logarithm of the dependent varible, i.e. {it:ln(y(t+h))} with {it:h = 0...hor}. 
 When the option {opt yl:ags()} is specified, it includes lags of the logarithm of the variable, i.e. {it:ln(y(t-l))} with {it:l = 1,...,ylags}.{p_end}
 
-{p 39 42 2}5. {bf:(logs diff)}: {it:Log-differences: }It uses forecasts of the dependent variable in differences of its natural logarithm, 
-i.e. {it:ln(y(t+h)) - ln(y(t+h-1))} with {it:h = 0...hor}. When the option {opt yl:ags()} is specified, it includes lags of the variable in log-differences, 
-i.e. {it:ln(y(t))-ln(y(t-l))} with {it:l = 1,...,ylags}.{p_end}
+{p 39 42 2}6. {bf:(logs diff)}: {it:Log-differences}: It uses forecasts of the dependent variable in differences of its natural logarithm, 
+i.e. {it:ln(y(t+h)) - ln(y(t+h-1))} with {it:h = 0...hor}. When the option {opt yl:ags()} is specified, it includes lags of the variable 
+in log-differences, i.e. {it:ln(y(t))-ln(y(t-l))} with {it:l = 1,...,ylags}.{p_end}
 
-{p 39 42 2}6. {bf:(logs cmlt)}: {it:Cumulative log-differences: }It uses forecasts of the dependent variable in cumulative differences of its natural logarithm, 
-i.e. {it:ln(y(t+h)) - ln(y(t-1))} with {it:h = 0...hor}. When the option {opt yl:ags()} is specified, it includes lags of the variable in log-differences, 
-i.e. {it:ln(y(t))-ln(y(t-l))} with {it:l = 1,...,ylags}.{p_end}
+{p 39 42 2}7. {bf:(logs cmlt)}: {it:Cumulative (long) log-differences}: It uses forecasts of the dependent variable in cumulative differences of its natural logarithm, i.e. {it:ln(y(t+h)) - ln(y(t-1))} with {it:h = 0...hor}. When the option {opt yl:ags()} is specified, 
+it includes lags of the variable in log-differences, i.e. {it:ln(y(t))-ln(y(t-l))} with {it:l = 1,...,ylags}.{p_end}
+
+{p 39 42 2}8. {bf:(logs cmlt sum)}: {it:Cumulative sum of log-differences}: It uses the cumulative sum of the differences of the logarithm 
+of the dependent variable, i.e. {it:Σ_{k=0, k=h}(ln(y{t+k})-ln(y{t+k-1})} with {it:h = 0...hor}. When the option {opt yl:ags()} is specified, 
+it includes lags of the variable in log-differences, i.e. {it:ln(y(t))-ln(y(t-l))} with {it:l = 1,...,ylags}.{p_end}
 
 
 {marker marginal_effects}{...}
@@ -301,7 +315,9 @@ in percentage terms, this option should be specified as fact(100).{p_end}
 
 {synopt:{opt nograph}}If this option is specified a graph is not displayed.{p_end}
 
-{synopt:{opt z:ero}}If this option is specified the graph includes a dashed line for the value 0.{p_end}
+{synopt:{opt z:ero}}If this option is specified the graph(s) includes a dashed line at the value y-axis = 0.{p_end}
+
+{synopt:{opt xz:ero}}If this option is specified the graph(s) includes a dashed line at the value x-axis = 0.{p_end}
 
 {synopt:{opt ti:tle(string)}}Specifies a title for the IRF graph.{p_end}
 
@@ -310,6 +326,10 @@ in percentage terms, this option should be specified as fact(100).{p_end}
 {synopt:{opt lab:el(string)}}Specifies a label for the IRF line in the IRF graph.{p_end}
 
 {synopt:{opt tti:tle(string)}}Specifies a name for the time axis in the IRF graph.{p_end}
+
+{synopt:{opt legend(string)}}Specifies the desired legend and its options in the same way as in any other Stata graph.{p_end}
+
+{synopt:{opt tlabel(string)}}Specifies the desired labels for the time-axis (periods) and its options in the same way as in any other Stata graph.{p_end}
 
 {synopt:{opt grn:ame(string)}}Specifies a graph name that could be used, for instance, when combining various graphs.{p_end}
 
@@ -509,28 +529,27 @@ we also make use of the option {bf:fact()} and we scale the response by a factor
 
 {p 4 8 2}. {stata gen lni = ln(i)}{p_end}
 {p 4 8 2}. {stata gen lnr = ln(r)}{p_end}
-{p 4 8 2}. {stata gen dlni = d.lni}{p_end}
-{p 4 8 2}. {stata gen dlnr = d.lnr}{p_end}
 
 {p 4 4 0}We first estimate the IRF using the two variables in logarithm:{p_end}
 
 {p 4 8 2}. {stata locproj lni lnr, f(100) yl(2) sl(2)}{p_end}
 
-{p 4 4 0}But we can also estimate the same by using the option {bf:transf(logs)} for the dependent variable:{p_end}
+{p 4 4 0}But we can also estimate the same by using the option {bf:transf(logs)} and applying it to both the
+dependent variable and the shock, by also adding the option {bf:shtransf}:{p_end}
 
-{p 4 8 2}. {stata locproj i lnr, f(100) yl(2) sl(2) tr(logs)}{p_end}
+{p 4 8 2}. {stata locproj i r, f(100) yl(2) sl(2) tr(logs) shtransf}{p_end}
 
 {p 4 4 0}We can estimate the model in differences by entering the log-difference as the dependent variable:{p_end}
 
-{p 4 8 2}. {stata locproj d.lni lnr, f(100) yl(2) sl(2)}{p_end}
+{p 4 8 2}. {stata locproj d.lni d.lnr, f(100) yl(2) sl(2)}{p_end}
 
-{p 4 4 0}However, we can also use the option {bf:transf(diff)} with the dependent variable in logs:{p_end}
+{p 4 4 0}However, we can also use the option {bf:transf(diff)} with the dependent variable in logs and the option {bf:shtransf}:{p_end}
 
-{p 4 8 2}. {stata locproj lni lnr, f(100) yl(2) sl(2) tr(diff)}{p_end}
+{p 4 8 2}. {stata locproj lni lnr, f(100) yl(2) sl(2) tr(diff) shtransf}{p_end}
 
 {p 4 4 0}Or we can also use the option {bf:transf(logs diff)} with the dependent variable in levels:{p_end}
 
-{p 4 8 2}. {stata locproj i lnr, f(100) yl(2) sl(2) tr(logs diff)}{p_end}
+{p 4 8 2}. {stata locproj i r, f(100) yl(2) sl(2) tr(logs diff) shtr}{p_end}
 
 {p 4 4 0}For estimating the model in cumulative differences we can do it with both variables in logarithm:{p_end}
 
@@ -544,7 +563,35 @@ we also make use of the option {bf:fact()} and we scale the response by a factor
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
 
 {marker example1_7}{...}
-{title:Example 1.7. Changing the confidence level or using more than one level}
+{title:Example 1.7. Multipliers}
+
+{p 4 4 0}If we were interested in estimating the multiplier ({it:m(h)}) between the variables
+i and r, we could estimate the local projection with both variables in cumulative sums of their log-differences, 
+and then apply the "cumulative sum" transformation. When estimating a multiplier, we need to use 
+the option {bf:shtransf} in order to apply the transformation indicated in the option {bf:transf()} to both 
+the dependent and the shock variables:{p_end}
+
+{p 4 8 2}. {stata locproj d.lni d.lnr, f(100) yl(2) sl(2) tr(cmlt sum) shtr}{p_end}
+
+{p 4 4 0}Which is also equivalent to write the variables in levels and then apply the "cumulative
+sum of log-differences" transformation:{p_end}
+
+{p 4 8 2}. {stata locproj i r, f(100) yl(2) sl(2) tr(logs cmlt sum) shtr}{p_end}
+
+{p 4 4 0}Moreover, when we are working with variables in logarithms, the multiplier can also
+be equivalent (or very similar) to apply cumulative differences:{p_end}
+
+{p 4 8 2}. {stata locproj i r, f(100) yl(2) sl(2) tr(logs cmlt) shtr}{p_end}
+
+{p 4 4 0}Which is also equivalent to:{p_end}
+
+{p 4 8 2}. {stata locproj lni lnr, f(100) yl(2) sl(2) tr(cmlt) shtr}{p_end}
+
+
+{synopt :{helpb locproj##index:Return to Index}}{p_end}
+
+{marker example1_8}{...}
+{title:Example 1.8. Changing the confidence level or using more than one level}
 
 {p 4 4 0}By default the confidence level for the confidence bands is 95%. If we want to change it, we can use the {opt conf()} option
 which admits a maximum of two levels and only admits integer values:{p_end}
@@ -555,8 +602,8 @@ which admits a maximum of two levels and only admits integer values:{p_end}
 
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
 
-{marker example1_8}{...}
-{title:Example 1.8. Saving the IRF results into new variables}
+{marker example1_9}{...}
+{title:Example 1.9. Saving the IRF results into new variables}
 
 {p 4 4 0}If we want to save the estimated IRF into a new variable that can be used later, we can use it through the options {bf:saveirf} and {bf:irfname()}.
 If we just type {bf:saveirf}, {cmd: locproj} generates four (or six) new variables with the IRF, its standard error and the confidence bands.
@@ -569,8 +616,8 @@ to give them a name of our preference (e.g. {it:newirf}), we can do it through t
 
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
 
-{marker example1_9}{...}
-{title:Example 1.9. Some graph options}
+{marker example1_10}{...}
+{title:Example 1.10. Some graph options}
 
 {p 4 4 0}If we do not want {cmd:locproj} to produce a graph, we just have to type {bf:nograph}:{p_end}
 
@@ -825,7 +872,7 @@ variables that we can use.{p_end}
 {p}We can also create four separate graphs and then combine them into a single one. For doing so, we need to specify the 
 option {opt separate}. In this case, we are giving each separate graph a title, and therefore, we also specify the option nogelend. Additionally, we are choosing the color red for the IRFs lines of the four graphs:{p_end}
 
-{p 4 8 2}. {stata lpgraph Mean Q20 Q50 Q80, h(-4/12) separate nolegend tti(Quarters) ti1(OLS) ti2(Low - Q20) ti3(Median) ti4(High - Q80) lcolor(red) title(Example of qreg & lpgraph, size(0.9)) z}{p_end}
+{p 4 8 2}. {stata lpgraph Mean Q20 Q50 Q80, h(-4/12) separate tti(Quarters) ti1(OLS) ti2(Low - Q20) ti3(Median) ti4(High - Q80) lcolor(red) title(Example of qreg & lpgraph, size(0.9)) z}{p_end}
 
 {synopt :{helpb locproj##index:Return to Index}}{p_end}
 {synoptline}
@@ -945,7 +992,83 @@ whithout the need to specify it through the {cmd:locproj} option {opt shock()}:{
 
 
 {marker example8}{...}
-{title:Example 8. D-i-D Event Study}
+{title:Example 8. Split-Jack-Knife Panel Data Estimator}
+
+{p}Mei et al. (2026) demonstrate that the fixed-effects (FE) estimator commonly used in panel LP applications suffers from a Nickell-type bias, even in specifications
+without lagged dependent variables. Their analysis shows that this bias can distort both point estimates and inference, and may lead to systematic attenuation of
+estimated impulse responses. They propose split-panel jackknife (SPJ) corrections as a simple and effective remedy and provide an Stata command called {cmd:xtlp} 
+that performs such correction.{p_end}
+
+{p}{cmd:locproj} can accommodate an estimator of the split-panel jackknife developed by Sun and Dhaene (2019) which includes an estimation command called {cmd:xtspj}. 
+When we use their SPJ estimator in {cmd:locproj}, it correctly replicates the results obtained when using the {cmd:xtlp} command developed by Mei et al. (2026), 
+while still offering many more methodological options.{p_end}
+
+{p}Click on {stata ssc install xtspj} to install {cmd:xtspj} or type: ssc install xtspj{p_end}
+{p}Click on {stata net install xtlp, from("https://raw.githubusercontent.com/shenshuuu/panel-local-projection-stata/main/")} to install {cmd:xtlp} or type: net install xtlp, 
+from("https://raw.githubusercontent.com/shenshuuu/panel-local-projection-stata/main/"){p_end}
+
+{p}Here we provide a simple example to demonstrate how to use the SPJ estimator with {cmd:locproj}. We use again the JST database:{p_end}
+
+{p 4 8 2}. {stata use JSTdatasetR5.dta, clear}{p_end}
+Or
+{p 4 8 2}. {stata webuse set data.macrohistory.net/JST/}
+
+{p 4 8 2}. {stata webuse JSTdatasetR5.dta, clear}{p_end}
+
+{p 4 8 2}. {stata xtset ifs year}{p_end}
+
+{p}First, we are going to compare the multiplier-response of nominal GDP to a shock in nominal public expenditure when using the standard FE estimator
+versus using the SPJ. This example has again only a didactic purpose, and does not intend to be an econometrically rigorous exercise in any way.{p_end}
+
+{p}Since the command {cmd:xtspj} does not work when any of the variables have gaps, i.e. some missing values in the middle of the time-series, then
+we are going to restrict the sample to years after 1960 to guarantee the absence of gaps:{p_end}
+
+{p 4 8 2}. {stata drop if year <=1960}{p_end}
+
+{p}To estimate the multiplier we are going to use the options {bf: transf()} together with the option {bf: shtransf} to apply the cumulative sum in log-differences
+to both the response and the shock variable. We first use as estimation method the command {cmd:xtscc} to produce Driscoll and Kraay (1998) standard errors:{p_end}
+
+{p 4 8 2}. {stata locproj gdp expenditure, tr(logs cmlt sum) shtr yl(1) sl(1) fe save irfn(FE) m(xtscc)}{p_end}
+
+{p}Then we change the estimator method to {cmd:xtspj}. When using this command we need to specify the options {bf:model()} and {bf:method()}. In the first option webuse
+are going to specify a simple linear model "regress" (using least-squares-based closed-form expressions), and in the second option we are going to specify "parm" 
+(the split-panel jackknife ML estimate).{p_end}
+
+{p 4 8 2}. {stata locproj gdp expenditure, tr(logs cmlt sum) shtr m(xtspj) yl(1) sl(1) method(parm) model(regress) save irfn(SPJ)}{p_end}
+
+{p}Now we can use the {cmd: lpgraph} to graphically compare both IRFs:{p_end}
+
+{p 4 8 2}. {stata lpgraph FE SPJ}{p_end}
+
+{p}We can see that the FE estimate is always smaller than the SPJ one, seemingly confirming the attenuation bias of the FE estimator. The FE has wider confidence bands 
+deriving from the  Driscoll-Kray robust standard errors.{p_end}
+
+{p}Secondly, we are going to compare the results obtained through using {cmd:locproj} together with {cmd:xtspj} versus the ones obtained using the {cmd:xtlp} 
+developed by Mei et al. (2026). Since the command {cmd:xtlp} does not allow to transform the shock, we cannot estimate a multiplier, but we are going to estimate
+the IRF of both variables in log-differences (for the multiplier we need the cumulative sum of both variables):{p_end}
+
+{p}We need to generate the response and shock variables in logarithms:{p_end}
+
+{p 4 8 2}. {stata gen lngdp=ln(gdp)}{p_end}
+{p 4 8 2}. {stata gen lnexpenditure=ln(expenditure)}{p_end}
+
+
+{p}First, we compare the results using the FE estimator:{p_end}
+
+{p 4 8 2}. {stata locproj gdp expenditure, tr(logs diff) shtr yl(1) sl(1) fe}{p_end}
+{p 4 8 2}. {stata xtlp d.lngdp l(0/1)d.lnexpenditure ld.lngdp, method(fe) h(0 5)}{p_end}
+
+{p}Second, we compare the results using the SPJ estimator:{p_end}
+
+{p 4 8 2}. {stata locproj gdp expenditure, tr(logs diff) shtr yl(1) sl(1) m(xtspj) model(regress) method(parm)}{p_end}
+{p 4 8 2}. {stata xtlp d.lngdp l(0/1)d.lnexpenditure ld.lngdp, method(spj) h(0 5)}{p_end}
+
+{p}We can see that in the FE case, both commands deliver the exact same results, while in the SPJ there are some small differences in the third decimal, but they are otherwise
+equivalent:{p_end}
+
+
+{marker example9}{...}
+{title:Example 9. D-i-D Event Study}
 
 {p}We can use {cmd:locproj} to estimate an Event Study based on the DiD estimator in the case where the treatment period is the same 
 for all treated individuals.{p_end}
@@ -977,11 +1100,15 @@ after the intervention {it:h = 0, 1, 2}. {p_end}
 
 {title:References}
 
-{p}Jordà, Òscar. 2005, "Estimation and inference of impulse responses by local projections." American Economic Review 95, no. 1 (2005): 161-182."{p_end}
+{p}Jordà, Òscar. 2005, "Estimation and inference of impulse responses by local projections." American Economic Review 95, no. 1 (2005): 161-182.{p_end}
+
+{p}Jordà, Ò. and Taylor, A.M. 2025, "Local Projections". Journal of Economic Literature 63(1): 59–110.{p_end}
+
+{p}Mei, Z., L. Sheng, and Z. Shi. 2026. "Nickell bias in panel local projection: Financial crises are worse than you think". Journal of International Economics 104210.{p_end}
+
+{p}Sun, Y., and G. Dhaene. 2019. xtspj: "A command for split-panel jackknife estimation". The Stata Journal 19(2): 335–374.{p_end}
 
 {p}Wooldridge, J. M., 2021, "Two-way fixed effects, the two-way mundlak regression, and difference-in-differences estimators". Available at SSRN 3906345{p_end}
-
-{p}Jordà, Ò. and Taylor, A.M. 2024, "Local Projections". Federal Reserve Bank of San Francisco Working Paper Series 2024(24){p_end}
 
 {p}https://sites.google.com/site/oscarjorda/home/local-projections?pli=1{p_end}
 
@@ -997,6 +1124,9 @@ after the intervention {it:h = 0, 1, 2}. {p_end}
 
 {p}Ugarte-Ruiz, A. 2023. "LOCPROJ: Stata module to estimate Local Projections," Statistical Software Components S459204, Boston College Department of Economics{p_end}
 {p}Ugarte-Ruiz, A. 2025., "LOCPROJ & LPGRAPH: Stata commands to estimate Local Projections". BBVA-Research WP-09, July 2025{p_end}
+{p}Ugarte-Ruiz, A. 2023. "locproj: A new Stata command to estimate local projections," 2023 Stata Conference 11, Stata Users Group.
+
+{title:Proceedings USA Stata Conference 2023} https://www.stata.com/meeting/us23/slides/US23_Ugarte-Ruiz.pdf
 
 {synoptline}
 

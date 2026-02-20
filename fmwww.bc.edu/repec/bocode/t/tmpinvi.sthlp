@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  20nov2025}{...}
+{* *! version 1.0.2  20nov2025}{...}
 {viewerjumpto "Syntax" "tmpinvi##syntax"}{...}
 {viewerjumpto "Description" "tmpinvi##description"}{...}
 {viewerjumpto "Postestimation" "tmpinvi##postestimation"}{...}
@@ -110,7 +110,8 @@ pre/postestimation
         {cmd:by:} prefix). Missing observations are omitted unless
         {bf:missingokay} is specified. Overrides any existing
         {bf:bval({help strings:{it:string}})} or
-        {bf:model({help strings:{it:string}})} settings.{p_end}
+        {bf:model({help strings:{it:string}})} settings. Will be ignored if
+        {help varlist:{it:varlist}} contains only missing values.{p_end}
 {synopt :{opth ilower:bound(name)}}Set a dynamic lower bound on cell
         values (including under the {cmd:by:} prefix) using a string scalar
         stored in {it:name}. The scalar may be generated in
@@ -593,6 +594,13 @@ including {cmd:estat corr} and {cmd:estat ttest}.
     Thanks for citing this software and my works on the topic:
 
 {p 8 8 2}
-    Bolotov, I. (2025). CLSP: Linear Algebra Foundations of a Modular Two-Step
+Bolotov, I. (2026). TMPINVI: Stata module solving Interactive Tabular Matrix
+    Problems via Pseudoinverse Estimation (TMPinvI) program is a wrapper for
+    the TMPinv-estimator commands tmpinv and tmpinvl2 with options extending
+    its functionality to pre/postestimation. Available from
+    {browse "https://ideas.repec.org/c/boc/bocode/s459294.html"}.
+
+{p 8 8 2}
+Bolotov, I. (2025). CLSP: Linear Algebra Foundations of a Modular Two-Step
     Convex Optimization-Based Estimator for Ill-Posed Problems. Mathematics,
     13, 3476. Available from {browse "https://doi.org/10.3390/math13213476"}.

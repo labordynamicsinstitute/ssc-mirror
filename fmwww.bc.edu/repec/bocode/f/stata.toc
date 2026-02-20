@@ -16,6 +16,7 @@ p fastxtile module to generate a variable of quantile categories
 p favplots module for formatted added-variable plot(s)
 p fbar module to produce bar charts showing frequencies of categorical variables 
 p fbep Module to Estimate Financial Break-Even Point Analysis (BEP)
+p fbnardl module to perform Fourier Bootstrap Nonlinear Autoregressive Distributed Lag estimation
 p fcinstability module to perform forecast comparison and forecast rationality tests
 p fcstats module to compute time series forecast accuracy statistics
 p fdfilter module to implement Corbae-Ouliaris frequency domain filter to time series data

@@ -1,0 +1,27 @@
+d 'RBFMVAR': module to estimate the Residual-Based Fully Modified VAR (RBFM-VAR) model
+d
+d  rbfmvar implements the RBFM-VAR estimator of Chang (2000,
+d Econometric Theory, 16(6), 905-926). The estimator provides valid
+d inference for nonstationary VARs containing any unknown mixture
+d of I(0), I(1), and I(2) variables without requiring prior
+d unit-root pretesting. It extends Phillips (1995, Econometrica)
+d FM-VAR and yields the optimal mixed-normal limiting distribution
+d described in Theorems 1-2 of Chang (2000). 
+d
+d KW: VAR
+d KW: fully modified VAR
+d KW: nonstationary VAR
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260219
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f rbfmvar.ado
+f rbfmvar.sthlp
+f rbfmvar_simulate.ado
+f rbfmvar_graph.ado
+f ../_/_rbfmvar_mata.ado
+f rbfmvar_example.do
