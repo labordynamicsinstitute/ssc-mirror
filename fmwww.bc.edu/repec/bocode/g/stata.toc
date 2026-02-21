@@ -5,6 +5,7 @@ p gammafit module to fit a two-parameter gamma distribution
 p gammasym module to compute the value of the symmetrical gamma function
 p gaodeweather module providing batch query of weather data using Amap API
 p garbage_mixl module to perform Bayesian garbage class mixed logit model estimation
+p garchur module to implement the trend-GARCH(1,1) unit root test with endogenous structural breaks
 p gausshermite module to estimate integrals using Gauss Hermite quadratures
 p gb2fit module to fit Generalized Beta of the Second Kind distribution by maximum likelihood
 p gb2lfit module to fit Generalized Beta of the Second Kind distribution by maximum likelihood (log parameter metric)

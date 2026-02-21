@@ -1,4 +1,4 @@
-d 'XTBREAKSCOINT': module to implement the panel cointegration test with structural breaks developed by Banerjee and Carrion-i-Silvestre (2015, Journal of Applied Econometrics)
+d 'XTBREAKCOINT': module to implement the panel cointegration test with structural breaks developed by Banerjee and Carrion-i-Silvestre (2015, Journal of Applied Econometrics)
 d
 d  This test accounts for: 1. Cross-sectional dependence via factor
 d models (up to 5 common factors). 2. Heterogeneous structural
@@ -17,8 +17,8 @@ d
 d Author:   Merwan Roudane, NA
 d Support: email  merwanroudane920@@gmail.com
 d
-f xtbreakscoint.ado
-f xtbreakscoint.sthlp
-f ../_/_xtbreakscoint_engine.ado
-f xtbreakscoint_example.do
-f xtbreakscoint_example.xlsx
+f xtbreakcoint.ado
+f xtbreakcoint.sthlp
+f ../_/_xtbreakcoint_engine.ado
+f xtbreakcoint_example.do
+f xtbreakcoint_example.xlsx

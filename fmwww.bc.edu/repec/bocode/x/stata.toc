@@ -35,6 +35,7 @@ p xtbalance module to transform the dataset into balanced Panel Data
 p xtbalance2 module to create a balanced subsample from unbalanced panel data
 p xtbcfe module to perform bootstrap-corrected Fixed Effects estimation and inference in dynamic panel models
 p xtbreak module for detecting and dating multiple structural breaks in time series and panel data
+p xtbreakcoint module to implement the panel cointegration test with structural breaks developed by Banerjee and Carrion-i-Silvestre (2015, Journal of Applied Econometrics)
 p xtbreakscoint module to implement the panel cointegration test with structural breaks developed by Banerjee and Carrion-i-Silvestre (2015, Journal of Applied Econometrics)
 p xtbunitroot module to perform unit root tests for panel data with structural breaks
 p xtcadfcoint module to perform Panel CADF cointegration test with structural breaks and cross-section dependence
@@ -113,6 +114,7 @@ p xtpatternvar module to generate string variable describing panel patterns
 p xtpdyn module to estimate dynamic random effects probit model with unobserved heterogeneity
 p xtpedroni module to perform Pedroni's panel cointegration tests and Panel Dynamic OLS estimation
 p xtpmg module for estimation of nonstationary heterogeneous panels
+p xtpqardl module to estimate Panel Quantile Autoregressive Distributed Lag (PQARDL) models
 p xtpqml module to estimate Fixed-effects Poisson (Quasi-ML) regression with robust standard errors
 p xtprobitunbal module to estimate Dynamic Probit Random Effects Models with Unbalanced Panels
 p xtpsse module to estimate a conditional fixed-effects Poisson panel regression

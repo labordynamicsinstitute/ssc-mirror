@@ -1,0 +1,24 @@
+d 'GARCHUR': module to implement the trend-GARCH(1,1) unit root test with endogenous structural breaks
+d
+d   garchur implements the trend-GARCH(1,1) unit root test with
+d endogenous structural breaks proposed by Narayan and Liu (2015,
+d Energy Economics). The test is designed for trending time-series
+d data -- particularly energy and commodity price series -- where
+d conventional unit root tests lose power 
+d
+d KW: GARCH
+d KW: unit root
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260220
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f garchur.ado
+f garchur.sthlp
+f garchur_graph.ado
+f ../_/_garchur_mata.ado
+f garchur_example.do

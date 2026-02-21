@@ -1,0 +1,29 @@
+d 'XTPQARDL': module to estimate Panel Quantile Autoregressive Distributed Lag (PQARDL) models
+d
+d  xtpqardl estimates Panel Quantile Autoregressive Distributed Lag
+d (PQARDL) models, combining the panel ARDL framework of Pesaran,
+d Shin & Smith (1999) with the quantile ARDL methodology of Cho,
+d Kim & Shin (2015) and the panel extension of Bildirici (2022).
+d Unlike standard Panel ARDL (xtpmg), which estimates at the
+d conditional mean, xtpqardl estimates long-run and short-run
+d relationships at each quantile of the conditional distribution. 
+d
+d KW: ARDL
+d KW: quantile
+d KW: panel data
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20260220
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtpqardl.ado
+f xtpqardl_graph.ado
+f xtpqardl_makedata.ado
+f xtpqardl.sthlp
+f ../_/_xtpqardl_ecm.ado
+f ../_/_xtpqardl_estimate.ado
+f ../_/_xtpqardl_waldtest.ado
+f xtpqardl_example.do

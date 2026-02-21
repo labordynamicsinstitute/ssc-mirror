@@ -27,6 +27,6 @@ f fbnardl.sthlp
 f ../_/_fbnardl_advanced.ado
 f ../_/_fbnardl_bootstrap.ado
 f ../_/_fbnardl_diagtest.ado
-f ../_/_dynmult.ado
+f ../_/_fbnardl_dynmult.ado
 f ../_/_fbnardl_stars.ado
-f fbnardl_example.ado
+f fbnardl_example.do
