@@ -15,6 +15,7 @@ p basetable module to compare a set of risk factors or effects with respect to a
 p batcher module to parallelise tasks
 p batplot module to produce Bland-Altman plots accounting for trend 
 p bayerhanck module to compute test for non-cointegration
+p bayeshmc module to fit Bayesian regression models in Stata using the No-U-Turn Sampler (NUTS) via CmdStan
 p bayesmixedlogit module to perform Bayesian estimation of mixed logit models
 p bayesmixedlogitwtp module for Bayesian estimation of mixed logit model in willingness-to-pay (WTP) space
 p bayesmlogit module to perform Bayesian estimation of mixed logit models

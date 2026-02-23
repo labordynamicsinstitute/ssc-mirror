@@ -1,0 +1,33 @@
+d 'EXAM2TEX': module to Generate Standardized LaTeX Exam Templates
+d
+d      exam2tex creates a complete, professionally formatted LaTeX
+d exam template that follows academic	 standards. Version 1.0.1
+d includes a critical fix for question numbering alignment in
+d English papers,    ensuring all question numbers are consistently
+d left-aligned throughout the document. 
+d
+d KW: examination
+d KW: LaTeX
+d KW: Chinese text
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260222
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Hu Fangfang,  Wanjiang University of Technology
+d Support: email    huff470@@163.com
+d
+d Author: Chen LiWen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+d Author: Yang Lu,  Anhui University of Technology
+d Support: email  1026835594@@qq.com
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+f exam2tex.ado
+f exam2tex.sthlp

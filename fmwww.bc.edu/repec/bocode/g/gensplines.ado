@@ -1,4 +1,4 @@
-*! version 1.00 2023-05-22
+*! version 1.01 2026-02-21
 program define gensplines, rclass
   version 16.1
   syntax anything [if][in], [                                      ///
@@ -339,8 +339,7 @@ program define gensplines, rclass
 end
 
 program define GetWinsorOpts
-  syntax anything [if][in], xvar(string) [values] touse(varname)
-  marksample touse
+  syntax anything , xvar(string) [values] touse(varname)
   numlist "`anything'", ascending min(2) max(2)
   
   capture confirm number `xvar'

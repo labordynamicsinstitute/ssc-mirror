@@ -161,16 +161,9 @@ values, rather than the centiles are used.
 
 {title:Author}
 
-{p 5 12 2}{bf:Paul C. Lambert}{p_end}        
-{p 5 12 2}Biostatistics Research Group{p_end}
-{p 5 12 2}Department of Population Health Sciences{p_end}
-{p 5 12 2}University of Leicester{p_end}
-{p 5 12 2}Leicester, UK{p_end}
-{p 5 12 2}{it: and}{p_end}
-{p 5 12 2}Department of Medical Epidemiology and Biostatistics{p_end}
-{p 5 12 2}Karolinska Institutet{p_end}
-{p 5 12 2}Stockholm, Sweden{p_end}
-{p 5 12 2}paul.lambert@le.ac.uk{p_end}
+{pstd}
+Paul C Lambert, Cancer Registry of Norway, NIPH, Norway & Karolinska Institutet, Sweden.
+({browse "mailto:paul.lambert@fhi.no":paul.lambert@fhi.no})
 
 
 {title:References}

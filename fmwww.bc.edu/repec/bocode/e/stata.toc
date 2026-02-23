@@ -109,6 +109,7 @@ p evi module to compute Epidemic Volatility Index (EVI) for detecting epidemic w
 p evstudydd module to estimate event studies in D-i-D settings 
 p ewma module to calculate exponentially weighted moving average
 p ewreg module to estimate errors-in-variable model with mismeasured regressor
+p exam2tex module to Generate Standardized LaTeX Exam Templates
 p exampleobs module to prints example observations 
 p examples module to show examples from on-line help files
 p exbsample module to compute exchangeably weighted (or Bayesian) bootstraps
