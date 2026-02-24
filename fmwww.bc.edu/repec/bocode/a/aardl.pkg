@@ -1,0 +1,31 @@
+d 'AARDL': module to perform Augmented ARDL Cointegration Analysis
+d
+d  aardl implements the Augmented Autoregressive Distributed Lag
+d (A-ARDL) cointegration test using the 3-test framework of Sam,
+d McNown & Goh (2019). The package provides **eight model types**
+d that combine three methodological advances — Fourier
+d approximation, bootstrap inference, and nonlinear ARDL — in a
+d single unified command. 
+d
+d KW: ARDL
+d KW: autoregressive
+d KW: distributed lag
+d KW: augmented ARDL
+d KW: Fourier
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260222
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f aardl.ado
+f aardl.sthlp
+f ../_/_aardl_advanced.ado
+f ../_/_aardl_bootstrap.ado
+f ../_/_aardl_diagtest.ado
+f ../_/_aardl_dynmult.ado
+f ../_/_aardl_ndynmult.ado
+f ../_/_aardl_stars.ado
+f aardl_example.do

@@ -20,6 +20,7 @@ p caterpillar module to generate confidence intervals, Bonferroni-corrected conf
 p catgraph module to plotting means of a variable by category 
 p catplot module for plots of frequencies, fractions or percents of categorical data
 p causaldata module providing datasets used in causal analysis
+p caustests module to implement seven Granger causality tests for multivariate time series
 p cb2html module to write a codebook to an HTML file
 p cbarplot module for centred bar plots of absolute or relative frequencies
 p cc_xd_didtextbook module to provide do-files and datafiles for textbook

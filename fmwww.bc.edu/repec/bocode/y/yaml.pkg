@@ -1,0 +1,34 @@
+d 'YAML': module for reading, writing, and manipulating YAML configuration files
+d
+d   The yaml command provides a complete YAML 1.2 (subset) parser
+d for Stata, enabling configuration-driven workflows, metadata
+d management, and interoperability with other languages (R, Python,
+d GitHub Actions). 
+d
+d KW: YAML
+d KW: configuration
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260223
+d
+d Author: Joao Pedro Azevedo, World Bank
+d Support: email jazevedo@@worldbank.org
+d
+f yaml.ado
+f yaml.sthlp
+f yaml_clear.ado
+f yaml_describe.ado
+f yaml_dir.ado
+f yaml_examples.sthlp
+f yaml_frames.ado
+f yaml_get.ado
+f yaml_list.ado
+f yaml_read.ado
+f yaml_validate.ado
+f yaml_whatsnew.sthlp
+f yaml_write.ado
+f ../_/_yaml_collapse.ado
+f ../_/_yaml_fastread.ado
+f ../_/_yaml_mataread.ado
+f ../_/_yaml_tokenize_line.ado

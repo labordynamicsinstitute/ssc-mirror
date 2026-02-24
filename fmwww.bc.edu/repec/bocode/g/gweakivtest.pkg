@@ -1,0 +1,42 @@
+d 'GWEAKIVTEST': module providing robust test for weak instruments for 2SLS with multiple endogenous regressors
+d
+d   gweakivtest implements the robust weak instruments test of
+d Lewis and Mertens (2025). It is a    postestimation command for
+d ivreg2 and ivregress.    gweakivtest tests the null hypothesis of
+d weak instruments for two-stage least squares (2SLS) models   
+d with multiple endogenous regressors, generalizing existing
+d bias-based tests for instrument strength    in 2SLS models. 
+d Specifically, it (1) generalizes the bias-based tests for weak
+d instrument of Stock	 and Yogo (2005) (developed under uniformly
+d weak instruments) and Sanderson and Windmeijer (2016)   
+d (developed under a rank-deficient first-stage) to be robust to
+d heteroskedasticity, autocorrelation	 and clustering (indeed,
+d any form of covariance matrix), and (2) extends the Montiel Olea
+d and	 Pflueger (2013) robust test for models with a single
+d endogenous regressor (as implemented in    weakivtest) to
+d multiple endogenous regressors. Like that of Montiel Olea and
+d Pflueger (2013), the	  test is based on a Nagar (1959)
+d approximation of the bias of the 2SLS estimator. 
+d
+d KW: instrumental variables
+d KW: weak instruments
+d KW: 2SLS
+d
+d Requires: Stata version 16 and avar from SSC (q.v.)
+d
+d Distribution-Date: 20260223
+d
+d Author:  Daniel J. Lewis , University College London
+d Support: email daniel.lewis920@@gmail.com
+d
+d Author:   Karel Mertens , Federal Reserve Bank of Dallas
+d Support: email mertens.karel@@gmail.com
+d
+d Author:    Jonathan Shaw, Institute for Fiscal Studies
+d Support: email jon@@jonshaw.net
+d
+f gweakivtest.ado
+f gweakivtest.sthlp
+F ../_/_lewis_mertens_crit_vals_linux.plugin
+F ../_/_lewis_mertens_crit_vals_mac.plugin
+F ../_/_lewis_mertens_crit_vals_win.plugin

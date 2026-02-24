@@ -179,6 +179,7 @@ p gtsheckman module to compute a generalized two-step Heckman selection model
 p gumbelfit module to fit a two-parameter Gumbel distribution
 p guttmanl module to produce Guttman lower bound reliability coefficients
 p gvselect module to perform best subsets variable selection
+p gweakivtest module providing robust test for weak instruments for 2SLS with multiple endogenous regressors
 p gwhet module to perform test for groupwise heteroskedasticity
 p gzipuse module to use and save compressed dta files and compress .dta files
 p gziputil module to provide access to gzipped files

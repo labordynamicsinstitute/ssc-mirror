@@ -1,0 +1,18 @@
+d 'CAUSTESTS': module to implement seven Granger causality tests for multivariate time series
+d
+d  caustests implements seven Granger causality tests for
+d multivariate	time series, unifying several important strands of
+d the causality testing literature 
+d
+d KW: time series
+d KW: Granger causality
+d
+d Requires: Stata version 
+d
+d Distribution-Date: 20260223
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f caustests.ado
+f caustests.sthlp
