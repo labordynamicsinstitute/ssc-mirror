@@ -7,12 +7,12 @@ program define survcollapse, rclass
 
     // timevar REQUIRED; keepvars OPTIONAL
     syntax [if] [in] , ///
-        DATEVAR(name) ///
-        CASEVAR(name) ///
-        TIMEVAR(name) ///
-        SAVING(string) ///
-        [ KEEPVARS(varlist) ///
-          REPLACE ]
+    DATEVAR(name) ///
+    CASEVAR(name) ///
+    TIMEVAR(string) ///
+    SAVING(string) ///
+    [ KEEPVARS(varlist) ///
+      REPLACE ]
 
     // ------------------------------------------------------------
     // Checks
@@ -90,7 +90,7 @@ program define survcollapse, rclass
     // ------------------------------------------------------------
     // Normalize timevar name
     // ------------------------------------------------------------
-    local __t = lower(trim("`timevar'"))
+    local __t = lower(strtrim("`timevar'"))
     if ("`__t'" == "day") local __t "__day"
 
     if !inlist("`__t'","__day","stata_week","iso_week","cdc_week") {
@@ -189,7 +189,7 @@ program define survcollapse, rclass
     use `"`__times'"', clear
     quietly merge 1:1 `__wstart' using `"`__collapsed'"'
 
-    quietly gen byte created0 = (_merge != 3)
+    quietly gen byte created = (_merge != 3)
     label var created "1=time unit created (filled-in); 0=observed in data"
     drop _merge
     quietly replace `casevar' = 0 if missing(`casevar')
@@ -210,17 +210,28 @@ program define survcollapse, rclass
         label var week "Week (Stata/Sunday-based)"
     }
     else if ("`__t'" == "cdc_week") {
-        // CDC/MMWR: Sun–Sat; week-year = year(Thursday); week1 contains Jan 4
-        tempvar __thu __y __jan4 __wk1
-        quietly gen long `__thu' = `__wstart' + 4
-        quietly gen int  `__y'   = year(`__thu')
+        // CDC/MMWR: Sun–Sat; week #1 is first week with >=4 days in the calendar year
+        // Use Wednesday (midweek) to determine MMWR year to avoid week==0 at year boundaries
+        tempvar __mid __y __jan4 __wk1
+        quietly gen long `__mid'  = `__wstart' + 3          // Wednesday of this MMWR week
+        quietly gen int  `__y'    = year(`__mid')
         quietly gen long `__jan4' = mdy(1,4,`__y')
         quietly gen long `__wk1'  = `__jan4' - dow(`__jan4')   // Sunday of week containing Jan 4
+
         quietly replace year = `__y'
         quietly replace week = 1 + floor((`__wstart' - `__wk1')/7)
-        drop `__thu' `__y' `__jan4' `__wk1'
+
+        // Safety guard: MMWR week should never be 0
+        quietly count if week==0
+        if (r(N)) {
+                di as error "survcollapse: generated MMWR week==0 (should be 1–52/53). Please report this."
+                exit 459
+        }
+
+        drop `__mid' `__y' `__jan4' `__wk1'
         label var year "Year (CDC/MMWR)"
         label var week "Week (CDC/MMWR)"
+
     }
     else if ("`__t'" == "iso_week") {
         // ISO: Mon-based; week-year = year(Thursday); week 1 contains Jan 4

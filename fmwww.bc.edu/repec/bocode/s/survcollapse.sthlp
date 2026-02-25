@@ -1,6 +1,6 @@
 {smcl}
 {* *! survcollapse.sthlp}                                                                                                                      
-{* *! v1.0 17Jan2026  Leonelo Bautista}                                                                                                     
+{* *! v1.1 23Feb2026  Leonelo Bautista}                                                                                                 
 {cmd:Help for survcollapse}{right:Copy}
 {hline}
                                                                                                                                                

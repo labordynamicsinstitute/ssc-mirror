@@ -1,7 +1,8 @@
 *******************************************************************************
-*! _wbopendata_info v2.4.0  09Feb2026
+*! _wbopendata_info v2.6.0  22Feb2026
 *! Return indicator metadata using shared frame cache (fast after first call)
-*! Uses same __wbod_parse_yaml_ind parser as search - fixed block scalars
+*! v2.6.0: Use v2 parser (same as search) for consistent frame cache
+*! v2.5.0: Bump parser_version to 1.1.0 (invalidate cache after YAML parser fix)
 *! v2.4.0: Parse Note field with _website to convert URLs to clickable links
 *! v2.3.0: New display layout with separate ID/Name rows. Add unit, limited_data.
 *!         Show all topic IDs/names. Add Filters section with clickable commands.
@@ -28,7 +29,7 @@ program define _wbopendata_info, rclass
     *---------------------------------------------------------------------------
     * Use shared frame cache (same as __wbopendata_search_cache)
     *---------------------------------------------------------------------------
-    local parser_version "1.0.10"
+    local parser_version "1.1.0"
     local frame_name "_wbod_indicators"
     local cache_loaded = 0
 
@@ -56,7 +57,7 @@ program define _wbopendata_info, rclass
         * First call or invalid cache - parse YAML and cache result
         di as text "(Caching metadata in memory...)"
         
-        __wbod_parse_yaml_ind "`yaml_path'"
+        __wbod_parse_yaml_ind_v2 "`yaml_path'"
         gen str10 _parser_version = "`parser_version'"
 
         * Save processed dataset to frame for future use

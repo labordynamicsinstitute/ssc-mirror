@@ -8733,6 +8733,7 @@ fmwww.bc.edu/repec/bocode/_/__unicef_parse_ind_yaml_v2.ado
 fmwww.bc.edu/repec/bocode/_/_cwfcn_labels_isco88a.sthlp
 fmwww.bc.edu/repec/bocode/_/_tevaluator.ado
 fmwww.bc.edu/repec/bocode/_/_yaml_fastread.ado
+fmwww.bc.edu/repec/bocode/_/__wbod_parse_yaml_ind_v2.ado
 fmwww.bc.edu/repec/bocode/_/_gprod.ado
 fmwww.bc.edu/repec/bocode/_/_sgedden.ado
 fmwww.bc.edu/repec/bocode/_/_gdensity.ado
@@ -8743,6 +8744,7 @@ fmwww.bc.edu/repec/bocode/_/_aardl_stars.ado
 fmwww.bc.edu/repec/bocode/_/_subsim_menu.ado
 fmwww.bc.edu/repec/bocode/_/_cwfcn_isco88_to_egp.sthlp
 fmwww.bc.edu/repec/bocode/_/_svm_getenv_win64.plugin
+fmwww.bc.edu/repec/bocode/_/_wbopendata_check_yaml.ado
 fmwww.bc.edu/repec/bocode/_/_grmargd.html
 fmwww.bc.edu/repec/bocode/_/__wbod_parse_yaml_ind.ado
 fmwww.bc.edu/repec/bocode/_/_ggreg.ado
@@ -9294,6 +9296,7 @@ fmwww.bc.edu/repec/bocode/_/_cwfcn_labels_egp11.sthlp
 fmwww.bc.edu/repec/bocode/_/_cwfcn_isco08_to_isco88.sthlp
 fmwww.bc.edu/repec/bocode/_/_grepeat.ado
 fmwww.bc.edu/repec/bocode/_/_cwfcn_kldb92_4d_to_kldb92_3d.sthlp
+fmwww.bc.edu/repec/bocode/_/_wbod_yaml_metadata.ado
 fmwww.bc.edu/repec/bocode/_/_longitude.ado
 fmwww.bc.edu/repec/bocode/_/_teffects2_parse_dvarlist.ado
 fmwww.bc.edu/repec/bocode/_/_grndint.ado
