@@ -34,6 +34,7 @@ p rankseg module to compute rank-order segregation measures with finite sample-b
 p ranktest module to test the rank of a matrix 
 p ranova module to estimate single factor repeated measures ANOVA
 p ranvar module to compute the random group variance estimator of the mean for survey data
+p rardl module to perform Rolling-Window and Recursive ARDL Cointegration Analysis
 p ras module to implement biproportional scaling (RAS) method
 p raschcvt module to produce data in WINSTEPS format
 p raschfit module to implement the Raschfit algorithm defined by Hardouin and Mesbah (2004)

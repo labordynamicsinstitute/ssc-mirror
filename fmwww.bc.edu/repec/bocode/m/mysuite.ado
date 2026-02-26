@@ -1,7 +1,7 @@
-*! mysuite v1.0 13Feb2026
-*! Authors: Wu Lianghai, Chen Liwen, Wu Hanyan
+*! mysuite v1.0.1 25Feb2026
+*! Authors: Wu Lianghai, Chen Liwen, Wu Hanyan, Wu Xinzhuo, Li Juan
 *! Built-in extensible program suite for empirical research
-*! 30 modules (28 on SSC, 2 local)
+*! 31 modules (29 on SSC, 2 local)
 
 program define mysuite
     version 18.0
@@ -13,7 +13,7 @@ program define mysuite
                      corrtex2 regtex reg2tex reftex getref get2ref em ///
                      efficiency opacity crash scrash eui qta area ///
                      upoint province_devcat cleandisk myedit bf ///
-                     fshare thesis_diagram rollbook
+                     fshare thesis_diagram rollbook exam2tex
     
     local local_modules bmc conservatism
     
@@ -23,18 +23,21 @@ program define mysuite
     if "`all'" == "" & "`installed'" == "" & "`download'" == "" {
         display as text _n(2)
         display as text "{hline 70}"
-        display as text "{bf:mysuite v1.0} - Built-in Extensible Program Suite"
+        display as text "{bf:mysuite v1.0.1} - Built-in Extensible Program Suite"
         display as text "{hline 70}"
         display as text "Developed by: Wu Lianghai (agd2010@yeah.net)"
         display as text "              Chen Liwen (2184844526@qq.com)"
-        display as text "              Wu Hanyan (2325476320@qq.com), and others"
+        display as text "              Wu Hanyan (2325476320@qq.com)"
+		display as text "              Wu Xinzhuo (2957833979@qq.com)"
+		display as text "              Li Juan (1536496199@qq.com)"
         display as text "Institution: School of Business, Anhui University of Technology (AHUT)"
-        display as text "             School of Economics and Management(NUAA)"
-        display as text "Date: 13 February 2026"
+        display as text "             University of Bristol (UB)"
+		display as text "             Red Cross Society of Ma'anshan City"
+        display as text "Date: 25 February 2026"
         display as text "{hline 70}" _n
         
         * Display available modules
-        display as text "{bf:AVAILABLE MODULES (30 programs)}" _n
+        display as text "{bf:AVAILABLE MODULES (31 programs)}" _n
         
         display as text "{bf:1 Core Components}"
         display as text "  {bf:art2tex}    : Empirical paper framework"
@@ -70,7 +73,9 @@ program define mysuite
         display as text "    {bf:bf}          : Folder structure generator"
         display as text "    {bf:bmc}         : Monograph template"
         display as text "    {bf:fshare}      : Course development folders"
-        display as text "    {bf:thesis_diagram}: Dissertation framework" _n
+        display as text "    {bf:thesis_diagram}: Dissertation framework"
+		display as text "    {bf:exam2tex}: LaTeX exam template" _n
+		
         
         display as text "  {bf:(2) Classroom Management}"
         display as text "    {bf:rollbook}    : Random roll call system" _n
@@ -94,7 +99,7 @@ program define mysuite
                 local ++ssc_installed
             }
         }
-        display as text "  SSC modules installed: {res:`ssc_installed'}/28"
+        display as text "  SSC modules installed: {res:`ssc_installed'}/29"
         
         * Check local modules
         foreach mod in `local_modules' {
@@ -137,7 +142,7 @@ program define mysuite
             }
         }
         
-        display as text _n "{bf:Summary:} {res:`ssc_installed'}/28 SSC modules installed"
+        display as text _n "{bf:Summary:} {res:`ssc_installed'}/29 SSC modules installed"
         exit
     }
     

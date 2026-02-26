@@ -1,0 +1,33 @@
+d 'MTNARDL': module to perform Bootstrap Multiple Threshold Nonlinear ARDL
+d
+d	mtnardl implements the Multiple Threshold Nonlinear
+d Autoregressive Distributed Lag (MTNARDL) model    proposed by Pal
+d and Mitra (2016).    Unlike the standard Nonlinear ARDL (NARDL)
+d which decomposes changes into positive and negative	 components
+d (binary split), the MTNARDL decomposes changes in independent
+d variables into    quantile-based regimes. This allows testing
+d whether the magnitude of price changes matters for   
+d transmission asymmetry, not just the direction. 
+d
+d KW: ARDL
+d KW: autoregressive
+d KW: distributed lag
+d KW: bootstrap
+d KW: threshold
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260225
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f mtnardl.ado
+f mtnardl.sthlp
+f ../_/_mtnardl_advanced.ado
+f ../_/_mtnardl_boptstrap.ado
+f ../_/_mtnardl_decompose.ado
+f ../_/_mtnardl_diagtest.ado
+f ../_/_mtnardl_dynmult.ado
+f ../_/_mtnardl_stars.ado
+f mtnardl_example.do

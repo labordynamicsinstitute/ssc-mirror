@@ -1,0 +1,29 @@
+d 'MVARDLURT': module to perform Multivariate ARDL Unit Root Test with Bootstrap Critical Values 
+d
+d	mvardlurt implements the multivariate ARDL unit root test
+d proposed by Sam, McNown, Goh, and Goh    (2024). This test
+d augments the standard ADF regression with the lagged level of a
+d covariate    (independent variable) to improve power, especially
+d when cointegration exists between the dependent    and
+d independent variables. 
+d
+d KW: ARDL
+d KW: autoregressive
+d KW: distributed lag
+d KW: unit root test
+d KW: bootstrap
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260225
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f mvardlurt.ado
+f mvardlurt.sthlp
+f ../_/_mvardlurt_boptstrap.ado
+f ../_/_mvardlurt_diagtest.ado
+f ../_/_mvardlurt_graph.ado
+f ../_/_mvardlurt_stars.ado
+f mvardlurt_example.do

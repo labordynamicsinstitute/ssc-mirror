@@ -257,6 +257,7 @@ p mtad module to perform Multinomial Test of Agglomeration and Dispersion
 p mtebinary module to compute Marginal Treatment Effects (MTE) With a Binary Instrument
 p mtefe module to compute marginal treatment effects with factor variables
 p mtemore module to compute Marginal Treatment Effects (MTE) With a Binary Instrument
+p mtnardl module to perform Bootstrap Multiple Threshold Nonlinear ARDL
 p mtpi module for the modified Toxicity Probability Interval design
 p mtreatreg module to fits models with multinomial treatments and continuous, count and binary outcomes using maximum simulated likelihood
 p mulogit module to calculate multivariate and univariate odds ratios in logistic regression
@@ -280,6 +281,7 @@ p multivrs module to conduct multiverse analysis
 p mundlak module to estimate random-effects regressions adding group-means of independent variables to the model
 p muxplot module to produce scatter plots with y versus multiple x variables
 p muxyplot module to produce scatter plots with multiple x and y variables
+p mvardlurt module to perform Multivariate ARDL Unit Root Test with Bootstrap Critical Values 
 p mvcorr module to generate moving-window correlation or autocorrelation in time series or panel
 p mvdcmp module to compute multivariate decomposition for nonlinear response models
 p mvfiles module to provide  a convenient way to move/copy matched files from a specified input directory (also including, if wanted, additionally recursively matched subsets of files within distinctly matched offspring-directories) to a specified output directory

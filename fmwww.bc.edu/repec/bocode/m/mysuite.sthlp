@@ -1,5 +1,5 @@
 ﻿{smcl}
-{* 13Feb2026}{...}
+{* 25Feb2026}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "myedit" "help myedit"}{...}
 {viewerjumpto "Syntax" "mysuite##syntax"}{...}
@@ -37,14 +37,14 @@
 
 {pstd}
 {cmd:mysuite} is a comprehensive Stata program suite designed for empirical research,
-teaching management, and academic writing. It provides access to 30 specialized
+teaching management, and academic writing. It provides access to 31specialized
 programs organized into three main categories.
 
 {pstd}
 {bf:Module Sources:}
 
 {phang2}
-28 modules available for download from SSC Archive{p_end}
+29 modules available for download from SSC Archive{p_end}
 
 {phang2}
 2 modules ({bf:bmc}, {bf:conservatism}) included locally in the mysuite package{p_end}
@@ -73,7 +73,7 @@ programs organized into three main categories.
 {phang2}
 {bf:MODE 1 - Display}
   No options specified
-  → Show program banner, complete module list (30 programs),
+  → Show program banner, complete module list (31programs),
      current installation status, and detailed usage instructions.
      No modules are downloaded or installed.{p_end}
 
@@ -93,7 +93,7 @@ programs organized into three main categories.
 {phang2}
 {bf:MODE 4 - Force Reinstall}
   {opt all} and {opt download} options combined
-  → Force reinstall ALL 28 SSC modules regardless of current installation status.
+  → Force reinstall ALL 29 SSC modules regardless of current installation status.
      Useful for updating to latest versions or fixing corrupted installations.{p_end}
 
 
@@ -122,22 +122,22 @@ Displays separate sections for SSC modules and local modules, with a count summa
 {bf:MODE 1 - Display Program Information:}
 
 {phang}{cmd:. mysuite}{p_end}
-{phang}Display program banner, complete module list (30 programs),
-current installation status (e.g., "SSC modules installed: 15/28"),
+{phang}Display program banner, complete module list (31 programs),
+current installation status (e.g., "SSC modules installed: 15/29"),
 and detailed usage instructions. No modules are downloaded or installed.{p_end}
 
 {pstd}
 {bf:MODE 2 - Install Missing Modules:}
 
 {phang}{cmd:. mysuite, all}{p_end}
-{phang}Smart installation - checks each of the 28 SSC modules and installs
+{phang}Smart installation - checks each of the 29 SSC modules and installs
 only those not currently found. Already installed modules are skipped.
 Example output:
   {bf:sumtex}: Already installed
   Installing {bf:regtex}... Done
   {bf:estout}: Already installed
 Installation Summary:
-  Already installed: 26 modules
+  Already installed: 27 modules
   Newly installed:   2 modules{p_end}
 
 {pstd}
@@ -152,28 +152,28 @@ Installation Summary:
   {bf:Local Modules:}
     {bf:bmc}: Installed
     {bf:conservatism}: Installed
-  {bf:Summary:} 24/28 SSC modules installed
+  {bf:Summary:} 24/29 SSC modules installed
 Useful for quick inventory of your setup.{p_end}
 
 {pstd}
 {bf:MODE 4 - Force Reinstall All Modules:}
 
 {phang}{cmd:. mysuite, all download}{p_end}
-{phang}Force reinstall ALL 28 SSC modules regardless of current status.
+{phang}Force reinstall ALL 29 SSC modules regardless of current status.
 Use this to update to latest versions or fix corrupted installations.
 Example output:
   Reinstalling {bf:art2tex}... Done
   Reinstalling {bf:case2tex}... Done
   ...
 Reinstallation Summary:
-  Successfully reinstalled: 28 modules{p_end}
+  Successfully reinstalled: 29 modules{p_end}
 
 {pstd}
 {bf:Checking Installation Status:}
 
 {phang}{cmd:. mysuite}{p_end}
 {phang}Running without options shows current installation status:
-"SSC modules installed: 18/28" - quickly see what's missing.{p_end}
+"SSC modules installed: 18/29" - quickly see what's missing.{p_end}
 
 {pstd}
 {bf:Editing Installed Modules:}
@@ -221,9 +221,19 @@ This is useful for learning, customization, and debugging.{p_end}
 {pstd}Nanjing, Jiangsu, China{p_end}
 
 {pstd}
-Development Date: 13 February 2026{p_end}
+{help 2957833979@qq.com: Wu Xinzhuo} (2957833979@qq.com){p_end}
+{pstd}University of Bristol (UB){p_end}
+{pstd}Leeds, West Yorkshire, England{p_end}
+
 {pstd}
-Version: 1.0 (Smart Installation){p_end}
+{help 1536496199@qq.com:Li Juan} (1536496199@qq.com){p_end}
+{pstd}Red Cross Society of Ma'anshan City{p_end}
+{pstd}Ma'anshan, Anhui, China{p_end}
+
+{pstd}
+Development Date: 25 February 2026{p_end}
+{pstd}
+Version: 1.0.1 (Smart Installation){p_end}
 
 
 {marker acknowledgments}{...}

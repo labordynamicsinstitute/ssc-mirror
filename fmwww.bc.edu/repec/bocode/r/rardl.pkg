@@ -1,0 +1,36 @@
+d 'RARDL': module to perform Rolling-Window and Recursive ARDL Cointegration Analysis
+d
+d      rardl implements the Rolling-Window ARDL bounds testing
+d approach of Shahbaz, Khan & Mubarak (2023)	and the Recursive
+d ARDL, ADF, and Granger causality tests of Khan, Shahbaz & Napari
+d (2023). These    methods evaluate subsample stability and
+d time-varying cointegration.	 The core idea is to apply the
+d Pesaran, Shin & Smith (2001) ARDL bounds test not just once on
+d the	 full sample, but repeatedly across overlapping sub-samples
+d (rolling windows) or expanding    sub-samples (recursive). This
+d reveals when and how the long-run equilibrium relationship
+d changes    over time. 
+d
+d KW: ARDL
+d KW: autoregressive
+d KW: distributed lag
+d KW: rolling window
+d KW: ARDL bounds test
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260225
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f rardl.ado
+f rardl.sthlp
+f ../_/_rardl_radf.ado
+f ../_/_rardl_recursive.ado
+f ../_/_rardl_rgranger.ado
+f ../_/_rardl_rolling.ado
+f ../_/_rardl_simulate.ado
+f ../_/_rardl_stars.ado
+f ../t/test/rardl.do
+f ../c/commodity_data.xlsx
