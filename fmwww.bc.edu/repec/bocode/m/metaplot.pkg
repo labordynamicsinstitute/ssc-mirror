@@ -1,0 +1,24 @@
+d 'METAPLOT': module to graphically display metadata heterogeneity
+d
+d    Metaplot is a novel graphical approach that gives a quick and
+d easy indication of the studies responsible for the extreme
+d heterogeneity across studies. 	Metaplot is based on the
+d ‘one-out’ sensitivity analysis according to the sequential
+d and combinatorial algorithm.	       Metaplot tells us to what
+d extent the omission of a particular study may reduce the overall
+d heterogeneity based on the I2 and χ2 statistics.	   
+d Metaplot has no limitations regarding the number of studies or
+d types of outcome data (binomial or continuous data). 
+d
+d KW: meta analysis
+d KW: graph
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20260226
+d
+d Author:   Jalal Poorolajal, Hamadan University of Medical Sciences, Iran
+d Support: email poorolajal@@umsha.ac.ir
+d
+f metaplot.ado
+f metaplot.sthlp

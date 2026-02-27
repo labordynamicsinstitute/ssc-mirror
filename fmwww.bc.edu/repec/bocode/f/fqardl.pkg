@@ -1,4 +1,4 @@
-d 'FQARDL': module to perform Fourier Bootstrap Autoregressive Distributed Lag Model estimation
+d 'FQARDL': module to perform Fourier Quantile Autoregressive Distributed Lag Model estimation
 d
 d   fqardl estimates a Fourier ARDL model and performs
 d cointegration    testing. It extends the    standard QARDL

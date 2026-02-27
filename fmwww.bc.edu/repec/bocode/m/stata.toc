@@ -123,6 +123,7 @@ p metan module for fixed and random effects meta-analysis
 p metandi module to perform meta-analysis of diagnostic accuracy
 p metaninf module to evaluate influence of a single study in meta-analysis estimation
 p metaparm module to perform meta-analysis and transformations using parmest resultssets
+p metaplot module to graphically display metadata heterogeneity
 p metapow module for simulation based sample size calculations for designing new clinical trials and diagnostic test accuracy studies to update an existing meta-analysis
 p metapred module producing outlier and influence diagnostics for meta-analysis 
 p metapreg module to compute fixed and random effects meta-analysis and meta-regression of proportions

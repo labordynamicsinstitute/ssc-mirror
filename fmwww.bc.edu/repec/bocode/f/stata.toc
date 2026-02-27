@@ -90,7 +90,7 @@ p fpref module to add prefix or suffix to filenames
 p fpro module to compute Financial Protection Indicators for Health Expenditures
 p fproper module to get proper case for foreign names in variables
 p fpuhc module to compute Financial Protection Indicators for Universal Health Coverage
-p fqardl module to perform Fourier Bootstrap Autoregressive Distributed Lag Model estimation
+p fqardl module to perform Fourier Quantile Autoregressive Distributed Lag Model estimation
 p fqreg module to estimate quantile regression for non-negative data with a mass-point at zero and an upper bound
 p fracdiff module to generate fractionally-differenced timeseries
 p fracdydx module to evaluate derivatives of fractional polynomials
