@@ -1,0 +1,24 @@
+d 'XTFIFEVD': module to implement Fixed Effects Filtered & Vector Decomposition Estimation for Time-Invariant and Rarely Changing Variables in Panel Data with Unit Fixed Effects
+d
+d     xtfifevd estimates the coefficients of time-invariant and
+d rarely changing variables in static panel    data models with
+d unit fixed effects.  Standard fixed-effects (FE) estimation
+d removes all	 time-invariant regressors via the within
+d transformation, making their coefficients unidentifiable. 
+d
+d KW: time series
+d KW: panel data
+d KW: fixed effects 
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20260227
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtfifevd.ado
+f xtfifevd.sthlp
+f xtfifevd_graph.ado
+f xtfifevd_graph.sthlp
+f xtfifevd_example.do

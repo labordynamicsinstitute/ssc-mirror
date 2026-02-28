@@ -1,0 +1,23 @@
+d 'XTQSH': module to implement Quantile Regression Slope Homogeneity Test for Panel Data 
+d
+d    xtqsh implements the Swamy-type and standardized Swamy-type
+d slope homogeneity tests proposed by	 Galvao, Juhl,
+d Montes-Rojas, and Olmo (2017) for quantile regression (QR)
+d fixed-effects panel data    models. 
+d
+d KW: time series
+d KW: panel data
+d KW: quantile regression
+d KW: fixed effects
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20260227
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtqsh.ado
+f xtqsh.sthlp
+f ../_/_xtqsh_estimate.ado
+f xtqsh_graph.ado

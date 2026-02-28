@@ -67,6 +67,7 @@ p xteurostat module to import data from Eurostat in panel data structure
 p xtevent module to estimate and visualize linear panel event-study models
 p xtewreg module to estimate errors-in-variable model with mismeasured regressors
 p xtfeis module to estimate linear Fixed-Effects model with Individual-specific Slopes (FEIS)
+p xtfifevd module to implement Fixed Effects Filtered & Vector Decomposition Estimation for Time-Invariant and Rarely Changing Variables in Panel Data with Unit Fixed Effects
 p xtfisher module to compute Fisher type unit root test for panel data 
 p xtfixedcoeftvcu module to estimate Panel Data Models with Coefficients that Vary over Time and Cross-sectional Units
 p xtfmb module to execute Fama-MacBeth two-step panel regression
@@ -121,6 +122,7 @@ p xtprobitunbal module to estimate Dynamic Probit Random Effects Models with Unb
 p xtpsse module to estimate a conditional fixed-effects Poisson panel regression
 p xtqptest module to perform Born & Breitung Bias-corrected LM-based test for serial correlation
 p xtqreg module to compute quantile regression with fixed effects
+p xtqsh module to implement Quantile Regression Slope Homogeneity Test for Panel Data 
 p xtregam module to estimate Amemiya Random-Effects Panel Data: Ridge and Weighted Regression
 p xtregbem module to estimate Between-Effects Panel Data: Ridge and Weighted Regression
 p xtregbn module to estimate Balestra-Nerlove Random-Effects Panel Data: Ridge and Weighted Regression

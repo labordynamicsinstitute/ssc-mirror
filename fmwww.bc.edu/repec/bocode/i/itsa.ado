@@ -1,3 +1,4 @@
+*! 4.0.0 Ariel Linden 10Feb2026						// added tripple difference (DDD-ITSA) model (treatment vs control1 and control2)
 *! 3.7.0 Ariel Linden 12Jan2026						// streamlined graphing section of MG-ITSA. Now when xvar is specified, graph will be consistent with SG-ITSA
 *! 3.6.2 Ariel Linden 06Jan2026						// fixed bug in multigroup graph with xvars without CI.
 *! 3.6.1 Ariel Linden 16Dec2025						// fixed CI lines on graphs to consistently display as solid lines
@@ -46,12 +47,12 @@
 program define itsa, rclass sort
 version 11.0
 
-	/* obtain settings */
 	syntax varlist(min=1 numeric ts fv) [if] [in] [aweight] ,	/// weight only relevant for -newey-
 	TRPeriod(string)											///	when the intervention began
 	[ TREATid(numlist min=1 max=1 int sort)						/// the ID of the treated unit
 	SINGle														/// specify single group ITSA
-	CONTid(numlist int sort)									/// IDs of controls
+	CONTid(numlist int sort)									/// IDs of controls (type 3: MG-ITSA)
+	CONTid2(numlist int sort)									/// IDs of second set of controls for type 4 (DDD-ITSA)
 	LAG(int -1)													/// lag only relevant for -newey-
 	PRAIS														/// estimate Prais-Winsten model
     POSTTRend													/// produce post-trend estimates
@@ -224,20 +225,35 @@ version 11.0
 			exit 198
 		}			
 		
+		/* new error for type 4 */
+		if "`contid2'" != "" & "`single'" != "" {
+			di as err "type 4 (with contid2()) may not be combined with single option"
+			exit 498
+		}
+		
+		/* new error for type 4 */
+		if "`contid2'" != "" & "`contid'" == "" {
+			di as err "type 4 requires both contid() and contid2()"
+			exit 498
+		}
 
-	 /********************* SET ANALYSIS TYPES ******************
-	  *		  Type 1: Single panel in data set					 *
-	  *		  Type 2: Single group amongst multiple panels		 *
-	  *		  Type 3: Multiple group analysis (one vs controls)	 *
-	  ************************************************************/
+	 /***************************** SET ANALYSIS TYPES ******************************
+	  *		  Type 1: Single panel in data set					 					*
+	  *		  Type 2: Single group amongst multiple panels		 					*
+	  *		  Type 3: Multiple group analysis (one vs controls)	 					*
+	  *		  Type 4: Three-group analysis (treatment vs control1 and control2) 	*
+	  ******************************************************************************/
 		if `multi_pnl'==0 {
 			local atype = 1
 		}
 		else if `multi_pnl'== 1 &  "`single'" !="" {
 			local atype = 2
 		}
-		else if `multi_pnl'== 1 &  "`single'" =="" {
+		else if `multi_pnl'== 1 &  "`single'" =="" & "`contid2'" == "" {
 			local atype = 3
+		}
+		else if `multi_pnl'== 1 &  "`single'" =="" & "`contid2'" != "" {
+			local atype = 4
 		}
 		if "`contid'" !="" {
 			/* check if all supplied contids are found in pvar */
@@ -252,15 +268,44 @@ version 11.0
 				exit 498
 			}
 		}
+		
+		/* additional checks for contid2 in type 4 */
+		if "`contid2'" !="" {
+			quietly levelsof `pvar', local(levp)
+			if !`: list contid2 in levp' {
+				di as err "at least one control unit in contid2() not found in panel variable: check contid2()"
+ 				exit 498
+			}
+			if `: list treatid in contid2' {
+				di as err "treated ID appears among control units: check contid2() and treatid()"
+				exit 498
+			}
+			if "`contid'" != "" {
+				if `: list contid2 in contid' {
+					di as err "control units in contid2() also appear in contid(): they should be mutually exclusive"
+					exit 498
+				}
+			}
+		}
+		
 		/* identify specified controls and insert commas */
 		if "`contid'" != "" & !strpos("`contid'", ",") {
 			local contid : subinstr local contid " " ",", all
 			local contid , `contid'
 		}
+		
+		/* identify specified controls for contid2 and insert commas */
+		if "`contid2'" != "" & !strpos("`contid2'", ",") {
+			local contid2 : subinstr local contid2 " " ",", all
+			local contid2 , `contid2'
+		}
 
 		/* verify the use of controls and generate inlist for use in model */
-		if "`contid'" != "" {
+		if "`contid'" != "" & "`contid2'" == "" {
 			local if2 & inlist(`pvar', `treatid' `contid')
+		}
+		else if "`contid'" != "" & "`contid2'" != "" {
+			local if2 & inlist(`pvar', `treatid' `contid' `contid2')
 		}
 
 		/* drop program variables if option "replace" is chosen */
@@ -721,9 +766,9 @@ version 11.0
 		#delim cr
 		}  /* End of Plot Loop */
 	}  /* End of TYPE 1 LOOP */
-
+	
 	/*************************************************
-	  TYPE 2 ANALYSIS: SINGLE GROUP MULTIPLE PANELS
+	  TYPE 2 ANALYSIS: SINGLE GROUP IN MULTIPLE PANELS
 	**************************************************/
 	else if `atype'==2 {
 		/* is treatid in panelvar? */
@@ -894,7 +939,7 @@ version 11.0
 		} // end "cf"
 
 		/**************************************************************
-		*  LINCOM: SINGLE GROUP MULTIPLE PANELS                     *
+		*  LINCOM: SINGLE GROUP IN MULTIPLE PANELS                    *
 		***************************************************************/
 		if "`posttrend'" != ""{
 
@@ -960,7 +1005,7 @@ version 11.0
 				local note "GLM model: family(`e(varfunct)'), link(`e(linkt)') with Newey-West standard errors - lag(`lag')"
 			}
 
-			/* CREATE PREDICTED VALUES FOR PLOTS */
+			/* create predicted values for plots */
 			quietly {
 				tempvar ypred_t
 				gen `ypred_t' = `prefix'_s_`dvar1'_pred
@@ -973,24 +1018,24 @@ version 11.0
 					local k = `k' + 1
 					tempvar tp_t`k' plt_t`k'
 					if `k'== 1 {
-						gen `tp_t`k'' = `ypred_t' if `tvar'<=`t' 
-						replace `tp_t`k''=. if `tvar'==`t'
-						ipolate `tp_t`k'' `tvar' if `tvar' <=`t', gen(`plt_t`k'') epolate
+						gen `tp_t`k'' = `ypred_t' if `tvar'<=`t' & `pvar'==`treatid'
+						replace `tp_t`k''=. if `tvar'==`t' & `pvar'==`treatid'
+						ipolate `tp_t`k'' `tvar' if `tvar' <=`t' & `pvar'==`treatid', gen(`plt_t`k'') epolate
 					}
 					if `k'> 1 & `k'<=`tct' {
 						local klast = `k'-1
 						local tlast: word `klast' of `trperiod'
-						gen `tp_t`k'' = `ypred_t' if `tvar'>=`tlast' & `tvar'<=`t'
-						replace `tp_t`k'' = . if `tvar'==`t'
-						ipolate `tp_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t', gen(`plt_t`k'') epolate
+						gen `tp_t`k'' = `ypred_t' if `tvar'>=`tlast' & `tvar'<=`t' & `pvar'==`treatid'
+						replace `tp_t`k'' = . if `tvar'==`t' & `pvar'==`treatid'
+						ipolate `tp_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `pvar'==`treatid', gen(`plt_t`k'') epolate
 					}
 					if `k' ==`tct' {
 						tempvar pltx
-						gen `pltx' = `ypred_t' if `tvar'>=`tmax'
+						gen `pltx' = `ypred_t' if `tvar'>=`tmax' & `pvar'==`treatid'
 					}
 				}  /* end of TRPERIOD LOOP */
 				
-				/* CREATE CI VALUES FOR PLOTS */				
+				/* create CI values for plots */				
 				if "`ci'" != "" {	
 					tempvar lcl_t ucl_t
 					gen `lcl_t' = `lcl' 
@@ -1002,32 +1047,32 @@ version 11.0
 						local k = `k' + 1
 						tempvar lp_t`k' llt_t`k' up_t`k' ult_t`k'
 						if `k'== 1 {
-							gen `lp_t`k'' = `lcl_t' if `tvar'<=`t'
-							replace `lp_t`k''=. if `tvar'==`t'
-							ipolate `lp_t`k'' `tvar' if `tvar' <=`t', gen(`llt_t`k'') epolate
-							gen `up_t`k'' = `ucl_t' if `tvar'<=`t' 
-							replace `up_t`k''=. if `tvar'==`t'
-							ipolate `up_t`k'' `tvar' if `tvar' <=`t', gen(`ult_t`k'') epolate						
+							gen `lp_t`k'' = `lcl_t' if `tvar'<=`t' & `pvar'==`treatid'
+							replace `lp_t`k''=. if `tvar'==`t' & `pvar'==`treatid'
+							ipolate `lp_t`k'' `tvar' if `tvar' <=`t' & `pvar'==`treatid', gen(`llt_t`k'') epolate
+							gen `up_t`k'' = `ucl_t' if `tvar'<=`t' & `pvar'==`treatid'
+							replace `up_t`k''=. if `tvar'==`t' & `pvar'==`treatid'
+							ipolate `up_t`k'' `tvar' if `tvar' <=`t' & `pvar'==`treatid', gen(`ult_t`k'') epolate						
 						}
 						if `k'> 1 & `k'<=`tct' {
 							local klast = `k'-1
 							local tlast: word `klast' of `trperiod'
-							gen `lp_t`k'' = `lcl_t' if `tvar'>=`tlast' & `tvar'<=`t'
+							gen `lp_t`k'' = `lcl_t' if `tvar'>=`tlast' & `tvar'<=`t' & `pvar'==`treatid'
 							replace `lp_t`k'' = . if `tvar'==`t'
-							ipolate `lp_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t', gen(`llt_t`k'') epolate
-							gen `up_t`k'' = `ucl_t' if `tvar'>=`tlast' & `tvar'<=`t'
-							replace `up_t`k'' = . if `tvar'==`t'
-							ipolate `up_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t', gen(`ult_t`k'') epolate						
+							ipolate `lp_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `pvar'==`treatid', gen(`llt_t`k'') epolate
+							gen `up_t`k'' = `ucl_t' if `tvar'>=`tlast' & `tvar'<=`t' & `pvar'==`treatid'
+							replace `up_t`k'' = . if `tvar'==`t' & `pvar'==`treatid'
+							ipolate `up_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `pvar'==`treatid', gen(`ult_t`k'') epolate						
 						}
 						if `k' ==`tct' {
 							tempvar lltx ultx
-							gen `lltx' = `lcl_t' if `tvar'>=`tmax' 
-							gen `ultx' = `ucl_t' if `tvar'>=`tmax'						
+							gen `lltx' = `lcl_t' if `tvar'>=`tmax' & `pvar'==`treatid'
+							gen `ultx' = `ucl_t' if `tvar'>=`tmax' & `pvar'==`treatid'						
 						}
 					}  /* end of TRPERIOD LOOP */
 				}	// end CI	
 				
-				/* Set up Plot Variables */
+				/* set up plot variables */
 				forvalues k = 1/`tct' {
 					local plotvars `plotvars' `plt_t`k''
 					local cpart `cpart' l
@@ -1342,14 +1387,14 @@ version 11.0
 
 			preserve
 
-			 /* Collapse actual & predicted for treat/control means */
+			 /* collapse actual & predicted for treat/control means */
 			collapse (mean) `dvar' `prefix'_m_`dvar'_pred `lcl' `ucl' ///
 				if `touse' `if2' [`weight' `exp'], by(`tvar' `prefix'_z)
 
 			local istreat   `prefix'_z==1
 			local iscontrol `prefix'_z==0
 
-			/* Start quietly loop */			
+			/* start quietly loop */			
 			quietly {   
 				
 				tempvar ypred_t ypred_c
@@ -1388,9 +1433,9 @@ version 11.0
 						gen `pltx_t' = `ypred_t' if `tvar'>=`tmax' &  `istreat'
 					}
 				} /* end "predict" trperiod loop - treatment */
-					
+				
 	
-				/* CREATE CI VALUES FOR PLOTS - TREATMENT */				
+				/* create CI values for plots - treatment */				
 				if "`ci'" != "" {	
 					local tct: word count `trperiod'
 					local tmax: word `tct' of `trperiod'
@@ -1424,7 +1469,7 @@ version 11.0
 					}  /* end of TRPERIOD LOOP */
 				}	// end CI	
 				
-				/* Set up plot variables for Treated */
+				/* set up plot variables for treated */
 				forvalues k = 1/`tct' {
 					local plotvars_t `plotvars_t'  `plt_t`k''
 					local cpart `cpart' l
@@ -1458,8 +1503,7 @@ version 11.0
 					local plotvars_t_U `plotvars_t_U' `ultx'
 				}
 
-				/* New CONTROLS plot section */
-				/* PREDICT no xvars */
+				/* new CONTROLS plot section */
 				local k = 0
 				foreach t in `trperiod' {
 					local k = `k' + 1
@@ -1482,7 +1526,7 @@ version 11.0
 					}
 				} /* end trperiod loop - controls */
 					
-				/* CREATE CI VALUES FOR PLOTS - CONTROLS */				
+				/* create CI values for plots - CONTROLS */				
 				if "`ci'" != "" {	
 					local tct: word count `trperiod'
 					local tmax: word `tct' of `trperiod'
@@ -1516,7 +1560,7 @@ version 11.0
 					}  /* end of TRPERIOD LOOP */
 				}	// end CI	
 		
-				/* Set up plot variables - CONTROLS */
+				/* set up plot variables - CONTROLS */
 				forvalues k = 1/`tct' {
 					local plotvars_c `plotvars_c' `plt_c`k''
 					local clp `clp' dash
@@ -1650,15 +1694,15 @@ version 11.0
 					}
 				} // end lowess	
 				
-
-			
 				/* get legend specs */
 				get_leg_multi , treatdesc(`treatdesc')  tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade')
 				local mleg = r(mleg)
 				
 			} // end quietly				
 				
-			// * graph it * //
+			**************
+			/* graph it */
+			**************
 			twoway ///
 				`shhh' ///				
 				(scatter  `dvar_t' `plotvars_t' `tvar', `cpart' `tmspart' `lc' `mc') ///
@@ -1676,6 +1720,656 @@ version 11.0
 		}   /* End of Figure Block */
 	}   /* End of Type 3 */
 	
+	/**************************************************
+	TYPE 4 ANALYSIS: Triple difference model (DDD-ITSA)
+	***************************************************/
+	else if `atype'== 4 {
+		quietly {
+			bysort `touse' `pvar' (`tvar'): gen `prefix'_t = `tvar' - `tvar'[1] if `touse'
+			gen byte `prefix'_z1 = `pvar' == `treatid' if `touse'
+			gen byte `prefix'_z2 = inlist(`pvar' `contid2') if `touse'
+			gen `prefix'_z1_t = `prefix'_z1 * `prefix'_t if `touse'
+			gen `prefix'_z2_t = `prefix'_z2 * `prefix'_t if `touse'
+			local rhs `prefix'_t `prefix'_z1 `prefix'_z2 `prefix'_z1_t `prefix'_z2_t
+
+			foreach t in `trperiod' {
+				local tper = strofreal(`t',"`tsfr'")
+				gen `prefix'_x`tper' = `tvar' >= `t' if `touse'
+				gen `prefix'_x_t`tper' = (`tvar' - `t') * `prefix'_x`tper' if `touse'
+				gen `prefix'_z1_x`tper' = `prefix'_z1 * `prefix'_x`tper' if `touse'
+				gen `prefix'_z1_x_t`tper' = `prefix'_x_t`tper' * `prefix'_z1 if `touse'
+				gen `prefix'_z2_x`tper' = `prefix'_z2 * `prefix'_x`tper' if `touse'
+				gen `prefix'_z2_x_t`tper' = `prefix'_x_t`tper' * `prefix'_z2 if `touse'
+				local rhs `rhs' `prefix'_x`tper' `prefix'_x_t`tper' `prefix'_z1_x`tper' `prefix'_z1_x_t`tper' `prefix'_z2_x`tper' `prefix'_z2_x_t`tper'
+			}
+		} // end quietly
+
+		tsset
+		// prais model
+		if "`prais'" != "" {
+			prais `dvar' `rhs' `xvar' if `touse' `if2' , `options'
+			matrix table =r(table)
+			local z_t t
+			local z_t_p P>|t|				
+		}
+		// glm model
+		else {
+			qui glm2 `dvar' `rhs' `xvar' if `touse' `if2' [`weight' `exp'], force nodisplay `options'
+			local vfac =  `e(N)'  /  `e(df)'
+			glm2 `dvar' `rhs' `xvar' if `touse' `if2' [`weight' `exp'], force vce(hac nwest `lag') vfactor(`vfac') `options'
+			matrix table =r(table)
+			local z_t z
+			local z_t_p P>|z|			
+		}
+    
+		local clv `r(level)'
+		local cil `=length("`clv'")'
+    
+		if "`ci'" == "" {
+			quietly predictnl `prefix'_m_`dvar'_pred = predict() if e(sample)
+			local itsavars `dvar' `rhs' `prefix'_m_`dvar'_pred
+			char def _dta[`prefix'_itsavars] "`itsavars'"
+		}
+		else {
+			tempvar lcl ucl
+			if "`prais'" != "" {
+				quietly predictnl `prefix'_m_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl')  df(`e(df_r)') level(`clv')	
+			}
+			else {
+				quietly predictnl `prefix'_m_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl') level(`clv') 
+			}
+			local itsavars `dvar' `rhs' `prefix'_m_`dvar'_pred
+			char def _dta[`prefix'_itsavars] "`itsavars'"			
+		}
+
+		/*********************************************************
+		*  LINCOM: TREATMENT VS CONTROL1 AND CONTROL2            *
+		**********************************************************/		
+		if "`posttrend'" != "" {
+			local bt_exp "_b[`prefix'_t] + _b[`prefix'_z1_t]"
+			local bc1_exp "_b[`prefix'_t]"
+			local bc2_exp "_b[`prefix'_t] + _b[`prefix'_z2_t]"
+			local bd_tc1 "_b[`prefix'_z1_t]"
+			local bd_tc2 "_b[`prefix'_z1_t] - _b[`prefix'_z2_t]"
+			local bd_c2c1 "_b[`prefix'_z2_t]"
+
+			foreach t in `trperiod' {
+				local tper = strofreal(`t',"`tsfr'")
+				local tperl = strofreal(`t',"`tsf'")
+				di _newline(1)
+				di in smcl in green _col(20) "Three-Group Comparison of Linear Postintervention Trends: `tperl'"
+				di _newline
+
+				local bt_exp "`bt_exp' + _b[`prefix'_x_t`tper'] + _b[`prefix'_z1_x_t`tper']"
+				local bc1_exp "`bc1_exp' + _b[`prefix'_x_t`tper']"
+				local bc2_exp "`bc2_exp' + _b[`prefix'_x_t`tper'] + _b[`prefix'_z2_x_t`tper']"
+				local bd_tc1 "`bd_tc1' + _b[`prefix'_z1_x_t`tper']"
+				local bd_tc2 "`bd_tc2' + _b[`prefix'_z1_x_t`tper'] - _b[`prefix'_z2_x_t`tper']"
+				local bd_c2c1 "`bd_c2c1' + _b[`prefix'_z2_x_t`tper']"
+
+				di "Treated     : `bt_exp'"
+				di "Control 1   : `bc1_exp'"
+				di "Control 2   : `bc2_exp'"
+				di "Treat-Con1  : `bd_tc1'"
+				di "Treat-Con2  : `bd_tc2'"
+				di "Con2-Con1   : `bd_c2c1'"
+
+				qui lincom `"`bt_exp'"', level(`clv')
+				local t_est = r(estimate)
+				local t_se = r(se)
+				local t_t = r(`z_t')
+				local t_p = r(p)
+				local t_lb = r(lb)
+				local t_ub = r(ub)
+
+				qui lincom `"`bc1_exp'"', level(`clv')
+				local c1_est = r(estimate)
+				local c1_se = r(se)
+				local c1_t = r(`z_t')
+				local c1_p = r(p)
+				local c1_lb = r(lb)
+				local c1_ub = r(ub)
+
+				qui lincom `"`bc2_exp'"', level(`clv')
+				local c2_est = r(estimate)
+				local c2_se = r(se)
+				local c2_t = r(`z_t')
+				local c2_p = r(p)
+				local c2_lb = r(lb)
+				local c2_ub = r(ub)
+
+				qui lincom `"`bd_tc1'"', level(`clv')
+				local d_tc1_est = r(estimate)
+				local d_tc1_se = r(se)
+				local d_tc1_t = r(`z_t')
+				local d_tc1_p = r(p)
+				local d_tc1_lb = r(lb)
+				local d_tc1_ub = r(ub)
+
+				qui lincom `"`bd_tc2'"', level(`clv')
+				local d_tc2_est = r(estimate)
+				local d_tc2_se = r(se)
+				local d_tc2_t = r(`z_t')
+				local d_tc2_p = r(p)
+				local d_tc2_lb = r(lb)
+				local d_tc2_ub = r(ub)
+
+				qui lincom `"`bd_c2c1'"', level(`clv')
+				local d_c2c1_est = r(estimate)
+				local d_c2c1_se = r(se)
+				local d_c2c1_t = r(`z_t')
+				local d_c2c1_p = r(p)
+				local d_c2c1_lb = r(lb)
+				local d_c2c1_ub = r(ub)
+
+				#delim ;
+				di in smcl in gr "{hline 13}{c TT}{hline 64}"
+				_newline "Linear Trend {c |}"
+				_col(21) "Coef. "
+				_col(29) "Std. Err."
+				_col(44) "`z_t'"
+				_col(49) "`z_t_p'"
+				_col(`=61-`cil'') `"[`clv'% Conf. Interval]"'
+				_newline
+				in gr in smcl "{hline 13}{c +}{hline 64}"
+				_newline
+				_col(1) "  Treated"
+				_col(14) "{c |}" in ye
+				_col(17) %9.7g `t_est'
+				_col(28) %9.7g `t_se'
+				_col(38) %8.2f `t_t'
+				_col(46) %8.3f `t_p'
+				_col(58) %9.7g `t_lb'
+				_col(70) %9.7g `t_ub'
+				_newline
+				in gr in smcl
+				_col(1) "  Control 1"
+				_col(14) "{c |}" in ye
+				_col(17) %9.7g `c1_est'
+				_col(28) %9.7g `c1_se'
+				_col(38) %8.2f `c1_t'
+				_col(46) %8.3f `c1_p'
+				_col(58) %9.7g `c1_lb'
+				_col(70) %9.7g `c1_ub'
+				_newline
+				in gr in smcl
+				_col(1) "  Control 2"
+				_col(14) "{c |}" in ye
+				_col(17) %9.7g `c2_est'
+				_col(28) %9.7g `c2_se'
+				_col(38) %8.2f `c2_t'
+				_col(46) %8.3f `c2_p'
+				_col(58) %9.7g `c2_lb'
+				_col(70) %9.7g `c2_ub'
+				_newline
+				in gr in smcl "{hline 13}{c +}{hline 64}"
+				_newline
+				_col(1) "  Treat-Con1"
+				_col(14) "{c |}" in ye
+				_col(17) %9.7g `d_tc1_est'
+				_col(28) %9.7g `d_tc1_se'
+				_col(38) %8.2f `d_tc1_t'
+				_col(46) %8.3f `d_tc1_p'
+				_col(58) %9.7g `d_tc1_lb'
+				_col(70) %9.7g `d_tc1_ub'
+				_newline
+				in gr in smcl
+				_col(1) "  Treat-Con2"
+				_col(14) "{c |}" in ye
+				_col(17) %9.7g `d_tc2_est'
+				_col(28) %9.7g `d_tc2_se'
+				_col(38) %8.2f `d_tc2_t'
+				_col(46) %8.3f `d_tc2_p'
+				_col(58) %9.7g `d_tc2_lb'
+				_col(70) %9.7g `d_tc2_ub'
+				_newline
+				in gr in smcl
+				_col(1) "  Con2-Con1"
+				_col(14) "{c |}" in ye
+				_col(17) %9.7g `d_c2c1_est'
+				_col(28) %9.7g `d_c2c1_se'
+				_col(38) %8.2f `d_c2c1_t'
+				_col(46) %8.3f `d_c2c1_p'
+				_col(58) %9.7g `d_c2c1_lb'
+				_col(70) %9.7g `d_c2c1_ub'
+				_newline
+				in gr in smcl "{hline 13}{c BT}{hline 64}"
+				;
+				#delim cr
+			} // end foreach t
+		} // end post-trend
+		
+		/* END IF POSTTREND & LINCOM BLOCK */
+		
+		/************************************************
+		 *             PLOT SECTION FOR TYPE 4          *
+		 ************************************************/
+
+		if `"`figure'`figure2'"' != "" {
+			local ydesc : var label `dvar'
+			if `"`ydesc'"' == "" local ydesc "`dvar1'"
+			local tdesc : var label `tvar'
+			if `"`tdesc'"' == "" local tdesc "`tvar'"
+			local treatdesc: label (`pvar')  `treatid'
+			if "`treatdesc'" == "" local treatdesc "Treated"
+			if "`prais'" !="" {
+				local note "Prais-Winsten and Cochrane-Orcutt regression - lag(1)"
+			}
+			else {
+				local note "GLM model: family(`e(varfunct)'), link(`e(linkt)') with Newey-West standard errors - lag(`lag')"
+			}
+
+			preserve
+
+			quietly {
+				// create indicator variables for each group
+				gen byte `prefix'_z_treat = `pvar' == `treatid' if `touse' `if2'
+				gen byte `prefix'_z_cont1 = inlist(`pvar' `contid') if `touse' `if2'
+				gen byte `prefix'_z_cont2 = inlist(`pvar' `contid2') if `touse' `if2'
+            
+				// create a combined variable for collapse
+				gen byte `prefix'_z_group = 1 if `prefix'_z_treat == 1
+				replace `prefix'_z_group = 2 if `prefix'_z_cont1 == 1
+				replace `prefix'_z_group = 3 if `prefix'_z_cont2 == 1
+            
+				// collapse the 3 groups
+				collapse (mean) `dvar' `prefix'_m_`dvar'_pred `lcl' `ucl' ///
+					if `touse' `if2' [`weight' `exp'], by(`tvar' `prefix'_z_group)
+            
+				// group indicators
+				local istreat `prefix'_z_group==1
+				local iscontrol1 `prefix'_z_group==2
+				local iscontrol2 `prefix'_z_group==3
+            
+				// generate predictions and CIs for each group
+				tempvar ypred_t ypred_c1 ypred_c2
+				gen `ypred_t' = `prefix'_m_`dvar'_pred if `istreat'
+				gen `ypred_c1' = `prefix'_m_`dvar'_pred if `iscontrol1'
+				gen `ypred_c2' = `prefix'_m_`dvar'_pred if `iscontrol2'
+            
+				if "`ci'" != "" {
+					tempvar lcl_t ucl_t lcl_c1 ucl_c1 lcl_c2 ucl_c2
+					gen `lcl_t' = `lcl' if `istreat'
+					gen `ucl_t' = `ucl' if `istreat'	
+					gen `lcl_c1' = `lcl' if `iscontrol1'					
+					gen `ucl_c1' = `ucl' if `iscontrol1'
+					gen `lcl_c2' = `lcl' if `iscontrol2'					
+					gen `ucl_c2' = `ucl' if `iscontrol2'
+				}
+            
+				// generate segmented predictions for each group
+				local tct: word count `trperiod'
+				local tmax: word `tct' of `trperiod'
+            
+				// treatment group predictions
+				local k = 0
+				foreach t in `trperiod' {
+					local k = `k' + 1
+					tempvar tp_t`k' plt_t`k'
+					if `k'== 1 {
+						gen `tp_t`k'' = `ypred_t' if `tvar'<=`t' & `istreat'
+						replace `tp_t`k''=. if `tvar'==`t' & `istreat'
+						ipolate `tp_t`k'' `tvar' if `tvar' <=`t' & `istreat', gen(`plt_t`k'') epolate
+					}
+					if `k'> 1 & `k'<=`tct' {
+						local klast = `k'-1
+						local tlast: word `klast' of `trperiod'
+						gen `tp_t`k'' = `ypred_t' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat'
+						replace `tp_t`k'' = . if `tvar'==`t' & `istreat'
+						ipolate `tp_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat', gen(`plt_t`k'') epolate
+					}
+					if `k' ==`tct' {
+						tempvar pltx_t
+						gen `pltx_t' = `ypred_t' if `tvar'>=`tmax' &  `istreat'
+					}
+				}
+            
+				// control 1 group predictions
+				local k = 0
+				foreach t in `trperiod' {
+					local k = `k' + 1
+					tempvar tp_c1`k' plt_c1`k'
+					if `k'== 1 {
+						gen `tp_c1`k'' = `ypred_c1' if `tvar'<=`t' & `iscontrol1'
+						replace `tp_c1`k''=. if `tvar'==`t' & `iscontrol1'
+						ipolate `tp_c1`k'' `tvar' if `tvar' <=`t' & `iscontrol1', gen(`plt_c1`k'') epolate
+					}
+					if `k'> 1 & `k'<=`tct' {
+						local klast = `k'-1
+						local tlast: word `klast' of `trperiod'
+						gen `tp_c1`k'' = `ypred_c1' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol1'
+						replace `tp_c1`k'' = . if `tvar'==`t' & `iscontrol1'
+						ipolate `tp_c1`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol1', gen(`plt_c1`k'') epolate
+					}
+					if `k' ==`tct' {
+						tempvar pltx_c1
+						gen `pltx_c1' = `ypred_c1' if `tvar'>=`tmax' &  `iscontrol1'
+					}
+				}
+            
+				// control 2 group predictions
+				local k = 0
+				foreach t in `trperiod' {
+					local k = `k' + 1
+					tempvar tp_c2`k' plt_c2`k'
+					if `k'== 1 {
+						gen `tp_c2`k'' = `ypred_c2' if `tvar'<=`t' & `iscontrol2'
+						replace `tp_c2`k''=. if `tvar'==`t' & `iscontrol2'
+						ipolate `tp_c2`k'' `tvar' if `tvar' <=`t' & `iscontrol2', gen(`plt_c2`k'') epolate
+					}
+					if `k'> 1 & `k'<=`tct' {
+						local klast = `k'-1
+						local tlast: word `klast' of `trperiod'
+						gen `tp_c2`k'' = `ypred_c2' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol2'
+						replace `tp_c2`k'' = . if `tvar'==`t' & `iscontrol2'
+						ipolate `tp_c2`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol2', gen(`plt_c2`k'') epolate
+					}
+					if `k' ==`tct' {
+						tempvar pltx_c2
+						gen `pltx_c2' = `ypred_c2' if `tvar'>=`tmax' &  `iscontrol2'
+					}
+				}
+            
+				// collect plot variables
+				forvalues k = 1/`tct' {
+					local plotvars_t `plotvars_t' `plt_t`k''
+					local plotvars_c1 `plotvars_c1' `plt_c1`k''
+					local plotvars_c2 `plotvars_c2' `plt_c2`k''
+                
+					local cpart `cpart' l
+					local mspart `mspart' none
+					local lblack `lblack' black
+					local mblack `mblack' black
+				}
+            
+				local cpart c(. l `cpart')
+					local lc lcolor(black `lblack' black)
+				local mc mcolor(black `mblack' black)
+				local tmspart  ms(O none `mspart')
+				local plotvars_t `plotvars_t' `pltx_t'
+				local plotvars_c1 `plotvars_c1' `pltx_c1'
+				local plotvars_c2 `plotvars_c2' `pltx_c2'
+            
+				// control line patterns
+				forvalues k = 1/`tct' {
+					local clp1 `clp1' dash			// Control 1: dash pattern
+					local clp2 `clp2' shortdash_dot	// Control 2: shortdash_dot pattern
+				}
+            
+				local cmspart1  ms(Oh `mspart' none)  // Control 1: Oh markers
+				local cmspart2  ms(Sh `mspart' none)  // Control 2: Sh markers
+				local clp1 lpattern(blank `clp1' dash)
+				local clp2 lpattern(blank `clp2' shortdash_dot)
+            
+				// CIs
+				if "`ci'" != "" {
+					// treatment CIs
+					local k = 0
+					foreach t in `trperiod' {
+						local k = `k' + 1
+						tempvar lp_t`k' llt_t`k' up_t`k' ult_t`k'
+						if `k'== 1 {
+							gen `lp_t`k'' = `lcl_t' if `tvar'<=`t' & `istreat'
+							replace `lp_t`k''=. if `tvar'==`t' & `istreat'
+							ipolate `lp_t`k'' `tvar' if `tvar' <=`t' & `istreat', gen(`llt_t`k'') epolate
+							gen `up_t`k'' = `ucl_t' if `tvar'<=`t' & `istreat'
+							replace `up_t`k''=. if `tvar'==`t' & `istreat'
+							ipolate `up_t`k'' `tvar' if `tvar' <=`t' & `istreat', gen(`ult_t`k'') epolate						
+						}
+						if `k'> 1 & `k'<=`tct' {
+							local klast = `k'-1
+							local tlast: word `klast' of `trperiod'
+							gen `lp_t`k'' = `lcl_t' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat'
+							replace `lp_t`k'' = . if `tvar'==`t'
+							ipolate `lp_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat', gen(`llt_t`k'') epolate
+							gen `up_t`k'' = `ucl_t' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat'
+							replace `up_t`k'' = . if `tvar'==`t' & `istreat'
+							ipolate `up_t`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `istreat', gen(`ult_t`k'') epolate						
+						}
+						if `k' ==`tct' {
+							tempvar lltx_t ultx_t
+							gen `lltx_t' = `lcl_t' if `tvar'>=`tmax' & `istreat'
+							gen `ultx_t' = `ucl_t' if `tvar'>=`tmax' & `istreat'	
+						}
+					}
+                
+					// control 1 CIs
+					local k = 0
+					foreach t in `trperiod' {
+						local k = `k' + 1
+						tempvar lp_c1`k' llt_c1`k' up_c1`k' ult_c1`k'
+						if `k'== 1 {
+							gen `lp_c1`k'' = `lcl_c1' if `tvar'<=`t' & `iscontrol1'
+							replace `lp_c1`k''=. if `tvar'==`t' & `iscontrol1'
+							ipolate `lp_c1`k'' `tvar' if `tvar' <=`t' & `iscontrol1', gen(`llt_c1`k'') epolate
+							gen `up_c1`k'' = `ucl_c1' if `tvar'<=`t' & `iscontrol1'
+							replace `up_c1`k''=. if `tvar'==`t' & `iscontrol1'
+							ipolate `up_c1`k'' `tvar' if `tvar' <=`t' & `iscontrol1', gen(`ult_c1`k'') epolate						
+						}
+						if `k'> 1 & `k'<=`tct' {
+							local klast = `k'-1
+							local tlast: word `klast' of `trperiod'
+							gen `lp_c1`k'' = `lcl_c1' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol1'
+							replace `lp_c1`k'' = . if `tvar'==`t'
+							ipolate `lp_c1`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol1', gen(`llt_c1`k'') epolate
+							gen `up_c1`k'' = `ucl_c1' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol1'
+							replace `up_c1`k'' = . if `tvar'==`t' & `iscontrol1'
+							ipolate `up_c1`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol1', gen(`ult_c1`k'') epolate						
+						}
+						if `k' ==`tct' {
+							tempvar lltx_c1 ultx_c1
+							gen `lltx_c1' = `lcl_c1' if `tvar'>=`tmax' & `iscontrol1'
+							gen `ultx_c1' = `ucl_c1' if `tvar'>=`tmax' & `iscontrol1' 
+						}
+					}
+                
+					// control 2 CIs
+					local k = 0
+					foreach t in `trperiod' {
+						local k = `k' + 1
+						tempvar lp_c2`k' llt_c2`k' up_c2`k' ult_c2`k'
+						if `k'== 1 {
+							gen `lp_c2`k'' = `lcl_c2' if `tvar'<=`t' & `iscontrol2'
+							replace `lp_c2`k''=. if `tvar'==`t' & `iscontrol2'
+							ipolate `lp_c2`k'' `tvar' if `tvar' <=`t' & `iscontrol2', gen(`llt_c2`k'') epolate
+							gen `up_c2`k'' = `ucl_c2' if `tvar'<=`t' & `iscontrol2'
+							replace `up_c2`k''=. if `tvar'==`t' & `iscontrol2'
+							ipolate `up_c2`k'' `tvar' if `tvar' <=`t' & `iscontrol2', gen(`ult_c2`k'') epolate						
+						}
+						if `k'> 1 & `k'<=`tct' {
+							local klast = `k'-1
+							local tlast: word `klast' of `trperiod'
+							gen `lp_c2`k'' = `lcl_c2' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol2'
+							replace `lp_c2`k'' = . if `tvar'==`t'
+							ipolate `lp_c2`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol2', gen(`llt_c2`k'') epolate
+							gen `up_c2`k'' = `ucl_c2' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol2'
+							replace `up_c2`k'' = . if `tvar'==`t' & `iscontrol2'
+							ipolate `up_c2`k'' `tvar' if `tvar'>=`tlast' & `tvar'<=`t' & `iscontrol2', gen(`ult_c2`k'') epolate						
+						}
+						if `k' ==`tct' {
+							tempvar lltx_c2 ultx_c2
+							gen `lltx_c2' = `lcl_c2' if `tvar'>=`tmax' & `iscontrol2'
+							gen `ultx_c2' = `ucl_c2' if `tvar'>=`tmax' & `iscontrol2' 
+						}
+					}
+                
+					// set up CI plot variables
+					forvalues k = 1/`tct' {
+						local plotvars_t_L `plotvars_t_L' `llt_t`k''
+						local plotvars_t_U `plotvars_t_U' `ult_t`k''
+						local plotvars_c1_L `plotvars_c1_L' `llt_c1`k''
+						local plotvars_c1_U `plotvars_c1_U' `ult_c1`k''
+						local plotvars_c2_L `plotvars_c2_L' `llt_c2`k''
+						local plotvars_c2_U `plotvars_c2_U' `ult_c2`k''
+                    
+						local lblue `lblue' blue
+						local lgreen `lgreen' green
+						local lbrown `lbrown' brown
+						local lp `lp' solid
+					}
+                
+					local lc2 lcolor(blue `lblue' blue)
+					local lc3 lcolor(green `lgreen' green)
+					local lc4 lcolor(brown `lbrown' brown)
+					local lp lp(solid `lp' solid)                      
+                
+					local plotvars_t_L `plotvars_t_L' `lltx_t'
+					local plotvars_t_U `plotvars_t_U' `ultx_t'
+					local plotvars_c1_L `plotvars_c1_L' `lltx_c1'
+					local plotvars_c1_U `plotvars_c1_U' `ultx_c1'
+					local plotvars_c2_L `plotvars_c2_L' `lltx_c2'
+					local plotvars_c2_U `plotvars_c2_U' `ultx_c2'
+                
+					local lclt (line `plotvars_t_L' `tvar', `lc2' `lp') 
+					local uclt (line `plotvars_t_U' `tvar', `lc2' `lp')
+					local lclc1 (line `plotvars_c1_L' `tvar', `lc3' `lp') 
+					local uclc1 (line `plotvars_c1_U' `tvar', `lc3' `lp')
+					local lclc2 (line `plotvars_c2_L' `tvar', `lc4' `lp') 
+					local uclc2 (line `plotvars_c2_U' `tvar', `lc4' `lp')
+				} // end CIs
+            
+				// generate "actual" variables
+				tempvar dvar_t dvar_c1 dvar_c2
+				gen `dvar_t' = `dvar' if `istreat'
+				gen `dvar_c1' = `dvar' if `iscontrol1'
+				gen `dvar_c2' = `dvar' if `iscontrol2'
+            
+				foreach t in `trperiod' {
+					local tper = strofreal(`t',"`tsf'")
+					local tperlist `tperlist' `tper'
+				}
+            
+				// shading
+				if "`shade'" != "" {
+					if "`ci'" != "" { 
+						sum `dvar_t', meanonly
+						local mindvar_t = r(min)
+						local maxdvar_t = r(max)
+						sum `ypred_t', meanonly
+						local minypred_t = r(min)			
+						local maxypred_t = r(max)
+						sum `dvar_c1', meanonly
+						local mindvar_c1 = r(min)
+						local maxdvar_c1 = r(max)
+						sum `ypred_c1', meanonly
+						local minypred_c1 = r(min)			
+						local maxypred_c1 = r(max)
+						sum `dvar_c2', meanonly
+						local mindvar_c2 = r(min)
+						local maxdvar_c2 = r(max)
+						sum `ypred_c2', meanonly
+						local minypred_c2 = r(min)			
+						local maxypred_c2 = r(max)
+						sum `ucl_t', meanonly
+						local maxucl_t = r(max)
+						sum `ucl_c1', meanonly
+						local maxucl_c1 = r(max)
+						sum `ucl_c2', meanonly
+						local maxucl_c2 = r(max)
+						sum `lcl_t', meanonly
+						local minlcl_t = r(min)
+						sum `lcl_c1', meanonly
+						local minlcl_c1 = r(min)
+						sum `lcl_c2', meanonly
+						local minlcl_c2 = r(min)					
+						local down = min(`mindvar_t', `minypred_t',`minlcl_t',`mindvar_c1', `minypred_c1',`minlcl_c1',`mindvar_c2', `minypred_c2',`minlcl_c2')			
+						local up = max(`maxdvar_t', `maxypred_t', `maxucl_t', `maxdvar_c1', `maxypred_c1', `maxucl_c1', `maxdvar_c2', `maxypred_c2', `maxucl_c2')				
+					}
+					else if "`ci'" == "" {
+						sum `dvar_t', meanonly
+						local mindvar_t = r(min)
+						local maxdvar_t = r(max)
+						sum `ypred_t', meanonly
+						local minypred_t = r(min)			
+						local maxypred_t = r(max)
+						sum `dvar_c1', meanonly
+						local mindvar_c1 = r(min)
+						local maxdvar_c1 = r(max)
+						sum `ypred_c1', meanonly
+						local minypred_c1 = r(min)			
+						local maxypred_c1 = r(max)
+						sum `dvar_c2', meanonly
+						local mindvar_c2 = r(min)
+						local maxdvar_c2 = r(max)
+						sum `ypred_c2', meanonly
+						local minypred_c2 = r(min)			
+						local maxypred_c2 = r(max)
+						local down = min(`mindvar_t', `minypred_t',`mindvar_c1', `minypred_c1',`mindvar_c2', `minypred_c2')			
+						local up = max(`maxdvar_t', `maxypred_t',`maxdvar_c1', `maxypred_c1',`maxdvar_c2', `maxypred_c2')
+					}
+                
+					if "`smin'" != "" {
+						local down = `smin'
+					}
+					if "`smax'" != "" {
+						local up = `smax'
+					}				
+                
+					_natscale `down' `up' `nat'
+					local ylab ylabel(`r(min)'(`r(delta)')`r(max)') 
+					tempvar upy
+					gen `upy' = `r(max)' 
+					local shhh (area `upy' `tvar' if inrange(`tvar', `shade1',`shade2'), base(`r(min)')  bcolor(gs14) plotregion(margin(b=0 t=0)))				
+				} // end shading	
+    
+				// graph title and subtitle
+				#delim ;
+				local titlesec
+				ytitle("`ydesc'")
+				xtitle("`tdesc'")
+				title("Three-Group Comparison: `treatdesc', Control 1, and Control 2")
+				subtitle("Intervention starts: `tperlist'")
+				;
+				#delim cr
+    
+				// lowess
+				if "`lowess'" != "" {
+					if "`bwidth'" != "" {
+						local lowt (lowess `dvar_t' `tvar', lcolor(red) lpattern(solid) bw(`bwidth'))
+						local lowc1 (lowess `dvar_c1' `tvar', lcolor(orange) lpattern(solid) bw(`bwidth'))
+						local lowc2 (lowess `dvar_c2' `tvar', lcolor(purple) lpattern(solid) bw(`bwidth'))
+					}
+					else {
+						local lowt (lowess `dvar_t' `tvar', lcolor(red) lpattern(solid))
+						local lowc1 (lowess `dvar_c1' `tvar', lcolor(orange) lpattern(solid))
+						local lowc2 (lowess `dvar_c2' `tvar', lcolor(purple) lpattern(solid))
+					}
+				} // end lowess
+    
+				// get legend for Type 4
+				get_leg_multi2 , treatdesc(`treatdesc') tperlist(`tperlist') tct(`tct') clv(`clv') lowess(`lowess') ci(`ci') shade(`shade')
+				local mleg = r(mleg)
+
+			}  // end of quietly for figure data prep
+        
+			**************
+			/* graph it */
+			**************
+			twoway ///
+				`shhh' ///				
+				(scatter  `dvar_t' `plotvars_t' `tvar', `cpart' `tmspart' `lc' `mc') ///
+				(scatter  `dvar_c1' `plotvars_c1' `tvar', `cpart' `cmspart1' `lc' `mc' `clp1') ///
+				(scatter  `dvar_c2' `plotvars_c2' `tvar', `cpart' `cmspart2' `lc' `mc' `clp2') ///
+				`lowt' ///
+				`lowc1' ///
+				`lowc2' ///
+				`lclt' ///
+				`uclt' ///	
+				`lclc1' ///
+				`uclc1' ///	
+				`lclc2' ///
+				`uclc2' ///	
+				, xline(`trperiod', lpattern(shortdash) lcolor(black)) ///
+				`ylab' ///						
+					`mleg' ///
+				`titlesec' note(`"`note'"') `figure2'
+        
+			restore
+
+		}  // end figure
+
+	} // end type 4
+	
 	// save estimation table
 	return matrix table = table	
 
@@ -1684,84 +2378,84 @@ end
 // program to generate the counterfactual
 program define gen_cf, rclass
 version 11.0
-    syntax, cmdlne(string) [prefix(string)]
+	syntax, cmdlne(string) [prefix(string)]
 
-    // loop to filter command line list
-    foreach var in `cmdlne' {
-        // skip _cons
-        if "`var'" == "_cons" continue
+	// loop to filter command line list
+	foreach var in `cmdlne' {
+		// skip _cons
+		if "`var'" == "_cons" continue
 
-        // handle interaction terms (e.g., c.var1#c.var2)
-        if strpos("`var'", "#") {
-            local cmdlne_filtered `cmdlne_filtered' `var'
-            continue
-        }
+		// handle interaction terms (e.g., c.var1#c.var2)
+		if strpos("`var'", "#") {
+			local cmdlne_filtered `cmdlne_filtered' `var'
+			continue
+		}
 
-        // extract clean (base) variable name (after last . if any)
-        local base = "`var'"
-        while strpos("`base'", ".") {
-            local base = substr("`base'", strpos("`base'", ".") + 1, .)
-        }
+		// extract clean (base) variable name (after last . if any)
+		local base = "`var'"
+		while strpos("`base'", ".") {
+			local base = substr("`base'", strpos("`base'", ".") + 1, .)
+		}
 
-        // remove user-defined prefix from base (if any)
-        local base_noprefix = "`base'"
-        if strpos("`base'", "`prefix'") == 1 {
-            local base_noprefix = substr("`base'", length("`prefix'") + 1, .)
-        }
+		// remove user-defined prefix from base (if any)
+		local base_noprefix = "`base'"
+		if strpos("`base'", "`prefix'") == 1 {
+			local base_noprefix = substr("`base'", length("`prefix'") + 1, .)
+		}
 
-        // Skip _x* and _y
-        if "`base_noprefix'" != "_y" & substr("`base_noprefix'", 1, 2) != "_x" {
-            local cmdlne_filtered `cmdlne_filtered' `var'
-        }
-    }
+		// skip _x* and _y
+		if "`base_noprefix'" != "_y" & substr("`base_noprefix'", 1, 2) != "_x" {
+			local cmdlne_filtered `cmdlne_filtered' `var'
+		}
+	}
 
-    // build expression
-    local first = 1
-    foreach var of local cmdlne_filtered {
-        // keep interaction terms as-is
-        if strpos("`var'", "#") {
-            local term "_b[`var'] * `var'"
-        }
-        else {
-            // get clean (base) variable name (after last .)
-            local base = "`var'"
-            while strpos("`base'", ".") {
+	// build expression
+	local first = 1
+	foreach var of local cmdlne_filtered {
+		// keep interaction terms as-is
+		if strpos("`var'", "#") {
+			local term "_b[`var'] * `var'"
+		}
+		else {
+			// get clean (base) variable name (after last .)
+			local base = "`var'"
+			while strpos("`base'", ".") {
                 local base = substr("`base'", strpos("`base'", ".") + 1, .)
-            }
+			}
 
-            // apply user-defined prefix only to _t
-            if "`base'" == "_t" {
-                local base_with_prefix "`prefix'`base'"
-            }
-            else {
-                local base_with_prefix "`base'"
-            }
+			// apply user-defined prefix only to _t
+			if "`base'" == "_t" {
+				local base_with_prefix "`prefix'`base'"
+			}
+			else {
+				local base_with_prefix "`base'"
+			}
 
-            // reapply operator(s) stripped earlier
-            local final_var "`var'"
-            if strpos("`var'", ".") {
-                local operator = substr("`var'", 1, strpos("`var'", "."))
-                local final_var "`operator'`base_with_prefix'"
-            }
-            else {
-                local final_var "`base_with_prefix'"
-            }
+			// reapply operator(s) stripped earlier
+			local final_var "`var'"
+			if strpos("`var'", ".") {
+				local operator = substr("`var'", 1, strpos("`var'", "."))
+				local final_var "`operator'`base_with_prefix'"
+			}
+			else {
+				local final_var "`base_with_prefix'"
+			}
 
-            local term "_b[`var'] * `final_var'"
-        }
+			local term "_b[`var'] * `final_var'"
+		}
 
-        // ensure that the expression doesn't start with "+"
-        if `first' {
-            local expr "`term'"
-            local first = 0
-        }
-        else {
-            local expr "`expr' + `term'"
-        }
-    }
+		// ensure that the expression doesn't start with "+"
+		if `first' {
+			local expr "`term'"
+			local first = 0
+		}
+		else {
+			local expr "`expr' + `term'"
+		}
+	}
 
-    // add constant term at the end
-    local expr "`expr' + _b[_cons]"
+	// add constant term at the end
+	local expr "`expr' + _b[_cons]"
 	
 	// save the local
 	ret local expr `expr'
@@ -2008,5 +2702,177 @@ version 11.0
 		}	
 		// save the local
 		ret local mleg `mleg'			
+end
 
-end	
+// program to get legend for triple difference (DDD-ITSA)
+program define get_leg_multi2, rclass
+version 11.0
+    syntax, [ treatdesc(string) tperlist(string) tct(string) LOWess(string) clv(string) ci(string) SHade(string) ] 
+
+		// [1,1,1]
+		if "`lowess'" != "" & "`ci'" != "" & "`shade'" != "" {
+			local x = `tct' - 1	
+			local ctrl1 = `tct' + 4				
+			local ctrl2 = `tct' + 5	
+			local ctrl3 = `ctrl2' + `tct' + 1
+			local ctrl4 = `ctrl3' + 1	
+			local low1 = `ctrl4' + `tct' + 1
+			local low2 = `ctrl4' + `tct' + 2
+			local low3 = `ctrl4' + `tct' + 3
+			local cl1 = `low1' + 3
+			local cl2 = `tct' + `low2' + (8 + `x')
+			local cl3 = `cl2' + (2 * `tct' - 1)
+			local mleg subtitle("Intervention starts: `tperlist'") legend(rows(3) ///
+				region(lcolor(black)) ///
+				order(- "`treatdesc':" 2 3 `low1' `cl1' ///
+				      - "Control 1:" `ctrl1' `ctrl2' `low2' `cl2' ///
+				      - "Control 2:" `ctrl3' `ctrl4' `low3' `cl3') ///
+				label(3 "Predicted") label(2 "Actual") ///
+				label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///
+				label(`ctrl3' "Actual") label(`ctrl4' "Predicted") ///					
+				label(`low1' "Lowess") label(`low2' "Lowess") label(`low3' "Lowess") ///
+				label(`cl1' "`clv'% CI") label(`cl2' "`clv'% CI") label(`cl3' "`clv'% CI") ///
+				symxsize(8) position(6))
+		}
+
+		// [1,1,0]		
+		if "`lowess'" != "" & "`ci'" != "" & "`shade'" == "" {			
+			local x = `tct' - 1	
+			local ctrl1 = `tct' + 3				
+			local ctrl2 = `tct' + 4	
+			local ctrl3 = `ctrl2' + `tct' + 1
+			local ctrl4 = `ctrl3' + 1		
+			local low1 = `ctrl4' + `tct' + 1
+			local low2 = `ctrl4' + `tct' + 2
+			local low3 = `ctrl4' + `tct' + 3
+			local cl1 = `low1' + 3
+			local cl2 = `tct' + `low2' + (8 + `x')
+			local cl3 = `cl2' + (2 * `tct' - 1)
+			local mleg subtitle("Intervention starts: `tperlist'") legend(rows(3) ///
+				region(lcolor(black)) ///
+				order(- "`treatdesc':" 1 2 `low1' `cl1' ///
+				      - "Control 1:" `ctrl1' `ctrl2' `low2' `cl2' ///
+				      - "Control 2:" `ctrl3' `ctrl4' `low3' `cl3') ///
+				label(1 "Actual") label(2 "Predicted") ///
+				label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///
+				label(`ctrl3' "Actual") label(`ctrl4' "Predicted") ///					
+				label(`low1' "Lowess") label(`low2' "Lowess") label(`low3' "Lowess") ///
+				label(`cl1' "`clv'% CI") label(`cl2' "`clv'% CI") label(`cl3' "`clv'% CI") ///
+				symxsize(8) position(6))
+		}
+
+		// [1,0,1]		
+		if "`lowess'" != "" & "`ci'" == "" & "`shade'" != "" {
+			local ctrl1 = `tct' + 4				
+			local ctrl2 = `tct' + 5	
+			local ctrl3 = `ctrl2' + `tct' + 1
+			local ctrl4 = `ctrl3' + 1
+			local low1 = `ctrl3' + `tct' + 2
+			local low2 = `ctrl3' + `tct' + 3
+			local low3 = `ctrl3' + `tct' + 4
+			local mleg subtitle("Intervention starts: `tperlist'") legend(rows(3) region(lcolor(black))  ///
+				order(- "`treatdesc':" 2 3 `low1' ///
+				      - "Control 1:" `ctrl1' `ctrl2' `low2' ///
+				      - "Control 2:" `ctrl3' `ctrl4' `low3') ///
+				label(3 "Predicted") label(2 "Actual") ///
+				label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///
+				label(`ctrl3' "Actual") label(`ctrl4' "Predicted") ///					
+				label(`low1' "Lowess") label(`low2' "Lowess") label(`low3' "Lowess") ///
+				symxsize(8) position(6))			
+		}
+
+		// [1,0,0]		
+		if "`lowess'" != "" & "`ci'" == "" & "`shade'" == "" {			
+			local ctrl1 = `tct' + 3				
+			local ctrl2 = `tct' + 4			
+			local ctrl3 = `ctrl2' + `tct' + 1
+			local ctrl4 = `ctrl3' + 1		
+			local low1 = `ctrl3' + `tct' + 2
+			local low2 = `ctrl3' + `tct' + 3
+			local low3 = `ctrl3' + `tct' + 4
+			local mleg subtitle("Intervention starts: `tperlist'") legend(rows(3) region(lcolor(black)) ///
+				order(- "`treatdesc':" 1 2 `low1' ///
+				      - "Control 1:" `ctrl1' `ctrl2' `low2' ///
+				      - "Control 2:" `ctrl3' `ctrl4' `low3') ///
+				label(1 "Actual") label(2 "Predicted") ///
+				label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///
+				label(`ctrl3' "Actual") label(`ctrl4' "Predicted") ///					
+				label(`low1' "Lowess") label(`low2' "Lowess") label(`low3' "Lowess") ///
+				symxsize(8) position(6))		
+		}
+
+		// [0,1,1]		
+		if "`lowess'" == "" & "`ci'" != "" & "`shade'" != "" {
+			local ctrl1 = `tct' + 4
+			local ctrl2 = `tct' + 5	
+			local ctrl3 = `ctrl2' + `tct' + 1		
+			local ctrl4 = `ctrl3' + 1
+			local cl1 = `ctrl4' + `tct' + 1
+			local cl2 = `cl1' + (2 * `tct' + 2)
+			local cl3 = `cl2' + (2 * `tct' + 2)
+			local mleg subtitle("Intervention starts: `tperlist'") legend(rows(3) region(lcolor(black)) ///
+				order(- "`treatdesc':" 2 3 `cl1' ///
+				      - "Control 1:" `ctrl1' `ctrl2' `cl2' ///
+				      - "Control 2:" `ctrl3' `ctrl4' `cl3') ///
+				label(3 "Predicted") label(2 "Actual") ///
+				label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///
+				label(`ctrl3' "Actual") label(`ctrl4' "Predicted") ///					
+				label(`cl1' "`clv'% CI") label(`cl2' "`clv'% CI") label(`cl3' "`clv'% CI") ///
+				symxsize(8) position(6))							
+		}
+
+		// [0,1,0]		
+		if "`lowess'" == "" & "`ci'" != "" & "`shade'" == "" {
+			local ctrl1 = `tct' + 3				
+			local ctrl2 = `tct' + 4	
+			local ctrl3 = `tct' + `ctrl2' + 1
+			local ctrl4 = `ctrl3' + 1 
+			local cl1 = `ctrl4' + `tct' + 1
+			local cl2 = `tct' + `ctrl2' + `ctrl3' + 4						
+			local cl3 = `cl2' + 3 * (`tct' - 1) + 1
+			local mleg subtitle("Intervention starts: `tperlist'") legend(rows(3) region(lcolor(black))  ///
+				order(- "`treatdesc':" 1 2 `cl1' ///
+				      - "Control 1:" `ctrl1' `ctrl2' `cl2' ///
+				      - "Control 2:" `ctrl3' `ctrl4' `cl3') ///
+				label(1 "Actual") label(2 "Predicted") ///
+				label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///
+				label(`ctrl3' "Actual") label(`ctrl4' "Predicted") ///					
+				label(`cl1' "`clv'% CI") label(`cl2' "`clv'% CI") label(`cl3' "`clv'% CI") ///
+				symxsize(8) position(6))
+		}
+		
+		// [0,0,1]		
+		if "`lowess'" == "" & "`ci'" == "" & "`shade'" != "" {
+			local ctrl1 = `tct' + 4				
+			local ctrl2 = `tct' + 5	
+			local ctrl3 = `tct' + `ctrl2' + 1
+			local ctrl4 = `ctrl3' + 1 
+			local mleg subtitle("Intervention starts: `tperlist'") legend(rows(3) region(lcolor(black))  ///
+				order(- "`treatdesc':" 2 3 ///
+				      - "Control 1:" `ctrl1' `ctrl2' ///
+				      - "Control 2:" `ctrl3' `ctrl4') ///
+				label(3 "Predicted") label(2 "Actual") ///
+				label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///
+				label(`ctrl3' "Actual") label(`ctrl4' "Predicted") ///
+				symxsize(8) position(6))			
+		}	
+		
+		// [0,0,0]		
+		if "`lowess'" == "" & "`ci'" == "" & "`shade'" == "" {	
+			local ctrl1 = `tct' + 3				
+			local ctrl2 = `tct' + 4	
+			local ctrl3 = `tct' + `ctrl2' + 1
+			local ctrl4 = `ctrl3' + 1 
+			local mleg subtitle("Intervention starts: `tperlist'") legend(rows(3) region(lcolor(black)) ///
+				order(- "`treatdesc':" 1 2 ///
+				      - "Control 1:" `ctrl1' `ctrl2' ///
+				      - "Control 2:" `ctrl3' `ctrl4') ///
+				label(1 "Actual") label(2 "Predicted") ///
+				label(`ctrl1' "Actual") label(`ctrl2' "Predicted") ///
+				label(`ctrl3' "Actual") label(`ctrl4' "Predicted") ///
+				symxsize(8) position(6))			
+		}	
+
+		// save the local		
+		ret local mleg `mleg'			
+end

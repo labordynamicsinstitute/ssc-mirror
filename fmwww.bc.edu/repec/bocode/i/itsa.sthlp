@@ -1,4 +1,5 @@
 {smcl}
+{* 10Feb2026}{...}
 {* 19Sep2025}{...}
 {* 31Jul2025}{...}
 {* 23Jul2025}{...}
@@ -50,8 +51,9 @@ must be declared. See {helpb tsset}.
 {p2coldent:* {opt trp:eriod}{cmd:(}{it:{help datetime:datelist}}{cmd:)}}specify the time period(s) when the intervention begins (e.g. {cmd:trperiod(2020)} or {cmd:trperiod(2001q2)} or {cmd:trperiod(21jan2020 ; 08feb2020)})  {p_end}
 {synopt:{opt sing:le}}indicates that {cmd:itsa} will be used for a single-group analysis {p_end}
 {synopt:{opt treat:id}{cmd:(#)}}specify the treated unit's identifier. Not required when only the treated unit is in the data 
-and {cmd:sing:le} is specified {p_end}
+and {cmd:single} is specified {p_end}
 {synopt:{opt cont:id}{cmd:({it:{help numlist:numlist}}})}specify a list of identifiers to be used as control units in the multiple-group analysis; default is to use all{p_end}
+{synopt:{opt contid2}{cmd:({it:{help numlist:numlist}}})}specify a list of identifiers to be used as a second set of control units in a triple difference analysis (DDD-ITSA) {p_end}
 {synopt:{opt prais}}fit a {helpb prais} model. Default is to fit a {helpb glm} model with Newey-West standard errors {p_end}
 {synopt:{opt lag}{cmd:(#)}}specify the maximum lag to be considered when a glm model with Newey-West standard errors is estimated{p_end}
 {synopt:{opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]}produce an interrupted time-series plot. Specifying {cmd:figure} without options uses the default 
@@ -102,11 +104,12 @@ least-squares method to estimate the parameters in a linear regression model
 in which the errors are assumed to follow a first-order autoregressive process.
 
 {pstd}
-{cmd:itsa} estimates treatment effects for either a single treatment group
-(with preintervention and postintervention observations) or a multiple-group
-comparison (that is, the single treatment group is compared with one or more
-control groups). Additionally, {cmd:itsa} can estimate treatment effects for
-multiple treatment periods. Because itsa is a wrapper for {helpb glm}, all
+{cmd:itsa} estimates treatment effects for (1) a single treatment unit
+(with preintervention and postintervention observations), (2) a multiple-group
+comparison (that is, the single treatment unit is compared to a control
+group), and (3) a "triple-difference" ITSA, in which a treatment unit is compared
+to two different sets of controls. Additionally, {cmd:itsa} can estimate treatment 
+effects for multiple treatment periods. Because itsa is a wrapper for {helpb glm}, all
 available model options are allowed. {p_end}
 
 
@@ -143,6 +146,12 @@ the same units as the panel variable specified in {cmd:tsset} {it:panelvar}
 nontreated units in the data will be used as controls.
 
 {phang}
+{cmd:contid2(}{it:numlist}{cmd:)} specifies a list of identifiers to be used as
+a second control group in a triple difference ITSA (DDD-ITA). The values entered must be
+in the same units as the panel variable specified in {cmd:tsset} {it:panelvar} 
+{it:timevar}; see {helpb tsset}. 
+
+{phang}
 {cmd:prais} specifies to fit a {helpb prais} model. If {cmd:prais} is
 not specified, {cmd:itsa} will use {helpb glm} with Newey-West standard errors, 
 as the default model.
@@ -168,8 +177,10 @@ default graph settings.
 
 {phang}
 {cmd:bwidth(#)} specifies the bandwidth. {cmd:bwidth(.8)} is the default.
-Centered subsets of N*{cmd:bwidth()} observations, {it:N} = number of observations, are used for calculating smoothed values for
-each point in the data except for endpoints, where smaller, uncentered subsets are used. The greater the {cmd:bwidth()}, the greater the smoothing.
+Centered subsets of N*{cmd:bwidth()} observations, {it:N} = number of observations,
+are used for calculating smoothed values for each point in the data except for 
+endpoints, where smaller, uncentered subsets are used. The greater the {cmd:bwidth()}, 
+the greater the smoothing.
 
 {phang}
 {cmd:ci} plots the confidence interval(s) on the {cmd:figure}. By default,
@@ -235,7 +246,7 @@ assumes the following form (Simonton 1977a, 1977b; Huitema and McKean 2000;
 Linden and Adams 2011):
 
 {pmore}
-Y_t = Beta_0 + Beta_1(T) + Beta_2(X_t) + Beta_3(TX_t){space 5}(1)
+Y_t = Beta_0 + Beta_1(T) + Beta_2(X_t) + Beta_3(TX_t) + ε {space 5}(1)
 
 {pstd}
 Here Y_t is the aggregated outcome variable measured at each equally spaced
@@ -263,7 +274,7 @@ model in (1) is expanded to include four additional terms (Beta_4 to Beta_7)
 (Simonton 1977a, 1977b; Linden and Adams 2011):
 
 {pmore} Y_t = Beta_0 + Beta_1(T) + Beta_2(X_t) + Beta_3(TX_t) +
-Beta_4(Z) + Beta_5(ZT) + Beta_6(ZX_t) + Beta_7(ZTX_t){space 5}(2)
+Beta_4(Z) + Beta_5(ZT) + Beta_6(ZX_t) + Beta_7(ZTX_t) + ε {space 5}(2)
 
 {pstd}
 Here Z is a dummy variable to denote the cohort assignment (treatment or
@@ -293,14 +304,43 @@ causal inferences about the relationship between the intervention and the
 outcomes (Linden and Adams 2011). See Linden (2017a) for many
 additional ITSA postestimation measures.
 
+{pstd}
+In the "triple difference" ITSA design (DDD-ITSA), the treated unit is compared to two 
+different sets of controls. For this design, the regression
+model in (2) is expanded to include four additional terms (Beta_8 to Beta_11):
+
+{pmore} Y_t = Beta_0 + Beta_1(T) + Beta_2(X_t) + Beta_3(TX_t) + Beta_4(Z1) + Beta_5(Z1T) + Beta_6(Z1X_t) + {p_end}
+{pmore} {space 8} Beta_7(Z1TX_t) +  Beta_8(Z2_t) + Beta_9(Z2T) + Beta_10(Z2X_t) + Beta_7(Z2TX_t) + ε {space 15}(3)
+
+{pstd}
+Here Z1 is a dummy variable to denote the treatment unit and Z2 is a dummy variable to denote the control group 2.
+Therefore, all variables and coefficients that include Z1 are equivalent to those in Model 2 and all variables and coefficients 
+that include Z2 compare control group 2 to control group 1. More specifically, Beta_8 represents the difference in the 
+level (intercept) of the dependent variable between control group 2 and control group 1 prior to the intervention, 
+Beta_9 represents the difference in the slope (trend) of the dependent variable between control group 2 and control group 1 
+prior to the intervention, Beta_10 indicates the difference between control group 2 and control group 1 in the level of the 
+dependent variable immediately following introduction of the intervention, and Beta_11 represents the difference between 
+control group 2 and control group 1 in the slope (trend) of the dependent variable after initiation of the intervention 
+compared with preintervention. 
+
+{pstd}
+As in Model 2, The two parameters Beta_4 and Beta_5 assess whether the treatment and control group 1 are balanced on both the
+level and the trend of the dependent variable in the preintervention period. Additionally, (Beta_4 - Beta_8) and (Beta_5 - Beta_9) 
+assess whether the treatment and control group 2 are balanced on both the level and trend of the dependent variable in 
+the preintervention period, while Beta_8 and Beta_9 assess whether control group 1 and control group 2 are balanced on both the level 
+and trend of the dependent variable in the preintervention period, respectively. Taken together, we can easily assess balance and 
+test for parallel trends amongst all groups.
+
 
 
 {title:Examples}
 
 {pstd}
-There are three general scenarios in which {cmd:itsa} can be implemented: 1) a
+There are four general scenarios in which {cmd:itsa} can be implemented: 1) a
 single-group ITSA using data with only the one panel, 2) a single-group ITSA
-in data where there are other panels, and 3) a multiple-group ITSA. The
+in data where there are other panels, 3) a multiple-group ITSA where the treatment
+unit is compared to a single control group, and 4) a "triple difference" model in
+which the treatment unit is compared to two different sets of controls. The
 examples below are described accordingly, using data from Abadie, Diamond, and
 Hainmueller (2010) and Linden and Adams (2011):
 
@@ -449,8 +489,28 @@ Here we specify two treatment periods and shade the area between them on the gra
 {phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1986; 1989) shade(1986 ; 1989) lag(1) replace fig posttr ci low": . itsa cigsale, treatid(3) trperiod(1986; 1989) shade(1986 ; 1989) lag(1) replace fig posttr ci low}}
 
 
+{pstd}
+{opt 4) "Triple difference" ITSA:}{p_end}
 
-{marker output_table}{...}
+{pmore}
+We compute a DDD-ITSA model by specifying the unit(s) assigned to the first control group {cmd:contid()} and specifying the unit(s) assigned 
+to the second control group {cmd:contid2()}. Here we assign Idaho and Montana to the first control group {cmd:contid(8 19)} and Colorado to the second control group
+{cmd:contid(4)}.  {p_end}
+
+{phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1989) lag(1) fig posttrend replace contid(8 19) contid2(4)":. itsa cigsale, treatid(3) trperiod(1989) lag(1) fig posttrend replace contid(8 19) contid2(4)}}{p_end}
+
+{pmore}
+Same as above but we now add a lowess smoother to better track the outcome over time amongst the group. We specify {cmd:bwidth(0.4)} to get better fits.  {p_end}
+
+{phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1989) lag(1) fig posttrend replace contid(8 19) contid2(4) low bwidth(0.4)":. itsa cigsale, treatid(3) trperiod(1989) lag(1) fig posttr repl contid(8 19) contid2(4) low bwidth(0.4)}} {p_end}
+
+{pmore}
+We now request confidence intervals instead of the lowess smoother.  {p_end}
+
+{phang3}{bf:{stata "itsa cigsale, treatid(3) trperiod(1989) lag(1) fig posttrend replace contid(8 19) contid2(4) ci":. itsa cigsale, treatid(3) trperiod(1989) lag(1) fig posttr repl contid(8 19) contid2(4) ci}} {p_end}
+ 
+
+
 {title:Output table}
 
 {pstd}
@@ -458,11 +518,12 @@ Here we specify two treatment periods and shade the area between them on the gra
 Below is a cross reference to default names for those variables that appear in
 the regression output tables (and used when {cmd:posttrend} is specified).
 Variables starting with {cmd:_z} are added to the dataset only when a
-multiple-group comparison is specified. {cmd:(trperiod)} is a suffix added to
-certain variables indicating the start of the intervention period. This is
-particularly helpful for differentiating between added variables when multiple
-interventions are specified. If the user specifies a {cmd:prefix()}, it will
-be applied to all variables generated by {cmd:itsa}.
+multiple-group comparison is specified, and variables starting with {cmd:_z1} 
+and {cmd:_z2} are added to the dataset only when a "triple difference" ITSA
+is specified. {cmd:(trperiod)} is a suffix added to certain variables indicating 
+the start of the intervention period. This is particularly helpful for differentiating 
+between added variables when multiple interventions are specified. If the user specifies 
+a {cmd:prefix()}, it will be applied to all variables generated by {cmd:itsa}.
 
 {synoptset 18}{...}
 {synopt:Variable}Description{p_end}
@@ -471,11 +532,17 @@ be applied to all variables generated by {cmd:itsa}.
 {synopt:{cmd:_t}}time since start of study{p_end}
 {synopt:{cmd:_x(trperiod)}}dummy variable representing the intervention periods (preintervention periods {cmd:0}, otherwise {cmd:1}){p_end}
 {synopt:{cmd:_x_t(trperiod)}}interaction between {cmd:_x} and a sequentially numbered variable starting in the period immediately following the intervention{p_end}
-{synopt:{cmd:_z}}dummy variable to denote the cohort assignment (treatment or control){p_end}
-{synopt:{cmd:_z_x(trperiod)}}interaction of {cmd:_z} and {cmd:_x}{p_end}
-{synopt:{cmd:_z_x_t(trperiod)}}interaction of {cmd:_z}, {cmd:_x}, and {cmd:_t}{p_end}
+{synopt:{cmd:_z}}dummy variable to denote the cohort assignment (treatment or control) in a multiple-group ITSA {p_end}
+{synopt:{cmd:_z_x(trperiod)}}interaction of {cmd:_z} and {cmd:_x} in a multiple-group ITSA{p_end}
+{synopt:{cmd:_z_x_t(trperiod)}}interaction of {cmd:_z}, {cmd:_x}, and {cmd:_t} in a multiple-group ITSA{p_end}
+{synopt:{cmd:_z1}}dummy variable to denote the treatment unit in a DDD-ITSA {p_end}
+{synopt:{cmd:_z1_x(trperiod)}}interaction of {cmd:_z1} and {cmd:_x} in a DDD-ITSA{p_end}
+{synopt:{cmd:_z1_x_t(trperiod)}}interaction of {cmd:_z1}, {cmd:_x}, and {cmd:_t} in a DDD-ITSA {p_end}
+{synopt:{cmd:_z2}}dummy variable to denote the second control group in a DDD-ITSA {p_end}
+{synopt:{cmd:_z2_x(trperiod)}}interaction of {cmd:_z2} and {cmd:_x} in a DDD-ITSA{p_end}
+{synopt:{cmd:_z2_x_t(trperiod)}}interaction of {cmd:_z2}, {cmd:_x}, and {cmd:_t} in a DDD-ITSA {p_end}
 {synopt:{cmd:_s_}{it:depvar}{cmd:_pred}}predicted value generated after running {cmd:itsa} for a single group {p_end}
-{synopt:{cmd:_m_}{it:depvar}{cmd:_pred}}predicted value generated after running {cmd:itsa} for a multiple-group comparison {p_end}
+{synopt:{cmd:_m_}{it:depvar}{cmd:_pred}}predicted value generated after estimating {cmd:itsa} a multiple-group or DDD-ITSA model {p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -486,8 +553,8 @@ be applied to all variables generated by {cmd:itsa}.
 {p 4 4 2}
 I owe a tremendous debt of gratitude to Nicholas J. Cox for his never-ending
 support and patience with me while originally developing {cmd:itsa}. I would
-also like to thank Steven J. Samuels for creating the {cmd:posttrend} option
-and help with various other improvements to {cmd:itsa}. Federico Tedeschi 
+also like to thank Steven J. Samuels for initally creating the {cmd:posttrend} option
+and helping with various other early improvements to {cmd:itsa}. Federico Tedeschi 
 found an error in the multiple-group or multiple-intervention posttrend
 estimation. Nicola Orsini correctly noted that {cmd:_t} should start at 0,
 rather than 1. 
@@ -570,6 +637,10 @@ Using permutation tests to enhance causal inference in interrupted time series a
 {phang}
 ------. 2025. 
 {browse "https://journals.sagepub.com/doi/10.1177/01632787251361514": A comprehensive simulation study to evaluate the effect size and study length relationship in single-group interrupted time series analysis}. 
+{it:Evaluation & the Health Professions} 
+
+{phang}
+------. 2026. Power considerations for multiple-group (controlled) interrupted time series analysis: A comprehensive simulation Study.
 {it:Evaluation & the Health Professions} 
 
 {phang} 
