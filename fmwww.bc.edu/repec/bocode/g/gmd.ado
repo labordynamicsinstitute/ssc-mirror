@@ -1,331 +1,796 @@
+*! version 2.0.0 10jan2026 Mohamed Lehbib and Karsten Müller
+
+********************************************************************************
+* Initial set up and syntax 
+********************************************************************************
+
 cap program drop gmd
 program define gmd
     version 15.0
-    syntax [anything] [, COUntry(string) Version(string) Raw Iso Vars]
+    
+    * Define syntax with optional arguments for version, country, raw data, etc.
+    syntax [anything] [, VErsion(string) COUntry(string) Raw VARS(string) Sources(string) CITE(string) print(string) Network(string) Fast(string)] 
+    
+    * Calculate number of variables 
+    local word_count = wordcount("`anything'")
 	
+     
+********************************************************************************
+* Checking dependencies, setting package versions 
+********************************************************************************
+    
+    * Check if the required 'missings' package is installed
+    cap which missings
+    if _rc !=0 {
+        di as error "This command requires the 'missings' package."
+        di as text "To install it, type " "{stata ssc install missings:ssc install missings}"
+        exit 498
+    }
+    
+    * Define the current internal package version
+    local package_version = "2.0.0"
+ 
+********************************************************************************
+* Print option (Internal Helper)
+* This is called by clickable links to display APA-style citations for the GMD
+********************************************************************************
+    if "`print'" != "" {
+        
+        * Print GMD NBER Paper citation
+        if strlower("`print'") == "gmd" {
+            di as text "Müller, K., Xu, C., Lehbib, M., & Chen, Z. (2025). The Global Macro Database: A New International Macroeconomic Dataset (NBER Working Paper No. 33714)."
+        }
+        * Print Stata Journal citation
+        else if strlower("`print'") == "stata" {
+            di as text "Lehbib, M. & Müller, K. (2025). gmd: The Easy Way to Access the World's Most Comprehensive Macroeconomic Database. Working Paper."
+        }
+        * Handle invalid print arguments
+        else {
+            di as err "Invalid option for print(). valid arguments are 'GMD' or 'Stata'."
+            exit 198
+        }
+        * Exit immediately so this helper doesn't run the rest of the program
+        exit
+    }   
 	
-	* Checking for the dependency
-	cap which missings
-	if _rc {
-		di as error "This command requires the 'missings' package."
-		di as text "Install it by typing: ssc install missings"
+********************************************************************************
+* Compares package version against data version in CSV
+* Check version logic, determine which one to use 
+* Check if the user has internet by trying to fetch the versions.csv 
+********************************************************************************
+    preserve
+    cap import delimited using "https://gmd-releases.s3.ap-southeast-2.amazonaws.com/data/helpers/versions.csv", clear varnames(1)
+	
+    if _rc == 0 {
+        * Parse version strings (YYYY_MM) into sortable numbers
+        qui gen year = substr(versions, 1, 4)
+        qui gen month = substr(versions, -2, 2)
+        qui destring year month, replace
+        gsort -year -month
+        
+        * Check if package is outdated
+        local package = version_package in 1 
+        if "`package'" != "`package_version'" {
+            di as text "There is a new version of the package. " "{stata ssc install gmd, replace:Click here to update.}"
+        }
+        qui drop version_package
+        local selected_version = versions in 1   
+        qui levelsof versions, local(available_versions) clean
+        
+        * If user asks for list of versions, print and exit
+        if "`version'" == "list" {
+            foreach ver of local available_versions {
+                di as text "`ver'"
+            }
+            restore 
+            exit 
+        }
+        * If user requests specific version, validate it exists
+        else if "`version'" != "" {
+			* Assert version is one word 
+			cap assert wordcount("`version'") == 1
+			if _rc != 0 {
+				local selected_version = versions in 1
+				di as err "Version must either be one specific version (`selected_version') or current."
+				restore 
+				exit 
+			}
+			
+            if `: list version in available_versions' {
+                * If version exists, set local to the desired version 
+				local selected_version "`version'"
+            }
+			else if "`version'" == "current" {
+				* Use the latest version (already stored in selected_version)
+				local selected_version = versions in 1
+				di as text "Current version: `selected_version'"
+			}
+            else {
+                di as error "Error: Version `version' does not exist"
+                di as text "Available versions: `available_versions'"
+                restore
+                exit 498
+            }
+        }
+    }
+    else {
+		
+		* The user either doesn't have internet, or the URL is down. 
+		cap import delimited using "https://raw.githubusercontent.com/KMueller-Lab/Global-Macro-Database/refs/heads/main/data/helpers/versions.csv", clear varnames(1)
+		
+		if _rc == 0 {
+			* The user has internet, but the AWS is not responding. 
+			* Check for updates 
+			qui gen year = substr(versions, 1, 4)
+			qui gen month = substr(versions, -2, 2)
+			qui destring year month, replace
+			gsort -year -month
+			
+			* Check if package is outdated
+			local package = version_package in 1 
+			if "`package'" != "`package_version'" {
+				di as text "There is a new version of the package. " "{stata ssc install gmd, replace:Click here to update.}"
+				di `"Please update the package from the GitHub repository and raise an issue if the update does not work at {browse "https://github.com/KMueller-Lab/Global-Macro-Database-Stata"}."'
+			}			
+		}
+		
+		if "`network'" != "" {
+			local internet "NaN"
+		}
+		else {
+			local internet "No"
+		}
+        di as error "Error: Unable to access version information. Check internet connection."
+		di as text "Loading local version"
+		
+		* Now check if the local version exist, use it if it does, otherwise, load it and save it.
+		local personal_folder "`c(sysdir_plus)'"
+		
+		* Check if the dataset is saved locally
+		cap confirm file "`personal_folder'g/GMD.dta"
+		
+		* If it's saved locally, store its path in a local macro
+		if _rc == 0 {
+			local saved_gmd "yes"
+			local gmd_df "`personal_folder'g/GMD.dta"			
+		}
+		
+		* If the dataset is not saved locally, restore and exit
+		else {
+			di as err "Local version not found"
+			restore
+			exit 498
+		}
+       
+    }
+    restore
+
+	if "`internet'" == "No" {
+		
+		* Active internet is required to load data from sources
+		if "`sources'" == "load" | "`sources'" == "list" {
+			di as err "You need access to the internet in order to fetch the sources list"
+			di as err "If you have active internet access, specify the option network"  "{stata gmd, network(yes) :gmd, network(yes)}"
+			exit 498
+		}
+		else if "`sources'" != "" {
+			di as err "You need access to the internet in order to fetch the `sources' data"
+			di as err "If you have active internet access, specify the option network"  "{stata gmd, network(yes) :gmd, network(yes)}"
+			exit 498
+		}
+		
+		* Active internet is required to load raw data
+		if "`raw'" != "" {
+			di as err "You need access to the internet in order to fetch the raw data"
+			di as err "If you have active internet access, specify the option network"  "{stata gmd, network(yes) :gmd, network(yes)}"
+			exit 498
+		}
+		
+		* Active internet is required to cite sources
+		if "`cite'" == "load" {
+			di as err "You need access to the internet in order to load the sources to cite"
+			di as err "If you have active internet access, specify the option network"  "{stata gmd, network(yes) :gmd, network(yes)}"
+			exit 498
+		}
+		else if "`cite'" != "" {
+			di as err "You need access to the internet in order to cite `cite'"
+			di as err "If you have active internet access, specify the option network"  "{stata gmd, network(yes) :gmd, network(yes)}"
+			exit 498
+		}
+	}
+
+
+	
+********************************************************************************
+* Cite option: Displays or loads BibTeX codes
+********************************************************************************
+
+    * Option 1: Load the full bibliography into memory
+    if "`cite'" == "load" {
+        preserve
+        cap import delimited using "https://gmd-releases.s3.ap-southeast-2.amazonaws.com/data/helpers/bib_dataframe.csv", clear varnames(1) encoding(utf-8)
+        
+        * If successful, commit changes (restore, not) and exit
+        if _rc == 0 {
+            restore, not
+            exit
+        }
+        else {
+            di `"Unable to import the list of sources to cite. Please raise an issue at {browse "https://github.com/KMueller-Lab/Global-Macro-Database-Stata"}."'
+            restore
+            exit 498
+        }
+    }  
+    
+    * Option 2: Display specific BibTeX code (e.g., gmd, cite(GMD))
+    else if "`cite'" != "" {
+        preserve
+        
+		* Open bibliography file 
+		qui import delimited using "https://gmd-releases.s3.ap-southeast-2.amazonaws.com/data/helpers/bib_dataframe.csv", clear varnames(1) encoding(utf-8)
+        
+		* Assert we are counting only one source
+		local cite_count = wordcount("`cite'")
+		if `cite_count' != 1 {
+			di as err "Only one citation can be retrieved at a time"
+			restore
+			exit 498
+		}
+		
+		* Assert the source exist 
+		qui count if strlower(source) == strlower("`cite'") 
+		if `r(N)' == 0 {
+			di as err "Source '`cite'' does not exist."
+			di as text "To load the list of sources to cite: " "{stata gmd, cite(load):gmd, cite(load)}"
+            restore
+            exit 498
+		}
+
+		* If yes, continue 
+		else {
+			* Only keep relevant source, write into local 
+            qui keep if strlower(source) == strlower("`cite'")
+            
+            * Get the citation and store in a scalar to preserve quotes
+            scalar cit_text = citation[1]
+            local p = cit_text
+            
+            * Insert a pipe (|) before fields (comma followed by space and word=)
+            local p = ustrregexra(`"`p'"', ",\s*([a-zA-Z0-9_]+\s*=)", "," + "|" + "  " + "$1")
+            
+            * Insert a pipe (|) before the final closing bracket
+            local p = ustrregexra(`"`p'"', "\}\s*$", "|" + "}")
+
+            * Loop through the string, splitting by pipe (|) to print each field on a new line
+            while `"`p'"' != "" {
+                local pos = strpos(`"`p'"', "|")
+                if `pos' == 0 {
+                    noi di as text `"`p'"'
+                    local p ""
+                }
+                else {
+                    * Use scalar to avoid quote issues in local expansion
+                    scalar tmp_line = substr(`"`p'"', 1, `pos'-1)
+                    noi di as text scalar(tmp_line)
+                    local p = substr(`"`p'"', `pos'+1, .)
+                }
+            }
+            scalar drop cit_text tmp_line
+            restore
+            exit
+        }		
+    }
+
+********************************************************************************
+* DATA LOADING BRANCHES
+* Crucial: These blocks are mutually exclusive (if/else if) to prevent overwriting.
+* They load data but DO NOT EXIT, allowing flow to Country Filtering below.
+********************************************************************************	
+	
+    * --- BRANCH 1: SOURCES (Load specific source data) ---
+    if ("`sources'" == "load" | "`sources'" == "list"){
+        if "`raw'" != "" di as err "Note: raw option is specified, but this is implicit when using the sources option."
+        
+        preserve 
+        cap import delimited using "https://gmd-releases.s3.ap-southeast-2.amazonaws.com/data/helpers/source_list.csv", clear varnames(1) encoding(utf-8) 
+        
+        if _rc == 0 {
+            if "`sources'" == "load" {
+                di as text "Imported the list of sources."
+                restore, not
+                exit 
+            }
+            else if "`sources'" == "list" {
+                qui levelsof source_name, clean loc(sourceloc)
+                foreach indsource in `sourceloc' {
+                    di as text "`indsource'"
+                }
+                restore 
+                exit
+            }
+        }
+        else {
+            di `"Unable to load source list. Please raise an issue at {browse "https://github.com/KMueller-Lab/Global-Macro-Database-Stata"}."'
+            restore
+            exit 498
+        }
+		
+		* Restore 
+		restore 
+    }
+    
+    * Load a specific source dataset (e.g. sources(IMF_IFS))
+    else if  "`sources'" != "" {
+        if "`raw'" != "" di as err "Note: raw option is specified, but this is implicit when using the sources option."
+        
+		* Format some sources correctly: 
+		if strlen("`sources'") == 7 & strpos("`sources'", "CS") == 1 {
+			local sources = substr("`sources'", -3, 3) + "_" + substr("`sources'", 3, 1) 
+		}
+		
+        local sources       = trim(itrim("`sources'"))
+        local sources_num = wordcount("`sources'")
+        
+        * Enforce single source loading
+        if `sources_num' > 1 {
+            di as error "Warning: Please specify exactly one source."
+            exit 498
+        }
+        
+        preserve
+        cap use "https://gmd-releases.s3.ap-southeast-2.amazonaws.com/data/clean/combined/`sources'.dta", clear
+		local res = _rc
+		if `res' != 0 {
+		
+			* Check if the issue is the source name (lowercase for example)
+			cap import delimited using "https://gmd-releases.s3.ap-southeast-2.amazonaws.com/data/helpers/source_list.csv", clear varnames(1) encoding(utf-8) 
+			if _rc != 0 {
+				di `"Unable to access variable list. Please raise an issue at {browse "https://github.com/KMueller-Lab/Global-Macro-Database-Stata"}."'
+			}
+            else {
+				qui count if strlower(source_name) == strlower("`sources'")
+				if `r(N)' == 1 {
+					* Source exist! 
+					qui levelsof source_name if strlower(source_name) == strlower("`sources'"), local(correct_source) clean
+					
+				}
+				else {
+					* Source doesn't exist 
+					di as err "Invalid source name"
+					di as text "To load the list of sources: " "{stata gmd, sources(load):gmd, sources(load)}"
+					restore 
+					exit 498
+				}
+			}
+            
+        }
+		
+		if `res' == 0 | "`correct_source'" != "" {
+            * If user requested specific variables, keep only those + IDs
+			if "`correct_source'" != "" {
+				local sources = "`correct_source'"
+			}
+			
+			cap use "https://gmd-releases.s3.ap-southeast-2.amazonaws.com/data/clean/combined/`sources'.dta", clear
+			if _rc != 0 {
+				di as err "Unable to load data for source '`sources''." 
+				di as text "Please check your internet connection or report this issue."
+				restore 
+				exit 498
+			}
+			
+            if "`anything'" != "" {
+                cap noisily confirm var `sources'_`anything'
+                if _rc == 0 {
+                    local keepvars "ISO3 year `sources'_`anything'"
+                    
+                    * Check if IDs exist in this specific source file
+                    cap confirm variable countryname
+                    if _rc == 0 local keepvars "`sources'_`keepvars' countryname"
+                    cap confirm variable id
+                    if _rc == 0 local keepvars "`keepvars' id"
+                    
+                    qui keep `keepvars'
+					
+					* Filter for a country 
+					if "`country'" != "" {
+						cap qui keep if ISO3 == strupper("`country'")
+						if _rc == 0 {
+							restore, not 
+							exit
+						}
+						else {
+							di as err "Country code not valid, returning data for all countries."	
+							di as text "To print the list of countries: " "{stata gmd, country(list):gmd, country(list)}"
+							di as text "To load the list of countries: " "{stata gmd, country(load):gmd, country(load)}"
+						}
+					}
+                    restore, not 
+					exit 
+                }
+				
+				* If no variable is specified, there is nothing to filter,
+				* and we return to the full source dataset 
+                else {					
+					qui ren `sources'_* *
+					qui ds ISO3 year, not
+					di as err "This source doesn't have data on `anything'. It has data on `r(varlist)'."
+                    restore
+                    exit
+                }
+            }
+			
+			else {
+				restore, not 
+				exit 
+			}
+
+        }
+		
+		restore, not 
+    }
+
+    * --- BRANCH 2: VARS (Load variable definitions) ---
+    else if "`vars'" == "load" {     
+        preserve 
+        cap import delimited using "https://gmd-releases.s3.ap-southeast-2.amazonaws.com/data/helpers/varlist.csv", clear varnames(1) encoding(utf-8)
+        if _rc != 0 {
+            di `"Unable to access variable list. Please raise an issue at {browse "https://github.com/KMueller-Lab/Global-Macro-Database-Stata"}."'
+            restore 
+            exit 498
+        }
+        restore, not 
+        exit
+    }
+    
+    * Print list of variables
+    else if "`vars'" == "list" {
+        preserve 
+        cap import delimited using "https://gmd-releases.s3.ap-southeast-2.amazonaws.com/data/helpers/varlist.csv", clear varnames(1) encoding(utf-8)
+        if _rc != 0 {
+            di `"Unable to access variable list. Please raise an issue at {browse "https://github.com/KMueller-Lab/Global-Macro-Database-Stata"}."'
+            restore 
+            exit 498
+        }
+        
+        * Formatting logic for table display
+        qui ds
+        qui gen varlength = strlen(variable)
+        qui gen deflength = strlen(definition)
+        qui su varlength 
+        local varlength = r(max) + 2
+        qui su deflength
+        local deflength = r(max) + `varlength' + 2
+        
+        di as text _newline "Available variables:" _newline
+        di as text "{hline 90}"
+        di as text "Variable" _col(`varlength') "Definition" _col(`deflength') "Units"
+        di as text "{hline 90}"
+        
+        qui count
+        local total = r(N)
+        forvalues i = 1/`total' {
+            local vname = variable[`i']
+            local vdesc = definition[`i']
+            local vunits = units[`i']
+            di as text "`vname'" _col(`varlength') "`vdesc'" _col(`deflength') "`vunits'"
+        }
+        di as text "{hline 90}"
+        restore 
+        exit                
+    }
+    
+    * --- BRANCH 3: RAW (Load raw CSV data) ---
+    else if "`raw'" != "" {
+        if `word_count' != 1 {
+            di as error "Warning: Please specify exactly one variable."
+            exit 498
+        }
+        
+        preserve  
+        cap import delimited using "https://gmd-releases.s3.ap-southeast-2.amazonaws.com/data/distribute/`anything'_`selected_version'.csv", clear case(preserve) varnames(1)
+        * If import fails, check if variable exists in main GMD file stored locally to give better error msg
+        if _rc != 0 {
+            cap import delimited using "https://gmd-releases.s3.ap-southeast-2.amazonaws.com/data/helpers/varlist.csv", clear varnames(1) encoding(utf-8)
+            cap confirm variable `anything', exact
+            if _rc != 0 {
+                di as err "Specified variable is not valid."
+                restore
+                exit 498
+            }
+            else {
+                di as err "Variable does not have raw data."
+                restore
+                exit 498
+            }        
+        }
+		else {
+			di as text "Loaded raw data on `anything'"
+			restore, not
+		}
+		
+    }
+	
+	* Helper: Load country list
+    if "`country'" == "load" {
+        preserve 
+		local personal_folder "`c(sysdir_plus)'"
+        cap use "`personal_folder'g/countrylist.dta", clear 
+        if _rc != 0 {
+			* Load the remote dataset
+			cap use "https://gmd-releases.s3.ap-southeast-2.amazonaws.com/data/helpers/countrylist.dta", clear 
+			if _rc == 0 {
+				* Check if we have the user's permission to save: 
+				if "`fast'" == "yes" {
+				di as text "Saving countrylist dataframe locally"
+				qui save "`personal_folder'g/countrylist.dta", replace
+				}
+				else {
+					restore, not
+					exit
+				}
+			}
+			else {
+				di `"Unable to access country list. Please raise an issue at {browse "https://github.com/KMueller-Lab/Global-Macro-Database-Stata"}."'
+				restore 
+				exit 
+			}           
+        }
+		restore, not
+		exit
+    }
+	
+    * Helper: Display country list
+    else if "`country'" == "list" {
+        preserve 
+		local personal_folder "`c(sysdir_plus)'"
+        cap use "`personal_folder'g/countrylist.dta", clear 
+        if _rc != 0 {
+			* Load the remote dataset
+			cap use "https://gmd-releases.s3.ap-southeast-2.amazonaws.com/data/helpers/countrylist.dta", clear 
+			if _rc == 0 {
+				* Check if we have the user's permission to save: 
+				if "`fast'" == "yes" {
+				di as text "Saving countrylist dataframe locally"
+				qui save "`personal_folder'g/countrylist.dta", replace
+				}
+				else {
+					restore, not
+					exit
+				}
+			}           
+        }
+        keep countryname ISO3
+        di as text _newline "Available countries:" _newline
+        di as text "{hline 90}"
+        di as text "ISO3 code  " _col(10) "Country name" 
+        di as text "{hline 90}"
+        qui count
+        local total = r(N)
+        forvalues i = 1/`total' {
+            local iso3 = ISO3[`i']
+            local country = countryname[`i']
+            di as text "`iso3'    " _col(10) "`country'"
+        }
+        di as text "{hline 90}"
+        restore
+        exit
+    }
+	
+	local check_id = strlower("`anything'")
+	* Ensure the user did not specify identifying variables 
+	if "`check_id'" == "iso3" | "`check_id'" == "year" | "`check_id'" == "id" | "`check_id'" == "countryname" {
+		di as err "`anything' is an identifying variable loaded in the dataset, specify common variables"
+		di as text "To print the list of variables: " "{stata gmd, vars(list):gmd, vars(list)}"
+		di as text "To load the list of variables: " "{stata gmd, vars(load):gmd, vars(load)}"
 		exit 498
 	}
-	
 	
 	* Preserve 
 	preserve 
 	
-	* Add a capture to ensure we don't clear the data unless we have successfully imported the data
-	cap noisily {
-    
-    * Store country list
-    local countrylist Afghanistan-AFG Albania-ALB Algeria-DZA "American Samoa-ASM" Andorra-AND Angola-AGO Anguilla-AIA Antarctica-ATA "Antigua and Barbuda-ATG" Argentina-ARG Armenia-ARM Aruba-ABW Australia-AUS Austria-AUT Azerbaijan-AZE Bahamas-BHS Bahrain-BHR Bangladesh-BGD Barbados-BRB Belarus-BLR Belgium-BEL Belize-BLZ Benin-BEN Bermuda-BMU Bhutan-BTN Bolivia-BOL "Bonaire, Sint Eustatius and Saba-BES" "Bosnia and Herzegovina-BIH" Botswana-BWA "Bouvet Island-BVT" Brazil-BRA "British Indian Ocean Territory-IOT" "British Virgin Islands-VGB" Brunei-BRN Bulgaria-BGR "Burkina Faso-BFA" Burundi-BDI Cambodia-KHM Cameroon-CMR Canada-CAN "Cape Verde-CPV" "Cayman Islands-CYM" "Central African Republic-CAF" Chad-TCD Chile-CHL China-CHN "Christmas Island-CXR" "Cocos (Keeling) Islands-CCK" Colombia-COL Comoros-COM "Cook Islands-COK" "Costa Rica-CRI" Croatia-HRV Cuba-CUB Curaçao-CUW Cyprus-CYP "Czech Republic-CZE" Czechoslovakia-CSK "Democratic Republic of Yemen-YMD" "Democratic Republic of the Congo-COD" Denmark-DNK Djibouti-DJI Dominica-DMA "Dominican Republic-DOM" Ecuador-ECU Egypt-EGY "El Salvador-SLV" "Equatorial Guinea-GNQ" Eritrea-ERI Estonia-EST Eswatini-SWZ Ethiopia-ETF "Falkland Islands-FLK" "Faroe Islands-FRO" Fiji-FJI Finland-FIN France-FRA "French Guiana-GUF" "French Polynesia-PYF" "French Southern Territories-ATF" Gabon-GAB Gambia-GMB Georgia-GEO "German Democratic Republic-DDR" Germany-DEU Ghana-GHA Gibraltar-GIB Greece-GRC Greenland-GRL Grenada-GRD Guadeloupe-GLP Guam-GUM Guatemala-GTM Guernsey-GGY Guinea-GIN "Guinea-Bissau-GNB" Guyana-GUY Haiti-HTI "Heard Island and McDonald Islands-HMD" "Holy See-VAT" Honduras-HND "Hong Kong-HKG" Hungary-HUN Iceland-ISL India-IND Indonesia-IDN Iran-IRN Iraq-IRQ Ireland-IRL "Isle of Man-IMN" Israel-ISR Italy-ITA "Ivory Coast-CIV" Jamaica-JAM Japan-JPN Jersey-JEY Jordan-JOR Kazakhstan-KAZ Kenya-KEN Kiribati-KIR Kosovo-XKX Kuwait-KWT Kyrgyzstan-KGZ Laos-LAO Latvia-LVA Lebanon-LBN Lesotho-LSO Liberia-LBR Libya-LBY Liechtenstein-LIE Lithuania-LTU Luxembourg-LUX Macau-MAC Macedonia-MKD Madagascar-MDG Malawi-MWI Malaysia-MYS Maldives-MDV Mali-MLI Malta-MLT "Marshall Islands-MHL" Martinique-MTQ Mauritania-MRT Mauritius-MUS Mayotte-MYT Mexico-MEX "Micronesia (Federated States of)-FSM" Moldova-MDA Monaco-MCO Mongolia-MNG Montenegro-MNE Montserrat-MSR Morocco-MAR Mozambique-MOZ Myanmar-MMR Namibia-NAM Nauru-NRU Nepal-NPL Netherlands-NLD "Netherlands Antilles-ANT" "New Caledonia-NCL" "New Zealand-NZL" Nicaragua-NIC Niger-NER Nigeria-NGA Niue-NIU "Norfolk Island-NFK" "North Korea-PRK" "Northern Mariana Islands-MNP" Norway-NOR Oman-OMN Pakistan-PAK Palau-PLW Palestine-PSE Panama-PAN "Papua New Guinea-PNG" Paraguay-PRY Peru-PER Philippines-PHL Pitcairn-PCN Poland-POL Portugal-PRT "Puerto Rico-PRI" Qatar-QAT "Republic of the Congo-COG" Romania-ROU "Russian Federation-RUS" Rwanda-RWA Réunion-REU "Saint Barthélemy-BLM" "Saint Helena, Ascension and Tristan da Cunha-SHN" "Saint Kitts and Nevis-KNA" "Saint Lucia-LCA" "Saint Martin-MAF" "Saint Pierre and Miquelon-SPM" "Saint Vincent and the Grenadines-VCT" Samoa-WSM "San Marino-SMR" "Sao Tome and Principe-STP" "Saudi Arabia-SAU" Senegal-SEN Serbia-SRB "Serbia and Montenegro-SCG" Seychelles-SYC "Sierra Leone-SLE" Singapore-SGP "Sint Maarten-SXM" Slovakia-SVK Slovenia-SVN "Solomon Islands-SLB" Somalia-SOM "South Africa-ZAF" "South Georgia and the South Sandwich Islands-SGS" "South Korea-KOR" "South Sudan-SSD" "Soviet Union-SUN" Spain-ESP "Sri Lanka-LKA" Sudan-SDN Suriname-SUR "Svalbard and Jan Mayen-SJM" Sweden-SWE Switzerland-CHE Syria-SYR Taiwan-TWN Tajikistan-TJK Tanzania-TZA Thailand-THA "Timor-Leste-TLS" Togo-TGO Tokelau-TKL Tonga-TON "Trinidad and Tobago-TTO" Tunisia-TUN Turkey-TUR Turkmenistan-TKM "Turks and Caicos Islands-TCA" Tuvalu-TUV "US Virgin Islands-VIR" Uganda-UGA Ukraine-UKR "United Arab Emirates-ARE" "United Kingdom-GBR" "United States-USA" "United States Minor Outlying Islands-UMI" Uruguay-URY Uzbekistan-UZB Vanuatu-VUT Venezuela-VEN Vietnam-VNM "Wallis and Futuna-WLF" "Western Sahara-ESH" Yemen-YEM Yugoslavia-YUG Zambia-ZMB Zimbabwe-ZWE "Åland Islands-ALA"
-    
-    * Base URLs for the data
-    local base_url "http://www.globalmacrodata.com"
-    
-    * Display package information
-    di as text "Global Macro Database by Müller et. al (2025)"
-    di as text "Website: https://www.globalmacrodata.com"
-    di as text ""
-	
-	* Determine current version
-	cap qui import delimited using "https://raw.githubusercontent.com/KMueller-Lab/Global-Macro-Database/refs/heads/main/data/helpers/versions.csv", clear varnames(1)
-	if _rc != 0 {
-		di as error "Error: Unable to access version information. Check internet connection."
-		exit 498
-	}
-	qui gen year = substr(versions, 1, 4)
-	qui gen month = substr(versions, -2, 2)
-	qui destring year month, replace
-	gsort -year -month
-	local current_version = versions in 1	
-	qui levelsof versions, local(available_versions) clean
-	clear
+	* Using the local version 
+	if "`gmd_df'" == "" & "`raw'" == "" {
+		* Now check if the local version exist, use it if it does, otherwise, load it and save it (if we have the permission).
+		local personal_folder "`c(sysdir_plus)'"
 		
-	* Check if the variable exist
-	if "`anything'" != "" {
-    local varlist "nGDP rGDP rGDP_USD rGDP_pc deflator cons cons_GDP rcons inv inv_GDP finv finv_GDP exports exports_GDP imports imports_GDP CA CA_GDP USDfx REER govexp govexp_GDP govrev govrev_GDP govtax govtax_GDP govdef govdef_GDP govdebt govdebt_GDP HPI CPI infl pop unemp strate ltrate cbrate M0 M1 M2 M3 M4 CurrencyCrisis BankingCrisis SovDebtCrisis"
-	
-	* Count the number of variables
-	local word_count = wordcount("`anything'")
-    
-    * Parse each word in `anything` as a separate variable
-    foreach var of local anything {
-        local var_exists = 0
-        
-        * Check if current variable exists in varlist
-        foreach valid_var of local varlist {
-            if "`var'" == "`valid_var'" {
-                local var_exists = 1
-                continue, break
-            }
-        }
-        
-        * If variable doesn't exist, display error and exit
-        if `var_exists' == 0 {
-            di as error "Invalid variable code: `var'"
-            di as text _newline "To see the list of valid variable codes, use: gmd, vars" _newline
-            exit 498
-        }
-    }
-	}
-	
-    
-	if "`vars'" != "" {
-		di as text _newline "Available variables:" _newline
-		di as text "{hline 90}"
-		di as text "Variable" _col(17) "Description"
-		di as text "{hline 90}"
-		
-		di as text "nGDP" _col(17) "Nominal Gross Domestic Product"
-		di as text "rGDP" _col(17) "Real Gross Domestic Product, in 2010 prices"
-		di as text "rGDP_pc" _col(17) "Real Gross Domestic Product per Capita"
-		di as text "rGDP_USD" _col(17) "Real Gross Domestic Product in USD"
-		di as text "deflator" _col(17) "GDP deflator"
-		di as text "cons" _col(17) "Total Consumption"
-		di as text "rcons" _col(17) "Real Total Consumption"
-		di as text "cons_GDP" _col(17) "Total Consumption as % of GDP"
-		di as text "inv" _col(17) "Total Investment"
-		di as text "inv_GDP" _col(17) "Total Investment as % of GDP"
-		di as text "finv" _col(17) "Fixed Investment"
-		di as text "finv_GDP" _col(17) "Fixed Investment as % of GDP"
-		di as text "exports" _col(17) "Total Exports"
-		di as text "exports_GDP" _col(17) "Total Exports as % of GDP"
-		di as text "imports" _col(17) "Total Imports"
-		di as text "imports_GDP" _col(17) "Total Imports as % of GDP"
-		di as text "CA" _col(17) "Current Account Balance"
-		di as text "CA_GDP" _col(17) "Current Account Balance as % of GDP"
-		di as text "USDfx" _col(17) "Exchange Rate against USD"
-		di as text "REER" _col(17) "Real Effective Exchange Rate, 2010 = 100"
-		di as text "govexp" _col(17) "Government Expenditure"
-		di as text "govexp_GDP" _col(17) "Government Expenditure as % of GDP"
-		di as text "govrev" _col(17) "Government Revenue"
-		di as text "govrev_GDP" _col(17) "Government Revenue as % of GDP"
-		di as text "govtax" _col(17) "Government Tax Revenue"
-		di as text "govtax_GDP" _col(17) "Government Tax Revenue as % of GDP"
-		di as text "govdef" _col(17) "Government Deficit"
-		di as text "govdef_GDP" _col(17) "Government Deficit as % of GDP"
-		di as text "govdebt" _col(17) "Government Debt"
-		di as text "govdebt_GDP" _col(17) "Government Debt as % of GDP"
-		di as text "HPI" _col(17) "House Price Index"
-		di as text "CPI" _col(17) "Consumer Price Index, 2010 = 100"
-		di as text "infl" _col(17) "Inflation Rate"
-		di as text "pop" _col(17) "Population"
-		di as text "unemp" _col(17) "Unemployment Rate"
-		di as text "strate" _col(17) "Short-term Interest Rate"
-		di as text "ltrate" _col(17) "Long-term Interest Rate"
-		di as text "cbrate" _col(17) "Central Bank Policy Rate"
-		di as text "M0" _col(17) "M0 Money Supply"
-		di as text "M1" _col(17) "M1 Money Supply"
-		di as text "M2" _col(17) "M2 Money Supply"
-		di as text "M3" _col(17) "M3 Money Supply"
-		di as text "M4" _col(17) "M4 Money Supply"
-		di as text "SovDebtCrisis" _col(17) "Sovereign Debt Crisis"
-		di as text "CurrencyCrisis" _col(17) "Currency Crisis"
-		di as text "BankingCrisis" _col(17) "Banking Crisis"
-		
-		di as text "{hline 90}"
-		exit _rc
-	}
-	
-	* Process version option
-    if "`version'" != "" {
-	
-    * Handle current version explicitly
-    if lower("`version'") == "current" {
-        local data_url "`base_url'/GMD_`current_version'.dta"
-    }
-	
-    else {
-		* Validate year and quarter
-        if !`: list version in available_versions' {
-			di as error "Error: `version' is not valid"
-			di as text "Available versions are: `available_versions'"
-			di as text "The current version is: `current_version'"
-			exit 498
+		* Check if the dataset is saved locally
+		cap confirm file "`c(sysdir_plus)'g/GMD_`selected_version'.dta"
+
+		* If it's saved locally, store its path in a local macro
+		if _rc == 0 {
+			local saved_gmd "yes"
+			local gmd_df "`personal_folder'g/GMD_`selected_version'.dta"
+			qui use "`gmd_df'", clear 
 		}
-        
-        * If we get here, format is valid
-        local data_url "`base_url'/GMD_`version'.dta"
-		}
-		
-		local current_version "`version'"
-	}
-	
-    else {
-        * Default to current base URL
-        local data_url "`base_url'/GMD_`current_version'.dta"
-    }
-	
-	
-    
-    * If country specified, validate it against the list
-    if "`country'" != "" {
-        local country = upper("`country'")
-        local valid = 0
-        
-        foreach pair of local countrylist {
-            local ccode = substr("`pair'", -3, 3)
-            if "`country'" == "`ccode'" {
-                local valid = 1
-                continue, break
-            }
-        }
-        
-        if `valid' == 0 {
-            di as error "Error: Invalid country code '`country''"
-            di as text _newline "To see the list of valid country codes, use: gmd, iso" _newline
-			exit 498
-        }
-		
-    }
-	
-	* Print the list of countries 
-	if "`iso'" != "" {
-		di as text "{hline 60}"
-		di as text "Country and territories" _col(50) "Code"
-		di as text "{hline 60}"
-		
-		foreach pair of local countrylist {
-			local cname = substr("`pair'", 1, strlen("`pair'") - 4)
-			local ccode = substr("`pair'", -3, 3)
-			di as text "`cname'" _col(50) "`ccode'"
-		}
-		
-		di as text "{hline 60}"
-		exit _rc
-	}
-	
-    
-    * Always clear existing data
-    clear
-    
-    * Load data based on whether variables are specified
-    cap noisily {
-    if "`raw'" != "" {
-		
-		* Make sure that only one variable is selected
-		if `word_count' > 1 {
-			di as error "Warning: raw requires specifying exactly one variable (not more, not less)."
-			exit _rc
-		}
-		
-        * Raw option is specified
-        if "`anything'" == "" {
-            * No variable specified, import first sheet with warning
-            di as error "Warning: No variable specified."
-            di as text "Note: Raw data is only accessed variable-wise using: gmd [variable], raw"
-			di as text `"To download the full data documentation: {browse "https://www.globalmacrodata.com/GMD.xlsx":https://www.globalmacrodata.com/GMD.xlsx}"'
-			exit _rc
-        }
-        else {
-            * Variable specified, import that specific sheet
-            di "Importing raw data for variable: `anything'"
-            qui import delimited using "`base_url'/`anything'_`current_version'.csv", clear case(preserve)
-			
-			* Set up the panel
-			qui encode ISO3, gen(id)
-			qui xtset id year 
-			
-			* Order the variable and sort the data 
-			order ISO3 countryname id year 
-			sort countryname year
-			
-        }
-    }
-    else {
-        * Original functionality for non-raw option
-        if "`anything'" == "" {
-            qui use "`data_url'"
-        }
-        else {
-			* If we are selecting one variable, import the csv because it's faster
-			if `word_count' == 1 {
-				di "Importing data for variable: `anything'"
-				qui import delimited using "`base_url'/`anything'_`current_version'.csv", clear case(preserve)
-				
-				* Set up the panel
-				qui encode ISO3, gen(id)
-				qui xtset id year 
-				
-				* Keep the variable demanded 
-				qui keep ISO3 year id countryname `anything'
-			}
-			
-			* Otherwise use the excel
-			else {
-				qui use ISO3 year id countryname `anything' using "`data_url'"
-			}
-			
-			* Order the variable and sort the data 
-			order ISO3 countryname id year 
-			sort countryname year
-        }
-    }
-}
-	
-    * If country specified, filter for that country
-    if "`country'" != "" {
-        qui keep if ISO3 == "`country'"
-        di as text "Filtered data for country: `country'"
-    }
-    
-    * Display final dataset dimensions
-	cap missings dropvars, force
-	qui describe
-	if r(k) < 5 {
-		di "The database has no data on `anything' for `country'"
-		clear
-		exit 498
-	}
-	else {
-		qui: describe
-		if r(N) > 0 {
-		if "`raw'" != "" {
-			local n_sources = `r(k)' - 8
-			di as text "Final dataset: `r(N)' observations of `n_sources' sources"
-			
-			* Display version information
-			if "`version'" != "" {
-				di as text "Version: `version'"
+		* If the dataset is not saved locally, load it and save it locally
+		else if "`fast'" == "yes" {		
+			cap qui use "https://gmd-releases.s3.ap-southeast-2.amazonaws.com/data/distribute/GMD_`selected_version'.dta", clear 
+			if _rc == 0 {
+				qui save "`personal_folder'g/GMD_`selected_version'.dta", replace
+				qui save "`personal_folder'g/GMD.dta", replace // Load in case the user doesn't have internet 
+				di as text "GMD dataset loaded and saved locally in `personal_folder'g."
+				local gmd_df "`personal_folder'g/GMD_`selected_version'.dta"
+				qui use "`gmd_df'", clear 
 			}
 			else {
-				di as text "Version: `current_version'"
+				di `"Unable to load the data. Please raise an issue at {browse "https://github.com/KMueller-Lab/Global-Macro-Database-Stata"}."'
+				restore 
+				exit 498
 			}
-			
-			* Order the variable and sort the data 
-			order ISO3 countryname id year 
-			sort countryname year
 		}
-
+		
 		else {
-		di as text "Final dataset: `r(N)' observations of `r(k)' variables"
-
-		* Display version information
-		if "`version'" != "" {
-			di as text "Version: `version'"
+			cap qui use "https://gmd-releases.s3.ap-southeast-2.amazonaws.com/data/distribute/GMD_`selected_version'.dta", clear 
 		}
-		else {
-			di as text "Version: `current_version'"
-		}
-
-		* Order the variable and sort the data 
-		order ISO3 countryname id year 
-		sort countryname year
-		}	
-	}
-}
-
 	}
 	
-	if _rc != 0 {
-    restore    
-    exit _rc
-}
-else {
-    restore, not    
-}
+	else if "`gmd_df'" != "" & "`raw'" == "" {
+		qui use "`gmd_df'", clear 
+	}
+	
+	restore, not
+	
+    * --- BRANCH 4: MAIN DATASET ---		
+    * Only runs if country is not load/list AND no other data was loaded above
+    if "`anything'" != "" & "`raw'" == "" {
+	   
+			* Opens specified version (default = current version)
+			
+            cap confirm variable `anything', exact
+            if _rc == 0 {
+                qui keep ISO3 year id countryname `anything'
+                
+				* Keep observations after first year with data
+				qui egen valid_count = rownonmiss(`anything')
+				qui bysort ISO3 (year): drop if sum(valid_count) == 0
+				qui drop valid_count
+				
+            }
+            else {  
+                * Handle multiple invalid variables
+                local invalid_vars ""
+                foreach var of local anything {
+                    cap confirm variable `var'
+                    if _rc != 0 {
+                        local invalid_vars "`invalid_vars' `var'"
+                    }
+                }
+                local var_count = wordcount("`invalid_vars'")
+				if `var_count' == 1 {
+					di as err "`invalid_vars' is not a valid variable code"
+				}
+				else {
+					di as err "`invalid_vars' are not valid variable codes"
+				}
+				di as text "To print the list of variables: " "{stata gmd, vars(list):gmd, vars(list)}"
+				di as text "To load the list of variables: " "{stata gmd, vars(load):gmd, vars(load)}"
+                exit 498
+            }
+    }
 
+********************************************************************************
+* Country option (helpers & filtering)
+* Applies to whichever dataset is currently loaded in memory
+********************************************************************************
+    
+    * Actual filtering 
+    if "`country'" != "" {
+        * Clean input string (remove commas, uppercase)
+        local country = subinstr("`country'", ",", " ", .)
+        local country = trim(itrim(upper("`country'")))
+        local countries_num = wordcount("`country'")
+        
+        * Case: Single country
+        if `countries_num' == 1 {
+            qui count if ISO3 == "`country'"
+            if `r(N)' == 0 {                    
+                di as err "Country code is invalid or no data for this country in source."
+				di as text "To print the list of countries: " "{stata gmd, country(list):gmd, country(list)}"
+				di as text "To load the list of countries: " "{stata gmd, country(load):gmd, country(load)}"
+                exit 498
+            }
+            else {
+                qui keep if ISO3 == "`country'"
+            }
+        }
+        * Case: Multiple countries
+        else {
+            qui gen keep_country = . 
+            local invalid_countries ""
+            foreach iso of local country {
+                qui count if ISO3 == "`iso'"
+                if r(N) == 0 {
+                    local invalid_countries "`invalid_countries' `iso'"
+                }
+                else {
+                    qui replace keep_country = 1 if ISO3 == "`iso'"
+                }                   
+            }
+            
+            * Check if we found any invalid codes
+            local invalid_countries = trim(itrim(upper("`invalid_countries'")))
+            if "`invalid_countries'" == "" {
+                qui keep if keep_country == 1 
+                drop keep_country
+            }
+            else {
+				local iso_count = wordcount("`invalid_countries'")
+				if `iso_count' == 1 {
+					di as err "`invalid_countries' is not a valid ISO3 code"
+				}
+				else {
+					di as err "`invalid_countries' are not valid ISO3 codes"
+				}
+				di as text "To print the list of countries: " "{stata gmd, country(list):gmd, country(list)}"
+				di as text "To load the list of countries: " "{stata gmd, country(load):gmd, country(load)}"
+				qui keep if keep_country == 1 
+				drop keep_country
+                exit 498
+            }
+        }                    
+    }
+
+********************************************************************************
+* Display dataset descriptives 
+********************************************************************************
+    
+    * Drop variables that are completely missing in the filtered subset
+    cap missings dropvars, force
+    qui describe
+    
+    * Dynamic variable count: Subtract identifiers from total count
+    local n_vars = r(k)
+    foreach v in ISO3 year id countryname {
+        cap confirm variable `v', exact
+        if _rc == 0 {
+            local n_vars = `n_vars' - 1
+        }
+    }
+
+    * If no data variables remain, warn user
+    if `n_vars' <= 0 { 
+        di as err "The database has no data on `anything' for `country'"
+        restore
+        exit 498
+    }
+    
+    * Print Final Summary
+    else {
+        qui describe
+        if r(N) > 0 {
+            
+            * Print GMD information and relevant papers to cite 
+            di as text "Global Macro Database by Müller, Xu, Lehbib, and Chen (2025)"
+            di as text `"Website: {browse "https://www.globalmacrodata.com"}"'
+            di as text ""
+            di as text "When using these data, please cite:"
+            di as text "{stata gmd, cite(GMD):[BibTeX code]} " `"{stata gmd, print(GMD): [APA-style citation]}"'                
+            di as text ""
+            di as text "When using the gmd Stata command, please further cite:"
+            di as text "{stata gmd, cite(lehbib2025gmd):[BibTeX code]} " `"{stata gmd, print(Stata): [APA-style citation]}"'
+            di as text ""
+			if "`fast'" == "" & "`saved_gmd'" != "yes" & "`raw'" == "" {
+				di as text "To save the data locally for faster reloading, use: " "{stata gmd, version(`selected_version') fast(yes):gmd, version(`selected_version') fast(yes)}"
+			}
+            * -------------------------------------------------
+
+            * Logic for raw/sources data (may lack countryname/id)
+            if "`raw'" != "" | "`sources'" != "" {
+                di as text "Final dataset: `r(N)' observations of `n_vars' variables"
+                if "`version'" != "" di as text "Version: `version'"
+                else di as text "Version: `selected_version'"
+            }
+            
+            * Logic for standard GMD data
+            else {
+                if `n_vars' > 1 di as text "Final dataset: `r(N)' observations for `n_vars' variables"
+                else di as text "Final dataset: `r(N)' observations for `n_vars' variable"
+
+                if "`version'" != "" di as text "Version: `version'"
+                else di as text "Version: `selected_version'"
+            }    
+        }
+    }
+    
 end

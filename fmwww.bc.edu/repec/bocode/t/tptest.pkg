@@ -1,0 +1,23 @@
+d 'TPTEST': module to implement Universal Turning Point & Inflection Point Test 
+d
+d   tptest is a universal post-estimation command for testing
+d turning points (U-shaped or inverse	 U-shaped relationships)
+d and inflection points. It provides a comprehensive battery of
+d modern    inference methods for the extreme point x* of fitted
+d nonlinear relationships. 
+d
+d KW: time series
+d KW: turning points
+d KW: inflection points
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260228
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f tptest.ado
+f tptest.sthlp
+f ../_/_tptest_graph.ado
+f ../_/_tptest_qgraph.ado

@@ -112,6 +112,7 @@ p touch module to create a blank data file
 p tpm module to estimate two-part cross-sectional models
 p tpoisson module to estimate truncated Poisson regression 
 p tpred module to generate predictions from Tobit model 
+p tptest module to implement Universal Turning Point & Inflection Point Test 
 p tpvar module to generate turning-point variable for graphics labelling
 p tr module providing prefix command to trace program execution
 p traces module to display traces of items
