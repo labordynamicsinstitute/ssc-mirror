@@ -6,14 +6,17 @@ d component tau-squared statistic after fitting a random-effects
 d meta-regression model using meta regress with the random()
 d option. It supports all random-effects estimation methods
 d currently available in Stata's meta suite. tau2ci uses the
-d standard error formulas implemented in the metafor package in R. 
+d standard error formulas implemented in the metafor package in R.
+d Note that the lower limit will be truncated at 0 if it is less
+d than 0, and the upper limit will be truncated at 1 if it is
+d greater than 1. 
 d
 d KW: meta regression
 d KW: tau-squared statistic
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20260131
+d Distribution-Date: 20260206
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org

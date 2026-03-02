@@ -1,0 +1,30 @@
+d 'XTBHST': module to implement bootstrap test for slope homogeneity in large panels.
+d
+d  xtbhst performs a block bootstrap test of slope homogeneity in
+d panels with a large number observations    of the cross-sectional
+d (N) and time (T) dimension.  The null hypothesis of the test is
+d of homogenous    slopes.  This implies all slope coefficients are
+d identical across cross-sectional units.    The test is a
+d block-bootstrapped version of Swamy's test for slope homogeneity,
+d evaluated using the	 resampling scheme proposed by Blomquist
+d and Westerlund (2015).  This procedure is asymptotically valid   
+d in the presence of serial correlation and cross-sectional
+d dependence of unknown form.  Unlike standard	  homogeneity tests
+d which impose asymptotic critical values, the bootstrap corrects
+d for finite-sample    size distortions and accommodates
+d complicated unobserved dependencies simply through block
+d resampling. 
+d
+d KW: time series
+d KW: panel data
+d KW: slope homogeneity
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260301
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtbhst.ado
+f xtbhst.sthlp

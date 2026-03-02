@@ -1793,6 +1793,7 @@ fmwww.bc.edu/repec/bocode/x/xtab_s1h.dta
 fmwww.bc.edu/repec/bocode/x/xtmixed_corr.html
 fmwww.bc.edu/repec/bocode/x/xtcd2.pkg
 fmwww.bc.edu/repec/bocode/x/xtserialpm.pkg
+fmwww.bc.edu/repec/bocode/x/xtbhst.ado
 fmwww.bc.edu/repec/bocode/x/xtmixedioupredict.ado
 fmwww.bc.edu/repec/bocode/x/xtpqml.ado
 fmwww.bc.edu/repec/bocode/x/xbrcspline.html
@@ -1907,6 +1908,7 @@ fmwww.bc.edu/repec/bocode/x/xtendothresdpd_p.ado
 fmwww.bc.edu/repec/bocode/x/xtregwhm.dlg
 fmwww.bc.edu/repec/bocode/x/xtpmg.sthlp
 fmwww.bc.edu/repec/bocode/x/xtidt.dlg
+fmwww.bc.edu/repec/bocode/x/xtbhst.sthlp
 fmwww.bc.edu/repec/bocode/x/xtmrho.hlp
 fmwww.bc.edu/repec/bocode/x/xtmod.html
 fmwww.bc.edu/repec/bocode/x/xtbalance.pkg
@@ -2209,6 +2211,7 @@ fmwww.bc.edu/repec/bocode/x/xtnondynthreshsfa.ado
 fmwww.bc.edu/repec/bocode/x/xmfp.html
 fmwww.bc.edu/repec/bocode/x/xtpedroni.sthlp
 fmwww.bc.edu/repec/bocode/x/xtdhcoint_example.do
+fmwww.bc.edu/repec/bocode/x/xtbhst.pkg
 fmwww.bc.edu/repec/bocode/x/xls2stata.pkg
 fmwww.bc.edu/repec/bocode/x/xcontract.html
 fmwww.bc.edu/repec/bocode/x/xtpatternvar.html
