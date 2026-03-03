@@ -1,0 +1,29 @@
+d 'MULTISPLINE': module to perform nonlinear multilevel spline modeling
+d
+d    multispline fits nonlinear multilevel regression models using
+d natural cubic spline basis expansion.    It provides a unified
+d workflow for fitting, predicting, visualizing, and summarizing
+d nonlinear    effects in hierarchical or longitudinal data.	The
+d command is particularly suited to large-scale education and
+d health datasets such as ECLS-K,    HSLS, and PISA where outcomes
+d are expected to have nonlinear relationships with predictors such
+d as	socioeconomic status (SES) or treatment dosage.    While
+d Stata provides mixed for multilevel models and mkspline for
+d spline construction, no existing    Stata command provides a
+d unified workflow for fitting, predicting, visualizing, and
+d computing ICCs    from nonlinear multilevel models.  multispline
+d fills this gap. 
+d
+d KW: splines
+d KW: panel data
+d
+d Requires: Stata version 14.1
+d
+d Distribution-Date: 20260302
+d
+d Author:   Subir Hait  , Michigan State University
+d Support: email  haitsubi@@msu.edu
+d
+f multispline.ado
+f multispline.sthlp
+f multispline_example.do

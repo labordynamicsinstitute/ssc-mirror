@@ -128,7 +128,7 @@ specify a csv file to save the csv output in.{p_end}
     row columns{p_end}
 	{synopt :{opt not:otal}}Exclude the Total column.{p_end}
 	{synopt :{opt nop:value}}Exclude the P-value column.{p_end}
-    {synopt :{opt col:umnorder}}Chose sets of column number (>1, <8) to show.{p_end}
+    {synopt :{opt col:umnorder}}Chose sets of column number (>1) to show.{p_end}
 	{synopt:{opt cap:tion(string)}}Caption for the output. Same as the {opt ti:tle} option.{p_end}
 	{synopt:{opt ti:tle(string)}}Title for the output. Same as the {opt cap:tion} option.
         The {opt ti:tle} option overwrites the {opt cap:tion} option.{p_end}
@@ -187,6 +187,9 @@ specify a csv file to save the csv output in.{p_end}
 
 {phang}Adding a missing report:{p_end}
 {phang}{stata basetable low race(c) age(%6.2f), missing}{p_end}
+
+{phang}Select and change columnn order:{p_end}
+{phang}{stata basetable low race(c) age(%6.2f), columnorder(4,2)}{p_end}
 
 {phang}Adding sub report on young (age < 20) mothers:{p_end}
 {phang}{stata basetable low race(c) age(%6.2f) [Young mothers #, if age < 20] race(c) age(%6.2f), missing}{p_end}

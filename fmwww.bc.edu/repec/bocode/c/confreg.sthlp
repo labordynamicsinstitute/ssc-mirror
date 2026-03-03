@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 14 Nov 2025}{...}
+{* *! version 1.2 2026-03-01}{...}
 {vieweralsosee "" "--"}{...}
 {viewerjumpto "Syntax" "confreg##syntax"}{...}
 {viewerjumpto "Description" "confreg##description"}{...}

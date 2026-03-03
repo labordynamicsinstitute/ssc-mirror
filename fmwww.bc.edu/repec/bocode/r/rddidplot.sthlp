@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.2.1  01Feb2026}{...}
+{* *! version 2.3.0  02Mar2026}{...}
 {viewerjumpto "Syntax" "rddidplot##syntax"}{...}
 {viewerjumpto "Description" "rddidplot##description"}{...}
 {viewerjumpto "Options" "rddidplot##options"}{...}

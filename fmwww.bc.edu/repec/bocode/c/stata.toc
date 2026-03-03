@@ -223,6 +223,7 @@ p confa module to perform confirmatory factor analysis modeling
 p confall module to plot and display estimates to assess confounding
 p confirmdir module to confirm if a directory exists
 p confnd module to plot and display estimates to assess confounding
+p confreg module to compute confusion matrix (Accuracy measures) estimated by mixed regression and nlcom
 p confsvy module to assess confounding effects in survey studies 
 p conindex module to perform estimation of concentration indices
 p conjoint module to analyse and visualise conjoint (factorial) experiments

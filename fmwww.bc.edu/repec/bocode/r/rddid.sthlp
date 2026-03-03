@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.2.1  01Feb2026}{...}
+{* *! version 2.3.0  02Mar2026}{...}
 {viewerjumpto "Syntax" "rddid##syntax"}{...}
 {viewerjumpto "Description" "rddid##description"}{...}
 {viewerjumpto "Options" "rddid##options"}{...}
@@ -86,29 +86,49 @@ When groups share the same units (e.g., panel pre/post), use {opt bootstrap} to 
 {marker examples}{...}
 {title:Examples}
 
-{phang}1. Standard estimation (Common bandwidth, analytic SEs){p_end}
-{phang}{cmd:. rddid outcome score, group(treated)}{p_end}
+{pstd}
+The following examples use {cmd:rddid_example}, a bundled synthetic dataset.
+It simulates a rural electrification policy study in which two neighboring regions each have an
+internal electrification zone boundary. Region A ({cmd:group}=1) implemented an electrification
+program inside its zone; Region B ({cmd:group}=0) did not. The running variable {cmd:distance}
+measures kilometers from the zone boundary (negative = outside, positive = inside), with the
+cutoff at 0. The true DiDC is 1.5 (tau_treated = 2.0, tau_control = 0.5).
 
-{phang}2. Non-zero cutoff{p_end}
-{phang}{cmd:. rddid outcome score, group(treated) c(50)}{p_end}
+{p2colset 9 28 30 2}{...}
+{p2col:{cmd:income_idx}}household income index (outcome){p_end}
+{p2col:{cmd:distance}}km from electrification zone boundary (running variable){p_end}
+{p2col:{cmd:group}}1 = Region A / treated, 0 = Region B / control{p_end}
+{p2col:{cmd:clusterid}}village cluster identifier{p_end}
+{p2col:{cmd:female}}female respondent (1 = yes){p_end}
+{p2col:{cmd:age}}respondent age in years{p_end}
+{p2colreset}{...}
+
+{phang}{cmd:. findfile rddid_example.dta}{p_end}
+{phang}{cmd:. use `r(fn)', clear}{p_end}
+
+{phang}1. Standard estimation (common bandwidth, analytic SEs){p_end}
+{phang}{cmd:. rddid income_idx distance, group(group)}{p_end}
+
+{phang}2. Conventional estimation with cluster-robust SEs and covariates{p_end}
+{phang}{cmd:. rddid income_idx distance, group(group) est(conventional) ///}{p_end}
+{phang}{cmd:.     vce(cluster clusterid) covs(female age)}{p_end}
 
 {phang}3. Independent bandwidths for Treated and Control groups{p_end}
-{phang}{cmd:. rddid outcome score, group(treated) bw(independent)}{p_end}
+{phang}{cmd:. rddid income_idx distance, group(group) bw(independent)}{p_end}
 
-{phang}4. Manual asymmetric bandwidths (Treated: 5 Left/10 Right; Control: 5 Left/5 Right){p_end}
-{phang}{cmd:. rddid outcome score, group(treated) h(5 10 5 5)}{p_end}
+{phang}4. Manual asymmetric bandwidths (Treated: 50 Left/75 Right; Control: 40 Left/60 Right){p_end}
+{phang}{cmd:. rddid income_idx distance, group(group) h(50 75 40 60)}{p_end}
 
-{phang}5. Bootstrapped standard errors (200 reps, reproducible){p_end}
-{phang}{cmd:. rddid outcome score, group(treated) bootstrap reps(200) seed(12345)}{p_end}
+{phang}5. Bootstrapped standard errors with cluster resampling (200 reps, reproducible){p_end}
+{phang}{cmd:. rddid income_idx distance, group(group) bootstrap reps(200) seed(42) ///}{p_end}
+{phang}{cmd:.     vce(cluster clusterid)}{p_end}
 
-{phang}6. Bootstrapped standard errors with cluster resampling{p_end}
-{phang}{cmd:. rddid outcome score, group(treated) bootstrap reps(200) vce(cluster id)}{p_end}
+{phang}6. CER-optimal bandwidth selector{p_end}
+{phang}{cmd:. rddid income_idx distance, group(group) bwselect(cerrd)}{p_end}
 
-{phang}7. Conventional estimation (non-bias-corrected){p_end}
-{phang}{cmd:. rddid outcome score, group(treated) est(conventional)}{p_end}
-
-{phang}8. CER-optimal bandwidth selector{p_end}
-{phang}{cmd:. rddid outcome score, group(treated) bwselect(cerrd)}{p_end}
+{phang}7. RD plots (postestimation){p_end}
+{phang}{cmd:. rddid income_idx distance, group(group) est(conventional)}{p_end}
+{phang}{cmd:. rddidplot, title("Rural Electrification: DiDC Estimates")}{p_end}
 
 {marker saved_results}{...}
 {title:Saved Results}
@@ -150,6 +170,27 @@ When groups share the same units (e.g., panel pre/post), use {opt bootstrap} to 
 {title:Also see}
 
 {pstd}{help rddidplot:rddidplot} — postestimation command for side-by-side RD plots{p_end}
+
+{marker citation}{...}
+{title:Citation}
+
+{p 4 4 2}
+Please cite the following paper when using this command:
+
+{p 8 8 2}
+Dries, Jonathan (2025). "Corporations as the State: Concessions, Urbanization, and Long-Run Development in the Copperbelt." {it:African Economic History Network Working Paper No. 85}.
+
+{p 4 4 2}
+Use the following BibTeX entry:
+
+{break}
+@techreport{rddid_2025,
+{break}  title={Corporations as the State: Concessions, Urbanization, and Long-Run Development in the Copperbelt},
+{break}  author={Dries, Jonathan},
+{break}  year={2025},
+{break}  institution={African Economic History Network},
+{break}  type={Working Paper No. 85}
+{break}}
 
 {marker author}{...}
 {title:Author}

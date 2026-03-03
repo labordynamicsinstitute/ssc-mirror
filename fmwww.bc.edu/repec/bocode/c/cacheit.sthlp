@@ -47,8 +47,11 @@
 {synopt :{opt nodata}}Does not cache data if changes occur in data{p_end}
 {synopt :{opt datacheck(string)}}Allows for data on disk to be checked to ensure command uniqueness{p_end}
 {synopt :{opt framecheck(string)}}Allows for additional frames to be checked to ensure command uniqueness{p_end}
+{synopt :{opt external_api(string)}}Incorporates external API identifiers into the cache key for uniqueness{p_end}
+{synopt :{opt rngcache}}Includes the random-number generator (RNG) state in the cache key{p_end}
 {synopt :{opt clear}}Allows command to proceed even if this saves over data currently in memory{p_end}
 {synopt :{opt hidden}}Does not return hidden elements as visible stored results{p_end}
+{synopt :{opt hidden_dir}}Use a hidden cache subdirectory named .cache instead of _cache{p_end}
 {synopt :{opt replace}}Re-runs command and saves over previously cached version{p_end}
 {synopt :{opt keep:all}}Does not clear previous ereturn and sreturn lists, permitting future use{p_end}
 {synoptline}
@@ -119,10 +122,11 @@ should be used with care, as any contents of the cache directory will be permane
 To avoid issues with potential loss of important information, the {opt clean} sub-command does
 NOT work recursively.  For example, if various projects are located within a main cache subfolder,
 these must be cleaned individually by using the {opt dir()} and/or {opt project()} options.
+You can also target the hidden {.cache} directory by adding {opt hidden_dir}.
  
 {phang}
 {opt list} Lists the full history of cached commands available for re-loading in the current
-cache directory.  
+cache directory. Add {opt hidden_dir} to list items in the hidden {.cache} directory.
 
 
 
@@ -138,6 +142,9 @@ define the path in the global macro {opt cache_dir} within your
 {help profile:profile.do} file or at the beginning of your do-file. The _cache 
 subdirectory will be created inside the directory specified in global 
 {opt cache_dir}.
+
+{pmore} Note: If you use {opt hidden_dir}, it overrides both {opt dir()} and the {opt cache_dir} global,
+always using a {.cache} directory in the current working directory.
 
  
 {phang}
@@ -179,6 +186,28 @@ the precise contents of any frames indicated in {opt framecheck}.  As many frame
 in {opt framecheck} as desired, and the name of each frame should simply be separated by white space.
 
 {phang}
+{opt external_api(string)} When using commands that retrieve data or information from external APIs
+(e.g., web services, remote databases, online repositories), the same command syntax may produce different
+results over time as the external source changes. Specify a string in {opt external_api} that uniquely
+identifies the current state or version of the external resource (e.g., a timestamp, version number,
+API response hash, or dataset identifier). This string is incorporated into the cache key so that {cmd:cacheit}
+will recognize when the external source has changed and create a distinct cache entry.
+
+{pmore} For example, if a command fetches data from an API that returns a version ID or last-modified
+timestamp, pass that information to {opt external_api} to ensure different versions are cached separately.
+
+{phang}
+{opt rngcache} By default, {cmd:cacheit} ignores the state of Stata's random-number generator (RNG)
+when constructing the cache key, so two commands that differ only by random draws will map to the
+same cached result. Specifying {opt rngcache} appends the current RNG state to the cache key so that
+commands involving randomness (e.g., {help bootstrap}, {help simulate}, resampling procedures, random
+splits) produce distinct caches for different RNG states.
+
+{pmore} For reproducibility, you may also set a seed with {cmd:seed(#)} in the {cmd:cacheit} options.
+When {opt rngcache} is set, the combination of the command, data signature, and RNG state determines
+uniqueness of the cache.
+
+{phang}
 {opt clear} Allows command implementation to proceed even if this would unsaved changes in 
 data (similar, for example, to {it: use, clear})
 
@@ -191,6 +220,11 @@ elements to stay hidden, the {opt hidden} option should be specified.
 and
 {mansection P returnRemarksandexamplesProgramminghiddenandhistoricalstoredresults:{it:Programming hidden and historical stored results}}
 under {it:Remarks and examples} of {bf:[P] return} for more information. 
+
+{phang}
+{opt hidden_dir} Generates a hidden cache directory named {.cache} in the current working directory,
+overriding any {opt dir()} option or {opt cache_dir} global setting. When combined with {opt project()},
+the project folder is created inside the {.cache} directory. 
 
 {phang}
 {opt replace} Forces {cmd:cacheit} to re-run the command and re-cache results, even if a 
@@ -223,6 +257,7 @@ default behaviour.
 {synopthdr:Global name and value}
 {synoptline}
 {synopt :{opt cache_replace} replace}Automatically activates the replace option, overwriting the cache each time.{p_end}
+{synopt :{opt cache_keepall} keepall}Automatically activates the keepall option, preserving previous return lists.{p_end}
 {synopt :{opt cache_on} off} Bypasses caching entirely (effectively ignoring the {it: cacheit:} prefix if present).{p_end}
 {synopt :{opt cache_prefix} string} Define a prefix for saving cached contents, overriding the default {it: _ch} used in the prefix
 option with any {it: string} defined by the user.{p_end}

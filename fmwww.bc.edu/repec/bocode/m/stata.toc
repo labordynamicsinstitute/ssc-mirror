@@ -277,6 +277,7 @@ p multisite_regitt module to compute the coefficients from a regression of site-
 p multisite_reglate module to Estimates the sign of univariate regression coefficients from regressions of site-level LATEs on site-level characteristics in multi-site randomized trials studied in de Chaisemartin & Deeb (2024)
 p multisite_varitt module to estimate and conduct inference on the variance of ITTs across sites in multi-site randomized trials
 p multisite_varlate module to estimate and conduct inference on the variance of LATEs across sites in multi-site randomized trials
+p multispline module to perform nonlinear multilevel spline modeling
 p multistate module to perform multi-state survival analysis
 p multivrs module to conduct multiverse analysis
 p mundlak module to estimate random-effects regressions adding group-means of independent variables to the model

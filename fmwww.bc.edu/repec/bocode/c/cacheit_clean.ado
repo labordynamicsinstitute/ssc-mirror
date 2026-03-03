@@ -43,10 +43,13 @@ program define cacheit_clean, rclass
         
         //Double check
         display in yellow "Warning: This will delete all files within `dir'"
-        display in yellow "Do you want to continue? (y/n): " _request(dcheck)
+        if ("`force'" == "") {
+            display in yellow "Do you want to continue? (y/n): " _request(dcheck)
+        }
+        else global dcheck "y"
 
         //Clean if indicated
-        if "$dcheck"=="y" cacheit_cleanup, dir(`dir')
+        if "${dcheck}"=="y" cacheit_cleanup, dir(`dir')
         else display "y not indicated.  Operation cancelled."
 
         //Exit

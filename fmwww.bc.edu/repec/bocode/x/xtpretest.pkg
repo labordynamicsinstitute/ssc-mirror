@@ -1,0 +1,25 @@
+d 'XTPRETEST': module to provide a Comprehensive Panel Data Pre-Testing Suite 
+d
+d	xtpretest provides a comprehensive suite of panel data
+d pre-tests in a single command, covering eight    modules of
+d diagnostic analysis. It combines homogeneity testing, summary
+d statistics, coefficient    heterogeneity analysis, slope
+d homogeneity tests, cross-sectional dependence diagnostics,
+d structural	break detection, and diagnostic visualisation into
+d one unified framework. 
+d
+d KW: panel data
+d KW: pretests
+d KW: pooling
+d KW: cross-sectional dependence
+d KW: structural breaks 
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260302
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtpretest.ado
+f xtpretest.sthlp

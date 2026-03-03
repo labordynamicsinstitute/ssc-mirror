@@ -114,11 +114,13 @@ p xtoos module for evaluating the out-of-sample prediction performance of panel-
 p xtoverid module to calculate tests of overidentifying restrictions after xtreg, xtivreg, xtivreg2, xthtaylor
 p xtpattern module to generate code showing pattern of xt data
 p xtpatternvar module to generate string variable describing panel patterns
+p xtpcmg module to implement Panel Cointegrating Polynomial Regressions: Group-Mean & Pooled FM-OLS
 p xtpdyn module to estimate dynamic random effects probit model with unobserved heterogeneity
 p xtpedroni module to perform Pedroni's panel cointegration tests and Panel Dynamic OLS estimation
 p xtpmg module for estimation of nonstationary heterogeneous panels
 p xtpqardl module to estimate Panel Quantile Autoregressive Distributed Lag (PQARDL) models
 p xtpqml module to estimate Fixed-effects Poisson (Quasi-ML) regression with robust standard errors
+p xtpretest module to provide a Comprehensive Panel Data Pre-Testing Suite 
 p xtprobitunbal module to estimate Dynamic Probit Random Effects Models with Unbalanced Panels
 p xtpsse module to estimate a conditional fixed-effects Poisson panel regression
 p xtqptest module to perform Born & Breitung Bias-corrected LM-based test for serial correlation

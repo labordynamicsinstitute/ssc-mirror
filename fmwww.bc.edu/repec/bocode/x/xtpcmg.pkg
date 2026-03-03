@@ -1,0 +1,28 @@
+d 'XTPCMG': module to implement Panel Cointegrating Polynomial Regressions: Group-Mean & Pooled FM-OLS
+d
+d      xtpcmg estimates Fully Modified OLS (FM-OLS) for Panel
+d Cointegrating Polynomial Regressions (CPRs).	  Polynomial
+d cointegration models arise when a dependent variable is linked
+d not just to an integrated    process but also to its higher-order
+d powers. The leading application is the Environmental Kuznets	 
+d Curve (EKC), where CO2 emissions follow a quadratic or cubic
+d function of GDP.  Standard panel    cointegration estimators are
+d inconsistent for these models because the polynomial powers are  
+d  perfectly correlated with the level of the integrated process. 
+d xtpcmg applies the specialised    FM-OLS corrections developed in
+d the recent econometrics literature. 
+d
+d KW: time series
+d KW: panel data
+d KW: cointegration
+d KW: fully modified OLS
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260302
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtpcmg.ado
+f xtpcmg.sthlp

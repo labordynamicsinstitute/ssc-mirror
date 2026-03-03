@@ -1,8 +1,11 @@
-*! Package basetable v 0.3.0
+*! Package basetable v 0.3.1
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*!version 0.3.0	2024-03-18 > Error message instead faulty table content when cell blocks are all missing, see lmatrixtools: if ( st_matrix("__lblr") >= . ) 
+*!version 0.3.1  2026-03-01 > Minor bugfix in columnorder. Max can order can now be greater than 8.
 *TODO show empty columns based on value labels
 *TODO: Count unique by
+*version 0.3.0  2026-01-12 > The default format for p-values in -basetable- is now the APA style.
+*version 0.3.0  2026-01-12 > Option columnorder added
+*version 0.3.0	2024-03-18 > Error message instead faulty table content when cell blocks are all missing, see lmatrixtools: if ( st_matrix("__lblr") >= . ) 
 *version 0.2.9  2024-02-25 > Option todocx added
 *version 0.2.9  2023-08-02 > Option for column order is added
 *version 0.2.9  2023-04-26 > cleanup in mata must be specific in "mata mata drop __* __*()". A capture is added preliminary
@@ -106,7 +109,7 @@ program define basetable
 			*/Exact(integer 0) /*
 			*/CAtegoricalreport(string) /*
 			*/noTOPcount /*
-			*/COLumnorder(numlist integer >1 <8) /*
+			*/COLumnorder(numlist integer >1) /*
 		*/]
         
 	if "`if'" != "" local if if (`if')

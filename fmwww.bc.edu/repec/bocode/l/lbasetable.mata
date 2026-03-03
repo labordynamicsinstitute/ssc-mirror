@@ -1,3 +1,4 @@
+*!version 0.3.0  2026-01-12 > New pvalue format
 *!version 0.3.0  2024-02-25 > Option todocx added
 *!version 0.3.0	2024-03-18 > Error message instead faulty table content when cell blocks are all missing, see lmatrixtools: if ( st_matrix("__lblr") >= . ) 
 * version 0.2.9  2023-08-02 > Option for column order is added

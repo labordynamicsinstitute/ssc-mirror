@@ -1,12 +1,15 @@
-*! Package confreg v. 1.0
+*! Package confreg v. 1.2
 *! Support: Niels Henrik Bruun, niels.henrik.bruun@gmail.com
-*! 2025-11-24 Created
+*! 2026-02-25 1.2 N in se_sp_auc_corr in wrong order
+* 2026-01-06 1.1 se_sp_auc_corr modified
+* 2025-11-24 1.0 Created
 
 *TODO Add -1 for inconclusive in test. Report P(inconclusive|C+) and P(inconclusive|C-) ?
 *TODO noSPec and noSEns ?
 
 program define confreg, rclass
-    version 15.1
+	version 15.1
+
 	// varlist truevals testvals groups
 	syntax varlist(min=2 max=3) [if], /*
 	*/[ /*
@@ -81,7 +84,7 @@ program define _se_sp_auc, rclass
 		local fnd `fnd' ( se`lvl' : `' _b[1.`trv'#`lvl'.`tp'])
 		local rnms "`rnms'" "`:label (`tp') `lvl'':Specificity, P(TN|C-)"
 		local fnd `fnd' ( sp`lvl' : (1 - _b[0.`trv'#`lvl'.`tp']))
-		local rnms "`rnms'" "`:label (`tp') `lvl'':AUC, (sens+spec)/2"
+		local rnms "`rnms'" "`:label (`tp') `lvl'':AUCbin, (sens+spec)/2"
 		local fnd `fnd' (auc`lvl' : 0.5 * (_b[1.`trv'#`lvl'.`tp'] + 1 - _b[0.`trv'#`lvl'.`tp']))
 		*local rnms "`rnms'" "`:label (`tp') `lvl'':LR+, sens/(1-spec)"
 		*local fnd `fnd' (LRp`lvl' : _b[1.`trv'#`lvl'.`tp'] / _b[0.`trv'#`lvl'.`tp'])
@@ -107,8 +110,10 @@ program define _se_sp_auc, rclass
 	matrix C = r(V) 
 	mata: C = st_matrix("C")
 	mata: dc = 1 :/ sqrt(diagonal(C))
-	mata: newC = lowertriangle(C :* (dc # dc'))
-	mata: newC = newC :* (1 :/ (newC :> 1e-4))
+	*mata: newC = lowertriangle(C :* (dc # dc'))
+	mata: newC = C :* (dc # dc')
+	*mata: newC = newC :* (1 :/ (newC :> 1e-4))
+	mata: newC = newC :* (newC :> 1e-4)
 	mata: st_replacematrix("C", newC)
 	matrix colnames C = "`rnms'"
 	matrix rownames C = "`rnms'"
@@ -118,7 +123,7 @@ end
 program define _acc_ppv_npv, rclass
 	syntax varname [if], prev(numlist max=1 >0 <1) tp(varname) [stub(string) scale(real 100)]
 	
-	estimates restore `stub'_se_sp_auc
+	qui estimates restore `stub'_se_sp_auc
 
 	capture matrix drop totals
 	local fnd
@@ -133,7 +138,7 @@ program define _acc_ppv_npv, rclass
 		local fnd `fnd' (npv`lvl': _b[sp`lvl'] * (1 - `prev') / (_b[sp`lvl'] * (1 - `prev') + (1 - _b[se`lvl']) * `prev'))
 		if "`if'" == "" qui su `varlist' if `tp' == `lvl'
 		else qui su `varlist' `if' & `tp' == `lvl'
-		matrix totals = nullmat(totals) \ r(sum) \ r(N) - r(sum) \ r(N)
+		matrix totals = nullmat(totals) \ r(N) \ r(sum) \ r(N) - r(sum)
 	}
 	qui nlcom `fnd', post
 	qui _coef_table
