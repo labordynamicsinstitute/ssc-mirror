@@ -20,8 +20,8 @@ d Requires: Stata version 8.2 and -akdensity- (findit akdensity)
 d
 d Distribution-Date: 20101221
 d
-d Author: Joao Pedro Azevedo, University of Newcastle
-d Support: email J.P.Azevedo@@newcastle.ac.uk
+d Author: Joao Pedro Azevedo, UNICEF
+d Support: email jpazevedo@@unicef.org
 d
 f dfl.ado
 f dfl.hlp

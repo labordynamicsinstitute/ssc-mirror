@@ -1,3 +1,4 @@
+0
 p hadrilm module to perform Hadri panel unit root test
 p haif module to compute Homoskedastic Adjustment Inflation Factors for model selection
 p haiku module to randomly produce haikus
@@ -12,7 +13,6 @@ p hansen2 module for Hansen's test for parameter instability
 p hapblock module to perform haplotype analysis to identify the edges of haplotype blocks
 p hapipf module to perform haplotype analysis
 p harmby module to harmonize values of variables within by-groups
-P hatemicoint module to implement cointegration tests with two unknown regime shifts following the methodology of Hatemi-J (2008)
 p hausman module to compute a Hausman test statistic (version 5)
 p hazdcmp module to produce multivariate decomposition for piecewise constant hazard rate models
 p hbar module to generate horizontal bar charts

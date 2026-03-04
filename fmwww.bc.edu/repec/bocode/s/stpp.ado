@@ -1,4 +1,4 @@
-*! version 1.4.6 2026-02-10
+*! version 1.4.7 2026-02-25
   
 program define stpp, rclass sortpreserve
   version 16.0
@@ -258,8 +258,8 @@ program define stpp, rclass sortpreserve
       pmyear2(string)  ///
       ]
     qui describe using "`using2filename'", varlist short
-    local pmage2 = cond("`pmage2'"== ".","",cond("`pmage2'"== "","`pmage'","`pmage2'")) 
-    local pmyear2 = cond("`pmyear2'"== ".","",cond("`pmyear2'"== "","`pmyear'","`pmyear2'"))
+    local pmage2   = cond("`pmage2'"== ".","",cond("`pmage2'"== "","`pmage'","`pmage2'")) 
+    local pmyear2  = cond("`pmyear2'"== ".","",cond("`pmyear2'"== "","`pmyear'","`pmyear2'"))
     local pmother2 = cond("`pmother2'"== ".","",cond("`pmother2'"== "","`pmother'","`pmother2'"))
     local pmrate2  = cond("`pmrate2'" == "","`pmrate'","`pmrate2'") 
     
@@ -300,12 +300,12 @@ program define stpp, rclass sortpreserve
 	                   inrange(`pmyear',`minyear',`maxattyear') 
                      
   // check pm other levels
-  if "`pmother'" != "" {
-    Check_popmort_levels if `touse', pmother(`pmother') pmage(`pmage') pmyear(`pmyear') ///
-                                     popmortframe(`popmortframe')                       ///
-                                     minyear(`minyear') maxattyear(`maxattyear')         ///
-                                     minage(`minage')  maxattage(`maxattage')      
-  }
+  Check_popmort_levels if `touse', pmage(`pmage')                               ///
+                                   popmortframe(`popmortframe')                 ///
+                                   minyear(`minyear') maxattyear(`maxattyear')  ///
+                                   minage(`minage')  maxattage(`maxattage')     ///
+                                   pmother(`pmother') pmyear(`pmyear')
+
                    
   if "`using2'" != "" {
     tempname popmort2frame
@@ -322,12 +322,10 @@ program define stpp, rclass sortpreserve
       di as error "popmort file does not vary by year / other covariates."
       exit 198
     }
-    if "`pmother2'" != "" {
-      Check_popmort_levels if `touse', pmother(`pmother2') pmage(`pmage2') pmyear(`pmyear2') ///
-                                       popmortframe(`popmort2frame') ///
-                                       minyear(`minyear') maxattyear(`maxattyear')         ///
-                                       minage(`minage')  maxattage(`maxattage')                                        
-    }
+    Check_popmort_levels if `touse', pmother(`pmother2') pmage(`pmage2') pmyear(`pmyear2') ///
+                                     popmortframe(`popmort2frame') ///
+                                     minyear(`minyear') maxattyear(`maxattyear')         ///
+                                     minage(`minage')  maxattage(`maxattage')                                        
   } 
   
   // store info for labels
@@ -617,14 +615,14 @@ end
 
 
 program define Check_popmort_levels
-  syntax [if], popmortframe(string)    ///
-               pmother(varlist)        ///
-               pmage(string)          ///
-               pmyear(string)         ///
-               minyear(string)    ///
-               maxattyear(string) ///
-               minage(string)     ///
-               maxattage(string)      
+  syntax [if], popmortframe(string)              ///
+               pmage(string)                     ///
+               minyear(string)                   ///
+               maxattyear(string)                ///
+               minage(string)                    ///
+               maxattage(string)                 ///
+               [pmyear(string) pmother(varlist)]         
+
   marksample touse
   
 // Check cam merge with pmother variables
@@ -642,16 +640,18 @@ program define Check_popmort_levels
   }
   
 // can we merge on year?
-  qui frame `popmortframe': summ `pmyear', meanonly
-  local pmyearmin `r(min)'
-  local pmyearmax `r(max)'
-  if `minyear'<`pmyearmin' {
-    di as error "Minimum calendar year in data (`minyear') not in popmort file"
-    exit 198
-  }
-  if `maxattyear'>`pmyearmax' {
-    di as error "Maximum attained calendar year in data (`maxattyear') not in popmort file"
-    exit 198
+  if "`pmyear'" != "" {
+    qui frame `popmortframe': summ `pmyear', meanonly
+    local pmyearmin `r(min)'
+    local pmyearmax `r(max)'
+    if `minyear'<`pmyearmin' {
+      di as error "Minimum calendar year in data (`minyear') not in popmort file"
+      exit 198
+    }
+    if `maxattyear'>`pmyearmax' {
+      di as error "Maximum attained calendar year in data (`maxattyear') not in popmort file"
+      exit 198
+    }
   }
 // can we merge on age?
   qui frame `popmortframe': summ `pmage', meanonly

@@ -12,8 +12,8 @@ d Requires: Stata version 14
 d
 d Distribution-Date: 20260223
 d
-d Author: Joao Pedro Azevedo, World Bank
-d Support: email jazevedo@@worldbank.org
+d Author: Joao Pedro Azevedo, UNICEF
+d Support: email jpazevedo@@unicef.org
 d
 f yaml.ado
 f yaml.sthlp

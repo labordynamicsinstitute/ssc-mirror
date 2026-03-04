@@ -1,9 +1,9 @@
 d 'FACTORTEST': module to perform tests for appropriateness of factor analysis
 d
-d factortest performs Bartlett's test for sphericity and calculates
-d the Kaiser-Meyer-Olkin Measure of Sampling Adequacy. Both tests
-d should be used  prior to a factor or a principal component
-d analysis. 
+d  factortest performs Bartlett's test for sphericity and
+d calculates the Kaiser-Meyer-Olkin Measure of Sampling Adequacy.
+d Both tests should be used  prior to a factor or a principal
+d component analysis. 
 d
 d KW: factor analysis
 d KW: principal components
@@ -12,11 +12,10 @@ d KW: sampling adequacy
 d
 d Requires: Stata version 7.0
 d
-d
-d Author:  Joao Pedro Azevedo, University of Newcastle-upon-Tyne, UK
-d Support: email j.p.azevedo@@ncl.ac.uk
-d
 d Distribution-Date: 20060827
+d
+d Author:  Joao Pedro Azevedo, UNICEF
+d Support: email jpazevedo@@unicef.org
 d
 f factortest.ado
 f factortest.hlp

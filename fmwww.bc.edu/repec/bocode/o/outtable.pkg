@@ -1,6 +1,6 @@
 d 'OUTTABLE': module to write matrix to LaTeX table
 d
-d outtable automates the conversion of a Stata matrix to a LaTeX
+d  outtable automates the conversion of a Stata matrix to a LaTeX
 d table, written to an	external file. The table is presented with
 d row and column names taken from the specified matrix.  Thus, one
 d need only generate the appropriate matrix  using standard Stata
@@ -17,14 +17,13 @@ d KW: matrices
 d
 d Requires: Stata version 8.0 (7.0 for outtable7) 
 d
+d Distribution-Date: 20251020
 d
 d Author: Christopher F Baum, Boston College
 d Support: email baum@@bc.edu
 d
-d Author: Joao Pedro Azevedo, World Bank
-d Support: email jazevedo@@worldbank.org
-d
-d Distribution-Date: 20251020
+d Author: Joao Pedro Azevedo, UNICEF
+d Support: email jpazevedo@@unicef.org
 d
 f outtable.ado
 f outtable2.ado

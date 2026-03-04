@@ -8683,7 +8683,6 @@ fmwww.bc.edu/repec/bocode/p/pccmtoolkit.sthlp
 fmwww.bc.edu/repec/bocode/p/pc_simulate.sthlp
 fmwww.bc.edu/repec/bocode/p/pcm000401_lf.ado
 fmwww.bc.edu/repec/bocode/p/progres.hlp
-fmwww.bc.edu/repec/bocode/p/pip.pkg
 fmwww.bc.edu/repec/bocode/p/power_cmd_loa_init.ado
 fmwww.bc.edu/repec/bocode/p/pooledsd.pkg
 fmwww.bc.edu/repec/bocode/p/pcm010301_lf.ado
