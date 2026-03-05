@@ -1,5 +1,5 @@
 *! aardl — Augmented ARDL Cointegration Analysis (8 Models)
-*! Version 1.1.0 — 2026-02-23
+*! Version 1.2.0 — 2026-03-04
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 *! Independent Researcher
 *!
@@ -1059,6 +1059,8 @@ program define aardl, eclass sortpreserve
     ereturn scalar p = `best_p'
     ereturn scalar kstar = `best_kstar'
     ereturn scalar total_models = `total_models'
+    ereturn scalar ecm_coef = `ecm_coef'
+    ereturn scalar horizon = `horizon'
     forvalues vi = 1/`nall' {
         local xvar : word `vi' of `all_indepvars'
         local cname = subinstr("`xvar'", ".", "_", .)
@@ -1068,6 +1070,7 @@ program define aardl, eclass sortpreserve
     ereturn local cmdline "aardl `0'"
     ereturn local depvar "`depvar'"
     ereturn local indepvars "`indepvars'"
+    ereturn local all_indepvars "`all_indepvars'"
     ereturn local lrxvars "`lrxvars'"
     ereturn local srvars "`srvars'"
     ereturn local type "`type'"

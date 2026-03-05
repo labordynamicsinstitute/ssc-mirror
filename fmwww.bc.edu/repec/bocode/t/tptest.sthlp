@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  28feb2026}{...}
+{* *! version 1.0.1  04mar2026}{...}
 {vieweralsosee "utest" "help utest"}{...}
 {vieweralsosee "nlcom" "help nlcom"}{...}
 {vieweralsosee "margins" "help margins"}{...}
@@ -15,7 +15,7 @@
 {viewerjumpto "References" "tptest##references"}{...}
 {viewerjumpto "Author" "tptest##author"}{...}
 {hline}
-help for {cmd:tptest}{right:Version 1.0.0 — 28feb2026}
+help for {cmd:tptest}{right:Version 1.0.1 — 04mar2026}
 {hline}
 
 {title:Title}

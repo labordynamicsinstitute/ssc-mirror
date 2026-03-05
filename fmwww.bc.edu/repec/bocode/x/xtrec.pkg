@@ -1,0 +1,32 @@
+d 'XTREC': module to implement Panel unit root test based on recursive detrending (Westerlund 2015)
+d
+d      xtrec performs a panel unit root test based on recursively
+d detrended data as proposed by Westerlund    (2015, Journal of
+d Econometrics). Two test statistics are available:	   t-REC:
+d the baseline test assuming iid errors. Asymptotically distributed
+d as N(0,1) under the		 null hypothesis of a unit root,
+d regardless of the degree of the fitted trend polynomial.	   
+d   This invariance property is unique among all panel unit root
+d tests and eliminates the need 	   for any mean or variance
+d correction factors.	     t-RREC: the robust version (invoked
+d with the robust option) that accommodates serial	     
+d correlation, cross-section dependence (via a common factor
+d structure), and cross-section 	   heteroskedasticity. Its
+d null distribution is also N(0,1), and the invariance property    
+d	 extends to general trend functions beyond polynomials
+d (including smooth transition shifts		 and trigonometric
+d functions). 
+d
+d KW: time series
+d KW: panel data
+d KW: unit root test
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260304
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtrec.ado
+f xtrec.sthlp

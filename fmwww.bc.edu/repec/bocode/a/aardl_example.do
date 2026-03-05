@@ -1,7 +1,7 @@
 // =========================================================================
 // aardl_example.do — Example: Augmented ARDL Package (8 Models)
 // =========================================================================
-// Version 1.1.0 — 2026-02-23
+// Version 1.2.0 — 2026-03-04
 // Author: Dr. Merwan Roudane
 //
 // This example demonstrates all 8 model types in the aardl package
@@ -131,6 +131,14 @@ di as res _n "=========================================="
 di as res "  Example 11: Minimal output"
 di as res "=========================================="
 aardl ln_inv ln_inc ln_consump, type(aardl) maxlag(4) nodiag nodynmult noadvanced notable
+
+// Example 12: Post-estimation advanced analysis
+di as res _n "=========================================="
+di as res "  Example 12: Post-estimation aardl_advanced"
+di as res "=========================================="
+aardl ln_inv ln_inc ln_consump, type(aardl) maxlag(4) ic(aic) case(3) noadvanced nograph
+aardl_advanced
+aardl_advanced, horizon(30) nograph
 
 // ─── Done ───
 di as txt _n "{hline 60}"

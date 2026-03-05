@@ -1,0 +1,26 @@
+d 'XTMISPANEL': module to provide Comprehensive Missing Data Detection, Imputation and Diagnostics for Panel Data
+d
+d     xtmispanel is a comprehensive, all-in-one Stata command for
+d handling missing values in panel    (time-series cross-sectional)
+d data.   The command is designed specifically for panel data and
+d respects the panel structure in all	 computations
+d (panel-specific means, within-panel interpolation, panel-aware
+d regression, etc.). 
+d
+d KW: panel data
+d KW: missing data
+d KW: diagnostics
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20260304
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtmispanel.ado
+f xtmispanel.sthlp
+f xtmispanel_test_all.do
+f xtmispanel_impute.ado
+f xtmispanel_graph.ado
+f xtmispanel_example.do

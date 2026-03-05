@@ -1,4 +1,4 @@
-*! tptest v1.0.0  28feb2026  Dr Merwan Roudane  merwanroudane920@gmail.com
+*! tptest v1.0.1  04mar2026  Dr Merwan Roudane  merwanroudane920@gmail.com
 *! Universal Turning Point & Inflection Point Test
 *! Post-estimation command for U-shape / inverse U-shape testing
 *! with Delta-method SEs, Fieller CIs, and publication-quality graphs
@@ -704,7 +704,7 @@ program define tptest, rclass sortpreserve
         "  Lind & Mehlum (2010) with Extensions" ///
         _col(72) in gr "{bf:║}"
     di in smcl in gr "  {bf:║}" _col(5) in ye ///
-        "  Version 1.0.0" ///
+        "  Version 1.0.1" ///
         _col(72) in gr "{bf:║}"
     di in smcl in gr "  {bf:╚══════════════════════════════════════════════════════════════════════╝}"
     di
@@ -1131,9 +1131,15 @@ program define _tptest_quantile_loop, rclass
 
         // For mmqreg with multi-quantile equations
         if "`cmd'" == "mmqreg" {
-            // mmqreg stores results with equation names like "qtile_10:", "qtile_25:", etc.
+            // mmqreg stores equations as "qtile__25:", "qtile__5:", etc.
+            // (double underscore, trailing zeros stripped from percentage)
             local qpct = round(`tauval' * 100)
-            local qprefix "qtile_`qpct':"
+            // Strip trailing zeros: 50 -> 5, 25 -> 25, 75 -> 75
+            local qpct_str "`qpct'"
+            while substr("`qpct_str'", -1, 1) == "0" & length("`qpct_str'") > 1 {
+                local qpct_str = substr("`qpct_str'", 1, length("`qpct_str'") - 1)
+            }
+            local qprefix "qtile__`qpct_str':"
         }
         else {
             local qprefix "`prefix'"
@@ -1147,16 +1153,45 @@ program define _tptest_quantile_loop, rclass
         local v1name "`qprefix'`var1'"
         local v2name "`qprefix'`var2'"
 
-        capture local qb1 = `beta'[1, colnumb(`beta', "`v1name'")]
-        if _rc != 0 {
-            // Try alternative naming
-            capture local qb1 = `beta'[1, colnumb(`beta', "`var1'")]
-            if _rc != 0 {
+        // Try primary name pattern
+        local _col1 = colnumb(`beta', "`v1name'")
+        if `_col1' == . {
+            // Try single-underscore variant (qtile_25:)
+            local qprefix2 = subinstr("`qprefix'", "qtile__", "qtile_", 1)
+            local v1name "`qprefix2'`var1'"
+            local v2name "`qprefix2'`var2'"
+            local _col1 = colnumb(`beta', "`v1name'")
+        }
+        if `_col1' == . {
+            // Try without prefix
+            local v1name "`var1'"
+            local v2name "`var2'"
+            local _col1 = colnumb(`beta', "`v1name'")
+        }
+        if `_col1' == . {
+            // Scan column names for a match containing the variable name
+            local _ncols = colsof(`beta')
+            local _colnames : colnames `beta'
+            local _colfull : colfullnames `beta'
+            local _found = 0
+            forvalues _ci = 1/`_ncols' {
+                local _cfull : word `_ci' of `_colfull'
+                if strpos("`_cfull'", "`var1'") > 0 & strpos(lower("`_cfull'"), "qtile") > 0 {
+                    // Check if this matches our tau value
+                    if strpos("`_cfull'", "`qpct_str'") > 0 | strpos("`_cfull'", "`qpct'") > 0 {
+                        // Extract the equation prefix from this column name
+                        local _eqpfx = substr("`_cfull'", 1, strpos("`_cfull'", "`var1'") - 1)
+                        local v1name "`_cfull'"
+                        local v2name "`_eqpfx'`var2'"
+                        local _found = 1
+                        continue, break
+                    }
+                }
+            }
+            if !`_found' {
                 di as text "  " %-8s %5.2f `tauval' in re "  (coefficients not found)"
                 continue
             }
-            local v1name "`var1'"
-            local v2name "`var2'"
         }
         local qb1 = `beta'[1, colnumb(`beta', "`v1name'")]
         local qb2 = `beta'[1, colnumb(`beta', "`v2name'")]

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0  23feb2026}{...}
+{* *! version 1.2.0  04mar2026}{...}
 {vieweralsosee "[R] regress" "help regress"}{...}
 {vieweralsosee "[R] ardl" "help ardl"}{...}
 {viewerjumpto "Syntax" "aardl##syntax"}{...}
@@ -11,6 +11,7 @@
 {viewerjumpto "Examples" "aardl##examples"}{...}
 {viewerjumpto "References" "aardl##references"}{...}
 {viewerjumpto "Author" "aardl##author"}{...}
+{viewerjumpto "Post-estimation" "aardl##postestimation"}{...}
 
 {title:Title}
 
@@ -55,6 +56,14 @@
 {synopt:{opt nog:raph}}suppress graphs{p_end}
 {synoptline}
 {p2colreset}{...}
+
+{pstd}
+{bf:Post-estimation:}
+{p_end}
+
+{p 8 17 2}
+{cmd:aardl_advanced}
+[{cmd:,} {opt hor:izon(#)} {opt nog:raph}]
 
 {p 4 6 2}
 You must {cmd:tsset} your data before using {cmd:aardl}; see {helpb tsset}.
@@ -330,6 +339,8 @@ profile. Default is 20.
 {synopt:{cmd:e(case)}}PSS case number{p_end}
 {synopt:{cmd:e(total_models)}}number of models evaluated in grid search{p_end}
 {synopt:{cmd:e(q_varname)}}selected lag q for each independent variable{p_end}
+{synopt:{cmd:e(ecm_coef)}}error correction (speed of adjustment) coefficient{p_end}
+{synopt:{cmd:e(horizon)}}multiplier/persistence horizon used{p_end}
 
 {p2col 5 28 32 2: Bootstrap only}{p_end}
 {synopt:{cmd:e(Fov_bp)}}bootstrap p-value (F_overall){p_end}
@@ -343,6 +354,7 @@ profile. Default is 20.
 {synopt:{cmd:e(indepvars)}}independent variable(s){p_end}
 {synopt:{cmd:e(type)}}model type{p_end}
 {synopt:{cmd:e(ic)}}information criterion used{p_end}
+{synopt:{cmd:e(all_indepvars)}}all independent variables (including decomposed){p_end}
 {synopt:{cmd:e(model)}}"ec"{p_end}
 {synopt:{cmd:e(coint_status)}}"cointegrated", "not_cointegrated", or "degenerate"{p_end}
 
@@ -417,6 +429,13 @@ for asymmetric effects:{p_end}
 {phang}{cmd:. di e(coint_status)}{space 1}// Cointegration conclusion{p_end}
 {phang}{cmd:. ereturn list}{space 5}// All stored results{p_end}
 
+{pstd}{bf:Example 12: Post-estimation advanced analysis}{p_end}
+{pstd}Run {cmd:aardl} with {cmd:noadvanced}, then use {cmd:aardl_advanced} separately:{p_end}
+{phang}{cmd:. aardl ln_inv ln_inc ln_consump, type(aardl) maxlag(4) ic(aic) case(3) noadvanced}{p_end}
+{phang}{cmd:. aardl_advanced}{p_end}
+{pstd}Override the horizon:{p_end}
+{phang}{cmd:. aardl_advanced, horizon(30)}{p_end}
+
 
 {marker references}{...}
 {title:References}
@@ -480,3 +499,82 @@ Dr. Merwan Roudane{break}
 Independent Researcher{break}
 Email: {browse "mailto:merwanroudane920@gmail.com":merwanroudane920@gmail.com}
 {p_end}
+
+
+{marker postestimation}{...}
+{title:Post-estimation}
+
+{pstd}
+{cmd:aardl_advanced} runs the advanced analysis as a separate post-estimation
+command after {cmd:aardl}. It includes dynamic multipliers, half-life analysis,
+persistence profile, Fourier significance test, and long-run equilibrium.
+{p_end}
+
+{pstd}
+{ul:Syntax}
+{p_end}
+
+{p 8 17 2}
+{cmd:aardl_advanced}
+[{cmd:,} {opt hor:izon(#)} {opt nog:raph}]
+{p_end}
+
+{pstd}
+{ul:Options}
+{p_end}
+
+{phang}
+{opt horizon(#)} overrides the horizon from the original {cmd:aardl} estimation.
+Default uses the value from the prior estimation (typically 20).
+{p_end}
+
+{phang}
+{opt nograph} suppresses all graphs (dynamic multipliers, persistence profile).
+{p_end}
+
+{pstd}
+{ul:Description}
+{p_end}
+
+{pstd}
+The advanced analysis includes:
+{p_end}
+
+{phang2}{bf:Dynamic Multipliers:} For linear ARDL models, displays impact and
+cumulative dynamic multipliers for each independent variable. For NARDL models,
+displays asymmetric dynamic multipliers (positive and negative paths) following
+Shin, Yu & Greenwood-Nimmo (2014).{p_end}
+
+{phang2}{bf:Half-Life Analysis:} Computes the half-life of shocks based on the
+ECM coefficient: t_half = -ln(2) / ln(1 + alpha).{p_end}
+
+{phang2}{bf:Persistence Profile:} Shows how shocks dissipate over the specified
+horizon, with persistence = (1 + alpha)^h.{p_end}
+
+{phang2}{bf:Fourier Significance Test:} For Fourier models (faardl, fbaardl,
+fanardl, fbanardl), reports the joint Wald F-test for the sine and cosine terms
+with p-value.{p_end}
+
+{phang2}{bf:Long-Run Equilibrium:} Displays the long-run equilibrium relationship
+derived from the estimated coefficients.{p_end}
+
+{pstd}
+{ul:Usage}
+{p_end}
+
+{pstd}
+The advanced analysis runs automatically when cointegration is found (unless
+suppressed with {opt noadvanced}). Use {cmd:aardl_advanced} to:
+{p_end}
+
+{phang2}1. Re-run the analysis with a different horizon{p_end}
+{phang2}2. Run it after suppressing it with {opt noadvanced}{p_end}
+{phang2}3. Re-display the results without re-running the full estimation{p_end}
+
+{pstd}
+{ul:Example}
+{p_end}
+
+{phang}{cmd:. aardl ln_inv ln_inc ln_consump, type(aardl) maxlag(4) noadvanced}{p_end}
+{phang}{cmd:. aardl_advanced}{p_end}
+{phang}{cmd:. aardl_advanced, horizon(30) nograph}{p_end}

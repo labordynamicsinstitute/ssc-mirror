@@ -101,6 +101,7 @@ p xtlsdvc module to estimate bias corrected LSDV dynamic panel data models
 p xtmg module to estimate panel time series models with heterogeneous slopes 
 p xtmipolateu module to replace missing values in a time series, two- or multidimensional varlist with interpolated (extrapolated) ones 
 p xtmis module to report missing observations for each variable in xt data
+p xtmispanel module to provide Comprehensive Missing Data Detection, Imputation and Diagnostics for Panel Data
 p xtmissingfill module to balance panel datasets and fill in missing values
 p xtmixed_corr module to compute model-implied intracluster correlations after xtmixed
 p xtmixediou module to estimate Linear mixed effects Integrated Ornstein-Uhlenbeck model
@@ -126,6 +127,7 @@ p xtpsse module to estimate a conditional fixed-effects Poisson panel regression
 p xtqptest module to perform Born & Breitung Bias-corrected LM-based test for serial correlation
 p xtqreg module to compute quantile regression with fixed effects
 p xtqsh module to implement Quantile Regression Slope Homogeneity Test for Panel Data 
+p xtrec module to implement Panel unit root test based on recursive detrending (Westerlund 2015)
 p xtregam module to estimate Amemiya Random-Effects Panel Data: Ridge and Weighted Regression
 p xtregbem module to estimate Between-Effects Panel Data: Ridge and Weighted Regression
 p xtregbn module to estimate Balestra-Nerlove Random-Effects Panel Data: Ridge and Weighted Regression
