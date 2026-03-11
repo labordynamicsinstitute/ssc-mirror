@@ -14,6 +14,7 @@ Tags are created every time the archive is mirrored. See [https://github.com/lab
 
 - The oldest tags are [2017-08-10](https://github.com/labordynamicsinstitute/ssc-mirror/releases/tag/2017-08-10), [2021-04-15](https://github.com/labordynamicsinstitute/ssc-mirror/releases/tag/2021-04-15), and [2021-08-10](https://github.com/labordynamicsinstitute/ssc-mirror/releases/tag/2021-08-10).
 - The oldest tag with continuous daily snapshots is [2021-12-23](https://github.com/labordynamicsinstitute/ssc-mirror/releases/tag/2021-12-23)
+- For bugs in the set of tags, see [ERRATA](ERRATA.md).
 
 ## Using the mirror
 
