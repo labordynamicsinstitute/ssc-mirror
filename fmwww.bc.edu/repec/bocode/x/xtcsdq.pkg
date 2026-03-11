@@ -1,0 +1,22 @@
+d 'XTCSDQ': module to implement Tests of no cross-sectional error dependence in panel quantile regressions
+d
+d      xtcsdq tests whether the residuals of a panel quantile
+d regression exhibit cross-sectional	dependence (CSD), based on
+d Demetrescu, Hosseinkouchack & Rodrigues (2023).    This is a
+d residual-based diagnostic test.  It examines pairwise
+d correlations among the quantile    regression errors after
+d fitting a QR model. The variables you supply define the model   
+d specification — they are not tested directly. 
+d
+d KW: panel data
+d KW: quantile regression
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260307
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtcsdq.ado
+f xtcsdq.sthlp

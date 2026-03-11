@@ -50,6 +50,7 @@ p xtcenter module to disaggregate within and between-person effects by centering
 p xtcips module to compute Pesaran Panel Unit Root Test in the Presence of Cross-section Dependence 
 p xtcointreg module for panel data generalization of cointegration regression using fully modified ordinary least squares, dynamic ordinary least squares, and canonical correlation regression methods
 p xtcsd module to test for cross-sectional dependence in panel data models
+p xtcsdq module to implement Tests of no cross-sectional error dependence in panel quantile regressions
 p xtcse2 module to estimate the exponent of cross-sectional dependence in large panels
 p xtcsi module to investigate Residual Cross-Section Independence 
 p xtcspqardl module to perform Cross-Sectionally Augmented Panel Quantile ARDL, Quantile CCE Mean Group, and Quantile CCE Pooled Mean Group Estimation
@@ -120,7 +121,9 @@ p xtpdyn module to estimate dynamic random effects probit model with unobserved 
 p xtpedroni module to perform Pedroni's panel cointegration tests and Panel Dynamic OLS estimation
 p xtpmg module for estimation of nonstationary heterogeneous panels
 p xtpqardl module to estimate Panel Quantile Autoregressive Distributed Lag (PQARDL) models
+p xtpcaus  module to perform Panel Granger Causality Tests: Panel Fourier Toda-Yamamoto (PFTY) and Panel Quantile Causality (PQC)
 p xtpqml module to estimate Fixed-effects Poisson (Quasi-ML) regression with robust standard errors
+p xtpqroot module to provide Panel Quantile Unit Root Tests with Common Shocks & Structural Breaks
 p xtpretest module to provide a Comprehensive Panel Data Pre-Testing Suite 
 p xtprobitunbal module to estimate Dynamic Probit Random Effects Models with Unbalanced Panels
 p xtpsse module to estimate a conditional fixed-effects Poisson panel regression

@@ -1,0 +1,44 @@
+d 'FCOINT': module to perform Fourier cointegration tests for time series with smooth structural breaks
+d
+d    fcoint implements four Fourier-based cointegration tests for
+d time-series data. The tests use    low-frequency Fourier
+d (trigonometric) components to approximate smooth structural
+d breaks of    unknown form in the deterministic trend, without
+d needing to estimate the number, timing, or form    of breaks.   
+d This is important because conventional cointegration tests
+d (Engle-Granger, Johansen, ADL) can	fail to detect
+d cointegration when the equilibrium relationship has undergone
+d smooth structural    shifts — such as gradual policy changes,
+d evolving market structures, or slow institutional    reforms.   
+d The key idea is that a Fourier expansion sin(2{c pi}kt/T) +
+d cos(2{c pi}kt/T) can approximate    virtually any smooth
+d deterministic function, including functions with multiple breaks
+d and	 nonlinear shifts (Gallant, 1981). This avoids the pitfalls
+d of dummy-variable approaches, which	 require pre-specifying
+d break dates and forms. 
+d
+d KW: cointegration
+d KW: Fourier
+d KW: time series
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260307
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f fcoint.ado
+f fcoint.sthlp
+f ../_/_fcoint_critvals.ado
+f ../_/_fcoint_cv_fadl_cumul.ado
+f ../_/_fcoint_cv_fadl_single.ado
+f ../_/_fcoint_cv_fadl.ado
+f ../_/_fcoint_cv_feg2.ado
+f ../_/_fcoint_cv_tsong_ftest.ado
+f ../_/_fcoint_cv_tsong.ado
+f ../_/_fcoint_fadl.ado
+f ../_/_fcoint_feg.ado
+f ../_/_fcoint_feg2.ado
+f ../_/_fcoint_tsong.ado

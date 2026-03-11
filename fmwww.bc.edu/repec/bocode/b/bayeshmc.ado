@@ -1,5 +1,5 @@
 *! bayeshmc.ado -- Bayesian regression via CmdStan HMC/NUTS
-*! Version 4.2.0 | 2026-02-21
+*! Version 4.3.2 | 2026-02-27
 *! Author: Ben Adarkwa Dwamena
 *!         Clinical Associate Professor Emeritus of Radiology
 *!         University of Michigan, Ann Arbor
@@ -67,6 +67,12 @@ program define bayeshmc, eclass
             _bhmc3_histogram, saving(`saving') parameters(`parameters') bins(`bins')
             exit
         }
+        if "`subcmd'" == "bayesplot" {
+            local 0 `"`orig_input'"'
+            syntax anything [, SAVing(string) PARAMeters(string) LAGs(integer 30)]
+            _bhmc3_bayesplot, saving(`saving') parameters(`parameters') lags(`lags')
+            exit
+        }
         if "`subcmd'" == "waic" {
             _bhmc3_waic
             exit
@@ -94,6 +100,8 @@ program define bayeshmc, eclass
               adapt_delta(real 0.8) max_treedepth(integer 10)     ///
               SAVing(string) DRYrun VERBose DIAGnostics             ///
               prior_sd(real -1) NORMalprior(real 100)             ///
+              SIGMAprior(string) TAUprior(string)                 ///
+              PHIprior(string) GAMMAprior(string)                 ///
               noHEADer                                            ///
               CMDstan(string) NOCAChe                              ///
               LKJprior(real 1) REPARAM                            ///
@@ -109,6 +117,12 @@ program define bayeshmc, eclass
     if `prior_sd' < 0 {
         local prior_sd = `normalprior'
     }
+    // Ancillary parameter priors: defaults follow Stan recommendations
+    // (Gelman, Vehtari et al., Stan Prior Choice Recommendations wiki, 2025)
+    if `"`sigmaprior'"' == "" local sigmaprior "normal(0, 5)"
+    if `"`tauprior'"'   == "" local tauprior   "normal(0, 2.5)"
+    if `"`phiprior'"'   == "" local phiprior   "normal(0, 5)"
+    if `"`gammaprior'"' == "" local gammaprior  "normal(0, 2)"
     // thinning -> thin
     if `thinning' > 0 {
         local thin = `thinning'
@@ -130,11 +144,27 @@ program define bayeshmc, eclass
         local re_terms : subinstr local re_rest ":" ""
         local re_terms = strtrim("`re_terms'")
         // Extract covariance() option from re_terms
+        // Handle both full "covariance(" and abbreviated "cov("
         local cov_pos = strpos("`re_terms'", "covariance(")
+        local cov_prefix_len = 12
+        if `cov_pos' == 0 {
+            local cov_pos = strpos("`re_terms'", "cov(")
+            local cov_prefix_len = 5
+        }
         if `cov_pos' > 0 {
             local cov_str = substr("`re_terms'", `cov_pos', .)
             local cov_end = strpos("`cov_str'", ")")
-            local cov_type = substr("`cov_str'", 12, `cov_end' - 12)
+            local cov_type = substr("`cov_str'", `cov_prefix_len', `cov_end' - `cov_prefix_len')
+            // Handle Stata abbreviations for covariance types
+            if "`cov_type'" == "unstruct" | "`cov_type'" == "unstr" | "`cov_type'" == "un" {
+                local cov_type "unstructured"
+            }
+            else if "`cov_type'" == "indep" | "`cov_type'" == "ind" {
+                local cov_type "independent"
+            }
+            else if "`cov_type'" == "exch" | "`cov_type'" == "exchange" {
+                local cov_type "exchangeable"
+            }
             local before_cov = substr("`re_terms'", 1, `cov_pos' - 1)
             local after_cov = substr("`re_terms'", `cov_pos' + `cov_end', .)
             local re_terms = strtrim("`before_cov'" + "`after_cov'")
@@ -145,11 +175,26 @@ program define bayeshmc, eclass
             local re_vars = strtrim(substr("`re_terms'", 1, `comma_pos' - 1))
             local re_opts = strtrim(substr("`re_terms'", `comma_pos' + 1, .))
             local re_terms "`re_vars'"
-            if strpos("`re_opts'", "covariance(") > 0 {
+            if strpos("`re_opts'", "covariance(") > 0 | strpos("`re_opts'", "cov(") > 0 {
                 local cov_pos2 = strpos("`re_opts'", "covariance(")
+                local cov_plen2 = 12
+                if `cov_pos2' == 0 {
+                    local cov_pos2 = strpos("`re_opts'", "cov(")
+                    local cov_plen2 = 5
+                }
                 local cov_str2 = substr("`re_opts'", `cov_pos2', .)
                 local cov_end2 = strpos("`cov_str2'", ")")
-                local cov_type = substr("`cov_str2'", 12, `cov_end2' - 12)
+                local cov_type = substr("`cov_str2'", `cov_plen2', `cov_end2' - `cov_plen2')
+                // Handle abbreviations
+                if "`cov_type'" == "unstruct" | "`cov_type'" == "unstr" | "`cov_type'" == "un" {
+                    local cov_type "unstructured"
+                }
+                else if "`cov_type'" == "indep" | "`cov_type'" == "ind" {
+                    local cov_type "independent"
+                }
+                else if "`cov_type'" == "exch" | "`cov_type'" == "exchange" {
+                    local cov_type "exchangeable"
+                }
             }
             if strpos("`re_opts'", "binomial(") > 0 {
                 local bin_pos = strpos("`re_opts'", "binomial(")
@@ -439,6 +484,11 @@ program define bayeshmc, eclass
     local outbase  "`wdir'/output"
 
     // --- Generate Stan code --------------------------------------
+    // Pass user-customizable ancillary priors to Mata via locals
+    local _sigma_prior `"`sigmaprior'"'
+    local _tau_prior   `"`tauprior'"'
+    local _phi_prior   `"`phiprior'"'
+    local _gamma_prior `"`gammaprior'"'
     mata: _bhmc3_write_stan("`family'", "`depvar'", "`predictors'",   ///
         "`groupvar'", "`re_terms'", `prior_sd', "`cov_type'",       ///
         `n_re', `lkjprior', "`het_vars'", `n_het',                  ///
@@ -504,6 +554,13 @@ program define bayeshmc, eclass
         "`groupvar'", "`re_terms'", "`cov_type'", `n_re',           ///
         "`het_vars'", "`sel_vars'", "`datapath'", `ll', `ul',       ///
         "`depvar_hi'", "`binomial'")
+    // Validate JSON: check for common issues (trailing dots, NaN)
+    mata: _bhmc3_validate_json("`datapath'")
+    if "`verbose'" != "" {
+        di as text "  JSON data file: `datapath'"
+        di as text "  JSON preview:"
+        mata: _bhmc3_json_preview("`datapath'")
+    }
     // Generate init file with data-driven starting values
     local initpath "`wdir'/init.json"
     mata: _bhmc3_write_init("`family'", "`depvar'", "`predictors'", "`initpath'")
@@ -792,12 +849,22 @@ program define bayeshmc, eclass
                 type "`wdir'/sampling.log"
             }
         }
+        // Show data.json preview for JSON parse errors
+        capture confirm file "`datapath'"
+        if _rc == 0 {
+            di as error ""
+            di as error "  Data JSON preview:"
+            mata: _bhmc3_json_preview("`datapath'")
+        }
         exit 198
     }
     if `missing_chains' > 0 {
-        local chains = `chains' - `missing_chains'
-        local total_draws = `chains' * `iterations'
-        di as text "  WARNING: `missing_chains' chain(s) failed. Using `chains' chain(s)."
+        local valid_chains = `chains' - `missing_chains'
+        local total_draws = `valid_chains' * `iterations'
+        di as text "  WARNING: `missing_chains' chain(s) failed. Using `valid_chains' chain(s)."
+    }
+    else {
+        local valid_chains = `chains'
     }
 
     di as text "  Sampling complete."
@@ -805,6 +872,7 @@ program define bayeshmc, eclass
     // --- Parse output & compute diagnostics ----------------------
     if "`verbose'" != "" di as text "  Computing summaries..."
 
+    // Pass original chain count -- Mata skips missing chain files
     tempfile respath
     mata: _bhmc3_parse_output("`outbase'", `chains', "`respath'",     ///
         "`family'", "`depvar'", "`predictors'", "`groupvar'",        ///
@@ -812,7 +880,7 @@ program define bayeshmc, eclass
 
     // --- Display -------------------------------------------------
     _bhmc3_display "`respath'" "`family'" "`depvar'" `N'              ///
-        `chains' `iterations' `warmup' "`hpd'" `clevel' `seed'
+        `valid_chains' `iterations' `warmup' "`hpd'" `clevel' `seed'
 
     // Store for subcommands
     capture copy "`respath'" "__bhmc3_results.csv", replace
@@ -950,9 +1018,8 @@ program define _bhmc3_display, eclass
             local f6 : di %10.4f `hi'
         }
 
-        // Display name: {eq:var} for Stata-style
+        // Display name: eq:var padded for display
         local dn = substr("`pn_mat'", 1, 24)
-        if strpos("`pn_mat'", ":") > 0 local dn = "{" + "`pn_mat'" + "}"
 
         di as text %24s "`dn'" " {c |}" as result                    ///
            " `f1' `f2' `f3' `f4'" "  `f5'" "  `f6'"
@@ -968,12 +1035,66 @@ program define _bhmc3_display, eclass
     mat colnames `b' = `cnames'
     mat colnames `V' = `cnames'
     mat rownames `V' = `cnames'
+    // Build ESS and R-hat vectors from the imported data
+    tempname ess_vec rhat_vec stats_mat
+    mat `ess_vec' = J(1, `np', .)
+    mat `rhat_vec' = J(1, `np', .)
+    // Build stats matrix: mean sd mcse median ci_lo ci_hi (np x 6)
+    mat `stats_mat' = J(`np', 6, .)
+    capture confirm variable ess
+    if _rc == 0 {
+        forvalues i = 1/`np' {
+            mat `ess_vec'[1, `i'] = ess[`i']
+            capture mat `rhat_vec'[1, `i'] = rhat[`i']
+        }
+    }
+    forvalues i = 1/`np' {
+        local mn  = mean[`i']
+        local sd  = sd[`i']
+        local mc  = mcse[`i']
+        local med = median[`i']
+        local lo  = ci_lo[`i']
+        local hi  = ci_hi[`i']
+        if !missing(`mn') {
+            mat `stats_mat'[`i', 1] = `mn'
+            mat `stats_mat'[`i', 2] = `sd'
+            mat `stats_mat'[`i', 3] = `mc'
+            mat `stats_mat'[`i', 4] = `med'
+            mat `stats_mat'[`i', 5] = `lo'
+            mat `stats_mat'[`i', 6] = `hi'
+        }
+    }
+    mat colnames `ess_vec' = `cnames'
+    mat colnames `rhat_vec' = `cnames'
+    mat rownames `stats_mat' = `cnames'
+    mat colnames `stats_mat' = mean sd mcse median ci_lo ci_hi
+
     ereturn post `b' `V', obs(`N')
     ereturn local cmd "bayeshmc"
+    ereturn local model "`family'"
     ereturn local family "`family'"
     ereturn local depvar "`depvar'"
     ereturn scalar chains = `chains'
+    ereturn scalar iterations = `iter'
+    ereturn scalar warmup = `warmup'
+    ereturn scalar seed = `seed'
     ereturn scalar mcmc_size = `total_draws'
+
+    // Convergence diagnostics
+    if !missing(`minESS') {
+        ereturn scalar min_ess = `minESS'
+        ereturn scalar max_ess = `maxESS'
+    }
+    if !missing(`maxrhat') {
+        ereturn scalar max_rhat = `maxrhat'
+    }
+    // Converged: min_ess >= 400 and max_rhat <= 1.1
+    if !missing(`minESS') & !missing(`maxrhat') {
+        ereturn scalar converged = (`minESS' >= 400) & (`maxrhat' <= 1.1)
+    }
+    ereturn matrix ess = `ess_vec'
+    ereturn matrix rhat = `rhat_vec'
+    ereturn matrix stats = `stats_mat'
 
     restore
 end
@@ -1388,6 +1509,233 @@ program define _bhmc3_histogram
     restore
 end
 
+// --- bayesplot: comprehensive 5-panel diagnostic display ----------
+// Equivalent to midas_bayesplot but for any bayeshmc model.
+// Creates: [Labels] | [Trace] | [Density] | [AC] | [R-hat]
+// Loads chain data once (vs 4x for separate trace/density/ac/histogram).
+program define _bhmc3_bayesplot
+    syntax [, SAVing(string) PARAMeters(string) LAGs(integer 30)]
+
+    if "$BHMC3_OUTBASE" == "" {
+        di as error "No results. Run bayeshmc first."
+        exit 198
+    }
+
+    preserve
+
+    // --- 1. Map display names <-> Stan names (one pass) ---
+    qui import delimited using "$BHMC3_RESULTS", clear
+    local nparams = _N
+
+    if "`parameters'" == "" {
+        local nplt = min(8, `nparams')
+        local dnames ""
+        local snames ""
+        forvalues i = 1/`nplt' {
+            local dnames "`dnames' `=param[`i']'"
+            local snames "`snames' `=stan_name[`i']'"
+        }
+    }
+    else {
+        local dnames ""
+        local snames ""
+        foreach p of local parameters {
+            forvalues i = 1/`nparams' {
+                if param[`i'] == "`p'" | stan_name[`i'] == "`p'" {
+                    local dnames "`dnames' `=param[`i']'"
+                    local snames "`snames' `=stan_name[`i']'"
+                    continue, break
+                }
+            }
+        }
+    }
+    drop _all
+
+    // Clean Stan names for Stata variable compatibility
+    local snames_clean ""
+    foreach p of local snames {
+        local pc = subinstr("`p'", ".", "", .)
+        local pc = subinstr("`pc'", "[", "", .)
+        local pc = subinstr("`pc'", "]", "", .)
+        local snames_clean "`snames_clean' `pc'"
+    }
+    local snames "`snames_clean'"
+    local nplt : word count `snames'
+
+    if `nplt' == 0 {
+        di as error "No parameters found to plot."
+        restore
+        exit 198
+    }
+
+    // --- 2. Load chain data ONCE ---
+    _bhmc3_load_draws
+
+    local nchains = $BHMC3_CHAINS
+    local total_draws = _N
+    local draws_per_chain = floor(`total_draws' / `nchains')
+    qui gen _chain = ceil(_n / `draws_per_chain')
+    qui replace _chain = `nchains' if _chain > `nchains'
+    qui bysort _chain: gen _citer = _n
+
+    // --- 3. Create all panels (graphics off for speed) ---
+    set graphics off
+
+    local label_plots ""
+    local trace_plots ""
+    local dens_plots ""
+    local ac_plots ""
+    local rhat_plots ""
+    local plotopts `"title("") xtitle("") ylabel("") xlabel("")"'
+
+    local i = 0
+    foreach p of local snames {
+        local i = `i' + 1
+        local dname : word `i' of `dnames'
+
+        capture confirm variable `p'
+        if _rc != 0 continue
+
+        // (a) Label panel
+        qui tw function y=0, range(0 0) name(_bp_lab`i', replace) ///
+            lc(none) ytitle("`dname'", orientation(horizontal) ///
+            size(medlarge)) ysca(noline) xsca(off) ///
+            plotregion(style(none)) graphregion(style(none)) `plotopts'
+        local label_plots "`label_plots' _bp_lab`i'"
+
+        // (b) Trace (chains overlaid)
+        local clines ""
+        forvalues c = 1/`nchains' {
+            local clines "`clines' (line `p' _citer if _chain == `c', lwidth(vthin))"
+        }
+        qui twoway `clines', legend(off) `plotopts' name(_bp_tr`i', replace)
+        local trace_plots "`trace_plots' _bp_tr`i'"
+
+        // (c) Density
+        qui kdensity `p', gen(_bpx`i' _bpf`i') nograph n(200)
+        qui twoway line _bpf`i' _bpx`i', lcolor(navy) ///
+            `plotopts' name(_bp_dn`i', replace)
+        capture drop _bpx`i' _bpf`i'
+        local dens_plots "`dens_plots' _bp_dn`i'"
+
+        // (d) Autocorrelation (manual, fast)
+        tempvar aclag acval
+        qui gen `aclag' = .
+        qui gen `acval' = .
+        qui su `p'
+        local pmean = r(mean)
+        local pvar = r(Var)
+        if `pvar' > 0 {
+            forvalues lag = 1/`lags' {
+                qui gen _atmp = (`p'[_n - `lag'] - `pmean') * (`p' - `pmean')
+                qui su _atmp
+                local n_ac = r(N)
+                if `n_ac' > 0 {
+                    qui replace `acval' = r(sum) / (`n_ac' * `pvar') in `lag'
+                    qui replace `aclag' = `lag' in `lag'
+                }
+                drop _atmp
+            }
+        }
+        else {
+            forvalues lag = 1/`lags' {
+                qui replace `acval' = 0 in `lag'
+                qui replace `aclag' = `lag' in `lag'
+            }
+        }
+        qui twoway bar `acval' `aclag' in 1/`lags', ///
+            barwidth(0.5) fcolor(navy%70) lcolor(navy) ///
+            yline(0, lcolor(black)) ///
+            `plotopts' name(_bp_ac`i', replace)
+        drop `aclag' `acval'
+        local ac_plots "`ac_plots' _bp_ac`i'"
+
+        // (e) Running R-hat
+        local npts = 10
+        tempvar rhx rhy
+        qui gen `rhx' = .
+        qui gen `rhy' = .
+        forvalues pt = 1/`npts' {
+            local cutoff = floor(`pt' / `npts' * `draws_per_chain')
+            if `cutoff' < 10 continue
+            local W = 0
+            local gsum = 0
+            local nper = 0
+            forvalues c = 1/`nchains' {
+                qui su `p' if _chain == `c' & _citer <= `cutoff'
+                if r(N) > 1 {
+                    local W = `W' + r(Var)
+                    local gsum = `gsum' + r(mean)
+                    local nper = r(N)
+                }
+            }
+            local W = `W' / `nchains'
+            local gmean = `gsum' / `nchains'
+            local B = 0
+            forvalues c = 1/`nchains' {
+                qui su `p' if _chain == `c' & _citer <= `cutoff'
+                if r(N) > 1 {
+                    local B = `B' + (r(mean) - `gmean')^2
+                }
+            }
+            local B = `nper' * `B' / (`nchains' - 1)
+            if `W' > 0 {
+                local vp = (`nper' - 1) / `nper' * `W' + `B' / `nper'
+                qui replace `rhx' = `cutoff' in `pt'
+                qui replace `rhy' = sqrt(`vp' / `W') in `pt'
+            }
+        }
+        qui twoway connected `rhy' `rhx' in 1/`npts', ///
+            lcolor(navy) mcolor(navy) msize(small) ///
+            yline(1, lpattern(dash) lcolor(cranberry)) ///
+            `plotopts' name(_bp_rh`i', replace)
+        drop `rhx' `rhy'
+        local rhat_plots "`rhat_plots' _bp_rh`i'"
+    }
+
+    // --- 4. Combine into 5-column panel ---
+    local mg "imargin(0 0 0 0)"
+
+    qui graph combine `label_plots', col(1) name(_bp_L, replace) ///
+        title("") fxsize(15)
+    qui graph combine `trace_plots', col(1) name(_bp_T, replace) ///
+        title("Trace", size(small)) `mg'
+    qui graph combine `dens_plots', col(1) name(_bp_D, replace) ///
+        title("Density", size(small)) `mg'
+    qui graph combine `ac_plots', col(1) name(_bp_A, replace) ///
+        title("Autocorrelation", size(small)) `mg'
+    qui graph combine `rhat_plots', col(1) name(_bp_R, replace) ///
+        title("R-hat", size(small)) `mg'
+
+    set graphics on
+
+    graph combine _bp_L _bp_T _bp_D _bp_A _bp_R, ///
+        row(1) ycommon `mg' ///
+        title("MCMC Diagnostics", size(medium)) ///
+        name(_bhmc_bayesplot, replace)
+
+    if "`saving'" != "" {
+        graph export "`saving'", replace
+        di as text "Bayesplot saved to `saving'"
+    }
+
+    // Clean up
+    forvalues j = 1/`nplt' {
+        capture graph drop _bp_lab`j'
+        capture graph drop _bp_tr`j'
+        capture graph drop _bp_dn`j'
+        capture graph drop _bp_ac`j'
+        capture graph drop _bp_rh`j'
+    }
+    capture graph drop _bp_L
+    capture graph drop _bp_T
+    capture graph drop _bp_D
+    capture graph drop _bp_A
+    capture graph drop _bp_R
+
+    restore
+end
+
 // --- Helper: load chain draws into dataset -----------------------
 program define _bhmc3_load_draws
     local outbase "$BHMC3_OUTBASE"
@@ -1395,10 +1743,22 @@ program define _bhmc3_load_draws
 
     // CmdStan CSVs have # comment lines before the header.
     // We need to find and skip them.
-    // Count comment lines in first chain to find where data starts
+    // Count comment lines in first available chain to find where data starts
     tempname fh
     local skip = 0
-    file open `fh' using "`outbase'_1.csv", read text
+    local first_chain = ""
+    forvalues c = 1/`nchains' {
+        capture confirm file "`outbase'_`c'.csv"
+        if _rc == 0 {
+            local first_chain = "`outbase'_`c'.csv"
+            continue, break
+        }
+    }
+    if "`first_chain'" == "" {
+        di as error "No chain output files found."
+        exit 601
+    }
+    file open `fh' using "`first_chain'", read text
     file read `fh' line
     while r(eof) == 0 {
         if substr("`line'", 1, 1) == "#" {
@@ -1654,6 +2014,39 @@ string scalar _pr(string scalar par, real scalar sd)
     return("  " + par + " ~ normal(0, " + strofreal(sd) + ");" + _nl())
 }
 
+// Ancillary parameter prior helpers: read from st_local(), fall back to defaults
+string scalar _pr_sigma()
+{
+    string scalar p
+    p = st_local("_sigma_prior")
+    if (p == "") p = "normal(0, 5)"
+    return("  sigma ~ " + p + ";" + _nl())
+}
+
+string scalar _pr_tau()
+{
+    string scalar p
+    p = st_local("_tau_prior")
+    if (p == "") p = "normal(0, 2.5)"
+    return("  tau ~ " + p + ";" + _nl())
+}
+
+string scalar _pr_phi()
+{
+    string scalar p
+    p = st_local("_phi_prior")
+    if (p == "") p = "normal(0, 5)"
+    return("  phi ~ " + p + ";" + _nl())
+}
+
+string scalar _pr_gamma()
+{
+    string scalar p
+    p = st_local("_gamma_prior")
+    if (p == "") p = "normal(0, 2)"
+    return("  gamma ~ " + p + ";" + _nl())
+}
+
 // -- regress ------------------------------------------------------
 string scalar _stan_regress(real scalar K, real scalar sd)
 {
@@ -1663,7 +2056,7 @@ string scalar _stan_regress(real scalar K, real scalar sd)
     c = c + "parameters { vector[K] beta; real alpha; real<lower=0> sigma; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  sigma ~ cauchy(0, 5);" + _nl()
+    c = c + _pr_sigma()
     c = c + "  y ~ normal(alpha + X * beta, sigma);" + _nl()
     c = c + "}" + _nl()
     c = c + "generated quantities {" + _nl()
@@ -1751,7 +2144,7 @@ string scalar _stan_nbreg(real scalar K, real scalar sd)
     c = c + "parameters { vector[K] beta; real alpha; real<lower=0> phi; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  phi ~ cauchy(0, 5);" + _nl()
+    c = c + _pr_phi()
     c = c + "  { vector[N] mu = exp(alpha + X*beta); y ~ neg_binomial_2(mu, phi); }" + _nl()
     c = c + "}" + _nl()
     c = c + "generated quantities {" + _nl()
@@ -1812,7 +2205,7 @@ string scalar _stan_xtreg(real scalar K, real scalar sd)
     c = c + "transformed parameters { vector[J] u = tau * z_u; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  sigma ~ cauchy(0,5); tau ~ cauchy(0,2.5); z_u ~ std_normal();" + _nl()
+    c = c + _pr_sigma() + _pr_tau() + "  z_u ~ std_normal();" + _nl()
     c = c + "  y ~ normal(alpha + X*beta + u[panel], sigma);" + _nl()
     c = c + "}" + _nl()
     c = c + "generated quantities {" + _nl()
@@ -1837,7 +2230,7 @@ string scalar _stan_mixed(real scalar K, real scalar sd)
     c = c + "transformed parameters { vector[J] u = tau * z_u; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  sigma ~ cauchy(0,5); tau ~ cauchy(0,2.5); z_u ~ std_normal();" + _nl()
+    c = c + _pr_sigma() + _pr_tau() + "  z_u ~ std_normal();" + _nl()
     c = c + "  y ~ normal(alpha + X*beta + u[group], sigma);" + _nl()
     c = c + "}" + _nl()
     c = c + "generated quantities {" + _nl()
@@ -1860,7 +2253,7 @@ string scalar _stan_melogit(real scalar K, real scalar sd)
     c = c + "transformed parameters { vector[J] u = tau * z_u; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  tau ~ cauchy(0,2.5); z_u ~ std_normal();" + _nl()
+    c = c + _pr_tau() + " z_u ~ std_normal();" + _nl()
     c = c + "  y ~ bernoulli_logit(alpha + X*beta + u[group]);" + _nl()
     c = c + "}" + _nl()
     c = c + "generated quantities {" + _nl()
@@ -1884,7 +2277,7 @@ string scalar _stan_meprobit(real scalar K, real scalar sd)
     c = c + "transformed parameters { vector[J] u = tau * z_u; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  tau ~ cauchy(0,2.5); z_u ~ std_normal();" + _nl()
+    c = c + _pr_tau() + " z_u ~ std_normal();" + _nl()
     c = c + "  { vector[N] eta = alpha + X*beta + u[group];" + _nl()
     c = c + "    for (n in 1:N) { if (y[n]==1) target += normal_lcdf(eta[n]|0,1);" + _nl()
     c = c + "      else target += normal_lccdf(eta[n]|0,1); } }" + _nl()
@@ -1912,7 +2305,7 @@ string scalar _stan_mepoisson(real scalar K, real scalar sd)
     c = c + "transformed parameters { vector[J] u = tau * z_u; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  tau ~ cauchy(0,2.5); z_u ~ std_normal();" + _nl()
+    c = c + _pr_tau() + " z_u ~ std_normal();" + _nl()
     c = c + "  y ~ poisson_log(alpha + X*beta + u[group]);" + _nl()
     c = c + "}" + _nl()
     c = c + "generated quantities {" + _nl()
@@ -1936,7 +2329,7 @@ string scalar _stan_menbreg(real scalar K, real scalar sd)
     c = c + "transformed parameters { vector[J] u = tau * z_u; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  phi ~ cauchy(0,5); tau ~ cauchy(0,2.5); z_u ~ std_normal();" + _nl()
+    c = c + _pr_phi() + _pr_tau() + "  z_u ~ std_normal();" + _nl()
     c = c + "  { vector[N] mu = exp(alpha + X*beta + u[group]); y ~ neg_binomial_2(mu, phi); }" + _nl()
     c = c + "}" + _nl()
     c = c + "generated quantities {" + _nl()
@@ -1959,7 +2352,7 @@ string scalar _stan_meologit(real scalar K, real scalar sd)
     c = c + "transformed parameters { vector[J] u = tau * z_u; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd)
-    c = c + "  cutpoints ~ normal(0, 10); tau ~ cauchy(0,2.5); z_u ~ std_normal();" + _nl()
+    c = c + "  cutpoints ~ normal(0, 10);" + _nl() + _pr_tau() + "  z_u ~ std_normal();" + _nl()
     c = c + "  y ~ ordered_logistic(X * beta + u[group], cutpoints);" + _nl()
     c = c + "}" + _nl()
     c = c + "generated quantities {" + _nl()
@@ -1981,7 +2374,7 @@ string scalar _stan_meoprobit(real scalar K, real scalar sd)
     c = c + "transformed parameters { vector[J] u = tau * z_u; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd)
-    c = c + "  cutpoints ~ normal(0, 10); tau ~ cauchy(0,2.5); z_u ~ std_normal();" + _nl()
+    c = c + "  cutpoints ~ normal(0, 10);" + _nl() + _pr_tau() + "  z_u ~ std_normal();" + _nl()
     c = c + "  y ~ ordered_probit(X * beta + u[group], cutpoints);" + _nl()
     c = c + "}" + _nl()
     c = c + "generated quantities {" + _nl()
@@ -2003,7 +2396,7 @@ string scalar _stan_mecloglog(real scalar K, real scalar sd)
     c = c + "transformed parameters { vector[J] u = tau * z_u; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  tau ~ cauchy(0,2.5); z_u ~ std_normal();" + _nl()
+    c = c + _pr_tau() + " z_u ~ std_normal();" + _nl()
     c = c + "  { vector[N] eta = alpha + X*beta + u[group];" + _nl()
     c = c + "    for (n in 1:N) { real p = 1 - exp(-exp(eta[n]));" + _nl()
     c = c + "      target += y[n]*log(p) + (1-y[n])*log1m(p); } }" + _nl()
@@ -2031,7 +2424,7 @@ string scalar _stan_mestreg(real scalar K, real scalar sd)
     c = c + "transformed parameters { vector[J] u = tau * z_u; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  shape ~ gamma(1,1); tau ~ cauchy(0,2.5); z_u ~ std_normal();" + _nl()
+    c = c + "  shape ~ gamma(1,1);" + _nl() + _pr_tau() + "  z_u ~ std_normal();" + _nl()
     c = c + "  { vector[N] ll = alpha + X*beta + u[group];" + _nl()
     c = c + "    for (n in 1:N) { real sc = exp(-ll[n]/shape);" + _nl()
     c = c + "      if (event[n]==1) target += weibull_lpdf(t[n]|shape,sc);" + _nl()
@@ -2064,7 +2457,8 @@ string scalar _stan_hetregress(real scalar K, real scalar H, real scalar sd)
     c = c + "  matrix[N,K] X; vector[N] y; matrix[N,H] W; }" + _nl()
     c = c + "parameters { vector[K] beta; real alpha; vector[H] gamma; }" + _nl()
     c = c + "model {" + _nl()
-    c = c + _pr("beta", sd) + _pr("alpha", sd) + _pr("gamma", sd)
+    c = c + _pr("beta", sd) + _pr("alpha", sd)
+    c = c + _pr_gamma()
     c = c + "  { vector[N] mu = alpha + X*beta; vector[N] sig = exp(W*gamma);" + _nl()
     c = c + "    y ~ normal(mu, sig); }" + _nl()
     c = c + "}" + _nl()
@@ -2085,7 +2479,8 @@ string scalar _stan_hetprobit(real scalar K, real scalar H, real scalar sd)
     c = c + "  matrix[N,K] X; array[N] int<lower=0,upper=1> y; matrix[N,H] W; }" + _nl()
     c = c + "parameters { vector[K] beta; real alpha; vector[H] gamma; }" + _nl()
     c = c + "model {" + _nl()
-    c = c + _pr("beta", sd) + _pr("alpha", sd) + _pr("gamma", sd)
+    c = c + _pr("beta", sd) + _pr("alpha", sd)
+    c = c + _pr_gamma()
     c = c + "  for (n in 1:N) { real eta = (alpha + dot_product(X[n],beta)) / exp(dot_product(W[n],gamma));" + _nl()
     c = c + "    if (y[n]==1) target += normal_lcdf(eta|0,1);" + _nl()
     c = c + "    else target += normal_lccdf(eta|0,1); }" + _nl()
@@ -2108,7 +2503,8 @@ string scalar _stan_hetoprobit(real scalar K, real scalar H, real scalar sd)
     c = c + "  matrix[N,K] X; array[N] int<lower=1,upper=J> y; matrix[N,H] W; }" + _nl()
     c = c + "parameters { vector[K] beta; ordered[J-1] cutpoints; vector[H] gamma; }" + _nl()
     c = c + "model {" + _nl()
-    c = c + _pr("beta", sd) + "  cutpoints ~ normal(0, 10);" + _nl() + _pr("gamma", sd)
+    c = c + _pr("beta", sd) + "  cutpoints ~ normal(0, 10);" + _nl()
+    c = c + _pr_gamma()
     c = c + "  for (n in 1:N) { real s = exp(dot_product(W[n],gamma)); real xb = dot_product(X[n],beta);" + _nl()
     c = c + "    if (y[n]==1) target += normal_lcdf((cutpoints[1]-xb)/s|0,1);" + _nl()
     c = c + "    else if (y[n]==J) target += normal_lccdf((cutpoints[J-1]-xb)/s|0,1);" + _nl()
@@ -2135,8 +2531,9 @@ string scalar _stan_mehetregress(real scalar K, real scalar H, real scalar sd)
     c = c + "  real<lower=0> tau; vector[J] z_u; }" + _nl()
     c = c + "transformed parameters { vector[J] u = tau * z_u; }" + _nl()
     c = c + "model {" + _nl()
-    c = c + _pr("beta", sd) + _pr("alpha", sd) + _pr("gamma", sd)
-    c = c + "  tau ~ cauchy(0,2.5); z_u ~ std_normal();" + _nl()
+    c = c + _pr("beta", sd) + _pr("alpha", sd)
+    c = c + _pr_gamma()
+    c = c + _pr_tau() + " z_u ~ std_normal();" + _nl()
     c = c + "  { vector[N] mu = alpha + X*beta + u[group]; vector[N] sig = exp(W*gamma);" + _nl()
     c = c + "    y ~ normal(mu, sig); }" + _nl()
     c = c + "}" + _nl()
@@ -2161,8 +2558,9 @@ string scalar _stan_mehetoprobit(real scalar K, real scalar H, real scalar sd)
     c = c + "  real<lower=0> tau; vector[J] z_u; }" + _nl()
     c = c + "transformed parameters { vector[J] u = tau * z_u; }" + _nl()
     c = c + "model {" + _nl()
-    c = c + _pr("beta", sd) + "  cutpoints ~ normal(0, 10);" + _nl() + _pr("gamma", sd)
-    c = c + "  tau ~ cauchy(0,2.5); z_u ~ std_normal();" + _nl()
+    c = c + _pr("beta", sd) + "  cutpoints ~ normal(0, 10);" + _nl()
+    c = c + _pr_gamma()
+    c = c + _pr_tau() + " z_u ~ std_normal();" + _nl()
     c = c + "  for (n in 1:N) { real s = exp(dot_product(W[n],gamma));" + _nl()
     c = c + "    real xb = dot_product(X[n],beta) + u[group[n]];" + _nl()
     c = c + "    if (y[n]==1) target += normal_lcdf((cutpoints[1]-xb)/s|0,1);" + _nl()
@@ -2180,7 +2578,7 @@ string scalar _stan_mehetoprobit(real scalar K, real scalar H, real scalar sd)
     c = c + "}" + _nl()
     return(c)
 }
-//  Uses separation strategy: tau_k ~ half-cauchy, Omega ~ LKJ(eta)
+//  Uses separation strategy: tau_k ~ half-normal, Omega ~ LKJ(eta)
 //  Sigma = diag(tau) * Omega * diag(tau)
 //  Non-centered parameterization via Cholesky: u = (diag(tau) * L_Omega * z)'
 // =================================================================
@@ -2328,10 +2726,10 @@ string scalar _stan_me_unstruct(string scalar fam, real scalar K,
         c = c + "  cutpoints ~ normal(0, 10);" + _nl()
     }
     if (fam == "mixed" | fam == "meglm" | fam == "metobit" | fam == "xtreg") {
-        c = c + "  sigma ~ cauchy(0, 5);" + _nl()
+        c = c + _pr_sigma()
     }
     if (fam == "menbreg") {
-        c = c + "  phi ~ cauchy(0, 5);" + _nl()
+        c = c + _pr_phi()
     }
     if (fam == "mestreg") {
         c = c + "  shape ~ gamma(1, 1);" + _nl()
@@ -2339,7 +2737,7 @@ string scalar _stan_me_unstruct(string scalar fam, real scalar K,
 
     // Covariance priors
     if (covprior == "lkj") {
-        c = c + "  tau ~ cauchy(0, 2.5);" + _nl()
+        c = c + _pr_tau() + "" + _nl()
         c = c + "  L_Omega ~ lkj_corr_cholesky(" + eta_str + ");" + _nl()
         c = c + "  to_vector(z_u) ~ std_normal();" + _nl()
     }
@@ -2350,8 +2748,8 @@ string scalar _stan_me_unstruct(string scalar fam, real scalar K,
     }
     else if (covprior == "siw") {
         // Scaled Inverse-Wishart (Gelman & Hill 2006)
-        // xi ~ half-cauchy, S_raw ~ IW(R+1, I)
-        c = c + "  xi ~ cauchy(0, 2.5);" + _nl()
+        // xi ~ half-normal, S_raw ~ IW(R+1, I)
+        c = c + "  xi ~ normal(0, 2.5);" + _nl()
         c = c + "  S_raw ~ inv_wishart(R + 1, diag_matrix(rep_vector(1.0, R)));" + _nl()
         c = c + "  to_vector(z_u) ~ std_normal();" + _nl()
     }
@@ -2365,7 +2763,7 @@ string scalar _stan_me_unstruct(string scalar fam, real scalar K,
     else if (covprior == "spherical") {
         // Spherical decomposition: uniform on angles (implicit from bounds)
         // Jacobian adjustment for the angle-to-correlation transformation
-        c = c + "  tau ~ cauchy(0, 2.5);" + _nl()
+        c = c + _pr_tau() + "" + _nl()
         c = c + "  // theta ~ uniform(0, pi) -- implicit from bounds" + _nl()
         c = c + "  // Jacobian: log|det(d corr / d theta)| for proper density" + _nl()
         c = c + "  { int idx = 1;" + _nl()
@@ -2588,7 +2986,7 @@ string scalar _stan_zinb(real scalar K, real scalar sd)
     c = c + "parameters { vector[K] beta; real alpha; real<lower=0> phi; real<lower=0,upper=1> theta; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  phi ~ cauchy(0,5); theta ~ beta(1,1);" + _nl()
+    c = c + _pr_phi() + "  theta ~ beta(1,1);" + _nl()
     c = c + "  for (n in 1:N) { real mu = exp(alpha + dot_product(X[n],beta));" + _nl()
     c = c + "    if (y[n]==0) target += log_sum_exp(log(theta), log1m(theta) + neg_binomial_2_lpmf(0|mu,phi));" + _nl()
     c = c + "    else target += log1m(theta) + neg_binomial_2_lpmf(y[n]|mu,phi); }" + _nl()
@@ -2613,7 +3011,7 @@ string scalar _stan_tobit(real scalar K, real scalar sd)
     c = c + "parameters { vector[K] beta; real alpha; real<lower=0> sigma; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  sigma ~ cauchy(0,5);" + _nl()
+    c = c + _pr_sigma()
     c = c + "  { vector[N] mu = alpha + X*beta;" + _nl()
     c = c + "    for (n in 1:N) { if (cens[n]==1) target += normal_lcdf(ll|mu[n],sigma);" + _nl()
     c = c + "      else target += normal_lpdf(y[n]|mu[n],sigma); } }" + _nl()
@@ -2636,7 +3034,7 @@ string scalar _stan_betareg(real scalar K, real scalar sd)
     c = c + "parameters { vector[K] beta; real alpha; real<lower=0> phi; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  phi ~ cauchy(0,5);" + _nl()
+    c = c + _pr_phi()
     c = c + "  { vector[N] mu = inv_logit(alpha + X*beta);" + _nl()
     c = c + "    y ~ beta_proportion(mu, phi); }" + _nl()
     c = c + "}" + _nl()
@@ -2685,7 +3083,7 @@ string scalar _stan_gnbreg(real scalar K, real scalar sd)
     c = c + "parameters { vector[K] beta; real alpha; real<lower=0> phi; real delta; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  phi ~ cauchy(0,5); delta ~ normal(0,1);" + _nl()
+    c = c + _pr_phi() + "  delta ~ normal(0,1);" + _nl()
     c = c + "  { vector[N] mu = exp(alpha + X*beta);" + _nl()
     c = c + "    vector[N] alpha_i = exp(delta) * pow(mu, delta);" + _nl()
     c = c + "    for (n in 1:N) y[n] ~ neg_binomial_2(mu[n], 1.0/alpha_i[n]); }" + _nl()
@@ -2728,7 +3126,7 @@ string scalar _stan_truncreg(real scalar K, real scalar sd)
     c = c + "parameters { vector[K] beta; real alpha; real<lower=0> sigma; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  sigma ~ cauchy(0,5);" + _nl()
+    c = c + _pr_sigma()
     c = c + "  { vector[N] mu = alpha + X*beta;" + _nl()
     c = c + "    for (n in 1:N) y[n] ~ normal(mu[n], sigma) T[ll, ]; }" + _nl()
     c = c + "}" + _nl()
@@ -2750,7 +3148,7 @@ string scalar _stan_intreg(real scalar K, real scalar sd)
     c = c + "parameters { vector[K] beta; real alpha; real<lower=0> sigma; }" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd)
-    c = c + "  sigma ~ cauchy(0,5);" + _nl()
+    c = c + _pr_sigma()
     c = c + "  { vector[N] mu = alpha + X*beta;" + _nl()
     c = c + "    for (n in 1:N) {" + _nl()
     c = c + "      if (obs_type[n]==0) target += normal_lpdf(y_lo[n]|mu[n],sigma);" + _nl()
@@ -2784,7 +3182,7 @@ string scalar _stan_heckman(real scalar K, real scalar S, real scalar sd)
     c = c + "}" + _nl()
     c = c + "model {" + _nl()
     c = c + _pr("beta", sd) + _pr("alpha", sd) + _pr("gamma", sd) + _pr("gamma0", sd)
-    c = c + "  sigma ~ cauchy(0,5); rho_raw ~ normal(0,2);" + _nl()
+    c = c + _pr_sigma() + "  rho_raw ~ normal(0,2);" + _nl()
     c = c + "  { real r2 = sqrt(1.0 - square(rho));" + _nl()
     c = c + "    vector[N] w = gamma0 + W * gamma;" + _nl()
     c = c + "    vector[N] v = alpha + X * beta;" + _nl()
@@ -3122,7 +3520,7 @@ void _jint(real scalar fh, string scalar key, real scalar val, real scalar comma
 {
     string scalar c
     c = (comma ? "," : "")
-    fput(fh, "  " + char(34) + key + char(34) + ": " + strofreal(val, "%10.0f") + c)
+    fput(fh, "  " + char(34) + key + char(34) + ": " + strtrim(strofreal(val, "%10.0f")) + c)
 }
 
 void _jreal(real scalar fh, string scalar key, real scalar val, real scalar comma)
@@ -3155,7 +3553,8 @@ void _jivec(real scalar fh, string scalar key, real colvector v, real scalar com
     c = (comma ? "," : "")
     s = "  " + char(34) + key + char(34) + ": [" 
     for (i = 1; i <= n; i++) {
-        s = s + strofreal(v[i], "%10.0f")
+        if (missing(v[i])) s = s + "0"
+        else s = s + strtrim(strofreal(v[i], "%10.0f"))
         if (i < n) s = s + ","
     }
     fput(fh, s + "]" + c)
@@ -3213,13 +3612,22 @@ void _bhmc3_parse_output(string scalar outbase, real scalar nchains,
     ci_hi_p = 1 - ci_lo_p
 
     // -- Read chain CSVs ------------------------------------------
-    // Read header from first chain
+    // Read header from first available chain file
     // Note: fget() returns max 32767 chars. If the header line is longer
     // (common with random-effect models), it comes in multiple fragments.
     // We concatenate fragments until we hit a line starting with a digit,
     // minus sign, or EOF (which indicates actual data rows).
 
-    cf = outbase + "_1.csv"
+    cf = ""
+    for (k = 1; k <= nchains; k++) {
+        cf = outbase + "_" + strofreal(k) + ".csv"
+        if (fileexists(cf)) break
+        cf = ""
+    }
+    if (cf == "") {
+        errprintf("Sampling failed: no chain output files found.\n")
+        exit(198)
+    }
     fh = fopen(cf, "r")
     hdr_line = ""
     in_header = 0
@@ -3454,35 +3862,35 @@ void _bhmc3_parse_output(string scalar outbase, real scalar nchains,
             else dnames[i] = pn
         }
         else if (pn == "alpha") dnames[i] = dv + "._cons"
-        else if (pn == "sigma") dnames[i] = "sigma._cons"
-        else if (pn == "tau") dnames[i] = "sigma_u._cons"
-        else if (pn == "tau_gq") dnames[i] = "sigma_u._cons"
+        else if (pn == "sigma") dnames[i] = "sigma"
+        else if (pn == "tau") dnames[i] = "sigma_u"
+        else if (pn == "tau_gq") dnames[i] = "sigma_u"
         // tau vector (unstructured): tau.1, tau.2, tau[1], tau[2]
         else if (substr(pn, 1, 4) == "tau." | substr(pn, 1, 4) == "tau[") {
             idx_s = subinstr(subinstr(subinstr(pn, "tau[", ""), "tau.", ""), "]", "")
-            dnames[i] = "sigma_u" + idx_s + "._cons"
+            dnames[i] = "sigma_u" + idx_s
         }
         // tau_gq vector (IW/SIW): tau_gq.1, tau_gq[1]
         else if (substr(pn, 1, 7) == "tau_gq." | substr(pn, 1, 7) == "tau_gq[") {
             idx_s = subinstr(subinstr(subinstr(pn, "tau_gq[", ""), "tau_gq.", ""), "]", "")
-            dnames[i] = "sigma_u" + idx_s + "._cons"
+            dnames[i] = "sigma_u" + idx_s
         }
-        else if (pn == "rho") dnames[i] = "rho._cons"
+        else if (pn == "rho") dnames[i] = "rho"
         // Omega matrix entries
         else if (substr(pn, 1, 6) == "Omega." | substr(pn, 1, 6) == "Omega[") {
             idx_s = subinstr(subinstr(subinstr(pn, "Omega[", ""), "Omega.", ""), "]", "")
-            dnames[i] = "corr_" + subinstr(idx_s, ",", "_") + "._cons"
+            dnames[i] = "corr_" + subinstr(idx_s, ",", "_")
         }
         // var_U vector entries
         else if (substr(pn, 1, 5) == "var_U" & strlen(pn) > 5) {
             idx_s = subinstr(subinstr(subinstr(pn, "var_U[", ""), "var_U.", ""), "]", "")
-            dnames[i] = "var_u" + idx_s + "._cons"
+            dnames[i] = "var_u" + idx_s
         }
-        else if (pn == "var_U") dnames[i] = "var_u._cons"
-        else if (pn == "phi") dnames[i] = "phi._cons"
-        else if (pn == "shape") dnames[i] = "shape._cons"
-        else if (pn == "lnalpha") dnames[i] = "lnalpha._cons"
-        else if (pn == "theta") dnames[i] = "theta._cons"
+        else if (pn == "var_U") dnames[i] = "var_u"
+        else if (pn == "phi") dnames[i] = "phi"
+        else if (pn == "shape") dnames[i] = "shape"
+        else if (pn == "lnalpha") dnames[i] = "lnalpha"
+        else if (pn == "theta") dnames[i] = "theta"
         else if (substr(pn, 1, 10) == "odds_ratio" | substr(pn, 1, 3) == "irr") {
             // Skip these from main display -- shown separately if needed
             dnames[i] = pn
@@ -3490,7 +3898,7 @@ void _bhmc3_parse_output(string scalar outbase, real scalar nchains,
         else if (substr(pn, 1, 9) == "cutpoints" | substr(pn, 1, 4) == "cut[" | substr(pn, 1, 4) == "cut.") {
             // Extract index: cutpoints.1 -> 1, cutpoints[2] -> 2
             idx_s = subinstr(subinstr(subinstr(pn, "cutpoints[", ""), "cutpoints.", ""), "]", "")
-            if (idx_s != pn) dnames[i] = "cut" + idx_s + "._cons"
+            if (idx_s != pn) dnames[i] = "cut" + idx_s
             else dnames[i] = pn
         }
         // gamma (scale/selection equation) parameters
@@ -3516,9 +3924,9 @@ void _bhmc3_parse_output(string scalar outbase, real scalar nchains,
         }
         else if (pn == "gamma0") {
             if (fam == "heckman" | fam == "heckprobit") dnames[i] = "select._cons"
-            else dnames[i] = "gamma0._cons"
+            else dnames[i] = "gamma0"
         }
-        else if (pn == "mills_lambda") dnames[i] = "mills._cons"
+        else if (pn == "mills_lambda") dnames[i] = "mills_lambda"
         else dnames[i] = pn
     }
 
@@ -3720,6 +4128,68 @@ void _bhmc3_json_preview(string scalar path)
     fclose(fh)
 }
 
+void _bhmc3_validate_json(string scalar path)
+{
+    real scalar fh, offset, bad, braces, brackets, in_string, ch, prev_ch
+    string scalar content, line, errmsg
+    
+    // Read entire file
+    fh = fopen(path, "r")
+    content = ""
+    while ((line = fget(fh)) != J(0, 0, "")) {
+        content = content + line + char(10)
+    }
+    fclose(fh)
+    
+    // Check for Stata missing values (bare dots not in key names)
+    bad = 0
+    offset = 1
+    while (offset <= strlen(content)) {
+        ch = ascii(substr(content, offset, 1))
+        // Check for "." that isn't part of a decimal number
+        if (ch == 46) {  // "."
+            // Look at context: previous and next character
+            prev_ch = (offset > 1 ? ascii(substr(content, offset - 1, 1)) : 32)
+            // If previous char is comma, bracket, or space, and it's NOT followed by digit
+            if ((prev_ch == 44 | prev_ch == 91 | prev_ch == 32 | prev_ch == 58) &
+                (offset >= strlen(content) | 
+                 ascii(substr(content, offset + 1, 1)) < 48 |
+                 ascii(substr(content, offset + 1, 1)) > 57)) {
+                printf("{err}  JSON validation: bare '.' (missing value?) at offset %g\n", offset)
+                // Show context
+                printf("{err}  Context: ...%s...\n", 
+                    substr(content, max((1, offset - 20)), 40))
+                bad = 1
+            }
+        }
+        offset++
+    }
+    
+    // Quick brace/bracket balance check
+    braces = 0
+    brackets = 0
+    for (offset = 1; offset <= strlen(content); offset++) {
+        ch = ascii(substr(content, offset, 1))
+        if (ch == 123) braces++      // {
+        else if (ch == 125) braces-- // }
+        else if (ch == 91) brackets++  // [
+        else if (ch == 93) brackets-- // ]
+    }
+    if (braces != 0) {
+        printf("{err}  JSON validation: unbalanced braces (net: %g)\n", braces)
+        bad = 1
+    }
+    if (brackets != 0) {
+        printf("{err}  JSON validation: unbalanced brackets (net: %g)\n", brackets)
+        bad = 1
+    }
+    
+    if (bad) {
+        printf("{err}  JSON file may be malformed: %s\n", path)
+        printf("{err}  File size: %g bytes\n", strlen(content))
+    }
+}
+
 
 // =================================================================
 //  WAIC and LOO-CV
@@ -3730,13 +4200,23 @@ void _bhmc3_json_preview(string scalar path)
 real matrix _bhmc3_get_loglik(string scalar outbase, real scalar nchains)
 {
     real scalar fh, c, ncols, j, n_ll, S_total, s, S_c
-    string scalar header, line, tok
+    string scalar header, line, tok, cf
     string vector hdr_tok, cols
     real rowvector ll_idx, vals
     real matrix loglik
 
-    // Read header from first chain to find log_lik columns
-    fh = fopen(outbase + "_1.csv", "r")
+    // Read header from first available chain to find log_lik columns
+    cf = ""
+    for (c = 1; c <= nchains; c++) {
+        cf = outbase + "_" + strofreal(c) + ".csv"
+        if (fileexists(cf)) break
+        cf = ""
+    }
+    if (cf == "") {
+        errprintf("No chain output files found for WAIC/LOO.\n")
+        exit(601)
+    }
+    fh = fopen(cf, "r")
     while ((line = fget(fh)) != J(0,0,"")) {
         if (substr(line, 1, 1) != "#") break
     }
@@ -3780,7 +4260,9 @@ real matrix _bhmc3_get_loglik(string scalar outbase, real scalar nchains)
     // Count total draws across chains
     S_total = 0
     for (c = 1; c <= nchains; c++) {
-        fh = fopen(outbase + "_" + strofreal(c) + ".csv", "r")
+        cf = outbase + "_" + strofreal(c) + ".csv"
+        if (!fileexists(cf)) continue
+        fh = fopen(cf, "r")
         while ((line = fget(fh)) != J(0,0,"")) {
             if (substr(line, 1, 1) != "#" & strpos(line, "lp__") == 0) {
                 S_total++
@@ -3793,7 +4275,9 @@ real matrix _bhmc3_get_loglik(string scalar outbase, real scalar nchains)
     loglik = J(S_total, n_ll, .)
     s = 0
     for (c = 1; c <= nchains; c++) {
-        fh = fopen(outbase + "_" + strofreal(c) + ".csv", "r")
+        cf = outbase + "_" + strofreal(c) + ".csv"
+        if (!fileexists(cf)) continue
+        fh = fopen(cf, "r")
         while ((line = fget(fh)) != J(0,0,"")) {
             if (substr(line, 1, 1) == "#") continue
             if (strpos(line, "lp__") > 0) continue

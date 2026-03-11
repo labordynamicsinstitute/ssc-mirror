@@ -19,6 +19,7 @@ p bayeshmc module to fit Bayesian regression models in Stata using the No-U-Turn
 p bayesmixedlogit module to perform Bayesian estimation of mixed logit models
 p bayesmixedlogitwtp module for Bayesian estimation of mixed logit model in willingness-to-pay (WTP) space
 p bayesmlogit module to perform Bayesian estimation of mixed logit models
+p bbandits module to Estimate Batched OLS for Multi-Armed Bandits
 p bcii module to to estimate the number needed to treat (NNT) and confidence intervals for patients improving, or ‘benefiting’ (either improvements gained or deteriorations prevented), in a randomised controlled trial
 p bcoeff module to save regression coefficients to new variable
 p bcoeffs module to save regression coefficients to new variable

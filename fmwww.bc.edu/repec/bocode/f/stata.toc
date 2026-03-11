@@ -19,6 +19,7 @@ p fbardl module to perform Fourier Bootstrap Autoregressive Distributed Lag Mode
 p fbep Module to Estimate Financial Break-Even Point Analysis (BEP)
 p fbnardl module to perform Fourier Bootstrap Nonlinear Autoregressive Distributed Lag estimation
 p fcinstability module to perform forecast comparison and forecast rationality tests
+p fcoint module to perform Fourier cointegration tests for time series with smooth structural breaks
 p fcstats module to compute time series forecast accuracy statistics
 p fdfilter module to implement Corbae-Ouliaris frequency domain filter to time series data
 p fdta module to change contents of string variables

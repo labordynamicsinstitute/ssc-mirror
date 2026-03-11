@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 4.2.0  16feb2026}{...}
+{* *! version 4.3.0  25feb2026}{...}
 {vieweralsosee "[BAYES] bayesmh" "help bayesmh"}{...}
 {vieweralsosee "[ME] mixed" "help mixed"}{...}
 {vieweralsosee "[ME] melogit" "help melogit"}{...}
@@ -51,6 +51,9 @@ using CmdStan{p_end}
 {cmd:bayeshmc ess}
 
 {p 8 16 2}
+{cmd:bayeshmc bayesplot} [{cmd:,} {cmdab:par:ameters(}{it:namelist}{cmd:)} {cmdab:lag:s(}{it:#}{cmd:)} {cmdab:sav:ing(}{it:filename}{cmd:)}]
+
+{p 8 16 2}
 {cmd:bayeshmc trace} [{cmd:,} {cmdab:par:ameters(}{it:namelist}{cmd:)} {cmdab:sav:ing(}{it:filename}{cmd:)}]
 
 {p 8 16 2}
@@ -91,6 +94,15 @@ Increase toward 1.0 for difficult posteriors.{p_end}
 {synopt:{opt normalprior(#)}}standard deviation of normal prior on regression
 coefficients; default is {cmd:normalprior(100)}{p_end}
 {synopt:{opt prior_sd(#)}}synonym for {cmd:normalprior()}{p_end}
+{synopt:{opt sigmaprior(string)}}prior for residual SD (sigma); default is
+{cmd:sigmaprior(normal(0, 5))} (half-normal via lower bound){p_end}
+{synopt:{opt tauprior(string)}}prior for random-effect SD (tau); default is
+{cmd:tauprior(normal(0, 2.5))} (half-normal via lower bound){p_end}
+{synopt:{opt phiprior(string)}}prior for precision/overdispersion (phi); default is
+{cmd:phiprior(normal(0, 5))} (half-normal via lower bound){p_end}
+{synopt:{opt gammaprior(string)}}prior for variance-equation coefficients (gamma);
+default is {cmd:gammaprior(normal(0, 2))}. The tighter default reflects
+that gamma operates on the log scale.{p_end}
 {synopt:{opt lkjprior(#)}}LKJ concentration parameter eta for correlation
 matrices; default is {cmd:lkjprior(1)} (uniform over correlations){p_end}
 {synopt:{opt covprior(string)}}prior for unstructured covariance matrix;
@@ -115,6 +127,8 @@ unchanged{p_end}
 
 {syntab:Reporting}
 {synopt:{opt noheader}}suppress the output header{p_end}
+{synopt:{opt diag:nostics}}display detailed convergence diagnostics table
+after estimation{p_end}
 {synopt:{opt sav:ing(filename)}}save MCMC draws to a Stata dataset{p_end}
 
 {syntab:Parameterization}
@@ -152,6 +166,28 @@ See {browse "https://mc-stan.org/users/interfaces/cmdstan":mc-stan.org} for
 installation instructions.  After installation, run
 {cmd:bayeshmc, setup path(}{it:cmdstan_path}{cmd:)} once to register the
 path.
+
+{pstd}
+{bf:Automatic setup each session.}  To avoid running {cmd:setup} manually
+every time Stata starts, add the following line to your {cmd:profile.do}:
+
+{phang2}{cmd:global CMDSTAN_HOME "C:\Users\username\.cmdstan\cmdstan-2.38.0"}{p_end}
+
+{pstd}
+Stata executes {cmd:profile.do} at startup.  The file is located at:
+
+{phang2}Windows: {cmd:C:\ado\personal\profile.do}{p_end}
+{phang2}macOS/Linux: {cmd:~/ado/personal/profile.do}{p_end}
+
+{pstd}
+If the file does not exist, create it.  You can also auto-detect CmdStan
+by adding:
+
+{phang2}{cmd:capture quietly bayeshmc, setup}{p_end}
+
+{pstd}
+which scans standard locations ({cmd:~/.cmdstan/}, {cmd:C:\Users\username\.cmdstan\})
+silently at startup.
 
 
 {marker options}{...}
@@ -277,6 +313,17 @@ median, and credible interval) for all parameters.
 {cmd:bayeshmc ess} displays effective sample sizes (ESS) and split-chain R-hat
 for all parameters.  ESS is computed using the variogram-based estimator of
 Vehtari et al. (2021).  R-hat uses the rank-normalized split-chain diagnostic.
+
+{phang}
+{cmd:bayeshmc bayesplot} [{cmd:,} {cmd:parameters(}{it:namelist}{cmd:)}
+{cmd:lags(}{it:#}{cmd:)} {cmd:saving(}{it:filename}{cmd:)}]
+produces a comprehensive 5-panel MCMC diagnostic display with one row per
+parameter: parameter labels, trace plots (chains overlaid), posterior
+density, autocorrelation, and running R-hat.  This is the recommended
+diagnostic command---it loads chain data once and creates all panels in a
+single pass, replacing separate calls to {cmd:trace}, {cmd:density},
+{cmd:ac}, and {cmd:histogram}.  By default, up to 8 parameters are shown.
+Default is 30 autocorrelation lags.
 
 {phang}
 {cmd:bayeshmc trace} [{cmd:,} {cmd:parameters(}{it:namelist}{cmd:)}
@@ -604,17 +651,44 @@ unreliable.
 {p2col 5 24 28 2: Scalars}{p_end}
 {synopt:{cmd:e(N)}}number of observations{p_end}
 {synopt:{cmd:e(chains)}}number of chains{p_end}
-{synopt:{cmd:e(mcmc_size)}}total number of posterior draws{p_end}
+{synopt:{cmd:e(iterations)}}post-warmup iterations per chain{p_end}
+{synopt:{cmd:e(warmup)}}warmup iterations per chain{p_end}
+{synopt:{cmd:e(seed)}}random-number seed{p_end}
+{synopt:{cmd:e(mcmc_size)}}total number of posterior draws
+({it:iterations} x {it:chains}){p_end}
+{synopt:{cmd:e(min_ess)}}minimum effective sample size across parameters{p_end}
+{synopt:{cmd:e(max_ess)}}maximum effective sample size across parameters{p_end}
+{synopt:{cmd:e(max_rhat)}}maximum R-hat across parameters{p_end}
+{synopt:{cmd:e(converged)}}convergence indicator: 1 if
+{cmd:e(min_ess)} >= 400 and {cmd:e(max_rhat)} <= 1.1{p_end}
 
 {p2col 5 24 28 2: Macros}{p_end}
 {synopt:{cmd:e(cmd)}}{cmd:bayeshmc}{p_end}
-{synopt:{cmd:e(family)}}estimation command (e.g., {cmd:melogit}){p_end}
+{synopt:{cmd:e(model)}}estimation family (e.g., {cmd:regress}, {cmd:melogit}){p_end}
+{synopt:{cmd:e(family)}}synonym for {cmd:e(model)}{p_end}
 {synopt:{cmd:e(depvar)}}name of dependent variable{p_end}
 
 {p2col 5 24 28 2: Matrices}{p_end}
-{synopt:{cmd:e(b)}}posterior means{p_end}
-{synopt:{cmd:e(V)}}diagonal matrix of posterior variances{p_end}
+{synopt:{cmd:e(b)}}1 x k vector of posterior means{p_end}
+{synopt:{cmd:e(V)}}k x k diagonal matrix of posterior variances{p_end}
+{synopt:{cmd:e(stats)}}k x 6 matrix of posterior summaries; columns are
+{cmd:mean}, {cmd:sd}, {cmd:mcse}, {cmd:median}, {cmd:ci_lo}, {cmd:ci_hi}{p_end}
+{synopt:{cmd:e(ess)}}1 x k vector of effective sample sizes{p_end}
+{synopt:{cmd:e(rhat)}}1 x k vector of R-hat values{p_end}
 {p2colreset}{...}
+
+{pstd}
+Row and column names of {cmd:e(stats)}, {cmd:e(ess)}, and {cmd:e(rhat)} use
+the same parameter names as {cmd:e(b)}, which follow the Stata
+{cmd:equation:variable} convention.
+
+{pstd}
+{cmd:bayeshmc waic} stores in {cmd:r()}: {cmd:r(waic)}, {cmd:r(lppd)},
+{cmd:r(p_waic)}, {cmd:r(se_waic)}.
+
+{pstd}
+{cmd:bayeshmc loo} stores in {cmd:r()}: {cmd:r(looic)}, {cmd:r(loo_lppd)},
+{cmd:r(p_loo)}, {cmd:r(se_looic)}, {cmd:r(n_high_khat)}.
 
 
 {marker technical}{...}
@@ -730,6 +804,8 @@ All examples assume CmdStan has been set up:
 
 {phang2}{cmd:. sysuse auto, clear}{p_end}
 {phang2}{cmd:. bayeshmc, iter(2000) chains(4) seed(12345) : logit foreign mpg weight}{p_end}
+{phang2}{cmd:. bayeshmc bayesplot}{p_end}
+{phang2}{cmd:. bayeshmc bayesplot, saving("diagnostics.png")}{p_end}
 {phang2}{cmd:. bayeshmc trace}{p_end}
 {phang2}{cmd:. bayeshmc ac, lags(30)}{p_end}
 {phang2}{cmd:. bayeshmc density}{p_end}

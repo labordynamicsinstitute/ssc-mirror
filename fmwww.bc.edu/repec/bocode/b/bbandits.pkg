@@ -1,0 +1,39 @@
+d 'BBANDITS': module to Estimate Batched OLS for Multi-Armed Bandits
+d
+d    This package provides tools for implementing and analyzing
+d batched multi-armed bandit experiments in Stata. It supports
+d adaptive treatment allocation across batches using several
+d assignment algorithms, including ε-first, ε-greedy, and
+d Thompson sampling. For estimation, the package implements
+d heteroskedasticity-robust batched OLS (BOLS). The package also
+d includes commands to simulate batched bandit designs, implement
+d allocation rules, and evaluate experimental performance. 
+d
+d KW: Randomized controlled trial
+d KW: causal inference
+d KW: multi-armed bandits
+d KW: experimental design
+d KW: machine learning
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260307
+d
+d Author:   Jan Kemper , Leibniz-Zentrum für Europäische Wirtschaftsforschung (ZEW)
+d Support: email jan.kemper@@zew.de 
+d
+d Author:   Davud Rostam-Afschar, University of Mannheim
+d Support: email rostam-afschar@@uni-mannheim.de
+d
+f bbandits.ado
+f bbandits.sthlp
+f bbandits_initialize.ado
+f bbandits_sim.ado
+f bbandits_update.ado
+f bbandits_initialize.sthlp
+f bbandits_sim.sthlp
+f bbandits_update.sthlp
+f bbandits_functions.py
+f bbandits_example.do
+f ../g/gaul_et_al_2024.dta
+f ../k/kasy_sautmann_2021.dta

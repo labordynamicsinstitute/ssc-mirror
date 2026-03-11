@@ -14,7 +14,7 @@ d KW: Bayesian regression
 d
 d Requires: Stata version 16, CmdStan 2.33, C++ compiler
 d
-d Distribution-Date: 20260222
+d Distribution-Date: 20260307
 d
 d Author:  Ben Dwamena, Division of Nuclear Medicine and Molecular Imaging, University of Michigan Health System, Ann Arbor
 d Support: email  bdwamena@@umich.edu

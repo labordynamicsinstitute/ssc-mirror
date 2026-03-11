@@ -1,0 +1,22 @@
+d 'XTPCAUS': module to perform Panel Granger Causality Tests: Panel Fourier Toda-Yamamoto (PFTY) and Panel Quantile Causality (PQC)
+d
+d	xtpcaus implements two panel Granger causality tests for
+d strongly balanced panel data.  The	command tests whether
+d indepvar Granger-causes depvar, with both individual-level and
+d panel-level	 test statistics. For each test, bootstrap p-values
+d account for cross-sectional dependence among	  panel units. 
+d
+d KW: panel data
+d KW: Granger causality tests
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260307
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtpcaus.ado
+f xtpcaus.sthlp
+f ../_/_xtpcaus_pfty.ado
+f ../_/_xtpcaus_pqc.ado

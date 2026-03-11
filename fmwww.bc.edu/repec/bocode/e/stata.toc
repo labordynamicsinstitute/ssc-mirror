@@ -107,6 +107,7 @@ p eventstudyweights module to estimate the implied weights on the cohort-specifi
 p evhistplot module to produce event history plot
 p evi module to compute Epidemic Volatility Index (EVI) for detecting epidemic waves
 p evstudydd module to estimate event studies in D-i-D settings 
+p ewm module to perform evaluation by the entropy weight method (EWM)
 p ewma module to calculate exponentially weighted moving average
 p ewreg module to estimate errors-in-variable model with mismeasured regressor
 p exam2tex module to Generate Standardized LaTeX Exam Templates

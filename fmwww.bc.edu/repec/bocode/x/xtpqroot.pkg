@@ -1,0 +1,42 @@
+d 'XTPQROOT': module to provide Panel Quantile Unit Root Tests with Common Shocks & Structural Breaks
+d
+d   xtpqroot implements two novel panel unit root tests designed
+d for panel data with cross-sectional	 dependence (CSD):	 
+d 1) CIPS(tau) Test: Quantile panel unit root test with common
+d shocks, proposed by Yang, Wei &	     Cai (2022, Economics
+d Letters). It extends Pesaran's (2007) CIPS test to a quantile    
+d	 regression framework, allowing the analysis of asymmetric
+d persistence across different		  quantiles of the
+d conditional distribution. While the standard CIPS test assesses
+d the mean	      persistence, CIPS(tau) can detect, for
+d example, whether a series is more persistent in	    
+d extreme quantiles than in the center. Implementation follows
+d Nazlioglu, Tarakci, Karul &		 Erdem (2026, NAJEF).	   
+d  2) tFR Test: Panel unit root test with smooth and sharp
+d structural breaks, proposed by	    Corakci & Omay (2023,
+d Renewable Energy). It combines the fractional Fourier function
+d (for		  smooth, gradual breaks) with the logistic smooth
+d transition (LST) function (for sharp, 	   abrupt breaks).
+d This allows the test to capture {bf:both types of structural
+d change	    simultaneously}. Cross-sectional dependence is
+d corrected via the sieve bootstrap	       procedure of Chang
+d (2004). 
+d
+d KW: time series
+d KW: panel data
+d KW: quantile
+d KW: unit root
+d KW: Common Shocks
+d KW: Structural Breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260228
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtpqroot.ado
+f xtpqroot.sthlp
+f ../_/_xtpqroot_cips.ado
+f ../_/_xtpqroot_fourier.ado
