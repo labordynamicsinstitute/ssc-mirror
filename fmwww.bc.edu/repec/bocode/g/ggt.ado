@@ -1,4 +1,4 @@
-*! version 5.0.0 11Aug2025
+*! version 6.0.0 24Jan2026
 
 
 ***********************************************
@@ -164,7 +164,8 @@ quietly {
 	tempfile org_dat_temp
 
 *define tempvars needed for remaining data checks
-	tempvar temp_GGT_flag temp_GGT_outcomesum temp_GGT_choicesum
+	tempvar temp_GGT_flag temp_GGT_min temp_GGT_max temp_GGT_outcomesum temp_GGT_choicesum
+
 
 *Check that each org appears once per individual
 	 egen `temp_GGT_flag' = count(temp_ggt_orgID), by(temp_ggt_persid)
@@ -242,9 +243,10 @@ quietly {
 * Check that indchar are the same within individual 
 	drop `temp_GGT_flag'
 	foreach ind_var in `indchar' {
-		cap drop `temp_GGT_flag'
-		egen `temp_GGT_flag'=mean(`ind_var'), by(`indID')
-		count if `ind_var'!=`temp_GGT_flag'
+		cap drop `temp_GGT_min' `temp_GGT_max'
+		egen double `temp_GGT_min'=min(`ind_var'), by(`indID')
+		egen double `temp_GGT_max'=max(`ind_var'), by(`indID')
+		count if `temp_GGT_min'!=`temp_GGT_max'
 		if r(N)>0 {
 			display as error "indchar `ind_var' must be the same within individual"
 			use `user_data_`randomID'', clear
@@ -252,7 +254,7 @@ quietly {
 			exit 504
 		}
 	}
-		
+	
 * Check that orgchar are the same within organization
 	tempvar orgcheck1 orgcheck2
 	foreach org_var in `orgchar' {

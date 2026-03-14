@@ -1,0 +1,30 @@
+d 'STANRUN': module to provide Modern interface to CmdStan for Bayesian modeling
+d
+d  stanrun provides a modern interface to CmdStan for running
+d Bayesian models in Stata. It supports full MCMC via Hamiltonian
+d Monte Carlo (HMC) with the No-U-Turn Sampler (NUTS), as well as
+d fast approximate inference via Automatic Differentiation
+d Variational Inference (ADVI). The package handles model
+d compilation, data export in R/S dump format, sequential chain
+d execution, automatic posterior import into Stata, and basic
+d convergence diagnostics (divergent transitions, R-hat, ESS).
+d stanrun is an enhanced successor to StataStan (Robert Grant &
+d Mustafa Ascha), with key improvements including synchronous shell
+d execution compatible with StataNow 19.5, automatic RTools
+d detection for Windows compilation, CmdStan CSV import with
+d automatic variable renaming, and variational inference support. 
+d
+d KW: STAN
+d KW: Bayesian modeling
+d
+d Requires: Stata version 14 for Windows, CmdStan 2.26+, RTools 
+d
+d Distribution-Date: 20260313
+d
+d Author:  Ben Dwamena, Division of Nuclear Medicine and Molecular Imaging, University of Michigan Health System, Ann Arbor
+d Support: email  bdwamena@@umich.edu
+d
+f stanrun.ado
+f stanrun.sthlp
+f stanrun_diagnostics.ado
+f stanrun_extract.ado

@@ -1,0 +1,30 @@
+d 'TENSPIDERS': module for measuring medication adherence using pharmaceutical claims data
+d
+d    The TENSPIDERS command measures medication adherence using
+d pharmaceutical claims data.  It    calculates adherence using the
+d Proportion of Days Covered (PDC) method, with flexible parameters
+d    that can be customized according to the TEN-SPIDERS framework
+d (Dalli et al.  Br J Clin Pharmacol.	 2022;88(10):4427–4442). 
+d
+d KW: pharmaceuticals
+d KW: adherence
+d KW: medication
+d
+d Requires: Stata version 10
+d
+d Distribution-Date: 20260313
+d
+d Author:   Adam C. Livori, Monash University
+d Support: email NA
+d
+d Author:  Tzu-Yung Kuo*, Monash University
+d Support: email NA
+d
+d Author:  Jedidiah I. Morton, Monash University
+d Support: email NA
+d
+d Author:  Lachlan L. Dalli, Monash University
+d Support: email lachlan.dalli@@monash.edu
+d
+f tenspiders.ado
+f tenspiders.sthlp

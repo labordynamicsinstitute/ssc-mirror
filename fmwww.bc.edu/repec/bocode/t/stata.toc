@@ -42,6 +42,7 @@ p tddens module to estimate and graph bivariate density with heat map
 p tdpd module to analyze third-degree price discrimination
 p ted module to test Stability of Regression Discontinuity Models
 p teffects2 module to estimate average treatment effects with observational data
+p tenspiders module for measuring medication adherence using pharmaceutical claims data
 p ternary module for trivariate plots
 p tesensitivity module for assessing sensitivity to the unconfoundedness assumption
 p testcase module to provide a code-testing framework for Mata
@@ -179,6 +180,7 @@ p twofold module to perform multiple imputation using the two-fold fully conditi
 p twolevelr2 module to compute within, between, and overall R-squared in linear two-level models
 p twopm module to estimate two-part models
 p twostep module to perform twostep multilevel analysis
+p twostep_nardl module providing Two-step estimation of the Nonlinear Autoregressive Distributed Lag (NARDL)
 p twostepweakiv module to implement two-step weak-instrument-robust confidence sets for linear instrumental-variable (IV) models
 p twoway__whistogram_gen module for generating histogram variables using aweights or iweights 
 p twoway_estfit module to enable graph twoway estfit

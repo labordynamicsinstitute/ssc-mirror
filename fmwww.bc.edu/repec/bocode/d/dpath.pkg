@@ -1,0 +1,27 @@
+d 'DPATH': module to construct and audit longitudinal decision paths
+d
+d  dpath is a Stata package for constructing and auditing
+d longitudinal decision paths from panel    data. It implements the
+d Decision Infrastructure Paradigm (Hait, 2026), which
+d conceptualizes    institutional AI systems as infrastructure
+d generating time-ordered binary decision sequences —    the
+d decision path — as the primary empirical object. 
+d
+d KW: decision paths
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260313
+d
+d Author:    Subir Hait,  Michigan State University
+d Support: email   haitsubi@@msu.edu
+d
+f dpath.ado
+f dpath.sthlp
+f dpath_audit.ado
+f dpath_build.ado
+f dpath_describe.ado
+f dpath_dri.ado
+f dpath_entropy.ado
+f dpath_equity.ado
+f dpath_example.do

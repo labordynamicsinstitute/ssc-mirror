@@ -126,6 +126,7 @@ p doub2flt module to change storage type of real variable
 p doubleb module to compute Contingent Valuation using Double-Bounded Dichotomous Choice 
 p doubletofloat module to recast variables from double to float storage type
 p doubmass module to draw double mass plot
+p dpath module to construct and audit longitudinal decision paths
 p dpplot module for density probability plots 
 p dpredict module to produce dynamic forecasts  for ARIMA(p,s,q) models
 p dqd module to compute treatment effects under alternative Parallel-q assumptions

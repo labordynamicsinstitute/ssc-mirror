@@ -1,0 +1,24 @@
+d 'TWOSTEP_NARDL': module providing Two-step estimation of the Nonlinear Autoregressive Distributed Lag (NARDL)
+d
+d	twostep_nardl implements the two-step estimation framework
+d for the Nonlinear Autoregressive    Distributed Lag (NARDL) model
+d developed by Cho, Greenwood-Nimmo, and Shin (2019).	 The NARDL
+d model (Shin, Yu, and Greenwood-Nimmo, 2014) is an asymmetric
+d extension of the ARDL    model of Pesaran, Shin, and Smith
+d (2001). It decomposes changes in independent variables into	
+d positive and negative partial sums, allowing separate long-run
+d and short-run coefficients for    increases vs. decreases. 
+d
+d KW: ARDL
+d KW: autoregressive distributed lag model
+d KW: nonlinear estimation
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260313
+d
+f twostep_nardl.ado
+f twostep_nardl.sthlp
+f ../_/twostep_nardl_p.ado
+f ../_/twostep_nardl_estat.ado
+f ../_/_2snardl_mata.do

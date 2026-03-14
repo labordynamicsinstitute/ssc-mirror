@@ -23,6 +23,7 @@ p upoint module to calculate the change value of inflection point of U or invert
 p upsetplot module to show Euler or Venn diagrams mapped to bar charts, upsetplot style
 p urall module to unify unit root tests (ADF, PP, ERS, and Zivot-Andrews) into a single, publication-quality table format with standardized output
 p urcovar module to perform Elliott-Jansson test for unit roots with stationary covariates
+p urstat module providing Comprehensive Unified Unit Root & Stationarity Testing
 p usagelog module to log usage of Stata programs in an existing text file
 p usd module to get US dollar exchange rates from the Federal Reserve
 p use10 module to use and describe version 10 datafiles in Stata 9.2

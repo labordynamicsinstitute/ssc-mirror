@@ -1,0 +1,20 @@
+d 'URSTAT': module providing Comprehensive Unified Unit Root & Stationarity Testing
+d
+d   urstat performs comprehensive unit root and stationarity
+d testing on one or more time series	variables simultaneously.
+d It produces up to six publication-quality tables and optional   
+d high-resolution PNG graphs, consolidating the most widely used
+d tests into a single command.	  All tests are applied at Level,
+d First Difference, and Second Difference to determine the   
+d integration order of each variable. 
+d
+d KW: unit root tests
+d KW: stationarity
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260313
+d
+f urstat.ado
+f urstat.sthlp
+f urstat_example.do

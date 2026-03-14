@@ -294,6 +294,7 @@ p staggered module implementing R staggered package based on Roth and Sant'Anna 
 p stak module to do simple reshapes or stacks
 p stan module to use Stan software for Bayesian modeling
 p standsurv module to compute standardized (marginal) survival and related functions
+p stanrun module to provide Modern interface to CmdStan for Bayesian modeling
 p starjas module to produce Arjas plot to check proportional hazards assumption
 p stat2data module to generate a Dataset of Descriptive Statistics Calculated for a List of Variables
 p stata2pajek module to export data to Pajek .net format
