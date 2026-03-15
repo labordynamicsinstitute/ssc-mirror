@@ -574,23 +574,23 @@ end
 
 
 if (c(os) == "Windows") {
-	program _lewis_mertens_crit_vals, plugin using(_lewis_mertens_crit_vals_win.plugin)
+	program gweakivtest_crit_vals_plugin, plugin using(gweakivtest_crit_vals_win.plugin)
 }
 else if (c(os) == "MacOSX") {
-	program _lewis_mertens_crit_vals, plugin using(_lewis_mertens_crit_vals_mac.plugin)
+	program gweakivtest_crit_vals_plugin, plugin using(gweakivtest_crit_vals_mac.plugin)
 }
 else if (c(os) == "Unix") {
-	program _lewis_mertens_crit_vals, plugin using(_lewis_mertens_crit_vals_linux.plugin)
+	program gweakivtest_crit_vals_plugin, plugin using(gweakivtest_crit_vals_linux.plugin)
 }
 
 
 
-capture program drop lewis_mertens_crit_vals
-program define lewis_mertens_crit_vals
+capture program drop gweakivtest_crit_vals
+program define gweakivtest_crit_vals
 
 	syntax, covmat(name) sigmat(name) sigvmat(name) numendog(integer) numinstr(integer) alpha(real) tau(real) rel(integer) target(integer) retain(integer) points(integer) procs(integer) record(integer) syn_cv_name(name) lms_cv_name(name) lmn_cv_name(name) lms_converged_name(name) lmn_converged_name(name)
 
-	plugin call _lewis_mertens_crit_vals, `covmat' `sigmat' `sigvmat' `numendog' `numinstr' `alpha' `tau' `rel' `target' `retain' `points' `procs' `record' `syn_cv_name' `lms_cv_name' `lmn_cv_name' `lms_converged_name' `lmn_converged_name'
+	plugin call gweakivtest_crit_vals_plugin, `covmat' `sigmat' `sigvmat' `numendog' `numinstr' `alpha' `tau' `rel' `target' `retain' `points' `procs' `record' `syn_cv_name' `lms_cv_name' `lmn_cv_name' `lms_converged_name' `lmn_converged_name'
 	
 end
 
@@ -718,7 +718,7 @@ void _gweakivtest(real scalar alpha, real scalar tau, real scalar rel, real scal
 	
 		// Call plugin program
 
-		plugin_prog_call_string = "lewis_mertens_crit_vals, covmat(" + Wtempname + ") sigmat(" + Sigtempname + ") sigvmat(" + Sigvtempname + ") numendog(" + strofreal(Nact) + ") numinstr(" + strofreal(Kact) + ") alpha(" + strofreal(alpha) + ") tau(" + strofreal(tau) + ") rel(" + strofreal(rel) + ") target(" + strofreal(target) + ") retain(" + strofreal(retain) + ") points(" + strofreal(points) + ") procs(" + strofreal(procs) + ") record(" + strofreal(record) + ") syn_cv_name(" + syn_cv_scalar_name + ") lms_cv_name(" + lms_cv_scalar_name + ") lmn_cv_name(" + lmn_cv_scalar_name + ") lms_converged_name(" + lms_converged_scalar_name + ") lmn_converged_name(" + lmn_converged_scalar_name + ")"
+		plugin_prog_call_string = "gweakivtest_crit_vals, covmat(" + Wtempname + ") sigmat(" + Sigtempname + ") sigvmat(" + Sigvtempname + ") numendog(" + strofreal(Nact) + ") numinstr(" + strofreal(Kact) + ") alpha(" + strofreal(alpha) + ") tau(" + strofreal(tau) + ") rel(" + strofreal(rel) + ") target(" + strofreal(target) + ") retain(" + strofreal(retain) + ") points(" + strofreal(points) + ") procs(" + strofreal(procs) + ") record(" + strofreal(record) + ") syn_cv_name(" + syn_cv_scalar_name + ") lms_cv_name(" + lms_cv_scalar_name + ") lmn_cv_name(" + lmn_cv_scalar_name + ") lms_converged_name(" + lms_converged_scalar_name + ") lmn_converged_name(" + lmn_converged_scalar_name + ")"
 		stata(plugin_prog_call_string)
 		
 	}

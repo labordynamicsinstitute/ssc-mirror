@@ -24,7 +24,7 @@ d KW: 2SLS
 d
 d Requires: Stata version 16 and avar from SSC (q.v.)
 d
-d Distribution-Date: 20260223
+d Distribution-Date: 20260314
 d
 d Author:  Daniel J. Lewis , University College London
 d Support: email daniel.lewis920@@gmail.com
@@ -37,6 +37,9 @@ d Support: email jon@@jonshaw.net
 d
 f gweakivtest.ado
 f gweakivtest.sthlp
-F ../_/_lewis_mertens_crit_vals_linux.plugin
-F ../_/_lewis_mertens_crit_vals_mac.plugin
-F ../_/_lewis_mertens_crit_vals_win.plugin
+G LINUX64   gweakivtest_crit_vals_linux.plugin  
+G MACINTEL64 gweakivtest_crit_vals_mac.plugin    
+G MACARM64 gweakivtest_crit_vals_mac.plugin    
+G WIN64 gweakivtest_crit_vals_win.plugin    
+
+

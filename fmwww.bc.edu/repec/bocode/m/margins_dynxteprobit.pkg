@@ -1,0 +1,38 @@
+d 'MARGINS_DYNXTEPROBIT': module to compute Marginal effects for a dynamic xteprobit with attrition
+d
+d   margins_dynxteprobit is a post-estimation command that produces
+d marginal effects estimates	following a dynamic xteprobit model
+d with endogenous attrition as proposed and studied by Carlson	 
+d and Semykina (2026). It fits regression models with selection by
+d using Heckman's two-step    consistent estimator.    In using the
+d xteprobit command for a dynamic xteprobit model with endogenous
+d attrition,	estimation occurs on a subset of the data, the time
+d periods that are observed and only the first	  time period of
+d attrition. The margins command is confined to compute marginal
+d effects on this    subset sample. The margins_dynxteprobit
+d command computes unconditional marginal effects (not	 
+d conditional on non-attrition) averaged over the entire sample.   
+d The default is calculating marginal effects with respect to the
+d binary lagged dependent variable    in the dynamic model. Other
+d capabilities include estimating marginal effects of other
+d continuous	variables (evaluated at fixed values of the lagged
+d binary dependent variable); estimating    marginal effects of
+d discrete variables as specified differences (evaluated at fixed
+d values of the    lagged binary dependent variable); and
+d estimating marginal effects at specified values of the   
+d covariates. 
+d
+d KW: panel data
+d KW: probit
+d KW: margins
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260314
+d
+d Author:  Alyssa H. Carlson, University of Missouri
+d Support: email  carlsonah@@missouri.edu
+d
+f margins_dynxteprobit.ado
+f margins_dynxteprobit.sthlp
+f margins_dynxteprobit_examples.do

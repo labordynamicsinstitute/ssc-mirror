@@ -1,0 +1,31 @@
+d 'XTGETS': module providing Panel General-to-Specific (GETS) Indicator Saturation for Structural Break Detection
+d
+d      xtgets implements Indicator Saturation methods for panel
+d data using automated General-to-Specific    (GETS) model
+d selection.  The command detects when and where structural breaks
+d occurred in panel    fixed-effects models, without requiring the
+d researcher to pre-specify the timing or location of	 any break.
+d    Why use xtgets?  Traditional panel estimators (e.g. TWFE,
+d diff-in-diff) require the researcher to    specify exactly which
+d units were treated and when.	xtgets reverses this logic: it
+d starts from	 the outcome and discovers treatment timing,
+d magnitude, and assignment by searching over a large	 set of
+d candidate break indicators and retaining only those that are
+d statistically significant.	This is what Pretis and Schwarz
+d (2022) call the reverse causal approach. 
+d
+d KW: panel dta
+d KW: structural breaks
+d KW: GETS
+d KW: general-to-specific
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20260314
+d
+f xtgets.ado
+f xtgets.sthlp
+f xtgets_mata.ado
+f xtgets_plot.ado
+f xtgets_plot.sthlp
+f xtgets_example.do

@@ -25,6 +25,7 @@ p margdistfit module to check the distributional assumptions underlying a parame
 p margeff module to compute average marginal effects for categorical and limited dependent variable models
 p margfx module to compute mean marginal effects with nonlinear models
 p margin module to compute average marginal effects for categorical and limited dependent variable models
+p margins_dynxteprobit module to compute Marginal effects for a dynamic xteprobit with attrition
 p marginscontplot2 module to graph margins for continuous predictors
 p margintegrate module to estimate non-parametric smooth functions for generalized additive models
 p marglmean module to compute marginal log means from regression models

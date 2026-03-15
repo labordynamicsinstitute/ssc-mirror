@@ -19,6 +19,6 @@ d Distribution-Date: 20260313
 d
 f twostep_nardl.ado
 f twostep_nardl.sthlp
-f ../_/twostep_nardl_p.ado
-f ../_/twostep_nardl_estat.ado
+f twostep_nardl_p.ado
+f twostep_nardl_estat.ado
 f ../_/_2snardl_mata.do

@@ -1,0 +1,33 @@
+d 'FFROOT': module to run all Fourier unit root and stationarity tests 
+d
+d	fourierall is a convenience command that runs all six
+d Fourier-based unit root and stationarity    tests sequentially on
+d the specified variable. It provides a comprehensive assessment of
+d the unit    root hypothesis using multiple methodologies. 
+d
+d KW: unit root tests
+d KW: stationarity
+d KW: Fourier
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260314
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f fourierall.ado
+f fourierall.sthlp
+f fourierdf.ado
+f fourierdf.sthlp
+f fourierdfdf.ado
+f fourierdfdf.sthlp
+f fourierfffff.ado
+f fourierfffff.sthlp
+f fouriergls.ado
+f fouriergls.sthlp
+f fourierkpss.ado
+f fourierkpss.sthlp
+f fourierlm.ado
+f fourierlm.sthlp
+f ffroot_example.do

@@ -30,6 +30,7 @@ p feldti module to compare two independent coefficients of reliability
 p fencode module to provide frequency-based encoding of string and numeric variables
 p fese module to calculate standard errors for fixed effects
 p fframeappend module to append data frames to currently active data frame
+p ffroot module to run all Fourier unit root and stationarity tests 
 p fgt_ci module to calculate and decompose Foster–Greer–Thorbecke (and standard) concentration indices
 p fgtest module to Compute Farrar-Glauber Multicollinearity Chi2, F, t Tests
 p fhsae module to fit an area level Fay-Herriot model
