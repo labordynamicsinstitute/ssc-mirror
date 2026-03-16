@@ -6547,6 +6547,7 @@ fmwww.bc.edu/repec/bocode/s/sotable.sthlp
 fmwww.bc.edu/repec/bocode/s/spweightcs.dlg
 fmwww.bc.edu/repec/bocode/s/sfpanel_p.ado
 fmwww.bc.edu/repec/bocode/s/svyselmlog.ado
+fmwww.bc.edu/repec/bocode/s/syndatakit.pkg
 fmwww.bc.edu/repec/bocode/s/sblsf.pkg
 fmwww.bc.edu/repec/bocode/s/spmstar7.ado
 fmwww.bc.edu/repec/bocode/s/saveascii.pkg
@@ -7554,6 +7555,7 @@ fmwww.bc.edu/repec/bocode/s/simple_ra.sthlp
 fmwww.bc.edu/repec/bocode/s/stjm_d0_fpm_na.ado
 fmwww.bc.edu/repec/bocode/s/solve.pkg
 fmwww.bc.edu/repec/bocode/s/sliceplot.pkg
+fmwww.bc.edu/repec/bocode/s/syndatakit.sthlp
 fmwww.bc.edu/repec/bocode/s/sgpv.dlg
 fmwww.bc.edu/repec/bocode/s/staft.sthlp
 fmwww.bc.edu/repec/bocode/s/sqr.ado
@@ -7996,6 +7998,7 @@ fmwww.bc.edu/repec/bocode/s/stak.pkg
 fmwww.bc.edu/repec/bocode/s/sqegen.html
 fmwww.bc.edu/repec/bocode/s/surface.pkg
 fmwww.bc.edu/repec/bocode/s/spregxt11.ado
+fmwww.bc.edu/repec/bocode/s/syndatakit.ado
 fmwww.bc.edu/repec/bocode/s/sum2.ado
 fmwww.bc.edu/repec/bocode/s/slideplot.pkg
 fmwww.bc.edu/repec/bocode/s/shp2dta.hlp
@@ -19696,6 +19699,7 @@ fmwww.bc.edu/repec/bocode/t/tex2col.sthlp
 fmwww.bc.edu/repec/bocode/t/tabcount7.hlp
 fmwww.bc.edu/repec/bocode/t/tomata.html
 fmwww.bc.edu/repec/bocode/t/todate7.html
+fmwww.bc.edu/repec/bocode/t/tca.sthlp
 fmwww.bc.edu/repec/bocode/t/titanic.dta
 fmwww.bc.edu/repec/bocode/t/tiva2023_mataMYindicators.mata
 fmwww.bc.edu/repec/bocode/t/title.hlp
@@ -19869,6 +19873,7 @@ fmwww.bc.edu/repec/bocode/t/tab2diagi.sthlp
 fmwww.bc.edu/repec/bocode/t/testout.sthlp
 fmwww.bc.edu/repec/bocode/t/tabletutorial_29.html
 fmwww.bc.edu/repec/bocode/t/txtlabdef.hlp
+fmwww.bc.edu/repec/bocode/t/tca_test.do
 fmwww.bc.edu/repec/bocode/t/traindata.dta
 fmwww.bc.edu/repec/bocode/t/texsave.ado
 fmwww.bc.edu/repec/bocode/t/tkdensity.html
@@ -20287,6 +20292,7 @@ fmwww.bc.edu/repec/bocode/t/twofold.pkg
 fmwww.bc.edu/repec/bocode/t/tabexp.sthlp
 fmwww.bc.edu/repec/bocode/t/test_strdist.do
 fmwww.bc.edu/repec/bocode/t/tnardl.ado
+fmwww.bc.edu/repec/bocode/t/tca.ado
 fmwww.bc.edu/repec/bocode/t/tic.sthlp
 fmwww.bc.edu/repec/bocode/t/t2t2outerw2.ado
 fmwww.bc.edu/repec/bocode/t/tau2ci.sthlp
@@ -20328,6 +20334,7 @@ fmwww.bc.edu/repec/bocode/t/tkdensity.ado
 fmwww.bc.edu/repec/bocode/t/ttestplus.ado
 fmwww.bc.edu/repec/bocode/t/tabletutorial_33.ihlp
 fmwww.bc.edu/repec/bocode/t/tobithetm.ado
+fmwww.bc.edu/repec/bocode/t/tca.mata
 fmwww.bc.edu/repec/bocode/t/twopm_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/t/tablecol.ado
 fmwww.bc.edu/repec/bocode/t/tabletutorial_3.html
@@ -20423,6 +20430,7 @@ fmwww.bc.edu/repec/bocode/t/tabletutorial_8.ihlp
 fmwww.bc.edu/repec/bocode/t/tgmixed.sthlp
 fmwww.bc.edu/repec/bocode/t/trackobs.ado
 fmwww.bc.edu/repec/bocode/t/tmap_dot.ado
+fmwww.bc.edu/repec/bocode/t/tca.pkg
 fmwww.bc.edu/repec/bocode/t/tosql.pkg
 fmwww.bc.edu/repec/bocode/t/testcase_test.mata
 fmwww.bc.edu/repec/bocode/t/tabletutorial.hlp

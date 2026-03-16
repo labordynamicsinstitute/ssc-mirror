@@ -1,0 +1,28 @@
+d 'TCA': module to perform Transmission Channel Analysis for structural VAR models
+d
+d	 tca implements Transmission Channel Analysis (TCA) for
+d structural vector autoregressive (SVAR)    models following the
+d methodology of Wegner, Lieb, and Smeekes (2025). TCA decomposes
+d impulse    response functions (IRFs) into contributions from
+d distinct transmission channels using a systems    form
+d representation and directed acyclic graph (DAG) path analysis.   
+d The key equation is x = Bx + Omega*epsilon, where B is a K*(h+1)
+d x K*(h+1) block lower-triangular    matrix and Omega encodes
+d structural shocks. By selectively zeroingentries in B and Omega, 
+d   different transmission paths can be isolated. 
+d
+d KW: structural VAR
+d KW: decomposition
+d KW: impulse response functions
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260315
+d
+d Author: Muhammad Alkhalaf, NA
+d Support: email   muhammedalkhalaf@@gmail.com
+d
+f tca.ado
+f tca.sthlp
+f tca.mata
+f tca_test.do

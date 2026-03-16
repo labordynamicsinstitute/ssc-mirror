@@ -1,0 +1,32 @@
+d 'SYNDATAKIT': module to generate synthetic econometric and financial data
+d
+d	syndatakit calls the syndatakit Python package to generate
+d synthetic tabular data calibrated to	  the statistical
+d properties of real econometric and financial datasets.  Generated
+d data preserves    marginal distributions, Spearman rank
+d correlations, VAR(1) temporal dynamics, and GARCH    volatility
+d structure.  It contains zero real individuals and requires no
+d data use agreements.	  Eighteen built-in profiles cover
+d macroeconomic indicators (FRED), mortgage origination (HMDA),   
+d bank call reports (FDIC), equity returns, corporate bonds,
+d insurance, real estate, tax	 statistics, and commodity markets.
+d  Each profile is calibrated against published aggregate   
+d statistics from U.S. federal agencies and international
+d statistical bodies.	 Fidelity scores range from 81.7% (IRS SOI,
+d limited by extreme income tail) to 95.0% (CFTC, FDIC).    The
+d fidelity score combines marginal moment agreement (45%), KS
+d distributional fit (30%), and    Spearman correlation distance
+d (25%). 
+d
+d KW: synthetic data
+d KW: reproducibility
+d
+d Requires: Stata version 16 and syndatakit Python package
+d
+d Distribution-Date: 20260315
+d
+d Author: Nitya Hapani, NA
+d Support: email  nitya@@syndatakit.com
+d
+f syndatakit.ado
+f syndatakit.sthlp

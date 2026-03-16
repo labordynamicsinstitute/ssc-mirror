@@ -470,6 +470,7 @@ p sxpose module to transpose string variable dataset
 p sxpose2 module to transpose string and numeric variable dataset including variable names and labels
 p symbionet module to build a symbiotic (or symmetric) correlation network from a list of variables
 p syncmrates module to compute child mortality rates using synthetic cohort probabilities
+p syndatakit module to generate synthetic econometric and financial data
 p synlight module to highlight syntax in SMCL and translate to HTML format
 p synth module to implement Synthetic Control Methods for Comparative Case Studies
 p synth2 module to implement synthetic control method (SCM) with placebo tests, robustness test and visualization
