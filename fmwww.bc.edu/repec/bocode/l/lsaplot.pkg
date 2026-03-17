@@ -1,0 +1,23 @@
+d 'LSAPLOT': module to plot event-study/dynamic treatment effects for difference-in-differences
+d
+d	lsaplot estimates and plots dynamic treatment effects
+d (coefficients for each relative time	  period) from an
+d event-study or staggered difference-in-differences (DID) model.
+d It automatically    generates publication-ready graphs with point
+d estimates and confidence intervals. 
+d
+d KW: treatment effects
+d KW: event study
+d KW: DiD models
+d
+d Requires: Stata version 14, ftools and reghdfe from SSC (q.v.)
+d
+d Distribution-Date: 20260316
+d
+d Author:   Linze Li , Shandong University of Finance and Economics
+d Support: email  lilinze626@@gmail.com
+d
+f lsaplot.ado
+f lsaplot.sthlp
+f lsaplot_code.do
+f lsaplot_data.dta

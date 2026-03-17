@@ -226,6 +226,7 @@ p lrplot module to plot coefficients from a logistic regression
 p lrseq module to calculate sequential likelihood-ratio test after model estimation
 p lrutil modules providing utilities for logistic regression
 p lsacsetup module to create a longitudinal dataset for Growing Up in Australia: The Longitudinal Study of Australian Children (LSAC)
+p lsaplot module to plot event-study/dynamic treatment effects for difference-in-differences
 p lstack module to stack variables with labelled _stack
 p lstrfun module to modify long local macros 
 p ltable2 module to generate life tables for rare events

@@ -1,0 +1,26 @@
+d 'DPTEST': module to perform multiple unit root and cointegration tests for I(2) processes
+d
+d	dptest implements four complementary tests for determining
+d the order of integration in time    series and for testing
+d cointegration when both I(1) and I(2) variables are present:	   
+d   1) Dickey-Pantula (1987) sequential t* procedure for multiple
+d unit roots	    2) Hasza-Fuller (1979) joint F test (Phi
+d statistics) for double unit roots	   3) Haldrup (1994 JBES)
+d semiparametric Z(F*) test for double unit roots	 4) Haldrup
+d (1994 JoE) residual-based cointegration ADF test with I(1) and
+d I(2) variables 
+d
+d KW: unit root test
+d KW: cointegration test
+d KW: nonstationary processes
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260316
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f dptest.ado
+f dptest.sthlp
+f dptest_example.do

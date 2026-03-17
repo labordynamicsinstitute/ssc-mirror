@@ -47,7 +47,7 @@
 {title:Description}
 
 {pstd}
-{cmd:margins_dynxteprobit} is a post-estimation command that produces marginal effects estimates following a dynamic xteprobit model with endogenous attrition as proposed and studied by Carlson and Semykina (2026). It fits regression models with selection by using Heckman's two-step consistent estimator.
+{cmd:margins_dynxteprobit} is a post-estimation command that produces marginal effects estimates following a dynamic xteprobit model with endogenous attrition as proposed and studied by Carlson and Semykina (2026). 
 
 {pstd}
 In using the {helpb xteprobit} command for a dynamic xteprobit model with endogenous attrition, estimation occurs on a subset of the data, the time periods that are observed and only the first time period of attrition. The {helpb margins} command is confined to compute marginal effects on this subset sample. The {cmd:margins_dynxteprobit} command computes unconditional marginal effects (not conditional on non-attrition) averaged over the entire sample. 

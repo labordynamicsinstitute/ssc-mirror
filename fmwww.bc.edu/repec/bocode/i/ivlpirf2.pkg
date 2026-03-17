@@ -1,0 +1,23 @@
+d 'IVLPIRF2': module to compute IV local-projection impulse-response functions with panel data and Driscoll-Kraay inference
+d
+d	ivlpirf2 estimates impulse-response functions (IRFs) using
+d the local projection (LP) method of	 Jordà (2005) with
+d instrumental variables. Unlike traditional VAR-based IRFs, local
+d projections	 estimate each horizon's response directly via
+d separate regressions, making them robust to model   
+d misspecification. 
+d
+d KW: impulse response functions
+d KW: local projections
+d KW: instrumental variables
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260316
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f ivlpirf2.ado
+f ivlpirf2.sthlp
+f ivlpirf2_example.do

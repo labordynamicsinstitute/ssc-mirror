@@ -129,6 +129,7 @@ p doubmass module to draw double mass plot
 p dpath module to construct and audit longitudinal decision paths
 p dpplot module for density probability plots 
 p dpredict module to produce dynamic forecasts  for ARIMA(p,s,q) models
+p dptest module to perform multiple unit root and cointegration tests for I(2) processes
 p dqd module to compute treatment effects under alternative Parallel-q assumptions
 p drarea module to overlap two range area plots
 p drcate module to estimate and plot conditional average treatment effect functions with uniform confidence bands using a doubly robust method
