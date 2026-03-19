@@ -46,6 +46,7 @@ p ineqdec0 module to calculate inequality indices with decomposition by subgroup
 p ineqdecgini module to estimate Gini coefficient with optional decomposition by subgroups
 p ineqdeco module to calculate inequality indices with decomposition by subgroup
 p ineqfac module to calculate inequality decomposition by factor components
+p ineqop module to perform Inequality of Opportunity analysis using the Shapley approach with Gini and entropy measures 
 p ineqord module to calculate indices of inequality and polarization for ordinal data
 p ineqrbd module to calculate regression-based inequality decomposition
 p inequal2 module to compute measures of inequality 

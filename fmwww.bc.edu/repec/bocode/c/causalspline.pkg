@@ -1,0 +1,31 @@
+d 'CAUSALSPLINE': module to perform nonlinear causal dose-response estimation via restricted cubic splines
+d
+d	causalspline estimates the causal dose-response function
+d E[Y(t)] = E[Y^(t)] for a continuous	 treatment T under the
+d unconfoundedness assumption (Y(t) ? T | X for all t).    The
+d exposure-response curve f(T) is modeled using {bf:restricted
+d cubic splines} (Harrell    parameterisation), allowing recovery
+d of nonlinear dose-response shapes: thresholds, diminishing   
+d returns, inverted-U patterns, and other nonlinear structures
+d without parametric assumptions. 
+d
+d KW: dose-response
+d KW: restricted cubic splines
+d KW: nonlinear estimation
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260318
+d
+d Author:    Subir Hait,  Michigan State University
+d Support: email   haitsubi@@msu.edu
+d
+f causalspline.ado
+f causalspline.sthlp
+f cs_simulate.ado
+f cs_region.ado
+f cs_plot.ado
+f cs_overlap.ado
+f cs_gradient.ado
+f cs_fragility.ado
+f causalspline_example.do

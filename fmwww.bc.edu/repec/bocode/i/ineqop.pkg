@@ -1,0 +1,31 @@
+d 'INEQOP': module to perform Inequality of Opportunity analysis using the Shapley approach with Gini and entropy measures 
+d
+d   ineqop estimates the contribution of birth circumstances and
+d other factors to various inequality measures using the direct,
+d indirect, and Shapley approaches, following Gradín and
+d Zapata-Román (ROIW, 2026). Given an outcome variable (e.g., per
+d capita income) and a set of circumstance variables that define
+d types (e.g., sex, ethnicity, et.), the command computes direct,
+d indirect, and Shapley decompositions of inequality for the Gini
+d coefficient and the generalized entropy (GE) family. The Shapley
+d approach accounts for the fact that direct and indirect estimates
+d do not sum to the overall inequality under path-dependent
+d measures because of interaction effects. The command provides
+d several optional outputs. Observations with missing values are
+d detected and excluded, and GE indices that require strictly
+d positive values are automatically dropped when the outcome
+d contains zeros or negative values. 
+d
+d KW: inequality
+d KW: Shapley approach
+d KW: Gini coefficient
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260318
+d
+d Author:   Carlos Gradin, Universidade de Vigo
+d Support: email cgradin@@uvigo.gal
+d
+f ineqop.ado
+f ineqop.sthlp

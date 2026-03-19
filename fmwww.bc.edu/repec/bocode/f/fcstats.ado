@@ -1,7 +1,8 @@
-*! version 1.1.0  24oct2025  CFBaum, JOtero
+*! version 1.2.0  18mar2026  CFBaum, JOtero
 *! version 1.0.0  10jun2017  CFBaum
 // based on dmariano.ado 1.0.3
 // 1.1.0: sign fix for MAPE, add QLIKE
+// 1.2.0: correct forecst2 handling
 
 
 program define fcstats, rclass
@@ -35,13 +36,14 @@ program define fcstats, rclass
 	g double `den' = sum((D.`actual' / L.`actual')^2) if `touse'
 	}
 	if "`forecast2'" != "" {
-			qui {
-			g double `vrmse2' = sum((`actual' - `forecast')^2) if `touse'
-			g double `vmae2' = sum(abs(`actual' - `forecast')) if `touse'
-			g double `vmape2' = sum(abs((`actual' - `forecast') / `actual')) if `touse'
-			g double `vqlike2' = sum((`actual'/`forecast') - log(`actual'/`forecast') - 1) if `touse'
-			g double `num2' = sum(((`actual' - `forecast') / L.`actual')^2) if `touse'
+			qui {			
+			g double `vrmse2' = sum((`actual' - `forecast2')^2) if `touse'
+			g double `vmae2' = sum(abs(`actual' - `forecast2')) if `touse'
+			g double `vmape2' = sum(abs((`actual' - `forecast2') / `actual')) if `touse'
+			g double `vqlike2' = sum((`actual'/`forecast2') - log(`actual'/`forecast2') - 1) if `touse'
+			g double `num2' = sum(((`actual' - `forecast2') / L.`actual')^2) if `touse'
 			g double `den2' = sum((D.`actual' / L.`actual')^2) if `touse'
+
 			}
 	}
 	g  `en' = _n * `touse'	
