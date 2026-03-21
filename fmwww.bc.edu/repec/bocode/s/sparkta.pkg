@@ -1,0 +1,25 @@
+d 'SPARKTA': module to produce interactive self-contained HTML charts
+d
+d   sparkta generates interactive, self-contained HTML charts from
+d Stata using a Java backend and Chart.js 4.4. One command produces
+d a fully interactive .html file that opens in any browser with no
+d server, no Python, and no R required. Supports 20+ chart types
+d including bar, line, scatter, CI bars, violin plots, histograms,
+d and stacked variants. Features live filter dropdowns, dual-handle
+d range sliders, scatter fit lines (7 types) with CI bands,
+d reference annotations, collapsible summary statistics panels with
+d live updates, and full offline mode. 
+d
+d KW: charts
+d KW: HTML
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260320
+d
+d Author:    Fahad Mirza, NA
+d Support: email  fm.109@@hotmail.com
+d
+f sparkta.ado
+f sparkta.sthlp
+f sparkta.jar

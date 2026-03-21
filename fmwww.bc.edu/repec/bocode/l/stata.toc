@@ -222,6 +222,7 @@ p lrasvar module to label or rename varlist as the contents of the specified var
 p lrchg module to calculate change in coefficients between logistic models 
 p lrdrop1 module to calculate likelihood-ratio test after dropping one term
 p lrmatx module to make logistic regression estimates available 
+p lrmbounds module implementing bounds approach to inference using the long-run multiplier (LRM)
 p lrplot module to plot coefficients from a logistic regression
 p lrseq module to calculate sequential likelihood-ratio test after model estimation
 p lrutil modules providing utilities for logistic regression

@@ -181,6 +181,7 @@ p sotable module to produce tests and confidence bands for multiple comparisons 
 p spaces module to parse a file for delimiters
 p spagg module to create aggregate source or target contagion spatial effect variable for directed dyadic data
 p sparkline module for sparkline-type plots
+p sparkta module to produce interactive self-contained HTML charts
 p spatial_hac_iv module to estimate an instrumental variable regression, adjusting standard errors for spatial correlation, heteroskedasticity, and autocorrelation
 p spautoc modules to calculate spatial autocorrelation (Moran and Geary measures)
 p spautoreg module to estimate Spatial (Lag-Error-Durbin-SAC-SPGKS-SPGSAR-GS2SLS-GS3SLS-SPML-SPGS-SPIVREG-IVTobit)

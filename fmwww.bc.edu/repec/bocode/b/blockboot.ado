@@ -3,6 +3,7 @@
 *! modified  v1.2 jotero 4jun2025
 *! modified  v1.3 cfb 27aug2025 for tsset checks
 *! modified  v1.4 jotero 11nov2025 for nbb fix
+*! modified. v1.5 cfb to return auto _lblk
 *! This routine implements the stationary bootstrap for bootstrapping stationary, dependent series
 *! The code draws on the MATLAB function stationary_bootstrap developed by Kevin Sheppard
 
@@ -10,7 +11,6 @@ capture program drop blockboot
 program define blockboot, rclass
 version 14
 
-// make prefix and lblock required
 syntax varlist(min=1 numeric ts fv) [if] [in], ///
 								TYPE(string) ///
 								PREfix(string) ///
@@ -55,6 +55,7 @@ else {
 }
 
 tempvar trd
+tempname ablk mu 
 qui gen `trd' = _n if `touse'
 qui sum `trd'
 local initobs = r(min)
@@ -83,26 +84,62 @@ if `seed'!=-1 {
    set seed `seednum'
 }
 
+	loc nx : word count `varlist'
+	mat `ablk' = J(`nx',2,.)
+	loc i 0
+	sca `mu' = 0
+	loc minn = 9999
+	loc maxx = 0
 	foreach x of varlist `varlist' {
+		loc i = `i'+ 1
 		confirm new var `prefix'`x'
 		qui putmata `fid' if `touse', replace
 		if ("`tauto'"!="noauto") {
 			mata: bstar("`x'","`touse'","`tauto'")
 //		di "Optimal block boot size = " _lblk
 			loc _lblk = _lblk
+			mat `ablk'[`i',1] = _lblk
+			sca `mu' = `mu' + `_lblk'
+			if (`nx'>2) {
+				if (`_lblk' <`minn') {
+					loc minn = `_lblk'
+				}
+				if (`_lblk' > `maxx') {
+					loc maxx = `_lblk'
+				}
+			}
 		}
+
 		mata: `type'indx(`initobs',`lastobs',`totalobs',`_lblk')
 		getmata (`_indices'`x') = indices, id(`fid') replace
 		qui gen `prefix'`x' = `x'[`_indices'`x'] if `touse'
 //		list `_indices'`x' `prefix'`x' , sep(0)
+	}
+	
+	if ("`tauto'"!="noauto") {
+		loc mu = `mu'/`nx'
+		mat `ablk'[2,2] = `mu'
+		if (`nx' > 2) {
+			mat `ablk'[1,2] = `minn'
+			mat `ablk'[3,2] = `maxx'
+			mat colnames `ablk' = Auto_Block Min_Mean_Max
+		}
+		else {
+			mat colnames `ablk' = Mean
+		}
+		mat rownames `ablk' = `varlist'
+		matlist `ablk', tit("Automatic Blocksize Selection") for(%12.2g)
 	}
 	return local cmdname "blockboot"
 	return local type "`type'"
 	return local prefix "`prefix'"
 	return scalar lblock = `_lblk'
 	return local varlist "`varlist'"
-	return scalar N = `totalobs'	
-end
+	return scalar N = `totalobs'
+	if ("`tauto'"!="noauto") {
+		return matrix autoblock = `ablk'
+	}
+	end
 
 // mata: mata clear
 mata:

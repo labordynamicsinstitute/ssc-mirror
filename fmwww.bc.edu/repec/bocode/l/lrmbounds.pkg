@@ -1,0 +1,26 @@
+d 'LRMBOUNDS': module implementing bounds approach to inference using the long-run multiplier (LRM)
+d
+d    lrmbounds implements the bounds approach to inference on
+d long-run relationships proposed by Webb, Linn, and Lebo (2019,
+d 2020). 
+d
+d KW: bounds approach
+d KW: long-run multiplier
+d KW: error-correction model
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260320
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f lrmbounds.ado
+f lrmbounds.sthlp
+f ../_/lrmbounds_critvals.ado
+f ../_/lrmbounds_estimate.ado
+f ../_/lrmbounds_ftest.ado
+f ../_/lrmbounds_graph.ado
+f ../_/lrmbounds_lrm.ado
+f ../_/lrmbounds_stars.ado
+f lrmbounds_example.do
