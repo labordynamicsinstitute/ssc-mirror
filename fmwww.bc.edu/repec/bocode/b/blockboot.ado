@@ -117,7 +117,7 @@ if `seed'!=-1 {
 	}
 	
 	if ("`tauto'"!="noauto") {
-		loc mu = `mu'/`nx'
+		loc mu = int(`mu'/`nx')
 		mat `ablk'[2,2] = `mu'
 		if (`nx' > 2) {
 			mat `ablk'[1,2] = `minn'

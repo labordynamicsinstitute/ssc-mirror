@@ -1,111 +1,179 @@
 {smcl}
-{* April 2014}{...}
+{* Version 2.0, March 2026}{...}
 {hline}
-help for {hi:unemp (Version 1.0)}{right:Carlos Gradín (April 2014)}
+help for {hi:unemp (Version 2.0)}{right:Carlos Grad{c i'}n (March 2026)}
 {hline}
 
-{title: Measures of employment deprivation (unemployment) among households}
+{title:Measures of employment deprivation among households}
 
-{p 8 17 2} {cmd:unemp} {it:unempvar} [{it:weights}] [{cmd:if} {it:exp}] [{cmd:in} {it:range}] , {cmdab:hid:}{it:(hidvar)}  [ {cmdab:hs:ize}{it:(hsizevar)} {cmdab:th:ao}{it:(#)} {cmdab:f:ormat}{it:(%9.#f)}
-{cmdab:g:amma}{it:(# [# ...])} {cmdab:a:lpha}{it:(# [# ...])}
-{cmdab:gen:erate}{it:(newvar)} {cmdab:dec:omp} ]
+{title:Syntax}
 
-{p 4 4 2} {cmd:fweights}, {cmd:aweights} and {cmd:iweights} are allowed; see {help weights}.
+{p 8 17 2}
+{cmd:unemp} {it:gapvar} [{it:weights}] [{cmd:if} {it:exp}] [{cmd:in} {it:range}],
+{cmdab:hid:}{it:(hidvar)}
+[{cmdab:hs:ize}{it:(hsizevar)} {cmdab:th:ao}{it:(#)}
+{cmdab:f:ormat}{it:(%9.#f)} {cmdab:g:amma}{it:(# [# ...])}
+{cmdab:a:lpha}{it:(# [# ...])} {cmdab:gen:erate}{it:(newvar)}
+{cmdab:dec:omp}]
+
+{p 12 4 2}
+{it:gapvar} is a variable containing individual employment gaps, either a
+dummy (1=unemployed, 0=employed) or a continuous variable in [0, 1]
+(e.g., relative gap in hours worked with respect to desired hours).
+
+{p 12 4 2}
+{cmd:fweights}, {cmd:aweights}, and {cmd:iweights} are allowed; see {help weights}.
 
 {title:Description}
 
 {p 4 4 2}
-{cmd:unemp} computes aggregate households' employment deprivation measures, which are sensitive to the distribution of employment among deprived households.
+{cmd:unemp} computes aggregate household employment deprivation measures that
+are sensitive to the distribution of employment among deprived households.
 
 {p 4 4 2}
-The program computes the family of FGT-type employment deprivation measures at the household level proposed in Gradín, Cantó, and Del Río (REHO 2014).
+The program computes the FGT-type family of employment deprivation measures
+at the household level proposed in Grad{c i'}n, Cant{c o'}, and Del R{c i'}o
+({it:Review of Economics of the Household}, 2017).
 
 {p 4 4 2}
-The measure first computes indices of employment deprivation for each household based on individual information on either unemployment (a dummy variable: 1 if unemployed, 0 if employed), 
-or underemployment (a continuous variable; i.e. relative gap in hours worked with respect to whished hours, ranging between 0 and 1).
+{ul:Step 1: Household deprivation index}
+
+{p 4 4 2}
+For each household {it:i} with {it:H_i} active members, the index first computes
+a household employment deprivation index:
+
+{p 8 4 2}
+{it:u_i(gamma) = (1/H_i) * sum_j (g_ij)^gamma}
+
+{p 4 4 2}
+where {it:g_ij} is the individual employment gap for person {it:j} in household
+{it:i} (given by {it:gapvar}), and {it:gamma >= 0} controls the sensitivity
+to the variability of gaps within the household.
+
+{p 8 4 2}
+If {it:gapvar} is a dummy (unemployment status), the index equals the
+proportion of unemployed members regardless of gamma, so {cmdab:g:amma}{it:(1)}
+is recommended. For continuous gaps (hours), different gamma values capture
+different aspects of within-household inequality in employment.
 
 {p 8 8 2}
-Households deprivation indices can be saved as new variables using {cmdab:gen}{it:(newvar)} with _subscripts indicating the value of gamma
-(i.e. with {cmdab:gen(u)}, u_0, u_1, u_2... are created standing for household deprivation index for gamma=0, 1, 2 ...).
-This could be useful to further analyze their distribution drawing kernel densities (see {help akdensity} if installed) 
-or computing "employment deprivation curves" (similar to TIP curves in poverty analysis) (using {help glcurve} if installed).
+Household deprivation indices can be saved using {cmdab:gen:erate}{it:(newvar)},
+creating variables with subscripts for each gamma value
+(e.g., {cmd:gen(u)} creates {it:u_0}, {it:u_1}, {it:u_2}, ...).
+These can be used with {help glcurve} (employment deprivation curves)
+or {help akdensity} (kernel densities), if installed.
 
 {p 4 4 2}
-In a second step, the program aggregates households' employment deprivation indices across the entire target population in order to obtain a distribution-sensitive aggregate index of households' deprivation in employment.
-
-{p 8 4 2}
-By default, the aggregate index weights households by the number of economically active members (units are individuals) such as in official unemployment rates.
-
-{p 8 4 2}
-It is possible to weight each household by the number of members (whether in the labor force or not) or any other household-level variable using the {cmdab:hs:ize} option. See examples below.
+{ul:Step 2: Aggregate index}
 
 {p 4 4 2}
-By default, a household is considered to be deprived in employment if any member has a positive gap (i.e. is unemployed or underemployed).
-For restricting deprived households to be only those having a deprivation level (proportion of unemployed members or of hours, depending on how the gap was measured) greater than a given threshold (i.e .20, .50, ...),
-use option {cmdab:th:ao}{it:(#)}, the default is {cmdab:th:ao}{it:(0)}. If {cmdab:th:ao}{it:(1)}, only households with all their members fully deprived contribute to aggregate deprivation.
+The program then aggregates household indices across the target population:
+
+{p 8 4 2}
+{it:U_alpha = (1/N) * sum_i u_i^alpha}
+
+{p 4 4 2}
+where {it:alpha >= 0} controls the sensitivity to inequality of deprivation
+among deprived households.
+
+{p 8 4 2}
+By default, the aggregate index weights households by the number of
+economically active members (as in official unemployment rates).
+Use {cmdab:hs:ize} to weight by household size or any other variable.
+
+{p 4 4 2}
+A household is considered deprived if its deprivation level (for gamma=1)
+exceeds the threshold {it:s}. Use {cmdab:th:ao}{it:(#)} to set this threshold
+(default: 0). If {cmdab:th:ao}{it:(1)}, only fully deprived households contribute.
+
 
 {title:Data requirements}
 
 {p 4 4 2}
-Microdata are required with observations being individuals in the labor force (economically active). Information identiying the households they belong to is necessary too. {it:unempvar} is a variable containing individual unemployment gaps that can be either a dummy variable (1 if unemployed, 0 if employed)
-or a continuous variable between 0 and 1 (i.e. indicating the relative gap in hours worked with respect to whished hours).
-{it:hidvar} is the household identifier. Observations can be weighted by the number of households members (see example below). Individuals with missing values in {it:unempvar} or {it:hidvar} will not be used in calculations.
+Microdata at the individual level, where observations are economically active
+persons. A household identifier ({it:hidvar}) is required. {it:gapvar} must
+be either a dummy (1=unemployed, 0=employed) or a continuous variable in
+[0, 1] indicating the relative hours gap. Individuals with missing values are
+excluded from calculations.
 
-{title:Reporting}
+
+{title:Required option}
+
+{p 4 8 2}
+{cmdab:hid:}{it:(hidvar)} specifies the household identifier variable.
+
+
+{title:Index options}
+
+{p 4 8 2}
+{cmdab:g:amma}{it:(# [# ...])} specifies the values of gamma (nonnegative
+integers). Default: {cmdab:g:amma}{it:(0 1 2)}.
+
+{p 12 12 2}
+Gamma captures the sensitivity of household deprivation indices to variability
+of employment gaps across members. If {it:gapvar} is a dummy, the index does
+not vary with gamma; use {cmdab:g:amma}{it:(1)}.
+
+{p 4 8 2}
+{cmdab:a:lpha}{it:(# [# ...])} specifies the values of alpha (nonnegative
+integers). Default: {cmdab:a:lpha}{it:(0 1 2)}.
+
+{p 12 12 2}
+Alpha captures the sensitivity of the aggregate measure to inequality of
+employment deprivation among deprived households.
+
+{p 4 8 2}
+{cmdab:th:ao}{it:(#)} sets the deprivation threshold (real value between 0
+and 1). For thao < 1, only households with u(gamma=1) > thao are considered
+deprived. For thao = 1, only fully deprived households contribute.
+Default: {cmdab:th:ao}{it:(0)} (any household with u_1 > 0 is deprived).
+
+
+{title:Weighting and reporting options}
+
+{p 4 8 2}
+{cmdab:hs:ize}{it:(hsizevar)} weights each household by {it:hsizevar}
+(e.g., number of household members). Without this option, households are
+weighted by their number of active members.
+
+{p 4 8 2}
+{cmdab:gen:erate}{it:(newvar)} creates new variables containing household
+employment deprivation indices for each gamma value. If combined with
+{cmdab:hs:ize}, the variables only take values for one observation per household.
+
+{p 4 8 2}
+{cmdab:dec:omp} reports the decomposition of the aggregate index into
+incidence, intensity, and inequality among deprived households:
+{it:U_alpha = H * I^alpha * (1 + Ep)}.
+For alpha=2, an alternative variance-based decomposition is also reported.
+
+{p 4 8 2}
+{cmdab:f:ormat}{it:(%9.#f)} changes the numeric format. Default:
+{cmdab:f:ormat}{it:(%9.4f)}.
+
+
+{title:Reported results}
 
 {p 4 4 2}
-* Aggregate measure of households' employment deprivation U() for the specified values of the parameters:
-
-{p 8 8 2}
-. gamma, for one or more nonnegative integer numbers (0, 1,2 3,...) specified in option {cmdab:g:amma}{it:(integer [integer ...])}, the default is to report gamma=0,1,2.
-
-{p 12 12 2}
-If {it:unempvar} is a dummy, the index does not vary with gamma, thus {cmdab:g:amma}{it:(1)} is recommended.
-
-{p 12 12 2}
-This parameter captures the sensitivity of household-level deprivation indices to variability of employment gaps across their members.
-
-{p 8 8 2}
-. alpha, for one or more nonnegative integer numbers specified in option {cmdab:a:lpha}{it:(integer [integer ...])}, the default is to report alpha=0,1,2.
-
-{p 12 12 2}
-This parameter captures the sensitivity of the aggregate measure of households deprivation in employment to inequality of employment indices among deprived households.
+{ul:Aggregate index} U(gamma, alpha) for all requested parameter combinations.
 
 {p 4 4 2}
-* If option {cmdab:dec:omp} is specified, the decomposition of the aggregate indices into deprivation incidence, intensity and inequality of employment among the deprived households is also reported.
+{ul:Decomposition} (with {cmdab:dec:omp}):
 
-{title:Required Option}
+{p 8 4 2}
+{it:U_alpha = H * I^alpha * (1 + Ep)}, where:{break}
+- H = headcount ratio (proportion of deprived households){break}
+- I = intensity (mean deprivation among deprived households){break}
+- Ep = inequality of deprivation among deprived households (alpha > 1)
 
-{p 4 8 2}
-{cmdab:hid:}{it:(hidvar)} to indicate household identifier.
+{p 4 4 2}
+{ul:Alternative decomposition for alpha=2}:
 
+{p 8 4 2}
+{it:U_2 = H * [I^2 + V(u)]}, where:{break}
+- V(u) = variance of u among deprived households{break}
+- CV2(1-u) = squared coefficient of variation of (1-u), such that V(u) = CV2(1-u) * (1-I)^2
 
-{title:Other Options}
-
-{p 4 8 2}
-{cmdab:g:amma}{it:(integer [integer ...])} to indicate the values of gamma, the default is {cmdab:g:amma}{it:(0 1 2)}.
-
-{p 4 8 2}
-{cmdab:a:lpha}{it:(integer [integer ...])} to indicate the values of alpha, the default is {cmdab:a:lpha}{it:(0 1 2)}.
-
-{p 4 8 2}
-{cmdab:th:ao}{it:(#)} to set the threshold in employement deprivation (real value between 0 and 1). For thao<1, only those households with a deprivation (for gamma=1) larger than the threshold will be considered deprived in employment. For thao=1,
-only fully deprived households are considered depived.
-The default is {cmdab:th:ao}{it:(0)} (i.e. a household with u_1>0 is considered deprived).
-
-{p 4 8 2}
-{cmdab:gen:erate}{it:(newvar)} to create new variables containing households' employment deprivation indices for different values of gamma. 
-If this option is combined with {cmdab:hs:ize}, the variables created only take values for one observation per-household.
-
-{p 4 8 2}
-{cmdab:dec:omp} to make the general decompoistion of the index for each aplha into incidence, intensity (alpha>0) and inequality (alpha>1) among deprived households.
-It also computes the variance of individual households deprivation indices (u) and the  coefficient of variation for 1-u in the case of alpha=2.
-
-{p 4 8 2}
-{cmdab:f:ormat}{it:(%9.#f)} to change numeric format, the default is {cmdab:f:ormat}{it:(%9.4f)}.
-
-{p 4 8 2}
-{cmdab:hs:ize}{it:(hsizevar)} to weight each household according to {it:(hsizevar)}. {it:(hsizevar)} might be the number of household members. If {it:hsizevar} is the same for all households, then the aggregate measure weights each household equally, regardless of their size.
 
 {title:Saved results}
 
@@ -113,150 +181,140 @@ It also computes the variance of individual households deprivation indices (u) a
 Matrices:
 
 {p 8 8 2}
-r(unemp): aggregate employment deprivation measure, and main decomposition if option {cmdab:dec:omp} specified
+{cmd:r(unemp)}: aggregate employment deprivation measure, and main
+decomposition if {cmdab:dec:omp} is specified.
 
-{p 8 8 2} 
-r(dec2): alternative decomposition for alpha=2 if option  {cmdab:dec:omp} specified
+{p 8 8 2}
+{cmd:r(dec2)}: alternative decomposition for alpha=2 if {cmdab:dec:omp}
+is specified.
 
 {p 4 4 2}
 Scalars:
 
 {p 8 8 2}
-r(U_i_j): aggregate employment deprivation measures U() for gamma=i and alpha=j.
+{cmd:r(U_i_j)}: aggregate employment deprivation U() for gamma={it:i}
+and alpha={it:j}.
+
+{p 8 8 2}
+{cmd:r(N)}: number of observations used.
+
 
 {title:Inference}
 
 {p 4 4 2}
-It is possible to obtain bootstrap standard errors with {cmd:unemp} using the returned scalars (see example below).
+Bootstrap standard errors can be obtained using the returned scalars
+(see example below).
+
 
 {title:Examples}
 
 {p 4 8 2}
-. {stata use unemp.dta, clear }
+. {stata use unemp.dta, clear}
 
 {p 4 8 2}
 . {stata desc}
 
 {p 4 8 2}
-1. Households are weighted according to the number of people in the labor force:
+{ul:1. Households weighted by number of active members (default):}
 
 {p 8 8 2}
-With a dummy indicating unemployment status (the index does not vary with gamma, only gamma=1 requested)
+With a dummy indicating unemployment status (gamma=1 recommended):
 
 {p 4 8 2}
-. {stata unemp unemployed [aw=w] , hid(hid) gamma(1) }
+. {stata unemp unemployed [aw=w], hid(hid) gamma(1)}
 
 {p 8 8 2}
-With a variable indicating gap in hours, e.g. (whished-worked)/whished
+With a variable indicating the gap in hours (e.g., (desired-worked)/desired):
 
 {p 4 8 2}
-. {stata unemp hgap [aw=w] , hid(hid) }
+. {stata unemp hgap [aw=w], hid(hid)}
 
 {p 8 8 2}
-Saved results
+Saved results:
 
 {p 4 8 2}
 . {stata ret list}
 
 {p 4 8 2}
-2. Households are equally weighted regardless of their size
+{ul:2. Households equally weighted regardless of size:}
 
 {p 4 8 2}
-. {stata gen hs=1 }
+. {stata gen hs=1}
 
 {p 4 8 2}
-. {stata unemp hgap [aw=w], hid(hid) hs(hs) }
+. {stata unemp hgap [aw=w], hid(hid) hs(hs)}
 
 {p 4 8 2}
-3. Households are weighted according to their household size (i.e. including non economically active members)
+{ul:3. Households weighted by household size (including inactive members):}
 
 {p 4 8 2}
-. {stata unemp hgap [aw=w], hid(hid) hs(hsize) }
-
-
-{p 4 8 2}
-Generating household employment deprivation index
+. {stata unemp hgap [aw=w], hid(hid) hs(hsize)}
 
 {p 4 8 2}
-. {stata unemp hgap [aw=w] , hid(hid) hs(hsize) gen(u) }
+{ul:Generating household deprivation indices:}
+
+{p 4 8 2}
+. {stata unemp hgap [aw=w], hid(hid) hs(hsize) gen(u)}
 
 {p 4 8 2}
 . {stata desc u_*}
 
 {p 4 8 2}
-Computing employment deprivation curve (gamma=2) across the population of households with at leat one member in the labor force (including members not in the labor force)[ {help glcurve} must be installed]
+Employment deprivation curve (gamma=2) [{help glcurve} must be installed]:
 
 {p 4 8 2}
 . {stata gen mu_2=-u_2}
 
 {p 4 8 2}
-. {stata glcurve u_2 [aw=w*hsize] , sort(mu_2)}
+. {stata glcurve u_2 [aw=w*hsize], sort(mu_2)}
 
 {p 4 8 2}
-Estimating the density of household employment deprivation indices (gamma=1) across the target population [ {help akdensity}  must be installed]
+Density of household deprivation (gamma=1) [{help akdensity} must be installed]:
 
 {p 4 8 2}
 . {stata akdensity u_1 if u_1>0 [aw=w*hsize], at(u_1)}
 
 {p 4 8 2}
-Changing default values of the parameters
+{ul:Changing default parameters:}
 
 {p 4 8 2}
-. {stata unemp hgap [aw=w] if country==1, hid(hid) hs(hsize) th(.2) gamma(0 1 2 3) alpha(1 2 3 4) }
+. {stata unemp hgap [aw=w] if country==1, hid(hid) hs(hsize) th(.2) gamma(0 1 2 3) alpha(1 2 3 4)}
 
 {p 4 8 2}
-Specific rates:
+{ul:Special cases:}
+
+{p 8 8 2}
+Standard unemployment rate:
 
 {p 4 8 2}
-Standard unemployment rate
+. {stata unemp unemployed [aw=w], hid(hid) g(1) a(1)}
+
+{p 8 8 2}
+Proportion of households with all active members unemployed:
 
 {p 4 8 2}
-. {stata unemp unemployed [aw=w], hid(hid) g(1) a(1) }
+. {stata unemp unemployed [aw=w], hid(hid) hs(hs) thao(1) g(1) a(1)}
+
+{p 8 8 2}
+Proportion of people in fully unemployed households:
 
 {p 4 8 2}
-Unemployment rate of households heads (% households)
+. {stata unemp unemployed [aw=w], hid(hid) hs(hsize) thao(1) g(1) a(1)}
 
 {p 4 8 2}
-. {stata unemp unemployed [aw=w] if head==1 , hid(hid) g(1) a(1) }
-
-{p 4 8 2}
-Proportion of people whose household head is unemployed
-
-{p 4 8 2}
-. {stata unemp unemployed [aw=w] if head==1 , hid(hid) hs(hsize) g(1) a(1)  }
-
-{p 4 8 2}
-Proportion of households with all economically active members unemployed
-
-{p 4 8 2}
-. {stata unemp unemployed [aw=w], hid(hid) hs(hs) thao(1) g(1) a(1) }
-
-{p 4 8 2}
-Proportion of people in households with all economically active members unemployed
-
-{p 4 8 2}
-. {stata unemp unemployed [aw=w], hid(hid) hs(hsize) thao(1) g(1) a(1) }
-
-{p 4 8 2}
-Decomposition
+{ul:Decomposition:}
 
 {p 4 8 2}
 . {stata unemp hgap [aw=w], hid(hid) hs(hsize) decomp}
 
 {p 4 8 2}
-Bootstrapping U(), exmaple for alpha=2, gamma=0,1,2 [BC estimates for Confidence Interval]
+{ul:Bootstrapping} (example for alpha=2, gamma=0,1,2; BC confidence interval):
 
 {p 8 8 2}
-cap program drop hhu
-
-{p 8 8 2}
-program def hhu
-
-{p 8 8 2}
-unemp hgap [aw=w], hid(hid) hs(hsize)
-
-{p 8 8 2}
-end
+cap program drop hhu{break}
+program define hhu{break}
+unemp hgap [aw=w], hid(hid) hs(hsize){break}
+end{break}
 
 {p 8 8 2}
 bootstrap r(U_0_2) r(U_1_2) r(U_2_2) if country==1, reps(10): hhu
@@ -264,23 +322,32 @@ bootstrap r(U_0_2) r(U_1_2) r(U_2_2) if country==1, reps(10): hhu
 {p 8 8 2}
 estat bootstrap
 
+
 {title:Author}
 
-
-{p 4 4 2}{browse "http://webs.uvigo.es/cgradin": Carlos Gradín}
-<cgradin@uvigo.es>{break}
-Facultade de CC. Económicas{break}
+{p 4 4 2}
+{browse "https://sites.google.com/view/cgradin": Carlos Grad{c i'}n}
+<cgradin@uvigo.gal>{break}
+Facultade de CC. Econ{c o'}micas{break}
 Universidade de Vigo{break}
 36310 Vigo, Galicia, Spain.
+
 
 {title:References}
 
 {p 4 8 2}
-Gradín, C, Cantó, O., and Del Río, C.(2014), Measuring employment deprivation in the EU using a household-level index, Review of the Economics of the Household.
+Grad{c i'}n, C., O. Cant{c o'}, and C. del R{c i'}o (2017), "Measuring
+employment deprivation in the EU using a household-level index",
+{it:Review of Economics of the Household}, 15(2): 639-667.
+
+{p 4 8 2}
+Foster, J., J. Greer, and E. Thorbecke (1984), "A Class of Decomposable
+Poverty Measures", {it:Econometrica}, 52(3): 761-766.
+
 
 {title:Also see}
 
 {p 4 13 2}
-{help akdensity} if installed; ; {help glcurve} if installed
-
-	
+{help akdensity} if installed;
+{help glcurve} if installed
+{p_end}
