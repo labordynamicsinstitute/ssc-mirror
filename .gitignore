@@ -1,5 +1,10 @@
 pq.dylib
 
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
 # Quarto build artifacts
 docs/_site/
 docs/.quarto/
