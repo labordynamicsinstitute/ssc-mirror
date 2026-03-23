@@ -1,0 +1,70 @@
+---
+title: "SSC Packages"
+---
+
+This page provides a searchable, filterable table of all packages in the SSC Archive mirror.
+Package metadata is parsed from the `.pkg` files in the [releases branch](https://github.com/labordynamicsinstitute/ssc-mirror/tree/releases).
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css">
+
+<table id="packages-table" class="display responsive nowrap" style="width:100%">
+  <thead>
+    <tr>
+      <th>Package</th>
+      <th>Description</th>
+      <th>Author</th>
+      <th>Distribution Date</th>
+    </tr>
+  </thead>
+</table>
+
+<!-- jQuery (required by DataTables) -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/responsive/2.5.0/js/dataTables.responsive.min.js"></script>
+
+<script>
+$(document).ready(function () {
+  $('#packages-table').DataTable({
+    ajax: {
+      url: 'data/packages.json',
+      dataSrc: ''
+    },
+    columns: [
+      {
+        data: 'name',
+        render: function (data) {
+          var lower = data.toLowerCase();
+          var url = 'https://ideas.repec.org/c/boc/bocode/' + lower + '.html';
+          return '<a href="' + url + '" target="_blank" rel="noopener">' + data + '</a>';
+        }
+      },
+      { data: 'description' },
+      { data: 'author' },
+      {
+        data: 'distribution_date',
+        render: function (data) {
+          if (!data) return '';
+          // Format YYYYMMDD -> YYYY-MM-DD
+          if (data.length === 8) {
+            return data.substring(0, 4) + '-' + data.substring(4, 6) + '-' + data.substring(6, 8);
+          }
+          return data;
+        }
+      }
+    ],
+    order: [[0, 'asc']],
+    pageLength: 25,
+    lengthMenu: [10, 25, 50, 100],
+    processing: true,
+    language: {
+      loadingRecords: 'Loading packages&hellip;',
+      processing: 'Loading packages&hellip;'
+    },
+    responsive: true
+  });
+});
+</script>

@@ -1,1 +1,6 @@
 pq.dylib
+
+# Quarto build artifacts
+docs/_site/
+docs/.quarto/
+docs/data/

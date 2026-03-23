@@ -1,0 +1,33 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+  title: "SSC Archive Mirror"
+  description: "A mirror of the Statistical Software Components archive at Boston College"
+  site-url: https://labordynamicsinstitute.github.io/ssc-mirror
+  repo-url: https://github.com/labordynamicsinstitute/ssc-mirror
+  repo-actions: [issue]
+  navbar:
+    left:
+      - text: "Home"
+        href: index.qmd
+      - text: "Packages"
+        href: packages.qmd
+      - text: "Tags"
+        href: tags.qmd
+    right:
+      - icon: github
+        href: https://github.com/labordynamicsinstitute/ssc-mirror
+        aria-label: GitHub
+  page-footer:
+    left: "Code released under [BSD-3 License](https://github.com/labordynamicsinstitute/ssc-mirror/blob/main/LICENSE)"
+    right:
+      - icon: github
+        href: https://github.com/labordynamicsinstitute/ssc-mirror
+
+format:
+  html:
+    theme: cosmo
+    css: styles.css
+    toc: true

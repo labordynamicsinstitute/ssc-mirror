@@ -1,0 +1,98 @@
+# Build and deploy the SSC Mirror website to GitHub Pages (gh-pages branch)
+#
+# The site is built with Quarto and uses DataTables.js for dynamic tables.
+# Package metadata is generated from the .pkg files in the releases branch.
+# Tag data is fetched from the GitHub API.
+
+name: Build Site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "scripts/generate_data.py"
+      - ".github/workflows/build_site.yml"
+  # Also rebuild daily so the tag list stays fresh
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Only allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          path: main
+
+      - name: Checkout releases branch (mirror data)
+        uses: actions/checkout@v4
+        with:
+          ref: releases
+          path: releases
+          sparse-checkout: fmwww.bc.edu/repec/bocode
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python dependencies
+        run: pip install requests
+
+      - name: Generate website data (packages.json + tags.json)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python main/scripts/generate_data.py \
+            --pkg-dir  releases/fmwww.bc.edu/repec/bocode \
+            --out-dir  main/docs/data \
+            --repo     labordynamicsinstitute/ssc-mirror \
+            --token    "$GITHUB_TOKEN"
+
+      - name: Install Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render Quarto site
+        run: |
+          cd main/docs
+          quarto render
+
+      - name: Copy data files into rendered site
+        run: |
+          mkdir -p main/docs/_site/data
+          cp main/docs/data/packages.json main/docs/_site/data/
+          cp main/docs/data/tags.json     main/docs/_site/data/
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: main/docs/_site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

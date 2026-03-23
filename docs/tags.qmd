@@ -1,0 +1,173 @@
+---
+title: "Mirror Tags"
+---
+
+This page shows all available date-stamped tags for the SSC Archive mirror.
+Each tag corresponds to a snapshot of the archive on that date.
+
+The tags are grouped into contiguous date ranges. Within a contiguous range, every calendar date has a corresponding snapshot. Gaps indicate dates where no snapshot was taken (e.g. due to workflow failures or intentional gaps).
+
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/jquery.dataTables.min.css">
+
+<div id="tags-summary" class="callout callout-style-default callout-note"></div>
+
+## Contiguous ranges
+
+<table id="ranges-table" class="display" style="width:100%">
+  <thead>
+    <tr>
+      <th>Range #</th>
+      <th>Start date</th>
+      <th>End date</th>
+      <th>Days covered</th>
+      <th>Expected snapshots</th>
+      <th>Actual snapshots</th>
+    </tr>
+  </thead>
+</table>
+
+## All tags
+
+<table id="tags-table" class="display" style="width:100%">
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>Tag</th>
+      <th>Date</th>
+      <th>Range</th>
+    </tr>
+  </thead>
+</table>
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+
+<script>
+$(document).ready(function () {
+  $.getJSON('data/tags.json', function (tagsData) {
+    var tags = tagsData.tags;          // sorted array of tag name strings, oldest first
+    var ranges = tagsData.ranges;      // array of {start, end, count, tags_list} objects
+    var earliest = tags.length > 0 ? tags[0] : '';
+    var latest   = tags.length > 0 ? tags[tags.length - 1] : '';
+
+    // ---- summary callout ----
+    if (tags.length > 0) {
+      $('#tags-summary').html(
+        '<div class="callout-header"><div class="callout-icon-container">' +
+        '<i class="callout-icon"></i></div>' +
+        '<div class="callout-title-container flex-fill">Summary</div></div>' +
+        '<div class="callout-body-container callout-body">' +
+        '<p><strong>Total snapshots:</strong> ' + tags.length + '</p>' +
+        '<p><strong>Earliest tag:</strong> <a href="https://github.com/labordynamicsinstitute/ssc-mirror/releases/tag/' + earliest + '" target="_blank">' + earliest + '</a></p>' +
+        '<p><strong>Latest tag:</strong> <a href="https://github.com/labordynamicsinstitute/ssc-mirror/releases/tag/' + latest + '" target="_blank">' + latest + '</a></p>' +
+        '<p><strong>Contiguous ranges:</strong> ' + ranges.length + '</p>' +
+        '</div>'
+      );
+    }
+
+    // ---- ranges table ----
+    var rangesRows = [];
+    ranges.forEach(function (r, i) {
+      var startDate = new Date(r.start);
+      var endDate   = new Date(r.end);
+      var daysCovered = Math.round((endDate - startDate) / 86400000) + 1;
+      var isCurrent = (r.end === latest);
+      var isEarliest = (r.start === earliest);
+      var rowClass = '';
+      if (isCurrent && isEarliest) rowClass = 'row-both';
+      else if (isCurrent) rowClass = 'row-latest';
+      else if (isEarliest) rowClass = 'row-earliest';
+
+      rangesRows.push({
+        range_num: i + 1,
+        start: r.start,
+        end: r.end,
+        days: daysCovered,
+        expected: daysCovered,
+        actual: r.count,
+        rowClass: rowClass
+      });
+    });
+
+    var rangesTable = $('#ranges-table').DataTable({
+      data: rangesRows,
+      columns: [
+        { data: 'range_num' },
+        {
+          data: 'start',
+          render: function (data, type, row) {
+            if (type === 'display') {
+              var label = data;
+              if (row.start === tags[0]) label += ' <span class="badge badge-earliest">earliest</span>';
+              return '<a href="https://github.com/labordynamicsinstitute/ssc-mirror/releases/tag/' + data + '" target="_blank">' + label + '</a>';
+            }
+            return data;
+          }
+        },
+        {
+          data: 'end',
+          render: function (data, type, row) {
+            if (type === 'display') {
+              var label = data;
+              if (row.end === tags[tags.length - 1]) label += ' <span class="badge badge-latest">latest</span>';
+              return '<a href="https://github.com/labordynamicsinstitute/ssc-mirror/releases/tag/' + data + '" target="_blank">' + label + '</a>';
+            }
+            return data;
+          }
+        },
+        { data: 'days' },
+        { data: 'expected' },
+        { data: 'actual' }
+      ],
+      order: [[1, 'asc']],
+      paging: false,
+      searching: false,
+      createdRow: function (row, data) {
+        if (data.rowClass) $(row).addClass(data.rowClass);
+      }
+    });
+
+    // ---- all tags table ----
+    // Map each tag to its range index
+    var tagRangeMap = {};
+    ranges.forEach(function (r, i) {
+      r.tags_list.forEach(function (t) {
+        tagRangeMap[t] = i + 1;
+      });
+    });
+
+    var allTagsRows = tags.map(function (tag, idx) {
+      return {
+        num: idx + 1,
+        tag: tag,
+        date: tag,
+        range: tagRangeMap[tag] || ''
+      };
+    });
+
+    $('#tags-table').DataTable({
+      data: allTagsRows,
+      columns: [
+        { data: 'num' },
+        {
+          data: 'tag',
+          render: function (data) {
+            var badges = '';
+            if (data === tags[0])              badges += ' <span class="badge badge-earliest">earliest</span>';
+            if (data === tags[tags.length - 1]) badges += ' <span class="badge badge-latest">latest</span>';
+            return '<a href="https://github.com/labordynamicsinstitute/ssc-mirror/releases/tag/' + data + '" target="_blank">' + data + '</a>' + badges;
+          }
+        },
+        { data: 'date' },
+        { data: 'range' }
+      ],
+      order: [[2, 'desc']],
+      pageLength: 50,
+      lengthMenu: [25, 50, 100, 200]
+    });
+  });
+});
+</script>
