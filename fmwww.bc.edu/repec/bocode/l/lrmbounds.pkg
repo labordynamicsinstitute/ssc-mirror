@@ -17,10 +17,10 @@ d Support: email  merwanroudane920@@gmail.com
 d
 f lrmbounds.ado
 f lrmbounds.sthlp
-f ../_/lrmbounds_critvals.ado
-f ../_/lrmbounds_estimate.ado
-f ../_/lrmbounds_ftest.ado
-f ../_/lrmbounds_graph.ado
-f ../_/lrmbounds_lrm.ado
-f ../_/lrmbounds_stars.ado
+f ../_/_lrmbounds_critvals.ado
+f ../_/_lrmbounds_estimate.ado
+f ../_/_lrmbounds_ftest.ado
+f ../_/_lrmbounds_graph.ado
+f ../_/_lrmbounds_lrm.ado
+f ../_/_lrmbounds_stars.ado
 f lrmbounds_example.do

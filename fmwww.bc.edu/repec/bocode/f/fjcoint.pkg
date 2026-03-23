@@ -1,0 +1,29 @@
+d 'FJCOINT': module implementing Johansen-Fourier cointegration tests with smooth structural breaks
+d
+d	fjcoint implements the Johansen-type cointegration tests
+d with a Fourier function, as proposed by Pascalau, Lee, Nazlioglu
+d and	 Lu (2022). 
+d
+d KW: cointegration
+d KW: structural breaks
+d KW: Johansen
+d KW: Fourier
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260322
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f fjcoint.ado
+f fjcoint.sthlp
+f ../_/_fjcoint_scvecm.ado
+f ../_/_fjcoint_sbc.ado
+f ../_/_fjcoint_johansen.ado
+f ../_/_fjcoint_graph.ado
+f ../_/_fjcoint_fourier.ado
+f ../_/_fjcoint_cv_trace.ado
+f ../_/_fjcoint_cv_sbc.ado
+f ../_/_fjcoint_cv_lambda.ado
+f ../_/_fjcoint_cv_johansen.ado

@@ -1,0 +1,37 @@
+d 'PRAISK': module to perform Iterated Prais-Winsten regression with AR(k) errors
+d
+d      praisk fits a linear regression model with autoregressive
+d errors AR(k) using the iterated Prais-Winsten (generalized least 
+d   squares) estimator. For AR(k>1), praisk follows the methods
+d described in Vougas (2021). The transformation uses exact   
+d initialization of the first k observations following Galbraith
+d and Galbraith (1974) and Hamilton (1994). AR(k) parameters are   
+d estimated by solving the pooled Yule-Walker cross-product system
+d jointly across all panels and segments, matching the behavior   
+d of official prais.	After estimation, praisk displays a table
+d of residual autocorrelations at lags 1 through k.  The
+d untransformed row shows    autocorrelations of the OLS residuals
+d (before AR filtering) and the transformed row shows
+d autocorrelations of the AR(k)    innovation residuals (after
+d filtering).  A successful transformation is indicated by
+d transformed autocorrelations close to    zero. For panel data,
+d autocorrelations are computed using Stata's lag operator, which
+d restricts all pairs to within-panel	 consecutive observations,
+d matching the approach used by prais for the Durbin-Watson
+d statistic. 
+d
+d KW: autoregressive errors
+d KW: AR(p)
+d KW: time series
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260322
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f praisk.ado
+f praisk_p.ado
+f praisk.sthlp
+f praisk_methods.pdf
