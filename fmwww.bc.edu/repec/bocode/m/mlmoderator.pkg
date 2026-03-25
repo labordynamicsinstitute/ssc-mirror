@@ -1,0 +1,33 @@
+d 'MLMODERATOR': module providing robustness diagnostics and visualization tools for cross-level interaction effects in multilevel models 
+d
+d    The mlmoderator package provides robustness diagnostics and
+d visualization tools for cross-level interaction effects in
+d multilevel models estimated using Stata’s mixed command. 
+d
+d KW: multilevel models
+d KW: mixed
+d KW: robustness
+d KW: visualization
+d
+d Requires: Stata version 14.1
+d
+d Distribution-Date: 20260324
+d
+d Author:    Subir Hait,  Michigan State University
+d Support: email   haitsubi@@msu.edu
+d
+f mlmcenter.ado
+f mlmcenter.sthlp
+f mlmjn.ado
+f mlmjn.sthlp
+f mlmplot.ado
+f mlmplot.sthlp
+f mlmprobe.ado
+f mlmprobe.sthlp
+f mlmsens.ado
+f mlmsens.sthlp
+f mlmsummary.ado
+f mlmsummary.sthlp
+f mlmvdecomp.ado
+f mlmvdecomp.sthlp
+f mlmoderator_demo.do

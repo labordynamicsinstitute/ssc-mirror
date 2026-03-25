@@ -1,0 +1,42 @@
+d 'NAAM': module to provide consistent string encoding, ID hashing, and label management
+d
+d    naam addresses a common and consequential problem in
+d large-scale survey and administrative data work: encoding string
+d variables consistently across multiple datasets or rounds.
+d Stata's built-in encode assigns numeric codes alphabetically
+d within each dataset independently. When a new category appears in
+d a later round -- a new district, a new industry, a new response
+d option -- all alphabetically subsequent codes shift. Any merge or
+d append across rounds then produces silently wrong results with no
+d error message. This is particularly common in multi-round
+d household surveys, administrative panel datasets, and any project
+d where data arrives in separate files over time. naam solves this
+d by encoding once, saving the exact string-to-numeric mapping to
+d an Excel workbook, and reapplying those mappings instantly to
+d every subsequent file. The same string always receives the same
+d numeric code. New categories are detected automatically, assigned
+d the next available code, and the Excel file is updated. The
+d workbook also serves as a permanent, human-readable audit record
+d of every mapping in the project. 
+d
+d KW: encode
+d KW: value labels
+d KW: string variables
+d KW: codebook
+d KW: Excel
+d KW: merge
+d KW: panel data
+d KW: ID variables
+d KW: data quality
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260324
+d
+d Author:  Vijayshree Jayaraman, NA
+d Support: email  jvijayshree26@@gmail.com
+d
+f naam.ado
+f naam.sthlp
+f naam_round1.dta
+f naam_round2.dta

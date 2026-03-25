@@ -1,10 +1,10 @@
 ﻿{smcl}
-{* October 3rd, 2025}{...}
+{* March 24th, 2026}{...}
 {hline}
 {title:Title}
 
 {p 4 4 2}
-{bf:efficiency} - Calculate investment efficiency based on Richardson (2006) model with single Excel file import functionality
+{bf:efficiency} - Calculate investment efficiency based on Richardson (2006) with robust multi-sheet merge
 
 {title:Authors}
 
@@ -40,70 +40,63 @@ E-mail: {browse "mailto:2437563124@qq.com":2437563124@qq.com}
 {title:Description}
 
 {p 4 4 2}
-{cmd:efficiency} calculates investment efficiency measures based on the Richardson (2006) model. {break}
-This version includes functionality to import and merge data from multiple sheets within a single Excel file.
+{cmd:efficiency} calculates investment efficiency measures following Richardson (2006).{break}
+This version imports data from multiple sheets (Sheet1 to Sheet`SHEETnum') of a single Excel file,{break}
+automatically merges them by {bf:stkcd} and year, and then estimates the investment efficiency model.
 
 {p 4 4 2}
-The program automatically imports data from multiple sheets (Sheet1 to Sheet10 by default) from the specified Excel file,{break}
-merges them into a panel dataset, and then estimates the investment efficiency model.
+Each sheet must contain at least {bf:stkcd} and either a numeric {bf:year} variable or a {bf:date} variable.{break}
+Variables can be spread across sheets; the program will combine them into a single panel dataset.{break}
+If a sheet cannot be imported or lacks key variables, a warning is issued and the sheet is skipped.{break}
+After merging, the program checks that all required variables exist; if any are missing, an error is returned.
 
 {p 4 4 2}
-The investment efficiency model follows Richardson (2006):
+The investment efficiency model is estimated using fixed-effects panel regression with clustered standard errors:
 
 {p 8 8 2}
-Invest_it = α + β₁·L1.Invest_it + β₂·L1.Size_it + β₃·L1.Lev_it + β₄·L1.Cash_it + {break}
-β₅·L1.Age_it + β₆·L1.Return_it + β₇·L1.TobinQ_it + β₈·State_it + β₉·L1.SalesGrowth_it + {break}
+Invest_it = α + β1*L1.Invest_it + β2*L1.Size_it + β3*L1.Lev_it + β4*L1.Cash_it + {break}
+β5*L1.Age_it + β6*L1.Return_it + β7*L1.TobinQ_it + β8*State_it + β9*L1.SalesGrowth_it + {break}
 YearDummies + IndustryDummies + ε_it
 
 {p 4 4 2}
-Where:{p_end}
-{p 8 12 2}- Invest_it: Investment expenditure in year t{p_end}
-{p 8 12 2}- L1.Invest_it: Lagged investment expenditure{p_end}
-{p 8 12 2}- L1.Size_it: Lagged firm size (log of total assets){p_end}
-{p 8 12 2}- L1.Lev_it: Lagged leverage ratio{p_end}
-{p 8 12 2}- L1.Cash_it: Lagged cash holdings{p_end}
-{p 8 12 2}- L1.Age_it: Lagged firm age{p_end}
-{p 8 12 2}- L1.Return_it: Lagged stock return{p_end}
-{p 8 12 2}- L1.TobinQ_it: Lagged Tobin's Q{p_end}
-{p 8 12 2}- State_it: State ownership dummy{p_end}
-{p 8 12 2}- L1.SalesGrowth_it: Lagged sales growth{p_end}
+Investment inefficiency is measured as the absolute residual:
+
+{p 8 8 2}
+Abs_InEff = |Invest_it - Invest_Predicted_it|
 
 {p 4 4 2}
-Investment inefficiency is measured as the absolute residual from the model:
+Over-investment and under-investment are defined as:
 
 {p 8 8 2}
-Abs_InEff = |Invest_it - Invest_Predicted_it|{p_end}
-
-{p 4 4 2}
-Over-investment and under-investment are calculated as:
-
-{p 8 8 2}
-Over_Invest = max(0, Invest_it - Invest_Predicted_it){p_end}
-{p 8 8 2}
-Under_Invest = max(0, Invest_Predicted_it - Invest_it){p_end}
+Over_Invest = max(0, Invest_it - Invest_Predicted_it){break}
+Under_Invest = max(0, Invest_Predicted_it - Invest_it)
 
 {title:Options}
 
 {p 4 4 2}
-{cmd:FILEpath(}{it:string}{cmd:)} specifies the path to the Excel file containing multiple sheets. {it:Required}.{p_end}
+{cmd:FILEpath(}{it:string}{cmd:)} specifies the path to the Excel file containing multiple sheets. {it:Required}.
 
 {p 4 4 2}
-{cmd:SHEETnum(}{it:integer}{cmd:)} specifies the number of sheets to import from the Excel file. Default is 10.{p_end}
+{cmd:SHEETnum(}{it:integer}{cmd:)} specifies the number of sheets to import (from Sheet1 to Sheet`SHEETnum'). Default is 10.
 
 {p 4 4 2}
-{cmd:SAVEpath(}{it:string}{cmd:)} specifies the path and filename to save the results dataset.{p_end}
+{cmd:SAVEpath(}{it:string}{cmd:)} specifies the path and filename to save the results dataset.
 
 {p 4 4 2}
-{cmd:REPLACE} allows overwriting an existing file when used with {cmd:SAVEpath}.{p_end}
+{cmd:REPLACE} allows overwriting an existing file when used with {cmd:SAVEpath}.
 
 {title:Data Requirements}
 
 {p 4 4 2}
-The program expects a single Excel file with multiple sheets (Sheet1 to Sheet10 by default) with the following structure:{p_end}
-{p 8 12 2}- Each sheet should contain a {cmd:stkcd} variable (firm identifier){p_end}
-{p 8 12 2}- Each sheet should contain either a {cmd:year} variable or a {cmd:date} variable{p_end}
-{p 8 12 2}- Sheets should contain various financial variables (invest, size, lev, cash, age, ret, tobinq, state, salegrowth){p_end}
-{p 8 12 2}- One sheet should contain a {cmd:code} variable for industry classification{p_end}
+The program expects a single Excel file with multiple sheets (Sheet1, Sheet2, ...). Each sheet must contain:{p_end}
+{p 8 12 2}• {bf:stkcd} (firm identifier) – numeric or string{p_end}
+{p 8 12 2}• either a numeric {bf:year} variable or a {bf:date} variable (string or Stata date){p_end}
+{p 8 12 2}• any subset of the following variables (they can be distributed across sheets):{p_end}
+{p 12 16 2}{bf:invest}, {bf:size}, {bf:lev}, {bf:cash}, {bf:age}, {bf:ret}, {bf:tobinq}, {bf:state}, {bf:salegrowth}{p_end}
+{p 8 12 2}• one sheet must contain a {bf:code} or {bf:indcd} variable for industry classification (Chinese stock codes preferred){p_end}
+
+{p 4 4 2}
+All numeric variables will be automatically converted if imported as strings.{p_end}
 
 {title:Examples}
 
@@ -129,27 +122,28 @@ The program adds the following variables to the dataset:{p_end}
 {p 8 12 2}{cmd:Under_Invest}: Under-investment measure{p_end}
 
 {p 4 4 2}
-The program also displays summary statistics for these variables.{p_end}
+Summary statistics for these variables are displayed after estimation.{p_end}
 
 {title:References}
 
 {p 4 4 2}
-Richardson, S. (2006). Over-investment of free cash flow. {it:Review of Accounting Studies}, 11(2-3), 159-189.{p_end}
+Richardson, S. (2006). Over-investment of free cash flow. {it:Review of Accounting Studies}, 11(2-3), 159-189.
 
 {p 4 4 2}
-Biddle, G. C., Hilary, G., & Verdi, R. S. (2009). How does financial reporting quality relate to investment efficiency? {it:Journal of Accounting and Economics}, 48(2-3), 112-131.{p_end}
+Biddle, G. C., Hilary, G., & Verdi, R. S. (2009). How does financial reporting quality relate to investment efficiency? {it:Journal of Accounting and Economics}, 48(2-3), 112-131.
 
 {p 4 4 2}
-Chen, F., Hope, O. K., Li, Q., & Wang, X. (2011). Financial reporting quality and investment efficiency of private firms in emerging markets. {it:The Accounting Review}, 86(4), 1255-1288.{p_end}
+Chen, F., Hope, O. K., Li, Q., & Wang, X. (2011). Financial reporting quality and investment efficiency of private firms in emerging markets. {it:The Accounting Review}, 86(4), 1255-1288.
 
 {title:Acknowledgments}
 
 {p 4 4 2}
-We sincerely appreciate Christopher F. Baum for his prompt guidance and revision suggestions.{p_end}
+We sincerely appreciate Christopher F. Baum for his prompt guidance and revision suggestions.
 
 {title:Also See}
 
 {p 4 4 2}
-Manual: {manhelp import_excel D}, {manhelp xtreg R}, {manhelp predict R}{p_end}
+Manual: {manhelp import_excel D}, {manhelp xtreg R}, {manhelp predict R}
 
 {hline}
+{*}
