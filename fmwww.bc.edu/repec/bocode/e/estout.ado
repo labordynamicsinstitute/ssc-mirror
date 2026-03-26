@@ -1,4 +1,4 @@
-*! version 3.31  26apr2022  Ben Jann
+*! version 3.33  23mar2026  Ben Jann
 
 program define estout, rclass
     version 8.2
@@ -29,6 +29,7 @@ program define estout, rclass
         DELimiter(string asis) ///
         INCELLdelimiter(string asis) ///
         end(string asis) ///
+        lastend(str asis) ///
         DMarker(string) ///
         MSign(string) ///
         SUBstitute(string asis) ///
@@ -214,7 +215,7 @@ program define estout, rclass
 
 *Defaults
     if "`defaults'"=="esttab"               local defaults "tab"
-    if "`defaults'"=="" & `"`using'"'==""   local defaults "smcl"
+    if "`defaults'"=="" & `"`macval(using)'"'=="" local defaults "smcl"
     if inlist("`defaults'", "", "smcl", "tab", "fixed", "tex", "html","mmd")  {
         local varwidthfactor = (1 + ("`eqlabelsmerge'"!="" & "`unstack'"=="")*.5)
         if inlist("`defaults'", "", "tab") {
@@ -335,8 +336,8 @@ program define estout, rclass
             file close `file'
         }
     }
-    if "`notype'"=="" & `"`using'"'=="" local type type
-    if "`smcltags'"=="" & "`noasis'"=="" local asis asis
+    if "`notype'"=="" & `"`macval(using)'"'=="" local type type
+    if "`smcltags'"=="" & "`noasis'"==""        local asis asis
     if "`asis'"!="" local asis "_asis"
     if "`smclrules'"!="" & "`nosmclmidrules'"=="" local smclmidrules smclmidrules
     if "`smclmidrules'"!="" & "`nosmcleqrules'"=="" local smcleqrules smcleqrules
@@ -949,10 +950,13 @@ program define estout, rclass
     else local hline
 
 * check begin, delimiter, end
+    if `"`macval(lastend)'"'=="" {
+        local lastend `"`macval(end)'"'
+    }
     tempfile tfile
     tempname file
-    file open `file' using `"`tfile'"', write text
-    foreach opt in begin delimiter end {
+    file open `file' using `"`macval(tfile)'"', write text
+    foreach opt in begin delimiter end lastend {
         capture file write `file' `macval(`opt')'
         if _rc {
             local `opt' `"`"`macval(`opt')'"'"'
@@ -993,10 +997,10 @@ program define estout, rclass
     if `labcol2width'>0 local fmt_l2 "%~`labcol2width's"
     if "`mgroupsspan'`mlabelsspan'`eqlabelsspan'`collabelsspan'"!="" {
         if `modelwidthzero'==0 {
-            file open `file' using `"`tfile'"', write text replace
+            file open `file' using `"`macval(tfile)'"', write text replace
             file write `file' `macval(delimiter)'
             file close `file'
-            file open `file' using `"`tfile'"', read text
+            file open `file' using `"`macval(tfile)'"', read text
             file read `file' delwidth
             file close `file'
             local delwidth = `length'(`"`macval(delwidth)'"')
@@ -1013,7 +1017,7 @@ program define estout, rclass
     local atvars3 `"`"`macval(title)'"' `"`macval(note)'"' `"`macval(discrete)'`macval(discrete2)'"' `"`macval(starlegend)'"'"'
 
 *Open output file
-    file open `file' using `"`tfile'"', write text replace
+    file open `file' using `"`macval(tfile)'"', write text replace
 
 *Write prehead
     if `"`macval(prehead)'"'!="" {
@@ -1672,9 +1676,15 @@ program define estout, rclass
 
 *End of table row
             if "`smcltags'"!="" file write `file' "{txt}"
-            if `weqcnt'==`eqdim' & "`varlabelslast'"=="" ///
-             & !(`isref' & `"`refcatbelow'"'!="") local varlabelsend0
             local tmpend `"`macval(end)'"'
+            if !(`isref' & `"`refcatbelow'"'!="") {
+                if `weqcnt'==`eqdim' & "`varlabelslast'"=="" local varlabelsend0
+                if `r'==`RI' {
+                    if `"`macval(statsarray)'"'=="" {
+                        local tmpend `"`macval(lastend)'"'
+                    }
+                }
+            }
             if "`varlabelsreplace'"!="" {
                 if `"`macval(varlabelsend0)'"'!=""  local tmpend
             }
@@ -1692,14 +1702,19 @@ program define estout, rclass
              `"`macval(value)'"'
 * insert refcat() (if refcatbelow)
             if `isref' & `"`refcatbelow'"'!="" {
-            if "`smcltags'"!="" file write `file' "{txt}"
+                if "`smcltags'"!="" file write `file' "{txt}"
                 if `hasrtfbrdr' & `r'==`RI' {
                     StableSubinstr begin `"`macval(rtfbeginbak)'"' "@rtfrowdefbrdr" `"`rtfrowdefbrdrb'"'
                     local rtfbrdron 1
                 }
-                if `weqcnt'==`eqdim' & "`varlabelslast'"=="" local varlabelsend0
                 local tmpbegin `"`macval(begin)'"'
                 local tmpend `"`macval(end)'"'
+                if `r'==`RI' {
+                    if `"`macval(statsarray)'"'=="" {
+                        local tmpend `"`macval(lastend)'"'
+                    }
+                }
+                if `weqcnt'==`eqdim' & "`varlabelslast'"=="" local varlabelsend0
                 if "`varlabelsreplace'"!="" {
                     if `"`macval(varlabelsbegin0)'"'!="" local tmpbegin
                     if `"`macval(varlabelsend0)'"'!=""  local tmpend
@@ -1738,9 +1753,14 @@ program define estout, rclass
             StableSubinstr begin `"`macval(rtfbeginbak)'"' "@rtfrowdefbrdr" `"`rtfrowdefbrdrb'"'
             local rtfbrdron 1
         }
-        if `i'==`nindicate' & "`varlabelslast'"=="" local varlabelsend
         local tmpbegin `"`macval(begin)'"'
         local tmpend `"`macval(end)'"'
+        if `i'==`nindicate' {
+            if `"`macval(statsarray)'"'=="" {
+                local tmpend `"`macval(lastend)'"'
+            }
+            if "`varlabelslast'"=="" local varlabelsend
+        }
         if "`varlabelsreplace'"!="" {
             if `"`macval(varlabelsbegin0)'"'!="" local tmpbegin
             if `"`macval(varlabelsend)'"'!=""  local tmpend
@@ -1929,8 +1949,11 @@ program define estout, rclass
             local lastm "`m'"
             local lasteq `"`eq'"'
         }
-        if `r'==`S' & "`statslabelslast'"=="" local statslabelsend
         local tmpend `"`macval(end)'"'
+        if `r'==`S' {
+            if "`statslabelslast'"=="" local statslabelsend
+            local tmpend `"`macval(lastend)'"'
+        }
         if "`statslabelsreplace'"!="" {
             if `"`macval(statslabelsend)'"'!="" local tmpend
         }
@@ -1983,16 +2006,16 @@ program define estout, rclass
     if `"`bottomfile'"'!="" {
         confirm file `"`bottomfile'"'
     }
-    if `"`using'"'!="" {
+    if `"`macval(using)'"'!="" {
         tempname file2
-        file open `file2' `using', write text `replace' `append'
+        file open `file2' `macval(using)', write text `replace' `append'
     }
     if "`type'"!="" di as res ""
     if `"`topfile'"'!="" {
         file open `file' using `"`topfile'"', read text
         file read `file' temp
         while r(eof)==0 {
-            if `"`using'"'!="" {
+            if `"`macval(using)'"'!="" {
                 file write `file2' `"`macval(temp)'"' _n
             }
             if "`type'"!="" {
@@ -2005,7 +2028,7 @@ program define estout, rclass
         }
         file close `file'
     }
-    file open `file' using `"`tfile'"', read text
+    file open `file' using `"`macval(tfile)'"', read text
     file read `file' temp
     while r(eof)==0 {
         forv s = 1(2)`S' {
@@ -2018,7 +2041,7 @@ program define estout, rclass
         if `rtfenc' {
             mata: estout_rtfencode("temp")
         }
-        if `"`using'"'!="" {
+        if `"`macval(using)'"'!="" {
             file write `file2' `"`macval(temp)'"' _n
         }
         if "`type'"!="" {
@@ -2034,7 +2057,7 @@ program define estout, rclass
         file open `file' using `"`bottomfile'"', read text
         file read `file' temp
         while r(eof)==0 {
-            if `"`using'"'!="" {
+            if `"`macval(using)'"'!="" {
                 file write `file2' `"`macval(temp)'"' _n
             }
             if "`type'"!="" {
@@ -2047,12 +2070,12 @@ program define estout, rclass
         }
         file close `file'
     }
-    if `"`using'"'!="" {
+    if `"`macval(using)'"'!="" {
         file close `file2'
         gettoken junk using0 : using
-        return local fn `using0'
+        return local fn `macval(using0)'
         if "`outfilenoteoff'"=="" {
-            di as txt `"(output written to {browse `using0'})"'
+            di as txt `"(output written to {browse `macval(using0)'})"'
         }
     }
 end
