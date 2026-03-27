@@ -1,0 +1,25 @@
+d 'XTLMBREAK': module to provide Panel LM cointegration test with multiple structural breaks
+d
+d     xtlmbreak implements the panel LM test for the null
+d hypothesis of cointegration proposed by Westerlund (2006),
+d published in	  the Oxford Bulletin of Economics and Statistics.
+d The test extends the McCoskey and Kao (1998) panel LM
+d cointegration test to    allow for multiple structural breaks in
+d both the level and trend of the cointegrated panel regression. 
+d
+d KW: panel data
+d KW: LM tests
+d KW: cointegration
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260326
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtlmbreak.ado
+f xtlmbreak.sthlp
+f ../_/_xtlmbreak_engine.ado
+f xtlmbreak_example.do

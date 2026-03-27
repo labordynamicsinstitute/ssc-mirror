@@ -1,0 +1,201 @@
+/*******************************************************************************
+*! leslie dialog version 1.0, 25 Mar. 2026, Jeronimo O. Muniz, jeronimo@ufmg.br
+*! for leslie.ado program, version 1.0, 25 Mar. 2026, Jeronimo O. Muniz.
+*******************************************************************************/
+VERSION 15.0
+POSITION . . 500 690
+
+DEFINE _xls +35
+DEFINE _ls +30
+DEFINE _ms +25
+DEFINE _ss +20
+DEFINE _iwd 480
+DEFINE _lft 10
+DEFINE _lft2 20
+DEFINE _lft3 30
+DEFINE _tb 35
+
+DIALOG main, tabtitle("Main")						///
+	label("leslie - Demographic projections using matrix models")
+
+BEGIN
+ TEXT tx_per 				15	10	260	.,	///
+	label("Number of forward projection periods (1 to 99):")
+ EDIT ed_per 				271 	10	40	.,	///
+ 	default("")							///
+	tooltip("A projection period is equal to the length of the age interval") ///
+	error("A number between 1 and 99")
+ 
+ GROUPBOX gb_proj			_lft	_xls	_iwd	220,	///
+ 	label("Your data is structured as")
+ RADIO rb_proj1				_lft2	60	170	.,	///
+	first default(1)						///
+	onclickon(main.ck_nomob.disable)				///
+	onclickoff(main.ck_tol2.hide)					///
+ 	label("One-sex")
+ RADIO rb_proj2				+175	@	@	.,	///
+ 	middle								///
+	onclickon(main.ck_nomob.disable)				///
+	onclickoff(main.ck_tol2.show)					///
+ 	label("Two-sex") 
+ RADIO rb_proj3				+175	@	@	.,	///
+	last								///
+	onclickon(main.ck_nomob.enable)					///
+	onclickoff(main.ck_tol2.show)					///
+ 	label("Multistate")
+ CHECKBOX ck_nomob			370	110	100	.,	///
+ 	option(nomobility)						///
+	 label("No mobility")
+ 
+ TEXTBOX tx_openT			_lft2	90	345	_tb,	///
+ 	lab("Optional value(s) for person-years remaining (e.g., T) in the extra last open age group:")
+ EDIT ed_openT				@	_xls	100	.,	///
+ 	label("extraT") option(extraT)					///
+	error("For two-sex projections, two values must be entered")	///
+	tooltip("Check the last value of vector T to have an idea of what" ///
+	" value(s) to enter. Example: extraT(1.98 1.05), respectively for" ///
+	"females and males")
+ 
+ TEXTBOX tx_mig				@	_xls	345	_tb,	///
+ 	lab("Optional file of past population(s) for inclusion of residual net migrants in the projections:")
+  /*FILE fi_mig 20 +20 250 ., label("Browse...") filter("*.dta|*.*") ///
+	tooltip("Your file must have a single variable with age-specific past" ///
+	"population(s). It must be in the working directory.") */
+ EDIT ed_mig				@	_xls	250	.,	///
+ 	label("mig1") option(mig1) 					///
+	error("Enter the file containing the past population") 		///
+	tooltip("Your file must be in your working directory and have a single" ///
+	"variable with age-specific past population(s). Example:" ///
+	"sweden_1988_female.dta OR sweden_1988_bothsexes.dta.")
+ 
+ CHECKBOX ck_mig2 			@ 	+30	270 	.,	///
+ 	tooltip("include half of the migrants at" 			///
+	"the beginning and half at the end of the projection interval") ///
+	option(mig2) label("Split net migrants over the projection period")
+ 
+ GROUPBOX gb_opts			_lft	+50	_iwd	405,	///
+ 	label("Other options")
+ TEXT tx_srb 				_lft2	_ss	200	.,	///
+ 	label("Sex ratio (boys/girls) at birth:")
+ DEFINE col2 225
+ EDIT ed_srb 				col2	@	60	.,	///
+ 	default(1.05) label("srb") option(srb) ///
+	tooltip("1.05 is the default sex ratio at birth for a female-dominant" ///
+		"projection, and 0.95 is usually used for males.")	/// 
+	error("Enter a number equal to the ratio of girls to boys at birth.")
+ TEXT tx_l0				_lft2	_ls	200	.,	///
+ 	label("Life table radix (ex. l0 = 100,000):")
+ EDIT ed_l0 				col2	@	60	.,	///
+ 	default(100000) label("l0") option(l0)				///
+	error("Enter a number for the life table radix")
+ TEXTBOX tx_varp			_lft2	+30	430	_tb,	///
+ 	lab("For projections with varying fertility and survival by age, enter the following expected value(s) for the last projection period:")
+ TEXT tx_tfr				_lft3	_xls	150	.,	///
+ 	label("Total fertility rate (tfr):")
+ EDIT ed_tfr				col2	@	60	.,	///
+ 	label("fert") option(fert) 					///
+	tooltip("Enter your expectation about the average number of children women will be bear in" ///
+	"the last projection period")
+
+ TEXT tx_base				_lft3	_ls	200	.,	///
+ 	label("Baseline year:")
+ EDIT ed_base 				col2	@	60	.,	///
+ 	label("base") option(baseline) 					///
+	tooltip("Enter the baseline year of the projection period (ex. 1993)")
+  
+ TEXT tx_place				_lft3	_ls	200	.,	///
+ 	label("Place of final ASFR standard:")
+ EDIT ed_place 				col2	@	90	.,	///
+ 	label("place") option(place)					///
+	tooltip("Enter the region, subregion, country, or area from which the" ///
+	"final age-specific fertility standard is borrowed") 
+  
+ TEXT tx_e0				_lft3	_ls	200	.,	///
+ 	label("Life expectancy at birth (e0):")
+ EDIT ed_e0				col2	@	90	.,	///
+ 	label("surv") option(surv)					///
+	tooltip("Enter one value for one-sex projections, or two consecutive values, one for females and" ///
+	 "one for males in the case of two-sex projections. Example: surv(86.41 83.64)," ///
+	 "respectively for females and males") 
+ 
+ TEXT tx_sigma				_lft3	_ls	200	.,	///
+ 	label("Slope of the survival curve (sigma):")
+ EDIT ed_sigma				col2	@	90	.,	///
+ 	label("sigma") option(sigma)					///
+	tooltip("Check estimated values of sigma in the graph and enter new possibilities here") 
+ 
+ CHECKBOX ck_stable			_lft2	+30	200	.,	///
+ 	tooltip("Reports stable-equivalent age structures")		///
+	option(stable)							///
+	label("Compute stability analysis")
+ CHECKBOX ck_summary			col2	@	200	.,	///
+ 	tooltip("Computes demographic measures such as tfr, grr, nrr, e0, intrisic rates, mean ages etc.") ///
+	option(summary)	label("Compute summary measures")
+ 
+ TEXT tx_tol				_lft2	+30	200	.,	///
+ 	label("Criteria of distance to stability:")
+ TEXT tx_tol2				_lft3	+25	600	.,	///
+ 	label("Tolerance:")
+ EDIT ed_tol2				100	@	90	.,	///
+ 	default(1e-6) label("tolerance") option(tolerance)		///
+	tooltip("This value impacts the reported time to achieve stability")
+ CHECKBOX ck_tol2 			col2	@	120	.,	///
+ 	option(keyfitz) label("Keyfitz's Delta")			///
+	tooltip("Uses Keyfitz's Delta as the measure of distance to the stable structure")
+ 
+ TEXT tx_ygual				_lft2	+30	480	.,	///
+ 	label("Young group upper age limit in the calculation of the total dependency ratio:")
+ EDIT ed_ygual				_lft2	_ss	45	.,	///
+ 	default(14) label("ygual") option(ygual)			///
+	tooltip("Change this value to set the age range of the young population" ///
+	"included in the calculation of total dependency ratios. Example:" ///
+	"ygual(19) sets the young group to those older than 0 and younger than 20.")
+END
+
+OK ok1,      label("OK") 
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit") 
+HELP hlp1, view("help leslie")
+RESET res1
+COPY copy1
+
+PROGRAM command
+BEGIN
+    put "leslie "
+    require main.ed_per
+	beginoptions
+		put "period("
+		put main.ed_per ") "
+		if main.ed_openT {
+			put "extraT("
+			put main.ed_openT ") "
+						 }
+		if main.ed_mig   {
+			put "mig1("
+			put main.ed_mig ") "
+						 }
+		if main.ck_mig2 {
+			put "mig2 "			
+						}
+		if main.rb_proj2 {
+			put "two"
+						 }
+		if main.rb_proj3 {
+			put "multistate"
+						 }
+		optionarg main.ed_srb
+		optionarg main.ed_l0
+		optionarg main.ed_tfr
+		optionarg main.ed_base
+		optionarg main.ed_place
+		optionarg main.ed_e0
+		optionarg main.ed_sigma
+		optionarg main.ed_tol2
+		optionarg main.ed_ygual
+		option main.ck_stable
+		option main.ck_summary
+		option main.ck_tol2
+		option main.ck_nomob
+	endoptions
+END
+

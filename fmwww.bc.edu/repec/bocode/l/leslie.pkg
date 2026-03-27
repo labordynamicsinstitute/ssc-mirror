@@ -1,0 +1,43 @@
+d 'LESLIE': module to automate demographic projections by age, sex, and multistate categories
+d
+d    leslie forward projects populations structured by age, sex,
+d and  other states of interest using matrix models. The program
+d implements the methods and procedures first introduced by Leslie
+d (1945), and later developed by  Rogers (1966, 1995). The program
+d produces projections for one- or  two-sex populations, with or
+d without net migration, and also performs  multistate projections,
+d with or without considering mobility between	subpopulations. The
+d table option calculates the age structure of	stable-equivalent
+d populations, and su:mmary computes several demographic  measures
+d characterizing the current population (tfr, nrr, e0, grr, mean
+d age  at death and of the population, intrinsic rates, momentum
+d etc.) 
+d
+d KW: population
+d KW: projections
+d KW: age structure
+d KW: demograohy
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20260326
+d
+d Author:   Jerônimo O. Muniz, Universidade Federal de Minas Gerais 
+d Support: email jeronimomuniz@@gmail.com
+d
+f leslie.ado
+f leslie.sthlp
+f leslie.dlg
+F ../w/wpp2024_median_e0.dta
+F ../w/wpp2024_median_e0F.dta
+F ../w/wpp2024_median_e0M.dta
+F ../w/wpp2024_median_fert.dta
+f leslie_test.do
+f ../m/multi_race_brazil.dta
+f ../r/random_nmr_bothsexes.dta
+f ../r/random_nmr.dta
+f ../s/sweden_1988_bothsexes.dta
+f ../s/sweden_1988_female.dta
+f ../s/sweden_1993_bothsexes.dta
+f ../s/sweden_1993_female.dta
+f ../s/sweden_1993_male.dta

@@ -45,6 +45,7 @@ p leanout module to produce lean output formatting for estimation results
 p leebounds module for estimating Lee (2009) treatment effect bounds
 p leedtwoway module to solve two way labor models
 p leftalign module to left-align (or right-align) variables
+p leslie module to utomates demographic projections by age, sex, and multistate categories
 p levels module to report distinct levels of integer or string variable
 p levene module to test for equal population variances
 p levinlin module to perform Levin-Lin-Chu panel unit root test

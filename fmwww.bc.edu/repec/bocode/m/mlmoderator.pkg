@@ -17,6 +17,7 @@ d Author:    Subir Hait,  Michigan State University
 d Support: email   haitsubi@@msu.edu
 d
 f mlmcenter.ado
+f mlmoderator.sthlp
 f mlmcenter.sthlp
 f mlmjn.ado
 f mlmjn.sthlp
