@@ -1,0 +1,43 @@
+d 'XTPUNITCOINT': module to compute panel cointegration and stationarity tests with structural breaks and common factors
+d
+d   The xtpunitcoint package provides three commands for panel data
+d analysis: (1) xtpcointegwe implements the panel cointegration
+d test of Westerlund and Edgerton (2008, Oxford Bulletin of
+d Economics and Statistics). Tests the null hypothesis of no
+d cointegration allowing for structural breaks (level shift or
+d regime shift) and cross-sectional dependence via common factors
+d estimated by principal components with Bai-Ng (2002) factor
+d selection. (2) xtpcointegboot implements the bootstrap panel
+d cointegration test of Westerlund and Edgerton (2007, Economics
+d Letters). Tests the null hypothesis of cointegration using the
+d McCoskey-Kao (1998) LM+ statistic with sieve bootstrap critical
+d values to correct for size distortions under cross-sectional
+d dependence. (3) )xtpkpss implements the panel KPSS stationarity
+d test of Carrion-i-Silvestre, del Barrio-Castro, and López-Bazo
+d (2005, Econometrics Journal). Tests the null of stationarity
+d allowing for multiple structural breaks at unknown dates,
+d detected via sequential Bai-Perron (1998) testing with the LWZ
+d information criterion. 
+d
+d KW: panel data
+d KW: cointegration
+d KW: structural breaks
+d KW: common factors
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260327
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtpcointegboot.ado
+f xtpcointegboot.sthlp
+f xtpcointegwe.ado
+f xtpcointegwe.sthlp
+f xtpkpss.ado
+f xtpkpss.sthlp
+f ../_/_xtpcointegboot_engine.ado
+f ../_/_xtpcointegwe_engine.ado
+f ../_/_xtpkpss_engine.ado
+f xtpunitcoint_example.do

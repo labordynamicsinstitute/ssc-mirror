@@ -7,8 +7,8 @@ d (1945), and later developed by  Rogers (1966, 1995). The program
 d produces projections for one- or  two-sex populations, with or
 d without net migration, and also performs  multistate projections,
 d with or without considering mobility between	subpopulations. The
-d table option calculates the age structure of	stable-equivalent
-d populations, and su:mmary computes several demographic  measures
+d stable option calculates the age structure of	stable-equivalent
+d populations, and summary computes several demographic  measures
 d characterizing the current population (tfr, nrr, e0, grr, mean
 d age  at death and of the population, intrinsic rates, momentum
 d etc.) 
@@ -16,7 +16,7 @@ d
 d KW: population
 d KW: projections
 d KW: age structure
-d KW: demograohy
+d KW: demography
 d
 d Requires: Stata version 15
 d
