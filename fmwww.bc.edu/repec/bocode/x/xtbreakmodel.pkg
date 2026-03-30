@@ -1,0 +1,38 @@
+d 'XTBREAKMODEL': module to compute heterogeneous structural breaks in panel data models
+d
+d  The xtbreakmodel command estimates structural breaks in panel
+d data regression models y_it = x'_it * beta(t) + alpha_i +
+d epsilon_it using four state-of-the-art methods:  (1) GAGFL —
+d Grouped Adaptive Group used Lasso (Okui & Wang, 2021,     Journal
+d of Econometrics). Allows units to belong to G latent	   groups
+d where each group has its own break dates and regime-specific	  
+d coefficients. Simultaneously estimates group membership and	 
+d group-specific structural breaks.  (2) AGFL/PLS — Adaptive
+d Group Fused Lasso for common breaks (Qian &	  Su, 2016, Journal
+d of Econometrics). Assumes all units share the     same break
+d dates. Uses Block Coordinate Descent with adaptive	 fused L1
+d penalty and BIC-type information criterion for lambda    
+d selection.  (3) BFK — Sequential Least Squares break detection
+d (Baltagi, Feng &     Kao, 2016, Journal of Econometrics). Detects
+d common breaks via	sequential SSR minimization across
+d candidate break dates.  (4) SaRa — Screening and Ranking
+d Algorithm (Li, Xiao & Chen, 2025).	 Nonparametric approach
+d using local kernel coefficient estimation	at multiple
+d bandwidths with median thresholding and IC-based     final
+d selection. 
+d
+d KW: panel data
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260329
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtbreakmodel.ado
+f xtbreakmodel.sthlp
+f xtbreakmodel_graph.ado
+f ../_/_xtbreakmodel_engine.ado
+f xtbreakmodel_example.do

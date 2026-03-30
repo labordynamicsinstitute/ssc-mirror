@@ -37,10 +37,12 @@ p xtbcfe module to perform bootstrap-corrected Fixed Effects estimation and infe
 p xtbhst module to implement bootstrap test for slope homogeneity in large panels.
 p xtbreak module for detecting and dating multiple structural breaks in time series and panel data
 p xtbreakcoint module to implement the panel cointegration test with structural breaks developed by Banerjee and Carrion-i-Silvestre (2015, Journal of Applied Econometrics)
+p xtbreakmodel module to compute heterogeneous structural breaks in panel data models
 p xtbreakscoint module to implement the panel cointegration test with structural breaks developed by Banerjee and Carrion-i-Silvestre (2015, Journal of Applied Econometrics)
 p xtbunitroot module to perform unit root tests for panel data with structural breaks
 p xtcadfcoint module to perform Panel CADF cointegration test with structural breaks and cross-section dependence
 p xtcaec module to estimate heterogeneous error correction models in cross-sectional dependent panel data
+p xtcbc module to compute Coefficient-by-Coefficient Breaks in Panel Data Models
 p xtcbfe module to perform bootstrap-corrected Fixed Effects estimation and inference in dynamic panel models
 p xtcce module to implement the Common Correlated Effects estimator
 p xtcd module to investigate Variable/Residual Cross-Section Dependence

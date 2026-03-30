@@ -1,5 +1,6 @@
 {smcl}
-{* *! version 1.0.0 09Mar2026}{...}
+{* *! version 1.0.1 25Mar2026}{...}
+{* *! version 1.0.0 06Mar2026}{...}
 {title:Title}
 
 {phang}
@@ -22,7 +23,7 @@
 {synopthdr}
 {synoptline}
 {syntab:Model}
-{p2coldent:* {opt lag(#)}}set maximum lag order of autocorrelation; {cmd:lag()} is required and must be >= 1{p_end}
+{p2coldent:* {opt lag(#)}}set maximum lag order of autocorrelation{p_end}
 {synopt:{opt nocons:tant}}suppress constant term{p_end}
 
 {syntab:SE/Robust}
@@ -33,6 +34,7 @@
 {syntab:Reporting}
 {synopt:{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}{p_end}
 {synopt:{opt coefl:egend}}display legend instead of statistics{p_end}
+{synopt:{opt nol:og}}suppress the iteration log{p_end}
 
 {syntab:Convergence}
 {synopt:{opt tol:erance(#)}}convergence tolerance; default is {cmd:tolerance(1e-6)}{p_end}
@@ -144,6 +146,11 @@ intervals. The default is {cmd:level(95)} or as set by {helpb set level}.
 
 {phang}
 {opt coeflegend}; see {helpb estimation options##coeflegend:[R] Estimation options}.
+
+{phang}
+{opt nolog} suppresses the iteration log that reports the value of rho (for AR(1))
+or the maximum modulus of the companion matrix eigenvalues (for AR(k>1)) at each
+iteration.
 
 
 
@@ -282,7 +289,7 @@ data, not to the AR innovations.
 {pstd}
 {cmd:praisk} stores the following in {cmd:e()}:
 
-{synoptset 22 tabbed}{...}
+{synoptset 28 tabbed}{...}
 {p2col 5 22 24 2: Scalars}{p_end}
 {synopt:{cmd:e(N)}}number of observations{p_end}
 {synopt:{cmd:e(rank)}}rank of variance-covariance matrix{p_end}
@@ -303,7 +310,7 @@ data, not to the AR innovations.
 {synopt:{cmd:e(ac_ols1)}, {cmd:e(ac_ols2)}, ...}autocorrelation of untransformed residuals at lag {it:k}{p_end}
 {synopt:{cmd:e(ac_ue1)}, {cmd:e(ac_ue2)}, ...}autocorrelation of AR innovation residuals at lag {it:k}{p_end}
 
-{synoptset 22 tabbed}{...}
+{synoptset 28 tabbed}{...}
 {p2col 5 22 24 2: Macros}{p_end}
 {synopt:{cmd:e(cmd)}}{cmd:praisk}{p_end}
 {synopt:{cmd:e(cmdline)}}command as typed{p_end}
@@ -316,28 +323,27 @@ data, not to the AR innovations.
 {synopt:{cmd:e(clustvar)}}name of cluster variable (if {cmd:vce(cluster)}){p_end}
 {synopt:{cmd:e(noconstant)}}{cmd:noconstant}, if specified{p_end}
 
-{synoptset 22 tabbed}{...}
+{synoptset 28 tabbed}{...}
 {p2col 5 22 24 2: Matrices}{p_end}
 {synopt:{cmd:e(b)}}coefficient vector{p_end}
 {synopt:{cmd:e(V)}}variance-covariance matrix of the estimator{p_end}
 {synopt:{cmd:e(rho)}}AR parameter estimates (1 x {it:k}){p_end}
 {synopt:{cmd:e(serho)}}standard errors of AR parameter estimates (1 x {it:k}){p_end}
 
-{synoptset 22 tabbed}{...}
+{synoptset 28 tabbed}{...}
 {p2col 5 22 24 2: Functions}{p_end}
 {synopt:{cmd:e(sample)}}marks estimation sample{p_end}
-
-
 
 {pstd}
 In addition to the above, the following is stored in {cmd:r()}:
 
-{synoptset 22 tabbed}{...}
+{synoptset 28 tabbed}{...}
 {p2col 5 22 24 2: Matrices}{p_end}
 {synopt:{cmd:r(table)}}matrix containing the coefficients with their standard errors, test statistics, p-values, and confidence intervals{p_end}
 
 {pstd}
 Note that results stored in {cmd:r()} are updated when the command is replayed and will be replaced when any r-class command is run after the estimation command.
+
 
 
 {title:References}
@@ -352,11 +358,12 @@ Hamilton, J. D. 1994. {it:Time Series Analysis}. Princeton University Press.
 {phang}
 Linden, A. 2026. Adjustment for autocorrelation in multiple-group (controlled) interrupted time series 
 analysis and its effect on power: A simulation study of the Newey-West and Prais-Winsten methods. 
-{browse "https://doi.org/10.21203/rs.3.rs-8865851/v1"} 
+Preprint. Research Square. {browse "https://doi.org/10.21203/rs.3.rs-8865851/v1"} 
 
 {phang}
 Linden, A. 2026. Multiple-group (controlled) interrupted time series analysis with higher-order autoregressive errors: 
-A simulation comparison of Newey–West and Prais–Winsten methods.
+A simulation study comparing Newey–West and Prais–Winsten methods. 
+Preprint. arXiv:2603.24814 {browse "https://arxiv.org/abs/2603.24814"}
 
 {phang}
 Vougas, D. V. 2021. Prais-Winsten algorithm for regression with second or
@@ -377,8 +384,7 @@ alinden@lindenconsulting.org{break}
 
 {pstd}
 I am grateful to Dimitrios V. Vougas for graciously providing the MATLAB code that served as the
-basis for this implementation. Panel data support, factor variable handling, robust standard errors, 
-and AR(k > 1) stationarity diagnostics are extensions not discussed in his paper or present in the MATLAB code.
+basis for the implementation in {cmd:praisk}.
 
 
 
@@ -389,6 +395,7 @@ to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
 Linden, Ariel. 2026. PRAISK: Stata module for computing iterated Prais-Winsten regression with AR(k) errors.
+Statistical Software Components s459648, Boston College Department of Economics.
 {p_end}
 
 

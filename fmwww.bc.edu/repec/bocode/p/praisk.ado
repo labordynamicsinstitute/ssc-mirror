@@ -1,4 +1,5 @@
-*! 1.0.0 Ariel Linden 22Mar2026
+*! 1.1.0 Ariel Linden 25Mar2026	// added nolog option
+*! 1.0.0 Ariel Linden 09Mar2026
 
 program define praisk, eclass
 	version 14
@@ -24,6 +25,7 @@ program define praisk, eclass
 		   ITERate(integer 250)						///
 		   vce(string)								///
 		   COEFLegend								///
+		   NOLog									///
 		]
 
 	if `lag' < 1 {
@@ -141,16 +143,18 @@ program define praisk, eclass
 	if "`vce_type'" == "cluster" local nclust = r(nclust)
 
 	// display iteration history prais-like
-	di ""
-	local niter = rowsof(iter_hist)
-	forvalues i = 1/`niter' {
-		local itnum = iter_hist[`i', 1]
-		local itval = iter_hist[`i', 2]
-		if `lag' == 1 {
-			di as txt "Iteration `itnum':  rho = " as res %7.4f `itval'		
-		}
-		else {
-			di as txt "Iteration `itnum':  max|eigenvalue| = " as res %7.4f `itval'				
+	if "`nolog'" == "" {
+		di ""
+		local niter = rowsof(iter_hist)
+		forvalues i = 1/`niter' {
+			local itnum = iter_hist[`i', 1]
+			local itval = iter_hist[`i', 2]
+			if `lag' == 1 {
+				di as txt "Iteration `itnum':  rho = " as res %7.4f `itval'		
+			}
+			else {
+				di as txt "Iteration `itnum':  max|eigenvalue| = " as res %7.4f `itval'				
+			}
 		}
 	}
 
