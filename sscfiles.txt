@@ -2995,6 +2995,7 @@ fmwww.bc.edu/repec/bocode/f/fre.zip
 fmwww.bc.edu/repec/bocode/f/fsum.pkg
 fmwww.bc.edu/repec/bocode/f/FSCfpama.dta
 fmwww.bc.edu/repec/bocode/f/flex.ado
+fmwww.bc.edu/repec/bocode/f/fasttabstat.ado
 fmwww.bc.edu/repec/bocode/f/fabplot.ado
 fmwww.bc.edu/repec/bocode/f/findval.pkg
 fmwww.bc.edu/repec/bocode/f/fsum.html
@@ -6821,6 +6822,7 @@ fmwww.bc.edu/repec/bocode/t/textfind.ado
 fmwww.bc.edu/repec/bocode/t/txt.ado
 fmwww.bc.edu/repec/bocode/t/tab2way.html
 fmwww.bc.edu/repec/bocode/t/tabletutorial_17.html
+fmwww.bc.edu/repec/bocode/t/tidy.sthlp
 fmwww.bc.edu/repec/bocode/t/tmpinv.sthlp
 fmwww.bc.edu/repec/bocode/t/texresults2.ado
 fmwww.bc.edu/repec/bocode/t/timeleft.pkg
@@ -12595,6 +12597,7 @@ fmwww.bc.edu/repec/bocode/i/ineqfac.pkg
 fmwww.bc.edu/repec/bocode/i/iop.pkg
 fmwww.bc.edu/repec/bocode/i/ivgravity.pkg
 fmwww.bc.edu/repec/bocode/i/ieduplicates.sthlp
+fmwww.bc.edu/repec/bocode/i/ife.ado
 fmwww.bc.edu/repec/bocode/i/incomecdf.sthlp
 fmwww.bc.edu/repec/bocode/i/ivtreatreg.ado
 fmwww.bc.edu/repec/bocode/i/ivactest.ado

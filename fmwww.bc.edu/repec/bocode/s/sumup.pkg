@@ -10,10 +10,11 @@ d KW: groups
 d
 d Requires: Stata version 12.1
 d
-d Distribution-Date: 20151231
+d Distribution-Date: 20260330
 d
-d Author: Matthieu Gomez, Princeton University
-d Support: email gomez.matthieu@@gmail.com
+d Author: Matthieu Gomez, Columbia University
+d Support: email mg3901@@columbia.edu
 d
 f sumup.ado
+f ../f/fasttabstat.ado
 f sumup.sthlp

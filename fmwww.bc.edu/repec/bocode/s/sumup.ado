@@ -1,23 +1,32 @@
+*! version 0.3 29mar2026
 /***************************************************************************************************
 The code for sumup is heavily inspired by tabstat.
+
+v0.3:
+- Display N/missing/freq as comma-separated integers
+- Adapt column width to variable format width
+- Fix line overflow when colwidth > 10 (neblock calculation)
+- Fix off-by-one skipping last single-obs group
+- Fix tempvar -> tempname for total matrix
+- Remove dead format code referencing undefined locals
+- Document all options in help file
 ***************************************************************************************************/
 
 program define sumup, sortpreserve rclass
     version 12.1
-    syntax [varlist(default=none)] [if] [in] [aweight fweight] [,  by(varlist) ///
+    syntax [varlist(default=none)] [if] [in] [aweight fweight] [,  ///
+    by(varlist) ///
     save(str) replace ///
     Detail Statistics(str) ///
     Missing noTotal ///
     seps(numlist) ///
-    CASEwise Format Format2(str) ///
+    CASEwise Format(str) ///
     LAbelwidth(int -1) VArwidth(int -1) ///
-    SAME noSEParator  septable(string)]
+    SAME noSEParator]
 
 
 
     if ("`weight'"!="") local wt [`weight'`exp']
-
-
 
     if "`varlist'" == ""{
         * tabulate function
@@ -31,6 +40,7 @@ program define sumup, sortpreserve rclass
             local statistics  n missing  mean sd min max 
         }
         else{
+            * p50 repeated: ends block 2 and opens block 3, mirroring summarize, detail layout
             local statistics n missing  mean sd skewness kurtosis  min p1 p5 p10 p25 p50 p50 p75 p90 p95 p99 max
             local seps 6 12
             local columns statistics
@@ -47,14 +57,11 @@ program define sumup, sortpreserve rclass
         exit 0
     }
 
-    if "`format'" != "" & `"`format2'"' != "" {
-        di as err "may not specify both format and format()"
-        exit 198
-    }
-    if `"`format2'"' != "" {
-        capt local tmp : display `format2' 1
+
+    if `"`format'"' != "" {
+        capt local tmp : display `format' 1
         if _rc {
-            di as err `"invalid %fmt in format(): `format2'"'
+            di as err `"invalid %fmt in format(): `format'"'
             exit 120
         }
     }
@@ -70,14 +77,19 @@ program define sumup, sortpreserve rclass
     local nvars : word count `varlist'
     forvalues iv = 1/`nvars' {
         local var`iv' ``iv''
-        if `"`format2'"' != "" {
-            local fmt`iv' `format2'
-        }
-        else if inlist("`name`iv''", "N", "missing"){
-            local fmt`iv' %9.0fc
+        if `"`format'"' != "" {
+            local fmt`iv' `format'
         }
         else{
             local fmt`iv' : format ``iv''
+        }
+    }
+
+    * compute max format width for column sizing
+    local maxfmtw 9
+    forvalues iv = 1/`nvars' {
+        if regexm("`fmt`iv''", "^%-?([0-9]+)") {
+            local maxfmtw = max(`maxfmtw', real(regexs(1)))
         }
     }
 
@@ -139,6 +151,9 @@ program define sumup, sortpreserve rclass
     /*  sample selection  */
 
     marksample touse, novarlist
+    if "`same'" != "" {
+        markout `touse' `varlist'
+    }
     if `nby' & "`missing'" == "" {
         markout `touse' `by' , strok
     }
@@ -196,22 +211,13 @@ program define sumup, sortpreserve rclass
 
 
     if "`separator'" == "" & ( (`nstats' > 1 & "`incol'" == "variables") /*
-        */         |(`nvars' > 1  & "`incol'" == "statistics")) {
+    */         |(`nvars' > 1  & "`incol'" == "statistics")) {
         local sepline yes
     }
 
 
 
-    if "`save'" ~= ""{
-        local matsize : set matsize
-        local matreq = max(`nstats',`nvars')
-        if `matsize' < `matreq' {
-            di as err /*
-            */ "set matsize to at least `matreq' (see help matsize for details)"
-            exit 908
-        }
-
-
+    if "`save'" != ""{
         cap confirm new file `"`save'"'
         if _rc ~= 0 & "`replace'" == ""{
             di as error  `"file `save' already exists. Specify option replace"'
@@ -241,15 +247,17 @@ program define sumup, sortpreserve rclass
 
 
     /* compute statistics  by group*/
-
+    local matsize : set matsize
+    local matreq = max(`nstats',`nvars')
+    if `matsize' < `matreq' {
+        di as err /*
+        */ "set matsize to at least `matreq' (see help matsize for details)"
+        exit 908
+    }
     tempname Stat
     mat `Stat' = J(`nstats',`nvars',0)
     mat colnames `Stat' = `varlist'
     mat rownames `Stat' = `stats'
-
-
-
-
 
     if `nby'{
         tempvar bylength
@@ -257,7 +265,7 @@ program define sumup, sortpreserve rclass
         bys `touse' `by' : gen `tlength' `bylength' = _N 
         local ig = 0
         local start = `touse_first'
-        while `start' < `touse_last'{
+        while `start' <= `touse_last'{
             local ++ig
             local end = `start' + `=`bylength'[`start']' - 1
 
@@ -317,31 +325,27 @@ program define sumup, sortpreserve rclass
     }
 
     /* if save */
-    if "`save'"~= ""{
+    if "`save'" ~= ""{
         postclose `postname'
         copy `postfile' `save', `replace'
         display "file `save' written"
     }
     else{
-
         if `nby'{
             * only do it if no collapse. This also means only a few groups
             local start = `touse_first'
             local ig = 0
-            while `start' < `touse_last'{
+            while `start' <= `touse_last'{
                 local ++ig
                 local end = `start' + `=`bylength'[`start']' - 1
                 forval ib = 1/`nby'{
-                    * cap because string matrix does not exist
-                    forval ib = 1/`nby'{
-                        if "`byvaluelabel`ib''" ~= ""{
-                            local byvaluelabel`ib'`ig' `"`: label `byvaluelabel`ib'' `=`by`ib''[`start']''"'
-                        }
-                        else{
-                            local byvaluelabel`ib'`ig' `"`=`by`ib''[`start']'"'
-                        }
-                        local bymaxlength`ib' = max(strlen(`"`byvaluelabel`ib'`ig''"'),`bymaxlength`ib'')
+                    if "`byvaluelabel`ib''" ~= ""{
+                        local byvaluelabel`ib'`ig' `"`: label `byvaluelabel`ib'' `=`by`ib''[`start']''"'
                     }
+                    else{
+                        local byvaluelabel`ib'`ig' `"`=`by`ib''[`start']'"'
+                    }
+                    local bymaxlength`ib' = max(strlen(`"`byvaluelabel`ib'`ig''"'),`bymaxlength`ib'')
                 }
                 local start = `end' + 1
             }
@@ -361,10 +365,10 @@ program define sumup, sortpreserve rclass
                     forvalues is = 1/`nstats' {
                         if "`cmd`is''" == "sum"{
                             if "`name`is''"== "freq"{
-                                mat `Stat'[`is',`iv'] = _N
+                                mat `Stat'[`is',`iv'] = `samplesize'
                             }
                             else if  "`name`is''"== "missing"{
-                                mat `Stat'[`is',`iv'] = _N - `expr`is''
+                                mat `Stat'[`is',`iv'] = `samplesize' - `expr`is''
                             }
                             else{
                                 mat `Stat'[`is',`iv'] = `expr`is''
@@ -386,9 +390,8 @@ program define sumup, sortpreserve rclass
             forval ib = 1/`nby'{
                 local byvaluelabel`ib'`ngt' "Total"
             }
-            tempvar Stat`ngt'
+            tempname Stat`ngt'
             mat `Stat`ngt'' = `Stat'
-
         }
         else{
             local ngt = `ng'
@@ -408,14 +411,14 @@ program define sumup, sortpreserve rclass
                     local bytype`ib' str
                 }
                 if regexm("`byformat`ib''", "\%d") {
-                        local has_M = index("`byformat`ib''", "M")
-                        local has_L = index("`byformat`ib''", "L")
-                        if `has_M' > 0 | `has_L' > 0 {
-                            local byw`ib' = 18
-                        }
-                        else {
-                            local byw`ib' = 11
-                        }
+                    local has_M = index("`byformat`ib''", "M")
+                    local has_L = index("`byformat`ib''", "L")
+                    if `has_M' > 0 | `has_L' > 0 {
+                        local byw`ib' = 18
+                    }
+                    else {
+                        local byw`ib' = 11
+                    }
                 }
                 else if regexm("`byformat`ib''", "\%t"){
                     local byw`ib' = 9
@@ -431,15 +434,14 @@ program define sumup, sortpreserve rclass
             }
         }
         * number of chars in display format
-        local ndigit  9
-        local colwidth = `ndigit'+2
+        local colwidth = `maxfmtw'+2
 
         local lleft = `byw' *("`by'"!="") + (`varwidth'+1)*("`descr'"!="")
 
         local cbar  = `lleft' + 1
         local lsize = c(linesize)
         * number of non-label elements in the row of a block
-        local neblock = int((`lsize' - `cbar')/10)
+        local neblock = int((`lsize' - `cbar')/`colwidth')
         if "`seps'" == ""{
             * number of blocks if stats horizontal
             local nsblock  = 1 + int((`nstats'-1)/`neblock')
@@ -544,7 +546,12 @@ program define sumup, sortpreserve rclass
                     }
                     di as txt  "{c |}" _c
                     forvalues is = `is1'/`is2' {
-                        local s : display `fmt`iv'' `Stat`ig''[`is',`iv'] 
+                        if inlist("`name`is''", "N", "missing", "freq") {
+                            local s : display %`maxfmtw'.0fc `Stat`ig''[`is',`iv']
+                        }
+                        else {
+                            local s : display `fmt`iv'' `Stat`ig''[`is',`iv']
+                        }
                         di as res %`colwidth's "`s'" _c
                     }
                     di
@@ -639,7 +646,7 @@ program define Stats2, rclass
             local st skewness
         }
         else if "`st'" == "k" {
-            local st skurtosis
+            local st kurtosis
         }
         else if "`st'" == "me" {
             local st mean
@@ -659,7 +666,7 @@ program define Stats2, rclass
             local cmd "`cmd' sum"
             continue
         }
-        if inlist("`st'", "n", "N"){
+        if inlist("`st'", "count", "n", "N"){
             local st N
             local titlename Obs
             local names "`names' `st'"
@@ -699,7 +706,7 @@ program define Stats2, rclass
 
         if "`st'" == "sd"{
             local names "`names' sd"
-            local titlenames `"`titlenames' "Std. Dev.""'
+            local titlenames `"`titlenames' StdDev"'
             local expr  "`expr' r(sd)"
             local class = max(`class',2)
             local cmd "`cmd' sum"
@@ -757,7 +764,7 @@ program define Stats2, rclass
             local titlenames `"`titlenames' p25 p50 p75"'
             local expr  "`expr' r(p25) r(p50) r(p75)"
             local class = max(`class',3)
-            local cmd "`cmd' `qcmd'"
+            local cmd "`cmd' sum sum sum"
             continue
         }   
         if regexm("`st'","^p[0-9]*$"){

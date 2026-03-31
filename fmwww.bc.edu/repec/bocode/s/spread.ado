@@ -1,9 +1,17 @@
 program define spread
 	version 12.1
-	syntax varlist, [variable(varname) value(varname) label(string)]
+	syntax varlist, [label(string) fast]
+
+
+	if ("`fast'" == "") preserve
+
 	tokenize `varlist'
 	local variable `1'
 	local value `2'
+	if "`value'" == ""{
+		di as error `"The correct syntax is "spread namevariable valuevariable". The valuevariable is missing."'
+		exit 4
+	}
 	qui{
 
 		/* take care of label */
@@ -63,7 +71,7 @@ program define spread
 			}
 		}
 		/* manage when more than 10 id variables */
-		loca ni `:word count `ivar''
+		local ni `:word count `ivar''
 		if `ni' > 10{
 			tempvar id
 			bys `ivar': gen `id' = 1
@@ -76,10 +84,19 @@ program define spread
 
 		/* reshape */
 		drop `bylength' `label'
-		qui reshape wide `value', i(`i') j(`variable') `string'
+		cap which greshape
+		if _rc == 0{
+			local reshape greshape
+			local reshapefast `fast'
+		}
+		else{
+			local reshape reshape
+			local reshapefast
+		}
+		qui `reshape' wide `value', i(`i') j(`variable') `string' `reshapefast'
+
 
 		/* check all new variable names are valid new variable name */
-
 		if "`string'" == ""{
 			local change "no"
 		}
@@ -88,41 +105,32 @@ program define spread
 				local v : word `i' of `variable_levels'
 				cap confirm new variable `v'
 				if _rc{
-					di as error "`value'`v'"
 					local change "no"
 				}
 			}
 		}
 
 
-	forval i = 1/`n'{
-		local v : word `i' of `variable_levels'
-		if "`change'" != "no"{
-			rename `value'`v' `v'
-			local names `names' `v'
-			if "`label'" ~= ""{
-				local l : word `i' of  `label_levels'
-				label variable `v' `"`l'"'
+		forval i = 1/`n'{
+			local v : word `i' of `variable_levels'
+			if "`change'" != "no"{
+				rename `value'`v' `v'
+				local names `names' `v'
+				if "`label'" ~= ""{
+					local l : word `i' of  `label_levels'
+					label variable `v' `"`l'"'
+				}
+			}
+			else{
+				local names `names' `value'`v'
+				if "`label'" ~= ""{
+					local l : word `i' of  `label_levels'
+					label variable `value'`v' `"`l'"'
+				}
 			}
 		}
-		else{
-			local names `names' `value'`v'
-			if "`label'" ~= ""{
-				local l : word `i' of  `label_levels'
-				label variable `value'`v' `"`l'"'
-			}
-		}
+		di as result "new variables created: " as text "`=subinstr("`names'", " ", ", ", .)'"
 	}
-	di as result "new variables created: " as text "`=subinstr("`names'", " ", ", ", .)'"
-}
+
+	if ("`fast'" == "") cap restore, not
 end
-
-
-
-
-
-
-
-
-
-

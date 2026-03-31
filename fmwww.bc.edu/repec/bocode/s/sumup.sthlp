@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.2 08jul2015}{...}
+{* *! version 0.3 29mar2026}{...}
 {vieweralsosee "tabstat" "help tabstat"}{...}
 {vieweralsosee "tabulate" "help tabulate"}{...}
 {vieweralsosee "table" "help table"}{...}
@@ -31,12 +31,12 @@
 {title:Description}
 
 {pstd}
-{cmd:sumup} returns the same set of statistics than {cmd:summarize}, computed by groups.
+{cmd:sumup} returns the same set of statistics as {cmd:summarize}, computed by groups.
 
 {marker weights}{...}
 {title:Weights}
 {pstd}
-{cmd:fweight}s, {cmd:aweight}s and {cmd:pweight}s are allowed; see {help weight}.
+{cmd:fweight}s and {cmd:aweight}s are allowed; see {help weight}.
 
 
 
@@ -46,10 +46,19 @@
 {synopthdr}
 {synoptline}
 {synopt :{opt by(byvars)}} variable(s) defining groups {p_end}
-{synopt :{opt d:etail}} detailed statistics.{p_end}
+{synopt :{opt d:etail}} detailed statistics{p_end}
 {synopt:{opt s:tatistics(statnames)}} specified list of statistics (see {help sumup##statnames:statnames}) {p_end}
 {synopt:{opt save(filename)}} save statistics as a collapsed dataset {p_end}
-{synopt:{opt replace}}  overwrite existing dataset{p_end}
+{synopt:{opt replace}} overwrite existing dataset{p_end}
+{synopt:{opt format(string)}} format to display statistics (observations and missings always display as integers){p_end}
+{synopt:{opt m:issing}} treat missing values of {opt by()} variables as a category{p_end}
+{synopt:{opt noT:otal}} suppress the Total row{p_end}
+{synopt:{opt c:asewise}} casewise deletion of observations (same as {opt same}){p_end}
+{synopt:{opt la:belwidth(#)}} width for by-variable labels; default 16, range 8-32{p_end}
+{synopt:{opt va:rwidth(#)}} width for variable names; default 12, range 8-16{p_end}
+{synopt:{opt noSEP:arator}} suppress separator lines between groups{p_end}
+{synopt:{opt seps(numlist)}} insert block separators after the specified statistic positions{p_end}
+{synoptline}
 
 
 {marker statnames}{...}
@@ -96,7 +105,7 @@
 {marker references}{...}
 {title:References}
 
-{cmd:sumup}, {cmd:table}, {cmd:tabstat}, {cmd:collapse} have similar functionalities, but {cmd:sumup} is ten times faster.
+{cmd:sumup}, {cmd:table}, {cmd:tabstat}, {cmd:collapse} have similar functionalities. {cmd:sumup} is ten times faster, and allows to define groups composed of multiple variables.
 Code for {cmd:sumup} borrows heavily from {cmd:tabstat}.
 
 
@@ -107,11 +116,11 @@ Code for {cmd:sumup} borrows heavily from {cmd:tabstat}.
 Matthieu Gomez
 
 {phang}
-Department of Economics, Princeton University
+Department of Economics, Columbia University
 
 {phang}
 Please report issues on Github
-{browse "https://github.com/matthieugomez/stata-sumup":https://github.com/matthieugomez/stata-sumup}
+{browse "https://github.com/matthieugomez/sumup":https://github.com/matthieugomez/sumup}
 {p_end}
 
 

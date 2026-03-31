@@ -1,16 +1,17 @@
 d 'TIDY': module to ease reshaping of data
 d
-d  this package contains utilities to ease tasks of reshaping data. 
+d  this package contains utilities to ease tasks of reshaping data. d
 d KW: data management
 d KW: reshape
 d
 d Requires: Stata version 12.1
 d
-d Distribution-Date: 20170713
+d Distribution-Date: 20260330
 d
-d Author: Matthieu Gomez, Princeton University
-d Support: email gomez.matthieu@@gmail.com
+d Author: Matthieu Gomez, Columbia University
+d Support: email mg3901@@columbia.edu
 d
+f tidy.sthlp
 f ../g/gather.ado
 f ../g/gather.sthlp
 f ../s/spread.ado

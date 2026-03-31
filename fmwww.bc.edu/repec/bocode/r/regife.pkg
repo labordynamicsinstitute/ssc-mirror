@@ -12,11 +12,12 @@ d KW: Bai
 d
 d Requires: Stata version 12 and hdfe, reghdfe from SSC (q.v.)
 d
-d Distribution-Date: 20210903
+d Distribution-Date: 20260330
 d
-d Author: Matthieu Gomez, Princeton University
-d Support: email gomez.matthieu@@gmail.com
+d Author: Matthieu Gomez, Columbia University
+d Support: email mg3901@@columbia.edu
 d
 f regife.ado
 f ../i/innerregife.ado
+f ../i/ife.ado
 f regife.sthlp

@@ -1,6 +1,8 @@
 program define gather
 	version 12.1
-	syntax varlist[, variable(string) value(string) label(string)]
+	syntax varlist, [variable(string) value(string) label(string) fast]
+
+	if ("`fast'" == "") preserve
 
 	if "`variable'"==""{
 		local variable variable
@@ -11,31 +13,55 @@ program define gather
 	cap confirm new variable `variable'
 	if _rc{
 		di as error "variable `variable' already exists. Change default name of new variable with option variable()"
-		exit
+		exit _rc
 	}
 	cap confirm new variable `value'
 	if _rc{
 		di as error "variable `value' already exists. Change default name of new variable with option value()"
-		exit
+		exit _rc
 	}
 
 	qui ds `varlist'
 	local varlist `r(varlist)'
 
+	/* check same type */
+	local type ""
+	foreach v in `varlist'{
+		cap confirm string var `v'
+		if _rc == 0{
+			if "`type'" == "numeric"{
+				di as error "Variables to gather do not have the same type"
+				exit 198
+			}
+			else{
+				local type "string"
+			}
+		}
+		else{
+			if "`type'" == "string"{
+				di as error "Variables to gather do not have the same type"
+				exit 198
+			}
+			else{
+				local type "numeric"
+			}
+		}
+	}
+
+
 	cap ds ____*
 	if _rc == 0 {
-		display as error "Please rename variables staring with ____ first" 
+		display as error "Please rename variables starting with ____ first"
 		exit 4
 	}
 
 	local i = 0
 	qui ds `varlist', not
 	local ivar `r(varlist)'
-	display "`ivar'"
 	if "`ivar'" ~= ""{
 		cap bys `ivar':  assert _N == 1
 		if _rc {
-			display as error "key variables do not uniquely identify the observations" 
+			display as error "key variables do not uniquely identify the observations"
 			exit 4
 		}
 	}
@@ -43,8 +69,6 @@ program define gather
 		tempvar ivar
 		gen `ivar' = 1
 	}
-	tempname tempdup
-
 
 
 	local names ""
@@ -53,8 +77,16 @@ program define gather
 		local l`i' : variable label `v'
 		rename `v' ____`i'
 	}
-
-	cap reshape long ____, i(`ivar') j(`variable') string
+	cap which greshape
+	if _rc == 0{
+		local reshape greshape
+		local reshapefast `fast'
+	}
+	else{
+		local reshape reshape
+		local reshapefast
+	}
+	cap `reshape' long ____, i(`ivar') j(`variable') string `reshapefast'
 	if _rc{
 		if _rc== 103{
 			display as error "too many variables specified"
@@ -62,13 +94,11 @@ program define gather
 		else{
 			display as error "reshape terminated with error"
 		}
-		reshape long ____, i(`ivar') j(`variable') string
 		local i = 0
 		foreach v in `varlist'{
 			local i = `i'+1
 			rename ____`i' `v'
 		}
-		display as error "reshape terminated with error"
 		exit _rc
 	}
 	else{
@@ -90,6 +120,8 @@ program define gather
 			qui replace `variable' = "``i''" if `variable' == "`i'"
 		}
 	}
+
+	if ("`fast'" == "") cap restore, not
 end
 
 
