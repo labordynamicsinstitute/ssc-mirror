@@ -235,17 +235,23 @@ indicated by autocorrelations close to zero in the transformed row. For single t
 {pstd}Fit AR(1); the autocorrelation table shows whether lag-1 serial correlation has been removed{p_end}
 
 {phang2}{cmd:. praisk usr idle syslcl, lag(1)}{p_end}
-{phang2}{cmd:. estat ic}{p_end}
+{phang2}{cmd:. predict uhat1, residuals}{p_end}
+{phang2}{cmd:. predict ue1, ue}{p_end}
+{phang2}{cmd:. ac uhat1}{p_end}
+{phang2}{cmd:. ac ue1}{p_end}
 
-{pstd}Fit AR(2); check whether transformed autocorrelations at lags 1 and 2 are near zero{p_end}
+{pstd}Fit AR(2); check whether lag-1 and lag-2 serial correlation have been removed{p_end}
 
 {phang2}{cmd:. praisk usr idle syslcl, lag(2)}{p_end}
-{phang2}{cmd:. estat ic}{p_end}
+{phang2}{cmd:. predict uhat2, residuals}{p_end}
+{phang2}{cmd:. predict ue2, ue}{p_end}
+{phang2}{cmd:. ac uhat2}{p_end}
+{phang2}{cmd:. ac ue2}{p_end}
 
 {pstd}
-Stop increasing the AR order when the transformed autocorrelations are negligible and AIC/BIC
-stops improving. For formal testing on single time series data, {helpb wntestq} can be applied
-to the saved innovation residuals.
+Stop increasing the AR order when the transformed autocorrelations are negligible and autocorrelation
+function indicates that there are no more significant lags. For formal testing, {helpb actest} can be applied
+(downloadable from SSC) to the saved innovation residuals.
 
 {hline}
 
@@ -406,5 +412,5 @@ Statistical Software Components s459648, Boston College Department of Economics.
 Manual: {manlink TS prais}
 
 {psee}
-Online: {helpb prais}, {helpb regress}, {helpb newey}, {helpb arima}
+Online: {helpb prais}, {helpb regress}, {helpb newey}, {helpb arima}, {helpb ac}, {helpb actest} (if installed)
 {p_end}

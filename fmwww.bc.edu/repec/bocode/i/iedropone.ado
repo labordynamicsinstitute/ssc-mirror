@@ -1,37 +1,32 @@
-*! version 7.3 01FEB2024 DIME Analytics dimeanalytics@worldbank.org
+*! version 7.5 20260331 - DIME Analytics - dimeanalytics@worldbank.org
 
-	capture program drop 	iedropone
-			program define 	iedropone ,
+cap program drop   iedropone
+    program define iedropone
 
-	qui {
+qui {
 
-		syntax [if] ,  [Numobs(numlist int min=1 max=1 >0) mvar(varname) mval(string) zerook]
+    version 12.0
 
-
-		version 12
+    syntax [if] ,  [Numobs(numlist int min=1 max=1 >0) mvar(varname) mval(string) zerook]
 
 		/***********************************
-
 			Set constants
-
 		***********************************/
 
 		*Set a constant for the multi option being used
-												local MULTI_USED 0
+												                  local MULTI_USED 0
 		if ("`mvar'" != "" & "`mval'" != "") 	local MULTI_USED 1
 
 		*Set a constant for the zerook option being used
-												local ZEROOK_USED 0
-		if ("`zerook'" != "") 					local ZEROOK_USED 1
+												  local ZEROOK_USED 0
+		if ("`zerook'" != "") local ZEROOK_USED 1
 
 		*Set a constant for if an IF-condition used
 												local IF_USED 0
-		if (`"`if'"' != "") 					local IF_USED 1
+		if (`"`if'"' != "") local IF_USED 1
 
 		/***********************************
-
 			Test input
-
 		***********************************/
 
 		*Test that mvar() and mval() was used in combination
@@ -53,16 +48,12 @@
 			error 197
 		}
 
-
 		/***********************************
-
 			Set locals
-
 		***********************************/
 
 		*If number of obs to drop is not set, then use the default which is 1
 		if "`numobs'" == "" {
-
 			local numobs = 1
 		}
 
@@ -76,9 +67,7 @@
 		}
 
 		/***********************************
-
 			Test the number of obs matching
-
 		***********************************/
 
 		*Subfunction options
@@ -132,11 +121,8 @@
 		}
 
 		/***********************************
-
 			Drop observation(s)
-
 		***********************************/
-
 
 		*Test if multivars are used
 		if `MULTI_USED' == 0 {
@@ -166,14 +152,13 @@
 		if `num_obs_dropped' != 1 noi di "`num_obs_dropped' observations were dropped"
 
 	}
-
-	end
+end
 
 	**Sub function that checks that the number of observations
 	* to drop is correct and it returns the number of observations
 	* that will be dropped.
 
-	capture program drop 	iedropone_test_match
+	cap program drop 	iedropone_test_match
 			program define 	iedropone_test_match , rclass
 
 
@@ -231,4 +216,4 @@
 			error 197
 		}
 
-	end
+end

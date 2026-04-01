@@ -17,8 +17,8 @@ d Requires: Stata version 14.1
 d
 d Distribution-Date: 20250808
 d
-d Author: DIME Analytics, The World Bank, DECIE
-d Support: email dimeanalytics@@worldbank.org
+d Author: DIME Analytics, The World Bank, DECDI
+d Support: email  dimeanalytics@@worldbank.org
 d
 f repkit.ado
 f repkit.sthlp

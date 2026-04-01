@@ -1,14 +1,14 @@
-*! version 7.3 01FEB2024 DIME Analytics dimeanalytics@worldbank.org
+*! version 7.5 20260331 - DIME Analytics - dimeanalytics@worldbank.org
 
 cap program drop   iegitaddmd
-	program define iegitaddmd
+    program define iegitaddmd
 
 qui {
-	syntax , folder(string) [comparefolder(string) customfile(string) all skip replace AUTOmatic DRYrun skipfolders(string)]
 
+    version 12.0
 
-	*Set version
-	version 12
+  syntax , folder(string) [comparefolder(string) customfile(string) all skip replace AUTOmatic DRYrun skipfolders(string)]
+
 
 	/******************************
 	*******************************

@@ -1,74 +1,68 @@
 {smcl}
-{* 01 Feb 2024}{...}
-
+{* *! version 7.5 20260331}{...}
 {hline}
-help for {hi:ietoolkit}
+{pstd}help file for {hi:ietoolkit}{p_end}
 {hline}
 
 {title:Title}
 
-{phang}{cmdab:ietoolkit} {hline 2} Returns information on the version of ietoolkit installed
-
-{phang}For a more descriptive discussion on the intended usage and work flow of this
-command please see the {browse "https://dimewiki.worldbank.org/wiki/Stata_Coding_Practices#ietoolkit":DIME Wiki}.
+{phang}{bf:ietoolkit} - Returns information on the version of {inp:ietoolkit} installed 
+{p_end}
 
 {title:Syntax}
 
-{phang}
-{cmdab:ietoolkit}
+{phang}For a more descriptive discussion on the intended usage and work flow of this command please see the {browse "https://dimewiki.worldbank.org/Ietoolkit":DIME Wiki}.
+{p_end}
 
-{pstd}Note that this command takes no arguments at all.{p_end}
+{phang}{bf:ietoolkit}
+{p_end}
 
-{marker desc}
+{phang}Note that this command takes no arguments at all.
+{p_end}
+
 {title:Description}
 
-{pstd}{cmdab:ietoolkit} This command returns the version of ietoolkit installed. It
-	can be used in the beginning of a Master Do-file that is intended to be used
-	by multiple users to programmatically test if ietoolkit is not installed for
-	the user and therefore need to be installed, or if the version the user has
-	installed is too old and needs to be upgraded.
+{pstd}{inp:ietoolkit} This command returns the version of {inp:ietoolkit} installed. It can be used  to programmatically test if {inp:ietoolkit} is already installed. 
+{p_end}
 
-{marker optslong}
 {title:Options}
 
-{phang}This command does not take any options.
+{pstd}This command does not take any options.
+{p_end}
 
-{marker example}
 {title:Examples}
 
-{pstd}The code below is an example code that can be added to the top of any do-file.
-	The example code first tests if the command is installed, and install it if not. If it is
-	installed, it tests if the version is less than version 5.0. If it is, it
-	replaces the ietoolkit file with the latest version. In your code you can skip
-	the second part if you are not sure which version is required. But you should
-	always have the first part testing that {inp:r(version)} has a value before using
-	it in less than or greater than expressions.
+{pstd}The code below is an example code that can be added to the top of any do-file.  The example code first tests if the command is installed, and install it if not. If it is installed, it tests if the version is less than version 5.0. If it is, it replaces the {inp:ietoolkit} file with the latest version. In your code you can skip the second part if you are not sure which version is required. But you should always have the first part testing that {inp:r(version)} has a value before using it in less than or greater than expressions. 
+{p_end}
 
-{inp}    cap ietoolkit
-{inp}    if "`r(version)'" == "" {
-{inp}      *ietoolkit not installed, install it
-{inp}      ssc install ietoolkit
-{inp}    }
-{inp}    else if `r(version)' < 5.0 {
-{inp}      *ietoolkit version too old, install the latest version
-{inp}      ssc install ietoolkit , replace
-{inp}    }{text}
-
+{input}{space 8}cap ietoolkit
+{space 8}if "`r(version)'" == "" { 
+{space 8}  *ietoolkit not installed, install it
+{space 8}  ssc install ietoolkit
+{space 8}}
+{space 8}else if `r(version)' < 5.0 { 
+{space 8}  *ietoolkit version too old, install the latest version
+{space 8}  ssc install ietoolkit , replace
+{space 8}}
+{text}
 {title:Acknowledgements}
 
-{phang}We would like to acknowledge the help in testing and proofreading we received
- in relation to this command and help file from (in alphabetic order):{p_end}
-{pmore}Luiza Cardoso De Andrade{break}Seungmin Lee{break}
+{pstd}We would like to acknowledge the help in testing and proofreading we received in relation to this command and help file from (in alphabetic order):
+{p_end}
+
+{pstd}  Luiza Cardoso De Andrade, Seungmin Lee
+{p_end}
 
 {title:Author}
 
-{phang}All commands in ietoolkit is developed by DIME Analytics at DECIE, The World Bank's unit for Development Impact Evaluations.
+{pstd}All commands in {inp:ietoolkit} is developed by DIME Analytics at DIME, the World Bank{c 39}s department for Development Impact. 
+{p_end}
 
-{phang}Main author: Kristoffer Bjarkefur, DIME Analytics, The World Bank Group
+{pstd}Main author: DIME Analytics, The World Bank
+{p_end}
 
-{phang}Please send bug-reports, suggestions and requests for clarifications
-		 writing "ietoolkit ietoolkit" in the subject line to:{break}
-		 dimeanalytics@worldbank.org
+{pstd}Please send bug-reports, suggestions and requests for clarifications writing {c 34}ietoolkit ietoolkit{c 34} in the subject line to: dimeanalytics@worldbank.org
+{p_end}
 
-{phang}You can also see the code, make comments to the code, see the version
-		 history of the code, and submit additions or edits to the code through {browse "https://github.com/worldbank/ietoolkit":the GitHub repository of ietoolkit}.{p_end}
+{pstd}You can also see the code, make comments to the code, see the version history of the code, and submit additions or edits to the code through the GitHub repository of {inp:ietoolkit}. 
+{p_end}

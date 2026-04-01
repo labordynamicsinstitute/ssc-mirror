@@ -27,10 +27,10 @@ d KW: matching
 d
 d Requires: Stata version 12
 d
-d Distribution-Date: 20240212
+d Distribution-Date: 20260331
 d
-d Author: DIME Analytics, The World Bank, DECIE
-d Support: email  lcardosodeandrad@@worldbank.org
+d Author: DIME Analytics, The World Bank, DECDI
+d Support: email  dimeanalytics@@worldbank.org
 d
 f ietoolkit.ado
 f ietoolkit.sthlp

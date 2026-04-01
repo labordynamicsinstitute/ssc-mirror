@@ -1,7 +1,11 @@
-*! version 7.3 01FEB2024 DIME Analytics dimeanalytics@worldbank.org
+*! version 7.5 20260331 - DIME Analytics - dimeanalytics@worldbank.org
 
-cap	program drop	iegraph
-	program define 	iegraph, rclass
+cap	program drop	  iegraph
+	  program define 	iegraph, rclass
+
+qui {
+
+    version 12.0
 
 	syntax varlist, 							///
  	   [noconfbars 								///
@@ -24,10 +28,6 @@ cap	program drop	iegraph
  		save(string) *]
 
  	if "`restore'" == "" preserve
-
-	qui {
-
-	version 12
 
 /*******************************************************************************
 

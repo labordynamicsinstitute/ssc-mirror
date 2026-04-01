@@ -1,206 +1,301 @@
 {smcl}
-{* 01 Feb 2024}{...}
+{* *! version 7.5 20260331}{...}
 {hline}
-help for {hi:iefolder}
+{pstd}help file for {hi:iefolder}{p_end}
 {hline}
 
 {title:Title}
 
-{phang2}{cmdab:iefolder} {hline 2} sets up project folders and master do-files according to World Bank DIME's standards.{p_end}
-
-{phang2}For a more descriptive discussion on the intended usage and work flow of this
-command please see the {browse "https://dimewiki.worldbank.org/wiki/Iefolder":DIME Wiki}.
+{phang}{bf:iefolder} - sets up project folders and master do-files according to World Bank DIME{c 39}s standards.
+{p_end}
 
 {title:Syntax}
 
-{pstd} {ul:When initially setting up the {hi:DataWork} folder in a new project:}{p_end}
+{phang}For a more descriptive discussion on the intended usage and work flow of this command please see the {browse "https://dimewiki.worldbank.org/Iefolder":DIME Wiki}
+{p_end}
 
-{phang2}{cmd:iefolder} new project, {cmdab:proj:ectfolder(}{it:directory}{cmd:)} {p_end}
+{phang}{it:When initially setting up the {inp:DataWork} folder in a new project}: 
+{p_end}
 
+{phang}{bf:iefolder} new {it:project_name} , {bf:{ul:proj}ectfolder}({it:directory})
+{p_end}
 
-{pstd} {ul:When adding folders to and already existing {hi:DataWork} folder:}{p_end}
+{phang}{it:When adding folders to and already existing {inp:DataWork} folder}: 
+{p_end}
 
-{phang2}{cmd:iefolder} new {it:itemtype} {it:itemname} , {cmdab:proj:ectfolder(}{it:directory}{cmd:)}
-	[{cmdab:abb:reviation(}{it:string}{cmd:)} {cmdab:sub:folder(}{it:folder}{cmd:)}] {p_end}
+{phang}{bf:iefolder} new {it:item_type} {it:item_name} , {bf:{ul:proj}ectfolder}({it:directory}) [{bf:abbreviation}({it:string}) {bf:subfolder}({it:folder})]
+{p_end}
 
-{pmore}where {it:itemtype} is either {it:round}, {it:unitofobs} or {it:subfolder}. See
-	details on {it:itemtype} and {it:itemname} below.{p_end}
+{phang}where {it:item_type} is either {it:round}, {it:unitofobs} or {it:subfolder}. See details on {it:item_type} and {it:item_name} below.
+{p_end}
 
-{marker opts}{...}
-{synoptset 22}{...}
-{synopthdr:options}
+{synoptset 24}{...}
+{p2coldent:{it:options}}Description{p_end}
 {synoptline}
-{synopt : {cmdab:proj:ectfolder(}{it:dir}{cmd:)}}The location of
-	the project folder where the {hi:DataWork} folder should be
-	created (new projects), or where it is located (new rounds, unitofobs and subfolders).{p_end}
-{synopt : {cmdab:abb:reviation(}{it:string}{cmd:)}}Optional abbreviation
-	of round name to be used to make globals shorter. Can only be used
-	when {it:itemtype} is round.{p_end}
-{synopt : {cmdab:sub:folder(}{it:folder}{cmd:)}}Creates the round folders inside
-	a subfolder to DataWork. Only works with new rounds and only after the subfolder
-	has been created with {it:iefolder new subfolder}.{p_end}
+{synopt: {bf:{ul:proj}ectfolder}({it:directory})}The location of the project folder where the {it:DataWork} folder should be created (new projects), or where it is located (new rounds, unitofobs and subfolders).{p_end}
+{synopt: {bf:abbreviation}({it:string})}Optional abbreviation of round name to be used to make globals shorter. Can only be used with {inp:iefolder new round}.{p_end}
+{synopt: {bf:subfolder}({it:folder})}Creates the round folders inside a subfolder to {it:DataWork}. Only works with new rounds and only after the subfolder has been created with {inp:iefolder new subfolder}.{p_end}
 {synoptline}
 
-{marker desc}{title:Description}
+{title:Description}
 
-{pstd}{cmdab:iefolder} automates the process of setting up the folders and master do-files
-	where all the data work will take place in a project folder. The folder structure set
-	up by {cmdab:iefolder} follows {browse "https://dimewiki.worldbank.org/wiki/DataWork_Folder":DIME's best practices}.
+{pstd}{inp:iefolder} automates the process of setting up the folders and 
+master do-files where all the data work will take place in a project folder.
+The folder structure set up by {inp:iefolder} follows DIME{c 39}s best practices. 
+{p_end}
 
-{pstd}In addition to setting up the {hi:DataWork} folder and its folder structure, the
-	command creates master do-files linking to all main folders in the folder structure. These
-	master do-files are updated whenever more rounds, units of observations, and
-	subfolders are added to the project folder using this command.
+{pstd}In addition to setting up the {it:DataWork} folder and its folder structure,
+the command creates master do-files linking to
+all main folders in the folder structure.
+These master do-files are updated whenever more rounds,
+units of observations, and subfolders are added to
+the project folder using this command.
+{p_end}
 
-{pstd}{ul:{hi:itemtypes}}{break} This command can create either a new DataWork folder or add folders to an
-	existing DataWork folder. The existing DataWork folder must have been created
-	with {cmd:iefolder} for the additions to work. A new DataWork folder is created using specifying {ul:project}. There are three types of folders that can be added to an existing folder by specifying {ul:round}, {ul:unitofobs} or {ul:subfolder}. See
-	next paragraphs for descriptions.
+{dlgtab:Item types}
 
-{pstd}{ul:{it:project}} sets up a new DataWork folder and its initial folder structure. You must always do this before you can do anything else. It also sets up the main master do-file for this DataWork folder. {cmd:iefolder} is implemented so that you can keep working for years with your project in between adding folders. The command reads and preserves changes made manually to the DataWork folder and master do-file before adding more folders using {cmd:iefolder}.
+{pstd}This command can create either a new {it:DataWork} folder or add folders
+to an existing {it:DataWork} folder.
+The existing {it:DataWork} folder must have been created with
+{inp:iefolder} for the additions to work. 
+A new {it:DataWork} folder is created using specifying project.
+There are three types of folders that can be added to an existing folder
+by specifying {it:round}, {it:unitofobs} or {it:subfolder}.
+See the next paragraphs for descriptions.
+{p_end}
 
-{pstd}{ul:{it:round}} folders are folders specific to a data collection round, for example, {it:Baseline}, {it:Endline},
-	{it:Follow Up} etc. (See {it:subfolder} below if your project is more complex than that.) When adding a new round, a round folder is added to the DataWork folder, and inside it the round folder structure described {browse "https://dimewiki.worldbank.org/wiki/DataWork_Survey_Round":here} is created. {cmd:iefolder} also
-	creates a master do-file specific for this round with globals referencing the main folders
-	in the folder structure specific to this round. Folders are created in two places, both in the DataWork folder, and in the Encrypted folder.
+{pstd}{bf:project} sets up a new {it:DataWork} folder and its initial folder structure.
+You must always do this before you can do anything else.
+It also sets up the main master do-file for this {it:DataWork} folder.
+{inp:iefolder} is implemented so that you can keep working for years 
+with your project in between adding folders.
+The command reads and preserves changes made manually to the {it:DataWork} folder
+and master do-file before adding more folders using {inp:iefolder}. 
+{p_end}
 
-{pstd}{ul:{it:unitofobs}} folders are folders specific to a unit of observation,
-	for example the master data set folder. Read more about master data sets and the folder structure
-	this commands sets up for you at {browse "https://dimewiki.worldbank.org/wiki/Master_Data_Set":here}. A
-	master data folder for each new unit of observation is created in two places. Both in
-	the MasterData folder in the DataWork folder, and in the Encrypted folder.
+{pstd}{bf:round} folders are folders specific to a data collection round,
+for example, Baseline, Endline, Follow Up etc.
+(See subfolder below if your project is more complex than that.)
+When adding a new round, a round folder is added to the {it:DataWork} folder,
+and inside it the round folder structure described
+{browse "https://dimewik/wiki/DataWork_Survey_Round":here} is created.
+{inp:iefolder} also creates a master do-file specific for this round with 
+globals referencing the main folders in the folder structure
+specific to this round.
+Folders are created in two places, both in the {it:DataWork} folder,
+and in the Encrypted folder.
+{p_end}
 
-{pstd}{ul:{it:subfolder}} can be used to organize folders with a lot of data collections. For examples, instead of having only one baseline data collection, a project might have a student, a teacher, and a school data collections all in baseline. With {it:subfolder} you can, using this example, create a folder called Baseline in the DataWork folder, and when creating the rounds for student, teacher and school, you can create those round inside the Baseline folder using the option {cmd:subfolder(}{it:Baseline}{cmd:)}. When creating a subfolder, only a single folder is created in the DataWork folder and it is empty. The main master do-file is however updated with a global to this folder.
+{pstd}{bf:unitofobs} folders are folders specific to a unit of observation,
+for example the master data set folder.
+Read more about master data sets and the folder structure
+this commands sets up for you at here.
+A master data folder for each new unit of observation is created in two places.
+Both in the MasterData folder in the {it:DataWork} folder,
+and in the Encrypted folder.
+{p_end}
 
-{marker optslong}{title:Options}
+{pstd}{bf:subfolder} can be used to organize project folders with
+a lot of data collections.
+For examples, instead of having only one baseline data collection,
+a project might have a student, a teacher,
+and a school data collections during baseline.
+You can then first create a baseline folder in the project folder using
+{it:subfolder} and then creating round-folders for student, teacher, school, etc.,
+inside the sub-folder suing {it:round} with the option {bf:subfolder}({it:baseeline}).
+When creating a subfolder,
+only a single folder is created in the {it:DataWork} folder which is empty.
+The main master do-file is however updated with a global to this folder.
+{p_end}
 
-{phang}{cmdab:proj:ectfolder(}{it:dir}{cmd:)} should point to the same folder regardless
-	of which {it:itemtype} is created. If {it:new project} is specified, the file path should
-	point to where DataWork should be created, and if {it:new round} or {it:new project} is
-	specified, it should point to where DataWork was already created. See how the file path is
-	the same both time when {cmd:iefolder} is called twice in Example 1 below.
+{title:Options}
 
-{phang}{cmdab:abb:reviation(}{it:string}{cmd:)} can be used to shorten the globals created
-	in the master do-files that point to the sub-folders to {it:round} folders. For example,
-	if you create a new {it:round} called Baseline, as in Example 1, then a global to the
-	DataSet folder called Baseline_dt will be created in the master do-file. If the
-	abbreviation option would have been used, like in Example 2, then the global would
-	have been called BL_dt.
+{pstd}{bf:{ul:proj}ectfolder}({it:directory}) should point to the same folder
+regardless of which {it:item_type} is created.
+If new project is specified,
+the file path should point to where {it:DataWork} should be created,
+and if new round or new project is specified,
+it should point to where {it:DataWork} was already created.
+See how the file path is the same both time when {inp:iefolder} 
+is called twice in Example 1 below.
+{p_end}
 
-{phang}{cmdab:sub:folder(}{it:folder}{cmd:)} creates a round folder inside the folder specified in this option. This option can only be used when creating a new round. The folder specified must have been created using {cmd:iefolder}. See example 3.
+{pstd}{bf:abbreviation}({it:string}) can be used to shorten the globals created
+in the master do-files that point to the sub-folders to round folders.
+For example, if you create a new round called Baseline,
+as in Example 1, then a global to the {it:DataSet} folder called Baseline{it:dt
+will be created in the master do-file.
+If the abbreviation option would have been used,
+like in Example 2, then the global would have been called BL{it:dt.
+{p_end}
+
+{pstd}{bf:subfolder}({it:folder}) creates a round folder inside
+the folder specified in this option.
+This option can only be used when creating a new round.
+The folder specified must have been created using {inp:iefolder}. See example 3. 
+{p_end}
 
 {title:Examples}
 
-{pstd}{hi:Example 1.}
+{dlgtab:Example 1}
 
-{pmore}{inp:global projectFolder "C:\Users\Documents\DropBox\ProjectABC"}
+{input}{space 8}global projectFolder "C:/Users/Documents/DropBox/ProjectABC"
+{space 8}
+{space 8}iefolder new project , projectfolder("$projectFolder")
+{space 8}iefolder new round baseline , projectfolder("$projectFolder")
+{text}
+{pstd}In the example above, in the line the first time {inp:iefolder} is used, 
+a folder called {it:DataWork} is created at the location of
+{inp:C:/Users/Documents/DropBox/ProjectABC}. 
+In the line where {inp:iefolder} used a second time, 
+a folder for the baseline round is created inside the {it:DataWork} folder.
+Note that the folder provided in {inp:projectfolder()} is the same both times. 
+{p_end}
 
-{pmore}{inp:iefolder new project , projectfolder("$projectFolder")}{break}
-{inp:iefolder new round baseline , projectfolder("$projectFolder")}
+{pstd}Both the {it:DataWork} folder and the baseline folder created have
+sub-folders and master do-files creating globals pointing to these.
+{p_end}
 
-{pstd}In the example above, in the line the first time {cmd:iefolder} is used, a folder
-	called {hi:DataWork} is created at the location of {it:"C:\Users\Documents\DropBox\ProjectABC"}.
-	In the line where {cmd:iefolder} used a second time, a folder for the baseline round
-	is created inside the {hi:DataWork} folder. Note that the folder provided
-	in {inp:projectfolder()} is the same both times.
+{dlgtab:Example 2}
 
-{pstd}Both the {hi:DataWork} folder and the {hi:baseline} folder created have sub-folders
-	and master do-files creating globals pointing to these.
+{input}{space 8}global projectFolder "C:/Users/Documents/DropBox/ProjectABC"
+{space 8}
+{space 8}iefolder new project , projectfolder("$projectFolder")
+{space 8}iefolder new round baseline , projectfolder("$projectFolder") abbreviation("BL")
+{text}
+{pstd}The example above creates the same folder structure as in Example 1,
+but in the globals in the master do-files the abbreviation BL
+is used instead of baseline.
+But the folders created on disk will still be called baseline.
+{p_end}
 
-
-{pstd}{hi:Example 2.}
-
-{pmore}{inp:global projectFolder "C:\Users\Documents\DropBox\ProjectABC"}
-
-{pmore}{inp:iefolder new project , projectfolder("$projectFolder")}{break}
-{inp:iefolder new round baseline , projectfolder("$projectFolder") abbreviation("BL")}
-
-{pstd}The example above creates the same folder structure as in Example 1, but
-	in the globals in the master do-files the abbreviation BL is used instead of
-	baseline. But the folders created on disk will still be called baseline.
-
-{pstd} {hi:Example 3.}
+{dlgtab:Example 3}
 
 {pstd}This example shows how to use subfolders.
+{p_end}
 
-{pmore}{inp:global projectFolder "C:\Users\Documents\DropBox\ProjectABC"}
+{input}{space 8}global projectFolder "C:/Users/Documents/DropBox/ProjectABC"
+{space 8}
+{space 8}iefolder new project , projectfolder("$projectFolder")
+{space 8}
+{space 8}iefolder new subfolder baseline , projectfolder("$projectFolder")
+{space 8}iefolder new round studentBL , projectfolder("$projectFolder") subfolder("baseline")
+{space 8}iefolder new round teacherBL , projectfolder("$projectFolder") subfolder("baseline")
+{text}
+{pstd}The code above creates a new {it:DataWork} folder inside the folder ProjectABC.
+Then subfolder is used to create a folder called baseline.
+Then the two baseline rounds, student and teacher,
+are created inside the folder baseline.
+{p_end}
 
-{pmore}{inp:iefolder new project , projectfolder("$projectFolder")}
+{pstd}The code below shows how the endline folder can be created in the same folder.
+Note that the rounds need to have unique names even across subfolders,
+and that is why the student and teacher round have the suffix EL.
+{p_end}
 
-{pmore}{inp:iefolder new subfolder baseline , projectfolder("$projectFolder")}{break}
-{inp:iefolder new round studentBL , projectfolder("$projectFolder") subfolder("baseline")}{break}
-{inp:iefolder new round teacherBL , projectfolder("$projectFolder") subfolder("baseline")}
+{input}{space 8}global projectFolder "C:/Users/Documents/DropBox/ProjectABC"
+{space 8}
+{space 8}iefolder new subfolder endline , projectfolder("$projectFolder")
+{space 8}iefolder new round studentEL , projectfolder("$projectFolder") subfolder("endline")
+{space 8}iefolder new round teacherEL , projectfolder("$projectFolder") subfolder("endline")
+{text}
+{dlgtab:Example 4}
 
-{pstd}The code above creates a new {hi:DataWork} folder inside the folder ProjectABC. Then {hi:subfolder} is used to create a folder called baseline. Then the two baseline rounds, student and teacher, are created inside the folder baseline.
+{pstd}The example below is meant to describe an intended workflow
+for a full life cycle of an impact evaluation.
+First we need to set up the {it:DataWork} folder.
+We do that using {inp:iefolder new project}. Like this: 
+{p_end}
 
-{pstd}The code below shows how the endline folder can be created in the same folder. Note that the rounds need to have unique names even across subfolders, and that is why the student and teacher round have the suffix EL.
+{input}{space 8}iefolder new project , projectfolder("C:/DropBox/ProjectABC")
+{text}
+{pstd}Our first data collection will be a baseline
+where the unit of observation is households.
+We therefore need to set up folders for the unit of observation {c 34}households{c 34}.
+In the encrypted master folder for {c 34}households{c 34}
+you can create your list over households and you have a subfolder called Sampling
+where you can keep do files and data with identifying information.
+We create all of that by using {inp:iefolder new unitofobs household}. Like this: 
+{p_end}
 
-{pmore}{inp:global projectFolder "C:\Users\Documents\DropBox\ProjectABC"}
+{input}{space 8}iefolder new unitofobs household , projectfolder("C:/DropBox/ProjectABC") abbreviation("BL")
+{text}
+{pstd}When we are ready to start preparing for the baseline
+we want to create the baseline folder.
+We do that using {inp:iefolder new round baseline}. Like this: 
+{p_end}
 
-{pmore}{inp:iefolder new subfolder endline , projectfolder("$projectFolder")}{break}
-{inp:iefolder new round studentEL , projectfolder("$projectFolder") subfolder("endline")}{break}
-{inp:iefolder new round teacherEL , projectfolder("$projectFolder") subfolder("endline")}
+{input}{space 8}iefolder new round baseline , projectfolder("C:/DropBox/ProjectABC") abbreviation("BL")
+{text}
+{pstd}At this point we can collect the baseline data,
+save the data in the folders we created and write the report.
+Then long stretches of time might pass before we need to use the command.
+{p_end}
 
-{pstd} {hi:Example 4.}
+{pstd}Let{c 39}s say that when we plan for midline
+we also want to collect data about the villages
+that the households we interview in baseline live in.
+Then we need to create a new master folder for the unit of observation villages.
+We do that using {inp:iefolder new unitofobs village}. Like this: 
+{p_end}
 
-{pstd}The example below is meant to describe an intended workflow for a full
-	life cycle of an impact evaluation. First we need to set up the {hi:DataWork} folder.
-	We do that using {it:{cmd:iefolder} new project}. Like this:
+{input}{space 8}iefolder new unitofobs village , projectfolder("C:/DropBox/ProjectABC")
+{text}
+{pstd}Then we need to create the rounds used for the midline round
+for both households and for villages.
+Since this is separate data collection
+(although they might happen at the same time).
+We create those folders like this:
+{p_end}
 
-{pmore}{inp:iefolder new project , projectfolder("C:\DropBox\ProjectABC")}
+{input}{space 8}iefolder new round midline       , projectfolder("C:/DropBox/ProjectABC") abbreviation("ML")
+{space 8}iefolder new round midlineVillage, projectfolder("C:/DropBox/ProjectABC") abbreviation("MLvill")
+{text}
+{pstd}Finally, in the last round of data collection,
+we are only collecting data on households again.
+Since we are not collecting data on any new unit of observation,
+we do not need to create any new master folder.
+{p_end}
 
-{pstd}Our first data collection will be a baseline where the unit of observation
-	is households. We therefore need to set up folders for the unit of observation
-	"households". In the encrypted master folder for "housholds" you can create your
-	list over households and you have a subfolder called {it:Sampling} where you
-	can keep do files and data with identifying information. We create all of that by
-	using {it:{cmd:iefolder} new unitofobs household}.	Like this:
-
-{pmore}{inp:iefolder new unitofobs household , projectfolder("C:\DropBox\ProjectABC") abbreviation("BL")}
-
-{pstd}When we are ready to start preparing for the baseline we want to create the
-	baseline folder. We do that using {it:{cmd:iefolder} new round baseline}. Like this:
-
-{pmore}{inp:iefolder new round baseline , projectfolder("C:\DropBox\ProjectABC") abbreviation("BL")}
-
-{pstd}At this point we can collect the baseline data, save the data in the folders
-	we created and write the report. Then long stretches of time might pass before
-	we need to use the command.
-
-{pstd}Let's say that when we plan for midline we also want
-	to collect data about the villages that the households we interview in baseline
-	live in. Then we need to create a new master folder for the unit of observation
-	villages. We do that using {it:{cmd:iefolder} new unitofobs village}. Like this:
-
-{pmore}{inp:iefolder new unitofobs village , projectfolder("C:\DropBox\ProjectABC")}
-
-{pstd}Then we need to create the rounds used for the midline round for both
-	households and for villages. Since this is separate data collection (although
-	they might happen at the same time). We create those folders like this:
-
-{pmore}{inp:iefolder new round midline {space 6}, projectfolder("C:\DropBox\ProjectABC") abbreviation("ML")}{break}
-{inp:iefolder new round midlineVillage, projectfolder("C:\DropBox\ProjectABC") abbreviation("MLvill")}
-
-{pstd}Finally, in the last round of data collection, we are only collecting data
-	on households again. Since we are not collecting data on any new unit
-	of observation, we do not need to create any new master folder.
-
-{pmore}{inp:iefolder new round endline , projectfolder("C:\DropBox\ProjectABC") abbreviation("EL")}
-
+{input}{space 8}iefolder new round endline , projectfolder("C:/DropBox/ProjectABC") abbreviation("EL")
+{text}
 {title:Acknowledgements}
 
-{phang}I would like to acknowledge the help in testing and proofreading I received in relation to this command and help file from (in alphabetic order):{p_end}
-{pmore}Guadalupe Bedoya{break}Laura Costica{break}Luiza Cardoso De Andrade{break}Mrijan Rimal{break}Sakina Shibuya{break}Seungmin Lee
+{pstd}This command was initially suggested by Esteban J. Quinones, University of Wisconsin-Madison.
+{p_end}
+
+{pstd}We would like to acknowledge the help in testing and proofreading we received in relation to this command and help file from (in alphabetical order):
+{p_end}
+
+{pstd}Guadalupe Bedoya
+{p_end}
+
+{pstd}Laura Costica
+{p_end}
+
+{pstd}Mrijan Rimal
+{p_end}
+
+{pstd}Sakina Shibuya
+{p_end}
+
+{pstd}Seungmin Lee
+{p_end}
+
+{title:Feedback, bug reports and contributions}
+
+{pstd}Please send bug-reports, suggestions and requests for clarifications
+writing {c 34}ietoolkit iefolder{c 34} in the subject line to: dimeanalytics@worldbank.org
+{p_end}
+
+{pstd}You can also see the code, make comments to the code, see the version
+history of the code, and submit additions or edits to the code through {browse "https://github.com/worldbank/ietoolkit":GitHub repository} for {inp:ietoolkit}. 
+{p_end}
 
 {title:Author}
 
-{phang}All commands in ietoolkit is developed by DIME Analytics at DECIE, The World Bank's unit for Development Impact Evaluations.
+{pstd}All commands in {inp:ietoolkit} are developed by DIME Analytics at DIME, The World Bank{c 39}s department for Development Impact Evaluations. 
+{p_end}
 
-{phang}Main author: Kristoffer Bjarkefur, DIME Analytics, The World Bank Group
-
-{phang}Please send bug-reports, suggestions and requests for clarifications
-		 writing "ietoolkit iefolder" in the subject line to:{break}
-		 dimeanalytics@worldbank.org
-
-{phang}You can also see the code, make comments to the code, see the version
-		 history of the code, and submit additions or edits to the code through  {browse "https://github.com/worldbank/ietoolkit":the GitHub repository of ietoolkit}.{p_end}
+{pstd}Main authors: Kristoffer Bjarkefur, Luiza Cardoso De Andrade, DIME Analytics, The World Bank Group
+{p_end}

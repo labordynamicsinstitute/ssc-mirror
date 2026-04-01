@@ -2,7 +2,7 @@
 
 //  prediction program for -praisk-: curently supports xb, residuals, stdp, and ue (AR innovation residuals)
 program define praisk_p
-	version 11
+	version 14
 
 	local myopts "XB Residuals UE STDp"
 
