@@ -360,6 +360,7 @@ fmwww.bc.edu/repec/bocode/l/lrasvar.pkg
 fmwww.bc.edu/repec/bocode/l/lincom2.html
 fmwww.bc.edu/repec/bocode/l/levels.hlp
 fmwww.bc.edu/repec/bocode/l/lfuni.html
+fmwww.bc.edu/repec/bocode/l/labrepel.sthlp
 fmwww.bc.edu/repec/bocode/l/lmgc.html
 fmwww.bc.edu/repec/bocode/l/labmv.ado
 fmwww.bc.edu/repec/bocode/l/labvalch3.sthlp
@@ -805,6 +806,7 @@ fmwww.bc.edu/repec/bocode/l/lmnad.ado
 fmwww.bc.edu/repec/bocode/l/lookforit.pkg
 fmwww.bc.edu/repec/bocode/l/levpredict.html
 fmwww.bc.edu/repec/bocode/l/lmargdistfit.mlib
+fmwww.bc.edu/repec/bocode/l/labrepel.ado
 fmwww.bc.edu/repec/bocode/l/lgeoplot_source.sthlp
 fmwww.bc.edu/repec/bocode/l/lmabgnl.dlg
 fmwww.bc.edu/repec/bocode/l/lmdi.sthlp
@@ -7008,6 +7010,7 @@ fmwww.bc.edu/repec/bocode/t/tslstarmod.pkg
 fmwww.bc.edu/repec/bocode/t/tabel_options2.ihlp
 fmwww.bc.edu/repec/bocode/t/takelist.html
 fmwww.bc.edu/repec/bocode/t/truecrypt.pkg
+fmwww.bc.edu/repec/bocode/t/treemapv.sthlp
 fmwww.bc.edu/repec/bocode/t/tau2ci.sthlp
 fmwww.bc.edu/repec/bocode/t/tabex.sthlp
 fmwww.bc.edu/repec/bocode/t/title.ado
@@ -20871,6 +20874,7 @@ fmwww.bc.edu/repec/bocode/v/varrets.sthlp
 fmwww.bc.edu/repec/bocode/v/validarcae_div21.ado
 fmwww.bc.edu/repec/bocode/v/viewresults.html
 fmwww.bc.edu/repec/bocode/v/vsave.ado
+fmwww.bc.edu/repec/bocode/v/vcontrol.ado
 fmwww.bc.edu/repec/bocode/v/vallabsave.pkg
 fmwww.bc.edu/repec/bocode/v/vif2.hlp
 fmwww.bc.edu/repec/bocode/v/vecar.hlp
@@ -20992,11 +20996,13 @@ fmwww.bc.edu/repec/bocode/v/varlmhet.sthlp
 fmwww.bc.edu/repec/bocode/v/varlabdef.pkg
 fmwww.bc.edu/repec/bocode/v/xtdpdgmm_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/v/vanelteren.hlp
+fmwww.bc.edu/repec/bocode/v/vcontrol.pkg
 fmwww.bc.edu/repec/bocode/v/vennbar.pkg
 fmwww.bc.edu/repec/bocode/v/varmi.sthlp
 fmwww.bc.edu/repec/bocode/v/xtdpdgmm.sthlp
 fmwww.bc.edu/repec/bocode/v/vc_reg.ado
 fmwww.bc.edu/repec/bocode/v/variog.ado
+fmwww.bc.edu/repec/bocode/v/vcontrol.sthlp
 fmwww.bc.edu/repec/bocode/v/varsearch.pkg
 fmwww.bc.edu/repec/bocode/v/varlag.ado
 fmwww.bc.edu/repec/bocode/v/vmatch.hlp

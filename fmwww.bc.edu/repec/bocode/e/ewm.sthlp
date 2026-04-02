@@ -1,5 +1,5 @@
 {smcl}
-{* 05Mar2024}{...}
+{* 01Apr2026}{...}
 {hline}
 help for {hi:ewm}
 {hline}
@@ -13,7 +13,8 @@ help for {hi:ewm}
 
 {p 4 10 2}
 {cmd:ewm} {varlist} {ifin} , [ {opt s:core(newvar)} {opt un:des(varlist)} {opt b:y(varlist)}
-{opt n:orm(method)} {opt sh:ift(#)} {opt sm:ooth(#)} {opt r:aw} {opt p:v} {opt ba:se} {opt l:ist} {opt k:eep} ]
+{opt n:orm(method)} {opt sh:ift(#)} {opt sm:ooth(#)} {opt r:aw} {opt p:v} {opt ba:se}
+{opt ran:k} {opt l:ist} {opt k:eep} ]
 
 {synoptset 15 tabbed}{...}
 {synopthdr}
@@ -28,6 +29,7 @@ help for {hi:ewm}
 {synopt :{opt r:aw}}is optional, uses raw data to calculating the comprehensive score. The default is using the {cmd:Min-Max} normalized data.{p_end}
 {synopt :{opt p:v}}is optional, uses proportional data to calculating the comprehensive score. This option is not allowed with option {opt r:aw}.{p_end}
 {synopt :{opt ba:se}}is optional, uses the maximum and minimum values of the base period for standardization; must be set with {opt b:y(varlist)}.{p_end}
+{synopt :{opt ran:k}}is optional, creats a new variable (named as {cmd:EWM_Rank}) which sorts the entropy weight score in descending order.{p_end}
 {synopt :{opt l:ist}}is optional, lists the entropy weight of {varlist} (their suffixes are {cmd:_EW}).{p_end}
 {synopt :{opt k:eep}}is optional, keeps the entropy weight variables of {varlist} (their suffixes are {cmd:_EW}). The default is dropped.{p_end}
 
@@ -39,7 +41,7 @@ help for {hi:ewm}
 (1) {res:MM}, i.e. max-min normalization, {cmd:(Xi-Xmin)/(Xmax-Xmin)} or {cmd:(Xmax-Xi)/(Xmax-Xmin)} (for undesirable variables) ;{break}
 (2) {res:MX}, i.e. maximization, {cmd:Xi/Xmax} or {cmd:1-Xi/Xmax} (for undesirable variables) ;{break}
 (3) {res:L1}, i.e. sum normalization, {cmd:Xi/SUM(Xi)} or {cmd:1-Xi/SUM(Xi)} (for undesirable variables)  ;{break}
-(4) {res:L2}, i.e. vector normalization, {cmd:Xi/SUM(Xi^2)} or {cmd:1-Xi/SUM(Xi^2)} (for undesirable variables) .{p_end}
+(4) {res:L2}, i.e. vector normalization, {cmd:Xi/(SUM(Xi^2))^0.5} or {cmd:1-Xi/SUM(Xi^2)} (for undesirable variables) .{p_end}
 {p 4 7 2}3. The command {cmd:ewm} may generate some variables named with preffixes or suffixes as follows:{break}
 {cmd:EW_ , _EW , _SCOR , _ET , _MNRM , _MAXM , _MINM , _pc , _NMS , _EJ .}{break}
 So, you should avoid to including variables names with these prefixes or suffixes.{p_end}
@@ -79,7 +81,7 @@ So, you should avoid to including variables names with these prefixes or suffixe
 {cmd: . ewm x1-x10, pv}
 
 {phang}
-6. Example of various normalization methods:
+4. Example of various normalization methods:
 
 {phang}
 {cmd: . ewm x1-x10, norm(MX) list}
@@ -101,6 +103,9 @@ So, you should avoid to including variables names with these prefixes or suffixe
 
 {phang}
 {cmd: . ewm x1-x10, sc(new_sc) smooth(0.01) list keep}
+
+{phang}
+{cmd: . EWM x1-x10, rank}
 
 {phang}
 6. Example of panel, longitudinal or multidimensional data:

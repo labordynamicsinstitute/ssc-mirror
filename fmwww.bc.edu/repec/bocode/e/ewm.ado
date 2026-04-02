@@ -1,6 +1,7 @@
-*! Version 1.3.0 2024-03-05
+*! Version 1.4.0 2026-04-01
 *! Author: Dejin Xie (Nanchang University, China)
 
+** Version 1.4.0 2026-04-01, option "rank" added
 ** Version 1.3.0 2024-03-05, option "norm" Modified
 ** Version 1.2.0 2022-06-30, option "base" added
 ** Version 1.1.0 2019-12-15, option "smooth" added
@@ -13,7 +14,7 @@ version 13
 
 syntax varlist (numeric) [if] [in], [ Score(string) UNdes(varlist) By(varlist) ///
                           Norm(string) SHift(numlist max=1 min=1 >0 <=1) ///
-                          SMooth(numlist max=1 min=1 >0 <1) Raw Pv BAse List Keep ]
+                          SMooth(numlist max=1 min=1 >0 <1) Raw Pv BAse RANk List Keep ]
 
 local VNUM : word count `varlist'
 tokenize `varlist'
@@ -30,36 +31,36 @@ marksample touse, novarlist
 if "`score'"=="" {
   local score "EW_Score"
 }
-if "`by'"~="" {
+if "`by'"!="" {
   local BY_TIME "bysort `by' (`EWMID') :"
   local TIME_BY ", by(`by')"
-  if "`base'"~="" {
+  if "`base'"!="" {
     tempvar ByBa
     egen `ByBa'=group(`by')
   }
 }
 else {
-  if "`base'"~="" {
+  if "`base'"!="" {
     dis as err "The option {it:{ul:ba}se} must be set with option {it:{ul:b}y(varlist)}."
     exit
   }
 }
-if "`shift'"~="" & "`smooth'"~="" {
+if "`shift'"!="" & "`smooth'"!="" {
   dis as err "option {it:{ul:sh}ift(#)} not allowed with {it:{ul:sm}ooth(#)}."
   error 198
 }
-if "`raw'"~="" & "`pv'"~="" {
+if "`raw'"!="" & "`pv'"!="" {
   dis as err "option {it:raw} not allowed with {it:pv}."
   error 198
 }
 
-if "`norm'"~="" {
+if "`norm'"!="" {
   local norm = upper("`norm'")
   if inlist("`norm'","MM","MX","L1","L2")==0 {
     dis as error `"The option {it:{ul:n}orm(method)} must be one of "{it:MM}", "{it:MX}", "{it:L1}" or "{it:L2}" !"'
     exit(198)
   }
-  if inlist("`norm'","L1","L2") & "`base'"~="" & "`by'"~="" {
+  if inlist("`norm'","L1","L2") & "`base'"!="" & "`by'"!="" {
     dis as text "The option {it:{ul:ba}se} is not worked since option {it:{ul:n}orm(`norm')} is set."
   }
 }
@@ -70,7 +71,9 @@ else {
 quietly {
 capture drop `score'
 capture drop *_EW
-
+if "`rank'"!="" {
+  capture drop EW_Rank
+}
 capture assert `touse'==1
 local TouSeE=!_rc
 if `TouSeE'==0 {
@@ -82,7 +85,7 @@ if `TouSeE'==0 {
 capture drop *_MNRM
 forvalues vi=1/`VNUM' {
   tempvar ``vi''_MAXM ``vi''_MINM ``vi''_pc  ``vi''_NMS ``vi''_EJ
-  inlist("`norm'","MM","MX") {
+  if inlist("`norm'","MM","MX") {
     if "`base'"=="" { 
       `BY_TIME' egen ```vi''_MAXM'=max(``vi'')
       `BY_TIME' egen ```vi''_MINM'=min(``vi'')
@@ -100,8 +103,8 @@ forvalues vi=1/`VNUM' {
     else {
       gen ``vi''_MNRM=(``vi''-```vi''_MINM')/(```vi''_MAXM'-```vi''_MINM')
     }
-    if "`shift'"~="" replace ``vi''_MNRM=``vi''_MNRM+`shift'
-    if "`smooth'"~="" replace ``vi''_MNRM=`smooth'+(1-`smooth')*``vi''_MNRM
+    if "`shift'"!="" replace ``vi''_MNRM=``vi''_MNRM+`shift'
+    if "`smooth'"!="" replace ``vi''_MNRM=`smooth'+(1-`smooth')*``vi''_MNRM
     `BY_TIME' egen ```vi''_pc'=pc(``vi''_MNRM), prop
   }
   if "`norm'"=="MX" {
@@ -111,8 +114,8 @@ forvalues vi=1/`VNUM' {
     else {
       gen ``vi''_MNRM=``vi''/```vi''_MAXM'
     }
-    if "`shift'"~="" replace ``vi''_MNRM=``vi''_MNRM+`shift'
-    if "`smooth'"~="" replace ``vi''_MNRM=`smooth'+(1-`smooth')*``vi''_MNRM
+    if "`shift'"!="" replace ``vi''_MNRM=``vi''_MNRM+`shift'
+    if "`smooth'"!="" replace ``vi''_MNRM=`smooth'+(1-`smooth')*``vi''_MNRM
     `BY_TIME' egen ```vi''_pc'=pc(``vi''_MNRM), prop
   }
   if "`norm'"=="L1" {
@@ -142,27 +145,27 @@ forvalues vi=1/`VNUM' {
   label var ``vi''_EW "Entropy Weight of ``vi''"
   drop ``vi''_ET
   capture drop ``vi''_SCOR
-  if "`raw'"~="" {
+  if "`raw'"!="" {
     gen ``vi''_SCOR=``vi''*``vi''_EW
     replace ``vi''_SCOR=(```vi''_MAXM'-``vi'')*``vi''_EW if `ustr'regexm("`undes'","(^| )``vi''( |$)")
   }
-    if "`pv'"~="" {
+    if "`pv'"!="" {
     gen ``vi''_SCOR=```vi''_pc'*``vi''_EW
   }
   if "`raw'"=="" & "`pv'"=="" {
     if "`norm'"=="MM" | "`norm'"=="MX" {
-      if "`shift'"~="" replace ``vi''_MNRM=``vi''_MNRM-`shift'
-      if "`smooth'"~="" replace ``vi''_MNRM=(``vi''_MNRM-`smooth')/(1-`smooth')
+      if "`shift'"!="" replace ``vi''_MNRM=``vi''_MNRM-`shift'
+      if "`smooth'"!="" replace ``vi''_MNRM=(``vi''_MNRM-`smooth')/(1-`smooth')
     }
     gen ``vi''_SCOR=``vi''_MNRM*``vi''_EW
   }
 }
 capture drop `score'
 egen `score'=rowtotal(*_SCOR)
-if "`raw'"~="" {
+if "`raw'"!="" {
   label var `score' "Comprehensive Score (by raw data)"
 }
-if "`pv'"~="" {
+if "`pv'"!="" {
   label var `score' "Comprehensive Score (by proportional data)"
 }
 if "`raw'"=="" &"`pv'"=="" {
@@ -171,6 +174,9 @@ if "`raw'"=="" &"`pv'"=="" {
 order *_EW, after(`score')
 drop *_SCOR
 drop *_MNRM
+if "`rank'"!="" {
+  `BY_TIME' egen EW_Rank=rank(-`score')
+}
 
 if `TouSeE'==0 {
   save `myEWMfile', replace
@@ -197,7 +203,7 @@ else {
   matrix colnames `EntW' = `varlist'
 }
 return matrix EW = `EntW'
-if "`list'"~="" {
+if "`list'"!="" {
   noisily dis as green "The entropy weight of {res:`varlist'} are as follows: "
   noisily list
 }

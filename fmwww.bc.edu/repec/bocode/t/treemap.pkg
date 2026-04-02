@@ -11,10 +11,11 @@ d KW: tree maps
 d
 d Requires: Stata version 15 and palettes, colrspace, labmask from SSC
 d
-d Distribution-Date: 20251210
+d Distribution-Date: 20260401
 d
 d Author: Asjad Naqvi, Austrian Institute of Economic Research (WIFO)
 d Support: email asjadnaqvi@@gmail.com
 d
 f treemap.ado
 f treemap.sthlp
+f treemapv.sthlp

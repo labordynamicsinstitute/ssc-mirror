@@ -7,7 +7,7 @@
 
 {it:(back to {stata help graphfunctions})}
 
-{title:labsplit}: {it:A Stata program for text and word wrapping.}
+{title:labsplit}: {it:A Stata function for text and word wrapping.}
 
 
 {marker syntax}{title:Syntax}

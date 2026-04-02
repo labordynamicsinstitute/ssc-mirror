@@ -32,6 +32,7 @@ p vce_mcov module to compute the Leave-Cluster-Out-Crossfit (LCOC) variance esti
 p vcemway module to adjust a Stata command's standard errors for multi-way clustering
 p vcf module to import VCF (Variant Caller Format) Files into Stata and format genotype data
 p vclose module to close viewer windows
+p vcontrol module for version controls
 p vecar module to estimate vector autoregressive (VAR) models
 p vecar6 module to estimate vector autoregressive (VAR) models (version 6)
 p vececm module to estimate vector error correction models (ECMs)

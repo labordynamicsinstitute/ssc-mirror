@@ -1,0 +1,21 @@
+d 'VCONTROL': module for version controls
+d
+d   vcontrol compares version dates of a Stata package available on
+d SSC and GitHub (or a custom URL).  It displays the   
+d distribution dates for both sources and identifies which version
+d is newer.    If the update option is specified, the latest
+d version is automatically installed from the source with the more
+d recent    distribution date. 
+d
+d KW: version
+d KW: version control
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20260401
+d
+d Author: Asjad Naqvi, Austrian Institute of Economic Research (WIFO)  
+d Support: email asjadnaqvi@@gmail.com
+d
+f vcontrol.ado
+f vcontrol.sthlp
