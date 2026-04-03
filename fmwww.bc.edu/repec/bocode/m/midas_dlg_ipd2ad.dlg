@@ -1,0 +1,58 @@
+/*
+  midas_dlg_ipd2ad.dlg — Individual participant data to aggregate
+  Version 2.0.0  30mar2026
+  Author: Ben Adarkwa Dwamena, MD
+*/
+
+VERSION 16.0
+
+POSITION . . 440 250
+
+DIALOG main, title("MIDAS — IPD to Aggregate Data")
+BEGIN
+  TEXT     tx_header  10  10 420  ., label("midas ipd2ad — Aggregate individual participant data to 2x2 tables")
+
+  GROUPBOX gb_vars   10  35 420  70, label("Variables (2 required: test_result disease_status)")
+  TEXT     tx_vars    20  55 400  .,                                            ///
+           label("test_positive (0/1)   disease_present (0/1)")
+  VARLIST  vl_vars    20  75 400  ., label("Select 2 binary variables")
+
+  GROUPBOX gb_opts   10 115 420  80, label("Options")
+  TEXT     tx_by      20 135 100  ., label("Study ID (by):")
+  VARNAME  vn_by     125 135 140  .
+
+  TEXT     tx_save   280 135  50  ., label("Save as:")
+  EDIT     ed_save   335 135 100  ., default("ipd_agg.dta")
+
+  TEXT     tx_thresh  20 165 100  ., label("Threshold:")
+  EDIT     ed_thresh 125 165  80  ., numonly                                    ///
+           tooltip("Optional: apply a common threshold across all studies (for continuous IPD)")
+  CHECKBOX ck_rep    280 165  80  ., label("Replace")
+
+  GROUPBOX gb_ifin   10 205 420  35, label("If/In")
+  EDIT     ed_ifin    20 223 400  ., tooltip("Optional if/in restriction")
+END
+
+HELP hlp1, view("help midas_ipd2ad")
+OK ok1, label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+
+PROGRAM command
+BEGIN
+  put "midas ipd2ad "
+  put main.vl_vars
+  if main.ed_ifin {
+    put " " main.ed_ifin
+  }
+  put ", by(" main.vn_by ")"
+  require main.ed_save
+  put " saving(" main.ed_save
+  if main.ck_rep {
+    put ", replace"
+  }
+  put ")"
+  if main.ed_thresh {
+    put " threshold(" main.ed_thresh ")"
+  }
+END

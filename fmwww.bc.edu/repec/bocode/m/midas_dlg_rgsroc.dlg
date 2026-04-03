@@ -1,0 +1,42 @@
+VERSION 16.0
+POSITION . . 560 230
+
+CANCEL can1, label("Close")
+HELP   hlp1, view("help midas_rgsroc")
+RESET  res1
+COPY   copy1
+
+SUBMIT sub1, label("Submit")
+
+DIALOG main, title("MIDAS -- Symmetric ROC Curve")
+BEGIN
+    GROUPBOX gb_p  10  10 540  90, label("Plot options")
+    CHECKBOX ck_wgt  20  30 150 ., label("Weighted")         option(weighted)
+    CHECKBOX ck_dat  20  54 150 ., label("Show data points") option(data)
+    CHECKBOX ck_lbl 185  30 170 ., label("Label data points") option(labeldata)
+    CHECKBOX ck_lgn 185  54 120 ., label("Show legend")      option(lgnd)
+    CHECKBOX ck_cbnd 370  30 160 ., label("Confidence bounds") option(cbounds)
+    CHECKBOX ck_pbnd 370  54 160 ., label("Prediction bounds") option(pbounds)
+    CHECKBOX ck_creg  20  78 160 ., label("Confidence region") option(cregion)
+    CHECKBOX ck_preg 185  78 160 ., label("Prediction region") option(pregion)
+
+    GROUPBOX gb_d  10 110 540  40, label("Display options")
+    TEXT     tx_lev  20 128 130 ., label("Confidence level (%):")
+    SPINNER  sp_lev  160 126  60 ., min(50) max(99) default(95) option(level)
+END
+
+PROGRAM command
+BEGIN
+    put "midas rgsroc"
+    beginoptions
+        option main.ck_wgt
+        option main.ck_dat
+        option main.ck_lbl
+        option main.ck_lgn
+        option main.ck_cbnd
+        option main.ck_pbnd
+        option main.ck_creg
+        option main.ck_preg
+        optionarg /hidedefault main.sp_lev
+    endoptions
+END

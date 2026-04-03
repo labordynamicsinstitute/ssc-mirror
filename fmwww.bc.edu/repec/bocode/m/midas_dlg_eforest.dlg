@@ -1,0 +1,85 @@
+/*
+  midas_dlg_eforest.dlg — Exploratory forest plot
+  Version 1.0.0  30mar2026
+  Author: Ben Adarkwa Dwamena, MD
+*/
+
+VERSION 16.0
+
+POSITION . . 400 230
+
+DIALOG main, title("MIDAS — Exploratory Forest Plot")
+BEGIN
+  TEXT     tx_header  10  10 380  ., label("midas eforest — Coupled forest plot (no summary diamond)")
+
+  GROUPBOX gb_plot   10  35 380  55, label("Plot Type")
+  COMBOBOX cb_plot    20  55 200  ., dropdownlist                              ///
+           contents(plot_list) values(plot_vals) default("generic")
+  TEXT     tx_pnote  230  57 150  ., label("(generic, ellipse, thick, rain)")
+
+  GROUPBOX gb_opts   10 100 380  80, label("Options")
+  TEXT     tx_level   20 120  50  ., label("Level:")
+  SPINNER  sp_level   75 120  60  ., min(10) max(99) default(95)
+
+  TEXT     tx_ms     150 120  60  ., label("Marker:")
+  EDIT     ed_ms     215 120  50  ., default("0.30") numonly
+
+  TEXT     tx_ts     280 120  40  ., label("Text:")
+  EDIT     ed_ts     325 120  50  ., default("0.30") numonly
+
+  TEXT     tx_ci      20 150  60  ., label("CI method:")
+  COMBOBOX cb_ci      85 150 120  ., dropdownlist                              ///
+           contents(ci_list) values(ci_vals) default("exact")
+END
+
+LIST plot_list
+BEGIN
+  Generic
+  Ellipse
+  Thick
+  Rain
+END
+
+LIST plot_vals
+BEGIN
+  generic
+  ellipse
+  thick
+  rain
+END
+
+LIST ci_list
+BEGIN
+  Exact
+  Wilson
+  Wald
+END
+
+LIST ci_vals
+BEGIN
+  exact
+  wilson
+  wald
+END
+
+HELP hlp1, view("help midas_eforest")
+OK ok1, label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+
+PROGRAM command
+BEGIN
+  put "midas eforest, plottype(" main.cb_plot ")"
+  if !main.sp_level.isdefault() {
+    put " level(" main.sp_level ")"
+  }
+  if !main.ed_ms.isdefault() {
+    put " mscale(" main.ed_ms ")"
+  }
+  if !main.ed_ts.isdefault() {
+    put " textscale(" main.ed_ts ")"
+  }
+  if !main.cb_ci.isdefault() {
+    put " cimethod(" main.cb_ci ")"
+  }
+END

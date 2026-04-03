@@ -1,0 +1,48 @@
+VERSION 16.0
+POSITION . . 620 230
+
+CANCEL can1, label("Close")
+HELP   hlp1, view("help midas_quadas")
+RESET  res1
+COPY   copy1
+SUBMIT sub1, label("Submit")
+
+DIALOG main, title("MIDAS -- quadas: QUADAS-2 Quality Assessment")
+BEGIN
+    GROUPBOX gb_v  10  10 600 100, label("Variables")
+    TEXT     tx_id  20  30 130 ., label("Study ID variable:")
+    VARNAME  vn_id 160  28 150 ., option(id)
+    TEXT     tx_pt 330  30 100 ., label("Plot type:")
+    COMBOBOX cb_pt 440  28 120 ., dropdownlist contents(ptlist) values(ptvals) option(plot)
+    TEXT     tx_rb  20  58 130 ., label("Risk of bias vars:")
+    VARLIST  vl_rb 160  56 430 ., option(robvars)
+    TEXT     tx_ac  20  84 130 ., label("Applicability vars:")
+    VARLIST  vl_ac 160  82 430 ., option(acvars)
+
+    GROUPBOX gb_o  10 120 600  40, label("Options")
+    CHECKBOX ck_col  20 138 100 ., label("Color") option(color)
+END
+
+LIST ptlist
+BEGIN
+    Bar chart
+    Summary chart
+END
+
+LIST ptvals
+BEGIN
+    bar
+    sum
+END
+
+PROGRAM command
+BEGIN
+    put "midas quadas "
+    beginoptions
+        optionarg main.vn_id
+        optionarg main.cb_pt
+        optionarg main.vl_rb
+        optionarg main.vl_ac
+        option main.ck_col
+    endoptions
+END

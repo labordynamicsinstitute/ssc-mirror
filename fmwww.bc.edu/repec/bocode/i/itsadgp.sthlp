@@ -1,10 +1,10 @@
 {smcl}
-{* 29Dec2024}{...}
+{* 04Apr2026}{...}
 
 
 {title:Title}
 
-{p2colset 5 16 17 2}{...}
+{p2colset 5 17 18 2}{...}
 {p2col :{hi:itsadgp} {hline 2}}Data generating process for interrupted time-series analysis {p_end}
 {p2colreset}{...}
 
@@ -12,15 +12,17 @@
 {title:Syntax}
 
 {p 8 16 2}
-{cmd:itsadgp}{cmd:,}
+{cmd:itsadgp}{cmd: ,}
 {cmdab:nt:ime(}{it:integer}{cmd:)}
 {cmdab:trp:eriod(}{it:integer}{cmd:)}
 {cmdab:int:ercept(}{it:#}{cmd:)}
 {cmdab:pre:trend(}{it:#}{cmd:)}
 {cmdab:post:trend(}{it:#}{cmd:)}
 {cmdab:st:ep(}{it:#}{cmd:)}
-[ {cmdab:sd(}{it:#}{cmd:)}
-{cmdab:rho(}{it:{help numlist}}{cmd:)}
+{cmdab:rho1(}{it:#}{cmd:)}
+[ {cmdab:rho2(}{it:#}{cmd:)}
+{cmdab:rho3(}{it:#}{cmd:)}
+{cmdab:sd(}{it:#}{cmd:)}
 {cmdab:seed(}{it:#}{cmd:)} ]
 
 
@@ -34,11 +36,13 @@
 {p2coldent:* {opt pre:trend}{cmd:(}{it:#}{cmd:)}}specify the trend (slope) of the time series prior to the intervention {p_end}
 {p2coldent:* {opt st:ep}{cmd:(}{it:#}{cmd:)}}specify the change in the level of the time series immediately following the introduction of the intervention{p_end}
 {p2coldent:* {opt post:trend}{cmd:(}{it:#}{cmd:)}}specify the trend (slope) of the time series after introduction of the intervention {p_end}
+{p2coldent:* {opt rho1}{cmd:(}{it:#}{cmd:)}}specify the lag 1 autoregressive coefficient{p_end}
+{synopt:{opt rho2}{cmd:(}{it:#}{cmd:)}}specify the lag 2 autoregressive coefficient; requires {cmd:rho1()} to also be specified{p_end}
+{synopt:{opt rho3}{cmd:(}{it:#}{cmd:)}}specify the lag 3 autoregressive coefficient; requires {cmd:rho1()} and {cmd:rho2()} to also be specified{p_end}
 {synopt:{opt sd}{cmd:(}{it:#}{cmd:)}}specify the standard deviation used to generate the random error term(s); default is {cmd:sd(1)} {p_end}
-{synopt:{opt rho}{cmd:(}{it:{help numlist}}{cmd:)}}specify the correlation coefficient(s) between adjacent (autoregressive) error terms {p_end}
 {synopt:{opt seed}{cmd:(}{it:#}{cmd:)}}sets the random-number seed to {it:#}{p_end}
 {synoptline}
-{p 4 6 2}* {opt ntime()}, {opt trperiod()}, {opt intercept()}, {opt pretrend()}, {opt posttrend()}, {opt step()} are required. {p_end}
+{p 4 6 2}* {opt ntime()}, {opt trperiod()}, {opt intercept()}, {opt pretrend()}, {opt posttrend()}, {opt step()}, {opt rho1()} are required. {p_end}
 {p2colreset}{...}
 
 
@@ -83,15 +87,27 @@ regression model, this value would be computed post-estimation as: {it:t} + {it:
 (where {it:xt} is an interaction between {it:t} and {it:x}); {cmd:posttrend() is required}. 
 
 {phang}
+{cmd:rho1(}{it:#}{cmd:)} specifies the lag 1 autoregressive coefficient; {cmd:rho1() is required}. For an AR(1) process, the random-error term is computed as:
+{it:epsilon_t} = {it:rho1 * epsilon_t-1} + {it:u_t} (equation 2 in Linden [2015]).
+All autoregressive coefficients must satisfy |{it:rho}| < 1.
+
+{phang}
+{cmd:rho2(}{it:#}{cmd:)} specifies the lag 2 autoregressive coefficient, extending the model to an AR(2) process:
+{it:epsilon_t} = {it:rho1 * epsilon_t-1} + {it:rho2 * epsilon_t-2} + {it:u_t}.
+Requires {cmd:rho1()} to also be specified. Unlike {cmd:rho1()}, there is no default — omitting {cmd:rho2()}
+means no second lag is included. To explicitly include a zero coefficient for lag 2 (while still specifying lag 3),
+use {cmd:rho2(0)}.
+
+{phang}
+{cmd:rho3(}{it:#}{cmd:)} specifies the lag 3 autoregressive coefficient, extending the model to an AR(3) process:
+{it:epsilon_t} = {it:rho1 * epsilon_t-1} + {it:rho2 * epsilon_t-2} + {it:rho3 * epsilon_t-3} + {it:u_t}.
+Requires both {cmd:rho1()} and {cmd:rho2()} to also be specified. There is no default — omitting {cmd:rho3()}
+means no third lag is included.
+
+{phang}
 {cmd:sd(}{it:#}{cmd:)} specifies the standard deviation used to generate the random error term(s): {it:u_t} = {it:N}(0,{cmd:sd}). A larger
 sd will induce greater variability in the time-series; default is {cmd:sd(1)}.
 
-{phang}
-{cmd:rho(}{it:numlist}{cmd:)} specifies the correlation coefficient(s) between adjacent (autoregressive) error terms. For a first-order 
-autoregressive [AR(1)] process, the random-error term is computed as: {it:epsilon_t} = {it:rho * epsilon_t-1} + {it:u_t} (equation 2 in [Linden 2015]).
-The number of values specified in {cmd:rho()} indicates the number of lags of autocorrelation in the time-series, so that one value indicates 1 lag, two
-values indicate 2 lags, etc. Most time-series follow an AR(1) process. 
- 
 {phang}
 {cmd:seed(}{it:#}{cmd:)} sets the random-number seed.
  
@@ -105,24 +121,24 @@ at the 50th time point. The starting value (intercept) is set to 10, the pre-int
 set to increase by 1 point every time period until the intervention starts, the level change (step) in
 the first time period immediately following introduction of the intervention is set to 30 points, 
 and the trend following introduction of the intervention (posttrend) is set to increase by 5 points 
-every period. We also build in an autoregressive process with one lag (AR1) by setting rho 
-(the autocorrelation coefficient) to 0.50. We set the standard deviation used to generate the random 
+every period. We also build in an autoregressive process with one lag (AR1) by setting rho1 
+(the lag 1 autocorrelation coefficient) to 0.50. We set the standard deviation used to generate the random 
 error term to 4, and we specify a seed to ensure replication.
 
-{pmore2}{cmd:. itsadgp, nt(100) trp(50) intercept(10) pre(1) post(5) step(30) sd(4) rho(.50) seed(12345)}{p_end}
+{pmore2}{cmd:. itsadgp, nt(100) trp(50) intercept(10) pre(1) post(5) step(30) sd(4) rho1(.50) seed(12345)}{p_end}
 
 {pstd}
 We now analyze these data using {helpb itsa}. The results in the regression table and post-trend table are close
-to those used in the data generating process. This will naturally differ depending on how {cmd:sd()} and {cmd:rho()} 
+to those used in the data generating process. This will naturally differ depending on how {cmd:sd()} and {cmd:rho1()} 
 are specified.
 
 {pmore2}{cmd:. itsa y, single trperiod(50) posttrend fig lag(1)}{p_end}
 
 {pstd}
-Same as before but we now generate an AR2 (2 lags) process, where the first lag has autocorrelation
+Same as before but we now generate an AR(2) process, where the first lag has autocorrelation
 of 0.50 and the second lag has autocorrelation of 0.30. We follow up the data generating process with {helpb itsa}.
 
-{pmore2}{cmd:. itsadgp, nt(100) trp(50) intercept(10) pre(1) post(5) step(30) sd(4) rho(.50 .30) seed(12345)}{p_end}
+{pmore2}{cmd:. itsadgp, nt(100) trp(50) intercept(10) pre(1) post(5) step(30) sd(4) rho1(.50) rho2(.30) seed(12345)}{p_end}
 {pmore2}{cmd:. itsa y, single trperiod(50) posttrend fig lag(2)}{p_end}
 
 {pstd}
@@ -130,20 +146,26 @@ In this example, we generate a time-series based on the results from the single-
 (available in the {helpb itsa} help file). We then estimate the treatment effects using {helpb itsa}. The regression table and
 posttrend table show similar results using our data generating process. 
 
-{pmore2}{cmd: . itsadgp, ntime(31) intercept(132) pretrend(-1.78) posttrend(-3.27) step(-20) trperiod(19) sd(1) rho(0.5) seed(12345)}{p_end}
+{pmore2}{cmd:. itsadgp, ntime(31) intercept(132) pretrend(-1.78) posttrend(-3.27) step(-20) trperiod(19) sd(1) rho1(0.5) seed(12345)}{p_end}
 {pmore2}{cmd:. itsa y, single trperiod(19) posttrend fig lag(1)}{p_end}
 
 {pstd}
-In this example, we generate data for a multi-group (treament vs control) time-series analysis. This is completed by generating a time series 
+In this example, we generate an AR(3) process with the second lag coefficient explicitly set to 0.
+
+{pmore2}{cmd:. itsadgp, nt(100) trp(50) intercept(10) pre(1) post(5) step(30) sd(4) rho1(.50) rho2(0) rho3(.20) seed(12345)}{p_end}
+{pmore2}{cmd:. itsa y, single trperiod(50) posttrend fig lag(3)}{p_end}
+
+{pstd}
+In this example, we generate data for a multi-group (treatment vs control) time-series analysis. This is completed by generating a time series 
 separately for each group (in this example we'll have one treatment group and one control group), saving and then appending the datasets.
 Finally, we estimate a model using {helpb itsa} 
 
-{pmore2}{cmd:. itsadgp, nt(100) trp(50) intercept(10) pre(1) post(5) step(30) sd(6) rho(.50) seed(12345)}{p_end}
+{pmore2}{cmd:. itsadgp, nt(100) trp(50) intercept(10) pre(1) post(5) step(30) sd(6) rho1(.50) seed(12345)}{p_end}
 {pmore2}{cmd:. gen tx = 1}{p_end}
 {pmore2}{cmd:. tempfile tx1}{p_end}
 {pmore2}{cmd:. save `tx1'}{p_end}
 
-{pmore2}{cmd:. itsadgp, nt(100) trp(50) intercept(8) pre(1.3) post(2.5) step(10) sd(6) rho(.50) seed(12345)}{p_end}
+{pmore2}{cmd:. itsadgp, nt(100) trp(50) intercept(8) pre(1.3) post(2.5) step(10) sd(6) rho1(.50) seed(12345)}{p_end}
 {pmore2}{cmd:. gen tx = 0}{p_end}
 {pmore2}{cmd:. append using `tx1'}{p_end}
 {pmore2}{cmd:. label define tx 1 "Treatment" 0 "Control", replace}{p_end}
@@ -154,35 +176,93 @@ Finally, we estimate a model using {helpb itsa}
 
 
 
+{title:Remarks}
+
+{pstd}
+ITS studies often have relatively short time series (e.g., 30–60 time periods), which places practical constraints on the AR order that can be reliably estimated from the generated data. 
+The following are rules of thumb based on the general time series literature:
+
+{phang}
+{bf:AR(1):} A minimum of 50 observations is commonly recommended for reliable estimation of ARIMA-class models (Box, Jenkins, and Reinsel 1994; McCleary and Hay 1980). 
+Most ITS time series follow an AR(1) process, making this the most practical choice in applied settings.
+
+{phang}
+{bf:AR(2):} At least 50 observations are needed, with 100 or more preferred. With fewer observations, the two AR coefficients may be difficult to distinguish from noise, 
+and standard errors will be wide.
+
+{phang}
+{bf:AR(3):} At least 100 observations are recommended, with 200 or more preferred. Each additional lag increases parameter uncertainty, and the partial autocorrelation 
+structure at lag 3 can be difficult to identify reliably in short series.
+
+{pstd}
+These recommendations reflect the general consensus that estimation performance for AR models deteriorates substantially when the number of time points falls below 50 
+(Box, Jenkins, and Reinsel 1994; McCleary and Hay 1980). Users who generate data with {cmd:ntime()} set below these thresholds should expect that downstream model fitting 
+(e.g., via {helpb itsa} or {helpb arima}) may yield unstable or imprecise AR coefficient estimates, particularly for higher-order processes. The generated data will still 
+be correct; the limitations apply to the estimation step.
+
+{pstd}
+In practice, AR(1) is by far the most common error structure in applied ITS research. The availability of {cmd:rho2()} and {cmd:rho3()} in {cmd:itsadgp2} is intended 
+primarily for simulation studies and methodological research, rather than reflecting typical applied usage.
+
+
+
 {title:References}
 
 {phang}
+Box, G. E. P., G. M. Jenkins, and G. C. Reinsel. 1994.
+{it:Time Series Analysis: Forecasting and Control}. 3rd ed. Englewood Cliffs, NJ: Prentice Hall.
+
+{phang}
+McCleary, R., and R. A. Hay. 1980.
+{it:Applied Time Series Analysis for the Social Sciences}. Beverly Hills, CA: Sage Publications.
+
+{phang}
 Linden, A. 2015.
-{browse "http://www.stata-journal.com/article.html?article=st0389":Conducting interrupted time series analysis for single and multiple group comparisons}.
+{browse "http://www.stata-journal.com/article.html?article=st0389": Conducting interrupted time series analysis for single and multiple group comparisons}.
 {it:Stata Journal}.
 15: 480-500.
 
 {phang}
 ------. 2017.
-{browse "http://www.stata-journal.com/article.html?article=st0389_3":A comprehensive set of postestimation measures to enrich interrupted time-series analysis}.
+{browse "http://www.stata-journal.com/article.html?article=st0389_3": A comprehensive set of postestimation measures to enrich interrupted time-series analysis}.
 {it:Stata Journal}
 17: 73-88.
 
 {phang}
 ------. 2022.
-{browse "https://journals.sagepub.com/doi/full/10.1177/1536867X221083929":Erratum: A comprehensive set of postestimation measures to enrich interrupted time-series analysis}.
+{browse "https://journals.sagepub.com/doi/full/10.1177/1536867X221083929": Erratum: A comprehensive set of postestimation measures to enrich interrupted time-series analysis}.
 {it:Stata Journal}
 22: 231-233. 
 
+{phang}
+------. 2025. 
+{browse "https://journals.sagepub.com/doi/10.1177/01632787251361514": A comprehensive simulation study to evaluate the effect size and study length relationship in single-group interrupted time series analysis}. 
+{it:Evaluation & the Health Professions} 
+
+{phang}
+------. 2026. 
+{browse "https://journals.sagepub.com/doi/10.1177/01632787261428159?int.sj-abstract.similar-articles.4": Power considerations for multiple-group (controlled) interrupted time series analysis: A comprehensive simulation Study}.
+{it:Evaluation & the Health Professions} 
+
+{phang}
+------. 2026. 
+{browse "https://doi.org/10.21203/rs.3.rs-8865851/v1": Adjustment for autocorrelation in multiple-group (controlled) interrupted time series analysis and its effect on power: A simulation study of the Newey-West and Prais-Winsten methods}. 
+Preprint. Research Square. 
+
+{phang}
+------. 2026.
+{browse "https://arxiv.org/abs/2603.24814": Multiple-group (controlled) interrupted time series analysis with higher-order autoregressive errors: A simulation study comparing Newey–West and Prais–Winsten methods}. 
+Preprint. arXiv 
 
 
-{marker citation}{title:Citation of {cmd:itsadgp}}
+
+{title:Citation of {cmd:itsadgp}}
 
 {p 4 8 2}{cmd:itsadgp} is not an official Stata command. It is a free contribution
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden A. (2025). ITSADGP: Stata module to generate artificial data for interrupted time-series analysis.
+Linden A. (2025). ITSADGP: Stata module to generate artificial data for interrupted time-series analysis. Statistical Software Components S459403, Boston College Department of Economics.
 
 
 
@@ -190,7 +270,7 @@ Linden A. (2025). ITSADGP: Stata module to generate artificial data for interrup
 
 {pstd}Ariel Linden{p_end}
 {pstd}Linden Consulting Group, LLC{p_end}
-{pstd}{browse "mailto:alinden@lindenconsulting.org":alinden@lindenconsulting.org}{p_end}
+{pstd}alinden@lindenconsulting.org{p_end}
        
  
-{p 7 14 2}Help: {helpb itsa} (if installed) {p_end}
+{p 7 14 2}Help: {helpb itsa} (if installed), {helpb power_itsa} (if installed) {p_end}

@@ -1,0 +1,67 @@
+VERSION 16.0
+POSITION . . 620 220
+
+CANCEL can1, label("Close")
+HELP   hlp1, view("help midas_binsse")
+RESET  res1
+COPY   copy1
+SUBMIT sub1, label("Submit")
+
+DIALOG main, title("MIDAS -- binsse: Small Study Effects")
+BEGIN
+    GROUPBOX gb_v  10  10 600  90, label("2x2 table variables")
+    TEXT    tx_tp  20  30  60 ., label("TP:")
+    VARNAME vn_tp  20  46 130 .
+    TEXT    tx_fp 170  30  60 ., label("FP:")
+    VARNAME vn_fp 170  46 130 .
+    TEXT    tx_fn 320  30  60 ., label("FN:")
+    VARNAME vn_fn 320  46 130 .
+    TEXT    tx_tn 470  30  60 ., label("TN:")
+    VARNAME vn_tn 470  46 130 .
+
+    GROUPBOX gb_m  10 110 600  70, label("Method (required)")
+    TEXT     tx_mt  20 130 130 ., label("Method:")
+    COMBOBOX cb_mt 160 128 220 ., dropdownlist contents(mlist) values(mvals) option(method)
+    TEXT     tx_id 395 130 100 ., label("ID variable(s):")
+    VARLIST  vl_id 500 128  90 ., option(id)
+
+    GROUPBOX gb_p  10 190 600  50, label("Plot options")
+    CHECKBOX ck_fun  20 210 150 ., label("Funnel plot")   option(funnel)
+    CHECKBOX ck_reg 185 210 160 ., label("Regression plot") option(regplot)
+END
+
+LIST mlist
+BEGIN
+    Deeks (DOR vs 1/rootESS)
+    Harbord (modified Egger)
+    Macaskill
+    Peters
+    Sterne
+    Rucker (arcsine)
+    Egger
+    Stanley (meta-significance)
+END
+
+LIST mvals
+BEGIN
+    d
+    h
+    m
+    p
+    s
+    r
+    e
+    t
+END
+
+PROGRAM command
+BEGIN
+    put "midas binsse "
+    put main.vn_tp " " main.vn_fp " " main.vn_fn " " main.vn_tn
+    beginoptions
+        optionarg main.cb_mt
+        optionarg main.vl_id
+        option main.ck_fun
+        option main.ck_reg
+    endoptions
+END

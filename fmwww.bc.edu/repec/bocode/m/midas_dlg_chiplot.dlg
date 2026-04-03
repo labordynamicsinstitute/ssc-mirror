@@ -1,0 +1,27 @@
+VERSION 16.0
+POSITION . . 560 160
+
+CANCEL can1, label("Close")
+HELP   hlp1, view("help midas_chiplot")
+RESET  res1
+COPY   copy1
+SUBMIT sub1, label("Submit")
+
+DIALOG main, title("MIDAS -- chiplot: Bivariate Association Chi-Plot")
+BEGIN
+    GROUPBOX gb_v  10  10 540  90, label("2x2 table variables")
+    TEXT    tx_tp  20  30  60 ., label("TP:")
+    VARNAME vn_tp  20  46 110 .
+    TEXT    tx_fp 145  30  60 ., label("FP:")
+    VARNAME vn_fp 145  46 110 .
+    TEXT    tx_fn 270  30  60 ., label("FN:")
+    VARNAME vn_fn 270  46 110 .
+    TEXT    tx_tn 395  30  60 ., label("TN:")
+    VARNAME vn_tn 395  46 110 .
+END
+
+PROGRAM command
+BEGIN
+    put "midas chiplot "
+    put main.vn_tp " " main.vn_fp " " main.vn_fn " " main.vn_tn
+END

@@ -1,4 +1,5 @@
 {smcl}
+{* 01Apr2026}{...}
 {* 10Feb2026}{...}
 {* 19Sep2025}{...}
 {* 31Jul2025}{...}
@@ -34,7 +35,8 @@
 
 {p 8 12 2}
 {cmd:itsa} {depvar} [{indepvars}] {ifin} {weight}{cmd:,}
-{cmdab:trp:eriod(}{it:{help datetime:datelist}}{cmd:)} 
+{cmdab:trp:eriod(}{it:{help datetime:datelist}}{cmd:)}
+{cmdab:lag(#)} 
 [{it:options}] 
 
 
@@ -49,13 +51,13 @@ must be declared. See {helpb tsset}.
 {synopthdr}
 {synoptline}
 {p2coldent:* {opt trp:eriod}{cmd:(}{it:{help datetime:datelist}}{cmd:)}}specify the time period(s) when the intervention begins (e.g. {cmd:trperiod(2020)} or {cmd:trperiod(2001q2)} or {cmd:trperiod(21jan2020 ; 08feb2020)})  {p_end}
+{p2coldent:* {opt lag}{cmd:(#)}}specify the maximum lag to be considered when a glm model with Newey-West standard errors is estimated{p_end}
 {synopt:{opt sing:le}}indicates that {cmd:itsa} will be used for a single-group analysis {p_end}
 {synopt:{opt treat:id}{cmd:(#)}}specify the treated unit's identifier. Not required when only the treated unit is in the data 
 and {cmd:single} is specified {p_end}
 {synopt:{opt cont:id}{cmd:({it:{help numlist:numlist}}})}specify a list of identifiers to be used as control units in the multiple-group analysis; default is to use all{p_end}
 {synopt:{opt contid2}{cmd:({it:{help numlist:numlist}}})}specify a list of identifiers to be used as a second set of control units in a triple difference analysis (DDD-ITSA) {p_end}
-{synopt:{opt prais}}fit a {helpb prais} model. Default is to fit a {helpb glm} model with Newey-West standard errors {p_end}
-{synopt:{opt lag}{cmd:(#)}}specify the maximum lag to be considered when a glm model with Newey-West standard errors is estimated{p_end}
+{synopt:{opt praisk}}fit a {helpb praisk} model. Default is to fit a {helpb glm} model with Newey-West standard errors {p_end}
 {synopt:{opt fig:ure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]}produce an interrupted time-series plot. Specifying {cmd:figure} without options uses the default 
 graph settings {p_end}
 {synopt:{opt low:ess}}plot a lowess smoothed line of {it:depvar} on {it:timevar} on the figure{p_end}
@@ -68,9 +70,9 @@ graph settings {p_end}
 {synopt:{opt posttr:end}}produce post-intervention trend estimates using {helpb lincom}, for the specified model {p_end}
 {synopt:{opt repl:ace}}replace variables created by {cmd:itsa} if they already exist {p_end}
 {synopt:{opt pre:fix}{cmd:(}{it:string}{cmd:)}}add a prefix to the names of variables created by {cmd:itsa}. Short prefixes are recommended {p_end}
-{synopt:[{it:model_options}]}specify all available options for {helpb prais} or {helpb glm}, depending on model chosen {p_end}
+{synopt:[{it:model_options}]}specify all available options for {helpb praisk} or {helpb glm}, depending on model chosen {p_end}
 {synoptline}
-{p 4 6 2}* {opt trperiod()} is required. {p_end}
+{p 4 6 2}* {opt trperiod()} and {opt lag()} are required. {p_end}
 {pstd}
 {it:indepvars} may contain factor variables; see {helpb fvvarlist}.{p_end}
 {pstd}
@@ -79,7 +81,7 @@ graph settings {p_end}
 {opt aweight}s are allowed with the {cmd:glm} option; see {helpb weight}. {p_end}
 {pstd}
 See {manhelp glm_postestimation R:glm postestimation} and 
-{manhelp prais_postestimation TS:prais postestimation} for features available after estimation.{p_end}
+{helpb praisk} for features available after estimation.{p_end}
 {p2colreset}{...}
 
 
@@ -99,9 +101,9 @@ Shadish, Cook, and Campbell 2002).
 {cmd:itsa} is a wrapper program for {helpb glm} by default, and produces
 Newey-West standard errors to adjust for an error structure that is assumed 
 to be heteroskedastic and possibly autocorrelated up to some user-defined lag.
-It can optionally be a wrapper for {helpb prais}, which uses the generalized 
+It can optionally be a wrapper for {helpb praisk}, which uses the generalized 
 least-squares method to estimate the parameters in a linear regression model 
-in which the errors are assumed to follow a first-order autoregressive process.
+in which the errors are assumed to follow a {it:k}-order autoregressive process.
 
 {pstd}
 {cmd:itsa} estimates treatment effects for (1) a single treatment unit
@@ -125,6 +127,10 @@ such as {cmd:trperiod(2020)} for a four-digit year, {cmd:trperiod(2019m11)} for
 monthly data or {cmd:trperiod(20jan2021)} for daily data. Multiple periods 
 may be specified, separated by a semicolon, as {cmd:trperiod(2019m6 ; 2019m11)}; 
 {cmd:trperiod() is required}.
+
+{phang}
+{cmd:lag(}{it:#}{cmd:)} specifies the maximum lag to be considered in the
+autocorrelation structure. {cmd:lag() is required}.
 
 {phang}
 {cmd:single} indicates that {cmd:itsa} will be used for a single-group
@@ -152,16 +158,9 @@ in the same units as the panel variable specified in {cmd:tsset} {it:panelvar}
 {it:timevar}; see {helpb tsset}. 
 
 {phang}
-{cmd:prais} specifies to fit a {helpb prais} model. If {cmd:prais} is
+{cmd:praisk} specifies to fit a {helpb praisk} model. If {cmd:praisk} is
 not specified, {cmd:itsa} will use {helpb glm} with Newey-West standard errors, 
 as the default model.
-
-{phang}
-{cmd:lag(}{it:#}{cmd:)} specifies the maximum lag to be considered in the
-autocorrelation structure when a {cmd:glm} model with Newey-West standard errors 
-is chosen (the default is {cmd:lag(0)}). An error message will appear if 
-both {cmd:prais} and {cmd:lag()} are specified, because {cmd:prais} implements 
-an AR(1) model by design.
 
 {phang}
 {cmd:figure}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}] produces
@@ -421,10 +420,9 @@ Same as above, but we now specify that CIs be presented on the graph instead of 
 {phang3}{bf:{stata "itsa cigsale, single treat(3) trperiod(1989) lag(1) fig posttrend replace ci": . itsa cigsale, single treatid(3) trperiod(1989) lag(1) fig posttrend replace ci}}{p_end}
 
 {pmore}
-Now we specify {cmd:prais} to fit an AR(1) model.  We specify {cmd:rhotype(tscorr)}, which bases p on the autocorrelation of the
-residuals, and compute robust standard errors. We also add CIs and a lowess smoother to the graph
+Now we specify {cmd:praisk} to fit an AR(1) model and compute robust standard errors. We also add CIs and a lowess smoother to the graph
 
-{phang3}{bf:{stata "itsa cigsale, single treatid(3) trperiod(1989) posttr replace prais rhotype(tscorr) vce(robust) fig ci low":. itsa cigsale, single treatid(3) trperiod(1989) posttr replace prais rhotype(tscorr) vce(robust) fig ci low}} {p_end}
+{phang3}{bf:{stata "itsa cigsale, single treatid(3) trperiod(1989) posttr replace praisk lag(1) vce(robust) fig ci low":. itsa cigsale, single treatid(3) trperiod(1989) posttr replace praisk lag(1) vce(robust) fig ci low}} {p_end}
 
 {pmore}
 Here we specify two treatment periods and shade the area between them, starting in 1982 and 1989 and specify
@@ -461,7 +459,7 @@ Same as above, but we add CIs and lowess smoother to the graph.
 {pmore}
 Here we specify the ITSA model using weights described in Abadie et al. (2010) as {opt aweights} and estimate the weighted model. We also add a lowess smoother to the graph.
 
-{phang3}{bf:{stata "itsa cigsale [aw=weights], treatid(3) trperiod(1989) replace figure(xlabel(1970(5)2000)) posttrend low": . itsa cigsale [aw=weights], treatid(3) trperiod(1989) replace figure(xlabel(1970(5)2000)) posttrend low}}{p_end}
+{phang3}{bf:{stata "itsa cigsale [aw=weights], treatid(3) trperiod(1989) replace lag(1) figure(xlabel(1970(5)2000)) posttrend low": . itsa cigsale [aw=weights], treatid(3) trperiod(1989) replace lag(1) figure(xlabel(1970(5)2000)) posttrend low}}{p_end}
 
 {pmore}
 We now indicate specific control groups to use in the analysis that were identified using {helpb itsamatch}. We add a lowess smoother to the graph
@@ -471,17 +469,17 @@ We now indicate specific control groups to use in the analysis that were identif
 {pmore}
 We now use the rescaled binary [0,1] version of the outcome ({opt cigsale_scaled}) with the best single match identified using {helpb itsamatch}. We also add a lowess smoother to the graph.
 
-{phang3}{bf:{stata "itsa cigsale_scaled, trperiod(1989) treatid(3) contid(23) replace posttrend f(binomial) fig low": . itsa cigsale_scaled, trperiod(1989) treatid(3) contid(23) replace posttrend f(binomial) fig low}}
+{phang3}{bf:{stata "itsa cigsale_scaled, trperiod(1989) treatid(3) lag(1) contid(23) replace posttrend f(binomial) fig low": . itsa cigsale_scaled, trperiod(1989) treatid(3) lag(1) contid(23) replace posttrend f(binomial) fig low}}
 
 {pmore}
 Now we use the rescaled count version of the outcome ({opt cigsale_count}) with matches identified using {helpb itsamatch}. We also add CIs to the graph.
 
-{phang3}{bf:{stata "itsa cigsale_count, trperiod(1989) treatid(3) contid(4 8 19) replace posttrend f(poisson) fig ci": . itsa cigsale_count, trperiod(1989) treatid(3) contid(4 8 19) replace posttrend f(poisson) fig ci}}
+{phang3}{bf:{stata "itsa cigsale_count, trperiod(1989) treatid(3) lag(1) contid(4 8 19) replace posttrend f(poisson) fig ci": . itsa cigsale_count, trperiod(1989) treatid(3) lag(1) contid(4 8 19) replace posttrend f(poisson) fig ci}}
 
 {pmore}
 Here we add a covariate {cmd:retprice} to the model and specify that estimates be computed at the 99% level. We also add CIs to the graph. One can see that, with the addition of covariates, the estimates are no longer linear.   
 
-{phang3}{bf:{stata "itsa cigsale retprice, treatid(3) trperiod(1989) replace fig posttrend ci level(99)": . itsa cigsale retprice, treatid(3) trperiod(1989) replace fig posttrend ci level(99)}}{p_end}
+{phang3}{bf:{stata "itsa cigsale retprice, treatid(3) trperiod(1989) lag(1) replace fig posttrend ci level(99)": . itsa cigsale retprice, treatid(3) trperiod(1989) lag(1) replace fig posttrend ci level(99)}}{p_end}
 
 {pmore}
 Here we specify two treatment periods and shade the area between them on the graph. We also add CIs and lowess smoother.
@@ -640,8 +638,24 @@ Using permutation tests to enhance causal inference in interrupted time series a
 {it:Evaluation & the Health Professions} 
 
 {phang}
-------. 2026. Power considerations for multiple-group (controlled) interrupted time series analysis: A comprehensive simulation Study.
+------. 2026. 
+{browse "https://journals.sagepub.com/doi/10.1177/01632787261428159?int.sj-abstract.similar-articles.4": Power considerations for multiple-group (controlled) interrupted time series analysis: A comprehensive simulation Study}.
 {it:Evaluation & the Health Professions} 
+
+{phang}
+------. 2026. 
+{browse "https://doi.org/10.21203/rs.3.rs-8865851/v1": Adjustment for autocorrelation in multiple-group (controlled) interrupted time series analysis and its effect on power: A simulation study of the Newey-West and Prais-Winsten methods}. 
+Preprint. Research Square. 
+
+{phang}
+------. 2026.
+{browse "https://arxiv.org/abs/2603.24814": Multiple-group (controlled) interrupted time series analysis with higher-order autoregressive errors: A simulation study comparing Newey–West and Prais–Winsten methods}. 
+Preprint. arXiv 
+
+{phang}
+------. 2026.
+{browse "https://doi.org/10.48550/arXiv.2603.17281": Improving causal inference in interrupted time series analysis: the triple difference design}. 
+Preprint. arXiv
 
 {phang} 
 Linden, A., and J. L. Adams. 2011. 
@@ -699,5 +713,5 @@ Simonton, D. K. 1977b. Erratum to Simonton. {it:Psychological Bulletin}
                     {it:Stata Journal}, volume 15, number 2: {browse "http://www.stata-journal.com/article.html?article=st0389":st0389}
 
 
-{p 7 14 2}Help: {helpb glm}, {helpb newey}, {helpb prais}, {helpb actest} (if installed), {helpb itsamatch} (if installed), {helpb itsaperm} (if installed), 
+{p 7 14 2}Help: {helpb glm}, {helpb newey}, {helpb praisk} (if installed), {helpb actest} (if installed), {helpb itsamatch} (if installed), {helpb itsaperm} (if installed), 
 {helpb power_itsa} (if installed), {helpb xtitsa} (if installed) {p_end}

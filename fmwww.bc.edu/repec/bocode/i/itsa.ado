@@ -1,4 +1,4 @@
-*! 4.0.0 Ariel Linden 10Feb2026						// added tripple difference (DDD-ITSA) model (treatment vs control1 and control2)
+*! 1.0.0 Ariel Linden 12Mar2026						// replaced prais with praisk; lag() required with no default
 *! 3.7.0 Ariel Linden 12Jan2026						// streamlined graphing section of MG-ITSA. Now when xvar is specified, graph will be consistent with SG-ITSA
 *! 3.6.2 Ariel Linden 06Jan2026						// fixed bug in multigroup graph with xvars without CI.
 *! 3.6.1 Ariel Linden 16Dec2025						// fixed CI lines on graphs to consistently display as solid lines
@@ -49,12 +49,12 @@ version 11.0
 
 	syntax varlist(min=1 numeric ts fv) [if] [in] [aweight] ,	/// weight only relevant for -newey-
 	TRPeriod(string)											///	when the intervention began
+	LAG(string)													/// lag order: >= 0 for newey; >= 1 for praisk
 	[ TREATid(numlist min=1 max=1 int sort)						/// the ID of the treated unit
 	SINGle														/// specify single group ITSA
 	CONTid(numlist int sort)									/// IDs of controls (type 3: MG-ITSA)
 	CONTid2(numlist int sort)									/// IDs of second set of controls for type 4 (DDD-ITSA)
-	LAG(int -1)													/// lag only relevant for -newey-
-	PRAIS														/// estimate Prais-Winsten model
+	PRAISK														/// estimate Prais(k) model
     POSTTRend													/// produce post-trend estimates
 	FIGure   FIGure2(str asis)									/// generate figure
 	SHADe(string)												/// shading area of graph (for wash-out)
@@ -67,18 +67,26 @@ version 11.0
 	NAT(int 5)													/// UNDOCUMENTED change _natscale #_n (for shade())
 	REPLace PREfix(str) *]
 
-	if "`exp'" != "" & "`prais'" != "" {
-		di as err "weights may not be specified with prais option"
+	if "`exp'" != "" & "`praisk'" != "" {
+		di as err "weights may not be specified with praisk option"
 		exit 101
 	}
 
-	if "`prais'" != "" {
-		if `lag' != -1 {
-			di as err "lag() may not be specified with prais option"
-			exit 198
-		}
+	* validate lag(): required for both models; must be >= 1 for praisk, >= 0 for newey
+	capture confirm integer number `lag'
+	if _rc {
+		di as err "lag() must be a non-negative integer"
+		exit 198
 	}
-	else if `lag' == -1 local lag 0
+	local lag = int(`lag')
+	if "`praisk'" != "" & `lag' < 1 {
+		di as err "lag() must be >= 1 when praisk is specified"
+		exit 198
+	}
+	if `lag' < 0 {
+		di as err "lag() must be a non-negative integer"
+		exit 198
+	}
 
 	gettoken dvar1 xvar : varlist
 
@@ -368,10 +376,10 @@ version 11.0
 
 		}  // end quietly
 	
-		/* run Prais or Newey regression */
+		/* run Praisk or Newey regression */
 		tsset
-		if "`prais'" != "" {
-			prais `dvar' `rhs' `xvar' if `touse' , `options'
+		if "`praisk'" != "" {
+			praisk `dvar' `rhs' `xvar' if `touse' , lag(`lag') `options'
 			/* create matrix of r(table) to ensure it is available */
 			matrix table = r(table)
 			
@@ -391,7 +399,7 @@ version 11.0
 			}
 			local itsavars `dvar' `rhs' `prefix'_s_`dvar1'_pred
 			char def _dta[`prefix'_itsavars] "`itsavars'"
-		} // end prais
+		} // end praisk
 		/* run a GLM model */
 		else {
 			* first run is to get values for vfactor
@@ -566,8 +574,8 @@ version 11.0
 			if `"`ydesc'"' == "" local ydesc "`dvar1'"
 			local tdesc : var label `tvar'
 			if `"`tdesc'"' == "" local tdesc "`tvar'"
-			if "`prais'" !="" {
-				local note "Prais-Winsten and Cochrane-Orcutt regression - lag(1)"
+			if "`praisk'" !="" {
+				local note "Prais-Winsten AR(`lag') regression"
 			}
 			else {
 				local note "GLM model: family(`e(varfunct)'), link(`e(linkt)') with Newey-West standard errors - lag(`lag')"
@@ -794,10 +802,10 @@ version 11.0
 
 		} // end quietly
 
-		/* run Prais or GLM (Newey) regression */
+		/* run Praisk or GLM (Newey) regression */
 		tsset
-		if "`prais'" != "" {
-			prais `dvar' `rhs' `xvar' if `touse' & `pvar'==`treatid' , `options'
+		if "`praisk'" != "" {
+			praisk `dvar' `rhs' `xvar' if `touse' & `pvar'==`treatid' , lag(`lag') `options'
 			/* create matrix of r(table) to ensure it is available */
 			matrix table =r(table)
 			
@@ -818,7 +826,7 @@ version 11.0
 			local itsavars `dvar' `rhs' `prefix'_s_`dvar1'_pred
 			char def _dta[`prefix'_itsavars] "`itsavars'"
 		
-		} // end prais
+		} // end praisk
 		/* GLM */
 		else {
 			* first run is to get values for vfactor
@@ -998,8 +1006,8 @@ version 11.0
 			local treatdesc: label ( `pvar' )  `treatid'
 			if "`treatdesc'" == "" local treatdesc "Treated"
 
-			if "`prais'" !="" {
-				local note "Prais-Winsten and Cochrane-Orcutt regression - lag(1)"
+			if "`praisk'" !="" {
+				local note "Prais-Winsten AR(`lag') regression"
 			}
 			else {
 				local note "GLM model: family(`e(varfunct)'), link(`e(linkt)') with Newey-West standard errors - lag(`lag')"
@@ -1228,10 +1236,10 @@ version 11.0
 			} /* end trperiod */
 		} //end quietly
 
-		/* run Prais or Newey regression */
+		/* run Praisk or Newey regression */
 		tsset
-		if "`prais'" != "" {
-			prais `dvar' `rhs' `xvar' if `touse' `if2' , `options'
+		if "`praisk'" != "" {
+			praisk `dvar' `rhs' `xvar' if `touse' `if2' , lag(`lag') `options'
 			/* create matrix of r(table) to ensure it is available for -itsamatch- */
 			matrix table =r(table)
 			
@@ -1256,7 +1264,7 @@ version 11.0
 		local clv `r(level)'
 		local cil `=length("`clv'")'
 		
-		/* generating CI values depending on whether the model was prais or GLM */
+		/* generating CI values depending on whether the model was praisk or GLM */
 		if "`ci'" == "" {
 			quietly predictnl `prefix'_m_`dvar'_pred = predict() if e(sample)
 			local itsavars `dvar' `rhs' `prefix'_m_`dvar'_pred
@@ -1264,7 +1272,7 @@ version 11.0
 		}
 		else {
 			tempvar lcl ucl
-			if "`prais'" != "" {
+			if "`praisk'" != "" {
 				quietly predictnl `prefix'_m_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl')  df(`e(df_r)') level(`clv')	
 			}
 			else {
@@ -1378,8 +1386,8 @@ version 11.0
 			local treatdesc: label (`pvar')  `treatid'
 			if "`treatdesc'" == "" local treatdesc "Treated"
 
-			if "`prais'" !="" {
-				local note "Prais-Winsten and Cochrane-Orcutt regression - lag(1)"
+			if "`praisk'" !="" {
+				local note "Prais-Winsten AR(`lag') regression"
 			}
 			else {
 				local note "GLM model: family(`e(varfunct)'), link(`e(linkt)') with Newey-West standard errors - lag(`lag')"
@@ -1745,9 +1753,9 @@ version 11.0
 		} // end quietly
 
 		tsset
-		// prais model
-		if "`prais'" != "" {
-			prais `dvar' `rhs' `xvar' if `touse' `if2' , `options'
+		// praisk model
+		if "`praisk'" != "" {
+			praisk `dvar' `rhs' `xvar' if `touse' `if2' , lag(`lag') `options'
 			matrix table =r(table)
 			local z_t t
 			local z_t_p P>|t|				
@@ -1772,7 +1780,7 @@ version 11.0
 		}
 		else {
 			tempvar lcl ucl
-			if "`prais'" != "" {
+			if "`praisk'" != "" {
 				quietly predictnl `prefix'_m_`dvar'_pred = predict() if e(sample), ci(`lcl' `ucl')  df(`e(df_r)') level(`clv')	
 			}
 			else {
@@ -1952,8 +1960,8 @@ version 11.0
 			if `"`tdesc'"' == "" local tdesc "`tvar'"
 			local treatdesc: label (`pvar')  `treatid'
 			if "`treatdesc'" == "" local treatdesc "Treated"
-			if "`prais'" !="" {
-				local note "Prais-Winsten and Cochrane-Orcutt regression - lag(1)"
+			if "`praisk'" !="" {
+				local note "Prais-Winsten AR(`lag') regression"
 			}
 			else {
 				local note "GLM model: family(`e(varfunct)'), link(`e(linkt)') with Newey-West standard errors - lag(`lag')"

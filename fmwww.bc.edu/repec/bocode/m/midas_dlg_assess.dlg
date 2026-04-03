@@ -1,0 +1,114 @@
+/*
+  midas_dlg_assess.dlg — Pre-model diagnostic assessment
+  Version 1.0.0  30mar2026
+  Author: Ben Adarkwa Dwamena, MD
+*/
+
+VERSION 16.0
+
+POSITION . . 440 340
+
+DIALOG main, title("MIDAS — Pre-Model Diagnostic Assessment")
+BEGIN
+  TEXT     tx_header  10  10 420  ., label("midas assess — Traffic-light diagnostic battery")
+
+  GROUPBOX gb_vars   10  35 420  55, label("Variables (4 required: tp fp fn tn)")
+  VARLIST  vl_vars    20  55 400  ., label("tp fp fn tn")
+
+  GROUPBOX gb_opts   10 100 420 145, label("Options")
+  TEXT     tx_id      20 120  80  ., label("Study ID:")
+  VARNAME  vn_id     105 120 140  .
+
+  TEXT     tx_cc     260 120  40  ., label("CC:")
+  EDIT     ed_cc     305 120  60  ., default("0.5") numonly                     ///
+           tooltip("Continuity correction for zero cells")
+
+  TEXT     tx_cut     20 150  80  ., label("Cutoff:")
+  EDIT     ed_cut    105 150  60  ., default("7") numonly                       ///
+           tooltip("Outer ellipse cutoff multiplier for outlier detection")
+
+  TEXT     tx_link   260 150  40  ., label("Link:")
+  COMBOBOX cb_link   305 150 100  ., dropdownlist                              ///
+           contents(link_list) values(link_vals) default("logit")
+
+  CHECKBOX ck_robust  20 180 120  ., label("Robust")                           ///
+           tooltip("Use biweight M-estimation for centre and scatter")
+  CHECKBOX ck_norm   145 180 120  ., label("Normality test")                   ///
+           tooltip("Mardia's multivariate skewness and kurtosis tests")
+  CHECKBOX ck_bacon  280 180 120  ., label("BACON test")                       ///
+           tooltip("Blocked Adaptive Outlier Nominator (requires ssc install bacon)")
+
+  CHECKBOX ck_nochi   20 210 120  ., label("No chi-plot")
+  CHECKBOX ck_nokend 145 210 120  ., label("No Kendall plot")
+  CHECKBOX ck_nobiv  280 210 120  ., label("No bivbox")
+
+  TEXT     tx_save    20 240  80  ., label("Save graph:")
+  EDIT     ed_save   105 240 260  ., tooltip("Save combined diagnostic plot to file")
+
+  GROUPBOX gb_ifin   10 270 420  35, label("If/In")
+  EDIT     ed_ifin    20 288 400  ., tooltip("Optional if/in restriction")
+END
+
+LIST link_list
+BEGIN
+  logit
+  probit
+  cloglog
+END
+
+LIST link_vals
+BEGIN
+  logit
+  probit
+  cloglog
+END
+
+HELP hlp1, view("help midas_assess")
+OK ok1, label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+
+PROGRAM command
+BEGIN
+  put "midas assess "
+  put main.vl_vars
+  if main.ed_ifin {
+    put " " main.ed_ifin
+  }
+  put ", "
+  if main.vn_id {
+    put "id(" main.vn_id ") "
+  }
+  if !main.ed_cc.isdefault() {
+    put "cc(" main.ed_cc ") "
+  }
+  if !main.ed_cut.isdefault() {
+    put "cutoff(" main.ed_cut ") "
+  }
+  if !main.cb_link.isdefault() {
+    put "link(" main.cb_link ") "
+  }
+  if main.ck_robust {
+    put "robust "
+  }
+  if main.ck_norm {
+    put "normtest "
+  }
+  if main.ck_bacon {
+    put "bacontest "
+  }
+  if main.ck_nochi {
+    put "nochiplot "
+  }
+  if main.ck_nokend {
+    put "nokendall "
+  }
+  if main.ck_nobiv {
+    put "nobivbox "
+  }
+  if main.ed_save {
+    put `"savegraph(""'
+    put main.ed_save
+    put `"")"'
+  }
+END

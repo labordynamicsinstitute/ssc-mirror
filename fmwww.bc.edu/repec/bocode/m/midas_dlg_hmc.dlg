@@ -1,0 +1,125 @@
+VERSION 16.0
+POSITION . . 680 640
+
+CANCEL can1, label("Close")
+HELP   hlp1, view("help midas_hmc")
+RESET  res1
+COPY   copy1
+
+
+DIALOG main, title("MIDAS -- HMC: Bayesian Hamiltonian Monte Carlo via CmdStan")
+BEGIN
+    GROUPBOX gb_v  10  10 660  90, label("2x2 table variables")
+    TEXT    tx_tp  20  30  60 ., label("TP:")
+    VARNAME vn_tp  20  46 140 .
+    TEXT    tx_fp 175  30  60 ., label("FP:")
+    VARNAME vn_fp 175  46 140 .
+    TEXT    tx_fn 330  30  60 ., label("FN:")
+    VARNAME vn_fn 330  46 140 .
+    TEXT    tx_tn 485  30  60 ., label("TN:")
+    VARNAME vn_tn 485  46 140 .
+
+    TEXT    tx_id   10 112 130 ., label("Study ID variable(s):")
+    VARLIST vl_id  150 110 200 ., option(id)
+
+    GROUPBOX gb_p  10 136 660  70, label("Model and covariance (required)")
+    TEXT tx_hmd  20 156 140 ., label("Stan model file:")
+    EDIT ed_hmd 170 154 480 ., option(modelfile)
+    TEXT     tx_hcv  20 180 140 ., label("Covariance prior:")
+    COMBOBOX cb_hcv 170 178 220 ., dropdownlist contents(covlist) values(covvals) option(covariance)
+
+    GROUPBOX gb_s  10 216 660  90, label("Paths and output")
+    TEXT tx_hsd  20 236 140 ., label("CmdStan directory:")
+    EDIT ed_hsd 170 234 480 ., option(standir)
+    TEXT tx_hof  20 260 140 ., label("Output file:")
+    EDIT ed_hof 170 258 480 ., option(outputfile)
+
+    GROUPBOX gb_m  10 316 660 130, label("Sampling settings")
+    TEXT    tx_hch  20 336 130 ., label("Chains:")
+    SPINNER sp_hch 160 334  70 ., min(1) max(16) default(4) option(chains)
+    TEXT    tx_hwm  20 360 130 ., label("Warmup:")
+    SPINNER sp_hwm 160 358  90 ., min(100) max(100000) default(1000) option(warmup)
+    TEXT    tx_hit  20 384 130 ., label("Iterations:")
+    SPINNER sp_hit 160 382  90 ., min(100) max(500000) default(2000) option(iter)
+    TEXT    tx_htn  20 408 130 ., label("Thinning:")
+    SPINNER sp_htn 160 406  70 ., min(1) max(100) default(1) option(thin)
+    TEXT    tx_hse 330 336 100 ., label("Seed:")
+    SPINNER sp_hse 440 334 120 ., min(-1) max(999999) default(-1) option(seed)
+    TEXT    tx_adp 330 360 100 ., label("Adapt delta:")
+    EDIT    ed_adp 440 358  90 ., option(adaptdelta)
+    TEXT    tx_tre 330 384 120 ., label("Max tree depth:")
+    SPINNER sp_tre 460 382  70 ., min(5) max(20) default(10) option(maxtreedepth)
+    TEXT    tx_thr 330 408 110 ., label("Threads (total):")
+    SPINNER sp_thr 450 406  70 ., min(-1) max(64) default(-1) option(threads)
+
+    GROUPBOX gb_o  10 456 660  60, label("Output options")
+    CHECKBOX ck_cnv  20 476 180 ., label("Convergence stats") option(convergestats)
+    CHECKBOX ck_shc 215 476 150 ., label("Show Stan code")    option(showcode)
+    CHECKBOX ck_log 375 476 160 ., label("Show CmdStan log")  option(log)
+    CHECKBOX ck_var 540 476 120 ., label("Variational")       option(variational)
+
+    GROUPBOX gb_d  10 526 660  50, label("Display options")
+    CHECKBOX ck_het  20 546 180 ., label("Heterogeneity stats") option(hetstats)
+    CHECKBOX ck_hsr 215 546 180 ., label("HSROC parameters")    option(hsroc)
+    CHECKBOX ck_hpd 400 546 130 ., label("HPD intervals")       option(hpd)
+    TEXT     tx_lev 200 546 130 ., label("Conf level (%):")
+    SPINNER  sp_lev 340 544  60 ., min(50) max(99) default(95) option(level)
+    GROUPBOX gb_rep  10 584 660  40, label("MCMC diagnostic options")
+    CHECKBOX ck_mdg  20 602 200 ., label("MCMC convergence diagnostics") option(moddiag)
+END
+
+OK     ok1,  label("OK")
+SUBMIT sub1, label("Submit")
+
+
+LIST covlist
+BEGIN
+    Inverse Wishart
+    Cholesky
+    Spherical
+    Cholesky-Fisher z
+    Product normal
+    Scaled Inverse Wishart
+    Hierarchical Inverse Wishart
+END
+
+LIST covvals
+BEGIN
+    iwishart
+    cholesky
+    spherical
+    cholefisher
+    product
+    sciwishart
+    hiwishart
+END
+
+PROGRAM command
+BEGIN
+    put "midas hmc "
+    put main.vn_tp " " main.vn_fp " " main.vn_fn " " main.vn_tn
+    beginoptions
+        optionarg main.vl_id
+        optionarg main.cb_hcv
+        optionarg /hidedefault main.ed_hmd
+        optionarg /hidedefault main.ed_hsd
+        optionarg /hidedefault main.ed_hof
+        optionarg /hidedefault main.sp_hch
+        optionarg /hidedefault main.sp_hwm
+        optionarg /hidedefault main.sp_hit
+        optionarg /hidedefault main.sp_htn
+        optionarg /hidedefault main.sp_hse
+        optionarg /hidedefault main.ed_adp
+        optionarg /hidedefault main.sp_tre
+        optionarg /hidedefault main.sp_thr
+        option main.ck_cnv
+        option main.ck_shc
+        option main.ck_log
+        option main.ck_var
+        option main.ck_het
+        option main.ck_hsr
+        option main.ck_hpd
+        optionarg /hidedefault main.sp_lev
+        option main.ck_mdg
+    endoptions
+END

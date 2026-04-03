@@ -1,0 +1,60 @@
+/*
+  midas_dlg_bclust2bin.dlg — Cluster-adjusted data conversion
+  Version 2.0.0  30mar2026
+  Author: Ben Adarkwa Dwamena, MD
+*/
+
+VERSION 16.0
+
+POSITION . . 440 250
+
+DIALOG main, title("MIDAS — Cluster-Adjusted Data")
+BEGIN
+  TEXT     tx_header  10  10 420  ., label("midas bclust2bin — Deflate clustered cell counts by design effect")
+
+  GROUPBOX gb_vars   10  35 420  70, label("Variables (5 required: tp fp fn tn np)")
+  TEXT     tx_vars    20  55 400  .,                                            ///
+           label("tp  fp  fn  tn  np (number of patients/clusters)")
+  VARLIST  vl_vars    20  75 400  ., label("Select 5 variables")
+
+  GROUPBOX gb_opts   10 115 420  80, label("Options")
+  TEXT     tx_id      20 135  80  ., label("Study ID:")
+  VARNAME  vn_id     105 135 120  .
+
+  TEXT     tx_icc    240 135  40  ., label("ICC:")
+  EDIT     ed_icc    285 135  80  ., numonly                                    ///
+           tooltip("Intraclass correlation coefficient (0-1). If blank, estimated from data.")
+
+  TEXT     tx_save    20 165  60  ., label("Save as:")
+  EDIT     ed_save    85 165 200  .,                                            ///
+           tooltip("Optional: save adjusted 2x2 data to file")
+  CHECKBOX ck_rep    295 165  80  ., label("Replace")
+
+  GROUPBOX gb_ifin   10 205 420  35, label("If/In")
+  EDIT     ed_ifin    20 223 400  ., tooltip("Optional if/in restriction")
+END
+
+HELP hlp1, view("help midas_bclust2bin")
+OK ok1, label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+
+PROGRAM command
+BEGIN
+  put "midas bclust2bin "
+  put main.vl_vars
+  if main.ed_ifin {
+    put " " main.ed_ifin
+  }
+  put ", id(" main.vn_id ")"
+  if main.ed_icc {
+    put " icc(" main.ed_icc ")"
+  }
+  if main.ed_save {
+    put " savedata(" main.ed_save
+    if main.ck_rep {
+      put ", replace"
+    }
+    put ")"
+  }
+END

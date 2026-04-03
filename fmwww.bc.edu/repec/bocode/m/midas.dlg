@@ -1,0 +1,104 @@
+/*
+  midas.dlg  -- MIDAS suite launcher
+  Ben A. Dwamena, University of Michigan / BennyBeauBooks
+  version 3.10  30mar2026
+*/
+
+VERSION 16.0
+POSITION . . 310 560
+
+CANCEL can1, label("Close")
+HELP   hlp1, view("help midas")
+
+DIALOG main, title("MIDAS -- Diagnostic Test Accuracy Meta-Analysis")
+BEGIN
+    TEXT tx_est  10  10 290 ., label("Estimation")
+    BUTTON bn_mle  10  28 290 26, label("MLE   -- meqrlogit / Gaussian quadrature") onpush(program open_mle)
+    BUTTON bn_qrs  10  58 290 26, label("QRSIM -- Quasi-random simulation MSL")     onpush(program open_qrsim)
+    BUTTON bn_mh   10  88 290 26, label("MH    -- Bayesian Metropolis-Hastings")     onpush(program open_mh)
+    BUTTON bn_hmc  10 118 290 26, label("HMC   -- Bayesian Hamiltonian Monte Carlo") onpush(program open_hmc)
+    BUTTON bn_inla 10 148 290 26, label("INLA  -- Integrated Nested Laplace")        onpush(program open_inla)
+
+    TEXT tx_post 10 188 290 ., label("Postestimation / Exploratory / Data")
+    BUTTON bn_post 10 206 290 26, label("Postestimation commands")   onpush(program open_post)
+    BUTTON bn_expl 10 236 290 26, label("Exploratory analysis")      onpush(program open_expl)
+    BUTTON bn_data 10 266 290 26, label("Data conversion utilities") onpush(program open_data)
+
+    TEXT tx_dec  10 306 290 ., label("Decision Analysis")
+    BUTTON bn_hsruc 10 324 290 26, label("HSRUC -- Clinical utility curve")  onpush(program open_hsruc)
+
+    TEXT tx_het  10 364 290 ., label("Heterogeneity Investigation")
+    BUTTON bn_subgrp 10 382 290 26, label("Subgroup analysis")  onpush(program open_subgroup)
+    BUTTON bn_mreg   10 412 290 26, label("Meta-regression")    onpush(program open_metareg)
+END
+
+PROGRAM open_mle
+BEGIN
+    put "db midas_dlg_mle"
+    stata
+END
+
+PROGRAM open_qrsim
+BEGIN
+    put "db midas_dlg_qrsim"
+    stata
+END
+
+PROGRAM open_mh
+BEGIN
+    put "db midas_dlg_mh"
+    stata
+END
+
+PROGRAM open_hmc
+BEGIN
+    put "db midas_dlg_hmc"
+    stata
+END
+
+PROGRAM open_inla
+BEGIN
+    put "db midas_dlg_inla"
+    stata
+END
+
+PROGRAM open_post
+BEGIN
+    put "db midas_dlg_post"
+    stata
+END
+
+PROGRAM open_expl
+BEGIN
+    put "db midas_dlg_expl"
+    stata
+END
+
+PROGRAM open_data
+BEGIN
+    put "db midas_dlg_data"
+    stata
+END
+
+PROGRAM open_hsruc
+BEGIN
+    put "db midas_dlg_hsruc"
+    stata
+END
+
+PROGRAM open_subgroup
+BEGIN
+    put "db midas_dlg_subgroup"
+    stata
+END
+
+PROGRAM open_metareg
+BEGIN
+    put "db midas_dlg_metareg"
+    stata
+END
+
+PROGRAM command
+BEGIN
+    put "display " `"""' "Use the buttons above to open a dialog" `"""'
+END

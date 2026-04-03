@@ -1,0 +1,134 @@
+VERSION 16.0
+POSITION . . 680 500
+
+CANCEL can1, label("Close")
+HELP   hlp1, view("help midas_inla")
+RESET  res1
+COPY   copy1
+
+
+DIALOG main, title("MIDAS -- INLA: Integrated Nested Laplace Approximation")
+BEGIN
+    GROUPBOX gb_v  10  10 660  90, label("2x2 table variables")
+    TEXT    tx_tp  20  30  60 ., label("TP:")
+    VARNAME vn_tp  20  46 140 .
+    TEXT    tx_fp 175  30  60 ., label("FP:")
+    VARNAME vn_fp 175  46 140 .
+    TEXT    tx_fn 330  30  60 ., label("FN:")
+    VARNAME vn_fn 330  46 140 .
+    TEXT    tx_tn 485  30  60 ., label("TN:")
+    VARNAME vn_tn 485  46 140 .
+
+    TEXT    tx_id   10 112 130 ., label("Study ID variable:")
+    VARNAME vn_id  150 110 200 ., option(id)
+
+    GROUPBOX gb_p  10 136 660  50, label("R paths (required)")
+    TEXT tx_rp  20 156 130 ., label("R executable:")
+    EDIT ed_rp 160 154 490 ., option(rpath)
+
+    GROUPBOX gb_o  10 196 660  50, label("Working directory")
+    TEXT tx_wd  20 216 130 ., label("Work directory:")
+    EDIT ed_wd 160 214 490 ., option(workdir)
+
+    GROUPBOX gb_m  10 256 660  90, label("Model options")
+    TEXT     tx_icv  20 276 140 ., label("Covariance:")
+    COMBOBOX cb_icv 170 274 200 ., dropdownlist contents(covlist) values(covvals) option(covmatrix)
+    TEXT     tx_iap  20 300 140 ., label("Approximation:")
+    COMBOBOX cb_iap 170 298 200 ., dropdownlist contents(applist) values(appvals) option(approximation)
+    TEXT     tx_iin  20 324 140 ., label("Integration strategy:")
+    COMBOBOX cb_iin 170 322 200 ., dropdownlist contents(intlist) values(intvals) option(integration)
+    TEXT     tx_nip 380 276 130 ., label("Integration points:")
+    SPINNER  sp_nip 520 274  80 ., min(5) max(100) default(20) option(nip)
+    CHECKBOX ck_stb 380 300 170 ., label("Stable mode")       option(stable)
+    CHECKBOX ck_man 380 324 170 ., label("Manual INLA call")  option(manual)
+
+    GROUPBOX gb_d  10 356 660  70, label("Display options")
+    CHECKBOX ck_nohd  20 376 190 ., label("Suppress header")       option(noheader)
+    CHECKBOX ck_nocf  20 400 190 ., label("Suppress coefficients") option(nocoefficients)
+    CHECKBOX ck_het  225 376 180 ., label("Heterogeneity stats")   option(hetstats)
+    CHECKBOX ck_hsr  225 400 180 ., label("HSROC parameters")      option(hsroc)
+    TEXT     tx_lev  430 376 130 ., label("Confidence level (%):")
+    SPINNER  sp_lev  570 374  60 ., min(50) max(99) default(95) option(level)
+    CHECKBOX ck_shw  430 400 160 ., label("Show R code")           option(showcode)
+    GROUPBOX gb_rep  10 414 660  40, label("MCMC diagnostic options")
+    CHECKBOX ck_mdg  20 432 200 ., label("MCMC convergence diagnostics") option(moddiag)
+END
+
+OK     ok1,  label("OK")
+SUBMIT sub1, label("Submit")
+
+
+LIST covlist
+BEGIN
+    Inverse Wishart
+    Cholesky
+    Spherical
+    Cholesky-Fisher z
+    Product normal
+    Scaled Inverse Wishart
+    Hierarchical Inverse Wishart
+END
+
+LIST covvals
+BEGIN
+    iwishart
+    cholesky
+    spherical
+    cholefisher
+    product
+    sciwishart
+    hiwishart
+END
+
+LIST applist
+BEGIN
+    Gaussian (default)
+    Laplace
+    Simplified Laplace
+END
+
+LIST appvals
+BEGIN
+    gaussian
+    laplace
+    simplified.laplace
+END
+
+LIST intlist
+BEGIN
+    Empirical Bayes (default)
+    Central composite design
+    Grid
+    Full Gauss-Hermite
+END
+
+LIST intvals
+BEGIN
+    eb
+    ccd
+    grid
+    gh
+END
+
+PROGRAM command
+BEGIN
+    put "midas inla "
+    put main.vn_tp " " main.vn_fp " " main.vn_fn " " main.vn_tn
+    beginoptions
+            optionarg main.ed_rp
+        optionarg main.ed_wd
+        optionarg /hidedefault main.cb_icv
+        optionarg /hidedefault main.cb_iap
+        optionarg /hidedefault main.cb_iin
+        optionarg /hidedefault main.sp_nip
+        option main.ck_stb
+        option main.ck_man
+        option main.ck_nohd
+        option main.ck_nocf
+        option main.ck_het
+        option main.ck_hsr
+        option main.ck_shw
+        optionarg /hidedefault main.sp_lev
+        option main.ck_mdg
+    endoptions
+END

@@ -2,7 +2,7 @@ d 'ITSA': module to perform interrupted time series analysis for single and mult
 d
 d  itsa estimates the effect of an intervention when the outcome
 d variable is ordered as a time series and a number of observations
-d are available in both preintervention and post intervention
+d are available in both preintervention and postintervention
 d periods. The study design is generally referred to as an
 d interrupted time-series analysis (ITSA) because the intervention
 d is expected to interrupt the level or trend subsequent to its
@@ -11,10 +11,10 @@ d Gottman 1975; Shadish, Cook, and Campbell 2002). itsa is a
 d wrapper program for glm by default, and produces Newey-West
 d standard errors to adjust for an error structure that is assumed
 d to be heteroskedastic and possibly autocorrelated up to some
-d user-defined lag.  It can optionally be a wrapper for prais,
+d user-defined lag.  It can optionally be a wrapper for praisk,
 d which uses the generalized least-squares method to estimate the
 d parameters in a linear regression model in which the errors are
-d assumed to follow a first-order autoregressive process. itsa
+d assumed to follow a k-order autoregressive process. itsa
 d estimates treatment effects for (1) a single treatment unit (with
 d preintervention and postintervention observations), (2) a
 d multiple-group comparison (that is, the single treatment unit is
@@ -28,9 +28,9 @@ d KW: interrupted time series
 d KW: quasi-experimental studies
 d KW: causal inference
 d
-d Requires: Stata version 11
+d Requires: Stata version 14
 d
-d Distribution-Date: 20260227
+d Distribution-Date: 20260402
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
@@ -38,5 +38,8 @@ d
 f itsa.ado
 f itsa.sthlp
 f ../g/glm2.ado
+f ../p/praisk.ado
+f ../p/praisk_p.ado
+f ../p/praisk.sthlp
 f ../c/cigsales.dta
 f ../c/cigsales_single.dta

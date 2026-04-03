@@ -1,0 +1,96 @@
+/*
+  midas_dlg_sforest.dlg — Summary forest plot (post-estimation)
+  Version 1.0.0  30mar2026
+  Author: Ben Adarkwa Dwamena, MD
+*/
+
+VERSION 16.0
+
+POSITION . . 400 280
+
+DIALOG main, title("MIDAS — Summary Forest Plot")
+BEGIN
+  TEXT     tx_header  10  10 380  ., label("midas sforest — Forest plot with pooled summary diamond")
+  TEXT     tx_note    10  28 380  ., label("Requires prior midas mle, mh, hmc, or inla estimation")
+
+  GROUPBOX gb_plot   10  50 380  55, label("Plot Type")
+  COMBOBOX cb_plot    20  70 200  ., dropdownlist                              ///
+           contents(plot_list) values(plot_vals) default("generic")
+  TEXT     tx_pnote  230  72 150  ., label("(generic, ellipse, thick, rain)")
+
+  GROUPBOX gb_opts   10 115 380 120, label("Options")
+  TEXT     tx_level   20 135  50  ., label("Level:")
+  SPINNER  sp_level   75 135  60  ., min(10) max(99) default(95)
+
+  TEXT     tx_ms     150 135  60  ., label("Marker:")
+  EDIT     ed_ms     215 135  50  ., default("0.75") numonly
+
+  TEXT     tx_ts     280 135  40  ., label("Text:")
+  EDIT     ed_ts     325 135  50  ., default("0.75") numonly
+
+  TEXT     tx_ci      20 165  60  ., label("CI method:")
+  COMBOBOX cb_ci      85 165 120  ., dropdownlist                              ///
+           contents(ci_list) values(ci_vals) default("exact")
+
+  CHECKBOX ck_pred    20 195 180  ., label("Prediction interval")              ///
+           tooltip("Display 95% prediction interval from between-study heterogeneity")
+  CHECKBOX ck_ovline 210 195 150  ., label("Overall reference line")
+END
+
+LIST plot_list
+BEGIN
+  Generic
+  Ellipse
+  Thick
+  Rain
+END
+
+LIST plot_vals
+BEGIN
+  generic
+  ellipse
+  thick
+  rain
+END
+
+LIST ci_list
+BEGIN
+  Exact
+  Wilson
+  Wald
+END
+
+LIST ci_vals
+BEGIN
+  exact
+  wilson
+  wald
+END
+
+HELP hlp1, view("help midas_sforest")
+OK ok1, label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+
+PROGRAM command
+BEGIN
+  put "midas sforest, plottype(" main.cb_plot ")"
+  if !main.sp_level.isdefault() {
+    put " level(" main.sp_level ")"
+  }
+  if !main.ed_ms.isdefault() {
+    put " mscale(" main.ed_ms ")"
+  }
+  if !main.ed_ts.isdefault() {
+    put " textscale(" main.ed_ts ")"
+  }
+  if !main.cb_ci.isdefault() {
+    put " cimethod(" main.cb_ci ")"
+  }
+  if main.ck_pred {
+    put " predinterval"
+  }
+  if main.ck_ovline {
+    put " ovline"
+  }
+END

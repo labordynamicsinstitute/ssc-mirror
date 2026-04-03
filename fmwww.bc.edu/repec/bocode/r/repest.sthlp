@@ -39,15 +39,15 @@
 {syntab:Optional}
 {synopt :{bf:by(}{it:{help varname:varname}} [,{it:{help repest##by_options:by_options}}]{bf:)}}produces separate estimates by levels of varname. Averaged results can optionally be requested.{p_end}
 {synopt :{bf:over(}{it:{help varlist:varlist}} [,test]{bf:)}}jointly estimates across levels of {it:{varlist}}.{p_end}
-{synopt :{bf:outfile(}{it:{help filename:filename}} [,{it:{help repest##of_options:of_options}}]{bf:)}}
-saves results to disk.{p_end}
-{synopt :{bf:results(}{it:{help repest##results_options:results_options}}{bf:)}}keep, add, and combine estimation results.{p_end}
+{synopt :{bf:outfile(}{it:{help filename:filename}} [,{it:{help repest##of_options:of_options}}]{bf:)}}saves results to disk.{p_end}
+{synopt :{bf:results(}{it:{help repest##results_options:results_options}}{bf:)}}keeps, adds, and combines estimation results.{p_end}
 {synopt :{bf:display}}displays results in output window.{p_end}
 {synopt :{bf:flag}}flags elements of results which should not be reported.{p_end}
-{synopt :{bf:coverage}}Reports coverage of estimation sample relative to target sample.{p_end}
+{synopt :{bf:coverage}}reports coverage of estimation sample relative to target sample.{p_end}
 {synopt :{bf:{ul:svy}parms(}{it:{help repest##svy_options:svy_options}}{bf:)}}overrides default parameters set by {it:{help repest##svyname:svyname}}.{p_end}
-{synopt :{bf:fast}} when a {help repest##pv:pvvarlist} is specified, computes sampling variance only for the first plausible value. {p_end}
-{synopt :{bf:store(}{it:string}{bf:)}} saves the estimation results stored in e().{p_end}
+{synopt :{bf:senate(}{it:{help varname:varname}}{bf:)}}normalizes weights so their sum is equal to 1 within each levels of {it:{help varname:varname}}.{p_end}
+{synopt :{bf:fast}}when a {help repest##pv:pvvarlist} is specified, computes sampling variance only for the first plausible value. {p_end}
+{synopt :{bf:store(}{it:string}{bf:)}}saves the estimation results stored in e().{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
@@ -261,6 +261,9 @@ Coverage proportions are stored as additional coefficients in e(b).
 suboption {bf:test} is specified within {bf:over}, the coverage reported for the difference corresponds to the lowest coverage of the two. 
 
 {phang}
+{bf:senate(}{it:{help varname:varname}}{bf:)} Normalizes weights so their sum is equal to 1 within each levels of {it:{help varname:varname}}. Useful when the estimation sample includes multiple countries, and each country is expected to contribute equally to the estimation.
+
+{phang}
 {bf:fast} When a {help repest##pv:pvvarlist} is specified, the share of variance accounted for by the sampling error is computed only for the first {bf: plausible value}. This is an unbiased shortcut that makes computation of the variance-covariance matrix faster.
 
 {phang}
@@ -328,6 +331,24 @@ exist in the dataset in use). These parameters can be overridden by values set i
 {p2col:Number of plausible values} 5 {p_end}
 {p2col:Primary sampling unit (for flags)} {bf:IDCNTRY IDCENTRE}{p_end}
 
+{p 10 10 15}{bf:PIAAC}: Programme for the International Assessment of Adult Competencies{p_end}
+{p2line}
+{p2col:Final weight} {bf:spfwt0}{p_end}
+{p2col:Replicate weights} {bf:spfwt1-spfwt80}{p_end}
+{p2col:Variance method*} Jackknife 1, 2, or BRR, depending on {bf:vemethodn}{p_end}
+{p2col:Number of replications} 80 {p_end}
+{p2col:Number of plausible values} 10{p_end}
+
+{p 10 10 15}*The correct estimation of standard errors with PIAAC data is specific to each country and cycle.
+Repest automatically determines the correct variance factor applicable to each estimation sample.
+If the estimation sample includes data from multiple countries or cycles, for which different methods
+should be used, the {bf:jk2_weights} option forces the variance method to be Jackknife 2, and adjusts all replicate 
+weights accordingly. See PIAAC Data Analysis Manual (Box 5.2) (https://doi.org/10.1787/25a87a9d-en). For example:
+
+{p 10 10 15}{cmd:. repest PIAAC, estimate(means PVLIT1) jk2_weights}{p_end}
+
+
+
 {p 10 10 15}{bf:PIRLS}: Progress in International Literacy Study {p_end}
 {p 10 10 15}{bf:TIMSS}: Trends in International Mathematics and Science Study {p_end}
 {p2line}
@@ -341,14 +362,14 @@ exist in the dataset in use). These parameters can be overridden by values set i
 
 
 {asis}
-gen WGT = TOTWGT  	// note: use TOTWGT for student weights, SCHWGT for school weights, MATWGT for math teacher weights, etc.
-  forval i = 1/75 {
-     local j = 75 + `i'
-     gen JR`i' = WGT
-     replace JR`i' = 2*WGT*JKREP if JKZONE == `i'
-     gen JR`j' = WGT
-     replace JR`j' = 2*WGT*(1-JKREP) if JKZONE == `i'
-     }
+        gen WGT = TOTWGT  	// note: use TOTWGT for student weights, SCHWGT for school weights, MATWGT for math teacher weights, etc.
+        forval i = 1/75 {
+            local j = 75 + `i'
+            gen JR`i' = WGT
+            replace JR`i' = 2*WGT*JKREP if JKZONE == `i'
+            gen JR`j' = WGT
+            replace JR`j' = 2*WGT*(1-JKREP) if JKZONE == `i'
+            }
 {smcl}
 
 
@@ -433,21 +454,6 @@ gen WGT = TOTWGT  	// note: use TOTWGT for student weights, SCHWGT for school we
 {p2col:Number of replications} 92 {p_end}
 
 
-{p 10 10 15}{bf:PIAAC}: Programme for the International Assessment of Adult Competencies{p_end}
-{p2line}
-{p2col:Final weight} {bf:spfwt0}{p_end}
-{p2col:Replicate weights} {bf:spfwt1-spfwt80}{p_end}
-{p2col:Variance method*} Jackknife 1 or 2, depending on {bf:vemethodn}{p_end}
-{p2col:Number of replications} 80 {p_end}
-{p2col:Number of plausible values} 10{p_end}
-
-{p 10 10 15}*The correct estimation of standard errors with PIAAC data is done with Jackknife 1 
-(Australia, Austria, Canada, Denmark, Germany) or Jackknife 2 (all other countries). 
-In Jackknife 1, the covariance matrix of replicate estimates is adjusted with a factor equal to 79/80. 
-When Jacknife 1 and 2 country samples are pooled, the adjustment factor is computed as a convex mixture
-of 79/80 and 1, with mixture weights proportional to the share of the sample from Jackknife 1 countries; 
-this share is computed using {bf:spfwt0} weights.
-
 {p 10 10 15}{bf:SVY}: User-defined survey settings (requires option {bf:{ul:svy}parms()}){p_end}
 {p2line}
 {p2col:Final weight} set by suboption {bf:final_weight_name({it:string})} {p_end}
@@ -455,6 +461,7 @@ this share is computed using {bf:spfwt0} weights.
 {p2col:Variance factor} set by suboption {bf:variancefactor(#)}  {p_end}
 {p2col:Number of replications} set by suboption {bf:NREP(#)}  {p_end}
 {p2col:Number of plausible values} set by suboption {bf:NBpv(#)}  {p_end}
+
 
 {bf: User-defined estimation commands}
 {pstd}

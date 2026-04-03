@@ -1,0 +1,30 @@
+VERSION 16.0
+POSITION . . 500 200
+
+CANCEL can1, label("Close")
+HELP   hlp1, view("help midas_lrmat")
+RESET  res1
+COPY   copy1
+
+SUBMIT sub1, label("Submit")
+
+DIALOG main, title("MIDAS -- Likelihood Ratio Matrix")
+BEGIN
+    GROUPBOX gb_p  10  10 480  70, label("Plot options")
+    CHECKBOX ck_wgt  20  30 150 ., label("Weighted")         option(wgt)
+    TEXT     tx_cc   20  54 100 ., label("Continuity corr:")
+    SPINNER  sp_cc  130  52  80 ., min(0) max(1) default(50) option(cc)
+
+    GROUPBOX gb_d  10  90 480  40, label("Display options")
+    TEXT     tx_lev  20 108 130 ., label("Confidence level (%):")
+    SPINNER  sp_lev  160 106  60 ., min(50) max(99) default(95) option(level)
+END
+
+PROGRAM command
+BEGIN
+    put "midas lrmat"
+    beginoptions
+        option main.ck_wgt
+        optionarg /hidedefault main.sp_lev
+    endoptions
+END
