@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.1.0 12Feb2026}{...}
+{* *! version 4.0.0 12Mar2026}{...}
 {* *! version 3.0.0 12Jan2026}{...}
 {* *! version 2.1.0 24Jul2025}{...}
 {* *! version 2.0.0 11June2025}{...}
@@ -23,17 +23,19 @@ Power for a single-group interrupted time series analysis:
 {opth n(numlist)} 
 {opth int:ercept(numlist)}
 {opth post:trend(numlist)}
+{opth rho1(numlist)}
 {opt [} {opth tr:period(numlist)}
 {opth pre:trend(numlist)}
 {opth st:ep(numlist)}
 {opt sd(#)}
-{opth ac:orr(numlist)} 
+{opth rho2(numlist)}
+{opth rho3(numlist)} {p_end}
+{p 12 14 2}
 {opth a:lpha(numlist)}
 {opt lev:el} 
-{opt noi:sily}  {p_end}
-{p 12 14 2}
+{opt noi:sily}
 {opt seed(#)}
-{opt prais}
+{opt praisk}
 {opt perf}
 {opth rep:s(numlist)} {opt ]} 
 
@@ -48,22 +50,25 @@ Power for a multiple-group interrupted time series analysis:
 {opth tpost:trend(numlist)}
 {opth cint:ercept(numlist)}
 {opth cpost:trend(numlist)}
+{opth trho1(numlist)}
+{opth crho1(numlist)}
 {opt [} {opth tr:period(numlist)}
 {opth contc:nt(numlist)}
-{opth tpre:trend(numlist)}  {p_end}
-{p 12 14 2}
+{opth tpre:trend(numlist)}
 {opth tst:ep(numlist)}
 {opt tsd(#)}
-{opth tac:orr(numlist)} 
+{opth trho2(numlist)}
+{opth trho3(numlist)}
 {opth cpre:trend(numlist)}
 {opth cst:ep(numlist)} 
 {opt csd(#)}
-{opth cac:orr(numlist)} 
+{opth crho2(numlist)}
+{opth crho3(numlist)}
 {opth a:lpha(numlist)}
 {opt lev:el} 
 {opt noi:sily}
 {opt seed(#)}
-{opt prais}
+{opt praisk}
 {opt perf}
 {opth rep:s(numlist)} {opt ]} 
 
@@ -80,16 +85,18 @@ In the syntax for {cmd:power multi_itsa}, all options beginning with the letter 
 {p2coldent:* {opth n(numlist)}}total number of time periods in the study{p_end}
 {p2coldent:* {opth int:ercept(numlist)}}intercept, or starting level of the outcome series {p_end}
 {p2coldent:* {opth post:trend(numlist)}}post-intervention trend (slope) {p_end}
+{p2coldent:* {opth rho1(numlist)}}lag 1 AR coefficient. All |rho| values must be < 1{p_end}
 {synopt :{opth tr:period(numlist)}}time period when the intervention is introduced; default is the halfway point in the time series - {cmd:n()}  {p_end}
 {synopt :{opth pre:trend(numlist)}}pre-intervention trend (slope); default is {cmd:pretrend(0)}{p_end}
 {synopt :{opth st:ep(numlist)}}change in the level of the outcome immediately following the introduction of the intervention; default is {cmd:step(0)} {p_end}
 {synopt :{opt sd(#)}}the standard deviation for adding variability in the data; default is {cmd:sd(1)}{p_end}
-{synopt :{opth ac:orr(numlist)}}autocorrelation (rho); default is {cmd:acorr(0)}{p_end}
+{synopt :{opth rho2(numlist)}}lag 2 AR coefficient; requires {cmd:rho1()}{p_end}
+{synopt :{opth rho3(numlist)}}lag 3 AR coefficient; requires {cmd:rho1()} and {cmd:rho2()}{p_end}
 {synopt :{opth a:lpha(numlist)}}significance level; default is {cmd:alpha(0.05)}{p_end}
 {synopt :{opt lev:el}}specify that power is based on a change in level; default is that power is based on a difference in pre- and post-intervention trends{p_end}
 {synopt :{opt noi:sily}}show the simulation progress (dots); default is to suppress the simulation progress (dots) {p_end}
 {synopt :{opt seed(#)}}set random-number seed to {it:#}{p_end}
-{synopt :{opt prais}}fit a {helpb prais} model (and all available model options). Default is to fit a {helpb glm} model with Newey-West standard errors {p_end}
+{synopt :{opt praisk}}fit a {helpb praisk} AR(k) model. The lag order is automatically determined from the number of rho options specified. Default is to fit a {helpb glm} model with Newey-West standard errors {p_end}
 {synopt:{opt perf}}present performance measures in table output {p_end}
 {synopt :{opth rep:s(numlist)}}the number of replications to be performed; default is {cmd:reps(100)} {p_end}
 
@@ -99,20 +106,24 @@ In the syntax for {cmd:power multi_itsa}, all options beginning with the letter 
 {p2coldent:* {opth tpost:trend(numlist)}}treated unit's post-intervention trend (slope) {p_end}
 {p2coldent:* {opth cint:ercept(numlist)}}control's intercept, or starting level of the outcome series {p_end}
 {p2coldent:* {opth cpost:trend(numlist)}}control's post-intervention trend (slope) {p_end}
+{p2coldent:* {opth trho1(numlist)}}treated unit's lag 1 AR coefficient. All |rho| values must be < 1{p_end}
+{p2coldent:* {opth crho1(numlist)}}control's lag 1 AR coefficient. All |rho| values must be < 1{p_end}
 {synopt :{opth tr:period(numlist)}}time period when the intervention is introduced; default is the halfway point in the time series - {cmd:n()}  {p_end}
 {synopt :{opth contc:nt(numlist)}}the number of control units to be generated; default is {cmd:contcnt(1)} {p_end}
 {synopt :{opth tpre:trend(numlist)}}treated unit's pre-intervention trend (slope); default is {cmd:tpretrend(0)}{p_end}
 {synopt :{opth tst:ep(numlist)}}treated unit's change in the level of the outcome immediately following the introduction of the intervention; default is {cmd:tstep(0)} {p_end}
 {synopt :{opt tsd(#)}}the standard deviation for adding variability to the treated unit's data; default is {cmd:tsd(1)}{p_end}
-{synopt :{opth tac:orr(numlist)}}treated unit's autocorrelation (rho); default is {cmd:tacorr(0)}{p_end}
+{synopt :{opth trho2(numlist)}}treated unit's lag 2 AR coefficient; requires {cmd:trho1()}{p_end}
+{synopt :{opth trho3(numlist)}}treated unit's lag 3 AR coefficient; requires {cmd:trho1()} and {cmd:trho2()}{p_end}
 {synopt :{opth pre:trend(numlist)}}control's pre-intervention trend (slope); default is {cmd:cpretrend(0)}{p_end}
 {synopt :{opth st:ep(numlist)}}control's change in the level of the outcome immediately following the introduction of the intervention; default is {cmd:cstep(0)} {p_end}
 {synopt :{opt sd(#)}}the standard deviation for adding variability to the control's data; default is {cmd:csd(1)}{p_end}
-{synopt :{opth ac:orr(numlist)}}control's autocorrelation (rho); default is {cmd:cacorr(0)}{p_end}
+{synopt :{opth crho2(numlist)}}control's lag 2 AR coefficient; requires {cmd:crho1()}{p_end}
+{synopt :{opth crho3(numlist)}}control's lag 3 AR coefficient; requires {cmd:crho1()} and {cmd:crho2()}{p_end}
 {synopt :{opt lev:el}}specify that power is based on changes in level; default is that power is based on differences in pre- and post-intervention trends{p_end}
 {synopt :{opt noi:sily}}show the simulation progress (dots); default is to suppress the simulation progress (dots) {p_end}
 {synopt :{opt seed(#)}}set random-number seed to {it:#}{p_end}
-{synopt :{opt prais}}fit a {helpb prais} model. Default is to fit a {helpb glm} model with Newey-West standard errors {p_end}
+{synopt :{opt praisk}}fit a {helpb praisk} AR(k) model. Default is to fit a {helpb glm} model with Newey-West standard errors {p_end}
 {synopt:{opt perf}}present performance measures in table output {p_end}
 {synopt :{opth rep:s(numlist)}}the number of replications to be performed; default is {cmd:reps(100)} {p_end}
 {synoptline}
@@ -126,14 +137,14 @@ In the syntax for {cmd:power multi_itsa}, all options beginning with the letter 
 {pstd}
 {opt power itsa} computes power for a specified number of time periods {cmd:n()} in a single-group or multiple-group interrupted time series analysis (ITSA), using simulation. 
 For a single-group ITSA, the process involves (1) generating a time series using {helpb itsadgp}, based on the user-inputs replicating the coefficients of a single-group ITSA 
-regression model (see Remarks section below)-- which may include autocorrelation for an autoregressive AR(1) model; (2) estimating a single-group {helpb itsa:ITSA} model using 
-either regression with Newey-West standard errors or Prais-Winsten regression; (3) testing if the difference in pre- and post-intervention trends = 0, or when {cmd:level} is 
-specified, testing if the change in level in the period immediately following introduction of the intervention (compared to the conterfactual) = 0; and (4) repeating this process 
-the number of times specified in {cmd:reps()}. For a multiple-group group ITSA, the process involves (1) generating one time series for the treated unit and one or more time 
-series for the controls, replicating the coefficients of a multiple-group ITSA regression model (see Remarks section below)-- which may include separate autocorrelations for 
-the treated unit and controls; (2) estimating a multiple-group {helpb itsa:ITSA} model using either regression with Newey-West standard errors or Prais-Winsten regression; 
-(3) testing if the difference in differences of the pre- and post-intervention trends = 0, or when {cmd:level} is specified, testing if the differences in the change in level 
-in the period immediately following introduction of the intervention (compared to the conterfactual) = 0; and (4) repeating this process the number of times specified in {cmd:reps()}.
+regression model (see Remarks section below)-- which may include AR(k) autocorrelated errors; (2) estimating a single-group {helpb itsa:itsa} model using 
+either regression with Newey-West standard errors or Prais-Winsten AR(k) regression via {helpb praisk}; (3) testing if the difference in pre- and post-intervention trends = 0, 
+or when {cmd:level} is specified, testing if the change in level in the period immediately following introduction of the intervention (compared to the counterfactual) = 0; and 
+(4) repeating this process the number of times specified in {cmd:reps()}. For a multiple-group group ITSA, the process involves (1) generating one time series for the treated 
+unit and one or more time series for the controls, replicating the coefficients of a multiple-group ITSA regression model (see Remarks section below)-- which may include separate 
+autocorrelations for the treated unit and controls; (2) estimating a multiple-group {helpb itsa:ITSA} model using either regression with Newey-West standard errors or Prais-Winsten 
+regression; (3) testing if the difference in differences of the pre- and post-intervention trends = 0, or when {cmd:level} is specified, testing if the differences in the change in level 
+in the period immediately following introduction of the intervention (compared to the counterfactual) = 0; and (4) repeating this process the number of times specified in {cmd:reps()}.
 
 
 {title:Remarks} 
@@ -233,8 +244,13 @@ default assumes that there is no step change ({cmd:step(0)}).
 {opt sd(#)} the standard deviation used for adding variability to the data in the data generating process. The default is {cmd:sd(1)}.
 
 {p 6 8 2} 
-{opth ac:orr(numlist)} the autocorrelation (rho) of an autoregressive 1 (AR(1)) model. The value(s) specified must be < 1.0. The default 
-is {cmd:acorr(0)} indicating no autocorrelation.
+{opth rho1(numlist)} the lag 1 autoregressive coefficient; {cmd:rho1()} is required. The value(s) specified must satisfy |rho| < 1.
+
+{p 6 8 2} 
+{opth rho2(numlist)} the lag 2 autoregressive coefficient, extending the model to AR(2). Requires {cmd:rho1()} to also be specified.
+
+{p 6 8 2} 
+{opth rho3(numlist)} the lag 3 autoregressive coefficient, extending the model to AR(3). Requires {cmd:rho1()} and {cmd:rho2()} to also be specified.
 
 {p 6 8 2} 
 {opth a:lpha(numlist)} significance level. The default is {cmd:alpha(0.05)}.
@@ -250,14 +266,13 @@ on a difference in pre- and post-intervention trends (Beta_3 in model 1 above).
 {opt seed(#)} sets the random-number seed for the simulations.
 
 {p 6 8 2} 
-{opt prais} fits a {helpb prais} model (with all available model options). If {cmd:prais} is
+{opt praisk} fits a {helpb praisk} AR(k) model (with all available model options). The lag order is automatically determined from the number of rho options specified. If {cmd:praisk} is
 not specified, {cmd:itsa} will use {helpb glm} with Newey-West standard errors, 
 as the default model. 
 
 {p 6 8 2} 
 {opt perf} requests that the following model performance measures be added to the output table: percent bias, root mean squared error, 
 confidence interval coverage, empirical standard errors. The confidence interval coverage will be computed based on the specified alpha level(s). 
-
 
 {p 6 8 2} 
 {opth rep:s(numlist)} specifies the number of replications to be performed. The default is {cmd:reps(100)} but a much higher number of repetitions should
@@ -304,8 +319,13 @@ default assumes that there is no step change ({cmd:tstep(0)}).
 {opt tsd(#)} the standard deviation used for adding variability to treated unit's data in the data generating process. The default is {cmd:tsd(1)}.
 
 {p 6 8 2} 
-{opth tac:orr(numlist)} the treated unit's autocorrelation (rho) of an autoregressive 1 (AR(1)) model. The value(s) specified must be < 1.0. The default 
-is {cmd:tacorr(0)} indicating no autocorrelation.
+{opth trho1(numlist)} the treated unit's lag 1 autoregressive coefficient; {cmd:trho1()} is required. The value(s) specified must satisfy |rho| < 1.
+
+{p 6 8 2}
+{opth trho2(numlist)} the treated unit's lag 2 autoregressive coefficient, extending the model to AR(2). Requires {cmd:trho1()} to also be specified.
+
+{p 6 8 2}
+{opth trho3(numlist)} the treated unit's lag 3 autoregressive coefficient, extending the model to AR(3). Requires {cmd:trho1()} and {cmd:trho2()} to also be specified.
 
 {p 6 8 2} 
 {opth cpre:trend(numlist)} the control's pre-intervention trend (Beta_1, in model 2 above). The default assumes that there is no pre-intervention
@@ -321,8 +341,13 @@ default assumes that there is no step change ({cmd:cstep(0)}).
 should increased with substantially as the number of control units is added via {cmd:contcnt()}.
 
 {p 6 8 2} 
-{opth cac:orr(numlist)} the control's autocorrelation (rho) of an autoregressive 1 (AR(1)) model. The value(s) specified must be < 1.0. The default 
-is {cmd:cacorr(0)} indicating no autocorrelation.
+{opth crho1(numlist)} the control's lag 1 autoregressive coefficient; {cmd:crho1()} is required. The value(s) specified must satisfy |rho| < 1.
+
+{p 6 8 2}
+{opth crho2(numlist)} the control's lag 2 autoregressive coefficient, extending the model to AR(2). Requires {cmd:crho1()} to also be specified.
+
+{p 6 8 2}
+{opth crho3(numlist)} the control's lag 3 autoregressive coefficient, extending the model to AR(3). Requires {cmd:crho1()} and {cmd:crho2()} to also be specified.
 
 {p 6 8 2} 
 {opth a:lpha(numlist)} significance level. The default is {cmd:alpha(0.05)}.
@@ -338,7 +363,7 @@ computed based on a difference in differences of pre- and post-intervention tren
 {opt seed(#)} sets the random-number seed for the simulations.
 
 {p 6 8 2} 
-{opt prais} fits a {helpb prais} model (with all available model options). If {cmd:prais} is
+{opt praisk} fits a {helpb praisk} AR(k) model (with all available model options). The lag order is automatically determined from the number of rho options specified. If {cmd:praisk} is
 not specified, {cmd:itsa} will use {helpb glm} with Newey-West standard errors, 
 as the default model. 
 
@@ -368,24 +393,24 @@ there will be an immediate effect of the intervention, so we set step to 0. In r
 found that the autocorrelation of the time series = 0.20. We set the repetitions to 100, but will increase 
 the reps to {ul:at least 1000} after we have established that the program is producing reasonable results.  {p_end}
 
-{phang2}{cmd:. power single_itsa, n(34) intercept(500) trperiod(17) step(0) posttrend(0.20) acorr(.20) alpha(0.05) reps(100) table(,labels(N "N-periods")) }{p_end}
+{phang2}{cmd:. power single_itsa, n(34) intercept(500) trperiod(17) step(0) posttrend(0.20) rho1(.20) alpha(0.05) reps(100) table(,labels(N "N-periods")) }{p_end}
 
 {pstd}Same as above, but we now add a couple of additional time periods. We {ul:do not} specify {cmd:trperiod()} so that the program
 will use the default halfway point(s) in the time series (specified as {cmd:n}). We also specify {cmd:noisily} to see the progress {p_end}
 
-{phang2}{cmd:. power single_itsa, n(32(2)36) intercept(500) step(0) posttrend(0.20) acorr(.20) alpha(0.05) reps(100) table(,labels(N "N-periods")) noi} {p_end}
+{phang2}{cmd:. power single_itsa, n(32(2)36) intercept(500) step(0) posttrend(0.20) rho1(.20) alpha(0.05) reps(100) table(,labels(N "N-periods")) noi} {p_end}
 
-{pstd}Same as above, but we now specify two autocorrelation values (0.20 and 0.30) and specify that a Prais-Winsten model be computed {p_end}
+{pstd}Same as above, but we now specify an AR(2) model with rho1=0.20 and rho2=0.30 and specify that a Praisk model be computed {p_end}
 
-{phang2}{cmd:. power single_itsa, n(32(2)36) intercept(500) step(0) posttrend(0.20) acorr(.20 .30) alpha(0.05) reps(100) table(,labels(N "N-periods")) noi prais} {p_end}
+{phang2}{cmd:. power single_itsa, n(32(2)36) intercept(500) step(0) posttrend(0.20) rho1(.20) rho2(.30) alpha(0.05) reps(100) table(,labels(N "N-periods")) noi praisk} {p_end}
 
 {pstd}Same as above, but we now graph the results {p_end}
 
-{phang2}{cmd:. power single_itsa, n(32(2)36) intercept(500) step(0) posttrend(0.20) acorr(.20 .30) alpha(0.05) reps(100) table(,labels(N "N-periods")) graph noi prais} {p_end}
+{phang2}{cmd:. power single_itsa, n(32(2)36) intercept(500) step(0) posttrend(0.20) rho1(.20) rho2(.30) alpha(0.05) reps(100) table(,labels(N "N-periods")) graph noi praisk} {p_end}
 
 {pstd}Same as above, but we now add an additional alpha of 0.01 {p_end}
 
-{phang2}{cmd:. power single_itsa, n(32(2)36) intercept(500) step(0) posttrend(0.20) acorr(.20 .30) alpha(0.01 0.05) reps(100) table(,labels(N "N-periods")) graph noi} {p_end}
+{phang2}{cmd:. power single_itsa, n(32(2)36) intercept(500) step(0) posttrend(0.20) rho1(.20) alpha(0.01 0.05) reps(100) table(,labels(N "N-periods")) graph noi} {p_end}
 
 
 {pstd}
@@ -399,20 +424,20 @@ between the actual level and the counterfactual level, in the period immediately
 increase by about 2%, so we specify {cmd:step(2.4)}. Review of past values in the time series suggests that the autocorrelation = 0.1.
 Here we specify the {cmd:level} option to ensure that the coefficient Beta_2 is evaluated.    {p_end}
 
-{phang2}{cmd:. power single_itsa, n(20) intercept(120) trperiod(10) step(2.4) posttrend(0) acorr(.10) alpha(0.05) reps(100) table(,labels(N "N-periods")) level noi}{p_end}
+{phang2}{cmd:. power single_itsa, n(20) intercept(120) trperiod(10) step(2.4) posttrend(0) rho1(.10) alpha(0.05) reps(100) table(,labels(N "N-periods")) level noi}{p_end}
 
 {pstd}Same as above but we now add two additional time periods to evaluate. We {ul:do not} include {cmd:trperiod} as an option to allow the
 program to use the default halfway marks of the time series for the start of the intervention. {p_end}
 
-{phang2}{cmd:. power single_itsa, n(20 22 24) intercept(120) step(2.4) posttrend(0) acorr(.10) alpha(0.05) reps(100) table(,labels(N "N-periods")) level noi}{p_end}
+{phang2}{cmd:. power single_itsa, n(20 22 24) intercept(120) step(2.4) posttrend(0) rho1(.10) alpha(0.05) reps(100) table(,labels(N "N-periods")) level noi}{p_end}
 
 {pstd}Same as above but we now add an alpha of 0.01 and request model performance data. {p_end}
 
-{phang2}{cmd:. power single_itsa, n(20 22 24) intercept(120) step(2.4) posttrend(0) acorr(.10) alpha(0.01 0.05) reps(100) table(,labels(N "N-periods")) level noi perf}{p_end}
+{phang2}{cmd:. power single_itsa, n(20 22 24) intercept(120) step(2.4) posttrend(0) rho1(.10) alpha(0.01 0.05) reps(100) table(,labels(N "N-periods")) level noi perf}{p_end}
 
 {pstd}Same as above, but we now graph the results {p_end}
 
-{phang2}{cmd:. power single_itsa, n(20 22 24) intercept(120) step(2.4) posttrend(0) acorr(.10) alpha(0.01 0.05) reps(100) table(,labels(N "N-periods")) graph level noi}{p_end}
+{phang2}{cmd:. power single_itsa, n(20 22 24) intercept(120) step(2.4) posttrend(0) rho1(.10) alpha(0.01 0.05) reps(100) table(,labels(N "N-periods")) graph level noi}{p_end}
 
 
 {pstd}
@@ -441,8 +466,8 @@ to 30 to account for large variability amongst the control units. We also treat 
 could specify different amounts for treatment and control. Finally, we specify the {opt noisily} option to see the simulation progress:
 
 {phang2}{cmd:. power multi_itsa, n(32(1)42) trperiod(20) contcnt(39) tint(132.2258) tpre(-1.779474) tpost(-3.274126) /// } {p_end}
-{phang3}{cmd: tstep(-20.0581) tsd(2) tacorr(.20) cint(135.4995) cpre(-.5477701) cpost(-1.051279) ///} {p_end}
-{phang3}{cmd: cstep(-17.25168) csd(30) cacorr(.20) reps(1000) noi alpha(0.05)}{p_end}
+{phang3}{cmd: tstep(-20.0581) tsd(2) trho1(.20) cint(135.4995) cpre(-.5477701) cpost(-1.051279) ///} {p_end}
+{phang3}{cmd: cstep(-17.25168) csd(30) crho1(.20) reps(1000) noi alpha(0.05)}{p_end}
 
 {pstd} We see that it will require about 38 time periods (with the intervention introduced at time period 20) for the _z_x_t coefficient to achieve P < 0.05 at around 80% power. 
 
@@ -457,7 +482,7 @@ unit is expected to experience a decreased trend of 2 office visits per week. We
 default treatment period to start at the halfway mark in the time series:
 
 {phang2}{cmd:. power multi_itsa, n(14(1)18) contcnt(10) tint(500) cint(500) tpre(0) cpre(0) tstep(0) cstep(0) tsd(2) csd(8) /// } {p_end}
-{phang3}{cmd: cpost(0) tpost(-2) tacorr(.20) cacorr(.20) reps(1000) noi alpha(0.05) table graph} {p_end}
+{phang3}{cmd: cpost(0) tpost(-2) trho1(.20) crho1(.20) reps(1000) noi alpha(0.05) table graph} {p_end}
 
 {pstd} We see that it will require about 17 weeks for the _z_x_t coefficient to achieve P < 0.05 at about 80% power when the intervention is introduced at the halfway point in the time series.
 
@@ -474,8 +499,8 @@ of 1%. We derive the input values by multiplying the counterfactual by the desir
 controls' step as-is:
 
 {phang2}{cmd:. power multi_itsa, n(31) trperiod(20) contcnt(39) tint(132.2258) tpre(-1.779474) tpost(-3.274126) /// } {p_end}
-{phang3}{cmd: tstep(-24.60 -25.59 -26.57 -27.56 -28.54  -29.52)  tsd(2) tacorr(.20) cint(135.4995) ///} {p_end}
-{phang3}{cmd: cpre(-.5477701) cpost(-1.051279) cstep(-17.25168) csd(6) cacorr(.20) reps(1000) noi alpha(0.05) level}{p_end}
+{phang3}{cmd: tstep(-24.60 -25.59 -26.57 -27.56 -28.54  -29.52)  tsd(2) trho1(.20) cint(135.4995) ///} {p_end}
+{phang3}{cmd: cpre(-.5477701) cpost(-1.051279) cstep(-17.25168) csd(6) crho1(.20) reps(1000) noi alpha(0.05) level}{p_end}
 
 {pstd}The results show that a decrease of about 30% in the treatment group's level (relative to the controls) would produce approximately 80% power to 
 detect a difference at {it:P} < 0.05. 
@@ -492,7 +517,7 @@ of 1 day. We specify 1000 repetitions. Most importantly, we specify the "level" 
 level between the groups. 
 
 {phang2}{cmd:. power multi_itsa, n(10(1)15) contcnt(3) tint(30) cint(30) tpre(0) cpre(0) tstep(15) cstep(0) tsd(2) csd(6) /// } {p_end}
-{phang3}{cmd: cpost(0) tpost(0)  tacorr(.20) cacorr(.20) reps(1000) alpha(0.05) table level noi} {p_end}
+{phang3}{cmd: cpost(0) tpost(0)  trho1(.20) crho1(.20) reps(1000) alpha(0.05) table level noi} {p_end}
 
 {pstd}The results show that it will take about 13 days after activating the prompt (total of 26 days pre- and post-activation) for a 50% increase in the treated office's 
 change in level (relative to controls) to produce statistical significance (at {it:P} < 0.05) with approximately 80% power. 
@@ -515,7 +540,9 @@ change in level (relative to controls) to produce statistical significance (at {
 {synopt:{cmd:r(N)}}computed sample size{p_end}
 {synopt:{cmd:r(onesided)}}1 for a one-sided test, 0 otherwise{p_end}
 {synopt:{cmd:r(reps)}}the number of repetitions{p_end}
-{synopt:{cmd:r(acorr)}}autocorrelation (rho){p_end}
+{synopt:{cmd:r(rho1)}}lag 1 AR coefficient{p_end}
+{synopt:{cmd:r(rho2)}}lag 2 AR coefficient (if specified){p_end}
+{synopt:{cmd:r(rho3)}}lag 3 AR coefficient (if specified){p_end}
 {synopt:{cmd:r(sd)}}specified standard deviation for generating randomness{p_end}
 {synopt:{cmd:r(posttrend)}}specified post-intervention trend{p_end}
 {synopt:{cmd:r(step)}}specified step (change in level){p_end}
@@ -551,13 +578,17 @@ change in level (relative to controls) to produce statistical significance (at {
 {synopt:{cmd:r(contcnt)}}the number of control units{p_end}
 {synopt:{cmd:r(onesided)}}1 for a one-sided test, 0 otherwise{p_end}
 {synopt:{cmd:r(reps)}}the number of repetitions{p_end}
-{synopt:{cmd:r(tacorr)}}treated unit's autocorrelation (rho){p_end}
+{synopt:{cmd:r(trho1)}}treated unit's lag 1 AR coefficient{p_end}
+{synopt:{cmd:r(trho2)}}treated unit's lag 2 AR coefficient (if specified){p_end}
+{synopt:{cmd:r(trho3)}}treated unit's lag 3 AR coefficient (if specified){p_end}
 {synopt:{cmd:r(tsd)}}treated unit's standard deviation for generating variability{p_end}
 {synopt:{cmd:r(tposttrend)}}treated unit's post-intervention trend{p_end}
 {synopt:{cmd:r(tstep)}}treated unit's step (change in level){p_end}
 {synopt:{cmd:r(tpretrend)}}treated unit's pre-intervention trend{p_end}
 {synopt:{cmd:r(tintercept)}}treated unit's intercept (starting level of the time series){p_end}
-{synopt:{cmd:r(cacorr)}}controls' autocorrelation (rho){p_end}
+{synopt:{cmd:r(crho1)}}controls' lag 1 AR coefficient{p_end}
+{synopt:{cmd:r(crho2)}}controls' lag 2 AR coefficient (if specified){p_end}
+{synopt:{cmd:r(crho3)}}controls' lag 3 AR coefficient (if specified){p_end}
 {synopt:{cmd:r(csd)}}controls' standard deviation for generating variability{p_end}
 {synopt:{cmd:r(cposttrend)}}controls' post-intervention trend{p_end}
 {synopt:{cmd:r(cstep)}}controls' step (change in level){p_end}
@@ -604,9 +635,25 @@ Linden, A. 2015.
 22: 231-233. 
 
 {phang}
----------. 2025. 
-{browse "https://journals.sagepub.com/doi/10.1177/01632787251361514":A comprehensive simulation study to evaluate the effect size and study length relationship in single-group interrupted time series analysis}. 
+------. 2025. 
+{browse "https://journals.sagepub.com/doi/10.1177/01632787251361514": A comprehensive simulation study to evaluate the effect size and study length relationship in single-group interrupted time series analysis}. 
 {it:Evaluation & the Health Professions} 
+
+{phang}
+------. 2026. 
+{browse "https://journals.sagepub.com/doi/10.1177/01632787261428159?int.sj-abstract.similar-articles.4": Power considerations for multiple-group (controlled) interrupted time series analysis: A comprehensive simulation Study}.
+{it:Evaluation & the Health Professions} 
+
+{phang}
+------. 2026. 
+{browse "https://doi.org/10.21203/rs.3.rs-8865851/v1": Adjustment for autocorrelation in multiple-group (controlled) interrupted time series analysis and its effect on power: A simulation study of the Newey-West and Prais-Winsten methods}. 
+Preprint. Research Square. 
+
+{phang}
+------. 2026.
+{browse "https://arxiv.org/abs/2603.24814": Multiple-group (controlled) interrupted time series analysis with higher-order autoregressive errors: A simulation study comparing Newey–West and Prais–Winsten methods}. 
+Preprint. arXiv 
+
 
 
 
@@ -616,7 +663,7 @@ Linden, A. 2015.
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden A. (2025). POWER ITSA: Stata module to compute power for single and multiple-group interrupted time series analysis. 
+Linden A. (2026). POWER itsa: Stata module to compute power for single and multiple-group interrupted time series analysis. 
 Statistical Software Components S459461, Boston College Department of Economics. 
 {browse "https://ideas.repec.org/c/boc/bocode/s459461.html":https://ideas.repec.org/c/boc/bocode/s459461.html} 
 
@@ -631,5 +678,5 @@ alinden@lindenconsulting.org{break}
 
 {title:Also see}
 
-{p 4 8 2} Online: {helpb power}, {helpb simulate}, {helpb itsa} (if installed), {helpb itsadgp} (if installed) {p_end}
+{p 4 8 2} Online: {helpb power}, {helpb simulate}, {helpb itsa} (if installed), {helpb itsadgp} (if installed), {helpb praisk} (if installed) {p_end}
 

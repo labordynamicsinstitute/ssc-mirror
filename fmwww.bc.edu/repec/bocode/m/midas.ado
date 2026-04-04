@@ -1,4 +1,5 @@
 *! Ben A. Dwamena: ben@bennybeaubooks.com 
+*! version 3.01 April 3, 2026
 *! version 3.00 March 30, 2026
 *! version 2.00 November 27, 2025
 *! version 1.00 January 31, 2021
@@ -104,6 +105,9 @@
 		else if ("`subcmd'"==bsubstr("metareg", 1, max(5, `l'))) {
 		midas_metareg `0'
 	}
+		else if ("`subcmd'"==bsubstr("het", 1, max(3, `l'))) {
+		midas_het `0'
+	}
 	else {
 				if ("`subcmd'"=="") {
 				di as smcl as err "syntax error"
@@ -111,7 +115,7 @@
 				di as smcl as err ///
 				"{bf:midas} must be followed by a subcommand."
 				di as smcl as err ///
-				"You might type {bf:midas mle}, {bf:midas eforest}, {bf:midas sforest}, {bf:midas hsruc}"
+				"You might type {bf:midas mle}, {bf:midas eforest}, {bf:midas sforest}, {bf:midas het}, {bf:midas hsruc}"
 				di as smcl as err "etc."
 				di as smcl as err "{p_end}"
 				exit 198

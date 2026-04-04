@@ -1,0 +1,33 @@
+d 'XTQRPLOT': module to compute entity-specific marginal effects from panel quantile regression
+d
+d  xtqrplot estimates panel quantile regression across a
+d user-defined grid of quantile windows and produces
+d entity-specific marginal effect visualisations. For each
+d cross-sectional unit, the command identifies its percentile rank
+d in the distribution of the dependent variable, assigns it to the
+d nearest quantile window, extracts the corresponding coefficient,
+d and presents the result as a colour-coded bar chart or matrix
+d heat map with 95% confidence intervals. The package supports both
+d balanced and unbalanced panels, four effect types (raw
+d coefficient, semi-elasticity, elasticity, basis points), three
+d plot types (cross-section, time-dimension, panel x time heat
+d map), pre-estimation normality diagnostics, and automatic results
+d tables. An optional enhanced heat map is available if heatplot
+d (SSC) is installed. 
+d
+d KW: panel data
+d KW: quantile regression
+d KW: marginal effects
+d
+d Requires: Stata version 14 and xtqreg or qregpd from SSC (q.v.)
+d
+d Distribution-Date: 20260403
+d
+d Author: Noman Arshed,   Sunway Business School, Sunway University
+d Support: email nouman.arshed@@gmail.com
+d
+f xtqrplot.ado
+f xtqrplot.sthlp
+f xtqrplot_example.do
+f xtqrplot_test_suite.do
+f xtqrplot_manual.pdf

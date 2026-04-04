@@ -11,9 +11,9 @@ version 11.0
 	syntax varlist(min=1 numeric) [if] [in] [aweight] ,       		/// weight only relevant for -newey-
 	TRPeriod(string)												/// start time of intervention    
 	TREATid(numlist min=1 max=1 int sort)                         	/// ID of actual treated unit
+	LAG(string)														/// lag order: >= 0 for newey; >= 1 for praisk	
 	[ Pr(real 0.05)													/// minimum p-value for balancing covariates
 	MATCHvar(varlist)												/// variables used for matching
-	LAG(int -1)														/// lag only relevant for -newey-
 	PRAIS															///	use -prais- rather than default -newey-
 	NOIsily															/// shows _zxt estimates as they are computed
 	PLOt PLOt2(str asis)											/// generate forest-plot
@@ -46,21 +46,9 @@ version 11.0
 		}
 				
 		/********* validate options ************/
-		if "`exp'" != "" & "`prais'" != "" {
+		if "`exp'" != "" & "`praisk'" != "" {
 			di as err "weights may not be specified with prais option"
 		exit 101
-		}
-	
-		if "`prais'" != "" {
-			if `lag' != -1 {
-				di as err "lag() may not be specified with prais option"
-			exit 198
-			}
-		}
-		else if `lag' == -1 local lag 0
-	
-		if "`pr'" == "" {
-			local pr = 0 
 		}
 	
 		/* Get unique levels of the panel (pvar) variable */
@@ -111,9 +99,9 @@ version 11.0
 		}
 		capture `noisily' {
 			qui replace id = `i' in `r' 
-			qui itsamatch `matchvar' if `touse', treatid(`i') trperiod(`trperiod') pr(`pr') lag(`lag') `prais' local(controls) `options'
+			qui itsamatch `matchvar' if `touse', treatid(`i') trperiod(`trperiod') pr(`pr') lag(`lag') `praisk' local(controls) `options'
 			qui	replace idC = "`controls'" in `r'
-			qui itsa `varlist' if `touse', treatid(`i') trperiod(`trperiod') contid(`controls') lag(`lag') `prais' replace `options'
+			qui itsa `varlist' if `touse', treatid(`i') trperiod(`trperiod') contid(`controls') lag(`lag') `praisk' replace `options'
 			lincom _b[_z_x_t`trperiod'] // diff-in-diffs
 		
 		quietly {

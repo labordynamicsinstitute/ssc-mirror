@@ -1,104 +1,174 @@
 /*
-  midas.dlg  -- MIDAS suite launcher
-  Ben A. Dwamena, University of Michigan / BennyBeauBooks
-  version 3.10  30mar2026
+  midas.dlg
+  Top-level dispatcher dialog for the MIDAS suite
+  Ben Adarkwa Dwamena  2026
+
+  Usage:  db midas
+  Presents a categorised list of MIDAS subcommands.
+  Selecting a command and clicking OK launches its own dialog via db.
 */
 
 VERSION 16.0
-POSITION . . 310 560
 
-CANCEL can1, label("Close")
-HELP   hlp1, view("help midas")
+INCLUDE _std_large
 
-DIALOG main, title("MIDAS -- Diagnostic Test Accuracy Meta-Analysis")
+DEFINE _dlgwd  520
+DEFINE _dlght  460
+
+DIALOG main, tabtitle("Main")                         ///
+    title("MIDAS — Meta-analysis of Diagnostic Accuracy Studies")  ///
+    label("MIDAS")
+
 BEGIN
-    TEXT tx_est  10  10 290 ., label("Estimation")
-    BUTTON bn_mle  10  28 290 26, label("MLE   -- meqrlogit / Gaussian quadrature") onpush(program open_mle)
-    BUTTON bn_qrs  10  58 290 26, label("QRSIM -- Quasi-random simulation MSL")     onpush(program open_qrsim)
-    BUTTON bn_mh   10  88 290 26, label("MH    -- Bayesian Metropolis-Hastings")     onpush(program open_mh)
-    BUTTON bn_hmc  10 118 290 26, label("HMC   -- Bayesian Hamiltonian Monte Carlo") onpush(program open_hmc)
-    BUTTON bn_inla 10 148 290 26, label("INLA  -- Integrated Nested Laplace")        onpush(program open_inla)
 
-    TEXT tx_post 10 188 290 ., label("Postestimation / Exploratory / Data")
-    BUTTON bn_post 10 206 290 26, label("Postestimation commands")   onpush(program open_post)
-    BUTTON bn_expl 10 236 290 26, label("Exploratory analysis")      onpush(program open_expl)
-    BUTTON bn_data 10 266 290 26, label("Data conversion utilities") onpush(program open_data)
+  /*--------------------------------------------------------*/
+  /* HEADER                                                 */
+  /*--------------------------------------------------------*/
+  TEXT tx_hdr 10 10 500 18,                            ///
+      label("Select a MIDAS subcommand, then click Launch Dialog.")
 
-    TEXT tx_dec  10 306 290 ., label("Decision Analysis")
-    BUTTON bn_hsruc 10 324 290 26, label("HSRUC -- Clinical utility curve")  onpush(program open_hsruc)
+  /*--------------------------------------------------------*/
+  /* DATA COMMANDS                                          */
+  /*--------------------------------------------------------*/
+  GROUPBOX gb_data 10 35 500 80,                        ///
+      label("Data commands")
 
-    TEXT tx_het  10 364 290 ., label("Heterogeneity Investigation")
-    BUTTON bn_subgrp 10 382 290 26, label("Subgroup analysis")  onpush(program open_subgroup)
-    BUTTON bn_mreg   10 412 290 26, label("Meta-regression")    onpush(program open_metareg)
-END
+  RADIO rb_clust2bin 20 53 220 18,                      ///
+      label("clust2bin  — Cluster to binary")           ///
+      first                                             ///
+      option(clust2bin)
+  RADIO rb_con2bin   20 73 220 18,                      ///
+      label("con2bin    — Continuous to binary")        ///
+      option(con2bin)
+  RADIO rb_ipd2ad    250 53 240 18,                     ///
+      label("ipd2ad     — IPD to aggregate data")       ///
+      option(ipd2ad)
+  RADIO rb_ord2bin   250 73 240 18,                     ///
+      label("ord2bin    — Ordinal to binary")           ///
+      option(ord2bin)
+  RADIO rb_simdata   20 93 220 18,                      ///
+      label("simdata    — Simulate DTA data")           ///
+      last                                              ///
+      option(simdata)
 
-PROGRAM open_mle
-BEGIN
-    put "db midas_dlg_mle"
-    stata
-END
+  /*--------------------------------------------------------*/
+  /* EXPLORATORY COMMANDS                                   */
+  /*--------------------------------------------------------*/
+  GROUPBOX gb_expl 10 125 500 105,                      ///
+      label("Exploratory commands")
 
-PROGRAM open_qrsim
-BEGIN
-    put "db midas_dlg_qrsim"
-    stata
-END
+  RADIO rb_quadas2   20 143 220 18,                     ///
+      label("quadas2    — QUADAS-2 assessment")         ///
+      first                                             ///
+      option(quadas2)
+  RADIO rb_bivbox    20 163 220 18,                     ///
+      label("bivbox     — Bivariate box plot")          ///
+      option(bivbox)
+  RADIO rb_chiplot   20 183 220 18,                     ///
+      label("chiplot    — Chi plot")                    ///
+      option(chiplot)
+  RADIO rb_kendall   250 143 240 18,                    ///
+      label("kendall    — Kendall correlation")         ///
+      option(kendall)
+  RADIO rb_assess    250 163 240 18,                    ///
+      label("assess     — Pre-estimation assessment")   ///
+      option(assess)
+  RADIO rb_binsse    250 183 240 18,                    ///
+      label("binsse     — Bivariate SSE")               ///
+      option(binsse)
+  RADIO rb_eforest   20 203 220 18,                     ///
+      label("eforest    — Exploratory forest plot")     ///
+      last                                              ///
+      option(eforest)
 
-PROGRAM open_mh
-BEGIN
-    put "db midas_dlg_mh"
-    stata
-END
+  /*--------------------------------------------------------*/
+  /* ESTIMATION COMMANDS                                    */
+  /*--------------------------------------------------------*/
+  GROUPBOX gb_est 10 240 500 80,                        ///
+      label("Estimation commands")
 
-PROGRAM open_hmc
-BEGIN
-    put "db midas_dlg_hmc"
-    stata
-END
+  RADIO rb_mle       20 258 220 18,                     ///
+      label("mle        — MLE (adaptive GH quadrature)")  ///
+      first                                             ///
+      option(mle)
+  RADIO rb_qrsim     20 278 220 18,                     ///
+      label("qrsim      — Quasi-likelihood REML")       ///
+      option(qrsim)
+  RADIO rb_mh        250 258 240 18,                    ///
+      label("mh         — Metropolis-Hastings MCMC")    ///
+      option(mh)
+  RADIO rb_hmc       250 278 240 18,                    ///
+      label("hmc        — HMC/NUTS (CmdStan)")          ///
+      option(hmc)
+  RADIO rb_inla      20 298 220 18,                     ///
+      label("inla       — INLA Bayesian")               ///
+      last                                              ///
+      option(inla)
 
-PROGRAM open_inla
-BEGIN
-    put "db midas_dlg_inla"
-    stata
-END
+  /*--------------------------------------------------------*/
+  /* POST-ESTIMATION COMMANDS                               */
+  /*--------------------------------------------------------*/
+  GROUPBOX gb_post 10 330 500 95,                       ///
+      label("Post-estimation commands")
 
-PROGRAM open_post
-BEGIN
-    put "db midas_dlg_post"
-    stata
-END
+  RADIO rb_het       20 348 220 18,                     ///
+      label("het        — Heterogeneity decomposition") ///
+      first                                             ///
+      option(het)
+  RADIO rb_sforest   20 368 220 18,                     ///
+      label("sforest    — Summary forest plot")         ///
+      option(sforest)
+  RADIO rb_bvsroc    250 348 240 18,                    ///
+      label("bvsroc     — Bivariate SROC curve")        ///
+      option(bvsroc)
+  RADIO rb_fagan     250 368 240 18,                    ///
+      label("fagan      — Fagan nomogram")              ///
+      option(fagan)
+  RADIO rb_pubbias   20 388 220 18,                     ///
+      label("pubbias    — Publication bias")            ///
+      option(pubbias)
+  RADIO rb_subgroup  250 388 240 18,                    ///
+      label("subgroup   — Subgroup analysis")           ///
+      option(subgroup)
+  RADIO rb_metareg   20 408 220 18,                     ///
+      label("metareg    — Meta-regression")             ///
+      last                                              ///
+      option(metareg)
 
-PROGRAM open_expl
-BEGIN
-    put "db midas_dlg_expl"
-    stata
-END
+END  /* main */
 
-PROGRAM open_data
-BEGIN
-    put "db midas_dlg_data"
-    stata
-END
 
-PROGRAM open_hsruc
-BEGIN
-    put "db midas_dlg_hsruc"
-    stata
-END
-
-PROGRAM open_subgroup
-BEGIN
-    put "db midas_dlg_subgroup"
-    stata
-END
-
-PROGRAM open_metareg
-BEGIN
-    put "db midas_dlg_metareg"
-    stata
-END
-
+/*--------------------------------------------------------*/
+/* COMMAND BUILDER                                        */
+/* Emits:  db midas_<subcmd>                              */
+/* which launches the subcommand's own dialog             */
+/*--------------------------------------------------------*/
 PROGRAM command
 BEGIN
-    put "display " `"""' "Use the buttons above to open a dialog" `"""'
+  put "db midas_"
+
+  if rb_clust2bin  { put "clust2bin"  }
+  if rb_con2bin    { put "con2bin"    }
+  if rb_ipd2ad     { put "ipd2ad"     }
+  if rb_ord2bin    { put "ord2bin"    }
+  if rb_simdata    { put "simdata"    }
+  if rb_quadas2    { put "quadas2"    }
+  if rb_bivbox     { put "bivbox"     }
+  if rb_chiplot    { put "chiplot"    }
+  if rb_kendall    { put "kendall"    }
+  if rb_assess     { put "assess"     }
+  if rb_binsse     { put "binsse"     }
+  if rb_eforest    { put "eforest"    }
+  if rb_mle        { put "mle"        }
+  if rb_qrsim      { put "qrsim"      }
+  if rb_mh         { put "mh"         }
+  if rb_hmc        { put "hmc"        }
+  if rb_inla       { put "inla"       }
+  if rb_het        { put "het"        }
+  if rb_sforest    { put "sforest"    }
+  if rb_bvsroc     { put "bvsroc"     }
+  if rb_fagan      { put "fagan"      }
+  if rb_pubbias    { put "pubbias"    }
+  if rb_subgroup   { put "subgroup"   }
+  if rb_metareg    { put "metareg"    }
 END

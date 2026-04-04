@@ -1,4 +1,5 @@
 {smcl}
+{* 02Apr2026}{...}
 {* 01May2024}{...}
 {* 19Apr2024}{...}
 {* 03Apr2018}{...}
@@ -15,8 +16,8 @@
 {cmd:itsaperm} {depvar} [{indepvars}] {ifin} {weight}{cmd:,}
 {cmdab:trp:eriod(}{it:{help datetime:date}}{cmd:)} 
 {opt treat:id(#)}
-[ {opt p:r(#)}
 {opt l:ag(#)}
+[ {opt p:r(#)}
 {opt match:var(varlist)}
 {opt plo:t}[{cmd:(}{it:{help twoway_options:twoway_options}}{cmd:)}]
 {opt fav:ors(string # string)} 
@@ -36,9 +37,8 @@ or {cmd:xtset} {it:panelvar} {it:timevar}. See {helpb tsset} or {helpb xtset}.{p
 {synoptline}
 {p2coldent:* {cmdab:trp:eriod(}{it:{help datetime:date}}{cmd:)}}specifies the time period when the intervention begins{p_end}
 {p2coldent:* {opt treat:id(#)}}specifies the identifier of the true treated unit{p_end}
+{p2coldent:* {opt lag}{cmd:(#)}}specify the maximum lag to be considered{p_end}
 {synopt:{opt p:r(#)}}specifies the minimum significance level ({it:P}-value) for assessing balance; default is {cmd:pr(0.05)}{p_end}
-{synopt :{opt l:ag(#)}}specifies the maximum lag to be considered when a model with Newey-West standard errors is estimated; 
-the default is {cmd:lag(0)}.{p_end}
 {synopt:{opt match:var}{cmd:(}{it:{help varlist:varlist}}{cmd:)}}specifies the variables used for finding 
 matches; the default is variables specified in {it:depvar} and {it:indepvars}{p_end}
 {synopt:{opt prais}}specifies to fit a {helpb prais} model; the default is a {helpb glm} model with Newey-West standard errors {p_end}
@@ -53,7 +53,7 @@ either side of zero (strings are separated by the # symbol){p_end}
 option is chosen; otherwise all available options of {help glm} {p_end}
 {synoptline}
 {marker weight}{...}
-{p 4 6 2}* {opt trperiod(#)} and {opt treatid(#)} must be specified.{p_end}
+{p 4 6 2}* {opt trperiod(#)}, {opt treatid(#)} and {opt lag(#)} must be specified.{p_end}
 {p 4 6 2}{opt aweight}s are allowed when a {helpb glm} model (the default) 
 is specified; see {help weight}.{p_end}
 
@@ -95,6 +95,10 @@ specified in {cmd:tsset} {it:panelvar timevar}; see {helpb tsset}.
 {cmd:treatid()} is required.
 
 {phang}
+{cmd:lag(}{it:#}{cmd:)} specifies the maximum lag to be considered in the
+autocorrelation structure. {cmd:lag() is required}.
+
+{phang}
 {cmd:pr(}{it:#}{cmd:)} specifies the minimum significance level ({it:P}-value) for determining
 balance on each variable in the {it:{varlist}}. While {cmd:pr} can be set to any value between
 0 and 1.0, 0.05 is the usual convention for considering balance. Naturally, higher values will
@@ -102,17 +106,9 @@ ensure closer balance, but it comes at a trade-off of losing observations as pot
 The default is {opt pr(0.05)}.
 
 {phang}
-{cmd:prais} specifies to fit a {helpb prais} model.  If {cmd:prais} is
+{cmd:praisk} specifies to fit a {helpb praisk} model.  If {cmd:praisk} is
 not specified, {cmd:itsa} will use {helpb glm} with Newey-West standard errors, 
 as the default model.
-
-{phang}
-{cmd:lag(}{it:#}{cmd:)} specifies the maximum lag to be considered in the
-autocorrelation structure when a {cmd:glm} model with Newey-West standard errors 
-is chosen. If the user specifies {cmd:lag(0)}, the default, the output is the 
-same as {cmd:glm,} {cmd:vce(robust)}.  An error message will appear if 
-both {cmd:prais} and {cmd:lag()} are specified, because {cmd:prais} implements 
-an AR(1) model by design.
 
 {phang}
 {cmd:matchvar(}{it:varlist}{cmd:)} specifies the variables that are passed to {helpb itsamatch} 
@@ -341,7 +337,9 @@ series data: Improving causal inference in program evaluation.
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden, Ariel (2018). ITSAPERM: Stata module for conducting permutation tests of matched sets in multiple group interrupted time series analysis {p_end}
+Linden, Ariel (2018). ITSAPERM: Stata module for conducting permutation tests of matched sets in multiple group interrupted time series analysis. 
+Statistical Software Components S458481, Boston College Department of Economics {p_end}
+
 
 
 {title:Author}
@@ -353,5 +351,5 @@ Linden, Ariel (2018). ITSAPERM: Stata module for conducting permutation tests of
  
 {title:Also see}
 
-{p 7 14 2}Help: {helpb glm}, {helpb newey}, {helpb prais}, {helpb itsa} (if installed), {helpb itsamatch} (if installed)
+{p 7 14 2}Help: {helpb glm}, {helpb newey}, {helpb praisk}, {helpb itsa} (if installed), {helpb itsamatch} (if installed)
  {p_end}

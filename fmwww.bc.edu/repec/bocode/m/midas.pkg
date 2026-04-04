@@ -61,6 +61,7 @@ f midas_rgsroc.ado
 f midas_sforest.ado
 f midas_simdata.ado
 f midas_subgroup.ado
+f midas_het.ado
 f midas.dlg
 f midas_dlg_assess.dlg
 f midas_dlg_bayesplot.dlg
@@ -91,6 +92,9 @@ f midas_dlg_rgsroc.dlg
 f midas_dlg_sforest.dlg
 f midas_dlg_simdata.dlg
 f midas_dlg_subgroup.dlg
+f midas_het.dlg
+f midas_dlg_het.dlg
+f midas_dlg_eforest.dlg
 f midas.sthlp
 f midas_assess.sthlp
 f midas_bayesplot.sthlp
@@ -121,6 +125,9 @@ f midas_rgsroc.sthlp
 f midas_sforest.sthlp
 f midas_simdata.sthlp
 f midas_subgroup.sthlp
+f midas_het.sthlp
+f midas_sforest.sthlp
+f midas_eforest.sthlp
 f ../c/con2bindata.dta
 f ../i/ipd2addata.dta
 f midas_example_data.dta

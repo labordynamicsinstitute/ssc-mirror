@@ -1,5 +1,8 @@
-*! 2.0.0 Ariel Linden 12Jan2026 // added prais option; added performance measures
+*! 3.0.0 Ariel Linden 12Mar2026		// replaced praisk for prais.
+									// this version now allows for multiple levels of rho()
+*! 2.0.0 Ariel Linden 12Jan2026 	// added prais option; added performance measures
 *! 1.0.0 Ariel Linden 11Jun2025
+
 
 program define power_cmd_single_itsa, rclass
         version 11
@@ -7,18 +10,21 @@ program define power_cmd_single_itsa, rclass
     syntax , n(integer) 		/// number of periods
 			INTercept(real) 	/// starting level
 			POSTtrend(real) 	/// post-intervention trend
+			Rho1(string)		/// lag 1 AR coefficient (required)
 			[ TRPeriod(string)	/// the treatment period when the intervention begins
 			PREtrend(real 0)	/// baseline trend
 			STep(real 0) 		/// post-intervention change in level			
 			sd(real 1) 			/// standard deviation for randomness of time series
 			alpha(real 0.05)	/// alpha level
-			acorr(real 0)		/// autocorrelation
+			Rho2(string)		/// lag 2 AR coefficient
+			Rho3(string)		/// lag 3 AR coefficient
 			LEVel				/// specify level change and not trend change
-			NOIsily				/// show the simulations dots
-			REPs(integer 100)	///
+			NOIsily				/// show the simulation dots
+			REPs(integer 100)	/// number of repetitions
 			seed(string) 		/// seed
 			PERF				/// performance measures will get passed on to output table
-			PRAIS * ]			// specify a prais model    
+			PRAISK				/// specify a praisk model
+			* ]					// additional options passed through to power_sim_single_itsa2
 
 			preserve
 			
@@ -30,20 +36,28 @@ program define power_cmd_single_itsa, rclass
 				local trperiod = ceil(`n' / 2)
 			}
 			
-			// Initial seed
-			if "`seed'"!="" {
+			// initial seed
+			if "`seed'" != "" {
 				set seed `seed'
 			}
-			local inis `=c(seed)'			
-			
+			local inis `=c(seed)'
+
+			// build optional rho strings to pass to power_sim_single_itsa2
+			local rho_opts "rho1(`rho1')"
+			if "`rho2'" != ""  local rho_opts "`rho_opts' rho2(`rho2')"
+			if "`rho3'" != ""  local rho_opts "`rho_opts' rho3(`rho3')"
+
 			if "`perf'" == "" {
-				`quietly' simulate reject=r(reject), reps(`reps') seed(`seed'): power_sim_single_itsa, n(`n') intercept(`intercept') pretrend(`pretrend') ///
-					posttrend(`posttrend') step(`step') trperiod(`trperiod') sd(`sd') acorr(`acorr') alpha(`alpha') `level' `prais' `options'
+				`quietly' simulate reject=r(reject), reps(`reps') seed(`seed'): power_sim_single_itsa, ///
+					n(`n') intercept(`intercept') pretrend(`pretrend') ///
+					posttrend(`posttrend') step(`step') trperiod(`trperiod') sd(`sd') ///
+					`rho_opts' alpha(`alpha') `level' `praisk' `options'
 			}
 			else {
-				`quietly' simulate reject=r(reject) coef=r(coef) rmse=r(rmse) cov=r(cov) se=r(se), reps(`reps') seed(`seed'): power_sim_single_itsa, n(`n') ///
-					intercept(`intercept') pretrend(`pretrend') posttrend(`posttrend') step(`step') trperiod(`trperiod') sd(`sd') acorr(`acorr') ///
-					alpha(`alpha') `level' `prais' `options'				
+				`quietly' simulate reject=r(reject) coef=r(coef) rmse=r(rmse) cov=r(cov) se=r(se), reps(`reps') seed(`seed'): power_sim_single_itsa, ///
+					n(`n') intercept(`intercept') pretrend(`pretrend') ///
+					posttrend(`posttrend') step(`step') trperiod(`trperiod') sd(`sd') ///
+					`rho_opts' alpha(`alpha') `level' `praisk' `options'
 			}
 			
     
@@ -53,7 +67,7 @@ program define power_cmd_single_itsa, rclass
 			summarize reject, meanonly
 			return scalar power = r(mean)
 			
-			if "`perf'" ! = "" {
+			if "`perf'" != "" {
 				summarize rmse, meanonly
 				return scalar rmse = r(mean)
 			
@@ -68,7 +82,7 @@ program define power_cmd_single_itsa, rclass
 					local true = (`posttrend' - `pretrend')
 				}
 				else {
-					local true = (`tstep') 
+					local true = `step'
 				}
 				return scalar bias = (( r(mean) - `true') / `true') * 100
 			}
@@ -81,11 +95,12 @@ program define power_cmd_single_itsa, rclass
 			return scalar pretrend = `pretrend'
 			return scalar step = `step'
 			return scalar posttrend = `posttrend'
-			return scalar sd = `sd'		
-			return scalar acorr = `acorr'
-			return scalar reps= `reps'
+			return scalar sd = `sd'
+			return scalar rho1 = `rho1'
+			if "`rho2'" != ""  return scalar rho2 = `rho2'
+			if "`rho3'" != ""  return scalar rho3 = `rho3'
+			return scalar reps = `reps'
 			
 			restore
-			
 
 end

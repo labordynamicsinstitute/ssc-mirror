@@ -1,0 +1,22 @@
+d 'TELEGRAM': module to Send free push notifications (mobile alerts) and exported figures from Stata to Telegram
+d
+d  The package provides a no-nonsense way to send free push
+d notifications (mobile alerts) and exported Stata figures directly
+d to the Telegram messenger app via the Bot API. It is intended for
+d researchers monitoring long-running simulations, bootstraps, or
+d server batch jobs. 
+d
+d KW: telegram
+d KW: push
+d KW: batch 
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260403
+d
+d Author: Daniel Obst,  NA
+d Support: email daniel@@danielobst.de
+d
+f telegram.ado
+f tg.ado
+f telegram.sthlp

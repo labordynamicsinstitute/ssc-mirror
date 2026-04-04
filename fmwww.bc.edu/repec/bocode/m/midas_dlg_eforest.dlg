@@ -1,35 +1,59 @@
 /*
-  midas_dlg_eforest.dlg — Exploratory forest plot
-  Version 1.0.0  30mar2026
+  midas_dlg_eforest.dlg — Exploratory forest plot (pre/post-estimation)
+  Version 1.0.0  03apr2026
   Author: Ben Adarkwa Dwamena, MD
 */
 
 VERSION 16.0
 
-POSITION . . 400 230
+POSITION . . 440 400
 
 DIALOG main, title("MIDAS — Exploratory Forest Plot")
 BEGIN
-  TEXT     tx_header  10  10 380  ., label("midas eforest — Coupled forest plot (no summary diamond)")
+  TEXT     tx_header  10  10 420  ., label("midas eforest — Exploratory coupled forest plot (no summary diamond)")
+  TEXT     tx_note    10  28 420  ., label("Requires: tp fp fn tn variables in memory")
 
-  GROUPBOX gb_plot   10  35 380  55, label("Plot Type")
-  COMBOBOX cb_plot    20  55 200  ., dropdownlist                              ///
+  GROUPBOX gb_vars   10  50 420  80, label("Variables")
+  TEXT     tx_tp      20  70  30  ., label("tp:")
+  VARNAME  vn_tp      55  68  70  .
+  TEXT     tx_fp     140  70  30  ., label("fp:")
+  VARNAME  vn_fp     175  68  70  .
+  TEXT     tx_fn     260  70  30  ., label("fn:")
+  VARNAME  vn_fn     295  68  70  .
+  TEXT     tx_tn     370  70  30  ., label("tn:")
+  VARNAME  vn_tn     400  68  30  .
+
+  TEXT     tx_id      20  98  30  ., label("id:")
+  VARNAME  vn_id      55  96 130  .
+  TEXT     tx_idnote 195  98 225  ., label("(study label variable — optional)")
+
+  GROUPBOX gb_plot   10 140 420  55, label("Plot type")
+  COMBOBOX cb_plot    20 160 200  ., dropdownlist                                 ///
            contents(plot_list) values(plot_vals) default("generic")
-  TEXT     tx_pnote  230  57 150  ., label("(generic, ellipse, thick, rain)")
+  TEXT     tx_pnote  235 162 175  ., label("generic / ellipse / thick / rain")
 
-  GROUPBOX gb_opts   10 100 380  80, label("Options")
-  TEXT     tx_level   20 120  50  ., label("Level:")
-  SPINNER  sp_level   75 120  60  ., min(10) max(99) default(95)
+  GROUPBOX gb_opts   10 205 420 145, label("Options")
+  TEXT     tx_level   20 225  50  ., label("Level:")
+  SPINNER  sp_level   75 223  55  ., min(10) max(99) default(95)
 
-  TEXT     tx_ms     150 120  60  ., label("Marker:")
-  EDIT     ed_ms     215 120  50  ., default("0.30") numonly
+  TEXT     tx_ms     145 225  55  ., label("Marker:")
+  EDIT     ed_ms     205 223  50  ., default("0.75") numonly
 
-  TEXT     tx_ts     280 120  40  ., label("Text:")
-  EDIT     ed_ts     325 120  50  ., default("0.30") numonly
+  TEXT     tx_ts     270 225  50  ., label("Text:")
+  EDIT     ed_ts     325 223  50  ., default("1.0") numonly
 
-  TEXT     tx_ci      20 150  60  ., label("CI method:")
-  COMBOBOX cb_ci      85 150 120  ., dropdownlist                              ///
+  TEXT     tx_ci      20 253  65  ., label("CI method:")
+  COMBOBOX cb_ci      90 251 110  ., dropdownlist                                 ///
            contents(ci_list) values(ci_vals) default("exact")
+
+  TEXT     tx_cs     215 253  70  ., label("iscale (combine):")
+  EDIT     ed_cs     295 251  45  ., default("0.5") numonly
+
+  TEXT     tx_cic     20 281  65  ., label("CI color:")
+  EDIT     ed_cic     90 279 110  ., default("")
+
+  TEXT     tx_dc     215 281  70  ., label("Diamond color:")
+  EDIT     ed_dc     290 279 130  ., default("")
 END
 
 LIST plot_list
@@ -62,14 +86,23 @@ BEGIN
   wald
 END
 
-HELP hlp1, view("help midas_eforest")
-OK ok1, label("OK")
+HELP hlp1,   view("help midas_eforest")
+OK ok1,      label("OK")
 CANCEL can1, label("Cancel")
 SUBMIT sub1, label("Submit")
 
 PROGRAM command
 BEGIN
-  put "midas eforest, plottype(" main.cb_plot ")"
+  put "midas eforest "
+  require main.vn_tp
+  require main.vn_fp
+  require main.vn_fn
+  require main.vn_tn
+  put main.vn_tp " " main.vn_fp " " main.vn_fn " " main.vn_tn
+  put ", plottype(" main.cb_plot ")"
+  if main.vn_id.isneq("") {
+    put " id(" main.vn_id ")"
+  }
   if !main.sp_level.isdefault() {
     put " level(" main.sp_level ")"
   }
@@ -81,5 +114,14 @@ BEGIN
   }
   if !main.cb_ci.isdefault() {
     put " cimethod(" main.cb_ci ")"
+  }
+  if !main.ed_cs.isdefault() {
+    put " combscale(" main.ed_cs ")"
+  }
+  if main.ed_cic.isneq("") {
+    put " cicolor(" main.ed_cic ")"
+  }
+  if main.ed_dc.isneq("") {
+    put " diamcolor(" main.ed_dc ")"
   }
 END

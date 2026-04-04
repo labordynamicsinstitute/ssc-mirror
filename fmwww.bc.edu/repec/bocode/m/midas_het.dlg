@@ -1,0 +1,86 @@
+/*
+  midas_het.dlg — Heterogeneity decomposition (post-estimation)
+  Version 1.0.1  03apr2026
+  Author: Ben Adarkwa Dwamena, MD
+*/
+
+VERSION 16.0
+
+POSITION . . 440 310
+
+DIALOG main, title("MIDAS — Heterogeneity Decomposition")
+BEGIN
+  TEXT     tx_header  10  10 420  ., label("midas het — Burke-weighted I2 contributions by study")
+  TEXT     tx_note    10  28 420  ., label("Requires prior midas mle, qrsim, mh, hmc, or inla estimation")
+
+  GROUPBOX gb_graph   10  50 420  75, label("Forest plot")
+  CHECKBOX ck_nograph 20  70 200  .,                                              ///
+           label("Suppress forest plot")                                          ///
+           onclickon(program disable_savegraph)                                   ///
+           onclickoff(program enable_savegraph)
+  TEXT     tx_save    20  95  80  ., label("Save graph:")
+  FILE     fi_save   105  93 315  .,                                              ///
+           label("Browse...")                                                      ///
+           filter("All files|*.*")                                                ///
+           defext("pdf")
+
+  GROUPBOX gb_fmt    10 135 420  55, label("Table format")
+  TEXT     tx_fmt    20 155 110  ., label("I2 display format:")
+  COMBOBOX cb_fmt   135 153 130  ., dropdownlist                                  ///
+           contents(fmt_list) values(fmt_vals) default("%6.4f")
+  TEXT     tx_fnote 275 155 145  ., label("(decimal places for I2 columns)")
+
+  GROUPBOX gb_info   10 200 420  70, label("Notes")
+  TEXT     tx_i1     20 218 400  ., label("Results are read from e() of the preceding estimation command.")
+  TEXT     tx_i2     20 236 400  ., label("Burke weights: Riley & Burke (Res Synth Methods 2018).")
+  TEXT     tx_i3     20 254 400  ., label("I2 method: Zhou & Dendukuri (Stat Med 2014).")
+END
+
+LIST fmt_list
+BEGIN
+  %6.4f  (4 d.p. — default)
+  %8.6f  (6 d.p. — high precision)
+  %5.2f  (2 d.p. — compact)
+  %5.1f  (1 d.p. — summary)
+END
+
+LIST fmt_vals
+BEGIN
+  %6.4f
+  %8.6f
+  %5.2f
+  %5.1f
+END
+
+PROGRAM disable_savegraph
+BEGIN
+  call main.fi_save.disable
+  call main.tx_save.disable
+END
+
+PROGRAM enable_savegraph
+BEGIN
+  call main.fi_save.enable
+  call main.tx_save.enable
+END
+
+HELP hlp1, view("help midas_het")
+OK ok1,     label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+
+PROGRAM command
+BEGIN
+  put "midas het"
+  if main.ck_nograph {
+    put " nograph"
+  }
+  if !main.ck_nograph {
+    if main.fi_save.isneq("") {
+      put " savegraph(" main.fi_save ")"
+    }
+  }
+  if main.cb_fmt.isneq("%6.4f") {
+    put " format(" main.cb_fmt ")"
+  }
+END

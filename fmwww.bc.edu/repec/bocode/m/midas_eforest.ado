@@ -15,7 +15,8 @@ program define midas_eforest, rclass byable(recall) sortpreserve
 		LEVEL(integer 95)
 		TITLE(passthru)  
 		MScale(real 0.75)
-		TEXTScale(real 0.75)  
+		TEXTScale(real 1.0)  
+		COMBscale(real 0.5)
 		CImethod(string) CIColor(string asis) DIAMcolor(string asis) *];
 	#delimit cr
 
@@ -64,7 +65,7 @@ program define midas_eforest, rclass byable(recall) sortpreserve
 	restore
 	
 	cforest, plot(`plottype') title(`title') ci(`cimethod') ///
-		ms(`mscale') level(`level') text(`textscale') ///
+		ms(`mscale') level(`level') text(`textscale') combscale(`combscale') ///
 		cicolor(`cicolor') diamcolor(`diamcolor')
 end
 
@@ -79,7 +80,8 @@ program define cforest, rclass byable(recall) sortpreserve
 		[LEVEL(integer 95)
 		TITLE(passthru)  
 		MScale(real 0.75)
-		TEXTScale(real 0.75)  
+		TEXTScale(real 1.0) 
+		COMBscale(real 0.5)
 		CImethod(string) CIColor(string asis) DIAMcolor(string asis) *];
 	#delimit cr
 
@@ -277,7 +279,7 @@ program define cforest, rclass byable(recall) sortpreserve
 			#delimit cr
 
 			#delimit;
-			nois graph combine `forplot' `graphlist' `ellip1' `forplot1' `ellip2' `forplot2', rows(1) ycommon;
+			nois graph combine `forplot' `graphlist' `ellip1' `forplot1' `ellip2' `forplot2', rows(1) ycommon iscale(`combscale');
 			#delimit cr
 		}
 		else if (strpos("`plottype'", "generic") != 0) {
@@ -313,7 +315,7 @@ program define cforest, rclass byable(recall) sortpreserve
 			* Use taller graph to give rows more space
 			local _ysize = max(8, `max' * 0.28)
 			#delimit;
-			nois graph combine `forplot' `graphlist' `generic1' `forplot1' `generic2' `forplot2', rows(1) ycommon
+			nois graph combine `forplot' `graphlist' `generic1' `forplot1' `generic2' `forplot2', rows(1) ycommon  iscale(`combscale')
 				ysize(`_ysize') xsize(18);
 			#delimit cr
 		}
@@ -349,7 +351,7 @@ program define cforest, rclass byable(recall) sortpreserve
 			#delimit cr
 			
 			#delimit;
-			nois graph combine `forplot' `graphlist' `thick1' `forplot1' `thick2' `forplot2', rows(1) ycommon;
+			nois graph combine `forplot' `graphlist' `thick1' `forplot1' `thick2' `forplot2', rows(1) ycommon iscale(`combscale');
 			#delimit cr
 		}
 		else if (strpos("`plottype'", "rain") != 0) {
@@ -422,7 +424,7 @@ program define cforest, rclass byable(recall) sortpreserve
 			#delimit cr
 
 			#delimit;
-			nois graph combine `forplot' `graphlist' `rain1' `forplot1' `rain2' `forplot2', rows(1) ycommon;
+			nois graph combine `forplot' `graphlist' `rain1' `forplot1' `rain2' `forplot2', rows(1) ycommon iscale(`combscale');
 			#delimit cr  
 		}
 		

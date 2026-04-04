@@ -13,8 +13,9 @@ program define midas_sforest, rclass byable(recall) sortpreserve
 		PLOTtype(string)  
 		[LEVEL(integer 95)
 		TITLE(passthru)  
-		MScale(real 1.0)
+		MScale(real 0.75)
 		TEXTScale(real 1.0)
+		COMBscale(real 0.5)
 		PREDinterval
 		OVLine
 		CImethod(string) CIColor(string asis) DIAMcolor(string asis) *];
@@ -51,12 +52,12 @@ program define midas_sforest, rclass byable(recall) sortpreserve
 
 	if "`predinterval'" == "predinterval" {
 		sforest, plot(`plottype') title(`title') ci(`cimethod') ///
-			ms(`mscale') level(`level') text(`textscale') ///
+			ms(`mscale') level(`level') text(`textscale')  combscale (`combscale') ///
 			cicolor(`cicolor') diamcolor(`diamcolor') `predinterval' `ovline'
 	}
 	else {
 		sforest, plot(`plottype') title(`title') ci(`cimethod') ///
-			ms(`mscale') level(`level') text(`textscale') `ovline'
+			ms(`mscale') level(`level') text(`textscale')  `ovline'
 	}
 end
 
@@ -70,8 +71,9 @@ program define sforest, rclass byable(recall) sortpreserve
 		PLOTtype(string)  
 		[LEVEL(integer 95)
 		TITLE(passthru)  
-		MScale(real 1.0)
-		TEXTScale(real 1.0)
+		MScale(real 0.80)
+		TEXTScale(real 0.80)
+		COMBscale(real 0.5)
 		PREDinterval
 		OVLine
 		CImethod(string) CIColor(string asis) DIAMcolor(string asis) *];
@@ -80,7 +82,7 @@ program define sforest, rclass byable(recall) sortpreserve
 	capture preserve
 	qui {
 		// Extract summary estimates based on estimation method
-		if e(cmd) == "midas_mle" {
+		if e(cmd) == "midas_mle" | e(cmd) == "midas_qrsim" {
 			tempname bfor Vfor forestmat
 			mat `bfor' = e(bsum)
 			mat `Vfor' = e(Vsum)
@@ -118,12 +120,6 @@ program define sforest, rclass byable(recall) sortpreserve
 		
 		// Extract study data
 		mat foresters = e(varlist)
-		
-		// Normalize column names — may be tempvar names after bayesparallel
-		local nc = colsof(foresters)
-		if `nc' >= 4 {
-			mat colnames foresters = tp fp fn tn
-		}
 		local id: rowfullnames foresters
 		local x: word count `id'
 		tempvar StudyIds
@@ -189,9 +185,10 @@ program define sforest, rclass byable(recall) sortpreserve
 		gen `studyvar2hi' = `spechi'
 
 		// Extract study weights
-		// Extract study weights via standardized helper
-		tempvar _bivwgt
-		_midas_getwgts, senwgt(`wgtsen') spewgt(`wgtspe') bivwgt(`_bivwgt')
+		mat studywgts = e(studywgts)
+		svmat studywgts, names(col)
+		gen `wgtsen' = senwgt
+		gen `wgtspe' = spewgt
 		gsort -`StudyIds'
 		
 		local null1: di " "
@@ -320,7 +317,6 @@ program define sforest, rclass byable(recall) sortpreserve
 		local notef1a: di "{bf:I{sup:2}(Sensitivity)} = " %3.2f `I2sen_md' " [" %3.2f `I2sen_lb' "-" %3.2f `I2sen_ub' "]"
 		local notef2a: di "{bf:I{sup:2}(Specificity)} = " %3.2f `I2spe_md' " [" %3.2f `I2spe_lb' "-" %3.2f `I2spe_ub' "]"
 		local note1c: di "{bf:I{sup:2}(Bivariate)} = " %3.2f `I2_md' " [" %3.2f `I2_lb' "-" %3.2f `I2_ub' "]"
-		local i2note `"note("`notef1a'    `notef2a'    `note1c'", size(*0.6) span)"'
 
 		// Create plots for 2x2 table cells
 		foreach k of varlist TP FP FN TN {
@@ -350,7 +346,7 @@ program define sforest, rclass byable(recall) sortpreserve
 		if !missing("`predinterval'") {
 			#delimit;
 			twoway (scatter `obs' `xvar', ms(i) 
-				ylab(`maxx' "{bf:Studyid}" -1 "{bf:Overall}" -3.0 "`predint'" `"`value'"', 
+				ylab(`maxx' "{bf:Studyid}" -1 "{bf:Overall}" -3.0 "`predint'" -5.0 "`notef1a'" -6.0 "`notef2a'" -7.0 "`note1c'" `"`value'"', 
 				valuelabel `ylabopt' angle(360)) lpat(blank) `xlab0'), 
 				ytick(none) xscale(noline) plotregion(style(none))
 				graphregion(style(none)) ysc(alternate) yscale(noline) nodraw legend(off) fxsize(25) yti("") xtitle("") name(`forplot', replace);
@@ -359,7 +355,7 @@ program define sforest, rclass byable(recall) sortpreserve
 		else {
 			#delimit;
 			twoway (scatter `obs' `xvar', ms(i) 
-				ylab(`maxx' "{bf:Studyid}" -1 "{bf:Overall}" `"`value'"', 
+				ylab(`maxx' "{bf:Studyid}" -1 "{bf:Overall}" -3.0 "`null1'" -5.0 "`notef1a'" -6.0 "`notef2a'" -7.0 "`note1c'" `"`value'"', 
 				valuelabel `ylabopt' angle(360)) lpat(blank) `xlab0'), 
 				ytick(none) xscale(noline) plotregion(style(none))
 				graphregion(style(none)) ysc(alternate) yscale(noline) nodraw legend(off) fxsize(25) yti("") xtitle("") name(`forplot', replace);
@@ -369,7 +365,7 @@ program define sforest, rclass byable(recall) sortpreserve
 		// Create weight plots
 		#delimit;
 		twoway (scatter `obs3' `xvar', ms(i) 
-			ylab(`maxx' "{bf:`wgttitle1'}" -1 "100.00" `"`value3'"', 
+			ylab(`maxx' "{bf:`wgttitle1'}" -1 "100.00" -3.0 "`null1'" -5.0 "`null1'" `"`value3'"', 
 			valuelabel labsize(*`textscale') labgap(*5) angle(360)) lpat(blank) `xlab0'), 
 			ylabel(, noticks) yscale(noline) fxsize(10) nodraw legend(off) yti("") xtitle("") 
 			graphregion(style(none)) plotregion(style(none)) name(`forplot1', replace);
@@ -377,7 +373,7 @@ program define sforest, rclass byable(recall) sortpreserve
 		
 		#delimit;
 		twoway (scatter `obs4' `xvar', ms(i) 
-			ylab(`maxx' "{bf:`wgttitle2'}" -1 "100.00" `"`value4'"',
+			ylab(`maxx' "{bf:`wgttitle2'}" -1 "100.00" -3.0 "`null1'" -5.0 "`null1'" `"`value4'"',
 			valuelabel labsize(*`textscale') labgap(*5) angle(360)) lpat(blank) `xlab0'), 
 			nodraw legend(off) xtitle("") fxsize(10)
 			ylabel(, noticks) yti("") yscale(noline) plotregion(style(none)) graphregion(style(none)) name(`forplot2', replace);
@@ -387,7 +383,7 @@ program define sforest, rclass byable(recall) sortpreserve
 		if !missing("`predinterval'") {
 			#delimit;
 			twoway (scatter `obs1' `xvar', ms(i) 
-				ylab(`maxx' "{bf:`gtitle1' `midaconf'}" -3.0 "`prednote1'" -1 "`note1f'"
+				ylab(`maxx' "{bf:`gtitle1' `midaconf'}" -5.0 "`null1'" -3.0 "`prednote1'" -1 "`note1f'"
 				`"`value1'"', valuelabel labsize(*`textscale') labgap(*5) angle(360)) lpat(blank) `xlab0'), 
 				ylabel(, noticks) plotregion(style(none)) graphregion(style(none)) yscale(noline) nodraw legend(off) yti("")
 				xtitle("") fxsize(20) name(`forplot3', replace);
@@ -395,7 +391,7 @@ program define sforest, rclass byable(recall) sortpreserve
 
 			#delimit;
 			twoway (scatter `obs2' `xvar', ms(i) 
-				ylab(`maxx' "{bf:`gtitle2' `midaconf'}" -3.0 "`prednote2'" -1 "`note2f'"
+				ylab(`maxx' "{bf:`gtitle2' `midaconf'}" -5.0 "`null1'" -3.0 "`prednote2'" -1 "`note2f'"
 				`"`value2'"', valuelabel labsize(*`textscale') labgap(*5) angle(360)) lpat(blank) `xlab0'), 
 				plotregion(style(none)) graphregion(style(none)) yscale(noline) nodraw legend(off) ylabel(, noticks) yti("")
 				xtitle("") fxsize(20) name(`forplot4', replace);
@@ -404,7 +400,7 @@ program define sforest, rclass byable(recall) sortpreserve
 		else {
 			#delimit;
 			twoway (scatter `obs1' `xvar', ms(i) 
-				ylab(`maxx' "{bf:`gtitle1' `midaconf'}" -1 "`note1f'"
+				ylab(`maxx' "{bf:`gtitle1' `midaconf'}" -5.0 "`null1'" -3.0 "`null1'" -1 "`note1f'"
 				`"`value1'"', valuelabel labsize(*`textscale') labgap(*5) angle(360)) lpat(blank) `xlab0'), 
 				ylabel(, noticks) plotregion(style(none)) graphregion(style(none)) yscale(noline) nodraw legend(off) yti("")
 				xtitle("") fxsize(20) name(`forplot3', replace);
@@ -412,7 +408,7 @@ program define sforest, rclass byable(recall) sortpreserve
 
 			#delimit;
 			twoway (scatter `obs2' `xvar', ms(i) 
-				ylab(`maxx' "{bf:`gtitle2' `midaconf'}" -1 "`note2f'"
+				ylab(`maxx' "{bf:`gtitle2' `midaconf'}" -5.0 "`null1'" -3.0 "`null1'" -1 "`note2f'"
 				`"`value2'"', valuelabel labsize(*`textscale') labgap(*5) angle(360)) lpat(blank) `xlab0'), 
 				plotregion(style(none)) graphregion(style(none)) yscale(noline) nodraw legend(off) ylabel(, noticks) yti("")
 				xtitle("") fxsize(20) name(`forplot4', replace);
@@ -442,8 +438,8 @@ program define sforest, rclass byable(recall) sortpreserve
 
 			#delimit;
 			graph twoway `ggeneric1' (scatteri `maxx' 0.5 (3) "{bf: `gtitle1'}", ms(i) mlabc(black))
-				(scatter `obs1' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle1'}" -1 "`null1'" `"`value'"', 
-				valuelabel angle(360)) blpattern(solid) blwidth(vthin) blcolor(black) lpat(blank) `xlab2') 
+				(scatter `obs1' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle1'}" -1 "`null1'" -3.0 "`null1'" -5.0 "`notef1a'" `"`value'"', 
+				valuelabel angle(360)) blpattern(solid) blwidth(vthin) blcolor(black) lpat(blank) `xlab1') 
 				`spoint11' `spoint12' `predpoint1', 
 				plotregion(style(none)) graphregion(style(none)) yscale(off) fxsize(30) ylab(none) `ovline1' 
 				ytitle("") xtitle("") legend(off) nodraw name(`generic1', replace);
@@ -462,15 +458,15 @@ program define sforest, rclass byable(recall) sortpreserve
 			
 			#delimit;
 			graph twoway `ggeneric2' (scatteri `maxx' 0.5 (3) "{bf: `gtitle2'}", ms(i) mlabc(black))
-				(scatter `obs2' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle2'}" -1 "`null1'" `"`value'"', 
-				valuelabel angle(360)) blpattern(solid) blwidth(vthin) blcolor(black) lpat(blank) `xlab2') 
+				(scatter `obs2' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle2'}" -1 "`null1'" -3.0 "`null1'" -5.0 "`notef1a'" `"`value'"', 
+				valuelabel angle(360)) blpattern(solid) blwidth(vthin) blcolor(black) lpat(blank) `xlab1') 
 				`spoint21' `spoint22' `predpoint2', 
 				ytitle("") xtitle("") fxsize(25) yscale(off) ylab(none) `ovline2' legend(off) nodraw
 				plotregion(style(none)) graphregion(style(none)) name(`generic2', replace);
 			#delimit cr
 
 			#delimit;
-			nois graph combine `forplot' `graphlist' `generic1' `forplot3' `forplot1' `generic2' `forplot4' `forplot2', ycommon rows(1) `i2note';
+			nois graph combine `forplot' `graphlist' `generic1' `forplot3' `forplot1' `generic2' `forplot4' `forplot2', ycommon rows(1) iscale(`combscale') ;
 			#delimit cr
 		}
 		else if (strpos("`plottype'", "thick") != 0) {
@@ -489,8 +485,8 @@ program define sforest, rclass byable(recall) sortpreserve
 			
 			#delimit;
 			graph twoway `gthick1' (scatteri `maxx' 0.5 (3) "{bf: `gtitle1'}", ms(i) mlabc(black))
-				(scatter `obs1' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle1'}" -1 "`null1'" `"`value'"', 
-				nolabel angle(360)) blpattern(solid) blwidth(vthin) blcolor(black) lpat(blank) `xlab2') 
+				(scatter `obs1' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle1'}" -1 "`null1'" -3.0 "`null1'" -5.0 "`notef1a'" `"`value'"', 
+				nolabel angle(360)) blpattern(solid) blwidth(vthin) blcolor(black) lpat(blank) `xlab1') 
 				`spoint11' `spoint12' `predpoint1', 
 				plotregion(style(none)) graphregion(style(none)) yscale(off) fxsize(30) ylab(none) `ovline1' 
 				ytitle("") xtitle("") legend(off) nodraw name(`thick1', replace);
@@ -510,15 +506,15 @@ program define sforest, rclass byable(recall) sortpreserve
 			
 			#delimit;
 			graph twoway `gthick2' (scatteri `maxx' 0.5 (3) "{bf: `gtitle2'}", ms(i) mlabc(black))
-				(scatter `obs2' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle2'}" -1 "`null1'" `"`value'"', 
-				valuelabel angle(360)) lpat(blank) blpattern(solid) blwidth(vthin) blcolor(black) `xlab2') 
+				(scatter `obs2' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle2'}" -1 "`null1'" -3.0 "`null1'" -5.0 "`notef2a'" `"`value'"', 
+				valuelabel angle(360)) lpat(blank) blpattern(solid) blwidth(vthin) blcolor(black) `xlab1') 
 				`spoint21' `spoint22' `predpoint2', 
 				ylab(none) ytitle("") xtitle("") fxsize(25) yscale(off) `ovline2' legend(off) nodraw
 				plotregion(style(none)) graphregion(style(none)) name(`thick2', replace);
 			#delimit cr
 
 			#delimit;
-			nois graph combine `forplot' `graphlist' `thick1' `forplot3' `forplot1' `thick2' `forplot4' `forplot2', ycommon rows(1) `i2note';
+			nois graph combine `forplot' `graphlist' `thick1' `forplot3' `forplot1' `thick2' `forplot4' `forplot2', ycommon rows(1) iscale(`combscale') ;
 			#delimit cr
 		}
 		else if (strpos("`plottype'", "rain") != 0) {
@@ -555,8 +551,8 @@ program define sforest, rclass byable(recall) sortpreserve
 			
 			#delimit;
 			graph twoway `graphrain1' (scatteri `maxx' 0.5 (3) "{bf: `gtitle1'}", ms(i) mlabc(black))
-				(scatter `obs1' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle1'}" -1 "`null1'" `"`value'"', 
-				valuelabel angle(360)) lpat(blank) blpattern(solid) blwidth(vthin) blcolor(black) `xlab2') 
+				(scatter `obs1' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle1'}" -1 "`null1'" -3.0 "`null1'" -5.0 "`notef1a'" `"`value'"', 
+				valuelabel angle(360)) lpat(blank) blpattern(solid) blwidth(vthin) blcolor(black) `xlab1') 
 				`spoint11' `spoint12' `predpoint1',
 				plotregion(style(none)) graphregion(style(none)) yscale(off) fxsize(30) ylab(none) `ovline1'
 				ytitle("") xtitle("") legend(off) nodraw name(`rain1', replace);
@@ -592,15 +588,15 @@ program define sforest, rclass byable(recall) sortpreserve
 			
 			#delimit;
 			graph twoway `graphrain2' (scatteri `maxx' 0.5 (3) "{bf: `gtitle2'}", ms(i) mlabc(black))
-				(scatter `obs2' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle2'}" -1 "`null1'" `"`value'"', 
-				valuelabel angle(360)) lpat(blank) blpattern(solid) blwidth(vthin) blcolor(black) `xlab2') 
+				(scatter `obs2' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle2'}" -1 "`null1'" -3.0 "`null1'" -5.0 "`notef2a'" `"`value'"', 
+				valuelabel angle(360)) lpat(blank) blpattern(solid) blwidth(vthin) blcolor(black) `xlab1') 
 				`spoint21' `spoint22' `predpoint2',
 				plotregion(style(none)) graphregion(style(none)) ytitle("") xtitle("") fxsize(25) yscale(off) ylab(none)
 				legend(off) `ovline2' nodraw name(`rain2', replace);
 			#delimit cr
 			
 			#delimit;
-			nois graph combine `forplot' `graphlist' `rain1' `forplot3' `forplot1' `rain2' `forplot4' `forplot2', ycommon rows(1) `i2note';
+			nois graph combine `forplot' `graphlist' `rain1' `forplot3' `forplot1' `rain2' `forplot4' `forplot2', ycommon rows(1) iscale(`combscale') ;
 			#delimit cr
 		}
 		else if (strpos("`plottype'", "ellipse") != 0) {
@@ -624,8 +620,8 @@ program define sforest, rclass byable(recall) sortpreserve
 
 			#delimit;
 			graph twoway (scatteri `maxx' 0.5 (3) "{bf: `gtitle1'}", ms(i) mlabc(black))
-				(scatter `obs1' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle1'}" -1 "`null1'" `"`value'"', 
-				nolabel angle(360)) lpat(blank) blpattern(solid) blwidth(vthin) blcolor(black) `xlab2') 
+				(scatter `obs1' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle1'}" -1 "`null1'" -3.0 "`null1'" -5.0 "`notef1a'" `"`value'"', 
+				nolabel angle(360)) lpat(blank) blpattern(solid) blwidth(vthin) blcolor(black) `xlab1') 
 				`spoint11' `spoint12' `predpoint1' `gellip', 
 				ytitle("") xtitle("") fxsize(30) ylab(none) yscale(off) `ovline1' legend(off)
 				plotregion(style(none)) graphregion(style(none)) nodraw name(`ellip1', replace);
@@ -650,15 +646,15 @@ program define sforest, rclass byable(recall) sortpreserve
 
 			#delimit;
 			graph twoway (scatteri `maxx' 0.5 (3) "{bf: `gtitle2'}", ms(i) mlabc(black))
-				(scatter `obs1' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle2'}" -1 "`null1'" `"`value'"',
-				nolabel angle(360)) lpat(blank) blpattern(solid) blwidth(vthin) blcolor(black) `xlab2')
+				(scatter `obs1' `xvar', ms(i) ylabel(`maxx' "{bf:`gtitle2'}" -1 "`null1'" -3.0 "`null1'" -5.0 "`notef2a'" `"`value'"',
+				nolabel angle(360)) lpat(blank) blpattern(solid) blwidth(vthin) blcolor(black) `xlab1')
 				`spoint21' `spoint22' `predpoint2' `sgellip',
 				ytitle("") xtitle("") fxsize(25) yscale(off) ylab(none) `ovline2' legend(off) 
 				plotregion(style(none)) graphregion(style(none)) nodraw name(`ellip2', replace);
 			#delimit cr
 
 			#delimit;
-			nois graph combine `forplot' `graphlist' `ellip1' `forplot3' `forplot1' `ellip2' `forplot4' `forplot2', ycommon rows(1) `i2note';
+			nois graph combine `forplot' `graphlist' `ellip1' `forplot3' `forplot1' `ellip2' `forplot4' `forplot2', ycommon rows(1) iscale(`combscale') ;
 			#delimit cr
 		}
 		
@@ -696,46 +692,3 @@ qui {
 		}
 }
 end
-
-// Standardized weight extraction from e(studywgts)
-capture program drop _midas_getwgts
-program define _midas_getwgts
-    version 16
-    syntax, SENwgt(string) SPEwgt(string) BIVwgt(string)
-    
-    * Try to grab the weight matrix
-    tempname wgtmat
-    capture mat `wgtmat' = e(studywgts)
-    local gotmat = (_rc == 0)
-    
-    if `gotmat' {
-        local ncol = colsof(`wgtmat')
-        local nrow = rowsof(`wgtmat')
-    }
-    else {
-        local ncol = 0
-        local nrow = 0
-    }
-    
-    if `gotmat' == 0 | `ncol' < 3 | `nrow' == 0 {
-        * Fallback: equal weights
-        qui gen double `senwgt' = 100 / _N
-        qui gen double `spewgt' = 100 / _N
-        qui gen double `bivwgt' = 100 / _N
-        exit
-    }
-    
-    * Match rows to dataset: use matrix row names to align with study IDs
-    * The dataset after xsvmat has StudyIds; the matrix has rownames.
-    * Use positional assignment (row i of matrix -> row i of dataset).
-    qui gen double `senwgt' = .
-    qui gen double `spewgt' = .
-    qui gen double `bivwgt' = .
-    local maxrow = min(`nrow', _N)
-    forvalues i = 1/`maxrow' {
-        qui replace `senwgt' = `wgtmat'[`i', 1] in `i'
-        qui replace `spewgt' = `wgtmat'[`i', 2] in `i'
-        qui replace `bivwgt' = `wgtmat'[`i', 3] in `i'
-    }
-end
-

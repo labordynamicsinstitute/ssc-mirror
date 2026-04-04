@@ -43,6 +43,7 @@ p tddens module to estimate and graph bivariate density with heat map
 p tdpd module to analyze third-degree price discrimination
 p ted module to test Stability of Regression Discontinuity Models
 p teffects2 module to estimate average treatment effects with observational data
+p telegram module to Send free push notifications (mobile alerts) and exported figures from Stata to Telegram
 p tenspiders module for measuring medication adherence using pharmaceutical claims data
 p ternary module for trivariate plots
 p tesensitivity module for assessing sensitivity to the unconfoundedness assumption
