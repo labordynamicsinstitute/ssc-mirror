@@ -1,0 +1,27 @@
+d 'COEFCONV': module to compute comprehensive marginal effects from regression slope coefficients
+d
+d      coefconv computes 23+ marginal effect types for every
+d predictor in the most recently estimated regression model.  It
+d draws all    inputs from Stata's e() results (slopes, variable
+d names, estimation sample) plus live descriptive statistics
+d (summarize,	 _pctile, correlate) so no separate
+d data-preparation step is needed.    coefconv is designed to run
+d immediately after regress, ivregress, areg, or xtreg.  It will
+d also run after non-linear    estimators but will warn that
+d linear-slope marginal effects are approximations in those cases. 
+d
+d KW: regression
+d KW: marginal efffects
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260404
+d
+d Author: Noman Arshed,   Sunway Business School, Sunway University
+d Support: email nouman.arshed@@gmail.com
+d
+f coefconv.ado
+f coefconv.sthlp
+f coefconv_plot.ado
+f coefconv_examples.do
+f coefconv_manual.pdf

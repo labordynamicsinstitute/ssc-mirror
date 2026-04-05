@@ -1,10 +1,21 @@
 d 'STRIPPLOT': module for strip plots (one-way dot plots) 
 d
-d	stripplot plots data as a series of marks against a single 
-d     magnitude axis, horizontal or vertical. It is an	Stata 8    
-d  alternative to gr7, oneway or dotplot with more flexibility in  
-d    several respects. Its predecessor, onewplot, remains available
-d to	  users of Stata 7 or Stata 6 as a separate module. 
+d	 strip plots data as a series of marks against a single
+d magnitude axis. By default this axis is horizontal. With the
+d option    vertical it is vertical.  Optionally, data points may
+d be stacked or cumulated into histogram- or dotplot-like or
+d distribution	  or quantile function displays.    The default
+d results of strip are fairly trivial, as if you had called up a
+d scatter plot of a variable of interest and a	  variable created
+d as some constant. The power of the command lies in its options. 
+d To that end, run the examples: the code for	 the examples is
+d included in a do-file alongside this help file and the ado file. 
+d   The older stripplot routine plots data as a series of marks
+d against a single	magnitude axis, horizontal or vertical. It
+d is an  Stata 8      alternative to gr7, oneway or dotplot with
+d more flexibility in	   several respects. Its predecessor,
+d onewplot, remains available to      users of Stata 7 or Stata 6
+d as a separate module. 
 d
 d KW: graphics
 d KW: dot plots
@@ -15,13 +26,16 @@ d KW: scatter plot
 d KW: box plot
 d KW: confidence intervals 
 d
-d Requires: Stata version 8.2
+d Requires: Stata version 9
 d
-d Distribution-Date: 20240505
+d Distribution-Date: 20260404
 d
 d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk
 d
 f stripplot.ado
 f stripplot.sthlp
+f strip.ado
+f strip.sthlp
+f strip_examples.do
 f stripplot_demo.do

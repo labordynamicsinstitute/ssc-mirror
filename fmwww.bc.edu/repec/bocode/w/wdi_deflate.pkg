@@ -1,0 +1,23 @@
+d 'WDI_DEFLATE': module to convert monetary values across PPP, USD, and LCU using WDI deflators
+d
+d    wdi_deflate converts monetary variables between local currency
+d units (LCU), PPP international dollars, and nominal US dollars,  
+d  adjusting for inflation using World Development Indicators (WDI)
+d data.  It creates new variables (or replaces existing ones)	
+d containing the converted values.  The command handles both
+d cross-sectional data with a fixed source year and panel data
+d where    the source year varies by observation. 
+d
+d KW: WDI
+d KW: deflate
+d KW: currency conversion
+d
+d Requires: Stata version 15 and tknz, wbopendata from SSC (q.v.)
+d
+d Distribution-Date: 20260404
+d
+d Author: Kalle Hirvonen,  IFPRI
+d Support: email K.Hirvonen@@cgiar.org
+d
+f wdi_deflate.ado
+f wdi_deflate.sthlp

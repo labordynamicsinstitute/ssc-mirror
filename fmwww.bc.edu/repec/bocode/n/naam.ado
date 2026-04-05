@@ -1,4 +1,4 @@
-*! naam version 1.0.0
+*! naam version 1.0.1
 *! Author: Vijayshree Jayaraman (jvijayshree26@gmail.com)
 *! GitHub: https://github.com/vijayshree-jayaraman
 *! "What's in a naam?" -- consistent encoding, ID hashing, label management
@@ -184,15 +184,22 @@ program define naam_id
 * Convert a string ID variable to consistent numeric codes across files.
 * On first call: assigns codes 1, 2, 3... alphabetically and saves mapping.
 * On subsequent calls: looks up saved mapping, adds new codes for new IDs.
-* Accepts a varlist: each variable is processed in turn, each with its own
-* sheet in the Excel file.
+* Accepts a varlist: each variable is processed in turn, each saved to its
+* own .dta file (base_varname.dta). No row-count limit.
 * -----------------------------------------------------------------------------
     version 14.0
     syntax varlist using/ [, replace keep strict]
 
-    local fname `"`using'"'
-    if substr(`"`fname'"',-5,5)!=".xlsx" & substr(`"`fname'"',-4,4)!=".xls" {
-        local fname `"`fname'.xlsx"'
+    * -- Strip any extension to get a clean base name -------------------------
+    local base `"`using'"'
+    if substr(`"`base'"', -4, 4) == ".dta" {
+        local base = substr(`"`base'"', 1, length(`"`base'"') - 4)
+    }
+    else if substr(`"`base'"', -5, 5) == ".xlsx" {
+        local base = substr(`"`base'"', 1, length(`"`base'"') - 5)
+    }
+    else if substr(`"`base'"', -4, 4) == ".xls" {
+        local base = substr(`"`base'"', 1, length(`"`base'"') - 4)
     }
 
     * -- Process each variable in the varlist ---------------------------------
@@ -207,6 +214,9 @@ program define naam_id
         }
         local ++n_processed
 
+        * One .dta per variable: base_varname.dta
+        local fname `"`base'_`v'.dta"'
+
         local vl : variable label `v'
         quietly count
         di as txt "  `r(N)' observations, processing `v'..."
@@ -214,17 +224,15 @@ program define naam_id
         * Always keep a string backup for mapping and for ,keep option
         quietly clonevar _str_`v' = `v'
 
-        * -- Check if a valid mapping sheet already exists for this variable --
+        * -- Check if a valid mapping .dta already exists for this variable ---
         local file_exists 0
         capture confirm file `"`fname'"'
         if !_rc {
             preserve
             capture {
-                quietly import excel using `"`fname'"', ///
-                    sheet("`v'") firstrow clear allstring
+                quietly use `"`fname'"', clear
                 confirm variable string_value
                 confirm variable numeric_code
-                destring numeric_code, replace force
                 quietly count if !missing(numeric_code)
                 if r(N) == 0 error 1
             }
@@ -253,9 +261,7 @@ program define naam_id
             tempfile existing_map
             preserve
             quietly {
-                import excel using `"`fname'"', ///
-                    sheet("`v'") firstrow clear allstring
-                destring numeric_code, replace force
+                use `"`fname'"', clear
                 duplicates drop string_value, force
                 save `"`existing_map'"', replace
             }
@@ -303,8 +309,8 @@ program define naam_id
         preserve
         quietly {
             keep _str_`v' _naam_id_`v'
-            rename _str_`v'       string_value
-            rename _naam_id_`v'   numeric_code
+            rename _str_`v'     string_value
+            rename _naam_id_`v' numeric_code
             duplicates drop string_value, force
             sort numeric_code
             local ntotal = _N
@@ -326,70 +332,16 @@ program define naam_id
 
         di as txt "  -> `v' assigned: `ntotal' unique IDs in mapping."
 
-        * -- Write index and mapping -------------------------------------------
-        * Excel has a hard row limit of 1,048,576. If unique IDs exceed this,
-        * save the mapping as a .dta file and skip the Excel file entirely.
-        local excel_limit 1048576
-        if `ntotal' <= `excel_limit' {
-            * Write index sheet to Excel
-            tempfile idx_new
-            preserve
-            quietly {
-                local idx_exists 0
-                capture confirm file `"`fname'"'
-                if !_rc {
-                    capture {
-                        import excel using `"`fname'"', ///
-                            sheet("index") firstrow clear allstring
-                        confirm variable varname
-                    }
-                    if !_rc local idx_exists 1
-                }
-                if `idx_exists' {
-                    capture drop if varname == "`v'"
-                    local n = _N + 1
-                    quietly set obs `n'
-                    replace varname  = "`v'"   in `n'
-                    replace varlabel = `"`vl'"' in `n'
-                    replace type     = "id"    in `n'
-                }
-                else {
-                    clear
-                    set obs 1
-                    gen str32  varname  = "`v'"
-                    gen str244 varlabel = `"`vl'"'
-                    gen str10  type     = "id"
-                }
-                export excel varname varlabel type using `"`fname'"', ///
-                    sheet("index") sheetreplace firstrow(variables)
-            }
-            restore
-            * Write mapping sheet to Excel
-            preserve
-            quietly {
-                use `"`new_mapping'"', clear
-                export excel string_value numeric_code using `"`fname'"', ///
-                    sheet("`v'") sheetreplace firstrow(variables)
-            }
-            restore
-            di as res `"naam id complete for `v' -> `fname'"'
+        * -- Save mapping as .dta (no row-count limit) ------------------------
+        preserve
+        quietly {
+            use `"`new_mapping'"', clear
+            save `"`fname'"', replace
         }
-        else {
-            * Too many IDs for Excel -- save entire mapping as .dta
-            * No Excel file is created or modified
-            local dta_fname = subinstr(`"`fname'"', ".xlsx", "_`v'_map.dta", .)
-            preserve
-            quietly {
-                use `"`new_mapping'"', clear
-                save `"`dta_fname'"', replace
-            }
-            restore
-            di as txt "  Note: `ntotal' unique IDs exceeds Excel row limit (1,048,576)."
-            di as txt "  Full mapping saved as: `dta_fname'"
-            di as txt "  No Excel file written. Use the .dta file directly for subsequent files."
-            di as res `"naam id complete for `v' -> `dta_fname'"'
-        }
+        restore
+        di as res `"naam id complete for `v' -> `fname'"'
     }
+
     if `n_processed' == 0 {
         di as err "No string variables found. naam id requires string variables."
         exit 109

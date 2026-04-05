@@ -4021,6 +4021,7 @@ fmwww.bc.edu/repec/bocode/c/cmaxuse.ado
 fmwww.bc.edu/repec/bocode/c/cgssm.pkg
 fmwww.bc.edu/repec/bocode/c/censlope_iteration.hlp
 fmwww.bc.edu/repec/bocode/c/counties.dta
+fmwww.bc.edu/repec/bocode/c/coefconv.pkg
 fmwww.bc.edu/repec/bocode/c/cycleplot.hlp
 fmwww.bc.edu/repec/bocode/c/circkdex5.do
 fmwww.bc.edu/repec/bocode/c/cprd_immunisation.sthlp
@@ -4174,6 +4175,7 @@ fmwww.bc.edu/repec/bocode/c/cortesti.pkg
 fmwww.bc.edu/repec/bocode/c/confsvy.ado
 fmwww.bc.edu/repec/bocode/c/clv.pkg
 fmwww.bc.edu/repec/bocode/c/cauchitasinhouterv2.ado
+fmwww.bc.edu/repec/bocode/c/coefconv.sthlp
 fmwww.bc.edu/repec/bocode/c/cprd_product.ado
 fmwww.bc.edu/repec/bocode/c/cenegbinll.ado
 fmwww.bc.edu/repec/bocode/c/Ch09_2mods.do
@@ -4251,6 +4253,7 @@ fmwww.bc.edu/repec/bocode/c/circcorr.ado
 fmwww.bc.edu/repec/bocode/c/convdate.sthlp
 fmwww.bc.edu/repec/bocode/c/confa.pkg
 fmwww.bc.edu/repec/bocode/c/cash_en.txt
+fmwww.bc.edu/repec/bocode/c/coefconv.ado
 fmwww.bc.edu/repec/bocode/c/cpoissone.hlp
 fmwww.bc.edu/repec/bocode/c/china_spatdwm.zip
 fmwww.bc.edu/repec/bocode/c/chunky.ado
@@ -4601,6 +4604,7 @@ fmwww.bc.edu/repec/bocode/c/circlebar.sthlp
 fmwww.bc.edu/repec/bocode/c/chitest.ado
 fmwww.bc.edu/repec/bocode/c/corrtable_njc_5.gph
 fmwww.bc.edu/repec/bocode/c/chaidforest_post.sthlp
+fmwww.bc.edu/repec/bocode/c/coefconv_manual.pdf
 fmwww.bc.edu/repec/bocode/c/compreg.ado
 fmwww.bc.edu/repec/bocode/c/cfby.sthlp
 fmwww.bc.edu/repec/bocode/c/cash_holding.do
@@ -4826,6 +4830,7 @@ fmwww.bc.edu/repec/bocode/c/classocoef.ado
 fmwww.bc.edu/repec/bocode/c/createtoc.dlg
 fmwww.bc.edu/repec/bocode/c/combinadd.sthlp
 fmwww.bc.edu/repec/bocode/c/circmedian.ado
+fmwww.bc.edu/repec/bocode/c/coefconv_plot.ado
 fmwww.bc.edu/repec/bocode/c/chaos.hlp
 fmwww.bc.edu/repec/bocode/c/cij.hlp
 fmwww.bc.edu/repec/bocode/c/conjoint.pkg
@@ -5016,6 +5021,7 @@ fmwww.bc.edu/repec/bocode/c/cnevent.ado
 fmwww.bc.edu/repec/bocode/c/ceqrace.sthlp
 fmwww.bc.edu/repec/bocode/c/cibplot.hlp
 fmwww.bc.edu/repec/bocode/c/contrasi.hlp
+fmwww.bc.edu/repec/bocode/c/coefconv_examples.do
 fmwww.bc.edu/repec/bocode/c/cfvars.pkg
 fmwww.bc.edu/repec/bocode/c/cprdhesop_appointment.ado
 fmwww.bc.edu/repec/bocode/c/cprd_nonxyzlookup.ado
@@ -5783,6 +5789,7 @@ fmwww.bc.edu/repec/bocode/c/circularkde.sthlp
 fmwww.bc.edu/repec/bocode/c/color-538r.style
 fmwww.bc.edu/repec/bocode/c/choplist.ado
 fmwww.bc.edu/repec/bocode/c/cpcorr6.hlp
+fmwww.bc.edu/repec/bocode/c/coefconv_plot.sthlp
 fmwww.bc.edu/repec/bocode/c/coldiag2.hlp
 fmwww.bc.edu/repec/bocode/c/CItest2bDescription.txt
 fmwww.bc.edu/repec/bocode/c/cprd_medical.sthlp
@@ -12723,12 +12730,14 @@ fmwww.bc.edu/repec/bocode/w/weavermarkup.ado
 fmwww.bc.edu/repec/bocode/w/weakivtest2.pkg
 fmwww.bc.edu/repec/bocode/w/wgttest.ado
 fmwww.bc.edu/repec/bocode/w/wtpcikr.html
+fmwww.bc.edu/repec/bocode/w/wdi_deflate.ado
 fmwww.bc.edu/repec/bocode/w/wid.sthlp
 fmwww.bc.edu/repec/bocode/w/whotdeck.hlp
 fmwww.bc.edu/repec/bocode/w/witch.ado
 fmwww.bc.edu/repec/bocode/w/wtdq.sthlp
 fmwww.bc.edu/repec/bocode/w/waffle_plot.sthlp
 fmwww.bc.edu/repec/bocode/w/wtdml.html
+fmwww.bc.edu/repec/bocode/w/wdi_deflate.pkg
 fmwww.bc.edu/repec/bocode/w/weavercheck.ado
 fmwww.bc.edu/repec/bocode/w/wdireshape.hlp
 fmwww.bc.edu/repec/bocode/w/wasstest.sthlp
@@ -13008,6 +13017,7 @@ fmwww.bc.edu/repec/bocode/w/white.pkg
 fmwww.bc.edu/repec/bocode/w/welcom.dlg
 fmwww.bc.edu/repec/bocode/w/wid.jar
 fmwww.bc.edu/repec/bocode/w/weltmle.sthlp
+fmwww.bc.edu/repec/bocode/w/wdi_deflate.sthlp
 fmwww.bc.edu/repec/bocode/w/writeinput.pkg
 fmwww.bc.edu/repec/bocode/w/wdiscrim.ado
 fmwww.bc.edu/repec/bocode/w/wtdpred.ado
@@ -17016,6 +17026,7 @@ fmwww.bc.edu/repec/bocode/s/sdhollister.sthlp
 fmwww.bc.edu/repec/bocode/s/sgtreg.ado
 fmwww.bc.edu/repec/bocode/s/spweight3.dta
 fmwww.bc.edu/repec/bocode/s/subjob31.ado
+fmwww.bc.edu/repec/bocode/s/strip.sthlp
 fmwww.bc.edu/repec/bocode/s/sptobitmstardxt06.ado
 fmwww.bc.edu/repec/bocode/s/SolvingAndSimulatingRBCModels.nb
 fmwww.bc.edu/repec/bocode/s/storecmd6.hlp
@@ -17725,6 +17736,7 @@ fmwww.bc.edu/repec/bocode/s/spsurv.pkg
 fmwww.bc.edu/repec/bocode/s/scheme-ukraine.scheme
 fmwww.bc.edu/repec/bocode/s/stnet.sthlp
 fmwww.bc.edu/repec/bocode/s/scls.sthlp
+fmwww.bc.edu/repec/bocode/s/strip_examples.do
 fmwww.bc.edu/repec/bocode/s/svygei.hlp
 fmwww.bc.edu/repec/bocode/s/singlearm.sthlp
 fmwww.bc.edu/repec/bocode/s/sptobitsdm.pkg

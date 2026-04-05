@@ -1,5 +1,5 @@
 {smcl}
-{* naam.sthlp  version 1.0.0  20 March 2026}{...}
+{* naam.sthlp  version 1.0.1  4 April 2026}{...}
 {hline}
 help for {cmd:naam}
 {hline}
@@ -46,8 +46,10 @@ help for {cmd:naam}
     {cmd:,} {opt using2(filename2)}
 
 {pstd}
-{it:filename} refers to an Excel workbook (.xlsx).
-If the {cmd:.xlsx} extension is omitted, it is appended automatically.
+For all subcommands except {cmd:naam id}, {it:filename} refers to an Excel workbook (.xlsx);
+the {cmd:.xlsx} extension is appended automatically if omitted.
+{cmd:naam id} saves each variable's mapping as a separate Stata .dta file
+({it:filename_varname.dta}), with no row-count limit.
 
 
 {marker description}{...}
@@ -71,12 +73,15 @@ variable to a named Excel workbook, and reapplies those mappings instantly to
 every subsequent file. The same string always receives the same numeric code.
 New categories are detected automatically, assigned the next available code,
 and the Excel file is updated. The Excel file also serves as a permanent,
-human-readable audit record of every mapping in the project.
+human-readable audit record of every mapping in the project. ID variables
+are handled separately by {cmd:naam id}, which saves mappings as native
+Stata .dta files with no row-count limit.
 
 {pstd}
 {cmd:naam} requires no user-written dependencies. All subcommands read and
 write standard .xlsx files using Stata{c 39}s built-in {helpb import excel}
-and {helpb export excel}.
+and {helpb export excel}. {cmd:naam id} reads and writes .dta files using
+{helpb use} and {helpb save}.
 
 
 {marker subcommands}{...}
@@ -93,8 +98,10 @@ and {helpb export excel}.
 {p2col:{cmd:naam id}}When you have a unique identifier column such as
     HH-001-MH that you need to merge datasets on, this converts it to a
     number and saves a record so the same ID always gets the same number
-    across every file. Use {cmd:naam id} on each file; do not use
-    {cmd:naam apply} for ID variables.{p_end}
+    across every file. Mappings are saved as native Stata .dta files
+    ({it:base_varname.dta}), one per ID variable, with no row-count limit.
+    Use {cmd:naam id} on each file; do not use {cmd:naam apply} for ID
+    variables.{p_end}
 {p2col:{cmd:naam export}}When your dataset already has numbers with labels
     attached, this saves those labels into Excel so you can restore them
     later if they get stripped.{p_end}
@@ -122,8 +129,10 @@ and {helpb export excel}.
 {dlgtab:naam encode and naam id}
 
 {phang}
-{opt replace} overwrites the Excel file if it already exists. Required
-the first time a mapping file is created for a given filename.
+{opt replace} overwrites the mapping file if it already exists. For
+{cmd:naam encode} and {cmd:naam export} this is the .xlsx file; for
+{cmd:naam id} this is the per-variable .dta file. Required the first
+time a mapping file is created for a given filename.
 
 {phang}
 {opt keep} retains the original string variable alongside the new numeric
@@ -206,9 +215,11 @@ each variable as follows:
 {pstd}
 Converts each string ID variable in {varlist} to a consistent numeric ID.
 On the {it:first} file, codes 1, 2, 3, ... are assigned in alphabetical
-order using {helpb egen} {opt group()}, and the mapping is saved to Excel.
-On every {it:subsequent} file, the saved mapping is read: known IDs receive
-their original codes, and new IDs receive the next available sequential codes.
+order using {helpb egen} {opt group()}, and the mapping is saved as a
+native Stata .dta file ({it:base_varname.dta}). On every {it:subsequent}
+file, the saved mapping is read: known IDs receive their original codes,
+and new IDs receive the next available sequential codes. There is no
+row-count limit.
 
 {dlgtab:naam export}
 
@@ -224,8 +235,10 @@ or modify anything in the dataset.
 {pstd}
 Reads a naam Excel file and prints its full contents to the Results window:
 each variable, its type, and every numeric code with its corresponding string
-value. For ID variables, the total count of saved IDs is shown. The dataset
-in memory is not used or modified.
+value. Applies to variables encoded with {cmd:naam encode} or exported with
+{cmd:naam export}. ID variable mappings are stored in separate .dta files
+and are not displayed by {cmd:naam list}; use {helpb use} or {helpb browse}
+to inspect them directly. The dataset in memory is not used or modified.
 
 {dlgtab:naam decode}
 
@@ -272,14 +285,15 @@ a warning.
 
 {phang}
 {c 149} Excel sheet names are truncated to 31 characters if the variable
-name is longer.
+name is longer. This applies to {cmd:naam encode} and {cmd:naam export};
+{cmd:naam id} is unaffected as it writes .dta files, not Excel sheets.
 
 
 {marker excel}{...}
-{title:Excel output structure}
+{title:Output file structure}
 
 {pstd}
-Every Excel file written by {cmd:naam} contains:
+{ul:Excel files} ({cmd:naam encode}, {cmd:naam export}, {cmd:naam apply}):
 
 {p2colset 5 24 26 2}
 {p2col:Sheet {it:index}}One row per processed variable. Columns:
@@ -292,6 +306,11 @@ Every Excel file written by {cmd:naam} contains:
 {pstd}
 These files are fully human-readable in Excel and should be archived
 alongside the datasets they describe.
+
+{pstd}
+{ul:.dta files} ({cmd:naam id}): one file per ID variable, named
+{it:base_varname.dta}. Each contains two variables: {it:string_value}
+and {it:numeric_code}, sorted by code. No row-count limit.
 
 
 {marker examples}{...}
@@ -314,13 +333,15 @@ format HH-MH-NNNNN. Install them with:{p_end}
 
 {pstd}Encode Round 1 and save the mapping{p_end}
 {phang2}{stata "naam encode district occupation religion using naam_maps.xlsx, replace":. naam encode district occupation religion using naam_maps.xlsx, replace}{p_end}
-{phang2}{stata "naam id hhid using naam_ids.xlsx, replace keep":. naam id hhid using naam_ids.xlsx, replace keep}{p_end}
+{phang2}{stata "naam id hhid using naam_ids, replace keep":. naam id hhid using naam_ids, replace keep}{p_end}
+{phang2}{cmd:* produces naam_ids_hhid.dta}{p_end}
 {phang2}{stata "save naam_enc1.dta, replace":. save naam_enc1.dta, replace}{p_end}
 
 {pstd}Apply same mapping to Round 2; Amravati detected and auto-assigned{p_end}
 {phang2}{stata "use naam_round2.dta, clear":. use naam_round2.dta, clear}{p_end}
 {phang2}{stata "naam apply using naam_maps.xlsx":. naam apply using naam_maps.xlsx}{p_end}
-{phang2}{stata "naam id hhid using naam_ids.xlsx, keep":. naam id hhid using naam_ids.xlsx, keep}{p_end}
+{phang2}{stata "naam id hhid using naam_ids, keep":. naam id hhid using naam_ids, keep}{p_end}
+{phang2}{cmd:* reads naam_ids_hhid.dta, assigns same codes + any new ones}{p_end}
 
 {pstd}Append: every district code is now consistent across both rounds{p_end}
 {phang2}{stata "append using naam_enc1.dta":. append using naam_enc1.dta}{p_end}
@@ -362,7 +383,7 @@ format HH-MH-NNNNN. Install them with:{p_end}
 
 {pstd}
 {cmd:naam} does not store results in {cmd:r()} or {cmd:e()}.
-All output is written to the Excel file specified in {cmd:using}.
+Output is written to the Excel file or .dta file specified in {cmd:using}.
 
 
 {marker requirements}{...}
@@ -371,7 +392,8 @@ All output is written to the Excel file specified in {cmd:using}.
 {pstd}
 Stata 14 or higher. No user-written packages are required.
 {cmd:naam} relies only on {helpb import excel}, {helpb export excel},
-{helpb encode}, {helpb egen}, {helpb label}, and {helpb levelsof}.
+{helpb use}, {helpb save}, {helpb encode}, {helpb egen},
+{helpb label}, and {helpb levelsof}.
 
 
 {marker citation}{...}
