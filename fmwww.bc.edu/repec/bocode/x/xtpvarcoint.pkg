@@ -1,0 +1,56 @@
+d 'XTPVARCOINT': module to perform Panel VAR Modeling with Cointegration, Structural Breaks, and Cross-Sectional Dependence
+d
+d   xtpvarcoint implements a comprehensive econometric toolkit for
+d vector autoregressive (VAR) modeling in heterogeneous panels.   
+d It is a Stata port of the R package pvars and provides:	
+d Panel cointegration rank tests based on the Johansen procedure
+d (Larsson et al. 2001), the Breitung (2005) two-step		
+d estimator, the Saikkonen-Luetkepohl procedure (Arsova and Oersal
+d 2018), and the correlation-augmented inverse normal		
+d test robust to cross-sectional dependence (Arsova and Oersal
+d 2021).	Panel VAR/VECM estimation using the mean-group (MG)
+d and pooled mean-group (PMG) estimators with optional Kilian
+d (1998)	    bias correction and factor-augmented
+d specifications for cross-sectional dependence.	Panel SVAR
+d identification via Cholesky decomposition, Blanchard-Quah
+d long-run restrictions, proxy/IV variables, distance		
+d covariance (DC), and Cramer-von Mises (CVM) independence
+d criteria.	   Specification tools for determining the number
+d of common factors (Onatski 2010, Ahn and Horenstein 2013, Bai and
+d Ng 2002)	      and the optimal lag order based on AIC, HQC,
+d SIC, and FPE criteria.	Impulse response functions,
+d {bf:forecast error variance decomposition}, and bootstrap
+d confidence intervals via the panel		moving-block
+d bootstrap.	    Publication-quality plots for IRFs with
+d confidence bands, FEVD stacked area charts, and companion matrix
+d eigenvalue		stability diagrams.    The data must be
+d xtset before calling xtpvarcoint.  Individual-specific lag orders
+d are supported by specifying a numlist in    lags(). 
+d
+d KW: panel data
+d KW: panel VAR
+d KW: panel VECM
+d KW: cointegration
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260405
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtpvarcoint.ado
+f xtpvarcoint.sthlp
+f ../_/_xtpvarcoint_coint.ado
+f ../_/_xtpvarcoint_irf.ado
+f ../_/_xtpvarcoint_mata.ado
+f ../_/_xtpvarcoint_moments.ado
+f ../_/_xtpvarcoint_pcoint.ado
+f ../_/_xtpvarcoint_pid.ado
+f ../_/_xtpvarcoint_plot.ado
+f ../_/_xtpvarcoint_pvar.ado
+f ../_/_xtpvarcoint_rscoef.ado
+f ../_/_xtpvarcoint_sboot.ado
+f ../_/_xtpvarcoint_speci.ado
+f xtpvarcoint_example.do

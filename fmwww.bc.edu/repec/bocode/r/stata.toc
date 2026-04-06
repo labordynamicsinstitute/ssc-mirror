@@ -123,6 +123,7 @@ p regoprob2 module to estimate random effects generalized ordered probit models 
 p regoptwgt module to produce optimal population weighting for regressions and instrumental variables
 p regpar module to compute population attributable risks from binary regression models
 p regpred module to calculate linear regression predictions
+p regproject module to perform post-estimation projection and boundary analysis
 p regresby module to generate regression residuals by byvarlist
 p regsave module to save regression results to a Stata-formatted dataset 
 p regsensitivity module for regression sensitivity analysis

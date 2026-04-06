@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.2.0  2026-04-03}{...}
+{* *! version 2.7.0  2026-04-04}{...}
 {viewerjumpto "Syntax" "wdi_deflate##syntax"}{...}
 {viewerjumpto "Description" "wdi_deflate##description"}{...}
 {viewerjumpto "Formulas" "wdi_deflate##formulas"}{...}
@@ -22,7 +22,8 @@ Build deflator dataset from WDI
 
 {p 8 16 2}
 {cmd:wdi_deflate build}
-{cmd:,} {opt sav:ing(filename)} [{opt replace} {opt gdp} {opt count:ries(codelist)} {opt snapshot(dirname)}]
+{cmd:,} {opt sav:ing(filename)} [{opt replace} {opt gdp}
+{opt countries(codelist)} {opt snapshot(dirname)}]
 
 
 {pstd}
@@ -52,9 +53,9 @@ file{p_end}
 {synopt:{opt replace}}overwrite existing file{p_end}
 {synopt:{opt gdp}}use GDP PPP factor (PA.NUS.PPP) instead of private
 consumption (PA.NUS.PRVT.PP){p_end}
-{synopt:{opt count:ries(codelist)}}space-separated ISO3 codes to download
-(e.g. {cmd:countries(ETH TZA USA)}); if omitted, downloads all
-countries{p_end}
+{synopt:{opt countries(codelist)}}space-separated ISO3 codes to
+download (e.g. {cmd:countries(ETH TZA USA)}); if omitted, downloads
+all countries{p_end}
 {synopt:{opt snapshot(dirname)}}save individual WDI indicator files
 (ppp_factor.dta, cpi.dta, xr.dta) to {it:dirname} for archival{p_end}
 {synoptline}
@@ -212,61 +213,87 @@ the standard conversion.
 {title:Examples}
 
 {pstd}
-{ul:LCU -> 2017 PPP $ (one-step, auto-downloads WDI data)}
+{ul:LCU -> 2021 PPP $ (one-step, auto-downloads WDI data)}
 
-        {cmd:wdi_deflate consumption,}
-            {cmd:country(iso3) from(2016) to(2017)}
+{p 8 8 2}
+    . {cmd:clear}{p_end}
+{p 8 8 2}
+    . {cmd:set obs 2}{p_end}
+{p 8 8 2}
+    . {cmd:gen iso3 = cond(_n==1, "ETH", "TZA")}{p_end}
+{p 8 8 2}
+    . {cmd:gen year = cond(_n==1, 2018, 2019)}{p_end}
+{p 8 8 2}
+    . {cmd:gen consumption = cond(_n==1, 15000, 850000)}{p_end}
+{p 8 8 2}
+    . {cmd:gen income = cond(_n==1, 22000, 1200000)}{p_end}
+{p 8 8 2}
+    . {cmd:wdi_deflate consumption income, country(iso3) from(year) to(2021)}{p_end}
+{p 8 8 2}
+    . {cmd:list}{p_end}
 
-        * Creates: consumption_ppp2017
+{p 8 8 2}
+    * Creates: consumption_ppp2021, income_ppp2021{p_end}
 
-{pstd}
-{ul:LCU -> nominal USD (one-step)}
-
-        {cmd:wdi_deflate consumption,}
-            {cmd:country(iso3) from(2016) to(2017) usd}
-
-        * Creates: consumption_usd2017
-
-{pstd}
-{ul:Build deflator for specific countries only (faster)}
-
-        {cmd:wdi_deflate build, saving("data/deflator.dta") countries(ETH TZA USA) replace}
 
 {pstd}
 {ul:Two-step workflow for replicability}
 
-        * Step 1: build and save a deflator snapshot
-        {cmd:wdi_deflate build, saving("data/deflator.dta") replace}
+{p 8 8 2}
+    . {cmd:wdi_deflate build, saving(deflator.dta) countries(ETH TZA) replace}{p_end}
+{p 8 8 2}
+    . {cmd:clear}{p_end}
+{p 8 8 2}
+    . {cmd:set obs 2}{p_end}
+{p 8 8 2}
+    . {cmd:gen iso3 = cond(_n==1, "ETH", "TZA")}{p_end}
+{p 8 8 2}
+    . {cmd:gen year = cond(_n==1, 2018, 2019)}{p_end}
+{p 8 8 2}
+    . {cmd:gen consumption = cond(_n==1, 15000, 850000)}{p_end}
+{p 8 8 2}
+    . {cmd:wdi_deflate consumption, country(iso3) from(year) to(2021) using(deflator.dta)}{p_end}
+{p 8 8 2}
+    . {cmd:list}{p_end}
 
-        * Step 2: convert using the saved snapshot
-        {cmd:wdi_deflate consumption,}
-            {cmd:country(iso3) from(2016) to(2017)}
-            {cmd:using("data/deflator.dta")}
+{pstd}
+The remaining examples assume a dataset with the referenced variables
+is already in memory.
+
+{pstd}
+{ul:LCU -> nominal USD}
+
+        {cmd:wdi_deflate consumption, country(iso3) from(year) to(2021) usd}
+
+        * Creates: consumption_usd2021
 
 {pstd}
 {ul:Deflate to constant LCU}
 
-        {cmd:wdi_deflate consumption,}
-            {cmd:country(iso3) from(year) to(2017)}
-            {cmd:using("data/deflator.dta") deflate}
+        {cmd:wdi_deflate consumption, country(iso3) from(year) to(2021) deflate}
 
-        * Creates: consumption_real2017
+        * Creates: consumption_real2021
+
+{pstd}
+{ul:Build deflator for specific countries only (faster)}
+
+        {cmd:wdi_deflate build, saving(deflator.dta) countries(ETH TZA USA) replace}
 
 {pstd}
 {ul:Rebase 2011 PPP $ to 2017 PPP $}
 
-        {cmd:wdi_deflate pov_line consumption,}
+        {cmd:wdi_deflate cost_ppp consumption,}
             {cmd:country(iso3) from(2011) to(2017)}
-            {cmd:using("data/deflator.dta") fromppp}
+            {cmd:using(deflator.dta) fromppp}
 
-        * Creates: pov_line_ppp2017, consumption_ppp2017
+        * Creates: cost_ppp_ppp2017, consumption_ppp2017
 
 {pstd}
 {ul:Rebase 2015 USD to 2020 USD}
 
         {cmd:wdi_deflate cost_usd,}
             {cmd:country(iso3) from(2015) to(2020)}
-            {cmd:using("data/deflator.dta") usd fromusd}
+            {cmd:using(deflator.dta) usd fromusd}
 
         * Creates: cost_usd_usd2020
 
@@ -275,7 +302,7 @@ the standard conversion.
 
         {cmd:wdi_deflate consumption_ppp,}
             {cmd:country(iso3) from(2017) to(2020)}
-            {cmd:using("data/deflator.dta") fromppp deflate}
+            {cmd:using(deflator.dta) fromppp deflate}
 
         * Creates: consumption_ppp_real2020
 
@@ -284,7 +311,7 @@ the standard conversion.
 
         {cmd:wdi_deflate cost_usd,}
             {cmd:country(iso3) from(2020) to(2022)}
-            {cmd:using("data/deflator.dta") fromusd deflate}
+            {cmd:using(deflator.dta) fromusd deflate}
 
         * Creates: cost_usd_real2022
 
@@ -293,21 +320,21 @@ the standard conversion.
 
         {cmd:wdi_deflate income,}
             {cmd:country(iso3) from(year) to(2017)}
-            {cmd:using("data/deflator.dta") suffix(_ppp17)}
+            {cmd:using(deflator.dta) suffix(_ppp17)}
 
 {pstd}
 {ul:Replace in place}
 
         {cmd:wdi_deflate consumption,}
             {cmd:country(countrycode) from(2011) to(2017)}
-            {cmd:using("data/deflator.dta") fromppp replace}
+            {cmd:using(deflator.dta) fromppp replace}
 
 {pstd}
 {ul:Convert only rural observations}
 
         {cmd:wdi_deflate consumption if urban==0,}
             {cmd:country(iso3) from(year) to(2017)}
-            {cmd:using("data/deflator.dta")}
+            {cmd:using(deflator.dta)}
 
 
 {marker notes}{...}
@@ -360,18 +387,19 @@ the deflator build date and data signature so you can verify which
 vintage was used.
 
 {pstd}
-{bf:Country filtering}: The {opt countries()} option on {cmd:build} limits
-the download to specified countries, which is much faster than a full-world
-download.  When {opt using()} is omitted, the auto-download path
-automatically extracts unique country codes from your data and downloads
-only those countries.  If you later merge the deflator with data containing
-countries not in the original download, the diagnostic output will identify
-which missing countries need to be added.
+{bf:Country filtering}: The {opt countries()} option on {cmd:build}
+limits the download to specified countries, which is much faster than a
+full-world download.  When {opt using()} is omitted, the auto-download
+path automatically extracts unique country codes from your data and
+downloads only those countries.  If you later merge the deflator with
+data containing countries not in the original download, the diagnostic
+output will identify which missing countries need to be added.
 
 {pstd}
-{bf:Dependency}: {cmd:wdi_deflate build} and auto-download both require
-{cmd:wbopendata}.  When {opt using()} is specified, the convert step has
-no dependencies beyond the saved .dta file.
+{bf:Dependencies}: {cmd:wdi_deflate build} and auto-download require
+{cmd:wbopendata} ({stata ssc install wbopendata}) and {cmd:tknz}
+({stata ssc install tknz}).  When {opt using()} is specified, the
+convert step has no dependencies beyond the saved .dta file.
 
 
 {marker indicators}{...}
@@ -423,4 +451,11 @@ Department of Economics.
 {pstd}
 Kalle Hirvonen, International Food Policy Research Institute (IFPRI).
 {browse "mailto:k.hirvonen@cgiar.org":k.hirvonen@cgiar.org}
+{p_end}
+
+
+{title:Last updated}
+
+{pstd}
+4 April 2026
 {p_end}

@@ -1,0 +1,28 @@
+d 'REGPROJECT': module to perform post-estimation projection and boundary analysis
+d
+d     regproject is a post-estimation command that projects the
+d effect of a chosen independent variable (IV) on the dependent   
+d variable (DV), while holding all other regressors at their median
+d values. It automatically detects whether the current dataset	 
+d is cross-sectional, time-series, or panel, and produces a
+d mode-appropriate set of graphs.    regproject must be run
+d immediately after a supported estimation command.  Supported
+d commands include: regress, xtreg, qreg,    xtregar, newey, arima,
+d ardl, ivregress. 
+d
+d KW: panel data
+d KW: marginal effects
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260405
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f regproject.ado
+f regproject.sthlp
+f ../_/_regproject_ts.ado
+f ../_/_regproject_pan.ado
+f ../_/_regproject_cs.ado
+f regproject_example.do
