@@ -236,6 +236,7 @@ p rosali module to detect of response shift at item-level between two times of m
 p rosner module implementing Rosner's generalized extreme studentized deviate (ESD) procedure to detect multiple outliers
 p rosssekh module to perform forecast comparison and forecast rationality tests
 p rotate2 module to produce sorted and labeled rotated matrix
+p round_exact module to perform exact decimal rounding using integer transformation to bypass floating-point noise
 p rowmat_utils module to perform parallel computation on sequences of matrices in Mata
 p rowranks module to create row ranks of a set of variables 
 p rowsort module to row sort a set of integer variables

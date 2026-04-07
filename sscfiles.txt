@@ -10850,6 +10850,7 @@ fmwww.bc.edu/repec/bocode/r/rangerun_run.ado
 fmwww.bc.edu/repec/bocode/r/rvpplot27.hlp
 fmwww.bc.edu/repec/bocode/r/rcs.html
 fmwww.bc.edu/repec/bocode/r/rscore.pkg
+fmwww.bc.edu/repec/bocode/r/round_exact.sthlp
 fmwww.bc.edu/repec/bocode/r/regions.m
 fmwww.bc.edu/repec/bocode/r/resp.ado
 fmwww.bc.edu/repec/bocode/r/recent.ado
@@ -11430,6 +11431,7 @@ fmwww.bc.edu/repec/bocode/r/read_differencetest.ado
 fmwww.bc.edu/repec/bocode/r/raschify.sthlp
 fmwww.bc.edu/repec/bocode/r/reghdfe3_footnote.ado
 fmwww.bc.edu/repec/bocode/r/reporterror.pkg
+fmwww.bc.edu/repec/bocode/r/round_exact.pkg
 fmwww.bc.edu/repec/bocode/r/rifle.ado
 fmwww.bc.edu/repec/bocode/r/rbfmvar.sthlp
 fmwww.bc.edu/repec/bocode/r/radar.sthlp
@@ -11713,6 +11715,7 @@ fmwww.bc.edu/repec/bocode/r/rrreg.html
 fmwww.bc.edu/repec/bocode/r/r2o.ado
 fmwww.bc.edu/repec/bocode/r/reg_ss.ado
 fmwww.bc.edu/repec/bocode/r/rotlist.hlp
+fmwww.bc.edu/repec/bocode/r/round_exact.ado
 fmwww.bc.edu/repec/bocode/r/recap.hlp
 fmwww.bc.edu/repec/bocode/r/robreg10.sthlp
 fmwww.bc.edu/repec/bocode/r/reghdfejl_masker.ado

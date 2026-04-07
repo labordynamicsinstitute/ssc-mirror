@@ -1,0 +1,23 @@
+d 'ROUND_EXACT': module to perform exact decimal rounding using integer transformation to bypass floating-point noise
+d
+d     round_exact addresses the common issue of floating-point
+d precision errors in Stata's built-in round(x, unit) function.   
+d Standard rounding often leaves "noise" in binary representation
+d (e.g., round(0.3, 0.1) resulting in 0.30000000000000004),   
+d which causes logical assertions to fail.    This command
+d implements the formula: round(val * 10^d) / 1^d. By transforming
+d the value into an integer before rounding, it    avoids the
+d precision errors introduced by fractional units. 
+d
+d KW: data management
+d KW: rounding
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260406
+d
+d Author:   Anne Fengyan Shi,  Pew Research Center
+d Support: email AShi@@pewresearch.org
+d
+f round_exact.ado
+f round_exact.sthlp

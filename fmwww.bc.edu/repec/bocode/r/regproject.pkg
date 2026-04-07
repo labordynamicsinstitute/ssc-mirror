@@ -17,8 +17,8 @@ d Requires: Stata version 14
 d
 d Distribution-Date: 20260405
 d
-d Author:   Merwan Roudane, NA
-d Support: email  merwanroudane920@@gmail.com
+d Author:   Noman Arshed, Sunway Business School, Sunway University
+d Support: email  nouman.arshed@@gmail.com
 d
 f regproject.ado
 f regproject.sthlp
