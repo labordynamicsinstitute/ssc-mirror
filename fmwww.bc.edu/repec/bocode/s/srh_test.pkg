@@ -1,0 +1,42 @@
+d 'SRH_TEST': module for computing the Scheirer-Ray-Hare nonparametric two-way analysis of variance test  
+d
+d  srh_test performs the Scheirer-Ray-Hare (SRH) test, a
+d nonparametric alternative to two-way factorial ANOVA. The test
+d was introduced by Scheirer, Ray, and Hare (1976) as an extension 
+d of the Kruskal-Wallis one-way test to designs with two crossed
+d factors and their interaction. The command displays the standard
+d ANOVA table augmented with two additional columns, H, the
+d Scheirer-Ray-Hare test statistic for each term, and Prob>chi2,
+d the p-value for H based on the chi-squared distribution with
+d degrees of freedom equal to those of the term. Like the
+d Kruskal-Wallis test, the SRH test does not require normality. It
+d assumes that observations are independent and that the response
+d variable is at least ordinal. The chi-squared approximation
+d improves with larger sample sizes; results should be interpreted
+d cautiously in small samples. The SRH test is intended for
+d balanced factorial designs, where every combination of
+d factor_var1 and factor_var2 levels contains the same number of
+d observations. With unbalanced designs the test may produce
+d unreliable results, because the sums of squares and MS(total) are
+d distorted when cell sizes differ. If the design is unbalanced,
+d alternative approaches should be considered. The SRH test has
+d lower statistical power than parametric two-way ANOVA and is
+d considered conservative relative to the parametric alternative
+d (Dytham 2003). When the normality assumption of parametric ANOVA
+d is plausible, that test is preferred. Post-hoc pairwise
+d comparisons should be performed separately if significant effects
+d are found. 
+d
+d KW: Scheirer-Ray-Hare test
+d KW: two-way analysis of variance
+d KW: ANOVA
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20260407
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f srh_test.ado
+f srh_test.sthlp

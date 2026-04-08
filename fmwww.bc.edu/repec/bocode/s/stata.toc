@@ -271,6 +271,7 @@ p sqmc module to compute squared multiple correlation
 p sqr module to make graphs square, or any other shape
 p sratio module to calculate ratio study statistics
 p sreweight module for survey reweighting
+p srh_test module for computing the Scheirer-Ray-Hare nonparametric two-way analysis of variance test  
 p srslogit module to perform Logit regression with secondary ridit splines
 p srtree module to implement regression trees via optimal pruning, bagging, random forests, and boosting methods
 p ssaggregate module to create shock-level aggregates for shift-share IV

@@ -5,9 +5,9 @@ d precision errors in Stata's built-in round(x, unit) function.
 d Standard rounding often leaves "noise" in binary representation
 d (e.g., round(0.3, 0.1) resulting in 0.30000000000000004),   
 d which causes logical assertions to fail.    This command
-d implements the formula: round(val * 10^d) / 1^d. By transforming
-d the value into an integer before rounding, it    avoids the
-d precision errors introduced by fractional units. 
+d implements the formula: round(val * 10**d) / 10**d. By
+d transforming the value into an integer before rounding, it   
+d avoids the precision errors introduced by fractional units. 
 d
 d KW: data management
 d KW: rounding
