@@ -1,0 +1,21 @@
+d 'QMODPLOT': module to produce a Quadratic Moderation Plot
+d
+d  qmodplot visualises moderated regression models in which the
+d focal predictor x may enter linearly or as a quadratic, and the
+d moderator m may affect both the linear and quadratic slope
+d components. 
+d
+d KW: regression
+d KW: moderation
+d KW: graphics
+d
+d Requires: Stata version 14 and xtqreg or qregpd from SSC (q.v.)
+d
+d Distribution-Date: 20260408
+d
+d Author: Noman Arshed,   Sunway Business School, Sunway University
+d Support: email nouman.arshed@@gmail.com
+d
+f qmodplot.ado
+f qmodplot.sthlp
+f qmodplot_demo.do

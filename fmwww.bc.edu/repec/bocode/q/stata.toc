@@ -15,6 +15,7 @@ p qic module to compute model selection criterion in GEE analyses
 p qll module to implement Elliott-Müller efficient test for general persistent time variation in regression coefficients
 p qlognorm module for diagnostic plots for lognormal distribution
 p qlqc15 module for scoring of the EORTC QLQ-C15-PAL
+p qmodplot module to produce a Quadratic Moderation Plot
 p qn module to estimate Rousseeuw and Croux (1993) robust measure of dispersion
 p qog module to access the most recent release of the "Quality of Government" data
 p qogbook module to access Quality of Government codebooks 

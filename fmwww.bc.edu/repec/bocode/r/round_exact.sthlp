@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.1.0  2026-04-03}{...}
+{* *! version 2.7.0  2026-04-08}{...}
 {vieweralsosee "round()" "help round"}{...}
 {viewerjumpto "Syntax" "round_exact##syntax"}{...}
 {viewerjumpto "Description" "round_exact##description"}{...}
@@ -41,23 +41,29 @@ causes logical assertions to fail.
 
 {pstd}
 This command implements the formula: {it:round(val * 10^d) / 10^d}. By transforming the value into an integer before rounding, 
-it avoids the precision errors introduced by fractional units.
+it avoids the precision errors introduced by fractional units. 
 
 
 {marker remarks}{...}
-{title:Remarks: The "Cox Logic" and Precision}
+{title:Remarks: Precision and Binary Representation}
 
 {pstd}
-Stata expert {bf:Nicholas J. Cox} has frequently cautioned users regarding the {cmd:round()} function, noting that decimal 
-fractions like 0.1 or 0.01 do not have exact binary representations. As Cox has observed, performing calculations 
-directly with integers is inherently more stable in digital computing because integers are represented exactly.
+As frequently noted by {help ncox:Nicholas J. Cox}, decimal fractions like 0.1 or 0.01 often lack exact binary 
+representations, leading to unexpected "noise" in calculations. For a comprehensive overview of rounding 
+logic and its implications in Stata, see: Cox, N. J. 2018. {it:Speaking Stata: From rounding to binning}. 
+{it:Stata Journal} 18: 741-754.
 
 {pstd}
-{cmd:round_exact} conforms to this reasoning but goes a step further. By scaling decimals into integers, 
-performing the rounding, and scaling back ({it:round(val * 10^d) / 10^d}), the command eliminates the 
-"trailing noise" found in standard functions.  
-This "back-and-forth" transformation ensures that the final decimal result matches the user's expectation 
-for exactness, enabling successful {cmd:assert} checks and exact, cross‑wave‑comparable results..
+A foundational discussion of the architectural hurdles of digital computing was provided by 
+{help gould:William Gould}, President and Architect of Stata. See: Gould, William. 2006. 
+{it:Mata Matters: Precision}. {it:Stata Journal} 6: 550-560.
+
+{pstd}
+Performing calculations with integers is inherently more stable because integers are represented 
+exactly. {cmd:round_exact} follows this logic by scaling decimals into integers, performing the 
+rounding, and then scaling back. This "back-and-forth" transformation ensures that the final decimal 
+result matches the user's expectation for exactness, enabling successful {cmd:assert} checks and 
+consistent results across comparative data analysis.
 
 
 {marker examples}{...}
@@ -68,8 +74,8 @@ for exactness, enabling successful {cmd:assert} checks and exact, cross‑wave�
 {phang2}{cmd:. assert r(val) == 0.3}{p_end}
 
 {pstd}Rounding a variable in a dataset:{p_end}
-{phang2}{cmd:. sysuse auto, clear}{p_end}
-{phang2}{cmd:. round_exact price, d(2) replace}{p_end}
+{phang2}{cmd:. sysuse nlsw88, clear}{p_end}
+{phang2}{cmd:. round_exact wage, d(4) replace}{p_end}
 
 {pstd}Creating a new rounded variable:{p_end}
 {phang2}{cmd:. round_exact gear_ratio, d(1) generate(gr_rounded)}{p_end}
@@ -80,11 +86,7 @@ for exactness, enabling successful {cmd:assert} checks and exact, cross‑wave�
 {title:Author}
 
 {pstd}Anne Fengyan Shi, Pew Research Center{p_end}
-
-{marker Date}{...}
-{title:Date}
-
-{pstd} April 3, 2026
+{pstd}Support: email AShi@pewresearch.org{p_end}
 
 {marker acknowledgment}{...}
 {title:Acknowledgment}

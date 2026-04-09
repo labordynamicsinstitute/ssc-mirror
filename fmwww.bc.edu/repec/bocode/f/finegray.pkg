@@ -1,0 +1,32 @@
+d 'FINEGRAY': module for fast Fine-Gray competing risks regression
+d
+d  finegray fits the Fine and Gray (1999) subdistribution hazard
+d model for competing risks data. It estimates subdistribution
+d hazard ratios (SHR) that quantify the effect of covariates on the
+d cumulative incidence of a cause of interest in the presence of
+d competing events. The implementation uses a native Mata
+d forward-backward scan algorithm that avoids data expansion
+d entirely. Supports factor variables, robust/clustered SEs,
+d stratified censoring distributions, CIF prediction, Schoenfeld
+d residuals, and a proportional subdistribution hazards test. 
+d
+d KW: competing risks
+d KW: Fine-Gray
+d KW: subdistribution hazard
+d KW: cumulative incidence
+d KW: survival analysis
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260408
+d
+d Author: Tim Copeland,  Department of Clinical Neuroscience, Karolinska Institutet
+d Support: email timothy.copeland@@ki.se 
+d
+f finegray.ado
+f finegray.sthlp
+f finegray_phtest.ado
+f finegray_predict.ado
+f ../_/_finegray_mata.ado
+f finegray_phtest.sthlp
+f finegray_predict.sthlp
