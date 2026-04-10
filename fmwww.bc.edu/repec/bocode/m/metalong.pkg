@@ -1,0 +1,34 @@
+d 'METALONG': module providing a coherent workflow for synthesising evidence from studies that report outcomes at multiple follow-up time points 
+d
+d  metalong provides tools for longitudinal meta-analysis with
+d integrated sensitivity analysis (ITCV), benchmark calibration,
+d fragility assessment, and spline-based trend estimation. 
+d
+d KW: longitudinal meta-analysis
+d KW: panel data
+d KW: splines
+d
+d Requires: Stata version 14.1
+d
+d Distribution-Date: 20260409
+d
+d Author:    Subir Hait,  Michigan State University
+d Support: email   haitsubi@@msu.edu
+d
+f metalong.sthlp
+f ml_benchmark.ado
+f ml_fragility.ado
+f ml_meta.ado
+f ml_plot.ado
+f ml_sens.ado
+f ml_spline.ado
+f ../s/sim_longmeta.ado
+f ml_benchmark.sthlp
+f ml_fragility.sthlp
+f ml_meta.sthlp
+f ml_plot.sthlp
+f ml_sens.sthlp
+f ml_spline.sthlp
+f ../s/sim_longmeta.sthlp
+f ../r/run_metalong.do
+f metalong_example.do

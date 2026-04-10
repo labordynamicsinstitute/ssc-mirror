@@ -1,0 +1,35 @@
+d 'XTPQCS': module to estimate Panel Quantile Regression with Common Shocks
+d
+d    xtpqcs estimates the fixed-effects panel quantile regression
+d (FEQR) model	  using the unregularised Koenker (2004)
+d concentration algorithm and reports the robust covariance matrix
+d of {bf:Chiang, Galvao    and Wei (2026, arXiv:2602.19201)}, which
+d remains consistent in the presence (or absence) of pervasive
+d common time shocks	Bt that induce arbitrary cross-sectional
+d dependence.	Why does this matter?  In macro/finance panels the
+d residuals of different units are contemporaneously correlated
+d because    common factors (business cycles, monetary policy, oil
+d prices) affect everybody at the same time.  Classical FEQR theory
+d    ignores this correlation, leading to downward-biased standard
+d errors and over-rejection of the null.  xtpqcs eliminates this   
+d problem. 
+d
+d KW: panel data
+d KW: quantile regression
+d KW: fixed effects
+d KW: common shocks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260329
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtpqcs.ado
+f xtpqcs.sthlp
+f xtpqcsmc.ado
+f xtpqcsplot.ado
+f xtpqcsmc.sthlp
+f xtpqcsplot.sthlp
+f xxtpqcs_demo.do

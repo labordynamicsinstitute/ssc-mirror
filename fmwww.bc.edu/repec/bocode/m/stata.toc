@@ -118,6 +118,7 @@ p metafrag module to compute the fragility index for meta-analysis
 p metafunnel module to produce funnel plots for meta-analysis
 p metagen module to perform meta-analysis of genetic-association studies 
 p metagraph module to draw Forrest plot after meta command
+p metalong module providing a coherent workflow for synthesising evidence from studies that report outcomes at multiple follow-up time points 
 p metamiss module to perform meta-analysis with missing data
 p metamiss2 module accounting for missing outcome data in meta-analysis
 p metan module for fixed and random effects meta-analysis

@@ -126,6 +126,7 @@ p xtpdyn module to estimate dynamic random effects probit model with unobserved 
 p xtpedroni module to perform Pedroni's panel cointegration tests and Panel Dynamic OLS estimation
 p xtpmg module for estimation of nonstationary heterogeneous panels
 p xtpqardl module to estimate Panel Quantile Autoregressive Distributed Lag (PQARDL) models
+p xtpqcs module to estimate Panel Quantile Regression with Common Shocks
 p xtpqml module to estimate Fixed-effects Poisson (Quasi-ML) regression with robust standard errors
 p xtpqroot module to provide Panel Quantile Unit Root Tests with Common Shocks & Structural Breaks
 p xtpretest module to provide a Comprehensive Panel Data Pre-Testing Suite 
