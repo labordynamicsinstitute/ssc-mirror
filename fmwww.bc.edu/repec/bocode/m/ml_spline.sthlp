@@ -2,7 +2,7 @@
 {* *! ml_spline.sthlp  metaLong for Stata 14.1}{...}
 {vieweralsosee "metalong"  "help metalong"}{...}
 {vieweralsosee "ml_meta"   "help ml_meta"}{...}
-{vieweralsosee "ml_plot"   "help ml_plot"}{...}
+{vieweralsosee "ml_plot"   "help metalong_plot"}{...}
 {hline}
 {title:ml_spline — Restricted Cubic Spline Time Trend for Longitudinal Meta-Analysis}
 
@@ -29,7 +29,7 @@ The command uses Stata's built-in {helpb mkspline} to construct the RCS basis.
 
 {pstd}
 The result is a smooth predicted trajectory with pointwise confidence bands,
-suitable for overlaying on the observed pooled estimates in {helpb ml_plot}.
+suitable for overlaying on the observed pooled estimates in {helpb metalong_plot}.
 An optional F-test for nonlinearity compares the spline to a simple linear fit.
 
 {title:Options}
@@ -57,11 +57,11 @@ Default is 0.05.
 
 {phang}
 {cmd:plot} draws a quick preview twoway plot of the spline. For a fully
-annotated combined figure use {helpb ml_plot}.
+annotated combined figure use {helpb metalong_plot}.
 
 {phang}
 {cmd:saving(}{filename}{cmd:)} saves the prediction dataset to {it:filename}.dta.
-This file is required by {helpb ml_plot} when the {cmd:splinefile()} option is used.
+This file is required by {helpb metalong_plot} when the {cmd:splinefile()} option is used.
 
 {phang}
 {cmd:replace} allows overwriting an existing {cmd:saving()} file.
@@ -79,7 +79,7 @@ This file is required by {helpb ml_plot} when the {cmd:splinefile()} option is u
 
 {synoptset 18 tabbed}{...}
 {synopt:{cmd:r(r_squared)}}Weighted R² of the spline fit{p_end}
-{synopt:{cmd:r(p_nonlinear)}}p-value for nonlinearity F-test (missing if df=1 or nolineartest){p_end}
+{synopt:{cmd:r(p_nonlinear)}}Nonlinearity F-test p-value; missing if df=1{p_end}
 {synopt:{cmd:r(df)}}Spline degrees of freedom used{p_end}
 {synopt:{cmd:r(alpha)}}Confidence level used{p_end}
 
@@ -123,6 +123,6 @@ a simple weighted linear regression via an F-statistic with (df − 1) and
 
 {title:See also}
 
-{helpb ml_meta}, {helpb ml_plot}, {helpb mkspline}, {helpb metalong}
+{helpb ml_meta}, {helpb metalong_plot}, {helpb mkspline}, {helpb metalong}
 
 {hline}

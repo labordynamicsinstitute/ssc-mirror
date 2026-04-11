@@ -7547,6 +7547,7 @@ fmwww.bc.edu/repec/bocode/k/kapgof.ado
 fmwww.bc.edu/repec/bocode/k/kalpha.sthlp
 fmwww.bc.edu/repec/bocode/k/kdbox.ado
 fmwww.bc.edu/repec/bocode/k/konfound.ado
+fmwww.bc.edu/repec/bocode/k/kapetanios.ado
 fmwww.bc.edu/repec/bocode/k/kleinI.dta
 fmwww.bc.edu/repec/bocode/k/kweight.mo
 fmwww.bc.edu/repec/bocode/k/kappaetcssi.ado
@@ -7588,9 +7589,11 @@ fmwww.bc.edu/repec/bocode/k/konfound.pkg
 fmwww.bc.edu/repec/bocode/k/kappaAux.ado
 fmwww.bc.edu/repec/bocode/k/kinkyreg_p.ado
 fmwww.bc.edu/repec/bocode/k/kdbox.hlp
+fmwww.bc.edu/repec/bocode/k/kapetanios.pkg
 fmwww.bc.edu/repec/bocode/k/ky_fit.ado
 fmwww.bc.edu/repec/bocode/k/kmatch.zip
 fmwww.bc.edu/repec/bocode/k/khbtab.sthlp
+fmwww.bc.edu/repec/bocode/k/kapetanios.sthlp
 fmwww.bc.edu/repec/bocode/k/kappaetc.sthlp
 fmwww.bc.edu/repec/bocode/k/k_geo_cow.ado
 fmwww.bc.edu/repec/bocode/k/ksmirnov2var.pkg
@@ -13681,6 +13684,7 @@ fmwww.bc.edu/repec/bocode/m/margdistfit_mata_invert.do
 fmwww.bc.edu/repec/bocode/m/mijoin.html
 fmwww.bc.edu/repec/bocode/m/mvis7.hlp
 fmwww.bc.edu/repec/bocode/m/mixregls_plugin.lin32
+fmwww.bc.edu/repec/bocode/m/metalong_plot.sthlp
 fmwww.bc.edu/repec/bocode/m/mahascore.hlp
 fmwww.bc.edu/repec/bocode/m/mldataset.dta
 fmwww.bc.edu/repec/bocode/m/matdelrc.hlp
@@ -14069,6 +14073,7 @@ fmwww.bc.edu/repec/bocode/m/mvtnorm.pkg
 fmwww.bc.edu/repec/bocode/m/meloreg2.ado
 fmwww.bc.edu/repec/bocode/m/midas_subgroup.sthlp
 fmwww.bc.edu/repec/bocode/m/mlad.pkg
+fmwww.bc.edu/repec/bocode/m/metalong_plot.ado
 fmwww.bc.edu/repec/bocode/m/metabias6.hlp
 fmwww.bc.edu/repec/bocode/m/mixregls_plugin.win32
 fmwww.bc.edu/repec/bocode/m/mvmeta_mufromsigma.ado

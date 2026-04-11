@@ -1,5 +1,6 @@
 p kalpha module to compute Krippendorff's Alpha-Reliability
 p kanom module to estimate Krippendorff's alpha for nominal variables
+p kapetanios module to perform Kapetanios (2005) unit-root test with up to 5 structural breaks
 p kapgof module to compute confidence intervals for the kappa statistic
 p kaplansky module to graph examples of distributions of varying kurtosis 
 p kappa2 module to produce Generalizations of weighted kappa for incomplete designs

@@ -71,7 +71,7 @@ models instead of t(k−1).
 {synopt:{opt k_studies}}Number of unique studies at this time point{p_end}
 {synopt:{opt p_original}}Original p-value from {cmd:ml_meta}{p_end}
 {synopt:{opt sig_original}}1 if originally significant at alpha{p_end}
-{synopt:{opt fragility_index}}Min removals to flip significance; missing if not found within maxk{p_end}
+{synopt:{opt fragility_index}}Min removals to flip significance;{break}missing if FI > maxk{p_end}
 {synopt:{opt frag_quotient}}fragility_index / k_studies{p_end}
 {synopt:{opt study_removed}}Study ID whose removal flipped (leave-one-out only){p_end}
 
@@ -132,6 +132,6 @@ Robust variance estimation in meta-regression with dependent effect sizes.
 
 {title:See also}
 
-{helpb ml_meta}, {helpb ml_sens}, {helpb ml_plot}, {helpb metalong}
+{helpb ml_meta}, {helpb ml_sens}, {helpb metalong_plot}, {helpb metalong}
 
 {hline}

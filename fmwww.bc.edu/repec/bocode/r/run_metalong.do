@@ -1,14 +1,14 @@
 /* ============================================================
    run_metalong.do
-   metaLong for Stata 14.1 - complete reproducible pipeline
-   Run with:   do "c:\ado\personal\run_metalong.do"
+   metaLong for Stata 14.1 — complete reproducible pipeline
+   Run with:   do run_metalong.do
+   Output files are saved to your current working directory.
    ============================================================ */
 
 version 14.1
 clear all
 set more off
 
-cd "c:\ado\personal"
 di as txt "Working directory: " as res c(pwd)
 
 /* ── STEP 1: Simulate data ──────────────────────────────────── */
@@ -33,7 +33,8 @@ list time theta sy itcv itcv_alpha fragile, sep(0)
 
 /* ── STEP 4: Benchmark ──────────────────────────────────────── */
 use sim_data.dta, clear
-ml_benchmark yi vi, study(study) time(time) metafile(meta_res) sensfile(sens_res) covariates(pub_year quality n) saving(bench_res) replace
+ml_benchmark yi vi, study(study) time(time) metafile(meta_res) ///
+    sensfile(sens_res) covariates(pub_year quality n) saving(bench_res) replace
 
 di _newline "=== Benchmark ==="
 use bench_res.dta, clear
@@ -50,7 +51,7 @@ list time k_studies fragility_index frag_quotient study_removed, sep(0)
 /* ── STEP 6: Spline ─────────────────────────────────────────── */
 ml_spline, metafile(meta_res) df(3) npred(100) saving(spline_res) replace
 
-/* ── STEP 7: Combined figure (drawn directly) ───────────────── */
+/* ── STEP 7: Combined figure (drawn directly — no ado needed) ── */
 
 /* Panel 1: Pooled effects */
 use meta_res.dta, clear

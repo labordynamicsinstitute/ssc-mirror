@@ -1,0 +1,34 @@
+d 'KAPETANIOS': module to perform Kapetanios (2005) unit-root test with up to 5 structural breaks
+d
+d  kapetanios implements Kapetanios' (2005) unit root test. The
+d main advantage of this procedure is that it allows for up to 5
+d structural breaks, with break dates endogenously estimated from
+d the data. Under the alternative hypothesis of trend stationarity,
+d these breaks may occur in the level and/or trend of the series.
+d To reflect this, three model specifications are available:
+d intercept breaks only (Model A), trend breaks only (Model B), and
+d both intercept and trend breaks (Model C, the default), each with
+d tabulated critical values. The test regression augments the
+d standard ADF equation with structural break dummies and lagged
+d differences of the dependent variable to control for serial
+d correlation. To determine the appropriate lag length, kapetanios
+d supports four selection methods: the sequential t-test of Ng and
+d Perron (1995) as used in the original paper (default), a
+d Breusch-Godfrey LM test based general-to-specific (GTS)
+d procedure, AIC, and BIC. For the AIC and BIC methods, a
+d post-selection Breusch-Godfrey test is automatically performed
+d and a warning is issued if autocorrelation remains. 
+d
+d KW: unit root test
+d KW: Kapetanios
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260410
+d
+d Author: Ozan Eruygur ,  AHBV University, Ankara, Turkiye
+d Support: email eruygur@@gmail.com
+d
+f kapetanios.ado
+f kapetanios.sthlp

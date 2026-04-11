@@ -96,9 +96,9 @@ is in memory only if {cmd:saving()} is also specified.
 {synopt:{opt time}}Follow-up time (numeric){p_end}
 {synopt:{opt yi}}Observed effect size{p_end}
 {synopt:{opt vi}}Sampling variance{p_end}
-{synopt:{opt pub_year}}Publication year (uniform integer, 2000–2022); omitted with {cmd:nocovariates}{p_end}
+{synopt:{opt pub_year}}Publication year (2000-2022); dropped with nocovariates{p_end}
 {synopt:{opt quality}}Study quality score (standard normal); omitted with {cmd:nocovariates}{p_end}
-{synopt:{opt n}}Study sample size (uniform integer, 30–500); omitted with {cmd:nocovariates}{p_end}
+{synopt:{opt n}}Study sample size (uniform 30-500);{break}omitted with {cmd:nocovariates}{p_end}
 
 {title:Examples}
 

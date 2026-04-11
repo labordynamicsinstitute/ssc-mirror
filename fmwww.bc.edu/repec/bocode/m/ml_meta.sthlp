@@ -5,7 +5,7 @@
 {vieweralsosee "ml_benchmark" "help ml_benchmark"}{...}
 {vieweralsosee "ml_spline"    "help ml_spline"}{...}
 {vieweralsosee "ml_fragility" "help ml_fragility"}{...}
-{vieweralsosee "ml_plot"      "help ml_plot"}{...}
+{vieweralsosee "ml_plot"      "help metalong_plot"}{...}
 {hline}
 {title:ml_meta — Longitudinal Meta-Analysis with Robust Variance Estimation}
 

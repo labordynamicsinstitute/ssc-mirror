@@ -19,14 +19,14 @@ f metalong.sthlp
 f ml_benchmark.ado
 f ml_fragility.ado
 f ml_meta.ado
-f ml_plot.ado
+f metalong_plot.ado
 f ml_sens.ado
 f ml_spline.ado
 f ../s/sim_longmeta.ado
 f ml_benchmark.sthlp
 f ml_fragility.sthlp
 f ml_meta.sthlp
-f ml_plot.sthlp
+f metalong_plot.sthlp
 f ml_sens.sthlp
 f ml_spline.sthlp
 f ../s/sim_longmeta.sthlp
