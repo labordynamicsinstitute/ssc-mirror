@@ -270,7 +270,7 @@ program _2snardl_multiplier, rclass
                SCHeme(string) TItle(string) ]
 
     // Load Mata routines
-    qui findfile _2snardl_mata.do
+    qui findfile _2snardl_mata.mata
     qui run "`r(fn)'"
 
     tempname mult_mat
@@ -636,7 +636,7 @@ program _2snardl_halflife, rclass
     local p_lag = e(p_lag)
 
     // Load Mata routines
-    qui findfile _2snardl_mata.do
+    qui findfile _2snardl_mata.mata
     qui run "`r(fn)'"
 
     // ---- A. ECM Half-Life ----
@@ -837,7 +837,7 @@ program _2snardl_asymadj, rclass
     local k     = e(k)
 
     // Load Mata routines
-    qui findfile _2snardl_mata.do
+    qui findfile _2snardl_mata.mata
     qui run "`r(fn)'"
 
     // Compute dynamic multipliers via Mata
@@ -1028,7 +1028,7 @@ program _2snardl_irf, rclass
     local k     = e(k)
 
     // Load Mata routines
-    qui findfile _2snardl_mata.do
+    qui findfile _2snardl_mata.mata
     qui run "`r(fn)'"
 
     // Dynamic multipliers (cumulative) via Mata

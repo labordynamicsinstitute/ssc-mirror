@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  20mar2026}{...}
+{* *! version 1.0.1  11apr2026}{...}
 {viewerjumpto "Syntax" "lrmbounds##syntax"}{...}
 {viewerjumpto "Description" "lrmbounds##description"}{...}
 {viewerjumpto "Options" "lrmbounds##options"}{...}
@@ -558,7 +558,7 @@ Uncertainty and inference in time series models.
 {pstd}Email: merwanroudane920@gmail.com{p_end}
 
 {pstd}
-{bf:Version:} 1.0.0 (20 March 2026){p_end}
+{bf:Version:} 1.0.1 (11 April 2026){p_end}
 
 {pstd}
 {bf:Suggested citation:}{p_end}

@@ -17813,6 +17813,7 @@ fmwww.bc.edu/repec/bocode/_/_incomelevel.ado
 fmwww.bc.edu/repec/bocode/_/_gstdn.ado
 fmwww.bc.edu/repec/bocode/_/_gsieve.ado
 fmwww.bc.edu/repec/bocode/_/_mtnardl_advanced.ado
+fmwww.bc.edu/repec/bocode/_/_2snardl_mata.mata
 fmwww.bc.edu/repec/bocode/_/_cwfcn_kldb10_5d_to_kldb10_2plus5.sthlp
 fmwww.bc.edu/repec/bocode/_/_gxtile.ado
 fmwww.bc.edu/repec/bocode/_/_mvardlurt_bootstrap.ado

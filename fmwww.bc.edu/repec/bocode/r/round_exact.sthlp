@@ -1,10 +1,11 @@
 {smcl}
-{* *! version 2.7.0  2026-04-08}{...}
+{* *! version 2.7.2  2026-04-08}{...}
 {vieweralsosee "round()" "help round"}{...}
 {viewerjumpto "Syntax" "round_exact##syntax"}{...}
 {viewerjumpto "Description" "round_exact##description"}{...}
 {viewerjumpto "Remarks" "round_exact##remarks"}{...}
 {viewerjumpto "Examples" "round_exact##examples"}{...}
+{viewerjumpto "Stored results" "round_exact##results"}{...}
 {title:Title}
 
 {phang}
@@ -43,6 +44,10 @@ causes logical assertions to fail.
 This command implements the formula: {it:round(val * 10^d) / 10^d}. By transforming the value into an integer before rounding, 
 it avoids the precision errors introduced by fractional units. 
 
+{pstd}
+{bf:New in version 2.7.2:} To maximize precision, the command now automatically recasts variables to {cmd:double} 
+before processing. Additionally, the count of observations replaced has been corrected.
+
 
 {marker remarks}{...}
 {title:Remarks: Precision and Binary Representation}
@@ -80,6 +85,18 @@ consistent results across comparative data analysis.
 {pstd}Creating a new rounded variable:{p_end}
 {phang2}{cmd:. round_exact gear_ratio, d(1) generate(gr_rounded)}{p_end}
 {phang2}{cmd:. list gear_ratio gr_rounded}{p_end}
+
+
+{marker results}{...}
+{title:Stored results}
+
+{pstd}
+{cmd:round_exact} stores the following in {cmd:r()}:
+
+{synoptset 15 tabbed {...}}
+{p2col 5 15 19 2: Scalars}{p_end}
+{synopt:{cmd:r(val)}}the rounded value (when rounding a literal #){p_end}
+{synopt:{cmd:r(N)}}number of observations modified or generated{p_end}
 
 
 {marker author}{...}

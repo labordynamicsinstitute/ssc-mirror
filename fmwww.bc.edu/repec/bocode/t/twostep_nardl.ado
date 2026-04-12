@@ -245,7 +245,7 @@ program define twostep_nardl , eclass sortpreserve
     // =========================================================================
     // LOAD MATA ROUTINES
     // =========================================================================
-    qui findfile _2snardl_mata.do
+    qui findfile _2snardl_mata.mata
     qui run "`r(fn)'"
 
     // =========================================================================

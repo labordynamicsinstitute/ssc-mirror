@@ -1,4 +1,4 @@
-*! version 1.0.0  20mar2026  Dr. Merwan Roudane
+*! version 1.0.1  11apr2026  Dr. Merwan Roudane
 *! LRMBOUNDS: Bounds Approach to Inference Using the Long Run Multiplier
 *! Implements Webb, Linn & Lebo (2019, Political Analysis) and
 *! Webb, Linn & Lebo (2020, Journal of Politics)
@@ -1877,44 +1877,49 @@ program define _lrmbounds_graph
     if "`graphdir'" == "" local graphdir "lrmbounds_graphs"
     capture mkdir "`graphdir'"
     
+    * ----------------------------------------------------------------
+    * Build ECM specification (shared by Graphs 1, 3, 5, 6)
+    * ----------------------------------------------------------------
+    local ecm_levels "L.`depvar'"
+    foreach xv of local indepvars {
+        local ecm_levels "`ecm_levels' L.`xv'"
+    }
+    local ecm_diffs ""
+    foreach xv of local indepvars {
+        local ecm_diffs "`ecm_diffs' D.`xv'"
+    }
+    if `optlag' > 1 {
+        forvalues i = 1/`=`optlag'-1' {
+            local ecm_diffs "`ecm_diffs' L`i'D.`depvar'"
+            foreach xv of local indepvars {
+                local ecm_diffs "`ecm_diffs' L`i'D.`xv'"
+            }
+        }
+    }
+    local trendvar ""
+    if "`trend'" != "" {
+        tempvar tvar
+        qui gen double `tvar' = _n
+        local trendvar "`tvar'"
+    }
+    
+    * Run the ECM once and keep fitted / residual for Graphs 3-4
+    qui regress D.`depvar' `ecm_levels' `ecm_diffs' `trendvar', `noconstant'
+    
+    tempname bmat Vmat
+    matrix `bmat' = e(b)
+    matrix `Vmat' = e(V)
+    local ecrate_val = _b[L.`depvar']
+    
+    tempvar fitted resid
+    qui predict double `fitted', xb
+    qui predict double `resid' , residuals
+    
     * ================================================================
     *  Graph 1: LRM Forest Plot with Bounds Decision
     *  Shows each LRM with CI, color-coded by bounds decision
     * ================================================================
-    capture {
-        * Re-estimate to get results in memory
-        local ecm_levels "L.`depvar'"
-        foreach xv of local indepvars {
-            local ecm_levels "`ecm_levels' L.`xv'"
-        }
-        local ecm_diffs ""
-        foreach xv of local indepvars {
-            local ecm_diffs "`ecm_diffs' D.`xv'"
-        }
-        if `optlag' > 1 {
-            forvalues i = 1/`=`optlag'-1' {
-                local ecm_diffs "`ecm_diffs' L`i'D.`depvar'"
-                foreach xv of local indepvars {
-                    local ecm_diffs "`ecm_diffs' L`i'D.`xv'"
-                }
-            }
-        }
-        local trendvar ""
-        if "`trend'" != "" {
-            tempvar tvar
-            qui gen double `tvar' = _n
-            local trendvar "`tvar'"
-        }
-        
-        qui regress D.`depvar' `ecm_levels' `ecm_diffs' `trendvar', `noconstant'
-        
-        local ecrate_val = _b[L.`depvar']
-        
-        * Build dataset for forest plot
-        tempname bmat Vmat
-        matrix `bmat' = e(b)
-        matrix `Vmat' = e(V)
-        
+    capture noisily {
         preserve
         clear
         qui set obs `nindep'
@@ -1959,7 +1964,7 @@ program define _lrmbounds_graph
                ylabel(1(1)`nindep', valuelabel angle(0) labsize(small)) ///
                xlabel(, labsize(small) grid glcolor(gs14)) ///
                ytitle("") xtitle("Long Run Multiplier (LRM)", size(medsmall)) ///
-               title("{bf:Long-Run Multiplier Estimates}", size(medlarge), size(medium) color("55 71 133")) ///
+               title("{bf:Long-Run Multiplier Estimates}", size(medium) color("55 71 133")) ///
                subtitle("Webb, Linn & Lebo (2019) Bounds Approach", size(small) color(gs6)) ///
                legend(off) ///
                scheme(s2color) ///
@@ -1967,7 +1972,7 @@ program define _lrmbounds_graph
                plotregion(margin(small)) ///
                name(_lrm_forest, replace)
         
-        qui graph export "`graphdir'/lrm_forest_plot.png", as(png) width(2400) height(1600) replace
+        qui graph export "`graphdir'/lrm_forest_plot.png", as(png) replace
         restore
     }
     
@@ -1975,7 +1980,7 @@ program define _lrmbounds_graph
     *  Graph 2: PSS F-Bounds Comparison Chart
     *  Bar showing F-stat against I(0)/I(1) bounds with colored zones
     * ================================================================
-    capture {
+    capture noisily {
         preserve
         clear
         qui set obs 100
@@ -2009,27 +2014,20 @@ program define _lrmbounds_graph
                plotregion(margin(small)) ///
                name(_lrm_fbounds, replace)
         
-        qui graph export "`graphdir'/pss_fbounds.png", as(png) width(2400) height(1200) replace
+        qui graph export "`graphdir'/pss_fbounds.png", as(png) replace
         restore
     }
     
     * ================================================================
     *  Graph 3: Actual vs Fitted with Residuals
     * ================================================================
-    capture {
-        qui regress D.`depvar' `ecm_levels' `ecm_diffs' `trendvar', `noconstant'
-        tempvar fitted resid
-        qui predict double `fitted', xb
-        qui predict double `resid', residuals
-        
-        qui tsset
-        local timevar "`r(timevar)'"
+    capture noisily {
         
         twoway (tsline D.`depvar', lcolor("55 71 133") lwidth(medthick)) ///
                (tsline `fitted', lcolor("220 95 60") lwidth(medium) lpattern(dash)), ///
                ytitle("D.`depvar'", size(medsmall)) ///
                xtitle("", size(medsmall)) ///
-               title("{bf:Actual vs. ECM-Fitted Values}", size(medlarge), size(medium) color("55 71 133")) ///
+               title("{bf:Actual vs. ECM-Fitted Values}", size(medium) color("55 71 133")) ///
                subtitle("Conditional ECM: D.`depvar'", size(small) color(gs6)) ///
                legend(order(1 "Actual" 2 "Fitted") rows(1) position(6) size(small) ///
                       region(lcolor(gs14) fcolor(white))) ///
@@ -2038,14 +2036,14 @@ program define _lrmbounds_graph
                plotregion(margin(small)) ///
                name(_lrm_actual_fit, replace)
         
-        qui graph export "`graphdir'/actual_vs_fitted.png", as(png) width(2400) height(1400) replace
+        qui graph export "`graphdir'/actual_vs_fitted.png", as(png) replace
     }
     
     * ================================================================
     *  Graph 4: Residual Diagnostics Panel
     *  Residual time series + histogram + QQ plot
     * ================================================================
-    capture {
+    capture noisily {
         * Residual time series  
         twoway (tsline `resid', lcolor("55 71 133") lwidth(medium)), ///
                yline(0, lcolor("220 95 60") lwidth(thin) lpattern(dash)) ///
@@ -2089,13 +2087,13 @@ program define _lrmbounds_graph
                graphregion(color(white) margin(medium)) ///
                name(_lrm_resid_panel, replace)
         
-        qui graph export "`graphdir'/residual_diagnostics.png", as(png) width(3600) height(1200) replace
+        qui graph export "`graphdir'/residual_diagnostics.png", as(png) replace
     }
     
     * ================================================================
     *  Graph 5: CUSUM Stability Plot
     * ================================================================
-    capture {
+    capture noisily {
         qui regress D.`depvar' `ecm_levels' `ecm_diffs' `trendvar', `noconstant'
         tempvar resid2
         qui predict double `resid2', residuals
@@ -2132,7 +2130,7 @@ program define _lrmbounds_graph
                (tsline `cusum_lower', lcolor("220 95 60") lwidth(medium) lpattern(dash)), ///
                ytitle("CUSUM", size(medsmall)) ///
                xtitle("", size(medsmall)) ///
-               title("{bf:CUSUM Stability Test}", size(medlarge), size(medium) color("55 71 133")) ///
+               title("{bf:CUSUM Stability Test}", size(medium) color("55 71 133")) ///
                subtitle("5% Significance Boundaries", size(small) color(gs6)) ///
                legend(order(1 "CUSUM" 2 "5% Boundary") rows(1) position(6) size(small) ///
                       region(lcolor(gs14) fcolor(white))) ///
@@ -2141,14 +2139,14 @@ program define _lrmbounds_graph
                plotregion(margin(small)) ///
                name(_lrm_cusum, replace)
         
-        qui graph export "`graphdir'/cusum_stability.png", as(png) width(2400) height(1400) replace
+        qui graph export "`graphdir'/cusum_stability.png", as(png) replace
     }
     
     * ================================================================
     *  Graph 6: Dynamic Multiplier Plot
     *  Cumulative effect of a unit change in x over time
     * ================================================================
-    capture {
+    capture noisily {
         qui regress D.`depvar' `ecm_levels' `ecm_diffs' `trendvar', `noconstant'
         
         local ecrate_dm = _b[L.`depvar']
@@ -2210,7 +2208,7 @@ program define _lrmbounds_graph
                plotregion(margin(small)) ///
                name(_lrm_dynmult, replace)
         
-        qui graph export "`graphdir'/dynamic_multipliers.png", as(png) width(2400) height(1400) replace
+        qui graph export "`graphdir'/dynamic_multipliers.png", as(png) replace
         restore
     }
     

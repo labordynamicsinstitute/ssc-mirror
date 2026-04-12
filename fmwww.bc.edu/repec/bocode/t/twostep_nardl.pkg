@@ -15,10 +15,13 @@ d KW: nonlinear estimation
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20260313
+d Distribution-Date: 20260411
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
 d
 f twostep_nardl.ado
 f twostep_nardl.sthlp
 f twostep_nardl_p.ado
 f twostep_nardl_estat.ado
-f ../_/_2snardl_mata.do
+f ../_/_2snardl_mata.mata
