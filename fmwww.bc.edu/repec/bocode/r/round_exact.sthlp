@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.7.2  2026-04-08}{...}
+{* *! version 3.0  2026-04-12}{...}
 {vieweralsosee "round()" "help round"}{...}
 {viewerjumpto "Syntax" "round_exact##syntax"}{...}
 {viewerjumpto "Description" "round_exact##description"}{...}
@@ -38,15 +38,17 @@
 {pstd}
 {cmd:round_exact} addresses the common issue of floating-point precision errors in Stata's built-in {cmd:round(x, unit)} function. 
 Standard rounding often leaves "noise" in binary representation (e.g., {cmd:round(0.3, 0.1)} resulting in {cmd:0.30000000000000004}), which 
-causes logical assertions to fail.
+can cause logical assertions and equality checks to fail.
 
 {pstd}
 This command implements the formula: {it:round(val * 10^d) / 10^d}. By transforming the value into an integer before rounding, 
-it avoids the precision errors introduced by fractional units. 
+it avoids the precision errors introduced by fractional units and ensures that rounding decisions are made in integer-scaled space,
+where boundaries are exact.
 
 {pstd}
-{bf:New in version 2.7.2:} To maximize precision, the command now automatically recasts variables to {cmd:double} 
-before processing. Additionally, the count of observations replaced has been corrected.
+{bf:New in version 3.0:} Numeric rounding logic has been refined to address edge cases involving stored {cmd:float} values.
+The command now applies storage-aware, conditional half-case handling when operating on scaled values, ensuring consistent behavior
+between scalar literals and numeric variables (e.g., values such as 3.05 rounding correctly to 3.1 at one decimal place).
 
 
 {marker remarks}{...}
@@ -56,19 +58,18 @@ before processing. Additionally, the count of observations replaced has been cor
 As frequently noted by {help ncox:Nicholas J. Cox}, decimal fractions like 0.1 or 0.01 often lack exact binary 
 representations, leading to unexpected "noise" in calculations. For a comprehensive overview of rounding 
 logic and its implications in Stata, see: Cox, N. J. 2018. {it:Speaking Stata: From rounding to binning}. 
-{it:Stata Journal} 18: 741-754.
+{it:Stata Journal} 18: 741–754.
 
 {pstd}
 A foundational discussion of the architectural hurdles of digital computing was provided by 
-{help gould:William Gould}, President and Architect of Stata. See: Gould, William. 2006. 
-{it:Mata Matters: Precision}. {it:Stata Journal} 6: 550-560.
+{help gould:William Gould}, Chief Architect of Stata. See: Gould, William. 2006. 
+{it:Mata Matters: Precision}. {it:Stata Journal} 6: 550–560.
 
 {pstd}
 Performing calculations with integers is inherently more stable because integers are represented 
 exactly. {cmd:round_exact} follows this logic by scaling decimals into integers, performing the 
-rounding, and then scaling back. This "back-and-forth" transformation ensures that the final decimal 
-result matches the user's expectation for exactness, enabling successful {cmd:assert} checks and 
-consistent results across comparative data analysis.
+rounding decision at the integer stage, and then scaling back. Any residual floating-point approximation
+occurs only after the rounding decision has already been made and cannot affect its correctness.
 
 
 {marker examples}{...}
@@ -105,7 +106,13 @@ consistent results across comparative data analysis.
 {pstd}Anne Fengyan Shi, Pew Research Center{p_end}
 {pstd}Support: email AShi@pewresearch.org{p_end}
 
+
 {marker acknowledgment}{...}
 {title:Acknowledgment}
 
-{pstd}This program was developed to address precision hurdles in longitudinal fraction arithmetic and comparative data analysis.{p_end}
+{pstd}
+This program was developed to address precision hurdles in longitudinal fraction arithmetic and comparative data analysis.
+Like all floating-point–aware methods, {cmd:round_exact} necessarily adopts explicit rules for handling values that fall
+extremely close to rounding boundaries due to prior numerical computation. In such cases, the command prioritizes
+decimal intent over binary representation, which may differ from strict IEEE floating-point behavior but provides
+greater stability and consistency for applied data analysis.{p_end}
