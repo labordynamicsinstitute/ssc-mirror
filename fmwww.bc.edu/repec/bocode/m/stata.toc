@@ -197,6 +197,7 @@ p mktex module to convert Microsoft Word (.docx) documents to LaTeX (.tex) forma
 p mlad module to perform maximum likelihood using automatic differentiation
 p mlboolean module to implement Boolean logit and probit
 p mlcoint module to compute Johansen cointegration tests
+p mlm_gof module for computing the Goodness-of-fit test after mixed-effects logistic regression with random intercepts
 p mlmoderator module providing robustness diagnostics and visualization tools for cross-level interaction effects in multilevel models 
 p mlogitroc module to calculate multiclass ROC Curves and AUC from Multinomial Logistic Regression
 p mlogpred module to produce predicted probabilities after mlogit and svymlog

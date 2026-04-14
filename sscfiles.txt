@@ -14158,12 +14158,14 @@ fmwww.bc.edu/repec/bocode/m/mf_mm_rbinomial.html
 fmwww.bc.edu/repec/bocode/m/metatrend.ado
 fmwww.bc.edu/repec/bocode/m/mivcs.ado
 fmwww.bc.edu/repec/bocode/m/mountainplot.pkg
+fmwww.bc.edu/repec/bocode/m/mlm_gof.ado
 fmwww.bc.edu/repec/bocode/m/mimpt.ado
 fmwww.bc.edu/repec/bocode/m/mcp2.ado
 fmwww.bc.edu/repec/bocode/m/motivatedolly.ado
 fmwww.bc.edu/repec/bocode/m/msp.ado
 fmwww.bc.edu/repec/bocode/m/multisite_reglate.ado
 fmwww.bc.edu/repec/bocode/m/mcattest.do
+fmwww.bc.edu/repec/bocode/m/mlm_gof.sthlp
 fmwww.bc.edu/repec/bocode/m/metaxl_morph.ado
 fmwww.bc.edu/repec/bocode/m/mvnxpb.pkg
 fmwww.bc.edu/repec/bocode/m/MV-AR.prg
@@ -14477,6 +14479,7 @@ fmwww.bc.edu/repec/bocode/m/metan7.dlg
 fmwww.bc.edu/repec/bocode/m/mmqreg.ado
 fmwww.bc.edu/repec/bocode/m/manski_ci.ado
 fmwww.bc.edu/repec/bocode/m/mvsumm7.hlp
+fmwww.bc.edu/repec/bocode/m/mlm_gof.pkg
 fmwww.bc.edu/repec/bocode/m/makehlp.pkg
 fmwww.bc.edu/repec/bocode/m/mrgtbl2.pkg
 fmwww.bc.edu/repec/bocode/m/mvsumm.hlp

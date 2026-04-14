@@ -1,4 +1,4 @@
-* Version 1.0 - 9 January 2025
+* Version 1.1 - 13 April 2026
 * By Matt Clance and J.M.C. Santos Silva
 * Please email jmcss@surrey.ac.uk for help and support
 
@@ -31,12 +31,14 @@ exit
 }
 
 if (`expectile' == 0.5) {
-                      capture ppmlhdfe `y' `_rhs'  if `touse', d a(`absorb') sep(`separation') vce(`vce') maxiter(`maxiter')
+                      if "`absorb'" == "" capture ppmlhdfe `y' `_rhs'  if `touse', d sep(`separation') vce(`vce') maxiter(`maxiter')
+                      else                capture ppmlhdfe `y' `_rhs'  if `touse', d sep(`separation') vce(`vce') maxiter(`maxiter') a(`absorb') 
                       if _rc!=0 di "ppmlhdfe did not converge"
                       else {
                       mat `kappa'=colsof(e(b))
                       local k=`kappa'[1,1]
-                      qui predict double `res'  if `touse', xbd
+                      if "`absorb'" == "" qui predict double `res'  if `touse', xb
+                      else                qui predict double `res'  if `touse', xbd
                       qui replace `res'=`y'-exp(`res')
                       if "`residual'"!=""  qui g double `residual'=`res' if `touse'   
                       local conv=e(converged) 
@@ -46,9 +48,11 @@ if (`expectile' == 0.5) {
                       }
 else {
 if "`start'"=="" {  
-qui ppmlhdfe `y' `_rhs'  if `touse', d a(`absorb') sep(`separation') vce(`vce')
+if "`absorb'" == "" qui ppmlhdfe `y' `_rhs'  if `touse', d sep(`separation') vce(`vce')
+else                qui ppmlhdfe `y' `_rhs'  if `touse', d sep(`separation') vce(`vce') a(`absorb')
 mat `bold'=e(b)
-qui predict double `res'  if `touse', xbd
+if "`absorb'" == "" qui predict double `res'  if `touse', xb
+else                qui predict double `res'  if `touse', xbd
 qui replace `res'=`y'-exp(`res')
 }
 else qui g double `res'=`start' if `touse'  
@@ -63,25 +67,29 @@ while (`cv' > `tolerance')&(`count'<`iterate') {
 local count=`count'+1
 capture drop `res' 
 if ("`strict'" != "") {
-                      capture ppmlhdfe `y' `_rhs' [pw=`w']  if `touse', d a(`absorb') sep(`separation') vce(`vce') maxiter(`maxiter')
+                      if "`absorb'" == "" capture ppmlhdfe `y' `_rhs' [pw=`w']  if `touse', d sep(`separation') vce(`vce') maxiter(`maxiter')
+                      else                capture ppmlhdfe `y' `_rhs' [pw=`w']  if `touse', d sep(`separation') vce(`vce') maxiter(`maxiter') a(`absorb')
                       if _rc!=0 di "ppmlhdfe did not converge"
                       mat `kappa'=colsof(e(b))
                       local k=`kappa'[1,1]
                       }
 else {
 if `count'==1 {
-                      capture ppmlhdfe `y' `_rhs' [pw=`w']  if `touse', d a(`absorb') sep(`separation') vce(`vce') maxiter(`maxiter')
+                      if "`absorb'" == "" capture ppmlhdfe `y' `_rhs' [pw=`w']  if `touse', d sep(`separation') vce(`vce') maxiter(`maxiter')
+                      else                capture ppmlhdfe `y' `_rhs' [pw=`w']  if `touse', d sep(`separation') vce(`vce') maxiter(`maxiter') a(`absorb')
                       if _rc!=0 di "ppmlhdfe did not converge"
                       g `smpl'=e(sample)
                       mat `kappa'=colsof(e(b))
                       local k=`kappa'[1,1]
               }
       else {
-                      capture ppmlhdfe `y' `_rhs' [pw=`w']  if (`touse')&(`smpl'==1), d a(`absorb') sep(none) vce(`vce')  maxiter(`maxiter')  
+                      if "`absorb'" == "" capture ppmlhdfe `y' `_rhs' [pw=`w']  if (`touse')&(`smpl'==1), d sep(none) vce(`vce')  maxiter(`maxiter')
+                      else                capture ppmlhdfe `y' `_rhs' [pw=`w']  if (`touse')&(`smpl'==1), d sep(none) vce(`vce')  maxiter(`maxiter') a(`absorb')  
                       if _rc!=0 di "ppmlhdfe did not converge"
            }
 }
-qui predict double `res'  if `touse', xbd
+if "`absorb'" == "" qui predict double `res'  if `touse', xb
+else                qui predict double `res'  if `touse', xbd
 mat `b'=e(b)
 if "`absorb'"!="" mat `b'[1,`k']=0
 if (`count'==1)&("`start'"!="") mat `bold'=`b'*0
