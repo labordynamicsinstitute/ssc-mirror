@@ -1,5 +1,5 @@
 {smcl}
-{* *! boottest 4.2.0 24 August 2022}{...}
+{* *! boottest 4.5.0 17 June 2025}{...}
 {help boottest:boottest}
 {hline}{...}
 
@@ -52,6 +52,7 @@ individual constraint expression must conform to the syntax for {help constraint
 {synopt:{opt jack:knife} or {opt jk}}request jackknifing of bootstrap data-generating process{p_end}
 {synopt:{opt stat:istic(t | c)}}specify statistic type to bootstrap; default is {it:t}{p_end}
 {synopt:{opt r:eps(#)}}specifies number of replications for bootstrap-based tests; default is 999; set to 0 for Rao or Wald test{p_end}
+{synopt:{cmdab:algo:rithm(}{it:coarse} {cmd:|} {it:granular}{cmd:)}}Override default algorithm; should only affect speed{p_end}
 {synopt:{opt nonul:l}}suppress imposition of null before bootstrapping{p_end}
 {synopt:{opt marg:ins}}bootstrap current results from {cmd:margins}{p_end}
 {synopt:{opt madj:ust(bonferroni | sidak)}}specify adjustment for multiple hypothesis tests{p_end}
@@ -65,6 +66,7 @@ individual constraint expression must conform to the syntax for {help constraint
 {synopt:{opt bootcl:uster(varlist)}}sets cluster variable(s) to boostrap on; default is all {cmdab:cl:uster()} variables{p_end}
 {synopt:{opt ar}}request Anderson-Rubin test{p_end}
 {synopt:{opt seed(#)}}initialize random number seed to {it:#}{p_end}
+{synopt:{opt sameseed}}use same seed for multiple independent hypotheses{p_end}
 {synopt:{cmdab:matsize:gb(#)}}set maximum size of wild weight matrix, in gigabytes{p_end}
 {synopt:{opt qui:etly}}suppress display of null-imposed estimate; relevant after ML estimation{p_end}
 {synopt:{opt cmd:line(string)}}provide estimation command line; needed only after custom ML estimation{p_end}
@@ -210,7 +212,7 @@ after estimation commands that do not support those adjustments.
 The tests are available after OLS, constrained OLS, 2SLS, and LIML estimation performed with {help regress}, {help cnsreg}, {help ivreg}, {help ivregress}, or 
 {stata ssc describe ivreg2:ivreg2}. The
 program works with Fuller LIML and {it:k}-class estimates done with {help ivreg2} (WRE bootstrap only). The program also works with regressions with one set of "absorbed" fixed
-effects performed with {help areg}; {help xtreg:xtreg, fe}; {help xtivreg:xtivreg, fe}; {help xtivreg2:xtivreg2, fe}; {help reghdfe:reghdfe}; {help didregress}; 
+effects performed with {help areg}; {help xtreg:xtreg, fe}; {help xtivreg:xtivreg, fe}; {help xtivreg2:xtivreg2, fe}; {help reghdfe:reghdfe}; {help ivreghdfe:ivreghdfe}; {help didregress}; 
 or {help xtdidregress}. ({help didregress} and {help xtdidregress} themselves can run the wild bootstrap, but much more slowly.) And {cmd:boottest} works after most Stata 
 ML-based estimation commands, including {help probit}, {help glm}, {stata ssc describe cmp:cmp}, and, in Stata 14.0 or later, 
 {help sem} and {help gsem} (score bootstrap only). (To work with {cmd:boottest}, an iterative optimization command must accept
@@ -351,6 +353,12 @@ distributions for t, z, F, or chi2 statistics. The alternative, {it:c}, requests
 time. {opt r:eps(0)} requests a Wald test or--if {opt boottype(score)} is also specified and {opt nonul:l} is not--a Rao test. The wrappers {cmd:waldtest}
 and {cmd:scoretest} facilitate this usage.
 
+{phang}{cmdab:algo:rithm(}{it:coarse} {cmd:|} {it:granular}{cmd:)} controls which algorithm is used to run the bootstrap. As described in Roodman et al. (2019), a defining feature of {cmd:boottest} is its fast algorithm 
+for the case when clusters are few ("coarse clustering"). However, when clusters are many
+("granular clustering"), the optimization tricks can backfire. {cmd:boottest} will automatically switch to an alternative
+and more direct implementation of the bootstrap in these cases. But its decision rule is not
+perfect. This option lets you override {cmd:boottest}'s judgment. It might save time, but should not affect results.
+
 {phang}{opt nonul:l} suppresses the imposition of the null before bootstrapping. This is rarely a good idea.
 
 {phang}{opt marg:ins} instructs {cmd:boottest} to treat results from a call to {cmd:margins}, which must just have been generated, as a linear combination of parameters,
@@ -429,6 +437,11 @@ all coefficients on instrumented variables, and no others.
 
 {phang}{opt seed(#)} sets the initial state of the random number generator. See {help set seed}.
 
+{phang}{opt sameseed(#)} forces use of the same seed when testing multiple independent hypotheses. Especially in conjuction with {cmdab:svm:at}, this option can be useful when
+using {cmd:boottest} as the starting point for wild-bootstrapping a complex computation that depends on several regression estimates. For example, to wild-bootstrap the ratio
+between the coefficients on regressors A and B, you could run {cmd:boottest {A} {B}, svmat(numer) sameseed}. This would save the bootstrapped estimates of the two coefficients
+in r(dist_1) and r(dist_2). You could then compute the ratios of corresponding entries in those return matrices, confident that they came from exactly the same simulations.
+
 {phang}{opt qui:etly}, with Maximum Likelihood-based estimation, suppresses display of initial re-estimation with null imposed.
 
 {phang}{opt matsize:gb(#)} limits the size of the wild weight matrix, in a gigabytes, when memory limits are a concern. More precisely,
@@ -477,27 +490,7 @@ time. If {cmd:boottest} already feels fast in your applications, the {cmd:julia}
 {pstd}However, for hard problems, such as ones involving the subcluster bootstrap, or multiway clustering in which all-cluster intersections are numerous, the Julia implementation
 can be much faster.
 
-{pstd}To use the Julia back end, you need to install several things. Because there is no direct software channel between Stata and Julia, {cmd:boottest} makes the 
-connection by way of Python. The requirements list may therefore look intimidating. But set-up should be straightforward! The requirements:
-
-{p 4 6 0}
-* Stata 16 or newer.
-
-{p 4 6 0}
-* {browse "https://www.python.org/downloads/":Python} (free), with Stata {browse "https://blog.stata.com/2020/08/18/stata-python-integration-part-1-setting-up-stata-to-use-python/":configured to use it}.
-
-{p 4 6 0}
-* Julia 1.7.0 or newer (free), {browse "https://julialang.org/downloads/platform":installed so that it is accessible through the system path}.
-
-{p 4 6 0}
-* Packages {browse "https://numpy.org/install":NumPy} and
-{browse "https://pyjulia.readthedocs.io/en/stable/installation.html":PyJulia} for Python and {browse "https://github.com/JuliaRandom/StableRNGs.jl":StableRNGs} 
-and {browse "https://github.com/droodman/WildBootTests.jl":WildBootTests} for Julia (all free). {cmd:boottest} should automatically install these when needed.
-
-{pstd}The creators of Julia {browse "https://docs.julialang.org/en/v1.7/stdlib/Random/":do not guarantee} that the built-in algorithms for generating random numbers will
-remain unchanged as Julia changes. To guarantee replicability of results, {cmd:boottest} therefore relies on the 
-{browse "https://github.com/JuliaRandom/StableRNGs.jl":StableRNGs} package, which does make this guarantee. For the same reason, on each call, {cmd:boottest} initializes 
-the Julia StableRNG with a seed extracted from the Stata random-number generator (RNG), so that seeding the Stata RNG will deterministically seed the Julia one.
+{pstd}To use the Julia back end, you need to install the {cmd:julia} package too.
 
 
 {title:Stored results}

@@ -1,5 +1,5 @@
-*! boottest 4.4.11 12 April 2024
-*! Copyright (C) 2015-23 David Roodman
+*! boottest 4.5.1 27 June 2025
+*! Copyright (C) 2015-25 David Roodman
 
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -131,7 +131,7 @@ class boottest {
   struct structFE rowvector FEs
 
   void new(), setsqrt(), setX1(), setptype(), setdirty(), setY2(), setY(), setX2(), setobswt(), setsc(), setML(), setLIML(), setARubin(), setauxwttype(),
-    setFuller(), setkappa(), setquietly(), setbeta(), setA(), setsmall(), sethascons(), setjk(), setscoreBS(), setB(), setnull(), setID(), setFEID(), setlevel(), setptol(), 
+    setFuller(), setkappa(), setquietly(), setbeta(), setA(), setsmall(), sethascons(), setjk(), setscoreBS(), setB(), setnull(), setgranular(), setID(), setFEID(), setlevel(), setptol(), 
     setrobust(), setR1(), setR(), setwillplot(), setgrid(), setmadjust(), setMaxMatSize(), setstattype(), close()
   private void MakeNumerAndJ(), _clustAccum(), MakeWREStats(), MakeInterpolables(), _MakeInterpolables(), MakeNonWREStats(), UpdateBootstrapcDenom(), Init(), plot(), MakeWildWeights(), boottest(), crosstabCapstarMinus(), InitWRE(), PrepWRE(), storeWtGrpResults(), NoNullUpdate()
   real matrix getplot(), getCI(), getV(), getv()
@@ -168,7 +168,7 @@ real matrix boottestOLS::_select(real matrix X, real rowvector v)
 
 real matrix boottestOLS::perp(real matrix A) {
   real matrix vec; real rowvector val; pragma unset vec; pragma unset val
-  symeigensystem(A*invsym(A'A)*A', vec, val); _edittozero(val, 1000)
+  symeigensystem(A*invsym(A'A)*A', vec, val); _edittozero(val, 1e6)
   return (_select(vec, !val))
 }
 
@@ -187,7 +187,7 @@ void boottestOLS::SetR(real matrix R1, | real matrix R) {
     if (all(diagonal(R1invR1R1))==0)
       _error(111, "Null hypothesis or model constraints are inconsistent or redundant.")
     R1invR1R1 = R1 ' R1invR1R1
-    symeigensystem(R1invR1R1 * R1, vec, val); _edittozero(val, 1000)
+    symeigensystem(R1invR1R1 * R1, vec, val); _edittozero(val, 1e6)
     R1perp = _select(vec, !val)  // eigenvectors orthogonal to span of R1; foundation for parameterizing subspace compatible with constraints
   } else
     R1invR1R1 = J(parent->kZ,0,0)  // and R1perp = I
@@ -196,8 +196,8 @@ void boottestOLS::SetR(real matrix R1, | real matrix R) {
     // prepare to reduce regression via FWL
     _R = R \ J(parent->kY2, parent->kX1, 0), I(parent->kY2)  // rows to prevent partialling out of endogenous regressors
     if (restricted)
-      _R = _R * R1perp 
-    symeigensystem(_R ' invsym(_R * _R') * _R, vec, val); _edittozero(val, 1000)
+      _R = _R * R1perp
+    symeigensystem(_R ' invsym(_R * _R') * _R, vec, val); _edittozero(val, 1e6)
     Rpar = _select(vec, val); if (restricted) Rpar = R1perp * Rpar  // par of RR₁perp
 
     if (isDGP | !parent->WREnonARubin) {  // in WRE, Rperp is same DGP and Repl; might not be in WUE, but is arranged so by call to SetR()
@@ -565,6 +565,8 @@ void boottestIVGMM::MakeH() {
   invH = invsym(*pH)
 
   if (pRperp) {  // for score bootstrap
+// "rows(*pRperp),cols(*pRperp),rows(*pH),cols(*pH)"
+// rows(*pRperp),cols(*pRperp),rows(*pH),cols(*pH)
     pA = cols(*pRperp)? &(*pRperp * invsym(*pRperp ' (*pH) * *pRperp) * *pRperp') : &invH
     AR = *pA * (Rpar ' (*parent->pR'))
     XAR = *pX12B(*pX1, *pX2, V * AR)
@@ -765,11 +767,11 @@ pointer(real matrix) scalar boottest::partialFE(pointer(real matrix) scalar pIn)
 }
 
 void boottest::new() {
-  ARubin = LIML = Fuller = WRE = small = scoreBS = auxwttype = ML = initialized = quietly = sqrt = ptype = robust = NFE = FEboot = granular = NErrClustCombs = subcluster = B = BFeas = interpolating = jk = 0
+  ARubin = LIML = Fuller = WRE = small = scoreBS = auxwttype = ML = initialized = quietly = sqrt = ptype = robust = NFE = FEboot = NErrClustCombs = subcluster = B = BFeas = interpolating = jk = 0
   twotailed = null = dirty = willplot = v_sd = notplotted = FEdfadj = bootstrapt = 1
   level = 95
   ptol = 1e-6
-  confpeak = MaxMatSize = .
+  confpeak = MaxMatSize = granular = .
   pY2 = pX1 = pX2 = py1 = pSc = pID = pFEID = pR1 = pR = pwt = &J(0,0,0)
   pr1 = pr = &J(0,1,0)
   pIDBootData = pIDBootAll = &.
@@ -875,6 +877,9 @@ void boottest::setB(real scalar B) {
 }
 void boottest::setnull    (real scalar null) {
   this.null = null; setdirty(1)
+}
+void boottest::setgranular(real scalar granular) {
+  this.granular = granular
 }
 void boottest::setID      (real matrix ID, | real scalar NBootClustVar, real scalar NErrClustVar) {
   this.pID = &ID; this.NBootClustVar = editmissing(NBootClustVar,1); this.NErrClustVar=editmissing(NErrClustVar,editmissing(NBootClustVar,1)); setdirty(1)
@@ -1004,6 +1009,7 @@ real scalar boottest::getpadj(|real scalar classical) {
 
 real scalar boottest::getstat() {
   if (dirty) boottest()
+
   return(multiplier * (*pDist)[1])
 }
 real scalar boottest::getdf() {
@@ -1183,8 +1189,8 @@ void boottest::Init() {  // for efficiency when varying r repeatedly to make CI,
     minN = rows(infoBootData)
 
   purerobust = robust & (scoreBS | subcluster)==0 & Nstar==Nobs  // do we ever error- *and* bootstrap-cluster by individual?
-  granular   = WREnonARubin? 2*Nobs*B*(2*Nstar+1) < Nstar*(Nstar*Nobs+Nall*B*(Nstar+1)) :
-                             !jk & robust & scoreBS==0 & (purerobust | (Nall+Nstar)*kZ*B + (Nall-Nstar)*B + kZ*B < Nall*kZ*kZ + Nobs*kZ + Nall * Nstar*kZ + Nall*Nstar)
+  if (granular == .) granular = WREnonARubin? 2*Nobs*B*(2*Nstar+1) < Nstar*(Nstar*Nobs+Nall*B*(Nstar+1)) :
+                                !jk & robust & scoreBS==0 & (purerobust | (Nall+Nstar)*kZ*B + (Nall-Nstar)*B + kZ*B < Nall*kZ*kZ + Nobs*kZ + Nall * Nstar*kZ + Nall*Nstar)
 
   if (jk & !WREnonARubin)
     granularjk = kZ^3 + Nstar * (Nobs/Nstar*kZ^2 + (Nobs/Nstar)^2*kZ + (Nobs/Nstar)^2 + (Nobs/Nstar)^3) < Nstar * (kZ^2*Nobs/Nstar + kZ^3 + 2*kZ*(kZ + Nobs/Nstar))
@@ -1519,9 +1525,15 @@ void boottest::InitWRE() {  // stuff done only once that knits together results 
   SstarUYbar = SstarinvZperpZperpZperpU = SstarZperpU = SstarUXinvXX = SstarUX = smatrix(Repl.kZ+1)
   SstarUU = smatrix(Repl.kZ+1, Repl.kZ+1)
 
+  if (Repl.kZ>1) {
+    if (robust) Zyi = smatrix(Repl.kZ+1)
+    if (!LIML) {
+      deltadenom_b = J(Repl.kZ, Repl.kZ, 0)
+      deltadenom = smatrix(Repl.kZ+1)
+    }
+  }
+
   if (bootstrapt) {
-    deltadenom_b = J(Repl.kZ, Repl.kZ, 0)
-    Zyi = deltadenom = smatrix(Repl.kZ+1)
     SstarUMZperp = SstarUPX = SstarUX
     _Jcap = J(Clust.N, Repl.kZ, 0)
     if (granular==0)
@@ -2186,12 +2198,14 @@ void boottest::MakeWREStats(real scalar w) {
       }
     }
 
-    if (robust)
-      for(i=Repl.kZ;i;i--)
-        Zyi[i].M = *Filling(i, betas, _jk)
-    else
-      for (i=Repl.kZ;i>=0;i--)
-        YYstar[i+1].M = HessianFixedkappa(i..Repl.kZ, i, 0, _jk)  // kappa=0 => Y*MZperp*Y
+    if (bootstrapt) {
+      if (robust)
+        for(i=Repl.kZ;i;i--)
+          Zyi[i].M = *Filling(i, betas, _jk)
+      else
+        for (i=Repl.kZ;i>=0;i--)
+          YYstar[i+1].M = HessianFixedkappa(i..Repl.kZ, i, 0, _jk)  // kappa=0 => Y*MZperp*Y
+    }
 
     for (b=cols(v); b; b--) {
       numer_b = null | w==1 & b==1? (Repl.RRpar * betas[,b] + Repl.Rt1) - *pr : Repl.RRpar * (betas[,b] - betas[,1])
@@ -2876,7 +2890,7 @@ void boottest_stata(string scalar statname, string scalar dfname, string scalar 
   string scalar X2names, string scalar samplename, string scalar scnames, real scalar robust, string scalar IDnames, real scalar NBootClustVar, real scalar NErrClustVar, 
   string scalar FEname, real scalar NFE, real scalar FEdfadj, string scalar wtname, string scalar obswttype, string scalar R1name, string scalar r1name, string scalar Rname, string scalar rname, real scalar B, string scalar repsname, string scalar repsFeasname, 
   real scalar small, string scalar diststat, string scalar distname, string scalar gridmin, string scalar gridmax, string scalar gridpoints, real scalar MaxMatSize, real scalar quietly,
-  string scalar b0name, string scalar V0name, string scalar vname, string scalar NBootClustname) {
+  string scalar b0name, string scalar V0name, string scalar vname, string scalar NBootClustname, real scalar granular) {
   real matrix X2, ID, FEID, sc, Y2, X1
   real colvector wt, Y
   class boottest scalar M
@@ -2900,6 +2914,7 @@ void boottest_stata(string scalar statname, string scalar dfname, string scalar 
   M.setR (st_matrix(Rname ), st_matrix(rname ))
   M.setnull(null)
   M.setsmall(small)
+  M.setgranular(granular)
   M.setrobust(robust)
   M.setjk(jk)
   M.setscoreBS(scoreBS)

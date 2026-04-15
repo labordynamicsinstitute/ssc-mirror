@@ -13569,7 +13569,6 @@ fmwww.bc.edu/repec/bocode/m/madot.sthlp
 fmwww.bc.edu/repec/bocode/m/midas_ord2bin.sthlp
 fmwww.bc.edu/repec/bocode/m/minap.html
 fmwww.bc.edu/repec/bocode/m/mf_elabel_dir.sthlp
-fmwww.bc.edu/repec/bocode/m/midas.pdf
 fmwww.bc.edu/repec/bocode/m/marg_nb2qq_prep.ado
 fmwww.bc.edu/repec/bocode/m/medcouple.pkg
 fmwww.bc.edu/repec/bocode/m/mlboolfirst.hlp
@@ -16908,6 +16907,7 @@ fmwww.bc.edu/repec/bocode/b/bitobit.hlp
 fmwww.bc.edu/repec/bocode/b/bgshade.ado
 fmwww.bc.edu/repec/bocode/b/bnormpdf.hlp
 fmwww.bc.edu/repec/bocode/b/bcoeff.ado
+fmwww.bc.edu/repec/bocode/b/lboottest.mlib
 fmwww.bc.edu/repec/bocode/b/build_dataflow_metadata.py
 fmwww.bc.edu/repec/bocode/b/bcuse.pkg
 fmwww.bc.edu/repec/bocode/b/brewextra.sthlp
