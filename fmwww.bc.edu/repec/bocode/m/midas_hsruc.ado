@@ -15,7 +15,7 @@
 *!   Katki HA, Bebu I (2021). JRSS-A 184:887-903.
 
 capture program drop midas_hsruc
-program define midas_hsruc, eclass
+program define midas_hsruc, rclass
 	version 16.0
 
 	syntax [, PREValence(real -1) ///
@@ -483,40 +483,40 @@ program define midas_hsruc, eclass
 	* STORE e() RESULTS
 	* ======================================================================
 
-	ereturn clear
-	ereturn scalar N          = `nstudies'
-	ereturn scalar prevalence = `prevalence'
-	ereturn scalar Se         = `Se'
-	ereturn scalar Sp         = `Sp'
-	ereturn scalar LRp        = `LRp'
-	ereturn scalar LRn        = `LRn'
-	ereturn scalar DOR        = `DOR'
-	ereturn scalar youden     = `youden'
-	ereturn scalar alpha      = `alpha'
-	ereturn scalar theta      = `theta'
-	ereturn scalar beta       = `beta'
-	ereturn scalar s2alpha    = `s2alpha'
-	ereturn scalar s2theta    = `s2theta'
-	ereturn scalar wau_hsruc  = `wau_hsruc'
-	ereturn scalar auc_nb     = `auc_nb'
-	ereturn scalar opt_pt     = `opt_pt'
-	ereturn scalar max_nb     = `max_nb'
-	ereturn scalar pt_low     = `pt_low'
-	ereturn scalar pt_high    = `pt_high'
-	ereturn scalar useful_low = `useful_low'
-	ereturn scalar useful_high = `useful_high'
+	* Return HSRUC results as r-class (preserving e() from estimation)
+	return scalar N          = `nstudies'
+	return scalar prevalence = `prevalence'
+	return scalar Se         = `Se'
+	return scalar Sp         = `Sp'
+	return scalar LRp        = `LRp'
+	return scalar LRn        = `LRn'
+	return scalar DOR        = `DOR'
+	return scalar youden     = `youden'
+	return scalar alpha      = `alpha'
+	return scalar theta      = `theta'
+	return scalar beta       = `beta'
+	return scalar s2alpha    = `s2alpha'
+	return scalar s2theta    = `s2theta'
+	return scalar wau_hsruc  = `wau_hsruc'
+	return scalar auc_nb     = `auc_nb'
+	return scalar opt_pt     = `opt_pt'
+	return scalar max_nb     = `max_nb'
+	return scalar pt_low     = `pt_low'
+	return scalar pt_high    = `pt_high'
+	return scalar useful_low = `useful_low'
+	return scalar useful_high = `useful_high'
 
 	if "`prediction'" != "" {
-		ereturn scalar pred_se_lo = `pred_se_lo'
-		ereturn scalar pred_se_hi = `pred_se_hi'
-		ereturn scalar pred_sp_lo = `pred_sp_lo'
-		ereturn scalar pred_sp_hi = `pred_sp_hi'
-		ereturn scalar nb_best    = `nb_best'
-		ereturn scalar nb_worst   = `nb_worst'
+		return scalar pred_se_lo = `pred_se_lo'
+		return scalar pred_se_hi = `pred_se_hi'
+		return scalar pred_sp_lo = `pred_sp_lo'
+		return scalar pred_sp_hi = `pred_sp_hi'
+		return scalar nb_best    = `nb_best'
+		return scalar nb_worst   = `nb_worst'
 	}
 
-	ereturn local cmd   "midas_hsruc"
-	ereturn local title "Hierarchical Summary Relative Utility Curve Analysis"
+	return local cmd   "midas_hsruc"
+	return local title "Hierarchical Summary Relative Utility Curve Analysis"
 
 	di _n as text "{hline 78}"
 	di as text "HSRUC analysis complete."

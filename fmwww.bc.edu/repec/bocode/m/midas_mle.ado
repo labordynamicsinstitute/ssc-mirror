@@ -260,6 +260,7 @@ program midas_mle, eclass byable(recall) sortpreserve
             ereturn local cmdline "midas mle `0'"
             ereturn local cmd "midas_mle"
             ereturn local package "midas"
+            cap estimates store _midas_estimates
         }
     }
     else { // replay
@@ -554,16 +555,40 @@ program midas_mle, eclass byable(recall) sortpreserve
         qui {
             tempname reffects scores residuals H invH scorei ci
             tempvar cooksd
+
             mat `reffects' = e(reffects)
-            svmat `reffects', names(col)
             mat `scores'= e(scores)
-            svmat `scores', names(col)
             mat `residuals'= e(residuals)
+            matrix `H' = e(V)
+
+            tempname groups_m bvars_m
+            mat `groups_m' = e(groups)
+            mat `bvars_m' = e(Vblogit)
+
+            local k = colsof(`H')
+
+            * Save current data and build diagnostic dataset
+            tempfile _origdata
+            capture save `_origdata', replace
+            
+            local nr = rowsof(`reffects')
+            local ns = rowsof(`scores')
+            local nd = rowsof(`residuals')
+            local ng = rowsof(`groups_m')
+            local nmax = max(`nr', `ns', `nd', `ng')
+            drop _all
+            set obs `nmax'
+
+            svmat `reffects', names(col)
+            svmat `scores', names(col)
             svmat `residuals', names(col)
 
-            matrix `H' = e(V)
-            local k = colsof(`H')
-            local N = _N
+            capture confirm variable studdy
+            if _rc {
+                gen studdy = _n
+            }
+
+            local N = `nr'
 
             gen `cooksd' = .
             local i = 1
@@ -587,30 +612,54 @@ program midas_mle, eclass byable(recall) sortpreserve
                 xtitle("Study", size(*.75)) nodraw title("Influence Analysis", size(*.75))
 
             ******Residual-based Goodness-of-fit Assessment**********
-            pnorm dresid, name(pdresid, replace) title("Goodness-Of-Fit", size(*.75)) ///
-                xtitle("Normal Quantile", size(*.75)) ylab(, angle(hor) ///
-                format(%7.2f)) nodraw ytitle("Deviance Residual", size(*.75))
+            * e(residuals) is interleaved: odd rows=dresid1, even rows=dresid2
+            * Pair them: for each row with dresid1 non-missing, grab dresid2 from next row
+            gen _dr1 = dresid1 if dresid1 < .
+            gen _dr2 = dresid2[_n+1] if dresid1 < .
+            gen _dresid = sign(_dr1) * sqrt(_dr1^2 + _dr2^2) if _dr1 < . & _dr2 < .
+            * Count non-missing paired residuals
+            count if _dresid < .
+            local ndresid = r(N)
+            * Compute mean and sd
+            sum _dresid if _dresid < .
+            local dmean = r(mean)
+            local dsd = r(sd)
+            * Rank the residuals for P-P plot (without sorting the dataset)
+            egen _rank = rank(_dresid) if _dresid < .
+            gen _pexp = (_rank - 0.5) / `ndresid' if _dresid < .
+            gen _pobs = normal((_dresid - `dmean') / `dsd') if _dresid < .
+            tw (function y=x, range(0 1) lc(gs12) lp(dash) lw(thin)) ///
+                (scatter _pobs _pexp if _dresid < ., ms(O) msize(*1.5) mc(navy) mlw(medthin)), ///
+                legend(off) name(pdresid, replace) ///
+                title("Goodness-Of-Fit", size(*.75)) ///
+                xtitle("Expected Normal", size(*.75)) ///
+                ytitle("Observed", size(*.75)) ///
+                ylab(0(0.2)1, angle(hor) format(%7.2f)) ///
+                xlab(0(0.2)1) nodraw
+            drop _dr1 _dr2 _dresid _rank _pexp _pobs
 
             ******Bivariate Normality using Mahalanobis Squared Distances**********
-            mkmat randeff*, matrix(xvar)
-            matrix accum cov = randeff*, noc dev
+            mkmat randeff* if randeff1 < ., matrix(xvar)
+            matrix accum cov = randeff* if randeff1 < ., noc dev
             matrix cov = cov/(r(N)-1)
             matrix mahascorex= (xvar) * (inv(cov)) * (xvar')
             matrix mahascore= (vecdiag(mahascorex))'
             svmat mahascore, names(mahascore)
-            pchi mahascore1,  df(2)  nodraw name(bivar, replace) ///
+            sort mahascore1
+            gen _chiexp = invchi2(2, (_n - 0.5) / `nr') if mahascore1 < .
+            gen _chiobs = mahascore1 if mahascore1 < .
+            tw (scatter _chiobs _chiexp if mahascore1 < ., ms(O) msize(*0.8) mc(navy)) ///
+                (function y=x, range(_chiexp) n(2) lc(gs8) lp(dash)), ///
+                legend(off) nodraw name(bivar, replace) ///
                 ylab(, angle(hor)) title("Bivariate Normality", size(*.75)) ///
                 xtitle("Chi-squared Quantile", size(*.75)) ///
                 ytitle("Mahalanobis Score", size(*.75))
 
             *****Outlier Detection using standardized residuals**********
-            tempname groups bvars
             tempvar stdres1 stdres2
-            mat `groups' = e(groups)
-            mat `bvars' = e(Vblogit)
-            local bvars1 = `bvars'[1,1]
-            local bvars2 = `bvars'[2,2]
-            svmat `groups', names(col)
+            local bvars1 = `bvars_m'[1,1]
+            local bvars2 = `bvars_m'[2,2]
+            svmat `groups_m', names(col)
             gen `stdres1' = (1-disgroup1)*randeff1/ sqrt(`bvars1' - serandeff1^2)
             gen `stdres2' = disgroup2*randeff2/ sqrt(`bvars2' - serandeff2^2)
             tw (scatter `stdres2' `stdres1', mlw(medthin) mlc(black) mfc(gs15) msize(*1.5) ms(O)) ///
@@ -622,6 +671,8 @@ program midas_mle, eclass byable(recall) sortpreserve
 
             nois graph combine pdresid outlier cooksd  bivar, rows(2)  `title'  `options'
         }
+        * Restore original data
+        capture use `_origdata', clear
     }
 
 

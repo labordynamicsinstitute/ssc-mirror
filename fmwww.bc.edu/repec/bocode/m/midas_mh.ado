@@ -920,24 +920,29 @@ tempname Vmat invmat fish varb pred
 tempvar pred1 pred2 pred eta1 eta2 eta idvar groupvar dep invn varp
 tempfile predresults
 
-postfile `predfile' `pred'1 `pred'2 `eta'1 `eta'2 using `predresults', replace
-qui forvalues i = 1/$midas_nobs {
-    if `i'==1 {
-        qui bayesstats summary (P1`i': invlogit({_midas_dep:1bn._midas_dis_status} + {U1[_midas_studyid]:1})) ///
-        (P2`i': invlogit({_midas_dep:2._midas_dis_status} + {U2[_midas_studyid]:1})) ///
-        (P3`i': ({_midas_dep:1bn._midas_dis_status} + {U1[_midas_studyid]:1})) ///
-        (P4`i': ({_midas_dep:2._midas_dis_status} + {U2[_midas_studyid]:1}))
+*--- Build exprlist for single bayesstats summary call across all studies ---*
+local exprlist ""
+forvalues i = 1/$midas_nobs {
+    if `i' == 1 {
+        local term "(P1_1: invlogit({_midas_dep:1bn._midas_dis_status} + {U1[_midas_studyid]:1})) (P2_1: invlogit({_midas_dep:2._midas_dis_status} + {U2[_midas_studyid]:1})) (P3_1: ({_midas_dep:1bn._midas_dis_status} + {U1[_midas_studyid]:1})) (P4_1: ({_midas_dep:2._midas_dis_status} + {U2[_midas_studyid]:1}))"
     }
     else {
-        qui bayesstats summary (P1`i': invlogit({_midas_dep:1bn._midas_dis_status} + {U1[_midas_studyid]:`i'})) ///
-        (P2`i': invlogit({_midas_dep:2._midas_dis_status} + {U2[_midas_studyid]:`i'})) ///
-        (P3`i': ({_midas_dep:1bn._midas_dis_status} + {U1[_midas_studyid]:`i'})) ///
-        (P4`i': ({_midas_dep:2._midas_dis_status} + {U2[_midas_studyid]:`i'}))
+        local term "(P1_`i': invlogit({_midas_dep:1bn._midas_dis_status} + {U1[_midas_studyid]:`i'})) (P2_`i': invlogit({_midas_dep:2._midas_dis_status} + {U2[_midas_studyid]:`i'})) (P3_`i': ({_midas_dep:1bn._midas_dis_status} + {U1[_midas_studyid]:`i'})) (P4_`i': ({_midas_dep:2._midas_dis_status} + {U2[_midas_studyid]:`i'}))"
     }
-    qui mat `Vmat'`i'=r(summary)
-    post `predfile' (`Vmat'`i'[1,4]) (`Vmat'`i'[2,4]) (`Vmat'`i'[3,4]) (`Vmat'`i'[4,4])
+    local exprlist "`exprlist' `term'"
 }
+qui bayesstats summary `exprlist'
+tempname summary_all
+matrix `summary_all' = r(summary)
 
+postfile `predfile' `pred'1 `pred'2 `eta'1 `eta'2 using `predresults', replace
+forvalues i = 1/$midas_nobs {
+    local r1 = (`i'-1)*4 + 1
+    local r2 = (`i'-1)*4 + 2
+    local r3 = (`i'-1)*4 + 3
+    local r4 = (`i'-1)*4 + 4
+    post `predfile' (`summary_all'[`r1',4]) (`summary_all'[`r2',4]) (`summary_all'[`r3',4]) (`summary_all'[`r4',4])
+}
 postclose `predfile'
 postutil clear
 use `predresults', clear

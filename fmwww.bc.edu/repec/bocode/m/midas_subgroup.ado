@@ -21,16 +21,6 @@ program define midas_subgroup, rclass
         NOGraph
         SAVEtable(string)
         PLOTtype(string)
-        RPATH(string)
-        STANdir(string)
-        MODELfile(string)
-        OUTPUTfile(string)
-        CHains(integer 4)
-        WARMup(integer 1000)
-        ITER(integer 10000)
-        THIN(integer 10)
-        SEED(integer 12345)
-        COVariance(string)
         *] ;
     #delimit cr
     
@@ -40,17 +30,6 @@ program define midas_subgroup, rclass
         exit 198
     }
     if "`plottype'" == "" local plottype "sroc"
-    
-    * Build estimator-specific option strings
-    local inla_opts ""
-    if "`rpath'" != "" local inla_opts `"rpath("`rpath'")"'
-    
-    local hmc_opts ""
-    if "`standir'" != ""    local hmc_opts `"`hmc_opts' standir("`standir'")"'
-    if "`modelfile'" != ""  local hmc_opts `"`hmc_opts' modelfile("`modelfile'")"'
-    if "`outputfile'" != "" local hmc_opts `"`hmc_opts' outputfile("`outputfile'")"'
-    if "`covariance'" != "" local hmc_opts `"`hmc_opts' covariance(`covariance')"'
-    local hmc_opts `"`hmc_opts' chains(`chains') warmup(`warmup') iter(`iter') thin(`thin') seed(`seed')"'
     
     tokenize `varlist'
     local tp `1'
@@ -139,10 +118,10 @@ program define midas_subgroup, rclass
                 midas qrsim `tp' `fp' `fn' `tn', id(`id') simulation(halton) draws(200) burn(50)
             }
             else if "`estimator'" == "hmc" {
-                midas hmc `tp' `fp' `fn' `tn', id(`id') `hmc_opts' `options'
+                midas hmc `tp' `fp' `fn' `tn', id(`id') `options'
             }
             else if "`estimator'" == "inla" {
-                midas inla `tp' `fp' `fn' `tn', id(`id') `inla_opts' `options'
+                midas inla `tp' `fp' `fn' `tn', id(`id') `options'
             }
         }
         

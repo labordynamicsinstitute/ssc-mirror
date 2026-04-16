@@ -4,7 +4,7 @@
 {title: Ehutchens: Hutchens `square root' segregation index, with decompositions by subgroup, and extended options for supergroups, stored matrices and new datasets}
 
         {cmdab:ehutchens} {it:unitvar} {it:segvar} [{it:weight}] [{cmdab:if} exp] [{cmdab:in} range] [, {cmdab:by:group}(groupvar) {cmdab:m:issing} {cmdab:f:ormat}(%fmt) {cmdab:su:pergroup}(varname) {cmdab:s:ave}(string) {cmdab:c:lear}]
-                  [{cmdab:b:ootstrap} {cmdab:re:ps}(integer 400) {cmdab:se:ed}(integer 12345) {cmdab:cl:uster}(varname)]
+                  [{cmdab:b:ootstrap} {cmdab:re:ps}(integer 400) {cmdab:se:ed}(integer 12345) {cmdab:cl:uster}(varname) {cmdab:st:rata}(varname)]
 
         {cmdab:fweights} and {cmdab:aweights} are allowed; see {help weights}.
 
@@ -44,9 +44,10 @@
 	
 	{cmdab:clear} replaces data in memory with the saved dataset containing index values. 
 		
-	{cmdab:bootstrap} {cmdab:reps}(integer 400){cmdab:seed}(integer 12345){cmdab:cluster}({it:varname}) sets the number of bootstrap samples in {cmdab:reps} (400 by default), sets the random-number seed in {cmdab:seed} (12345 by default)
-	and {cmdab:cluster} specifies the social units defined in {it:unitvar} as resampling clusters. This option is defined from the built-in bootstrap Stata command, allowing sample weights and storing estimations, but its usage is 
-	restricted to the three suboptions already mentioned. It runs the original hutchens command slightly modified, as an internal program, for each bootstrap replication after the supergroup calculations are completed. 
+	{cmdab:bootstrap} {cmdab:reps}(integer 400){cmdab:seed}(integer 12345){cmdab:cluster}({it:varname}) [{cmdab:strata}({it:varname})] requests bootstrap estimation of the main statistics. {cmdab:reps} specifies the number of 
+	bootstrap replications (400 by default), and {cmdab:seed} sets the random-number seed (12345 by default). {cmdab:cluster} defines the resampling units (typically the social units specified in {it:unitvar}), 
+	indicating that bootstrap samples are drawn at the cluster level with replacement. Optionally, {cmdab:strata} may be specified to account for stratified sampling designs; in this case, resampling is performed 
+	independently within each stratum. This option is defined from the built-in bootstrap Stata command, allowing sample weights and storing estimations, but its usage is restricted to the three suboptions already mentioned.  
 	Estimations are stored in a matrix. This option cannot be combined with the save option.
 
 

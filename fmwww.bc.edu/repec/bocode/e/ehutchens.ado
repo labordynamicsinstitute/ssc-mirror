@@ -3,6 +3,7 @@
 
 	*! version 1.0.2, Francisco Ceron, 23Sept2024
 	*! version 1.0.3, Francisco Ceron, 15Aug2025
+	*! version 1.0.4, Francisco Ceron, 15Apr2026
 	
 	*! ehutchens: extended hutchens 'square root' segregation index (additively decomposable), with supergroup option, stored matrices, save new dataset and bootstrap options
 	*! This is an extension of -hutchens-, version 1.0.0,  Stephen Jenkins, 17aug2005.
@@ -226,14 +227,12 @@ end
 	
 	
 	
-	
-	
-/// ehutchens program: extended hutchens 'square root' segregation index (additively decomposable), with supergroup, stored matrices, save new dataset and bootstrap options	
+	/// ehutchens program: extended hutchens 'square root' segregation index (additively decomposable), with supergroup, stored matrices, save new dataset and bootstrap options	
 			
 				program define ehutchens, rclass 
 					version 15.1
 					syntax varlist(min=2 max=2) [fw aw/] [if] [in] [, ///
-					   Missing Format(passthru) BYgroup(varname)  SUpergroup(varname) Save(string) Clear] [Bootstrap Reps(integer 400) SEed(integer 12345) CLuster(varname)]
+					   Missing Format(passthru) BYgroup(varname)  SUpergroup(varname) Save(string) Clear] [Bootstrap Reps(integer 400) SEed(integer 12345) CLuster(varname) STrata(varname)]
 
 		
 		************************************************************************
@@ -649,6 +648,11 @@ end
 				local missing_option "missing"
 				}
 				
+				local strata_option ""
+				if "`strata'" != "" {
+				local strata_option "strata(`strata')"
+				}
+				
 				*****************************************************************
 				
 						qui summ `supergroup' 
@@ -656,7 +660,7 @@ end
 	
 				****************************************************************
 				
-				bootstrap r(S) r(SW) r(SB)  , reps(`reps') seed(`seed') cluster(`cluster') nowarn force: hu_int `varlist' `weight_option' `missing_option', `bygroup_option'
+				bootstrap r(S) r(SW) r(SB)  , reps(`reps') seed(`seed') cluster(`cluster') idcluster(`cluster'_bs) `strata_option' nowarn force: hu_int `varlist' `weight_option' , `missing_option' `bygroup_option'
 				
 				
 				estat bootstrap, all

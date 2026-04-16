@@ -353,7 +353,7 @@ if !replay() {
     bIsqmed bIsqsd bmed bsd midas_sim_data {
         ereturn matrix `i' = ``i'', copy
     }
-    ereturn matrix studywgts = `studywgts', copy
+    ereturn matrix studyweights = `studywgts', copy
 
     // scalars
     ereturn scalar nstudies = `numobs'

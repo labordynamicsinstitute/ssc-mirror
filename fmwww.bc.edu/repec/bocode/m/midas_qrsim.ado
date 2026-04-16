@@ -313,6 +313,7 @@ ereturn local cmdline "midas_qrsim `0'"
 eret local predict  "midas_qrsim_p"
 ereturn local package "midas"
 ereturn local cmd   "midas_qrsim"
+cap estimates store _midas_estimates
 }
 }
 else { // replay

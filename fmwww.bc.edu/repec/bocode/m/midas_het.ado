@@ -74,22 +74,32 @@ program define midas_het, eclass
     }
 
     *----------------------------------------------------------
-    * Guard 2: retrieve weight matrix from e(studywgts)
-    * All five MIDAS estimators post e(studywgts) with columns
-    * senwgt spewgt bivwgt
+    * Guard 2: weight matrix — try e(studywgts) first (midas_mle
+    * naming convention), then e(studyweights) as fallback
     *----------------------------------------------------------
-    capture confirm matrix e(studywgts)
-    if _rc {
-        di as err "midas_het: e(studywgts) not found."
-        di as err "Re-run a MIDAS estimation command first."
+    local wgt_mname ""
+    foreach mn in studywgts studyweights {
+        capture confirm matrix e(`mn')
+        if !_rc {
+            local wgt_mname "`mn'"
+            continue, break
+        }
+    }
+    if `"`wgt_mname'"' == "" {
+        di as err "midas_het: weight matrix not found in e(). " ///
+                  "Expected e(studywgts) or e(studyweights). " ///
+                  "Re-run estimation to restore e()."
         exit 301
     }
-    local nr = rowsof(e(studywgts))
-    if `nr' < 2 | colsof(e(studywgts)) != 3 {
-        di as err "midas_het: e(studywgts) has wrong dimensions."
+
+    local nr = rowsof(e(`wgt_mname'))
+    local nc = colsof(e(`wgt_mname'))
+
+    if `nr' < 2 | `nc' != 3 {
+        di as err "midas_het: e(`wgt_mname') is `nr'×`nc'; " ///
+                  "expected n≥2 × 3."
         exit 503
     }
-    local wgt_mname "studywgts"
 
     *----------------------------------------------------------
     * Guard 3: recover I² values
@@ -197,9 +207,9 @@ program define midas_het, eclass
     *----------------------------------------------------------
     tempname W bI2 H Hpct C __s
 
-    *--- Pull weight matrix directly from e(studywgts) ---*
-    matrix `W'   = e(studywgts)
-    matrix colnames `W' = senwgt spewgt bivwgt
+    *--- Pull weight matrix using discovered name ---*
+    matrix `W'   = e(`wgt_mname')
+    matrix colnames `W' = wt_sens wt_spec wt_biv
 
     local rn : rownames `W'
 
@@ -231,7 +241,7 @@ program define midas_het, eclass
         }
         matrix `C'[1,`j'] = `__s'
     }
-    matrix colnames `C' = senwgt_sum spewgt_sum bivwgt_sum
+    matrix colnames `C' = wt_sens_sum wt_spec_sum wt_biv_sum
 
     *----------------------------------------------------------
     * Copy H and Hpct to permanent names BEFORE ereturn consumes them

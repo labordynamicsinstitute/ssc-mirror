@@ -1,4 +1,4 @@
-*! version 1.4.7 2026-02-25
+*! version 1.4.8 2026-04-15
   
 program define stpp, rclass sortpreserve
   version 16.0
@@ -184,13 +184,6 @@ program define stpp, rclass sortpreserve
   }
   
   
-  // Check any events  
-  qui count if `touse' & _d
-  if `r(N)' == 0 {
-    display in red "No events"
-    exit 198
-  }  
-  
   /// checks that at least one observation and 1 event.
   if "`by'" != "" | "`standstrata'" != "" {
     tempvar bygroups eventtab
@@ -199,17 +192,19 @@ program define stpp, rclass sortpreserve
     qui levelsof _d  if `touse'
     matrix `eventtab' =  `eventtab'[1...,`r(r)']
     mata:st_local("zeroevents",strofreal(sum(st_matrix("`eventtab'"):==0):>0))
-    if `zeroevents' {
+    if `zeroevents' & "`inccens'" == "" {
     	di as error "There are zero events in one of the groups defined by the"
-    	di as error "by() and/or standstrata() options"
+    	di as error "by() and/or standstrata() options."
+      di as error "You can try using the inccens option."
       exit 198
     }
     qui replace `touse' = 0 if `bygroups' == .
   }
   else {
     quietly count if _d==1 & `touse'
-    if `r(N)' == 0 {
+    if `r(N)' == 0 & "`inccens'" == "" {
     	di as error "There are zero events" 
+      di as error "You can try using the inccens option."
       exit 198
     }
   }
@@ -870,7 +865,8 @@ struct stpp_info {
                         mint_k,                // minimum value of t by by levels
                         maxt_k,                // maximum value of t by by levels
                         maxt_sk,               // maximum value of t by by/stand levels
-                        maxtall_k              // maximum value of t (all) by by levels
+                        maxtall_k,             // maximum value of t (all) by by levels
+                        mineventtime_sk        // minimum event time by by/stand levels
   
   real         matrix   Nunique_t_sk,          // No. of unique t for stand and by levels
                         Nunique_t_k,           // No. of unique t for by levels
@@ -1097,16 +1093,16 @@ function PP_Get_stpp_info()
   
 // unique values of t
 // calculated separately for by and standstrata levels
-  S.unique_t_sk  = asarray_create("real",2)
-  S.unique_t_k   = asarray_create("real",1)
-  S.Nunique_t_sk = J(S.Nstandlevels,S.Nbylevels,.)
-  S.Nobs_by_sk   = J(S.Nstandlevels,S.Nbylevels,.)  
-  S.Nunique_t_k  = J(1,S.Nbylevels,.)
-  S.maxt_k       = asarray_create("real",1)
-  S.mint_k       = asarray_create("real",1)
-  S.maxtall_k    = asarray_create("real",1)
-  S.maxt_sk      = asarray_create("real",2) 
- 
+  S.unique_t_sk     = asarray_create("real",2)
+  S.unique_t_k      = asarray_create("real",1)
+  S.Nunique_t_sk    = J(S.Nstandlevels,S.Nbylevels,.)
+  S.Nobs_by_sk      = J(S.Nstandlevels,S.Nbylevels,.)  
+  S.Nunique_t_k     = J(1,S.Nbylevels,.)
+  S.maxt_k          = asarray_create("real",1)
+  S.mint_k          = asarray_create("real",1)
+  S.maxtall_k       = asarray_create("real",1)
+  S.maxt_sk         = asarray_create("real",2) 
+  S.mineventtime_sk = asarray_create("real",2) 
 
   for(k=1;k<=S.Nbylevels;k++) {
     for(s=1;s<=S.Nstandlevels;s++) {
@@ -1119,6 +1115,13 @@ function PP_Get_stpp_info()
       S.Nunique_t_sk[s,k] = rows(asarray(S.unique_t_sk,(s,k)))
       S.Nobs_by_sk[s,k]   = sum(S.by:==S.bylevels[k,] :& S.standstrata:==S.standlevels[s])
       asarray(S.maxt_sk,(s,k),max(S.t[selectindex(rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars :& S.standstrata:==S.standlevels[s])]))
+      // maximum event time: set to maxtime if no events
+      if(sum(S.d[selectindex(rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars :& S.standstrata:==S.standlevels[s])])>0) {
+        asarray(S.mineventtime_sk,(s,k),min(S.t[selectindex(S.d :& rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars :& S.standstrata:==S.standlevels[s])]))
+      }
+      else {
+        asarray(S.mineventtime_sk,(s,k),asarray(S.maxt_sk,(s,k)))
+      }
     }
     if(S.hasinccens) {
       asarray(S.unique_t_k,(k),uniqrows(S.t[selectindex(rowsum(S.by:==S.bylevels[k,]):==S.Nbyvars)]))
@@ -1599,7 +1602,8 @@ void function PP_Gen_cumulative_indweights(struct stpp_info scalar S)
   real matrix allcause, 
               tmpmat, tmpmat_v, 
               allcause_lag, lambda_c,
-              lambda_all_t_var
+              lambda_all_t_var,
+              beforeevent_index
 
               
   S.RS_PP      = asarray_create("real",1)
@@ -1617,6 +1621,7 @@ void function PP_Gen_cumulative_indweights(struct stpp_info scalar S)
   for(k=1;k<=S.Nbylevels;k++) {
     asarray(S.Nrisk,k,asarray(S.Nrisk_s_t,(1,S.bylevels[k,])))
     asarray(S.RS_PP_var,k,quadrunningsum(asarray(S.lambda_e_t_var,(1,S.bylevels[k,]))))
+    beforeevent_index = selectindex(asarray(S.unique_t_k,k):<asarray(S.mineventtime_sk,(1,k)))
     
     // Marginal RS
     if(S.hasflemhar) {
@@ -1636,15 +1641,17 @@ void function PP_Gen_cumulative_indweights(struct stpp_info scalar S)
     else {
       tmpmat = -quadrunningsum(log(1:-asarray(S.lambda_e_t,(1,S.bylevels[k,]))))
       if(S.hasdeathprob) {
-        asarray(S.RS_PP, k, 1:-exp(-(tmpmat, 
-                                     tmpmat :- zz:*sqrt(asarray(S.RS_PP_var,k)), 
-                                     tmpmat :+ zz:*sqrt(asarray(S.RS_PP_var,k)))))
+        tmpmat =  1:-exp(-(tmpmat,tmpmat :- zz:*sqrt(asarray(S.RS_PP_var,k)), 
+                                  tmpmat :+ zz:*sqrt(asarray(S.RS_PP_var,k))))
       }
       else {
-        asarray(S.RS_PP, k, exp(-(tmpmat, 
-                                  tmpmat :+ zz:*sqrt(asarray(S.RS_PP_var,k)), 
-                                  tmpmat :- zz:*sqrt(asarray(S.RS_PP_var,k)))))
+        tmpmat =  exp(-(tmpmat,tmpmat :+ zz:*sqrt(asarray(S.RS_PP_var,k)), 
+                               tmpmat :- zz:*sqrt(asarray(S.RS_PP_var,k))))
       }
+      if(rows(beforeevent_index)) {
+        tmpmat[beforeevent_index,2..3] = J(rows(beforeevent_index),2,.)
+      }
+      asarray(S.RS_PP, k, tmpmat)
     }
 
     // Marginal all cause    
@@ -1661,7 +1668,12 @@ void function PP_Gen_cumulative_indweights(struct stpp_info scalar S)
         if(S.haspopmort2) allcause = -quadrunningsum(log(1:-(lambda_c :+ asarray(S.lambda_pop2_t,(1,S.bylevels[k,])))))
         else allcause   = -quadrunningsum(log(1:-asarray(S.lambda_all_t,(1,S.bylevels[k,]))))          
       }
-      asarray(S.AC,k,PP_log_tran_var(S,allcause, asarray(S.AC_var,k), zz))
+      allcause = PP_log_tran_var(S,allcause, asarray(S.AC_var,k), zz)
+      // make observations before first event equal to 1
+      if(rows(beforeevent_index)) {
+        allcause[beforeevent_index,1] = J(rows(beforeevent_index),1,1:-S.hasdeathprob)
+      }
+      asarray(S.AC,k,allcause)
     }
 
     // Marginal crude probs
@@ -1688,12 +1700,16 @@ void function PP_Gen_cumulative_indweights(struct stpp_info scalar S)
 	   
       asarray(S.CP_can_var,k,tmpmat_v) 
       if(S.hascrudeprob_untrans) {
-        asarray(S.CP_can, k, (tmpmat,tmpmat-zz:*sqrt(asarray(S.CP_can_var,k)),
-                                     tmpmat+zz:*sqrt(asarray(S.CP_can_var,k))))
+        tmpmat =  (tmpmat,tmpmat-zz:*sqrt(asarray(S.CP_can_var,k)),
+                                     tmpmat+zz:*sqrt(asarray(S.CP_can_var,k)))
       }
       else {
-        asarray(S.CP_can, k, PP_loglog_tran_var(tmpmat,asarray(S.CP_can_var,k),zz))
+        tmpmat = PP_loglog_tran_var(tmpmat,asarray(S.CP_can_var,k),zz)
       }
+      if(rows(beforeevent_index)) {
+        tmpmat[beforeevent_index,2..3] = J(rows(beforeevent_index),2,.)
+      }
+      asarray(S.CP_can, k, tmpmat)
 
       if(S.CP_calcother) {
         tmpmat_v = J(Nuniq,1,0)        
@@ -1703,7 +1719,11 @@ void function PP_Gen_cumulative_indweights(struct stpp_info scalar S)
           tmpmat_v[j]=quadsum((tmpmat[j]:-tmpmat[1::j,.]):^2:*lambda_all_t_var[1::j,.]) 
         }      
         asarray(S.CP_oth_var,k,tmpmat_v) 
-        asarray(S.CP_oth, k, PP_loglog_tran_var(tmpmat,asarray(S.CP_oth_var,k),zz))
+        tmpmat = PP_loglog_tran_var(tmpmat,asarray(S.CP_oth_var,k),zz)
+        if(rows(beforeevent_index)) {
+          tmpmat[beforeevent_index,2..3] = J(rows(beforeevent_index),2,.)
+        }        
+        asarray(S.CP_oth, k, tmpmat)
       }
     }
   }

@@ -1,174 +1,455 @@
 /*
-  midas.dlg
-  Top-level dispatcher dialog for the MIDAS suite
-  Ben Adarkwa Dwamena  2026
+  midas.dlg  -- MIDAS consolidated dialog (mega-dialog)
+  Ben A. Dwamena, University of Michigan
+  version 4.00  14apr2026
 
-  Usage:  db midas
-  Presents a categorised list of MIDAS subcommands.
-  Selecting a command and clicking OK launches its own dialog via db.
+  Single dialog with 4 tabs replacing 33+ individual .dlg files.
+  This reduces the SSC midas.pkg to well under the 100-line limit.
 */
 
 VERSION 16.0
+POSITION . . 680 520
 
-INCLUDE _std_large
+OK     ok1,   label("Submit")
+CANCEL can1,  label("Close")
+HELP   hlp1,  view("help midas")
+RESET  res1
+COPY   copy1
 
-DEFINE _dlgwd  520
-DEFINE _dlght  460
-
-DIALOG main, tabtitle("Main")                         ///
-    title("MIDAS — Meta-analysis of Diagnostic Accuracy Studies")  ///
-    label("MIDAS")
-
+// =====================================================================
+// TAB 1: ESTIMATION
+// =====================================================================
+DIALOG est, tabtitle("Estimation")
 BEGIN
+    TEXT     tx_eng     10  10 150  ., label("Estimation engine:")
+    COMBOBOX cb_eng    165   8 200  ., dropdownlist                ///
+        contents(est_engines) values(est_engvals)                  ///
+        onselchange(program est_update)
 
-  /*--------------------------------------------------------*/
-  /* HEADER                                                 */
-  /*--------------------------------------------------------*/
-  TEXT tx_hdr 10 10 500 18,                            ///
-      label("Select a MIDAS subcommand, then click Launch Dialog.")
+    GROUPBOX gb_vars   10  40 660  65, label("2x2 Table Variables")
+    TEXT     tx_tp      20  60  30  ., label("TP:")
+    VARNAME  vn_tp      55  58 120  .
+    TEXT     tx_fp     185  60  30  ., label("FP:")
+    VARNAME  vn_fp     220  58 120  .
+    TEXT     tx_fn     350  60  30  ., label("FN:")
+    VARNAME  vn_fn     385  58 120  .
+    TEXT     tx_tn     515  60  30  ., label("TN:")
+    VARNAME  vn_tn     550  58 100  .
 
-  /*--------------------------------------------------------*/
-  /* DATA COMMANDS                                          */
-  /*--------------------------------------------------------*/
-  GROUPBOX gb_data 10 35 500 80,                        ///
-      label("Data commands")
+    TEXT     tx_id      20  82  80  ., label("Study ID:")
+    VARNAME  vn_id     105  80 120  .
 
-  RADIO rb_clust2bin 20 53 220 18,                      ///
-      label("clust2bin  — Cluster to binary")           ///
-      first                                             ///
-      option(clust2bin)
-  RADIO rb_con2bin   20 73 220 18,                      ///
-      label("con2bin    — Continuous to binary")        ///
-      option(con2bin)
-  RADIO rb_ipd2ad    250 53 240 18,                     ///
-      label("ipd2ad     — IPD to aggregate data")       ///
-      option(ipd2ad)
-  RADIO rb_ord2bin   250 73 240 18,                     ///
-      label("ord2bin    — Ordinal to binary")           ///
-      option(ord2bin)
-  RADIO rb_simdata   20 93 220 18,                      ///
-      label("simdata    — Simulate DTA data")           ///
-      last                                              ///
-      option(simdata)
+    GROUPBOX gb_eopts  10 115 660 280, label("Engine Options")
 
-  /*--------------------------------------------------------*/
-  /* EXPLORATORY COMMANDS                                   */
-  /*--------------------------------------------------------*/
-  GROUPBOX gb_expl 10 125 500 105,                      ///
-      label("Exploratory commands")
+    // -- MLE options --
+    TEXT     tx_quad    20 135  90  ., label("Quadrature pts:")
+    SPINNER  sp_quad   115 133  55  ., min(5) max(50) default(20)
+    CHECKBOX ck_het     20 160 200  ., label("Report heterogeneity stats") option(hetstats)
+    CHECKBOX ck_hsroc   20 183 200  ., label("Report HSROC parameters")   option(hsroc)
+    CHECKBOX ck_revman  20 206 200  ., label("Report RevMan parameters")  option(revman)
+    CHECKBOX ck_diag   240 160 200  ., label("Diagnostic plot (diagplot)") option(diagplot)
+    CHECKBOX ck_ebayes 240 183 200  ., label("Empirical Bayes plot")
 
-  RADIO rb_quadas2   20 143 220 18,                     ///
-      label("quadas2    — QUADAS-2 assessment")         ///
-      first                                             ///
-      option(quadas2)
-  RADIO rb_bivbox    20 163 220 18,                     ///
-      label("bivbox     — Bivariate box plot")          ///
-      option(bivbox)
-  RADIO rb_chiplot   20 183 220 18,                     ///
-      label("chiplot    — Chi plot")                    ///
-      option(chiplot)
-  RADIO rb_kendall   250 143 240 18,                    ///
-      label("kendall    — Kendall correlation")         ///
-      option(kendall)
-  RADIO rb_assess    250 163 240 18,                    ///
-      label("assess     — Pre-estimation assessment")   ///
-      option(assess)
-  RADIO rb_binsse    250 183 240 18,                    ///
-      label("binsse     — Bivariate SSE")               ///
-      option(binsse)
-  RADIO rb_eforest   20 203 220 18,                     ///
-      label("eforest    — Exploratory forest plot")     ///
-      last                                              ///
-      option(eforest)
+    // -- Bayesian options (MH/HMC) --
+    TEXT     tx_chains 20 238  60  ., label("Chains:")
+    SPINNER  sp_chains  85 236  50  ., min(1) max(8) default(4)
+    TEXT     tx_mcsize 150 238  70  ., label("MC size:")
+    EDIT     ed_mcsize 225 236  70  ., default("10000") numonly
+    TEXT     tx_prior  310 238  40  ., label("Prior:")
+    COMBOBOX cb_prior  355 236 150  ., dropdownlist               ///
+        contents(prior_list) values(prior_vals)
+    CHECKBOX ck_hpd     20 263 200  ., label("HPD intervals (vs equal-tailed)")
 
-  /*--------------------------------------------------------*/
-  /* ESTIMATION COMMANDS                                    */
-  /*--------------------------------------------------------*/
-  GROUPBOX gb_est 10 240 500 80,                        ///
-      label("Estimation commands")
+    // -- Save graph --
+    TEXT     tx_save    20 365  80  ., label("Save graph:")
+    FILE     fi_save   105 363 400  ., option(savegraph)          ///
+        dialogtitle("Save graph as") filter("PNG|*.png|EPS|*.eps|PDF|*.pdf")
+END
 
-  RADIO rb_mle       20 258 220 18,                     ///
-      label("mle        — MLE (adaptive GH quadrature)")  ///
-      first                                             ///
-      option(mle)
-  RADIO rb_qrsim     20 278 220 18,                     ///
-      label("qrsim      — Quasi-likelihood REML")       ///
-      option(qrsim)
-  RADIO rb_mh        250 258 240 18,                    ///
-      label("mh         — Metropolis-Hastings MCMC")    ///
-      option(mh)
-  RADIO rb_hmc       250 278 240 18,                    ///
-      label("hmc        — HMC/NUTS (CmdStan)")          ///
-      option(hmc)
-  RADIO rb_inla      20 298 220 18,                     ///
-      label("inla       — INLA Bayesian")               ///
-      last                                              ///
-      option(inla)
+LIST est_engines
+BEGIN
+    "MLE -- Gaussian quadrature"
+    "QRSIM -- Quasi-random simulation"
+    "MH -- Metropolis-Hastings"
+    "HMC -- Hamiltonian Monte Carlo"
+    "INLA -- Integrated Nested Laplace"
+END
 
-  /*--------------------------------------------------------*/
-  /* POST-ESTIMATION COMMANDS                               */
-  /*--------------------------------------------------------*/
-  GROUPBOX gb_post 10 330 500 95,                       ///
-      label("Post-estimation commands")
+LIST est_engvals
+BEGIN
+    mle
+    qrsim
+    mh
+    hmc
+    inla
+END
 
-  RADIO rb_het       20 348 220 18,                     ///
-      label("het        — Heterogeneity decomposition") ///
-      first                                             ///
-      option(het)
-  RADIO rb_sforest   20 368 220 18,                     ///
-      label("sforest    — Summary forest plot")         ///
-      option(sforest)
-  RADIO rb_bvsroc    250 348 240 18,                    ///
-      label("bvsroc     — Bivariate SROC curve")        ///
-      option(bvsroc)
-  RADIO rb_fagan     250 368 240 18,                    ///
-      label("fagan      — Fagan nomogram")              ///
-      option(fagan)
-  RADIO rb_pubbias   20 388 220 18,                     ///
-      label("pubbias    — Publication bias")            ///
-      option(pubbias)
-  RADIO rb_subgroup  250 388 240 18,                    ///
-      label("subgroup   — Subgroup analysis")           ///
-      option(subgroup)
-  RADIO rb_metareg   20 408 220 18,                     ///
-      label("metareg    — Meta-regression")             ///
-      last                                              ///
-      option(metareg)
+LIST prior_list
+BEGIN
+    "Scaled inverse Wishart"
+    "LKJ"
+    "Cholesky"
+    "Huang-Wand"
+END
 
-END  /* main */
+LIST prior_vals
+BEGIN
+    siw
+    lkj
+    cholesky
+    huangwand
+END
 
+PROGRAM est_update
+BEGIN
+    // Placeholder: could enable/disable Bayesian-only controls
+    // based on cb_eng selection
+END
 
-/*--------------------------------------------------------*/
-/* COMMAND BUILDER                                        */
-/* Emits:  db midas_<subcmd>                              */
-/* which launches the subcommand's own dialog             */
-/*--------------------------------------------------------*/
+// =====================================================================
+// TAB 2: POST-ESTIMATION
+// =====================================================================
+DIALOG post, tabtitle("Post-estimation")
+BEGIN
+    TEXT     tx_pcmd    10  10 150  ., label("Command:")
+    COMBOBOX cb_pcmd   165   8 250  ., dropdownlist               ///
+        contents(post_cmds) values(post_cmdvals)
+
+    GROUPBOX gb_popts  10  40 660 350, label("Options")
+
+    // -- Forest plot options --
+    TEXT     tx_ptype   20  60  60  ., label("Plot type:")
+    COMBOBOX cb_ptype   85  58 130  ., dropdownlist               ///
+        contents(forest_types) values(forest_typevals)
+
+    TEXT     tx_plevel  230  60  40  ., label("Level:")
+    SPINNER  sp_plevel  275  58  55  ., min(10) max(99) default(95)
+
+    // -- CI method --
+    TEXT     tx_pci     345  60  70  ., label("CI method:")
+    COMBOBOX cb_pci     420  58 120  ., dropdownlist              ///
+        contents(ci_methods) values(ci_vals)
+
+    // -- Common checkboxes --
+    CHECKBOX ck_wgt     20  90 200  ., label("Weight markers by study size") option(wgt)
+    CHECKBOX ck_regline 20 113 200  ., label("Add regression line")          option(regline)
+    CHECKBOX ck_sumline 20 136 200  ., label("Add summary DOR line")         option(sumline)
+    CHECKBOX ck_color   20 159 200  ., label("Color coding")                 option(color)
+
+    // -- Pretest probability (for fagan) --
+    TEXT     tx_pretest  20 190 120 ., label("Pretest prob (0-1):")
+    EDIT     ed_pretest 145 188 100 ., default("")
+
+    // -- ROB/AC vars (for quadas2) --
+    TEXT     tx_robvars  20 220 120 ., label("Risk of bias vars:")
+    VARLIST  vl_robvars 145 218 400 ., option(robvars)
+    TEXT     tx_acvars   20 248 120 ., label("Applicability vars:")
+    VARLIST  vl_acvars  145 246 400 ., option(acvars)
+
+    // -- ID variable --
+    TEXT     tx_pid      20 278  80 ., label("Study ID:")
+    VARNAME  vn_pid     105 276 120 .
+
+    // -- Covariate for metareg --
+    TEXT     tx_covar    20 308  80 ., label("Covariate:")
+    VARNAME  vn_covar   105 306 120 .
+
+    // -- Save graph --
+    TEXT     tx_psave    20 340  80 ., label("Save graph:")
+    FILE     fi_psave   105 338 400 ., option(savegraph)          ///
+        dialogtitle("Save graph as") filter("PNG|*.png|EPS|*.eps|PDF|*.pdf")
+END
+
+LIST post_cmds
+BEGIN
+    "sforest -- Summary forest plot"
+    "rgsroc -- Summary ROC curve"
+    "bvsroc -- Bivariate SROC"
+    "fagan -- Fagan nomogram"
+    "lrmat -- LR scatter matrix"
+    "condiplot -- Conditional probability"
+    "pubbias -- Publication bias"
+    "bayesplot -- MCMC diagnostics"
+    "het -- Heterogeneity decomposition"
+    "hsruc -- Clinical utility curve"
+    "subgroup -- Subgroup analysis"
+    "metareg -- Meta-regression"
+    "quadas2 -- Quality assessment"
+END
+
+LIST post_cmdvals
+BEGIN
+    sforest
+    rgsroc
+    bvsroc
+    fagan
+    lrmat
+    condiplot
+    pubbias
+    bayesplot
+    het
+    hsruc
+    subgroup
+    metareg
+    quadas2
+END
+
+LIST forest_types
+BEGIN
+    generic
+    ellipse
+    thick
+    rain
+END
+
+LIST forest_typevals
+BEGIN
+    generic
+    ellipse
+    thick
+    rain
+END
+
+LIST ci_methods
+BEGIN
+    "Wald (default)"
+    "Wilson"
+    "Exact"
+END
+
+LIST ci_vals
+BEGIN
+    wald
+    wilson
+    exact
+END
+
+// =====================================================================
+// TAB 3: EXPLORATORY
+// =====================================================================
+DIALOG expl, tabtitle("Exploratory")
+BEGIN
+    TEXT     tx_ecmd    10  10 150  ., label("Command:")
+    COMBOBOX cb_ecmd   165   8 250  ., dropdownlist               ///
+        contents(expl_cmds) values(expl_cmdvals)
+
+    GROUPBOX gb_evars  10  40 660  65, label("Variables")
+    TEXT     tx_etp      20  60  30  ., label("TP:")
+    VARNAME  vn_etp      55  58 120  .
+    TEXT     tx_efp     185  60  30  ., label("FP:")
+    VARNAME  vn_efp     220  58 120  .
+    TEXT     tx_efn     350  60  30  ., label("FN:")
+    VARNAME  vn_efn     385  58 120  .
+    TEXT     tx_etn     515  60  30  ., label("TN:")
+    VARNAME  vn_etn     550  58 100  .
+
+    TEXT     tx_eid      20  82  80  ., label("Study ID:")
+    VARNAME  vn_eid     105  80 120  .
+
+    GROUPBOX gb_eopts2  10 115 660 200, label("Options")
+    CHECKBOX ck_ecolor   20 135 200  ., label("Color coding") option(color)
+    CHECKBOX ck_elabel   20 158 200  ., label("Label points")
+
+    // -- Plot type for eforest --
+    TEXT     tx_eptype   20 188  80  ., label("Plot type:")
+    COMBOBOX cb_eptype  105 186 130  ., dropdownlist              ///
+        contents(forest_types) values(forest_typevals)
+
+    // -- Save graph --
+    TEXT     tx_esave    20 280  80  ., label("Save graph:")
+    FILE     fi_esave   105 278 400  ., option(savegraph)         ///
+        dialogtitle("Save graph as") filter("PNG|*.png|EPS|*.eps|PDF|*.pdf")
+END
+
+LIST expl_cmds
+BEGIN
+    "eforest -- Exploratory forest plot"
+    "bivbox -- Bivariate boxplot"
+    "chiplot -- Chi-plot"
+    "kendall -- Kendall plot"
+    "binsse -- Small-study effects"
+    "assess -- Pre-model diagnostics"
+END
+
+LIST expl_cmdvals
+BEGIN
+    eforest
+    bivbox
+    chiplot
+    kendall
+    binsse
+    assess
+END
+
+// =====================================================================
+// TAB 4: DATA
+// =====================================================================
+DIALOG data, tabtitle("Data")
+BEGIN
+    TEXT     tx_dcmd    10  10 150  ., label("Command:")
+    COMBOBOX cb_dcmd   165   8 250  ., dropdownlist               ///
+        contents(data_cmds) values(data_cmdvals)
+
+    GROUPBOX gb_dvars  10  40 660 120, label("Variables / Parameters")
+
+    // -- simdata parameters --
+    TEXT     tx_nstud    20  60  80  ., label("# Studies:")
+    SPINNER  sp_nstud   105  58  70  ., min(5) max(200) default(20)
+    TEXT     tx_nsamp   190  60  70  ., label("N/study:")
+    SPINNER  sp_nsamp   265  58  70  ., min(20) max(2000) default(150)
+
+    TEXT     tx_logse    20  88  80  ., label("Logit(Se):")
+    EDIT     ed_logse   105  86  60  ., default("2.0") numonly
+    TEXT     tx_logsp   180  88  80  ., label("Logit(Sp):")
+    EDIT     ed_logsp   265  86  60  ., default("2.5") numonly
+    TEXT     tx_varse   340  88  80  ., label("Var(logSe):")
+    EDIT     ed_varse   425  86  60  ., default("0.5") numonly
+    TEXT     tx_varsp   500  88  80  ., label("Var(logSp):")
+    EDIT     ed_varsp   585  86  60  ., default("0.5") numonly
+    TEXT     tx_corr     20 116  80  ., label("Correlation:")
+    EDIT     ed_corr    105 114  60  ., default("-0.3") numonly
+
+    // -- ord2bin / con2bin / ipd2ad vars --
+    GROUPBOX gb_dconv  10 170 660  80, label("Conversion Variables")
+    TEXT     tx_dtest    20 190  80  ., label("Test var:")
+    VARNAME  vn_dtest   105 188 150  .
+    TEXT     tx_dtruth  270 190  80  ., label("Truth var:")
+    VARNAME  vn_dtruth  355 188 150  .
+    TEXT     tx_dstudy   20 218  80  ., label("Study ID:")
+    VARNAME  vn_dstudy  105 216 150  .
+
+    // -- Save dataset --
+    TEXT     tx_dsave    20 270  80  ., label("Save data:")
+    FILE     fi_dsave   105 268 400  ., option(saving)            ///
+        dialogtitle("Save dataset as") filter("Stata|*.dta")
+END
+
+LIST data_cmds
+BEGIN
+    "simdata -- Simulate DTA datasets"
+    "ord2bin -- Ordinal to binary"
+    "con2bin -- Continuous to binary"
+    "bclust2bin -- Cluster-adjusted"
+    "ipd2ad -- IPD to aggregate"
+END
+
+LIST data_cmdvals
+BEGIN
+    simdata
+    ord2bin
+    con2bin
+    bclust2bin
+    ipd2ad
+END
+
+// =====================================================================
+// COMMAND BUILDER
+// =====================================================================
 PROGRAM command
 BEGIN
-  put "db midas_"
+    // ----- ESTIMATION TAB -----
+    if est.cb_eng.isnevalue() {
+        put "midas "
+        put est.cb_eng
+        put " "
+        require est.vn_tp
+        require est.vn_fp
+        require est.vn_fn
+        require est.vn_tn
+        put est.vn_tp " " est.vn_fp " " est.vn_fn " " est.vn_tn
+        beginoptions
+            optionarg est.vn_id /hidedefault
+            option est.ck_het
+            option est.ck_hsroc
+            option est.ck_revman
+            option est.ck_diag
+            optionarg est.fi_save
+        endoptions
+    }
 
-  if rb_clust2bin  { put "clust2bin"  }
-  if rb_con2bin    { put "con2bin"    }
-  if rb_ipd2ad     { put "ipd2ad"     }
-  if rb_ord2bin    { put "ord2bin"    }
-  if rb_simdata    { put "simdata"    }
-  if rb_quadas2    { put "quadas2"    }
-  if rb_bivbox     { put "bivbox"     }
-  if rb_chiplot    { put "chiplot"    }
-  if rb_kendall    { put "kendall"    }
-  if rb_assess     { put "assess"     }
-  if rb_binsse     { put "binsse"     }
-  if rb_eforest    { put "eforest"    }
-  if rb_mle        { put "mle"        }
-  if rb_qrsim      { put "qrsim"      }
-  if rb_mh         { put "mh"         }
-  if rb_hmc        { put "hmc"        }
-  if rb_inla       { put "inla"       }
-  if rb_het        { put "het"        }
-  if rb_sforest    { put "sforest"    }
-  if rb_bvsroc     { put "bvsroc"     }
-  if rb_fagan      { put "fagan"      }
-  if rb_pubbias    { put "pubbias"    }
-  if rb_subgroup   { put "subgroup"   }
-  if rb_metareg    { put "metareg"    }
+    // ----- POST-ESTIMATION TAB -----
+    if post.cb_pcmd.isnevalue() {
+        put "midas "
+        put post.cb_pcmd
+
+        // quadas2 needs special handling
+        if post.cb_pcmd.iseq("quadas2") {
+            beginoptions
+                optionarg post.vn_pid /hidedefault
+                optionarg post.vl_robvars
+                optionarg post.vl_acvars
+                put " plot("
+                put post.cb_ptype
+                put ")"
+                option post.ck_color
+                optionarg post.fi_psave
+            endoptions
+        }
+        else {
+            beginoptions
+                if post.cb_pcmd.iseq("sforest") {
+                    put " plottype("
+                    put post.cb_ptype
+                    put ")"
+                }
+                if post.cb_pcmd.iseq("fagan") & !post.ed_pretest.isdefault() {
+                    optionarg post.ed_pretest
+                }
+                if post.cb_pcmd.iseq("subgroup") {
+                    optionarg post.vn_covar
+                }
+                if post.cb_pcmd.iseq("metareg") {
+                    optionarg post.vn_covar
+                }
+                option post.ck_wgt
+                option post.ck_regline
+                option post.ck_sumline
+                option post.ck_color
+                optionarg post.fi_psave
+            endoptions
+        }
+    }
+
+    // ----- EXPLORATORY TAB -----
+    if expl.cb_ecmd.isnevalue() {
+        put "midas "
+        put expl.cb_ecmd
+        put " "
+        put expl.vn_etp " " expl.vn_efp " " expl.vn_efn " " expl.vn_etn
+        beginoptions
+            optionarg expl.vn_eid /hidedefault
+            if expl.cb_ecmd.iseq("eforest") {
+                put " plottype("
+                put expl.cb_eptype
+                put ")"
+            }
+            option expl.ck_ecolor
+            optionarg expl.fi_esave
+        endoptions
+    }
+
+    // ----- DATA TAB -----
+    if data.cb_dcmd.isnevalue() {
+        put "midas "
+        put data.cb_dcmd
+
+        if data.cb_dcmd.iseq("simdata") {
+            beginoptions
+                put " n(" data.sp_nsamp ")"
+                put " studies(" data.sp_nstud ")"
+                put " logits(" data.ed_logse " " data.ed_logsp ")"
+                put " varlogits(" data.ed_varse " " data.ed_varsp ")"
+                put " corr(" data.ed_corr ")"
+            endoptions
+        }
+        else {
+            // ord2bin, con2bin, bclust2bin, ipd2ad
+            put " "
+            put data.vn_dtest " " data.vn_dtruth
+            beginoptions
+                optionarg data.vn_dstudy /hidedefault
+                optionarg data.fi_dsave
+            endoptions
+        }
+    }
 END

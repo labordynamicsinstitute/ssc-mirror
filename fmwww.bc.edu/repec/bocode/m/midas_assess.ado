@@ -57,7 +57,7 @@ program define midas_assess, rclass
     if ("`id'" != "") local idopt "id(`id') labeloutliers"
 
     local saveopt
-    if (`"`savegraph'"' != "") local saveopt `"name(_assess_bvb, replace)"'
+    if (`"`savegraph'"' != "") local saveopt `"name(assess_bvb, replace)"'
 
     quietly midas_bivbox `varlist' if `touse', ///
         robust robnormtest cc(`cc') cutoff(`cutoff') `idopt' `saveopt' `options'
@@ -114,7 +114,7 @@ program define midas_assess, rclass
             legend(off)
             title("QQ Plot: Bivariate Normality Assessment", size(*0.8))
             subtitle("N = `N'   QQ corr = `: di %5.3f `rqq''", size(*0.7))
-            aspect(1) name(_assess_qq, replace) ;
+            aspect(1) name(assess_qq, replace) ;
         #delimit cr
         
         return scalar N       = `N'

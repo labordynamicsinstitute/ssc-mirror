@@ -139,7 +139,7 @@ overwritten and {cmd:midas_het} will exit with an error.
 {pstd}
 Let n be the number of primary studies and let
 W be the n{c 215}3 matrix of Burke weights posted by the estimator in
-{cmd:e(studywgts)}, with columns indexing sensitivity (j=1),
+{cmd:e(studyweights)}, with columns indexing sensitivity (j=1),
 specificity (j=2), and the bivariate composite (j=3).
 
 {pstd}
@@ -248,10 +248,9 @@ pre-existing estimation results are preserved.
 
 {synoptset 22 tabbed}{...}
 {syntab:Matrices}
-{synopt:{cmd:e(studywgts)}}n{c 215}3 matrix of Burke precision weights;
-columns are {it:senwgt}, {it:spewgt}, {it:bivwgt}; rows labelled by
-study identifier; all five MIDAS estimators post under this name with
-these column names{p_end}
+{synopt:{cmd:e(studyweights)}}n{c 215}3 matrix of Burke weights; columns
+are {it:wt_sens}, {it:wt_spec}, {it:wt_biv}; rows labelled by study
+identifier{p_end}
 {synopt:{cmd:e(bIsquared)}}1{c 215}3 row vector of overall I{c 178}
 values; columns are {it:I2_sens}, {it:I2_spec}, {it:I2_biv}{p_end}
 {synopt:{cmd:e(studyI2)}}n{c 215}3 matrix of apportioned I{c 178}
@@ -261,8 +260,8 @@ contributions in percentage points; columns are {it:I2_sens_contrib},
 columns are {it:I2_sens_pctpt}, {it:I2_spec_pctpt},
 {it:I2_biv_pctpt}{p_end}
 {synopt:{cmd:e(wtcheck)}}1{c 215}3 row vector of weight column sums for
-audit; columns are {it:senwgt_sum}, {it:spewgt_sum},
-{it:bivwgt_sum}{p_end}
+audit; columns are {it:wt_sens_sum}, {it:wt_spec_sum},
+{it:wt_biv_sum}{p_end}
 {p2colreset}{...}
 
 

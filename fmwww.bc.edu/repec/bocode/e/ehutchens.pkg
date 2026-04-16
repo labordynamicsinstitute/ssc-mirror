@@ -27,9 +27,9 @@ d KW: decomposition
 d
 d Requires: Stata version 15.1
 d
-d Distribution-Date: 20251116
+d Distribution-Date: 20260415
 d
-d Author: Francisco I. Ceron,  Millennium Nucleus for the Study of Labour Market Mismatch (LM2C2), Pontificia Universidad Católica de Chile
+d Author: Francisco I. Ceron, Millennium Nucleus for the Study of Labour Market Mismatch (LM2C2), Pontificia Universidad Católica de Chile
 d Support: email fcerona@@uc.cl 
 d
 f ehutchens.ado

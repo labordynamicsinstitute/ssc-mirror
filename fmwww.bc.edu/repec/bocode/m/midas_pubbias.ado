@@ -43,8 +43,13 @@ if `level' < 10 | `level' > 99 {
 di as error "level() must be between 10 and 99"
 	exit 198
 }
-* Log-scale axis labels (replaces mylabels dependency)
-local ylab `"0 "1"  `=ln(10)' "10"  `=ln(100)' "100"  `=ln(1000)' "1000""'
+* Log-scale axis labels via mylabels
+capture which mylabels
+if _rc {
+    nois di as txt "Installing required package: mylabels"
+    ssc install mylabels
+}
+mylabels 1 10 100 1000, myscale(ln(@)) local(ylab)
 
 /* initialise legend counter */
 local li 1
@@ -93,8 +98,16 @@ local legend `"`legend' label(`li' "Study")"'
 local order "`order' `li++'"
 local ++li
 }
+else {
+local _pdef2 "mlw(medthin) mlc(black) mfc(gs15) msize(*1.5) ms(O)"
+local _popts2 = cond(!missing("`pointopts'"), "`pointopts'", "`_pdef2'")
+local studypoints `"(scatter `xb' `yb', sort `_popts2')"'
+local studypoints `"`studypoints' (scatter `xb' `yb', ms(i) mlabp(0) mlabel(`pid') mlabs(*.5) mlabc(black))"'
+local legend `"`legend' label(`li' "Study")"'
+local order "`order' `li++'"
+local ++li
+}
 
-* mylabels replaced with hardcoded log-scale labels above
 regress  `yb' `xb'[weight=`pubwgt'], level(`level')
 estimates store `stbias'
 scalar intercept = _b[_cons]
@@ -109,6 +122,9 @@ matrix rownames vcov =  Bias Intercept
 matrix colnames vcov =  Bias Intercept 
 nois matrix post b vcov, dep(yb) dof(`e(df_r)') obs(`e(N)')
 local pbias=2*ttail(e(df_r), abs(_b[Bias]/_se[Bias]))
+local _bias_coef = _b[Bias]
+local _bias_int  = _b[Intercept]
+local _bias_se   = _se[Bias]
 local note: di "pvalue  = "%6.2f `pbias'
 nois di " "
 nois di " "
@@ -124,21 +140,28 @@ local order "`order' `li++'"
 local ++li
 }
 #delimit;
-nois twoway `studypoints' `stline', xlab(`ylab', angle(horizontal) labsize(*.75) format(%7.2f)) 
+capture nois twoway `studypoints' `stline', xlab(`ylab', angle(horizontal) labsize(*.75) format(%7.2f)) 
 legend(order(`order') pos(6) row(1) size(*.50)  `legend') 
 ylab(, labsize(*.75) angle(horizontal)) `title' aspectratio(1) 
 /*plotregion(margin(zero))*/ xtitle("Diagnostic Odds Ratio")  `sumline'
 subtitle("`ptitle'" "`note'", size(*.65)) yscale(rev) `scheme' `saving' `options';
 #delimit cr
-estimates drop  `stbias'
+local twrc = _rc
+capture estimates drop `stbias'
 restore
 estimates restore modpost
+estimates drop modpost
+}
+
+if `twrc' {
+    di as error "pubbias plot failed with r(`twrc')"
+    exit `twrc'
 }
 
 * Return bias regression results
-return scalar bias_coef = b[1,1]
-return scalar intercept = b[1,2]
-return scalar bias_se   = sqrt(vcov[1,1])
+return scalar bias_coef = `_bias_coef'
+return scalar intercept = `_bias_int'
+return scalar bias_se   = `_bias_se'
 return scalar bias_pval = `pbias'
 
 end
