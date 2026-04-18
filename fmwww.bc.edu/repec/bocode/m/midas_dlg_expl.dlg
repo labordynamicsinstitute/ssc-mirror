@@ -1,0 +1,50 @@
+VERSION 16.0
+POSITION . . 340 260
+
+CANCEL can1, label("Close")
+HELP   hlp1, view("help midas")
+
+DIALOG main, title("MIDAS -- Exploratory Analysis")
+BEGIN
+    TEXT tx_e  10  10 320 ., label("Exploratory commands")
+    BUTTON bn_bin  10  28 320 26, label("binsse  -- Small study effects / publication bias") onpush(program open_binsse)
+    BUTTON bn_chi  10  58 320 26, label("chiplot -- Bivariate association chi-plot")         onpush(program open_chiplot)
+    BUTTON bn_bvb  10  88 320 26, label("bivbox  -- Bivariate boxplot")                      onpush(program open_bivbox)
+    BUTTON bn_qud  10 118 320 26, label("quadas  -- QUADAS-2 quality assessment")            onpush(program open_quadas)
+    BUTTON bn_knd  10 148 320 26, label("kendall -- Kendall K-plot for bivariate dependence")   onpush(program open_kendall)
+END
+
+PROGRAM open_binsse
+BEGIN
+    put "db midas_dlg_binsse"
+    stata
+END
+
+PROGRAM open_chiplot
+BEGIN
+    put "db midas_dlg_chiplot"
+    stata
+END
+
+PROGRAM open_bivbox
+BEGIN
+    put "db midas_dlg_bivbox"
+    stata
+END
+
+PROGRAM open_quadas
+BEGIN
+    put "db midas_dlg_quadas"
+    stata
+END
+
+PROGRAM open_kendall
+BEGIN
+    put "db midas_dlg_kendall"
+    stata
+END
+
+PROGRAM command
+BEGIN
+    put "display " `"""' "Select a command above" `"""'
+END

@@ -1,0 +1,142 @@
+/*
+  midas_dlg_hsruc.dlg — GUI dialog for HSRUC analysis
+  Version 1.0.0  30mar2026
+  Author: Ben Adarkwa Dwamena, MD
+  
+  Open via:  db midas_dlg_hsruc
+  Requires:  prior MIDAS estimation (midas mle, mh, hmc, or inla)
+*/
+
+VERSION 16.0
+
+POSITION . . 480 520
+
+DIALOG main, title("MIDAS HSRUC — Clinical Utility Analysis") tabtitle("Main")
+BEGIN
+  TEXT     tx_header    10  10 460  .,                                         ///
+           label("Hierarchical Summary Relative Utility Curve Analysis")
+  TEXT     tx_note      10  30 460  .,                                         ///
+           label("Requires prior MIDAS estimation (mle, mh, hmc, or inla)")
+
+  GROUPBOX gb_prev     10  60 460  55, label("Prevalence")
+  TEXT     tx_prev     20  80 120  ., label("Target prevalence:")
+  EDIT     ed_prev    145  80  80  ., default("0.20") numonly                  ///
+           tooltip("Disease prevalence in target population (0 to 1)")
+
+  GROUPBOX gb_grid    10 125 460  75, label("Threshold Grid")
+  TEXT     tx_npts     20 145 120  ., label("Grid points:")
+  SPINNER  sp_npts    145 145  80  ., min(10) max(999) default(99)             ///
+           tooltip("Number of equispaced threshold probabilities")
+  TEXT     tx_thresh   20 170 120  ., label("Custom thresholds:")
+  EDIT     ed_thresh  145 170 310  .,                                          ///
+           tooltip("Optional: space-separated list e.g. 0.05 0.10 0.20 0.50")
+
+  GROUPBOX gb_metrics 10 210 460 100, label("Utility Metrics")
+  CHECKBOX ck_mrs      20 230 150  ., label("Mean Risk Stratification")        ///
+           tooltip("Katki (2019) MRS statistic")
+  CHECKBOX ck_nbgain  20 250 150  ., label("NB Gain over treat-all")
+  CHECKBOX ck_inb     20 270 150  ., label("Incremental Net Benefit")          ///
+           tooltip("Katki & Bebu (2021) INB")     onclickon(script inb_on)     ///
+           onclickoff(script inb_off)
+  CHECKBOX ck_all    200 230 150  ., label("All metrics")                      ///
+           tooltip("Compute everything")
+  CHECKBOX ck_opt    200 250 150  ., label("Optimal threshold")
+  CHECKBOX ck_pred   200 270 150  ., label("Prediction intervals")             ///
+           tooltip("95% prediction intervals reflecting heterogeneity")
+
+  GROUPBOX gb_cost   10 320 460  80, label("Cost-Effectiveness (for INB)")
+  TEXT     tx_scost   20 340 120  ., label("Screen cost:")
+  EDIT     ed_scost  145 340  80  ., default("0") numonly
+  TEXT     tx_tcost  240 340  80  ., label("Treat cost:")
+  EDIT     ed_tcost  325 340  80  ., default("0") numonly
+  TEXT     tx_lyg     20 365 120  ., label("Life-years gained:")
+  EDIT     ed_lyg    145 365  80  ., default("1") numonly
+
+  GROUPBOX gb_output 10 410 460  55, label("Output")
+  CHECKBOX ck_notable  20 430 120  ., label("Suppress table")
+  CHECKBOX ck_nograph 145 430 120  ., label("Suppress graph")
+  TEXT     tx_saving  270 430  50  ., label("Save to:")
+  FILE     fi_saving  325 430 135  ., label("Browse...") filter("Stata Data|*.dta")  ///
+           tooltip("Save utility curve data to .dta file")
+END
+
+SCRIPT inb_on
+BEGIN
+  main.ed_scost.enable
+  main.ed_tcost.enable
+  main.ed_lyg.enable
+END
+
+SCRIPT inb_off
+BEGIN
+  main.ed_scost.disable
+  main.ed_tcost.disable
+  main.ed_lyg.disable
+END
+
+HELP hlp1, view("help midas_hsruc")
+
+OK ok1, label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+
+PROGRAM command
+BEGIN
+  put "midas_hsruc"
+  put ", "
+  require main.ed_prev
+  put "prevalence(" main.ed_prev ")"
+
+  if !main.ed_thresh.isdefault() {
+    put " thresholds(" main.ed_thresh ")"
+  }
+  if !main.sp_npts.isdefault() {
+    put " npoints(" main.sp_npts ")"
+  }
+
+  if main.ck_all {
+    put " allmetrics"
+  }
+  else {
+    if main.ck_mrs {
+      put " mrs"
+    }
+    if main.ck_nbgain {
+      put " nbgain"
+    }
+    if main.ck_inb {
+      put " inb"
+    }
+    if main.ck_opt {
+      put " optimal"
+    }
+  }
+
+  if main.ck_pred {
+    put " prediction"
+  }
+
+  if main.ck_inb | main.ck_all {
+    if !main.ed_scost.isdefault() {
+      put " screencost(" main.ed_scost ")"
+    }
+    if !main.ed_tcost.isdefault() {
+      put " treatcost(" main.ed_tcost ")"
+    }
+    if !main.ed_lyg.isdefault() {
+      put " lyg(" main.ed_lyg ")"
+    }
+  }
+
+  if main.ck_notable {
+    put " notable"
+  }
+  if main.ck_nograph {
+    put " nograph"
+  }
+  if !main.fi_saving.isdefault() {
+    put `" saving(""'
+    put main.fi_saving
+    put `"")"'
+  }
+END

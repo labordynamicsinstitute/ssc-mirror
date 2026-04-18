@@ -1,0 +1,172 @@
+/*
+  midas_dlg_metareg.dlg — Meta-regression dialog
+  Version 2.0  31mar2026
+*/
+
+VERSION 16.0
+POSITION . . 500 720
+
+DIALOG main, title("MIDAS: Meta-Regression") tabtitle("Main")
+BEGIN
+    TEXT     tx_vars    10   10  200  ., label("Variables: tp fp fn tn")
+    VARLIST  vl_vars    10   30  470  ., label("Variables")
+    
+    TEXT     tx_id      10   60  100  ., label("Study ID:")
+    VARNAME  vn_id     110   60  200  ., label("ID variable")
+    
+    TEXT     tx_cov     10   90  100  ., label("Covariates:")
+    VARLIST  vl_cov    110   90  370  ., label("Covariate(s)") numeric
+    
+    GROUPBOX gb_target  10  130  250  90, label("Covariate Target")
+    RADIO    rb_both    20  150  200  ., first label("Both Se and Sp") default(1)
+    RADIO    rb_sen     20  170  200  ., label("Sensitivity only") option(senonly)
+    RADIO    rb_spe     20  190  200  ., last  label("Specificity only") option(speonly)
+    
+    CHECKBOX ck_nogr   280  150  200  ., label("Suppress graph") option(nograph)
+    CHECKBOX ck_nois   280  175  200  ., label("Show iterations") option(noisily)
+    
+    TEXT     tx_save   10   235  100  ., label("Save LaTeX:")
+    FILE     fl_save  110   235  370  ., label("Browse...") filter("TeX files|*.tex") save
+    
+    TEXT     tx_level  10   270  100  ., label("CI Level (%):")
+    SPINNER  sp_level 110   270   60  ., min(80) max(99) default(95)
+END
+
+DIALOG sroc, tabtitle("Binary SROC")
+BEGIN
+    TEXT     tx_info    10   10  470  40, ///
+        label("For binary covariates, the SROC plot fits separate models per subgroup. Choose the subgroup estimator below.")
+    
+    TEXT     tx_subest  10   55  150  ., label("Subgroup estimator:")
+    COMBOBOX cb_subest 160   55  150  ., dropdownlist         ///
+        contents(subest_list) value(subest_val) default(mle)
+    
+    GROUPBOX gb_inla   10   90  470  60, label("INLA (R-INLA)")
+    TEXT     tx_rpath   20  110  120  ., label("Rscript path:")
+    FILE     fl_rpath  140  110  330  ., label("Browse...") filter("Executables|*.exe")
+    
+    GROUPBOX gb_hmc    10  160  470  260, label("HMC (CmdStan)")
+    TEXT     tx_stan    20  180  120  ., label("CmdStan dir:")
+    FILE     fl_stan   140  180  330  ., label("Browse...") directory
+    
+    TEXT     tx_model   20  210  120  ., label("Model file:")
+    EDIT     ed_model  140  210  200  ., default("midas.stan")
+    
+    TEXT     tx_output  20  240  120  ., label("Output prefix:")
+    EDIT     ed_output 140  240  200  ., default("metareg")
+    
+    TEXT     tx_subcov  20  270  120  ., label("Covariance:")
+    COMBOBOX cb_subcov 140  270  150  ., dropdownlist         ///
+        contents(cov_list) value(cov_val) default(cholesky)
+    
+    TEXT     tx_chains  20  305  60   ., label("Chains:")
+    SPINNER  sp_chains  80  305  60   ., min(1) max(16) default(4)
+    TEXT     tx_warmup 160  305  60   ., label("Warmup:")
+    SPINNER  sp_warmup 220  305  80   ., min(100) max(50000) default(1000)
+    
+    TEXT     tx_iter    20  335  60   ., label("Iter:")
+    SPINNER  sp_iter    80  335  80   ., min(1000) max(100000) default(10000)
+    TEXT     tx_thin   160  335  60   ., label("Thin:")
+    SPINNER  sp_thin   220  335  60   ., min(1) max(100) default(10)
+    
+    TEXT     tx_seed    20  365  60   ., label("Seed:")
+    SPINNER  sp_seed    80  365  80   ., min(1) max(999999) default(12345)
+END
+
+LIST subest_list
+BEGIN
+    MLE (meglm)
+    INLA (R-INLA)
+    HMC (CmdStan)
+END
+
+LIST subest_val
+BEGIN
+    mle
+    inla
+    hmc
+END
+
+LIST cov_list
+BEGIN
+    Cholesky
+    Inverse-Wishart
+    Spherical
+    Huang-Wand
+END
+
+LIST cov_val
+BEGIN
+    cholesky
+    iwishart
+    spherical
+    huangwand
+END
+
+OK ok1, label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+
+PROGRAM command
+BEGIN
+    put "midas metareg "
+    varlist main.vl_vars
+    put ", id(" main.vn_id ")"
+    put " covariates(" main.vl_cov ")"
+    
+    optionarg main.rb_sen
+    optionarg main.rb_spe
+    optionarg main.ck_nogr
+    optionarg main.ck_nois
+    
+    if main.sp_level.isneq(95) {
+        put " level(" main.sp_level ")"
+    }
+    
+    if main.fl_save.isneq("") {
+        put `" savetable(""'
+        put main.fl_save
+        put `"")"'
+    }
+    
+    if sroc.cb_subest.isneq("mle") {
+        put " subestimator(" sroc.cb_subest ")"
+    }
+    
+    if sroc.fl_rpath.isneq("") {
+        put `" rpath(""'
+        put sroc.fl_rpath
+        put `"")"'
+    }
+    
+    if sroc.fl_stan.isneq("") {
+        put `" standir(""'
+        put sroc.fl_stan
+        put `"")"'
+    }
+    
+    if sroc.ed_model.isneq("") & sroc.cb_subest.iseq("hmc") {
+        put `" modelfile(""'
+        put sroc.ed_model
+        put `"")"'
+    }
+    
+    if sroc.ed_output.isneq("") & sroc.cb_subest.iseq("hmc") {
+        put `" outputfile(""'
+        put sroc.ed_output
+        put `"")"'
+    }
+    
+    if sroc.cb_subest.iseq("hmc") {
+        put " chains(" sroc.sp_chains ")"
+        put " warmup(" sroc.sp_warmup ")"
+        put " iter(" sroc.sp_iter ")"
+        put " thin(" sroc.sp_thin ")"
+        put " seed(" sroc.sp_seed ")"
+        if sroc.cb_subcov.isneq("") {
+            put " subcovariance(" sroc.cb_subcov ")"
+        }
+    }
+    
+    stata
+END

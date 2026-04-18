@@ -10,5 +10,8 @@ if `until' >= 1000 {
 	loc rest = string(`until'-1000)
 	loc rem = "1,0"+"`rest'"
 }
+// deal with < 1010
+	loc rest = string(`until'-1000)
+	loc rem = "1,00"+"`rest'"
 di _n _n _col(30) "ONLY" _n _col(27) "`rem' DAYS" _n _col(29) "TO GO" _n _n
 end

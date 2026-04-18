@@ -129,7 +129,10 @@ commands. These can include options like {cmd:name()}, {cmd:title()}, etc.
 {marker examples}{...}
 {title:Examples}
 
-{pstd}Setup: Create example dataset with QUADAS-2 assessments{p_end}
+{pstd}Setup: Load example dataset{p_end}
+{phang2}{cmd:. use http://fmwww.bc.edu/repec/bocode/m/quadas2data.dta, clear}{p_end}
+
+{pstd}Or create example dataset manually:{p_end}
 {phang2}{cmd:. clear}{p_end}
 {phang2}{cmd:. input str20 study str10 rob1 str10 rob2 str10 rob3 str10 ac1 str10 ac2}{p_end}
 {phang2}{cmd:"Smith 2020" "low" "low" "unclear" "low" "low"}{p_end}

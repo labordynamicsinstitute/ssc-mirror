@@ -3,7 +3,8 @@ d
 d   Comprehensive suite for bivariate meta-analysis of diagnostic
 d test accuracy. Five estimation engines (MLE, QRSIM, MH, HMC,
 d INLA), post-estimation graphics, exploratory tools, and data
-d management utilities. 
+d management utilities. The companion package midas_dlg provides
+d dialogs. 
 d
 d KW: meta-analysis
 d KW: meta-regression
@@ -21,7 +22,7 @@ d KW: forest plot
 d
 d Requires: Stata version 16, xsvmat from SSC (q.v.)
 d
-d Distribution-Date: 20260415
+d Distribution-Date: 20260417
 d
 d Author:  Ben Dwamena, Division of Nuclear Medicine, Department  of Radiology, University of Michigan Health System, Ann Arbor
 d Support: email  bdwamena@@umich.edu
@@ -58,7 +59,6 @@ f midas_rgsroc.ado
 f midas_sforest.ado
 f midas_simdata.ado
 f midas_subgroup.ado
-f midas.dlg
 f midas.sthlp
 f midas_assess.sthlp
 f midas_bayesplot.sthlp
@@ -91,3 +91,8 @@ f midas_sforest.sthlp
 f midas_simdata.sthlp
 f midas_subgroup.sthlp
 f midas_example_data.dta
+f ../c/con2bindata.dta
+f ../i/ipd2addata.dta
+f midasclustbin.dta
+f ../o/ord2bindata.dta
+f ../q/quadas2data.dta

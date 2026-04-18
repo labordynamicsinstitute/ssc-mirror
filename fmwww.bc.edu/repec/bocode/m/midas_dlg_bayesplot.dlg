@@ -1,0 +1,54 @@
+/*
+  midas_dlg_bayesplot.dlg — MCMC diagnostic plots
+  Version 1.0.0  30mar2026
+  Author: Ben Adarkwa Dwamena, MD
+  
+  Post-estimation command: requires prior midas mh or midas hmc
+*/
+
+VERSION 16.0
+
+POSITION . . 380 250
+
+DIALOG main, title("MIDAS — MCMC Diagnostic Plots")
+BEGIN
+  TEXT     tx_header  10  10 360  ., label("midas bayesplot — Trace, density, ACF, Gelman-Rubin")
+  TEXT     tx_note    10  30 360  ., label("Requires prior midas mh or midas hmc estimation")
+
+  GROUPBOX gb_opts   10  55 360 100, label("Options")
+  CHECKBOX ck_trace   20  75 100  ., label("Trace") default(1)
+  CHECKBOX ck_dens   125  75 100  ., label("Density") default(1)
+  CHECKBOX ck_acf    230  75 100  ., label("ACF") default(1)
+
+  CHECKBOX ck_all     20 100 100  ., label("All (default)")  default(1)
+  CHECKBOX ck_comb   125 100 150  ., label("Combine chains")
+
+  TEXT     tx_save    20 130  80  ., label("Save stub:")
+  EDIT     ed_save   105 130 250  .,                                           ///
+           tooltip("Filename stub for saving individual plots")
+
+  GROUPBOX gb_params 10 165 360  40, label("Parameters (blank = all)")
+  EDIT     ed_params  20 183 340  .,                                           ///
+           tooltip("Space-separated parameter names, e.g. logitsen logitspe")
+END
+
+HELP hlp1, view("help midas_bayesplot")
+OK ok1, label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+
+PROGRAM command
+BEGIN
+  put "midas bayesplot"
+  if main.ed_params {
+    put ", params(" main.ed_params ")"
+  }
+  if main.ck_comb {
+    put " combine"
+  }
+  if main.ed_save {
+    put `" savegraph(""'
+    put main.ed_save
+    put `"")"'
+  }
+END

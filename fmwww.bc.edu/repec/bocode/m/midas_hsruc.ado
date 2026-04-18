@@ -415,7 +415,7 @@ program define midas_hsruc, rclass
 		local tw1 `"`tw1' (line nb_all pt, lcolor(cranberry) lpattern(dash))"'
 		local tw1 `"`tw1', yline(0, lcolor(gs10) lpattern(dot))"'
 		local tw1 `"`tw1' xtitle("Threshold probability") ytitle("Net benefit")"'
-		local tw1 `"`tw1' legend(order(1 "Test strategy" 2 "Treat all") size(small) rows(1))"'
+		local tw1 `"`tw1' legend(order(1 "Test strategy" 2 "Treat all") size(small) rows(1) pos(6))"'
 		local tw1 `"`tw1' title("Decision Curve", size(medium))"'
 		local tw1 `"`tw1' name(_hsruc_dca, replace)"'
 		qui twoway `tw1'

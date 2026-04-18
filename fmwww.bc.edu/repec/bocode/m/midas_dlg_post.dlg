@@ -1,0 +1,64 @@
+VERSION 16.0
+POSITION . . 340 300
+
+CANCEL can1, label("Close")
+HELP   hlp1, view("help midas")
+
+DIALOG main, title("MIDAS -- Postestimation Commands")
+BEGIN
+    TEXT tx_s  10  10 320 ., label("Graphical / tabular postestimation:")
+    BUTTON bn_for  10  28 320 26, label("Forest plot")                   onpush(program open_forest)
+    BUTTON bn_rgs  10  58 320 26, label("Symmetric ROC curve")           onpush(program open_rgsroc)
+    BUTTON bn_bvs  10  88 320 26, label("Bivariate ROC curve")           onpush(program open_bvsroc)
+    BUTTON bn_lrm  10 118 320 26, label("Likelihood ratio matrix")       onpush(program open_lrmat)
+    BUTTON bn_fgn  10 148 320 26, label("Fagan nomogram")                onpush(program open_fagan)
+    BUTTON bn_cnd  10 178 320 26, label("Conditional probability plot")  onpush(program open_condiplot)
+    BUTTON bn_pub  10 208 320 26, label("Publication bias")              onpush(program open_pubbias)
+END
+
+PROGRAM open_forest
+BEGIN
+    put "db midas_dlg_forest"
+    stata
+END
+
+PROGRAM open_rgsroc
+BEGIN
+    put "db midas_dlg_rgsroc"
+    stata
+END
+
+PROGRAM open_bvsroc
+BEGIN
+    put "db midas_dlg_bvsroc"
+    stata
+END
+
+PROGRAM open_lrmat
+BEGIN
+    put "db midas_dlg_lrmat"
+    stata
+END
+
+PROGRAM open_fagan
+BEGIN
+    put "db midas_dlg_fagan"
+    stata
+END
+
+PROGRAM open_condiplot
+BEGIN
+    put "db midas_dlg_condiplot"
+    stata
+END
+
+PROGRAM open_pubbias
+BEGIN
+    put "db midas_dlg_pubbias"
+    stata
+END
+
+PROGRAM command
+BEGIN
+    put "display " `"""' "Select a command above" `"""'
+END

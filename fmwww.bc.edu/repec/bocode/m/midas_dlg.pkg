@@ -1,0 +1,65 @@
+d 'MIDAS_DLG': module providing dialogs for meta-analytical integration of diagnostic test accuracy studies
+d
+d   Comprehensive suite for bivariate meta-analysis of diagnostic
+d test accuracy. Five estimation engines (MLE, QRSIM, MH, HMC,
+d INLA), post-estimation graphics, exploratory tools, and data
+d management utilities. The companion package midas_dlg provides
+d dialogs. 
+d
+d KW: meta-analysis
+d KW: meta-regression
+d KW: roc curve
+d KW: mixed models
+d KW: diagnosis
+d KW: sensitivity and specificity
+d KW: Bayes' nomogram
+d KW: bivariate analysis
+d KW: publication bias
+d KW: predictive values
+d KW: likelihood ratios
+d KW: heterogeneity
+d KW: forest plot
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260417
+d
+d Author:  Ben Dwamena, Division of Nuclear Medicine, Department  of Radiology, University of Michigan Health System, Ann Arbor
+d Support: email  bdwamena@@umich.edu
+d
+f midas_dlg_assess.dlg
+f midas_dlg_bayesplot.dlg
+f midas_dlg_bclust2bin.dlg
+f midas_dlg_binsse.dlg
+f midas_dlg_bivbox.dlg
+f midas_dlg_bvsroc.dlg
+f midas_dlg_chiplot.dlg
+f midas_dlg_con2bin.dlg
+f midas_dlg_condiplot.dlg
+f midas_dlg_data.dlg
+f midas_dlg_eforest.dlg
+f midas_dlg_expl.dlg
+f midas_dlg_fagan.dlg
+f midas_dlg_forest.dlg
+f midas_dlg_het.dlg
+f midas_dlg_hmc.dlg
+f midas_dlg_hsruc.dlg
+f midas_dlg_inla.dlg
+f midas_dlg_ipd2ad.dlg
+f midas_dlg_kendall.dlg
+f midas_dlg_lrmat.dlg
+f midas_dlg_metareg.dlg
+f midas_dlg_mh.dlg
+f midas_dlg_mle.dlg
+f midas_dlg_ord2bin.dlg
+f midas_dlg_post.dlg
+f midas_dlg_pubbias.dlg
+f midas_dlg_qmc.dlg
+f midas_dlg_qrmc.dlg
+f midas_dlg_qrsim.dlg
+f midas_dlg_quadas.dlg
+f midas_dlg_quadas2.dlg
+f midas_dlg_rgsroc.dlg
+f midas_dlg_sforest.dlg
+f midas_dlg_simdata.dlg
+f midas_dlg_subgroup.dlg

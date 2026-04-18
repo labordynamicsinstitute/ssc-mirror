@@ -1,0 +1,108 @@
+/*
+  midas_dlg_bvsroc.dlg — Bivariate SROC plot
+  Version 2.1.0  30mar2026
+  Author: Ben Adarkwa Dwamena, MD
+*/
+
+VERSION 16.0
+
+POSITION . . 420 370
+
+DIALOG main, title("MIDAS — Bivariate Summary ROC Plot")
+BEGIN
+  TEXT     tx_header  10  10 400  ., label("midas bvsroc — Summary ROC with confidence/prediction regions")
+  TEXT     tx_note    10  28 400  ., label("Requires prior midas mle, mh, hmc, or inla estimation")
+
+  GROUPBOX gb_reg    10  50 400  80, label("Regions (select one per type)")
+  CHECKBOX ck_cel     20  70 120  ., label("Conf ellipse")
+  CHECKBOX ck_creg   145  70 120  ., label("Conf region")
+  CHECKBOX ck_pel    270  70 120  ., label("Pred ellipse")
+  CHECKBOX ck_preg    20  95 120  ., label("Pred region")
+
+  GROUPBOX gb_disp   10 140 400  80, label("Display")
+  CHECKBOX ck_mean    20 160 100  ., label("Summary pt") default(1)
+  CHECKBOX ck_data   125 160  80  ., label("Data pts")
+  CHECKBOX ck_wgt    210 160  80  ., label("Weighted")
+  CHECKBOX ck_label  295 160 100  ., label("Label data")
+  CHECKBOX ck_lgnd    20 190  80  ., label("Legend")
+  CHECKBOX ck_area   125 190 160  ., label("Region area indices")                ///
+           tooltip("Compute prediction/confidence area ratio and heterogeneity indices")
+
+  GROUPBOX gb_opts   10 230 400  55, label("Options")
+  TEXT     tx_level   20 250  50  ., label("Level:")
+  SPINNER  sp_level   75 250  60  ., min(10) max(99) default(95)
+  TEXT     tx_cc     155 250  50  ., label("Conf:")
+  EDIT     ed_cc     210 250  80  ., tooltip("Confidence region colour, e.g. blue%40")
+  TEXT     tx_pc     305 250  50  ., label("Pred:")
+  EDIT     ed_pc     360 250  50  ., tooltip("Prediction region colour, e.g. green%30")
+
+  GROUPBOX gb_lgn    10 295 400  35, label("Legend Position")
+  COMBOBOX cb_lgn     20 313 120  ., dropdownlist                               ///
+           contents(lgn_list) values(lgn_vals) default("6")
+END
+
+LIST lgn_list
+BEGIN
+  Bottom (6)
+  Right (3)
+  Top (12)
+  Left (9)
+END
+
+LIST lgn_vals
+BEGIN
+  6
+  3
+  12
+  9
+END
+
+HELP hlp1, view("help midas_bvsroc")
+OK ok1, label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+
+PROGRAM command
+BEGIN
+  put "midas bvsroc"
+  put ","
+  if main.ck_cel {
+    put " cellipse"
+  }
+  if main.ck_creg {
+    put " cregion"
+  }
+  if main.ck_pel {
+    put " pellipse"
+  }
+  if main.ck_preg {
+    put " pregion"
+  }
+  if main.ck_mean {
+    put " mean"
+  }
+  if main.ck_data {
+    put " data"
+  }
+  if main.ck_wgt {
+    put " weighted"
+  }
+  if main.ck_label {
+    put " labeldata"
+  }
+  if main.ck_lgnd {
+    put " lgnd lgnpos(" main.cb_lgn ")"
+  }
+  if main.ck_area {
+    put " area"
+  }
+  if !main.sp_level.isdefault() {
+    put " level(" main.sp_level ")"
+  }
+  if main.ed_cc {
+    put " confcolor(" main.ed_cc ")"
+  }
+  if main.ed_pc {
+    put " predcolor(" main.ed_pc ")"
+  }
+END

@@ -1,0 +1,163 @@
+/*
+  midas_dlg_subgroup.dlg â€" Subgroup analysis dialog
+  Version 2.0  31mar2026
+*/
+
+VERSION 16.0
+POSITION . . 480 680
+
+DIALOG main, title("MIDAS: Subgroup Analysis") tabtitle("Main")
+BEGIN
+    TEXT     tx_vars    10   10  200  ., label("Variables: tp fp fn tn")
+    VARLIST  vl_vars    10   30  450  ., label("Variables")
+    
+    TEXT     tx_id      10   60  100  ., label("Study ID:")
+    VARNAME  vn_id     110   60  200  ., label("ID variable")
+    
+    TEXT     tx_by      10   90  100  ., label("Subgroup by:")
+    VARNAME  vn_by     110   90  200  ., label("By variable")
+    
+    TEXT     tx_est     10  130  100  ., label("Estimator:")
+    COMBOBOX cb_est    110  130  150  ., dropdownlist         ///
+        contents(est_list) value(est_val) default(mle)
+    
+    CHECKBOX ck_het    10   170  200  ., label("Heterogeneity stats") option(hetstats)
+    CHECKBOX ck_hsroc  10   195  200  ., label("HSROC parameters")   option(hsroc)
+    CHECKBOX ck_nogr   10   220  200  ., label("Suppress graph")     option(nograph)
+    
+    TEXT     tx_save   10   255  100  ., label("Save LaTeX:")
+    FILE     fl_save  110   255  350  ., label("Browse...") filter("TeX files|*.tex") save
+    
+    TEXT     tx_level  10   290  100  ., label("CI Level (%):")
+    SPINNER  sp_level 110   290   60  ., min(80) max(99) default(95)
+END
+
+DIALOG paths, tabtitle("Paths")
+BEGIN
+    GROUPBOX gb_inla   10   10  450  80, label("INLA (R-INLA)")
+    TEXT     tx_rpath   20   30  120  ., label("Rscript path:")
+    FILE     fl_rpath  140   30  310  ., label("Browse...") filter("Executables|*.exe")
+    
+    GROUPBOX gb_hmc    10  100  450  250, label("HMC (CmdStan)")
+    TEXT     tx_stan    20  120  120  ., label("CmdStan dir:")
+    FILE     fl_stan   140  120  310  ., label("Browse...") directory
+    
+    TEXT     tx_model   20  150  120  ., label("Model file:")
+    EDIT     ed_model  140  150  200  ., default("midas.stan")
+    
+    TEXT     tx_output  20  180  120  ., label("Output prefix:")
+    EDIT     ed_output 140  180  200  ., default("subgroup")
+    
+    TEXT     tx_cov     20  210  120  ., label("Covariance:")
+    COMBOBOX cb_cov    140  210  150  ., dropdownlist         ///
+        contents(cov_list) value(cov_val) default(cholesky)
+    
+    TEXT     tx_chains  20  245  60   ., label("Chains:")
+    SPINNER  sp_chains  80  245  60   ., min(1) max(16) default(4)
+    TEXT     tx_warmup 160  245  60   ., label("Warmup:")
+    SPINNER  sp_warmup 220  245  80   ., min(100) max(50000) default(1000)
+    
+    TEXT     tx_iter    20  275  60   ., label("Iter:")
+    SPINNER  sp_iter    80  275  80   ., min(1000) max(100000) default(10000)
+    TEXT     tx_thin   160  275  60   ., label("Thin:")
+    SPINNER  sp_thin   220  275  60   ., min(1) max(100) default(10)
+    
+    TEXT     tx_seed    20  305  60   ., label("Seed:")
+    SPINNER  sp_seed    80  305  80   ., min(1) max(999999) default(12345)
+END
+
+LIST est_list
+BEGIN
+    MLE
+    QRSIM
+    HMC
+    INLA
+END
+
+LIST est_val
+BEGIN
+    mle
+    qrsim
+    hmc
+    inla
+END
+
+LIST cov_list
+BEGIN
+    Cholesky
+    Inverse-Wishart
+    Spherical
+    Huang-Wand
+END
+
+LIST cov_val
+BEGIN
+    cholesky
+    iwishart
+    spherical
+    huangwand
+END
+
+OK ok1, label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+
+PROGRAM command
+BEGIN
+    put "midas subgroup "
+    varlist main.vl_vars
+    put ", id(" main.vn_id ")"
+    put " by(" main.vn_by ")"
+    put " estimator(" main.cb_est ")"
+    
+    if main.sp_level.isneq(95) {
+        put " level(" main.sp_level ")"
+    }
+    
+    optionarg main.ck_het
+    optionarg main.ck_hsroc
+    optionarg main.ck_nogr
+    
+    if main.fl_save.isneq("") {
+        put `" savetable(""'
+        put main.fl_save
+        put `"")"'
+    }
+    
+    if paths.fl_rpath.isneq("") {
+        put `" rpath(""'
+        put paths.fl_rpath
+        put `"")"'
+    }
+    
+    if paths.fl_stan.isneq("") {
+        put `" standir(""'
+        put paths.fl_stan
+        put `"")"'
+    }
+    
+    if paths.ed_model.isneq("") {
+        put `" modelfile(""'
+        put paths.ed_model
+        put `"")"'
+    }
+    
+    if paths.ed_output.isneq("") {
+        put `" outputfile(""'
+        put paths.ed_output
+        put `"")"'
+    }
+    
+    if main.cb_est.iseq("hmc") {
+        put " chains(" paths.sp_chains ")"
+        put " warmup(" paths.sp_warmup ")"
+        put " iter(" paths.sp_iter ")"
+        put " thin(" paths.sp_thin ")"
+        put " seed(" paths.sp_seed ")"
+        if paths.cb_cov.isneq("") {
+            put " covariance(" paths.cb_cov ")"
+        }
+    }
+    
+    stata
+END

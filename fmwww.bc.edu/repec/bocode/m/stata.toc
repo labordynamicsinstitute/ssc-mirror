@@ -157,6 +157,7 @@ p mibmi module for cleaning and multiple imputation algorithm for body mass inde
 p mice module for multiple imputation of missing values
 p mict module to provide Multiple imputation for Categorical Time-series
 p midas module for meta-analytical integration of diagnostic test accuracy studies 
+p midas_dlg module providing dialogs for meta-analytical integration of diagnostic test accuracy studies
 p miesize module to estimate effect sizes from multiply imputed data
 p mif2dta module convert MapInfo Interchange Format boundary files to Stata boundary files
 p miinc module to conduct multi-model inference using information criteria 

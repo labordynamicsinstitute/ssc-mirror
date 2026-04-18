@@ -1,4 +1,4 @@
-*! version 2.00  27nov2025
+*! version 2.10  15apr2026
 *! midas_ipd2ad - Convert Individual Patient Data to Aggregate Diagnostic Data
 *! Ben A. Dwamena, University of Michigan
 
@@ -61,14 +61,37 @@ if _rc {
     exit 198
 }
 
-* Validate saving option
-if "`saving'" != "" {
-    if "`replace'" == "" {
-        capture confirm file "`saving'.dta"
+* Validate saving option — handle replace inside saving()
+if `"`saving'"' != "" {
+    local saving_clean `"`saving'"'
+    local has_replace = 0
+    if strpos(lower(`"`saving'"'), "replace") > 0 {
+        local saving_clean = subinstr(`"`saving'"', ", replace", "", .)
+        local saving_clean = subinstr(`"`saving_clean'"', ",replace", "", .)
+        local saving_clean = subinstr(`"`saving_clean'"', "replace", "", .)
+        local saving_clean = strtrim(`"`saving_clean'"')
+        local has_replace = 1
+    }
+    if "`replace'" != "" {
+        local has_replace = 1
+    }
+    local saving `"`saving_clean'"'
+    if !`has_replace' {
+        capture confirm file `"`saving'"'
         if !_rc {
-            di as error "file `saving'.dta already exists; specify replace option"
+            di as error `"file `saving' already exists; specify replace option"'
             exit 602
         }
+        if !strpos(`"`saving'"', ".dta") {
+            capture confirm file `"`saving'.dta"'
+            if !_rc {
+                di as error `"file `saving'.dta already exists; specify replace option"'
+                exit 602
+            }
+        }
+    }
+    if `has_replace' {
+        local replace "replace"
     }
 }
 
@@ -221,13 +244,13 @@ quietly {
 *----------------------------------------------------------
 * Save if requested
 *----------------------------------------------------------
-if "`saving'" != "" {
-    quietly save "`saving'", `replace'
-    di as text _n "Aggregate data saved to: " as result "`saving'.dta"
+if `"`saving'"' != "" {
+    quietly save `"`saving'"', `replace'
+    di as text _n "Aggregate data saved to: " as result `"`saving'"'
 }
 
 * Restore or keep
-if "`saving'" == "" {
+if `"`saving'"' == "" {
     restore, not
     di as text _n "Aggregate data kept in memory (original data discarded)"
 }
@@ -237,114 +260,3 @@ else {
 }
 
 end
-
-exit
-
-# /*
-
-# HELP FILE DOCUMENTATION
-
-## Title
-
-midas_ipd2ad - Convert Individual Patient Data to Aggregate Diagnostic Data
-
-## Syntax
-
-midas ipd2ad testvar refvar [if] [in], by(studyvar) [options]
-
-## Description
-
-midas_ipd2ad converts individual patient-level diagnostic test accuracy data
-to aggregate study-level format (2x2 tables). This is useful when you have
-individual patient data from multiple studies and need to create aggregate
-data for meta-analysis.
-
-The command calculates true positives (TP), false positives (FP), false
-negatives (FN), and true negatives (TN) for each study, along with derived
-measures like sensitivity and specificity.
-
-## Required Arguments
-
-testvar      Binary variable indicating test result (0=negative, 1=positive)
-refvar       Binary variable indicating reference standard (0=no disease, 1=disease)
-by(studyvar) Variable identifying individual studies
-
-## Options
-
-saving(filename)      Save aggregate data to specified file
-replace              Overwrite existing file
-studylabel(varname)  Variable with study labels/names to keep
-designvar(varname)   Variable indicating study design (cohort/case-control)
-keepvars(varlist)    Additional variables to keep in aggregate dataset
-noisily              Display detailed output
-
-## Examples
-
-. * Basic conversion
-. use ipd_data, clear
-. midas ipd2ad test_result disease_status, by(studyid)
-
-. * With saving
-. midas ipd2ad test_result disease_status, by(studyid) ///
-saving(aggregate_data, replace)
-
-. * Keep study information
-. midas ipd2ad test_result disease_status, by(studyid) ///
-studylabel(author) designvar(studytype) ///
-keepvars(year country)
-
-. * After conversion, run meta-analysis
-. midas mle tp fp fn tn, case(studytype)
-
-## Stored Results
-
-The command creates a dataset with the following variables:
-
-studyid (or studylabel)  - Study identifier
-tp                       - True positives
-fp                       - False positives
-fn                       - False negatives
-tn                       - True negatives
-sensitivity              - Sensitivity (TP / (TP+FN))
-specificity              - Specificity (TN / (FP+TN))
-n_diseased              - Number with disease (TP+FN)
-n_healthy               - Number without disease (FP+TN)
-n_total                 - Total patients in study
-[keepvars]              - Any additional variables specified
-
-## Remarks
-
-Data Requirements:
-
-- Test and reference standard variables must be coded as 0/1
-- Missing values are automatically excluded
-- Each study must have at least one patient
-
-Data Quality Checks:
-
-- The command checks for zero cells (may cause meta-analysis issues)
-- Identifies studies with perfect sensitivity/specificity
-- Flags small studies (<30 patients)
-
-Typical Workflow:
-
-1. Load individual patient data
-1. Run midas ipd2ad to create aggregate data
-1. Check aggregate data for issues
-1. Apply continuity correction if needed
-1. Run meta-analysis with midas mle or midas inla
-
-## Author
-
-Ben A. Dwamena
-University of Michigan
-bdwamena@umich.edu
-
-## Also See
-
-# midas_con2bin  - Convert continuous test results to binary
-midas_ord2bin  - Convert ordinal test results to binary
-midas_bclust   - Convert clustered data to binary
-midas_mle      - Maximum likelihood meta-analysis
-
-*/

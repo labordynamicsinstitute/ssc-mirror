@@ -1,0 +1,122 @@
+VERSION 16.0
+POSITION . . 680 650
+
+CANCEL can1, label("Close")
+HELP   hlp1, view("help midas_mh")
+RESET  res1
+COPY   copy1
+
+
+DIALOG main, title("MIDAS -- MH: Bayesian Metropolis-Hastings")
+BEGIN
+    GROUPBOX gb_v  10  10 660  90, label("2x2 table variables")
+    TEXT    tx_tp  20  30  60 ., label("TP:")
+    VARNAME vn_tp  20  46 140 .
+    TEXT    tx_fp 175  30  60 ., label("FP:")
+    VARNAME vn_fp 175  46 140 .
+    TEXT    tx_fn 330  30  60 ., label("FN:")
+    VARNAME vn_fn 330  46 140 .
+    TEXT    tx_tn 485  30  60 ., label("TN:")
+    VARNAME vn_tn 485  46 140 .
+
+    TEXT    tx_id   10 112 130 ., label("Study ID variable(s):")
+    VARLIST vl_id  150 110 200 ., option(id)
+
+    GROUPBOX gb_c  10 136 660  60, label("Covariance prior (required)")
+    TEXT     tx_cov  20 156 160 ., label("Structure:")
+    COMBOBOX cb_cov  190 154 250 ., dropdownlist contents(covlist) values(covvals) option(covariance)
+
+    GROUPBOX gb_m  10 206 660 120, label("MCMC settings")
+    TEXT    tx_ch   20 226 130 ., label("Chains:")
+    SPINNER sp_ch  160 224  70 ., min(1) max(16) default(4) option(chains)
+    TEXT    tx_mcs  20 250 130 ., label("MC sample size:")
+    SPINNER sp_mcs 160 248  90 ., min(1000) max(500000) default(20000) option(mcsize)
+    TEXT    tx_bn   20 274 130 ., label("Burn-in:")
+    SPINNER sp_bn  160 272  90 ., min(100) max(500000) default(20000) option(burn)
+    TEXT    tx_th   20 298 130 ., label("Thinning:")
+    SPINNER sp_th  160 296  70 ., min(1) max(100) default(1) option(thin)
+    TEXT    tx_sd  330 226 100 ., label("Seed:")
+    SPINNER sp_sd  440 224 120 ., min(1) max(999999) default(12345) option(seed)
+    TEXT    tx_dt  330 250 100 ., label("Dots interval:")
+    SPINNER sp_dt  440 248 120 ., min(100) max(100000) default(10000) option(dots)
+    CHECKBOX ck_par 330 274 180 ., label("Parallel chains") option(parallel)
+    CHECKBOX ck_cnv 330 298 180 ., label("Convergence stats") option(convergestats)
+
+    GROUPBOX gb_pr 10 336 660 130, label("Prior overrides (leave blank for defaults)")
+    TEXT tx_mup  20 356 130 ., label("mu prior:")
+    EDIT ed_mup  160 354 490 ., option(muprior)
+    TEXT tx_sgp  20 380 130 ., label("Sigma prior:")
+    EDIT ed_sgp  160 378 490 ., option(sigmaprior)
+    TEXT tx_php  20 404 130 ., label("phi prior:")
+    EDIT ed_php  160 402 490 ., option(phiprior)
+    TEXT tx_rhp  20 428 130 ., label("rho prior:")
+    EDIT ed_rhp  160 426 490 ., option(rhoprior)
+    TEXT tx_lmp  20 452 130 ., label("lambda prior:")
+    EDIT ed_lmp  160 450 490 ., option(lamdaprior)
+
+    GROUPBOX gb_d  10 476 660  70, label("Display options")
+    CHECKBOX ck_nohd  20 496 190 ., label("Suppress header")       option(noheader)
+    CHECKBOX ck_nocf  20 520 190 ., label("Suppress coefficients") option(nocoefficients)
+    CHECKBOX ck_het  225 496 190 ., label("Heterogeneity stats")   option(hetstats)
+    CHECKBOX ck_hsr  225 520 190 ., label("HSROC parameters")      option(hsroc)
+    CHECKBOX ck_hpd   20 544 190 ., label("HPD intervals")         option(hpd)
+    TEXT     tx_lev  440 496 130 ., label("Confidence level (%):")
+    SPINNER  sp_lev  580 494  60 ., min(50) max(99) default(95) option(level)
+    GROUPBOX gb_rep  10 534 660  40, label("MCMC diagnostic options")
+    CHECKBOX ck_mdg  20 552 200 ., label("MCMC convergence diagnostics") option(moddiag)
+END
+
+OK     ok1,  label("OK")
+SUBMIT sub1, label("Submit")
+
+
+LIST covlist
+BEGIN
+    Inverse Wishart
+    Cholesky
+    Spherical
+    Cholesky-Fisher z
+    Product normal
+    Scaled Inverse Wishart
+    Hierarchical Inverse Wishart
+END
+
+LIST covvals
+BEGIN
+    iwishart
+    cholesky
+    spherical
+    cholefisher
+    product
+    sciwishart
+    hiwishart
+END
+
+PROGRAM command
+BEGIN
+    put "midas mh "
+    put main.vn_tp " " main.vn_fp " " main.vn_fn " " main.vn_tn
+    beginoptions
+        optionarg main.vl_id
+        optionarg main.cb_cov
+        optionarg /hidedefault main.sp_ch
+        optionarg /hidedefault main.sp_mcs
+        optionarg /hidedefault main.sp_bn
+        optionarg /hidedefault main.sp_th
+        optionarg /hidedefault main.sp_sd
+        optionarg /hidedefault main.sp_dt
+        option main.ck_par
+        option main.ck_cnv
+        optionarg /hidedefault main.ed_mup
+        optionarg /hidedefault main.ed_sgp
+        optionarg /hidedefault main.ed_php
+        optionarg /hidedefault main.ed_rhp
+        optionarg /hidedefault main.ed_lmp
+        option main.ck_nohd
+        option main.ck_nocf
+        option main.ck_het
+        option main.ck_hsr
+        optionarg /hidedefault main.sp_lev
+        option main.ck_mdg
+    endoptions
+END

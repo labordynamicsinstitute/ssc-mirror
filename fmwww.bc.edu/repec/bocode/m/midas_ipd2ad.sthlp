@@ -63,6 +63,10 @@ variables for the index test result and the reference standard.
 
 {title:Example}
 
+{pstd}Setup: Load example dataset{p_end}
+{phang2}{cmd:. use http://fmwww.bc.edu/repec/bocode/m/ipd2addata.dta, clear}{p_end}
+
+
 {phang2}{cmd:. midas ipd2ad testpos disease, by(studyid) saving(aggregate.dta, replace)}{p_end}
 {phang2}{cmd:. use aggregate, clear}{p_end}
 {phang2}{cmd:. midas mle tp fp fn tn, id(studyid)}{p_end}

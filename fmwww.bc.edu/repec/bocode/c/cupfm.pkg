@@ -1,0 +1,31 @@
+d 'CUPFM': module to estimate Panel Cointegration with Common Factors models
+d
+d  `cupfm` estimates panel cointegration models with
+d cross-sectional dependence modeled as a common factor structure.
+d It implements all five estimators from Bai, Kao & Ng (2009) and
+d Bai & Kao (2005), translated exactly from the authors' official
+d GAUSS source code. The package includes automatic factor
+d selection via Bai & Ng (2002) information criteria, Bartlett and
+d Parzen kernel long-run covariance estimation, and provides
+d publication-quality visualizing plots (coefficients, factors,
+d loadings) and automated export formats (Excel, LaTeX, CSV). 
+d
+d KW: panel data
+d KW: cointegration
+d KW: common factors
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260417
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f cupfm.ado
+f cupfm.sthlp
+f ../_/_cupfm_display.ado
+f ../_/_cupfm_export.ado
+f ../_/_cupfm_mata.ado
+f ../_/_cupfm_plot.ado
+f ../_/_cupfm_validate.ado
+f cupfm_example.do

@@ -304,6 +304,7 @@ p ctohri module to translate From Counts to Hazard Ratio
 p ctreatreg module for estimating dose-response models under exogenous and endogenous treatment
 p cub module to estimate ordinal outcome model estimated by a mixture of a uniform and a shifted binomial
 p cuentacot module for Contributions Counting
+p cupfm module to estimate Panel Cointegration with Common Factors models
 p cureregr module to estimate parametric cure regression
 p cureregr8 module to estimate parametric cure regression (version 8.2)
 p curvefit module to produces curve estimation regression statistics and related plots between two variables for alternative curve estimation regression models

@@ -1,0 +1,49 @@
+d 'LWDID': module to implmenent Rolling Difference-in-Differences Estimator for Small-N and Large-N Panel Data
+d
+d      lwdid implements the transformation-based rolling
+d Difference-in-Differences estimators developed in Lee and
+d Wooldridge (2025,    2026a).	The command provides a unified
+d implementation for panel data settings with either a large-N or a
+d small-N    cross-sectional dimension, allowing treatment effects
+d to be estimated under both the staggered treatment adoption and
+d the common	timing case.	The central idea is to transform
+d outcomes within each unit to remove pre-treatment means, trends,
+d or seasonal components,    yielding residualized outcomes. These
+d transformed outcomes allow treatment effects to be estimated
+d using simple cross-sectional	  regressions in each
+d post-treatment period, facilitating both overall and
+d period-specific ATT estimation.    By default, lwdid uses the
+d large-N procedure of Lee and Wooldridge (2025), which is designed
+d for panels with a large    cross-sectional dimension and allows
+d for heterogeneous treatment effects and unit-specific
+d heterogeneous linear trends.	  When the cross-sectional
+d dimension is small (small-N), conventional large-N inference may
+d be unreliable. In such settings,    specifying the small option
+d invokes the exact small-sample inference procedures developed in
+d Lee and Wooldridge (2026a). The    seasonal-adjustment options
+d demeanq, detrendq, demeanm, and detrendm are currently available
+d only under the small-N    implementation.    Based on the
+d treatment cohort variable specified in gvar(), lwdid
+d automatically detects whether the design involves a single   
+d treatment cohort (common timing) or multiple cohorts (staggered
+d adoption) and applies the appropriate estimation procedure. 
+d
+d KW: DiD
+d KW: panel data
+d KW: treatment effects
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260417
+d
+d Author: Soo Jeong Lee,  Southern Illinois University Carbondale
+d Support: email soojeong.lee@@siu.edu
+d
+d Author: Jeffrey M. Wooldridge, Michigan State University
+d Support: email  wooldri1@@msu.edu
+d
+f lwdid.ado
+f lwdid.sthlp
+f lw_castle.dta
+f lw_smoking.dta
+f lw_walmart.dta

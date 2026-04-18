@@ -53,6 +53,10 @@ compute implied sensitivity and specificity, from which integer counts
 
 {title:Example}
 
+{pstd}Setup: Load example dataset{p_end}
+{phang2}{cmd:. use http://fmwww.bc.edu/repec/bocode/m/con2bindata.dta, clear}{p_end}
+
+
 {phang2}{cmd:. midas con2bin n1 x1 sd1 n0 x0 sd0, id(study) savedata(binary.dta)}{p_end}
 
 {title:Also see}

@@ -60,6 +60,10 @@ than using the optimal Youden index.
 
 {title:Example}
 
+{pstd}Setup: Load example dataset{p_end}
+{phang2}{cmd:. use http://fmwww.bc.edu/repec/bocode/m/ord2bindata.dta, clear}{p_end}
+
+
 {phang2}{cmd:. midas ord2bin score dis nondis totaldis totalnondis, idvar(study) savedata(binary.dta, replace)}{p_end}
 
 {title:Also see}

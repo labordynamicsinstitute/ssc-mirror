@@ -1,0 +1,56 @@
+/*
+  midas_dlg_ord2bin.dlg — Ordinal to binary conversion
+  Version 2.0.0  30mar2026
+  Author: Ben Adarkwa Dwamena, MD
+*/
+
+VERSION 16.0
+
+POSITION . . 460 280
+
+DIALOG main, title("MIDAS — Ordinal to Binary Conversion")
+BEGIN
+  TEXT     tx_header  10  10 440  ., label("midas ord2bin — Convert ordinal ratings to 2x2 at optimal Youden threshold")
+
+  GROUPBOX gb_vars   10  35 440  70, label("Variables (5 required)")
+  TEXT     tx_vars    20  55 420  .,                                            ///
+           label("score  dis_n  nondis_n  total_dis  total_nondis")
+  VARLIST  vl_vars    20  75 420  ., label("Select 5 variables")
+
+  GROUPBOX gb_opts   10 115 440  70, label("Options")
+  TEXT     tx_id      20 135  90  ., label("Study ID var:")
+  VARNAME  vn_id     115 135 140  .
+  TEXT     tx_save   270 135  60  ., label("Save as:")
+  EDIT     ed_save   335 135 105  ., default("ord2bin_result.dta")
+
+  CHECKBOX ck_det     20 160 120  ., label("Detail")                           ///
+           tooltip("Display Youden index and Se/Sp at each threshold")
+  CHECKBOX ck_rep    145 160 120  ., label("Replace")
+
+  GROUPBOX gb_ifin   10 195 440  35, label("If/In")
+  EDIT     ed_ifin    20 213 420  ., tooltip("Optional if/in restriction")
+END
+
+HELP hlp1, view("help midas_ord2bin")
+OK ok1, label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+
+PROGRAM command
+BEGIN
+  put "midas ord2bin "
+  put main.vl_vars
+  if main.ed_ifin {
+    put " " main.ed_ifin
+  }
+  put ", idvar(" main.vn_id ")"
+  require main.ed_save
+  put " savedata(" main.ed_save
+  if main.ck_rep {
+    put ", replace"
+  }
+  put ")"
+  if main.ck_det {
+    put " detail"
+  }
+END

@@ -1,0 +1,71 @@
+VERSION 16.0
+POSITION . . 600 280
+
+CANCEL can1, label("Close")
+HELP   hlp1, view("help midas_forest")
+RESET  res1
+COPY   copy1
+
+SUBMIT sub1, label("Submit")
+
+DIALOG main, title("MIDAS -- Forest Plot")
+BEGIN
+    GROUPBOX gb_p  10  10 580  90, label("Plot options")
+    TEXT     tx_plt  20  30 120 ., label("Plot type:")
+    COMBOBOX cb_plt  150  28 150 ., dropdownlist contents(pltlist) values(pltvals) option(plottype)
+    CHECKBOX ck_pre 320  32 160 ., label("Prediction interval") option(predinterval)
+    CHECKBOX ck_ovl 320  56 160 ., label("Overall line")        option(ovline)
+    CHECKBOX ck_nos  20  56 180 ., label("Suppress summary")    option(nosummary)
+    TEXT     tx_ci   20  78 120 ., label("CI method:")
+    COMBOBOX cb_ci  150  76 150 ., dropdownlist contents(cilist) values(civals) option(cimethod)
+
+    GROUPBOX gb_d  10 110 580  50, label("Display options")
+    TEXT     tx_lev  20 130 130 ., label("Confidence level (%):")
+    SPINNER  sp_lev  160 128  60 ., min(50) max(99) default(95) option(level)
+    TEXT     tx_msc 250 130  80 ., label("Marker scale:")
+    SPINNER  sp_msc 340 128  70 ., min(1) max(200) default(75) option(mscale)
+END
+
+LIST pltlist
+BEGIN
+    generic (default)
+    ellipse
+    thick
+    rain
+END
+
+LIST pltvals
+BEGIN
+    generic
+    ellipse
+    thick
+    rain
+END
+
+LIST cilist
+BEGIN
+    exact
+    wilson
+    agresti
+END
+
+LIST civals
+BEGIN
+    exact
+    wilson
+    agresti
+END
+
+PROGRAM command
+BEGIN
+    put "midas forest"
+    beginoptions
+        optionarg main.cb_plt
+        option main.ck_pre
+        option main.ck_ovl
+        option main.ck_nos
+        optionarg /hidedefault main.cb_ci
+        optionarg /hidedefault main.sp_lev
+        optionarg /hidedefault main.sp_msc
+    endoptions
+END

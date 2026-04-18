@@ -64,6 +64,10 @@ then creates design-effect-adjusted variables {cmd:midas_tp}, {cmd:midas_fp},
 
 {title:Example}
 
+{pstd}Setup: Load example dataset{p_end}
+{phang2}{cmd:. use http://fmwww.bc.edu/repec/bocode/m/midasclustbin.dta, clear}{p_end}
+
+
 {phang2}{cmd:. midas bclust2bin tp fp fn tn np, id(author year)}{p_end}
 {phang2}{cmd:. midas mle midas_tp midas_fp midas_fn midas_tn, id(author year)}{p_end}
 
