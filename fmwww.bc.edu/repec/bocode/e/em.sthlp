@@ -1,5 +1,5 @@
-﻿{smcl}
-{* *! version 1.0 09Oct2025}{...}
+{smcl}
+{* *! version 1.0 18Apr2026}{...}
 {hline}
 {cmd:em} {hline 2} Modified Jones Model for Earnings Management Measurement
 {hline}
@@ -17,9 +17,9 @@
 {synoptset 20 tabbed}{...}
 {synopthdr:options}
 {synoptline}
-{synopt:{opt using}}path to raw data Excel file; default is "D:\Academic Friends\Dingyuan Accounting 202502\data\emdata\rawdata.xlsx"{p_end}
-{synopt:{opt datafolder}({it:string})}path to folder containing Excel data files; alternative to using{p_end}
-{synopt:{opt outputfolder}({it:string})}path to folder for output files; default is "D:\Academic Friends\Dingyuan Accounting 202502\report"{p_end}
+{synopt:{opt using}}path to raw data Excel file; default is "rawdata.xlsx" in the current working directory{p_end}
+{synopt:{opt datafolder}({it:string})}path to folder containing the Excel data file; alternative to using{p_end}
+{synopt:{opt outputfolder}({it:string})}path to folder for output files; default is the current working directory{p_end}
 {synopt:{opt replace}}overwrite existing log and output files{p_end}
 {synoptline}
 
@@ -28,50 +28,54 @@
 {p 4 4 2}
 {cmd:em} implements the Modified Jones Model (Dechow, Sloan, and Sweeney, 1995) 
 for measuring earnings management through discretionary accruals. The command 
-processes financial statement data from Excel files, estimates model parameters 
+processes financial statement data from an Excel file, estimates model parameters 
 by year-industry groups, and calculates both discretionary and non-discretionary accruals.
 
 {p 4 4 2}
 The command automatically handles log file management, closes any open logs before 
 starting, and generates comprehensive output including descriptive statistics 
-and regression results.
+and regression results. All output files (Stata dataset, Excel file, log, and RTF tables) 
+are saved in the specified output folder (by default, the current working directory). 
+The full path to the Excel results file is displayed in the Stata results window.
 
 {title:Options}
 
 {phang}
 {opt using} specifies the path to the raw data Excel file containing all required 
 data sheets. The file must contain four sheets named Sheet1, Sheet2, Sheet3, and Sheet4 
-with appropriate data structure. Default is "D:\Academic Friends\Dingyuan Accounting 202502\data\emdata\rawdata.xlsx".
+with appropriate data structure. Default is "rawdata.xlsx" in the current working directory.
 
 {phang}
 {opt datafolder(string)} specifies the path to the folder containing the 
-required Excel data files. This is an alternative to the using option. 
-Default is "D:\Academic Friends\Dingyuan Accounting 202502\data\emdata".
+required Excel data file. This is an alternative to the using option. 
+The command will look for a file named "rawdata.xlsx" inside this folder.
 
 {phang}
 {opt outputfolder(string)} specifies the path to the folder where output 
 files will be saved. The command will create several output files including 
-the main dataset, log file, and statistical tables. Default is 
-"D:\Academic Friends\Dingyuan Accounting 202502\report".
+the main dataset, Excel file, log file, and statistical tables. Default is 
+the current working directory.
 
 {phang}
 {opt replace} allows overwriting existing output files. If specified, the command 
-will replace any existing log file and output datasets. Without this option, 
+will replace any existing log file, output dataset, and Excel file. Without this option, 
 the command will append to existing log files.
 
 {title:Required Data File}
 
 {p 4 4 2}
-The Excel file must contain four sheets with the following data:
+The Excel file must contain four sheets with the following data. All sheets must include 
+a string variable {bf:date} (e.g., "20201231") from which the year is extracted, and a numeric 
+variable {bf:stkcd} for firm identifier. The {bf:code} variable in Sheet1 contains industry codes.
 
 {phang2}
-1. {bf:Sheet1} - Contains industry codes, total assets ({bf:at}), net income ({bf:ni}), and revenue ({bf:revenue}){p_end}
+1. {bf:Sheet1} - Contains {bf:stkcd}, {bf:date}, {bf:code} (industry code), {bf:at} (total assets), {bf:ni} (net income), and {bf:revenue}{p_end}
 {phang2}
-2. {bf:Sheet2} - Contains cash flow from operating activities ({bf:cfo}){p_end}
+2. {bf:Sheet2} - Contains {bf:stkcd}, {bf:date}, and {bf:cfo} (cash flow from operating activities){p_end}
 {phang2}
-3. {bf:Sheet3} - Contains receivables ({bf:rec}) and fixed assets data{p_end}
+3. {bf:Sheet3} - Contains {bf:stkcd}, {bf:date}, and {bf:rec} (receivables){p_end}
 {phang2}
-4. {bf:Sheet4} - Contains net fixed assets ({bf:ppe}); only consolidated statements (type "A") are used{p_end}
+4. {bf:Sheet4} - Contains {bf:stkcd}, {bf:date}, {bf:type} ("A" for consolidated, "B" for parent), and {bf:ppe} (net fixed assets){p_end}
 
 {title:Variables Created}
 
@@ -81,12 +85,11 @@ The command creates the following key variables in the output dataset:
 {phang2}
 {bf:stkcd} - Stock code identifier{p_end}
 {phang2}
-{bf:year} - Year{p_end}
+{bf:year} - Year extracted from {bf:date}{p_end}
 {phang2}
 {bf:ta_at} - Total accruals scaled by lagged total assets{p_end}
 {phang2}
 {bf:nda_at} - Non-discretionary accruals scaled by lagged total assets{p_end}
-{phang2}
 {bf:da_at} - Discretionary accruals scaled by lagged total assets (earnings management measure){p_end}
 {phang2}
 {bf:alpha0, alpha1, alpha2} - Estimated coefficients from the Modified Jones Model{p_end}
@@ -96,10 +99,12 @@ The command creates the following key variables in the output dataset:
 {title:Output Files}
 
 {p 4 4 2}
-The command generates the following output files in the outputfolder:
+The command generates the following output files in the output folder:
 
 {phang2}
 {bf:em_results.dta} - Main Stata dataset with all calculated variables and results{p_end}
+{phang2}
+{bf:em_results.xlsx} - Same data exported to Excel; the file path is displayed in the results window{p_end}
 {phang2}
 {bf:earnings_management_analysis.log} - Detailed log file of the analysis process{p_end}
 {phang2}
@@ -126,7 +131,7 @@ and PPE is property, plant, and equipment.
 {title:Examples}
 
 {p 4 4 2}
-Basic usage with default file:
+Basic usage with default file in current directory:
 
 {phang2}{cmd:. em}{p_end}
 
@@ -153,9 +158,9 @@ Combine custom file with replace option:
 {title:Stored Results}
 
 {p 4 4 2}
-The command stores the main results in the dataset saved as em_results.dta. 
-Additionally, it generates RTF tables with descriptive statistics and 
-regression results.
+The command stores the main results in the dataset saved as em_results.dta and also 
+exports them to em_results.xlsx. Additionally, it generates RTF tables with descriptive 
+statistics and regression results.
 
 {title:Authors}
 

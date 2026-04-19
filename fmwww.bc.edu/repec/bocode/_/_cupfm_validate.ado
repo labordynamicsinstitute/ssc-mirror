@@ -1,6 +1,6 @@
 *! _cupfm_validate.ado - Input validation for cupfm
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Version: 1.0.1 - 2026-04-16 (First SSC submission)
+*! Version: 1.0.2 - 2026-04-18 (Bug fix release)
 
 capture program drop _cupfm_validate
 program define _cupfm_validate, rclass

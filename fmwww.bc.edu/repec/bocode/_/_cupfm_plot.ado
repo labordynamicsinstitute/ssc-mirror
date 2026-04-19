@@ -1,6 +1,6 @@
 *! _cupfm_plot.ado - Publication-quality visualizations for cupfm
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Version: 1.0.1 - 2026-04-16 (First SSC submission)
+*! Version: 1.0.2 - 2026-04-18 (Bug fix release)
 *!
 *! Produces:
 *!  Plot 1: Coefficient comparison (all 5 estimators with 95% CI)

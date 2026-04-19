@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.5.8 22Oct2025}{...}
+{* *! version 1.5.9 18Apr2026}{...}
 {vieweralsosee "" "--"}{...}
 {viewerjumpto "Syntax" "bf##syntax"}{...}
 {viewerjumpto "Description" "bf##description"}{...}
@@ -32,6 +32,12 @@ The command automatically detects available hard drives and prioritizes E drive,
 avoiding the system C drive (unless only C drive is available).
 
 {pstd}
+If the command cannot create the base directory on the selected drive (e.g., due to permission
+restrictions on drive C:\), it will automatically fall back to using the current working directory.
+This ensures that the command always completes successfully, even on systems with limited write
+permissions on the system drive.
+
+{pstd}
 The {opt language()} option allows creating directory structures with either English or Chinese names.
 
 {pstd}
@@ -42,7 +48,8 @@ The command also creates ready-to-run do files in each subdirectory that demonst
 data analysis workflow using Stata's built-in auto dataset.
 
 {pstd}
-Version 1.5.8 adds example session display and improves error handling for log files and model results.
+Version 1.5.9 improves fallback behavior when drive root directories are not writable,
+and enhances error handling for log files and model results.
 
 {marker options}{...}
 {title:Options}
@@ -119,7 +126,8 @@ Or run only the report generation to execute all steps automatically:
 {txt}
 
 {pstd}
-The command creates the following directory structure on the selected drive:{p_end}
+The command creates the following directory structure on the selected drive (or in the current
+working directory if the drive is not writable):{p_end}
 {pstd}English structure:{p_end}
 {pstd}1. Academic Friends - base directory{p_end}
 {pstd}2. Dingyuan Accounting [issue] - project directory{p_end}
@@ -172,7 +180,7 @@ Users can run the do files in two ways:{p_end}
 {pstd}{bf:Option 1:} Run files individually in sequence{p_end}
 {pstd}{bf:Option 2:} Run only the report generation file, which automatically calls all previous steps{p_end}
 
-{title:Drive Selection Algorithm}
+{title:Drive Selection and Fallback Algorithm}
 
 {pstd}
 The command uses the following algorithm to select the appropriate drive:{p_end}
@@ -180,6 +188,13 @@ The command uses the following algorithm to select the appropriate drive:{p_end}
 {pstd}2. Then prefer D drive if available{p_end}
 {pstd}3. Then any non-C drive{p_end}
 {pstd}4. Finally use C drive if no other options{p_end}
+
+{pstd}
+After selecting the drive, the command attempts to create the base directory (e.g.,
+{bf:Academic Friends} or {bf:益友学术}) on that drive. If this fails (for example, due to
+permission restrictions on drive C:\), the command will automatically fall back to using the
+current working directory as the base location. This ensures that the command always succeeds
+and creates the project structure in a writable location.
 
 {title:Program Definitions}
 

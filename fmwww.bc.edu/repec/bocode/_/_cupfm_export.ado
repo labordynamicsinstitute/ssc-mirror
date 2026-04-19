@@ -1,6 +1,6 @@
 *! _cupfm_export.ado - Export results (Excel, LaTeX, CSV) for cupfm
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Version: 1.0.1 - 2026-04-16 (First SSC submission)
+*! Version: 1.0.2 - 2026-04-18 (Fix: version 14 consistency)
 
 capture program drop _cupfm_export
 program define _cupfm_export

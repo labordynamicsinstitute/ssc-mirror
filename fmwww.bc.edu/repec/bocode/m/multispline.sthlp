@@ -1,156 +1,233 @@
 {smcl}
-{* *! version 1.0.4  Subir Hait  01mar2026}{...}
-{hline}
-help for {cmd:multispline}
+{* version 0.2.0  Subir Hait  Michigan State University  2026-04-18}{...}
+{cmd:help multispline}{right:MultiSpline v0.2.0}
 {hline}
 
 {title:Title}
 
 {phang}
-{bf:multispline} {hline 2} Nonlinear multilevel spline modeling
+{bf:multispline} {hline 2} Spline-Based Nonlinear Modeling for Multilevel
+and Longitudinal Data
 
 {title:Syntax}
 
 {p 8 17 2}
-{cmd:multispline}
-{depvar}
-{indepvar}
-{ifin},
-{cmd:cluster(}{varname}{cmd:)}
+{cmd:multispline} {depvar} {indepvar} [{it:controls}] {ifin} {cmd:,}
 [{it:options}]
 
-{synoptset 20 tabbed}{...}
+{synoptset 28 tabbed}{...}
 {synopthdr}
 {synoptline}
-{syntab:Required}
-{synopt:{opt cluster(varname)}}grouping variable for multilevel model{p_end}
+{syntab:Clustering}
+{synopt:{opt cl:uster(varlist)}}up to 2 grouping variables; higher level
+  first for nested models{p_end}
+{synopt:{opt nested}}nested random effects {cmd:(higher/lower)} instead
+  of cross-classified{p_end}
 
-{syntab:Optional}
-{synopt:{opt nknots(#)}}number of spline knots; default is {cmd:nknots(4)}{p_end}
-{synopt:{opt autoknots}}automatically select optimal number of knots{p_end}
-{synopt:{opt at(numlist)}}predict over range defined by numlist{p_end}
-{synopt:{opt plot}}display plot of nonlinear fit{p_end}
+{syntab:Spline specification}
+{synopt:{opt df(# | auto)}}degrees of freedom; {cmd:auto} selects by AIC
+  or BIC; default {cmd:auto}{p_end}
+{synopt:{opt df_r:ange(string)}}candidate df values for auto selection;
+  default {cmd:"2 3 4 5 6"}{p_end}
+{synopt:{opt cr:iterion(aic|bic)}}information criterion; default {cmd:aic}{p_end}
+{synopt:{opt me:thod(ns|bs)}}spline basis: natural cubic ({cmd:ns},
+  default) or B-spline ({cmd:bs}){p_end}
+{synopt:{opt bs_d:egree(#)}}B-spline polynomial degree; default {cmd:3}{p_end}
+{synopt:{opt fa:mily(gaussian|logit|probit)}}outcome family; default
+  {cmd:gaussian}; use {cmd:logit} or {cmd:probit} for binary outcomes{p_end}
+
+{syntab:Diagnostics}
+{synopt:{opt comp:are}}compare spline against linear and polynomial
+  models (AIC, BIC, LRT){p_end}
+{synopt:{opt poly_d:egrees(string)}}polynomial degrees for comparison;
+  default {cmd:"2 3"}{p_end}
+{synopt:{opt r2}}Nakagawa-Schielzeth marginal and conditional R-squared
+  with level-specific variance partition{p_end}
+{synopt:{opt icc}}intraclass correlation coefficients with interpretation{p_end}
+{synopt:{opt het}}cluster heterogeneity: BLUP plot and LRT (random
+  slopes vs intercepts){p_end}
+{synopt:{opt nhet(#)}}number of clusters to show in het plot;
+  default {cmd:30}{p_end}
+
+{syntab:Random effects}
+{synopt:{opt rands:lope}}allow spline trajectory to vary across
+  clusters (random spline slopes){p_end}
+
+{syntab:Post-estimation}
+{synopt:{opt pr:edict_grid(#)}}prediction grid points; default {cmd:100}{p_end}
+{synopt:{opt le:vel(#)}}confidence level; default {cmd:95}{p_end}
+{synopt:{opt der:ivatives}}first and second derivatives with CI bands{p_end}
+{synopt:{opt tu:rning_points}}local maxima, minima, and slope regions{p_end}
+{synopt:{opt pl:ot(type)}}inline plot: {cmd:trajectory}, {cmd:slope},
+  {cmd:curvature}, or {cmd:combo}{p_end}
+{synopt:{opt sa:ving(filename)}}save prediction dataset for
+  {cmd:multispline_plot}{p_end}
 {synoptline}
-{p2colreset}{...}
 
 {title:Description}
 
 {pstd}
-{cmd:multispline} fits nonlinear multilevel regression models using
-natural cubic spline basis expansion. It provides a unified workflow
-for fitting, predicting, visualizing, and summarizing nonlinear effects
-in hierarchical or longitudinal data.
+{cmd:multispline} fits nonlinear regression models using natural cubic
+splines or B-splines, with optional multilevel random effects via
+{cmd:mixed} (Gaussian) or {cmd:melogit}/{cmd:meprobit} (binary). It
+provides a complete workflow from fitting through model comparison,
+R-squared decomposition, derivative-based interpretation, cluster
+heterogeneity diagnostics, and publication-ready plots.
 
 {pstd}
-The command is particularly suited to large-scale education and health
-datasets such as ECLS-K, HSLS, and PISA where outcomes are expected
-to have nonlinear relationships with predictors such as socioeconomic
-status (SES) or treatment dosage.
+All functionality is self-contained in a single {cmd:.ado} file requiring
+only base Stata ({cmd:regress}, {cmd:mixed}, {cmd:melogit},
+{cmd:meprobit}, {cmd:mkspline}).
+
+{title:Model types}
 
 {pstd}
-While Stata provides {cmd:mixed} for multilevel models and
-{cmd:mkspline} for spline construction, no existing Stata command
-provides a unified workflow for fitting, predicting, visualizing,
-and computing ICCs from nonlinear multilevel models.
-{cmd:multispline} fills this gap.
+The model fitted depends on the options supplied:
 
-{title:Options}
+{p2colset 6 26 28 2}{...}
+{p2col:{bf:OLS}}No {cmd:cluster()}, {cmd:family(gaussian)}
+   -  single-level linear regression with spline terms{p_end}
+{p2col:{bf:LMM}}With {cmd:cluster()}, {cmd:family(gaussian)}
+   -  mixed-effects regression via {cmd:mixed}{p_end}
+{p2col:{bf:LMM-nested}}{cmd:cluster(g1 g2) nested}
+   -  {cmd:mixed ... || g1: || g2:}{p_end}
+{p2col:{bf:LMM-cross}}{cmd:cluster(g1 g2)} without {cmd:nested}
+   -  cross-classified via {cmd:|| _all: R.g1 || g2:}{p_end}
+{p2col:{bf:LMM-rslope}}{cmd:randslope}
+   -  spline basis enters as random slopes{p_end}
+{p2col:{bf:Logit/{bf:Probit}}}{cmd:family(logit|probit)}, no {cmd:cluster()}
+   -  single-level binary regression{p_end}
+{p2col:{bf:GLMM-Logit}}{cmd:family(logit)} with {cmd:cluster()}
+   -  multilevel logistic via {cmd:melogit}{p_end}
 
-{phang}
-{opt cluster(varname)} specifies the grouping variable for the
-multilevel model. Required.
+{title:Derivatives and turning points}
 
-{phang}
-{opt nknots(#)} number of knots for cubic spline basis.
-Default is 4. Must be >= 3.
+{pstd}
+The {cmd:derivatives} option computes numerical first (d1) and second
+(d2) derivatives of the predicted spline curve across the x-grid,
+with delta-method confidence intervals. d1 represents the marginal
+effect of x at each point. d2 represents curvature. Note: d2 CIs may
+be wide due to numerical differentiation  -  treat them cautiously.
 
-{phang}
-{opt autoknots} automatically selects optimal number of knots
-between 4 and 7 based on number of unique values of predictor.
+{pstd}
+{cmd:turning_points} detects where d1 changes sign (local maxima or
+minima) and identifies contiguous slope-direction regions.
 
-{phang}
-{opt at(numlist)} generates predictions over a 50-point grid
-spanning the range defined by the numlist values.
-Useful for smooth prediction curves.
+{title:R-squared decomposition}
 
-{phang}
-{opt plot} displays plot of predicted nonlinear relationship.
+{pstd}
+For LMM models, {cmd:r2} reports Nakagawa-Schielzeth (2013) marginal
+R-squared (R2m, variance from fixed effects only) and conditional
+R-squared (R2c, fixed plus random effects), following the formula
+extended by Nakagawa, Johnson and Schielzeth (2017).
+
+{pstd}
+For GLMM (logit), the denominator includes the distribution-specific
+variance (pi^2/3 for logit, 1 for probit) following the Nakagawa
+et al. (2017) extension.
+
+{title:Cluster heterogeneity (het)}
+
+{pstd}
+The {cmd:het} option: (1) fits a random-slope model and performs an LRT
+comparing random slopes vs random intercepts to test whether the
+nonlinear trajectory shape varies across clusters; (2) plots
+cluster-specific BLUP-based trajectories against the population mean
+for visual inspection. Only available for single-cluster Gaussian LMMs.
 
 {title:Examples}
 
-{pstd}
-{bf:Example 1: Education example}
+{pstd}{ul:OLS with automatic df and trajectory plot}{p_end}
+{phang2}{cmd:. sysuse auto, clear}{p_end}
+{phang2}{cmd:. multispline price mpg, df(auto) compare plot(trajectory)}{p_end}
 
-{phang2}{cmd:. multispline math_score ses, cluster(schid) nknots(4) plot}{p_end}
+{pstd}{ul:OLS with derivatives and turning points}{p_end}
+{phang2}{cmd:. multispline price mpg, df(auto) derivatives turning_points plot(combo)}{p_end}
 
-{pstd}
-{bf:Example 2: Automatic knot selection}
+{pstd}{ul:Single-cluster LMM with R-squared and ICC}{p_end}
+{phang2}{cmd:. multispline score age female ses,}{p_end}
+{phang2}{cmd:    cluster(student_id) df(auto) r2 icc compare plot(trajectory)}{p_end}
 
-{phang2}{cmd:. multispline math_score ses, cluster(schid) autoknots plot}{p_end}
+{pstd}{ul:Nested multilevel (higher-level cluster first)}{p_end}
+{phang2}{cmd:. multispline score age female ses,}{p_end}
+{phang2}{cmd:    cluster(school_id student_id) nested}{p_end}
+{phang2}{cmd:    df(auto) r2 icc compare derivatives turning_points plot(combo)}{p_end}
 
-{pstd}
-{bf:Example 3: Grid predictions}
+{pstd}{ul:Cross-classified multilevel}{p_end}
+{phang2}{cmd:. multispline score age female ses,}{p_end}
+{phang2}{cmd:    cluster(school_id neighbourhood_id)}{p_end}
+{phang2}{cmd:    df(4) r2 icc plot(trajectory)}{p_end}
 
-{phang2}{cmd:. multispline math_score ses, cluster(schid) nknots(4) at(-3 -2 -1 0 1 2 3) plot}{p_end}
+{pstd}{ul:Random spline slopes}{p_end}
+{phang2}{cmd:. multispline score age, cluster(student_id) df(3) randslope r2}{p_end}
 
-{pstd}
-{bf:Example 4: Health science example}
+{pstd}{ul:Cluster heterogeneity diagnostics}{p_end}
+{phang2}{cmd:. multispline score age female ses,}{p_end}
+{phang2}{cmd:    cluster(student_id) df(3) het nhet(25)}{p_end}
 
-{phang2}{cmd:. multispline bloodpressure dosage, cluster(hospital) nknots(4) plot}{p_end}
+{pstd}{ul:Binary outcome - single level logit}{p_end}
+{phang2}{cmd:. multispline pass age female ses,}{p_end}
+{phang2}{cmd:    family(logit) df(auto) compare plot(trajectory)}{p_end}
 
-{pstd}
-{bf:Example 5: Real Stata data}
+{pstd}{ul:Binary outcome - multilevel GLMM logit}{p_end}
+{phang2}{cmd:. multispline pass age female ses,}{p_end}
+{phang2}{cmd:    cluster(student_id) family(logit) df(3) r2 plot(trajectory)}{p_end}
 
-{phang2}{cmd:. sysuse nlsw88, clear}{p_end}
-{phang2}{cmd:. multispline wage age, cluster(industry) nknots(4) plot}{p_end}
+{pstd}{ul:B-spline basis}{p_end}
+{phang2}{cmd:. multispline score age, cluster(student_id) method(bs) df(4) plot(trajectory)}{p_end}
+
+{pstd}{ul:Save predictions for separate plotting}{p_end}
+{phang2}{cmd:. multispline score age, cluster(student_id) df(auto) derivatives saving(pred)}{p_end}
+{phang2}{cmd:. multispline_plot, using(pred) type(trajectory) xvar(age)}{p_end}
+{phang2}{cmd:. multispline_plot, using(pred) type(combo)      xvar(age)}{p_end}
 
 {title:Stored results}
 
 {pstd}
-{cmd:multispline} stores the following in {cmd:r()}:
+{cmd:multispline} stores the following in {cmd:e()}:
 
-{synoptset 20 tabbed}{...}
-{p2col 5 20 24 2: Scalars}{p_end}
-{synopt:{cmd:r(nknots)}}number of knots used{p_end}
-{synopt:{cmd:r(nsplines)}}number of spline terms{p_end}
-{synopt:{cmd:r(interior)}}number of interior knots{p_end}
+{synoptset 22 tabbed}{...}
+{synopt:{cmd:e(cmd)}}       {cmd:multispline}{p_end}
+{synopt:{cmd:e(yvar)}}      outcome variable name{p_end}
+{synopt:{cmd:e(xvar)}}      focal predictor name{p_end}
+{synopt:{cmd:e(method)}}    spline method (ns or bs){p_end}
+{synopt:{cmd:e(model_type)}}OLS, LMM, LMM-nested, LMM-cross, LMM-rslope,
+  Logit, GLMM-Logit, etc.{p_end}
+{synopt:{cmd:e(df)}}        degrees of freedom selected{p_end}
+{synopt:{cmd:e(aic)}}       AIC of fitted model{p_end}
+{synopt:{cmd:e(bic)}}       BIC of fitted model{p_end}
 
-{p2col 5 20 24 2: Macros}{p_end}
-{synopt:{cmd:r(y)}}outcome variable name{p_end}
-{synopt:{cmd:r(x)}}predictor variable name{p_end}
-{synopt:{cmd:r(cluster)}}cluster variable name{p_end}
-{synopt:{cmd:r(knots)}}interior knot locations{p_end}
-{synopt:{cmd:r(cmd)}}command name{p_end}
-{synoptline}
-{p2colreset}{...}
+{title:References}
+
+{pstd}
+Nakagawa, S. and Schielzeth, H. (2013).
+A general and simple method for obtaining R-squared from generalized
+linear mixed-effects models.
+{it:Methods in Ecology and Evolution}, 4(2), 133-142.
+
+{pstd}
+Nakagawa, S., Johnson, P.C.D. and Schielzeth, H. (2017).
+The coefficient of determination R-squared from generalized linear
+mixed-effects models revisited and expanded.
+{it:Journal of the Royal Society Interface}, 14(134), 20170213.
+
+{pstd}
+Rights, J.D. and Sterba, S.K. (2019).
+Quantifying explained variance in multilevel models.
+{it:Psychological Methods}, 24(3), 309-338.
 
 {title:Author}
 
 {pstd}
-Subir Hait{break}
-Michigan State University{break}
+Subir Hait, Michigan State University{break}
 haitsubi@msu.edu{break}
-{browse "https://github.com/causalfragility-lab/MultiSpline-Stata"}
-
-{title:References}
-
-{phang}
-Bates, D., Maechler, M., Bolker, B., and Walker, S. (2015).
-Fitting linear mixed-effects models using lme4.
-{it:Journal of Statistical Software}, 67(1), 1-48.
-
-{phang}
-Hastie, T. and Tibshirani, R. (1990).
-{it:Generalized Additive Models}.
-CRC Press.
-
-{phang}
-Raudenbush, S. W. and Bryk, A. S. (2002).
-{it:Hierarchical Linear Models}.
-Sage Publications.
+ORCID: 0009-0004-9871-9677{break}
+https://github.com/causalfragility-lab/MultiSpline-Stata
 
 {title:Also see}
 
 {psee}
-{helpb mixed}, {helpb mkspline}, {helpb estat icc}
-{p_end}
+{helpb multispline_plot} for post-estimation plots from saved datasets{p_end}
+{psee}
+{helpb mixed}, {helpb melogit}, {helpb meprobit}, {helpb regress},
+{helpb mkspline}{p_end}

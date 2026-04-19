@@ -1,4 +1,5 @@
-*! bf.ado v1.5.8 Wulianghai(AHUT) Chen Liwen(AHUT) Wu Hanyan(NUAA) 22Oct2025
+*! bf.ado v1.5.9 Wulianghai(AHUT) Chen Liwen(AHUT) Wu Hanyan(NUAA) , 22Oct2025
+*! Modified: Fallback to current directory when cannot create base directory on drive root, 18Apr2026
 capture prog drop bf
 program define bf
 version 18.0
@@ -22,7 +23,7 @@ if !inlist("`language'", "en", "cn") {
 
 // Get all available drives
 local drives ""
-forvalues i = 67/90 {  // ASCII A-Z
+forvalues i = 67/90 {  // ASCII C-Z
     local drive = char(`i')
     capture cd "`drive':"
     if _rc == 0 {
@@ -89,30 +90,49 @@ else {
     local report_dofile "report_generation.do"
 }
 
-// Check and create base directory (overwrite if exists)
-local base_path "`preferred_drive':/`base_dir'"
-capture mkdir "`base_path'"
-if _rc != 0 & _rc != 693 {
-    di as error "Failed to create base directory: `base_path'"
-    exit _rc
+// ---------------------------------------------------------------------
+// Determine base path with fallback mechanism
+// ---------------------------------------------------------------------
+local base_path_on_drive "`preferred_drive':/`base_dir'"
+capture mkdir "`base_path_on_drive'"
+
+if _rc == 0 | _rc == 693 {
+    // Success or directory already exists
+    local base_path "`base_path_on_drive'"
+}
+else {
+    // Cannot create on drive root (e.g., permission denied on C:)
+    di as text "Note: Unable to create base directory on `preferred_drive': drive. Using current directory instead."
+    
+    // Try to create base directory under current working directory
+    local base_path_in_cwd "`c(pwd)'/`base_dir'"
+    capture mkdir "`base_path_in_cwd'"
+    if _rc == 0 | _rc == 693 {
+        local base_path "`base_path_in_cwd'"
+    }
+    else {
+        // Even current directory fails – just use current directory without base_dir
+        di as text "Note: Cannot create base directory in current location either. Creating project directly in current directory."
+        local base_path "`c(pwd)'"
+    }
 }
 
 // Create project directory (overwrite if exists)
 local project_path "`base_path'/`project_dir'"
-// Remove existing directory first to ensure clean setup
-capture shell rmdir /s /q "`project_path'"  // Windows command to force remove directory
+capture shell rmdir /s /q "`project_path'"
 capture mkdir "`project_path'"
+
 if _rc != 0 {
-    // Try to create in current working directory
+    // Ultimate fallback: create project directory in current working directory
     local project_path "`project_dir'"
-    capture shell rmdir /s /q "`project_path'"  // Windows command to force remove directory
+    capture shell rmdir /s /q "`project_path'"
     capture mkdir "`project_path'"
     if _rc != 0 {
-        di as error "Failed to create project directory in both drive `preferred_drive': and current directory!"
+        di as error "Failed to create project directory in both `base_path' and current directory!"
         di as error "Please check your permissions or specify a different location."
         exit 693
     }
-    di as text "Note: Created project directory in current working directory instead of drive `preferred_drive':"
+    di as text "Note: Created project directory in current working directory instead of `base_path'."
 }
 
 cd "`project_path'"
@@ -120,7 +140,7 @@ cd "`project_path'"
 // Create subdirectories (overwrite if exists)
 local dirs "`model_dir' `data_dir' `program_dir' `report_dir'"
 foreach dir of local dirs {
-    capture shell rmdir /s /q "`dir'"  // Windows command to force remove directory
+    capture shell rmdir /s /q "`dir'"
     capture mkdir "`dir'"
     if _rc != 0 {
         di as error "Warning: Failed to create subdirectory: `dir'"

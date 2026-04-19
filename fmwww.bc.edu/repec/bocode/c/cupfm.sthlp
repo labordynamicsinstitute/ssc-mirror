@@ -1,5 +1,5 @@
 {smcl}
-{* *! cupfm.sthlp — Help file for cupfm v1.0.1  2026-04-16}{...}
+{* *! cupfm.sthlp — Help file for cupfm v1.0.2  2026-04-18}{...}
 {vieweralsosee "xtpmg"    "help xtpmg"}{...}
 {vieweralsosee "xtpedroni" "help xtpedroni"}{...}
 {viewerjumpto "Syntax"           "cupfm##syntax"}{...}

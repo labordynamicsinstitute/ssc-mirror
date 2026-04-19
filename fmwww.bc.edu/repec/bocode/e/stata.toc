@@ -40,6 +40,7 @@ p ellip6 module to plot confidence ellipses (version 6)
 p ellip7 module to plot confidence ellipses (version 7)
 p ellipticity module to compute optimal rank-based multivariate tests of elliptical symmetry and sphericity 
 p eltmle module to provide Ensemble Learning Targeted Maximum Likelihood Estimation
+p em module to calculate earnings management measures using the Modified Jones Model
 p email module to send emails from Stata via Python
 p emailme module to facilitate sending mail on Windows systems
 p emc module providing prefix command estimating contrasts for effect modifier values

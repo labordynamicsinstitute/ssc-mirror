@@ -3780,6 +3780,7 @@ fmwww.bc.edu/repec/bocode/c/circlebar.sthlp
 fmwww.bc.edu/repec/bocode/c/ceqrace.sthlp
 fmwww.bc.edu/repec/bocode/c/cnstock.sthlp
 fmwww.bc.edu/repec/bocode/c/CHTdata_extract10percent.dta
+fmwww.bc.edu/repec/bocode/c/chse_hoe.ado
 fmwww.bc.edu/repec/bocode/c/convert_top_lines.ado
 fmwww.bc.edu/repec/bocode/c/checkrob.pkg
 fmwww.bc.edu/repec/bocode/c/clsp.pkg
@@ -3819,6 +3820,7 @@ fmwww.bc.edu/repec/bocode/c/color-538bs8.style
 fmwww.bc.edu/repec/bocode/c/cii2.hlp
 fmwww.bc.edu/repec/bocode/c/colrspace.sthlp
 fmwww.bc.edu/repec/bocode/c/ceqhhchar.ado
+fmwww.bc.edu/repec/bocode/c/chse_paradox.ado
 fmwww.bc.edu/repec/bocode/c/copycode.pkg
 fmwww.bc.edu/repec/bocode/c/cdreg.sthlp
 fmwww.bc.edu/repec/bocode/c/cusum6.pkg
@@ -3834,6 +3836,7 @@ fmwww.bc.edu/repec/bocode/c/cseplist.hlp
 fmwww.bc.edu/repec/bocode/c/_cureregr8_gen.ado
 fmwww.bc.edu/repec/bocode/c/ceqmarg.ado
 fmwww.bc.edu/repec/bocode/c/clarify.pkg
+fmwww.bc.edu/repec/bocode/c/chse.pkg
 fmwww.bc.edu/repec/bocode/c/circgph.ado
 fmwww.bc.edu/repec/bocode/c/caplog.html
 fmwww.bc.edu/repec/bocode/c/createtoc.dlg
@@ -4200,6 +4203,7 @@ fmwww.bc.edu/repec/bocode/c/ciji.hlp
 fmwww.bc.edu/repec/bocode/c/Ch07_1mod.do
 fmwww.bc.edu/repec/bocode/c/cnsrsig.ado
 fmwww.bc.edu/repec/bocode/c/concindexi.hlp
+fmwww.bc.edu/repec/bocode/c/chse_welfare.sthlp
 fmwww.bc.edu/repec/bocode/c/csdid.sthlp
 fmwww.bc.edu/repec/bocode/c/color-plb1.style
 fmwww.bc.edu/repec/bocode/c/cauchitasinhinnerw3.ado
@@ -4273,6 +4277,7 @@ fmwww.bc.edu/repec/bocode/c/corescore.sthlp
 fmwww.bc.edu/repec/bocode/c/complogit.html
 fmwww.bc.edu/repec/bocode/c/calibr.pkg
 fmwww.bc.edu/repec/bocode/c/clr2boun.ado
+fmwww.bc.edu/repec/bocode/c/chse_paradox.sthlp
 fmwww.bc.edu/repec/bocode/c/circkdex3.do
 fmwww.bc.edu/repec/bocode/c/changemean.hlp
 fmwww.bc.edu/repec/bocode/c/cedesign.ado
@@ -4526,6 +4531,7 @@ fmwww.bc.edu/repec/bocode/c/color_style9.ado
 fmwww.bc.edu/repec/bocode/c/cta.pkg
 fmwww.bc.edu/repec/bocode/c/clore.ado
 fmwww.bc.edu/repec/bocode/c/cauchyevaluator.ado
+fmwww.bc.edu/repec/bocode/c/chse_welfare.ado
 fmwww.bc.edu/repec/bocode/c/cauchitcauchyouterv3.ado
 fmwww.bc.edu/repec/bocode/c/csv2xml.py
 fmwww.bc.edu/repec/bocode/c/cv.pkg
@@ -4729,6 +4735,7 @@ fmwww.bc.edu/repec/bocode/c/cquantile.hlp
 fmwww.bc.edu/repec/bocode/c/colorcheck.sthlp
 fmwww.bc.edu/repec/bocode/c/configuration.properties
 fmwww.bc.edu/repec/bocode/c/cntrade.ado
+fmwww.bc.edu/repec/bocode/c/chse_hoe.sthlp
 fmwww.bc.edu/repec/bocode/c/cluster_ra.sthlp
 fmwww.bc.edu/repec/bocode/c/cpredict.hlp
 fmwww.bc.edu/repec/bocode/c/cs_ivreg2_3.1.08.do
@@ -4758,6 +4765,7 @@ fmwww.bc.edu/repec/bocode/c/color-ukrimaroon.style
 fmwww.bc.edu/repec/bocode/c/color-tflyellow.style
 fmwww.bc.edu/repec/bocode/c/cs_ivreg2.do
 fmwww.bc.edu/repec/bocode/c/callst.ado
+fmwww.bc.edu/repec/bocode/c/chse_regime.sthlp
 fmwww.bc.edu/repec/bocode/c/csranks.ado
 fmwww.bc.edu/repec/bocode/c/center.pkg
 fmwww.bc.edu/repec/bocode/c/csdid.pkg
@@ -4788,6 +4796,7 @@ fmwww.bc.edu/repec/bocode/c/chaidforest.pkg
 fmwww.bc.edu/repec/bocode/c/corr2docx.pkg
 fmwww.bc.edu/repec/bocode/c/circdiff.hlp
 fmwww.bc.edu/repec/bocode/c/circkde.sthlp
+fmwww.bc.edu/repec/bocode/c/chse_fliptime.ado
 fmwww.bc.edu/repec/bocode/c/convlist.hlp
 fmwww.bc.edu/repec/bocode/c/color-538rs4.style
 fmwww.bc.edu/repec/bocode/c/cnsprobit.ado
@@ -5008,6 +5017,7 @@ fmwww.bc.edu/repec/bocode/c/cmi_inter.ado
 fmwww.bc.edu/repec/bocode/c/chartabb.ado
 fmwww.bc.edu/repec/bocode/c/cc_xd_didtextbook.html
 fmwww.bc.edu/repec/bocode/c/collect.ado
+fmwww.bc.edu/repec/bocode/c/chse_fliptime.sthlp
 fmwww.bc.edu/repec/bocode/c/charto6.ado
 fmwww.bc.edu/repec/bocode/c/cflpois.ado
 fmwww.bc.edu/repec/bocode/c/cstable.html
@@ -5016,6 +5026,7 @@ fmwww.bc.edu/repec/bocode/c/complexity.sthlp
 fmwww.bc.edu/repec/bocode/c/convlist.html
 fmwww.bc.edu/repec/bocode/c/cmi_te.ado
 fmwww.bc.edu/repec/bocode/c/cprdhes_hrg.sthlp
+fmwww.bc.edu/repec/bocode/c/chse_fdi.sthlp
 fmwww.bc.edu/repec/bocode/c/chunky.hlp
 fmwww.bc.edu/repec/bocode/c/chiplot.pkg
 fmwww.bc.edu/repec/bocode/c/color-vermillion.style
@@ -5110,6 +5121,7 @@ fmwww.bc.edu/repec/bocode/c/color-ieteal.style
 fmwww.bc.edu/repec/bocode/c/corrtex2.ado
 fmwww.bc.edu/repec/bocode/c/corr_svy.pkg
 fmwww.bc.edu/repec/bocode/c/clarify.sthlp
+fmwww.bc.edu/repec/bocode/c/chse_regime.ado
 fmwww.bc.edu/repec/bocode/c/color-538bs9.style
 fmwww.bc.edu/repec/bocode/c/cwmglm.sthlp
 fmwww.bc.edu/repec/bocode/c/circrplot.hlp
@@ -5190,6 +5202,7 @@ fmwww.bc.edu/repec/bocode/c/cs_ivreg2_3.1.03.do
 fmwww.bc.edu/repec/bocode/c/c_ml_stata_data_new_example.dta
 fmwww.bc.edu/repec/bocode/c/coefconv.ado
 fmwww.bc.edu/repec/bocode/c/countvalues.pkg
+fmwww.bc.edu/repec/bocode/c/chse_fdi.ado
 fmwww.bc.edu/repec/bocode/c/Ch08_3way.do
 fmwww.bc.edu/repec/bocode/c/cenegbinll.ado
 fmwww.bc.edu/repec/bocode/c/cointsmall_examples.do
@@ -5590,6 +5603,7 @@ fmwww.bc.edu/repec/bocode/c/cleanlog.hlp
 fmwww.bc.edu/repec/bocode/c/cal.pkg
 fmwww.bc.edu/repec/bocode/c/covbalexcel.do
 fmwww.bc.edu/repec/bocode/c/cs_weakiv_2.4.03.do
+fmwww.bc.edu/repec/bocode/c/chse_example.do
 fmwww.bc.edu/repec/bocode/c/centcalc.ado
 fmwww.bc.edu/repec/bocode/c/cal2spell.ado
 fmwww.bc.edu/repec/bocode/c/crossfit.ado
@@ -13384,6 +13398,7 @@ fmwww.bc.edu/repec/bocode/m/midas_fagan.ado
 fmwww.bc.edu/repec/bocode/m/mf_mm_jk.hlp
 fmwww.bc.edu/repec/bocode/m/mcmcconverge.ado
 fmwww.bc.edu/repec/bocode/m/markovci_pa.ado
+fmwww.bc.edu/repec/bocode/m/multispline_demo.do
 fmwww.bc.edu/repec/bocode/m/metan7.hlp
 fmwww.bc.edu/repec/bocode/m/mifit.ado
 fmwww.bc.edu/repec/bocode/m/msregress.ado
@@ -13582,6 +13597,7 @@ fmwww.bc.edu/repec/bocode/m/mlboolfirst.hlp
 fmwww.bc.edu/repec/bocode/m/mixlogitwtp.sthlp
 fmwww.bc.edu/repec/bocode/m/mf_rtnorm.sthlp
 fmwww.bc.edu/repec/bocode/m/metafunnel.ado
+fmwww.bc.edu/repec/bocode/m/multispline_verify.do
 fmwww.bc.edu/repec/bocode/m/mf_mm_linbin.hlp
 fmwww.bc.edu/repec/bocode/m/mapsm.ado
 fmwww.bc.edu/repec/bocode/m/mypoint.mata
@@ -13897,6 +13913,7 @@ fmwww.bc.edu/repec/bocode/m/matcfm.ado
 fmwww.bc.edu/repec/bocode/m/mmws.sthlp
 fmwww.bc.edu/repec/bocode/m/midas_example.dta
 fmwww.bc.edu/repec/bocode/m/marhis.ado
+fmwww.bc.edu/repec/bocode/m/multispline_plot.ado
 fmwww.bc.edu/repec/bocode/m/mi_twoway.pkg
 fmwww.bc.edu/repec/bocode/m/mean2.ado
 fmwww.bc.edu/repec/bocode/m/meresc.html

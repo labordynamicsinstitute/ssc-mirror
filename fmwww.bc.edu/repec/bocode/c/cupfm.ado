@@ -1,5 +1,5 @@
 *! cupfm.ado - Panel Cointegration with Common Factors
-*! Version 1.0.1 - 2026-04-16 (First SSC submission)
+*! Version 1.0.2 - 2026-04-18 (Fix: cupfm_main() not found after SSC install)
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 *!
 *! Implements all estimators from:
@@ -135,18 +135,15 @@ program define cupfm, eclass
     di ""
 
     // --- LOAD MATA ENGINE -----------------------------------------------------
-    // If cupfm_main is not already in memory, load _cupfm_mata.ado via adopath.
-    capture mata: mata describe cupfm_main
+    // _cupfm_mata.ado defines program _cupfm_mata and compiles all Mata functions.
+    // Stata finds it automatically via adopath (SSC installs to ado/plus/c/).
+    // This is the same mechanism used by _cupfm_validate, _cupfm_display, etc.
+    capture mata: mata describe cupfm_main()
     if _rc {
-        capture quietly do "_cupfm_mata.ado"
-        if _rc {
-            // Last resort: check Stata PLUS directory
-            local mypath : sysdir PLUS
-            capture quietly do `"`mypath'c/cupfm/_cupfm_mata.ado"'
-        }
+        _cupfm_mata
     }
 
-    // Re-sort (in case adopath loading changed dataset state)
+    // Re-sort (dataset sort order must be panelvar timevar for Mata engine)
     sort `panelvar' `timevar'
 
     // --- CALL MATA ENGINE - results stored in _cupfm_* global matrices --------

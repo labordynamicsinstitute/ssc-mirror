@@ -2,7 +2,7 @@
 *! Reproduces Monte Carlo design from Bai, Kao & Ng (2009) Table 1-4
 *! and Bai & Kao (2005) Table 1
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Version: 1.0.1 - 2026-04-16 (First SSC submission)
+*! Version: 1.0.2 - 2026-04-18 (Bug fix release)
 
 // ========================================================================
 // SETUP

@@ -19,11 +19,14 @@ d KW: panel data
 d
 d Requires: Stata version 14.1
 d
-d Distribution-Date: 20260302
+d Distribution-Date: 20260418
 d
 d Author:   Subir Hait  , Michigan State University
 d Support: email  haitsubi@@msu.edu
 d
 f multispline.ado
+f multispline_plot.ado
 f multispline.sthlp
+f multispline_demo.do
 f multispline_example.do
+f multispline_verify.do

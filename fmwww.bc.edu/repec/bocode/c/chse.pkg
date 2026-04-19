@@ -1,0 +1,30 @@
+d 'CHSE': module implementing Contested Hierarchy with Social Embedding
+d
+d  chse implements Contested Hierarchy with Social Embedding with
+d six commands covering regime classification, the Fiscal Dominance
+d Index, leadership flip time, HOE estimation, welfare distortions,
+d and the Hierarchy Persistence Paradox. 
+d
+d KW: contested hierarchy
+d KW: social embedding
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260418
+d
+d Author: Nitya Hapani,  NA
+d Support: email nityahapani.tges@@gmail.com
+d
+f chse_fdi.ado
+f chse_fliptime.ado
+f chse_hoe.ado
+f chse_paradox.ado
+f chse_regime.ado
+f chse_welfare.ado
+f chse_fdi.sthlp
+f chse_fliptime.sthlp
+f chse_hoe.sthlp
+f chse_paradox.sthlp
+f chse_regime.sthlp
+f chse_welfare.sthlp
+f chse_example.do
