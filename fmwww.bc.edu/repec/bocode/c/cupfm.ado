@@ -1,5 +1,5 @@
 *! cupfm.ado - Panel Cointegration with Common Factors
-*! Version 1.0.2 - 2026-04-18 (Fix: cupfm_main() not found after SSC install)
+*! Version 1.0.3 - 2026-04-19 (Fix: mata drop pattern for function cleanup)
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 *!
 *! Implements all estimators from:

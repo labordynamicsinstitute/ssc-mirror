@@ -1,9 +1,24 @@
 d 'CHSE': module implementing Contested Hierarchy with Social Embedding
 d
-d  chse implements Contested Hierarchy with Social Embedding with
-d six commands covering regime classification, the Fiscal Dominance
-d Index, leadership flip time, HOE estimation, welfare distortions,
-d and the Hierarchy Persistence Paradox. 
+d  We develop a theory of hierarchical authority in which
+d leadership is contested, not structural. Hierarchy beliefs (the
+d probability that player i leads player j) evolve through four
+d coupled mechanisms: Bayesian anticipation, role ambiguity,
+d retroactive reframing, and network propagation via an endogenous
+d kernel. The solution concept is the Hierarchy Orbit Equilibrium
+d (HOE), an invariant measure of the induced Markov process,
+d nesting Nash and Stackelberg as degenerate special cases. We show
+d that a 15-parameter system compresses into two indices: the
+d Hierarchy Stability Index and Propagation Intensity, whose ratio
+d partitions parameter space into four dynamic regimes. We prove
+d existence, ergodicity, and Lyapunov stability, and characterise
+d three welfare distortions endemic to interior equilibria. A
+d central result is the Hierarchy Persistence Paradox: stronger
+d hierarchies produce larger cascades when they fall, because
+d accumulated anticipation accuracy inflates the spectral radius of
+d the propagation kernel. Applied to central bank independence, the
+d framework correctly classifies six country-period episodes from
+d robust monetary dominance to fiscal dominance. 
 d
 d KW: contested hierarchy
 d KW: social embedding

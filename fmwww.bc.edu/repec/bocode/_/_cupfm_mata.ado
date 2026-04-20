@@ -3,7 +3,7 @@
 *!   Bai & Kao (2005) SSRN-1815227
 *!   Bai, Kao & Ng (2009) Journal of Econometrics, 149(1), 82-99
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Version: 1.0.2 - 2026-04-18 (Fix: cupfm_main() not found after SSC install)
+*! Version: 1.0.3 - 2026-04-19 (Fix: mata drop cupfm_*() - was missing () so old functions survived in memory)
 *!
 *! DATA FORMAT CONVENTION:
 *!   GAUSS:  Y[T,N],   X[T,N*k]  (wide format)
@@ -15,7 +15,7 @@ program define _cupfm_mata
     // The Mata functions (cupfm_*) are compiled when this .ado is first sourced.
 end
 
-capture mata: mata drop cupfm_*
+capture mata: mata drop cupfm_*()
 mata:
 
 // ===================================================================

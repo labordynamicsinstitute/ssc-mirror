@@ -3385,6 +3385,7 @@ fmwww.bc.edu/repec/bocode/u/usmap.zip
 fmwww.bc.edu/repec/bocode/u/utest.pkg
 fmwww.bc.edu/repec/bocode/u/unemp.pkg
 fmwww.bc.edu/repec/bocode/u/uniquestrata.pkg
+fmwww.bc.edu/repec/bocode/u/USbudget.dta
 fmwww.bc.edu/repec/bocode/u/urstat.pkg
 fmwww.bc.edu/repec/bocode/u/undid_init.sthlp
 fmwww.bc.edu/repec/bocode/u/uscounty1.zip
@@ -3912,6 +3913,7 @@ fmwww.bc.edu/repec/bocode/c/csvconvert.pkg
 fmwww.bc.edu/repec/bocode/c/cisd1.ado
 fmwww.bc.edu/repec/bocode/c/county_true.dta
 fmwww.bc.edu/repec/bocode/c/covariancemat.ado
+fmwww.bc.edu/repec/bocode/c/cobreakcoint.ado
 fmwww.bc.edu/repec/bocode/c/caterpillar_replication.dta
 fmwww.bc.edu/repec/bocode/c/crsconvert.ado
 fmwww.bc.edu/repec/bocode/c/cprd_xyzlookup.sthlp
@@ -3981,6 +3983,7 @@ fmwww.bc.edu/repec/bocode/c/callsado.hlp
 fmwww.bc.edu/repec/bocode/c/ceqextpop.sthlp
 fmwww.bc.edu/repec/bocode/c/confa_p.ado
 fmwww.bc.edu/repec/bocode/c/cs_weakiv_2.4.02.do
+fmwww.bc.edu/repec/bocode/c/cobreakcoint.pkg
 fmwww.bc.edu/repec/bocode/c/cnsrsig.html
 fmwww.bc.edu/repec/bocode/c/corr_svy.ado
 fmwww.bc.edu/repec/bocode/c/ckvar.pkg
@@ -5459,6 +5462,7 @@ fmwww.bc.edu/repec/bocode/c/cngdf.sthlp
 fmwww.bc.edu/repec/bocode/c/casefat.pkg
 fmwww.bc.edu/repec/bocode/c/chunky8.html
 fmwww.bc.edu/repec/bocode/c/cpredict.pkg
+fmwww.bc.edu/repec/bocode/c/cobreakcoint_example.do
 fmwww.bc.edu/repec/bocode/c/cprd_additional.ado
 fmwww.bc.edu/repec/bocode/c/color-iegreen.style
 fmwww.bc.edu/repec/bocode/c/color_brewer.ado
@@ -5506,6 +5510,7 @@ fmwww.bc.edu/repec/bocode/c/chewfile.ado
 fmwww.bc.edu/repec/bocode/c/carryforward.hlp
 fmwww.bc.edu/repec/bocode/c/char2fmt.txt
 fmwww.bc.edu/repec/bocode/c/cv_kfold.ado
+fmwww.bc.edu/repec/bocode/c/cobreakcoint.sthlp
 fmwww.bc.edu/repec/bocode/c/condisc.sthlp
 fmwww.bc.edu/repec/bocode/c/cureregr8.pkg
 fmwww.bc.edu/repec/bocode/c/cluster.do
@@ -18132,6 +18137,7 @@ fmwww.bc.edu/repec/bocode/_/_fredweb.ado
 fmwww.bc.edu/repec/bocode/_/_cupfm_export.ado
 fmwww.bc.edu/repec/bocode/_/_fcoint_fadl.ado
 fmwww.bc.edu/repec/bocode/_/_eventiv.ado
+fmwww.bc.edu/repec/bocode/_/_cobreakcoint_display.ado
 fmwww.bc.edu/repec/bocode/_/_tknz.ado
 fmwww.bc.edu/repec/bocode/_/_cwfcn_kldb88_3d_to_kldb10_2d.sthlp
 fmwww.bc.edu/repec/bocode/_/_cwfcn_kldb88_3d_to_kldb10_4d.sthlp
@@ -18179,6 +18185,7 @@ fmwww.bc.edu/repec/bocode/_/_cwfcn_isco08_to_siops.sthlp
 fmwww.bc.edu/repec/bocode/_/_cureregr8.ado
 fmwww.bc.edu/repec/bocode/_/_gwberr.ado
 fmwww.bc.edu/repec/bocode/_/_bcsf_bracketing.mata
+fmwww.bc.edu/repec/bocode/_/_cobreakcoint_mata.ado
 fmwww.bc.edu/repec/bocode/_/_qardl_estimate.ado
 fmwww.bc.edu/repec/bocode/_/_fbnardl_advanced.ado
 fmwww.bc.edu/repec/bocode/_/_ddml_sample.ado
@@ -18375,6 +18382,7 @@ fmwww.bc.edu/repec/bocode/_/_unicefdata_update_sync_history.ado
 fmwww.bc.edu/repec/bocode/_/_cwfcn_labels_oesch.sthlp
 fmwww.bc.edu/repec/bocode/_/_cwfcn_kldb92_4d_to_kldb88harm.sthlp
 fmwww.bc.edu/repec/bocode/_/_gwmean.pkg
+fmwww.bc.edu/repec/bocode/_/_cobreakcoint_plot.ado
 fmwww.bc.edu/repec/bocode/_/_metadata_linewrap.ado
 fmwww.bc.edu/repec/bocode/_/_svm_setenv_MACARM64.plugin
 fmwww.bc.edu/repec/bocode/_/_gadju.ado

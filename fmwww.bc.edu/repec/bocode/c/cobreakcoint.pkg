@@ -1,0 +1,33 @@
+d 'COBREAKCOINT': module to perform Quasi-Likelihood Ratio Tests for Cointegration, Cobreaking, and Cotrending
+d
+d     cobreakcoint implements quasi-likelihood ratio (QLR) tests
+d for the joint analysis of cointegration,    cobreaking, and
+d cotrending in a bivariate or multivariate system of I(1)
+d variables that may contain	structural breaks in their
+d deterministic components.    In applied macroeconomics and
+d finance, researchers often test whether two non-stationary (I(1))
+d variables    share a long-run equilibrium (cointegration). 
+d However, many macroeconomic time series exhibit structural   
+d breaks — permanent shifts in their means or trends caused by
+d policy changes, economic crises, or	 institutional reforms.
+d Standard cointegration tests (e.g., Engle-Granger, Johansen) can
+d produce misleading	results when such breaks are present. 
+d
+d KW: cointegration
+d KW: cobreaking
+d KW: cotrending
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260419
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f cobreakcoint.ado
+f cobreakcoint.sthlp
+f ../_/_cobreakcoint_display.ado
+f ../_/_cobreakcoint_mata.ado
+f ../_/_cobreakcoint_plot.ado
+f cobreakcoint_example.do
+f ../u/USbudget.dta
