@@ -1,0 +1,27 @@
+d 'XTDPTHRESH': module to estimate Dynamic Panel Threshold Model with Endogeneity
+d
+d    xtdpthresh estimates the dynamic panel threshold model of Seo
+d and Shin (2016), extended to unbalanced panels    via Forward
+d Orthogonal Deviations (Arellano-Bover 1995) and System GMM
+d (Blundell-Bond 1998).  Inference for	  the threshold location
+d uses the grid bootstrap of Gong and Seo (2026), which is
+d uniformly valid regardless	of whether the threshold model is
+d continuous (kink) or discontinuous (jump). 
+d
+d KW: dynamic panel
+d KW: threshold
+d KW: forward orthogonal deviations
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20260420
+d
+d Author: Duy Chinh Nguyen,  International University, Ho Chi Minh City, Vietnam
+d Support: email ndchinh@@hcmiu.edu.vn
+d
+d Author: Nhat Duy Lai ,  Faculty of Finance and Accounting, Saigon University
+d Support: email lnduy@@sgu.edu.vn
+d
+f xtdpthresh.ado
+f xtdpthresh.sthlp
+f ../i/invest.dta

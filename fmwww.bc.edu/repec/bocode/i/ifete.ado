@@ -1,5 +1,5 @@
-*! xtteifeci 2.0.0 2024/03/22
-prog def xtteifeci, eclass sortpreserve
+*! ifete 1.0.0 2026/03/26
+prog def ifete, eclass sortpreserve
 	version 17
 	preserve
 	qui xtset
@@ -14,7 +14,7 @@ prog def xtteifeci, eclass sortpreserve
 	syntax varlist [if] [in], TReatvar(varname) [ ///
 		r(numlist min = 1 max = 1 int) ITERate(integer 1000) TOLerance(real 0.0001) trend(integer 0) ///
 		BOOTStrap(integer 500) seed(integer 1) ///
-		RMEthod(string) rmax(numlist min = 1 max = 1 int) ///
+		RMEthod(string) rmax(numlist min = 1 max = 1 int) rmin(numlist min = 1 max = 1 int)  ///
 		CIType(string) frame(string) noFIGure SAVEGraph(string) ]
 	local panelVar "`r(panelvar)'"
     local timeVar "`r(timevar)'"
@@ -25,7 +25,7 @@ prog def xtteifeci, eclass sortpreserve
 	foreach i in `varlist'{
 		qui count if `i' == .
 		if `r(N)' != 0 {
-			di as err "There are {bf:`r(N)'} missing values in variable {bf:`i'}, which is not allowed by {bf:xtteifeci}"
+			di as err "There are {bf:`r(N)'} missing values in variable {bf:`i'}, which is not allowed by {bf:ifete}"
 			exit 198
 		}
 	}
@@ -49,8 +49,11 @@ prog def xtteifeci, eclass sortpreserve
 		}
 	}
 	/* Check r() and rmax() */
+	if "`rmin'" == ""{
+		loc rmin = 1
+	}
 	if "`r'" == "" & "`rmax'" == ""{
-		loc rmax = 8
+		loc rmax = 10
 		loc rstart = -`rmax'
 	}
 	else if "`r'" == "" & "`rmax'" != ""{
@@ -68,15 +71,21 @@ prog def xtteifeci, eclass sortpreserve
 	local cmax = 3
 	local wtype = 1	
 	/* Check rmethod() */
-	if "`rmethod'" == "" loc rmethod "bn"
+	if "`rmethod'" == "" loc rmethod "loo"
 	else {
-		if "`rmethod'" != "bn" & "`rmethod'" != "abc" {
-			di as err "invalid rmethod() -- rmethod() must be specified one of {bf:bn abc}"
+		if "`rmethod'" != "loo" & "`rmethod'" != "ic1" & "`rmethod'" != "ic2" & "`rmethod'" != "ic3" & "`rmethod'" != "pc1" & "`rmethod'" != "pc2" & "`rmethod'" != "pc3" & "`rmethod'" != "er"  & "`rmethod'" != "gr" & substr("`rmethod'", 1, 2) != "cv" {
+			di as err "invalid rmethod() -- rmethod() must be specified one of {bf:cv() loo ic1 ic2 ic3 pc1 pc2 pc3 er gr}"
 			exit 198
 		}
 	}
-
-
+	if(substr("`rmethod'", 1, 2) == "cv" ){
+		mata: tmp = tokens(subinstr(subinstr(subinstr("`rmethod'", "(", "", .), ")", "", .), "cv", "", .), " "); if(cols(tmp) != 2) {st_local("J", "."); st_local("KK", ".");} else {st_local("J", strofreal(strtoreal(tmp[2]))); st_local("KK", strofreal(strtoreal(tmp[1])));}
+		loc rmethod "cv"
+	}
+	else{
+		loc J = .
+		loc KK = .
+	}
 	frame put `panelVar' `timeVar' `varlist' `treatvar', into(`frame')
 	frame `frame'{
         /* Generate panelVarStr */
@@ -87,8 +96,16 @@ prog def xtteifeci, eclass sortpreserve
 		/* Generate timeVarStr */
 		tempvar timeVarStr 
 		qui tostring `timeVar', gen(`timeVarStr') usedisplayformat force
-		
-		mata: xtteifeci("`panelVar'", "`timeVar'", "`varlist'", "`treatvar'", `rstart', `tolerance', `iterate', `bootstrap', `trend', `seed', `cmax', `step', `wtype', `nbck', ("`rmethod'" == "bn"? 1 : 2));
+		mata: ifete("`panelVar'", "`timeVar'", "`varlist'", "`treatvar'", `rmin' ,`rstart', `tolerance', `iterate', `bootstrap', `trend', `seed', `cmax', `step', `wtype', `nbck', ///
+			("`rmethod'" == "cv"  ? 10 :  ///
+			("`rmethod'" == "loo" ? 0 :  ///
+			("`rmethod'" == "pc1" ? 1 :  ///
+			("`rmethod'" == "pc2" ? 2 :  ///
+			("`rmethod'" == "pc3" ? 3 :  ///
+			("`rmethod'" == "ic1" ? 4 :  ///
+			("`rmethod'" == "ic2" ? 5 :  ///
+			("`rmethod'" == "ic3" ? 6 :  ///
+			("`rmethod'" == "er"  ? 8 : 9))))))))), `J', `KK');
 		
 		label variable pred·`depvar' "predicted outcome"
 		label variable tr·`depvar' "treatment effect"
@@ -122,8 +139,8 @@ prog def xtteifeci, eclass sortpreserve
 		label variable tr·`depvar'·sypval "p-value corresponding to symmetric confidence interval of treatment effect"
 		
 		loc depvar = word("`varlist'", 1)
-		mata: printf("\n{txt}Estimation results based on the data from control units and the pre-treatment data of treated units:\n")
-		mata: xtteifeci_summary(st_data(., "`depvar' pred·`depvar' `treatvar'"));
+		mata: printf("\n{txt}Estimation results based on the data from control units and the pretreatment data of treated units:\n")
+		mata: ifete_summary(st_data(., "`depvar' pred·`depvar' `treatvar'"));
 		ereturn clear
 		if `K' > 0 {
 			matrix beta = b
@@ -132,52 +149,55 @@ prog def xtteifeci, eclass sortpreserve
 			ereturn display
 		}
 		if "`r'" == ""{
-			if "`rmethod'" == "bn" mata: printf("{p 0 6 2}{txt}Note: The number of factors is estimated using the method proposed by Bai and Ng (2002) with the maximum number of factors set to be {res}`rmax'{txt}.{p_end}\n");
-			else mata: printf("{p 0 6 2}{txt}Note: The number of factors is estimated using the method proposed by Alessi et al. (2010) with the maximum number of factors set to be {res}`rmax'{txt}.{p_end}\n");
+			if "`rmethod'" == "loo" {
+				mata: printf("{p 0 6 2}{txt}Note: The number of factors is estimated using the leave-one-out cross validation ({res}`rmethod'{txt}) (Xu, 2017), with the number of factors selected from the range [{res}`rmin'{txt}, {res}`rmax'{txt}].{p_end}\n");
+			}
+			else if inlist("`rmethod'", "pc1", "pc2", "pc3", "ic1", "ic2", "ic3") {
+				mata: printf("{p 0 6 2}{txt}Note: The number of factors is estimated using the {res}`rmethod'{txt} criterion (Bai and Ng, 2002), with the number of factors selected from the range [{res}`rmin'{txt}, {res}`rmax'{txt}].{p_end}\n");
+			}
+			else if "`rmethod'" == "abc" {
+				mata: printf("{p 0 6 2}{txt}Note: The number of factors is estimated using the {res}`rmethod'{txt} criterion (Alessi et al., 2010), with the number of factors selected from the range [{res}`rmin'{txt}, {res}`rmax'{txt}].{p_end}\n");
+			}
+			else if "`rmethod'" == "er" {
+				mata: printf("{p 0 6 2}{txt}Note: The number of factors is estimated using the {res}eigenvalue ratio{txt} criterion (Ahn and Horenstein, 2013), with the number of factors selected from the range [{res}`rmin'{txt}, {res}`rmax'{txt}].{p_end}\n");
+			}
+			else if "`rmethod'" == "gr" {
+				mata: printf("{p 0 6 2}{txt}Note: The number of factors is estimated using the {res}growth ratio{txt} criterion (Ahn and Horenstein, 2013), with the number of factors selected from the range [{res}`rmin'{txt}, {res}`rmax'{txt}].{p_end}\n");
+			}
+			else if "`rmethod'" == "cv" {
+				mata: printf("{p 0 6 2}{txt}Note: The number of factors is estimated using the twice K-fold cross validation ({res}`rmethod'(`KK' `J'){txt}) (Wei and Chen, 2020), with the number of factors selected from the range [{res}`rmin'{txt}, {res}`rmax'{txt}].{p_end}\n");
+			}
 		}
-		mata: unit_index = xtteifeci_index(st_sdata(., "`panelVarStr'"), st_data(., "`panelVar'"))
-		mata: time_index = xtteifeci_index(st_sdata(., "`timeVarStr'"), st_data(., "`timeVar'"))
+		mata: unit_index = ifete_index(st_sdata(., "`panelVarStr'"), st_data(., "`panelVar'"))
+		mata: time_index = ifete_index(st_sdata(., "`timeVarStr'"), st_data(., "`timeVar'"))
 		foreach i of loc trunits {
 			mata: ord = selectindex(st_data(., "`panelVar'") :== `i' :& st_data(., "`treatvar'") :== 1)
 			di
 			mata: st_local("istr", unit_index.str[selectindex(unit_index.val :== `i'),.])
 			mata: printf("{txt}Estimation and prediction results during the posttreatment periods in {res}`istr'{txt}, with " + ("`citype'" == "eq"? "equal-tailed":"symmetric") + " confidence intervals:\n");
-			mata: xtteifeci_print(time_index, st_data(ord, "`timeVar' `depvar' pred·`depvar' pred·`depvar'·`citype'025 pred·`depvar'·`citype'975"), ("Time", "   Actual Outcome", "   Predicted Outcome", "       [95% Confidence", " Interval]"), (13, 16, 16, 16), 0)
-			mata: xtteifeci_print(time_index, st_data(ord, "`timeVar' tr·`depvar' tr·`depvar'·`citype'pval tr·`depvar'·`citype'025 tr·`depvar'·`citype'975"), ("Time", "    Treatment Effect", "{space 6}{it:p}-value", "{space 11}[95% Confidence", " Interval]"), (13, 16, 16, 16), 1)
+			mata: ifete_print(time_index, st_data(ord, "`timeVar' `depvar' pred·`depvar' pred·`depvar'·`citype'025 pred·`depvar'·`citype'975"), ("Time", "   Actual Outcome", "   Predicted Outcome", "       [95% Confidence", " Interval]"), (13, 16, 16, 16), 0)
+			mata: ifete_print(time_index, st_data(ord, "`timeVar' tr·`depvar' tr·`depvar'·`citype'pval tr·`depvar'·`citype'025 tr·`depvar'·`citype'975"), ("Time", "    Treatment Effect", "{space 6}{it:p}-value", "{space 11}[95% Confidence", " Interval]"), (13, 16, 16, 16), 1)
 			if("`figure'" == ""){
 				mata: st_local("xline", strofreal(min(st_data(ord, "`timeVar'"))));
+				mata: st_local("xlinestr", time_index.str[selectindex(time_index.val :== `xline'), .]);
 				mata: st_local("istrname", strtoname(subinstr("`istr'", " ", "", .)))
 				if ("`c(scheme)'" == "sj") mata: st_local("color1", "gs1"); st_local("color2", "gs3"); st_local("color3", "gs1");
 				else mata: st_local("color1", "maroon"); st_local("color2", "navy"); st_local("color3", "dkgreen");
-				twoway (connected `depvar' `timeVar', lcolor(`color1') msymbol(smtriangle_hollow) mcolor(`color1')) ///
-					(connect pred·`depvar' `timeVar', lpattern(dash) lcolor(`color2') msymbol(X) mcolor(`color2'))  if `panelVar' == `i' & `treatvar' == 0, ///
-					title("Actual and Predicted Outcomes") subtitle("during pretreatment periods in `istr'") ///
-					name(pred_pre_`istrname', replace) ///
-					ytitle(`depvar')  legend(order(1 "Actual Outcome" 2 "Predicted Outcome") ///
-					rows(1) position(6)) nodraw
-				twoway (rarea pred·`depvar'·`citype'005 pred·`depvar'·`citype'995 `timeVar', fcolor(gs12%30) lwidth(none)) ///
-					(rarea pred·`depvar'·`citype'025 pred·`depvar'·`citype'975 `timeVar', fcolor(gs8%30) lwidth(none)) ///
-					(rarea pred·`depvar'·`citype'05 pred·`depvar'·`citype'95 `timeVar', fcolor(gs4%30) lwidth(none)) ///
+				twoway (rarea pred·`depvar'·`citype'025 pred·`depvar'·`citype'975 `timeVar', fcolor(gs8%30) lwidth(none)) ///
 					(connected `depvar' `timeVar', lcolor(`color1') msymbol(smtriangle_hollow) mcolor(`color1')) /// 
-					(connect pred·`depvar' `timeVar', lpattern(dash) lcolor(`color2') msymbol(X) mcolor(`color2')) if `panelVar' == `i' & `treatvar' == 1, ///
-					title("Actual and Predicted Outcomes") subtitle("during posttreatment periods in `istr'") ///
-					name(pred_post_`istrname', replace) ///
-					ytitle(`depvar')  legend(order(4 "Actual Outcome" 5 "Predicted Outcome"  1 "99% Confidence Interval" 2 "95% Confidence Interval" 3 "90% Confidence Interval") ///
-					rows(3) position(6)) nodraw
-				
-				twoway (connected tr·`depvar' `timeVar', lcolor(`color3') msymbol(smcircle_hollow) mcolor(`color3')) if `panelVar' == `i' & `treatvar' == 0, ///
+					(connect pred·`depvar' `timeVar', lpattern(dash) lcolor(`color2') msymbol(X) mcolor(`color2')) if `panelVar' == `i', ///
+					title("Actual and Predicted Outcomes in `istr'") name(pred_`istrname', replace) ///
+					ytitle(`depvar')  xline(`xline', lp(dot) lc(black)) ///
+					note("Note: The vertical dotted line indicates the start of the treatment period (`xlinestr').") ///
+					legend(order(2 "Actual" 3 "Predicted" 1 "95% Confidence Interval") rows(1) position(6)) nodraw
+				twoway (rarea tr·`depvar'·`citype'025 tr·`depvar'·`citype'975 `timeVar', fcolor(gs8%30) lwidth(none)) ///
+					(connected tr·`depvar' `timeVar', lcolor(`color3') msymbol(smcircle_hollow) mcolor(`color3')) if `panelVar' == `i', ///
 					yline(0, lp(dot) lc(black%40) lwidth(0.5)) ///
-					title("Gaps between Acutal and Predicted Outcomes ") subtitle("during pretreatment periods in `istr'") ///
-					name(eff_pre_`istrname', replace) ytitle("gaps on `depvar'") nodraw
-				twoway (rarea tr·`depvar'·`citype'005 tr·`depvar'·`citype'995 `timeVar', fcolor(gs12%30) lwidth(none)) ///
-					(rarea tr·`depvar'·`citype'025 tr·`depvar'·`citype'975 `timeVar', fcolor(gs8%30) lwidth(none)) ///
-					(rarea tr·`depvar'·`citype'05 tr·`depvar'·`citype'95 `timeVar', fcolor(gs4%30) lwidth(none)) ///
-					(connected tr·`depvar' `timeVar', lcolor(`color3') msymbol(smcircle_hollow) mcolor(`color3')) if `panelVar' == `i' & `treatvar' == 1, ///
-					yline(0, lp(dot) lc(black%40) lwidth(0.5)) ///
-					title("Treatment Effects") subtitle("during posttreatment periods in `istr'") name(eff_post_`istrname', replace) ///
-					legend(order(4 "Treatment Effect" 1 "99% Confidence Interval" 2 "95% Confidence Interval" 3 "90% Confidence Interval" ) ///
-					rows(2) cols(2) position(6)) ytitle("treatment effects on `depvar'") nodraw
-				loc graphlist = "`graphlist' pred_pre_`istrname' pred_post_`istrname' eff_pre_`istrname' eff_post_`istrname'"
+					title("Treatment Effects in `istr'") xline(`xline', lp(dot) lc(black)) ///
+					note("Note: The vertical dotted line indicates the start of the treatment period (`xlinestr').") ///
+					legend(order(2 "Treatment Effect" 1 "95% Confidence Interval") ///
+					rows(1) cols(2) position(6)) ytitle("treatment effects on `depvar'") name(eff_`istrname', replace) nodraw
+				loc graphlist = "`graphlist' pred_`istrname' eff_`istrname'"
 			}
 		}
 	}
@@ -188,7 +208,7 @@ prog def xtteifeci, eclass sortpreserve
 	else{
 		di
 		ereturn local graphlist "`graphlist'"
-		xtteifeci_savegraph `savegraph'
+		ifete_savegraph `savegraph'
 	}
 	mata: st_local("graphlist", strtrim("`graphlist'"))
 	ereturn scalar r = `rend'
@@ -205,8 +225,8 @@ prog def xtteifeci, eclass sortpreserve
 	ereturn local graphlist "`graphlist'"
 	if "`framename'" != "" ereturn loc frame "`framename'"
 	ereturn local seed "`seed'"
-	ereturn local cmdline "xtteifeci `0'"
-	ereturn local cmd "xtteifeci"
+	ereturn local cmdline "ifete `0'"
+	ereturn local cmd "ifete"
 	ereturn local trend "`trend'"
 	ereturn local indepvars "`indepvars'"
 	ereturn local depvar "`depvar'"
@@ -221,7 +241,7 @@ prog def xtteifeci, eclass sortpreserve
 	di _newline as txt "Finished."
 end
 
-program xtteifeci_savegraph
+program ifete_savegraph
         version 16
         preserve
         syntax [anything], [asis replace]
@@ -232,12 +252,12 @@ program xtteifeci_savegraph
 end
 
 mata:
-	struct xtteifeci_indexs{
+	struct ifete_indexs{
 		real matrix val
 		string matrix str
 	}
-	struct xtteifeci_indexs scalar xtteifeci_index(string matrix str, real matrix val){
-		struct xtteifeci_indexs scalar res
+	struct ifete_indexs scalar ifete_index(string matrix str, real matrix val){
+		struct ifete_indexs scalar res
 		ord = order(val, 1);
 		val = val[ord,.];
 		str = str[ord,.];
@@ -247,7 +267,7 @@ mata:
 		res.str = str[info_sum[., 1], 1];
 		return(res)
 	}
-	void xtteifeci_print(struct xtteifeci_indexs scalar index, real matrix M, string matrix colnames, real matrix wides, real scalar significance){
+	void ifete_print(struct ifete_indexs scalar index, real matrix M, string matrix colnames, real matrix wides, real scalar significance){
 		rowsindex = J(rows(M), 1, .)
 		for(i = 1; i <= rows(M); i++) rowsindex[i, .] = selectindex(M[i, 1] :== index.val);
 		if(significance){
@@ -295,29 +315,29 @@ mata:
 		printf("\n")
 		if(significance){
 			printf(stritrim(sprintf("{p 0 6 2}{txt}Note: (1) The average treatment effect over the posttreatment period is{res} %10.4f{txt}.{p_end}\n", ATE)))
-			printf("{p 6 6 2}{txt}(2) {res}***{txt}, {res}**{txt}, and {res}* {txt}denote statistical significance of treatment effect at the {res}1{txt}, {res}5{txt}, and {res}10{txt} level, respectively.{p_end}\n")
+			printf("{p 6 6 2}{txt}(2) {res}***{txt}, {res}**{txt}, and {res}* {txt}denote statistical significance of treatment effect at the {res}1%%{txt}, {res}5%%{txt}, and {res}10%%{txt} level, respectively.{p_end}\n")
 		}
 	}
-	struct xtteifeci_svds{
+	struct ifete_svds{
 		real matrix U, D, V
 	}
-	struct xtteifeci_svds scalar xtteifeci_svd(real matrix data, real scalar r){
-		struct xtteifeci_svds scalar res
+	struct ifete_svds scalar ifete_svd(real matrix data, real scalar r){
+		struct ifete_svds scalar res
 		fullsvd(data, res.U, res.D, res.V)
 		if(r == .){
 			res.D = diag(res.D)
 		}else{
-			res.U = res.U[., 1..r]
-			res.D = diag(res.D)[1..r, 1..r]
-			res.V = res.V[1..r, .]
+			if(cols(res.U) >= r) res.U = res.U[., 1..r]; else res.U = .
+			if(rows(res.D) >= r) res.D = diag(res.D)[1..r, 1..r]; else res.D = .
+			if(rows(res.V) >= r) res.V = res.V[1..r, .]; else res.V = .
 		}
 		return(res)
 	}
-	struct xtteifeci_ifes{
+	struct ifete_ifes{
 		real matrix betahat, Fhat, Lhat, V
 	}
-	struct xtteifeci_ifes scalar xtteifeci_ife(real matrix Y, real matrix X, real scalar r, real scalar epsln, real scalar iter, real scalar trend, real scalar isV){
-		struct xtteifeci_svds scalar tmp; real matrix U, D, V; struct xtteifeci_ifes scalar res;
+	struct ifete_ifes scalar ifete_ife(real matrix Y, real matrix X, real scalar r, real scalar epsln, real scalar iter, real scalar trend, real scalar isV){
+		struct ifete_svds scalar tmp; real matrix U, D, V; struct ifete_ifes scalar res;
 		T = rows(Y);
 		N = cols(Y);		
 		effT = T^(1 + trend);
@@ -334,7 +354,7 @@ mata:
 			i = i + 1;
 			betaold = betanew;
 			R = (Y - X * (I(N) # betaold))/(sqrt(N*effT));
-			tmp = xtteifeci_svd(R, r)
+			tmp = ifete_svd(R, r)
 			F = sqrt(effT)*tmp.U;
 			H = I(T)-(F * F')/effT;
 			tmpX = (I(N) # H) * Xlong
@@ -355,13 +375,13 @@ mata:
 		}
 		return(res);
 	}
-	struct xtteifeci_fmbcs{
+	struct ifete_fmbcs{
 		real matrix Chat, betahat, V, SEP, Ehat, Ftall, Fwide, Ltall, Lwide
 	}
-	struct xtteifeci_fmbcs scalar xtteifeci_fmbc(real matrix Y, real matrix X, real scalar iscov, real scalar T0, real scalar N0, real scalar r, real scalar epsilon, real scalar iter, real scalar KK, real scalar trend){
-		struct xtteifeci_fmbcs scalar res; 
-		struct xtteifeci_svds scalar tmpsvds; 
-		struct xtteifeci_ifes scalar tmpifes; 
+	struct ifete_fmbcs scalar ifete_fmbc(real matrix Y, real matrix X, real scalar iscov, real scalar T0, real scalar N0, real scalar r, real scalar epsilon, real scalar iter, real scalar KK, real scalar trend){
+		struct ifete_fmbcs scalar res; 
+		struct ifete_svds scalar tmpsvds; 
+		struct ifete_ifes scalar tmpifes; 
 		N = cols(Y);
 		T = rows(Y);
 		effT = T^(1 + trend);
@@ -369,24 +389,24 @@ mata:
 		Ytall = Y[1..T, 1..N0];
 		Ywide = Y[1..T0, 1..N];
 		if(iscov == 0){
-			tmpsvds = xtteifeci_svd(Ytall/sqrt(effT * N0), r);
+			tmpsvds = ifete_svd(Ytall/sqrt(effT * N0), r);
 			Ftall = sqrt(effT) * tmpsvds.U;
 			Ltall = sqrt(N0) * tmpsvds.V' * tmpsvds.D;
-			tmpsvds =xtteifeci_svd(Ywide/sqrt(effT0*N), r);
+			tmpsvds =ifete_svd(Ywide/sqrt(effT0*N), r);
 			Fwide = sqrt(effT0) * tmpsvds.U;
 			Lwide = sqrt(N) * tmpsvds.V' * tmpsvds.D;
 		} else {
 			p = cols(X)/N;
 			Xtall = X[1..T, 1..(N0 * p)];
 			Xwide = X[1..T0, 1..N * p];
-			tmpifes = xtteifeci_ife(Ytall, Xtall, r, epsilon, iter, trend, 1);
+			tmpifes = ifete_ife(Ytall, Xtall, r, epsilon, iter, trend, 1);
 			Ftall = tmpifes.Fhat;
 			Ltall = tmpifes.Lhat;
 			betahat = tmpifes.betahat;
 			V = tmpifes.V;
-			tmpifes = xtteifeci_ife(Ywide, Xwide, r, epsilon, iter, trend, 0);
-			Fwide = tmpifes.Fhat;
-			Lwide = tmpifes.Lhat;
+			tmpsvds = ifete_svd((Ywide - Xwide * (I(N) # betahat))/sqrt(effT0*N), r);
+			Fwide = sqrt(effT0) * tmpsvds.U;
+			Lwide = sqrt(N) * tmpsvds.V' * tmpsvds.D;
 		}
 		res.Ftall = Ftall;
 		res.Fwide = Fwide;
@@ -426,17 +446,17 @@ mata:
 		res.SEP = SEP
 		return(res)
 	}
-	struct xtteifeci_ciers{
+	struct ifete_ciers{
 		real matrix est, betahat, V, eq05, eq95, eq025, eq975, eq005, eq995, eqpval, sy05, sy95, sy025, sy975, sy005, sy995, sypval, Yhat
 	}
-	real matrix xtteifeci_quantile(real matrix data, real matrix p){
+	real matrix ifete_quantile(real matrix data, real matrix p){
 		N = rows(data);
 		res = J(rows(p), cols(data), .);
 		p = ceil(p * N)
 		for(i = 1; i<=cols(data); i++) res[., i] = data[order(data, i)[p, ], i];
 		return(res);
 	}
-	real matrix xtteifeci_pval(real matrix eff, real matrix effs, real matrix SEP, real matrix citype){
+	real matrix ifete_pval(real matrix eff, real matrix effs, real matrix SEP, real matrix citype){
 		s = -eff :/ SEP
 		if(citype == 0){
 			pvalues = 2 * colmin(mean(effs:>=s) \ mean(effs:<=s))
@@ -445,15 +465,15 @@ mata:
 		}
 		return(pvalues);
 	}
-	struct xtteifeci_ciers scalar xtteifeci_cier(real matrix Y, real matrix X, real scalar iscov, real scalar T0, real scalar N0, real scalar r, real scalar epsilon, real scalar iter, real scalar B, real scalar trend){
-		struct xtteifeci_fmbcs scalar tmp;
-		struct xtteifeci_ciers scalar res;
+	struct ifete_ciers scalar ifete_cier(real matrix Y, real matrix X, real scalar iscov, real scalar T0, real scalar N0, real scalar r, real scalar epsilon, real scalar iter, real scalar B, real scalar trend){
+		struct ifete_fmbcs scalar tmp;
+		struct ifete_ciers scalar res;
 		N = cols(Y);
 		T = rows(Y);
 		T1 = T - T0;
 		N1 = N - N0;
 		KK = floor(T0 ^ (1/5));
-		tmp = xtteifeci_fmbc(Y, X, iscov, T0, N0, r, epsilon, iter, KK, trend);
+		tmp = ifete_fmbc(Y, X, iscov, T0, N0, r, epsilon, iter, KK, trend);
 		st_matrix("Ftall", tmp.Ftall);
 		st_matrix("Fwide", tmp.Fwide);
 		st_matrix("Ltall", tmp.Ltall);
@@ -483,7 +503,7 @@ mata:
 				 Estar[T0 + 1..T, i] = Ehat[runiformint(T1, 1, 1, T0), i] :- Eibar[1, i - N0];
 			}
 			Ystar = Chat + Estar;
-			tmp = xtteifeci_fmbc(Ystar, ., 0, T0, N0, r, epsilon, iter, KK, trend);
+			tmp = ifete_fmbc(Ystar, ., 0, T0, N0, r, epsilon, iter, KK, trend);
  			Chatstar = tmp.Chat;
  			SEPstar = tmp.SEP;
             S_star[b, .] = rowshape((Chatstar[T0 + 1..T, N0 + 1..N] - Ystar[T0 + 1..T,N0 + 1..N]):/SEPstar, 1);	
@@ -493,18 +513,18 @@ mata:
 		res.est = est;
 		res.betahat = (iscov == 1? betahat : .);
 		res.V = (iscov == 1? V : .);
-		eqpval = xtteifeci_pval(rowshape(est, 1), S_star, rowshape(SEP, 1), 0);
+		eqpval = ifete_pval(rowshape(est, 1), S_star, rowshape(SEP, 1), 0);
 		res.eqpval = rowshape(eqpval, T1);
-		sypval = xtteifeci_pval(rowshape(est, 1), S_star, rowshape(SEP, 1), 1);
+		sypval = ifete_pval(rowshape(est, 1), S_star, rowshape(SEP, 1), 1);
 		res.sypval = rowshape(sypval, T1);
-		eqci = xtteifeci_quantile(S_star, (0.05\0.95\0.025\0.975\0.005\0.995));
+		eqci = ifete_quantile(S_star, (0.05\0.95\0.025\0.975\0.005\0.995));
 		res.eq05 = est + rowshape(eqci[1, .], T1) :* SEP;
 		res.eq95 = est + rowshape(eqci[2, .], T1) :* SEP;
 		res.eq025 = est + rowshape(eqci[3, .], T1) :* SEP;
 		res.eq975 = est + rowshape(eqci[4, .], T1) :* SEP;
 		res.eq005 = est + rowshape(eqci[5, .], T1) :* SEP;
 		res.eq995 = est + rowshape(eqci[6, .], T1) :* SEP;
-		syci = xtteifeci_quantile(abs(S_star), (0.90\0.95\0.99));
+		syci = ifete_quantile(abs(S_star), (0.90\0.95\0.99));
 		res.sy05 = est - rowshape(syci[1, .], T1) :* SEP;
 		res.sy95 = est + rowshape(syci[1, .], T1) :* SEP;
 		res.sy025 = est - rowshape(syci[2, .], T1) :* SEP;
@@ -514,129 +534,211 @@ mata:
  		res.Yhat = (iscov == 0? Chat : Chat + X * (I(N) # betahat));
 		return(res);
 	}
-	real scalar xtteifeci_enofY(real matrix Y, real scalar rmax, real scalar trend){
-		struct xtteifeci_svds scalar tmpsvds;
+	real scalar ifete_BNofY(real matrix Y, real scalar rmin, real scalar rmax, real scalar trend, real scalar type){
+		struct ifete_svds scalar tmpsvds;
 		T = rows(Y);
 		N = cols(Y);
-		effT = T^(1+trend);
+		rmax = min((rmax, N - 1, T - 1))
+		effT = T^(1 + trend);
 		alphaT = T/(4*log(log(T))) * trend + (1 - trend);
-		tmpsvds = xtteifeci_svd(Y/sqrt(effT*N), rmax);
+		tmpsvds = ifete_svd(Y/sqrt(effT*N), rmax);
 		F = sqrt(effT) * tmpsvds.U;
 		L = sqrt(N) * tmpsvds.V' * tmpsvds.D;
 		sig2hat = trace((Y - F * L')*(Y - F * L')')/(N * T);
-		PCmin = sig2hat + rmax*sig2hat*alphaT*((N+T)/(N*T))*log(N*T/(N+T));
+		C2_NT = min((N, T));
 		r_star= rmax;
-		for(r = 1; r <= (rmax - 1); r++){
+		BN = J(6, 1, .)
+		BNmin = .
+		for(r = rmin; r <= (rmax); r++){
 			F = sqrt(effT) * tmpsvds.U[., 1..r];
 			L = sqrt(N) * (tmpsvds.V')[., 1..r] * tmpsvds.D[1..r, 1..r];
 			SSR = trace((Y - F * L')*(Y - F * L')')/(N * T);
-			PC = SSR + r * sig2hat * alphaT * ((N+T)/(N*T)) * log(N * T/(N+T));
-			if(PC < PCmin){
-				PCmin = PC;
+			BN[1] = SSR + r * sig2hat * ((N+T)/(N*T))*ln((N*T)/(N+T));
+			BN[2] = SSR + r * sig2hat * ((N+T)/(N*T))*ln(C2_NT);
+			BN[3] = SSR + r * sig2hat * ln(C2_NT)/(C2_NT);
+			BN[4] = log(SSR) + r * ((N+T)/(N*T))*ln(((N*T)/(N+T)))
+			BN[5] = log(SSR) + r * ((N+T)/(N*T))*ln(C2_NT);
+			BN[6] = log(SSR) + r * ln(C2_NT)/(C2_NT);
+			PC = SSR + r * sig2hat * alphaT * ((N+T)/(N*T)) * log(N * T/(N+T));	
+			if(BNmin = . | BN[type] < BNmin){
+				BNmin = BN[type];
 				r_star = r;
 			}
 		}
 		return(r_star);
 	}
-	real scalar xtteifeci_enofYX(real matrix Y, real matrix X, real scalar rmax,real scalar epsln, real scalar iter, real scalar trend){
-		struct xtteifeci_ifes scalar tmp;
+	real scalar ifete_ERofY(real matrix Y, real scalar rmin, real scalar rmax, real scalar trend){
+		struct ifete_svds scalar tmpsvds;
+		T = rows(Y);
 		N = cols(Y);
-		rnew = rmax;
-		rold = 0;
-		while(rnew!=rold){
-			rold=rnew;
-			tmp = xtteifeci_ife(Y, X, rold, epsln, iter, trend, 0);
-			R = Y - X * (I(N) # tmp.betahat);
-			rnew = xtteifeci_enofY(R, rmax, trend);			
+		rmax = min((rmax, N - 1, T - 1));
+		m = min((N, T));
+		eignvals = eigenvalues(Y*(Y')/(N*T));
+		r_star= .;
+		ERmax = .;
+		for(r = rmin; r <= min((rmax, cols(eignvals) - 1)); r++){
+			ER = eignvals[r]/eignvals[r + 1]
+			if(ERmax == . |ER > ERmax){
+				ERmax = ER;
+				r_star = r;
+			}
 		}
-		r_star = rnew;
 		return(r_star);
 	}
-	real matrix xtteifeci_std(real matrix A, real scalar w){
+	real scalar ifete_GRofY(real matrix Y, real scalar rmin, real scalar rmax, real scalar trend){
+		struct ifete_svds scalar tmpsvds;
+		T = rows(Y);
+		N = cols(Y);
+		rmax = min((rmax, N - 1, T - 1));
+		m = min((N, T));
+		eignvals = eigenvalues(Y*(Y')/(N*T));
+		r_star= .;
+		GRmax = .
+		for(r = rmin; r <= min((rmax, cols(eignvals) - 1)); r++){
+			V = sum(eignvals[(r + 1)..m]);
+			miustar = eignvals[r]/V;
+			Vplus = sum(eignvals[(r + 2)..m]);
+			miustarplus = eignvals[r + 1]/Vplus;
+			GR = log(1 + miustar)/log(1 + miustarplus)
+			if(GRmax == . | GR > GRmax){
+				GRmax = GR;
+				r_star = r;
+			}
+		}
+		return(r_star);
+	}
+	real scalar ifete_LOOofY(real matrix Ytall, real matrix Yrest, real scalar trend, real scalar rmin, real scalar rmax){
+		struct ifete_svds scalar tmpsvds;
+		T = rows(Ytall);
+		N0 = cols(Ytall);
+		T0 = rows(Yrest);
+		rmax = min((rmax, N0 - 1, T0 - 1));
+		effT = T^(1 + trend);
+		MSPElist = J(1, rmax, .)
+		for(r = rmin; r <= rmax; r++){
+			tmpsvds = ifete_svd(Ytall/sqrt(effT*N0), r);
+			F = sqrt(effT) * tmpsvds.U;
+			tmpsum = 0;
+			for(t = 1; t<= T0; t++){
+				tmpindex = selectindex((1::T0):!=t)
+				L = svsolve(F[tmpindex, .], Yrest[tmpindex, .])
+				tmpsum = tmpsum + sum((Yrest[t, .] - F[t, .]* L):^2)
+			}
+			MSPElist[1, r] = tmpsum/T0
+		}
+		minindex(MSPElist[., rmin..rmax], 1, r_star, .)
+		return(r_star + rmin - 1);
+	}
+	real matrix ifete_dropRows(real matrix A, real colvector drop)
+	{
+		tmp = J(rows(A), 1, 1);
+		tmp[drop, 1] = J(rows(drop), 1, 0);
+		return(A[selectindex(tmp), .]);
+	}
+	real matrix ifete_dropCols(real matrix A, real rowvector drop)
+	{
+		tmp = J(1, cols(A), 1);
+		tmp[1, drop] = J(1, cols(drop), 0);
+		return(A[., selectindex(tmp)]);
+	}
+	class AssociativeArray scalar ifete_ranSplitRows(real matrix A, real scalar J){
+		T = rows(A);
+		key = asarray_create("real"); 
+		tmp = jumble(1::rows(A));
+		step = ceil(T/J);
+		for(j = 1; j <= J; j++){
+			if(j * step <= T){
+				asarray(key, j, tmp[((j - 1)*step + 1) :: (j * step)]);
+			} else{
+				asarray(key, j, tmp[((j - 1)*step + 1)::T]);
+			}
+		} 
+		return(key);
+	}
+	class AssociativeArray scalar ifete_ranSplitCols(real matrix A, real scalar K){
+		N = cols(A);
+		key = asarray_create("real"); 
+		tmp = jumble(1::cols(A))';
+		step = ceil(N/K);
+		for(k = 1; k <= K; k++){
+			if(k * step <= N){
+				asarray(key, k, tmp[((k - 1)*step + 1)..(k * step)]);
+			} else{
+				asarray(key, k, tmp[((k - 1)*step + 1)..N]);
+			}
+		} 
+		return(key);
+	}
+	real scalar ifete_CVofY(real matrix Ytall, real matrix Ywide,  string scalar type, real scalar J, real scalar K, real scalar trend, real scalar rmin, real scalar rmax){
+		struct ifete_svds scalar tmpsvds;
+		N0 = cols(Ytall);
+		T0 = rows(Ywide);
+		rmax = min((rmax, N0 - 1, T0 - 1));
+		if(type == "tall") Y = Ytall; else Y = Ywide;
+		T = rows(Y);
+		N = cols(Y);
+		Tlist = ifete_ranSplitRows(Y, K);
+		Nlist = ifete_ranSplitCols(Y, J);
+		effT = T^(1 + trend);
+		MSPElist = J(1, rmax, .)
+		for(r = rmin; r <= rmax; r++){
+			tmpsum = 0;
+			for(j = 1; j<= J; j++){
+				tmpsvds = ifete_svd(ifete_dropCols(Y, asarray(Nlist, j))/sqrt(effT*(N0- cols(asarray(Nlist, j)))), r);
+				F = sqrt(effT) * tmpsvds.U;
+				for(k = 1; k<= K; k++){
+					L = svsolve(ifete_dropRows(F, asarray(Tlist, k)), ifete_dropRows(Y[., asarray(Nlist, j)], asarray(Tlist, k)));
+					tmpsum = tmpsum + sum((Y[asarray(Tlist, k), asarray(Nlist, j)] - F[asarray(Tlist, k), .]* L):^2)
+				}
+			}
+			MSPElist[1, r] = tmpsum;
+		}
+		minindex(MSPElist[., rmin..rmax], 1, r_star, .)
+		return(r_star + rmin - 1);
+	}
+	real matrix ifete_std(real matrix A, real scalar w){
 		res = J(1, cols(A), .);
 		for(i = 1; i <= cols(A); i++) res[., i] = (w == 1 ? sqrt(sum((A[., i]:-mean(A[., i])):^2)/rows(A)) : sqrt(sum((A[., i]:-mean(A[., i])):^2)/(rows(A)- 1)));
 		return(res);
 	}
-	
-	real scalar xtteifeci_abc(real matrix X, real scalar kmax, real scalar wtype, real scalar cmax, real scalar step, real scalar nbck){
-		npace = 1; 
-		T = rows(X);
-		n = cols(X);
-		if (nbck == .) nbck = floor(n/10);
-		x = (X - J(T, 1, 1) * mean(X)):/ (J(T, 1, 1) * xtteifeci_std(X, 1));
-		s = 0;
-		abc = J(0, floor(cmax*step), .);
-		for(N = n - nbck; N <= n; N = N + npace){
-			s = s + 1; 
-			Ns = jumble(1::n);
-			xs = x[1..T, Ns[1..N]];
-			xs = (xs - J(T, 1, 1) * mean(xs)):/(J(T, 1, 1) * xtteifeci_std(xs, 1));
-			eigv = Re(eigenvalues(variance(xs)))';
-			IC1 = J(kmax + 1, 1, 0);
-			for(k = 1;k <= kmax + 1; k++) IC1[k, 1] = sum(eigv[k..N]); 
-			p = ((N + T)/(N * T)) * log((N * T)/(N + T));
-			T0 = (0::kmax):*p;
-			tmp = J(1, floor(cmax * step), .);
-			for(c = 1; c <= floor(cmax * step); c++){
-				cc = c/step;
-				IC = (IC1:/N) + T0*cc;
-				rr = order(IC, 1)[1];
-				tmp[1, c] = rr - 1;
-			}
-			abc = abc \ tmp;
-		}
-		cr = (1::floor(cmax*step)):/step;
-		ABC = (kmax, 0, 0);
-		sabc = xtteifeci_std(abc, 0);
-		for(ii = 1; ii <= rows(cr); ii++){
-			if(sabc[1, ii] == 0){
-				if(abc[rows(abc), ii] == ABC[rows(ABC), 1]){
-					ABC[rows(ABC), 3] = cr[ii];
-				}else{
-					ABC = (ABC \ abc[rows(abc), ii], cr[ii], cr[ii]);
-				}
-			}
-		}
-		ABC = (ABC, ABC[. ,3] - ABC[. ,2]);
-		if(wtype == 1) return((ABC[selectindex(ABC[2..rows(ABC), 4] :> 0.05) :+ 1, 1])[1]); else return((ABC[selectindex(ABC[2..rows(ABC), 4] :> 0.01) :+ 1, 1])[1]);
-	}
-	real scalar xtteifeci_enofabcYX(real matrix Y, real matrix X, real scalar rmax, real scalar wtype, real scalar epsilon, real scalar iter, real scalar trend, real scalar cmax, real scalar step, real scalar nbck){
-		struct xtteifeci_ifes scalar tmp;
-		N = cols(Y);
+	real scalar ifete_rfind(real matrix Ytall, real matrix Ywide, real matrix Yrest, real matrix Xtall, real matrix Xwide, real matrix Xrest, real scalar rmin, real scalar rmax, real scalar wtype, real scalar epsilon, real scalar iter, real scalar trend, real scalar cmax, real scalar step, real scalar nbck, real scalar rcriterion, real scalar iscov, real scalar J, real scalar K){
+		struct ifete_ifes scalar tmp;
+		N = cols(Ytall);
+		N1 = cols(Yrest);
 		rnew = rmax;
 		rold = 0;
 		i = 0;
-		while (rnew !=rold){
-			i = i + 1;
-			rold = rnew;
-			tmp = xtteifeci_ife(Y, X, rold, epsilon, iter, trend, 0);
-			R = Y - X * (I(N) # tmp.betahat);
-			rnew = xtteifeci_abc(R, rmax, wtype, cmax, step, nbck);
-		}
-		r_star = rnew;
-		return(r_star);
-	}
-	real scalar xtteifeci_rfind(real matrix Y, real matrix X, real scalar rmax, real scalar wtype, real scalar epsilon, real scalar iter, real scalar trend, real scalar cmax, real scalar step, real scalar nbck, real scalar rcriterion, real scalar iscov){
-		struct xtteifeci_ifes scalar tmp;
-		N = cols(Y);
-		rnew = rmax;
-		rold = 0;
-		i = 0;
+		type = "tall";
+		if(J == . & type == "tall") J = cols(Ytall);
+		if(J == . & type == "wide") J = cols(Ywide);
+		if(K == . & type == "tall") K = rows(Ytall);
+		if(K == . & type == "wide") K = rows(Ywide);
 		while (rnew !=rold){
 			i = i + 1;
 			rold = rnew;
 			if(iscov){
-				tmp = xtteifeci_ife(Y, X, rold, epsilon, iter, trend, 0);
-				R = Y - X * (I(N) # tmp.betahat);
-			} else R = Y;
-			if(rcriterion == 1) rnew = xtteifeci_enofY(R, rmax, trend); else rnew = xtteifeci_abc(R, rmax, wtype, cmax, step, nbck);
+				tmp = ifete_ife(Ytall, Xtall, rold, epsilon, iter, trend, 0);
+				Rtall = Ytall - Xtall * (I(N) # tmp.betahat);
+				Rrest = Yrest - Xrest * (I(N1) # tmp.betahat);
+			} else {
+				Rtall = Ytall;
+				Rrest = Yrest;
+			}
+			if(rcriterion == 0) rnew = ifete_LOOofY(Rtall, Rrest, trend, rmin, rmax);
+			if(rcriterion >= 1 & rcriterion <= 6) rnew = ifete_BNofY(Rtall, rmin, rmax, trend, rcriterion);
+			if(rcriterion == 8) rnew = ifete_ERofY(Rtall, rmin, rmax, trend);
+			if(rcriterion == 9) rnew = ifete_GRofY(Rtall, rmin, rmax, trend);
+			if(rcriterion == 10)  {
+				st_local("J", strofreal(J));
+				st_local("KK", strofreal(K));
+				rnew = ifete_CVofY(Ytall, Ywide, type, J, K, trend, rmin, rmax);
+			}
 		}
 		r_star = rnew;
 		return(r_star);
 	}
-	
-	void xtteifeci(string scalar panelvar, string scalar timevar, string scalar varlist, string scalar treatvar, real scalar r, real scalar epsilon, real scalar iter, real scalar reps, real scalar trend, real scalar seed, real scalar cmax, real scalar step, real scalar wtype, real scalar nbck, real scalar rcriterion){
-		struct xtteifeci_ciers scalar res;
+	void ifete(string scalar panelvar, string scalar timevar, string scalar varlist, string scalar treatvar, real scalar rmin, real scalar r, real scalar epsilon, real scalar iter, real scalar reps, real scalar trend, real scalar seed, real scalar cmax, real scalar step, real scalar wtype, real scalar nbck, real scalar rcriterion, real scalar J, real scalar K){
+		struct ifete_ciers scalar res;
 		data = st_data(., panelvar + " " + timevar + " " + treatvar + " " + varlist);
 		times = uniqrows(data[., 2]);
 		T = rows(times);
@@ -673,14 +775,15 @@ mata:
 		seed_org = rseed();
 		if(r < 0){
             rseed(seed);
+			r = -min((-r, N0, T0));
 			if(iscov){
-				r = xtteifeci_rfind(Y[., 1..N0], X[., 1..(p*N0)], -r, wtype, epsilon, iter, trend, cmax, step, nbck, rcriterion, iscov);	
+				r = ifete_rfind(Y[., 1..N0], Y[1..T0, .], Y[1..T0, (N0 + 1)..N], X[., 1..(p*N0)], X[1..T0, .], X[1..T0, (p*N0+1)..(p*N)], rmin, -r, wtype, epsilon, iter, trend, cmax, step, nbck, rcriterion, iscov, J, K);	
 			}else{
-				r = xtteifeci_rfind(Y[., 1..N0], ., -r, wtype, epsilon, iter, trend, cmax, step, nbck, rcriterion, iscov);
+				r = ifete_rfind(Y[., 1..N0], Y[1..T0, .], Y[1..T0, (N0 + 1)..N],., ., ., rmin, -r, wtype, epsilon, iter, trend, cmax, step, nbck, rcriterion, iscov, J, K);
 			}
 		}
 		rseed(seed);
-		res = xtteifeci_cier(Y, X, iscov, T0, N0, r,  epsilon, iter, reps, trend);
+		res = ifete_cier(Y, X, iscov, T0, N0, r,  epsilon, iter, reps, trend);
 		st_matrixrowstripe("Ftall", (J(rows(times), 1, ""), strofreal(times)));
 		st_matrixrowstripe("Ltall", (J(rows(unit_ctrl), 1, ""), strofreal(unit_ctrl)));
 		st_matrixrowstripe("Fwide", (J(rows(time_pre), 1, ""), strofreal(time_pre)));
@@ -689,7 +792,6 @@ mata:
 		st_matrixcolstripe("Ltall", (J(r, 1, ""), "r":+strofreal(1::r)));
 		st_matrixcolstripe("Fwide", (J(r, 1, ""), "r":+strofreal(1::r)));
 		st_matrixcolstripe("Lwide", (J(r, 1, ""), "r":+strofreal(1::r)));
-		
 		Ehat = Y - res.Yhat;
 		data_pred = J(rows(data), 2, .)
 		for(i = 1; i <= N; i++) data_pred[info_sum[i, 1]..info_sum[i, 2], .] = (res.Yhat[., i], Ehat[., i]);
@@ -726,7 +828,7 @@ mata:
 		}
 		rngstate(seed_org);
 	}
-	void xtteifeci_summary(real matrix data){
+	void ifete_summary(real matrix data){
 		M = select(data[., 1..2], !data[., 3]);
 		y = M[., 1];
 		pred = M[., 2];
@@ -736,15 +838,15 @@ mata:
 		R2 = 1 - sum((y :- pred) :* (y :- pred))/sum((y :- mean(y)) :* (y :- mean(y)));
 		wide = 12;
 		wide = wide < 9 ? 9 : (wide + 67 > st_numscalar("c(linesize)") ? max((st_numscalar("c(linesize)") - 67, 9)) : wide);
-		printf("{hline " + strofreal(wide + 66) + "}\n")
-		printf(" {txt}%-18uds =  {res}%12.0f {space "+ strofreal(wide - 9) 
-				+ "} {txt}%-24uds  =   {res}%8.0f\n", "Factor dimension", strtoreal(st_local("rend")), "Number of Covariates", strtoreal(st_local("K")))
-		printf(" {txt}%-18uds =  {res}%12uds {space "+ strofreal(wide - 9) 
-				+ "} {txt}%-24uds  =   {res}%8.0f\n", "Size of Tall Block", sprintf("(%s, %s)", st_local("N0"), st_local("T")),  "Number of Control Obs.", rows(M))
-		printf(" {txt}%-18uds =  {res}%12uds {space "+ strofreal(wide - 9) 
-				+ "} {txt}%-24uds  =   {res}%8.3f\n", "Size of Wide Block", sprintf("(%s, %s)", st_local("N"), st_local("T0")),  "Mean Squared Error", MSE)
-		printf(" {txt}%-23uds =  {res}%12.5f {space "+ strofreal(wide - 9) 
-				+ "} {txt}%-24uds  =   {res}%8.3f\n", "{it:R}-squared", R2 , "Root Mean Squared Error", RMSE)
+		printf("{hline " + strofreal(wide + 66) + "}\n")	
+		printf(" {txt}%-24uds  =   {res}%8.0f {space "+ strofreal(wide - 9) 
+				+ "}{txt}%-18uds =  {res}%12uds\n",  "Number of Control Units", strtoreal(st_local("N0")), "Size of Tall Block", sprintf("(%s, %s)", st_local("T"), st_local("N0")))
+		printf(" {txt}%-28uds  = {res}%4.0f {space "+ strofreal(wide - 9) 
+				+ "}{txt}%-18uds =  {res}%12uds\n",  "Number of Pretreatment Periods", strtoreal(st_local("T0")), "Size of Wide Block", sprintf("(%s, %s)", st_local("T0"), st_local("N")))
+		printf(" {txt}%-24uds  =   {res}%8.0f {space "+ strofreal(wide - 9) 
+				+ "}{txt}%-18uds =  {res}%12.0f\n",  "Number of Covariates", strtoreal(st_local("K")), "Number of Factors", strtoreal(st_local("rend")))
+		printf(" {txt}%-24uds  =   {res}%8.3f {space "+ strofreal(wide - 9) 
+				+ "}{txt}%-23uds =  {res}%12.5f\n",  "Root Mean Squared Error", RMSE, "Pretreatment {it:R}²", R2)
 		printf("{hline " + strofreal(wide + 66) + "}\n")
 		st_local("MSE", strofreal(MSE));
 		st_local("RMSE", strofreal(RMSE));
@@ -753,5 +855,4 @@ mata:
 end
 
 * Version history
-* 2.0.0 Improve the help file
-* 1.0.0 Submit the initial version of xtteifeci
+* 1.0.0 Submit the initial version of ifete

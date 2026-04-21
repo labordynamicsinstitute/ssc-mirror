@@ -27,7 +27,7 @@ d KW: API
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20260224
+d Distribution-Date: 20260420
 d
 d Author: Joao Pedro Azevedo, UNICEF
 d Support: email jpazevedo@@unicef.org
@@ -102,8 +102,8 @@ f wbopendata_region.sthlp
 f wbopendata_sourceid.sthlp
 f wbopendata_topicid.sthlp
 f wbopendata_whatsnew.sthlp
-f world-c.dta
-f world-d.dta
+F world-c.dta
+F world-d.dta
 f ../y/yaml.ado
 f ../y/yaml.sthlp
 f ../y/yaml_clear.ado

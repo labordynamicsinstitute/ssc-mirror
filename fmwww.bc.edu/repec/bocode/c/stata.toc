@@ -292,6 +292,7 @@ p crosswalk module to recode variable based on crosswalk table (bulk recoding)
 p crtest module to perform Cramer-Ridder Test for pooling states in a Multinomial logit 
 p crtrees module to compute Classification and Regression Trees algorithms
 p csdid module for the estimation of Difference-in-Difference models with multiple time periods
+p csestudy module to provide Efficient Inference for Cross-Sectional Event Studies
 p csipolate module to perform cubic spline interpolation
 p csjl module to extend cs command for exposures with more than two categories
 p csranks module to construct uniformly asymptotically valid confidence sets on ranks

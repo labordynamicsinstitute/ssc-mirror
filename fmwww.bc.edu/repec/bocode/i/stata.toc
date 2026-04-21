@@ -16,6 +16,7 @@ p idonepsu module for dealing with strata that have singleton PSUs
 p ie_rate module to conduct age, period, and cohort (APC) analysis of tabular rate data using the intrinsic estimator 
 p iefieldkit module providing Stata commands for primary data collection and cleaning
 p ietoolkit module providing commands specially developed for Impact Evaluations
+p ifete module to provide Estimation and Inference of Treatment Effects through a Factor-Based Approach
 p ifin module to generate a local containing an if statement to select multiple values
 p ifwins module to subset a dataset by 'if exp' before subsetting by 'in range'
 p igeintb module to estimate intergenerational income elasticities (IGEs) with multiple sets of instruments

@@ -3,7 +3,7 @@
 *!   Bai & Kao (2005) SSRN-1815227
 *!   Bai, Kao & Ng (2009) Journal of Econometrics, 149(1), 82-99
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Version: 1.0.3 - 2026-04-19 (Fix: mata drop cupfm_*() - was missing () so old functions survived in memory)
+*! Version: 1.0.4 - 2026-04-20 (Fix: file must be sourced via run to compile mata block)
 *!
 *! DATA FORMAT CONVENTION:
 *!   GAUSS:  Y[T,N],   X[T,N*k]  (wide format)
@@ -11,8 +11,7 @@
 
 capture program drop _cupfm_mata
 program define _cupfm_mata
-    // Stub program - exists so Stata's adopath can find and load this file.
-    // The Mata functions (cupfm_*) are compiled when this .ado is first sourced.
+    // Stub: sourced via findfile+run in cupfm.ado to compile all cupfm_*() Mata functions.
 end
 
 capture mata: mata drop cupfm_*()

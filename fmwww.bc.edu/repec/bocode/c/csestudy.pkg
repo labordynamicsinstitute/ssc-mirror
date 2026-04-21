@@ -1,0 +1,39 @@
+d 'CSESTUDY': module to provide Efficient Inference for Cross-Sectional Event Studies
+d
+d  csestudy implements the time-series approach to cross-sectional
+d event study inference described in Cohn, Johnson, Liu, and
+d Wardlaw (2026), "Past is Prologue: Inference from the Cross
+d Section of Returns Around an Event," Journal of Financial
+d Economics 180, 104278. Standard event study methodologies
+d typically fail to account for the cross-correlation structure in
+d stock returns across firm characteristics, and clustering
+d standard errors by industry does not address this. The command
+d benchmarks the event-period coefficient against a distribution of
+d the same relationship estimated on pre-event days, using either
+d OLS or GLS with a PCA-based covariance estimator. Rejection
+d criteria are reported as a parametric z-score and a p-value from
+d the empirical CDF of pre-event coefficients. 
+d
+d KW: event study
+d KW: cross sectional data
+d KW: corporate finance
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260420
+d
+d Author: Jonathan Cohn,  University of Texas at Austin
+d Support: email jonathan.cohn@@mccombs.utexas.edu 
+d
+d Author: Travis Johnson,  University of Texas at Austin
+d Support: email  travis.johnson@@mccombs.utexas.edu 
+d
+d Author: Zack Liu,  University of Houston
+d Support: email zliu@@bauer.uh.edu 
+d
+d Author: Malcolm Wardlaw,  University of Georgia
+d Support: email Malcolm.Wardlaw@@uga.edu
+d
+f csestudy.ado
+f csestudy.mata
+f csestudy.sthlp

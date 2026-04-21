@@ -1,6 +1,6 @@
 *! _cupfm_display.ado - Clean journal-quality output for cupfm
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Version: 1.0.2 - 2026-04-18 (Fix: updated version string in banner)
+*! Version: 1.0.4 - 2026-04-20 (Fix: banner version updated)
 *!   - Fixed table alignment (uniform 11-char estimator columns)
 *!   - t-stats as (xx.xx) with 2 decimal places, fixed-width stars
 *!   - Removed References section from output
@@ -67,7 +67,7 @@ program define _cupfm_display
     di ""
     di as text "  {hline 74}"
     di as text "  {bf:cupfm} {c -} Panel Cointegration with Common Factors" ///
-               "  | v1.0.2  `=c(current_date)'"
+               "  | v1.0.4  `=c(current_date)'"
     di as text "  Bai, Kao {c &} Ng (2009, JoE 149:82-99)" ///
                "  {c |}  Bai {c &} Kao (2005, SSRN-1815227)"
     di as text "  {hline 74}"
