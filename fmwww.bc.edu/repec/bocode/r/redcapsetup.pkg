@@ -1,0 +1,24 @@
+d 'REDCAPSETUP': module to perform some checks on the setup of a REDCap database
+d
+d      redcapsetup extracts contents inside square brackets from
+d the columns of each csv file.  Often this will be    a
+d variablename that appears in the Data Dictionary (DD). Sometimes
+d it will be an eventname.  Sometimes it    will be a "smart
+d variable".  Note, smart variables (and other contents with a
+d hyphen) are ignored.	  Sometimes it may be other things such as
+d units if text like "[kg]" appears in the DD.	The user is told   
+d about rows which may be a problem, making it easy for the user to
+d find any problem cell(s) on those rows. 
+d
+d KW: data management
+d KW: RedCap
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260421
+d
+d Author:  Mark Chatfield,   The University of Queensland
+d Support: email  m.chatfield@@uq.edu.au
+d
+f redcapsetup.ado
+f redcapsetup.sthlp

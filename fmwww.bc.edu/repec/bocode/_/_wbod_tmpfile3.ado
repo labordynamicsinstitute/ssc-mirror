@@ -1,5 +1,5 @@
-*! _wbod_tmpfile3 <4 Jan 2026 : 13:06:44>                 by João Pedro Azevedo
-*                 auto generated and updated using _update_countrymetadata.ado 
+*! _wbod_tmpfile3 <20 Apr 2026 : 06:38:37>                 by João Pedro Azevedo
+*                 auto generated and updated using __wbod_update_countrymetadata.ado 
   
  program define _wbod_tmpfile3 
   
@@ -228,7 +228,7 @@
          cap: replace lendingtype = "IDX"     if `match' == "ZMB"  
          cap: replace lendingtype = "IDB"     if `match' == "ZWE"  
   
-******************  Lable: lendingtype ******************
+******************  Label: lendingtype ******************
   
      lab var lendingtype                 "Lending Type Code" 
  }        
@@ -537,7 +537,7 @@
          cap: replace lendingtype_iso2 = "XI"     if `match' == "ZMB"  
          cap: replace lendingtype_iso2 = "XH"     if `match' == "ZWE"  
   
-******************  Lable: lendingtype_iso2 ******************
+******************  Label: lendingtype_iso2 ******************
   
      lab var lendingtype_iso2    "Lending Type Code (ISO 2 digits)" 
  }        
@@ -767,7 +767,7 @@
          cap: replace lendingtypename = "IDA"     if `match' == "ZMB"  
          cap: replace lendingtypename = "Blend"     if `match' == "ZWE"  
   
-******************  Lable: lendingtypename ******************
+******************  Label: lendingtypename ******************
   
      lab var lendingtypename     "Lending Type Name" 
  }        
@@ -813,7 +813,6 @@
          cap: replace capital = "Bangui"     if `match' == "CAF"  
          cap: replace capital = "Ottawa"     if `match' == "CAN"  
          cap: replace capital = "Bern"     if `match' == "CHE"  
-         cap: replace capital = "<wb:capitalCity"     if `match' == "CHI"  
          cap: replace capital = "Santiago"     if `match' == "CHL"  
          cap: replace capital = "Beijing"     if `match' == "CHN"  
          cap: replace capital = "Yamoussoukro"     if `match' == "CIV"  
@@ -850,7 +849,6 @@
          cap: replace capital = "London"     if `match' == "GBR"  
          cap: replace capital = "Tbilisi"     if `match' == "GEO"  
          cap: replace capital = "Accra"     if `match' == "GHA"  
-         cap: replace capital = "<wb:capitalCity"     if `match' == "GIB"  
          cap: replace capital = "Conakry"     if `match' == "GIN"  
          cap: replace capital = "Banjul"     if `match' == "GMB"  
          cap: replace capital = "Bissau"     if `match' == "GNB"  
@@ -861,7 +859,6 @@
          cap: replace capital = "Guatemala City"     if `match' == "GTM"  
          cap: replace capital = "Agana"     if `match' == "GUM"  
          cap: replace capital = "Georgetown"     if `match' == "GUY"  
-         cap: replace capital = "<wb:capitalCity"     if `match' == "HKG"  
          cap: replace capital = "Tegucigalpa"     if `match' == "HND"  
          cap: replace capital = "Zagreb"     if `match' == "HRV"  
          cap: replace capital = "Port-au-Prince"     if `match' == "HTI"  
@@ -873,7 +870,6 @@
          cap: replace capital = "Tehran"     if `match' == "IRN"  
          cap: replace capital = "Baghdad"     if `match' == "IRQ"  
          cap: replace capital = "Reykjavik"     if `match' == "ISL"  
-         cap: replace capital = "<wb:capitalCity"     if `match' == "ISR"  
          cap: replace capital = "Rome"     if `match' == "ITA"  
          cap: replace capital = "Kingston"     if `match' == "JAM"  
          cap: replace capital = "Amman"     if `match' == "JOR"  
@@ -897,7 +893,6 @@
          cap: replace capital = "Vilnius"     if `match' == "LTU"  
          cap: replace capital = "Luxembourg"     if `match' == "LUX"  
          cap: replace capital = "Riga"     if `match' == "LVA"  
-         cap: replace capital = "<wb:capitalCity"     if `match' == "MAC"  
          cap: replace capital = "Marigot"     if `match' == "MAF"  
          cap: replace capital = "Rabat"     if `match' == "MAR"  
          cap: replace capital = "Monaco"     if `match' == "MCO"  
@@ -940,7 +935,6 @@
          cap: replace capital = "Pyongyang"     if `match' == "PRK"  
          cap: replace capital = "Lisbon"     if `match' == "PRT"  
          cap: replace capital = "Asuncion"     if `match' == "PRY"  
-         cap: replace capital = "<wb:capitalCity"     if `match' == "PSE"  
          cap: replace capital = "Papeete"     if `match' == "PYF"  
          cap: replace capital = "Doha"     if `match' == "QAT"  
          cap: replace capital = "Bucharest"     if `match' == "ROU"  
@@ -997,7 +991,7 @@
          cap: replace capital = "Lusaka"     if `match' == "ZMB"  
          cap: replace capital = "Harare"     if `match' == "ZWE"  
   
-******************  Lable: capital ******************
+******************  Label: capital ******************
   
      lab var capital                             "Capital Name" 
  }        
@@ -1043,7 +1037,7 @@
          cap: replace longitude = real("21.6407")       if `match' == "CAF"  
          cap: replace longitude = real("-75.6919")       if `match' == "CAN"  
          cap: replace longitude = real("7.44821")       if `match' == "CHE"  
-         cap: replace longitude = real("<wb:longitude")       if `match' == "CHI"  
+         cap: replace longitude = real(".")       if `match' == "CHI"  
          cap: replace longitude = real("-70.6475")       if `match' == "CHL"  
          cap: replace longitude = real("116.286")       if `match' == "CHN"  
          cap: replace longitude = real("-4.0305")       if `match' == "CIV"  
@@ -1055,7 +1049,7 @@
          cap: replace longitude = real("-23.5087")       if `match' == "CPV"  
          cap: replace longitude = real("-84.0089")       if `match' == "CRI"  
          cap: replace longitude = real("-82.3667")       if `match' == "CUB"  
-         cap: replace longitude = real("<wb:longitude")       if `match' == "CUW"  
+         cap: replace longitude = real(".")       if `match' == "CUW"  
          cap: replace longitude = real("-81.3857")       if `match' == "CYM"  
          cap: replace longitude = real("33.3736")       if `match' == "CYP"  
          cap: replace longitude = real("14.4205")       if `match' == "CZE"  
@@ -1080,7 +1074,7 @@
          cap: replace longitude = real("-0.126236")       if `match' == "GBR"  
          cap: replace longitude = real("44.793")       if `match' == "GEO"  
          cap: replace longitude = real("-0.20795")       if `match' == "GHA"  
-         cap: replace longitude = real("<wb:longitude")       if `match' == "GIB"  
+         cap: replace longitude = real(".")       if `match' == "GIB"  
          cap: replace longitude = real("-13.7")       if `match' == "GIN"  
          cap: replace longitude = real("-16.5885")       if `match' == "GMB"  
          cap: replace longitude = real("-15.1804")       if `match' == "GNB"  
@@ -1128,7 +1122,7 @@
          cap: replace longitude = real("6.1296")       if `match' == "LUX"  
          cap: replace longitude = real("24.1048")       if `match' == "LVA"  
          cap: replace longitude = real("113.55")       if `match' == "MAC"  
-         cap: replace longitude = real("<wb:longitude")       if `match' == "MAF"  
+         cap: replace longitude = real(".")       if `match' == "MAF"  
          cap: replace longitude = real("-6.8704")       if `match' == "MAR"  
          cap: replace longitude = real("7.41891")       if `match' == "MCO"  
          cap: replace longitude = real("28.8497")       if `match' == "MDA"  
@@ -1170,7 +1164,7 @@
          cap: replace longitude = real("125.754")       if `match' == "PRK"  
          cap: replace longitude = real("-9.13552")       if `match' == "PRT"  
          cap: replace longitude = real("-57.6362")       if `match' == "PRY"  
-         cap: replace longitude = real("<wb:longitude")       if `match' == "PSE"  
+         cap: replace longitude = real(".")       if `match' == "PSE"  
          cap: replace longitude = real("-149.57")       if `match' == "PYF"  
          cap: replace longitude = real("51.5082")       if `match' == "QAT"  
          cap: replace longitude = real("26.0979")       if `match' == "ROU"  
@@ -1193,7 +1187,7 @@
          cap: replace longitude = real("14.5044")       if `match' == "SVN"  
          cap: replace longitude = real("18.0645")       if `match' == "SWE"  
          cap: replace longitude = real("31.4659")       if `match' == "SWZ"  
-         cap: replace longitude = real("<wb:longitude")       if `match' == "SXM"  
+         cap: replace longitude = real(".")       if `match' == "SXM"  
          cap: replace longitude = real("55.4466")       if `match' == "SYC"  
          cap: replace longitude = real("36.3119")       if `match' == "SYR"  
          cap: replace longitude = real("-71.141389")       if `match' == "TCA"  
@@ -1227,7 +1221,7 @@
          cap: replace longitude = real("28.2937")       if `match' == "ZMB"  
          cap: replace longitude = real("31.0672")       if `match' == "ZWE"  
   
-******************  Lable: longitude ******************
+******************  Label: longitude ******************
   
      lab var longitude           "Capital Longitude" 
  }        
@@ -1273,7 +1267,7 @@
          cap: replace latitude = real("5.63056")       if `match' == "CAF"  
          cap: replace latitude = real("45.4215")       if `match' == "CAN"  
          cap: replace latitude = real("46.948")       if `match' == "CHE"  
-         cap: replace latitude = real("<wb:latitude")       if `match' == "CHI"  
+         cap: replace latitude = real(".")       if `match' == "CHI"  
          cap: replace latitude = real("-33.475")       if `match' == "CHL"  
          cap: replace latitude = real("40.0495")       if `match' == "CHN"  
          cap: replace latitude = real("5.332")       if `match' == "CIV"  
@@ -1285,7 +1279,7 @@
          cap: replace latitude = real("14.9218")       if `match' == "CPV"  
          cap: replace latitude = real("9.63701")       if `match' == "CRI"  
          cap: replace latitude = real("23.1333")       if `match' == "CUB"  
-         cap: replace latitude = real("<wb:latitude")       if `match' == "CUW"  
+         cap: replace latitude = real(".")       if `match' == "CUW"  
          cap: replace latitude = real("19.3022")       if `match' == "CYM"  
          cap: replace latitude = real("35.1676")       if `match' == "CYP"  
          cap: replace latitude = real("50.0878")       if `match' == "CZE"  
@@ -1310,7 +1304,7 @@
          cap: replace latitude = real("51.5002")       if `match' == "GBR"  
          cap: replace latitude = real("41.71")       if `match' == "GEO"  
          cap: replace latitude = real("5.57045")       if `match' == "GHA"  
-         cap: replace latitude = real("<wb:latitude")       if `match' == "GIB"  
+         cap: replace latitude = real(".")       if `match' == "GIB"  
          cap: replace latitude = real("9.51667")       if `match' == "GIN"  
          cap: replace latitude = real("13.4495")       if `match' == "GMB"  
          cap: replace latitude = real("11.8037")       if `match' == "GNB"  
@@ -1358,7 +1352,7 @@
          cap: replace latitude = real("49.61")       if `match' == "LUX"  
          cap: replace latitude = real("56.9465")       if `match' == "LVA"  
          cap: replace latitude = real("22.1667")       if `match' == "MAC"  
-         cap: replace latitude = real("<wb:latitude")       if `match' == "MAF"  
+         cap: replace latitude = real(".")       if `match' == "MAF"  
          cap: replace latitude = real("33.9905")       if `match' == "MAR"  
          cap: replace latitude = real("43.7325")       if `match' == "MCO"  
          cap: replace latitude = real("47.0167")       if `match' == "MDA"  
@@ -1400,7 +1394,7 @@
          cap: replace latitude = real("39.0319")       if `match' == "PRK"  
          cap: replace latitude = real("38.7072")       if `match' == "PRT"  
          cap: replace latitude = real("-25.3005")       if `match' == "PRY"  
-         cap: replace latitude = real("<wb:latitude")       if `match' == "PSE"  
+         cap: replace latitude = real(".")       if `match' == "PSE"  
          cap: replace latitude = real("-17.535")       if `match' == "PYF"  
          cap: replace latitude = real("25.2948")       if `match' == "QAT"  
          cap: replace latitude = real("44.4479")       if `match' == "ROU"  
@@ -1423,7 +1417,7 @@
          cap: replace latitude = real("46.0546")       if `match' == "SVN"  
          cap: replace latitude = real("59.3327")       if `match' == "SWE"  
          cap: replace latitude = real("-26.5225")       if `match' == "SWZ"  
-         cap: replace latitude = real("<wb:latitude")       if `match' == "SXM"  
+         cap: replace latitude = real(".")       if `match' == "SXM"  
          cap: replace latitude = real("-4.6309")       if `match' == "SYC"  
          cap: replace latitude = real("33.5146")       if `match' == "SYR"  
          cap: replace latitude = real("21.4602778")       if `match' == "TCA"  
@@ -1457,7 +1451,7 @@
          cap: replace latitude = real("-15.3982")       if `match' == "ZMB"  
          cap: replace latitude = real("-17.8312")       if `match' == "ZWE"  
   
-******************  Lable: latitude ******************
+******************  Label: latitude ******************
   
      lab var latitude                    "Capital Latitude" 
  }        
