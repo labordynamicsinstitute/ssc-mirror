@@ -3,9 +3,9 @@
 
 program define chse_hoe, rclass
     version 14.0
-    syntax varname(numeric) [if] [in] , ///
-        [BURNin(integer 0) WINdows(integer 4) ///
-         ALPHAr(real 0.3) TOL(real 0.05)]
+    syntax varname(numeric) [if] [in] [, ///
+        BURNin(integer 0) WINdows(integer 4) ///
+        ALPHAr(real 0.3) TOL(real 0.05)]
 
     marksample touse
 

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.0.0  2026-04-12}{...}
+{* *! version 3.1.0  2026-04-21}{...}
 {vieweralsosee "round()" "help round"}{...}
 {viewerjumpto "Syntax" "round_exact##syntax"}{...}
 {viewerjumpto "Description" "round_exact##description"}{...}
@@ -9,12 +9,10 @@
 {viewerjumpto "Stored results" "round_exact##results"}{...}
 {viewerjumpto "Limitations" "round_exact##limitations"}{...}
 
-
 {title:Title}
 
 {phang}
 {bf:round_exact} {hline 2} Exact decimal rounding via integer transformation to mitigate floating‑point noise.
-
 
 {marker syntax}{...}
 {title:Syntax}
@@ -23,7 +21,7 @@
 {cmd:round_exact} {it:{help varname}} {ifin} {cmd:,} {opt d(integer)} [{it:options}]
 
 {p 8 17 2}
-{cmd:round_exact} {it:#} {cmd:,} {opt d(integer)}
+{cmd:round_exact} {it:#} {cmd:,} {opt d(integer)} [{opt fromstring}]
 
 {synoptset 20 tabbed}{...}
 {synopthdr}
@@ -32,9 +30,9 @@
 {p2coldent:* {opt d(integer)}}number of decimal places for rounding{p_end}
 {synopt:{opt gen:erate(newvar)}}create a new variable containing rounded values{p_end}
 {synopt:{opt replace}}overwrite the existing variable with rounded values{p_end}
+{synopt:{opt fromstring}}treat input as a string literal or variable to avoid initial binary conversion noise{p_end}
 {synoptline}
 {p 4 6 2}* {opt d(integer)} is required.{p_end}
-
 
 {marker description}{...}
 {title:Description}
@@ -46,17 +44,15 @@
 {cmd:assert} statements to fail.
 
 {pstd}
-{cmd:round_exact} mitigates this problem by temporarily transforming decimal values into integers, 
-applying a rounding offset with a conditional epsilon to guard against floating‑point edge cases, and 
-then scaling results back to decimals. This approach avoids fractional binary units during rounding 
-and produces results that align with expected decimal logic for statistical reporting and analysis. 
+{cmd:round_exact} mitigates this problem by temporarily transforming decimal values into integers,
+applying a rounding offset with a conditional epsilon to guard against floating‑point edge cases, and
+then scaling results back to decimals. This approach avoids fractional binary units during rounding
+and produces results that align with expected decimal logic for statistical reporting and analysis.
 It is especially useful when rounded values are used in comparisons, merges, tabulations, or logical checks—situations where small floating‑point discrepancies can lead to unexpected results.
 
 {pstd}
-{bf:New in version 3.0.0:} Numeric rounding has been refined by using a conditional epsilon, improving
-alignment between human decimal intent and binary floating‑point representation and yielding greater
-accuracy than unconditional adjustment methods.
-
+{bf:New in version 3.1.0:} The command now supports {opt fromstring} mode for precision rounding from
+literals and reports specific counts for generated vs. changed observations.
 
 {marker remarks}{...}
 {title:Remarks: Precision and binary representation}
@@ -78,7 +74,6 @@ Integer arithmetic is inherently stable because integers are represented exactly
 back. This transformation produces stable decimal results, supports consistent comparisons, and
 reduces spurious failures in logical checks.
 
-
 {marker notes}{...}
 {title:Notes}
 
@@ -86,7 +81,6 @@ reduces spurious failures in logical checks.
 {cmd:round_exact} modifies stored numeric values rather than display formatting. Unlike display
 formats (such as {cmd:%9.2f}), which affect only presentation, the command ensures that values are
 stored in a form suitable for exact comparisons and reliable use with {cmd:==} and {cmd:assert}.
-
 
 {marker examples}{...}
 {title:Examples}
@@ -103,18 +97,17 @@ stored in a form suitable for exact comparisons and reliable use with {cmd:==} a
 {phang2}{cmd:. round_exact gear_ratio, d(1) generate(gr_rounded)}{p_end}
 {phang2}{cmd:. list gear_ratio gr_rounded}{p_end}
 
-
 {marker results}{...}
 {title:Stored results}
 
 {pstd}
 {cmd:round_exact} stores the following in {cmd:r()}:
 
-{synoptset 15 tabbed}
-{p2col 5 15 19 2:Scalars}{p_end}
+{synoptset 20 tabbed}
+{p2col 5 20 24 2:Scalars}{p_end}
 {synopt:{cmd:r(val)}}rounded value (when rounding a literal #){p_end}
-{synopt:{cmd:r(N)}}number of observations modified or generated{p_end}
-
+{synopt:{cmd:r(N_generated)}}number of non-missing observations created (when using {cmd:generate()}){p_end}
+{synopt:{cmd:r(N_changed)}}number of observations where the value actually changed (when using {cmd:replace()}){p_end}
 
 {marker limitations}{...}
 {title:Limitations}
@@ -126,7 +119,6 @@ any residual ambiguity near rounding boundaries reflects binary representation r
 implementation defects. Applications requiring exact decimal precision should use fixed‑point
 (scaled‑integer) representations instead of floating‑point values.
 
-
 {marker author}{...}
 {title:Author}
 
@@ -135,9 +127,9 @@ Anne Fengyan Shi, Pew Research Center{p_end}
 {pstd}
 Support: email AShi@pewresearch.org{p_end}
 
-
 {marker acknowledgment}{...}
 {title:Acknowledgment}
 
 {pstd}
 Version 3 was revised based on feedback from Daniel Klein.{p_end}
+

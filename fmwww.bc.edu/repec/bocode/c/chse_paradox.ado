@@ -13,10 +13,10 @@
 
 program define chse_paradox, rclass
     version 14.0
-    syntax varlist(min=2 max=2 numeric) [if] [in] , ///
-        [FDI ALPHAr(real 0.3) TRUST(real 0.65) PHI(real 0.60) ///
-         ACCfloor(real 0.50) ACCceiling(real 0.92) ///
-         GENerate(name) replace]
+    syntax varlist(min=2 max=2 numeric) [if] [in] [, ///
+        FDI ALPHAr(real 0.3) TRUST(real 0.65) PHI(real 0.60) ///
+        ACCfloor(real 0.50) ACCceiling(real 0.92) ///
+        GENerate(name) replace]
 
     tokenize `varlist'
     local disrupt_var `1'
@@ -60,11 +60,14 @@ program define chse_paradox, rclass
     local corr = r(rho)
 
     quietly summarize `acc_var'     if `touse'
-    local acc_min = r(min);  local acc_max = r(max)
+    local acc_min = r(min)
+    local acc_max = r(max)
     quietly summarize `rhoK_var'    if `touse'
-    local rhoK_min = r(min); local rhoK_max = r(max)
+    local rhoK_min = r(min)
+    local rhoK_max = r(max)
     quietly summarize `cascade_var' if `touse'
-    local casc_min = r(min); local casc_max = r(max)
+    local casc_min = r(min)
+    local casc_max = r(max)
 
     di as text _newline "CHSE Hierarchy Persistence Paradox Test"
     di as text "{hline 58}"
@@ -92,8 +95,7 @@ program define chse_paradox, rclass
 
     if "`generate'" != "" {
         if "`replace'" != "" {
-            capture drop `generate'_hsi `generate'_acc ///
-                         `generate'_rhoK `generate'_cascade
+            capture drop `generate'_hsi `generate'_acc `generate'_rhoK `generate'_cascade
         }
         quietly {
             gen double `generate'_hsi     = `hsi_use'

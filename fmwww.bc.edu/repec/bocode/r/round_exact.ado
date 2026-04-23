@@ -1,9 +1,8 @@
-*! version 3.0.0  2026-04-12
+*! version 3.1.0  2026-04-21
 *! Author: Anne Fengyan Shi
 *! Revision:
-*!   - Adds fromstring mode (string variable or quoted literal)
-*!   - Numeric mode: removes unconditional eps; uses conditional half-case handling
-*!   - Fix: half-case tolerance now adapts to float vs double storage (prevents 3.05->3.0 in float vars)
+*!    - Adds report and return scalar for N_generated (excluding missing values)
+*!    - Standardized output messaging for consistency between modes
 
 program define round_exact, rclass
     version 14.0
@@ -101,13 +100,20 @@ program define round_exact, rclass
 
             quietly gen double `out' = cond(`neg', -`scaled', `scaled') / `multiplier' if `touse'
             quietly replace `generate' = `out' if `touse'
+            
+            // Count generated non-missing cases
+            quietly count if `touse' & !missing(`generate')
+            local n_gen = r(N)
 
-            di as text "Variable " as result "`generate'" as text " created (type double)."
+            di as text "Variable " as result "`generate'" as text " created (type double)." ///
+               " (" as result "`n_gen'" as text " non-missing observation(s) generated)"
+            
+            return scalar N_generated = `n_gen'
             exit
         }
 
         // =========================
-        // numeric mode (FIXED)
+        // numeric mode
         // =========================
         tempvar x z f tolz iround newval
         quietly gen double `x' = `input' if `touse'
@@ -128,7 +134,14 @@ program define round_exact, rclass
         if "`generate'" != "" {
             confirm new variable `generate'
             quietly gen double `generate' = `newval' if `touse'
-            di as text "Variable " as result "`generate'" as text " created (type double)."
+            
+            quietly count if `touse' & !missing(`generate')
+            local n_gen = r(N)
+            
+            di as text "Variable " as result "`generate'" as text " created (type double)." ///
+               " (" as result "`n_gen'" as text " non-missing observation(s) generated)"
+            
+            return scalar N_generated = `n_gen'
         }
         else if "`replace'" != "" {
             quietly recast double `input'
@@ -147,8 +160,7 @@ program define round_exact, rclass
     // CASE 2: Scalar/Literal Mode
     // ---------------------------------------------------------
     else {
-
-        // fromstring scalar: treat input as literal text token
+        // [Logic remains unchanged for scalars as they do not involve multiple observations]
         if "`fromstring'" != "" {
             local s = trim("`input'")
             if ("`s'"=="" | "`s'"==".") {
@@ -175,7 +187,6 @@ program define round_exact, rclass
             }
             if "`ip'"=="" local ip = "0"
 
-            // pad fp
             local fp = "`fp'" + strrepeat("0", `d'+1)
             local fp2 = substr("`fp'", 1, `d'+1)
 
@@ -201,7 +212,6 @@ program define round_exact, rclass
             exit
         }
 
-        // numeric scalar (keep conditional half logic; use double eps)
         tempname z f tolz iround res
         scalar `z' = abs(`input') * `multiplier'
         scalar `f' = `z' - floor(`z')
