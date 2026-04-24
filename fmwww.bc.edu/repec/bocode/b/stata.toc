@@ -50,6 +50,7 @@ p bidensity module to produce and graph bivariate density estimates
 p bigtab module to produce frequency tables for "too many values"
 p bihist module to produce bihistograms
 p bimap module to produce bivariate maps
+p bimpoisson module to fit the bivariate mixed Poisson regression model by maximum simulated likelihood (MSL)
 p bineq module to analyze multidimensional inequality in two dimensions of wellbeing
 p binomci module to compute confidence intervals for binomial proportions using 12 methods
 p binscatter module to generate binned scatterplots

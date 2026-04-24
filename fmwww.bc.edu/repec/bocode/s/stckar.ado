@@ -1,5 +1,5 @@
-*! 3nov23 Jonathan Thiele v1.01
-*! jonathan.thiele@fu-berlin.de
+*! 23apr26 Jonathan Thiele v1.02
+*! jonathan-thiele@web.de
 *! RWI - Leibniz-Institut fuer Wirtschaftsforschung
 * written in Stata version:  16.1
 

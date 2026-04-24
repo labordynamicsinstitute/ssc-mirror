@@ -1,5 +1,5 @@
 {smcl}
-{* Version 1.01 3November2023}{...}
+{* Version 1.02 23April2026}{...}
 {cmd: help stckar}
 
 {bf:stckar} {hline 2} draws stacked area graphs
@@ -82,5 +82,5 @@ The command was written with Stata 16.1.
 {title:Author}
 
 	Jonathan Thiele
-	jonathan.thiele@fu-berlin.de
+	jonathan-thiele@web.de
 	written at the RWI - Leibniz-Institut fuer Wirtschaftsforschung

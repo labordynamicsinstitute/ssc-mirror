@@ -1,29 +1,29 @@
 d 'MLM_GOF': module for computing the Goodness-of-fit test after mixed-effects logistic regression with random intercepts
 d
 d  mlm_gof performs a goodness-of-fit test for binary multilevel
-d logistic models with random intercepts, fitted by melogit. It
-d tests whether the fitted model describes the data adequately.
-d Two-level models are tested using the method of Perera,
-d Sooriyarachchi & Wickramasuriya (2016), and higher-order models
-d are tested using the method of Fernando & Sooriyarachchi (2022).
-d The test is based on an extension of the Hosmer-Lemeshow
-d goodness-of-fit test to the multilevel setting. The key idea is
-d to divide observations within each innermost cluster into G
-d groups based on their predicted probabilities, then test whether
-d the group membership adds explanatory power beyond the fitted
-d model. If the model fits well, group membership should be
-d uninformative. 
+d logistic models fitted by melogit. It extends the grouping-based
+d test of Perera, Sooriyarachchi & Wickramasuriya (2016) and
+d Fernando & Sooriyarachchi (2022) to models with random
+d coefficients (Linden 2026). The test works by dividing
+d observations within each level-2 cluster into G groups based on
+d their conditional predicted probabilities, then testing whether
+d group membership adds explanatory power beyond the fitted model
+d via a joint Wald test on G-1 indicator variables. Under a
+d well-fitting model, the group indicators should be uninformative
+d and the Wald statistic should follow a chi-squared distribution
+d with G-1 degrees of freedom. 
 d
-d KW: logistic regression
-d KW: fixed effects
+d KW: mixed-effect logistic regression
+d KW: random intercepts
 d KW: goodness of fit
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20260413
+d Distribution-Date: 20260423
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
 d
 f mlm_gof.ado
 f mlm_gof.sthlp
+f mlm_gof.pdf

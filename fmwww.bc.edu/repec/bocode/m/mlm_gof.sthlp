@@ -1,10 +1,9 @@
 {smcl}
-{* 09Apr2026}{...}
-
+{* 21Apr2026}{...}
 {title:Title}
 
 {phang}
-{bf:mlm_gof} {hline 2} Goodness-of-fit test after mixed-effects logistic regression with random intercepts
+{bf:mlm_gof} {hline 2} Goodness-of-fit test after mixed-effects logistic regression
 
 
 {marker syntax}{...}
@@ -13,37 +12,48 @@
 {p 8 16 2}
 {cmd:mlm_gof} [{cmd:,} {opt gr:oups(#)}]
 
+
 {synoptset 20 tabbed}{...}
 {synopthdr}
 {synoptline}
 {synopt:{opt gr:oups(#)}}number of groups; default is data-driven method{p_end}
 {synoptline}
-
 {pstd}
-{cmd:mlm_gof} requires that the current estimation results be from {helpb melogit}.
+{cmd:mlm_gof} requires that the estimation results currently in memory be from {helpb melogit}.
+
 
 
 {marker description}{...}
 {title:Description}
 
 {pstd}
-{cmd:mlm_gof} performs a goodness-of-fit test for binary multilevel logistic models with random intercepts, fitted by {helpb melogit}. It tests 
-whether the fitted model describes the data adequately. Two-level models are tested using the method of Perera, Sooriyarachchi & 
-Wickramasuriya (2016), and higher-order models are tested using the method of Fernando & Sooriyarachchi (2022).
-
-{pstd}
-The test is based on an extension of the Hosmer-Lemeshow goodness-of-fit test to the multilevel setting. The key idea is to divide observations 
-within each innermost cluster into {it:G} groups based on their predicted probabilities, then test whether the group membership adds explanatory 
-power beyond the fitted model. If the model fits well, group membership should be uninformative.
+{cmd:mlm_gof} performs a goodness-of-fit test for binary multilevel logistic models fitted by {helpb melogit}. It 
+extends the grouping-based test of Perera, Sooriyarachchi & Wickramasuriya (2016) and Fernando & Sooriyarachchi (2022) 
+to models with random coefficients (Linden 2026). The test works by dividing observations within each level-2 cluster 
+into {it:G} groups based on their conditional predicted probabilities, then testing whether group membership adds 
+explanatory power beyond the fitted model via a joint Wald test on {it:G}{c -}1 indicator variables. Under a well-fitting 
+model, the group indicators should be uninformative and the Wald statistic should follow a chi-squared distribution 
+with {it:G}{c -}1 degrees of freedom. 
 
 
 
 {title:Options}
 
 {phang}
-{opt groups(#)} specifies the number of groups, {it:G}, into which observations are divided within each cluster cell. 
-By default, {it:G} is determined automatically from the data as the smaller of 10 and the minimum cluster cell size, so 
-that every cell can be divided into {it:G} non-empty groups. The degrees of freedom for the test are {it:G}-1.
+{opt groups(#)} specifies the number of groups, {it:G}, into which observations are
+divided within each level-2 cluster. The default data-driven choice G = min(10, {it:min_cell_n}), 
+where {it:min_cell_n} is the minimum number of observations across all level-2 clusters, ensures that every
+level-2 cluster can be divided into {it:G} non-empty groups, preventing convergence
+failures in the augmented model refit. This is equivalent to the fixed G = 10 used
+by Perera et al. (2016) and Fernando & Sooriyarachchi (2022) when {it:min_cell_n}
+>= 10, which covers all scenarios studied in those papers. When {it:min_cell_n} < 10,
+G is reduced accordingly and a warning is issued. Users may specify a fixed value via
+{cmd:groups(#)}, subject to the constraint that it does not exceed {it:min_cell_n}.
+Note that only level-2 cluster sizes are considered when computing {it:min_cell_n};
+higher-level units (level-3 clusters and above) are not checked because groups are
+formed within level-2 clusters only, and empty-group problems cannot arise at higher
+levels. See Linden (2026) for a comprehensive discussion.
+
 
 
 {title:Examples}
@@ -52,14 +62,13 @@ that every cell can be divided into {it:G} non-empty groups. The degrees of free
 {pstd}Setup{p_end}
 {phang2}{cmd:. webuse bangladesh}{p_end}
 
-{pstd}Two-level random-intercept model, followed by {cmd:mlm_gof} using default determimation of {cmd:groups()} {p_end}
+{pstd}Two-level random-intercept model{p_end}
 {phang2}{cmd:. melogit c_use i.urban age i.children || district:}{p_end}
 {phang2}{cmd:. mlm_gof}{p_end}
 
-{pstd}Two-level random-intercept with correlated random effects{p_end}
-{phang2}{cmd:. melogit c_use i.urban age i.children || district:, cov(unstruct)}{p_end}
+{pstd}Two-level random coefficient model with random slope on {cmd:urban}{p_end}
+{phang2}{cmd:. melogit c_use i.urban age i.children || district: i.urban, cov(unstructured)}{p_end}
 {phang2}{cmd:. mlm_gof}{p_end}
-
     {hline}
 {pstd}Setup{p_end}
 {phang2}{cmd:. webuse towerlondon}{p_end}
@@ -67,9 +76,7 @@ that every cell can be divided into {it:G} non-empty groups. The degrees of free
 {pstd}Three-level nested model, {cmd:subject} nested within {cmd:family}{p_end}
 {phang2}{cmd:. melogit dtlm difficulty i.group || family: || subject:}{p_end}
 {phang2}{cmd:. mlm_gof}{p_end}
-
     {hline}
-
 
 
 {title:Stored results}
@@ -80,22 +87,16 @@ that every cell can be divided into {it:G} non-empty groups. The degrees of free
 {synoptset 15 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
 {synopt:{cmd:r(chi2)}}Wald chi-squared statistic{p_end}
-{synopt:{cmd:r(df)}}degrees of freedom (= G-1){p_end}
+{synopt:{cmd:r(df)}}degrees of freedom (= G{c -}1){p_end}
 {synopt:{cmd:r(p)}}p-value{p_end}
 {synopt:{cmd:r(N)}}number of observations{p_end}
 {synopt:{cmd:r(groups)}}effective number of groups G{p_end}
 {synopt:{cmd:r(levels)}}number of data levels detected{p_end}
+{synopt:{cmd:r(reterms)}}number of random-effect terms (intercepts + slopes){p_end}
 {p2colreset}{...}
 
 
-
 {title:References}
-
-{phang}
-Abeysekera, W. W. M. and R. Sooriyarachchi. 2009. A novel method for
-testing goodness of fit of a proportional odds model: An application
-to AIDS study. {it:Journal of National Science Foundation Sri Lanka}
-36(2): 125-135.
 
 {phang}
 Fernando, G. and R. Sooriyarachchi. 2022. The development of a
@@ -104,34 +105,14 @@ goodness-of-fit test for high level binary multilevel models.
 51(5): 2710-2730.
 
 {phang}
-Hosmer, D. W. and S. Lemeshow. 1989.
-{it:Applied Logistic Regression}. New York: John Wiley & Sons.
-
-{phang}
-Hosmer, D. W. and S. Lemeshow. 2000.
-{it:Applied Logistic Regression}. 2nd ed. New York: John Wiley & Sons.
-
-{phang}
-Lipsitz, S. R., G. M. Fitzmaurice and G. Molenberghs. 1996.
-Goodness-of-fit tests for ordinal response regression models.
-{it:Journal of the Royal Statistical Society, Series C}
-45(2): 175-190.
-
-{phang}
-Maydeu-Olivares, A. and C. Garcia-Forero. 2010. Goodness-of-fit
-testing. {it:International Encyclopedia of Education} 7: 190-196.
+Linden, A. 2026. {browse "https://arxiv.org/abs/2604.19694": A goodness-of-fit test for mixed-effects logistic regression}. 
+Preprint. arXiv
 
 {phang}
 Perera, A. A. P. N. M., M. R. Sooriyarachchi and S. L. Wickramasuriya.
 2016. A goodness of fit test for the multilevel logistic model.
 {it:Communications in Statistics - Simulation and Computation}
 45(2): 643-659.
-
-{phang}
-Rosner, B., R. J. Glynn and M.-L. T. Lee. 2003. Incorporation of
-clustering effects for the Wilcoxon rank sum test: A large-sample
-approach. {it:Biometrics} 59(4): 1089-1098.
-
 
 
 {title:Citation of {cmd:mlm_gof}}
@@ -140,9 +121,10 @@ approach. {it:Biometrics} 59(4): 1089-1098.
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden, Ariel. 2026. MLM_GOF: Stata module for computing the Goodness-of-fit test after mixed-effects logistic regression with random intercepts
+Linden, Ariel. 2026. mlm_gof: Stata module for computing the goodness-of-fit
+test after mixed-effects logistic regression. Statistical Software Components S459670, 
+Boston College Department of Economics. 
 {p_end}
-
 
 
 {title:Author}
@@ -151,8 +133,6 @@ Linden, Ariel. 2026. MLM_GOF: Stata module for computing the Goodness-of-fit tes
 Ariel Linden{break}
 President, Linden Consulting Group, LLC{break}
 alinden@lindenconsulting.org{break}
-
-
 
 
 {title:Also see}

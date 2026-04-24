@@ -1,0 +1,61 @@
+d 'TIMEALLOC': module to create diary-level time-allocation variables from episode data
+d
+d  timealloc converts an episode-level diary dataset into a
+d diary-level dataset with one row    per diary.    For each
+d category of the first variable in varlist, the command creates
+d variables showing    how much time the diarist spent in that
+d category during the day. If only one diary field    is supplied,
+d timealloc also creates variables counting how many episodes fall
+d into each    category.    This command is especially useful when
+d researchers want a diary-level file summarising    time spent in
+d categories such as activities, locations, or co-presence states. 
+d   Keywords: time use, sequences, episodes, diary 
+d
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20260423
+d
+d Author:   Juana Lamote de Grignon Pérez, Centre for Time Use Research (UCL)
+d Support: email juana.lamote@@gmail.com
+d
+f timealloc.ado
+f timealloc.sthlp
+f timeallocx.ado
+f timeallocx.sthlp
+f ../c/c25tom5.ado
+f ../c/calgen.ado
+f ../c/clock2min.ado
+f ../c/clocklabel.ado
+f ../e/epicheck.ado
+f ../e/epifix.ado
+f ../e/epigen.ado
+f ../e/epigenx.ado
+f ../e/epitrans.ado
+f ../m/m69tom4.ado
+f ../m/m69tom11.ado
+f ../w/whatmin.ado
+f ../w/whattime.ado
+f ../c/c25tom5.sthlp
+f ../c/calgen.sthlp
+f ../c/clock2min.sthlp
+f ../e/epicheck.sthlp
+f ../e/epifix.sthlp
+f ../e/epigen.sthlp
+f ../e/epigenx.sthlp
+f ../e/epitrans.sthlp
+f ../m/m69tom4.sthlp
+f ../m/m69tom11.sthlp
+f ../w/whatmin.sthlp
+f ../w/whattime.sthlp
+f timealloc_examples.do
+f ../c/Canada2022.dta 
+f ../g/Georgia2020.dta 
+f ../i/India1998.dta 
+f ../i/India2019.dta 
+f ../l/Luxemburg2014.dta 
+f ../m/MTUS_haf.dta 
+f ../m/MTUS_hef.dta 
+f ../s/SouthAfrica2010.dta 
+f ../u/UK2014.dta 
+f ../u/US2020.dta 

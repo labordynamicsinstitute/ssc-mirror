@@ -1,0 +1,31 @@
+d 'BIMPOISSON': module to fit the bivariate mixed Poisson regression model by maximum simulated likelihood (MSL)
+d
+d   bimpoisson fits the bivariate mixed Poisson regression model by
+d maximum simulated likelihood (MSL) using the approaches proposed
+d by Munkin and Trivedi (The Econometrics Journal, 1999). Options
+d include: sampling function or standard MSL; pseudo-random uniform
+d or Halton draws, antithetic acceleration, and a first-order bias
+d correction. There are also post-estimation tools to predict
+d conditional count probabilities and expected counts. 
+d
+d KW: bivariate mixed Poisson regression
+d KW: maximum simulated likelihood
+d KW: sampling function
+d KW: count data
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20260423
+d
+d Author: Stephen P. Jenkins, London School of Economics and Political Science
+d Support: email S.Jenkins@@lse.ac.uk
+d
+d Author: Fernando Rios-Avila, London School of Economics and Political Science
+d Support: email f.rios.a@@gmail.com 
+d
+f bimpoisson.ado
+f bimpoisson_lf.ado
+f bimpoisson2_lf.ado
+f bimpoisson_p.ado
+f bimpoisson.sthlp
+f bimpoisson_postestimation.sthlp
