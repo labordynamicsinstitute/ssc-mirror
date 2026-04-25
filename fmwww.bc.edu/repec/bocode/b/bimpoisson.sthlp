@@ -281,9 +281,10 @@ Setting the optimization type to {cmd:technique(bhhh)} resets the default
 The examples below are based on the data about numbers of doctor and hospital
 visits and their predictors accompanying the {cmd:bivcnto} package 
 by Xu and Hardin (2016). The data are downloadable via the commands {stata "net sj 16-2 st0433"} and
-{stata "net get st0433"}. MT's empirical application is based on 
-data previously used by Deb and Trivedi (1997): the data are downloadable 
-from {browse "https://www.journaldata.zbw.eu/dataset/demand-for-medical-care-by-the-elderly-a-finite-mixture-approach"}.
+{stata "net get st0433"}. MT's empirical application is based on data previously
+ used by Deb and Trivedi (1997): see "debtrivedi.dta". (We downloaded these 
+ data from the {it: Journal of Applied Econometrics} archive website 
+ and converted them to Stata format.)
 
 {p 4 8 2}{cmd: use "rwm1984.dta", clear}
 

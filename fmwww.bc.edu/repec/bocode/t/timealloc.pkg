@@ -1,4 +1,4 @@
-d 'TIMEALLOC': module to create diary-level time-allocation variables from episode data
+d 'TIMEALLOC': module to manipulate diary-based time use data
 d
 d  timealloc converts an episode-level diary dataset into a
 d diary-level dataset with one row    per diary.    For each

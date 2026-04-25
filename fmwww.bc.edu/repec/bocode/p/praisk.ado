@@ -1,3 +1,4 @@
+*! 1.2.0 Ariel Linden 23Apr2026	// fixed display with multiple panels
 *! 1.1.0 Ariel Linden 25Mar2026	// added nolog option
 *! 1.0.0 Ariel Linden 09Mar2026
 
@@ -142,6 +143,13 @@ program define praisk, eclass
 	local  nonstationary  = r(nonstationary)
 	if "`vce_type'" == "cluster" local nclust = r(nclust)
 
+	// display gaps message before iteration log — matches prais behaviour
+	if `ngaps' > 0 {
+		di as txt _newline "Number of gaps in sample = " as res `ngaps' ///
+			as txt "   (gap count includes panel changes)"
+		di as txt "note: computations for rho restarted at each gap."
+	}
+
 	// display iteration history prais-like
 	if "`nolog'" == "" {
 		di ""
@@ -259,12 +267,6 @@ program define praisk, eclass
 	else {
 		ereturn local vce     "ols"
 		ereturn local vcetype ""
-	}
-
-	if `ngaps' > 0 {
-		di as txt _newline "Number of gaps in sample = " as res `ngaps' ///
-			as txt "   (gap count includes panel changes)"
-		di as txt "note: computations for rho restarted at each gap."
 	}
 
 	// autocorrelations of residuals at lags 1..p
@@ -694,6 +696,7 @@ real matrix function praisk_build_segments(real colvector panid,
 		}
 	}
 	segs = (segs \ (seg_start, n))
+	*ngaps_ptr = rows(segs) - 1
 	return(segs)
 }
 

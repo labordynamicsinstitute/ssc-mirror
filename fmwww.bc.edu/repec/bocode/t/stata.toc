@@ -82,7 +82,7 @@ p tictoc module to provide simplified timer commands
 p tidy module to ease reshaping of data
 p tidytuesday module for fetching tidytuesday data
 p tihtest module to test for time invariant unobserved heterogeneity in generalized linear models for panel data
-p timealloc module to create diary-level time-allocation variables from episode data
+p timealloc module to manipulate diary-based time use data
 p timeit module to provide single line version of timer on/off
 p timeleft module to count the number of days...
 p timestamp module to obtain a UNIX timestamp and the current time of a user-specified timezone

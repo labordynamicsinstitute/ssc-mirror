@@ -87,6 +87,7 @@ p mdesc module to tabulate prevalence of missing values
 p mean2 module to make a table of estimate means with subpopulation differences
 p mean_ci_plot module to plot means and confidence intervals
 p meaning module to use internet search for the meaning for a word or phrase
+p medage module to calculate linear interpolated median age from 5-year age group data
 p medcouple module to compute medcouple measure of asymmetry and heaviness of the tails
 p median module to perform the median test
 p mediation module for causal mediation analysis and sensitivity analysis
@@ -198,7 +199,7 @@ p mktex module to convert Microsoft Word (.docx) documents to LaTeX (.tex) forma
 p mlad module to perform maximum likelihood using automatic differentiation
 p mlboolean module to implement Boolean logit and probit
 p mlcoint module to compute Johansen cointegration tests
-p mlm_gof module for computing the Goodness-of-fit test after mixed-effects logistic regression with random intercepts
+p mlm_gof module  for computing the goodness-of-fit test after mixed-effects logistic regression
 p mlmoderator module providing robustness diagnostics and visualization tools for cross-level interaction effects in multilevel models 
 p mlogitroc module to calculate multiclass ROC Curves and AUC from Multinomial Logistic Regression
 p mlogpred module to produce predicted probabilities after mlogit and svymlog
@@ -284,6 +285,7 @@ p multisite_varitt module to estimate and conduct inference on the variance of I
 p multisite_varlate module to estimate and conduct inference on the variance of LATEs across sites in multi-site randomized trials
 p multispline module to perform nonlinear multilevel spline modeling
 p multistate module to perform multi-state survival analysis
+p multisynth module to build synthetic clones for treated panel units
 p multivrs module to conduct multiverse analysis
 p mundlak module to estimate random-effects regressions adding group-means of independent variables to the model
 p muxplot module to produce scatter plots with y versus multiple x variables

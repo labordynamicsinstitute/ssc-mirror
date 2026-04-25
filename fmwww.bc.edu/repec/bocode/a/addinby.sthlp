@@ -15,7 +15,7 @@ help for {cmd:addinby} and {cmd:fraddinby}{right:(Roger Newson)}
 {p 8 21 2}
 {cmd:fraddinby} {help varlist:{it:keyvarlist}} , {opt fra:me(frame_name)} [ {break}
   {opt m:issing} {opt un:matched(action_spec)} {opt noc:omplete}
-  {opth keep(varlist)} {opth gen:erate(newvar)}
+  {opth keep(varlist)} {opth gen:erate(newvar)} {opt sortp:reserve}
   ]
 
 {pstd}
@@ -33,8 +33,8 @@ It adds variables and/or values to existing observations in the dataset currentl
 from a Stata-format dataset stored in the file {it:filename}
 (the using dataset),
 using a foreign key of variables specified by the {help varlist:{it:keyvarlist}}
-to identify observations in the using dataset.
-These foreign key variables must identify observations in the using dataset uniquely.
+to identify observations in the {cmd:using} dataset.
+These foreign key variables must identify observations in the {cmd:using} dataset uniquely.
 Unlike {helpb merge:merge m:1},
 {cmd:addinby} always preserves the observations in the master dataset in their original sorting order,
 and never adds any additional observations,
@@ -126,6 +126,15 @@ It is similar to the option of the same name for {helpb frlink}.
 If {cmd:generate()} is not specified,
 then no linkage information variable is generated.
 
+{phang}
+{opt sortpreserve} specifies that the frame specified in the {cmd:frame()} option
+will be sorted as it was before, after the execution of {cmd:fraddinby}.
+If {cmd:sortpreserve} is not specified, then the frame specified in the {cmd:frame()} option
+will be resorted by  the {help varlist:keyvarlist}.
+Note that {cmd:sortpreserve} and {cmd:generate()} may not be used together,
+because the {cmd:generate()} option generates a variable giving positions
+in the order of the {help varlist:keyvarlist}.
+
 
 {title:Remarks}
 
@@ -210,8 +219,8 @@ The frame {cmd:frieda} is then dropped
 {title:Author}
 
 {pstd}
-Roger Newson, Imperial College London, UK.{break}
-Email: {browse "mailto:r.newson@imperial.ac.uk":r.newson@imperial.ac.uk}
+Roger Newson, Queen Mary University of London, UK.{break}
+Email: {browse "mailto:r.newson@qmul.ac.uk":r.newson@qmul.ac.uk}
 
 
 {title:Also see}

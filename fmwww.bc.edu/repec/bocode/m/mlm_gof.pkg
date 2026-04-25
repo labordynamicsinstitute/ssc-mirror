@@ -1,4 +1,4 @@
-d 'MLM_GOF': module for computing the Goodness-of-fit test after mixed-effects logistic regression with random intercepts
+d 'MLM_GOF': module  for computing the goodness-of-fit test after mixed-effects logistic regression
 d
 d  mlm_gof performs a goodness-of-fit test for binary multilevel
 d logistic models fitted by melogit. It extends the grouping-based

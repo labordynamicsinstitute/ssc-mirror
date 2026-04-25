@@ -1,5 +1,5 @@
 #delim ;
-prog def fraddinby, sortpreserve;;
+prog def fraddinby, sortpreserve;
 version 16.0;
 /*
   Add in variables and/or values from a dataset in a data frame
@@ -7,11 +7,12 @@ version 16.0;
   leaving the master dataset in its original sorting order
   and without any new linkage variable (except if requested).
 *! Author: Roger Newson
-*! Date: 13 April 2020
+*! Date: 23 April 2026
 */
 
 
-syntax varlist , FRAme(name) [ Missing UNmatched(string) noCOmplete FAST KEEP(string) GENerate(name) ];
+syntax varlist , FRAme(name) [ Missing UNmatched(string) noCOmplete FAST KEEP(string) GENerate(name)
+  SORTPreserve ];
 /*
   frame() specifies the frame from which new variables are to be merged.
   missing denotes that missing values in key variables are allowed.
@@ -23,6 +24,8 @@ syntax varlist , FRAme(name) [ Missing UNmatched(string) noCOmplete FAST KEEP(st
   generate() specifies the name of a new linkage variable to be generated
     for the linkage between the current dataframe and the linked data frame,
     but absent if not specified.
+  sortpreserve specifies that the frame spacified by frame() will be sorted
+    back to its original order after execution.
 */
 
 
@@ -30,6 +33,13 @@ syntax varlist , FRAme(name) [ Missing UNmatched(string) noCOmplete FAST KEEP(st
  Check that frame() option specifies an existing frame
 *;
 confirm frame `frame';
+
+
+* Check that generate() and sortpreserve are not both specified. *;
+if "`generate'"!="" & "`sortpreserve'"!="" {;
+  disp as error "You may not specify both generate() and sortpreserve";
+  error 498;
+};
 
 
 *
@@ -89,6 +99,25 @@ if "`missing'"=="" {;
 };
 
 
+* Add temporary old-order variable if sortpreserve is specified ^;
+if "`sortpreserve'"!="" {;
+  frame `frame' {;
+    local oldsb: sortedby;
+    tempvar oldorder;
+    gene byte `oldorder'=_n;
+    cap assert `oldorder'>`oldorder'[_n-1] if _n>1;
+    if _rc {;
+      disp as error "Frame `frmme' has too many observations for sortpreserve to work";
+      error 498;    
+    };
+  };
+};
+
+
+* Begining of unindented capture noisily block *;
+cap noi {;
+
+
 *
  Create linkage to frame()
 *;
@@ -119,6 +148,21 @@ else if "`unmatched'"=="drop" {;
 if `Nexpkeep'>0 {;
   qui foreach X in `expkeep' {;
     frget `X'=`X', from(`generate');
+  };
+};
+
+
+};
+* End of unindented capture noisily block *;
+if _rc error _rc;
+
+
+* Sort frame() back to original order if requested (;
+if "`sortpreserve'"!="" {;
+  frame `frame' {;
+    sort `oldorder';
+    drop `oldorder';
+    if "`oldsb'"!="" sort `oldsb', stable;
   };
 };
 

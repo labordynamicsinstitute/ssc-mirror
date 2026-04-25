@@ -1,0 +1,29 @@
+d 'MULTISYNTH': module to build synthetic clones for treated panel units
+d
+d      multisynth extends the synthetic-control method of Abadie,
+d Diamond, and Hainmüller (2010) to panel settings    with
+d multiple treated units and staggered treatment timing. The
+d synthetic-control idea — finding a convex	 combination of
+d untreated units that reproduces the treated unit's pre-treatment
+d outcome path — is applied	 independently to each treated
+d unit. Treated units are identified by treated()==1; the variable
+d post()    defines the unit-specific split between pre-treatment
+d and post-treatment observations, so units need not	share a
+d common treatment date. 
+d
+d KW: synthetic control
+d KW: staggered timing
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260424
+d
+d Author: Leonhard Benedikt Friedel,   WHU - Otto Beisheim School of Management
+d Support: email  leonhard.friedel@@whu.edu
+d
+f multisynth.ado
+f multisynth.sthlp
+f multisynth_stack.dta
+f multisynth_weights.dta
+f multisynth_example_data.dta
+f multisynth_example.do

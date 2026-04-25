@@ -15,7 +15,7 @@ d KW: count data
 d
 d Requires: Stata version 15
 d
-d Distribution-Date: 20260423
+d Distribution-Date: 20260424
 d
 d Author: Stephen P. Jenkins, London School of Economics and Political Science
 d Support: email S.Jenkins@@lse.ac.uk
@@ -29,3 +29,4 @@ f bimpoisson2_lf.ado
 f bimpoisson_p.ado
 f bimpoisson.sthlp
 f bimpoisson_postestimation.sthlp
+f ../d/debtrivedi.dta

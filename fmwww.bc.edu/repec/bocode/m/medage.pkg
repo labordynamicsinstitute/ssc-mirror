@@ -1,0 +1,21 @@
+d 'MEDAGE': module to calculate linear interpolated median age from 5-year age group data
+d
+d   The medage command calculates the linear interpolated median
+d age from population data aggregated into 5-year age intervals
+d (e.g., 0-4, 5-9, etc.). While Stata provides robust tools for
+d individual-level data, demographers working with binned census
+d data or population projections often have to manually implement
+d interpolation formulas. 
+d
+d KW: data management
+d KW: interpolation
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260424
+d
+d Author:   Anne Fengyan Shi,  Pew Research Center
+d Support: email AShi@@pewresearch.org
+d
+f medage.ado
+f medage.sthlp
