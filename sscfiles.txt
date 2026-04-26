@@ -18709,6 +18709,7 @@ fmwww.bc.edu/repec/bocode/n/npinfo.sthlp
 fmwww.bc.edu/repec/bocode/n/njc_best_stuff.html
 fmwww.bc.edu/repec/bocode/n/nwcluster.ado
 fmwww.bc.edu/repec/bocode/n/nwANND.ado
+fmwww.bc.edu/repec/bocode/n/naics_sic_lookup.dta
 fmwww.bc.edu/repec/bocode/n/nrow.ado
 fmwww.bc.edu/repec/bocode/n/ncaexample.dta
 fmwww.bc.edu/repec/bocode/n/normtest.pkg
@@ -18779,6 +18780,7 @@ fmwww.bc.edu/repec/bocode/n/nytimes.ado
 fmwww.bc.edu/repec/bocode/n/ncf.hlp
 fmwww.bc.edu/repec/bocode/n/ncdisp.sthlp
 fmwww.bc.edu/repec/bocode/n/nonparmde.pkg
+fmwww.bc.edu/repec/bocode/n/nace2_isic4_bridge.dta
 fmwww.bc.edu/repec/bocode/n/naam.pkg
 fmwww.bc.edu/repec/bocode/n/nctprob.html
 fmwww.bc.edu/repec/bocode/n/num2base26.sthlp
@@ -18817,6 +18819,7 @@ fmwww.bc.edu/repec/bocode/n/pc_dd_analytic.sthlp
 fmwww.bc.edu/repec/bocode/n/network_rank.sthlp
 fmwww.bc.edu/repec/bocode/n/nehurdle_truncp.ado
 fmwww.bc.edu/repec/bocode/n/nehurdle_truncnb2.ado
+fmwww.bc.edu/repec/bocode/n/nace_to_ff.sthlp
 fmwww.bc.edu/repec/bocode/n/nctinv.ado
 fmwww.bc.edu/repec/bocode/n/nicewords.ado
 fmwww.bc.edu/repec/bocode/n/NairTables.dta
@@ -19065,6 +19068,7 @@ fmwww.bc.edu/repec/bocode/n/nswre74.dta
 fmwww.bc.edu/repec/bocode/n/normi.sthlp
 fmwww.bc.edu/repec/bocode/n/nytimes.sthlp
 fmwww.bc.edu/repec/bocode/n/nicedates.pkg
+fmwww.bc.edu/repec/bocode/n/nace_to_ff.ado
 fmwww.bc.edu/repec/bocode/n/npiv.sthlp
 fmwww.bc.edu/repec/bocode/n/nearstat.html
 fmwww.bc.edu/repec/bocode/n/nnipolate.sthlp
@@ -20267,6 +20271,7 @@ fmwww.bc.edu/repec/bocode/i/ivreg2.hlp
 fmwww.bc.edu/repec/bocode/i/intllf_lnormal.ado
 fmwww.bc.edu/repec/bocode/i/igenerate.sthlp
 fmwww.bc.edu/repec/bocode/i/ivactest.hlp
+fmwww.bc.edu/repec/bocode/i/isic_to_ff.ado
 fmwww.bc.edu/repec/bocode/i/ivcloglog_ex.ado
 fmwww.bc.edu/repec/bocode/i/intercorr.sthlp
 fmwww.bc.edu/repec/bocode/i/isis.sthlp
@@ -20886,6 +20891,7 @@ fmwww.bc.edu/repec/bocode/i/integrate_aq.ado
 fmwww.bc.edu/repec/bocode/i/ineqdec05.ado
 fmwww.bc.edu/repec/bocode/i/ivglog.ado
 fmwww.bc.edu/repec/bocode/i/i_ineq.sthlp
+fmwww.bc.edu/repec/bocode/i/isic4_naics17_bridge.dta
 fmwww.bc.edu/repec/bocode/i/intllf_sgt.ado
 fmwww.bc.edu/repec/bocode/i/ivlasso_p.ado
 fmwww.bc.edu/repec/bocode/i/img.sthlp
@@ -20945,6 +20951,7 @@ fmwww.bc.edu/repec/bocode/i/icomp.pdf
 fmwww.bc.edu/repec/bocode/i/invmvnormal.sthlp
 fmwww.bc.edu/repec/bocode/i/iimpute.ado
 fmwww.bc.edu/repec/bocode/i/intllf_ggamma.ado
+fmwww.bc.edu/repec/bocode/i/isic_to_ff.sthlp
 fmwww.bc.edu/repec/bocode/i/inshell_detect_pwsh.ado
 fmwww.bc.edu/repec/bocode/i/ivreg2_cue.ado
 fmwww.bc.edu/repec/bocode/i/ineqfac.html

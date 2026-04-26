@@ -1,14 +1,13 @@
 {smcl}
-{* *! version 0.5.2  18apr2026}{...}
+{* *! version 0.6.0  25apr2026}{...}
 {cmd:help xtdpthresh}
 {hline}
 
 {title:Title}
 
 {pstd}
-{hi:xtdpthresh} {hline 2} Dynamic Panel Threshold Model with Endogeneity,
-supporting Unbalanced Panels via Forward Orthogonal Deviations, and Grid
-Bootstrap Inference (Gong-Seo 2026)
+{hi:xtdpthresh} {hline 2} Dynamic panel threshold regression for unbalanced
+panels, with endogenous regressors and continuity-robust inference
 
 
 {title:Syntax}
@@ -35,7 +34,8 @@ where:
 {synoptline}
 {syntab:Model specification}
 {synopt:{opt qx(varname)}}threshold variable (REQUIRED){p_end}
-{synopt:{opt endo:genous(varlist)}}endogenous regressors; lagged levels used as IV{p_end}
+{synopt:{opt endo:genous(varlist)}}contemporaneously endogenous regressors; instrumented by lags from t-2{p_end}
+{synopt:{opt pred:etermined(varlist)}}weakly exogenous (predetermined) regressors; instrumented by lags from t-1{p_end}
 {synopt:{opt exo:genous(varlist)}}extra exogenous regressors (same treatment as {it:indepvars}){p_end}
 {synopt:{opt iv(varlist[, sub-opts])}}additional user-supplied instruments.
 Concise xtabond2-style sub-options allowed: {cmd:iv({it:varlist}, maxlag(# [#]) collapse)}.
@@ -60,6 +60,7 @@ asymptotic CIs are invalid in that case). Use grid bootstrap instead.{p_end}
 {synopt:{opt gridci(#)}}# grid points for CI construction; default {cmd:25}{p_end}
 {synopt:{opt boot(#)}}bootstrap replications; default {cmd:299}{p_end}
 {synopt:{opt nosearch}}skip grid bootstrap (point estimate only){p_end}
+{synopt:{opt nowarn}}suppress CI-boundary pinning warning{p_end}
 
 {syntab:Reporting}
 {synopt:{opt l:evel(#)}}confidence level; default {cmd:95}{p_end}
@@ -76,9 +77,17 @@ Use {help xtset} before running {cmd:xtdpthresh}.
 {cmd:xtdpthresh} estimates the dynamic panel threshold model of
 Seo and Shin (2016), extended to unbalanced panels via Forward Orthogonal
 Deviations (Arellano-Bover 1995) and System GMM (Blundell-Bond 1998).
-Inference for the threshold location uses the grid bootstrap of
-Gong and Seo (2026), which is uniformly valid regardless of whether the
-threshold model is continuous (kink) or discontinuous (jump).
+Inference for the threshold location follows the grid-inversion framework
+of Gong and Seo (2026, Section 4.1), implemented with the fast-bootstrap
+scheme of {help xthenreg:xthenreg} (Seo, Kim, and Kim 2019): wild residual
+weights, fixed first-stage GMM weight, one-step bootstrap per draw. See
+{help xtdpthresh##citype:citype} for details and caveats.
+
+{pstd}
+For full methodology, Monte Carlo evidence, and worked empirical
+illustrations on Hansen (1999) firm investment data and FDIC bank-panel
+data, see the companion paper:
+{browse "https://ssrn.com/abstract=6619058":Nguyen and Lai (2026)}.
 
 {pstd}
 The estimated dynamic model is:
@@ -99,16 +108,19 @@ blocks.
 {pstd}
 When the true model is continuous (satisfies δ_1 + δ_p·γ = 0 and δ_2:p-1 = 0),
 the GMM threshold estimator converges at {it:n^(1/4)}-rate with a non-normal
-distribution; the standard nonparametric bootstrap is inconsistent. The grid
-bootstrap in {cmd:xtdpthresh} imposes the null at each candidate γ and is
-valid regardless of continuity.
+distribution; the standard nonparametric bootstrap is inconsistent. The
+grid bootstrap implemented here imposes the null at each candidate γ,
+which is the key property that delivers empirical coverage near nominal
+under both continuous (kink) and discontinuous (jump) specifications in
+our Monte Carlo; see {help xtdpthresh##citype:citype} for the
+implementation-level caveats.
 
 
 {title:Syntax conventions relative to xthenreg}
 
 {pstd}
 {cmd:xtdpthresh} is designed to feel familiar to users of {cmd:xthenreg}
-(Kim-Kim-Seo 2019) while extending it along several dimensions. Key
+(Seo, Kim, and Kim 2019) while extending it along several dimensions. Key
 differences:
 
 {phang}
@@ -152,10 +164,26 @@ practice, putting these in {it:indepvars} achieves the same effect.
 {dlgtab:Model specification}
 
 {phang}
-{opt endogenous(varlist)} specifies endogenous regressors. These are
-appended to the regressor matrix (in addition to {it:indepvars}), and the
-command automatically uses their lagged levels as instruments. {it:endogenous()}
-variables must NOT appear in {it:indepvars}.
+{opt endogenous(varlist)} specifies contemporaneously endogenous regressors,
+i.e., E[x_{it} ε_{it}] ≠ 0. These are appended to the regressor matrix and
+the command instruments them with lagged levels {x_{i,t-2}, x_{i,t-3}, ...}
+in the transformed equation (lags from t-2, since x_{i,t-1} can correlate
+with Δε_{it} = ε_{it} - ε_{i,t-1}). {it:endogenous()} variables must NOT
+appear in {it:indepvars}, {opt exogenous()}, or {opt predetermined()}.
+
+{phang}
+{opt predetermined(varlist)} specifies weakly exogenous (predetermined)
+regressors, i.e., E[x_{i,t-1} ε_{it}] = 0 but E[x_{it} ε_{it}] may be
+nonzero. Predetermined regressors are instrumented with lagged levels
+{x_{i,t-1}, x_{i,t-2}, ...} in the transformed equation — one more lag
+than {opt endogenous()} since x_{i,t-1} is a valid instrument under the
+predetermined assumption. This is the standard Arellano-Bond / Bond
+(2002) classification: use {opt endogenous()} for variables jointly
+determined with y_{it} (e.g., simultaneously chosen by the firm),
+{opt predetermined()} for lagged-feedback variables (e.g., capital that
+responds to past shocks but is fixed at time t). {it:predetermined()}
+variables must NOT appear in {it:indepvars}, {opt exogenous()}, or
+{opt endogenous()}.
 
 {phang}
 {opt exogenous(varlist)} specifies additional exogenous regressors. These
@@ -279,7 +307,18 @@ observations whenever at least one future value exists.
 
 {pmore}
 {cmd:system} — system GMM (Blundell-Bond 1998). Stacks FOD equations
-with level equations using Δ-lag instruments.
+with level equations using Δ-lag instruments as in the {cmd:xtabond2}
+FOD-plus-level configuration (Roodman 2009, Section 3.4).
+
+{pmore}
+{bf:CAUTION: method(system) should be used with care.} Formal asymptotic
+theory for Blundell-Bond system GMM in dynamic panel threshold models
+is not established in the literature, and the standard mean-stationarity
+requirement on initial conditions must hold within each regime — a
+non-trivial restriction when fixed effects are correlated with regime
+membership. We recommend reporting {cmd:method(system)} results alongside
+{cmd:method(fd)} or {cmd:method(fod)} as a robustness check rather than
+as the primary specification.
 
 {phang}
 {opt grid(#)} sets the number of grid points for the γ search. Default 30.
@@ -287,8 +326,11 @@ For Monte Carlo or final estimation, use a denser grid (50-100).
 
 {phang}
 {opt trim(#)} sets the trimming rate for the γ grid, using xthenreg's
-convention: {cmd:trim(0.2)} means grid spans the 10th to 90th percentile
-of {it:q_var}. Must be in [0.01, 0.45]. Default 0.10.
+convention: {cmd:trim(#)} trims {it:#}/2 from each tail of {it:q_var}.
+Examples: {cmd:trim(0.10)} → grid spans [p5, p95]; {cmd:trim(0.20)} →
+grid spans [p10, p90]; {cmd:trim(0.40)} → grid spans [p20, p80]. Must
+be in [0.01, 0.45]. Default 0.10. Note: this differs from {cmd:xthreg}
+/{cmd:xthreg2} which interpret the trim argument as a per-tail fraction.
 
 {dlgtab:Inference}
 
@@ -296,8 +338,8 @@ of {it:q_var}. Must be in [0.01, 0.45]. Default 0.10.
 {opt citype(grid|none)} chooses CI construction method for the threshold.
 
 {pmore}
-{cmd:grid} — grid bootstrap CI via test inversion (Gong-Seo 2026 Algorithm 1),
-uniformly valid regardless of model continuity. Default.
+{cmd:grid} — grid bootstrap CI via test inversion within the framework
+of Gong-Seo (2026, Section 4.1). Default.
 
 {pmore}
 {cmd:none} — skip threshold CI; report point estimate and coefficient SE
@@ -307,12 +349,40 @@ only.
 Asymptotic CI is NOT provided as an option. Under the continuous (kink)
 model, γ̂ is n^(1/4)-consistent with a non-normal limit distribution
 (Theorem 2 of Gong-Seo 2026), making standard asymptotic intervals
-invalid. The grid bootstrap is uniformly valid across continuous and
-discontinuous cases.
+invalid.
+
+{pmore}
+{bf:Implementation note.} The grid bootstrap follows the fast-bootstrap
+scheme of {help xthenreg:xthenreg} (Seo, Kim, and Kim 2019, the reference Stata
+implementation of Seo-Shin 2016): unit-level wild residual weights, a
+fixed first-stage GMM weight matrix held across draws, and one-step
+bootstrap GMM per replication. We use Mammen (1993) two-point wild
+weights in place of the N(0,1) weights used by xthenreg (per
+Davidson-MacKinnon 2000, for better finite-sample properties) and extend
+the scheme from xthenreg's sup-Wald linearity test to (i) the grid-
+inversion threshold CI of Gong-Seo (2026, Section 4.1) and (ii) the
+continuity test of Gong-Seo (2026, Section 4.3, Theorem 7). The fast
+scheme is 30-60 times faster than the exact Algorithm 1 of Gong-Seo and
+matches user expectations from xthenreg, though Gong-Seo Theorem I.1
+uniform validity is proved for the exact algorithm; Monte Carlo coverage
+near nominal on the canonical Seo-Shin Tong-SETAR DGP supports the fast
+scheme's empirical validity. A {cmd:bootstrap(exact)} option is planned
+for a future version.
 
 {phang}
 {opt gridci(#)} sets grid points for CI construction. Finer grid gives
 more precise CI but slower runtime. Default 25.
+
+{pmore}
+{bf:Implementation note.} CI construction uses {cmd:gridci(#)} points as
+the H_0 grid (values of γ at which the test is inverted), but the
+unrestricted argmin within each bootstrap replication is searched over
+the coarser {cmd:grid(#)} points to save compute. The test-inversion
+comparison is valid because the unrestricted argmin is computed on the
+{it:same} coarse grid for both the sample statistic and the bootstrap
+draws, so any coarseness-induced bias cancels in the quantile
+comparison. For applications needing the finest possible unrestricted
+search, set {cmd:grid(#)} equal to or larger than {cmd:gridci(#)}.
 
 {phang}
 {opt boot(#)} sets bootstrap replications. Minimum 10 (enforced for debugging
@@ -324,6 +394,16 @@ Default 299.
 {phang}
 {opt nosearch} skips the grid bootstrap CI entirely. Equivalent to
 {cmd:citype(none)}.
+
+{phang}
+{opt nowarn} suppresses the CI-boundary pinning warning. By default,
+{cmd:xtdpthresh} prints a warning when either CI bound equals the trim
+floor/ceiling (within 10^-4 of the trim range). Boundary pinning signals
+either weak identification in the affected regime or that the grid edge
+at the current {cmd:trim()} setting cuts close to γ̂. The flag is stored
+in {cmd:e(boundary_warn)} (0 = no pin, 1 = lower, 2 = upper, 3 = both)
+regardless of whether {cmd:nowarn} is set. Use {cmd:nowarn} when running
+many specifications in a loop to avoid log clutter.
 
 {dlgtab:Reporting}
 
@@ -419,6 +499,7 @@ The second call (unrestricted) reports {cmd:e(pval_cont)}; if less than
 {synopt:{cmd:e(obj)}}GMM objective at γ̂{p_end}
 {synopt:{cmd:e(k_exog)}}# exogenous regressors{p_end}
 {synopt:{cmd:e(k_endog)}}# endogenous regressors{p_end}
+{synopt:{cmd:e(k_predet)}}# predetermined regressors{p_end}
 {synopt:{cmd:e(k_inst)}}# user-supplied instruments{p_end}
 {synopt:{cmd:e(flag_kink)}}1 if kink option specified{p_end}
 {synopt:{cmd:e(flag_static)}}1 if static option specified{p_end}
@@ -432,6 +513,7 @@ The second call (unrestricted) reports {cmd:e(pval_cont)}; if less than
 {synopt:{cmd:e(q_var)}}name of threshold variable{p_end}
 {synopt:{cmd:e(indepvars)}}names of exogenous regressors{p_end}
 {synopt:{cmd:e(endog)}}names of endogenous regressors{p_end}
+{synopt:{cmd:e(predet)}}names of predetermined regressors{p_end}
 {synopt:{cmd:e(exog_extra)}}names of extra exogenous regressors (from {opt exogenous()}){p_end}
 {synopt:{cmd:e(inst)}}names of user-supplied instruments{p_end}
 {synopt:{cmd:e(method)}}transformation method used{p_end}
@@ -491,6 +573,17 @@ asymptotically. For FD, AR(1) is expected to REJECT (by construction,
 {cmd:e(ar2)}. {bf:Should NOT reject at conventional levels.} Rejection
 signals that moment conditions are invalid (ε_{t-2} correlated with ε_t),
 and the GMM estimator is inconsistent.
+
+{phang}
+{bf:AR formula note.} {cmd:xtdpthresh} implements a simplified Arellano-Bond
+AR(k) statistic, {it:m}_k = (Σ_i {it:e}_i) / sqrt(Σ_i {it:e}_i^2) where
+{it:e}_i = Σ_t {it:r}_{i,t} · {it:r}_{i,t-k}, evaluated on first-difference
+residuals. This matches the asymptotic limit of the full Arellano-Bond
+variance (a cluster-robust sum-of-squares with no adjustment for estimated
+θ̂) but differs from {cmd:xtabond2}'s finite-sample sandwich correction.
+Under the null, the two statistics have the same {it:N}(0, 1) limit; in
+moderate samples the simplified form is slightly more conservative (larger
+p-values).
 
 {title:Hypothesis tests (bootstrap-based, require citype(grid))}
 
@@ -568,6 +661,9 @@ distribution V_1 - V_2 + V_3.
 {title:References}
 
 {phang}
+Nguyen, D. C., and N. D. Lai. 2026. {browse "https://ssrn.com/abstract=6619058":xtdpthresh: Dynamic panel threshold regression for unbalanced panels, with endogenous regressors and continuity-robust inference}. {it:SSRN Working Paper} 6619058.
+
+{phang}
 Arellano, M., and O. Bover. 1995. Another look at the instrumental
 variable estimation of error-components models. {it:Journal of
 Econometrics} 68: 29-51.
@@ -619,5 +715,5 @@ ORCID: {browse "https://orcid.org/0009-0008-5365-2893":0009-0008-5365-2893}
 {title:Also see}
 
 {psee}
-Online: {help xtset}, {help xthenreg} (Kim-Kim-Seo 2019), {help xtabond},
+Online: {help xtset}, {help xthenreg} (Seo, Kim, and Kim 2019), {help xtabond},
 {help xtabond2} (Roodman 2009){p_end}

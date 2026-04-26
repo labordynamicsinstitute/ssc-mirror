@@ -6,11 +6,16 @@ d Fama-French industry	  classification schemes: FF5, FF10, FF12,
 d FF17, FF30, FF38, FF48, and FF49.    The command accepts both
 d numeric and string NAICS codes. String NAICS codes are   
 d automatically converted to numeric values. Non-numeric strings
-d (e.g., "XXXX") are	treated as missing.    The Fama-French
-d industry classifications are widely used in empirical accounting
-d and	 finance research to group firms by industry. These
-d classifications are based on	  four-digit SIC codes and are
-d maintained by Kenneth R. French on his data library	 website. 
+d (e.g., "XXXX") are	treated as missing.    naics_to_ff /
+d isic_to_ff / nace_to_ff convert NAICS, ISIC, or NACE industry
+d codes to Fama-French industry classifications. naics_to_ff maps
+d NAICS->SIC->FF, isic_to_ff maps ISIC Rev.4->NAICS->SIC->FF, and
+d nace_to_ff maps NACE Rev.2->ISIC Rev.4->NAICS->SIC->FF.    The
+d Fama-French industry classifications are widely used in empirical
+d accounting and    finance research to group firms by industry.
+d These classifications are based on	four-digit SIC codes and
+d are maintained by Kenneth R. French on his data library   
+d website. 
 d
 d KW: data management
 d KW: NAICS codes
@@ -20,10 +25,17 @@ d KW: French
 d
 d Requires: Stata version 14 and sic_to_ff from SSC (q.v.)
 d
-d Distribution-Date: 20251221
+d Distribution-Date: 20260425
 d
 d Author: Kelvin Law,   Nanyang Technological University
 d Support: email klaw@@ntu.edu.sg
 d
 f naics_to_ff.ado
 f naics_to_ff.sthlp
+f ../i/isic_to_ff.ado
+f ../i/isic_to_ff.sthlp
+f nace_to_ff.ado
+f nace_to_ff.sthlp
+f ../i/isic4_naics17_bridge.dta
+f nace2_isic4_bridge.dta
+f naics_sic_lookup.dta

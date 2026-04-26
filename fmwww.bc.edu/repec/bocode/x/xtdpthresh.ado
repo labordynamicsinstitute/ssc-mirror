@@ -1,6 +1,6 @@
-*! version 0.5.2  18apr2026  (AR test on FD residuals for all methods, per xtabond2)
+*! version 0.6.0  25apr2026  (xthenreg-compatible strict sample restored after tsrevar; tsrevar expansion of ts operators in regressors and iv(); predetermined() option for weakly-exogenous regressors; robust syntax-based iv() parser supporting multi-var iv(z1 z2, collapse); maxlag validation requires >=2 for dynamic/endogenous; xdpt2_rangen replaces rangen for portability; valid-bootstrap p-values; xdpt2_quantile replaces mm_quantile; IV-empty level-eq rows dropped; cluster-robust V + Hansen J at best theta; unrestricted-bootstrap 2-step fallback)
 *! Dynamic Panel Threshold Model with Endogeneity, Unbalanced Support
-*! API matches xthenreg (Kim-Kim-Seo 2019 SJ) extended with:
+*! API matches xthenreg (Seo, Kim, and Kim 2019 SJ) extended with:
 *!   - method(fod|fd|system) for unbalanced panels (Arellano-Bover 1995)
 *!   - Grid bootstrap inference for threshold CI (Gong-Seo 2026 JoE)
 *!
@@ -17,7 +17,8 @@
 *!
 *! Syntax:
 *!   xtdpthresh depvar [indepvars] [if] [in], qx(varname)
-*!       [ endogenous(varlist) exogenous(varlist) iv(varlist[, sub-opts]) ]
+*!       [ endogenous(varlist) predetermined(varlist) exogenous(varlist)
+*!         iv(varlist[, sub-opts]) ]
 *!       [ kink static td ]
 *!       [ method(fd|fod|system) ]
 *!       [ collapse maxlag(# [#]) levmaxlag(# [#]) ]
@@ -30,8 +31,11 @@
 *!   qx()      — threshold variable q (required option, not positional)
 *!
 *! Options:
-*!   endogenous(varlist) — endogenous regressors (lagged levels as IVs)
-*!   exogenous(varlist)  — extra exogenous regressors (treated like indepvars)
+*!   endogenous(varlist)    — contemporaneously endogenous regressors.
+*!                            Instrumented in Δ/FOD eq by lags t-2, t-3, ....
+*!   predetermined(varlist) — weakly exogenous (predetermined) regressors.
+*!                            Instrumented in Δ/FOD eq by lags t-1, t-2, ....
+*!   exogenous(varlist)     — extra exogenous regressors (treated like indepvars)
 *!   iv(varlist[, maxlag(a b) collapse])
 *!                       — user-supplied external IVs, xtabond2-style sub-opts
 *!   td                  — time-demean y and regressors within each t (q untouched)
@@ -59,6 +63,7 @@ program define xtdpthresh, eclass
         [                                           ///
         IV(string)                                  ///
         ENDOgenous(varlist numeric ts)              ///
+        PREDetermined(varlist numeric ts)           ///
         EXOgenous(varlist numeric ts)               ///
         KINK                                        ///
         STATIC                                      ///
@@ -74,6 +79,7 @@ program define xtdpthresh, eclass
         CITYPE(string)                              ///
         Level(cilevel)                              ///
         NOSEARCH                                    ///
+        NOWARN                                      ///
         VERBOSE                                     ///
         ]
     local flag_verbose = cond("`verbose'" != "", 1, 0)
@@ -82,50 +88,36 @@ program define xtdpthresh, eclass
     // xtabond2-style concise form. Sub-options, when present, take precedence
     // over the top-level maxlag()/collapse. If not present, top-level wins.
     if "`iv'" != "" {
-        // Save outer locals — the inner `syntax` call below clobbers `varlist'
-        // (and could clobber other positional locals) with empty.
+        // Save outer locals — the inner `syntax' call below clobbers `varlist',
+        // `if', `in', and option locals such as `maxlag' / `collapse'.
         local _save_varlist    `"`varlist'"'
         local _save_if         `"`if'"'
         local _save_in         `"`in'"'
         local _outer_maxlag    `"`maxlag'"'
         local _outer_collapse  `"`collapse'"'
 
-        gettoken iv_vars iv_rest : iv, parse(",")
-        local iv_vars = trim(`"`iv_vars'"')
-        local _sub_has = 0
-        if `"`iv_rest'"' != "" {
-            gettoken _c iv_opts : iv_rest, parse(",")
-            local iv_opts = trim(`"`iv_opts'"')
-            if `"`iv_opts'"' != "" {
-                local 0 , `iv_opts'
-                cap syntax , [MAXLAG(numlist max=2 min=1 integer >0) COLLAPSE]
-                if _rc {
-                    di as err "invalid sub-options in iv(...) — allowed: maxlag(# [#]) collapse"
-                    exit 198
-                }
-                local _sub_has = 1
-                if "`maxlag'"   == "" local maxlag   `"`_outer_maxlag'"'
-                if "`collapse'" == "" local collapse `"`_outer_collapse'"'
-            }
+        // Robust parser for iv(z1 z2 [, maxlag(a b) collapse]).
+        // The previous gettoken-based parser split at blanks and therefore
+        // failed for multiple IVs such as iv(z1 z2, collapse).
+        local 0 `"`iv'"'
+        cap syntax varlist(numeric ts) [, MAXLAG(numlist max=2 min=1 integer >0) COLLAPSE]
+        if _rc {
+            di as err "invalid iv(...) syntax — use iv(varlist [, maxlag(# [#]) collapse])"
+            exit 198
         }
-        if !`_sub_has' {
-            local maxlag   `"`_outer_maxlag'"'
-            local collapse `"`_outer_collapse'"'
-        }
+        local iv_vars `"`varlist'"'
+        if "`maxlag'"   == "" local maxlag   `"`_outer_maxlag'"'
+        if "`collapse'" == "" local collapse `"`_outer_collapse'"'
+
         // Restore outer positional/if/in clobbered by inner syntax
         local varlist `"`_save_varlist'"'
         local if      `"`_save_if'"'
         local in      `"`_save_in'"'
 
-        cap confirm numeric variable `iv_vars'
-        if _rc {
-            di as err "iv() variables invalid: `iv_vars'"
-            exit 198
-        }
         local iv `iv_vars'
     }
 
-    marksample touse
+    marksample touse, novarlist
 
     // === Option normalization & validation ===
     if "`method'" == "" local method "fd"
@@ -202,17 +194,39 @@ program define xtdpthresh, eclass
     local indepvars = trim("`indepvars'")
     local q_var "`qx'"
 
+    // Dependent variable must be a plain variable name. Time-series operators
+    // are allowed for regressors/options only and are expanded below via tsrevar.
+    if strpos("`depvar'", ".") {
+        di as err "dependent variable may not contain time-series operators; create the lag/difference as a separate variable if needed"
+        exit 198
+    }
+
+    // Save user-facing lists before tsrevar expansion. Expanded temporary
+    // variable names are used internally; these labels are used for display,
+    // ereturn metadata, and coefficient names.
+    local indepvars_lab `"`indepvars'"'
+
     // Note: Seo-Shin (2016) permits q_var to appear as a regressor (in indepvars
     // or endogenous()). In that case the slope on q changes at γ — a natural
     // specification (e.g. "does the marginal effect of debt on invest shift
     // above some debt threshold?"). No overlap check needed.
 
     // === Collect all regressors ===
-    // Exog regressors (default: all indepvars are exogenous unless endogenous())
-    // Endog regressors (listed in endogenous()) must NOT appear in indepvars
+    // Exog regressors (default: all indepvars are exogenous unless endogenous()
+    //                  or predetermined() is specified)
+    // Endog regressors     (option endogenous())    : instruments from t-2
+    // Predet regressors    (option predetermined()) : instruments from t-1
+    // None of these three groups may overlap with each other or with indepvars.
     local exog_extra : list clean exogenous
     local endog      : list clean endogenous
+    local predet     : list clean predetermined
     local inst_extra : list clean iv
+
+    // User-facing copies after option macros are normalized.
+    local exog_extra_lab `"`exog_extra'"'
+    local endog_lab      `"`endog'"'
+    local predet_lab     `"`predet'"'
+    local inst_extra_lab `"`inst_extra'"'
 
     // Check no overlap between endogenous and indepvars
     local overlap : list endog & indepvars
@@ -220,10 +234,48 @@ program define xtdpthresh, eclass
         di as err "endogenous() vars must not appear in indepvars: `overlap'"
         exit 198
     }
+    // Check no overlap between endogenous and exogenous
+    local overlap2 : list endog & exog_extra
+    if "`overlap2'" != "" {
+        di as err "endogenous() and exogenous() vars must not overlap: `overlap2'"
+        exit 198
+    }
+    // Check no overlap between indepvars and exogenous (would duplicate in X)
+    local overlap3 : list indepvars & exog_extra
+    if "`overlap3'" != "" {
+        di as err "indepvars and exogenous() vars must not overlap: `overlap3'"
+        exit 198
+    }
+    // Check no overlap between predetermined and (indepvars / exog / endog)
+    local overlap4 : list predet & indepvars
+    if "`overlap4'" != "" {
+        di as err "predetermined() vars must not appear in indepvars: `overlap4'"
+        exit 198
+    }
+    local overlap5 : list predet & exog_extra
+    if "`overlap5'" != "" {
+        di as err "predetermined() and exogenous() vars must not overlap: `overlap5'"
+        exit 198
+    }
+    local overlap6 : list predet & endog
+    if "`overlap6'" != "" {
+        di as err "predetermined() and endogenous() vars must not overlap: `overlap6'"
+        exit 198
+    }
 
-    local k_exog  : word count `indepvars' `exog_extra'
-    local k_endog : word count `endog'
-    local k_inst  : word count `inst_extra'
+    local k_exog   : word count `indepvars' `exog_extra'
+    local k_endog  : word count `endog'
+    local k_predet : word count `predet'
+    local k_inst   : word count `inst_extra'
+
+    // Validate maxlag against model structure: dynamic L.y or endogenous regressors
+    // require lag >= 2 in the transformed (Δ/FOD) equation, since x_{t-1} can
+    // correlate with the differenced error term. Predetermined regressors only
+    // need lag >= 1, which is already enforced by numlist constraints.
+    if `maxlag_hi' < 2 & (!`flag_static' | `k_endog' > 0) {
+        di as err "maxlag() upper bound must be at least 2 for dynamic or endogenous transformed-equation instruments"
+        exit 198
+    }
 
     // === xtset check ===
     capture xtset
@@ -234,6 +286,87 @@ program define xtdpthresh, eclass
     local panelvar = r(panelvar)
     local timevar  = r(timevar)
     local is_balanced = ("`r(balanced)'" == "strongly balanced")
+
+    // === Expand time-series operators for Mata st_data() =======================
+    // Stata's parser can accept numeric ts varlists, but Mata's st_data() cannot
+    // reliably read expressions such as L.x, D.x, or L(1/2).x directly. tsrevar
+    // materializes them as temporary variables. All downstream data handling uses
+    // the expanded names, while *_lab locals preserve the user's original syntax.
+    if `"`indepvars'"' != "" {
+        cap tsrevar `indepvars'
+        if _rc {
+            di as err "could not expand indepvars with time-series operators"
+            exit _rc
+        }
+        local _expanded `"`r(varlist)'"'
+        local _n_user : word count `indepvars_lab'
+        local _n_exp  : word count `_expanded'
+        if `_n_user' != `_n_exp' {
+            di as err "range time-series operators such as L(1/2).x are not supported here; spell them out as separate terms"
+            exit 198
+        }
+        local indepvars `"`_expanded'"'
+    }
+    if `"`exog_extra'"' != "" {
+        cap tsrevar `exog_extra'
+        if _rc {
+            di as err "could not expand exogenous() with time-series operators"
+            exit _rc
+        }
+        local _expanded `"`r(varlist)'"'
+        local _n_user : word count `exog_extra_lab'
+        local _n_exp  : word count `_expanded'
+        if `_n_user' != `_n_exp' {
+            di as err "range time-series operators such as L(1/2).x are not supported here; spell them out as separate terms"
+            exit 198
+        }
+        local exog_extra `"`_expanded'"'
+    }
+    if `"`endog'"' != "" {
+        cap tsrevar `endog'
+        if _rc {
+            di as err "could not expand endogenous() with time-series operators"
+            exit _rc
+        }
+        local _expanded `"`r(varlist)'"'
+        local _n_user : word count `endog_lab'
+        local _n_exp  : word count `_expanded'
+        if `_n_user' != `_n_exp' {
+            di as err "range time-series operators such as L(1/2).x are not supported here; spell them out as separate terms"
+            exit 198
+        }
+        local endog `"`_expanded'"'
+    }
+    if `"`predet'"' != "" {
+        cap tsrevar `predet'
+        if _rc {
+            di as err "could not expand predetermined() with time-series operators"
+            exit _rc
+        }
+        local _expanded `"`r(varlist)'"'
+        local _n_user : word count `predet_lab'
+        local _n_exp  : word count `_expanded'
+        if `_n_user' != `_n_exp' {
+            di as err "range time-series operators such as L(1/2).x are not supported here; spell them out as separate terms"
+            exit 198
+        }
+        local predet `"`_expanded'"'
+    }
+    if `"`inst_extra'"' != "" {
+        cap tsrevar `inst_extra'
+        if _rc {
+            di as err "could not expand iv() variables with time-series operators"
+            exit _rc
+        }
+        local _expanded `"`r(varlist)'"'
+        local _n_user : word count `inst_extra_lab'
+        local _n_exp  : word count `_expanded'
+        if `_n_user' != `_n_exp' {
+            di as err "range time-series operators such as L(1/2).x are not supported here; spell them out as separate terms"
+            exit 198
+        }
+        local inst_extra `"`_expanded'"'
+    }
 
     // === Time-effect purging (td option) =======================================
     // Equivalent to including year dummies in both regimes but enforcing equal
@@ -250,8 +383,19 @@ program define xtdpthresh, eclass
         qui gen `Ly' = L.`depvar'
     }
 
-    // === Mark sample: include all relevant vars ===
-    markout `touse' `depvar' `q_var' `indepvars' `endog' `exog_extra' `inst_extra'
+    // === Sample handling ===
+    // xthenreg-compatible strict sample. The marksample, novarlist call earlier
+    // avoided Stata trying to mark out time-series operators before tsrevar
+    // expansion. Now that tsrevar has materialized L.x/D.x into temporary
+    // variables, explicitly mark out all observed user-supplied model variables
+    // so that the effective sample matches the v0.5.4 / xthenreg convention
+    // (drops rows where any user-supplied regressor is missing).
+    //
+    // For the dynamic specification, the auto-generated L.depvar is also
+    // marked out to restore the xthenreg-compatible strict complete-case
+    // sample. This intentionally excludes the first usable lag boundary row
+    // from the estimation sample, matching the benchmark convention.
+    markout `touse' `depvar' `q_var' `indepvars' `endog' `predet' `exog_extra' `inst_extra'
     if !`flag_static' {
         markout `touse' `Ly'
     }
@@ -273,21 +417,24 @@ program define xtdpthresh, eclass
     di as text "Dep. var: " as res "`depvar'" ///
        as text "   Threshold (q): " as res "`q_var'" ///
        as text "`restr_lab'"
-    local reglist "`indepvars' `exog_extra'"
+    local reglist "`indepvars_lab' `exog_extra_lab'"
     local reglist : list clean reglist
     if !`flag_static' local reglist "L.`depvar' (auto) `reglist'"
     if `flag_td' local reglist "`reglist' (time-demeaned)"
     di as text "Regressors: " as res "`reglist'"
-    if `k_endog' > 0 di as text "Endogenous: " as res "`endog'"
-    if `k_inst' > 0 di as text "Extra IVs:  " as res "`inst_extra'"
+    if `k_endog'  > 0 di as text "Endogenous:    " as res "`endog_lab'"
+    if `k_predet' > 0 di as text "Predetermined: " as res "`predet_lab'"
+    if `k_inst'   > 0 di as text "Extra IVs:     " as res "`inst_extra_lab'"
     di ""
 
     // === Build regressor list for Mata: order matters ===
     // Column layout in X_mat:
-    //   [L.y (if dynamic), exog_regressors, endog_regressors]
+    //   [L.y (if dynamic), exog_regressors, endog_regressors, predet_regressors]
     // Lagged y is column 1 when dynamic (handled via var_type).
     local all_exog "`indepvars' `exog_extra'"
     local all_exog : list clean all_exog
+    local all_exog_lab "`indepvars_lab' `exog_extra_lab'"
+    local all_exog_lab : list clean all_exog_lab
 
     // === Compute trim range for γ grid from q_var distribution ===
     // Match xthenreg convention: trim(0.2) = trim 0.1 each tail → p10 to p90
@@ -297,6 +444,10 @@ program define xtdpthresh, eclass
     qui _pctile `q_var' if `touse', percentiles(`trim_lo' `trim_hi')
     scalar `q_lo' = r(r1)
     scalar `q_hi' = r(r2)
+    if missing(`q_lo') | missing(`q_hi') | (`q_lo' >= `q_hi') {
+        di as err "qx() has insufficient variation after trim(`trim'); threshold grid is empty"
+        exit 498
+    }
 
     // === Dispatch to Mata ===
     local do_grid_ci = cond("`citype'" == "grid" & "`nosearch'" == "", 1, 0)
@@ -309,7 +460,7 @@ program define xtdpthresh, eclass
     // The threshold variable q is left untouched so γ keeps its original scale.
     // Applied after preserve so user data is not permanently modified.
     if `flag_td' {
-        local _td_vars "`depvar' `indepvars' `endog' `exog_extra' `inst_extra'"
+        local _td_vars "`depvar' `indepvars' `endog' `predet' `exog_extra' `inst_extra'"
         if !`flag_static' local _td_vars "`_td_vars' `Ly'"
         local _td_vars : list clean _td_vars
         local _td_vars : list uniq _td_vars
@@ -325,7 +476,7 @@ program define xtdpthresh, eclass
     tempname n_raw n_trans n_level n_iv n_units
     tempname hansen hansen_df hansen_p ar1 ar1_p ar2 ar2_p
     mata: xtdpthresh_run("`depvar'", "`Ly'", "`all_exog'", "`endog'",    ///
-                          "`inst_extra'", "`q_var'",                       ///
+                          "`predet'", "`inst_extra'", "`q_var'",           ///
                           "`panelvar'", "`timevar'",                       ///
                           "`method'", `flag_static', `flag_kink',           ///
                           `flag_collapse', `maxlag_lo', `maxlag_hi',         ///
@@ -360,20 +511,50 @@ program define xtdpthresh, eclass
     // === Coefficient labels (match xthenreg convention) ===
     local cnames ""
     if !`flag_static' local cnames "Lag_y_b"
-    foreach v of local all_exog {
-        local cnames "`cnames' `v'_b"
+    foreach v of local all_exog_lab {
+        local _cv = subinstr("`v'", ".", "_", .)
+        local _cv = subinstr("`_cv'", "/", "_", .)
+        local _cv = subinstr("`_cv'", "(", "", .)
+        local _cv = subinstr("`_cv'", ")", "", .)
+        local cnames "`cnames' `_cv'_b"
     }
-    foreach v of local endog {
-        local cnames "`cnames' `v'_b"
+    foreach v of local endog_lab {
+        local _cv = subinstr("`v'", ".", "_", .)
+        local _cv = subinstr("`_cv'", "/", "_", .)
+        local _cv = subinstr("`_cv'", "(", "", .)
+        local _cv = subinstr("`_cv'", ")", "", .)
+        local cnames "`cnames' `_cv'_b"
+    }
+    foreach v of local predet_lab {
+        local _cv = subinstr("`v'", ".", "_", .)
+        local _cv = subinstr("`_cv'", "/", "_", .)
+        local _cv = subinstr("`_cv'", "(", "", .)
+        local _cv = subinstr("`_cv'", ")", "", .)
+        local cnames "`cnames' `_cv'_b"
     }
     if !`flag_kink' {
         local cnames "`cnames' cons_d"
         if !`flag_static' local cnames "`cnames' Lag_y_d"
-        foreach v of local all_exog {
-            local cnames "`cnames' `v'_d"
+        foreach v of local all_exog_lab {
+            local _cv = subinstr("`v'", ".", "_", .)
+            local _cv = subinstr("`_cv'", "/", "_", .)
+            local _cv = subinstr("`_cv'", "(", "", .)
+            local _cv = subinstr("`_cv'", ")", "", .)
+            local cnames "`cnames' `_cv'_d"
         }
-        foreach v of local endog {
-            local cnames "`cnames' `v'_d"
+        foreach v of local endog_lab {
+            local _cv = subinstr("`v'", ".", "_", .)
+            local _cv = subinstr("`_cv'", "/", "_", .)
+            local _cv = subinstr("`_cv'", "(", "", .)
+            local _cv = subinstr("`_cv'", ")", "", .)
+            local cnames "`cnames' `_cv'_d"
+        }
+        foreach v of local predet_lab {
+            local _cv = subinstr("`v'", ".", "_", .)
+            local _cv = subinstr("`_cv'", "/", "_", .)
+            local _cv = subinstr("`_cv'", "(", "", .)
+            local _cv = subinstr("`_cv'", ")", "", .)
+            local cnames "`cnames' `_cv'_d"
         }
     }
     else {
@@ -387,11 +568,53 @@ program define xtdpthresh, eclass
 
     // === Compact final report (xthreg2-style) ===
     di as text "{hline 78}"
+    // Compute boundary-pin flag (used both for display and e(boundary_warn))
+    //   0 = neither bound pins  |  1 = lower pins  |  2 = upper pins  |  3 = both pin
+    local _bwarn = 0
+    if `do_grid_ci' {
+        local _range_bnd = (`=`q_hi'') - (`=`q_lo'')
+        if `_range_bnd' > 0 & !missing(`=`gam_lo'') & !missing(`=`gam_hi'') {
+            local _eps_bnd = 1e-4 * `_range_bnd'
+            local _lo_pin = (abs((`=`gam_lo'') - (`=`q_lo'')) < `_eps_bnd')
+            local _hi_pin = (abs((`=`gam_hi'') - (`=`q_hi'')) < `_eps_bnd')
+            if `_lo_pin' & `_hi_pin' local _bwarn = 3
+            else if `_lo_pin'        local _bwarn = 1
+            else if `_hi_pin'        local _bwarn = 2
+        }
+    }
+
     if `do_grid_ci' {
         di as text "Threshold estimate (" as res "`level'% grid bootstrap CI" as text "):"
         di as text "   γ̂ = " as res %7.4f `gam' ///
            as text "   CI = [" as res %7.4f `gam_lo' ", " %7.4f `gam_hi' "]" ///
            as text "   GMM obj = " as res %7.3f `obj'
+
+        // Display warning unless nowarn set. e(boundary_warn) flag is always
+        // ereturn'd below regardless of display suppression.
+        if `_bwarn' > 0 & "`nowarn'" == "" {
+            di ""
+            di as text "   " as err "Warning:" as text " CI " _c
+            if `_bwarn' == 3 {
+                di as text "BOTH bounds pin to trim boundaries [" ///
+                   as res %7.4f `=`q_lo'' as text ", " ///
+                   as res %7.4f `=`q_hi'' as text "]"
+            }
+            else if `_bwarn' == 1 {
+                di as text "lower bound pins to trim floor (" ///
+                   as res %7.4f `=`q_lo'' as text ")"
+            }
+            else {
+                di as text "upper bound pins to trim ceiling (" ///
+                   as res %7.4f `=`q_hi'' as text ")"
+            }
+            di as text "   Possible causes: weak identification in the affected regime,"
+            di as text "   or grid edge at trim(" as res %4.2f `trim' as text ") cuts close to γ̂."
+            di as text "   Re-run with a different trim to check γ̂ / CI stability."
+            di as text "   Alternatives: trim(0.10) widens the grid (default in xthreg2);"
+            di as text "   trim(0.15) is the Gong-Seo (2026) convention; trim(0.40) is the"
+            di as text "   xthenreg / Seo-Shin (2016) convention. Suppress this warning with"
+            di as text "   the " as res "nowarn" as text " option."
+        }
     }
     else {
         di as text "Threshold estimate:"
@@ -428,10 +651,11 @@ program define xtdpthresh, eclass
     ereturn local cmd        "xtdpthresh"
     ereturn local depvar     "`depvar'"
     ereturn local q_var      "`q_var'"
-    ereturn local indepvars  "`indepvars'"
-    ereturn local endog      "`endog'"
-    ereturn local exog_extra "`exog_extra'"
-    ereturn local inst       "`inst_extra'"
+    ereturn local indepvars  "`indepvars_lab'"
+    ereturn local endog      "`endog_lab'"
+    ereturn local predet     "`predet_lab'"
+    ereturn local exog_extra "`exog_extra_lab'"
+    ereturn local inst       "`inst_extra_lab'"
     ereturn local method     "`method'"
     ereturn local panelvar   "`panelvar'"
     ereturn local timevar    "`timevar'"
@@ -455,11 +679,13 @@ program define xtdpthresh, eclass
     ereturn scalar ar2_p     = `ar2_p'
     ereturn scalar k_exog    = `k_exog'
     ereturn scalar k_endog   = `k_endog'
+    ereturn scalar k_predet  = `k_predet'
     ereturn scalar k_inst    = `k_inst'
     ereturn scalar flag_kink = `flag_kink'
     ereturn scalar flag_static = `flag_static'
     ereturn scalar balanced  = `is_balanced'
     ereturn scalar flag_td   = `flag_td'
+    ereturn scalar boundary_warn = `_bwarn'
 
     ereturn display, level(`level')
 end
@@ -471,15 +697,36 @@ end
 mata:
 mata set matastrict off
 
+// Package-level Mata scalars (xdpt_collapse, xdpt_lag_lo, xdpt_lag_hi,
+// xdpt_lev_lo, xdpt_lev_hi, xdpt_verbose) are declared "external" inside
+// each function that uses them (Mata does not allow file-scope declarations
+// at the top of a mata: block). xtdpthresh_run() assigns the values once
+// per invocation; helpers read them via "external real scalar ..." locals.
+
+// Built-in-safe replacement for rangen(): n equally spaced points from a to b.
+// This avoids relying on version-specific Mata helpers.
+real colvector xdpt2_rangen(real scalar a, real scalar b, real scalar n)
+{
+    real scalar i
+    real colvector out
+    if (n <= 1) return(J(1, 1, a))
+    out = J(n, 1, .)
+    for (i = 1; i <= n; i++) {
+        out[i] = a + (b - a) * (i - 1) / (n - 1)
+    }
+    return(out)
+}
+
 // Per-unit data structure (unbalanced-aware)
 struct xdpt2_unit {
     real scalar    id
     real colvector t        // observed times, sorted
     real colvector y        // y at observed times
     real matrix    X        // regressors at observed times (n_i × K)
-                            // col 1: L.y (if dynamic); then exog; then endog
+                            // col 1: L.y (if dynamic); then exog; then endog;
+                            //        then predetermined
     real colvector q        // q at observed times
-    real rowvector var_type // per col: 1=lag_y, 2=exog, 3=endog
+    real rowvector var_type // per col: 1=lag_y, 2=exog, 3=endog, 4=predet
     real scalar    k_endog_start  // col index where endog starts (0 if none)
     real matrix    X_inst   // user-supplied instrument values (n_i × k_inst)
 }
@@ -487,14 +734,15 @@ struct xdpt2_unit {
 // Build per-unit structs from long-form data
 struct xdpt2_unit rowvector xdpt2_build_units(
     real colvector y, real matrix Ly, real matrix X_exog,
-    real matrix X_endog, real matrix X_inst, real colvector q,
+    real matrix X_endog, real matrix X_predet,
+    real matrix X_inst, real colvector q,
     real colvector pid, real colvector tid,
     real scalar flag_static)
 {
     struct xdpt2_unit rowvector U
     struct xdpt2_unit scalar u
     real colvector ids, idx, ord, var_type
-    real scalar n_units, i, K, k_ex, k_en, k_in
+    real scalar n_units, i, K, k_ex, k_en, k_pd, k_in
 
     ids = uniqrows(pid)
     n_units = rows(ids)
@@ -502,15 +750,17 @@ struct xdpt2_unit rowvector xdpt2_build_units(
 
     k_ex = cols(X_exog)
     k_en = cols(X_endog)
+    k_pd = cols(X_predet)
     k_in = cols(X_inst)
     real scalar lag_y_present
     lag_y_present = (flag_static ? 0 : 1)
-    K = lag_y_present + k_ex + k_en
+    K = lag_y_present + k_ex + k_en + k_pd
 
     var_type = J(1, 0, 0)
     if (!flag_static) var_type = var_type, 1
     if (k_ex > 0)     var_type = var_type, J(1, k_ex, 2)
     if (k_en > 0)     var_type = var_type, J(1, k_en, 3)
+    if (k_pd > 0)     var_type = var_type, J(1, k_pd, 4)
 
     for (i = 1; i <= n_units; i++) {
         idx = selectindex(pid :== ids[i])
@@ -530,12 +780,13 @@ struct xdpt2_unit rowvector xdpt2_build_units(
         if (!flag_static) u.X = u.X, Ly[idx][ord]
         if (k_ex > 0)     u.X = u.X, X_exog[idx, .][ord, .]
         if (k_en > 0)     u.X = u.X, X_endog[idx, .][ord, .]
+        if (k_pd > 0)     u.X = u.X, X_predet[idx, .][ord, .]
 
         u.X_inst = J(rows(idx), 0, 0)
         if (k_in > 0) u.X_inst = X_inst[idx, .][ord, .]
 
         u.var_type = var_type
-        u.k_endog_start = (k_en > 0 ? K - k_en + 1 : 0)
+        u.k_endog_start = (k_en + k_pd > 0 ? K - (k_en + k_pd) + 1 : 0)
 
         U = U, u
     }
@@ -552,9 +803,16 @@ real scalar xdpt2_find_t(struct xdpt2_unit scalar u, real scalar target)
     return(0)
 }
 
+// Helper: true if any element of a row vector / matrix block is missing.
+real scalar xdpt2_hasmiss(real matrix A)
+{
+    if (rows(A) == 0 | cols(A) == 0) return(0)
+    return(sum(A :>= .) > 0)
+}
+
 // Transform one unit: FD or FOD for both y and X.
 // Returns (dy, dW(γ), Z, retained_times) for this unit.
-// W includes regime regressors: W = [X_trans, r, r·y_lag, r·X_exog, r·X_endog]
+// W includes regime regressors: W = [X_trans, r, r·y_lag, r·X_exog, r·X_endog, r·X_predet]
 // For non-kink model. For kink, W has fewer cols (see separate function).
 void xdpt2_transform_unit(struct xdpt2_unit scalar u,
                            real scalar gamma, string scalar method,
@@ -599,6 +857,9 @@ void xdpt2_transform_unit(struct xdpt2_unit scalar u,
             if (u.t[j] - u.t[j-1] != 1) continue  // not consecutive
             // Check we have at least 2 years of history for IV
             if (xdpt2_find_t(u, u.t[j] - 2) == 0) continue
+            // Skip candidate rows whose transformed regressor would contain missing values
+            if (u.y[j] >= . | u.y[j-1] >= . | u.q[j] >= . | u.q[j-1] >= .) continue
+            if (xdpt2_hasmiss(W_lvl[j, .]) | xdpt2_hasmiss(W_lvl[j-1, .])) continue
             dy_list = dy_list \ (u.y[j] - u.y[j-1])
             dW_list = dW_list \ (W_lvl[j, .] - W_lvl[j-1, .])
             times_list = times_list \ u.t[j]
@@ -610,6 +871,9 @@ void xdpt2_transform_unit(struct xdpt2_unit scalar u,
             if (xdpt2_find_t(u, u.t[j] - 2) == 0) continue
             Tf = n - j
             if (Tf < 1) continue
+            // Skip candidate rows whose FOD-transformed regressor would contain missing values
+            if (u.y[j] >= . | u.q[j] >= . | xdpt2_hasmiss(u.y[|j+1 \ n|]) | xdpt2_hasmiss(u.q[|j+1 \ n|])) continue
+            if (xdpt2_hasmiss(W_lvl[j, .]) | xdpt2_hasmiss(W_lvl[|j+1, 1 \ n, k_W_cols|])) continue
             c = sqrt(Tf / (Tf + 1))
             dy_list = dy_list \ (c * (u.y[j] - mean(u.y[|j+1 \ n|])))
             fut_mean_w = mean(W_lvl[|j+1, 1 \ n, k_W_cols|])
@@ -623,22 +887,28 @@ void xdpt2_transform_unit(struct xdpt2_unit scalar u,
     //   col 1:        constant (1)
     //   cols 2..:     y lags (y_{t-2}, y_{t-3}, ..., up to lag_max = t-t_min)
     //   next cols:    for each exog x: Δx_t (1 IV per t)
-    //   next cols:    for each endog x: x_lags (x_{t-1}, x_{t-2}, ...)
+    //   next cols:    for each endog x: x_lags (x_{t-2}, x_{t-3}, ...)
+    //   next cols:    for each predet x: x_lags (x_{t-1}, x_{t-2}, ...)
+    //   next cols:    user-supplied external IVs (1 per var per block)
     // Block-diagonal across t: row at time t has nonzero only in block b(t).
 
     // Determine per-block IV width (use t_max_global for max lag depth)
     lag_max = t_max_global - t_min_global  // max possible lag count at t=t_max
-    // Per block at time t: width = 1(const) + #lag_y + #exog + #endog·(lags)
+    // Per block at time t: width = 1(const) + #lag_y + #exog + (#endog + #predet)·(lags)
     //                    + #inst (user-supplied IVs, 1 per inst var per block)
-    real scalar k_exog, k_endog, k_inst, iv_width
+    // Endog vars use lags t-2..t-(lag_max+1); predet vars use lags t-1..t-lag_max;
+    // both get lag_max columns per var, so total column count is the same.
+    real scalar k_exog, k_endog, k_predet, k_ep, k_inst, iv_width
     external real scalar xdpt_collapse
-    k_exog = sum(u.var_type :== 2)
-    k_endog = sum(u.var_type :== 3)
+    k_exog   = sum(u.var_type :== 2)
+    k_endog  = sum(u.var_type :== 3)
+    k_predet = sum(u.var_type :== 4)
+    k_ep     = k_endog + k_predet
     k_inst = cols(u.X_inst)
     iv_width = 1                     // constant
     if (!flag_static) iv_width = iv_width + lag_max   // lag y
     iv_width = iv_width + k_exog                      // Δx per exog
-    iv_width = iv_width + lag_max * k_endog           // lags per endog
+    iv_width = iv_width + lag_max * k_ep              // lags per endog/predet
     iv_width = iv_width + k_inst                      // 1 per user inst per block
 
     n_blocks = t_max_global - t_min_global - 1  // blocks for t ∈ [t_min+2, t_max]
@@ -671,7 +941,9 @@ void xdpt2_transform_unit(struct xdpt2_unit scalar u,
                 real scalar pos
                 pos = xdpt2_find_t(u, t - lag_idx)
                 if (pos > 0) {
-                    Z_list[i, base_col + col_off + lag_idx - 1] = u.y[pos]
+                    if (u.y[pos] < .) {
+                        Z_list[i, base_col + col_off + lag_idx - 1] = u.y[pos]
+                    }
                 }
             }
             col_off = col_off + lag_max
@@ -686,33 +958,56 @@ void xdpt2_transform_unit(struct xdpt2_unit scalar u,
             if (u.var_type[vt] == 2) {
                 vi = vi + 1
                 if (pos_t > 0 & pos_tm1 > 0) {
-                    Z_list[i, base_col + col_off + vi] = u.X[pos_t, vt] - u.X[pos_tm1, vt]
+                    if (u.X[pos_t, vt] < . & u.X[pos_tm1, vt] < .) {
+                        Z_list[i, base_col + col_off + vi] = u.X[pos_t, vt] - u.X[pos_tm1, vt]
+                    }
                 }
             }
         }
         col_off = col_off + k_exog
 
-        // Endog x: levels lagged (filter by maxlag range)
+        // Endog / predetermined regressors: lagged levels as instruments in Δ/FOD.
+        //   Endog  (var_type==3): lags t-2, t-3, ..., t-(lag_max+1)
+        //     — x_{t-1} is invalid because it can correlate with Δε_t
+        //   Predet (var_type==4): lags t-1, t-2, ..., t-lag_max
+        //     — weakly exogenous; x_{t-1} is valid (Blundell-Bond convention)
+        // Each variable receives lag_max consecutive columns in the IV block,
+        // iterating over the combined list in the same order as u.X.
         vi = 0
         for (vt = 1; vt <= cols(u.X); vt++) {
-            if (u.var_type[vt] == 3) {
-                for (lag_idx = 1; lag_idx <= lag_max; lag_idx++) {
+            if (u.var_type[vt] == 3 | u.var_type[vt] == 4) {
+                real scalar lag_start, lag_stop, col_shift
+                if (u.var_type[vt] == 3) {
+                    lag_start = 2
+                    lag_stop  = lag_max + 1
+                    col_shift = 1    // column offset = lag_idx - 1
+                }
+                else {
+                    lag_start = 1
+                    lag_stop  = lag_max
+                    col_shift = 0    // column offset = lag_idx
+                }
+                for (lag_idx = lag_start; lag_idx <= lag_stop; lag_idx++) {
                     if (lag_idx < xdpt_lag_lo | lag_idx > xdpt_lag_hi) continue
                     pos = xdpt2_find_t(u, t - lag_idx)
                     if (pos > 0) {
-                        Z_list[i, base_col + col_off + vi*lag_max + lag_idx] = u.X[pos, vt]
+                        if (u.X[pos, vt] < .) {
+                            Z_list[i, base_col + col_off + vi*lag_max + lag_idx - col_shift] = u.X[pos, vt]
+                        }
                     }
                 }
                 vi = vi + 1
             }
         }
-        col_off = col_off + lag_max * k_endog
+        col_off = col_off + lag_max * k_ep
 
         // User-supplied instruments (inst): value at time t, one IV per inst var
         if (k_inst > 0 & pos_t > 0) {
             real scalar ii
             for (ii = 1; ii <= k_inst; ii++) {
-                Z_list[i, base_col + col_off + ii] = u.X_inst[pos_t, ii]
+                if (u.X_inst[pos_t, ii] < .) {
+                    Z_list[i, base_col + col_off + ii] = u.X_inst[pos_t, ii]
+                }
             }
         }
     }
@@ -763,8 +1058,9 @@ void xdpt2_level_unit(struct xdpt2_unit scalar u,
 
     // Per-block IV count for level equation:
     //   For L.y (dynamic): lagged differences Δy_{t-l} for l in [lev_lo, lev_hi]
-    //   For exog x: Δx_{t-l+1} for l in [lev_lo, lev_hi]
-    //   For endog x: Δx_{t-l} for l in [lev_lo, lev_hi]
+    //   For exog x:   Δx_{t-l+1} for l in [lev_lo, lev_hi]
+    //   For predet x: Δx_{t-l+1} for l in [lev_lo, lev_hi]   (weakly exog ⇒ Δx_t valid)
+    //   For endog x:  Δx_{t-l}   for l in [lev_lo, lev_hi]
     //   For user inst: inst_t (single, no lag sweep — inst assumed exog in levels)
     external real scalar xdpt_lev_lo, xdpt_lev_hi
     real scalar n_lev_lags, k_inst_lev
@@ -775,6 +1071,7 @@ void xdpt2_level_unit(struct xdpt2_unit scalar u,
     if (!flag_static) iv_per_t = iv_per_t + n_lev_lags
     iv_per_t = iv_per_t + sum(u.var_type :== 2) * n_lev_lags
     iv_per_t = iv_per_t + sum(u.var_type :== 3) * n_lev_lags
+    iv_per_t = iv_per_t + sum(u.var_type :== 4) * n_lev_lags
     iv_per_t = iv_per_t + k_inst_lev
 
     // Valid t for level equation: t where lagged differences are constructible
@@ -798,14 +1095,15 @@ void xdpt2_level_unit(struct xdpt2_unit scalar u,
         b = t - t_min_valid + 1
         if (b < 1 | b > n_blocks) continue
 
-        // Need t and min required lag available
+        // Need t and nonmissing level equation variables
         pos_t   = xdpt2_find_t(u, t)
         if (pos_t == 0) continue
+        if (u.y[pos_t] >= . | u.q[pos_t] >= . | xdpt2_hasmiss(W_lvl[pos_t, .])) continue
 
-        // Build row
-        y_list    = y_list \ u.y[pos_t]
-        W_list    = W_list \ W_lvl[pos_t, .]
-        times_list = times_list \ t
+        // BUG 4a FIX: build IV row FIRST, add y/W/Z only if IV row is informative.
+        // Previously, y/W were appended unconditionally while Z could be all-zero
+        // for observations near the boundary (t-lev_lag not available). This
+        // polluted the GMM sum with zero-moment rows.
 
         // Build IV row: block-diag or collapsed (shared cols across t)
         real rowvector z_row
@@ -821,8 +1119,10 @@ void xdpt2_level_unit(struct xdpt2_unit scalar u,
                 pos_a = xdpt2_find_t(u, t - lev_lag)
                 pos_b = xdpt2_find_t(u, t - lev_lag - 1)
                 if (pos_a > 0 & pos_b > 0) {
-                    z_row[base_col + col_off + (lev_lag - xdpt_lev_lo + 1)] ///
-                        = u.y[pos_a] - u.y[pos_b]
+                    if (u.y[pos_a] < . & u.y[pos_b] < .) {
+                        z_row[base_col + col_off + (lev_lag - xdpt_lev_lo + 1)] ///
+                            = u.y[pos_a] - u.y[pos_b]
+                    }
                 }
             }
             col_off = col_off + n_lev_lags
@@ -836,8 +1136,10 @@ void xdpt2_level_unit(struct xdpt2_unit scalar u,
                     pos_a = xdpt2_find_t(u, t - lev_lag + 1)
                     pos_b = xdpt2_find_t(u, t - lev_lag)
                     if (pos_a > 0 & pos_b > 0) {
-                        z_row[base_col + col_off + vi*n_lev_lags + (lev_lag - xdpt_lev_lo + 1)] ///
-                            = u.X[pos_a, vt] - u.X[pos_b, vt]
+                        if (u.X[pos_a, vt] < . & u.X[pos_b, vt] < .) {
+                            z_row[base_col + col_off + vi*n_lev_lags + (lev_lag - xdpt_lev_lo + 1)] ///
+                                = u.X[pos_a, vt] - u.X[pos_b, vt]
+                        }
                     }
                 }
                 vi = vi + 1
@@ -853,8 +1155,10 @@ void xdpt2_level_unit(struct xdpt2_unit scalar u,
                     pos_a = xdpt2_find_t(u, t - lev_lag)
                     pos_b = xdpt2_find_t(u, t - lev_lag - 1)
                     if (pos_a > 0 & pos_b > 0) {
-                        z_row[base_col + col_off + vi*n_lev_lags + (lev_lag - xdpt_lev_lo + 1)] ///
-                            = u.X[pos_a, vt] - u.X[pos_b, vt]
+                        if (u.X[pos_a, vt] < . & u.X[pos_b, vt] < .) {
+                            z_row[base_col + col_off + vi*n_lev_lags + (lev_lag - xdpt_lev_lo + 1)] ///
+                                = u.X[pos_a, vt] - u.X[pos_b, vt]
+                        }
                     }
                 }
                 vi = vi + 1
@@ -862,15 +1166,46 @@ void xdpt2_level_unit(struct xdpt2_unit scalar u,
         }
         col_off = col_off + sum(u.var_type :== 3) * n_lev_lags
 
+        // Predet IVs: Δx_{t-l+1} = x_{t-l+1} - x_{t-l}, same formula as exog
+        //   (predetermined regressors are uncorrelated with current ε, so
+        //    Δx_t can serve as an instrument in the level equation)
+        vi = 0
+        for (vt = 1; vt <= cols(u.X); vt++) {
+            if (u.var_type[vt] == 4) {
+                for (lev_lag = xdpt_lev_lo; lev_lag <= xdpt_lev_hi; lev_lag++) {
+                    pos_a = xdpt2_find_t(u, t - lev_lag + 1)
+                    pos_b = xdpt2_find_t(u, t - lev_lag)
+                    if (pos_a > 0 & pos_b > 0) {
+                        if (u.X[pos_a, vt] < . & u.X[pos_b, vt] < .) {
+                            z_row[base_col + col_off + vi*n_lev_lags + (lev_lag - xdpt_lev_lo + 1)] ///
+                                = u.X[pos_a, vt] - u.X[pos_b, vt]
+                        }
+                    }
+                }
+                vi = vi + 1
+            }
+        }
+        col_off = col_off + sum(u.var_type :== 4) * n_lev_lags
+
         // User-supplied instruments (inst): value at time t, one IV per inst var
         // Same as transformed equation — valid under exogeneity of user IVs.
         if (k_inst_lev > 0) {
             real scalar ii_lev
             for (ii_lev = 1; ii_lev <= k_inst_lev; ii_lev++) {
-                z_row[base_col + col_off + ii_lev] = u.X_inst[pos_t, ii_lev]
+                if (u.X_inst[pos_t, ii_lev] < .) {
+                    z_row[base_col + col_off + ii_lev] = u.X_inst[pos_t, ii_lev]
+                }
             }
         }
 
+        // BUG 4a FIX: only append observation if IV row has at least one
+        // non-zero entry. Otherwise the moment z_row·(y-x'θ) = 0 trivially
+        // and adds a useless row that can corrupt the variance estimate.
+        if (sum(abs(z_row)) < 1e-12) continue
+
+        y_list    = y_list \ u.y[pos_t]
+        W_list    = W_list \ W_lvl[pos_t, .]
+        times_list = times_list \ t
         Z_list = Z_list \ z_row
     }
 
@@ -1268,6 +1603,27 @@ real colvector xdpt2_mammen_draw(real scalar n_u)
     return(-phi_mam :* d :+ (1/phi_mam) :* (1 :- d))
 }
 
+// Quantile helper that avoids dependency on moremata's mm_quantile().
+// Uses Hyndman-Fan type 7 interpolation and ignores missing values.
+real scalar xdpt2_quantile(real colvector x, real scalar p)
+{
+    real colvector xs
+    real scalar n, h, j, g
+
+    xs = select(x, x :< .)
+    n = rows(xs)
+    if (n == 0) return(.)
+    xs = sort(xs, 1)
+    if (p <= 0) return(xs[1])
+    if (p >= 1) return(xs[n])
+
+    h = 1 + (n - 1) * p
+    j = floor(h)
+    g = h - j
+    if (j >= n) return(xs[n])
+    return((1 - g) * xs[j] + g * xs[j + 1])
+}
+
 // 2-stage grid search (xthenreg-style):
 //   Stage 1: grid search with W_first (MA(1) for FD, ZZ_inv for FOD)
 //   Stage 2: compute W_n_2 from Stage-1 residuals, grid search again with W_n_2 fixed
@@ -1395,17 +1751,64 @@ void xdpt2_grid_search(struct xdpt2_unit rowvector units,
     }
 
     if (best_gamma_2 == .) {
-        // Fallback to stage-1
+        // Fallback to stage-1. BUG 8 FIX: recompute cluster-robust V at
+        // best_theta_1 using W_n_2 = invsym(Omega) already computed above.
+        // best_V_1 comes from xdpt2_solve_gmm_1step which returns naive
+        // (A^-1)/n that is correct only when W_wt = Omega^-1; here W_wt
+        // was W_first (MA(1) weight), so naive V is not cluster-robust.
+        // With W_n_2 available, we can build the proper cluster-robust V:
+        //   V = (ZW' · W_n_2 · ZW)^-1 / n  at best_theta_1
+        // Falls back to best_V_1 only if A_1_cr is ill-conditioned.
         best_gamma = best_gamma_1
         best_obj = best_obj_1
         best_theta = best_theta_1
-        best_V = best_V_1
+        real matrix ZW_1_cr, A_1_cr
+        real scalar ok_v1
+        ok_v1 = 0
+        ZW_1_cr = cache[idx_1].Z' * cache[idx_1].dW / cache[idx_1].n_rows
+        A_1_cr = ZW_1_cr' * W_n_2 * ZW_1_cr
+        if (cond(A_1_cr) <= 1e12) {
+            best_V = invsym(A_1_cr) / cache[idx_1].n_rows
+            ok_v1 = 1
+        }
+        if (!ok_v1) best_V = best_V_1
     }
     else {
         best_gamma = best_gamma_2
         best_obj = best_obj_2
         best_theta = best_theta_2
-        best_V = best_V_2
+        // BUG 2 FIX: recompute V with cluster-robust Omega at best_gamma_2
+        // instead of using 1-step V from xdpt2_solve_gmm_1step. This matches
+        // FOD/system path which returns cluster-robust V via xdpt2_solve_gmm.
+        real scalar idx_2, ok_v2
+        real colvector r_2_final
+        real matrix Omega_2, ZW_2, A_2_final, best_V_cr
+        idx_2 = 0
+        for (gl = 1; gl <= rows(gamma_grid); gl++) {
+            if (gamma_grid[gl] == best_gamma_2) {
+                idx_2 = gl
+                gl = rows(gamma_grid) + 1
+            }
+        }
+        ok_v2 = 0
+        if (idx_2 > 0 & cache[idx_2].ok) {
+            r_2_final = cache[idx_2].dY - cache[idx_2].dW * best_theta_2
+            Omega_2 = xdpt2_build_cluster_omega(cache[idx_2].Z, r_2_final,
+                                                 cache[idx_2].uid)
+            if (cond(Omega_2) <= 1e12) {
+                ZW_2 = cache[idx_2].Z' * cache[idx_2].dW / cache[idx_2].n_rows
+                A_2_final = ZW_2' * invsym(Omega_2) * ZW_2
+                if (cond(A_2_final) <= 1e12) {
+                    best_V_cr = invsym(A_2_final) / cache[idx_2].n_rows
+                    best_V = best_V_cr
+                    ok_v2 = 1
+                }
+            }
+        }
+        if (!ok_v2) {
+            // Fallback to 1-step V if cluster-robust computation fails
+            best_V = best_V_2
+        }
     }
 }
 
@@ -1427,7 +1830,7 @@ void xdpt2_grid_bootstrap(struct xdpt2_unit rowvector units,
     real colvector times_r, theta_r, resid_r, Y_boot, theta_b
     real colvector D_vec, accept, uid_r, uid_b
     real colvector eta_unit, eta
-    real scalar phi_mam, prob_mam, n_u, i, u
+    real scalar n_u, i, u
     real matrix dY_b, dW_b, Z_b
     real colvector times_b, theta_b_r, theta_b_u
     // Declarations for 1-step sample D (Gong-Seo Alg. 1 consistency fix)
@@ -1437,8 +1840,6 @@ void xdpt2_grid_bootstrap(struct xdpt2_unit rowvector units,
 
     n_ci = rows(gamma_ci_grid)
     accept = J(n_ci, 1, 0)
-    phi_mam = (sqrt(5) - 1) / 2
-    prob_mam = (sqrt(5) + 1) / (2 * sqrt(5))
     n_u = length(units)
 
     // === Build per-gamma caches ONCE (avoid repeated stack_at_gamma) ===
@@ -1506,7 +1907,7 @@ void xdpt2_grid_bootstrap(struct xdpt2_unit rowvector units,
         resid_r = dY_r - dW_r * theta_r
 
         // Bootstrap loop  [FAST PATH: uses precomputed C_g, no cluster-Ω]
-        D_vec = J(n_boot, 1, 0)
+        D_vec = J(n_boot, 1, .)
         for (b = 1; b <= n_boot; b++) {
             // UNIT-LEVEL Mammen weights (vectorized)
             eta_unit = xdpt2_mammen_draw(n_u)
@@ -1521,7 +1922,6 @@ void xdpt2_grid_bootstrap(struct xdpt2_unit rowvector units,
                 xdpt2_solve_gmm(Y_boot, dW_r, Z_r, uid_r, times_r, method,
                                  ok_b_r, theta_b_r, obj_b_r, V_dummy)
                 if (!ok_b_r) {
-                    D_vec[b] = 0
                     continue
                 }
             }
@@ -1533,7 +1933,15 @@ void xdpt2_grid_bootstrap(struct xdpt2_unit rowvector units,
                 if (gamma_cache[gb].n_rows != rows(Y_boot)) continue
                 xdpt2_fast_gmm_boot(Y_boot, gamma_cache[gb],
                                      ok_b_u, theta_b_u, obj_b_u)
-                if (!ok_b_u) continue
+                if (!ok_b_u) {
+                    // BUG 7 FIX: fallback to full 2-step GMM if fast path fails.
+                    // Previously we silently skipped, biasing min_obj_b upward.
+                    xdpt2_solve_gmm(Y_boot, gamma_cache[gb].dW,
+                                     gamma_cache[gb].Z, gamma_cache[gb].uid,
+                                     gamma_cache[gb].times, method,
+                                     ok_b_u, theta_b_u, obj_b_u, V_dummy)
+                    if (!ok_b_u) continue
+                }
                 if (obj_b_u < min_obj_b) min_obj_b = obj_b_u
             }
 
@@ -1542,7 +1950,11 @@ void xdpt2_grid_bootstrap(struct xdpt2_unit rowvector units,
             D_vec[b] = D_boot
         }
 
-        crit = mm_quantile(D_vec, 1, 1 - alpha)
+        crit = xdpt2_quantile(D_vec, 1 - alpha)
+        if (crit == .) {
+            accept[l] = 0
+            continue
+        }
         accept[l] = (D_sample <= crit)
 
         if (xdpt_verbose) {
@@ -1583,10 +1995,10 @@ real scalar xdpt2_continuity_test(struct xdpt2_unit rowvector units,
                                     real scalar t_min, real scalar t_max,
                                     real scalar n_boot)
 {
-    real scalar g_kink, obj_kink, T_sample, T_boot_b, count_exceed
+    real scalar g_kink, obj_kink, T_sample, T_boot_b, count_exceed, valid_boot
     real scalar b, gl, ok, obj_cur, n_u, u, i, ok_b, obj_kink_b, obj_jump_b
     real scalar gl_j, min_obj_kink_b, min_obj_jump_b
-    real scalar phi_mam, prob_mam, K
+    real scalar K
     real colvector theta_kink_sample, r_kink, Y_boot, eta, eta_unit
     real matrix dY_k, dW_k, Z_k, V_dummy
     real colvector times_k, uid_k, theta_cur, times_cur, uid_cur
@@ -1613,10 +2025,9 @@ real scalar xdpt2_continuity_test(struct xdpt2_unit rowvector units,
                           dY_k, dW_k, Z_k, times_k, uid_k)
     r_kink = dY_k - dW_k * best_theta_k
 
-    phi_mam = (sqrt(5) - 1) / 2
-    prob_mam = (sqrt(5) + 1) / (2 * sqrt(5))
     n_u = length(units)
     count_exceed = 0
+    valid_boot = 0
 
     // Build 2 caches: one with flag_kink=1 (for kink model), one with flag_kink=0 (jump)
     struct xdpt2_gamma_cache rowvector cache_kink, cache_jump
@@ -1688,6 +2099,7 @@ real scalar xdpt2_continuity_test(struct xdpt2_unit rowvector units,
         }
 
         if (min_obj_kink_b == . | min_obj_jump_b == .) continue
+        valid_boot = valid_boot + 1
         T_boot_b = min_obj_kink_b - min_obj_jump_b
         if (T_boot_b < 0) T_boot_b = 0
         if (T_boot_b >= T_sample) count_exceed = count_exceed + 1
@@ -1697,7 +2109,8 @@ real scalar xdpt2_continuity_test(struct xdpt2_unit rowvector units,
         displayflush()
     }
 
-    return(count_exceed / n_boot)
+    if (valid_boot == 0) return(.)
+    return(count_exceed / valid_boot)
 }
 
 // Linearity test (H0: no regime, δ=0). Wild bootstrap.
@@ -1711,7 +2124,7 @@ real scalar xdpt2_linearity_test(struct xdpt2_unit rowvector units,
 {
     // Restricted: no regime — W has only K (β) cols; γ irrelevant
     real scalar K, ok, obj_r, n_rows, b, ok_b_r, obj_b_r, ok_b_u, obj_b_u
-    real scalar gl_b, min_obj_b_u, supW_sample, count_exceed, phi_mam, prob_mam
+    real scalar gl_b, min_obj_b_u, supW_sample, count_exceed, valid_boot
     real scalar n_u, u
     real matrix dY_s, dW_s, Z_s, W_beta_s, V_r, V_dummy
     real colvector times_s, theta_r, resid_r, Y_boot, theta_b_r, theta_b_u
@@ -1725,6 +2138,7 @@ real scalar xdpt2_linearity_test(struct xdpt2_unit rowvector units,
     theta_1s_dummy = J(0, 1, 0)
 
     K = cols(units[1].X)
+    if (K == 0) return(.)
     n_u = length(units)
 
     // Build stacked data at any γ (restricted uses only β cols, γ doesn't matter)
@@ -1735,25 +2149,35 @@ real scalar xdpt2_linearity_test(struct xdpt2_unit rowvector units,
 
     W_beta_s = dW_s[., 1..K]  // only β part
 
-    // 2-step solve for point estimate (theta_r, residuals)
-    xdpt2_solve_gmm(dY_s, W_beta_s, Z_s, uid_s, times_s, method, ok, theta_r, obj_r, V_r)
-    if (!ok) return(.)
-
-    // Bootstrap under H0 (unit-level Mammen) — uses theta_r from 2-step fit
-    resid_r = dY_s - W_beta_s * theta_r
-    count_exceed = 0
-
     // Cache per-gamma stacks ONCE for unrestricted grid search
     struct xdpt2_gamma_cache rowvector gamma_cache
     gamma_cache = xdpt2_build_gamma_cache(units, gamma_grid, method,
                                            flag_static, flag_kink, t_min, t_max)
 
-    // Sample supW using 1-step W_first (consistent with bootstrap per
-    // Gong-Seo 2026 Alg. 1). 2-step obj has different scale from bootstrap obj.
-    W_first_lin = gamma_cache[1].W_first
+    real scalar idx_base
+    idx_base = 0
+    for (gl_s = 1; gl_s <= cols(gamma_cache); gl_s++) {
+        if (gamma_cache[gl_s].ok) {
+            idx_base = gl_s
+            gl_s = cols(gamma_cache) + 1
+        }
+    }
+    if (idx_base == 0) return(.)
+
+    // BUG 4b FIX: use 1-step theta_r with W_first (consistent with bootstrap).
+    // Previously theta_r came from 2-step solve_gmm while supW uses 1-step obj,
+    // creating a scale inconsistency between sample and bootstrap statistics.
+    // Both sample and bootstrap now use 1-step with the same W_first weight.
+    W_first_lin = gamma_cache[idx_base].W_first
     xdpt2_solve_gmm_1step(dY_s, W_beta_s, Z_s, W_first_lin,
-                           ok_1s, theta_1s_dummy, obj_r_1s, V_dummy)
-    if (!ok_1s) return(.)
+                           ok, theta_r, obj_r_1s, V_r)
+    if (!ok) return(.)
+
+    // Bootstrap under H0 (unit-level Mammen) — uses 1-step theta_r
+    resid_r = dY_s - W_beta_s * theta_r
+    count_exceed = 0
+    valid_boot = 0
+
     min_obj_u_1s = .
     for (gl_s = 1; gl_s <= cols(gamma_cache); gl_s++) {
         if (!gamma_cache[gl_s].ok) continue
@@ -1772,7 +2196,7 @@ real scalar xdpt2_linearity_test(struct xdpt2_unit rowvector units,
     real matrix W_first_s, ZW_beta, A_beta, C_beta
     real scalar fast_r_ok, n_rows_s
     n_rows_s = rows(dY_s)
-    W_first_s = gamma_cache[1].W_first
+    W_first_s = gamma_cache[idx_base].W_first
     ZW_beta = Z_s' * W_beta_s / n_rows_s
     A_beta = ZW_beta' * W_first_s * ZW_beta
     fast_r_ok = (cond(A_beta) <= 1e12)
@@ -1826,6 +2250,7 @@ real scalar xdpt2_linearity_test(struct xdpt2_unit rowvector units,
 
         real scalar supW_b
         supW_b = obj_b_r - min_obj_b_u
+        valid_boot = valid_boot + 1
         if (supW_b >= supW_sample) count_exceed = count_exceed + 1
     }
     if (!xdpt_verbose) {
@@ -1833,7 +2258,8 @@ real scalar xdpt2_linearity_test(struct xdpt2_unit rowvector units,
         displayflush()
     }
 
-    return(count_exceed / n_boot)
+    if (valid_boot == 0) return(.)
+    return(count_exceed / valid_boot)
 }
 
 // Hansen J over-identification test.
@@ -1848,6 +2274,40 @@ real rowvector xdpt2_hansen_j(real scalar obj, real scalar n_iv, real scalar k_W
     if (df <= 0) return(out_miss)
     pval = 1 - chi2(df, obj)
     return((obj, df, pval))
+}
+
+// BUG 1 FIX: recompute Hansen J cluster-robust at best theta, independent
+// of whether optimization used 1-step or 2-step GMM. The stored best_obj
+// can be a 1-step criterion (FD stage-2 path, or 2-step fallback when
+// cluster Omega is singular); passing that value into a chi^2 p-value is
+// invalid. Recomputing J = n * g(theta)' * Omega^{-1} * g(theta) with the
+// cluster-robust Omega at best_theta gives a proper 2-step statistic.
+// Returns missing if Omega is singular (Hansen J is then not well-defined
+// and the caller displays Hansen as unavailable).
+real scalar xdpt2_recompute_cluster_j(real colvector Y, real matrix W,
+                                       real matrix Z, real colvector unit_id,
+                                       real colvector theta)
+{
+    real scalar n_rows, n_units, i, u
+    real matrix Omega, g_per_unit, Ze
+    real colvector r, g_bar
+
+    n_rows = rows(Y)
+    if (n_rows < 20) return(.)
+    if (cols(Z) <= cols(W)) return(.)
+
+    r = Y - W * theta
+    Ze = Z :* r
+    n_units = max(unit_id)
+    g_per_unit = J(n_units, cols(Z), 0)
+    for (i = 1; i <= n_rows; i++) {
+        u = unit_id[i]
+        g_per_unit[u, .] = g_per_unit[u, .] + Ze[i, .]
+    }
+    Omega = g_per_unit' * g_per_unit / n_rows
+    if (cond(Omega) > 1e12) return(.)
+    g_bar = Z' * r / n_rows
+    return(n_rows * (g_bar' * invsym(Omega) * g_bar))
 }
 
 // Arellano-Bond AR(k) test for serial correlation in transformed residuals.
@@ -1905,6 +2365,7 @@ void xtdpthresh_run(string scalar depvar_name,
                       string scalar Ly_name,
                       string scalar exog_names,
                       string scalar endog_names,
+                      string scalar predet_names,
                       string scalar inst_names,
                       string scalar q_name,
                       string scalar panelvar_name,
@@ -1934,7 +2395,7 @@ void xtdpthresh_run(string scalar depvar_name,
     xdpt_verbose = strtoreal(st_local("flag_verbose"))
     real colvector y, q, pid, tid, gamma_grid
     real matrix Ly
-    real matrix X_exog, X_endog, X_inst
+    real matrix X_exog, X_endog, X_predet, X_inst
     struct xdpt2_unit rowvector units
     real scalar t_min, t_max, i, n_units
 
@@ -1945,17 +2406,20 @@ void xtdpthresh_run(string scalar depvar_name,
     Ly  = J(rows(y), 0, 0)
     if (!flag_static & Ly_name != "") Ly = st_data(., Ly_name)
 
-    X_exog  = J(rows(y), 0, 0)
-    X_endog = J(rows(y), 0, 0)
-    X_inst  = J(rows(y), 0, 0)
-    if (exog_names  != "") X_exog  = st_data(., exog_names)
-    if (endog_names != "") X_endog = st_data(., endog_names)
-    if (inst_names  != "") X_inst  = st_data(., inst_names)
+    X_exog   = J(rows(y), 0, 0)
+    X_endog  = J(rows(y), 0, 0)
+    X_predet = J(rows(y), 0, 0)
+    X_inst   = J(rows(y), 0, 0)
+    if (exog_names   != "") X_exog   = st_data(., exog_names)
+    if (endog_names  != "") X_endog  = st_data(., endog_names)
+    if (predet_names != "") X_predet = st_data(., predet_names)
+    if (inst_names   != "") X_inst   = st_data(., inst_names)
 
     t_min = min(tid)
     t_max = max(tid)
 
-    units = xdpt2_build_units(y, Ly, X_exog, X_endog, X_inst, q, pid, tid, flag_static)
+    units = xdpt2_build_units(y, Ly, X_exog, X_endog, X_predet, X_inst,
+                               q, pid, tid, flag_static)
     n_units = length(units)
     if (n_units < 5) {
         errprintf("xtdpthresh: need >= 5 units (got %g)\n", n_units)
@@ -1965,7 +2429,7 @@ void xtdpthresh_run(string scalar depvar_name,
            n_units, rows(y), t_min, t_max)
 
     // Grid search over γ
-    gamma_grid = rangen(q_lo, q_hi, n_grid)
+    gamma_grid = xdpt2_rangen(q_lo, q_hi, n_grid)
 
     real scalar best_obj, best_gamma
     real colvector best_theta
@@ -1994,7 +2458,7 @@ void xtdpthresh_run(string scalar depvar_name,
     pval_cont = .
 
     if (do_grid_ci) {
-        gamma_ci_grid = rangen(q_lo, q_hi, n_gridci)
+        gamma_ci_grid = xdpt2_rangen(q_lo, q_hi, n_gridci)
         xdpt2_grid_bootstrap(units, gamma_grid, gamma_ci_grid,
                               best_obj, best_gamma,
                               method, flag_static, flag_kink,
@@ -2044,10 +2508,20 @@ void xtdpthresh_run(string scalar depvar_name,
     }
 
     // === Hansen J over-identification test ===
+    // BUG 1 FIX: recompute J cluster-robust at best theta, independent of the
+    // optimization path. When solve_gmm falls back to 1-step (Omega singular)
+    // or when FD stage-2 loop stores 1-step criterion, best_obj is not chi^2
+    // distributed. Recomputing here ensures chi^2 validity.
     real rowvector hj
-    real scalar k_W_final, hansen_stat, hansen_df, hansen_p
+    real scalar k_W_final, hansen_stat, hansen_df, hansen_p, J_cluster
     k_W_final = cols(dW_f)
-    hj = xdpt2_hansen_j(best_obj, n_iv, k_W_final)
+    J_cluster = xdpt2_recompute_cluster_j(dY_f, dW_f, Z_f, uid_f, best_theta)
+    if (J_cluster != .) {
+        hj = xdpt2_hansen_j(J_cluster, n_iv, k_W_final)
+    }
+    else {
+        hj = (., ., .)
+    }
     hansen_stat = hj[1]
     hansen_df = hj[2]
     hansen_p = hj[3]
