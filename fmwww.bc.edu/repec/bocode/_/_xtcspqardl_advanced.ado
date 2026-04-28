@@ -1,4 +1,4 @@
-*! _xtcspqardl_advanced v1.0.0 — Advanced analysis tables
+*! _xtcspqardl_advanced v1.0.1 — Advanced analysis tables
 *! Cross-quantile comparison, pairwise tests, persistence profile
 *! Called internally by xtcspqardl.ado via the 'full' option
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)

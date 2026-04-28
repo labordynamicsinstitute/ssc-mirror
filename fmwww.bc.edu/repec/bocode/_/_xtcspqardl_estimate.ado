@@ -1,4 +1,4 @@
-*! _xtcspqardl_estimate v1.0.0 — Per-panel quantile regression engine
+*! _xtcspqardl_estimate v1.0.1 — Per-panel quantile regression engine
 *! CS-PQARDL: Panel Quantile ARDL with CCE augmentation
 *! Called internally by xtcspqardl.ado
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)

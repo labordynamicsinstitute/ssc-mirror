@@ -212,13 +212,22 @@ program define _regproject_ts
     }
     if "`cross_note2'" == "" local cross_note2 "No DV limits specified"
     
+    /* note text: always show IV trend rate; append DV limits if within visible range */
+    local g2_note_txt "IV (`focusvar') trend: `=string(`trend_focus', "%8.4f")' per period; other covariates held at median"
+    if `has_ymin' & `ymin_val' > `g2_vis_lo' & `ymin_val' < `g2_vis_hi' {
+        local g2_note_txt "`g2_note_txt'  |  DV lower limit: `=string(`ymin_val', "%9.3g")'"
+    }
+    if `has_ymax' & `ymax_val' > `g2_vis_lo' & `ymax_val' < `g2_vis_hi' {
+        local g2_note_txt "`g2_note_txt'  |  DV upper limit: `=string(`ymax_val', "%9.3g")'"
+    }
+
     twoway (line _yhat_p2 _period, lcolor(navy) lwidth(medium)),         ///
         `g2_upper' `g2_lower'                                             ///
         xlabel(1(4)`horizon') xtitle("Periods Ahead")                    ///
         ytitle("Projected `depvar'")                                      ///
         title("Forward Projection: IV Trended, Others Fixed", size(medsmall)) ///
         subtitle("`cross_note2'", size(vsmall))                           ///
-        note("IV trend: `=string(`trend_focus', "%8.4f")' per period; others at median", size(vsmall)) ///
+        note("`g2_note_txt'", size(vsmall))                               ///
         scheme(s2color) name(rp_ts2, replace)
     
     restore

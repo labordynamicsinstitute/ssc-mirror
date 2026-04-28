@@ -1,4 +1,4 @@
-*! _xtcspqardl_qccepmg v1.0.0 — QCCEPMG Estimation Engine
+*! _xtcspqardl_qccepmg v1.0.1 — QCCEPMG Estimation Engine
 *! Quantile CCE Pooled Mean Group estimator
 *! Based on: Harding, Lamarche & Pesaran (2018) + Pesaran (2006) CCEP
 *! Called internally by xtcspqardl.ado

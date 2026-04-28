@@ -1,0 +1,31 @@
+d 'LOGOUTE': module to provide automated table conversion to HTML, Markdown, and LaTeX
+d
+d	logoute is built on top of logout (logout.ado by Roy Wada).
+d It keeps the original table-capture	 workflow from logout and
+d adds direct HTML/Markdown table export, so users can generate   
+d publish-ready HTML tables from the same syntax.    It is
+d particularly useful for generating descriptive statistics tables
+d or simple frequency	 lists that need to be embedded in web
+d reports or LaTeX documents. Compared with the    original logout,
+d logoute extends functionality by exporting HTML/Markdown tables
+d directly    and is optimized for the tohtml workflow, producing
+d cleaner HTML with proper class    attributes for styling. 
+d
+d KW: data management
+d KW: table conversion
+d KW: HTML
+d KW: Markdown
+d KW: LaTeX
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260427
+d
+d Author: Kerry Du, School of Management, Xiamen University
+d Support: email kerrydu@@xmu.edu.cn
+d
+d Author:  Huanyu Jia,  School of Business, Zhengzhou University
+d Support: email jiahuanyu@@zzu.edu.cn
+d
+f logoute.ado
+f logoute.sthlp

@@ -196,6 +196,7 @@ p logittorisk module for conversion of logistic regression output to differences
 p logloss module for computing the log loss metric for binary outcome models
 p lognfit module to fit lognormal distribution by maximum likelihood
 p logout module to convert log or ASCII files into various output formats
+p logoute module to provide automated table conversion to HTML, Markdown, and LaTeX
 p logpred module to calculate logistic regression probabilities
 p logtest module to test significance of a predictor in logistic models
 p lomackinlay module to perform Lo-MacKinlay variance ratio test

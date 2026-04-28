@@ -1,7 +1,7 @@
 * =====================================================================
 * XTPQARDL — Example Do-File
 * Panel Quantile ARDL Estimation
-* Version 1.0.1 | February 2026
+* Version 1.0.2 | April 2026
 * =====================================================================
 * This do-file demonstrates the xtpqardl package using:
 *   1. Simulated data (N=20, T=60) — full demo with all quantiles

@@ -1,0 +1,34 @@
+d 'ISHERE': module to insert markers in log files for report generation
+d
+d      The name ishere draws inspiration from a long-standing
+d convention in academic and	technical writing:  the humble
+d placeholder note like "Table 1 goes here" or "Figure	  inserted
+d here." For decades, researchers have used such phrases to mark
+d where results    should appear in a manuscript—especially when
+d figures and tables are generated separately	 from the main
+d text.    In the world of reproducible research with Stata, a
+d similar need arises: how do you tell	  your analysis script,
+d "Put the graph right here in the log," so that it can later be   
+d cleanly converted into a polished report? The answer is ishere.  
+d  Literally meaning "insert something here, on this line, in this
+d do-file," ishere acts as a	dynamic, executable placeholder. It
+d is a dual-purpose command designed to work with tohtml    for
+d generating formatted HTML reports from Stata log files. 
+d
+d KW: data management
+d KW: markers
+d KW: Markdown
+d KW: HTML
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260427
+d
+d Author: Kerry Du, School of Management, Xiamen University
+d Support: email kerrydu@@xmu.edu.cn
+d
+d Author:  Huanyu Jia,  School of Business, Zhengzhou University
+d Support: email jiahuanyu@@zzu.edu.cn
+d
+f ishere.ado
+f ishere.sthlp

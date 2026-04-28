@@ -146,6 +146,23 @@ program define _regproject_cs
         local xlab_str `xlab_str' `i' "`lbl'"
     }
     
+    /* DV limit note — only include each limit when it falls inside the visible frame */
+    local g1_note_parts ""
+    if `has_ymin' {
+        if `ymin_val' >= `g1_ylo' & `ymin_val' <= `g1_yhi' {
+            local g1_note_parts "`g1_note_parts'DV lower limit = `=string(`ymin_val', "%9.3g")'  "
+        }
+    }
+    if `has_ymax' {
+        if `ymax_val' >= `g1_ylo' & `ymax_val' <= `g1_yhi' {
+            local g1_note_parts "`g1_note_parts'DV upper limit = `=string(`ymax_val', "%9.3g")'"
+        }
+    }
+    local g1_note_opt ""
+    if `"`g1_note_parts'"' != "" {
+        local g1_note_opt `"note("`g1_note_parts'", size(vsmall))"'
+    }
+
     /* sort dataset temporarily for graph */
     preserve
     sort `sort_iv'
@@ -161,6 +178,7 @@ program define _regproject_cs
         ytitle("Predicted `depvar'")                               ///
         title("Projected Effect: `depvar' by Entity", size(medsmall)) ///
         subtitle("Bars = entity ŷ using own values; Lines = benchmark projections") ///
+        `g1_note_opt'                                              ///
         legend(order(2 "Max IV ref" 3 "Min IV ref" 4 "User upper IV" 5 "User lower IV") ///
                size(vsmall) rows(1))                               ///
         scheme(s2color) name(rp_cs1, replace)
@@ -210,11 +228,18 @@ program define _regproject_cs
     sort sens_val
     quietly generate _srank = _n
     
+    /* build explicit ylabel from variable names in sorted order */
+    local g2_ylab ""
+    forvalues j = 1/`nsens' {
+        local lbl_j = sens_var[`j']
+        local g2_ylab `g2_ylab' `j' `"`lbl_j'"'
+    }
+    
     twoway (bar sens_val _srank if sens_focal == 0,                ///
                 barwidth(0.6) color(navy%60) horizontal)           ///
            (bar sens_val _srank if sens_focal == 1,                ///
                 barwidth(0.6) color(orange%80) horizontal),        ///
-        ylabel(1(1)`nsens', valuelabel angle(0) labsize(small))    ///
+        ylabel(`g2_ylab', angle(0) labsize(small))                 ///
         ytitle("")                                                  ///
         xtitle("Range of Predicted `depvar' (min-to-max)")         ///
         title("Sensitivity Ranking of Regressors", size(medsmall)) ///
@@ -256,14 +281,27 @@ program define _regproject_cs
         
         quietly generate _gap_color = (`gap_var' < 0)
         
+        /* choose boundary label for subtitle */
+        if `has_ymax' & `has_ymin' {
+            local g3_sub "How far each entity's projected `depvar' sits from the user-specified DV limits"
+        }
+        else if `has_ymax' {
+            local g3_sub "How far each entity's projected `depvar' sits from the upper DV limit (`ymax_val')"
+        }
+        else {
+            local g3_sub "How far each entity's projected `depvar' sits from the lower DV limit (`ymin_val')"
+        }
+
         twoway (bar `gap_var' _xpos3 if _gap_color == 0, barwidth(0.7) color(teal%70)) ///
                (bar `gap_var' _xpos3 if _gap_color == 1, barwidth(0.7) color(red%70)), ///
             yline(0, lcolor(black) lwidth(thin))                   ///
             xlabel(1(1)`n', valuelabel angle(45) labsize(vsmall))  ///
             xtitle("`focusvar' (sorted ascending)")                ///
-            ytitle("Gap")                                          ///
+            ytitle("Gap (DV units)")                               ///
             title("`gap_title'", size(medsmall))                   ///
-            subtitle("Positive = headroom; Negative = limit breached") ///
+            subtitle("`g3_sub'", size(vsmall))                     ///
+            note("Teal bars (positive) = headroom remaining to the limit;  Red bars (negative) = limit already breached", ///
+                 size(vsmall))                                      ///
             legend(order(1 "Within bounds" 2 "Limit breached") size(vsmall)) ///
             scheme(s2color) name(rp_cs3, replace)
         

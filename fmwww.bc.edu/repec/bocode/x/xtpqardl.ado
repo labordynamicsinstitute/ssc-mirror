@@ -1,4 +1,4 @@
-*! xtpqardl v1.0.1  20feb2026  Dr Merwan Roudane  merwanroudane920@gmail.com
+*! xtpqardl v1.0.2  26apr2026  Dr Merwan Roudane  merwanroudane920@gmail.com
 *! Panel Quantile Autoregressive Distributed Lag (PQARDL) Model
 *! Combines Panel ARDL (PMG/MG/DFE) with Quantile Regression
 *! Based on: Cho, Kim & Shin (2015), Bildirici (2022), Pesaran et al. (1999)
@@ -271,7 +271,7 @@ program define Estimate, eclass
 		"  XTPQARDL — Panel Quantile ARDL" ///
 		_col(72) in gr "{bf:║}"
 	di in smcl in gr "  {bf:║}" _col(5) in ye ///
-		"  Version 1.0.1" ///
+		"  Version 1.0.2" ///
 		_col(72) in gr "{bf:║}"
 	di in smcl in gr "  {bf:╚══════════════════════════════════════════════════════════════════════╝}"
 	di in smcl in gr "{hline 78}"
@@ -1002,7 +1002,7 @@ program define Estimate, eclass
 	* ================================================================
 	di
 	di in smcl in gr "{hline 78}"
-	di in gr "  {bf:XTPQARDL v1.0.1} — Panel Quantile ARDL" ///
+	di in gr "  {bf:XTPQARDL v1.0.2} — Panel Quantile ARDL" ///
 		_col(50) in ye "PQARDL(`ardl_order')"
 	di in smcl in gr "{hline 78}"
 	di

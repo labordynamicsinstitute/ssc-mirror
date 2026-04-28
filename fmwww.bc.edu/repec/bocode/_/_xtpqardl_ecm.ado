@@ -1,7 +1,7 @@
-*! _xtpqardl_ecm v1.0.1 — ECM reparameterization for Panel QARDL
+*! _xtpqardl_ecm v1.0.2 — ECM reparameterization for Panel QARDL
 *! Called internally by xtpqardl.ado
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: February 2026
+*! Date: April 2026
 
 capture program drop _xtpqardl_ecm
 program define _xtpqardl_ecm, rclass
@@ -85,14 +85,17 @@ program define _xtpqardl_ecm, rclass
 	* ================================================================
 	* Loop over panels × quantiles
 	* ================================================================
+	local ncoefs_ecm = 1 + `k' + max(`p'-1, 0) + `k'*`q'
 	local pi = 0
 	foreach i of local ids {
 		local ++pi
 		
-		qui count if `touse' & `ivar' == `i'
+		* Count non-missing obs for this panel
+		qui count if `touse' & `ivar' == `i' & D.`depvar' != .
 		local ni = r(N)
 		
-		if `ni' < `p' + `q' + `k' + 5 {
+		* Need at least ncoefs + 2 for qreg to have degrees of freedom
+		if `ni' < `ncoefs_ecm' + 2 {
 			continue
 		}
 		
@@ -104,7 +107,8 @@ program define _xtpqardl_ecm, rclass
 				if `touse' & `ivar' == `i', quantile(`= `tauval' * 100') ///
 				`constant'
 			
-			if _rc != 0 | e(N) < 5 {
+			* Need at least ncoefs+1 obs for valid estimation
+			if _rc != 0 | e(N) < `ncoefs_ecm' + 1 {
 				continue
 			}
 			

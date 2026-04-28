@@ -1,4 +1,4 @@
-*! xtcspqardl_graph v1.0.0 — Premium visualization suite
+*! xtcspqardl_graph v1.0.1 — Premium visualization suite
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
 *! Date: February 2026
 *! 6 graphs: Quantile Process, ECT Heatmap, Half-Life, LR Comparison,
@@ -207,7 +207,7 @@ program define _xtcsg_plot_qccemg_process
 					size(medlarge) color(black)) ///
 				subtitle("Short-run coefficients ϑ(τ) with 95% CI", ///
 					size(small)) ///
-				note("XTCSPQARDL v1.0.0", ///
+				note("XTCSPQARDL v1.0.1", ///
 					size(vsmall) color(gs8)) ///
 				cols(`ncols') ///
 				graphregion(fcolor(white) color(white)) ///
@@ -322,7 +322,7 @@ program define _xtcsg_plot_cspqardl_beta
 					size(medlarge) color(black)) ///
 				subtitle("LR coefficients β(τ) with 95% CI bands", ///
 					size(small)) ///
-				note("XTCSPQARDL v1.0.0", ///
+				note("XTCSPQARDL v1.0.1", ///
 					size(vsmall) color(gs8)) ///
 				graphregion(fcolor(white) color(white)) ///
 				name(xtcspq_lr_combined, replace)
@@ -411,7 +411,7 @@ program define _xtcsg_plot_qccemg_lr
 					size(medlarge) color(black)) ///
 				subtitle("Derived Long-Run Coefficients θ(τ)", ///
 					size(small)) ///
-				note("XTCSPQARDL v1.0.0", ///
+				note("XTCSPQARDL v1.0.1", ///
 					size(vsmall) color(gs8)) ///
 				graphregion(fcolor(white) color(white)) ///
 				name(xtcspq_qccemg_lr_combined, replace)
@@ -525,7 +525,7 @@ program define _xtcsg_plot_cspqardl_sr
 					size(medlarge) color(black)) ///
 				subtitle("Short-Run dynamics with 95% CI bands", ///
 					size(small)) ///
-				note("XTCSPQARDL v1.0.0", ///
+				note("XTCSPQARDL v1.0.1", ///
 					size(vsmall) color(gs8)) ///
 				graphregion(fcolor(white) color(white)) ///
 				name(xtcspq_sr_combined, replace)

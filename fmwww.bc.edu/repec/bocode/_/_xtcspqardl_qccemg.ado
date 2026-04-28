@@ -1,4 +1,4 @@
-*! _xtcspqardl_qccemg v1.0.0 — QCCEMG Estimation Engine
+*! _xtcspqardl_qccemg v1.0.1 — QCCEMG Estimation Engine
 *! Quantile CCE Mean Group estimator (Harding, Lamarche & Pesaran 2018)
 *! Called internally by xtcspqardl.ado
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)

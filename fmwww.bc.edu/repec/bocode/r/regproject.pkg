@@ -15,7 +15,7 @@ d KW: marginal effects
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20260405
+d Distribution-Date: 20260427
 d
 d Author:   Noman Arshed, Sunway Business School, Sunway University
 d Support: email  nouman.arshed@@gmail.com
@@ -25,4 +25,5 @@ f regproject.sthlp
 f ../_/_regproject_ts.ado
 f ../_/_regproject_pan.ado
 f ../_/_regproject_cs.ado
+f ../_/_regproject_nomo.ado
 f regproject_example.do

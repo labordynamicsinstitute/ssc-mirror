@@ -1,0 +1,34 @@
+d 'TOHTML': module to convert Stata log files to HTML reports
+d
+d     tohtml is specifically designed to work hand-in-hand with
+d ishere, forming a unified    workflow embodied by the phrase:
+d everything is here: from do to html. This design    philosophy
+d emphasizes a minimalist approach to reproducible research—where
+d "is here"    corresponds to the ishere command (marking where
+d elements belong), and "to html"    corresponds to the tohtml
+d command (converting marked logs into polished reports).    The
+d core principle is simple: everything you need for your analysis
+d lives in one	  place—your do-file.  You mark locations with
+d ishere, run your analysis, and tohtml    transforms the log into
+d a professional HTML report. No external tools, no manual editing,
+d    no copy-pasting—just a streamlined path from code to
+d publication-ready output.    tohtml converts Stata log files
+d containing ishere markers into formatted HTML reports.    The
+d command can process a single log file or a directory containing
+d multiple table and	figure files. The latter gathers all table
+d and figure files in the directory in a HTML. 
+d
+d KW: data management
+d
+d Requires: Stata version 17 and pathutil from SSC (q.v.)
+d
+d Distribution-Date: 20260427
+d
+d Author: Kerry Du, School of Management, Xiamen University
+d Support: email kerrydu@@xmu.edu.cn
+d
+d Author:  Huanyu Jia,  School of Business, Zhengzhou University
+d Support: email jiahuanyu@@zzu.edu.cn
+d
+f tohtml.ado
+f tohtml.sthlp

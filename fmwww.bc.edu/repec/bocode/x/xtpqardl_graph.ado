@@ -1,6 +1,6 @@
-*! xtpqardl_graph v1.0.1 — Premium visualization for Panel QARDL
+*! xtpqardl_graph v1.0.2 — Premium visualization for Panel QARDL
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: February 2026
+*! Date: April 2026
 *! 6 graphs: Quantile Process, ECT Heatmap, Half-Life, LR Comparison,
 *!           IRF Fan, Persistence Profile
 
@@ -16,7 +16,7 @@ program define xtpqardl_graph
 	di
 	di in smcl in gr "{hline 78}"
 	di in smcl in gr "  {bf:╔══════════════════════════════════════════════════════════════════════╗}"
-	di in smcl in gr "  {bf:║   XTPQARDL Premium Visualizations                     v1.0.1       ║}"
+	di in smcl in gr "  {bf:║   XTPQARDL Premium Visualizations                     v1.0.2       ║}"
 	di in smcl in gr "  {bf:╚══════════════════════════════════════════════════════════════════════╝}"
 	di in smcl in gr "{hline 78}"
 	
@@ -168,7 +168,7 @@ program define _xtpq_plot_qprocess
 					size(medlarge) color(black)) ///
 				subtitle("Long-run β(τ) with 95% confidence bands", ///
 					size(small) color(gs5)) ///
-				note("XTPQARDL v1.0.1", ///
+				note("XTPQARDL v1.0.2", ///
 					size(vsmall) color(gs8)) ///
 				graphregion(fcolor(white) color(white)) ///
 				name(xtpqardl_qprocess, replace)
@@ -297,7 +297,7 @@ program define _xtpq_plot_halflife
 			graphregion(fcolor(white) color(white) margin(small)) ///
 			legend(off) ///
 			yline(1, lcolor(gs12) lpattern(shortdash) lwidth(thin)) ///
-			note("XTPQARDL v1.0.1", size(vsmall) color(gs8)) ///
+			note("XTPQARDL v1.0.2", size(vsmall) color(gs8)) ///
 			name(xtpqardl_halflife, replace)
 	}
 	if _rc == 0 {
@@ -389,7 +389,7 @@ program define _xtpq_plot_lr_comparison
 			legend(order(`legend_order') size(small) rows(1) ///
 				position(6) region(lcolor(gs14))) ///
 			yline(0, lcolor(gs12) lpattern(dash) lwidth(thin)) ///
-			note("XTPQARDL v1.0.1", ///
+			note("XTPQARDL v1.0.2", ///
 				size(vsmall) color(gs8)) ///
 			name(xtpqardl_lr_coefs, replace)
 	}
@@ -471,7 +471,7 @@ program define _xtpq_plot_irf_fan
 				position(6) region(lcolor(gs14))) ///
 			yline(0, lcolor(gs12) lpattern(dash) lwidth(thin)) ///
 			yline(0.5, lcolor("220 80 50%40") lpattern(shortdash) lwidth(thin)) ///
-			note("50% line shown dashed. XTPQARDL v1.0.1", ///
+			note("50% line shown dashed. XTPQARDL v1.0.2", ///
 				size(vsmall) color(gs8)) ///
 			name(xtpqardl_irf_fan, replace)
 	}
@@ -547,7 +547,7 @@ program define _xtpq_plot_persistence
 				size(small) rows(1) position(6) ///
 				region(lcolor(gs14))) ///
 			yline(0, lcolor(gs12) lpattern(dash) lwidth(thin) axis(1)) ///
-			note("XTPQARDL v1.0.1", ///
+			note("XTPQARDL v1.0.2", ///
 				size(vsmall) color(gs8)) ///
 			name(xtpqardl_persistence, replace)
 	}

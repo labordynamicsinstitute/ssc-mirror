@@ -1,4 +1,4 @@
-*! regproject v1.0.1
+*! regproject v1.1.0
 *! Post-estimation projection and boundary analysis
 *! Author : Dr Noman Arshed, Senior Lecturer
 *!          Department of Business Analytics
@@ -23,6 +23,7 @@ program define regproject
         SAving(string)                  ///
         COMBINE                         ///
         NODisplay                       ///
+        NOMO                            ///
     ]
     
     local focusvar `varlist'
@@ -303,10 +304,12 @@ program define regproject
     
     if "`datamode'" == "timeseries" local ngraphs = 3
     else                            local ngraphs = 4
-    
-    di as text "  Graphs       : " as result "`ngraphs'" as text " (`datamode' mode)"
+    if "`nomo'" != ""               local ngraphs = `ngraphs' + 3
+
+    di as text "  Graphs       : " as result "`ngraphs'" as text " (`datamode' mode`=cond("`nomo'"!="", " + nomogram", "")')"
     if "`saving'" != "" {
-        di as text "  Saving       : " as result "`saving'_1.gph" as text " ... " as result "`saving'_`ngraphs'.gph"
+        di as text "  Saving       : " as result "`saving'_1.gph" as text " ..."
+        if "`nomo'" != "" di as text "                  (nomo: `saving'_nomo1.gph  `saving'_nomo2.gph  `saving'_nomo3.gph)"
     }
     else {
         di as text "  Saving       : not specified"
@@ -354,6 +357,25 @@ program define regproject
             saving(`saving') `combine' `nodisplay'
     }
     
+    /* ------------------------------------------------------------------ */
+    /*  BLOCK 9 — NOMOGRAM GRAPHS (mode-agnostic, optional)               */
+    /*  Runs after the mode-specific block so e(b) is still the stored    */
+    /*  estimates (restored from _regproject_stored before this point).   */
+    /* ------------------------------------------------------------------ */
+    if "`nomo'" != "" {
+        /* Restore before nomo so _b[] is available inside the sub-program */
+        quietly estimates restore _regproject_stored
+        _regproject_nomo `focusvar',                                    ///
+            regressors(`regressors')                                    ///
+            nreg(`nreg') focuspos(`focuspos') depvar(`depvar')         ///
+            cons(`cons_val')                                            ///
+            bounds_lower(`bounds_lower') bounds_upper(`bounds_upper')  ///
+            med_vec(`med_vec')                                          ///
+            has_ymin(`has_ymin') has_ymax(`has_ymax')                  ///
+            ymin_val(`ymin') ymax_val(`ymax')                          ///
+            saving(`saving') `nodisplay'
+    }
+
     /* restore original estimation results for the user */
     quietly estimates restore _regproject_stored
     quietly estimates drop    _regproject_stored

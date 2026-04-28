@@ -103,6 +103,7 @@ p isa module to perform Imbens' (2003) sensitivity analysis
 p isco module to recode 4 digit ISCO-68 occupational codes
 p iscogen module to translate ISCO codes
 p iscoil module to recode Israeli CBS occupation standard classification into ISCO-08 occupational classification
+p ishere module to insert markers in log files for report generation
 p isko module to recode 4 digit ISCO-88 occupational codes
 p isocodes module to generate standardized country codes and names
 p isogini module to estimate isogini measures at different percentiles

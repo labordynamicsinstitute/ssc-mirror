@@ -1,4 +1,4 @@
-*! xtcspqardl v1.0.0  25feb2026  Dr Merwan Roudane  merwanroudane920@gmail.com
+*! xtcspqardl v1.0.1  26apr2026  Dr Merwan Roudane  merwanroudane920@gmail.com
 *! Cross-Sectionally Augmented Panel Quantile ARDL (CS-PQARDL) 
 *! & Quantile CCE Mean Group (QCCEMG) Estimator
 *! Based on: Harding, Lamarche & Pesaran (2018), Pesaran (2006),
@@ -77,22 +77,33 @@ program define Estimate, eclass
 		local cr_lags = floor(`avg_T'^(1/3))
 	}
 	
-	* CSA for dependent variable
+	* ================================================================
+	* PRE-EVALUATE all ts operators BEFORE any bysort
+	* (bysort `tvar': destroys tsset sort registration, making
+	*  subsequent D., L. operators fail with "not sorted")
+	* ================================================================
+	tempvar dv_for_csa
+	qui gen double `dv_for_csa' = `depvar' if `touse'
+	
+	forvalues j = 1/`k' {
+		local xvar : word `j' of `indepvars'
+		tempvar xforcsa`j'
+		qui gen double `xforcsa`j'' = `xvar' if `touse'
+	}
+	
+	* ================================================================
+	* NOW compute CSA means (bysort is safe — only plain vars used)
+	* ================================================================
 	tempvar csa_y
-	qui bysort `tvar': egen double `csa_y' = mean(`depvar') if `touse'
+	qui bysort `tvar': egen double `csa_y' = mean(`dv_for_csa') if `touse'
 	local csa_vars "`csa_y'"
 	local csa_names "csa_`depvar'"
 	
-	* CSA for independent variables
 	local csa_x_vars ""
 	local csa_x_names ""
 	forvalues j = 1/`k' {
-		local xvar : word `j' of `indepvars'
-		* Handle ts operators: use tsrevar to get plain var
-		tempvar xplain csa_x`j'
-		qui gen double `xplain' = `xvar' if `touse'
-		qui bysort `tvar': egen double `csa_x`j'' = mean(`xplain') if `touse'
-		drop `xplain'
+		tempvar csa_x`j'
+		qui bysort `tvar': egen double `csa_x`j'' = mean(`xforcsa`j'') if `touse'
 		local csa_x_vars "`csa_x_vars' `csa_x`j''"
 		local csa_x_names "`csa_x_names' csa_x`j'"
 	}
@@ -100,8 +111,8 @@ program define Estimate, eclass
 	local csa_all "`csa_y' `csa_x_vars'"
 	local n_csa = 1 + `k'
 	
-	* Restore panel sort order (bysort `tvar': re-sorted by time only)
-	sort `ivar' `tvar'
+	* Restore panel sort order AND re-register tsset
+	qui tsset
 	
 	* Generate lagged CSA
 	local csa_lagged ""
@@ -154,7 +165,7 @@ program define Estimate, eclass
 			"  Harding, Lamarche & Pesaran (2018)" ///
 			_col(72) in gr "{bf:║}"
 		di in smcl in gr "  {bf:║}" _col(5) in ye ///
-			"  Version 1.0.0" ///
+			"  Version 1.0.1" ///
 			_col(72) in gr "{bf:║}"
 		di in smcl in gr "  {bf:╚══════════════════════════════════════════════════════════════════════╝}"
 		di in smcl in gr "{hline 78}"
@@ -621,7 +632,7 @@ program define Estimate, eclass
 			"  Cross-Sectionally Augmented (2nd Generation)" ///
 			_col(72) in gr "{bf:║}"
 		di in smcl in gr "  {bf:║}" _col(5) in ye ///
-			"  Version 1.0.0" ///
+			"  Version 1.0.1" ///
 			_col(72) in gr "{bf:║}"
 		di in smcl in gr "  {bf:╚══════════════════════════════════════════════════════════════════════╝}"
 		di in smcl in gr "{hline 78}"
@@ -1093,7 +1104,7 @@ program define Estimate, eclass
 	* ================================================================
 	di
 	di in smcl in gr "{hline 78}"
-	di in gr "  {bf:XTCSPQARDL v1.0.0}" _c
+	di in gr "  {bf:XTCSPQARDL v1.0.1}" _c
 	if "`qccemg'" != "" | "`qccepmg'" != "" {
 		di in gr " — `est_label' (HLP 2018)"
 	}

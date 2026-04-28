@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.1  20feb2026}{...}
+{* *! version 1.0.2  26apr2026}{...}
 {vieweralsosee "xtpmg" "help xtpmg"}{...}
 {vieweralsosee "qreg" "help qreg"}{...}
 {viewerjumpto "Syntax" "xtpqardl##syntax"}{...}

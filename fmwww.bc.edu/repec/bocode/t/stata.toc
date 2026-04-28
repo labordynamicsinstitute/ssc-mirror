@@ -102,9 +102,11 @@ p tobithetm module to estimate Tobit Multiplicative Heteroscedasticity Regressio
 p tobitiv module to perform instrumental variables tobit
 p todate module to generate Stata date variables from run-together date variables
 p todummy module to create dummy variables
+p tohtml module to convert Stata log files to HTML reports
 p tolerance module to calculate tolerance intervals (normal distribution)
 p tolong module to provide a faster reshape long
 p tolower module to rename variables with lower case names
+p tomarkstat module to convert Markdown from tohtml to markstat .stmd
 p tomata module to make vectors in Mata of variables in Stata
 p tomode module to change values of a variable to mode(s)
 p topsis module to calculate comprehensive scores based on the entropy method or the entropy-TOPSIS method

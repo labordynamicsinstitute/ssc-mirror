@@ -7,7 +7,7 @@ version 16.0;
   leaving the master dataset in its original sorting order
   and without any new linkage variable (except if requested).
 *! Author: Roger Newson
-*! Date: 23 April 2026
+*! Date: 26 April 2026
 */
 
 
@@ -104,7 +104,7 @@ if "`sortpreserve'"!="" {;
   frame `frame' {;
     local oldsb: sortedby;
     tempvar oldorder;
-    gene byte `oldorder'=_n;
+    gene long `oldorder'=_n;
     cap assert `oldorder'>`oldorder'[_n-1] if _n>1;
     if _rc {;
       disp as error "Frame `frmme' has too many observations for sortpreserve to work";

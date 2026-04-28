@@ -1,0 +1,26 @@
+d 'OUTREG2E': module to provide outreg2 with direct HTML/Markdown table export
+d
+d  outreg2e is based on outreg2 (outreg2.ado by Roy Wada) and keeps
+d the original table-building behavior.   Its main extension is
+d direct HTML/Markdown table output for web/markdown workflows. In 
+d   other words, outreg2e is intended as a lightweight extension of
+d outreg2, adding    HTML/Markdown export while preserving familiar
+d syntax. 
+d
+d KW: data management
+d KW: table conversion
+d KW: HTML
+d KW: Markdown
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260427
+d
+d Author: Kerry Du, School of Management, Xiamen University
+d Support: email kerrydu@@xmu.edu.cn
+d
+d Author:  Huanyu Jia,  School of Business, Zhengzhou University
+d Support: email jiahuanyu@@zzu.edu.cn
+d
+f outreg2e.ado
+f outreg2e.sthlp

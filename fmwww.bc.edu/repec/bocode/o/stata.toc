@@ -53,6 +53,7 @@ p outfix2 module to output formatted data
 p outfixt module to write fixed-format text file
 p outreg module to write estimation tables to a Word or TeX file
 p outreg2 module to arrange regression outputs into an illustrative table
+p outreg2e module to provide outreg2 with direct HTML/Markdown table export
 p outreg5 module to format regression output for published tables
 p outseries module to write timeseries to text files
 p outsum module to write formatted descriptive statistics to a text file

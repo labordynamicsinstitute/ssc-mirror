@@ -1,6 +1,6 @@
-*! xtpqardl_makedata v1.0.1 — Generate panel data for PQARDL testing
+*! xtpqardl_makedata v1.0.2 — Generate panel data for PQARDL testing
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: February 2026
+*! Date: April 2026
 
 capture program drop xtpqardl_makedata
 program define xtpqardl_makedata
@@ -25,7 +25,7 @@ program define xtpqardl_makedata
 	
 	di
 	di in smcl in gr "{hline 70}"
-	di in gr "{bf:XTPQARDL Data Generator}" _col(50) in ye "v1.0.1"
+	di in gr "{bf:XTPQARDL Data Generator}" _col(50) in ye "v1.0.2"
 	di in smcl in gr "{hline 70}"
 	di in gr "  Panels (N):          " in ye "`n'"
 	di in gr "  Time periods (T):    " in ye "`t'"

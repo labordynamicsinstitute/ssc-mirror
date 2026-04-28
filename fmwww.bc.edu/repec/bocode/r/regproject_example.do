@@ -7,6 +7,7 @@
    1. Cross-sectional  — 14 named Asian economies
    2. Time series      — sysuse uslifeexp (1900-1999)
    3. Panel data       — 10 countries × 5 periods
+   4. Nomogram graphs  — nomo option on CS example
    ========================================================= */
 
 version 14
@@ -276,4 +277,133 @@ regproject gdp,                     ///
 di as text _n "{hline 60}"
 di as text "  regproject examples complete."
 di as text "  cs_example_*.gph   ts_example_*.gph   pan_example_*.gph"
+di as text "{hline 60}"
+
+/* --------------------------------------------------------- */
+/*  MODE 4 — NOMOGRAM GRAPHS (nomo option)                  */
+/*  Re-use the cross-sectional FDI model above.             */
+/*  Shows per-variable contribution in absolute FDI units.  */
+/* --------------------------------------------------------- */
+
+di as text _n "{hline 60}"
+di as text "  EXAMPLE 4 — Nomogram graphs (nomo option)"
+di as text "  Re-using: fdi = f(gdp_growth, trade, inflation)"
+di as text "  Data: 14 Asian economies (cross-section)"
+di as text "{hline 60}"
+
+/* Rebuild the cross-sectional dataset */
+clear
+set obs 14
+
+generate str15 country = ""
+replace country = "Malaysia"    in 1
+replace country = "Thailand"    in 2
+replace country = "Indonesia"   in 3
+replace country = "Philippines" in 4
+replace country = "Vietnam"     in 5
+replace country = "Singapore"   in 6
+replace country = "Cambodia"    in 7
+replace country = "Myanmar"     in 8
+replace country = "Bangladesh"  in 9
+replace country = "Pakistan"    in 10
+replace country = "SriLanka"    in 11
+replace country = "India"       in 12
+replace country = "China"       in 13
+replace country = "Japan"       in 14
+
+generate gdp_growth = .
+replace gdp_growth = 5.8 in 1 \ replace gdp_growth = 4.2 in 2
+replace gdp_growth = 5.1 in 3 \ replace gdp_growth = 6.2 in 4
+replace gdp_growth = 6.8 in 5 \ replace gdp_growth = 3.4 in 6
+replace gdp_growth = 7.0 in 7 \ replace gdp_growth = 6.5 in 8
+replace gdp_growth = 7.3 in 9 \ replace gdp_growth = 3.8 in 10
+replace gdp_growth = 3.2 in 11\ replace gdp_growth = 6.9 in 12
+replace gdp_growth = 6.6 in 13\ replace gdp_growth = 1.0 in 14
+
+generate trade = .
+replace trade = 130.2 in 1 \ replace trade = 122.5 in 2
+replace trade =  50.3 in 3 \ replace trade =  68.4 in 4
+replace trade =  93.7 in 5 \ replace trade = 326.5 in 6
+replace trade =  89.2 in 7 \ replace trade =  40.1 in 8
+replace trade =  38.6 in 9 \ replace trade =  29.4 in 10
+replace trade =  54.7 in 11\ replace trade =  42.1 in 12
+replace trade =  37.8 in 13\ replace trade =  32.6 in 14
+
+generate inflation = .
+replace inflation = 2.1 in 1 \ replace inflation = 1.8 in 2
+replace inflation = 3.4 in 3 \ replace inflation = 2.9 in 4
+replace inflation = 3.8 in 5 \ replace inflation = 1.2 in 6
+replace inflation = 4.1 in 7 \ replace inflation = 5.7 in 8
+replace inflation = 5.2 in 9 \ replace inflation = 8.1 in 10
+replace inflation = 4.8 in 11\ replace inflation = 4.3 in 12
+replace inflation = 2.3 in 13\ replace inflation = 0.5 in 14
+
+generate fdi = .
+replace fdi =  4.8 in 1 \ replace fdi =  3.6 in 2
+replace fdi =  3.1 in 3 \ replace fdi =  2.7 in 4
+replace fdi =  6.1 in 5 \ replace fdi =  9.8 in 6
+replace fdi =  7.3 in 7 \ replace fdi =  4.2 in 8
+replace fdi =  1.8 in 9 \ replace fdi =  1.1 in 10
+replace fdi =  1.6 in 11\ replace fdi =  2.8 in 12
+replace fdi =  2.9 in 13\ replace fdi =  0.8 in 14
+
+label variable gdp_growth "GDP Growth (%)"
+label variable trade      "Trade Openness (% GDP)"
+label variable inflation  "Inflation (%)"
+label variable fdi        "FDI Inflows (% GDP)"
+
+regress fdi gdp_growth trade inflation
+
+/* ---- 4a: Standard graphs + nomo together ---- */
+regproject gdp_growth,              ///
+    ivmins(-2   25   0)             ///
+    ivmaxs(10  350  10)             ///
+    ymin(0) ymax(12)                ///
+    combine nomo saving(nomo_example)
+
+/*
+  Graphs produced:
+    rp_cs1  — entity bar chart sorted by gdp_growth
+    rp_cs2  — sensitivity ranking (all three IVs)
+    rp_cs3  — gap to FDI ceiling (ymax=12)
+    rp_cs4  — actual vs counterfactual ŷ
+    rp_nomo1 — contribution nomogram
+               Left end labels  = IV value at minimum FDI contribution
+               Right end labels = IV value at maximum FDI contribution
+               Bar annotation   = |ΔŶ| in FDI % GDP units
+    rp_nomo2 — % share of total achievable ΔFDI per variable
+    rp_nomo3 — β coefficient dot chart with full-range whiskers
+
+  Reading rp_nomo1:
+    - A bar spanning -1.2 to +0.8 means that variable can shift FDI
+      by up to 1.2 percentage points downward or 0.8 upward from the
+      median-baseline prediction (other IVs held at their medians).
+    - Teal bar → positive coefficient (higher IV → higher FDI)
+    - Maroon bar → negative coefficient (higher IV → lower FDI)
+    - Orange bar → focal IV (gdp_growth), highlighted for emphasis
+    - Left-end number → raw IV value producing the minimum FDI contribution
+    - Right-end number → raw IV value producing the maximum FDI contribution
+
+  Reading rp_nomo2:
+    - The widest bar tells you which variable accounts for the largest
+      share of the total achievable variation in FDI across all IVs.
+
+  Reading rp_nomo3:
+    - The dot shows β (FDI units per 1-unit change in IV).
+    - The whisker shows the full contribution range once the entire
+      lb-to-ub sweep of that IV is considered.
+*/
+
+/* ---- 4b: Nomo only, with saving ---- */
+/* Useful when you only want the nomogram without redrawing mode graphs */
+regproject gdp_growth,              ///
+    ivmins(-2   25   0)             ///
+    ivmaxs(10  350  10)             ///
+    ymin(0) ymax(12)                ///
+    nomo nodisplay saving(nomo_only)
+
+di as text _n "{hline 60}"
+di as text "  All examples complete."
+di as text "  Nomogram graphs: rp_nomo1  rp_nomo2  rp_nomo3"
+di as text "  Saved:  nomo_example_*.gph  nomo_only_nomo*.gph"
 di as text "{hline 60}"

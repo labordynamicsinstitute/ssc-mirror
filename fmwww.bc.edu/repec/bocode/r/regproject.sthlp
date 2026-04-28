@@ -1,5 +1,5 @@
 {smcl}
-{* *! regproject v1.0.0  April 2026}{...}
+{* *! regproject v1.1.0  April 2026}{...}
 {viewerjumpto "Syntax" "regproject##syntax"}{...}
 {viewerjumpto "Description" "regproject##description"}{...}
 {viewerjumpto "Options" "regproject##options"}{...}
@@ -37,9 +37,11 @@
 {synopt:{opt ymax(#)}}upper limit of dependent variable{p_end}
 
 {syntab:Output}
-{synopt:{opt saving(stub)}}save graphs as {it:stub}_1.gph, {it:stub}_2.gph, ...{p_end}
+{synopt:{opt saving(stub)}}save graphs as {it:stub}_1.gph, ... (and {it:stub}_nomo1–3.gph if {opt nomo} is specified){p_end}
 {synopt:{opt combine}}combine all mode graphs into a single figure{p_end}
 {synopt:{opt nodisplay}}suppress screen display (useful in batch scripts){p_end}
+{synopt:{opt nomo}}additionally produce three nomogram graphs showing each variable's
+contribution to the dependent variable in absolute units of change{p_end}
 {synoptline}
 
 {p2colreset}{...}
@@ -117,8 +119,67 @@ using {cmd:graph combine}.
 {phang}
 {opt nodisplay} suppresses screen output of graphs. Useful in batch runs.
 
+{phang}
+{opt nomo} requests three additional nomogram graphs that are mode-agnostic (produced
+regardless of whether the data are cross-sectional, panel, or time series).
+All three graphs are built from the regression coefficients and the bounds
+matrix — no additional assumptions are required.
 
-{marker graphs}{...}
+
+{marker nomographs}{...}
+{title:Nomogram graphs (option nomo)}
+
+{pstd}
+When {opt nomo} is specified, three additional graphs are produced that show
+how many units each independent variable can shift the dependent variable
+across its specified range.
+The nomogram builds on two key quantities per variable:
+
+{phang2}• {bf:Contribution at lower bound:}  β{sub:k} × (lb{sub:k} − median{sub:k})
+
+{phang2}• {bf:Contribution at upper bound:}  β{sub:k} × (ub{sub:k} − median{sub:k})
+
+{pstd}
+All contributions are expressed as {it:deviations from the median-baseline prediction}.
+The centre line at x = 0 on graphs nomo1 and nomo3 represents the case
+where every regressor equals its sample median.
+
+{dlgtab:Graph nomo1 — Contribution Nomogram}
+
+{phang2}
+A horizontal bar chart (tornado diagram with nomogram annotations).
+Each bar spans from the minimum to the maximum possible contribution of that
+variable to ŷ.  The left-end label shows the raw IV value that produces the
+minimum contribution; the right-end label shows the value that produces the
+maximum contribution.  For a positive coefficient the left end corresponds to
+lb and the right end to ub; for a negative coefficient the mapping is reversed.
+Bars are colored teal (positive β), maroon (negative β), or orange (focal IV).
+The in-bar annotation shows |Δŷ| — the total achievable shift in ŷ units.
+
+{dlgtab:Graph nomo2 — Relative Contribution Bar Chart}
+
+{phang2}
+A horizontal percentage bar chart.  Each bar shows what fraction of the total
+achievable variation in ŷ (the sum of all per-variable ranges) that variable
+accounts for.  Annotation on each bar gives both the percentage share and the
+absolute Δŷ range.  Useful for at-a-glance comparisons of relative importance.
+
+{dlgtab:Graph nomo3 — Unit-Effect Dot Chart}
+
+{phang2}
+A dot chart showing the raw regression coefficient (β) for each variable on
+a common x-axis, with the vertical reference line at x = 0.  Horizontal
+whiskers extend from the minimum to the maximum contribution of each variable,
+serving as a CI-style visual for the full-range contribution.  Variables are
+sorted ascending by absolute full-range contribution so the most impactful
+variable appears at the top.
+
+{pstd}
+{bf:Printed output.}  When {opt nomo} is specified a summary table is also
+printed listing each variable's coefficient, lower bound, upper bound,
+absolute Δŷ range, and share of total achievable variation.
+
+
 {title:Graphs by data mode}
 
 {dlgtab:Cross-sectional (4 graphs)}
@@ -198,8 +259,8 @@ detects cross-sectional mode.{p_end}
 {phang2}{cmd:. regress price mpg weight length}{p_end}
 {phang2}{cmd:. regproject weight, ivmin(1500) ivmax(5000) ymin(3000) ymax(16000)}{p_end}
 
-{pstd}With bounds for all IVs and combined output:{p_end}
-{phang2}{cmd:. regproject weight, ivmins(10 1500 140) ivmaxs(41 5000 233) ymin(3000) ymax(16000) combine}{p_end}
+{pstd}With nomogram graphs to show per-variable contribution in ŷ units:{p_end}
+{phang2}{cmd:. regproject weight, ivmins(10 1500 140) ivmaxs(41 5000 233) ymin(3000) ymax(16000) nomo}{p_end}
 
 {pstd}
 {bf:Interpretation:} Graph 1 shows predicted price per car sorted by weight.
@@ -208,6 +269,9 @@ observed min/max and at user-supplied realistic bounds. Graph 2 ranks
 mpg, weight, and length by their leverage on price. Graph 3 shows each
 car's headroom to the price ceiling. Graph 4 shows actual vs counterfactual
 predicted price if weight were replaced with its median.
+With {opt nomo}: rp_nomo1 shows the range of price change each variable can
+drive; rp_nomo2 shows what share of total achievable variation each variable
+accounts for; rp_nomo3 shows the per-unit coefficient with full-range whiskers.
 
 
 {dlgtab:Time series — sysuse uslifeexp}

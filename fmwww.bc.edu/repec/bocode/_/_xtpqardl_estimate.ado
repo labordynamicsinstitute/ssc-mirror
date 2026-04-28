@@ -1,9 +1,10 @@
-*! _xtpqardl_estimate v1.0.1 — Per-panel quantile regression engine
+*! _xtpqardl_estimate v1.0.2 — Per-panel quantile regression engine
 *! Called internally by xtpqardl.ado
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: February 2026
+*! Date: April 2026
 *!
-*! Fixed: pre-generates lagged variables to avoid qreg+tsop failures
+*! v1.0.2: Fixed obs counting (non-missing only), relaxed min-obs filter
+*! v1.0.1: Pre-generates lagged variables to avoid qreg+tsop failures
 
 capture program drop _xtpqardl_estimate
 program define _xtpqardl_estimate, rclass
@@ -140,10 +141,12 @@ program define _xtpqardl_estimate, rclass
 	foreach i of local ids {
 		local ++pi
 		
-		qui count if `touse' & `ivar' == `i'
+		* Count non-missing obs (where depvar AND all regressors exist)
+		qui count if `touse' & `ivar' == `i' & `depvar_q' != .
 		local ni = r(N)
 		
-		if `ni' < `ncoefs_total' + 5 {
+		* Need at least ncoefs + 2 for qreg to have degrees of freedom
+		if `ni' < `ncoefs_total' + 2 {
 			continue
 		}
 		
@@ -164,7 +167,8 @@ program define _xtpqardl_estimate, rclass
 				continue
 			}
 			
-			if e(N) < 5 continue
+			* Need at least ncoefs+1 obs for valid estimation
+			if e(N) < `ncoefs_total' + 1 continue
 			
 			local any_tau_ok = 1
 			

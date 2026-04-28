@@ -1,4 +1,4 @@
-*! _xtcspqardl_ecm v1.0.0 — ECM reparameterization for CS-PQARDL
+*! _xtcspqardl_ecm v1.0.1 — ECM reparameterization for CS-PQARDL
 *! Error Correction Model: CSA enter the ECT only (not SR dynamics)
 *! Called internally by xtcspqardl.ado
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)

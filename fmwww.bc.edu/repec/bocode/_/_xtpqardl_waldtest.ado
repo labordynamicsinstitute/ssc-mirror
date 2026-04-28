@@ -1,6 +1,6 @@
-*! _xtpqardl_waldtest v1.0.1 — Wald tests for Panel QARDL
+*! _xtpqardl_waldtest v1.0.2 — Wald tests for Panel QARDL
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: February 2026
+*! Date: April 2026
 *!
 *! Tests H0: parameter(tau_i) = parameter(tau_{i+1}) for all adjacent pairs
 *! Now handles missing quantiles by testing only valid ones

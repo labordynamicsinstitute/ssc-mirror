@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  25feb2026}{...}
+{* *! version 1.0.2  27apr2026}{...}
 {vieweralsosee "xtpqardl" "help xtpqardl"}{...}
 {vieweralsosee "xtpmg" "help xtpmg"}{...}
 {vieweralsosee "xtdcce2" "help xtdcce2"}{...}
@@ -294,7 +294,10 @@ These are treated as nuisance parameters to absorb unobserved common factors.
 {phang2}{cmd:. gen x1 = rnormal()}{p_end}
 {phang2}{cmd:. gen x2 = rnormal()}{p_end}
 {phang2}{cmd:. bysort t: egen f = mean(rnormal())}{p_end}
-{phang2}{cmd:. gen y = 0.5*L.y + 1.0*x1 + 0.5*x2 + 0.3*f + rnormal() if t > 1}{p_end}
+{phang2}{cmd:. sort id t}{p_end}
+{phang2}{cmd:. xtset id t}{p_end}
+{phang2}{cmd:. gen y = 0 if t == 1}{p_end}
+{phang2}{cmd:. by id: replace y = 0.5*y[_n-1] + 1.0*x1 + 0.5*x2 + 0.3*f + rnormal() if _n > 1}{p_end}
 {phang2}{cmd:. gen dy = D.y}{p_end}
 {phang2}{cmd:. gen dx1 = D.x1}{p_end}
 {phang2}{cmd:. gen dx2 = D.x2}{p_end}

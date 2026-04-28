@@ -38,6 +38,8 @@ program define _regproject_pan
     }
     local orig_cons  = `cons'
     local coef_focus = `orig_coef_`focuspos''
+    /* SE of focal coefficient — captured now before any e(V) overwrite */
+    local se_focus   = sqrt(e(V)[`focuspos', `focuspos'])
     
     /* ------------------------------------------------------------------ */
     /*  REFERENCE LINE VALUES (median base, focal IV varies)               */
@@ -147,8 +149,25 @@ program define _regproject_pan
         local g1_xlabel "xlabel(1(1)`n_ent', angle(45) labsize(vsmall))"
     }
     
+    /* DV limit note for panel G1 — only when the limit falls inside the visible frame */
+    local p1_note_parts ""
+    if `has_ymin' {
+        if `ymin_val' > `g1_vis_lo' & `ymin_val' < `g1_vis_hi' {
+            local p1_note_parts "DV lower limit = `=string(`ymin_val', "%9.3g")'  "
+        }
+    }
+    if `has_ymax' {
+        if `ymax_val' > `g1_vis_lo' & `ymax_val' < `g1_vis_hi' {
+            local p1_note_parts "`p1_note_parts'DV upper limit = `=string(`ymax_val', "%9.3g")'"
+        }
+    }
+    local p1_note_opt ""
+    if `"`p1_note_parts'"' != "" {
+        local p1_note_opt `"note("`p1_note_parts'", size(vsmall))"'
+    }
+
     twoway (scatter _yhat_pan _xpos1,                                    ///
-                msymbol(O) msize(medlarge) mcolor(navy)),                 ///
+                msymbol(O) msize(medlarge) mcolor(navy%50)),              ///
         `p1_rl_max' `p1_rl_min' `p1_rl_ub' `p1_rl_lb'                   ///
         `p1_ymax_line' `p1_ymin_line'                                    ///
         `g1_xlabel'                                                       ///
@@ -156,6 +175,7 @@ program define _regproject_pan
         ytitle("Predicted `depvar'")                                      ///
         title("Panel Projection at Latest Period (t=`latest_t')", size(medsmall)) ///
         subtitle("Dots = entity ŷ at latest period; Lines = benchmark projections", size(vsmall)) ///
+        `p1_note_opt'                                                     ///
         legend(order(2 "Max IV" 3 "Min IV" 4 "User upper IV" 5 "User lower IV") ///
                size(vsmall) rows(1))                                      ///
         scheme(s2color) name(rp_pan1, replace)
@@ -235,33 +255,47 @@ program define _regproject_pan
     local flo  = `dmin' - `fpad'
     local fhi  = `dmax' + `fpad'
     
+    /* CI band around theoretical slope: SE(β·x) = |x|·SE(β) */
+    sort _delta_iv
+    quietly generate _ci_hi3 = `coef_focus' * _delta_iv + 1.96 * `se_focus' * abs(_delta_iv)
+    quietly generate _ci_lo3 = `coef_focus' * _delta_iv - 1.96 * `se_focus' * abs(_delta_iv)
+    
     local coef_str = string(`coef_focus', "%6.3f")
+    local se_str   = string(`se_focus',   "%6.3f")
     
     if "`entlabel'" != "" {
-        twoway (scatter _delta_yhat _delta_iv,                            ///
+        twoway (rarea _ci_hi3 _ci_lo3 _delta_iv,                          ///
+                    color(red%12) lwidth(none))                            ///
+               (scatter _delta_yhat _delta_iv,                            ///
                     mlabel(`entlabel') mlabsize(vsmall)                   ///
-                    msymbol(O) mcolor(navy%70) msize(medium))             ///
+                    msymbol(O) mcolor(navy%50) msize(medium))             ///
                (function y = `coef_focus' * x,                           ///
                     range(`flo' `fhi')                                    ///
                     lcolor(red) lpattern(dash) lwidth(medium)),           ///
             xtitle("Δ `focusvar' (last − first period)")                  ///
             ytitle("Δ Predicted `depvar'")                                ///
             title("IV Change vs Outcome Change by Entity", size(medsmall)) ///
-            subtitle("Dashed = theoretical slope (β = `coef_str')", size(vsmall)) ///
-            legend(order(2 "β = `coef_str'") size(vsmall))               ///
+            subtitle("Change in focal IV vs change in projected outcome across entities", size(vsmall)) ///
+            note("Dashed line = theoretical slope (β = `coef_str');  light band = 95% CI (SE = `se_str')", ///
+                 size(vsmall))                                            ///
+            legend(order(3 "β = `coef_str'" 1 "95% CI band") size(vsmall)) ///
             scheme(s2color) name(rp_pan3, replace)
     }
     else {
-        twoway (scatter _delta_yhat _delta_iv,                            ///
-                    msymbol(O) mcolor(navy%70) msize(medium))             ///
+        twoway (rarea _ci_hi3 _ci_lo3 _delta_iv,                          ///
+                    color(red%12) lwidth(none))                            ///
+               (scatter _delta_yhat _delta_iv,                            ///
+                    msymbol(O) mcolor(navy%50) msize(medium))             ///
                (function y = `coef_focus' * x,                           ///
                     range(`flo' `fhi')                                    ///
                     lcolor(red) lpattern(dash) lwidth(medium)),           ///
             xtitle("Δ `focusvar' (last − first period)")                  ///
             ytitle("Δ Predicted `depvar'")                                ///
             title("IV Change vs Outcome Change by Entity", size(medsmall)) ///
-            subtitle("Dashed = theoretical slope (β = `coef_str')", size(vsmall)) ///
-            legend(order(2 "β = `coef_str'") size(vsmall))               ///
+            subtitle("Change in focal IV vs change in projected outcome across entities", size(vsmall)) ///
+            note("Dashed line = theoretical slope (β = `coef_str');  light band = 95% CI (SE = `se_str')", ///
+                 size(vsmall))                                            ///
+            legend(order(3 "β = `coef_str'" 1 "95% CI band") size(vsmall)) ///
             scheme(s2color) name(rp_pan3, replace)
     }
     
@@ -281,7 +315,9 @@ program define _regproject_pan
             xtitle("Time (`timevar')")                                    ///
             ytitle("Entity (`panelvar')")                                 ///
             title("Predicted `depvar' — Heat Map", size(medsmall))        ///
-            subtitle("RdBu: blue = low, red = high `depvar'", size(vsmall)) ///
+            subtitle("Cell colour encodes predicted `depvar': entities (rows) × time periods (columns)", ///
+                     size(vsmall))                                        ///
+            note("Colour scale: blue = low `depvar', red = high `depvar' (RdBu palette)", size(vsmall)) ///
             name(rp_pan4, replace)
     }
     else {
@@ -297,8 +333,10 @@ program define _regproject_pan
             xtitle("Time (`timevar')")                                    ///
             ytitle("Entity (`panelvar')")                                  ///
             title("Predicted `depvar' — Period × Entity", size(medsmall)) ///
-            subtitle("Dot size ∝ predicted `depvar'; install heatplot (SSC) for full heat map", ///
+            subtitle("Bubble size encodes predicted `depvar' level across entity-period cells", ///
                      size(vsmall))                                         ///
+            note("Larger bubble = higher predicted `depvar';  install heatplot (SSC) for colour heat map", ///
+                 size(vsmall))                                             ///
             scheme(s2color) name(rp_pan4, replace)
         
         quietly drop _heat_norm

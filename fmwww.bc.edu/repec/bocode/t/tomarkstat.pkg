@@ -1,0 +1,23 @@
+d 'TOMARKSTAT': module to convert Markdown from tohtml to markstat .stmd
+d
+d      tomarkstat takes cleaned Markdown ({.md}) from tohtml (or
+d similar) and converts it to	 Stata Markdown ({.stmd}) for use
+d with markstat using to render dynamic documents in HTML,    PDF,
+d Word, and other formats. 
+d
+d KW: data management
+d KW: tables
+d KW: output format
+d
+d Requires: Stata version 17 and pathutil from SSC (q.v.)
+d
+d Distribution-Date: 20260427
+d
+d Author: Kerry Du, School of Management, Xiamen University
+d Support: email kerrydu@@xmu.edu.cn
+d
+d Author:  Huanyu Jia,  School of Business, Zhengzhou University
+d Support: email jiahuanyu@@zzu.edu.cn
+d
+f tomarkstat.ado
+f tomarkstat.sthlp
