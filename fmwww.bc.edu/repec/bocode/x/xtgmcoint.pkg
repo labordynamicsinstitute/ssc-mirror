@@ -1,0 +1,31 @@
+d 'XTGMCOINT': module to estimate the cointegrating relationship in heterogeneous panels using Pedroni's group-mean Fully Modified OLS (FMOLS) and Dynamic OLS (DOLS)
+d
+d   xtgmcoint implements Pedroni's (2000, 2001) group-mean panel
+d Fully Modified OLS (FMOLS) and Dynamic OLS (DOLS) estimators for
+d heterogeneous cointegrated panels. The command provides
+d unit-by-unit and panel-level long-run coefficient estimates with
+d three group-mean averaging schemes (simple, square-root, and
+d precision-weighted), supports constant and trend specifications,
+d common time-effect removal via time dummies, multivariate
+d cointegrating regressions, and user-specified null hypotheses on
+d the long-run coefficients. Results have been validated against
+d the corresponding RATS procedures (PANELFM and PANELDOLS,
+d available on SSC). 
+d
+d KW: panel data
+d KW: fully modified OLS
+d KW: Pedroni
+d KW: group mean
+d KW: dynamic OLS
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20260428
+d
+d Author: Ozan Eruygur ,  AHBV University, Ankara, Turkiye
+d Support: email eruygur@@gmail.com
+d
+f xtgmcoint.ado
+f xtgmcoint.sthlp
+F xtgmcoint_examples.txt
+F ../r/rats_codes_outputs.txt

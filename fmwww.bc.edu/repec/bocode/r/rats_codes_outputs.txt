@@ -1,0 +1,493 @@
+open data pedroni_ppp.xls
+calendar(panelobs=246,m) 1973:6
+data(format=xls,org=columns) 1//1973:06 20//1993:11 ae rf wpi cpi uswpi uscpi country entry year month
+set logexrate    = log(ae)
+set logratio     = log(cpi/uscpi)
+set logwpi_ratio = log(wpi/uswpi)
+
+source panelfm.src
+source paneldols.src
+
+
+*===== EXAMPLE 2: Model specifications =====
+
+* with constant (default)
+@panelfm(bvec=||0.0||,notdum,print=short,average=simple)
+# logexrate logratio
+@paneldols(bvec=||0.0||,notdum,print=short,average=simple)
+# logexrate logratio
+
+* model with trend
+@panelfm(bvec=||0.0||,det=trend,notdum,print=short,average=simple)
+# logexrate logratio
+@paneldols(bvec=||0.0||,det=trend,notdum,print=short,average=simple)
+# logexrate logratio
+
+* with time dummies
+@paneldols(bvec=||0.0||,tdum,print=short,average=simple)
+# logexrate logratio
+@panelfm(bvec=||0.0||,tdum,print=short,average=simple)
+# logexrate logratio
+
+* with time dummies and trend
+@paneldols(bvec=||0.0||,tdum,det=trend,print=short,average=simple)
+# logexrate logratio
+@panelfm(bvec=||0.0||,tdum,det=trend,print=short,average=simple)
+# logexrate logratio
+
+* with different lag options
+@paneldols(bvec=||0.0||,dlags=5,lags=5,det=trend,notdum,print=short,average=simple)
+# logexrate logratio
+@panelfm(bvec=||0.0||,lags=5,det=trend,notdum,print=short,average=simple)
+# logexrate logratio
+
+
+*===== EXAMPLE 3: Multivariate =====
+
+@paneldols(bvec=||0.0,0.0||,lags=5,dlags=5,notdum,print=short,average=simple)
+# logexrate logratio logwpi_ratio
+@panelfm(bvec=||0.0,0.0||,lags=5,notdum,print=short,average=simple)
+# logexrate logratio logwpi_ratio
+
+
+*===== EXAMPLE 4: Different null hypotheses per variable =====
+
+@paneldols(bvec=||1.0,0.0,0.0,0.0||,lags=5,dlags=5,notdum,print=short,average=simple)
+# logexrate uswpi uscpi cpi wpi
+
+
+*===== EXAMPLE 5: Short-T multivariate (T=46) =====
+
+do J=1,20
+   set logexrate    1977:04+(J-1)*246 1993:11+(J-1)*246 = %na
+   set logratio     1977:04+(J-1)*246 1993:11+(J-1)*246 = %na
+   set logwpi_ratio 1977:04+(J-1)*246 1993:11+(J-1)*246 = %na
+end do J
+
+@paneldols(bvec=||0.0,0.0||,lags=2,dlags=2,notdum,print=short,average=simple)
+# logexrate logratio logwpi_ratio
+@panelfm(bvec=||0.0,0.0||,lags=2,notdum,print=short,average=simple)
+# logexrate logratio logwpi_ratio
+
+
+*===== EXAMPLE 7: Saving residuals and fitted values =====
+* Reload data because Example 5 overwrote with NAs
+
+open data pedroni_ppp.xls
+calendar(panelobs=246,m) 1973:6
+data(format=xls,org=columns) 1//1973:06 20//1993:11 ae rf wpi cpi uswpi uscpi country entry year month
+set logexrate = log(ae)
+set logratio  = log(cpi/uscpi)
+
+@panelfm(bvec=||0.0||,lags=5,notdum,print=short,average=simple)
+# logexrate logratio
+set ehat_fm = %resids
+set yhat_fm = logexrate - %resids
+
+@paneldols(bvec=||0.0||,lags=5,dlags=5,notdum,print=short,average=simple)
+# logexrate logratio
+set ehat_dols = %resids
+set yhat_dols = logexrate - %resids
+
+stats ehat_fm
+stats yhat_fm
+stats ehat_dols
+stats yhat_dols
+
+
+*===== EXAMPLE 8: Three averaging methods =====
+
+@panelfm(bvec=||1.0||,lags=5,notdum,print=short,average=simple)
+# logexrate logratio
+@panelfm(bvec=||1.0||,lags=5,notdum,print=short,average=sqrt)
+# logexrate logratio
+@panelfm(bvec=||1.0||,lags=5,notdum,print=short,average=precision)
+# logexrate logratio
+
+@paneldols(bvec=||1.0||,lags=5,dlags=2,notdum,print=short,average=simple)
+# logexrate logratio
+@paneldols(bvec=||1.0||,lags=5,dlags=2,notdum,print=short,average=sqrt)
+# logexrate logratio
+@paneldols(bvec=||1.0||,lags=5,dlags=2,notdum,print=short,average=precision)
+# logexrate logratio
+
+Mean Group Panel FM Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Kernel Width Computed
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.169935   97.413036
+
+
+Mean Group Panel DOLS Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Dynamic Lags              2
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.174056   88.614120
+
+
+Mean Group Panel FM Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Kernel Width Computed
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.003210   29.997626
+
+
+Mean Group Panel DOLS Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Dynamic Lags              2
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.006913   28.105943
+
+
+Mean Group Panel DOLS Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Dynamic Lags              2
+       common time dummies included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.130887  154.248717
+
+
+Mean Group Panel FM Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Kernel Width Computed
+       common time dummies included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.120151  174.313972
+
+
+Mean Group Panel DOLS Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Dynamic Lags              2
+       common time dummies included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.184113   40.196640
+
+
+Mean Group Panel FM Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Kernel Width Computed
+       common time dummies included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.174499   42.941242
+
+
+Mean Group Panel DOLS Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Dynamic Lags              5
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.010235   28.380940
+
+
+Mean Group Panel FM Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Kernel Width              5
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.003210   29.997626
+
+
+Mean Group Panel DOLS Estimation
+       LHS Variable LOGEXRATE
+       Individuals              18
+       Time Periods Unbalanced
+       Dynamic Lags              5
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+       LOGWPI_RATIO       0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO          -0.552557   -9.349950
+       LOGWPI_RATIO       1.528439   23.057227
+
+
+Mean Group Panel FM Estimation
+       LHS Variable LOGEXRATE
+       Individuals              18
+       Time Periods Unbalanced
+       Kernel Width              5
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+       LOGWPI_RATIO       0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO          -0.658225   -9.295890
+       LOGWPI_RATIO       1.551160   23.710363
+
+
+Mean Group Panel DOLS Estimation
+       LHS Variable LOGEXRATE
+       Individuals              18
+       Time Periods Unbalanced
+       Dynamic Lags              5
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       USWPI              1.000000
+       USCPI              0.000000
+       CPI                0.000000
+       WPI                0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  USWPI             -0.001367 -764.766318
+       USCPI             -0.002383   -0.400153
+       CPI               -0.012167  -11.368347
+       WPI                0.034993   28.694774
+
+
+Mean Group Panel DOLS Estimation
+       LHS Variable LOGEXRATE
+       Individuals              17
+       Time Periods             46
+       Dynamic Lags              2
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+       LOGWPI_RATIO       0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO          -0.093188    1.540303
+       LOGWPI_RATIO       0.757852    7.900313
+
+
+Mean Group Panel FM Estimation
+       LHS Variable LOGEXRATE
+       Individuals              17
+       Time Periods             46
+       Kernel Width              2
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+       LOGWPI_RATIO       0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           0.096894    1.451010
+       LOGWPI_RATIO       0.611792   10.734428
+
+
+Mean Group Panel FM Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Kernel Width              5
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.169935   97.413036
+
+
+Mean Group Panel DOLS Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Dynamic Lags              5
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           0.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.202432   87.886543
+
+
+Statistics on Series EHAT_FM
+Panel(246) of Monthly Data From      1//1973:06 To     20//1993:11
+Observations               4920
+Sample Mean            0.009773      Variance              6.245025
+Standard Error         2.499005      SE of Sample Mean     0.035627
+t-Statistic (Mean=0)   0.274316      Signif Level (Mean=0) 0.783853
+Skewness               0.120338      Signif Level (Sk=0)   0.000571
+Kurtosis (excess)     -1.189072      Signif Level (Ku=0)   0.000000
+Jarque-Bera          301.722567      Signif Level (JB=0)   0.000000
+
+
+Statistics on Series YHAT_FM
+Panel(246) of Monthly Data From      1//1973:06 To     20//1993:11
+Observations                 4920
+Sample Mean              2.664401      Variance              0.902628
+Standard Error           0.950067      SE of Sample Mean     0.013545
+t-Statistic (Mean=0)   196.710594      Signif Level (Mean=0) 0.000000
+Skewness                -1.147984      Signif Level (Sk=0)   0.000000
+Kurtosis (excess)       10.241304      Signif Level (Ku=0)   0.000000
+Jarque-Bera          22581.933156      Signif Level (JB=0)   0.000000
+
+
+Statistics on Series EHAT_DOLS
+Panel(246) of Monthly Data From      1//1973:06 To     20//1993:11
+Observations               4920
+Sample Mean            0.001513      Variance              6.261368
+Standard Error         2.502273      SE of Sample Mean     0.035674
+t-Statistic (Mean=0)   0.042419      Signif Level (Mean=0) 0.966166
+Skewness               0.120766      Signif Level (Sk=0)   0.000546
+Kurtosis (excess)     -1.186979      Signif Level (Ku=0)   0.000000
+Jarque-Bera          300.787523      Signif Level (JB=0)   0.000000
+
+
+Statistics on Series YHAT_DOLS
+Panel(246) of Monthly Data From      1//1973:06 To     20//1993:11
+Observations                 4920
+Sample Mean              2.672661      Variance              0.953469
+Standard Error           0.976457      SE of Sample Mean     0.013921
+t-Statistic (Mean=0)   191.987580      Signif Level (Mean=0) 0.000000
+Skewness                -1.147984      Signif Level (Sk=0)   0.000000
+Kurtosis (excess)       10.241304      Signif Level (Ku=0)   0.000000
+Jarque-Bera          22581.933156      Signif Level (JB=0)   0.000000
+
+
+Mean Group Panel FM Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Kernel Width              5
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           1.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.169935    8.665310
+
+
+Mean Group Panel FM Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Kernel Width              5
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           1.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.097640    8.665310
+
+
+Mean Group Panel FM Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Kernel Width              5
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           1.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           0.856933    8.665310
+
+
+Mean Group Panel DOLS Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Dynamic Lags              2
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           1.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.174056    8.420033
+
+
+Mean Group Panel DOLS Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Dynamic Lags              2
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           1.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           1.104996    8.420033
+
+
+Mean Group Panel DOLS Estimation
+       LHS Variable LOGEXRATE
+       Individuals              20
+       Time Periods            246
+       Dynamic Lags              2
+       common time dummies NOT included
+
+       RHS Variable H0 Coefficient
+       LOGRATIO           1.000000
+
+Member Variable     Coefficient    t-Statistic
+Group  LOGRATIO           0.787260    8.420033
+
+

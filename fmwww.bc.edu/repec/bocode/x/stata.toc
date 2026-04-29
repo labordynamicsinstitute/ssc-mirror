@@ -81,6 +81,7 @@ p xtgeebcv module to compute bias-corrected (small-sample) standard errors for g
 p xtgets module providing Panel General-to-Specific (GETS) Indicator Saturation for Structural Break Detection
 p xtgls2 module to estimate GLS estimator for large N, small T panel data models
 p xtglsr module to calculate robust, or cluster-robust variance after xtgls
+p xtgmcoint module to estimate the cointegrating relationship in heterogeneous panels using Pedroni's group-mean Fully Modified OLS (FMOLS) and Dynamic OLS (DOLS)
 p xtgmmfa module to perform GMM estimation for fixed-T factor-augmented panel data model
 p xtgps module to estimate Hoechle, Schmid, and Zimmermann's (2024) GPS regression model for analyzing asset returns
 p xtgrangert module for improved Granger non-causality testing in heterogeneous and homogeneous panel data

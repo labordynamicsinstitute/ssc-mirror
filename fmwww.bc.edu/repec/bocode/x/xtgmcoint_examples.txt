@@ -1,0 +1,78 @@
+* ===== Example 1: Pedroni (2001) replication =====
+use https://eruygurakademi.com/datasets/pedronidata.dta, clear
+xtgmcoint logexrate logratio, method(dols) dlags(4) lags(4) b(1) full ttest
+xtgmcoint logexrate logratio, method(fmols) lags(4) b(1) full ttest
+
+* Pedroni (2001) Table 1 panel "Between" exact replication
+xtgmcoint logexrate logratio, method(dols) dlags(5) lags(5) b(1) pedroni2001
+xtgmcoint logexrate logratio, method(dols) dlags(5) lags(5) b(1) tdum pedroni2001
+
+
+* ===== Example 2: Model specifications =====
+use https://eruygurakademi.com/datasets/pedronidata.dta, clear
+
+* With constant (default)
+xtgmcoint logexrate logratio, method(fmols)
+xtgmcoint logexrate logratio, method(dols)
+
+* Model with trend
+xtgmcoint logexrate logratio, method(fmols) trend
+xtgmcoint logexrate logratio, method(dols) trend
+
+* With time dummies
+xtgmcoint logexrate logratio, method(dols) tdum
+xtgmcoint logexrate logratio, method(fmols) tdum
+
+* With time dummies and trend
+xtgmcoint logexrate logratio, method(dols) tdum trend
+xtgmcoint logexrate logratio, method(fmols) tdum trend
+
+* Different lag options
+xtgmcoint logexrate logratio, method(dols) lags(5) dlags(5) trend
+xtgmcoint logexrate logratio, method(fmols) lags(5) trend
+
+
+* ===== Example 3: Multivariate =====
+use https://eruygurakademi.com/datasets/pedronidata.dta, clear
+gen logwpi_ratio = log(wpi/uswpi)
+xtgmcoint logexrate logratio logwpi_ratio, method(dols) lags(5) dlags(5)
+xtgmcoint logexrate logratio logwpi_ratio, method(fmols) lags(5)
+
+
+* ===== Example 4: Different null hypotheses per variable via b() vector =====
+xtgmcoint logexrate uswpi uscpi cpi wpi, method(dols) lags(5) dlags(5) b(1 0 0 0)
+
+
+* ===== Example 5: Short-T multivariate example (T=46) =====
+use https://eruygurakademi.com/datasets/pedronidata.dta, clear
+gen logwpi_ratio = log(wpi/uswpi)
+bysort country (time): keep if _n <= 46
+xtgmcoint logexrate logratio logwpi_ratio, method(dols) lags(2) dlags(2)
+xtgmcoint logexrate logratio logwpi_ratio, method(fmols) lags(2)
+
+
+* ===== Example 6: Comparison with xtpedroni (Neal 2014) =====
+xtgmcoint logexrate logratio, method(dols) lags(5) dlags(5) b(1) pedroni2001
+xtpedroni logexrate logratio, lags(5) mlags(5) b(1) notdum notest
+
+
+* ===== Example 7: Saving residuals and fitted values =====
+use https://eruygurakademi.com/datasets/pedronidata.dta, clear
+xtgmcoint logexrate logratio, method(fmols) lags(5) resid(ehat_fm) fit(yhat_fm)
+xtgmcoint logexrate logratio, method(dols) lags(5) dlags(5) resid(ehat_dols) fit(yhat_dols)
+summ ehat_fm yhat_fm ehat_dols yhat_dols
+
+
+* ===== Example 8: Three averaging methods =====
+xtgmcoint logexrate logratio, method(fmols) lags(5) b(1) average(simple)
+xtgmcoint logexrate logratio, method(fmols) lags(5) b(1) average(sqrt)
+xtgmcoint logexrate logratio, method(fmols) lags(5) b(1) average(precision)
+
+
+* ===== Example 9: Density plot of unit-level estimates =====
+xtgmcoint logexrate logratio, method(fmols) lags(5)
+preserve
+clear
+svmat e(ibetas), names(beta_)
+kdensity beta_1, normal
+restore
