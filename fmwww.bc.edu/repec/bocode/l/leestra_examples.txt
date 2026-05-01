@@ -1,0 +1,83 @@
+* ============================================================
+* Setup (Examples 1-7)
+* ============================================================
+use "https://www.eruygurakademi.com/datasets/nelsonplosser.dta", clear
+tsset year
+gen lrgnp   = log(realgnp)
+gen logwage = 100 * log(realwages)
+gen lcpi    = log(cpi)
+gen lstock  = log(stockprice)
+
+* Example 1: realgnp, crash, 1 break, fixed lags=4
+leestra lrgnp, model(crash) breaks(1) lags(4) method(fixed)
+
+* Example 2: realgnp, break, 2 breaks, GTOS up to 4 (default method)
+leestra lrgnp, model(break) breaks(2) lags(4)
+
+* Example 3: realgnp, no break, fixed lags=4 (Schmidt-Phillips)
+leestra lrgnp, breaks(0) lags(4) method(fixed)
+
+* Example 4: realwages, break, 1 break, GTOS up to 8
+leestra logwage, model(break) breaks(1) lags(8)
+
+* Example 5: cpi, crash, 2 breaks, fixed lags=2
+leestra lcpi, model(crash) breaks(2) lags(2) method(fixed)
+
+* Example 6: stockprice, break, 1 break, GTOS up to 6, slstay=0.05
+leestra lstock, model(break) breaks(1) lags(6) slstay(0.05)
+
+* Example 7: realgnp, break, 1 break, BG up to 4
+leestra lrgnp, model(break) breaks(1) lags(4) method(bg)
+
+
+* ============================================================
+* Example 8: Annual data (T=43): Interest rates and inflation, Canada
+* ============================================================
+use https://www.eruygurakademi.com/datasets/kapetanios/jgm-data.dta, clear
+leestra r_s, model(break) breaks(2)
+leestra r_s, model(break) breaks(2) method(bg)
+leestra r_s, model(break) breaks(2) method(bg) lags(18)
+leestra r_s, model(break) breaks(2) method(bg) lags(15)
+leestra r_s, model(break) breaks(2) method(bg) lags(12)
+
+
+* ============================================================
+* Example 9: Quarterly data (T=258): MIDAS data
+* ============================================================
+use https://www.eruygurakademi.com/datasets/kapetanios/gdp_midas.dta, clear
+leestra qgdp, breaks(2) model(break) method(bg) thin(10)
+leestra d.qgdp, breaks(2) model(break) method(bg) thin(10)
+leestra d2.qgdp, breaks(2) model(break) method(bg) thin(10)
+
+
+* ============================================================
+* Example 10: Monthly data (T=144): Box and Jenkins Series G
+* ============================================================
+use https://www.eruygurakademi.com/datasets/kapetanios/bjg.dta, clear
+leestra lg, breaks(2) model(break) method(bg) thin(10)
+
+
+* ============================================================
+* Example 11: Weekly data (T=2117): NYSE closing price 1966-2006
+* ============================================================
+use https://www.eruygurakademi.com/datasets/nysewk2.dta, clear
+leestra close, breaks(2) thin(10)
+
+
+* ============================================================
+* Example 12: Daily data (T=1974): Bollerslev-Ghysels exchange rate
+* ============================================================
+use https://www.eruygurakademi.com/datasets/kapetanios/b-g.dta, clear
+leestra Y, breaks(2) thin(10)
+
+
+* ============================================================
+* Accessing stored results
+* ============================================================
+use "https://www.eruygurakademi.com/datasets/nelsonplosser.dta", clear
+tsset year
+gen lrgnp = log(realgnp)
+leestra lrgnp, model(break) breaks(1) lags(4)
+display r(tstat)
+matrix list r(bps)
+matrix list r(cv)

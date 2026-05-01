@@ -1,7 +1,7 @@
-*! version 0.0.7  Jens Hainmueller 01/26/2014
+*! version 0.0.8  Jens Hainmueller 04/29/2026
 
 program synth , eclass
-  version 9.2
+  version 13.0
   preserve
 
 /* check if data is tsset with panel and time var */
@@ -42,7 +42,7 @@ program synth , eclass
                                        ]
 
 
-/* Define Tempvars and speperate Dvar and Predcitors */
+/* Define tempvars and separate dependent var and predictors */
    tempvar Xco Xcotemp Xtr Xtrtemp Zco Ztr Yco Ytr subsample misscheck conlabel
 
 /* Check User Inputs  ************************* */
@@ -98,7 +98,7 @@ program synth , eclass
     local clab "`pvar'"
     tempvar index
     gen `index' = _n
-   /* now label the pvar accoringly */
+   /* now label the pvar accordingly */
     foreach i in `levp' {
         qui su `index' if `pvar' == `i', meanonly
         local label = `unitnames'[`r(max)']
@@ -190,7 +190,7 @@ capture confirm numeric var `dvar'
                 exit 198
             }
 
-/* check if at leat one predictor is pecified */
+/* check if at least one predictor is specified */
  if "`anything'" == "" {
    di as err "not a single variable specified. please supply at least a response variable"
    exit 198
@@ -219,10 +219,10 @@ capture confirm numeric var `dvar'
    /* get token */
     gettoken p anything: anything , bind
 
-    /* check if there is a paranthesis in token */
+    /* check if there is a parenthesis in the token */
         local whereq = strpos("`p'", "(")
         if `whereq' == 0 {
-      /* if not, token is just a varname and so check wheter this is a proper variable */
+      /* if not, the token is just a varname; check that it is a proper variable */
           capture confirm numeric var `p'
             if _rc {
                 di as err "`p' does not exist as a (numeric) variable in dataset"
@@ -233,7 +233,7 @@ capture confirm numeric var `dvar'
           /* set empty label for regular time period */
           local xtimelab ""
 
-    } /* if yes, token is varname plus time, so try to disentagngle the two */
+    } /* if yes, the token is varname plus time, so disentangle the two */
     else {
         /* get var */
             local var = substr("`p'",1,`whereq'-1)
@@ -249,13 +249,13 @@ capture confirm numeric var `dvar'
             local xtimelab `xtime'
             local xtimelab : subinstr local xtimelab " " "", all
 
-        /* now check wheter this is a second paranthsis */
+        /* now check whether this is a second parenthesis */
             local wherep = strpos("`xtime'", "(")
          /* if no, delete a potential & and done */
             if `wherep' == 0 {
               local xtime : subinstr local xtime "&" " ", all
               local xtime : subinstr local xtime ")" " ", all
-             } /* if yes, this is a numlist so we remove both paranthesis, but put the first one back in */
+             } /* if yes, this is a numlist so we remove both parentheses, but put the first one back in */
             else {
               local xtime : subinstr local xtime ")" " ", all
               local xtime : subinstr local xtime " " ")"
@@ -310,7 +310,7 @@ capture confirm numeric var `dvar'
        mat `Xtr' = `Xtr',`Xtrtemp'
        mat `Xco' = `Xco',`Xcotemp'
 
-  } /* close while loop through aynthing string, varibale construction is done */
+  } /* close while loop through anything string; variable construction is done */
 
    /* rownames for final X matrixes  */
    mat rown `Xco' = `counit'
@@ -445,7 +445,7 @@ di "{txt}{p 0 30 0} Nested optimization requested {p_end}"
        local std : list std | iterate
       } */
 
-   /* check wheter user has specified any of the nrtol options */
+   /* check whether user has specified any of the nrtol options */
    /* 1. check if shownrtolernace is used */
       local std : subinstr local std "shownrtolerance" "shownrtolerance", count(local shownrtoluser)
        if `shownrtoluser' > 0 {
@@ -473,12 +473,12 @@ di "{txt}{p 0 30 0} Nested optimization requested {p_end}"
    mat $Zco = `Zco'
    mat $Ztr = `Ztr'
 
- /* set up the liklihood model for optimization */
+ /* set up the likelihood model for optimization */
    /* since we optimize on matrices, we need to trick */
    /* ml and first simulate a dataset with correct dimensions */
     qui drop _all
     qui matrix pred = matuniform(rowsof(`V'),rowsof(`V'))
-   /*  now create k articifical vars names pred1, pred2,... */
+   /*  now create k artificial vars named pred1, pred2,... */
     qui svmat  pred
 
    /* get regression based V or user defined V as initial values */
@@ -698,7 +698,7 @@ end
 
 /* subroutine reducesample: creates subsample marker for specified periods and units  */
 program reducesample , rclass
-  version 9.2
+  version 13.0
   syntax , tno(numlist >=0 integer) uno(numlist integer) genname(string)
   qui tsset
   local tvar `r(timevar)'
@@ -714,7 +714,7 @@ program reducesample , rclass
 
 /* subroutine missingchecker: goes through matrix, checks missing obs and gives informative error */
 program missingchecker , rclass
-  version 9.2
+  version 13.0
   syntax , tno(numlist >=0 integer) cvar(string) sub(string) ulabel(string)  checkno(string) [ tilab(string) ]
   qui tsset
   local tvar `r(timevar)'
@@ -736,7 +736,7 @@ end
 
 /* subroutine gettabstatmat: heavily reduced version of SSC "tabstatmat" program by Nick Cox */
 program gettabstatmat
-        version 9.2
+        version 13.0
         syntax name(name=matout)
         local I = 1
         while "`r(name`I')'" != "" {
@@ -754,7 +754,7 @@ end
 
 /* subroutine agmat: aggregate x-values over time, checks missing, and returns predictor matrix */
 program agmat
-       version 9.2
+       version 13.0
        syntax name(name=finalmat) , cvar(string) opstat(string) sub(string) ulabel(string) checkno(string) [ tilab(string) ]
        qui tsset
        local pvar `r(panelvar)'
@@ -774,10 +774,10 @@ program agmat
        qui drop `sub'
 end
 
-/* subroutine agdvarco: aggregates values of outcome varibale over time and returns in transposed form  */
+/* subroutine agdvarco: aggregates values of outcome variable over time and returns in transposed form  */
 /* has a trorco flag for treated or controls, since different aggregation is used */
 program agdvar
-       version 9.2
+       version 13.0
        syntax name(name=outmat) , cvar(string) timeno(numlist >=0 integer) ///
                                   unitno(numlist integer) sub(string) tlabel(string) ///
                                   ulabel(string) trorco(string)
@@ -825,7 +825,7 @@ end
 
 /* subroutine to run ml in robust way using difficult and without, plus with or without nrtol */
 program wrapml , eclass
-        version 9.2
+        version 13.0
 syntax , lstd(string) lbini(string) lpred(string) lnrtoluser(numlist) lnonrtoluser(numlist) lsearch(string)
 
 /* add search if specified */

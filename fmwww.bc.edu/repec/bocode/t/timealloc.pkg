@@ -23,6 +23,8 @@ f timealloc.ado
 f timealloc.sthlp
 f timeallocx.ado
 f timeallocx.sthlp
+f tslotcheck.ado
+f tslotcheck.sthlp
 f ../c/c25tom5.ado
 f ../c/calgen.ado
 f ../c/clock2min.ado

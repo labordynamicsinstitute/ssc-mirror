@@ -334,8 +334,10 @@ A one by one matrix that contains the Root Mean Squared Prediction Error (RMSPE)
 
 {p 4 8 2}
 Load Example Data: This panel dataset contains information for 39 US States for the years 1970-2000
-(see Abadie, Diamond, and Hainmueller (2010) for details).{p_end}
-{p 4 8 2}{stata "use synth_smoking":. use synth_smoking}{p_end}
+(see Abadie, Diamond, and Hainmueller (2010) for details).
+The dataset ships with the package; if {cmd:smoking.dta} is not in your current working directory,
+run {cmd:net get synth} to download it, then:{p_end}
+{p 4 8 2}{stata "use smoking, clear":. use smoking, clear}{p_end}
 
 {p 4 8 2}
 Declare the dataset as panel:{p_end}
@@ -401,7 +403,7 @@ can improve the fit even further and requires yet more computing time. Also, {cm
 predictors are averaged for the 1980,1981,...,1988 period. {p_end}
 
 {p 4 8 2}
-Example 5 – Run placebo in space:{p_end}
+Example 5 ï¿½ Run placebo in space:{p_end}
 {phang}{cmd:. tempname resmat} {break}
 {cmd: forvalues i = 1/4   {c -(}}{break}
 {cmd:      synth cigsale retprice cigsale(1988) cigsale(1980) cigsale(1975) , trunit(`i') trperiod(1989) xperiod(1980(1)1988) } {break}
@@ -420,7 +422,7 @@ This is a code example to run placebo studies by iteratively reassigning the int
 {title:References}
 
 {p 4 8 2}
-Abadie, A., Diamond, A., and J. Hainmueller. 2014. Comparative Politics and the Synthetic Control Method. American Journal of Political Science (Forthcoming 2014).
+Abadie, A., Diamond, A., and J. Hainmueller. 2014. Comparative Politics and the Synthetic Control Method. {it:American Journal of Political Science} 59(2): 495-510.
 
 {p 4 8 2}
 Abadie, A., Diamond, A., and J. Hainmueller. 2010. Synthetic Control Methods for Comparative Case Studies: Estimating the Effect of California's Tobacco Control Program.
@@ -439,8 +441,8 @@ Vanderbei, R.J. 1999. LOQO: An interior point code for quadratic programming.
       Jens Hainmueller, jhain@stanford.edu
       Stanford
 
-      Alberto Abadie, abadie@mit.edu
+      Alberto Abadie
       MIT
 
-      Alexis Diamond, adiamond@fas.harvard.edu
-      IFC
+      Alexis Diamond
+      Minerva University

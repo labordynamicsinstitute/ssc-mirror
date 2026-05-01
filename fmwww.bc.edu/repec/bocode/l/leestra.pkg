@@ -1,0 +1,22 @@
+d 'LEESTRA': module to perform Lee-Strazicich unit root tests with one or two structural breaks
+d
+d    leestra performs the Lee-Strazicich minimum LM unit-root test
+d on a time series. The test	allows for up to two endogenously
+d determined structural breaks under both the null and	 
+d alternative hypotheses, in contrast to tests in the Perron
+d tradition which assume no break    under the null. 
+d
+d KW: unit root tests
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260430
+d
+d Author: Ozan Eruygur ,  AHBV University, Ankara, Turkiye
+d Support: email eruygur@@gmail.com
+d
+f leestra.ado
+f leestra.sthlp
+F leestra_examples.txt
+F ../r/rats_codes_with_outputs.txt
