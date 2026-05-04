@@ -24,11 +24,11 @@
 {synoptline}
 
 {syntab:Main}
-{synopt:{opt deriv(string)}}save derivatives in current dataset with the specified prefix{p_end}
+{synopt:{opt deriv}}save derivatives in current dataset{p_end}
 {synopt:{opt sderiv(filename)}}save derivatives in a named dataset{p_end}
 {synopt:{opt graph}}generate histograms of the derivatives{p_end}
-{synopt:{opt vcov}}save fitted variance-covariance matrix to memory{p_end}
-{synopt:{opt svcov(filename)}}save fitted variance-covariance matrix in a named dataset{p_end}
+{synopt:{opt vcov}}save variance-covariance matrix to memory{p_end}
+{synopt:{opt svcov(filename)}}save variance-covariance matrix in a named dataset{p_end}
 {synopt:{opt keep(filename)}}saves the output table in a named dataset{p_end}
 
 {syntab:Advanced}
@@ -72,7 +72,7 @@ The krls routine constructs a n x n matrix. Please ensure that your system has s
 {dlgtab:Main}
 
 {phang}
-{opt deriv(string)} saves a n x k matrix of pointwise derivatives from the Gaussian kernel into the current dataset. These derivatives describe the marginal effect of covariates at each datapoint. Appended with the prefix specified by the user.
+{opt deriv} saves a n x k matrix of pointwise derivatives from the Gaussian kernel into the current dataset. These derivatives describe the marginal effect of covariates at each datapoint. Variables are appended with the prefix d_
 
 {phang}
 {opt sderiv(filename)} stores the matrix of pointwise derivatives in a new dataset specified by filename.dta
@@ -81,10 +81,10 @@ The krls routine constructs a n x n matrix. Please ensure that your system has s
 {opt graph} generates histograms for the pointwise derivatives.
 
 {phang}
-{opt vcov} stores the n x n fitted variance-covariance matrix for fitted values in e(Vcov_y). By default this matrix is not stored in memory.
+{opt vcov} stores the n x n variance-covariance matrix for fitted values in e(Varcovfit), by default this matrix is dropped from memory.
 
 {phang}
-{opt svcov(filename)} stores the fitted variance-covariance matrix in a new dataset specified by filename.dta
+{opt svcov(filename)}  stores the variance-covariance matrix in a new dataset specified by filename.dta
 
 {phang}
 {opt keep(filename)} stores the output table in a new dataset specified by filename.dta. 
@@ -105,7 +105,7 @@ errors between the i and the i+1 iteration is less than n * 10^-3
 set according to eigenvalue size. Set this value to 0 for maximum sensitivity. 
 
 {phang}
-{opt suppress} instructs the routine to avoid calculating derivatives and suppress all output. This offers a speed increase when the user 
+{opt suppress} instructs the routine to avoid calculating derivatives and suppress output. This offers a speed increase when the user 
 is primarily interested in attaining predicted values. 
 
 {phang}
@@ -118,7 +118,7 @@ is primarily interested in attaining predicted values.
 
     Basic syntax
 {p 4 8 2}{stata " krls growth yearsschool assassinations       ":. krls growth yearsschool assassinations}{p_end}
-{p 4 8 2}{stata " krls growth yearsschool assassinations, deriv(myprefix)":. krls growth yearsschool assassinations, deriv(myprefix)}{p_end}
+{p 4 8 2}{stata " krls growth yearsschool assassinations, deriv":. krls growth yearsschool assassinations, deriv}{p_end}
 {p 4 8 2}{stata " krls growth yearsschool assassinations, graph":. krls growth yearsschool assassinations, graph}{p_end}	
 	The command returns the average of the point-wise derivatives for continuous variables.
 	
@@ -137,18 +137,18 @@ is primarily interested in attaining predicted values.
 
    Viewing the Variance-Covariance Matrix
 {p 4 8 2}{stata " krls growth yearsschool assassinations, vcov":. krls growth yearsschool assassinations, vcov}{p_end}
-{p 4 8 2}{stata " matrix list e(Vcov_y)":. matrix list e(Vcov_y)}{p_end}
+{p 4 8 2}{stata " matrix list e(Varcovfit)":. matrix list e(Varcovfit)}{p_end}
 
-	In order to conserve memory, the fitted variance-covariance matrix is not saved by default.
+	In order to conserve memory, the variance-covariance matrix is not saved by default.
 
    Adjusting the Results Table
 {p 4 8 2}{stata " krls growth yearsschool assassinations, quantile(.1 .5 .9)":. krls growth yearsschool assassinations, quantile(.1 .5 .9)}{p_end}
 
-   Viewing fitted values, standard errors, etc using {help predict}
+   Viewing fitted values, standard errors, etc using {help kpredict}
    
 {p 4 8 2}{stata " krls growth yearsschool assassinations":. krls growth yearsschool assassinations}{p_end}
-{p 4 8 2}{stata " predict myname_fitted, fitted  ":. predict myname_fitted, fitted}{p_end}
-{p 4 8 2}{stata " predict myname_se, se":. predict myname_se, se}{p_end} 
+{p 4 8 2}{stata " kpredict myname_fitted, fitted  ":. kpredict myname_fitted, fitted}{p_end}
+{p 4 8 2}{stata " kpredict myname_se, se":. kpredict myname_se, se}{p_end} 
    Out of sample Prediction
 {p 4 8 2}{stata " set seed 1":. set seed 1}{p_end}
 {p 4 8 2}{stata " gen double u = runiform()":. gen double u = runiform()}{p_end}
@@ -156,8 +156,9 @@ is primarily interested in attaining predicted values.
 {p 4 8 2}{stata " gen insample = 1":. gen insample = 1}{p_end}
 {p 4 8 2}{stata " replace insample = 0 in 1/5":. replace insample = 0 in 1/5}{p_end}
 {p 4 8 2}{stata " krls growth rgdp60 tradeshare yearsschool assassinations if insample==1":. krls growth rgdp60 tradeshare yearsschool assassinations if insample==1}{p_end}
-{p 4 8 2}{stata " predict myname2_fitted, fitted":. predict myname2_fitted, fitted}{p_end}
-{p 4 8 2}{stata " predict myname2_residuals, resid":. predict myname2_residuals, resid}{p_end}
+{p 4 8 2}{stata " kpredict myname2_fitted, fitted":. kpredict myname2_fitted, fitted}{p_end}
+{p 4 8 2}{stata " kpredict myname2_residuals, resid":. kpredict myname2_residuals, resid}{p_end}
+
 
 
 {title:Saved results}
@@ -168,40 +169,35 @@ By default, {cmd:krls}  ereturns the following results, which can be displayed b
 
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: Scalars}{p_end}
-{synopt:{cmd:e(Looloss)}}  the sum of squared leave-out-one (LOO) error{p_end}
-{synopt:{cmd:e(lambda)}}  the lambda value used (manual or selected via optimization){p_end}
-{synopt:{cmd:e(R2)}}  the R squared of the final model{p_end}
 {synopt:{cmd:e(sigma)}}  the sigma value used (manual or selected via optimization){p_end}
-{synopt:{cmd:e(Effective_df)}}  the effective degrees of freedom{p_end}
-{synopt:{cmd:e(tolerance)}}  the tolerance  (manual or selected via optimization){p_end}
-{synopt:{cmd:e(lowerbound)}} the lowerbound (manual or selected via optimization){p_end}
+{synopt:{cmd:e(lambda)}}  the sigma value used (manual or selected via optimization){p_end}
+{synopt:{cmd:e(R2)}}  the R squared of the final model{p_end}
+{synopt:{cmd:e(Looloss)}}  the sum of squared leave-out-one (LOO) error{p_end}
+{synopt:{cmd:e(Eff_Degrees)}}  the effective degrees of freedom{p_end}
 
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: Macros}{p_end} 
 {synopt:{cmd:e(cmd)}}  krls {p_end}
+{synopt:{cmd:e(cmdline)}}  the full command as typed{p_end}
 {synopt:{cmd:e(depvar)}}  the dependent variable{p_end}
-{synopt:{cmd:e(indvar)}}  the independent variables{p_end}
 
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: Matrices}{p_end} 
-{synopt:{cmd: e(b)}} pointwise derivatives or first differences {p_end}
-{synopt:{cmd: e(Output)}} the full output table in matrix form {p_end}
-{synopt:{cmd: e(Coeffs)}} krls coefficients; used in predict {p_end}
-{synopt:{cmd: e(Vcov_c)}} the krls coefficient variance covariance matrix; used in predict {p_end}
-{synopt:{cmd: e(Vcov_y)}} the variance covariance matrix for fitted values. {p_end}
+{synopt:{cmd: e(Output)}} the output table of pointwise derivatives and first differences in matrix form {p_end}
 
 {title:References}
 
 {p 4 8 2}
-Hainmueller, J & Hazlett, C, 2014. "Kernel Regularized Least Squares: Reducing Misspecification Bias with a Flexible and Interpretable Machine Learning Approach.” Political Analysis (Spring 2014) 22(2): 143-168.
+Hainmueller, J & Hazlett, C, 2014. "Kernel Regularized Least Squares: Reducing Misspecification Bias with a Flexible and Interpretable Machine Learning Approach.” Political Analysis.
+ 
 
 {title:Authors}
 
-      Jeremy Ferwerda, ferwerda@mit.edu
-      MIT
+      Jeremy Ferwerda
+      Dartmouth College
 
       Jens Hainmueller, jhain@stanford.edu
       Stanford
 
-      Chad Hazlett, chazlett@mit.edu
+      Chad Hazlett
       UCLA

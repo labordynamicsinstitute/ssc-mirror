@@ -23,7 +23,7 @@ While the `ssc` command in Stata will continue to go to the original location, y
 ```{stata}
 global sscdate "2021-12-21"
 global sscmirror "raw.githubusercontent.com/labordynamicsinstitute/ssc-mirror/$sscdate/" 
-net install a2reg, from(https://${sscmirror}fmwww.bc.edu/repec/bocode/a)
+net install a2reg, from(https://${sscmirror}fmwww.bc.edu/repec/bocode/a) all
 ```
 
 where the date `2021-12-21` corresponds to an existing tag. Also see [`ssc2`](https://github.com/labordynamicsinstitute/stata-ssc2/) for more streamlined functionality:

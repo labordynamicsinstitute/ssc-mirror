@@ -1,4 +1,4 @@
-d 'EBALANCE': module to perform Entropy reweighting to create balanced samples
+d 'EBALANCE': module to perform entropy reweighting to create balanced samples
 d
 d  ebalance implements entropy balancing, a data preprocessing
 d procedure that   allows users to reweight a dataset such that the
@@ -15,15 +15,15 @@ d KW: covariate distributions
 d KW: moment conditions
 d KW: balanced samples
 d
-d Requires: Stata version 11.2
+d Requires: Stata version 13
 d
-d Distribution-Date: 20150130
+d Distribution-Date: 20260503
 d
-d Author: Jens Hainmueller, Department of Political Science, MIT
-d Support: email jhainm@@mit.edu
+d Author: Jens Hainmueller, Stanford University
+d Support: email  jhain@@stanford.edu
 d
-d Author: Yiqing Xu, Department of Political Science, MIT
-d Support: email xyq@@mit.edu
+d Author: Yiqing Xu, Stanford University
+d Support: email yiqingxu@@stanford.edu
 d
 f ebalance.ado
 f ebalance.sthlp

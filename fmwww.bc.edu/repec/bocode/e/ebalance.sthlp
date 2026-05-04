@@ -31,7 +31,8 @@
 {synopt:{opt wttr:eat}}accept base weights for treated units; {opt basewt()} is required{p_end}
 {synopt:{opth g:enerate(newvar)}}specify varname for variable that stores the entropy balancing weights{p_end}
 {synopt:{opt k:eep(filename)}}specify filename of a dataset that stores the balance table{p_end}
-{synopt:{opt rep:lace}}overwrite existing dataset{p_end}
+{synopt:{opt rep:lace}}overwrite an existing variable named in {opt generate()} or an existing dataset named in {opt keep()}{p_end}
+{synopt:{opt q:uietly}}suppress per-iteration progress messages and pre/post balance tables (the converged returns are still ereturned){p_end}
 {synopt:{opt maxi:ter(#)}}set maximum number of iterations; default is {cmd:maxiter(20)}{p_end}
 {synopt:{opt tol:erance(real)}}set tolerance level for convergence; default is {cmd:tolerance(.015)}{p_end}
 
@@ -306,5 +307,5 @@ Kullback, S. 1959, "Information Theory and Statistics", Wiley, NY.
       Jens Hainmueller, jhain@stanford.edu
       Stanford
 
-      Yiqing Xu, xyq@mit.edu
-      MIT
+      Yiqing Xu
+      Stanford

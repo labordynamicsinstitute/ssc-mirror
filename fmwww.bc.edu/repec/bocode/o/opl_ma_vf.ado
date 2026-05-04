@@ -1,5 +1,5 @@
 ********************************************************************************
-*! opl_ma_vf, v1, GCerulli, 11Aug2025
+*! opl_ma_vf, v4, GCerulli, 29apr2026
 *! Optimal policy learning with multi-actions estimating the value function
 *! using: IPW, RA, DR
 ********************************************************************************
@@ -9,7 +9,7 @@ version 16
 * Define the syntax: varlist includes dependent and independent variables
 * policy_train: variable indicating the treatment policy used in training
 * policy_new: variable indicating the new policy to be evaluated
-syntax varlist(fv ts) , policy_train(varlist max=1) policy_new(varlist max=1)
+syntax varlist , policy_train(varlist max=1) policy_new(varlist max=1)
 
 * Mark observations that satisfy the specified conditions
 marksample touse
@@ -28,7 +28,45 @@ local NN=r(N)
 qui levelsof `policy_train' , local(num_actions)
 local L: word count `num_actions'
 local M=`L'-1  // Number of unique actions minus one
-
+********************************************************************************
+* Check that there is more than one level
+********************************************************************************
+if `L' <= 1 {
+    di _newline
+    di in red "*************************************************************"
+    di in red "ERROR: Variable '`policy_train'' must have at least 2 levels."
+    di in red "Only one action detected. Policy learning is not feasible.   "
+    di in red "*************************************************************"
+    error 1
+}
+********************************************************************************
+qui sum `Y'
+local MIN=r(min)
+if `MIN'<0{
+		di _newline
+		di in red "*************************************************************"
+		di in red "WARNING: Variable '`Y'' must take non-negative values.       "
+		di in red "It should be  a 'welfare' measure.                           "
+		di in red "*************************************************************"	
+		error 1	
+}
+********************************************************************************
+* Check if w contains consecutive values starting from 0: 0,1,2,...,M
+********************************************************************************
+qui levelsof `policy_train', local(ww)
+qui numlist "0(1)`M'"
+local consec_list `r(numlist)'
+local equal : list ww == consec_list
+if !`equal' {
+    di _newline
+    di in red "*****************************************************"
+    di in red "ERROR: variable '`policy_train'' must take values    "
+    di in red "0,1,2,...,M without gaps.                            "
+    di in red "Detected values: `ww'                                "
+    di in red "Expected values: `consec_list'                       "
+    di in red "*****************************************************"
+    error 1
+}
 ********************************************************************************
 * Check for existence of dummy variables (_D0, _D1, ..., _DM)
 * If they exist, prompt an error to avoid overwriting
@@ -44,7 +82,6 @@ foreach var of local VARS1{
 		error 1
 	}
 }
-
 ********************************************************************************
 * Check for existence of probability variables (_pi0, _pi1, ..., _piM)
 * If they exist, prompt an error
@@ -66,7 +103,6 @@ foreach var of local VARS2{
 ********************************************************************************
 local D `policy_train'
 local pi `policy_new'
-
 ********************************************************************************
 * Estimate E(Y | D=j, X) for each treatment action j
 ********************************************************************************
@@ -85,7 +121,6 @@ forvalues j=0/`M'{
     rename _D`i' _D`j'  // Ensure correct ordering of dummy variables
     local i=`i'+1
 }
-
 ********************************************************************************
 * Estimate propensity scores P(D=j | X) using logistic regression
 ********************************************************************************
@@ -94,7 +129,6 @@ forvalues j=0/`M'{
     qui logit _D`j' `X'  // Estimate probability of receiving treatment j
     qui predict `P`j''  // Store estimated propensity scores
 }
-
 ********************************************************************************
 * Compute REG_D: E(Y | D=j, X) based on estimated conditional expectations
 ********************************************************************************
@@ -103,7 +137,6 @@ qui gen `REG_D' = 0
 forvalues j=0/`M'{
     qui replace `REG_D' = `REG_D' + _D`j'*`Y_hat`j''  
 }
-
 ********************************************************************************
 * Compute the value function using different estimation methods
 ********************************************************************************
@@ -155,10 +188,8 @@ qui gen `DR' = ((`Y' - `REG_D') * `A') / `pD' + `RA'  // DR estimator
 ********************************************************************************
 * Eliminate (_D0, _D1, ..., _DM) and (_pi0, _pi1, ..., _piM)
 ********************************************************************************
-forvalues j=0/`M'{
-    qui cap drop _D`j'
-	qui cap drop _pi`j'
-}
+cap drop _pi* 
+cap drop _D*
 ********************************************************************************
 * Store results in e-class
 ********************************************************************************

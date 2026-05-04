@@ -23,20 +23,22 @@ d KW: regularized least squares
 d KW: machine learning
 d KW: kernel methods
 d
-d Requires: Stata version 11
+d Requires: Stata version 13
 d
-d Distribution-Date: 20150306
+d Distribution-Date: 20260503
 d
-d Author:       Jeremy Ferwerda , MIT
-d Support: email ferwerda@@mit.edu
+d Author:       Jeremy Ferwerda , Dartmouth College
+d Support: email jeremy.a.ferwerda@@dartmouth.edu
 d
-d Author:       Jens Hainmueller, Stanford University
+d Author: Jens Hainmueller, Stanford University
 d Support: email  jhain@@stanford.edu
 d
-d Author:   Chad Hazlett, MIT
-d Support: email chazlett@@mit.edu
+d Author:   Chad Hazlett, UCLA
+d Support: email chazlett@@stat.ucla.edu
 d
 f krls.ado
 f krls.sthlp
+f kpredict.ado
+f kpredict.sthlp
 f krls_p.ado
 f ../g/growthdata.dta

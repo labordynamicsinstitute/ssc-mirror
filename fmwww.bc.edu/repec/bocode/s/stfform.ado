@@ -1,4 +1,4 @@
-*! version 1.2 Sep 2025
+*! version 1.3 Apr 2026
 pro def stfform, sortpreserve rclass
 syntax [varlist (numeric default=none) ] [, NSIMulation(integer 1000) noGraph nplot(integer 20) SAVing(string asis) noxb nolog novars graphnames(name)  SIMColor(string) OBSColor(string)]
 version 16 
@@ -102,7 +102,9 @@ if (`"`saving'"'!="")  frame `df': {
 	}	
 	save `saving'
 }
-matlist `_fformtest', title("Functional form test based on cumulative martingale residuals - `nsimulation' replications" )
+
+local digits=1+max(0,floor(log10(`nsimulation')))
+matlist `_fformtest', title("Functional form test based on cumulative martingale residuals - `nsimulation' replications") format(%9.`digits'f)
 di _newline "P(S>=s): p value under the null hypothesis that the functional form is correctly specified"
 if ("`xb'" !="noxb") di _newline"xb: test for the link function"
 return matrix test=`_fformtest'

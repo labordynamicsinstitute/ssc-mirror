@@ -16,13 +16,13 @@ d
 d Distribution-Date: 20260430
 d
 d Author: Alberto Abadie, MIT
-d Support: email abadie@mit.edu
+d Support: email abadie@@mit.edu
 d
 d Author: Alexis Diamond, Minerva University
-d Support: email  adiamond@fas.harvard.edu
+d Support: email adiamond@@minerva.edu
 d
 d Author: Jens Hainmueller, Stanford University
-d Support: email jhain@@stanford.edu
+d Support: email  jhain@@stanford.edu
 d
 f synth.ado
 f synth_ll.ado
@@ -30,10 +30,9 @@ f synth.sthlp
 f ../l/lsynth_mata_subr.mlib
 f smoking.dta
 f ../g/germany.dta
-G WIN64      synthopt.win64   synthopt.plugin
-G LINUX64    synthopt.linux64 synthopt.plugin
-G MACARM64   synthopt.mac     synthopt.plugin
-G MACINTEL64 synthopt.mac     synthopt.plugin
-G OSX.ARM64  synthopt.mac     synthopt.plugin
-G OSX.X8664  synthopt.mac     synthopt.plugin
-h synthopt.plugin
+f synthopt.plugin
+f synthopt.win32
+f synthopt.win64   
+f synthopt.linux32
+f synthopt.linux64
+f synthopt.mac

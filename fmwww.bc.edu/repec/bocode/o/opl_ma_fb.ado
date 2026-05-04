@@ -2,7 +2,7 @@
 * "opl_ma_fb.ado" 
 * (opl=optimal policy learning, ma=multi-action, fb=first best)
 * V.12, GCerulli
-* September 16, 2025
+* April 29, 2026
 ********************************************************************************
 program opl_ma_fb , eclass
 syntax varlist(fv ts) , policy_train(varlist max=1) /// 
@@ -16,7 +16,8 @@ syntax varlist(fv ts) , policy_train(varlist max=1) ///
 				 gr_reward_train(name) ///
 				 gr_reward_new(name) ///
 				 save_preds_vars(string) ///
-				 value_var(numlist max=1)]
+				 value_var(numlist max=1) ///
+				 allownegvar]
 ********************************************************************************
 marksample touse
 gettoken y X : varlist
@@ -39,6 +40,17 @@ if `MIN'<0{
 qui levelsof `policy_train' , local(num_actions)
 local L: word count `num_actions'
 local M=`L'-1
+********************************************************************************
+* Check that there is more than one level
+********************************************************************************
+if `L' <= 1 {
+    di _newline
+    di in red "*************************************************************"
+    di in red "ERROR: Variable '`policy_train'' must have at least 2 levels."
+    di in red "Only one action detected. Policy learning is not feasible.   "
+    di in red "*************************************************************"
+    error 1
+}
 ********************************************************************************
 * Check if these variables already exist in the dataset
 ********************************************************************************
@@ -90,18 +102,21 @@ error 1
 tempvar w
 qui gen `w' = `policy_train'
 ********************************************************************************
-* Check if w contains consecutive values starting: 0,1,2,...,M
-qui levelsof `w' , local(ww)
-local k=0
-foreach h of local ww{
-	if `h'!=`k'{
-		di _newline
-		di in red "*****************************************************"
-		di in red "WARNING: your treatment variable must be: 0,1,2,...,M"
-		di in red "*****************************************************"
-		error 1
-	}
-	local k=`k'+1
+* Check if w contains consecutive values starting from 0: 0,1,2,...,M
+********************************************************************************
+qui levelsof `w', local(ww)
+qui numlist "0(1)`M'"
+local consec_list `r(numlist)'
+local equal : list ww == consec_list
+if !`equal' {
+    di _newline
+    di in red "*****************************************************"
+    di in red "ERROR: variable '`policy_train'' must take values    "
+    di in red "0,1,2,...,M without gaps.                            "
+    di in red "Detected values: `ww'                                "
+    di in red "Expected values: `consec_list'                       "
+    di in red "*****************************************************"
+    error 1
 }
 ********************************************************************************
 qui{  // Start quietly
@@ -129,21 +144,16 @@ tempvar `y'_sq
 qui gen ``y'_sq'=`y'^2
 ********************************************************************************
 forvalues i=0/`M'{
-	tempvar pred`i'
-	qui gen `pred`i''=.
-	tempvar predv`i'
-	qui gen `predv`i''=.
-	tempvar var`i'
-	qui gen `var`i''=.
+    tempvar pred`i'
+    qui gen `pred`i'' = .
+    tempvar var`i'
+    qui gen `var`i'' = .
+    tempvar pred_var`i'
+    qui gen `pred_var`i'' = .
 }
 ********************************************************************************
 tempvar variance
-qui gen `variance'=.
-********************************************************************************
-forvalues i=0/`M'{
-	tempvar pred_var`i'
-	qui gen `pred_var`i''=.
-}
+qui gen `variance' = .
 ********************************************************************************
 local class `name_opt_policy'
 qui gen `class' =.
@@ -170,7 +180,9 @@ qui regress `__res2`i'' `X' if `w'==`i' & _index==0
 tempvar __`var`i''
 qui predict `__`var`i''', xb
 qui replace `var`i''=`__`var`i'''
-qui replace `var`i''=. if `var`i''<0   // put to missing if conditional variance is negative
+if "`allownegvar'" == "" {
+    qui replace `var`i'' = . if `var`i'' < 0   // put to missing if conditional variance is negative
+}
 }
 }
 ********************************************************************************
@@ -193,7 +205,9 @@ qui regress `__res2`i'' `X' if `w'==`i' & _index==0
 tempvar __`var`i''
 qui predict `__`var`i''', xb
 qui replace `var`i''=`__`var`i'''
-qui replace `var`i''=`value_var' if `var`i''<0   // put to `value_var' if conditional variance is negative
+if "`allownegvar'" == "" {
+    qui replace `var`i'' = `value_var' if `var`i'' < 0   // put to `value_var' if conditional variance is negative
+}
 }
 }
 ********************************************************************************

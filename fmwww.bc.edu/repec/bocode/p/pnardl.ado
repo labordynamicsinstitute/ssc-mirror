@@ -1,4 +1,4 @@
-*! version 1.1.0  12feb2026  Dr Merwan Roudane  merwanroudane920@gmail.com
+*! version 1.1.1  02may2026  Dr Merwan Roudane  merwanroudane920@gmail.com
 *! pnardl: Panel Nonlinear ARDL (Panel NARDL) estimation
 *! Based on Shin, Yu and Greenwood-Nimmo (2014)
 *! Features: Dynamic multipliers, asymmetry tables, IRF for +/- shocks, graphs
@@ -81,9 +81,15 @@ program define pnardl, eclass
 	
 	di
 	di in smcl in gr "{hline 78}"
-	di in gr "{bf:Panel NARDL Estimation}" _col(49) in ye "Version 1.1.0"
+	di in gr "{bf:Panel NARDL Estimation}" _col(49) in ye "Version 1.1.1"
 	di in gr "{it:Shin, Yu and Greenwood-Nimmo (2014)}"
 	di in smcl in gr "{hline 78}"
+	
+	* Auto-enable full when per-panel features are requested
+	* (xtpmg only stores per-panel coefficients with the full option)
+	if "`panelcoef'" != "" | `multip' > 0 | `irfshock' > 0 | "`graph'" != "" {
+		local full "full"
+	}
 	
 	* Validate new options
 	if `multip' < 0 | `multip' > 50 {
@@ -389,7 +395,7 @@ program define pnardl, eclass
 	
 	* Asymmetry comparison table
 	if "`asytable'" != "" {
-		capture quie est restore PMG
+		capture quie est restore `modelname'_pnardl
 		pnardl_AsymTable, ivar(`ivar') ec(`ec') ///
 			posvars(`pos_vars') negvars(`neg_vars') ///
 			asymvars(`asym_vars_display')
@@ -397,7 +403,7 @@ program define pnardl, eclass
 	
 	* Per-panel coefficients
 	if "`panelcoef'" != "" {
-		capture quie est restore PMG
+		capture quie est restore `modelname'_pnardl
 		pnardl_PanelCoef, ivar(`ivar') ec(`ec') ///
 			posvars(`pos_vars') negvars(`neg_vars') ///
 			asymvars(`asym_vars_display')
@@ -405,7 +411,7 @@ program define pnardl, eclass
 	
 	* Dynamic multipliers
 	if `multip' > 0 {
-		capture quie est restore PMG
+		capture quie est restore `modelname'_pnardl
 		pnardl_DynMultiplier, periods(`multip') ivar(`ivar') ec(`ec') ///
 			posvars(`pos_vars') negvars(`neg_vars') ///
 			asymvars(`asym_vars_display')
@@ -413,7 +419,7 @@ program define pnardl, eclass
 	
 	* IRF for positive/negative shocks
 	if `irfshock' > 0 {
-		capture quie est restore PMG
+		capture quie est restore `modelname'_pnardl
 		pnardl_IRFShock, periods(`irfshock') ivar(`ivar') ec(`ec') ///
 			posvars(`pos_vars') negvars(`neg_vars') ///
 			asymvars(`asym_vars_display')
@@ -423,10 +429,10 @@ program define pnardl, eclass
 	if "`graph'" != "" {
 		di
 		di in smcl in gr "{hline 78}"
-		di in gr "{bf:Generating Visualizations}" _col(49) in ye "PNARDL 1.1.0"
+		di in gr "{bf:Generating Visualizations}" _col(49) in ye "PNARDL 1.1.1"
 		di in smcl in gr "{hline 78}"
 		
-		capture quie est restore PMG
+		capture quie est restore `modelname'_pnardl
 		pnardl_PlotECT, ivar(`ivar') ec(`ec')
 		pnardl_PlotAsymLR, ivar(`ivar') ec(`ec') ///
 			posvars(`pos_vars') negvars(`neg_vars') ///
@@ -476,7 +482,7 @@ program define pnardl_AsymTable
 	
 	di
 	di in smcl in gr "{hline 78}"
-	di in gr "{bf:Asymmetry Comparison Table}" _col(49) in ye "PNARDL 1.1.0"
+	di in gr "{bf:Asymmetry Comparison Table}" _col(49) in ye "PNARDL 1.1.1"
 	di in smcl in gr "{hline 78}"
 	di
 	
@@ -607,7 +613,7 @@ program define pnardl_PanelCoef
 	
 	di
 	di in smcl in gr "{hline 78}"
-	di in gr "{bf:Per-Panel Coefficients}" _col(49) in ye "PNARDL 1.1.0"
+	di in gr "{bf:Per-Panel Coefficients}" _col(49) in ye "PNARDL 1.1.1"
 	di in smcl in gr "{hline 78}"
 	di
 	
@@ -623,42 +629,45 @@ program define pnardl_PanelCoef
 	local sum_phi = 0
 	local n_conv = 0
 	
-	foreach i of global iis {
+	* Get panel IDs robustly via levelsof (not relying on global $iis)
+	qui levelsof `ivar', local(panel_ids)
+	
+	foreach i of local panel_ids {
 		local coefname "`ivar'_`i':`ec'"
+		local phi = .
+		local se = .
 		capture local phi = _b[`coefname']
-		if !_rc {
-			capture local se = _se[`coefname']
-			
-			local hl = .
-			local adj = .
-			local conv "No"
-			local star ""
-			
-			if `phi' < 0 & `phi' > -2 {
-				local hl = ln(2) / abs(`phi')
-				local adj = abs(`phi') * 100
-				local conv "Yes"
-				local sum_phi = `sum_phi' + `phi'
-				local n_conv = `n_conv' + 1
-			}
-			else {
-				local conv "No"
-			}
-			
-			if !_rc & `se' > 0 {
-				local tstat = abs(`phi' / `se')
-				if `tstat' > 2.576 local star "***"
-				else if `tstat' > 1.960 local star " **"
-				else if `tstat' > 1.645 local star "  *"
-			}
-			
-			di in gr %10s "`i'" " {c |}" ///
-				in ye %10.4f `phi' " {c |}" ///
-				in ye %10.2f `hl' " {c |}" ///
-				in ye %9.1f `adj' "% {c |}" ///
-				in ye %10s "`conv'" " {c |}" ///
-				in ye " `star'"
+		if _rc continue
+		capture local se = _se[`coefname']
+		
+		if `phi' == . continue
+		
+		local hl = .
+		local adj = .
+		local conv "No"
+		local star ""
+		
+		if `phi' < 0 & `phi' > -2 {
+			local hl = ln(2) / abs(`phi')
+			local adj = abs(`phi') * 100
+			local conv "Yes"
+			local sum_phi = `sum_phi' + `phi'
+			local n_conv = `n_conv' + 1
 		}
+		
+		if `se' != . & `se' > 0 {
+			local tstat = abs(`phi' / `se')
+			if `tstat' > 2.576 local star "***"
+			else if `tstat' > 1.960 local star " **"
+			else if `tstat' > 1.645 local star "  *"
+		}
+		
+		di in gr %10s "`i'" " {c |}" ///
+			in ye %10.4f `phi' " {c |}" ///
+			in ye %10.2f `hl' " {c |}" ///
+			in ye %9.1f `adj' "% {c |}" ///
+			in ye %10s "`conv'" " {c |}" ///
+			in ye " `star'"
 	}
 	
 	di in smcl in gr "  {hline 10}{c +}{hline 11}{c +}{hline 11}{c +}{hline 11}{c +}{hline 11}{c +}{hline 9}"
@@ -685,16 +694,20 @@ program define pnardl_DynMultiplier
 	
 	di
 	di in smcl in gr "{hline 78}"
-	di in gr "{bf:Dynamic Multipliers (Cumulative)}" _col(49) in ye "PNARDL 1.1.0"
+	di in gr "{bf:Dynamic Multipliers (Cumulative)}" _col(49) in ye "PNARDL 1.1.1"
 	di in smcl in gr "{hline 78}"
 	
 	* Get mean ECT coefficient
 	local sum_phi = 0
 	local n_valid = 0
-	foreach i of global iis {
+	qui levelsof `ivar', local(panel_ids)
+	foreach i of local panel_ids {
 		local coefname "`ivar'_`i':`ec'"
+		local phi = .
 		capture local phi = _b[`coefname']
-		if !_rc & `phi' < 0 {
+		if _rc continue
+		if `phi' == . continue
+		if `phi' < 0 {
 			local sum_phi = `sum_phi' + `phi'
 			local n_valid = `n_valid' + 1
 		}
@@ -790,16 +803,20 @@ program define pnardl_IRFShock
 	
 	di
 	di in smcl in gr "{hline 78}"
-	di in gr "{bf:IRF: Positive vs Negative Shocks}" _col(49) in ye "PNARDL 1.1.0"
+	di in gr "{bf:IRF: Positive vs Negative Shocks}" _col(49) in ye "PNARDL 1.1.1"
 	di in smcl in gr "{hline 78}"
 	
 	* Get mean ECT
 	local sum_phi = 0
 	local n_valid = 0
-	foreach i of global iis {
+	qui levelsof `ivar', local(panel_ids)
+	foreach i of local panel_ids {
 		local coefname "`ivar'_`i':`ec'"
+		local phi = .
 		capture local phi = _b[`coefname']
-		if !_rc & `phi' < 0 {
+		if _rc continue
+		if `phi' == . continue
+		if `phi' < 0 {
 			local sum_phi = `sum_phi' + `phi'
 			local n_valid = `n_valid' + 1
 		}
@@ -878,7 +895,13 @@ end
 program define pnardl_PlotECT
 	syntax, IVar(string) EC(string)
 	
-	local n_panels = wordcount("$iis")
+	qui levelsof `ivar', local(panel_ids)
+	local n_panels = wordcount("`panel_ids'")
+	
+	if `n_panels' == 0 {
+		di in ye "  No panels found for ECT plot."
+		exit
+	}
 	
 	preserve
 	clear
@@ -888,16 +911,17 @@ program define pnardl_PlotECT
 	qui gen color_cat = .
 	
 	local idx = 0
-	foreach i of global iis {
+	foreach i of local panel_ids {
 		local idx = `idx' + 1
 		local coefname "`ivar'_`i':`ec'"
+		local coef = .
 		capture local coef = _b[`coefname']
-		if !_rc {
-			qui replace phi = `coef' in `idx'
-			if `coef' < -0.5 qui replace color_cat = 1 in `idx'
-			else if `coef' < 0 qui replace color_cat = 2 in `idx'
-			else qui replace color_cat = 3 in `idx'
-		}
+		if _rc continue
+		if `coef' == . continue
+		qui replace phi = `coef' in `idx'
+		if `coef' < -0.5 qui replace color_cat = 1 in `idx'
+		else if `coef' < 0 qui replace color_cat = 2 in `idx'
+		else qui replace color_cat = 3 in `idx'
 	}
 	
 	qui sum phi
@@ -912,7 +936,7 @@ program define pnardl_PlotECT
 		    color("231 76 60%80") lcolor("231 76 60") barwidth(0.7)),
 		title("{bf:ECT Speed of Adjustment by Panel}", 
 			size(large) color(black))
-		subtitle("Panel NARDL — PNARDL 1.1.0", size(medsmall) color(gs5))
+		subtitle("Panel NARDL — PNARDL 1.1.1", size(medsmall) color(gs5))
 		ytitle("ECT Coefficient ({&phi}{sub:i})", size(medium))
 		xtitle("Panel", size(medium))
 		ylabel(, format(%5.2f) angle(0) labsize(small) 
@@ -982,7 +1006,7 @@ program define pnardl_PlotAsymLR
 		    color("231 76 60%80") lcolor("192 57 43") barwidth(0.28)),
 		title("{bf:Long-Run Asymmetric Coefficients}", 
 			size(large) color(black))
-		subtitle("{&beta}{sup:+} vs {&beta}{sup:-} — PNARDL 1.1.0", 
+		subtitle("{&beta}{sup:+} vs {&beta}{sup:-} — PNARDL 1.1.1", 
 			size(medsmall) color(gs5))
 		ytitle("Long-Run Coefficient", size(medium))
 		xtitle("Variable", size(medium))
@@ -1015,10 +1039,14 @@ program define pnardl_PlotMultiplier
 	* Get mean ECT
 	local sum_phi = 0
 	local n_valid = 0
-	foreach i of global iis {
+	qui levelsof `ivar', local(panel_ids)
+	foreach i of local panel_ids {
 		local coefname "`ivar'_`i':`ec'"
+		local phi = .
 		capture local phi = _b[`coefname']
-		if !_rc & `phi' < 0 {
+		if _rc continue
+		if `phi' == . continue
+		if `phi' < 0 {
 			local sum_phi = `sum_phi' + `phi'
 			local n_valid = `n_valid' + 1
 		}
@@ -1032,9 +1060,14 @@ program define pnardl_PlotMultiplier
 	local pv : word 1 of `posvars'
 	local nv : word 1 of `negvars'
 	local av : word 1 of `asymvars'
+	local beta_p = .
+	local beta_n = .
 	capture local beta_p = _b[`ec':`pv']
 	capture local beta_n = _b[`ec':`nv']
-	if _rc exit
+	if `beta_p' == . | `beta_n' == . {
+		di in ye "  Cannot plot multiplier: LR coefficients not found."
+		exit
+	}
 	
 	preserve
 	clear
@@ -1072,7 +1105,7 @@ program define pnardl_PlotMultiplier
 		   (line zero period, lcolor(gs10) lwidth(vthin)),
 		title("{bf:Cumulative Dynamic Multipliers}", 
 			size(large) color(black))
-		subtitle("Positive vs Negative Shocks to `av' — PNARDL 1.1.0", 
+		subtitle("Positive vs Negative Shocks to `av' — PNARDL 1.1.1", 
 			size(medsmall) color(gs5))
 		ytitle("Cumulative Effect on Y", size(medium))
 		xtitle("Periods After Shock", size(medium))

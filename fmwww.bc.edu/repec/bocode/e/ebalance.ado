@@ -1,6 +1,6 @@
-*! version 1.5.4 Jens Hainmueller, Yiqing Xu 01/29/15
+*! version 1.5.5 Jens Hainmueller, Yiqing Xu 04/29/2026
 program ebalance , eclass
-        version 11.2
+        version 13.0
 
 syntax varlist(min=1 numeric fv) [if] [in] [, TARgets(numlist >0 <=3 integer) ///
                                            MANUALtargets(numlist) ///
@@ -11,7 +11,8 @@ syntax varlist(min=1 numeric fv) [if] [in] [, TARgets(numlist >0 <=3 integer) //
 										   MAXIter(integer 20) ///
 										   TOLerance(real .015) ///
 										   Keep(string) ///
-										   REPlace]
+										   REPlace ///
+										   Quietly]
 
 qui: marksample touse // exclude obs with missng data
 tempvar baseweight treated controls
@@ -25,20 +26,21 @@ if "`generate'"=="" {
 }
 cap confirm variable `generate', exact
 if _rc == 0 {
-   if "`generate'"=="_webal" {
-	 cap drop _webal   
+   /* the default '_webal' is always silently overwritten (legacy behavior);
+      any other user-supplied name requires the replace option to overwrite */
+   if "`generate'"=="_webal" | "`replace'" != "" {
+     cap drop `generate'
    }
    else {
-     dis as err "variable `generate' already defined"
-     exit	 
+     dis as err "variable `generate' already defined; use the replace option to overwrite"
+     exit 198
    }
 }
 
-/* check replace under keep() */
-if ("`keep'" == "" & "`replace'" != "") {
-  dis as err "option replace invalid -- keep() is not specified"
-  exit
-}
+/* the replace option now applies to either keep() (file overwrite) or
+   gen() (variable overwrite), so it is valid as long as one of them is
+   specified. The default _webal variable is always silently replaced
+   (legacy behavior); user-supplied gen() names need replace to overwrite. */
 
 
 /* check file already exists */
@@ -52,17 +54,17 @@ if ("`keep'" != "" & "`replace'" == "") {
 if ("`manualtargets'"!="") { // manual mode: single group where treat is omitted
   if ("`targets'"!="") {
     dis as err "targets() and manualtargets() are not compatible"
-	exit
+	exit 198
   }
   if "`wttreat'"!="" {
 	dis as err "wttreat and manualtargets() are not compatible"
-	exit
+	exit 198
   }
   * check number of observations
   qui: count if  `touse' == 1  
   if (`r(N)' <= 1) {
       dis as err "insufficient observations"
-      exit
+      exit 198
   }	
   * create factor variables as temporary variables (so they can be used with other commands)
   fvrevar `varlist'
@@ -83,25 +85,25 @@ else {  // auto mode: two groups with treat specified
   gettoken D varlist: varlist
   if ("`varlist'"=="") {
     disp as err "too few variables specified"
-	exit
+	exit 198
   }
   * check treatment variable
   _fv_check_depvar `D'
     qui: count if `D'!=1 & `D'!=0 & `touse' == 1
     if (`r(N)'>0) {
       dis as err "treatment indicator (`D') must be a logical variable, TRUE (1) or FALSE (0)"
-      exit
+      exit 198
     }
     qui: sum `D' if `touse' == 1  
     if (`r(Var)' == 0) {
       dis as err "treatment indicator (`D') must contain both treatment and control observations"
-      exit
+      exit 198
     }
-    qui: count if `D'==0 & `touse' == 1  
+    qui: count if `D'==0 & `touse' == 1
     if (`r(N)' <= 1) {
       dis as err "insufficient observations"
-      exit
-    }	
+      exit 198
+    }
 	* create factor variables as temp vars 
    fvrevar `varlist'
    local fvarlist `r(varlist)'   
@@ -131,7 +133,6 @@ if ("`basewt'"!="") {
    if ("`wttreat'"=="") {
          /* case without base weights for treated units */  
          /* drop controls with missing weight */
-		 di "test"
         qui: count if `basewt'==. & `D' == 0 & `touse' == 1
 		if (`r(N)'>0)  di as txt "note: `r(N)' control units with missing base weights are not assigned weights"
         qui: replace  `touse'=0 if `basewt'==. & `D' == 0 & `touse' == 1	
@@ -154,8 +155,8 @@ if ("`basewt'"!="") {
  }
  else {
     if "`wttreat'"!="" {
-	    dis as err "weigthing variable required"
-		exit
+	    dis as err "weighting variable required"
+		exit 198
     }
     else {
         qui: gen `baseweight' = 1 if `touse' == 1
@@ -179,13 +180,13 @@ if ("`manualtargets'"!="") { // single group mode
   /* check numlist in manualtargets*/
   if wordcount("`manualtargets'")>`xnum1' {
      dis as err "manualtargets() invalid -- numlist has too many elements"
-	 exit
+	 exit 198
   }
   if wordcount("`manualtargets'")<`xnum1' {
      dis as err "manualtargets() invalid -- numlist has too few elements"
-	 exit
+	 exit 198
   }
-  /* generate one artifical treated in new last row */
+  /* generate one artificial treated in new last row */
   mata st_addobs(1)
   qui: replace `D'    =1 in -1
   qui: replace `touse'=1 in -1
@@ -219,7 +220,7 @@ else {  //two-group mode
   }
   if wordcount("`targets'")>`xnum1' {
      dis as err "targets() invalid -- numlist has too many elements"
-	 exit
+	 exit 198
   }
   else {
      if wordcount("`targets'")<`xnum1' {
@@ -233,7 +234,7 @@ else {  //two-group mode
 	     }
 	     else {
 	       dis as err "targets() invalid -- numlist has too few elements"
-		   exit
+		   exit 198
 	     }	
       }
    }
@@ -255,13 +256,13 @@ else {  //two-group mode
 	 if (``i''>= 2) {
 	 /* populate matrix for 2nd order moments */
 	    /* exclude high orders for bivariate covars */
-    	 qui: sum(`xx') if `D'==1 & `touse' == 1    // less than 2 values among the treated
-    	 if (r(sd)==0) {
+    	 qui: tab(`xx') if `D'==1 & `touse' == 1    // less than 2 values among the treated
+    	 if (r(r)<=2) {
 		    dis as txt "note: higher order constraint omitted due to too few values of `xx'"
             continue
       	 }
-	    qui: sum(`xx') if `D'==0 & `touse' == 1    // less than 2 values among controls
-        if (r(sd)==0) {
+	    qui: tab(`xx') if `D'==0 & `touse' == 1    // less than 2 values among controls
+        if (r(r)<=2) {
 		    dis as txt "note: higher order constraint omitted due to too few values of `xx'"
             continue
 	    }
@@ -274,13 +275,12 @@ else {  //two-group mode
 	    tempvar `xx'_2
 	    qui: gen     ``xx'_2' =  (`xx' - `treat_mean')^2*`ctrl_N'/(`ctrl_N'-1)    if `touse' == 1 & `D'==0
 	    qui: replace ``xx'_2' =  (`xx' - `treat_mean')^2*`treat_N'/(`treat_N'-1)  if `touse' == 1 & `D'==1
-	    * mata: idxvar2 = idxvar2, (st_varindex(tokens("``xx'_2'")))
 		mata: Xnames2 = Xnames2 \ ("``xx'_2'","`yy'")
 		local ++xnum2
     }
     if (``i''== 3) {
 	  /* populate matrix for 3rd order moments */
-      /* gen temp cubed terms (degrees of freedom adjusted to be consistent with STATA defination , see Manual "summarize" ) */
+      /* gen temp cubed terms (degrees of freedom adjusted to be consistent with Stata definition , see Manual "summarize" ) */
 	    tempvar `xx'_3
         qui: gen     ``xx'_3' =  (`xx' - `treat_mean')^3*(`ctrl_N'/(`ctrl_N'-1))^1.5    if `touse' == 1 & `D'==0
         qui: replace ``xx'_3' =  (`xx' - `treat_mean')^3*(`treat_N'/(`treat_N'-1))^1.5  if `touse' == 1 & `D'==1
@@ -315,23 +315,25 @@ while "`tempvarlist'"~="" {
    if (`tmax'<`cmin' | `cmax'<`tmin') {
       if ("`manualtargets'"~="") dis as err "target beyond the range of `xx'"
       else dis as err "no overlap in `xx'"
-	  exit
+	  exit 198
    }
 }
  
 
 /********************* Produce initial output ************************* */
-di _newline(1)
-di as res "Data Setup"
-if ("`manualtargets'"=="") {
-  di as txt "Treatment variable:   " as res "`D'"
-  mata: printf("{txt}Covariate adjustment:")
-  mata: printf("%s ", constrt1)
-  if `xnum2'!=0 mata: printf("{txt}(1st order).{res}%s {txt}(2nd order).",constrt2)
-  if `xnum3'!=0 mata: printf("{res}%s {txt}(3rd order).\n",constrt3)
+if ("`quietly'"=="") {
+  di _newline(1)
+  di as res "Data Setup"
+  if ("`manualtargets'"=="") {
+    di as txt "Treatment variable:   " as res "`D'"
+    mata: printf("{txt}Covariate adjustment:")
+    mata: printf("%s ", constrt1)
+    if `xnum2'!=0 mata: printf("{txt}(1st order).{res}%s {txt}(2nd order).",constrt2)
+    if `xnum3'!=0 mata: printf("{res}%s {txt}(3rd order).\n",constrt3)
+  }
+  else mata: printf("{txt}Covariate adjustment:{res}%s{txt}\n", constrt1)
+  di _newline(1)
 }
-else mata: printf("{txt}Covariate adjustment:{res}%s{txt}\n", constrt1)
-di _newline(1)
 
 
 /* ********************** Main Algo ************************* */
@@ -340,14 +342,14 @@ qui: replace `treated'  = 1 if `D' == 1 & `touse' == 1
 qui: gen     `controls' = 0
 qui: replace `controls' = 1 if `D' == 0 & `touse' == 1
 
-di as res "Optimizing..."
-mata: eb("`treated'","`controls'",Xnames[,1]',"`baseweight'","`generate'",`maxiter',`tolerance')
+if ("`quietly'"=="") di as res "Optimizing..."
+mata: eb("`treated'","`controls'",Xnames[,1]',"`baseweight'","`generate'",`maxiter',`tolerance',"`quietly'")
 
 if (res_converge == 0) {  /* report the most demanding variable in case of non-convegence */
   if (res_maxdist == 0) dis as txt "note: The algorithm fails to adjust the summation of weights (possibly due to too few control units)" 
   else if (res_maxdist <= `xnum1') di as txt "note: The algorithm fails to adjust the mean (1st order moment) of " as res word("`constrt1'",res_maxdist) 
   else if (res_maxdist <= `xnum1'+`xnum2') di as txt "note: The algorithm fails to adjust the variance (2nd order moment) of " as res word("`constrt2'",res_maxdist-`xnum1')
-  else di as txt "note: The algorithm fails to adjust the 3rd order moment of " as res word("`constrt2'",res_maxdist-`xnum1'-`xnum2')
+  else di as txt "note: The algorithm fails to adjust the 3rd order moment of " as res word("`constrt3'",res_maxdist-`xnum1'-`xnum2')
   
   if ("`keep'" != "") dis as txt "note: convergence not achieved; balance table not saved"
   
@@ -400,7 +402,7 @@ else {
 
 /* nomalization adjustment */
 if ("`manualtargets'"!="") {
-  qui: drop in -1                  /* drop artifical treated unit */
+  qui: drop in -1                  /* drop artificial treated unit */
   qui: sum `generate' if `touse'==1
   qui: replace `generate'= `generate'*`normconst'*`r(N)'/`r(sum)' if `touse'==1
 }
@@ -414,55 +416,64 @@ else {
 
 /* ******************  Organize output ********************* */
 
-/* show results */
+/* show results — always compute the Pre / Post matrices for ereturn,
+   but suppress the matlist display under `quietly' */
 if ("`manualtargets'"!="") {
-  di _newline(1)
+  if ("`quietly'"=="") di _newline(1)
   qui: sum `generate' if `D'==0 & `touse'==1
-  di as res "No. of units adjusted: " as txt "`r(N)' " as res "total of weights: " as txt round(`r(sum)')
+  if ("`quietly'"=="") di as res "No. of units adjusted: " as txt "`r(N)' " as res "total of weights: " as txt round(`r(sum)')
 
-  di _newline(1)
-  if "`basewt'"=="" di as res "Before: " as txt "without weighting"
-  else di as res "Before: " as txt "`basewt' as the weighting variable"
-  qui: tabstat `fvarlist' [aweight=`baseweight'] if `touse' == 1, c(s) s(mean variance skewness) longstub save 
+  if ("`quietly'"=="") {
+    di _newline(1)
+    if "`basewt'"=="" di as res "Before: " as txt "without weighting"
+    else di as res "Before: " as txt "`basewt' as the weighting variable"
+  }
+  qui: tabstat `fvarlist' [aweight=`baseweight'] if `touse' == 1, c(s) s(mean variance skewness) longstub save
   tempname Pre Post
   mat `Pre' =  r(StatTotal)'
-  mat rownames `Pre' = `lfvarlist' 
-  matlist `Pre', tw(12) format(%9.4g)
-  
-  di _newline(1)
-  di as res "After:  " as txt "`generate' as the weighting variable"
+  mat rownames `Pre' = `lfvarlist'
+  if ("`quietly'"=="") matlist `Pre', tw(12) format(%9.4g)
+
+  if ("`quietly'"=="") {
+    di _newline(1)
+    di as res "After:  " as txt "`generate' as the weighting variable"
+  }
   qui: tabstat `fvarlist' [aweight=`generate'] if `touse' == 1, c(s) s(mean variance skewness) longstub save
   mat `Post' =  r(StatTotal)'
-  mat rownames `Post' = `lfvarlist' 
-  matlist `Post', tw(12) format(%9.4g)
+  mat rownames `Post' = `lfvarlist'
+  if ("`quietly'"=="") matlist `Post', tw(12) format(%9.4g)
 }
 else {
-  di _newline(1)
+  if ("`quietly'"=="") di _newline(1)
   qui: sum `generate' if `D'==1 & `touse'==1
-  di as res "Treated units: " as txt "`r(N)'" _column(24) as res "total of weights: " as txt round(`r(sum)')
+  if ("`quietly'"=="") di as res "Treated units: " as txt "`r(N)'" _column(24) as res "total of weights: " as txt round(`r(sum)')
   qui: sum `generate' if `D'==0 & `touse'==1
-  di as res "Control units: " as txt "`r(N)'" _column(24) as res "total of weights: " as txt round(`r(sum)')
+  if ("`quietly'"=="") di as res "Control units: " as txt "`r(N)'" _column(24) as res "total of weights: " as txt round(`r(sum)')
 
-  di _newline(1)
-  if "`basewt'"=="" di as res "Before: " as txt "without weighting"
-  else di as res "Before: " as txt "`basewt' as the weighting variable"
-  qui: tabstat `fvarlist' [aweight=`baseweight'] if `touse' == 1, c(s) by(`D') s(mean variance skewness) nototal longstub save 
- 
+  if ("`quietly'"=="") {
+    di _newline(1)
+    if "`basewt'"=="" di as res "Before: " as txt "without weighting"
+    else di as res "Before: " as txt "`basewt' as the weighting variable"
+  }
+  qui: tabstat `fvarlist' [aweight=`baseweight'] if `touse' == 1, c(s) by(`D') s(mean variance skewness) nototal longstub save
+
   tempname Pre Post
   mat `Pre' = r(Stat2)', r(Stat1)'
   mat colnames `Pre' = mean variance skewness mean variance skewness
   mat coleq `Pre' = Treat Treat Treat Control Control Control
-  mat rownames `Pre' = `lfvarlist' 
-  matlist `Pre', tw(12) lines(eq) showcoleq(c)  format(%9.4g) 
-  
-  di _newline(1)
-  di as res "After:  " as txt "`generate' as the weighting variable"
-  qui: tabstat `fvarlist' [aweight=`generate'] if `touse' == 1, c(s) by(`D') s(mean variance skewness) nototal longstub save 
+  mat rownames `Pre' = `lfvarlist'
+  if ("`quietly'"=="") matlist `Pre', tw(12) lines(eq) showcoleq(c)  format(%9.4g)
+
+  if ("`quietly'"=="") {
+    di _newline(1)
+    di as res "After:  " as txt "`generate' as the weighting variable"
+  }
+  qui: tabstat `fvarlist' [aweight=`generate'] if `touse' == 1, c(s) by(`D') s(mean variance skewness) nototal longstub save
   mat `Post' = r(Stat2)', r(Stat1)'
   mat colnames `Post' = mean variance skewness mean variance skewness
   mat coleq `Post' = Treat Treat Treat Control Control Control
-  mat rownames `Post' = `lfvarlist' 
-  matlist `Post', tw(12) lines(eq) showcoleq(c) format(%9.4g) 
+  mat rownames `Post' = `lfvarlist'
+  if ("`quietly'"=="") matlist `Post', tw(12) lines(eq) showcoleq(c) format(%9.4g)
 }
 
 
@@ -589,21 +600,27 @@ void linesearch(todo, ss, Q, cX, M, coefs, nstep, maxdiff, g, H)
 	   real matrix wr
 	   real matrix weightsebal
 	   real matrix xxs
-	   	
-       wr = exp(cX*(coefs-(ss:*nstep)')')
+	   real matrix linpred
+
+	   /* cap the linear predictor at 700 to prevent exp() overflow on
+	      ill-conditioned data — Inf would propagate to NaN below */
+       linpred = cX * (coefs - (ss :* nstep)')'
+       linpred = linpred :* (linpred :<= 700) :+ 700 :* (linpred :> 700)
+       wr = exp(linpred)
        weightsebal = wr:*Q
        xxs = weightsebal'*cX
        maxdiff = max(abs(xxs-M'))
 }
 
 /* entropy balancing */
-void eb(string Tr, string Co, string matrix X, string Baseweight, string Newvar, real Numiter, real Tol)
+void eb(string Tr, string Co, string matrix X, string Baseweight, string Newvar, real Numiter, real Tol, string Quietly)
  {
  real matrix coX
  real matrix trX
  real matrix baseweight
  real matrix treatweight
- real vector moment                    
+ real matrix linpred
+ real vector moment
  real matrix coefs                      // coefficients (lambdas)
  real scalar rr
  real scalar cc
@@ -642,7 +659,14 @@ maxdiff = Tol + 1
 
 while (maxdiff > Tol & iter<=Numiter) {
 
- wr = exp(coX*coefs')
+ /* cap the linear predictor at 700 to prevent exp() overflow on
+    ill-conditioned data; with poorly-scaled covariates a single Newton
+    step can push coefs into a regime where exp(coX*coefs') == Inf,
+    which then becomes NaN under the next multiplication. The cap is
+    inactive on well-conditioned problems. */
+ linpred = coX * coefs'
+ linpred = linpred :* (linpred :<= 700) :+ 700 :* (linpred :> 700)
+ wr = exp(linpred)
  weightsebal = wr:*baseweight
  xxs  = weightsebal'*coX    
  gradient = xxs - moment'   /* gradient */
@@ -689,8 +713,10 @@ while (maxdiff > Tol & iter<=Numiter) {
  maxdiff = max(abs(gradient))/moment[1]     // rescale according to weight total of the treated
  maxdist = maxw = 0
  maxindex(abs(gradient),1,maxdist,maxw)  //store the most demanding variable in maxdist
- printf("{txt}Iteration %f: Max Difference = {res}%g", iter, maxdiff)
- printf("{txt}\n")
+ if (Quietly == "") {
+   printf("{txt}Iteration %f: Max Difference = {res}%g", iter, maxdiff)
+   printf("{txt}\n")
+ }
  if (zerostep ==1) {
   /* printf("{txt} (line search fails)\n") */
    break

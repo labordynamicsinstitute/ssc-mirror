@@ -31,12 +31,12 @@ version 11
 
 	// Adjust for factors
 	local fvops = "`s(fvops)'" == "true" 
-    	if `fvops' { 
+    if `fvops' { 
     	  fvrevar `e(indvar)'
           local varlist `r(varlist)'
           qui: _rmcoll `varlist', forcedrop
           local regs `r(varlist)'
-    	}
+    }
 	
 	mata: m_krls_predict("`trainingset'","`testset'","`newvarname'","`seflag'","`training_exclude'","`regs'")
 		

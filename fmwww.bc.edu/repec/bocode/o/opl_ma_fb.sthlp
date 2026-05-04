@@ -1,5 +1,5 @@
 {smcl}
-{* *! Version 6, G. Cerulli, 24nov2025}{...}
+{* *! Version 7, G. Cerulli, 29apr2026}{...}
 
 {title:Title}
 
@@ -16,6 +16,8 @@
 {cmd:new_data(}{it:name}{cmd:)}
 {cmd:policy_non_optimal_train(}{it:varname}{cmd:)}
 {cmd:policy_non_optimal_new(}{it:varname}{cmd:)}
+{cmd:value_var(}{it:number}{cmd:)}
+{cmd:allownegvar}
 {cmd:save_preds_vars(}{it:name}{cmd:)}
 {cmd:gr_action_train(}{it:name}{cmd:)}
 {cmd:gr_reward_train(}{it:name}{cmd:)}
@@ -66,7 +68,13 @@ and treatment effects. It allows for different risk preferences in decision-maki
 
 {phang}
 {opt policy_non_optimal_new(varname)} is an alternative (non-optimal) policy to compare against optimal policy within new data.
-    
+
+{phang}
+{opt value_var(number)} imputes to a value equal to {it:number} possible negative values of the estimated conditional variance. 
+
+{phang}
+{opt allownegvar} allows negative predictions of the conditional variances. By default, negative predicted conditional variances are not allowed: they are set to missing or replaced by {opt value_var(number)} when specified.
+
 {phang}  
 {opt save_preds_vars(name)} saves conditional expectations and variances.
 

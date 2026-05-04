@@ -1,7 +1,7 @@
 p eaalogit module to estimate endogenous attribute attendance models
 p eacf module to compute Extended Sample Autocorrelation Function
 p eba module to perform extreme bound analysis
-p ebalance module to perform Entropy reweighting to create balanced samples
+p ebalance module to perform entropy reweighting to create balanced samples
 p ebalfit module to perform entropy balancing
 p ebct module to perform entropy reweighting to create balanced samples for continuous treatments
 p ebreg module to compute Robust Empirical Bayes Confidence Intervals
