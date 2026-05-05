@@ -1,0 +1,34 @@
+d 'BMC': module to Automatically Generate Chapter Configuration Text Files for Academic Monograph
+d
+d	 The bmc command is used to automatically generate
+d configuration text files for each chapter of academic   
+d monographs. Based on user-input chapter information, the command
+d generates standardized bmc#.txt files    containing detailed
+d instructions for seven tasks including chapter content
+d development, LaTeX document	 generation, teaching plan
+d creation, slide design, and case study writing.    The generated
+d configuration files follow a standard format and can be used for
+d automated document generation    workflows. This is particularly
+d useful for academic writing projects that require batch
+d processing of    multiple chapters. The version 2.7 adds a
+d monograph() option to customize the academic monograph title,   
+d allowing users to generate configuration files for different
+d monograph projects. 
+d
+d KW: text management
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260504
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+d Author:   Hu Fangfang,  Wanjiang University of Technology
+d Support: email    huff470@@163.com
+d
+f bmc.ado
+f bmc.sthlp

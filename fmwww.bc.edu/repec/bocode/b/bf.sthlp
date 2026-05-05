@@ -1,5 +1,5 @@
-{smcl}
-{* *! version 1.5.9 18Apr2026}{...}
+﻿{smcl}
+{* *! version 1.6.0 02May2026}{...}
 {vieweralsosee "" "--"}{...}
 {viewerjumpto "Syntax" "bf##syntax"}{...}
 {viewerjumpto "Description" "bf##description"}{...}
@@ -48,7 +48,7 @@ The command also creates ready-to-run do files in each subdirectory that demonst
 data analysis workflow using Stata's built-in auto dataset.
 
 {pstd}
-Version 1.5.9 improves fallback behavior when drive root directories are not writable,
+Version 1.6.0 improves fallback behavior when drive root directories are not writable,
 and enhances error handling for log files and model results.
 
 {marker options}{...}

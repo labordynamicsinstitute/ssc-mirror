@@ -1,4 +1,4 @@
-*! em v1.0 18Apr2026
+*! em v1.2 02May2026
 *! Modified Jones Model for Earnings Management Measurement
 *! Authors: Wu Lianghai, Wu Hanyan, Liu Rui, Yang Lu
 *! Email: agd2010@yeah.net
@@ -9,17 +9,17 @@ program define em
     
     * Set default paths if not specified
     if "`using'" != "" {
-        local rawdatafile "`using'"
+        local rawdatafile `"`using'"'
     }
     else if "`datafolder'" != "" {
-        local rawdatafile "`datafolder'/rawdata.xlsx"
+        local rawdatafile `"`datafolder'/rawdata.xlsx"'
     }
     else {
         local rawdatafile "rawdata.xlsx"
     }
     
     if "`outputfolder'" == "" {
-        local outputfolder "`c(pwd)'"
+        local outputfolder `"`c(pwd)'"'
     }
     
     * Check if data file exists
@@ -64,13 +64,14 @@ program define em
     di "Loading industry codes, total assets, net income, and revenue data..."
     import excel `"`rawdatafile'"', sheet("Sheet1") firstrow clear
     destring stkcd, replace
-    gen year = real(substr(date,1,4))
+    gen year = substr(date,1,4)
+    destring year, replace
     sort stkcd year
     xtset stkcd year
     order stkcd year
     drop date
     tempfile d1
-    save `d1'
+    save `"`d1'"'
     
     * --------------------------------------------------------------
     * Load and process second dataset (Sheet2: cash flow from operations)
@@ -78,14 +79,14 @@ program define em
     di "Loading cash flow from operations data..."
     import excel `"`rawdatafile'"', sheet("Sheet2") firstrow clear
     destring stkcd, replace
-    gen year = real(substr(date,1,4))
-    sort stkcd year
+    gen year = substr(date,1,4)
+    destring year, replace
     xtset stkcd year
     order stkcd year
     capture drop code   // drop any 'code' variable to avoid conflict with Sheet1
     drop date
     tempfile d2
-    save `d2'
+    save `"`d2'"'
     
     * --------------------------------------------------------------
     * Load and process third dataset (Sheet3: receivables and fixed assets)
@@ -93,14 +94,15 @@ program define em
     di "Loading receivables and fixed assets data..."
     import excel `"`rawdatafile'"', sheet("Sheet3") firstrow clear
     destring stkcd, replace
-    gen year = real(substr(date,1,4))
+    gen year = substr(date,1,4)
+    destring year, replace
     sort stkcd year
     xtset stkcd year
     order stkcd year
     capture drop code
     drop date
     tempfile d3
-    save `d3'
+    save `"`d3'"'
     
     * --------------------------------------------------------------
     * Load and process fourth dataset (Sheet4: fixed assets PPE)
@@ -109,23 +111,24 @@ program define em
     import excel `"`rawdatafile'"', sheet("Sheet4") firstrow clear
     drop if type == "B"   // keep consolidated statements (A), drop parent company statements (B)
     destring stkcd, replace
-    gen year = real(substr(date,1,4))
+    gen year = substr(date,1,4)
+    destring year, replace
     sort stkcd year
     duplicates drop stkcd year, force
     xtset stkcd year
     order stkcd year
     drop date type
     tempfile fixed_assets
-    save `fixed_assets'
+    save `"`fixed_assets'"'
     
     * --------------------------------------------------------------
     * Merge all datasets
     * --------------------------------------------------------------
     di "Merging datasets..."
-    use `d1', clear
-    merge 1:1 stkcd year using `d2', keep(match) nogenerate
-    merge 1:1 stkcd year using `d3', keep(match) nogenerate
-    merge 1:1 stkcd year using `fixed_assets', keep(match) nogenerate
+    use `"`d1'"', clear
+    merge 1:1 stkcd year using `"`d2'"', keep(match) nogenerate
+    merge 1:1 stkcd year using `"`d3'"', keep(match) nogenerate
+    merge 1:1 stkcd year using `"`fixed_assets'"', keep(match) nogenerate
     
     * --------------------------------------------------------------
     * Generate required variables
@@ -164,11 +167,12 @@ program define em
     * Estimate Modified Jones Model by year-industry groups
     * --------------------------------------------------------------
     di "Estimating Modified Jones Model coefficients by year-industry groups..."
-    statsby _b _se e(r2) e(rmse) e(df_m) e(F) e(N), by(year_ind) saving(temp_coef, replace): ///
+    tempfile coef_file
+    statsby _b _se e(r2) e(rmse) e(df_m) e(F) e(N), by(year_ind) saving(`"`coef_file'"', replace): ///
         reg ta_at inv_at delta_rev_at ppe_at, nocons
     
     * Merge coefficients back
-    merge m:1 year_ind using temp_coef, nogenerate
+    merge m:1 year_ind using `"`coef_file'"', nogenerate
     rename (_b_inv_at _b_delta_rev_at _b_ppe_at) (alpha0 alpha1 alpha2)
     
     * Calculate non-discretionary accruals (NDA)
@@ -182,7 +186,7 @@ program define em
     * Label and save final dataset
     * --------------------------------------------------------------
     label data "Modified Jones Model (Dechow et al., 1995)"
-    notes: Calculated using em.ado v1.0 on $S_DATE
+    notes: Calculated using em.ado v1.1 on $S_DATE
     notes: Authors: Wu Lianghai (AHUT), Wu Hanyan (NUAA), Liu Rui (AHUT), Yang Lu (Rugao Finance Bureau)
     
     save `"`outputfolder'/em_results.dta"', replace

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0 18Apr2026}{...}
+{* *! version 1.2 02May2026}{...}
 {hline}
 {cmd:em} {hline 2} Modified Jones Model for Earnings Management Measurement
 {hline}
@@ -37,6 +37,10 @@ starting, and generates comprehensive output including descriptive statistics
 and regression results. All output files (Stata dataset, Excel file, log, and RTF tables) 
 are saved in the specified output folder (by default, the current working directory). 
 The full path to the Excel results file is displayed in the Stata results window.
+
+{p 4 4 2}
+Starting with version 1.2, all file path macros are enclosed in compound double quotes 
+({cmd:`"`macroname'"'}) to robustly handle spaces and special characters in directory names.
 
 {title:Options}
 
@@ -90,7 +94,9 @@ The command creates the following key variables in the output dataset:
 {bf:ta_at} - Total accruals scaled by lagged total assets{p_end}
 {phang2}
 {bf:nda_at} - Non-discretionary accruals scaled by lagged total assets{p_end}
-{bf:da_at} - Discretionary accruals scaled by lagged total assets (earnings management measure){p_end}
+{phang2}
+{bf:da_at} - Discretionary accruals scaled by lagged total assets
+{p_end}
 {phang2}
 {bf:alpha0, alpha1, alpha2} - Estimated coefficients from the Modified Jones Model{p_end}
 {phang2}
@@ -161,6 +167,14 @@ Combine custom file with replace option:
 The command stores the main results in the dataset saved as em_results.dta and also 
 exports them to em_results.xlsx. Additionally, it generates RTF tables with descriptive 
 statistics and regression results.
+
+{title:Version History}
+
+{p 4 4 2}
+1.2 (02May2026): Improved robustness of macro references using compound double quotes to prevent errors when file paths contain spaces or special characters.
+
+{p 4 4 2}
+1.0 (23Apr2026): Initial release.
 
 {title:Authors}
 

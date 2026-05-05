@@ -105,10 +105,12 @@ p pnardl module to perform Panel Nonlinear ARDL (Panel NARDL) estimation
 p png2rtf module to include PNG graphics in RTF documents
 p pnrcheck module to verify the check digit in Swedish personal identification number
 p pobrezaecu module to predict poverty in Ecuador 
+p pocoint module to perform Phillips-Ouliaris cointegration tests
 p poi2hdfe module to estimate a Poisson regression with two high-dimensional fixed effects
 p poisml module to estimate maximum likelihood Poisson regression models
 p polar module to plot polar coordinates
 p polarspike module for polar spike graphs
+p polishpaper module to Generate a Structured Polishing Template for Academic Papers
 p polyspline module to generate sensible bases for polynomials and other splines
 p pooledsd module to calculate pooled standard deviation for a continuous variable by a factor variable
 p poparms module for potential outcome parameter estimation

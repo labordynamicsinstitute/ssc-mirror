@@ -74,6 +74,7 @@ p blockboot module to implement four bootstrap schemes for dependent timeseries 
 p blogit2 module to produce grouped data logit with support for in
 p blood_glucose module for converting between HbA1c and blood glucose values
 p blp module to estimate Berry Levinsohn Pakes random coefficients logit estimator
+p bmc module to Automatically Generate Chapter Configuration Text Files for Academic Monograph
 p bme module to compute Bounded midpoint estimator
 p bmi module to compute Body Mass Index
 p bmjcip module to format confidence intervals and P-values for medical journals

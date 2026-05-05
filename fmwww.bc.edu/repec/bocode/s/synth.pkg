@@ -1,38 +1,26 @@
-d 'SYNTH': module to implement Synthetic Control Methods for Comparative Case Studies
+v 3
+d synth. Synthetic Control Methods for Comparative Case Studies
+d {bf: Alberto Abadie, MIT}
+d {bf: Alexis Diamond, Minerva University}
+d {bf: Jens Hainmueller, Department of Political Science and Graduate School of Business, Stanford}
+d 
+d Implements the synthetic control method for causal inference in comparative case studies as
+d described in "Synthetic Control Methods for Comparative Case Studies of Aggregate Interventions: 
+d Estimating the Effect of California's Tobacco Control Program. 
+d Journal of the American Statistical Association. 105(490): 493-505. 2010.
 d
-d  synth implements the synthetic control method for causal
-d inference in comparative case studies as described in "Synthetic
-d Control Methods for Comparative Case Studies of Aggregate
-d Interventions:  Estimating the Effect of California's Tobacco
-d Control Programm.  Journal of the American Statistical
-d Association. 105(490): 493-505. 2010. 
 d
-d KW: synthetic control
-d KW: causal inference
-d KW: comparative case studies
-d
-d Requires: Stata version 13
-d
-d Distribution-Date: 20260430
-d
-d Author: Alberto Abadie, MIT
-d Support: email abadie@@mit.edu
-d
-d Author: Alexis Diamond, Minerva University
-d Support: email adiamond@@minerva.edu
-d
-d Author: Jens Hainmueller, Stanford University
-d Support: email  jhain@@stanford.edu
-d
+d Support: jhain@stanford.edu
 f synth.ado
 f synth_ll.ado
 f synth.sthlp
 f ../l/lsynth_mata_subr.mlib
 f smoking.dta
 f ../g/germany.dta
-f synthopt.plugin
-f synthopt.win32
-f synthopt.win64   
-f synthopt.linux32
-f synthopt.linux64
-f synthopt.mac
+G WIN64      synthopt.win64   synthopt.plugin
+G LINUX64    synthopt.linux64 synthopt.plugin
+G MACARM64   synthopt.mac     synthopt.plugin
+G MACINTEL64 synthopt.mac     synthopt.plugin
+G OSX.ARM64  synthopt.mac     synthopt.plugin
+G OSX.X8664  synthopt.mac     synthopt.plugin
+h synthopt.plugin

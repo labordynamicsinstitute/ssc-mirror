@@ -1,0 +1,25 @@
+d 'POCOINT': module to perform Phillips-Ouliaris cointegration tests
+d
+d	pocoint computes the four Phillips-Ouliaris (1990)
+d residual-based tests of the null hypothesis of no   
+d cointegration:    -  Za: Phillips Z(alpha) coefficient test	 - 
+d Zt: Phillips Z(t) t-ratio test (default)    -  Pu: variance ratio
+d test introduced in the paper	  -  Pz: multivariate trace test
+d (invariant to the normalization of the cointegrating regression) 
+d
+d KW: cointegration
+d KW: Phillips
+d KW: Ouliaris
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260504
+d
+d Author: Ozan Eruygur ,  AHBV University, Ankara, Turkiye
+d Support: email eruygur@@gmail.com
+d
+f pocoint.ado
+f pocoint.sthlp
+f pocoint_tables.mata
+f pocoint_pv_table.dta
+f pocoint_cv_table.dta

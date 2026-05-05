@@ -1,0 +1,29 @@
+d 'CONSERVATISM': module to calculate Khan & Watts (2009) Accounting Conservatism Measurement
+d
+d      conservatism implements the Khan & Watts (2009) accounting
+d conservatism measurement model for Chinese	A-share listed
+d companies. The program calculates the C_SCORE measure of
+d accounting conservatism based on    firm characteristics
+d including size, market-to-book ratio, and leverage. 
+d
+d KW: conservatism measurement
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20250727
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+d Author: Chen Liwen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+f conservatism.ado
+f conservatism.sthlp
+f ../d/d1.xlsx
+f ../d/d2.xlsx
+f ../d/d3.xlsx
+f ../d/d4.xlsx

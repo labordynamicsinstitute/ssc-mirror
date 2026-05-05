@@ -1,0 +1,24 @@
+d 'POLISHPAPER': module to Generate a Structured Polishing Template for Academic Papers
+d
+d	The polishpaper command generates a structured text file
+d containing a polishing template for academic	  papers. The
+d template includes seven tasks designed to guide users through the
+d manuscript revision process. 
+d
+d KW: text management
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260504
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+d Author: Yang Lu,  Anhui University of Technology
+d Support: email  1026835594@@qq.com
+d
+f polishpaper.ado
+f polishpaper.sthlp

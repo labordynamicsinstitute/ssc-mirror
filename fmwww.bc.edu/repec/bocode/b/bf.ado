@@ -1,4 +1,4 @@
-*! bf.ado v1.5.9 Wulianghai(AHUT) Chen Liwen(AHUT) Wu Hanyan(NUAA) , 22Oct2025
+*! bf.ado v1.6.0 Wulianghai(AHUT) Chen Liwen(AHUT) Wu Hanyan(NUAA) , 02May2026
 *! Modified: Fallback to current directory when cannot create base directory on drive root, 18Apr2026
 capture prog drop bf
 program define bf
@@ -53,11 +53,6 @@ if "`preferred_drive'" == "" {
 // If only C drive available, use it
 if "`preferred_drive'" == "" & strpos("`drives'", " C ") {
     local preferred_drive "C"
-}
-
-if "`preferred_drive'" == "" {
-    di as error "No available hard drive found!"
-    exit 601
 }
 
 // Set directory names based on language

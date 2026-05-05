@@ -231,6 +231,7 @@ p confreg module to compute confusion matrix (Accuracy measures) estimated by mi
 p confsvy module to assess confounding effects in survey studies 
 p conindex module to perform estimation of concentration indices
 p conjoint module to analyse and visualise conjoint (factorial) experiments
+p conservatism module to calculate Khan & Watts (2009) Accounting Conservatism Measurement
 p contour module to draw contour plots
 p contrast module to calculate contrasts between factor levels
 p convert_top_lines module to handle leading lines of text file
