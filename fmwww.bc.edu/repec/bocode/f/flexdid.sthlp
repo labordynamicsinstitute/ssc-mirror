@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 2.2  04may2026}{...}
 {* *! version 2.0  05feb2026}{...}
 {* *! version 1.6  30nov2025}{...}
 {* *! version 1.5  18oct2025}{...}
@@ -153,7 +154,7 @@ in the regression. All the covariates {it:covarlist} are interacted with with tr
 {phang}
 {opth userco:hort(varname:cohortvar)} specifies a user-defined cohort variable, overriding 
 the internal cohort variable calculated using {opth tx:(varlist:txvar)} and {opth ti:me(varlist:timevar)}. 
-It is useful in situations where the internal cohort variable is incorrect or inappropriate, 
+It is useful in situations where the internally generated cohort variable is incorrect or inappropriate, 
 e.g., when some time periods of observational-level data are missing.
 
 {phang}

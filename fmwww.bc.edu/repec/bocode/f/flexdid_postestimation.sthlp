@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 2.2  04may2026}{...}
 {* *! version 2.0  05feb2026}{...}
 {* *! version 1.6  30nov2025}{...}
 {* *! version 1.5  18oct2025}{...}
@@ -59,7 +60,7 @@ be specified{p_end}
 {synopt :{cmd:no}{cmd:graph}} supresses the ATET plot{p_end}
 {p2coldent :+ {opth graph:(marginsplot:graph_opts)}} affects rendition of the ATET plot{p_end}
 {synopt :{opt dydx}} estimates ATETs using the {cmd:dydx} option in {cmd:{help margins}}; 
-useful when the default procedure fails to produce standard errors of the ATETs{p_end}
+useful when the default procedure fails to produce standard errors of the ATETs.{p_end}
 {synopt :{opth agg:regationweight(flexdid_postestimation##wtype:wtype)}}specify the aggregation weights; 
 default is {cmd:aggregationweight(obslevel)}{p_end}
 {synoptline}
@@ -156,7 +157,9 @@ found in {helpb marginsplot}.
 {opt dydx} estimates ATETs using the {cmd:dydx} option in {cmd:{help margins}}. The default
 procedure is to use {cmd:{help margins_contrast}}. Although {cmd:{help margins_contrast}} is
 substantially faster, on occasion it fails to produce standard errors of the estimates. 
-{cmd:dydx} is useful in those cases.
+{cmd:dydx} is useful in those cases.  This option is especially useful when the internally 
+generated cohort variable is incorrect or inappropriate, e.g., when some time periods of 
+observational-level data are missing.
 
 {phang}
 {opt agg:regationweight(wtype)} specifies the aggregaton wights, either {cmd: obslevel}

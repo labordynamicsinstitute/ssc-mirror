@@ -1,4 +1,5 @@
-*! version 2.0  05feb2026
+*! version 2.2  04may2026
+**! version 2.0  05feb2026
 **! version 1.6  30nov2025
 **! version 1.5  18oct2025
 ** version 1.0  10sep2025
@@ -53,7 +54,7 @@ program Estimate, eclass sortpreserve
 		exit 198
 	}
 	if word("`vce'",1) == "cluster" local clustvar `=word("`vce'",2)'
-		
+
 	// Marksample
 	marksample touse
 	markout `touse' `clustvar' `wt' `tx' `group' `time', strok
@@ -80,7 +81,7 @@ program Estimate, eclass sortpreserve
 	restore
 	if (`gaps'!=0 & "`usercohort'"=="") {
 		display as text "{p 0 6 0 78}"
-		display as error "Time variable has gaps. Specify {bf:usercohort()} to correctly assign cohorts to groups that were first treated at times coincident with gaps in the data."
+		display as error "Time variable has gaps. Specify {bf:usercohort()} to correctly assign cohorts to groups that were first treated at times coincident with gaps in the data. Also, consider using the dydx option for postestimation commands."
 		display as text "{p_end}"
 		exit 451
 	}
@@ -223,7 +224,7 @@ program Estimate, eclass sortpreserve
 
 	ereturn local cmd flexdid
 	ereturn local estat_cmd flexdid_estat
-	ereturn local group "`group'"
+	ereturn local flex_group "`group'"
 	ereturn local time "`time'"
 	ereturn local tx "`tx'"
 	ereturn local usercohort "`usercohort'"

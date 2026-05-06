@@ -476,17 +476,17 @@ plus 10 regressions based on combinations of 5 taken 3 at a time
 {pstd }Pablo Gluzmann {p_end}
 {pstd} CEDLAS-fce-UNLP and CONICET {p_end}
 {pstd} La Plata, Argentina {p_end}
-{pstd} gluzmann@yahoo.com {p_end}
+{pstd} gluzmann@gmail.com {p_end}
 
 {pstd} Demian Panigo{p_end}
 {pstd} Instituto Malvinas, UNLP and CONICET{p_end}
 {pstd} La Plata, Argentina{p_end}
 {pstd} panigo@gmail.com {p_end}
 
-{pstd} Back to {it:{help samregc:Top}} {p_end}
+{pstd} Back to {it:{help samregc:Top}}  {p_end}
 
 {*:*****************************************************************************************}
 {title:Also see}
 
-{p 7 14 2}Help: {it:{help checkrob:checkrob}}
+{p 7 14 2}Help: {help checkrob:checkrob} {help multivrs:multivrs} 
 

@@ -1,515 +1,457 @@
+*! version 1.0.1  25april2026
 *===============================================================================================
 * samregc: Sensitivity Analysis of the Main Regression Coefficients					   
 * Authors:																			                  
 * Pablo Glüzmann, CEDLAS-UNLP and CONICET - La Plata, Argentina - gluzmann@yahoo.com
 * Demian Panigo, Instituto Malvinas, UNLP and CONICET - La Plata, Argentina - panigo@gmail.com 
 *-----------------------------------------------------------------------------------------------
-* Version 1.0 - 14-04-2025                                                          
+*
 *===============================================================================================
 *DEFINE "samregc" PROGRAM
-capture program drop samregc
 program define samregc, rclass
-qui {
-	version 15.0
-	*Define Syntax Program
-	syntax varlist(min=2 numeric ts) [aw fw iw pw] [if] [in],	///
-	[														   	///
-	ITerateover(varlist numeric ts)						///
-	GRITerateover(string)									///
-	NComb(numlist >=1 integer max=2) 			   	///
-	Fixvar(varlist numeric ts)								///
-	CMDEst(string) 									   	///
-	CMDOptions(string) 								   	///
-	CMDIveq(string) 									   	///
-	RESults(string) 								   	   ///
-	REPlace 												   	///
-	COUnt 												   	///
-	DOuble 												   	///
-	NOExcel														///
-	NOGraph														///
-	GRAPHTYpe(string)											///
-	GRAPHTItle(string)                              ///
-	GRAPHOptions(string)										///
-	LEVel(real 95)											   ///
-	at(real 0)											      ///
-	SAMEsample 											   	///
-	UNBalanced                                      ///
-	SISters(string)        									///
-	]
-	if "`iterateover'" == "" & "`griterateover'" == "" {
-			display as error "One or both of the options iterateover() or griterateover() are required."
-			exit 503
-	}
-	if "`results'" == ""		 loc results "samregc"
-	if "`cmdest'" == ""		 loc cmdest "regress"
-	if "`graphtype'" == ""	 loc graphtype "gph"
-	if "`graphtitle'" == ""	 loc graphtitle "varnames"
-	if "`sisters'" != ""	    loc unbalanced "unbalanced"
-	
-	tempvar touse
-	mark `touse' `if' `in'
+	version 17.0
+	qui {
+		loc setvarabbrev =c(varabbrev)
+		if "`setvarabbrev'" =="off" set varabbrev on
+		
+		* High-level workflow of the main command:
+		* 1) parse and validate syntax/options
+		* 2) normalize paths/output names and test write permissions
+		* 3) identify dependent, main, fixed, and iteration variables
+		* 4) build the specification space (plain variables and/or groups)
+		* 5) run a baseline model and estimate total execution time
+		* 6) enumerate combinations and execute all requested estimations
+		* 7) assemble the results dataset, summary tables, and graphs
+		* 8) optionally run sister estimations to separate sample and covariate effects
+		*Define Syntax Program
+		syntax varlist(min=2 numeric ts) [aw fw iw pw] [if] [in],	///
+		[														   	///
+		ITerateover(varlist numeric ts)						///
+		GRITerateover(string asis)									///
+		NComb(numlist >=1 integer max=2) 			   	///
+		Fixvar(varlist numeric ts)								///
+		CMDEst(string asis) 									   	///
+		CMDOptions(string asis) 								   	///
+		CMDIveq(string asis) 									   	///
+		RESults(string ) 								   	   ///
+		REPlace 												   	///
+		COUnt 												   	///
+		DOuble 												   	///
+		NOExcel														///
+		NOGraph														///
+		GRAPHTYpe(string asis)											///
+		GRAPHTItle(string asis)                              ///
+		GRAPHOptions(string asis)										///
+		LEVel(real 95)											   ///
+		at(real 0)											      ///
+		SAMEsample 											   	///
+		UNBalanced                                      ///
+		SISters(string)        									///
+		]
+		* At least one source of model variation must be provided.
+		* iterateover() varies individual variables; griterateover() varies blocks of variables.
+		if "`iterateover'" == "" & "`griterateover'" == "" {
+				display as error "One or both of the options iterateover() or griterateover() are required."
+				exit 503
+		}
+		if "`results'" == ""		 loc results "samregc"
+		if "`cmdest'" == ""		 loc cmdest "regress"
+		if "`graphtype'" == ""	 loc graphtype "gph"
+		if "`graphtitle'" == ""	 loc graphtitle "varnames"
+		if "`sisters'" != ""	    loc unbalanced "unbalanced"
+		
+		* touse marks the working estimation sample after applying if/in restrictions.
+		tempvar touse
+		mark `touse' `if' `in'
 
-	*Define Error Messages
-	capture tsset
-	loc time=r(timevar)
-	loc panel=r(panelvar)
-	if "`time'" == "."	loc time ""
-	if "`panel'" == "."	loc panel ""
+		*Define Error Messages
+		capture tsset
+		loc time=r(timevar)
+		loc panel=r(panelvar)
+		if "`time'" == "."	loc time ""
+		if "`panel'" == "."	loc panel ""
 
-	if "`fixvar'" != "" {
+		if "`fixvar'" != "" {
+			loc aux 0
+			foreach var1 of varlist `fixvar'  {
+				foreach var2 of varlist `varlist' {
+					if "`var1'" == "`var2'" loc aux 1
+				}
+			}
+			if `aux'==1 {
+				display as error "Option fixvar contains at least one variable already included as main variable"
+				exit 503
+			}
+		}
+		if "`samesample'" != ""	 & "`unbalanced'" != "" {
+				display as error "Option samesample cannot be combined with options unbalanced or sisters()."
+				exit 198
+		}
+
+		* Normalize output path/base name from results().
+		* The command accepts a basename with or without path and with or without .dta.
+		* This block also checks whether the target directory is writable before heavy work starts.
+		* Define and correct the location of the results
+		loc path ""
+		loc revresults=reverse("`results'")
+		loc dta=substr("`results'",-4,.)
+		loc dta=strmatch("`dta'",".dta")
+		if `dta'==1 loc revresults=substr("`revresults'",5,.)
+		loc results=reverse("`revresults'")
+		loc posit=strpos("`revresults'","\")
+		loc posit2=strpos("`revresults'","/")
+		loc position = max(`posit',`posit2')
+		if `posit'>0 & `posit2'>0 loc position=min(`posit',`posit2')
+		if `position'!=0 {
+			loc revpath =substr("`revresults'",`position',.)
+			loc path =reverse("`revpath'")
+		}
+		if "`path'" == "" loc fname "`results'"
+		if "`path'" != "" {
+			loc posaux=`position'-1
+			loc fname =substr("`results'",-`posaux',.)
+		}
+		loc length =length("`results'")
 		loc aux 0
-		foreach var1 of varlist `fixvar'  {
-			foreach var2 of varlist `varlist' {
-				if "`var1'" == "`var2'" loc aux 1
-			}
-		}
-		if `aux'==1 {
-			display as error "Option fixvar contains at least one variable already included as main variable"
-			exit 503
-		}
-	}
-	if "`samesample'" != ""	 & "`unbalanced'" != "" {
-			display as error "Option samesample cannot be combined with options unbalanced, sisters or arrows"
-			exit 198
-	}
 
-	* Define and correct the location of the results
-	loc path ""
-	loc revresults=reverse("`results'")
-	loc dta=substr("`results'",-4,.)
-	loc dta=strmatch("`dta'",".dta")
-	if `dta'==1 loc revresults=substr("`revresults'",5,.)
-	loc results=reverse("`revresults'")
-	loc posit=strpos("`revresults'","\")
-	loc posit2=strpos("`revresults'","/")
-	loc position = max(`posit',`posit2')
-	if `posit'>0 & `posit2'>0 loc position=min(`posit',`posit2')
-	if `position'!=0 {
-		loc revpath =substr("`revresults'",`position',.)
-		loc path =reverse("`revpath'")
-	}
-	if "`path'" == "" loc fname "`results'"
-	if "`path'" != "" {
-		loc posaux=`position'-1
-		loc fname =substr("`results'",-`posaux',.)
-	}
-	loc length =length("`results'")
-	loc aux 0
-
-	if `length'>245-20 & "`path'" == "" {
-		display as error "the path of the working directory is too long, change the working directory using command cd or specify shorter path using option results"
-		exit 603
-	}
-	if `length'>245-20 & "`path'" != "" {
-		display as error "the path specified in option results too long, specify a shorter path using option results"
-		exit 603
-	}
-	preserve
-	drop _all
-	set obs 1
-	tempname aux
-	tempvar var1
-	gen `var1' =1
-	capture save "`results'.dta", `replace'
-	if _rc == 602 {
-		display as error "file `results'.dta already exists"
-		exit 602
-	}
-	if _rc !=0 & "`path'" == "" {
-		display as error "stata cannot save files in the working directory, change the working directory using command cd or specify another path using option results"
-		exit 603
-	}
-	if _rc !=0 & "`path'" != "" {
-		display as error "stata cannot save files the path specified in option results, change the working directory using command cd or specify another path using option results"
-		exit 603
-	}
-	capture erase "`results'.dta"
-	* Exports an empty Excel file to force an error if it already exists, or it is open
-	if "`noexcel'" == "" {
-		export excel using "`results'.xlsx", `replace'
-		erase "`results'.xlsx"
-	}
-
-	* Split Depvar and MainVariables
-	drop _all
-	restore
-	local wt: word 2 of `exp'
-	tokenize `varlist'	
-	loc depvar "`1'"
-	macro shift 1
-	loc MainVar "`*'"
-	loc graphtitle_list ""
-	loc nMainvar = wordcount("`MainVar'")
-	loc nn=1
-	foreach var of varlist `MainVar' {
-		if "`graphtitle'" == "varnames" loc gr_mv`nn' "`var'"
-		if "`graphtitle'" == "varlabels" {
-			capture loc gr_mv`nn': variable label `var'
-			if _rc !=0 | "`gr_mv`nn''" == "" loc gr_mv`nn' "`var'"
+		if `length'>245-20 & "`path'" == "" {
+			display as error "the path of the working directory is too long, change the working directory using command cd or specify shorter path using option results"
+			exit 603
 		}
-		if `nn' ==1 loc graphtitle_list "`gr_mv`nn''"
-		else loc graphtitle_list "`graphtitle_list'|`gr_mv`nn''"
-		loc ++nn
-	}
-	* Split & add Instrumental Variables
-	if "`cmdiveq'" != ""  {
-			_iv_parse `depvar' (`cmdiveq')
-			loc instruments "`s(inst)'"
-			loc endogenous "`s(endog)'"
-	}
-	/*
-	if "`instruments'" != "" & "`endogenous'" != "" {
-		foreach var1 of local endogenous {
-			local iterateover: subinstr local iterateover "`var1'" "", word
+		if `length'>245-20 & "`path'" != "" {
+			display as error "the path specified in option results too long, specify a shorter path using option results"
+			exit 603
 		}
-		loc iterateover "`iterateover' `endogenous'"
-	}
-	*/
-	if "`griterateover'" != "" & "`iterateover'"!= "" {
-		loc aux 0
-		foreach var1 in `griterateover'  {
-			foreach var2 of varlist `iterateover' {
-				if "`var1'" == "`var2'" loc aux 1
-			}
-		}
-		if `aux'==1 {
-			display as error "Option griterateover contains at least one variable already included in iterateover"
-			exit 503
-		}
-	}
-	if "`griterateover'" != "" {
-		loc nwg: word count `griterateover'
-		parse "`griterateover'",parse(|)
-		loc gi =1
-		forvalues i=1/`nwg' {
-			if "``i''" != "|" & "``i''" != "" {
-				tempname group`gi'
-				loc `group`gi'' = "``i''"
-				loc ++gi
-			}
-		}
-		loc ng =`gi'-1
-		loc groups_list ""
-		loc var_groups_list ""
-		forvalues gi=1/`ng' {
-			loc groups_list "`groups_list' `group`gi''"
-			loc var_groups_list "`var_groups_list' ``group`gi'''"
-		}
-	}
-	* Complete the ncomb syntax
-	if "`ncomb'" == "" {
-		loc allcomb: word count `iterateover' `groups_list'
-		loc ncomb "1 `allcomb'"
-	}
-	tokenize `ncomb'	
-	loc kmin `1'
-	if "`2'" != "" loc kmax `2'
-	if "`2'" == "" loc kmax `1'
-	if `kmin'>`kmax' {
-		display as error "ncomb() invalid, elements out of order"
-		exit 124
-	}
-	loc tindep: word count `iterateover' `groups_list'
-	loc ListaTotVar "`MainVar' `fixvar' `iterateover' `var_groups_list'"
-	if "`samesample'" != "" {
-		tempvar aux
-		gen `aux'=0 if `touse' ==1
-		foreach var of varlist `ListaTotVar' {
-			replace `aux'=1 if `touse' ==1 & `var'>=. 
-		}
-		replace `touse' =0 if `aux' ==1
-	}
-	* Calculate the total number of regressions to run
-	loc Ntotreg 0
-	loc total 0
-	forvalues j=`kmin'/`kmax' {
-		loc n1=comb(`tindep',`j')
-		loc total = `total'+`n1'
-	}
-	* Including without varlist_iterate
-	loc total = `total'+1
-	if `total'<=0 | `total' >=. {
-		display as error "Too few independent variables specified for selected combinatorial"
-		exit 198
-	}
-	noi di as text "---------------------------------------------------------------------------"
-	noi di as text " Baseline Regression: without iteration variables "
-	noi di as text "---------------------------------------------------------------------------"
-	* Split & add Instrumental Variables
-	loc estim: word 2 of `cmdest'
-	if ("`instruments'" != "" | "`estim'" == "gmm") {
-		loc ivendogenous = ""
-		foreach var1 of varlist `MainVar' `fixvar' {
-			foreach var2 of local endogenous {
-				if "`var1'" == "`var2'" loc ivendogenous " `ivendogenous' `var2' "
-			}
-		}
-		loc anything2 "`MainVar' `fixvar'"
-		foreach var1 of local ivendogenous {
-			local anything2: subinstr local anything2 "`var1'" "", word
-		}
-		noi `cmdest' `depvar' `anything2' (`endogenous' =`instruments') [`weight'`exp'] if `touse' ==1 ,`cmdoptions'
-	}
-	else noi `cmdest' `depvar' `MainVar' `fixvar' [`weight'`exp'] if `touse' ==1 ,`cmdoptions'
-	* check for omitted variables
-	tempname bomit
-	local noitnames : colfullnames e(b)
-	mat `bomit' =e(b)
-	loc omit =0
-	foreach var1 of local noitnames {
-		if substr("`var1'",1,2) == "o." loc omit=1
-		if _b[`var1'] ==0 | _b[`var1'] ==. loc omit=1
-	}
-	if `omit'==1 {
-		display as error "The estimation without iteration variables cannot contain variables omitted due to collinearity"
-		exit 503
-	}
-	noi di as text "---------------------------------------------------------------------------"
-	noi di as text "Total Number of Estimations: " as result "`total'"
-	noi di as text "---------------------------------------------------------------------------"
-	loc estcomoptions "cmde(`cmdest') cmdoptions(`cmdoptions') cmdstat(`cmdstat') results(`results') lastreg(`total') `double' `count' time(`time') panel(`panel') instruments(`instruments') endogenous(`endogenous')  " 
-	local hh1: word count `fixvar'
-	local hh2: word count `ListaTotVar'
-	loc hh 1
-	if `hh2'>`kmax'+`hh1' {
-		foreach var of local ListaTotVar {
-			if `hh'<=(`kmax'+`hh1') loc listaaux "`listaaux' `var'"
-			loc ++hh
-		}
-	}
-	else loc listaaux "`ListaTotVar'"
-	* Estimate the execution time
-	timer clear 99
-	timer on 99
-	tempname aux
-	_samregc_estcomtry `depvar' `MainVar' `listaaux' [`weight'`exp'] if `touse' ==1 , matres2(`aux') `estcomoptions' ordervar(`ListaTotVar') nroreg(`Ntotreg') 
-	loc error =r(noest)
-	if `error' == 1 di as error "Time estimation was not performed."
-	capture mat drop `aux'
-	macro drop aux
-	timer off 99
-	timer list
-	ret li
-	loc time1 r(t99)
-	timer clear 99
-	loc timeprox =round((`time1'*`total')/50)
-	if "`sisters'" != "" loc timeprox =round((`time1'*`total')/50)*2
-	if `timeprox'>=3 {
-		noi di as text "----------------------------------------------------------------------------------"
-		noi di as text "Warning: Estimation could take about " as result "`timeprox'" as text " minutes or more"
-		noi di as text "----------------------------------------------------------------------------------"
-	}
-
-	* Compute combinations
-	noi di as text "Computing combinations..."
-	forvalues combaux=1/`kmax' {
-		tempfile __a_`combaux'
-		loc __a_ "`__a_' `__a_`combaux''"
-	}
-	_samregc_combinate `__a_', nsamp(`tindep') ncomb(`kmin',`kmax')
-	noi di as text "Preparing estimation list..."
-
-	tokenize `iterateover' `groups_list'
-	forvalues j=`kmin'/`kmax' {
 		preserve
-		use `__a_`j'', clear
-		erase `__a_`j''
-		loc v =_N
-		loc v1 "`"
-		loc v2 "'"
-		d _all
-		forvalues i =1/`v' {
-			macro drop _reg`i' 
-			foreach var of varlist _all {
-				loc vaux = `var'[`i']
-				if "`griterateover'" == "" loc reg`i' " `reg`i'' `v1'`vaux'`v2'"
-				if "`griterateover'" != "" {
-					loc vg = ""
-					forvalues gi =1/`ng' {
-						loc vv = "`v1'`vaux'`v2'"
-						if "`vv'" == "`group`gi''" loc vg = "``group`gi'''"
+		drop _all
+		set obs 1
+		tempname aux
+		tempvar var1
+		gen `var1' =1
+		capture save "`results'.dta", `replace'
+		if _rc == 602 {
+			display as error "file `results'.dta already exists"
+			exit 602
+		}
+		if _rc !=0 & "`path'" == "" {
+			display as error "stata cannot save files in the working directory, change the working directory using command cd or specify another path using option results"
+			exit 603
+		}
+		if _rc !=0 & "`path'" != "" {
+			display as error "stata cannot save files the path specified in option results, change the working directory using command cd or specify another path using option results"
+			exit 603
+		}
+		capture erase "`results'.dta"
+		* Exports an empty Excel file to force an error if it already exists, or it is open
+		if "`noexcel'" == "" {
+			export excel using "`results'.xlsx", `replace'
+			erase "`results'.xlsx"
+		}
+
+		* Split the user varlist into dependent variable and always-included main regressors.
+		* MainVar coefficients are the objects summarized in the final tables/graphs.
+		* Split Depvar and MainVariables
+		drop _all
+		restore
+		local wt: word 2 of `exp'
+		tokenize `varlist'	
+		loc depvar "`1'"
+		macro shift 1
+		loc MainVar "`*'"
+		loc graphtitle_list ""
+		loc nMainvar = wordcount("`MainVar'")
+		loc nn=1
+		foreach var of varlist `MainVar' {
+			if "`graphtitle'" == "varnames" loc gr_mv`nn' "`var'"
+			if "`graphtitle'" == "varlabels" {
+				capture loc gr_mv`nn': variable label `var'
+				if _rc !=0 | "`gr_mv`nn''" == "" loc gr_mv`nn' "`var'"
+			}
+			if `nn' ==1 loc graphtitle_list "`gr_mv`nn''"
+			else loc graphtitle_list "`graphtitle_list'|`gr_mv`nn''"
+			loc ++nn
+		}
+		* Parse the optional endogenous = instruments specification used by iv-like estimators.
+		* The parsing is done once here and then reused by the estimation subprograms.
+		* Split & add Instrumental Variables
+		if "`cmdiveq'" != ""  {
+				_iv_parse `depvar' (`cmdiveq')
+				loc instruments "`s(inst)'"
+				loc endogenous "`s(endog)'"
+		}
+		/*
+		if "`instruments'" != "" & "`endogenous'" != "" {
+			foreach var1 of local endogenous {
+				local iterateover: subinstr local iterateover "`var1'" "", word
+			}
+			loc iterateover "`iterateover' `endogenous'"
+		}
+		*/
+		if "`griterateover'" != "" & "`iterateover'"!= "" {
+			loc aux 0
+			foreach var1 in `griterateover'  {
+				foreach var2 of varlist `iterateover' {
+					if "`var1'" == "`var2'" loc aux 1
+				}
+			}
+			if `aux'==1 {
+				display as error "Option griterateover contains at least one variable already included in iterateover"
+				exit 503
+			}
+		}
+		* Convert grouped iteration syntax separated by | into internal macros.
+		* Each group behaves as one combinatorial unit, even if it contains several variables.
+		if "`griterateover'" != "" {
+			loc nwg: word count `griterateover'
+			parse "`griterateover'",parse(|)
+			loc gi =1
+			forvalues i=1/`nwg' {
+				if "``i''" != "|" & "``i''" != "" {
+					tempname group`gi'
+					loc `group`gi'' = "``i''"
+					loc ++gi
+				}
+			}
+			loc ng =`gi'-1
+			loc groups_list ""
+			loc var_groups_list ""
+			forvalues gi=1/`ng' {
+				loc groups_list "`groups_list' `group`gi''"
+				loc var_groups_list "`var_groups_list' ``group`gi'''"
+			}
+		}
+		* Complete ncomb() when the user omits it.
+		* Default behavior is to evaluate all subset sizes from 1 to the total number of
+		* iteration units (single variables plus groups), plus the baseline model with none.
+		* Complete the ncomb syntax
+		if "`ncomb'" == "" {
+			loc allcomb: word count `iterateover' `groups_list'
+			loc ncomb "1 `allcomb'"
+		}
+		tokenize `ncomb'	
+		loc kmin `1'
+		if "`2'" != "" loc kmax `2'
+		if "`2'" == "" loc kmax `1'
+		if `kmin'>`kmax' {
+			display as error "ncomb() invalid, elements out of order"
+			exit 124
+		}
+		loc tindep: word count `iterateover' `groups_list'
+		loc ListaTotVar "`MainVar' `fixvar' `iterateover' `var_groups_list'"
+		if "`samesample'" != "" {
+			tempvar aux
+			gen `aux'=0 if `touse' ==1
+			foreach var of varlist `ListaTotVar' {
+				replace `aux'=1 if `touse' ==1 & `var'>=. 
+			}
+			replace `touse' =0 if `aux' ==1
+		}
+		* Calculate the total number of regressions to run
+		loc Ntotreg 0
+		loc total 0
+		forvalues j=`kmin'/`kmax' {
+			loc n1=comb(`tindep',`j')
+			loc total = `total'+`n1'
+		}
+		* Including without varlist_iterate
+		loc total = `total'+1
+		if `total'<=0 | `total' >=. {
+			display as error "Too few independent variables specified for selected combinatorial"
+			exit 198
+		}
+		noi di as text "---------------------------------------------------------------------------"
+		noi di as text " Baseline Regression: without iteration variables "
+		noi di as text "---------------------------------------------------------------------------"
+		* Split & add Instrumental Variables
+		loc estim: word 2 of `cmdest'
+		if ("`instruments'" != "" | "`estim'" == "gmm") {
+			loc ivendogenous = ""
+			foreach var1 of varlist `MainVar' `fixvar' {
+				foreach var2 of local endogenous {
+					if "`var1'" == "`var2'" loc ivendogenous " `ivendogenous' `var2' "
+				}
+			}
+			loc anything2 "`MainVar' `fixvar'"
+			foreach var1 of local ivendogenous {
+				local anything2: subinstr local anything2 "`var1'" "", word
+			}
+			noi `cmdest' `depvar' `anything2' (`endogenous' =`instruments') [`weight'`exp'] if `touse' ==1 ,`cmdoptions'
+		}
+		else noi `cmdest' `depvar' `MainVar' `fixvar' [`weight'`exp'] if `touse' ==1 ,`cmdoptions'
+		* check for omitted variables
+		tempname bomit
+		local noitnames : colfullnames e(b)
+		mat `bomit' =e(b)
+		loc omit =0
+		foreach var1 of local noitnames {
+			if substr("`var1'",1,2) == "o." loc omit=1
+			if _b[`var1'] ==0 | _b[`var1'] ==. loc omit=1
+		}
+		if `omit'==1 {
+			display as error "The estimation without iteration variables cannot contain variables omitted due to collinearity"
+			exit 503
+		}
+		noi di as text "---------------------------------------------------------------------------"
+		noi di as text "Total Number of Estimations: " as result "`total'"
+		noi di as text "---------------------------------------------------------------------------"
+		loc estcomoptions "cmde(`cmdest') cmdoptions(`cmdoptions') cmdstat(`cmdstat') results(`results') lastreg(`total') `double' `count' time(`time') panel(`panel') instruments(`instruments') endogenous(`endogenous')  " 
+		local hh1: word count `fixvar'
+		local hh2: word count `ListaTotVar'
+		loc hh 1
+		if `hh2'>`kmax'+`hh1' {
+			foreach var of local ListaTotVar {
+				if `hh'<=(`kmax'+`hh1') loc listaaux "`listaaux' `var'"
+				loc ++hh
+			}
+		}
+		else loc listaaux "`ListaTotVar'"
+		* Run a lightweight pilot estimation to approximate total runtime.
+		* The pilot uses a truncated specification only to give the user an early warning.
+		* Estimate the execution time
+		timer clear 99
+		timer on 99
+		tempname aux
+		_samregc_estcomtest `depvar' `MainVar' `listaaux' [`weight'`exp'] if `touse' ==1 , matres2(`aux') `estcomoptions' ordervar(`ListaTotVar') nroreg(`Ntotreg') 
+		loc error =r(noest)
+		if `error' == 1 di as error "Time estimation was not performed."
+		capture mat drop `aux'
+		macro drop aux
+		timer off 99
+		timer list
+		ret li
+		loc time1 r(t99)
+		timer clear 99
+		loc timeprox =round((`time1'*`total')/50)
+		if "`sisters'" != "" loc timeprox =round((`time1'*`total')/50)*2
+		if `timeprox'>=3 {
+			noi di as text "----------------------------------------------------------------------------------"
+			noi di as text "Warning: Estimation could take about " as result "`timeprox'" as text " minutes or more"
+			noi di as text "----------------------------------------------------------------------------------"
+		}
+
+		* Build the full list of combinations requested by ncomb().
+		* The helper subprogram writes temporary datasets containing index combinations.
+		* Compute combinations
+		noi di as text "Computing combinations..."
+		forvalues combaux=1/`kmax' {
+			tempfile __a_`combaux'
+			loc __a_ "`__a_' `__a_`combaux''"
+		}
+		_samregc_combinate `__a_', nsamp(`tindep') ncomb(`kmin',`kmax')
+		noi di as text "Preparing estimation list..."
+
+		tokenize `iterateover' `groups_list'
+		forvalues j=`kmin'/`kmax' {
+			preserve
+			use `__a_`j'', clear
+			erase `__a_`j''
+			loc v =_N
+			loc v1 "`"
+			loc v2 "'"
+			d _all
+			forvalues i =1/`v' {
+				macro drop _reg`i' 
+				foreach var of varlist _all {
+					loc vaux = `var'[`i']
+					if "`griterateover'" == "" loc reg`i' " `reg`i'' `v1'`vaux'`v2'"
+					if "`griterateover'" != "" {
+						loc vg = ""
+						forvalues gi =1/`ng' {
+							loc vv = "`v1'`vaux'`v2'"
+							if "`vv'" == "`group`gi''" loc vg = "``group`gi'''"
+						}
+						if "`vg'" == "" loc reg`i' " `reg`i'' `v1'`vaux'`v2'"
+						if "`vg'" != "" loc reg`i' " `reg`i'' `vg'"
 					}
-					if "`vg'" == "" loc reg`i' " `reg`i'' `v1'`vaux'`v2'"
-					if "`vg'" != "" loc reg`i' " `reg`i'' `vg'"
+				}
+			}
+			restore
+			forvalues i =1/`v' {
+				loc ++Ntotreg
+				loc regress`Ntotreg' "`reg`i''" 
+				macro drop _reg_`i'
+			}
+		}
+		noi di as text "Doing estimations..."
+		
+		* Preallocate storage in Mata for speed.
+		* Each row corresponds to one estimation; columns store order, coefficients, test
+		* statistics, number of observations, number of variables, and model rank.
+		* Create the results matrix in Mata
+		* k = nro of variables
+		* 1+k plus constant
+		* (1+`k')*2 = t y coeff of all plus order 
+		* 1+(1+`k')*2 +3 add 1 for order + 1 for observations + 1 number of variables + 1 for rank (variables that were effectively included)
+		tempname resultados matres matres1 matres2 matres1S matres2S resultadosS matresS
+		loc ListaTotsigleVar ""
+		foreach var of varlist `ListaTotVar' {
+			loc ListaTotsigleVar "`ListaTotsigleVar' `var'"
+		}
+		local k: word count `ListaTotsigleVar'
+		mat `matres1' = J(1,(1+`k')*2,.)
+		mat `matres2' = J(1,3,.)
+		*`Ntotreg'+1== including without varlist_iterate 
+		mata `resultados' = J(`Ntotreg'+1,1+(1+`k')*2+3,.)
+
+		if "`sisters'" != "" {
+			mat `matres1S' = J(1,(1+`k')*2,.)
+			mat `matres2S' = J(1,3,.)
+			*`Ntotreg'+1== including without varlist_iterate
+			mata `resultadosS' = J(`Ntotreg'+1,1+(1+`k')*2+3,.)
+		}
+		* Add constant to the list
+		loc aux = regexm("`cmdoptions'","nocons")
+		if "`aux'" == "0" loc ListaTotVarCons "`ListaTotsigleVar' _cons"
+
+		* Iterate over the baseline plus every requested specification.
+		* Failed estimations are skipped but tracked so row numbering in Mata remains compact.
+		* Run regressions
+		loc noestcom =0
+		loc h=1
+		*including without varlist_iterate 
+		loc regress0 ""
+		forvalues i=0/`Ntotreg' {
+			loc error_est =0
+			loc oreg =`i'
+			*h=`i'-`noestcom'+1== including without varlist_iterate 
+			loc h=`i'-`noestcom'+1
+			noi _samregc_estcom `depvar' `MainVar' `fixvar' `regress`oreg'' [`weight'`exp'] if `touse' ==1 , matres1(`matres1')  matres2(`matres2') `estcomoptions' ordervar(`ListaTotVarCons') nroreg(`oreg') 
+			loc zt =r(t)
+			if "`zt'" == "." loc zt = "t"
+			capture loc zt0 = v_`i'_`zt'[1] 
+
+			if r(noest) ==1 {
+				loc ++noestcom
+				loc error_est =1
+				continue
+			}
+			mat `matres' = `oreg',`matres1',`matres2'
+			mata `resultados'[`h',.]=st_matrix("`matres'")
+
+			* Sister estimations reuse the same sample as the current model but remove
+			* the iteration variables, allowing decomposition of sample vs. covariate effects.
+			* sisters regressions
+			if "`sisters'" != "" {
+				if "`samesample'" == "" {
+					_samregc_estcom `depvar' `MainVar' `fixvar' [`weight'`exp'] if `touse' ==1 & e(sample), matres1(`matres1S')  matres2(`matres2S') `estcomoptions' ordervar(`ListaTotVarCons') nroreg(`oreg') 
+					mat `matresS' = `oreg',`matres1S',`matres2S'
+					mata `resultadosS'[`h',.]=st_matrix("`matresS'")
+				}
+
+				if "`samesample'" != "" {
+					if `i'==1 _samregc_estcom `depvar' `MainVar' `fixvar' [`weight'`exp'] if `touse' ==1 , matres1(`matres1S')  matres2(`matres2S') `estcomoptions' ordervar(`ListaTotVarCons') nroreg(`oreg') 
+					mat `matresS' = `oreg',`matres1S',`matres2S'
+					mata `resultadosS'[`h',.]=st_matrix("`matresS'")
 				}
 			}
 		}
-		restore
-		forvalues i =1/`v' {
-			loc ++Ntotreg
-			loc regress`Ntotreg' "`reg`i''" 
-			macro drop _reg_`i'
-		}
-	}
-	noi di as text "Doing estimations..."
-	
-	* Create the results matrix in Mata
-	* k = nro of variables
-	* 1+k plus constant
-	* (1+`k')*2 = t y coeff of all plus order 
-	* 1+(1+`k')*2 +3 add 1 for order + 1 for observations + 1 number of variables + 1 for rank (variables that were effectively included)
-	tempname resultados matres matres1 matres2 matres1S matres2S resultadosS matresS
-	loc ListaTotsigleVar ""
-	foreach var of varlist `ListaTotVar' {
-		loc ListaTotsigleVar "`ListaTotsigleVar' `var'"
-	}
-	local k: word count `ListaTotsigleVar'
-	mat `matres1' = J(1,(1+`k')*2,.)
-	mat `matres2' = J(1,3,.)
-	*`Ntotreg'+1== including without varlist_iterate 
-	mata `resultados' = J(`Ntotreg'+1,1+(1+`k')*2+3,.)
-
-	if "`sisters'" != "" {
-		mat `matres1S' = J(1,(1+`k')*2,.)
-		mat `matres2S' = J(1,3,.)
-		*`Ntotreg'+1== including without varlist_iterate
-		mata `resultadosS' = J(`Ntotreg'+1,1+(1+`k')*2+3,.)
-	}
-	* Add constant to the list
-	loc aux = regexm("`cmdoptions'","nocons")
-	if "`aux'" == "0" loc ListaTotVarCons "`ListaTotsigleVar' _cons"
-
-	* Run regressions
-	loc noestcom =0
-	loc h=1
-	*including without varlist_iterate 
-	loc regress0 ""
-	forvalues i=0/`Ntotreg' {
-		loc error_est =0
-		loc oreg =`i'
-		*h=`i'-`noestcom'+1== including without varlist_iterate 
-		loc h=`i'-`noestcom'+1
-		noi _samregc_estcom `depvar' `MainVar' `fixvar' `regress`oreg'' [`weight'`exp'] if `touse' ==1 , matres1(`matres1')  matres2(`matres2') `estcomoptions' ordervar(`ListaTotVarCons') nroreg(`oreg') 
-		loc zt =r(t)
-		if "`zt'" == "." loc zt = "t"
-		capture loc zt0 = v_`i'_`zt'[1] 
-
-		if r(noest) ==1 {
-			loc ++noestcom
-			loc error_est =1
-			continue
-		}
-		mat `matres' = `oreg',`matres1',`matres2'
-		mata `resultados'[`h',.]=st_matrix("`matres'")
-
-		* sisters regressions
-		if "`sisters'" != "" {
-			if "`samesample'" == "" {
-				_samregc_estcom `depvar' `MainVar' `fixvar' [`weight'`exp'] if `touse' ==1 & e(sample), matres1(`matres1S')  matres2(`matres2S') `estcomoptions' ordervar(`ListaTotVarCons') nroreg(`oreg') 
-				mat `matresS' = `oreg',`matres1S',`matres2S'
-				mata `resultadosS'[`h',.]=st_matrix("`matresS'")
-			}
-
-			if "`samesample'" != "" {
-				if `i'==1 _samregc_estcom `depvar' `MainVar' `fixvar' [`weight'`exp'] if `touse' ==1 , matres1(`matres1S')  matres2(`matres2S') `estcomoptions' ordervar(`ListaTotVarCons') nroreg(`oreg') 
-				mat `matresS' = `oreg',`matres1S',`matres2S'
-				mata `resultadosS'[`h',.]=st_matrix("`matresS'")
-			}
-		}
-	}
-	noi di as text "Saving results..."
-	preserve
-	drop _all
-	getmata (v*) = `resultados'
-	mata mata drop `resultados'
-	loc i=1
-	ren v`i' order
-	label var order "Order number of estimation"
-	loc i=2
-	loc j=1
-
-	foreach var of local ListaTotVarCons {
-		loc h = `i'+1
-		ren v`i' v_`j'_b 
-		label var v_`j'_b "`var' coeff."
-		if "`var'" == "_cons" label var v_`j'_b "Constant coeff."
-		ren v`h' v_`j'_`zt' 
-		label var v_`j'_`zt' "`var' `zt'-stat."
-		if "`var'" == "_cons" label var v_`j'_`zt' "Constant `zt'-stat."
-		loc i=`i'+2
-		loc ++j
-	}
-	foreach name in obs nvar rank {
-		ren v`i' `name'
-		loc ++i
-	}
-	label var obs  "Number of observations"
-	label var nvar "Number of variables"
-	label var rank "Rank (excluding omitted variables)"
-	*************************************************************************************************************************
-	order v_*,  seq
-	loc i=1
-	foreach var of varlist v_*_b {
-		capture ren `var' v_`i'_b 
-		loc ++i
-	}
-	loc i=1
-	foreach var of varlist v_*_`zt' {
-		capture ren `var' v_`i'_`zt'
-		loc ++i
-	}
-	if r(N)==0  {
-		display as error "No estimations have been stored."
-		exit 
-	}
-
-	order order, first
-	if "`double'" != "" {
-		if "`cmdstat'" != "" {
-			foreach i of local cmdstat {
-				capture format `i' %20.0g
-			}
-			
-		}
-	}
-	drop if order ==.
-	gen omitted =0
-	foreach var of varlist *_b {
-		replace omitted =1 if `var'== 0 
-	}
-	replace omitted =. if order ==0
-	label var omitted "=1 One or more variables were omitted because of collinearity"
-	compress
-	sort order
-	noi save "`results'.dta", `replace'
-	count if omitted ==1
-	loc est_omit =r(N)
-	if "`nograph'" == "" noi _samregc_g1 `MainVar' if omitted == 0 , path(`path') `replace' at(`at') level(`level') graphtype(`graphtype') graphoptions(`graphoptions') graphtitle_list(`graphtitle_list') zt(`zt') 
-	tempname table1 
-	noi _samregc_table1 `MainVar' if omitted == 0 & order!=0, path(`path') `replace' results(`results') at(`at') level(`level') mtname(`table1') zt(`zt')
-
-	return matrix table1 = `table1'
-   
-	return local Pos    =r(Pos)
-	return local Neg    =r(Neg)
-	return local st_Low =r(st_Low)
-	return local st_Ins =r(st_Ins)
-	return local st_Up  =r(st_Up)
-	return local Total  =r(Total)
-	if `est_omit'>0 {
-		return local Est_Omit =r(Est_Omit)
-		return local Tot_Est  =r(Tot_Est)
-	}
-	if `est_omit'==0 return local Table1Colnames Pos Neg st_Low st_Ins st_Up Total 
-	if `est_omit'>0 return local Table1Colnames  Pos Neg st_Low st_Ins st_Up Total Total
-   sum obs if order!=0
-	if r(min) != r(max) loc sameobs =0 
-	if r(min) == r(max) loc sameobs =1 
-
-	noi display as text 
-	if `sameobs' !=1 & "`unbalanced'" == "" {
-		noi di as text "--------------------------------------------------------"
-		noi di as text " Unbalanced sample across covariates"
-	   noi di as text " Use options unbalanced and sisters for further analysis"
-		noi di as text "--------------------------------------------------------"
-	}
-
-	if "`unbalanced'" != "" & "`nograph'" == "" noi _samregc_scatterbt `MainVar' if omitted == 0 , path(`path') `replace' at(`at') level(`level') graphtype(`graphtype') graphoptions(`graphoptions') graphtitle_list(`graphtitle_list') zt(`zt') 
-	
-	if "`sisters'" != "" {
+		* Convert Mata output back to Stata variables, label them, and persist the dataset.
+		* Graphs and summary tables are generated only after the raw results file exists.
+		noi di as text "Saving results..."
+		preserve
 		drop _all
-		getmata (v*) = `resultadosS'
-		mata mata drop `resultadosS'
+		getmata (v*) = `resultados'
+		mata mata drop `resultados'
 		loc i=1
 		ren v`i' order
 		label var order "Order number of estimation"
@@ -518,33 +460,36 @@ qui {
 
 		foreach var of local ListaTotVarCons {
 			loc h = `i'+1
-			foreach mainvar in `MainVar' {
-				if "`var'" == "`mainvar'" {
-					ren v`i' v_`j'_bSIS 
-					label var v_`j'_bSIS "`var' coeff. of Sister Estim."
-					ren v`h' v_`j'_`zt'SIS 
-					label var v_`j'_`zt'SIS "`var' `zt'-stat. of Sister Estim."
-				}
-			}
+			ren v`i' v_`j'_b 
+			label var v_`j'_b "`var' coeff."
+			if "`var'" == "_cons" label var v_`j'_b "Constant coeff."
+			ren v`h' v_`j'_`zt' 
+			label var v_`j'_`zt' "`var' `zt'-stat."
+			if "`var'" == "_cons" label var v_`j'_`zt' "Constant `zt'-stat."
 			loc i=`i'+2
 			loc ++j
 		}
-		keep order v_*
+		foreach name in obs nvar rank {
+			ren v`i' `name'
+			loc ++i
+		}
+		label var obs  "Number of observations"
+		label var nvar "Number of variables"
+		label var rank "Rank (excluding omitted variables)"
 		*************************************************************************************************************************
 		order v_*,  seq
 		loc i=1
-		foreach var of varlist v_*_bSIS {
-			capture ren `var' v_`i'_bSIS 
+		foreach var of varlist v_*_b {
+			capture ren `var' v_`i'_b 
 			loc ++i
 		}
 		loc i=1
-		foreach var of varlist v_*_`zt'SIS {
-			capture ren `var' v_`i'_`zt'SIS
+		foreach var of varlist v_*_`zt' {
+			capture ren `var' v_`i'_`zt'
 			loc ++i
 		}
-
 		if r(N)==0  {
-			display as error "No estimations has been stored"
+			display as error "No estimations have been stored."
 			exit 
 		}
 
@@ -558,43 +503,141 @@ qui {
 			}
 		}
 		drop if order ==.
-		drop if order ==0
+		gen omitted =0
+		foreach var of varlist *_b {
+			replace omitted =1 if `var'== 0 
+		}
+		replace omitted =. if order ==0
+		label var omitted "=1 One or more variables were omitted because of collinearity"
 		compress
 		sort order
-		tempfile sisters_coef
-		save `sisters_coef', replace
-		drop _all
-		use "`results'.dta"
-		merge 1:1 order using `sisters_coef'
-		foreach var of varlist *SIS {
-			replace `var' =. if omitted ==1 & order!=0
+		noi save "`results'.dta", `replace'
+		count if omitted ==1
+		loc est_omit =r(N)
+		if "`nograph'" == "" noi _samregc_g1 `MainVar' if omitted == 0 , path(`"`path'"') `replace' at(`at') level(`level') graphtype(`graphtype') graphoptions(`graphoptions') graphtitle_list(`graphtitle_list') zt(`zt') 
+		tempname table1 
+		noi _samregc_t1 `MainVar' if omitted == 0 & order!=0, path(`"`path'"') `replace' results(`"`results'"') at(`at') level(`level') mtname(`table1') zt(`zt')
+
+		return matrix table1 = `table1'
+	   
+		return local Pos    =r(Pos)
+		return local Neg    =r(Neg)
+		return local st_Low =r(st_Low)
+		return local st_Ins =r(st_Ins)
+		return local st_Up  =r(st_Up)
+		return local Total  =r(Total)
+		if `est_omit'>0 {
+			return local Est_Omit =r(Est_Omit)
+			return local Tot_Est  =r(Tot_Est)
 		}
-		drop _merge 
-		save "`results'.dta", replace
-		if "`nograph'" == "" noi _samregc_g_sisters `MainVar' if omitted == 0 ,path(`path') `replace' at(`at') level(`level') graphtype(`graphtype') graphoptions(`graphoptions') graphtitle_list(`graphtitle_list') sisters(`sisters')  zt(`zt') 
-	}
+		if `est_omit'==0 return local Table1Colnames Pos Neg st_Low st_Ins st_Up Total 
+		if `est_omit'>0 return local Table1Colnames  Pos Neg st_Low st_Ins st_Up Total Total
+	   sum obs if order!=0
+		if r(min) != r(max) loc sameobs =0 
+		if r(min) == r(max) loc sameobs =1 
 
-	loc mainList ""
-	foreach var in `MainVar' {
-		loc a =ustrtoname("`var'")
-		tempname `a'Table
-		loc mainList "`mainList' ``a'Table'"
-	}
-	loc obs_no_it = obs[1]
-	noi _samregc_MvTable `MainVar' if omitted == 0 & order!=0, path(`path') `replace' results(`results') at(`at') level(`level')  fixvar(`fixvar') `unbalanced' sisters(`sisters') mtname(`mainList') zt(`zt') obs_no_it(`obs_no_it') `noexcel'
-	loc list_var_des =r(list_var_des)
-	foreach vd in `list_var_des' {
-		return local `vd' =r(`vd')
-	}	
-	return local MainVarColnames  `list_var_des'
-                
-	foreach var in `MainVar' {
-		loc a =ustrtoname("`var'")
-	   return matrix `a'_Table = ``a'Table'
-	}
+		noi display as text 
+		if `sameobs' !=1 & "`unbalanced'" == "" {
+			noi di as text "--------------------------------------------------------"
+			noi di as text " Unbalanced sample across covariates"
+		   noi di as text " Use options unbalanced and sisters for further analysis"
+			noi di as text "--------------------------------------------------------"
+		}
 
-	restore
-}
+		if "`unbalanced'" != "" & "`nograph'" == "" noi _samregc_scatterbt `MainVar' if omitted == 0 , path(`"`path'"') `replace' at(`at') level(`level') graphtype(`graphtype') graphoptions(`graphoptions') graphtitle_list(`graphtitle_list') zt(`zt') 
+		
+		* If sisters() was requested, assemble the companion results matrix and merge it
+		* back into the main results dataset before producing the sister diagnostics.
+		if "`sisters'" != "" {
+			drop _all
+			getmata (v*) = `resultadosS'
+			mata mata drop `resultadosS'
+			loc i=1
+			ren v`i' order
+			label var order "Order number of estimation"
+			loc i=2
+			loc j=1
+
+			foreach var of local ListaTotVarCons {
+				loc h = `i'+1
+				foreach mainvar in `MainVar' {
+					if "`var'" == "`mainvar'" {
+						ren v`i' v_`j'_bSIS 
+						label var v_`j'_bSIS "`var' coeff. of Sister Estim."
+						ren v`h' v_`j'_`zt'SIS 
+						label var v_`j'_`zt'SIS "`var' `zt'-stat. of Sister Estim."
+					}
+				}
+				loc i=`i'+2
+				loc ++j
+			}
+			keep order v_*
+			*************************************************************************************************************************
+			order v_*,  seq
+			loc i=1
+			foreach var of varlist v_*_bSIS {
+				capture ren `var' v_`i'_bSIS 
+				loc ++i
+			}
+			loc i=1
+			foreach var of varlist v_*_`zt'SIS {
+				capture ren `var' v_`i'_`zt'SIS
+				loc ++i
+			}
+
+			if r(N)==0  {
+				display as error "No estimations has been stored"
+				exit 
+			}
+
+			order order, first
+			if "`double'" != "" {
+				if "`cmdstat'" != "" {
+					foreach i of local cmdstat {
+						capture format `i' %20.0g
+					}
+					
+				}
+			}
+			drop if order ==.
+			drop if order ==0
+			compress
+			sort order
+			tempfile sisters_coef
+			save `sisters_coef', replace
+			drop _all
+			use "`results'.dta"
+			merge 1:1 order using `sisters_coef'
+			foreach var of varlist *SIS {
+				replace `var' =. if omitted ==1 & order!=0
+			}
+			drop _merge 
+			save "`results'.dta", replace
+			if "`nograph'" == "" noi _samregc_g_sisters `MainVar' if omitted == 0 ,path(`"`path'"') `replace' at(`at') level(`level') graphtype(`graphtype') graphoptions(`graphoptions') graphtitle_list(`graphtitle_list') sisters(`sisters')  zt(`zt') 
+		}
+
+		loc mainList ""
+		foreach var in `MainVar' {
+			loc a =ustrtoname("`var'")
+			tempname `a'Table
+			loc mainList "`mainList' ``a'Table'"
+		}
+		loc obs_no_it = obs[1]
+		noi _samregc_MvTable `MainVar' if omitted == 0 & order!=0, path(`"`path'"') `replace' results(`"`results'"') at(`at') level(`level')  fixvar(`fixvar') `unbalanced' sisters(`sisters') mtname(`mainList') zt(`zt') obs_no_it(`obs_no_it') `noexcel'
+		loc list_var_des =r(list_var_des)
+		foreach vd in `list_var_des' {
+			return local `vd' =r(`vd')
+		}	
+		return local MainVarColnames  `list_var_des'
+					
+		foreach var in `MainVar' {
+			loc a =ustrtoname("`var'")
+		   return matrix `a'_Table = ``a'Table'
+		}
+
+		restore
+		if "`setvarabbrev'" == "off" set varabbrev off
+	}
 end
 
 
@@ -602,249 +645,269 @@ end
 * auxiliary subprograms
 *****************************************************************************************************
 
+*! version 1.0.1  01mar2026
 * "_samregc_combinate" SUBPROGRAM
-capture program drop _samregc_combinate
 program define _samregc_combinate
-
-	syntax anything ,NSamp(integer) NComb(numlist >0 integer max=2) [Reps] [*]
-	preserve
-	tokenize `ncomb'
-	loc kmin `1'
-	if "`2'" !="" loc kmax `2'
-	if "`2'" == "" loc kmax `1'
-	tokenize `anything'
-	clear
-	set obs `nsamp'
-	gen aux1=_n
-	tempfile temp
-	save `temp', replace
-	if `kmin' ==1 {
-		save "`1'", replace
-		count
-	}
-	if `kmax' >=2 {
-		loc lista_ant = "aux1 "
-		tempfile foto
-		save `foto', replace
-		forvalues j=2/`kmax' {
-			tempfile temp`j'
-			ren aux aux`j'
-			save `temp`j'', replace
+	version 17.0
+	qui {
+		set varabbrev on
+		* Purpose: create all requested index combinations from 1..nsamp.
+		* Output: one temporary dataset per subset size listed in ncomb().
+		* If reps is omitted, combinations are unique and sorted (no repeated indices).
+		syntax anything ,NSamp(integer) NComb(numlist >0 integer max=2) [Reps] [*]
+		preserve
+		tokenize `ncomb'
+		loc kmin `1'
+		if "`2'" !="" loc kmax `2'
+		if "`2'" == "" loc kmax `1'
+		tokenize `anything'
+		clear
+		set obs `nsamp'
+		gen aux1=_n
+		tempfile temp
+		save `temp', replace
+		if `kmin' ==1 {
+			save "`1'", replace
+			count
 		}
-		use `foto', clear
-		forvalues j=2/`kmax' {
-			loc j_1 =`j'-1
-			cross using `temp`j''
-			if "`reps'" == "" drop if aux`j_1'>=aux`j'
-			if "`reps'" !="" drop if aux`j_1'>aux`j'
-			if `kmin'<=`j' {
-				save "``j''", replace
-				count
+		if `kmax' >=2 {
+			loc lista_ant = "aux1 "
+			tempfile foto
+			save `foto', replace
+			forvalues j=2/`kmax' {
+				tempfile temp`j'
+				ren aux aux`j'
+				save `temp`j'', replace
+			}
+			use `foto', clear
+			forvalues j=2/`kmax' {
+				loc j_1 =`j'-1
+				cross using `temp`j''
+				if "`reps'" == "" drop if aux`j_1'>=aux`j'
+				if "`reps'" !="" drop if aux`j_1'>aux`j'
+				if `kmin'<=`j' {
+					save "``j''", replace
+					count
+				}
 			}
 		}
+		restore
 	}
-	restore
 end
 
+*! version 1.0.1  01mar2026
 * "_samregc_estcom" SUBPROGRAM
-capture program drop _samregc_estcom
 program define _samregc_estcom, rclass
-qui	{
-	loc setmoreprev=c(more)
-	set more off
-	syntax anything [aw fw iw pw] [if], matres1(string) matres2(string) CMDEst(string) [CMDOptions(string) cmdstat(string)] results(string) ordervar(string) [nroreg(integer 0) lastreg(integer 0) double COUnt time(string) panel(string) instruments(string) endogenous(string) ] [*]
-	if "`count'" != "" noi di as text "Estimation number " as result "`nroreg'" as text " of " as result "`lastreg'"
-	loc error =0
-	tempvar touse insample
-	tempname table
-	mark `touse' `if' 
-	gen `insample' =1 if `touse'==1
-	if "`instruments'" != "" {
-		foreach var1 of local anything {
-			foreach var2 of local endogenous {
-				if "`var1'" == "`var2'" loc ivendogenous " `ivendogenous' `var2' "
-			}
-		}
-		loc anything2 "`anything'"
-		local anything2: subinstr local anything2 "[]" "", word
-		foreach var1 of local ivendogenous {
-			local anything2: subinstr local anything2 "`var1'" "", word
-		}
-		loc estim: word 2 of `cmdest'
-		if ("`ivendogenous'" != "" | "`estim'" == "gmm") {
-			loc dependiente: word 1 of `anything2' 
-			capture `cmdest' `anything2' (`ivendogenous' =`instruments') [`weight'`exp'] if `insample'==1, `cmdoptions'
-			if _rc !=0 loc error = _rc
-			if _rc ==0 capture mat `table' =r(table)
-		}
-		else {
-			loc dependiente: word 1 of `anything2' 
-			capture `cmdest' `anything2' [`weight'`exp'] if `insample'==1, `cmdoptions'
-			if _rc !=0 loc error = _rc
-			if _rc ==0 capture mat `table' =r(table)
-		}
-	}
-	else {
-		loc dependiente: word 1 of `anything' 
-		capture `cmdest' `anything' [`weight'`exp'] if `insample'==1, `cmdoptions'
-		if _rc !=0 loc error = _rc
-		if _rc ==0 capture mat `table' =r(table)
-	}
-}
-
-if `error' == 0 {
-	tempname betas sigmas t 
-	mat `betas'  =e(b) 
-	loc nvar     = colsof(`betas')
-	loc obs      = e(N)
-	loc rank     = e(rank)
-	if `rank'    ==0 exit
-	capture loc nv2 = colsof(`table')
-	if _rc ==0 & `nvar' == `nv2' {
-		capture mat `t' =`table'["t",1...]
-		if _rc !=0 {
-			return local t = "z"
-			mat `t' =`table'["z",1...]
-		}
-	}
-	else {
-		mat `sigmas' = e(V)
-		capture mat `t'=(`betas'*inv(cholesky(diag(vecdiag(`sigmas')))))
-		if _rc !=0 {
-			mat `t' = `betas'
-			forvalues i=1/`nvar'{
-				mat `t'[1,`i'] = `betas'[1,`i'] / `sigmas'[`i',`i']^.5
-			}
-		}
-	}
-	mat `matres1'=`matres1'*.
-	loc i=1
-	loc h=1
-	local names : colfullnames e(b)
-	foreach var1 of local ordervar {
-		foreach var2 of local names {
-			if "`var1'" == "`var2'" | "o.`var1'" == "`var2'" | "`dependiente':o.`var1'" == "`var2'" | "`dependiente':`var1'" == "`var2'" {
-				mat `matres1'[1,`i']=`betas'[1,`h']
-				mat `matres1'[1,`i'+1]=`t'[1,`h']
-				loc ++h	
-			} 
-		}
-		loc i=`i'+2
-	}
-	mat `matres2' = `obs',`nvar',`rank'
-	if "`cmdstat'" != "" {
-		tempname aux
-		foreach i of local cmdstat {
-			mat `aux'=e(`i')
-			mat colnames `aux'= `i'
-			mat `matres2'=`matres2',`aux'
-		}
-	}
-	if "`setmoreprev'" == "on" set more on
-}
-if `error' !=0 {
-	noi di as text "Error " as input "r(" `error' ")" as text " in estimation number " as result "`nroreg'" 
-	return scalar noest =1
-	sleep 300
-	exit
-}
-
-end
-
-* "_samregc_estcomtry" SUBPROGRAM
-capture program drop _samregc_estcomtry
-program define _samregc_estcomtry, rclass
-qui	{
-	loc setmoreprev=c(more)
-	set more off
-	syntax anything [aw fw iw pw] [if], matres2(string) CMDEst(string) [CMDOptions(string) cmdstat(string)] results(string) ordervar(string) [nroreg(integer 0) lastreg(integer 0) double COUnt time(string) panel(string) instruments(string) endogenous(string) ] [*]
-	loc error =0
-	tempvar touse insample
-	tempname table
-	mark `touse' `if' 
-	gen `insample' =1 if `touse'==1
-	if "`instruments'" !="" {
-		foreach var1 of local anything {
-			foreach var2 of local endogenous {
-				if "`var1'" == "`var2'" loc ivendogenous " `ivendogenous' `var2' "
-			}
-		}
-		loc anything2 "`anything'"
-		local anything2: subinstr local anything2 "[]" "", word
-		foreach var1 of local ivendogenous {
-			local anything2: subinstr local anything2 "`var1'" "", word
-		}
-		loc estim: word 2 of `cmdest'
-		if ("`ivendogenous'" !="" | "`estim'" == "gmm") {
-			loc dependiente: word 1 of `anything2' 
-			capture `cmdest' `anything2' (`ivendogenous' =`instruments') [`weight'`exp'] if `insample'==1, `cmdoptions'
-			if _rc !=0 loc error = _rc
-			if _rc ==0 capture mat `table' =r(table)
-		}
-		else {
-			loc dependiente: word 1 of `anything2' 
-			capture `cmdest' `anything2' [`weight'`exp'] if `insample'==1, `cmdoptions'
-			if _rc !=0 loc error = _rc
-			if _rc ==0 capture mat `table' =r(table)
-		}
-	}
-	else {
-		loc dependiente: word 1 of `anything' 
-		capture `cmdest' `anything' [`weight'`exp'] if `insample'==1, `cmdoptions'
-		if _rc !=0 loc error = _rc
-		if _rc ==0 capture mat `table' =r(table)
-	}
-}
-
-if `error' == 0 {
-	tempname betas sigmas t 
-	mat `betas'  =e(b) 
-	loc nvar     = colsof(`betas')
-	loc obs      = e(N)
-	loc rank     = e(rank)
-	if `rank'    ==0 exit
-	capture loc nv2 = colsof(`table')
-	if _rc ==0 & `nvar' == `nv2' {
-		capture mat `t' = `table'["t",1...]
-		if _rc !=0 {
-			return local t = "z"
-			mat `t' =`table'["z",1...]
-		}
-	}
-	else {
-		mat `sigmas' = e(V)
-		capture mat `t'=(`betas'*inv(cholesky(diag(vecdiag(`sigmas')))))
-		if _rc !=0 {
-			mat `t' = `betas'
-			forvalues i=1/`nvar'{
-				mat `t'[1,`i'] = `betas'[1,`i'] / `sigmas'[`i',`i']^.5
-			}
-		}
-	}
-	mat `matres2' = `obs',`nvar', `rank'
-	if "`cmdstat'" !="" {
-		tempname aux
-		foreach i of local cmdstat {
-			mat `aux'=e(`i')
-			mat colnames `aux'= `i'
-			mat `matres2'=`matres2',`aux'
-		}
-	}
-	if "`setmoreprev'" == "on" set more on
-}
-if `error' !=0 {
-	noi di as text "Error " as input "r(" `error' ")" as text "estimating time in estimation number " as result "`nroreg'" 
-	return scalar noest =1
-	sleep 300
-	exit
-}
-
-end
-
-* "_samregc_table1" SUBPROGRAM
-capture program drop _samregc_table1
-program define _samregc_table1, rclass
+	version 17.0
 	qui	{
+		set varabbrev on
+		* Purpose: run one estimation, recover coefficients and test statistics, and write
+		* them into caller-provided matrices. This is the core engine used by samregc.
+		loc setmoreprev=c(more)
+		set more off
+		syntax anything [aw fw iw pw] [if], matres1(string) matres2(string) CMDEst(string asis) [CMDOptions(string asis) cmdstat(string)] results(string asis) ordervar(string) [nroreg(integer 0) lastreg(integer 0) double COUnt time(string) panel(string) instruments(string) endogenous(string) ] [*]
+		if "`count'" != "" noi di as text "Estimation number " as result "`nroreg'" as text " of " as result "`lastreg'"
+		loc error =0
+		tempvar touse insample
+		tempname table
+		mark `touse' `if' 
+		gen `insample' =1 if `touse'==1
+		if "`instruments'" != "" {
+			foreach var1 of local anything {
+				foreach var2 of local endogenous {
+					if "`var1'" == "`var2'" loc ivendogenous " `ivendogenous' `var2' "
+				}
+			}
+			loc anything2 "`anything'"
+			local anything2: subinstr local anything2 "[]" "", word
+			foreach var1 of local ivendogenous {
+				local anything2: subinstr local anything2 "`var1'" "", word
+			}
+			loc estim: word 2 of `cmdest'
+			if ("`ivendogenous'" != "" | "`estim'" == "gmm") {
+				loc dependiente: word 1 of `anything2' 
+				capture `cmdest' `anything2' (`ivendogenous' =`instruments') [`weight'`exp'] if `insample'==1, `cmdoptions'
+				if _rc !=0 loc error = _rc
+				if _rc ==0 capture mat `table' =r(table)
+			}
+			else {
+				loc dependiente: word 1 of `anything2' 
+				capture `cmdest' `anything2' [`weight'`exp'] if `insample'==1, `cmdoptions'
+				if _rc !=0 loc error = _rc
+				if _rc ==0 capture mat `table' =r(table)
+			}
+		}
+		else {
+			loc dependiente: word 1 of `anything' 
+			capture `cmdest' `anything' [`weight'`exp'] if `insample'==1, `cmdoptions'
+			if _rc !=0 loc error = _rc
+			if _rc ==0 capture mat `table' =r(table)
+		}
+	}
+
+	if `error' == 0 {
+		tempname betas sigmas t 
+		mat `betas'  =e(b) 
+		loc nvar     = colsof(`betas')
+		loc obs      = e(N)
+		loc rank     = e(rank)
+		if `rank'    ==0 exit
+		capture loc nv2 = colsof(`table')
+		if _rc ==0 & `nvar' == `nv2' {
+			capture mat `t' =`table'["t",1...]
+			if _rc !=0 {
+				return local t = "z"
+				mat `t' =`table'["z",1...]
+			}
+		}
+		else {
+			mat `sigmas' = e(V)
+			capture mat `t'=(`betas'*inv(cholesky(diag(vecdiag(`sigmas')))))
+			if _rc !=0 {
+				mat `t' = `betas'
+				forvalues i=1/`nvar'{
+					mat `t'[1,`i'] = `betas'[1,`i'] / `sigmas'[`i',`i']^.5
+				}
+			}
+		}
+		mat `matres1'=`matres1'*.
+		loc i=1
+		loc h=1
+		local names : colfullnames e(b)
+		foreach var1 of local ordervar {
+			foreach var2 of local names {
+				if "`var1'" == "`var2'" | "o.`var1'" == "`var2'" | "`dependiente':o.`var1'" == "`var2'" | "`dependiente':`var1'" == "`var2'" {
+					mat `matres1'[1,`i']=`betas'[1,`h']
+					mat `matres1'[1,`i'+1]=`t'[1,`h']
+					loc ++h	
+				} 
+			}
+			loc i=`i'+2
+		}
+		mat `matres2' = `obs',`nvar',`rank'
+		if "`cmdstat'" != "" {
+			tempname aux
+			foreach i of local cmdstat {
+				mat `aux'=e(`i')
+				mat colnames `aux'= `i'
+				mat `matres2'=`matres2',`aux'
+			}
+		}
+		if "`setmoreprev'" == "on" set more on
+	}
+	if `error' !=0 {
+		if "`setmoreprev'" == "on" set more on
+		noi di as text "Error " as input "r(" `error' ")" as text " in estimation number " as result "`nroreg'" 
+		return scalar noest =1
+		sleep 300
+		exit
+	}
+end
+
+*! version 1.0.1  01mar2026
+* "_samregc_estcomtest" SUBPROGRAM
+program define _samregc_estcomtest, rclass
+	version 17.0
+	qui	{
+		set varabbrev on
+		* Purpose: cheap pilot estimation used only to approximate runtime and verify that
+		* the chosen estimator/options are compatible with the assembled syntax.
+		loc setmoreprev=c(more)
+		set more off
+		syntax anything [aw fw iw pw] [if], matres2(string) CMDEst(string asis) [CMDOptions(string asis) cmdstat(string)] results(string asis) ordervar(string) [nroreg(integer 0) lastreg(integer 0) double COUnt time(string) panel(string) instruments(string) endogenous(string) ] [*]
+		loc error =0
+		tempvar touse insample
+		tempname table
+		mark `touse' `if' 
+		gen `insample' =1 if `touse'==1
+		if "`instruments'" !="" {
+			foreach var1 of local anything {
+				foreach var2 of local endogenous {
+					if "`var1'" == "`var2'" loc ivendogenous " `ivendogenous' `var2' "
+				}
+			}
+			loc anything2 "`anything'"
+			local anything2: subinstr local anything2 "[]" "", word
+			foreach var1 of local ivendogenous {
+				local anything2: subinstr local anything2 "`var1'" "", word
+			}
+			loc estim: word 2 of `cmdest'
+			if ("`ivendogenous'" !="" | "`estim'" == "gmm") {
+				loc dependiente: word 1 of `anything2' 
+				capture `cmdest' `anything2' (`ivendogenous' =`instruments') [`weight'`exp'] if `insample'==1, `cmdoptions'
+				if _rc !=0 loc error = _rc
+				if _rc ==0 capture mat `table' =r(table)
+			}
+			else {
+				loc dependiente: word 1 of `anything2' 
+				capture `cmdest' `anything2' [`weight'`exp'] if `insample'==1, `cmdoptions'
+				if _rc !=0 loc error = _rc
+				if _rc ==0 capture mat `table' =r(table)
+			}
+		}
+		else {
+			loc dependiente: word 1 of `anything' 
+			capture `cmdest' `anything' [`weight'`exp'] if `insample'==1, `cmdoptions'
+			if _rc !=0 loc error = _rc
+			if _rc ==0 capture mat `table' =r(table)
+		}
+	}
+
+	* On success, recover the model dimensions and the relevant test statistic matrix.
+	* This subprogram only needs the compact metadata stored in matres2.
+	if `error' == 0 {
+		tempname betas sigmas t 
+		mat `betas'  =e(b) 
+		loc nvar     = colsof(`betas')
+		loc obs      = e(N)
+		loc rank     = e(rank)
+		if `rank'    ==0 exit
+		capture loc nv2 = colsof(`table')
+		if _rc ==0 & `nvar' == `nv2' {
+			capture mat `t' = `table'["t",1...]
+			if _rc !=0 {
+				return local t = "z"
+				mat `t' =`table'["z",1...]
+			}
+		}
+		else {
+			mat `sigmas' = e(V)
+			capture mat `t'=(`betas'*inv(cholesky(diag(vecdiag(`sigmas')))))
+			if _rc !=0 {
+				mat `t' = `betas'
+				forvalues i=1/`nvar'{
+					mat `t'[1,`i'] = `betas'[1,`i'] / `sigmas'[`i',`i']^.5
+				}
+			}
+		}
+		mat `matres2' = `obs',`nvar', `rank'
+		if "`cmdstat'" !="" {
+			tempname aux
+			foreach i of local cmdstat {
+				mat `aux'=e(`i')
+				mat colnames `aux'= `i'
+				mat `matres2'=`matres2',`aux'
+			}
+		}
+		if "`setmoreprev'" == "on" set more on
+	}
+	if `error' !=0 {
+		if "`setmoreprev'" == "on" set more on
+		noi di as text "Error " as input "r(" `error' ")" as text " in estimation number " as result "`nroreg'" 
+		return scalar noest =1
+		sleep 300
+		exit
+	}
+end
+
+*! version 1.0.1  01mar2026
+* "_samregc_t1" SUBPROGRAM
+program define _samregc_t1, rclass
+	version 17.0
+	qui	{
+		set varabbrev on
+		* Purpose: build the aggregate summary table for each main variable.
+		* The table classifies sign and significance relative to at() and level().
 		syntax anything [if], [replace path(string) results(string) level(real 95) at(real 0) mtname(string) zt(string) ] [*]
 		loc vt =invnorm((100-`level')/200)
 		tempname table1_1 table1
@@ -944,7 +1007,7 @@ program define _samregc_table1, rclass
 		noi di as text " Table 1 (values): Aggregate impact of iteration vars. on each main var."
 		noi di as text "------------------------------------------------------------------------"
 		mkmat  `list_var' , matrix(`mtname') rownames(varname)
-		if "`noexcel'" == "" export excel using "`results'.xlsx", sheet("Table 1", modify) firstrow(varlabels) keepcellfmt
+		if "`noexcel'" == "" export excel using "`results'.xlsx", sheet("Table 1") firstrow(varlabels) 
 		noi list, noobs table divider
 		replace Pos     = round(Pos     / Total *100, 0.1)
 		replace Neg     = round(Neg     / Total *100, 0.1)
@@ -957,17 +1020,23 @@ program define _samregc_table1, rclass
 		noi di as text " Table 1 (percentages)"
 		noi di as text "----------------------"
 		noi list, noobs table divider
-		if "`noexcel'" == "" export excel using "`results'.xlsx", sheet("Table 2", modify) firstrow(varlabels) keepcellfmt
+		if "`noexcel'" == "" export excel using "`results'.xlsx", sheet("Table 2") firstrow(varlabels) 
 		restore
 	}
-
 end
 
+*! version 1.0.1  01mar2026
 * "_samregc_g1" SUBPROGRAM
-capture program drop _samregc_g1
 program define _samregc_g1, rclass
+	version 17.0
 	qui	{
+		set varabbrev on
+		* Purpose: produce the default kernel-density graphs for coefficients and
+		* associated t/z statistics across valid estimations.
 		syntax anything [if], [path(string) replace level(real 95) at(real 0) graphtype(string) graphoptions(string) graphtitle_list(string) zt(string) ] [*]
+		* Normalize graph output path: when results() has no explicit directory, save graphs in current working directory.
+		loc graphpath `"`path'"'
+		if `"`graphpath'"' == `""' loc graphpath "."
 		loc vt =invnorm((100-`level')/200)
 		parse "`graphtitle_list'",parse(|)
 		loc ngrit=1
@@ -987,8 +1056,8 @@ program define _samregc_g1, rclass
 			* include 0 in y-axis
 
 			kdensity v_`i'_b `if' & _n!=1, xline(`beta0') yscale(range(0)) xscale(range(`rmin' `rmax')) text(0 `beta0' "Coefficient without iteration variables", place(neast) orientation(vertical) ) xtitle("`graphtitle' coeff.")  `graphoptions'
-			if "`graphtype'" == "gph" noi graph save "`path'/kdensity_b_`var'.`graphtype'", `replace'
-			else if "`graphtype'" != "" noi graph export "`path'/kdensity_b_`var'.`graphtype'", `replace' as(`graphtype')
+			if "`graphtype'" == "gph" noi graph save "`graphpath'/kdensity_b_`var'.`graphtype'", `replace'
+			else if "`graphtype'" != "" noi graph export "`graphpath'/kdensity_b_`var'.`graphtype'", `replace' as(`graphtype')
 			loc lx =`at'+`vt'
 			loc ux =`at'-`vt'
 			sum v_`i'_`zt' `if', mean
@@ -1001,19 +1070,26 @@ program define _samregc_g1, rclass
 			* "
 			kdensity v_`i'_`zt' `if' & _n!=1, `agrego_xline' xtitle("`graphtitle' coeff.") `graphoptions'
 
-			if "`graphtype'" == "gph" noi graph save "`path'/kdensity_t_`var'.`graphtype'", `replace'
-			else if "`graphtype'" != "" noi graph export "`path'/kdensity_t_`var'.`graphtype'", `replace' as(`graphtype')
+			if "`graphtype'" == "gph" noi graph save "`graphpath'/kdensity_t_`var'.`graphtype'", `replace'
+			else if "`graphtype'" != "" noi graph export "`graphpath'/kdensity_t_`var'.`graphtype'", `replace' as(`graphtype')
 			loc ++i
 			loc ngrit = `ngrit' +2
 		}
 	}
 end
 
+*! version 1.0.1  01mar2026
 * "_samregc_scatterbt" SUBPROGRAM
-capture program drop _samregc_scatterbt
 program define _samregc_scatterbt, rclass
+	version 17.0
 	qui	{
+		set varabbrev on
+		* Purpose: graph how coefficient values and t/z statistics vary with sample size
+		* when different specifications imply different numbers of observations.
 		syntax anything [if], [path(string) replace level(real 95) at(real 0) graphtype(string) graphoptions(string) graphtitle_list(string) zt(string) ] [*]
+		* Normalize graph output path: when results() has no explicit directory, save graphs in current working directory.
+		loc graphpath `"`path'"'
+		if `"`graphpath'"' == `""' loc graphpath "."
 		loc vt =invnorm((100-`level')/200)
 		parse "`graphtitle_list'",parse(|)
 		loc ngrit=1
@@ -1040,27 +1116,33 @@ program define _samregc_scatterbt, rclass
 
 			* scatter of coeff.
 			twoway (scatter v_`i'_b obs `if' & order!=0, title(`graphtitle') ytitle("Coefficient values") legend(off) yline(`b0') text(`b0' `pos' "Coeff. without iteration variables", place(seast)) mfcolor(none)) , `graphoptions'
-			if "`graphtype'" == "gph" noi graph save "`path'/unbalanced_b_`var'.`graphtype'", `replace'
-			else if "`graphtype'" != "" noi graph export "`path'/unbalanced_b_`var'.`graphtype'", `replace' as(`graphtype') 
+			if "`graphtype'" == "gph" noi graph save "`graphpath'/unbalanced_b_`var'.`graphtype'", `replace'
+			else if "`graphtype'" != "" noi graph export "`graphpath'/unbalanced_b_`var'.`graphtype'", `replace' as(`graphtype') 
 
 			* scatter of t/z statistic
 			loc add_yline `" yline(`lx') yline(`ux') yline(`zt0') yscale(range(`rmin' `rmax')) text(`lx' `pos' "`level'% lower c.i.", place(neast)) text(`ux' `pos' "`level'% upper c.i.", place(seast)) text(`zt0' `pos' "`zt'-stat. without iteration var.", place(`ztpos')) mfcolor(none) "'
 			* "
 			twoway (scatter v_`i'_`zt' obs `if' & order!=0, title(`graphtitle') `add_yline' ytitle("`zt'-statistic") legend(label(1 "`zt'-statistic"))) (lfit v_`i'_`zt' obs `if' & order!=0,legend(label(2 "Linear fit"))), `graphoptions'
-			if "`graphtype'" == "gph" noi graph save "`path'/unbalanced_`zt'_`var'.`graphtype'", `replace'
-			else if "`graphtype'" != "" noi graph export "`path'/unbalanced_`zt'_`var'.`graphtype'", `replace' as(`graphtype')
+			if "`graphtype'" == "gph" noi graph save "`graphpath'/unbalanced_`zt'_`var'.`graphtype'", `replace'
+			else if "`graphtype'" != "" noi graph export "`graphpath'/unbalanced_`zt'_`var'.`graphtype'", `replace' as(`graphtype')
 			loc ++i
 			loc ngrit = `ngrit' +2
 		}
 	}
 end
 
-
+*! version 1.0.1  01mar2026
 * "_samregc_g_sisters" SUBPROGRAM
-capture program drop _samregc_g_sisters
 program define _samregc_g_sisters, rclass
+	version 17.0
 	qui	{
+		set varabbrev on
+		* Purpose: graph paired original vs. sister estimations. These diagnostics help
+		* separate specification effects from sample-composition effects.
 		syntax anything [if], [path(string) replace level(real 95) at(real 0) graphtype(string) graphoptions(string) graphtitle_list(string) sisters(string) zt(string) ] [*]
+		* Normalize graph output path: when results() has no explicit directory, save graphs in current working directory.
+		loc graphpath `"`path'"'
+		if `"`graphpath'"' == `""' loc graphpath "."
 		loc vt = -invnorm((100-`level')/200)
 		parse "`graphtitle_list'",parse(|)
 		loc ngrit =1
@@ -1098,13 +1180,13 @@ program define _samregc_g_sisters, rclass
 			capture clonevar v_`i'_`zt'SIS = v_`i'_zSIS 
 			if "`sisters'" == "scatter" | "`sisters'" == "both" {
 				twoway (scatter v_`i'_`zt' obs `if' & _n!=1, title(`graphtitle') pstyle(p1) `add_yline' ytitle("`zt'-statistic") legend(label(1 "With iteration variables")) mfcolor(none)) (scatter v_`i'_`zt'SIS obs `if', msymbol(T) pstyle(p2) legend(label(2 "Without iteration variables")) mfcolor(none)) (lfit v_`i'_`zt' obs, pstyle(p1) legend(label(3 "lfit: with iteration var."))) (lfit v_`i'_`zt'SIS obs, pstyle(p2) legend(label(4 "lfit: without iteration var."))), `graphoptions'
-				if "`graphtype'" == "gph" noi graph save "`path'/sisters_scatter_`var'.`graphtype'", `replace'
-				else if "`graphtype'" != "" noi graph export "`path'/sisters_scatter_`var'.`graphtype'", `replace' as(`graphtype')
+				if "`graphtype'" == "gph" noi graph save "`graphpath'/sisters_scatter_`var'.`graphtype'", `replace'
+				else if "`graphtype'" != "" noi graph export "`graphpath'/sisters_scatter_`var'.`graphtype'", `replace' as(`graphtype')
 			}			
 			if "`sisters'" == "pcarrow" | "`sisters'" == "both" {
 				twoway (pcarrow v_`i'_`zt'SIS obs v_`i'_`zt' obs `if' & v_`i'_`zt'SIS-v_`i'_`zt' <=0 & _n!=1, title(`graphtitle') legend(label(1 "Sister `zt'-stat < `zt'-stat")) ytitle("`zt'-statistic") `add_yline' mstyle(p3arrow) color(green)  barbsize(1)) (pcarrow v_`i'_`zt'SIS obs v_`i'_`zt' obs `if' & v_`i'_`zt'SIS-v_`i'_`zt' >0 & _n!=1, `add_yline' color(maroon) barbsize(1) legend(label(2 "Sister `zt'-stat > `zt'-stat"))), `graphoptions' 
-				if "`graphtype'" == "gph" noi graph save "`path'/sisters_pcarrow_`var'.`graphtype'", `replace'
-				else if "`graphtype'" != "" noi graph export "`path'/sisters_pcarrow_`var'.`graphtype'", `replace' as(`graphtype')
+				if "`graphtype'" == "gph" noi graph save "`graphpath'/sisters_pcarrow_`var'.`graphtype'", `replace'
+				else if "`graphtype'" != "" noi graph export "`graphpath'/sisters_pcarrow_`var'.`graphtype'", `replace' as(`graphtype')
 			}			
 			loc ++i
 			loc ngrit = `ngrit' +2
@@ -1112,12 +1194,17 @@ program define _samregc_g_sisters, rclass
 	}
 end
 
-
+*! version 1.0.1  01mar2026
 * "_samregc_MvTable" SUBPROGRAM
-capture program drop _samregc_MvTable
 program define _samregc_MvTable, rclass
+	version 17.0
 	qui	{
+		set varabbrev on
+		* Purpose: build variable-by-variable diagnostic tables showing which iteration
+		* variables are associated with sign/significance changes in the main coefficients.
 		syntax anything [if],  [path(string) replace level(real 95) at(real 0) results(string) fixvar(string) unbalanced sisters(string) mtname(string) zt(string) obs_no_it(integer 0)] [*]
+		* mtname() contains the tempname list of per-main-variable matrices created
+		* by the caller. The routine fills one matrix per main variable.
 		tokenize `mtname'
 		if "`sisters'" != "" loc altn "SIS"
 		if "`sisters'" == "" {
@@ -1368,8 +1455,9 @@ program define _samregc_MvTable, rclass
 			if "`noexcel'" != "" noi di as text " was stored as r(`a'_Table)"
 			noi di as text "------------------------------------------------------------------------------------------"
 			mkmat `list_var', matrix(``i'') rownames(varname)
+			* Export to Excel unless the caller explicitly suppresses spreadsheet output.
 			if "`noexcel'" == "" {
-				capture export excel using "`results'.xlsx", sheet("`var' List", modify) firstrow(varlabels) keepcellfmt
+				capture export excel using "`results'.xlsx", sheet("`var' List") firstrow(varlabels) 
 				if _rc != 0 {
 					no di as text "Variable name `var' is too long, list of interaction covariates exported in csv format"
 					export delimited using "`var'_List.csv", datafmt `replace'
@@ -1380,4 +1468,7 @@ program define _samregc_MvTable, rclass
 		}
 	}
 end
+
+
+
 

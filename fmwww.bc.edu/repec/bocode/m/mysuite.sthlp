@@ -1,5 +1,5 @@
-﻿{smcl}
-{* 25Feb2026}{...}
+{smcl}
+{* 05May2026}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "myedit" "help myedit"}{...}
 {viewerjumpto "Syntax" "mysuite##syntax"}{...}
@@ -37,35 +37,22 @@
 
 {pstd}
 {cmd:mysuite} is a comprehensive Stata program suite designed for empirical research,
-teaching management, and academic writing. It provides access to 31specialized
-programs organized into three main categories.
-
-{pstd}
-{bf:Module Sources:}
-
-{phang2}
-29 modules available for download from SSC Archive{p_end}
-
-{phang2}
-2 modules ({bf:bmc}, {bf:conservatism}) included locally in the mysuite package{p_end}
+teaching management, and academic writing. It provides access to 32 specialized
+programs available from the SSC archive.
 
 {pstd}
 {bf:Core Features:}
 
 {phang2}
 - Centralized module discovery and installation{p_end}
-
 {phang2}
-- Smart installation: only installs missing modules{p_end}
-
+- Smart installation: only installs missing modules (with {opt all}){p_end}
 {phang2}
-- Force reinstall all modules when needed{p_end}
-
+- Force reinstall all 32 modules when needed (with {opt all download}){p_end}
 {phang2}
 - Installation status checking and reporting{p_end}
-
 {phang2}
-- List all currently installed modules{p_end}
+- List all currently installed modules (with {opt installed}){p_end}
 
 {pstd}
 {bf:Operation Modes:}
@@ -73,7 +60,7 @@ programs organized into three main categories.
 {phang2}
 {bf:MODE 1 - Display}
   No options specified
-  → Show program banner, complete module list (31programs),
+  → Show program banner, complete list of 32 modules,
      current installation status, and detailed usage instructions.
      No modules are downloaded or installed.{p_end}
 
@@ -86,15 +73,31 @@ programs organized into three main categories.
 {phang2}
 {bf:MODE 3 - List Installed}
   {opt installed} option specified
-  → Display a complete list of all currently installed modules,
-     separated into SSC modules and local modules sections.
-     Shows installation count summary.{p_end}
+  → Display a complete list of all currently installed modules.
+     Shows installation count summary (e.g., "24/32 modules installed").{p_end}
 
 {phang2}
 {bf:MODE 4 - Force Reinstall}
   {opt all} and {opt download} options combined
-  → Force reinstall ALL 29 SSC modules regardless of current installation status.
+  → Force reinstall ALL 32 modules regardless of current installation status.
      Useful for updating to latest versions or fixing corrupted installations.{p_end}
+
+
+{title:Updates in version 1.0.8}
+
+{pstd}
+The following improvements have been made in version 1.0.8:
+
+{phang2}
+- {bf:bmc} and {bf:conservatism}, previously distributed as local ado‑files,
+  are now fully available on SSC and can be installed via {cmd:mysuite, all}.{p_end}
+{phang2}
+- A new module {bf:polishpaper} (academic paper polishing template) has been
+  added to the suite and is available on SSC.{p_end}
+{phang2}
+- {bf:regtex} and {bf:reg2tex} are bundled in a single SSC package. Typing
+  {cmd: ssc desc regtex} and clicking the hyperlink in the results window
+  downloads both programs at once.{p_end}
 
 
 {marker options}{...}
@@ -107,12 +110,13 @@ Shows installation progress and summary statistics upon completion.
 
 {phang}
 {opt Installed} lists all currently installed modules without making any changes.
-Displays separate sections for SSC modules and local modules, with a count summary.
+Displays each of the 32 modules with "Installed" or "Not installed" status,
+followed by a count summary.
 
 {phang}
 {opt Download} modifies the behavior of {opt all}. When combined:
 - {cmd:mysuite, all} → Install missing modules only
-- {cmd:mysuite, all download} → Force reinstall ALL modules
+- {cmd:mysuite, all download} → Force reinstall ALL 32 modules
 
 
 {marker examples}{...}
@@ -122,22 +126,22 @@ Displays separate sections for SSC modules and local modules, with a count summa
 {bf:MODE 1 - Display Program Information:}
 
 {phang}{cmd:. mysuite}{p_end}
-{phang}Display program banner, complete module list (31 programs),
-current installation status (e.g., "SSC modules installed: 15/29"),
+{phang}Display program banner, complete module list (32 programs),
+current installation status (e.g., "SSC modules installed: 20/32"),
 and detailed usage instructions. No modules are downloaded or installed.{p_end}
 
 {pstd}
 {bf:MODE 2 - Install Missing Modules:}
 
 {phang}{cmd:. mysuite, all}{p_end}
-{phang}Smart installation - checks each of the 29 SSC modules and installs
+{phang}Smart installation - checks each of the 32 modules and installs
 only those not currently found. Already installed modules are skipped.
 Example output:
   {bf:sumtex}: Already installed
   Installing {bf:regtex}... Done
   {bf:estout}: Already installed
 Installation Summary:
-  Already installed: 27 modules
+  Already installed: 30 modules
   Newly installed:   2 modules{p_end}
 
 {pstd}
@@ -145,35 +149,33 @@ Installation Summary:
 
 {phang}{cmd:. mysuite, installed}{p_end}
 {phang}Display complete list of currently installed modules:
-  {bf:Currently Installed Modules:}
+  {bf:Currently Installed SSC Modules:}
     {bf:art2tex}: Installed
     {bf:case2tex}: Installed
     ...
-  {bf:Local Modules:}
-    {bf:bmc}: Installed
-    {bf:conservatism}: Installed
-  {bf:Summary:} 24/29 SSC modules installed
+    {bf:exam2tex}: Not installed
+  {bf:Summary:} 24/32 SSC modules installed
 Useful for quick inventory of your setup.{p_end}
 
 {pstd}
 {bf:MODE 4 - Force Reinstall All Modules:}
 
 {phang}{cmd:. mysuite, all download}{p_end}
-{phang}Force reinstall ALL 29 SSC modules regardless of current status.
+{phang}Force reinstall ALL 32 modules regardless of current status.
 Use this to update to latest versions or fix corrupted installations.
 Example output:
   Reinstalling {bf:art2tex}... Done
   Reinstalling {bf:case2tex}... Done
   ...
 Reinstallation Summary:
-  Successfully reinstalled: 29 modules{p_end}
+  Successfully reinstalled: 32 modules{p_end}
 
 {pstd}
 {bf:Checking Installation Status:}
 
 {phang}{cmd:. mysuite}{p_end}
 {phang}Running without options shows current installation status:
-"SSC modules installed: 18/29" - quickly see what's missing.{p_end}
+"SSC modules installed: 18/32" - quickly see what's missing.{p_end}
 
 {pstd}
 {bf:Editing Installed Modules:}
@@ -188,17 +190,10 @@ This is useful for learning, customization, and debugging.{p_end}
 {pstd}
 {bf:Common Workflows:}
 
-{phang}{cmd:. mysuite}{p_end}
 {phang}1. Check what's installed: {cmd:. mysuite}{p_end}
-
-{phang}{cmd:. mysuite, all}{p_end}
 {phang}2. Install missing modules: {cmd:. mysuite, all}{p_end}
-
-{phang}{cmd:. mysuite, installed}{p_end}
 {phang}3. Verify installation: {cmd:. mysuite, installed}{p_end}
-
-{phang}{cmd:. mysuite, all download}{p_end}
-{phang}4. Update all modules: {cmd:. mysuite, all download} (quarterly){p_end}
+{phang}4. Update all modules (quarterly): {cmd:. mysuite, all download}{p_end}
 
 
 {marker authors}{...}
@@ -221,7 +216,7 @@ This is useful for learning, customization, and debugging.{p_end}
 {pstd}Nanjing, Jiangsu, China{p_end}
 
 {pstd}
-{help 2957833979@qq.com: Wu Xinzhuo} (2957833979@qq.com){p_end}
+{help 2957833979@qq.com:Wu Xinzhuo} (2957833979@qq.com){p_end}
 {pstd}University of Bristol (UB){p_end}
 {pstd}Leeds, West Yorkshire, England{p_end}
 
@@ -231,9 +226,9 @@ This is useful for learning, customization, and debugging.{p_end}
 {pstd}Ma'anshan, Anhui, China{p_end}
 
 {pstd}
-Development Date: 25 February 2026{p_end}
+Development Date: 05 May 2026{p_end}
 {pstd}
-Version: 1.0.1 (Smart Installation){p_end}
+Version: 1.0.8{p_end}
 
 
 {marker acknowledgments}{...}
@@ -249,3 +244,4 @@ Thanks to his enthusiastic support and timely scientific guidance, we have succe
 {psee}
 Online: {help myedit}, {help ssc}, {help adofile}, {help which}
 {p_end}
+{*}

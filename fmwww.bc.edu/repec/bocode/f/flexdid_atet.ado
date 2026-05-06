@@ -1,4 +1,5 @@
-*! version 2.0  05feb2026
+*! version 2.2  04may2026
+**! version 2.0  05feb2026
 **! version 1.6  30nov2025
 **! version 1.5  18oct2025
 **! version 1.0  10sep2025
@@ -108,7 +109,7 @@ program define _ATET_Overall, rclass
 	syntax [anything], [overall OVERALL(numlist min=1) FOR(string) ///
 		DYDX AGGregationweight(string) Level(cilevel) *]
         
-	local group `e(group)'
+	local group `e(flex_group)'
 	local time `e(time)'
 	local tx `e(tx)'
 	local usercohort `e(usercohort)'
@@ -224,7 +225,7 @@ program define _ATET_Byget, rclass
 	syntax [anything], [byget BYGET(numlist min=1) FOR(string) ///
 		TEst(string) DYDX AGGregationweight(string)Level(cilevel) *]
       
-	local group `e(group)'
+	local group `e(flex_group)'
 	local time `e(time)'
 	local tx `e(tx)'
 	local usercohort `e(usercohort)'
@@ -333,7 +334,7 @@ program define _ATET_Byexposure, rclass
 	syntax [anything], [byexposure BYEXPOSURE(numlist min=1) FOR(string) ///
 		NOGraph GRAPHoptions(string) TEst(string) DYDX AGGregationweight(string)Level(cilevel) *]
         
-	local group `e(group)'
+	local group `e(flex_group)'
 	local time `e(time)'
 	local tx `e(tx)'
 	local usercohort `e(usercohort)'
@@ -388,6 +389,14 @@ program define _ATET_Byexposure, rclass
 	quietly egen `meventtime' = group(`expsubset'), label
 	quietly levelsof `meventtime', local(lofm)
 
+quietly sum `meventtime' if _Cohort==0
+local minusone = r(mean)
+quietly sum `meventtime'
+local etmin `r(min)'
+local etmax `r(max)'
+local gap `=int((`etmax' - `etmin')/20) + 1'
+if `minusone'==. local minusone `etmin'
+
 	tempvar ttx
 	quietly generate byte `ttx' = _Tx if `touse'
 	quietly replace `ttx' = 1 if _Cohort>0 & `eventtime'==-1 & `touse'
@@ -420,7 +429,8 @@ program define _ATET_Byexposure, rclass
 		else quietly margins r._Tx, subpop(if `ttx'==1 & inlist(`eventtime', `byexposure')==1 `andfor') contrast(effects nowald) over(`meventtime') vce(unconditional) noomit post `options'
 	}
 
-	if "`nograph'"=="" quietly marginsplot, xtitle(Exposure `time') ytitle({&Delta} `yvar') title("`ttl'") yline(0) `graphoptions'
+	if "`nograph'"=="" quietly marginsplot, xtitle(Exposure `time') ytitle({&Delta} `yvar') ///
+		title("`ttl'") yline(0) xlabel(`minusone'(-`gap')`etmin' `minusone'(`gap')`etmax' ) `graphoptions'
 	tempname beta Var nm 
 
 	matrix `beta' = r(b)
@@ -456,7 +466,7 @@ program define _ATET_Bycalendar, rclass
 	syntax [anything], [bycalendar BYCALENDAR(numlist min=1) FOR(string) ///
 		NOGraph GRAPHoptions(string) TEst(string) DYDX AGGregationweight(string)Level(cilevel) *]
         
-	local group `e(group)'
+	local group `e(flex_group)'
 	local time `e(time)'
 	local tx `e(tx)'
 	local usercohort `e(usercohort)'
@@ -572,7 +582,7 @@ program define _ATET_Bycohort, rclass
 	syntax [anything], [bycohort BYCOHORT(numlist min=1) FOR(string) ///
 		NOGraph GRAPHoptions(string) TEst(string) DYDX AGGregationweight(string)Level(cilevel) *]
         
-	local group `e(group)'
+	local group `e(flex_group)'
 	local time `e(time)'
 	local tx `e(tx)'
 	local usercohort `e(usercohort)'
@@ -663,7 +673,7 @@ program define _ATET_Bycohort, rclass
 	local nfull = r(N)
 	local nsub = r(N_sub)
 	mata: mata: st_global("e(depvar)", "Treated cohort")
-	matrix colnames `beta' = `lofm'
+	matrix colnames `beta' = `lofby'
 
 	_coef_table_header, title(`ttl') nomodel
 	display ""
@@ -691,7 +701,7 @@ program define _ATET_Bygroup, rclass
 	syntax [anything], [bygroup BYGROUP(numlist min=1) FOR(string) ///
 		NOGraph GRAPHoptions(string) TEst(string) DYDX AGGregationweight(string)Level(cilevel) *]
         
-	local group `e(group)'
+	local group `e(flex_group)'
 	local time `e(time)'
 	local tx `e(tx)'
 	local usercohort `e(usercohort)'
