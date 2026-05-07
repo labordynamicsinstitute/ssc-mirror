@@ -1,0 +1,30 @@
+d 'XTPANELCOINT': module to perform panel cointegration and multiple long-run relations estimation
+d
+d    xtpanelcoint implements six panel cointegration estimators for
+d long-run relations in heterogeneous panels where both N and T are
+d large. 
+d
+d KW: cointegration
+d KW: panel data
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260506
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtpanelcoint.ado
+f xtpanelcoint.sthlp
+f ../_/_xtpc_breitung.ado
+f ../_/_xtpc_display.ado
+f ../_/_xtpc_mgdl_display.ado
+f ../_/_xtpc_mgdl.ado
+f ../_/_xtpc_mgmw.ado
+f ../_/_xtpc_pdols.ado
+f ../_/_xtpc_plot.ado
+f ../_/_xtpc_pme_display.ado
+f ../_/_xtpc_pme.ado
+f ../_/_xtpc_spmg.ado
+f xtpanelcoint_example_realdata.do
+f xtpanelcoint_sample.dta

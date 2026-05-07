@@ -120,6 +120,7 @@ p xtnptimevar module to estimate non-parametric time-varying coefficients panel 
 p xtnumfac module to estimate the number of factors in panel data
 p xtoos module for evaluating the out-of-sample prediction performance of panel-data models
 p xtoverid module to calculate tests of overidentifying restrictions after xtreg, xtivreg, xtivreg2, xthtaylor
+p xtpanelcoint module to perform panel cointegration and multiple long-run relations estimation
 p xtpattern module to generate code showing pattern of xt data
 p xtpatternvar module to generate string variable describing panel patterns
 p xtpcaus module to perform Panel Granger Causality Tests: Panel Fourier Toda-Yamamoto (PFTY) and Panel Quantile Causality (PQC)

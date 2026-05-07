@@ -1,0 +1,32 @@
+d 'MANYBARS': module to produce bar graphs of a summary statistic for an outcome y variable at specific values of multiple indicator x variables
+d
+d  manybars generates bar graphs showing a summary statistic for an
+d outcome variable, computed separately at user-specified values of
+d one or more indicator variables. This adds functionality to
+d Stata's native -graph bar- command, which requires a single
+d categorical grouping variable for each - over()- call and cannot
+d draw bars for multiple separate indicator variables in a single
+d graph. manybars accepts one or more numeric indicator variables
+d as x variables ("xvars") and computes the specified statistic
+d (default: mean) of the outcome at a specific value of each
+d indicator (default: 1), displaying the results as a grouped bar
+d graph with legend labels drawn from value or variable labels. The
+d -displayvalues()- option allows the user to specify which value
+d of each xvar defines the subgroup of interest. Optionally, bars
+d can be further grouped by one or more (usually categorical)
+d grouping variables using the -overvars()- option. This produces
+d clustered bar graphs that compare the statistic, at each
+d xvar=displayvalue, across those over-variables. 
+d
+d KW: graphics
+d KW: bar graph
+d
+d Requires: Stata version 
+d
+d Distribution-Date: 20260506
+d
+d Author: Brian Shaw,  Indiana University
+d Support: email bpshaw@@iu.edu
+d
+f manybars.ado
+f manybars.sthlp
