@@ -1,0 +1,35 @@
+d 'QVAR': module to perform Quantile Vector Autoregression
+d
+d     qvar implements Quantile Vector Autoregression models for
+d Stata, providing a comprehensive toolkit for	  quantile-based
+d multivariate time-series analysis. The package supports the
+d complete QVAR workflow:    estimation, testing, forecasting,
+d impulse responses, evaluation, and publication-quality
+d visualization 
+d
+d KW: panel data
+d KW: vector autoregression
+d KW: quantile estimation
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260507
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f qvar.ado
+f qvar.sthlp
+f ../_/_qvar_build_lags.ado
+f ../_/_qvar_estimate.ado
+f ../_/_qvar_evaluate.ado
+f ../_/_qvar_forecast.ado
+f ../_/_qvar_granger.ado
+f ../_/_qvar_irf.ado
+f ../_/_qvar_plot.ado
+f ../_/_qvar_significance_stars.ado
+f ../_/_qvar_stationarity_check.ado
+f ../_/_qvar_table.ado
+f ../_/_qvar_utils.ado
+f ../_/_qvar_varqr.ado
+f qvar_example.do

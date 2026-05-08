@@ -1,0 +1,31 @@
+d 'CLSPL2': module providing Convex Least Squares Programming (CLSP) is a modular two-step estimator for solving underdetermined, ill-posed, or structurally constrained least-squares problems
+d
+d   Convex Least Squares Programming (CLSP) is a modular two-step
+d estimator  for solving underdetermined, ill-posed, or
+d structurally constrained	least-squares problems. It combines
+d pseudoinverse-based estimation with  convex-programming
+d correction methods inspired by Lasso, Ridge, and	Elastic Net
+d to ensure numerical stability, constraint enforcement, and  
+d interpretability. The current implementation limits the second
+d step to   the Ridge case by employing a second pseudoinverse
+d estimation. The	package also provides numerical stability
+d analysis and CLSP-specific	 diagnostics, including partial
+d R^2, normalized RMSE (NRMSE), bootstrap   or Monte Carlo t-tests
+d for mean NRMSE, and condition-number-based	    confidence
+d bands.  
+d
+d KW: linear programming
+d KW: least squares
+d KW: pseudoinverse
+d KW: singular value decomposition
+d
+d Requires: Stata version 15.1 
+d
+d Distribution-Date: 20260507
+d
+d Author: Ilya Bolotov, Prague University of Economics and Business
+d Support: email ilya.bolotov@@vse.cz
+d
+f clspl2.ado
+f clspl2.sthlp
+f ../l/lclspl2.mlib

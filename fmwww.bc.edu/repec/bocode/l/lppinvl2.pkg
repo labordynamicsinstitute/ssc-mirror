@@ -1,0 +1,29 @@
+d 'LPPINVL2': module providing Linear Programming via Regularized Least Squares (LPPinv) is a modular two-step estimator for solving underdetermined, ill-posed, or structurally constrained linear and quadratic programming problems using least-squares and convex optimization
+d
+d   The Linear Programming via Regularized Least Squares (LPPinv)
+d is a two-  stage estimation method that reformulates linear
+d programs as structured  least-squares problems. Based on the
+d Convex Least Squares Programming    (CLSP) framework, LPPinv
+d solves linear inequality, equality, and bound   constraints by
+d (1) constructing a canonical constraint system and	   
+d computing a pseudoinverse projection, followed by (2) a second   
+d	 pseudoinverse estimation to improve fit, coherence, and
+d achieve Ridge-   style regularization (based on the pure
+d Stata/Mata CLSP implementation). LPPinv is intended for
+d underdetermined and ill-posed linear problems,    for which
+d standard solvers fail.     
+d
+d KW: linear programming
+d KW: least squares
+d KW: pseudoinverse
+d KW: singular value decomposition
+d
+d Requires: Stata version 15.1 and clspl2 from SSC (q.v.)
+d
+d Distribution-Date: 20260507
+d
+d Author: Ilya Bolotov, Prague University of Economics and Business
+d Support: email ilya.bolotov@@vse.cz
+d
+f lppinvl2.ado
+f lppinvl2.sthlp

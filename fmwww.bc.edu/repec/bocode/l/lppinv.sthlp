@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  20nov2025}{...}
+{* *! version 1.1.0  20nov2025}{...}
 {viewerjumpto "Syntax" "lppinv##syntax"}{...}
 {viewerjumpto "Description" "lppinv##description"}{...}
 {viewerjumpto "Postestimation" "lppinv##postestimation"}{...}
@@ -15,6 +15,7 @@ structurally constrained linear and quadratic programming problems using
 least-squares and convex optimization
 
 {title:Requirements}
+
 {phang}
 Because Stata does not provide native convex optimization tools, estimation is
 performed using the Python 3 module {bf:pylppinv}, which must be installed and
@@ -143,6 +144,9 @@ system shell:
         {bf:aub({help strings:{it:string}})}, and
         {bf:aeq({help strings:{it:string}})} are sourced from the dataset
         and do not share the same number of rows.{p_end}
+{synopt :{opth condtol:erance(real)}}Singular-value cutoff for the custom
+        condition number function. If set to a {bf:missing value}, the
+        implementation uses an internal relative cutoff of {bf:1e-14}.{p_end}
 
 {synoptline}
 {p2colreset}{...}
@@ -272,7 +276,7 @@ For the bootstrap/Monte Carlo t-test for the mean of NRMSE:
 {synopt :{opth sample:size(#)}}Size of the Monte Carlo simulated sample under
         H0 (default {bf:50}).{p_end}
 {synopt :{opth seed:(#)}}Optional random seed to override the default
-        (default {bf:123456789}). Requires {bf:simulate}.{p_end}
+        (default {bf:123456789}).{p_end}
 {synopt :{opth dist:ribution(string)}}Distribution for generating synthetic
         {bf:b} vectors. One of: {bf:normal}, {bf:uniform}, or {bf:laplace}
         (default {bf:normal}). Requires {bf:simulate}.{p_end}
@@ -296,13 +300,16 @@ For the bootstrap/Monte Carlo t-test for the mean of NRMSE:
 (Python 3.10 or higher) set with the help of {cmd:python set exec} command!
 {break}For Python users, there is a standalone Python implementation {browse "https://pypi.org/project/pylppinv/"} with the same functionality.
 {break}Likewise, for R users, there is an R equivalent {browse "https://cran.r-project.org/web/packages/rlppinv/"}.
-
-{pstd}
-For a pure Stata alternative, with reduced second step functionality, consult
-{helpb lppinvl2}.
+{break}For a pure Stata alternative, with reduced second step functionality,
+consult {helpb lppinvl2}.
 
 {pstd}
 For detailed information on {cmd:python set exec}, consult {helpb python}.
+
+{pstd}
+To ensure cross-platform reproducibility, all CLSP implementations use a
+{bf:modified condition number function} based on singular values, with a
+relative cutoff equal to {bf:condtolerance * the largest singular value}.
 
 {marker examples}{...}
 {title:Examples}
@@ -341,18 +348,20 @@ For detailed information on {cmd:python set exec}, consult {helpb python}.
 {synopt:{cmd:e(N)}}number of observations{p_end}
 {synopt:{cmd:e(r)}}number of refinement iterations performed in the first step
        {p_end}
+{synopt:{cmd:e(rcond)}}regularization parameter for the Moore-Penrose and
+Bott-Duffin inverses{p_end}
 {synopt:{cmd:e(tolerance)}}convergence tolerance for NRMSE change between
        refinement iterations{p_end}
 {synopt:{cmd:e(alpha)}}regularization parameter (weight) in the final convex
        program{p_end}
 {synopt:{cmd:e(kappaC)}}spectral kappa() for [{bf:C}, {bf:S}]{p_end}
-{synopt:{cmd:e(kappaB)}}spectral kappa() for {bf:B} = {bf:A}^†[{bf:C},
-       {bf:S}]{p_end}
+{synopt:{cmd:e(kappaB)}}spectral kappa() for {bf:B} = {bf:A}[{bf:C},
+       {bf:S}]^†{p_end}
 {synopt:{cmd:e(kappaA)}}spectral κ() for {bf:A}{p_end}
 {synopt:{cmd:e(r2_partial)}}R^2 for {bf:M} in {bf:A}{p_end}
-{synopt:{cmd:e(nrmse)}}mean square error calculated from {bf:A} and normalized
-       by standard deviation (NRMSE){p_end}
-{synopt:{cmd:e(nrmse_partial)}}mean square error calculated from {bf:M} in
+{synopt:{cmd:e(nrmse)}}root mean square error calculated from {bf:A} and
+       normalized by standard deviation (NRMSE){p_end}
+{synopt:{cmd:e(nrmse_partial)}}root mean square error calculated from {bf:M} in
        {bf:A} and normalized by standard deviation (NRMSE){p_end}
 
 {p2col 5 23 26 2: Macros}{p_end}
@@ -405,11 +414,11 @@ In addition to the above, the following is stored in {cmd:r()}:
 {synopt:{cmd:r(rmsa_dnrmse)}}summary statistics for changes in {bf:e(nrmse)}
        after dropping one row in [{bf:C}, {bf:S}]{p_end}
 {synopt:{cmd:r(rmsa_dzhat)}}summary statistics for changes in {bf:e(zhat)}
-       after dropping one row in [{bf:C}, {bf:S}]{p_end}
+       (L2 norm) after dropping one row in [{bf:C}, {bf:S}]{p_end}
 {synopt:{cmd:r(rmsa_dz)}}summary statistics for changes in {bf:e(z)}
-       after dropping one row in [{bf:C}, {bf:S}]{p_end}
+       (L2 norm) after dropping one row in [{bf:C}, {bf:S}]{p_end}
 {synopt:{cmd:r(rmsa_dx)}}summary statistics for changes in {bf:e(x)}
-       after dropping one row in [{bf:C}, {bf:S}]{p_end}
+       (L2 norm) after dropping one row in [{bf:C}, {bf:S}]{p_end}
 {synopt:{cmd:r(z_lower)}}summary statistics for the lower bound of the
        diagnostic interval (confidence band) based on kappa({bf:A}) for
        {bf:z}{p_end}
@@ -445,6 +454,13 @@ including {cmd:estat corr} and {cmd:estat ttest}.
 
 {pstd}
     Thanks for citing this software and my works on the topic:
+
+{p 8 8 2}
+Bolotov, I. (2026). LPPINV: Stata module providing Linear Programming via
+    Regularized Least Squares (LPPinv) is a modular two-step estimator for
+    solving underdetermined, ill-posed, or structurally constrained linear and
+    quadratic programming problems using least-squares and convex optimization
+    {browse "https://ideas.repec.org/c/boc/bocode/s459045.html"}.
 
 {p 8 8 2}
     Bolotov, I. (2025). CLSP: Linear Algebra Foundations of a Modular Two-Step

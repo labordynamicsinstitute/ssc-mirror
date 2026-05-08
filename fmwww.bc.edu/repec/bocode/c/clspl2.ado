@@ -1,21 +1,23 @@
-*! version 1.1.0  20nov2025  I I Bolotov
-program define clsp, eclass byable(recall)
-	version 16.0
+*! version 1.1.0  20aug2025  I I Bolotov
+program define clspl2, eclass byable(recall)
+	version 15.1
 	/*
 		Convex Least Squares Programming (CLSP) is a modular two-step estimator 
 		for solving underdetermined, ill-posed, or structurally constrained     
 		least-squares problems. It combines pseudoinverse-based estimation with 
 		convex-programming correction methods inspired by Lasso, Ridge, and     
 		Elastic Net to ensure numerical stability, constraint enforcement, and  
-		interpretability. The package also provides numerical stability analysis
-		and CLSP-specific diagnostics, including partial R^2, normalized RMSE   
-		(NRMSE), Monte Carlo t-tests for mean NRMSE, and condition-number-based 
+		interpretability. The current implementation limits the second step to  
+		the Ridge case by employing a second pseudoinverse estimation. The      
+		package also provides numerical stability analysis and CLSP-specific    
+		diagnostics, including partial R^2, normalized RMSE (NRMSE), bootstrap  
+		or Monte Carlo t-tests for mean NRMSE, and condition-number-based       
 		confidence bands.                                                       
 
 		Author: Ilya Bolotov, MBA, Ph.D.                                        
 		Date: 20 August 2025                                                    
 	*/
-	tempname vars CLSP warnings error
+	tempname vars
 	// replay last result                                                       
 	if replay() {
 		if _by() {
@@ -23,7 +25,7 @@ program define clsp, eclass byable(recall)
 		}
 		cap conf mat e(z)
 		if _rc {
-			di as err "results of clsp not found"
+			di as err "results of clspl2 not found"
 			exit 301
 		}
 		_summary									   // print summary
@@ -34,11 +36,10 @@ program define clsp, eclass byable(recall)
 	[anything] [if] [in], [													///
 		b(string) Constraints(string) Slackvars(string) MODel(string)		///
 		m(int 0) p(int 0) i(int 1) j(int 1) ZERODiagonal r(int 1) Z(name)	///
-		RCOND(real 0) TOLerance(real -1) ITERationlimit(int 0) noFINAL		///
-		alpha(numlist >=-1 <=1 sort) CVXopt(string asis) MISSingokay		///
-		CONDTOLerance(real 1e-14) *											///
+		RCOND(real  0) TOLerance(real -1) ITERationlimit(int 1) noFINAL		///
+		CONDTOLerance(real 1e-14) nested x *								///
 	]
-	// adjust and preprocess options for Python's CLSP module                   
+	// adjust and preprocess options for the CLSPL2 Mata class                  
 	if           ustrregexm( `"`anything'"',       "^estat",     1)           {
 		_estat `=ustrregexrf(`"`anything'"',       "^estat", "", 1)', `options'
 		exit 0
@@ -93,7 +94,7 @@ program define clsp, eclass byable(recall)
 		di as err "m(), p(), i(), and j() must be non-negative"
 		exit 198
 	}
-	if (`r' <  0 | `iterationlimit'          <  0)                            {
+	if (`r' <  1 | `iterationlimit'          <  1)                            {
 		di as err "r() and iterationlimit() must be at least 1"
 		exit 198
 	}
@@ -107,77 +108,6 @@ program define clsp, eclass byable(recall)
 		di as err "tolerance() must be -1 or lie in [0,1)"
 		exit 198
 	}
-	if ("`alpha'"                                            != "")           {
-		numlist " `alpha'"
-		loc        alpha       `r(numlist)'
-		foreach    a in        `alpha'                            {
-			if ! (`a' == -1 | (`a' >= 0 & `a' <= 1)) {
-				di as err "each value in alpha() must be -1 or lie in [0,1]"
-				exit 198
-			}
-			if   (`a' == -1                        ) {
-				loc alpha "None"
-				continue, break
-			}
-		}
-		if `: word count of `alpha''  > 1									///
-			loc alpha =      "[" + ustrregexra("`alpha'", "\s+", ", ") + "]"
-	}
-	else    loc alpha     "None"
-	loc   problem "'general'"
-	mata: if (ustrregexm(`"`anything'"',                       "ap|tm", 1)) ///
-		  st_local("problem",                                 "'ap'"      );;
-	mata: if (ustrregexm(`"`anything'"',                     "cmls|rp", 1)) ///
-		  st_local("problem",                               "'cmls'"      );;
-	loc   _a       ", selectvar='`touse'', missingval=nan), dtype=float64"
-	loc   C_array  "None"
-	if  "`constraints'"  != ""                                                {
-		mata: if (! hasmissing( _st_varindex(tokens("`constraints'"    )))) ///
-			  st_local("C_array", "_(array(Data.get('`constraints''`_a'))");;
-		mata: if (J(0,0,.)        !=      st_matrix("`constraints'"      )) ///
-			  st_local("C_array", "array(Matrix.get('`constraints''    ))");;
-	}
-	loc   S_array  "None"
-	if  "`slackvars'"    != ""                                                {
-		mata: if (! hasmissing( _st_varindex(tokens("`slackvars'"      )))) ///
-			  st_local("S_array", "_(array(Data.get('`slackvars''  `_a'))");;
-		mata: if (J(0,0,.)        !=      st_matrix("`slackvars'"        )) ///
-			  st_local("S_array", "array(Matrix.get('`slackvars''      ))");;
-	}
-	loc   M_array  "None"
-	if  "`model'"        != ""                                                {
-		mata: if (! hasmissing( _st_varindex(tokens("`model'"          )))) ///
-			  st_local("M_array", "_(array(Data.get('`model''      `_a'))");;
-		mata: if (J(0,0,.)        !=      st_matrix("`model'"            )) ///
-			  st_local("M_array", "array(Matrix.get('`model''          ))");;
-	}
-	loc   b_array  "None"
-	if  "`b'"            != ""                                                {
-		mata: if (! hasmissing( _st_varindex(tokens("`b'"              )))) ///
-			  st_local("b_array", "_(array(Data.get('`b''          `_a'))");;
-		mata: if (J(0,0,.)        !=      st_matrix("`b'"                )) ///
-			  st_local("b_array", "array(Matrix.get('`b''              ))");;
-	}
-	loc   m              =cond( `m',                "`m'",            "None")
-	loc   p              =cond( `p',                "`p'",            "None")
-	loc   i              =cond( `i',                 `i',                  1)
-	loc   j              =cond( `j',                 `j',                  1)
-	loc   zerodiagonal   =cond("`zerodiagonal'"!= "",        "True", "False")
-	loc   r              =cond( `r',                 `r',                  1)
-	loc   Z_array  "None"
-	if  "`z'"            != ""                                                {
-		mata: if (J(0,0,.)          !=    st_matrix("`z'"                )) ///
-			  st_local("Z_array", "array(Matrix.get('`z''              ))");;
-	}
-	loc   rcond          =cond( `rcond'        >   0,     "`rcond'",		///
-						  cond( `rcond'        <   0,        "True", "False"))
-	loc   tolerance      =cond( `tolerance'    >=  0, "`tolerance'",  "None")
-	loc   iterationlimit =cond( `iterationlimit',"`iterationlimit'",  "None")
-	loc   final          =cond("`final'"       == "",        "True", "False")
-	if `"`cvxopt'"'      != ""												///
-	loc   cvxopt         =", " + ustrregexrf(`"`cvxopt'"',  "^\s*,",      "")
-	loc   condtolerance  =cond( `condtolerance'<.,"`condtolerance'",  "None")
-	// estimate with the help of Python's CLSP module                           
 	sca                 `vars'    = ""				   // markout [if] [in]
 	foreach name in     `constraints' `slackvars' `model' `b'                 {
 		cap conf var    `name'
@@ -185,82 +115,122 @@ program define clsp, eclass byable(recall)
 	}
 	tempvar              touse
 	mark                `touse'  `if' `in'
-	if ("`missingokay'"  == "")												///
 	markout             `touse'  `=   `vars''
-	if ("`b_array'"  == "None")                                               {
-		di as err "RHS error: b() is misspecified"
-		error 7102
+	mata: problem = "general"
+	mata: if (ustrregexm(`"`anything'"',                       "ap|tm", 1)) ///
+		  problem =      "ap";;
+	mata: if (ustrregexm(`"`anything'"',                     "cmls|rp", 1)) ///
+		  problem =    "cmls";;
+	mata:     C = J(0,0,.)
+	if  "`constraints'"  != ""                                                {
+		mata: if (! hasmissing( _st_varindex(tokens("`constraints'"    )))) ///
+			  C =   st_data(.,  _st_varindex(tokens("`constraints'"    )),  ///
+			                                        "`touse'"             );;
+		mata: if (J(0,0,.)        !=      st_matrix("`constraints'"      )) ///
+			  C =                         st_matrix("`constraints'"       );;
 	}
-	if ("`C_array'"  == "None"  &        "`M_array'"  == "None"  &			///
-		"`m'"        == "None"  &        "`p'"        == "None")              {
-		di as err "LHS error: all of constraints(), model(), m(), and p() " ///
-							 "are misspecified"
-		error 7102
+	mata:     S = J(0,0,.)
+	if  "`slackvars'"    != ""                                                {
+		mata: if (! hasmissing( _st_varindex(tokens("`slackvars'"      )))) ///
+			  S =   st_data(.,  _st_varindex(tokens("`slackvars'"      )),  ///
+			                                        "`touse'"             );;
+		mata: if (J(0,0,.)        !=      st_matrix("`slackvars'"        )) ///
+			  S =                         st_matrix("`slackvars'"         );;
 	}
-	python: `CLSP', `warnings', `error' = _(None, False,                    ///
-	                                         fun=CLSP().solve,              ///
-	                              **dict(problem=`problem',                 ///
-	                                           C=`C_array',                 ///
-	                                           S=`S_array',                 ///
-	                                           M=`M_array',                 ///
-	                                           b=`b_array',                 ///
-	                                           m=`m',                       ///
-	                                           p=`p',                       ///
-	                                           i=`i',                       ///
-	                                           j=`j',                       ///
-	                               zero_diagonal=`zerodiagonal',            ///
-	                                           r=`r',                       ///
-	                                           Z=`Z_array',                 ///
-	                                       rcond=`rcond',                   ///
-	                                   tolerance=`tolerance',               ///
-	                             iteration_limit=`iterationlimit',          ///
-	                                       final=`final',                   ///
-	                                       alpha=`alpha',                   ///
-	                              cond_tolerance=`condtolerance'  `cvxopt'))
-	python:         `warnings' = [SFIToolkit.displayln('{txt}note: '+k    ) ///
-	                              for k in dict.fromkeys(str(w.message    ) ///
-	                              for w in `warnings'                     )]
-	python:                       Macro.setLocal("`error'", `error'       )
-	if "``error''"  != ""                                                     {
-		di as err   "``error''"
-		exit 7102
+	mata:     M  =J(0,0,.)
+	if  "`model'"        != ""                                                {
+		mata: if (! hasmissing( _st_varindex(tokens("`model'"          )))) ///
+			  M =   st_data(.,  _st_varindex(tokens("`model'"          )),  ///
+			                                        "`touse'"             );;
+		mata: if (J(0,0,.)        !=      st_matrix("`model'"            )) ///
+			  M =                         st_matrix("`model'"             );;
 	}
+	mata:     b  =J(0,0,.)
+	if  "`b'"            != ""                                                {
+		mata: if (! hasmissing( _st_varindex(tokens("`b'"              )))) ///
+			  b =   st_data(.,  _st_varindex(tokens("`b'"              )),  ///
+			                                        "`touse'"             );;
+		mata: if (J(0,0,.)        !=      st_matrix("`b'"                )) ///
+			  b =                         st_matrix("`b'"                 );;
+	}
+	mata: m              =  `m'                    ? `m'                  : .
+	mata: p              =  `p'                    ? `p'                  : .
+	mata: i              =  `i'                    ? `i'                  : 1
+	mata: j              =  `j'                    ? `j'                  : 1
+	mata: zero_diagonal  = "`zerodiagonal'" != ""  ?  1                   : 0
+	mata: r              =  `r'                    ? `r'                  : 1
+	mata:     Z  =J(0,0,.)
+	if  "`z'"            != ""                                                {
+		mata: if (J(0,0,.)        !=      st_matrix("`z'"                )) ///
+			  Z  =                        st_matrix("`z'"                 );;
+	}
+	mata: rcond          =  `rcond'         >   0  ? `rcond'                ///
+						 : (`rcond'         <   0  ?  1                   : .)
+	mata: tolerance      =  `tolerance'     >=  0  ? `tolerance'          : .
+	mata: iteration_limit=  `iterationlimit'       ? `iterationlimit'     : .
+	mata: final          = "`final'"        != ""  ?  0                   : 1
+	// make the command metadata (clspl2 can be both standalone and nested)     
+	loc cmdline          =   cond("`nested'"!= ""  & "`e(cmdline)'"  != "", ///
+								  "`e(cmdline)'",    "clspl2  `0'        ")
+	loc cmd              =   cond("`nested'"!= ""  & "`e(cmd)'"      != "", ///
+								  "`e(cmd)'",        "clspl2             ")
+	loc estat_cmd        =   cond("`nested'"!= ""  & "`e(estat_cmd)'"!= "", ///
+								  "`e(estat_cmd)'",  "clspl2 estat       ")
+	loc title            =   cond("`nested'"!= ""  & "`e(title)'"    != "", ///
+								  "`e(title)'",      "CLSP estimation    ")
+	if  "`nested'" !=  ""                                                   ///
+	foreach  s   in    full model_n model_i reduced    /* tmpinvl2   */       {
+		loc           `s' "`e(`s')'"
+	}
+	// estimate with the help of the CLSPL2 Mata class                          
+	mata: if (b == J(0,0,.))                                   {            ///
+		      errprintf("RHS error: b() is misspecified\n");                ///
+		      exit(198);                                                    ///
+		  };;
+	mata: if (C == J(0,0,.) & M == J(0,0,.) & m == . & p == .) {            ///
+		      errprintf("LHS error: all of constraints(), model(), m(), " + ///
+		                "and p() are misspecified\n");                      ///
+		      exit(198);                                                    ///
+		  };;
+	mata: CLSP = CLSPL2();                                                  ///
+		  CLSP.solve(problem, C, S, M, b, m, p, i, j, zero_diagonal,        ///
+		                      r, Z, rcond, tolerance, iteration_limit,      ///
+		                      final, `condtolerance')
+	mata: mata drop           C  S  M  b  m  p  i  j  zero_diagonal         ///
+		                      r  Z  rcond  tolerance  iteration_limit       ///
+		                      final
 	mata: st_eclear()                                  // store results
 	eret post,         esample(`touse')
 	qui  count   if    e(sample)
 	eret sca N      =  r(N)
 	foreach  s   in    iteration_limit r rcond tolerance alpha kappaC		///
 					   kappaB kappaA r2_partial nrmse nrmse_partial           {
-		loc  code             "`CLSP'.`s'"
-		_store  `s',   py(`code'       ) r(e) t(scalar)
+		_store  `s',   r(e) t(scalar)
 	}
-	eret loc cmdline   clsp  `0'
-	eret loc cmd       clsp
-	eret loc estat_cmd clsp estat
-	eret loc title     CLSP estimation
+	foreach  s   in    cmdline cmd estat_cmd  title                         ///
+					   full model_n model_i reduced    /* tmpinvl2   */       {
+		eret loc      `s' ``s''
+	}
+	if ("`nested'" !=  "" & "`e(cmd)'" ==  "clspl2")   error 199
 	foreach  s   in    final seed distribution                                {
-		loc  code   =  cond(! inlist("`s'", "distribution"      ),			///
-							  "`CLSP'.`s'",									///
-							  "`CLSP'.`s'.__code__.co_names[-1]")
-		_store  `s',   py(`code', True ) r(e) t(macro )
+		_store  `s',   r(e) t(macro )
 	}
 	foreach  s   in    A C_idx b Z zhat z x y z_lower z_upper x_lower		///
 											  x_upper y_lower y_upper         {
-		loc  code             "`CLSP'.`s'"
-		_store  `s',   py(`code'       ) r(e) t(matrix)
+		_store  `s',   r(e) t(matrix)
 	}
-	python:  del   `warnings', `error'
-	mata: st_global("s(clsp)","`CLSP'" )
+	if ("`nested'" !=  "" & "`x'"      !=  ""      )                        ///
+	mata: st_matrix("e(X)",       st_matrix("e(x)"))
 	_summary, noread								   // store summary
 end
 
 program define _estat, eclass
-	version 16.0
+	version 15.1
 	tempname tmp warnings error bar
 	// assert last result                                                       
 	cap conf mat e(z)
 	if _rc {
-		di as err "results of clsp not found"
+		di as err "results of clspl2 not found"
 		exit 301
 	}
 	// syntax                                                                   
@@ -270,7 +240,7 @@ program define _estat, eclass
 		SAMPLEsize(int 50) SEED(int 0) DISTribution(string) PARTial			///
 		SIMulate Level(cilevel)												///
 	]
-	// adjust and preprocess options for Python's CLSP module                   
+	// adjust and preprocess options for the CLSPL2 Mata class                  
 	if ("`anything'"                                         == "")           {
 		di as err "subcommand required"
 		exit 321
@@ -283,40 +253,25 @@ program define _estat, eclass
 		di as err "must specify either bar or hbar option"
 		exit 198
 	}
-	loc   reset          =cond("`reset'"       != "",        "True", "False")
-	loc   matrix         =cond("`matrix'"      != "",    "`matrix'","rmsa_i")
-	loc   seed           =cond( `seed',                    "`seed'",  "None")
-	loc   distribution   =cond("`distribution'"!= "",                       ///
-												  "'`distribution''", "None")
-	loc   partial        =cond("`partial'"     != "",        "True", "False")
-	loc   simulate       =cond("`simulate'"    != "",        "True", "False")
+	loc   matrix         = cond("`matrix'"  != "",  "`matrix'", "rmsa_i")
+	mata: reset          = "`reset'"        != ""  ?  1                   : 0
+	mata: threshold      =  `threshold'            ? `threshold'          : .
+	mata: sample_size    =  `samplesize'           ? `samplesize'         : .
+	mata: seed           =  `seed'                 ? `seed'               : .
+	mata: distribution   = "`distribution'"
+	mata: partial        = "`partial'"      != ""  ?  1                   : 0
+	mata: simulate       = "`simulate'"     != ""  ?  1                   : 0
 	// compute the structural correlogram of the CLSP constraint system         
 	if  ustrregexm( `"`anything'"',                "^corr",      1)           {
 		_read
-		python:  `tmp', `warnings', `error' = _(None, False,                ///
-		                                         fun=`s(clsp)'.corr,        ///
-		                                **dict(reset=`reset',               ///
-		                                   threshold=`threshold'          ))
-		python:         `warnings' = [SFIToolkit.displayln('{txt}note: '+k) ///
-		                              for k in dict.fromkeys(str(w.message) ///
-		                              for w in `warnings'                 )]
-		python:                       Macro.setLocal("`error'", `error'   )
-		if "``error''"  != ""												  {
-			di as err      "``error''"
-			exit 7102
-		}
-		loc CLSP            `s(clsp)'				   // store results
+		qui mata: CLSP.corr(reset, threshold)          // store results
 		foreach  s   in    rmsa                                               {
-			loc  code      "  `CLSP'.`s'"
-			_store  `s',   py(`code'       ) r(e) t(scalar)
+			_store  `s',   r(e) t(scalar)
 		}
 		foreach  s   in    rmsa_i rmsa_dkappaC rmsa_dkappaB rmsa_dkappaA	///
 						   rmsa_dnrmse rmsa_dzhat rmsa_dz rmsa_dx             {
-			loc  code      "  `CLSP'.`s'"
-			_store  `s',   py(`code'       ) r(e) t(matrix)
+			_store  `s',   r(e) t(matrix)
 		}
-		python:  del   `warnings', `error'
-		mata: st_global("s(clsp)","`CLSP'" )
 		_summary, noread							   // store summary
 		if "`bar'"      != ""  |											///
 		   "`hbar'"     != ""                                                 {
@@ -344,30 +299,10 @@ program define _estat, eclass
 	// CLSP estimator                                                           
 	if  ustrregexm( `"`anything'"',                "^ttest",     1)           {
 		_read
-		python:  `tmp', `warnings', `error' = _(None, False,                ///
-		                                         fun=`s(clsp)'.ttest,       ///
-		                                **dict(reset=`reset',               ///
-		                                 sample_size=`samplesize',          ///
-		                                        seed=`seed',                ///
-		                                distribution=`distribution',        ///
-		                                     partial=`partial',             ///
-		                                    simulate=`simulate'           ))
-		python:         `warnings' = [SFIToolkit.displayln('{txt}note: '+k) ///
-		                              for k in dict.fromkeys(str(w.message) ///
-		                              for w in `warnings'                 )]
-		python:                       Macro.setLocal("`error'", `error'   )
-		if "``error''"  != ""												  {
-			di as err      "``error''"
-			exit 7102
-		}
-		loc CLSP            `s(clsp)'				   // store results
-		if "`seed'"                  != "None"								///
-		mata: st_global("e(seed)",         "`seed'"                           )
-		if "`distribution'"          != "None"								///
-		mata: st_global("e(distribution)", subinstr("`distribution'","'","",.))
+		qui mata: CLSP.ttest(reset, sample_size, seed, distribution,        ///
+			                 partial,  simulate)       // store results
 		foreach  s   in    nrmse_ttest                                        {
-			loc  code      "  `CLSP'.`s'"
-			_store  `s',   py(`code'       ) r(e) t(matrix)
+			_store  `s',   r(e) t(matrix)
 		}
 		tempname f
 		mkf     `f'
@@ -376,8 +311,6 @@ program define _estat, eclass
 		frame   `f':   qui sum
 		loc t   `r(N)' `r(mean)' `r(sd)'									///
 				`=cond("`partial'" != "",e(nrmse_partial),e(nrmse))'
-		python:  del   `warnings', `error'
-		mata: st_global("s(clsp)","`CLSP'" )
 		_summary, noread							   // store summary
 		ttesti  `t', l(`level')						   // print ttest
 		exit 0
@@ -387,47 +320,37 @@ program define _estat, eclass
 end
 
 program define _read, sclass
-	version 16.0
-	tempname tmp
+	version 15.1
 	// scalars, macros, and matrices in e()                                     
-	cap python:     `tmp'      = CLSP()
+	mata: CLSP =  CLSPL2()
 	foreach  s   in    iteration_limit r rcond tolerance alpha kappaC		///
 					   kappaB kappaA rmsa r2_partial nrmse nrmse_partial      {
-			 if      "`s'"     == "rcond"									///
-		cap python: `tmp'.`s'  =  Scalar.getValue('e(`s')')                 ///
-		                       if Scalar.getValue('e(`s')') > 0 else (True  ///
-		                       if Scalar.getValue('e(`s')') < 0 else False)
+		if            "`s'"    == "rcond"									///
+		cap mata: CLSP.`s'     =  (tmp=st_numscalar("e(`s')")) >  0 ? tmp   ///
+			                   :  (tmp                         <  0 ? 1   : .)
 		else																///
-		cap python: `tmp'.`s'  =      Scalar.getValue('e(`s')')
+		cap mata: CLSP.`s'     =  (tmp=st_numscalar("e(`s')")) != J(0,0,.)  ///
+			                      ? tmp : .
 	}
 	foreach  s   in    final seed distribution                                {
-			 if      "`s'"     == "final"									///
-		cap python: `tmp'.`s'  = Macro.getGlobal('e(`s')') == "True"
-		else if      "`s'"     == "seed"									///
-		cap python: `tmp'.`s'  =  int(Macro.getGlobal('e(`s')'))
-		else if      "`s'"     == "distribution"                              {
-			python: `tmp'.rng  = random.default_rng(`tmp'.seed)
-			python: `tmp'.`s'  = lambda n:`tmp'.rng.`e(`s')'(size=(n, 1))
-		}
-		else																///
-		cap python: `tmp'.`s'  =      Macro.getGlobal('e(`s')')
+			 if       "`s'"    == "final"									///
+		cap mata: CLSP.`s'     =  st_global("e(`s')") == "True" ? 1 : 0
+		else if       "`s'"    == "seed"									///
+		cap mata: CLSP.`s'     =  strtoreal(st_global("e(`s')"))
+		else if       "`s'"    == "distribution"							///
+		cap mata: CLSP.`s'     =  st_global("e(`s')")
 	}
 	foreach  s   in    A C_idx b Z zhat z x y rmsa_i rmsa_dkappaC			///
 					   rmsa_dkappaB rmsa_dkappaA rmsa_dnrmse rmsa_dzhat		///
 					   rmsa_dz rmsa_dx nrmse_ttest z_lower z_upper x_lower	///
 					   x_upper y_lower y_upper                                {
-			 if      "`s'"     == "C_idx"									///
-		cap python: `tmp'.`s'  =    [int(i) for i in Matrix.get('e(C_idx)')[0]]
-		else if      "`s'"     == "b"										///
-		cap python: `tmp'.`s'  =     array(Matrix.get('e(rhs)'), dtype=float64)
-		else																///
-		cap python: `tmp'.`s'  =     array(Matrix.get('e(`s')'), dtype=float64)
+		loc tmp                =  cond("`s'" == "b", "rhs", "`s'")
+		cap mata: CLSP.`s'     =  st_matrix("e(`tmp')")
 	}
-	cap sret loc clsp   `tmp'						   // store object
 end
 
 program define _reorder, eclass
-	version 16.0
+	version 15.1
 	loc rows =  e(C_idx)[1, 1]
 	loc cols =  e(C_idx)[1, 2]
 	// scalars, macros, and matrices in e()                                     
@@ -437,22 +360,23 @@ program define _reorder, eclass
 									anyof(("iteration_limit"    ),"`s'" )   ///
 									?      "hidden" :"visible"          )
 	}
-	foreach  s   in    distribution seed final title estat_cmd cmd cmdline    {
+	foreach  s   in    distribution seed final model_n model_i reduced		///
+					   full title estat_cmd cmd cmdline                       {
 		mata:             st_global("e(`s')",         st_global("e(`s')"),  ///
-									anyof(("N/A"                ),"`s'" )   ///
+									anyof(("full", "reduced"),    "`s'" )   ///
 									?      "hidden" :"visible"          )
 	}
 	foreach  s   in    y_upper y_lower x_upper x_lower z_upper z_lower		///
 					   nrmse_ttest rmsa_dx rmsa_dz rmsa_dzhat rmsa_dnrmse	///
 					   rmsa_dkappaA rmsa_dkappaB rmsa_dkappaC rmsa_i y x z	///
-					   zhat Z rhs C_idx A                                     {
+					   zhat X Z rhs C_idx A                                   {
 		mata:             st_matrix("e(`s')",         st_matrix("e(`s')"),  ///
 									anyof(("Z","rhs","C_idx","A"),"`s'" ) | ///
 									ustrregexm("`s'","(rmsa|ttest)",   1)   ///
 									?      "hidden" :"visible"          )
 		cap conf mat e(`s')
 		if      _rc                   continue
-		if      inlist(  "`s'",            "x","x_lower","x_upper"      )	///
+		if      inlist(  "`s'",        "X","x","x_lower","x_upper"      )	///
 		mata:   st_local( "x" ,     cols(st_matrix("e(`s')")) ==  1         ///
 			                               ?      `","`s'""'      :  "" )
 		if               "`x'" == ""  continue   /* skip if non-vector       */
@@ -500,68 +424,58 @@ program define _reorder, eclass
 	}
 end
 
-program define _store, eclass
-	version 16.0
-	tempname tmp
+program define _store, sclass
+	version 15.1
 	// syntax
-	syntax name, PYthon(string asis) Result(string) Type(string)
+	syntax name, Result(string) Type(string)
 	loc result =             substr(strlower("`result'"),             1, 1)
 	loc type   =          strproper(strlower("`type'"                    ))
 	// scalars, macros, and matrices in e() and r()                             
-	mata:     st_local("_type",    ("scalar",      "local",   "matrix"   )[ ///
-		               selectindex(("Scalar",      "Macro",   "Matrix"   )  ///
-		                           :==                          "`type'")])
-	mata:     st_local("_attr",    ("setValue",    "setLocal", "store"   )[ ///
-		               selectindex(("Scalar",      "Macro",   "Matrix"   )  ///
-		                           :== "`type'"                         )])
 	mata:     st_local("_fun",     ("numscalar",   "global",  "matrix"   )[ ///
 		               selectindex(("Scalar",      "Macro",   "Matrix"   )  ///
 		                           :==                          "`type'")])
-	if       "`namelist'" == "rcond"										///
-	cap python:      Macro.setLocal("python",  str(-1 if         `python'   ///
-		                                           is True  else `python'))
-	cap python:      `type'.`_attr'('`tmp'',                  _( `python'))
+	loc tmp    =             cond("`namelist'" == "b", "rhs", "`namelist'")
+	if       "`namelist'" =="rcond"											///
+	cap mata: st_`_fun'("`result'(`tmp')", CLSP.`tmp' >= . ?  0 :           ///
+		                                  (CLSP.`tmp' >= 1 ? -1 : CLSP.`tmp'))
+	else {
+		if   "`namelist'" !="final"    &  "`namelist'"!= "seed"				///
+		cap mata: st_`_fun'("`result'(`tmp')",          CLSP.`namelist')
+		else																///
+		cap mata: st_`_fun'("`result'(`tmp')",     "`namelist'" != "final"  ///
+			                       ?          strofreal(CLSP.`namelist')    ///
+			                       : ("False","True"  )[CLSP.`namelist'+1])
+	}
 	if _rc																	///
-	mata:    st_`_fun'(   "`result'(`namelist')",  .                      )
-	if       "`namelist'" == "b"                   loc namelist  "rhs"
-	if       "`namelist'" == "C_idx"  |										///
-			 "`result'"   == "r"											///
-	mata:    st_matrix(   "`tmp'",                    st_matrix("`tmp'" )')
-	mata:    st_`_fun'(   "`result'(`namelist')",                           ///
-		     st_`=cond(   "`_fun'"!="global","`_fun'","local")'("`tmp'" ) )
+	cap mata: st_`_fun'("`result'(`tmp')",         "`type'" != "Macro"      ///
+		                                           ? . : ""               )
 end
 
 program define _summary, sclass
-	version 16.0
-	tempname tmp warnings error
+	version 15.1
+	tempname tmp
 	if "`1'" == ""    _read
-	python:  `tmp', `warnings', `error' = _(None, False,                    ///
-	                                         fun=`s(clsp)'.summary,         ///
-	                              **dict(display=False                    ))
-	python:         `warnings' = [SFIToolkit.displayln('{txt}note: '+k)     ///
-		                          for k in dict.fromkeys(str(w.message)     ///
-		                          for w in `warnings'                     )]
-	python:                       Macro.setLocal("`error'", `error'       )
-	if "``error''"  != ""                                                     {
-		di as err      "``error''"
-		exit 7102
-	}
 	mata:    st_rclear()                               // store results
-	foreach  s   in    inverse                                                {
-		loc  code      "`tmp'['`s'']"
-		cap _store `s', py(`code', True ) r(r) t(macro )
-	}
+	mata:    st_global("r(inverse)", (CLSP.Z != J(0,0,.))                 & ///
+		                             (max(abs(CLSP.Z - I(rows(CLSP.Z))))  > ///
+		                              CLSP.tolerance) ? "Bott-Duffin"       ///
+		                                              : "Moore-Penrose")
 	foreach  s   in    rmsa_i rmsa_dkappaC rmsa_dkappaB rmsa_dkappaA		///
 					   rmsa_dnrmse rmsa_dzhat rmsa_dz rmsa_dx				///
 					   z_lower z_upper x_lower x_upper y_lower y_upper        {
-		loc  code      "`tmp'['`s'']"
-		cap _store `s', py(`code'       ) r(r) t(matrix)
+		cap mata: st_matrix("r(`s')",(tmp=min(CLSP.`s'),max(CLSP.`s'),      ///
+			                                  mean(colshape(CLSP.`s', 1)),  ///
+			                         sqrt(variance(colshape(CLSP.`s', 1)))) ///
+			                         != J(1,4,.) ? tmp :(regexm("`s'","^y") ///
+			                                     ? tmp : J(0,0,.)        ))
 	}
-	foreach  v   in           `s(clsp)' `tmp' `warnings' `error'              {
-		cap  python:    del   `v'
-	}
-	cap sret loc clsp  ""
+	cap mata: mata drop CLSP
 	_reorder
+	if ("`e(cmd)'" == "tmpinvl2"     &  "`e(full)'" != "True")				///
+	di as  res  _n                                               "Reduced "	///
+	   ustrregexrf(strproper("`e(title)'"), "pinv", "Pinv", 1)    " Model:"	///
+	   as  txt  _n  %-20s                                     "  Position:"	///
+	   as  res      %18s                    " `e(model_i)' of `e(model_n)'"
 	loc p  "partial"
 	di as  res  _n "Estimator Configuration:"		   // print results
 	mata:  display(_sprint("Generalized inverse",  st_global("r(inverse)"  )))
@@ -596,7 +510,7 @@ program define _summary, sclass
 end
 
 * Mata code ***************                                                     
-version 16.0
+version 15.1
 
 loc RS           real scalar
 loc SS           string scalar
@@ -636,43 +550,5 @@ mata set matastrict on
                      return(sprintf("%"+strofreal(w)+"."+strofreal(ep)+"e", x))
     else             return(fixed)
 }
-end
-
-* Python 3 code ***********                                                     
-version 16.0
-python:
-# Stata Function Interface
-from sfi import  Data, Macro, Matrix, Scalar, SFIToolkit
-# Python Modules
-from   warnings  import catch_warnings, simplefilter
-try:
-    from   numpy import nan, array, ndarray, float64, random
-    from   clsp  import CLSP
-except:
-    SFIToolkit.errprint('pyclsp not found; install from PyPI')
-    SFIToolkit.error(7102)
-
-def _(x, flag=False, fun=None, **kwargs):              # preprocess output
-    if  fun is None:
-        return  (str(x)           if flag                         else
-                 float('nan')     if x is None  or (isinstance(x, ndarray)
-                                                and x.size  == 0) else
-                 x.reshape(-1, 1) if               (isinstance(x, ndarray)
-                                                and x.ndim  == 1) else
-                 array([a.ravel() for  a in x],             dtype=float64)
-                                  if                isinstance(x, list   )
-                                  and           all(isinstance(a, ndarray)
-                                  for  a in x)                    else
-                 list(x.values()) if                isinstance(x, dict   )
-                                                                  else  x)
-    else:
-        result, warnings, error = None, [], ''
-        with catch_warnings(record=True) as warnings:
-            simplefilter('always')
-            try:
-                result = fun(**kwargs)
-            except Exception as e:
-                error  = str(   e)
-        return  result, warnings, error
 end
 * an extra line to even the total number

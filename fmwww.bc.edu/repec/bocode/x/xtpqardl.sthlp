@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.2  26apr2026}{...}
+{* *! version 1.0.3  06may2026}{...}
 {vieweralsosee "xtpmg" "help xtpmg"}{...}
 {vieweralsosee "qreg" "help qreg"}{...}
 {viewerjumpto "Syntax" "xtpqardl##syntax"}{...}
@@ -8,6 +8,7 @@
 {viewerjumpto "Options" "xtpqardl##options"}{...}
 {viewerjumpto "Examples" "xtpqardl##examples"}{...}
 {viewerjumpto "Stored results" "xtpqardl##results"}{...}
+{viewerjumpto "Diagnostics" "xtpqardl##diagnostics"}{...}
 {viewerjumpto "References" "xtpqardl##references"}{...}
 {viewerjumpto "Author" "xtpqardl##author"}{...}
 
@@ -297,6 +298,118 @@ Default is ECT.
 {synopt:{cmd:e(beta_all)}}panel-specific long-run beta (N x k*ntau){p_end}
 {synopt:{cmd:e(rho_all)}}panel-specific ECT coefficient (N x ntau){p_end}
 {synopt:{cmd:e(halflife_all)}}panel-specific half-life (N x ntau){p_end}
+
+
+{marker diagnostics}{...}
+{title:Diagnostics and troubleshooting}
+
+{pstd}
+{bf:Understanding "No panels could be estimated"}
+
+{pstd}
+This error occurs when {it:none} of the individual panel units have enough
+observations to estimate the quantile regression model. It is {bf:not} a code
+error — it reflects a {bf:degrees-of-freedom} constraint inherent to the
+data and model specification.
+
+{pstd}
+{bf:Why does this happen?}
+
+{pstd}
+The PQARDL model runs a separate quantile regression for each panel. The
+number of parameters per panel depends on the model specification:
+
+{p2colset 9 42 44 2}{...}
+{p2col:{bf:Component}}{bf:Number of parameters}{p_end}
+{p2line}
+{p2col:Lagged dependent (ECT)}1{p_end}
+{p2col:Long-run x variables}k (number of LR regressors){p_end}
+{p2col:AR lags of dependent}p - 1{p_end}
+{p2col:SR contemporaneous diffs}k (one per indepvar){p_end}
+{p2col:SR additional lags}depends on q(){p_end}
+{p2col:Constant}1{p_end}
+{p2line}
+{p2col:{bf:Total}}{bf:k_lr + (p-1) + k_sr + 1}{p_end}
+{p2colreset}{...}
+
+{pstd}
+For example, with 4 independent variables and PQARDL(1,1,1,1,1):
+1 (ECT) + 4 (LR levels) + 0 (AR) + 4 (SR diffs) + 1 (constant) = {bf:10 parameters}.
+Each panel needs at least T >= 10 non-missing observations. If the average T
+in the data is only 7-8, no panel can satisfy this requirement.
+
+{pstd}
+{bf:Practical rule of thumb:}
+
+{pstd}
+For a PQARDL(1,1,...,1) with k independent variables, you need:
+
+{p 8 8 2}
+T_min = 2k + 2     (per panel, after differencing)
+
+{pstd}
+With T = 7 periods per panel, the maximum feasible number of predictors is
+approximately {bf:k = 2 to 3} (depending on missing values).
+
+{pstd}
+{bf:How to resolve:}
+
+{phang}
+1. {bf:Reduce the number of predictors.} Include only the most theoretically
+important variables. With T ~ 7, use at most 2-3 independent variables.
+{p_end}
+
+{phang}
+2. {bf:Use longer time series.} If possible, extend the panel to more time
+periods so each panel has enough observations for the model.
+{p_end}
+
+{phang}
+3. {bf:Use the DFE estimator.} The {opt dfe} option pools all panels into a
+single quantile regression with panel fixed effects. This does not require
+sufficient T per panel, as it uses the total pooled sample. However, DFE
+imposes homogeneity of all coefficients across panels.
+{p_end}
+
+{phang}
+4. {bf:Reduce lag orders.} Higher p() and q() values add more parameters.
+Keep p(1) and q(1) when T is short.
+{p_end}
+
+{pstd}
+{bf:Understanding partial panel estimation}
+
+{pstd}
+When the command reports, for example, "822/1072 panels estimated
+successfully", this means 250 panels were skipped because they did not have
+enough non-missing observations across {it:all} variables (dependent, LR
+levels, and SR differences simultaneously). This is normal and expected —
+the mean group estimates are computed from the panels that could be estimated.
+The diagnostic line shows:
+
+{phang2}
+{cmd:(Diagnostics: X panels skipped [insuff. obs], Y qreg failures)}
+{p_end}
+
+{pstd}
+where {bf:insuff. obs} means the panel had fewer non-missing observations
+than the minimum required, and {bf:qreg failures} means the quantile
+regression command itself returned an error (e.g., perfect collinearity,
+numerical issues).
+
+{pstd}
+{bf:Degrees-of-freedom table by number of predictors (PQARDL(1,1,...)):}
+
+{p2colset 9 28 30 2}{...}
+{p2col:{bf:Predictors (k)}}{bf:Min T needed}{p_end}
+{p2line}
+{p2col:1}4{p_end}
+{p2col:2}6{p_end}
+{p2col:3}8{p_end}
+{p2col:4}10{p_end}
+{p2col:5}12{p_end}
+{p2line}
+{p2colreset}{...}
 
 
 {marker references}{...}

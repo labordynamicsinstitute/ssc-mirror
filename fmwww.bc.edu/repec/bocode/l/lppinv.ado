@@ -1,4 +1,4 @@
-*! version 1.0.0  20aug2025  I I Bolotov
+*! version 1.1.0  20nov2025  I I Bolotov
 program define lppinv, eclass byable(recall)
 	version 16.0
 	/*
@@ -37,7 +37,8 @@ program define lppinv, eclass byable(recall)
 		LOWERbound(numlist miss) UPPERbound(numlist miss)					///
 		REPLACEvalue(numlist miss max=1) r(int 1) Z(name) RCOND(real 0)		///
 		TOLerance(real -1) ITERationlimit(int 0) noFINAL					///
-		alpha(numlist >=-1 <=1 sort) CVXopt(string asis) MISSingokay *		///
+		alpha(numlist >=-1 <=1 sort) CVXopt(string asis) MISSingokay		///
+		CONDTOLerance(real 1e-14) *											///
 	]
 	// adjust and preprocess options for Python's LPPinv module                 
 	if           ustrregexm( `"`anything'"',       "^estat",     1)           {
@@ -226,7 +227,8 @@ program define lppinv, eclass byable(recall)
 	`=cond("`tolerance'"     !="",      "tolerance=`tolerance',",     "")'  ///
 	`=cond("`iterationlimit'"!="","iteration_limit=`iterationlimit',","")'  ///
 	                                         final=`final',                 ///
-	                                         alpha=`alpha'    `cvxopt'    ))
+	                                         alpha=`alpha',                 ///
+	                              cond_tolerance=`condtolerance'  `cvxopt'))
 	python:         `warnings' = [SFIToolkit.displayln('{txt}note: '+k    ) ///
 	                              for k in dict.fromkeys(str(w.message    ) ///
 	                              for w in `warnings'                     )]
@@ -239,8 +241,8 @@ program define lppinv, eclass byable(recall)
 	eret post,         esample(`touse')
 	qui  count   if    e(sample)
 	eret sca N      =  r(N)
-	foreach  s   in    iteration_limit r tolerance alpha kappaC kappaB		///
-					   kappaA r2_partial nrmse nrmse_partial                  {
+	foreach  s   in    iteration_limit r rcond tolerance alpha kappaC		///
+					   kappaB kappaA r2_partial nrmse nrmse_partial           {
 		loc  code             "`CLSP'.`s'"
 		_store  `s',   py(`code'       ) r(e) t(scalar)
 	}
@@ -399,13 +401,18 @@ program define _read, sclass
 	tempname tmp
 	// scalars, macros, and matrices in e()                                     
 	cap python:     `tmp'      = CLSP()
-	foreach  s   in    iteration_limit r tolerance alpha kappaC kappaB		///
-					   kappaA rmsa r2_partial nrmse nrmse_partial             {
+	foreach  s   in    iteration_limit r rcond tolerance alpha kappaC		///
+					   kappaB kappaA rmsa r2_partial nrmse nrmse_partial      {
+			 if      "`s'"     == "rcond"									///
+		cap python: `tmp'.`s'  =  Scalar.getValue('e(`s')')                 ///
+		                       if Scalar.getValue('e(`s')') > 0 else (True  ///
+		                       if Scalar.getValue('e(`s')') < 0 else False)
+		else																///
 		cap python: `tmp'.`s'  =      Scalar.getValue('e(`s')')
 	}
 	foreach  s   in    final seed distribution                                {
 			 if      "`s'"     == "final"									///
-		cap python: `tmp'.`s'  = bool(Macro.getGlobal('e(`s')'))
+		cap python: `tmp'.`s'  = Macro.getGlobal('e(`s')') == "True"
 		else if      "`s'"     == "seed"									///
 		cap python: `tmp'.`s'  =  int(Macro.getGlobal('e(`s')'))
 		else if      "`s'"     == "distribution"                              {
@@ -434,8 +441,8 @@ program define _reorder, eclass
 	loc rows =  e(C_idx)[1, 1]
 	loc cols =  e(C_idx)[1, 2]
 	// scalars, macros, and matrices in e()                                     
-	foreach  s   in    N iteration_limit r tolerance alpha kappaC kappaB	///
-					   kappaA rmsa r2_partial nrmse nrmse_partial             {
+	foreach  s   in    N iteration_limit r rcond tolerance alpha kappaC		///
+					   kappaB kappaA rmsa r2_partial nrmse nrmse_partial      {
 		mata:          st_numscalar("e(`s')",      st_numscalar("e(`s')"),  ///
 									anyof(("iteration_limit"    ),"`s'" )   ///
 									?      "hidden" :"visible"          )
@@ -520,6 +527,9 @@ program define _store, eclass
 	mata:     st_local("_fun",     ("numscalar",   "global",  "matrix"   )[ ///
 		               selectindex(("Scalar",      "Macro",   "Matrix"   )  ///
 		                           :==                          "`type'")])
+	if       "`namelist'" == "rcond"										///
+	cap python:      Macro.setLocal("python",  str(-1 if         `python'   ///
+		                                           is True  else `python'))
 	cap python:      `type'.`_attr'('`tmp'',                  _( `python'))
 	if _rc																	///
 	mata:    st_`_fun'(   "`result'(`namelist')",  .                      )

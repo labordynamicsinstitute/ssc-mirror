@@ -46,4 +46,5 @@ p quantiles module to categorize by quantiles
 p quickicc module to compute intraclass correlation and standard error calculation after xtmixed
 p quine module providing a self-producing program
 p qv module to compute quasi-variances
+p qvar module to perform Quantile Vector Autoregression
 p qweibull module to generate quantile-quantile plot for data vs fitted Weibull distribution

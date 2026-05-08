@@ -1,4 +1,4 @@
-*! version 1.0.2  20aug2025  I I Bolotov
+*! version 1.1.0  20nov2025  I I Bolotov
 program define tmpinvi, eclass byable(recall)
 	version 16.0
 	/*
@@ -137,5 +137,5 @@ program define tmpinvi, eclass byable(recall)
 	if ("`get'"      != ""       |  "`_byvars'"  != ""    )					///
 	restore
 	if ("`get'"      != ""                                )					///
-	qui merge 1:1   `id' using   `tmpf',       `update' `replace'  nogen
+	cap merge 1:1   `id' using   `tmpf',       `update' `replace'  nogen
 end

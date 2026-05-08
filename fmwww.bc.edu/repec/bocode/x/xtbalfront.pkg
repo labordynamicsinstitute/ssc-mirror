@@ -1,0 +1,37 @@
+d 'XTBALFRONT': module to trade-off frontier diagnostics and balanced-subsample selection for unbalanced panel data
+d
+d  xtbalfront examines an unbalanced panel and characterises the
+d trade-off between balanced length (number of years) and balanced
+d breadth (number of cross-sections) implied by the pattern of
+d missing data on a user-supplied variable list. By default it
+d produces a panel-structure summary (xtset + xtdescribe), both a
+d "best-window" trade-off curve (best obtainable balanced sample at
+d each length) and a "recency-anchored" curve (sample held to end
+d at the most recent period), together with a presence/absence
+d heatmap, a histogram of per-cross-section data availability, an
+d internal-gap diagnostic, and the L*N peak (the largest balanced
+d sample). When the analyst supplies years() or crosssections(),
+d the command additionally produces a Welch t-test comparison of
+d the proposed subsample against the discarded cross-sections, an
+d overlaid pre/post histogram for each variable showing the
+d distributional shift with the percentage change in the mean in
+d the note, lists the selected cross-sections, and either creates
+d an indicator variable (generate()) or restricts the dataset
+d (keep). A dryrun option lets the analyst review the diagnostics
+d before committing. The command emphasises analyst flexibility -
+d any window length, any anchor, any subset target - and a
+d quantitative read on how the chosen subsample differs
+d distributionally from the original unbalanced data. 
+d
+d KW: panel data
+d KW: unbalanced panels
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260507
+d
+d Author: Noman Arshed,   Sunway Business School, Sunway University
+d Support: email nouman.arshed@@gmail.com
+d
+f xtbalfront.ado
+f xtbalfront.sthlp

@@ -1,4 +1,4 @@
-*! xtpqardl v1.0.2  26apr2026  Dr Merwan Roudane  merwanroudane920@gmail.com
+*! xtpqardl v1.0.3  06may2026  Dr Merwan Roudane  merwanroudane920@gmail.com
 *! Panel Quantile Autoregressive Distributed Lag (PQARDL) Model
 *! Combines Panel ARDL (PMG/MG/DFE) with Quantile Regression
 *! Based on: Cho, Kim & Shin (2015), Bildirici (2022), Pesaran et al. (1999)
@@ -271,7 +271,7 @@ program define Estimate, eclass
 		"  XTPQARDL — Panel Quantile ARDL" ///
 		_col(72) in gr "{bf:║}"
 	di in smcl in gr "  {bf:║}" _col(5) in ye ///
-		"  Version 1.0.2" ///
+		"  Version 1.0.3" ///
 		_col(72) in gr "{bf:║}"
 	di in smcl in gr "  {bf:╚══════════════════════════════════════════════════════════════════════╝}"
 	di in smcl in gr "{hline 78}"
@@ -338,8 +338,19 @@ program define Estimate, eclass
 			in gr " panels estimated successfully"
 		
 		if `valid_panels' == 0 {
+			local ncoefs_tot = `k_lr_est' + (`p' - 1) + `ncoefs_sr'
+			local min_T = `ncoefs_tot' + 1
+			local avg_T = round(`nobs' / `npanels', 0.1)
 			di as err "  ERROR: No panels could be estimated"
-			di as err "  Check that lr() variables exist and have sufficient variation"
+			di as err "  Reason: insufficient degrees of freedom"
+			di as err "  The PQARDL(`ardl_order') model requires `ncoefs_tot' regressors" ///
+				" (+constant = `min_T' parameters)"
+			di as err "  Each panel needs at least T ≥ `min_T' non-missing observations,"
+			di as err "  but average T in data ≈ `avg_T'"
+			di as err "  Suggestions:"
+			di as err "    • Reduce the number of predictors"
+			di as err "    • Use longer time series (more periods)"
+			di as err "    • Try the {bf:dfe} option (pools across panels)"
 			exit 2000
 		}
 		
@@ -1002,7 +1013,7 @@ program define Estimate, eclass
 	* ================================================================
 	di
 	di in smcl in gr "{hline 78}"
-	di in gr "  {bf:XTPQARDL v1.0.2} — Panel Quantile ARDL" ///
+	di in gr "  {bf:XTPQARDL v1.0.3} — Panel Quantile ARDL" ///
 		_col(50) in ye "PQARDL(`ardl_order')"
 	di in smcl in gr "{hline 78}"
 	di

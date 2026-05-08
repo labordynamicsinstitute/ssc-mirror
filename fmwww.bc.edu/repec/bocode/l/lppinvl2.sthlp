@@ -1,37 +1,31 @@
 {smcl}
-{* *! version 1.1.0  20nov2025}{...}
-{viewerjumpto "Syntax" "tmpinv##syntax"}{...}
-{viewerjumpto "Description" "tmpinv##description"}{...}
-{viewerjumpto "Postestimation" "tmpinv##postestimation"}{...}
-{viewerjumpto "Remarks" "tmpinv##remarks"}{...}
-{viewerjumpto "Examples" "tmpinv##examples"}{...}
-{viewerjumpto "Stored results" "tmpinv##results"}{...}
+{* *! version 1.1.0  20aug2025}{...}
+{viewerjumpto "Syntax" "lppinvl2##syntax"}{...}
+{viewerjumpto "Description" "lppinvl2##description"}{...}
+{viewerjumpto "Postestimation" "lppinvl2##postestimation"}{...}
+{viewerjumpto "Remarks" "lppinvl2##remarks"}{...}
+{viewerjumpto "Examples" "lppinvl2##examples"}{...}
+{viewerjumpto "Stored results" "lppinvl2##results"}{...}
 
 {title:Title}
 {phang}
-{cmd:tmpinv} {hline 2} Tabular Matrix Problems via Pseudoinverse Estimation
-(TMPinv) is a modular two-step estimator for solving underdetermined, ill-posed,
-or structurally constrained allocation problems using least-squares and convex
-optimization
+{cmd:lppinvl2} {hline 2} Linear Programming via Regularized Least Squares
+(LPPinv) is a modular two-step estimator for solving underdetermined, ill-posed,
+or structurally constrained linear and quadratic programming problems, based on
+the L2 norm (i.e., implementing the {bf:alpha} = {bf:1} special case)
 
 {title:Requirements}
 
 {phang}
-Because Stata does not provide native convex optimization tools, estimation is
-performed using the Python 3 module {bf:pytmpinv}, which must be installed and
-available to Stata's Python integration. Installation can be performed from the
-system shell:
-
-{phang}
-{cmd:. shell pip {space 1} install {space 18}pytmpinv}{p_end}
-{phang}
-{cmd:. shell conda install -c ilyabolotov -y pytmpinv}{p_end}
-
+{helpb clspl2}: Convex Least Squares Programming (CLSP) is a modular two-step
+estimator for solving underdetermined, ill-posed, or structurally constrained
+least-squares problems, based on the L2 norm (i.e., implementing the
+{bf:alpha = 1} special case).
 {marker syntax}{...}
 {title:Syntax}
 
 {p 8 17 2}
-{cmdab:tmpinv}
+{cmdab:lppinvl2}
 {help strings:{it:string}}
 {ifin}
 [{cmd:,} {it:options}]
@@ -41,74 +35,55 @@ system shell:
 {synoptline}
 
 {syntab:Problem definition}
-{synopt :{it:string}}One of: {bf:full}/{bf:general} - full model or {bf: # #} -
-        reduced model with given matrix dimensions (rows columns), so that the
-        problem is estimated as a set of reduced problems constructed from
-        contiguous submatrices of the original table. For example, reduced =
-        (6, 6) implies 5×5 data blocks with 1 slack row and 1 slack column each
-        (edge blocks may be smaller). The minimum is {bf:3 3}.{p_end}
-{synopt :{opth red:uced(#)}}Position within the reduced model, from which the
-        respective reduced solution's results are loaded into {cmd:e()}, with
-        possible values ranging between {bf:-number of reduced problems}
-        (equivalent to {bf:1}) and {bf:number of reduced problems} (equivalent
-        to {bf:-1}) (default {bf:-1}). Requires reduced model.{p_end}
+{synopt :{it:string}}One of: {bf:nonneg} - enforce nonnegativity constraints,
+        the standard setting in real-world linear and quadratic programming
+        problems, or {bf:free} - enforce no constraints.{p_end}
 
 {syntab:Right-hand side}
-{synopt :{opth brow:(strings:string)}}Right-hand side vector of row totals,
-        {help varname:{it:varname}} or {it:name of an existing matrix}. Please
-        note that both {bf:brow({help strings:{it:string}})} and
-        {bf:bcol({help strings:{it:string}})} must be provided. Required.{p_end}
-{synopt :{opth bcol:(strings:string)}}Right-hand side vector of column totals,
-        {help varname:{it:varname}} or {it:name of an existing matrix}. Please
-        note that both {bf:brow({help strings:{it:string}})} and
-        {bf:bcol({help strings:{it:string}})} must be provided. Required.{p_end}
-{synopt :{opth bval:(strings:string)}}Right-hand side vector of known cell
-        values, {help varname:{it:varname}} or
-        {it:name of an existing matrix}.{p_end}
+{synopt :{opth bub:(strings:string)}}Right-hand side vector for inequality
+        constraints, {help varname:{it:varname}} or
+        {it:name of an existing matrix}. Please note that at least one of
+        {bf:bub({help strings:{it:string}})} or
+        {bf:beq({help strings:{it:string}})} must be provided, matched by
+        a corresponding {bf:aub({help strings:{it:string}})} or
+        {bf:aeq({help strings:{it:string}})}.{p_end}
+{synopt :{opth beq:(strings:string)}}Right-hand side vector for equality
+        constraints, {help varname:{it:varname}} or
+        {it:name of an existing matrix}. Please note that at least one of
+        {bf:bub({help strings:{it:string}})} or
+        {bf:beq({help strings:{it:string}})} must be provided, matched by
+        a corresponding {bf:aub({help strings:{it:string}})} or
+        {bf:aeq({help strings:{it:string}})}.{p_end}
 
 {syntab:Left-hand side}
-{synopt :{opth s:lackvars(strings:string)}}Block {bf:S}, of shape
-        (m + p)×(m + p), of the design matrix {bf:A} = [{bf:C}, {bf:S}\ {bf:M},
-        {bf:Q}], {help varlist:{it:varlist}} or
-        {it:name of an existing matrix}. A diagonal sign slack (surplus) matrix
-        with entries in {{bf:0},{bf:±1}}: {bf:0} enforces equality (==
-        {bf:brow({help strings:{it:string}})} or
-        {bf:bcol({help strings:{it:string}})}), {bf:1} enforces a
-        lower-than-or-equal (≤) condition, {bf:-1} enforces a
-        greater-than-or-equal (≥) condition. The first m diagonal entries
-        correspond to row constraints, and the remaining p to column
-        constraints. Please note that, in the reduced model, {bf:S} is
-        ignored: slack behavior is derived implicitly from block-wise marginal
-        totals.{p_end}
-{synopt :{opth mod:el(strings:string)}}Block {bf:M} of the design matrix
-        {bf:A} = [{bf:C}, {bf:S}\ {bf:M}, {bf:Q}], {help varlist:{it:varlist}}
-        or {it:name of an existing matrix}. Each row defines a linear
-        restriction on the flattened solution matrix. The corresponding
-        right-hand side values must be provided in
-        {bf:bval({help strings:{it:string}})}. This block is used to encode
-        known cell values. Please note that, in the reduced model, {bf:M} must
-        be a unique row subset of an identity matrix (i.e.,
-        diagonal-only). Arbitrary or non-diagonal model matrices cannot be
-        mapped to reduced blocks, making the model infeasible.{p_end}
-{synopt :{opth i:(#)}}Grouping size for row    sum constraints in
-        APs/TMs.{p_end}
-{synopt :{opth j:(#)}}Grouping size for column sum constraints in
-        APs/TMs.{p_end}
-{synopt :{opt zerod:iagonal}}Enforce structural zero diagonals in
-        APs/TMs.{p_end}
-{synopt :{opt sym:metric}}Enforce symmetry of the estimated solution matrix
-        as: {bf:e(X)} = {bf:0.5} * ({bf:e(X)} + {bf:e(X)}'). Applies to
-        {bf:e(X)} only. For proper model symmetry, please add explicit symmetry
-        constraints to {bf:M} in a full-model solve instead of using this
-        option.{p_end}
+{synopt :{opth aub:(strings:string)}}Matrix for inequality constraints
+        {bf:aub({help strings:{it:string}})} ⋅ {bf:x} ≤
+        {bf:bub({help strings:{it:string}})}, {help varlist:{it:varlist}}
+        or {it:name of an existing matrix}. Please note that at least one of
+        {bf:aub({help strings:{it:string}})} or
+        {bf:aeq({help strings:{it:string}})} must be provided, matched by
+        a corresponding {bf:bub({help strings:{it:string}})} or
+        {bf:beq({help strings:{it:string}})}.{p_end}
+{synopt :{opth aeq:(strings:string)}}Matrix for equality constraints
+        {bf:aeq({help strings:{it:string}})} ⋅ {bf:x} =
+        {bf:beq({help strings:{it:string}})}, {help varlist:{it:varlist}}
+        or {it:name of an existing matrix}. Please note that at least one of
+        {bf:aub({help strings:{it:string}})} or
+        {bf:aeq({help strings:{it:string}})} must be provided, matched by
+        a corresponding {bf:bub({help strings:{it:string}})} or
+        {bf:beq({help strings:{it:string}})}.{p_end}
 
 {syntab:Prior information}
 {synopt :{opth lower:bound(numlist)}}Lower bounds on cell values. If a single
         value is given (please use missing values {bf:.} or {bf:.a-z} for
-        {bf:-∞}), it is applied to all m×p cells.{p_end}
+        {bf:-∞}), it is applied to all variables. Under {bf:nonneg}, negative
+        values in {bf:lowerbound({help numlist:{it:numlist}})} will produce an
+        error.{p_end}
 {synopt :{opth upper:bound(numlist)}}Upper bounds on cell values. If a single
         value is given (please use missing values {bf:.} or {bf:.a-z} for
-        {bf:∞}), it is applied to all m×p cells.{p_end}
+        {bf:∞}), it is applied to all variables. Under {bf:nonneg}, negative
+        values in {bf:upperbound({help numlist:{it:numlist}})} will produce an
+        error.{p_end}
 {synopt :{opth replace:value(numlist)}}Final replacement value (real or missing
         {bf:.} or {bf:.a-z}) for any cell in the solution matrix that violates
         the bounds specified in {bf:lowerbound({help numlist:{it:numlist}})}
@@ -138,32 +113,10 @@ system shell:
         refinement loop (default {bf:50}).{p_end}
 
 {syntab:Estimation (second step)}
-{synopt :{opt nofinal}}Suppress the second step, a convex programming problem
-        solved to refine {bf:z-hat}. The resulting solution {bf:z}^* minimizes
-        a weighted L1/L2 norm around {bf:z-hat} subject to {bf:A}{bf:z} =
-        {bf:b}.{p_end}
-{synopt :{opth alpha:(real)}}Regularization parameter (weight) in the final
-        convex program: {bf:α} = {bf:0} - Lasso (L1 norm), {bf:α} = {bf:1} -
-        Tikhonov Regularization/Ridge (L2 norm), or {bf:0} < {bf:α} < {bf:1}
-        - Elastic Net. If {bf:-1}, {bf:α} is chosen, based on an error
-        rule: {bf:α} = min({bf:1.0}, NRMSE_{{bf:α} = {bf:0}} / (NRMSE_{{bf:α}
-        = {bf:0}} + NRMSE_{{bf:α} = {bf:1}} +
-        {bf:tolerance({help real:{it:real}})})). If a
-        {help numlist:{it:numlist}}, with each value in [{bf:0}, {bf:1}], is
-        provided, each candidate is evaluated via a full solve, and the {bf:α}
-        with the smallest NRMSE is selected (default {bf:-1}).{p_end}
-{synopt :{opth cvx:opt(string asis)}}Python keyword arguments passed to the
-        CVXPY solver in {bf:pytmpinv}.{p_end}
+{synopt :{opt nofinal}}Suppress the second step, a second pseudoinverse
+        estimation to refine {bf:z-hat}.{p_end}
 
 {syntab:Other}
-{synopt :{opt miss:ingokay}}Treat Stata missing values {bf:.} and {bf:.a-z} as
-        observations and forward them to {bf:pytmpinv} as {cmd:numpy.nan}. For
-        example, when at least two of {bf:brow({help strings:{it:string}})},
-        {bf:bcol({help strings:{it:string}})},
-        {bf:bval({help strings:{it:string}})},
-        {bf:slackvars({help strings:{it:string}})}, and
-        {bf:model({help strings:{it:string}})} are sourced from the dataset
-        and do not share the same number of rows.{p_end}
 {synopt :{opth condtol:erance(real)}}Singular-value cutoff for the custom
         condition number function. If set to a {bf:missing value}, the
         implementation uses an internal relative cutoff of {bf:1e-14}.{p_end}
@@ -171,10 +124,10 @@ system shell:
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
-{help varname} and {help varlist} in {bf:brow({help strings:{it:string}})},
-{bf:bcol({help strings:{it:string}})}, {bf:bval({help strings:{it:string}})},
-{bf:slackvars({help strings:{it:string}})}, and
-{bf:model({help strings:{it:string}})} may not contain time-series operators
+{help varname} and {help varlist} in {bf:bub({help strings:{it:string}})},
+{bf:beq({help strings:{it:string}})},
+{bf:aub({help strings:{it:string}})}, and
+{bf:aeq({help strings:{it:string}})} may not contain time-series operators
 or factor variables and are filtered by {ifin} with missing values being
 excluded by default; see {help tsvarlist} and {help fvvarlist}.{p_end}
 {p 4 6 2}
@@ -188,10 +141,10 @@ are allowed; see {help prefix}.{p_end}
 See {ul:{bf:Postestimation}} for features available after estimation.{p_end}
 
 {marker description}{...}
-{title:Description}
+{title:Description} 
 
 {pstd}
-{cmd:tmpinv} implements the
+{cmd:lppinvl2} implements the
 {bf:Convex Least Squares Programming (CLSP) estimator}, a modular two-step
 convex optimization framework, capable of addressing ill-posed and
 underdetermined problems. After reformulating a problem in its canonical form,
@@ -205,20 +158,11 @@ pseudoinverse when {bf:Z} = {bf:I}) -- where ({bf:A}_Z^†)^(r) =
 (({bf:Z}({bf:A}^(r))^{c TT}{bf:A}^(r){bf:Z})^†){bf:Z}({bf:A}^(r))^{c TT} is the
 Bott-Duffin inverse with a left projector {bf:P}_Z^L (reduced to
 ({bf:A}^†)^(r) = ((({bf:A}^(r))^{c TT}{bf:A}^(r))^†)({bf:A}^(r))^{c TT} when
-{bf:Z} = {bf:I}). The optional Step 2 corrects {bf:zhat} by solving a convex
-program, which penalizes deviations using a Lasso/Ridge/Elastic Net-inspired
-scheme parameterized by {bf:α} ∈ [{bf:0}, {bf:1}] and yields {bf:z}^*. The
-second step guarantees a unique solution for {bf:α} ∈ ({bf:0}, {bf:1}] and
-coincides with the Minimum-Norm BLUE (MNBLUE) when {bf:α} = {bf:1}.
-
-{pstd}
-{cmd:tmpinv} focuses on a special case of the CLSP estimation, allocation
-problems ({bf:AP}s) (or, for flow variables, tabular matrix problems, {bf:TM}s)
-- in most cases, underdetermined problems involving matrices {bf:X} ∈ ℝ^{m×p}
-to be estimated, subject to known row and column sums, manifested as a block
-submatrix [(({bf:I}_{m/i} ⊗ {bf:1}_i) ⊗ {bf:1}_p)^{c TT}, ({bf:1}_m ⊗
-({bf:I}_{p/j} ⊗ {bf:1}_j)^{c TT})]^{c TT} in {bf:C} and a [row sums\
-column sums^{c TT}] subvector in {bf:b}.
+{bf:Z} = {bf:I}). The optional Step 2 corrects {bf:zhat} via a second
+pseudoinverse estimation {bf:z}^* = {bf:zhat} + ({bf:A}^(r))^{c TT}
+({bf:A}^(r)({bf:A}^(r))^{c TT})^† ({bf:b} - {bf:A}^(r){bf:zhat}), guaranteeing
+an L2-norm-based Minimum-Norm BLUE (MNBLUE) unique solution (corresponding to
+{bf:alpha} = {bf:1} in the estimator).
 
 {pstd}
 {bf:Numerical stability of {bf:A}:}
@@ -261,18 +205,13 @@ considered to be uniform).
 {pstd}
 For total RMSA and sensitivity of [{bf:C}, {bf:S}] to dropping one row:
 {break}
-{cmdab:. tmpinv estat corr}
+{cmdab:. lppinvl2 estat corr}
 [{cmd:,} {it:options}]
 
 {synoptset 35 tabbed}{...}
 {synopthdr}
 {synoptline}
 
-{synopt :{opth red:uced(#)}}Position within the reduced model, from which the
-        respective reduced solution's results are loaded into {cmd:e()}, with
-        possible values ranging between {bf:-number of reduced problems}
-        (equivalent to {bf:1}) and {bf:number of reduced problems} (equivalent
-        to {bf:-1}) (default {bf:e(model_i)}).{p_end}
 {synopt :{opt reset:}}Force recomputation of all diagnostic values instead of
         replaying previously stored results.{p_end}
 {synopt :{opth thresh:old(real)}}If positive, limits the output to constraints
@@ -298,18 +237,13 @@ For total RMSA and sensitivity of [{bf:C}, {bf:S}] to dropping one row:
 {pstd}
 For the bootstrap/Monte Carlo t-test for the mean of NRMSE:
 {break}
-{cmdab:. tmpinv estat ttest}
+{cmdab:. lppinvl2 estat ttest}
 [{cmd:,} {it:options}]
 
 {synoptset 35 tabbed}{...}
 {synopthdr}
 {synoptline}
 
-{synopt :{opth red:uced(#)}}Position within the reduced model, from which the
-        respective reduced solution's results are loaded into {cmd:e()}, with
-        possible values ranging between {bf:-number of reduced problems}
-        (equivalent to {bf:1}) and {bf:number of reduced problems} (equivalent
-        to {bf:-1}) (default {bf:e(model_i)}).{p_end}
 {synopt :{opt reset:}}Force a new generation of the t-test sample instead of
         replaying previously stored results.{p_end}
 {synopt :{opth sample:size(#)}}Size of the Monte Carlo simulated sample under
@@ -335,15 +269,9 @@ For the bootstrap/Monte Carlo t-test for the mean of NRMSE:
 {title:Remarks}
 
 {pstd}
-{cmd:tmpinv} requires an executable of a Python 3 installation
-(Python 3.10 or higher) set with the help of {cmd:python set exec} command!
-{break}For Python users, there is a standalone Python implementation {browse "https://pypi.org/project/pytmpinv/"} with the same functionality.
-{break}Likewise, for R users, there is an R equivalent {browse "https://cran.r-project.org/web/packages/rtmpinv/"}.
-{break}For a pure Stata alternative, with reduced second step functionality,
-consult {helpb tmpinvl2}.
-
-{pstd}
-For detailed information on {cmd:python set exec}, consult {helpb python}.
+{break}For Python users, there is a standalone Python implementation {browse "https://pypi.org/project/pylppinv/"} with the same functionality.
+{break}Likewise, for R users, there is an R equivalent {browse "https://cran.r-project.org/web/packages/rlppinv/"}.
+{break}For a Python-based Stata alternative, consult {helpb lppinv}.
 
 {pstd}
 To ensure cross-platform reproducibility, all CLSP implementations use a
@@ -353,91 +281,33 @@ relative cutoff equal to {bf:condtolerance * the largest singular value}.
 {marker examples}{...}
 {title:Examples}
 
-        * AP (TM), based on a symmetric input-output table, with 10% of
-        * known values
+        * LPRLS/QPRLS, based on an underdetermined and potentially infeasible
+        * problem
         {cmd:. clear}
         {cmd:. local seed = 123456789}
         {cmd:. set   seed  `seed'}
 
         * sample (dataset)
-        {cmd:. local m      = 20}
-        {cmd:. local p      = 20}
-        {cmd:. mata: X_true =     rnormal(`m', `p',  0,  1 )}
-        {cmd:. mata: X_true =         abs( X_true + X_true') / 2.0}
-        {cmd:. mata:            st_matrix("X_true", X_true)}
-        {cmd:. mata: P      =       order(runiform(`m' * `p', 1), 1)}
-        {cmd:. mata: idx    = (1::(`m' * `p'))[P][1..floor(0.1 * (`m' * `p'))]}
-
-        * model
-        {cmd:. mata: M      = I(`m' * `p')[idx,.]}
-        {cmd:. mata:            st_matrix("M",    M    )}
-        {cmd:. mata: b_row  =  quadrowsum(X_true)}
-        {cmd:. mata:            st_matrix("brow", b_row)}
-        {cmd:. mata: b_col  =  quadcolsum(X_true)'}
-        {cmd:. mata:            st_matrix("bcol", b_col)}
-        {cmd:. mata: b_val  =         vec(X_true)[idx,.]}
-        {cmd:. mata:            st_matrix("bval", b_val)}
-        {cmd:. local l      = 0}
-        {cmd:. local u      = .}
-        {cmd:. local LHS    "brow(brow) bcol(bcol) bval(bval) model(M) sym"}
-        {cmd:. quiet tmpinv full,  `LHS' lower(`l') upper(`u') r(1) alpha(1.0)}
+        {cmd:. mata: A_ub = rnormal(50, 500, 0, 1)}
+        {cmd:. mata: st_matrix("A_ub", A_ub)}
+        {cmd:. mata: A_eq = rnormal(25, 500, 0, 1)}
+        {cmd:. mata: st_matrix("A_eq", A_eq)}
+        {cmd:. mata: b_ub = rnormal(50,   1, 0, 1)}
+        {cmd:. mata: st_matrix("b_ub", b_ub)}
+        {cmd:. mata: b_eq = rnormal(25,   1, 0, 1)}
+        {cmd:. mata: st_matrix("b_eq", b_eq)}
+        {cmd:. quiet lppinvl2 free, aub(A_ub) aeq(A_eq) bub(b_ub) beq(b_eq) r(1)}
 
         * results
-        {cmd:. display "true X:"}
-        {cmd:. matlist X_true}
-        {cmd:. display "X_hat: "}
-        {cmd:. matlist e(X)}
-        {cmd:. mata: ss_res = sum((st_matrix("X_true")  - st_matrix("e(X)"))         :^2)}
-        {cmd:. mata: ss_tot = sum((st_matrix("X_true") :- mean(st_matrix("X_true"))) :^2)}
-        {cmd:. mata: st_numscalar("r2_user", 1 - ss_res/ss_tot)}
-        {cmd:. di as res %-32s "R2_user_defined:" %5.4f r2_user}
-        {cmd:. estat ttest, samplesize(30) seed(`seed') distribution(normal)}
-
-        * AP (TM), based on a trade matrix, with a zero diagonal and 20% of
-        * known values (computation is slow)
-        {cmd:. clear}
-        {cmd:. local seed = 123456789}
-        {cmd:. set   seed  `seed'}
-
-        * sample (dataset)
-        {cmd:. local m      = 40}
-        {cmd:. local p      = 40}
-        {cmd:. mata: X_true =     rnormal(`m', `p',  0,  1 )}
-        {cmd:. mata:                _diag(X_true, 0)}
-        {cmd:. mata:            st_matrix("X_true", X_true)}
-        {cmd:. mata: P      =       order(runiform(`m' * `p', 1), 1) }
-        {cmd:. mata: idx    = (1::(`m' * `p'))[P][1..floor(0.2 * (`m' * `p'))]}
-
-        * model
-        {cmd:. mata: M      = I(`m' * `p')[idx,.]}
-        {cmd:. mata:            st_matrix("M",    M    )}
-        {cmd:. mata: b_row  =  quadrowsum(X_true)}
-        {cmd:. mata:            st_matrix("brow", b_row)}
-        {cmd:. mata: b_col  =  quadcolsum(X_true)'}
-        {cmd:. mata:            st_matrix("bcol", b_col)}
-        {cmd:. mata: b_val  =         vec(X_true)[idx,.]}
-        {cmd:. mata:            st_matrix("bval", b_val)}
-        {cmd:. local l      = 0}
-        {cmd:. local u      = .}
-        {cmd:. local LHS    "brow(brow) bcol(bcol) bval(bval) model(M) zerod sym"}
-        {cmd:. quiet tmpinv 20 20, `LHS' lower(`l') upper(`u') r(1) alpha(1.0)}
-
-        * results
-        {cmd:. display "true X:"}
-        {cmd:. matlist X_true}
-        {cmd:. display "X_hat: "}
-        {cmd:. matlist e(X)}
-        {cmd:. mata: ss_res = sum((st_matrix("X_true")  - st_matrix("e(X)"))         :^2)}
-        {cmd:. mata: ss_tot = sum((st_matrix("X_true") :- mean(st_matrix("X_true"))) :^2)}
-        {cmd:. mata: st_numscalar("r2_user", 1 - ss_res/ss_tot)}
-        {cmd:. di as res %-32s "R2_user_defined:" %5.4f r2_user}
+        {cmd:. display "x hat (x_M hat):"}
+        {cmd:. matlist e(x), format(%9.4f)}
         {cmd:. estat ttest, samplesize(30) seed(`seed') distribution(normal)}
 
 {marker results}{...}
 {title:Stored results}
 
 {pstd}
-{cmd:tmpinv} stores the following in {cmd:e()}:
+{cmd:lppinvl2} stores the following in {cmd:e()}:
 {break}(developers may be interested in {cmd:. ereturn list, all})
 
 {synoptset 23 tabbed}{...}
@@ -450,7 +320,9 @@ Bott-Duffin inverses{p_end}
 {synopt:{cmd:e(tolerance)}}convergence tolerance for NRMSE change between
        refinement iterations{p_end}
 {synopt:{cmd:e(alpha)}}regularization parameter (weight) in the final convex
-       program{p_end}
+       program of the CLSP estimator; for {cmd:lppinvl2} always {bf:1} (added
+       for compatibility with the Python-based {helpb tmpinv}){p_end}
+
 {synopt:{cmd:e(kappaC)}}spectral kappa() for [{bf:C}, {bf:S}]{p_end}
 {synopt:{cmd:e(kappaB)}}spectral kappa() for {bf:B} = {bf:A}[{bf:C},
        {bf:S}]^†{p_end}
@@ -463,11 +335,9 @@ Bott-Duffin inverses{p_end}
 
 {p2col 5 23 26 2: Macros}{p_end}
 {synopt:{cmd:e(cmdline)}}command as typed{p_end}
-{synopt:{cmd:e(cmd)}}{cmd:tmpinv}{p_end}
+{synopt:{cmd:e(cmd)}}{cmd:lppinvl2}{p_end}
 {synopt:{cmd:e(estat_cmd)}}program used to implement {cmd:estat}{p_end}
 {synopt:{cmd:e(title)}}estimator title{p_end}
-{synopt:{cmd:e(model_i)}}position within the reduced model{p_end}
-{synopt:{cmd:e(model_n)}}number of reduced problems{p_end}
 {synopt:{cmd:e(final)}}presence of the second step in estimation, {bf:True} or
        {bf:False}{p_end}
 {synopt:{cmd:e(seed)}}random seed in the Monte Carlo-based t-test{p_end}
@@ -475,11 +345,10 @@ Bott-Duffin inverses{p_end}
             vectors in the Monte Carlo-based t-test{p_end}
 
 {p2col 5 23 26 2: Matrices}{p_end}
-{synopt:{cmd:e(X)}}m×p matrix of the full solution{p_end}
 {synopt:{cmd:e(zhat)}}vector of the first-step estimate{p_end}
 {synopt:{cmd:e(z)}}vector of the final solution. If the second step is
        disabled, it equals {bf:zhat}{p_end}
-{synopt:{cmd:e(x)}}m×p matrix containing the variable component of {bf:z}{p_end}
+{synopt:{cmd:e(x)}}vector containing the variable component of {bf:z}{p_end}
 {synopt:{cmd:e(y)}}vector containing the slack component of {bf:z}{p_end}
 {synopt:{cmd:e(z_lower)}}lower bound of the diagnostic interval (confidence
        band) based on kappa({bf:A}) for {bf:z}{p_end}
@@ -518,7 +387,7 @@ In addition to the above, the following is stored in {cmd:r()}:
 {synopt:{cmd:r(rmsa_dz)}}summary statistics for changes in {bf:e(z)}
        (L2 norm) after dropping one row in [{bf:C}, {bf:S}]{p_end}
 {synopt:{cmd:r(rmsa_dx)}}summary statistics for changes in {bf:e(x)}
-       (L2 or Frobenius norm) after dropping one row in [{bf:C}, {bf:S}]{p_end}
+       (L2 norm) after dropping one row in [{bf:C}, {bf:S}]{p_end}
 {synopt:{cmd:r(z_lower)}}summary statistics for the lower bound of the
        diagnostic interval (confidence band) based on kappa({bf:A}) for
        {bf:z}{p_end}
@@ -554,13 +423,6 @@ including {cmd:estat corr} and {cmd:estat ttest}.
 
 {pstd}
     Thanks for citing this software and my works on the topic:
-
-{p 8 8 2}
-Bolotov, I. (2026). TMPINV: Stata module solving Tabular Matrix Problems via
-    Pseudoinverse Estimation (TMPinv) is a modular two-step estimator for
-    solving underdetermined, ill-posed, or structurally constrained allocation
-    problems using least-squares and convex optimization. Available from
-    {browse "https://ideas.repec.org/c/boc/bocode/s459131.html"}.
 
 {p 8 8 2}
     Bolotov, I. (2025). CLSP: Linear Algebra Foundations of a Modular Two-Step

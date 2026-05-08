@@ -1,19 +1,16 @@
-d 'LPPINV': module providing a non-iterated general implementation of the LPLS estimator for cOLS, TM, and custom cases
+d 'LPPINV': module providing Linear Programming via Regularized Least Squares (LPPinv) is a modular two-step estimator for solving underdetermined, ill-posed, or structurally constrained linear and quadratic programming problems using least-squares and convex optimization
 d
-d      The program implements the LPLS (linear programming through
-d least squares) estimator with the help of the Moore-Penrose	
-d inverse (pseudoinverse), calculated using singular value
-d decomposition (SVD), with emphasis on the estimation of OLS	
-d constrained in values (cOLS), Transaction Matrix (TM), and custom
-d (user-defined) cases. The pseudoinverse offers a    unique
-d minimum-norm least-squares solution, which is the best linear
-d unbiased estimator (BLUE); see Albert (1972,	  Chapter VI).
-d (Over)determined problems are accompanied by regression analysis,
-d which is feasible in their case. For such    and especially all
-d remaining cases, a Monte Carlo-based t-test of mean NRMSE
-d (normalized by the standard deviation of    the RHS) is
-d performed, the sample being drawn from a uniform or user-provided
-d distribution (via a Mata function). 
+d    The Linear Programming via Regularized Least Squares (LPPinv)
+d is a two-stage estimation method that reformulates linear
+d programs as structured least-squares problems. Based on the
+d Convex Least Squares Programming (CLSP) framework, LPPinv solves
+d linear inequality, equality, and bound constraints by (1)
+d constructing a canonical constraint system and computing a
+d pseudoinverse projection, followed by (2) a convex- programming
+d correction stage to refine the solution under additional 
+d regularization (e.g., Lasso, Ridge, or Elastic Net). LPPinv is
+d intended for underdetermined and ill-posed linear problems, for
+d which standard  solvers fail. 
 d
 d KW: linear programming
 d KW: least squares
@@ -22,7 +19,7 @@ d KW: singular value decomposition
 d
 d Requires: Stata version 16 and Python modules pylppinv, numpy, cvxpy
 d
-d Distribution-Date: 20260120
+d Distribution-Date: 20260507
 d
 d Author: Ilya Bolotov, Prague University of Economics and Business
 d Support: email ilya.bolotov@@vse.cz

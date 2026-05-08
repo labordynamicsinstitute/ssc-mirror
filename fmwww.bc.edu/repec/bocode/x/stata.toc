@@ -33,6 +33,7 @@ p xtarsim module to perform Monte Carlo analysis for dynamic panel data models
 p xtavplot module to produce added-variable plots for panel data estimation
 p xtbalance module to transform the dataset into balanced Panel Data
 p xtbalance2 module to create a balanced subsample from unbalanced panel data
+p xtbalfront module to trade-off frontier diagnostics and balanced-subsample selection for unbalanced panel data
 p xtbcfe module to perform bootstrap-corrected Fixed Effects estimation and inference in dynamic panel models
 p xtbhst module to implement bootstrap test for slope homogeneity in large panels.
 p xtbreak module for detecting and dating multiple structural breaks in time series and panel data

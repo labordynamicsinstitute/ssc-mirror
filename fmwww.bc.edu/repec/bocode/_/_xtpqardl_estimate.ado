@@ -1,10 +1,13 @@
-*! _xtpqardl_estimate v1.0.2 — Per-panel quantile regression engine
+*! _xtpqardl_estimate v1.0.3 — Per-panel quantile regression engine
 *! Called internally by xtpqardl.ado
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: April 2026
+*! Date: May 2026
 *!
+*! v1.0.3: Fixed multi-predictor "0 panels" bug — count obs across ALL vars,
+*!         relaxed min-obs threshold, added failure diagnostics
 *! v1.0.2: Fixed obs counting (non-missing only), relaxed min-obs filter
 *! v1.0.1: Pre-generates lagged variables to avoid qreg+tsop failures
+
 
 capture program drop _xtpqardl_estimate
 program define _xtpqardl_estimate, rclass
@@ -137,16 +140,25 @@ program define _xtpqardl_estimate, rclass
 	local pi = 0
 	local success_count = 0
 	local first_error = 1
+	local skip_obs = 0
+	local skip_qreg = 0
 	
 	foreach i of local ids {
 		local ++pi
 		
-		* Count non-missing obs (where depvar AND all regressors exist)
-		qui count if `touse' & `ivar' == `i' & `depvar_q' != .
+		* Count non-missing obs where depvar AND ALL regressors are present
+		* This avoids inflated counts when some regressors have many missings
+		local nmiss_cond "`depvar_q' != ."
+		foreach _rv of local fullreg {
+			local nmiss_cond "`nmiss_cond' & `_rv' != ."
+		}
+		qui count if `touse' & `ivar' == `i' & `nmiss_cond'
 		local ni = r(N)
 		
-		* Need at least ncoefs + 2 for qreg to have degrees of freedom
-		if `ni' < `ncoefs_total' + 2 {
+		* Need at least ncoefs + 1 for qreg to have degrees of freedom
+		* (ncoefs_total counts regressors; +1 for the constant)
+		if `ni' < `ncoefs_total' + 1 {
+			local ++skip_obs
 			continue
 		}
 		
@@ -161,9 +173,16 @@ program define _xtpqardl_estimate, rclass
 			capture qui qreg `depvar_q' `fullreg' ///
 				if `touse' & `ivar' == `i', quantile(`tq')
 			
-			* rc=498 means VCE failed but coefficients are valid
-			* Only skip on other errors (101 = ts operators, 2000 = no obs, etc.)
-			if _rc != 0 & _rc != 498 {
+			local qreg_rc = _rc
+			
+			* rc=498 means VCE failed but coefficients are valid — keep
+			* rc=0 means full success — keep
+			* All other errors: skip this quantile for this panel
+			if `qreg_rc' != 0 & `qreg_rc' != 498 {
+				if `first_error' & `skip_qreg' < 3 {
+					noi di in gr "    (panel `i', τ=`tauval': qreg rc=`qreg_rc', N_avail=`ni')"
+				}
+				local ++skip_qreg
 				continue
 			}
 			
@@ -216,6 +235,13 @@ program define _xtpqardl_estimate, rclass
 			local ++success_count
 		}
 	}
+	
+	* Diagnostic summary if many panels failed
+	if `skip_obs' > 0 | `skip_qreg' > 0 {
+		noi di in gr "    (Diagnostics: `skip_obs' panels skipped [insuff. obs]," ///
+			" `skip_qreg' qreg failures)"
+	}
+	
 	
 	* ================================================================
 	* Compute Mean Group averages
