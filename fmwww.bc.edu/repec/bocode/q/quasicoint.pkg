@@ -1,0 +1,36 @@
+d 'QUASICOINT': module to perform Quasi-Cointegration Analysis without Unit Roots 
+d
+d	quasicoint implements the quasi-cointegration framework of
+d Duffy & Simons (2023), which extends standard    cointegration
+d analysis to settings where the dominant autoregressive roots may
+d be near but not exactly equal    to unity.	The problem.
+d Elliott (1998) showed that standard efficient estimators of
+d cointegrating relationships	 (FM-OLS, DOLS, Johansen ML) suffer
+d severe size distortions when roots are near but not exactly at
+d unity —    even within an O(n{c -1}) neighbourhood that is
+d empirically indistinguishable from exact unit roots.	  The
+d solution. Rather than defining cointegration in terms of
+d integration orders — which becomes vacuous	  without exact
+d unit roots — Duffy & Simons identify long-run equilibrium
+d relationships via the {bf:relative	decay rates of impulse
+d responses}. The resulting quasi-cointegrating space (QCS)
+d coincides exactly with the	standard cointegrating space when
+d unit roots are present, but remains meaningful when they are not. d
+d KW: cointegration
+d KW: unit roots
+d KW: quasi-integrated
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260509
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f quasicoint.ado
+f quasicoint.sthlp
+f ../_/_quasicoint_display.ado
+f ../_/_quasicoint_export.ado
+f ../_/_quasicoint_mata.ado
+f ../_/_quasicoint_plot.ado
+f quasicoint_example.do

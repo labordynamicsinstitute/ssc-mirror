@@ -11,7 +11,7 @@
 *!
 *! with A₀(τ) lower-triangular with zero diagonal (recursive structure).
 *!
-*! Version 0.1.0
+*! Version 1.1.0
 
 program define _qvar_estimate, eclass
     version 16.0

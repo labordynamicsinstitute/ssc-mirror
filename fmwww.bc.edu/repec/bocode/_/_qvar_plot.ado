@@ -2,7 +2,7 @@
 *! Translates Python plotting.py color palette & chart types to Stata
 *! Color palette: Teal #0A6C74, Coral #E8714A, Gold #F4B942,
 *!   Slate #4A5568, Lavender #8B7EC8, Mint #2ECC9B, Rose #E85D75
-*! Version 0.1.0
+*! Version 1.1.0
 
 program define _qvar_plot
     version 16.0
@@ -130,8 +130,8 @@ program define _qvar_plot_coef
     qui gen double coef_neg = coef if coef < 0
 
     // Create the heatmap plot
-    local pos_opts "msymbol(O) mcolor("0 108 116") mlcolor("0 108 116")"
-    local neg_opts "msymbol(O) mcolor("232 93 117") mlcolor("232 93 117")"
+    local pos_opts `"msymbol(O) mcolor("0 108 116") mlcolor("0 108 116")"'
+    local neg_opts `"msymbol(O) mcolor("232 93 117") mlcolor("232 93 117")"'
 
     twoway ///
         (scatter param_id tau_id if coef >= 0 [w=msize], ///
@@ -305,17 +305,21 @@ program define _qvar_plot_fan
     if "`varname'" == "" local varname "Y"
     if "`title'" == ""   local title "Forecast Distribution — `varname'"
 
+    // _n is a pseudo-variable; create a real variable for the x-axis
+    tempvar hvar
+    qui gen long `hvar' = _n
+
     // Fan chart: nested confidence bands
     twoway ///
-        (rarea `q05' `q95' _n, ///
+        (rarea `q05' `q95' `hvar', ///
             color("10 108 116%12") lwidth(none)) ///
-        (rarea `q25' `q75' _n, ///
+        (rarea `q25' `q75' `hvar', ///
             color("10 108 116%25") lwidth(none)) ///
-        (line `q50' _n, ///
+        (line `q50' `hvar', ///
             lcolor("10 108 116") lwidth(medthick) ///
             lpattern(solid)) ///
         `=cond("`mean'"!="", ///
-            "(line `mean' _n, lcolor(""232 113 74"") lwidth(medium) lpattern(dash))", ///
+            "(line `mean' `hvar', lcolor(""232 113 74"") lwidth(medium) lpattern(dash))", ///
             "")' ///
         , ///
         title("`title'", color("27 40 56") size(medium)) ///
@@ -349,12 +353,16 @@ program define _qvar_plot_irf
         local title "Quantile IRF: `shockvar' {&rarr} `respvar'  ({&tau} = `tau')"
     }
 
+    // _n is a pseudo-variable; create a real variable for the x-axis
+    tempvar hvar
+    qui gen long `hvar' = _n
+
     twoway ///
-        (rarea `lower' `upper' _n, ///
-            color("10 108 116%20") lwidth(none)) ///
-        (connected `irf' _n, ///
-            lcolor("10 108 116") lwidth(medthick) ///
-            mcolor("10 108 116") msymbol(O) msize(small)) ///
+        (rarea `lower' `upper' `hvar', ///
+            color(`"10 108 116%20"') lwidth(none)) ///
+        (connected `irf' `hvar', ///
+            lcolor(`"10 108 116"') lwidth(medthick) ///
+            mcolor(`"10 108 116"') msymbol(O) msize(small)) ///
         , ///
         yline(0, lcolor("74 85 104") lwidth(thin) lpattern(solid)) ///
         title("`title'", color("27 40 56") size(medium)) ///
@@ -444,14 +452,18 @@ program define _qvar_plot_gar
     if "`varname'" == "" local varname "GDP Growth"
     if "`title'" == ""   local title "Growth-at-Risk: `varname'"
 
+    // _n is a pseudo-variable; create a real variable for the x-axis
+    tempvar tvar
+    qui gen long `tvar' = _n
+
     twoway ///
-        (rarea `qlower' `qupper' _n, ///
+        (rarea `qlower' `qupper' `tvar', ///
             color("10 108 116%15") lwidth(none)) ///
-        (line `mean' _n, ///
+        (line `mean' `tvar', ///
             lcolor("27 40 56") lwidth(medthick)) ///
-        (line `qlower' _n, ///
+        (line `qlower' `tvar', ///
             lcolor("232 93 117") lwidth(medium) lpattern(dash)) ///
-        (line `qupper' _n, ///
+        (line `qupper' `tvar', ///
             lcolor("46 204 155") lwidth(medium) lpattern(dash)) ///
         , ///
         yline(0, lcolor("74 85 104") lwidth(thin) lpattern(solid)) ///

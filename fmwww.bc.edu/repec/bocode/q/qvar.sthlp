@@ -1,5 +1,5 @@
-﻿{smcl}
-{* *! version 1.0.0  07may2026}{...}
+{smcl}
+{* *! version 1.1.0  07may2026}{...}
 {vieweralsosee "[R] qreg" "help qreg"}{...}
 {vieweralsosee "[TS] var" "help var"}{...}
 {vieweralsosee "[TS] dfuller" "help dfuller"}{...}

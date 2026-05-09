@@ -1,5 +1,5 @@
 *! qvar — Quantile Vector Autoregression for Stata
-*! Version 1.0.0 — 2026-05-07
+*! Version 1.1.0 — 2026-05-07
 *! Author: Dr. Merwan Roudane <merwanroudane920@gmail.com>
 *!
 *! Implements methods from:

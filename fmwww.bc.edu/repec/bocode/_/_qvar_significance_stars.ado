@@ -1,5 +1,5 @@
 *! _qvar_significance_stars.ado — Return significance stars
-*! Version 0.1.0
+*! Version 1.1.0
 
 program define _qvar_significance_stars, rclass
     version 16.0

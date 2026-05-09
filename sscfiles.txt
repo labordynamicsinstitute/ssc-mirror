@@ -3576,6 +3576,7 @@ fmwww.bc.edu/repec/bocode/q/qgb2.ado
 fmwww.bc.edu/repec/bocode/q/qu.do
 fmwww.bc.edu/repec/bocode/q/qvar_example.do
 fmwww.bc.edu/repec/bocode/q/quaidsce_postestimation.sthlp
+fmwww.bc.edu/repec/bocode/q/quasicoint.sthlp
 fmwww.bc.edu/repec/bocode/q/qexp.html
 fmwww.bc.edu/repec/bocode/q/qrprocess.pkg
 fmwww.bc.edu/repec/bocode/q/qlist.hlp
@@ -3623,6 +3624,7 @@ fmwww.bc.edu/repec/bocode/q/qadf_graph.ado
 fmwww.bc.edu/repec/bocode/q/quaidsce_estat.ado
 fmwww.bc.edu/repec/bocode/q/qbeta4.hlp
 fmwww.bc.edu/repec/bocode/q/qreg2.html
+fmwww.bc.edu/repec/bocode/q/quasicoint.pkg
 fmwww.bc.edu/repec/bocode/q/quadas.ado
 fmwww.bc.edu/repec/bocode/q/qcount.html
 fmwww.bc.edu/repec/bocode/q/quantiles.pkg
@@ -3703,6 +3705,7 @@ fmwww.bc.edu/repec/bocode/q/qvgraph.ado
 fmwww.bc.edu/repec/bocode/q/qdagum.html
 fmwww.bc.edu/repec/bocode/q/qqcompare.pkg
 fmwww.bc.edu/repec/bocode/q/qpairdata.dta
+fmwww.bc.edu/repec/bocode/q/quasicoint.ado
 fmwww.bc.edu/repec/bocode/q/qrprocess_p.ado
 fmwww.bc.edu/repec/bocode/q/qenvnormal.sthlp
 fmwww.bc.edu/repec/bocode/q/qexp5.hlp
@@ -3712,6 +3715,7 @@ fmwww.bc.edu/repec/bocode/q/qdagum.hlp
 fmwww.bc.edu/repec/bocode/q/qta.ado
 fmwww.bc.edu/repec/bocode/q/qgumbel.hlp
 fmwww.bc.edu/repec/bocode/q/Quadas2.pdf
+fmwww.bc.edu/repec/bocode/q/quasicoint_example.do
 fmwww.bc.edu/repec/bocode/q/qlognorm.hlp
 fmwww.bc.edu/repec/bocode/q/qfrplot7.hlp
 fmwww.bc.edu/repec/bocode/q/quickicc.ado

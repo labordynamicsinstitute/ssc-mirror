@@ -9,7 +9,7 @@
 *!   • Sequential regime detection (Algorithm 2)
 *!   • supWald comparison test (Koenker & Machado, 1999)
 *!
-*! Version 0.1.0
+*! Version 1.1.0
 
 program define _qvar_granger, eclass
     version 16.0
@@ -206,23 +206,28 @@ program define _qvar_granger, eclass
     foreach tau of numlist `taugrid' {
         local ++tau_col
 
-        // Full model QR
-        capture {
-            qui qreg `depvar' `full_rhs' if `touse', quantile(`tau')
+        // Full model QR — separate capture blocks so we can diagnose failures
+        local wald_tau = 0
 
+        capture qui qreg `depvar' `full_rhs' if `touse', quantile(`tau')
+        if _rc == 0 {
             // Wald test: H0: z coefficients = 0
-            local test_expr ""
+            // Note: after qreg, test stores result in r(F) not r(chi2)
+            local test_vars ""
             forvalues j = 1/`p' {
                 local zvar : word `j' of `z_lagvars'
-                if `j' > 1 local test_expr "`test_expr' "
-                local test_expr "`test_expr'[`zvar']"
+                local test_vars "`test_vars' `zvar'"
             }
 
-            qui test `test_expr'
-            local wald_tau = r(chi2)
-        }
-        if _rc != 0 {
-            local wald_tau = 0
+            capture qui test `test_vars'
+            if _rc == 0 {
+                // Convert F to Wald chi2: W = F * df_numerator
+                local F_val = r(F)
+                local df_val = r(df)
+                if `F_val' < . & `df_val' < . {
+                    local wald_tau = `F_val' * `df_val'
+                }
+            }
         }
 
         matrix `wald_stats'[`tau_col', 1] = `wald_tau'
@@ -268,19 +273,24 @@ program define _qvar_granger, eclass
         local boot_exp_sum = 0
 
         foreach tau of numlist `taugrid' {
-            capture {
-                qui qreg `depvar' `full_rhs' if `touse', quantile(`tau')
-                local ztest ""
+            local bw = 0
+
+            capture qui qreg `depvar' `full_rhs' if `touse', quantile(`tau')
+            if _rc == 0 {
+                local test_vars ""
                 forvalues j = 1/`p' {
                     local zvar : word `j' of `z_lagvars'
-                    if `j' > 1 local ztest "`ztest' "
-                    local ztest "`ztest'[`zvar']"
+                    local test_vars "`test_vars' `zvar'"
                 }
-                qui test `ztest'
-                local bw = r(chi2)
-            }
-            if _rc != 0 {
-                local bw = 0
+
+                capture qui test `test_vars'
+                if _rc == 0 {
+                    local F_val = r(F)
+                    local df_val = r(df)
+                    if `F_val' < . & `df_val' < . {
+                        local bw = `F_val' * `df_val'
+                    }
+                }
             }
 
             if `bw' > `boot_sup_stat' {
@@ -376,6 +386,37 @@ program define _qvar_granger, eclass
         di as result %20s "supWald" %12.4f `sup_wald' %12.4f `sup_wald_pval'
     }
 
+    // ─── Store e-class results ───
+    // (must come before regime detection so regime results are preserved)
+    di as text ""
+    di as text "{hline 78}"
+    di as text "  Significance: *** p<0.01, ** p<0.05, * p<0.1"
+    di as text "{hline 78}"
+
+    ereturn clear
+    ereturn local cmd          "qvar granger"
+    ereturn local depvar       "`depvar'"
+    ereturn local gcvar        "`gcvar'"
+    ereturn local controls     "`controls'"
+    ereturn scalar n_obs       = `n'
+    ereturn scalar n_gc_lags   = `p'
+    ereturn scalar n_bootstrap = `bootstrap'
+
+    ereturn scalar sup_lm      = `sup_lm'
+    ereturn scalar sup_lm_pval = `sup_lm_pval'
+    ereturn scalar exp_lm      = `exp_lm'
+    ereturn scalar exp_lm_pval = `exp_lm_pval'
+
+    if `do_supwald' & `sup_wald' < . {
+        ereturn scalar sup_wald      = `sup_wald'
+        ereturn scalar sup_wald_pval = `sup_wald_pval'
+    }
+
+    // Store Wald statistics matrix (make a copy since ereturn matrix consumes it)
+    tempname wald_copy
+    matrix `wald_copy' = `wald_stats'
+    ereturn matrix wald_stats = `wald_stats'
+
     // ═══════════════════════════════════════════════════════════════════════
     // STEP 5: Sequential Regime Detection (Algorithm 2)
     // ═══════════════════════════════════════════════════════════════════════
@@ -406,8 +447,8 @@ program define _qvar_granger, eclass
             local max_wald_obs = 1
             local max_wald_val = 0
             forvalues j = 1/`ntaus' {
-                if `wald_stats'[`j', 1] > `max_wald_val' {
-                    local max_wald_val = `wald_stats'[`j', 1]
+                if `wald_copy'[`j', 1] > `max_wald_val' {
+                    local max_wald_val = `wald_copy'[`j', 1]
                     local max_wald_obs = `j'
                 }
             }
@@ -425,32 +466,4 @@ program define _qvar_granger, eclass
             ereturn scalar bp_obs     = `bp_obs'
         }
     }
-
-    // ─── Store e-class results ───
-    di as text ""
-    di as text "{hline 78}"
-    di as text "  Significance: *** p<0.01, ** p<0.05, * p<0.1"
-    di as text "{hline 78}"
-
-    ereturn clear
-    ereturn local cmd          "qvar granger"
-    ereturn local depvar       "`depvar'"
-    ereturn local gcvar        "`gcvar'"
-    ereturn local controls     "`controls'"
-    ereturn scalar n_obs       = `n'
-    ereturn scalar n_gc_lags   = `p'
-    ereturn scalar n_bootstrap = `bootstrap'
-
-    ereturn scalar sup_lm      = `sup_lm'
-    ereturn scalar sup_lm_pval = `sup_lm_pval'
-    ereturn scalar exp_lm      = `exp_lm'
-    ereturn scalar exp_lm_pval = `exp_lm_pval'
-
-    if `do_supwald' & `sup_wald' < . {
-        ereturn scalar sup_wald      = `sup_wald'
-        ereturn scalar sup_wald_pval = `sup_wald_pval'
-    }
-
-    // Store Wald statistics matrix
-    ereturn matrix wald_stats = `wald_stats'
 end

@@ -1,5 +1,5 @@
 *! _qvar_stationarity_check.ado — ADF tests on all variables
-*! Version 0.1.0
+*! Version 1.1.0
 
 program define _qvar_stationarity_check
     version 16.0

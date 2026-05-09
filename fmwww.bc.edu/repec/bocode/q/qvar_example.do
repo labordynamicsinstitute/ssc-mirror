@@ -3,15 +3,15 @@
 // ══════════════════════════════════════════════════════════════════════════════
 //
 // This do-file demonstrates all features of the qvar Stata package:
-//   1. QVAR Estimation (core.py → _qvar_estimate.ado)
-//   2. Quantile Granger Causality (granger.py → _qvar_granger.ado)
-//   3. VAR-QR Growth-at-Risk (varqr.py → _qvar_varqr.ado)
-//   4. Quantile Forecasting (forecasting.py → _qvar_forecast.ado)
-//   5. Quantile IRF (irf.py → _qvar_irf.ado)
-//   6. Forecast Evaluation (evaluation.py → _qvar_evaluate.ado)
+//   1. QVAR Estimation
+//   2. Quantile Granger Causality
+//   3. VAR-QR Growth-at-Risk
+//   4. Quantile Forecasting
+//   5. Quantile Impulse Response Functions
+//   6. Forecast Evaluation
 //
 // Author: Dr. Merwan Roudane
-// Version: 0.1.0
+// Version: 1.1.0
 // ══════════════════════════════════════════════════════════════════════════════
 
 clear all
@@ -27,7 +27,7 @@ summarize dln_inv dln_inc dln_consump
 
 // ══════════════════════════════════════════════════════════════════════════════
 // 1. QVAR ESTIMATION
-//    Python equivalent: QuantileVAR(lags=2).fit(data, taus=[0.05,0.5,0.95])
+//    Chavleishvili & Manganelli (2019)
 // ══════════════════════════════════════════════════════════════════════════════
 
 di _n "{hline 78}"
@@ -46,7 +46,7 @@ matrix list _qvar_b_0_50_eq2
 
 // ══════════════════════════════════════════════════════════════════════════════
 // 2. QUANTILE GRANGER CAUSALITY
-//    Python equivalent: QuantileGrangerCausality(lags=1).test(y, z)
+//    Mayer, Wied & Troster (2025)
 // ══════════════════════════════════════════════════════════════════════════════
 
 di _n "{hline 78}"
@@ -68,7 +68,7 @@ if e(sup_wald) < . {
 
 // ══════════════════════════════════════════════════════════════════════════════
 // 3. VAR-QR MODEL (Growth-at-Risk)
-//    Python equivalent: VARQR(var_lags=2).fit(data)
+//    Carboni et al. (2024)
 // ══════════════════════════════════════════════════════════════════════════════
 
 di _n "{hline 78}"
@@ -88,7 +88,7 @@ tsline _varqr_sigma_dln_inv _varqr_sigma_dln_inc, ///
 
 // ══════════════════════════════════════════════════════════════════════════════
 // 4. QUANTILE FORECASTING
-//    Python equivalent: QVARForecaster().forecast(results, horizon=12)
+//    Surprenant (2025)
 // ══════════════════════════════════════════════════════════════════════════════
 
 di _n "{hline 78}"
@@ -103,7 +103,7 @@ qvar forecast, horizon(12) nsims(5000) seed(42)
 
 // ══════════════════════════════════════════════════════════════════════════════
 // 5. QUANTILE IMPULSE RESPONSES
-//    Python equivalent: QuantileIRF(results).compute(shock_var="dln_inc")
+//    White, Kim & Manganelli (2015)
 // ══════════════════════════════════════════════════════════════════════════════
 
 di _n "{hline 78}"
@@ -122,7 +122,7 @@ tsline _qvar_irf_dln_inc_dln_inv _qvar_irf_lo_dln_inc_dln_inv ///
 
 // ══════════════════════════════════════════════════════════════════════════════
 // 6. FORECAST EVALUATION
-//    Python equivalent: qw_crps(), diebold_mariano_test(), coverage_test()
+//    Gneiting & Ranjan (2011), Diebold & Mariano (1995), Christoffersen (1998)
 // ══════════════════════════════════════════════════════════════════════════════
 
 di _n "{hline 78}"

@@ -1,5 +1,5 @@
 *! _qvar_build_lags.ado — Build lag matrix for VAR/QVAR
-*! Version 0.1.0
+*! Version 1.1.0
 
 program define _qvar_build_lags, rclass
     version 16.0

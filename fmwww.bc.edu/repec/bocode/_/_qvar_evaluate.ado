@@ -1,9 +1,9 @@
 *! _qvar_evaluate.ado — Forecast Evaluation Tools
 *! Surprenant (2025), Bank of Canada SWP 2025-4
 *! Provides: qwCRPS, Diebold-Mariano, Mincer-Zarnowitz, Coverage tests
-*! Version 0.1.0
+*! Version 1.1.0
 
-program define _qvar_evaluate, rclass
+program define _qvar_evaluate, eclass
     version 16.0
     syntax varlist(min=2), ACTual(varname) ///
         [TAUs(numlist >0 <1) WEIght(string) ///
@@ -95,11 +95,13 @@ program define _qvar_evaluate, rclass
     local crps_mean = r(mean)
     di "    Mean qwCRPS = " %10.6f `crps_mean'
 
-    return scalar qw_crps = `crps_mean'
-
     // ═══════════════════════════════════════════════════════════════════
     // 3. Diebold-Mariano Test (if 2+ forecast sets)
     // ═══════════════════════════════════════════════════════════════════
+
+    local dm_stat = .
+    local dm_pval = .
+    local dm_diff = .
 
     if `nforecasts' >= 2 {
         di _n "  Diebold-Mariano Test (Diebold & Mariano, 1995):"
@@ -134,20 +136,21 @@ program define _qvar_evaluate, rclass
         local var_d = max(`var_d', 1e-12)
         local dm_stat = `d_bar' / sqrt(`var_d')
         local dm_pval = 2 * (1 - normal(abs(`dm_stat')))
+        local dm_diff = `d_bar'
 
         di "    d_bar     = " %10.6f `d_bar'
         di "    DM stat   = " %10.4f `dm_stat'
         di "    p-value   = " %10.4f `dm_pval'
         di "    Winner    : " cond(`d_bar' < 0, "`fc1'", "`fc2'")
-
-        return scalar dm_stat = `dm_stat'
-        return scalar dm_pval = `dm_pval'
-        return scalar dm_diff = `d_bar'
     }
 
     // ═══════════════════════════════════════════════════════════════════
     // 4. Coverage Test (Christoffersen, 1998)
     // ═══════════════════════════════════════════════════════════════════
+
+    local cov_rho_hat = .
+    local cov_lr_uc   = .
+    local cov_uc_pval = .
 
     if `nforecasts' >= 2 {
         di _n "  Coverage Test (Christoffersen, 1998):"
@@ -162,33 +165,45 @@ program define _qvar_evaluate, rclass
             (`actual' <= `upper_fc')
 
         qui sum `I_cov', meanonly
-        local rho_hat = r(mean)
+        local cov_rho_hat = r(mean)
         local T = r(N)
-        local T1 = `rho_hat' * `T'
+        local T1 = `cov_rho_hat' * `T'
         local T0 = `T' - `T1'
         local rho = `nominal'
 
         // Unconditional coverage LR
         if `T0' > 0 & `T1' > 0 {
-            local lr_uc = -2 * (`T0' * ln(1 - `rho') + `T1' * ln(`rho') ///
-                - `T0' * ln(1 - `rho_hat') - `T1' * ln(`rho_hat'))
+            local cov_lr_uc = -2 * (`T0' * ln(1 - `rho') + `T1' * ln(`rho') ///
+                - `T0' * ln(1 - `cov_rho_hat') - `T1' * ln(`cov_rho_hat'))
         }
         else {
-            local lr_uc = 0
+            local cov_lr_uc = 0
         }
-        local uc_pval = 1 - chi2(1, `lr_uc')
+        local cov_uc_pval = 1 - chi2(1, `cov_lr_uc')
 
-        di "    Empirical coverage = " %6.4f `rho_hat'
-        di "    UC LR statistic    = " %8.4f `lr_uc'
-        di "    UC p-value         = " %8.4f `uc_pval'
-        di "    Correct coverage   : " cond(`uc_pval' > 0.05, "Yes", "No")
-
-        return scalar coverage   = `rho_hat'
-        return scalar uc_stat    = `lr_uc'
-        return scalar uc_pval    = `uc_pval'
+        di "    Empirical coverage = " %6.4f `cov_rho_hat'
+        di "    UC LR statistic    = " %8.4f `cov_lr_uc'
+        di "    UC p-value         = " %8.4f `cov_uc_pval'
+        di "    Correct coverage   : " cond(`cov_uc_pval' > 0.05, "Yes", "No")
     }
 
     di _n "{hline 78}"
     di "  Significance: *** p<0.01, ** p<0.05, * p<0.1"
     di "{hline 78}"
+
+    // ─── Store e-class results (persist across commands) ───
+    ereturn clear
+    ereturn local cmd       "qvar evaluate"
+    ereturn local actual    "`actual'"
+    ereturn local forecasts "`varlist'"
+    ereturn local weight    "`weight'"
+
+    ereturn scalar qw_crps  = `crps_mean'
+    ereturn scalar dm_stat  = `dm_stat'
+    ereturn scalar dm_pval  = `dm_pval'
+    ereturn scalar dm_diff  = `dm_diff'
+    ereturn scalar coverage = `cov_rho_hat'
+    ereturn scalar uc_stat  = `cov_lr_uc'
+    ereturn scalar uc_pval  = `cov_uc_pval'
 end
+

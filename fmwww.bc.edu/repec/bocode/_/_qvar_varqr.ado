@@ -2,7 +2,7 @@
 *! Carboni, Fonseca, Fornari & Urrutia (2024), ECB WP 3171
 *! Stage 1: OLS VAR for conditional mean
 *! Stage 2: QR on residuals for time-varying variance
-*! Version 0.1.0
+*! Version 1.1.0
 
 program define _qvar_varqr, eclass
     version 16.0
@@ -54,21 +54,29 @@ program define _qvar_varqr, eclass
     di "  Observations : `T'"
 
     // ─── Stage 2: QR on Residuals ───
+    // Use lagged |residuals| as regressors to capture volatility clustering
     di _n "  Stage 2: Time-Varying Variance (QR on residuals)"
     di "  {hline 40}"
-
-    local qr_regressors ""
-    foreach var of varlist `varnames' {
-        forvalues j = 1/`qrlags' {
-            tempvar qrx_`var'_`j'
-            qui gen double `qrx_`var'_`j'' = L`j'.`var' if `touse2'
-            local qr_regressors "`qr_regressors' `qrx_`var'_`j''"
-        }
-    }
 
     local eq_idx = 0
     foreach depvar of varlist `varnames' {
         local ++eq_idx
+
+        // Build regressors: lagged absolute residuals for all equations
+        local qr_regressors ""
+        foreach rvar of varlist `varnames' {
+            forvalues j = 1/`qrlags' {
+                tempvar absres_`rvar'_`j'
+                qui gen double `absres_`rvar'_`j'' = ///
+                    abs(L`j'._varqr_resid_`rvar') if `touse2'
+                local qr_regressors "`qr_regressors' `absres_`rvar'_`j''"
+            }
+        }
+
+        // Mark valid obs after generating lags
+        tempvar touse3
+        mark `touse3'
+        markout `touse3' `qr_regressors' _varqr_resid_`depvar'
 
         forvalues tau_idx = 1/`ntaus' {
             local tau : word `tau_idx' of `taus'
@@ -76,36 +84,35 @@ program define _qvar_varqr, eclass
 
             capture {
                 qui qreg _varqr_resid_`depvar' `qr_regressors' ///
-                    if `touse2', quantile(`tau')
+                    if `touse3', quantile(`tau')
                 tempvar qfit_`eq_idx'_`tau_idx'
                 qui predict double `qfit_`eq_idx'_`tau_idx'' ///
-                    if `touse2', xb
+                    if `touse3', xb
                 matrix _varqr_qr_b_`depvar'_`tau_label' = e(b)
             }
             if _rc != 0 {
                 di as error "  QR failed for `depvar' tau=`tau'"
-                qui gen double `qfit_`eq_idx'_`tau_idx'' = 0 if `touse2'
+                qui gen double `qfit_`eq_idx'_`tau_idx'' = 0 if `touse3'
             }
         }
 
-        // sigma = sum(Q*phi_inv) / sum(phi_inv^2)
-        tempvar sigma_i denom_i
-        qui gen double `denom_i' = 0
-        qui gen double `sigma_i' = 0
+        // Estimate sigma from interquantile range:
+        // sigma_t = (Q_upper(t) - Q_lower(t)) / (Phi^{-1}(tau_up) - Phi^{-1}(tau_lo))
+        // Use first and last tau as lower/upper
+        local tau_lo : word 1 of `taus'
+        local tau_hi : word `ntaus' of `taus'
+        local phi_lo = invnormal(`tau_lo')
+        local phi_hi = invnormal(`tau_hi')
+        local phi_spread = `phi_hi' - `phi_lo'
 
-        forvalues tau_idx = 1/`ntaus' {
-            local tau : word `tau_idx' of `taus'
-            local phi_inv = invnormal(`tau')
-            qui replace `sigma_i' = `sigma_i' + ///
-                `qfit_`eq_idx'_`tau_idx'' * `phi_inv' if `touse2'
-            qui replace `denom_i' = `denom_i' + `phi_inv'^2 if `touse2'
-        }
+        tempvar sigma_i
+        qui gen double `sigma_i' = ///
+            (`qfit_`eq_idx'_`ntaus'' - `qfit_`eq_idx'_1') / `phi_spread' ///
+            if `touse3'
+        qui replace `sigma_i' = max(`sigma_i', 1e-8) if `touse3'
+        qui gen double _varqr_sigma_`depvar' = `sigma_i' if `touse3'
 
-        qui replace `sigma_i' = `sigma_i' / `denom_i' if `touse2'
-        qui replace `sigma_i' = max(`sigma_i', 1e-8) if `touse2'
-        qui gen double _varqr_sigma_`depvar' = `sigma_i' if `touse2'
-
-        qui sum _varqr_sigma_`depvar' if `touse2'
+        qui sum _varqr_sigma_`depvar' if `touse3'
         di as result "    sigma(`depvar'): mean=" %8.4f r(mean) ///
                      ", std=" %8.4f r(sd)
     }

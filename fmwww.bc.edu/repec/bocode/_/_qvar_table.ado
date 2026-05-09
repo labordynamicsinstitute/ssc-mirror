@@ -1,7 +1,7 @@
 *! _qvar_tables.ado — Publication-Quality Table Formatting
 *! Translates Python tables.py — journal-style output
 *! Supports: console, LaTeX, HTML formats
-*! Version 0.1.0
+*! Version 1.1.0
 
 program define _qvar_table
     version 16.0
@@ -74,10 +74,11 @@ program define _qvar_table_coef
             di as result "{col 4}Equation: `eqvar'"
             di as text "{col 4}{hline 70}"
 
-            // Column headers
+            // Column headers — use _col() positioning for alignment
+            // Each data column is 14 chars wide
             di as text "{col 4}" %20s "Variable" _c
             foreach tau of numlist `taus' {
-                di as text %12s "{&tau}=`tau'" _c
+                di as text %14s "tau=`tau'" _c
             }
             di ""
             di as text "{col 4}{hline 70}"
@@ -110,13 +111,13 @@ program define _qvar_table_coef
                         local pval = 1
                     }
 
-                    // Stars
-                    local stars ""
+                    // Stars — pad to exactly 3 characters for alignment
+                    local stars "   "
                     if `pval' < 0.01      local stars "***"
-                    else if `pval' < 0.05 local stars "**"
-                    else if `pval' < 0.10 local stars "*"
+                    else if `pval' < 0.05 local stars "** "
+                    else if `pval' < 0.10 local stars "*  "
 
-                    di as result %9.4f `coef' "`stars'" _c
+                    di as result %10.4f `coef' "`stars' " _c
                 }
                 di ""
             }
@@ -184,7 +185,9 @@ program define _qvar_table_coef
                     else if `pval' < 0.05 local stars "^{**}"
                     else if `pval' < 0.10 local stars "^{*}"
 
-                    di " & $" %7.4f `coef' "`stars'$" _c
+                    // Use compound quotes to protect * from macro expansion
+                    local cell `"$ `=string(`coef',"%7.4f")'`stars'$"'
+                    di `" & `cell'"' _c
                 }
                 di " \\\\"
             }
@@ -194,7 +197,7 @@ program define _qvar_table_coef
         di "\bottomrule"
         di "\end{tabular}"
         di "\begin{tablenotes}\small"
-        di "\item Significance: $^{***}$ p$<$0.01, $^{**}$ p$<$0.05, $^{*}$ p$<$0.10"
+        di `"\\item Significance: $^{***}$ p$<$0.01, $^{**}$ p$<$0.05, $^{*}$ p$<$0.10"'
         di "\end{tablenotes}"
         di "\end{table}"
     }

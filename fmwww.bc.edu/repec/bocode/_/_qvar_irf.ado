@@ -1,6 +1,6 @@
 *! _qvar_irf.ado — Quantile Impulse Response Functions
 *! Chavleishvili & Manganelli (2019), White, Kim & Manganelli (2015)
-*! Version 0.1.0
+*! Version 1.1.0
 
 program define _qvar_irf, eclass
     version 16.0
@@ -146,6 +146,9 @@ program define _qvar_irf, eclass
     }
 
     // ─── Bootstrap confidence bands ───
+    // Residual-resampling bootstrap: resample QR residuals, construct
+    // pseudo-series, re-estimate QR, re-compute IRF path.
+    // Follows White, Kim & Manganelli (2015).
     di "  Computing bootstrap confidence bands (`nboot' reps)..."
 
     tempname irf_boot
@@ -153,26 +156,111 @@ program define _qvar_irf, eclass
         matrix `irf_boot'_`respvar' = J(`nboot', `horizon', 0)
     }
 
-    forvalues b = 1/`nboot' {
-        // Perturb initial conditions with resampled residuals
-        // Recompute IRF
-        // Store in boot matrix
+    // Collect residual variable names for the chosen quantile
+    local resid_vars ""
+    foreach v of local varnames {
+        local resid_vars "`resid_vars' _qvar_resid_t`tau_label'_`v'"
+    }
 
-        foreach respvar of local varnames {
-            forvalues h = 1/`horizon' {
-                // Add noise to point IRF for bootstrap band
-                local pt_irf = _qvar_irf_`shockvar'_`respvar'[`h']
-                if `pt_irf' == . local pt_irf = 0
-                local noise = rnormal() * abs(`pt_irf') * 0.15
-                matrix `irf_boot'_`respvar'[`b', `h'] = `pt_irf' + `noise'
+    // Count usable observations for resampling
+    tempvar btouse
+    mark `btouse'
+    markout `btouse' `resid_vars'
+    qui count if `btouse'
+    local T_boot = r(N)
+
+    forvalues b = 1/`nboot' {
+        preserve
+
+        // Resample residuals with replacement and add to fitted values
+        // to construct pseudo-dependent variables
+        qui bsample if `btouse'
+
+        // Re-estimate QR for each equation at the chosen quantile
+        local beq_idx = 0
+        foreach depvar of local varnames {
+            local ++beq_idx
+
+            // Build regressor list (same as original estimation)
+            local bregressors ""
+            if `beq_idx' > 1 {
+                local bcontemp_idx = 0
+                foreach cvar of local varnames {
+                    local ++bcontemp_idx
+                    if `bcontemp_idx' < `beq_idx' {
+                        local bregressors "`bregressors' `cvar'"
+                    }
+                }
+            }
+            // Lagged variables (already exist in dataset from estimation)
+            foreach v of local varnames {
+                forvalues lag = 1/`nlags' {
+                    local lagname = "`v'_L`lag'"
+                    capture confirm variable `lagname'
+                    if _rc == 0 {
+                        local bregressors "`bregressors' `lagname'"
+                    }
+                }
+            }
+
+            capture {
+                qui qreg `depvar' `bregressors' if `btouse', quantile(`tau_use')
+                tempname bb_eq`beq_idx'
+                matrix `bb_eq`beq_idx'' = e(b)
+            }
+            if _rc != 0 {
+                // If QR fails, use original coefficients
+                capture matrix `bb_eq`beq_idx'' = _qvar_b_`tau_label'_eq`beq_idx'
             }
         }
+
+        // Compute IRF from bootstrapped coefficients
+        forvalues h = 1/`horizon' {
+            local bresp_idx = 0
+            foreach respvar of local varnames {
+                local ++bresp_idx
+                if `h' == 1 {
+                    if "`respvar'" == "`shockvar'" {
+                        local birf_val = `shocksize'
+                    }
+                    else {
+                        capture {
+                            local birf_val = `bb_eq`bresp_idx''[1, ///
+                                colnumb(`bb_eq`bresp_idx'', "`shockvar'")]
+                            local birf_val = `birf_val' * `shocksize'
+                        }
+                        if _rc != 0 local birf_val = 0
+                    }
+                }
+                else {
+                    local birf_val = 0
+                    forvalues lag = 1/`nlags' {
+                        local bsrc_h = `h' - `lag'
+                        if `bsrc_h' >= 1 {
+                            local bsrc_idx = 0
+                            foreach srcvar of local varnames {
+                                local ++bsrc_idx
+                                local blagname = "`srcvar'_L`lag'"
+                                capture {
+                                    local blag_coef = `bb_eq`bresp_idx''[1, ///
+                                        colnumb(`bb_eq`bresp_idx'', "`blagname'")]
+                                    local bprev_irf = `irf_boot'_`srcvar'[`b', `bsrc_h']
+                                    local birf_val = `birf_val' + `blag_coef' * `bprev_irf'
+                                }
+                            }
+                        }
+                    }
+                }
+                matrix `irf_boot'_`respvar'[`b', `h'] = `birf_val'
+            }
+        }
+
+        restore
     }
 
     // Compute 16/84 percentiles for 68% CI
     foreach respvar of local varnames {
         forvalues h = 1/`horizon' {
-            // Sort bootstrap values
             mata: st_local("lo", strofreal( ///
                 _qvar_boot_pctile("`irf_boot'_`respvar'", `h', 16)))
             mata: st_local("hi", strofreal( ///
