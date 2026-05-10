@@ -1,5 +1,5 @@
-{smcl}
-{* 05May2026}{...}
+﻿{smcl}
+{* 09May2026}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "myedit" "help myedit"}{...}
 {viewerjumpto "Syntax" "mysuite##syntax"}{...}
@@ -60,7 +60,7 @@ programs available from the SSC archive.
 {phang2}
 {bf:MODE 1 - Display}
   No options specified
-  → Show program banner, complete list of 32 modules,
+  → Show program banner, complete list of 33 modules,
      current installation status, and detailed usage instructions.
      No modules are downloaded or installed.{p_end}
 
@@ -74,7 +74,7 @@ programs available from the SSC archive.
 {bf:MODE 3 - List Installed}
   {opt installed} option specified
   → Display a complete list of all currently installed modules.
-     Shows installation count summary (e.g., "24/32 modules installed").{p_end}
+     Shows installation count summary (e.g., "24/33 modules installed").{p_end}
 
 {phang2}
 {bf:MODE 4 - Force Reinstall}
@@ -83,10 +83,10 @@ programs available from the SSC archive.
      Useful for updating to latest versions or fixing corrupted installations.{p_end}
 
 
-{title:Updates in version 1.0.8}
+{title:Updates in version 1.0.9}
 
 {pstd}
-The following improvements have been made in version 1.0.8:
+The following improvements have been made in version 1.0.9:
 
 {phang2}
 - {bf:bmc} and {bf:conservatism}, previously distributed as local ado‑files,
@@ -110,7 +110,7 @@ Shows installation progress and summary statistics upon completion.
 
 {phang}
 {opt Installed} lists all currently installed modules without making any changes.
-Displays each of the 32 modules with "Installed" or "Not installed" status,
+Displays each of the 33 modules with "Installed" or "Not installed" status,
 followed by a count summary.
 
 {phang}
@@ -126,15 +126,15 @@ followed by a count summary.
 {bf:MODE 1 - Display Program Information:}
 
 {phang}{cmd:. mysuite}{p_end}
-{phang}Display program banner, complete module list (32 programs),
-current installation status (e.g., "SSC modules installed: 20/32"),
+{phang}Display program banner, complete module list (33 programs),
+current installation status (e.g., "SSC modules installed: 20/33"),
 and detailed usage instructions. No modules are downloaded or installed.{p_end}
 
 {pstd}
 {bf:MODE 2 - Install Missing Modules:}
 
 {phang}{cmd:. mysuite, all}{p_end}
-{phang}Smart installation - checks each of the 32 modules and installs
+{phang}Smart installation - checks each of the 33 modules and installs
 only those not currently found. Already installed modules are skipped.
 Example output:
   {bf:sumtex}: Already installed
@@ -154,7 +154,7 @@ Installation Summary:
     {bf:case2tex}: Installed
     ...
     {bf:exam2tex}: Not installed
-  {bf:Summary:} 24/32 SSC modules installed
+  {bf:Summary:} 24/33 SSC modules installed
 Useful for quick inventory of your setup.{p_end}
 
 {pstd}
@@ -175,7 +175,7 @@ Reinstallation Summary:
 
 {phang}{cmd:. mysuite}{p_end}
 {phang}Running without options shows current installation status:
-"SSC modules installed: 18/32" - quickly see what's missing.{p_end}
+"SSC modules installed: 18/33" - quickly see what's missing.{p_end}
 
 {pstd}
 {bf:Editing Installed Modules:}
@@ -226,9 +226,9 @@ This is useful for learning, customization, and debugging.{p_end}
 {pstd}Ma'anshan, Anhui, China{p_end}
 
 {pstd}
-Development Date: 05 May 2026{p_end}
+Development Date: 09 May 2026{p_end}
 {pstd}
-Version: 1.0.8{p_end}
+Version: 1.0.9{p_end}
 
 
 {marker acknowledgments}{...}

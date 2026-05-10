@@ -18074,6 +18074,7 @@ fmwww.bc.edu/repec/bocode/_/_tptest_graph.ado
 fmwww.bc.edu/repec/bocode/_/_ipwlogit_svy.ado
 fmwww.bc.edu/repec/bocode/_/__wbod_yaml_metadata.ado
 fmwww.bc.edu/repec/bocode/_/_cwfcn_kldb92_4d_to_kldb10_2d.sthlp
+fmwww.bc.edu/repec/bocode/_/_quasicoint_export.ado
 fmwww.bc.edu/repec/bocode/_/_unicefdata_dataflows.yaml
 fmwww.bc.edu/repec/bocode/_/_parse_date_to_string.ado
 fmwww.bc.edu/repec/bocode/_/_cwfcn_isco08_to_iseisps.sthlp
@@ -18233,6 +18234,7 @@ fmwww.bc.edu/repec/bocode/_/_gvreldif.pkg
 fmwww.bc.edu/repec/bocode/_/_mrsvmat.hlp
 fmwww.bc.edu/repec/bocode/_/_gkalpha.ado
 fmwww.bc.edu/repec/bocode/_/_cwfcn_kldb88_3d_to_kldb10_3plus5.sthlp
+fmwww.bc.edu/repec/bocode/_/_quasicoint_plot.ado
 fmwww.bc.edu/repec/bocode/_/_gtruncdig.ado
 fmwww.bc.edu/repec/bocode/_/_fredweb.ado
 fmwww.bc.edu/repec/bocode/_/_cupfm_export.ado
@@ -18419,6 +18421,7 @@ fmwww.bc.edu/repec/bocode/_/_digdis.ado
 fmwww.bc.edu/repec/bocode/_/_getcensus_parse_geography.ado
 fmwww.bc.edu/repec/bocode/_/_regproject_nomo.ado
 fmwww.bc.edu/repec/bocode/_/_blncdtree.mata
+fmwww.bc.edu/repec/bocode/_/_quasicoint_mata.ado
 fmwww.bc.edu/repec/bocode/_/_grepeat.ado
 fmwww.bc.edu/repec/bocode/_/_cwcasefcn_esec88.sthlp
 fmwww.bc.edu/repec/bocode/_/_parse_colon.mo
@@ -18456,6 +18459,7 @@ fmwww.bc.edu/repec/bocode/_/_wbopendata_topics.yaml
 fmwww.bc.edu/repec/bocode/_/_cureregr.ado
 fmwww.bc.edu/repec/bocode/_/_gammareg.ado
 fmwww.bc.edu/repec/bocode/_/_wbod_tmpfile2.ado
+fmwww.bc.edu/repec/bocode/_/_quasicoint_display.ado
 fmwww.bc.edu/repec/bocode/_/_stevaluator.ado
 fmwww.bc.edu/repec/bocode/_/_cupfm_mata.ado
 fmwww.bc.edu/repec/bocode/_/_expevaluator.ado

@@ -43,6 +43,7 @@ p qualtricsload module to download survey results from Qualtrics server and opti
 p quandl module to obtain data from Quandl using the Quandl API
 p quantil2 module to generate multivariate quantile plot
 p quantiles module to categorize by quantiles
+p quasicoint module to perform Quasi-Cointegration Analysis without Unit Roots 
 p quickicc module to compute intraclass correlation and standard error calculation after xtmixed
 p quine module providing a self-producing program
 p qv module to compute quasi-variances
