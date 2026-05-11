@@ -30,6 +30,7 @@ p qreg2 module to perform quantile regression with robust and clustered standard
 p qregpd module to perform Quantile Regression for Panel Data
 p qregplot module for plotting coefficients of a Quantile Regression
 p qregsel module to estimate quantile regression corrected for sample selection
+p qresid module to compute randomized quantile residuals for regression diagnostics 
 p qrisk2cmd module to run QRISK2 from within Stata
 p qrkd module to estimate and produce robust inference for heterogeneous causal effects of a continuous treatment in quantile regression kink designs
 p qrowname module to extract lists of quoted row and column names from a matrix

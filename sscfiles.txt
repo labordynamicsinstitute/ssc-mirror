@@ -3449,6 +3449,7 @@ fmwww.bc.edu/repec/bocode/q/qfactor.sthlp
 fmwww.bc.edu/repec/bocode/q/qic.pkg
 fmwww.bc.edu/repec/bocode/q/qic.hlp
 fmwww.bc.edu/repec/bocode/q/qrisk2cmd.ado
+fmwww.bc.edu/repec/bocode/q/qresid_examples.do
 fmwww.bc.edu/repec/bocode/q/qogbook.sthlp
 fmwww.bc.edu/repec/bocode/q/qenv_mata10.do
 fmwww.bc.edu/repec/bocode/q/qenv_sim_F.ado
@@ -3559,6 +3560,7 @@ fmwww.bc.edu/repec/bocode/q/qogbook.html
 fmwww.bc.edu/repec/bocode/q/quantiles.ado
 fmwww.bc.edu/repec/bocode/q/qenvchi2.ado
 fmwww.bc.edu/repec/bocode/q/qcolname.html
+fmwww.bc.edu/repec/bocode/q/qresid.sthlp
 fmwww.bc.edu/repec/bocode/q/qogbook.ado
 fmwww.bc.edu/repec/bocode/q/qqplot2.pkg
 fmwww.bc.edu/repec/bocode/q/quandl.ado
@@ -3602,6 +3604,7 @@ fmwww.bc.edu/repec/bocode/q/qoguse.sthlp
 fmwww.bc.edu/repec/bocode/q/quantil2.pkg
 fmwww.bc.edu/repec/bocode/q/qv.sthlp
 fmwww.bc.edu/repec/bocode/q/qstat2.m
+fmwww.bc.edu/repec/bocode/q/qresid.ado
 fmwww.bc.edu/repec/bocode/q/qrisk2import.sthlp
 fmwww.bc.edu/repec/bocode/q/qenvgamma.html
 fmwww.bc.edu/repec/bocode/q/qinvgamma.html
@@ -3708,6 +3711,7 @@ fmwww.bc.edu/repec/bocode/q/qpairdata.dta
 fmwww.bc.edu/repec/bocode/q/quasicoint.ado
 fmwww.bc.edu/repec/bocode/q/qrprocess_p.ado
 fmwww.bc.edu/repec/bocode/q/qenvnormal.sthlp
+fmwww.bc.edu/repec/bocode/q/qresid.pkg
 fmwww.bc.edu/repec/bocode/q/qexp5.hlp
 fmwww.bc.edu/repec/bocode/q/qenv_sim_chi2.ado
 fmwww.bc.edu/repec/bocode/q/qqvalue.html
@@ -21215,6 +21219,7 @@ fmwww.bc.edu/repec/bocode/g/gammafit.html
 fmwww.bc.edu/repec/bocode/g/garchur.pkg
 fmwww.bc.edu/repec/bocode/g/genqreg.ado
 fmwww.bc.edu/repec/bocode/g/getregstats.sthlp
+fmwww.bc.edu/repec/bocode/g/gtcsem.sthlp
 fmwww.bc.edu/repec/bocode/g/_gsqgapcount.ado
 fmwww.bc.edu/repec/bocode/g/getref.ado
 fmwww.bc.edu/repec/bocode/g/gs3sls.ado
@@ -21311,6 +21316,7 @@ fmwww.bc.edu/repec/bocode/g/graph3d.ado
 fmwww.bc.edu/repec/bocode/g/gmvport-test.do
 fmwww.bc.edu/repec/bocode/g/Georgia2020.dta
 fmwww.bc.edu/repec/bocode/g/georoutei.sthlp
+fmwww.bc.edu/repec/bocode/g/gtcsem.pkg
 fmwww.bc.edu/repec/bocode/g/glcurve5.hlp
 fmwww.bc.edu/repec/bocode/g/ggtaxonomy.pkg
 fmwww.bc.edu/repec/bocode/g/greek_in_word.sthlp
@@ -21477,6 +21483,7 @@ fmwww.bc.edu/repec/bocode/g/gsa.hlp
 fmwww.bc.edu/repec/bocode/g/gologit29_autofit.ado
 fmwww.bc.edu/repec/bocode/g/geocircles_examples.ado
 fmwww.bc.edu/repec/bocode/g/gsgroup.pkg
+fmwww.bc.edu/repec/bocode/g/gtcsem_plot.sthlp
 fmwww.bc.edu/repec/bocode/g/grcomb.pkg
 fmwww.bc.edu/repec/bocode/g/gridsearch.ado
 fmwww.bc.edu/repec/bocode/g/goelevation.pkg
@@ -21886,6 +21893,7 @@ fmwww.bc.edu/repec/bocode/g/getbvarbmod.ado
 fmwww.bc.edu/repec/bocode/g/gformula.sthlp
 fmwww.bc.edu/repec/bocode/g/genfreq.pkg
 fmwww.bc.edu/repec/bocode/g/ginireg.sthlp
+fmwww.bc.edu/repec/bocode/g/gtcsem_plot.ado
 fmwww.bc.edu/repec/bocode/g/gmm_mqg.ado
 fmwww.bc.edu/repec/bocode/g/grstyle_set.hlp
 fmwww.bc.edu/repec/bocode/g/grstest2.ado
@@ -21909,6 +21917,7 @@ fmwww.bc.edu/repec/bocode/g/gevfit.pkg
 fmwww.bc.edu/repec/bocode/g/gmm_ivcloglog.ado
 fmwww.bc.edu/repec/bocode/g/grouplabs_example1.do
 fmwww.bc.edu/repec/bocode/g/gradip.hlp
+fmwww.bc.edu/repec/bocode/g/gtcsem.ado
 fmwww.bc.edu/repec/bocode/g/getfilename2.pkg
 fmwww.bc.edu/repec/bocode/g/genqreg.pkg
 fmwww.bc.edu/repec/bocode/g/genstack.pkg

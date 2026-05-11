@@ -1,0 +1,26 @@
+d 'QRESID': module to compute randomized quantile residuals for regression diagnostics 
+d
+d    qresid implements randomized quantile residuals (Dunn-Smyth
+d residuals) for regression    diagnostics in supported independent
+d regression models in Stata. The package is intended	 for
+d generalized linear and related models where conventional
+d residuals may be difficult	to interpret. These residuals are
+d also known as probability integral transform (PIT)	residuals
+d on the normal scale; for discrete outcomes, the randomized
+d version is commonly	 called a randomized quantile residual
+d (RQR). 
+d
+d KW: quantile estimation
+d KW: residuals
+d KW: Dunn-Smyth residuals
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20260511
+d
+d Author: Percy Soto-Becerra,   Universidad Privada del Norte, Lima, Peru
+d Support: email percys1991@@gmail.com
+d
+f qresid.ado
+f qresid.sthlp
+f qresid_examples.do

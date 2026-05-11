@@ -1,0 +1,28 @@
+d 'GTCSEM': module to compute conditional standard errors of measurement in Generalizability Theory
+d
+d      gtcsem estimates conditional standard errors of measurement
+d (CSEMs) under    Generalizability Theory for a univariate,
+d single-facet, persons-by-items (p x i) crossed    design. 
+d Whereas the overall (population) SEM summarizes measurement
+d precision averaged	across the population, the CSEM
+d characterizes the precision of the measurement for an   
+d individual at a given score level (Brennan, 1998).  This is the
+d relevant index when	 measurement decisions are made about
+d persons rather than groups, including the assessment	  of the
+d local accuracy of cut-score classifications. 
+d
+d KW: measurement
+d KW: standard errors
+d KW: conditional standard errors
+d
+d Requires: Stata version 
+d
+d Distribution-Date: 20260511
+d
+d Author: René Gempp,  Universidad Diego Portales
+d Support: email rene.gempp@@udp.cl
+d
+f gtcsem.ado
+f gtcsem_plot.ado
+f gtcsem.sthlp
+f gtcsem_plot.sthlp
