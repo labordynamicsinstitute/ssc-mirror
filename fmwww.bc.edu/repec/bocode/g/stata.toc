@@ -174,6 +174,7 @@ p gsdata module to download high frequency data for a list of stock in ShangHai 
 p gsgroup module to create a group variable and optionally an output dataset for a gsort key
 p gsreg module to perform Global Search Regression
 p gsum module to calculate summary statistics for grouped data
+p gtcsem module to compute conditional standard errors of measurement in Generalizability Theory
 p gtools module to provide a fast implementation of common group commands 
 p gtsheckman module to compute a generalized two-step Heckman selection model
 p gumbelfit module to fit a two-parameter Gumbel distribution

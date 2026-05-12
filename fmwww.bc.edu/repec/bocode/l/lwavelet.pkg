@@ -1,0 +1,51 @@
+d 'LWAVELET': module providing Wavelet analysis for time series
+d
+d      wavelet (lwavelet) is a comprehensive wavelet analysis
+d package for Stata implementing    both discrete and continuous
+d wavelet transforms, bivariate analysis (cross-wavelet,   
+d coherence), and multivariate frequency-band analysis (multiple
+d correlation, regression,    cross-correlation).    The package
+d provides tools for decomposing time series into frequency bands,
+d testing for	 co-movement between pairs of series across scales,
+d and performing regression analysis at    different temporal
+d resolutions. This is the first complete wavelet analysis package
+d for	 Stata, with functionality comparable to R packages
+d biwavelet, wavelets, and wavemulcor. 
+d
+d KW: wavelets
+d KW: time series
+d KW: discrete
+d KW: continuous
+d KW: bivariate
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20260511
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f lmodwt.ado
+f lmodwt.sthlp
+f ../w/wavelet.ado
+f ../w/wmcorr.ado
+f ../w/wmreg.ado
+f ../w/wmxcorr.ado
+f ../w/wt.ado
+f ../w/wtc.ado
+f ../x/xwt.ado
+f ../w/wavelet.sthlp
+f ../w/wmcorr.sthlp
+f ../w/wmreg.sthlp
+f ../w/wmxcorr.sthlp
+f ../w/wt.sthlp
+f ../w/wtc.sthlp
+f ../x/xwt.sthlp
+f ../_/_wv_bivariate.mata
+f ../_/_wv_core.mata
+f ../_/_wv_cwt.mata
+f ../_/_wv_display.mata
+f ../_/_wv_filters.mata
+f ../_/_wv_multi.mata
+f lwavelet.mlib
+f ../_/_build_lwavelet.do

@@ -417,6 +417,37 @@ Cronbach, L. J., Gleser, G. C., Nanda, H., & Rajaratnam, N. (1972).
 Wiley.
 
 
+{marker author}{...}
+{title:Author}
+
+{pstd}Rene Gempp{break}
+Facultad de Administracion y Economia, Universidad Diego Portales, Santiago, Chile{break}
+Email: {browse "mailto:rene.gempp@udp.cl":rene.gempp@udp.cl}
+{p_end}
+
+
+{marker citation}{...}
+{title:Citation}
+
+{pstd}
+Please cite this software as:
+{p_end}
+
+{pmore}
+Gempp, R. (2026). gtcsem: Stata module to compute conditional standard errors of measurement in Generalizability Theory (Version 1.0.0). 
+ Statistical Software Components S459702, Boston College Department of Economics.
+{p_end}
+
+
+{marker support}{...}
+{title:Support and updates}
+
+{pstd}
+Bug reports, feature requests, and the development version are
+available at {browse "https://github.com/rgempp/gtcsem"}.
+{p_end}
+
+
 {marker alsosee}{...}
 {title:Also see}
 

@@ -281,6 +281,24 @@ Brennan, R. L. (2001). {it:Generalizability Theory}.
 Springer-Verlag.
 
 
+{marker author}{...}
+{title:Author}
+
+{pstd}Rene Gempp{break}
+Facultad de Administracion y Economia, Universidad Diego Portales, Santiago, Chile{break}
+Email: {browse "mailto:rene.gempp@udp.cl":rene.gempp@udp.cl}
+{p_end}
+
+
+{marker support}{...}
+{title:Support and updates}
+
+{pstd}
+Bug reports, feature requests, and the development version are
+available at {browse "https://github.com/rgempp/gtcsem"}.
+{p_end}
+
+
 {marker alsosee}{...}
 {title:Also see}
 

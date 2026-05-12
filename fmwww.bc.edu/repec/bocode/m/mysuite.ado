@@ -1,32 +1,32 @@
-*! mysuite v1.0.8 05May2026
+*! mysuite v1.0.9 09May2026
 *! Authors: Wu Lianghai, Chen Liwen, Wu Hanyan, Wu Xinzhuo, Li Juan
 *! Built-in extensible program suite for empirical research
-*! 32 modules available from SSC
+*! 33 modules available from SSC
 
 program define mysuite
     version 18.0
     
     syntax [, ALL INSTALLed Download]
     
-    * Define SSC module list (31 modules)
+    * Define SSC module list (33 modules)
     local ssc_online art2tex case2tex mktex sumtex tab2excel corrtex ///
                      corrtex2 regtex reftex getref get2ref conservatism em ///
                      efficiency opacity crash scrash eui qta area ///
                      upoint province_devcat bmc polishpaper cleandisk myedit bf ///
-                     fshare thesis_diagram rollbook exam2tex
+                     fshare thesis_diagram rollbook exam2tex mysuite
 	
 	local ssc_modules art2tex case2tex mktex sumtex tab2excel corrtex ///
                      corrtex2 regtex reg2tex reftex getref get2ref conservatism em ///
                      efficiency opacity crash scrash eui qta area ///
                      upoint province_devcat bmc polishpaper cleandisk myedit bf ///
-                     fshare thesis_diagram rollbook exam2tex
+                     fshare thesis_diagram rollbook exam2tex mysuite
     *-------------------------------------------------------------------
     * MODE 1: DISPLAY MENU (no options)
     *-------------------------------------------------------------------
     if "`all'" == "" & "`installed'" == "" & "`download'" == "" {
         display as text _n(2)
         display as text "{hline 70}"
-        display as text "{bf:mysuite v1.0.8} - Built-in Extensible Program Suite"
+        display as text "{bf:mysuite v1.0.9} - Built-in Extensible Program Suite"
         display as text "{hline 70}"
         display as text "Developed by: Wu Lianghai (agd2010@yeah.net)"
         display as text "              Chen Liwen (2184844526@qq.com)"
@@ -36,11 +36,11 @@ program define mysuite
         display as text "Institution: School of Business, Anhui University of Technology (AHUT)"
         display as text "             University of Bristol (UB)"
         display as text "             Red Cross Society of Ma'anshan City"
-        display as text "Date: 05 May 2026"
+        display as text "Date: 09 May 2026"
         display as text "{hline 70}" _n
         
         * Display available modules
-        display as text "{bf:AVAILABLE MODULES (32 programs from SSC)}" _n
+        display as text "{bf:AVAILABLE MODULES (33 programs from SSC)}" _n
         
         display as text "{bf:1. Core Components}"
         display as text "  {bf:art2tex}      : Empirical paper framework"
@@ -78,7 +78,9 @@ program define mysuite
         display as text "  {bf:fshare}       : Course development folder creator"
         display as text "  {bf:thesis_diagram} : Dissertation framework diagram"
         display as text "  {bf:rollbook}     : Random roll call system"
-        display as text "  {bf:exam2tex}     : LaTeX exam template generator" _n
+		display as text "  {bf:exam2tex}     : LaTeX exam template generator"
+		display as text "  {bf:mysuite}      : Built-in extensible program suite for empirical research" _n
+         
         
         display as text "{hline 70}"
         display as text "{bf:USAGE INSTRUCTIONS:}" _n
@@ -97,7 +99,7 @@ program define mysuite
                 local ++ssc_installed
             }
         }
-        display as text "  SSC modules installed: {res:`ssc_installed'}/32"
+        display as text "  SSC modules installed: {res:`ssc_installed'}/33"
         exit
     }
     
@@ -117,7 +119,7 @@ program define mysuite
                 display as text "  {bf:`mod'}: {error:Not installed}"
             }
         }
-        display as text _n "{bf:Summary:} {res:`ssc_installed'}/32 SSC modules installed"
+        display as text _n "{bf:Summary:} {res:`ssc_installed'}/33 SSC modules installed"
         exit
     }
     
