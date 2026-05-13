@@ -1,0 +1,23 @@
+d 'XTBESTCCE': module to compute Bootstrap-Enhanced Common Correlated Effects for panel data with distinct correlated factors
+d
+d      xtbestcce implements the toolbox of Stauskas & De Vos
+d (2024), which extends the Common    Correlated Effects (CCE)
+d framework of xtdcce2 (Ditzen, 2024) to settings where the   
+d dependent variable and the regressors are driven by distinct but
+d correlated sets of	unobserved factors. 
+d
+d KW: bootstrap
+d KW: cross-section dependence
+d KW: common correlated effects
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20260512
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtbestcce.ado
+f xtbestcce.sthlp
+f xtbestcce_plot.ado
+f ../e/example_xtbestcce.do

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  2026-05-10}{...}
+{* *! version 1.1.0  2026-05-11}{...}
 {viewerjumpto "Syntax" "lmodwt##syntax"}{...}
 {viewerjumpto "Description" "lmodwt##description"}{...}
 {viewerjumpto "Options" "lmodwt##options"}{...}

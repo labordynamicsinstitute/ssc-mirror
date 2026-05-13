@@ -1,5 +1,5 @@
 *! wavelet — Main dispatcher for the lwavelet package
-*! Version 1.0.0  2026-05-10
+*! Version 1.1.0  2026-05-11
 *! Author: Dr. Merwan Roudane <merwanroudane920@gmail.com>
 *!
 *! Usage:
@@ -68,11 +68,11 @@ program define _wavelet_about
     di as result "  {bf:lwavelet} — Wavelet Analysis for Time Series"
     di as text "  {hline 65}"
     di as text ""
-    di as text "  Version:     {res}1.0.0"
-    di as text "  Date:        {res}2026-05-10"
+    di as text "  Version:     {res}1.1.0"
+    di as text "  Date:        {res}2026-05-11"
     di as text "  Author:      {res}Dr. Merwan Roudane"
     di as text "  Email:       {res}merwanroudane920@gmail.com"
-    di as text "  Requires:    {res}Stata 11+"
+    di as text "  Requires:    {res}Stata 17+"
     di as text ""
     di as text "  {bf:Available Commands:}"
     di as text "  {hline 65}"

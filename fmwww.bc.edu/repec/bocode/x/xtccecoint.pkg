@@ -1,0 +1,30 @@
+d 'XTCCECOINT': module to perform Panel CCE Cointegration Test (Banerjee & Carrion-i-Silvestre, 2017)
+d
+d      xtccecoint implements the CADF_P panel cointegration test
+d proposed by Banerjee and    Carrion-i-Silvestre (2017). The test
+d assesses whether a set of I(1) variables in a panel	 are
+d cointegrated, while accounting for cross-section dependence using
+d the Common	Correlated Effects (CCE) approach of Pesaran
+d (2006).    Unlike tests that require explicit estimation of
+d common factors (e.g., Bai-Ng principal    components), this
+d command uses cross-section averages as convenient and robust
+d proxies    for the unobserved common factors. No pre-testing for
+d the number of factors is required. 
+d
+d KW: cointegration
+d KW: cross-section dependence
+d KW: common correlated effects
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260512
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtccecoint.ado
+f xtccecoint.sthlp
+f ../_/_xtccecoint_display.ado
+f ../_/_xtccecoint_mata.ado
+f ../_/_xtccecoint_plot.ado
+f xtccecoint_example.do

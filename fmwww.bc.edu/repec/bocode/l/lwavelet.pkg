@@ -18,9 +18,9 @@ d KW: discrete
 d KW: continuous
 d KW: bivariate
 d
-d Requires: Stata version 11
+d Requires: Stata version 17 (11 if Mata code is user-compiled)
 d
-d Distribution-Date: 20260511
+d Distribution-Date: 20260512
 d
 d Author:   Merwan Roudane, NA
 d Support: email  merwanroudane920@@gmail.com
@@ -49,3 +49,4 @@ f ../_/_wv_filters.mata
 f ../_/_wv_multi.mata
 f lwavelet.mlib
 f ../_/_build_lwavelet.do
+f ../e/example_lwavelet.do

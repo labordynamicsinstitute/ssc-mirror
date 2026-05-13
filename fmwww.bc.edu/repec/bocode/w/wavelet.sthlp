@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  2026-05-10}{...}
+{* *! version 1.1.0  2026-05-11}{...}
 {viewerjumpto "Syntax" "wavelet##syntax"}{...}
 {viewerjumpto "Description" "wavelet##description"}{...}
 {viewerjumpto "Commands" "wavelet##commands"}{...}
@@ -29,46 +29,46 @@ Main dispatcher:
 Available subcommands:
 
 {synoptset 14}{...}
-{synopt :{opt lmodwt}}Maximal Overlap Discrete Wavelet Transform{p_end}
-{synopt :{opt wt}}Continuous Wavelet Transform (CWT){p_end}
-{synopt :{opt xwt}}Cross-Wavelet Transform{p_end}
-{synopt :{opt wtc}}Wavelet Coherence (with Monte Carlo significance){p_end}
-{synopt :{opt wmcorr}}Wavelet Multiple Correlation{p_end}
-{synopt :{opt wmreg}}Wavelet Multiple Regression{p_end}
-{synopt :{opt wmxcorr}}Wavelet Multiple Cross-Correlation{p_end}
-{synopt :{opt about}}Package information{p_end}
-{synopt :{opt filters}}List available wavelet filters{p_end}
+{synopt :{help lmodwt:{bf:lmodwt}}}Maximal Overlap Discrete Wavelet Transform{p_end}
+{synopt :{help wt:{bf:wt}}}Continuous Wavelet Transform (CWT){p_end}
+{synopt :{help xwt:{bf:xwt}}}Cross-Wavelet Transform{p_end}
+{synopt :{help wtc:{bf:wtc}}}Wavelet Coherence (with Monte Carlo significance){p_end}
+{synopt :{help wmcorr:{bf:wmcorr}}}Wavelet Multiple Correlation{p_end}
+{synopt :{help wmreg:{bf:wmreg}}}Wavelet Multiple Regression{p_end}
+{synopt :{help wmxcorr:{bf:wmxcorr}}}Wavelet Multiple Cross-Correlation{p_end}
+{synopt :{bf:about}}Package information{p_end}
+{synopt :{bf:filters}}List available wavelet filters{p_end}
 {synoptline}
 
 {pstd}
 Or use commands directly:
 
 {p 8 17 2}
-{cmd:lmodwt} {it:varname} [{cmd:if}] [{cmd:in}]{cmd:,}
+{help lmodwt:{cmd:lmodwt}} {it:varname} [{cmd:if}] [{cmd:in}]{cmd:,}
 [{opt l:evels(#)} {opt f:ilter(name)} {opt mra} {opt gen:erate(prefix)}]
 
 {p 8 17 2}
-{cmd:wt} {it:varname} [{cmd:if}] [{cmd:in}]{cmd:,}
+{help wt:{cmd:wt}} {it:varname} [{cmd:if}] [{cmd:in}]{cmd:,}
 [{opt dt(#)} {opt m:other(name)} {opt pa:ram(#)} {opt dj(#)} {opt plot}]
 
 {p 8 17 2}
-{cmd:xwt} {it:var1 var2} [{cmd:if}] [{cmd:in}]{cmd:,}
+{help xwt:{cmd:xwt}} {it:var1 var2} [{cmd:if}] [{cmd:in}]{cmd:,}
 [{opt dt(#)} {opt m:other(name)} {opt pa:ram(#)} {opt dj(#)}]
 
 {p 8 17 2}
-{cmd:wtc} {it:var1 var2} [{cmd:if}] [{cmd:in}]{cmd:,}
+{help wtc:{cmd:wtc}} {it:var1 var2} [{cmd:if}] [{cmd:in}]{cmd:,}
 [{opt dt(#)} {opt m:other(name)} {opt nrands(#)} {opt plot}]
 
 {p 8 17 2}
-{cmd:wmcorr} {it:varlist} [{cmd:if}] [{cmd:in}]{cmd:,}
+{help wmcorr:{cmd:wmcorr}} {it:varlist} [{cmd:if}] [{cmd:in}]{cmd:,}
 [{opt l:evels(#)} {opt f:ilter(name)} {opt level(#)} {opt plot}]
 
 {p 8 17 2}
-{cmd:wmreg} {it:varlist} [{cmd:if}] [{cmd:in}]{cmd:,}
+{help wmreg:{cmd:wmreg}} {it:varlist} [{cmd:if}] [{cmd:in}]{cmd:,}
 [{opt l:evels(#)} {opt f:ilter(name)} {opt plot}]
 
 {p 8 17 2}
-{cmd:wmxcorr} {it:varlist} [{cmd:if}] [{cmd:in}]{cmd:,}
+{help wmxcorr:{cmd:wmxcorr}} {it:varlist} [{cmd:if}] [{cmd:in}]{cmd:,}
 [{opt l:evels(#)} {opt f:ilter(name)} {opt maxlag(#)} {opt plot}]
 
 
@@ -107,7 +107,7 @@ included for users who wish to rebuild from source.
 {dlgtab:Discrete Wavelet Transforms}
 
 {phang}
-{cmd:lmodwt} {it:varname}{cmd:,} {opt levels(#)} {opt filter(name)} [{opt mra}
+{help lmodwt:{cmd:lmodwt}} {it:varname}{cmd:,} {opt levels(#)} {opt filter(name)} [{opt mra}
 {opt generate(prefix)}]
 {break}
 Computes the Maximal Overlap Discrete Wavelet Transform. The MODWT
@@ -130,7 +130,7 @@ J detail components (D1,...,DJ) and one smooth component (SJ).
 {dlgtab:Continuous Wavelet Transforms}
 
 {phang}
-{cmd:wt} {it:varname}{cmd:,} [{opt dt(#)} {opt mother(name)} {opt param(#)}
+{help wt:{cmd:wt}} {it:varname}{cmd:,} [{opt dt(#)} {opt mother(name)} {opt param(#)}
 {opt dj(#)} {opt s0(#)} {opt siglvl(#)} {opt plot} {opt colormap(name)}]
 {break}
 Computes the Continuous Wavelet Transform using the FFT convolution theorem.
@@ -152,13 +152,13 @@ Paul, m=2 for DOG).
 {bf:turbo} (default).
 
 {phang}
-{cmd:xwt} {it:var1 var2}{cmd:,} [options same as {cmd:wt}]
+{help xwt:{cmd:xwt}} {it:var1 var2}{cmd:,} [options same as {help wt:{cmd:wt}}]
 {break}
 Computes the Cross-Wavelet Transform: W_xy = W_x * conj(W_y). Identifies
 common power and relative phase between two time series across scales.
 
 {phang}
-{cmd:wtc} {it:var1 var2}{cmd:,} [{opt nrands(#)} plus options same as {cmd:wt}]
+{help wtc:{cmd:wtc}} {it:var1 var2}{cmd:,} [{opt nrands(#)} plus options same as {help wt:{cmd:wt}}]
 {break}
 Computes Wavelet Coherence: R² = |S(W_xy)|² / (S(|W_x|²) * S(|W_y|²)).
 Significance is tested via Monte Carlo simulation using AR(1) surrogates.
@@ -169,7 +169,7 @@ Significance is tested via Monte Carlo simulation using AR(1) surrogates.
 {dlgtab:Multivariate Wavelet Analysis}
 
 {phang}
-{cmd:wmcorr} {it:varlist}{cmd:,} [{opt levels(#)} {opt filter(name)}
+{help wmcorr:{cmd:wmcorr}} {it:varlist}{cmd:,} [{opt levels(#)} {opt filter(name)}
 {opt level(#)} {opt plot}]
 {break}
 Computes wavelet multiple correlation at each scale following
@@ -182,13 +182,13 @@ pairwise correlation matrix and computes R² = 1 - 1/max(diag(P^-1)).
 {opt plot} produces a scale-by-scale correlation plot with CI bands.
 
 {phang}
-{cmd:wmreg} {it:varlist}{cmd:,} [{opt levels(#)} {opt filter(name)} {opt plot}]
+{help wmreg:{cmd:wmreg}} {it:varlist}{cmd:,} [{opt levels(#)} {opt filter(name)} {opt plot}]
 {break}
 Performs OLS regression at each wavelet scale. The dependent variable is
 automatically selected as the variable yielding maximum R² ({bf:YmaxR}).
 
 {phang}
-{cmd:wmxcorr} {it:varlist}{cmd:,} [{opt levels(#)} {opt filter(name)}
+{help wmxcorr:{cmd:wmxcorr}} {it:varlist}{cmd:,} [{opt levels(#)} {opt filter(name)}
 {opt maxlag(#)} {opt plot}]
 {break}
 Computes wavelet multiple cross-correlation at each scale for lags
@@ -199,43 +199,67 @@ Computes wavelet multiple cross-correlation at each scale for lags
 {title:Examples}
 
 {pstd}
-{bf:Example 1: MODWT decomposition}
-
-{phang2}{cmd:. sysuse gnp96}{p_end}
-{phang2}{cmd:. tsset date}{p_end}
-{phang2}{cmd:. lmodwt gnp96, levels(4) filter(la8) mra generate(_gnp)}{p_end}
-
-{pstd}
-{bf:Example 2: CWT with heatmap}
-
-{phang2}{cmd:. wt gnp96, dt(0.25) mother(morlet) plot colormap(turbo)}{p_end}
+A single coherent walkthrough using Stata's built-in Lütkepohl quarterly
+macro dataset (1960q1–1982q4, log levels of investment, income, and
+consumption). The full runnable script ships with the package as
+{bf:example_lwavelet.do}.
 
 {pstd}
-{bf:Example 3: Cross-wavelet transform}
+{bf:Setup}
 
-{phang2}{cmd:. webuse lutkepohl2}{p_end}
+{phang2}{cmd:. webuse lutkepohl2, clear}{p_end}
 {phang2}{cmd:. tsset qtr}{p_end}
-{phang2}{cmd:. xwt investment income}{p_end}
 
 {pstd}
-{bf:Example 4: Wavelet coherence with Monte Carlo}
+{bf:1. MODWT decomposition of investment}
 
-{phang2}{cmd:. wtc investment income, nrands(500) plot}{p_end}
+{pmore}
+With N=92 quarterly observations, J=3 is the maximum admissible level
+for the LA(8) filter. The three detail bands cover periods of 6–12 months
+(D1), 1–2 years (D2), and 2–4 years (D3); S3 captures everything slower
+than ~4 years (trend + long cycle).
 
-{pstd}
-{bf:Example 5: Wavelet multiple correlation}
-
-{phang2}{cmd:. wmcorr investment income consumption, levels(4) plot}{p_end}
-
-{pstd}
-{bf:Example 6: Wavelet multiple regression}
-
-{phang2}{cmd:. wmreg investment income consumption, levels(4) plot}{p_end}
+{phang2}{cmd:. lmodwt inv, levels(3) filter(la8) mra generate(_inv)}{p_end}
+{phang2}{cmd:. matrix list e(wvar), format(%9.4f)}{p_end}
 
 {pstd}
-{bf:Example 7: Wavelet cross-correlation}
+{bf:2. CWT power spectrum of investment}
 
-{phang2}{cmd:. wmxcorr investment income, levels(4) maxlag(8) plot}{p_end}
+{phang2}{cmd:. wt inv, dt(0.25) mother(morlet) plot colormap(turbo)}{p_end}
+
+{pstd}
+{bf:3. Cross-wavelet transform inv–inc}
+
+{phang2}{cmd:. xwt inv inc, dt(0.25) mother(morlet)}{p_end}
+
+{pstd}
+{bf:4. Wavelet coherence with Monte Carlo significance and phase arrows}
+
+{phang2}{cmd:. wtc inv inc, dt(0.25) nrands(500) plot}{p_end}
+
+{pstd}
+{bf:5. Wavelet multiple correlation across inv, inc, consump}
+
+{phang2}{cmd:. wmcorr inv inc consump, levels(3) filter(la8) plot}{p_end}
+{phang2}{cmd:. matrix list e(wmcorr), format(%9.4f)}{p_end}
+{phang2}{cmd:. matrix list e(ymaxr)}{p_end}
+
+{pstd}
+{bf:6. Wavelet multiple regression (auto-selects dependent variable per scale)}
+
+{phang2}{cmd:. wmreg inv inc consump, levels(3) filter(la8) plot}{p_end}
+{phang2}{cmd:. matrix list e(rsq), format(%9.4f)}{p_end}
+
+{pstd}
+{bf:7. Wavelet multiple cross-correlation (lead-lag, ±8 quarters)}
+
+{phang2}{cmd:. wmxcorr inv inc consump, levels(3) filter(la8) maxlag(8) plot}{p_end}
+
+{pstd}
+To run the entire example end-to-end with narrative comments and
+interpretive notes, execute the bundled script:
+
+{phang2}{cmd:. do example_lwavelet.do}{p_end}
 
 
 {marker results}{...}
@@ -355,3 +379,22 @@ Please cite as:{break}
 Roudane, M. (2026). lwavelet: Wavelet analysis for time series in Stata.
 Statistical Software Components, Boston College Department of Economics.
 {p_end}
+
+
+{title:Also see}
+
+{psee}
+Per-command help (click to open):
+
+{p2colset 8 22 24 2}{...}
+{p2col :{help lmodwt}}MODWT decomposition (discrete){p_end}
+{p2col :{help wt}}Continuous wavelet transform{p_end}
+{p2col :{help xwt}}Cross-wavelet transform{p_end}
+{p2col :{help wtc}}Wavelet coherence + Monte Carlo{p_end}
+{p2col :{help wmcorr}}Wavelet multiple correlation{p_end}
+{p2col :{help wmreg}}Wavelet multiple regression{p_end}
+{p2col :{help wmxcorr}}Wavelet multiple cross-correlation{p_end}
+{p2colreset}{...}
+
+{psee}
+Stata 18+ built-in: {help modwt} (decimated DWT/MODWT — different from {help lmodwt:lmodwt}).

@@ -35,6 +35,7 @@ p xtbalance module to transform the dataset into balanced Panel Data
 p xtbalance2 module to create a balanced subsample from unbalanced panel data
 p xtbalfront module to trade-off frontier diagnostics and balanced-subsample selection for unbalanced panel data
 p xtbcfe module to perform bootstrap-corrected Fixed Effects estimation and inference in dynamic panel models
+p xtbestcce module to compute Bootstrap-Enhanced Common Correlated Effects for panel data with distinct correlated factors
 p xtbhst module to implement bootstrap test for slope homogeneity in large panels.
 p xtbreak module for detecting and dating multiple structural breaks in time series and panel data
 p xtbreakcoint module to implement the panel cointegration test with structural breaks developed by Banerjee and Carrion-i-Silvestre (2015, Journal of Applied Econometrics)
@@ -46,6 +47,7 @@ p xtcaec module to estimate heterogeneous error correction models in cross-secti
 p xtcbc module to compute Coefficient-by-Coefficient Breaks in Panel Data Models
 p xtcbfe module to perform bootstrap-corrected Fixed Effects estimation and inference in dynamic panel models
 p xtcce module to implement the Common Correlated Effects estimator
+p xtccecoint module to perform Panel CCE Cointegration Test (Banerjee & Carrion-i-Silvestre, 2017)
 p xtcd module to investigate Variable/Residual Cross-Section Dependence
 p xtcd2 module to test for weak cross sectional dependence
 p xtcdf module to perform Pesaran's CD-test for cross-sectional dependence in panel context

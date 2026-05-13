@@ -1,5 +1,5 @@
 *! xwt — Cross-Wavelet Transform
-*! Version 1.0.0  2026-05-10
+*! Version 1.1.0  2026-05-11
 *! Author: Dr. Merwan Roudane <merwanroudane920@gmail.com>
 *! Part of the lwavelet package
 
