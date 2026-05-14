@@ -54,6 +54,7 @@ p xtcdf module to perform Pesaran's CD-test for cross-sectional dependence in pa
 p xtcenter module to disaggregate within and between-person effects by centering variables for mixed and melogit models
 p xtcips module to compute Pesaran Panel Unit Root Test in the Presence of Cross-section Dependence 
 p xtcointreg module for panel data generalization of cointegration regression using fully modified ordinary least squares, dynamic ordinary least squares, and canonical correlation regression methods
+p xtcsb module to compute Multifactor cross-sectionally augmented panel unit root tests of CIPS* and CSB (Pesaran, Smith & Yamagata 2013)
 p xtcsd module to test for cross-sectional dependence in panel data models
 p xtcsdq module to implement Tests of no cross-sectional error dependence in panel quantile regressions
 p xtcse2 module to estimate the exponent of cross-sectional dependence in large panels
@@ -74,6 +75,7 @@ p xtendothresdpd module to estimate a Dynamic Panel Data Threshold Effects Model
 p xteurostat module to import data from Eurostat in panel data structure
 p xtevent module to estimate and visualize linear panel event-study models
 p xtewreg module to estimate errors-in-variable model with mismeasured regressors
+p xtfactortest module to compute specification tests for heterogeneous panel data models with interactive (multifactor) error effects
 p xtfeis module to estimate linear Fixed-Effects model with Individual-specific Slopes (FEIS)
 p xtfifevd module to implement Fixed Effects Filtered & Vector Decomposition Estimation for Time-Invariant and Rarely Changing Variables in Panel Data with Unit Fixed Effects
 p xtfisher module to compute Fisher type unit root test for panel data 

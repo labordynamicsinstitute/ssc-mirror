@@ -1,0 +1,27 @@
+d 'XTCSB': module to compute Multifactor cross-sectionally augmented panel unit root tests of CIPS* and CSB (Pesaran, Smith & Yamagata 2013)
+d
+d	 xtcsb implements the two panel unit root tests proposed by
+d Pesaran, Smith & Yamagata    (2013, Journal of Econometrics 175,
+d 94-115) for panels with a multifactor error	 structure:	  
+d CIPS*: a truncated average of cross-sectionally augmented
+d Dickey-Fuller (CADF)		  t-ratios. Generalises the test of
+d Pesaran (2007) by adding the cross-section		averages of
+d k additional observable variables to handle m{sub:0} >= 1
+d unobserved		factors.	CSB: a cross-sectionally
+d augmented Sargan-Bhargava test based on the partial sums of	   
+d      the residuals from an augmented first-difference regression.
+d CSB has typically	       higher power than CIPS for small to
+d moderate T. 
+d
+d KW: panel data
+d KW: unit root tests
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260513
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtcsb.ado
+f xtcsb.sthlp

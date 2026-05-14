@@ -7882,6 +7882,7 @@ fmwww.bc.edu/repec/bocode/x/xtab.ado
 fmwww.bc.edu/repec/bocode/x/xcontract.pkg
 fmwww.bc.edu/repec/bocode/x/xt2treatments.ado
 fmwww.bc.edu/repec/bocode/x/xtregsam.sthlp
+fmwww.bc.edu/repec/bocode/x/xtfactortest.pkg
 fmwww.bc.edu/repec/bocode/x/xcollapse.ado
 fmwww.bc.edu/repec/bocode/x/xtpqardl.ado
 fmwww.bc.edu/repec/bocode/x/xtvar2_example.do
@@ -8023,6 +8024,7 @@ fmwww.bc.edu/repec/bocode/x/xtmixed_corr.ado
 fmwww.bc.edu/repec/bocode/x/xtseqreg.sthlp
 fmwww.bc.edu/repec/bocode/x/xtdhazard.ado
 fmwww.bc.edu/repec/bocode/x/xri_pnll.ado
+fmwww.bc.edu/repec/bocode/x/xtfactortest.ado
 fmwww.bc.edu/repec/bocode/x/xtcointreg.ado
 fmwww.bc.edu/repec/bocode/x/xtdhcoint_example.do
 fmwww.bc.edu/repec/bocode/x/xriml.pkg
@@ -8087,6 +8089,7 @@ fmwww.bc.edu/repec/bocode/x/xtmixed_corr.html
 fmwww.bc.edu/repec/bocode/x/xfrac.hlp
 fmwww.bc.edu/repec/bocode/x/xtset2.sthlp
 fmwww.bc.edu/repec/bocode/x/xtcd2.sthlp
+fmwww.bc.edu/repec/bocode/x/xtcsb.pkg
 fmwww.bc.edu/repec/bocode/x/xtccecoint.sthlp
 fmwww.bc.edu/repec/bocode/x/xtdolshm_p.ado
 fmwww.bc.edu/repec/bocode/x/xtdpdgmm.ado
@@ -8109,6 +8112,7 @@ fmwww.bc.edu/repec/bocode/x/xtmod.pkg
 fmwww.bc.edu/repec/bocode/x/xtgrangert_example.dta
 fmwww.bc.edu/repec/bocode/x/xtrevu.ado
 fmwww.bc.edu/repec/bocode/x/xtwest.ado
+fmwww.bc.edu/repec/bocode/x/xtcsb.sthlp
 fmwww.bc.edu/repec/bocode/x/xtcd.sthlp
 fmwww.bc.edu/repec/bocode/x/xcontract.ado
 fmwww.bc.edu/repec/bocode/x/xtdcce2_auxiliary.ado
@@ -8259,6 +8263,7 @@ fmwww.bc.edu/repec/bocode/x/xtitsa.pkg
 fmwww.bc.edu/repec/bocode/x/xfrac_chk.ado
 fmwww.bc.edu/repec/bocode/x/xtoverid.pkg
 fmwww.bc.edu/repec/bocode/x/xtnumfac.sthlp
+fmwww.bc.edu/repec/bocode/x/xtfactortest.sthlp
 fmwww.bc.edu/repec/bocode/x/xtcbc.sthlp
 fmwww.bc.edu/repec/bocode/x/xtpcaus.pkg
 fmwww.bc.edu/repec/bocode/x/xtevent.sthlp
@@ -8396,6 +8401,7 @@ fmwww.bc.edu/repec/bocode/x/xrigls.pkg
 fmwww.bc.edu/repec/bocode/x/xtistest.sthlp
 fmwww.bc.edu/repec/bocode/x/xtgrangert.sthlp
 fmwww.bc.edu/repec/bocode/x/xpredict.sthlp
+fmwww.bc.edu/repec/bocode/x/xtcsb.ado
 fmwww.bc.edu/repec/bocode/x/xframedir.ado
 fmwww.bc.edu/repec/bocode/x/xri_enll.ado
 fmwww.bc.edu/repec/bocode/x/xtine.sthlp

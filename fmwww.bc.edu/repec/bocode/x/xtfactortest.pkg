@@ -1,0 +1,31 @@
+d 'XTFACTORTEST': module to compute specification tests for heterogeneous panel data models with interactive (multifactor) error effects
+d
+d     xtfactortest is a Stata library implementing a coherent
+d battery of specification tests    for heterogeneous panel data
+d models.     Such Interactive-Effects (IE) panels nest both the
+d standard two-way fixed effects (2W-FE)    model and the Common
+d Correlated Effects (CCE) framework of Pesaran (2006).  Whether or
+d    not a researcher needs CCE / PC depends on two concurrent
+d issues:	 (a) whether the slopes beta_i are heterogeneous
+d and, if so, whether that	      heterogeneity is correlated
+d with VARIANCE features of the regressors (Campello,		
+d Galvao & Juhl 2019);	      (b) whether the regressors are
+d correlated with the unobserved factor loadings gamma_i	   
+d (Bai 2009; Kapetanios, Serlenga & Shin 2023, 2024).	
+d xtfactortest answers each question with a dedicated test plus a
+d joint test, and provides    an explicit decision rule based on
+d the five-lessons review of Juodis & Reese (2026). 
+d
+d KW: panel data
+d KW: specification tests
+d KW: multifactor effects
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260513
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtfactortest.ado
+f xtfactortest.sthlp
