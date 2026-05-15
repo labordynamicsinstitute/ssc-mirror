@@ -1,4 +1,4 @@
-*! version 1.1.0  20aug2025  I I Bolotov
+*! version 1.1.0  20nov2025  I I Bolotov
 program define clspl2, eclass byable(recall)
 	version 15.1
 	/*

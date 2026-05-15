@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0  20aug2025}{...}
+{* *! version 1.1.0  20nov2025}{...}
 {viewerjumpto "Syntax" "lppinvl2##syntax"}{...}
 {viewerjumpto "Description" "lppinvl2##description"}{...}
 {viewerjumpto "Postestimation" "lppinvl2##postestimation"}{...}
@@ -423,6 +423,14 @@ including {cmd:estat corr} and {cmd:estat ttest}.
 
 {pstd}
     Thanks for citing this software and my works on the topic:
+
+{p 8 8 2}
+Bolotov, I. (2026). LPPINVL2: Stata module providing Linear Programming via
+    Regularized Least Squares (LPPinv) is a modular two-step estimator for
+    solving underdetermined, ill-posed, or structurally constrained linear and
+    quadratic programming problems using least-squares and convex
+    optimization. Available from
+    {browse "https://ideas.repec.org/c/boc/bocode/s459696.html"}.
 
 {p 8 8 2}
     Bolotov, I. (2025). CLSP: Linear Algebra Foundations of a Modular Two-Step

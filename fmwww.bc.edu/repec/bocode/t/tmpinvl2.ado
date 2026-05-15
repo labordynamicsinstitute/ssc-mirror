@@ -1,4 +1,4 @@
-*! version 1.1.0  20aug2025  I I Bolotov
+*! version 1.1.0  20nov2025  I I Bolotov
 program define tmpinvl2, eclass byable(recall)
 	version 15.1
 	/*
@@ -389,7 +389,7 @@ program define tmpinvl2, eclass byable(recall)
 							*/ nested  x
 			if "`full'"        == "False"									///
 			qui  est  save   "`e(reduced)'",								///
-							  `=cond(`model_i'==1, "replace","append")'
+							  `=cond("`model_i'"=="1","replace","append")'
 			if "`full'"        == "False"									///
 			mata: X[m_start::m_end,p_start..p_end] = st_matrix("e(X)");
 			else															///
@@ -407,7 +407,15 @@ program define tmpinvl2, eclass byable(recall)
 		          X[rows(idx) ? idx : J(0,1,.)]                           = ///
 		          J(rows(idx),1,replace_value);                             ///
 		          X      = colshape(X,`p');
-	mata:             st_matrix("e(X)", "`symmetric'" == "" ? X  : 0.5*(X+X'));
+						   /* ensure the result is properly stored           */
+	if     "`full'" == "False"  tempfile  tmpf
+	forval        i      =                      1/`e(model_n)'                {
+		if "`full'" == "False"  qui est use      "`e(reduced)'",   number(`i')
+		mata:         st_matrix("e(X)", "`symmetric'" == "" ? X  : 0.5*(X+X'));
+		if "`full'" == "False"  qui est save      `tmpf',					///
+										 `=cond("`i'"=="1","replace","append")'
+	}
+	if     "`full'" == "False"  copy     `tmpf'  "`e(reduced)'",   replace
 						   /* update the result and display its summary      */
 	_update `reduced'								   // switch result
 	clspl2											   // print summary

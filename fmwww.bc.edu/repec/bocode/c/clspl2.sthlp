@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0  20aug2025}{...}
+{* *! version 1.1.0  20nov2025}{...}
 {viewerjumpto "Syntax" "clspl2##syntax"}{...}
 {viewerjumpto "Description" "clspl2##description"}{...}
 {viewerjumpto "Postestimation" "clspl2##postestimation"}{...}
@@ -473,6 +473,14 @@ including {cmd:estat corr} and {cmd:estat ttest}.
     Thanks for citing this software and my works on the topic:
 
 {p 8 8 2}
+Bolotov, I. (2026). CLSPL2: Stata module providing Convex Least Squares
+    Programming (CLSP) is a modular two-step estimator for solving
+    underdetermined, ill-posed, or structurally constrained least-squares
+    problems. Available from
+    {browse "https://ideas.repec.org/c/boc/bocode/s459695.html"}.
+
+{p 8 8 2}
     Bolotov, I. (2025). CLSP: Linear Algebra Foundations of a Modular Two-Step
     Convex Optimization-Based Estimator for Ill-Posed Problems. Mathematics,
     13, 3476. Available from {browse "https://doi.org/10.3390/math13213476"}.
+                                                                                
