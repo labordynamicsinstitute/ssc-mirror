@@ -211,7 +211,7 @@ p mmat2tex module to output Mata matrix as LaTeX table
 p mmeiv module to perform Multiple Marginal Effects IV Estimation
 p mmerge module: Safer and easier to use variant of merge.
 p mmodes module to calculate the mode for a numeric varlist
-p mmqreg module to estimate quantile regressions via Method of Moments
+p mmqreg module to estimate MM-Quantile Regression with Decomposed Split-Panel Jackknife and Visualization
 p mmsel module to simulate (counterfactual) distributions from quantile regressions (w/optional sample selection correction)
 p mmsrm module to estimate Multidimensional Marginally Sufficient Rasch Model (MMSRM)
 p mmws module to perform marginal mean weighting through stratification

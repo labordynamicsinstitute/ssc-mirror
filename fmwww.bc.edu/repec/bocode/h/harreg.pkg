@@ -1,0 +1,40 @@
+d 'HARREG': module to estimate time-series regression with HAR standard errors and fixed-b inference
+d
+d      harreg fits a time-series regression by OLS and reports
+d heteroskedasticity- and    autocorrelation-robust (HAR) standard
+d errors based on fixed-b asymptotics, as recommended	 by
+d Lazarus, Lewis, Stock, and Watson (LLSW, 2018) and Lazarus,
+d Lewis, and Stock (LLS,    2021).    The default estimator is the
+d equal-weighted cosine (EWC) with nu = floor(0.41*T^(2/3)),	as
+d recommended by LLSW (2018).  Alternative long-run variance (LRV)
+d estimators include	equal-weighted periodogram (EWP),
+d Newey-West/Bartlett (NW), and quadratic spectral (QS).    The
+d default rules for the truncation parameter (nw, qs) and degrees
+d of freedom (ewc, ewp)    are designed to optimize the tradeoff
+d between test size (controlling the probability of    false
+d rejection) and size-adjusted power, following LLSW (2018).	For
+d ewc and ewp, inference uses t(nu) and F(m,nu-m+1) reference
+d distributions, where m is    the number of restrictions tested. 
+d For nw and qs, harreg simulates the fixed-b null    distribution
+d to obtain p-values and critical values. 
+d
+d KW: HAR
+d KW: long-run variance
+d
+d Requires: Stata version 
+d
+d Distribution-Date: 20260516
+d
+d Author:  Eben Lazarus,  UC Berkeley
+d Support: email  lazarus@@berkeley.edu
+d
+d Author: Daniel J. Lewis ,  University College London
+d Support: email daniel.j.lewis@@ucl.ac.uk
+d
+f harreg.ado
+f harreg_p.ado
+f harwald.ado
+f harreg.sthlp
+f harwald.sthlp
+f har_utils.mata
+f ../l/lharreg.mlib

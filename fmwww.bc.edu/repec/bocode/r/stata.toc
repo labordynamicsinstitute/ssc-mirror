@@ -15,6 +15,7 @@ p radiusmatch module to perform distance-weighted radius matching with bias adju
 p raewma module to plot the risk adjusted exponentially weighted moving average
 p ralloc module to design randomized controlled trials
 p ralpha module to generate pseudo-random characters or words
+p rals module to perform Residual Augmented Least Squares unit-root and cointegration tests 
 p randcmd module to compute randomization inference p-values
 p randcmdci module to produce robust randomization-t p-values and confidence intervals for regression coefficients
 p randcoef module to estimate correlated random effects and correlated random coefficients models
@@ -81,6 +82,7 @@ p rdpower module to perform power calculations for random designs
 p rdqte module for estimation and robust inference for quantile treatment effects (QTE) in regression discontinuity designs (RDD)
 p rdrobust module to provide robust data-driven inference in the regression-discontinuity design
 p rds module for respondent driven sampling
+p rdstagger module to estimate Staggered Regression Discontinuity with Network Interference
 p readlog module to read and process a file
 p readraster module to read and process raster data in NetCDF and GeoTIFF files
 p readreplace module to make replacements that are specified in an external dataset

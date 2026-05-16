@@ -1,0 +1,50 @@
+d 'RDSTAGGER': module to estimate Staggered Regression Discontinuity with Network Interference
+d
+d      rdstagger estimates ATT(g,t) - the average treatment effect
+d for the cohort of units first    treated in period g, measured at
+d calendar time t - within a unified framework that    combines
+d three identification strategies:	  (1) Regression
+d discontinuity (RD): treatment eligibility is determined by a
+d running	     variable crossing a known cutoff. Kernel
+d weights concentrate the comparison on 	   observations
+d near the cutoff.	  (2) Staggered difference-in-differences:
+d units adopt treatment at heterogeneous times		 
+d (cohorts), following the framework of Callaway and Sant'Anna
+d (2021). This avoids		 the forbidden-comparison problem
+d of two-way fixed effects estimators under	       treatment
+d effect heterogeneity.        (3) Network interference: units may
+d receive spillover effects through a network of	   
+d neighbors. The command estimates both the direct ATT (on treated
+d units) and the	    share of neighbors treated as a
+d spillover proxy (Manski, 2013).    For each cohort-period cell,
+d rdstagger computes a kernel-weighted DiD using the   
+d pre-treatment period immediately before treatment adoption as the
+d base period (g-1). 
+d
+d KW: ATT
+d KW: treatment effect
+d KW: regression discontinuity
+d KW: staggered treatment
+d KW: spillovers
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260516
+d
+d Author:    Subir Hait,  Michigan State University
+d Support: email   haitsubi@@msu.edu
+d
+f rdstagger.ado
+f rdstagger.sthlp
+f rdstagger_agg.ado
+f rdstagger_plot.ado
+f rdstagger_pretest.ado
+f rdstagger_sim.ado
+f rdstagger_spillover.ado
+f rdstagger_agg.sthlp
+f rdstagger_plot.sthlp
+f rdstagger_pretest.sthlp
+f rdstagger_sim.sthlp
+f rdstagger_spillover.sthlp
+f rdstagger_example.do
+f rdstagger_montecarlo.do

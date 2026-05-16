@@ -1,10 +1,17 @@
-d 'MMQREG': module to estimate quantile regressions via Method of Moments
+d 'MMQREG': module to estimate MM-Quantile Regression with Decomposed Split-Panel Jackknife and Visualization
 d
 d   mmqreg estimates quantile regressions using the method of
 d moments as proposed by  Machado and Santos Silva (J.
 d Econometrics, 2019). In contrast with xtqreg, this command allows
 d for the estimation of quantile regressions without fixed effects,
-d as well as when multiple fixed effects are used. 
+d as well as when multiple fixed effects are used.  v2.4 adds the
+d jknife option, integrating the MM-QR-JK half-panel jackknife bias
+d    correction into mmqreg. In short-T panels with fixed effects,
+d the MM-QR scale function    and quantile-location estimators
+d inherit the incidental-parameters bias of    within-transformed
+d estimators. The decomposed JK removes the leading-order bias from
+d    these two components separately rather than from the final
+d beta(tau). 
 d
 d KW: qreq
 d KW: xtqreg
@@ -14,11 +21,16 @@ d KW: predict
 d
 d Requires: Stata version 13 and hdfe, ftools from SSC (q.v.)
 d
-d Distribution-Date: 20220621
+d Distribution-Date: 20260515
 d
 d Author: Fernando Rios-Avila, Levy Economics Institute of Bard College
 d Support: email friosavi@@levy.org
 d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
 f mmqreg.ado
 f mmqreg.sthlp
+f mmqregplot.ado
+f mmqregplot.sthlp
 f mmqreg_example.do

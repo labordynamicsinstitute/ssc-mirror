@@ -135,6 +135,7 @@ p drarea module to overlap two range area plots
 p drcate module to estimate and plot conditional average treatment effect functions with uniform confidence bands using a doubly robust method
 p drdecomp module to estimate  Shapley value of growth and distribution components of changes in poverty indicators
 p drdid module for the estimation of Doubly Robust Difference-in-Difference models
+p drlate module to perform Doubly robust estimation of the local average treatment effect (LATE) and the local average treatment effect on the treated (LATT)
 p drm module to fit Sobel's Diagonal Reference Model (DRM)
 p drmeta module for dose-response meta-analysis
 p drmmws module to perform doubly-robust marginal mean weighting through stratification

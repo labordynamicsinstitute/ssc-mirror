@@ -1,0 +1,39 @@
+d 'DRLATE': module to perform Doubly robust estimation of the local average treatment effect (LATE) and the local average treatment effect on the treated (LATT)
+d
+d      drlate estimates the local average treatment effect (LATE)
+d and the local average    treatment effect on the treated (LATT)
+d using observational data.  The command    accommodates a binary
+d instrument, a continuous, binary, or count treatment, and a	
+d continuous, binary, or count outcome.  All standard errors are
+d computed jointly for the    instrument propensity score, the
+d outcome regression, the treatment regression, and the    causal
+d estimand, using Stata's gmm command with iterate(0) (one-step GMM
+d with analytical    starting values), yielding valid inference. 
+d
+d KW: LATE
+d KW: local average treatment effect
+d KW: LATT
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260515
+d
+d Author:  Derya Uysal, LMU Munich
+d Support: email derya.uysal@@econ.lmu.de 
+d
+d Author:  Tymon Słoczyński , Brandeis University
+d Support: email tslocz@@brandeis.edu
+d
+d Author: Jeffrey M. Wooldridge, Michigan State University
+d Support: email  wooldri1@@msu.edu
+d
+f drlate.ado
+f drlate.sthlp
+f drlate_estimate_late.ado
+f drlate_estimate_latt.ado
+f drlate_estimate.ado
+f ../_/_drlate_getstats.ado
+f ../_/_drlate_gmmopts.ado
+f ../_/_drlate_options.ado
+f ../_/_drlate_parse.ado
+f ../_/_drlate_ps.ado

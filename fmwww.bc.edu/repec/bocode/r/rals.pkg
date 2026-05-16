@@ -1,0 +1,47 @@
+d 'RALS': module to perform Residual Augmented Least Squares unit-root and cointegration tests 
+d
+d   The rals package implements every test in the {it:Residual
+d Augmented Least Squares}    family (Im & Schmidt 2008): the
+d second- and third-moment information in the regression   
+d residuals is exploited to gain power whenever the errors are
+d non-normal.  The package    collects nine commands covering both
+d unit-root and cointegration testing, with optional	Fourier
+d deterministic components and structural breaks. 
+d
+d KW: unit root tests
+d KW: residual augmented least squares
+d KW: cointegration
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260515
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f rals.ado
+f rals.sthlp
+f ralsadf.ado
+f ralsbattery.ado
+f ralscoint.ado
+f ralsdiag.ado
+f ralsfadf.ado
+f ralsfadl.ado
+f ralsfkss.ado
+f ralslm.ado
+f ralslmb.ado
+f ralsadf.sthlp
+f ralsbattery.sthlp
+f ralscoint.sthlp
+f ralsdiag.sthlp
+f ralsfadf.sthlp
+f ralsfadl.sthlp
+f ralsfkss.sthlp
+f ralslm.sthlp
+f ralslmb.sthlp
+f ../_/_rals_graph_fadf.ado
+f ../_/_rals_graph_ur.ado
+f ../_/_rals_mata.ado
+f ../_/_rals_print_header.ado
+f ../_/_rals_print_two_row.ado
+f rals_demo.do
