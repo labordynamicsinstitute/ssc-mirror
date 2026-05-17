@@ -1,4 +1,4 @@
-*! rals 1.0.0  12may2026
+*! rals 1.0.1  16may2026
 *! Author: Dr Merwan Roudane  <merwanroudane920@gmail.com>
 *! Residual Augmented Least Squares (RALS) unit root and cointegration tests
 *------------------------------------------------------------------------------
@@ -8,7 +8,8 @@
 
 program define rals
     version 14.0
-    qui _rals_mata
+    capture mata: __rals_loaded()
+    if _rc qui _rals_mata
     syntax [anything] [, Version About Help ]
 
     * no argument at all -> show banner
@@ -22,7 +23,7 @@ program define rals
     local first = lower("`first'")
 
     if "`first'"=="version" | "`version'" != "" {
-        di as result "rals " as text "1.0.0  (12 May 2026)"
+        di as result "rals " as text "1.0.1  (16 May 2026)"
         di as text   "  Author: Dr Merwan Roudane <merwanroudane920@gmail.com>"
         exit 0
     }
@@ -67,7 +68,7 @@ program define _rals_banner
     di as text ""
     di as text "{hline 78}"
     di as text "  Author : Dr Merwan Roudane  <merwanroudane920@gmail.com>"
-    di as text "  Version: 1.0.0  --  13 May 2026"
+    di as text "  Version: 1.0.1  --  16 May 2026"
     di as text "  Help   : {help rals}    --    Quick start: type {bf:doc rals_demo.do}"
     di as text "{hline 78}"
     di as text ""

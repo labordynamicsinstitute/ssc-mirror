@@ -1,4 +1,4 @@
-*! _rals_graph_fadf 1.0.0  12may2026  Dr Merwan Roudane
+*! _rals_graph_fadf 1.0.1  16may2026  Dr Merwan Roudane
 *! Shared Fourier-plot helper for ralsfadf and ralsfkss.
 program define _rals_graph_fadf
     args y timevar touse stat cv5 kfreq T

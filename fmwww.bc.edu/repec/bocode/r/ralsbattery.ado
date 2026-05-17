@@ -1,4 +1,4 @@
-*! ralsbattery 2.0.0  13may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
+*! ralsbattery 1.0.1  16may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
 *! Full-package driver:
 *!    - {it:varlist} with 1 variable  : run every RALS unit-root test
 *!    - {it:varlist} with 2+ variables: unit-root battery on each variable
@@ -8,7 +8,8 @@
 
 program define ralsbattery, rclass
     version 14.0
-    qui _rals_mata
+    capture mata: __rals_loaded()
+    if _rc qui _rals_mata
     syntax varlist(min=1 ts) [if] [in], [        ///
         TREND                                    ///
         MAXLags(integer 8)                       ///

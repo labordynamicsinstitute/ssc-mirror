@@ -1,4 +1,4 @@
-*! ralsfadl 1.0.0  12may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
+*! ralsfadl 1.0.1  16may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
 *! RALS-Fourier ADL cointegration test
 *  Reference:  Yilanci, V., Ulucak, R., Zhang, Y., & Andreoni, V. (2022).
 *              Sustainable Development 31(2): 812-824.
@@ -10,7 +10,8 @@
 
 program define ralsfadl, rclass
     version 14.0
-    qui _rals_mata
+    capture mata: __rals_loaded()
+    if _rc qui _rals_mata
     syntax varlist(min=2 ts) [if] [in], [          ///
             TREND                                  ///
             MAXLags(integer 3)                     ///

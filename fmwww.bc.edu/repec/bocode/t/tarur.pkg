@@ -1,0 +1,48 @@
+d 'TARUR': module to perform nonlinear unit-root, cointegration, and linearity tests with embedded critical values and automatic decisions
+d
+d    tarur provides a unified Stata interface to 20+ nonlinear
+d unit-root, cointegration, and    linearity tests. Every test
+d embeds the original paper's critical values, computes   
+d automatic reject/fail-to-reject decisions at the 1%, 5%, and 10%
+d levels, and prints a	  publication-style summary. The tarur
+d command is a dispatcher to one ado-file per test;    you can also
+d call the individual commands directly (e.g., tarur_kss varname,  
+d  case(demeaned) works the same as tarur kss varname,
+d case(demeaned)). 
+d
+d KW: nonlinear unit root
+d KW: coiegration
+d KW: linearity tests
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260516
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f tarur.ado
+f tarur.sthlp
+f tarur_arch.ado
+f tarur_cookvougas.ado
+f tarur_cuestasgarratt.ado
+f tarur_cuestasordonez.ado
+f tarur_endersgranger.ado
+f tarur_enderssiklos.ado
+f tarur_harveymills.ado
+f tarur_huchen.ado
+f tarur_init.ado
+f tarur_kilic.ado
+f tarur_kruse.ado
+f tarur_kss.ado
+f tarur_ksscoint.ado
+f tarur_lnv.ado
+f tarur_mcleodli.ado
+f tarur_parkshintani.ado
+f tarur_pascalau.ado
+f tarur_runall.ado
+f tarur_sollis2004.ado
+f tarur_sollis2009.ado
+f tarur_terasvirta.ado
+f tarur_vougas.ado
+f ../_/tarur_mata.do

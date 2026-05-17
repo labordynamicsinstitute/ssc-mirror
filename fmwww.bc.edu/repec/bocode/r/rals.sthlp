@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  13may2026}{...}
+{* *! version 1.0.1  16may2026}{...}
 {title:Title}
 
 {phang}{bf:rals} {hline 2} Residual Augmented Least Squares unit-root and cointegration tests
@@ -74,4 +74,4 @@ Author: {bf:Dr Merwan Roudane}, merwanroudane920@gmail.com
 
 {pstd}
 Dr Merwan Roudane -- merwanroudane920@gmail.com
-{break}Version 1.0.0  --  13 May 2026
+{break}Version 1.0.1  --  16 May 2026

@@ -1,4 +1,4 @@
-*! ralscoint 1.0.0  12may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
+*! ralscoint 1.0.1  16may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
 *! RALS cointegration tests:  ECM, ADL, EG, EG2  with RALS augmentation
 *  Reference:  Lee, H., Lee, J., & Im, K. (2015) Studies in Nonlinear Dynamics
 *              & Econometrics 19(4): 397-413.
@@ -8,7 +8,8 @@
 
 program define ralscoint, rclass
     version 14.0
-    qui _rals_mata
+    capture mata: __rals_loaded()
+    if _rc qui _rals_mata
     syntax varlist(min=2 ts) [if] [in], [          ///
             TREND                                  ///
             METHod(string)                         /// ecm adl eg eg2 all

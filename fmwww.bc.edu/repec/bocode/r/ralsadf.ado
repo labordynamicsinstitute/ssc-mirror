@@ -1,4 +1,4 @@
-*! ralsadf 1.0.0  12may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
+*! ralsadf 1.0.1  16may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
 *! RALS-ADF unit-root test of Im, Lee & Tieslau (2014)
 *  Festschrift in Honor of Peter Schmidt (pp. 315-342), Springer.
 *  Mirrors the GAUSS code rals_adf.src by Saban Nazlioglu.
@@ -6,7 +6,8 @@
 
 program define ralsadf, rclass
     version 14.0
-    qui _rals_mata
+    capture mata: __rals_loaded()
+    if _rc qui _rals_mata
     syntax varname(ts) [if] [in], [                ///
             TREND                                  ///
             MAXLags(integer 8)                     ///

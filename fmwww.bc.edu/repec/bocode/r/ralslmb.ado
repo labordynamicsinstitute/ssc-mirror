@@ -1,4 +1,4 @@
-*! ralslmb 1.0.0  12may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
+*! ralslmb 1.0.1  16may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
 *! RALS-LM unit-root test WITH STRUCTURAL BREAKS
 *  Reference:
 *    Meng, Lee & Payne (2017) Studies in Nonlinear Dynamics & Econometrics 21(1):31-45.
@@ -8,7 +8,8 @@
 
 program define ralslmb, rclass
     version 14.0
-    qui _rals_mata
+    capture mata: __rals_loaded()
+    if _rc qui _rals_mata
     syntax varname(ts) [if] [in], [                ///
             MODel(integer 2)                       /// 1=level break ; 2=level+trend break
             BReaks(integer 1)                      /// 1 or 2

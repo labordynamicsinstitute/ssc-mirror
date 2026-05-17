@@ -1,4 +1,4 @@
-*! ralslm 1.0.0  12may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
+*! ralslm 1.0.1  16may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
 *! RALS-LM unit-root test of Meng, Im, Lee & Tieslau (2014)
 *  Festschrift in Honor of Peter Schmidt (pp. 343-357), Springer.
 *  Mirrors the GAUSS code rals_lm.src by Saban Nazlioglu.
@@ -6,7 +6,8 @@
 
 program define ralslm, rclass
     version 14.0
-    qui _rals_mata
+    capture mata: __rals_loaded()
+    if _rc qui _rals_mata
     syntax varname(ts) [if] [in], [                ///
             MAXLags(integer 8)                     ///
             IC(string)                             ///

@@ -1,4 +1,4 @@
-*! ralsfkss 1.0.0  12may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
+*! ralsfkss 1.0.1  16may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
 *! RALS-Fourier KSS unit-root test
 *  Reference:  Yilanci & Ozgur (2025) Politicka Ekonomie 73(3): 528-565.
 *  Step 1: Fourier de-trending (Christopoulos & Leon-Ledesma 2010).
@@ -8,7 +8,8 @@
 
 program define ralsfkss, rclass
     version 14.0
-    qui _rals_mata
+    capture mata: __rals_loaded()
+    if _rc qui _rals_mata
     syntax varname(ts) [if] [in], [                ///
             TREND                                  ///
             MAXLags(integer 8)                     ///

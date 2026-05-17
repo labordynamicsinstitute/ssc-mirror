@@ -1,4 +1,4 @@
-*! ralsdiag 1.0.0  12may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
+*! ralsdiag 1.0.1  16may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
 *! Pre-test diagnostics for the RALS family:
 *!    - Shapiro-Wilk and Jarque-Bera normality tests
 *!    - Harvey, Leybourne & Xiao (2008) linearity test
@@ -10,7 +10,8 @@
 
 program define ralsdiag, rclass
     version 14.0
-    qui _rals_mata
+    capture mata: __rals_loaded()
+    if _rc qui _rals_mata
     syntax varname(ts) [if] [in], [                ///
             TREND                                  ///
             MAXLags(integer 8)                     ]

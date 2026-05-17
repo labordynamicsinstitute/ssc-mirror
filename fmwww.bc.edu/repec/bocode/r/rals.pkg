@@ -14,7 +14,7 @@ d KW: cointegration
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20260515
+d Distribution-Date: 20260516
 d
 d Author:   Merwan Roudane, NA
 d Support: email  merwanroudane920@@gmail.com
@@ -42,6 +42,7 @@ f ralslmb.sthlp
 f ../_/_rals_graph_fadf.ado
 f ../_/_rals_graph_ur.ado
 f ../_/_rals_mata.ado
+f ../_/_rals_mata.mata
 f ../_/_rals_print_header.ado
 f ../_/_rals_print_two_row.ado
 f rals_demo.do

@@ -13,6 +13,7 @@ p hansen2 module for Hansen's test for parameter instability
 p hapblock module to perform haplotype analysis to identify the edges of haplotype blocks
 p hapipf module to perform haplotype analysis
 p harmby module to harmonize values of variables within by-groups
+p harreg module to estimate time-series regression with HAR standard errors and fixed-b inference
 p hausman module to compute a Hausman test statistic (version 5)
 p hazdcmp module to produce multivariate decomposition for piecewise constant hazard rate models
 p hbar module to generate horizontal bar charts

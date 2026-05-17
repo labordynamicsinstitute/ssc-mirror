@@ -1,4 +1,4 @@
-*! _rals_graph_ur 1.0.0  12may2026  Dr Merwan Roudane
+*! _rals_graph_ur 1.0.1  16may2026  Dr Merwan Roudane
 *! Shared time-series plot for unit-root commands in the rals package.
 program define _rals_graph_ur
     args y timevar touse testname stat cv5

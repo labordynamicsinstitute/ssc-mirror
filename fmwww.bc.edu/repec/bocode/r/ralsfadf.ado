@@ -1,4 +1,4 @@
-*! ralsfadf 1.0.0  12may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
+*! ralsfadf 1.0.1  16may2026  Dr Merwan Roudane  <merwanroudane920@gmail.com>
 *! RALS-Fourier ADF unit-root test (Yilanci, Aydin & Aydin 2019)
 *  MPRA Paper No. 96797.  Critical values from Tables 1a / 1b of the paper,
 *  Hansen (1995) interpolation across rho^2 and bilinear in T.
@@ -6,7 +6,8 @@
 
 program define ralsfadf, rclass
     version 14.0
-    qui _rals_mata
+    capture mata: __rals_loaded()
+    if _rc qui _rals_mata
     syntax varname(ts) [if] [in], [                ///
             TREND                                  ///
             MAXLags(integer 8)                     ///

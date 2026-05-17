@@ -1,4 +1,4 @@
-*! _rals_print_header 1.0.0  12may2026  Dr Merwan Roudane
+*! _rals_print_header 1.0.1  16may2026  Dr Merwan Roudane
 *! Shared header printer for the rals test commands.
 program define _rals_print_header
     args testname ref varname T lag ic model

@@ -1,4 +1,4 @@
-*! _rals_print_two_row 1.0.0  13may2026  Dr Merwan Roudane
+*! _rals_print_two_row 1.0.1  16may2026  Dr Merwan Roudane
 *! Shared 2-row test-result table for the rals package.
 *!   row 1 = stage-1 test (no rho^2)
 *!   row 2 = stage-2 RALS test (with rho^2)
