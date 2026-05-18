@@ -165,6 +165,7 @@ p xtrevu module to reverse the order of values of time series and panel data var
 p xtrobreg module providing pairwise-differences and first-differences robust regression estimators
 p xtscc module to calculate robust standard errors for panels with cross-sectional dependence
 p xtsel module for selection of variables and specification in a panel-data framework
+p xtselfe module to estimate fixed-effects panel-data models with sample selection
 p xtsemipar module to compute Semiparametric Fixed-Effects Estimator of Baltagi and Li 
 p xtseqreg module to perform sequential estimation of linear panel data models
 p xtserialpm module to perform a portmanteau test for serial correlation in panel data

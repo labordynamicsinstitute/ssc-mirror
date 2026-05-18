@@ -1,7 +1,15 @@
-*! mmqregplot v2.0  April 2026
-*! Authors: Dr Merwan Roudane (merwanroudane920@gmail.com)
-*!          Fernando Rios-Avila (original mmqreg)
+*! mmqregplot v2.1  May 2026
+*! Shipped with mmqreg v2.5 (SSC).
+*! Authors: Fernando Rios-Avila (original mmqreg, friosa@gmail.com)
+*!          Dr Merwan Roudane (mmqregplot companion, merwanroudane920@gmail.com)
 *! Description: Beautiful coefficient plots for mmqreg
+*!   v2.1: single-call multi-quantile design (replaces fragile per-quantile loop
+*!         that produced r(503) conformability errors); new options showall,
+*!         saving(prefix), gformat(), keepgraphs, nocombine; named graphs
+*!         (mmqp1..., mmqloc, mmqsca, mmqfe, mmqcombined); fixes for
+*!         location/scale name(...,replace) and feplot histogram normopts();
+*!         absorb() rebuilt from e(fevlist) for FE-consistent paths; explicit
+*!         "version 13" statement.
 *!   v2.0: eqplot() for location/scale/all equations,
 *!         colorscheme() presets, feplot for country/unit FE visualization
 *!   v1.0: quantile coefficient paths with CI bands
@@ -28,6 +36,7 @@
 ===========================================================================*/
 
 program define mmqregplot, rclass
+	version 13
 
 	syntax [varlist(fv default=none)] , ///
 		[EQplot(string)           /// qtile(def)|location|scale|all
@@ -47,6 +56,11 @@ program define mmqregplot, rclass
 		 FEplot                   /// show FE/country-effects panel
 		 FEStyle(string)          /// bar(def)|hist|dot
 		 NOZero                   /// suppress y=0 reference line
+		 SAVing(string)           /// path prefix: saves each panel + combined as .gph
+		 GFormat(string asis)     /// extra image formats: e.g. "png pdf"
+		 KEEPgraphs               /// keep individual panels in memory after combine
+		 SHOWall                  /// draw each panel directly (no nodraw); skip combine
+		 NOCombine                /// skip the graph combine step
 		 *]
 
 	** ---- Validate ----
@@ -60,6 +74,14 @@ program define mmqregplot, rclass
 	if "`eqplot'"==""    local eqplot "qtile"
 	if "`colorscheme'"=="" local colorscheme "navy"
 	if "`festyle'"==""   local festyle "bar"
+
+	** showall: each panel drawn directly, then combined at the end (combined = last graph).
+	** Individuals are kept in memory so user can browse via Graph manager.
+	if "`showall'"!="" {
+		local keepgraphs "keepgraphs"
+		local ndraw      ""
+	}
+	else local ndraw "nodraw"
 
 	** ---- Save original estimates ----
 	tempname lastreg
@@ -151,108 +173,97 @@ program define mmqregplot, rclass
 	** ---- QTILE: quantile path plots ----
 	if inlist("`eqplot'","qtile","all") {
 
-		** OLS reference
+		** Strip nols from oth2 (we add nols ourselves below; mmqreg rejects duplicates)
+		local oth4
+		foreach word of local oth2 {
+			if "`word'"!="nols" & "`word'"!="NOls" & "`word'"!="NOLS" & "`word'"!="NOLs" {
+				local oth4 "`oth4' `word'"
+			}
+		}
+		local oth2 `oth4'
+
+		** Rebuild absorb() from e(fevlist) so the path matches the user's model
+		local fespec
+		if "`fevlist'"!="" local fespec absorb(`fevlist')
+
+		** OLS reference (single regress)
 		if "`ols'"!="" {
 			tempname olsaux
 			qui: regress `yvar' `xvar' `ifin' `wgt', `olsopt'
 			matrix `olsaux'=r(table)
 		}
 
-		tempname aux
-		** Quantile path accumulation (Mata-based for reliability)
-		local qfirst = 1
+		** ----- Single multi-quantile mmqreg call (v2.4 supports q(numlist)) -----
+		display as text _n "Estimating quantile paths..."
+		qui: mmqreg `yvar' `xvar' `ifin' `wgt', q(`qlist') `fespec' `oth2' nols
 
-		display as text _n "Estimating quantile paths:"
+		tempname bigB bigV
+		matrix `bigB' = e(b)
+		matrix `bigV' = e(V)
+		local cnms: colnames `bigB'
+		local ceqs: coleq    `bigB'
+		local K     = colsof(`bigB')
+		local z     = invnormal((1+`level'/100)/2)
+
+		** Build qq vector (Nq x 1)
+		local nq: word count `qlist'
+		matrix `qq' = J(`nq', 1, 0)
+		local i = 0
 		foreach q of local qlist {
-			display _c "."
-			qui: mmqreg `yvar' `xvar' `ifin' `wgt', q(`q') `oth2' nols
-			** Collect b from e(b): K columns
-			tempname bq vq
-			matrix `bq' = e(b)
-			matrix `vq' = e(V)
-			local k = colsof(`bq')
-			local z = invnormal((1+`level'/100)/2)
-			tempname llq ulq
-			matrix `llq' = `bq'
-			matrix `ulq' = `bq'
-			forvalues i = 1/`k' {
-				local sei = sqrt(max(0, `vq'[`i',`i']))
-				matrix `llq'[1,`i'] = `bq'[1,`i'] - `z'*`sei'
-				matrix `ulq'[1,`i'] = `bq'[1,`i'] + `z'*`sei'
-			}
-			** Accumulate into Stata matrices via row stacking
-			if `qfirst' {
-				matrix `qq' = (`q')
-				matrix `bs' = `bq'
-				matrix `ll' = `llq'
-				matrix `ul' = `ulq'
-				if "`ols'"!="" {
-					matrix `bso' = `olsaux'[1, .]
-					matrix `llo' = `olsaux'[5, .]
-					matrix `ulo' = `olsaux'[6, .]
-				}
-				local qfirst = 0
-			}
-			else {
-				matrix `qq' = `qq' \ (`q')
-				matrix `bq'[1,1] = `bq'[1,1]   // force colnames to be current
-				** Horizontal stack with explicit coleq strip
-				local kcols: colnames `bq'
-				local keqs:  coleq    `bq'
-				** Copy numeric content only via Mata
-				mata: st_matrix("`bs'", st_matrix("`bs'") \ st_matrix("`bq'"))
-				mata: st_matrix("`ll'", st_matrix("`ll'") \ st_matrix("`llq'"))
-				mata: st_matrix("`ul'", st_matrix("`ul'") \ st_matrix("`ulq'"))
-				if "`ols'"!="" {
-					mata: st_matrix("`bso'", st_matrix("`bso'") \ st_matrix("`olsaux'")[1, .])
-					mata: st_matrix("`llo'", st_matrix("`llo'") \ st_matrix("`olsaux'")[5, .])
-					mata: st_matrix("`ulo'", st_matrix("`ulo'") \ st_matrix("`olsaux'")[6, .])
-				}
-			}
+			local i = `i' + 1
+			matrix `qq'[`i', 1] = `q'
 		}
-		display ""
 
-		** Strip equations from bs colnames for variable lookup
-		local qcolnames: colnames `bq'
-		local qcolnames2
-		foreach cc of local qcolnames {
-			local p = strpos("`cc'", ":")
-			if `p' > 0 local cc2 = substr("`cc'", `p'+1, .)
-			else        local cc2 "`cc'"
-			local qcolnames2 `qcolnames2' `cc2'
-		}
-		** Assign stripped names to all coefficient matrices
-		matrix colnames `bs' = `qcolnames2'
-		matrix colnames `ll' = `qcolnames2'
-		matrix colnames `ul' = `qcolnames2'
-
-		** Build qtile panels
+		** ----- Build per-variable plot data -----
 		local gcnt: word count `vlist'
 		local cnt  = 0
 		local nmtitle: word count `mtitles'
+		tempname aux
 
 		foreach v of local vlist {
 			local cnt = `cnt' + 1
 
-			** Find column position of variable v in qcolnames
-			local vcol = 0
-			local ci = 0
-			foreach c of local qcolnames {
-				local ci = `ci' + 1
-				if "`c'"=="`v'" & `vcol'==0 local vcol `ci'
-			}
-			if `vcol'==0 {
-				display in red "mmqregplot: `v' not found in Q-matrix — skipped"
-				continue
+			** Per-variable matrix: Nq rows × 4 cols (q, b, ll, ul)
+			matrix `aux' = J(`nq', 4, .)
+			local i = 0
+			local missing_any = 0
+			foreach q of local qlist {
+				local i = `i' + 1
+				local strq = subinstr("`q'",".","_",.)
+				if `nq'==1 local target_eq "qtile"
+				else       local target_eq "qtile_`strq'"
+
+				** Locate column whose (coleq, colname) matches (target_eq, v)
+				local col = 0
+				forvalues k = 1/`K' {
+					local thiseq:  word `k' of `ceqs'
+					local thisnm:  word `k' of `cnms'
+					if "`thiseq'"=="`target_eq'" & "`thisnm'"=="`v'" & `col'==0 {
+						local col = `k'
+					}
+				}
+				if `col'==0 {
+					local missing_any = 1
+					continue
+				}
+				local bv  = `bigB'[1, `col']
+				local sev = sqrt(max(0, `bigV'[`col', `col']))
+				matrix `aux'[`i', 1] = `q'
+				matrix `aux'[`i', 2] = `bv'
+				matrix `aux'[`i', 3] = `bv' - `z' * `sev'
+				matrix `aux'[`i', 4] = `bv' + `z' * `sev'
 			}
 
-			matrix `aux' = `qq', `bs'[., `vcol'], `ll'[., `vcol'], `ul'[., `vcol']
+			if `missing_any' {
+				display in red "mmqregplot: some quantiles for `v' not found in e(b) — partial plot"
+			}
+
 			svmat double `aux', names(__mmqp_)
 
-			** OLS overlay
+			** OLS overlay (constant across quantiles)
 			local olsci
 			if "`ols'"!="" {
-				local olscols: colnames `bso'
+				local olscols: colnames `olsaux'
 				local ovcol = 0
 				local ci = 0
 				foreach c of local olscols {
@@ -260,9 +271,12 @@ program define mmqregplot, rclass
 					if "`c'"=="`v'" & `ovcol'==0 local ovcol `ci'
 				}
 				if `ovcol'>0 {
-					tempname saux
-					matrix `saux' = `bso'[., `ovcol'], `llo'[., `ovcol'], `ulo'[., `ovcol']
-					svmat double `saux', names(__mmqo_)
+					local olsb  = `olsaux'[1, `ovcol']
+					local olsll = `olsaux'[5, `ovcol']
+					local olsul = `olsaux'[6, `ovcol']
+					qui: gen double __mmqo_1 = `olsb'  in 1/`nq'
+					qui: gen double __mmqo_2 = `olsll' in 1/`nq'
+					qui: gen double __mmqo_3 = `olsul' in 1/`nq'
 					local olsci (line __mmqo_1 __mmqp_1, lpattern(solid) lcolor(`ols_color') lwidth(medthick)) ///
 								(line __mmqo_2 __mmqp_1, lpattern(dash) lcolor(`ols_color'%60) lwidth(thin)) ///
 								(line __mmqo_3 __mmqp_1, lpattern(dash) lcolor(`ols_color'%60) lwidth(thin))
@@ -291,12 +305,13 @@ program define mmqregplot, rclass
 
 			twoway ///
 				(rarea __mmqp_3 __mmqp_4 __mmqp_1, `raopt') ///
-				(line __mmqp_2 __mmqp_1, `lnopt') , ///
+				(line __mmqp_2 __mmqp_1, `lnopt') ///
+				`olsci' , ///
 				`yzero' ///
 				xtitle("Quantile", size(small)) ytitle("") ///
 				xlabel(10(10)90, grid glcolor(gs15)) ///
 				title(`"`vlabx'"', size(small) color(navy) margin(b=1)) ///
-				legend(off) nodraw name(`pnm', replace) ///
+				legend(off) `ndraw' name(`pnm', replace) ///
 				`twopt'
 
 			local grcmb_all `grcmb_all' `pnm'
@@ -306,9 +321,6 @@ program define mmqregplot, rclass
 
 		** Return
 		return matrix qq = `qq'
-		return matrix bs = `bs'
-		return matrix ll = `ll'
-		return matrix ul = `ul'
 	}
 
 	** ---- LOCATION: horizontal coefplot ----
@@ -320,13 +332,13 @@ program define mmqregplot, rclass
 			display in red "Location/scale matrices not available. Re-run mmqreg without nols."
 		}
 		else {
-			tempname mloc
+			capture graph drop mmqloc
 			mmqreg_coefgraph, eq(location)              ///
 				level(`level') colorscheme(`colorscheme') ///
 				twopt(`twopt') `label' `nozero'           ///
 				title("Location equation: `yvar'")        ///
-				name(`mloc', replace) nodraw
-			local grcmb_all `grcmb_all' `mloc'
+				name(mmqloc) `ndraw'
+			local grcmb_all `grcmb_all' mmqloc
 		}
 	}
 
@@ -339,13 +351,13 @@ program define mmqregplot, rclass
 			display in red "Scale matrices not available. Re-run mmqreg without nols."
 		}
 		else {
-			tempname msca
+			capture graph drop mmqsca
 			mmqreg_coefgraph, eq(scale)                  ///
 				level(`level') colorscheme(`colorscheme') ///
 				twopt(`twopt') `label' `nozero'           ///
 				title("Scale equation: `yvar'")           ///
-				name(`msca', replace) nodraw
-			local grcmb_all `grcmb_all' `msca'
+				name(mmqsca) `ndraw'
+			local grcmb_all `grcmb_all' mmqsca
 		}
 	}
 
@@ -356,27 +368,50 @@ program define mmqregplot, rclass
 		}
 		else {
 			local fe_var: word 1 of `fevlist'
-			tempname mfe
+			capture graph drop mmqfe
 			mmqreg_feplot, yvar(`yvar') xvar(`xvar') fevar(`fe_var')  ///
 				ifin(`ifin') wgt(`wgt')                                 ///
 				festyle(`festyle') colorscheme(`colorscheme')           ///
 				twopt(`twopt') `label'                                   ///
-				name(`mfe', replace) nodraw
-			local grcmb_all `grcmb_all' `mfe'
+				name(mmqfe) `ndraw'
+			local grcmb_all `grcmb_all' mmqfe
 		}
 	}
 
 	** ---- Final combine ----
 	local npanels: word count `grcmb_all'
 
+	** ----- Save each individual panel (if requested) -----
+	if "`saving'"!="" & `npanels' > 0 {
+		foreach pnm of local grcmb_all {
+			capture qui: graph save `pnm' "`saving'_`pnm'.gph", replace
+			if "`gformat'"!="" {
+				foreach fmt of local gformat {
+					capture qui: graph export "`saving'_`pnm'.`fmt'", name(`pnm') replace
+				}
+			}
+		}
+		display as text "Saved `npanels' panel file(s) with prefix: " as result "`saving'_*"
+	}
+
 	if `npanels' == 0 {
 		display in red "No plots were generated."
+	}
+	else if "`nocombine'"!="" {
+		** Skip combine — show each panel individually
+		foreach pnm of local grcmb_all {
+			graph display `pnm'
+		}
+		display as text "Displayed `npanels' panel(s) individually: " as result "`grcmb_all'"
+		display as text "  use {stata graph display NAME} to bring one to front (e.g. {stata graph display mmqp1})"
 	}
 	else if `npanels' == 1 {
 		** Single panel — re-draw without nodraw overlay
 		local singpanel: word 1 of `grcmb_all'
 		graph display `singpanel'
-		capture: graph drop `singpanel'
+		if "`keepgraphs'"=="" {
+			capture: graph drop `singpanel'
+		}
 	}
 	else {
 		** Build clean title
@@ -390,11 +425,31 @@ program define mmqregplot, rclass
 			local grc_title "MM-QR `eqplot' Equation — `yvar'"
 		}
 
+		capture graph drop mmqcombined
 		graph combine `grcmb_all',                              ///
-			title("`grc_title'", size(medsmall) color(navy))   ///
+			name(mmqcombined, replace)                          ///
+			title("`grc_title'", size(medsmall) color(navy))    ///
 			graphregion(color(white)) imargin(tiny)             ///
 			`grcopt' `options'
-		capture: graph drop `grcmb_all'
+
+		** Save combined (if requested)
+		if "`saving'"!="" {
+			capture qui: graph save mmqcombined "`saving'.gph", replace
+			if "`gformat'"!="" {
+				foreach fmt of local gformat {
+					capture qui: graph export "`saving'.`fmt'", name(mmqcombined) replace
+				}
+			}
+			display as text "Saved combined figure: " as result "`saving'.gph"
+		}
+
+		if "`keepgraphs'"=="" {
+			capture: graph drop `grcmb_all'
+		}
+		else {
+			display as text "Individual panels kept in memory: " as result "`grcmb_all'"
+			display as text "  use {stata graph display NAME} to view, e.g. {stata graph display mmqp1}"
+		}
 	}
 
 	** Restore
@@ -608,7 +663,7 @@ program define mmqreg_feplot
 			title("Distribution of `felab' Effects (N=`N_fe' units)", ///
 				size(small) color(navy)) ///
 			xline(0, lcolor(gs10) lpattern(dash)) ///
-			normal nopts(lcolor(gs10) lpattern(longdash)) ///
+			normal normopts(lcolor(gs10) lpattern(longdash)) ///
 			graphregion(color(white)) plotregion(margin(small)) ///
 			`gname' `ndraw' `twopt'
 	}

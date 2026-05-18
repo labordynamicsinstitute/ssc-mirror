@@ -1,24 +1,39 @@
-*! coefconv v1.0.0 — April 2026
+*! coefconv v1.1.0 — May 2026
 *! Dr Noman Arshed, Sunway Business School, Sunway University
 *! Comprehensive Marginal Effects from Regression Slope Coefficients
 *! ─────────────────────────────────────────────────────────────────
-*! Computes 23+ effect types: raw slopes, standardized slopes,
-*! elasticities, semi-elasticities, basis-point effects, proportional
-*! effects, Pratt importance, and discrete-change effects.
+*! Computes 30 effect types across 8 families.
 *!
 *! Syntax:
 *!   coefconv [, GRate(#) QUANtiles(numlist) DELTA(numlist)
-*!             SAVing(filename[, replace]) noTABle FORmat(fmt)]
+*!             SAVing(filename[, replace]) noTABle FORmat(fmt)
+*!             PLot GYBench(#)]
 *!
 *! Options:
-*!   grate(#)       Growth rate for default ΔX = grate × X̄  (default 0.01)
+*!   grate(#)       Growth rate for default ΔX = grate × X̄ (default 0.01)
 *!   quantiles(…)   Extra percentiles beyond default {10 25 50 75 90}
 *!   delta(…)       Custom ΔX list applied to every predictor
 *!   saving(…)      Save wide results dataset (one row per predictor)
-*!   notable        Suppress all display output
+*!   notable        Suppress all display output (computation still runs)
 *!   format(fmt)    Stata number format (default %12.6f)
+*!   plot           Draw per-IV reference-relative column charts
+*!                  (graphs named ccv_ref_<varname>)
+*!   gybench(#)     User-supplied Y growth rate (decimal, e.g. 0.02 = 2%);
+*!                  overrides observed growth from tsset/xtset
 *!
-*! Requires: prior OLS/IV/FE estimation with e(b), e(depvar), e(sample)
+*! v1.1.0 NEW:
+*!   • Family 8: Reference-Relative Effects
+*!       – ΔY/σY            (% of one Y-SD)
+*!       – ΔY/IQR(Y)        (% of Y's middle 50%)
+*!       – ΔY/(Ȳ·gY)        (% of one period's worth of Y change)
+*!       – ε · gX / gY      (share of Y's growth attributable to X's growth)
+*!   • -plot- option for per-IV column charts
+*!   • -gybench()- option for user-supplied Y growth benchmark
+*!   • Auto-detection of negative Pratt% (squared/interaction terms)
+*!   • Pratt% scalars now returned even with notable
+*!
+*! Requires: prior OLS/IV/FE estimation with e(b), e(depvar), e(sample).
+*! For Family 8 temporal metrics: tsset or xtset (or gybench()).
 *! ─────────────────────────────────────────────────────────────────
 
 capture program drop coefconv
@@ -32,6 +47,8 @@ program define coefconv, rclass
         SAVing(string asis)                 ///
         noTABle                             ///
         FORmat(string)                      ///
+        PLot                                ///
+        GYBench(real -1)                    ///
     ]
 
     // =========================================================================
@@ -105,6 +122,63 @@ program define coefconv, rclass
                    "Elasticity and proportional effects will be missing.)"
     }
 
+    // Y quartiles for Family 8 (IQR reference)
+    quietly _pctile `depvar' if e(sample), percentiles(25 50 75)
+    local yp25 = r(r1)
+    local ymed = r(r2)
+    local yp75 = r(r3)
+    local yiqr = `yp75' - `yp25'
+
+    // =========================================================================
+    // 3b. TIME / PANEL STRUCTURE DETECTION & Y GROWTH
+    // =========================================================================
+    local has_time = 0
+    local panelvar ""
+    local timevar  ""
+
+    capture qui xtset
+    if _rc == 0 & "`r(panelvar)'" != "" {
+        local has_time = 1
+        local panelvar "`r(panelvar)'"
+        local timevar  "`r(timevar)'"
+    }
+    else {
+        capture qui tsset
+        if _rc == 0 & "`r(timevar)'" != "" {
+            local has_time = 1
+            local timevar  "`r(timevar)'"
+        }
+    }
+
+    // Observed Y growth: mean of |ΔY / Y_lag| within panels (if any)
+    local gY_obs = .
+    if `has_time' {
+        tempvar lagY gYabs
+        capture qui gen double `lagY' = L.`depvar' if e(sample)
+        if _rc == 0 {
+            qui gen double `gYabs' = abs((`depvar' - `lagY') / `lagY') ///
+                if e(sample) & !missing(`lagY') & `lagY' != 0 & !missing(`depvar')
+            qui summarize `gYabs' if e(sample), meanonly
+            if r(N) > 0 local gY_obs = r(mean)
+            capture drop `lagY'
+            capture drop `gYabs'
+        }
+    }
+
+    // Resolve effective gY: user benchmark overrides observed
+    if `gybench' >= 0 {
+        local gY_eff = `gybench'
+        local gY_src "USER"
+    }
+    else if !missing(`gY_obs') {
+        local gY_eff = `gY_obs'
+        local gY_src "OBSERVED"
+    }
+    else {
+        local gY_eff = .
+        local gY_src "n/a"
+    }
+
     // =========================================================================
     // 4. ZERO-ORDER CORRELATIONS  r(Y, Xj)
     //    Build a clean list of actual dataset variables (skip factor notation)
@@ -118,7 +192,6 @@ program define coefconv, rclass
     tempname CORR
     quietly correlate `depvar' `corr_vars' if e(sample)
     matrix `CORR' = r(C)
-    // CORR[1, j+1] = r(depvar, Xj) for j in corr_vars
 
     // =========================================================================
     // 5. BUILD QUANTILE LIST  (default + user additions, always sorted)
@@ -140,7 +213,7 @@ program define coefconv, rclass
     if "`table'" == "" {
         di ""
         di as text "{hline `lw'}"
-        di as text "  {bf:Marginal Effects Analysis  —  coefconv v1.0}"
+        di as text "  {bf:Marginal Effects Analysis  —  coefconv v1.1.0}"
         di as text "{hline `lw'}"
         di as text "  Model          : " as result "`ecmd'"
         di as text "  Dep. Variable  : " as result "`depvar'"
@@ -154,6 +227,29 @@ program define coefconv, rclass
         }
         di as text "  Ȳ  /  σ(Y)     : " as result %12.6f `ymean' ///
                    as text " / " as result %12.6f `ysd'
+        di as text "  IQR(Y)         : " as result %12.6f `yiqr'
+
+        // Growth display
+        if `gybench' >= 0 {
+            di as text "  Y growth (gY)  : " as result %7.4f `gY_eff'*100 ///
+                       as text "%  " as result "(USER benchmark)"
+        }
+        else if `has_time' & !missing(`gY_obs') {
+            di as text "  Y growth (gY)  : " as result %7.4f `gY_eff'*100 ///
+                       as text "%  " as result "(OBSERVED"
+            if "`panelvar'" != "" {
+                di as text "                   panel: " as result "`panelvar'" ///
+                           as text ", time: " as result "`timevar'" as text ")"
+            }
+            else if "`timevar'" != "" {
+                di as text "                   time: " as result "`timevar'" as text ")"
+            }
+        }
+        else {
+            di as text "  Y growth (gY)  : " as result "n/a" as text "  " ///
+                       "{it:(no tsset/xtset; Family 8 temporal metrics will be missing)}"
+        }
+
         di as text "  Growth rate ΔX : " as result "`=`grate'*100'%" ///
                    as text " of X̄   (override with {bf:delta()} option)"
         di as text "{hline `lw'}"
@@ -182,6 +278,7 @@ program define coefconv, rclass
             }
             // Mark as factor/non-real for saving section
             local sv_ok_`j' = 0
+            local varname_`j' = "`v'"
             return scalar b_`v' = `beta'
             continue
         }
@@ -211,7 +308,6 @@ program define coefconv, rclass
             local qi = `qi' + 1
             local xpct_`q' = r(r`qi')
         }
-        // Core quantile shortcuts (always present from base_q)
         local xp10  = `xpct_10'
         local xp25  = `xpct_25'
         local xmed  = `xpct_50'
@@ -224,6 +320,21 @@ program define coefconv, rclass
 
         // --- Default ΔX: growth rate × X̄ ---
         local dx_gr = `xmean' * `grate'
+
+        // --- Per-X growth rate gX (mean of |ΔX/X_lag| within panels) ---
+        local gX_`j' = .
+        if `has_time' {
+            tempvar lagX gXabs
+            capture qui gen double `lagX' = L.`v' if e(sample)
+            if _rc == 0 {
+                qui gen double `gXabs' = abs((`v' - `lagX') / `lagX') ///
+                    if e(sample) & !missing(`lagX') & `lagX' != 0 & !missing(`v')
+                qui summarize `gXabs' if e(sample), meanonly
+                if r(N) > 0 local gX_`j' = r(mean)
+                capture drop `lagX'
+                capture drop `gXabs'
+            }
+        }
 
         // --- Store indexed locals for saving section (runs after clear) ---
         local sv_ok_`j'  = 1
@@ -246,13 +357,13 @@ program define coefconv, rclass
 
         // ── FAMILY 2: Elasticity & Semi-Elasticity ────────────────────────
         local f2_elas   = cond(`ymean' != 0,  `beta' * `xmean' / `ymean',         .)
-        local f2_xsemi  = `beta' * `xmean'                            // ΔY per 1%ΔX × X̄/100
+        local f2_xsemi  = `beta' * `xmean'
         local f2_ysemi  = cond(`ymean' != 0,  (`beta' / `ymean') * 100,           .)
 
         // ── FAMILY 3: Basis-Point & Percentage-Point Effects ──────────────
         local f3_bp    = `beta' / 10000
         local f3_pp    = `beta' / 100
-        local f3_pct1  = `beta' * `xmean' / 100        // ΔY for 1% increase in X
+        local f3_pct1  = `beta' * `xmean' / 100
 
         // ── FAMILY 4: Relative & Proportional Effects ─────────────────────
         local f4_prop  = cond(`ymean' != 0,  `beta' / `ymean',         .)
@@ -263,10 +374,8 @@ program define coefconv, rclass
         local f5_bxr    = `beta' * `r_xy'
         local f5_pratt  = cond(!missing(`f1_fstd'),  `f1_fstd' * `r_xy',   .)
 
-        // Accumulate Pratt denominator
         if !missing(`f5_pratt') local pratt_denom = `pratt_denom' + `f5_pratt'
 
-        // Save per-var Pratt numerator, β*, r for summary table
         local pratt_n_`j'  = `f5_pratt'
         local bstd_`j'     = `f1_fstd'
         local rxy_`j'      = `r_xy'
@@ -278,6 +387,31 @@ program define coefconv, rclass
         local f7_range  = `beta' * `xrange'
         local f7_1sd    = cond(!missing(`xsd'), `beta' * `xsd',      .)
         local f7_2sd    = cond(!missing(`xsd'), `beta' * 2 * `xsd',  .)
+
+        // ── FAMILY 8: Reference-Relative Effects ─────────────────────────
+        // Scenario: ΔY = β · grate · X̄  (same as f7_growth)
+        local dY_sc = `f7_growth'
+
+        local f8_ofpctY = cond(`ymean' != 0,   `dY_sc' / `ymean' * 100,   .)
+        local f8_ofsigY = cond(`ysd'   > 0,    `dY_sc' / `ysd'   * 100,   .)
+        local f8_ofIQRy = cond(`yiqr'  > 0,    `dY_sc' / `yiqr'  * 100,   .)
+
+        local yperiod = cond(!missing(`gY_eff'), `ymean' * `gY_eff', .)
+        local f8_ofPer  = cond(!missing(`yperiod') & `yperiod' != 0, ///
+                               `dY_sc' / `yperiod' * 100,  .)
+
+        local f8_attrib = cond(!missing(`f2_elas') & !missing(`gX_`j'') & ///
+                               !missing(`gY_eff') & `gY_eff' != 0, ///
+                               `f2_elas' * `gX_`j'' / `gY_eff' * 100, .)
+
+        // Save indexed locals for plot loop after Pratt summary
+        local plot_b_`j'       = `f1_raw'
+        local plot_dXsc_`j'    = `dx_gr'
+        local plot_pctY_`j'    = `f8_ofpctY'
+        local plot_sd_`j'      = `f8_ofsigY'
+        local plot_iqr_`j'     = `f8_ofIQRy'
+        local plot_period_`j'  = `f8_ofPer'
+        local plot_attrib_`j'  = `f8_attrib'
 
         // =================================================================
         // DISPLAY THIS VARIABLE'S BLOCK
@@ -296,6 +430,11 @@ program define coefconv, rclass
                "Min = "  as result %10.4f `xmin'  as text ///
                "  Max = " as result %10.4f `xmax'  as text ///
                "  IQR = " as result %10.4f `xiqr'
+            if `has_time' & !missing(`gX_`j'') {
+                di as text "  │  " ///
+                   "gX = " as result %8.4f `gX_`j''*100 as text "%   " ///
+                   "(observed growth rate)"
+            }
             di as text "  ├" "{hline 72}"
 
             // Column headers
@@ -354,7 +493,6 @@ program define coefconv, rclass
             foreach q of local all_q {
                 local dX_q  = `xpct_`q'' - `xmed'
                 local dY_q  = `beta' * `dX_q'
-                // Build sign string manually (Stata di has no %+f flag)
                 local sgn = cond(`dX_q' >= 0, "+", "")
                 di as text _col(`c1') "p50 → p`q'" ///
                     "  (X_p`q' = " as result %8.4f `xpct_`q'' ///
@@ -380,6 +518,18 @@ program define coefconv, rclass
                        as result %8.5f 2*`xsd' as text ")" ///
                        _col(`c2') as result `fmt' `f7_2sd'
 
+            // ─ Family 8 ──────────────────────────────────────────────────
+            di as text _col(`c1') "{bf:[ 8 ]  Reference-Relative Effects  " ///
+                       "(% under ΔX = `=`grate'*100'% · X̄)}"
+            di as text _col(`c1') "ΔY / σY            (% of one Y-SD)" ///
+                       _col(`c2') as result %12.4f `f8_ofsigY' as text " %"
+            di as text _col(`c1') "ΔY / IQR(Y)        (% of Y's middle 50%)" ///
+                       _col(`c2') as result %12.4f `f8_ofIQRy' as text " %"
+            di as text _col(`c1') "ΔY / (Ȳ · gY)      (% of one period's ΔY)" ///
+                       _col(`c2') as result %12.4f `f8_ofPer'  as text " %"
+            di as text _col(`c1') "ε · gX / gY        (share of Y's growth)" ///
+                       _col(`c2') as result %12.4f `f8_attrib' as text " %"
+
             // Custom ΔX values
             if "`delta'" != "" {
                 di as text _col(`c1') "{bf:[ + ]  Custom ΔX Values}"
@@ -396,16 +546,23 @@ program define coefconv, rclass
         } // end "`table'" == ""
 
         // Store return scalars for this variable
-        return scalar b_`v'       = `f1_raw'
-        return scalar bstd_`v'    = `f1_fstd'
-        return scalar elas_`v'    = `f2_elas'
-        return scalar ysemi_`v'   = `f2_ysemi'
-        return scalar pratt_n_`v' = `f5_pratt'
+        return scalar b_`v'         = `f1_raw'
+        return scalar bstd_`v'      = `f1_fstd'
+        return scalar elas_`v'      = `f2_elas'
+        return scalar ysemi_`v'     = `f2_ysemi'
+        return scalar pratt_n_`v'   = `f5_pratt'
+        return scalar gX_`v'        = `gX_`j''
+        return scalar ref_pctY_`v'  = `f8_ofpctY'
+        return scalar ref_sd_`v'    = `f8_ofsigY'
+        return scalar ref_iqr_`v'   = `f8_ofIQRy'
+        return scalar ref_period_`v' = `f8_ofPer'
+        return scalar ref_attrib_`v' = `f8_attrib'
 
     } // end foreach v (main loop)
 
     // =========================================================================
     // 8. PRATT'S RELATIVE IMPORTANCE SUMMARY TABLE
+    //    (compute Pratt% per var always; display only when table is on)
     // =========================================================================
     if "`table'" == "" {
         di ""
@@ -418,30 +575,153 @@ program define coefconv, rclass
                    _col(54) "{bf:Pratt Raw}" ///
                    _col(68) "{bf:% of R²}"
         di as text "  {hline 76}"
+    }
 
-        forvalues jj = 1/`j' {
-            local vn  = "`varname_`jj''"
-            local bs  = `bstd_`jj''
-            local rx  = `rxy_`jj''
-            local pn  = `pratt_n_`jj''
+    local has_neg_pratt = 0
+    forvalues jj = 1/`j' {
+        if `sv_ok_`jj'' == 0 {
+            local plot_pratt_`jj' = .
+            continue
+        }
 
-            local pp = cond(!missing(`pn') & `pratt_denom' != 0, ///
-                           `pn' / `pratt_denom' * 100, .)
+        local vn  = "`varname_`jj''"
+        local bs  = `bstd_`jj''
+        local rx  = `rxy_`jj''
+        local pn  = `pratt_n_`jj''
 
+        local pp = cond(!missing(`pn') & `pratt_denom' != 0, ///
+                       `pn' / `pratt_denom' * 100, .)
+
+        local plot_pratt_`jj' = `pp'
+
+        if !missing(`pp') {
+            if `pp' < 0 local has_neg_pratt = 1
+        }
+
+        return scalar pratt_pct_`vn' = `pp'
+
+        if "`table'" == "" {
             di as text _col(5) "`vn'" ///
                as result _col(22) %14.6f `bs' ///
                          _col(40) %10.6f `rx' ///
                          _col(54) %10.6f `pn' ///
                          _col(68) %8.3f  `pp'  as text "%"
-
-            return scalar pratt_pct_`vn' = `pp'
         }
+    }
 
+    if "`table'" == "" {
         di as text "  {hline 76}"
         di as text _col(5) "Total" ///
            as result _col(54) %10.6f `pratt_denom' ///
                      _col(68) "100.000%"
         di as text "{hline `lw'}"
+
+        if `has_neg_pratt' {
+            di ""
+            di as text "  {bf:Note on negative Pratt %:}"
+            di as text "  Negative components are legitimate, not errors. They typically"
+            di as text "  appear with squared or interaction terms (e.g. X and X²)"
+            di as text "  whose β* and r(Y, X) have opposite signs. The signed components"
+            di as text "  still sum to R². Interpret negative Pratt% as the variable's"
+            di as text "  suppression contribution relative to its co-occurring terms,"
+            di as text "  not as 'reducing' the model's explained variance."
+        }
+    }
+
+    // =========================================================================
+    // 8b. PLOT — Reference-Relative Column Charts (one per IV)
+    // =========================================================================
+    if "`plot'" != "" {
+
+        // Format Y-growth string once for subtitles
+        if !missing(`gY_eff') {
+            local gY_str = string(`gY_eff'*100, "%6.3f") + "% (`gY_src')"
+        }
+        else {
+            local gY_str "n/a"
+        }
+
+        local plotted_any = 0
+
+        forvalues jj = 1/`j' {
+            if `sv_ok_`jj'' == 0 continue         // skip factor vars
+
+            local vn  = "`varname_`jj''"
+            local bj  = `plot_b_`jj''
+            local dxj = `plot_dXsc_`jj''
+            local pY  = `plot_pctY_`jj''
+            local pSD = `plot_sd_`jj''
+            local pIQ = `plot_iqr_`jj''
+            local pPe = `plot_period_`jj''
+            local pAt = `plot_attrib_`jj''
+            local pPr = `plot_pratt_`jj''
+
+            local subB  = string(`bj',  "%9.4f")
+            local subDx = string(`dxj', "%9.4f")
+
+            // Build a Stata-safe graph name (replace dots, hashes etc.)
+            local gname = "ccv_ref_" + subinstr("`vn'", ".", "_", .)
+            local gname = subinstr("`gname'", "#", "x", .)
+
+            preserve
+                quietly {
+                    clear
+                    set obs 6
+                    gen str40  metric = ""
+                    gen double value  = .
+                    gen byte   ord    = _n
+
+                    replace metric = "% of Y-mean  (ΔY / Ȳ)"            in 1
+                    replace value  = `pY'                                in 1
+                    replace metric = "% of σY  (ΔY / SD of Y)"          in 2
+                    replace value  = `pSD'                               in 2
+                    replace metric = "% of Y-IQR  (ΔY / IQR)"           in 3
+                    replace value  = `pIQ'                               in 3
+                    replace metric = "% of R²  (Pratt share)"           in 4
+                    replace value  = `pPr'                               in 4
+                    replace metric = "% of one Y-period  (ΔY / Ȳ·gY)"   in 5
+                    replace value  = `pPe'                               in 5
+                    replace metric = "Growth share of Y  (ε·gX / gY)"   in 6
+                    replace value  = `pAt'                               in 6
+
+                    // Drop fully-missing rows to keep chart tidy
+                    drop if missing(value)
+                }
+
+                quietly count
+                if r(N) > 0 {
+                    graph hbar (asis) value, ///
+                        over(metric, sort(ord) label(labsize(small))) ///
+                        title("Reference-relative effects: {bf:`vn'}", ///
+                              size(medium)) ///
+                        subtitle("β = `subB'  |  ΔX = `subDx' (`=`grate'*100'% of X̄)  |  Y growth = `gY_str'", ///
+                              size(small)) ///
+                        ytitle("Value (%)  —  sign preserved") ///
+                        yline(0, lcolor(gs10) lpattern(dash)) ///
+                        blabel(bar, format(%7.2f) size(small)) ///
+                        bar(1, fcolor(navy*0.7) lcolor(navy)) ///
+                        name(`gname', replace)
+                    local plotted_any = 1
+                }
+            restore
+        }
+
+        if "`table'" == "" {
+            di ""
+            if `plotted_any' {
+                di as text "  {bf:Reference-relative plots} drawn as " ///
+                           "{bf:ccv_ref_<varname>}"
+                di as text "  Bring one to the front: " ///
+                           "{stata graph display ccv_ref_<varname>:graph display ccv_ref_<varname>}"
+                if `has_neg_pratt' {
+                    di as text "  {it:(Bars for terms with negative Pratt% extend left of zero;}"
+                    di as text "  {it: see note above for interpretation.)}"
+                }
+            }
+            else {
+                di as text "  (No plottable predictors — all skipped as factor terms.)"
+            }
+        }
     }
 
     // =========================================================================
@@ -460,7 +740,6 @@ program define coefconv, rclass
             clear
             quietly set obs `j'
 
-            // Variable identifier
             gen str40  varname     = ""
             label var  varname     "Variable name"
 
@@ -518,6 +797,18 @@ program define coefconv, rclass
             gen double disc_2sd    = .
             label var  disc_2sd    "Discrete: +/- 2 SD"
 
+            // Family 8
+            gen double ref_pctY    = .
+            label var  ref_pctY    "Family 8: dY/Ybar (% under 1%-X scenario)"
+            gen double ref_sd      = .
+            label var  ref_sd      "Family 8: dY/sigmaY (% of one Y-SD)"
+            gen double ref_iqr     = .
+            label var  ref_iqr     "Family 8: dY/IQR(Y) (% of Y's middle 50%)"
+            gen double ref_period  = .
+            label var  ref_period  "Family 8: dY/(Ybar*gY) (% of one Y-period)"
+            gen double ref_attrib  = .
+            label var  ref_attrib  "Family 8: elas*gX/gY (% share of Y growth)"
+
             // Descriptives
             gen double r_xy        = .
             label var  r_xy        "Zero-order correlation r(Y,X)"
@@ -531,11 +822,11 @@ program define coefconv, rclass
             label var  xmax_v      "Max of X"
             gen double xiqr_v      = .
             label var  xiqr_v      "IQR of X"
+            gen double gX_v        = .
+            label var  gX_v        "Observed growth rate of X"
 
-            // Populate rows using indexed locals computed in main loop
-            // (avoids capture confirm variable / summarize inside cleared dataset)
+            // Populate rows
             local jj = 0
-
             foreach v of local indepvars {
                 local jj = `jj' + 1
                 local bj = `B'[1, `jj']
@@ -547,7 +838,6 @@ program define coefconv, rclass
                     continue
                 }
 
-                // Retrieve pre-computed stats
                 local xm  = `sv_xm_`jj''
                 local xs  = `sv_xs_`jj''
                 local xmn = `sv_xmn_`jj''
@@ -583,17 +873,26 @@ program define coefconv, rclass
                     replace disc_range  = `bj'*`xrg'                              in `jj'
                     replace disc_1sd    = cond(!missing(`xs'), `bj'*`xs', .)     in `jj'
                     replace disc_2sd    = cond(!missing(`xs'), `bj'*2*`xs', .)   in `jj'
+                    replace ref_pctY    = `plot_pctY_`jj''                        in `jj'
+                    replace ref_sd      = `plot_sd_`jj''                          in `jj'
+                    replace ref_iqr     = `plot_iqr_`jj''                         in `jj'
+                    replace ref_period  = `plot_period_`jj''                      in `jj'
+                    replace ref_attrib  = `plot_attrib_`jj''                      in `jj'
                     replace r_xy        = `rxv'                                    in `jj'
                     replace xmean       = `xm'                                     in `jj'
                     replace xsd         = `xs'                                     in `jj'
                     replace xmin_v      = `xmn'                                    in `jj'
                     replace xmax_v      = `xmx'                                    in `jj'
                     replace xiqr_v      = `iq'                                     in `jj'
+                    replace gX_v        = `gX_`jj''                                in `jj'
                 }
             }
 
             label var varname "Variable name"
             note: coefconv results — model: `ecmd', dep. var.: `depvar', N=`N'
+            if !missing(`gY_eff') {
+                note: Y growth rate (gY) = `gY_eff' (`gY_src')
+            }
 
             save `"`savefile'"', `saverep'
             di as text "(coefconv: Wide results saved to {bf:`savefile'})"
@@ -607,8 +906,13 @@ program define coefconv, rclass
     return scalar r2         = `r2'
     return scalar ymean      = `ymean'
     return scalar ysd        = `ysd'
+    return scalar yiqr       = `yiqr'
     return scalar pratt_tot  = `pratt_denom'
+    return scalar gY         = `gY_eff'
+    return scalar gY_obs     = `gY_obs'
+    return local  gY_src       "`gY_src'"
     return local  depvar       "`depvar'"
     return local  indepvars    "`indepvars'"
+    return scalar has_time   = `has_time'
 
 end

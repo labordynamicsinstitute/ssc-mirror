@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0 April 2026}{...}
+{* *! version 2.1 May 2026}{...}
 {cmd:help mmqregplot}
 
 {hline}
@@ -59,13 +59,26 @@ fixed effects (requires {cmd:absorb()} in {cmd:mmqreg}){p_end}
 {synopt :{opt cons}}include the constant as an additional subplot{p_end}
 {synopt :{opt level(#)}}confidence level; default is 95{p_end}
 
+{syntab:Graph display and saving}
+{synopt :{opt show:all}}draw every panel directly (no hidden {cmd:nodraw}); each panel
+stays in memory; the combined figure is produced last{p_end}
+{synopt :{opt keep:graphs}}keep individual panels in memory after combining
+(otherwise dropped){p_end}
+{synopt :{opt noc:ombine}}skip the {cmd:graph combine} step entirely — display
+each panel one by one{p_end}
+{synopt :{opt sav:ing(prefix)}}save every panel and the combined figure as
+{cmd:.gph} files using {it:prefix}; e.g. {cmd:saving("out/wage")} writes
+{cmd:out/wage_mmqp1.gph}, {cmd:out/wage_mmqloc.gph}, {cmd:out/wage.gph}, etc.{p_end}
+{synopt :{opt gf:ormat(formats)}}additional image formats to export (space-separated);
+e.g. {cmd:gformat(png pdf)}{p_end}
+
 {synoptline}
 
 
 {title:Description}
 
 {pstd}
-{cmd:mmqregplot} (v2.0) is a comprehensive visualization suite that must be
+{cmd:mmqregplot} (v2.1) is a comprehensive visualization suite that must be
 run immediately after {cmd:mmqreg}. It offers four plot types:
 
 {phang}{bf:1. Quantile path plots} ({cmd:eqplot(qtile)}, default){break}
@@ -90,6 +103,41 @@ and Cleveland dot plot ({cmd:festyle(dot)}).{p_end}
 {pstd}
 Color schemes are controlled by {cmd:colorscheme()}: {cmd:navy} (default),
 {cmd:viridis}, {cmd:autumn}, {cmd:warm}, {cmd:mono}, {cmd:teal}.{p_end}
+
+
+{title:Graph names}
+
+{pstd}
+Every panel is created as a named graph held in Stata's memory:{p_end}
+
+{synoptset 20 tabbed}{...}
+{synopt:{cmd:mmqp1}, {cmd:mmqp2}, ...}quantile-path panel for the
+{it:n}th variable (one per requested variable){p_end}
+{synopt:{cmd:mmqloc}}location coefplot (when {cmd:eqplot(location)} or {cmd:all}){p_end}
+{synopt:{cmd:mmqsca}}scale coefplot (when {cmd:eqplot(scale)} or {cmd:all}){p_end}
+{synopt:{cmd:mmqfe}}fixed-effects panel (when {cmd:feplot}){p_end}
+{synopt:{cmd:mmqcombined}}final combined figure{p_end}
+
+{pstd}
+By default, individual panels are dropped after combining (only
+{cmd:mmqcombined} remains visible). Pass {cmd:keepgraphs} or {cmd:showall} to
+keep them all in memory so you can browse with
+{stata graph display mmqp1}, {stata graph display mmqloc}, etc.{p_end}
+
+
+{title:Saving figures to disk}
+
+{pstd}
+The {opt sav:ing(prefix)} option saves every panel plus the combined figure
+as Stata graph files ({cmd:.gph}). Add {opt gf:ormat()} to also export images
+in any format Stata supports (png, pdf, jpg, eps, tif, svg). Example:{p_end}
+
+{phang2}{cmd:. mmqregplot, eqplot(all) saving("out/wage") gformat(png pdf)}{p_end}
+
+{pstd}
+produces {cmd:out/wage_mmqp1.gph}, {cmd:out/wage_mmqloc.gph},
+{cmd:out/wage_mmqsca.gph}, {cmd:out/wage.gph} — and a {cmd:.png} and
+{cmd:.pdf} copy of each.{p_end}
 
 
 {title:Examples}
@@ -130,6 +178,18 @@ Color schemes are controlled by {cmd:colorscheme()}: {cmd:navy} (default),
 {pstd}{bf:9. Mono scheme for publication}{p_end}
 {phang2}{stata "mmqregplot age, eqplot(all) colorscheme(mono) level(90) nozero"}{p_end}
 
+{pstd}{bf:10. Show every panel individually, with a combined summary at the end}{p_end}
+{phang2}{stata "mmqregplot age ttl_exp tenure, eqplot(all) showall"}{p_end}
+
+{pstd}{bf:11. Save all panels + combined to PNG and PDF}{p_end}
+{phang2}{stata `"mmqregplot age ttl_exp tenure, eqplot(all) ols saving("out/wage") gformat(png pdf)"'}{p_end}
+
+{pstd}{bf:12. Keep panels in memory and browse them manually}{p_end}
+{phang2}{stata "mmqregplot, eqplot(all) keepgraphs"}{p_end}
+{phang2}{stata "graph display mmqloc"}{p_end}
+{phang2}{stata "graph display mmqsca"}{p_end}
+{phang2}{stata "graph display mmqp1"}{p_end}
+
     {hline}
 
 
@@ -139,20 +199,17 @@ Color schemes are controlled by {cmd:colorscheme()}: {cmd:navy} (default),
 
 {synoptset 12 tabbed}{...}
 {synopt:{cmd:r(qq)}}matrix of quantile values plotted{p_end}
-{synopt:{cmd:r(bs)}}matrix of coefficients (rows = quantiles, cols = variables){p_end}
-{synopt:{cmd:r(ll)}}matrix of lower confidence bounds{p_end}
-{synopt:{cmd:r(ul)}}matrix of upper confidence bounds{p_end}
 
 
 {title:Authors}
 
 {pstd}
-{bf:Dr Merwan Roudane}{break}
-merwanroudane920@gmail.com{p_end}
-
-{pstd}
 {bf:Fernando Rios-Avila} (original {cmd:mmqreg}){break}
 friosa@gmail.com{p_end}
+
+{pstd}
+{bf:Dr Merwan Roudane} ({cmd:mmqregplot} companion){break}
+merwanroudane920@gmail.com{p_end}
 
 
 {title:Also see}

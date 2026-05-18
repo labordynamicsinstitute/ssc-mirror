@@ -2,7 +2,7 @@
 *! Run automatically by every tarur_* command on first use.
 *!
 *! NOTE: Stata's `discard` does NOT clear Mata. After updating
-*! `_tarur_mata.do`, run `mata: mata clear` (or `tarur_init, force`)
+*! `_tarur_mata.mata`, run `mata: mata clear` (or `tarur_init, force`)
 *! before the next test so Stata reloads the new mata functions.
 
 program define tarur_init
@@ -14,9 +14,9 @@ program define tarur_init
         if _rc == 0 exit 0
     }
 
-    findfile "_tarur_mata.do"
+    findfile "_tarur_mata.mata"
     if "`r(fn)'" == "" {
-        di as error "_tarur_mata.do not found on adopath."
+        di as error "_tarur_mata.mata not found on adopath."
         di as error "Place the tarur/ folder on the adopath, e.g.:"
         di as error `"    adopath + "C:/path/to/tarur""'
         exit 601

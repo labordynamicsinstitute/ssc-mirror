@@ -627,6 +627,7 @@ fmwww.bc.edu/repec/bocode/_/_fqardl_waldtest.ado
 fmwww.bc.edu/repec/bocode/_/_gwmean.sthlp
 fmwww.bc.edu/repec/bocode/_/_gkweight.ado
 fmwww.bc.edu/repec/bocode/_/_grmargb.ado
+fmwww.bc.edu/repec/bocode/_/_tarur_mata.mata
 fmwww.bc.edu/repec/bocode/_/_xtpvarcoint_irf.ado
 fmwww.bc.edu/repec/bocode/_/_staticfc.ado
 fmwww.bc.edu/repec/bocode/_/_fcoint_cv_tsong.ado
@@ -12810,6 +12811,7 @@ fmwww.bc.edu/repec/bocode/x/xteurostat.pkg
 fmwww.bc.edu/repec/bocode/x/xfrac.html
 fmwww.bc.edu/repec/bocode/x/xtcenter.pkg
 fmwww.bc.edu/repec/bocode/x/xtgps_material.zip
+fmwww.bc.edu/repec/bocode/x/xtselfe_p.ado
 fmwww.bc.edu/repec/bocode/x/xtrec.pkg
 fmwww.bc.edu/repec/bocode/x/xtcsb.sthlp
 fmwww.bc.edu/repec/bocode/x/xtbalance2.ado
@@ -12961,6 +12963,7 @@ fmwww.bc.edu/repec/bocode/x/xtvar2.sthlp
 fmwww.bc.edu/repec/bocode/x/xtnptimevaravecb.ado
 fmwww.bc.edu/repec/bocode/x/xb2pi.ado
 fmwww.bc.edu/repec/bocode/x/xcorplot.pkg
+fmwww.bc.edu/repec/bocode/x/xtselfe.pkg
 fmwww.bc.edu/repec/bocode/x/xtbreak.ado
 fmwww.bc.edu/repec/bocode/x/xtmixedioupredict.ado
 fmwww.bc.edu/repec/bocode/x/xtdcce2.ado
@@ -13294,6 +13297,7 @@ fmwww.bc.edu/repec/bocode/x/xtdcce2133_estat.ado
 fmwww.bc.edu/repec/bocode/x/xtstfetchcovid19.ado
 fmwww.bc.edu/repec/bocode/x/xt2treatments.pkg
 fmwww.bc.edu/repec/bocode/x/xtnptimevar.ado
+fmwww.bc.edu/repec/bocode/x/xtselfe.sthlp
 fmwww.bc.edu/repec/bocode/x/xtlsdvc.html
 fmwww.bc.edu/repec/bocode/x/xfrac_dis.ado
 fmwww.bc.edu/repec/bocode/x/xtsum2docx.pkg
@@ -13304,6 +13308,7 @@ fmwww.bc.edu/repec/bocode/x/xtbalance.pkg
 fmwww.bc.edu/repec/bocode/x/xtbreakmodel.ado
 fmwww.bc.edu/repec/bocode/x/xtpretest.pkg
 fmwww.bc.edu/repec/bocode/x/xi3.ado
+fmwww.bc.edu/repec/bocode/x/xtselfe.ado
 fmwww.bc.edu/repec/bocode/x/xtprobitunbal.sthlp
 fmwww.bc.edu/repec/bocode/x/xtmrho.html
 fmwww.bc.edu/repec/bocode/x/xtpmg.pkg
@@ -22306,6 +22311,7 @@ fmwww.bc.edu/repec/bocode/c/chaidforest_post.sthlp
 fmwww.bc.edu/repec/bocode/c/cprdhes_hospital.sthlp
 fmwww.bc.edu/repec/bocode/c/chaos.hlp
 fmwww.bc.edu/repec/bocode/c/center.zip
+fmwww.bc.edu/repec/bocode/c/coefconv_tests.do
 fmwww.bc.edu/repec/bocode/c/color-ygs2.style
 fmwww.bc.edu/repec/bocode/c/cv_regress.sthlp
 fmwww.bc.edu/repec/bocode/c/choi_lr_test.pkg

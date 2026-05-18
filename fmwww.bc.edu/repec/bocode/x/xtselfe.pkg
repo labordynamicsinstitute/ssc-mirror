@@ -1,0 +1,30 @@
+d 'XTSELFE': module to estimate fixed-effects panel-data models with sample selection
+d
+d  xtselfe implements the Han and Lee (2022) approach for
+d correcting selectivity bias in the within-group estimator of
+d linear panel-data models with fixed effects and sample selection.
+d It uses pooled weighted least squares based on pairwise
+d differences that eliminate the fixed effects. Correction terms
+d are constructed from period-wise probit regressions and plug-in
+d maximum likelihood estimates of the intertemporal correlations in
+d the selection errors. Standard errors are computed by the delta
+d method and adjusted for the generated regressors problem. 
+d
+d KW: fixed effects
+d KW: panel data
+d KW: sample selection
+d KW: selectivity bias
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260517
+d
+d Author: Chirok Han,  Department of Economics, Korea University
+d Support: email chirokhan@@korea.ac.kr
+d
+d Author: Goeun Lee ,  Department of Economics, Kookmin University
+d Support: email goeunlee@@kookmin.ac.kr
+d
+f xtselfe.ado
+f xtselfe_p.ado
+f xtselfe.sthlp

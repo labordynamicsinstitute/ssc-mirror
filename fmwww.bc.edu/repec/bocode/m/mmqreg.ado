@@ -1,9 +1,13 @@
+*! v2.5 Adds explicit "version 13" statement (per Kit Baum's note on v2.4),
+*!      and ships the polished mmqregplot companion (single-call multi-quantile
+*!      design; new options: showall, saving, gformat, keepgraphs, nocombine;
+*!      fixes for the location/scale/feplot branches).
 *! v2.4 Adds Decomposed Split-Panel Jackknife (jknife option) integrating
 *!      the MM-QR-JK methodology. JK correction applied to scale g(.) and
 *!      quantile Q(.) separately, then recombined as b + g_jk * Q_jk(tau).
 *!      Also adds mmqregplot companion.
 *! Authors: Fernando Rios-Avila (original, v1.0-v2.3)
-*!          Dr Merwan Roudane (contributor, v2.4 extension)
+*!          Dr Merwan Roudane (contributor, v2.4-v2.5 extensions)
 *!          Contact: merwanroudane920@gmail.com
 * v2.3 More Efficient rewritten. adds NOls
 * v2.21 keep singletons
@@ -46,6 +50,7 @@ end
 ** Main entry point
 ** =========================================================
 program define mmqreg, eclass
+	version 13
 
  if replay() {
 	if "`e(cmd)'"=="mmqreg" {
@@ -68,8 +73,7 @@ program define mmqreg, eclass
 						nowarning NOLS   ///
 						JKnife           /// NEW v2.4: Split-Panel Jackknife SE
 						 ]
-    version 13
-						 
+
 	** verify absorb dependencies
 	if "`absorb'"!="" {
 		qui:capture which hdfe

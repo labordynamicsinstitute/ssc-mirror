@@ -146,7 +146,7 @@ Test-specific extras: {cmd:tarur kruse} returns {cmd:r(beta1)},
 SSC routes every file in the package to the user's PLUS adopath, with
 files binned by their first character: the {cmd:tarur*} ado-files and
 help file land in {cmd:~/ado/plus/t/}, and the Mata helper
-{cmd:_tarur_mata.do} lands in {cmd:~/ado/plus/_/}. {cmd:findfile} walks
+{cmd:_tarur_mata.mata} lands in {cmd:~/ado/plus/_/}. {cmd:findfile} walks
 the adopath, so {cmd:tarur_init} locates the Mata helper automatically.
 No manual {cmd:adopath} setup is required for SSC users.
 {p_end}
@@ -168,7 +168,7 @@ of a {cmd:tarur} command Stata is actually using, type {cmd:which tarur}
 
 {pstd}{ul:After editing the source}{p_end}
 {phang}
-After modifying any {cmd:tarur_*.ado} or {cmd:_tarur_mata.do} file
+After modifying any {cmd:tarur_*.ado} or {cmd:_tarur_mata.mata} file
 in-place, run {cmd:mata: mata clear} (or {cmd:tarur_init, force}) once.
 Stata's {cmd:discard} clears compiled programs but NOT Mata, so newly
 edited Mata functions otherwise stay unloaded.
