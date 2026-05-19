@@ -1,0 +1,38 @@
+d 'PMEAN': module to compute panel-data means and exact within-between decomposition for two- and three-dimensional panel data
+d
+d      pmean computes panel-data means and the exact within-between
+d decomposition for    two-dimensional (id x time) and
+d three-dimensional (id x time x dim3) panel data. For each   
+d input variable, the command generates marginal means (overall, by
+d id, by time, and    optionally by a third dimension), the implied
+d within and between components, and two- and	 three-way
+d fixed-effect residuals.  With dim3() and full, the command
+d additionally	  generates the full ANOVA-style pairwise
+d interaction components and the three-way    residual.    The
+d additive identities (2D, 3D main effects, and full 3-way ANOVA)
+d hold exactly at every    observation in any panel, balanced or
+d unbalanced. The third dimension can represent a    sector,
+d region, product group, industry, cohort, or any other grouping
+d observed alongside	the panel id and time.	  The estimation
+d sample is defined by if, in, and observations with nonmissing
+d values of    id(), time(), and, when supplied, dim3().  Missing
+d values of the analysis variables are	  handled variable by
+d variable unless the listwise option is specified. 
+d
+d KW: panel data
+d KW: means
+d KW: within
+d KW: between
+d
+d Requires: Stata version 15.1 
+d
+d Distribution-Date: 20260519
+d
+d Author: Ahmad Nawaz,   Department of Economics, University of Sahiwal
+d Support: email ahmadnawaz@@uosahiwal.edu.pk
+d
+d Author:  Jianghuai Zheng,  Department of Industrial Economics, Nanjing University
+d Support: email zhengjh@@nju.edu.cn
+d
+f pmean.ado
+f pmean.sthlp

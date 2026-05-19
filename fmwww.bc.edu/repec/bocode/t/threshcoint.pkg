@@ -1,0 +1,75 @@
+d 'THRESHCOINT': module to execute threshold cointegration tests and models 
+d
+d      threshcoint is a Stata implementation of every major
+d threshold cointegration test and    model from the econometrics
+d literature. All numerics run in Mata. No bootstrap is    required
+d for the tabulated tests -- asymptotic / finite-sample critical
+d values are	bundled.    The library is a direct port of the
+d Python threshcoint library by Dr Merwan Roudane and	
+d consolidates methods from twelve academic papers and three R
+d packages (tsDyn,    NonlinearTSA, plus the original supF.r
+d script). 
+d
+d KW: cointegration
+d KW: threshold
+d KW: tests
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260519
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f threshcoint.ado
+f threshcoint.sthlp
+f tc_adf.ado
+f tc_adlbdm.ado
+f tc_adlbo.ado
+f tc_bbc.ado
+f tc_bf.ado
+f tc_compare.ado
+f tc_covaug.ado
+f tc_eg.ado
+f tc_eqtar.ado
+f tc_es.ado
+f tc_exes.ado
+f tc_glsmtar.ado
+f tc_hs.ado
+f tc_kss.ado
+f tc_plot.ado
+f tc_pp.ado
+f tc_setar.ado
+f tc_supf.ado
+f tc_sysadl.ado
+f tc_tar.ado
+f tc_tvecm.ado
+f ../_/_tc_load.ado
+f ../_/_threshcoint_mata.mata
+f tc_adf.sthlp
+f tc_adlbdm.sthlp
+f tc_adlbo.sthlp
+f tc_bbc.sthlp
+f tc_bf.sthlp
+f tc_compare.sthlp
+f tc_covaug.sthlp
+f tc_eg.sthlp
+f tc_eqtar.sthlp
+f tc_es.sthlp
+f tc_exes.sthlp
+f tc_glsmtar.sthlp
+f tc_hs.sthlp
+f tc_kss.sthlp
+f tc_plot.sthlp
+f tc_pp.sthlp
+f tc_setar.sthlp
+f tc_supf.sthlp
+f tc_sysadl.sthlp
+f tc_tar.sthlp
+f tc_tvecm.sthlp
+f threshcoint_demo.do
+f threshcoint_diagnose.do
+f ../c/campbell.dta
+f ../c/ccr.dta
+f ../s/stockwatson.dta
+f ../s/sw93.dta
