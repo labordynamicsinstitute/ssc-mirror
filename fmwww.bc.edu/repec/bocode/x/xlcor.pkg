@@ -1,0 +1,21 @@
+d 'XLCOR': module to estimate Chatterjee's rank correlation 
+d
+d  xicor estimates Chatterjee's (2021) rank correlation coefficient
+d xi. 
+d
+d KW: Chatterjee
+d KW: correlation
+d KW: dependence
+d KW: nonlinear
+d KW: ranks
+d KW: xi
+d
+d Requires: Stata version 11.2
+d
+d Distribution-Date: 20260520
+d
+d Author: Daniel Klein, Universität Kassel
+d Support: email klein.daniel.81@@gmail.com
+d
+f xlcor.ado
+f xlcor.sthlp

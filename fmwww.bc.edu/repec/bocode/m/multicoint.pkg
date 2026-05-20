@@ -1,0 +1,46 @@
+d 'MULTICOINT': module to estimate and test multicointegrated time-series in the sense of Granger-Lee (1989, 1990)
+d
+d	Two I(1) flow series are said to be multicointegrated when
+d their cumulated sums - which	  are I(2) by construction -
+d cointegrate together and with the original flows.  In that   
+d case there is a "second layer" of long-run equilibrium relating
+d the stock variables to    the underlying flow variables, on top
+d of the standard I(1) cointegration y - β x ~ I(0).	 The
+d classical example (Granger & Lee, 1989) is the
+d production-sales-inventory identity:	  y_t (production) and x_t
+d (sales) are I(1) and cointegrated; the level of inventories Q_t  
+d  = Σ(y - x)_s would normally inherit one unit root, but in the
+d presence of	 multicointegration Q_t (or a linear combination of
+d Q_t and the flows) is stationary.    Stock-flow data of housing
+d starts / completions, income / consumption / wealth, and many   
+d other systems exhibit this feature (Engsted & Haldrup, 1999). 
+d
+d KW: cointegration
+d KW: multiple cointegration
+d KW: unit roots
+d
+d Requires: Stata version 14 and cointreg from SJ 12-3 st0272 (q.v.) 
+d
+d Distribution-Date: 20260519
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f multicoint_cv.ado
+f multicoint_graph.ado
+f multicoint_sim.ado
+f multicoint.ado
+f multicoint_cv.sthlp
+f multicoint_graph.sthlp
+f multicoint_sim.sthlp
+f multicoint.sthlp
+f ../_/_mc_est_imols.ado
+f ../_/_mc_est_ols.ado
+f ../_/_mc_est_taols.ado
+f ../_/_mc_mata.ado
+f ../_/_mc_mata.mata
+f ../_/_mc_pick_adf_lag.ado
+f ../_/_mc_resid_from_b.ado
+f ../_/_mc_test_egh.ado
+f ../_/_mc_test_gl.ado
+f ../_/_mc_test_taols.ado

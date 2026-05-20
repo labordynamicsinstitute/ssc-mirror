@@ -11,6 +11,8 @@ p xfrac module to produce tabulation using categories defined by fractions of a 
 p xframeappend module to append data frames to the end of the current data frame
 p xglm module to extend glm
 p xgroup module to create a grouping variable with key values in an output dataset
+p xicor module to estimate Chatterjee's rank correlation 
+p xlcor module to estimate Chatterjee's rank correlation 
 p xlincom module to estimate multiple linear combinations of parameters
 p xlink module to provide extra link functions for use with glm
 p xls2dta module to save Excel files as Stata datasets
