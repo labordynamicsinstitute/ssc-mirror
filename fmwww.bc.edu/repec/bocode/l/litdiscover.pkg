@@ -1,0 +1,35 @@
+d 'LITDISCOVER': module for theory-aware literature review, analysis, and discovery
+d
+d   litdiscover combines latent Dirichlet allocation (LDA) topic
+d modelling of abstract text with a deductive overlay of
+d researcher- coded construct fields (theory, dependent variable,
+d independent variable, moderator, mediator, decision, context,
+d method, journal, year). It produces topic-by-field
+d cross-tabulations, TCCM and ADO framework outputs,
+d network-analytic measures (degree, betweenness, Louvain
+d communities, modularity) over construct co-occurrences, FREX
+d exclusivity scores, per-topic stability diagnostics via Jaccard
+d similarity across random seeds, UMass coherence diagnostics, and
+d a suite of static figures and interactive HTML deliverables
+d (pyLDAvis, pyvis, plotly Sankey). Designed for systematic
+d literature reviews across management, marketing, organisation
+d studies, information systems, education, health policy, and the
+d broader social and behavioural sciences. 
+d
+d KW: topic modelling
+d KW: literature
+d
+d Requires: Stata version 19, heatplot, palettes, colrspace from SSC (q.v.), Python 3.10, Python packages
+d
+d Distribution-Date: 20260520
+d
+d Author: Nebojsa S. Davcik,  EM Normandie Business School, Oxford, UK
+d Support: email davcik@@live.com
+d
+f litdiscover.ado
+f litdiscover.sthlp
+f litdi.ado
+f litdiscover.py
+f litdiscover_net.py
+f litdiscover_viz.py
+f litdiscover_example500.dta

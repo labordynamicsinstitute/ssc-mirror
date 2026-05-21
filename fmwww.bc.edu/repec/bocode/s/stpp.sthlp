@@ -24,6 +24,7 @@
 {synopthdr}
 {synoptline}
 {syntab:Options}
+{synopt :{opt adddeaths}}add number of deaths to frame(in years){p_end}
 {synopt :{opt aged:iag(varname)}}age at diagnosis (in years){p_end}
 {synopt :{opt dateb:irth(varname)}}date of birth{p_end}
 {synopt :{opt dated:iag(varname)}}date at diagnosis{p_end}
@@ -97,6 +98,9 @@ with the expected survival defined by the rates in the {cmd:popmort2()} file.
 Confidence intervals are also calculated and named {it: newvar}{cmd:_lci} and {it: newvar}{cmd:_uci}
 
 {title:Options}
+
+{phang}
+{opt adddeaths} includes the number of deaths between intervals when using the {cmd:frame()} option.
 
 {phang}
 {opt agediag(varname)} names the variable containing age at diagnosis. This should be in years. It is best to avoid using truncated (integer) age as this assumes that each person was diagnosed on their birthday.

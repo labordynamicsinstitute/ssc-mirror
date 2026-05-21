@@ -203,6 +203,7 @@ program define genindweights, rclass sortpreserve
       qui rename `refproportion' ref
       di as text "--Summary of weights--" _continue
       local addby = cond("`nobyoption'"=="","`by'","")
+      format %5.4f obs ref `newvarname'
       list `addby' `refdata_strata' `refframe_strata' `refcond_strata' `agegroup' obs ref `newvarname', noobs abbrev(30) sepby(`by')
       di as result  "Observed proportions (obs): reference proportions (ref) and relative weights (`newvarname')"
     }

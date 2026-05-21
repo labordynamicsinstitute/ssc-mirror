@@ -76,6 +76,7 @@ p listsome module to list a (possibly random) sample of observations
 p listtab module to list variables as rows of a TeX, HTML or word processor table
 p listtex module to list variables as rows of a TeX, HTML or word processor table
 p listutil modules to manipulate lists of words
+p litdiscover module for theory-aware literature review, analysis, and discovery
 p ljs module to left-justify string variables for printing
 p lmabg Module to compute OLS Autocorrelation Breusch-Godfrey Test at Higher Order AR(p)
 p lmabg2 Module to Compute 2SLS-IV Autocorrelation Breusch-Godfrey Test at Higher Order AR(p)

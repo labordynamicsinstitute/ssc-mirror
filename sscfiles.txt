@@ -17376,6 +17376,7 @@ fmwww.bc.edu/repec/bocode/l/leacf_acf.mlib
 fmwww.bc.edu/repec/bocode/l/lrmbounds.ado
 fmwww.bc.edu/repec/bocode/l/lmnad2.ado
 fmwww.bc.edu/repec/bocode/l/log2html7.hlp
+fmwww.bc.edu/repec/bocode/l/litdiscover.py
 fmwww.bc.edu/repec/bocode/l/lmadurmnl.dta
 fmwww.bc.edu/repec/bocode/l/lrasvar.pkg
 fmwww.bc.edu/repec/bocode/l/logitjack.ado
@@ -17694,6 +17695,7 @@ fmwww.bc.edu/repec/bocode/l/lmsrd.html
 fmwww.bc.edu/repec/bocode/l/lorenz.zip
 fmwww.bc.edu/repec/bocode/l/lmavon.sthlp
 fmwww.bc.edu/repec/bocode/l/lmnwhite.sthlp
+fmwww.bc.edu/repec/bocode/l/litdi.ado
 fmwww.bc.edu/repec/bocode/l/lxhuse.ado
 fmwww.bc.edu/repec/bocode/l/lany.ado
 fmwww.bc.edu/repec/bocode/l/louvain_gcd.ado
@@ -17907,6 +17909,7 @@ fmwww.bc.edu/repec/bocode/l/lmharch2.sthlp
 fmwww.bc.edu/repec/bocode/l/labbe.dlg
 fmwww.bc.edu/repec/bocode/l/lmoments.ado
 fmwww.bc.edu/repec/bocode/l/lambda.hlp
+fmwww.bc.edu/repec/bocode/l/litdiscover.pkg
 fmwww.bc.edu/repec/bocode/l/lmavonxt.ado
 fmwww.bc.edu/repec/bocode/l/lclogitpr2.sthlp
 fmwww.bc.edu/repec/bocode/l/lmose.sthlp
@@ -17992,6 +17995,7 @@ fmwww.bc.edu/repec/bocode/l/lsplagvar.mlib
 fmwww.bc.edu/repec/bocode/l/lmalbnl.pkg
 fmwww.bc.edu/repec/bocode/l/lcmc_predict.ado
 fmwww.bc.edu/repec/bocode/l/lfsummvl.html
+fmwww.bc.edu/repec/bocode/l/litdiscover_example500.dta
 fmwww.bc.edu/repec/bocode/l/lyapexpan.m
 fmwww.bc.edu/repec/bocode/l/lianxh.sthlp
 fmwww.bc.edu/repec/bocode/l/labgen2.ado
@@ -18120,6 +18124,7 @@ fmwww.bc.edu/repec/bocode/l/lmabpgnl.ado
 fmwww.bc.edu/repec/bocode/l/lmetan.mlib
 fmwww.bc.edu/repec/bocode/l/labcenswdi.pkg
 fmwww.bc.edu/repec/bocode/l/lmhcw2.dlg
+fmwww.bc.edu/repec/bocode/l/litdiscover.ado
 fmwww.bc.edu/repec/bocode/l/labvars.sthlp
 fmwww.bc.edu/repec/bocode/l/lmabpgxt.ado
 fmwww.bc.edu/repec/bocode/l/lmoments9.html
@@ -18165,6 +18170,7 @@ fmwww.bc.edu/repec/bocode/l/lsacsetup.pkg
 fmwww.bc.edu/repec/bocode/l/lmnad.ado
 fmwww.bc.edu/repec/bocode/l/loevh2.ado
 fmwww.bc.edu/repec/bocode/l/lmngryxt.pkg
+fmwww.bc.edu/repec/bocode/l/litdiscover.sthlp
 fmwww.bc.edu/repec/bocode/l/lmhhp.sthlp
 fmwww.bc.edu/repec/bocode/l/laplacereg.pkg
 fmwww.bc.edu/repec/bocode/l/lrutil.hlp
@@ -18180,6 +18186,7 @@ fmwww.bc.edu/repec/bocode/l/labvalpool.hlp
 fmwww.bc.edu/repec/bocode/l/lincheck.hlp
 fmwww.bc.edu/repec/bocode/l/lmavonnl.html
 fmwww.bc.edu/repec/bocode/l/ltop.ado
+fmwww.bc.edu/repec/bocode/l/litdiscover_net.py
 fmwww.bc.edu/repec/bocode/l/lclogitcov2.ado
 fmwww.bc.edu/repec/bocode/l/lasreg.mlib
 fmwww.bc.edu/repec/bocode/l/linorm.mlib
@@ -18406,6 +18413,7 @@ fmwww.bc.edu/repec/bocode/l/libd3.sthlp
 fmwww.bc.edu/repec/bocode/l/labelsof.pkg
 fmwww.bc.edu/repec/bocode/l/lmalb2.dlg
 fmwww.bc.edu/repec/bocode/l/lowy.sthlp
+fmwww.bc.edu/repec/bocode/l/litdiscover_viz.py
 fmwww.bc.edu/repec/bocode/l/lGo.mlib
 fmwww.bc.edu/repec/bocode/l/lgph.sthlp
 fmwww.bc.edu/repec/bocode/l/logitfe.ado
