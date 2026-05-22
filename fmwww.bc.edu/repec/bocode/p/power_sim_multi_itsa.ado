@@ -93,7 +93,7 @@ program define power_sim_multi_itsa, rclass
 			// generate control datasets
 			local contmax = `contcnt' + 1
 			forvalues i = 2/`contmax' {
-				itsadgp2, ntime(`n') trperiod(`trperiod') intercept(`cintercept') pretrend(`cpretrend') posttrend(`cposttrend') step(`cstep') sd(`csd') `c_rho_opts'
+				itsadgp, ntime(`n') trperiod(`trperiod') intercept(`cintercept') pretrend(`cpretrend') posttrend(`cposttrend') step(`cstep') sd(`csd') `c_rho_opts'
 				gen z = 0	
 				gen id = `i'
 				

@@ -51,7 +51,7 @@ must be declared. See {helpb tsset}.
 {synopthdr}
 {synoptline}
 {p2coldent:* {opt trp:eriod}{cmd:(}{it:{help datetime:datelist}}{cmd:)}}specify the time period(s) when the intervention begins (e.g. {cmd:trperiod(2020)} or {cmd:trperiod(2001q2)} or {cmd:trperiod(21jan2020 ; 08feb2020)})  {p_end}
-{p2coldent:* {opt lag}{cmd:(#)}}specify the maximum lag to be considered when a glm model with Newey-West standard errors is estimated{p_end}
+{p2coldent:* {opt lag}{cmd:(#)}}specify the maximum lag to be considered{p_end}
 {synopt:{opt sing:le}}indicates that {cmd:itsa} will be used for a single-group analysis {p_end}
 {synopt:{opt treat:id}{cmd:(#)}}specify the treated unit's identifier. Not required when only the treated unit is in the data 
 and {cmd:single} is specified {p_end}

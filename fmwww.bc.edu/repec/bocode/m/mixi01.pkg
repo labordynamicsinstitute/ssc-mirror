@@ -1,0 +1,55 @@
+d 'MIXI01': module providing econometric methods for systems mixing I(0) and I(1) variables
+d
+d	mixi01 is a comprehensive Stata package for estimation and
+d inference in time series    systems that contain a mixture of
+d I(1) (nonstationary, unit-root) and I(0) (stationary)   
+d variables.  Higher orders of integration (I(2) and above) are out
+d of scope; series that    are I(2) should be first-differenced to
+d I(1) before being used as inputs.  The package    implements the
+d fully modified (FM) estimation framework of Phillips (1995) and
+d Kitamura    and Phillips (1997), the structural VAR methodology
+d of Fisher, Huh and Pagan (2016) for	 systems with P0/T0/P1/T1
+d shock classifications, and the mixed VECM of Chen (2022).   
+d Standard cointegration methods typically require that all
+d variables in a system share the    same order of integration.  In
+d practice, macroeconomic systems routinely mix trending and   
+d stationary variables — output, prices and interest rates, for
+d example.  mixi01 provides a	 unified framework where the
+d researcher does not need to pretest variables for unit roots,   
+d determine the dimension of the cointegration space, or separate
+d I(1) from I(0) regressors    before estimation. 
+d
+d KW: order of integration
+d KW: statonarity
+d KW: nonstationary
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260521
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f mixi01.ado
+f mixi01_acl.ado
+f mixi01_fmiv.ado
+f mixi01_fmols.ado
+f mixi01_fmvar.ado
+f mixi01_graph.ado
+f mixi01_irf.ado
+f mixi01_lrcov.ado
+f mixi01_svar.ado
+f mixi01_table.ado
+f mixi01_test.ado
+f mixi01_vecm.ado
+f ../_/_mixi01_mata.ado
+f ../_/_mixi01_mata.mata
+f mixi01.sthlp
+f mixi01_acl.sthlp
+f mixi01_fmiv.sthlp
+f mixi01_fmols.sthlp
+f mixi01_fmvar.sthlp
+f mixi01_irf.sthlp
+f mixi01_svar.sthlp
+f mixi01_test.sthlp
+f mixi01_vecm.sthlp
