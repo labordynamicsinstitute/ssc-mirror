@@ -442,7 +442,7 @@ void _mixi01_vecm_estimate(
     Mmat = invsym(S11) * S10 * S00inv * S01
 
     // Make symmetric for eigendecomposition
-    Mmat = (Mmat + Mmat') / 2
+    _makesymmetric(Mmat)
 
     // Eigendecomposition — symeigensystem returns eigenvalues as a row vector
     symeigensystem(Mmat, eigvec_r, eigval_row)
@@ -627,7 +627,7 @@ void _mixi01_vecm_estimate(
         s2 = eq*kx
         VV_full[s1::s2, s1::s2] = Sigma[eq, eq] * XXinv_full
     }
-    VV_full = (VV_full + VV_full') / 2
+    _makesymmetric(VV_full)
 
     // Vectorise
     b_vec = J(1, nparam, 0)

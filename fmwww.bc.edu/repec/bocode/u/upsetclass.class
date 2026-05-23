@@ -1,0 +1,464 @@
+*! version 1.0.0 22may2026
+
+version 18.5
+
+class upsetclass {
+	
+	classwide:
+		double nover
+		string useropts
+		array baropts
+	
+	instancespecific:
+		double vert
+		double nbars
+		double obsmax
+		double onoff
+		double axissize
+		double axisgap
+		double axismax
+		double labpos
+		double ymax
+		double blabperc
+		double blabstyle
+		double blabpos
+		double bwidth
+		string blabfmt
+		string gridsyn
+		string plotsyn
+		string optsyn
+		string blabopts
+	
+}
+
+prog define .over
+	
+	syntax anything, [ bar(string asis) * ]
+	
+	.nover = `anything'
+	
+	/// Parse bar options
+	
+	while (`"`bar'"' != "") {
+		
+		.bar `bar'
+		local barid = s(barid)
+		
+		if !missing(`barid') local specid `specid' `barid'
+		
+		local bar
+		local 0, `options'
+		syntax, [ bar(string asis) * ]
+		
+	}
+	
+	mata: st_local("noverseq", invtokens(strofreal(1..`.nover')))
+	
+	local unspecid : list noverseq - specid
+	
+	if ("`unspecid'" != "") foreach i of local unspecid {
+		.baropts[`i'] = "col(stc`i')"
+	}
+	
+	.useropts = `"`options'"'
+	
+end
+
+prog define .bar, sclass
+	
+	sreturn clear
+	
+	syntax anything,														///
+		[																	///
+			COLor(string)													///
+			FColor(passthru)												///
+			FIntensity(passthru)											///
+			LColor(passthru)												///
+			LWidth(passthru)												///
+			LPattern(passthru)												///
+			LAlign(passthru)												///
+			LSTYle(passthru)												///
+			BSTYle(passthru)												///
+		]
+	
+	confirm integer n `anything'
+	
+	if (`anything' <= `.nover') & (1 <= `anything') {
+		
+		if ("`color'" == "") local color stc`anything'
+		
+		.baropts[`anything'] = `"col(`color') `fcolor' `fintensity' `lcolor' `lwidth' `lpattern' `lalign' `lstyle' `bstyle'"'
+		
+		sreturn local barid = `anything'
+		
+	}
+	
+end
+
+prog define .set
+	
+	syntax anything,														///
+		[																	///
+			gap(numlist max=1)												///
+			XSCale(string asis)												///
+			YSCale(string asis)												///
+			YTItle(string asis)												///
+			YLABel(string asis)												///
+			YSIZe(numlist max=1)											///
+			BLABel(string asis)												///
+			barwidth(string)												///
+			off																///
+		]
+	
+	/// Setup
+	
+	tokenize `anything'
+	
+	.vert = `1'
+	local nbars = `2'
+	.obsmax = `3'
+	
+	.onoff = ("`off'" == "")
+	
+	if ("`ysize'" != "") .axissize = `ysize'
+	else .axissize = 0.5 + 2.5 * `.vert'
+	
+	if ("`gap'" != "") .axisgap = `gap'
+	else .axisgap = 0.2 - 0.1 * `.vert'
+	
+	local ymax = `.axissize' + `.axisgap'
+	
+	/// Scale options
+	
+	if (`.vert') {
+		local xcoords `.axisgap' 0 `.axisgap' 1
+		local ycoords `.axisgap' 0 `ymax' 0
+	}
+	
+	else {
+		local xcoords 0 -`.axisgap' -1 -`.axisgap'
+		local ycoords 0 -`.axisgap' 0 -`ymax'
+	}
+	
+	.scale `xcoords', `xscale'
+	.scale `ycoords', `yscale'
+	local yscmax = s(yscmax)
+	
+	.axismax = max(`yscmax', `.obsmax')
+	
+	/// Label options
+	
+	.lab `ylabel'
+	
+	.ymax = cond(`.onoff', `ymax', `.labpos')
+	
+	/// Title options
+	
+	.title `ytitle'
+	
+	/// Bar label options
+	
+	.blab `blabel'
+	
+	/// Bar width
+	
+	if ("`barwidth'") == "" local barwidth = 2 / (3 * `nbars' + 1)
+	
+	.bwidth = `barwidth'
+	
+	/// Misc
+	
+	if !(`.onoff') {
+		.plotsyn = ""
+		.gridsyn = ""
+		.optsyn = ""
+	}
+	
+end
+
+prog define .lab
+	
+	syntax [ anything ],													///
+		[																	///
+			labgap(numlist max=1)											///
+			LABSize(string)													///
+			LABColor(string)												///
+			format(string)													///
+			ORIENTation(passthru)											///
+			TLength(numlist max=1)											///
+			TPosition(string)												///
+			TLSTYle(string)													///
+			TLWidth(string)													///
+			TLColor(string)													///
+			GLSTYle(string)													///
+			GLWidth(string)													///
+			GLColor(string)													///
+			GLPattern(string)												///
+			nogrid															///
+			noticks															///
+			noLABels														///
+		]
+	
+	/*** Defaults *************************************************************/
+	
+	if ("`tlength'" != "") local tlen = `tlength'
+	else local tlen = (2.7 - 1.7 * `.vert') * 0.025
+	
+	if ("`labgap'" == "") local labgap = (2.7 - 1.7 * `.vert') * 0.02
+	
+	if ("`labcolor'" == "") local labcolor black
+	
+	if ("`tlcolor'" == "") local tlcolor black
+	
+	if ("`glcolor'" == "") local glcolor gs14
+	
+	if ("`glpattern'" == "") local glpattern dash
+	
+	/*** Tick start ***********************************************************/
+	
+	local strltpos = strlower("`tposition'")
+	
+	local operator = cond(`.vert', "-", "+")
+	local tplace = cond(`.vert', 9, 12)
+	
+	if strpos(".outside", ".`strltpos'") local tstart = 0
+	
+	else if strpos(".inside", ".`strltpos'") local tstart = - `operator' `tlen'
+	
+	else if strpos(".crossing", ".`strltpos'") local tstart = - `operator' 0.5 * `tlen'
+	
+	else {
+		di as err `"Unknown tick position {bf:`tposition'}"'
+		exit 198
+	}
+	
+	local tickpos = `tstart' `operator' `tlen'
+	
+	.labpos = `tickpos' `operator' `labgap'
+	
+	local mult = cond(`.vert', "", "-")
+	
+	/*** Ticks ****************************************************************/
+	
+	_upsetlabfetch `anything', varmax(`.obsmax')
+	local userticks "`s(ticks)'"
+	local labs `"`s(labs)'"'
+	local tickmax = s(tickmax)
+	
+	if (`tickmax' > `.axismax') & !missing(`tickmax') .axismax = `tickmax'
+	if ("`format'" != "") local labifmt "local labi : display `format' \`labi'"
+	
+	local tickn : word count `userticks'
+	
+	forvalues i = 1 / `tickn' {
+		
+		local ticki : word `i' of `userticks'
+		local labi : word `i' of `labs'
+		if ("`format'" != "") local labi : display `format' `labi'
+		
+		local scaletick = `mult' (`.axisgap' + `ticki' * `.axissize' / `.axismax')
+		
+		if (`.vert') {
+			
+			local iticksyn `scaletick' `tstart' `scaletick' `tickpos'
+			local iticklab `scaletick' `.labpos'
+						
+		}
+		
+		else {
+			
+			local iticksyn `tstart' `scaletick' `tickpos' `scaletick'
+			local iticklab `.labpos' `scaletick'
+						
+		}
+		
+		if ("`grid'" == "") {
+			
+			local igridsyn = cond(`.vert', 									///
+								  "`scaletick' 0 `scaletick' 1", 			///
+								  "0 `scaletick' -1 `scaletick'")
+			
+			local ygridsyn (scatteri `igridsyn', recast(line)				///
+												 lc(`glcolor') 				///
+												 lp(`glpattern')			///
+												 lsty(`glstyle')			///
+												 lw(`glwidth'))
+			
+		}
+		
+		else local ygridsyn
+		
+		local gridsyn `gridsyn' `ygridsyn'
+		
+		local ticksyn `ticksyn' (scatteri `iticksyn', recast(line) 			///
+													  lc(`tlcolor') 		///
+													  lsty(`tlstyle') 		///
+													  lw(`tlwidth'))
+		
+		local ticklab `ticklab' `iticklab' `"`labi'"'
+		
+	}
+	
+	local ticklab text(`ticklab', place(`tplace') c(`labcolor') 			///
+								  si(`labsize') `orientation')
+	
+	if ("`grid'" == "") .gridsyn = `"`gridsyn'"'
+	if ("`ticks'" == "") .plotsyn = `"`.plotsyn' `ticksyn'"'
+	if ("`labels'" == "") .optsyn = `"`.optsyn' `ticklab'"'
+	
+end
+
+prog define .blab
+		
+	syntax [anything],														///
+		[																	///
+			POSition(string)												///
+			gap(passthru)													///
+			format(string)													///
+			ORIENTation(string)												///
+			Size(passthru)													///
+			Color(string)													///
+			PERCentage														///
+		]
+	
+	if inlist(`"`anything'"', "bar", "cumbar", "total") {
+		
+		if ("`color'" == "") local color black
+		
+		/// Style
+		
+		if ("`anything'" == "bar") .blabstyle = 1
+		else if ("`anything'" == "cumbar") .blabstyle = 2
+		else .blabstyle = 3
+		
+		/// Position
+		
+		if strpos(".outside", ".`position'") {
+			.blabpos = 3
+			local mlabp = 9 + 3 * `.vert'
+		}
+		
+		else if strpos(".inside", ".`position'") {
+			.blabpos = 3
+			local mlabp = 3 + 3 * `.vert'
+		}
+		
+		else if strpos(".base", ".`position'") {
+			
+			.blabpos = 1
+			local mlabp = 9 + 3 * `.vert'
+			
+		}
+		
+		else if strpos(".center", ".`position'") {
+			
+			.blabpos = 2
+			local mlabp = 0
+			
+		}
+		
+		else {
+			di as err "`invalid position `position''"
+			exit 198
+		}
+		
+		/// Orientation
+		
+		if (`"`orientation'"' == "vertical") local mlabang = 90
+		else if (`"`orientation'"' == "rhorizontal") local mlabang = 180
+		else if (`"`orientation'"' == "rvertical") local mlabang = 270
+		else {
+			local mlabang = 0
+			if !inlist(`"`orientation'"', "", "horizontal") di as txt `"(note: named style {bf:`orientation'} not found in class tb_orientstyle, default attributes used)"'
+		}
+		
+		local blabopts	mlabp(`mlabp') mlabang(`mlabang') mlabc(`color') 	///
+						msize(0) mcol(none)
+		
+		if ("`gap'" != "") local blabopts `blabopts' mlab`gap'
+		
+		if ("`size'" != "") local blabopts `blabopts' mlab`size'
+		
+		if ("`format'" == "") local format %12.1g
+				
+		.blabopts = `"`blabopts'"'
+		
+		.blabperc = ("`percentage'" != "")
+		
+		.blabfmt = `"`format'"'
+		
+	}
+		
+	else if !inlist(`"`anything'"', "", "none") {
+		di as txt `"(note: named style {bf:`anything'} not found in class barlabelstyle, default attributes used)"'
+	}
+	
+	else .blabpos = 0
+	
+end
+
+prog define .title
+	
+	syntax [ anything ], 													///
+		[ 																	///
+			PLACEment(string)												///
+			ORIENTation(string)												///
+			TITLEGap(numlist max=1) 										///
+			*																///
+		]
+	
+	if (`"`anything'"' != `""""') {
+		
+		if (`"`anything'"' == "") local anything = cond(`.vert', 			///
+										`""Intersection frequency""', 		///
+										`""Set frequency""')
+		
+		if ("`orientation'" == "") local orientation = cond(`.vert', 		///
+													   "vertical", 			///
+													   "horizontal")
+		
+		if ("`placement'" != "") local placement = strofreal(12 - 3 * `.vert')
+		
+		if ("`titlegap'" == "") local titlegap = (2.4 - 1.4 * `.vert') * 0.15
+		
+		local textopts place(`placement') orient(`orientation') `options'
+		
+		local posneg = 2 * `.vert' - 1
+		
+		local textypos = `posneg' * (`.axisgap' + `.axissize' / 2)
+		local textxpos = - `posneg' * `titlegap' + `.labpos'
+		
+		local textpos = cond(`.vert', "`textypos' `textxpos'", 				///
+									  "`textxpos' `textypos'")
+		
+		.optsyn = `"`.optsyn' text(`textpos' `anything', `textopts')"'
+		
+	}
+	
+end
+
+prog define .scale, sclass
+	
+	sreturn clear
+	
+	syntax anything,														///
+		[																	///
+			Range(numlist min=2 max=2 sort >=0)								///
+			LColor(string)													///
+			LSTYle(passthru)												///
+			LWidth(passthru)												///
+			LPattern(passthru)												///
+			off																///
+		]
+	
+	if ("`off'" == "") {
+		if ("`lcolor'" == "") local lcolor black
+		.plotsyn = `"`.plotsyn' (scatteri `anything', c(l) msize(0) mc(none) lc(`lcolor') `lstyle' `lwidth' `lpattern')"'
+	}
+	
+	if ("`range'" != "") sreturn local yscmax = word("`range'", 2)
+	
+end
+
+
+

@@ -20,8 +20,7 @@ program define mixi01_fmiv, eclass sortpreserve
         I0(varlist ts fv)                                    ///
         auto                                                 ///
         KERnel(string)                                       ///
-        BWIDth(real 0)                                       ///
-        BW(string)                                           ///
+        BW(real 0)                                           ///
         BMETh(string)                                        ///
         OVERID                                               ///
         VALidity                                             ///
@@ -34,13 +33,9 @@ program define mixi01_fmiv, eclass sortpreserve
     if "`i1vars'" == "" & "`i1'" != "" local i1vars `i1'
     if "`i0vars'" == "" & "`i0'" != "" local i0vars `i0'
 
-    * Aliases: iv() / sargan / bw()
+    * Aliases: iv() / sargan
     if "`instruments'" == "" & "`iv'" != "" local instruments `iv'
     if "`overid'" == "" & "`sargan'" != "" local overid "overid"
-    if "`bw'" != "" & `bwidth' == 0 {
-        capture confirm number `bw'
-        if !_rc local bwidth = `bw'
-    }
 
     * Parse `cmdline' to extract depvar, exogvars, and any (endog = inst) block
     local depvar    ""
@@ -100,6 +95,18 @@ program define mixi01_fmiv, eclass sortpreserve
 
     * ── Mark sample ──────────────────────────────────────────────
     marksample touse
+    * Strip the dependent variable from i1()/i0() if listed there
+    local dep_in_i1 : list depvar in i1vars
+    local dep_in_i0 : list depvar in i0vars
+    if `dep_in_i1' {
+        local i1vars : list i1vars - depvar
+        di as text "  (warning: removing dependent variable {bf:`depvar'} from i1())"
+    }
+    if `dep_in_i0' {
+        local i0vars : list i0vars - depvar
+        di as text "  (warning: removing dependent variable {bf:`depvar'} from i0())"
+    }
+
     markout `touse' `depvar' `exogvars' `endogvars' `instruments'
     if "`i1vars'" != "" markout `touse' `i1vars'
     if "`i0vars'" != "" markout `touse' `i0vars'
@@ -168,7 +175,7 @@ program define mixi01_fmiv, eclass sortpreserve
         "`touse'",                                        ///
         "`method'",                                       ///
         "`constant'" != "noconstant",                     ///
-        "`kernel'", `bwidth', "`bmeth'",                  ///
+        "`kernel'", `bw', "`bmeth'",                      ///
         "`overid'" != "",                                 ///
         "`validity'" != "",                               ///
         "`b'", "`V'", "`Omega'", "`bw_used'",            ///
@@ -403,7 +410,7 @@ real matrix _fmiv_lrcov(real matrix U, real scalar bw, string scalar ktype)
         w = _fmiv_kernel_weight(ktype, j/bw)
         if (abs(w) > 1e-15) Omega = Omega + w * _fmiv_sample_autocov(U, j)
     }
-    return((Omega + Omega') / 2)
+    return(makesymmetric(Omega))
 }
 
 real matrix _fmiv_onesided_lrcov(real matrix U, real scalar bw, string scalar ktype)
@@ -679,7 +686,7 @@ void _mixi01_fmiv_estimate(
             }
         }
 
-        S_z = (S_z + S_z') / 2
+        _makesymmetric(S_z)
         S_z_inv = invsym(S_z)
 
         // GMM estimator: beta = inv(X'Z S^{-1} Z'X) * X'Z S^{-1} Z' y+
@@ -723,7 +730,7 @@ void _mixi01_fmiv_estimate(
         VV = Om_cond_give * invsym(XPZX)
     }
 
-    VV = (VV + VV') / 2
+    _makesymmetric(VV)
 
     // ── 8.  Overidentification test (Hansen J) ────────────────
     real scalar J_stat, J_pval, df_overid
@@ -744,7 +751,7 @@ void _mixi01_fmiv_estimate(
             S_j = S_j + resid_fm[t_idx]^2 * (Zall[t_idx, .]' * Zall[t_idx, .])
         }
         S_j = S_j / T
-        S_j = (S_j + S_j') / 2
+        _makesymmetric(S_j)
 
         real colvector Zu_fm
         Zu_fm = cross(Zall, resid_fm)

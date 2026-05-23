@@ -138,7 +138,7 @@ real matrix mixi01_lrcov(real matrix U, real scalar K, string scalar kernel)
     }
 
     /* Force exact symmetry */
-    Omega = (Omega + Omega') / 2
+    _makesymmetric(Omega)
 
     return(Omega)
 }
@@ -656,7 +656,7 @@ struct mixi01_fmvar_result scalar mixi01_fmvar_est(
     /* Nonstationary block: Omega_ee.2 ⊗ (Ylag'Ylag)^{-1}  (T rate) */
     real matrix Omega_ee_2
     Omega_ee_2 = Omega_ee - Omega_eu * Omega_uu_inv * Omega_eu'
-    Omega_ee_2 = (Omega_ee_2 + Omega_ee_2') / 2
+    _makesymmetric(Omega_ee_2)
     /* Ensure PSD */
     if (min(diagonal(Omega_ee_2)) < 1e-12) {
         Omega_ee_2 = Omega_ee * 0.01
@@ -1007,7 +1007,7 @@ real matrix mixi01_makepsd(real matrix A)
     real scalar k, i
 
     k = rows(A)
-    S = (A + A') / 2
+    S = makesymmetric(A)
 
     /* Eigendecompose and zero out negative eigenvalues */
     symeigensystem(S, V=., Lambda=.)
@@ -1017,7 +1017,7 @@ real matrix mixi01_makepsd(real matrix A)
     }
 
     S = V * diag(Lambda) * V'
-    S = (S + S') / 2
+    _makesymmetric(S)
 
     return(S)
 }

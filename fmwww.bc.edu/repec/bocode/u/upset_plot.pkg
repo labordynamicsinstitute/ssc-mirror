@@ -1,0 +1,25 @@
+d 'UPSET_PLOT': module to produce UpSet plots for binary indicator variables
+d
+d   upset_plot calculates and displays intersection and set
+d frequencies for combinations of    binary indicator variables in
+d varlist, using the UpSet plot design described by Lex et    al.
+d (2014). 
+d
+d KW: upset plot
+d KW: binary indicators
+d
+d Requires: Stata version 18.5
+d
+d Distribution-Date: 20260522
+d
+d Author: Dylan Taylor,  London School of Hygiene and Tropical Medicine
+d Support: email dylanjamestaylor00@@gmail.com
+d
+f upset_plot.ado
+f upset_plot.sthlp
+f upset_barchart_options.sthlp
+f ../_/_upsetruleparse.ado
+f ../_/_upsetlabfetch.ado
+f ../_/_upsetexample.ado
+f upsetclass.class
+f upset_plot_dataex.dta

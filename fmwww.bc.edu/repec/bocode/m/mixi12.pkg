@@ -1,0 +1,51 @@
+d 'MIXI12': module for cointegration analysis of systems containing both I(1) and I(2) variables
+d
+d     mixi12 provides a one-stop pipeline for the empirical
+d analysis of multivariate systems    where the integration order
+d of the variables is unknown and may be a mixture of I(1) and	 
+d I(2).  Such systems arise naturally for nominal stock variables
+d (broad money, monetary    base, price indices) once levels - not
+d growth rates - are taken; the benchmark    applications are
+d long-run money demand and purchasing-power parity. 
+d
+d KW: order of integration
+d KW: statonarity
+d KW: nonstationary
+d KW: I(2)
+d
+d Requires: Stata version 14, dptest, multicoint from SSC (q.v.)
+d
+d Distribution-Date: 20260522
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f mixi12.ado
+f mixi12.sthlp
+f mixi12_cv.ado
+f mixi12_egh.ado
+f mixi12_gl.ado
+f mixi12_graph.ado
+f mixi12_haldrup.ado
+f mixi12_johansen.ado
+f mixi12_mco_compare.ado
+f mixi12_mco.ado
+f mixi12_sim.ado
+f mixi12_sw.ado
+f mixi12_trans.ado
+f mixi12_unit.ado
+f mixi12_cv.sthlp
+f mixi12_egh.sthlp
+f mixi12_gl.sthlp
+f mixi12_graph.sthlp
+f mixi12_haldrup.sthlp
+f mixi12_johansen.sthlp
+f mixi12_mco_compare.sthlp
+f mixi12_mco.sthlp
+f mixi12_sim.sthlp
+f mixi12_sw.sthlp
+f mixi12_trans.sthlp
+f mixi12_unit.sthlp
+f ../_/_mixi12_mata.ado
+f ../_/_mixi12_mata.mata
+f ../_/_mixi12_pretty.ado

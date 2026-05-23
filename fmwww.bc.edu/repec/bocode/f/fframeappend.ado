@@ -1,4 +1,4 @@
-*! fframeappend 1.1.2 7jan2025 Jürgen Wiemers (juergen.wiemers@iab.de)
+*! fframeappend 1.1.4 22may2026 Jürgen Wiemers (juergen.wiemers@iab.de)
 *! Syntax: fframeappend [varlist] [if] [in], using(framelist) [force preserve drop Generate(name)]
 *!
 *! fframeappend ("fast frame append") appends variables from using frames 'framelist'
@@ -12,11 +12,13 @@
 program fframeappend
     version 16
 
-    // Retokenize 0
-    local 0: list clean 0    
+    // Note: `0' is intentionally NOT passed through `list clean'. Doing so corrupts string `if'
+    // conditions (e.g. `if x=="a"'): the embedded double quotes make `list clean' absorb the comma
+    // that separates the command from its options. Compound quotes are used throughout below
+    // because `0' may contain such double quotes.
 
     // Check if using() is given
-    if !strmatch("`0'", "*using(*") {
+    if !strmatch(`"`0'"', "*using(*") {
         display as error "Option 'using()' required"
         exit 198
     }
@@ -26,7 +28,7 @@ program fframeappend
     local sortlist `r(sortlist)'
 
     // Replace abbreviated frame list with expanded list; rebuild local 0 with expanded list
-    local using_frames = regexr( regexr( "`0'", "(.*)using\(", "" ) , "\).*$", "")
+    local using_frames = regexr( regexr( `"`0'"', "(.*)using\(", "" ) , "\).*$", "")
 
     local using_frames: list clean using_frames
     local using_frames: list uniq using_frames
@@ -35,13 +37,17 @@ program fframeappend
         qui frames dir `frame'
         local expanded_frames `expanded_frames' `r(frames)'
     }
-    local expanded_frames: list uniq expanded_frames    
-    local 0 = subinstr("`0'", "`using_frames'", "`expanded_frames'", 1)
+    local expanded_frames: list uniq expanded_frames
+    // Rebuild `0' by replacing the whole using(...) parenthetical with the expanded frame list.
+    // (A regex replace is used rather than subinstr so that it does not depend on `0' being
+    //  space-normalised and does not accidentally match the frame name elsewhere in `0'.)
+    local 0 = regexr(`"`0'"', "using\([^)]*\)", "using(`expanded_frames')")
 
     // Check if current frame is included in using frames
     qui frame
-    local master = r(currentframe)    
-    if strmatch("`expanded_frames'", "*`master'") {
+    local master = r(currentframe)
+    local self_append: list master in expanded_frames
+    if `self_append' {
         display as error "You are trying to append the current frame to itself"
         exit 110
     }
@@ -130,18 +136,32 @@ end
 // Main routine
 program fframeappend_run    
     // Get name of using frame from args to be able to
-    // run 'syntax' on the using frame.
-    local using = regexr( regexr( "`0'", "(.*)using\(", "" ) , "\).*$", "")
+    // run 'syntax' on the using frame. Compound quotes: `0' may contain a string `if' condition.
+    local using = regexr( regexr( `"`0'"', "(.*)using\(", "" ) , "\).*$", "")
 
     frame `using': syntax [varlist] [if] [in], using(namelist min=1) [force]
 
     qui frame
     local master = r(currentframe)
 
-    // Edge case: empty master frame
+    // Edge case: empty master frame (no variables). Faithfully copy the using frame
+    // (preserving variable labels, value labels, display formats and characteristics),
+    // then honour any if/in and varlist restrictions on the copy. Row restrictions are
+    // applied first, while all variables are still present, so an `if' expression may
+    // reference variables that are not part of `varlist'. When no restriction is given
+    // this reduces to a plain `frame copy' (the previous behaviour).
     mata: st_local("master_has_vars", strofreal(st_nvar()))
     if (!`master_has_vars') {
         frame copy `using' `master', replace
+        cwf `master'
+        if (`"`if'`in'"' != "") {     // compound quotes: an `if' expression may contain double quotes
+            tempvar touse
+            qui mark `touse' `if' `in'
+            qui keep if `touse'
+            qui drop `touse'
+        }
+        qui describe, fullnames varlist
+        if ("`varlist'" != "`r(varlist)'") qui keep `varlist'
         exit 0
     }
 
@@ -149,16 +169,17 @@ program fframeappend_run
     qui describe, fullnames varlist
     local mastervars = r(varlist)
 
-    // Check for variables with incompatible type (string <-> numeric)
-    if "`force'" == "" {
-        local commonvars: list varlist & mastervars
-        mata: incompatible_vars("`commonvars'", "`using'", "`master'")
-        if "`incompatible_vars'" != "" {
-            display as error "You are trying to append numeric to string variables (or vice versa) for the following variables: "
-            display as error "`incompatible_vars'"
-            display as error "Use option 'force' if you want to append anyway."
-            exit 106
-        }
+    // Identify common variables and those with incompatible type (string <-> numeric).
+    // NB: commonvars must be computed regardless of `force'. Otherwise the type promotion
+    // below is silently skipped when `force' is given, which truncates strings and loses
+    // numeric precision (e.g. appending a double to a byte master keeps the byte type).
+    local commonvars: list varlist & mastervars
+    mata: incompatible_vars("`commonvars'", "`using'", "`master'")
+    if "`force'" == "" & "`incompatible_vars'" != "" {
+        display as error "You are trying to append numeric to string variables (or vice versa) for the following variables: "
+        display as error "`incompatible_vars'"
+        display as error "Use option 'force' if you want to append anyway."
+        exit 106
     }
 
     // Promote variables in master frame if necessary
@@ -303,6 +324,28 @@ end
 
 
 * Version history
+* 1.1.4 - Bugfixes:
+*         - When option `force' was specified, variable type promotion in the master frame was inadvertently
+*           skipped altogether. As a result, appending a variable whose type in the using frame was "larger"
+*           than in the master frame (e.g. a `double' into a `byte' master variable, or a `str7' into a `str3'
+*           master variable) could silently truncate strings or lose numeric precision. Type promotion is now
+*           performed regardless of `force'. Type-incompatible variables (string <-> numeric) continue to keep
+*           the master type when `force' is given, as before.
+*         - String `if' conditions (e.g. `if x=="a"') caused the command to fail with a type-mismatch /
+*           invalid-syntax error. The command line was normalised with `: list clean', which mangled the
+*           embedded double quotes (absorbing the comma before the options), and the command line was
+*           subsequently handled with ordinary rather than compound double quotes. String `if' conditions
+*           now work.
+*         - When appending into a master frame that has no variables, any `varlist', `if' or `in' restriction
+*           was ignored and the complete using frame was copied. The restrictions are now honoured while still
+*           preserving the using frame's variable labels, value labels, display formats and characteristics.
+*           (With no restriction the behaviour is unchanged: a plain copy of the using frame.)
+* 1.1.3 - Bugfixes:
+*         - The check guarding against appending the current frame to itself used a suffix string match
+*           (`strmatch("`expanded_frames'", "*`master'")`). This produced false positives when a using frame
+*           name merely ended with the master frame name (e.g. master `decisions`, using `fr_entferne_decisions`)
+*           and false negatives when the master frame was not the last name in the using list. The check now uses
+*           exact list membership (`: list master in expanded_frames`). (Thanks to mkaulisch for reporting the issue.)
 * 1.1.2 - Bugfixes:
 *         - Previously, `strX' variables were not always correctly promoted to `strY' variables for X < Y. This could lead
 *           to an appended string variable being truncated. This has been fixed. (Thanks to Roger Newson for reporting the issue.)

@@ -1,0 +1,28 @@
+d 'URTABLE': module to perform ADF, DF-GLS, PP, and KPSS unit-root tests with data-driven lag/bandwidth selection
+d
+d      urtable reports four unit-root and stationarity tests on a
+d single time series in one    comparison table: the augmented
+d Dickey-Fuller (ADF), the Elliott-Rothenberg-Stock   
+d GLS-detrended DF (DF-GLS) in three variants based on different
+d lag-selection criteria,    the Phillips-Perron (PP), and the
+d Kwiatkowski-Phillips-Schmidt-Shin (KPSS) test. All lag    lengths
+d and bandwidths are chosen data-driven. The output table includes
+d critical values    at 1%, 5%, and 10%, decision flags, and a
+d one-sentence conclusion at the 5% level that	  aggregates the
+d evidence across the four tests. 
+d
+d KW: unit root
+d KW: ADF
+d KW: DFGLS
+d KW: PP
+d KW: KPSS
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260522
+d
+d Author:  Y. Baris Altayligil,  Istanbul University, Department of Economics
+d Support: email  ybaris@@istanbul.edu.tr
+d
+f urtable.ado
+f urtable.sthlp

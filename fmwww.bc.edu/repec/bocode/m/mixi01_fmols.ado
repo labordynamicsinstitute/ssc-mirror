@@ -14,7 +14,7 @@ program define mixi01_fmols, eclass sortpreserve
         noCONStant                                      ///
         TRend(integer 0)                                ///
         KERnel(string)                                  ///
-        BWIDth(real 0)                                  ///
+        BW(real 0)                                      ///
         BMETh(string)                                   ///
         VLAG(integer 0)                                 ///
         Level(real 95)                                  ///
@@ -49,6 +49,18 @@ program define mixi01_fmols, eclass sortpreserve
     if "`indepvars'" == "" {
         di as error "at least one regressor required"
         exit 198
+    }
+
+    * Strip the dependent variable from i1()/i0() if the user listed it there
+    local dep_in_i1 : list depvar in i1vars
+    local dep_in_i0 : list depvar in i0vars
+    if `dep_in_i1' {
+        local i1vars : list i1vars - depvar
+        di as text "  (warning: removing dependent variable {bf:`depvar'} from i1())"
+    }
+    if `dep_in_i0' {
+        local i0vars : list i0vars - depvar
+        di as text "  (warning: removing dependent variable {bf:`depvar'} from i0())"
     }
 
     markout `touse' `depvar' `indepvars'
@@ -131,7 +143,7 @@ program define mixi01_fmols, eclass sortpreserve
         "`constant'" != "noconstant",                 ///
         `trend',                                      ///
         "`kernel'",                                   ///
-        `bwidth',                                     ///
+        `bw',                                         ///
         "`bmeth'",                                    ///
         `vlag',                                       ///
         `level',                                      ///
@@ -202,7 +214,10 @@ program define mixi01_fmols, eclass sortpreserve
     ereturn local i1vars    "`i1vars'"
     ereturn local i0vars    "`i0vars'"
     ereturn local kernel    "`kernel'"
+    if `bw' > 0  local bmeth_disp "User"
+    else         local bmeth_disp = proper("`bmeth'")
     ereturn local bmeth     "`bmeth'"
+    ereturn local bmeth_disp "`bmeth_disp'"
     ereturn local constant  "`constant'"
     ereturn local properties "b V"
 
@@ -235,7 +250,8 @@ program define _mixi01_fmols_display
     if "`kernel'" == "qs" local kerndisp "Quad. Spectral"
 
     local bwdisp : di %6.2f `bw'
-    local bwmethod = proper("`bmeth'")
+    local bwmethod "`e(bmeth_disp)'"
+    if "`bwmethod'" == "" local bwmethod = proper("`bmeth'")
 
     local r2disp : di %8.4f `r2'
     local r2adisp : di %8.4f `r2a'
@@ -487,7 +503,7 @@ real matrix _fmols_lrcov(real matrix U, real scalar bw, string scalar ktype)
     }
 
     // Force symmetry
-    Omega = (Omega + Omega') / 2
+    _makesymmetric(Omega)
     return(Omega)
 }
 
@@ -889,7 +905,7 @@ void _mixi01_fmols_estimate(
     }
 
     // Force symmetry
-    VV = (VV + VV') / 2
+    _makesymmetric(VV)
 
     // ── 14. Build integration order vector ───────────────────
     real matrix iord

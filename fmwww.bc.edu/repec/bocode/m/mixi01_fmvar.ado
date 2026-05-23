@@ -15,7 +15,7 @@ program define mixi01_fmvar, eclass sortpreserve
         noCONStant                                            ///
         TRend(integer 0)                                      ///
         KERnel(string)                                        ///
-        BWIDth(real 0)                                        ///
+        BW(real 0)                                        ///
         BMETh(string)                                         ///
         VLAG(integer 0)                                       ///
         Level(real 95)                                        ///
@@ -97,7 +97,7 @@ program define mixi01_fmvar, eclass sortpreserve
         `lags', `rank',                                  ///
         "`constant'" != "noconstant",                    ///
         `trend',                                         ///
-        "`kernel'", `bwidth', "`bmeth'", `vlag',         ///
+        "`kernel'", `bw', "`bmeth'", `vlag',             ///
         "`b'", "`V'", "`Sigma'", "`F_comp'",            ///
         "`eigenvals'", "`bw_used'"                       ///
     )
@@ -355,7 +355,7 @@ real matrix _fmvar_lrcov(real matrix U, real scalar bw, string scalar ktype)
             Omega = Omega + w * _fmvar_sample_autocov(U, j)
         }
     }
-    return((Omega + Omega') / 2)
+    return(makesymmetric(Omega))
 }
 
 real matrix _fmvar_onesided_lrcov(real matrix U, real scalar bw, string scalar ktype)
@@ -649,7 +649,7 @@ void _mixi01_fmvar_estimate(
         Om_ee_2 = Om_ee
     }
     // Force positive semi-definiteness
-    Om_ee_2 = (Om_ee_2 + Om_ee_2') / 2
+    _makesymmetric(Om_ee_2)
 
     // Full VCE: Kronecker product (equation by equation is simpler)
     // For display: V_eq(j) = Om_ee_2[j,j] * inv(X'X)
@@ -662,7 +662,7 @@ void _mixi01_fmvar_estimate(
         s_end   = eq*kx
         VV_full[s_start::s_end, s_start::s_end] = Om_ee_2[eq, eq] * XXinv
     }
-    VV_full = (VV_full + VV_full') / 2
+    _makesymmetric(VV_full)
 
     // ── 11. Companion matrix and eigenvalues ──────────────────
     real matrix F_comp, eig_r, eig_i, eigmod

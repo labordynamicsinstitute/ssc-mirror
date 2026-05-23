@@ -39,6 +39,18 @@ program define mixi01_acl, eclass sortpreserve
         exit 198
     }
 
+    * Strip the dependent variable from i1()/i0() if the user listed it there
+    local dep_in_i1 : list depvar in i1vars
+    local dep_in_i0 : list depvar in i0vars
+    if `dep_in_i1' {
+        local i1vars : list i1vars - depvar
+        di as text "  (warning: removing dependent variable {bf:`depvar'} from i1())"
+    }
+    if `dep_in_i0' {
+        local i0vars : list i0vars - depvar
+        di as text "  (warning: removing dependent variable {bf:`depvar'} from i0())"
+    }
+
     markout `touse' `depvar' `indepvars'
     if "`i1vars'" != "" markout `touse' `i1vars'
     if "`i0vars'" != "" markout `touse' `i0vars'
@@ -473,7 +485,7 @@ void _mixi01_acl_estimate(
     // Variance: V = sigma^2 (X'X)^{-1}
     real matrix V
     V = sigma2 * XXinv
-    V = (V + V') / 2
+    _makesymmetric(V)
 
     // Self-normalisation blocks: Sxx = sum x_t x_t', Szz = sum z_t z_t'
     real matrix Sxx, Szz

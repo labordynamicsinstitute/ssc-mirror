@@ -679,7 +679,7 @@ void _mixi01_svar_estimate(
         s2 = eq*kx
         VV_full[s1::s2, s1::s2] = Sigma[eq, eq] * XXinv
     }
-    VV_full = (VV_full + VV_full') / 2
+    _makesymmetric(VV_full)
 
     // Vectorise coefficients
     b_vec = J(1, nparam, 0)
