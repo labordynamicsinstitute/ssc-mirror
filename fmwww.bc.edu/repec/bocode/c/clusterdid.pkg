@@ -1,0 +1,27 @@
+d 'CLUSTERDID': module providing power analysis for cluster randomized trials, difference-in-differences sample size, and repeated cross-sections
+d
+d      clusterdid establishes a generalized, parallel-group
+d difference-in-differences (DiD)    cluster randomized trial
+d framework observed over a longitudinal panel of T = T0 + T1	
+d periods. It integrates the multi-way and nested error component
+d models from Baltagi	 (2021) to capture permanent and
+d time-varying cluster shocks.	  Unlike legacy power commands
+d restricted to single post-treatment snapshots or purely   
+d standardized metrics, clusterdid natively accommodates
+d multi-period repeated    cross-sections, allowing researchers to
+d evaluate how expanding baseline and endline	 tracking horizons
+d mathematically reduces the variance multiplier. 
+d
+d KW: power analysis
+d KW: DiD
+d KW: randomized trial
+d
+d Requires: Stata version 
+d
+d Distribution-Date: 20260524
+d
+d Author: Wael Moussa,    FHI 360
+d Support: email wmoussa@@fhi360.org
+d
+f clusterdid.ado
+f clusterdid.sthlp

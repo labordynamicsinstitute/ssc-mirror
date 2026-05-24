@@ -22768,6 +22768,7 @@ fmwww.bc.edu/repec/bocode/c/clustpop.hlp
 fmwww.bc.edu/repec/bocode/c/cprplot2.hlp
 fmwww.bc.edu/repec/bocode/c/cf2.hlp
 fmwww.bc.edu/repec/bocode/c/cprd_staff.sthlp
+fmwww.bc.edu/repec/bocode/c/clusterdid.pkg
 fmwww.bc.edu/repec/bocode/c/classifylasso.mata
 fmwww.bc.edu/repec/bocode/c/circgph.ado
 fmwww.bc.edu/repec/bocode/c/curvefit.html
@@ -22950,6 +22951,7 @@ fmwww.bc.edu/repec/bocode/c/chronogram.sthlp
 fmwww.bc.edu/repec/bocode/c/clr2.ado
 fmwww.bc.edu/repec/bocode/c/cycleplot.html
 fmwww.bc.edu/repec/bocode/c/csti.pkg
+fmwww.bc.edu/repec/bocode/c/clusterdid.sthlp
 fmwww.bc.edu/repec/bocode/c/calipmatch.sthlp
 fmwww.bc.edu/repec/bocode/c/center.pkg
 fmwww.bc.edu/repec/bocode/c/cigsales.dta
@@ -23494,6 +23496,7 @@ fmwww.bc.edu/repec/bocode/c/countyfips.pkg
 fmwww.bc.edu/repec/bocode/c/ceqdomext.sthlp
 fmwww.bc.edu/repec/bocode/c/catplot2010.ado
 fmwww.bc.edu/repec/bocode/c/clustergram_examples.ado
+fmwww.bc.edu/repec/bocode/c/clusterdid.ado
 fmwww.bc.edu/repec/bocode/c/CItest2bDescription.txt
 fmwww.bc.edu/repec/bocode/c/calldiagram.sthlp
 fmwww.bc.edu/repec/bocode/c/cpredict.hlp
