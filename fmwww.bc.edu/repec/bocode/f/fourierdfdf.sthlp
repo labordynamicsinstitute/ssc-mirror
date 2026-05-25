@@ -15,6 +15,12 @@
 {p2col:{cmd:fourierdfdf} {hline 2}}Double Frequency Fourier Dickey-Fuller unit root test{p_end}
 {p2colreset}{...}
 
+{pstd}
+{it:Part of the} {bf:{helpb fourierur}} {it:package.} Other tests:
+{helpb fourierlm}, {helpb fourierdf}, {helpb fouriergls},
+{helpb fourierkpss}, {helpb fourierfffff}.
+{p_end}
+
 
 {marker syntax}{...}
 {title:Syntax}

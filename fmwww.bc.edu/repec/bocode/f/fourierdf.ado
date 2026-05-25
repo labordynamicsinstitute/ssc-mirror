@@ -2,7 +2,7 @@
 *! Economics Letters, 117 (2012), 196-199
 *! Ported from GAUSS code by Saban Nazlioglu
 *! Compatible with Stata 14+
-*! Package: ffrroot v1.0
+*! Package: fourierur v1.0
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 *! Date: 11 March 2026
 

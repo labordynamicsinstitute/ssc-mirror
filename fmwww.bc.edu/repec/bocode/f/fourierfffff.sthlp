@@ -14,6 +14,12 @@
 {p2col:{cmd:fourierfffff} {hline 2}}Fractional Frequency Flexible Fourier Form DF test (FFFFF-DF){p_end}
 {p2colreset}{...}
 
+{pstd}
+{it:Part of the} {bf:{helpb fourierur}} {it:package.} Other tests:
+{helpb fourierlm}, {helpb fourierdf}, {helpb fouriergls},
+{helpb fourierkpss}, {helpb fourierdfdf}.
+{p_end}
+
 
 {marker syntax}{...}
 {title:Syntax}

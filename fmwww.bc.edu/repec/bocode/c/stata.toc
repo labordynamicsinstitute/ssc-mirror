@@ -152,6 +152,7 @@ p cluster module to perform nonhierarchical k-means (or k-medoids) cluster analy
 p cluster2 module to perform power analysis for two-level cluster randomized trials
 p cluster3 module to perform power analysis for up to three-level cluster randomized trial
 p clusterbs module to perform a pairs symmetric cluster bootstrap-t procedure
+p clusterdid module providing power analysis for cluster randomized trials, difference-in-differences sample size, and repeated cross-sections
 p clustergram module to produce graph for visualizing hierarchical and non-hierarchical cluster analyses
 p clustersampsim module to simulate cluster-randomized trial sample size requirements 
 p clustpop module to estimate population cluster group assignments

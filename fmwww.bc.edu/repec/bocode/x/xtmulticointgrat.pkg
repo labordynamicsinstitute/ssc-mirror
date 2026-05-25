@@ -1,0 +1,34 @@
+d 'XTMULTICOINTGRAT': module for panel multicointegration testing with cross-section independence or approximate common factors
+d
+d	 xtmulticointgrat tests for multicointegration - a "second
+d layer" of long-run equilibrium    - in a balanced panel of N
+d cross-sectional units observed over T periods.  A standard   
+d cointegrating relationship is        y_i,t = c_t α_i + x_i,t
+d β_i + ϑ_i,t    with ϑ_i,t I(0).  Multicointegration arises
+d when the cumulated equilibrium error S_i,t =	  Σ ϑ_i,j is
+d itself cointegrated with the original I(1) flows, that is	  
+d y_i,t = m_t μ_i + S_i,t γ_i + u_i,t    with u_i,t I(0).  The
+d classical Granger-Lee (1989) production / sales / inventory
+d example    is the canonical illustration.  When at least two
+d cross-sectional units share common	stochastic trends, the test
+d must be modified to account for cross-section dependence;   
+d Berenguer-Rico & Carrion-i-Silvestre (2006) adapt the Bai-Ng
+d (2004) PANIC framework for	this purpose. 
+d
+d KW: multicointegration
+d KW: cross-sectional independence
+d KW: common factors
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260524
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtmulticointgrat.ado
+f xtmulticointgrat.sthlp
+f xtmulticointgrat_graph.ado
+f xtmulticointgrat_graph.sthlp
+f ../_/_xtmcg_mata.ado
+f ../_/_xtmcg_mata.mata

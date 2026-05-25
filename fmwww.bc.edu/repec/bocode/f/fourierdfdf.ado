@@ -2,7 +2,7 @@
 *! Computational Economics, 59: 445-470
 *! With Sieve Bootstrap extension (Gerolimetto & Magrini, RIEDS 2026)
 *! Compatible with Stata 14+
-*! Package: ffrroot v1.0
+*! Package: fourierur v1.0
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 *! Date: 11 March 2026
 

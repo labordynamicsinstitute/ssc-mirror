@@ -14,6 +14,12 @@
 {p2col:{cmd:fourierkpss} {hline 2}}Fourier KPSS stationarity test{p_end}
 {p2colreset}{...}
 
+{pstd}
+{it:Part of the} {bf:{helpb fourierur}} {it:package.} Other tests:
+{helpb fourierlm}, {helpb fourierdf}, {helpb fouriergls},
+{helpb fourierfffff}, {helpb fourierdfdf}.
+{p_end}
+
 
 {marker syntax}{...}
 {title:Syntax}

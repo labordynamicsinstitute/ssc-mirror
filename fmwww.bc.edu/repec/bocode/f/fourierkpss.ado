@@ -2,7 +2,7 @@
 *! Journal of Time Series Analysis, 27(3), 381-409
 *! Ported from GAUSS code by Saban Nazlioglu
 *! Compatible with Stata 14+
-*! Package: ffrroot v1.0
+*! Package: fourierur v1.0
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 *! Date: 11 March 2026
 

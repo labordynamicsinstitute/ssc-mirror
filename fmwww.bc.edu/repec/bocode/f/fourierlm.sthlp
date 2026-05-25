@@ -15,6 +15,12 @@
 {p2col:{cmd:fourierlm} {hline 2}}Fourier LM unit root test with flexible Fourier form{p_end}
 {p2colreset}{...}
 
+{pstd}
+{it:Part of the} {bf:{helpb fourierur}} {it:package.} Other tests:
+{helpb fourierdf}, {helpb fouriergls}, {helpb fourierkpss},
+{helpb fourierfffff}, {helpb fourierdfdf}.
+{p_end}
+
 
 {marker syntax}{...}
 {title:Syntax}

@@ -89,6 +89,7 @@ p for211 modules to document features of for and extend the for command
 p forec_instab module to perform forecast comparison and forecast rationality tests
 p forest module to visualize results from multiple regressions on a single independent variable
 p forfile module to execute command for each matching file
+p fourierur module for Flexible Fourier Form unit root and stationarity tests
 p fprank module to compute Two-Sample Fligner-Policello Robust Rank Order Test
 p fpref module to add prefix or suffix to filenames
 p fpro module to compute Financial Protection Indicators for Health Expenditures

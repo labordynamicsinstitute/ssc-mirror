@@ -1,0 +1,36 @@
+d 'FOURIERUR': module for Flexible Fourier Form unit root and stationarity tests
+d
+d	fourierur is the single main command of the fourierur
+d package.  It provides a unified    interface to six Fourier-based
+d unit root and stationarity tests that use a Flexible	  Fourier
+d Form (FFF) to approximate unknown smooth structural breaks.	
+d With test(name) you pick one test to run; with test(all) (the
+d default) it runs all six    tests sequentially and prints a
+d comparative summary. Each test can also still be called   
+d directly by name — see the links at the top of the help file. 
+d
+d KW: unit root
+d KW: flexible Fourier form
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260524
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f fourierur.ado
+f fourierdf.sthlp
+f fourierdf.ado
+f fourierdfdf.ado
+f fourierfffff.ado
+f fouriergls.ado
+f fourierkpss.ado
+f fourierlm.ado
+f fourierdfdf.sthlp
+f fourierfffff.sthlp
+f fouriergls.sthlp
+f fourierkpss.sthlp
+f fourierlm.sthlp
+f fourierur.sthlp
+f fourierur_example.do

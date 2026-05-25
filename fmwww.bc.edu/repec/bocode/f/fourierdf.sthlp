@@ -14,6 +14,12 @@
 {p2col:{cmd:fourierdf} {hline 2}}Fourier ADF unit root test with flexible Fourier form{p_end}
 {p2colreset}{...}
 
+{pstd}
+{it:Part of the} {bf:{helpb fourierur}} {it:package.} Other tests:
+{helpb fourierlm}, {helpb fouriergls}, {helpb fourierkpss},
+{helpb fourierfffff}, {helpb fourierdfdf}.
+{p_end}
+
 
 {marker syntax}{...}
 {title:Syntax}

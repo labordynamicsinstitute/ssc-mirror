@@ -1,15 +1,25 @@
 d 'DRMMWS': module to perform doubly-robust marginal mean weighting through stratification
 d
 d  drmmws estimates doubly-robust effects of a binary treatment on
-d an outcome, controlling for observed confounding variables, using
-d a data pre-processing procedure that combines elements of two
-d propensity score-based techniques, stratification and weighting
-d (referred to as marginal mean weighting through stratification
-d [MMWS]). drmmws estimates the potential-outcome means (or
-d medians) for each treatment group, and the average (or median)
-d treatment effect (ATE, MTE), or the average (or median) treatment
-d effect on the treated (ATT, MTE). Standard errors, p values, and
-d confidence intervals are computed using a bootstrap procedure
+d an outcome, controlling for observed confounding variables (See
+d Linden [2017a] for details of the method).  Drmmws uses weighted
+d regression coefficients to compute averages (or medians) of each
+d treatment group's predicted outcome distribution, with weights
+d computed for each observation based on their actual treatment
+d assignment and stratum (See Hong [2010, 2012], and Linden
+d [2014]). The contrast of these averages (or medians) estimates
+d the treatment effects.  drmmws estimates the potential-outcome
+d means (or medians) for each treatment group, and the average (or
+d median) treatment effect (ATE, MTE), or the average (or median)
+d treatment effect on the treated (ATT, MTT). By default, standard
+d errors are computed analytically using margins applied to each
+d weighted GLM outcome model. The standard error of the treatment
+d effect is then derived using the delta method (square root of the
+d sum of squared standard errors of the two potential outcome
+d means). Results are displayed in the standard Stata coefficient
+d table with z-statistics,  p-values, and confidence intervals.
+d Specifying the bootstrap option instead obtains standard errors,
+d p values, and confidence intervals using a bootstrap procedure
 d which incorporates estimation of both the propensity score and
 d outcome models. 
 d
@@ -22,7 +32,7 @@ d KW: causal inference
 d
 d Requires: Stata version 13 
 d
-d Distribution-Date: 20170128
+d Distribution-Date: 20260525
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
@@ -30,4 +40,6 @@ d
 f drmmws.ado
 f drmmws_bs.ado
 f drmmws.sthlp
+f ../m/mmws.ado
+f ../m/mmws.sthlp
 f drmmws_proof.do
