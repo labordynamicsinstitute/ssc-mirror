@@ -1,9 +1,10 @@
 {smcl}
+{* *! version 2.0.0 24May2026}{...}
 {* *! version 1.0.0 06Jan2017}{...}
 
 {title:Title}
 
-{p2colset 5 15 20 2}{...}
+{p2colset 5 15 19 2}{...}
 {p2col:{hi:drmmws} {hline 2}} Doubly-robust marginal mean weighting through stratification  {p_end}
 {p2colreset}{...}
 
@@ -26,8 +27,11 @@
 {opt att}
 {opt med:ian}
 {opt comm:on}
+{opt boot:strap}
+{opt nodots}
 {opt seed}({it:integer})
-{opt reps}({it:integer}) ]
+{opt reps}({it:integer})
+{opt level}({it:#}) ]
 
 
 {p 4 4 2}
@@ -44,8 +48,11 @@
 {synopt:{opt att}} estimates average treatment effect on the treated; default is the average treatment effect in the population {p_end}
 {synopt:{opt med:ian}} estimates median treatment effects. Can be combined with {cmd:att} to estimate the median treatment effect on the treated {p_end}
 {synopt:{opt comm:on}} restricts the analysis to only those units within the region of common support {p_end}
-{synopt:{opt seed}{cmd:(}{it:integer}{cmd:)}} sets the random-number seed for the bootstrap procedure {p_end}
-{synopt:{opt reps}{cmd:(}{it:integer}{cmd:)}} specifies the number of replications to be performed in the bootstrap procedure; default is 200 {p_end}
+{synopt:{opt boot:strap}} requests bootstrap standard errors. By default, standard errors are computed analytically using {cmd:margins} {p_end}
+{synopt:{opt nodots}} suppresses display of the replication dots during bootstrap (only relevant with {cmd:bootstrap}) {p_end}
+{synopt:{opt seed}{cmd:(}{it:integer}{cmd:)}} sets the random-number seed for the bootstrap procedure (only relevant with {cmd:bootstrap}) {p_end}
+{synopt:{opt reps}{cmd:(}{it:integer}{cmd:)}} specifies the number of replications to be performed in the bootstrap procedure; default is 200 (only relevant with {cmd:bootstrap}) {p_end}
+{synopt:{opt level}{cmd:(}{it:#}{cmd:)}} sets the confidence level; default is {cmd:c(level)} (usually 95) {p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
@@ -57,10 +64,18 @@
 
 {pstd}
 {opt drmmws} estimates doubly-robust effects of a binary treatment on an outcome, controlling for observed confounding variables (See Linden [2017a] for details of the method). 
-{opt drmmws} use weighted regression coefficients to compute averages (or medians) of each treatment group's predicted outcome distribution, with weights computed for each observation 
+{opt drmmws} uses weighted regression coefficients to compute averages (or medians) of each treatment group's predicted outcome distribution, with weights computed for each observation 
 based on their actual treatment assignment and stratum (See Hong [2010, 2012], and Linden [2014]). The contrast of these averages (or medians) estimates the treatment effects. 
 {opt drmmws} estimates the potential-outcome means (or medians) for each treatment group, and the average (or median) treatment effect (ATE, MTE), or the average (or median) 
-treatment effect on the treated (ATT, MTE). Standard errors, {it:p} values, and confidence intervals are computed using a bootstrap procedure which incorporates estimation of both 
+treatment effect on the treated (ATT, MTT).
+
+{pstd}
+By default, standard errors are computed analytically using {cmd:margins} applied to each weighted GLM outcome model. The standard error of the treatment effect is then derived
+using the delta method (square root of the sum of squared standard errors of the two potential outcome means). Results are displayed in the standard Stata coefficient table
+with z-statistics, p-values, and confidence intervals.
+
+{pstd}
+Specifying the {opt bootstrap} option instead obtains standard errors, {it:p} values, and confidence intervals using a bootstrap procedure which incorporates estimation of both
 the propensity score and outcome models.
 
 {pstd}
@@ -75,6 +90,10 @@ can remove over 90% of the initial bias due to the covariates used to generate t
 stratification solution for the specific data at hand. This can be accomplished by first running the user-written program {help pstrata} to determine how many quantiles
 are necessary to achieve balance on the propensity score (Linden [2017b] found that {help pstrata} consistently achieved better covariate balance and reduced bias when compared
 to 5 quantiles). Once the optimal number of quantiles has been determined, this value can be passed on to {opt drmmws} in the {opt nstrata()} option.
+
+{pstd}
+When {cmd:median} is specified without {cmd:bootstrap}, point estimates are displayed but standard errors are not available (quantile regression models do not support
+{cmd:margins}). Use the {cmd:bootstrap} option to obtain standard errors for median treatment effects.
 
 
 
@@ -94,14 +113,14 @@ to determine the optimal number of quantiles for the given dataset.
 {cmd:family(}{it:familyname}{cmd:)} uses the probability distribution of the generalized linear outcome model. See {help glm##familyname:familyname} for all available options.
 
 {p 4 8 2}
-{cmd:link(}{it:linkname}{cmd:)}is the link function of the generalized linear outcome model. See {help glm##linkname:linkname} for all available options.
+{cmd:link(}{it:linkname}{cmd:)} is the link function of the generalized linear outcome model. See {help glm##linkname:linkname} for all available options.
 
 {p 4 8 2}
 {cmd:att} specifies that {opt drmmws} should estimate the average treatment effect on the treated (ATT). The default is to estimate the average treatment effect in the population (ATE).
 
 {p 4 8 2}
 {cmd:median} specifies that {opt drmmws} should estimate the median treatment effect (estimated using quantile regression). {opt median} can be combined with the {opt att} option to
-estimate the median treatment effect on the treated (MTT).
+estimate the median treatment effect on the treated (MTT). Note: standard errors are not available for median estimates without {cmd:bootstrap}.
 
 {p 4 8 2}
 {cmd:common} restricts the analysis to only those units within the region of common support. {opt drmmws} generates weights for those observations within the region of common 
@@ -109,12 +128,22 @@ estimate the median treatment effect on the treated (MTT).
 	on common support.
 
 {p 4 8 2}
-{cmd:seed(}{it:#}{cmd:)} sets the random-number seed for the bootstrap procedure.
+{cmd:bootstrap} requests that standard errors and confidence intervals be computed using a bootstrap procedure. Without this option, standard errors are derived analytically
+using {cmd:margins}. The bootstrap incorporates uncertainty from both the propensity score and outcome model estimation steps.
+
+{p 4 8 2}
+{cmd:nodots} suppresses display of the replication dots that appear by default during bootstrap estimation. Only relevant when {cmd:bootstrap} is specified.
+
+{p 4 8 2}
+{cmd:seed(}{it:#}{cmd:)} sets the random-number seed for the bootstrap procedure. Only relevant when {cmd:bootstrap} is specified.
 	
 {p 4 8 2}
 {cmd:reps(}{it:#}{cmd:)} specifies the number of bootstrap replications to be performed.  The default is 200.  A total of 50-200 replications are generally adequate for estimates of standard error
         and thus are adequate for normal-approximation confidence intervals; see Mooney and Duval [1993, 11].  Estimates of confidence intervals using the percentile or bias-corrected
-        methods typically require 1,000 or more replications.
+        methods typically require 1,000 or more replications. Only relevant when {cmd:bootstrap} is specified.
+
+{p 4 8 2}
+{cmd:level(}{it:#}{cmd:)} specifies the confidence level as a percentage for confidence intervals. The default is {cmd:c(level)}, which is usually 95.
 
 
     
@@ -135,71 +164,44 @@ estimate the median treatment effect on the treated (MTT).
 {pstd}Setup{p_end}
 {phang2}{cmd:. webuse cattaneo2, clear}
 
-{pstd}Estimate the average treatment effect of smoking on birthweight, using 5 stata {p_end}
-{phang2}{cmd: . drmmws bweight mbsmoke, ovars(prenatal1 mmarried mage fbaby) pvars(mmarried c.mage##c.mage fbaby medu) nstrata(5)}
+{pstd}Estimate the ATE of smoking on birthweight using margins-based standard errors (default){p_end}
+{phang2}{cmd:. drmmws bweight mbsmoke, ovars(prenatal1 mmarried mage fbaby) pvars(mmarried c.mage##c.mage fbaby medu) nstrata(5)}
 
-{pstd}Assess the ATE as a percentage of the mean birthweight that would occur if no mothers smoke. {p_end}
-{phang2}{cmd: . nlcom _b[teffect] / _b[poms0]}
+{pstd}Same model, but use bootstrap standard errors instead{p_end}
+{phang2}{cmd:. drmmws bweight mbsmoke, ovars(prenatal1 mmarried mage fbaby) pvars(mmarried c.mage##c.mage fbaby medu) nstrata(5) bootstrap reps(500)}
 
-{pstd}Estimate the median treatment effect of smoking on birthweight, using 5 stata {p_end}
-{phang2}{cmd: . drmmws bweight mbsmoke, ovars(prenatal1 mmarried mage fbaby) pvars(mmarried c.mage##c.mage fbaby medu) nstrata(5) median}
+{pstd}Assess the ATE as a percentage of the mean birthweight that would occur if no mothers smoke (works after default or bootstrap){p_end}
+{phang2}{cmd:. nlcom _b[teffect] / _b[poms0]}
 
-{pstd}Refit the above model, but estimate median treatment effects on the treated {p_end}
-{phang2}{cmd: . drmmws bweight mbsmoke, ovars(prenatal1 mmarried mage fbaby) pvars(mmarried c.mage##c.mage fbaby medu) nstrata(5) att median}
+{pstd}Estimate the median treatment effect (point estimates only; use bootstrap for SEs){p_end}
+{phang2}{cmd:. drmmws bweight mbsmoke, ovars(prenatal1 mmarried mage fbaby) pvars(mmarried c.mage##c.mage fbaby medu) nstrata(5) median}
 
-{pstd}Refit the above model, but limit the analysis to individuals on common support, and set the number of bootstrap reps to 1,000 {p_end}
-{phang2}{cmd: . drmmws bweight mbsmoke, ovars(prenatal1 mmarried mage fbaby) pvars(mmarried c.mage##c.mage fbaby medu) nstrata(5) att median common reps(1000)}
+{pstd}Estimate median treatment effects with bootstrap standard errors{p_end}
+{phang2}{cmd:. drmmws bweight mbsmoke, ovars(prenatal1 mmarried mage fbaby) pvars(mmarried c.mage##c.mage fbaby medu) nstrata(5) median bootstrap reps(1000)}
 
-{pstd}Get produce a table of additional boostrap confidence intervals{p_end}
-{phang2}{cmd: . estat bootstrap, all}
+{pstd}Median treatment effects on the treated with common support and bootstrap SEs{p_end}
+{phang2}{cmd:. drmmws bweight mbsmoke, ovars(prenatal1 mmarried mage fbaby) pvars(mmarried c.mage##c.mage fbaby medu) nstrata(5) att median common bootstrap reps(1000)}
+
+{pstd}Get additional bootstrap confidence intervals (after bootstrap estimation){p_end}
+{phang2}{cmd:. estat bootstrap, all}
 
 
 
 {title:Saved results}
 
-{p 4 8 2}
-{cmd:drmmws} returns the following bootstrap results in {cmd: e()}:
+{pstd}
+{cmd:drmmws} saves results in {cmd:e()}. Without the {cmd:bootstrap} option, the following are available:
 
 {synoptset 25 tabbed}{...}
 {p2col 5 25 29 2: Scalars}{p_end}
-
-{synopt:{cmd:e(level)}}confidence level for bootstrap CIs{p_end}
-{synopt:{cmd:e(N_reps)}}number of complete replications{p_end}
-{synopt:{cmd:e(N_misreps)}}number of incomplete replications{p_end}
-{synopt:{cmd:e(bs_version)}}version for {cmd:bootstrap} results{p_end}
-{synopt:{cmd:e(rank)}}rank of {cmd:e(V)}{p_end}
-{synopt:{cmd:e(k_eq)}}number of equations in {cmd:e(b)}{p_end}
-{synopt:{cmd:e(k_exp)}}number of standard expressions{p_end}
-{synopt:{cmd:e(k_eexp)}}number of extended expressions (i.e., {cmd:_b}){p_end}
-{synopt:{cmd:e(k_extra)}}number of extra equations beyond the original ones from {cmd:e(b)}{p_end}
 {synopt:{cmd:e(N)}}sample size{p_end}
 
-{synoptset 25 tabbed}{...}
-{p2col 5 25 29 2: Macros}{p_end}
-{synopt:{cmd:e(cmdline)}}command as typed{p_end}
-{synopt:{cmd:e(cmd)}}same as {cmd:e(cmdname)} or {cmd:bootstrap}{p_end}
-{synopt:{cmd:e(cmdname)}}command name from {it:command}{p_end}
-{synopt:{cmd:e(prefix)}}{cmd:bootstrap}{p_end}
-{synopt:{cmd:e(title)}}title in estimation output{p_end}
-{synopt:{cmd:e(rngstate)}}random-number state used{p_end}
-{synopt:{cmd:e(exp}{it:#}{cmd:)}}expression for the {it:#}th statistic{p_end}
-{synopt:{cmd:e(command)}}{it:command}{p_end}
-{synopt:{cmd:e(vcetype)}}title used to label Std. Err.{p_end}
-{synopt:{cmd:e(vce)}}{cmd:bootstrap}{p_end}
-{synopt:{cmd:e(properties)}}{cmd:b V}{p_end}
-
-{synoptset 25 tabbed}{...}
 {p2col 5 25 29 2: Matrices}{p_end}
-{synopt:{cmd:e(b)}}observed statistics{p_end}
-{synopt:{cmd:e(V)}}bootstrap variance-covariance matrix{p_end}
-{synopt:{cmd:e(b_bs)}}bootstrap estimates{p_end}
-{synopt:{cmd:e(reps)}}number of nonmissing results{p_end}
-{synopt:{cmd:e(bias)}}estimated biases{p_end}
-{synopt:{cmd:e(z0)}}median biases{p_end}
-{synopt:{cmd:e(se)}}estimated standard errors{p_end}
-{synopt:{cmd:e(ci_normal)}}normal-approximation CIs{p_end}
-{synopt:{cmd:e(ci_percentile)}}percentile CIs{p_end}
-{synopt:{cmd:e(ci_bc)}}bias-corrected CIs{p_end}
+{synopt:{cmd:e(b)}}estimated coefficients (poms1, poms0, teffect){p_end}
+{synopt:{cmd:e(V)}}variance-covariance matrix{p_end}
+
+{pstd}
+With the {cmd:bootstrap} option, all standard {cmd:bootstrap} e() results are available; see {help bootstrap##saved_results:bootstrap saved results}.
 
 
 {title:References}
@@ -247,9 +249,8 @@ drmmws: Stata module for implementing doubly-robust marginal mean weighting thro
 
 {p 4 4 2}
 Ariel Linden{break}
-President, Linden Consulting Group, LLC{break}
-{browse "mailto:alinden@lindenconsulting.org":alinden@lindenconsulting.org}{break}
-{browse "http://www.lindenconsulting.org"}{p_end}
+alinden@lindenconsulting.org
+
 
 
 {title:Acknowledgments} 
@@ -260,8 +261,7 @@ I wish to thank Chuck Huber for trouble-shooting an error in the bootstrap proce
 
 {title:Also see}
 
-{p 4 8 2}Online:  {helpb xtile}, {helpb glm}, {helpb teffects}, {helpb bootstrap}, {helpb mmws} (if installed), 
+{p 4 8 2}Online:  {helpb xtile}, {helpb glm}, {helpb margins}, {helpb teffects}, {helpb bootstrap}, {helpb mmws} (if installed), 
  {helpb pstrata} (if installed), {helpb covbal} (if installed) {p_end}
-
 
 
