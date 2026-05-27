@@ -1,0 +1,50 @@
+d 'ASYCAUS': module to provide Asymmetric Granger-Causality Suite 
+d
+d	asycaus implements the full battery of asymmetric Granger
+d causality tests for time    series. Each subcommand decomposes
+d the two series into cumulative positive and cumulative   
+d negative shocks following Granger and Yoon (2002), then conducts
+d the relevant inference    within an augmented VAR (Toda and
+d Yamamoto 1995).    The package is bivariate by design (testing
+d whether causvar causes depvar) and follows	Hatemi-J's program
+d — the inference is exact when combined with the leverage
+d bootstrap    (Hacker and Hatemi-J, 2006, 2012). The default
+d lag-selection criterion is the Hatemi-J    information criterion
+d (HJC; Hatemi-J 2003), with AIC, AICC, SBC and HQC also available 
+d   via ic().	 For each subcommand a professional table is
+d printed and a publication-quality graph is	produced (suppress
+d with nograph). 
+d
+d KW: Granger causality
+d KW: asymmetry
+d KW: time series
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260526
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f asycaus.ado
+f asycaus.sthlp
+f asycaus_all.ado
+f asycaus_dynamic.ado
+f asycaus_efficient.ado
+f asycaus_fourier.ado
+f asycaus_quantile.ado
+f asycaus_spectral.ado
+f asycaus_static.ado
+f asycaus_engine.mata
+f ../_/_asycaus_check_tsset.ado
+f asycaus_engine.mata
+f ../_/_asycaus_footer.ado
+f ../_/_asycaus_header.ado
+f ../_/_asycaus_iccode.ado
+f asycaus_all.sthlp
+f asycaus_dynamic.sthlp
+f asycaus_efficient.sthlp
+f asycaus_fourier.sthlp
+f asycaus_quantile.sthlp
+f asycaus_spectral.sthlp
+f asycaus_static.sthlp

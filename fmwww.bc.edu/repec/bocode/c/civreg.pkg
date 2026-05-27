@@ -1,0 +1,24 @@
+d 'CIVREG': module to perform coplanar/synthetic instrumental variables regression
+d
+d      civreg estimates linear models with endogenous regressors
+d using the Coplanar/Synthetic	  Instrumental Variables (CIV)
+d method proposed by Dzhumashev and Tursunalieva (2025).    Unlike
+d conventional instrumental variables estimators, the CIV method
+d does not require    external instruments. Instead, instruments
+d are constructed from the observed data using	  the geometric
+d relationship among the dependent variable, endogenous regressors,
+d and	 structural disturbances. 
+d
+d KW: instrumental variables
+d KW: coplanar method
+d KW: synthetic instruments
+d
+d Requires: Stata version 11.2 and ivreg2, ranktest from SSC (q.v.) 
+d
+d Distribution-Date: 20260527
+d
+d Author: Manh Hoang-Ba ,  NA
+d Support: email hbmanh9492@@gmail.com
+d
+f civreg.ado
+f civreg.sthlp

@@ -1,0 +1,39 @@
+d 'QCOINTLIB': module to provide library of quantile cointegration tests and estimators
+d
+d	qcointall runs the complete battery of quantile
+d cointegration tests and estimators on a    single dataset. It
+d calls:	1. xqcoint — Xiao (2009) FM + Kuriyama (2016)
+d CUSUM test	    2. qpolycoint — Li, Zheng & Guo (2016)
+d polynomial + Wald linearity test	  3. fqardl, type(qcoint)
+d — Furno (2020) residual-based aux-QR test	     4. tuqcoint
+d — Tu et al. (2022) NP local-constant (if zvar() given)	 
+d 5. liqcoint_fc — Li et al. (2025) functional-coefficient (if
+d zvar() given)        6. qardl — Cho, Kim & Shin (2015) QARDL
+d SSC command (if ardlpq() given) 
+d
+d KW: cointegration
+d KW: quantiles
+d KW: test
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260527
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f qcointall.ado
+f qpolycoint.ado
+f ../t/tuqcoint.ado
+f ../x/xqcoint.ado
+f ../x/xqcoint_const.ado
+f ../x/xqcoint_robust.ado
+f ../l/liqcoint_fc.ado
+f ../l/liqcoint_fc.sthlp
+f qcointall.sthlp
+f qcointlib.sthlp
+f qpolycoint.sthlp
+f ../t/tuqcoint.sthlp
+f ../x/xqcoint.sthlp
+f ../x/xqcoint_const.sthlp
+f ../x/xqcoint_robust.sthlp

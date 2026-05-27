@@ -1,0 +1,17 @@
+d 'MCHS': module to provide Stata file/CLI boundary adapter
+d
+d    Delegates MCHS workflows to the external CLI/file boundary. No
+d formula logic is    implemented in this ado adapter. 
+d
+d KW: MCHS
+d KW: CLI
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260526
+d
+d Author: Dylan Mordaunt, NA
+d Support: email d.a.mordaunt@@gmail.com
+d
+f mchs.ado
+f mchs.sthlp
