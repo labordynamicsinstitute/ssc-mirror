@@ -1,0 +1,49 @@
+d 'DNQR': module to perform Dynamic Network Quantile Regression  
+d
+d	dnqr estimates the Dynamic Network Quantile Regression
+d model of Xu, Wang, Shin and Zheng    (2024).	For each quantile
+d tau in (0,1) the conditional quantile of depvar given the   
+d information set is	    Q{sub:Y}(tau | F_t) = gamma{sub:0}(tau)
+d + Z'alpha(tau) + gamma{sub:1}(tau) (1/n_i)		sum_j
+d a_{ij} Y_{j,t} + gamma{sub:2}(tau) (1/n_i) sum_j a_{ij} Y_{j,t-1}
+d +	       gamma{sub:3}(tau) Y_{i,t-1} + sum_{k=0..p} F_{t-k}'
+d beta_k(tau)	 The contemporaneous network mean sum_j w_{ij}
+d Y_{jt} is endogenous under the    simultaneous-spillover
+d assumption.  Plugging it directly into qreg would produce an	 
+d inconsistent estimator.  dnqr therefore follows the instrumental
+d variable quantile    regression (IVQR) approach of Chernozhukov
+d and Hansen (2006) and estimates    gamma{sub:1}(tau) by a
+d one-dimensional grid search: for each candidate alpha, the
+d working    quantile regression of Y - alpha * W Y_t on
+d (instruments, exogenous regressors) is fit	and the L{sub:2}
+d norm of the instrument coefficients is computed; alpha-hat is the
+d    minimiser.  Standard errors follow Powell (1986) sandwich with
+d Hall-Sheather or Bofinger    bandwidth (Koenker-Xiao 2006). 
+d
+d KW: quantile regression
+d KW: dynamic regression 
+d
+d Requires: Stata version 13
+d
+d Distribution-Date: 20260530
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f dnqr.ado
+f ../n/nqar.sthlp
+f ../_/_dnqr_impulse_plot.ado
+f ../_/_dnqr_mata.ado
+f ../_/_dnqr_init.mata
+f ../_/_dnqr_silent_qreg.ado
+f dnqr_impulse.ado
+f dnqr_plot.ado
+f dnqr_simulate.ado
+f ../n/nqar.ado
+f dnqr_impulse.sthlp
+f dnqr_plot.sthlp
+f dnqr_postestimation.sthlp
+f dnqr_simulate.sthlp
+f dnqr.sthlp
+f dnqrlib.sthlp
+f ../n/nqar.sthlp

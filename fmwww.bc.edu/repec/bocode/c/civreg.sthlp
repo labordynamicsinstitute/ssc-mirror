@@ -50,17 +50,22 @@ Most options supported by {helpb ivreg2} may also be specified.
 {p2colreset}{...}
 
 {pstd}
-{cmd:civreg} passes most standard IV estimation options directly to
+{helpb civreg} passes most standard IV estimation options directly to
 {helpb ivreg2}. See {helpb ivreg2} for estimation, variance-covariance,
 and reporting options.
 
 {pstd}
-{cmd:civreg} requires STATA version 11 or later, {helpb ivreg2}
-version 2.1.15 or later, and relevant STATA packages.
+{helpb civreg} requires STATA version 11 or later, {helpb ivreg2}
+version 2.1.15 or later, and relevant STATA packages. To install {helpb civreg}, type:
+
+{phang2}. {stata `"ssc install civreg"'}{p_end}
 
 {pstd}
 The R programming language and {helpb rcall} package must be installed
-when option {cmd:rcode} is specified.
+when option {cmd:rcode} is specified. To install {helpb rcall}, type:
+
+{phang2}. {stata `"net install github, from("https://haghish.github.io/github/")"'}{p_end}
+{phang2}. {stata `"github install haghish/rcall, stable"'}{p_end}
 
 {marker description}{...}
 {title:Description}
@@ -277,7 +282,7 @@ estimation.
 The latest version of {cmd:civreg} can be found at the following link: {browse "https://github.com/ManhHB94/":https://github.com/ManhHB94/}{p_end}
 
 {pstd}To update the {cmd:civreg} package to the latest version, run either of the following commands{p_end}
-{phang2}. {stata `"ssc install civreg, replace"'}{p_end}
+{phang2}. {stata `"ado update civreg, update"'}{p_end}
 {phang2}. {stata `"net install civreg, from("https://raw.githubusercontent.com/ManhHB94/civreg/main/") replace"'}{p_end}
 
 {marker results}{...}
@@ -326,12 +331,19 @@ In addition, the following are stored:
 {title:References}
 
 {phang}
-Baum, C. F. (2007). ivreg2: Stata module for extended instrumental variables/2SLS, GMM and AC/HAC, LIML and k-class regression. {it:http://ideas.repec.org/c/boc/bocode/s425401.html}.
+Baum, C.F., Schaffer, M.E., Stillman, S. 2010.
+ivreg2: Stata module for extended instrumental variables/2SLS, GMM and AC/HAC, LIML and k-class regression.
+{browse "http://ideas.repec.org/c/boc/bocode/s425401.html":http://ideas.repec.org/c/boc/bocode/s425401.html}
 
 {phang}
-Dzhumashev, R., & Tursunalieva, A. (2025). A Synthetic Instrumental Variable Method: Using the Dual Tendency Condition for Coplanar Instruments. {it:arXiv preprint arXiv:2512.17301}.
+Dzhumashev, R., Tursunalieva, A. 2025.  A synthetic instrumental variable method: Using the dual tendency condition for coplanar instruments. {browse "https://doi.org/10.48550/arXiv.2512.17301":https://doi.org/10.48550/arXiv.2512.17301}.
+
+{phang}
+Haghish, E.F. 2021.  Integrating R machine learning algorithms in Stata using rcall. UK Stata Conference 2021, StataCorp. 
+{browse "https://www.stata.com/meeting/uk21/slides/UK21_Haghish.pdf":https://www.stata.com/meeting/uk21/slides/UK21_Haghish.pdf}
 
 {marker author}{...}
 {title:Author}
 
     Package implementation by Manh Hoang-Ba (hbmanh9492@gmail.com).
+

@@ -107,6 +107,7 @@ p dmariano module to calculate Diebold-Mariano comparison of forecast accuracy
 p dmerge module to merge datasets using a modification of Stata's merge
 p dmexogxt module to test consistency of OLS vs XT-IV estimates
 p dmout module to create difference-in-means tables
+p dnqr module to perform Dynamic Network Quantile Regression  
 p do2screen module to display do-files in result window
 p dobatch module to launch a do-file as a background batch process
 p docd module to change the working directory before executing a do-file
