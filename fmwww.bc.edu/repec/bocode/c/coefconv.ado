@@ -1,13 +1,14 @@
-*! coefconv v1.1.0 — May 2026
+*! coefconv v1.2.0 — May 2026
 *! Dr Noman Arshed, Sunway Business School, Sunway University
 *! Comprehensive Marginal Effects from Regression Slope Coefficients
 *! ─────────────────────────────────────────────────────────────────
-*! Computes 30 effect types across 8 families.
+*! Computes 30 effect types across 8 families, plus an optional
+*! general-dominance / Shapley decomposition of R².
 *!
 *! Syntax:
 *!   coefconv [, GRate(#) QUANtiles(numlist) DELTA(numlist)
 *!             SAVing(filename[, replace]) noTABle FORmat(fmt)
-*!             PLot GYBench(#)]
+*!             PLot GYBench(#) DOMinance MAXDom(#)]
 *!
 *! Options:
 *!   grate(#)       Growth rate for default ΔX = grate × X̄ (default 0.01)
@@ -20,8 +21,20 @@
 *!                  (graphs named ccv_ref_<varname>)
 *!   gybench(#)     User-supplied Y growth rate (decimal, e.g. 0.02 = 2%);
 *!                  overrides observed growth from tsset/xtset
+*!   dominance      Add general-dominance / Shapley R² decomposition
+*!                  (always non-negative, sums to R², correlation-robust)
+*!   maxdom(#)      Max predictors for dominance (default 14; cost is 2^k)
 *!
-*! v1.1.0 NEW:
+*! v1.2.0 NEW:
+*!   • -dominance- option: general-dominance (Budescu) / Shapley / LMG
+*!     decomposition of R², computed natively in Mata from the
+*!     correlation matrix (no re-estimation, no external dependency).
+*!     Complements Pratt: shares are non-negative, sum to R², and are
+*!     robust to correlation among predictors.
+*!   • -maxdom(#)- guard on the 2^k dominance computation.
+*!   • Returns r(dom_pct_<var>), r(dom_raw_<var>), r(dom_r2).
+*!
+*! v1.1.0:
 *!   • Family 8: Reference-Relative Effects
 *!       – ΔY/σY            (% of one Y-SD)
 *!       – ΔY/IQR(Y)        (% of Y's middle 50%)
@@ -49,6 +62,8 @@ program define coefconv, rclass
         FORmat(string)                      ///
         PLot                                ///
         GYBench(real -1)                    ///
+        DOMinance                           ///
+        MAXDom(integer 14)                  ///
     ]
 
     // =========================================================================
@@ -213,7 +228,7 @@ program define coefconv, rclass
     if "`table'" == "" {
         di ""
         di as text "{hline `lw'}"
-        di as text "  {bf:Marginal Effects Analysis  —  coefconv v1.1.0}"
+        di as text "  {bf:Marginal Effects Analysis  —  coefconv v1.2.0}"
         di as text "{hline `lw'}"
         di as text "  Model          : " as result "`ecmd'"
         di as text "  Dep. Variable  : " as result "`depvar'"
@@ -264,6 +279,10 @@ program define coefconv, rclass
 
     foreach v of local indepvars {
         local j = `j' + 1
+
+        // Initialize dominance locals (filled later if -dominance- requested)
+        local domraw_`j' = .
+        local dompct_`j' = .
 
         // --- Beta for this variable ---
         local beta = `B'[1, `j']
@@ -629,6 +648,115 @@ program define coefconv, rclass
     }
 
     // =========================================================================
+    // 8c. GENERAL DOMINANCE / SHAPLEY DECOMPOSITION OF R²  (option -dominance-)
+    //     Computed natively in Mata from the (Y, X) correlation matrix.
+    //     General dominance (Budescu 1993) = LMG (Lindeman-Merenda-Gold 1980)
+    //     = Shapley regression value. Shares are non-negative and sum to the
+    //     OLS R² implied by the same correlation matrix. No re-estimation.
+    // =========================================================================
+    local dom_done = 0
+    local r2full_dom = .
+    if "`dominance'" != "" {
+
+        local kk : word count `corr_vars'
+
+        if `kk' == 0 {
+            if "`table'" == "" {
+                di ""
+                di as text "  (Dominance skipped: no continuous predictors " ///
+                           "— all terms are factor/interaction.)"
+            }
+        }
+        else if `kk' > `maxdom' {
+            if "`table'" == "" {
+                di ""
+                di as text "  (Dominance skipped: `kk' continuous predictors " ///
+                           "exceed maxdom(`maxdom').)"
+                di as text "   The cost grows as 2^k; raise the cap with " ///
+                           "{bf:maxdom(`kk')} if you accept the runtime.)"
+            }
+        }
+        else {
+            // Heavy-compute heads-up for larger k
+            if `kk' > 14 & "`table'" == "" {
+                di ""
+                di as text "  (Computing dominance over `kk' predictors " ///
+                           "= `=2^`kk'' subset fits; this may take a moment.)"
+            }
+
+            tempname DOM
+            mata: ccv_gendom("`CORR'", "`DOM'")
+
+            local r2full_dom = `DOM'[1, `kk' + 1]
+
+            // Map dominance results (corr_vars order) back to predictor index j
+            local cj = 0
+            forvalues jj = 1/`j' {
+                if `sv_ok_`jj'' == 1 {
+                    local cj = `cj' + 1
+                    local domraw_`jj' = `DOM'[1, `cj']
+                    local dompct_`jj' = cond(`r2full_dom' != 0, ///
+                                             `DOM'[1, `cj'] / `r2full_dom' * 100, .)
+                }
+            }
+            local dom_done = 1
+
+            // Return scalars
+            return scalar dom_r2 = `r2full_dom'
+            forvalues jj = 1/`j' {
+                if `sv_ok_`jj'' == 1 {
+                    local vn = "`varname_`jj''"
+                    return scalar dom_raw_`vn' = `domraw_`jj''
+                    return scalar dom_pct_`vn' = `dompct_`jj''
+                }
+            }
+
+            // Display comparison table (Pratt vs Dominance)
+            if "`table'" == "" {
+                di ""
+                di as text "{hline `lw'}"
+                di as text "  {bf:Relative Importance  —  Pratt vs General Dominance (Shapley)}"
+                di as text "{hline `lw'}"
+                di as text "  OLS R² implied by correlation matrix: " ///
+                           as result %8.6f `r2full_dom'
+                if !missing(`r2') {
+                    di as text "  (model e(r2) = " as result %8.6f `r2' ///
+                               as text "; these match for OLS on these regressors only)"
+                }
+                di as text "  {hline 76}"
+                di as text _col(5)  "{bf:Variable}" ///
+                           _col(28) "{bf:Pratt % of R²}" ///
+                           _col(48) "{bf:Dominance raw}" ///
+                           _col(66) "{bf:Dom. % of R²}"
+                di as text "  {hline 76}"
+                forvalues jj = 1/`j' {
+                    if `sv_ok_`jj'' == 0 continue
+                    local vn  = "`varname_`jj''"
+                    local ppr = `plot_pratt_`jj''
+                    di as text _col(5) "`vn'" ///
+                       as result _col(28) %10.3f `ppr'  as text "%" ///
+                       as result _col(48) %12.6f `domraw_`jj'' ///
+                       as result _col(66) %8.3f  `dompct_`jj''  as text "%"
+                }
+                di as text "  {hline 76}"
+                di as text _col(5) "Total" ///
+                   as result _col(48) %12.6f `r2full_dom' ///
+                             _col(66) "100.000%"
+                di as text "{hline `lw'}"
+                di ""
+                di as text "  {bf:Reading this table.}"
+                di as text "  Pratt (β*·r) splits R² but can go negative for"
+                di as text "  suppressors/squared terms. General dominance averages each"
+                di as text "  predictor's marginal R² contribution over all 2^k orderings"
+                di as text "  (= Shapley value): shares are non-negative, sum to R², and"
+                di as text "  remain stable under correlation among predictors. Large gaps"
+                di as text "  between the two columns flag collinearity-driven instability"
+                di as text "  in the Pratt split."
+            }
+        }
+    }
+
+    // =========================================================================
     // 8b. PLOT — Reference-Relative Column Charts (one per IV)
     // =========================================================================
     if "`plot'" != "" {
@@ -825,6 +953,12 @@ program define coefconv, rclass
             gen double gX_v        = .
             label var  gX_v        "Observed growth rate of X"
 
+            // Dominance / Shapley (populated only if -dominance- ran)
+            gen double dom_raw     = .
+            label var  dom_raw     "General-dominance raw (Shapley R2 contribution)"
+            gen double dom_pct     = .
+            label var  dom_pct     "General-dominance % of R2 (Shapley share)"
+
             // Populate rows
             local jj = 0
             foreach v of local indepvars {
@@ -885,6 +1019,8 @@ program define coefconv, rclass
                     replace xmax_v      = `xmx'                                    in `jj'
                     replace xiqr_v      = `iq'                                     in `jj'
                     replace gX_v        = `gX_`jj''                                in `jj'
+                    replace dom_raw     = `domraw_`jj''                            in `jj'
+                    replace dom_pct     = `dompct_`jj''                            in `jj'
                 }
             }
 
@@ -892,6 +1028,9 @@ program define coefconv, rclass
             note: coefconv results — model: `ecmd', dep. var.: `depvar', N=`N'
             if !missing(`gY_eff') {
                 note: Y growth rate (gY) = `gY_eff' (`gY_src')
+            }
+            if `dom_done' {
+                note: General-dominance/Shapley R2 decomposition included (R2 = `r2full_dom')
             }
 
             save `"`savefile'"', `saverep'
@@ -915,4 +1054,70 @@ program define coefconv, rclass
     return local  indepvars    "`indepvars'"
     return scalar has_time   = `has_time'
 
+end
+
+* ─────────────────────────────────────────────────────────────────
+* Mata: general-dominance / Shapley R² decomposition.
+* Defined at file scope (loaded once when the ado is loaded) so that
+* the function persists in Mata memory and the in-program call finds it.
+* Reads the (Y,X) correlation matrix named Cname (Y in row/col 1),
+* writes a 1 x (k+1) row vector [gd_1 ... gd_k , R2_full] to Dname.
+* ─────────────────────────────────────────────────────────────────
+version 14.0
+
+mata:
+
+void ccv_gendom(string scalar Cname, string scalar Dname)
+{
+    real matrix    C, Rxx, S
+    real colvector ryx, rr, R2
+    real rowvector gd, idx
+    real scalar    k, nsub, m, b, mm, i, bit, mi, s, w, val
+
+    C    = st_matrix(Cname)
+    k    = cols(C) - 1
+    ryx  = C[(2::(k+1)), 1]
+    Rxx  = C[(2::(k+1)), (2::(k+1))]
+    nsub = 2^k
+
+    // R² for every subset via r' Rxx^{-1} r on the correlation matrix
+    R2 = J(nsub, 1, 0)
+    for (m = 1; m <= nsub - 1; m++) {
+        idx = J(1, 0, .)
+        mm  = m
+        for (b = 1; b <= k; b++) {
+            if (mod(mm, 2) == 1) idx = (idx, b)
+            mm = floor(mm / 2)
+        }
+        rr  = ryx[idx']
+        S   = Rxx[idx', idx']
+        val = (rr' * invsym(S) * rr)
+        if (val < 0) val = 0
+        if (val > 1) val = 1
+        R2[m + 1] = val
+    }
+
+    // General-dominance (Shapley) weights
+    gd = J(1, k, 0)
+    for (m = 0; m <= nsub - 1; m++) {
+        s  = 0
+        mm = m
+        for (b = 1; b <= k; b++) {
+            if (mod(mm, 2) == 1) s++
+            mm = floor(mm / 2)
+        }
+        // weight for adding one predictor to a subset of size s: s! (k-1-s)! / k!
+        w = exp(lngamma(s + 1) + lngamma(k - s) - lngamma(k + 1))
+        for (i = 1; i <= k; i++) {
+            bit = 2^(i - 1)
+            if (mod(floor(m / bit), 2) == 0) {
+                mi = m + bit
+                gd[i] = gd[i] + w * (R2[mi + 1] - R2[m + 1])
+            }
+        }
+    }
+
+    // Return [gd_1 ... gd_k , R2_full] as a 1 x (k+1) row vector
+    st_matrix(Dname, (gd, R2[nsub]))
+}
 end

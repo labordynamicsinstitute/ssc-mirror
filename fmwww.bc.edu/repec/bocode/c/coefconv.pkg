@@ -15,7 +15,7 @@ d KW: marginal efffects
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20260517
+d Distribution-Date: 20260530
 d
 d Author: Noman Arshed,   Sunway Business School, Sunway University
 d Support: email nouman.arshed@@gmail.com
@@ -23,5 +23,7 @@ d
 f coefconv.ado
 f coefconv.sthlp
 f coefconv_plot.ado
+f coefconv_plot.sthlp
 f coefconv_examples.do
+f coefconv_v12_test.do
 f coefconv_manual.pdf

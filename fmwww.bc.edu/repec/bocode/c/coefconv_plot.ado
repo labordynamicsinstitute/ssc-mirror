@@ -1,4 +1,4 @@
-*! coefconv_plot v1.0.0 — April 2026
+*! coefconv_plot v1.2.0 — May 2026
 *! Dr Noman Arshed, Sunway Business School, Sunway University
 *! Visualization companion for coefconv
 *! ─────────────────────────────────────────────────────────────────
@@ -13,6 +13,11 @@
 *!
 *! Must be run immediately after the regression (before any other
 *! estimation command overwrites e()).
+*!
+*! v1.2.0: version sync with coefconv 1.2.0. Companion graphs unchanged;
+*!         verified against coefconv's notable/grate()/saving() interface
+*!         and r(pratt_pct_*) returns. The coefconv -plot- and -dominance-
+*!         options are independent of this command.
 *! ─────────────────────────────────────────────────────────────────
 
 capture program drop coefconv_plot

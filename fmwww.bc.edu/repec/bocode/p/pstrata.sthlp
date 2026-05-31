@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 2.0.0  29May2026}{...}
 {* *! version 1.1.0  28Oct2016}{...}
 {* *! version 1.0.0  21Aug2016}{...}
 {cmd:help pstrata}
@@ -23,6 +24,7 @@
 		{opt com:mon}
 		{opt repl:ace} 
 		{opt pre:fix}({it:string})
+		{opt dis:play}
 		]
 
 		
@@ -40,6 +42,7 @@
 {synopt:{opt com:mon}}use only those observations within the region of common support when generating quantiles {p_end}
 {synopt:{opt repl:ace}}replace the strata variables created by {cmd:pstrata} if they already exist {p_end}
 {synopt:{opt pre:fix}}adds a prefix to the names of the strata variables created by {cmd:pstrata}; default name is {it:strata1}, {it:strata2}, etc. {p_end}
+{synopt:{opt dis:play}}display a table of p-values by quantile for each propensity score {p_end}
 {synoptline}
 {p2colreset}{...}
 		
@@ -126,6 +129,10 @@ the same prefix will be replaced.{p_end}
 
 {phang}
 {opt prefix(string)} adds a prefix to the names of the strata variables created by {cmd:pstrata}. Short prefixes are recommended.{p_end}
+
+{phang}
+{opt display} displays a table of p-values by quantile for each propensity score, along with an indicator of whether balance was achieved within each quantile 
+(based on {opt plevel()}). This provides a convenient summary of the stratification results without needing to inspect the returned matrices directly.{p_end}
 
 
 {title:Examples}
@@ -238,10 +245,8 @@ Linden, A. 2016. pstrata: Stata module for implementing optimal propensity score
 
 {p 4 4 2}
 Ariel Linden{break}
-President, Linden Consulting Group, LLC{break}
-Ann Arbor, MI, USA{break} 
-{browse "mailto:alinden@lindenconsulting.org":alinden@lindenconsulting.org}{break}
-{browse "http://www.lindenconsulting.org"}{p_end}
+alinden@lindenconsulting.org
+
 
         
 {title:Acknowledgments} 

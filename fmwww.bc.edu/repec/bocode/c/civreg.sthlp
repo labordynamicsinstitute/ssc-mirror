@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  27may2026}{...}
+{* *! version 1.0.1  28may2026}{...}
 {viewerjumpto "Syntax"         "civreg##syntax"}{...}
 {viewerjumpto "Description"    "civreg##description"}{...}
 {viewerjumpto "Method"         "civreg##method"}{...}
@@ -12,7 +12,7 @@
 {title:Title}
 
 {p2colset 5 15 20 2}{...}
-{p2col:{bf:civreg} {hline 2}}Coplanar/synthetic instrumental variables regression{p_end}
+{p2col:{bf:civreg} {hline 2}}Coplanar/synthetic instrumental variables (CIV/SIV) regression{p_end}
 {p2colreset}{...}
 
 {marker syntax}{...}
@@ -296,12 +296,22 @@ The latest version of {cmd:civreg} can be found at the following link: {browse "
 In addition, the following are stored:
 
 {synoptset 20 tabbed}{...}
-
 {synopt:{cmd:e(fe_opt)}}fixed-effects specification: 0 = none, 1 = one-way FE, 2 = two-way FE{p_end}
 {synopt:{cmd:e(rc)}}return code{p_end}
 {synopt:{cmd:e(hete)}}heteroskedasticity criterion selected by {cmd:hete(#)}{p_end}
 {synopt:{cmd:e(reps)}}number of bootstrap replications used{p_end}
 {synopt:{cmd:e(rcode)}}whether results are reproduced exactly in R{p_end}
+{synopt:{cmd:e(chk_sign)}}store information about the signs of cov(x,u){p_end}
+{synopt:{cmd:e(cor_x_iv)}}correlation matrix corr(x,civ){p_end}
+{synopt:{cmd:e(d0)}}matrix of parameter d0 (mean across bootstrap replications){p_end}
+
+{title:Citation of civreg}
+
+{phang}{helpb civreg} is not an official Stata command. It is a free contribution
+to the research community, like a paper. Please cite it as such: {p_end}
+
+{phang2}Manh Hoang-Ba, 2026. CIVREG: Stata module to perform coplanar/synthetic instrumental variables regression.
+{browse "https://ideas.repec.org/c/boc/bocode/s459728.html":https://ideas.repec.org/c/boc/bocode/s459728.html}
 
 {marker examples}{...}
 {title:Examples}

@@ -15591,6 +15591,7 @@ fmwww.bc.edu/repec/bocode/c/calibest.pkg
 fmwww.bc.edu/repec/bocode/c/ckkeep.hlp
 fmwww.bc.edu/repec/bocode/c/cub14.ado
 fmwww.bc.edu/repec/bocode/c/clhet_d2.ado
+fmwww.bc.edu/repec/bocode/c/coefconv_v12_test.do
 fmwww.bc.edu/repec/bocode/c/ccmatch.ado
 fmwww.bc.edu/repec/bocode/c/cprdent_1.sthlp
 fmwww.bc.edu/repec/bocode/c/cv.sthlp

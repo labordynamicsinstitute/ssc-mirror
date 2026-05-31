@@ -1,5 +1,5 @@
 {smcl}
-{* coefconv_plot.sthlp -- help file for coefconv_plot v1.0.0 *}
+{* coefconv_plot.sthlp -- help file for coefconv_plot v1.2.0 *}
 {hline}
 {title:Title}
 
@@ -42,6 +42,13 @@ The program calls {cmd:coefconv} internally (silently) so no prior call to
 Each graph is assigned a unique {cmd:name()} so all three remain open
 at once: {bf:ccv_std} (Graph 1), {bf:ccv_pratt} (Graph 2), and
 {bf:ccv_eff_}{it:varname} (Graph 3, one per predictor).
+
+{pstd}
+These three summary graphs complement {cmd:coefconv}'s own {opt plot} option,
+which draws per-predictor reference-relative column charts
+({bf:ccv_ref_}{it:varname}) from its Family 8 metrics, and its {opt dominance}
+option, which adds a general-dominance / Shapley decomposition of R-squared
+alongside Pratt. See {helpb coefconv} for those.
 
 {hline}
 {title:Graph 1 -- Standardized Slopes Forest Plot}
@@ -262,9 +269,16 @@ open graphs type {cmd:graph dir}. To bring any graph to the front type
 {title:Dependencies}
 
 {pstd}
-Requires {helpb coefconv} to be in the adopath.
-Place both {cmd:coefconv.ado} and {cmd:coefconv_plot.ado} in the same
-directory (e.g. ~/ado/personal/ on Mac/Linux or C:\ado\personal\ on Windows).
+Requires {helpb coefconv}. Install the complete package from SSC:
+
+{phang2}{cmd:. ssc install coefconv, replace}{p_end}
+
+{pstd}
+This places both {cmd:coefconv.ado} and {cmd:coefconv_plot.ado} in the
+{cmd:PLUS} directory, where {cmd:ado update} can find and deliver bug fixes
+automatically. Do {it:not} copy files manually into {cmd:PERSONAL} — that
+directory precedes {cmd:PLUS} on the adopath and will occlude any
+SSC-updated version, preventing {cmd:ado update} from working correctly.
 
 {hline}
 {title:Author}
