@@ -334,7 +334,7 @@ di as error /*
 			local ivar "`mark_id'"
 		}
 		
-		mata: create_civlist("endo_rmc", "lhs", "ivar", "inexog_rmc", /*
+		qui mata: create_civlist("endo_rmc", "lhs", "ivar", "inexog_rmc", /*
 						*/	"touse", /*
 						*/	"d", "delt", "dmax", "reps", "r_code", "hete", /*
 						*/ "nocons", "panelis", /*
@@ -1419,7 +1419,7 @@ void create_civ(real colvector y,
 				nocons,
 				panelis
 		)
-		d0m
+//		d0m
 		civ = x :- k * d0m * r
 
 	}
