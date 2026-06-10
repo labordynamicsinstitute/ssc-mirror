@@ -1,0 +1,30 @@
+d 'DIDPARALLEL': module to test parallel trends assumption for difference-in-differences models
+d
+d     didparallel provides an easy implementation of event study
+d for difference-in-differences    (DID) models, where policy
+d adoption may be synchronized or staggered. It only takes three   
+d simple steps:  (1) estimate the DID model; (2) store the result;
+d and (3) run didparallel    by specifying the stored result and
+d the treatment variable. 
+d
+d KW: parallel trends
+d KW: difference in differences
+d KW: DiD
+d
+d Requires: Stata version 
+d
+d Distribution-Date: 20260609
+d
+d Author:     Guanpeng Yan,  Shandong University of Finance and Economics
+d Support: email  guanpengyan@@yeah.net
+d
+d Author: Qiang Chen ,   Shandong University
+d Support: email  qiang2chen2@@126.com
+d
+f didparallel.ado
+f didparallel.sthlp
+f ../l/ldidparallel.mlib
+f ../b/bacon_example.dta
+f ../c/cao_chen.dta
+f ../m/mpdta.dta
+f ../e/example_didparallel.do

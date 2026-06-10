@@ -1,0 +1,25 @@
+d 'XTPRAISK': module to perform Prais-Winsten regression with AR(k) errors and panel-corrected standard errors
+d
+d   xtpraisk calculates Prais-Winsten regression with AR(k) errors
+d and panel-corrected standard errors, thereby extending Stata's
+d xtpcse command to higher-order autoregressive errors. As with
+d xtpcse, xtpraisk assumes that the disturbances are, by default,
+d heteroskedastic and contemporaneously correlated across panels. 
+d
+d KW: autoregressive errors
+d KW: AR(p)
+d KW: panel data
+d KW: Prais–Winsten
+d KW: panel-corrected standard errors
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260609
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f xtpraisk.ado
+f xtpraisk_p.ado
+f xtpraisk.sthlp
+f xtpraisk_methods.pdf

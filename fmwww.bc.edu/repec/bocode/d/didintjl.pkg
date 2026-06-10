@@ -1,0 +1,25 @@
+d 'DIDINTJL': module to estimate the average treatment effect on the treated (ATT) while accounting for covariates that may vary by state, time, or both.
+d
+d      didintjl is a Stata command that serves as a wrapper for the
+d didint() function from the	    DiDInt.jl Julia package.  It
+d requires you to specify the names of the outcome, state,	 
+d and time variables as well as either a gvar variable, or, to
+d specifically list the        treated states and their treatment
+d times. 
+d
+d KW: difference in differences
+d KW: DiD
+d KW: ATE
+d KW: average treatment effect
+d
+d Requires: Stata version 16, julia from SSC (q.v.), Julia language, package DiDInt
+d
+d Distribution-Date: 20260609
+d
+d Author:  Eric Jamieson,  NA
+d Support: email ericbrucejamieson@@gmail.com 
+d
+f didintjl.ado
+f didintjl.sthlp
+f didintjl_plot.ado
+f didintjl_plot.sthlp

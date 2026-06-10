@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 2.5  06jun2026}{...}
 {* *! version 2.2  04may2026}{...}
 {* *! version 2.0  05feb2026}{...}
 {* *! version 1.6  30nov2025}{...}
@@ -53,12 +54,15 @@ which the treatment occurs.{p_end}
 by default, the groups for which which treatment effects are estimated{p_end}
 {p2coldent :* {opth ti:me(varname:timevar)}}specify the time variable for time-fixed effects and
 the time periods for which treatment effects are estimated{p_end}
-{synopt :{opth spec:ification(flexdid##stype:stype)}}specify the regression; 
-default is {cmd:specification(lagsonly)}{p_end}
+{synopt :{opth spec:ification(flexdid##stype:stype)}}specify the regression to have lags only or 
+lags and leads treatment parameters; default is {cmd:specification(lagsonly)}{p_end}
 {synopt :{opth xnotint:eracted(varlist:xnivarlist)}}specify covariates to enter only additively;
 variables in {it:covarlist} are interacted with treatment, group and time indicators{p_end}
 {synopt :{opth userco:hort(varlist:cohortvar)}}specify the cohort variable if the internally generated cohort 
-variable is inappropriate, e.g., when some time periods are missing{p_end}
+variable is inappropriate, e.g., when there are no observations, or missing values, for one or more groups
+in one or more time periods{p_end}
+{synopt :{opt base:period(#)}}specify the base pre-treatment exposure period in a lags and leads 
+specification as a negative integer; default is {cmd:baseperiod(-1)}{p_end}
 {synopt :{opt ver:bose}}display output of underlying regression{p_end}
 
 {syntab:SE/Robust}
@@ -114,8 +118,7 @@ be included in the interactions, with a larger set of covariates entering the re
 {cmd:flexdid} also allows the treatment group indicators to be disaggregates of cohorts, and for the group-level fixed
 effects in the regression to be different from (typically disaggregates of) the treatment group indicators. {cmd:flexdid} 
 can handle designs with no never-treated units with additional identification assumptions. {cmd:flexdid} can also 
-handle designs in which data are missing in some time-periods (periods in which cohorts of treatment started but are
-unobserved).
+handle designs in which data are missing in some time-periods.
 
 
 {marker options}{...}
@@ -155,7 +158,13 @@ in the regression. All the covariates {it:covarlist} are interacted with with tr
 {opth userco:hort(varname:cohortvar)} specifies a user-defined cohort variable, overriding 
 the internal cohort variable calculated using {opth tx:(varlist:txvar)} and {opth ti:me(varlist:timevar)}. 
 It is useful in situations where the internally generated cohort variable is incorrect or inappropriate, 
-e.g., when some time periods of observational-level data are missing.
+e.g., when there are no observations, or missing values, for one or more groups in one or more time periods.
+
+{phang}
+{opt base:period(#)} specifies the base pre-treatment exposure period in a lags and leads specification as a negative integer value; the default is {cmd:baseperiod(-1)}. It is useful in situations when the default pre-treatment exposure period is missing, 
+or has missing values, for one or more groups. In such situations, the user should pick a base period that does not have
+missing data, or use a lags only specification. It is also useful if the user wishes to pick an earlier (than -1) base period to avoid potential anticipation
+effects.
 
 {phang}
 {opt ver:bose} displays the output of the underlying OLS regression. Allows the user to see
@@ -172,6 +181,10 @@ that allows for intragroup correlation, and {cmd:vce(robust)} that allows for he
 
 {marker examples}{...}
 {title:Examples}
+
+{hline}
+{pstd}
+Specifications with treatment coefficients at the group X time level
 
 {pstd}
 Setup{p_end}
@@ -195,6 +208,10 @@ for school districts over year; using the lags and leads specification and
 {phang2}{cmd:. flexdid bmi medu sports girl, tx(hhabit) group(schools) time(year)} 
         {cmd:  specification(lagsandleads)}{p_end}
 
+{hline}
+{pstd}
+Specifications with treatment coefficients at the cohort X time level
+
 {pstd}
 As above but groups are now defined by collections of schools into cohorts ({cmd:group(chrt)}), while 
 standard errors are clustered at the schools-level ({cmd:vce(cluster schools)}).{p_end}
@@ -213,7 +230,39 @@ The cohort by year effects are identical to those obtained using {cmd: hdidregre
 	
 {phang2}{cmd:. hdidregress ra (bmi) (hhabit), group(schools) time(year) basetime(common)}{p_end}
 
+{hline}
+{pstd}
+One or more cohorts missing all observations at exposure year 0
 
+{pstd}
+Estimate the FLEX regression of treatment, {cmd:hhabit}, on outcome body mass index, {cmd:bmi}
+for cohorts over year; using the lags and leads specification when exposure period t = 0 is 
+missing for one cohort. Here the user must specify the {cmd: usercohort()} option. The internally 
+generated cohort variable will be incorrect. Reports the overall ATET.{p_end}
+
+{phang2}Setup - manually create cohort where t = 0 is missing{p_end}
+{phang2}{cmd:. drop if (chrt==2036 & year==2036)}{p_end}
+
+{phang2}{cmd:. flexdid bmi, tx(hhabit) group(chrt) time(year) vce(cluster schools)}
+	{cmd:usercohort(chrt) specification(lagsandleads)}{p_end}
+	
+{hline}
+{pstd}
+One or more cohorts missing all observations at exposure year -1
+
+{pstd}
+Estimate the FLEX regression of treatment, {cmd:hhabit}, on outcome body mass index, {cmd:bmi}
+for cohorts over year; using the lags and leads specification when exposure period t = -1 is 
+missing for one cohort. Here the user must specify the {cmd: usercohort()} and the {cmd: baseperiod()}
+option. The user should select a base period that does not have missing data.{p_end}
+
+{phang2}Setup - manually create cohort where t = -1 is missing{p_end}
+{phang2}{cmd:. drop if (chrt==2036 & year==2035)}{p_end}
+
+{phang2}{cmd:. flexdid bmi, tx(hhabit) group(chrt) time(year) vce(cluster schools)}
+	{cmd:usercohort(chrt) baseperiod(-2) specification(lagsandleads)}{p_end}
+	
+{hline}
 {marker results}{...}
 {title:Stored results}
 

@@ -415,7 +415,7 @@ program define tmpinvl2, eclass byable(recall)
 		if "`full'" == "False"  qui est save      `tmpf',					///
 										 `=cond("`i'"=="1","replace","append")'
 	}
-	if     "`full'" == "False"  copy     `tmpf'  "`e(reduced)'",   replace
+	if     "`full'" == "False"  copy     `tmpf'  "`e(reduced)'.ster", replace
 						   /* update the result and display its summary      */
 	_update `reduced'								   // switch result
 	clspl2											   // print summary

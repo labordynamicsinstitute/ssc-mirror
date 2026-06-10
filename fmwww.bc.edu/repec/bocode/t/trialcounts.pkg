@@ -1,0 +1,27 @@
+d 'TRIALCOUNTS': module to calculate the number of subjects recruited to, and the number having reached subsequent scheduled visits
+d
+d   trialcounts is a program for calculating the number of subjects
+d recruited		      to, and the number having reached
+d subsequent scheduled visits, in a		      clinical
+d trial based on supplied linear piecewise recruitment functions,  
+d		  whilst additionally accounting for potential
+d dropout.  From these are		     derived the 'cohort
+d weights' which can be used in the mixedpower program		   
+d      in order to calculate power or sample size for linear mixed
+d models,		    accounting for the recruitment and
+d dropout functions established in		     trialcounts at
+d a given point in trial time. 
+d
+d KW: clinical trials
+d KW: sample size
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260609
+d
+d Author: Matthew Burnell,  University College London 
+d Support: email m.burnell@@ucl.ac.uk
+d
+f trialcounts.ado
+f trialcounts.sthlp
+f ../m/ms_recruitment.dta

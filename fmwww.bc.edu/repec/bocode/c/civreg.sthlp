@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.1  28may2026}{...}
+{* *! version 2.0.0  02jun2026}{...}
 {viewerjumpto "Syntax"         "civreg##syntax"}{...}
 {viewerjumpto "Description"    "civreg##description"}{...}
 {viewerjumpto "Method"         "civreg##method"}{...}
@@ -34,17 +34,22 @@ Most options supported by {helpb ivreg2} may also be specified.
 {synoptline}
 {syntab:CIV/SIV construction}
 
-{synopt:{opt fe}}specifies one-way (individual) fixed-effects estimator{p_end}
-{synopt:{opt twfe}}specifies two-way (individual and time) fixed-effects estimator{p_end}
 {synopt:{opt hete(#)}}criterion used to identify the optimal coplanar/synthetic instrument ({it:#} = 0, 1, or 2); default is {cmd:hete(0)}{p_end}
 {synopt:{opt d(#)}}initial value of the nuisance parameter {it:d0}; default is {cmd:d(0.01)}{p_end}
 {synopt:{opt delt(#)}}grid-search increment for {it:d0}; default is {cmd:delt(0.01)}{p_end}
 {synopt:{opt dmax(#)}}upper bound (angle measured in degrees) for the search over {it:d0}; default is {cmd:dmax(70)}{p_end}
 {synopt:{opt reps(#)}}bootstrap replications used to select optimal {it:d0}; default is {cmd:reps(50)}{p_end}
+{synopt:{opt plus:rand}}specifies that an independent random disturbance with zero mean
+and variance equal to the variance of the endogenous variable is added to the SIV variable.{p_end}
+{synopt:{opt rcode}}uses R programming language (via {cmd:rcall}) for random number generation to exactly reproduce R results{p_end}
+
+{syntab:FE options}
+
+{synopt:{opt fe}}specifies one-way (individual) fixed-effects estimator{p_end}
+{synopt:{opt twfe}}specifies two-way (individual and time) fixed-effects estimator{p_end}
 {synopt:{opt maxiter(#)}}maximum iterations for Halperin APM; default is {cmd:maxiter(50)}{p_end}
 {synopt:{opt tol:erance(#)}}convergence tolerance for maximum absolute difference; default is {cmd:tolerance(1e-8)}{p_end}
 {synopt:{opt nolog}}suppresses the Halperin APM iteration log{p_end}
-{synopt:{opt rcode}}uses R programming language (via {cmd:rcall}) for random number generation to exactly reproduce R results{p_end}
 
 {synoptline}
 {p2colreset}{...}
@@ -56,16 +61,31 @@ and reporting options.
 
 {pstd}
 {helpb civreg} requires STATA version 11 or later, {helpb ivreg2}
-version 2.1.15 or later, and relevant STATA packages. To install {helpb civreg}, type:
+version 2.1.15 or later, and relevant STATA packages. 
 
-{phang2}. {stata `"ssc install civreg"'}{p_end}
+{title:Install and update}
 
 {pstd}
-The R programming language and {helpb rcall} package must be installed
-when option {cmd:rcode} is specified. To install {helpb rcall}, type:
+To install {helpb civreg}, type:
 
-{phang2}. {stata `"net install github, from("https://haghish.github.io/github/")"'}{p_end}
-{phang2}. {stata `"github install haghish/rcall, stable"'}{p_end}
+{phang2}. {stata `"ssc install civreg"'}{p_end}
+{phang2}. {stata `"net install civreg, from("https://raw.githubusercontent.com/ManhHB94/civreg/main/")"'}{p_end}
+
+{pstd}
+The latest version of {cmd:civreg} can be found at the following link: {browse "https://github.com/ManhHB94/":https://github.com/ManhHB94/}{p_end}
+
+{pstd}To update the {cmd:civreg} package to the latest version, run either of the following commands{p_end}
+{phang2}. {stata `"ado update civreg, update"'}{p_end}
+{phang2}. {stata `"ssc install civreg, replace"'}{p_end}
+{phang2}. {stata `"net install civreg, from("https://raw.githubusercontent.com/ManhHB94/civreg/main/") replace"'}{p_end}
+
+{title:Citation of civreg}
+
+{phang}{helpb civreg} is not an official Stata command. It is a free contribution
+to the research community, like a paper. Please cite it as such: {p_end}
+
+{phang2}Manh Hoang-Ba, 2026. CIVREG: Stata module to perform coplanar/synthetic instrumental variables regression.
+{browse "https://ideas.repec.org/c/boc/bocode/s459728.html":https://ideas.repec.org/c/boc/bocode/s459728.html}
 
 {marker description}{...}
 {title:Description}
@@ -88,13 +108,12 @@ reduced-form representation of the model. A valid coplanar
 instrument projected onto that subspace can be represented as
 
 {p 12 12 2}
-{it:s = x + k*d0*r}
+{it:s = x - k*d0*r}
 
 {pstd}
 where {it:x} is the endogenous regressor, {it:r} is orthogonal to {it:x}
 within the regression plane, {it:d0} is a nuisance parameter, and
-{it:k} depends on the sign of the covariance between the endogenous
-regressor and the structural error.
+{it:k} = 1 if {it:cov(x,u)>0}, or -1 if {it:cov(x,u)<0}, with {it:u} is the structural error.
 
 {pstd}
 The CIV estimator searches for the value of {it:d0} that satisfies the
@@ -133,7 +152,7 @@ where {it:x} is endogenous because {it:cov(x,u) != 0}.
 The CIV method constructs a coplanar instrument of the form
 
 {p 12 12 2}
-{it:s = x + k*d0*r}
+{it:s = x - k*d0*r}
 
 {pstd}
 where {it:r} is constructed as the component of the dependent variable
@@ -195,18 +214,6 @@ applied to the transformed data.
 {dlgtab:SIV construction}
 
 {phang}
-{opt fe} requests the one-way fixed-effects estimator for panel data.
-Before constructing the coplanar instrument, all variables are
-transformed using the within transformation (time-demeaning at the
-individual level).
-
-{phang}
-{opt twfe} requests the two-way fixed-effects estimator for panel data.
-Before constructing the coplanar instrument, all variables are
-transformed using the Halperin alternating projection method (APM) to
-remove both individual and time fixed effects iteratively.
-
-{phang}
 {opt hete(#)} specifies the criterion used to identify the optimal
 coplanar instrument.
 
@@ -241,6 +248,24 @@ distribution functions and the Anderson-Darling statistic.{p_end}
 obtain the optimal {it:d0}.
 
 {phang}
+{opt rcode} requests random number generation through R programming
+language using {cmd:rcall}.
+
+{dlgtab:FE options}
+
+{phang}
+{opt fe} requests the one-way fixed-effects estimator for panel data.
+Before constructing the coplanar instrument, all variables are
+transformed using the within transformation (time-demeaning at the
+individual level).
+
+{phang}
+{opt twfe} requests the two-way fixed-effects estimator for panel data.
+Before constructing the coplanar instrument, all variables are
+transformed using the Halperin alternating projection method (APM) to
+remove both individual and time fixed effects iteratively.
+
+{phang}
 {opt maxiter(#)} specifies the maximum number of iterations used in the
 Halperin APM algorithm when option {cmd:twfe} is specified.
 
@@ -253,14 +278,11 @@ absolute difference between successive APM iterations when option
 {opt nolog} suppresses the iteration log displayed by the Halperin APM
 algorithm when option {cmd:twfe} is specified.
 
-{phang}
-{opt rcode} requests random number generation through R programming
-language using {cmd:rcall}.
 
 {title:Important notes}
 
 {pstd}
-{cmd:civreg} does not currently support factor-variable notation or
+{helpb civreg} does not currently support factor-variable notation or
 time-series operators directly inside the command syntax.
 
 {pstd}
@@ -276,14 +298,18 @@ estimation.
 
 {phang2}{cmd:. xtset} {it:panelvar timevar}{p_end}
 
-{title:Install and update}
+{pstd}
+{cmd:predict , residuals} after {helpb civreg}. Under {cmd:fe} or {cmd:twfe},  
+the predicted residuals are composite residuals (a_i [+ v_t] + u_it), 
+not structural residuals (u_it). Structural residuals can be obtained by assuming E(a_i)=0 and E(v_t)=0
+and performing calculations on group means. See Examples below for details.
 
 {pstd}
-The latest version of {cmd:civreg} can be found at the following link: {browse "https://github.com/ManhHB94/":https://github.com/ManhHB94/}{p_end}
+The R programming language and {helpb rcall} package must be installed
+when option {cmd:rcode} is specified. To install {helpb rcall}, type:
 
-{pstd}To update the {cmd:civreg} package to the latest version, run either of the following commands{p_end}
-{phang2}. {stata `"ado update civreg, update"'}{p_end}
-{phang2}. {stata `"net install civreg, from("https://raw.githubusercontent.com/ManhHB94/civreg/main/") replace"'}{p_end}
+{phang2}. {stata `"net install github, from("https://haghish.github.io/github/")"'}{p_end}
+{phang2}. {stata `"github install haghish/rcall, stable"'}{p_end}
 
 {marker results}{...}
 {title:Saved results}
@@ -304,14 +330,6 @@ In addition, the following are stored:
 {synopt:{cmd:e(chk_sign)}}store information about the signs of cov(x,u){p_end}
 {synopt:{cmd:e(cor_x_iv)}}correlation matrix corr(x,civ){p_end}
 {synopt:{cmd:e(d0)}}matrix of parameter d0 (mean across bootstrap replications){p_end}
-
-{title:Citation of civreg}
-
-{phang}{helpb civreg} is not an official Stata command. It is a free contribution
-to the research community, like a paper. Please cite it as such: {p_end}
-
-{phang2}Manh Hoang-Ba, 2026. CIVREG: Stata module to perform coplanar/synthetic instrumental variables regression.
-{browse "https://ideas.repec.org/c/boc/bocode/s459728.html":https://ideas.repec.org/c/boc/bocode/s459728.html}
 
 {marker examples}{...}
 {title:Examples}
@@ -334,8 +352,19 @@ to the research community, like a paper. Please cite it as such: {p_end}
 {phang2}{it:Fixed-effects CIV estimation:}{p_end}
 {phang2}{stata ". civreg n (k = ) w ys, fe"}{p_end}
 
+{phang2}{it:Predict a_i:}{p_end}
+{phang2}{stata ". predict double au , resid"}{p_end}
+{phang2}{stata ". egen double a_i = mean(au) , by(id)"}{p_end}
+
 {phang2}{it:Two-way fixed-effects CIV estimation:}{p_end}
-{phang2}{stata ". civreg n (k w = ) ys, twfe"}{p_end}
+{phang2}{stata ". civreg n (k w = ) ys if year > 1977 & year < 1983 , twfe"}{p_end}
+
+{phang2}{it:Predict a_i and v_t in} {cmd:balanced panel data} {it:case:}{p_end}
+{phang2}{stata ". predict double avu if e(sample) , resid"}{p_end}
+{phang2}{stata ". qui sum avu if e(sample), mean"}{p_end}
+{phang2}{stata ". scalar avu_m = r(mean)"}{p_end}
+{phang2}{stata ". egen double a_i = mean(avu - `=avu_m') if e(sample), by(id)"}{p_end}
+{phang2}{stata ". egen double v_t = mean(avu - `=avu_m') if e(sample), by(year)"}{p_end}
 
 {marker references}{...}
 {title:References}

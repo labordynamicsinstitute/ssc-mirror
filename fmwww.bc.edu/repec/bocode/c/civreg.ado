@@ -5,12 +5,16 @@ Require package:
    ivreg2, ranktest, (options: rcall, github for reproduce R results)
 		
 Versions:
-* 05/27/26 - 1.0.0 first-time contribute
-* 05/28/26 - 1.0.1 use cluster bootstrap sampling in panel data case
-                   add in e():  info. of cov(x,u);
+* 05/27/26 - 1.0.0 + first-time contribute
+* 05/28/26 - 1.0.1 + use cluster bootstrap sampling in panel data case
+                   + add in e():  info. of cov(x,u);
                                   matrix of corr(x, civ)
                                   and matrix of parameter(s) d0
-
+* 06/02/26 - 2.0.0 + add exexog in to FWL steps
+                   + always demeaning after FWL procedure
+                   + add option radd: CIV + IIDN(0, sd(x))
+                   + adjust create IV in case hete(1) and hete(2), follow Ratbek's feedback
+				   
 ==============================================================================*/
 
 cap pro drop civreg
@@ -26,13 +30,7 @@ pro def civreg, eclass byable(recall)
 	local ivreg2_cmd "ivreg2"
 	
 	if replay() {
-/*		
-		if `"`e(cmd)'"' != "civreg" {
-			error 301
-		}
-		else syntax [, Level(integer $S_level) FIRST FFIRST /*
-			*/	NOFOoter NOOUTput EForm(string) PLUS ]
-*/			
+		
 		syntax [, Level(integer $S_level) FIRST FFIRST RF /*
 			*/	NOHEader NOFOoter NOOUTput EForm(string) PLUS]
 			
@@ -55,7 +53,7 @@ pro def civreg, eclass byable(recall)
 		
 		ereturn local cmd "civreg"
 	}
-// end replay
+
 	else {
 		
 		syntax anything(name = 0) [if] [in] , [ /*
@@ -66,6 +64,7 @@ pro def civreg, eclass byable(recall)
 			*/	delt(real 0.01)					/*
 			*/	dmax(real 70)					/*
 			*/	rcode 							/*
+			*/	PLUSrand						/*	// ver 2.0.0
 			*/	maxiter(integer 50)				/*
 			*/	TOLerance(real 1e-8)			/*
 			*/	NOLOG							/*
@@ -74,8 +73,8 @@ pro def civreg, eclass byable(recall)
 			*/	saverf SAVERFPrefix(name)		/*
 			*/	NOFOoter NOOUTput				/*
 			*/	EForm(string) PLUS				/*
-			*/	Level(integer $S_level)			/*
-			*/	liml gmm2s gmmw	gmm				/*	// to be partialed out
+			*/	Level(integer $S_level )		/*
+			*/	liml gmm2s	gmm					/*	// to be partialed out
 			*/	*								/*
 			*/	]
 
@@ -129,6 +128,16 @@ pro def civreg, eclass byable(recall)
 		
 		if "`rcode'" != "" local r_code = 1
 		else local r_code = 0
+		
+		if "`plusrand'" != "" {
+			
+			local plus_rd = 1
+			local plusrand_tilte ", plus zero-mean random variable"
+		}
+		else {
+			
+			local plus_rd = 0
+		}
 		
 		marksample touse
 		markout `touse' `lhs' `endo' `inexog' `exexog' `cluster' , strok
@@ -334,10 +343,10 @@ di as error /*
 			local ivar "`mark_id'"
 		}
 		
-		qui mata: create_civlist("endo_rmc", "lhs", "ivar", "inexog_rmc", /*
-						*/	"touse", /*
-						*/	"d", "delt", "dmax", "reps", "r_code", "hete", /*
-						*/ "nocons", "panelis", /*
+		mata: create_civlist("endo_rmc", "lhs", "ivar",  			/*
+						*/	"inexog_rmc", "exexog_rmc", "touse", 		/*
+						*/	"d", "delt", "dmax", "reps", "r_code",  	/*
+						*/	"hete", "nocons", "panelis", "plus_rd", 	/*
 						*/	"civ" )
 				
 		mat rown `sign_k' = `endo_rmc'
@@ -350,40 +359,42 @@ di as error /*
 		mat rown `d0' = "d0"
 		mat coln `d0' = `endo_rmc'
 		
+		if `: word count `endo_rmc'' > 1 local nocoll "nocollin"
+		
 		if `fe_opt' == 0 {
-			
-			qui cap version `ver': `ivreg2_cmd' /*
+
+			qui version `ver': `ivreg2_cmd' /*
 							*/	`lhs' (`endo_rmc' = `civ' `exexog_rmc' ) 	/*
 							*/	`inexog_rmc' if `touse' , `options'			/*
 							*/	`first' `ffirst' `rf' 						/*
 							*/	savefprefix(`savefprefix') 					/*
 							*/	saverfprefix(`saverfprefix')				/*
 							*/	`noheader' `nofooter' `nooutput'			/*
-							*/	`eform'	`plus' level(`level') 
+							*/	`eform'	`plus' level(`level') `nocoll'
 
 		}
 		else if `fe_opt' == 1 {
 			
-			qui cap version `ver': `ivreg2_cmd' /*
+			qui version `ver': `ivreg2_cmd' /*
 							*/	`lhs' (`endo_rmc' = `civ' `exexog_rmc' ) 	/*
 							*/	`inexog_rmc' if `touse' , `options'			/*
 							*/	`first' `ffirst' `rf' 						/*
 							*/	savefprefix(`savefprefix') 					/*
 							*/	saverfprefix(`saverfprefix')				/*
 							*/	`noheader' `nofooter' `nooutput'			/*
-							*/	`eform'	`plus' level(`level')				/*
-							*/	dofminus(`=`N'-1 + `nocons'')
+							*/	`eform'	`plus' level(`level') `nocoll'		/*
+							*/	dofminus(`=`N'-1 + `nocons'') 
 		}
 		else {
 
-			qui cap version `ver': `ivreg2_cmd' /*
+			qui version `ver': `ivreg2_cmd' /*
 							*/	`lhs' (`endo_rmc' = `civ' `exexog_rmc' ) 	/*
 							*/	`inexog_rmc' if `touse' , `options'			/*
 							*/	`first' `ffirst' `rf' 						/*
 							*/	savefprefix(`savefprefix') 					/*
 							*/	saverfprefix(`saverfprefix')				/*
 							*/	`noheader' `nofooter' `nooutput'			/*
-							*/	`eform'	`plus' level(`level')				/*
+							*/	`eform'	`plus' level(`level') `nocoll'		/*
 							*/	dofminus(`=`N' + `T' - 2 + `nocons'') 
 		}
 
@@ -406,10 +417,10 @@ di as error /*
 restore
 
 		qui merge m:1 `mark_id' using `_data', nogen		
-		
+	
 //		Label CIV
 		qui foreach var of local civ {
-			label var `var' "`var' generated by most recent civreg command"
+			label var `var' "`var' generated by most recent civreg command`plusrand_tilte'"
 		}
 		
 //		Store results
@@ -1099,7 +1110,7 @@ real scalar criterion_homo(
 }
 
 // hete = 1
-real scalar criterion_gls_f(
+real scalar criterion_hete_p(
         real colvector x_b,
         real colvector civ_b,
         real scalar nocons
@@ -1141,11 +1152,12 @@ real scalar criterion_gls_f(
 
         dv = chi2(1, chi2_g) - chi2(1, chi2_o)
 
-        return(abs(dv))
+//        return(abs(dv)) 
+		return(dv)		// ver 2.0.0
 }
 
 // hete = 2
-real scalar criterion_gls_ad(
+real scalar criterion_hete_n(
         real colvector x_b,
         real colvector civ_b,
 		real scalar nocons
@@ -1177,7 +1189,16 @@ real scalar criterion_gls_ad(
 		
 		ad0 = ad2_stat(xx0, yy0)
 		
-        return(1 - ad0)
+//		return(1 - ad0)
+
+//		ver 2.0.0		
+		if (mean(xx0) > mean(yy0)) {
+			return(-ad0)
+		}
+		else {
+			return(ad0)
+		}
+
 }
 
 
@@ -1264,7 +1285,7 @@ real scalar find_d0_boot(
                         }
                         else if (hete == 1) {
 
-                                m1[i] = criterion_gls_f(
+                                m1[i] = criterion_hete_p(
                                                 x_b,
                                                 civ_b,
 												nocons
@@ -1272,7 +1293,7 @@ real scalar find_d0_boot(
                         }
                         else if (hete == 2) {
 
-                                m1[i] = criterion_gls_ad(
+                                m1[i] = criterion_hete_n(
                                                 x_b,
                                                 civ_b,
 												nocons
@@ -1294,21 +1315,22 @@ real scalar find_d0_boot(
 				create_civ FUNCTION
 ================================================================ */
 
-void create_civ(real colvector y,
-                     real colvector x,
-					 real colvector id,
-                     real scalar d_or,
-					 real scalar delt,
-					 real scalar dmax,
-					 real scalar reps,
-					 real scalar r_code,
-					 real scalar hete,
-					 real scalar nocons,
-					 real scalar panelis,
+void create_civ(
+					real colvector y,
+					real colvector x,
+					real colvector id,
+					real scalar d_or,
+					real scalar delt,
+					real scalar dmax,
+					real scalar reps,
+					real scalar r_code,
+					real scalar hete,
+					real scalar nocons,
+					real scalar panelis,
 					 
-					 real colvector civ,
-					 real rowvector sign,
-					 real matrix d0m)
+					real colvector civ,
+					real rowvector sign,
+					real matrix d0m)
 {
 	
 	N = rows(y)
@@ -1320,6 +1342,7 @@ void create_civ(real colvector y,
 
 	theta1 = 0
 	dd = d
+	
 	while (theta1 < dmax) {
 		civ = x :- dd :* r
 		theta = acos(quadcross(x,civ) / sqrt(quadcross(x,x)*quadcross(civ,civ)))
@@ -1328,12 +1351,21 @@ void create_civ(real colvector y,
 	}
 	
 	signc = J(2, 5, .)
+/*
+ signc matrix
+ -------------------------------------
+   1  |   2   |   3   |   4   |   5   
+ -------------------------------------
+   k  |  cov  |  cov  |  cor  |  cor  
+      | signc | abs_nd| signc | abs_nd
+ -------------------------------------
+*/
 	signc[1, 1] = 1
 	signc[2, 1] = -1
 	
 	for (j = 1; j<=2; j++) {
 
-		if (j < 2) {
+		if (j == 1) {
 			k = 1
 		}
 		else {
@@ -1342,66 +1374,55 @@ void create_civ(real colvector y,
 		
 		i = 1
 		m_rows = floor( (dd-d_or) / delt ) + 1
-		m1 = J(m_rows, 1, .)
-		m2 = J(m_rows, 1, .)
+		m_v = J(m_rows, 1, .)
+		m_c = J(m_rows, 1, .)
 		d = d_or
 		
 		while (d < dd) {
+			
 			civ = x :- k * d * r
+			
 			e = x - ls_xb(x, civ, nocons)
 			e2 = e:^2
-			m1i = variance((e2, civ))
-			m2i = correlation((e2, civ))
+			m_vi = variance((e2, civ))
+			m_ci = correlation((e2, civ))
 
-			m1[i] = m1i[1, 2]
-			m2[i] = m2i[1, 2]
+			m_v[i] = m_vi[1, 2]
+			m_c[i] = m_ci[1, 2]
 			
 			d = d + delt
 			i = i + 1
 		}
 		
-		m1 = select(m1 , m1  :!= .)
-		m2 = select(m2 , m2  :!= .)
+		m_v = select(m_v , m_v  :!= .)
+		m_c = select(m_c , m_c  :!= .)
 		
-		m = m1
+		m = m_v
 		signc[j, 3] = check_initial_abs_increase(m)
-		signc[j, 5] = check_initial_abs_increase(m2)
+		signc[j, 5] = check_initial_abs_increase(m_c)
 		
 		if (signc[j,3] != 1) {
-			index = find_first_sign_change(m1)
+			index = find_first_sign_change(m_v)
 			n_m = rows(m)
-			m = m1[index..n_m]
+			m = m_v[index..n_m]
 		}
 		
 		signc[j, 2] = check_sign_change(m)
 		signc[j, 3] = check_initial_abs_increase(m)
-		signc[j, 4] = check_sign_change(m2)
+		signc[j, 4] = check_sign_change(m_c)
 		
 	}
 	
 	ch = J(2, 1, .)
+
 	for (j = 1; j<=2 ; j++) {
-/*		
-		if (j==1) {
-			sign_str = "cor(x,u)<0"
-		}
-		else {
-			sign_str = "cor(x,u)>0"
-		}
-		if (signc[j, 3] * signc[j, 4] == 0) {
-			printf("The assumption that " + sign_str +" is FALSE\n")
-		}
-		else {
-			printf("The assumption that " + sign_str +" is TRUE\n")			
-		}
-*/		
+
 		ch[j] = signc[j, 2] + signc[j, 3] + signc[j, 4] + signc[j, 5]
 	}
 	
 	pos_max = find_max_pos(ch)
 	k = signc[pos_max, 1]
-//	k
-//	signc
+
 	sign = signc[pos_max, ]
 	
 	if (k != 0) {
@@ -1419,9 +1440,8 @@ void create_civ(real colvector y,
 				nocons,
 				panelis
 		)
-//		d0m
-		civ = x :- k * d0m * r
 
+		civ = x :- k * d0m * r
 	}
 
 
@@ -1430,14 +1450,15 @@ void create_civ(real colvector y,
 
 
 /*================================================================
-				MAKER_civ FUNCTION
+				CREATE CIV LIST FUNCTION
 ================================================================*/
 
 void create_civlist(
         string scalar xname,      
         string scalar yname,
 		string scalar idname,
-        string scalar hname,      
+        string scalar hname,
+		string scalar ivname,
         string scalar tousename,  
         
         string scalar dname,
@@ -1448,13 +1469,14 @@ void create_civlist(
         string scalar hetename,
 		string scalar noconsn,
 		string scalar panelisn,
+		string scalar plusrandn,
         
         string scalar outname     
 )
 {
-        string rowvector x0n, y0n, h0n
+        string rowvector x0n, y0n, h0n, ivn
         
-        real matrix x0, y0, h
+        real matrix x0, y0, h , iv
         real matrix x0i, civ, hi
         
         real colvector y, x, xi , id , civ_i
@@ -1472,11 +1494,12 @@ void create_civlist(
         real scalar hete
 		real scalar nocons
 		real scalar panelis
+		real scalar plus_rd
         
         string scalar vname
         string scalar civlist
 
-        
+       
 // =====================================================
 // 		READ STATA LOCALS
 // =====================================================
@@ -1484,6 +1507,7 @@ void create_civlist(
         x0n = tokens(st_local(xname))
         y0n = tokens(st_local(yname))
         h0n = tokens(st_local(hname))
+		ivn = tokens(st_local(ivname))
 		idn = tokens(st_local(idname))
 		touse = st_local(tousename)
       
@@ -1503,6 +1527,13 @@ void create_civlist(
         else {
                 h = J(N, 1, 0)
         }
+		
+        if (length(ivn) > 0) {
+                iv = st_data(., ivn, touse)
+        }
+        else {
+                iv = J(N, 1, 0)
+        }		
 
         
 // =====================================================
@@ -1516,7 +1547,8 @@ void create_civlist(
         r_code  = strtoreal(st_local(rcodename))
         hete    = strtoreal(st_local(hetename))
 		nocons  = strtoreal(st_local(noconsn))
-		panelis  = strtoreal(st_local(panelisn))
+		panelis = strtoreal(st_local(panelisn))
+		plus_rd = strtoreal(st_local(plusrandn)) 
 
         k_x = cols(x0)
         
@@ -1525,11 +1557,10 @@ void create_civlist(
 // =====================================================
 
         civ = J(N, k_x, .)
-//		civb = J(N, k_x, .)
 
 		sign_k = J(k_x, 5, .)
 		d0 = J(1, k_x, .)
-
+		
         for (i=1; i<=k_x; i++) {
 
                 xi = x0[,i]
@@ -1555,14 +1586,21 @@ void create_civlist(
                                 x0i = x0[,1..i-1] , x0[,i+1..k_x]
                         }
 						
-						hi = x0i, h
-                        y = y0 - ls_xb(y0, hi, nocons)
-                        x = xi - ls_xb(xi, hi, nocons)
+						hi = x0i, h , iv
+//                        y = y0 - ls_xb(y0, hi, nocons)
+//                        x = xi - ls_xb(xi, hi, nocons)
+
+                        y = y0 - ls_xb(y0, hi, 0) // ver 2.0.0: to alaways demean
+                        x = xi - ls_xb(xi, hi, 0) // ver 2.0.0: to alaways demean
                 }
                 else {
 
-                        y = y0 - ls_xb(y0, h, nocons)
-                        x = xi - ls_xb(xi, h, nocons)
+//                        y = y0 - ls_xb(y0, h, nocons)
+//                        x = xi - ls_xb(xi, h, nocons)
+
+						hi = h , iv					// ver 2.0.0
+                        y = y0 - ls_xb(y0, hi, 0)	// ver 2.0.0: to alaways demean
+                        x = xi - ls_xb(xi, hi, 0)	// ver 2.0.0: to alaways demean
                 }
                 
 // ---------------------------------------------
@@ -1590,7 +1628,9 @@ void create_civlist(
 				sign_k[i, ] = sign
 				d0[i] = d0m
 				
-				if (k_x==1) {
+//				if (k_x==1) {	
+				if (plus_rd == 0) {	// ver 2.0.0
+					
 					civ[,i] = civ_i
 					
 				} else {
@@ -1612,7 +1652,6 @@ void create_civlist(
 					
 				}
 				
-//				civ[,i] = civi
         }
 		
         
@@ -1630,27 +1669,15 @@ void create_civlist(
 				if (_st_varindex(vname) != .) {
 						st_dropvar(vname)
 				}
-					
-				// create variable
-				st_addvar("double", vname)
-					
-				// store values
-				st_store(., vname, touse, civ[,i])
-					
-				// collect varlist
+				
+				_vn = st_addvar("double", vname)	// ver 2.0.0
+				st_store(., _vn, touse, civ[,i])	
+				
 				civlist = civlist + " " + vname
         }
 
-        
-// =====================================================
-// 		RETURN LOCAL MACRO
-// =====================================================
-
         st_local(outname, strtrim(civlist))
 		
-// =====================================================
-// 		RETURN MATRIX
-// =====================================================
 		stata("tempname sign_k")
         st_matrix(st_local("sign_k"), sign_k)
 		

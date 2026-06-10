@@ -1,4 +1,6 @@
 {smcl}
+{* *! version 2.5  06jun2026}{...}
+{* *! version 2.3  27may2026}{...}
 {* *! version 2.2  04may2026}{...}
 {* *! version 2.0  05feb2026}{...}
 {* *! version 1.6  30nov2025}{...}
@@ -60,7 +62,7 @@ be specified{p_end}
 {synopt :{cmd:no}{cmd:graph}} supresses the ATET plot{p_end}
 {p2coldent :+ {opth graph:(marginsplot:graph_opts)}} affects rendition of the ATET plot{p_end}
 {synopt :{opt dydx}} estimates ATETs using the {cmd:dydx} option in {cmd:{help margins}}; 
-useful when the default procedure fails to produce standard errors of the ATETs.{p_end}
+useful when the default procedure fails to produce standard errors of the ATETs or the ATETs themselves.{p_end}
 {synopt :{opth agg:regationweight(flexdid_postestimation##wtype:wtype)}}specify the aggregation weights; 
 default is {cmd:aggregationweight(obslevel)}{p_end}
 {synoptline}

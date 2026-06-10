@@ -1,33 +1,30 @@
-*! 1.3.0 Ariel Linden 01Jun2026	// handle gap-boundary segments of length <= p
-*! 1.2.0 Ariel Linden 23Apr2026	// fixed display with multiple panels
-*! 1.1.0 Ariel Linden 25Mar2026	// added nolog option
-*! 1.0.0 Ariel Linden 09Mar2026
+*! 1.0.0 Ariel Linden 06Jun2026
 
-program define praisk, eclass
+program define xtpraisk, eclass
 	version 14
 
 	if replay() {
-		if "`e(cmd)'" != "praisk" {
+		if "`e(cmd)'" != "xtpraisk" {
 			di as err "last estimates not found"
 			exit(301)
 		}
 		syntax [, Level(cilevel) COEFLegend]
-		praisk_display, level(`level') `coeflegend'
+		xtpraisk_display, level(`level') `coeflegend'
 		exit
 	}
 
-	local cmdline `"praisk `0'"'
+	local cmdline `"xtpraisk `0'"'
 
 	syntax varlist(min=1 numeric ts fv) [if] [in]	///
 		, LAG(integer)								///
 		[  Level(cilevel)							///
 		   NOCONStant								///
-		   Robust									///
 		   TOLerance(real 1e-6)						///
 		   ITERate(integer 250)						///
-		   vce(string)								///
 		   COEFLegend								///
 		   NOLog									///
+		   NP1										///
+		   NMK										///
 		]
 
 	if `lag' < 1 {
@@ -43,39 +40,33 @@ program define praisk, eclass
 		exit(198)
 	}
 
-	if "`robust'" != "" & "`vce'" != "" {
-		di as err "cannot specify both robust and vce()"
-		exit(198)
-	}
-	if "`robust'" != "" local vce "robust"
 
-	local vce_type   ""
-	local clustervar ""
-	if "`vce'" != "" {
-		tokenize `vce'
-		local vce_type = lower("`1'")
-		if "`vce_type'" == "cluster" {
-			if "`2'" == "" {
-				di as err "vce(cluster) requires a variable name"
-				exit(198)
-			}
-			local clustervar "`2'"
-			confirm variable `clustervar'
-		}
-		else if "`vce_type'" != "robust" {
-			di as err "vce() must be robust or cluster varname"
-			exit(198)
-		}
-	}
+
+	// require panel tsset
+	_xt, trequired
+	local panelvar "`r(ivar)'"
+	local timevar  "`r(tvar)'"
 
 	marksample touse
 
-	quietly tsset
-	local timevar  "`r(timevar)'"
-	local panelvar "`r(panelvar)'"
-
-	// exclude obs where the time (or panel) variable is missing — mirrors -prais-
+	// exclude obs where time or panel variable is missing
 	markout `touse' `timevar' `panelvar'
+
+	// panel summary stats
+	tempvar grpct
+	quietly {
+		by `panelvar', sort: gen `c(obs_t)' `grpct' = _N if `touse'
+		summarize `grpct' if `touse', meanonly
+	}
+	local g_min = r(min)
+	local g_max = r(max)
+	local g_avg = r(mean)
+	quietly {
+		tempvar panfirst
+		by `panelvar': gen byte `panfirst' = (_n==1) if `touse'
+		summarize `panfirst' if `touse', meanonly
+	}
+	local N_g = r(sum)
 
 	tokenize `varlist'
 	local yvar `1'
@@ -124,13 +115,15 @@ program define praisk, eclass
 		}
 	}
 
-	local nocons = ("`noconstant'" != "")
+	local nocons  = ("`noconstant'" != "")
+	local use_np1 = ("`np1'"        != "")
+	local use_nmk = ("`nmk'"        != "")
 
-	mata: praisk_main("`yvar'", "`xvars_keep'",        ///
+	mata: xtpraisk_main("`yvar'", "`xvars_keep'",        ///
 	                  `lag', "`touse'",                 ///
 	                  "`timevar'", "`panelvar'",         ///
 	                  `nocons', `tolerance', `iterate',  ///
-	                  "`vce_type'", "`clustervar'")
+	                  `use_np1', `use_nmk')
 
 	matrix b_post     = r(b)
 	matrix V_post     = r(V)
@@ -141,23 +134,20 @@ program define praisk, eclass
 	local  nobs_post      = r(nobs)
 	local  k_post         = r(k)
 	local  iter_post      = r(iter)
+	local  bounded        = r(bounded)
 	local  ss_res         = r(ss_res)
 	local  ss_tot         = r(ss_tot)
+	local  nmk_div        = r(nmk_div)
 	local  ngaps          = r(ngaps)
 	local  nonstationary  = r(nonstationary)
-	if "`vce_type'" == "cluster" local nclust = r(nclust)
 
-	// display gaps message before iteration log — matches prais behaviour
-	if `ngaps' > 0 {
-		if "`panelvar'" != "" {
-			di as txt _newline "Number of gaps in sample = " as res `ngaps' ///
-				as txt "   (gap count includes panel changes)"
-		}
-		else {
-			di as txt _newline "Number of gaps in sample = " as res `ngaps'
-		}
-		di as txt "note: computations for rho restarted at each gap."
+	if `bounded' {
+		di as txt "note: estimates of rho outside [-1,1] bounded to be in the range [-1,1]."
 	}
+
+	// display gaps message
+	// gap note suppressed in display (matching xtpcse behavior)
+	// gaps are tracked internally and stored in e(ngaps)
 
 	// display iteration history prais-like
 	if "`nolog'" == "" {
@@ -176,8 +166,10 @@ program define praisk, eclass
 	}
 
 	if `nonstationary' {
-		di as txt "warning: lag(`lag') estimates are non-stationary" ///
-			" (max|eigenvalue| >= 1)"
+		di as err "warning: lag(`lag') estimates are non-stationary" ///
+			" (max|eigenvalue| >= 1); estimation aborted."
+		di as err "         Consider a lower lag order or check your data."
+		exit(504)
 	}
 
 	// apply display names like -prais-
@@ -230,12 +222,7 @@ program define praisk, eclass
 	local ss_mod   = `ss_tot' - `ss_res'
 	local r2       = `ss_mod' / `ss_tot'
 	local r2_adj   = 1 - (1-`r2') * (`nobs_post'-1) / `dfr_post'
-	local rmse     = sqrt(`ss_res' / `dfr_post')
-
-	if "`vce_type'" == "" | "`vce_type'" == "ols" {
-		local f_stat = (`ss_mod' / `dfm_post') / (`ss_res' / `dfr_post')
-		ereturn scalar F = `f_stat'
-	}
+	local rmse     = sqrt(`ss_res' / `nmk_div')
 
 	ereturn scalar ll         = `ll_post'
 	ereturn scalar N          = `nobs_post'
@@ -251,39 +238,34 @@ program define praisk, eclass
 	ereturn scalar iterations = `iter_post'
 	ereturn scalar tolerance  = `tolerance'
 	ereturn scalar ngaps      = `ngaps'
-	if "`vce_type'" == "cluster" ereturn scalar N_clust = `nclust'
+	ereturn scalar N_g        = `N_g'
+	ereturn scalar g_min      = `g_min'
+	ereturn scalar g_avg      = `g_avg'
+	ereturn scalar g_max      = `g_max'
 
 	ereturn scalar p_lag      = `lag'
 	ereturn matrix rho        = rho_post
 	ereturn matrix serho      = serho_post
-	ereturn local  cmd        "praisk"
+	ereturn local  cmd        "xtpraisk"
 	ereturn local  cmdline    `"`cmdline'"'
-	ereturn local  predict    "praisk_p"
-	ereturn local  title      "Prais-Winsten AR(`lag') Regression"
+	ereturn local  predict    "xtpraisk_p"
+	ereturn local  title      "Prais{c 150}Winsten AR(`lag') regression, correlated panels corrected standard errors (PCSEs)"
 	ereturn local  noconstant "`noconstant'"
 	ereturn local  panelvar   "`panelvar'"
 	ereturn local  timevar    "`timevar'"
+	ereturn local  ivar       "`panelvar'"
+	ereturn local  tvar       "`timevar'"
+	ereturn local  vce        "pcse"
+	ereturn local  vcetype    "Panel-corrected"
 
-	if "`vce_type'" == "robust" {
-		ereturn local vce     "robust"
-		ereturn local vcetype "Semirobust"
-	}
-	else if "`vce_type'" == "cluster" {
-		ereturn local vce      "cluster"
-		ereturn local vcetype  "Semirobust"
-		ereturn local clustvar "`clustervar'"
-	}
-	else {
-		ereturn local vce     "ols"
-		ereturn local vcetype ""
-	}
 
 	// autocorrelations of residuals at lags 1..p
+	quietly tsset `panelvar' `timevar'
 	tempvar smpl xbhat ols_r ue_r
 	quietly generate byte `smpl' = e(sample)
 	quietly _predict double `xbhat' if `smpl', xb
 	quietly generate double `ols_r' = `yvar' - `xbhat' if `smpl'
-	quietly praisk_p `ue_r' if `smpl', ue
+	quietly xtpraisk_p `ue_r' if `smpl', ue
 
 	forvalues k = 1/`lag' {
 		quietly correlate `ols_r' L`k'.`ols_r' if `smpl'
@@ -292,12 +274,34 @@ program define praisk, eclass
 		ereturn scalar ac_ue`k'  = r(rho)
 	}
 
-	praisk_display, level(`level') `coeflegend'
+	// clear df_r so ereturn display uses z not t (like xtpcse)
+	ereturn local df_r
+
+	// Wald chi2 using posted coefficient names
+	if "`cnames'" != "" {
+		quietly testparm `cnames'
+	}
+	else {
+		quietly testparm _cons
+	}
+	ereturn scalar chi2 = r(chi2)
+	ereturn scalar p    = r(p)
+	ereturn scalar df   = `dfm_post'
+
+	// panel balance
+	if `g_min' == `g_max' {
+		ereturn local balance "balanced"
+	}
+	else {
+		ereturn local balance "unbalanced"
+	}
+
+	xtpraisk_display, level(`level') `coeflegend'
 end
 
 
 // display program
-program define praisk_display
+program define xtpraisk_display
 	syntax [, Level(cilevel) COEFLegend]
 
 	local nobs     = e(N)
@@ -311,63 +315,49 @@ program define praisk_display
 	local ss_tot   = `ss_mod' + `ss_res'
 	local ms_mod   = `ss_mod' / `dfm'
 	local ms_res   = `ss_res' / `dfr'
-	local vce_type = e(vce)
 	local clusvar  = e(clustvar)
-	local nclust   = e(N_clust)
 	local p_lag    = colsof(e(rho))
 	local ngaps    = e(ngaps)
-	local nocons   = ("`e(noconstant)'" != "")
+	local nocons    = ("`e(noconstant)'" != "")
+	local rank_post = e(rank)
+	local N_g      = e(N_g)
+	local g_min    = e(g_min)
+	local g_avg    = e(g_avg)
+	local g_max    = e(g_max)
 
 	local crit = invnormal(1 - (1-`level'/100)/2)
 
 	di ""
-	di as txt "Prais{c 150}Winsten AR(`p_lag') regression with iterated estimates"
+	di as txt "Prais{c 150}Winsten AR(`p_lag') regression, correlated panels corrected standard errors (PCSEs)"
 	di ""
-
-	if "`vce_type'" == "ols" {
-		local f_stat = e(F)
-		local p_f    = Ftail(`dfm', `dfr', `f_stat')
-		di as txt %12s "Source"  " {c |}" ///
-			_col(22) "SS" _col(35) "df" _col(44) "MS" ///
-			_col(52) "Number of obs"   _col(67) "= " as res %10.0f `nobs'
-		di as txt "{hline 13}{c +}{hline 34}" ///
-			_col(52) "F(`dfm',`dfr')"  _col(67) "= " as res %10.2f `f_stat'
-		di as txt %12s "Model" " {c |}"  ///
-			_col(17) as res %10.0g `ss_mod'  ///
-			_col(27) %10.0fc `dfm'           ///
-			_col(39) %10.0g `ms_mod'         ///
-			_col(52) as txt "Prob > F"   _col(67) "= " as res %10.4f `p_f'
-		di as txt %12s "Residual" " {c |}" ///
-			_col(17) as res %10.0g `ss_res'  ///
-			_col(27) %10.0fc `dfr'           ///
-			_col(39) %10.0g `ms_res'         ///
-			_col(52) as txt "R-squared"   _col(67) "= " as res %10.4f `r2'
-		di as txt "{hline 13}{c +}{hline 34}" ///
-			_col(52) "Adj R-squared"      _col(67) "= " as res %10.4f `r2_adj'
-		di as txt %12s "Total" " {c |}"          ///
-			_col(17) as res %10.0g `ss_tot'      ///
-			_col(27) %10.0fc (`nobs'-1)          ///
-			_col(39) %10.0g (`ss_tot'/(`nobs'-1)) ///
-			_col(52) as txt "Root MSE"    _col(67) "= " as res %10.4f `rmse'
-		di ""
-		ereturn display, level(`level') plus `coeflegend'
+	di as txt "Group variable: " _col(19) as res "`e(ivar)'" ///
+		_col(49) as txt "Number of obs"   _col(67) "= " as res %10.0f `nobs'
+	di as txt "Time variable:  " _col(19) as res "`e(tvar)'" ///
+		_col(49) as txt "Number of groups" _col(67) "= " as res %10.0f `N_g'
+	di as txt "Panels:" _col(19) as res "correlated (`e(balance)')" ///
+		_col(49) as txt "Obs per group:"
+	if `p_lag' == 1 {
+		di as txt "Autocorrelation:" _col(19) as res "common AR(1)" ///
+			_col(63) as txt "min" _col(67) "= " as res %10.0f `g_min'
 	}
 	else {
-		tempname bmat Vmat
-		matrix `bmat' = e(b)
-		matrix `Vmat' = e(V)
-		mata: praisk_wald_f("`bmat'", "`Vmat'", `dfm', `nocons', "r(wald_F)")
-		local f_stat = r(wald_F)
-		local p_f    = Ftail(`dfm', `dfr', `f_stat')
-		di as txt "Linear regression" ///
-			_col(49) "Number of obs"    _col(67) "= " as res %10.0f `nobs'
-		di as txt _col(49) "F(`dfm',`dfr')"    _col(67) "= " as res %10.2f `f_stat'
-		di as txt _col(49) "Prob > F"          _col(67) "= " as res %10.4f `p_f'
-		di as txt _col(49) "R-squared"         _col(67) "= " as res %10.4f `r2'
-		di as txt _col(49) "Root MSE"          _col(67) "= " as res %10.4f `rmse'
-		di ""
-		ereturn display, level(`level') plus `coeflegend'
+		di as txt "Autocorrelation:" _col(19) as res "common AR(`p_lag')" ///
+			_col(63) as txt "min" _col(67) "= " as res %10.0f `g_min'
 	}
+	di as txt _col(63) as txt "avg" _col(67) "= " as res %10.1f `g_avg'
+	di as txt _col(63) as txt "max" _col(67) "= " as res %10.0f `g_max'
+	di ""
+
+	// PCSE display: Wald chi2 and R2 matching xtpcse
+	local n_cv = `N_g' * (`N_g' + 1) / 2
+	di as txt "Estimated covariances" _col(28) "= " as res %9.0g `n_cv' ///
+		_col(49) as txt "R-squared" _col(67) "= " as res %10.4f `r2'
+	di as txt "Estimated autocorrelations" _col(28) "= " as res %9.0g 1 ///
+		_col(49) as txt "Wald chi2(`dfm')" _col(67) "= " as res %10.2f e(chi2)
+	di as txt "Estimated coefficients" _col(28) "= " as res %9.0g `rank_post' ///
+		_col(49) as txt "Prob > chi2" _col(67) "= " as res %10.4f e(p)
+	di ""
+	_coef_table, level(`level') plus `coeflegend'
 
 	// lag parameters: always shown regardless of coeflegend
 	local i = 1
@@ -434,7 +424,116 @@ end
 version 14.0
 mata:
 
-real rowvector function praisk_ljungbox(real matrix  resid,
+real matrix function xtpraisk_toeplitz(real colvector c)
+{
+	real scalar n, i, j
+	real matrix T
+
+	n = rows(c)
+	T = J(n, n, 0)
+	for (i=1; i<=n; i++) {
+		for (j=1; j<=i; j++) {
+			T[i,j] = c[i-j+1]
+		}
+	}
+	return(T)
+}
+
+real matrix function xtpraisk_vp_inv(real colvector rho, real scalar p)
+{
+	real matrix  vpinv, rho1
+	real scalar  i, j, k1, k2, s1, s2
+
+	vpinv = J(p, p, 0)
+	rho1  = (-1 \ rho)
+
+	for (j=1; j<=p; j++) {
+		for (i=1; i<=j; i++) {
+			s2 = 0
+			for (k2 = p+1-j; k2 <= p+i-j; k2++) {
+				s2 = s2 + rho[k2] * rho[k2+j-i]
+			}
+			s1 = 0
+			for (k1=1; k1<=i; k1++) {
+				s1 = s1 + rho1[k1] * rho1[k1+j-i]
+			}
+			vpinv[i,j] = s1 - s2
+			vpinv[j,i] = vpinv[i,j]
+		}
+	}
+	return(vpinv)
+}
+
+void function xtpraisk_wald_f(string scalar bname,
+                             string scalar Vname,
+                             real   scalar dfm,
+                             real   scalar nocons,
+                             string scalar rscalar)
+{
+	real matrix b, V
+	real scalar k, F
+
+	b = st_matrix(bname)
+	V = st_matrix(Vname)
+	k = cols(b)
+
+	if (!nocons) {
+		b = b[|1,1 \ 1,k-1|]
+		V = V[|1,1 \ k-1,k-1|]
+	}
+
+	F = (b * invsym(V) * b')[1,1] / dfm
+	st_numscalar(rscalar, F)
+}
+
+real scalar function xtpraisk_ar_maxroot(real colvector rho, real scalar p)
+{
+	real matrix companion, eigvals
+
+	if (p == 1) return(abs(rho[1,1]))
+
+	companion = J(p, p, 0)
+	companion[1, .] = rho'
+	companion[|2,1 \ p,p-1|] = I(p-1)
+
+	eigvals = eigenvalues(companion)
+	return(max(sqrt(Re(eigvals):^2 + Im(eigvals):^2)))
+}
+
+real colvector function xtpraisk_ar_resid(real colvector u,
+                                         real matrix    allsegs,
+                                         real colvector rho,
+                                         real scalar    p)
+{
+	real scalar    g, nsegs, r1, r2, ns, i, lag
+	real scalar    val
+	real colvector ug, er, out
+
+	nsegs = rows(allsegs)
+	out   = J(0, 1, 0)
+
+	for (g=1; g<=nsegs; g++) {
+		r1 = allsegs[g,1]
+		r2 = allsegs[g,2]
+		ns = r2 - r1 + 1
+		if (ns <= p) continue
+
+		ug = u[|r1 \ r2|]
+		er = J(ns - p, 1, 0)
+
+		for (i=1; i<=ns-p; i++) {
+			val = ug[i+p]
+			for (lag=1; lag<=p; lag++) {
+				val = val - rho[lag] * ug[i+p-lag]
+			}
+			er[i] = val
+		}
+		out = (out \ er)
+	}
+	return(out)
+}
+
+real rowvector function xtpraisk_ljungbox(real matrix  resid,
                                          real matrix  allsegs,
                                          real scalar  m)
 {
@@ -490,207 +589,8 @@ real rowvector function praisk_ljungbox(real matrix  resid,
 
 	return((Q, m))
 }
-real matrix function praisk_toeplitz(real colvector c)
-{
-	real scalar n, i, j
-	real matrix T
 
-	n = rows(c)
-	T = J(n, n, 0)
-	for (i=1; i<=n; i++) {
-		for (j=1; j<=i; j++) {
-			T[i,j] = c[i-j+1]
-		}
-	}
-	return(T)
-}
-
-
-real matrix function praisk_vp_inv(real colvector rho, real scalar p)
-{
-	real matrix  vpinv, rho1
-	real scalar  i, j, k1, k2, s1, s2
-
-	vpinv = J(p, p, 0)
-	rho1  = (-1 \ rho)
-
-	for (j=1; j<=p; j++) {
-		for (i=1; i<=j; i++) {
-			s2 = 0
-			for (k2 = p+1-j; k2 <= p+i-j; k2++) {
-				s2 = s2 + rho[k2] * rho[k2+j-i]
-			}
-			s1 = 0
-			for (k1=1; k1<=i; k1++) {
-				s1 = s1 + rho1[k1] * rho1[k1+j-i]
-			}
-			vpinv[i,j] = s1 - s2
-			vpinv[j,i] = vpinv[i,j]
-		}
-	}
-	return(vpinv)
-}
-
-
-// compute Wald F statistic from named e(b) and e(V) matrices
-void function praisk_wald_f(string scalar bname,
-                             string scalar Vname,
-                             real   scalar dfm,
-                             real   scalar nocons,
-                             string scalar rscalar)
-{
-	real matrix b, V
-	real scalar k, F
-
-	b = st_matrix(bname)
-	V = st_matrix(Vname)
-	k = cols(b)
-
-	if (!nocons) {
-		b = b[|1,1 \ 1,k-1|]
-		V = V[|1,1 \ k-1,k-1|]
-	}
-
-	F = (b * invsym(V) * b')[1,1] / dfm
-	st_numscalar(rscalar, F)
-}
-
-
-// compute maximum modulus of companion matrix eigenvalues
-real scalar function praisk_ar_maxroot(real colvector rho, real scalar p)
-{
-	real matrix companion, eigvals
-
-	if (p == 1) return(abs(rho[1,1]))
-
-	companion = J(p, p, 0)
-	companion[1, .] = rho'
-	companion[|2,1 \ p,p-1|] = I(p-1)
-
-	eigvals = eigenvalues(companion)
-	return(max(sqrt(Re(eigvals):^2 + Im(eigvals):^2)))
-}
-
-
-// compute AR innovation residuals pooled across segments
-real colvector function praisk_ar_resid(real colvector u,
-                                         real matrix    allsegs,
-                                         real colvector rho,
-                                         real scalar    p)
-{
-	real scalar    g, nsegs, r1, r2, ns, i, lag
-	real scalar    val
-	real colvector ug, er, out
-
-	nsegs = rows(allsegs)
-	out   = J(0, 1, 0)
-
-	for (g=1; g<=nsegs; g++) {
-		r1 = allsegs[g,1]
-		r2 = allsegs[g,2]
-		ns = r2 - r1 + 1
-		if (ns <= p) continue
-
-		ug = u[|r1 \ r2|]
-		er = J(ns - p, 1, 0)
-
-		for (i=1; i<=ns-p; i++) {
-			val = ug[i+p]
-			for (lag=1; lag<=p; lag++) {
-				val = val - rho[lag] * ug[i+p-lag]
-			}
-			er[i] = val
-		}
-		out = (out \ er)
-	}
-	return(out)
-}
-
-
-// estimate rho by Yule-Walker (pooled cross-products across segments)
-real colvector function praisk_pooled_yw(real colvector   u,
-                                          real matrix      allsegs,
-                                          real scalar      p,
-                                          real matrix      A_out)
-{
-	real scalar    g, nsegs, r1, r2, ns, i, j, lo, hi
-	real colvector rho, ug, b
-	real matrix    A
-
-	nsegs = rows(allsegs)
-	A     = J(p, p, 0)
-	b     = J(p, 1, 0)
-
-	for (g=1; g<=nsegs; g++) {
-		r1 = allsegs[g,1]
-		r2 = allsegs[g,2]
-		ns = r2 - r1 + 1
-		if (ns <= p) continue
-
-		ug = u[|r1 \ r2|]
-
-		for (j=1; j<=p; j++) {
-			if (ns > j) {
-				b[j] = b[j] + (ug[|j+1 \ ns|]' * ug[|1 \ ns-j|])[1,1]
-			}
-		}
-
-		for (i=1; i<=p; i++) {
-			for (j=1; j<=i; j++) {
-				lo = max((i,j)) + 1
-				hi = ns
-				if (hi >= lo) {
-					A[i,j] = A[i,j] + (ug[|lo-i \ hi-i|]' * ug[|lo-j \ hi-j|])[1,1]
-				}
-				A[j,i] = A[i,j]
-			}
-		}
-	}
-
-	if (A[1,1] == 0) {
-		errprintf("ERROR: No segment has enough observations to estimate AR(%g)\n", p)
-		exit(198)
-	}
-
-	rho   = lusolve(A, b)
-	A_out = A
-	return(rho)
-}
-
-
-void function praisk_transform_segment(real colvector ys,  real matrix  Xs,
-                                        real colvector rho, real scalar  p,
-                                        real colvector yrs, real matrix  xrs)
-{
-	real matrix    vpinv, p0, pm
-	real scalar    n
-	real colvector col1
-
-	n     = rows(ys)
-	vpinv = praisk_vp_inv(rho, p)
-	p0    = cholesky(vpinv)
-	p0    = p0[p::1, p::1]
-
-	// when n <= p the segment is too short for any CO rows; only the
-	// Prais-Winsten initialization block applies.  Use the top-left n×n
-	// submatrix of p0 — for n=1, p=1 this reduces to sqrt(1-rho^2)*y,
-	// exactly matching official -prais- behavior at gap boundaries.
-	if (n <= p) {
-		yrs = p0[|1,1 \ n,n|] * ys
-		xrs = p0[|1,1 \ n,n|] * Xs
-		return
-	}
-
-	col1  = (1 \ -rho \ J(n-p-1, 1, 0))
-	pm    = praisk_toeplitz(col1)
-	pm[|1,1 \ p,p|] = p0
-
-	yrs = pm * ys
-	xrs = pm * Xs
-}
-
-
-real matrix function praisk_build_segments(real colvector panid,
+real matrix function xtpraisk_build_segments(real colvector panid,
                                             real colvector tvec,
                                             pointer(real scalar) scalar ngaps_ptr)
 {
@@ -719,8 +619,38 @@ real matrix function praisk_build_segments(real colvector panid,
 	return(segs)
 }
 
+void function xtpraisk_transform_segment(real colvector ys,  real matrix  Xs,
+                                        real colvector rho, real scalar  p,
+                                        real colvector yrs, real matrix  xrs)
+{
+	real matrix    vpinv, p0, pm
+	real scalar    n
+	real colvector col1
 
-void function praisk_transform_panel(real colvector y,       real matrix  X,
+	n     = rows(ys)
+	vpinv = xtpraisk_vp_inv(rho, p)
+	p0    = cholesky(vpinv)
+	p0    = p0[p::1, p::1]
+
+	// When n <= p the segment is too short for any CO rows; only the
+	// Prais-Winsten initialisation block applies.  Use the top-left nxn
+	// submatrix of p0 -- for n=1, p=1 this reduces to sqrt(1-rho^2)*y,
+	// exactly matching official -prais- behaviour at gap boundaries.
+	if (n <= p) {
+		yrs = p0[|1,1 \ n,n|] * ys
+		xrs = p0[|1,1 \ n,n|] * Xs
+		return
+	}
+
+	col1  = (1 \ -rho \ J(n-p-1, 1, 0))
+	pm    = xtpraisk_toeplitz(col1)
+	pm[|1,1 \ p,p|] = p0
+
+	yrs = pm * ys
+	xrs = pm * Xs
+}
+
+void function xtpraisk_transform_panel(real colvector y,       real matrix  X,
                                       real colvector rho,     real scalar  p,
                                       real matrix    allsegs,
                                       real colvector yr,      real matrix  xr)
@@ -736,7 +666,7 @@ void function praisk_transform_panel(real colvector y,       real matrix  X,
 		ns  = r2 - r1 + 1
 		yrs = J(ns, 1, .)
 		xrs = J(ns, cols(X), .)
-		praisk_transform_segment(y[|r1 \ r2|],
+		xtpraisk_transform_segment(y[|r1 \ r2|],
 		                          X[|r1,1 \ r2,cols(X)|],
 		                          rho, p, yrs, xrs)
 		yr[|r1 \ r2|]            = yrs
@@ -744,8 +674,86 @@ void function praisk_transform_panel(real colvector y,       real matrix  X,
 	}
 }
 
+real colvector function xtpraisk_pooled_yw(real colvector            u,
+                                            real matrix               allsegs,
+                                            real scalar               p,
+                                            real matrix               A_out,
+                                            real scalar               use_np1,
+                                            pointer(real scalar) scalar bounded_ptr)
+{
+	real scalar    g, nsegs, r1, r2, ns, i, j, lo, hi
+	real scalar    npanels, bounded, w, wtotal
+	real colvector rho_i, rho_sum, ug, b_i
+	real matrix    A_i, A_sum
 
-void function praisk_main(string scalar yvar,
+	nsegs   = rows(allsegs)
+	rho_sum = J(p, 1, 0)
+	A_sum   = J(p, p, 0)
+	npanels = 0
+	wtotal  = 0
+	bounded = 0
+
+	for (g=1; g<=nsegs; g++) {
+		r1 = allsegs[g,1]
+		r2 = allsegs[g,2]
+		ns = r2 - r1 + 1
+		if (ns <= p) continue
+
+		ug  = u[|r1 \ r2|]
+		A_i = J(p, p, 0)
+		b_i = J(p, 1, 0)
+
+		for (j=1; j<=p; j++) {
+			if (ns > j) {
+				b_i[j] = (ug[|j+1 \ ns|]' * ug[|1 \ ns-j|])[1,1]
+			}
+		}
+		for (i=1; i<=p; i++) {
+			for (j=1; j<=i; j++) {
+				lo = max((i,j)) + 1
+				hi = ns
+				if (hi >= lo) {
+					A_i[i,j] = (ug[|lo-i \ hi-i|]' * ug[|lo-j \ hi-j|])[1,1]
+				}
+				A_i[j,i] = A_i[i,j]
+			}
+		}
+
+		if (A_i[1,1] == 0) continue
+
+		rho_i = lusolve(A_i, b_i)
+
+		if (p == 1) {
+			if (rho_i[1] >  1) {
+				rho_i[1] =  1
+				bounded  =  1
+			}
+			if (rho_i[1] < -1) {
+				rho_i[1] = -1
+				bounded  =  1
+			}
+		}
+
+		if (use_np1) w = ns
+		else         w = ns - 1
+		rho_sum = rho_sum + w * rho_i
+		A_sum   = A_sum   + w * A_i
+		wtotal  = wtotal  + w
+		npanels = npanels + 1
+	}
+
+	if (npanels == 0) {
+		errprintf("no panel has enough obs to estimate AR(%g)\n", p)
+		exit(198)
+	}
+
+	if (bounded) *bounded_ptr = 1
+
+	A_out = A_sum / wtotal
+	return(rho_sum / wtotal)
+}
+
+void function xtpraisk_main(string scalar yvar,
                            string scalar xvars_expanded,
                            real   scalar p,
                            string scalar touse,
@@ -754,15 +762,17 @@ void function praisk_main(string scalar yvar,
                            real   scalar nocons,
                            real   scalar tol,
                            real   scalar maxiter,
-                           string scalar vcetype,
-                           string scalar clustervar)
+                           real   scalar use_np1,
+                           real   scalar use_nmk)
 {
 	real matrix      X, yr, xr, invxx, cov, cov_v, A_yw, data, vpinv
-	real matrix      meat, scores, allsegs
-	real colvector   y, u, rho, oldrho, b, es, serho, clid, ar_res
+	real matrix      allsegs
+	real colvector   y, u, rho, oldrho, b, es, serho, ar_res
 	real colvector   panid, tvec
-	real scalar      nobs, k, iter, uu, s2, hc_scale, has_x
-	real scalar      ll, ldet, i, g, nclust, ngaps, disp_val, s2_ar, n_ar
+	real scalar      nobs, k, iter, uu, s2, has_x, nmk_div
+	real scalar      ll, ldet, i, ngaps, disp_val, s2_ar, n_ar
+	real scalar      bounded
+	pointer(real scalar) scalar bounded_ptr
 	real scalar      ss_res, ss_tot, yrbar
 	pointer(real scalar) scalar ngaps_ptr
 	string matrix    rhonames
@@ -771,24 +781,12 @@ void function praisk_main(string scalar yvar,
 	has_x = (xvars_expanded != "")
 
 	if (panelvar != "") {
-		if (clustervar != "") {
-			if (has_x) allvars = (touse, panelvar, timevar, yvar, tokens(xvars_expanded), clustervar)
-			else       allvars = (touse, panelvar, timevar, yvar, clustervar)
-		}
-		else {
-			if (has_x) allvars = (touse, panelvar, timevar, yvar, tokens(xvars_expanded))
-			else       allvars = (touse, panelvar, timevar, yvar)
-		}
+		if (has_x) allvars = (touse, panelvar, timevar, yvar, tokens(xvars_expanded))
+		else       allvars = (touse, panelvar, timevar, yvar)
 	}
 	else {
-		if (clustervar != "") {
-			if (has_x) allvars = (touse, timevar, yvar, tokens(xvars_expanded), clustervar)
-			else       allvars = (touse, timevar, yvar, clustervar)
-		}
-		else {
-			if (has_x) allvars = (touse, timevar, yvar, tokens(xvars_expanded))
-			else       allvars = (touse, timevar, yvar)
-		}
+		if (has_x) allvars = (touse, timevar, yvar, tokens(xvars_expanded))
+		else       allvars = (touse, timevar, yvar)
 	}
 
 	data = st_data(., allvars)
@@ -799,32 +797,16 @@ void function praisk_main(string scalar yvar,
 		panid = data[., 2]
 		tvec  = data[., 3]
 		y     = data[., 4]
-		if (clustervar != "") {
-			if (has_x) X = data[|1,5 \ rows(data), cols(data)-1|]
-			else       X = J(rows(data), 0, .)
-			clid = data[., cols(data)]
-		}
-		else {
-			if (has_x) X = data[|1,5 \ rows(data), cols(data)|]
-			else       X = J(rows(data), 0, .)
-			clid = J(0, 1, .)
-		}
+		if (has_x) X = data[|1,5 \ rows(data), cols(data)|]
+		else       X = J(rows(data), 0, .)
 	}
 	else {
 		data  = data[order(data[.,2], 1), .]
 		panid = J(rows(data), 1, 1)
 		tvec  = data[., 2]
 		y     = data[., 3]
-		if (clustervar != "") {
-			if (has_x) X = data[|1,4 \ rows(data), cols(data)-1|]
-			else       X = J(rows(data), 0, .)
-			clid = data[., cols(data)]
-		}
-		else {
-			if (has_x) X = data[|1,4 \ rows(data), cols(data)|]
-			else       X = J(rows(data), 0, .)
-			clid = J(0, 1, .)
-		}
+		if (has_x) X = data[|1,4 \ rows(data), cols(data)|]
+		else       X = J(rows(data), 0, .)
 	}
 
 	if (nocons == 0) X = (X, J(rows(X), 1, 1))
@@ -834,74 +816,71 @@ void function praisk_main(string scalar yvar,
 
 	ngaps_ptr = &ngaps
 	ngaps     = 0
-	allsegs   = praisk_build_segments(panid, tvec, ngaps_ptr)
+	allsegs   = xtpraisk_build_segments(panid, tvec, ngaps_ptr)
 	ngaps     = *ngaps_ptr
 
-	A_yw   = J(p, p, 0)
-	u      = y - X * (invsym(X'*X) * (X'*y))
-	rho    = praisk_pooled_yw(u, allsegs, p, A_yw)
-	oldrho = rho :+ 1
+	// single-pass estimation matching xtpcse:
+	// step 1: estimate rho from OLS residuals once
+	// step 2: apply Prais-Winsten transformation once
+	// step 3: GLS regression
+	A_yw        = J(p, p, 0)
+	bounded     = 0
+	bounded_ptr = &bounded
+	u           = y - X * (invsym(X'*X) * (X'*y))
+	rho         = xtpraisk_pooled_yw(u, allsegs, p, A_yw, use_np1, bounded_ptr)
 
 	yr = J(nobs, 1, .)
 	xr = J(nobs, k, .)
 
-	// accumulate iteration history
+	// display: iteration 0 (rho=0) and iteration 1 (estimated rho)
 	iter_hist = (0, 0)
+	if (p == 1) {
+		disp_val = rho[1,1]
+	}
+	else {
+		disp_val = xtpraisk_ar_maxroot(rho, p)
+	}
+	iter_hist = iter_hist \ (1, disp_val)
+	iter = 1
 
-	iter = 0
-	while (max(abs(rho - oldrho)) > tol) {
-		iter = iter + 1
-		if (iter > maxiter) {
-			errprintf("Maximum number of iterations exceeded!\n")
-			exit(430)
-		}
-		oldrho = rho
-		praisk_transform_panel(y, X, rho, p, allsegs, yr, xr)
-		invxx = invsym(xr'*xr)
-		b     = invxx * (xr'*yr)
-		u     = y - X*b
-		rho   = praisk_pooled_yw(u, allsegs, p, A_yw)
-		if (p == 1) {
-			disp_val = rho[1,1]
-		}
-		else {
-			disp_val = praisk_ar_maxroot(rho, p)
-		}
-		iter_hist = iter_hist \ (iter, disp_val)
+	xtpraisk_transform_panel(y, X, rho, p, allsegs, yr, xr)
+
+	// guard: non-stationary rho can produce missing values in transformed data
+	if (missing(yr) > 0 | missing(xr) > 0) {
+		errprintf("AR(%g) transformation produced missing values\n", p)
+		errprintf("this typically occurs when estimates are non-stationary\n")
+		errprintf("(max|eigenvalue| >= 1); consider a lower lag order\n")
+		exit(504)
 	}
 
+	invxx = invsym(xr'*xr)
+	b     = invxx * (xr'*yr)
 	es  = yr - xr*b
 	uu  = (es'*es)[1,1]
 	s2  = uu / nobs
-	cov = (uu/(nobs-k)) * invxx
+	if (use_nmk) nmk_div = nobs - k
+	else          nmk_div = nobs
+	cov = (uu / nmk_div) * invxx
 
-	if (vcetype == "robust") {
-		hc_scale = nobs / (nobs - k)
-		meat     = xr' * diag(es:^2) * xr
-		cov_v    = hc_scale * invxx * meat * invxx
+	// guard: missing residuals would corrupt PCSE sandwich
+	if (missing(es) > 0 | missing(uu)) {
+		errprintf("residuals contain missing values after AR(%g) transformation\n", p)
+		errprintf("consider a lower lag order\n")
+		exit(504)
 	}
-	else if (vcetype == "cluster") {
-		nclust   = rows(uniqrows(clid))
-		hc_scale = (nclust/(nclust-1)) * ((nobs-1)/(nobs-k))
-		meat     = J(k, k, 0)
-		for (g=1; g<=nclust; g++) {
-			scores = xr[selectindex(clid :== uniqrows(clid)[g]), .] ///
-			       :* es[selectindex(clid :== uniqrows(clid)[g])]
-			meat   = meat + (colsum(scores))' * colsum(scores)
-		}
-		cov_v = hc_scale * invxx * meat * invxx
-	}
-	else {
-		cov_v = cov
-	}
+
+	// PCSE sandwich: accounts for panel heteroscedasticity and
+	// contemporaneous cross-panel correlation (Beck & Katz 1995)
+	xtpraisk_pcse(es, xr, panid, rows(uniqrows(panid)),
+	              nobs, k, nmk_div, cov_v)
 
 	// correct SE for rho_hat
-	ar_res = praisk_ar_resid(u, allsegs, rho, p)
+	ar_res = xtpraisk_ar_resid(u, allsegs, rho, p)
 	n_ar   = rows(ar_res)
 	s2_ar  = (ar_res' * ar_res)[1,1] / n_ar
 	serho  = sqrt(diagonal(s2_ar * invsym(A_yw)))
 
-	vpinv = praisk_vp_inv(rho, p)
+	vpinv = xtpraisk_vp_inv(rho, p)
 	ldet  = ln(det(vpinv))
 	ll    = - nobs/2 * ln(2*pi())  ///
 	        - nobs/2 * ln(s2)      ///
@@ -927,11 +906,12 @@ void function praisk_main(string scalar yvar,
 	st_numscalar("r(k)",             k)
 	st_numscalar("r(p_lag)",          p)
 	st_numscalar("r(iter)",          iter)
+	st_numscalar("r(bounded)",        bounded)
 	st_numscalar("r(ss_res)",        ss_res)
 	st_numscalar("r(ss_tot)",        ss_tot)
+	st_numscalar("r(nmk_div)",       nmk_div)
 	st_numscalar("r(ngaps)",         ngaps)
-	st_numscalar("r(nonstationary)", (praisk_ar_maxroot(rho, p) >= 1))
-	if (vcetype == "cluster") st_numscalar("r(nclust)", nclust)
+	st_numscalar("r(nonstationary)", (xtpraisk_ar_maxroot(rho, p) >= 1))
 
 	rhonames = J(p, 1, "")
 	for (i=1; i<=p; i++) rhonames[i,1] = "rho" + strofreal(i)
@@ -939,5 +919,63 @@ void function praisk_main(string scalar yvar,
 	st_matrixcolstripe("r(serho)", (J(p,1,""), rhonames))
 }
 
-end
 
+// compute Sigma (M x M cross-panel covariance) and X'OmegaX sandwich
+// mirrors xtpcse's getSigma + glsaccum for the balanced panel case
+void function xtpraisk_pcse(real colvector   es,
+                              real matrix      Xr,
+                              real colvector   panid,
+                              real scalar      M,
+                              real scalar      nobs,
+                              real scalar      k,
+                              real scalar      nmk_div,
+                              real matrix      V_out)
+{
+	real matrix    Sigma, XpXi, XomegaX, S_i, S_j
+	real colvector ei, ej, panels
+	real scalar    i, j, T_ij, n_i, n_j
+
+	panels = uniqrows(panid)
+	Sigma  = J(M, M, 0)
+
+	// build Sigma: Sigma[i,j] = e_i'e_j / T_ij
+	for (i=1; i<=M; i++) {
+		ei = es[selectindex(panid :== panels[i])]
+		for (j=i; j<=M; j++) {
+			ej   = es[selectindex(panid :== panels[j])]
+			T_ij = min((rows(ei), rows(ej)))
+			Sigma[i,j] = (ei[|1 \ T_ij|]' * ej[|1 \ T_ij|])[1,1] / T_ij
+			Sigma[j,i] = Sigma[i,j]
+		}
+	}
+
+	// XomegaX = sum_i sum_j Sigma[i,j] * Xi'Xj (matched by time period)
+	XomegaX = J(k, k, 0)
+	for (i=1; i<=M; i++) {
+		n_i = sum(panid :== panels[i])
+		S_i = Xr[selectindex(panid :== panels[i]), .]
+		for (j=i; j<=M; j++) {
+			n_j  = sum(panid :== panels[j])
+			T_ij = min((n_i, n_j))
+			S_j  = Xr[selectindex(panid :== panels[j]), .]
+			if (i == j) {
+				XomegaX = XomegaX + Sigma[i,j] * (S_i[|1,1 \ T_ij,k|]' * S_i[|1,1 \ T_ij,k|])
+			}
+			else {
+				XomegaX = XomegaX + Sigma[i,j] * (S_i[|1,1 \ T_ij,k|]' * S_j[|1,1 \ T_ij,k|]) ///
+				                  + Sigma[j,i] * (S_j[|1,1 \ T_ij,k|]' * S_i[|1,1 \ T_ij,k|])
+			}
+		}
+	}
+
+	// PCSE sandwich: V = (X'X)^{-1} * XomegaX * (X'X)^{-1}
+	XpXi  = invsym(Xr'*Xr)
+	V_out = XpXi * XomegaX * XpXi
+
+	// nmk correction if specified
+	if (nmk_div == nobs - k) V_out = nobs * V_out / (nobs - k)
+}
+
+
+
+end

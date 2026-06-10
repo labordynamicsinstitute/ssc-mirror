@@ -468,6 +468,8 @@ program define _summary, sclass
 			                         sqrt(variance(colshape(CLSP.`s', 1)))) ///
 			                         != J(1,4,.) ? tmp :(regexm("`s'","^y") ///
 			                                     ? tmp : J(0,0,.)        ))
+		qui mata:                    if (st_matrix("r(`s')")  ==  J(0,0,.)) ///
+			      st_matrix("r(`s')",                             J(1,4,.));;
 	}
 	cap mata: mata drop CLSP
 	_reorder

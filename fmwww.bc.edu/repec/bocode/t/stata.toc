@@ -137,6 +137,7 @@ p treecluster module for plotting clustered trees
 p treemap module for treemaps
 p treeplot module to graph a tree in Stata
 p trellis module to create a trellis graph
+p trialcounts module to calculate the number of subjects recruited to, and the number having reached subsequent scheduled visits
 p trim_vars module to trim blanks in a varlist
 p trimap module for trivariate maps
 p trimlabs module to trim variable labels

@@ -1,0 +1,32 @@
+d 'MIXEDPOWER': module to calculate power or sample size analytically for linear mixed-effects models
+d
+d  mixedpower is a program for calculating power or sample size
+d analytically			 for linear mixed-effects models,
+d typically for the design of a randomised		    
+d clinical trial. As such, calculation will be far quicker and
+d generally		      more accurate than by the use of
+d simulation. The user has the facility to		     select
+d the treatment effect parameterisation, covariance structure,	   
+d	       allocation ratio, adjust for both dropout and
+d incomplete follow-up due to			staggered
+d recruitment, and even account for misspecification of the	   
+d	    treatment effect.  
+d
+d KW: power
+d KW: sample size
+d KW: linear mixed-effects models
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260609
+d
+d Author: Matthew Burnell,  University College London 
+d Support: email m.burnell@@ucl.ac.uk
+d
+f mixedpower.ado
+f mixedpower.sthlp
+f mvmixedpower.ado
+f mvmixedpower.sthlp
+f ../d/dmmixedpower.ado
+f ../d/dmmixedpower.sthlp
+f ms_recruitment.dta

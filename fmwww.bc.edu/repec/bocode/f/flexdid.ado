@@ -1,4 +1,5 @@
-*! version 2.2  04may2026
+*! version 2.5  06jun2026
+**! version 2.2  04may2026
 **! version 2.0  05feb2026
 **! version 1.6  30nov2025
 **! version 1.5  18oct2025
@@ -19,6 +20,7 @@ program Estimate, eclass sortpreserve
 		[									///
 			SPECification(string)			/// 
 			USERCOhort(varname numeric)		///
+			BASEperiod(integer -1)			///
 			XNOTINTeracted(varlist fv)		///
 			VCE(string)						///
 			VERbose							///
@@ -75,16 +77,39 @@ program Estimate, eclass sortpreserve
 	// Check that time is equally spaced
 	preserve
 	quietly keep if `touse'
-	quietly bysort `time': keep if _n==1
-	quietly tsset `time'
+	quietly bysort `group' `time': keep if _n==1
+	quietly xtset `time'
 	local gaps = r(gaps)
-	restore
-	if (`gaps'!=0 & "`usercohort'"=="") {
+	local balance = r(balanced)
+	if (`gaps'!=0 & "`r(balanced)'"=="unbalanced" & "`usercohort'"=="") {
 		display as text "{p 0 6 0 78}"
-		display as error "Time variable has gaps. Specify {bf:usercohort()} to correctly assign cohorts to groups that were first treated at times coincident with gaps in the data. Also, consider using the dydx option for postestimation commands."
+		display as error "Time variable has gaps for one or more groups. Specify {bf:usercohort()} to correctly assign groups to their cohorts."
 		display as text "{p_end}"
 		exit 451
 	}
+
+	else if (`gaps'!=0 & "`r(balanced)'"=="unbalanced" & "`specification'"=="lagsandleads" & "`usercohort'"!="") {
+
+		tempvar et
+		local everabsent 0
+		quietly levelsof `group' if `usercohort'>0, local(lg)
+		foreach g of local lg {
+			quietly generate int `et' = `time' - `usercohort' if `group'==`g'
+			quietly levelsof `et' if `et'<0, local(let)
+			local present: list baseperiod in let
+			local absent `=1-`present''
+			local everabsent `=`everabsent' + `absent''
+			quietly drop `et'
+		}
+		if (`everabsent'>0) {
+			display as text "{p 0 6 0 78}"
+			display as error "Time variable has gaps. You have a lags and leads specification where one or more groups is missing in the base exposure period `baseperiod'. Specify {bf:baseperiod()} to use a base period without any missing groups or use a lags only specification."
+			display as text "{p_end}"
+			exit 451
+		}
+	}
+	restore
+
 
 	quietly local xintersection: list xnotinteracted & xvars
 	if "`xintersection'"!="" {
@@ -130,19 +155,18 @@ program Estimate, eclass sortpreserve
 	}
 
 
-	// Define pretreatment indicators by cohort (cohort-1 time is base)
-	quietly generate byte _Tx = `tx' if `touse'
-	quietly levelsof _Cohort if `touse', local(clevels)
-	foreach c of local clevels {
-		quietly replace _Tx = 1 if _Cohort>0 & _Cohort == `c' & `time'<`=`c'-1' & `touse'
-	}
-	label variable _Tx "flexdid treatment lags & leads indicator"
-
 	// Define exposure time
 	tempvar eventtime ieventtime
 	quietly generate int `eventtime' = `time' - _Cohort if _Cohort>0 & `touse'
-	quietly replace `eventtime' = -1 if _Cohort==0 & `touse'
+	quietly replace `eventtime' = `baseperiod' if _Cohort==0 & `touse'
 
+	// Define pretreatment indicators by cohort (cohort-baseperiod time is base)
+	quietly generate byte _Tx = `tx' if `touse'
+	quietly levelsof _Cohort if `touse', local(clevels)
+	quietly replace _Tx = 1 if _Cohort>0 & `eventtime'!=`baseperiod' & `touse'
+	label variable _Tx "flexdid treatment lags & leads indicator"
+
+	
 	quietly count if _Cohort>0 & `eventtime'>=0 & `touse'
 	local cn = r(N)
 	quietly count if _Tx==1 & `eventtime'>=0 & `touse'
@@ -159,7 +183,7 @@ program Estimate, eclass sortpreserve
 		foreach g of local glevels {
 			quietly levelsof `time' if `touse', local(tlevels)
 			foreach t of local tlevels {
-				if `t' >= `c' local TxGlags ///
+				if `t' >= `c'+(`baseperiod'+1) local TxGlags ///
 					`"`TxGlags' `c'._Cohort#`g'.`group'#`t'.`time'#1._Tx"'
 			}
 		}
@@ -170,7 +194,7 @@ program Estimate, eclass sortpreserve
 		foreach g of local glevels {
 			quietly levelsof `time' if `touse', local(tlevels)
 			foreach t of local tlevels {
-				if `t' >= `c' local TxGlagsXX ///
+				if `t' >= `c'+(`baseperiod'+1) local TxGlagsXX ///
 					`"`TxGlagsXX' `c'._Cohort#`g'.`group'#`t'.`time'#1._Tx#(c.(`xvars')) "'
 			}
 		}
@@ -181,7 +205,7 @@ program Estimate, eclass sortpreserve
 		foreach g of local glevels {
 			quietly levelsof `time' if `touse', local(tlevels)
 			foreach t of local tlevels {
-				if `t' <=`=`c'-2' local TxGleads ///
+				if `t' <=`=`c'+(`baseperiod'-1)' local TxGleads ///
 					`"`TxGleads' `c'._Cohort#`g'.`group'#`t'.`time'#1._Tx "'
 			}
 		}
@@ -192,7 +216,7 @@ program Estimate, eclass sortpreserve
 		foreach g of local glevels {
 			quietly levelsof `time' if `touse', local(tlevels)
 			foreach t of local tlevels {
-				if `t' <=`=`c'-2' local TxGleadsXX ///
+				if `t' <=`=`c'+(`baseperiod'-1)' local TxGleadsXX ///
 					`"`TxGleadsXX' `c'._Cohort#`g'.`group'#`t'.`time'#1._Tx#(c.(`xvars')) "'
 			}
 		}
@@ -228,6 +252,7 @@ program Estimate, eclass sortpreserve
 	ereturn local time "`time'"
 	ereturn local tx "`tx'"
 	ereturn local usercohort "`usercohort'"
+	ereturn local baseperiod "(`baseperiod')"
 	ereturn local specification "`specification'"
 
 	ereturn scalar F = `F'

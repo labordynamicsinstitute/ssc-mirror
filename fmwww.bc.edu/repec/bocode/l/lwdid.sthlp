@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.1 16APR2026 Soo Jeong Lee and Jeffrey M. Wooldridge *}
+{* *! version 2.4 1JUNE2026 Soo Jeong Lee and Jeffrey M. Wooldridge *}
 {viewerjumpto "Syntax" "lwdid##syntax"}{...}
 {viewerjumpto "Description" "lwdid##description"}{...}
 {viewerjumpto "Options" "lwdid##options"}{...}
@@ -11,7 +11,7 @@
 {title:Title}
 
 {p2colset 5 20 22 2}{...}
-{p2col :{bf:lwdid} {hline 2}}Transformation-based rolling DID estimator (Lee & Wooldridge, 2025, 2026a){p_end}
+{p2col :{bf:lwdid} {hline 2}}Transformation-based rolling DID estimator (Lee & Wooldridge, 2026a, 2026b){p_end}
 {p2colreset}{...}
 
 
@@ -62,6 +62,16 @@ Required unless {cmd:small} is specified.{p_end}
 {synopt:{opt small}}{it:Small-N only.} Specifies the small-sample implementation for settings with few treated units, few control units, or both.{p_end}
 
 {syntab:Optional options}
+
+{synopt:{opt pre(#)}}{it:Large-N only.} Specifies the number of pre-treatment periods used to construct the outcome transformation.{break}
+By default, all available pre-treatment periods are used.{break}
+For example, {cmd:pre(1)} uses only the last pre-treatment period, while
+{cmd:pre(3)} uses the last three pre-treatment periods.{p_end}
+
+{synopt:{opt never}}{it:Large-N only.} Uses only never-treated units as controls; by default, {cmd:lwdid} uses both never-treated and not-yet-treated units.{p_end}
+
+{synopt:{opt attgt}}{it:Large-N only.}  Reports cohort-by-year  ATT(g,t)  estimates with robust standard errors and confidence intervals.{p_end}
+
 {synopt:{opt save(filename)}}Save estimation results as a .dta file.{p_end}
 
 {synopt:{opt graph}}Displays graphical results.{break}
@@ -89,17 +99,17 @@ Small-N: plots treated and control means of residualized outcomes over time.{p_e
 
 {pstd}
 {cmd:lwdid} implements the transformation-based rolling Difference-in-Differences estimators 
-developed in Lee and Wooldridge (2025, 2026a). 
+developed in Lee and Wooldridge (2026a, 2026b). 
 The command provides a unified implementation for panel data settings with either 
 a {it:large-N} or a {it:small-N} cross-sectional dimension, allowing treatment effects
 to be estimated under both the staggered treatment adoption and the common timing case. 
 
 {pstd}
-The central idea is to transform outcomes within each unit to remove
-pre-treatment means, trends, or seasonal components, yielding residualized
-outcomes. These transformed outcomes allow treatment effects to be estimated
-using simple cross-sectional regressions in each post-treatment period,
-facilitating both overall and period-specific ATT estimation.
+The central idea is to transform outcome variables within each unit to remove
+pre-treatment means, trends, or seasonal components. This within-unit transformation
+converts panel data into a series of cross-sectional datasets where the residualized outcomes serve as the dependent variable.
+Treatment effects are then estimated via simple cross-sectional regressions in each
+period, enabling both overall and period-specific ATT estimation.
 
 {pstd}
 By default, {cmd:lwdid} uses the large-N procedure of Lee and Wooldridge (2025),
@@ -110,8 +120,8 @@ heterogeneous treatment effects and unit-specific heterogeneous linear trends.
 When the cross-sectional dimension is small ({it:small-N}), conventional
 large-N inference may be unreliable. In such settings, specifying
 the {cmd:small} option invokes the exact small-sample inference procedures
-developed in Lee and Wooldridge (2026a). The seasonal-adjustment options
-{cmd:demeanq}, {cmd:detrendq}, {cmd:demeanm}, and {cmd:detrendm} are currently available only under the small-N implementation.
+developed in Lee and Wooldridge (2026b). The seasonal-adjustment options
+{cmd:demeanq}, {cmd:detrendq}, {cmd:demeanm}, and {cmd:detrendm} are currently available under the small-N implementation.
 
 {pstd}
 Based on the treatment cohort variable specified in {cmd:gvar()}, {cmd:lwdid}
@@ -120,7 +130,7 @@ automatically detects whether the design involves a single treatment cohort
 appropriate estimation procedure. 
 
 {pstd}
-Details of the implementation are given in Lee and Wooldridge (2026b); 
+Details of the implementation are given in Hur, Lee and Wooldridge (2026c); 
 see also the {browse "https://github.com/Soo-econ/lwdid":lwdid GitHub repository}
 for additional examples and documentation.
 
@@ -176,17 +186,17 @@ scale.
 {title:Citation}
 
 {pstd}
-Lee, Soo Jeong, and Jeffrey M. Wooldridge (2025), 
+Lee, S. J., and Wooldridge, J. M. (2026a), 
 "A Simple Transformation Approach to Difference-in-Differences Estimation for Panel Data," 
-Working Paper, Available at {browse "https://dx.doi.org/10.2139/ssrn.4516518":SSSRN 4516518}.
+forthcoming at {browse "https://doi.org/10.1080/07350015.2026.2683047":{it:Journal of Business & Economic Statistics}}.
 
 {pstd}
-Lee, Soo Jeong, and Jeffrey M. Wooldridge (2026a), 
+Lee, S. J., and Wooldridge, J. M. (2026b), 
 "Simple Approaches to Inference with Difference-in-Differences Estimators with Small Cross-Sectional Sample Sizes,"  
 Working Paper, Available at {browse "https://dx.doi.org/10.2139/ssrn.5325686":SSRN 5325686}
 
 {pstd}
-Lee, Soo Jeong, and Jeffrey M. Wooldridge (2026b), 
+Hur, E. K., Lee, S. J., and Wooldridge, J. M. (2026c), 
 "Rolling Difference-in-Differences Estimation for Small and Large Panels,"  
 Working Paper, Available at {browse "https://dx.doi.org/10.2139/ssrn.6502558":SSRN 6502558}
 

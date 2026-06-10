@@ -1,4 +1,4 @@
-*! version 1.0.0 17jan2026
+*! version 1.0.1 28may2026
 
 program define xtselfe, eclass
 	version 16.1
@@ -110,18 +110,26 @@ program define xtselfe, eclass
 	
 	// verifying seldep as dummy
 	qui levelsof `seldep' if `touse', local(seldepval)
-	if "`seldepval'" != "0 1" {
-		di as err "`seldep' for `tid' = `j' is not a 0/1 variable"
+	if "`seldepval'" == "0" {
+		di as err "{bf:`seldep'} contains only zeros"
+		exit 450
+	}
+	else if "`seldepval'" == "1" {
+		di as err "{bf:`seldep'} contains only ones"
+		exit 450
+	}
+	else if "`seldepval'" != "0 1" {
+		di as err "{bf:`seldep'} must contain only 0 and 1"
 		exit 450
 	}
 	foreach j of local tlevels {
 		qui levelsof `seldep' if `touse' & `tid' == `j', local(seldepval`j')
 		if "`seldepval`j''" == "0" {
-			di as err "`seldep' for `tid' = `j' contains 0 only"
+			di as err "{bf:`seldep'} for `tid' = `j' contains only zeros"
 			exit 450
 		}
 		else if "`seldepval`j''" == "1" {
-			di as err "`seldep' for `tid' = `j' contains 1 only"
+			di as err "{bf:`seldep'} for `tid' = `j' contains only ones"
 			exit 450
 		}
 	}

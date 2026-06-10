@@ -1,4 +1,5 @@
-*! version 2.2  04may2026
+*! version 2.5  06jun2026
+**! version 2.2  04may2026
 **! version 2.0  05feb2026
 **! version 1.6  30nov2025
 **! version 1.5  18oct2025
@@ -113,6 +114,7 @@ program define _ATET_Overall, rclass
 	local time `e(time)'
 	local tx `e(tx)'
 	local usercohort `e(usercohort)'
+	local baseperiod `e(baseperiod)'
 	local clustvar `e(clustvar)'
 	local wexp `e(wexp)'
 	local specification `e(specification)'
@@ -147,7 +149,7 @@ program define _ATET_Overall, rclass
 
 	tempvar eventtime
 	quietly generate `eventtime' = `time' - _Cohort if _Cohort>0 & `touse'
-	quietly replace `eventtime' = -1 if _Cohort==0 & `touse'
+	quietly replace `eventtime' = `baseperiod' if _Cohort==0 & `touse'
 
 	tempvar expsubset meventtime
 	quietly generate `expsubset' = .
@@ -162,7 +164,7 @@ program define _ATET_Overall, rclass
 
 	tempvar ttx
 	quietly generate byte `ttx' = _Tx if `touse'
-	quietly replace `ttx' = 1 if _Cohort>0 & `eventtime'==-1 & `touse'
+	quietly replace `ttx' = 1 if _Cohort>0 & `eventtime'==`baseperiod' & `touse'
 
 	if "`for'"!="" local andfor "& (`for')"
 
@@ -229,6 +231,7 @@ program define _ATET_Byget, rclass
 	local time `e(time)'
 	local tx `e(tx)'
 	local usercohort `e(usercohort)'
+	local baseperiod `e(baseperiod)'
 	local clustvar `e(clustvar)'
 	local wexp `e(wexp)'
 	local specification `e(specification)'
@@ -260,7 +263,7 @@ program define _ATET_Byget, rclass
 
 	tempvar eventtime
 	quietly generate `eventtime' = `time' - _Cohort if _Cohort>0 & `touse'
-	quietly replace `eventtime' = -1 if _Cohort==0 & `touse'
+	quietly replace `eventtime' = `baseperiod' if _Cohort==0 & `touse'
 
 	tempvar expsubset meventtime
 	quietly generate `expsubset' = .
@@ -272,7 +275,7 @@ program define _ATET_Byget, rclass
 
 	tempvar ttx
 	quietly generate byte `ttx' = _Tx if `touse'
-	quietly replace `ttx' = 1 if _Cohort>0 & `eventtime'==-1 & `touse'
+	quietly replace `ttx' = 1 if _Cohort>0 & `eventtime'==`baseperiod' & `touse'
 
 	if "`for'"!="" local andfor "& (`for')"
 
@@ -306,8 +309,6 @@ program define _ATET_Byget, rclass
 	matrix colnames `beta' = `lofgt'
 
 	_coef_table_header, title(`ttl') nomodel
-*	_align maxlen "diN diNt" : "`nfull' `nsub'" "15.0fc"
-*	display as text "{ralign 71:Treated obs = }" as result "`diNt'"
 	display ""
 	_coef_table, bmatrix(`beta') vmatrix(`Var')  coeftitle("ATET") level(`level') noabbrev
 	display as text "Note: Linearization is used to calculate standard errors of each ATET"
@@ -338,6 +339,7 @@ program define _ATET_Byexposure, rclass
 	local time `e(time)'
 	local tx `e(tx)'
 	local usercohort `e(usercohort)'
+	local baseperiod `e(baseperiod)'
 	local clustvar `e(clustvar)'
 	local wexp `e(wexp)'
 	local specification `e(specification)'
@@ -377,7 +379,7 @@ program define _ATET_Byexposure, rclass
 
 	tempvar eventtime
 	quietly generate `eventtime' = `time' - _Cohort if _Cohort>0 & `touse'
-	quietly replace `eventtime' = -1 if _Cohort==0 & `touse'
+	quietly replace `eventtime' = `baseperiod' if _Cohort==0 & `touse'
 
 	tempvar expsubset meventtime
 	quietly generate `expsubset' = .
@@ -399,7 +401,7 @@ if `minusone'==. local minusone `etmin'
 
 	tempvar ttx
 	quietly generate byte `ttx' = _Tx if `touse'
-	quietly replace `ttx' = 1 if _Cohort>0 & `eventtime'==-1 & `touse'
+	quietly replace `ttx' = 1 if _Cohort>0 & `eventtime'==`baseperiod' & `touse'
 
 	if "`for'"!="" local andfor "& (`for')"
 
@@ -470,6 +472,7 @@ program define _ATET_Bycalendar, rclass
 	local time `e(time)'
 	local tx `e(tx)'
 	local usercohort `e(usercohort)'
+	local baseperiod `e(baseperiod)'
 	local clustvar `e(clustvar)'
 	local wexp `e(wexp)'
 	local specification `e(specification)'
@@ -509,7 +512,7 @@ program define _ATET_Bycalendar, rclass
 
 	tempvar eventtime
 	quietly generate `eventtime' = `time' - _Cohort if _Cohort>0 & `touse'
-	quietly replace `eventtime' = -1 if _Cohort==0 & `touse'
+	quietly replace `eventtime' = `baseperiod' if _Cohort==0 & `touse'
 
 	tempvar calsubset
 	quietly generate `calsubset' = .
@@ -586,6 +589,7 @@ program define _ATET_Bycohort, rclass
 	local time `e(time)'
 	local tx `e(tx)'
 	local usercohort `e(usercohort)'
+	local baseperiod `e(baseperiod)'
 	local clustvar `e(clustvar)'
 	local wexp `e(wexp)'
 	local specification `e(specification)'
@@ -625,7 +629,7 @@ program define _ATET_Bycohort, rclass
 
 	tempvar eventtime mcohort
 	quietly generate `eventtime' = `time' - _Cohort if _Cohort>0 & `touse'
-	quietly replace `eventtime' = -1 if _Cohort==0 & `touse'
+	quietly replace `eventtime' = `baseperiod' if _Cohort==0 & `touse'
 
 	// marginsplot is nicer if cohort is defined as sequential integers (mcohort)
 	tempvar chrtsubset
@@ -705,6 +709,7 @@ program define _ATET_Bygroup, rclass
 	local time `e(time)'
 	local tx `e(tx)'
 	local usercohort `e(usercohort)'
+	local baseperiod `e(baseperiod)'
 	local clustvar `e(clustvar)'
 	local wexp `e(wexp)'
 	local specification `e(specification)'
@@ -744,7 +749,7 @@ program define _ATET_Bygroup, rclass
 
 	tempvar eventtime mgroup
 	quietly generate `eventtime' = `time' - _Cohort if _Cohort>0 & `touse'
-	quietly replace `eventtime' = -1 if _Cohort==0 & `touse'
+	quietly replace `eventtime' = `baseperiod' if _Cohort==0 & `touse'
 
 	// marginsplot is nicer if group is defined as sequential integers (mgroup)
 	tempvar grpsubset
