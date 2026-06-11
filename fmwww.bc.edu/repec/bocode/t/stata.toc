@@ -101,6 +101,7 @@ p tmpinvl2 module solving Tabular Matrix Problems via Pseudoinverse Estimation (
 p tmpm module to implement Trauma Mortality Prediction Model using AIS, ICD-9 or ICD-10 codes
 p tmpm2 module to implement Trauma Mortality Prediction Model using AIS, ICD-9 or ICD-10 codes
 p tnardl module to enhances time-series analysis in Stata by automating the estimation of three-regime NARDL models
+p tnardll module to estimate Threshold (Nonlinear) Autoregressive Distributed Lag model 
 p tobithetm module to estimate Tobit Multiplicative Heteroscedasticity Regression
 p tobitiv module to perform instrumental variables tobit
 p todate module to generate Stata date variables from run-together date variables

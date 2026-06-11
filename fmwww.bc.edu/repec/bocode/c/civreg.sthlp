@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.0  02jun2026}{...}
+{* *! version 2.2.0  10jun2026}{...}
 {viewerjumpto "Syntax"         "civreg##syntax"}{...}
 {viewerjumpto "Description"    "civreg##description"}{...}
 {viewerjumpto "Method"         "civreg##method"}{...}
@@ -9,10 +9,13 @@
 {viewerjumpto "References"     "civreg##references"}{...}
 {viewerjumpto "Author"         "civreg##author"}{...}
 
+help for {helpb civreg}{right:Manh Hoang-Ba (hbmanh9492@gmail, {browse "https://www.youtube.com/@manhb.econometrics":Youtube}, {browse "https://www.facebook.com/ManhHB94/":Facebook}, {browse "https://manhb94econometrics.wordpress.com":Website})}
+
+
 {title:Title}
 
 {p2colset 5 15 20 2}{...}
-{p2col:{bf:civreg} {hline 2}}Coplanar/synthetic instrumental variables (CIV/SIV) regression{p_end}
+{p2col:{bf:civreg} {hline 2}}Coplanar (synthetic) instrumental variables (CIV/SIV) regression{p_end}
 {p2colreset}{...}
 
 {marker syntax}{...}
@@ -40,8 +43,11 @@ Most options supported by {helpb ivreg2} may also be specified.
 {synopt:{opt dmax(#)}}upper bound (angle measured in degrees) for the search over {it:d0}; default is {cmd:dmax(70)}{p_end}
 {synopt:{opt reps(#)}}bootstrap replications used to select optimal {it:d0}; default is {cmd:reps(50)}{p_end}
 {synopt:{opt plus:rand}}specifies that an independent random disturbance with zero mean
-and variance equal to the variance of the endogenous variable is added to the SIV variable.{p_end}
-{synopt:{opt rcode}}uses R programming language (via {cmd:rcall}) for random number generation to exactly reproduce R results{p_end}
+and variance equal to the variance of the endogenous variable is added to the CIV variable.{p_end}
+{synopt:{opt cgr:aph}}display covariance and correlation graphs of squared first-stage residuals and CIV used in determining the direction of endogeneity{p_end}
+{synopt:{opt saveg:raph}}save the covariance and correlation graphs produced by {opt cgraph}{p_end}
+{synopt:{opt gp:refix(name)}}specify the prefix used for naming graphs saved with {opt savegraph}{p_end}
+{synopt:{opt rcode}}uses R programming language (via {helpb rcall}) for random number generation to exactly reproduce R results{p_end}
 
 {syntab:FE options}
 
@@ -65,16 +71,14 @@ version 2.1.15 or later, and relevant STATA packages.
 
 {title:Install and update}
 
-{pstd}
-To install {helpb civreg}, type:
-
+{pstd}To install {helpb civreg}, type:{p_end}
 {phang2}. {stata `"ssc install civreg"'}{p_end}
 {phang2}. {stata `"net install civreg, from("https://raw.githubusercontent.com/ManhHB94/civreg/main/")"'}{p_end}
 
 {pstd}
-The latest version of {cmd:civreg} can be found at the following link: {browse "https://github.com/ManhHB94/":https://github.com/ManhHB94/}{p_end}
+The latest version of {helpb civreg} can be found at the following link: {browse "https://github.com/ManhHB94/":https://github.com/ManhHB94/}{p_end}
 
-{pstd}To update the {cmd:civreg} package to the latest version, run either of the following commands{p_end}
+{pstd}To update the {helpb civreg} package to the latest version, run either of the following commands{p_end}
 {phang2}. {stata `"ado update civreg, update"'}{p_end}
 {phang2}. {stata `"ssc install civreg, replace"'}{p_end}
 {phang2}. {stata `"net install civreg, from("https://raw.githubusercontent.com/ManhHB94/civreg/main/") replace"'}{p_end}
@@ -91,9 +95,9 @@ to the research community, like a paper. Please cite it as such: {p_end}
 {title:Description}
 
 {pstd}
-{cmd:civreg} estimates linear models with endogenous regressors using the
-Coplanar/Synthetic Instrumental Variables (CIV) method proposed by
-Dzhumashev and Tursunalieva (2025).
+{helpb civreg} estimates linear models with endogenous regressors using the
+Coplanar (Synthetic) Instrumental Variables (CIV) method proposed by
+Dzhumashev and Tursunalieva (2025), currently available as an arXiv preprint.
 
 {pstd}
 Unlike conventional instrumental variables estimators, the CIV method
@@ -113,7 +117,7 @@ instrument projected onto that subspace can be represented as
 {pstd}
 where {it:x} is the endogenous regressor, {it:r} is orthogonal to {it:x}
 within the regression plane, {it:d0} is a nuisance parameter, and
-{it:k} = 1 if {it:cov(x,u)>0}, or -1 if {it:cov(x,u)<0}, with {it:u} is the structural error.
+{it:k} = 1 if {it:cov(x,u)} > 0, or -1 if {it:cov(x,u)} < 0, with {it:u} is the structural error.
 
 {pstd}
 The CIV estimator searches for the value of {it:d0} that satisfies the
@@ -128,7 +132,7 @@ coplanar instrument simultaneously satisfies:
 
 {pstd}
 The identified coplanar instrument is then supplied to
-{cmd:ivreg2} for standard IV/2SLS estimation.
+{helpb ivreg2} for standard IV/2SLS estimation.
 
 {marker method}{...}
 {title:Method}
@@ -188,7 +192,7 @@ proposed in Dzhumashev and Tursunalieva (2025).
 
 {pstd}
 The resulting coplanar instrument is treated as a generated
-instrument and passed to {cmd:ivreg2} for final estimation.
+instrument and passed to {helpb ivreg2} for final estimation.
 
 {pstd}
 When option {cmd:fe} or {cmd:twfe} is specified, the fixed-effects
@@ -248,8 +252,19 @@ distribution functions and the Anderson-Darling statistic.{p_end}
 obtain the optimal {it:d0}.
 
 {phang}
+{opt cgraph} displays covariance and correlation graphs of squared first-stage residuals and the CIV under both assumed directions of endogeneity, 
+{cmd:cov(u,x)>0} and {cmd:cov(u,x)<0}, for each endogenous variable being evaluated.{p_end}
+
+{phang}
+{opt savegraph} saves the covariance and correlation graphs generated under each assumed direction of endogeneity. By default, graphs are saved as {it:[direction]}{cmd:_e2_}{it:[varname]}{cmd:.gph}, 
+where {it:direction} is {cmd:pos} or {cmd:neg} and {it:varname} is the name of the endogenous variable.{p_end}
+
+{phang}
+{opt gprefix(name)} specifies a prefix to be added to the default graph filename when {opt savegraph} is specified. For example, {cmd:gprefix(myproj_)} produces graph filenames such as {cmd:myproj_pos_e2_x.gph} and {cmd:myproj_neg_e2_x.gph}.{p_end}
+
+{phang}
 {opt rcode} requests random number generation through R programming
-language using {cmd:rcall}.
+language using {helpb rcall}.
 
 {dlgtab:FE options}
 
@@ -282,20 +297,21 @@ algorithm when option {cmd:twfe} is specified.
 {title:Important notes}
 
 {pstd}
-{helpb civreg} does not currently support factor-variable notation or
-time-series operators directly inside the command syntax.
+As of the current release of {helpb civreg}, the underlying CIV methodology has not yet undergone formal peer review in a scholarly journal.
+Users are encouraged to carefully evaluate its suitability and robustness for their specific research applications.
+The methodology remains an active area of research and may be subject to further revision and development.{p_end}
 
 {pstd}
-Users should generate transformed variables manually before estimation.
-
+{helpb civreg} does not currently support factor-variable notation or
+time-series operators directly inside the command syntax.
+Users should generate transformed variables manually before estimation.{p_end}
 {phang2}{cmd:. generate Lx = L.x}{p_end}
 {phang2}{cmd:. tabulate group, generate(g_)}{p_end}
 
 {pstd}
 Options {cmd:fe} and {cmd:twfe} require panel data declared by
 {helpb xtset}. Both panel and time identifiers must be specified before
-estimation.
-
+estimation.{p_end}
 {phang2}{cmd:. xtset} {it:panelvar timevar}{p_end}
 
 {pstd}
@@ -306,8 +322,7 @@ and performing calculations on group means. See Examples below for details.
 
 {pstd}
 The R programming language and {helpb rcall} package must be installed
-when option {cmd:rcode} is specified. To install {helpb rcall}, type:
-
+when option {cmd:rcode} is specified. To install {helpb rcall}, type:{p_end}
 {phang2}. {stata `"net install github, from("https://haghish.github.io/github/")"'}{p_end}
 {phang2}. {stata `"github install haghish/rcall, stable"'}{p_end}
 
@@ -315,9 +330,8 @@ when option {cmd:rcode} is specified. To install {helpb rcall}, type:
 {title:Saved results}
 
 {pstd}
-{cmd:civreg} stores all standard estimation results returned by
-{cmd:ivreg2} in {cmd:e()}.
-
+{helpb civreg} stores all standard estimation results returned by
+{helpb ivreg2} in {cmd:e()}.{p_end}
 {pstd}
 In addition, the following are stored:
 
@@ -334,37 +348,43 @@ In addition, the following are stored:
 {marker examples}{...}
 {title:Examples}
 
-{phang2}{it:Load mroz dataset:}{p_end}
+{phang}{it:Load {cmd:mroz} dataset:}{p_end}
 {phang2}{stata ". webuse mroz, clear"}{p_end}
 
-{phang2}{it:Model with one endogenous variable:}{p_end}
+{phang}{it:Model with one endogenous variable:}{p_end}
 {phang2}{stata ". civreg hours (lwage = ) educ age kidslt6 kidsge6 nwifeinc, hete(0) reps(5)"}{p_end}
 
-{phang2}{it:Model with two endogenous variables:}{p_end}
+{phang}{it:Model with two endogenous variables:}{p_end}
 {phang2}{stata ". civreg hours (lwage educ = ) age kidslt6 kidsge6 nwifeinc, hete(1) reps(5)"}{p_end}
 
-{phang2}{it:Reproducing the SIV column results of Table 2 in Dzhumashev and Tursunalieva (2025):}{p_end}
+{phang}{it:Reproducing the SIV column results of Table 2 in Dzhumashev and Tursunalieva (2025):}{p_end}
 {phang2}{stata ". civreg hours (lwage = ) educ age kidslt6 kidsge6 nwifeinc , hete(0) reps(49) small rcode"}{p_end}
 
-{phang2}{it:Load Arellano and Bond (1991) dataset:}{p_end}
+{phang}{it:Load Arellano and Bond (1991) dataset:}{p_end}
 {phang2}{stata ". webuse abdata, clear"}{p_end}
 
-{phang2}{it:Fixed-effects CIV estimation:}{p_end}
+{phang}{it:Fixed-effects CIV estimation:}{p_end}
 {phang2}{stata ". civreg n (k = ) w ys, fe"}{p_end}
 
-{phang2}{it:Predict a_i:}{p_end}
+{phang}{it:Predict a_i:}{p_end}
 {phang2}{stata ". predict double au , resid"}{p_end}
 {phang2}{stata ". egen double a_i = mean(au) , by(id)"}{p_end}
 
-{phang2}{it:Two-way fixed-effects CIV estimation:}{p_end}
+{phang}{it:Two-way fixed-effects CIV estimation:}{p_end}
 {phang2}{stata ". civreg n (k w = ) ys if year > 1977 & year < 1983 , twfe"}{p_end}
 
-{phang2}{it:Predict a_i and v_t in} {cmd:balanced panel data} {it:case:}{p_end}
+{phang}{it:Predict a_i and v_t in} {cmd:{it:balanced panel data}} {it:case:}{p_end}
 {phang2}{stata ". predict double avu if e(sample) , resid"}{p_end}
 {phang2}{stata ". qui sum avu if e(sample), mean"}{p_end}
 {phang2}{stata ". scalar avu_m = r(mean)"}{p_end}
 {phang2}{stata ". egen double a_i = mean(avu - `=avu_m') if e(sample), by(id)"}{p_end}
 {phang2}{stata ". egen double v_t = mean(avu - `=avu_m') if e(sample), by(year)"}{p_end}
+
+{title:Acknowledgements}
+
+{p 0 4}The author is grateful to Ratbek Dzhumashev, corresponding author of the Coplanar (Synthetic) Instrumental Variable (CIV) methodology,
+for his generous assistance and valuable clarifications regarding the coplanar-instrument search algorithm. 
+The author also thanks Stata users for their helpful comments, suggestions, and feedback, which have contributed to the development and improvement of {helpb civreg}.
 
 {marker references}{...}
 {title:References}
@@ -375,7 +395,8 @@ ivreg2: Stata module for extended instrumental variables/2SLS, GMM and AC/HAC, L
 {browse "http://ideas.repec.org/c/boc/bocode/s425401.html":http://ideas.repec.org/c/boc/bocode/s425401.html}
 
 {phang}
-Dzhumashev, R., Tursunalieva, A. 2025.  A synthetic instrumental variable method: Using the dual tendency condition for coplanar instruments. {browse "https://doi.org/10.48550/arXiv.2512.17301":https://doi.org/10.48550/arXiv.2512.17301}.
+Dzhumashev, R., Tursunalieva, A. 2025.  A synthetic instrumental variable method: Using the dual tendency condition for coplanar instruments. 
+arXiv preprint arXiv:2512.17301. {browse "https://doi.org/10.48550/arXiv.2512.17301":https://doi.org/10.48550/arXiv.2512.17301}.
 
 {phang}
 Haghish, E.F. 2021.  Integrating R machine learning algorithms in Stata using rcall. UK Stata Conference 2021, StataCorp. 

@@ -1,0 +1,39 @@
+d 'QNARDL': module to estimate Quantile Nonlinear Autoregressive Distributed Lag model of Cho, Greenwood-Nimmo, Kim and Shin
+d
+d	 qnardl estimates the {bf:Quantile Nonlinear Autoregressive
+d Distributed Lag} model — a quantile-regression   
+d generalisation of NARDL that admits both:	    Sign asymmetry
+d via the partial-sum decomposition of selected regressors into
+d positive and negative 	   cumulative changes (Shin, Yu &
+d Greenwood-Nimmo 2014); and Locational (quantile) asymmetry by
+d estimating the long-run and short-run dynamics at user-specified 
+d	    quantiles τ of the conditional distribution of the
+d dependent variable (Cho, Kim & Shin 2015).  
+d
+d KW: ARDL
+d KW: quantile
+d KW: nonlinear ARDL
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260610
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f qnardl.ado
+f qnardl.sthlp
+f ../_/_qnardl_bounds.ado
+f ../_/_qnardl_cusum.ado
+f ../_/_qnardl_decompose.ado
+f ../_/_qnardl_diagnostics.ado
+f ../_/_qnardl_display.ado
+f ../_/_qnardl_lagsel.ado
+f ../_/_qnardl_multipliers.ado
+f ../_/_qnardl_onestep.ado
+f ../_/_qnardl_twostep.ado
+f ../_/_qnardl_wald.ado
+f qnardl_cgraph.ado
+f qnardl_graph.ado
+f qnardl_mgraph.ado
+f qnardl_showall.ado

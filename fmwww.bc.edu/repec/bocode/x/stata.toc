@@ -61,6 +61,7 @@ p xtcsd module to test for cross-sectional dependence in panel data models
 p xtcsdq module to implement Tests of no cross-sectional error dependence in panel quantile regressions
 p xtcse2 module to estimate the exponent of cross-sectional dependence in large panels
 p xtcsi module to investigate Residual Cross-Section Independence 
+p xtcsnardl module to estimate Cross-Sectionally Augmented Panel Nonlinear ARDL (CS-NARDL)
 p xtcspqardl module to perform Cross-Sectionally Augmented Panel Quantile ARDL, Quantile CCE Mean Group, and Quantile CCE Pooled Mean Group Estimation
 p xtdcce module to estimate heterogeneous coefficient models using common correlated effects in a dynamic panel
 p xtdcce2 module to estimate heterogeneous coefficient models using common correlated effects in a dynamic panel
@@ -73,6 +74,7 @@ p xtdpdml module to estimate Dynamic Panel Data Models using Maximum Likelihood
 p xtdpdqml module to perform quasi-maximum likelihood linear dynamic panel data estimation
 p xtdpdserial module to perform panel data serial correlation tests
 p xtdpthresh module to estimate Dynamic Panel Threshold Model with Endogeneity
+p xtdyntest module to perform specification tests after dynamic panel-data GMM estimation
 p xtendothresdpd module to estimate a Dynamic Panel Data Threshold Effects Model with Endogenous Regressors
 p xteurostat module to import data from Eurostat in panel data structure
 p xtevent module to estimate and visualize linear panel event-study models
@@ -133,8 +135,10 @@ p xtpattern module to generate code showing pattern of xt data
 p xtpatternvar module to generate string variable describing panel patterns
 p xtpcaus module to perform Panel Granger Causality Tests: Panel Fourier Toda-Yamamoto (PFTY) and Panel Quantile Causality (PQC)
 p xtpcmg module to implement Panel Cointegrating Polynomial Regressions: Group-Mean & Pooled FM-OLS
+p xtpdlib module to provide a library of second-generation panel data tests 
 p xtpdyn module to estimate dynamic random effects probit model with unobserved heterogeneity
 p xtpedroni module to perform Pedroni's panel cointegration tests and Panel Dynamic OLS estimation
+p xtpfardl module to provide Fourier-augmented panel ARDL / CS-ARDL estimator 
 p xtpmg module for estimation of nonstationary heterogeneous panels
 p xtpqardl module to estimate Panel Quantile Autoregressive Distributed Lag (PQARDL) models
 p xtpqcs module to estimate Panel Quantile Regression with Common Shocks
@@ -150,6 +154,7 @@ p xtqptest module to perform Born & Breitung Bias-corrected LM-based test for se
 p xtqreg module to compute quantile regression with fixed effects
 p xtqrplot module to compute entity-specific marginal effects from panel quantile regression
 p xtqsh module to implement Quantile Regression Slope Homogeneity Test for Panel Data 
+p xtquantilebreak module to perform shrinkage quantile regression for panel data with multiple structural breaks 
 p xtrec module to implement Panel unit root test based on recursive detrending (Westerlund 2015)
 p xtregam module to estimate Amemiya Random-Effects Panel Data: Ridge and Weighted Regression
 p xtregbem module to estimate Between-Effects Panel Data: Ridge and Weighted Regression

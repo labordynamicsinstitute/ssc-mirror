@@ -1,0 +1,50 @@
+d 'QQR': module to estimate Bivariate Quantile-on-Quantile Regression (Sim & Zhou 2015)
+d
+d	qqr estimates a bivariate quantile-on-quantile regression
+d following Sim & Zhou (2015).	For each pair (τ, θ)	  the
+d procedure fits a locally-weighted quantile regression        y =
+d β₀(τ,θ) + β₁(τ,θ) (x − x_θ) + u	  with kernel
+d weights centred on the θ-quantile of x.  The slope coefficient
+d β₁(τ,θ) traces how the τ-quantile    of y responds to x
+d when x is at its θ-quantile.  The result is an M×L surface that
+d generalises both standard    quantile regression (one θ) and OLS
+d (the mean). 
+d
+d KW: quantile
+d KW: regression
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260610
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f qqr.ado
+f ../m/mqqr.ado
+f qqcauseplot.ado
+f qqdiff.ado
+f qqgcause.ado
+f qqheat.ado
+f qqkrls.ado
+f qqribbon.ado
+f qqsurf.ado
+f qqsurf3d.ado
+f qqtable.ado
+f qqtest.ado
+f ../_/_qqcolors.ado
+f ../m/mqqr.sthlp
+f qqcauseplot.sthlp
+f qqdiff.sthlp
+f qqgcause.sthlp
+f qqheat.sthlp
+f qqkrls.sthlp
+f qqr_package.sthlp
+f qqr.sthlp
+f qqribbon.sthlp
+f qqsurf.sthlp
+f qqsurf3d.sthlp
+f qqtable.sthlp
+f qqtest.sthlp
+f ../l/lqqr.mata
+f ../l/llqqr.mlib

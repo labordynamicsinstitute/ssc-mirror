@@ -18,6 +18,7 @@ p qlognorm module for diagnostic plots for lognormal distribution
 p qlqc15 module for scoring of the EORTC QLQ-C15-PAL
 p qmodplot module to produce a Quadratic Moderation Plot
 p qn module to estimate Rousseeuw and Croux (1993) robust measure of dispersion
+p qnardl module to estimate Quantile Nonlinear Autoregressive Distributed Lag model of Cho, Greenwood-Nimmo, Kim and Shin
 p qog module to access the most recent release of the "Quality of Government" data
 p qogbook module to access Quality of Government codebooks 
 p qpair module to perform Q-analysis on paired Q-sorts using different factor extraction and factor rotation techniques
@@ -26,6 +27,7 @@ p qqcompare module to evaluate balance after matching using quantile-quantile pl
 p qqplot2 module to produce quantile-quantile plot
 p qqplot3 module to plot the unweighted and weighted quantiles of one variable against the corresponding quantiles of another
 p qqplotg module to draw quantile-quantile plots, generalized to allow groups and plotting difference vs mean
+p qqr module to estimate Bivariate Quantile-on-Quantile Regression (Sim & Zhou 2015)
 p qqvalue module to generate quasi-q-values by inverting multiple-test procedures
 p qreg2 module to perform quantile regression with robust and clustered standard errors
 p qregpd module to perform Quantile Regression for Panel Data

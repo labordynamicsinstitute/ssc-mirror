@@ -1,0 +1,22 @@
+d 'XTQUANTILEBREAK': module to perform shrinkage quantile regression for panel data with multiple structural breaks 
+d
+d	xtquantilebreak estimates the panel quantile regression
+d model of Zhang, Zhu, Feng and He (2022), in which    the slope
+d coefficients are allowed to change at an unknown number of
+d structural breaks whose locations are    determined by the data. 
+d
+d KW: quantile
+d KW: panel data
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260610
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtquantilebreak.ado
+f xtquantilebreak.sthlp
+f xtquantilebreak_graph.ado
+f ../_/_xtquantilebreak_engine.ado

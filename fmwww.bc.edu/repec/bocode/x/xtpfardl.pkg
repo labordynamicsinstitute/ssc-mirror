@@ -1,0 +1,28 @@
+d 'XTPFARDL': module to provide Fourier-augmented panel ARDL / CS-ARDL estimator 
+d
+d	xtpfardl estimates the Fourier-augmented panel ARDL family
+d of models for heterogeneous, cross-sectionally    dependent
+d panels with smooth structural breaks.  It augments the
+d (cross-section augmented) panel ARDL with    Enders-Lee Fourier
+d terms sin(2{&pi}kt/T) and cos(2{&pi}kt/T) that approximate an
+d unknown number of gradual    breaks without pre-testing break
+d dates. 
+d
+d KW: panel data
+d KW: ARDL
+d KW: cross-section
+d KW: Fourier-augmented
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260610
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtpfardl.ado
+f xtfdh.ado
+f xtpfnardl.ado
+f xtpfardl.sthlp
+f xtfdh.sthlp
+f xtpfnardl.sthlp

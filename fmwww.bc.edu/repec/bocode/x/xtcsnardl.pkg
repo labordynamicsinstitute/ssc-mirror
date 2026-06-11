@@ -1,0 +1,27 @@
+d 'XTCSNARDL': module to estimate Cross-Sectionally Augmented Panel Nonlinear ARDL (CS-NARDL)
+d
+d      xtcsnardl is a unified suite of nonlinear panel estimators
+d with cross-section augmentation. Every    estimator in this
+d package is the nonlinear (asymmetric) extension of a canonical
+d CCE/ARDL method. 
+d
+d KW: ARDL
+d KW: nonlinear ARDL
+d KW: panel data
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20260610
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtcsnardl_graph.ado
+f xtcsnardl.ado
+f xtcsnardl_examples.sthlp
+f xtcsnardl_graph.sthlp
+f xtcsnardl_methodology.sthlp
+f xtcsnardl_postestimation.sthlp
+f xtcsnardl.sthlp
+f ../t/test_all.do
+f ../t/test_fast.do

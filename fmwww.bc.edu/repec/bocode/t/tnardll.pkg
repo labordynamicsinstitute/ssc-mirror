@@ -1,0 +1,29 @@
+d 'TNARDLL': module to estimate Threshold (Nonlinear) Autoregressive Distributed Lag model 
+d
+d      tnardll estimates the Threshold ARDL (TARDL) model of Cho,
+d Greenwood-Nimmo and Shin (2020c, 2020d), surveyed    in Cho,
+d Greenwood-Nimmo and Shin (2021). The TARDL model generalises the
+d Nonlinear ARDL (NARDL) of Shin, Yu	and Greenwood-Nimmo (2014)
+d by decomposing the first differences of one regressor into
+d regime-specific    partial-sum processes around one or more
+d unknown threshold values, rather than the known value of zero
+d used	  by NARDL. This admits size (momentum) asymmetry in
+d addition to sign asymmetry. 
+d
+d KW: nonlinear ARDL
+d KW: threshold model
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260610
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f tnardll_p.ado
+f tnardll.ado
+f tnardlldiag.ado
+f tnardllmult.ado
+f tnardll.sthlp
+f tnardlldiag.sthlp
+f tnardllmult.sthlp

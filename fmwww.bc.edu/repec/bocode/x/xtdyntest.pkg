@@ -1,0 +1,20 @@
+d 'XTDYNTEST': module to perform specification tests after dynamic panel-data GMM estimation
+d
+d   xtdyntest runs cross-sectional dependence tests, structural
+d break tests, and  Sarafidis-Yamagata-Robertson (2009) tests 
+d after a dynamic panel data (DPD) estimator 
+d
+d KW: DPD
+d KW: dynamic panel data
+d KW: cross-sectional dependence
+d KW: structural breaks
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260610
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtdyntest.ado
+f xtdyntest.sthlp

@@ -1,0 +1,28 @@
+d 'XTPDLIB': module to provide a library of second-generation panel data tests 
+d
+d	 xtpdlib is a Stata library that brings several modern
+d panel time-series tests - accounting for cross-section   
+d dependence, structural shifts and heterogeneity - from Saban
+d Nazlioglu's GAUSS TSPDLIB into Stata, with	journal-quality
+d output tables, publication-style graphs, and fully cross-linked
+d help. 
+d
+d KW: panel data
+d KW: time series tests
+d KW: structural shifts
+d KW: cross-section dependence
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260610
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtcipsm.ado
+f xtfpss.ado
+f xtpgc.ado
+f xtcipsm.sthlp
+f xtfpss.sthlp
+f xtpdlib.sthlp
+f xtpgc.sthlp

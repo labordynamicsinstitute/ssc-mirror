@@ -394,6 +394,7 @@ p stsurvimpute module for flexible imputation of censored survival data
 p sttex module to integrate Stata results into a LaTeX document
 p studysi module to calculates sample size and power for comparative studies
 p stute_test module to compute Stute (1997) linearity test
+p stvarag module to produce Aggregated Values of String Variable(s)
 p stvarcom module to generate subset combinations of a string variable
 p stylerules module -- suggestions on programming style
 p styletextab module to style LaTeX tables exported by collect suite of commands

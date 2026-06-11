@@ -15,6 +15,17 @@ Versions:
                    + add option radd: CIV + IIDN(0, sd(x))
                    + adjust create IV in case hete(1) and hete(2), follow Ratbek's feedback
 				   
+* 06/03/26 - 2.0.1 + Halperin APM: `var'1, `var'2, m_i, m_t, dif --> tempvar
+* 06/05/26 - 2.1.0 + Pham Anh Ton comments in find_first_sign_change():
+                     - return(.) must be outside the "for" loop!
+* 06/06/26 - 2.1.1 + d0 formula generalized by Pham Anh Ton
+                     - d0 = d_or + (find_min_pos() - 1) * delt
+* 06/08/26 - 2.1.2 + find_first_sign_change(): return(.) --> return(1) 
+                        when the sign not change
+                   + dofminus(`=`N' + `T'-2 +`nocons'') --> -`nocons'
+* 06/10/26 - 2.2.0 + exogenous check: cov(e^2,siv) = 0 for both k = -1 and 1
+                   + add cgraph, savecgraph, gname option
+                        to plot and save cov(e^2,siv), cor(e^2,siv) graph
 ==============================================================================*/
 
 cap pro drop civreg
@@ -65,6 +76,7 @@ pro def civreg, eclass byable(recall)
 			*/	dmax(real 70)					/*
 			*/	rcode 							/*
 			*/	PLUSrand						/*	// ver 2.0.0
+			*/	CGRaph SAVEgraph GPrefix(name)	/*	// ver 2.2.0
 			*/	maxiter(integer 50)				/*
 			*/	TOLerance(real 1e-8)			/*
 			*/	NOLOG							/*
@@ -157,6 +169,14 @@ pro def civreg, eclass byable(recall)
 		if "`noconstant'" == "" local nocons = 0
 		else local nocons = 1
 		
+* option graph		
+		if "`cgraph'" == "" local cgrph = 0
+		else local cgrph = 1
+		
+		if "`savegraph'" == "" local scgrph = 0
+		else local scgrph = 1
+		
+		
 * mark data
 		tempvar mark_id
 		qui gen long `mark_id' = _n 
@@ -235,7 +255,7 @@ di as error /*
 				
 			}
 			
-		//	Two-Way FE: Halperin APM
+//	Two-Way FE: Halperin APM
 			else {
 
 				qui levelsof `tvar' if `touse' , local(tvarnames)
@@ -258,6 +278,8 @@ di as error /*
 						gen double ``var'0' = `var' if `touse'
 					}
 					
+					tempvar m_i m_t dif
+					
 					local iter = 0
 					
 					while `iter' <= `maxiter' {
@@ -265,20 +287,22 @@ di as error /*
 						local maxdif = 0
 						
 						qui foreach var of varlist `lhs' `endo' `inexog' `exexog' {
+							
+							tempvar `var'1 `var'2
 // time-demean
-							egen double m_i  = mean(``var'0') if `touse' , by(`ivar')
-							gen double `var'1 = ``var'0' - m_i if `touse'
-							
+							egen double `m_i'  = mean(``var'0') if `touse' , by(`ivar')
+							gen double ``var'1' = ``var'0' - `m_i' if `touse'
+						
 // group-demean
-							egen double m_t  = mean(`var'1) if `touse' , by(`tvar')
-							gen double `var'2 = `var'1 - m_t if `touse'
+							egen double `m_t'  = mean(``var'1') if `touse' , by(`tvar')
+							gen double ``var'2' = ``var'1' - `m_t' if `touse'
 							
-							gen double dif = abs(`var'2 - ``var'0') if `touse'
-							sum dif , mean
+							gen double `dif' = abs(``var'2' - ``var'0') if `touse'
+							sum `dif' , mean
 							local maxdif = max(`maxdif', r(max))
 							
-							replace ``var'0' = `var'2 if `touse'
-							cap drop m_i m_t dif `var'1 `var'2
+							replace ``var'0' = ``var'2' if `touse'
+							cap drop `m_i' `m_t' `dif' ``var'1' ``var'2'
 							
 						}
 						
@@ -343,10 +367,11 @@ di as error /*
 			local ivar "`mark_id'"
 		}
 		
-		mata: create_civlist("endo_rmc", "lhs", "ivar",  			/*
+		mata: create_civlist("endo_rmc", "lhs", "ivar",  				/*
 						*/	"inexog_rmc", "exexog_rmc", "touse", 		/*
 						*/	"d", "delt", "dmax", "reps", "r_code",  	/*
 						*/	"hete", "nocons", "panelis", "plus_rd", 	/*
+						*/	"cgrph" , "scgrph", "gprefix",				/*	// ver 2.2.0
 						*/	"civ" )
 				
 		mat rown `sign_k' = `endo_rmc'
@@ -383,7 +408,7 @@ di as error /*
 							*/	saverfprefix(`saverfprefix')				/*
 							*/	`noheader' `nofooter' `nooutput'			/*
 							*/	`eform'	`plus' level(`level') `nocoll'		/*
-							*/	dofminus(`=`N'-1 + `nocons'') 
+							*/	dofminus(`=`N'-1 - `nocons'') 
 		}
 		else {
 
@@ -395,7 +420,7 @@ di as error /*
 							*/	saverfprefix(`saverfprefix')				/*
 							*/	`noheader' `nofooter' `nooutput'			/*
 							*/	`eform'	`plus' level(`level') `nocoll'		/*
-							*/	dofminus(`=`N' + `T' - 2 + `nocons'') 
+							*/	dofminus(`=`N' + `T' - 2 - `nocons'') 
 		}
 
 //		correlation of `civ' and `endo'
@@ -416,7 +441,7 @@ di as error /*
 
 restore
 
-		qui merge m:1 `mark_id' using `_data', nogen		
+		qui merge 1:1 `mark_id' using `_data', nogen		
 	
 //		Label CIV
 		qui foreach var of local civ {
@@ -921,10 +946,16 @@ real scalar find_first_sign_change(real colvector x)
         if (diff_signs[i] != 0) {
 			return(i + 1)
 		}
+
+/* Pham Anh Ton comment: return(.) must be outside the "for" loop!
 		else {
 			return(.)			
 		}
+*/		
     }
+	
+//	return(.)	// ver 2.1.0
+	return(1)	// ver 2.1.2
 
 }
 
@@ -1090,7 +1121,7 @@ real matrix make_v012(real scalar sd_x, real scalar N, real scalar seed)
 ================================================================ */
 
 // hete = 0
-real scalar criterion_homo(
+real scalar crit_homo(
         real colvector x_b,
         real colvector civ_b,
 		real scalar nocons
@@ -1110,7 +1141,7 @@ real scalar criterion_homo(
 }
 
 // hete = 1
-real scalar criterion_hete_p(
+real scalar crit_hete_p(
         real colvector x_b,
         real colvector civ_b,
         real scalar nocons
@@ -1121,8 +1152,8 @@ real scalar criterion_hete_p(
         real colvector wgt
         real colvector e_gls, e2_gls
 
-        real scalar ess_o, rss_o
-        real scalar ess_g, rss_g
+        real scalar ess_o, tss_o
+        real scalar ess_g, tss_g
         real scalar chi2_o, chi2_g
         real scalar dv, N
 		N = rows(x_b)
@@ -1141,14 +1172,14 @@ real scalar criterion_hete_p(
         e2_gls = e_gls :^ 2
 
         ess_o = sum((ls_xb(e2_ols, civ_b, 0) :- mean(e2_ols)) :^ 2)
-        rss_o = sum(e2_ols)
+        tss_o = sum(e2_ols)
 
-        chi2_o = (ess_o / 2) / (rss_o / N)^2
+        chi2_o = (ess_o / 2) / (tss_o / N)^2
 
         ess_g = sum((ls_xb(e2_gls, civ_b, 0) :- mean(e2_gls)) :^ 2)
-        rss_g = sum(e2_gls)
+        tss_g = sum(e2_gls)
 
-        chi2_g = (ess_g / 2) / (rss_g / N)^2
+        chi2_g = (ess_g / 2) / (tss_g / N)^2
 
         dv = chi2(1, chi2_g) - chi2(1, chi2_o)
 
@@ -1157,7 +1188,7 @@ real scalar criterion_hete_p(
 }
 
 // hete = 2
-real scalar criterion_hete_n(
+real scalar crit_hete_n(
         real colvector x_b,
         real colvector civ_b,
 		real scalar nocons
@@ -1277,7 +1308,7 @@ real scalar find_d0_boot(
 
                         if (hete == 0) {
 
-                                m1[i] = criterion_homo(
+                                m1[i] = crit_homo(
                                                 x_b,
                                                 civ_b,
 												nocons
@@ -1285,7 +1316,7 @@ real scalar find_d0_boot(
                         }
                         else if (hete == 1) {
 
-                                m1[i] = criterion_hete_p(
+                                m1[i] = crit_hete_p(
                                                 x_b,
                                                 civ_b,
 												nocons
@@ -1293,7 +1324,7 @@ real scalar find_d0_boot(
                         }
                         else if (hete == 2) {
 
-                                m1[i] = criterion_hete_n(
+                                m1[i] = crit_hete_n(
                                                 x_b,
                                                 civ_b,
 												nocons
@@ -1302,8 +1333,11 @@ real scalar find_d0_boot(
 
                         d = d + delt
                 }
-                d0 = find_min_pos(m1) * delt
-                d0i[l] = d0
+
+// d0 formula generalized by Pham Anh Ton
+//                d0 = find_min_pos(m1) * delt
+                d0 = d_or + (find_min_pos(m1) - 1) * delt	// ver 2.1.1
+				d0i[l] = d0
         }
 		
         return(mean(d0i))
@@ -1316,6 +1350,8 @@ real scalar find_d0_boot(
 ================================================================ */
 
 void create_civ(
+					string scalar xn,
+					string scalar gn,
 					real colvector y,
 					real colvector x,
 					real colvector id,
@@ -1327,6 +1363,8 @@ void create_civ(
 					real scalar hete,
 					real scalar nocons,
 					real scalar panelis,
+					real scalar cgrph,
+					real scalar scgrph,
 					 
 					real colvector civ,
 					real rowvector sign,
@@ -1367,9 +1405,13 @@ void create_civ(
 
 		if (j == 1) {
 			k = 1
+			s_sign = ">"
+			dir_endo = "pos"
 		}
 		else {
 			k = -1
+			s_sign = "<"
+			dir_endo = "neg"
 		}
 		
 		i = 1
@@ -1397,19 +1439,86 @@ void create_civ(
 		m_v = select(m_v , m_v  :!= .)
 		m_c = select(m_c , m_c  :!= .)
 		
-		m = m_v
-		signc[j, 3] = check_initial_abs_increase(m)
-		signc[j, 5] = check_initial_abs_increase(m_c)
+//		m = m_v
+//		signc[j, 3] = check_initial_abs_increase(m)
+		abs_m_v_chk = check_initial_abs_increase(m_v)	// ver 2.2.0
 		
-		if (signc[j,3] != 1) {
+		if (abs_m_v_chk != 1) {
 			index = find_first_sign_change(m_v)
-			n_m = rows(m)
+			n_m = rows(m_v)
 			m = m_v[index..n_m]
+		}
+		else {
+			m = m_v		// ver 2.2.0
 		}
 		
 		signc[j, 2] = check_sign_change(m)
 		signc[j, 3] = check_initial_abs_increase(m)
 		signc[j, 4] = check_sign_change(m_c)
+		signc[j, 5] = check_initial_abs_increase(m_c)
+		
+// ver 2.2.0 plot cov(e^2,civ) and cor(e^2,civ) graph
+		if (cgrph==1 | scgrph==1) {
+
+			n_mv = rows(m)
+			n_mc = rows(m_c)
+			n_stata = st_nobs()
+			if (n_stata < n_mc) {
+				st_addobs(n_mc - n_stata)
+			}
+
+			stata("tempvar mv mc obs")
+			mvn  = st_local("mv")
+			mcn  = st_local("mc")
+			obsn = st_local("obs")
+
+			stata("qui gen double " + mvn  + " = .")
+			stata("qui gen double " + mcn  + " = .")
+			stata("qui gen long "   + obsn + " = _n")
+
+//st_store(1::n_mv, mvn, m_v)
+			st_store(1::n_mv, mvn, m)
+			st_store(1::n_mc, mcn, m_c)
+
+			cond = "if _n <= " + strofreal(n_mv)
+			
+// Covariance
+			cmd1 = "twoway (line " + mvn + " " + obsn + " " + cond + ///
+				   ", lcolor(blue) lpattern(solid) lwidth(*2)), " + ///
+				   "name(graph1, replace) " + ///
+				   "title(Cov(e{sup:2}, civ_" + xn + ")) " + ///
+				   "ytitle(Covariance) xtitle(Grid index) nodraw"
+			stata(cmd1)
+			
+// Correlation
+			cmd2 = "twoway (line " + mcn + " " + obsn + " " + cond + ///
+				   ", lcolor(red) lpattern(dash) lwidth(*2)), " + ///
+				   "name(graph2, replace) " + ///
+				   "title(Cor(e{sup:2}, civ_" + xn + ")) " + ///
+				   "ytitle(Correlation) xtitle(Grid index) nodraw"
+			stata(cmd2)
+			
+// Combined graph
+			stata("graph combine graph1 graph2, " +
+				   "name(cov_e2_" + xn + "_" + dir_endo + ", replace) " +
+				   "title(Assumption: Cov(u, " + xn + ") " +
+				  s_sign + " 0) cols(2)")
+
+			if (scgrph == 1) {
+				
+				stata("di")
+				
+				if (gn == "") {
+					
+					stata("graph save " + dir_endo + "_e2_" + xn + ", replace")
+				}
+				else {
+					
+					stata("graph save " + gn + "_" + dir_endo + "_e2_" + xn + ", replace")
+				}
+			}
+			
+		}
 		
 	}
 	
@@ -1425,7 +1534,34 @@ void create_civ(
 
 	sign = signc[pos_max, ]
 	
-	if (k != 0) {
+//	ver 2.2.0
+	if ( signc[pos_max,2] * signc[pos_max, 4] == 0 ) {
+		displayas("text")
+		printf("\ndetermining the direction of endogeneity for %s\n", xn)
+		errprintf("\nCov(e^2,civ) does not change sign under either endogeneity-direction assumption.")
+		printf("\nthis suggests that %s may be considered exogenous.\n", xn)
+
+		stata("tempname signc")
+		string scalar mname
+
+		stata("tempname signc")
+		mname = st_local("signc")
+
+		st_matrix(mname, signc)
+
+		stata("mat coln " + mname +
+			  " = assm_sign cov_signchg cov_abs_nd cor_signchg cor_abs_nd")
+	  
+		stata("mat list " + mname)
+	  
+		exit(198)
+		
+	}
+	
+//	if (k != 0) {
+	
+	else {		// ver 2.2.0
+		
 		d0m = find_d0_boot(
 				x,
 				r,
@@ -1470,6 +1606,9 @@ void create_civlist(
 		string scalar noconsn,
 		string scalar panelisn,
 		string scalar plusrandn,
+		string scalar cgrphn,
+		string scalar scgrphn,
+		string scalar gname,
         
         string scalar outname     
 )
@@ -1495,6 +1634,8 @@ void create_civlist(
 		real scalar nocons
 		real scalar panelis
 		real scalar plus_rd
+		real scalar cgrph
+		real scalar scgrph
         
         string scalar vname
         string scalar civlist
@@ -1510,6 +1651,7 @@ void create_civlist(
 		ivn = tokens(st_local(ivname))
 		idn = tokens(st_local(idname))
 		touse = st_local(tousename)
+		graphn = st_local(gname)
       
 // =====================================================
 // 		READ DATA
@@ -1548,7 +1690,10 @@ void create_civlist(
         hete    = strtoreal(st_local(hetename))
 		nocons  = strtoreal(st_local(noconsn))
 		panelis = strtoreal(st_local(panelisn))
-		plus_rd = strtoreal(st_local(plusrandn)) 
+		plus_rd = strtoreal(st_local(plusrandn))
+		cgrph	= strtoreal(st_local(cgrphn))
+		scgrph	= strtoreal(st_local(scgrphn))
+		
 
         k_x = cols(x0)
         
@@ -1608,6 +1753,8 @@ void create_civlist(
 // ---------------------------------------------
 
                 create_civ(
+					x0n[i],
+					graphn,
 					y,
                     x,
 					id,
@@ -1619,12 +1766,14 @@ void create_civlist(
 					hete,
 					nocons,
 					panelis,
+					cgrph,
+					scgrph,
 					
 					civ_i,
 					sign,
 					d0m
 				)
-		
+				
 				sign_k[i, ] = sign
 				d0[i] = d0m
 				
