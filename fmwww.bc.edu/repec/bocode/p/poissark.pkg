@@ -1,0 +1,32 @@
+d 'POISSARK': module to perform Poisson regression with integer-valued autoregressive-corrected standard errors
+d
+d     poissark fits Poisson regression models for count time series
+d with autoregressive errors of order k. Regression coefficients
+d are estimated by Poisson maximum likelihood; the AR thinning
+d parameters rho_1,...,rho_k are estimated by conditional least
+d squares (CLS) applied to the integer-valued autoregressive
+d (INAR(p)) model of Du and Li (1991), which extends the INAR(1)
+d model of McKenzie (1985) and Al-Osh and Alzaid (1987) to
+d arbitrary order using independent binomial thinning at each lag.
+d Standard errors for the regression coefficients are corrected via
+d an INAR-corrected sandwich estimator that accounts for the
+d estimated autocorrelation structure (Klimko and Nelson 1978).
+d Only positive autocorrelation is supported (rho_j >= 0), which is
+d a fundamental constraint of the binomial thinning mechanism. 
+d
+d KW: Poisson regreession
+d KW: autoregressive errors
+d KW: conditional least squares
+d KW: integer-valued autoregressive model
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260611
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f poissark.ado
+f poissark_p.ado
+f poissark.sthlp
+f poissark_example.dta

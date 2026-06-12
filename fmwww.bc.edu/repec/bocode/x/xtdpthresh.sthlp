@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.6.0  25apr2026}{...}
+{* *! version 0.6.1  26apr2026}{...}
 {cmd:help xtdpthresh}
 {hline}
 
@@ -37,9 +37,8 @@ where:
 {synopt:{opt endo:genous(varlist)}}contemporaneously endogenous regressors; instrumented by lags from t-2{p_end}
 {synopt:{opt pred:etermined(varlist)}}weakly exogenous (predetermined) regressors; instrumented by lags from t-1{p_end}
 {synopt:{opt exo:genous(varlist)}}extra exogenous regressors (same treatment as {it:indepvars}){p_end}
-{synopt:{opt iv(varlist[, sub-opts])}}additional user-supplied instruments.
-Concise xtabond2-style sub-options allowed: {cmd:iv({it:varlist}, maxlag(# [#]) collapse)}.
-Sub-options override the top-level {cmd:maxlag()}/{cmd:collapse} when both are given.{p_end}
+{synopt:{opt iv(varlist[, collapse])}}additional user-supplied instruments.
+The {cmd:collapse} sub-option collapses ONLY the user-IV block (one shared column per IV instead of one per time block); use top-level {cmd:collapse} to collapse everything. The {cmd:maxlag()} sub-option was removed in v0.7.5 — it never affected user IVs and silently overrode the top-level {cmd:maxlag()} (see Changes section).{p_end}
 {synopt:{opt kink}}enforce continuity (kink) restriction{p_end}
 {synopt:{opt static}}static model; do NOT auto-add L.{it:depvar} as regressor{p_end}
 {synopt:{opt td}}purge common time shocks by within-time demeaning of y and regressors{p_end}
@@ -59,12 +58,14 @@ limiting distribution (n^(1/4)-rate under continuity; Gong-Seo 2026 show
 asymptotic CIs are invalid in that case). Use grid bootstrap instead.{p_end}
 {synopt:{opt gridci(#)}}# grid points for CI construction; default {cmd:25}{p_end}
 {synopt:{opt boot(#)}}bootstrap replications; default {cmd:299}{p_end}
+{synopt:{opt rseed(#)}}set RNG seed before any bootstrap draw, for exact bit-for-bit reproducibility of CI bounds and test p-values{p_end}
 {synopt:{opt nosearch}}skip grid bootstrap (point estimate only){p_end}
-{synopt:{opt nowarn}}suppress CI-boundary pinning warning{p_end}
+{synopt:{opt nowarn}}suppress CI-boundary pinning warning, disconnected-CI note, and the {cmd:method(system)} grid-bootstrap heuristic-extension advisory{p_end}
 
 {syntab:Reporting}
 {synopt:{opt l:evel(#)}}confidence level; default {cmd:95}{p_end}
 {synopt:{opt verbose}}print per-γ bootstrap progress (25+ lines); default is a compact one-dot-per-γ progress bar{p_end}
+{synopt:{opt exportgmm}}expose GMM moment weight A, instrument Z_f, and FD-transformed regressors X_f via persistent Mata externals for external verification (debug option){p_end}
 {synoptline}
 
 {p 4 6 2}
@@ -116,6 +117,76 @@ our Monte Carlo; see {help xtdpthresh##citype:citype} for the
 implementation-level caveats.
 
 
+{title:Changes in version 0.7.5 (11jun2026, since 0.6.0)}
+
+{pstd}
+Substantive consolidated release. Users upgrading from v0.6.x should
+re-verify {cmd:method(system)} results (the new level-equation constant
+changes them) and re-run AR(1)/AR(2) diagnostics (the AR statistic is now
+the full Arellano-Bond formula).
+
+{pstd}
+{bf:Audit fixes (estimation).}
+
+{phang}
+{cmd:method(system)} estimates a level-equation constant ({cmd:cons_lvl},
+the LAST element of {cmd:e(b)}) and adds the moment E[eta+eps] = 0, matching
+{cmd:xtabond2}. Without it the level moments require E[dz] = 0, which fails
+for trending instruments.
+
+{phang}
+Unified fixed-weight 2-stage grid search for {cmd:method(fod)} and
+{cmd:method(system)}: previously the weight was re-estimated per grid point,
+making the GMM objective not comparable across the grid.
+
+{phang}
+{cmd:e(sample)} is set via {cmd:esample()}; bootstrap p-values use the
+Davidson-MacKinnon add-one correction (never exactly zero); empty or
+disconnected CI acceptance regions are flagged via {cmd:e(ci_empty)} and
+{cmd:e(ci_nseg)} instead of silently collapsing to a point; zero-instrument
+rows are dropped in the transformed equation too.
+
+{phang}
+{cmd:iv(}{it:z}{cmd:, collapse)} now collapses ONLY the user-IV block; the
+{cmd:iv(}{it:z}{cmd:, maxlag(...))} sub-option is removed and now errors
+{cmd:r(198)} (it silently overrode the top-level {cmd:maxlag()} -- use that
+instead). New {cmd:rseed(}{it:#}{cmd:)} for reproducibility; {cmd:e(cmdline)}
+stored; per-gamma caches built once and shared across the grid search, CI,
+and specification tests; Mata conformability fix in {cmd:xdpt2_stack_at_gamma}
+that crashed {cmd:method(system)}.
+
+{pstd}
+{bf:B1 -- full Arellano-Bond AR formula (now VERIFIED).} AR(1)/AR(2) use
+the full Arellano and Bond (1991, eq. 8) m-statistic
+m_k = b0 / sqrt(T1 + T2 + T3), including the estimated-parameter variance
+correction, with a principled fallback to the simplified b0/sqrt(T1) when
+the variance pieces are unavailable or non-positive. The earlier
+limitation (simplified statistic without the correction) is RESOLVED.
+Certified two ways: (1) an independent external re-implementation of the
+formula, fed the package's own A / Z_f / X_f / V / residuals (exposed via
+{cmd:exportgmm}), reproduces {cmd:e(ar*)} to machine precision AND matches
+Roodman's {cmd:abar} bit-for-bit on identical first-difference residuals;
+(2) Monte Carlo size of the AR(2) test under an H0 data-generating process
+is on target near the 5% nominal level.
+
+{pstd}
+{bf:Postestimation predict.} New {cmd:xtdpthresh_p} returns {cmd:residuals}
+(the residual of the equation actually estimated), {cmd:arresiduals} (the
+FD AR-test series the AR statistics consume, xtabond2 convention),
+{cmd:xb}, and {cmd:regime}. Residuals are merged back from the persisted
+estimation rows by ({it:panelvar},{it:timevar}) key -- identical by
+construction across all methods and any panel pattern, guarded by
+{cmd:e(p_serial)} against stale Mata state. See
+{help xtdpthresh##postest:Postestimation}.
+
+{pstd}
+{bf:New e() scalars and option.} {cmd:e(ar*_b0)}, {cmd:e(ar*_T1)},
+{cmd:e(ar*_TT)} expose the AR m-statistic decomposition; {cmd:e(ar*_np)}
+the lag-pair count (sign flags the full vs fallback path). New
+{cmd:exportgmm} option exposes the GMM weight A, instruments Z_f, and
+FD-transformed regressors X_f via Mata externals for external verification.
+
+
 {title:Syntax conventions relative to xthenreg}
 
 {pstd}
@@ -136,10 +207,12 @@ unbalanced panel support; {cmd:method(system)} adds Blundell-Bond level
 moments.
 
 {phang}
-{cmd:*} Added: {cmd:iv(}{it:varlist}[, sub-opts]{cmd:)} for external
-instruments, with xtabond2-style sub-options {cmd:maxlag()} and
-{cmd:collapse} that override the top-level settings. Functionally
-similar to {cmd:xthenreg}'s {cmd:inst()} but with finer control.
+{cmd:*} Added: {cmd:iv(}{it:varlist}[, {cmd:collapse}]{cmd:)} for external
+instruments. The {cmd:collapse} sub-option collapses ONLY the user-IV
+block (one shared column per IV). The {cmd:maxlag()} sub-option that
+existed in v0.6.x is removed in v0.7.5 — user IVs always enter as their
+period-t value, so it never affected them. Use the top-level
+{cmd:maxlag()} option for GMM-style instrument lag control.
 
 {phang}
 {cmd:*} Added: {cmd:collapse}, {cmd:maxlag()}, {cmd:levmaxlag()} for
@@ -214,7 +287,7 @@ So a minimal call like {cmd:xtdpthresh y x1 x2, qx(q)} already uses
 x1, x2, and the lagged y as instruments — no need to specify {cmd:iv()}.
 
 {phang}
-{opt iv(varlist[, sub-opts])} specifies {it:additional} user-supplied
+{opt iv(varlist[, collapse])} specifies {it:additional} user-supplied
 instruments that enter Z without being added as regressors. Useful when
 an {it:external} IV exists (e.g., industry-level average that moves with
 a firm endogenous variable). Each {it:iv} variable contributes one extra
@@ -222,8 +295,11 @@ column per time block. Under {cmd:method(system)}, user IVs are added to
 BOTH transformed- and level-equation moment blocks — valid when the user
 IV is exogenous in levels. User is responsible for supplying only IVs
 satisfying E[z · ε] = 0 in levels.
-Sub-options {cmd:maxlag(# [#])} and {cmd:collapse} inside {cmd:iv()}
-override the corresponding top-level options (xtabond2-style).
+The {cmd:collapse} sub-option (v0.7.0 semantics) collapses ONLY the user-IV
+block — one shared column per IV across all time blocks. Use the top-level
+{cmd:collapse} option to collapse everything. The {cmd:maxlag()} sub-option
+that existed in v0.6.x is removed in v0.7.5 (it never affected user IVs);
+use the top-level {cmd:maxlag()} for GMM-style instrument lag control.
 
 {phang}
 {opt kink} requests the continuity-restricted (kink) model of Seo-Shin
@@ -416,6 +492,17 @@ per γ point, 25+ lines of output). Useful for monitoring long-running
 bootstraps on large panels or for debugging convergence. Without
 {opt verbose}, the command prints a compact one-dot-per-γ progress bar.
 
+{phang}
+{opt exportgmm} populates the Mata externals {bf:xdpt_best_A} (GMM moment
+weight, k_iv × k_iv), {bf:xdpt_best_Z_f} (instrument matrix on the FD-row
+stack, n_trans × k_iv), and {bf:xdpt_best_X_f} (FD-transformed regressors
+on the same rows, n_trans × k_W). Off by default — Z_f can be 4 MB+ on
+balanced Hansen FD with maxlag(2 4). Use this when you want to verify the
+AR(k) statistic externally: feed the externals plus
+{cmd:predict, arresiduals} and {cmd:e(V)} into an independent
+implementation of the Arellano-Bond (1991, eq. 8) formula and compare
+against {cmd:e(ar*)}. See the v0.7.5 changelog for the example workflow.
+
 
 {title:Examples}
 
@@ -434,14 +521,14 @@ Same but with cashflow as endogenous (auto-lag instruments):
 {pstd}
 Unbalanced banking panel, FOD transformation, with user-supplied IV:
 
-{phang2}{cmd:. xtdpthresh roa gdp_growth credit_growth, qx(car)}{break}
-{cmd:      endogenous(L.roa) iv(industry_avg_roa) method(fod)}{p_end}
+{phang2}{cmd:. xtdpthresh roa gdp_growth, qx(car)}{break}
+{cmd:      endogenous(credit_growth) iv(industry_avg_roa) method(fod)}{p_end}
 
 {pstd}
-Concise xtabond2-style: lag range and collapse set inside {cmd:iv()}:
+xtabond2-style: lag range at top level, user-IV block independently collapsed inside {cmd:iv()}:
 
 {phang2}{cmd:. xtdpthresh invest tobin_q cashflow, qx(debt)}{break}
-{cmd:      iv(L2_tobin, maxlag(2 4) collapse) method(fd)}{p_end}
+{cmd:      iv(L2_tobin, collapse) maxlag(2 4) method(fd)}{p_end}
 
 {pstd}
 Point estimate only (skip bootstrap, useful for quick checks):
@@ -474,6 +561,62 @@ The second call (unrestricted) reports {cmd:e(pval_cont)}; if less than
 0.05, the jump model is preferred; otherwise kink is not rejected.
 
 
+{marker postest}{...}
+{title:Postestimation: predict}
+
+{p 8 17 2}
+{cmd:predict} {dtype} {newvar} {ifin} [{cmd:,} {it:statistic}]
+
+{synoptset 22 tabbed}{...}
+{synopt:Default}{cmd:residuals}{p_end}
+{synopt:{cmd:residuals}}residual of the ESTIMATED equation: FD residual under {cmd:method(fd)}, FOD residual under {cmd:method(fod)}, FD-restack residual under {cmd:method(system)} (level-equation residuals are not yet exposed){p_end}
+{synopt:{cmd:arresiduals}}the FD residual series the AR(1)/AR(2) tests consume (xtabond2 convention, always FD-form). For {cmd:method(fd)} this equals {cmd:residuals}; for {cmd:method(fod)} it is the FD restack and differs from the FOD estimation residual in variance and pattern; for {cmd:method(system)} it equals {cmd:residuals}{p_end}
+{synopt:{cmd:xb}}fit of whichever equation {cmd:residuals} corresponds to ({cmd:residuals + xb} = transformed depvar row-by-row){p_end}
+{synopt:{cmd:regime}}regime indicator 1{c -(}q_it > γ̂{c )-} on raw rows within {it:if}/{it:in} (not restricted to e(sample)){p_end}
+
+{pstd}
+Use {cmd:arresiduals}, not {cmd:residuals}, to reproduce the reported
+AR(1)/AR(2) statistics under {cmd:method(fod)}: the FOD estimation
+residual has a different variance and a mechanical first-order
+autocorrelation, so an AR test on it would not match the reported value.
+Under {cmd:method(fd)} and {cmd:method(system)} the two coincide.
+
+{pstd}
+Both {cmd:residuals} and {cmd:arresiduals} are merged into the new
+variable by ({it:panelvar}, {it:timevar}) key from data persisted in Mata
+globals during estimation — identical by construction to the
+estimation-time series, for every method and any panel pattern. No
+transformation, trim, t-2 instrument-history, or zero-instrument filter
+is re-derived in {cmd:predict}. Rows outside the estimator's row set
+return missing.
+
+{pstd}
+{bf:Staleness.} {cmd:predict} requires {cmd:xtdpthresh} as the active
+estimation AND its Mata state intact. After {cmd:mata: mata clear},
+{cmd:discard}, a Stata restart, or {cmd:estimates restore} of a different
+{cmd:xtdpthresh} run, re-run {cmd:xtdpthresh} first. The error path is
+clean: rc 498 if the Mata globals are gone or the run-serial disagrees
+with the current e(); rc 301 if e() comes from a build {bf:<} v0.7.3 that
+never stored prediction rows.
+
+{pstd}
+Example — extract residuals after {cmd:method(fd)}:
+
+{phang2}{cmd:. xtdpthresh invest tobin_q cashflow debt, qx(debt) method(fd) maxlag(2 4) nosearch}{p_end}
+{phang2}{cmd:. predict double ehat, residuals}{p_end}
+{phang2}{cmd:. predict byte regime_hat, regime}{p_end}
+
+{pstd}
+{cmd:arresiduals} enables external verification of the AR(k) statistic
+against {cmd:abar} or any reimplementation. With the AR-test residuals
+available the user can reproduce v0.7.2's reported m_k bit-for-bit by
+computing b0 = Σ_i Σ_t ê_{i,t}·ê_{i,t-k} and T1 = Σ_i (Σ_t
+ê_{i,t}·ê_{i,t-k})² externally and comparing against {cmd:e(ar*_b0)} and
+{cmd:e(ar*_T1)}; the full denominator {cmd:e(ar*_T1)} + {cmd:e(ar*_TT)}
+accounts for the T2+T3 parameter-uncertainty correction (see B1 status
+in {help xtdpthresh##changelog:Changes}).
+
+
 {title:Stored results}
 
 {synoptset 22 tabbed}{...}
@@ -491,11 +634,21 @@ The second call (unrestricted) reports {cmd:e(pval_cont)}; if less than
 {synopt:{cmd:e(ar1_p)}}AR(1) p-value (typically rejects for FD due to MA(1)){p_end}
 {synopt:{cmd:e(ar2)}}Arellano-Bond AR(2) m-statistic{p_end}
 {synopt:{cmd:e(ar2_p)}}AR(2) p-value (should NOT reject if moments valid){p_end}
+{synopt:{cmd:e(ar1_b0)}}AR(1) numerator b0 = e_{-1}'·e (v0.7.2 debug scalar){p_end}
+{synopt:{cmd:e(ar1_T1)}}AR(1) variance T1 = Σ_i c_i² (simplified denominator){p_end}
+{synopt:{cmd:e(ar1_TT)}}AR(1) parameter-uncertainty term T2+T3 (full-formula correction){p_end}
+{synopt:{cmd:e(ar2_b0)}}AR(2) numerator (debug scalar){p_end}
+{synopt:{cmd:e(ar2_T1)}}AR(2) variance T1 (debug scalar){p_end}
+{synopt:{cmd:e(ar2_TT)}}AR(2) parameter-uncertainty term T2+T3 (debug scalar){p_end}
+{synopt:{cmd:e(ar1_np)}}AR(1) lag-pair count; >0 full AB path used, <0 simplified fallback{p_end}
+{synopt:{cmd:e(ar2_np)}}AR(2) lag-pair count; sign = full/fallback path flag{p_end}
 {synopt:{cmd:e(gamma)}}threshold point estimate γ̂{p_end}
-{synopt:{cmd:e(gamma_lo)}}grid bootstrap CI lower bound{p_end}
-{synopt:{cmd:e(gamma_hi)}}grid bootstrap CI upper bound{p_end}
-{synopt:{cmd:e(pval_lin)}}linearity test p-value (Seo-Shin 2016 style){p_end}
-{synopt:{cmd:e(pval_cont)}}continuity test p-value (Gong-Seo 2026, Section 4.3 and Theorem 7); missing when {cmd:kink} is set{p_end}
+{synopt:{cmd:e(gamma_lo)}}grid bootstrap CI lower bound (missing when {cmd:e(ci_empty)}=1){p_end}
+{synopt:{cmd:e(gamma_hi)}}grid bootstrap CI upper bound (missing when {cmd:e(ci_empty)}=1){p_end}
+{synopt:{cmd:e(ci_empty)}}1 if the bootstrap rejected every grid point (no CI), 0 otherwise{p_end}
+{synopt:{cmd:e(ci_nseg)}}number of connected segments in the acceptance region (1 = standard CI; >1 = disconnected, hull reported){p_end}
+{synopt:{cmd:e(pval_lin)}}linearity test p-value (Seo-Shin 2016 style; add-one corrected){p_end}
+{synopt:{cmd:e(pval_cont)}}continuity test p-value (Gong-Seo 2026, Section 4.3 and Theorem 7; add-one corrected); missing when {cmd:kink} is set{p_end}
 {synopt:{cmd:e(obj)}}GMM objective at γ̂{p_end}
 {synopt:{cmd:e(k_exog)}}# exogenous regressors{p_end}
 {synopt:{cmd:e(k_endog)}}# endogenous regressors{p_end}
@@ -505,10 +658,12 @@ The second call (unrestricted) reports {cmd:e(pval_cont)}; if less than
 {synopt:{cmd:e(flag_static)}}1 if static option specified{p_end}
 {synopt:{cmd:e(flag_td)}}1 if td option specified{p_end}
 {synopt:{cmd:e(balanced)}}1 if panel is strongly balanced{p_end}
+{synopt:{cmd:e(boundary_warn)}}grid-CI boundary-pin flag (0 none, 1 lower, 2 upper, 3 both){p_end}
 
 {synoptset 22 tabbed}{...}
 {p2col 5 22 26 2: Macros}{p_end}
 {synopt:{cmd:e(cmd)}}{cmd:xtdpthresh}{p_end}
+{synopt:{cmd:e(cmdline)}}the command line as typed{p_end}
 {synopt:{cmd:e(depvar)}}name of dependent variable{p_end}
 {synopt:{cmd:e(q_var)}}name of threshold variable{p_end}
 {synopt:{cmd:e(indepvars)}}names of exogenous regressors{p_end}
@@ -533,13 +688,14 @@ The coefficient vector {cmd:e(b)} is labeled following {cmd:xthenreg}
 convention.
 
 {pstd}
-{bf:Unrestricted (jump) model} — 2K+1 coefficients:
+{bf:Unrestricted (jump) model} — 2K+1 coefficients (2K+2 under {cmd:method(system)}):
 
 {phang2}{cmd:Lag_y_b}       coefficient on L.{it:depvar} in β (if dynamic){p_end}
 {phang2}{cmd:<var>_b}       coefficient on {it:var} in β (β part){p_end}
 {phang2}{cmd:cons_d}        intercept jump δ_1{p_end}
 {phang2}{cmd:Lag_y_d}       coefficient on L.{it:depvar} in δ (if dynamic){p_end}
 {phang2}{cmd:<var>_d}       coefficient on {it:var} in δ (δ part){p_end}
+{phang2}{cmd:cons_lvl}      level-equation constant (LAST element; {cmd:method(system)} only; absorbs E[η], matching {cmd:xtabond2}, v0.7.0){p_end}
 
 {pstd}
 {bf:Kink (continuity-restricted) model} — K+1 coefficients:
@@ -575,15 +731,29 @@ signals that moment conditions are invalid (ε_{t-2} correlated with ε_t),
 and the GMM estimator is inconsistent.
 
 {phang}
-{bf:AR formula note.} {cmd:xtdpthresh} implements a simplified Arellano-Bond
-AR(k) statistic, {it:m}_k = (Σ_i {it:e}_i) / sqrt(Σ_i {it:e}_i^2) where
-{it:e}_i = Σ_t {it:r}_{i,t} · {it:r}_{i,t-k}, evaluated on first-difference
-residuals. This matches the asymptotic limit of the full Arellano-Bond
-variance (a cluster-robust sum-of-squares with no adjustment for estimated
-θ̂) but differs from {cmd:xtabond2}'s finite-sample sandwich correction.
-Under the null, the two statistics have the same {it:N}(0, 1) limit; in
-moderate samples the simplified form is slightly more conservative (larger
-p-values).
+{bf:AR formula.} {cmd:xtdpthresh} implements the full Arellano-Bond
+(1991, eq. 8) m-statistic on the first-difference residuals (or FD-restacked
+residuals for {cmd:method(fod|system)}), {it:m}_k = b0 / sqrt(T1 + T2 + T3),
+where b0 = ẽ_{-k}'·ê is the lag-aligned residual cross product (raw sum),
+T1 = Σ_i c_i² is the simplified denominator (per-unit cross products
+squared), T2 = −2g'(G'AG)^{-1}G'A·s is the moment-vector covariance with
+θ̂, and T3 = g'V̂g is the direct θ̂-variance contribution; g = X_t'ẽ_{-k},
+G = X_s'Z_s, A = the moment weight paired with the reported θ̂, and V̂ is
+the reported variance of θ̂. The estimator-influence pieces are exposed
+as e(ar*_b0), e(ar*_T1), e(ar*_TT), and the underlying residuals are
+returned by {cmd:predict, residuals}; this enables external bit-for-bit
+verification against {cmd:abar} or any reimplementation of the Arellano-Bond
+formula (see {help xtdpthresh##postest:Postestimation}). The pre-v0.7.2
+simplified statistic m_k = b0/sqrt(T1) is retained as a principled fallback
+(T2=T3=0 special case) whenever the estimator pieces are unavailable or
+push the variance estimate non-positive in small samples. For
+{cmd:method(fod|system)}, the AR(k) test residuals are restacked into
+first-differences (matching the {cmd:xtabond2} convention); T2/T3 use the
+estimation-equation residuals/instruments/regressors. Benchmark against
+{cmd:xtabond2} on linear DPD specifications gives a model-effect comparison
+rather than a clean formula comparison — for the latter, use
+{cmd:predict, residuals} followed by an external full-AB implementation
+on the same residual series.
 
 {title:Hypothesis tests (bootstrap-based, require citype(grid))}
 
@@ -683,11 +853,15 @@ Gong, W., and M. H. Seo. 2026. Bootstraps for dynamic panel threshold
 models. {it:Journal of Econometrics} 253: 106153.
 
 {phang}
+Hansen, B. E. 1999. Threshold effects in non-dynamic panels: Estimation,
+testing, and inference. {it:Journal of Econometrics} 93: 345-368.
+
+{phang}
 Hansen, B. E. 1999. The grid bootstrap and the autoregressive model.
 {it:Review of Economics and Statistics} 81: 594-607.
 
 {phang}
-Kim, S., Y. J. Kim, and M. H. Seo. 2019. Estimation of dynamic panel
+Seo, M. H., S. Kim, and Y.-J. Kim. 2019. Estimation of dynamic panel
 threshold model using Stata. {it:Stata Journal} 19: 685-697.
 
 {phang}

@@ -1,0 +1,45 @@
+d 'XTDYNESTIMB': module implementing dynamic linear panel-data estimators robust to structural breaks, long-T overidentification, and error cross-sectional dependence
+d
+d	 xtdynestimb estimates the dynamic linear panel-data model 
+d	y_it = a_1 y_i,t-1 + ... + a_p y_i,t-p + x_it' b + eta_i [+
+d f_t] + v_it	 with three modern estimators that each address a
+d different failure of the textbook Arellano-Bond /   
+d Blundell-Bond GMM estimator:	      o Structural breaks. Mean
+d shifts in the fixed effects invalidate the standard difference
+d and system		moment conditions. dd adds the break-robust
+d double-difference moment conditions of Chowdhury &	       
+d Russell (2017) (both the instruments and the equation are in
+d differences) and offers five nested		 estimators.	   
+d o Error cross-sectional dependence. Common factors make the
+d lagged-level instruments invalid. csdgmm	      removes the
+d common factors by cross-sectional (time) demeaning and,
+d optionally, restricts the	       instrument set to the
+d regressors only (Sarafidis 2009).	   o Long-T
+d overidentification bias. When T is large the number of AB moment
+d conditions grows like T^2,		biasing the estimator. 
+d ablasso uses period-by-period LASSO to keep only the most
+d informative		 instruments and cross-fitting to remove
+d the over-fitting bias (Chernozhukov, Fernandez-Val, Huang &	   
+d      Wang 2024). 
+d
+d KW: dynamic panel data
+d KW: DPD
+d KW: structural breaks
+d KW: cross-sectional dependence
+d KW: overidentification biad
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260611
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtdynestimb_predict.ado
+f xtdynestimb.ado
+f xtdynestimb_ablasso.sthlp
+f xtdynestimb_csdgmm.sthlp
+f xtdynestimb_dd.sthlp
+f xtdynestimb_postestimation.sthlp
+f xtdynestimb.sthlp
+f xtdynestimb_example.do

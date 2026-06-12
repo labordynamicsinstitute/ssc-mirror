@@ -74,6 +74,7 @@ p xtdpdml module to estimate Dynamic Panel Data Models using Maximum Likelihood
 p xtdpdqml module to perform quasi-maximum likelihood linear dynamic panel data estimation
 p xtdpdserial module to perform panel data serial correlation tests
 p xtdpthresh module to estimate Dynamic Panel Threshold Model with Endogeneity
+p xtdynestimb module implementing dynamic linear panel-data estimators robust to structural breaks, long-T overidentification, and error cross-sectional dependence
 p xtdyntest module to perform specification tests after dynamic panel-data GMM estimation
 p xtendothresdpd module to estimate a Dynamic Panel Data Threshold Effects Model with Endogenous Regressors
 p xteurostat module to import data from Eurostat in panel data structure

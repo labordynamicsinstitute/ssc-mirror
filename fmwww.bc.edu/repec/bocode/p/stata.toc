@@ -109,6 +109,7 @@ p pobrezaecu module to predict poverty in Ecuador
 p pocoint module to perform Phillips-Ouliaris cointegration tests
 p poi2hdfe module to estimate a Poisson regression with two high-dimensional fixed effects
 p poisml module to estimate maximum likelihood Poisson regression models
+p poissark module to perform Poisson regression with integer-valued autoregressive-corrected standard errors
 p polar module to plot polar coordinates
 p polarspike module for polar spike graphs
 p polishpaper module to Generate a Structured Polishing Template for Academic Papers

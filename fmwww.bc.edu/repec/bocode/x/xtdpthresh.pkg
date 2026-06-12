@@ -14,7 +14,7 @@ d KW: forward orthogonal deviations
 d
 d Requires: Stata version 15
 d
-d Distribution-Date: 20260425
+d Distribution-Date: 20260611
 d
 d Author: Duy Chinh Nguyen,  International University, Ho Chi Minh City, Vietnam
 d Support: email ndchinh@@hcmiu.edu.vn
@@ -23,5 +23,6 @@ d Author: Nhat Duy Lai ,  Faculty of Finance and Accounting, Saigon University
 d Support: email lnduy@@sgu.edu.vn
 d
 f xtdpthresh.ado
+f xtdpthresh_p.ado
 f xtdpthresh.sthlp
 f ../i/invest.dta
