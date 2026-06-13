@@ -1,0 +1,30 @@
+d 'DUMMIFY': module to create indicator variables with automatic variable labels
+d
+d      dummify creates a set of indicator (0/1) variables from a
+d categorical variable, one for each level, and    labels each one
+d automatically in the form "variable label = value label". It also
+d reports a compact summary    table listing each level, its value
+d label, and the indicator created for it.  Essentially, it is a
+d more	  convenient implementation of tabulate, generate(),
+d producing indicators that carry meaningful variable	 labels
+d rather than the bare stems that tabulate, generate() leaves
+d behind.    varname must be numeric and contain only non-negative
+d integer values. By default an indicator is created for    every
+d level; base or base(#) designates one level as an omitted
+d reference category. An indicator equals 1    where varname takes
+d the corresponding value and 0 elsewhere, and is left missing
+d wherever varname is	 missing. 
+d
+d KW: data management
+d KW: indicator variables
+d KW: variable labels
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260612
+d
+d Author:  Gorkem Aksaray,  Trinity College Dublin
+d Support: email aksarayg@@tcd.ie
+d
+f dummify.ado
+f dummify.sthlp

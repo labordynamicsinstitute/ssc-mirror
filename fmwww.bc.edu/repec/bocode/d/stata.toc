@@ -167,6 +167,7 @@ p dudahart module to calculate and graph Duda-Hart cluster stopping indices from
 p dummies function to create families of dummy variables
 p dummies2 module to create indicator variables from categorical variable and vice versa
 p dummieslab module to convert categorical variable to dummy variables using label names
+p dummify module to create indicator variables with automatic variable labels
 p duncan module to calculate dissimilarity index
 p dups module to identify and optionally remove duplicate observations
 p durbinh module to calculate Durbin's h test for serial correlation

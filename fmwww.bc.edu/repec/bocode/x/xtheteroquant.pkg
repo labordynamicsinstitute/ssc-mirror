@@ -1,0 +1,39 @@
+d 'XTHETEROQUANT': module to compute quantiles of heterogeneous individual-specific coefficients in panel data, with SQB and CDQB bootstrap inference (Galvao, Hounyo and Lin, 2026)
+d
+d      xtheteroquant implements the two-step estimator of Galvao,
+d Hounyo and Lin (2026) for the tau-quantile of the cross-sectional
+d    distribution of heterogeneous individual-specific coefficients
+d in the linear panel-data model	y_it = a_i + x_it'b_i +
+d e_it,        i = 1,...,N,  t = 1,...,T,    where every unit i has
+d its own intercept a_i and its own slope vector b_i.  The
+d procedure is:        Step 1 (individual estimation).	For each
+d unit i, estimate the coefficient vector by OLS using only that
+d unit's time series.	     Step 2 (quantile aggregation).  For
+d each coefficient, take the empirical tau-quantile of the N
+d first-step estimates, 	   theta_hat(tau) = argmin_theta
+d (1/N) sum_i rho_tau(theta_hat_i - theta), where rho_tau is the
+d quantile-regression check	       function.    Unlike
+d conventional fixed-effects quantile regression (qreg / panel QR),
+d where tau indexes the conditional distribution of the    outcome,
+d here tau indexes the distribution of the structural coefficients
+d across units: tau = .9 answers "what is the slope for    the
+d 90th-percentile most-responsive unit?", not "what is the effect
+d at the 90th percentile of y?".  Typical uses: heterogeneous	
+d treatment or policy sensitivities, the distribution of
+d mutual-fund timing skill, firm-specific pass-through,
+d country-specific    elasticities. 
+d
+d KW: quantile regression
+d KW: heterogeneity
+d KW: panel data
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260612
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtheteroquant.ado
+f xtheteroquant.sthlp
+f xtheteroquant_example.do

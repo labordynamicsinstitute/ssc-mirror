@@ -216,6 +216,7 @@ p mmeiv module to perform Multiple Marginal Effects IV Estimation
 p mmerge module: Safer and easier to use variant of merge.
 p mmodes module to calculate the mode for a numeric varlist
 p mmqreg module to estimate MM-Quantile Regression with Decomposed Split-Panel Jackknife and Visualization
+p mmqrtest module to provide  specification and diagnostic tests for MM-QR location-scale panel quantile models (Machado and Santos Silva 2019; Canay 2011)
 p mmsel module to simulate (counterfactual) distributions from quantile regressions (w/optional sample selection correction)
 p mmsrm module to estimate Multidimensional Marginally Sufficient Rasch Model (MMSRM)
 p mmws module to perform marginal mean weighting through stratification

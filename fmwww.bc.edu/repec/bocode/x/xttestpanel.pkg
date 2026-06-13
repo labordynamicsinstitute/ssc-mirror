@@ -1,0 +1,35 @@
+d 'XTTESTPANEL': module to perform post-estimation diagnostic test suite for linear panel-data models
+d
+d	 xttestpanel is a unified library of modern post-estimation
+d diagnostic tests for linear panel-data regressions. Each
+d subcommand	estimates the requested model internally (fixed
+d effects, random effects, two-way, or pooled), extracts the
+d residuals, computes	 the relevant battery of tests, prints a
+d clean formatted table, and -- with the graph option -- produces a
+d publication-quality	 diagnostic plot.  The all subcommand runs
+d everything and adds a colour-coded decision summary and an
+d optional combined    dashboard. 
+d
+d KW:  panel data
+d KW: fixed effects
+d KW: random effects
+d KW: graphics
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260612
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xttestpanel_example.do
+f xttestpanel_postestimation_example.do
+f xttestpanel.ado
+f xttestpanel_csd.sthlp
+f xttestpanel_func.sthlp
+f xttestpanel_hausman.sthlp
+f xttestpanel_het.sthlp
+f xttestpanel_postestimation.sthlp
+f xttestpanel_serial.sthlp
+f xttestpanel_vif.sthlp
+f xttestpanel.sthlp

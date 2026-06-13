@@ -1,0 +1,37 @@
+d 'MMQRTEST': module to provide  specification and diagnostic tests for MM-QR location-scale panel quantile models (Machado and Santos Silva 2019; Canay 2011)
+d
+d     mmqrtest provides the testing toolbox that Machado and Santos
+d Silva (2019) call for but do not develop.    Their
+d method-of-moments quantile regression (MM-QR) is built on a
+d conditional location-scale model, and the    authors note that
+d "although we do not develop such tests here, it is possible to
+d test the assumption that    the covariates only affect the
+d location and scale functions" (sec. 1) and that such tests "can
+d be	constructed as tests for overidentifying restrictions, but
+d it may be possible to develop simpler    regression-based
+d procedures" (sec. 7).  mmqrtest implements that program: every
+d maintained assumption of the	  MM-QR panel model is mapped to a
+d computable diagnostic with a clear verdict, publication-style
+d tables, and	 optional graphs. 
+d
+d KW: method of moments
+d KW: quantile regression
+d KW: tests
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260612
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f mmqrtest.ado
+f mmqrtest_canay.sthp
+f mmqrtest_distfe.sthlp
+f mmqrtest_guide.sthlp
+f mmqrtest_postestimation.sthlp
+f mmqrtest_scalepos.sthlp
+f mmqrtest_scalerel.sthlp
+f mmqrtest_spec.sthlp
+f mmqrtest.sthlp
+f mmqrtest_example.do
