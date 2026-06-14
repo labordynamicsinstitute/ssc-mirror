@@ -25,6 +25,7 @@ p caustests module to implement seven Granger causality tests for multivariate t
 p cb2html module to write a codebook to an HTML file
 p cbarplot module for centred bar plots of absolute or relative frequencies
 p cc_xd_didtextbook module to provide do-files and datafiles for textbook
+p ccgi module to compute China Corporate Governance Index (CCGI)
 p ccmatch module to match cases and controls using specified  variables
 p ccmpre module to compute PRE Measures for Cultural Consensus Models
 p cconv module to  Convert a string variable to a classification from a built-in or user-defined JSON file using libjson 

@@ -63,4 +63,5 @@ p wtdttt module to estimate parameters of the ordinary and reverse Waiting Time 
 p wtp module to estimate confidence intervals for willingness to pay measures
 p wtpcikr module to estimate Krinsky and Robb Confidence Intervals for Mean and Median Willingness to Pay
 p wwwhelp module to display the help document in PDF format of the specified command via browsers
+p wxsum module to process temperature and precipitation data
 p wyoung module to perform multiple testing corrections

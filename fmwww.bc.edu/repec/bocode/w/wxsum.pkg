@@ -1,0 +1,34 @@
+d 'WXSUM': module to process temperature and precipitation data
+d
+d      wxsum processes remote sensing rainfall and temperature data
+d and outputs useful seasonal statistics. It can    be used with
+d either rainfall or temperature data from any source. 
+d
+d KW: climate
+d KW: temperature
+d KW: rainfall
+d KW: precipitation
+d
+d Requires: Stata version 
+d
+d Distribution-Date: 20260613
+d
+d Author:  Jeffrey D. Michler,  University of Arizona
+d Support: email jdmichler@@arizona.edu
+d
+d Author:  Anna Josephson, University of Arizona 
+d Support: email aljosephson@@arizona.edu
+d
+d Author: Oscar Barriga-Cabanillas, World Bank 
+d Support: email obarriga@@worldbank.org
+d
+d Author: Aleksandr Michuda,  Swarthmore College 
+d Support: email amichud1@@swarthmore.edu
+d
+d Author: Jeffrey C. Oliver,  University of Arizona 
+d Support: email jcoliver@@arizona.edu
+d
+f wxsum.ado
+f wxsum.sthlp
+f ../t/temp.dta
+f ../r/rain.dta

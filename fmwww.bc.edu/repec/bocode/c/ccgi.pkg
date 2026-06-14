@@ -1,0 +1,26 @@
+d 'CCGI': module to compute China Corporate Governance Index (CCGI)
+d
+d	 ccgi constructs the China Corporate Governance Index
+d (CCGI) using 12 governance indicators with equal    weights. The
+d program automatically performs Min-Max normalization and
+d distinguishes between forward and    reverse indicators.  All
+d variables are assigned descriptive labels.	After running ccgi,
+d the dataset remains in memory with all original variables,
+d normalized variables	  (prefixed with "n_"), and the newly
+d created ccgi_index variable, allowing for further analysis. 
+d
+d KW: corporate governance
+d KW: China
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20260613
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+f ccgi.ado
+f ccgi.sthlp

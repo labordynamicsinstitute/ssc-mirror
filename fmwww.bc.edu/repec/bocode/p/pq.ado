@@ -1,5 +1,11 @@
 *! pq - read/write parquet files with stata
-*! Version 3.0.0 - Add robust SPSS/CSV round-trip support, faster CSV read/write than native stata CSV
+*! Version 3.0.7 - Fix for write subset of variables, support for arrow extension types
+*!				   Fix for relaxed on directory read
+*!				   Auto infer file format on pq read-like
+*!         3.0.6 - Update underlying rust library for better SPSS write compatibility
+*!         3.0.5 - Fix random_n() off-by-one; fix pq use with wide varlists hitting Stata's plugin-call
+*!                 string limit; aggressive memory return on Linux for HPC/cgroup environments. Fix for weird label char edge case
+*!         3.0.0 - Add robust SPSS/CSV round-trip support, faster CSV read/write than native stata CSV
 *! 				   faster SAS reads.
 *!				   Better handling reads of strl columns, handle datasets that exceed the limit
 *!				   of Stata's C plugin API.  Better options for low-memory parquet writes
@@ -370,14 +376,19 @@ program pq_use_append
 						drop_strl				///
 						format(string)			///
 						fast					///
-						append]
-	
+						append				///
+						cast(string asis)		///
+						lax				///
+						binary_to_string]
+
+	local pq_namelist_buf `"`namelist'"'
+		
 	pq_register_plugin
 	
 	pq_convert_path `"`using'"'
 	local using = r(fullpath)
-	local source_format = lower("`format'")
-	if ("`source_format'" == "") local source_format parquet
+	pq_infer_format, path("`using'") format("`format'")
+	local source_format = r(format)
 	if !inlist("`source_format'", "parquet", "sas", "spss", "csv") {
 		display as error `"Unsupported format(`format'): expected parquet, sas, spss, or csv"'
 		exit 198
@@ -487,11 +498,18 @@ program pq_use_append
 	local b_detailed = 1
 	local b_compress = "`compress'" != ""
 	local b_compress_string_to_numeric = "`compress_string_to_numeric'" != ""
-	//	di `"plugin call polars_parquet_plugin, describe "`using'" `b_quiet' `b_detailed' "`sql_if'" "`asterisk_to_variable'" `b_compress' `b_compress_string_to_numeric'"'
 	
+	//	di `"plugin call polars_parquet_plugin, describe "`using'" `b_quiet' `b_detailed' "`sql_if'" "`asterisk_to_variable'" `b_compress' `b_compress_string_to_numeric'"'
 	// Rust resolves wildcards and applies drop() inside file_summary(), then sets
 	// matched_vars. drop_strl columns (binary parquet type) are filtered below.
-	plugin call polars_parquet_plugin, describe "`using'" `b_quiet' `b_detailed' `"`sql_if'"' "`asterisk_to_variable'" `b_compress' `b_compress_string_to_numeric' "`source_format'" `infer_schema_length_for_plugin' `parse_dates_for_plugin' `b_fast' 100 "`namelist'" "`drop'"
+	local b_binary_to_string = ("`binary_to_string'" != "")
+	local b_cast_strict = ("`lax'" == "")
+	local pq_cast_buf `cast'
+	plugin call polars_parquet_plugin, describe "`using'" `b_quiet' `b_detailed' `"`sql_if'"' "`asterisk_to_variable'" `b_compress' `b_compress_string_to_numeric' "`source_format'" `infer_schema_length_for_plugin' `parse_dates_for_plugin' `b_fast' 100 "pq_namelist_buf" "`drop'" "pq_cast_buf" `b_binary_to_string' `b_cast_strict'
+	if (_rc) {
+		if (`"`pq_cast_error'"' != "") di as error "`pq_cast_error'"
+		exit _rc
+	}
 
 	local vars_in_file
 	local n_renamed = 0
@@ -753,7 +771,15 @@ program pq_use_append
 
 	//	strl col names and dta path are passed so the plugin writes the strl .dta
 	//	in the same scan as the non-strl columns (consistent sampling)
-	plugin call polars_parquet_plugin, read "`using'" "from_macro" `row_to_read' `offset' `"`sql_if'"' `"`mapping'"' `vertical_relaxed' "`asterisk_to_variable'" "`sort'" `n_obs_already' `random_share' `random_seed' `batch_size_for_plugin' "`strl_col_names'" "`temp_strl_dta'" "`source_format'" `b_preserve_order' `infer_schema_length_for_plugin' `parse_dates_for_plugin'
+	capture noisily plugin call polars_parquet_plugin, read "`using'" "from_macro" `row_to_read' `offset' `"`sql_if'"' `"`mapping'"' `vertical_relaxed' "`asterisk_to_variable'" "`sort'" `n_obs_already' `random_share' `random_seed' `batch_size_for_plugin' "`strl_col_names'" "`temp_strl_dta'" "`source_format'" `b_preserve_order' `infer_schema_length_for_plugin' `parse_dates_for_plugin'
+	local _read_rc = _rc
+	if (`_read_rc') {
+		if (`b_append' & !`all_strl_append' & `n_obs_already' < _N) {
+			quietly keep in 1/`n_obs_already'
+		}
+		if (`"`pq_cast_error'"' != "") di as error "`pq_cast_error'"
+		exit `_read_rc'
+	}
 
 	//	Merge strL columns from .dta written by plugin into the current dataset
 	//	The .dta always contains _pq_strl_key (1-based row index) added by Rust.
@@ -1014,8 +1040,8 @@ program pq_describe, rclass
 	
 	pq_convert_path `"`using'"'
 	local using = r(fullpath)
-	local source_format = lower("`format'")
-	if ("`source_format'" == "") local source_format parquet
+	pq_infer_format, path("`using'") format("`format'")
+	local source_format = r(format)
 	if !inlist("`source_format'", "parquet", "sas", "spss", "csv") {
 		display as error `"Unsupported format(`format'): expected parquet, sas, spss, or csv"'
 		exit 198
@@ -1142,8 +1168,8 @@ program pq_save
 	
 	pq_convert_path `"`using'"'
 	local using = r(fullpath)
-	local source_format = lower("`format'")
-	if ("`source_format'" == "") local source_format parquet
+	pq_infer_format, path("`using'") format("`format'")
+	local source_format = r(format)
 	if !inlist("`source_format'", "parquet", "spss", "csv") {
 		display as error `"Unsupported save format(`format'): expected parquet, spss, or csv"'
 		exit 198
@@ -1165,6 +1191,7 @@ program pq_save
 	local StataColumnInfo from_macros
 	local var_count = 0
 	local n_rename = 0
+	unab _all_variables_ordered : _all
 	
 
 
@@ -1212,10 +1239,15 @@ program pq_save
 		local dtype_`var_count' `typei'
 		local format_`var_count' `formati'
 		local str_length_`var_count' `str_length'
+		local col_`var_count' : list posof "`vari'" in _all_variables_ordered
 		
 		//	Rename?
 		if ("`noautorename'" == "") {
+			//	capture: labels with backticks (e.g. `87) cause r(132) "too few quotes"
+			//	when expanded inside compound quotes -- silently skip rename check
+
 			local labeli: variable label `vari'
+			local labeli: subinstr local labeli "\`" "'", all
 
 			if regexm(`"`labeli'"', "^\{parquet_name:([^}]*)\}") {
 				//	Extract the value between "parquet_name:" and "}"
@@ -1226,7 +1258,7 @@ program pq_save
 
 				//	di "n_rename: `n_rename'"
 				//	di "	from: `rename_from_`n_rename''"
-				//	di "	to:   `rename_to_`n_rename''" 
+				//	di "	to:   `rename_to_`n_rename''"
 			}
 		}
 	}
@@ -1401,8 +1433,8 @@ program pq_write_overflow_dta
 		exit 198
 	}
 
-	local source_format = lower("`format'")
-	if ("`source_format'" == "") local source_format parquet
+	pq_infer_format, path("`using'") format("`format'")
+	local source_format = r(format)
 	if !inlist("`source_format'", "parquet", "sas", "spss", "csv") {
 		display as error `"Unsupported format(`format'): expected parquet, sas, spss, or csv"'
 		exit 198
@@ -1488,6 +1520,21 @@ program pq_register_plugin
 end
 
 
+
+
+program define pq_infer_format, rclass
+	version 16
+	syntax, path(string) [format(string)]
+	local fmt = lower("`format'")
+	if ("`fmt'" == "") {
+		local p = lower("`path'")
+		if regexm("`p'", "\.sas7bdat$")       local fmt sas
+		else if regexm("`p'", "\.(sav|zsav)$") local fmt spss
+		else if regexm("`p'", "\.csv$")        local fmt csv
+		else                                    local fmt parquet
+	}
+	return local format "`fmt'"
+end
 
 
 program define pq_convert_path, rclass

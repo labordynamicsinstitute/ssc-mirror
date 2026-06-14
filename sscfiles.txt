@@ -3382,6 +3382,8 @@ fmwww.bc.edu/repec/bocode/w/wjtest.hlp
 fmwww.bc.edu/repec/bocode/w/weathr.ado
 fmwww.bc.edu/repec/bocode/w/wid_example1.sthlp
 fmwww.bc.edu/repec/bocode/w/WEmixtureLEandUC_loglik.ado
+fmwww.bc.edu/repec/bocode/w/wxsum.sthlp
+fmwww.bc.edu/repec/bocode/w/wxsum.ado
 fmwww.bc.edu/repec/bocode/w/wclogit.ado
 fmwww.bc.edu/repec/bocode/w/wtd_perc.ado
 fmwww.bc.edu/repec/bocode/w/wedderburn.dta
@@ -3651,6 +3653,7 @@ fmwww.bc.edu/repec/bocode/w/winprob.sthlp
 fmwww.bc.edu/repec/bocode/w/wordconvert.ado
 fmwww.bc.edu/repec/bocode/w/wisconsin.dta
 fmwww.bc.edu/repec/bocode/w/weaver.pkg
+fmwww.bc.edu/repec/bocode/w/wxsum.pkg
 fmwww.bc.edu/repec/bocode/w/word.sthlp
 fmwww.bc.edu/repec/bocode/w/wid.jar
 fmwww.bc.edu/repec/bocode/w/winsor.ado
@@ -4323,6 +4326,7 @@ fmwww.bc.edu/repec/bocode/p/pyramid_chart.sthlp
 fmwww.bc.edu/repec/bocode/p/postsim.ado
 fmwww.bc.edu/repec/bocode/p/prodvars.sthlp
 fmwww.bc.edu/repec/bocode/p/postrcspline.pkg
+fmwww.bc.edu/repec/bocode/p/pq.notpkg
 fmwww.bc.edu/repec/bocode/p/python_plugin.c
 fmwww.bc.edu/repec/bocode/p/povimp.sthlp
 fmwww.bc.edu/repec/bocode/p/pace.pkg
@@ -20578,6 +20582,7 @@ fmwww.bc.edu/repec/bocode/c/Ch05_Examples_1_and_2.do
 fmwww.bc.edu/repec/bocode/c/cmp_lf1.ado
 fmwww.bc.edu/repec/bocode/c/cprdent_5.ado
 fmwww.bc.edu/repec/bocode/c/cepois.pkg
+fmwww.bc.edu/repec/bocode/c/ccgi.sthlp
 fmwww.bc.edu/repec/bocode/c/correctedValues.dta
 fmwww.bc.edu/repec/bocode/c/cluster_ra.sthlp
 fmwww.bc.edu/repec/bocode/c/cgroup.sthlp
@@ -21203,6 +21208,7 @@ fmwww.bc.edu/repec/bocode/c/cprd_product.ado
 fmwww.bc.edu/repec/bocode/c/clr3bound.sthlp
 fmwww.bc.edu/repec/bocode/c/cs_region.ado
 fmwww.bc.edu/repec/bocode/c/crossfold.ado
+fmwww.bc.edu/repec/bocode/c/ccgi.ado
 fmwww.bc.edu/repec/bocode/c/Ch02_2mod_mixed.do
 fmwww.bc.edu/repec/bocode/c/cal.ado
 fmwww.bc.edu/repec/bocode/c/centroid.pkg
@@ -21324,6 +21330,7 @@ fmwww.bc.edu/repec/bocode/c/cprplots.pkg
 fmwww.bc.edu/repec/bocode/c/color-ukripink.style
 fmwww.bc.edu/repec/bocode/c/crater.pkg
 fmwww.bc.edu/repec/bocode/c/collist.ado
+fmwww.bc.edu/repec/bocode/c/ccgi.pkg
 fmwww.bc.edu/repec/bocode/c/cs_ivreg2_3.1.06.do
 fmwww.bc.edu/repec/bocode/c/ceqfiscal.sthlp
 fmwww.bc.edu/repec/bocode/c/color-tflgreen.style
@@ -23720,6 +23727,7 @@ fmwww.bc.edu/repec/bocode/t/tablepc.html
 fmwww.bc.edu/repec/bocode/t/treatrew.sthlp
 fmwww.bc.edu/repec/bocode/t/test_net_install.log
 fmwww.bc.edu/repec/bocode/t/trialcounts.ado
+fmwww.bc.edu/repec/bocode/t/temp.dta
 fmwww.bc.edu/repec/bocode/t/tvpplot.ado
 fmwww.bc.edu/repec/bocode/t/tw3xls_example1.xlsx
 fmwww.bc.edu/repec/bocode/t/twload.sthlp
