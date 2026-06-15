@@ -305,19 +305,18 @@ Hamilton, J. D. 1994. {it:Time Series Analysis}. Princeton University Press.
 Linden, A. 2026. Adjustment for autocorrelation in multiple-group
 (controlled) interrupted time series analysis and its effect on power:
 A simulation study of the Newey-West and Prais-Winsten methods.
-Preprint. Research Square.
 {browse "https://doi.org/10.21203/rs.3.rs-8865851/v1"}
 
 {phang}
 Linden, A. 2026. Multiple-group (controlled) interrupted time series
 analysis with higher-order autoregressive errors: A simulation study
 comparing Newey-West and Prais-Winsten methods.
-Preprint. arXiv:2603.24814 {browse "https://arxiv.org/abs/2603.24814"}
+{browse "https://arxiv.org/abs/2603.24814"}
 
 {phang}
 Linden, A. 2026. Extending Prais–Winsten regression to panel data
 with higher-order autoregressive errors: A simulation study.
-Preprint. arXiv
+{browse "https://arxiv.org/html/2606.12596v1"}
 
 {phang}
 Vougas, D. V. 2021. Prais-Winsten algorithm for regression with second
@@ -332,8 +331,10 @@ or higher order autoregressive errors. {it:Econometrics} 9(3): 32.
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden A. (2026). XTPRAISK: Stata module for computing Prais-Winsten regression with AR(k) errors and
+Linden A. 2026. XTPRAISK: Stata module for computing Prais-Winsten regression with AR(k) errors and
 panel-corrected standard errors. 
+Statistical Software Components S459735, Boston College Department of Economics.
+{p_end}
 
 
 

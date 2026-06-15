@@ -1,8 +1,8 @@
-*! didintjl 0.7.7 June 6th 2026
+*! didintjl 0.7.8 June 14th 2026
 /*------------------------------------*/
 /*didintjl*/
 /*written by Eric Jamieson */
-/*version 0.7.7 2026-06-07 */
+/*version 0.7.8 2026-14-07 */
 /*------------------------------------*/
 
 cap program drop didintjl
@@ -89,14 +89,14 @@ program define didintjl, rclass
         qui jl: date_format = "`date_format'"
     }
 
-    // Check that DiDInt.jl v0.9.5 or later is installed
+    // Check that DiDInt.jl v0.9.6 or later is installed
     tempname DiDIntOK
     qui jl: using Pkg
     qui jl: _didint_pkgs = filter(p -> p.second.name == "DiDInt", Pkg.dependencies())
-    qui jl: _didint_ok = !isempty(_didint_pkgs) && first(values(_didint_pkgs)).version >= v"0.9.5"
+    qui jl: _didint_ok = !isempty(_didint_pkgs) && first(values(_didint_pkgs)).version >= v"0.9.6"
     qui jl: SF_scal_save("`DiDIntOK'", _didint_ok ? 1.0 : 0.0)
     if `DiDIntOK' != 1 {
-        di as error "DiDInt.jl v0.9.5 or later is required but not found."
+        di as error "DiDInt.jl v0.9.6 or later is required but not found."
         di as error "Please install or update DiDInt.jl by running: jl AddPkg DiDInt"
         exit 44
     }
@@ -642,6 +642,7 @@ end
 /*--------------------------------------*/
 /* Change Log */
 /*--------------------------------------*/
+*0.7.8 - suggest user have DiDInt.jl version v0.9.6 or later (as opposed to only 0.9.5)
 *0.7.7 - No longer automatically download DiDInt, instead suggest user download explicitly via 'jl AddPkg DiDInt'
 *0.7.6 - Added arg for edgecase, made sure value labels are dropped for outcome
 *0.7.5 - Added better processing for labelled variables

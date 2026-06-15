@@ -14,7 +14,7 @@ d KW: average treatment effect
 d
 d Requires: Stata version 16, julia from SSC (q.v.), Julia language, package DiDInt
 d
-d Distribution-Date: 20260609
+d Distribution-Date: 20260614
 d
 d Author:  Eric Jamieson,  NA
 d Support: email ericbrucejamieson@@gmail.com 
@@ -23,3 +23,6 @@ f didintjl.ado
 f didintjl.sthlp
 f didintjl_plot.ado
 f didintjl_plot.sthlp
+f didintjl_example.do
+f didintjl_plot_example.do
+f ../m/MeritExampleDataDiDIntjl.dta

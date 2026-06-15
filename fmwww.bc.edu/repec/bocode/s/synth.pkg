@@ -30,9 +30,10 @@ f synth.sthlp
 f ../l/lsynth_mata_subr.mlib
 f smoking.dta
 f ../g/germany.dta
-f synthopt.plugin
-f synthopt.win32
-f synthopt.win64   
-f synthopt.linux32
-f synthopt.linux64
-f synthopt.mac
+G WIN64      synthopt.win64   synthopt.plugin
+G LINUX64    synthopt.linux64 synthopt.plugin
+G MACARM64   synthopt.mac     synthopt.plugin
+G MACINTEL64 synthopt.mac     synthopt.plugin
+G OSX.ARM64  synthopt.mac     synthopt.plugin
+G OSX.X8664  synthopt.mac     synthopt.plugin
+h synthopt.plugin

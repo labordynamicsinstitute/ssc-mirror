@@ -1,8 +1,8 @@
-*! didintjl_plot 0.0.3 June 7th 2026
+*! didintjl_plot 0.0.4 June 14th 2026
 /*------------------------------------*/
 /*didintjl_plot*/
 /*written by Eric Jamieson */
-/*version 0.0.3 2026-07-06 */
+/*version 0.0.4 2026-14-06 */
 /*------------------------------------*/
 
 cap program drop didintjl_plot
@@ -49,14 +49,14 @@ program define didintjl_plot
         qui jl: date_format = "`date_format'"
     }
 
-    // Check that DiDInt.jl v0.9.5 or later is installed
+    // Check that DiDInt.jl v0.9.6 or later is installed
     tempname DiDIntOK
     qui jl: using Pkg
     qui jl: _didint_pkgs = filter(p -> p.second.name == "DiDInt", Pkg.dependencies())
-    qui jl: _didint_ok = !isempty(_didint_pkgs) && first(values(_didint_pkgs)).version >= v"0.9.5"
+    qui jl: _didint_ok = !isempty(_didint_pkgs) && first(values(_didint_pkgs)).version >= v"0.9.6"
     qui jl: SF_scal_save("`DiDIntOK'", _didint_ok ? 1.0 : 0.0)
     if `DiDIntOK' != 1 {
-        di as error "DiDInt.jl v0.9.5 or later is required but not found."
+        di as error "DiDInt.jl v0.9.6 or later is required but not found."
         di as error "Please install or update DiDInt.jl by running: jl AddPkg DiDInt"
         exit 44
     }
@@ -514,6 +514,7 @@ end
 /*--------------------------------------*/
 /* Change Log */
 /*--------------------------------------*/
+* 0.0.4 - suggest user have DiDInt.jl version v0.9.6 or later (as opposed to only 0.9.5)
 * 0.0.3 - changed default hc value to 1 (from 3)
 * 0.0.2 - Got everything working with Julia v1.11.7, julia.ado v1.2.2 & DiDInt.jl v0.6.15
 * 0.0.1 - created function

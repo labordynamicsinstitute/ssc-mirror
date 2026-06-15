@@ -13360,6 +13360,7 @@ fmwww.bc.edu/repec/bocode/m/miset.ado
 fmwww.bc.edu/repec/bocode/m/multistate_example.dta
 fmwww.bc.edu/repec/bocode/m/modlpr.hlp
 fmwww.bc.edu/repec/bocode/m/metatrim.pkg
+fmwww.bc.edu/repec/bocode/m/MeritExampleDataDiDIntjl.dta
 fmwww.bc.edu/repec/bocode/m/m_ddml_sip1991.csv
 fmwww.bc.edu/repec/bocode/m/metandi_postestimation.html
 fmwww.bc.edu/repec/bocode/m/marker.ado
@@ -17704,6 +17705,7 @@ fmwww.bc.edu/repec/bocode/d/doseresponse_model.ado
 fmwww.bc.edu/repec/bocode/d/drm.sthlp
 fmwww.bc.edu/repec/bocode/d/dyn2do.ado
 fmwww.bc.edu/repec/bocode/d/dpath_example.do
+fmwww.bc.edu/repec/bocode/d/didintjl_plot_example.do
 fmwww.bc.edu/repec/bocode/d/difflist.html
 fmwww.bc.edu/repec/bocode/d/dynpandoc.sthlp
 fmwww.bc.edu/repec/bocode/d/detect.hlp
@@ -18045,6 +18047,7 @@ fmwww.bc.edu/repec/bocode/d/devr2.ado
 fmwww.bc.edu/repec/bocode/d/dtalink.pkg
 fmwww.bc.edu/repec/bocode/d/duplist.ado
 fmwww.bc.edu/repec/bocode/d/ds2.pkg
+fmwww.bc.edu/repec/bocode/d/didintjl_example.do
 fmwww.bc.edu/repec/bocode/d/did_imputation.pkg
 fmwww.bc.edu/repec/bocode/d/dietr.ado
 fmwww.bc.edu/repec/bocode/d/dltable.ado
