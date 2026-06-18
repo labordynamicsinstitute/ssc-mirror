@@ -9,7 +9,7 @@ d KW: temperature
 d KW: rainfall
 d KW: precipitation
 d
-d Requires: Stata version 
+d Requires: Stata version 15.1
 d
 d Distribution-Date: 20260613
 d

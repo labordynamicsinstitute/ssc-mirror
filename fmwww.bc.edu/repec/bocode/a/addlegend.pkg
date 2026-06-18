@@ -1,0 +1,23 @@
+d 'ADDLEGEND': module to add a custom legend to a twoway graph
+d
+d  addlegend is a utility to create a custom legend and add it to a
+d twoway graph. In contrast to Stata's legend() option, addlegend
+d can combine multiple symbols in a single legend key, and the keys
+d can be freely positioned on the plot. 
+d
+d KW: graph
+d KW: legend
+d KW: twoway
+d
+d Requires: Stata version 14 and addplot from SSC (q.v.)
+d
+d Distribution-Date: 20241110
+d
+d Author: Ben Jann, University of Bern
+d Support: email jann@@soz.unibe.ch
+d
+f addlegend.ado
+f addlegend.sthlp
+f ../_/_mklegend.ado
+f ../_/_mklegend.sthlp
+f addlegend.zip

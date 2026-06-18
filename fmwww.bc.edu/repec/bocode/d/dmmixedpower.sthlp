@@ -25,7 +25,7 @@ model. This might be appropriate for the design of a randomised clinical trial t
 {p 4}{...}
 See also {helpb mixedpower}, {helpb mvmixedpower}, {helpb trialcounts}
 {p2colreset}{...}
-	
+
 {marker syntax}{...}
 {title:Syntax}
 
@@ -35,7 +35,7 @@ See also {helpb mixedpower}, {helpb mvmixedpower}, {helpb trialcounts}
 		{cmd: trtspec(}{it:{help dmmixedpower##trtspec_type:trtspec_type}}{cmd:)}
 		{opth sched:ule(numlist)}
         [{it:{help dmmixedpower##options_table:options}}]
-		
+
 {synoptset 36 tabbed}{...}
 {marker options}
 {marker options_table}{...}
@@ -116,7 +116,7 @@ where {bf:Sigma}={bf:R}+{bf:ZGZ}'. The variance-covariance matrix is calculated 
 2-person variance* for the proposed treatment effect parameter which may then be used in a power/sample size calculation in the conventional
 manner, suitably adjusting for the proposed or required sample size. Integration with {helpb trialcounts} for dropout and partial follow-up
  is feasible similarly to {cmd:mixedpower}.
- 
+
 {pstd}
 * assuming allocation ratio is (1 1), otherwise covariance matrix is calculated for a N1+N2 person trial, where N1 and N2 are
 the integers specified in {opt ara:tio(N1 N2)}. If there is assumed incomplete follow-up then the covariance matrix is further 
@@ -175,7 +175,7 @@ rounded down to nearest even number. A similar principle is applied when {opt ar
 {phang}
 {opt diff:erence(#)} the magnitude of the treatment effect, specified as the value of the relevant regression parameters.
 Hence for {opt trtspec(slope)} the value supplied is the absolute change of the treatment group relative to control group per unit time.
- 
+
 {phang}
 {opt eff:ectiveness(#)} for the {opt trtspec(slope)} selection only, {it:instead} of using {opt diff:erence} 
 the user may alternatively specify
@@ -191,7 +191,7 @@ direction (positive to negative slope or vice-versa) or ii) increase (decreases)
 {opt conts:lope(#)} this option is to be used in conjunction with {opt eff:ectiveness} and represents the mean control group
  slope that the effectiveness option is relative to, entered as a real number. 
  Not required if {opt diff:erence} used.
- 
+
 {dlgtab:Variance options}
 
 {phang} 
@@ -233,7 +233,7 @@ For example, if your variance parameter estimates came from a model where time w
  Scale-dependent effect sizes (slope-based) should be kept unchanged in {opt diff:erence} - the fundamental aspects
  (schedule and effect size) are specified in the scale you wish, but variance parameters from a source with a different scale
  are rescaled by {opt sca:le}.
- 
+
 {phang}
 {opt ara:tio(# #)} specifies relative group sizes (allocation ratio). {opt ara:tio} requires two integers reflecting the control group
  to treatment group allocation ratio. The default is {opt ara:tio(1 1)} i.e equal group size, though there is no limit to the 
@@ -250,7 +250,7 @@ For example, if your variance parameter estimates came from a model where time w
  knowing that in fact the allocation was not perfectly balanced. For example, enter {opt ara:tio(152 147)}.
  Note 'fractional' power and 'fractional' sample size
  are also returned in the stored results.
-  
+
 {phang}
 {opth drop:outs(numlist)} specifies the estimated proportion of dropouts out of the original sample you 
 expect following each study visit. It must correspond exactly to the length of the schedule list. 
@@ -281,7 +281,7 @@ has yet been randomised. If both {opt strec:ruitment} and {opt drop:outs} are sp
  that is not the case, then use {helpb trialcounts} to work with {cmd:dmmixedpower} to find when a sufficient sample size can be achieved.{p_end}
 
 {dlgtab:Reporting options} 
- 
+
 {phang}
 {opt nohead:er} prevents display of the {cmd: dmmixedpower} header banner.
 
@@ -307,7 +307,7 @@ are rownames to help identify rows. The tags include 't' for (treatment) group (
 The columns are not labelled but X1 is the control slope and X2 the treatment effect.
 One may use {opt xmat(#)}, {opt rmat(#)}, {opt zmat(#)}, {opt gmat(#)} and {opt bvarn(#)} together
  and # can be different for all options, assuming the selections are individually permissible.
- 
+
 {phang}
 {opt rmat(#)} returns the R error matrix for a particular 'cohort' identified by visit number # from the schedule list. All information
 given in {opt xmat} applies here, except for column identification, where instead column matches row. 
@@ -347,7 +347,7 @@ It may be worth looking at the X and Z matrices from the last 'cohort' to help u
 {pmore}{bf:{stata `". mat li r(xmat)"'}} {p_end}
 {pmore}{bf:{stata `". mat li r(zmat)"'}} {p_end}
 
-{pstd}	
+{pstd}
 
 
 {hline}

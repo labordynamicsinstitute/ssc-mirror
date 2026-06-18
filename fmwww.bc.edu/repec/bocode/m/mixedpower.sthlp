@@ -21,16 +21,18 @@
 {p2col :{hi:mixedpower} {hline 2}}{cmd:mixedpower} is a program for calculating power or sample size analytically for linear mixed-effects
 models, typically for the design of a randomised clinical trial. As such, calculation will be far quicker and generally more accurate than by the 
 use of simulation. The user has the facility to select the treatment effect 
-parameterisation, covariance structure, allocation ratio, adjust for both dropout and incomplete follow-up due to staggered recruitment, 
+parameterisation, covariance structure, allocation ratio, adjust for both dropout 
+and incomplete follow-up due to staggered recruitment, 
 and even account for misspecification of the treatment effect.
 It is anticipated that the most likely scenario of use will be where there are repeated measurements over time, and some of the 
-option terminology reflects this (for example {opt sched:ule}). However, the generalisability of the command allows for designs that are 
+option terminology reflects this (for example {opt sched:ule}). However, 
+the generalisability of the command allows for designs that are 
 not necessarily temporal.{p_end}
 
 {p 4}{...}
 See also {helpb mvmixedpower}, {helpb dmmixedpower}, {helpb trialcounts}
 {p2colreset}{...}
-	
+
 {marker syntax}{...}
 {title:Syntax}
 
@@ -40,7 +42,7 @@ See also {helpb mvmixedpower}, {helpb dmmixedpower}, {helpb trialcounts}
 		{cmd: trtspec(}{it:{help mixedpower##trtspec_type:trtspec_type}}{cmd:)}
 		{opth sched:ule(numlist)}
         [{it:{help mixedpower##options_table:options}}]
-		
+
 {synoptset 36 tabbed}{...}
 {marker options}
 {marker options_table}{...}
@@ -158,18 +160,18 @@ where {bf:Sigma}={bf:R}+{bf:ZGZ}'. The variance-covariance matrix is calculated 
 manner, suitably adjusting for the proposed or required sample size. All calculations are based on the z distribution, with the exception 
 of the joint tests of multiple treatment-based parameters which are based on the non-central chi-squared distribution.
 The variance-covariance matrix is
- derived from 4 matrices that reflect the proposed mixed model for a representive control and representive treatment group 
- subject*: the design matrix of fixed effects {bf:X}, 
- residual error matrix {bf:R}, the design matrix of random effects {bf:Z} and the covariance matrix of random effects {bf:G}.
- Details of the general approach can be found in Frost et al (2008), for example.
- In {cmd:mixedpower} entry of the required parameter values is always possible directly from the user, 
- either as real number values or as a matrix,
- but all values can also instead be 'automatically' entered from a suitable {cmd:mixed} model in memory which speeds up practical
- use of the command appreciably.
- While it is the user's responsibility to check whether this model is 'suitable', the program contains considerable checks on the 
- inputs combined with helpful error messages should the program be forced to exit.
- 
- {pstd}
+derived from 4 matrices that reflect the proposed mixed model for a representive control and representive treatment group 
+subject*: the design matrix of fixed effects {bf:X}, 
+residual error matrix {bf:R}, the design matrix of random effects {bf:Z} and the covariance matrix of random effects {bf:G}.
+Details of the general approach can be found in Frost et al (2008), for example.
+In {cmd:mixedpower} entry of the required parameter values is always possible directly from the user, 
+either as real number values or as a matrix,
+but all values can also instead be 'automatically' entered from a suitable {cmd:mixed} model in memory which speeds up practical
+use of the command appreciably.
+While it is the user's responsibility to check whether this model is 'suitable', the program contains considerable checks on the 
+inputs combined with helpful error messages should the program be forced to exit.
+
+{pstd}
 {cmd:mixedpower} allows the user to choose various control and treatment group parameterisations reflected in {bf:X}, including
 any user-defined function, whilst allowable
 random effects choices impact {bf:Z} and {bf:G}. This includes the facility to choose separate {bf:G} blocks for control
@@ -180,7 +182,7 @@ Such a model is usually selected
 without random effects (using option {opt marginal}) in order to model the covariance structure directly i.e. a marginal model, but
 {cmd:mixedpower} does allow input with both complex error structure and random effects included.
 
- {pstd}
+{pstd}
  With treatment effect specifications that involve more than one model term, then a matching number 
  of treatment effect differences
  must be provided, with sample size or power then based on a linear combination or joint test of those parameters 
@@ -225,7 +227,7 @@ adjusted to reflect the proportions of predicted data patterns
 {title:Options}
 
 {dlgtab:Required options}
- 
+
 {phang} 
 {cmd: trtspec(}{it:{help mixedpower##trtspec_type:trtspec_type}}{cmd:)} allows the user to specify different
  parameterisations of the treatment effect. 
@@ -253,13 +255,13 @@ effect must be found by a linear combination - see {opt lct:est()}.
 {opt slint} is for the situation when there is an initial intercept difference at baseline and 
 a subsequent additional slope effect too. A joint test probably makes more sense here than a linear
  combination of slope and intercept, though of course one may simply test either term alone.
- 
+
 {pmore} 
  {opt factor} allows for a factorised (or saturated or unstructured) time#treatment effect, so that there
  are arbitrary treatment differences at each timepoint, except that at 'baseline' (actually at first measure, usually
  when time=0), control and treatment means are constrained 
  to be equal. To specify arbitrary differences at all timepoints, including 'baseline' (or rather, first visit), then use {opt factor0}.
- 
+
 {pmore}  
  {opt user(f1(t)[;f2(t)])} allows the user to specify their own functions of schedule time as the treatment effect. 
 Despite the syntactical description one should use 'x' instead of 't' for time, so that the formulation
@@ -279,7 +281,7 @@ Despite the syntactical description one should use 'x' instead of 't' for time, 
  intrinsic meaning through use of factorised or intercept-only option choices within {opt altc:ont} 
  or {opt trtspec} and a time value-invariant covariance structure. Even so, the supplied number list must always be increasing and
  not negative.
- 
+
 {dlgtab:Basic options} 
 
 {phang}
@@ -334,7 +336,7 @@ However, the number of test values entered in {opt lct:est} or {opt jtt:est} sho
  will now be returned, which may be useful. The
  'estimated' treatment parameter values that are the consequence of the model 'misspecification' can be found 
  in the returned values as {bf:r(trtbeta_model)}, and together with 'estimated' control parameter values in  {bf:r(betas_model)}.
- 
+
 {phang}
 {cmd: actualcont(}{it:{help mixedpower##trtspec_type:altcont_type}}{cmd:)} to specify the correct control term parameterisation,
  implying that the model parameterisation of intercept and slope (or overridden using 
@@ -355,14 +357,15 @@ allowed for {opt altcont} may be allowed for {opt actualcont}.
 
 {phang}
 {opt diff:erence(# [# ...])} the magnitude of the treatment effect, specified as the value of the relevant regression parameter.
-Hence for {opt trtspec(slope)} the value supplied is the absolute change of the treatment group relative to control group per unit time.
+Hence for {opt trtspec(slope)} the value supplied is the absolute change of the treatment group 
+relative to control group per unit time.
  A number is required for each treatment related parameter, see {opt trtspec(trtspec_type)}. So for {opt slope}, {opt intercept} and {opt lateslope} 
  one value is required. For {opt slint} two values are required (intercept, slope). 
 {opt 2slopes} also requires two values, 1st slope then 2nd slope. For {opt factor} one 
 less the {opt sched:ule} length is required, relating, in order, the individual treatment effect differences from 2nd to final visit. For 
 {opt factor0} the number of difference values should match the {opt sched:ule} length from first to final visit, in order. For 
 {opt user} supply a difference value for each user-function provided. 
- 
+
 {phang}
 {opt eff:ectiveness(#)} for the {opt trtspec(slope)} selection only, {it:instead} of using {opt diff:erence} the user may alternatively specify
  the treatment magnitude in proportionate terms relative to the control group slope. The value supplied should be a real
@@ -376,7 +379,7 @@ direction (positive to negative slope or vice-versa) or ii) increase (decreases)
 {opt conts:lope(#)} this option is to be used in conjunction with {opt eff:ectiveness} and represents the mean control group
  slope that the effectiveness option is relative to, entered as a real number. 
  Not required if {opt diff:erence} used. 
- 
+
 {phang}
 {opt lct:est(# # ...)} when {opt diff:erence} has more than one value required then one must also indicate how the multiple 
 treatment effect parameters will be synthesised into a single test with which to base power or sample size. Hence one must use
@@ -425,7 +428,7 @@ See option {opt auto} for a shortcut to using {opt cov:ariance} and {opt err:orv
 {opt auto} use of this option will automatically transfer the second-level random effect and error variance values from a suitable 
 mixed model in memory, and is an auto-input alternative to using {opt cov:ariance} {it:and} {opt err:orvar}. It is the user's 
 responsibility to ensure the model is 'suitable'. To clarify, {opt auto} is used {it:instead} of {opt cov:ariance} and 
-{opt error:var}, whereas for options {opt covhet}, {opt errxt} and {opt errhet} one denotes auto-input by selecting the {it:input_type} 
+{opt error:var}, whereas for options {opt covhet}, {opt errxt} and {opt errhet} one denotes auto-input by selecting the {it:input_type}
 {opt auto} within the option. 
 
 {pmore}
@@ -445,7 +448,8 @@ version where {it:input_type} is {opt input(matrix)}. Rules for user-input entry
  and can be
 combined with the {opt auto} option for auto-entry of parameters for the control group. In fact, this specific 
 combination of input types
-is possible whether a standard mixed model with single covariance block has been fitted, or the heteroschedastic version detailed below. 
+is possible whether a standard mixed model with single covariance block has been fitted, 
+or the heteroschedastic version detailed below. 
 For the auto-entry version of {opt covhet} the heteroschedastic model in memory must be fitted in a specific manner:
 
 {p 12 16 4}{cmd:. mixed} {it:depvar  fixed_portion}  || {it:id_level2}: 
@@ -497,7 +501,7 @@ from a mixed model in memory or user-entry
  The number of parameter values supplied indicates the order of {it:xterror_type} for those types where
  this is relevant. For example, entering 3 parameter values indicates an AR structure of order 2. In the input instructions below be aware
  that order of inputs is important and are expected in the order they are described:
- 
+
 {p2colset 12 34 34 0 }{synopt :{opt ind:ependent # [# ...]}}enter a variance for IID errors; for heteroschedastically distributed errors 
 enter a variance for each timepoint of the {opt sched:ule} list{p_end}
 {synopt :{opt exc:hangeable # #}}enter a common variance and a common correlation{p_end}
@@ -511,7 +515,7 @@ length; note direct matrix entry within option not allowed{p_end}
 {synopt :{opt exp:onential}}enter a variance and an auto-correlation {p_end}
 
 {pmore}
- Of course all of the above {it:xterror_type}s maybe entered by use of {opt unstructured} with an appropriate matrix. One could obtain such 
+ Of course all of the above {it:xterror_type}s maybe entered by use of {opt unstructured} with an appropriate matrix. One could obtain such
  a matrix after a fitted mixed model with {helpb me estat wcorrelation} and using the returned {cmd:r(Cov)} matrix.
  Note that all {it:xterror_type} options 
  may be abbreviated in {cmd:mixedpower}, in identical manner to the {cmd: mixed} command itself. It is recommended requesting
@@ -541,7 +545,7 @@ For example, if your variance parameter estimates came from a model where time w
  Scale-dependent effect sizes (slope-based) should be kept unchanged in {opt diff:erence} - the fundamental aspects
  (schedule and effect size) are specified in the scale you wish, but variance parameters from a source with a different scale
  are rescaled by {opt sca:le}.
- 
+
 {phang}
 {opt ara:tio(# #)} specifies relative group sizes (allocation ratio). {opt ara:tio} requires two integers reflecting the control group
  to treatment group allocation ratio. The default is {opt ara:tio(1 1)} i.e equal group size, though there is no limit to the 
@@ -558,7 +562,7 @@ For example, if your variance parameter estimates came from a model where time w
  knowing that in fact the allocation was not perfectly balanced. For example, enter {opt ara:tio(152 147)}.
  Note 'fractional' power and 'fractional' sample size
  are also returned in the stored results.
-  
+
 {phang}
 {opth drop:outs(numlist)} specifies the estimated proportion of dropouts out of the original sample you 
 expect following each study visit. It must correspond exactly to the length of the schedule list. 
@@ -589,7 +593,7 @@ has yet been recruited. If both {opt strec:ruitment} and {opt drop:outs} are spe
  that is not the case, then use {helpb trialcounts} to work with {cmd:mixedpower} to find when a sufficient sample size can be achieved.{p_end}
 
 {dlgtab:Reporting options} 
- 
+
 {phang}
 {opt nohead:er} prevents display of the {cmd: mixedpower} header banner.
 
@@ -610,8 +614,9 @@ If either {opt drop:outs} or
 possible for cohorts with non-zero probability weightings. This means that if both {opt drop:outs} and {opt strec:ruitment} are not used then
 one can only request the X matrix appropriate for the last visit (number #) in {opt sched:ule} where all individuals have a full complement
 of measures. Note {bf:r(xmat)} is not automatically returned as there is 1) potential for the matrix to be large and 2) if some visits 
-(especially the last one)
-not represented it is not obvious for which cohort {opt xmat(#)} should be returned; hence the use of #. When displaying {bf:r(xmat)} there 
+(especially the last one) are
+not represented it is not obvious for which cohort {opt xmat(#)} should be returned; hence the use of #. 
+When displaying {bf:r(xmat)} there 
 are rownames to help identify rows. The tags include 't' for (treatment) group (0 for control, 1 for treatment) and 
 'v' for visit (the visit index number in the schedule list).
 The columns are not labelled other than X1, X2... but all control term variables come 
@@ -622,7 +627,7 @@ One may use {opt xmat(#)}, {opt rmat(#)}, {opt zmat(#)}, {opt gmat(#)} and {opt 
 also returns a set of expected y outcomes i.e. {bf:X}{bf:B'}. If {opt actualtrt} has been utilised then use of
  {opt xmat(#)} will also return a design X matrix indicating the 'true' fixed portion parameterisation, as well as the modelled one, plus a matrix
  of the model derived set of expected y outcomes.
- 
+
 {phang}
 {opt rmat(#)} returns the R error matrix for a particular 'cohort' identified by visit number # from the schedule list. All row information
 given in {opt xmat} applies here, whereas for column identification, column matches row. Displaying {bf:r(rmat)} may be 
@@ -656,10 +661,10 @@ no row- or column-name information, but the order of variables is exactly as des
 {marker warnings}{...}
   {title:WARNING SECTION: some important information concerning (co)variance parameter entry and mixedpower}
   {hline}
- 
+
 {pstd}
 There are a few things worth pointing out regarding the use of mixedpower, some general and some very specific.
- 
+
 {pstd}
 It is straightforward to fit a mixed model with a particular covariance structure and then subsequently calculate
  power or sample size for that model using {cmd:mixedpower}, especially with the auto-entry methods. In fact, be aware
@@ -675,7 +680,7 @@ It is straightforward to fit a mixed model with a particular covariance structur
  higher power compared to a correlated random slopes and intercept model estimated from the same data, purely because the covariance
  structure of the dataset is badly represented by the random intercept model. Implied correlations at later timepoints, for example,
  may be then be greatly understated.
- 
+
 {pstd}
 The point concerning 'relevant dataset' is highly pertinent. Of course
 estimates of power will be misleading if based on a pilot dataset that differs in
@@ -689,14 +694,14 @@ estimates of power will be misleading if based on a pilot dataset that differs i
  information specifically for a new treatment arm might seem unlikely; but in {cmd:mixedpower} input types can be both, so
  one could auto-input for the control arm directly from a mixed model in memory, and speculate with user-entry variances 
  for the treatment arm that are anticipated to be, say, a specific amount larger due to treatment response variability. 
-  
+
 {pstd}
  When using {opt errxt} or {opt errhet} options with user-input entry, pay particular care in how 
  to specify the intended covariance structure. Variances are always required, rather than standard deviations, but correlations are 
  typically required rather than covariances. There are also special parameters required for AR and MA error structures. 
  The theta (MA 1 or 2) and phi (AR 2) terms are those reported from the mixed model output, rather than what is 'ereturned' in e(b).
  The order and number of terms is crucial. 
- 
+
 {pstd}
  Be aware of when your schedule list should match that from the assisting dataset when using {opt errxt} or {opt errhet} - 
  most error structures relate to 
@@ -705,7 +710,7 @@ estimates of power will be misleading if based on a pilot dataset that differs i
  be valid if the schedule list is a subset of the first {it:k} visits. If the schedule list is longer than the fitted model with an
  unstructured or banded error model then
  {cmd:mixedpower} will exit as required variance terms will be missing.
- 
+
 {pstd}
  The MA, AR and Toeplitz structures have parameters that reflect a constant time gap (usually of one time-unit). Be aware
  the schedule list should reflect this gap, and that the gap be consistent. Perhaps one may feasibly 
@@ -716,7 +721,7 @@ estimates of power will be misleading if based on a pilot dataset that differs i
  this should be so (it may hard for {cmd:mixed} to otherwise check for equal-sized gaps?)
  and {cmd:mixedpower} can be legitimately used with equal-sized, even if not necessarily integer-sized, gaps for any
  error structure regardless of {opt sched:ule} list. 
- 
+
 {pstd}
 Finally, be aware that the covariance structure itself can have a significant impact on results. Not just in the obvious sense of greater variability
 leading to less power, but also that time-dependent structures may lead to counter-intuitive results. Should this seemingly occur it is
@@ -724,7 +729,7 @@ worth re-running {cmd:mixedpower} for a random intercept, or even a marginal ind
  under these simpler structures follow intuitive expecations, and hopefully convince yourself it is the covariance structure itself causing
  the 'anomalous' result. This is also particularly relevant when using {opt actualtrt} and the returned {bf:r(trtbeta_model)} effect size(s)
  appears to make little sense given the inputted 'true' effect size(s) in {opt diff:erence}. See Bamia et al (2013).
- 
+
     {hline}
 {marker examples}{...}
   {title:Examples}
@@ -981,15 +986,16 @@ characteristics when actual non-linear effects were modelled with a proportionat
 correspond as they introduce an additional layer of uncertainty whereby an initial observational study used for the variance inputs 
 is itself repeatedly simulated with non-linear trajectories, but modelled as linear. 
 And as mentioned under {opt actualtrt()} the estimate of Var({bf:B_hat}) will not be unchanged if the fixed
-effect components differ in functional form. One set of their examples has an error variance of 0.15 and random effects covarariance matrix 
+effect components differ in functional form. One set of their examples has an error variance
+ of 0.15 and random effects covarariance matrix 
 (0.5, .0354\.0354, 0.01). With an annual visit schedule out to 5 years we look at examples where the control group has
 a range of non-linear trajectories and the treatment effect is proportional to the function of time, 
 rather than to time itself. In all examples the functions
 are defined so that both arms start baseline with a mean value of 6, and the control arm reaches 7 at year 5 with the treatment 
 reaching 6.75, given the treatment difference of 0.05. This can be
 checked in each case by the returned {cmd: r(exp_y_true)}. We are also interested in the modelled treatment effect {cmd: r(trtbeta_model)}
- to assess bias when assuming a proportionate slope effect.{p_end}
-	
+to assess bias when assuming a proportionate slope effect.{p_end}
+
 {pstd}
 If the true treatment effect was a proportionate slope then the required sample size would be 230  if power is set at 0.8, 
 regardless of the control arm trajectory, assuming a slope and intercept (or factorised time) is used. 

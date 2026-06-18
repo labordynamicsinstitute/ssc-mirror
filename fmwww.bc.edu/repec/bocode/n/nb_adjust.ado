@@ -1,4 +1,4 @@
-*! version 2.11  12-Jun-2023, Dirk Enzmann
+*! version 2.13  16-Jun-2026, Dirk Enzmann
 *! Adjust or remove outliers of a negative binomial distributed variable
 
 // Main Program
@@ -87,7 +87,10 @@ program nb_adjust, rclass byable(onecall)
     if (_rc != 0) capture drop `generate'
   }
   if "`generate'" != "" confirm new var `generate'
-  if (`seed' != -1) set seed `seed'
+  if (`seed' != -1) {
+     set seed `seed'
+     set sortseed `seed'
+  }
 
   * Prepare -by:- steps:
   if "`_byvars'" != "" {

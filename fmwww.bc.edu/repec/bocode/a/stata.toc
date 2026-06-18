@@ -14,6 +14,7 @@ p acreg module to perform Arbitrary Correlation Regression
 p actest module to perform Cumby-Huizinga general test for autocorrelation in time series
 p addbefore module to add number or character before a variable
 p addinby module to add in data from a disk dataset using a foreign key
+p addlegend module to add a custom legend to a twoway graph
 p addnotes program to add notes to the end of text files
 p addplot module to add twoway plot objects to an existing twoway graph
 p addtex module to display text on a graph

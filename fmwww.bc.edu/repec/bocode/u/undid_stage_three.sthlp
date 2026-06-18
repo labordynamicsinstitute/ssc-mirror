@@ -77,7 +77,7 @@ performs randomization inference to compute RI-pvals.
 {syntab:Estimation Options}
 {synopt:{opt covariates(integer)}}use covariate-adjusted estimates: 1 = use diff_estimate_covariates, 0 = use diff_estimate (default: 0){p_end}
 {synopt:{opt notyet(integer)}}use not-yet-treated periods from treated silos as controls: 1 = yes, 0 = no (default: 0){p_end}
-{synopt:{opt hc(integer)}}heteroskedasticity-consistent covariance matrix estimator: 0, 1, 2, 3, or 4 (default: 3){p_end}
+{synopt:{opt hc(integer)}}heteroskedasticity-consistent covariance matrix estimator: 0, 1, 2, 3, or 4 (default: 1){p_end}
 
 {syntab:Silo Selection}
 {synopt:{opt omit(string)}}space-separated list of silos to exclude from analysis{p_end}
@@ -233,6 +233,6 @@ Stata package version 2.0.0. {browse "https://github.com/ebjamieson97/undid"}{p_
 
 {* undid_stage_three                                  }
 {* written by Eric Jamieson                           }
-{* version 2.0.0 2026-02-16                           }
+{* version 2.0.2 2026-02-19                           }
 
 {smcl}

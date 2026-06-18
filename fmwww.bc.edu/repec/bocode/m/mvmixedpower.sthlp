@@ -24,7 +24,7 @@ models, typically for the design of a randomised clinical trial where you wish t
 {p 4}{...}
 See also {helpb mixedpower}, {helpb dmmixedpower}, {helpb trialcounts}
 {p2colreset}{...}
-	
+
 {marker syntax}{...}
 {title:Syntax}
 
@@ -35,7 +35,7 @@ See also {helpb mixedpower}, {helpb dmmixedpower}, {helpb trialcounts}
 		{opth sched:ule(numlist)}
 		{opt m:ulti(#)}
         [{it:{help mvmixedpower##options_table:options}}]
-		
+
 {synoptset 36 tabbed}{...}
 {marker options}
 {marker options_table}{...}
@@ -104,7 +104,7 @@ The subsequent effect size may then be used in a power/sample size calculation i
 manner, suitably adjusting for the proposed or required sample size.
  Further details can be found in the help file for {helpb mixedpower}. 
 Integration with {helpb trialcounts} for dropout and partial follow-up is feasible similarly to {cmd:mixedpower}.
- 
+
 {pstd}
 * assuming allocation ratio is (1 1), otherwise covariance matrix is calculated for a N1+N2 person trial, where N1 and N2 are
 the integers specified in {opt ara:tio(N1 N2)}. If there is assumed incomplete follow-up then the covariance matrix is further 
@@ -114,7 +114,7 @@ adjusted to reflect the proportions of predicted data patterns
 {title:Options}
 
 {dlgtab:Required options}
- 
+
 {phang} 
 {cmd: trtspec(}{it:{help mvmixedpower##trtspec_type:trtspec_type}}{cmd:)} allows the user to specify different
  parameterisations of the treatment effect - currently only a slope or intercept effect allowed. 
@@ -169,7 +169,7 @@ rounded down to nearest even number. A similar principle is applied when {opt ar
 Hence for {opt trtspec(slope)} the value supplied is the absolute change of the treatment group relative to control group per unit time per {it:m}.
 One can either give {it:m} treatment differences as a numer list or a single value that applies for all {it:m} outcomes. This may be the 
 a reasonable option when all outcomes have been standardised or are naturally commensurate.
- 
+
 {phang}
 {opt eff:ectiveness(# [# ...])} for the {opt trtspec(slope)} selection only, {it:instead} of using {opt diff:erence} 
 the user may alternatively specify
@@ -199,7 +199,7 @@ Also allowed are the text entries {it:ivw} indicating inverse-variance weighting
  is necessary if some of the outcomes trend in opposite directions, meaning the effect sizes will typically be given
 with opposite signs in {opt diff:erence} or assumed with {opt eff:ectiveness}. The text selection {it:nivw} acknowledges these
 differentially signed effects as all indicating improvement whilst respecting the signs of the off-diagonals in the covariance matrix.{p_end}
- 
+
 {dlgtab:Variance options}
 
 {phang} 
@@ -253,7 +253,7 @@ For example, if your variance parameter estimates came from a model where time w
  Scale-dependent effect sizes (slope-based) should be kept unchanged in {opt diff:erence} - the fundamental aspects
  (schedule and effect size) are specified in the scale you wish, but variance parameters from a source with a different scale
  are rescaled by {opt sca:le}.
- 
+
 {phang}
 {opt ara:tio(# #)} specifies relative group sizes (allocation ratio). {opt ara:tio} requires two integers reflecting the control group
  to treatment group allocation ratio. The default is {opt ara:tio(1 1)} i.e equal group size, though there is no limit to the 
@@ -270,7 +270,7 @@ For example, if your variance parameter estimates came from a model where time w
  knowing that in fact the allocation was not perfectly balanced. For example, enter {opt ara:tio(152 147)}.
  Note 'fractional' power and 'fractional' sample size
  are also returned in the stored results.
-  
+
 {phang}
 {opth drop:outs(numlist)} specifies the estimated proportion of dropouts out of the original sample you 
 expect following each study visit. It must correspond exactly to the length of the schedule list. 
@@ -301,7 +301,7 @@ has yet been randomised. If both {opt strec:ruitment} and {opt drop:outs} are sp
  that is not the case, then use {helpb trialcounts} to work with {cmd:mvmixedpower} to find when a sufficient sample size can be achieved.{p_end}
 
 {dlgtab:Reporting options} 
- 
+
 {phang}
 {opt nohead:er} prevents display of the {cmd: mvmixedpower} header banner.
 
@@ -330,7 +330,7 @@ before the treatment term variable, and
 intercepts come before slopes.  
 One may use {opt xmat(#)}, {opt rmat(#)}, {opt zmat(#)}, {opt gmat(#)} and {opt bvarn(#)} together
  and # can be different for all options, assuming the selections are individually permissible.
- 
+
 {phang}
 {opt rmat(#)} returns the R error matrix for a particular 'cohort' identified by visit number # from the schedule list. All information
 given in {opt xmat} applies here, except for column identification, where instead column matches row. Displaying {bf:r(rmat)} may be 
@@ -385,7 +385,7 @@ necessary to reduce the precision of the covariance entries for the input versio
 {pmore}{bf:{stata `". estimates use mvmixed_pd.ster"'}} {p_end}
 {pmore}{bf:{stata `". mixed"'}} {p_end}
 {pmore}{bf:{stata `". mvmixedpower,  trtspec(slope) sched(0 0.25 0.5(0.5)3) conts(0.865 0.975 1.876) eff(0.3) auto m(3) weighting(ivw) n(800)"'}}{p_end}
-		
+
 {pstd}  
 We now look at combining {cmd:mvmixedpower} with {helpb trialcounts} with an advanced example.
  We first load a dataset containing recruitment rates for a real MS trial. 
@@ -418,7 +418,7 @@ a signal of IMP activity we tolerate a high (one-sided) alpha in order to mainta
 {pmore}{bf:{stata `". mixed"'}} {p_end}
 {pmore}{bf:{stata `". trialcounts, sched(0(6)36) ends(month) rates(recr2 1(1)21 27) time(38) drfunction(weibull, p(0.75) s(0.9)) disp2 rgr dgr"'}}{p_end}
 {pmore}{bf:{stata `". mvmixedpower, trtspec(slope) sched(0 0.5 1 1.5 2 2.5 3) contslope(.1075532 -.1258883 -.0793978) eff(0.4)  auto multi(3) weighting(nivw) n(686) alpha(0.6) dropout(`= r(fw_rescale)')"'}}{p_end}
-	
+
 {pstd}
 Note, even though use of {cmd:mvmixedpower} will overwrite the r-class returned list from
  {cmd:trialcounts}, {cmd:mixedpower} 

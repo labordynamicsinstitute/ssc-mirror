@@ -1,6 +1,6 @@
 cap program drop sdid_event
 program define sdid_event, eclass
-syntax varlist(max = 4 min = 4) [if] [in] [, effects(integer 0) placebo(string) disag vce(string) brep(integer 50) method(string) covariates(string)]
+syntax varlist(max = 4 min = 4) [if] [in] [, effects(integer 0) placebo(string) disag vce(string) brep(integer 50) method(string) covariates(string asis) vcov sb boot_ci combine(string) unstandardized cluster(string)]
     version 12.0
     tempvar touse
     mark `touse' `if' `in'
@@ -28,29 +28,49 @@ syntax varlist(max = 4 min = 4) [if] [in] [, effects(integer 0) placebo(string) 
         sort `2' `3'
         bys `2': egen ever_treated_XX = max(`4')
 
+        local cov_vars_opt = ""
         if "`covariates'" != "" {
-            gen Y_res_XX = `1'
-            egen G_XX = group(`2')
-            egen T_XX = group(`3')
-            reg Y_res_XX `covariates' i.G_XX i.T_XX if `4' == 0
-            mat reg_res = e(b)
-            local sel = 0
-            foreach v in `covariates' {
-                local sel = `sel' + 1
-                replace Y_res_XX = Y_res_XX - reg_res[1, `sel'] * `v'
+            check_covariates `covariates'
+            if "`unstandardized'" != "" & r(cov_type) != "optimized" {
+                noi di as err "unstandardized can only be used with covariates(varlist, optimized)."
+                cap drop *_XX
+                exit
             }
-            local varlist = subinstr("`varlist'", "`1'", "Y_res_XX", 1)
-            drop G_XX T_XX
+            if r(cov_type) == "projected" {
+                local cov_vars_proj = r(cov_vars)
+            }
+            else if r(cov_type) == "optimized" {
+                local cov_vars_opt = "`=r(cov_vars)'"
+                if "`unstandardized'" == "" {
+                    local scov_vars_opt 
+                    foreach var of varlist `cov_vars_opt' {
+                        egen z`var'_XX = std(`var') if `touse'
+                        local scov_vars_opt "`scov_vars_opt' z`var'"
+                    }
+                    local cov_vars_opt = "`scov_vars_opt'"
+                }
+            }
+            else {
+                di as err "Syntax error in covariates(varlist [, method])"
+                cap drop *_XX
+                exit
+            }
         }
 
-        sdid_event_core `varlist' if `touse', effects(`effects') placebo(`placebo') method(`method') `disag'
+        scalar inner_loop_error = 0
+        sdid_event_core `varlist' if `touse', effects(`effects') placebo(`placebo') method(`method') `disag' combine("`combine'") cov_optimized("`cov_vars_opt'") `unstandardized' cov_projected("`cov_vars_proj'") cluster(`cluster')
+        if (scalar(inner_loop_error) == 1) {
+            cap drop *_XX
+            exit 
+        }
         mat res_main = res
         mat H_main = H
 
         if "`vce'" == "" local vce "bootstrap"
-        if !inlist("`vce'", "off", "bootstrap", "placebo") {
+        if !inlist("`vce'", "noinference", "bootstrap", "placebo") {
             di as err "Syntax error in vce option."
-            di as err "Only {cmd:off}, {cmd:placebo} and {cmd:bootstrap} (dafalt) allowed."
+            di as err "Only {cmd:noinference}, {cmd:placebo} and {cmd:bootstrap} (default) allowed."
+            cap drop *_XX
             exit
         }
         if "`vce'" == "placebo" {
@@ -59,14 +79,52 @@ syntax varlist(max = 4 min = 4) [if] [in] [, effects(integer 0) placebo(string) 
             unique `2' if ever_treated_XX == 1
             if `N_co' < r(unique) {
                 di as err "vce(placebo) can only be specified when the number of treated units is lower than the number of control units."
+                cap drop *_XX
                 exit
             }
         }
+
+        if "`combine'" != "" {
+            scalar tot_combine = length("`combine'") - length(subinstr("`combine'", ";", "", .)) + 1
+            local arg_combine = "`combine';"
+
+            mat H_cb = J(scalar(tot_combine), 3, .)
+            local rown_b = ""
+            forv k = 1/`=tot_combine' {
+                local v_combine_`k' = substr("`arg_combine'", 1, strpos("`arg_combine'", ";")-1)
+                local arg_combine = substr("`arg_combine'", strpos("`arg_combine'", ";") + 1, .)
+
+                local t_k = 0
+                foreach s in `v_combine_`k'' {
+                    local t_k = `t_k' + 1
+                }
+
+                mat cset_`k' = J(`t_k', 3, .)
+                local t_k = 1
+                foreach s in `v_combine_`k'' {
+                    mat cset_`k'[`t_k', 1] = `s'
+                    mat cset_`k'[`t_k', 2] = H[`s' + 1, 1]
+                    mat cset_`k'[`t_k', 3] = H[`s' + 1, 3]
+                    local t_k = `t_k' + 1
+                }
+
+                mata: cbm = st_matrix("cset_`k'")
+                mata: st_numscalar("cbn", sum(cbm[., 3]))
+                mata: st_numscalar("cbt", (cbm[., 2]' * cbm[, 3])/sum(cbm[., 3]))
+
+                mat H_cb[`k', 1] = scalar(cbt)
+                mat H_cb[`k', 3] = scalar(cbn)
+                local rown_b = "`rown_b' Cmb_Effect_`k'"
+            }
+            mat rown H_cb = `rown_b'
+            mat coln H_cb = "Estimate" "SE" "Switchers"
+        }
+
     }
     di as text "`m_`method''"
 
-    if "`vce'" == "off" {
-        matlist H_main
+    if "`vce'" == "noinference" {
+        matlist H_main, under
 
         local rownm: rown H_main
         mata: b = (st_matrix("H_main")[.,1])'
@@ -77,11 +135,9 @@ syntax varlist(max = 4 min = 4) [if] [in] [, effects(integer 0) placebo(string) 
         ereturn matrix H = H_main
     }
     else {  
-            qui {
-                scalar breps = `brep'
-                mata: boot_res_XX = J(st_numscalar("breps"), rows(st_matrix("H_main")), .)
-                local failed = 0
-            }
+            scalar breps = `brep'
+            mata: boot_res_XX = J(st_numscalar("breps"), rows(st_matrix("H_main")), .)
+            local failed = 0
 
             di ""
             di "Boostrap replications (`brep'), `vce' mode."
@@ -89,9 +145,12 @@ syntax varlist(max = 4 min = 4) [if] [in] [, effects(integer 0) placebo(string) 
             di "|" _continue
             local counter = 1/50
             scalar r_XX = 1
+            scalar inner_loop_error = 0
             while r_XX <= breps {
-                qui cap sdid_event_core `varlist' if `touse', effects(`effects') placebo(`placebo') method(`method') sampling(`vce') 
-                if _rc == 0 {
+                scalar failed_run = 0
+                sdid_event_core `varlist' if `touse', effects(`effects') placebo(`placebo') method(`method') sampling(`vce') cov_optimized("`cov_vars_opt'") `unstandardized' cov_projected("`cov_vars_proj'") cluster(`cluster')
+                if (scalar(inner_loop_error) == 1) continue, break
+                if (scalar(failed_run) == 0) {
                     mata: fail_coefs = rows(st_matrix("H_main")) - rows(st_matrix("H"))
                     mata: boot_res_XX[st_numscalar("r_XX"), .] = ((st_matrix("H")[., 1])', J(1, fail_coefs, .))
                     if (r_XX/`brep') > `counter' {
@@ -104,11 +163,24 @@ syntax varlist(max = 4 min = 4) [if] [in] [, effects(integer 0) placebo(string) 
             }
             di "|" _newline
 
-            mata: SE_add(boot_res_XX, st_matrix("H_main"))
+            {
+                if "`boot_ci'" == "" {
+                    mata: SE_add(boot_res_XX, st_matrix("H_main"))
+                }
+                else {
+                    mata: SE_add_emp(boot_res_XX, st_matrix("H_main"))
+                    di "CIs recovered from bootstrap distribution"
+                }
+            }
+            if (scalar(inner_loop_error) == 1) {
+                cap drop *_XX
+                exit
+            }
+
             local rownm: rown H_main
             mat rown H_SE = `rownm'
             mat coln H_SE = "Estimate" "SE" "LB CI" "UB CI" "Switchers"
-            matlist H_SE       
+            matlist H_SE, under
 
             mata: b = (st_matrix("H_SE")[.,1])'
             mata: V = diag((st_matrix("H_SE")[.,2]):^2)
@@ -121,18 +193,79 @@ syntax varlist(max = 4 min = 4) [if] [in] [, effects(integer 0) placebo(string) 
             ereturn post b V
             ereturn matrix H = H_SE
 
+            if "`vcov'" != "" {
+                mata: st_matrix("vcov", variance(boot_res_XX[.,2..(st_numscalar("effects")+1)]))
+                local vcov_n = ""
+                forv j = 1/`=effects' {
+                    local vcov_n = "`vcov_n' Effect_`j'"
+                }
+                mat rown vcov = `vcov_n'
+                mat coln vcov = `vcov_n'
+                ereturn matrix vcov = vcov 
+                if `=placebo' > 0 {
+                    mata: st_matrix("vcov_pl", variance(boot_res_XX[.,(st_numscalar("effects")+2)..(st_numscalar("effects")+st_numscalar("placebo") + 1)]))
+                    local vcov_n = ""
+                    forv j = 1/`=placebo' {
+                        local vcov_n = "`vcov_n' Placebo_`j'"
+                    }
+                    mat rown vcov_pl = `vcov_n'
+                    mat coln vcov_pl = `vcov_n'
+                    ereturn matrix vcov_pl = vcov_pl 
+                }
+            }
+
             if `failed' > 0 {
                 di as result ""
                 di as result "WARNING: Restarted `failed' bootstrap run(s) with no treated or control groups."
             }
+
+            if "`combine'" != "" {
+                mata: boot_res_cb_XX = J(rows(boot_res_XX), st_numscalar("tot_combine"), 0)
+                forv k = 1/`=tot_combine' {
+                    scalar cbid = `k'
+                    scalar cbtw = H_cb[`k', 3]
+                    local t_k = 1
+                    foreach s in `v_combine_`k'' {
+                        scalar id = `s'
+                        scalar cbw = cset_`k'[`t_k', 3]
+                        mata: boot_res_cb_XX[., st_numscalar("cbid")] = boot_res_cb_XX[., st_numscalar("cbid")] + boot_res_XX[., st_numscalar("id") + 1] * st_numscalar("cbw")
+                        local t_k = `t_k' + 1
+                    }
+                    mata: boot_res_cb_XX[., st_numscalar("cbid")] = boot_res_cb_XX[., st_numscalar("cbid")] / st_numscalar("cbtw")
+                }
+
+                {
+                    if "`boot_ci'" == "" {
+                        mata: SE_add_cb(boot_res_cb_XX, st_matrix("H_cb"))
+                    }
+                    else {
+                        mata: SE_add_cb_emp(boot_res_cb_XX, st_matrix("H_cb"))
+                    }
+                }
+                
+                mat H_cb = H_cb[.,1..1], H_cb_SE[.,2..5]
+                mat coln H_cb = "Estimate" "SE" "LB CI" "UB CI" "Switchers"
+            }
+    }
+
+    if "`combine'" != "" {
+        di ""
+        di "Combined ATTs"
+        matlist H_cb, under
+        ereturn matrix H_comb = H_cb
     }
 
 
     if "`disag'" != "" {
         di ""
         di "Disaggregated ATTs - Cohort level"
-        matlist res_main
+        matlist res_main, under
         ereturn matrix H_c = res_main
+    }
+
+    if "`sb'" != "" {
+        mata: st_matrix("boot_res", boot_res_XX)
+        ereturn matrix sb = boot_res
     }
 
     cap drop *_XX
@@ -140,7 +273,7 @@ end
 
 cap program drop sdid_event_core
 program define sdid_event_core, eclass
-syntax varlist(max = 4 min = 4) [if] [in], effects(integer) method(string) [disag placebo(string) sampling(string)]
+syntax varlist(max = 4 min = 4) [if] [in], effects(integer) method(string) [disag placebo(string) sampling(string) combine(string) cov_optimized(string) cov_projected(string) unstandardized cluster(string)]
 preserve
 qui {
 
@@ -150,11 +283,18 @@ qui {
     egen G_XX = group(`2')
     egen T_XX = group(`3')
     gen D_XX = `4'
-    keep Y_XX D_XX G_XX T_XX ever_treated_XX
+    keep Y_XX D_XX G_XX T_XX ever_treated_XX `cov_optimized' `cov_projected' `cluster'
+
+    if "`cluster'" != "" {
+        egen cluster_XX = group(`cluster')
+    }
+    else {
+        gen cluster_XX = G_XX
+    }
 
     if "`sampling'" != "" {
         if "`sampling'" == "bootstrap" {
-            bsample, cluster(G_XX)
+            bsample, cluster(cluster_XX)
             sort G_XX T_XX
             bys G_XX T_XX: gen ID_XX = _n
             egen G_temp_XX = group(G_XX ID_XX)
@@ -163,31 +303,59 @@ qui {
             drop G_temp_XX ID_XX
         }
         if "`sampling'" == "placebo" {
-            sort G_XX T_XX
-            mata: treat = st_data(., ("G_XX", "T_XX", "D_XX", "ever_treated_XX"))
-            mata: treat = select(treat, treat[., 4])[., 3]
-            mata: st_matrix("treat", treat)
-            keep if ever_treated_XX == 0
+            bys cluster_XX: gen N_C_XX = _N
+            sum N_C_XX
+            if r(sd) > 0 {
+                noi di as err "When vce(placebo) is specified, clustervar must contain the same number of units."
+                restore
+                scalar inner_loop_error = 1
+                exit
+            }
+            local N_C = r(mean)
+            bys cluster_XX: egen ever_treated_C_XX = max(D_XX)
+            sort ever_treated_C_XX cluster_XX G_XX T_XX
+            mata: M_C = st_data(., ("D_XX", "ever_treated_C_XX"))
+            mata: M_C_1 = colshape(select(M_C[.,1], M_C[.,2] :== 1), `N_C')
+            mata: M_C_0 = colshape(select(M_C[.,1], M_C[.,2] :== 0), `N_C')
+            mata: st_numscalar("N_diff_rows", rows(M_C_0) - rows(M_C_1))
+            mata: st_numscalar("N_diff_cols", cols(M_C_0) - cols(M_C_1))
+            if scalar(N_diff_rows) < 0 {
+                noi di as err "With vce(placebo), there must be at least as many untreated groups (or clusters) as treated groups (or clusters)."
+                restore
+                scalar inner_loop_error = 1
+                exit 
+            }
+            if scalar(N_diff_cols) != 0 {
+                noi di as err "When vce(placebo) is specified, clustervar must contain the same number of units."
+                restore
+                scalar inner_loop_error = 1
+                exit
+            }
 
-            bsample, cluster(G_XX)
-            sort G_XX T_XX
-            bys G_XX T_XX: gen ID_XX = _n
-            egen G_temp_XX = group(G_XX ID_XX)
-            replace G_XX = G_temp_XX
-            sort G_XX T_XX
-            drop G_temp_XX ID_XX
-
-            drop D_XX ever_treated_XX
-            gen id_r = uniform()
-            bys G_XX: egen id_rg = mean(id_r)
-            sort id_rg G_XX T_XX
-            svmat treat
-            rename treat1 D_XX
-            replace D_XX = 0 if missing(D_XX)
+            mata: M_P = (M_C_1 \ J(st_numscalar("N_diff_rows"), cols(M_C_1), 0)), runiform(rows(M_C_0), 1)
+            mata: M_P = sort(M_P, cols(M_P))[.,1..(cols(M_P)-1)]
             
+            keep if ever_treated_C_XX == 0
+
+            drop D_XX ever_treated_*
+            gen D_XX = .
+            mata: st_store(., "D_XX", rowshape(M_P, rows(M_P)*cols(M_P)))
+
+            foreach temp in M_C M_C_1 M_C_0 M_P {
+                mata: mata drop `temp'
+            }
+
             sort G_XX T_XX
             bys G_XX: egen ever_treated_XX = max(D_XX)            
         }
+    }
+
+    if "`cov_projected'" != "" {
+        // Residualize Y on covariates, T and G FE on the sample of not-yet-treated
+        reg Y_XX `cov_projected' ibn.G_XX ibn.T_XX if D_XX == 0, noconst
+        predict Y_res_XX, res
+        replace Y_XX = Y_res_XX
+        drop Y_res_XX
     }
 
     gen F_g_temp = D_XX*T_XX
@@ -204,6 +372,7 @@ qui {
     gen T_g_XX = T_max - C_XX + 1 if ever_treated_XX == 1
     sum T_g_XX
     local L_g = r(max)
+    scalar L_g = `L_g'
 
     // Number of feasible placebo estimates
     sum C_XX if ever_treated_XX == 1
@@ -234,12 +403,23 @@ qui {
         }
     }
 
-    sdid Y_XX G_XX T_XX D_XX, vce(noinference) method(`method') mattitles
+
+    sum Y_XX
+    cap sdid Y_XX G_XX T_XX D_XX, vce(noinference) method(`method') covariates(`cov_optimized') `unstandardized'
+    if _rc != 0 {
+        scalar failed_run = 1
+        restore
+        exit
+    }
     mata: mata set matastrict off
     mata: omega = st_matrix("e(omega)")
     mata: lambda = st_matrix("e(lambda)")
     matrix design = e(adoption)
     mata: st_numscalar("cohorts", rows(st_matrix("design")))
+
+    if "`cov_optimized'" != "" {
+        mata: beta = st_matrix("e(beta)")
+    }
 
     mat res = J(1 + `L_g', `=cohorts', .)
     local rown "ATT_c"
@@ -274,7 +454,15 @@ qui {
 
         sort C_XX G_XX T_XX
 
-        gen Y_XX_`c' = Y_XX if inlist(C_XX, 0, `c')
+        if "`cov_optimized'" == "" gen Y_XX_`c' = Y_XX if inlist(C_XX, 0, `c')
+        else { // Optimized projection //
+            gen Pr_`c'_XX = .
+            mata: st_store(., "Pr_`c'_XX", st_data(., "`cov_optimized'") * select(beta[1..(rows(beta)-1),.], beta[rows(beta),.]:==`c'))
+            gen Y_XX_`c' = Y_XX - Pr_`c'_XX if inlist(C_XX, 0, `c')
+
+            mata: st_data(.,"Pr_`c'_XX")'
+            drop Pr_`c'_XX
+        }
         mata: mata set matastrict off
         mata: ATT_compute(st_data(., "Y_XX_`c'"), omega_temp, lambda_temp, st_numscalar("N_`c'"), st_numscalar("N_Post_`c'"), st_numscalar("N_Tr_`c'"))
         mat res[1, `j'] = ATT
@@ -296,13 +484,14 @@ qui {
             }
         }
     }
+
     if "`placebo'" != "" {
         mat res = res \ res_pl
     }
     
-    scalar tot_est = scalar(effects) + scalar(placebo)
-    mat li res
-    mata: ATT_aggte(st_matrix("res"), st_matrix("t_weight"), st_numscalar("tot_est"), st_matrix("c_weight"))
+    //scalar tot_est = scalar(effects) + scalar(placebo)
+    mata: ATT_aggte(st_matrix("res"), st_matrix("t_weight"), st_numscalar("effects"), st_numscalar("placebo"), st_numscalar("L_g"), st_matrix("c_weight"))
+
 }   
 
     local rown_effects "ATT"
@@ -323,7 +512,17 @@ qui {
         mat rown res = `rown' 
         mat coln res = `coln'
     }
+
 restore
+end
+
+cap program drop check_covariates
+program define check_covariates, rclass
+syntax varlist [, projected optimized]
+return local cov_vars = "`varlist'"
+if (("`projected'"==""&"`optimized'"=="")|("`projected'"==""&"`optimized'"!="")) return local cov_type = "optimized"
+else if ("`projected'"!=""&"`optimized'"=="") return local cov_type = "projected"
+else return local cov_type = ""
 end
 
 cap mata: mata drop ATT_compute()
@@ -351,7 +550,7 @@ end
 
 cap mata: mata drop ATT_aggte()
 mata:
-void ATT_aggte(B, W, E, S) {
+void ATT_aggte(B, W, E, P, TE, S) {
     X = W' \ S' \ B
     H = J(rows(B), 3, .)
     for (j = 3; j <= rows(X); j++) {
@@ -365,7 +564,12 @@ void ATT_aggte(B, W, E, S) {
         H[j-2, 1] = (temp_mat[1, .] :/ sum(temp_mat[1, .])) * temp_mat[2, .]'
         H[j-2, 3] = sum(S[1..cols(temp_mat),.])
     }
-    st_matrix("H",  H[1..(1+E), .])    
+    if (P == 0) {
+        st_matrix("H",  H[1..(1+E), .])    
+    }
+    else {
+        st_matrix("H",  H[(1..(1+E),(2+TE)..(1+TE+P)), .])    
+    }
 }
 end
 
@@ -374,10 +578,70 @@ mata:
 void SE_add(V, B) {
     H = B[,1], J(rows(B), 3, .), B[, 3]
     for (j = 1; j <= rows(B); j++) {
-        H[j, 2] = sqrt(variance(V[.,j]))
+        H[j, 2] = sqrt(variance(V)[j,j])
         H[j, 3] = H[j, 1] - 1.96 * H[j, 2]
         H[j, 4] = H[j, 1] + 1.96 * H[j, 2]
     }
     st_matrix("H_SE", H)
+}
+end
+
+cap mata: mata drop SE_add_emp()
+mata:
+void SE_add_emp(V, B) {
+    H = B[,1], J(rows(B), 3, .), B[, 3]
+    V = V\B[,1]'
+    for (j = 1; j <= rows(B); j++) {
+        H[j, 2] = sqrt(variance(V)[j,j])
+        V_nm = select(V[.,j], V[.,j]:~= .)
+        K = sort(V_nm,1), ((1.. rows(V_nm))/rows(V_nm))'
+        LT = sort(select(K, K[.,2]:<=0.025), 1) 
+        if (rows(LT) == 0) {
+            LT = K[1,.]
+        }
+        RT = sort(select(K, K[.,2]:>=0.975), 1)
+        if (rows(RT) == 0) {
+            RT = K[rows(K),.]
+        }
+        H[j, 3] = LT[rows(LT), 1]
+        H[j, 4] = RT[1,1]
+    }
+    st_matrix("H_SE", H)
+}
+end
+
+cap mata: mata drop SE_add_cb()
+mata:
+void SE_add_cb(V, B) {
+    H = B[,1], J(rows(B), 3, .), B[, 3]
+    for (j = 1; j <= rows(B); j++) {
+        H[j, 2] = sqrt(variance(V)[j,j])
+        H[j, 3] = H[j, 1] - 1.96 * H[j, 2]
+        H[j, 4] = H[j, 1] + 1.96 * H[j, 2]
+    }
+    st_matrix("H_cb_SE", H)
+}
+end
+
+cap mata: mata drop SE_add_cb_emp()
+mata:
+void SE_add_cb_emp(V, B) {
+    H = B[,1], J(rows(B), 3, .), B[, 3]
+    for (j = 1; j <= rows(B); j++) {
+        H[j, 2] = sqrt(variance(V)[j,j])
+        V_nm = select(V[.,j], V[.,j]:~= .)
+        K = sort(V_nm,1), ((1.. rows(V_nm))/rows(V_nm))'
+        LT = sort(select(K, K[.,2]:<=0.025), 1) 
+        if (rows(LT) == 0) {
+            LT = K[1,.]
+        }
+        RT = sort(select(K, K[.,2]:>=0.975), 1)
+        if (rows(RT) == 0) {
+            RT = K[rows(K),.]
+        }
+        H[j, 3] = LT[rows(LT), 1]
+        H[j, 4] = RT[1,1]
+    }
+    st_matrix("H_cb_SE", H)
 }
 end

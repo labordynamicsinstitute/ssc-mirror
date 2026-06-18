@@ -1,14 +1,14 @@
 /*------------------------------------*/
 /*undid_stage_three*/
 /*written by Eric Jamieson */
-/*version 2.0.1 2026-02-17 */
+/*version 2.0.2 2026-02-19 */
 /*------------------------------------*/
 cap program drop undid_stage_three
 program define undid_stage_three, rclass
     version 16
     syntax, dir_path(string) /// 
             [agg(string) weights(string) covariates(int 0) notyet(int 0) ///
-            nperm(int 999) verbose(int 250) seed(int 0) max_attempts(int 100) check_anon_size(int 0) hc(int 3) ///
+            nperm(int 999) verbose(int 250) seed(int 0) max_attempts(int 100) check_anon_size(int 0) hc(int 1) ///
             omit(string) only(string)]
 
     // ---------------------------------------------------------------------------------------- //
@@ -481,6 +481,32 @@ program define undid_stage_three, rclass
         }
     }
 
+    // For staggered adoption, do final check to make sure that every gt is paired
+    // Note that this is already done explicitly for the gt and sgt aggreation, but in order for any of the 
+    // aggregation methods for staggered adoption to be thereotically sound, this should actually just be done for all.
+    if `check_staggered' == 1 {
+        qui levelsof gt, local(gts)
+        foreach gt of local gts {
+            qui count if treat == 1 & gt == "`gt'"
+            local treated_count = r(N)
+            qui count if treat == 0 & gt == "`gt'"
+            local control_count = r(N)
+            if `treated_count' < 1 | `control_count' < 1 {
+                di as err "Warning: Could not find at least one treated and one control observation for gt = `gt'."
+                di as err "Warning: Dropping rows where gt = `gt'."
+                qui drop if gt == "`gt'"
+            }
+        }
+        qui count if treat == 1
+        local treated_count = r(N)
+        qui count if treat == 0
+        local control_count = r(N)
+        if `treated_count' < 1 | `control_count' < 1 {
+            di as err "Error: Need at least one treated and one control observation."
+            exit 20
+        }
+    }
+
     // Check if randomization inference should be done
     local randomize = 1 // Always possible for common adoption
     if `check_staggered' == 1 {
@@ -651,7 +677,7 @@ program define undid_stage_three, rclass
     qui scalar `agg_att_pval' = .
     qui scalar `agg_att_jknife_pval' = .
 
-    mata : undid_stage_three_compute(`hc', "`agg'", "`weights'", "`agg_att'", "`agg_att_se'", "`agg_att_pval'", "`agg_att_jknife_se'", "`agg_att_jknife_pval'", `check_common', "`table_matrix'")
+    mata : undid_stage_three_compute(`hc', "`agg'", "`weights'", "`agg_att'", "`agg_att_se'", "`agg_att_pval'", "`agg_att_jknife_se'", "`agg_att_jknife_pval'", `check_common', `covariates', "`table_matrix'")
 
     // ---------------------------------------------------------------------------------------- //
     // ------------------------- PART FOUR: Randomization Inference! -------------------------- // 
@@ -796,12 +822,20 @@ void undid_stage_three_compute(
     string scalar agg_att_pval,
     string scalar agg_att_jknife_se,
     string scalar agg_att_jknife_pval,
-    real scalar common_flag, | string scalar undid_matrix
+    real scalar common_flag,
+    real scalar covariates, | string scalar undid_matrix
 )
 {
+    if (covariates == 1) {
+        var_column = "diff_var_covariates"
+    }
+    else if (covariates == 0) {
+        var_column = "diff_var"
+    }
+
     // Get ordering of columns
     if (common_flag == 1) {
-        M = st_data(., ("silo_id", "gvar_date", "treat", "n", "n_t", "y"))
+        M = st_data(., ("silo_id", "gvar_date", "treat", "n", "n_t", "y", var_column))
         nrows = rows(M)
         treat_col = 3
         n_col = 4
@@ -809,7 +843,7 @@ void undid_stage_three_compute(
         y_col = 6
     } 
     else if (agg == "time") {
-        M = st_data(., ("silo_id", "gvar_date", "t", "treat", "n", "n_t", "y", "time"))
+        M = st_data(., ("silo_id", "gvar_date", "t", "treat", "n", "n_t", "y", "time", var_column))
         nrows = rows(M)
         t_col = 3
         treat_col = 4
@@ -820,10 +854,10 @@ void undid_stage_three_compute(
     }
     else {
         if (agg == "gt" | agg == "sgt") {
-            M = st_data(., ("silo_id", "gvar_date", "t", "treat", "n", "n_t", "y", agg + "_id"))
+            M = st_data(., ("silo_id", "gvar_date", "t", "treat", "n", "n_t", "y", agg + "_id", var_column))
         }
         else {
-            M = st_data(., ("silo_id", "gvar_date", "t", "treat", "n", "n_t", "y"))
+            M = st_data(., ("silo_id", "gvar_date", "t", "treat", "n", "n_t", "y", var_column))
         }
         nrows = rows(M)
         t_col = 3
@@ -834,7 +868,7 @@ void undid_stage_three_compute(
     }
     gvar_col = 2
     silo_col = 1
-    last_col = cols(M)
+    var_col = cols(M)
 
     // Define the iterable based on the aggregation type
     if (agg == "silo") {
@@ -844,11 +878,11 @@ void undid_stage_three_compute(
         iterable = uniqrows(select(M, M[.,treat_col] :== 1)[.,gvar_col])
     }
     else if (agg == "gt") {
-        gt_col = last_col
+        gt_col = 8
         iterable = uniqrows(select(M, M[.,treat_col] :== 1)[.,gt_col])
     }
     else if (agg == "sgt") {
-        sgt_col = last_col
+        sgt_col = 8
         iterable = uniqrows(select(M, M[.,treat_col] :== 1)[.,sgt_col])
     }
     else if (agg == "time") {
@@ -870,6 +904,12 @@ void undid_stage_three_compute(
             W = W :/ sum(W)
         }
         regresults = undid_regress_ols(X, Y, W, hc)
+
+        // Compute SE edge case
+        if ((regresults[2,1] == .) & (rows(subset) == 2) & (hc == 1)) {
+            regresults[2,1] = sqrt(sum(subset[.,var_col]))
+        }
+
         st_numscalar(agg_att, regresults[1,1])
         st_numscalar(agg_att_se, regresults[2,1])
         st_numscalar(agg_att_pval, regresults[3,1])
@@ -903,6 +943,12 @@ void undid_stage_three_compute(
 
         // Run regression, store results
         regresults = undid_regress_ols(X, Y, W, hc)
+
+        // Check for edge case
+        if ((regresults[2,1] == . ) & (rows(subset) == 2) & (hc == 1) & (agg != "time")) {
+            regresults[2,1] = sqrt(sum(subset[.,var_col]))
+        }
+
         sub_agg_results[i, 1] = regresults[1,1]
         sub_agg_results[i, 2] = regresults[2,1]
         sub_agg_results[i, 3] = regresults[3,1]
@@ -920,10 +966,10 @@ void undid_stage_three_compute(
     // Run aggregate regression
     n = rows(sub_agg_results)
     regresults = undid_regress_ols(J(n, 1, 1), sub_agg_results[., 1], W, hc)
+    sub_agg_results = undid_jackknife_procedure(agg_att_jknife_se, agg_att_jknife_pval, M, agg, weighting, regresults[1,1], sub_agg_results, iterable)
     st_numscalar(agg_att, regresults[1,1])
     st_numscalar(agg_att_se, regresults[2,1])
     st_numscalar(agg_att_pval, regresults[3,1])
-    sub_agg_results = undid_jackknife_procedure(agg_att_jknife_se, agg_att_jknife_pval, M, agg, weighting, regresults[1,1], sub_agg_results, iterable)
     st_matrix(undid_matrix, sub_agg_results)
 
 }
@@ -952,14 +998,14 @@ real matrix undid_jackknife_procedure(
     silo_col = 1
     gvar_col = 2
     
-    if (cols(data) == 6) {
+    if (cols(data) == 7) {
         // Common adoption
         treat_col = 3
         n_col = 4
         n_t_col = 5
         y_col = 6
     }
-    else if (cols(data) == 8) {
+    else if (cols(data) == 9) {
         // staggered, either agg is time, gt, or sgt
         t_col = 3
         treat_col = 4
@@ -974,7 +1020,7 @@ real matrix undid_jackknife_procedure(
             sgt_col = 8
         }
     }
-    else if (cols(data) == 7) {
+    else if (cols(data) == 8) {
         // standard case without extra columns
         t_col = 3
         treat_col = 4
@@ -1798,11 +1844,11 @@ real colvector undid_stage_three_mask(
     silo_col = 1
     gvar_col = 2
     
-    if (cols(M) == 6) {
+    if (cols(M) == 7) {
         // Common adoption
         treat_col = 3
     }
-    else if (cols(M) == 8) {
+    else if (cols(M) == 9) {
         // staggered, either agg is time, gt, or sgt
         t_col = 3
         treat_col = 4
@@ -1815,7 +1861,7 @@ real colvector undid_stage_three_mask(
             sgt_col = 8
         }
     }
-    else if (cols(M) == 7) {
+    else if (cols(M) == 8) {
         // standard case without extra columns
         t_col = 3
         treat_col = 4
@@ -1863,6 +1909,7 @@ end
 /*--------------------------------------*/
 /* Change Log */
 /*--------------------------------------*/
+*2.0.2 - changed the default hc option to hc1 for alignment with stage 2 computations. also added one additional data check, as well as a computation method for some SE edge cases when n = 2
 *2.0.1 - made the HCCME computation more efficient
 *2.0.0 - added additional check for RI procedure, disallowed none aggregation for staggered adoption, added HCCME options via the hc arg, fixed issue with jackknife calculation, moved computation to Mata, changed use_pre_controls arg to notyet
 *1.0.0 - created function

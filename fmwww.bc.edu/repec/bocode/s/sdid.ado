@@ -1,7 +1,7 @@
 *! sdid: Synthetic Difference-in-Differences
-*! Version 2.0.2 June 28, 2024
-*! Author: Pailañir Daniel, Clarke Damian
-*! dpailanir@fen.uchile.cl, dclarke@fen.uchile.cl
+*! Version 2.0.6 June 9, 2026
+*! Author: Pailañir Daniel, Clarke Damian, Ciccia Diego
+*! dpailanir@fen.uchile.cl, dclarke@fen.uchile.cl, diego.ciccia@kellogg.northwestern.edu
 
 /*
 Versions
@@ -11,14 +11,20 @@ Versions
 1.3.0 Jul 13, 2022: Addition of DiD and SC methods
 1.4.0 Jan 15, 2023: Standard error for each adoption (Bootstrap only)
 2.0.0 Feb 24, 2023: Standard error for each adoption (Bootstrap, placebo, jackknife) [SSC]
+2.0.3 May 14, 2025: Updates to incorporate additional covariate options
+2.0.4 July 31, 2025: Updates to incorporate cluster SE (bootstrap/placebo)
+2.0.5 Aug 8, 2025: Updates to incorporate cluster SE (jackknife)
+2.0.6 June 9, 2026: fixed bug with placebo inference (Github n. 102)
 */
 
+cap program drop sdid
 program sdid, eclass
 version 13.0
 
 #delimit ;
-    syntax varlist(min=4 max=4) [if] [in], vce(string) 
+    syntax varlist(min=4 max=4) [if] [in],  
     [
+    vce(string)
     seed(numlist integer >0 max=1)
     reps(integer 50)
     covariates(string asis)
@@ -41,6 +47,8 @@ version 13.0
     verbose
     XLINE_opts(string asis)
     YLINE_opts(string asis)
+    _not_yet
+    cluster(string asis)
     ]
     ;
 #delimit cr  
@@ -52,7 +60,8 @@ version 13.0
 tempvar touse
 mark `touse' `if' `in'
 **Check if group ID is numeric or string
-local clustvar "`2'"
+if "`cluster'" != "" local clustvar "`cluster'"
+else local clustvar "`2'"
 
 local stringvar=0
 cap count if `2'==0
@@ -68,8 +77,13 @@ else {
     tokenize `varlist'
 }
 
+if "`vce'" == "" local vce "bootstrap"
 if !inlist("`vce'", "bootstrap", "jackknife", "placebo","noinference") {
     dis as error "vce() must be one of bootstrap, jackknife, placebo or noinference."
+    exit 198
+}
+if ("`_not_yet'" != "" & "`covariates'" == "") {
+    dis as error "_not_yet can only be used in combination with covariates(, projected)"
     exit 198
 }
 
@@ -141,10 +155,19 @@ if "`vce'"=="jackknife" {
     qui bys `2': egen `t2'=min(`t1')
     qui levelsof `t2', local(T2)
     foreach t of local T2 {
-        qui sum `2' if `4'==1 & `t2'==`t'
-        if r(min)==r(max) {
-            di as error "Jackknife `SEN' at least two treated units for each treatment period"
-            exit 451
+        if "`cluster'" == "" {
+            qui sum `2' if `4'==1 & `t2'==`t'
+            if r(min)==r(max) {
+                di as error "Jackknife `SEN' at least two treated units for each treatment period"
+                exit 451
+            }
+        }
+        else {
+            qui levelsof `cluster' if `4'==1 & `t2'==`t'
+            if r(r)==1 {
+                di as error "Jackknife `SEN' at least two treated clusters for each treatment period"
+                exit 451
+            }
         }
     }
 }
@@ -233,12 +256,19 @@ if length("`graph'")!=0&`stringvar'==1 {
 }
 
 local control_opt = 0
+local nyt = 0
 if "`covariates'"!="" {
     _parse_X `covariates'
     if "`r(ctype)'"=="optimized" local control_opt = 2
     if "`r(ctype)'"=="projected" local control_opt = 1
     local conts = r(controls)
     local contname = r(controls)
+
+    if ("`_not_yet'" != "" & `control_opt' != 1) {
+        dis as error "_not_yet can only be used in combination with covariates(, projected)"
+        exit 198
+    }
+    if "`_not_yet'" != "" local nyt = 1
 	
     foreach var of varlist `contname' {
         qui sum `var'
@@ -269,6 +299,15 @@ if "`covariates'"!="" {
     }
 }
 
+// Clustering //
+if "`cluster'" == "" {
+    local clustervar `2'
+}
+else {
+    tempvar clustervar
+    egen `clustervar' = group(`cluster')
+}
+
 *------------------------------------------------------------------------------*
 * (2) Calculate ATT, plus some locals for inference
 *------------------------------------------------------------------------------*
@@ -286,8 +325,14 @@ if "`method'"=="did"  local m=2
 if "`method'"=="sc"   local m=3
 
 **IDs (`2') go in twice here because we are not resampling
-mata: data = st_data(.,("`1' `2' `2' `3' `4' `treated' `tyear' `conts'"))
-mata: ATT = synthdid(data, 0, ., ., `control_opt', `jk', `m', `zeta_lambda', `zeta_omega', `min_dec', `max_iter')
+if !("`cluster'" != "" & "`vce'" == "jackknife") {
+    mata: data = st_data(.,("`1' `2' `2' `3' `4' `treated' `tyear' `conts'"))
+    mata: ATT = synthdid(data, 0, ., ., `control_opt', `jk', `m', `zeta_lambda', `zeta_omega', `min_dec', `max_iter', `nyt', 0)
+}
+else {
+    mata: data = st_data(.,("`1' `2' `clustervar' `3' `4' `treated' `tyear' `conts'"))
+    mata: ATT = synthdid(data, 0, ., ., `control_opt', `jk', `m', `zeta_lambda', `zeta_omega', `min_dec', `max_iter', `nyt', 1)
+}
 mata: LAMBDA = st_matrix("lambda")
 mata: OMEGA  = st_matrix("omega")
 
@@ -364,9 +409,11 @@ if "`vce'"=="bootstrap" {
     while `b'<=`B' {
         preserve
         qui keep if `touse'
-        keep `1' `2' `3' `4' `treated' `tyear' `conts'
+        keep `1' `2' `3' `4' `treated' `tyear' `conts' `clustervar'
         tempvar cID
-        bsample, cluster(`2') idcluster(`cID')
+        tempvar vID
+        bsample, cluster(`clustervar') idcluster(`cID')
+        egen `vID' = group(`cID' `2')
         qui count if `treated' == 0
         local r1 = r(N)
         qui count if `treated' != 0
@@ -382,8 +429,8 @@ if "`vce'"=="bootstrap" {
             qui putmata bsam_id=`2' if `tyear'==. & `3'==`mint', replace
             mata: indicator=smerge(bsam_id, (ori_id, ori_pos))
             mata: OMEGAB=OMEGA[(indicator\rows(OMEGA)),]		
-            mata: data = st_data(.,("`1' `cID' `2' `3' `4' `treated' `tyear' `conts'"))
-            mata: ATT_b[`b',] = synthdid(data,1,OMEGAB,LAMBDA,`control_opt',`jk',`m', `zeta_lambda', `zeta_omega', `min_dec', `max_iter')
+            mata: data = st_data(.,("`1' `vID' `2' `3' `4' `treated' `tyear' `conts'"))
+            mata: ATT_b[`b',] = synthdid(data,1,OMEGAB,LAMBDA,`control_opt',`jk',`m', `zeta_lambda', `zeta_omega', `min_dec', `max_iter', `nyt', 0)
 			
             *taus for adoption times
             mata: ty = uniqrows(select(data[,7], data[,5]:==1))
@@ -424,45 +471,65 @@ else if "`vce'"=="placebo" {
 	
     while `b'<=`B' {
         preserve
-        qui keep if `touse'
-		
-        keep `1' `2' `3' `4' `tyear' `conts'
-        qui drop if `tyear'!=.        //drop treated units
-		
-        tempvar id
-        egen `id' = group(`2')
-        qui sum `id'
-        local max = r(max)
-		
-        *generate vector of selected placebos
-        local rowsselect = `co'-`newtr'+1				
-        mata id_list = range(1, `max', 1)
-        mata asignar_pr = (id_list, runiform(`max',1))
-        mata st_matrix("Select", sort(asignar_pr, 2)[1..`rowsselect', 1])
-        				
-        *replace treatment status with placebos
-        forval i=1/`rowsselect' {
-            qui replace `tyear' = tryears[`i',1] if `id'==Select[`i',1]
+        qui {
+            tempvar ng
+            keep if `touse'
+            
+            keep `1' `2' `3' `4' `tyear' `conts' `clustervar'
+            sum `3'
+            bys `clustervar': egen `ng' = sum(`3'==`=r(min)')
+            sum `ng'
+            local N_g = r(mean)
+            if r(sd) != 0 {
+                noi di as err "vce(placebo) can be used with cluster() only when each cluster contains the same number of groups."
+                exit
+            }
+
+            tempvar treat_temp ever_treat clust_id
+            gen `treat_temp' = `tyear'!=.
+            bys `clustervar': egen `ever_treat' = max(`treat_temp')
+            
+            sort `ever_treat' `clustervar' `2' `3'
+            gen `clust_id' = _n if `ever_treat' == 1
+            sum `clust_id'
+            local start = r(min)
+            local stop = r(max)
+
+            mata: Y_1c = st_data(range(`start',`stop',1), ("`4' `clustervar'"))
+            mata: D_c = rowshape(Y_1c[.,1], rows(Y_1c)/(`T'*`N_g'))
+            mata: st_numscalar("diff_obs_placebo", (st_nobs()-rows(Y_1c))-rows(Y_1c))
+
+            if (scalar(diff_obs_placebo) < 0) {
+                noi di as err "When using cluster() with vce(placebo), the number of clusters with at least one treated units cannot exceed the number of clusters with only untreated units."
+                exit
+            }
+
+            mata: D_new = placebo_treat(st_nobs()-rows(Y_1c), D_c)
+
+            drop if `ever_treat' == 1  
+            mata: st_store(., "`4'", D_new)
+            egen `treated' = max(`4'), by(`2')
+            gen tyear_temp = `3' * `4' if `4' > 0
+            bys `2': egen tyear_new = min(tyear_temp)
+            replace `tyear' = tyear_new
+            drop tyear_new tyear_temp
+                    
+            noi display in smcl "." _continue
+            if mod(`b',50)==0 noi dis "     `b'"
+            
+            qui putmata psam_id=`2' if `tyear'==. & `3'==`mint', replace
+            mata: indicator=smerge(psam_id, (ori_id, ori_pos))
+            mata: OMEGAP=OMEGA[(indicator\rows(OMEGA)),]
+            mata: data = st_data(.,("`1' `2' `2' `3' `4' `treated' `tyear' `conts'"))
+            mata: ATT_p[`b',] = synthdid(data,1,OMEGAP,LAMBDA,`control_opt',`jk',`m', `zeta_lambda', `zeta_omega', `min_dec', `max_iter', `nyt', 0)
+
+            *taus for adoption times
+            mata: ty = uniqrows(select(data[,7], data[,5]:==1))
+            mata: ty_taus = (ty, st_matrix("tau_i"))
+            mata: tau_p =  (tau_p\ty_taus)
+                                
+            local ++b
         }
-
-        qui replace `4' = 1 if `3'>=`tyear'
-        egen `treated' = max(`4'), by(`2')
-				
-        display in smcl "." _continue
-        if mod(`b',50)==0 dis "     `b'"
-		
-        qui putmata psam_id=`2' if `tyear'==. & `3'==`mint', replace
-        mata: indicator=smerge(psam_id, (ori_id, ori_pos))
-        mata: OMEGAP=OMEGA[(indicator\rows(OMEGA)),]
-        mata: data = st_data(.,("`1' `2' `2' `3' `4' `treated' `tyear' `conts'"))
-        mata: ATT_p[`b',] = synthdid(data,1,OMEGAP,LAMBDA,`control_opt',`jk',`m', `zeta_lambda', `zeta_omega', `min_dec', `max_iter')
-
-        *taus for adoption times
-        mata: ty = uniqrows(select(data[,7], data[,5]:==1))
-        mata: ty_taus = (ty, st_matrix("tau_i"))
-        mata: tau_p =  (tau_p\ty_taus)
-							
-        local ++b
         restore
     }
 	
@@ -506,13 +573,17 @@ else {
 }
 
 qui levelsof `2' if `touse'
+local ngroups: word count `r(levels)'
+qui levelsof `clustervar' if `touse'
 local nclust: word count `r(levels)'
 
 if "`vce'"=="noinference" local se=.
 ereturn scalar se     =`se' 
 ereturn scalar ATT    =`ATT'
 ereturn scalar reps   =`reps'
+ereturn scalar N_group= `ngroups'
 ereturn scalar N_clust=`nclust'
+
 
 if "`mattitles'"!="" {
         local rn ""
@@ -545,7 +616,7 @@ if length("`returnweights'")!=0 {
         }
         local ++i
     }
-    ren c `3'
+    varabbrev ren c `3'
     tempfile dlambda
     qui save `dlambda'
     restore
@@ -561,7 +632,7 @@ if length("`returnweights'")!=0 {
 	    ren c`i' `generate'omega`t'
         local ++i
     }
-    ren c `2'
+    varabbrev ren c `2'
     tempfile domega
     qui save `domega'
     restore
@@ -589,6 +660,7 @@ if "`covariates'"!="" {
 }
 
 ereturn local cmdline  "sdid `0'"
+ereturn local groupvar `2'
 ereturn local clustvar `clustvar'
 ereturn local depvar   `1'
 ereturn local vce      "`vce'"
@@ -813,18 +885,28 @@ end
 *------------------------------------------------------------------------------*
 * (8) Mata functions
 *------------------------------------------------------------------------------*
+** cap drop mata functions 
+cap mata: mata drop synthdid()
+cap mata: mata drop lambda()
+cap mata: mata drop fw()
+cap mata: mata drop sspar()
+cap mata: mata drop sum_norm()
+cap mata: mata drop smerge()
+cap mata: mata drop projected()
+cap mata: mata drop placebo_treat()
+
 *Main function (synthdid)
 *Below assumes data is a matrix with:
 * (1) y variable
 * (2) group variable (bootstrap fix if necessary)
-* (3) orig group variable
+* (3) orig group variable (jk without cluster) or cluster variable (jk with cluster)
 * (4) time variable
 * (5) treatment variable
 * (6) indicator if unit ever treated
 * (7) indicator of year treated (if treated)
 * (8+) any controls
 mata:
-    real scalar synthdid(matrix data, inference, OMEGA, LAMBDA, controls, jk, mt, ELambda, EOmega, MinDec, MaxIter) {
+    real scalar synthdid(matrix data, inference, OMEGA, LAMBDA, controls, jk, mt, ELambda, EOmega, MinDec, MaxIter, NotYet, cluster) {
         data  = sort(data, (6,2,4))
         units = panelsetup(data,2)
         NT = panelstats(units)[,3]
@@ -835,8 +917,14 @@ mata:
         controlID = uniqrows(select(data[.,2],data[,7]:==.))  
 		
         if (jk==1) {
-            uniqID=(uniqrows(select(data[.,2],data[,7]:==.)) \ uniqrows(select(data[.,2],data[,7]:!=.)))
-            N = panelstats(units)[,1]
+            if (cluster == 0) {
+                uniqID=(uniqrows(select(data[.,2],data[,7]:==.)) \ uniqrows(select(data[.,2],data[,7]:!=.)))
+                N = panelstats(units)[,1]
+            } 
+            else {
+                uniqID=uniqrows(data[.,3])
+                N = max(uniqID)
+            }
         }
 		
         //matrix for beta
@@ -854,7 +942,7 @@ mata:
         //save original data for jackknife
         data_ori=data
         if (cols(data)>7 & controls==1) {
-            projected(data, Yprojected, Beta)
+            projected(data, Yprojected, Beta, NotYet)
             data[,1] = Yprojected
         }
         
@@ -1096,7 +1184,7 @@ mata:
 
             }
         }
-		
+
         if (inference==0) {
             Omega =  (Omega, controlID)
             Omega =  (Omega \ (trt', .))
@@ -1119,13 +1207,14 @@ mata:
             tau_aux_j = J(rows(trt),N,.)
 			se_aux_j = J(rows(trt),1,.)
             yNco_ori=yNco
-            ind=(1::yNco)
+            ind=(1::yNco), uniqrows(select(data_ori[,(2,3)],data_ori[,7]:==.))            
             for (i=1; i<=N; ++i) {
                 drp=uniqID[i]
                 data_aux = select(data_ori, data_ori[,3]:!=drp)
+
                 //projected adjustment
                 if (cols(data_aux)>7 & controls==1) {
-                    projected(data_aux, Yprojected, Beta_jk)
+                    projected(data_aux, Yprojected, Beta_jk, NotYet)
                     data_aux[,1] = Yprojected
                 }	
                 
@@ -1147,9 +1236,9 @@ mata:
                     ytreat = panelsum(ytreat,yunits)
                     ytreat = ytreat/yNT
                     Y_aux = rowshape(ydata_aux[.,1],yNG)
-					
+
                     lambda_aux = select(Lambda'[.,1::Npre],Lambda'[,rows(Lambda)]:==trt[yr])  
-                    id1=select(ind, ind:!=i)
+                    id1=select(ind[,1], ind[,1+cluster*2]:!=i)
                     omega_aux = select(Omega'[.,1::yNco_ori],Omega'[,rows(Omega)]:==trt[yr]) 
                     omega_aux = sum_norm(omega_aux[id1])
                     if (controls==0 | controls==1) {
@@ -1386,9 +1475,9 @@ end
 
 *projected covariates
 mata:
-    void projected(Y, Yprojected, Beta) {
+    void projected(Y, Yprojected, Beta, NotYet) {
         K = cols(Y)
-        cdat = Y[selectindex(Y[,6]:==0),(1,2,4,8..K)]
+        cdat = Y[selectindex(Y[,6 - NotYet]:==0),(1,2,4,8..K)]
         cdat = select(cdat, rowmissing(cdat):==0)
         X = cdat[.,4::cols(cdat)]
         NX = cols(X)
@@ -1409,6 +1498,19 @@ mata:
         Beta = beta[1::NX]
         X = Y[.,8::K]
         Yprojected = Y[.,1]-X*Beta
+}
+end
+
+mata:
+real matrix placebo_treat(n,V) {
+    M = J(n,1,0)
+    r = cols(V)
+    index_set = (1..(n/r))', uniform(n/r,1)
+    index_set = sort(index_set, 2)
+    for (j = 1; j <= rows(V); j++) {
+        M[((index_set[j,1]-1)*r+1)..(index_set[j,1]*r),1] = V[j,.]'
+    }
+    return(M)
 }
 end
 

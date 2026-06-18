@@ -19,11 +19,17 @@
 {cmd:[,}
 {cmd:effects(}{it:integer} 0{cmd:)}
 {cmd:placebo(}{it:integer} 0{cmd:)}
-{cmd:covariates(}{it:string}{cmd:)}
+{cmd:covariates(}{it:varlist} [, {it:method}]{cmd:)}
 {cmd:disag}
 {cmd:vce(}{it:string}{cmd:)}
 {cmd:brep(}{it:integer} 50{cmd:)}
-{cmd:method(}{it:string}{cmd:)]}
+{cmd:cluster(}{it:varlist}{cmd:)}
+{cmd:method(}{it:string}{cmd:)}
+{cmd:combine(}{it:string}{cmd:)}
+{cmd:vcov}
+{cmd:sb}
+{cmd:boot_ci}
+{cmd:unstandardized]}
 {p_end}
 
 {p 4 4}
@@ -90,18 +96,37 @@ By default, all feasible dynamic effects are reported.
 
 {p 4 4}
 {cmd:vce()}: selects method for bootstrap inference. 
-The allowed arguments are {cmd:off}, {cmd:bootstrap} and {cmd:placebo}.
-With {cmd:off}, the program reports only the point estimates,
+The allowed arguments are {cmd:noinference}, {cmd:bootstrap} and {cmd:placebo}.
+With {cmd:noinference}, the program reports only the point estimates,
 while {cmd:bootstrap} and {cmd:placebo} correspond to 
 Algorithms 2 and 4 in Clarke et al. (2023).
 {p_end}
 
 {p 4 4}
+{cmd:cluster()} adjusts the inference algorithm 
+specified in {cmd:vce()} to clusters at the {it: varlist} 
+level. The desired cluster level is specified via {it: varlist}. 
+It is possible to specify more than one variable in {it:varlist}, 
+as long as their join is coarser than the group variable 
+(e.g. {cmd: sdid earnings firm year treatment, ... cluster(region industry)}). 
+There is no need to cluster at the group variable, 
+in that inference is already perfomed at that level. 
+When {cmd:vce(bootstrap)} is selected, 
+bootstrap resampling is performed at the cluster level. 
+When {cmd:vce(placebo)} is selected, treatment paths 
+of clusters that have at least one treated 
+group are reassigned to fully untreated clusters. 
+In this case, it is required that ({it:a}) there are at least 
+as many fully untreated clusters as clusters with at least 
+one treated group, ({it:b}) all clusters contain 
+the same number of groups. 
+{p_end}
+
+{p 4 4}
 {cmd:covariates()}: adds covariates to the estimation routine.
-To this end, {cmd:sdid_event} implements the {it:projected} method
-from {cmd:sdid}, whereas the outcome is replaced by the residuals 
-of the outcome variable from a TWFE regression on covariates, in the 
-sample of untreated and not-yet-treated units.
+To this end, {cmd:sdid_event} implements both the {it:optimized} 
+(default) and the {it:projected} methods from {cmd:sdid}. 
+See {cmd:sdid} help file for further details.
 {p_end}
 
 {p 4 4}
@@ -112,6 +137,44 @@ sample of untreated and not-yet-treated units.
 {cmd:method()}: estimation method. Allowed arguments:
 {cmd:sdid} (default) for Synthetic DiD, {cmd:did} for
 traditional DiD and {cmd:sc} for Synthetic Control.
+{p_end}
+
+{p 4 4}
+{cmd:combine()}: grouping multiple event study 
+coefficients under a single estimate. For instance,
+with year-group data over 6 years, one could be interested in
+comparing differential outcomes in three-year windows 
+after the start of the treatment. This can be achieved
+by {cmd:combine(1 2 3; 4 5 6)}. This option returns the 
+corresponding estimate, plus standard errors, CIs and
+number of treated units x post treatment periods in the
+requested windows.
+{p_end}
+
+{p 4 4}
+{cmd:vcov}: returns the variance-covariance matrix
+of the requested dynamic effects. If {cmd:placebo()}
+is requested, the option also returns the 
+variance-covariance matrix of the placebo estimates.
+{p_end}
+
+{p 4 4}
+{cmd:sb}: returns a matrix with the values of 
+the requested estimates across all bootstrap repetitions.
+{p_end}
+
+{p 4 4}
+{cmd:boot_ci}: by default, 95% CIs are computed 
+using a normal approximation for the bootstrap 
+distribution of the estimates. With this option on, 
+the reported CIs are computed using the empirical 
+CDF. 
+{p_end}
+
+{p 4 4}
+{cmd:unstandardized}: As in {cmd:sdid}, in the case of 
+"optimized" covariates, by default covariates are 
+standardized as z-scores, unless this option is specified.
 {p_end}
 
 {marker examples}{...}
@@ -181,8 +244,8 @@ Clarke, D. Pailanir, D. Athey, S., Imbens, G. (2023) {browse "https://arxiv.org/
 {title:Authors}
 
 {p 4 4}
-Diego Ciccia, Sciences Po. 
-{browse "mailto:diego.ciccia@sciencespo.fr":diego.ciccia@sciencespo.fr}
+Diego Ciccia, Northwestern University, Kellogg School of Management. 
+{browse "mailto:diego.ciccia@kellogg.northwestern.edu":diego.ciccia@kellogg.northwestern.edu}
 {p_end}
 
 {p 4 4}

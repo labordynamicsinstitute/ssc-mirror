@@ -1,0 +1,30 @@
+d 'REDUCE_AIGC': module to reduce AIGC similarity in Word documents 
+d
+d      reduce_aigc calls an enhanced Python script (reduce_word.py)
+d to perform multiple text    transformations on Microsoft Word
+d (.docx) documents. It reduces the likelihood of being    flagged
+d as AI-generated content (AIGC) or plagiarized text, with full
+d bilingual support    (English/Chinese) and optimization for
+d official similarity checks such as VIP. 
+d
+d KW: AI content
+d KW: AIGC
+d KW: bilingual English/Chinese
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20260617
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+d Author: Chen Liwen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+f reduce_aigc.ado
+f reduce_word.py
+f reduce_aigc.sthlp
+f reduce_quickref.sthlp

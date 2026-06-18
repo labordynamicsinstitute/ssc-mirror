@@ -13,9 +13,9 @@ d KW: difference in differences
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20260217
+d Distribution-Date: 20260617
 d
-d Author: Eric Jamieson, NA
+d Author: Eric Jamieson, Dalhousie University
 d Support: email ericbrucejamieson@@gmail.com
 d
 f undid_diff.ado

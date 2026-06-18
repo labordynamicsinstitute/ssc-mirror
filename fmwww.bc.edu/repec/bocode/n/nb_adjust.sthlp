@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.12  12-Jun-20233, Dirk Enzmann}{...}
+{* *! version 2.13  16-Jun-2026, Dirk Enzmann}{...}
 {hi:help nb_adjust}
 {hline}
 

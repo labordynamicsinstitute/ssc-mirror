@@ -122,7 +122,7 @@ the necessary counts and probability weights, accounting for both factors. Dropo
 as a list within the {opt drop:outs} option or using the {opt drf:unction} which calculates dropout probabilities
 for the user based on common parametric survival models, selected according to preferential hazard shapes. Plots
 can also be produced by {cmd:trialcounts} to visualise both dropout and recruitment function selections.
- 
+
 
 {marker options}{...}
 {title:Options}
@@ -134,7 +134,7 @@ can also be produced by {cmd:trialcounts} to visualise both dropout and recruitm
  not negative. The length of the list is limited to 101 visits including baseline, though the table of counts output will not
  be printed with visit length>20. Even so, the output will not be presented prettily before that number is reached. All important
   information will in supplied in the returned list regardless of visit length.
- 
+
 {phang}
 {opt ends(varname|numlist)} list of timepoints that relate to the 'end' of each piecewise (linear) recruitment function. The list can be directly supplied as a number list,
  allowing the usual shorthand conventions, or as a (numeric) variable name that contain the numbers therein, with relevant rows
@@ -160,7 +160,7 @@ method for both {opt ends} and {opt rates}), but not necessarily that in {opt sc
  regardless of the length of the span. One could even supply a long list of values if one was attempting to 
  replicate the actual recruitment rates of a trial through time (e.g. one rate per month so far, and perhaps supplemented with predicted
  rates into the future), and this can be easily performed with the variable name method if such rates exist in a data file. 
- 
+
 {pmore}
 If using the variable name input method for {opt ends} then one must do so also for {opt rates}; if using the variable name
 input method for {opt rates} then one may use either the variable name or number list input method for {opt ends}, assuming the length matches for both.
@@ -168,7 +168,7 @@ input method for {opt rates} then one may use either the variable name or number
  consecutive rows have the same rate. This may speed-up computation if there are many rows (say, recruitment rates for every
  month of a trial) and the search option is being utilised. Also be aware that including an empty row will cause the
  program to exit.
- 
+
 {dlgtab:Other options} 
 
 {phang}
@@ -196,7 +196,7 @@ to indicate this function i.e. what should the last value from {opt ends} be? If
 recruit a certain number of subjects then use {opt maxn(#)}. Once the supplied recruitment function hits the {opt maxn(#)} limit,
  that point becomes the time value of the last recruited subjects (and hence the last value of {opt ends} 
 in this restricted recruitment function). Counts and recruitment plots (including the limit of the trial) will reflect this.
- 
+
 {phang} 
 {opt search(# #)} allows one to search for the point in trial time where a target number (the first #) of subjects reaches a
 particular visit number (the second #). Hence the second # must not be greater than the length of {opt sched:ule}. If the {opt search}
@@ -221,7 +221,7 @@ to deal with numerical inaccuracies within Stata.
 and perhaps plausible, manner the dropout function compared to the direct entry of {opt drop:outs}. Instead a parametric survival model 
 is chosen with a hazard function that reflects anticipated dropout rates over the trial history (for example increasing, decreasing,
  non-monotonic). The function choices are weibull, log normal, gompertz, log logistic and generalized gamma. 
- 
+
 {pmore}
  All models except the generalized gamma are specified using 2 of 3 
  possible parameters {opt p(#)}, {opt l(#)} and {opt s(#)}. The letters {opt p} and {opt l} are taken from the Weibull model relating
@@ -234,7 +234,7 @@ is chosen with a hazard function that reflects anticipated dropout rates over th
  value of {opt l} is then back-calculated in order to generate the dropout probabilities. Hence {opt s(#)} must be between 0 and 1.
  For the generalized gamma model, there is no {opt s(#)} as it is not possible to back-calculate the other parameters from a survival
  probability. Instead the generalized gamma has an additional parameter kappa {opt k(#)}{p_end}
- 
+
 {phang2}{opt weibull} where {opt p} is the shape parameter p (>0) and {opt l} the rate parameter lambda (>0). {opt p}<1 
 results in an decreasing monotonic hazard function; {opt p}=1 results in a constant hazard function 
 i.e. exponential survival model at value of {opt l(#)}; {opt p}=2 results in an positive linear hazard function; 
@@ -273,14 +273,14 @@ Think of the red vertical lines moving from left to right as trial time progress
  information regarding the recruitment function is also presented. Note, that if dropout is indicated then this will
  not impact this graph which exclusively concerns recruitment, unlike the table result of counts which integrates
  in the dropout function or list.
- 
+
 {phang}
 {opt dgr:aph} produces two graphs of the dropout survival and hazard functions specified in {opt drf:unction} with
 additional information concerning parameter values. 
 
 {phang}
 {opt noli:nes} suppresses the red vertical and horizontal lines depicting the visit counts, as described above in {opt rgr:aph}
- 
+
 {phang}
 {opth rgopts(twoway_options)} supply (and possibly override) any options allowed for twoway plots for the recruitment graph,
  except for {help name_option} in which case use {opt ren:ame}.
@@ -292,7 +292,7 @@ additional information concerning parameter values.
 {phang}
 {opth dsgopts(twoway_options)} supply (and possibly override) any options allowed for twoway plots for the dropout survival graph,
  except for {help name_option} in which case use {opt dsn:ame}.
- 
+
 {phang}
 {opth ren:ame(name_option)} override the default name given to the recruitment function graph.
 
