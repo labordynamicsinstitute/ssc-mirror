@@ -27,8 +27,8 @@ d Requires: Stata version 15.1 and synth, distinct, elasticregress from SSC (q.v
 d
 d Distribution-Date: 20260210
 d
-d Author: 	  Justin C. Wiltshire,    University of California, Davis
-d Support: email  jcwiltshire@@ucdavis.edu
+d Author: 	  Justin C. Wiltshire,   University of Victoria
+d Support: email wiltshire@@uvic.ca
 d
 f allsynth.ado
 f allsynth.sthlp

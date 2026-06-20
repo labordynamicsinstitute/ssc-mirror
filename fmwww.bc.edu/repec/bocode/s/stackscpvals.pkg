@@ -1,0 +1,24 @@
+d 'STACKSCPVALS': module providing post-estimation handling of synthetic controls 
+d
+d	 stackscpvals is a post-estimation command for use in
+d conjunction with the allsynth    command (Wiltshire Forthcoming),
+d which should be understood prior to implementation of   
+d stackscpvals and which automates the implementation of several
+d synthetic control    estimation features.  stackscpvals permits
+d simple post-estimation stacking and averaging    of synthetic
+d control estimated gaps (and placebo gaps) and especially
+d post-estimation    adjusted versions thereof for users who have
+d already estimated those gaps using allsynth. 
+d
+d KW: synthetic controls
+d KW: stacking
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20260619
+d
+d Author: 	  Justin C. Wiltshire,   University of Victoria
+d Support: email wiltshire@@uvic.ca
+d
+f stackscpvals.ado
+f stackscpvals.sthlp

@@ -291,6 +291,7 @@ p stackdid module to estimate Stacked Difference-in-Differences Regression
 p stackedcount module to produce a stacked area graph  
 p stackedev module to implement stacked event study estimator
 p stackreg module to perform stacked linear regression analysis to facilitate testing of multiple hypotheses
+p stackscpvals module providing post-estimation handling of synthetic controls 
 p staft module to fit flexible parametric accelerated failure time models
 p staggered module implementing R staggered package based on Roth and Sant'Anna (2023)
 p stak module to do simple reshapes or stacks

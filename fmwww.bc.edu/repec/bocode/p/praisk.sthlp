@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 1.0.2 18Jun2026}{...}
 {* *! version 1.0.1 25Mar2026}{...}
 {* *! version 1.0.0 06Mar2026}{...}
 {title:Title}
@@ -111,7 +112,10 @@ Typing {cmd:praisk} without arguments replays the last estimation results.
 
 {phang}
 {opt lag(#)} specifies the order of the autoregressive process for the errors;
-{cmd:lag()} is required and must be >= 1.
+{cmd:lag()} is required and must be >= 1. A necessary condition for estimation
+is k < n_s, where n_s is the length of the shortest contiguous segment;
+{cmd:praisk} returns an error if this condition is not met. In practice, values
+of k beyond 3 or 4 are rarely warranted.
 
 {phang}
 {opt noconstant} suppresses the constant term from the model.

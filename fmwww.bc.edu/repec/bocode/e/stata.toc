@@ -12,6 +12,7 @@ p eclplot module to generate estimates and confidence limits plots
 p ecollapse module to extend collapse to string variables
 p econsig module to quickly calculate six types of economic significance to simplify your empirical process.
 p edfreg module to make corrections for statistical inference with robust or clustered covariance matrices
+p editprofile module to maintain profile.do settings
 p edm module to implement empirical dynamic modeling
 p educationdata module to download data from the Urban Institute Education Data Portal
 p eefanalytics module for Evaluating Educational Interventions using Randomised Controlled Trial Designs

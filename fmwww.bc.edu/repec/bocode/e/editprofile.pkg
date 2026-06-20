@@ -1,0 +1,26 @@
+d 'EDITPROFILE': module to maintain profile.do settings
+d
+d	editprofile locates, opens, and optionally creates the
+d user-specific profile.do file.    Stata executes profile.do
+d automatically whenever it is launched, allowing users to set	 
+d custom defaults (working directory, graphics scheme, memory
+d allocation, extra ado    directories, etc.).	  Called without
+d any options, editprofile opens the first profile.do found in
+d Stata's    standard search order — the current working
+d directory, the Stata installation directory,	  or the PERSONAL
+d ado directory.  If no profile.do exists yet, an error message is
+d shown    and the user is advised to use the create option. 
+d
+d KW: profile
+d KW: file management
+d
+d Requires: Stata version 12
+d
+d Distribution-Date: 20260619
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+f editprofile.ado
+f editprofile.sthlp
+f ../p/profile.do

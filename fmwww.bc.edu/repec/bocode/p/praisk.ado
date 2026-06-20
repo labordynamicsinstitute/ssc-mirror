@@ -1,3 +1,4 @@
+*! 1.4.0 Ariel Linden 18Jun2026	// produce error when K = smallest segment N
 *! 1.3.0 Ariel Linden 01Jun2026	// handle gap-boundary segments of length <= p
 *! 1.2.0 Ariel Linden 23Apr2026	// fixed display with multiple panels
 *! 1.1.0 Ariel Linden 25Mar2026	// added nolog option
@@ -76,6 +77,31 @@ program define praisk, eclass
 
 	// exclude obs where the time (or panel) variable is missing — mirrors -prais-
 	markout `touse' `timevar' `panelvar'
+
+	// warn if lag order is large relative to shortest segment
+	quietly {
+		tempvar _seg_id _seg_n
+		gen long `_seg_id' = 0 if `touse'
+		if "`panelvar'" != "" {
+			replace `_seg_id' = 1 if `touse' & ///
+				(l.`panelvar' == . | `panelvar' != l.`panelvar' | ///
+				 l.`timevar'  == . | `timevar'  != l.`timevar' + 1)
+		}
+		else {
+			replace `_seg_id' = 1 if `touse' & ///
+				(l.`timevar' == . | `timevar' != l.`timevar' + 1)
+		}
+		replace `_seg_id' = sum(`_seg_id') if `touse'
+		bysort `_seg_id': gen long `_seg_n' = _N if `touse'
+		summarize `_seg_n' if `touse', meanonly
+	}
+	local _min_seg = r(min)
+	if `lag' >= `_min_seg' {
+		di as err "lag(`lag') is too large: no segment has enough " ///
+			"observations to estimate AR(`lag') " ///
+			"(shortest segment has n = `_min_seg')"
+		exit(198)
+	}
 
 	tokenize `varlist'
 	local yvar `1'
@@ -648,7 +674,7 @@ real colvector function praisk_pooled_yw(real colvector   u,
 	}
 
 	if (A[1,1] == 0) {
-		errprintf("ERROR: No segment has enough observations to estimate AR(%g)\n", p)
+		errprintf("No segment has enough observations to estimate AR(%g)\n", p)
 		exit(198)
 	}
 

@@ -1,0 +1,51 @@
+d 'MHTOPT': module for Optimal Multiple Hypothesis Testing
+d
+d  mhtopt implements the optimal multiple-hypothesis-testing (MHT)
+d correction  of Viviano, Wuthrich and Niehaus (2026), which
+d derives the per-test significance level alpha* from the economic
+d incentives of research production rather than treating MHT
+d adjustment as ad hoc. Given a cost function for adding hypotheses
+d and observations to a study, the package returns the alpha* that
+d maximizes the welfare of an evidence-driven decision maker. Two
+d cost models are supported: a linear/FDA calibration (default,
+d using fixed-cost share parameters from Sertkaya et al. 2016) and
+d a Cobb-Douglas calibration (J-PAL parameters from Appendix A of
+d the paper). The package provides five commands: mht_critical
+d computes alpha* for given J and n; mht_test applies the
+d correction to a vector of p-values and compares against
+d Bonferroni, Holm, Benjamini-Hochberg, and unadjusted decisions;
+d mht_est is a postestimation wrapper that reads e(b) and e(V) from
+d any Stata regression; mht_cost_estimate recovers cost parameters
+d from project-level data; mht_table reproduces Table 1 of the
+d paper. Reference: arXiv:2104.13367. 
+d
+d KW: hypothesis testing
+d KW: multiple hypotheses 
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20260619
+d
+d Author: Davide Viviano ,  Harvard University
+d Support: email dviviano@@fas.harvard.edu
+d
+d Author: Kaspar Wuthrich,  Department of Economics, University of Michigan
+d Support: email kasparwu@@umich.edu
+d
+d Author: Paul Niehaus,  UC San Diego
+d Support: email pniehaus@@ucsd.edu
+d
+d Author: Erick Rosas Lopez,   UC San Diego
+d Support: email erosaslpez@@ucsd.edu
+d
+f mht_cost_estimate.ado
+f mht_critical.ado
+f mht_est.ado
+f mht_table.ado
+f mht_test.ado
+f mht_cost_estimate.sthlp
+f mht_critical.sthlp
+f mht_est.sthlp
+f mht_table.sthlp
+f mht_test.sthlp
+f mht_example.do

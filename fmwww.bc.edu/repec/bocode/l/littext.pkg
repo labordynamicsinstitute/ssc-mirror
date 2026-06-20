@@ -1,0 +1,45 @@
+d 'LITTEXT': module to automate construct discovery and relationship inference from an academic text
+d
+d      littext extracts candidate construct relationships from an
+d unstructured corpus of    academic text (titles, abstracts, full
+d texts) or other research text such as interview    transcripts,
+d consumer reviews, and social media comments. It is intended for
+d the	 exploratory researcher who has assembled a large corpus
+d and wants to generate candidate    relationships of the form "X
+d is associated with Y", "X moderates the effect of Z on Y",   
+d etc., that can then be hand-curated into a formal, systematic
+d literature review coding    scheme. 
+d
+d KW: construct discovery
+d KW: text processing
+d
+d Requires: Stata version 19 and Python packages spacy, sentence-transformers, hdbscan, scikit-learn, umap-learn, networkx, pandas, and numpy
+d
+d Distribution-Date: 20260619
+d
+d Author:  Nebojsa S. Davcik,   EM Normandie Business School, Oxford, UK
+d Support: email davcik@@live.com
+d
+f litt.ado
+f littext.ado
+f littext_cleaners.py
+f littext_cluster.py
+f littext_embed.py
+f littext_env.py
+f littext_extract.py
+f littext_hierarchy.py
+f littext_io.py
+f littext_pipeline.py
+f littext_relate.py
+f littext_run.py
+f littext_state.py
+f littext_viz.py
+f litt.sthlp
+f littext.sthlp
+f ../_/_littext_analyze.ado
+f ../_/_littext_example.ado
+f ../_/_littext_export.ado
+f ../_/_littext_graph.ado
+f ../_/_littext_install.ado
+f ../_/_littext_resolve.ado
+f littext_example.dta
