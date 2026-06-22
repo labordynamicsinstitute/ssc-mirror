@@ -1,4 +1,4 @@
-*! version 2.0  28nov2025
+*! version 2.1  16jun2026
 *! Bivariate SROC plots for diagnostic test accuracy meta-analysis
 capture program drop midas_bvsroc
 
@@ -202,13 +202,15 @@ program define midas_bvsroc, rclass byable(recall) sortpreserve
 			}
 			local pregion `"(line `PBsn' `PBsp', `fshade')"'
 			local legend `"`legend' label(`li' "`level'% Prediction Region")"'
-			local order "`order' `li++'"
+			local order "`order' `li'"
+			local ++li
 		}
 		else if missing("`pregion'") & !missing("`pellipse'") {
 			local clpcw2 "clpat(shortdash) clc(green) clw(medium)"
 			local pellipse `"(line `PBsn' `PBsp', `clpcw2')"'
 			local legend `"`legend' label(`li' "`level'% Prediction Ellipse")"'
-			local order "`order' `li++'"
+			local order "`order' `li'"
+			local ++li
 		}
 
 		// Confidence region/ellipse
@@ -221,13 +223,15 @@ program define midas_bvsroc, rclass byable(recall) sortpreserve
 			}
 			local cregion `"(line `CBsens' `CBspec', `hshade')"'
 			local legend `"`legend' label(`li' "`level'% Confidence Region")"'
-			local order "`order' `li++'"
+			local order "`order' `li'"
+			local ++li
 		}
 		else if missing("`cregion'") & !missing("`cellipse'") {
 			local clpcw1 "clpat(dot) clc(blue) clw(medium)"
 			local cellipse `"(line `CBsens' `CBspec', `clpcw1')"'
 			local legend `"`legend' label(`li' "`level'% Confidence Ellipse")"'
-			local order "`order' `li++'"
+			local order "`order' `li'"
+			local ++li
 		}
 
 		// Observed data points
@@ -240,7 +244,11 @@ program define midas_bvsroc, rclass byable(recall) sortpreserve
 				local observed `"`observed' (scatter `sens' `spec', ms(i) mlabp(0) mlabel(`pid') mlabs(*.5) mlabc(black))"'
 			}
 			local legend `"`legend' label(`li' "Weighted observed data")"'
-			local order "`order' `li++'"
+			local order "`order' `li'"
+			local ++li
+			if !missing("`labeldata'") {
+				local ++li
+			}
 		}
 		else if (!missing("`data'") & missing("`weighted'")) {
 			local _ptopts = cond(!missing("`pointopts'"), "`pointopts'", "mlw(medthin) mlc(black) mfc(gs12) msize(*1.5) ms(O)")
@@ -249,7 +257,11 @@ program define midas_bvsroc, rclass byable(recall) sortpreserve
 				local observed `"`observed' (scatter `sens' `spec', ms(i) mlabp(0) mlabel(`pid') mlabs(*.5) mlabc(black))"'
 			}
 			local legend `"`legend' label(`li' "Observed data")"'
-			local order "`order' `li++'"
+			local order "`order' `li'"
+			local ++li
+			if !missing("`labeldata'") {
+				local ++li
+			}
 		}
 
 		// Summary operating point
@@ -265,7 +277,8 @@ program define midas_bvsroc, rclass byable(recall) sortpreserve
 			local _smopts = cond(!missing("`summopts'"), "`summopts'", "ms(D) msize(*1.4) mcolor(`summ')")
 			local summ `"(scatteri `mtpr' `mtnr', `_smopts')"'
 			local legend `"`legend' label(`li' "Summary Operating Point" "`snnote'" "`spnote'")"'
-			local order "`order' `li++'"
+			local order "`order' `li'"
+			local ++li
 			
 			// Store summary point
 			return scalar summ_sens = `mtpr'
@@ -284,12 +297,10 @@ program define midas_bvsroc, rclass byable(recall) sortpreserve
 			local lgnd "legend(off)"
 		}
 
-		// Ensure at least one plot element for twoway axis initialization
-		local _smopts2 = cond(!missing("`summopts'"), "`summopts'", "ms(D) msize(*1.4) mcolor(black)")
-		local baseplot `"(scatteri `mtpr' `mtnr', `_smopts2')"'
+
 		// Create the plot
 		#delimit;
-		nois twoway `baseplot' `pregion' `pellipse' `cregion' `cellipse' `observed' `summ', 
+		nois twoway `pregion' `pellipse' `cregion' `cellipse' `observed' `summ', 
 			`lgnd'
 			xsc(reverse) ysc(range(0 1))  
 			xla(0(0.1)1, nogrid format(%3.1f))

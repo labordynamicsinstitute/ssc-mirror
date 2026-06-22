@@ -320,6 +320,7 @@ p mycd10 module to process ICD-10 diagnosis and procedure codes
 p mycolours module for setting a palette of colours through local macros
 p mydatelabels module to generate axis labels with a label every time a component changes
 p myedit module to provide smart Stata ado-file editor
+p myinterval module to compute confidence intervals for the mean using the t-distribution
 p mylabels module for axis labels or ticks on transformed scales or for daily dates
 p mypkg module to inform on packages installed over net
 p myrank module to generate axis variable base on ranks 

@@ -1,4 +1,4 @@
-*! version 2.0.0  14jun2026  Ben Jann
+*! version 2.0.1  20jun2026  Ben Jann
 
 program _mklegend, rclass
     version 14
@@ -39,7 +39,7 @@ program _mklegend, rclass
     }
     
     // get limits of plotregion from graph
-    parse_graph "`graph'" `subgr' // returns Ymin Ymax, Xmin, Xmax
+    parse_graph "`graph'" "`subgr'" // => graph subgr grfam Ymin Ymax Xmin Xmax
     local Yr = (`Ymax' - `Ymin')
     local Xr = (`Xmax' - `Xmin')
     if `Y'>=.  local Y  = `Ymin' + `y' * `Yr' / 100
@@ -117,7 +117,10 @@ program _mklegend, rclass
     }
     
     // return result
-    return local legend `"`legend'"'
+    return local graphfamily `"`grfam'"'
+    return local subgraphs   `"`subgr'"'
+    return local graphname   `"`graph'"'
+    return local legend      `"`legend'"'
 end
 
 program parse_topts
@@ -128,12 +131,16 @@ program parse_topts
 end
 
 program parse_graph
-    gettoken name 0 : 0
-    gettoken plot 0 : 0
-    if `"`name'"'=="" {
-        local name `"`._Gr_Global.current_graph'"'
-        if `"`name'"'=="" { // no graph available
+    gettoken graph 0 : 0
+    gettoken plots 0 : 0
+    gettoken plot    : plots
+    if `"`graph'"'=="" {
+        local graph `"`._Gr_Global.current_graph'"'
+        if `"`graph'"'=="" { // no graph available
             di as txt "(no graph found; assuming range 0 to 100 for both axes)"
+            c_local graph ""
+            c_local subgr ""
+            c_local grfam ""
             c_local Ymin 0
             c_local Ymax 100
             c_local Xmin 0
@@ -142,57 +149,60 @@ program parse_graph
         }
     }
     // obtain defaults from graph
-    capt classutil d `name'
+    capt classutil d `graph'
     if _rc {
-        di as err `"graph `name' not found"'
+        di as err `"graph `graph' not found"'
         exit 111
     }
     if "`plot'"!="" {
-        capt classutil d `name'.graphs[`plot']
+        capt classutil d `graph'.graphs[`plot']
         if _rc {
             di as err `"subgraph `plot' not found"'
             exit 111
         }
-        local grtype `"`.`name'.graphs[`plot'].graphfamily'"'
+        local grtype `"`.`graph'.graphs[`plot'].graphfamily'"'
         if `"`grtype'"'!="twoway" {
             di as err `"subgraph `plot' not twoway"'
             exit 498
         }
     }
     else {
-        local grtype `"`.`name'.graphfamily'"'
+        local grtype `"`.`graph'.graphfamily'"'
         if `"`grtype'"'!="twoway" {
             local plots
-            local nplots `"`.`name'.n'"'
+            local nplots `"`.`graph'.n'"'
             capt confirm integer number `nplots'
             if _rc==0 {
                 forv plot = 1/`nplots' {
-                    if `"`.`name'.graphs[`plot'].graphfamily'"'=="twoway" {
+                    if `"`.`graph'.graphs[`plot'].graphfamily'"'=="twoway" {
                         local plots `plots' `plot'
                     }
                 }
             }
             if "`plots'"=="" {
-                di as err "no twoway subgraphs found in `name'"
+                di as err "no twoway subgraphs found in `graph'"
                 exit 111
             }
             gettoken plot : plots
         }
     }
-    if "`plot'"=="" local Name `name'
-    else            local Name `name'.graphs[`plot']
+    if "`plot'"=="" local Graph `graph'
+    else            local Graph `graph'.graphs[`plot']
     foreach Z in Y X {
         local z = strlower("`Z'")
-        local `z'rev `.`Name'.plotregion1.`z'scale.reverse.istrue'
+        local `z'rev `.`Graph'.plotregion1.`z'scale.reverse.istrue'
         if `"``z'rev'"'=="1" {
-            c_local `Z'min `.`Name'.plotregion1.`z'scale.curmax'
-            c_local `Z'max `.`Name'.plotregion1.`z'scale.curmin'
+            c_local `Z'min `.`Graph'.plotregion1.`z'scale.curmax'
+            c_local `Z'max `.`Graph'.plotregion1.`z'scale.curmin'
         }
         else {
-            c_local `Z'min `.`Name'.plotregion1.`z'scale.curmin'
-            c_local `Z'max `.`Name'.plotregion1.`z'scale.curmax'
+            c_local `Z'min `.`Graph'.plotregion1.`z'scale.curmin'
+            c_local `Z'max `.`Graph'.plotregion1.`z'scale.curmax'
         }
     }
+    c_local graph "`graph'"
+    c_local subgr "`plots'"
+    c_local grfam "`.`graph'.graphfamily'"
 end
 
 program parse_frame

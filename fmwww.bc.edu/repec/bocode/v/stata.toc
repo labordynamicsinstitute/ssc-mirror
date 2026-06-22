@@ -14,6 +14,7 @@ p vam module to compute teacher value-added measures
 p vanelteren module to perform van Elteren's test  (generalized Wilcoxon-Mann-Whitney ranksum test)
 p var_nr module to estimate set identified SVARS 
 p varcase module to toggle the case of variable names
+p varck module to check existence of variables in Stata memory
 p vardistinct module to generate a variable representing the number(s) of distinct observations or values
 p variog module to calculate and graph semi-variograms 
 p varlab module to save and load variable labels

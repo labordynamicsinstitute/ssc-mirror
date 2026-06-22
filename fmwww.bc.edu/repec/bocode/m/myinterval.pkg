@@ -1,0 +1,26 @@
+d 'MYINTERVAL': module to compute confidence intervals for the mean using the t-distribution
+d
+d	 myinterval computes confidence intervals for the
+d population mean of each variable in varlist, using the   
+d Student's t distribution.  This is appropriate when the
+d population variance is unknown and the sample size	is small,
+d or when exact t-based inference is desired. 
+d
+d KW: confidence interval
+d KW: mean
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20260621
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+d Author: Chen Liwen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+f myinterval.ado
+f myinterval.sthlp

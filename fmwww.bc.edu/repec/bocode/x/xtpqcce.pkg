@@ -1,0 +1,30 @@
+d 'XTPQCCE': module providing panel quantile CCE mean-group estimators (QCCEMG & CCEMG-CSQR)
+d
+d    xtpqcce estimates heterogeneous panel quantile regression
+d models with unobserved common factors (interactive fixed effects)
+d and cross-sectional dependence, using the Common Correlated
+d Effects (CCE) approach of Pesaran (2006): each unit's quantile
+d regression is augmented with cross-sectional averages of the
+d dependent variable and regressors (and their lags) to proxy the
+d latent factors, and the unit-level slopes are averaged into a
+d mean-group estimator reported across quantiles. 
+d
+d KW:  panel data
+d KW: quantile estimation
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20260621
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtpqcce.ado
+f xtpqcce.sthlp
+f xtpqcce_example.do
+f xtpqcce_graph.ado
+f xtpqcce_postestimation.sthlp
+f ../_/_xtpqcce_csqr.ado
+f ../_/_xtpqcce_ebuild.ado
+f ../_/_xtpqcce_qmg.ado
+f ../l/lxtpqcce.mlib

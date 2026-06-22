@@ -1,0 +1,33 @@
+d 'VARCK': module to check existence of variables in Stata memory
+d
+d	 varck checks whether specified variables exist in the
+d dataset in memory.  It handles single or multiple    variables,
+d prints color-coded bilingual output (Chinese / English), and is
+d tailored for interactive data    exploration in accounting
+d empirical research. 
+d
+d KW: data management
+d KW: variable names
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260621
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Yang Lu,  Anhui University of Technology
+d Support: email  1026835594@@qq.com
+d
+d Author:   Hu Fangfang,  Wanjiang University of Technology
+d Support: email    huff470@@163.com
+d
+d Author: Chen Liwen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+f varck.ado
+f varck.sthlp
+f ../s/sunny_varck.do
