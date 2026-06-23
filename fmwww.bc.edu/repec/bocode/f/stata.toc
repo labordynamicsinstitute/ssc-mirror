@@ -76,6 +76,7 @@ p floattolong module to recast variables from float to long storage type
 p florindjp module to create a flower plot to visualize indicators
 p flowchart module to generate subject disposition flow diagram figures in LaTeX using PGF/TikZ to include in manuscripts
 p flower module to draw sunflower plots
+p fm module to manage file classifications
 p fmiss module to identify variables with problematic missing values 
 p fmlogit module fitting a fractional multinomial logit model by quasi maximum likelihood
 p fmm module to estimate finite mixture models

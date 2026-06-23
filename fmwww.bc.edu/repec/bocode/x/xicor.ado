@@ -1,4 +1,4 @@
-*! version 1.0.0  19may2026
+*! version 1.0.1  22jun2026
 program xicor , rclass
     
     version 16.1
@@ -353,7 +353,7 @@ void xicor_u::return_pvalue()
     
     st_matrix("r(xi_pvalue)",colshape((xi,pvalue,J(k,k,.z)),k),"hidden")
     st_matrixcolstripe("r(xi_pvalue)",(J(k,1,""),varlist'))
-    st_matrixrowstripe("r(xi_pvalue)",(J(3*k,1,""),colshape((varlist',J(2,k,"_")),1)))
+    st_matrixrowstripe("r(xi_pvalue)",(J(3*k,1,""),colshape((varlist',J(k,2,"_")),1)))
     
     st_matrix("r(tau2)",tau2,"hidden")
     st_matrixcolstripe("r(tau2)",(J(k,1,""),varlist'))
@@ -428,6 +428,7 @@ exit
 /*  _________________________________________________________________________
                                                               version history
 
+1.0.1   22jun2026   bug fix: option p-value with more than two variables
 1.0.0   19may2026   complete rewrite
                     reproducible results, conditional on c(rngstate)
                     new options `pvalue`, `normalize`, `rseed()`, `format()`

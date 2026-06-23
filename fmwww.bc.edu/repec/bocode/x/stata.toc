@@ -128,6 +128,7 @@ p xtmoran module to calculate Moran's I and Moran's Ii statistics for panel data
 p xtmrho module to calculate intra-class correlations after xtmixed
 p xtmulticointgrat module for panel multicointegration testing with cross-section independence or approximate common factors
 p xtnondynthreshsfa module to estimate Threshold Effects in Non-Dynamic Panel Data Stochastic Frontier Models
+p xtnonlincoint module providing nonlinear panel cointegration tests robust to structural breaks and cross-sectional dependence
 p xtnptimevar module to estimate non-parametric time-varying coefficients panel data models with fixed effects
 p xtnumfac module to estimate the number of factors in panel data
 p xtoos module for evaluating the out-of-sample prediction performance of panel-data models

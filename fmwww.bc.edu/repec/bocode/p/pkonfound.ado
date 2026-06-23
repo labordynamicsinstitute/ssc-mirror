@@ -3149,8 +3149,11 @@ program define test_VAM, rclass
         exit 198
     }
     /* NEW: Under-identification check */
-    if (est_eff >= replace_stu) & (replace_stu > eff_thr) {
-        di as error "The est_eff >= replace_stu > eff_thr. Therefore, one would have to replace more than the entire sample to reduce the VAM below the threshold. In this context the replacement % is greater than 1 and is under identified."
+	if (est_eff >= replace_stu) & (replace_stu > eff_thr) {
+        di as error "The est_eff >= replace_stu > eff_thr. Therefore, one would have to"
+        di as error "replace more than the entire sample to reduce the VAM below the"
+        di as error "threshold. In this context the replacement % is greater than 1 and"
+        di as error "is under identified."
         exit 198
     }
 
@@ -3167,8 +3170,8 @@ program define test_VAM, rclass
     scalar signed_peer = cond(below, -abs(raw_peer), abs(raw_peer))
 
 	/* Peer-effect scenario summary */
-	local peer_abs = string(abs(signed_peer), "%9.3f")
-	local peer_signed = string(signed_peer, "%9.3f")
+	local peer_abs = trim(string(abs(signed_peer), "%9.3f"))
+	local peer_signed = trim(string(signed_peer, "%9.3f"))
 	
     /* 4) Labels */
     if (below) {
@@ -3187,6 +3190,7 @@ program define test_VAM, rclass
     /* 5) Build graph data quietly */
     quietly {
         preserve
+		clear
         set obs 200
         gen double p_seq = 0.01 + (_n-1)*(0.4999-0.01)/199
         gen double y_abs  = abs(cond(below, ///
@@ -3197,50 +3201,77 @@ program define test_VAM, rclass
             (line    y_abs p_seq,    lcolor(navy) lwidth(medium)) ///
             (scatteri `=abs(signed_peer)' `=peer_effect_pi',    ///
                 mcolor(red)       msymbol(O)    msize(medsmall)), ///
-            title("Size of peer effect by proportion to be replaced (pi)", size(medsmall)) ///
+            title("Size of peer effect by proportion to be replaced (pi_p)", size(medsmall)) ///
             ytitle("Absolute value of the peer effect") ///
             xtitle("Proportion to be replaced") ///
             legend(off) name(peerplot, replace)
         restore
     }
 
-    /* 6) Narrative output: exact R-style and order */
-        di "This is beta version of the VAM function."
+	/* 6) Narrative output */
+    local s_est     = trim(string(est_eff, "%6.3f"))
+    local s_thr     = trim(string(eff_thr, "%4.2f"))
+    local s_rep     = trim(string(replace_stu, "%4.2f"))
+    local s_pct     = trim(string(round(100*pi_replace)))
+    local s_nobs    = trim(string(n_obs, "%9.0f"))
+    local s_rir     = trim(string(rir_count, "%9.0f"))
+    local s_peerpct = trim(string(round(100*peer_effect_pi)))
+
+    di "This is beta version of the VAM function."
     di ""
 
-    di "The reported VAM score is " %6.3f est_eff ///
-       " with evaluation threshold of " %4.2f eff_thr "."
-    di "The VAM score is " "`dir_word'" " the threshold. Therefore, the RIR indicates replacement required to " "`action_word'" " the VAM " "`move_word'" " the threshold."
+    di "The reported VAM score is `s_est' with evaluation threshold of `s_thr'."
+    di "The VAM score is `dir_word' the threshold. Therefore, the RIR indicates"
+    di "replacement required to `action_word' the VAM `move_word' the threshold."
     di ""
 
     /* Replacement scenario summary */
     if (below) {
-        di "If there are no peer effects, then " as result rir_count as text " (" as result round(100*pi_replace) as text "%) students must be replaced with students whose score is " as result %4.2f replace_stu as text " (as specified) to move the VAM " as result "`move_word'" as text " the threshold (RIR = " as result round(100*pi_replace) as text "% * " as result n_obs as text " = " as result rir_count as text ")."
+        di "If there are no peer effects, then `s_rir' (`s_pct'%) students must be"
+        di "replaced with students whose score is `s_rep' (as specified) to move the"
+        di "VAM `move_word' the threshold (RIR = `s_pct'% * `s_nobs' = `s_rir')."
     }
     else {
-        di "If there are no peer effects, then " as result rir_count as text " (" as result round(100*pi_replace) as text "%) students whose score is " as result %4.2f replace_stu as text " (as specified) must be replaced with students whose score is at the threshold level " as result %4.2f eff_thr as text " to move the VAM " as result "`move_word'" as text " the threshold (RIR = " as result round(100*pi_replace) as text "% * " as result n_obs as text " = " as result rir_count as text ")."
+        di "If there are no peer effects, then `s_rir' (`s_pct'%) students whose"
+        di "score is `s_rep' (as specified) must be replaced with students whose"
+        di "score is at the threshold level `s_thr' to move the VAM `move_word' the"
+        di "threshold (RIR = `s_pct'% * `s_nobs' = `s_rir')."
     }
     di ""
 
-    /* Peer‐effect scenario summary */
-    di "If all of the bias comes from peer spillover effects, and we assume " round(100*peer_effect_pi) "% (as specified) students are " "`bias_word'" " the others, then a peer effect of " `peer_abs' " is needed to change the evaluation."
-    display "Each replaced student must have a " _continue
-    display `peer_signed' _continue
-    display " effect (compared to their replacements) on each of the non-replaced students to cross the threshold for evaluation."
+    /* Peer-effect scenario summary */
+    di "If all of the bias comes from peer spillover effects, and we assume"
+    di "`s_peerpct'% (as specified) students are `bias_word' the others, then a"
+    di "peer effect of `peer_abs' is needed to change the evaluation."
+    di "Each replaced student must have a `peer_signed' effect (compared to"
+    di "their replacements) on each of the non-replaced students to cross the"
+    di "threshold for evaluation."
     di ""
 
-    di "See the figure for combinations of size of peer effect by proportion to be replaced (pi) to change the evaluation. The red point marks the value reported above."
+    di "See the figure for combinations of size of peer effect by proportion"
+    di "to be replaced (pi_p) to change the evaluation. The red point marks the"
+    di "value reported above."
     di ""
 
-    di "The calculations and interpretation depend on your VAM model specification and estimation. See the paper for more details."
+    di "The calculations and interpretation depend on your VAM model"
+    di "specification and estimation. See the paper for more details."
+    di ""
+
+    di "See Lin et al. (2026) for a description of the method."
+    di ""
+    di "Citation: Lin, Q., Frank, K. A., and Maroulis, S. J. (2026)."
+    di "Application of Sensitivity Analysis for Teacher Effectiveness"
+    di "Evaluation in the Context of Accountability."
+    di "Journal of Research on Educational Effectiveness, 1-28."
+    di "https://doi.org/10.1080/19345747.2026.2658056"
     di ""
 
     graph display peerplot
 
     /* 7) Return values */
-    return scalar pi_replace  = pi_replace
-    return scalar rir_count   = rir_count
-    return scalar peer_effect = signed_peer
+    return scalar pi_replace  = scalar(pi_replace)
+    return scalar rir_count   = scalar(rir_count)
+    return scalar peer_effect = scalar(signed_peer)
 	
 	* ---- Examples ----
 	*
@@ -3514,6 +3545,426 @@ program define delta_statsig, rclass
     return local  status       "ok"
 end
 
+// #33
+// sensitivity_rir: Unified Robustness of Inference to Replacement (RIR)
+// Supports scale("t") [default, LM only] and scale("r") [LM or GLM].
+// Call via pkonfound ..., indx("RIR") [scale("t"|"r")] [link(logit|probit)]
+// Mirrors the R RIR engine test_correlation_rir().
+// See that file for full methodological notes.
+capture program drop sensitivity_rir
+program define sensitivity_rir, rclass
+version 16.0
+
+syntax anything [ , SCALE(string) LINK(string) ALPHA(real 0.05) TAILS(integer 2) NU(real 0) ]
+
+local est_eff      : word 1 of `anything'
+local std_err      : word 2 of `anything'
+local n_obs        : word 3 of `anything'
+local n_covariates : word 4 of `anything'
+
+// Validate inputs
+if missing(real("`est_eff'")) | missing(real("`std_err'")) | ///
+   missing(real("`n_obs'"))   | missing(real("`n_covariates'")) {
+    di as error "RIR requires est_eff, std_err, n_obs, and n_covariates."
+    exit 198
+}
+local est_eff      = real("`est_eff'")
+local std_err      = real("`std_err'")
+local n_obs        = real("`n_obs'")
+local n_covariates = real("`n_covariates'")
+
+if (`std_err' <= 0) {
+    di as error "std_err must be greater than zero."
+    exit 198
+}
+if (`n_obs' < 2) {
+    di as error "n_obs must be at least 2."
+    exit 198
+}
+if (!inlist(`tails', 1, 2)) {
+    di as error "tails() must be 1 or 2."
+    exit 198
+}
+if ("`link'" != "" & !inlist("`link'", "logit", "probit")) {
+    di as error "link() must be logit or probit (for GLM), or omitted (for LM)."
+    exit 198
+}
+
+// Default scale is "t"
+if "`scale'" == "" local scale "t"
+if !inlist("`scale'", "t", "r") {
+    di as error "scale() must be t (t-statistic scale, LM only) or r (correlation scale, LM/GLM)."
+    exit 198
+}
+
+// Determine pathway: LM (t-distribution) vs GLM (Wald z)
+local is_glm = ("`link'" != "")
+
+// scale="t" is only available for LM
+if ("`scale'" == "t" & `is_glm' == 1) {
+    di as error "scale(t) is only available for linear models. For GLM, use scale(r)."
+    exit 198
+}
+
+// Degrees of freedom: residual df = n - (n_covariates + 1 focal predictor) - 1 intercept
+// Mirrors R: df = max(1, n_obs - n_covariates - 2)
+local df = max(1, `n_obs' - `n_covariates' - 2)
+
+// Observed test statistic
+local stat_obs = (`est_eff' - `nu') / `std_err'
+
+// Critical value and observed p-value
+if (`is_glm' == 0) {
+    // LM: t-distribution
+    local stat_crit = invttail(`df', `alpha' / `tails')
+    if (`tails' == 2) {
+        local p_obs = 2 * ttail(`df', abs(`stat_obs'))
+    }
+    else {
+        local p_obs = ttail(`df', abs(`stat_obs'))
+    }
+    local stat_label "t"
+    local r_interp   "partial correlation"
+    local model_desc "a linear model (OLS)"
+}
+else {
+    // GLM: Wald z (normal approximation)
+    local stat_crit = invnormal(1 - `alpha' / `tails')
+    if (`tails' == 2) {
+        local p_obs = 2 * normal(-abs(`stat_obs'))
+    }
+    else {
+        local p_obs = normal(-abs(`stat_obs'))
+    }
+    local stat_label "z"
+    local r_interp   "correlation-equivalent index"
+    local model_desc "a generalized linear model (GLM, `link' link)"
+}
+
+// Convert to correlation scale: r = stat / sqrt(stat^2 + df)
+// Used by scale("r") as primary metric; computed for both scales as reference.
+local r_obs  = `stat_obs'  / sqrt(`stat_obs'^2  + `df')
+local r_crit = `stat_crit' / sqrt(`stat_crit'^2 + `df')
+
+// Significance flag
+local is_sig = (`p_obs' < `alpha')
+
+// Small epsilon guard against division by zero
+local eps = 1e-300
+
+// RIR on correlation scale (pi_r / k_r) -- primary for scale("r")
+if (`is_sig' == 1) {
+    local pi_r = max(0, min(1, 1 - abs(`r_crit') / max(abs(`r_obs'), `eps')))
+}
+else {
+    local pi_r = max(0, min(1, 1 - max(abs(`r_obs'), `eps') / max(abs(`r_crit'), `eps')))
+}
+local k_r = ceil(`n_obs' * `pi_r')
+
+// RIR on t/z scale (pi_stat / k_stat)
+// For scale("t"): this is the primary metric (identical to beta-metric RIR for LM).
+// For scale("r") + GLM: reported as a conversion-quality diagnostic (z-based reference).
+if (`is_sig' == 1) {
+    local pi_stat = max(0, min(1, 1 - abs(`stat_crit') / max(abs(`stat_obs'), `eps')))
+}
+else {
+    local pi_stat = max(0, min(1, 1 - max(abs(`stat_obs'), `eps') / max(abs(`stat_crit'), `eps')))
+}
+local k_stat = ceil(`n_obs' * `pi_stat')
+
+// Set primary metric based on scale
+if "`scale'" == "t" {
+    local pi_primary = `pi_stat'
+    local k_primary  = `k_stat'
+}
+else {
+    local pi_primary = `pi_r'
+    local k_primary  = `k_r'
+}
+
+// Action and replacement language
+if (`is_sig' == 1) {
+    local action_clause    "nullify the inference (lose statistical significance)"
+    local replacement_phrase "data points for which the effect is `nu'."
+}
+else {
+    local action_clause    "sustain an inference of an effect (reach statistical significance)"
+    local replacement_phrase "data points at the threshold for statistical significance."
+}
+
+// -------------------------------------------------------------------------
+// Output
+// -------------------------------------------------------------------------
+
+// Title (scale-conditional)
+if "`scale'" == "t" {
+    dis "Robustness of Inference to Replacement (RIR):"
+}
+else {
+    dis "Correlation-Based Robustness of Inference to Replacement (RIR):"
+}
+dis ""
+
+// Intro paragraph
+dis "This function calculates the number of data points that would need to be"
+dis "replaced to `action_clause', based on `model_desc'."
+dis "Replacement is assumed to occur uniformly across the distribution of observations."
+dis ""
+
+// Formula and where-block (scale-conditional)
+if "`scale'" == "t" {
+    // t-scale path
+    // delta (effect-scale) components; equivalent to the t-scale fraction
+    local delta_hat    = `est_eff' - `nu'
+    local delta_thresh = `stat_crit' * `std_err'
+    if (`is_sig' == 1) {
+        dis "The closed-form fraction on the t-statistic scale is"
+        dis "  pi_t = (|delta_hat| - |delta_#|) / |delta_hat| = (|t_obs| - |t_crit|) / |t_obs|"
+        dis "       = (" string(abs(`delta_hat'), "%9.3f") " - " ///
+            string(`delta_thresh', "%9.3f") ") / " ///
+            string(abs(`delta_hat'), "%9.3f") " = (" ///
+            string(abs(`stat_obs'), "%9.3f") " - " ///
+            string(abs(`stat_crit'), "%9.3f") ") / " ///
+            string(abs(`stat_obs'), "%9.3f")
+        dis "       = " string(`pi_stat', "%9.3f") "."
+    }
+    else {
+        dis "The closed-form fraction on the t-statistic scale is"
+        dis "  pi_t = (|delta_#| - |delta_hat|) / |delta_#| = (|t_crit| - |t_obs|) / |t_crit|"
+        dis "       = (" string(`delta_thresh', "%9.3f") " - " ///
+            string(abs(`delta_hat'), "%9.3f") ") / " ///
+            string(`delta_thresh', "%9.3f") " = (" ///
+            string(abs(`stat_crit'), "%9.3f") " - " ///
+            string(abs(`stat_obs'), "%9.3f") ") / " ///
+            string(abs(`stat_crit'), "%9.3f")
+        dis "       = " string(`pi_stat', "%9.3f") "."
+    }
+    dis "where:"
+    dis "  pi_t = replacement fraction on the t-statistic scale;"
+    dis "  delta_hat = estimated effect (est_eff - nu):"
+    dis "              delta_hat = " string(`delta_hat', "%9.3f") ";"
+    dis "  delta_# = effect threshold for significance (t_crit * std_err):"
+    dis "            delta_# = " string(`delta_thresh', "%9.3f") ";"
+    dis "  t_obs = observed t-statistic (df = `df'):"
+    dis "          t_obs = (est_eff - nu) / std_err = " string(`stat_obs', "%9.3f") ";"
+    dis "  t_crit = critical t-value at alpha = `alpha' (t-distribution, df = `df'):"
+    dis "           t_crit = " string(`stat_crit', "%9.3f") "."
+    dis ""
+    dis "Using a threshold of " string(abs(`stat_crit'), "%9.3f") ///
+        " for statistical significance (alpha = `alpha'),"
+}
+else {
+    // r-scale path
+    if (`is_sig' == 1) {
+        dis "The closed-form fraction on the correlation scale is"
+        dis "  pi_r = (|r_obs| - |r_crit|) / |r_obs|"
+        dis "       = (" string(abs(`r_obs'), "%9.3f") " - " ///
+            string(abs(`r_crit'), "%9.3f") ") / " ///
+            string(abs(`r_obs'), "%9.3f")
+        dis "       = " string(`pi_r', "%9.3f") "."
+    }
+    else {
+        dis "The closed-form fraction on the correlation scale is"
+        dis "  pi_r = (|r_crit| - |r_obs|) / |r_crit|"
+        dis "       = (" string(abs(`r_crit'), "%9.3f") " - " ///
+            string(abs(`r_obs'), "%9.3f") ") / " ///
+            string(abs(`r_crit'), "%9.3f")
+        dis "       = " string(`pi_r', "%9.3f") "."
+    }
+    dis "where:"
+    dis "  pi_r = replacement fraction on the correlation scale;"
+    if (`is_glm' == 0) {
+        dis "  r_obs = observed partial correlation implied by t (df = `df'):"
+        dis "          r_obs = t_obs / sqrt(t_obs^2 + df) = " string(`r_obs', "%9.3f") ";"
+        dis "  r_crit = critical partial correlation at alpha = `alpha' (t-distribution, df = `df'):"
+        dis "           r_crit = t_crit / sqrt(t_crit^2 + df) = " string(`r_crit', "%9.3f") "."
+    }
+    else {
+        dis "  r_obs = observed `r_interp' implied by the Wald z-statistic (eff. df = `df'):"
+        dis "          r_obs = z_obs / sqrt(z_obs^2 + df) = " string(`r_obs', "%9.3f") ";"
+        dis "  r_crit = critical `r_interp' at alpha = `alpha' (standard normal):"
+        dis "           r_crit = z_crit / sqrt(z_crit^2 + df) = " string(`r_crit', "%9.3f") "."
+    }
+    dis ""
+    dis "Using a threshold of " string(abs(`r_crit'), "%9.3f") ///
+        " for statistical significance (alpha = `alpha'),"
+}
+
+// Plain-language summary (shared structure; uses pi_primary and k_primary)
+dis string(round(100 * `pi_primary', 0.001), "%9.3f") ///
+    "% of the observed estimate of `est_eff' " ///
+    cond(`is_sig', "would have to be due to bias", ///
+                   "would need to be strengthened by replacement") "."
+if (`is_sig' == 1) {
+    dis "to nullify the inference. " _c
+}
+dis "This implies replacing `k_primary' of `n_obs' observations (" ///
+    string(round(100 * `pi_primary', 0.001), "%9.3f") "%) with"
+dis "`replacement_phrase'"
+dis "Thus, RIR = `k_primary'."
+dis ""
+
+// Interpretation line
+if (`is_sig' == 1) {
+    dis "That is, the RIR value represents the proportion of the data that would have"
+    dis "to be replaced with data points for which the effect is `nu' for the observed"
+    dis "relationship to lose statistical significance."
+}
+else {
+    dis "This RIR value represents the proportion of the data that would have to be"
+    dis "replaced with data points at the threshold for statistical significance for"
+    dis "the result to become statistically significant."
+}
+
+// GLM-only z-based reference (conversion-quality diagnostic; scale="r" only)
+if (`is_glm' == 1 & "`scale'" == "r") {
+    dis ""
+    dis "z-Based Reference (conversion-quality diagnostic):"
+    dis "For a GLM, the correlation-equivalent index r is derived from the Wald z via a"
+    dis "nonlinear mapping that depends on effective degrees of freedom (df = `df')."
+    dis "The z-based replacement fraction is free of this dependency:"
+    dis "  pi_z = " string(`pi_stat', "%9.3f") ",  RIR_z = `k_stat'."
+    dis "The r-based and z-based fractions converge for large samples. A large gap"
+    dis "may indicate that the r-scale compression is substantively affecting the RIR"
+    dis "estimate, and that the Wald z may also be unreliable at this sample size."
+}
+
+// Scale note
+dis ""
+if "`scale'" == "t" {
+    dis "Note: This RIR is computed via the t-statistic, which assumes a constant"
+    dis "standard error (SE) across replacement. For an RIR that accounts for SE"
+    dis "inflation due to replacement, use scale(r)."
+}
+else if (`is_glm' == 1) {
+    dis "Note: This RIR is computed by converting the Wald z-statistic to the"
+    dis "correlation scale. It accounts for SE inflation due to replacement. The"
+    dis "z-based reference above provides the unconverted RIR for comparison."
+}
+else {
+    dis "Note: This RIR is computed via the correlation scale and does not assume a"
+    dis "constant standard error (SE). It accounts for SE inflation due to replacement."
+    dis "For an RIR that assumes a constant SE across replacement, use scale(t)."
+}
+
+// Citation
+dis ""
+dis "See Frank et al. (2013) for a description of the method."
+dis ""
+dis "Citation: Frank, K.A., Maroulis, S., Duong, M., and Kelcey, B. (2013)."
+dis "What would it take to change an inference? Using Rubin's causal model to"
+dis "interpret the robustness of causal inferences."
+dis "Educational Evaluation and Policy Analysis, 35(4), 437-460."
+
+// -------------------------------------------------------------------------
+// Return scalars
+// -------------------------------------------------------------------------
+// Always returned
+return scalar df        = `df'
+return scalar stat_obs  = `stat_obs'
+return scalar stat_crit = `stat_crit'
+return scalar p_obs     = `p_obs'
+return scalar RIR       = `k_primary'
+return scalar RIR_perc  = `pi_primary'
+
+// scale("r") only: r-scale quantities
+if "`scale'" == "r" {
+    return scalar pi_r   = `pi_r'
+    return scalar r_obs  = `r_obs'
+    return scalar r_crit = `r_crit'
+}
+
+// scale("r") + GLM only: z-based reference
+if ("`scale'" == "r" & `is_glm' == 1) {
+    return scalar pi_z  = `pi_stat'
+    return scalar RIR_z = `k_stat'
+}
+
+end
+
+// #34: applicability guard
+// Emits a non-fatal note when the user supplies options that are
+// not used by the dispatched branch.
+capture program drop _pkonfound_applicability
+program define _pkonfound_applicability
+version 16.0
+syntax , ORIGcmd(string asis) BRanch(string)
+
+    if "`branch'" == "" exit 0
+
+    // All known options (must mirror pkonfound's syntax line)
+    local known_opts ///
+        sig nu onetail model_type switch_trm replace rep_0 test1 ///
+        far_bound sdx sdy rs eff_thr fr2max_multiplier fr2max alpha ///
+        tails raw_treatment_success replace_stu peer_effect_pi ///
+        lb ub indx est_eff std_err n_obs n_covariates n_treat ///
+        a1 b1 c1 d1 link scale
+
+    // Detect which option NAMES appear in the original cmdline.
+    // Each Stata option is typed as `name(...)`, so we look for
+    // `name(` preceded by a non-word char (or start). Positional
+    // arguments are not flagged (they have no name token).
+    local user_supplied ""
+    foreach o of local known_opts {
+        if regexm(`" `origcmd'"', "[^a-zA-Z0-9_]`o'\(") {
+            local user_supplied `user_supplied' `o'
+        }
+    }
+
+    // Universal options apply to every branch
+    local universal alpha sig indx model_type
+
+    // Per-branch applicable options (mirrors R .pkonfound_applicable)
+    if "`branch'" == "RIR_t" ///
+        local appl est_eff std_err n_obs n_covariates ///
+                   tails onetail nu ub lb scale
+    else if "`branch'" == "RIR_r_lm" ///
+        local appl est_eff std_err n_obs n_covariates ///
+                   tails onetail nu ub lb scale
+    else if "`branch'" == "RIR_r_glm" ///
+        local appl est_eff std_err n_obs n_covariates ///
+                   tails onetail nu ub lb scale link
+    else if "`branch'" == "ols_IT" ///
+        local appl est_eff std_err n_obs n_covariates ///
+                   tails onetail nu ub lb sdx sdy rs ///
+                   far_bound eff_thr
+    else if "`branch'" == "COP" ///
+        local appl est_eff std_err n_obs n_covariates ///
+                   tails onetail sdx sdy rs eff_thr ///
+                   fr2max fr2max_multiplier
+    else if "`branch'" == "PSE" ///
+        local appl est_eff std_err n_obs n_covariates ///
+                   sdx sdy rs eff_thr
+    else if "`branch'" == "VAM" ///
+        local appl est_eff n_obs replace_stu peer_effect_pi eff_thr
+    else if "`branch'" == "logistic" ///
+        local appl est_eff std_err n_obs n_covariates ///
+                   tails onetail nu n_treat switch_trm replace ///
+                   raw_treatment_success
+    else if "`branch'" == "two_by_two" ///
+        local appl a1 b1 c1 d1 test1 switch_trm replace
+    else exit 0
+
+    local applicable `universal' `appl'
+
+    // Set-difference: user_supplied minus applicable
+    local irrelevant ""
+    foreach o of local user_supplied {
+        local found = 0
+        foreach a of local applicable {
+            if "`o'" == "`a'" {
+                local found = 1
+                continue, break
+            }
+        }
+        if `found' == 0 local irrelevant `irrelevant' `o'
+    }
+
+    if `:word count `irrelevant'' > 0 {
+        di as txt "Note: option(s) not applicable to `branch' and ignored: `irrelevant'."
+        di as txt "      See {help pkonfound} for which options apply to each analysis."
+    }
+end
 
 // Main Function
 * pkonfound_v2 (now its most updated pkonfound) with 3 types
@@ -3550,7 +4001,9 @@ syntax [anything] [if] [in], ///
         [a1(real -98765432123456789.987654321)] ///
         [b1(real -98765432123456789.987654321)] ///
         [c1(real -98765432123456789.987654321)] ///
-        [d1(real -98765432123456789.987654321)]
+        [d1(real -98765432123456789.987654321)] ///
+		[link(string)] ///
+        [scale(string)]
 
 // replace: 0 = entire //1 = control
 // switch_trm: default = True
@@ -3565,6 +4018,29 @@ syntax [anything] [if] [in], ///
 if "`indx'" == "" {
     local indx "RIR"
 }
+
+* applicability guard (non-fatal note for inapplicable options).
+local _orig0_ap `"`0'"'
+
+* normalize indx for branch detection
+local _ix "`indx'"
+local _sc "`scale'"
+
+* determine branch (mirrors actual dispatch order in pkonfound)
+local _br ""
+if      "`_ix'" == "COP"   local _br "COP"
+else if "`_ix'" == "PSE"   local _br "PSE"
+else if "`_ix'" == "VAM"   local _br "VAM"
+else if `model_type' == 1 local _br "logistic"
+else if `model_type' == 2 | `a1' != `NA'      local _br "two_by_two"
+else if "`_ix'" == "RIR" & `eff_thr' == `NA' {
+    if      "`link'" != ""  local _br "RIR_r_glm"
+    else if "`_sc'" == "r"  local _br "RIR_r_lm"
+    else                    local _br "RIR_t"
+}
+else local _br "ols_IT"
+
+_pkonfound_applicability, origcmd(`"`_orig0_ap'"') branch("`_br'")
 
 * define raw positionals
 local p1 : word 1 of `anything'
@@ -3644,6 +4120,57 @@ if `model_type'== 0 {
         return scalar pi_replace  = `saved_pi_replace'
         return scalar rir_count   = `saved_rir_count'
         return scalar peer_effect = `saved_peer_effect'
+        exit
+    }
+	
+    // RIR with scale("t"|"r"): unified dispatch via sensitivity_rir subroutine.
+    // Default scale is "t" (t-statistic, LM only).
+    // If eff_thr is set, fall through to the existing beta-threshold path instead.
+    if ("`indx'" == "RIR" & `eff_thr' == `NA') {
+
+        if (`est_eff' == `NA' | `std_err' == `NA' | `n_obs' == `NA' | `n_covariates' == `NA') {
+            di as error "RIR requires est_eff(), std_err(), n_obs(), and n_covariates()."
+            exit 198
+        }
+
+        // Apply default scale
+        if "`scale'" == "" local scale "t"
+
+        sensitivity_rir `est_eff' `std_err' `n_obs' `n_covariates', ///
+            scale(`scale') alpha(`alpha') tails(`tails') nu(`nu') link(`link')
+
+        // Capture return values before konfound_footer clears r()
+        local saved_RIR       = r(RIR)
+        local saved_RIR_perc  = r(RIR_perc)
+        local saved_p_obs     = r(p_obs)
+        local saved_stat_obs  = r(stat_obs)
+        local saved_stat_crit = r(stat_crit)
+        local saved_df        = r(df)
+        // r-scale quantities (missing if scale="t")
+        local saved_pi_r      = r(pi_r)
+        local saved_r_obs     = r(r_obs)
+        local saved_r_crit    = r(r_crit)
+        // GLM z-based reference (missing unless scale="r" + GLM)
+        local saved_pi_z      = r(pi_z)
+        local saved_RIR_z     = r(RIR_z)
+
+        konfound_footer
+
+        return scalar RIR       = `saved_RIR'
+        return scalar RIR_perc  = `saved_RIR_perc'
+        return scalar p_obs     = `saved_p_obs'
+        return scalar stat_obs  = `saved_stat_obs'
+        return scalar stat_crit = `saved_stat_crit'
+        return scalar df        = `saved_df'
+        if (`saved_pi_r' != .) {
+            return scalar pi_r   = `saved_pi_r'
+            return scalar r_obs  = `saved_r_obs'
+            return scalar r_crit = `saved_r_crit'
+        }
+        if (`saved_pi_z' != .) {
+            return scalar pi_z  = `saved_pi_z'
+            return scalar RIR_z = `saved_RIR_z'
+        }
         exit
     }
 	
@@ -4393,7 +4920,7 @@ if `model_type'== 0 {
 					., ., `eff_cv_m3' / `se_cv_m3', `eff_cv_m3_oster' / `se_cv_m3_oster')
 
 	matrix rownames ftable = "r2" "coef_x" "se_x" "std_coef_x" "t_x" "coef_cv" "se_cv" "t_cv"
-	matrix colnames ftable = "m1:x" "m2:x,z" "m3(delta_exact):x,z,cv" "m3(delta*):x,z,cv"
+	matrix colnames ftable = "m1:x" "m2:x,z" "m3(delta_Corr):x,z,cv" "m3(delta*):x,z,cv"
 	if _N < 5{
 		quietly set obs 5
 	}
@@ -4497,7 +5024,7 @@ if `model_type'== 0 {
 	       ytitle("Scaled R2", axis(2)) ///
            xtitle("Model Label") ///
            xlabel(1 "Baseline(M1)" 2 "Intermediate(M2)" 3 "Final(M3)", axis(1)) ///
-		   legend(order(1 "Exact coef_x" 2 "Star coef_x" 6 "Exact R2"))
+		   legend(order(1 "coef_x based on delta_Corr" 2 "coef_x based on delta*" 6 "R2 (scaled)"))
 			  
 			  }
 	
@@ -4892,9 +5419,9 @@ if `model_type'== 0 {
 	else if ("`indx'" == "COP") {
 	dis "Coefficient of Proportionality (COP):"
 	dis ""
-	dis "This function calculates a correlation-based coefficient of proportionality (COP)"
-	dis "along with Oster's delta*. The correlation-based COP provides an exact measure"
-	dis "even in finite samples and does not depend on the specification of a baseline model."
+	dis "Background"
+	dis "This function calculates a correlation-based coefficient of proportionality (delta_Correlation)"
+	dis "along with Oster's delta*. The correlation-based COP does not depend on the specification of" _newline "a baseline model."
 	dis ""
 	 // Symmetry note for negative estimates
     if (`negest' == 1) {
@@ -4902,19 +5429,40 @@ if `model_type'== 0 {
         di ""
     }
 
+    dis "COP"
 	dis "The correlation-based delta (delta_Correlation) is " string(`delta_exact', "%9.3f") ", and delta* is " string(`delta_star', "%9.3f")
-    dis "(assuming no covariates in the baseline model M1), indicating a relative bias of " string(`delta_pctbias', "%9.3f") "%."
-    dis "Note that %bias = (delta* - delta) / delta."
+    dis "(assuming no covariates in the baseline model M1)."
 	dis ""
 	
+    dis "Corresponding Impact of a Confounding Variable"
+	local impact_cv  = abs(`rxcv_exact' * `rycv_exact')
+	local impact_obs = abs(`rxz' * `ryz')
+	dis "The corresponding impact (Frank, 2000) of the unobserved covariate(s) necessary"
+	dis "to satisfy the specified conditions (eff_thr = " string(`eff_thr') " and FR2max = " string(`fr2max', "%3.2f") ") is"
+	if (`impact_obs' < 1e-10) {
+	    dis "r_xcv * r_ycv = " string(abs(`rxcv_exact'), "%5.4f") " * " string(abs(`rycv_exact'), "%5.4f") " = " string(`impact_cv', "%5.4f") "."
+	    dis "The impact of observed covariates is near zero; ratio not reported."
+	}
+	else {
+	    local impact_ratio = `impact_cv' / `impact_obs'
+	    dis "r_xcv * r_ycv = " string(abs(`rxcv_exact'), "%5.4f") " * " string(abs(`rycv_exact'), "%5.4f") " = " string(`impact_cv', "%5.4f") ", which is " string(`impact_ratio'*100, "%2.0f") "% of the impact of the"
+	    dis "observed covariates (R_XZ * R_YZ = " string(abs(`rxz'), "%5.4f") " * " string(abs(`ryz'), "%5.4f") " = " string(`impact_obs', "%5.4f") ")."
+	}
+	dis ""
+	dis "Through the product r_xcv * r_ycv, Frank's impact accounts for the relationship"
+	dis "of the covariate to the outcome (Y) as well as the focal predictor (X)."
+	dis `"See the konfound command with index = "IT" for details of the Impact Threshold"'
+	dis "for a Confounding Variable (ITCV)."
+	dis ""
 	
+	dis "Threshold Based on Statistical Significance"
     // Significance-threshold COP (if available)
     if ("`sig_status'" == "ok") {
         // format df with commas
         local df_sig_fmt = string(`df_sig', "%9.0fc")
         dis "Using alpha = " string(`alpha', "%4.2f") " and df = " "`df_sig_fmt'" " (so critical r = " string(`rcrit_sig', "%9.4f") "), the delta threshold"
         dis "for statistical significance is " string(`delta_sig', "%9.3f")  "."
-        dis "This corresponds to a CV (omitted confounder) with partial correlations"
+        dis "This requires a CV (omitted confounder) with partial correlations"
         dis "r_xcv|z ~ " string(`rxcvGz_sig', "%9.4f") " (between X and CV given Z) and r_ycv|z ~ " string(`rycvGz_sig', "%9.4f") " (between Y and CV given Z)."
         dis ""
     }
@@ -4923,11 +5471,6 @@ if `model_type'== 0 {
         di ""
     }
 	
-	// Coefficients under delta_exact and delta*
-    dis "With the correlation-based delta, the coefficient of X in the final model will be " string(`eff_x_m3', "%9.3f") "."
-    dis "With delta*, the coefficient of X in the final model will be " string(`eff_x_m3_oster', "%9.3f") "."
-    dis ""
-
     // Boundary (tipping-point) regression quantities, if available
     if ("`sig_status'" == "ok") {
         dis "Using the delta threshold for statistical significance and the corresponding partial correlations,"
@@ -4937,6 +5480,15 @@ if `model_type'== 0 {
     }
 	
 	di "Include 'return list' following the pkonfound command to see more specific results" _newline "and graphic presentation of the result."
+	dis ""
+	dis "See Frank et al. (2026) for a description of the method."
+	dis ""
+	dis "Citation: Frank, K. A., Lin, Q., Maroulis, S., Dai, S., Choi, J., Jess, N.,"
+	dis "Lin, H.-C., Liu, Y., Maestrales, S., Searle, E., and Tait, J. (2026)."
+	dis "Quantifying sensitivity to selection on unobserved covariates: Recasting"
+	dis "the coefficient of proportionality within a correlational framework."
+	dis "Journal of Educational and Behavioral Statistics. Advance online publication."
+	dis "https://doi.org/10.3102/10769986261422704"
 	
 	}
 	else if ("`indx'" == "PSE") {
@@ -5003,13 +5555,13 @@ if `model_type'== 0 {
 
 	* return raw_output for test_cop
 	if ("`indx'" == "COP") {
-		return scalar max_rcvz = `max_rcvz' 
-		return scalar conditional_rir_rxygz = `cond_rir_rxyz'
-		return scalar conditional_rir_pi_rxygz = `cond_rirpi_rxyz'
-		return scalar conditional_rir_null = `cond_rir_null'
-		return scalar conditional_rir_pi_null = `cond_rirpi_null'
-		return scalar conditional_rir_fixed_y = `cond_rir_fixedy'
-		return scalar conditional_rir_pi_fixed_y = `cond_rirpi_fixedy'
+		*return scalar max_rcvz = `max_rcvz' 
+		*return scalar conditional_rir_rxygz = `cond_rir_rxyz'
+		*return scalar conditional_rir_pi_rxygz = `cond_rirpi_rxyz'
+		*return scalar conditional_rir_null = `cond_rir_null'
+		*return scalar conditional_rir_pi_null = `cond_rirpi_null'
+		*return scalar conditional_rir_fixed_y = `cond_rir_fixedy'
+		*return scalar conditional_rir_pi_fixed_y = `cond_rirpi_fixedy'
 		return scalar var_cv = `sdcv'^2
 		return scalar var_x = `sdx'^2
 		return scalar var_y = `sdy'^2
@@ -5023,7 +5575,7 @@ if `model_type'== 0 {
 			return scalar rxcvGz_sig = .
 			return scalar delta_sig = .
 		}
-		return scalar delta_pctbias = `delta_pctbias'
+		*return scalar delta_pctbias = `delta_pctbias'
 		return scalar delta_Correlation = `delta_exact'
 		return scalar delta_star_restricted = `delta_star_restricted'
 		return scalar delta_star = `delta_star'
@@ -5035,7 +5587,7 @@ if `model_type'== 0 {
 		dis "Correlation matrix implied by delta*"
 		matlist cor_oster 
 		dis ""
-		dis "Correlation matrix implied by delta_exact"
+		dis "Correlation matrix implied by delta_Corr"
 		matlist cor_exact 
 
 	}

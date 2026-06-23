@@ -1,0 +1,34 @@
+d 'XTNONLINCOINT': module providing nonlinear panel cointegration tests robust to structural breaks and cross-sectional dependence
+d
+d   xtnonlincoint provides two nonlinear panel cointegration tests
+d that are robust to cross-sectional dependence. The subcommand
+d "ecm" implements the nonlinear error-correction based test of
+d Omay, Emirmahmutoglu and Denaux (2017, Economics Letters 157,
+d 1-4, doi:10.1016/j.econlet.2017.05.017), forming the
+d Abadir-Distaso modified Wald group-mean statistic with a sieve
+d bootstrap. The subcommand "fffff" implements the fractional
+d frequency flexible Fourier form test of Olayeni, Tiwari and Wohar
+d (2021, Applied Economics Letters 28, 482-486,
+d doi:10.1080/13504851.2020.1761526), combining KSS nonlinearity,
+d smooth Fourier structural breaks selected on a
+d fractional-frequency grid, a stationary bootstrap and the
+d Sequential Panel Selection Method. Both subcommands print
+d journal-style tables and optional plots, and return their results
+d in r(). 
+d
+d KW:  panel data
+d KW: nonlinear cointegration
+d KW: cross-sectional dependence
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260622
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtnonlincoint.ado
+f xtnonlincoint.sthlp
+f xtnonlincoint_ecm.sthlp
+f xtnonlincoint_example.do
+f xtnonlincoint_fffff.sthlp

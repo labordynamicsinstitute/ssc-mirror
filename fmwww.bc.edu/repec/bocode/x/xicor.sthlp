@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.0  19may2026}{...}
+{* *! version 2.0.1  19may2026}{...}
 {vieweralsosee "[R] correlate" "help correlate"}{...}
 {vieweralsosee "[R] spearman" "help spearman"}{...}
 {viewerjumpto "Syntax" "xicor##syntax"}{...}
@@ -62,8 +62,7 @@ see {helpb set_seed:[R] seed}.
 
 {phang}
 {opt pvalue}
-computes asymptotic two-sided {it:p}-values
-for testing the xi correlation coefficients against independence.
+computes asymptotic two-sided {it:p}-values for testing independence.
 {opt pvalue} 
 may not be combined with 
 {opt normalize} 

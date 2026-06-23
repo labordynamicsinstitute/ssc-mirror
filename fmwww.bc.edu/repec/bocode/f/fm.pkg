@@ -1,0 +1,26 @@
+d 'FM': module to manage file classifications
+d
+d      fm classifies files in a specified directory by their first
+d English character and moves them into    corresponding
+d alphabetical subdirectories. This is useful for keeping personal
+d ado directories, project    folders, or any file collection tidy
+d and easy to navigate. 
+d
+d KW: data management
+d KW: variable names
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260622
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author: Chen Liwen,  Anhui University of Technology
+d Support: email  2184844526@@qq.com
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+f fm.ado
+f fm.sthlp

@@ -73,6 +73,9 @@ Please enter R-squared with the accuracy as high as possible, recommended at lea
 
 {phang}
 {opt indx(#)} The user can specify whether the output for a linear model should be RIR {cmd:indx("RIR")} or ITCV {cmd:indx("IT")}; the default is RIR. To change to ITCV one should specify {cmd:indx("IT")} 		
+
+{phang}
+{opt scale(string)} For {cmd:indx("RIR")}, selects the RIR variant: {cmd:scale("t")} (default) computes RIR on the t-statistic scale and is available for linear models only; {cmd:scale("r")} computes RIR on the correlation scale, supports both linear and generalized linear models, and relaxes the constant standard error assumption. Ignored for other indices.
 		
 {syntab: {ul:Values}}
 
@@ -191,6 +194,77 @@ RIR as % of students needed to be replaced.
 
 
 {phang}
+{bf:Correlation-Based RIR (scale("r")}
+
+{pstd}
+With {cmd:indx("RIR")} and {cmd:scale("r")}, RIR is computed on the correlation scale. It converts a regression coefficient and its standard error into a correlation-scale effect size (r_obs), compares it to a critical correlation (r_crit), and computes the fraction of observations (pi_r) that would need to be replaced to nullify or sustain the inference. This variant relaxes the constant standard error assumption of the default t-scale ({cmd:scale("t")}) and applies to both linear models (LM, t-based) and generalized linear models (GLM, z-based) including logistic and probit regression. For GLM, a z-based replacement fraction is also reported as a conversion-quality diagnostic alongside the primary r-based result.
+
+
+{p 8 17 2}
+{cmdab:pkonfound}
+[{# # # #}]
+[,{cmd:model_type(0) indx("RIR") scale("r")} {it:options}]
+
+{synoptset 20 tabbed}{...}
+{syntab: {ul:Main}}
+{synopt:{opt est_eff}} the estimated value of the regression coefficient{p_end}
+{synopt:{opt std_err}} the standard error of the regression coefficient{p_end}
+{synopt:{opt n_obs}} the sample size{p_end}
+{synopt:{opt n_covariates}} the number of covariates in the model{p_end}
+
+{syntab: {ul:Options}}
+
+{phang}
+{opt link(string)} Specifies the link function for GLM; use {cmd:link("logit")} for logistic regression or {cmd:link("probit")} for probit regression. Omit this option for linear models.
+
+{phang}
+{opt alpha(#)} Significance level of the test; default is 0.05 {cmd:alpha(.05)}. To change the significance level to .10 use {cmd:alpha(.1)}
+
+{phang}
+{opt tails(#)} Whether hypothesis testing is one-tailed or two-tailed; the default is two-tailed {cmd:tails(2)}; to change to one-tailed use {cmd:tails(1)}
+
+{phang}
+{opt nu(#)} The null hypothesis value against which to test the estimate. Default is {cmd:nu(0)}
+
+{syntab: {ul:Values}}
+
+{pstd}
+To view these stored results, use the {cmd:return list} command immediately after running the pkonfound command.
+
+{phang}
+{opt r_obs}
+Observed correlation-scale effect size derived from the test statistic (partial correlation for LM; correlation-equivalent index for GLM)
+
+{phang}
+{opt r_crit}
+Critical correlation-scale value corresponding to the significance threshold
+
+{phang}
+{opt stat_obs}
+Observed test statistic (t for LM; Wald z for GLM)
+
+{phang}
+{opt p_obs}
+Two-tailed p-value of the observed test statistic
+
+{phang}
+{opt pi_r}
+Replacement fraction on the correlation scale; the proportion of observations that would need to be replaced to nullify or sustain the inference
+
+{phang}
+{opt RIR}
+Robustness of Inference to Replacement on the correlation scale; the number of observations that would need to be replaced (RIR = ceiling(n_obs * pi_r))
+
+{phang}
+{opt pi_z}
+z-based replacement fraction (GLM only); free of the effective degrees-of-freedom dependency introduced by the r-conversion. A large gap between pi_z and pi_r may indicate that r-scale compression is substantively affecting the RIR estimate.
+
+{phang}
+{opt RIR_z}
+z-based RIR count (GLM only); the number of observations corresponding to pi_z
+
+
+{phang}
 {bf:Coefficient of Proportionality} 
 
 {pstd}
@@ -209,7 +283,7 @@ This command calculates the correlation between the omitted variable and the foc
 {synopt:{opt n_covariates}} the number of covariates in the model{p_end}
 {synopt:{opt sdx}} the standard deviation of the independent variable in the model{p_end}
 {synopt:{opt sdy}} the standard deviation of the dependent variable in the model{p_end}
-{synopt:{opt rs}} the R-squared value from the the model{p_end}
+{synopt:{opt rs}} the R-squared value from the model{p_end}
 
 {syntab: {ul:Options}}
 
@@ -241,9 +315,6 @@ To view these stored results, use the {cmd:return list} command immediately afte
 
 {phang}
 {opt delta_Correlation} Precise delta value, providing a more accurate assessment
-
-{phang}
-{opt delta_pctbias} Percent of bias when comparing delta_star with delta_Correlation
 
 {phang}
 {opt var_y} Variance of the dependent variable 
@@ -608,6 +679,33 @@ For a thoughtful background on benchmark options for ITCV, see {browse "https://
 {phang}Named syntax: {p_end}
 {phang}{cmd:. pkonfound, est_eff(0.14) n_obs(20) replace_stu(0.16) eff_thr(0.15) peer_effect_pi(0.3) indx("VAM")}{p_end}
 
+{pstd}
+## Assume in a linear model, the estimate is 0.30, the standard error is 0.015, the sample size is 5000, and the number of covariates is 10. To calculate the correlation-based RIR:
+
+{phang}Positional syntax: {p_end}
+{phang}{cmd:. pkonfound 0.30 0.015 5000 10, indx("RIR") scale("r")}{p_end}
+
+{phang}Named syntax: {p_end}
+{phang}{cmd:. pkonfound, est_eff(0.30) std_err(0.015) n_obs(5000) n_covariates(10) indx("RIR") scale("r")}{p_end}
+
+{pstd}
+## Assume in a logistic regression, the estimate is -0.20, the standard error is 0.103, the sample size is 20888, and the number of covariates is 3. To calculate the correlation-based RIR with the z-based diagnostic:
+
+{phang}Positional syntax: {p_end}
+{phang}{cmd:. pkonfound -0.20 0.103 20888 3, indx("RIR") scale("r") link("logit")}{p_end}
+
+{phang}Named syntax: {p_end}
+{phang}{cmd:. pkonfound, est_eff(-0.20) std_err(0.103) n_obs(20888) n_covariates(3) indx("RIR") scale("r") link("logit")}{p_end}
+
+{pstd}
+## Assume in a probit regression, the estimate is 0.05, the standard error is 0.08, the sample size is 500, and the number of covariates is 5. To calculate the correlation-based RIR:
+
+{phang}Positional syntax: {p_end}
+{phang}{cmd:. pkonfound 0.05 0.08 500 5, indx("RIR") scale("r") link("probit")}{p_end}
+
+{phang}Named syntax: {p_end}
+{phang}{cmd:. pkonfound, est_eff(0.05) std_err(0.08) n_obs(500) n_covariates(5) indx("RIR") scale("r") link("probit")}{p_end}
+
 {marker authors}{...}
 {title:Authors}
 
@@ -664,6 +762,13 @@ Frank, K., Lin, Q., Maroulis, S., Dai, S., Jess, N., Lin, H. C., ... & Tait, J. 
 
 {pstd}
 Frank, K.A., Lin, Q., Xu, R., Maroulis, S., Mueller, A. (2023). Quantifying the Robustness of Causal Inferences: Sensitivity Analysis for Pragmatic Social Science, Social Science Research, 110, 102815.
+
+{pstd}
+Frank, K. A., Lin, Q., Maroulis, S., Dai, S., Choi, J., Jess, N.,
+Lin, H.-C., Liu, Y., Maestrales, S., Searle, E., and Tait, J. (2026).
+Quantifying sensitivity to selection on unobserved covariates: Recasting
+the coefficient of proportionality within a correlational framework.
+Journal of Educational and Behavioral Statistics. Advance online publication.
 
 
 See {browse "https://konfound-it.org/":https://konfound-it.org/} for more information.
