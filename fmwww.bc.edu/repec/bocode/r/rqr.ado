@@ -1,10 +1,10 @@
-*! rqr 1.0.2 15june2022 Nicolai T. Borgen 
+*! rqr 1.0.3 22june2026 Nicolai T. Borgen 
 
 program define rqr, eclass
 	
 	version 12 
 	
-	syntax varlist(min=2 max=2) [if] [in] [aw fw iw],		///
+	syntax varlist(min=2 max=2) [if] [in] [pw fw iw],		///
 		[Quantile(string)]									///
 		[Controls(varlist fv)]								///
 		[absorb(varlist fv)]								///
@@ -16,7 +16,8 @@ program define rqr, eclass
 		[generate_r(namelist max=1)]						///
 		[options_predict(string asis)]						///
 		[print1step]										///
-		[SMOOTHING(string asis)]								
+		[SMOOTHING(string asis)]							///
+		[showconstant]
 
 	local cmdline `*'
 	
@@ -108,9 +109,16 @@ program define rqr, eclass
 	* Smoothing *
 		
 	if "`smoothing'"!="" {	
-		tempvar yjitter u
-		gen double `u'=runiform(`jitter') 
-		/*qui */ su `u'
+				tempvar yjitter u
+		local slist = subinstr("`smoothing'", ",", " ", .)
+		local smooth_a : word 1 of `slist'
+		local smooth_b : word 2 of `slist'
+		if "`smooth_a'"=="" | "`smooth_b'"=="" {
+			di as error "smoothing() requires two numbers separated by a comma, e.g., smoothing(0,0.01)"
+			exit 198
+		}
+		gen double `u'=`smooth_a'+(`smooth_b'-`smooth_a')*runiform()
+		qui su `u'
 		gen double `yjitter'=`y'+`u'-r(mean)
 	}
 	
@@ -125,17 +133,17 @@ program define rqr, eclass
 
 	if "`absorb'"==""  {
 	    if "`step1command'"=="" local step1command regress
-	    `qui' `step1command' `treatment' `controls' if `touse' [`weight' `exp'], `step1options'
+	    `qui' `step1command' `treatment' `controls' if `touse' [`weight' `exp'], `options_step1'
 	}
 	if "`absorb'"!="" {
 		tempvar resid
 			
 		if "`step1command'"!="" {
-			if "`step1command'"=="xtreg" `qui' `step1command' `treatment' `controls' if `touse', fe i(`absorb') `step1options'
-			else `qui' `step1command' `treatment' `controls' if `touse' [`weight' `exp'], absorb(`absorb') `step1options'
+			if "`step1command'"=="xtreg" `qui' `step1command' `treatment' `controls' if `touse', fe i(`absorb') `options_step1'
+			else `qui' `step1command' `treatment' `controls' if `touse' [`weight' `exp'], absorb(`absorb') `options_step1'
 		} 
-		if `nabsorb'==1 & "`step1command'"=="" `qui' areg `treatment' `controls' if `touse' [`weight' `exp'], absorb(`absorb') `step1options'
-		if `nabsorb'>1 & "`step1command'"=="" `qui' reghdfe `treatment' `controls' if `touse' [`weight' `exp'], absorb(`absorb') residuals(`resid') `step1options'
+		if `nabsorb'==1 & "`step1command'"=="" `qui' areg `treatment' `controls' if `touse' [`weight' `exp'], absorb(`absorb') `options_step1'
+		if `nabsorb'>1 & "`step1command'"=="" `qui' reghdfe `treatment' `controls' if `touse' [`weight' `exp'], absorb(`absorb') residuals(`resid') `options_step1'
 		if `nabsorb'>1 local step1command "reghdfe"
 	}
 	qui predict double `treat' if `touse', `options_predict'		
@@ -173,15 +181,21 @@ program define rqr, eclass
 	if "`qrmodel'"=="qrprocess" {
 		local nquantile=rowsof(e(quantiles))
 		local colrownames
+		local tcols
+		local cpos 0
 		forvalues n=1/`nquantile' {
 			matrix `matquantile'=e(quantiles)
 			local nn=`matquantile'[`n',1]
 			local colrownames `colrownames' Q`nn':`treatment' Q`nn':_cons		
+			local ++cpos
+			local tcols `tcols' `cpos'
+			local ++cpos
 		}
 	}
-				
+	
 	if "`qrmodel'"=="qreg" {
 		local colrownames `treatment' _cons
+		local tcols 1
 	}
 	
 	tempname b v
@@ -192,6 +206,34 @@ program define rqr, eclass
 	if rowsof(`v')!=0 mat colnames `v'=`colrownames'
 	if rowsof(`v')!=0 mat rownames `v'=`colrownames'
 
+	* Drop the constant unless showconstant is specified *
+	if "`showconstant'"=="" {
+		local nt : word count `tcols'
+		local kfull=colsof(`b')
+		tempname S St
+		matrix `S'=J(`kfull',`nt',0)
+		local a 0
+		foreach ca of local tcols {
+			local ++a
+			matrix `S'[`ca',`a']=1
+		}
+		matrix `b'=`b'*`S'
+		if rowsof(`v')!=0 {
+			matrix `St'=`S''
+			matrix `v'=`St'*`v'*`S'
+		}
+		local fullnames `colrownames'
+		local colrownames
+		foreach ca of local tcols {
+			local nm : word `ca' of `fullnames'
+			local colrownames `colrownames' `nm'
+		}
+		matrix colnames `b'=`colrownames'
+		if rowsof(`v')!=0 {
+			matrix colnames `v'=`colrownames'
+			matrix rownames `v'=`colrownames'
+		}
+	}
 	
 	if "`qrmodel'"=="qrprocess" {
 		

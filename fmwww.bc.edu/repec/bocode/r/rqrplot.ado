@@ -1,4 +1,4 @@
-*! rqrplot 1.0.2 15june2022 Nicolai T. Borgen 
+*! rqrplot 1.0.3 22june2026 Nicolai T. Borgen 
 
 program define rqrplot, rclass
 

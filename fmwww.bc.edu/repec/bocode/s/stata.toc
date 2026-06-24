@@ -438,6 +438,7 @@ p surveyspan module to analyze timestamp metadata from field surveys to monitor 
 p survsim module to simulate complex survival data
 p survtime module to compute survival time for use in stset
 p survwgt module to create and manipulate survey weights 
+p suso module to provide client for the Survey Solutions (SuSo) REST API
 p susoapi module to provide Survey Solutions API client class for Stata
 p sutex module to LaTeX code for summary statistics tables 
 p sutex2 module to produce LaTeX tables for summary statistics

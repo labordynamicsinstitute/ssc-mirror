@@ -22,7 +22,7 @@ d KW: forest plot
 d
 d Requires: Stata version 16, xsvmat from SSC (q.v.)
 d
-d Distribution-Date: 20260621
+d Distribution-Date: 20260623
 d
 d Author:  Ben Dwamena, Division of Nuclear Medicine, Department  of Radiology, University of Michigan Health System, Ann Arbor
 d Support: email  bdwamena@@umich.edu
@@ -36,6 +36,7 @@ f midas_binsse.ado
 f midas_bivbox.ado
 f midas_bvsroc.ado
 f midas_chiplot.ado
+f midas_cii.ado
 f midas_con2bin.ado
 f midas_condiplot.ado
 f midas_eforest.ado

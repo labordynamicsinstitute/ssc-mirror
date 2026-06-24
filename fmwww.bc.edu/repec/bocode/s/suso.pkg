@@ -1,0 +1,33 @@
+d 'SUSO': module to provide client for the Survey Solutions (SuSo) REST API
+d
+d  suso provides a Stata interface to the World Bank Survey
+d Solutions API, letting users manage the full survey lifecycle
+d from a do-file rather than the web interface. It covers
+d assignments, interviews (the quality-control workflow of
+d approving, rejecting, commenting, and reassigning),
+d questionnaires, data exports, maps, users, supervisors,
+d workspaces, server settings, and statistics. List endpoints load
+d directly into a Stata dataset with automatic pagination; a single
+d command starts, monitors, and downloads (and optionally unzips)
+d an export; and one command backs up an entire workspace.
+d Destructive operations like deleting workspaces require explicit
+d confirmation and are written to an audit log. The package is
+d self-contained: a bundled, dependency-free Java backend performs
+d the authenticated HTTPS calls using the Java runtime that ships
+d with Stata, so no R or Python installation is required. 
+d
+d KW: survey data
+d KW: World Bank
+d KW: SuSo
+d
+d Requires: Stata version 14.2
+d
+d Distribution-Date: 20260623
+d
+d Author: Attique Ur Rehman,  World Bank Group
+d Support: email attique@@worldbank.org
+d
+f suso.ado
+f suso.jar
+f suso.sthlp
+f suso_examples.do

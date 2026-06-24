@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.2  Nicolai T. Borgen 15june2022}{...}
+{* *! version 1.0.3  Nicolai T. Borgen 22june2026}{...}
 {cmd:help rqrplot}
 {hline}
 

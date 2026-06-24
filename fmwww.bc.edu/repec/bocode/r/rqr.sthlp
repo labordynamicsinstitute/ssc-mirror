@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.2  Nicolai T. Borgen 15june2022}{...}
+{* *! version 1.0.3  Nicolai T. Borgen 22june2026}{...}
 {cmd:help rqr}
 {hline}
 
@@ -19,7 +19,7 @@
 		{opth options_step1(string)} {opth options_qreg(string)} 
 		{opth options_qrprocess(string)} {opth options_predict(string)}
 		{opth generate_r(varname)} {opt smoothing(a,b)} {opt print1step}
-		{it:{help rqr##options:options}}]
+		{opt showconstant} {it:{help rqr##options:options}}]
 
 {marker options}{...}
 {synoptset 27 tabbed}{...}
@@ -56,6 +56,8 @@ the first-step regression.{p_end}
 {p2coldent : {opt smoothing(a,b)}}adds uniformly distributed noise over the interval 
 [a,b] to the outcome variable.{p_end}
 {p2coldent : {opt print1step}}displays the first-step regression.{p_end}
+{p2coldent : {opt showconstant}}displays the constant in the output and stores 
+it in {cmd:e(b)} and {cmd:e(V)}. By default the constant is omitted.{p_end}
 {synoptline}
 {p2colreset}{...}
 {marker weights}{...}
@@ -127,7 +129,7 @@ regression model. See {it:regress {help regress##options:options}},
 {it:reghdfe {help reghdfe##options:options}} for list of available options 
 in the different first-step regressions. First-step options are rarely needed. 
 One exception is if the user wants to include singleton groups in the {helpb reghdfe}
-command, which can be achieved by adding the option {opt options_1step(keepsingletons)}.
+command, which can be achieved by adding the option {opt options_step1(keepsingletons)}.
 
 {phang}
 {opth options_qreg(string)} passes options along to the second-step 
@@ -155,6 +157,10 @@ the first-step regression.
 {phang}
 {opt print1step} displays the first-step regression.
 
+{phang}
+{opt showconstant} displays the constant in the coefficient table and stores it 
+in {cmd:e(b)} and {cmd:e(V)}. By default, {cmd:rqr} omits the constant. The 
+constant is the quantile of the outcome at a residualized treatment of zero.
 
 {title:Examples}
 

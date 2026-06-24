@@ -1,4 +1,5 @@
 *! Ben A. Dwamena: ben@bennybeaubooks.com 
+*! version 3.02 June 16, 2026
 *! version 3.01 April 3, 2026
 *! version 3.00 March 30, 2026
 *! version 2.00 November 27, 2025
@@ -107,6 +108,9 @@
 	}
 		else if ("`subcmd'"==bsubstr("het", 1, max(3, `l'))) {
 		midas_het `0'
+	}
+		else if ("`subcmd'"=="cii") { 
+		midas_cii `0'
 	}
 	else {
 				if ("`subcmd'"=="") {

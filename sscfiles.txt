@@ -9864,6 +9864,7 @@ fmwww.bc.edu/repec/bocode/s/shp2dta.hlp
 fmwww.bc.edu/repec/bocode/s/spregdpd.html
 fmwww.bc.edu/repec/bocode/s/sqegen.html
 fmwww.bc.edu/repec/bocode/s/shellout.hlp
+fmwww.bc.edu/repec/bocode/s/suso.sthlp
 fmwww.bc.edu/repec/bocode/s/spregfext.sthlp
 fmwww.bc.edu/repec/bocode/s/streamplot_crash.ado
 fmwww.bc.edu/repec/bocode/s/StataLmat.ico
@@ -10020,6 +10021,7 @@ fmwww.bc.edu/repec/bocode/s/scheme-gg_cividis.scheme
 fmwww.bc.edu/repec/bocode/s/spmat_import.sthlp
 fmwww.bc.edu/repec/bocode/s/sqr.html
 fmwww.bc.edu/repec/bocode/s/str2d.ado
+fmwww.bc.edu/repec/bocode/s/suso.jar
 fmwww.bc.edu/repec/bocode/s/str2d.hlp
 fmwww.bc.edu/repec/bocode/s/spregsarxt4.ado
 fmwww.bc.edu/repec/bocode/s/survsim_details.txt
@@ -10112,6 +10114,7 @@ fmwww.bc.edu/repec/bocode/s/savegz.sthlp
 fmwww.bc.edu/repec/bocode/s/spregxt.pkg
 fmwww.bc.edu/repec/bocode/s/spsurv.hlp
 fmwww.bc.edu/repec/bocode/s/sensatt.html
+fmwww.bc.edu/repec/bocode/s/suso_examples.do
 fmwww.bc.edu/repec/bocode/s/svmatf.html
 fmwww.bc.edu/repec/bocode/s/stdtable.sthlp
 fmwww.bc.edu/repec/bocode/s/stemmer_example.do
@@ -10906,6 +10909,7 @@ fmwww.bc.edu/repec/bocode/s/segdata.dta
 fmwww.bc.edu/repec/bocode/s/schema_validator.py
 fmwww.bc.edu/repec/bocode/s/sortlistby.ado
 fmwww.bc.edu/repec/bocode/s/spregcs3.dta
+fmwww.bc.edu/repec/bocode/s/suso.ado
 fmwww.bc.edu/repec/bocode/s/splitvallabels.ado
 fmwww.bc.edu/repec/bocode/s/surloads.pkg
 fmwww.bc.edu/repec/bocode/s/sepscatter.sthlp
@@ -12428,6 +12432,7 @@ fmwww.bc.edu/repec/bocode/s/spkde.sthlp
 fmwww.bc.edu/repec/bocode/s/stockcapit.sthlp
 fmwww.bc.edu/repec/bocode/s/stndzxage.ado
 fmwww.bc.edu/repec/bocode/s/svr.pkg
+fmwww.bc.edu/repec/bocode/s/suso.pkg
 fmwww.bc.edu/repec/bocode/s/spikeplt.hlp
 fmwww.bc.edu/repec/bocode/s/sreweight.ado
 fmwww.bc.edu/repec/bocode/s/seqlogit_lf.ado
@@ -13469,6 +13474,7 @@ fmwww.bc.edu/repec/bocode/m/markdown.dlg
 fmwww.bc.edu/repec/bocode/m/metaprop_one_examples.ado
 fmwww.bc.edu/repec/bocode/m/mountainplot.sthlp
 fmwww.bc.edu/repec/bocode/m/mf_mz_pancolshape.hlp
+fmwww.bc.edu/repec/bocode/m/midas_cii.ado
 fmwww.bc.edu/repec/bocode/m/mrobust_online_appendix.pdf
 fmwww.bc.edu/repec/bocode/m/motivatedolly.sthlp
 fmwww.bc.edu/repec/bocode/m/meanvar.ado
