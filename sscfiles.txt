@@ -16220,6 +16220,7 @@ fmwww.bc.edu/repec/bocode/l/lintrend.ado
 fmwww.bc.edu/repec/bocode/l/le8.dta
 fmwww.bc.edu/repec/bocode/l/lrseq.hlp
 fmwww.bc.edu/repec/bocode/l/lmcol.html
+fmwww.bc.edu/repec/bocode/l/lzqreg.pkg
 fmwww.bc.edu/repec/bocode/l/lmabgxt.sthlp
 fmwww.bc.edu/repec/bocode/l/lmgc.pkg
 fmwww.bc.edu/repec/bocode/l/lmabp2.ado
@@ -16339,6 +16340,7 @@ fmwww.bc.edu/repec/bocode/l/lassoregress.sthlp
 fmwww.bc.edu/repec/bocode/l/lmharchxt.dlg
 fmwww.bc.edu/repec/bocode/l/lsq.mlib
 fmwww.bc.edu/repec/bocode/l/lew.mlib
+fmwww.bc.edu/repec/bocode/l/lzqreg.sthlp
 fmwww.bc.edu/repec/bocode/l/lfieldarea.mlib
 fmwww.bc.edu/repec/bocode/l/lmnadxt.dlg
 fmwww.bc.edu/repec/bocode/l/logitcprplot.zip
@@ -16565,6 +16567,7 @@ fmwww.bc.edu/repec/bocode/l/lflexmat.mlib
 fmwww.bc.edu/repec/bocode/l/lmabxt.ado
 fmwww.bc.edu/repec/bocode/l/labvalclone.hlp
 fmwww.bc.edu/repec/bocode/l/lrmbounds.ado
+fmwww.bc.edu/repec/bocode/l/lzqreg.ado
 fmwww.bc.edu/repec/bocode/l/lmalb.ado
 fmwww.bc.edu/repec/bocode/l/lmeg.dta
 fmwww.bc.edu/repec/bocode/l/linkplot.html
@@ -16736,6 +16739,7 @@ fmwww.bc.edu/repec/bocode/o/oglm_ll.ado
 fmwww.bc.edu/repec/bocode/o/oneclick.sthlp
 fmwww.bc.edu/repec/bocode/o/optifact.ado
 fmwww.bc.edu/repec/bocode/o/oaxaca.dta
+fmwww.bc.edu/repec/bocode/o/ordaxaca_examples.do
 fmwww.bc.edu/repec/bocode/o/omamatv3.w64.plugin
 fmwww.bc.edu/repec/bocode/o/odksplit.pkg
 fmwww.bc.edu/repec/bocode/o/opendf_zip2csv.ado
@@ -16757,6 +16761,7 @@ fmwww.bc.edu/repec/bocode/o/opendf_installpython.sthlp
 fmwww.bc.edu/repec/bocode/o/optaspect.sthlp
 fmwww.bc.edu/repec/bocode/o/outshee2.hlp
 fmwww.bc.edu/repec/bocode/o/outwrite.pkg
+fmwww.bc.edu/repec/bocode/o/ordaxaca.sthlp
 fmwww.bc.edu/repec/bocode/o/overlay.pkg
 fmwww.bc.edu/repec/bocode/o/_oaxaca.ado
 fmwww.bc.edu/repec/bocode/o/opencagegeo.pkg
@@ -16778,6 +16783,7 @@ fmwww.bc.edu/repec/bocode/o/ordplot.pkg
 fmwww.bc.edu/repec/bocode/o/orth_out.sthlp
 fmwww.bc.edu/repec/bocode/o/orthog.hlp
 fmwww.bc.edu/repec/bocode/o/oaxaca9.pkg
+fmwww.bc.edu/repec/bocode/o/ordaxaca_cert.do
 fmwww.bc.edu/repec/bocode/o/oparallel_ex.ado
 fmwww.bc.edu/repec/bocode/o/opplot.sthlp
 fmwww.bc.edu/repec/bocode/o/open2_cn.sthlp
@@ -16794,6 +16800,7 @@ fmwww.bc.edu/repec/bocode/o/ovbd.pkg
 fmwww.bc.edu/repec/bocode/o/omninorm.pkg
 fmwww.bc.edu/repec/bocode/o/opencagegeoi.ado
 fmwww.bc.edu/repec/bocode/o/overid.pkg
+fmwww.bc.edu/repec/bocode/o/ordaxaca.pkg
 fmwww.bc.edu/repec/bocode/o/outtable2.ado
 fmwww.bc.edu/repec/bocode/o/omegacoef.ado
 fmwww.bc.edu/repec/bocode/o/opl_plot_best.ado
@@ -17002,6 +17009,7 @@ fmwww.bc.edu/repec/bocode/o/oesch.ado
 fmwww.bc.edu/repec/bocode/o/outdat.hlp
 fmwww.bc.edu/repec/bocode/o/odk2xls.ado
 fmwww.bc.edu/repec/bocode/o/opl_lc.sthlp
+fmwww.bc.edu/repec/bocode/o/ordaxaca.ado
 fmwww.bc.edu/repec/bocode/o/outtex6.ado
 fmwww.bc.edu/repec/bocode/o/ordvar.ado
 fmwww.bc.edu/repec/bocode/o/onewayplot.ado

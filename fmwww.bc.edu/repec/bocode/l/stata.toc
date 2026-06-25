@@ -247,3 +247,4 @@ p lwdid module to implmenent Rolling Difference-in-Differences Estimator for Sma
 p lxhget module to download datasets of lianxh.cn blogs or network 
 p lxhuse module to access Stata datasets of lianxh.cn blogs
 p lxpct_2 module to calculate multistate life expectancies
+p lzqreg module providing quantile regression to analyze logarithmic relationships with non-positive values in the outcome variable

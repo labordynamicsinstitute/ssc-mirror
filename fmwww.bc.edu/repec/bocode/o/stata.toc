@@ -38,6 +38,7 @@ p opplot module to generate a vertical bar chart to summarize a binary outcome i
 p oprobpr module to display predicted probabilities from ordered probit and logit
 p optaspect module to compute heuristic criteria for optimal aspect ratios in a two-variable line plot
 p optifact module to find the best summated rating scale from a list of items
+p ordaxaca module for nonlinear Oaxaca decomposition with ordered dependent variables
 p ordcatsampsi module to compute power and sample size for ordered categorical outcomes
 p ordplot module for cumulative distribution plot of ordinal variable
 p ordvar module to calculate measures of ordinal consensus and dispersion

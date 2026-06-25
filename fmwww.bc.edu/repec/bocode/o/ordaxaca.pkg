@@ -1,0 +1,24 @@
+d 'ORDAXACA': module for nonlinear Oaxaca decomposition with ordered dependent variables
+d
+d  odxaxaca is a Stata command for twofold nonlinear Oaxaca
+d decomposition with ordered dependent variables. The command
+d estimates separate ordered logit or ordered probit models for two
+d groups and decomposes differences in predicted outcome
+d probabilities into explained and unexplained components. 
+d
+d KW: Oaxaca decomposition
+d KW: ordered logit
+d KW: ordered probit
+d KW: nonlinear decomposition
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20260624
+d
+d Author: Refat Mishuk,  University of New Mexico
+d Support: email mishuk.refat@@gmail.com
+d
+f ordaxaca.ado
+f ordaxaca.sthlp
+f ordaxaca_cert.do
+f ordaxaca_examples.do

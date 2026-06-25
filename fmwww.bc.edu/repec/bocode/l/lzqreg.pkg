@@ -1,0 +1,32 @@
+d 'LZQREG': module providing quantile regression to analyze logarithmic relationships with non-positive values in the outcome variable
+d
+d      lzqreg fits a quantile regression model where the raw
+d dependent variable, specified in depvar, is	 transformed with a
+d calibrated extensive margin (CEM) transformation of the form	   
+d   y* = ln(depvar)	   if depvar > 0;	      y* = -psi   
+d if depvar <= 0.    lzqreg is essentially a wrapper for qreg.	If
+d the fitted values of a quantile regression on this   
+d CEM-transformed outcome are all greater than -psi, then results
+d are displayed. The resulting coefficients    can be meaningfully
+d interpreted as logarithmic intensive-margin relationships between
+d the outcome variable	  and the independent variables, even with
+d non-positive values in the outcome variable. If the condition
+d does	  not hold for the specified quantile, then the command
+d iteratively makes psi larger and checks again. After	  ten
+d iterations where the condition does not hold, lzqreg returns an
+d error and suppresses results. This	implementation is an
+d automated adaptation of the algorithm described by Liu & Kaplan
+d (2025). 
+d
+d KW: quantile regression
+d KW: log transformation
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20260624
+d
+d Author: Jack Fitzgerald,  VU Amsterdam
+d Support: email jackfitzgeraldresearch@@gmail.com
+d
+f lzqreg.ado
+f lzqreg.sthlp
