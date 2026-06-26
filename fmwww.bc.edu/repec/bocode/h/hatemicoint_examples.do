@@ -1,7 +1,7 @@
 *! hatemicoint_examples.do
 *! Example file for hatemicoint package
 *! Author: Dr. Merwan ROUDANE, Independent Researcher
-*! Date: February 2026
+*! Date: June 2026
 
 clear all
 set more off
@@ -231,6 +231,64 @@ di as text "Comparison:"
 di as text "  Full sample:   ADF* = " as result %9.4f `adf_full'
 di as text "  First half:    ADF* = " as result %9.4f `adf_first'
 di as text "  Second half:   ADF* = " as result %9.4f `adf_second'
+di ""
+
+********************************************************************************
+* EXAMPLE 8: Model Specifications (level shift, trend, regime shift)
+********************************************************************************
+
+di as result "{hline 78}"
+di as result "Example 8: Comparing Model Specifications"
+di as result "{hline 78}"
+di ""
+
+webuse lutkepohl2, clear
+tsset qtr
+
+di as result "Model 1: Level shift (break in intercept only)"
+hatemicoint ln_inv ln_inc, model(1)
+local zt_m1 = r(zt_min)
+
+di ""
+
+di as result "Model 2: Level shift with trend"
+hatemicoint ln_inv ln_inc, model(2)
+local zt_m2 = r(zt_min)
+
+di ""
+
+di as result "Model 3: Regime shift (intercept and slope; default)"
+hatemicoint ln_inv ln_inc, model(3)
+local zt_m3 = r(zt_min)
+
+di ""
+di as text "Comparison of Zt* across model specifications:"
+di as text "  Model 1 (level shift):        " as result %9.4f `zt_m1'
+di as text "  Model 2 (level shift+trend):  " as result %9.4f `zt_m2'
+di as text "  Model 3 (regime shift):       " as result %9.4f `zt_m3'
+di ""
+
+********************************************************************************
+* EXAMPLE 9: Break and Decision Visualization
+********************************************************************************
+
+di as result "{hline 78}"
+di as result "Example 9: Graphing the Breaks and the Test Decision"
+di as result "{hline 78}"
+di ""
+
+webuse lutkepohl2, clear
+tsset qtr
+
+* Combined figure: series with shaded regimes and breaks, the cointegrating
+* residual, and a decision plot (statistic / 5% critical value).
+hatemicoint ln_inv ln_inc, graph
+
+* Show the breaks selected by the Za* statistic instead of the default Zt*.
+hatemicoint ln_inv ln_inc, graphtest(za)
+
+* The figure is named "hatemicoint" and can be exported, e.g.:
+* graph export hatemicoint_breaks.png, replace width(1400) name(hatemicoint)
 di ""
 
 ********************************************************************************

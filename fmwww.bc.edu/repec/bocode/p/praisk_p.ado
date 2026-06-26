@@ -1,3 +1,4 @@
+*! 1.0.1 Ariel Linden 24Jun2026	// fixed "not sorted" error
 *! 1.0.0 Ariel Linden 09Mar2026
 
 //  prediction program for -praisk-: curently supports xb, residuals, stdp, and ue (AR innovation residuals)
@@ -52,12 +53,17 @@ program define praisk_p
 
 	// ue: AR innovation residuals
 	if "`ue'" != "" {
-		local yvar    "`e(depvar)'"
-		local timevar "`e(timevar)'"
+		local yvar     "`e(depvar)'"
+		local timevar  "`e(timevar)'"
+		local panelvar "`e(panelvar)'"
 		if "`timevar'" == "" {
 			di as err "ue requires tsset time variable"
 			exit 198
 		}
+
+		// re-establish tsset sort order; lag operators require it
+		if "`panelvar'" != "" quietly tsset `panelvar' `timevar'
+		else                  quietly tsset `timevar'
 
 		// AR order
 		if !missing(e(p_lag)) local p_lag = e(p_lag)

@@ -1,4 +1,4 @@
-*! version 1.32 by Justin Wiltshire. Updated 02/09/2026 - Wrapper adding functionality to -synth- package
+*! version 1.33 by Justin Wiltshire. Updated 06/25/2026 - Wrapper adding functionality to -synth- package
 
 program allsynth, eclass sortpreserve byable(recall)
 	version 15.1 // Not tested on earlier versions
@@ -431,6 +431,10 @@ program allsynth, eclass sortpreserve byable(recall)
 				* Ensure stacked(figure(bcorrect)) is not specificed if the allsynth option bcorrect() is not (correctly) specified 
 				if strpos("`_stFigure'", "bcorrect") != 0 & "`bcorrect'" == "" {
 					di as err "`_Entry'(`_stFigure') is specified in the allsynth option stacked(), but the allsynth option bcorrect(merge) is not (or not correctly) specified. The allsynth option bcorrect() must be specified with -merge- if `_Entry'(`_stFigure') is specified in the allsynth option stacked()"
+					exit 198
+				}
+				if strpos("`_stFigure'", "classic") == 0 & "`bcorrect'" == "" {
+					di as err "`_Entry'() is specified in the allsynth option stacked(), but neither stacked(`_Entry'(classic)) nor the allsynth option bcorrect(merge) are specified. If `_Entry'() is specified in the allsynth option stacked() without the allsynth option bcorrect(merge) also being specified, then the allsynth option stacked(`_Entry'(classic)) must be specified"
 					exit 198
 				}
 				
@@ -2074,7 +2078,7 @@ program allsynth, eclass sortpreserve byable(recall)
 			if (`nonzerows' > `predno') & `chzero' != 0 {
 				di ""
 				di "{hline}"
-				di as err "Warning: the -synth- weighting matrix W for treated unit (`pvar' == `actreat') contains more non-zero weights than predictor variables and is likely not unique. Consider adjusting the number of predictor variables or appropriately restricting the donor pool"
+				di as err "Warning: the -synth- weighting matrix W for treated unit (`pvar' == `actreat') contains more nonzero weights than predictor variables and is likely not unique. Consider adjusting the number of predictor variables or appropriately restricting the donor pool"
 				di ""
 				di "{hline}"
 			}
@@ -2301,7 +2305,7 @@ program allsynth, eclass sortpreserve byable(recall)
 			if (`nonzerows' > `predno') & `chzero' != 0 {
 				di ""
 				di "{hline}"
-				di as err "Warning: the -synth- weighting matrix W for treated unit (`pvar' == `actreat') contains more non-zero weights than predictor variables and is likely not unique. Consider adjusting the number of predictor variables or appropriately restricting the donor pool"
+				di as err "Warning: the -synth- weighting matrix W for treated unit (`pvar' == `actreat') contains more nonzero weights than predictor variables and is likely not unique. Consider adjusting the number of predictor variables or appropriately restricting the donor pool"
 				di ""
 				di "{hline}"
 			}
@@ -2408,7 +2412,7 @@ program allsynth, eclass sortpreserve byable(recall)
 	di
 	di as smcl "{cmd:allsynth is a user-written command made freely-available to the research community. Please cite the paper:}"
 	di
-	di as smcl `"{browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire, Justin C., 2026.  allsynth: (Stacked) Synthetic Control Bias-Correction Utilities for Stata. Working paper.}"'
+	di as smcl `"{browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire, Justin C., Forthcoming.  allsynth: (Stacked) Synthetic Control Bias-Correction Utilities for Stata. The Stata Journal.}"'
 	di
 	di "{hline}"
 end
@@ -2738,7 +2742,9 @@ program stackedsc, rclass
 				}
 				qui drop gap*
 				qui replace _Pval = . if `tvar' < `trperiod'
-				qui replace _Pval_bc = . if `tvar' < `trperiod'
+				if "`_plgapbc'" != "" {
+					qui replace _Pval_bc = . if `tvar' < `trperiod'
+				}
 				qui merge 1:1 `tvar' `pvar' using "`core3'", nogen norep
 				qui sort `tvar' `pvar' gap* `pvalrmspevars' _Se* _Pval*
 				local pvalvariancevars "_Se* _Tstat* _Pval* LB* UB*"
@@ -3140,7 +3146,7 @@ program graphgaps, rclass
 		}
 		if `gapfigci' == 1 {
 			if `gapfigclassic' == 1 {
-				local gapfigcis "(rarea LB_95 UB_95 `tvar if `pvar' == `actreat', color(gs12%50) lwidth(none))"
+				local gapfigcis "(rarea LB_95 UB_95 `tvar' if `pvar' == `actreat', color(gs12%50) lwidth(none))"
 			}
 			if `gapfigbcorrect' == 1 {
 				local gapfigcisbc "(rarea LB_95_bc UB_95_bc `tvar' if `pvar' == `actreat', color(gs12%50) lwidth(none))"

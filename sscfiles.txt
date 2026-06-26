@@ -6112,6 +6112,7 @@ fmwww.bc.edu/repec/bocode/h/hashsort.sthlp
 fmwww.bc.edu/repec/bocode/h/heapbs.ado
 fmwww.bc.edu/repec/bocode/h/hktrade.ado
 fmwww.bc.edu/repec/bocode/h/halfinvnorm.sthlp
+fmwww.bc.edu/repec/bocode/h/hatemij.pkg
 fmwww.bc.edu/repec/bocode/h/historaj.pkg
 fmwww.bc.edu/repec/bocode/h/heterogi.hlp
 fmwww.bc.edu/repec/bocode/h/hdfe.ado
@@ -6440,6 +6441,7 @@ fmwww.bc.edu/repec/bocode/h/hnbreg1.hlp
 fmwww.bc.edu/repec/bocode/h/head.ado
 fmwww.bc.edu/repec/bocode/h/hhelp.ado
 fmwww.bc.edu/repec/bocode/h/histplot.html
+fmwww.bc.edu/repec/bocode/h/hatemij.sthlp
 fmwww.bc.edu/repec/bocode/h/heckprobit_fixedrho.ado
 fmwww.bc.edu/repec/bocode/h/hadrilm.ado
 fmwww.bc.edu/repec/bocode/h/htmlabbr.mata
@@ -6488,6 +6490,7 @@ fmwww.bc.edu/repec/bocode/h/hetred.pkg
 fmwww.bc.edu/repec/bocode/h/hangroot.hlp
 fmwww.bc.edu/repec/bocode/h/htmltfoot.mata
 fmwww.bc.edu/repec/bocode/h/heart.sthlp
+fmwww.bc.edu/repec/bocode/h/hatemij.ado
 fmwww.bc.edu/repec/bocode/h/hpfilter.sthlp
 fmwww.bc.edu/repec/bocode/h/hollingsworth_et_al_2022.dta
 fmwww.bc.edu/repec/bocode/h/hireg.ado
@@ -15132,6 +15135,7 @@ fmwww.bc.edu/repec/bocode/l/lmcovsem.dta
 fmwww.bc.edu/repec/bocode/l/lms.html
 fmwww.bc.edu/repec/bocode/l/lmadurmxt.sthlp
 fmwww.bc.edu/repec/bocode/l/labunab.hlp
+fmwww.bc.edu/repec/bocode/l/lodes.ado
 fmwww.bc.edu/repec/bocode/l/labeldatasyntax.ado
 fmwww.bc.edu/repec/bocode/l/lasagna.pkg
 fmwww.bc.edu/repec/bocode/l/levene.ado
@@ -15696,6 +15700,7 @@ fmwww.bc.edu/repec/bocode/l/lmabp2.dlg
 fmwww.bc.edu/repec/bocode/l/lincomest_p.ado
 fmwww.bc.edu/repec/bocode/l/leestra_examples.txt
 fmwww.bc.edu/repec/bocode/l/lmharch2.dta
+fmwww.bc.edu/repec/bocode/l/lodes.pkg
 fmwww.bc.edu/repec/bocode/l/lany.ado
 fmwww.bc.edu/repec/bocode/l/lclogit2.sthlp
 fmwww.bc.edu/repec/bocode/l/lmnjbnl.dlg
@@ -16611,6 +16616,7 @@ fmwww.bc.edu/repec/bocode/l/listtab_rstyle.html
 fmwww.bc.edu/repec/bocode/l/lmhmss2.dta
 fmwww.bc.edu/repec/bocode/l/lstmt.mlib
 fmwww.bc.edu/repec/bocode/l/lmnwhite.dlg
+fmwww.bc.edu/repec/bocode/l/lodes.sthlp
 fmwww.bc.edu/repec/bocode/l/lmhhpnl.sthlp
 fmwww.bc.edu/repec/bocode/l/lmadurh2.dta
 fmwww.bc.edu/repec/bocode/l/lpdidtestdata1.dta

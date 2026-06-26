@@ -1,0 +1,27 @@
+d 'HATEMIJ': module to perform Hatemi-J cointegration test with two unknown breaks
+d
+d   hatemij implements the Hatemi-J (2008) test for cointegration
+d with two unknown breaks, computing the three statistics ADF*,
+d Zt*, and Za*. Three specifications are supported (level shift,
+d level shift with trend, and regime shift), with critical values
+d from Hatemi-J (2008) for up to four regressors. Six ADF
+d lag-selection rules are available (fixed, AIC, BIC, downward-t
+d with a 1.96 or 1.645 cutoff, and a Breusch-Godfrey test based
+d selection), together with three long-run-variance kernels (iid,
+d Bartlett, Quadratic-Spectral). The cointegrating regression with
+d breaks can be estimated by the code. The package was validated
+d against Hatemi-J's own Gauss code (coint2b) and the tspdlib Gauss
+d library of Saban Nazlioglu. 
+d
+d KW: cointegration
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260625
+d
+d Author: Ozan Eruygur,  Ankara Haci Bayram Veli University
+d Support: email eruygur@@gmail.com
+d
+f hatemij.ado
+f hatemij.sthlp

@@ -5,14 +5,14 @@ d for cointegration in the presence of two unknown structural
 d breaks. The methodology extends the Gregory and Hansen (1996)
 d framework to accommodate two regime shifts, where both the timing
 d and location of the breaks are determined endogenously from the
-d data.
+d data. 
 d
 d KW: unit root tests
 d KW: structural breaks
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20260206
+d Distribution-Date: 20260625
 d
 d Author:   Merwan Roudane, NA
 d Support: email  merwanroudane920@@gmail.com

@@ -1,0 +1,38 @@
+d 'LODES': module to download and analyze U.S. Census LEHD LODES origin-destination employment statistics
+d
+d    lodes downloads and processes the U.S. Census Bureau's
+d Longitudinal	Employer-Household Dynamics (LEHD)
+d Origin-Destination Employment  Statistics (LODES) data within
+d Stata, replicating the analyses  available through the Census
+d Bureau's OnTheMap web tool  (https://onthemap.ces.census.gov/).
+d The command supports the three  LODES dataset types -- OD
+d (origin-destination), WAC (workplace area  characteristics), and
+d RAC (residence area characteristics) -- for any  U.S. state and
+d any year currently published in LODES8, including  selection by
+d job type, age cohort, earnings group, and industry  sector. Three
+d analysis subcommands mirror those of OnTheMap:  destination
+d analyzes where workers residing in (or working in) a	given area
+d commute to (or from); inflow_outflow reports counts of  workers
+d living and/or working in an area, broken into in-area and 
+d out-of-area; and area_profile summarizes the job composition of
+d an  area. Built-in U.S. Census geographies are supported (block
+d group,  tract, ZCTA, place, county, CBSA, state), as is any
+d user-supplied  custom polygon provided as an ESRI zipped
+d shapefile. Downloaded data  are returned as Stata frames and can
+d optionally be saved as .dta,	.xlsx, or frame-collection (.dtas)
+d files. 
+d
+d KW: employer-household dynamics
+d KW: commuting
+d KW: spatial data
+d KW: mapping
+d
+d Requires: Stata version 16.1 and fframeappend, geoinpoly from SSC (q.v.)
+d
+d Distribution-Date: 20260625
+d
+d Author: Sisinnio Concas,  Center for Urban Transportation Research, University of South Florida
+d Support: email   concas@@usf.edu
+d
+f lodes.ado
+f lodes.sthlp

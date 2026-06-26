@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.1  04feb2026}{...}
+{* *! version 2.0.0  25jun2026}{...}
 {viewerjumpto "Syntax" "hatemicoint##syntax"}{...}
 {viewerjumpto "Description" "hatemicoint##description"}{...}
 {viewerjumpto "Options" "hatemicoint##options"}{...}
@@ -31,7 +31,10 @@
 {synopt:{opt kernel(string)}}kernel for long-run variance: {cmd:iid}, {cmd:bartlett}, or {cmd:qs}; default is {cmd:iid}{p_end}
 {synopt:{opt bwl(#)}}bandwidth for long-run variance; default is round(4*(T/100)^(2/9)){p_end}
 {synopt:{opt trim:ming(#)}}trimming rate for break search; default is {cmd:trimming(0.15)}{p_end}
-{synopt:{opt model(#)}}model specification; only {cmd:model(3)} (regime shift) is supported{p_end}
+{synopt:{opt model(#)}}model specification: {cmd:1} (level shift), {cmd:2} (level shift with trend), or {cmd:3} (regime shift); default is {cmd:model(3)}{p_end}
+{syntab:Reporting}
+{synopt:{opt graph}}produce a combined figure: the series and the cointegrating residual with the estimated breaks, plus a decision plot{p_end}
+{synopt:{opt grapht:est(test)}}which test's breaks to display in the series/residual panels: {cmd:adf}, {cmd:zt}, or {cmd:za}; default is {cmd:zt} (implies {cmd:graph}){p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}
@@ -44,10 +47,15 @@ You must {cmd:tsset} your data before using {cmd:hatemicoint}; see {helpb tsset}
 {title:Description}
 
 {pstd}
-{cmd:hatemicoint} implements three residual-based tests for cointegration in the presence of two unknown regime shifts,
-as developed by Hatemi-J (2008). The tests allow for structural breaks in both the intercept and slope parameters
-at two unknown points in the sample. The timing of the breaks is determined endogenously by searching over all
-possible break combinations within a trimmed range.
+{cmd:hatemicoint} implements three residual-based tests for cointegration in the presence of two unknown
+structural breaks, as developed by Hatemi-J (2008). The timing of the breaks is determined endogenously by
+searching over all admissible pairs of break points within a trimmed range. Three deterministic specifications
+are supported (see {cmd:model()}): a level shift, a level shift with trend, and a regime shift that allows the
+slope coefficients to change as well.
+
+{pstd}
+The Mata engine reproduces the original GAUSS reference implementation (the {cmd:coint_hatemiJ} routine of the
+TSPDLIB library and Hatemi-J's own code) to within machine precision for the ADF*, Zt* and Za* statistics.
 
 {pstd}
 The command tests the null hypothesis of no cointegration against the alternative of cointegration with two regime shifts.
@@ -68,13 +76,20 @@ All three tests search for the break points that provide the strongest evidence 
 and Monte Carlo simulations as reported in Hatemi-J (2008).
 
 {pstd}
-The model estimated is:
+The cointegrating regression depends on {cmd:model()}. With D{subscript:1t} and D{subscript:2t} equal to 1 after
+the first and second break points, respectively:
 
 {p 8 12 2}
-y{subscript:t} = α{subscript:0} + α{subscript:1}D{subscript:1t} + α{subscript:2}D{subscript:2t} + β'{subscript:0}x{subscript:t} + β'{subscript:1}D{subscript:1t}x{subscript:t} + β'{subscript:2}D{subscript:2t}x{subscript:t} + u{subscript:t}
+{cmd:model(1)} (level shift):{break}
+y{subscript:t} = α{subscript:0} + α{subscript:1}D{subscript:1t} + α{subscript:2}D{subscript:2t} + β'x{subscript:t} + u{subscript:t}
 
-{pstd}
-where D{subscript:1t} and D{subscript:2t} are dummy variables that equal 1 after the first and second break points, respectively.
+{p 8 12 2}
+{cmd:model(2)} (level shift with trend):{break}
+y{subscript:t} = α{subscript:0} + α{subscript:1}D{subscript:1t} + α{subscript:2}D{subscript:2t} + γt + β'x{subscript:t} + u{subscript:t}
+
+{p 8 12 2}
+{cmd:model(3)} (regime shift, default):{break}
+y{subscript:t} = α{subscript:0} + α{subscript:1}D{subscript:1t} + α{subscript:2}D{subscript:2t} + β'{subscript:0}x{subscript:t} + β'{subscript:1}D{subscript:1t}x{subscript:t} + β'{subscript:2}D{subscript:2t}x{subscript:t} + u{subscript:t}
 
 
 {marker options}{...}
@@ -126,8 +141,32 @@ and the two breaks must be at least 0.15T observations apart. This follows the a
 of Gregory and Hansen (1996). The value must be between 0 and 0.5.
 
 {phang}
-{opt model(#)} specifies the model type. Currently only {cmd:model(3)} is supported,
-which allows for regime shifts in both the intercept and slope parameters (the default and only option).
+{opt model(#)} specifies the deterministic specification of the cointegrating regression:
+
+{phang2}
+{cmd:1} - level shift: breaks in the intercept only.
+
+{phang2}
+{cmd:2} - level shift with trend: breaks in the intercept, plus a linear time trend.
+
+{phang2}
+{cmd:3} - regime shift (default): breaks in both the intercept and the slope coefficients on {it:indepvars}.
+
+{dlgtab:Reporting}
+
+{phang}
+{opt graph} produces a combined figure (named {cmd:hatemicoint}) with three panels:
+(i) the dependent variable over time with the three regimes shaded and the two estimated break
+dates marked; (ii) the cointegrating residual to which the unit-root tests are applied, with the
+same break lines; and (iii) a decision plot in which each statistic is divided by its 5% critical
+value, so that a single reference line at 1.0 separates rejection (marker to the right, shown in
+green) from non-rejection (marker to the left, shown in red). Grey ticks mark the 1% and 10%
+critical-value ratios.
+
+{phang}
+{opt graphtest(test)} selects which test's estimated break dates are drawn in the series and
+residual panels: {cmd:adf}, {cmd:zt} (default), or {cmd:za}. Specifying {opt graphtest()} implies
+{opt graph}. The decision panel always shows all three statistics.
 
 
 {marker remarks}{...}
@@ -204,6 +243,16 @@ more reliable inference.
 {pstd}Use quadratic spectral kernel and custom bandwidth{p_end}
 {phang2}{cmd:. hatemicoint ln_inv ln_inc, kernel(qs) bwl(8)}{p_end}
 
+{pstd}Level shift only (model 1) and level shift with trend (model 2){p_end}
+{phang2}{cmd:. hatemicoint ln_inv ln_inc, model(1)}{p_end}
+{phang2}{cmd:. hatemicoint ln_inv ln_inc, model(2)}{p_end}
+
+{pstd}Produce the break-and-decision figure{p_end}
+{phang2}{cmd:. hatemicoint ln_inv ln_inc, graph}{p_end}
+
+{pstd}Draw the breaks selected by the Za* test{p_end}
+{phang2}{cmd:. hatemicoint ln_inv ln_inc, graphtest(za)}{p_end}
+
 {pstd}Use more conservative trimming{p_end}
 {phang2}{cmd:. hatemicoint ln_inv ln_inc, trimming(0.20)}{p_end}
 
@@ -225,17 +274,25 @@ more reliable inference.
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
-{synopt:{cmd:r(adf_min)}}minimum ADF test statistic{p_end}
-{synopt:{cmd:r(tb1_adf)}}first break location for ADF test (observation number){p_end}
-{synopt:{cmd:r(tb2_adf)}}second break location for ADF test (observation number){p_end}
-{synopt:{cmd:r(zt_min)}}minimum Zt test statistic{p_end}
-{synopt:{cmd:r(tb1_zt)}}first break location for Zt test (observation number){p_end}
-{synopt:{cmd:r(tb2_zt)}}second break location for Zt test (observation number){p_end}
-{synopt:{cmd:r(za_min)}}minimum Za test statistic{p_end}
-{synopt:{cmd:r(tb1_za)}}first break location for Za test (observation number){p_end}
-{synopt:{cmd:r(tb2_za)}}second break location for Za test (observation number){p_end}
+{synopt:{cmd:r(adf_min)}}minimum ADF* test statistic{p_end}
+{synopt:{cmd:r(lag_adf)}}selected ADF lag order at the ADF* break{p_end}
+{synopt:{cmd:r(tb1_adf)}}first break for ADF* test (observation number){p_end}
+{synopt:{cmd:r(tb2_adf)}}second break for ADF* test (observation number){p_end}
+{synopt:{cmd:r(date1_adf)}}first break for ADF* test (time-variable value){p_end}
+{synopt:{cmd:r(date2_adf)}}second break for ADF* test (time-variable value){p_end}
+{synopt:{cmd:r(zt_min)}}minimum Zt* test statistic{p_end}
+{synopt:{cmd:r(tb1_zt)}}first break for Zt* test (observation number){p_end}
+{synopt:{cmd:r(tb2_zt)}}second break for Zt* test (observation number){p_end}
+{synopt:{cmd:r(date1_zt)}}first break for Zt* test (time-variable value){p_end}
+{synopt:{cmd:r(date2_zt)}}second break for Zt* test (time-variable value){p_end}
+{synopt:{cmd:r(za_min)}}minimum Za* test statistic{p_end}
+{synopt:{cmd:r(tb1_za)}}first break for Za* test (observation number){p_end}
+{synopt:{cmd:r(tb2_za)}}second break for Za* test (observation number){p_end}
+{synopt:{cmd:r(date1_za)}}first break for Za* test (time-variable value){p_end}
+{synopt:{cmd:r(date2_za)}}second break for Za* test (time-variable value){p_end}
 {synopt:{cmd:r(nobs)}}number of observations{p_end}
 {synopt:{cmd:r(k)}}number of independent variables{p_end}
+{synopt:{cmd:r(model)}}model specification (1, 2, or 3){p_end}
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Matrices}{p_end}

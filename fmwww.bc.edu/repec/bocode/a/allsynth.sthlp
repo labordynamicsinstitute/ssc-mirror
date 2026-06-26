@@ -1,15 +1,15 @@
 {smcl}
-{* Feb4,2026}{...}
+{* June25,2026}{...}
 {cmd:help allsynth} 
 {hline}
 
-{title:Title} {p 19 20 0} {cmd:Version 1.32} - Release date: February 9, 2026. Tested on Stata 15.1 and above. 
+{title:Title} {p 19 20 0} {cmd:Version 1.33} - Release date: June 25, 2026. Tested on Stata 15.1 and above. 
 
 {p2colset 5 20 20 2}{...}
 {p2col :{hi:allsynth} {hline 2}}Automates estimation of (i) bias-corrected synthetic control gaps ("treatment effects"); (ii) RMSPE-ranked {it:p}-values and 
 placebo-variance-based {it:p}-values and 95% confidence intervals from "in-space" treatment permutations; and (iii) "stacked" synthetic controls 
 (with many treated units and potentially staggered treatment timing); and also provides heavily-automated graphing functionality. See 
-{browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire 2026} for a thorough review of {cmd:allsynth} {p_end}
+{browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire (Forthcoming)} for a thorough review of {cmd:allsynth} {p_end}
 {p2colreset}{...}
 
 
@@ -40,7 +40,7 @@ unit and its donor pool, proposed by {browse "https://www.tandfonline.com/doi/ab
 ({browse "https://onlinelibrary.wiley.com/doi/abs/10.1111/ajps.12116":Abadie, Diamond and Hainmueller 2015}); 
 {cmd:(3)} automated estimation of a "stacked" (or "separate") synthetic control estimator with many treated units and potentially staggered treatment timing
 ({browse "https://ftp.iza.org/dp8944.pdf":Dube and Zipperer 2015}, {browse "https://academic.oup.com/jrsssb/article/84/2/351/7056152":Ben-Michael, Feller and Rothstein 2022}, 
-{browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2025}), 
+{browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2026a}), 
 yielding estimates of the average treatment effects and (if desired) associated {it:p}-values and 95% confidence intervals for both classic and bias-corrected specifications; and
 {cmd:(4)} greatly expanded automated graphing capability. {cmd: allsynth} also provides additional diagnostics and warnings to help guide users.
 
@@ -68,7 +68,7 @@ Informative warnings are returned if the specified options need to be changed. P
 {p 8 8 2}{it:At least one} of {cmd:rmspe} or {cmd:variance} is required, and both are permitted, though {cmd:variance} may {it:only} be specified when the {cmd:stacked()} option is also specified. 
 {cmd:rmspe} will calculate RMSPE-ranked {it:p}-values for each post-treatment period. {cmd:variance} will calculate {it:p}-values and 95% confidence intervals for each post 
 treatment period based on the variance of the sample distribution of placebo average gaps, but may only be specified if the {cmd:stacked()} option is also specified (see 
-{browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire 2026} for further discussion).
+{browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire (Forthcoming)} for further discussion).
 
 {p 8 8 2}If the {cmd:bcorrect()} option is specified, then the bias-corrected placebo gaps and {it:p}-values
 will also be calculated. {cmd:pvalues()} must be specified for the placebos to be estimated and for the placebo gaps to be plotted (see the entry on the {cmd:gapfigure()} option, below). 
@@ -101,24 +101,13 @@ only in the difference rather than in these variables individually; however, vis
 
 
 {p 4 8 2}
-{cmd:gapfigure}({cmd:classic}|{cmd:bcorrect} [ {cmd:placebos lineback, save}({it:file}) [{cmd:, replace} ]) {it:twoway_options} ]) can be used to 
-automatically generate a plot of the trajectories of (at most two of) the estimated gaps, bias-corrected gaps, the set of placebo gaps, or 
-the set of bias-corrected placebo gaps. The bias-corrected gaps can only be plotted if the {cmd:allsynth} option {cmd:bcorrect()} 
-is specified, and the placebo gaps can only be plotted if the {cmd:allsynth} option {cmd:pvalues()} is specified. If {cmd:bcorrect()} is specified, 
-only the bias-corrected gaps and placebo gaps can be plotted.
+{cmd:gapfigure}({cmd:classic}|{cmd:bcorrect} [ {cmd:lineback, save}({it:file}) [{cmd:, replace} ]) {it:twoway_options} ]) can be used to 
+automatically generate a plot of the trajectories of (at most two of) the estimated gaps and bias-corrected gaps. The bias-corrected gaps can only be plotted if the {cmd:allsynth} option {cmd:bcorrect()} 
+is specified. If {cmd:bcorrect()} is specified, only the bias-corrected gaps can be plotted. {cmd: gapfigure()} should not be specified if the {cmd: allsynth} option {cmd: stacked()} is specified.
 
-{p 8 8 2}{it:At least one} of {cmd:classic} or {cmd:bcorrect} must be specified, though both may also be specified if the {cmd:placebos} option 
-(see option (1), below) is {it:not} specified. {cmd:classic} plots the classic estimated gaps for the treated units, and {cmd:bcorrect} plots the bias-corrected 
-estimated gaps for the treated unit.{p_end}
+{p 8 8 2}{it:At least one} of {cmd:classic} or {cmd:bcorrect} must be specified, though both may also be specified. {cmd:classic} plots the classic estimated gaps for the treated units, and {cmd:bcorrect} plots the bias-corrected estimated gaps for the treated unit.{p_end}
 
-{p 8 8 2}Users may also specify additional {cmd:gapfigure()} options:{p_end}
-
-{p 10 10 2}(1) {cmd:placebos} plots the (classic {it:or} bias-corrected) estimated placebo gaps from in-space treatment permutations, and may only
-be specified if the {cmd:allsynth} option {cmd:pvalues()} is also specified. {cmd:placebos} may be specified with {it:either} {cmd:classic} {it:or} 
-{cmd:bcorrect}, but not both. If the {cmd:allsynth} option {cmd:bcorrect()} is specified, then {cmd:placebos} may {it:only} be specified with {cmd:bcorrect}.
-
-{p 10 10 2}(2) {cmd:lineback} places a vertical dotted line on the plot in the final pre-treatment period. The default setting places a vertical dotted line on the
-plot in the treatment period.
+{p 10 10 2}(2) {cmd:lineback} places a vertical dotted line on the plot in the final pre-treatment period. The default setting places a vertical dotted line on the plot in the treatment period.
 
 {p 10 10 2}(3) {cmd:save}({it:file}) specified that the plot should be saved to the indicated {it:file}, which may include a filepath and a filename. 
 The default file extension is {it:.pdf} but another extension may be specified. {cmd:replace} may be specified after a comma if any identically-named
@@ -142,7 +131,7 @@ that this necessitates that no variable in {it:varlist} have its value in the fi
 {p 4 8 2}{cmd:stacked}({cmd:trunits}({it:varname}) {cmd:trperiods}({it:varname}){cmd:, clear} [ {cmd:eventtime}({it:numlist}) {cmd:avgweights}({it:varname}) 
 {cmd:balanced} {cmd:donorcond}({it:string} [{cmd:,} {it:string} ]) {cmd:donorcond2}({it:string} [{cmd:,} {it:string} ]) {cmd:donorcond3}({it:string} [{cmd:,} 
 {it:string} ]) {cmd:donorcond4}({it:string} [{cmd:,} {it:string} ]) {cmd:donorif}({it:string}) {cmd:unique_w} {cmd:sampleavgs}({it:real}) 
-{cmd:figure}({cmd:classic}|{cmd:bcorrect} [ {cmd:placebos lineback}{cmd:, save}({it:file}) [{cmd:, replace} ]) {it:twoway_options} ]) can be used to automatically 
+{cmd:figure}({cmd:classic}|{cmd:bcorrect} [ {cmd:placebos ci lineback}{cmd:, save}({it:file}) [{cmd:, replace} ]) {it:twoway_options} ]) can be used to automatically 
 estimate the average treatment effect on the treated units using a stacked synthetic control estimating strategy. 
 
 {p 8 8 2} Users may specify if the estimates should be calculated in event time or calendar time (where either are possible), may specify whether 
@@ -150,11 +139,11 @@ estimates should be balanced in the specified time-type periods, may specify uni
 whether the averages should include only unit-estimates associated with unique estimated {it:W} matrices. Users may also specify conditions for 
 selecting treated-unit-specific donor pools.
 
-{p 8 8 2} Users may additionally specify the automatic generation of a distribution of sampled average placebo gaps and calculate RMSPE-ranked {it:p}-values from that distribution, 
+{p 8 8 2} Users may additionally specify the automatic generation of a distribution of sampled average placebo gaps and calculate RMSPE-ranked and placebo-variance {it:p}-values from that distribution, 
 and/or {it:p}-values and 95% confidence intervals based on the {it:variance} of that distribution, and may also specify the number of placebo {it:average} gaps included in the sample distribution. 
 
 {p 8 8 2} Similarly to the {cmd:gapfigure()} option (see above), {cmd:stacked()} allows users to automatically generate a (customizable) plot of the 
-trajectories of the estimated average gaps, bias-corrected average gaps, 95% confidence intervals around either, the set of placebo average gaps, or the set of 
+trajectories of the estimated average gapsa and bias-corrected average gaps, and additionally 95% confidence intervals around either, the set of placebo average gaps, or the set of 
 bias-corrected placebo average gaps, all in event time, or in calendar time when units are treated simultaneously. 
 
 {p 8 8 2} The {cmd:allsynth} option {cmd:keep}({it:file}) must be specified if {cmd:stacked()} is specified, and the treated-unit-specific results for 
@@ -210,10 +199,8 @@ the set of placebo average gaps, and the set of average bias-corrected placebo g
 with {it:either} the classic average gaps {cmd:or} the average bias-corrected gaps, but not both. These figures will be plotted in the time type (calendar time or event time) 
 of the estimates (see the entry for {cmd:eventtime()}, above). 
 
-{p 10 10 2}(8)The bias-corrected gaps can only be plotted if the {cmd:allsynth} option {cmd:bcorrect()} is specified, the placebo gaps can only be plotted if the 
-{cmd:allsynth} option {cmd:pvalues()} is specified, and the 95% confidence intervals can be plotted only if the {cmd:pvalues}(variance) option of {cmd:allsynth} is specified. 
-{cmd:figure()} uses the same syntax as the {cmd:allsynth} option {cmd:gapfigure()}, but unlike {cmd:gapfigure()} it is possible to specify {cmd:figure}({cmd:classic placebos}) 
-even if the {cmd:allsynth} option {cmd:bcorrect() is specified. As with {cmd:gapfigure()}, the plot can also be customized and saved. See the syntax 
+{p 10 10 2}The bias-corrected gaps can only be plotted if the {cmd:allsynth} option {cmd:bcorrect()} is specified, the placebo gaps can only be plotted if the 
+{cmd:allsynth} option {cmd:pvalues()} is specified, and the 95% confidence intervals can be plotted only if the {cmd:pvalues}(variance) option of {cmd:allsynth} is specified. As with {cmd:gapfigure()}, the plot can also be customized and saved. See the syntax
 for {cmd:gapfigure()} for further explanation of the syntax for {cmd:figure()}.{p_end}
 
 {p 4 4 2}
@@ -235,7 +222,7 @@ from {browse "https://www.tandfonline.com/doi/abs/10.1198/jasa.2009.ap08746":Aba
 
 {p 4 4 2}
 Examples 11-13 illustrate the use of {cmd: allsynth} when the {cmd: stacked()} option {it:is} specified, making use of {it:a subset of} the data used in
-{browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2025}; {browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":2026}.{p_end}
+{browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2026a}; {browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":2026}.{p_end}
 
 
 {p 0 4 2}{cmd:Examples 1-10:}
@@ -276,8 +263,7 @@ Example 3 - Calculate, display, and save the classic and the bias-corrected gaps
 
 {p 8 8 2}
 This example reproduces the estimation in Example 1, but as {cmd:bcorrect()} and its own {cmd:figure} option are specified, it also calculates
-the classic and the (OLS regression estimated) bias-corrected gaps for each period (for the treated unit, 3, which is California), while plotting the bias-corrected outcome paths of the treated unit and its synthetic control. The classic results are saved in the working directory as {it:smokingresults.dta} as the {cmd:keep()} command is specified, and because {cmd:bcorrect(merge)} is also specified those results are merged and saved to the same file, and the variables _Y_treated and _Y_synthetic are replaced in this saved file by their bias-corrected values (meaningful only for calculating the bias-corrected gap). If {cmd:bcorrect(merge)} had instead been specified, _Y_treated and _Y_synthetic would have been left as their uncorrected values, and the bias-corrected
-values would have been saved as _Y_treated_bc and _Y_synthetic_bc. The {cmd:replace} option is specified so {it:smokingresults.dta} can be saved even if the file already exists (it will be overwritten). {p_end}
+the classic and the (OLS regression estimated) bias-corrected gaps for each period (for the treated unit, 3, which is California), while plotting the bias-corrected outcome paths of the treated unit and its synthetic control. The classic results are saved in the working directory as {it:smokingresults.dta} as the {cmd:keep()} command is specified, and because {cmd:bcorrect(merge)} is also specified those results are merged and saved to the same file, with the bias-corrected values saved as _Y_treated_bc and _Y_synthetic_bc alongside the uncorrected values _Y_treated and _Y_synthetic. The {cmd:replace} option is specified so {it:smokingresults.dta} can be saved even if the file already exists (it will be overwritten). {p_end}
 
 {p 4 4 2}
 Example 4 - Calculate, display, and save the classic and the bias-corrected gaps between the treated unit outcome and the synthetic control outcome,
@@ -360,7 +346,7 @@ save(ex10}{cmd:, replace)} after the comma adds the title "Ex10" and saves the g
 
 {p 0 4 2}{cmd:Examples 11-13:}
 
-{p 4 4 2}Load the example data from {browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2025}; {browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":2026}. This contains panel observations of 605 U.S. counties where Walmart tried to build a Supercenter over the years 1990-2005 (see {browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2025} for details):{p_end}
+{p 4 4 2}Load the example data from {browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2026a}; {browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":2026}. This contains panel observations of 605 U.S. counties where Walmart tried to build a Supercenter over the years 1990-2005 (see {browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2026a} for details):{p_end}
 {p 8 4 2}{stata "sysuse allsynth_walmart, clear":sysuse allsynth_walmart, clear}{p_end}
 
 {p 4 8 2}
@@ -368,7 +354,7 @@ Declare the dataset as a panel:{p_end}
 {p 8 8 2}{stata "tsset cty_fips year":tsset cty_fips year}{p_end}
 
 {p 4 8 2}
-See {browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire 2026} for discussion of the following examples without defining or calling
+See {browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf":Wiltshire (Forthcoming)} for discussion of the following examples without defining or calling
 the macros (which is done to shorten the commands so that Stata's help file language (SMCL) will recognize them as interactive (clickable on a Windows system).
 
 {p 4 8 2}
@@ -408,8 +394,8 @@ Estimate, display, and save the classic and bias-corrected average treatment eff
 As {cmd:stacked()} is specified, this example estimates and plots the classic and bias-corrected average treatment effects of Walmart Supercenter entry on county employment in Indiana. The {it:supercenter} variable identifies with a 1 all the counties in Indiana which got their first Walmart Supercenter over this period, and identifies with a 0 all of the donor pool counties in the sample where Walmart tried to build a Supercenter during this period but was blocked by local efforts. The {it:super_year} variable identifies (in every year) the year of Supercenter entry into the treated counties. Note that {cmd:, clear} is also specified within {cmd:stacked()}, as it is required (because all existing identically-named files are erased when {cmd:stacked()} is specified). The estimated average effects are in percentage terms as {cmd:transform}({cmd:emps_n10 `prednorm', normalize}) was specified, which normalizes employment (and the specified covariates) in each treated county and its donor pool counties to the final pre-treatment period for that treated county. The results are displayed, stored, and saved in event time, as Indiana's counties were treated over several years. The classic and bias-corrected estimated average treatment effects are displayed on the graph, as the {cmd:stacked()} option {cmd:figure}({cmd:classic bcorrect}) is specified.{p_end}
 
 {p 4 4 2}
-Example 12 - Calculate the stacked average treatment effects of Supercenter entry on aggregate county employment across the U.S. as in {browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2025}, but without {it:p}-values. 
-Note that this example takes 18 seconds to run on StataNow/MP 19.5 for Windows (64-bit x86) with an 8-core license on a system with 64GB total physical memory and a 24-core Intel i9 processor.{p_end}
+Example 12 - Calculate the stacked average treatment effects of Supercenter entry on aggregate county employment across the U.S. as in {browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2026a}, but without {it:p}-values. 
+Note that this example takes 334 seconds to run on StataNow/MP 19.5 for Windows (64-bit x86) with an 8-core license on a system with 64GB total physical memory and a 24-core Intel i9 processor.{p_end}
 
 {p 4 4 2}
 First restore the data to include all treated and all donor pool counties:{p_end}
@@ -432,7 +418,7 @@ This example does as Example 11, but for all treated counties in the U.S. As {cm
 be saved to allsynth_walmart/ex12.pdf and will replace any existing file of the same name. As {cmd:xtitle}(Event year) is specified, the x-axis title will be changed to "Event year".{p_end}
 
 {p 4 4 2}
-Example 13 - Do as Example 12, but estimate RMSPE-ranked and placebo-variance {it:p}-values (along with 95% confidence intervals for the latter) and generate the plot for the bias-corrected estimated ATT, 1000 sampled placebo average gaps, and the 95% confidence intervals as in {browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2025}.{p_end} 
+Example 13 - Do as Example 12, but estimate RMSPE-ranked and placebo-variance {it:p}-values (along with 95% confidence intervals for the latter) and generate the plot for the bias-corrected estimated ATT, 1000 sampled placebo average gaps, and the 95% confidence intervals as in {browse "https://justinwiltshire.com/s/JustinCWiltshire_JMP.pdf":Wiltshire 2026a}.{p_end} 
 
 {p 4 4 2}
 First, define a macro that specifies all the desired options of the {cmd:figure()} option of the {cmd:stacked()} option:{p_end}
@@ -476,10 +462,10 @@ Ben-Michael, E., Feller, A. and J. Rothstein, 2021. The Augmented Synthetic Cont
 Ben-Michael, E., Feller, A. and J. Rothstein, 2022. Synthetic Controls with Staggered Adoption. {it:Journal of the Royal Statistical Society Series B: Statistical Methodology}, 84(2): 351-381.
 
 {p 4 8 2}
-Wiltshire, J.C., 2025. Walmart Supercenters and Monopsony Power: How a Large, Low-Wage Employer Impacts Local Labor Markets. {it:Working paper}.
+Wiltshire, J.C., 2026a. Walmart Supercenters and Monopsony Power: How a Large, Low-Wage Employer Impacts Local Labor Markets. {it:Working paper}.
 
 {p 4 8 2}
-Wiltshire, J.C., 2026. allsynth: (Stacked) Synthetic Control Bias-Correction Utilities for Stata. {it:Working paper}.
+Wiltshire, J.C., Forthcoming. allsynth: (Stacked) Synthetic Control Bias-Correction Utilities for Stata. {it:The Stata Journal}.
 
 
 {marker citation}{...}
@@ -487,8 +473,8 @@ Wiltshire, J.C., 2026. allsynth: (Stacked) Synthetic Control Bias-Correction Uti
 
 {pstd}{opt allsynth} is user-written command made freely-available to the research community. Please cite the associated paper: {p_end}
 
-{phang}Wiltshire, J.C., 2026.
-allsynth: (Stacked) Synthetic Control Bias-Correction Utilities for Stata. {it:Working paper}.
+{phang}Wiltshire, J.C., Forthcoming.
+allsynth: (Stacked) Synthetic Control Bias-Correction Utilities for Stata. {it:The Stata Journal}.
 {browse "https://justinwiltshire.com/s/allsynth_Wiltshire.pdf"}.
 
 
