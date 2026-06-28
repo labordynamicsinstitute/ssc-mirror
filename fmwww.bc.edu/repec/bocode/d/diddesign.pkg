@@ -1,0 +1,60 @@
+d 'DIDDESIGN': module to perform Double Difference-in-Differences Estimation
+d
+d      diddesign implements the Double Difference-in-Differences
+d (Double DID) method from Egami and Yamauchi (2023). The method   
+d optimally combines the standard DID estimator with the sequential
+d DID (s-DID) estimator using GMM weights to improve	efficiency
+d while maintaining robustness.    For standard DID designs
+d (design(did)), the command estimates both DID and s-DID, then
+d computes the GMM-optimal weighted    combination (Double DID). 
+d When kmax() is set to a value greater than 2 and sufficient
+d pre-treatment periods are available,	  the command uses the
+d generalized K-DID estimator from Appendix E of Egami and Yamauchi
+d (2023), combining up to K moment    conditions via GMM. The k-th
+d component uses the k-th order parallel trends assumption, which
+d can account for (k-1)-th degree    polynomial time-varying
+d confounding.	  For staggered adoption (SA) designs (design(sa)),
+d the command handles multiple treatment timing groups and computes
+d    time-weighted averages across cohorts. 
+d
+d KW: DiD
+d KW: double difference in difference
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260627
+d
+d Author:   Xuanyu Cai,  City University of Macau
+d Support: email  xuanyuCAI@@outlook.com
+d
+d Author:     Wenli Xu, City University of Macau 
+d Support: email  wlxu@@cityu.edu.mo
+d
+f diddesign.ado
+f diddesign.sthlp
+f ../_/_diddesign_display_footer.ado
+f ../_/_diddesign_display_header.ado
+f ../_/_diddesign_display_result.ado
+f ../_/_diddesign_display_table_header.ado
+f ../_/_diddesign_error.ado
+f ../_/_diddesign_expand_covariates.ado
+f ../_/_diddesign_load_mata.ado
+f ../_/_diddesign_parallel_boot.ado
+f ../_/_diddesign_parallel_worker.ado
+f ../_/_diddesign_parse.ado
+f ../_/_diddesign_prep.ado
+f ../_/_diddesign_sa.ado
+f ../_/_diddesign_utils.ado
+f ../_/_diddesign_warning.ado
+f ../c/compile_mlib.do
+f diddesign_check.ado
+f diddesign_mata.do
+f diddesign_plot.ado
+f diddesign_check.sthlp
+f diddesign_intro.sthlp
+f diddesign_plot.sthlp
+f ../e/example_kdid.do
+f ../e/example_malesky.do
+f ../e/example_paglayan.do
+f ../m/malesky2014.dta
+f ../p/paglayan2019.dta

@@ -1,0 +1,34 @@
+d 'MAKI': module to implement Maki (2012) cointegration test with unknown number of breaks
+d
+d	maki performs the residual-based cointegration test of Maki
+d (2012), which allows the cointegrating relationship to have an   
+d unknown number of structural breaks, smaller than or equal to a
+d maximum number of breaks k set a priori.  The procedure   
+d combines the sequential break-search idea of Bai and Perron
+d (1998) with the unit-root testing strategy of Kapetanios (2005). 
+d   The null hypothesis is no cointegration; the alternative is
+d cointegration with i breaks (i {c <=} k). For each candidate set 
+d   of breaks the test estimates the regression by OLS, runs an
+d ADF-type regression on the residuals, and records the t-statistic
+d    for the residual unit-root coefficient. The test statistic is
+d the minimum t-statistic over all the partitions searched up to k 
+d   breaks. Large negative values lead to rejection of the no-
+d cointegration null. Breakpoints are selected by minimizing the
+d sum	 of squared residuals (SSR).	This command is a
+d Stata/Mata port of the original GAUSS procedures written by Daiki
+d Maki and distributed in the TSPDLIB	 library (Aptech Systems).
+d The first regressor in indepvars through the fourth is supported;
+d critical values are available for    up to four regressors only. 
+d
+d KW: structural breaks
+d KW: Maki
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260627
+d
+d Author: Ozan Eruygur,  Ankara Haci Bayram Veli University
+d Support: email eruygur@@gmail.com
+d
+f maki.ado
+f maki.sthlp

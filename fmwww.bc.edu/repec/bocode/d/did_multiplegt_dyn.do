@@ -9,17 +9,317 @@
 ** Subsections may contain unnumbered subsubsections, tagged with "//".
 ** Subsubsections may be further divided into paragraphs, tagged with "*".
 ** Comments are also tagged with "*".
-** This version : February 15th, 2024
+** This version : June 9th, 2026
+
+** This version includes Diego's changes:
+**** Fixes to variance estimation with controls() (tks)
+**** Fixes to same_switchers() and same_switchers_pl() with unbalanced panel
+**** Fixes to controls() with unbalanced panel
+**** no_updates turned into _no_updates
+**** Fix to cluster variances
+**** Fixed norm weights with unbalanced panels
+**** Fixed effect_equal()
+**** (proposed) comprehensive fix to demeaning with clusters + simplified syntax
+**** (proposed) fix to demeaning when E_hat_denom == 1
+**** more_granular_demeaning
+**** Added Clement's second fix to placebo
+**** Replaced _r_ub and _r_lb with explicit CI computation
+**** Added sup test from sotable
+
+** Felix:
+**** Delete if d_sq_int_XX==`l' condition when summing placebo variances 
+**** Adjust - when storing the switcher out variances
+**** Add cap drop group2_XX to Tom's change regarding the re-counting of groups
+**** Add different_paths_XX in the group statement "gegen rank_paths_XX=group(-count_path_XX different_paths_XX) if count_path_XX!=." when generating variable to distinguish paths for the by_path() option
+
+** Clément:
+**** Demeaning for singular cohorts
+**** No demeaning if singular cohorts have joint DoF = 1
+
+**** Line 3204, add if "`trends_lin'"=="" condition when adding the avg_effect estimate to the matrix used for esttab (solve delta_XX not found error) -> needed to add this condition at multiple places
+**** Add ereturn for p-value test joint nullity effects
+
+*** DAC:
+**** Added HC2 BM DOF SES to predict_het
 
 ********************************************************************************
 *                                 PROGRAM 1                                    *
+********************************************************************************
+
+********************************************************************************
+*        Mata workers for avg_time_periods option                              *
+*  _compute_Tg  : per-horizon T_g (last period with a valid control group)    *
+*  _avg_cumul   : numerator / denominator + per-effect switcher counts        *
+********************************************************************************
+
+capture mata: mata drop _compute_Tg()
+mata:
+void _compute_Tg(string scalar gv, string scalar tv, string scalar yv,
+                 string scalar fv, string scalar tgcv, string scalar evv,
+                 string scalar fev, string scalar clsv, string scalar ngtv,
+                 string scalar tgoutv)
+{
+    real colvector G, T, Y, F, TGC, EV, FE, CLS, NGT, TGOUT
+    st_view(G,      ., gv)
+    st_view(T,      ., tv)
+    st_view(Y,      ., yv)
+    st_view(F,      ., fv)
+    st_view(TGC,    ., tgcv)
+    st_view(EV,     ., evv)
+    st_view(FE,     ., fev)
+    st_view(CLS,    ., clsv)
+    st_view(NGT,    ., ngtv)
+    st_view(TGOUT,  ., tgoutv)
+
+    real scalar N, i, j, r, s, e, u, P, refp, Fg_, Tgc_, ever, cls_, last_P
+    real scalar own_ref, own_P, has_ctrl, cg, c_fe, c_yref, c_yP, g_id
+
+    N = rows(G)
+    i = 1
+    while (i <= N) {
+        g_id = G[i]
+        j = i
+        while (j <= N) {
+            if (G[j] != g_id) break
+            j++
+        }
+
+        Fg_  = F[i]
+        Tgc_ = TGC[i]
+        ever = EV[i]
+        cls_ = CLS[i]
+        refp = Fg_ - 1
+        last_P = Fg_ - 1
+
+        if (ever == 1 & Fg_ < .) {
+
+            own_ref = 0
+            r = i
+            while (r <= j-1) {
+                if (T[r] == refp) {
+                    if (NGT[r] == 1 & Y[r] < .) own_ref = 1
+                    break
+                }
+                r++
+            }
+
+            if (own_ref == 1) {
+                P = Fg_
+                while (P <= Tgc_) {
+
+                    own_P = 0
+                    r = i
+                    while (r <= j-1) {
+                        if (T[r] == P) {
+                            if (NGT[r] == 1 & Y[r] < .) own_P = 1
+                            break
+                        }
+                        r++
+                    }
+
+                    if (own_P == 1) {
+                        has_ctrl = 0
+                        s = 1
+                        while (s <= N) {
+                            cg = G[s]
+                            e = s
+                            while (e <= N) {
+                                if (G[e] != cg) break
+                                e++
+                            }
+                            if (cg != g_id & CLS[s] == cls_) {
+                                c_fe = FE[s]
+                                if (c_fe > P) {
+                                    c_yref = 0
+                                    c_yP   = 0
+                                    u = s
+                                    while (u <= e-1) {
+                                        if (T[u] == refp & NGT[u] == 1 & Y[u] < .) c_yref = 1
+                                        if (T[u] == P    & NGT[u] == 1 & Y[u] < .) c_yP   = 1
+                                        u++
+                                    }
+                                    if (c_yref == 1 & c_yP == 1) has_ctrl = 1
+                                }
+                            }
+                            if (has_ctrl == 1) break
+                            s = e
+                        }
+                        if (has_ctrl == 1) last_P = P
+                    }
+                    P++
+                }
+            }
+        }
+
+        r = i
+        while (r <= j-1) {
+            TGOUT[r] = last_P
+            r++
+        }
+        i = j
+    }
+}
+end
+
+capture mata: mata drop _avg_cumul()
+mata:
+void _avg_cumul(string scalar gv,  string scalar tv,  string scalar dv,
+                string scalar yv,
+                string scalar d1v, string scalar fv,  string scalar tgv,
+                string scalar evv, string scalar fev, string scalar clsv,
+                string scalar mgv, string scalar ngtv, string scalar sgv,
+                string scalar wv,
+                real scalar ell, real scalar ssw_flag, string scalar sw_dir)
+{
+    real colvector G, T, D, Y, D1, F, TG, EV, FE, CLS, MG, NGT, SG, W
+    st_view(G,   ., gv)
+    st_view(T,   ., tv)
+    st_view(D,   ., dv)
+    st_view(Y,   ., yv)
+    st_view(D1,  ., d1v)
+    st_view(F,   ., fv)
+    st_view(TG,  ., tgv)
+    st_view(EV,  ., evv)
+    st_view(FE,  ., fev)
+    st_view(CLS, ., clsv)
+    st_view(MG,  ., mgv)
+    st_view(NGT, ., ngtv)
+    st_view(SG,  ., sgv)
+    st_view(W,   ., wv)
+
+    real scalar N, i, j, r, s, e, u, k, kmax, period, refp
+    real scalar d1, Fg_, Tg_, ever, Mg_, cls_, dval, y_ref, y_hor, sg_val
+    real scalar d_ref_real, hor_ok, has_ctrl, cg, c_fe, c_yref, c_yhor
+    real scalar incr, weight, num, den, avg, g_id
+    real rowvector nswitch
+
+    N = rows(G)
+    num = 0
+    den = 0
+    nswitch = J(1, ell, 0)
+
+    i = 1
+    while (i <= N) {
+        g_id = G[i]
+        j = i
+        while (j <= N) {
+            if (G[j] != g_id) break
+            j++
+        }
+
+        d1     = D1[i]
+        Fg_    = F[i]
+        Tg_    = TG[i]
+        ever   = EV[i]
+        Mg_    = MG[i]
+        cls_   = CLS[i]
+        sg_val = SG[i]
+
+        if (ever == 1 & Fg_ < . & Fg_ <= Tg_ &
+            (ssw_flag == 0 | Mg_ >= ell) &
+            (sw_dir != "in"  | sg_val == 1) &
+            (sw_dir != "out" | sg_val == 0)) {
+
+            refp = Fg_ - 1
+            y_ref = .
+            d_ref_real = 0
+            r = i
+            while (r <= j-1) {
+                if (T[r] == refp) {
+                    if (NGT[r] == 1) {
+                        y_ref = Y[r]
+                        d_ref_real = 1
+                    }
+                    break
+                }
+                r++
+            }
+
+            kmax = Mg_ - 1
+            for (k = 0; k <= kmax; k++) {
+
+                period = Fg_ + k
+
+                dval   = .
+                y_hor  = .
+                hor_ok = 0
+                r = i
+                while (r <= j-1) {
+                    if (T[r] == period) {
+                        if (NGT[r] == 1) {
+                            dval   = D[r]
+                            y_hor  = Y[r]
+                            hor_ok = 1
+                        }
+                        break
+                    }
+                    r++
+                }
+
+                if (dval < . & d_ref_real == 1 & hor_ok == 1 & y_ref < . & y_hor < .) {
+
+                    has_ctrl = 0
+                    s = 1
+                    while (s <= N) {
+                        cg = G[s]
+                        e = s
+                        while (e <= N) {
+                            if (G[e] != cg) break
+                            e++
+                        }
+                        if (cg != g_id & CLS[s] == cls_) {
+                            c_fe = FE[s]
+                            if (c_fe > period) {
+                                c_yref = 0
+                                c_yhor = 0
+                                u = s
+                                while (u <= e-1) {
+                                    if (T[u] == refp   & NGT[u] == 1 & Y[u] < .) c_yref = 1
+                                    if (T[u] == period & NGT[u] == 1 & Y[u] < .) c_yhor = 1
+                                    u++
+                                }
+                                if (c_yref == 1 & c_yhor == 1) has_ctrl = 1
+                            }
+                        }
+                        if (has_ctrl == 1) break
+                        s = e
+                    }
+
+                    if (has_ctrl == 1) {
+                        incr   = abs(dval - d1)
+                        weight = Mg_ - k
+                        num = num + incr * weight
+                        den = den + incr
+                        nswitch[1, k+1] = nswitch[1, k+1] + W[r]
+                    }
+                }
+            }
+        }
+        i = j
+    }
+
+    avg = (den != 0 ? num/den : .)
+    st_numscalar("num_XX", num)
+    st_numscalar("den_XX", den)
+    st_numscalar("avg_cumul_XX", avg)
+    st_matrix("nswitch_mata_XX", nswitch)
+}
+end
+
 ********************************************************************************
 
 capture program drop did_multiplegt_dyn
 
 program did_multiplegt_dyn, eclass
 	version 12.0
-	syntax varlist(min=4 max=4 numeric) [if] [in] [, effects(integer 1) placebo(integer 0) switchers(string) controls(varlist numeric) trends_nonparam(varlist numeric) weight(varlist numeric max=1) dont_drop_larger_lower NORMALIZED cluster(varlist numeric max=1) graphoptions(string) save_results(string) graph_off same_switchers same_switchers_pl effects_equal  drop_if_d_miss_before_first_switch trends_lin ci_level(integer 95) by(varlist numeric max=1) predict_het(string) design(string) date_first_switch(string)  NORMALIZED_weights CONTinuous(integer 0) save_sample less_conservative_se]
+	syntax varlist(min=4 max=4 numeric) [if] [in] [, effects(integer 1) placebo(integer 0) switchers(string) only_never_switchers controls(varlist numeric) trends_nonparam(varlist numeric) weight(varlist numeric max=1) dont_drop_larger_lower NORMALIZED cluster(varlist numeric max=1) graphoptions(string) save_results(string) graph_off same_switchers same_switchers_pl effects_equal(string)  drop_if_d_miss_before_first_switch trends_lin ci_level(integer 95) by(varlist numeric max=1) predict_het(string) predict_het_hc2bm design(string) date_first_switch(string)  NORMALIZED_weights CONTinuous(integer 0) reset(integer 0) save_sample less_conservative_se more_granular_demeaning by_path(string) bootstrap(string) _no_updates avg_time_periods]
+	
+////////// 0. Auto-updates
+if "`_no_updates'" == "" {
+	if uniform() < 0.01 {
+		noi ssc install did_multiplegt_dyn, replace
+	}
+}	
 
 ////////// 1. Checking that necessary tools to run command installed, and that syntax correctly specified.	
 		
@@ -29,22 +329,127 @@ if _rc{
 	di ""
 	di as error "You have not installed the gtools package which is used within the did_multiplegt_dyn command."
 	di `"{stata "ssc install gtools": Click here to install gtools}"'
+	di as input _continue ""
 	
 	exit
 }	
+
+// Save controls in a specific local if trends_lin by() continuous() and continuous are specified at the same time
+if "`trends_lin'"!=""&"`by'"!=""&`continuous'!=0{
+	local controls_orig_XX = "`controls'"
+}
+
+// Error message if by and by_path specified at the same time
+if "`by'"!=""&"`by_path'"!=""{	
+	di as error ""
+	di as error "The options by() and by_path() can not be specified at the same time!"
+	di as input _continue ""
+	exit
+}
 
 
 if `continuous'<0{
 	di ""
 	di as error "The input of the continuous() option has to be a positive integer!"
+	di as input _continue ""
 	
 	exit
+}
+
+if ("`by_path'"!=""&"`graphoptions'"!=""){
+	di ""
+	di as error "by_path() builds on pre-specified graph options so it does not allow for any further inputs in graphoptions()!"
+	di as input _continue ""
+	
+	exit
+}	
+
+if ("`by_path'"!=""&"`by_path'"!="all"){
+	
+	capture confirm integer number `by_path'
+	if _rc{
+	di ""	
+	di as error "The input of the by_path() option has to be {it:all} or a positive integer!"
+	di as input _continue ""
+	
+	exit
+	}
+	
+if `by_path'<=0{
+	di ""
+	di as error "The input of the by_path() option has to be {it:all} or a positive integer!"
+	di as input _continue ""
+	
+	exit
+}
+}
+
+if "`bootstrap'"!=""&`continuous'==0{
+	di as error "You specified the bootstrap option without the continuous option. Please be aware that we strongly recommend to only compute bootstraped standard errors when you want to use the continuous option. Otherwise you can rely on the (much faster) computation of analytical standard errors."	
+	di as input _continue ""
+}
+
+if "`bootstrap'"==""&`continuous'>0{
+	di as error "You specified the continuous option without the bootstrap option. Please be aware that we recommend to compute bootstraped standard errors when you are using the continuous option as the analytical standard errors can be liberal in that case."	
+	di as input _continue ""
+}
+
+// Allow to specify seed with bootstrap
+if "`bootstrap'"==""{
+	local bootstrap_XX = 0 // allowing to keep the structure from before
+}	
+if "`bootstrap'"!=""{
+	if strpos("`bootstrap'", ",") == 0 {
+		di as error ""
+		di as error "Syntax error in bootstrap option"
+		di as error "Comma required"
+		di as input _continue ""
+		exit
+	}
+
+	local bootstrap_XX = strtrim(substr("`bootstrap'", 1, strpos("`bootstrap'", ",") - 1))
+	local seed_temp_XX = strtrim(substr("`bootstrap'", strpos("`bootstrap'", ",") + 1, .))
+	
+	// set default to 50 reps
+	if "`bootstrap_XX'"==""{
+		local bootstrap_XX = 50
+	}
+	
+	// set default to no seed
+	if "`seed_temp_XX'"==""{
+		local seed_XX ""
+	}
+	if "`seed_temp_XX'"!=""{
+		local seed_XX "seed(`seed_temp_XX')"
+	}
+}
+
+// Check that bootstrap input is correct 
+if `bootstrap_XX'!=0{
+	
+	local controls_bs_orig_XX="`controls'"
+	
+	capture confirm integer number `bootstrap_XX'
+	if _rc{
+	di ""	
+	di as error "The input of the bootstrap() option has to be a positive integer greater than 1"
+	di as input _continue ""
+	exit
+	}
+	
+if `bootstrap_XX'<2{
+	di ""
+	di as error "The input of the bootstrap() option has to be a positive integer greater than 1"
+	di as input _continue ""
+	exit
+}
 }
 
 ///// Add a Warning that same_switchers_pl only works when same_switchers is specified.
 if "`same_switchers_pl'"!=""&"`same_switchers'"==""{
 	di ""
 	di as error "The same_switchers_pl option only works if same_switchers is specified as well!"
+	di as input _continue ""
 	
 	exit
 }
@@ -53,8 +458,13 @@ if "`same_switchers_pl'"!=""&"`same_switchers'"==""{
 if `continuous'>0&"`design'"!=""{
 	di ""
 	di as error "The design option can not be specified together with the continuous option!"
+	di as input _continue ""
 
 	exit
+}
+
+if "`more_granular_demeaning'" != "" {
+	local less_conservative_se "less_conservative_se"
 }
 
 ////////// 2. Data preparation steps	
@@ -116,8 +526,9 @@ capture drop U_Gg_var_global_XX
 capture drop U_Gg_var_global_2_XX
 capture drop weight_XX
 capture drop delta_XX
+capture drop aux_XX
 
-ereturn clear
+// ereturn clear //Modif Felix
 
 tokenize `varlist'
 
@@ -144,6 +555,58 @@ drop if `2'==.|`3'==.
 	keep `in'
 	} 
 	
+	
+///// Collapse and weight
+	
+// Checking wether data has to be collapsed, because at a more disaggregated level than group*time.
+ 
+capture drop counter_XX
+capture drop counter_temp_XX
+gen counter_temp_XX=1
+bys `2' `3' : gegen counter_XX=count(counter_temp_XX)
+sum counter_XX
+scalar aggregated_data=0
+if r(max)==1{
+scalar aggregated_data=1
+}
+
+// Creating the weight variable.
+
+if("`weight'"==""){
+gen weight_XX = 1
+}
+else{
+gen weight_XX = `weight'
+}
+
+replace weight_XX=0 if weight_XX==.
+
+// Collapsing the data when necessary
+
+if scalar(aggregated_data)==0{
+	
+	replace weight_XX=10^(-38) if `1'==.
+	capture drop tag_y_miss_XX
+	gen tag_y_miss_XX=(`1'==.)
+	
+	if "`1'"!="`4'"{			
+		collapse (mean) `1' `4' tag_y_miss_XX `controls' `trends_nonparam' `cluster' `by' `predict_het' (count) weight_XX [pw=weight_XX], by(`2' `3') 
+	}
+	
+	if "`1'"=="`4'"{
+				
+		collapse (mean) `1' `controls' `trends_nonparam' `cluster' `by' `predict_het' (count) weight_XX [pw=weight_XX], by(`2' `3')
+	}	
+	
+	replace weight_XX=0 if tag_y_miss_XX==1
+}
+	
+//// Modif Felix 26.05.2025 -> tempvar to use the correct weights when we use by_path and the data is collapsed becausee the group variable is coarser than the panel identifier
+if "`by_path'" != ""{
+	tempvar weight_path_XX
+	generate `weight_path_XX' = weight_XX
+}	
+	
 ///// by option for heterogeneous treatment effects analysis
 
 // define local so we run the loop once if by is not specified
@@ -155,9 +618,8 @@ if "`by'" !=""{
 	xtset `2' `3'
 	xtsum `by'
 	if `r(sd_w)'!=0{
-		display as error "The variable specified in the option by"
-		display as error "is time-varying. That variable should"
-		display as error "be time-invariant."
+		display as error "The variable specified in the option by is time-varying. That variable should be time-invariant."
+		di as input _continue ""
 		exit
 	}
 }
@@ -202,6 +664,20 @@ bys `2': gegen mean_y_XX=mean(`1')
 drop if mean_d_XX==.|mean_y_XX==.
 drop mean_d_XX mean_y_XX
 
+// save data for bootstrap
+if `bootstrap_XX'!=0{
+	
+	qui tempfile data_bootstrap_XX
+	qui save "`data_bootstrap_XX'.dta", replace
+
+	if "`less_conservative_se'"!=""{
+		di as error ""
+		di as error "The less_conservative_se option has no effect when bootstrap is specified, therefore it is ignored in this case to save computation time."
+		di as input _continue ""
+		local less_conservative_se ""
+}
+}
+
 ///// predict_het option for heterogeneous treatment effects analysis
 
 if "`predict_het'"!=""{
@@ -210,11 +686,22 @@ if strpos("`predict_het'", ",") == 0 {
 		di as error ""
 		di as error "Syntax error in predict_het option"
 		di as error "Comma required"
+		di as input _continue ""
 		exit
 	}
 
 local het_vars_XX = strtrim(substr("`predict_het'", 1, strpos("`predict_het'", ",") - 1))
 local het_nums_XX = strtrim(substr("`predict_het'", strpos("`predict_het'", ",") + 1, .))
+
+	// Modif Felix: Add checks for correct inputs in predict_het
+	if "`het_vars_XX'"==""{
+		di as error "You did not specify any variables to be used in the predict_het option, therefore this option will be ignored"
+		di as input _continue ""
+	}
+	
+	if "`het_nums_XX'"==""{
+		local het_nums_XX
+	}
 	
 	local pred_het `het_vars_XX'
 	local het_effects `het_nums_XX'	
@@ -225,9 +712,8 @@ if "`normalized'"!=""{
 	local het_effects ""
 	local predict_het ""
 	di as error ""
-	di as error "The options normalized and predict_het can not be"
-	di as error "specified at the same time, therefore predict_het"
-	di as error "will be ignored."
+	di as error "The options normalized and predict_het can not be specified at the same time, therefore predict_het will be ignored."
+	di as input _continue ""
 }
 
 * Check if predict_het and controls are specified simulataneously
@@ -236,25 +722,24 @@ if "`predict_het'"!=""&"`controls'"!=""{
 	local het_effects ""
 	local predict_het ""
 	di as error ""
-	di as error "The options controls() and predict_het can not be"
-	di as error "specified at the same time, therefore predict_het"
-	di as error "will be ignored."
+	di as error "The options controls() and predict_het can not be specified at the same time, therefore predict_het will be ignored."
+	di as input _continue ""
 }
 }	
 
 * Check if only time-invariant variables are specified in predict_het
 if "`pred_het'" !=""{
-	xtset `2' `3'
 	
 	local predict_het_bad=""
 	local predict_het_good=""
 	
 	foreach var in `pred_het'{
-	xtsum `var'
-	if `r(sd_w)'!=0{
+	bys `2': sum `var'
+	
+	if r(sd)!=0{
 		local predict_het_bad="`predict_het_bad' `var'"
 	}
-	if `r(sd_w)'==0{
+	if r(sd)==0{
 		local predict_het_good="`predict_het_good' `var'"
 	}
 	}
@@ -262,51 +747,20 @@ if "`pred_het'" !=""{
 	if "`predict_het_bad'"!=""{
 	display as error "The variable(s) (`predict_het_bad') specified in the option predict_het"
 	display as error "is(are) time-varying, the command will therefore ignore them."
+	di as input _continue ""
 	}
 }
 
-///// Collapse and weight
+*Limit use of predict_het_hc2bm to cases where predict_het is specified
+if "`predict_het'"=="" & "`predict_het_hc2bm'" != "" {
+	di as error ""
+	di as error "Option predict_het_hc2bm only available when predict_het is specified."
 	
-// Checking wether data has to be collapsed, because at a more disaggregated level than group*time.
- 
-capture drop counter_XX
-capture drop counter_temp_XX
-gen counter_temp_XX=1
-bys `2' `3' : gegen counter_XX=count(counter_temp_XX)
-sum counter_XX
-scalar aggregated_data=0
-if r(max)==1{
-scalar aggregated_data=1
+	di as input _continue ""
+	
+	exit
 }
 
-// Creating the weight variable.
-
-if("`weight'"==""){
-gen weight_XX = 1
-}
-else{
-gen weight_XX = `weight'
-}
-
-replace weight_XX=0 if weight_XX==.
-
-// Collapsing the data when necessary
-
-if scalar(aggregated_data)==0{
-	
-	replace weight_XX=0 if `1'==.
-	
-	if "`1'"!="`4'"{
-				
-		collapse (mean) `1' `4' `controls' `trends_nonparam' `cluster' `by' (count) weight_XX [pw=weight_XX], by(`2' `3')
-	}
-	
-	if "`1'"=="`4'"{
-				
-		collapse (mean) `1' `controls' `trends_nonparam' `cluster'`by' (count) weight_XX [pw=weight_XX], by(`2' `3')
-	}	
-}
- 
 
 ///// Creating Y G T D variables
 
@@ -318,6 +772,69 @@ gen treatment_XX=`4'
 ///// Declaring data as (G,T) panel
 
 xtset group_XX time_XX
+
+//////////////////// Reset option
+
+if `reset'!=0 {
+
+	capture drop count_d_non_miss_XX
+	capture drop count_d_non_miss_temp_XX
+	capture drop changed_XX 
+	capture drop spell_XX 
+	capture drop periods_since_change_XX 
+	capture drop reset_dummy_XX 
+	capture drop reset_count_XX 
+	capture drop new_group_XX
+
+	//// Balancing panel to all complete treatment paths
+
+	gen count_d_non_miss_temp_XX=(treatment_XX!=.)
+	bys group_XX: gegen count_d_non_miss_XX=sum(count_d_non_miss_temp_XX)
+	sum count_d_non_miss_XX
+	drop if count_d_non_miss_XX<r(max)
+
+	//// Time since last treatment change
+
+	xtset group_XX time_XX
+
+	bysort group_XX (time_XX): gen changed_XX = treatment_XX != treatment_XX[_n-1] if _n > 1
+	bysort group_XX (time_XX): replace changed_XX = 0 if _n == 1
+
+	bysort group_XX (time_XX): gen spell_XX = sum(changed_XX)
+
+	bysort group_XX spell_XX (time_XX): gen periods_since_change_XX = _n - 1
+	replace periods_since_change_XX=0 if spell_XX==0
+
+	//// Treatment paths with one treatment change and then no change for `reset' periods
+	gen reset_dummy_XX=(periods_since_change_XX==`reset')
+
+	bysort group_XX (time_XX): gen reset_count_XX=sum(reset_dummy_XX)
+
+	//// New group variable
+
+	gegen new_group_XX=group(group_XX reset_count_XX)
+
+	//// Clustering at the level of the old group variable if no clustering variable was specified
+
+	* If a clustering variable was specified, it should in principle be coarser than the old group variable (that's what is requested in the help file).
+	* However, the check for that takes place below (around line 900), and will now be made with the new group variable, so a user could for instance voluntarily specify the new group variable as their clustering
+	* variable to have a more granular clustering level than old group. Given that this type of behavior would need to be deliberate (not an unvoluntary mistake), I think it is fine to leave the code as is rather than
+	* moving the check that the clustering variable is coarser than the group variable up. 
+
+	if "`cluster'"==""{
+		capture drop old_group_XX
+		gen old_group_XX=group_XX
+		local cluster = "old_group_XX"
+	}
+
+	//// Replacing the group variable by the new group variable
+
+	replace group_XX= new_group_XX 	
+
+	//// Dropping all variables that were created and are now unnecessary
+	drop count_d_non_miss_temp_XX count_d_non_miss_XX changed_XX spell_XX periods_since_change_XX reset_dummy_XX reset_count_XX new_group_XX
+	
+}
 
 ///// Creating variables useful to deal with imbalanced panels:
 
@@ -376,8 +893,8 @@ if "`dont_drop_larger_lower'"==""{
 sort group_XX time_XX
 
 ///// Counting number of groups
-sum group_XX
-scalar G_XX=r(max)
+//sum group_XX
+//scalar G_XX=r(max)
 
 ///// Ever changed treatment
 gen ever_change_d_XX=(abs(diff_from_sq_XX)>0&treatment_XX!=.)
@@ -408,6 +925,7 @@ replace d_sq_XX=0
 
 // Create a new variable = to d_sq_XX expressed in integers
 capture drop d_sq_int_XX
+
 gegen d_sq_int_XX = group(d_sq_XX)
 
 ///// Dropping the values of the baseline treatment such that no variance in F_g within those values.
@@ -416,20 +934,20 @@ bys d_sq_XX `trends_nonparam': gegen var_F_g_XX=sd(F_g_XX)
 drop if var_F_g_XX==0
 drop var_F_g_XX
 
-///// Error message if Design Restriction 1 is not met.
+//// CHANGE BELOW - tks
+//// Counting number of groups after the drop above
+cap drop group2_XX
+egen group2_XX = group(group_XX)
+sum group2_XX
+scalar G_XX=r(max)
+////
 
+///// Error message if Design Restriction 1 is not met.
 count
 if r(N)==0{
 	di as error ""
-	di as error "No treatment effect can be estimated."
-	di as error "This is because Assumption 1 in"
-	di as error "de Chaisemartin & D'Haultfoeuille (2023)"
-	di as error "is not satisfied in the data used for"
-	di as error "estimation, given the options requested."
-	di as error "This may be due to the fact groups' baseline treatement"
-	di as error "is continuous. Then, you can try using the"
-	di as error "option continuous() which allows for a"
-	di as error "continous period-one treatement."
+	di as error "No treatment effect can be estimated. This is because Design Restriction 1 in de Chaisemartin & D'Haultfoeuille (2024) is not satisfied in the data, given the options requested. This may be due to the fact that groups' period-one treatment is continuous, or takes a large number of values, and you have not specified the continuous option. If so, you can try to specify this option. If the issue persists even with this option, this means that all groups experience their first treatment change at the same date, a situation where the estimators of de Chaisemartin & D'Haultfoeuille (2024) cannot be used."
+	di as input _continue ""
 
 	exit
 }
@@ -511,6 +1029,12 @@ if "`trends_lin'"!=""{
 	gen FD_outcome_XX =outcome_XX-L.outcome_XX
 	replace outcome_XX = FD_outcome_XX
 	drop FD_outcome_XX
+	
+	// adapt controls for case where trends_lin by and continuous specified together
+	if "`trends_lin'"!=""&"`by'"!=""&`continuous'!=0{
+	local controls = "`controls_orig_XX'"
+}
+	
 	if "`controls'" !=""{
 	foreach var of varlist `controls'{
 	capture drop FD_`var'_XX
@@ -531,6 +1055,18 @@ capture drop d_sq_XX_new
 bys group_XX: gegen d_sq_XX_new=mean(d_sq_XX)
 drop d_sq_XX
 rename d_sq_XX_new d_sq_XX
+
+///// CHANGE BELOW - tks
+
+bys group_XX: gegen d_sq_int_XX_new = mean(d_sq_int_XX)
+drop d_sq_int_XX
+rename d_sq_int_XX_new d_sq_int_XX
+
+bys group_XX: gegen F_g_XX_new = mean(F_g_XX)
+drop F_g_XX
+rename F_g_XX_new F_g_XX
+
+/////
 
 ///// Defining N_gt, the weight of each cell (g,t)
 gen N_gt_XX=1
@@ -580,6 +1116,9 @@ else if `continuous'>0{
 	drop if avg_post_switch_treat_XX==d_sq_XX_orig&F_g_XX!=T_g_XX+1
 	gen S_g_XX=(avg_post_switch_treat_XX>d_sq_XX_orig) if F_g_XX!=T_max_XX+1
 }	
+// correct for the fact that if all avg_post_switch_treat_XX are missing it is considered as +inf
+egen aux_XX = min(avg_post_switch_treat_XX), by(group_XX)
+replace S_g_XX = . if aux_XX ==.
 
 // Define another version where S_g=-1 for switchers out, which we need 
 // when predict_het or continuous specified.
@@ -596,29 +1135,29 @@ scalar heterogeneity_scalar_XX=1
 ///// and adding time_FEs interacted with D_{g,1} as controls
 if `continuous'>0{
 
-//Binarizing and staggerizing treatment
-capture drop treatment_XX_temp
-gen treatment_XX_temp = (F_g_XX<=time_XX)*S_g_het_XX if S_g_het_XX!=.
-capture drop treatment_XX_orig
-gen treatment_XX_orig=treatment_XX
-replace treatment_XX = treatment_XX_temp 
+	//Binarizing and staggerizing treatment
+	capture drop treatment_XX_temp
+	gen treatment_XX_temp = (F_g_XX<=time_XX)*S_g_het_XX if S_g_het_XX!=.
+	capture drop treatment_XX_orig
+	gen treatment_XX_orig=treatment_XX
+	replace treatment_XX = treatment_XX_temp 
 
-//Enriching controls
-tab time_XX, gen(time_fe_XX_)
-local max_time_XX=r(r)
-// Modif Clément: actually, to compute the estimator with the continuous option we need to control for polynomial in D_{g,1} interacted with \sum_{k=1}^t'1\{t=k}, sum of period FEs up to t'.
-forvalue i=2/`max_time_XX'{
-replace time_fe_XX_`i'=(time_XX>=`i')
-}
-// End modif Clément
-foreach var of varlist time_fe_XX_2-time_fe_XX_`max_time_XX'{
-	forvalues pol_level = 1/`=degree_pol'{
-		gen `var'_bt`pol_level'_XX = `var'*d_sq_`pol_level'_XX
-		local controls "`controls' `var'_bt`pol_level'_XX"
+	//Enriching controls
+	tab time_XX, gen(time_fe_XX_)
+	local max_time_XX=r(r)
+	// Modif Clément: actually, to compute the estimator with the continuous option we need to control for polynomial in D_{g,1} interacted with \sum_{k=1}^t'1\{t=k}, sum of period FEs up to t'.
+	forvalue i=2/`max_time_XX'{
+	replace time_fe_XX_`i'=(time_XX>=`i')
 	}
-	capture drop `var'
-}
-capture drop time_fe_XX_1
+	// End modif Clément
+	foreach var of varlist time_fe_XX_2-time_fe_XX_`max_time_XX'{
+		forvalues pol_level = 1/`=degree_pol'{
+			gen `var'_bt`pol_level'_XX = `var'*d_sq_`pol_level'_XX
+			local controls "`controls' `var'_bt`pol_level'_XX"
+		}
+		capture drop `var'
+	}
+	capture drop time_fe_XX_1
 }
 
 ///// Creating treatment at F_g: D_{g,F_g}
@@ -644,10 +1183,16 @@ bysort group_XX : gen first_obs_by_gp_XX = (_n==1)
 ///// and checking clustering variable weakly coarser than group variable.
 
 if "`cluster'"!=""{
+		
+	// FELIX 06-03-25 -> I guess this is how Tom solved it 
+	cap drop cluster_group_XX
+	bysort group_XX: gegen cluster_group_XX=min(`cluster') 
+	bysort group_XX: replace `cluster'=cluster_group_XX if `cluster'==.
+	// Can do this because clusters have to be coarser than groups
 	
 	capture drop cluster_var_g_XX
 	
-	bysort `cluster' : gen first_obs_by_clust_XX = (_n==1)
+	bysort `cluster' (group_XX time_XX) : gen first_obs_by_clust_XX = (_n==1) if `cluster'!=. // FELIX 05_03_25 -> This is then not needed anymore
 	
 	//Error message for clustering: non-nested case
 	bysort group_XX: gegen cluster_var_g_XX = sd(`cluster')
@@ -656,6 +1201,7 @@ if "`cluster'"!=""{
 	if (scalar(max_cluster_var_XX) >0){
 	di as error ""
 	di as error "The group variable should be nested within the clustering variable."
+	di as input _continue ""
 	exit
 	}
 	
@@ -759,9 +1305,23 @@ forv i = 1/`count_controls'{
 	local controlsXX "`controlsXX' diff_X`i'_XX"
 }
 
-reg diff_y_XX `controlsXX' ibn.time_XX [aw=N_gt_XX] if d_sq_int_XX==`l'&time_XX<F_g_XX, noconst
+*Modif Clément 30/6/2025
+*cap reg diff_y_XX `controlsXX' ibn.time_XX [aw=N_gt_XX] if d_sq_int_XX==`l'&time_XX<F_g_XX, noconst
+if "`trends_nonparam'" == "" {
+cap reg diff_y_XX `controlsXX' ibn.time_XX [aw=N_gt_XX] if d_sq_int_XX==`l'&time_XX<F_g_XX, noconst
+}
+if "`trends_nonparam'" != "" {
+capture drop trends_nonparam_temp_XX
+gegen trends_nonparam_temp_XX=group(`trends_nonparam')	
+cap reg diff_y_XX `controlsXX' ibn.time_XX#ibn.trends_nonparam_temp_XX [aw=N_gt_XX] if d_sq_int_XX==`l'&time_XX<F_g_XX, noconst
+}
+*End Modif Clément 19/6/2025
+
+if (_rc == 0) {
 predict E_y_hat_gt_int_`l'_XX if d_sq_int_XX==`l'&time_XX<F_g_XX
-	
+*Modif Clément 19/6/2025
+capture drop trends_nonparam_temp_XX
+*End Modif Clément 19/6/2025
 	tempfile data_XX
 	save "`data_XX'.dta", replace
 	
@@ -809,23 +1369,40 @@ local levels_d_sq_XX_final "`levels_d_sq_XX_final' `l'" // Added local so as to 
 					scalar drop det_XX
 		}
 
-			matrix inv_Denom_`l'_XX = invsym(didmgt_XX)*G_XX
+		// Changes Diego 27-03-25: N_c_`l'_XX adjustment
+		sum F_g_XX
+		gen N_c_`l'_temp_XX = time_XX >= 2 & time_XX <= r(max) - 1 & time_XX < F_g_XX & diff_y_XX < .
+		sum N_gt_XX if N_c_`l'_temp_XX == 1
+
+		matrix inv_Denom_`l'_XX = invsym(didmgt_XX)*r(sum)*G_XX
+		drop N_c_`l'_temp_XX
 }
 
 use "`data_XX'.dta", clear
 
 }
+}
+else {
+*Modif Clément 19/6/2025
+capture drop trends_nonparam_temp_XX
+*End Modif Clément 19/6/2025	
+    drop if d_sq_int_XX == `l'
+    noi di "Baseline Treatment Level `l' dropped because of insufficient observations."
+}
 
 }
 
-//Fill up store_singular_XX, with correct values of statu quo and not the levels
+//Fill up store_singular_XX, with correct values of statu quo and not the levels -> Modif Felix
 levelsof d_sq_XX, local(levels_d_sq_bis_XX)
 scalar index_sing_XX = 0
 foreach l of local levels_d_sq_bis_XX {
-scalar index_sing_XX = scalar(index_sing_XX)+1
-if(scalar(store_singular_`=index_sing_XX'_XX) == 1){
-local store_singular_XX = "`store_singular_XX' `l'"
-}
+	scalar index_sing_XX = scalar(index_sing_XX)+1
+	capture confirm scalar store_singular_`=index_sing_XX'_XX
+	if _rc==0{
+		if(scalar(store_singular_`=index_sing_XX'_XX) == 1){
+		local store_singular_XX = "`store_singular_XX' `l'"
+		}
+	}
 }
 
 ///// Display errors if one of the Den_d^{-1} is not defined
@@ -833,14 +1410,9 @@ if ("`store_singular_XX'"!=""){
 	
 	di as error "Some control variables are not taken into account for groups with baseline treatment equal to: [`store_singular_XX']"
 	di as error "This may occur in the following situations:"
-	di as error "1. For groups with those values of the baseline treatment,"
-	di as error "the regression of the outcome first difference on the controls' first differences "
-	di as error "and time fixed effects has fewer observations than variables."
-	di as error "Note that for each value of the baseline treatment,"
-	di as error "those regressions are estimated among (g,t)s such that g has not changed treatment yet at t."
-	di as error "2. For groups with those values of the baseline treatment, "
-	di as error "two or more of your control variables are perfectly collinear "
-	di as error "in the sample where the regression is run, for instance because those control variables do not vary over time."
+	di as error "1. For groups with those values of the baseline treatment, the regression of the outcome first difference on the controls' first differences and time fixed effects has fewer observations than variables. Note that for each value of the baseline treatment, those regressions are estimated among (g,t)s such that g has not changed treatment yet at t."
+	di as error "2. For groups with those values of the baseline treatment, two or more of your control variables are perfectly collinear in the sample where the regression is run, for instance because those control variables do not vary over time."
+	di as input _continue ""
 }
 
 ///// Values of baseline treatment such that residualization could not be performed at all are dropped.
@@ -875,6 +1447,9 @@ scalar L_placebo_u_XX=r(max)
 if "`trends_lin'"!=""{
 	scalar L_placebo_u_XX=L_placebo_u_XX-1
 }
+if L_placebo_u_XX==. {
+    scalar L_placebo_u_XX = 0
+}
 }
 }
 
@@ -889,25 +1464,21 @@ scalar L_placebo_a_XX=r(max)
 if "`trends_lin'"!=""{
 	scalar L_placebo_a_XX=L_placebo_a_XX-1
 }
+if L_placebo_a_XX==. {
+    scalar L_placebo_a_XX = 0
+}
 }
 }
 
 // Error message if Design Restriction 1 is not met
 
 if ("`switchers'"=="in"&(L_u_XX==.|L_u_XX==0))|("`switchers'"=="out"&(L_a_XX==.|L_a_XX==0))|("`switchers'"==""&(L_u_XX==.|L_u_XX==0)&(L_a_XX==.|L_a_XX==0)){
-		di as error ""
-		di as error "No treatment effect can be estimated."
-		di as error "This is because Assumption 1 in"
-		di as error "de Chaisemartin & D'Haultfoeuille (2023)"
-		di as error "is not satisfied in the data used for"
-		di as error "estimation, given the options requested."
-		di as error "If this is caused by your baseline treatement"
-		di as error "being continuous you can  try using the"
-		di as error "option continuous() which allows for a"
-		di as error "continous period-one treatement."
+	di as error ""
+	di as error "No treatment effect can be estimated. This is because Design Restriction 1 in de Chaisemartin & D'Haultfoeuille (2024) is not satisfied in the data, given the options requested. This may be due to the fact that groups' period-one treatment is continuous, or takes a large number of values, and you have not specified the continuous option. If so, you can try to specify this option. If the issue persists even with this option, this means that all groups experience their first treatment change at the same date, a situation where the estimators of de Chaisemartin & D'Haultfoeuille (2024) cannot be used."
+	di as input _continue ""
 		
-		exit
-	}
+	exit
+}
 
 // Checking that the number of dynamic and placebo effects requested by user
 // are feasible, and correcting them if they are not. 
@@ -955,24 +1526,177 @@ else{
 // display an error message.
 if l_XX<`effects'{
 	di as error ""
-	di as error "The number of effects requested is too large."
-	di as error "The number of effects which can be estimated is at most " l_XX "."
-	di as error "The command will therefore try to estimate " l_XX " effect(s)."
+	di as error "The number of effects requested is too large. The number of effects which can be estimated is at most " l_XX ". The command will therefore try to estimate " l_XX " effect(s)."
+	di as input _continue ""
 }
 
 if `placebo'!=0{
 	if l_placebo_XX<`placebo'&`effects'>=`placebo'{
 		di as error ""
-		di as error "The number of placebos which can be estimated is at most " l_placebo_XX "."
-		di as error "The command will therefore try to estimate " l_placebo_XX " placebo(s)."
+		di as error "The number of placebos which can be estimated is at most " l_placebo_XX ". The command will therefore try to estimate " l_placebo_XX " placebo(s)."
+		di as input _continue ""
 	}
 
 	if `effects'<`placebo'{
 		di as error ""
-		di as error "The number of placebo requested cannot be larger than the number of effects requested."
-		di as error "The command cannot compute more than " l_placebo_XX " placebo(s)."
+		di as error "The number of placebo requested cannot be larger than the number of effects requested. The command cannot compute more than " l_placebo_XX " placebo(s)."
+		di as input _continue ""
 	}
 }
+
+// Adjustment to add more placebos (did_multiplegt_dyn_all_pl)
+local max_pl_u_XX = 0
+local max_pl_a_XX = 0
+local max_pl_gap_u_XX = 0
+local max_pl_gap_a_XX = 0
+gen pl_gap_XX = (F_g_XX - 2) - L_g_XX if S_g_XX != .
+if ("`switchers'" == "" | "`switchers'" == "in") {
+	sum F_g_XX if S_g_XX == 1
+	local max_pl_u_XX = r(max) - 2
+	sum pl_gap_XX if S_g_XX == 1
+	local max_pl_gap_u_XX = r(max)
+}
+if ("`switchers'" == "" | "`switchers'" == "out") {
+	sum F_g_XX if S_g_XX == 0
+	local max_pl_a_XX = r(max) - 2
+	sum pl_gap_XX if S_g_XX == 0
+	local max_pl_gap_a_XX = r(max)
+}
+scalar max_pl_XX = max(`max_pl_u_XX', `max_pl_a_XX')
+scalar max_pl_gap_XX = max(`max_pl_gap_u_XX', `max_pl_gap_a_XX')
+drop pl_gap_XX
+
+///// Start the by_path option here -> after defining l_XX etc. but before calling the core program
+if "`by_path'"!=""{
+
+// Disentangle all the treatment paths and match switchers with those paths with not yet switchers with the same baseline that can be used as controls
+forvalues k=0/`=l_XX'{
+	gen dummy_treat_`k'_temp=treatment_XX if time_XX==F_g_XX-1+`k'
+	gegen dummy_treat_`k'=max(dummy_treat_`k'_temp), by(group_XX)
+	capture drop dummy_treat_`k'_temp
+}
+// Variable grouping all groups that follow exactly the same treatment path from F_g-1 to F_g-1+\ell
+gegen different_paths_temp_XX=group(dummy_treat_*) if time_XX<=F_g_XX-1+`=l_XX'
+gegen different_paths_XX=max(different_paths_temp_XX), by(group_XX)
+
+// Modify for never switchers
+replace different_paths_XX=. if F_g_XX==T_g_XX+1
+sum different_paths_XX
+local num_paths_XX=r(max) // count number of different switchers paths
+// Issue, controls can be controls for multiple treatment paths (as long as they have the same baseline treatment)
+// And as not yet switchers are also controls there will be some groups for which less than the l_XX effects will be estimated -> specify same_switchers option
+
+if "`by_path'"=="all"{ // case where we dont specify a numeric value
+	local by_path=`num_paths_XX'
+}
+
+// Warnings
+if `by_path'>`num_paths_XX'{
+	di ""
+	di as error "You specified a number that exceeds the number of treatment paths in the by_path() option! The number of paths is automatically set to the number of treatment paths in the sample."
+	di as input _continue ""
+	
+	local by_path=`num_paths_XX'
+}
+
+// count number of groups within each path and sort the numbers accordingly in ascending order (1 -> most, 2 -> second most etc...)
+if `by_path'<`num_paths_XX'{
+gen count_path_XX=. 
+forvalues k=1/`num_paths_XX'{
+	count if different_paths_XX==`k'&first_obs_by_gp_XX==1 // important to count each group just once in case of unbalanced panel!
+	replace count_path_XX=r(N) if different_paths_XX==`k' 
+}
+
+gegen rank_paths_XX=group(-count_path_XX different_paths_XX) if count_path_XX!=.
+replace different_paths_XX=rank_paths_XX
+}
+
+
+// prevent \ell to be overwritten, should be checked each repetition again 
+	scalar l_XX_orig=scalar(l_XX)
+	scalar l_placebo_XX_orig=scalar(l_placebo_XX)
+
+// create dummies which state for which path you can act as control depending on the same F_g-1 and not having switched (yet) at F_g_XX-1+l_XX
+global graph_by_path ""
+forvalues k=1/`by_path'{
+	sum d_sq_XX if different_paths_XX==`k'
+	local path_d_sq_XX=r(mean)
+	sum F_g_XX if different_paths_XX==`k'
+	local path_min_Fg_XX=r(min)
+	
+//  keep everyone prior to switch (and same baseline)
+	capture drop cont_path_alt_XX
+	gen cont_path_alt_XX=(time_XX<F_g_XX&d_sq_XX==`path_d_sq_XX')
+	
+// re-initialize l_XX in case it got changed in one repetition 
+	scalar l_XX=scalar(l_XX_orig)
+	scalar l_placebo_XX=scalar(l_placebo_XX_orig)	
+	
+// generate a global which stores the number of groups in each path
+	count if different_paths_XX==`k'&first_obs_by_gp_XX==1
+	global num_g_path_`k'_XX=r(N)	
+	
+// specify a local with the treatment path to display in Matrix
+	global k=`k'
+	
+	local path_`k'_XX ""
+	forvalues j=0/`=l_XX'{
+		sum treatment_XX if time_XX==F_g_XX-1+`j'&different_paths_XX==`k'
+		local inp_XX=r(mean)
+		if `j'==0{
+		local path_`k'_XX "`path_`k'_XX'`inp_XX'"
+		}
+		else{
+		local path_`k'_XX "`path_`k'_XX', `inp_XX'"	
+		}
+	}
+	global path_`k'_XX "`path_`k'_XX'"
+	
+	
+global l_graph_XX=`=l_XX'		
+global l_placebo_graph_XX=`=-l_placebo_XX'	
+
+capture graph drop graph_`k'_XX
+
+// call did_multiplegt_dyn with the corresponding options // Modif Felix 26.05.2025 -> change the weight to the tempvar
+noisily did_multiplegt_dyn `1' `2' `3' `4' if (different_paths_XX==`k'|cont_path_alt_XX==1), effects(`=l_XX') placebo(`=l_placebo_XX') same_switchers switchers(`switchers') `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') weight(`weight_path_XX') `dont_drop_larger_lower' `normalized' cluster(`cluster') `same_switchers_pl' `trends_lin' by(`by_var_path') predict_het(`predict_het') ci_level(`ci_level') design(`design') date_first_switch(`date_first_switch') continuous(`continuous') `less_conservative_se' `normalized_weights' `graph_off' `save_sample' graphoptions(xlabel(`=-l_placebo_XX'[1]`=l_XX') title(Treatment path (${path_`k'_XX}); ${num_g_path_`k'_XX} switchers, size(small)) xtitle(Relative time to last period before treatment changes (t=0), size(small)) graphregion(color(white)) plotregion(color(white)) legend(pos(6) order(`graph_options_int') rows(1) size(small)) name(graph_`k'_XX) legend(off))
+
+// Save global with all the graph names to do the combine 
+global graph_by_path "$graph_by_path graph_`k'_XX"
+}
+
+if "`graph_off'"==""{
+// check if all graphs are created
+graph dir 
+local in_memory_XX=r(list)	
+	
+	local count_graphs_XX=0
+	foreach b of global graph_by_path{ 
+    if `: list b in in_memory_XX' { 
+         local count_graphs_XX=`count_graphs_XX'
+    } 
+    else{
+		local count_graphs_XX=`count_graphs_XX'+1
+	} 
+ } 
+
+// combine the graphs if all of them could be produced 
+if `count_graphs_XX'==0{
+graph combine $graph_by_path, title(DID from last period before treatment changes (t=0) to t, size(medium)) ycom
+}
+else{
+	di as error ""
+	di as error "Estimation of at least one treatment path was not possible, therefore no combined graph is produced."
+	di as input _continue ""
+}
+}
+
+// Reset the global so we do not always see path in table 
+global k ""
+
+exit // end the command here for now -> do not run "the full sample"
+} // end "by_path" option
+
 
 ///// Generating default values for the variables which will be aggregated 
 ///// after Program 2 below has been run for switchers in and for switchers out.
@@ -991,6 +1715,8 @@ forvalue i=1/`=l_XX'{
 	capture drop U_Gg_var_`i'_out_XX
 	capture drop U_Gg_var_glob_`i'_XX
 	capture drop U_Gg_var_glob_eff`i'_sqrd_XX
+	capture drop delta_D_g_`i'_plus_XX 
+	capture drop delta_D_g_`i'_minus_XX 
 	
 	gen U_Gg`i'_plus_XX = 0
 	gen U_Gg`i'_minus_XX = 0
@@ -1002,9 +1728,16 @@ forvalue i=1/`=l_XX'{
 	gen U_Gg_var_`i'_out_XX=0
 	scalar sum_for_var_in_XX=0
 	scalar sum_for_var_out_XX=0
+	gen delta_D_g_`i'_plus_XX=0 
+	gen delta_D_g_`i'_minus_XX=0 
 	
 	scalar N0_`i'_XX_new=0
 	scalar N1_`i'_XX_new=0
+	
+	if "`weight'"!=""{
+		scalar N0_`i'_XX_weight=0
+		scalar N1_`i'_XX_weight=0
+	}
 	
 	if "`normalized'"!=""{
 		scalar delta_D_`i'_in_XX = 0
@@ -1040,8 +1773,14 @@ if l_placebo_XX!=0{
 	gen count`i'_pl_plus_XX = 0
 	gen count`i'_pl_minus_XX = 0
 	
+	
 	scalar N0_placebo_`i'_XX_new=0
 	scalar N1_placebo_`i'_XX_new=0
+	
+	if "`weight'"!=""{
+		scalar N0_`i'_pl_XX_weight=0
+		scalar N1_`i'_pl_XX_weight=0
+	}
 	
 	if "`normalized'"!=""{
 		scalar delta_D_pl_`i'_in_XX = 0
@@ -1061,28 +1800,31 @@ gen U_Gg_var_plus_XX = 0
 gen U_Gg_var_minus_XX = 0
 
 // Initialize switchers tag variable to earmark switchers after did_multiplegt_dyn_core 
-if "`save_sample'" != "" {
-	gen switcher_tag_XX = .
-}
+capture drop switcher_tag_XX
+gen switcher_tag_XX = .
 
 ///// Perform the estimation: call the program did_multiplegt_dyn_core, 
 ///// for switchers in and for switchers out, and store the results.
+
+// Modif. Diego: tailor the upper bounds of the switcher_tag loops to the actual number of post periods requested/feasible for switchers-in and switchers-out
+scalar L_u_XX_tag = min(L_u_XX, `effects')
+scalar L_a_XX_tag = min(L_a_XX, `effects')
 
 // For switchers in
 if ("`switchers'"==""|"`switchers'"=="in"){
 if L_u_XX!=.&L_u_XX!=0{
 
+***** MODIF FELIX: Replaced all the weights by weight(weight_XX) instead of weight(`weight') due to the fact that `weights' does not exist anymore after collapsing
+
 * Perform the estimation of effects and placebos outside of the loop on 
 * number of effects if trends_lin not specified
 if "`trends_lin'"==""{
-	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`=l_XX') placebo(`=l_placebo_XX') switchers_core(in) controls(`controls') trends_nonparam(`trends_nonparam') `normalized' `same_switchers' `same_switchers_pl' `effects_equal' continuous(`continuous') `less_conservative_se'
+	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`=l_XX') placebo(`=l_placebo_XX') switchers_core(in) `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') `normalized' `same_switchers' `same_switchers_pl' continuous(`continuous') `less_conservative_se' weight(weight_XX) cluster(`cluster')
 
 	// Store the number of the event-study effect for switchers-in
-	if "`save_sample'" != "" {
-		forv k = 1/`=l_XX' {
+		forv k = 1/`=L_u_XX_tag' {
 			replace switcher_tag_XX = `k' if distance_to_switch_`k'_XX == 1
 		}
-	}
 }	
 	
 forvalue i=1/`=l_XX'{
@@ -1091,12 +1833,10 @@ forvalue i=1/`=l_XX'{
 * if trends_lin is specified
 * Note that if the option trends_lin was specified, same_switchers must also be specified.
 if "`trends_lin'"!=""{
-	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') switchers_core(in) controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers `effects_equal' trends_lin continuous(`continuous') `less_conservative_se'
+	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') switchers_core(in) `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers  trends_lin continuous(`continuous') `less_conservative_se' weight(weight_XX) cluster(`cluster')
 
 	// Store the number of the event-study effect for switchers-in
-	if "`save_sample'" != "" {
 	replace switcher_tag_XX = `i' if distance_to_switch_`i'_XX == 1
-	}
 	}
 * Store variables necessary for computation of effects.
 * N.B.: in the case of unbalanced panels, it can happen that the U_Gg`i'_XX are not computed by program 2 (for example when y is missing). Consequently, for the command not to display an error message and continue running, we need to verify the variable is created, which is conditional on  N1_`i'_XX!=0.
@@ -1109,6 +1849,10 @@ if N1_`i'_XX!=0{
 		if "`normalized'"!=""{
 			scalar delta_D_`i'_in_XX = delta_norm_`i'_XX
 		}
+		
+		if "`trends_lin'"==""{
+			replace delta_D_g_`i'_plus_XX = delta_D_g_`i'_XX
+		}
 	}
 }
 
@@ -1118,7 +1862,7 @@ if l_placebo_XX!=0{
 	forvalue i=1/`=l_placebo_XX'{
 		
 		if "`trends_lin'"!=""{
-	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') placebo(`i') switchers_core(in) controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers same_switchers_pl `effects_equal' trends_lin continuous(`continuous') `less_conservative_se'
+	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') placebo(`i') switchers_core(in) `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers same_switchers_pl trends_lin continuous(`continuous') `less_conservative_se' weight(weight_XX) cluster(`cluster')
 }
 				
 		if N1_placebo_`i'_XX!=0{
@@ -1155,38 +1899,38 @@ if ("`switchers'"==""|"`switchers'"=="out"){
 if L_a_XX!=.&L_a_XX!=0{
 	
 if "`trends_lin'"==""{	
-did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`=l_XX') placebo(`=l_placebo_XX') switchers_core(out) controls(`controls')  trends_nonparam(`trends_nonparam') `normalized' `same_switchers' `same_switchers_pl' `effects_equal' continuous(`continuous') `less_conservative_se'
+did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`=l_XX') placebo(`=l_placebo_XX') switchers_core(out) `only_never_switchers' controls(`controls')  trends_nonparam(`trends_nonparam') `normalized' `same_switchers' `same_switchers_pl' continuous(`continuous') `less_conservative_se' weight(weight_XX) cluster(`cluster')
 
 	// Store the number of the event-study effect for switchers-out
-	if "`save_sample'" != "" {
-		forv k = 1/`=l_XX' {
+		forv k = 1/`=L_a_XX_tag' {
 			replace switcher_tag_XX = `k' if distance_to_switch_`k'_XX == 1
 		}
-	}
 
 }
 	
 forvalue i=1/`=l_XX'{
 	
 if "`trends_lin'"!=""{	
-	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') switchers_core(out) controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers `effects_equal' trends_lin continuous(`continuous') `less_conservative_se'
+	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') switchers_core(out) `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers trends_lin continuous(`continuous') `less_conservative_se' weight(weight_XX) cluster(`cluster')
 
 	// Store the number of the event-study effect for switchers-out
-	if "`save_sample'" != "" {
 	replace switcher_tag_XX = `i' if distance_to_switch_`i'_XX == 1
-	}
 }
 	
 if N0_`i'_XX!=0{
 		replace U_Gg`i'_minus_XX = - U_Gg`i'_XX
 		replace count`i'_minus_XX= count`i'_core_XX
-		replace U_Gg_var_`i'_out_XX=U_Gg`i'_var_XX
+		//// CHANGE BELOW - tks (add minus sign)
+		replace U_Gg_var_`i'_out_XX= - U_Gg`i'_var_XX
 		scalar N0_`i'_XX_new=N0_`i'_XX
 		
 		if "`normalized'"!=""{
 			scalar delta_D_`i'_out_XX = delta_norm_`i'_XX
 		}
 		
+		if "`trends_lin'"==""{
+		replace delta_D_g_`i'_minus_XX = delta_D_g_`i'_XX
+		}
 	}
 	
 }
@@ -1197,13 +1941,14 @@ if l_placebo_XX!=0{
 	forvalue i=1/`=l_placebo_XX'{
 		
 if "`trends_lin'"!=""{	
-	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') placebo(`i') switchers_core(out) controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers same_switchers_pl `effects_equal' trends_lin continuous(`continuous') `less_conservative_se'
+	did_multiplegt_dyn_core_new outcome_XX group_XX time_XX treatment_XX, effects(`i') placebo(`i') switchers_core(out) `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') `normalized' same_switchers same_switchers_pl trends_lin continuous(`continuous') `less_conservative_se' weight(weight_XX) cluster(`cluster')
 }
 		
 	if N0_placebo_`i'_XX!=0{
 			replace U_Gg_pl_`i'_minus_XX  = -U_Gg_placebo_`i'_XX
 			replace count`i'_pl_minus_XX= count`i'_pl_core_XX
-			replace U_Gg_var_pl_`i'_out_XX=U_Gg_pl_`i'_var_XX 
+			//// CHANGE BELOW - tks (add minus sign)
+			replace U_Gg_var_pl_`i'_out_XX= - U_Gg_pl_`i'_var_XX 
 			scalar N0_placebo_`i'_XX_new=N0_placebo_`i'_XX
 			
 			if "`normalized'"!=""{
@@ -1218,13 +1963,15 @@ if "`trends_lin'"!=""{
 	if sum_N0_l_XX!=0{
 	replace U_Gg_minus_XX = - U_Gg_XX
 	scalar U_Gg_den_minus_XX=U_Gg_den_XX
-	replace U_Gg_var_minus_XX = U_Gg_var_XX
+	replace U_Gg_var_minus_XX = - U_Gg_var_XX
 	}
 	}
 
 }
 	
 } // end of the loop for switchers out 
+
+scalar drop L_u_XX_tag L_a_XX_tag
 
 ////////// 5. Computing the estimators and their variances
 
@@ -1235,6 +1982,9 @@ if "`trends_lin'"!=""{
 matrix mat_res_XX = J(l_XX+l_placebo_XX+1,7,.) 
 
 // Loop over the number of effects to be estimated
+
+	// Create a local to store effects we cant estimate 
+	local missing_eff_XX ""	
 
 forvalue i=1/`=l_XX'{
 
@@ -1267,6 +2017,21 @@ scalar N_effect_`i'_XX = N_effect_`i'_XX
 ereturn scalar N_effect_`i' = N_effect_`i'_XX
 matrix mat_res_XX[`i',5]=N_effect_`i'_XX
 
+// Modif Felix weight -> Display correct N with weights
+if "`weight'"!=""{
+	matrix mat_res_XX[`i',6]=N1_`i'_XX_weight+N0_`i'_XX_weight
+	ereturn scalar N_switchers_effect_`i'_w= N1_`i'_XX_weight+N0_`i'_XX_weight
+
+	capture drop count`i'_global_XX_w
+	capture drop N_effect_`i'_XX_w
+	
+	gen count`i'_global_XX_w=count`i'_global_XX/weight_XX
+	gegen N_effect_`i'_XX_w = total(count`i'_global_XX_w) 
+	scalar N_effect_`i'_XX_w = N_effect_`i'_XX_w
+	ereturn scalar N_effect_`i'_w = N_effect_`i'_XX_w
+	matrix mat_res_XX[`i',5]=N_effect_`i'_XX_w
+}
+
 // Error message if DID_\ell cannot be estimated
 
 if N_switchers_effect_`i'_XX==0|N_effect_`i'_XX==0{
@@ -1274,6 +2039,9 @@ if N_switchers_effect_`i'_XX==0|N_effect_`i'_XX==0{
 	di as error "Effect_"`i' " cannot be estimated."
 	di as error "There is no switcher or no control"
 	di as error "for this effect."
+	di as input _continue ""
+	
+	local missing_eff_XX `missing_eff_XX' `i'
 }
 
 // Averaging the U_Gg\ell to compute DID_\ell
@@ -1362,16 +2130,49 @@ ereturn scalar N_avg_total_effect = scalar(N_effect_XX)
 
 }
 
+// Modif Felix weight
+if "`weight'"!=""{
+	scalar N_switchers_effect_XX_w=0
+	forvalue i=1/`=l_XX'{
+		scalar N_switchers_effect_XX_w = N_switchers_effect_XX_w + N1_`i'_XX_weight+N0_`i'_XX_weight
+	}
+	
+	matrix mat_res_XX[l_XX+1,6]=N_switchers_effect_XX_w
+	ereturn scalar N_switchers_effect_average_w=N_switchers_effect_XX_w
+	
+	capture drop count_global_XX_w
+	capture drop N_effect_XX_w
+	gen count_global_XX_w=0
+	forvalue i=1/`=l_XX'{
+		replace count_global_XX_w= max(count_global_XX_w, count`i'_global_XX_w)
+	}
+	
+	sum count_global_XX_w
+	scalar N_effect_XX_w=r(sum)
+	matrix mat_res_XX[l_XX+1,5]=scalar(N_effect_XX_w)
+	ereturn scalar N_avg_total_effect_w = scalar(N_effect_XX_w)
+}
+
 // Add time_to_treat to the results matrix even when computation of average total effect skipped with trends_lin, important fot the graph later.
 if "`trends_lin'"!=""{
 	local rownames "`rownames' Av_tot_eff" 
 	matrix mat_res_XX[l_XX+1,7]=0
 }
 
+// Generate string local for sotable
+local str_effects "Effect_1"
+if l_XX > 1 {
+	forv j = 2/`=l_XX' {
+		local str_effects "`str_effects' Effect_`j'"
+	}
+}
 	
 ///// Computing the placebo estimators (same steps as for the DID_\ell, not commented)
 
 if l_placebo_XX!=0{
+	
+	// Create a local to store effects we cant estimate 
+	local missing_pl_XX ""
 
 forvalue i=1/`=l_placebo_XX'{	
 
@@ -1413,12 +2214,18 @@ if N_switchers_placebo_`i'_XX==0|N_placebo_`i'_XX==0{
 	di as error "Placebo_"`i' " cannot be estimated."
 	di as error "There is no switcher or no control"
 	di as error "for this placebo."
+	di as input _continue ""
+	
+	local missing_pl_XX `missing_pl_XX' `i'
 }
 if "`normalized'"!=""{
 	if (delta_D_pl_`i'_global_XX==0|delta_D_pl_`i'_global_XX==.){
 	di as error ""
 	di as error "Placebo_"`i' " cannot be estimated."
 	di as error "The denominator is missing for this normalized placebo."
+	di as input _continue ""
+	
+	local missing_pl_XX `missing_pl_XX' `i'
 	
 	scalar N_placebo_`i'_XX=0
 	scalar N_switchers_placebo_`i'_XX=0
@@ -1429,8 +2236,182 @@ ereturn scalar N_placebo_`i' = N_placebo_`i'_XX
 matrix mat_res_XX[`=l_XX' + 1 + `i',5]=N_placebo_`i'_XX
 matrix mat_res_XX[`=l_XX'+ 1 + `i',6]=N_switchers_placebo_`i'_XX
 
+// Modif Felix weight
+if "`weight'"!=""{
+	matrix mat_res_XX[`=l_XX'+ 1 + `i',6]=N1_`i'_pl_XX_weight+N0_`i'_pl_XX_weight
+	ereturn scalar N_switchers_placebo_`i'_w=N1_`i'_pl_XX_weight+N0_`i'_pl_XX_weight
+	
+	capture drop count`i'_pl_global_XX_w
+	capture drop N_placebo_`i'_XX_w
+	
+	gen count`i'_pl_global_XX_w=count`i'_pl_global_XX/weight_XX
+	gegen N_placebo_`i'_XX_w = total(count`i'_pl_global_XX_w) 
+	scalar N_placebo_`i'_XX_w = N_placebo_`i'_XX_w
+	ereturn scalar N_placebo_`i'_w = N_placebo_`i'_XX_w
+	matrix mat_res_XX[`=l_XX' + 1 + `i',5]=N_placebo_`i'_XX_w
 }
+
 }
+
+// Generate string local for sotable
+local str_placebo "Placebo_1"
+if l_placebo_XX > 1 {
+	forv j = 2/`=l_placebo_XX' {
+		local str_placebo "`str_placebo' Placebo_`j'"
+	}
+}
+
+}
+
+//// Extract estimates vector (without avg_effect) for honestdid
+matrix didmgt_results_no_avg1_XX=J(`=l_XX',1,.)
+matrix didmgt_results_no_avg1_XX=mat_res_XX[1 .. `=l_XX',1]
+matrix didmgt_results_no_avg_XX = didmgt_results_no_avg1_XX
+
+if `=l_placebo_XX'>0{
+matrix didmgt_results_no_avg2_XX=J(`=l_placebo_XX',1,.)
+matrix didmgt_results_no_avg2_XX=mat_res_XX[`=l_XX'+2 .. `=l_XX'+`=l_placebo_XX'+1,1]
+matrix didmgt_results_no_avg_XX = didmgt_results_no_avg1_XX \ didmgt_results_no_avg2_XX
+}
+
+matrix didmgt_results_no_avg_XX=didmgt_results_no_avg_XX'
+
+capture matrix drop didmgt_results_no_avg1_XX didmgt_results_no_avg2_XX
+
+//// Add bootstrap 
+if `bootstrap_XX'!=0{
+	
+	// Save "pre-bootstraped" results matrix so it does not get overwritten 
+	matrix mat_res_bs_XX=mat_res_XX
+	
+	// Save "pre-bootstrap" data 
+	qui tempfile data_pre_bootstrap_XX
+	qui save "`data_pre_bootstrap_XX'.dta", replace
+	
+	// Load original data 
+	use "`data_bootstrap_XX'.dta", clear
+	
+	// gen numlists
+	numlist "1/`=l_XX'"
+	local num_eff_XX "`r(numlist)'"
+	// Adjust for missings
+	local num_eff_XX: list num_eff_XX- missing_eff_XX
+	
+	if `=l_placebo_XX'>0{
+	numlist "1/`=l_placebo_XX'"
+	local num_pl_XX "`r(numlist)'"
+	// Adjust for missings
+	local num_pl_XX: list num_pl_XX- missing_pl_XX
+	}
+	
+	//Store the coefficients to bootstrap
+	local coefs ""
+	foreach i of numlist `num_eff_XX'{
+		local coefs = "`coefs' e(Effect_`i')"
+	}
+	
+	if `=l_placebo_XX'>0{
+	foreach i of numlist `num_pl_XX'{
+		local coefs = "`coefs' e(Placebo_`i')"
+	}
+	}
+	
+	if "`trends_lin'"==""{
+	local coefs "`coefs' e(Av_tot_effect)"
+	}
+	
+	xtset, clear // need this to ensure bootstrap is running correctly
+	
+	// Save pre-bootstraped coefficients matrix for residualization (controls) and matrix for the actual coefficient matrix to be used in the ereturn post 
+	foreach u of local levels_d_sq_XX {
+		matrix coefs_sq_bs_`u'_XX = coefs_sq_`u'_XX
+	}
+	matrix didmgt_bs_results_no_avg_XX=didmgt_results_no_avg_XX // Modif Felix
+	
+	// Modif Felix: Ensure that we do not add missings in this process
+	gen existing_pre_XX=1
+	
+	// Save pre-bootstraped scalars 
+	mata: scalars_XX = st_dir("global", "numscalar", "*_XX")	
+	getmata (scalars_XX*) = scalars_XX, force					
+	// Fix this by counting the number of observations before and after we add all the scalars in and then delete the additional cells we might add!!!				
+	
+	levelsof(scalars_XX), local(scalars_save)
+	foreach w of local scalars_save {
+		local k = subinstr("`w'","_XX","_XY",.)
+		scalar `k' = `w'
+	}
+	capture drop scalars_XX* 
+	
+		
+	// Modif Felix: Ensure that we do not add missings in this process
+	drop if existing_pre_XX==.
+	drop existing_pre_XX
+	
+	global bootstrap_on_XX "yes"
+	
+	// bootstrap the whole command
+	if "`cluster'"==""{
+		bootstrap "`coefs'", reps(`bootstrap_XX') cluster(`2') `seed_XX': did_multiplegt_dyn `1' `2' `3' `4', effects(`=l_XY') placebo(`=l_placebo_XY') `same_switchers' switchers(`switchers') `only_never_switchers' controls(`controls_bs_orig_XX') trends_nonparam(`trends_nonparam') weight(`weight') `dont_drop_larger_lower' `drop_if_d_miss_before_first_switch' `normalized' `same_switchers_pl' `trends_lin' continuous(`continuous') graph_off
+	}
+	else if "`cluster'"!=""{
+		bootstrap "`coefs'", reps(`bootstrap_XX') cluster(`cluster') `seed_XX': did_multiplegt_dyn `1' `2' `3' `4', effects(`=l_XY') placebo(`=l_placebo_XY') `same_switchers' switchers(`switchers') `only_never_switchers' controls(`controls_bs_orig_XX') trends_nonparam(`trends_nonparam') weight(`weight') `dont_drop_larger_lower' `normalized' `same_switchers_pl' `drop_if_d_miss_before_first_switch' `trends_lin' continuous(`continuous') graph_off
+	}
+	
+	//global bootstrap_on_XX ""
+	
+	// store bootstrap results matrix
+	matrix bs_out_XX=r(table)
+	matrix bs_var_cov_XX=e(V) // Modif Felix: also fetch var/cov Matrix
+	
+	
+	// Restore residualization matrix 
+	foreach u of local levels_d_sq_XX {
+		matrix coefs_sq_`u'_XX = coefs_sq_bs_`u'_XX
+	}
+	matrix didmgt_results_no_avg_XX=didmgt_bs_results_no_avg_XX // Modif Felix
+	
+	// Restore scalars
+	mata: scalars_XY = st_dir("global", "numscalar", "*_XY")
+	getmata (scalars_XY*) = scalars_XY, force
+	levelsof(scalars_XY), local(scalars_save)
+	foreach w of local scalars_save {
+		local k = subinstr("`w'","_XY","_XX",.)
+		scalar `k' = `w'
+	}
+	capture drop scalars_XY*
+	
+	// row 1 to l_XX are the effects 
+	mat se_eff_bs_XX=J(`=l_XX',1,.)
+	local j=1 // local to find the correct row in the bootstrap output matrix
+	foreach k of numlist `num_eff_XX'{
+		mat se_eff_bs_XX[`k',1]=bs_out_XX[2,`j']
+		local j=`j'+1
+	}
+	
+	// row l_XX+1 to l_XX+l_placebo_XX are the placebos
+	if l_placebo_XX!=0{
+		mat se_pl_bs_XX=J(`=l_placebo_XX',1,.)
+		local for_count_2_XX=`=l_XX'+`=l_placebo_XX' // Felix: obsolete
+		local for_count_3_XX=`=l_XX'+1 // Felix: obsolete
+		foreach k of numlist `num_pl_XX'{
+			mat se_pl_bs_XX[`k',1]=bs_out_XX[2,`j']
+			local j=`j'+1
+		}
+	}
+	
+	if "`trends_lin'"==""{
+	// row l_XX+l_placebo_XX+1 isvaverage cummulative (total) effect
+	mat se_avg_eff_bs_XX=bs_out_XX[2,`j']
+	}
+	
+	// Reload results matrix 
+	matrix mat_res_XX=mat_res_bs_XX
+	
+	// Reload the "pre-bootstrap" data 
+	use "`data_pre_bootstrap_XX'.dta", clear
+}
+global bootstrap_on_XX "" // Modif Felix
 
 /////  Computing the variance of DID_\ell
 
@@ -1458,7 +2439,7 @@ if "`cluster'"==""{
 // Compute sigma_hat_2_l with clustering: sum U_Gg_var_l within a cluster, and then take average of square. 
 
 if "`cluster'"!=""{
-		
+	
 	capture drop clust_U_Gg_var_glob_`i'_XX
 	capture drop clust_U_Gg_var_glob_`i'_2_XX
 	
@@ -1483,6 +2464,11 @@ scalar se_`i'_XX = sqrt(sum_for_var_`i'_XX)
 // Normalize SE if normalized option was specified
 if "`normalized'"!=""{
 	scalar se_`i'_XX = scalar(se_`i'_XX)/scalar(delta_D_`i'_global_XX)
+}
+
+// Adapting the se scalars with the bootstrap
+if `bootstrap_XX'!=0{
+	scalar se_`i'_XX=se_eff_bs_XX[`i',1]
 }
 
 // Storing the results
@@ -1546,6 +2532,11 @@ if "`normalized'"!=""{
 	scalar se_placebo_`i'_XX = scalar(se_placebo_`i'_XX)/scalar(delta_D_pl_`i'_global_XX)
 }
 
+// Adapting the se scalars with the bootstrap
+if `bootstrap_XX'!=0{
+	scalar se_placebo_`i'_XX=se_pl_bs_XX[`i',1]
+}
+
 matrix mat_res_XX[`=l_XX' + 1 + `i',2]=scalar(se_placebo_`i'_XX)
 ereturn scalar se_placebo_`i'=scalar(se_placebo_`i'_XX)
 	
@@ -1589,6 +2580,12 @@ if "`cluster'"!=""{
 }
 
 scalar se_XX = sqrt(sum_for_var_XX)
+
+// Adapting the se scalars with the bootstrap
+if `bootstrap_XX'!=0{
+	scalar se_XX=se_avg_eff_bs_XX[1,1]
+}
+
 matrix mat_res_XX[l_XX+1,2]=se_XX
 ereturn scalar se_avg_total_effect = se_XX
 
@@ -1637,13 +2634,122 @@ ereturn matrix didmgt_variances=didmgt_var2
 ereturn matrix variances= compatibility_variances
 ereturn local cmd "did_multiplegt_dyn"
 */
+
+
 ////////// 6. Computing p-values from the tests 
+
+//// Generate combined Variance-Covariance Matrix for honestdid
+// Note: Check if all of them are defined!
+// If test is feasible, initalize scalar at 0
+		scalar all_Ns_pl_not_zero=0
+		scalar all_delta_pl_not_zero=0
+		
+		// Count the number of placebos that can be estimated
+		forvalue i=1/`=l_placebo_XX'{
+		if ("`switchers'"==""&(N1_placebo_`i'_XX_new!=0|N0_placebo_`i'_XX_new!=0))|("`switchers'"=="out"&N0_placebo_`i'_XX_new!=0)|("`switchers'"=="in"&N1_placebo_`i'_XX_new!=0){
+			scalar all_Ns_pl_not_zero=all_Ns_pl_not_zero+1
+			
+		}
+		// Count the number of normalized placebos that can be estimated
+		if "`normalized'"!=""{
+		if (delta_D_pl_`i'_global_XX!=0 & delta_D_pl_`i'_global_XX!=.){
+			scalar all_delta_pl_not_zero=all_delta_pl_not_zero+1
+		}
+		}
+		}
+		
+		scalar all_Ns_not_zero=0
+	
+		forvalue i=1/`=l_XX'{
+		if ("`switchers'"==""&(N1_`i'_XX_new!=0|N0_`i'_XX_new!=0))|("`switchers'"=="out"&N0_`i'_XX_new!=0)|("`switchers'"=="in"&N1_`i'_XX_new!=0){
+			scalar all_Ns_not_zero=all_Ns_not_zero+1
+			}
+	}
+		
+if ((all_Ns_pl_not_zero==l_placebo_XX & "`normalized'"=="")|(all_Ns_pl_not_zero==l_placebo_XX & "`normalized'"!="" & all_delta_pl_not_zero==l_placebo_XX))&all_Ns_not_zero==l_XX{		
+
+// Creating a matrix where the variances and the covariances will be stored.
+matrix didmgt_Var_all_XX=J(`=l_XX'+`=l_placebo_XX',`=l_XX'+`=l_placebo_XX',0)
+
+local total_num_estimates_XX=`=l_XX'+`=l_placebo_XX'
+
+// combine effects and placebos in "one" variable with running index (similarly for scalars storing the se's)
+capture drop U_Gg_var_comb_*_XX
+forvalue i=1/`=l_XX'{
+	gen U_Gg_var_comb_`i'_XX=U_Gg_var_glob_`i'_XX
+	scalar se_all_`i'_XX=se_`i'_XX
+	if "`normalized'"!=""{
+		scalar delta_D_all_`i'_XX=delta_D_`i'_global_XX
+	}
+}
+forvalue i=`=l_XX+1'/`total_num_estimates_XX'{
+	local j=`i'-`=l_XX'
+	gen U_Gg_var_comb_`i'_XX=U_Gg_var_glob_pl_`j'_XX
+	scalar se_all_`i'_XX=se_placebo_`j'_XX
+	if "`normalized'"!=""{
+		scalar delta_D_all_`i'_XX=delta_D_pl_`j'_global_XX
+	}
+}
+
 
 // If the option cluster is specified, we have previously replaced U_Gg_var_glob_pl_`i'_XX by clust_U_Gg_var_glob_pl_`i'_XX, and U_Gg_var_glob_`i'_XX by clust_U_Gg_var_glob_`i'_XX. 
 // Now, we must also replace first_obs_by_gp_XX by first_obs_by_clust_XX
 if "`cluster'"!=""{
 replace first_obs_by_gp_XX=first_obs_by_clust_XX
 }
+
+forvalue i=1/`total_num_estimates_XX'{
+		
+		// Fill the diagonal with the Variances
+		matrix didmgt_Var_all_XX[`i',`i']= scalar(se_all_`i'_XX)^2
+	
+		// Fill off diagonal with covariances
+		if `i'<`total_num_estimates_XX'{
+		forvalue j=`=`i'+1'/`total_num_estimates_XX'{
+			
+			* Create variables necessary to compute the covariances
+			capture drop U_Gg_var_comb_`i'_`j'_XX
+			capture drop U_Gg_var_comb_`i'_`j'_2_XX
+					
+			if ("`normalized'"==""){
+			gen U_Gg_var_comb_`i'_`j'_XX = U_Gg_var_comb_`i'_XX + U_Gg_var_comb_`j'_XX
+		}
+			
+			// Also need adjusted delta_D for all effects!!!
+			if "`normalized'"!=""{
+			gen U_Gg_var_comb_`i'_`j'_XX = U_Gg_var_comb_`i'_XX/scalar(delta_D_all_`i'_XX) + U_Gg_var_comb_`j'_XX/scalar(delta_D_all_`j'_XX)
+		}
+
+			* Estimate the covariances
+			gen U_Gg_var_comb_`i'_`j'_2_XX = U_Gg_var_comb_`i'_`j'_XX^2*first_obs_by_gp_XX
+			
+			
+			sum U_Gg_var_comb_`i'_`j'_2_XX
+			scalar var_sum_comb_`i'_`j'_XX=r(sum)/G_XX^2
+			
+			scalar cov_comb_`i'_`j'_XX = (scalar(var_sum_comb_`i'_`j'_XX) - scalar(se_all_`i'_XX)^2 - scalar(se_all_`j'_XX)^2)/2
+	
+			* Store the results
+			matrix didmgt_Var_all_XX[`i',`j']= scalar(cov_comb_`i'_`j'_XX)
+			matrix didmgt_Var_all_XX[`j',`i']= scalar(cov_comb_`i'_`j'_XX)
+
+		}
+	}
+	
+}
+
+*** Modif Felix: replace by bootstrap var/cov matrix
+if `bootstrap_XX'!=0{
+	matrix didmgt_Var_all_XX=bs_var_cov_XX
+}
+
+}
+	// Error message if not all of the specified effects/placebos could be estimated 
+	else{
+		di as error ""
+		di as error "Some placebos/effects could not be estimated. Therefore, the command will not be compatible with the honestdid command."
+		di as input _continue ""
+	}
 
 ///// Performing a test that all placebo are jointly equal to 0.
 
@@ -1720,110 +2826,344 @@ if (l_placebo_XX!=0)&l_placebo_XX>1{
 	
 	}
 	
+	*** Modif Felix: replace matrix with bootstrap
+	if `bootstrap_XX'!=0{
+		matrix didmgt_Var_Placebo=bs_var_cov_XX["_bs_`=l_XX+1'".."_bs_`=l_XX+l_placebo_XX'","_bs_`=l_XX+1'".."_bs_`=l_XX+l_placebo_XX'"]
+	}	
+	
 	// Compute P-value for the F-test on joint nullity of all placebos
 	matrix didmgt_Var_Placebo_inv=invsym(didmgt_Var_Placebo)
 	matrix didmgt_Placebo_t=didmgt_Placebo'
 	matrix didmgt_chi2placebo=didmgt_Placebo_t*didmgt_Var_Placebo_inv*didmgt_Placebo
-	scalar p_jointplacebo=1-chi2(l_placebo_XX,didmgt_chi2placebo[1,1])
-	ereturn scalar p_jointplacebo=1-chi2(l_placebo_XX,didmgt_chi2placebo[1,1])
+	
+	
+	
+	*Modif David 05_02_2026: check that matrix has full rank before performing the test:
+	* Check rank of didmgt_Var_Placebo
+	matrix symeigen X_pl v_pl = didmgt_Var_Placebo
+	scalar warning_pl= abs(v_pl[1,1]/v_pl[rowsof(v_pl), colsof(v_pl)])
+	if (warning_pl != .) {
+		scalar p_jointplacebo=1-chi2(l_placebo_XX,didmgt_chi2placebo[1,1])
+		ereturn scalar p_jointplacebo=1-chi2(l_placebo_XX,didmgt_chi2placebo[1,1])
+		}
+	if (warning_pl == .){
+		scalar p_jointplacebo=.
+		ereturn scalar p_jointplacebo=.
+		}
 
 	}
 	
 	// Error message if not all of the specified placebos could be estimated 
 	else{
 		di as error ""
-		di as error "Some placebos could not be estimated."
-		di as error "Therefore, the test of joint nullity of the placebos "
-		di as error "could not be computed."
+		di as error "Some placebos could not be estimated. Therefore, the test of joint nullity of the placebos could not be computed."
+		di as input _continue ""
 	}
 	
 }
 
-///// Performing a test that all DID_\ell effects are equal (similar structure as test on placebos, not commented, except for the small differences with placebos)
 
+///// Performing a test that all DID_\ell effects are equal to 0 
+// Felix: This will be automatically reported in case there are at least two effects requested and none are missign
+
+// initalize scalar
 scalar all_Ns_not_zero=.
+scalar all_delta_not_zero=.
 
-if ("`effects_equal'")!=""&l_XX>1{
-	
-	scalar all_Ns_not_zero=0
-	
-	forvalue i=1/`=l_XX'{
+// Test can only be run when at least two placebos requested:
+if l_XX>1{
+
+		// If test is feasible, initalize scalar at 0
+		scalar all_Ns_not_zero=0
+		scalar all_delta_not_zero=0
+		
+		// Count the number of effects that can be estimated
+		forvalue i=1/`=l_XX'{
 		if ("`switchers'"==""&(N1_`i'_XX_new!=0|N0_`i'_XX_new!=0))|("`switchers'"=="out"&N0_`i'_XX_new!=0)|("`switchers'"=="in"&N1_`i'_XX_new!=0){
 			scalar all_Ns_not_zero=all_Ns_not_zero+1
-			}
-	}
-	
-	if all_Ns_not_zero==l_XX{
-	
-	matrix didmgt_Effects = mat_res_XX[1..l_XX, 1]
-	
-	matrix didmgt_Var_Effects=J(l_XX, l_XX, 0)
-	
-	matrix didmgt_identity = J(`=l_XX-1', l_XX,0)
-	
-	forvalue i=1/`=l_XX'{
-				if ("`switchers'"==""&(N1_`i'_XX_new!=0|N0_`i'_XX_new!=0))|("`switchers'"=="out"&N0_`i'_XX_new!=0)|("`switchers'"=="in"&N1_`i'_XX_new!=0){
-
-		matrix didmgt_Var_Effects[`i',`i']= scalar(se_`i'_XX)^2
-		
-		if `i'<`=l_XX'{
-			matrix didmgt_identity[`i',`i'] =1
+			
 		}
+		// Count the number of normalized effects that can be estimated
+		if "`normalized'"!=""{
+		if (delta_D_`i'_global_XX!=0 & delta_D_`i'_global_XX!=.){
+			scalar all_delta_not_zero=all_delta_not_zero+1
+		}
+		}
+		}
+
+	// Test can only be run when all requested effects could be computed:
+	// Add condition with normalized
+	if (all_Ns_not_zero==l_XX & "`normalized'"=="")|(all_Ns_not_zero==l_XX & "`normalized'"!="" & all_delta_not_zero==l_XX){
+
+	// Creating a vector with all placebo estimates
+	matrix didmgt_effects=J(l_XX,1,0)
+	
+	// Creating a matrix where the variances and the covariances of the placebos will be stored.
+	matrix didmgt_Var_effects=J(l_XX,l_XX,0)
+	
+	// Fill those matrices
+	forvalue i=1/`=l_XX'{
 		
+		matrix didmgt_effects[`i',1]=scalar(DID_`i'_XX)
+		matrix didmgt_Var_effects[`i',`i']= scalar(se_`i'_XX)^2
+	
 		if `i'<`=l_XX'{
 		forvalue j=`=`i'+1'/`=l_XX'{
+			
+			* Create variables necessary to compute the covariances
+			capture drop U_Gg_var_`i'_`j'_XX
+			capture drop U_Gg_var_`i'_`j'_2_XX
 					
-		capture drop U_Gg_var_`i'_`j'_XX
-		capture drop U_Gg_var_`i'_`j'_2_XX	
-		
-		if ("`normalized'"==""){
-			gen U_Gg_var_`i'_`j'_XX = U_Gg_var_glob_`i'_XX+ U_Gg_var_glob_`j'_XX
+			if ("`normalized'"==""){
+			gen U_Gg_var_`i'_`j'_XX = U_Gg_var_glob_`i'_XX + U_Gg_var_glob_`j'_XX
 		}
+			
 			if "`normalized'"!=""{
 			gen U_Gg_var_`i'_`j'_XX = U_Gg_var_glob_`i'_XX/scalar(delta_D_`i'_global_XX) + U_Gg_var_glob_`j'_XX/scalar(delta_D_`j'_global_XX)
 		}
-		
-			gen U_Gg_var_`i'_`j'_2_XX = U_Gg_var_`i'_`j'_XX^2*first_obs_by_gp_XX
 
+			* Estimate the covariances
+			gen U_Gg_var_`i'_`j'_2_XX = U_Gg_var_`i'_`j'_XX^2*first_obs_by_gp_XX
+			
 			sum U_Gg_var_`i'_`j'_2_XX
 			scalar var_sum_`i'_`j'_XX=r(sum)/G_XX^2
-			scalar cov_`i'_`j'_XX = (scalar(var_sum_`i'_`j'_XX) - scalar(se_`i'_XX)^2 - scalar(se_`j'_XX)^2)/2
 			
-			matrix didmgt_Var_Effects[`i',`j']= scalar(cov_`i'_`j'_XX)
-			matrix didmgt_Var_Effects[`j',`i']= scalar(cov_`i'_`j'_XX)	
-						
+			scalar cov_`i'_`j'_XX = (scalar(var_sum_`i'_`j'_XX) - scalar(se_`i'_XX)^2 - scalar(se_`j'_XX)^2)/2
+	
+			* Store the results
+			matrix didmgt_Var_effects[`i',`j']= scalar(cov_`i'_`j'_XX)
+			matrix didmgt_Var_effects[`j',`i']= scalar(cov_`i'_`j'_XX)
+
 		}
+	}
+	
+	}
+	
+	*** Modif Felix: replace matrix with bootstrap
+	if `bootstrap_XX'!=0{
+		matrix didmgt_Var_eff=bs_var_cov_XX["_bs_`=1'".."_bs_`=l_XX'","_bs_`=1'".."_bs_`=l_XX'"]
+	}	
+	
+	// Compute P-value for the F-test on joint nullity of all effects
+	matrix didmgt_Var_effects_inv=invsym(didmgt_Var_effects)
+	matrix didmgt_effects_t=didmgt_effects'
+	matrix didmgt_chi2effects=didmgt_effects_t*didmgt_Var_effects_inv*didmgt_effects
+	
+	
+	*Modif David 05_02_2026: check that matrix has full rank before performing the test:
+	* Check rank of didmgt_Var_effects
+	matrix symeigen X_eff v_eff = didmgt_Var_effects
+	scalar warning_eff= abs(v_eff[1,1]/v_eff[rowsof(v_eff), colsof(v_eff)])
+	if (warning_eff != .) {
+		scalar p_jointeffects=1-chi2(l_XX,didmgt_chi2effects[1,1])
+		ereturn scalar p_jointeffects=1-chi2(l_XX,didmgt_chi2effects[1,1])
 		}
-	}
-	}
-	
-	*Creating a matrix of demeaned effects: null being tested = joint equality, not jointly 0
-	matrix didmgt_D =didmgt_identity -J(`=l_XX-1',l_XX,(1/l_XX))
-	matrix didmgt_test_effects = didmgt_D*didmgt_Effects
-	matrix didmgt_test_var = didmgt_D*didmgt_Var_Effects*didmgt_D'
-	*Enforcing symmetry
-	matrix didmgt_test_var = (didmgt_test_var + didmgt_test_var')/2
-		
-	matrix didmgt_test_var_inv=invsym(didmgt_test_var)
-	matrix didmgt_test_effects_t=didmgt_test_effects'
-	matrix didmgt_chi2_equal_ef=didmgt_test_effects_t*didmgt_test_var_inv*didmgt_test_effects
-	scalar p_equality_effects=1-chi2(`=l_XX-1',didmgt_chi2_equal_ef[1,1])
-	ereturn scalar p_equality_effects=1-chi2(`=l_XX-1',didmgt_chi2_equal_ef[1,1])
-	
+	if (warning_eff == .){
+		scalar p_jointeffects=.
+		ereturn scalar p_jointeffects=.
+		}
+
 	}
 	
+	// Error message if not all of the specified placebos could be estimated 
 	else{
 		di as error ""
-		di as error "Some effects could not be estimated."
-		di as error "Therefore, the test of equality of the effects "
-		di as error "could not be computed."
+		di as error "Some effects could not be estimated. Therefore, the test of joint nullity of the effects could not be computed."
+		di as input _continue ""
 	}
 	
+}
+
+// LBX change below 
+
+///// Performing a test that all DID_\ell effects are equal (similar structure as test on placebos, not commented, except for the small differences with placebos)
+// scalar all_Ns_not_zero=. // Modif Felix: this scalar is already initalized above and would now be overwritten when it should not be	
+// 	effects_equal(string)
+
+local ee_called = 0
+
+// Check and Extract Lower and Upper Bound from the Option
+if ("`effects_equal'")!="" & l_XX>1{
+	
+	* when all is not specified 
+	if "`effects_equal'" != "all"{ 
+		
+		* Exit when option wrongly called without separator
+		if strpos("`effects_equal'", ",") == 0 {
+			di as error "Syntax error in effects_equal option"
+			di as error "Comma required"
+			di as input _continue ""
+			exit
+		}
+		
+		* Extract lower and upper bounds of interest 
+		local ee_lb = strtrim(substr("`effects_equal'", 1, strpos("`effects_equal'", ",") - 1))
+		local ee_ub = strtrim(substr("`effects_equal'", strpos("`effects_equal'", ",") + 1, .))
+		
+				* Exit when option wrongly call with non-integer inputs
+		capture confirm integer number `ee_lb'
+		if _rc{
+		di ""	
+		di as error "The input of the effects_equal() option has to be a positive integer in the range of estimated effects."
+		di as input _continue ""
+		exit
+		}
+		capture confirm integer number `ee_ub'
+		if _rc{
+		di ""	
+		di as error "The input of the effects_equal() option has to be a positive integer in the range of estimated effects."
+		di as input _continue ""
+		exit
+		}
+	
+		* Exit if lower and upper bounds do not make sense
+		if `ee_ub' <= `ee_lb' | `ee_lb' < 1 | `ee_ub' > l_XX{
+			di as error "Syntax error in effect_equal option: The bounds specifed are out of range."
+			exit
+		}
+	}
+	
+	* when all is specified: default range
+	else{
+		local ee_lb = 1
+		local ee_ub = l_XX
+	}
+	
+	
+	* when effects_equal effectively called
+	local ee_called = 1
+}
+
+// When option correctly called 
+if `ee_called' == 1 & l_XX>1 {  
+
+	scalar all_Ns_not_zero_equal_test=0
+	
+	// Check how many periods of effects have sufficient observations for the test to proceed. 	
+	forvalue i=`ee_lb'/`ee_ub'{
+		if ("`switchers'"==""&(N1_`i'_XX_new!=0|N0_`i'_XX_new!=0))|("`switchers'"=="out"&N0_`i'_XX_new!=0)|("`switchers'"=="in"&N1_`i'_XX_new!=0){
+			scalar all_Ns_not_zero_equal_test=all_Ns_not_zero_equal_test+1 
+			}
+	}
+	
+
+	* track num of periods of interest
+	local length=`ee_ub'-`ee_lb'+1
+	
+	* when all periods of interest have sufficient obs 
+	
+	
+	if all_Ns_not_zero_equal_test==`length'{
+		
+		
+		* Extract the first column of rows up to l_xx, hold DID_\ell to be tested for equality. 
+		matrix didmgt_Effects = mat_res_XX[`ee_lb'..`ee_ub', 1]
+		* Initialize the variance-covariance matrix for the effects of l_XX size. 
+		matrix didmgt_Var_Effects=J(`length', `length', 0)
+		* Create a partial identity matrix. 
+		matrix didmgt_identity = J(`=`length'-1', `length',0 )  
+		
+		* loop over each dyn effects of interest
+		
+		forvalue i=`ee_lb'/`ee_ub'{
+		
+			* condition on sufficient obs for this dyn effect
+			if ("`switchers'"==""&(N1_`i'_XX_new!=0|N0_`i'_XX_new!=0))|("`switchers'"=="out"&N0_`i'_XX_new!=0)|("`switchers'"=="in"&N1_`i'_XX_new!=0){
+				
+				* Location tracking in the sub matrices j:submatrix, i:full matrix. 
+				local j=`i'-`ee_lb'+1
+				
+				* Update diagonal elements of didmgt_Var Effects
+				matrix didmgt_Var_Effects[`j',`j']=scalar(se_`i'_XX)^2
+				* Update diagonal element of the identity matrix for matrix of demeaned effects
+				if `i' < `ee_ub'{
+					matrix didmgt_identity[`j',`j']=1
+				}
+				
+				* Update the variance-covariance matrix of selected effects
+				if `i' < `ee_ub'{
+
+					/* Nested loop iterate over rest periods to be paired with i from i+1 to upper bound */
+					forvalue k=`=`i'+1'/`=`ee_ub''{ 
+						
+						* Location tracking in the sub matrices s:submatrix, k:full matrix. 
+						local s=`k'-`ee_lb'+1
+						
+						capture drop U_Gg_var_`i'_`k'_XX
+						capture drop U_Gg_var_`i'_`k'_2_XX	
+						
+						if ("`normalized'"==""){
+							gen U_Gg_var_`i'_`k'_XX = U_Gg_var_glob_`i'_XX+ U_Gg_var_glob_`k'_XX
+						}
+						if "`normalized'"!=""{
+							gen U_Gg_var_`i'_`k'_XX = U_Gg_var_glob_`i'_XX/scalar(delta_D_`i'_global_XX) + U_Gg_var_glob_`k'_XX/scalar(delta_D_`k'_global_XX)
+						}
+						
+						gen U_Gg_var_`i'_`k'_2_XX = U_Gg_var_`i'_`k'_XX^2*first_obs_by_gp_XX
+
+						sum U_Gg_var_`i'_`k'_2_XX
+						scalar var_sum_`i'_`k'_XX=r(sum)/G_XX^2
+						scalar cov_`i'_`k'_XX = (scalar(var_sum_`i'_`k'_XX) - scalar(se_`i'_XX)^2 - scalar(se_`k'_XX)^2)/2
+							
+						* Update covariance of i,k pair in submatrix
+						matrix didmgt_Var_Effects[`j',`s']= scalar(cov_`i'_`k'_XX)
+						matrix didmgt_Var_Effects[`s',`j']= scalar(cov_`i'_`k'_XX)
+						
+					}
+				/* End nested loop */ 
+				}
+				}
+				}
+				
+				
+ 		if `bootstrap_XX'!=0{
+ 			matrix didmgt_Var_Effects=bs_var_cov_XX["_bs_1".."_bs_`=l_XX'","_bs_1".."_bs_`=l_XX'"]
+			matrix didmgt_Var_Effects = didmgt_Var_Effects[`ee_lb'..`ee_ub', `ee_lb'..`ee_ub']
+ 			}	
+
+
+			/* Just subsetting everything */			
+			//matrix didmgt_D = (1+1/(`=`length'-1')) * didmgt_identity - J(`=`length'-1', `=`length'', 1/(`=`length'-1'))
+			matrix didmgt_D = didmgt_identity - J(`=`length'-1', `=`length'', 1/(`=`length''))
+			* Demeaned effect matrix vector
+			matrix didmgt_test_effects = didmgt_D * didmgt_Effects
+			* Variance Covariance matrix of demeaned effects
+			matrix didmgt_test_var = didmgt_D * didmgt_Var_Effects * didmgt_D'
+			* Enforcing symmetry
+			matrix didmgt_test_var = (didmgt_test_var + didmgt_test_var') / 2 
+			matrix didmgt_test_var_inv = invsym(didmgt_test_var)
+			matrix didmgt_test_effects_t = didmgt_test_effects'
+			
+			* chi-squared statistics : effectstranspose * (Variance)^(-1)* effects
+			matrix didmgt_chi2_equal_ef = didmgt_test_effects_t * didmgt_test_var_inv * didmgt_test_effects
+			
+			
+	*Modif David 05_02_2026: check that matrix has full rank before performing the test:
+	* Check rank of didmgt_Var_effects, since they are the estimators used for the equality of effects test
+	if (warning_eff != .) {
+			scalar p_equality_effects = 1 - chi2(`=`length'-1', didmgt_chi2_equal_ef[1, 1])  
+			ereturn scalar p_equality_effects = 1 - chi2(`=`length'-1', didmgt_chi2_equal_ef[1, 1])	
+		}
+	if (warning_eff == .){
+		scalar p_equality_effects=.
+		ereturn scalar p_equality_effects=.
+		}	
+		
+		}
+		else{
+		di as error ""
+		di as error "Some effects could not be estimated. Therefore, the test of equality of the effects could not be computed."
+		di as input _continue ""
+	}
+}
 	}
 
-	} // end of the quietly condition
+// LBX change above
 		
 ////////// 7. Output the final tables
+	
+// Supress output during the bootstrap replications
+if "$bootstrap_on_XX"==""{
 	
 ///// Generating the output that will be shown in the console
 
@@ -1833,19 +3173,77 @@ matrix colnames mat_res_XX= "Estimate" "SE" "LB CI" "UB CI" "N" "Switchers" "tim
 
 ///// Table for the DID_l estimates
 display _newline
-di as input "{hline 80}"
-di as input _skip(13) "Estimation of treatment effects: Event-study effects"
+di "{hline 80}"
+di _skip(13) "{bf:Estimation of treatment effects: Event-study effects}"
 if "`by'" !=""{	
 * Add description with the by variable level if by is specified
-di as input _skip(35) "By: `by' = `val_lab_int_XX'"
+di _skip(35) "{bf:By: `by' = `val_lab_int_XX'}"
 }	
-di as input "{hline 80}"
-noisily matlist mat_res_XX[1..l_XX, 1..6]
-di as input "{hline 80}"
-if l_XX>1&"`effects_equal'"!=""&all_Ns_not_zero==l_XX{
-* When effects_equal is specified show P-value here	
-di as text "{it:Test of equality of the effects : p-value =} " scalar(p_equality_effects)
+if "$k"!=""{
+	local k=$k
+	local nb_obs_adj_XX = strlen("${path_`k'_XX}")
+	di _skip(`=42-`nb_obs_adj_XX'') "{bf:Path (${path_`k'_XX})}"
 }
+di "{hline 80}"
+noisily matlist mat_res_XX[1..l_XX, 1..6]
+di "{hline 80}"
+// Felix: Add test on effects jointly = 0
+if (l_XX>1&all_Ns_not_zero==l_XX&all_delta_not_zero==l_XX&"`normalized'"!="")|(l_XX>1&all_Ns_not_zero==l_XX&"`normalized'"==""){
+	
+	if (warning_eff <= 1000) {
+		di as text "{it:Test of joint nullity of the effects : p-value =} " scalar(p_jointeffects)
+	}
+	if (warning_eff == .) {
+		noi di as err "The F-test that all effects are equal to zero is not computed because the variance of effects is not invertible. This can for instance happen if you cluster standard errors and you have more pre-trend estimators than clusters."
+	}
+	if (warning_eff != . & warning_eff >= 1000){
+		noi di as err "The F-test that all effects are equal to zero may not be reliable, because the variance of the effects is close to not being invertible (the ratio of its largest and smallest eigenvalues is larger than 1000). This can for instance happen when you compute many effects estimators, or when your effects are very strongly correlated. We recommend that you complement the F-test with a sup t-test, see FAQ section of the help file for more details."
+		di as text ""
+		di as text "{it:Test of joint nullity of the effects : p-value =} " scalar(p_jointeffects)
+	}
+
+}
+
+if `ee_called' == 1 & l_XX>1 {
+// LBX Change below 
+if l_XX>1&"`effects_equal'"!=""&all_Ns_not_zero_equal_test== `length'{ 
+* When effects_equal is specified show P-value here	
+if `length' == l_XX{
+	if (warning_eff <= 1000) {
+		di as text "{it:Test of equality of the effects : p-value =} " scalar(p_equality_effects)
+	}
+	if (warning_eff == .) {
+		noi di as err "The F-test that all effects are equal is not computed because the variance of effects is not invertible. This can for instance happen if you cluster standard errors and you have more pre-trend estimators than clusters."
+	}
+	if (warning_eff != . & warning_eff >= 1000){
+		noi di as err "The F-test that all effects are equal may not be reliable, because the variance of the effects is close to not being invertible (the ratio of its largest and smallest eigenvalues is larger than 1000). This can for instance happen when you compute many effects estimators, or when your effects are very strongly correlated. We recommend that you complement the F-test with a sup t-test, see FAQ section of the help file for more details."
+		di as text ""
+		di as text "{it:Test of equality of the effects : p-value =} " scalar(p_equality_effects)
+	}
+	
+	
+}
+else{
+	if (warning_eff <= 1000) {
+		di as text "{it:Test of equality of the effects of having been exposed to treatment for `ee_lb' to `ee_ub' periods: p-value =} " scalar(p_equality_effects) 
+	}
+	if (warning_eff == .) {
+		noi di as err "The F-test that effects `ee_lb' to `ee_ub' are equal is not computed because the variance of effects is not invertible. This can for instance happen if you cluster standard errors and you have more pre-trend estimators than clusters."
+	}
+	if (warning_eff != . & warning_eff >= 1000){
+		noi di as err "The F-test that effects `ee_lb' to `ee_ub' are equal may not be reliable, because the variance of the effects is close to not being invertible (the ratio of its largest and smallest eigenvalues is larger than 1000). This can for instance happen when you compute many effects estimators, or when your effects are very strongly correlated. We recommend that you complement the F-test with a sup t-test, see FAQ section of the help file for more details."
+		di as text ""
+		di as text "{it:Test of equality of the effects of having been exposed to treatment for `ee_lb' to `ee_ub' periods: p-value =} " scalar(p_equality_effects) 
+	}
+	
+}
+}
+
+if all_Ns_not_zero_equal_test != `length'{ 
+di as text "{it: Not enough observations in some period to perform the test of equality of the effects.}"
+}
+}
+// LBX Change above
 
 ///// Table for the Average total effect estimate
 if "`trends_lin'"==""{
@@ -1855,24 +3253,86 @@ matrix mat_res_avg_XX=mat_res_XX[l_XX+1, 1..6]
 matrix mat_res_avg_XX=(mat_res_avg_XX, .z )
 matrix colnames mat_res_avg_XX= "Estimate" "SE" "LB CI" "UB CI" "N" "Switch" "x Periods"
 display _newline
-di as input "{hline 80}"
-di as input _skip(4) "Estimation of treatment effects: Average total effect per treatment unit"
+di "{hline 80}"
+di _skip(15) "{bf:Average cumulative (total) effect per treatment unit}"
 if "`by'" !=""{	
 * Add description with the by variable level if by is specified
-di as input _skip(35) "By: `by' = `val_lab_int_XX'"
+di _skip(35) "{bf:By: `by' = `val_lab_int_XX'}"
+}
+if "$k"!=""{
+	local k=$k
+	local nb_obs_adj_XX = strlen("${path_`k'_XX}")
+	di _skip(`=42-`nb_obs_adj_XX'') "{bf:Path (${path_`k'_XX})}"
 }	
-di as input "{hline 80}"
+di "{hline 80}"
 noisily matlist mat_res_avg_XX, nodotz
-di as input "{hline 80}"
+di "{hline 80}"
+
+///// avg_time_periods option: per-horizon T_g via Mata, reusing existing variables
+if "`avg_time_periods'" != "" {
+	// For continuous(p): d1 and distinct-D1_orig check use d_sq_XX_orig
+	// (d_sq_XX is set to 0 for all groups when continuous>0).
+	// For binary: d_sq_XX holds the actual baseline treatment.
+	local d1_avg_XX "d_sq_XX"
+	if `continuous' > 0 local d1_avg_XX "d_sq_XX_orig"
+
+	qui {
+		// ever-switcher indicator (group constant: F_g_XX < T_max+1)
+		tempvar ever_sw_XX
+		gen byte `ever_sw_XX' = (F_g_XX < T_max_XX + 1)
+
+		// unweighted 0/1 cell-validity indicator (N_gt_XX includes weights)
+		tempvar ngt_bin_XX
+		gen byte `ngt_bin_XX' = (outcome_XX != .)
+
+		// per-horizon T_g from Mata _compute_Tg
+		// T_g_XX = bys d_sq_XX [trends_nonparam]: max(F_g_trunc_XX)-1  = Tg_class
+		// F_g_XX = Fg_eff  (already T_max+1 for never-switchers)
+		// d_sq_int_XX = dsq_cls
+		tempvar Tg_ph_XX
+		gen double `Tg_ph_XX' = .
+		sort group_XX time_XX
+		mata: _compute_Tg("group_XX","time_XX","outcome_XX","F_g_XX","T_g_XX", ///
+			"`ever_sw_XX'","F_g_XX","d_sq_int_XX","`ngt_bin_XX'", ///
+			"`Tg_ph_XX'")
+
+		// per-horizon M_g
+		tempvar Mg_ph_XX
+		gen double `Mg_ph_XX' = min(`=l_XX', `Tg_ph_XX' - F_g_XX + 1)
+
+		// compute avg + per-effect switcher counts
+		local ssw_flag_XX = cond("`same_switchers'"!="", 1, 0)
+		mata: _avg_cumul("group_XX","time_XX","treatment_XX","outcome_XX","`d1_avg_XX'", ///
+			"F_g_XX","`Tg_ph_XX'","`ever_sw_XX'","F_g_XX","d_sq_int_XX", ///
+			"`Mg_ph_XX'","`ngt_bin_XX'","S_g_XX","N_gt_XX",`=l_XX', ///
+			`ssw_flag_XX', "`switchers'")
+	}
+
+	di as text "Average number of time periods over which a treatment's effect is accumulated = " ///
+		as result scalar(avg_cumul_XX)
+	di as text "Number of switchers per effect:"
+	forvalues k = 1/`=l_XX' {
+		di as text "   Effect_`k' : " as result nswitch_mata_XX[1,`k']
+	}
+
+	// Persist per-effect counts as Stata scalars so they survive the
+	// ereturn clear / ereturn post that happens later in the program.
+	// The actual ereturn scalar N_switch_avg_* / avg_cumul calls are
+	// emitted further down, alongside the standard N_switchers_effect_*.
+	forvalues k = 1/`=l_XX' {
+		scalar N_switch_avg_`k'_XX = nswitch_mata_XX[1, `k']
+	}
+	capture matrix drop nswitch_mata_XX
+}
 
 }
 
 // Output in case trends_lin is specified
 if "`trends_lin'"!=""{
 display _newline
-di as input "{hline 80}"
-di as input _skip(4) "When the option {it:trends_lin} is specified no average effects are reported"
-di as input "{hline 80}"
+di "{hline 80}"
+di _skip(4) "{bf:When the option {it:trends_lin} is specified no average effects are reported}"
+di "{hline 80}"
 }	
 
 ///// Table for the placebo estimates
@@ -1880,20 +3340,37 @@ if l_placebo_XX!=0{
 * Only shown when some placebos are requested
 
 display _newline
-di as input "{hline 80}"
-di as input _skip(10) "Testing the parallel trends and no anticipation assumptions"
+di "{hline 80}"
+di _skip(10) "{bf:Testing the parallel trends and no anticipation assumptions}"
 if "`by'" !=""{	
 * Add description with the by variable level if by is specified	
-di as input _skip(35) "By: `by' = `val_lab_int_XX'"
+di _skip(35) "{bf:By: `by' = `val_lab_int_XX'}"
+}
+if "$k"!=""{
+	local k=$k
+	local nb_obs_adj_XX = strlen("${path_`k'_XX}")
+	di  _skip(`=42-`nb_obs_adj_XX'') "{bf:Path (${path_`k'_XX})}"
 }	
-di as input "{hline 80}"
+di "{hline 80}"
 matlist mat_res_XX[l_XX+2...,1..6]
-di as input "{hline 80}"
+di "{hline 80}"
 if (l_placebo_XX>1&all_Ns_pl_not_zero==l_placebo_XX&all_delta_pl_not_zero==l_placebo_XX&"`normalized'"!="")|(l_placebo_XX>1&all_Ns_pl_not_zero==l_placebo_XX&"`normalized'"==""){
-di as text "{it:Test of joint nullity of the placebos : p-value =} " scalar(p_jointplacebo)
+	if (warning_pl <= 1000) {
+		di as text "{it:Test of joint nullity of the placebos : p-value =} " scalar(p_jointplacebo)
+	}
+	if (warning_pl == .) {
+		noi di as err "The F-test that all pre-trends are equal to zero is not computed because the variance of pre-trends is not invertible. This can for instance happen if you cluster standard errors and you have more pre-trend estimators than clusters."
+	}
+	if (warning_pl != . & warning_pl >= 1000){
+		noi di as err "The F-test that all pre-trends are equal to zero may not be reliable, because the variance of the placebos is close to not being invertible (the ratio of its largest and smallest eigenvalues is larger than 1000). This can for instance happen when you compute many placebos estimators, or when your placebos are very strongly correlated. We recommend that you complement the F-test with a sup t-test, see FAQ section of the help file for more details."
+		di as text ""
+		di as text "{it:Test of joint nullity of the placebos : p-value =} " scalar(p_jointplacebo)
+	}
+
 }
 }
 
+} // end bootstrap condition
 ////////// 8. Output other post estimation options
 
 ///// Testing for effect heterogeneity
@@ -1903,7 +3380,7 @@ qui{
 sort group_XX time_XX	
 
 // Define number of effects we want to calculate
-if "`het_effects'"==""{
+if "`het_effects'"=="all"{
 local all_effects_XX ""	
 // Take all effects corresponding to the number of requested effect estimates
 forvalues i=1/`=l_XX'{
@@ -1911,11 +3388,11 @@ local all_effects_XX "`all_effects_XX' `i'"
 }
 }
 
-if "`het_effects'"!=""{ 
+if "`het_effects'"!="all"{ 
 // allow to only show some effects specified in the option
 local all_effects_XX "`het_effects'"
 local test_eff_XX : subinstr local het_effects " " ",", all 
-local count_length_XX: word count `test_eff_XX'
+local count_length_XX: word count `all_effects_XX'
 if `count_length_XX'==1{
 	local max_test_eff_XX=`test_eff_XX'
 }
@@ -1927,9 +3404,12 @@ local max_test_eff_XX = max(`test_eff_XX')
 		di as error ""
 		di as error "You specified some numbers in predict_het that exceed the number of effects possible to estimate!"
 		di as error "Please specify only numbers that are smaller or equal to the number you request in effects()."
+		di as input _continue ""
 		exit
 	}
 }
+
+local all_effects_XX_e "`all_effects_XX'" // Modif Felix (delta_XX error)
 
 // Loop the procedure over all requested effects for which potential heterogeneity should be predicted
 foreach i in `all_effects_XX'{
@@ -1967,20 +3447,35 @@ if "`trends_lin'" != ""{
 }
 replace prod_het_`i'_XX=S_g_het_XX*prod_het_`i'_XX
 
-
 * keep one observation by group to not artificially increase sample
-bys group_XX: replace prod_het_`i'_XX = . if _n != 1
+bys group_XX: replace prod_het_`i'_XX = . if switcher_tag_XX != `i' // Change by DAC to fix issue with the number of units
 
 * F_g_XX#d_sq_XX#S_g_het_XX
 gegen d_sq_group_XX=group(d_sq_XX)
 
+//Define clusters for the SE in the predict_het in case the predict_het_hc2bm option is specified
+if "`cluster'" != ""{
+	local cluster_het `cluster'
+}
+if "`cluster'" == ""{
+	local cluster_het group_XX
+}
+//Define SE type according to if predict_het_hc2bm was specified or not
+if "`predict_het_hc2bm'" == ""{
+	local ses = "hc2"
+}
+if "`predict_het_hc2bm'" != ""{
+	local ses = "hc2 `cluster_het', dfadjust"
+} 
+
+
 // Run regression of interest 
 if "`trends_nonparam'" == "" {
-reg prod_het_`i'_XX `predict_het_good' F_g_XX#d_sq_group_XX#S_g_XX [aw=N_gt_XX] if F_g_XX-1+`i'<=T_g_XX, level(`ci_level') vce(robust)
+reg prod_het_`i'_XX `predict_het_good' F_g_XX#d_sq_group_XX#S_g_XX [aw=N_gt_XX] if F_g_XX-1+`i'<=T_g_XX, level(`ci_level') vce(`ses')
 }
 if "`trends_nonparam'" != "" {
 gegen trends_nonparam_temp_XX=group(`trends_nonparam')	
-reg prod_het_`i'_XX `predict_het_good' F_g_XX#d_sq_group_XX#S_g_XX#trends_nonparam_temp_XX [aw=N_gt_XX] if F_g_XX-1+`i'<=T_g_XX, level(`ci_level') vce(robust)
+reg prod_het_`i'_XX `predict_het_good' F_g_XX#d_sq_group_XX#S_g_XX#trends_nonparam_temp_XX [aw=N_gt_XX] if F_g_XX-1+`i'<=T_g_XX, level(`ci_level') vce(`ses')
 capture drop trends_nonparam_temp_XX
 }
 
@@ -1988,8 +3483,8 @@ capture drop trends_nonparam_temp_XX
 forvalues j=1/`:word count `predict_het_good''{
 scalar beta_het_`j'_eff`i'_hat_XX=_b["`: word `j' of `predict_het_good''"]
 scalar se_het_`j'_eff`i'_hat_XX=_se["`: word `j' of `predict_het_good''"]
-scalar lb_het_`j'_eff`i'_hat_XX=_r_lb["`: word `j' of `predict_het_good''"]
-scalar ub_het_`j'_eff`i'_hat_XX=_r_ub["`: word `j' of `predict_het_good''"]
+scalar lb_het_`j'_eff`i'_hat_XX=_b["`: word `j' of `predict_het_good''"]+invt(e(N)-e(df_m)-1,0.025)*_se["`: word `j' of `predict_het_good''"]
+scalar ub_het_`j'_eff`i'_hat_XX=_b["`: word `j' of `predict_het_good''"]+invt(e(N)-e(df_m)-1,0.975)*_se["`: word `j' of `predict_het_good''"]
 scalar t_het_`j'_eff`i'_hat_XX=scalar(beta_het_`j'_eff`i'_hat_XX)/scalar(se_het_`j'_eff`i'_hat_XX)
 }
 scalar N_het_`i'_hat_XX=e(N)
@@ -2031,57 +3526,361 @@ matrix rownames effect_het_`i'_XX=`effect_het_rownames_`i'_XX'
 
 // Output the table
 display _newline
-di as input "{hline 80}"
-di as input _skip(25) "Predicting effect heterogeneity"
+di "{hline 80}"
+di _skip(25) "{bf:Predicting effect heterogeneity}"
 if "`by'" !=""{
 * Add description with the by variable level if by is specified		
-di as input _skip(35) "By: `by' = `val_lab_int_XX'"
+di _skip(35) "{bf:By: `by' = `val_lab_int_XX'}"
 }	
-di as input "{hline 80}"
+di "{hline 80}"
 
 // output only the specified effects
 foreach i in `all_effects_XX'{
 display _newline
-di as input "{hline 80}"	
-di as input _skip(37) "Effect_`i'"
-di as input "{hline 80}"
+di "{hline 80}"	
+di _skip(37) "{bf:Effect_`i'}"
+di "{hline 80}"
 matlist effect_het_`i'_XX
-di as input "{hline 80}"
+di "{hline 80}"
 di as text "{it:Test of joint nullity of the estimates : p-value =} " p_het_`i'_hat_XX
 }
+
+
+
+*****************************************************
+// Note: We need a step to ensure that we only do this for the number of pre peridos that are available in the data -> For now just allow as mayn placebos as specified
+
+// Note: we need to specify "all", correct that in the help file and fix the issue when we specify a numlist
+
+if `=l_placebo_XX'>0{
+local all_effects_XX_dyn "`all_effects_XX'"
+qui{		
+if "`het_effects'"=="all"{
+local all_effects_XX ""	
+// Take all effects corresponding to the number of requested effect estimates
+forvalues i=1/`=l_placebo_XX'{
+local all_effects_XX "`all_effects_XX' `i'"
 }
+}
+
+if "`het_effects'"!="all"{ 
+// allow to only show some effects specified in the option
+local all_effects_XX "`het_effects'"
+local test_eff_XX : subinstr local het_effects " " ",", all 
+local count_length_XX: word count `all_effects_XX'
+if `count_length_XX'==1{
+	local max_test_eff_XX=`test_eff_XX'
+}
+else{
+local max_test_eff_XX = max(`test_eff_XX')
+}
+	if `max_test_eff_XX'>`=l_placebo_XX'{
+	* error if specified effects not matching with those actually calculated	
+		di as error ""
+		di as error "You specified some numbers in predict_het that exceed the number of placebos possible to estimate!"
+		di as error "Please specify only numbers that are smaller or equal to the number you request in placebo()."
+		di as input _continue ""
+		exit
+	}
+}
+
+local all_effects_XX_pl "`all_effects_XX'" // Modif Felix (delta_XX error)
+
+foreach i in `all_effects_XX'{
+
+// Modif Felix: Yg,Fg−1-ℓ
+gen Yg_Fg_pl_`i'_XX_temp=outcome_non_diff_XX if time_XX==F_g_XX-1-`i'
+bys group_XX: gegen Yg_Fg_pl_`i'_XX=mean(Yg_Fg_pl_`i'_XX_temp)
+capture drop Yg_Fg_pl_`i'_XX_temp
+
+// Modif Felix: Now generate Sg*(Yg,Fg−1-ℓ − Yg,Fg−1) 
+gen prod_het_pl_`i'_XX=(Yg_Fg_pl_`i'_XX - Yg_Fg_min_1_XX)
+if "`trends_lin'" != ""{
+	replace prod_het_pl_`i'_XX=prod_het_pl_`i'_XX-`i'*(Yg_Fg_min_1_XX-Yg_Fg_min_2_XX)
+}
+replace prod_het_pl_`i'_XX=S_g_het_XX*prod_het_pl_`i'_XX
+
+* keep one observation by group to not artificially increase sample
+bys group_XX: replace prod_het_pl_`i'_XX = . if switcher_tag_XX != `i' // Change by DAC to fix issue with the number of units
+
+// Run regression of interest 
+if "`trends_nonparam'" == "" {
+reg prod_het_pl_`i'_XX `predict_het_good' F_g_XX#d_sq_group_XX#S_g_XX [aw=N_gt_XX] if F_g_XX-1+`i'<=T_g_XX, level(`ci_level') vce(`ses') // leave the F_g_XX-1+`i'<=T_g_XX condition as it is to ensure that we only use treated groups or is this already taken into account by the S_g_XX?
+}
+if "`trends_nonparam'" != "" {
+gegen trends_nonparam_temp_XX=group(`trends_nonparam')	
+reg prod_het_pl_`i'_XX `predict_het_good' F_g_XX#d_sq_group_XX#S_g_XX#trends_nonparam_temp_XX [aw=N_gt_XX] if F_g_XX-1+`i'<=T_g_XX, level(`ci_level') vce(`ses')
+capture drop trends_nonparam_temp_XX
+}
+
+// Retrieve the results from the regression
+forvalues j=1/`:word count `predict_het_good''{
+scalar beta_het_`j'_pl`i'_hat_XX=_b["`: word `j' of `predict_het_good''"]
+scalar se_het_`j'_pl`i'_hat_XX=_se["`: word `j' of `predict_het_good''"]
+scalar lb_het_`j'_pl`i'_hat_XX=_b["`: word `j' of `predict_het_good''"]+invt(e(N)-e(df_m)-1,0.025)*_se["`: word `j' of `predict_het_good''"]
+scalar ub_het_`j'_pl`i'_hat_XX=_b["`: word `j' of `predict_het_good''"]+invt(e(N)-e(df_m)-1,0.975)*_se["`: word `j' of `predict_het_good''"]
+scalar t_het_`j'_pl`i'_hat_XX=scalar(beta_het_`j'_pl`i'_hat_XX)/scalar(se_het_`j'_pl`i'_hat_XX)
+}
+scalar N_het_pl_`i'_hat_XX=e(N)
+
+// Add F-test on joint significance
+test `predict_het_good'
+scalar p_het_pl_`i'_hat_XX=r(p)
+scalar F_het_pl_`i'_hat_XX=r(F)
+}
+}
+
+// Generate results matrix
+foreach i in `all_effects_XX'{
+matrix effect_het_pl_`i'_XX=J(`:word count `predict_het_good'',6,.)
+
+local effect_het_pl_rownames_`i'_XX ""
+
+forvalue j=1/`:word count `predict_het_good''{
+matrix effect_het_pl_`i'_XX[`j',1]=scalar(beta_het_`j'_pl`i'_hat_XX)
+matrix effect_het_pl_`i'_XX[`j',2]=scalar(se_het_`j'_pl`i'_hat_XX)
+matrix effect_het_pl_`i'_XX[`j',3]=scalar(t_het_`j'_pl`i'_hat_XX)
+matrix effect_het_pl_`i'_XX[`j',4]=scalar(lb_het_`j'_pl`i'_hat_XX)
+matrix effect_het_pl_`i'_XX[`j',5]=scalar(ub_het_`j'_pl`i'_hat_XX)
+matrix effect_het_pl_`i'_XX[`j',6]=scalar(N_het_pl_`i'_hat_XX)
+
+// Generate local with rownames
+local pl_het_rownames_`i'_XX "`pl_het_rownames_`i'_XX' "`: word `j' of `predict_het_good''""
+}
+
+// Assign names
+matrix colnames effect_het_pl_`i'_XX= "Estimate" "SE" "t" "LB CI" "UB CI" "N"
+matrix rownames effect_het_pl_`i'_XX=`pl_het_rownames_`i'_XX'
+
+}
+
+// Output the table
+display _newline
+di "{hline 80}"
+di _skip(18) "{bf:Predicting effect heterogeneity - Placebos}"
+if "`by'" !=""{
+* Add description with the by variable level if by is specified		
+di _skip(35) "{bf:By: `by' = `val_lab_int_XX'}"
+}	
+di "{hline 80}"
+
+// output only the specified effects
+foreach i in `all_effects_XX'{
+display _newline
+di "{hline 80}"	
+di _skip(37) "{bf:Placebo_`i'}"
+di "{hline 80}"
+matlist effect_het_pl_`i'_XX
+di "{hline 80}"
+di as text "{it:Test of joint nullity of the estimates : p-value =} " p_het_pl_`i'_hat_XX
+}
+} // End condition that at least one placebo specified
+else{
+	noi di "No placebos were specified so predict_het will also not report placebo estimates"
+}
+
+*****************************************************
+
+
+}
+
+
+
 
 
 ///// Store all the ereturns after the last reg was called 
 ereturn clear 
 
+// Modif Felix: Put ereturn post before all the other ereturns and adjust row/col names
+
+/* -> Problems with format -> didmgt_results_no_avg_XX does not take out missings, didmgt_Var_all_XX does, so we would need to change one of them to make it work (plus we create b V with all those missings, would need to change it too)
+	// Adjust for missings
+	local minus ""
+	
+	if "`missing_eff_XX'" != ""{
+		foreach i of numlist `missing_eff_XX'{
+			local minus = "`minus' Effect_`i'"
+		}
+	}
+	
+	if "`missing_pl_XX'" != ""{
+		foreach i of numlist `missing_pl_XX'{
+			local minus = "`minus' Placebo_`i'"
+		}
+	}
+	
+local minus " `minus' Av_tot_eff"
+local rownames_alt : list rownames-minus
+*/
+
+local minus Av_tot_eff
+local rownames_alt : list rownames-minus
+
+////// Integration with esttab
+if "`trends_lin'"==""{ // Modif Felix (delta_XX error)
+	matrix b=(didmgt_results_no_avg_XX, scalar(delta_XX))
+}
+else if "`trends_lin'"!=""{ // Modif Felix (delta_XX error) -> Also check if I need to change the way in which the variances are retrieved from didmgt_Var_all_XX -> no because avg effect not in there!
+	matrix b=(didmgt_results_no_avg_XX)
+}	
+
+local nc = colsof(b)
+matrix V = J(`nc', `nc', 0)
+if "`bootstrap'"==""{ // Modif Felix: Adapt Matrix for bootstrap
+
+if "`trends_lin'"==""{ // Modif Felix (delta_XX error)
+	forv i=1/`=`nc'-1' {
+		forv j =1/`=`nc'-1' {
+			mat V[`i', `j'] = didmgt_Var_all_XX[`i', `j']
+		}
+	}
+}
+else if "`trends_lin'"!=""{ // Modif Felix (delta_XX error)
+forv i=1/`=`nc'' {
+		forv j =1/`=`nc'' {
+			mat V[`i', `j'] = didmgt_Var_all_XX[`i', `j']
+		}
+	}
+}
+
+}
+if "`bootstrap'"!=""{ // Modif Felix: Adapt Matrix for bootstrap
+	mat V=didmgt_Var_all_XX
+}
+
+// Note Felix: Drop this bootstrap distiction after we reeplaced  didmgt_Var_all_XX by bs_var_cov_XX above so we get the "correct" variance covariance matrix with and without bootstrap.
+
+// Modif Felix: Adjust for cases where SE cant be computed -> with bootstrap we already have the Avg_tot_eff in there
+if "`trends_lin'"==""{ // Modif Felix (delta_XX error)
+	if "`bootstrap'"==""{
+		if scalar(se_XX)!=. {
+			mat V[`nc', `nc'] = scalar(se_XX)^2
+		}
+		if scalar(se_XX)==. {
+			mat V[`nc', `nc'] = 0
+		}
+	}
+}	
+
+
+if "`trends_lin'"==""{ // Modif Felix (delta_XX error)
+	matrix colnames b= `rownames_alt' Av_tot_eff
+	matrix rownames V = `rownames_alt' Av_tot_eff
+	matrix colnames V = `rownames_alt' Av_tot_eff
+}
+else if "`trends_lin'"!=""{ // Modif Felix (delta_XX error)
+	matrix colnames b= `rownames_alt'
+	matrix rownames V = `rownames_alt'
+	matrix colnames V = `rownames_alt'
+}
+
+// Modif Felix (delta_XX error) -> does the following section also need to be changed??? -> yes
+if "`predict_het'" != "" {
+	local het_rown ""
+	
+	if "`trends_lin'"==""{ // Modif Felix (delta_XX error)
+		local rownames_het "`rownames_alt' Av_tot_eff"
+	}
+	else if "`trends_lin'"!=""{ // Modif Felix (delta_XX error)
+		local rownames_het "`rownames_alt'"
+	}
+	
+	foreach v in `rownames_het' {
+		local het_rown "`het_rown' `1':`v'"
+	}
+	
+	foreach i in `all_effects_XX_e'{ // Modif Felix (delta_XX error)
+		local nc = rowsof(effect_het_`i'_XX)
+		local nv = rowsof(V)
+		mat V`i' = J(`nc', `nc', 0)
+		forv j = 1/`nc' {
+			mat b = (b, scalar(effect_het_`i'_XX[`j', 1]))
+			mat V`i'[`j', `j'] = scalar(effect_het_`i'_XX[`j', 2])^2
+		}
+		mat V = (V, J(`nv',`nc', 0)\J(`nc', `nv', 0), V`i')
+		local rnames ""
+		foreach rn in `effect_het_rownames_`i'_XX' {
+			local rnames "`rnames' Effect_`i':`rn'"
+		}
+		local het_rown "`het_rown' `rnames'"
+	}	
+	
+	// split this to add both effects and placebos to the ereturn
+	foreach i in `all_effects_XX_pl'{ // Modif Felix (delta_XX error)
+		local nc = rowsof(effect_het_pl_`i'_XX)
+		local nv = rowsof(V)
+		mat V`i' = J(`nc', `nc', 0)
+		forv j = 1/`nc' {
+			mat b = (b, scalar(effect_het_pl_`i'_XX[`j', 1]))
+			mat V`i'[`j', `j'] = scalar(effect_het_pl_`i'_XX[`j', 2])^2
+		}
+		mat V = (V, J(`nv',`nc', 0)\J(`nc', `nv', 0), V`i')
+		local rnames ""
+		foreach rn in `pl_het_rownames_`i'_XX' {
+			local rnames "`rnames' Placebo_`i':`rn'"
+		}
+		local het_rown "`het_rown' `rnames'"
+	}
+	
+	mat coln b = `het_rown'
+	mat rown V = `het_rown'
+	mat coln V = `het_rown'
+}
+
+// Felix -> Lets add cap and print error message when we are in the case with some missings in the matrices (cases where we have missings in the output table)
+cap ereturn post b V 
+if _rc!=0{
+	di ""
+	di as error "Warning: some of the effects/placebos could not be computed so e(b)/e(V) will not be defined!"
+}
+
+// Felix: Continue by adding Av_tot_eff to the Var/Cov matrix
+
 forvalue i=1/`=l_XX'{
-ereturn scalar Effect_`i' = scalar(DID_`i'_XX)
-ereturn scalar N_effect_`i' = N_effect_`i'_XX
-ereturn scalar N_switchers_effect_`i' = N_switchers_effect_`i'_XX
-ereturn scalar se_effect_`i'=scalar(se_`i'_XX)
+capture ereturn scalar Effect_`i' = scalar(DID_`i'_XX)
+capture ereturn scalar N_effect_`i' = N_effect_`i'_XX
+capture ereturn scalar N_switchers_effect_`i' = N_switchers_effect_`i'_XX
+capture ereturn scalar se_effect_`i'=scalar(se_`i'_XX)
+}
+ereturn local effects `"`str_effects'"'
+
+// avg_time_periods cross-check scalars: posted here so they survive ereturn clear/post.
+if "`avg_time_periods'" != "" {
+	capture ereturn scalar avg_cumul = scalar(avg_cumul_XX)
+	forvalue i = 1/`=l_XX' {
+		capture ereturn scalar N_switch_avg_`i' = scalar(N_switch_avg_`i'_XX)
+		capture scalar drop N_switch_avg_`i'_XX
+	}
+}
+
+// Modif Felix 12.05.25
+if (l_XX>1&all_Ns_not_zero==l_XX&all_delta_not_zero==l_XX&"`normalized'"!="")|(l_XX>1&all_Ns_not_zero==l_XX&"`normalized'"==""){
+capture ereturn scalar p_jointeffects=scalar(p_jointeffects)
 }
 
 if "`effects_equal'" != ""{
-ereturn scalar p_equality_effects=scalar(p_equality_effects)
+capture ereturn scalar p_equality_effects=scalar(p_equality_effects)
 }
 
 if l_placebo_XX!=0{
+ereturn local placebo `"`str_placebo'"'
 forvalue i=1/`=l_placebo_XX'{
-ereturn scalar Placebo_`i' = scalar(DID_placebo_`i'_XX)
-ereturn scalar N_placebo_`i' = N_placebo_`i'_XX
-ereturn scalar N_switchers_placebo_`i' = N_switchers_placebo_`i'_XX
-ereturn scalar se_placebo_`i'=scalar(se_placebo_`i'_XX)
+capture ereturn scalar Placebo_`i' = scalar(DID_placebo_`i'_XX)
+capture ereturn scalar N_placebo_`i' = N_placebo_`i'_XX
+capture ereturn scalar N_switchers_placebo_`i' = N_switchers_placebo_`i'_XX
+capture ereturn scalar se_placebo_`i'=scalar(se_placebo_`i'_XX)
 }
 if (l_placebo_XX>1&all_Ns_pl_not_zero==l_placebo_XX&all_delta_pl_not_zero==l_placebo_XX&"`normalized'"!="")|(l_placebo_XX>1&all_Ns_pl_not_zero==l_placebo_XX&"`normalized'"==""){
-ereturn scalar p_jointplacebo=scalar(p_jointplacebo)
+capture ereturn scalar p_jointplacebo=scalar(p_jointplacebo)
 }
 }
 
-ereturn scalar Av_tot_effect = scalar(delta_XX)
-ereturn scalar N_avg_total_effect = scalar(N_effect_XX)
-ereturn scalar N_switchers_effect_average = N_switchers_effect_XX
-ereturn scalar se_avg_total_effect = se_XX
+if "`trends_lin'"==""{
+capture ereturn scalar Av_tot_effect = scalar(delta_XX)
+capture ereturn scalar N_avg_total_effect = scalar(N_effect_XX)
+capture ereturn scalar N_switchers_effect_average = N_switchers_effect_XX
+capture ereturn scalar se_avg_total_effect = se_XX
+}
 
 ereturn local cmd "did_multiplegt_dyn"
 ereturn matrix estimates=didmgt_b2 
@@ -2089,9 +3888,19 @@ ereturn matrix estimates=didmgt_b2
 ereturn matrix variances=compatibility_variances
 
 if "`predict_het'"!=""{
-foreach i in `all_effects_XX'{
-ereturn matrix effect_het_`i'_XX=effect_het_`i'_XX
-}	
+if `=l_placebo_XX' == 0 {
+	foreach i in `all_effects_XX'{
+	ereturn matrix effect_het_`i'_XX=effect_het_`i'_XX
+	}	
+} 
+else {
+	foreach i in `all_effects_XX_dyn'{
+	ereturn matrix effect_het_`i'_XX=effect_het_`i'_XX
+	}	
+	foreach i in `all_effects_XX_pl'{
+	ereturn matrix effect_het_pl_`i'_XX=effect_het_pl_`i'_XX
+	}	
+}
 }
 
 ///// Option that shows a table with weights attached to each normalized effect
@@ -2100,6 +3909,7 @@ if "`normalized_weights'" != "" {
 		// Error as normalized_weights only works in combination with normalized
 		if "`normalized'" == "" {
 			noi di as err "normalized option required to compute normalized_weights"
+			di as input _continue ""
 			exit
 		}
 
@@ -2110,7 +3920,7 @@ if "`normalized_weights'" != "" {
 	forv i = 1/`=l_XX'{	
 		local m = "ℓ=`i'"
 		local cols `cols' `m'
-		gen N_gt_`i'_temp_XX = N_gt_XX if time_XX == F_g_XX - 1 + `i'
+		gen N_gt_`i'_temp_XX = N_gt_XX if time_XX == F_g_XX - 1 + `i' & `i' <= L_g_XX & N_gt_control_`i'_XX > 0 & N_gt_control_`i'_XX != . & diff_y_`i'_XX != .
 		gegen N_gt_`i'_XX = mean(N_gt_`i'_temp_XX), by(group_XX)
 		drop N_gt_`i'_temp_XX
 		forv k = 0/`=`i' - 1' {
@@ -2165,16 +3975,16 @@ if "`normalized_weights'" != "" {
 	}
 
 	// Output the table
-	noi display _newline
-	di as input "{hline 70}"
-	di as input _skip(15) "Weights on treatment lags"
+	display _newline
+	di "{hline 70}"
+	di _skip(15) "{bf:Weights on treatment lags}"
 	if "`by'" !=""{	
 	* Add description with the by variable level if by is specified	
-	di as input _skip(25) "By: `by' = `val_lab_int_XX'"
+	di _skip(25) "{bf:By: `by' = `val_lab_int_XX'}"
 	}	
-	di as input "{hline 70}"
-	noi matlist weight_mat, format(%9.4fc) lines(rowtotal)
-	noi display _newline		
+	di "{hline 70}"
+	matlist weight_mat, format(%9.4fc) lines(rowtotal)
+	display _newline		
 }
 
 // Saving data for further options as save sample drops variables 
@@ -2198,7 +4008,7 @@ if "`save_sample'" != "" {
 		replace _did_sample = -1 if _did_sample == 0
 		replace _did_sample = 0 if _did_sample == .
 		cap label drop switch_lab_XX 
-		label define switch_lab_XX 0 "Control" 1 "Switcher-in" -1 "Switcher-out"
+		label define switch_lab_XX 0 "Never-switcher" 1 "Switcher-in" -1 "Switcher-out"
 		label values _did_sample switch_lab_XX
 		
 		// Save dataset to be in the memory at the end
@@ -2238,6 +4048,7 @@ if "`design'" != "" {
 		di as error ""
 		di as error "Syntax error in design option"
 		di as error "Comma required"
+		di as input _continue ""
 		
 		exit
 	}
@@ -2350,56 +4161,62 @@ if "`design'" != "" {
 	foreach v in col row {
 		mat `v'n desmat = ``v'names'
 	}
+	}
 
 	// output in console
 	if "`des_path'" == "console" {		
-		noi display _newline
-		di as input "{hline 80}"
-		di as input _skip(10) "Detection of treatment paths - `des_n' periods after first switch"
+		display _newline
+		di "{hline 80}"
+		di _skip(10) "{bf:Detection of treatment paths - `des_n' periods after first switch}"
 		if "`by'" !=""{	
 			* Add description with the by variable level if by is specified	
-			di as input _skip(35) "By: `by' = `val_lab_int_XX'"
+			di _skip(35) "{bf:By: `by' = `val_lab_int_XX'}"
 		}	
-		di as input "{hline 80}"
-		noi matlist desmat, format(%9.4gc)
-		di as input "{hline 80}"
-		noi di "{it: Treatment paths detected in at least `=strtrim("`des_per'")'% of the switching groups `tot_switch' for which `effects' effects could be estimated.}"
-		noi di "{it: Total % = `=strtrim("`last_p'")' %}"
+		di "{hline 80}"
+		matlist desmat, format(%9.4gc)
+		di "{hline 80}"
+		di "{it: Treatment paths detected in at least `=strtrim("`des_per'")'% of the switching groups `tot_switch' for which `effects' effects could be estimated.}"
+		di "{it: Total % = `=strtrim("`last_p'")' %}"
 		
 		// Get values for the reference line that explains how to read the table 
-		local n_groups = N_XX[1]
-		local d_start = treatment_XX1[1]
-		if `des_n' == 1 {
-			local d_vec : di %9.2gc treatment_XX2[1]
-			local d_vec = strtrim("`d_vec'")
-		}
-		else {
-			local d_vec = "vector ("
-			forv j = 1/`des_n' {
-				local k : di %9.2gc treatment_XX`=`j' + 1'[1]
-				local k = strtrim("`k'")
-				local d_vec = "`d_vec'`k', "
+		qui {
+			local n_groups = N_XX[1]
+			local d_start = treatment_XX1[1]
+			if `des_n' == 1 {
+				local d_vec : di %9.2gc treatment_XX2[1]
+				local d_vec = strtrim("`d_vec'")
 			}
-			local d_vec = substr("`d_vec'", 1, length("`d_vec'")-2) + ")"
+			else {
+				local d_vec = "vector ("
+				forv j = 1/`des_n' {
+					local k : di %9.2gc treatment_XX`=`j' + 1'[1]
+					local k = strtrim("`k'")
+					local d_vec = "`d_vec'`k', "
+				}
+				local d_vec = substr("`d_vec'", 1, length("`d_vec'")-2) + ")"
+			}
 		}
-		noi di as text "{it: Design interpretation (first row):}"
-		noi di as text "{it: `n_groups' groups started with treatment `d_start' and then experienced treatment `d_vec'.}"		
+		di as text "{it: Design interpretation (first row):}"
+		di as text "{it: `n_groups' groups started with treatment `d_start' and then experienced treatment `d_vec'.}"		
 	}
 	
 	// output as excel
 	else if "`des_path'" != "console" & "`des_path'" !=  "" {
 		if "`by'"==""{
-		 putexcel set "`des_path'", replace sheet("Design", replace)
-		 putexcel A1 = matrix(desmat, names)
-		 noi di as input "Design exported to `des_path'"
+		qui {
+			putexcel set "`des_path'", replace sheet("Design", replace)
+			putexcel A1 = matrix(desmat, names)
+		}
+		 di "{bf:Design exported to `des_path'}"
 		}
 		else if "`by'"!=""{
-		 * Create new sheet for each by level when by is specified	
-		 putexcel set "`des_path'", modify sheet("Design `by' = `val_lab_int_XX'", replace)
-		 putexcel A1 = matrix(desmat, names)
-		 noi di as input "Design exported to `des_path'"
+			qui {
+			* Create new sheet for each by level when by is specified	
+			putexcel set "`des_path'", modify sheet("Design `by' = `val_lab_int_XX'", replace)
+			putexcel A1 = matrix(desmat, names)
+			}
+		 di "{bf:Design exported to `des_path'}"
 	}  
-	}
 	}
 }
 
@@ -2420,6 +4237,7 @@ if "`date_first_switch'" != "" {
 	if "`dfs_opt'" != "" & "`dfs_opt'" != "by_baseline_treat" {
 		di as error ""
 		di as error "Only option {bf:by_baseline_treat} allowed"
+		di as input _continue ""
 		exit
 	}
 	
@@ -2428,9 +4246,11 @@ if "`date_first_switch'" != "" {
 	keep if time_XX == F_g_XX 
 	*Keep just 1 observation per group
 	keep `2' `3' F_g_XX d_sq_XX
+	}
 	
 	// When by_baseline_treat is not specified
 	if missing("`dfs_opt'") {
+		qui {
 		// collapse the number of groups by time
 		gcollapse (count) `2', by(`3')
 		tostring `3', replace
@@ -2442,32 +4262,35 @@ if "`date_first_switch'" != "" {
 		// make matrix with the number and share of groups by time
 		mkmat `2' share_XX, matrix(dfs) rownames(`3')
 		mat colnames dfs = #Groups %Groups
+		}
+
 		// output in console
 		if "`dfs_path'" == "console" {		
-			noi display _newline
-			di as input "{hline 48}"
-			di as input _skip(10) "Switching dates"
+			display _newline
+			di "{hline 48}"
+			di  _skip(10) "{bf:Switching dates}"
 			if "`by'" !=""{	
 				* Add description with the by variable level if by is specified
-				di as input _skip(10) "By: `by' = `val_lab_int_XX'"
+				di _skip(10) "{bf:By: `by' = `val_lab_int_XX'}"
 			}	
-			di as input "{hline 48}"
-			noi matlist dfs, format(%9.4gc) rowtitle("Any status quo treat.") twidth(25) // New text
-			di as input "{hline 48}"		
+			di "{hline 48}"
+			matlist dfs, format(%9.4gc) rowtitle("Any status quo treat.") twidth(25) // New text
+			di "{hline 48}"		
+
 			ereturn scalar switch_dates = `=_N'
 		}
 		// output as excel
 		else if "`dfs_path'" != "console" & "`dfs_path'" !=  "" {
 			if "`by'"==""{
-				putexcel set "`dfs_path'", replace sheet("Switching dates", replace)
-				putexcel A1 = matrix(dfs, names)
-				noi di as input "Switching dates exported to `dfs_path'"
+				qui putexcel set "`dfs_path'", replace sheet("Switching dates", replace)
+				qui putexcel A1 = matrix(dfs, names)
+				di "{bf:Switching dates exported to `dfs_path'}"
 			}
 			else if "`by'"!=""{
 				* Create new sheet for each by level when by is specified	
-				putexcel set "`dfs_path'", modify sheet("Switching dates `by' = `val_lab_int_XX'", replace)
-				putexcel A1 = matrix(dfs, names)
-				noi di as input "Switching dates exported to `dfs_path'"
+				qui putexcel set "`dfs_path'", modify sheet("Switching dates `by' = `val_lab_int_XX'", replace)
+				qui putexcel A1 = matrix(dfs, names)
+				di "{bf:Switching dates exported to `dfs_path'}"
 			}
 		}		
 	}
@@ -2475,40 +4298,48 @@ if "`date_first_switch'" != "" {
 	// When by_baseline_treat is specified
 	else {
 		// collapse, but this time by time and status quo treatment
+		qui {
 		gcollapse (count) `2', by(`3' d_sq_XX)
 		tostring `3', replace
 		gegen tot_share_XX = sum(`2'), by(d_sq_XX)
 		gen share_XX = `2'/tot_share_XX * 100
 		sort d_sq_XX `3'
+		}
 		
-		noi display _newline
+		display _newline
 		if "`dfs_path'" == "console" {
-			di as input "{hline 48}"
-			di as input _skip(10) "Switching dates"
-			di as input "{hline 48}"
+			di "{hline 48}"
+			di _skip(10) "{bf:Switching dates}"
+			di "{hline 48}"
 		}
 		
 		// make matrix with the number and share of groups by time, one for each level of status quo treatment
-		tostring d_sq_XX, replace
-		levelsof d_sq_XX, local(levels_d_sq_XX)
-		local i = 1
+		qui {
+			tostring d_sq_XX, replace
+			levelsof d_sq_XX, local(levels_d_sq_XX)
+			local i = 1
+		}
 		foreach m of local levels_d_sq_XX {
-			mkmat `2' share_XX if d_sq_XX == "`m'", matrix(dfs`i') rownames(`3')
-			mat colnames dfs`i' = #Groups %Groups
-			sum `2'
-			local tot_s = r(sum)
-			
+			qui {
+				mkmat `2' share_XX if d_sq_XX == "`m'", matrix(dfs`i') rownames(`3')
+				mat colnames dfs`i' = #Groups %Groups
+				sum `2'
+				local tot_s = r(sum)
+			}			
 			// output in console
 			if "`dfs_path'" == "console" {		
-				noi matlist dfs`i', format(%9.4gc) rowtitle("Status quo treat. = `m'") twidth(25) // New
-				di as input "{hline 48}"
-				sum `2' if d_sq_XX == "`m'"
-				local tot_s = r(sum)
-				count if d_sq_XX == "`m'"
-				ereturn scalar switch_dates_Dsq_`l_by' = `r(N)' // New
+				matlist dfs`i', format(%9.4gc) rowtitle("Status quo treat. = `m'") twidth(25) // New
+				di "{hline 48}"
+				qui {
+					sum `2' if d_sq_XX == "`m'"
+					local tot_s = r(sum)
+					count if d_sq_XX == "`m'"
+					ereturn scalar switch_dates_Dsq_`l_by' = `r(N)' // New
+				}
 			}
 			// output as excel
 			else if "`dfs_path'" != "console" & "`dfs_path'" !=  "" {
+				qui {
 				if `i' == 1 {
 					local rep_opt "replace"
 				}
@@ -2526,21 +4357,20 @@ if "`date_first_switch'" != "" {
 					putexcel set "`dfs_path'", modify sheet("Dates Base treat=`m' & `by' = `val_lab_int_XX'", replace) //`by' = `val_lab_int_XX'
 					putexcel A1 = matrix(dfs`i', names)
 					noi di _newline
-				}
-			}	
-			local i = `i' + 1			
+				}	
+			}
 		}
-		
+		local i = `i' + 1			
+		}
 		// consol message if output is written to excel
 		if "`dfs_path'" != "console" & "`dfs_path'" != "" {
-			noi di as input "Switching dates exported to `dfs_path'"
+			di "Switching dates exported to `dfs_path'"
 		}
-	}
 	}
 }
 
 // Reload the data before it was changed in save_sample
-use `data_predesign', clear
+qui use `data_predesign', clear // Modif Felix: Add qui
 
 // If by specified, reload the original data before restricting the sample with by
 if "`by'" !=""{	
@@ -2648,6 +4478,7 @@ rename mat_res_XX_by_`l'5 N_`l'
 rename mat_res_XX_by_`l'6 N_switchers_`l'
 rename mat_res_XX_by_`l'7 time_to_treat
 
+
 // pick CI color matching the line color
 local col_CI=`cnt_XX'+1
 
@@ -2696,7 +4527,6 @@ local merge_count=`merge_count'+1
 
 // Add universal graph options
 local graph_options "legend(pos(6) order(`graph_options_int') rows(1))"
-
 }	
 
 }
@@ -2711,7 +4541,7 @@ else{
 global options="`graphoptions'"
 twoway `graph_input', $options
 }
-}
+} // end graph_off
 
 
 ///// Saving the results if requested
@@ -2730,7 +4560,7 @@ keep time_to_treat point_estimate* se_point_estimate* lb_CI_95* up_CI_95* N* N_s
 
 // Store information about the dataset
 label data "Stores did_multiplegt_dyn estimates' information: Type 'notes' for details." 
-local command_options_XX effects(`effects') placebo(`placebo') switchers(`switchers') controls(`controls') trends_nonparam(`trends_nonparam') weight(`weight') `dont_drop_larger_lower' `normalized' cluster(`cluster') `same_switchers' `trends_lin' by(`by') predict_het(`predict_het') ci_level(`ci_level') design(`design') date_first_switch(`date_first_switch') continuous(`continuous') `less_conservative_se' `normalized_weights'
+local command_options_XX effects(`effects') placebo(`placebo') switchers(`switchers') `only_never_switchers' controls(`controls') trends_nonparam(`trends_nonparam') weight(`weight') `dont_drop_larger_lower' `normalized' cluster(`cluster') `same_switchers' `trends_lin' by(`by') predict_het(`predict_het') ci_level(`ci_level') design(`design') date_first_switch(`date_first_switch') continuous(`continuous') `less_conservative_se' `normalized_weights'
 notes : "{bf:{ul:Date of Run:}} `c(current_date)' at `c(current_time)'"
 notes : "{bf:{ul:Command Syntax:}} did_multiplegt `1' `2' `3' `4' `if' `in', `command_options_XX' "
 notes : "{bf:{ul:Path of the Used Dataset:}} `dataset_name_XX' "
@@ -2771,7 +4601,7 @@ capture program drop did_multiplegt_dyn_core_new
 
 program did_multiplegt_dyn_core_new, eclass
 	version 12.0
-	syntax varlist(min=4 max=4 numeric) [, effects(integer 1) placebo(integer 0) switchers(string) controls(varlist numeric) trends_nonparam(varlist numeric) weight(varlist numeric) dont_drop_larger_lower NORMALIZED cluster(varlist numeric) graphoptions(string) SAVe_results(string) graph_off same_switchers same_switchers_pl effects_equal  drop_if_d_miss_before_first_switch trends_lin ci_level(integer 95) by(varlist numeric max=1) predict_het(string) design(string) date_first_switch(string) NORMALIZED_weights CONTinuous(string) switchers_core(string) less_conservative_se]
+	syntax varlist(min=4 max=4 numeric) [, effects(integer 1) placebo(integer 0) switchers(string) only_never_switchers controls(varlist numeric) trends_nonparam(varlist numeric) weight(varlist numeric) dont_drop_larger_lower NORMALIZED cluster(varlist numeric) graphoptions(string) SAVe_results(string) graph_off same_switchers same_switchers_pl drop_if_d_miss_before_first_switch trends_lin ci_level(integer 95) by(varlist numeric max=1) predict_het(string) design(string) date_first_switch(string) NORMALIZED_weights CONTinuous(string) switchers_core(string) less_conservative_se]
 	qui{
 		
 ////////// 1. Scalars initialization
@@ -2783,9 +4613,7 @@ if "`switchers_core'"=="in"{
 scalar l_u_a_XX=min(`effects', L_u_XX)
 
 if `placebo'!=0{
-	if L_placebo_u_XX!=.&L_placebo_u_XX!=0{
 	scalar l_placebo_u_a_XX=min(`placebo', L_placebo_u_XX)
-	}
 	}
 
 	scalar increase_XX=1
@@ -2795,9 +4623,7 @@ if "`switchers_core'"=="out"{
 scalar l_u_a_XX=min(`effects', L_a_XX)
 
 if `placebo'!=0{
-	if L_placebo_a_XX!=.&L_placebo_a_XX!=0{
 	scalar l_placebo_u_a_XX=min(`placebo', L_placebo_a_XX)
-	}
 	}
 
 scalar increase_XX=0
@@ -2823,6 +4649,7 @@ forvalue i=1/`=l_u_a_XX'{
 capture drop distance_to_switch_`i'_XX
 capture drop never_change_d_`i'_XX
 capture drop N`=increase_XX'_t_`i'_XX
+capture drop N`=increase_XX'_t_`i'_XX_w
 capture drop N`=increase_XX'_t_`i'_g_XX
 capture drop N_gt_control_`i'_XX
 capture drop diff_y_`i'_XX
@@ -2907,6 +4734,10 @@ gen cohort_fullpath_0_XX=(num_g_paths_0_XX>1)
 ///// Identifying the control (g,t)s in the estimation of dynamic effect i 
 bys group_XX: gen never_change_d_`i'_XX=(F_g_XX>time_XX) if diff_y_`i'_XX!=.
 
+if "`only_never_switchers'" != "" {
+	replace never_change_d_`i'_XX = 0 if F_g_XX > time_XX & F_g_XX < T_max_XX + 1 & diff_y_`i'_XX != .
+}
+
 ///// Creating N^g_t:
 ///// number of control groups for g at t
 gen never_change_d_`i'_wXX = never_change_d_`i'_XX*N_gt_XX
@@ -2927,9 +4758,70 @@ capture drop still_switcher_`i'_XX
 
 sort group_XX time_XX
 
+// Modif. Diego 31-03-2025: long-difference and other variables to tailor distance_to_switch to the groups for which the all the effects can be computed
+cap drop N_g_control_check_XX
+gen N_g_control_check_XX = 0
+
+forv j = 1/`=`effects'' {
+	cap drop diff_y_last_XX
+	cap drop never_change_d_last_XX
+	cap drop never_change_d_last_wXX
+	cap drop N_gt_control_last_XX
+	cap drop N_g_control_last_temp_XX
+	cap drop N_g_control_last_m_XX
+	cap drop diff_y_relev_temp_XX
+	cap drop diff_y_relev_XX
+
+	xtset group_XX time_XX
+	bys group_XX : gen diff_y_last_XX = outcome_XX - L`j'.outcome_XX
+	bys group_XX: gen never_change_d_last_XX=(F_g_XX>time_XX) if diff_y_last_XX!=.
+	if "`only_never_switchers'" != "" {
+		replace never_change_d_last_XX = 0 if F_g_XX > time_XX & F_g_XX < T_max_XX + 1 & diff_y_last_XX != .
+	}
+	gen never_change_d_last_wXX = never_change_d_last_XX*N_gt_XX
+	bys time_XX d_sq_XX `trends_nonparam': gegen N_gt_control_last_XX=total(never_change_d_last_wXX)
+
+	gen N_g_control_last_temp_XX = N_gt_control_last_XX if time_XX == F_g_XX - 1 + `j'
+	bys group_XX: egen N_g_control_last_m_XX = mean(N_g_control_last_temp_XX)
+
+	gen diff_y_relev_temp_XX = diff_y_last_XX if time_XX == F_g_XX - 1 + `j'
+	bys group_XX: egen diff_y_relev_XX = mean(diff_y_relev_temp_XX)
+
+	replace N_g_control_check_XX = N_g_control_check_XX + (N_g_control_last_m_XX > 0 & diff_y_relev_XX != .)
+}
+
 * If the same_switchers_pl option is specified:
 
 if ("`same_switchers_pl'"!=""){
+cap drop N_g_control_check_pl_XX
+gen N_g_control_check_pl_XX = 0
+forv j = 1/`=`placebo'' {
+	cap drop diff_y_last_XX
+	cap drop never_change_d_last_XX
+	cap drop never_change_d_last_wXX
+	cap drop N_gt_control_last_XX
+	cap drop N_g_control_last_temp_XX
+	cap drop N_g_control_last_m_XX
+	cap drop diff_y_relev_temp_XX
+	cap drop diff_y_relev_XX
+
+	xtset group_XX time_XX
+	bys group_XX : gen diff_y_last_XX = outcome_XX - F`j'.outcome_XX
+	bys group_XX: gen never_change_d_last_XX=(F_g_XX>time_XX) if diff_y_last_XX!=.
+	if "`only_never_switchers'" != "" {
+		replace never_change_d_last_XX = 0 if F_g_XX > time_XX & F_g_XX < T_max_XX + 1 & diff_y_last_XX != .
+	}
+	gen never_change_d_last_wXX = never_change_d_last_XX*N_gt_XX
+	bys time_XX d_sq_XX `trends_nonparam': gegen N_gt_control_last_XX=total(never_change_d_last_wXX)
+
+	gen N_g_control_last_temp_XX = N_gt_control_last_XX if time_XX == F_g_XX - 1 - `j'
+	bys group_XX: egen N_g_control_last_m_XX = mean(N_g_control_last_temp_XX)
+
+	gen diff_y_relev_temp_XX = diff_y_last_XX if time_XX == F_g_XX - 1 - `j'
+	bys group_XX: egen diff_y_relev_XX = mean(diff_y_relev_temp_XX)
+
+	replace N_g_control_check_pl_XX = N_g_control_check_pl_XX + (N_g_control_last_m_XX > 0 & diff_y_relev_XX != .)
+}
 * Generate a variable tagging the switchers that should be dropped
 * Is the case if at least one of the placebos or effects we try to estimate is missing:
 gen relevant_y_missing_XX=(outcome_XX==.&time_XX>=F_g_XX-1-`=`placebo''&time_XX<=F_g_XX-1+`=`effects'') 
@@ -2938,18 +4830,20 @@ if "`controls'" != ""{
 replace relevant_y_missing_XX=1 if fd_X_all_non_missing_XX==0&time_XX>=F_g_XX-1-`=`placebo''&time_XX<=F_g_XX-1+`=`effects''
 }
 
-bys group_XX: gen cum_fillin_XX = sum(relevant_y_missing_XX)
-gen dum_fillin_temp_XX = (cum_fillin_XX==0&time_XX==F_g_XX-1+`=`effects'')
-bys group_XX: gegen fillin_g_XX = total(dum_fillin_temp_XX)
+// Modif. Diego 19-04-25: make the same adjustments as below in case same_switcher_pl is specified
+//bys group_XX: gen cum_fillin_XX = sum(relevant_y_missing_XX)
+//gen dum_fillin_temp_XX = (cum_fillin_XX==0&time_XX==F_g_XX-1+`=`effects'')
+//bys group_XX: gegen fillin_g_XX = total(dum_fillin_temp_XX)
 
-gen dum_fillin_temp_pl_XX = (cum_fillin_XX==0&time_XX==F_g_XX-1-`=`placebo'')
-bys group_XX: gegen fillin_g_pl_XX = total(dum_fillin_temp_pl_XX)
+//gen dum_fillin_temp_pl_XX = (cum_fillin_XX==0&time_XX==F_g_XX-1-`=`placebo'')
+//bys group_XX: gegen fillin_g_pl_XX = total(dum_fillin_temp_pl_XX)
+gen fillin_g_pl_XX = (N_g_control_check_pl_XX == `placebo')
 
 capture drop dum_fillin_temp_XX
 capture drop dum_fillin_temp_pl_XX
 
 * tag switchers who have no missings from F_g_XX-1-`=`placebo'' to F_g_XX-1+`=`effects''
-gen still_switcher_`i'_XX = (F_g_XX-1+`=`effects''<=T_g_XX&fillin_g_XX>0)  	
+gen still_switcher_`i'_XX = (F_g_XX-1+`=`effects''<=T_g_XX & N_g_control_check_XX == `effects')  	
 
 gen distance_to_switch_`i'_XX=(still_switcher_`i'_XX&time_XX==F_g_XX-1+`i'&`i'<=L_g_XX&S_g_XX==increase_XX&N_gt_control_`i'_XX>0&N_gt_control_`i'_XX!=.) if diff_y_`i'_XX!=. 
 }
@@ -2965,14 +4859,17 @@ if "`controls'" != ""{
 replace relevant_y_missing_XX=1 if fd_X_all_non_missing_XX==0&time_XX>=F_g_XX&time_XX<=F_g_XX-1+`=`effects''
 }
 
-bys group_XX: gen cum_fillin_XX = sum(relevant_y_missing_XX)
-gen dum_fillin_temp_XX = (cum_fillin_XX==0&time_XX==F_g_XX-1+`=`effects'')
-bys group_XX: gegen fillin_g_XX = total(dum_fillin_temp_XX)
+// Modif. Diego 31-03-2025: we do not need this block if we use the changes above
+//bys group_XX: gen cum_fillin_XX = sum(relevant_y_missing_XX)
+//gen dum_fillin_temp_XX = (cum_fillin_XX==0&time_XX==F_g_XX-1+`=`effects'')
+//bys group_XX: gegen fillin_g_XX = total(dum_fillin_temp_XX)
 
 * tag switchers who have no missings from F_g_XX-1 to F_g_XX-1+`=`effects''
-gen still_switcher_`i'_XX = (F_g_XX-1+`=`effects''<=T_g_XX&fillin_g_XX>0) 	
+// Modif. Diego 31-03-2025: add check for control groups with the same baseline treat to still_switchers for all estimated periods
 
+gen still_switcher_`i'_XX = (F_g_XX-1+`=`effects''<=T_g_XX & N_g_control_check_XX == `effects') 	
 gen distance_to_switch_`i'_XX=(still_switcher_`i'_XX&time_XX==F_g_XX-1+`i'&`i'<=L_g_XX&S_g_XX==increase_XX&N_gt_control_`i'_XX>0&N_gt_control_`i'_XX!=.) if diff_y_`i'_XX!=.  
+
 }
 }
 
@@ -2995,7 +4892,21 @@ scalar N`=increase_XX'_`i'_XX =0
 // Loop over t incrementing the scalar
 forvalue t=`=t_min_XX'/`=T_max_XX'{
 	sum N`=increase_XX'_t_`i'_XX if time_XX==`t'
-	scalar N`=increase_XX'_`i'_XX = N`=increase_XX'_`i'_XX + r(mean)
+	if !missing(r(mean)) scalar N`=increase_XX'_`i'_XX = N`=increase_XX'_`i'_XX + r(mean)
+}
+
+// Modif Felix weight
+if "`weight'"!=""{
+
+	bys time_XX: gegen N`=increase_XX'_t_`i'_XX_w=total(distance_to_switch_`i'_XX)
+	
+	scalar N`=increase_XX'_`i'_XX_weight =0
+
+// Loop over t incrementing the scalar
+forvalue t=`=t_min_XX'/`=T_max_XX'{
+	sum N`=increase_XX'_t_`i'_XX_w if time_XX==`t'
+	if !missing(r(mean)) scalar N`=increase_XX'_`i'_XX_weight = N`=increase_XX'_`i'_XX_weight + r(mean)
+}
 }
 
 ///// Creating N^1_{t,\ell,g}/N^0_{t,\ell,g}: 
@@ -3041,8 +4952,9 @@ foreach l of local levels_d_sq_XX { // index l corresponds to d in the paper
 
 // intermediate variable to count the number of groups within each not yet switched cohort
 
-capture drop dummy_XX
-gen dummy_XX=(F_g_XX>time_XX & d_sq_int_XX == `l')
+// Changes Diego 27-03-25
+//capture drop dummy_XX
+//gen dummy_XX=(F_g_XX>time_XX & d_sq_int_XX == `l')
 
 // Computing coordinates of vectors m_+_(g,d,l) and m_-_(g,d,l)
 
@@ -3062,7 +4974,24 @@ replace M`=increase_XX'_`l'_`count_controls'_`i'_XX = (1/G_XX)*M`=increase_XX'_`
 
 // number of groups within each not yet switched cohort
 capture drop E_hat_denom_`count_controls'_`l'_XX
-bys time_XX : egen E_hat_denom_`count_controls'_`l'_XX = total(dummy_XX) if d_sq_int_XX == `l'
+//// CHANGE BELOW - tks + Changes Diego 27-03-25: replace dummy_XX_2 with dummy_XX
+
+// Modif Clément 20/6/2025:
+* Counting number of groups for DOF adjustment
+{
+cap drop dummy_XX
+gen dummy_XX = 0
+replace dummy_XX = (F_g_XX>time_XX & d_sq_int_XX == `l') if diff_y_XX < .
+	if "`cluster'" == "" {
+		bys time_XX : egen E_hat_denom_`count_controls'_`l'_XX = total(dummy_XX) if d_sq_int_XX == `l'
+	}
+	else {
+		cap drop cluster_temp_XX
+		gen cluster_temp_XX= `cluster' if dummy_XX == 1
+		bys time_XX : gegen E_hat_denom_`count_controls'_`l'_XX = nunique(cluster_temp_XX) if !missing(cluster_temp_XX)
+	}
+}
+// End Modif Clément 20/6/2025
 
 // Add the indicator for at least two groups in the cohort to E_y_hat_gt_`l'_XX (demeaning is possible)
 capture drop E_y_hat_gt_`l'_XX
@@ -3075,10 +5004,19 @@ gen E_y_hat_gt_`l'_XX=E_y_hat_gt_int_`l'_XX*(E_hat_denom_`count_controls'_`l'_XX
 capture drop in_sum_temp_`count_controls'_`l'_XX
 capture drop N_c_`l'_temp_XX
 capture drop N_c_`l'_XX
-gen N_c_`l'_temp_XX = d_sq_int_XX == `l' & time_XX >= 2 & time_XX <= T_d_XX & time_XX < F_g_XX
+//// CHANGE BELOW - tks, Changes Diego 27-03-25: Multiply by N_gt_XX
+gen N_c_`l'_temp_XX = N_gt_XX * (d_sq_int_XX == `l' & time_XX >= 2 & time_XX <= T_d_XX & time_XX < F_g_XX & diff_y_XX < .)
+////
 egen N_c_`l'_XX = total(N_c_`l'_temp_XX)
-gen in_sum_temp_`count_controls'_`l'_XX = (prod_X`count_controls'_Ngt_XX*(1+(E_hat_denom_`count_controls'_`l'_XX>=2)*(sqrt((E_hat_denom_`count_controls'_`l'_XX)/(E_hat_denom_`count_controls'_`l'_XX - 1))-1))*(diff_y_XX-E_y_hat_gt_`l'_XX)*(time_XX>=2 & time_XX<=F_g_XX-1)) / N_c_`l'_XX
+/// Changes Diego 16-06-25: Adjust demeaning when E_hat_denom == 1
+cap drop in_sum_temp_adj_`count_controls'_`l'_XX
+gen in_sum_temp_adj_`count_controls'_`l'_XX = 0 if E_y_hat_gt_`l'_XX != .
+replace in_sum_temp_adj_`count_controls'_`l'_XX = (sqrt((E_hat_denom_`count_controls'_`l'_XX)/(E_hat_denom_`count_controls'_`l'_XX - 1))-1) if E_y_hat_gt_`l'_XX != . & E_hat_denom_`count_controls'_`l'_XX > 1
+gen in_sum_temp_`count_controls'_`l'_XX = (prod_X`count_controls'_Ngt_XX*(1+(E_hat_denom_`count_controls'_`l'_XX>=2)*in_sum_temp_adj_`count_controls'_`l'_XX)*(diff_y_XX-E_y_hat_gt_`l'_XX)*(time_XX>=2 & time_XX<=F_g_XX-1)) / N_c_`l'_XX
+
+
 capture drop in_sum_`count_controls'_`l'_XX
+capture drop in_sum_temp_adj_`count_controls'_`l'_XX
 bys group_XX: gegen in_sum_`count_controls'_`l'_XX = total(in_sum_temp_`count_controls'_`l'_XX) 
 
 }
@@ -3088,7 +5026,7 @@ bys group_XX: gegen in_sum_`count_controls'_`l'_XX = total(in_sum_temp_`count_co
 // Yg,t − Yg,t−ℓ − (Xg,t − Xg,t−ℓ)*θ_{Dg,1}
 
 foreach l of local levels_d_sq_XX { 
-	if (scalar(useful_res_`l'_XX)>1){ 
+	if (scalar(useful_res_`l'_XX)>1){
 replace diff_y_`i'_XX = diff_y_`i'_XX - coefs_sq_`l'_XX[`=`count_controls'',1]*diff_X`count_controls'_`i'_XX if d_sq_int_XX==`l' 
 * N.B. : in the above line, we do not add "&diff_X`count_controls'_`i'_XX!=." because we want to exclude from the estimation any first/long-difference for which the covariates are missing.
 
@@ -3110,27 +5048,37 @@ gen in_brackets_`l'_`count_controls'_XX=0
 
 capture drop diff_y_`i'_N_gt_XX
 gen diff_y_`i'_N_gt_XX=N_gt_XX*diff_y_`i'_XX
-capture drop dof_diff_y_`i'_N_gt_XX
-gen dof_diff_y_`i'_N_gt_XX=(N_gt_XX!=0&diff_y_`i'_XX!=.)
+
+capture drop dof_ns_`i'_XX
+gen dof_ns_`i'_XX = (N_gt_XX != 0&diff_y_`i'_XX!=.&never_change_d_`i'_XX==1&N`=increase_XX'_t_`i'_XX>0&N`=increase_XX'_t_`i'_XX!=.)
+capture drop dof_s_`i'_XX
+gen dof_s_`i'_XX = (N_gt_XX != 0&distance_to_switch_`i'_XX==1)
 
 // For never switchers, demeaning wrt to cohorts defined by D_{g,1}, `trends_nonparam' 
 //(\mathcal{D}_k in companion paper)
 
-
 // Modif Clément: we need to add by time
 * Mean's denominator
-bys d_sq_XX `trends_nonparam' time_XX : gegen count_cohort_`i'_ns_t_XX=total(N_gt_XX) if diff_y_`i'_XX!=.&never_change_d_`i'_XX==1&N`=increase_XX'_t_`i'_XX>0&N`=increase_XX'_t_`i'_XX!=.
+bys d_sq_XX `trends_nonparam' time_XX : gegen count_cohort_`i'_ns_t_XX=total(N_gt_XX) if dof_ns_`i'_XX == 1
 
 * Mean's numerator
-bys d_sq_XX `trends_nonparam' time_XX: gegen total_cohort_`i'_ns_t_XX=total(diff_y_`i'_N_gt_XX) if never_change_d_`i'_XX==1&N`=increase_XX'_t_`i'_XX>0&N`=increase_XX'_t_`i'_XX!=.
+bys d_sq_XX `trends_nonparam' time_XX: gegen total_cohort_`i'_ns_t_XX=total(diff_y_`i'_N_gt_XX) if dof_ns_`i'_XX == 1
 
 * Mean 
 gen mean_cohort_`i'_ns_t_XX=total_cohort_`i'_ns_t_XX/count_cohort_`i'_ns_t_XX
 
 * Counting number of groups for DOF adjustment
-bys d_sq_XX `trends_nonparam' time_XX: gegen dof_cohort_`i'_ns_t_XX=total(dof_diff_y_`i'_N_gt_XX) if diff_y_`i'_XX!=.&never_change_d_`i'_XX==1&N`=increase_XX'_t_`i'_XX>0&N`=increase_XX'_t_`i'_XX!=.
+{
+	if "`cluster'" == "" {
+		bys d_sq_XX `trends_nonparam' time_XX: gegen dof_cohort_`i'_ns_t_XX=total(dof_ns_`i'_XX) if dof_ns_`i'_XX == 1
+	}
+	else {
+		cap drop cluster_dof_`i'_ns_XX
+		gen cluster_dof_`i'_ns_XX = `cluster' if dof_ns_`i'_XX == 1
+		bys d_sq_XX `trends_nonparam' time_XX: gegen dof_cohort_`i'_ns_t_XX = nunique(cluster_dof_`i'_ns_XX) if !missing(cluster_dof_`i'_ns_XX)
+	}
+}
 // End modif Clément
-
 
 // For switchers, if option less_conservative_se not specified, demeaning wrt to 
 // cohorts defined by D_{g,1}, F_g, D_{g,F_g}, `trends_nonparam' (\mathcal{C}_k in companion paper).
@@ -3138,18 +5086,29 @@ bys d_sq_XX `trends_nonparam' time_XX: gegen dof_cohort_`i'_ns_t_XX=total(dof_di
 if "`less_conservative_se'" == ""{
 	
 * Mean's denominator
-bys d_sq_XX F_g_XX d_fg_XX `trends_nonparam' : gegen count_cohort_`i'_s_t_XX=total(N_gt_XX) if distance_to_switch_`i'_XX==1
+bys d_sq_XX F_g_XX d_fg_XX `trends_nonparam' : gegen count_cohort_`i'_s_t_XX=total(N_gt_XX) if dof_s_`i'_XX==1
 
 * Mean's numerator
-bys d_sq_XX F_g_XX d_fg_XX `trends_nonparam' : gegen total_cohort_`i'_s_t_XX=total(diff_y_`i'_N_gt_XX) if distance_to_switch_`i'_XX==1 
+bys d_sq_XX F_g_XX d_fg_XX `trends_nonparam' : gegen total_cohort_`i'_s_t_XX=total(diff_y_`i'_N_gt_XX) if dof_s_`i'_XX==1 
 
 * Mean 
 gen mean_cohort_`i'_s_t_XX=total_cohort_`i'_s_t_XX/count_cohort_`i'_s_t_XX	
 		
 * Counting number of groups for DOF adjustment
-bys d_sq_XX F_g_XX d_fg_XX `trends_nonparam' : gegen dof_cohort_`i'_s_t_XX=total(dof_diff_y_`i'_N_gt_XX) if distance_to_switch_`i'_XX==1
-
+// Changes Diego 16-06-25: adjust DoF with clusters
+{
+	if "`cluster'" == "" {
+		bys d_sq_XX F_g_XX d_fg_XX `trends_nonparam' : gegen dof_cohort_`i'_s_t_XX=total(dof_s_`i'_XX) if dof_s_`i'_XX==1
+	}
+	else {
+		cap drop cluster_dof_`i'_s_XX
+		gen cluster_dof_`i'_s_XX = `cluster' if dof_s_`i'_XX == 1
+		bys d_sq_XX F_g_XX d_fg_XX `trends_nonparam': gegen dof_cohort_`i'_s_t_XX = nunique(cluster_dof_`i'_s_XX) if !missing(cluster_dof_`i'_s_XX)
+	}
 }
+}
+//save test_data, replace
+
 
 // For switchers, if option less_conservative_se specified, demeaning wrt to cohorts 
 // defined by D_{g,1} F_g, D_{g,F_g},..., D_{g,F_g+\ell}, if that cohort has at least two groups,
@@ -3161,27 +5120,43 @@ if "`less_conservative_se'" != ""{
 		
 * Mean's denominator	
 * by D_{g,1}, F_g, `trends_nonparam':
-bys path_0_XX `trends_nonparam' : gegen count_cohort_`i'_s0_t_XX=total(N_gt_XX) if distance_to_switch_`i'_XX==1
+bys path_0_XX `trends_nonparam' : gegen count_cohort_`i'_s0_t_XX=total(N_gt_XX) if dof_s_`i'_XX==1
 * by D_{g,1}, F_g, D_{g,F_g}, `trends_nonparam':
-bys path_1_XX `trends_nonparam' : gegen count_cohort_`i'_s1_t_XX=total(N_gt_XX) if distance_to_switch_`i'_XX==1
+bys path_1_XX `trends_nonparam' : gegen count_cohort_`i'_s1_t_XX=total(N_gt_XX) if dof_s_`i'_XX==1
 * by D_{g,1}, F_g, D_{g,F_g},..., D_{g,F_g+\ell}, `trends_nonparam':
-bys path_`i'_XX `trends_nonparam' : gegen count_cohort_`i'_s2_t_XX=total(N_gt_XX) if distance_to_switch_`i'_XX==1
+bys path_`i'_XX `trends_nonparam' : gegen count_cohort_`i'_s2_t_XX=total(N_gt_XX) if dof_s_`i'_XX==1
 	
 * Mean's numerator
 * by D_{g,1}, F_g, `trends_nonparam':
-bys path_0_XX `trends_nonparam' : gegen total_cohort_`i'_s0_t_XX=total(diff_y_`i'_N_gt_XX) if distance_to_switch_`i'_XX==1
+bys path_0_XX `trends_nonparam' : gegen total_cohort_`i'_s0_t_XX=total(diff_y_`i'_N_gt_XX) if dof_s_`i'_XX==1
 * by D_{g,1}, F_g, D_{g,F_g}, `trends_nonparam':
-bys path_1_XX `trends_nonparam' : gegen total_cohort_`i'_s1_t_XX=total(diff_y_`i'_N_gt_XX) if distance_to_switch_`i'_XX==1	
+bys path_1_XX `trends_nonparam' : gegen total_cohort_`i'_s1_t_XX=total(diff_y_`i'_N_gt_XX) if dof_s_`i'_XX==1	
 * by D_{g,1}, F_g, D_{g,F_g},..., D_{g,F_g+\ell}, `trends_nonparam':
-bys path_`i'_XX `trends_nonparam' : gegen total_cohort_`i'_s2_t_XX=total(diff_y_`i'_N_gt_XX) if distance_to_switch_`i'_XX==1
+bys path_`i'_XX `trends_nonparam' : gegen total_cohort_`i'_s2_t_XX=total(diff_y_`i'_N_gt_XX) if dof_s_`i'_XX==1
 
 * Counting number of groups for DOF adjustment
-* by D_{g,1}, F_g, `trends_nonparam':
-bys path_0_XX `trends_nonparam' : gegen dof_cohort_`i'_s0_t_XX=total(dof_diff_y_`i'_N_gt_XX) if distance_to_switch_`i'_XX==1
-* by D_{g,1}, F_g, D_{g,F_g}, `trends_nonparam':
-bys path_1_XX `trends_nonparam' : gegen dof_cohort_`i'_s1_t_XX=total(dof_diff_y_`i'_N_gt_XX) if distance_to_switch_`i'_XX==1
-* by D_{g,1}, F_g, D_{g,F_g},..., D_{g,F_g+\ell}, `trends_nonparam':
-bys path_`i'_XX `trends_nonparam' : gegen dof_cohort_`i'_s2_t_XX=total(dof_diff_y_`i'_N_gt_XX) if distance_to_switch_`i'_XX==1
+// Changes Diego 16-06-25: adjust DoF with clusters
+{
+	if "`cluster'" == "" {
+		* by D_{g,1}, F_g, `trends_nonparam':
+		bys path_0_XX `trends_nonparam' : gegen dof_cohort_`i'_s0_t_XX=total(dof_s_`i'_XX) if dof_s_`i'_XX==1
+		* by D_{g,1}, F_g, D_{g,F_g}, `trends_nonparam':
+		bys path_1_XX `trends_nonparam' : gegen dof_cohort_`i'_s1_t_XX=total(dof_s_`i'_XX) if dof_s_`i'_XX==1
+		* by D_{g,1}, F_g, D_{g,F_g},..., D_{g,F_g+\ell}, `trends_nonparam':
+		bys path_`i'_XX `trends_nonparam' : gegen dof_cohort_`i'_s2_t_XX=total(dof_s_`i'_XX) if dof_s_`i'_XX==1
+	}
+	else {
+		cap drop cluster_dof_`i'_s_XX
+		gen cluster_dof_`i'_s_XX = `cluster' if dof_s_`i'_XX == 1
+		* by D_{g,1}, F_g, `trends_nonparam':
+		bys path_0_XX `trends_nonparam' : gegen dof_cohort_`i'_s0_t_XX = nunique(cluster_dof_`i'_s_XX) if !missing(cluster_dof_`i'_s_XX)
+		* by D_{g,1}, F_g, D_{g,F_g}, `trends_nonparam':
+		bys path_1_XX `trends_nonparam' : gegen dof_cohort_`i'_s1_t_XX = nunique(cluster_dof_`i'_s_XX) if !missing(cluster_dof_`i'_s_XX)
+		* by D_{g,1}, F_g, D_{g,F_g},..., D_{g,F_g+\ell}, `trends_nonparam':
+		bys path_`i'_XX `trends_nonparam' : gegen dof_cohort_`i'_s2_t_XX = nunique(cluster_dof_`i'_s_XX) if !missing(cluster_dof_`i'_s_XX)
+
+	}
+}
 
 *Attributing the right number of groups depending on which cohort will be used in demeaning:
 gen dof_cohort_`i'_s_t_XX=dof_cohort_`i'_s2_t_XX if dof_cohort_`i'_s2_t_XX>=2
@@ -3195,14 +5170,54 @@ replace mean_cohort_`i'_s_t_XX=total_cohort_`i'_s0_t_XX/count_cohort_`i'_s0_t_XX
 
 }
 
+// Modif Clément 30/6/2025:
+// If a switcher is the only one in their cohort or if a not-yet-switcher is the only one in their cohort, we demean wrt union of switchers and not-yet switchers, provided switchers and not-yet-switchers do not all come from the same cluster.
+
+cap drop dof_ns_s_`i'_XX
+cap drop count_cohort_`i'_ns_s_t_XX
+cap drop total_cohort_`i'_ns_s_t_XX
+cap drop mean_cohort_`i'_ns_s_t_XX
+cap drop dof_cohort_`i'_ns_s_t_XX
+
+gen dof_ns_s_`i'_XX=(dof_s_`i'_XX==1|dof_ns_`i'_XX ==1)
+
+* Mean's denominator
+bys d_sq_XX `trends_nonparam' time_XX : gegen count_cohort_`i'_ns_s_t_XX=total(N_gt_XX) if dof_ns_s_`i'_XX==1
+
+* Mean's numerator
+bys d_sq_XX `trends_nonparam' time_XX: gegen total_cohort_`i'_ns_s_t_XX=total(diff_y_`i'_N_gt_XX) if dof_ns_s_`i'_XX==1
+
+* Mean 
+gen mean_cohort_`i'_ns_s_t_XX=total_cohort_`i'_ns_s_t_XX/count_cohort_`i'_ns_s_t_XX
+
+* Counting number of groups for DOF adjustment
+{
+	if "`cluster'" == "" {
+		bys d_sq_XX `trends_nonparam' time_XX: gegen dof_cohort_`i'_ns_s_t_XX=total(dof_ns_s_`i'_XX) if dof_ns_s_`i'_XX==1
+	}
+	else {
+		cap drop cluster_dof_`i'_ns_s_XX
+		gen cluster_dof_`i'_ns_s_XX = `cluster' if dof_ns_s_`i'_XX==1
+		bys d_sq_XX `trends_nonparam' time_XX: gegen dof_cohort_`i'_ns_s_t_XX = nunique(cluster_dof_`i'_ns_s_XX) if !missing(cluster_dof_`i'_ns_s_XX)
+	}
+}	
+
 ///// From those parts, generate variables for the demeaning and the DOF adjustment 
-// E_hat_(g,t), defined from parts depending on the cohort definition 
-gen E_hat_gt_`i'_XX=mean_cohort_`i'_ns_t_XX*(dof_cohort_`i'_ns_t_XX>=2) if (time_XX<F_g_XX)
-replace E_hat_gt_`i'_XX=mean_cohort_`i'_s_t_XX*(dof_cohort_`i'_s_t_XX>=2) if (F_g_XX-1+`i'==time_XX)
+// E_hat_(g,t), defined from parts depending on the cohort definition
+gen E_hat_gt_`i'_XX=0 if (time_XX<F_g_XX|F_g_XX-1+`i'==time_XX) 
+replace E_hat_gt_`i'_XX=mean_cohort_`i'_ns_t_XX if (time_XX<F_g_XX&dof_cohort_`i'_ns_t_XX>=2)
+replace E_hat_gt_`i'_XX=mean_cohort_`i'_s_t_XX if (F_g_XX-1+`i'==time_XX&dof_cohort_`i'_s_t_XX>=2)
+replace E_hat_gt_`i'_XX=mean_cohort_`i'_ns_s_t_XX if dof_cohort_`i'_ns_s_t_XX>=2&((F_g_XX-1+`i'==time_XX&dof_cohort_`i'_s_t_XX==1)|(time_XX<F_g_XX&dof_cohort_`i'_ns_t_XX==1))
 
 // DOF_(g,t) for DOF adjustement, defined from parts depending on the cohort definition 
-gen DOF_gt_`i'_XX=1+(dof_cohort_`i'_s_t_XX>=2)*(sqrt(dof_cohort_`i'_s_t_XX/(dof_cohort_`i'_s_t_XX-1))-1) if (F_g_XX-1+`i'==time_XX)
-replace DOF_gt_`i'_XX=1+(dof_cohort_`i'_ns_t_XX>=2)*(sqrt(dof_cohort_`i'_ns_t_XX/(dof_cohort_`i'_ns_t_XX-1))-1) if (time_XX<F_g_XX)	
+// Diego - 02-03-25: when there is only 1 switcher, dof_cohort_`i'_s_t_XX = 1, hence the denominator in the expression below is 0
+// The fraction is undefined and Stata puts it to missing
+gen DOF_gt_`i'_XX=1 if (time_XX<F_g_XX|F_g_XX-1+`i'==time_XX)
+replace DOF_gt_`i'_XX= sqrt(dof_cohort_`i'_s_t_XX/(dof_cohort_`i'_s_t_XX-1)) if (F_g_XX-1+`i'==time_XX & dof_cohort_`i'_s_t_XX > 1)
+replace DOF_gt_`i'_XX=  sqrt(dof_cohort_`i'_ns_t_XX/(dof_cohort_`i'_ns_t_XX-1)) if (time_XX<F_g_XX & dof_cohort_`i'_ns_t_XX > 1)
+replace DOF_gt_`i'_XX=  sqrt(dof_cohort_`i'_ns_s_t_XX/(dof_cohort_`i'_ns_s_t_XX-1)) if dof_cohort_`i'_ns_s_t_XX>=2&((F_g_XX-1+`i'==time_XX&dof_cohort_`i'_s_t_XX==1)|(time_XX<F_g_XX&dof_cohort_`i'_ns_t_XX==1))
+
+// End modif Clément 30/6/2025.
 
 ////////// 3. Computing U_Gg_\ell variables
 
@@ -3247,6 +5262,8 @@ if "`controls'"!=""{
 levelsof d_sq_int_XX, local(levels_d_sq_XX)
 
 foreach l of local levels_d_sq_XX {	
+	// FELIX: Add this condition here, same for the placebo case!	
+	if (scalar(useful_res_`l'_XX)>1){
 	
 capture drop combined`=increase_XX'_temp_`l'_`i'_XX	
 gen combined`=increase_XX'_temp_`l'_`i'_XX=0
@@ -3259,9 +5276,12 @@ forvalues k=1/`count_controls'{
 	
 // Computation of all cross products between elements of jth line of Den^{-1}_d and term multiplying it
 capture drop in_brackets_`l'_`j'_`k'_temp_XX
+//// CHANGE BELOW - tks + Changes Diego 27-03-25: remove N_c_`l'_XX from formula below, since we have adjusted inv_Denom above
 gen in_brackets_`l'_`j'_`k'_temp_XX = inv_Denom_`l'_XX[`j',`k'] * in_sum_`k'_`l'_XX * (d_sq_int_XX == `l' & F_g_XX>=3) 
+////
 
 // Summing over k, to have jth coordinate of vector Den^{-1}_d*...
+
 replace in_brackets_`l'_`j'_XX=in_brackets_`l'_`j'_XX+in_brackets_`l'_`j'_`k'_temp_XX
 } // end loop over k
 
@@ -3277,22 +5297,28 @@ replace combined`=increase_XX'_temp_`l'_`i'_XX=combined`=increase_XX'_temp_`l'_`
 } // end loop over j
 
 // Final sum over the status quo treatment (outer sum over d in the formula)
-replace part2_switch`=increase_XX'_`i'_XX=part2_switch`=increase_XX'_`i'_XX+combined`=increase_XX'_temp_`l'_`i'_XX if d_sq_int_XX==`l' 
+// Modif. Diego: dropped  if d_sq_int_XX==`l'
+replace part2_switch`=increase_XX'_`i'_XX=part2_switch`=increase_XX'_`i'_XX+combined`=increase_XX'_temp_`l'_`i'_XX
+} // Modif FELIX: condition "useful residual" 
 } // end loop over l
 
-// Making the adjustement to U^(+,var)_{G,g,l} when controls are included
-if `=increase_XX'==1{
-replace U_Gg`i'_temp_var_XX=U_Gg`i'_temp_var_XX - part2_switch1_`i'_XX 
-}
-
-if `=increase_XX'==0{
-replace U_Gg`i'_temp_var_XX=U_Gg`i'_temp_var_XX + part2_switch0_`i'_XX 
-}
-	
 }	
 
 // Summing the U^(var)_{G,g,l}s over time periods for each group
 bys group_XX: gegen U_Gg`i'_var_XX=total(U_Gg`i'_temp_var_XX)
+
+// Modeif Felix 21.03.2025 (adjust order of adding additional term and summing across t)
+if "`controls'" != "" {
+	// Making the adjustement to U^(+,var)_{G,g,l} when controls are included
+	if `=increase_XX'==1{
+	replace U_Gg`i'_var_XX=U_Gg`i'_var_XX - part2_switch1_`i'_XX 
+	}
+
+	if `=increase_XX'==0{
+	//// CHANGE BELOW - tks (switching plus to minus in the sum since the final sign flip won't be until later)
+	replace U_Gg`i'_var_XX=U_Gg`i'_var_XX - part2_switch0_`i'_XX 
+	}
+}
 
 }
 
@@ -3370,6 +5396,7 @@ capture drop U_Gg_pl_`i'_var_XX
 capture drop dist_to_switch_pl_`i'_XX
 capture drop never_change_d_pl_`i'_XX
 capture drop N`=increase_XX'_t_placebo_`i'_XX
+capture drop N`=increase_XX'_t_pl_`i'_XX_w
 capture drop N`=increase_XX'_t_placebo_`i'_g_XX
 capture drop N_gt_control_placebo_`i'_XX
 capture drop dummy_U_Gg_pl_`i'_XX 
@@ -3416,7 +5443,10 @@ gen never_change_d_pl_`i'_wXX=never_change_d_pl_`i'_XX*N_gt_XX
 bys time_XX d_sq_XX `trends_nonparam': gegen N_gt_control_placebo_`i'_XX=total(never_change_d_pl_`i'_wXX) 
 
 ///// Creating binary variable indicating whether g is \ell periods away from switch & (diff_y_pl_`i'_XX!=.) is well defined -> based on the already defined distance_to_switch_`i'_XX variable 
-gen dist_to_switch_pl_`i'_XX=distance_to_switch_`i'_XX*(diff_y_pl_`i'_XX!=.) 
+*Modif Clément 26/09/2025:
+*gen dist_to_switch_pl_`i'_XX=distance_to_switch_`i'_XX*(diff_y_pl_`i'_XX!=.)
+gen dist_to_switch_pl_`i'_XX=distance_to_switch_`i'_XX*(diff_y_pl_`i'_XX!=.)*(N_gt_control_placebo_`i'_XX>0&N_gt_control_placebo_`i'_XX!=.)
+ 
 if "`same_switchers_pl'"!=""{
 	replace dist_to_switch_pl_`i'_XX=dist_to_switch_pl_`i'_XX*fillin_g_pl_XX
 }
@@ -3433,9 +5463,22 @@ scalar N`=increase_XX'_placebo_`i'_XX=0
 // Loop over t incrementing the scalar
 forvalue t=`=t_min_XX'/`=T_max_XX'{
 	sum N`=increase_XX'_t_placebo_`i'_XX if time_XX==`t'
-	scalar N`=increase_XX'_placebo_`i'_XX = N`=increase_XX'_placebo_`i'_XX + r(mean)
+	if !missing(r(mean)) scalar N`=increase_XX'_placebo_`i'_XX = N`=increase_XX'_placebo_`i'_XX + r(mean) // Modif Diego
 }
 
+// Modif Felix weight
+if "`weight'"!=""{
+
+	bys time_XX: gegen N`=increase_XX'_t_pl_`i'_XX_w=total(dist_to_switch_pl_`i'_XX)
+	
+	scalar N`=increase_XX'_`i'_pl_XX_weight=0
+
+// Loop over t incrementing the scalar
+forvalue t=`=t_min_XX'/`=T_max_XX'{
+	sum N`=increase_XX'_t_pl_`i'_XX_w if time_XX==`t'
+	if !missing(r(mean)) scalar N`=increase_XX'_`i'_pl_XX_weight = N`=increase_XX'_`i'_pl_XX_weight + r(mean) // Modif Diego
+}
+}
 
 ///// Creating N^1_{t,\ell,g}/N^0_{t,\ell,g} for the placebos: 
 ///// Variable counting number of groups \ell periods away from switch at t, 
@@ -3502,24 +5545,35 @@ gen in_brackets_pl_`l'_`count_controls'_XX=0
 
 capture drop diff_y_pl_`i'_N_gt_XX
 gen diff_y_pl_`i'_N_gt_XX=N_gt_XX*diff_y_pl_`i'_XX
-capture drop dof_diff_y_pl_`i'_N_gt_XX
-gen dof_diff_y_pl_`i'_N_gt_XX=(N_gt_XX!=0&diff_y_pl_`i'_XX!=.)
+capture drop dof_ns_pl_`i'_XX
+gen dof_ns_pl_`i'_XX = N_gt_XX!=0&diff_y_pl_`i'_XX!=.&never_change_d_pl_`i'_XX==1&N`=increase_XX'_t_placebo_`i'_XX>0&N`=increase_XX'_t_placebo_`i'_XX!=.
+capture drop dof_s_pl_`i'_XX
+gen dof_s_pl_`i'_XX = N_gt_XX!=0&dist_to_switch_pl_`i'_XX==1
 
 // For never switchers, demeaning wrt to cohorts defined by D_{g,1}, `trends_nonparam' 
 //(\mathcal{D}_k in companion paper)
 
 // Modif Clément: we need to add by time
 * Mean's denominator
-bys d_sq_XX `trends_nonparam' time_XX : gegen count_cohort_pl_`i'_ns_t_XX=total(N_gt_XX) if diff_y_pl_`i'_XX!=.&never_change_d_pl_`i'_XX==1&N`=increase_XX'_t_placebo_`i'_XX>0&N`=increase_XX'_t_placebo_`i'_XX!=.
+bys d_sq_XX `trends_nonparam' time_XX : gegen count_cohort_pl_`i'_ns_t_XX=total(N_gt_XX) if dof_ns_pl_`i'_XX == 1
 
 * Mean's numerator
-bys d_sq_XX `trends_nonparam' time_XX : gegen total_cohort_pl_`i'_ns_t_XX=total(diff_y_pl_`i'_N_gt_XX) if never_change_d_pl_`i'_XX==1&N`=increase_XX'_t_placebo_`i'_XX>0&N`=increase_XX'_t_placebo_`i'_XX!=.
+bys d_sq_XX `trends_nonparam' time_XX : gegen total_cohort_pl_`i'_ns_t_XX=total(diff_y_pl_`i'_N_gt_XX) if dof_ns_pl_`i'_XX == 1
 
 * Mean 
 gen mean_cohort_pl_`i'_ns_t_XX=total_cohort_pl_`i'_ns_t_XX/count_cohort_pl_`i'_ns_t_XX
 
 * Counting number of groups for DOF adjustment
-bys d_sq_XX `trends_nonparam' time_XX : gegen dof_cohort_pl_`i'_ns_t_XX=total(dof_diff_y_pl_`i'_N_gt_XX) if diff_y_pl_`i'_XX!=.&never_change_d_pl_`i'_XX==1&N`=increase_XX'_t_placebo_`i'_XX>0&N`=increase_XX'_t_placebo_`i'_XX!=.
+{
+	if "`cluster'" == "" {
+		bys d_sq_XX `trends_nonparam' time_XX : gegen dof_cohort_pl_`i'_ns_t_XX=total(dof_ns_pl_`i'_XX) if dof_ns_pl_`i'_XX == 1
+	}
+	else {
+		cap drop cluster_dof_pl_`i'_ns_XX
+		gen cluster_dof_pl_`i'_ns_XX = `cluster' if dof_ns_pl_`i'_XX == 1
+		bys d_sq_XX `trends_nonparam' time_XX: gegen dof_cohort_pl_`i'_ns_t_XX = nunique(cluster_dof_pl_`i'_ns_XX) if !missing(cluster_dof_pl_`i'_ns_XX)
+	}
+}
 // End modif Clément
 
 // For switchers, for placebos we no longer need to distinguish depending on whether the option
@@ -3527,26 +5581,74 @@ bys d_sq_XX `trends_nonparam' time_XX : gegen dof_cohort_pl_`i'_ns_t_XX=total(do
 // cohorts defined by D_{g,1}, F_g, D_{g,F_g}, `trends_nonparam' (\mathcal{C}_k in companion paper).
 
 * Mean's denominator
-bys d_sq_XX F_g_XX d_fg_XX `trends_nonparam' : gegen count_cohort_pl_`i'_s_t_XX=total(N_gt_XX) if dist_to_switch_pl_`i'_XX==1
+bys d_sq_XX F_g_XX d_fg_XX `trends_nonparam' : gegen count_cohort_pl_`i'_s_t_XX=total(N_gt_XX) if dof_s_pl_`i'_XX==1
 
 * Mean's numerator
-bys d_sq_XX F_g_XX d_fg_XX `trends_nonparam' : gegen total_cohort_pl_`i'_s_t_XX=total(diff_y_pl_`i'_N_gt_XX) if dist_to_switch_pl_`i'_XX==1 
+bys d_sq_XX F_g_XX d_fg_XX `trends_nonparam' : gegen total_cohort_pl_`i'_s_t_XX=total(diff_y_pl_`i'_N_gt_XX) if dof_s_pl_`i'_XX==1 
 
 * Mean 
 gen mean_cohort_pl_`i'_s_t_XX=total_cohort_pl_`i'_s_t_XX/count_cohort_pl_`i'_s_t_XX	
 		
 * Counting number of groups for DOF adjustment
-bys d_sq_XX F_g_XX d_fg_XX `trends_nonparam' : gegen dof_cohort_pl_`i'_s_t_XX=total(dof_diff_y_pl_`i'_N_gt_XX) if dist_to_switch_pl_`i'_XX==1
+{
+	if "`cluster'" == "" {
+		bys d_sq_XX F_g_XX d_fg_XX `trends_nonparam' : gegen dof_cohort_pl_`i'_s_t_XX=total(dof_s_pl_`i'_XX) if dof_s_pl_`i'_XX==1
+	}
+	else {
+		cap drop cluster_dof_pl_`i'_s_XX
+		gen cluster_dof_pl_`i'_s_XX = `cluster' if dof_s_pl_`i'_XX == 1
+		bys d_sq_XX F_g_XX d_fg_XX `trends_nonparam': gegen dof_cohort_pl_`i'_s_t_XX = nunique(cluster_dof_pl_`i'_s_XX) if !missing(cluster_dof_pl_`i'_s_XX)
+	}
+}
 
+// Modif Clément 19/6/2025:
+// If a switcher is the only one in their cohort or if a not-yet-switcher is the only one in their cohort, we demean wrt union of switchers and not-yet switchers.
+
+cap drop dof_ns_s_pl_`i'_XX
+cap drop count_cohort_pl_`i'_ns_s_t_XX
+cap drop total_cohort_pl_`i'_ns_s_t_XX
+cap drop mean_cohort_pl_`i'_ns_s_t_XX
+cap drop dof_cohort_pl_`i'_ns_s_t_XX
+
+gen dof_ns_s_pl_`i'_XX=(dof_s_pl_`i'_XX==1|dof_ns_pl_`i'_XX ==1)
+
+* Mean's denominator
+bys d_sq_XX `trends_nonparam' time_XX : gegen count_cohort_pl_`i'_ns_s_t_XX=total(N_gt_XX) if dof_ns_s_pl_`i'_XX==1
+
+* Mean's numerator
+bys d_sq_XX `trends_nonparam' time_XX: gegen total_cohort_pl_`i'_ns_s_t_XX=total(diff_y_pl_`i'_N_gt_XX) if dof_ns_s_pl_`i'_XX==1
+
+* Mean 
+gen mean_cohort_pl_`i'_ns_s_t_XX=total_cohort_pl_`i'_ns_s_t_XX/count_cohort_pl_`i'_ns_s_t_XX
+
+* Counting number of groups for DOF adjustment
+{
+	if "`cluster'" == "" {
+		bys d_sq_XX `trends_nonparam' time_XX: gegen dof_cohort_pl_`i'_ns_s_t_XX=total(dof_ns_s_pl_`i'_XX) if dof_ns_s_pl_`i'_XX==1
+	}
+	else {
+		cap drop cluster_dof_pl_`i'_ns_s_XX
+		gen cluster_dof_pl_`i'_ns_s_XX = `cluster' if dof_ns_s_pl_`i'_XX==1
+		bys d_sq_XX `trends_nonparam' time_XX: gegen dof_cohort_pl_`i'_ns_s_t_XX = nunique(cluster_dof_pl_`i'_ns_s_XX) if !missing(cluster_dof_pl_`i'_ns_s_XX)
+	}
+}	
 
 ///// From those parts, generate variables for the demeaning and the DOF adjustment 
-// E_hat_pl_(g,t), defined from parts depending on the cohort definition 
-gen E_hat_gt_pl_`i'_XX=mean_cohort_pl_`i'_ns_t_XX*(dof_cohort_pl_`i'_ns_t_XX>=2) if (time_XX<F_g_XX)
-replace E_hat_gt_pl_`i'_XX=mean_cohort_pl_`i'_s_t_XX*(dof_cohort_pl_`i'_s_t_XX>=2) if (F_g_XX-1+`i'==time_XX)
+// E_hat_(g,t), defined from parts depending on the cohort definition 
+gen E_hat_gt_pl_`i'_XX=0 if (time_XX<F_g_XX|F_g_XX-1+`i'==time_XX)
+replace E_hat_gt_pl_`i'_XX=mean_cohort_pl_`i'_ns_t_XX if (dof_cohort_pl_`i'_ns_t_XX>=2&time_XX<F_g_XX)
+replace E_hat_gt_pl_`i'_XX=mean_cohort_pl_`i'_s_t_XX if (dof_cohort_pl_`i'_s_t_XX>=2&F_g_XX-1+`i'==time_XX)
+replace E_hat_gt_pl_`i'_XX=mean_cohort_pl_`i'_ns_s_t_XX if dof_cohort_pl_`i'_ns_s_t_XX>=2&(F_g_XX-1+`i'==time_XX&dof_cohort_pl_`i'_s_t_XX==1)|(time_XX<F_g_XX&dof_cohort_pl_`i'_ns_t_XX==1)
 
-// DOF_pl_(g,t) for DOF adjustement, defined from parts depending on the cohort definition 
-gen DOF_gt_pl_`i'_XX=1+(dof_cohort_pl_`i'_s_t_XX>=2)*(sqrt(dof_cohort_pl_`i'_s_t_XX/(dof_cohort_pl_`i'_s_t_XX-1))-1) if (F_g_XX-1+`i'==time_XX)
-replace DOF_gt_pl_`i'_XX=1+(dof_cohort_pl_`i'_ns_t_XX>=2)*(sqrt(dof_cohort_pl_`i'_ns_t_XX/(dof_cohort_pl_`i'_ns_t_XX-1))-1) if (time_XX<F_g_XX)	
+// DOF_(g,t) for DOF adjustement, defined from parts depending on the cohort definition 
+// Diego - 02-03-25: when there is only 1 switcher, dof_cohort_`i'_s_t_XX = 1, hence the denominator in the expression below is 0
+// The fraction is undefined and Stata puts it to missing
+gen DOF_gt_pl_`i'_XX=1 if (time_XX<F_g_XX|F_g_XX-1+`i'==time_XX)
+replace DOF_gt_pl_`i'_XX=  sqrt(dof_cohort_pl_`i'_s_t_XX/(dof_cohort_pl_`i'_s_t_XX-1)) if (F_g_XX-1+`i'==time_XX & dof_cohort_pl_`i'_s_t_XX > 1)
+replace DOF_gt_pl_`i'_XX=  sqrt(dof_cohort_pl_`i'_ns_t_XX/(dof_cohort_pl_`i'_ns_t_XX-1)) if (time_XX<F_g_XX & dof_cohort_pl_`i'_ns_t_XX > 1)
+replace DOF_gt_pl_`i'_XX=  sqrt(dof_cohort_pl_`i'_ns_s_t_XX/(dof_cohort_pl_`i'_ns_s_t_XX-1)) if dof_cohort_pl_`i'_ns_s_t_XX>=2&(F_g_XX-1+`i'==time_XX&dof_cohort_pl_`i'_s_t_XX==1)|(time_XX<F_g_XX&dof_cohort_pl_`i'_ns_t_XX==1)
+
+// End modif Clément 19/6/2025.
 
 ////////// 6. Computing U_Gg_\ell variables for the placebos (similar to part 4, less commented)
 
@@ -3572,6 +5674,7 @@ if "`controls'"!=""{
 
 levelsof d_sq_int_XX, local(levels_d_sq_XX)
 foreach l of local levels_d_sq_XX {	
+if (scalar(useful_res_`l'_XX)>1){ // MODIF FELIX
 	
 capture drop combined_pl`=increase_XX'_temp_`l'_`i'_XX	
 gen combined_pl`=increase_XX'_temp_`l'_`i'_XX=0
@@ -3580,7 +5683,9 @@ forvalues j=1/`count_controls'{
 forvalues k=1/`count_controls'{		
 	
 capture drop in_brackets_pl_`l'_`j'_`k'_temp_XX
+//// CHANGE BELOW - tks + Changes Diego 27-03-25: remove N_c_`l'_XX from formula below, since we have adjusted inv_Denom above
 gen in_brackets_pl_`l'_`j'_`k'_temp_XX = inv_Denom_`l'_XX[`j',`k'] * in_sum_`k'_`l'_XX * (d_sq_int_XX == `l' & F_g_XX>=3)
+////
 replace in_brackets_pl_`l'_`j'_XX=in_brackets_pl_`l'_`j'_XX+in_brackets_pl_`l'_`j'_`k'_temp_XX
 }
 
@@ -3592,20 +5697,25 @@ gen combined_pl`=increase_XX'_temp_`l'_`j'_`i'_XX=M_pl`=increase_XX'_`l'_`j'_`i'
 replace combined_pl`=increase_XX'_temp_`l'_`i'_XX=combined_pl`=increase_XX'_temp_`l'_`i'_XX+combined_pl`=increase_XX'_temp_`l'_`j'_`i'_XX
 } 
 
-replace part2_pl_switch`=increase_XX'_`i'_XX=part2_pl_switch`=increase_XX'_`i'_XX+combined_pl`=increase_XX'_temp_`l'_`i'_XX if d_sq_int_XX==`l' 
-}
+replace part2_pl_switch`=increase_XX'_`i'_XX=part2_pl_switch`=increase_XX'_`i'_XX+combined_pl`=increase_XX'_temp_`l'_`i'_XX
+} // MODIF FELIX
+} // end loop oveer l
 
-if `=increase_XX'==1{
-replace U_Gg_pl_`i'_temp_var_XX=U_Gg_pl_`i'_temp_var_XX - part2_pl_switch1_`i'_XX 
-}
-
-if `=increase_XX'==0{
-replace U_Gg_pl_`i'_temp_var_XX=U_Gg_pl_`i'_temp_var_XX + part2_pl_switch0_`i'_XX 
-}
-	
 }	
 
 bys group_XX: gegen U_Gg_pl_`i'_var_XX=total(U_Gg_pl_`i'_temp_var_XX)
+
+// Modeif Felix 21.03.2025 (adjust order of adding additional term and summing across t)
+if "`controls'"!=""{
+	if `=increase_XX'==1{
+	replace U_Gg_pl_`i'_var_XX=U_Gg_pl_`i'_var_XX - part2_pl_switch1_`i'_XX 
+	}
+
+	if `=increase_XX'==0{
+	//// CHANGE BELOW - tks (change plus to minus since final sign flip won't be until later)
+	replace U_Gg_pl_`i'_var_XX=U_Gg_pl_`i'_var_XX - part2_pl_switch0_`i'_XX 	
+	}
+}
 
 }
 
@@ -3618,12 +5728,12 @@ if "`normalized'"!=""{
 	capture drop delta_D_pl_`i'_cum_temp_XX
 
 	if `continuous'==0{
-	bys group_XX : gegen sum_treat_until_`i'_pl_XX = total(treatment_XX - d_sq_XX) if time_XX>=F_g_XX&time_XX<=F_g_XX-1+`i'&diff_y_pl_`i'_XX!=.&S_g_XX==increase_XX
-	}
+	bys group_XX : gegen sum_treat_until_`i'_pl_XX = total(treatment_XX - d_sq_XX) if time_XX>=F_g_XX&time_XX<=F_g_XX-1+`i'& S_g_XX==increase_XX
+	} // FELIX 18.03.2025 (delete the diff_y_pl_`i'_XX!=. condition)
 
 	else if `continuous'>0{
-		bys group_XX : gegen sum_treat_until_`i'_pl_XX = total(treatment_XX_orig - d_sq_XX_orig) if time_XX>=F_g_XX&time_XX<=F_g_XX-1+`i'&S_g_XX==increase_XX&diff_y_pl_`i'_XX!=.
-	}
+		bys group_XX : gegen sum_treat_until_`i'_pl_XX = total(treatment_XX_orig - d_sq_XX_orig) if time_XX>=F_g_XX&time_XX<=F_g_XX-1+`i'&S_g_XX==increase_XX
+	} // FELIX 18.03.2025 (delete the diff_y_pl_`i'_XX!=. condition)
 
 gen delta_D_pl_`i'_cum_temp_XX = N_gt_XX/N`=increase_XX'_placebo_`i'_XX*[sum_treat_until_`i'_pl_XX* S_g_XX + (1-S_g_XX)*(-sum_treat_until_`i'_pl_XX)] if dist_to_switch_pl_`i'_XX==1
 
@@ -3686,38 +5796,42 @@ gen U_Gg_num_var_XX=0
 
 
 forvalue i=1/`=l_u_a_XX'{
-	
-if (N`=increase_XX'_`i'_XX!=0){
-capture drop delta_D_`i'_temp_XX
-capture drop delta_D_`i'_XX
-		 
-///// Computing the weights w_+,l
-scalar w_`i'_XX = N`=increase_XX'_`i'_XX / sum_N`=increase_XX'_l_XX
 		
-///// Computing the delta_D_+,l", which enter in the denominator of \hat{\delta}_+/\hat{\delta}_-.
+	if (N`=increase_XX'_`i'_XX!=0){
+		capture drop delta_D_`i'_temp_XX
+		capture drop delta_D_`i'_XX
+				 
+		///// Computing the weights w_+,l
+		scalar w_`i'_XX = N`=increase_XX'_`i'_XX / sum_N`=increase_XX'_l_XX
+				
+		///// Computing the delta_D_+,l", which enter in the denominator of \hat{\delta}_+/\hat{\delta}_-.
 
-if `continuous'==0{
-gen delta_D_`i'_temp_XX = N_gt_XX/N`=increase_XX'_`i'_XX*[(treatment_XX-d_sq_XX)* S_g_XX + (1-S_g_XX)*(d_sq_XX-treatment_XX)] if distance_to_switch_`i'_XX==1
-}
-// Redefine this with original treatment if continuous option specified (treatment was binarized and staggerized)
-else if `continuous'>0{
-gen delta_D_`i'_temp_XX = N_gt_XX/N`=increase_XX'_`i'_XX*[(treatment_XX_orig-d_sq_XX_orig)* S_g_XX + (1-S_g_XX)*(d_sq_XX_orig-treatment_XX_orig)] if distance_to_switch_`i'_XX==1	
-}	
+		if `continuous'==0{
+			gen delta_D_`i'_temp_XX = N_gt_XX/N`=increase_XX'_`i'_XX*[(treatment_XX-d_sq_XX)* S_g_XX + (1-S_g_XX)*(d_sq_XX-treatment_XX)] if distance_to_switch_`i'_XX==1
+		}
+		// Redefine this with original treatment if continuous option specified (treatment was binarized and staggerized)
+		else if `continuous'>0{
+			gen delta_D_`i'_temp_XX = N_gt_XX/N`=increase_XX'_`i'_XX*[(treatment_XX_orig-d_sq_XX_orig)* S_g_XX + (1-S_g_XX)*(d_sq_XX_orig-treatment_XX_orig)] if distance_to_switch_`i'_XX==1	
+		}	
 
-replace delta_D_`i'_temp_XX=0 if delta_D_`i'_temp_XX==.
-gegen delta_D_`i'_XX = total(delta_D_`i'_temp_XX)
-drop delta_D_`i'_temp_XX	
-	
-///// Computing the numerator of U^+_{G,g}: summing up the U_{G,g,l}s, after weighting them
-bys group_XX : replace U_Gg_num_XX = U_Gg_num_XX + w_`i'_XX * U_Gg`i'_XX
+		// For the average cumulative effect we want to keep delta_D_`i'_temp_XX and rescale it by N`=increase_XX'_`i'_XX/N_gt_XX to get an unweightened version of [D_{g,Fg-1+l} - D_{g,1}]	
+		// Maybe call it delta_D_g_`i'_XX instead of delta_D_`i'_temp_XX and then keep it?	
+		capture drop delta_D_g_`i'_XX
+		replace delta_D_`i'_temp_XX=0 if delta_D_`i'_temp_XX==.
+		gegen delta_D_`i'_XX = total(delta_D_`i'_temp_XX)
+		gen delta_D_g_`i'_XX=delta_D_`i'_temp_XX * (N`=increase_XX'_`i'_XX/N_gt_XX)
+		drop delta_D_`i'_temp_XX	
+			
+		///// Computing the numerator of U^+_{G,g}: summing up the U_{G,g,l}s, after weighting them
+		bys group_XX : replace U_Gg_num_XX = U_Gg_num_XX + w_`i'_XX * U_Gg`i'_XX
 
-///// Computing the numerator of the "alternative" U_{G,g}s for the variance : summing up the U_{G,g,l}_vars, after weighting them
-bys group_XX : replace U_Gg_num_var_XX = U_Gg_num_var_XX + w_`i'_XX * U_Gg`i'_var_XX
+		///// Computing the numerator of the "alternative" U_{G,g}s for the variance : summing up the U_{G,g,l}_vars, after weighting them
+		bys group_XX : replace U_Gg_num_var_XX = U_Gg_num_var_XX + w_`i'_XX * U_Gg`i'_var_XX
 
-///// Computing the denominator of U^+_{G,g}: summing up the delta^D_{+,l}s, after weighting them
-bys group_XX : replace U_Gg_den_XX = U_Gg_den_XX + w_`i'_XX * delta_D_`i'_XX
+		///// Computing the denominator of U^+_{G,g}: summing up the delta^D_{+,l}s, after weighting them
+		bys group_XX : replace U_Gg_den_XX = U_Gg_den_XX + w_`i'_XX * delta_D_`i'_XX
 
-}
+	}
 
 }
 		

@@ -279,8 +279,8 @@ GDD categories are constructed over the seasonal GDD total, not over daily tempe
 
 {title:Authors}
 
-{pstd}Jeffrey D. Michler{p_end}
-{pstd}Anna Josephson{p_end}
-{pstd}Oscar Barriga-Cabanillas{p_end}
-{pstd}Aleksandr Michuda{p_end}
-{pstd}Jeffrey C. Oliver{p_end}
+{pstd}Jeffrey D. Michler (jdmichler@arizona.edu){p_end}
+{pstd}Anna Josephson (aljosephson@arizona.edu){p_end}
+{pstd}Oscar Barriga-Cabanillas (obarriga@worldbank.org){p_end}
+{pstd}Aleksandr Michuda (amichud1@swarthmore.edu){p_end}
+{pstd}Jeffrey C. Oliver (jcoliver@arizona.edu){p_end}
