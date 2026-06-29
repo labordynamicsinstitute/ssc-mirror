@@ -444,7 +444,7 @@ the number of newly treated units in each period.
 {title:Example Data Files}
 
 {pstd}
-The package includes two example datasets that are automatically installed:
+The package includes two example datasets distributed as ancillary files:
 
 {phang2}
 {bf:malesky2014.dta} - Vietnam communes data from Malesky et al. (2014)
@@ -453,19 +453,19 @@ The package includes two example datasets that are automatically installed:
 {bf:paglayan2019.dta} - US states panel data from Paglayan (2019)
 
 {pstd}
-After installation, you can load the data from any directory with {helpb sysuse}:
-
-{phang2}
-{cmd:. sysuse malesky2014, clear}
-
-{phang2}
-{cmd:. sysuse paglayan2019, clear}
-
-{pstd}
-To download the optional example do-files into the current directory, run:
+To download the datasets to your current working directory:
 
 {phang2}
 {cmd:. net get diddesign}
+
+{pstd}
+Then load with {helpb use}:
+
+{phang2}
+{cmd:. use malesky2014, clear}
+
+{phang2}
+{cmd:. use paglayan2019, clear}
 
 {pstd}
 Then run the complete example analyses:

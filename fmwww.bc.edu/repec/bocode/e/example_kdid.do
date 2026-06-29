@@ -214,7 +214,7 @@ di as txt _n _dup(70) "="
 di as txt "PART 5: STAGGERED ADOPTION K-DID (PAGLAYAN 2019)"
 di as txt _dup(70) "=" _n
 
-capture noisily sysuse paglayan2019, clear
+capture noisily use paglayan2019, clear
 if _rc != 0 {
     capture use paglayan2019, clear
 }
@@ -246,21 +246,8 @@ else {
  * Summary
  *---------------------------------------------------------------------------*/
 
-di as txt _n _dup(70) "="
-di as txt "SUMMARY: WHEN TO USE K-DID"
-di as txt _dup(70) "="
-di as txt ""
-di as txt "  kmax(2) — Default. Standard Double DID."
-di as txt "            Handles constant and linear time-varying confounding."
-di as txt ""
-di as txt "  kmax(3) — Use when 3+ pre-treatment periods are available and"
-di as txt "            there is concern about quadratic confounding trends."
-di as txt "            The k=3 component is unbiased under quadratic confounding"
-di as txt "            where k=1 and k=2 would be biased."
-di as txt ""
-di as txt "  jtest(on) — Adaptive moment selection via Hansen J-test."
-di as txt "              Automatically drops violated moment conditions."
-di as txt "              Recommended when unsure which assumptions hold."
-di as txt ""
-di as txt "  design(sa) kmax(3) — SA K-DID for staggered adoption designs."
-di as txt "                        Combines K-DID with time-weighted SA aggregation."
+di as txt _n "WHEN TO USE K-DID:" _newline ///
+    "  kmax(2) — Default. Handles constant and linear confounding." _newline ///
+    "  kmax(3) — Use with 3+ pre-periods for quadratic confounding." _newline ///
+    "  jtest(on) — Adaptive moment selection via Hansen J-test." _newline ///
+    "  design(sa) kmax(3) — SA K-DID for staggered adoption."

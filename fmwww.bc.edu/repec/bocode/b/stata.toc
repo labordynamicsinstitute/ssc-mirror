@@ -34,6 +34,7 @@ p benford module to test Benford's Law on a variable
 p betacoef module to calculate beta coefficients from regression
 p betafit module to fit a two-parameter beta distribution
 p betaprior module to calculate the parameters of a Beta distribution given the mean and variance
+p betark module for computing Beta regression with autoregressive-corrected errors for proportion outcomes, by joint conditional maximum likelihood.
 p betterbar module to produce bar graphs with optional standard error bars and cross-group comparisons
 p bf module to create directory structure for Dingyuan Accounting academic projects on Windows
 p bfmcorr module for correcting surveys using tax data 

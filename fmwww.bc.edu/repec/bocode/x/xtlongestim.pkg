@@ -1,0 +1,31 @@
+d 'XTLONGESTIM': module providing long-run and mean-coefficient estimators with small-T bias correction for dynamic heterogeneous panels
+d
+d      xtlongestim unifies, in a single command, the estimators of
+d the long-run and mean short-run coefficients of dynamic   
+d heterogeneous panels developed in Pesaran and Zhao (1999) and
+d Hsiao, Pesaran and Tahmiscioglu (1999).    The mean group (MG)
+d estimator of the long-run coefficient is consistent but, as both
+d papers show, can carry substantial bias    when the time
+d dimension T is small, because of (a) the small-T bias of the
+d short-run least-squares estimates of lambda(i) and	beta(i),
+d and (b) the nonlinearity of beta/(1-lambda).	xtlongestim
+d implements the bias-reduction and Bayes shrinkage    procedures
+d proposed to deal with this, several of which had not previously
+d been available in Stata. 
+d
+d KW:  panel data
+d KW: heterogenous panels
+d KW: small-T panels
+d KW: mean group estimator
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20260628
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtlongestim.ado
+f xtlongestim.sthlp
+f xtlongestim_postestimation.sthlp
+f xtlongestim_example.do

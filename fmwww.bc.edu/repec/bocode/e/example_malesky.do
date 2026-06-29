@@ -46,7 +46,7 @@ di as txt _n _dup(70) "="
 di as txt "SECTION 1: DATA LOADING AND EXPLORATION"
 di as txt _dup(70) "=" _n
 
-capture noisily sysuse malesky2014, clear
+capture noisily use malesky2014, clear
 if _rc != 0 {
     display as error "Error: malesky2014.dta is not installed"
     display as error "Please run: net install diddesign, from(...)"

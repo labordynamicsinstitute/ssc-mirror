@@ -14,7 +14,7 @@ d estimated autocorrelation structure (Klimko and Nelson 1978).
 d Only positive autocorrelation is supported (rho_j >= 0), which is
 d a fundamental constraint of the binomial thinning mechanism. 
 d
-d KW: Poisson regreession
+d KW: Poisson regression
 d KW: autoregressive errors
 d KW: conditional least squares
 d KW: integer-valued autoregressive model

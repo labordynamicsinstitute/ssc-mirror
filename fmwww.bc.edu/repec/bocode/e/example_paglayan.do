@@ -42,7 +42,7 @@ di as txt _n _dup(70) "="
 di as txt "SECTION 1: DATA LOADING AND PREPARATION"
 di as txt _dup(70) "=" _n
 
-capture noisily sysuse paglayan2019, clear
+capture noisily use paglayan2019, clear
 if _rc != 0 {
     display as error "Error: paglayan2019.dta is not installed"
     display as error "Please run: net install diddesign, from(...)"

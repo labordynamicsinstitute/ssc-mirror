@@ -255,7 +255,7 @@ program define _diddesign_prep, rclass
         // -----------------------------------------------------------------
         tempvar Gi_temp
         egen `Gi_temp' = max(`treatment') if `touse', by(`id')
-        replace `Gi_temp' = round(`Gi_temp', 1) if `touse'
+        quietly replace `Gi_temp' = round(`Gi_temp', 1) if `touse'
         
         // -----------------------------------------------------------------
         // Step 4: Create post-treatment indicator (It)
@@ -337,7 +337,7 @@ program define _diddesign_prep, rclass
         tempvar Gi_temp It_temp
         gen `Gi_temp' = `treatment' if `touse'
         gen `It_temp' = `post' if `touse'
-        replace `It_temp' = round(`It_temp', 1) if `touse'
+        quietly replace `It_temp' = round(`It_temp', 1) if `touse'
         
         // -----------------------------------------------------------------
         // Step 3: Time index conversion
