@@ -1,4 +1,4 @@
-*! didparallel 1.0.0 2026/04/16 GuanpengYan
+*! didparallel 1.1.0 2026/06/29 Guanpeng Yan, Qiang Chen
 prog def didparallel, eclass
 	version 16
     qui xtset
@@ -81,4 +81,5 @@ program didparallel_SaveGraph
 	}
 end
 * Version history
+* 1.1.0 Optimize ldidparallel.mlib to improve computation speed
 * 1.0.0 Submit the initial version

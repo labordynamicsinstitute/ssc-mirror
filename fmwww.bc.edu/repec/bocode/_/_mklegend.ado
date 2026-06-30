@@ -1,4 +1,4 @@
-*! version 2.0.1  20jun2026  Ben Jann
+*! version 2.0.3  27jun2026  Ben Jann
 
 program _mklegend, rclass
     version 14
@@ -22,7 +22,7 @@ program _mklegend, rclass
     // parse options
     syntax [, nodraw Margin(passthru) /*
         */ FRame FRame2(str) lskip(real 1.5)/*
-        */ y(real 96) x(real 2) h(real 5) w(real 5)/*
+        */ y(real 95) x(real 5) h(real 5) w(real 5)/*
         */ ty(real 0) tx(numlist max=1) tw(real 20) Text(str)/*
         */ PSTYle(passthru) * ]
     mata: extract_opts(("Y", "X", "H", "W", "TY", "TX", "TW"))
@@ -107,10 +107,12 @@ program _mklegend, rclass
             else            local fr_W = `fr_R' - `fr_X'
         }
         if `fr_w'>=. local fr_w = `fr_W' / `Xr' * 100
-        local fr_B = `fr_Y' - `fr_H'
-        local fr_R = `fr_X' + `fr_W'
-        local legend (scatteri `fr_B' `fr_X' `fr_B' `fr_R' `fr_Y' `fr_R'/*
-            */ `fr_Y' `fr_X', recast(area) nodropbase `fr_opts') `legend'
+        local fr_B `: di %10.0g `fr_Y' - `fr_H''
+        local fr_T `: di %10.0g `fr_Y''
+        local fr_L `: di %10.0g `fr_X''
+        local fr_R `: di %10.0g `fr_X' + `fr_W''
+        local legend (scatteri `fr_B' `fr_L' `fr_B' `fr_R' `fr_T' `fr_R'/*
+            */ `fr_T' `fr_L', recast(area) nodropbase `fr_opts') `legend'
         foreach opt in XM YM W H X Y xm ym w h x y {
             return scalar fr_`opt' = `fr_`opt''
         }
@@ -226,6 +228,7 @@ program parse_frame
 end
 
 program parse_key
+    // options
     foreach arg in minY maxY minX maxX p Ymin Yr Xmin Xr _Y _X _H _W/*
         */ _pstyle _options _TY _TX _TW _place _just _topts {
         gettoken `arg' 0 : 0
@@ -257,10 +260,10 @@ program parse_key
     
     // collect symbols
     gettoken next : txt
-    if `"`next'"'=="-" {
+    if inlist(`"`next'"', ".", "-") {
         gettoken next txt : txt
         local sym_n  0
-        local hassym 1
+        local hassym = `"`next'"'=="-"
     }
     else {
         local i 0
@@ -284,8 +287,7 @@ program parse_key
     // plot symbols
     local plots
     forv i=1/`sym_n' {
-        parse_sym `minY' `maxY' `minX' `maxX'/*
-            */ `p' `Ymin' `Yr' `Xmin' `Xr' `Y' `X' `H' `W'/*
+        parse_sym `p' `Ymin' `Yr' `Xmin' `Xr' `Y' `X' `H' `W'/*
             */ `"`pstyle'"' `"`options'"' `sym_`i'' // return plot
         local plots `plots' `plot'
     }
@@ -294,14 +296,8 @@ program parse_key
     parse_txt `txt' // returns txt
     
     // plot label
-    if `TX'>=. local tx = `W' + cond(`W'<0, -1, 1) * abs(`Xr') / 100
+    if `TX'>=. local tx = 0.75 * `W'
     else       local tx `TX'
-    local y = `Y'
-    local x = `X'
-    if `hassym' {
-        local y = `y' + `TY'
-        local x = `x' + `tx'
-    }
     if (sign(`tx')*sign(`Xr'))<0 {
         if `"`place'"'=="" local place left
         if `"`just'"'==""  local just  right
@@ -312,94 +308,156 @@ program parse_key
         if `"`just'"'==""  local just  left
         local tdir 1
     }
+    if `hassym' {
+        local ty = `Y' + `TY'
+        local tx = `X' + `tx'
+    }
+    else {
+        local ty = `Y'
+        local tx = `X' - 0.5*`W'
+    }
+    local y `: di %10.0g `ty''
+    local x `: di %10.0g `tx''
     local topts place(`place') just(`just') `topts'
     local plots `plots' (scatteri `y' `x', ms(i) text(`y' `x' `txt', `topts'))
-    local minY = min(`minY', `y' - 0.5 * `H', `y' + 0.5 * `H')
-    local maxY = max(`maxY', `y' - 0.5 * `H', `y' + 0.5 * `H')
-    local minX = min(`minX', `x', `x' + `tdir' * `TW')
-    local maxX = max(`maxX', `x', `x' + `tdir' * `TW')
+    
+    // update range of legend (ignoring individual symbol settings)
+    local tmp "`Y'-0.5*`H', `Y'+0.5*`H', `ty'-0.5*`H', `ty'+0.5*`H'"
+    local minY = min(`minY', `tmp')
+    local maxY = max(`maxY', `tmp')
+    local tmp "`X'-0.5*`W', `X'+0.5*`W', `tx', `tx'+`tdir'*`TW'"
+    local minX = min(`minX', `tmp')
+    local maxX = max(`maxX', `tmp')
     
     // returns
-    c_local minY `minY'
-    c_local maxY `maxY'
-    c_local minX `minX'
-    c_local maxX `maxX'
-    foreach opt in p Y X H W TY TX TW {
+    foreach opt in p Y X H W TY TX TW minY maxY minX maxX plots {
         c_local `opt' ``opt''
     }
-    c_local plots `plots'
 end
 
 program parse_sym
-    foreach arg in minY maxY minX maxX p Ymin Yr Xmin Xr _Y _X _H _W/*
-        */ _pstyle _options {
+    // options
+    foreach arg in p Ymin Yr Xmin Xr _Y _X _H _W _pstyle _options {
         gettoken `arg' 0 : 0
     }
     _parse comma SYM 0 : 0
-    if !`: list sizeof SYM' local SYM `""""'
     syntax [, y(numlist max=1) x(numlist max=1)/*
         */ h(numlist max=1) w(numlist max=1)/*
         */ PSTYle(passthru) * ]
-    if "`y'"!="" local _Y  = `Ymin' + `y' * `Yr' / 100
-    if "`x'"!="" local _X  = `Xmin' + `x' * `Xr' / 100
-    if "`h'"!="" local _H  =          `h' * `Yr' / 100
-    if "`w'"!="" local _W  =          `w' * `Xr' / 100
+    if "`h'"!="" local _H = `h' * `Yr' / 100
+    if "`w'"!="" local _W = `w' * `Xr' / 100
     mata: extract_opts(("Y", "X", "H", "W"))
     foreach opt in Y X H W {
         if "``opt''"!="" numlist `"``opt''"', max(1)
     }
-    foreach opt in Y X H W pstyle {
+    foreach opt in H W pstyle {
         if "``opt''"!="" continue
         local `opt' `"`_`opt''"'
     }
+    if "`Y'"=="" {
+        if "`y'"!="" local Y = `y' * `Yr' / 100
+        else         local Y 0
+    }
+    local Y = `_Y' + `Y'
+    if "`X'"=="" {
+        if "`x'"!="" local X = `x' * `Xr' / 100
+        else         local X 0
+    }
+    local X = `_X' + `X'
     local options `_options' `options'
+    parse_getpnum, `pstyle' // updates p
+    parse_getopt MLABPosition, `options'
+    parse_getopt LSTYle, `options'
+    if `"`lstyle'"'!="" local lstyle
+    else local lstyle lstyle(p`p'other) // used by spike, cap, capsym
+    
+    // plot symbols
+    if !`: list sizeof SYM' local SYM "."
     local plots
-    foreach sym of local SYM {
-        if      `"`sym'"'=="rcap"    local sym "cap"
-        else if `"`sym'"'=="rcapsym" local sym "capsym"
-        else if `"`sym'"'=="spike"   local sym "line"
-        local b = `Y' - 0.5 * `H'
-        local t = `Y' + 0.5 * `H'
-        local l = `X'
-        local r = `X' + `W'
-        local minY = min(`minY', `t', `b')
-        local maxY = max(`maxY', `t', `b')
-        local minX = min(`minX', `l', `r')
-        local maxX = max(`maxX', `l', `r')
-        local ptype ""
-        if inlist(`"`sym'"',"line","cap","capsym") {
-            if `"`sym'"'=="line"     local plot recast(line)
-            else if `"`sym'"'=="cap" local plot recast(connect) ms(|)
-            else                     local plot recast(connect)
-            local plot scatteri `Y' `l' `Y' `r', `plot'
-        }
-        else if inlist(`"`sym'"',"area","bar","rline") {
-            if `"`sym'"'=="rline" {
-                local plot scatteri `t' `l' `t' `r' . . `b' `l' `b' `r',/*
-                    */ recast(line) cmissing(n)
-            }
-            else {
-                local ptype "`sym'"
-                local plot scatteri `b' `l' `b' `r' `t' `r' `t' `l',/*
-                    */ recast(area) nodropbase
-            }
+    local b `: di %10.0g `Y' - 0.5 * `H''
+    local t `: di %10.0g `Y' + 0.5 * `H''
+    local m `: di %10.0g `Y''
+    local l `: di %10.0g `X' - 0.5 * `W''
+    local r `: di %10.0g `X' + 0.5 * `W''
+    local c `: di %10.0g `X''
+    while (`"`SYM'"'!="") {
+        local ptype
+        local LTSYLE
+        gettoken sym SYM : SYM, qed(istext)
+        if `istext' {
+            if `"`mlabposition'"'=="" local plot (0)
+            else                      local plot
+            local plot scatteri `m' `c' `plot' `"`sym'"', ms(i)
         }
         else {
-            local c = `X' + 0.5 * `W'
-            local plot ms(`sym')
-            if `"`sym'"'=="" local plot
-            local plot scatteri `Y' `c', `plot'
+            if      `"`sym'"'=="rcap"    local sym "cap"
+            else if `"`sym'"'=="rcapsym" local sym "capsym"
+            if inlist(`"`sym'"',"line","vline") {
+                if "`sym'"=="line" local plot `m' `l' `m' `r'
+                else               local plot `b' `c' `t' `c'
+                local plot scatteri `plot', recast(line)
+            }
+            else if inlist(`"`sym'"',"spike","vspike") {
+                if "`sym'"=="spike" local plot `m' `l' `m' `r'
+                else                local plot `b' `c' `t' `c'
+                local plot scatteri `plot', recast(line)
+                local LSTYLE `lstyle'
+            }
+            else if inlist(`"`sym'"',"rline","vrline") {
+                if "`sym'"=="rline" local plot `t' `l' `t' `r' . . `b' `l' `b' `r'
+                else                local plot `b' `l' `t' `l' . . `b' `r' `t' `r'
+                local plot scatteri `plot', recast(line) cmissing(n)
+            }
+            else if inlist(`"`sym'"',"area") {
+                local ptype "area"
+                local plot `b' `l' `b' `r' `t' `r' `t' `l'
+                local plot scatteri `plot', recast(area) nodropbase
+            }
+            else if inlist(`"`sym'"',"bar") {
+                local ptype "bar"
+                local plot `b' `l' `b' `r' `t' `r' `t' `l'
+                local plot scatteri `plot', recast(area) nodropbase
+            }
+            else if inlist(`"`sym'"',"cap", "vcap") {
+                if "`sym'"=="cap" local plot `m' `l' `m' `r', ms(|)
+                else              local plot `b' `c' `t' `c', ms(|) msang(90)
+                local plot scatteri `plot' recast(connect)
+                local LSTYLE `lstyle'
+            }
+            else if inlist(`"`sym'"',"capsym", "vcapsym") {
+                if "`sym'"=="capsym" local plot `m' `l' `m' `r'
+                else                 local plot `b' `c' `t' `c'
+                local plot scatteri `plot', recast(connect)
+                local LSTYLE `lstyle'
+            }
+            else {
+                local plot ms(`sym')
+                if `"`sym'"'=="." local plot
+                local plot scatteri `m' `c', `plot'
+            }
         }
-        if `"`pstyle'"'=="" local PSTYLE pstyle(p`p'`ptype')
-        else                local PSTYLE `pstyle'
+        if `"`pstyle'"'=="" local PSTYLE pstyle(p`p'`ptype') `LSTYLE'
+        else                local PSTYLE `pstyle' `LSTYLE'
         local OPTIONS `PSTYLE' `options'
         local plots `plots' (`plot' `OPTIONS')
     }
-    c_local minY `minY'
-    c_local maxY `maxY'
-    c_local minX `minX'
-    c_local maxX `maxX'
+    
+    // returns
     c_local plot `plots'
+end
+
+program parse_getpnum
+    syntax [, PSTYle(str) ]
+    if regexm(`"`pstyle'"', "^p([1-9][0-9]*)") {
+        c_local p = regexs(1)
+    }
+end
+
+program parse_getopt
+    _parse comma OPT 0 : 0
+    syntax [, `OPT'(passthru) * ]
+    local opt = strlower("`OPT'")
+    c_local `opt' `"``opt''"'
 end
 
 program parse_txt
@@ -426,9 +484,9 @@ void extract_opts(string rowvector O)
     options = ""
     while ((opt = tokenget(t))!="") {
         arg = tokenpeek(t)
-        if ((substr(arg,1,1)+substr(arg,-1,1))=="()") { // arg is "(...)"
+        if (_token_has_pars(arg)) { // option has arguments
             (void) tokenget(t)
-            if (anyof(O,opt)) {
+            if (anyof(O, opt)) { // match found; extract option
                 st_local(opt, strtrim(substr(arg, 2, strlen(arg)-2)))
                 continue
             }
@@ -440,35 +498,77 @@ void extract_opts(string rowvector O)
     st_local("options", substr(options, 2, .))
 }
 
+real scalar _token_has_pars(string scalar s)
+{   // 1 if "(...)", 0 else
+    if (substr(s,1,1)=="(") {
+        if (substr(s,-1,1)==")") return(1)
+        return(0)
+    }
+    return(0)
+}
+
 void keys_expand()
 {
-    real scalar   i, a, b
+    real scalar   i, a, b, par, opts, newkey
     string scalar s, tok
     transmorphic  t
     
     s = st_global("s(after)")
-    t = tokeninit("", "||", (`""""', `"`""'"', "()"))
+    t = tokeninit(" ", (",", "||"), (`""""', `"`""'"', "()"))
     tokenset(t, s)
-    i = b = 0
+    newkey = opts = par = i = 0
+    b = 1
     while ((tok = tokenget(t))!="") {
-        if (tok=="||") {
-            a = b + 1
-            b = tokenoffset(t)
-            tok = strtrim(substr(s, a, b-a-2))
-            if (tok!="") {
-                i++
-                st_local("key_"+strofreal(i), tok)
+        if (_token_has_pars(tok)) {
+            if (opts==par) newkey = 1 /* start new key it token is "(...)" and
+                one of the following cases applies: (1) the position of the
+                token is not in a section of options and the token is not
+                preceded by "(...)" (2) the position of the token is in a
+                section of options and it is preceded by "(...)" */
+            par = 1 // remember that token is "(...)" for the next loop
+        }
+        else {
+            if      (tok==".") newkey = 1  // heading
+            else if (tok=="-") newkey = 1  // subheading
+            else if (tok==",") {
+                if (opts) newkey = 1       // repeated set of options
+                else      opts = 1         // start of options, i.e. ", ..."
             }
-            continue
+            else if (tok=="||") newkey = 2 // explicit key delimiter
+            par = 0 // remember that token is not "(...)" for the next loop
+        }
+        if (newkey) {
+            a = b; b = tokenoffset(t)
+            opts = 0
+            if (newkey==2) { // (explicit delimiter)
+                _keys_expand(i, s, a, b-a-2) // extract key (w/o delimiter)
+                tok = tokenpeek(t)
+                if (tok!="||") { // move to first token after delimiter
+                    tok = tokenget(t)
+                    if (_token_has_pars(tok)) par  = 1 // token is "(...)"
+                    else if (tok==",")        opts = 1 // start of options
+                }
+            }
+            else { // (implicit delimiter)
+                b = b - strlen(tok)
+                _keys_expand(i, s, a, b-a) // extract key
+            }
+            newkey = 0
         }
     }
-    a = b + 1
-    tok = strtrim(substr(s, a, .))
+    _keys_expand(i, s, b, .) // extract last key
+    st_local("key_n", strofreal(i))
+}
+
+void _keys_expand(real scalar i, string scalar s, real scalar a, real scalar l)
+{
+    string scalar tok
+    
+    tok = strtrim(substr(s, a, l))
     if (tok!="") {
         i++
         st_local("key_"+strofreal(i), tok)
     }
-    st_local("key_n", strofreal(i))
 }
 
 end

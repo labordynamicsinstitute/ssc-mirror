@@ -1,0 +1,26 @@
+d 'XTGUNITROOT': module providing generalized fixed-T panel unit root test (doubly modified estimator)
+d
+d      xtgunitroot implements the generalized fixed-T panel unit
+d root test of Karavias and Tzavalis (2019), based on the
+d {it:doubly	modified estimator} (DME). Unlike the simpler
+d fixed-T tests, the DME is robust to	     short-term serial
+d correlation of unspecified form (up to order maxlag),       
+d heteroscedasticity and error cross-section heterogeneity,	  
+d a common structural break at a known or unknown date,    while
+d remaining valid for a large number of cross-section units N and a
+d small, fixed number of time periods T, and invariant	  to the
+d initial condition. 
+d
+d KW:  panel data
+d KW: panel unit root
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260629
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtgunitroot.ado
+f xtgunitroot.sthlp
+f xtgunitroot_example.do

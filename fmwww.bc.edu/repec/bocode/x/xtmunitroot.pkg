@@ -1,0 +1,32 @@
+d 'XTMUNITROOT': module providing fixed-T panel unit root tests with missing values
+d
+d      xtmunitroot implements the fixed-T panel unit root tests of
+d Harris and Tzavalis (1999) and Karavias and Tzavalis (2014),	 
+d extended to unbalanced panels with missing values exactly as in
+d Karavias, Tzavalis and Zhang (2022). These tests are designed   
+d for panels with a large number of cross-section units N and a
+d small, fixed number of time periods T.    The model is an AR(1)
+d panel, u(i,t) = rho*u(i,t-1) + e(i,t), and the test is	H0:
+d rho = 1 (every panel has a unit root) vs H1: rho < 1
+d (stationary).    The pooled fixed-effects estimator of rho is
+d inconsistent for fixed T (the Hurwicz-Nickell bias), so it is
+d bias-corrected and	the resulting statistic is asymptotically
+d standard normal as N -> infinity:	   z = (rho_hat - bias - 1)
+d / sqrt(V/N) -> N(0,1) under H0.    Because rho_hat is biased
+d downward, the bias is negative; under stationarity z is large and
+d negative, so the unit-root null is	rejected in the lower tail. d
+d KW:  panel data
+d KW: panel unit root
+d KW: fixed-T
+d KW: missing values
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260629
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtmunitroot.ado
+f xtmunitroot.sthlp
+f xtmunitroot_example.do

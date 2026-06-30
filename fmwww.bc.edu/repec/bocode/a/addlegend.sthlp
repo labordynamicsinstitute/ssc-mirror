@@ -1,5 +1,5 @@
 {smcl}
-{* 20jun2026}{...}
+{* 27jun2026}{...}
 {hi:help addlegend}{...}
 {right:{browse "https://github.com/benjann/addlegend/"}}
 {hline}
@@ -25,26 +25,27 @@
     where {it:keylist} is
 
 {p 8 15 2}
-    {it:key} [ {cmd:||} {it:key} [...]]
+    {it:key} [[{cmd:||}] {it:key} [...]]
 
 {pstd}
     and {it:key} is
 
 {p 8 15 2}
-    [{it:symboldef}]
+    {it:symboldef}
     {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} [...]]
     [{cmd:,} {it:{help addlegend##sopts:symopts}}
     {it:{help addlegend##topts:txtopts}} ]
 
 {pstd}
-    and {it:symboldef} is {cmd:-} or
+    and {it:symboldef} is {cmd:.} (or empty) for a heading (aligned with
+    symbol), {cmd:-} for a subheading (aligned with text), or
 
 {p 8 15 2}
     {cmd:(}{it:symlist} [{cmd:,} {it:{help addlegend##sopts:symopts}}]{cmd:)}
     [{cmd:(}{it:symlist} [{cmd:,} {it:{help addlegend##sopts:symopts}}]{cmd:)} [...]]
 
 {pstd}
-    and {it:symlist} is
+    where {it:symlist} is
 
 {p 8 15 2}
     [{it:symbol} [{it:symbol} [...]]]
@@ -53,19 +54,23 @@
     and {it:symbol} is
 
 {p2colset 9 22 22 2}{...}
-{p2col : {it:{help symbolstyle}}}marker
+{p2col : {it:{help symbolstyle}}}marker; may type {cmd:.} (missing) for default marker
     {p_end}
-{p2col : {opt line}}line
+{p2col : {cmd:"}{help graph_text:{it:text}}{cmd:"}}any text
     {p_end}
-{p2col : {opt rline}}double line
+{p2col : [{cmd:v}]{opt line}}vertical or horizontal line
+    {p_end}
+{p2col : [{cmd:v}]{opt spike}}vertical or horizontal spike
+    {p_end}
+{p2col : [{cmd:v}]{opt rline}}vertical or horizontal double line
     {p_end}
 {p2col : {opt area}}area
     {p_end}
 {p2col : {opt bar}}bar
     {p_end}
-{p2col : {opt cap}}capped line; can also type {cmd:rcap}
+{p2col : [{cmd:v}]{opt cap}}vertical or horizontal capped line
     {p_end}
-{p2col : {opt capsym}}line capped with symbols; can also type {cmd:rcapsym}
+{p2col : [{cmd:v}]{opt capsym}}vertical or horizontal line capped with symbols
     {p_end}
 
 
@@ -95,18 +100,20 @@
     {p_end}
 {synopt :{it:{help marker_options}}}options affecting look of markers
     {p_end}
+{synopt :{it:{help marker_label_options}}}options affecting look of text symbols
+    {p_end}
 {synopt :{it:{help line_options}}}options affecting look of lines
     {p_end}
-{synopt :{it:{help area_options}}}options affecting look of areas
+{synopt :{it:{help area_options}}}options affecting look of areas or bars
     {p_end}
 
 {marker topts}{...}
 {syntab :{it:{help addlegend##txtopts:txtopts}}}
-{synopt :{opt ty(#)} or {opt TY(#)}}vertical position of text, relative to symbol, in percent or units
+{synopt :{opt ty(#)} or {opt TY(#)}}vertical offset of text, in percent or units of Y-axis
     {p_end}
-{synopt :{opt tx(#)} or {opt TX(#)}}horizontal position of text, relative to symbol, in percent or units
+{synopt :{opt tx(#)} or {opt TX(#)}}horizontal offset of text, in percent or units of X-axis
     {p_end}
-{synopt :{opt tw(#)} or {opt TW(#)}}with of text, in percent or units; only relevant for {cmd:frame()}
+{synopt :{opt tw(#)} or {opt TW(#)}}width of text, in percent or units; only relevant for {cmd:frame()}
     {p_end}
 {synopt :{opth t:ext(textbox_options)}}options affecting look of text
     {p_end}
@@ -155,8 +162,8 @@
     level of a legend key, or at the level of a key's symbol. Upper-level
     settings are used as defaults for lower-level settings, and options
     specified a lower level take precedence over options specified at an upper
-    level (ignoring case; for example, {cmd:y()} specified at a lower level
-    takes precedence over {cmd:Y()} specified at an upper level). Furthermore,
+    level (ignoring case; for example, {cmd:y()} specified at the level of a legend key
+    takes precedence over {cmd:Y()} specified at the global level). Furthermore,
     if specified at the level of a legend key, options
     {helpb addlegend##symopts:y()},
     {helpb addlegend##symopts:x()},
@@ -177,7 +184,7 @@
 
 {pstd}
     Command {cmd:_mklegend} is the engine behind {cmd:addlegend}. It analyses
-    the selected graph, creates the code of the custom legend (a set of
+    the selected graph, creates the code for the custom legend (a set of
     {helpb twoway scatteri} commands), and stores it in macro
     {cmd:r(legend)}. {cmd:addlegend} then applies {helpb addplot} to add the
     contents of {cmd:r(legend)} to the definition of the selected graph.
@@ -273,7 +280,7 @@
     {opt y(#)} and {opt Y(#)} set the vertical position of the (first) legend
     key (i.e., the midpoint of the vertical space allocated for the key's
     symbol), in percent of the range of the Y-axis or in units of the Y-axis,
-    respectively. The default is {cmd:x(95)}. {cmd:Y()} takes precedence over
+    respectively. The default is {cmd:y(95)}. {cmd:Y()} takes precedence over
     {cmd:y()}.
 
 {pmore}
@@ -284,12 +291,24 @@
     and {it:lskip} is the baselineskip as set by option
     {helpb addlegend##lskip:lskip()}.
 
+{pmore}
+    Furthermore, if specified at the level of a key's symbol, {cmd:y()} and
+    {cmd:Y()} are interpreted as the vertical offset of the symbol from the
+    key's overall position, in percent of the range of the Y-axis or in
+    units of the Y-axis, respectively. The default vertical offset is {cmd:0}.
+
 {phang}
     {opt x(#)} and {opt X(#)} set the horizontal position of the legend key
-    (i.e., the left edge of the space allocated for the key's symbol, or the
-    right edge if the key's width is negative), in percent of the range of the
-    X-axis or in units of the X-axis, respectively. The default is
-    {cmd:x(2)}. {cmd:X()} takes precedence over {cmd:y()}.
+    (i.e., the midpoint of the horizontal space allocated for the key's
+    symbol), in percent of the range of the X-axis or in units of the X-axis,
+    respectively. The default is {cmd:x(5)}. {cmd:X()} takes precedence over
+    {cmd:y()}.
+
+{pmore}
+    If specified at the level of a key's symbol, {cmd:x()} and
+    {cmd:X()} are interpreted as the horizontal offset of the symbol from the
+    key's overall position, in percent of the range of the X-axis or in
+    units of the X-axis, respectively. The default horizontal offset is {cmd:0}.
 
 {phang}
     {opt h(#)} and {opt H(#)} set the height to be allocated for the legend
@@ -305,33 +324,44 @@
 
 {phang}
     {it:marker_options} are options affecting the look of the markers included
-    in the legend key's symbol; see help {it:{help marker_options}}. If omitted,
-    option {cmd:pstyle()} will be set automatically based on the order of the
-    keys.
+    in the legend key's symbol; see help {it:{help marker_options}}. If
+    omitted, option {cmd:pstyle()} will be set automatically based on the
+    order of the keys. To be precise, {cmd:pstyle()} will be set to
+    {cmd:p}{it:#} (or {cmd:p}{it:#}{cmd:area} or {cmd:p}{it:#}{cmd:bar} depending
+    on chosen symbol), where {it:#} is the number of
+    the key (not counting headings; staring over at 1 after 15).
 
 {phang}
-    {it:line_options} are options affecting the look of the lines included
-    in the legend key's symbol; see help {it:{help line_options}}.
+    {it:marker_label_options} are options affecting the look of text included
+    in the legend key's symbol; see help {it:{help marker_label_options}}. If omitted,
+    option {cmd:mlabposition()} will be set to {cmd:0}.
 
 {phang}
-    {it:area_options} are options affecting the look of the areas included
+    {it:line_options} are options affecting the look of the lines included in
+    the legend key's symbol; see help {it:{help line_options}}. If omitted,
+    option {cmd:lstyle()} will be set to {cmd:p}{it:#}{cmd:other} in case of
+    {cmd:spike}, {cmd:cap}, and {cmd:capsym}, where {it:#} is the number
+    of the plot as set by {cmd:pstyle()}.
+
+{phang}
+    {it:area_options} are options affecting the look of the areas or bars included
     in the legend key's symbol; see help {it:{help area_options}}.
 
 {marker txtopts}{...}
 {dlgtab:txtopts}
 
 {phang}
-    {opt ty(#)} and {opt TY(#)} set the vertical offset of the text, relative
-    to the position of the key's symbol, in percent of the range of the Y-axis
+    {opt ty(#)} and {opt TY(#)} set the vertical offset of the text from the
+    key's position as set by {cmd:y()} or {cmd:Y()}, in percent of the range of the Y-axis
     or in units of the Y-axis, respectively. The default is
     {cmd:ty(0)}. {cmd:TY()} takes precedence over {cmd:ty()}.
 
 {phang}
-    {opt tx(#)} and {opt TX(#)} set the horizontal offset of the text, relative
-    to the position of the key's symbol, in percent of the range of the X-axis
-    or in units of the X-axis, respectively. The default is to set the offset
-    to the width of the key's symbol plus 1 percent of the width of the
-    X-axis. {cmd:TX()} takes precedence over {cmd:tx()}.
+    {opt tx(#)} and {opt TX(#)} set the horizontal offset of the text from the
+    key's position as set by {cmd:x()} or {cmd:X()}, in percent of the range of
+    the X-axis or in units of the X-axis, respectively. The default is to set
+    the offset to 0.75 times the width of the space allocated for the key's
+    symbol. {cmd:TX()} takes precedence over {cmd:tx()}.
 
 {phang}
     {opt tw(#)} and {opt TW(#)} set the with of the text, in percent of the
@@ -366,8 +396,16 @@
 
 {pstd}
     Option {cmd:X(45)} has been used to shift the legend to the right of the
-    graph (i.e., to position the left edge of the space allocated for the keys'
+    graph (i.e., to position the midpoint of the space allocated for the keys'
     symbols at X = 45). By default, the legend is placed in the top-left corner.
+
+{pstd}
+    Furthermore, note that key delimite {cmd:||} is optional. That is, the above
+    command could also be typed as follows:
+
+{p 8 12 2}
+    . {stata `"addlegend, X(45) frame: (Oh X, msize(large)) "Mileage (mpg)" (line) "Fitted values""'}
+    {p_end}
 
 {dlgtab:Custom positioning of legend keys}
 
@@ -380,7 +418,7 @@
     . {stata twoway (hist weight if foreign==0, psty(p1bar) color(%50)) (hist weight if foreign==1, psty(p2bar) color(%50))}
     {p_end}
 {p 8 12 2}
-    . {stata `"addlegend, lskip(0) color(%50): (bar) "Domestic", X(4840) W(-300) || (bar) "Foreign", X(1760) W(300)"'}
+    . {stata `"addlegend, lskip(0) color(%50): (bar) "Domestic", X(4690) W(-300) || (bar) "Foreign", X(1910) W(300)"'}
     {p_end}
 
 {pstd}
@@ -392,7 +430,7 @@
 {pstd}
     To create a heading that is aligned with the keys' symbols, type
 
-        {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} [...]]
+        {cmd:.} {cmd:"}{it:text}{cmd:"} [{cmd:"}{it:text}{cmd:"} [...]]
 
 {pstd}
     Alternatively, to create a heading that is aligned with the
@@ -408,7 +446,7 @@
     . {stata twoway (connect le_f le_m year)}
     {p_end}
 {p 8 12 2}
-    . {stata `"addlegend: "Heading aligned with symbol" || (line) () "female" || - "Heading aligned with text" || (line) () "male""'}
+    . {stata `"addlegend: . "Heading aligned with symbol" || (line) () "female" || - "Heading aligned with text" || (line) () "male""'}
     {p_end}
 
 {dlgtab:Placing the legend outside of the plot region}
@@ -469,7 +507,7 @@
     . {stata twoway (sc mpg turn) (lfit mpg turn)}
     {p_end}
 {p 8 12 2}
-    . {stata `"_mklegend, x(60): () "Observations" || (line) "Linear fit""'}
+    . {stata `"_mklegend, X(45) frame: () "Observations" || (line) "Linear fit""'}
     {p_end}
 {p 8 12 2}
     . {stata `"addplot: `r(legend)', norescaling legend(order(1 "Mileage (mpg)" 2 "Fitted values"))"'}
@@ -484,7 +522,7 @@
     . {stata twoway (sc mpg turn) (lfit mpg turn), nodraw}
     {p_end}
 {p 8 12 2}
-    . {stata `"_mklegend, x(80) frame: () "Observations" || (line) "Linear fit""'}
+    . {stata `"_mklegend, X(45) frame: () "Observations" || (line) "Linear fit""'}
     {p_end}
 {p 8 12 2}
     . {stata twoway (sc mpg turn) (lfit mpg turn) `r(legend)', legend(off)}
