@@ -1,9 +1,9 @@
-*! version 1.0.1  26apr2024
+*! version 1.1.0  27jun2026
 program define xtsurmg, eclass
     version 16
     syntax varlist(min=2 numeric) [if] [in], ///
         [CORr noHeader noTable Level(cilevel) ///
-        fourier(integer 0) bootstrap(integer 0) *]
+        fourier(integer 0) bootstrap(integer 0) CCE *]
 
     // Check if data is xtset
     capt xtset
@@ -44,7 +44,20 @@ program define xtsurmg, eclass
     qui sum `it'
     gen timeindex = `it' - r(min) + 1
     local period = r(max) - r(min) + 1
-    
+
+    // Generate CCE cross-section averages (by time period)
+    // Includes the dependent variable and all independent variables.
+    // Fourier terms are NEVER averaged (they are deterministic and identical
+    // across units, so their cross-section average equals themselves).
+    local cce_terms ""
+    local depvar_indep `depvar' `indepvars'
+    if "`cce'" != "" {
+        foreach v of local depvar_indep {
+            qui by `it', sort: egen double `v'_avg = mean(`v')
+            local cce_terms `cce_terms' `v'_avg
+        }
+    }
+
     // Generate Fourier terms
     local fourier_terms ""
     if `fourier' > 0 {
@@ -55,8 +68,160 @@ program define xtsurmg, eclass
         }
     }
 
-    // Reshape data wide by group
+    // Build the list of regressors that augment each group regression.
+    // (CCE averages and/or Fourier terms in addition to the original indepvars.)
+    local augment ""
+    if "`cce'" != "" {
+        local augment `augment' `cce_terms'
+    }
+    if `fourier' > 0 {
+        local augment `augment' `fourier_terms'
+    }
+
+
     qui levelsof `id', local(groups)
+
+    if "`cce'" != "" {
+        // ----- Mean Group (CCE-MG) estimation -----
+        local report_vars `indepvars' `augment'
+        local vars_all `report_vars' _cons
+        local nvars = `: word count `vars_all''
+
+        // Collect per-group coefficients into a matrix (ngroups x nvars).
+        tempname coefs
+        matrix `coefs' = J(`ngroups', `nvars', .)
+        local grow = 0
+        local used_groups = 0
+
+        foreach g of local groups {
+            local ++grow
+            capture qui regress `depvar' `indepvars' `augment' if `id' == `g'
+            if _rc == 0 {
+                local ++used_groups
+                tempname bg
+                matrix `bg' = e(b)
+                local bcols : colnames `bg'
+                // Map this group's estimated coefficients to the common order.
+                local jcol = 0
+                foreach v of local vars_all {
+                    local ++jcol
+                    if colnumb(`bg', "`v'") != . {
+                        matrix `coefs'[`grow', `jcol'] = `bg'[1, colnumb(`bg', "`v'")]
+                    }
+                }
+            }
+        }
+
+        if `used_groups' < 1 {
+            di as error "No group-specific regression could be estimated"
+            if `didpreserve' restore
+            error 498
+        }
+
+        // Compute MG mean, variance, se, z, p for each term.
+        tempname mg_means mg_var mg_se mg_z mg_p
+        matrix `mg_means' = J(1, `nvars', .)
+        matrix `mg_var'   = J(1, `nvars', .)
+        matrix `mg_se'    = J(1, `nvars', .)
+        matrix `mg_z'     = J(1, `nvars', .)
+        matrix `mg_p'     = J(1, `nvars', .)
+
+        forval j = 1/`nvars' {
+            local sum = 0
+            local cnt = 0
+            forval r = 1/`ngroups' {
+                local val = `coefs'[`r', `j']
+                if !missing(`val') {
+                    local sum = `sum' + `val'
+                    local cnt = `cnt' + 1
+                }
+            }
+            local mean = cond(`cnt' > 0, `sum'/`cnt', .)
+            local variance = 0
+            if `cnt' > 1 {
+                forval r = 1/`ngroups' {
+                    local val = `coefs'[`r', `j']
+                    if !missing(`val') {
+                        local diff = `val' - `mean'
+                        local variance = `variance' + `diff'*`diff'
+                    }
+                }
+                // Non-parametric MG variance of the mean: s2 / N
+                local variance = `variance' / (`cnt'*(`cnt'-1))
+            }
+            local se = cond(`variance' > 0, sqrt(`variance'), .)
+            local z  = cond(!missing(`se'), `mean'/`se', .)
+            local p  = cond(!missing(`z'), 2*normal(-abs(`z')), .)
+
+            matrix `mg_means'[1, `j'] = `mean'
+            matrix `mg_var'[1, `j']   = `variance'
+            matrix `mg_se'[1, `j']    = `se'
+            matrix `mg_z'[1, `j']     = `z'
+            matrix `mg_p'[1, `j']     = `p'
+        }
+
+        matrix colnames `mg_means' = `vars_all'
+        matrix colnames `mg_var'   = `vars_all'
+        matrix colnames `mg_se'    = `vars_all'
+        matrix colnames `mg_z'     = `vars_all'
+        matrix colnames `mg_p'     = `vars_all'
+
+        // ----- Header -----
+        di _n as text "{hline 78}"
+        if `fourier' == 0 {
+            di as text "Common Correlated Effects Mean Group (CCE-MG) Estimation"
+        }
+        else {
+            di as text "Fourier CCE Mean Group (F-CCEMG) Estimation"
+        }
+        di as text "{hline 78}"
+        di as text "Number of groups: " as result `ngroups'
+        di as text "Groups used:      " as result `used_groups'
+        di as text "Time periods:     " as result `period'
+        if `fourier' > 0 {
+            di as text "Fourier terms:    " as result `fourier'
+        }
+        di as text "CCE cross-section averages: " as result "included (depvar + indepvars)"
+        di as text "{hline 78}"
+        di as text %12s "Variable(s)" _col(20) "  Mean coef." ///
+            _col(38) "    Std. err.  " _col(40) "   z-stat." _col(70) " P>|z|"
+        di as text "{hline 78}"
+
+        local jcol = 0
+        foreach v of local vars_all {
+            local ++jcol
+            di as text %12s "`v'" _col(20) as result %12.5f `mg_means'[1, `jcol'] ///
+                _col(38) %12.5f `mg_se'[1, `jcol'] _col(40) %12.3f `mg_z'[1, `jcol'] ///
+                _col(70) %6.3f `mg_p'[1, `jcol']
+        }
+
+        di as text "{hline 78}"
+        di as text "Note: CCE cross-section averages of the dependent and independent"
+        di as text "      variables are included as additional regressors in each unit."
+
+        // ----- ereturn -----
+        ereturn matrix mg_means = `mg_means'
+        ereturn matrix mg_var   = `mg_var'
+        ereturn matrix mg_se    = `mg_se'
+        ereturn matrix mg_z     = `mg_z'
+        ereturn matrix mg_p     = `mg_p'
+        ereturn scalar groups   = `ngroups'
+        ereturn scalar groups_used = `used_groups'
+        ereturn scalar time     = `period'
+        ereturn local estimator = cond(`fourier' > 0, "F-CCEMG", "CCEMG")
+        ereturn local cce       = "yes"
+        ereturn local bootstrap = "no"
+        ereturn local panelvar  `id'
+        ereturn local timevar   `it'
+
+        if `didpreserve' {
+            restore
+        }
+        exit
+    }
+
+
+    // Reshape data wide by group
     qui reshape wide `depvar' `indepvars' `fourier_terms', i(`it') j(`id')
 
     // Build equation list and track equation names
@@ -102,24 +267,31 @@ program define xtsurmg, eclass
         ereturn scalar bootstrap_reps = `bootstrap'
     }
 
-
     di _n as text "{hline 78}"
     if `fourier' == 0 {
         di as text "Seemingly Unrelated Regression - Mean Group (SURMG) Estimation"
-        di as text "{hline 78}"        
+        di as text "{hline 78}"
         di as text "Number of groups: " `ngroups'
         di as text "Time periods: " `period'
     }
     else {
         di as text "Fourier Seemingly Unrelated Regression - Mean Group (F-SURMG) Estimation"
-        di as text "{hline 78}"    
+        di as text "{hline 78}"
         di as text "Number of groups: " `ngroups'
         di as text "Time periods: " `period'
         di as text "Fourier terms: " as result `fourier'
     }
 
     local coefnames : colnames `b_sur'
-    local vars_all `indepvars' _cons  // Include original independent variables and constant
+
+    // Build the full list of terms to report as mean group statistics.
+    local report_vars `indepvars'
+    if `fourier' > 0 {
+        forval i = 1/`fourier' {
+            local report_vars `report_vars' k`i'sin k`i'cos
+        }
+    }
+    local vars_all `report_vars' _cons
 
     tempname mg_means mg_var mg_se mg_z mg_p
     local nvars = `: word count `vars_all''
@@ -136,8 +308,8 @@ program define xtsurmg, eclass
         _col(38) "    Std. err.  " _col(40) "   z-stat." _col(70) " P>|z|"
     di as text "{hline 78}"
 
-    // Process regular variables
-    foreach v of local indepvars {
+    // Process all reported regressors (indepvars, Fourier terms)
+    foreach v of local report_vars {
         local sum = 0
         local count = 0
         local coef_list ""
@@ -182,7 +354,7 @@ program define xtsurmg, eclass
     local sum_cons = 0
     local count_cons = 0
     local coef_list_cons ""
-    
+
     foreach eq of local eqnames {
         local c "`eq':_cons"
         if colnumb(`b_sur', "`c'") != . {
@@ -216,11 +388,11 @@ program define xtsurmg, eclass
     di as text %12s "_cons" _col(20) as result %12.5f `mean_cons' ///
         _col(38) %12.5f `se_cons' _col(40) %12.3f `z_cons' _col(70) %6.3f `p_cons'
 
-    matrix colnames `mg_means' = `indepvars' _cons
-    matrix colnames `mg_var' = `indepvars' _cons
-    matrix colnames `mg_se' = `indepvars' _cons
-    matrix colnames `mg_z' = `indepvars' _cons
-    matrix colnames `mg_p' = `indepvars' _cons
+    matrix colnames `mg_means' = `report_vars' _cons
+    matrix colnames `mg_var' = `report_vars' _cons
+    matrix colnames `mg_se' = `report_vars' _cons
+    matrix colnames `mg_z' = `report_vars' _cons
+    matrix colnames `mg_p' = `report_vars' _cons
 
     ereturn matrix mg_means = `mg_means'
     ereturn matrix mg_var = `mg_var'
@@ -229,6 +401,8 @@ program define xtsurmg, eclass
     ereturn matrix mg_p = `mg_p'
     ereturn scalar groups = `ngroups'
     ereturn scalar time = `period'
+    ereturn local estimator = cond(`fourier' > 0, "F-SURMG", "SURMG")
+    ereturn local cce = "no"
     ereturn local panelvar `id'
     ereturn local timevar `it'
 

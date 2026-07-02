@@ -1,32 +1,34 @@
-*! mysuite v1.0.9 09May2026
+*! mysuite v1.1.2 30Jun2026
 *! Authors: Wu Lianghai, Chen Liwen, Wu Hanyan, Wu Xinzhuo, Li Juan
 *! Built-in extensible program suite for empirical research
-*! 33 modules available from SSC
+*! 39 modules available from SSC
 
 program define mysuite
     version 18.0
-    
+
     syntax [, ALL INSTALLed Download]
-    
-    * Define SSC module list (33 modules)
+
+    * Define SSC module list (39 modules)
     local ssc_online art2tex case2tex mktex sumtex tab2excel corrtex ///
                      corrtex2 regtex reftex getref get2ref conservatism em ///
                      efficiency opacity crash scrash eui qta area ///
                      upoint province_devcat bmc polishpaper cleandisk myedit bf ///
-                     fshare thesis_diagram rollbook exam2tex mysuite
-	
-	local ssc_modules art2tex case2tex mktex sumtex tab2excel corrtex ///
+                     fshare thesis_diagram rollbook exam2tex mysuite ///
+                     editprofile reduce_aigc myinterval ccgi fm varck
+
+    local ssc_modules art2tex case2tex mktex sumtex tab2excel corrtex ///
                      corrtex2 regtex reg2tex reftex getref get2ref conservatism em ///
                      efficiency opacity crash scrash eui qta area ///
                      upoint province_devcat bmc polishpaper cleandisk myedit bf ///
-                     fshare thesis_diagram rollbook exam2tex mysuite
+                     fshare thesis_diagram rollbook exam2tex mysuite ///
+                     editprofile reduce_aigc myinterval ccgi fm varck
     *-------------------------------------------------------------------
     * MODE 1: DISPLAY MENU (no options)
     *-------------------------------------------------------------------
     if "`all'" == "" & "`installed'" == "" & "`download'" == "" {
         display as text _n(2)
         display as text "{hline 70}"
-        display as text "{bf:mysuite v1.0.9} - Built-in Extensible Program Suite"
+        display as text "{bf:mysuite v1.1.2} - Built-in Extensible Program Suite"
         display as text "{hline 70}"
         display as text "Developed by: Wu Lianghai (agd2010@yeah.net)"
         display as text "              Chen Liwen (2184844526@qq.com)"
@@ -36,21 +38,22 @@ program define mysuite
         display as text "Institution: School of Business, Anhui University of Technology (AHUT)"
         display as text "             University of Bristol (UB)"
         display as text "             Red Cross Society of Ma'anshan City"
-        display as text "Date: 09 May 2026"
+        display as text "Date: 30 Jun 2026"
         display as text "{hline 70}" _n
-        
+
         * Display available modules
-        display as text "{bf:AVAILABLE MODULES (33 programs from SSC)}" _n
-        
+        display as text "{bf:AVAILABLE MODULES (39 programs from SSC)}" _n
+
         display as text "{bf:1. Core Components}"
         display as text "  {bf:art2tex}      : Empirical paper framework"
         display as text "  {bf:case2tex}     : Case study framework"
-        display as text "  {bf:mktex}        : DOCX to TEX converter" _n
-        
+        display as text "  {bf:mktex}        : DOCX to TEX converter"
+        display as text "  {bf:fm}           : File classification manager" _n
+
         display as text "{bf:2. Support Kits}"
         display as text "  {bf:sumtex}       : Descriptive statistics to LaTeX"
         display as text "  {bf:tab2excel}    : Descriptive statistics to Excel"
-        display as text "  {bf:corrtex}     : Correlation matrix to LaTeX"
+        display as text "  {bf:corrtex}      : Correlation matrix to LaTeX"
         display as text "  {bf:corrtex2}     : Correlation matrix to LaTeX (alternative)"
         display as text "  {bf:regtex}       : Regression table to LaTeX"
         display as text "  {bf:reg2tex}      : Regression table to LaTeX (alternative)"
@@ -69,8 +72,12 @@ program define mysuite
         display as text "  {bf:upoint}       : Inflection point in U-shaped relationship"
         display as text "  {bf:province_devcat} : Regional development classification"
         display as text "  {bf:bmc}          : Chapter configuration file generator"
-        display as text "  {bf:polishpaper}  : Academic paper polishing template" _n
-        
+        display as text "  {bf:polishpaper}  : Academic paper polishing template"
+        display as text "  {bf:reduce_aigc}  : AIGC text reduction tool"
+        display as text "  {bf:myinterval}   : Confidence interval computation"
+        display as text "  {bf:ccgi}         : Corporate governance indicator"
+        display as text "  {bf:varck}        : Variable existence check" _n
+
         display as text "{bf:3. Research & Teaching Management}"
         display as text "  {bf:cleandisk}    : Disk space cleanup"
         display as text "  {bf:myedit}       : ADO file editor"
@@ -78,18 +85,19 @@ program define mysuite
         display as text "  {bf:fshare}       : Course development folder creator"
         display as text "  {bf:thesis_diagram} : Dissertation framework diagram"
         display as text "  {bf:rollbook}     : Random roll call system"
-		display as text "  {bf:exam2tex}     : LaTeX exam template generator"
-		display as text "  {bf:mysuite}      : Built-in extensible program suite for empirical research" _n
-         
-        
+        display as text "  {bf:exam2tex}     : LaTeX exam template generator"
+        display as text "  {bf:mysuite}      : Built-in extensible program suite for empirical research"
+        display as text "  {bf:editprofile}  : Stata profile editor" _n
+
+
         display as text "{hline 70}"
         display as text "{bf:USAGE INSTRUCTIONS:}" _n
         display as text "  {bf:mysuite}                 : Show this help and module list"
         display as text "  {bf:mysuite, all}            : Install all missing SSC modules"
         display as text "  {bf:mysuite, installed}      : List currently installed modules"
-        display as text "  {bf:mysuite, all download}   : Force reinstall all 32 modules"
+        display as text "  {bf:mysuite, all download}   : Force reinstall all 39 modules"
         display as text "{hline 70}" _n
-        
+
         * Display installation status
         display as text "{bf:CURRENT INSTALLATION STATUS:}" _n
         local ssc_installed = 0
@@ -99,10 +107,10 @@ program define mysuite
                 local ++ssc_installed
             }
         }
-        display as text "  SSC modules installed: {res:`ssc_installed'}/33"
+        display as text "  SSC modules installed: {res:`ssc_installed'}/39"
         exit
     }
-    
+
     *-------------------------------------------------------------------
     * MODE 2: LIST INSTALLED MODULES
     *-------------------------------------------------------------------
@@ -119,10 +127,10 @@ program define mysuite
                 display as text "  {bf:`mod'}: {error:Not installed}"
             }
         }
-        display as text _n "{bf:Summary:} {res:`ssc_installed'}/33 SSC modules installed"
+        display as text _n "{bf:Summary:} {res:`ssc_installed'}/39 SSC modules installed"
         exit
     }
-    
+
     *-------------------------------------------------------------------
     * MODE 3: INSTALL MISSING MODULES (all)
     *-------------------------------------------------------------------
@@ -131,7 +139,7 @@ program define mysuite
         local ssc_count = 0
         local already_count = 0
         local fail_count = 0
-        
+
         foreach mod in `ssc_online' {
             capture which `mod'
             if _rc == 0 {
@@ -151,7 +159,7 @@ program define mysuite
                 }
             }
         }
-        
+
         display as text _n "{bf:Installation Summary:}"
         display as text "  Already installed: {res:`already_count'} modules"
         display as text "  Newly installed:   {res:`ssc_count'} modules"
@@ -160,15 +168,15 @@ program define mysuite
         }
         exit
     }
-    
+
     *-------------------------------------------------------------------
     * MODE 4: FORCE REINSTALL ALL MODULES (all download)
     *-------------------------------------------------------------------
     if "`all'" != "" & "`download'" != "" {
-        display as text _n "{bf:Force reinstalling all 32 SSC modules...}" _n
+        display as text _n "{bf:Force reinstalling all 39 SSC modules...}" _n
         local ssc_count = 0
         local fail_count = 0
-        
+
         foreach mod in `ssc_online' {
             display as text "  Reinstalling {bf:`mod'}..." _continue
             capture ssc install `mod', replace
@@ -181,7 +189,7 @@ program define mysuite
                 local ++fail_count
             }
         }
-        
+
         display as text _n "{bf:Reinstallation Summary:}"
         display as text "  Successfully reinstalled: {res:`ssc_count'} modules"
         if `fail_count' > 0 {
@@ -190,5 +198,5 @@ program define mysuite
         display as text _n "Type {bf:help mysuite} for detailed documentation."
         exit
     }
-    
+
 end
