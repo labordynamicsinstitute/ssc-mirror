@@ -1,92 +1,6 @@
-*! version 0.7.5  11jun2026  (consolidated release since 0.6.0. AUDIT FIXES: e(sample) set via esample(); r()->e() handoff moved before -restore-; method(system) estimates a level-equation constant (cons_lvl) and adds the moment E[eta+eps]=0, matching xtabond2; unified fixed-weight 2-stage grid search for fod/system so the GMM objective is comparable across the gamma grid; add-one (Davidson-MacKinnon) bootstrap p-values; empty/disconnected CI acceptance regions flagged via e(ci_empty)/e(ci_nseg); zero-instrument rows dropped in the transformed equation too; iv() sub-option maxlag() now errors (was a silent override of the global lag depth), iv() collapse now collapses only the user-IV block; new rseed() option; e(cmdline) stored; per-gamma caches built once and shared across grid search, CI, linearity, and continuity tests; coefficient-name de-duplication; Mata conformability fix in xdpt2_stack_at_gamma for method(system). B1 (AR FORMULA): AR(1)/AR(2) now use the FULL Arellano-Bond (1991, eq. 8) m-statistic m_k = b0/sqrt(T1+T2+T3), including the estimated-parameter variance terms (-2g'(G'AG)^{-1}G'A*s and g'Vg), with a principled fallback to the simplified b0/sqrt(T1) when the variance pieces are unavailable or non-positive. B1 VERIFIED by two decisive checks: (1) an independent external AB(1991, eq.8) re-implementation fed the package's A/Z_f/X_f/V/residuals reproduces e(ar1)/e(ar2)/e(ar*_b0)/e(ar*_T1)/e(ar*_TT) to machine precision and matches Roodman's -abar- bit-for-bit on identical FD residuals; (2) Monte Carlo size of AR(2) under an H0 DGP (no 2nd-order autocorrelation) is on target near 5%. PREDICT: new xtdpthresh_p returns -residuals- (estimation-equation residual), -arresiduals- (the FD AR-test series, xtabond2 convention), -xb-, and -regime-; residuals are merged from persisted estimation rows by (panelvar,timevar) key, identical by construction across all methods and panel patterns, guarded by e(p_serial) against stale Mata state. NEW e(): ar*_b0/ar*_T1/ar*_TT decomposition and ar*_np full/fallback path-flag debug scalars. NEW OPTION -exportgmm- exposes the GMM weight A, instruments Z_f, and FD-transformed regressors X_f via Mata externals for external verification.)
-*! version 0.6.1  26apr2026  (doc fixes: replace endogenous(L.roa) example that collided with auto-added L.y; correct Seo-Kim-Kim 2019 author order in references; disambiguate Hansen 1999 by listing both JoE panel-threshold paper and RES grid-bootstrap paper; add e(boundary_warn) to Stored results section of help)
-*! version 0.6.0  25apr2026  (xthenreg-compatible strict sample restored after tsrevar; tsrevar expansion of ts operators in regressors and iv(); predetermined() option for weakly-exogenous regressors; robust syntax-based iv() parser supporting multi-var iv(z1 z2, collapse); maxlag validation requires >=2 for dynamic/endogenous; xdpt2_rangen replaces rangen for portability; valid-bootstrap p-values; xdpt2_quantile replaces mm_quantile; IV-empty level-eq rows dropped; cluster-robust V + Hansen J at best theta; unrestricted-bootstrap 2-step fallback)
-*! Dynamic Panel Threshold Model with Endogeneity, Unbalanced Support
-*! API matches xthenreg (Seo, Kim, and Kim 2019 SJ) extended with:
-*!   - method(fod|fd|system) for unbalanced panels (Arellano-Bover 1995)
-*!   - Grid bootstrap inference for threshold CI (Gong-Seo 2026 JoE)
-*!
-*! Authors:
-*!   Duy Chinh Nguyen   <ndchinh@hcmiu.edu.vn>  (ORCID 0000-0002-9157-9358)
-*!     School of Business, International University - VNU-HCM, Vietnam
-*!   Nhat Duy Lai       <lnduy@sgu.edu.vn>      (ORCID 0009-0008-5365-2893)
-*!     Faculty of Finance & Accounting, Saigon University, Ho Chi Minh City
-*!   Corresponding author: Nhat Duy Lai
-*!
-*! Model (Seo-Shin 2016, Gong-Seo 2026):
-*!   y_it = β1·y_{i,t-1} + x_it'β2 + (1, y_{i,t-1}, x_it')δ · 1{q_it > γ}
-*!          + η_i + ε_it
-*!
-*! Syntax:
-*!   xtdpthresh depvar [indepvars] [if] [in], qx(varname)
-*!       [ endogenous(varlist) predetermined(varlist) exogenous(varlist)
-*!         iv(varlist[, collapse]) ]
-*!       [ kink static td ]
-*!       [ method(fd|fod|system) ]
-*!       [ collapse maxlag(# [#]) levmaxlag(# [#]) ]
-*!       [ grid(#) gridci(#) trim(#) boot(#) rseed(#) ]
-*!       [ nosearch nowarn citype(grid|none) level(#) verbose ]
-*!
-*! Positional args:
-*!   depvar    — dependent variable y
-*!   indepvars — other regressors x (exogenous by default)
-*!   qx()      — threshold variable q (required option, not positional)
-*!
-*! Options:
-*!   endogenous(varlist)    — contemporaneously endogenous regressors.
-*!                            Instrumented in Δ/FOD eq by lags t-2, t-3, ....
-*!   predetermined(varlist) — weakly exogenous (predetermined) regressors.
-*!                            Instrumented in Δ/FOD eq by lags t-1, t-2, ....
-*!   exogenous(varlist)     — extra exogenous regressors (treated like indepvars)
-*!   iv(varlist[, collapse])
-*!                       — user-supplied external IVs. The collapse sub-option
-*!                         collapses ONLY the user-IV instrument block (one
-*!                         shared column per IV instead of one per time block).
-*!                         NOTE: the maxlag() sub-option is no longer
-*!                         accepted — user IVs always enter as their period-t
-*!                         value, so it never had any effect on them, while it
-*!                         silently overrode the top-level maxlag() for
-*!                         GMM-style instruments (L.y, endogenous(),
-*!                         predetermined()). Use the top-level maxlag() instead.
-*!   td                  — time-demean y and regressors within each t (q untouched)
-*!   kink                — enforce continuity at threshold
-*!   static              — do NOT auto-add L.y as regressor
-*!   method(fd|fod|system) — transformation: fd (Seo-Shin default),
-*!                           fod (unbalanced-friendly), system (+ level eqs)
-*!   collapse            — collapse block-diagonal instruments across time
-*!   maxlag(a [b])       — lag range for transformed-eq instruments
-*!   levmaxlag(a [b])    — lag range for level-eq instruments (system)
-*!   grid(#)             — # grid points for γ search; default 30
-*!   gridci(#)           — # grid points for CI construction; default 25
-*!   trim(#)             — trim fraction for γ grid; default 0.10
-*!   boot(#)             — bootstrap replications; default 299
-*!   rseed(#)            — set the RNG seed before any bootstrap draw, for
-*!                         exact reproducibility of CI and test p-values
-*!   citype(grid|none)   — CI method; default grid
-*!   nosearch            — point estimate only, skip bootstrap CI
-*!   nowarn              — suppress advisory warnings (boundary pin,
-*!                         disconnected CI, method(system) bootstrap note)
-*!   level(#)            — confidence level; default 95
-*!   verbose             — print per-γ bootstrap progress
-*!
-*! Hard requirements: at least 5 usable units (>= 4
-*! observations each) and at least 20 usable transformed observations per γ
-*! for any GMM solve; γ points failing this are skipped in the grid search.
-*!
-*! Statistical notes:
-*!   - method(system) estimates a level-equation constant ("cons_lvl", last
-*!     element of e(b) when level rows exist) and adds the moment
-*!     E[η+ε] = 0, following xtabond2.
-*!   - AR(1)/AR(2) implement the full Arellano-Bond (1991, eq. 8) m-statistic
-*!     including the estimated-parameter variance correction. For
-*!     method(fod|system) the test is computed on FD-restacked residuals with
-*!     the actual estimator's influence pieces — a faithful extension of the
-*!     xtabond2 convention. Decomposition pieces (b0, T1, T2+T3) are exposed
-*!     as e(ar*_b0), e(ar*_T1), e(ar*_TT) for external verification, and
-*!     -predict, residuals- returns the underlying FD residuals (see D5).
-*!   - Grid-bootstrap inference under method(system) resamples stacked
-*!     transformed + level residuals jointly; this extension of Gong-Seo
-*!     (2026) Algorithm 1 is heuristic.
+*! version 0.7.9.1  02jul2026
+*! xtdpthresh -- dynamic panel threshold regression (Seo-Shin 2016; Gong-Seo 2026)
+*! Duy Chinh Nguyen (IU VNU-HCM) & Nhat Duy Lai (SGU, corresponding). See -help xtdpthresh-.
 
 program define xtdpthresh, eclass
     version 15.0
@@ -118,11 +32,13 @@ program define xtdpthresh, eclass
         Level(cilevel)                              ///
         NOSEARCH                                    ///
         NOWARN                                      ///
+        EXPORTGMM                                   ///
+        NOTEST                                      ///
         VERBOSE                                     ///
-        EXPORTGmm                                   ///
         ]
-    local flag_verbose   = cond("`verbose'"   != "", 1, 0)
+    local flag_verbose = cond("`verbose'" != "", 1, 0)
     local flag_exportgmm = cond("`exportgmm'" != "", 1, 0)
+    local flag_notest = cond("`notest'" != "", 1, 0)
 
     // === Parse iv() with sub-options: iv(varlist [, collapse]) ===
     // v0.7.0 semantics fix: the collapse sub-option no longer overrides the
@@ -149,7 +65,7 @@ program define xtdpthresh, eclass
         }
         local iv_vars `"`varlist'"'
         if "`maxlag'" != "" {
-            di as err "iv() sub-option maxlag() is not supported:"
+            di as err "iv() sub-option maxlag() is not supported (v0.7.0):"
             di as err "user-supplied IVs always enter as their period-t value, so"
             di as err "maxlag() never affected them — it only (silently) overrode the"
             di as err "top-level maxlag() controlling GMM-style instruments. Use the"
@@ -559,7 +475,7 @@ program define xtdpthresh, eclass
                           `levmaxlag_lo', `levmaxlag_hi',                   ///
                           `grid', `gridci', `trim', `=`q_lo'', `=`q_hi'',   ///
                           `do_grid_ci', `boot', `=(100-`level')/100',       ///
-                          `flag_iv_collapse')
+                          `flag_iv_collapse', `flag_exportgmm', `flag_notest')
 
     // === Retrieve results from r() ===
     // v0.7.0 (A2 fix): retrieval moved BEFORE -restore-. Stata does not
@@ -588,17 +504,17 @@ program define xtdpthresh, eclass
     scalar `ar1_p'     = r(xdpt2_ar1_p)
     scalar `ar2'       = r(xdpt2_ar2)
     scalar `ar2_p'     = r(xdpt2_ar2_p)
-    tempname ar1_b0 ar1_T1 ar1_TT ar2_b0 ar2_T1 ar2_TT ar1_np ar2_np
+    tempname ar1_b0 ar1_T1 ar1_TT ar2_b0 ar2_T1 ar2_TT
     scalar `ar1_b0' = r(xdpt2_ar1_b0)
     scalar `ar1_T1' = r(xdpt2_ar1_T1)
     scalar `ar1_TT' = r(xdpt2_ar1_TT)
     scalar `ar2_b0' = r(xdpt2_ar2_b0)
     scalar `ar2_T1' = r(xdpt2_ar2_T1)
     scalar `ar2_TT' = r(xdpt2_ar2_TT)
-    scalar `ar1_np' = r(xdpt2_ar1_np)
-    scalar `ar2_np' = r(xdpt2_ar2_np)
-    tempname p_serial
+    tempname p_serial ar1_np ar2_np
     scalar `p_serial' = r(xdpt2_p_serial)
+    scalar `ar1_np'   = r(xdpt2_ar1_np)
+    scalar `ar2_np'   = r(xdpt2_ar2_np)
 
     restore
 
@@ -822,9 +738,11 @@ program define xtdpthresh, eclass
     ereturn scalar ar2_b0    = `ar2_b0'
     ereturn scalar ar2_T1    = `ar2_T1'
     ereturn scalar ar2_TT    = `ar2_TT'
+    ereturn scalar p_serial  = `p_serial'
+    // v0.7.5: signed AR pair counts — POSITIVE means the full AB (1991, eq.8)
+    // variance (T2+T3 included) was used; NEGATIVE means the T2=T3=0 fallback.
     ereturn scalar ar1_np    = `ar1_np'
     ereturn scalar ar2_np    = `ar2_np'
-    ereturn scalar p_serial  = `p_serial'
     ereturn scalar k_exog    = `k_exog'
     ereturn scalar k_endog   = `k_endog'
     ereturn scalar k_predet  = `k_predet'
@@ -1021,9 +939,15 @@ void xdpt2_transform_unit(struct xdpt2_unit scalar u,
     }
 
     // Per-unit transformation loop
-    dy_list = J(0, 1, 0)
-    dW_list = J(0, k_W_cols, 0)
-    times_list = J(0, 1, 0)
+    // v0.7.8 (SPEEDUP, bit-for-bit): preallocate the per-unit lists and fill
+    // by row counter instead of growing them with the \ operator (each append
+    // copies the whole accumulated matrix -> O(T^2 k) per unit per gamma).
+    // The values written are IDENTICAL; only the memory pattern changes.
+    real scalar m_tr
+    dy_list = J(n, 1, .)
+    dW_list = J(n, k_W_cols, .)
+    times_list = J(n, 1, .)
+    m_tr = 0
 
     if (method == "fd") {
         for (j = 2; j <= n; j++) {
@@ -1033,9 +957,10 @@ void xdpt2_transform_unit(struct xdpt2_unit scalar u,
             // Skip candidate rows whose transformed regressor would contain missing values
             if (u.y[j] >= . | u.y[j-1] >= . | u.q[j] >= . | u.q[j-1] >= .) continue
             if (xdpt2_hasmiss(W_lvl[j, .]) | xdpt2_hasmiss(W_lvl[j-1, .])) continue
-            dy_list = dy_list \ (u.y[j] - u.y[j-1])
-            dW_list = dW_list \ (W_lvl[j, .] - W_lvl[j-1, .])
-            times_list = times_list \ u.t[j]
+            m_tr = m_tr + 1
+            dy_list[m_tr]    = u.y[j] - u.y[j-1]
+            dW_list[m_tr, .] = W_lvl[j, .] - W_lvl[j-1, .]
+            times_list[m_tr] = u.t[j]
         }
     }
     else {  // fod
@@ -1048,11 +973,25 @@ void xdpt2_transform_unit(struct xdpt2_unit scalar u,
             if (u.y[j] >= . | u.q[j] >= . | xdpt2_hasmiss(u.y[|j+1 \ n|]) | xdpt2_hasmiss(u.q[|j+1 \ n|])) continue
             if (xdpt2_hasmiss(W_lvl[j, .]) | xdpt2_hasmiss(W_lvl[|j+1, 1 \ n, k_W_cols|])) continue
             c = sqrt(Tf / (Tf + 1))
-            dy_list = dy_list \ (c * (u.y[j] - mean(u.y[|j+1 \ n|])))
+            m_tr = m_tr + 1
+            dy_list[m_tr]    = c * (u.y[j] - mean(u.y[|j+1 \ n|]))
             fut_mean_w = mean(W_lvl[|j+1, 1 \ n, k_W_cols|])
-            dW_list = dW_list \ (c * (W_lvl[j, .] - fut_mean_w))
-            times_list = times_list \ u.t[j]
+            dW_list[m_tr, .] = c * (W_lvl[j, .] - fut_mean_w)
+            times_list[m_tr] = u.t[j]
         }
+    }
+
+    // Truncate to the filled rows (empty -> 0-row matrices, exactly as the
+    // old append version produced)
+    if (m_tr == 0) {
+        dy_list    = J(0, 1, 0)
+        dW_list    = J(0, k_W_cols, 0)
+        times_list = J(0, 1, 0)
+    }
+    else if (m_tr < n) {
+        dy_list    = dy_list[|1 \ m_tr|]
+        dW_list    = dW_list[|1, 1 \ m_tr, k_W_cols|]
+        times_list = times_list[|1 \ m_tr|]
     }
 
     // === Build block-diagonal Z matrix per xthenreg moment structure ===
@@ -1294,9 +1233,6 @@ void xdpt2_level_unit(struct xdpt2_unit scalar u,
     // stationarity, contaminating Hansen J and biasing level-loaded
     // coefficients. W gains one final column of ones; Z gains one shared
     // final constant column.
-    y_list = J(0, 1, 0)
-    W_list = J(0, k_W_cols + 1, 0)
-    times_list = J(0, 1, 0)
     real scalar n_cols_Z_lev, core_cols_lev, inst_cols_lev, inst_base_lev
     external real scalar xdpt_iv_collapse
     if (xdpt_collapse) core_cols_lev = iv_per_t
@@ -1304,7 +1240,15 @@ void xdpt2_level_unit(struct xdpt2_unit scalar u,
     if (k_inst_lev > 0) inst_cols_lev = (xdpt_iv_collapse ? k_inst_lev : n_blocks * k_inst_lev)
     else                inst_cols_lev = 0
     n_cols_Z_lev = core_cols_lev + inst_cols_lev + 1   // +1 = level constant
-    Z_list = J(0, n_cols_Z_lev, 0)
+    // v0.7.8 (SPEEDUP, bit-for-bit): preallocate + row counter instead of
+    // growing with \ (see xdpt2_transform_unit note). Every kept row is
+    // assigned in full, so the initial fill value is never read.
+    real scalar m_lev
+    y_list     = J(n, 1, .)
+    W_list     = J(n, k_W_cols + 1, .)
+    times_list = J(n, 1, .)
+    Z_list     = J(n, n_cols_Z_lev, .)
+    m_lev = 0
 
     for (j = 1; j <= n; j++) {
         t = u.t[j]
@@ -1425,10 +1369,25 @@ void xdpt2_level_unit(struct xdpt2_unit scalar u,
         // constant moment.
         z_row[n_cols_Z_lev] = 1
 
-        y_list    = y_list \ u.y[pos_t]
-        W_list    = W_list \ (W_lvl[pos_t, .], 1)   // level-eq constant regressor
-        times_list = times_list \ t
-        Z_list = Z_list \ z_row
+        m_lev = m_lev + 1
+        y_list[m_lev]     = u.y[pos_t]
+        W_list[m_lev, .]  = W_lvl[pos_t, .], 1   // level-eq constant regressor
+        times_list[m_lev] = t
+        Z_list[m_lev, .]  = z_row
+    }
+
+    // Truncate to the filled rows (empty -> 0-row matrices, as before)
+    if (m_lev == 0) {
+        y_list     = J(0, 1, 0)
+        W_list     = J(0, k_W_cols + 1, 0)
+        times_list = J(0, 1, 0)
+        Z_list     = J(0, n_cols_Z_lev, 0)
+    }
+    else if (m_lev < n) {
+        y_list     = y_list[|1 \ m_lev|]
+        W_list     = W_list[|1, 1 \ m_lev, k_W_cols + 1|]
+        times_list = times_list[|1 \ m_lev|]
+        Z_list     = Z_list[|1, 1 \ m_lev, n_cols_Z_lev|]
     }
 
     y_out = y_list
@@ -1454,15 +1413,31 @@ void xdpt2_stack_at_gamma(struct xdpt2_unit rowvector units,
     k_W_cols = (flag_kink ? K + 1 : 2*K + 1)
 
     // === FOD/FD equation rows ===
-    dY_out = J(0, 1, 0)
-    dW_out = J(0, k_W_cols, 0)
-    Z_out = J(0, 0, 0)
-    times_out = J(0, 1, 0)
-    unit_id_out = J(0, 1, 0)
+    // v0.7.8 (SPEEDUP, bit-for-bit): two-pass stacking. Pass 1 calls the
+    // per-unit transform ONCE per unit and parks the results behind pointers
+    // (as copies -- the locals are overwritten by the next call); pass 2
+    // allocates each stacked matrix once and fills it by row ranges. The old
+    // one-pass version grew the stacks with the \ operator, which copies the
+    // ENTIRE accumulated matrix on every append -> O(N_units^2) copying per
+    // gamma point; with thousands of units this dominated cache building.
+    // Row values and row order are IDENTICAL to the append version, so the
+    // stacks -- and everything downstream -- are bit-for-bit unchanged.
 
     // For system, use FOD under the hood for transformed equation
     string scalar trans_method
     trans_method = (method == "system" ? "fod" : method)
+
+    pointer() rowvector pY_s, pW_s, pZ_s, pT_s
+    real colvector nr_s
+    real scalar n_tot_s, r0_s, n_iv_s
+
+    pY_s = J(1, n_units, NULL)
+    pW_s = J(1, n_units, NULL)
+    pZ_s = J(1, n_units, NULL)
+    pT_s = J(1, n_units, NULL)
+    nr_s = J(n_units, 1, 0)
+    n_tot_s = 0
+    n_iv_s = 0   // set from the first unit with rows, like the old code
 
     for (i = 1; i <= n_units; i++) {
         xdpt2_transform_unit(units[i], gamma, trans_method,
@@ -1471,12 +1446,44 @@ void xdpt2_stack_at_gamma(struct xdpt2_unit rowvector units,
                               dy_i, dW_i, Z_i, time_i)
         n_rows_i = rows(dy_i)
         if (n_rows_i == 0) continue
-        dY_out = dY_out \ dy_i
-        dW_out = dW_out \ dW_i
-        if (cols(Z_out) == 0) Z_out = J(0, cols(Z_i), 0)
-        Z_out = Z_out \ Z_i
-        times_out = times_out \ time_i
-        unit_id_out = unit_id_out \ J(n_rows_i, 1, i)
+        nr_s[i] = n_rows_i
+        if (n_iv_s == 0) n_iv_s = cols(Z_i)
+        // &(x[.,.]) parks a COPY of x behind the pointer
+        pY_s[i] = &(dy_i[., .])
+        pW_s[i] = &(dW_i[., .])
+        pZ_s[i] = &(Z_i[., .])
+        pT_s[i] = &(time_i[., .])
+        n_tot_s = n_tot_s + n_rows_i
+    }
+
+    if (n_tot_s == 0) {
+        dY_out = J(0, 1, 0)
+        dW_out = J(0, k_W_cols, 0)
+        Z_out = J(0, 0, 0)
+        times_out = J(0, 1, 0)
+        unit_id_out = J(0, 1, 0)
+    }
+    else {
+        dY_out      = J(n_tot_s, 1, .)
+        dW_out      = J(n_tot_s, k_W_cols, .)
+        Z_out       = J(n_tot_s, n_iv_s, .)
+        times_out   = J(n_tot_s, 1, .)
+        unit_id_out = J(n_tot_s, 1, .)
+        r0_s = 1
+        for (i = 1; i <= n_units; i++) {
+            if (nr_s[i] == 0) continue
+            dY_out[|r0_s \ r0_s + nr_s[i] - 1|]                = *pY_s[i]
+            dW_out[|r0_s, 1 \ r0_s + nr_s[i] - 1, k_W_cols|]   = *pW_s[i]
+            Z_out[|r0_s, 1 \ r0_s + nr_s[i] - 1, n_iv_s|]      = *pZ_s[i]
+            times_out[|r0_s \ r0_s + nr_s[i] - 1|]             = *pT_s[i]
+            unit_id_out[|r0_s \ r0_s + nr_s[i] - 1|]           = J(nr_s[i], 1, i)
+            r0_s = r0_s + nr_s[i]
+            // free the parked copy early to cap peak memory
+            pY_s[i] = NULL
+            pW_s[i] = NULL
+            pZ_s[i] = NULL
+            pT_s[i] = NULL
+        }
     }
 
     // Drop all-zero columns of transformed Z
@@ -1497,14 +1504,20 @@ void xdpt2_stack_at_gamma(struct xdpt2_unit rowvector units,
     real matrix Y_lev_all, W_lev_all, Z_lev_all
     real colvector times_lev_all, uid_lev_all
 
-    Y_lev_all = J(0, 1, 0)
-    // v0.7.0.1 hotfix: level W carries the constant column (A3), so the
-    // accumulator must be k_W_cols + 1 wide — mismatch here caused a 3200
-    // conformability error for method(system).
-    W_lev_all = J(0, k_W_cols + 1, 0)
-    Z_lev_all = J(0, 0, 0)
-    times_lev_all = J(0, 1, 0)
-    uid_lev_all = J(0, 1, 0)
+    // v0.7.8 (SPEEDUP, bit-for-bit): same two-pass stacking as the FOD/FD
+    // section above. v0.7.0.1 hotfix note preserved: level W carries the
+    // constant column (A3), so the stack is k_W_cols + 1 wide.
+    pointer() rowvector pY_l, pW_l, pZ_l, pT_l
+    real colvector nr_l
+    real scalar n_tot_l, r0_l, n_iv_l
+
+    pY_l = J(1, n_units, NULL)
+    pW_l = J(1, n_units, NULL)
+    pZ_l = J(1, n_units, NULL)
+    pT_l = J(1, n_units, NULL)
+    nr_l = J(n_units, 1, 0)
+    n_tot_l = 0
+    n_iv_l = 0
 
     for (i = 1; i <= n_units; i++) {
         xdpt2_level_unit(units[i], gamma, flag_static, flag_kink,
@@ -1512,12 +1525,42 @@ void xdpt2_stack_at_gamma(struct xdpt2_unit rowvector units,
                           y_l, W_l, Z_l, time_l)
         n_rows_i = rows(y_l)
         if (n_rows_i == 0) continue
-        Y_lev_all = Y_lev_all \ y_l
-        W_lev_all = W_lev_all \ W_l
-        if (cols(Z_lev_all) == 0) Z_lev_all = J(0, cols(Z_l), 0)
-        Z_lev_all = Z_lev_all \ Z_l
-        times_lev_all = times_lev_all \ time_l
-        uid_lev_all = uid_lev_all \ J(n_rows_i, 1, i)
+        nr_l[i] = n_rows_i
+        if (n_iv_l == 0) n_iv_l = cols(Z_l)
+        pY_l[i] = &(y_l[., .])
+        pW_l[i] = &(W_l[., .])
+        pZ_l[i] = &(Z_l[., .])
+        pT_l[i] = &(time_l[., .])
+        n_tot_l = n_tot_l + n_rows_i
+    }
+
+    if (n_tot_l == 0) {
+        Y_lev_all = J(0, 1, 0)
+        W_lev_all = J(0, k_W_cols + 1, 0)
+        Z_lev_all = J(0, 0, 0)
+        times_lev_all = J(0, 1, 0)
+        uid_lev_all = J(0, 1, 0)
+    }
+    else {
+        Y_lev_all     = J(n_tot_l, 1, .)
+        W_lev_all     = J(n_tot_l, k_W_cols + 1, .)
+        Z_lev_all     = J(n_tot_l, n_iv_l, .)
+        times_lev_all = J(n_tot_l, 1, .)
+        uid_lev_all   = J(n_tot_l, 1, .)
+        r0_l = 1
+        for (i = 1; i <= n_units; i++) {
+            if (nr_l[i] == 0) continue
+            Y_lev_all[|r0_l \ r0_l + nr_l[i] - 1|]                    = *pY_l[i]
+            W_lev_all[|r0_l, 1 \ r0_l + nr_l[i] - 1, k_W_cols + 1|]   = *pW_l[i]
+            Z_lev_all[|r0_l, 1 \ r0_l + nr_l[i] - 1, n_iv_l|]         = *pZ_l[i]
+            times_lev_all[|r0_l \ r0_l + nr_l[i] - 1|]                = *pT_l[i]
+            uid_lev_all[|r0_l \ r0_l + nr_l[i] - 1|]                  = J(nr_l[i], 1, i)
+            r0_l = r0_l + nr_l[i]
+            pY_l[i] = NULL
+            pW_l[i] = NULL
+            pZ_l[i] = NULL
+            pT_l[i] = NULL
+        }
     }
 
     // Drop all-zero columns of level Z
@@ -1582,16 +1625,27 @@ real matrix xdpt2_build_W_ma1(real matrix Z, real colvector times,
     W2 = Z' * Z / n_u
 
     // W1: within-unit consecutive-time cross products
+    // v0.7.8 (SPEEDUP, bit-for-bit): the consecutive pairs are located with
+    // ONE vectorized pass over the stack instead of one selectindex() scan of
+    // the full unit_id vector per unit (O(N_units x n_rows) comparisons, plus
+    // a per-unit copy of the unit's Z block). The stack is unit-ordered with
+    // time ascending within unit, so the pair list enumerates in EXACTLY the
+    // order of the old double loop; the rank-1 accumulation below adds the
+    // identical terms in the identical order -> W1 is bit-for-bit unchanged.
+    // (Do NOT replace the loop with the single matmul
+    //  Z[pair_j :- 1, .]' * Z[pair_j, .] without re-certifying: it is
+    //  algebraically identical but BLAS accumulation order may differ.)
     W1 = J(k_iv, k_iv, 0)
-    for (i = 1; i <= n_u; i++) {
-        rows_i = selectindex(unit_id :== i)
-        if (rows(rows_i) < 2) continue
-        times_i = times[rows_i]
-        Z_i = Z[rows_i, .]
-        for (j = 2; j <= rows(rows_i); j++) {
-            if (times_i[j] - times_i[j-1] == 1) {
+    if (n_rows >= 2) {
+        real colvector pair_j
+        pair_j = selectindex(
+              (unit_id[|2 \ n_rows|] :== unit_id[|1 \ n_rows - 1|])
+           :& ((times[|2 \ n_rows|] :- times[|1 \ n_rows - 1|]) :== 1))
+        if (rows(pair_j) > 0) {
+            pair_j = pair_j :+ 1   // shift to index of the LATER row of the pair
+            for (j = 1; j <= rows(pair_j); j++) {
                 // Consecutive pair: add z_{t-1}' z_t
-                W1 = W1 + Z_i[j-1, .]' * Z_i[j, .]
+                W1 = W1 + Z[pair_j[j] - 1, .]' * Z[pair_j[j], .]
             }
         }
     }
@@ -1651,11 +1705,8 @@ void xdpt2_solve_gmm(real colvector Y, real matrix W, real matrix Z,
     // Cluster-robust Ω for 2nd stage: Ω = (1/n_rows) Σ_i (Σ_{t∈i} Z_it·r_it)(...)'
     Ze = Z :* r1
     n_units = max(unit_id)
-    g_per_unit = J(n_units, cols(Z), 0)
-    for (i = 1; i <= n_rows; i++) {
-        u = unit_id[i]
-        g_per_unit[u, .] = g_per_unit[u, .] + Ze[i, .]
-    }
+    // v0.7.8: run-based per-unit aggregation (see xdpt2_gsum_by_unit)
+    g_per_unit = xdpt2_gsum_by_unit(Ze, unit_id, n_units)
     Omega = g_per_unit' * g_per_unit / n_rows
 
     if (cond(Omega) > 1e12) {
@@ -1706,21 +1757,100 @@ void xdpt2_solve_gmm_1step(real colvector Y, real matrix W_reg, real matrix Z,
     ok = 1
 }
 
+// v0.7.9 (C): variant of xdpt2_solve_gmm_1step taking the two cross
+// products ZW = Z'W_reg/n and ZY = Z'Y/n precomputed. The cache stores them
+// computed by the very same expressions on the very same matrices this
+// function would use, so A, theta, and V are bitwise identical; the
+// residual r and moment g_bar are kept VERBATIM on the n-row data to
+// preserve floating-point association, so obj is bitwise identical too.
+void xdpt2_solve_gmm_1step_pre(real colvector Y, real matrix W_reg,
+                                real matrix Z,
+                                real matrix ZW, real colvector ZY,
+                                real matrix W_wt,
+                                real scalar ok, real colvector theta,
+                                real scalar obj, real matrix V)
+{
+    real scalar n_rows
+    real matrix A
+    real colvector r, g_bar
+
+    ok = 0
+    if (rows(Y) < 20) return
+    n_rows = rows(Y)
+
+    A = ZW' * W_wt * ZW
+    if (cond(A) > 1e12) return
+    theta = invsym(A) * ZW' * W_wt * ZY
+    r = Y - W_reg * theta
+    g_bar = Z' * r / n_rows
+    obj = n_rows * (g_bar' * W_wt * g_bar)
+    V = invsym(A) / n_rows
+    ok = 1
+}
+
+// v0.7.8 (SPEEDUP): per-unit sum of moment rows, run-based.
+// Replaces the row-by-row accumulation loop (one interpreted iteration plus
+// two row-vector extract/store copies PER ROW) with one colsum() per
+// contiguous same-unit run. The stack is unit-contiguous by construction
+// (FD/FOD: one run per unit; system: one FOD run + one level run per unit,
+// runs appearing in the same global order the old loop visited them), and
+// run subtotals are added into g_per_unit in that same order. colsum()
+// accumulates top-down in double precision (Mata keeps quad accumulation in
+// the separate quadcolsum()), so the result is expected bit-for-bit
+// identical to the scalar loop -- certify with verify_speedup before
+// relying; the scalar loop is preserved below as the reference fallback.
+real matrix xdpt2_gsum_by_unit(real matrix Ze, real colvector unit_id,
+                                real scalar n_units)
+{
+    real scalar n_rows, k, rr, u
+    real matrix g_per_unit
+    real colvector bnd, s_idx, e_idx
+
+    n_rows = rows(Ze)
+    k = cols(Ze)
+    g_per_unit = J(n_units, k, 0)
+    if (n_rows == 0) return(g_per_unit)
+    if (n_rows == 1) {
+        g_per_unit[unit_id[1], .] = Ze[1, .]
+        return(g_per_unit)
+    }
+
+    // Run boundaries: row rr ends a run iff unit_id[rr+1] != unit_id[rr]
+    bnd = selectindex(unit_id[|2 \ n_rows|] :!= unit_id[|1 \ n_rows - 1|])
+    s_idx = 1 \ (bnd :+ 1)      // run starts
+    e_idx = bnd \ n_rows        // run ends
+    for (rr = 1; rr <= rows(s_idx); rr++) {
+        u = unit_id[s_idx[rr]]
+        if (e_idx[rr] > s_idx[rr]) {
+            g_per_unit[u, .] = g_per_unit[u, .] + colsum(Ze[|s_idx[rr], 1 \ e_idx[rr], k|])
+        }
+        else {
+            g_per_unit[u, .] = g_per_unit[u, .] + Ze[s_idx[rr], .]
+        }
+    }
+    return(g_per_unit)
+
+    // --- original scalar loop (bit-for-bit reference fallback) ---
+    // g_per_unit = J(n_units, cols(Ze), 0)
+    // for (i = 1; i <= rows(Ze); i++) {
+    //     u = unit_id[i]
+    //     g_per_unit[u, .] = g_per_unit[u, .] + Ze[i, .]
+    // }
+    // return(g_per_unit)
+}
+
 // Helper: compute cluster-robust Ω from residuals (unit-level clustering)
 real matrix xdpt2_build_cluster_omega(real matrix Z, real colvector r,
                                         real colvector unit_id)
 {
-    real scalar n_rows, n_units, i, u
+    real scalar n_rows, n_units
     real matrix Ze, g_per_unit, Omega
 
     n_rows = rows(Z)
     n_units = max(unit_id)
     Ze = Z :* r
-    g_per_unit = J(n_units, cols(Z), 0)
-    for (i = 1; i <= n_rows; i++) {
-        u = unit_id[i]
-        g_per_unit[u, .] = g_per_unit[u, .] + Ze[i, .]
-    }
+    // v0.7.8: run-based per-unit aggregation (see xdpt2_gsum_by_unit)
+    g_per_unit = xdpt2_gsum_by_unit(Ze, unit_id, n_units)
     Omega = g_per_unit' * g_per_unit / n_rows
     return(Omega)
 }
@@ -1742,6 +1872,11 @@ struct xdpt2_gamma_cache {
     real matrix    C_g
     real scalar    n_rows     // cached rows(dY)
     real scalar    fast_ok    // 1 if C_g valid (non-singular A)
+    // v0.7.9 (C): cross products stored at build time so the grid search
+    // does not recompute them (they were rebuilt twice per gamma: stage 1
+    // and stage 2). Set for every ok entry.
+    real matrix    ZW         // Z'dW/n  (k_iv x k_W)
+    real colvector ZY         // Z'dY/n  (k_iv x 1)
 }
 
 struct xdpt2_gamma_cache rowvector xdpt2_build_gamma_cache(
@@ -1758,9 +1893,12 @@ struct xdpt2_gamma_cache rowvector xdpt2_build_gamma_cache(
     real colvector dY_cur, times_cur, uid_cur
     real matrix dW_cur, Z_cur, ZZ, ZZ_inv, W_first
     real matrix ZW_cur, A_cur
+    real scalar ref_g, reuse_w, reuse_y
+    real colvector ZY_cur
 
     G = rows(gamma_grid)
     cache = xdpt2_gamma_cache(1, G)
+    ref_g = 0
 
     for (g = 1; g <= G; g++) {
         cache[g].ok = 0
@@ -1773,15 +1911,45 @@ struct xdpt2_gamma_cache rowvector xdpt2_build_gamma_cache(
 
         if (rows(dY_cur) == 0) continue
         n_rows = rows(dY_cur)
-        ZZ = Z_cur' * Z_cur / n_rows
-        if (cond(ZZ) > 1e12) continue
-        ZZ_inv = invsym(ZZ)
-        if (method == "fd") {
-            W_first = xdpt2_build_W_ma1(Z_cur, times_cur, uid_cur)
+        // v0.7.9 (B): exact-guarded reuse of the gamma-invariant weight
+        // pieces. Z, times, uid (and dY) do not depend on gamma by
+        // construction, so ZZ, the cond(ZZ) admissibility decision, and
+        // W_first (including the expensive MA(1) build under method(fd))
+        // are identical across the grid. Rather than trusting that
+        // invariant, each entry is compared BITWISE (matrix == matrix is a
+        // scalar test in Mata) against the first admitted entry; on any
+        // mismatch the entry takes the original fresh-compute path below,
+        // so the stored values are bit-for-bit unchanged either way. The
+        // fresh path also stops computing a dead invsym(ZZ) under
+        // method(fd) (it was computed, then discarded for the MA(1)
+        // weight) -- a pure dead-value elimination.
+        reuse_w = 0
+        reuse_y = 0
+        if (ref_g > 0) {
+            reuse_w = (Z_cur == cache[ref_g].Z &
+                       times_cur == cache[ref_g].times &
+                       uid_cur == cache[ref_g].uid)
+            if (reuse_w) reuse_y = (dY_cur == cache[ref_g].dY)
+        }
+        if (reuse_w) {
+            W_first = cache[ref_g].W_first
         }
         else {
-            W_first = ZZ_inv
+            ZZ = Z_cur' * Z_cur / n_rows
+            if (cond(ZZ) > 1e12) continue
+            if (method == "fd") {
+                W_first = xdpt2_build_W_ma1(Z_cur, times_cur, uid_cur)
+            }
+            else {
+                W_first = invsym(ZZ)
+            }
         }
+
+        // v0.7.9 (C): ZY = Z'dY/n, reused from the reference entry under
+        // the exact guard above (both Z and dY bitwise equal), computed by
+        // the identical expression otherwise.
+        if (reuse_y) ZY_cur = cache[ref_g].ZY
+        else         ZY_cur = Z_cur' * dY_cur / n_rows
 
         cache[g].dY      = dY_cur
         cache[g].dW      = dW_cur
@@ -1791,11 +1959,14 @@ struct xdpt2_gamma_cache rowvector xdpt2_build_gamma_cache(
         cache[g].W_first = W_first
         cache[g].n_rows  = n_rows
         cache[g].ok      = 1
+        cache[g].ZY      = ZY_cur
+        if (ref_g == 0) ref_g = g   // first admitted entry = bitwise reference
 
         // Precompute C_g for fast bootstrap (1-step GMM with fixed W_first)
         //   θ(Y) = invsym(ZW' W_first ZW) · ZW' · W_first · (Z'Y/n)
         //        = C_g · (Z'Y/n)
         ZW_cur = Z_cur' * dW_cur / n_rows
+        cache[g].ZW = ZW_cur   // v0.7.9 (C): stored for the grid search
         A_cur = ZW_cur' * W_first * ZW_cur
         if (cond(A_cur) <= 1e12) {
             cache[g].C_g = invsym(A_cur) * ZW_cur' * W_first
@@ -1825,6 +1996,31 @@ void xdpt2_fast_gmm_boot(real colvector Y_boot,
     g = gc.Z' * r / gc.n_rows
     obj = gc.n_rows * (g' * gc.W_first * g)
     ok = 1
+}
+
+// v0.7.6: batched twin of xdpt2_fast_gmm_boot — IDENTICAL objective formula,
+// evaluated for all B bootstrap columns of Y_mat (n_rows x B) at once. The
+// GMM objective n*g'Wf g is a quadratic form in g = Z'r/n, so column b of the
+// result equals the scalar fast solve on Y_mat[,b] to machine precision.
+// Returns the 1 x B row vector of objectives. Caller guarantees gc.fast_ok==1
+// and rows(Y_mat)==gc.n_rows.
+real rowvector xdpt2_fast_obj_batch_raw(real matrix Y_mat, real matrix Z,
+                                         real matrix dW, real matrix C_g,
+                                         real matrix W_first, real scalar n_rows)
+{
+    real matrix ZY, Theta, R, G, WG
+    ZY    = Z' * Y_mat / n_rows            // n_iv x B
+    Theta = C_g * ZY                       // k_W x B
+    R     = Y_mat - dW * Theta             // n_rows x B
+    G     = Z' * R / n_rows                // n_iv x B
+    WG    = W_first * G                    // n_iv x B
+    return(n_rows :* colsum(G :* WG))      // 1 x B
+}
+real rowvector xdpt2_fast_obj_batch(real matrix Y_mat,
+                                     struct xdpt2_gamma_cache scalar gc)
+{
+    return(xdpt2_fast_obj_batch_raw(Y_mat, gc.Z, gc.dW, gc.C_g,
+                                     gc.W_first, gc.n_rows))
 }
 
 // Vectorized Mammen 2-point draws for n_u units.
@@ -1921,9 +2117,11 @@ void xdpt2_grid_search(struct xdpt2_unit rowvector units,
     for (gl = 1; gl <= rows(gamma_grid); gl++) {
         if (!cache[gl].ok) continue
         if (rows(cache[gl].dY) < 20) continue
-        xdpt2_solve_gmm_1step(cache[gl].dY, cache[gl].dW, cache[gl].Z,
-                                cache[gl].W_first,
-                                ok, theta_cur, obj_cur, V_cur)
+        // v0.7.9 (C): precomputed-cross-products solver, bitwise identical
+        xdpt2_solve_gmm_1step_pre(cache[gl].dY, cache[gl].dW, cache[gl].Z,
+                                   cache[gl].ZW, cache[gl].ZY,
+                                   cache[gl].W_first,
+                                   ok, theta_cur, obj_cur, V_cur)
         if (!ok) continue
         if (obj_cur < best_obj_1) {
             best_obj_1 = obj_cur
@@ -1976,8 +2174,10 @@ void xdpt2_grid_search(struct xdpt2_unit rowvector units,
         if (!cache[gl].ok) continue
         if (rows(cache[gl].dY) < 20) continue
         if (cols(cache[gl].Z) != cols(W_n_2)) continue
-        xdpt2_solve_gmm_1step(cache[gl].dY, cache[gl].dW, cache[gl].Z, W_n_2,
-                                ok, theta_cur, obj_cur, V_cur)
+        // v0.7.9 (C): precomputed-cross-products solver, bitwise identical
+        xdpt2_solve_gmm_1step_pre(cache[gl].dY, cache[gl].dW, cache[gl].Z,
+                                   cache[gl].ZW, cache[gl].ZY, W_n_2,
+                                   ok, theta_cur, obj_cur, V_cur)
         if (!ok) continue
         if (obj_cur < best_obj_2) {
             best_obj_2 = obj_cur
@@ -2002,7 +2202,8 @@ void xdpt2_grid_search(struct xdpt2_unit rowvector units,
         real matrix ZW_1_cr, A_1_cr
         real scalar ok_v1
         ok_v1 = 0
-        ZW_1_cr = cache[idx_1].Z' * cache[idx_1].dW / cache[idx_1].n_rows
+        // v0.7.9 (C): reuse the stored cross product (bitwise identical value)
+    ZW_1_cr = cache[idx_1].ZW
         A_1_cr = ZW_1_cr' * W_n_2 * ZW_1_cr
         if (cond(A_1_cr) <= 1e12) {
             best_V = invsym(A_1_cr) / cache[idx_1].n_rows
@@ -2034,7 +2235,8 @@ void xdpt2_grid_search(struct xdpt2_unit rowvector units,
             Omega_2 = xdpt2_build_cluster_omega(cache[idx_2].Z, r_2_final,
                                                  cache[idx_2].uid)
             if (cond(Omega_2) <= 1e12) {
-                ZW_2 = cache[idx_2].Z' * cache[idx_2].dW / cache[idx_2].n_rows
+                // v0.7.9 (C): stored cross product, bitwise identical
+                ZW_2 = cache[idx_2].ZW
                 A_2_final = ZW_2' * invsym(Omega_2) * ZW_2
                 if (cond(A_2_final) <= 1e12) {
                     best_V_cr = invsym(A_2_final) / cache[idx_2].n_rows
@@ -2092,6 +2294,44 @@ void xdpt2_grid_bootstrap(struct xdpt2_unit rowvector units,
     gamma_ci_cache = xdpt2_build_gamma_cache(units, gamma_ci_grid, method,
                                               flag_static, flag_kink, t_min, t_max)
 
+    // === v0.7.9 (A): hoist the sample-side unrestricted grid minimum ===
+    // Inside the l-loop, D_sample needs the minimum over the gamma grid of
+    // the 1-step objective evaluated on dY_r -- but dY is gamma-invariant,
+    // so dY_r is the SAME vector at every CI point and the scan recomputed
+    // the identical minimum n_ci times. It is computed ONCE here on the
+    // first ok CI entry's dY; each l reuses it only after an EXACT bitwise
+    // dY comparison (falling back to the original scan otherwise).
+    // xdpt2_fast_gmm_boot is deterministic, so every objective the per-l
+    // scan would produce is bitwise equal to the hoisted one, and min()
+    // over bitwise-identical values is order-free -- D_sample is
+    // bit-for-bit unchanged. No RNG is involved in the scan.
+    real scalar smin_ready, smin_has, smin_val, smin_ref_l, l0s
+    smin_ready = 0
+    smin_has = 0
+    smin_val = .
+    smin_ref_l = 0
+    for (l0s = 1; l0s <= n_ci; l0s++) {
+        if (!gamma_ci_cache[l0s].ok) continue
+        smin_ref_l = l0s
+        break
+    }
+    if (smin_ref_l > 0) {
+        for (gb_s = 1; gb_s <= cols(gamma_cache); gb_s++) {
+            if (!gamma_cache[gb_s].ok) continue
+            if (gamma_cache[gb_s].n_rows != gamma_ci_cache[smin_ref_l].n_rows) continue
+            xdpt2_fast_gmm_boot(gamma_ci_cache[smin_ref_l].dY,
+                                 gamma_cache[gb_s],
+                                 ok_1s, theta_s_dummy, obj_u_1s)
+            if (!ok_1s) continue
+            if (!smin_has) {
+                smin_val = obj_u_1s
+                smin_has = 1
+            }
+            else if (obj_u_1s < smin_val) smin_val = obj_u_1s
+        }
+        smin_ready = 1
+    }
+
     external real scalar xdpt_verbose
     if (xdpt_verbose) printf("  Grid bootstrap (B=%g, gridci=%g, unit-level Mammen; cached)...\n", n_boot, n_ci)
     else {
@@ -2130,14 +2370,26 @@ void xdpt2_grid_bootstrap(struct xdpt2_unit rowvector units,
             continue
         }
         // Sample unrestricted: min 1-step obj over γ_grid using dY_r
+        // v0.7.9 (A): reuse the hoisted grid minimum under an exact bitwise
+        // dY guard (see the smin_* block above); identical dY implies an
+        // identical participating cache set and bitwise-identical
+        // objectives, and min() is order-free, so best_obj_1s -- and hence
+        // D_sample -- is bit-for-bit the per-l scan's value.
         best_obj_1s = obj_r_1s
-        for (gb_s = 1; gb_s <= cols(gamma_cache); gb_s++) {
-            if (!gamma_cache[gb_s].ok) continue
-            if (gamma_cache[gb_s].n_rows != rows(dY_r)) continue
-            xdpt2_fast_gmm_boot(dY_r, gamma_cache[gb_s],
-                                 ok_1s, theta_s_dummy, obj_u_1s)
-            if (!ok_1s) continue
-            if (obj_u_1s < best_obj_1s) best_obj_1s = obj_u_1s
+        if (smin_ready & dY_r == gamma_ci_cache[smin_ref_l].dY) {
+            if (smin_has) {
+                if (smin_val < best_obj_1s) best_obj_1s = smin_val
+            }
+        }
+        else {
+            for (gb_s = 1; gb_s <= cols(gamma_cache); gb_s++) {
+                if (!gamma_cache[gb_s].ok) continue
+                if (gamma_cache[gb_s].n_rows != rows(dY_r)) continue
+                xdpt2_fast_gmm_boot(dY_r, gamma_cache[gb_s],
+                                     ok_1s, theta_s_dummy, obj_u_1s)
+                if (!ok_1s) continue
+                if (obj_u_1s < best_obj_1s) best_obj_1s = obj_u_1s
+            }
         }
         D_sample = obj_r_1s - best_obj_1s
         if (D_sample < 0) D_sample = 0
@@ -2150,47 +2402,100 @@ void xdpt2_grid_bootstrap(struct xdpt2_unit rowvector units,
         resid_r = dY_r - dW_r * theta_r
 
         // Bootstrap loop  [FAST PATH: uses precomputed C_g, no cluster-Ω]
+        // v0.7.6 SPEEDUP: when γ_ℓ and every participating unrestricted γ use
+        // the fast path, the whole B-replication bootstrap is done in batched
+        // matrix form via xdpt2_fast_obj_batch (objective is a quadratic form
+        // in Z'Y). Mammen weights are drawn in the SAME per-replication order
+        // as the scalar loop, so D_vec — and the resulting CI — is identical
+        // to v0.7.5 to machine precision. Any cache needing the full 2-step
+        // fallback (singular fast path) drops to the original scalar loop in
+        // the else branch, preserving exact prior behavior.
         D_vec = J(n_boot, 1, .)
-        for (b = 1; b <= n_boot; b++) {
-            // UNIT-LEVEL Mammen weights (vectorized)
-            eta_unit = xdpt2_mammen_draw(n_u)
-            eta = eta_unit[uid_r]
-            Y_boot = dW_r * theta_r + resid_r :* eta
-
-            // Bootstrap restricted at γ_ℓ — fast 1-step GMM
-            xdpt2_fast_gmm_boot(Y_boot, gamma_ci_cache[l],
-                                 ok_b_r, theta_b_r, obj_b_r)
-            if (!ok_b_r) {
-                // Fallback: full 2-step if fast path failed (rare)
-                xdpt2_solve_gmm(Y_boot, dW_r, Z_r, uid_r, times_r, method,
-                                 ok_b_r, theta_b_r, obj_b_r, V_dummy)
-                if (!ok_b_r) {
-                    continue
-                }
-            }
-
-            // Bootstrap unrestricted: grid search (fast 1-step per γ)
-            min_obj_b = obj_b_r
+        real scalar n_rows_r_b, use_batch_b, jb
+        real colvector fast_gb_b
+        real matrix ETA_b, ETAr_b, Ymat_b, OBJ_b
+        real rowvector objr_b, objg_b, minobj_b, Dvec_b
+        n_rows_r_b  = rows(dY_r)
+        use_batch_b = (gamma_ci_cache[l].ok == 1 &
+                       gamma_ci_cache[l].fast_ok == 1 &
+                       gamma_ci_cache[l].n_rows == n_rows_r_b)
+        fast_gb_b = J(0, 1, 0)
+        if (use_batch_b) {
             for (gb = 1; gb <= cols(gamma_cache); gb++) {
                 if (!gamma_cache[gb].ok) continue
-                if (gamma_cache[gb].n_rows != rows(Y_boot)) continue
-                xdpt2_fast_gmm_boot(Y_boot, gamma_cache[gb],
-                                     ok_b_u, theta_b_u, obj_b_u)
-                if (!ok_b_u) {
-                    // BUG 7 FIX: fallback to full 2-step GMM if fast path fails.
-                    // Previously we silently skipped, biasing min_obj_b upward.
-                    xdpt2_solve_gmm(Y_boot, gamma_cache[gb].dW,
-                                     gamma_cache[gb].Z, gamma_cache[gb].uid,
-                                     gamma_cache[gb].times, method,
-                                     ok_b_u, theta_b_u, obj_b_u, V_dummy)
-                    if (!ok_b_u) continue
+                if (gamma_cache[gb].n_rows != n_rows_r_b) continue
+                if (gamma_cache[gb].fast_ok != 1) {
+                    use_batch_b = 0      // a participating γ needs full solve
+                    break
                 }
-                if (obj_b_u < min_obj_b) min_obj_b = obj_b_u
+                fast_gb_b = fast_gb_b \ gb
             }
+        }
 
-            D_boot = obj_b_r - min_obj_b
-            if (D_boot < 0) D_boot = 0
-            D_vec[b] = D_boot
+        if (use_batch_b & rows(fast_gb_b) > 0) {
+            // ---- batched path (bit-for-bit identical to scalar loop) ----
+            ETA_b = J(n_u, n_boot, 0)
+            for (b = 1; b <= n_boot; b++) {
+                ETA_b[., b] = xdpt2_mammen_draw(n_u)   // same draw order as scalar
+            }
+            ETAr_b = ETA_b[uid_r, .]
+            Ymat_b = (dW_r * theta_r) :+ (resid_r :* ETAr_b)
+            objr_b = xdpt2_fast_obj_batch(Ymat_b, gamma_ci_cache[l])
+            // v0.7.9 (D): preallocated stack (the old append recopied the
+            // accumulator per gamma); values and row order identical
+            OBJ_b  = J(1 + rows(fast_gb_b), n_boot, .)
+            OBJ_b[1, .] = objr_b                       // restricted = initial min
+            for (jb = 1; jb <= rows(fast_gb_b); jb++) {
+                objg_b = xdpt2_fast_obj_batch(Ymat_b, gamma_cache[fast_gb_b[jb]])
+                OBJ_b[1 + jb, .] = objg_b
+            }
+            minobj_b = colmin(OBJ_b)                   // per-sample min over γ
+            Dvec_b   = objr_b - minobj_b
+            Dvec_b   = Dvec_b :* (Dvec_b :> 0)         // max(0, .)
+            D_vec    = Dvec_b'
+        }
+        else {
+            // ---- original scalar loop (unchanged fallback) ----
+            for (b = 1; b <= n_boot; b++) {
+                // UNIT-LEVEL Mammen weights (vectorized)
+                eta_unit = xdpt2_mammen_draw(n_u)
+                eta = eta_unit[uid_r]
+                Y_boot = dW_r * theta_r + resid_r :* eta
+
+                // Bootstrap restricted at γ_ℓ — fast 1-step GMM
+                xdpt2_fast_gmm_boot(Y_boot, gamma_ci_cache[l],
+                                     ok_b_r, theta_b_r, obj_b_r)
+                if (!ok_b_r) {
+                    // Fallback: full 2-step if fast path failed (rare)
+                    xdpt2_solve_gmm(Y_boot, dW_r, Z_r, uid_r, times_r, method,
+                                     ok_b_r, theta_b_r, obj_b_r, V_dummy)
+                    if (!ok_b_r) {
+                        continue
+                    }
+                }
+
+                // Bootstrap unrestricted: grid search (fast 1-step per γ)
+                min_obj_b = obj_b_r
+                for (gb = 1; gb <= cols(gamma_cache); gb++) {
+                    if (!gamma_cache[gb].ok) continue
+                    if (gamma_cache[gb].n_rows != rows(Y_boot)) continue
+                    xdpt2_fast_gmm_boot(Y_boot, gamma_cache[gb],
+                                         ok_b_u, theta_b_u, obj_b_u)
+                    if (!ok_b_u) {
+                        // BUG 7 FIX: fallback to full 2-step GMM if fast fails.
+                        xdpt2_solve_gmm(Y_boot, gamma_cache[gb].dW,
+                                         gamma_cache[gb].Z, gamma_cache[gb].uid,
+                                         gamma_cache[gb].times, method,
+                                         ok_b_u, theta_b_u, obj_b_u, V_dummy)
+                        if (!ok_b_u) continue
+                    }
+                    if (obj_b_u < min_obj_b) min_obj_b = obj_b_u
+                }
+
+                D_boot = obj_b_r - min_obj_b
+                if (D_boot < 0) D_boot = 0
+                D_vec[b] = D_boot
+            }
         }
 
         crit = xdpt2_quantile(D_vec, 1 - alpha)
@@ -2338,43 +2643,99 @@ real scalar xdpt2_continuity_test(struct xdpt2_unit rowvector units,
         displayflush()
     }
 
-    for (b = 1; b <= n_boot; b++) {
-        if (!xdpt_verbose) {
-            if (mod(b, 50) == 0) printf("+ %g\n  ", b)
-            else                 printf(".")
-            displayflush()
+    // v0.7.7 SPEEDUP: batch all B replications when every participating γ in
+    // BOTH the kink and jump caches uses the fast path. Same Mammen draw order
+    // -> bit-for-bit identical p-value to v0.7.6; else original scalar loop.
+    real scalar use_batch_C, jjC, n_rows_k
+    real colvector fast_k_C, fast_j_C
+    real matrix ETA_C, ETAr_C, Ymat_C, OBJk_C, OBJj_C
+    real rowvector mink_C, minj_C, T_C
+    n_rows_k = rows(dY_k)
+    use_batch_C = 1
+    fast_k_C = J(0, 1, 0)
+    fast_j_C = J(0, 1, 0)
+    for (gl = 1; gl <= cols(cache_kink); gl++) {
+        if (!cache_kink[gl].ok) continue
+        if (cache_kink[gl].n_rows != n_rows_k) continue
+        if (cache_kink[gl].fast_ok != 1) {
+            use_batch_C = 0
+            break
         }
-        eta_unit = xdpt2_mammen_draw(n_u)
-        eta = eta_unit[uid_k]
-        Y_boot = dW_k * best_theta_k + r_kink :* eta
-
-        // Compute min obj under KINK on bootstrap (fast 1-step, cached C_g)
-        min_obj_kink_b = .
-        for (gl = 1; gl <= cols(cache_kink); gl++) {
-            if (!cache_kink[gl].ok) continue
-            if (cache_kink[gl].n_rows != rows(Y_boot)) continue
-            xdpt2_fast_gmm_boot(Y_boot, cache_kink[gl],
-                                 ok_b, theta_cur, obj_cur)
-            if (!ok_b) continue
-            if (obj_cur < min_obj_kink_b) min_obj_kink_b = obj_cur
-        }
-
-        // Compute min obj under JUMP on bootstrap (fast 1-step, cached C_g)
-        min_obj_jump_b = .
+        fast_k_C = fast_k_C \ gl
+    }
+    if (use_batch_C) {
         for (gl_j = 1; gl_j <= cols(cache_jump); gl_j++) {
             if (!cache_jump[gl_j].ok) continue
-            if (cache_jump[gl_j].n_rows != rows(Y_boot)) continue
-            xdpt2_fast_gmm_boot(Y_boot, cache_jump[gl_j],
-                                 ok_b, theta_cur, obj_cur)
-            if (!ok_b) continue
-            if (obj_cur < min_obj_jump_b) min_obj_jump_b = obj_cur
+            if (cache_jump[gl_j].n_rows != n_rows_k) continue
+            if (cache_jump[gl_j].fast_ok != 1) {
+                use_batch_C = 0
+                break
+            }
+            fast_j_C = fast_j_C \ gl_j
         }
+    }
+    if (use_batch_C & rows(fast_k_C) > 0 & rows(fast_j_C) > 0) {
+        ETA_C = J(n_u, n_boot, 0)
+        for (b = 1; b <= n_boot; b++) ETA_C[., b] = xdpt2_mammen_draw(n_u)
+        ETAr_C = ETA_C[uid_k, .]
+        Ymat_C = (dW_k * best_theta_k) :+ (r_kink :* ETAr_C)
+        // v0.7.9 (D): preallocated stacks; values and row order identical
+        OBJk_C = J(rows(fast_k_C), n_boot, .)
+        OBJk_C[1, .] = xdpt2_fast_obj_batch(Ymat_C, cache_kink[fast_k_C[1]])
+        for (jjC = 2; jjC <= rows(fast_k_C); jjC++) {
+            OBJk_C[jjC, .] = xdpt2_fast_obj_batch(Ymat_C,
+                                                  cache_kink[fast_k_C[jjC]])
+        }
+        mink_C = colmin(OBJk_C)
+        OBJj_C = J(rows(fast_j_C), n_boot, .)
+        OBJj_C[1, .] = xdpt2_fast_obj_batch(Ymat_C, cache_jump[fast_j_C[1]])
+        for (jjC = 2; jjC <= rows(fast_j_C); jjC++) {
+            OBJj_C[jjC, .] = xdpt2_fast_obj_batch(Ymat_C,
+                                                  cache_jump[fast_j_C[jjC]])
+        }
+        minj_C = colmin(OBJj_C)
+        T_C = mink_C - minj_C
+        T_C = T_C :* (T_C :> 0)
+        valid_boot = n_boot
+        count_exceed = sum(T_C :>= T_sample)
+    }
+    else {
+        for (b = 1; b <= n_boot; b++) {
+            if (!xdpt_verbose) {
+                if (mod(b, 50) == 0) printf("+ %g\n  ", b)
+                else                 printf(".")
+                displayflush()
+            }
+            eta_unit = xdpt2_mammen_draw(n_u)
+            eta = eta_unit[uid_k]
+            Y_boot = dW_k * best_theta_k + r_kink :* eta
 
-        if (min_obj_kink_b == . | min_obj_jump_b == .) continue
-        valid_boot = valid_boot + 1
-        T_boot_b = min_obj_kink_b - min_obj_jump_b
-        if (T_boot_b < 0) T_boot_b = 0
-        if (T_boot_b >= T_sample) count_exceed = count_exceed + 1
+            min_obj_kink_b = .
+            for (gl = 1; gl <= cols(cache_kink); gl++) {
+                if (!cache_kink[gl].ok) continue
+                if (cache_kink[gl].n_rows != rows(Y_boot)) continue
+                xdpt2_fast_gmm_boot(Y_boot, cache_kink[gl],
+                                     ok_b, theta_cur, obj_cur)
+                if (!ok_b) continue
+                if (obj_cur < min_obj_kink_b) min_obj_kink_b = obj_cur
+            }
+
+            min_obj_jump_b = .
+            for (gl_j = 1; gl_j <= cols(cache_jump); gl_j++) {
+                if (!cache_jump[gl_j].ok) continue
+                if (cache_jump[gl_j].n_rows != rows(Y_boot)) continue
+                xdpt2_fast_gmm_boot(Y_boot, cache_jump[gl_j],
+                                     ok_b, theta_cur, obj_cur)
+                if (!ok_b) continue
+                if (obj_cur < min_obj_jump_b) min_obj_jump_b = obj_cur
+            }
+
+            if (min_obj_kink_b == . | min_obj_jump_b == .) continue
+            valid_boot = valid_boot + 1
+            T_boot_b = min_obj_kink_b - min_obj_jump_b
+            if (T_boot_b < 0) T_boot_b = 0
+            if (T_boot_b >= T_sample) count_exceed = count_exceed + 1
+        }
     }
     if (!xdpt_verbose) {
         printf(" done\n")
@@ -2496,46 +2857,85 @@ real scalar xdpt2_linearity_test(struct xdpt2_unit rowvector units,
     }
 
     real colvector ZY_b, r_b, g_b
-    for (b = 1; b <= n_boot; b++) {
-        if (!xdpt_verbose) {
-            if (mod(b, 50) == 0) printf("+ %g\n  ", b)
-            else                 printf(".")
-            displayflush()
-        }
-        eta_unit = xdpt2_mammen_draw(n_u)
-        eta = eta_unit[uid_s]
-        Y_boot = W_beta_s * theta_r + resid_r :* eta
-
-        // Bootstrap restricted — fast inline if C_beta valid
-        if (fast_r_ok) {
-            ZY_b = Z_s' * Y_boot / n_rows_s
-            theta_b_r = C_beta * ZY_b
-            r_b = Y_boot - W_beta_s * theta_b_r
-            g_b = Z_s' * r_b / n_rows_s
-            obj_b_r = n_rows_s * (g_b' * W_first_s * g_b)
-            ok_b_r = 1
-        }
-        else {
-            xdpt2_solve_gmm(Y_boot, W_beta_s, Z_s, uid_s, times_s, method,
-                             ok_b_r, theta_b_r, obj_b_r, V_dummy)
-            if (!ok_b_r) continue
-        }
-
-        // Bootstrap unrestricted: grid search (fast 1-step)
-        min_obj_b_u = obj_b_r
+    // v0.7.7 SPEEDUP: batch all B replications when the restricted (C_beta)
+    // solve is fast AND every participating unrestricted γ uses the fast path.
+    // Mammen draws keep the same per-replication order -> bit-for-bit identical
+    // p-value to v0.7.6. Otherwise fall back to the original scalar loop.
+    real scalar use_batch_L, jjL
+    real colvector fast_gl_L
+    real matrix ETA_L, ETAr_L, Ymat_L, OBJu_L
+    real rowvector objr_L, minu_L, supW_L
+    use_batch_L = fast_r_ok
+    fast_gl_L = J(0, 1, 0)
+    if (use_batch_L) {
         for (gl_b = 1; gl_b <= cols(gamma_cache); gl_b++) {
             if (!gamma_cache[gl_b].ok) continue
-            if (gamma_cache[gl_b].n_rows != rows(Y_boot)) continue
-            xdpt2_fast_gmm_boot(Y_boot, gamma_cache[gl_b],
-                                 ok_b_u, theta_b_u, obj_b_u)
-            if (!ok_b_u) continue
-            if (obj_b_u < min_obj_b_u) min_obj_b_u = obj_b_u
+            if (gamma_cache[gl_b].n_rows != n_rows_s) continue
+            if (gamma_cache[gl_b].fast_ok != 1) {
+                use_batch_L = 0
+                break
+            }
+            fast_gl_L = fast_gl_L \ gl_b
         }
+    }
+    if (use_batch_L & rows(fast_gl_L) > 0) {
+        ETA_L = J(n_u, n_boot, 0)
+        for (b = 1; b <= n_boot; b++) ETA_L[., b] = xdpt2_mammen_draw(n_u)
+        ETAr_L = ETA_L[uid_s, .]
+        Ymat_L = (W_beta_s * theta_r) :+ (resid_r :* ETAr_L)
+        objr_L = xdpt2_fast_obj_batch_raw(Ymat_L, Z_s, W_beta_s, C_beta,
+                                           W_first_s, n_rows_s)
+        // v0.7.9 (D): preallocated stack; values and row order identical
+        OBJu_L = J(1 + rows(fast_gl_L), n_boot, .)
+        OBJu_L[1, .] = objr_L                        // restricted = initial min
+        for (jjL = 1; jjL <= rows(fast_gl_L); jjL++) {
+            OBJu_L[1 + jjL, .] = xdpt2_fast_obj_batch(Ymat_L,
+                                                      gamma_cache[fast_gl_L[jjL]])
+        }
+        minu_L = colmin(OBJu_L)
+        supW_L = objr_L - minu_L
+        valid_boot = n_boot
+        count_exceed = sum(supW_L :>= supW_sample)
+    }
+    else {
+        for (b = 1; b <= n_boot; b++) {
+            if (!xdpt_verbose) {
+                if (mod(b, 50) == 0) printf("+ %g\n  ", b)
+                else                 printf(".")
+                displayflush()
+            }
+            eta_unit = xdpt2_mammen_draw(n_u)
+            eta = eta_unit[uid_s]
+            Y_boot = W_beta_s * theta_r + resid_r :* eta
 
-        real scalar supW_b
-        supW_b = obj_b_r - min_obj_b_u
-        valid_boot = valid_boot + 1
-        if (supW_b >= supW_sample) count_exceed = count_exceed + 1
+            if (fast_r_ok) {
+                ZY_b = Z_s' * Y_boot / n_rows_s
+                theta_b_r = C_beta * ZY_b
+                r_b = Y_boot - W_beta_s * theta_b_r
+                g_b = Z_s' * r_b / n_rows_s
+                obj_b_r = n_rows_s * (g_b' * W_first_s * g_b)
+                ok_b_r = 1
+            }
+            else {
+                xdpt2_solve_gmm(Y_boot, W_beta_s, Z_s, uid_s, times_s, method,
+                                 ok_b_r, theta_b_r, obj_b_r, V_dummy)
+                if (!ok_b_r) continue
+            }
+
+            min_obj_b_u = obj_b_r
+            for (gl_b = 1; gl_b <= cols(gamma_cache); gl_b++) {
+                if (!gamma_cache[gl_b].ok) continue
+                if (gamma_cache[gl_b].n_rows != rows(Y_boot)) continue
+                xdpt2_fast_gmm_boot(Y_boot, gamma_cache[gl_b],
+                                     ok_b_u, theta_b_u, obj_b_u)
+                if (!ok_b_u) continue
+                if (obj_b_u < min_obj_b_u) min_obj_b_u = obj_b_u
+            }
+
+            supW_b_s = obj_b_r - min_obj_b_u
+            valid_boot = valid_boot + 1
+            if (supW_b_s >= supW_sample) count_exceed = count_exceed + 1
+        }
     }
     if (!xdpt_verbose) {
         printf(" done\n")
@@ -2584,11 +2984,8 @@ real scalar xdpt2_recompute_cluster_j(real colvector Y, real matrix W,
     r = Y - W * theta
     Ze = Z :* r
     n_units = max(unit_id)
-    g_per_unit = J(n_units, cols(Z), 0)
-    for (i = 1; i <= n_rows; i++) {
-        u = unit_id[i]
-        g_per_unit[u, .] = g_per_unit[u, .] + Ze[i, .]
-    }
+    // v0.7.8: run-based per-unit aggregation (see xdpt2_gsum_by_unit)
+    g_per_unit = xdpt2_gsum_by_unit(Ze, unit_id, n_units)
     Omega = g_per_unit' * g_per_unit / n_rows
     if (cond(Omega) > 1e12) return(.)
     g_bar = Z' * r / n_rows
@@ -2632,7 +3029,11 @@ real rowvector xdpt2_ar_full(real scalar k,
     real rowvector out_miss
     transmorphic cmap
 
-    out_miss = (., ., .)
+    // 6 elements to match the success return (mk, np, pval, b0, T1, TT):
+    // callers read [4]..[6] unconditionally, so a 3-element failure return
+    // crashed the whole command with Mata 3301 whenever the AR test could
+    // not be computed (e.g. AR(2) with zero lag-2 pairs on T=5 panels).
+    out_miss = (., ., ., ., ., .)
     if (rows(e_t) < 2) return(out_miss)
 
     // --- Pass 1 (test equation): lag-aligned ẽ_{-k}, per-unit c_i, b0, T1 ---
@@ -2721,12 +3122,50 @@ real rowvector xdpt2_ar_full(real scalar k,
     return((mk, (full_ok ? n_pairs : -n_pairs), pval, b0, T1, T2 + T3))
 }
 
-// xdpt2_p_fill (the predict merge helper) lives canonically in
-// xtdpthresh_p.ado — Stata 17 makes ado-internal mata functions private to
-// the defining ado, so the helper has to be visible from xtdpthresh_p.ado,
-// not here. The externals it reads (xdpt_p_resid / xdpt_p_est /
-// xdpt_p_serial_m) are populated in the orchestrator below and persist
-// across the predict call.
+// v0.7.3 (D5): fill the -predict- target variable from the persisted
+// AR-test rows. which: 1 = residuals (ê), 2 = xb (= Δy − ê). Writes only on
+// rows whose (panelvar, timevar) key matches a stored estimation row AND that
+// are marked by touse; everything else is left untouched (missing).
+// serial_expect = e(p_serial) guards against stale Mata state (mata clear,
+// restart, or e() restored from a different run).
+void xdpt2_p_fill(string scalar pvar, string scalar tvar,
+                   string scalar outvar, string scalar touse,
+                   real scalar source, real scalar which,
+                   real scalar serial_expect)
+{
+    external real matrix xdpt_p_resid, xdpt_p_est, xdpt_p_serial_m
+    real matrix D, S
+    real scalar r, v
+    transmorphic A
+
+    // source: 1 = AR-test (FD) series; 2 = estimation-equation series
+    S = (source == 2 ? xdpt_p_est : xdpt_p_resid)
+
+    if (rows(xdpt_p_serial_m) == 0 | rows(S) == 0) {
+        errprintf("xtdpthresh predict: stored estimation rows not found in Mata memory\n")
+        errprintf("  (cleared by -mata: mata clear-, -discard-, or restarting Stata).\n")
+        errprintf("  Re-run xtdpthresh, then predict.\n")
+        exit(498)
+    }
+    if (serial_expect >= . | xdpt_p_serial_m[1, 1] != serial_expect) {
+        errprintf("xtdpthresh predict: stored rows belong to a different xtdpthresh run\n")
+        errprintf("  than the current e() results (e.g. -estimates restore- of an older\n")
+        errprintf("  model). Re-run xtdpthresh, then predict.\n")
+        exit(498)
+    }
+
+    A = asarray_create("real", 2)
+    asarray_notfound(A, .)
+    for (r = 1; r <= rows(S); r++) {
+        asarray(A, (S[r, 1], S[r, 2]),
+                (which == 2 ? S[r, 3] - S[r, 4] : S[r, 4]))
+    }
+    st_view(D = ., ., (pvar, tvar, outvar), touse)
+    for (r = 1; r <= rows(D); r++) {
+        v = asarray(A, (D[r, 1], D[r, 2]))
+        if (v < .) D[r, 3] = v
+    }
+}
 
 // Main orchestrator
 void xtdpthresh_run(string scalar depvar_name,
@@ -2752,10 +3191,12 @@ void xtdpthresh_run(string scalar depvar_name,
                       real scalar do_grid_ci,
                       real scalar n_boot,
                       real scalar alpha,
-                      real scalar flag_iv_collapse)
+                      real scalar flag_iv_collapse,
+                      real scalar flag_exportgmm,
+                      real scalar flag_notest)
 {
     external real scalar xdpt_collapse, xdpt_iv_collapse, xdpt_lag_lo, xdpt_lag_hi
-    external real scalar xdpt_lev_lo, xdpt_lev_hi, xdpt_verbose, xdpt_export_gmm
+    external real scalar xdpt_lev_lo, xdpt_lev_hi, xdpt_verbose
     xdpt_collapse = flag_collapse
     xdpt_iv_collapse = flag_iv_collapse
     xdpt_lag_lo = maxlag_lo
@@ -2763,7 +3204,6 @@ void xtdpthresh_run(string scalar depvar_name,
     xdpt_lev_lo = levmaxlag_lo
     xdpt_lev_hi = levmaxlag_hi
     xdpt_verbose = strtoreal(st_local("flag_verbose"))
-    xdpt_export_gmm = strtoreal(st_local("flag_exportgmm"))
     real colvector y, q, pid, tid, gamma_grid
     real matrix Ly
     real matrix X_exog, X_endog, X_predet, X_inst
@@ -2850,20 +3290,26 @@ void xtdpthresh_run(string scalar depvar_name,
                               gam_lo, gam_hi, ci_empty, ci_nseg)
         if (xdpt_verbose) printf("  Grid CI = [%8.4f, %8.4f]\n", gam_lo, gam_hi)
 
-        pval_lin = xdpt2_linearity_test(units, gamma_grid, cache_main,
-                                         best_obj,
-                                         method, flag_static, flag_kink,
-                                         t_min, t_max, n_boot)
-        if (xdpt_verbose) printf("  Linearity p-value = %6.4f\n", pval_lin)
+        // v0.7.7: -notest- skips the linearity + continuity bootstraps
+        // entirely (they are independent of the CI). For a coverage study that
+        // only needs e(gamma_lo)/e(gamma_hi) this removes the dominant cost
+        // after the CI itself is batched; pval_lin/pval_cont stay missing.
+        if (!flag_notest) {
+            pval_lin = xdpt2_linearity_test(units, gamma_grid, cache_main,
+                                             best_obj,
+                                             method, flag_static, flag_kink,
+                                             t_min, t_max, n_boot)
+            if (xdpt_verbose) printf("  Linearity p-value = %6.4f\n", pval_lin)
 
-        // Continuity test only when unrestricted (jump) model is estimated;
-        // cache_main is then exactly the jump cache it needs.
-        if (!flag_kink) {
-            pval_cont = xdpt2_continuity_test(units, gamma_grid, cache_main,
-                                                best_obj,
-                                                method, flag_static,
-                                                t_min, t_max, n_boot)
-            if (xdpt_verbose) printf("  Continuity p-value = %6.4f\n", pval_cont)
+            // Continuity test only when unrestricted (jump) model is estimated;
+            // cache_main is then exactly the jump cache it needs.
+            if (!flag_kink) {
+                pval_cont = xdpt2_continuity_test(units, gamma_grid, cache_main,
+                                                    best_obj,
+                                                    method, flag_static,
+                                                    t_min, t_max, n_boot)
+                if (xdpt_verbose) printf("  Continuity p-value = %6.4f\n", pval_cont)
+            }
         }
     }
 
@@ -2993,34 +3439,37 @@ void xtdpthresh_run(string scalar depvar_name,
     xdpt_p_est   = p_id_est,  times_f,     dY_f,     resid_est
     st_numscalar("r(xdpt2_p_serial)", xdpt_p_serial_m[1, 1])
 
-    // exportgmm option (debug/verification): expose GMM weight A, instrument
-    // matrix Z_f, and FD-transformed regressors X_f for external Roodman
-    // certification. Guarded by xdpt_export_gmm to avoid memory cost on
-    // production runs (Z_f can be n_trans × k_iv, 4MB+ on Hansen).
-    external real matrix xdpt_best_A, xdpt_best_Z_f, xdpt_best_X_f
-    external real scalar xdpt_export_gmm
-    if (xdpt_export_gmm == 1) {
+    // v0.7.5: exportgmm — expose the GMM pieces of the reported estimate for
+    // external verification (e.g. re-computing the full AB AR statistic
+    // outside the package). The externals are created/RESET on EVERY run:
+    // 0x0 when the option is off (so stale matrices from a previous
+    // exportgmm run can never leak), populated when on.
+    //   xdpt_best_A    — moment weight paired with theta_hat/V_hat (k_iv x k_iv)
+    //   xdpt_best_Z_f  — instruments at gamma_hat, estimation stack (n x k_iv)
+    //   xdpt_best_X_f  — regressors at gamma_hat, estimation stack (n x k_par)
+    //   xdpt_best_Xar  — FD AR-test-equation regressors (rows match
+    //                    xdpt_p_resid); equals X_f under method(fd), the FD
+    //                    restack under fod/system — needed (with xdpt_p_resid
+    //                    and xdpt_p_est) to reproduce e(ar*) externally for
+    //                    those methods.
+    external real matrix xdpt_best_A, xdpt_best_Z_f, xdpt_best_X_f, xdpt_best_Xar
+    xdpt_best_A   = J(0, 0, .)
+    xdpt_best_Z_f = J(0, 0, .)
+    xdpt_best_X_f = J(0, 0, .)
+    xdpt_best_Xar = J(0, 0, .)
+    if (flag_exportgmm) {
         xdpt_best_A   = best_A
         xdpt_best_Z_f = Z_f
         xdpt_best_X_f = dW_f
-    }
-    else {
-        // Leave empty so test code can detect "no export requested"
-        xdpt_best_A   = J(0, 0, 0)
-        xdpt_best_Z_f = J(0, 0, 0)
-        xdpt_best_X_f = J(0, 0, 0)
+        xdpt_best_Xar = X_ar
     }
     ar1_stat = ar1[1]
     ar1_p = ar1[3]
     ar2_stat = ar2[1]
     ar2_p = ar2[3]
-    real scalar ar1_b0, ar1_T1, ar1_TT, ar2_b0, ar2_T1, ar2_TT, ar1_np, ar2_np
+    real scalar ar1_b0, ar1_T1, ar1_TT, ar2_b0, ar2_T1, ar2_TT
     ar1_b0 = ar1[4]; ar1_T1 = ar1[5]; ar1_TT = ar1[6]
     ar2_b0 = ar2[4]; ar2_T1 = ar2[5]; ar2_TT = ar2[6]
-    // out[2] = signed pair count: positive when the full AB(1991, eq.8) path
-    // was used, negative when the T2=T3=0 fallback fired (ill-conditioned or
-    // non-positive variance). |np| is the number of lag-k residual pairs.
-    ar1_np = ar1[2]; ar2_np = ar2[2]
 
     if (xdpt_verbose) {
         printf("  Hansen J=%6.3f (df=%g) p=%6.4f\n", hansen_stat, hansen_df, hansen_p)
@@ -3030,6 +3479,11 @@ void xtdpthresh_run(string scalar depvar_name,
 
     // Return results
     st_rclear()
+    // v0.7.5 hotfix (restored): persist serial AFTER st_rclear so e(p_serial)
+    // survives for -predict-. The 0.7.6/0.7.7 speedup refactor (branched from
+    // 0.7.3) dropped this re-set; without it st_rclear() wipes the scalar set
+    // above and e(p_serial) returns missing, breaking predict (r301).
+    st_numscalar("r(xdpt2_p_serial)", xdpt_p_serial_m[1, 1])
     st_matrix("r(xdpt2_theta)", best_theta')
     st_matrix("r(xdpt2_V)",     best_V)
     st_numscalar("r(xdpt2_gamma)", best_gamma)
@@ -3059,12 +3513,35 @@ void xtdpthresh_run(string scalar depvar_name,
     st_numscalar("r(xdpt2_ar2_b0)",    ar2_b0)
     st_numscalar("r(xdpt2_ar2_T1)",    ar2_T1)
     st_numscalar("r(xdpt2_ar2_TT)",    ar2_TT)
-    st_numscalar("r(xdpt2_ar1_np)",    ar1_np)
-    st_numscalar("r(xdpt2_ar2_np)",    ar2_np)
-    // hotfix: persist serial AFTER st_rclear so e(p_serial) survives
-    st_numscalar("r(xdpt2_p_serial)", xdpt_p_serial_m[1, 1])
+    st_numscalar("r(xdpt2_ar1_np)",    ar1[2])
+    st_numscalar("r(xdpt2_ar2_np)",    ar2[2])
 }
 
 end
 // End of xtdpthresh.ado
 
+
+* ============================================================================
+* CHANGELOG  (plain comments -- not shown by -which-; full detail in SSC history)
+* ----------------------------------------------------------------------------
+* 0.7.9.1 02jul2026 bugfix: xdpt2_ar_full failure return was 3 elements but
+*                   callers read [4]..[6] -- panels where the AR test cannot
+*                   be computed (e.g. AR(2) with zero lag-2 pairs on T=5)
+*                   crashed the whole command with Mata 3301 instead of
+*                   reporting AR as missing. Pre-existing since 0.7.2.
+* 0.7.9  02jul2026  speedup: exact-guarded reuse of gamma-invariant work
+*                   (CI-min hoist, W_first & Z'Y reuse, cached cross-products)
+* 0.7.8  02jul2026  speedup: large-N cache build (preallocated stacking,
+*                   run-based cluster-moment aggregation)
+* 0.7.7  10jun2026  speedup: batched linearity/continuity bootstraps; -notest-
+* 0.7.6  10jun2026  speedup: batched grid-bootstrap CI (typically 10-40x)
+* 0.7.5  10jun2026  -exportgmm-; e(ar*_np) full-formula path flags
+* 0.7.4  10jun2026  -predict- returns estimation-eq residuals; -arresiduals-
+* 0.7.3  10jun2026  -predict- merge architecture (exact AR-test rows)
+* 0.7.2  10jun2026  full Arellano-Bond (1991) AR m-statistic
+* 0.7.1  10jun2026  hotfix: method(system) conformability
+* 0.7.0  10jun2026  audit: e(sample), system level constant, unified grid
+*                   search, add-one bootstrap p-values, rseed(), e(cmdline)
+* 0.6.1  26apr2026  doc fixes
+* 0.6.0  25apr2026  initial SSC release
+* ============================================================================

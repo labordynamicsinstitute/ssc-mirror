@@ -37,6 +37,7 @@ p konfound module to quantify robustness of causal inferences
 p kotlarski module to execute deconvolution kernel density estimation and produce a robust construction of its uniform confidence band
 p kountry module to standardize country names across various datasets
 p kpss module to compute Kwiatkowski-Phillips-Schmidt-Shin test for stationarity
+p kpssbr module to implement KPSS unit root tests with up to 2 structural breaks
 p kr20 module to calculate Kuder-Richardson coefficient of reliability
 p krippalpha module to compute Krippendorff's alpha intercoder reliability coefficient
 p krls module to perform Kernel–Based Regularized Least Squares

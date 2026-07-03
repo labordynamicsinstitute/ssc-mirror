@@ -1,4 +1,4 @@
-*! version 1.0.1  25april2026
+*! version 1.0.2  27may2026
 *===============================================================================================
 * samregc: Sensitivity Analysis of the Main Regression Coefficients					   
 * Authors:																			                  
@@ -24,12 +24,12 @@ program define samregc, rclass
 		* 7) assemble the results dataset, summary tables, and graphs
 		* 8) optionally run sister estimations to separate sample and covariate effects
 		*Define Syntax Program
-		syntax varlist(min=2 numeric ts) [aw fw iw pw] [if] [in],	///
+		syntax varlist(min=2 numeric ts fv) [aw fw iw pw] [if] [in],	///
 		[														   	///
 		ITerateover(varlist numeric ts)						///
 		GRITerateover(string asis)									///
 		NComb(numlist >=1 integer max=2) 			   	///
-		Fixvar(varlist numeric ts)								///
+		Fixvar(varlist numeric ts fv)								///
 		CMDEst(string asis) 									   	///
 		CMDOptions(string asis) 								   	///
 		CMDIveq(string asis) 									   	///
@@ -70,8 +70,20 @@ program define samregc, rclass
 		loc panel=r(panelvar)
 		if "`time'" == "."	loc time ""
 		if "`panel'" == "."	loc panel ""
-
+		
 		if "`fixvar'" != "" {
+			* Expansion of potential dummies in fixvar 
+			xi `fixvar'
+			capture d _I*, varlist
+			if _rc==0  loc add =r(varlist)
+			* Extract i.vars
+			loc fixvar_add ""
+			foreach var in `fixvar' {
+				if strmatch("`var'", "i.*") == 0 loc fixvar_add "`fixvar_add' `var'"
+			}
+			
+			* Add dummies to fixvar
+			loc fixvar "`fixvar_add' `add'"
 			loc aux 0
 			foreach var1 of varlist `fixvar'  {
 				foreach var2 of varlist `varlist' {
@@ -280,16 +292,28 @@ program define samregc, rclass
 		else noi `cmdest' `depvar' `MainVar' `fixvar' [`weight'`exp'] if `touse' ==1 ,`cmdoptions'
 		* check for omitted variables
 		tempname bomit
-		local noitnames : colfullnames e(b)
 		mat `bomit' =e(b)
 		loc omit =0
-		foreach var1 of local noitnames {
-			if substr("`var1'",1,2) == "o." loc omit=1
+		loc ord =1
+		foreach var1 in `MainVar' {
 			if _b[`var1'] ==0 | _b[`var1'] ==. loc omit=1
+			if `bomit'[1,`ord'] ==0 | `bomit'[1,`ord'] ==. loc omit=1
+			loc ++ord
 		}
 		if `omit'==1 {
-			display as error "The estimation without iteration variables cannot contain variables omitted due to collinearity"
-			exit 503
+		display as error "The estimation without iteration variables is not valid."
+		display as error "One or more Main_Varlist variables were omitted due to collinearity."
+		exit 503
+		}
+		loc omitfix=0
+		foreach var1 in `fixvar' {
+			if _b[`var1'] ==0 | _b[`var1'] ==. loc omitfix=1
+			if `bomit'[1,`ord'] ==0 | `bomit'[1,`ord'] ==. loc omitfix=1
+			loc ++ord
+		}
+		if `omitfix'==1 {
+			display as error "Warning: One or more fixvar variables were collinear and omitted in the estimation without iteration variables."
+			display as error "The analysis will continue because all Main_Varlist variables were estimated."
 		}
 		noi di as text "---------------------------------------------------------------------------"
 		noi di as text "Total Number of Estimations: " as result "`total'"
@@ -450,7 +474,7 @@ program define samregc, rclass
 		noi di as text "Saving results..."
 		preserve
 		drop _all
-		getmata (v*) = `resultados'
+		getmata (v*) = `resultados', `double'
 		mata mata drop `resultados'
 		loc i=1
 		ren v`i' order
@@ -458,9 +482,18 @@ program define samregc, rclass
 		loc i=2
 		loc j=1
 
+		loc lNoFix_b ""
 		foreach var of local ListaTotVarCons {
 			loc h = `i'+1
 			ren v`i' v_`j'_b 
+			if "`fixvar'"!="" {
+				foreach var2 in `fixvar' {
+					if "`var'" != "`var2'" {
+						loc lNoFix_b "`lNoFix_b' v_`j'_b"
+						loc lNoFix_t "`lNoFix_b' v_`j'_t"
+					}
+				}
+			}
 			label var v_`j'_b "`var' coeff."
 			if "`var'" == "_cons" label var v_`j'_b "Constant coeff."
 			ren v`h' v_`j'_`zt' 
@@ -504,8 +537,15 @@ program define samregc, rclass
 		}
 		drop if order ==.
 		gen omitted =0
-		foreach var of varlist *_b {
-			replace omitted =1 if `var'== 0 
+		* Omitted fixvar variables are not considered here. The relevant conditions are:
+		*   1) the estimation must contain coefficients for all MainVar variables
+		*   2) the estimation must contain the required number of itvar combinations
+		*      (i.e., no iteration variable should be omitted)
+		* It is irrelevant whether any fixvar variable is omitted		
+		if "`fixvar'"!="" {
+			foreach var of varlist `lNoFix_b' {
+				replace omitted =1 if `var'== 0 
+			}
 		}
 		replace omitted =. if order ==0
 		label var omitted "=1 One or more variables were omitted because of collinearity"
@@ -516,7 +556,7 @@ program define samregc, rclass
 		loc est_omit =r(N)
 		if "`nograph'" == "" noi _samregc_g1 `MainVar' if omitted == 0 , path(`"`path'"') `replace' at(`at') level(`level') graphtype(`graphtype') graphoptions(`graphoptions') graphtitle_list(`graphtitle_list') zt(`zt') 
 		tempname table1 
-		noi _samregc_t1 `MainVar' if omitted == 0 & order!=0, path(`"`path'"') `replace' results(`"`results'"') at(`at') level(`level') mtname(`table1') zt(`zt')
+		noi _samregc_t1 `MainVar' if omitted == 0 & order!=0, path(`"`path'"') `replace' results(`"`results'"') at(`at') level(`level') mtname(`table1') zt(`zt') `noexcel'
 
 		return matrix table1 = `table1'
 	   
@@ -908,7 +948,7 @@ program define _samregc_t1, rclass
 		set varabbrev on
 		* Purpose: build the aggregate summary table for each main variable.
 		* The table classifies sign and significance relative to at() and level().
-		syntax anything [if], [replace path(string) results(string) level(real 95) at(real 0) mtname(string) zt(string) ] [*]
+		syntax anything [if], [replace path(string) results(string) level(real 95) at(real 0) mtname(string) zt(string) NOExcel] [*]
 		loc vt =invnorm((100-`level')/200)
 		tempname table1_1 table1
 		mat `table1_1' =J(1,8,.)
@@ -978,11 +1018,25 @@ program define _samregc_t1, rclass
 		noi di as text "---------------------------------"
 		loc totm1 =`totest'+1
 		if `est_omit' !=0 {
-			
 			noi di as text " Total estimations: " as result `totm1'
 			noi di as text " Total estimations excluding the baseline regression: " as result `totest'
 			noi di as text " Estimations excluded because of omitted variables: " as result `est_omit'
 			noi di as text " Valid estimations: " as result `totval'
+			if `totval' ==0 {
+				di as error "No valid estimation was obtained."
+				di as error "The analysis cannot continue because one or more iteration variables are omitted in all specifications, probably due to collinearity."
+				di as error "The results dataset has been saved: `results'"
+				di as error "Please review the iteration variables and, if appropriate, exclude one or more of them, or any non-main fixed variable specified through fixvar()."
+				exit 2001
+			}			
+
+			if `totval'/`totm1' < .5 {
+				di as error "Warning: More than half of the estimations are invalid because one or more iteration variables are frequently omitted, probably due to collinearity."
+				di as error "Please review the iteration variables and, if appropriate, exclude one or more of them, or any non-main fixed variable specified through fixvar()."		
+			}
+			if `totval'/`totm1' < .75 {
+				di as error "Warning: More than 25% of estimations are invalid because one or more iteration variables are frequently omitted due to collinearity; reviewing iteration variables and, if needed, fixvar() controls is recommended."
+			}
 		}
 		if `est_omit' ==0 {
 			noi di as text " Total estimations: " as result `totm1'
@@ -1202,7 +1256,7 @@ program define _samregc_MvTable, rclass
 		set varabbrev on
 		* Purpose: build variable-by-variable diagnostic tables showing which iteration
 		* variables are associated with sign/significance changes in the main coefficients.
-		syntax anything [if],  [path(string) replace level(real 95) at(real 0) results(string) fixvar(string) unbalanced sisters(string) mtname(string) zt(string) obs_no_it(integer 0)] [*]
+		syntax anything [if],  [path(string) replace level(real 95) at(real 0) results(string) fixvar(string) unbalanced sisters(string) mtname(string) zt(string) obs_no_it(integer 0) NOExcel] [*]
 		* mtname() contains the tempname list of per-main-variable matrices created
 		* by the caller. The routine fills one matrix per main variable.
 		tokenize `mtname'

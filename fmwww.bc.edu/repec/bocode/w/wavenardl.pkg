@@ -1,0 +1,26 @@
+d 'WAVENARDL': module estimating Wavelet-based Nonlinear ARDL (W-NARDL) model (Jammazi, Lahiani & Nguyen, 2015)
+d
+d    wavenardl estimates the wavelet-based nonlinear autoregressive
+d distributed lag (W-NARDL)    model of Jammazi, Lahiani & Nguyen
+d (2015). 
+d
+d KW:   wavelets
+d KW: ARDL
+d KW: autoregressive distributed lag model
+d KW: nonlinear estimation
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260702
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f wavenardl.ado
+f wavenardl.sthlp
+f wdenoise.ado
+f wdenoise.sthlp
+f ../_/_wavenardl_diag.ado
+f ../_/_wavenardl_dynmult.ado
+f ../_/_wavenardl_stars.ado
+f wavenardl_example.do

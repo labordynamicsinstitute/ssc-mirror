@@ -2084,6 +2084,7 @@ fmwww.bc.edu/repec/bocode/_/_gsqfirstpos.ado
 fmwww.bc.edu/repec/bocode/_/_mpitb_gafvars.ado
 fmwww.bc.edu/repec/bocode/_/_wv_cwt.mata
 fmwww.bc.edu/repec/bocode/_/_gneqany.ado
+fmwww.bc.edu/repec/bocode/_/_wavenardl_diag.ado
 fmwww.bc.edu/repec/bocode/_/_lendingtype.ado
 fmwww.bc.edu/repec/bocode/_/__init__.py
 fmwww.bc.edu/repec/bocode/_/_cwfcn_labels_kldb92_2d.sthlp
@@ -2558,6 +2559,7 @@ fmwww.bc.edu/repec/bocode/_/_diddesign_display_result.ado
 fmwww.bc.edu/repec/bocode/_/_mvis7.ado
 fmwww.bc.edu/repec/bocode/_/__yaml_fastread.ado
 fmwww.bc.edu/repec/bocode/_/_svmachines_MACARM64.plugin
+fmwww.bc.edu/repec/bocode/_/_wavenardl_dynmult.ado
 fmwww.bc.edu/repec/bocode/_/__wbod_sync.ado
 fmwww.bc.edu/repec/bocode/_/_gatan2.ado
 fmwww.bc.edu/repec/bocode/_/_cwfcn_labels_isco88com.sthlp
@@ -2781,6 +2783,7 @@ fmwww.bc.edu/repec/bocode/_/_cupfm_validate.ado
 fmwww.bc.edu/repec/bocode/_/_expreg.ado
 fmwww.bc.edu/repec/bocode/_/_xmltoyaml_parse_lines.ado
 fmwww.bc.edu/repec/bocode/_/_region_iso2.ado
+fmwww.bc.edu/repec/bocode/_/_wavenardl_stars.ado
 fmwww.bc.edu/repec/bocode/_/_bcsf_bracketing.mata
 fmwww.bc.edu/repec/bocode/_/_xtcspqardl_ecm.ado
 fmwww.bc.edu/repec/bocode/_/_geoplot_pie.ado
@@ -3372,6 +3375,7 @@ fmwww.bc.edu/repec/bocode/w/wordcloud.ado
 fmwww.bc.edu/repec/bocode/w/wtddiag.ado
 fmwww.bc.edu/repec/bocode/w/wid_list_age_codes.sthlp
 fmwww.bc.edu/repec/bocode/w/wbull.pkg
+fmwww.bc.edu/repec/bocode/w/wavenardl.pkg
 fmwww.bc.edu/repec/bocode/w/wangtsiatis.ado
 fmwww.bc.edu/repec/bocode/w/w.sthlp
 fmwww.bc.edu/repec/bocode/w/waffle.pkg
@@ -3449,6 +3453,7 @@ fmwww.bc.edu/repec/bocode/w/winprob.pkg
 fmwww.bc.edu/repec/bocode/w/wordy.pkg
 fmwww.bc.edu/repec/bocode/w/wdireshape.ado
 fmwww.bc.edu/repec/bocode/w/wid_example3.sthlp
+fmwww.bc.edu/repec/bocode/w/wavenardl.sthlp
 fmwww.bc.edu/repec/bocode/w/wgtcellcollapse.sthlp
 fmwww.bc.edu/repec/bocode/w/weeklyclaims.ado
 fmwww.bc.edu/repec/bocode/w/weibullfit.ado
@@ -3460,6 +3465,7 @@ fmwww.bc.edu/repec/bocode/w/wtdtttdiag.ado
 fmwww.bc.edu/repec/bocode/w/wbopendata_whatsnew.sthlp
 fmwww.bc.edu/repec/bocode/w/welcom.pkg
 fmwww.bc.edu/repec/bocode/w/wtddat.dta
+fmwww.bc.edu/repec/bocode/w/wavenardl_example.do
 fmwww.bc.edu/repec/bocode/w/wbopendata_lendingtype.sthlp
 fmwww.bc.edu/repec/bocode/w/wdi_deflate.pkg
 fmwww.bc.edu/repec/bocode/w/writekml.hlp
@@ -3518,6 +3524,7 @@ fmwww.bc.edu/repec/bocode/w/winsor.hlp
 fmwww.bc.edu/repec/bocode/w/wtd.ado
 fmwww.bc.edu/repec/bocode/w/wwwhelp_cn.sthlp
 fmwww.bc.edu/repec/bocode/w/wtdtttpredprob.sthlp
+fmwww.bc.edu/repec/bocode/w/wavenardl.ado
 fmwww.bc.edu/repec/bocode/w/wt.ado
 fmwww.bc.edu/repec/bocode/w/wtd_show.ado
 fmwww.bc.edu/repec/bocode/w/whatmin.sthlp
@@ -3535,6 +3542,7 @@ fmwww.bc.edu/repec/bocode/w/wyoung.pkg
 fmwww.bc.edu/repec/bocode/w/wtdtttpreddur.sthlp
 fmwww.bc.edu/repec/bocode/w/wgtcollapse-example.do
 fmwww.bc.edu/repec/bocode/w/wridit.pkg
+fmwww.bc.edu/repec/bocode/w/wdenoise.ado
 fmwww.bc.edu/repec/bocode/w/wpp2024_median_e0.dta
 fmwww.bc.edu/repec/bocode/w/weave.ado
 fmwww.bc.edu/repec/bocode/w/waldtest.ado
@@ -3552,6 +3560,7 @@ fmwww.bc.edu/repec/bocode/w/wexamples.ado
 fmwww.bc.edu/repec/bocode/w/whatsdeff.ado
 fmwww.bc.edu/repec/bocode/w/wtdttt.pkg
 fmwww.bc.edu/repec/bocode/w/wtdset.sthlp
+fmwww.bc.edu/repec/bocode/w/wdenoise.sthlp
 fmwww.bc.edu/repec/bocode/w/waffle_plot.ado
 fmwww.bc.edu/repec/bocode/w/winratiotest.sthlp
 fmwww.bc.edu/repec/bocode/w/wdi_deflate.ado
@@ -15634,6 +15643,7 @@ fmwww.bc.edu/repec/bocode/l/lmadurm.ado
 fmwww.bc.edu/repec/bocode/l/lintegrate.mlib
 fmwww.bc.edu/repec/bocode/l/lpr4ytz.ado
 fmwww.bc.edu/repec/bocode/l/lmabp.sthlp
+fmwww.bc.edu/repec/bocode/l/ldiddesign.mlib
 fmwww.bc.edu/repec/bocode/l/localseg.sthlp
 fmwww.bc.edu/repec/bocode/l/lmhtreg.mlib
 fmwww.bc.edu/repec/bocode/l/licio15.mlib
@@ -18785,6 +18795,7 @@ fmwww.bc.edu/repec/bocode/k/keybygen.ado
 fmwww.bc.edu/repec/bocode/k/kapgof.ado
 fmwww.bc.edu/repec/bocode/k/ky_fit.pkg
 fmwww.bc.edu/repec/bocode/k/kaputil.pkg
+fmwww.bc.edu/repec/bocode/k/kpssbr.sthlp
 fmwww.bc.edu/repec/bocode/k/kappaAux.ado
 fmwww.bc.edu/repec/bocode/k/kuipertest.pkg
 fmwww.bc.edu/repec/bocode/k/kinkyreg_postestimation.sthlp
@@ -18849,6 +18860,7 @@ fmwww.bc.edu/repec/bocode/k/k_capc.ado
 fmwww.bc.edu/repec/bocode/k/ky_example.do
 fmwww.bc.edu/repec/bocode/k/kmtest_cv.ado
 fmwww.bc.edu/repec/bocode/k/keyplot.hlp
+fmwww.bc.edu/repec/bocode/k/kpssbr.ado
 fmwww.bc.edu/repec/bocode/k/kwallis2.ado
 fmwww.bc.edu/repec/bocode/k/ky_ll_1.ado
 fmwww.bc.edu/repec/bocode/k/kuipertest.ado
@@ -18918,6 +18930,7 @@ fmwww.bc.edu/repec/bocode/k/kanom.ado
 fmwww.bc.edu/repec/bocode/k/kitli_gap2bm.sthlp
 fmwww.bc.edu/repec/bocode/k/ky_ll_4.ado
 fmwww.bc.edu/repec/bocode/k/kdens2.html
+fmwww.bc.edu/repec/bocode/k/kpssbr.pkg
 fmwww.bc.edu/repec/bocode/k/krippalpha.pkg
 fmwww.bc.edu/repec/bocode/k/kmtest_power.ado
 fmwww.bc.edu/repec/bocode/k/kobo2stata.sthlp

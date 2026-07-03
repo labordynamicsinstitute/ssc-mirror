@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.6.1  26apr2026}{...}
+{* *! version 0.7.9.1  02jul2026}{...}
 {cmd:help xtdpthresh}
 {hline}
 
@@ -60,6 +60,7 @@ asymptotic CIs are invalid in that case). Use grid bootstrap instead.{p_end}
 {synopt:{opt boot(#)}}bootstrap replications; default {cmd:299}{p_end}
 {synopt:{opt rseed(#)}}set RNG seed before any bootstrap draw, for exact bit-for-bit reproducibility of CI bounds and test p-values{p_end}
 {synopt:{opt nosearch}}skip grid bootstrap (point estimate only){p_end}
+{synopt:{opt notest}}skip the linearity and continuity test bootstraps (independent of the CI); for coverage-only runs needing only {cmd:e(gamma_lo)}/{cmd:e(gamma_hi)}{p_end}
 {synopt:{opt nowarn}}suppress CI-boundary pinning warning, disconnected-CI note, and the {cmd:method(system)} grid-bootstrap heuristic-extension advisory{p_end}
 
 {syntab:Reporting}
@@ -116,6 +117,37 @@ under both continuous (kink) and discontinuous (jump) specifications in
 our Monte Carlo; see {help xtdpthresh##citype:citype} for the
 implementation-level caveats.
 
+
+{title:Changes in version 0.7.9.1 (02jul2026, since 0.7.5)}
+
+{pstd}
+Performance releases (v0.7.6-v0.7.9) plus one bug fix (v0.7.9.1). All
+estimates, threshold CIs, test p-values, and {cmd:predict} series are
+bit-for-bit identical to v0.7.5; only computation speed changed, plus one
+new option.
+
+{phang}
+Bug fix (v0.7.9.1): on panels where an Arellano-Bond AR test cannot be
+computed at all — e.g. AR(2) has zero lag-2 residual pairs when usable
+observations span only two consecutive periods per unit (T=5 with the
+dynamic model) — the command crashed with a Mata subscript error (3301)
+after estimation had succeeded, returning nothing. It now reports the
+affected AR statistic and its p-value as missing and returns all other
+results normally. Present since v0.7.2, including the SSC v0.7.5.
+
+{phang}
+{cmd:notest} (new in v0.7.7) skips the linearity and continuity test
+bootstraps while still constructing the threshold CI, for coverage-only
+or simulation runs that need only {cmd:e(gamma_lo)}/{cmd:e(gamma_hi)}.
+
+{phang}
+Speedups (no result change): batched wild-bootstrap objective for the
+grid CI and the linearity/continuity tests (v0.7.6-v0.7.7); large-N
+cache build with preallocated stacking and run-based cluster moments
+(v0.7.8); exact-guarded reuse of gamma-invariant work across the grid
+(v0.7.9). Typically 10-40x faster for the bootstrap CI at large T /
+{cmd:boot()}. The Mammen wild-bootstrap draw order is unchanged, so every
+reported quantity matches v0.7.5 to machine precision.
 
 {title:Changes in version 0.7.5 (11jun2026, since 0.6.0)}
 
@@ -205,6 +237,25 @@ convention of {cmd:xthreg2} (Wang-Lian 2019).
 is the default and reproduces {cmd:xthenreg}; {cmd:method(fod)} enables
 unbalanced panel support; {cmd:method(system)} adds Blundell-Bond level
 moments.
+
+{phang}
+{cmd:*} Two-step weight: {cmd:xtdpthresh} uses the UNCENTERED clustered
+moment covariance (1/n)Σĝ_iĝ_i' (the {cmd:xtabond2} convention, keeping
+Hansen J and AR diagnostics comparable to that command); {cmd:xthenreg}
+centers it by subtracting the outer product of the mean moment, per
+Seo-Shin (2016, eq. 11). Both are consistent under correct specification;
+the difference is O(1/n). A {cmd:center} option is planned.
+
+{phang}
+{cmd:*} Coefficient SEs: {cmd:xtdpthresh} reports two-step cluster-robust
+SEs for the slope parameters evaluated AT the estimated threshold —
+treating γ̂ as fixed, the Hansen (1999) convention — and deliberately
+reports NO asymptotic SE for γ̂ itself (its asymptotic distribution
+depends on whether the model is continuous; Gong-Seo 2026). All inference
+on γ runs through the grid-bootstrap CI instead. {cmd:xthenreg} reports a
+joint variance including a kernel-estimated Jacobian column for γ, with
+an SE for γ̂. Slope SEs from the two commands are of the same order in
+the comparisons we ran.
 
 {phang}
 {cmd:*} Added: {cmd:iv(}{it:varlist}[, {cmd:collapse}]{cmd:)} for external
@@ -470,6 +521,14 @@ Default 299.
 {phang}
 {opt nosearch} skips the grid bootstrap CI entirely. Equivalent to
 {cmd:citype(none)}.
+
+{phang}
+{opt notest} skips the linearity and continuity test bootstraps only,
+while still constructing the threshold CI. The two test bootstraps are
+independent of the CI inversion, so this is useful for coverage or
+simulation runs that need only {cmd:e(gamma_lo)} and {cmd:e(gamma_hi)}:
+{cmd:e(pval_lin)} and {cmd:e(pval_cont)} are left missing. CI bounds are
+bit-for-bit identical to a full run with the same {cmd:rseed()}.
 
 {phang}
 {opt nowarn} suppresses the CI-boundary pinning warning. By default,

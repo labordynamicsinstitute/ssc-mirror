@@ -1,4 +1,4 @@
-*! version 0.7.5  11jun2026  (companion predict program, shipped with xtdpthresh 0.7.5)
+*! version 0.7.9.1  02jul2026  (companion predict program for xtdpthresh; code unchanged since 0.7.5)
 *!
 *! predict program for xtdpthresh: residuals, xb, regime, arresiduals.
 *!

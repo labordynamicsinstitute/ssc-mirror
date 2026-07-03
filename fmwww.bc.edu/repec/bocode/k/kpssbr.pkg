@@ -1,0 +1,23 @@
+d 'KPSSBR': module to implement KPSS unit root tests with up to 2 structural breaks
+d
+d	 kpssbr implements the family of KPSS stationarity tests,
+d with the null of I(0)    stationarity. The test statistic is	   
+d	eta = T^(-2) * sum(S_t^2) / lrv    where S_t is the partial
+d sum of regression residuals from the deterministic   
+d specification, and lrv is a kernel estimate of the long-run
+d variance. The null is    rejected when eta exceeds the right-tail
+d critical value. 
+d
+d KW: structural breaks
+d KW: KPSS test
+d KW: unit root
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260702
+d
+d Author: Ozan Eruygur,  Ankara Haci Bayram Veli University
+d Support: email eruygur@@gmail.com
+d
+f kpssbr.ado
+f kpssbr.sthlp
