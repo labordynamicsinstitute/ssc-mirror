@@ -1,0 +1,31 @@
+d 'XTFMG': module providing second-generation heterogeneous panel estimators with individual and common shocks:
+d
+d      xtfmg estimates the mean slope of the heterogeneous panel
+d data model with individual and common shocks	      y_it = a_i +
+d b_i' x_it + u_it,	 u_it = g_i' f_t + e_it,    where the
+d slopes b_i are heterogeneous across units with mean b = E(b_i),
+d f_t is a vector of unobserved common factors	  generating
+d cross-sectional dependence (CSD), and each unit may in addition
+d experience structural breaks at unit-specific    dates. The
+d object of interest is the mean slope b. 
+d
+d KW:  panel data
+d KW: cross-sectional dependence
+d KW: Fourier 
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260703
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtfmg.ado
+f xtfmg.sthlp
+f xtfmg_all.sthlp
+f xtfmg_breaks.sthlp
+f xtfmg_estimators.sthlp
+f xtfmg_example.do
+f xtfmg_fccemg.sthlp
+f xtfmg_fsurmg.sthlp
+f xtfmg_map.sthlp

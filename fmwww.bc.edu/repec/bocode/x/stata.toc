@@ -86,6 +86,7 @@ p xtfifevd module to implement Fixed Effects Filtered & Vector Decomposition Est
 p xtfisher module to compute Fisher type unit root test for panel data 
 p xtfixedcoeftvcu module to estimate Panel Data Models with Coefficients that Vary over Time and Cross-sectional Units
 p xtfmb module to execute Fama-MacBeth two-step panel regression
+p xtfmg module providing second-generation heterogeneous panel estimators with individual and common shocks:
 p xtgcause module to test for Granger non-causality in heterogeneous panels
 p xtgeebcv module to compute bias-corrected (small-sample) standard errors for generalized estimating equations
 p xtgets module providing Panel General-to-Specific (GETS) Indicator Saturation for Structural Break Detection

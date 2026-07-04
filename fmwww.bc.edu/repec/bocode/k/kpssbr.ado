@@ -201,15 +201,60 @@ program define kpssbr, rclass
     }
     di as txt " Lags used   : " as res %5.0f `Lused'
     di as txt " N obs       : " as res %5.0f `T'
+    * ---- optional calendar date for break points ------------------------
+    * If the dataset has been tsset with a calendar format (%tm, %tq, %ty,
+    * %td, %tw, %th, %tc, %tC), also display the calendar date next to
+    * the break-point observation number. This does NOT change the core
+    * results; it is a display-only enhancement.
+    *
+    * Capture the r() values from the Mata dispatch BEFORE calling any
+    * other command that might overwrite r().
+    local rbp  = cond(`breaks' == 1, r(bpoint),  .)
+    local rbp1 = cond(`breaks' == 2, r(bpoint1), .)
+    local rbp2 = cond(`breaks' == 2, r(bpoint2), .)
+
+    local tsfmt ""
+    local tsvar ""
+    local t0    = .
+    quietly capture tsset
+    if _rc == 0 {
+        local tsfmt "`r(tsfmt)'"
+        local tsvar "`r(timevar)'"
+        if "`tsvar'" != "" {
+            qui summarize `tsvar' if `touse', meanonly
+            local t0 = r(min)
+        }
+    }
+
     if (`breaks' == 1) {
-        local bp = r(bpoint)
-        di as txt " Break point : " as res %5.0f `bp' as txt "  (observation number within sample)"
+        local bp = `rbp'
+        if !missing(`t0') & "`tsfmt'" != "" {
+            local bpdate = `t0' + `bp' - 1
+            local bpstr  : display `tsfmt' `bpdate'
+            local bpstr = trim("`bpstr'")
+            di as txt " Break point : " as res %5.0f `bp' as txt "  (" as res "`bpstr'" as txt ")"
+        }
+        else {
+            di as txt " Break point : " as res %5.0f `bp' as txt "  (observation number within sample)"
+        }
     }
     if (`breaks' == 2) {
-        local bp1 = r(bpoint1)
-        local bp2 = r(bpoint2)
-        di as txt " Break 1     : " as res %5.0f `bp1'
-        di as txt " Break 2     : " as res %5.0f `bp2'
+        local bp1 = `rbp1'
+        local bp2 = `rbp2'
+        if !missing(`t0') & "`tsfmt'" != "" {
+            local bp1d = `t0' + `bp1' - 1
+            local bp2d = `t0' + `bp2' - 1
+            local bp1s : display `tsfmt' `bp1d'
+            local bp1s = trim("`bp1s'")
+            local bp2s : display `tsfmt' `bp2d'
+            local bp2s = trim("`bp2s'")
+            di as txt " Break 1     : " as res %5.0f `bp1' as txt "  (" as res "`bp1s'" as txt ")"
+            di as txt " Break 2     : " as res %5.0f `bp2' as txt "  (" as res "`bp2s'" as txt ")"
+        }
+        else {
+            di as txt " Break 1     : " as res %5.0f `bp1'
+            di as txt " Break 2     : " as res %5.0f `bp2'
+        }
     }
     di as txt "{hline 72}"
     di as txt " Test statistic : " as res %12.6f `stat'
@@ -260,10 +305,21 @@ program define kpssbr, rclass
     return scalar cv5      = `cv5'
     return scalar cv1      = `cv1'
     if (`breaks' == 0) return scalar cv25 = `cv25'
-    if (`breaks' == 1) return scalar bpoint = r(bpoint)
+    if (`breaks' == 1) {
+        return scalar bpoint = `rbp'
+        if !missing(`t0') & "`tsfmt'" != "" {
+            return scalar bpdate = `t0' + `rbp' - 1
+            return local  tsfmt  "`tsfmt'"
+        }
+    }
     if (`breaks' == 2) {
-        return scalar bpoint1 = r(bpoint1)
-        return scalar bpoint2 = r(bpoint2)
+        return scalar bpoint1 = `rbp1'
+        return scalar bpoint2 = `rbp2'
+        if !missing(`t0') & "`tsfmt'" != "" {
+            return scalar bp1date = `t0' + `rbp1' - 1
+            return scalar bp2date = `t0' + `rbp2' - 1
+            return local  tsfmt   "`tsfmt'"
+        }
     }
     return scalar N        = `T'
     return scalar breaks   = `breaks'
