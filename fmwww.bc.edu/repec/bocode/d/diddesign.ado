@@ -1,4 +1,5 @@
 *! diddesign.ado - Main estimation command for Double DID
+*! version 1.0.2  03jul2026
 *!
 *! Implements the Double Difference-in-Differences estimator for standard
 *! DID designs with multiple pre-treatment periods. Combines standard DID
@@ -15,19 +16,19 @@ program define diddesign, eclass
     // =========================================================================
     // Mata functions are loaded if not already available in memory
     
-    capture mata: mata describe _did_std_main()
+    capture mata: _did_check_tail_loaded()
     if _rc != 0 {
         // Mata functions are not loaded; attempt to locate and load them
         local mata_loaded = 0
         
-        // Method 1: Direct findfile for diddesign_mata.do (works after net install)
+        // Method 1: Direct findfile for diddesign_mata.do
         qui capture findfile diddesign_mata.do
         if _rc == 0 {
             quietly do "`r(fn)'"
             local mata_loaded = 1
         }
         
-        // Method 2: Relative path from ado file (works in development environment)
+        // Method 2: Relative path from ado file
         if !`mata_loaded' {
             qui capture findfile diddesign.ado
             if _rc == 0 {
@@ -44,14 +45,12 @@ program define diddesign, eclass
         
         // Verify loading succeeded
         if !`mata_loaded' {
-            capture mata: mata describe _did_std_main()
+            capture mata: _did_check_tail_loaded()
             if _rc != 0 {
-                display as error "E001: DIDdesign Mata functions not found"
-                display as error "Mata files could not be located in adopath or relative paths."
-                display as error "Solutions:"
-                display as error "  1. Reinstall: net install diddesign, from(...) replace"
-                display as error "  2. Or manually: do {path}/diddesign_mata.do"
-                exit 198
+                display as error "E015: DIDdesign Mata library not loaded"
+                display as error "       Please use 'diddesign' command which auto-loads the library"
+                display as error "       Or reinstall: ssc install diddesign, replace"
+                exit 499
             }
         }
     }

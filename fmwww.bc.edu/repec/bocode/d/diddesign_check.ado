@@ -1,4 +1,5 @@
 *! diddesign_check.ado - Diagnostic tests for parallel trends assumption
+*! version 1.0.2  03jul2026
 *!
 *! Implements placebo tests for assessing the parallel trends assumption in
 *! difference-in-differences designs. Computes standardized pre-treatment DID
@@ -44,12 +45,10 @@ program define diddesign_check, eclass
         if !`mata_loaded' {
             capture mata: _did_check_tail_loaded()
             if _rc != 0 {
-                display as error "E001: DIDdesign diagnostic Mata functions not fully loaded"
-                display as error "The did_check.mata tail sentinel is unavailable."
-                display as error "Solutions:"
-                display as error "  1. Reinstall: net install diddesign, from(...) replace"
-                display as error "  2. Or manually: do {path}/diddesign_mata.do"
-                exit 198
+                display as error "E015: DIDdesign Mata library not loaded"
+                display as error "       Please use 'diddesign' command which auto-loads the library"
+                display as error "       Or reinstall: ssc install diddesign, replace"
+                exit 499
             }
         }
     }

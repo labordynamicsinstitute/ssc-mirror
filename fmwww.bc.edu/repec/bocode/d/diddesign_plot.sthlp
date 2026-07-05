@@ -1,5 +1,7 @@
 {smcl}
-{* *! version 1.1.0  29jan2026}{...}
+{* *! version 1.0.2  03jul2026}{...}
+{title:Copyright}
+Copyright 2026 Xuanyu Cai and Wenli Xu
 {vieweralsosee "diddesign" "help diddesign"}{...}
 {vieweralsosee "diddesign_check" "help diddesign_check"}{...}
 {vieweralsosee "diddesign_plot" "help diddesign_plot"}{...}

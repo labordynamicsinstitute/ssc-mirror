@@ -1,4 +1,5 @@
 *! diddesign_plot.ado - Visualization command for DIDdesign estimation results
+*! version 1.0.2  03jul2026
 *!
 *! Generates diagnostic plots for Double DID analysis including trend plots
 *! for standard DID designs and treatment pattern visualizations for

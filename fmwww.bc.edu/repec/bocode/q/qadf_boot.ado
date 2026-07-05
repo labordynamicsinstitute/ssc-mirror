@@ -1,5 +1,5 @@
 *! qadf_boot - Quantile ADF Unit Root Test: Bootstrap Inference
-*! Version 1.0.0, February 2026
+*! Version 1.1.0, 03 July 2026
 *! Author: Dr. Merwan Roudane
 *! Email: merwanroudane920@gmail.com
 *!
@@ -12,7 +12,11 @@
 *!   Step 1: Fit AR(q) to w_t = dy_t by OLS
 *!   Step 2: Draw iid {u*_t} from centered residuals
 *!   Step 3: Generate y*_t under null (unit root): y*_t = y*_{t-1} + w*_t
-*!   Step 4: Estimate QAR regression on bootstrap sample
+*!   Step 4: Re-run the FULL QADF procedure (including lag re-selection)
+*!           on the bootstrap sample via qadf_core (exact qreg solutions)
+*!
+*! Version 1.1.0: every bootstrap replication now recomputes the statistic
+*! with the exact qreg solver and the source-compatible lag selection.
 
 program define qadf_boot, rclass sortpreserve
     version 14.0
@@ -28,14 +32,17 @@ program define qadf_boot, rclass sortpreserve
         ]
 
     *--------------------------------------------------------------------------
-    * Load Mata library
+    * Load Mata library (only if not already compiled)
     *--------------------------------------------------------------------------
-    capture findfile _qadf_mata.ado
+    capture mata: qadfm_ping()
     if _rc {
-        di as error "Required file _qadf_mata.ado not found."
-        exit 601
+        capture findfile _qadf_mata.ado
+        if _rc {
+            di as error "Required file _qadf_mata.ado not found."
+            exit 601
+        }
+        qui run `"`r(fn)'"'
     }
-    qui run `"`r(fn)'"'
 
     *--------------------------------------------------------------------------
     * Validate inputs
@@ -56,12 +63,15 @@ program define qadf_boot, rclass sortpreserve
         exit 198
     }
 
-    if "`ic'" == "" local ic "aic"
+    if "`ic'" == "" local ic "tstat"
     local ic = lower("`ic'")
-    if !inlist("`ic'", "aic", "bic", "tstat") {
-        di as error "ic() must be {bf:aic}, {bf:bic}, or {bf:tstat}"
+    if !inlist("`ic'", "aic", "bic", "sic", "tstat") {
+        di as error "ic() must be {bf:tstat}, {bf:aic}, or {bf:bic}"
         exit 198
     }
+    local icn 3
+    if "`ic'" == "aic" local icn 1
+    if inlist("`ic'", "bic", "sic") local icn 2
 
     if `reps' < 50 {
         di as error "reps() should be at least 50"
@@ -77,6 +87,10 @@ program define qadf_boot, rclass sortpreserve
     else {
         local model_label "Constant + Trend"
     }
+
+    * Protect any e() results in memory
+    tempname ehold
+    capture _estimates hold `ehold', restore nullok
 
     *--------------------------------------------------------------------------
     * First, run the original QADF test
@@ -98,7 +112,7 @@ program define qadf_boot, rclass sortpreserve
     local cv10_hansen = r(cv10)
 
     *--------------------------------------------------------------------------
-    * Run bootstrap
+    * Run bootstrap: AR sieve DGP under H0, full re-computation per rep
     *--------------------------------------------------------------------------
     di as txt _n "{col 5}Running bootstrap (`reps' replications)..."
     di as txt "{col 5}Bootstrap DGP: AR(`opt_lags') sieve under H0 (unit root)"
@@ -109,23 +123,36 @@ program define qadf_boot, rclass sortpreserve
     local seed_val = `seed'
     if `seed_val' == -1 local seed_val = .
 
-    mata: qadf_bootstrap("`y_temp'", `tau', "`model'", `maxlags', ///
-        "`ic'", `reps', `seed_val', "`touse'", `qadf_stat')
+    mata: qadfm_boot_prep("`y_temp'", "`touse'", `maxlags', `icn')
+    local Tfull = r(T)
+
+    preserve
+    qui drop _all
+    qui set obs `Tfull'
+    qui gen long __qadf_t = _n
+    qui tsset __qadf_t
+    qui gen double __qadf_ystar = .
+    mata: qadfm_boot("__qadf_ystar", `tau', "`model'", `maxlags', `icn', ///
+        `reps', `seed_val', `qadf_stat')
 
     local boot_nv = r(boot_nvalid)
+    if `boot_nv' >= 10 {
+        local boot_pvalue   = r(boot_pvalue)
+        local boot_cv1_t    = r(boot_cv1_t)
+        local boot_cv5_t    = r(boot_cv5_t)
+        local boot_cv10_t   = r(boot_cv10_t)
+        local boot_cv1_u    = r(boot_cv1_u)
+        local boot_cv5_u    = r(boot_cv5_u)
+        local boot_cv10_u   = r(boot_cv10_u)
+    }
+    restore
+    capture mata: mata drop __qadfm_mu __qadfm_betas __qadfm_dyq ///
+        __qadfm_y1v __qadfm_T __qadfm_q
 
     if `boot_nv' < 10 {
         di as error "Insufficient valid bootstrap replications (`boot_nv' out of `reps')"
         exit 198
     }
-
-    local boot_pvalue   = r(boot_pvalue)
-    local boot_cv1_t    = r(boot_cv1_t)
-    local boot_cv5_t    = r(boot_cv5_t)
-    local boot_cv10_t   = r(boot_cv10_t)
-    local boot_cv1_u    = r(boot_cv1_u)
-    local boot_cv5_u    = r(boot_cv5_u)
-    local boot_cv10_u   = r(boot_cv10_u)
 
     * Significance
     local stars ""

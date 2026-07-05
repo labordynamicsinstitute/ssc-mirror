@@ -447,11 +447,11 @@ program define _diddesign_parse, rclass
     // The Mata library must be loaded prior to estimation. Direct invocation
     // of this program without the main command will produce a clear error.
     
-    capture mata: mata describe _diddesign_populate_option()
+    capture mata: _did_check_tail_loaded()
     if _rc != 0 {
         display as error "E015: DIDdesign Mata library not loaded"
         display as error "       Please use 'diddesign' command which auto-loads the library"
-        display as error "       Or run: do diddesign-stata/mata/diddesign_mata.do"
+        display as error "       Or reinstall: ssc install diddesign, replace"
         exit 499
     }
     

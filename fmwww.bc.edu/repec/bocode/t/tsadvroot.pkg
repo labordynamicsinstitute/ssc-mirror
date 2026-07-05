@@ -1,0 +1,38 @@
+d 'TSADVROOT': module providing advanced time-series unit-root tests
+d
+d      tsadvroot is a library of modern univariate unit-root tests
+d that go beyond the classical Dickey-Fuller framework in two	
+d directions:	     1. Quantile-based testing. The qadf and fqadf
+d subcommands test the unit-root hypothesis across the conditional
+d quantiles	       of the series, so that persistence may
+d differ in the lower, central and upper parts of the conditional
+d distribution. 	   fqadf additionally allows smooth
+d structural changes of unknown form through a flexible Fourier
+d component.	    2. Structural breaks. The npadf subcommand
+d allows two sharp breaks at unknown dates (in the level, or in the
+d level and	       slope), and cisur implements the full
+d Carrion-i-Silvestre, Kim and Perron (2009) battery of
+d quasi-GLS-detrended tests	       with up to 3 estimated (or 5
+d known) breaks, with critical values from the authors' response
+d surfaces. 
+d
+d KW: time series
+d KW: unit root
+d KW: quantile
+d KW: Fourier
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260704
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f tsadvroot.ado
+f tsadvroot.sthlp
+f tsadvroot_cisur.sthlp
+f tsadvroot_fqadf.sthlp
+f tsadvroot_npadf.sthlp
+f tsadvroot_qadf.sthlp
+f tsadvroot_test.do

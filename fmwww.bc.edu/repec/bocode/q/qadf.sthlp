@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  February 2026}{...}
+{* *! version 1.1.0  03 July 2026}{...}
 {vieweralsosee "[TS] dfuller" "help dfuller"}{...}
 {vieweralsosee "[TS] pperron" "help pperron"}{...}
 {vieweralsosee "[TS] dfgls" "help dfgls"}{...}
@@ -65,7 +65,7 @@
 {synopt:{opt tau(#)}}quantile; default is {cmd:tau(0.5)}{p_end}
 {synopt:{opt m:odel(string)}}model specification; {cmd:c} (constant, default) or {cmd:ct} (constant + trend){p_end}
 {synopt:{opt maxl:ags(#)}}maximum ADF lags; default is {cmd:maxlags(8)}{p_end}
-{synopt:{opt ic(string)}}information criterion; {cmd:aic} (default), {cmd:bic}, or {cmd:tstat}{p_end}
+{synopt:{opt ic(string)}}lag-selection criterion; {cmd:tstat} (default, as in the reference GAUSS code), {cmd:aic}, or {cmd:bic}{p_end}
 {synopt:{opt l:evel(#)}}confidence level; default is {cmd:level(95)}{p_end}
 {synopt:{opt nopr:int}}suppress output display{p_end}
 {synoptline}
@@ -180,12 +180,26 @@ to include in the ADF regression. The optimal lag is selected according
 to the chosen information criterion. The default is {cmd:maxlags(8)}.
 
 {phang}
-{opt ic(string)} specifies the lag selection method:
+{opt ic(string)} specifies the lag selection method. The lag order is
+selected once, from a constant-only OLS ADF regression, exactly as in the
+reference GAUSS code (tspdlib):
 
-{phang2}{cmd:aic} (the default) uses the Akaike Information Criterion.{p_end}
-{phang2}{cmd:bic} uses the Bayesian (Schwarz) Information Criterion.{p_end}
-{phang2}{cmd:tstat} uses the t-statistic significance rule: starts at the
-maximum lag and reduces until the last lag coefficient is significant at 5%.{p_end}
+{phang2}{cmd:tstat} (the default, as in the GAUSS source) uses the
+general-to-specific t-statistic rule: starts at the maximum lag and reduces
+until the last lag coefficient has |t| > 1.645.{p_end}
+{phang2}{cmd:aic} uses the Akaike Information Criterion with the tspdlib
+penalty ln(SSR/n) + 2(k+2)/n.{p_end}
+{phang2}{cmd:bic} (synonym {cmd:sic}) uses the Schwarz criterion with the
+penalty ln(SSR/n) + (k+2)ln(n)/n.{p_end}
+
+{phang}
+{it:Version note.} Up to version 1.0.0 the default was {cmd:aic} with the
+standard 2k/n penalty, the t-stat rule used the 1.96 threshold, the quantile
+regressions were solved by an iteratively reweighted least-squares
+approximation, and delta-squared was clamped to [0.01, 0.99]. Since version
+1.1.0 all four points follow the reference GAUSS code {cmd:qr_adf.src}
+exactly, and the quantile regressions are solved exactly by {helpb qreg}.
+Results can therefore differ slightly from version 1.0.0.{p_end}
 
 {dlgtab:Bootstrap}
 

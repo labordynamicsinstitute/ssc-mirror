@@ -1,5 +1,5 @@
 *! qadf - Quantile ADF Unit Root Test
-*! Version 1.0.0, February 2026
+*! Version 1.1.0, 03 July 2026
 *! Author: Dr. Merwan Roudane
 *! Email: merwanroudane920@gmail.com
 *!
@@ -12,6 +12,12 @@
 *! Critical Values:
 *!   Hansen, B. (1995). Rethinking the Univariate Approach to Unit Root Tests.
 *!   Econometric Theory, 11, 1148-1171.
+*!
+*! Version 1.1.0: exact compatibility with the GAUSS source qr_adf.src
+*! (tspdlib, S. Nazlioglu). Quantile regressions are now solved exactly by
+*! qreg; lag selection uses the tspdlib penalties and the 1.645 t-stat rule
+*! (now the default criterion, as in the source); delta-squared is reported
+*! unclamped; contiguity of the sample is enforced.
 
 program define qadf, rclass sortpreserve
     version 14.0
@@ -20,21 +26,24 @@ program define qadf, rclass sortpreserve
         TAU(real 0.5)                         /// Quantile (0 < tau < 1)
         Model(string)                         /// Model: c (constant) or ct (constant+trend)
         MAXLags(integer 8)                    /// Maximum ADF lags
-        IC(string)                            /// Info criterion: aic, bic, tstat
+        IC(string)                            /// Info criterion: tstat, aic, bic
         Level(cilevel)                        /// Confidence level
         NOPRint                               /// Suppress output
         ]
 
     *--------------------------------------------------------------------------
-    * Load Mata library
+    * Load Mata library (only if not already compiled)
     *--------------------------------------------------------------------------
-    capture findfile _qadf_mata.ado
+    capture mata: qadfm_ping()
     if _rc {
-        di as error "Required file _qadf_mata.ado not found."
-        di as error "Ensure the QADF package is properly installed."
-        exit 601
+        capture findfile _qadf_mata.ado
+        if _rc {
+            di as error "Required file _qadf_mata.ado not found."
+            di as error "Ensure the QADF package is properly installed."
+            exit 601
+        }
+        qui run `"`r(fn)'"'
     }
-    qui run `"`r(fn)'"'
 
     *--------------------------------------------------------------------------
     * Input validation
@@ -61,17 +70,20 @@ program define qadf, rclass sortpreserve
         }
     }
 
-    * Validate IC
+    * Validate IC (default: tstat, the GAUSS-source default)
     if "`ic'" == "" {
-        local ic "aic"
+        local ic "tstat"
     }
     else {
         local ic = lower("`ic'")
-        if !inlist("`ic'", "aic", "bic", "tstat") {
-            di as error "ic() must be {bf:aic}, {bf:bic}, or {bf:tstat}"
+        if !inlist("`ic'", "aic", "bic", "sic", "tstat") {
+            di as error "ic() must be {bf:tstat}, {bf:aic}, or {bf:bic}"
             exit 198
         }
     }
+    local icn 3
+    if "`ic'" == "aic" local icn 1
+    if inlist("`ic'", "bic", "sic") local icn 2
 
     * Validate maxlags
     if `maxlags' < 0 {
@@ -79,32 +91,39 @@ program define qadf, rclass sortpreserve
         exit 198
     }
 
-    * Check sample size
+    * Check sample size and contiguity
     qui count if `touse'
     local N = r(N)
     if `N' < 20 {
         di as error "insufficient observations (need at least 20, have `N')"
         exit 2001
     }
+    qui tsreport if `touse'
+    if r(N_gaps) > 0 {
+        di as error "the estimation sample contains `r(N_gaps)' gap(s) in `timevar'"
+        di as error "the QADF test requires a contiguous series"
+        exit 498
+    }
+
+    * Protect any e() results in memory (qreg is run internally)
+    tempname ehold
+    capture _estimates hold `ehold', restore nullok
 
     *--------------------------------------------------------------------------
-    * Compute QADF test via Mata
+    * Compute the QADF test (lag selection + exact qreg, source-compatible)
     *--------------------------------------------------------------------------
-    tempvar y_temp
-    qui gen double `y_temp' = `varlist' if `touse'
+    qadf_core `varlist' if `touse', tau(`tau') model(`model') ///
+        pmax(`maxlags') icn(`icn')
 
-    mata: qadf_compute("`y_temp'", `tau', "`model'", `maxlags', "`ic'", "`touse'")
-
-    * Retrieve results from Mata
-    local qadf_stat = r(qadf_stat)
-    local coef_stat = r(coef_stat)
+    local qadf_stat = r(tn)
+    local coef_stat = r(Un)
     local rho_tau   = r(rho_tau)
     local rho_ols   = r(rho_ols)
     local alpha_tau = r(alpha_tau)
     local delta2    = r(delta2)
     local half_life = r(half_life)
     local opt_lags  = r(lags)
-    local nobs      = r(nobs)
+    local nobs      = r(neff)
     local cv1       = r(cv1)
     local cv5       = r(cv5)
     local cv10      = r(cv10)

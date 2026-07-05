@@ -1,5 +1,5 @@
 *! qadf_graph - Quantile ADF Unit Root Test: Visualization
-*! Version 1.0.0, February 2026
+*! Version 1.1.0, 03 July 2026
 *! Author: Dr. Merwan Roudane
 *! Email: merwanroudane920@gmail.com
 *!

@@ -1,5 +1,5 @@
 *! qadf_process - Quantile ADF Unit Root Test: Multi-Quantile Process
-*! Version 1.0.0, February 2026
+*! Version 1.1.0, 03 July 2026
 *! Author: Dr. Merwan Roudane
 *! Email: merwanroudane920@gmail.com
 *!
@@ -35,20 +35,23 @@ program define qadf_process, rclass sortpreserve
         local quantiles "0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9"
     }
     if "`model'" == "" local model "c"
-    if "`ic'" == "" local ic "aic"
+    if "`ic'" == "" local ic "tstat"
 
     * Count quantiles
     local nq : word count `quantiles'
 
     *--------------------------------------------------------------------------
-    * Load Mata library
+    * Load Mata library (only if not already compiled)
     *--------------------------------------------------------------------------
-    capture findfile _qadf_mata.ado
+    capture mata: qadfm_ping()
     if _rc {
-        di as error "Required file _qadf_mata.ado not found."
-        exit 601
+        capture findfile _qadf_mata.ado
+        if _rc {
+            di as error "Required file _qadf_mata.ado not found."
+            exit 601
+        }
+        qui run `"`r(fn)'"'
     }
-    qui run `"`r(fn)'"'
 
     *--------------------------------------------------------------------------
     * Validate inputs
@@ -63,13 +66,20 @@ program define qadf_process, rclass sortpreserve
         exit 198
     }
     local ic = lower("`ic'")
-    if !inlist("`ic'", "aic", "bic", "tstat") {
-        di as error "ic() must be {bf:aic}, {bf:bic}, or {bf:tstat}"
+    if !inlist("`ic'", "aic", "bic", "sic", "tstat") {
+        di as error "ic() must be {bf:tstat}, {bf:aic}, or {bf:bic}"
         exit 198
     }
+    local icn 3
+    if "`ic'" == "aic" local icn 1
+    if inlist("`ic'", "bic", "sic") local icn 2
 
     qui count if `touse'
     local N = r(N)
+
+    * Protect any e() results in memory
+    tempname ehold
+    capture _estimates hold `ehold', restore nullok
 
     if "`model'" == "c" {
         local model_label "Constant"
@@ -172,8 +182,17 @@ program define qadf_process, rclass sortpreserve
         local seed_val = `seed'
         if `seed_val' == -1 local seed_val = .
 
-        mata: qadf_bootstrap_process("`y_temp'", "`quantiles'", ///
-            "`model'", `maxlags', "`ic'", `reps', `seed_val', "`touse'")
+        mata: qadfm_boot_prep("`y_temp'", "`touse'", `maxlags', `icn')
+        local Tfull = r(T)
+
+        preserve
+        qui drop _all
+        qui set obs `Tfull'
+        qui gen long __qadf_t = _n
+        qui tsset __qadf_t
+        qui gen double __qadf_ystar = .
+        mata: qadfm_bootproc("__qadf_ystar", "`quantiles'", "`model'", ///
+            `maxlags', `icn', `reps', `seed_val')
 
         local boot_nv = r(boot_nvalid)
 
@@ -187,7 +206,10 @@ program define qadf_process, rclass sortpreserve
             local boot_qcm_t_5  = r(boot_qcm_t_5)
             local boot_qcm_t_10 = r(boot_qcm_t_10)
         }
-        else {
+        restore
+        capture mata: mata drop __qadfm_mu __qadfm_betas __qadfm_dyq ///
+            __qadfm_y1v __qadfm_T __qadfm_q
+        if `boot_nv' < 10 {
             di as error "Warning: Insufficient valid bootstrap replications (`boot_nv')"
             local bootstrap ""
         }
