@@ -1,9 +1,9 @@
 ********************************************************************************
-* xtpmg 2.0.1: Complete Example — All New Features
+* xtpmg 2.1.1: Complete Example — All New Features
 * Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
-* Date: 12 February 2026
+* Date: 6 July 2026
 *
-* This example demonstrates the full XTPMG 2.0.1 workflow:
+* This example demonstrates the full XTPMG 2.1.1 workflow:
 *   1. Automatic lag selection (AIC/BIC)
 *   2. PMG estimation with ARDL order display
 *   3. Per-panel short-run coefficient table
@@ -170,7 +170,108 @@ di "  EXAMPLE 9: Dynamic Fixed Effects (DFE)"
 di "============================================================"
 
 capture drop ECT
-xtpmg d.y d.x1 d.x2, lr(l.y x1 x2) fe replace
+xtpmg d.y d.x1 d.x2, lr(l.y x1 x2) dfe replace
+
+
+* ==============================================================================
+* 11. CROSS-SECTIONAL DEPENDENCE TEST (NEW in 2.1.1)
+* ==============================================================================
+* The Pesaran (2004/2015) CD test on the residuals is printed automatically
+* after every estimator and stored in e(CD), e(p_CD), e(CD_avg).
+
+di _n(3)
+di "============================================================"
+di "  EXAMPLE 10: Cross-Sectional Dependence diagnostics"
+di "============================================================"
+
+capture drop ECT
+xtpmg d.y d.x1 d.x2, lr(l.y x1 x2) pmg replace
+di "CD statistic = " e(CD) "   p-value = " e(p_CD)
+
+
+* ==============================================================================
+* 12. PROFESSIONAL VISUALIZATIONS (NEW in 2.1.1)
+* ==============================================================================
+* graph -> long-run coefficient plot, ECT bar chart, half-life chart,
+*          IRF plot, short-run coefficient panel, and a combined dashboard.
+
+di _n(3)
+di "============================================================"
+di "  EXAMPLE 11: Full graphical dashboard"
+di "============================================================"
+
+capture drop ECT
+xtpmg d.y d.x1 d.x2, lr(l.y x1 x2) pmg full irf(15) graph replace
+* Graphs produced (in memory): xtpmg_lrcoef xtpmg_ect xtpmg_halflife
+*                              xtpmg_irf xtpmg_sr_combined xtpmg_dashboard
+
+
+* ==============================================================================
+* 13. PER-PANEL COEFFICIENT PLOTS via estat (NEW in 2.1.1)
+* ==============================================================================
+
+di _n(3)
+di "============================================================"
+di "  EXAMPLE 12: estat box / bar / rcap"
+di "============================================================"
+
+capture drop ECT
+xtpmg d.y d.x1 d.x2, lr(l.y x1 x2) pmg replace
+estat rcap                 // caterpillar: per-panel point + 95% CI
+estat rcap ec              // only the error-correction (speed of adjustment)
+estat bar, nomg            // per-panel bars, no mean-group line
+estat box                  // distribution of per-panel coefficients
+
+
+* ==============================================================================
+* 14. CROSS-SECTION BOOTSTRAP via estat (NEW in 2.1.1)
+* ==============================================================================
+
+di _n(3)
+di "============================================================"
+di "  EXAMPLE 13: estat bootstrap (panel bootstrap)"
+di "============================================================"
+
+capture drop ECT
+xtpmg d.y d.x1 d.x2, lr(l.y x1 x2) pmg replace
+estat bootstrap, reps(200) seed(12345)
+estat bootstrap, reps(200) seed(12345) percentile
+
+
+* ==============================================================================
+* 15. HAUSMAN MODEL-SELECTION TEST (MG vs PMG vs DFE)
+* ==============================================================================
+* Hausman contrasts a consistent estimator against a more efficient (more
+* restrictive) one; order less-restrictive first.  H0: extra restriction valid.
+*   - Do NOT reject  -> prefer the more restrictive/efficient estimator.
+*   - Reject         -> use the less-restrictive estimator.
+* The standard PMG test is  hausman mg pmg  (tests long-run homogeneity).
+* See "help xtpmg" -> Model selection: the Hausman test.
+
+di _n(3)
+di "============================================================"
+di "  EXAMPLE 14: Hausman tests"
+di "============================================================"
+
+capture drop ECT
+xtpmg d.y d.x1 d.x2, lr(l.y x1 x2) pmg replace
+estimates store pmg
+capture drop ECT
+xtpmg d.y d.x1 d.x2, lr(l.y x1 x2) mg replace
+estimates store mg
+capture drop ECT
+xtpmg d.y d.x1 d.x2, lr(l.y x1 x2) dfe replace
+estimates store dfe
+
+* Primary test: long-run homogeneity (MG vs PMG)
+hausman mg pmg, sigmamore
+
+* Secondary (interpret with care; see help): DFE restrictions
+hausman pmg dfe, sigmamore
+
+* Visualize: forest plot of long-run coefficients + annotated test statistic
+estat hausman mg pmg dfe, sigmamore
+* Graph produced (in memory): xtpmg_hausman
 
 
 ********************************************************************************
@@ -180,5 +281,5 @@ xtpmg d.y d.x1 d.x2, lr(l.y x1 x2) fe replace
 di _n(3)
 di "============================================================"
 di "  All examples completed successfully!"
-di "  XTPMG version 2.0.1 — Dr Merwan Roudane"
+di "  XTPMG version 2.1.1 — Dr Merwan Roudane"
 di "============================================================"

@@ -1,4 +1,4 @@
-*! version 2.0.1  12feb2026  Dr Merwan Roudane  merwanroudane920@gmail.com
+*! version 2.1.1  06jul2026  Dr Merwan Roudane  merwanroudane920@gmail.com
 *! XTPMG: Enhanced panel ARDL with lag selection, short-run tables, half-life & IRF
 *! Fix: predict eq() naming conflict causing r(110) in Stata 15.1+
 *! Original: 1.1.1 Ed Blackburne -- Mark Frank, Sam Houston State University, 20 February 2007
@@ -11,7 +11,10 @@ program define xtpmg
 			if (`"`e(cmd)'"' !="xtpmg") error 301
 			Display `0'
 		}
-		else Estimate `0'
+		else {
+			global xtpmg_cmdline `"xtpmg `0'"'
+			Estimate `0'
+		}
 end
 
 program define Estimate, eclass
@@ -47,10 +50,9 @@ program define Estimate, eclass
 		}
 	}
 	
-	* Auto-trigger lag selection when maxlag is specified but lagsel is not
+	* Warn if maxlag is specified but lagsel is not
 	if "`lagsel'" == "" & `maxlag' != 4 {
-		local lagsel "aic"
-		di in gr "Note: maxlag(`maxlag') specified without lagsel(); defaulting to lagsel(aic)"
+		di in ye "Note: maxlag(`maxlag') specified without lagsel(). Add lagsel(aic), lagsel(bic), or lagsel(both) to enable automatic lag selection."
 	}
 	
 	* Validate maxlag
@@ -91,7 +93,7 @@ program define Estimate, eclass
 	qui tsset
 	local ivar `r(panelvar)'
 	local tvar `r(timevar)'
-	capture macro drop nocons LRy LRx SRy SRx
+	capture macro drop nocons LRy LRx SRy SRx ARDL_display ARDL_order_p
 	tokenize `varlist'
 	global SRy `1'
 	mac shift
@@ -117,15 +119,19 @@ program define Estimate, eclass
 		SelectLags if `touse', maxlag(`maxlag') lagsel(`lagsel') ivar(`ivar') tvar(`tvar')
 		* Results stored in globals: $ARDL_order, $ARDL_display
 	}
+	else if "`lr'" != "" {
+		* Infer ARDL order from the actual variables in the model
+		InferARDLOrder
+	}
 
 	if "`mg'"!=""{
 		EstMG if `touse', level(`level') ec(`ec') `full' ///
-			srtable(`srtable') halflife(`halflife') irf(`irf')
+			srtable(`srtable') halflife(`halflife') irf(`irf') graph(`graph')
 		exit
 	}
 
 	if "`dfe'"!=""{
-		EstDFE if `touse', level(`level') ec(`ec')
+		EstDFE if `touse', level(`level') ec(`ec') graph(`graph')
 		exit
 	}
 
@@ -235,7 +241,7 @@ program define Estimate, eclass
 	
 	}
 
-	tempname b V 
+	tempname b V bicp seicp
 	matrix `V'=syminv(`G')
 	matrix `thV'=`V'[1..`kl',1..`kl']
 	matrix `b'=nullmat(`theta'), `param' 
@@ -245,6 +251,12 @@ program define Estimate, eclass
 	matrix rownames `sigs'=$iis
 	matrix colnames `sigs'="Variance"	
 	eret post `b' `V', esample(`touse')
+	* --- per-panel coefficient/SE matrices for estat (2.1.1) ---
+	capture mata: xtpmg_split("e(b)","e(V)", `=scalar(`kl')', `=scalar(`ks')', `n')
+	local coef_i "`ec' $SRx"
+	if "`constant'"=="" local coef_i "`coef_i' _cons"
+	capture matrix rownames __xtpmg_bi = $iis
+	capture matrix rownames __xtpmg_sei = $iis
 
 // Handle any constraints. However, much like reg3, this will
 // fail if the unconstrained model is not identified since these constraints
@@ -274,6 +286,14 @@ program define Estimate, eclass
 	matrix `v1'=J(`k1',`k0',0),`V'
 	matrix `V'=`v0' \ `v1'
 	
+	* --- Cross-sectional dependence test on residuals (Pesaran CD) ---
+	tempvar _cdres
+	quie gen double `_cdres'=`r' if e(sample)
+	tempname cdstat cdp cdavg
+	capture XtpmgCD `_cdres'
+	scalar `cdstat'=r(CD)
+	scalar `cdp'=r(pCD)
+	scalar `cdavg'=r(CDavg)
 	quie replace `r'=`r'^2
 	quie sum `r' if e(sample)
 	ereturn scalar sigma=r(mean)
@@ -290,7 +310,12 @@ program define Estimate, eclass
 	ereturn local tvar="`tvar'"
 	ereturn local cmd="xtpmg"
 	ereturn local model="PMG"
+	ereturn local estat_cmd "xtpmg_estat"
+	ereturn local cmdline "$xtpmg_cmdline"
 	ereturn scalar ll=scalar(`ll')
+	ereturn scalar CD=`cdstat'
+	ereturn scalar p_CD=`cdp'
+	ereturn scalar CD_avg=`cdavg'
 	
 	* Store ARDL order if lag selection was used
 	if "$ARDL_display" != "" {
@@ -299,8 +324,14 @@ program define Estimate, eclass
 	
 	* Store phis for half-life
 	if "`lr'" != "" {
+		capture matrix rownames `phis'=$iis
 		ereturn matrix phi_i=`phis'
 	}
+	capture matrix `bicp'=__xtpmg_bi
+	capture ereturn matrix b_i=`bicp'
+	capture matrix `seicp'=__xtpmg_sei
+	capture ereturn matrix se_i=`seicp'
+	ereturn local coef_i "`coef_i'"
 
 	quie est store PMG, copy title("Full pmg estimates")
 	matrix `b'=e(MGE_b)
@@ -344,7 +375,17 @@ program define Estimate, eclass
 	ereturn local tvar="`tvar'"
 	ereturn local cmd="xtpmg"
 	ereturn local model="pmg"
+	ereturn local estat_cmd "xtpmg_estat"
+	ereturn local cmdline "$xtpmg_cmdline"
+	capture matrix `bicp'=__xtpmg_bi
+	capture ereturn matrix b_i=`bicp'
+	capture matrix `seicp'=__xtpmg_sei
+	capture ereturn matrix se_i=`seicp'
+	ereturn local coef_i "`coef_i'"
 	ereturn scalar ll=scalar(`ll')
+	ereturn scalar CD=`cdstat'
+	ereturn scalar p_CD=`cdp'
+	ereturn scalar CD_avg=`cdavg'
 	
 	if "$ARDL_display" != "" {
 		ereturn local ardl_order "$ARDL_display"
@@ -357,9 +398,10 @@ program define Estimate, eclass
 	}
 
 	Display, level(`level')
+	capture noisily XtpmgShowCSD
 	
 	* =====================================================================
-	* POST-ESTIMATION DIAGNOSTICS (new in 2.0.1)
+	* POST-ESTIMATION DIAGNOSTICS (new in 2.1.1)
 	* =====================================================================
 	
 	* Short-run table for each panel
@@ -381,7 +423,7 @@ program define Estimate, eclass
 	}
 	
 	* =====================================================================
-	* GRAPH VISUALIZATIONS (new in 2.0.1)
+	* GRAPH VISUALIZATIONS (new in 2.1.1)
 	* =====================================================================
 	
 	if "`graph'" != "" {
@@ -389,7 +431,7 @@ program define Estimate, eclass
 		
 		di
 		di in smcl in gr "{hline 78}"
-		di in gr "{bf:Generating Visualizations}" _col(49) in ye "XTPMG 2.0.1"
+		di in gr "{bf:Generating Visualizations}" _col(49) in ye "XTPMG 2.1.1"
 		di in smcl in gr "{hline 78}"
 		
 		* 1. ECT bar chart (always available with full or graph)
@@ -408,6 +450,12 @@ program define Estimate, eclass
 			PlotSRCoefs, ivar(`ivar') ec(`ec')
 		}
 		
+		* 5. Long-run coefficient plot (dot-and-whisker)
+		PlotLRCoefs, ec(`ec')
+		
+		* 6. Combined professional dashboard
+		PlotDashboard, periods(`irf')
+		
 		di in smcl in gr "{hline 78}"
 		di
 	}
@@ -423,8 +471,11 @@ end
 
 program define EstMG, eclass
 	syntax [if] [in], EC(string) [Level(integer `c(level)') FULL ///
-		SRTable(string) HALFlife(string) IRF(integer 0)] 
+		SRTable(string) HALFlife(string) IRF(integer 0) GRaph(string)] 
 	marksample touse
+	qui xtset
+	local ivar "`r(panelvar)'"
+	local tvar "`r(timevar)'"
 	tempname nl N names
 	quie count if `touse'
 	local N=r(N)
@@ -462,6 +513,7 @@ program define EstMG, eclass
 	}
 
 	matrix `VV'=J(`kk'*`n',`kk'*`n',0)
+	tempname phis phi_one phcopy1 phcopy2 bicp seicp
 	local j=1
 	
 	foreach i of global iis{
@@ -477,6 +529,8 @@ program define EstMG, eclass
 		tempname b V
 		matrix `b'=e(b)
 		matrix `V'=e(V)
+		scalar `phi_one'=`b'[1,`=wordcount("$LRx")'+1]
+		matrix `phis'=nullmat(`phis') \ `phi_one'
 		matrix colnames `b'=`names'
 		foreach xx of local names{
 			local newname "`newname' `_dta[iis]'_`i'`xx'"
@@ -487,6 +541,13 @@ program define EstMG, eclass
 		local j=`j'+1
 	}
 
+	capture matrix rownames `phis'=$iis
+	* --- per-panel coefficient/SE matrices for estat (2.1.1) ---
+	capture mata: xtpmg_split("`b0'","`VV'", 0, `kk', `n')
+	local coef_i "$LRx `ec' $SRx"
+	if "$nocons"=="" local coef_i "`coef_i' _cons"
+	capture matrix rownames __xtpmg_bi = $iis
+	capture matrix rownames __xtpmg_sei = $iis
 	matrix colnames `VV'= `newname'
 	matrix rownames `VV'= `newname'
 	matrix colnames `b0'= `newname'
@@ -512,6 +573,13 @@ program define EstMG, eclass
 	quie gen double `ec' = `ectmp' if `touse'
 
 	quie replace `ec'=$LRy-`ec'
+	tempvar _cdres
+	quie gen double `_cdres'=`r' if `touse'
+	tempname cdstat cdp cdavg
+	capture XtpmgCD `_cdres'
+	scalar `cdstat'=r(CD)
+	scalar `cdp'=r(pCD)
+	scalar `cdavg'=r(CDavg)
 	quie replace `r'=`r'^2 if `touse'
 	quie sum `r' if `touse'
 	scalar `sig2'=r(mean)
@@ -527,6 +595,18 @@ program define EstMG, eclass
 	ereturn local tvar="`tvar'"
 	ereturn local cmd="xtpmg"	
 	ereturn local model="mg"
+	ereturn local estat_cmd "xtpmg_estat"
+	ereturn local cmdline "$xtpmg_cmdline"
+	ereturn scalar CD=`cdstat'
+	ereturn scalar p_CD=`cdp'
+	ereturn scalar CD_avg=`cdavg'
+	capture matrix `phcopy1'=`phis'
+	capture ereturn matrix phi_i=`phcopy1'
+	capture matrix `bicp'=__xtpmg_bi
+	capture ereturn matrix b_i=`bicp'
+	capture matrix `seicp'=__xtpmg_sei
+	capture ereturn matrix se_i=`seicp'
+	ereturn local coef_i "`coef_i'"
 	
 	if "$ARDL_display" != "" {
 		ereturn local ardl_order "$ARDL_display"
@@ -553,6 +633,18 @@ program define EstMG, eclass
 	ereturn local tvar="`tvar'"
 	ereturn local cmd="xtpmg"	
 	ereturn local model="MG"
+	ereturn local estat_cmd "xtpmg_estat"
+	ereturn local cmdline "$xtpmg_cmdline"
+	ereturn scalar CD=`cdstat'
+	ereturn scalar p_CD=`cdp'
+	ereturn scalar CD_avg=`cdavg'
+	capture matrix `phcopy2'=`phis'
+	capture ereturn matrix phi_i=`phcopy2'
+	capture matrix `bicp'=__xtpmg_bi
+	capture ereturn matrix b_i=`bicp'
+	capture matrix `seicp'=__xtpmg_sei
+	capture ereturn matrix se_i=`seicp'
+	ereturn local coef_i "`coef_i'"
 	
 	if "$ARDL_display" != "" {
 		ereturn local ardl_order "$ARDL_display"
@@ -563,14 +655,54 @@ program define EstMG, eclass
 		quie est restore mg
 	}
 	Display, level(`level')
+	capture noisily XtpmgShowCSD
+	
+	* --- Post-estimation diagnostics for MG (uses e(phi_i)) ---
+	if "`halflife'" != "" {
+		quie est restore mg
+		DisplayHalfLife, ivar(`ivar') ec(`ec')
+	}
+	if `irf' > 0 {
+		quie est restore mg
+		SimulateIRF, periods(`irf') ivar(`ivar') ec(`ec')
+	}
+	if "`srtable'" != "" {
+		di in ye "  Note: srtable (per-panel SR) is available for the pmg model only."
+	}
+	if "`graph'" != "" {
+		quie est restore mg
+		PlotECT, ivar(`ivar') ec(`ec')
+		PlotHalfLife, ivar(`ivar') ec(`ec')
+		PlotLRCoefs, ec(`ec')
+		if `irf' > 0 {
+			PlotIRF, periods(`irf') ivar(`ivar') ec(`ec')
+		}
+		PlotDashboard, periods(`irf')
+	}
+	if "`full'"!=""{
+		quie est restore MG
+	}
+	else {
+		quie est restore mg
+	}
 end
 
 program define EstDFE, eclass
-	syntax [if] [in], EC(string) [Level(integer `c(level)')] 
+	syntax [if] [in], EC(string) [Level(integer `c(level)') GRaph(string)] 
 	marksample touse
+	qui xtset
+	local ivar "`r(panelvar)'"
+	local tvar "`r(timevar)'"
 	tempname nl names sigma
 	quie xtreg $SRy $LRy $LRx $SRx if `touse', level(`level') fe $cluster
 	quie est store rDFE, copy title("Reduced form dfe estimates")
+	tempvar _cdres
+	capture predict double `_cdres' if `touse', e
+	tempname cdstat cdp cdavg
+	capture XtpmgCD `_cdres'
+	scalar `cdstat'=r(CD)
+	scalar `cdp'=r(pCD)
+	scalar `cdavg'=r(CDavg)
 	scalar `sigma'=e(sigma)
 	local nl
 	local names
@@ -610,8 +742,13 @@ program define EstDFE, eclass
 	}
 
 	eret local cmd="xtpmg" 
-	eret local model="fe"
+	eret local model="dfe"
+	eret local estat_cmd "xtpmg_estat"
+	eret local cmdline "$xtpmg_cmdline"
 	eret scalar sigma=`sigma' 
+	eret scalar CD=`cdstat'
+	eret scalar p_CD=`cdp'
+	eret scalar CD_avg=`cdavg'
 	
 	if "$ARDL_display" != "" {
 		eret local ardl_order "$ARDL_display"
@@ -619,6 +756,10 @@ program define EstDFE, eclass
 	
 	quie est store DFE, title("Dynamic fixed effects estimates")
 	Display, level(`level')
+	capture noisily XtpmgShowCSD
+	if "`graph'" != "" {
+		PlotLRCoefs, ec(`ec')
+	}
 end
 
 
@@ -669,7 +810,7 @@ end
 
 
 * =========================================================================
-* NEW IN 2.0.1: SelectLags — Automatic lag selection via AIC/BIC
+* NEW IN 2.1.1: SelectLags — Automatic lag selection via AIC/BIC
 * Searches over ARDL(p, q1, ..., qk) and MODIFIES $SRx accordingly
 * =========================================================================
 
@@ -679,7 +820,7 @@ program define SelectLags
 	
 	di
 	di in smcl in gr "{hline 78}"
-	di in gr "{bf:Automatic Lag Selection}" _col(49) in ye "XTPMG 2.0.1"
+	di in gr "{bf:Automatic Lag Selection}" _col(49) in ye "XTPMG 2.1.1"
 	di in smcl in gr "{hline 78}"
 	di in gr "  Criterion:    " in ye upper("`lagsel'")
 	di in gr "  Max lag:      " in ye "`maxlag'"
@@ -718,6 +859,17 @@ program define SelectLags
 		}
 	}
 	local n_xvars = wordcount("`unique_x'")
+	
+	* ---- Fix a COMMON estimation sample across all candidate lag orders ----
+	* AIC/BIC are comparable only when every candidate uses the same obs.
+	* Require the deepest lag terms (order maxlag) to be present.
+	tempvar csample
+	qui gen byte `csample' = `touse'
+	local _deep = `maxlag' - 1
+	capture qui replace `csample' = 0 if missing(L`_deep'.$SRy)
+	foreach xvar of local unique_x {
+		capture qui replace `csample' = 0 if missing(L`_deep'D.`xvar')
+	}
 	
 	* ---- Storage for per-panel results ----
 	tempname best_aic best_bic curr_aic curr_bic
@@ -768,12 +920,12 @@ program define SelectLags
 			
 			* Estimate with this lag structure
 			capture quie regress $SRy `deplag' $LRx $SRx ///
-				if `touse' & `ivar' == `i', $nocons
+				if `csample' & `ivar' == `i', $nocons
 			
 			if !_rc & e(N) > 0 {
 				local k_params = e(rank)
 				scalar `curr_aic' = -2 * e(ll) + 2 * `k_params'
-				scalar `curr_bic' = -2 * e(ll) + `k_params' * ln(`ni')
+				scalar `curr_bic' = -2 * e(ll) + `k_params' * ln(e(N))
 				
 				if scalar(`curr_aic') < scalar(`best_aic') {
 					scalar `best_aic' = scalar(`curr_aic')
@@ -798,7 +950,24 @@ program define SelectLags
 		
 		* ============================================================
 		* STEP 2: Search over qi for each x variable
+		*   Use the panel's best p from STEP 1 to build dep-var lags
 		* ============================================================
+		
+		* Build dep-var lags from this panel's best p (AIC)
+		local deplag_aic ""
+		if `best_p_aic_i' > 1 {
+			forvalues lag = 1/`= `best_p_aic_i' - 1' {
+				local deplag_aic "`deplag_aic' L`lag'.$SRy"
+			}
+		}
+		* Build dep-var lags from this panel's best p (BIC)
+		local deplag_bic ""
+		if `best_p_bic_i' > 1 {
+			forvalues lag = 1/`= `best_p_bic_i' - 1' {
+				local deplag_bic "`deplag_bic' L`lag'.$SRy"
+			}
+		}
+		
 		local xidx = 0
 		foreach xvar of local unique_x {
 			local xidx = `xidx' + 1
@@ -808,16 +977,20 @@ program define SelectLags
 			local best_q_aic_i = 1
 			local best_q_bic_i = 1
 			
-			forvalues q = 1/`maxlag' {
+			forvalues q = 0/`maxlag' {
 				* Build: d.x, Ld.x, L2d.x, ..., L(q-1)d.x
-				local xlag "d.`xvar'"
-				if `q' > 1 {
-					forvalues lag = 1/`= `q' - 1' {
-						local xlag "`xlag' L`lag'D.`xvar'"
+				* q=0 means NO contemporaneous diff (exclude this x from SR)
+				local xlag ""
+				if `q' > 0 {
+					local xlag "d.`xvar'"
+					if `q' > 1 {
+						forvalues lag = 1/`= `q' - 1' {
+							local xlag "`xlag' L`lag'D.`xvar'"
+						}
 					}
 				}
 				
-				* Build the rest of the SR vars (other x's unchanged)
+				* Build the rest of the SR vars (other x's at contemporaneous only)
 				local other_sr ""
 				foreach ox of local unique_x {
 					if "`ox'" != "`xvar'" {
@@ -825,18 +998,28 @@ program define SelectLags
 					}
 				}
 				
-				capture quie regress $SRy $LRx `xlag' `other_sr' ///
-					if `touse' & `ivar' == `i', $nocons
+				* --- AIC search: use dep-var lags from AIC-optimal p ---
+				capture quie regress $SRy `deplag_aic' $LRx `xlag' `other_sr' ///
+					if `csample' & `ivar' == `i', $nocons
 				
 				if !_rc & e(N) > 0 {
 					local k_params = e(rank)
 					scalar `curr_aic' = -2 * e(ll) + 2 * `k_params'
-					scalar `curr_bic' = -2 * e(ll) + `k_params' * ln(`ni')
 					
 					if scalar(`curr_aic') < scalar(`best_aic') {
 						scalar `best_aic' = scalar(`curr_aic')
 						local best_q_aic_i = `q'
 					}
+				}
+				
+				* --- BIC search: use dep-var lags from BIC-optimal p ---
+				capture quie regress $SRy `deplag_bic' $LRx `xlag' `other_sr' ///
+					if `csample' & `ivar' == `i', $nocons
+				
+				if !_rc & e(N) > 0 {
+					local k_params = e(rank)
+					scalar `curr_bic' = -2 * e(ll) + `k_params' * ln(e(N))
+					
 					if scalar(`curr_bic') < scalar(`best_bic') {
 						scalar `best_bic' = scalar(`curr_bic')
 						local best_q_bic_i = `q'
@@ -885,9 +1068,9 @@ program define SelectLags
 	local q_aic_str ""
 	local q_bic_str ""
 	forvalues xidx = 1/`n_xvars' {
-		local mode_q_aic = 1
+		local mode_q_aic = 0
 		local mode_q_aic_cnt = 0
-		forvalues q = 1/`maxlag' {
+		forvalues q = 0/`maxlag' {
 			local cnt = 0
 			foreach qq of local all_q`xidx'_aic {
 				if `qq' == `q' local cnt = `cnt' + 1
@@ -899,9 +1082,9 @@ program define SelectLags
 		}
 		local q_aic_str "`q_aic_str' `mode_q_aic'"
 		
-		local mode_q_bic = 1
+		local mode_q_bic = 0
 		local mode_q_bic_cnt = 0
-		forvalues q = 1/`maxlag' {
+		forvalues q = 0/`maxlag' {
 			local cnt = 0
 			foreach qq of local all_q`xidx'_bic {
 				if `qq' == `q' local cnt = `cnt' + 1
@@ -952,6 +1135,9 @@ program define SelectLags
 		local xidx = `xidx' + 1
 		local qi : word `xidx' of `chosen_q'
 		
+		* Skip this x variable if qi=0 (no SR component)
+		if `qi' == 0 continue
+		
 		* Contemporaneous difference
 		local new_srx "`new_srx' d.`xvar'"
 		
@@ -995,7 +1181,66 @@ end
 
 
 * =========================================================================
-* NEW IN 2.0.1: DisplaySRTable — Per-panel short-run coefficients
+* InferARDLOrder — Deduce ARDL(p, q1, q2, ...) from current $SRy/$SRx/$LRx
+* Called when no lagsel is active to display correct model order
+* =========================================================================
+
+program define InferARDLOrder
+	* p = 1 + number of lagged dependent-variable difference terms in $SRx
+	* The dependent var base name is extracted from $SRy (strip D. prefix)
+	local dep_base "$SRy"
+	local dep_base = subinstr("`dep_base'", "D.", "", .)
+	local dep_base = subinstr("`dep_base'", "d.", "", .)
+	
+	* Count lagged dependent terms in $SRx (L1.D.y, L2.D.y, etc.)
+	local p = 1
+	foreach sx of global SRx {
+		local sx_clean = upper("`sx'")
+		local dep_upper = upper("`dep_base'")
+		if strpos("`sx_clean'", "`dep_upper'") > 0 {
+			* This is a lagged dep-var diff term — increment p
+			local p = `p' + 1
+		}
+	}
+	
+	* Get unique x-variable base names from $LRx
+	local unique_x ""
+	foreach lrx of global LRx {
+		local bname "`lrx'"
+		local bname = subinstr("`bname'", "L.", "", .)
+		local bname = subinstr("`bname'", "l.", "", .)
+		local bname = subinstr("`bname'", "L1.", "", .)
+		local bname = subinstr("`bname'", "l1.", "", .)
+		local found 0
+		foreach ux of local unique_x {
+			if "`ux'" == "`bname'" local found = 1
+		}
+		if `found' == 0 {
+			local unique_x "`unique_x' `bname'"
+		}
+	}
+	
+	* For each x variable, count how many terms appear in $SRx
+	local ardl_str "ARDL(`p'"
+	foreach xvar of local unique_x {
+		local qi = 0
+		local xvar_upper = upper("`xvar'")
+		foreach sx of global SRx {
+			local sx_upper = upper("`sx'")
+			if strpos("`sx_upper'", "`xvar_upper'") > 0 {
+				local qi = `qi' + 1
+			}
+		}
+		local ardl_str "`ardl_str',`qi'"
+	}
+	local ardl_str "`ardl_str')"
+	
+	global ARDL_display "`ardl_str'"
+end
+
+
+* =========================================================================
+* NEW IN 2.1.1: DisplaySRTable — Per-panel short-run coefficients
 * =========================================================================
 
 program define DisplaySRTable
@@ -1003,7 +1248,7 @@ program define DisplaySRTable
 	
 	di
 	di in smcl in gr "{hline 78}"
-	di in gr "{bf:Panel-Specific Short-Run Coefficients}" _col(49) in ye "XTPMG 2.0.1"
+	di in gr "{bf:Panel-Specific Short-Run Coefficients}" _col(49) in ye "XTPMG 2.1.1"
 	di in gr "  (In PMG, short-run coefficients are heterogeneous across panels)"
 	di in smcl in gr "{hline 78}"
 	di
@@ -1116,17 +1361,20 @@ end
 
 
 * =========================================================================
-* NEW IN 2.0.1: DisplayHalfLife — Half-life of adjustment
+* NEW IN 2.1.1: DisplayHalfLife — Half-life of adjustment
 * =========================================================================
 
 program define DisplayHalfLife
 	syntax, IVar(string) EC(string)
+	tempname _PHI
+	capture matrix `_PHI'=e(phi_i)
+	local _hasphi = (_rc==0)
 	
 	di
 	di in smcl in gr "{hline 78}"
 	di in gr "{bf:Half-Life of Adjustment to Long-Run Equilibrium}" ///
-		_col(49) in ye "XTPMG 2.0.1"
-	di in gr "  Formula: half_life = ln(2) / |phi_i|"
+		_col(49) in ye "XTPMG 2.1.1"
+	di in gr "  Formula: half_life = ln(2) / -ln(1+phi_i)  (discrete EC decay)"
 	di in gr "  where phi_i is the error-correction (speed of adjustment) coefficient"
 	di in smcl in gr "{hline 78}"
 	di
@@ -1149,11 +1397,20 @@ program define DisplayHalfLife
 	local n_valid = 0
 	local n_convergent = 0
 	
+	local _idx = 0
 	foreach i of global iis {
+		local _idx = `_idx' + 1
 		local coefname "`ivar'_`i':`ec'"
 		
-		capture local phi = _b[`coefname']
-		if _rc {
+		if `_hasphi' {
+			local phi = `_PHI'[`_idx',1]
+			local _prc = 0
+		}
+		else {
+			capture local phi = _b[`coefname']
+			local _prc = _rc
+		}
+		if `_prc' {
 			di in gr %10s "`i'" " {c |}" ///
 				%15s "." " {c |}" ///
 				%15s "." " {c |}" ///
@@ -1173,7 +1430,13 @@ program define DisplayHalfLife
 		
 		* Half-life calculation
 		if `phi' < 0 & `phi' > -2 {
-			local hl = ln(2) / abs(`phi')
+			local _onep = abs(1 + `phi')
+			if `_onep' > 0 & `_onep' < 1 {
+				local hl = ln(2) / (-ln(`_onep'))
+			}
+			else {
+				local hl = 0
+			}
 			local adj_speed = abs(`phi') * 100
 			local sum_hl = `sum_hl' + `hl'
 			local sum_phi = `sum_phi' + `phi'
@@ -1229,18 +1492,24 @@ end
 
 
 * =========================================================================
-* NEW IN 2.0.1: SimulateIRF — Impulse response simulation
+* NEW IN 2.1.1: SimulateIRF — Impulse response simulation
 * =========================================================================
 
 program define SimulateIRF
 	syntax, Periods(integer) IVar(string) EC(string)
+	tempname _PHI
+	capture matrix `_PHI'=e(phi_i)
+	local _hasphi = (_rc==0)
 	
 	di
 	di in smcl in gr "{hline 78}"
-	di in gr "{bf:Impulse Response Function (Simulated)}" ///
-		_col(49) in ye "XTPMG 2.0.1"
+	di in gr "{bf:Error-Correction Adjustment Path (Simulated)}" ///
+		_col(49) in ye "XTPMG 2.1.1"
 	di in gr "  Shock: One-unit deviation from long-run equilibrium at t=0"
 	di in gr "  Tracing adjustment path via error-correction mechanism"
+	di in gr "  {bf:Assumption:} pure EC decay at the mean phi; short-run ARDL"
+	di in gr "  lag dynamics are not propagated. Exact for ARDL(1,0,...,0);"
+	di in gr "  an approximation to the full impulse response otherwise."
 	di in gr "  Periods: `periods'"
 	di in smcl in gr "{hline 78}"
 	di
@@ -1261,10 +1530,19 @@ program define SimulateIRF
 	local sum_phi = 0
 	local n_valid = 0
 	
+	local _idx = 0
 	foreach i of global iis {
+		local _idx = `_idx' + 1
 		local coefname "`ivar'_`i':`ec'"
-		capture local phi = _b[`coefname']
-		if !_rc & `phi' < 0 {
+		if `_hasphi' {
+			local phi = `_PHI'[`_idx',1]
+			local _prc = 0
+		}
+		else {
+			capture local phi = _b[`coefname']
+			local _prc = _rc
+		}
+		if !`_prc' & `phi' < 0 {
 			local sum_phi = `sum_phi' + `phi'
 			local n_valid = `n_valid' + 1
 		}
@@ -1354,8 +1632,9 @@ program define SimulateIRF
 	
 	* Summary
 	local final_gap = `gap' * 100
-	local half_life = ln(2) / abs(`mean_phi')
-	local q90_life = ln(10) / abs(`mean_phi')
+	local _onep = abs(1 + `mean_phi')
+	local half_life = ln(2) / (-ln(`_onep'))
+	local q90_life = ln(10) / (-ln(`_onep'))
 	
 	di
 	di in gr "  {bf:Summary:}"
@@ -1371,7 +1650,7 @@ end
 
 
 * =========================================================================
-* ENHANCED DISPLAY (updated for 2.0.1)
+* ENHANCED DISPLAY (updated for 2.1.1)
 * =========================================================================
 
 program define Display
@@ -1381,7 +1660,7 @@ program define Display
 		#delimit ;
 		di _n in smcl in gr "{hline 78}" ;
 		di in gr "{bf:Pooled Mean Group Regression}"
-		   _col(49) in ye "XTPMG v2.0.1" ;
+		   _col(49) in ye "XTPMG v2.1.1" ;
 		di in gr "{it:Pesaran, Shin & Smith (1999)}" ;
 		di in smcl in gr "{hline 78}" ;
 		di in gr "(Estimate results saved as " in ye e(model) in gr ")" ;
@@ -1408,7 +1687,7 @@ program define Display
 		}
 		di in smcl in gr "{hline 78}"
 	}
-	if "`e(model)'"=="fe"{
+	if "`e(model)'"=="fe" | "`e(model)'"=="dfe"{
 		quie est restore DFE
 		if "$cluster"!=""{
 			di _n in smcl in gr "{hline 78}"
@@ -1418,7 +1697,7 @@ program define Display
 		di in smcl in gr "{hline 78}";
 		di in gr "{bf:Dynamic Fixed Effects Regression:} " 
 			in ye "Estimated Error Correction Form"
-		   _col(49) "XTPMG v2.0.1" ;
+		   _col(49) "XTPMG v2.1.1" ;
 		di in gr "(Estimate results saved as " in ye "DFE" in gr ")";
 		di in smcl in gr "{hline 78}";
 
@@ -1428,7 +1707,7 @@ program define Display
 		#delimit ;	
 		di _n in smcl in gr "{hline 78}";
 		di in gr "{bf:Mean Group Estimation:} " in ye "Error Correction Form"
-		   _col(49) "XTPMG v2.0.1" ;
+		   _col(49) "XTPMG v2.1.1" ;
 		di in gr "(Estimate results saved as " in ye e(model) in gr ")";
 		di in smcl in gr "{hline 78}";
 		#delimit cr
@@ -1443,17 +1722,20 @@ end
 
 
 * =========================================================================
-* NEW IN 2.0.1: GRAPH VISUALIZATIONS
+* NEW IN 2.1.1: GRAPH VISUALIZATIONS
 * Beautiful Stata graphs for panel ARDL diagnostics
 * =========================================================================
 
 
 * =========================================================================
-* PlotIRF — Impulse Response Function graph
+* PlotIRF -- Error-correction adjustment path graph
 * =========================================================================
 
 program define PlotIRF
 	syntax, Periods(integer) IVar(string) EC(string)
+	tempname _PHI
+	capture matrix `_PHI'=e(phi_i)
+	local _hasphi = (_rc==0)
 	
 	tempname fullb
 	matrix `fullb' = e(b)
@@ -1462,10 +1744,19 @@ program define PlotIRF
 	local sum_phi = 0
 	local n_valid = 0
 	
+	local _idx = 0
 	foreach i of global iis {
+		local _idx = `_idx' + 1
 		local coefname "`ivar'_`i':`ec'"
-		capture local phi = _b[`coefname']
-		if !_rc & `phi' < 0 {
+		if `_hasphi' {
+			local phi = `_PHI'[`_idx',1]
+			local _prc = 0
+		}
+		else {
+			capture local phi = _b[`coefname']
+			local _prc = _rc
+		}
+		if !`_prc' & `phi' < 0 {
 			local sum_phi = `sum_phi' + `phi'
 			local n_valid = `n_valid' + 1
 		}
@@ -1477,7 +1768,8 @@ program define PlotIRF
 	}
 	
 	local mean_phi = `sum_phi' / `n_valid'
-	local half_life = ln(2) / abs(`mean_phi')
+	local _onep = abs(1 + `mean_phi')
+	local half_life = ln(2) / (-ln(`_onep'))
 	
 	* Create temporary dataset for plotting
 	preserve
@@ -1516,9 +1808,9 @@ program define PlotIRF
 		    lcolor("47 117 181") lwidth(medthick) lpattern(solid))
 		   (line zero_line period, 
 		    lcolor(gs10) lwidth(thin) lpattern(dash)),
-		title("{bf:Impulse Response Function}", 
+		title("{bf:Error-Correction Adjustment Path}", 
 			size(large) color(black))
-		subtitle("Error Correction Adjustment Path — XTPMG 2.0.1", 
+		subtitle("Error Correction Adjustment Path — XTPMG 2.1.1", 
 			size(medsmall) color(gs5))
 		ytitle("Response to Unit Shock", size(medium))
 		xtitle("Periods After Shock", size(medium))
@@ -1552,6 +1844,9 @@ end
 
 program define PlotECT
 	syntax, IVar(string) EC(string)
+	tempname _PHI
+	capture matrix `_PHI'=e(phi_i)
+	local _hasphi = (_rc==0)
 	
 	tempname fullb
 	matrix `fullb' = e(b)
@@ -1573,13 +1868,21 @@ program define PlotECT
 	foreach i of global iis {
 		local idx = `idx' + 1
 		local coefname "`ivar'_`i':`ec'"
-		capture local coef = _b[`coefname']
-		if !_rc {
+		if `_hasphi' {
+			local coef = `_PHI'[`idx',1]
+			local _prc = 0
+		}
+		else {
+			capture local coef = _b[`coefname']
+			local _prc = _rc
+		}
+		if !`_prc' {
+			local se = .
 			capture local se = _se[`coefname']
 			qui replace panel_id = "Panel `i'" in `idx'
 			qui replace phi = `coef' in `idx'
 			
-			if !_rc & `se' > 0 {
+			if `se' < . & `se' > 0 {
 				local tstat = abs(`coef' / `se')
 				if `tstat' > 2.576 qui replace sig = 3 in `idx'
 				else if `tstat' > 1.960 qui replace sig = 2 in `idx'
@@ -1593,7 +1896,7 @@ program define PlotECT
 		}
 		else {
 			qui replace panel_id = "Panel `i'" in `idx'
-			qui replace phi = 0 in `idx'
+			* leave phi missing so the mean line excludes non-estimated panels
 		}
 	}
 	
@@ -1611,7 +1914,7 @@ program define PlotECT
 		    color("231 76 60%80") lcolor("231 76 60") barwidth(0.7)),
 		title("{bf:Error Correction Term (ECT) by Panel}", 
 			size(large) color(black))
-		subtitle("Speed of Adjustment Coefficients — XTPMG 2.0.1", 
+		subtitle("Speed of Adjustment Coefficients — XTPMG 2.1.1", 
 			size(medsmall) color(gs5))
 		ytitle("ECT Coefficient ({&phi}{sub:i})", size(medium))
 		xtitle("Panel", size(medium))
@@ -1645,6 +1948,9 @@ end
 
 program define PlotHalfLife
 	syntax, IVar(string) EC(string)
+	tempname _PHI
+	capture matrix `_PHI'=e(phi_i)
+	local _hasphi = (_rc==0)
 	
 	tempname fullb
 	matrix `fullb' = e(b)
@@ -1663,11 +1969,24 @@ program define PlotHalfLife
 	foreach i of global iis {
 		local idx = `idx' + 1
 		local coefname "`ivar'_`i':`ec'"
-		capture local phi = _b[`coefname']
+		if `_hasphi' {
+			local phi = `_PHI'[`idx',1]
+			local _prc = 0
+		}
+		else {
+			capture local phi = _b[`coefname']
+			local _prc = _rc
+		}
 		qui replace panel_id = "Panel `i'" in `idx'
 		
-		if !_rc & `phi' < 0 & `phi' > -2 {
-			local hl = ln(2) / abs(`phi')
+		if !`_prc' & `phi' < 0 & `phi' > -2 {
+			local _onep = abs(1 + `phi')
+			if `_onep' > 0 & `_onep' < 1 {
+				local hl = ln(2) / (-ln(`_onep'))
+			}
+			else {
+				local hl = 0
+			}
 			local adj = abs(`phi') * 100
 			qui replace half_life = `hl' in `idx'
 			qui replace adj_speed = `adj' in `idx'
@@ -1685,7 +2004,7 @@ program define PlotHalfLife
 		    msymbol(circle) msize(medium) mcolor("41 128 185") mlcolor(white) mlwidth(thin)),
 		title("{bf:Half-Life of Adjustment by Panel}", 
 			size(large) color(black))
-		subtitle("Time to Close 50% of Disequilibrium Gap — XTPMG 2.0.1", 
+		subtitle("Time to Close 50% of Disequilibrium Gap — XTPMG 2.1.1", 
 			size(medsmall) color(gs5))
 		xtitle("Half-Life (periods)", size(medium))
 		ytitle("Panel", size(medium))
@@ -1695,7 +2014,7 @@ program define PlotHalfLife
 		xline(`mean_hl', lcolor("231 76 60") lwidth(medthin) lpattern(dash))
 		legend(off)
 		note("Mean half-life = `: di %4.2f `mean_hl'' periods (dashed red line)"
-			 "Formula: half_life = ln(2) / |{&phi}{sub:i}|",
+			 "Formula: half_life = ln(2) / -ln(1+{&phi}{sub:i})",
 			 size(vsmall) color(gs6))
 		graphregion(fcolor(white) lcolor(white))
 		plotregion(fcolor(white) lcolor(gs14) margin(small))
@@ -1714,6 +2033,9 @@ end
 
 program define PlotSRCoefs
 	syntax, IVar(string) EC(string)
+	tempname _PHI
+	capture matrix `_PHI'=e(phi_i)
+	local _hasphi = (_rc==0)
 	
 	tempname fullb
 	matrix `fullb' = e(b)
@@ -1832,7 +2154,7 @@ program define PlotSRCoefs
 		graph combine `combined_names',
 			title("{bf:Panel-Specific Short-Run Coefficients}", 
 				size(large) color(black))
-			subtitle("Heterogeneous SR dynamics across panels — XTPMG 2.0.1",
+			subtitle("Heterogeneous SR dynamics across panels — XTPMG 2.1.1",
 				size(medsmall) color(gs5))
 			note("Bars = point estimates, whiskers = 95% CI, dashed line = mean across panels", 
 				size(vsmall) color(gs6))
@@ -1845,3 +2167,267 @@ program define PlotSRCoefs
 	}
 end
 
+
+* =========================================================================
+* NEW IN 2.1.1: Cross-sectional dependence test (Pesaran CD) + engine
+* =========================================================================
+
+program define XtpmgCD, rclass
+	args resid
+	qui xtset
+	local pv "`r(panelvar)'"
+	local tv "`r(timevar)'"
+	capture scalar drop __xtpmg_CD __xtpmg_CDp __xtpmg_CDavg __xtpmg_np __xtpmg_N
+	scalar __xtpmg_CD    = .
+	scalar __xtpmg_CDp   = .
+	scalar __xtpmg_CDavg = .
+	scalar __xtpmg_np    = 0
+	scalar __xtpmg_N     = 0
+	capture mata: xtpmg_cd("`resid'", "`pv'", "`tv'")
+	return scalar CD     = __xtpmg_CD
+	return scalar pCD    = __xtpmg_CDp
+	return scalar CDavg  = __xtpmg_CDavg
+	return scalar npairs = __xtpmg_np
+	return scalar Ncd    = __xtpmg_N
+	capture scalar drop __xtpmg_CD __xtpmg_CDp __xtpmg_CDavg __xtpmg_np __xtpmg_N
+end
+
+program define XtpmgShowCSD
+	if "`e(CD)'"=="" exit
+	tempname cd p avg
+	scalar `cd'  = e(CD)
+	scalar `p'   = e(p_CD)
+	scalar `avg' = e(CD_avg)
+	di
+	di in smcl in gr "{hline 78}"
+	di in gr "{bf:Cross-Sectional Dependence Test (Residuals)}" _col(66) in ye "XTPMG 2.1.1"
+	di in gr "  Pesaran (2004, 2015) CD test   H0: cross-sectional independence"
+	di in smcl in gr "{hline 78}"
+	if `cd' >= . {
+		di in ye "  CD statistic unavailable (insufficient overlapping observations)."
+		di in smcl in gr "{hline 78}"
+		exit
+	}
+	local stars ""
+	if `p' < 0.01      local stars "***"
+	else if `p' < 0.05 local stars "** "
+	else if `p' < 0.10 local stars "*  "
+	di in gr "  CD statistic"                _col(34) "=" _col(40) in ye %9.4f `cd' "  `stars'"
+	di in gr "  p-value"                     _col(34) "=" _col(40) in ye %9.4f `p'
+	di in gr "  Mean |pairwise correlation|" _col(34) "=" _col(40) in ye %9.4f `avg'
+	di in smcl in gr "{hline 78}"
+	if `p' < 0.05 {
+		di in gr "  {bf:Conclusion:} reject H0 at 5% - evidence of cross-sectional dependence."
+		di in gr "  PMG/MG/DFE assume errors are independent across panels (Pesaran, Shin &"
+		di in gr "  Smith 1999, Assumption 1). Consider CCE / common-factor models or"
+		di in gr "  cross-sectional demeaning of the data."
+	}
+	else {
+		di in gr "  {bf:Conclusion:} fail to reject H0 at 5% - no evidence of CSD."
+	}
+	di in gr "  Significance: *** p<.01, ** p<.05, * p<.10"
+	di in smcl in gr "{hline 78}"
+	di
+end
+
+* =========================================================================
+* NEW IN 2.1.1: PlotLRCoefs - long-run coefficient dot-and-whisker plot
+* =========================================================================
+
+program define PlotLRCoefs
+	syntax, EC(string)
+	local nlr = wordcount("$LRx")
+	if `nlr' == 0 {
+		di in ye "  No long-run coefficients available to plot."
+		exit
+	}
+	preserve
+	clear
+	qui set obs `nlr'
+	qui gen vnum = _n
+	qui gen str32 vname = ""
+	qui gen coef = .
+	qui gen se   = .
+	qui gen lo   = .
+	qui gen hi   = .
+	local k = 0
+	foreach x of global LRx {
+		local k = `k' + 1
+		qui replace vname = "`x'" in `k'
+		capture local c = _b[`ec':`x']
+		if !_rc {
+			qui replace coef = `c' in `k'
+			local sx = .
+			capture local sx = _se[`ec':`x']
+			if `sx' < . & `sx' > 0 {
+				qui replace se = `sx' in `k'
+				qui replace lo = `c' - 1.96*`sx' in `k'
+				qui replace hi = `c' + 1.96*`sx' in `k'
+			}
+		}
+	}
+	forvalues i = 1/`nlr' {
+		local nm "`=vname[`i']'"
+		label define _lrvl `i' "`nm'", add
+	}
+	label values vnum _lrvl
+	qui sum coef
+	local mc = r(mean)
+	#delimit ;
+	twoway (rspike lo hi vnum, horizontal lcolor("41 128 185") lwidth(medthick))
+	       (scatter vnum coef, msymbol(circle) msize(large)
+	            mcolor("41 128 185") mlcolor(white) mlwidth(medthin)),
+		title("{bf:Long-Run Coefficients}", size(large) color(black))
+		subtitle("Pooled long-run estimates with 95% CI - XTPMG 2.1.1",
+			size(medsmall) color(gs5))
+		xtitle("Coefficient", size(medium))
+		ytitle("")
+		ylabel(1/`nlr', valuelabel angle(0) labsize(small))
+		xlabel(, format(%5.2f) labsize(small) grid glcolor(gs14) glpattern(dot))
+		xline(0, lcolor("231 76 60") lwidth(medthin) lpattern(dash))
+		legend(off)
+		note("Whiskers = 95% confidence interval; red dashed line = 0",
+			size(vsmall) color(gs6))
+		graphregion(fcolor(white) lcolor(white))
+		plotregion(fcolor(white) lcolor(gs14) margin(medium))
+		name(xtpmg_lrcoef, replace) ;
+	#delimit cr
+	di in gr "  {bf:Graph saved:} " in ye "xtpmg_lrcoef"
+	restore
+end
+
+* =========================================================================
+* NEW IN 2.1.1: PlotDashboard - combine key graphs into one figure
+* =========================================================================
+
+program define PlotDashboard
+	syntax [, Periods(integer 0)]
+	local glist ""
+	foreach g in xtpmg_lrcoef xtpmg_ect xtpmg_halflife xtpmg_irf {
+		capture graph describe `g'
+		if _rc == 0 local glist "`glist' `g'"
+	}
+	local ng : word count `glist'
+	if `ng' == 0 {
+		di in ye "  Dashboard: no component graphs available."
+		exit
+	}
+	#delimit ;
+	graph combine `glist',
+		title("{bf:XTPMG Model Dashboard}", size(large) color(black))
+		subtitle("Long-run coefficients, error correction, half-life & adjustment path - XTPMG 2.1.1",
+			size(small) color(gs5))
+		note("XTPMG 2.1.1 - Dr Merwan Roudane", size(vsmall) color(gs8))
+		graphregion(fcolor(white) lcolor(white))
+		cols(2) iscale(0.65) imargin(small)
+		name(xtpmg_dashboard, replace) ;
+	#delimit cr
+	di in gr "  {bf:Graph saved:} " in ye "xtpmg_dashboard"
+end
+
+* =========================================================================
+* Mata: Pesaran (2004/2015) CD statistic from residual variable
+* (unbalanced-panel safe, pairwise common samples)
+* =========================================================================
+
+mata:
+void xtpmg_cd(string scalar rv, string scalar iv, string scalar tv)
+{
+	real matrix D, sel, E
+	real colvector ids, tms, a, b, av, bv, ok, pos
+	real scalar N, Tn, i, j, k, Tij, denom, rho, S, SR, np, sa, sb, cd
+
+	D = st_data(., (rv, iv, tv))
+	D = select(D, D[,1] :< .)
+	if (rows(D) < 4) {
+		st_numscalar("__xtpmg_CD", .)
+		st_numscalar("__xtpmg_CDp", .)
+		st_numscalar("__xtpmg_CDavg", .)
+		st_numscalar("__xtpmg_np", 0)
+		st_numscalar("__xtpmg_N", 0)
+		return
+	}
+	ids = uniqrows(D[,2])
+	tms = uniqrows(D[,3])
+	N = rows(ids)
+	Tn = rows(tms)
+	E = J(Tn, N, .)
+	for (i=1; i<=N; i++) {
+		sel = D[selectindex(D[,2] :== ids[i]), (3,1)]
+		for (k=1; k<=rows(sel); k++) {
+			pos = selectindex(tms :== sel[k,1])
+			if (rows(pos) >= 1) {
+				E[pos[1], i] = sel[k,2]
+			}
+		}
+	}
+	S = 0
+	SR = 0
+	np = 0
+	for (i=1; i<=N-1; i++) {
+		for (j=i+1; j<=N; j++) {
+			a = E[,i]
+			b = E[,j]
+			ok = selectindex((a :< .) :& (b :< .))
+			Tij = rows(ok)
+			if (Tij > 2) {
+				av = a[ok]
+				bv = b[ok]
+				sa = sum(av)/Tij
+				sb = sum(bv)/Tij
+				av = av :- sa
+				bv = bv :- sb
+				denom = sqrt(sum(av:^2) * sum(bv:^2))
+				if (denom > 0) {
+					rho = sum(av :* bv)/denom
+					S = S + sqrt(Tij)*rho
+					SR = SR + abs(rho)
+					np = np + 1
+				}
+			}
+		}
+	}
+	if (N >= 2 & np > 0) {
+		cd = sqrt(2/(N*(N-1))) * S
+		st_numscalar("__xtpmg_CD", cd)
+		st_numscalar("__xtpmg_CDp", 2*normal(-abs(cd)))
+		st_numscalar("__xtpmg_CDavg", SR/np)
+		st_numscalar("__xtpmg_np", np)
+		st_numscalar("__xtpmg_N", N)
+	}
+	else {
+		st_numscalar("__xtpmg_CD", .)
+		st_numscalar("__xtpmg_CDp", .)
+		st_numscalar("__xtpmg_CDavg", .)
+		st_numscalar("__xtpmg_np", 0)
+		st_numscalar("__xtpmg_N", N)
+	}
+}
+end
+
+mata:
+void xtpmg_split(string scalar bn, string scalar Vn, real scalar off, real scalar blk, real scalar n)
+{
+	real matrix b, V, bi, sei
+	real scalar i, j, c
+	b = st_matrix(bn)
+	V = st_matrix(Vn)
+	bi = J(n, blk, .)
+	sei = J(n, blk, .)
+	for (i=1; i<=n; i++) {
+		for (j=1; j<=blk; j++) {
+			c = off + (i-1)*blk + j
+			if (c <= cols(b)) {
+				bi[i,j] = b[1,c]
+				if (c <= cols(V)) {
+					if (V[c,c] >= 0) {
+						sei[i,j] = sqrt(V[c,c])
+					}
+				}
+			}
+		}
+	}
+	st_matrix("__xtpmg_bi", bi)
+	st_matrix("__xtpmg_sei", sei)
+}
+end

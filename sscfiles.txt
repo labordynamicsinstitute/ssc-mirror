@@ -24648,6 +24648,7 @@ fmwww.bc.edu/repec/bocode/x/xfrac_chk.ado
 fmwww.bc.edu/repec/bocode/x/xtpraisk.ado
 fmwww.bc.edu/repec/bocode/x/xtpanelcoint.pkg
 fmwww.bc.edu/repec/bocode/x/xtpcointegwe.ado
+fmwww.bc.edu/repec/bocode/x/xtpmg_estat.ado
 fmwww.bc.edu/repec/bocode/x/xtpcaus.sthlp
 fmwww.bc.edu/repec/bocode/x/xtpattern.hlp
 fmwww.bc.edu/repec/bocode/x/xtregsam.pkg
@@ -24773,6 +24774,7 @@ fmwww.bc.edu/repec/bocode/x/xtpdyn.sthlp
 fmwww.bc.edu/repec/bocode/x/xtgrangert.sthlp
 fmwww.bc.edu/repec/bocode/x/xtpedroni.sthlp
 fmwww.bc.edu/repec/bocode/x/xtwest.ado
+fmwww.bc.edu/repec/bocode/x/xtpmg_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/x/xttestpanel_postestimation_example.do
 fmwww.bc.edu/repec/bocode/x/xml_tab.hlp
 fmwww.bc.edu/repec/bocode/x/xtcsi.pkg
