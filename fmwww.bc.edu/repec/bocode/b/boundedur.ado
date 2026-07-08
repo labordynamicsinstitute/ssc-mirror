@@ -1,560 +1,653 @@
-*! boundedur v1.0.0 Dr. Merwan Roudane 02Feb2026
-*! Unit root tests for bounded time series (Cavaliere & Xu, 2014)
-*! Email: merwanroudane920@gmail.com
-*! Reference: Cavaliere, G., Xu, F. (2014). Testing for unit roots in bounded time series.
-*!            Journal of Econometrics 178, 259-272.
+*! boundedur v2.0.0  Merwan Roudane  07jul2026
+*! Unit-root tests for bounded time series -- a library
+*! Base command implements Cavaliere & Xu (2014, J.Econometrics 178, 259-272)
+*! Algorithm 1 (simulation-based ADF and M tests) faithfully.
+*! github.com/merwanroudane  --  merwanroudane920@gmail.com
+*!
+*! Dispatcher:
+*!   boundedur <varname> , lbound() [ubound() ...]   -> Cavaliere-Xu (2014) tests
+*!   boundedur cx      <varname> , ...               -> same, explicit
+*!   boundedur mtests  <varname> , ...               -> Carrion-i-Silvestre & Gadea (2013)
+*!   boundedur breaks  <varname> , ...               -> (in development) CSG (2016)
+*!   boundedur hlt     <varname> , ...               -> (in development) CSG (2024)
 
 program define boundedur, rclass
     version 14.0
-    
-    syntax varname(ts) [if] [in], ///
-        lbound(real) ///
-        [ubound(real 999999)] ///
-        [test(string)] ///
-        [lags(integer -1)] ///
-        [maxlag(integer -1)] ///
-        [nsim(integer 499)] ///
-        [nstep(integer -1)] ///
-        [recolor] ///
-        [krclag(integer -1)] ///
-        [level(cilevel)] ///
-        [detrend(string)] ///
-        [nosimulation] ///
-        [seed(integer -1)] ///
-        [savesim(string)]
-    
-    * Display header
-    di _n as text "{title:Bounded Unit Root Tests}"
-    di as text "{hline 78}"
-    di as text "Reference: Cavaliere & Xu (2014), Journal of Econometrics 178, 259-272"
-    di as text "{hline 78}"
-    
-    * Mark sample
-    marksample touse
-    _ts tvar panvar if `touse', sort onepanel
-    markout `touse' `tvar'
-    
-    * CRITICAL: Correct syntax for tsset (from lessons learned)
-    * NO EQUALS SIGN for string r() results!
-    qui tsset
-    local timevar `r(timevar)'
-    local panelvar `r(panelvar)'
-    
-    * Check for panel data
-    if "`panelvar'" != "" {
-        di as error "Panel data not supported. Please use single time series."
+
+    * ---- dispatcher: peek at the first token --------------------------------
+    gettoken sub rest : 0, parse(" ,")
+    local sub = lower("`sub'")
+
+    if inlist("`sub'","cx","mtests","breaks","hlt") {
+        local 0 `"`rest'"'
+        if "`sub'" == "cx" {
+            boundedur_cx `0'
+        }
+        else if "`sub'" == "mtests" {
+            boundedur_stub "mtests" "Carrion-i-Silvestre & Gadea (2013), GLS M-tests for bounded series"
+        }
+        else if "`sub'" == "breaks" {
+            boundedur_stub "breaks" "Carrion-i-Silvestre & Gadea (2016), bounds+breaks"
+        }
+        else {
+            boundedur_stub "hlt" "Carrion-i-Silvestre & Gadea (2024), HLT level-shift"
+        }
+    }
+    else {
+        * no recognised subcommand -> default to the Cavaliere-Xu tests
+        boundedur_cx `0'
+    }
+    return add
+end
+
+*==============================================================================
+* Placeholder for library modules still under construction
+*==============================================================================
+program define boundedur_stub
+    args name desc
+    di as error "boundedur `name': `desc' is not yet available in this release."
+    di as text  "This module is on the roadmap; see {help boundedur##roadmap:help boundedur}."
+    exit 198
+end
+
+
+*==============================================================================
+* boundedur cx : Cavaliere & Xu (2014) simulation-based ADF and M tests
+*==============================================================================
+program define boundedur_cx, rclass
+    version 14.0
+
+    syntax varname(ts) [if] [in] , ///
+        Lbound(string) ///
+        [ Ubound(string) ] ///
+        [ Test(string) ] ///
+        [ Lags(integer -1) ] ///
+        [ MAXLag(integer -1) ] ///
+        [ Nsim(integer 499) ] ///
+        [ Nstep(integer -1) ] ///
+        [ DETrend(string) ] ///
+        [ REColor ] ///
+        [ KRClag(integer -1) ] ///
+        [ GLSc(real -7.0) ] ///
+        [ SEED(integer -1) ] ///
+        [ SAVESIM(name) ] ///
+        [ noGRAPH ] ///
+        [ GNAME(string) ] ///
+        [ Level(cilevel) ]
+
+    * ---- parse bounds (allow . / "inf" for one-sided) -----------------------
+    local lb = lower("`lbound'")
+    local ub = lower("`ubound'")
+    local lbval = .
+    if !inlist("`lb'","",".","inf","-inf","+inf","none") {
+        capture confirm number `lbound'
+        if _rc {
+            di as error "lbound() must be a number or . for one-sided"
+            exit 198
+        }
+        local lbval = real("`lbound'")
+    }
+    local ubval = .
+    if !inlist("`ub'","",".","inf","+inf","none") {
+        capture confirm number `ubound'
+        if _rc {
+            di as error "ubound() must be a number or . for one-sided"
+            exit 198
+        }
+        local ubval = real("`ubound'")
+    }
+    if `lbval'==. & `ubval'==. {
+        di as error "Specify at least one finite bound in lbound() or ubound()."
         exit 198
     }
-    
-    if "`timevar'" == "" {
-        di as error "Time variable not set. Use {cmd:tsset} first."
+    if `lbval'!=. & `ubval'!=. {
+        if `lbval' >= `ubval' {
+            di as error "lower bound must be strictly less than upper bound"
+            exit 198
+        }
+    }
+
+    * ---- sample / time handling --------------------------------------------
+    marksample touse
+    markout `touse' `varlist'
+    capture qui tsset
+    if _rc {
+        di as error "Data are not tsset. Use {cmd:tsset} timevar first."
         exit 111
     }
-    
-    * Count observations
+    local timevar "`r(timevar)'"
+    local panelvar "`r(panelvar)'"
+    if "`panelvar'" != "" {
+        di as error "Panel data are not supported; use a single time series (tsset time)."
+        exit 198
+    }
+    if "`timevar'" == "" {
+        di as error "Data are not tsset. Use {cmd:tsset} timevar first."
+        exit 111
+    }
+    markout `touse' `timevar'
     qui count if `touse'
     local N = r(N)
-    
-    if `N' < 10 {
-        di as error "Insufficient observations (minimum 10 required)"
+    if `N' < 15 {
+        di as error "Insufficient observations (need at least 15)."
         exit 2001
     }
-    
-    * Validate bounds
-    if `lbound' >= `ubound' & `ubound' != 999999 {
-        di as error "Lower bound must be less than upper bound"
-        exit 198
-    }
-    
-    * Check if variable respects bounds
-    qui summarize `varlist' if `touse'
-    local vmin = r(min)
-    local vmax = r(max)
-    
-    if `vmin' < `lbound' {
-        di as error "Variable minimum (`vmin') is below lower bound (`lbound')"
-        exit 198
-    }
-    
-    if `ubound' != 999999 & `vmax' > `ubound' {
-        di as error "Variable maximum (`vmax') is above upper bound (`ubound')"
-        exit 198
-    }
-    
-    * Default test type
-    if "`test'" == "" local test "all"
-    
-    * Validate test option
-    local test = lower("`test'")
-    local validtests "adf adfalpha adft mzalpha mzt msb all"
-    local testok = 0
-    foreach vt of local validtests {
-        if "`test'" == "`vt'" {
-            local testok = 1
-        }
-    }
-    if !`testok' {
-        di as error "Invalid test type. Valid options: adf, adfalpha, adft, mzalpha, mzt, msb, all"
-        exit 198
-    }
-    
-    * Default detrend
+
+    * ---- detrending ---------------------------------------------------------
     if "`detrend'" == "" local detrend "constant"
     local detrend = lower("`detrend'")
-    
-    * Validate detrend
-    if !inlist("`detrend'", "constant", "none") {
-        di as error "Invalid detrend option. Use 'constant' or 'none'"
+    if !inlist("`detrend'","constant","gls","none") {
+        di as error "detrend() must be constant, gls or none"
         exit 198
     }
-    
-    * Set seed if specified
-    if `seed' > 0 {
-        set seed `seed'
+    local detcode = 0
+    if "`detrend'"=="gls"  local detcode = 1
+    if "`detrend'"=="none" local detcode = 2
+
+    * ---- test selection -----------------------------------------------------
+    if "`test'"=="" local test "all"
+    local test = lower("`test'")
+    if !inlist("`test'","adfalpha","adft","mzalpha","mzt","msb","all") {
+        di as error "test() must be one of: adfalpha adft mzalpha mzt msb all"
+        exit 198
     }
-    
-    * Set maxlag default (Ng & Perron 2001: k <= 12*(T/100)^0.25)
-    if `maxlag' == -1 {
-        local maxlag = floor(12 * (`N'/100)^0.25)
+
+    * ---- lag machinery ------------------------------------------------------
+    if `maxlag' == -1 local maxlag = floor(12*(`N'/100)^0.25)
+    if `nstep'  == -1 local nstep  = `N'        // Remark 4.4: n=T best in finite samples
+    if `nstep'  < `N' {
+        di as text "note: nstep(`nstep') < T; paper requires n>=T. Resetting to T=`N'."
+        local nstep = `N'
     }
-    
-    * Set nstep default
-    if `nstep' == -1 {
-        if "`nosimulation'" != "" {
-            local nstep = 0
-        }
-        else {
-            local nstep = `N'  // Paper recommends n=T for finite samples
-        }
-    }
-    
-    * Display test configuration
-    di _n as text "{bf:Test Configuration:}"
-    di as text "  Variable: " as result "`varlist'"
-    di as text "  Time variable: " as result "`timevar'"
-    di as text "  Observations: " as result `N'
-    if `ubound' != 999999 {
-        di as text "  Bounds: [" as result `lbound' as text ", " as result `ubound' as text "]"
-    }
-    else {
-        di as text "  Lower bound: " as result `lbound' as text " (one-sided)"
-    }
-    di as text "  Detrending: " as result "`detrend'"
-    
-    * Lag selection using MAIC criterion (Ng & Perron 2001)
-    if `lags' == -1 {
-        tempname lagsel
-        _boundedur_lagselect `varlist' if `touse', ///
-            maxlag(`maxlag') ///
-            detrend(`detrend')
-        local lags = r(maic_lag)
-        di as text "  Lags (MAIC): " as result `lags'
-    }
-    else {
-        di as text "  Lags (user): " as result `lags'
-    }
-    
-    * Set krclag for recoloring
-    if `krclag' == -1 {
-        local krclag = `lags'
-    }
-    
-    * Estimate long-run variance using spectral AR estimator (Equation 3.8)
-    tempname sigma2_lr alpha1_hat
-    _boundedur_lrvar `varlist' if `touse', ///
-        lags(`lags') ///
-        detrend(`detrend')
-    scalar `sigma2_lr' = r(sigma2_lr)
-    scalar `alpha1_hat' = r(alpha1_hat)
-    
-    * Estimate bound parameters c and c_bar (Equation 4.10)
-    tempname c_lower c_upper
-    
-    * Use X0 as initial value (under null hypothesis)
-    qui sum `varlist' if `touse'
-    local X0 = r(mean) 
-    
-    * Compute standardized bound parameters
-    scalar `c_lower' = (`lbound' - `X0') / (sqrt(`sigma2_lr') * sqrt(`N'))
-    
-    if `ubound' != 999999 {
-        scalar `c_upper' = (`ubound' - `X0') / (sqrt(`sigma2_lr') * sqrt(`N'))
-    }
-    else {
-        scalar `c_upper' = .  // Infinity for one-sided bound
-    }
-    
-    di as text "  Estimated c_lower: " as result %7.4f `c_lower'
-    if `ubound' != 999999 {
-        di as text "  Estimated c_upper: " as result %7.4f `c_upper'
-    }
-    di as text "  Long-run variance: " as result %9.6f `sigma2_lr'
-    di as text "  alpha(1) estimate: " as result %9.6f `alpha1_hat'
-    
-    * Storage for results
-    tempname test_stat pval
-    
-    * Initialize result matrix
-    matrix define boundedur_results = J(6, 3, .)
-    matrix colnames boundedur_results = Statistic p_value CV_5pct
-    matrix rownames boundedur_results = ADF_alpha ADF_t MZ_alpha MZ_t MSB_test Standard
-    
-    local row = 1
-    
-    * Run ADF_alpha test
-    if inlist("`test'", "adf", "adfalpha", "all") {
-        if "`nosimulation'" == "" {
-            _boundedur_adf `varlist' if `touse', ///
-                lags(`lags') ///
-                clower(`=`c_lower'') ///
-                cupper(`=`c_upper'') ///
-                nsim(`nsim') ///
-                nstep(`nstep') ///
-                detrend(`detrend') ///
-                stat(alpha) ///
-                krclag(`krclag') ///
-                `recolor'
-            
-            scalar `test_stat' = r(adf_alpha)
-            scalar `pval' = r(pval)
-            
-            matrix boundedur_results[1,1] = `test_stat'
-            matrix boundedur_results[1,2] = `pval'
-            
-            return scalar adf_alpha = `test_stat'
-            return scalar pval_adf_alpha = `pval'
-        }
-        else {
-            _boundedur_adf `varlist' if `touse', ///
-                lags(`lags') ///
-                detrend(`detrend') ///
-                stat(alpha) ///
-                nosimulation
-            
-            scalar `test_stat' = r(adf_alpha)
-            matrix boundedur_results[1,1] = `test_stat'
-            return scalar adf_alpha = `test_stat'
-        }
-    }
-    
-    * Run ADF_t test
-    if inlist("`test'", "adf", "adft", "all") {
-        if "`nosimulation'" == "" {
-            _boundedur_adf `varlist' if `touse', ///
-                lags(`lags') ///
-                clower(`=`c_lower'') ///
-                cupper(`=`c_upper'') ///
-                nsim(`nsim') ///
-                nstep(`nstep') ///
-                detrend(`detrend') ///
-                stat(t) ///
-                krclag(`krclag') ///
-                `recolor'
-            
-            scalar `test_stat' = r(adf_t)
-            scalar `pval' = r(pval)
-            
-            matrix boundedur_results[2,1] = `test_stat'
-            matrix boundedur_results[2,2] = `pval'
-            
-            return scalar adf_t = `test_stat'
-            return scalar pval_adf_t = `pval'
-        }
-        else {
-            _boundedur_adf `varlist' if `touse', ///
-                lags(`lags') ///
-                detrend(`detrend') ///
-                stat(t) ///
-                nosimulation
-            
-            scalar `test_stat' = r(adf_t)
-            matrix boundedur_results[2,1] = `test_stat'
-            return scalar adf_t = `test_stat'
-        }
-    }
-    
-    * Run MZ_alpha test
-    if inlist("`test'", "mzalpha", "all") {
-        if "`nosimulation'" == "" {
-            _boundedur_m `varlist' if `touse', ///
-                lags(`lags') ///
-                clower(`=`c_lower'') ///
-                cupper(`=`c_upper'') ///
-                nsim(`nsim') ///
-                nstep(`nstep') ///
-                detrend(`detrend') ///
-                test(mzalpha) ///
-                sigma2(`=`sigma2_lr'')
-            
-            scalar `test_stat' = r(mz_alpha)
-            scalar `pval' = r(pval)
-            
-            matrix boundedur_results[3,1] = `test_stat'
-            matrix boundedur_results[3,2] = `pval'
-            
-            return scalar mz_alpha = `test_stat'
-            return scalar pval_mz_alpha = `pval'
-        }
-        else {
-            _boundedur_m `varlist' if `touse', ///
-                lags(`lags') ///
-                detrend(`detrend') ///
-                test(mzalpha) ///
-                sigma2(`=`sigma2_lr'') ///
-                nosimulation
-            
-            scalar `test_stat' = r(mz_alpha)
-            matrix boundedur_results[3,1] = `test_stat'
-            return scalar mz_alpha = `test_stat'
-        }
-    }
-    
-    * Run MZ_t test
-    if inlist("`test'", "mzt", "all") {
-        if "`nosimulation'" == "" {
-            _boundedur_m `varlist' if `touse', ///
-                lags(`lags') ///
-                clower(`=`c_lower'') ///
-                cupper(`=`c_upper'') ///
-                nsim(`nsim') ///
-                nstep(`nstep') ///
-                detrend(`detrend') ///
-                test(mzt) ///
-                sigma2(`=`sigma2_lr'')
-            
-            scalar `test_stat' = r(mz_t)
-            scalar `pval' = r(pval)
-            
-            matrix boundedur_results[4,1] = `test_stat'
-            matrix boundedur_results[4,2] = `pval'
-            
-            return scalar mz_t = `test_stat'
-            return scalar pval_mz_t = `pval'
-        }
-        else {
-            _boundedur_m `varlist' if `touse', ///
-                lags(`lags') ///
-                detrend(`detrend') ///
-                test(mzt) ///
-                sigma2(`=`sigma2_lr'') ///
-                nosimulation
-            
-            scalar `test_stat' = r(mz_t)
-            matrix boundedur_results[4,1] = `test_stat'
-            return scalar mz_t = `test_stat'
-        }
-    }
-    
-    * Run MSB test
-    if inlist("`test'", "msb", "all") {
-        if "`nosimulation'" == "" {
-            _boundedur_m `varlist' if `touse', ///
-                lags(`lags') ///
-                clower(`=`c_lower'') ///
-                cupper(`=`c_upper'') ///
-                nsim(`nsim') ///
-                nstep(`nstep') ///
-                detrend(`detrend') ///
-                test(msb) ///
-                sigma2(`=`sigma2_lr'')
-            
-            scalar `test_stat' = r(msb)
-            scalar `pval' = r(pval)
-            
-            matrix boundedur_results[5,1] = `test_stat'
-            matrix boundedur_results[5,2] = `pval'
-            
-            return scalar msb = `test_stat'
-            return scalar pval_msb = `pval'
-        }
-        else {
-            _boundedur_m `varlist' if `touse', ///
-                lags(`lags') ///
-                detrend(`detrend') ///
-                test(msb) ///
-                sigma2(`=`sigma2_lr'') ///
-                nosimulation
-            
-            scalar `test_stat' = r(msb)
-            matrix boundedur_results[5,1] = `test_stat'
-            return scalar msb = `test_stat'
-        }
-    }
-    
-    * Display results
-    di _n as text "{bf:Test Results:}"
+    local recol = 0
+    if "`recolor'" != "" local recol = 1
+    if `seed' > 0 set seed `seed'
+
+    * ---- bounds echo --------------------------------------------------------
+    di _n as text "{bf:Bounded unit-root tests} " as text "(Cavaliere & Xu 2014, {it:J. Econometrics} 178)"
     di as text "{hline 78}"
-    
-    if "`nosimulation'" == "" {
-        di as text _col(20) "Statistic" _col(35) "p-value" _col(50) "Decision (5%)"
-        di as text "{hline 78}"
-        
-        if !missing(boundedur_results[1,1]) {
-            local dec1 = cond(boundedur_results[1,2] < 0.05, "Reject H0", "Fail to reject")
-            di as text "ADF_alpha" _col(20) as result %10.4f boundedur_results[1,1] ///
-                _col(35) %8.4f boundedur_results[1,2] _col(50) "`dec1'"
-        }
-        
-        if !missing(boundedur_results[2,1]) {
-            local dec2 = cond(boundedur_results[2,2] < 0.05, "Reject H0", "Fail to reject")
-            di as text "ADF_t" _col(20) as result %10.4f boundedur_results[2,1] ///
-                _col(35) %8.4f boundedur_results[2,2] _col(50) "`dec2'"
-        }
-        
-        if !missing(boundedur_results[3,1]) {
-            local dec3 = cond(boundedur_results[3,2] < 0.05, "Reject H0", "Fail to reject")
-            di as text "MZ_alpha" _col(20) as result %10.4f boundedur_results[3,1] ///
-                _col(35) %8.4f boundedur_results[3,2] _col(50) "`dec3'"
-        }
-        
-        if !missing(boundedur_results[4,1]) {
-            local dec4 = cond(boundedur_results[4,2] < 0.05, "Reject H0", "Fail to reject")
-            di as text "MZ_t" _col(20) as result %10.4f boundedur_results[4,1] ///
-                _col(35) %8.4f boundedur_results[4,2] _col(50) "`dec4'"
-        }
-        
-        if !missing(boundedur_results[5,1]) {
-            local dec5 = cond(boundedur_results[5,2] < 0.05, "Reject H0", "Fail to reject")
-            di as text "MSB" _col(20) as result %10.4f boundedur_results[5,1] ///
-                _col(35) %8.4f boundedur_results[5,2] _col(50) "`dec5'"
-        }
-    }
-    else {
-        di as text _col(20) "Statistic"
-        di as text "{hline 78}"
-        
-        if !missing(boundedur_results[1,1]) {
-            di as text "ADF_alpha" _col(20) as result %10.4f boundedur_results[1,1]
-        }
-        
-        if !missing(boundedur_results[2,1]) {
-            di as text "ADF_t" _col(20) as result %10.4f boundedur_results[2,1]
-        }
-        
-        if !missing(boundedur_results[3,1]) {
-            di as text "MZ_alpha" _col(20) as result %10.4f boundedur_results[3,1]
-        }
-        
-        if !missing(boundedur_results[4,1]) {
-            di as text "MZ_t" _col(20) as result %10.4f boundedur_results[4,1]
-        }
-        
-        if !missing(boundedur_results[5,1]) {
-            di as text "MSB" _col(20) as result %10.4f boundedur_results[5,1]
-        }
-    }
-    
+
+    * ---- call the Mata engine ----------------------------------------------
+    tempname RES
+    mata: _bur_cx_run("`varlist'","`touse'","`timevar'")
+    * The Mata driver writes:
+    *   scalars: __bur_k __bur_kmax __bur_s2ar __bur_x0 __bur_cinf __bur_csup
+    *   matrix : __bur_res  (5 x 3: statistic, pvalue, cv5)  rownames set below
+    *   matrix : __bur_sim  (nsim x 3) if requested
+
+    local siglev = 100 - `level'
+    matrix `RES' = __bur_res
+    matrix rownames `RES' = ADF_alpha ADF_t MZ_alpha MZ_t MSB
+    matrix colnames `RES' = Statistic p_value CV_`siglev'
+
+    local k     = __bur_k
+    local s2ar  = __bur_s2ar
+    local x0    = __bur_x0
+    local cinf  = __bur_cinf
+    local csup  = __bur_csup
+
+    * ---- configuration block ------------------------------------------------
+    di as text "  Variable        : " as result "`varlist'"
+    di as text "  Time variable   : " as result "`timevar'"
+    di as text "  Observations T  : " as result `N'
+    local lbtxt = cond(`lbval'==., "-inf", string(`lbval'))
+    local ubtxt = cond(`ubval'==., "+inf", string(`ubval'))
+    di as text "  Bounds [b, b-bar]: " as result "[`lbtxt', `ubtxt']"
+    di as text "  Detrending      : " as result "`detrend'" ///
+        cond("`detrend'"=="gls"," (c-bar=`glsc')","")
+    di as text "  Lags (MAIC)     : " as result `k' as text "  (kmax=`maxlag')"
+    di as text "  Long-run var s^2: " as result %9.5f `s2ar'
+    di as text "  X0 (first obs)  : " as result %9.5f `x0'
+    local citxt = cond(`cinf'==., "-inf", string(`cinf',"%7.4f"))
+    local cstxt = cond(`csup'==., "+inf", string(`csup',"%7.4f"))
+    di as text "  Bound params    : " as text "c-hat=" as result "`citxt'" ///
+        as text "   c-bar-hat=" as result "`cstxt'"
+    local krcuse = cond(`krclag'==-1, `k', `krclag')
+    local rctxt = ""
+    if `recol' & `krcuse' >= 1 local rctxt "   (re-coloured, krc=`krcuse')"
+    if `recol' & `krcuse' < 1  local rctxt "   (re-colouring requested but krc=0: inactive)"
+    di as text "  MC replications : " as result `nsim' as text "   steps n=" as result `nstep' as text "`rctxt'"
+
+    * ---- results table ------------------------------------------------------
+    di _n as text "{hline 78}"
+    di as text %-12s "Test" _col(20) %10s "Statistic" _col(34) %9s "p-value" ///
+        _col(46) %10s "CV(`siglev'%)" _col(60) "Decision"
     di as text "{hline 78}"
-    di as text "H0: Unit root with bounds at [`lbound', " ///
-        cond(`ubound'==999999, "inf", string(`ubound')) "]"
-    
-    if "`nosimulation'" == "" {
-        di as text "p-values computed using " `nsim' " Monte Carlo replications"
-        di as text "Discretization steps: " `nstep'
-        if "`recolor'" != "" {
-            di as text "Re-coloring device applied (krc=" `krclag' ")"
+
+    local names ADF_alpha ADF_t MZ_alpha MZ_t MSB
+    local disp  "ADF*_alpha ADF*_t MZ*_alpha MZ*_t MSB*"
+    local keep  "adfalpha adft mzalpha mzt msb"
+    forvalues i = 1/5 {
+        local nm  : word `i' of `names'
+        local sh  : word `i' of `disp'
+        local kv  : word `i' of `keep'
+        if "`test'"=="all" | "`test'"=="`kv'" {
+            local st = `RES'[`i',1]
+            local pv = `RES'[`i',2]
+            local cv = `RES'[`i',3]
+            local star = ""
+            if `pv' < .10  local star "*"
+            if `pv' < .05  local star "**"
+            if `pv' < .01  local star "***"
+            local dec = cond(`pv' < `siglev'/100, "Reject H0", "Fail to reject")
+            di as text %-12s "`sh'" _col(20) as result %10.4f `st' ///
+                _col(34) %9.4f `pv' as result "`star'" _col(46) as result %10.4f `cv' ///
+                _col(60) as text "`dec'"
         }
     }
-    
-    * Return results
-    return scalar N = `N'
-    return scalar lags = `lags'
-    return scalar c_lower = `c_lower'
-    return scalar c_upper = `c_upper'
-    return scalar sigma2_lr = `sigma2_lr'
-    return scalar lbound = `lbound'
-    return scalar ubound = `ubound'
-    return local timevar "`timevar'"
-    return local depvar "`varlist'"
-    return local detrend "`detrend'"
-    return matrix results = boundedur_results
-    
+    di as text "{hline 78}"
+    di as text "H0: bounded unit root, b in [`lbtxt', `ubtxt'].  * .10  ** .05  *** .01"
+    di as text "ADF/MZ reject for large negative values; MSB rejects for small values."
+    di as text "p-values: Monte Carlo (Cavaliere-Xu Algorithm 1, B=`nsim', n=`nstep')."
+
+    * ---- returns ------------------------------------------------------------
+    return scalar N       = `N'
+    return scalar lags    = `k'
+    return scalar s2ar    = `s2ar'
+    return scalar x0      = `x0'
+    return scalar c_lower = `cinf'
+    return scalar c_upper = `csup'
+    return scalar lbound  = `lbval'
+    return scalar ubound  = `ubval'
+    return scalar adf_alpha = `RES'[1,1]
+    return scalar adf_t     = `RES'[2,1]
+    return scalar mz_alpha  = `RES'[3,1]
+    return scalar mz_t      = `RES'[4,1]
+    return scalar msb       = `RES'[5,1]
+    return scalar p_adf_alpha = `RES'[1,2]
+    return scalar p_adf_t     = `RES'[2,2]
+    return scalar p_mz_alpha  = `RES'[3,2]
+    return scalar p_mz_t      = `RES'[4,2]
+    return scalar p_msb       = `RES'[5,2]
+    return local  detrend "`detrend'"
+    return local  timevar "`timevar'"
+    return local  depvar  "`varlist'"
+    return local  cmd     "boundedur"
+    return matrix results = `RES', copy
+
+    * ---- optional: save the simulated null distribution ---------------------
+    if "`savesim'" != "" {
+        capture drop `savesim'1 `savesim'2 `savesim'3
+        qui svmat double __bur_sim, name(`savesim')
+        di as text "note: simulated null draws saved in `savesim'1 (alpha), `savesim'2 (t), `savesim'3 (msb)."
+    }
+
+    * ---- journal-style graphics --------------------------------------------
+    if "`graph'" != "nograph" {
+        boundedur_plot_cx, timevar(`timevar') depvar(`varlist') touse(`touse') ///
+            lbound(`lbval') ubound(`ubval') gname(`gname') ///
+            astat(`=`RES'[3,1]') acv(`=`RES'[3,3]')
+    }
+
+    * ---- tidy engine leftovers ---------------------------------------------
+    capture matrix drop __bur_res __bur_sim
+    capture scalar drop __bur_k __bur_kmax __bur_s2ar __bur_x0 __bur_cinf __bur_csup
 end
 
-*==============================================================================
-* Subroutine: MAIC lag selection (Ng & Perron 2001)
-*==============================================================================
-program define _boundedur_lagselect, rclass
-    syntax varlist(max=1 ts) [if] [in], maxlag(integer) [detrend(string)]
-    
-    marksample touse
-    
-    if "`detrend'" == "" local detrend "constant"
-    
-    tempname maic bestlag
-    scalar `maic' = .
-    scalar `bestlag' = 0
-    
-    forvalues k = 0/`maxlag' {
-        * Run ADF regression with k lags
-        if "`detrend'" == "constant" {
-            qui reg D.`varlist' L.`varlist' LD(1/`k').D.`varlist' if `touse'
-        }
-        else {
-            qui reg D.`varlist' L.`varlist' LD(1/`k').D.`varlist' if `touse', nocons
-        }
-        
-        local N_k = e(N)
-        local sigma2_k = e(rss) / `N_k'
-        local tau_k = 2 * (`k' + 1) / `N_k'
-        
-        local maic_k = ln(`sigma2_k') + `tau_k'
-        
-        if `maic_k' < `maic' | `k' == 0 {
-            scalar `maic' = `maic_k'
-            scalar `bestlag' = `k'
-        }
-    }
-    
-    return scalar maic_lag = `bestlag'
-    return scalar maic = `maic'
-end
 
 *==============================================================================
-* Subroutine: Long-run variance estimation (spectral AR, Equation 3.8)
+* Journal-style graphics for boundedur cx
 *==============================================================================
-program define _boundedur_lrvar, rclass
-    syntax varlist(max=1 ts) [if] [in], lags(integer) [detrend(string)]
-    
-    marksample touse
-    
-    if "`detrend'" == "" local detrend "constant"
-    
-    * Run ADF regression to get residual variance and alpha(1)
-    if `lags' > 0 {
-        if "`detrend'" == "constant" {
-            qui reg D.`varlist' L.`varlist' LD(1/`lags').D.`varlist' if `touse'
+program define boundedur_plot_cx
+    version 14.0
+    syntax , timevar(string) depvar(string) touse(string) ///
+        [ lbound(string) ubound(string) gname(string) astat(string) acv(string) ]
+
+    if "`gname'" == "" local gname boundedur
+
+    * ---- Panel A: the bounded series with the bounds drawn ------------------
+    local yl ""
+    if !inlist("`lbound'",".","") ///
+        local yl "`yl' yline(`lbound', lpattern(dash) lcolor(red) lwidth(medthin))"
+    if !inlist("`ubound'",".","") ///
+        local yl "`yl' yline(`ubound', lpattern(dash) lcolor(red) lwidth(medthin))"
+
+    twoway (line `depvar' `timevar' if `touse', lcolor(navy) lwidth(medthin)), ///
+        `yl' ///
+        title("Bounded series", size(medium)) ///
+        subtitle("dashed red = bounds", size(small)) ///
+        ytitle("`depvar'") xtitle("`timevar'") ///
+        graphregion(color(white)) plotregion(color(white)) ///
+        name(`gname'_series, replace) nodraw
+
+    local glist `gname'_series
+
+    * ---- Panel B: simulated (MC) null distribution vs observed -------------
+    capture confirm matrix __bur_sim
+    if !_rc {
+        preserve
+        clear
+        qui svmat double __bur_sim, name(bsim)
+        local xl ""
+        if "`astat'" != "" local xl "`xl' xline(`astat', lcolor(navy) lwidth(medthick))"
+        if "`acv'"   != "" local xl "`xl' xline(`acv', lcolor(red) lpattern(dash))"
+        twoway (histogram bsim1, percent color(gs12) lcolor(gs9)), ///
+            `xl' ///
+            title("MC null distribution: MZ*{sub:{&alpha}}", size(medium)) ///
+            subtitle("navy = observed statistic; red dash = critical value", size(small)) ///
+            xtitle("MZ*{sub:{&alpha}}") ytitle("percent") ///
+            graphregion(color(white)) plotregion(color(white)) ///
+            name(`gname'_null, replace) nodraw
+        restore
+        local glist `glist' `gname'_null
+    }
+
+    capture graph combine `glist', ///
+        title("boundedur: Cavaliere & Xu (2014) bounded unit-root test", size(medsmall)) ///
+        note("Regulated Brownian-motion null via Algorithm 1 (clipping construction).", size(vsmall)) ///
+        graphregion(color(white)) name(`gname', replace)
+    if _rc {
+        capture graph display `gname'_series
+    }
+end
+
+
+*==============================================================================
+*                              M A T A   E N G I N E
+*==============================================================================
+version 14.0
+mata:
+mata set matastrict off
+
+// -------------------------------------------------------------------------
+// GLS (quasi-difference) de-meaning for a constant, Elliott-Rothenberg-Stock
+// -------------------------------------------------------------------------
+real colvector _bur_detgls(real colvector y, real scalar cbar)
+{
+    real scalar nt, abar, bhat
+    real colvector z, ya, za
+    nt   = rows(y)
+    z    = J(nt,1,1)
+    abar = 1 + cbar/nt
+    ya   = y
+    za   = z
+    ya[|2 \ nt|] = y[|2 \ nt|] :- abar*y[|1 \ nt-1|]
+    za[|2 \ nt|] = z[|2 \ nt|] :- abar*z[|1 \ nt-1|]
+    bhat = quadcross(za,ya)/quadcross(za,za)
+    return(y :- z*bhat)
+}
+
+// -------------------------------------------------------------------------
+// Ng-Perron MAIC lag selection over a FIXED effective sample (t=kmax+2..T)
+// -------------------------------------------------------------------------
+real scalar _bur_maic(real colvector d, real scalar kmax)
+{
+    real scalar T, nef, k, i, r, t, sumy, s2, tau, mic, best, bestv
+    real colvector dep, bb, e
+    real matrix Rg, Xk, iXk
+    T   = rows(d)
+    nef = T - kmax - 1
+    if (nef < 5) return(0)
+    dep = J(nef,1,0)
+    Rg  = J(nef, kmax+1, 0)
+    for (r=1; r<=nef; r++) {
+        t = kmax + 1 + r
+        dep[r]  = d[t] - d[t-1]
+        Rg[r,1] = d[t-1]
+        for (i=1; i<=kmax; i++) {
+            Rg[r,1+i] = d[t-i] - d[t-i-1]
+        }
+    }
+    sumy  = quadcross(Rg[.,1], Rg[.,1])
+    best  = 0
+    bestv = .
+    for (k=0; k<=kmax; k++) {
+        Xk  = Rg[|1,1 \ nef,k+1|]
+        iXk = invsym(quadcross(Xk,Xk))
+        bb  = iXk*quadcross(Xk,dep)
+        e   = dep - Xk*bb
+        s2  = quadcross(e,e)/nef
+        tau = (bb[1]^2 * sumy)/s2
+        mic = ln(s2) + 2*(k+tau)/nef
+        if (mic < bestv | k==0) {
+            bestv = mic
+            best  = k
+        }
+    }
+    return(best)
+}
+
+// -------------------------------------------------------------------------
+// ADF regression on de-trended series d with k augmenting lags.
+// Returns colvector: (adf_alpha \ adf_t \ alpha1 \ s2ar \ pi \ se \ lagcoefs)
+// -------------------------------------------------------------------------
+real colvector _bur_adf(real colvector d, real scalar k)
+{
+    real scalar T, nobs, r, t, i, alpha1, s2, se, pi, adfa, adft, s2ar
+    real colvector dep, b, e, out
+    real matrix Rg, iXtX
+    T    = rows(d)
+    nobs = T - k - 1
+    dep  = J(nobs,1,0)
+    Rg   = J(nobs, k+1, 0)
+    for (r=1; r<=nobs; r++) {
+        t = k + 1 + r
+        dep[r]  = d[t] - d[t-1]
+        Rg[r,1] = d[t-1]
+        for (i=1; i<=k; i++) {
+            Rg[r,1+i] = d[t-i] - d[t-i-1]
+        }
+    }
+    iXtX = invsym(quadcross(Rg,Rg))
+    b    = iXtX*quadcross(Rg,dep)
+    e    = dep - Rg*b
+    s2   = quadcross(e,e)/nobs
+    se   = sqrt(iXtX[1,1]*s2)
+    pi   = b[1]
+    alpha1 = 1
+    if (k >= 1) {
+        alpha1 = 1 - sum(b[|2 \ k+1|])
+    }
+    s2ar = s2/(alpha1^2)
+    adfa = T*pi/alpha1
+    adft = pi/se
+    out  = (adfa \ adft \ alpha1 \ s2ar \ pi \ se)
+    if (k >= 1) {
+        out = out \ b[|2 \ k+1|]
+    }
+    return(out)
+}
+
+// -------------------------------------------------------------------------
+// M statistics from de-trended series d and long-run variance lrv.
+// Cavaliere-Xu (2014) convention: numerator includes the -T^{-1} X0^2 term.
+// -------------------------------------------------------------------------
+real rowvector _bur_mstats(real colvector d, real scalar lrv)
+{
+    real scalar T, sslag, mza, msb, mzt
+    T     = rows(d)
+    sslag = quadcross(d[|1 \ T-1|], d[|1 \ T-1|])
+    mza   = (d[T]^2/T - d[1]^2/T - lrv)/(2*sslag/(T^2))
+    msb   = sqrt(sslag/(T^2*lrv))
+    mzt   = mza*msb
+    return((mza, mzt, msb))
+}
+
+// -------------------------------------------------------------------------
+// Re-colouring filter (eq. 4.14): alpha_krc(L)/alpha_krc(1) u_t = eps_t
+//   => u_t = (1-sum a) eps_t + sum_i a_i u_{t-i} ,  unit long-run variance.
+// -------------------------------------------------------------------------
+real colvector _bur_recolor(real colvector eps, real colvector a)
+{
+    real scalar n, p, t, i, s, a1
+    real colvector u
+    n  = rows(eps)
+    p  = rows(a)
+    a1 = 1 - sum(a)
+    u  = J(n,1,0)
+    for (t=1; t<=n; t++) {
+        s = a1*eps[t]
+        for (i=1; i<=p; i++) {
+            if (t-i >= 1) {
+                s = s + a[i]*u[t-i]
+            }
+        }
+        u[t] = s
+    }
+    return(u)
+}
+
+// -------------------------------------------------------------------------
+// Empirical quantile (type-7, linear interpolation)
+// -------------------------------------------------------------------------
+real scalar _bur_quantile(real colvector x, real scalar p)
+{
+    real colvector s
+    real scalar n, h, fl
+    s  = sort(x,1)
+    n  = rows(s)
+    h  = (n-1)*p + 1
+    fl = floor(h)
+    if (fl >= n) return(s[n])
+    if (fl < 1)  return(s[1])
+    return(s[fl] + (h-fl)*(s[fl+1]-s[fl]))
+}
+
+// -------------------------------------------------------------------------
+// Monte Carlo null distribution (Algorithm 1, Steps i-iii) via the
+// clipping construction. Returns B x 3 matrix: (lambda_alpha, lambda_t, lambda_msb).
+// -------------------------------------------------------------------------
+real matrix _bur_cx_sim(real scalar cinf, real scalar csup, real scalar n, ///
+    real scalar B, real scalar recol, real colvector acoef)
+{
+    real matrix S
+    real colvector eps, u, Xp, Xt
+    real scalar b, t, xprev, xv, sq, m, A, num, La, Lmsb, Lt
+    S  = J(B, 3, .)
+    sq = sqrt(n)
+    for (b=1; b<=B; b++) {
+        eps = rnormal(n,1,0,1)
+        if (recol==1 & rows(acoef)>0) {
+            u = _bur_recolor(eps, acoef)
         }
         else {
-            qui reg D.`varlist' L.`varlist' LD(1/`lags').D.`varlist' if `touse', nocons
+            u = eps
         }
-        
-        * Get coefficients on lagged differences
-        tempname alpha1
-        scalar `alpha1' = 1
-        forvalues i = 1/`lags' {
-            scalar `alpha1' = `alpha1' - _b[LD`i'.D.`varlist']
+        Xp    = J(n+1,1,0)
+        xprev = 0
+        for (t=1; t<=n; t++) {
+            xv = xprev + u[t]/sq
+            if (csup < .) {
+                if (xv > csup) xv = csup
+            }
+            if (cinf < .) {
+                if (xv < cinf) xv = cinf
+            }
+            Xp[t+1] = xv
+            xprev   = xv
         }
+        m   = mean(Xp)
+        Xt  = Xp :- m
+        A   = mean(Xt[|2 \ n+1|]:^2)
+        num = Xt[n+1]^2 - Xt[1]^2 - 1
+        La  = num/(2*A)
+        Lmsb = sqrt(A)
+        Lt   = La*Lmsb
+        S[b,1] = La
+        S[b,2] = Lt
+        S[b,3] = Lmsb
+    }
+    return(S)
+}
+
+// -------------------------------------------------------------------------
+// Driver for  boundedur cx
+// -------------------------------------------------------------------------
+void _bur_cx_run(string scalar yvar, string scalar touse, string scalar tvar)
+{
+    real matrix X, R, S
+    real colvector y, d, ar, arc, acoef
+    real rowvector mm
+    real scalar T, kmax, k, detcode, glsc, B, n, recol, krc
+    real scalar lb, ub, x0, s2ar, sAR, cinf, csup, lev
+    real scalar adfa, adft, mza, mzt, msb
+    real scalar p_adfa, p_adft, p_mza, p_mzt, p_msb, cva, cvt, cvm
+
+    lb      = strtoreal(st_local("lbval"))
+    ub      = strtoreal(st_local("ubval"))
+    kmax    = strtoreal(st_local("maxlag"))
+    detcode = strtoreal(st_local("detcode"))
+    glsc    = strtoreal(st_local("glsc"))
+    B       = strtoreal(st_local("nsim"))
+    n       = strtoreal(st_local("nstep"))
+    recol   = strtoreal(st_local("recol"))
+    krc     = strtoreal(st_local("krclag"))
+    k       = strtoreal(st_local("lags"))
+    lev     = 1 - strtoreal(st_local("level"))/100   // significance-level tail (e.g. 0.05)
+
+    X  = st_data(., (yvar, tvar), touse)
+    X  = sort(X, 2)
+    y  = X[.,1]
+    T  = rows(y)
+    x0 = y[1]
+
+    if (detcode==0) {
+        d = y :- mean(y)
+    }
+    else if (detcode==1) {
+        d = _bur_detgls(y, glsc)
     }
     else {
-        if "`detrend'" == "constant" {
-            qui reg D.`varlist' L.`varlist' if `touse'
-        }
-        else {
-            qui reg D.`varlist' L.`varlist' if `touse', nocons
-        }
-        
-        tempname alpha1
-        scalar `alpha1' = 1
+        d = y
     }
-    
-    * Residual variance
-    local sigma2 = e(rss) / e(N)
-    
-    * Long-run variance estimate: sigma^2 / alpha(1)^2
-    local sigma2_lr = `sigma2' / (`alpha1'^2)
-    
-    return scalar sigma2_lr = `sigma2_lr'
-    return scalar alpha1_hat = `alpha1'
-    return scalar sigma2 = `sigma2'
+
+    if (k < 0) k = _bur_maic(d, kmax)
+    if (k > T-4) k = T-4
+    if (k < 0) k = 0
+
+    ar    = _bur_adf(d, k)
+    adfa  = ar[1]
+    adft  = ar[2]
+    s2ar  = ar[4]
+    sAR   = sqrt(s2ar)
+
+    mm  = _bur_mstats(d, s2ar)
+    mza = mm[1]
+    mzt = mm[2]
+    msb = mm[3]
+
+    cinf = .
+    csup = .
+    if (lb < .) cinf = (lb - x0)/(sAR*sqrt(T))
+    if (ub < .) csup = (ub - x0)/(sAR*sqrt(T))
+
+    acoef = J(0,1,.)
+    if (recol==1) {
+        if (krc < 0) krc = k
+        if (krc >= 1) {
+            arc   = _bur_adf(d, krc)
+            acoef = arc[|7 \ 6+krc|]
+        }
+    }
+
+    S = _bur_cx_sim(cinf, csup, n, B, recol, acoef)
+
+    p_adfa = mean(S[.,1] :<= adfa)
+    p_adft = mean(S[.,2] :<= adft)
+    p_mza  = mean(S[.,1] :<= mza)
+    p_mzt  = mean(S[.,2] :<= mzt)
+    p_msb  = mean(S[.,3] :<= msb)
+
+    cva = _bur_quantile(S[.,1], lev)
+    cvt = _bur_quantile(S[.,2], lev)
+    cvm = _bur_quantile(S[.,3], lev)
+
+    R = J(5,3,.)
+    R[1,.] = (adfa, p_adfa, cva)
+    R[2,.] = (adft, p_adft, cvt)
+    R[3,.] = (mza,  p_mza,  cva)
+    R[4,.] = (mzt,  p_mzt,  cvt)
+    R[5,.] = (msb,  p_msb,  cvm)
+
+    st_matrix("__bur_res", R)
+    st_matrix("__bur_sim", S)
+    st_numscalar("__bur_k",    k)
+    st_numscalar("__bur_kmax", kmax)
+    st_numscalar("__bur_s2ar", s2ar)
+    st_numscalar("__bur_x0",   x0)
+    st_numscalar("__bur_cinf", cinf)
+    st_numscalar("__bur_csup", csup)
+}
+
 end
+

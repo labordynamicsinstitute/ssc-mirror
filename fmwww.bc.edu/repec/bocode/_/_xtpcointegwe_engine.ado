@@ -4,7 +4,15 @@
 *! Maps to: pd_coint_wedgerton (1).src (GAUSS)
 *!
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
-*! Version 3.0.0 — 26 March 2026 (No void output params)
+*! Version 3.0.2 — 07 July 2026
+*! 3.0.2: Factor extraction now sorts eigenvectors by descending eigenvalue
+*!        (symeigensystem + order) so the leading nf factors match GAUSS's
+*!        svd1() ordering. Mata's eigensystem() left them unsorted, which
+*!        could select non-principal factors and change nf / the statistics.
+*! 3.0.1: Fix conformability error in _we_get_fl when N > T (more panels
+*!        than time periods). Loadings now use cross(e, f_mat) = e'*f_mat
+*!        instead of cross(e', f_mat). The N <= T branch was unaffected.
+*! 3.0.0: No void output params
 
 mata:
 mata clear
@@ -95,19 +103,26 @@ real colvector _we_find_breaks(real matrix YY, real matrix XX,
 real matrix _we_get_fl(real matrix e, real scalar nf) {
   real scalar TT, NN
   real matrix V, f_mat, l_mat
-  real vector d
+  real rowvector d
+  real colvector ord
 
   TT = rows(e); NN = cols(e)
 
+  // GAUSS uses svd1(), whose singular vectors are ordered by DESCENDING
+  // singular value, so f0[.,1:nf] are the leading factors. Mata's
+  // symeigensystem() does not guarantee that order, so sort eigenvectors
+  // by descending eigenvalue before taking the first nf.
   if (NN > TT) {
-    eigensystem(e * e', V, d)
-    V = Re(V)
+    symeigensystem(e * e', V, d)
+    ord = order(d', -1)
+    V = V[., ord]
     f_mat = V[., 1..nf] * sqrt(TT)
-    l_mat = cross(e', f_mat) / TT
+    l_mat = cross(e, f_mat) / TT
   }
   else {
-    eigensystem(cross(e, e), V, d)
-    V = Re(V)
+    symeigensystem(cross(e, e), V, d)
+    ord = order(d', -1)
+    V = V[., ord]
     l_mat = V[., 1..nf] * sqrt(NN)
     f_mat = (e * l_mat) / NN
   }

@@ -17,14 +17,12 @@ d KW: bounded time series
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20260202
+d Distribution-Date: 20260707
 d
 d Author:   Merwan Roudane, NA
 d Support: email  merwanroudane920@@gmail.com
 d
 f boundedur.ado
 f boundedur.sthlp
-f ../_/_boundedur_adf.ado
-f ../_/_boundedur_m.ado
 f boundedur_examples.do
 f boundedur_cert.do

@@ -1,0 +1,35 @@
+d 'BOUNDEDUROOT': module to perform unit-root and level-shift tests for bounded time series 
+d
+d	boundeduroot is a library of unit-root and level-shift
+d tests for bounded time series - series confined to an interval
+d either    by construction or by policy (unemployment rates,
+d budget shares, nominal interest rates, capacity-utilisation
+d rates,    target-zone exchange rates). It is the structural-break
+d companion to the base command boundedur, which implements the   
+d Cavaliere & Xu (2014) simulation-based ADF and M tests. Where
+d boundedur handles the no-break case, boundeduroot adds GLS   
+d detrending, structural breaks in the mean, and multiple
+d level-shift detection, each with bound-specific critical values  
+d  obtained by simulating a regulated (reflected) Brownian motion. 
+d
+d KW: unit root tests
+d KW: level shift
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260707
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f boundeduroot.ado
+f boundeduroot.sthlp
+f boundeduroot_breaks.ado
+f boundeduroot_breaks.sthlp
+f boundeduroot_examples.do
+f boundeduroot_hlt.ado
+f boundeduroot_hlt.sthlp
+f boundeduroot_mtests.ado
+f boundeduroot_mtests.sthlp
+f boundeduroot_selftest.do

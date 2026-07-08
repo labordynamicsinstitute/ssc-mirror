@@ -2,7 +2,7 @@
 *! Implements: Westerlund & Edgerton (2008, Oxford Bull. Econ. Stat.)
 *! "A Simple Test for Cointegration in Dependent Panels with Structural Breaks"
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
-*! Version 1.0.0 — 26 March 2026
+*! Version 1.0.2 — 07 July 2026 (fix N>T conformability + factor ordering)
 *!
 *! Based on original GAUSS code (pd_coint_wedgerton.src) by Joakim Westerlund
 *! Department of Economics, Lund University

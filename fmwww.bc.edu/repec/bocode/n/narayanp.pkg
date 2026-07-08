@@ -1,0 +1,29 @@
+d 'NARAYANP': module to implement Narayan-Popp (2010) unit root test with two structural breaks
+d
+d      narayanp performs the Narayan and Popp (2010) Augmented
+d Dickey-Fuller-type test for a unit root that allows for two
+d structural	breaks at unknown dates. The data-generating
+d process is written as an unobserved-components model in which the
+d breaks are	modelled as innovational outliers, so that a break
+d takes effect gradually rather than instantaneously (Narayan and
+d Popp 2010,	Eqs. 1-6). The test allows for breaks under both
+d the unit-root null and the trend-stationary alternative, which
+d reduces the	 spurious rejections that affect earlier ADF-type
+d break tests.	  Two specifications are available, both for
+d trending data: model M1 allows two breaks in the level, and model
+d M2 allows two    breaks in the level and in the slope. In both
+d cases the test statistic is the t-ratio on the coefficient of
+d y(t-1); the	 unit-root null is rho = 1. 
+d
+d KW: unit root tests
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260707
+d
+d Author: Ozan Eruygur,  Ankara Haci Bayram Veli University
+d Support: email eruygur@@gmail.com
+d
+f narayanp.ado
+f narayanp.sthlp
