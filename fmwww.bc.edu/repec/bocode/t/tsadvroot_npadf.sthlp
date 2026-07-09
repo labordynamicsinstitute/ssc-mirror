@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  03jul2026}{...}
+{* *! version 1.1.0  07jul2026}{...}
 {viewerjumpto "Syntax" "tsadvroot_npadf##syntax"}{...}
 {viewerjumpto "Description" "tsadvroot_npadf##description"}{...}
 {viewerjumpto "Options" "tsadvroot_npadf##options"}{...}
@@ -39,6 +39,10 @@ unknown dates (Narayan and Popp 2010)
 or {cmd:tstat} (default, the source default){p_end}
 {synopt:{opt tr:im(real)}}trimming fraction for the break search; default
 {cmd:trim(0.10)} (the source's coded default){p_end}
+{synopt:{opt seq:uential}}select the two breaks by the Narayan-Popp (2010)
+sequential procedure (paper Eqs. 10-11){p_end}
+{synopt:{opt sim:ul}}select the two breaks by the Narayan-Popp (2010)
+simultaneous procedure (paper Eq. 9){p_end}
 {synopt:{opt gr:aph}}plot the series with the estimated break dates{p_end}
 {synopt:{opt na:me(string)}}graph name{p_end}
 {synopt:{opt nopr:int}}suppress the results table{p_end}
@@ -53,10 +57,32 @@ or {cmd:tstat} (default, the source default){p_end}
 {cmd:tsadvroot npadf} implements the Narayan and Popp (2010) ADF-type
 unit-root test allowing for two structural breaks at unknown dates. Model M1
 allows two breaks in the level of a trending series; model M2 allows two
-breaks in both the level and the slope. The break dates are those that
-minimize the ADF t-statistic over a two-dimensional grid, and the reported
-statistic is the minimized t-ratio on y_t-1. Critical values are from
-Narayan and Popp (2010, Table 3) and depend on the sample size.
+breaks in both the level and the slope. In every case the reported statistic
+is the ADF t-ratio on y_t-1 and the critical values are from Narayan and Popp
+(2010, Table 3) and depend on the sample size.
+
+{pstd}
+Three break-search procedures are available, so the command can reproduce
+either the widely-used GAUSS/tspdlib routine or the paper's own procedures:
+
+{phang2}
+{bf:default (grid)} {hline 2} the tspdlib {cmd:ADF_2breaks} routine: additive
+lagged level/trend dummies (no impulse dummies), break dates chosen to
+{it:minimize} the ADF t over a two-dimensional grid. This is what most applied
+work reports as "the Narayan-Popp test".{p_end}
+
+{phang2}
+{bf:sequential} {hline 2} Narayan and Popp (2010, Eqs. 10-11): the paper-form
+test regression (Eq. 7 for M1, Eq. 8 for M2), which adds the innovational-
+outlier one-period impulse dummies 1(t=TB+1). TB1 is chosen to maximize the
+absolute t of its impulse coefficient; TB2 is then chosen the same way given
+TB1. This is the paper's preferred procedure and the one behind the Table 3
+critical values.{p_end}
+
+{phang2}
+{bf:simul} {hline 2} Narayan and Popp (2010, Eq. 9): the same paper-form
+regression, but both breaks are chosen jointly to maximize the F statistic for
+the joint significance of the two impulse-dummy coefficients.{p_end}
 
 
 {marker options}{...}
@@ -77,22 +103,49 @@ the tspdlib (k+2) penalty, {cmd:tstat} = general-to-specific with
 min(T-3-pmax, floor((1-trim) x T)), with the second break at least 2
 (model 1) or 3 (model 2) periods after the first.
 
+{phang}
+{opt sequential} and {opt simul} are mutually exclusive; omit both for the
+default GAUSS/tspdlib grid. Under either paper procedure the reported ADF
+statistic is the t-ratio on y_t-1 at the selected break pair, and (for
+{cmd:simul}) the winning joint-impulse F is returned in {cmd:r(fstat)}.
+
 
 {marker methods}{...}
 {title:Methods and formulas}
 
 {pstd}
-For each candidate pair (TB1, TB2) the test regression is
+{bf:Default (grid).} For each candidate pair (TB1, TB2) the test regression is
 
 {p 8 8 2}
 D.y_t = rho y_t-1 + z_t-1' gamma + sum_j phi_j D.y_t-j + e_t
 
 {pstd}
 with z = (1, t, DU1, DU2) in M1 and z = (1, t, DU1, DU2, DT1, DT2) in M2,
-where DU_i,t = 1(t > TB_i) and DT_i,t = (t - TB_i) 1(t > TB_i). Note that
-the deterministic terms enter {it:lagged} (z_t-1), following the NP test
-equation derived from their innovational-outlier DGP. The statistic is the
-t-ratio on rho at the break pair that minimizes it.
+where DU_i,t = 1(t > TB_i) and DT_i,t = (t - TB_i) 1(t > TB_i). The
+deterministic terms enter {it:lagged} (z_t-1). No impulse dummies are
+included, and the statistic is the t-ratio on rho at the break pair that
+{it:minimizes} it. This reproduces the GAUSS/tspdlib {cmd:ADF_2breaks}
+routine.
+
+{pstd}
+{bf:Paper form (}{cmd:sequential}{bf:/}{cmd:simul}{bf:).} The regression adds
+the innovational-outlier one-period impulse dummies D(TB_i)_t = 1(t = TB_i+1)
+of Narayan and Popp (2010, Eqs. 7-8):
+
+{p 8 8 2}
+D.y_t = rho y_t-1 + a + b t + theta1 D(TB1)_t + theta2 D(TB2)_t + z_t-1' gamma
++ sum_j phi_j D.y_t-j + e_t
+
+{pstd}
+with the lagged level (and, for M2, trend) dummies in z_t-1 as above. Break
+dates are chosen from the impulse coefficients: {cmd:sequential} maximizes
+|t(theta1)| then |t(theta2)| (Eqs. 10-11); {cmd:simul} maximizes the joint F
+of (theta1, theta2) (Eq. 9). The impulse and lagged-level dummies use the same
+timing convention as the grid path, so a given TB indexes the same regime
+break under all three procedures. Because the grid path drops the impulse
+dummies and uses a different selection rule, its statistic and (occasionally)
+its break dates differ from the paper procedures on the same data; the Table 3
+critical values were generated under the paper's procedure.
 
 
 {marker compat}{...}
@@ -129,10 +182,12 @@ pre-break regime}: the break dummies switch on strictly after TB.
 {synopt:{cmd:r(frac1)}, {cmd:r(frac2)}}break fractions{p_end}
 {synopt:{cmd:r(lags)}}selected lag order at the optimum{p_end}
 {synopt:{cmd:r(cv1)}, {cmd:r(cv5)}, {cmd:r(cv10)}}critical values{p_end}
+{synopt:{cmd:r(fstat)}}joint-impulse F at the selected pair ({cmd:simul}
+only){p_end}
 {synopt:{cmd:r(T)}}sample size{p_end}
 {p2col 5 18 22 2: Macros}{p_end}
 {synopt:{cmd:r(cmd)}, {cmd:r(varname)}, {cmd:r(model)}, {cmd:r(ic)},
-{cmd:r(breakdates)}}{p_end}
+{cmd:r(breakdates)}, {cmd:r(breaksearch)}}{p_end}
 {p2colreset}{...}
 
 
@@ -144,6 +199,11 @@ pre-break regime}: the break dummies switch on strictly after TB.
 {phang}{cmd:. tsadvroot npadf lair, model(1) graph}{p_end}
 {phang}{cmd:. tsadvroot npadf lair, model(2) pmax(4) ic(sic) trim(0.15)}{p_end}
 {phang}{cmd:. di r(stat) " breaks at " r(tb1) " and " r(tb2)}{p_end}
+
+{pstd}Paper procedures (impulse dummies, NP's own break selection):{p_end}
+{phang}{cmd:. tsadvroot npadf lair, model(2) sequential}{p_end}
+{phang}{cmd:. tsadvroot npadf lair, model(2) simul}{p_end}
+{phang}{cmd:. di r(stat) "  joint-impulse F = " r(fstat)}{p_end}
 
 
 {marker references}{...}

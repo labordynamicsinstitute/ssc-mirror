@@ -100,6 +100,7 @@ p xtgraph module to produce graphs of cross-sectional time series (xt) data
 p xtgunitroot module providing generalized fixed-T panel unit root test (doubly modified estimator)
 p xtheckmanfe module to fit panel data models in the presence of endogeneity and selection
 p xtheteroquant module to compute quantiles of heterogeneous individual-specific coefficients in panel data, with SQB and CDQB bootstrap inference (Galvao, Hounyo and Lin, 2026)
+p xthkrcoint module to perform Hadri-Kurozumi-Rao panel cointegration test with the null of cointegration
 p xthrtest module to perform Born & Breitung Bias-corrected HR-test for first order panel serial correlation
 p xthst module to test slope homogeneity in large panels
 p xthybrid module to estimate hybrid and correlated random effect (Mundlak) models within the framework of generalized linear mixed models (GLMM)

@@ -1,8 +1,9 @@
-*! tsadvroot 1.0.0  03jul2026
+*! tsadvroot 1.1.0  07jul2026
 *! Advanced time-series unit-root tests:
 *!   qadf  - quantile ADF (Koenker & Xiao 2004)
 *!   fqadf - Fourier quantile ADF (Li & Zheng 2018) with residual bootstrap
-*!   npadf - two-break ADF (Narayan & Popp 2010)
+*!   npadf - two-break ADF (Narayan & Popp 2010): grid (tspdlib) default,
+*!           plus sequential/simultaneous impulse-dummy procedures (paper)
 *!   cisur - GLS unit-root tests with multiple structural breaks
 *!           (Carrion-i-Silvestre, Kim & Perron 2009)
 *! Exact Stata translation of the GAUSS routines by Saban Nazlioglu (tspdlib)
@@ -583,7 +584,7 @@ end
 program define tsadvroot_npadf, rclass
     version 14.0
     syntax varname(ts) [if] [in] [, Model(string) PMax(integer 8) IC(string) ///
-        TRim(real 0.10) GRaph NAme(string) noPRint ]
+        TRim(real 0.10) SEQuential SIMul GRaph NAme(string) noPRint ]
 
     local yv `varlist'
     if "`model'" == "" local model "1"
@@ -608,6 +609,18 @@ program define tsadvroot_npadf, rclass
         di as err "trim() must be strictly between 0 and 0.5"
         exit 198
     }
+    * ---- break-search procedure ------------------------------------------
+    * mode 0 = tspdlib/GAUSS grid (min ADF-t, no impulse dummies)  [default]
+    * mode 1 = Narayan-Popp (2010) sequential  (Eqs. 10-11, impulse dummies)
+    * mode 2 = Narayan-Popp (2010) simultaneous(Eq. 9,     impulse dummies)
+    local seq = ("`sequential'" != "")
+    local sim = ("`simul'" != "")
+    if `seq' & `sim' {
+        di as err "{bf:sequential} and {bf:simul} cannot be combined;" ///
+            " choose one break-search procedure"
+        exit 198
+    }
+    local mode = cond(`seq', 1, cond(`sim', 2, 0))
 
     marksample touse
     _tsav_check `touse'
@@ -619,9 +632,9 @@ program define tsadvroot_npadf, rclass
     }
 
     if "`print'" == "" {
-        di as text "(grid search over two break dates, this may take a moment...)"
+        di as text "(search over two break dates, this may take a moment...)"
     }
-    mata: _tsav_np("`yv'", "`touse'", `mnum', `pmax', `icn', `trim')
+    mata: _tsav_np("`yv'", "`touse'", `mnum', `pmax', `icn', `trim', `mode')
     local stat = r(npstat)
     local tb1p = r(tb1)
     local tb2p = r(tb2)
@@ -629,6 +642,7 @@ program define tsadvroot_npadf, rclass
     local cv1 = r(cv1)
     local cv5 = r(cv5)
     local cv10 = r(cv10)
+    local fstat = r(fstat)
 
     * map break positions to time values
     tempvar pos
@@ -646,6 +660,10 @@ program define tsadvroot_npadf, rclass
     else if `stat' < `cv5' local st "**"
     else if `stat' < `cv10' local st "*"
 
+    local bstxt "grid, minimum ADF-t (tspdlib/GAUSS)"
+    if `mode' == 1 local bstxt "sequential, max |t| on impulse (NP Eqs. 10-11)"
+    if `mode' == 2 local bstxt "simultaneous, max joint-impulse F (NP Eq. 9)"
+
     if "`print'" == "" {
         local mlab "M1: two breaks in level"
         if `mnum' == 2 local mlab "M2: two breaks in level and slope"
@@ -659,9 +677,14 @@ program define tsadvroot_npadf, rclass
         di as text "Variable      : " as result "`yv'" ///
             as text _col(44) "Obs             = " as result %8.0f `T'
         di as text "Model         : " as result "`mlab'"
+        di as text "Break search  : " as result "`bstxt'"
         di as text "Lag selection : " as result "`iclab'" ///
             as text _col(44) "Lags selected   = " as result %8.0f `plag'
         di as text "Trimming      : " as result %5.2f `trim'
+        if `mode' == 2 {
+            di as text "Impulse joint F: " as result %8.3f `fstat' ///
+                as text "  (at the selected break pair)"
+        }
         di as text "{hline 78}"
         di as text "   ADF-stat        TB1          TB2          1%       5%      10%"
         di as text "{hline 78}"
@@ -670,8 +693,18 @@ program define tsadvroot_npadf, rclass
             _col(43) %9.3f `cv1' %9.3f `cv5' %9.3f `cv10'
         di as text "{hline 78}"
         di as text "H0: unit root with two breaks in the DGP."
+        if `mode' == 0 {
+            di as text "Grid path (tspdlib): additive step/trend dummies," ///
+                " breaks chosen by min ADF-t."
+        }
+        else {
+            di as text "Paper form (NP Eqs. 7-8): innovational-outlier impulse" ///
+                " dummies included;"
+            di as text "breaks chosen by the significance of the impulse" ///
+                " coefficients."
+        }
         di as text "Break dates are the last period of each pre-break regime" ///
-            " (DU_t = 1 if t > TB)."
+            " (level shift starts at TB+1)."
         di as text "Critical values: Narayan & Popp (2010), Table 3, T = `T'."
         di as text "Rejection: * p<0.10, ** p<0.05, *** p<0.01."
         di as text "{hline 78}"
@@ -708,6 +741,11 @@ program define tsadvroot_npadf, rclass
     return local model "`mnum'"
     return local ic "`ic'"
     return local breakdates "`tb1s' `tb2s'"
+    local bsret "grid"
+    if `mode' == 1 local bsret "sequential"
+    if `mode' == 2 local bsret "simultaneous"
+    return local breaksearch "`bsret'"
+    if `mode' == 2 return scalar fstat = `fstat'
     return local varname "`yv'"
     return local cmd "tsadvroot npadf"
 end
@@ -1432,17 +1470,119 @@ void _tsav_fq_boot(string scalar ystar, real scalar tt, real scalar nboot,
 //     the effective bounds are T1 = max(3+pmax, ceil(trim*T)) (then pmax+3 if
 //     < pmax+2) and T2 = min(T-3-pmax, floor((1-trim)*T))
 // ---------------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// Narayan & Popp (2010) paper-form deterministics for a break whose last
+// pre-break period is tb, aligned to the (T-1)-length differenced equation
+// used by _tsav_np (row i corresponds to time t = i+1):
+//   impulse  D(TB)_t   = 1(t = tb+1)              -> 1 at row tb
+//   level    DU'_{t-1} = 1(t-1 > tb) = 1(t > tb+1)-> 1 for rows > tb
+//   trend    DT'_{t-1} = 1(t-1 > tb)*(t-1-tb)     -> (row-tb) for rows > tb
+// This matches the LAGGED convention of the grid path, so break positions are
+// reported consistently across the grid and paper procedures.
+// ---------------------------------------------------------------------------
+real colvector _tsav_np_imp(real scalar tb, real scalar Tm1)
+{
+    return(J(tb-1, 1, 0) \ 1 \ J(Tm1-tb, 1, 0))
+}
+real colvector _tsav_np_du(real scalar tb, real scalar Tm1)
+{
+    return(J(tb, 1, 0) \ J(Tm1-tb, 1, 1))
+}
+real colvector _tsav_np_dtl(real scalar tb, real scalar Tm1)
+{
+    return(J(tb, 1, 0) \ (1::(Tm1-tb)))
+}
+
+// ---------------------------------------------------------------------------
+// Paper-form candidate regression (NP 2010, Eq. 7 for M1 / Eq. 8 for M2):
+//   D.y_t = rho*y_{t-1} + Zb'gamma + sum_j phi_j D.y_{t-j} + e_t
+// Zb is the deterministic block (impulse + lagged level/trend dummies) for
+// the candidate break(s). The lag is selected by ic on the varying sample
+// (the same mechanics as the grid path); the regression is refit at the
+// selected lag. Returns (tau, sel, pidx):
+//   tau  = ADF t-ratio on y_{t-1}
+//   sel  = |t| on column reqc1 (impulse coef) when reqc2==0     [sequential]
+//        = joint F on columns reqc1,reqc2 (two impulses) /2      [Eq. 9]
+//   pidx = 1-based selected-lag index (reported lag = pidx-1)
+// ---------------------------------------------------------------------------
+real rowvector _tsav_np_cand(real colvector dy, real colvector y1,
+    real matrix Zb, real matrix lmat, real scalar pmax, real scalar ic,
+    real scalar Tm1, real scalar reqc1, real scalar reqc2)
+{
+    real colvector dep, bb, ee, sevec, taup, aicp, sicp, tstatp, idx, bc
+    real matrix X, XX, Vc
+    real scalar p, lo, n1, kx, pidx, plag, tau, sel, sig2
+
+    taup   = J(pmax+1, 1, .)
+    aicp   = J(pmax+1, 1, .)
+    sicp   = J(pmax+1, 1, .)
+    tstatp = J(pmax+1, 1, .)
+    for (p = 0; p <= pmax; p++) {
+        lo  = p + 2
+        dep = dy[lo::Tm1]
+        X   = y1[lo::Tm1], Zb[lo::Tm1, .]
+        if (p > 0) {
+            X = X, lmat[lo::Tm1, 1::p]
+        }
+        n1 = rows(dep)
+        kx = cols(X)
+        XX = invsym(cross(X, X))
+        bb = XX*cross(X, dep)
+        ee = dep - X*bb
+        sevec = sqrt(diagonal(XX)*(cross(ee, ee)/(n1-kx)))
+        taup[p+1]   = bb[1]/sevec[1]
+        aicp[p+1]   = ln(cross(ee, ee)/n1) + 2*(kx+2)/n1
+        sicp[p+1]   = ln(cross(ee, ee)/n1) + (kx+2)*ln(n1)/n1
+        tstatp[p+1] = abs(bb[kx]/sevec[kx])
+    }
+    pidx = _tsav_getlagidx(ic, aicp, sicp, tstatp)
+    plag = pidx - 1
+    lo   = plag + 2
+    dep  = dy[lo::Tm1]
+    X    = y1[lo::Tm1], Zb[lo::Tm1, .]
+    if (plag > 0) {
+        X = X, lmat[lo::Tm1, 1::plag]
+    }
+    n1    = rows(dep)
+    kx    = cols(X)
+    XX    = invsym(cross(X, X))
+    bb    = XX*cross(X, dep)
+    ee    = dep - X*bb
+    sig2  = cross(ee, ee)/(n1-kx)
+    sevec = sqrt(diagonal(XX)*sig2)
+    tau   = bb[1]/sevec[1]
+    if (reqc2 == 0) {
+        sel = abs(bb[reqc1]/sevec[reqc1])
+    }
+    else {
+        idx = (reqc1 \ reqc2)
+        bc  = bb[idx]
+        Vc  = XX[idx, idx]*sig2
+        if (missing(Vc[1,1]) | missing(bc[1]) | missing(bc[2])) {
+            sel = .
+        }
+        else {
+            sel = (bc' * invsym(Vc) * bc)/2
+        }
+    }
+    return((tau, sel, pidx))
+}
+
 void _tsav_np(string scalar yname, string scalar touse, real scalar model,
-    real scalar pmax, real scalar ic, real scalar trimm)
+    real scalar pmax, real scalar ic, real scalar trimm, real scalar mode)
 {
     real colvector y, dy, y1, dep, bb, ee, sevec, taup, aicp, sicp, tstatp
     real colvector du1, du2, dt1v, dt2v, dc, dtv, cv
-    real matrix lmat, z, z1, X, XX
-    real scalar T, j, T1, T2, tb1, tb2, tb2s, p, lo, n1, kx, pidx, stat
-    real scalar ADFmin, tb1min, tb2min, optlag
+    real colvector dcm, dtm, imp1, dul1, dtl1, imp2, dul2, dtl2
+    real matrix lmat, z, z1, X, XX, Zb
+    real scalar T, Tm1, j, T1, T2, tb1, tb2, tb2s, p, lo, n1, kx, pidx, stat
+    real scalar ADFmin, tb1min, tb2min, optlag, fstat, gap, c2col
+    real scalar tbb, best, tb1s
+    real rowvector rr
 
     y = st_data(., yname, touse)
     T = rows(y)
+    Tm1 = T - 1
     dy = y[2::T] - y[1::(T-1)]
     y1 = y[1::(T-1)]
     lmat = J(T-1, pmax, 0)
@@ -1456,61 +1596,172 @@ void _tsav_np(string scalar yname, string scalar touse, real scalar model,
     if (T1 < pmax + 2) {
         T1 = pmax + 3
     }
-    dc = J(T, 1, 1)
-    dtv = (1::T)
     ADFmin = 1000
     tb1min = 0
     tb2min = 0
     optlag = 1
-    taup = J(pmax+1, 1, .)
-    aicp = J(pmax+1, 1, .)
-    sicp = J(pmax+1, 1, .)
-    tstatp = J(pmax+1, 1, .)
-    for (tb1 = T1; tb1 <= T2; tb1++) {
-        if (model == 1) {
-            tb2s = tb1 + 2
-        }
-        else {
-            tb2s = tb1 + 3
-        }
-        for (tb2 = tb2s; tb2 <= T2; tb2++) {
-            du1 = J(tb1, 1, 0) \ J(T-tb1, 1, 1)
-            du2 = J(tb2, 1, 0) \ J(T-tb2, 1, 1)
+    fstat  = .
+
+    if (mode == 0) {
+        // ---- tspdlib / GAUSS grid: min ADF-t, additive LAGGED dummies -----
+        dc = J(T, 1, 1)
+        dtv = (1::T)
+        taup = J(pmax+1, 1, .)
+        aicp = J(pmax+1, 1, .)
+        sicp = J(pmax+1, 1, .)
+        tstatp = J(pmax+1, 1, .)
+        for (tb1 = T1; tb1 <= T2; tb1++) {
             if (model == 1) {
-                z = dc, dtv, du1, du2
+                tb2s = tb1 + 2
             }
             else {
-                dt1v = J(tb1, 1, 0) \ (1::(T-tb1))
-                dt2v = J(tb2, 1, 0) \ (1::(T-tb2))
-                z = dc, dtv, du1, du2, dt1v, dt2v
+                tb2s = tb1 + 3
             }
-            // z1 = lagged deterministics: z_{t-1} aligned with dy_t
-            z1 = z[1::(T-1), .]
-            for (p = 0; p <= pmax; p++) {
-                lo = p + 2
-                dep = dy[lo::(T-1)]
-                X = y1[lo::(T-1)], z1[lo::(T-1), .]
-                if (p > 0) {
-                    X = X, lmat[lo::(T-1), 1::p]
+            for (tb2 = tb2s; tb2 <= T2; tb2++) {
+                du1 = J(tb1, 1, 0) \ J(T-tb1, 1, 1)
+                du2 = J(tb2, 1, 0) \ J(T-tb2, 1, 1)
+                if (model == 1) {
+                    z = dc, dtv, du1, du2
                 }
-                n1 = rows(dep)
-                kx = cols(X)
-                XX = invsym(cross(X, X))
-                bb = XX*cross(X, dep)
-                ee = dep - X*bb
-                sevec = sqrt(diagonal(XX)*(cross(ee, ee)/(n1-kx)))
-                taup[p+1] = bb[1]/sevec[1]
-                aicp[p+1] = ln(cross(ee, ee)/n1) + 2*(kx+2)/n1
-                sicp[p+1] = ln(cross(ee, ee)/n1) + (kx+2)*ln(n1)/n1
-                tstatp[p+1] = abs(bb[kx]/sevec[kx])
+                else {
+                    dt1v = J(tb1, 1, 0) \ (1::(T-tb1))
+                    dt2v = J(tb2, 1, 0) \ (1::(T-tb2))
+                    z = dc, dtv, du1, du2, dt1v, dt2v
+                }
+                // z1 = lagged deterministics: z_{t-1} aligned with dy_t
+                z1 = z[1::(T-1), .]
+                for (p = 0; p <= pmax; p++) {
+                    lo = p + 2
+                    dep = dy[lo::(T-1)]
+                    X = y1[lo::(T-1)], z1[lo::(T-1), .]
+                    if (p > 0) {
+                        X = X, lmat[lo::(T-1), 1::p]
+                    }
+                    n1 = rows(dep)
+                    kx = cols(X)
+                    XX = invsym(cross(X, X))
+                    bb = XX*cross(X, dep)
+                    ee = dep - X*bb
+                    sevec = sqrt(diagonal(XX)*(cross(ee, ee)/(n1-kx)))
+                    taup[p+1] = bb[1]/sevec[1]
+                    aicp[p+1] = ln(cross(ee, ee)/n1) + 2*(kx+2)/n1
+                    sicp[p+1] = ln(cross(ee, ee)/n1) + (kx+2)*ln(n1)/n1
+                    tstatp[p+1] = abs(bb[kx]/sevec[kx])
+                }
+                pidx = _tsav_getlagidx(ic, aicp, sicp, tstatp)
+                stat = taup[pidx]
+                if (stat < ADFmin) {
+                    tb1min = tb1
+                    tb2min = tb2
+                    ADFmin = stat
+                    optlag = pidx
+                }
             }
-            pidx = _tsav_getlagidx(ic, aicp, sicp, tstatp)
-            stat = taup[pidx]
-            if (stat < ADFmin) {
-                tb1min = tb1
-                tb2min = tb2
-                ADFmin = stat
-                optlag = pidx
+        }
+    }
+    else {
+        // ---- Narayan-Popp (2010) paper form: impulse dummies included -----
+        dcm = J(Tm1, 1, 1)
+        dtm = (1::Tm1)
+        if (model == 1) {
+            gap = 2
+            c2col = 6
+        }
+        else {
+            gap = 3
+            c2col = 7
+        }
+        if (mode == 1) {
+            // ---- Sequential procedure (Eqs. 10-11) ------------------------
+            // Step 1: single break maximizing |t| of the impulse coefficient.
+            best = -1
+            tb1s = 0
+            for (tbb = T1; tbb <= T2; tbb++) {
+                imp1 = _tsav_np_imp(tbb, Tm1)
+                dul1 = _tsav_np_du(tbb, Tm1)
+                if (model == 1) {
+                    Zb = dcm, dtm, imp1, dul1
+                }
+                else {
+                    dtl1 = _tsav_np_dtl(tbb, Tm1)
+                    Zb = dcm, dtm, imp1, dul1, dtl1
+                }
+                rr = _tsav_np_cand(dy, y1, Zb, lmat, pmax, ic, Tm1, 4, 0)
+                if (rr[2] < . & rr[2] > best) {
+                    best = rr[2]
+                    tb1s = tbb
+                }
+            }
+            if (tb1s == 0) {
+                _error("sequential step 1 found no admissible break; reduce pmax()/trim() or add observations")
+            }
+            // Step 2: impose TB1, maximize |t| of the second impulse coef.
+            imp1 = _tsav_np_imp(tb1s, Tm1)
+            dul1 = _tsav_np_du(tb1s, Tm1)
+            if (model == 2) {
+                dtl1 = _tsav_np_dtl(tb1s, Tm1)
+            }
+            best = -1
+            for (tbb = T1; tbb <= T2; tbb++) {
+                if (abs(tbb - tb1s) < gap) {
+                    continue
+                }
+                imp2 = _tsav_np_imp(tbb, Tm1)
+                dul2 = _tsav_np_du(tbb, Tm1)
+                if (model == 1) {
+                    Zb = dcm, dtm, imp1, dul1, imp2, dul2
+                }
+                else {
+                    dtl2 = _tsav_np_dtl(tbb, Tm1)
+                    Zb = dcm, dtm, imp1, dul1, dtl1, imp2, dul2, dtl2
+                }
+                rr = _tsav_np_cand(dy, y1, Zb, lmat, pmax, ic, Tm1, c2col, 0)
+                if (rr[2] < . & rr[2] > best) {
+                    best   = rr[2]
+                    tb1min = min((tb1s, tbb))
+                    tb2min = max((tb1s, tbb))
+                    ADFmin = rr[1]
+                    optlag = rr[3]
+                }
+            }
+            if (tb1min == 0) {
+                _error("sequential step 2 found no admissible second break; reduce pmax()/trim() or add observations")
+            }
+        }
+        else {
+            // ---- Simultaneous procedure (Eq. 9) ---------------------------
+            // over all admissible pairs, maximize the joint F of the two
+            // impulse-dummy coefficients.
+            best = -1
+            for (tb1 = T1; tb1 <= T2 - gap; tb1++) {
+                imp1 = _tsav_np_imp(tb1, Tm1)
+                dul1 = _tsav_np_du(tb1, Tm1)
+                if (model == 2) {
+                    dtl1 = _tsav_np_dtl(tb1, Tm1)
+                }
+                for (tb2 = tb1 + gap; tb2 <= T2; tb2++) {
+                    imp2 = _tsav_np_imp(tb2, Tm1)
+                    dul2 = _tsav_np_du(tb2, Tm1)
+                    if (model == 1) {
+                        Zb = dcm, dtm, imp1, dul1, imp2, dul2
+                    }
+                    else {
+                        dtl2 = _tsav_np_dtl(tb2, Tm1)
+                        Zb = dcm, dtm, imp1, dul1, dtl1, imp2, dul2, dtl2
+                    }
+                    rr = _tsav_np_cand(dy, y1, Zb, lmat, pmax, ic, Tm1, 4, c2col)
+                    if (rr[2] < . & rr[2] > best) {
+                        best   = rr[2]
+                        fstat  = rr[2]
+                        tb1min = tb1
+                        tb2min = tb2
+                        ADFmin = rr[1]
+                        optlag = rr[3]
+                    }
+                }
+            }
+            if (tb1min == 0) {
+                _error("simultaneous search found no admissible break pair; reduce pmax()/trim() or add observations")
             }
         }
     }
@@ -1522,6 +1773,7 @@ void _tsav_np(string scalar yname, string scalar touse, real scalar model,
     st_numscalar("r(cv1)", cv[1])
     st_numscalar("r(cv5)", cv[2])
     st_numscalar("r(cv10)", cv[3])
+    st_numscalar("r(fstat)", fstat)
 }
 
 // Narayan & Popp (2010), Table 3 critical values by sample size

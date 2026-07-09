@@ -117,6 +117,7 @@ p topsis module to calculate comprehensive scores based on the entropy method or
 p torats module to facilitate transfer of data to RATS
 p torumm module to produce data in RUMM format
 p tosql module to transfer data to SQL database
+p totimpact module to compute total impact effects in time series regressions
 p touch module to create a blank data file
 p tpm module to estimate two-part cross-sectional models
 p tpoisson module to estimate truncated Poisson regression 

@@ -1,0 +1,24 @@
+d 'TOTIMPACT': module to compute total impact effects in time series regressions
+d
+d     totimpact estimates the total impact effect of each regressor
+d in a linear time series regression, following Pesaran and Smith  
+d  (2014). In an experiment the inputs are made orthogonal, so the
+d effect of one input is unambiguous. In observational time   
+d series the regressors are realisations of correlated stochastic
+d processes that cannot be held fixed, and the ordinary   
+d multiple-regression coefficient beta_i — the ceteris paribus
+d (other things equal) effect — is often not the quantity of	 
+d interest. 
+d
+d KW: time series
+d KW: impact
+d KW: orthogonal effects
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260708
+d
+f totimpact.ado
+f totimpact.sthlp
+f totimpact_postestimation.sthlp
+f totimpact_example.do

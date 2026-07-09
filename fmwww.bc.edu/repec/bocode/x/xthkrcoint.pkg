@@ -1,0 +1,46 @@
+d 'XTHKRCOINT': module to perform Hadri-Kurozumi-Rao panel cointegration test with the null of cointegration
+d
+d	xthkrcoint implements the panel cointegration tests of
+d Hadri, Kurozumi and Rao (2015, Econometrics Journal).  The
+d distinctive	 features of the test are:	  1. The null
+d hypothesis is cointegration for every unit; the alternative is
+d that at least one unit is not cointegrated.	       This is the
+d natural null when the researcher wishes to establish a long-run
+d relationship, and it complements the more	     common
+d no-cointegration-null tests (xtcointtest).	    2. The
+d asymptotics hold with N fixed and T large, so the test suits
+d typical macroeconomic and financial panels where N is 	
+d small relative to T. No estimation of the number of common
+d factors is required.	      3. Arbitrary cross-section dependence
+d (weak or strong, including common factors and cross-unit
+d cointegration) is mopped up	       nonparametrically through
+d the long-run variance of the pooled autocovariances, in the
+d spirit of Driscoll-Kraay. The 	 pooled statistic is
+d therefore asymptotically standard normal and no bootstrap
+d critical values are needed.	     4. Serial correlation is
+d handled by dynamic OLS (DOLS) — the cointegrating regression is
+d augmented with leads and lags of	    Dx — and a bias
+d correction removes the finite-sample negative bias of the
+d autocovariance statistic (which otherwise	     makes the test
+d conservative).    The command reports the pooled statistic
+d S{sub:K} (uncorrected) and S~{sub:K} (bias-corrected), each with
+d a one-sided	 (upper-tail) p-value, a decision at the 5% level,
+d and a per-unit breakdown showing which cross-sections drive a
+d rejection.	With graph it draws a two-panel diagnostics
+d dashboard. 
+d
+d KW: panel data
+d KW: unit root tests
+d KW: cointegration
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260708
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xthkrcoint.ado
+f xthkrcoint.sthlp
+f xthkrcoint_postestimation.sthlp
+f xthkrcoint_example.do

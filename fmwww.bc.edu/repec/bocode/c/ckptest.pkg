@@ -1,0 +1,27 @@
+d 'CKPTEST': module to implement unit root tests up to five unknown break points 
+d
+d   ckptest implements the unit root tests of Carrion-i-Silvestre,
+d Kim, and Perron (2009, Econometric Theory) up to 5 unknown break
+d points. Seven statistics are reported (PT, MPT, ADF, ZA, MZA,
+d MSB, MZT), with critical values. The Perron-Yabu (2009, JBES)
+d pretest for a break in trend is run and reported by default
+d before the unit root tests, following the procedure of the paper
+d (. As an original contribution of the package, ckptest introduces
+d a general-to-specific lag selection algorithm that selects the
+d lag order of the spectral AR regression by controlling residual
+d serial correlation with the Breusch-Godfrey test, in addition to
+d MAIC (the default) and BIC, and reports a Breusch-Godfrey
+d diagnostic for every method. 
+d
+d KW: unit root tests
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260708
+d
+d Author: Ozan Eruygur,  Ankara Haci Bayram Veli University
+d Support: email eruygur@@gmail.com
+d
+f ckptest.ado
+f ckptest.sthlp
