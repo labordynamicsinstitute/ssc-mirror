@@ -1,0 +1,32 @@
+d 'URVOL': module to compute Unit-root tests robust to non-stationary (time-varying) volatility
+d
+d     urvol implements a family of unit-root tests designed to
+d remain valid, and to gain power, when the innovation variance is
+d not	 constant over the sample -the "unstable" or
+d "non-stationary" volatility case.  Permanent changes in variance
+d (level shifts,    trends in variance, smooth transitions,
+d integrated volatility) are pervasive in macroeconomic and
+d financial time series    (exchange rates, interest rates, output,
+d asset prices).  As Cavaliere (2004) shows, such variance dynamics
+d make the standard    Dickey-Fuller (DF) and Phillips-Perron (PP)
+d tests size-distorted: an early negative or late positive variance
+d change can push    the empirical rejection frequency well above
+d (or below) the nominal level, invalidating the usual critical
+d values. 
+d
+d KW: volatility
+d KW: nonstationary
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260709
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f urvol.ado
+f urvol.sthlp
+f urvol_beare.sthlp
+f urvol_bzu.sthlp
+f urvol_example.do
+f urvol_wbdf.sthlp

@@ -1,5 +1,5 @@
 {smcl}
-{* *!version 10.0.0  2025-06-30}{...}
+{* *!version 11.1.0  2026-05-22}{...}
 {viewerjumpto "Syntax" "rdbwselect##syntax"}{...}
 {viewerjumpto "Description" "rdbwselect##description"}{...}
 {viewerjumpto "Options" "rdbwselect##options"}{...}
@@ -33,6 +33,7 @@
 {cmd:bwcheck(}{it:bwcheck}{cmd:)}
 {cmd:bwrestrict(}{it:bwropt}{cmd:)}
 {cmd:stdvars(}{it:stdopt}{cmd:)}
+{cmd:precision(}{it:precopt}{cmd:)}
 {cmd:vce(}{it:vcetype [vceopt1 vceopt2]}{cmd:)}
 ]{p_end}
 
@@ -58,6 +59,8 @@ and {browse "https://rdpackages.github.io/references/Calonico-Cattaneo-Farrell-T
 {p 4 8}Related Stata and R packages useful for inference in RD designs are described in the following website:{p_end}
 
 {p 8 8}{browse "https://rdpackages.github.io/":https://rdpackages.github.io/}{p_end}
+
+{p 4 8}{it:Requires Stata 16 or later.}{p_end}
 
 
 {marker options}{...}
@@ -131,7 +134,9 @@ Options are:{p_end}
 
 {p 4 8}{cmd:bwrestrict(}{it:bwropt}{cmd:)} if set {opt on}, computed bandwidths are restricted to lie within the range of {it:runvar}. Default is {opt on}.{p_end}
 
-{p 4 8}{cmd:stdvars(}{it:stdopt}{cmd:)} if set {opt on}, {it:depvar} and {it:runvar} are standardized before computing the bandwidths. Default is {opt off}.{p_end}
+{p 4 8}{cmd:stdvars(}{it:stdopt}{cmd:)} if set {opt on}, {it:depvar} and {it:runvar} are standardized before computing the bandwidths. Standardization avoids numerical instability in bandwidth selection when {it:runvar} has very large or very small magnitude. Default is {opt on}.{p_end}
+
+{p 4 8}{cmd:precision(}{it:precopt}{cmd:)} controls the storage precision of internal temporary variables (cluster-id, mass-point counts). Options are {cmd:double} (default) and {cmd:single}; {cmd:single} maps to Stata's {cmd:float} storage type. Default is {cmd:precision(double)}.{p_end}
 
 {dlgtab:Variance-Covariance Estimation}
 
@@ -142,8 +147,11 @@ Options are:{p_end}
 {p 8 12}{cmd:vce(hc1)} for heteroskedasticity-robust plug-in residuals variance estimator with {it:hc1} weights.{p_end}
 {p 8 12}{cmd:vce(hc2)} for heteroskedasticity-robust plug-in residuals variance estimator with {it:hc2} weights.{p_end}
 {p 8 12}{cmd:vce(hc3)} for heteroskedasticity-robust plug-in residuals variance estimator with {it:hc3} weights.{p_end}
-{p 8 12}{cmd:vce(nncluster }{it:clustervar [nnmatch]}{cmd:)} for cluster-robust nearest neighbor variance estimation using with {it:clustervar} indicating the cluster ID variable and {it: nnmatch} matches indicating the minimum number of neighbors to be used.{p_end}
-{p 8 12}{cmd:vce(cluster }{it:clustervar}{cmd:)} for cluster-robust plug-in residuals variance estimation with degrees-of-freedom weights and {it:clustervar} indicating the cluster ID variable.{p_end}
+{p 8 12}{cmd:vce(cluster }{it:clustervar}{cmd:)} for cluster-robust plug-in residuals variance estimation with degrees-of-freedom weights; equivalent to {cmd:vce(cr1 }{it:clustervar}{cmd:)}.{p_end}
+{p 8 12}{cmd:vce(cr1 }{it:clustervar}{cmd:)} for cluster-robust plug-in residuals variance estimator with degrees-of-freedom correction.{p_end}
+{p 8 12}{cmd:vce(cr2 }{it:clustervar}{cmd:)} for the Bell-McCaffrey (2002) bias-reduced cluster-robust variance estimator (CRV2).{p_end}
+{p 8 12}{cmd:vce(cr3 }{it:clustervar}{cmd:)} for the Pustejovsky-Tipton (2018) cluster-robust variance estimator (CRV3), approximately unbiased with few clusters.{p_end}
+{p 8 12}The CR2/CR3 leverage correction applies to both the conventional and the robust bias-corrected standard errors, including when the point-estimation bandwidth h differs from the bias-correction bandwidth b; in that case the cluster leverage is computed from the bias (b) regression.{p_end}
 {p 8 12}Default is {cmd:vce(nn 3)}.{p_end}
 
     {hline}
@@ -170,11 +178,13 @@ Options are:{p_end}
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
+{synopt:{cmd:e(N)}}number of observations{p_end}
 {synopt:{cmd:e(N_l)}}number of observations to the left of the cutoff{p_end}
 {synopt:{cmd:e(N_r)}}number of observations to the right of the cutoff{p_end}
 {synopt:{cmd:e(c)}}cutoff value{p_end}
 {synopt:{cmd:e(p)}}order of the polynomial used for estimation of the regression function{p_end}
 {synopt:{cmd:e(q)}}order of the polynomial used for estimation of the bias of the regression function estimator{p_end}
+{synopt:{cmd:e(n_clust)}}number of clusters (only when {cmd:vce(cluster}|{cmd:cr1}|{cmd:cr2}|{cmd:cr3} ...{cmd:)} is specified){p_end}
 
 {synopt:{cmd:e(h_mserd)}}     MSE-optimal bandwidth selector for the RD treatment effect estimator.{p_end}
 {synopt:{cmd:e(h_msetwo_l)}}  MSE-optimal bandwidth selectors below the cutoff for the RD treatment effect estimator.{p_end}
@@ -209,13 +219,22 @@ Options are:{p_end}
 {synopt:{cmd:e(b_cercomb2_r)}} for median({opt certwo_r},{opt cerrd},{opt cersum}), above the cutoff.{p_end}
 
 {p2col 5 20 24 2: Macros}{p_end}
+{synopt:{cmd:e(cmd)}}{cmd:rdbwselect}{p_end}
+{synopt:{cmd:e(cmdline)}}command as typed{p_end}
+{synopt:{cmd:e(title)}}title ({cmd:RD bandwidth selection (sharp/fuzzy)}, optionally {cmd:, covariate-adjusted}){p_end}
+{synopt:{cmd:e(depvar)}}name of dependent (outcome) variable{p_end}
 {synopt:{cmd:e(runningvar)}}name of running variable{p_end}
-{synopt:{cmd:e(outcomevar)}}name of outcome variable{p_end}
 {synopt:{cmd:e(clustvar)}}name of cluster variable{p_end}
-{synopt:{cmd:e(covs)}}name of covariates{p_end}
-{synopt:{cmd:e(vce_select)}}vcetype specified in vce(){p_end}
+{synopt:{cmd:e(covs)}}names of additional covariates{p_end}
+{synopt:{cmd:e(vce_select)}}vcetype specified in vce() (raw option name, e.g. "nn", "hc3", "cr3"){p_end}
+{synopt:{cmd:e(vce_type)}}display label for variance-covariance estimator (e.g. "NN", "HC3", "CR3"){p_end}
 {synopt:{cmd:e(bwselect)}}bandwidth selection choice{p_end}
 {synopt:{cmd:e(kernel)}}kernel choice{p_end}
+{synopt:{cmd:e(precision)}}storage precision selected via {cmd:precision()}: {cmd:double} (default) or {cmd:single}{p_end}
+
+{p2col 5 20 24 2: Matrices}{p_end}
+{synopt:{cmd:e(mat_h)}}1x2 matrix of bandwidths for the RD treatment effect estimator (left, right){p_end}
+{synopt:{cmd:e(mat_b)}}1x2 matrix of bandwidths for the bias of the RD treatment effect estimator (left, right){p_end}
 
 
 {marker references}{...}
@@ -264,12 +283,12 @@ Options are:{p_end}
 {browse "mailto:scalonico@ucdavis.edu":scalonico@ucdavis.edu}.{p_end}
 
 {p 4 8}Matias D. Cattaneo, Princeton University, Princeton, NJ.
-{browse "mailto:cattaneo@princeton.edu":cattaneo@princeton.edu}.{p_end}
+{browse "mailto:matias.d.cattaneo@gmail.com":matias.d.cattaneo@gmail.com}.{p_end}
 
 {p 4 8}Max H. Farrell, University of California, Santa Barbara, CA.
-{browse "mailto:maxhfarrell@ucsb.edu":maxhfarrell@ucsb.edu}.{p_end}
+{browse "mailto:mhfarrell@gmail.com":mhfarrell@gmail.com}.{p_end}
 
 {p 4 8}Rocio Titiunik, Princeton University, Princeton, NJ.
-{browse "mailto:titiunik@princeton.edu":titiunik@princeton.edu}.{p_end}
+{browse "mailto:rocio.titiunik@gmail.com":rocio.titiunik@gmail.com}.{p_end}
 
 

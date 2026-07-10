@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  03jul2026}{...}
+{* *! version 1.2.0  08jul2026}{...}
 {viewerjumpto "Syntax" "tsadvroot_cisur##syntax"}{...}
 {viewerjumpto "Description" "tsadvroot_cisur##description"}{...}
 {viewerjumpto "Options" "tsadvroot_cisur##options"}{...}
@@ -34,10 +34,15 @@ structural breaks (Carrion-i-Silvestre, Kim and Perron 2009)
 {synopt:{opt m:odel(string)}}{cmd:const} (0: constant, no breaks),
 {cmd:trend} (1: linear trend, no breaks), {cmd:slope} (2: breaks in the
 trend slope), {cmd:break} (3: breaks in level and slope; the default){p_end}
-{synopt:{opt b:reaks(#)}}number of {it:unknown} breaks to estimate, 1-3;
-default {cmd:breaks(1)}{p_end}
+{synopt:{opt b:reaks(#)}}number of {it:unknown} breaks to estimate: 1-3 with
+{cmd:method(brute)}, 1-5 with {cmd:method(dp)}; default {cmd:breaks(1)}{p_end}
 {synopt:{opt breakd:ates(numlist)}}{it:known} break dates (time-variable
 values, up to 5); overrides {opt breaks()}{p_end}
+{synopt:{opt meth:od(string)}}break-search algorithm: {cmd:brute} (grid
+search, GAUSS estimation=0, the source default) or {cmd:dp} (dynamic
+programming, GAUSS estimation=1){p_end}
+{synopt:{opt max:iter(#)}}maximum GLS/estimation iterations for {cmd:method(dp)};
+default {cmd:maxiter(100)}{p_end}
 {synopt:{opt p:enalty(string)}}lag penalty for the long-run variance:
 {cmd:maic} (default) or {cmd:bic}{p_end}
 {synopt:{opt km:ax(#)}}maximum lag for the long-run variance; default
@@ -68,12 +73,17 @@ reports seven statistics computed on the quasi-GLS-detrended series:
 {p2colreset}{...}
 
 {pstd}
-Unknown break dates are estimated by minimizing the GLS sum of squared
-residuals over all admissible break-date combinations (the source's
-brute-force algorithm, its default). The non-centrality parameter c-bar and
-the 1%, 5% and 10% critical values are evaluated from the authors' response
-surfaces at the estimated break fractions, so no bootstrap is needed. All
-seven tests reject the unit root for values {it:below} the critical value.
+Unknown break dates are estimated in one of two ways, matching the two
+estimation paths of the GAUSS source: {cmd:method(brute)} (the default, the
+{cmd:sburControlCreate} default) minimizes the GLS sum of squared residuals
+over all admissible break-date combinations (up to 3 breaks); {cmd:method(dp)}
+uses the source's dynamic-programming algorithm (Bai-Perron dating followed by
+iterated GLS re-dating and restricted GLS estimation), which handles up to 5
+breaks and is the more accurate procedure for the general multiple-break case.
+The non-centrality parameter c-bar and the 1%, 2.5%, 5% and 10% critical
+values are evaluated from the authors' response surfaces at the estimated
+break fractions, so no bootstrap is needed. All seven tests reject the unit
+root for values {it:below} the critical value.
 
 
 {marker options}{...}
@@ -86,10 +96,21 @@ of the trend; model 3 (the default, the paper's leading case) lets each
 break shift both the level and the slope.
 
 {phang}
-{opt breaks(#)}: with unknown dates the brute-force search is O(T) for one
-break, O(T^2) for two and O(T^3) for three - with T around 200 and
-{cmd:breaks(3)} expect several minutes. Minimum segment length is 2, and the
-first/last 3 observations are excluded, as in the source.
+{opt breaks(#)}: with {cmd:method(brute)} the search is O(T) for one break,
+O(T^2) for two and O(T^3) for three - with T around 200 and {cmd:breaks(3)}
+expect several minutes; minimum segment length is 2 and the first/last 3
+observations are excluded, as in the source. {cmd:method(dp)} is far faster
+(the dynamic-programming recursion is O(T^2) regardless of the number of
+breaks) and supports up to 5; it uses 10% trimming, as in the source.
+
+{phang}
+{opt method()}, {opt maxiter()}: {cmd:brute} reproduces the source's
+brute-force branch and is the {cmd:sburControlCreate} default; {cmd:dp}
+reproduces the source's dynamic-programming branch. The two give the same
+answer for 1-3 breaks when both apply, but can select different dates in
+finite samples (the dp restricted-estimation stage refines them). {opt maxiter()}
+caps the stage-2 GLS-dating and stage-3 outer iterations (the source default
+is 100; the inner restricted-estimation loop is fixed at 10).
 
 {phang}
 {opt breakdates(numlist)}: supply up to 5 known break dates (values of the
@@ -131,14 +152,18 @@ regression with the MAIC/BIC lag chosen on OLS-detrended data.
 {title:Source compatibility (carrion silvestre2009.src)}
 
 {pstd}The following source conventions are reproduced exactly:{p_end}
-{phang2}- the brute-force estimation path, which is the source's own default
-({cmd:sburControlCreate} sets {cmd:estimation = 0}); the alternative
-dynamic-programming path ({cmd:estimation = 1}, Bai-Perron dating plus
-Perron-Qu restricted iterations) is {it:not} implemented - with unknown
-dates the command therefore supports up to 3 breaks, exactly like the
-source's brute-force code;{p_end}
-{phang2}- search bounds j in [3, T-3] with a minimum of 2 periods between
-consecutive breaks;{p_end}
+{phang2}- {it:both} estimation paths of the source are implemented:
+{cmd:method(brute)} = {cmd:__sbur_multiple_gls_brute} ({cmd:estimation = 0},
+the {cmd:sburControlCreate} default) and {cmd:method(dp)} =
+{cmd:__sbur_multiple_gls_algorithm} ({cmd:estimation = 1}: OLS Bai-Perron
+dating, iterated GLS re-dating with c-bar updating, and the restricted
+GLS estimation stage {cmd:__sbur_est2_gls}), transcribed from the GAUSS
+source and cross-checked to numerical precision across models and break
+counts;{p_end}
+{phang2}- as in the source, the dp path uses the stage-2 c-bar for the final
+statistics while building the regressors from the stage-3 dates;{p_end}
+{phang2}- brute-force search bounds j in [3, T-3] with a minimum of 2 periods
+between consecutive breaks; dp trimming fixed at 10%;{p_end}
 {phang2}- c-bar re-evaluated from the response surface at every candidate
 break vector;{p_end}
 {phang2}- s2(AR) lag chosen on OLS-detrended data; its regression has no
@@ -164,12 +189,12 @@ coefficients).{p_end}
 {synopt:{cmd:r(nbreaks)}}number of breaks{p_end}
 {synopt:{cmd:r(T)}}sample size{p_end}
 {p2col 5 20 24 2: Macros}{p_end}
-{synopt:{cmd:r(cmd)}, {cmd:r(varname)}, {cmd:r(model)}, {cmd:r(penalty)},
-{cmd:r(breakdates)}}{p_end}
+{synopt:{cmd:r(cmd)}, {cmd:r(varname)}, {cmd:r(model)}, {cmd:r(method)},
+{cmd:r(penalty)}, {cmd:r(breakdates)}}{p_end}
 {p2col 5 20 24 2: Matrices}{p_end}
 {synopt:{cmd:r(stats)}}1 x 7: PT MPT ADF ZA MZA MSB MZT{p_end}
-{synopt:{cmd:r(cv)}}4 x 3 critical values (rows MSB MZA MZT PT; columns
-1% 5% 10%){p_end}
+{synopt:{cmd:r(cv)}}4 x 4 critical values (rows MSB MZA MZT PT; columns
+1% 2.5% 5% 10%){p_end}
 {synopt:{cmd:r(breakpos)}}estimated/known break positions (models 2-3){p_end}
 {p2colreset}{...}
 
@@ -188,6 +213,10 @@ coefficients).{p_end}
 
 {pstd}Two estimated breaks, BIC lag penalty{p_end}
 {phang}{cmd:. tsadvroot cisur lair, model(break) breaks(2) penalty(bic)}{p_end}
+
+{pstd}Four breaks via the dynamic-programming algorithm (not available under
+the brute-force default){p_end}
+{phang}{cmd:. tsadvroot cisur lair, model(break) breaks(4) method(dp)}{p_end}
 
 {pstd}Known break dates{p_end}
 {phang}{cmd:. tsadvroot cisur lair, model(break) breakdates(1955m1 1958m1)}{p_end}

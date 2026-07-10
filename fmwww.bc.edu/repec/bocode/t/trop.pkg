@@ -1,0 +1,92 @@
+d 'TROP': module implementing Triply Robust Panel Estimator
+d
+d	trop implements the Triply Robust Panel (TROP) estimator
+d proposed by Athey, Imbens, Qu, and Viviano (2025) for estimating
+d the	 average treatment effect on the treated (ATT) in panel
+d data settings.  The estimator combines unit weights, time
+d weights, and	  a nuclear-norm regularized low-rank factor model
+d to predict counterfactual outcomes for treated unit-time pairs.  
+d  The triple robustness property (Theorem 5.1) ensures that the
+d bias of the estimator is bounded by the product of three   
+d components: unit imbalance, time imbalance, and misspecification
+d of the regression adjustment.  The estimator is consistent if   
+d any one of the three components is zero (Corollary 1). 
+d
+d KW: panel data
+d KW: triply robust estimator
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260709
+d
+d Author:   Xuanyu Cai,  City University of Macau
+d Support: email  xuanyuCAI@@outlook.com
+d
+d Author:     Wenli Xu, City University of Macau 
+d Support: email  wlxu@@cityu.edu.mo
+d
+f trop.ado
+f trop.sthlp
+f trop_backend_select.mata
+f trop_bootstrap_diagnostics.mata
+f trop_bootstrap.ado
+f trop_check.ado
+f trop_constants.mata
+f trop_data_transfer.mata
+f trop_data.ado
+f trop_ereturn_store.mata
+f trop_estat_bootstrap.ado
+f trop_estat_factors.ado
+f trop_estat_helpers.mata
+f trop_estat_loocv.ado
+f trop_estat_sensitivity.ado
+f trop_estat_summarize.ado
+f trop_estat_triplerob.ado
+f trop_estat_vce.ado
+f trop_estat_weights.ado
+f trop_estat.ado
+f trop_estat.sthlp
+f trop_eventstudy.mata
+f trop_handle_error.ado
+f trop_lambda_grid.mata
+f trop_linux_x64.plugin
+f trop_loocv_validation.mata
+f trop_macos_arm64.plugin
+f trop_macos_x64.plugin
+f trop_main.mata
+f trop_p.ado
+f trop_predict_alpha.ado
+f trop_predict_beta.ado
+f trop_predict_fitted.ado
+f trop_predict_mu.ado
+f trop_predict_residuals.ado
+f trop_predict_te.ado
+f trop_predict_validate.ado
+f trop_predict_y0.ado
+f trop_predict_y1.ado
+f trop_predict.sthlp
+f trop_rust_interface.mata
+f trop_validate.ado
+f trop_validation.mata
+f trop_windows_x64.plugin
+f ../_/_trop_attach_idnames.ado
+f ../_/_trop_cleanup_vars.ado
+f ../_/_trop_deploy_data.ado
+f ../_/_trop_estat_distance.ado
+f ../_/_trop_estat_eventstudy.ado
+f ../_/_trop_estat_mht.ado
+f ../_/_trop_estat_pretrend.ado
+f ../_/_trop_estat_table.ado
+f ../_/_trop_load_mata.ado
+f ../_/_trop_load_plugin.ado
+f ../_/_trop_set_grid.ado
+f ../_/_trop_validate_params.ado
+f ../l/load_mata_once.do
+f ../l/ltrop.mlib
+f ../c/compile_all.do
+f ../b/basque_gdp.dta
+f ../c/cps_logwage.dta
+f ../c/cps_urate.dta
+f ../g/germany_gdp.dta
+f ../p/pwt_loggdp.dta
+f ../s/smoking_packs.dta

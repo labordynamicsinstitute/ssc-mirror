@@ -149,6 +149,7 @@ p trinary module containing extensions to generate to implement three-way logic
 p triplot module to generate triangular plots
 p triprobit module to estimate trivariate probit model using the GHK simulator
 p trnbin0 module to estimate zero-truncated negative binomial regression
+p trop module implementing Triply Robust Panel Estimator
 p trpois0 module to estimate zero-truncated Poisson regression models
 p truecrypt module to mount or dismount TrueCrypt volumes
 p truernd module to generate true random numbers 

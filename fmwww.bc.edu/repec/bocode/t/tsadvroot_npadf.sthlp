@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0  07jul2026}{...}
+{* *! version 1.2.0  08jul2026}{...}
 {viewerjumpto "Syntax" "tsadvroot_npadf##syntax"}{...}
 {viewerjumpto "Description" "tsadvroot_npadf##description"}{...}
 {viewerjumpto "Options" "tsadvroot_npadf##options"}{...}

@@ -39,7 +39,7 @@ qui {
 *------------------------------------------------------------------------------
 * 1. qadf -- default deciles, model c, on the random walk
 *------------------------------------------------------------------------------
-di as text _n ">>> [1/14] tsadvroot qadf, defaults, random walk"
+di as text _n ">>> [1/15] tsadvroot qadf, defaults, random walk"
 capture noisily tsadvroot qadf rw
 if _rc {
     di as err "FAILED (rc = " _rc ")"
@@ -52,7 +52,7 @@ else {
     di as result "OK  (lags = " r(lags) ", N = " r(N) ")"
 }
 
-di as text _n ">>> [2/14] tsadvroot qadf, single tau, model ct, ic(aic), stationary AR"
+di as text _n ">>> [2/15] tsadvroot qadf, single tau, model ct, ic(aic), stationary AR"
 capture noisily tsadvroot qadf ar, tau(0.5) model(ct) ic(aic) pmax(6)
 if _rc {
     di as err "FAILED (rc = " _rc ")"
@@ -66,7 +66,7 @@ else {
     else di as text "    note: no 5% rejection this draw (power is not 100%)"
 }
 
-di as text _n ">>> [3/14] tsadvroot qadf with graph, three quantiles, ic(sic)"
+di as text _n ">>> [3/15] tsadvroot qadf with graph, three quantiles, ic(sic)"
 capture noisily tsadvroot qadf ar, tau(0.25 0.5 0.75) ic(sic) graph name(g_qadf)
 if _rc {
     di as err "FAILED (rc = " _rc ")"
@@ -74,7 +74,7 @@ if _rc {
 }
 else di as result "OK  (graph g_qadf created)"
 
-di as text _n ">>> [4/14] tsadvroot qadf, pmax(0) forces no lags"
+di as text _n ">>> [4/15] tsadvroot qadf, pmax(0) forces no lags"
 capture noisily tsadvroot qadf rw, tau(0.5) pmax(0) noprint
 if _rc {
     di as err "FAILED (rc = " _rc ")"
@@ -88,7 +88,7 @@ else {
 *------------------------------------------------------------------------------
 * 2. fqadf -- Fourier quantile ADF
 *------------------------------------------------------------------------------
-di as text _n ">>> [5/14] tsadvroot fqadf, no bootstrap, smooth-break series, graph"
+di as text _n ">>> [5/15] tsadvroot fqadf, no bootstrap, smooth-break series, graph"
 capture noisily tsadvroot fqadf smooth, tau(0.25 0.5 0.75) freq(1) lags(2) ///
     nobootstrap graph name(g_fqadf)
 if _rc {
@@ -101,7 +101,7 @@ else {
     di as result "OK  (median tn = " %6.3f R[2,5] ")"
 }
 
-di as text _n ">>> [6/14] tsadvroot fqadf with bootstrap (B=99, seeded)"
+di as text _n ">>> [6/15] tsadvroot fqadf with bootstrap (B=99, seeded)"
 capture noisily tsadvroot fqadf smooth, tau(0.5) model(c) freq(1) lags(2) ///
     nboot(99) seed(12345)
 if _rc {
@@ -115,7 +115,7 @@ else {
     di as result "OK  (tn = " %6.3f r(tn) ", boot p = " %5.3f r(pboot) ")"
 }
 
-di as text _n ">>> [7/14] tsadvroot fqadf, model ct, random walk (should NOT reject)"
+di as text _n ">>> [7/15] tsadvroot fqadf, model ct, random walk (should NOT reject)"
 capture noisily tsadvroot fqadf rw, tau(0.5) model(ct) freq(2) lags(1) ///
     nboot(99) seed(6789)
 if _rc {
@@ -131,7 +131,7 @@ else {
 *------------------------------------------------------------------------------
 * 3. npadf -- Narayan-Popp two-break test
 *------------------------------------------------------------------------------
-di as text _n ">>> [8/14] tsadvroot npadf model(1), broken-trend series, graph"
+di as text _n ">>> [8/15] tsadvroot npadf model(1), broken-trend series, graph"
 capture noisily tsadvroot npadf brk, model(1) pmax(4) graph name(g_np1)
 if _rc {
     di as err "FAILED (rc = " _rc ")"
@@ -144,7 +144,7 @@ else {
         r(tb1) " and t = " r(tb2) ")"
 }
 
-di as text _n ">>> [9/14] tsadvroot npadf model(2), ic(aic), trim(0.15)"
+di as text _n ">>> [9/15] tsadvroot npadf model(2), ic(aic), trim(0.15)"
 capture noisily tsadvroot npadf brk, model(2) pmax(4) ic(aic) trim(0.15)
 if _rc {
     di as err "FAILED (rc = " _rc ")"
@@ -152,7 +152,7 @@ if _rc {
 }
 else di as result "OK  (ADF = " %6.3f r(stat) ")"
 
-di as text _n ">>> [10/14] tsadvroot npadf model(1) sequential (NP paper Eqs 10-11)"
+di as text _n ">>> [10/15] tsadvroot npadf model(1) sequential (NP paper Eqs 10-11)"
 capture noisily tsadvroot npadf brk, model(1) pmax(4) sequential
 if _rc {
     di as err "FAILED (rc = " _rc ")"
@@ -166,7 +166,7 @@ else {
         r(tb1) " and t = " r(tb2) ")"
 }
 
-di as text _n ">>> [11/14] tsadvroot npadf model(2) simul (NP paper Eq 9), returns F"
+di as text _n ">>> [11/15] tsadvroot npadf model(2) simul (NP paper Eq 9), returns F"
 capture noisily tsadvroot npadf brk, model(2) pmax(4) simul
 if _rc {
     di as err "FAILED (rc = " _rc ")"
@@ -191,7 +191,7 @@ else {
 *------------------------------------------------------------------------------
 * 4. cisur -- Carrion-i-Silvestre, Kim & Perron (2009)
 *------------------------------------------------------------------------------
-di as text _n ">>> [12/14] tsadvroot cisur, no-break models (const / trend)"
+di as text _n ">>> [12/15] tsadvroot cisur, no-break models (const / trend)"
 capture noisily tsadvroot cisur rw, model(const)
 if _rc {
     di as err "FAILED (rc = " _rc ")"
@@ -211,7 +211,7 @@ else {
     di as result "OK  (model 1: cbar = -13.5)"
 }
 
-di as text _n ">>> [13/14] tsadvroot cisur model(break) breaks(1) + graph, then breaks(2)"
+di as text _n ">>> [13/15] tsadvroot cisur model(break) breaks(1) + graph, then breaks(2)"
 capture noisily tsadvroot cisur brk, model(break) breaks(1) graph name(g_cis1)
 if _rc {
     di as err "FAILED (rc = " _rc ")"
@@ -234,7 +234,7 @@ else {
         "; true breaks 70 and 140)"
 }
 
-di as text _n ">>> [14/14] tsadvroot cisur, known breaks + model(slope)"
+di as text _n ">>> [14/15] tsadvroot cisur, known breaks + model(slope)"
 capture noisily tsadvroot cisur brk, model(break) breakdates(70 140)
 if _rc {
     di as err "FAILED (rc = " _rc ")"
@@ -247,6 +247,34 @@ if _rc {
     local ++errors
 }
 else di as result "OK  (model slope runs)"
+
+di as text _n ">>> [15/15] tsadvroot cisur method(dp), 2 and 4 breaks"
+capture noisily tsadvroot cisur brk, model(break) breaks(2) method(dp) noprint
+if _rc {
+    di as err "FAILED (rc = " _rc ")"
+    local ++errors
+}
+else {
+    assert r(mzt) < .
+    assert "`r(method)'" == "dp"
+    matrix Bdp = r(breakpos)
+    assert el(Bdp,1,1) < el(Bdp,2,1)
+    di as result "OK  (dp 2 breaks: MZt = " %6.3f r(mzt) ", breaks " ///
+        el(Bdp,1,1) " " el(Bdp,2,1) ")"
+}
+* four breaks: unavailable under brute, available under dp
+capture tsadvroot cisur brk, model(break) breaks(4) method(brute) noprint
+if _rc == 198 di as result "OK  (brute breaks(4) correctly rejected)"
+else {
+    di as err "FAILED: brute breaks(4) not rejected (rc = " _rc ")"
+    local ++errors
+}
+capture noisily tsadvroot cisur brk, model(break) breaks(4) method(dp) noprint
+if _rc {
+    di as err "FAILED (dp breaks(4) rc = " _rc ")"
+    local ++errors
+}
+else di as result "OK  (dp 4 breaks: MZt = " %6.3f r(mzt) ")"
 
 *------------------------------------------------------------------------------
 * 5. Error handling: gaps, panel data, bad options

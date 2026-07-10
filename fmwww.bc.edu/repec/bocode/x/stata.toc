@@ -114,6 +114,7 @@ p xtitsa module for performing interrupted time-series analysis for panel data
 p xtivdfreg module to perform defactored instrumental variables estimation of large panel data models
 p xtivreg2 module to perform extended IV/2SLS, GMM and AC/HAC, LIML and k-class regression for panel data models
 p xtivreg28 module to perform extended IV/2SLS, GMM and AC/HAC, LIML and k-class regression for panel data models (version 8)
+p xtkpybreak module to perform CCE estimation under non-stationary common factors and multiple structural breaks in non-stationary heterogeneous panels
 p xtkr module to implement the Keane and Runkle estimator for dynamic panel data models
 p xtkumblienhard module to Estimate Generalized Four-Component Panel Data Stochastic Frontier Models
 p xtlmbreak module to provide Panel LM cointegration test with multiple structural breaks

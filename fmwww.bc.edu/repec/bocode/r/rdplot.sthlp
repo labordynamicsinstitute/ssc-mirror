@@ -1,5 +1,5 @@
 {smcl}
-{* *!version 10.0.0  2025-06-30}{...}
+{* *!version 11.1.0  2026-05-22}{...}
 {viewerjumpto "Syntax" "rdplot##syntax"}{...}
 {viewerjumpto "Description" "rdplot##description"}{...}
 {viewerjumpto "Options" "rdplot##options"}{...}
@@ -30,6 +30,7 @@
 {cmd:covs_eval(}{it:covars_eval}{cmd:)}
 {cmd:covs_drop(}{it:covsdropoption}{cmd:)}
 {cmd:masspoints(}{it:masspointsoption}{cmd:)}
+{cmd:precision(}{it:precopt}{cmd:)}
 {cmd:ci(}{it:cilevel}{cmd:)}
 {it:shade}
 {cmd:graph_options(}{it:gphopts}{cmd:)}
@@ -56,6 +57,8 @@ and {browse "https://rdpackages.github.io/references/Calonico-Cattaneo-Farrell-T
 {p 4 8}Related Stata and R packages useful for inference in RD designs are described in the following website:{p_end}
 
 {p 8 8}{browse "https://rdpackages.github.io":https://rdpackages.github.io}{p_end}
+
+{p 4 8}{it:Requires Stata 16 or later.}{p_end}
 
 
 {marker options}{...}
@@ -96,6 +99,8 @@ Options are:{p_end}
 {p 8 12}{opt check}  looks for and reports the number of unique observations at each side of the cutoff.   {p_end}
 {p 8 12}{opt adjust}  sets {cmd:binselect(}{it:binmethod}{cmd:)} as polynomial regression when mass points are present. {p_end}
 {p 8 12} Default option is {cmd:masspoints(adjust)}.{p_end}
+
+{p 4 8}{cmd:precision(}{it:precopt}{cmd:)} controls the storage precision of internal temporary variables (the {cmd:rdplot_*} output variables when {cmd:genvars} is requested). Options are {cmd:double} (default) and {cmd:single}; {cmd:single} maps to Stata's {cmd:float} storage type. Default is {cmd:precision(double)}.{p_end}
 
 {dlgtab:Polynomial Fit}
 
@@ -164,14 +169,26 @@ Default is {cmd:kernel(uniform)} (i.e., equal/no weighting to all observations o
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
+{synopt:{cmd:e(N)}}number of observations{p_end}
 {synopt:{cmd:e(N_l)}}original number of observations to the left of the cutoff{p_end}
 {synopt:{cmd:e(N_r)}}original number of observations to the right of the cutoff{p_end}
+{synopt:{cmd:e(N_h_l)}}effective number of observations (given the bandwidth) to the left of the cutoff{p_end}
+{synopt:{cmd:e(N_h_r)}}effective number of observations (given the bandwidth) to the right of the cutoff{p_end}
 {synopt:{cmd:e(c)}}cutoff value{p_end}
+{synopt:{cmd:e(p)}}order of the polynomial used for the fit{p_end}
 {synopt:{cmd:e(J_star_l)}}selected number of bins to the left of the cutoff{p_end}
 {synopt:{cmd:e(J_star_r)}}selected number of bins to the right of the cutoff{p_end}
 
 {p2col 5 20 24 2: Macros}{p_end}
+{synopt:{cmd:e(cmd)}}{cmd:rdplot}{p_end}
+{synopt:{cmd:e(cmdline)}}command as typed{p_end}
+{synopt:{cmd:e(title)}}title ({cmd:RD plot}){p_end}
+{synopt:{cmd:e(depvar)}}name of dependent (outcome) variable{p_end}
+{synopt:{cmd:e(runningvar)}}name of running variable{p_end}
 {synopt:{cmd:e(binselect)}}method used to compute the optimal number of bins{p_end}
+{synopt:{cmd:e(eq_l)}}polynomial equation (left of cutoff) as a string, suitable for overlaying the fit via {cmd:twoway function}{p_end}
+{synopt:{cmd:e(eq_r)}}polynomial equation (right of cutoff) as a string, suitable for overlaying the fit via {cmd:twoway function}{p_end}
+{synopt:{cmd:e(precision)}}storage precision selected via {cmd:precision()}: {cmd:double} (default) or {cmd:single}{p_end}
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Matrices}{p_end}
@@ -211,13 +228,13 @@ Default is {cmd:kernel(uniform)} (i.e., equal/no weighting to all observations o
 {browse "mailto:scalonico@ucdavis.edu":scalonico@ucdavis.edu}.{p_end}
 
 {p 4 8}Matias D. Cattaneo, Princeton University, Princeton, NJ.
-{browse "mailto:cattaneo@princeton.edu":cattaneo@princeton.edu}.{p_end}
+{browse "mailto:matias.d.cattaneo@gmail.com":matias.d.cattaneo@gmail.com}.{p_end}
 
 {p 4 8}Max H. Farrell, University of California, Santa Barbara, CA.
-{browse "mailto:maxhfarrell@ucsb.edu":maxhfarrell@ucsb.edu}.{p_end}
+{browse "mailto:mhfarrell@gmail.com":mhfarrell@gmail.com}.{p_end}
 
 {p 4 8}Rocio Titiunik, Princeton University, Princeton, NJ.
-{browse "mailto:titiunik@princeton.edu":titiunik@princeton.edu}.{p_end}
+{browse "mailto:rocio.titiunik@gmail.com":rocio.titiunik@gmail.com}.{p_end}
 
 
 

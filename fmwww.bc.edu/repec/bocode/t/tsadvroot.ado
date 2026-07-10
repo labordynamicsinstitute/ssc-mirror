@@ -1,4 +1,4 @@
-*! tsadvroot 1.1.0  07jul2026
+*! tsadvroot 1.2.0  08jul2026
 *! Advanced time-series unit-root tests:
 *!   qadf  - quantile ADF (Koenker & Xiao 2004)
 *!   fqadf - Fourier quantile ADF (Li & Zheng 2018) with residual bootstrap
@@ -753,13 +753,16 @@ end
 *==============================================================================
 * SUBCOMMAND 4 : cisur  --  Carrion-i-Silvestre, Kim & Perron (2009)
 * GLS-based unit-root tests with multiple structural breaks.
-* Exact translation of carrion silvestre2009.src (brute-force path,
-* the source default: sburControlCreate() sets estimation = 0)
+* Exact translation of carrion silvestre2009.src. Both source estimation
+* paths are implemented: method(brute) = __sbur_multiple_gls_brute
+* (estimation = 0, the sburControlCreate default; 1-3 unknown breaks) and
+* method(dp) = __sbur_multiple_gls_algorithm (estimation = 1; 1-5 breaks).
 *==============================================================================
 program define tsadvroot_cisur, rclass
     version 14.0
     syntax varname(ts) [if] [in] [, Model(string) Breaks(integer 1) ///
-        BREAKDates(numlist) Penalty(string) KMax(integer 4) KMin(integer 0) ///
+        BREAKDates(numlist) METHod(string) MAXiter(integer 100) ///
+        Penalty(string) KMax(integer 4) KMin(integer 0) ///
         GRaph NAme(string) noPRint ]
 
     local yv `varlist'
@@ -786,6 +789,22 @@ program define tsadvroot_cisur, rclass
     }
     if `kmin' < 0 | `kmax' < `kmin' {
         di as err "require 0 <= kmin() <= kmax()"
+        exit 198
+    }
+    * ---- estimation method: brute (GAUSS estimation=0, sburControlCreate ----
+    * ---- default) or dp (dynamic programming, GAUSS estimation=1) -----------
+    if "`method'" == "" local method "brute"
+    local method = lower("`method'")
+    if inlist("`method'", "brute", "bruteforce", "grid", "0") local est 0
+    else if inlist("`method'", "dp", "algorithm", "algo", "dynamic", "1") local est 1
+    else {
+        di as err "method() must be {bf:brute} (grid search, GAUSS" ///
+            " estimation=0, the source default) or {bf:dp} (dynamic" ///
+            " programming, GAUSS estimation=1)"
+        exit 198
+    }
+    if `maxiter' < 1 {
+        di as err "maxiter() must be a positive integer"
         exit 198
     }
 
@@ -832,13 +851,28 @@ program define tsadvroot_cisur, rclass
             }
         }
         else {
-            if `m' < 1 | `m' > 3 {
+            if `est' == 0 & (`m' < 1 | `m' > 3) {
                 di as err "with unknown break dates the brute-force search" ///
-                    " (the GAUSS-source default) supports breaks(1) to breaks(3);"
-                di as err "for 4 or 5 breaks supply known dates via breakdates()"
+                    " (method(brute), the GAUSS-source default) supports" ///
+                    " breaks(1) to breaks(3);"
+                di as err "use {bf:method(dp)} for 4 or 5 unknown breaks," ///
+                    " or supply known dates via breakdates()"
                 exit 198
             }
-            if `m' == 3 & `T' > 150 & "`print'" == "" {
+            if `est' == 1 & (`m' < 1 | `m' > 5) {
+                di as err "the dynamic-programming search supports breaks(1)" ///
+                    " to breaks(5)"
+                exit 198
+            }
+            if `est' == 1 {
+                local h10 = int(0.10*`T')
+                if `h10' < 5 | `T' < (`m'+2)*`h10' {
+                    di as err "sample too short for method(dp) with breaks(`m')" ///
+                        " and 10% trimming"
+                    exit 2001
+                }
+            }
+            if `est' == 0 & `m' == 3 & `T' > 150 & "`print'" == "" {
                 di as text "(3 unknown breaks with T=`T': the O(T{c 94}3)" ///
                     " grid search may take several minutes)"
             }
@@ -850,14 +884,17 @@ program define tsadvroot_cisur, rclass
     if !`known' matrix `TB' = J(1, 1, 0)
 
     if "`print'" == "" & `mnum' >= 2 & !`known' {
-        di as text "(searching for `m' break(s) by GLS-SSR minimization...)"
+        local howtxt "GLS-SSR grid search"
+        if `est' == 1 local howtxt "the dynamic-programming algorithm"
+        di as text "(searching for `m' break(s) by `howtxt'...)"
     }
 
     tempvar fitv
     qui gen double `fitv' = .
     tempname ST CV TBOUT
     mata: _tsav_cis("`yv'", "`touse'", `mnum', `known', "`TB'", `m', ///
-        `pen', `kmax', `kmin', "`fitv'", "`ST'", "`CV'", "`TBOUT'")
+        `pen', `kmax', `kmin', `est', `maxiter', "`fitv'", "`ST'", ///
+        "`CV'", "`TBOUT'")
     local cbar = r(cbar)
     local krule = r(krule)
 
@@ -892,7 +929,8 @@ program define tsadvroot_cisur, rclass
         if `mnum' == 1 local mlab "linear trend, no breaks (Model 1)"
         if `mnum' == 2 local mlab "breaks in the trend slope (Model 2)"
         if `mnum' == 3 local mlab "breaks in level and slope (Model 3)"
-        local blab "estimated (GLS-SSR minimization)"
+        local blab "estimated, brute-force GLS-SSR grid search"
+        if `est' == 1 local blab "estimated, dynamic programming (dp)"
         if `known' local blab "known (user supplied)"
         local plab "MAIC"
         if `pen' == 1 local plab "BIC"
@@ -912,9 +950,9 @@ program define tsadvroot_cisur, rclass
         di as text "c-bar      : " as result %8.4f `cbar' ///
             as text _col(44) "Lags (`plab')   = " as result %8.0f `krule'
         di as text "{hline 78}"
-        di as text "   Test        Statistic        1%        5%       10%    Decision"
+        di as text "   Test        Statistic       1%      2.5%        5%       10%"
         di as text "{hline 78}"
-        * cv rows in CV: 1=msb 2=mza 3=mzt 4=pt ; mapping as in the source
+        * cv rows in CV: 1=msb 2=mza 3=mzt 4=pt ; cols 1/2.5/5/10 as in source
         local names `""PT" "MPT" "ADF" "ZA" "MZA" "MSB" "MZT""'
         local cvrow "4 4 3 2 2 1 3"
         forvalues i = 1/7 {
@@ -922,31 +960,21 @@ program define tsadvroot_cisur, rclass
             local cr : word `i' of `cvrow'
             local s = `ST'[1, `i']
             local c1 = `CV'[`cr', 1]
-            local c5 = `CV'[`cr', 2]
-            local c10 = `CV'[`cr', 3]
-            local dec "Cannot reject H0"
+            local c25 = `CV'[`cr', 2]
+            local c5 = `CV'[`cr', 3]
+            local c10 = `CV'[`cr', 4]
             local st ""
-            if `s' < `c1' {
-                local dec "Reject H0 (1%)"
-                local st "***"
-            }
-            else if `s' < `c5' {
-                local dec "Reject H0 (5%)"
-                local st "**"
-            }
-            else if `s' < `c10' {
-                local dec "Reject H0 (10%)"
-                local st "*"
-            }
+            if `s' < `c1' local st "***"
+            else if `s' < `c5' local st "**"
+            else if `s' < `c10' local st "*"
             di as text %7s "`nm'" as result %14.3f `s' as text %-4s "`st'" ///
-                as result %9.3f `c1' %10.3f `c5' %10.3f `c10' ///
-                as text "   `dec'"
+                as result %9.3f `c1' %10.3f `c25' %10.3f `c5' %10.3f `c10'
         }
         di as text "{hline 78}"
-        di as text "H0: unit root. All tests reject for values BELOW the critical value."
+        di as text "H0: unit root. Tests reject for values BELOW the critical value." ///
+            "  * p<.10 ** p<.05 *** p<.01."
         di as text "Critical values from the response surfaces in the GAUSS code of"
         di as text "Carrion-i-Silvestre et al. (2009), evaluated at the break fractions."
-        di as text "* p<0.10, ** p<0.05, *** p<0.01."
         di as text "{hline 78}"
     }
 
@@ -985,12 +1013,13 @@ program define tsadvroot_cisur, rclass
     return scalar lags = `krule'
     return scalar nbreaks = cond(`mnum' >= 2, `nbfound', 0)
     return local model "`mnum'"
+    return local method = cond(`est' == 1, "dp", "brute")
     return local penalty "`penalty'"
     return local breakdates "`bdates'"
     return local varname "`yv'"
     return local cmd "tsadvroot cisur"
     matrix rownames `CV' = MSB MZA MZT PT
-    matrix colnames `CV' = cv1 cv5 cv10
+    matrix colnames `CV' = cv1 cv2_5 cv5 cv10
     return matrix cv = `CV', copy
     if `mnum' >= 2 {
         return matrix breakpos = `TBOUT', copy
@@ -1887,10 +1916,11 @@ real matrix _tsav_ciscv(real colvector lam, real scalar cbar)
     }
     P = _tsav_cisparam()
     crit = x*P
-    return((crit[1], crit[3], crit[4] \
-            crit[5], crit[7], crit[8] \
-            crit[9], crit[11], crit[12] \
-            crit[13], crit[15], crit[16]))
+    // rows MSB / MZA / MZT / PT ; columns 1% / 2.5% / 5% / 10%
+    return((crit[1], crit[2], crit[3], crit[4] \
+            crit[5], crit[6], crit[7], crit[8] \
+            crit[9], crit[10], crit[11], crit[12] \
+            crit[13], crit[14], crit[15], crit[16]))
 }
 
 real matrix _tsav_cisparam()
@@ -2127,16 +2157,440 @@ real colvector _tsav_lam5(real colvector tb, real scalar T)
     return(lam)
 }
 
+// ===========================================================================
+// Bai-Perron dynamic-programming dating for the CiS-Kim-Perron estimation=1
+// path. Faithful port of the __sbur_dating / recssr / __sbur_parti /
+// __sbur_dating_gls / __recssr_gls / __sbur_est2_gls machinery of
+// carrion silvestre2009.src (three-stage algorithm: OLS dating, iterated GLS
+// re-dating with c_bar updating, and restricted GLS estimation).
+// ===========================================================================
+
+// index of the first column-minimum (GAUSS minindc)
+real scalar _tsav_minindc(real colvector v)
+{
+    real scalar i, w
+
+    w = min(v)
+    for (i = 1; i <= rows(v); i++) {
+        if (v[i] == w) {
+            return(i)
+        }
+    }
+    return(1)
+}
+
+// recursive OLS SSR for every segment ending, start..last (GAUSS recssr)
+real colvector _tsav_recssr(real scalar start, real colvector y,
+    real matrix z, real scalar h, real scalar last)
+{
+    real colvector vecssr, delta1, delta2, invz, res
+    real matrix inv1, zs
+    real scalar v, f, r
+
+    vecssr = J(last, 1, 0)
+    zs = z[start::(start+h-1), .]
+    inv1 = luinv(cross(zs, zs))
+    delta1 = inv1*cross(zs, y[start::(start+h-1)])
+    res = y[start::(start+h-1)] - zs*delta1
+    vecssr[start+h-1] = cross(res, res)
+    for (r = start+h; r <= last; r++) {
+        v = y[r] - z[r, .]*delta1
+        invz = inv1*z[r, .]'
+        f = 1 + z[r, .]*invz
+        delta2 = delta1 + (invz*v)/f
+        inv1 = inv1 - (invz*invz')/f
+        delta1 = delta2
+        vecssr[r] = vecssr[r-1] + v*v/f
+    }
+    return(vecssr)
+}
+
+// recursive GLS SSR (GAUSS __recssr_gls): appends a segment-initial impulse
+// (=1 at the first observation of each segment) to the regressors
+real colvector _tsav_recssr_gls(real scalar start, real colvector y,
+    real matrix z, real scalar h, real scalar last)
+{
+    real colvector vecssr, delta1, delta2, invz, res, imp
+    real matrix inv1, zs
+    real rowvector zr
+    real scalar v, f, r
+
+    imp = 1 \ J(rows(z)-1, 1, 0)
+    vecssr = J(last, 1, 0)
+    zs = z[start::(start+h-1), .], imp[1::h]
+    inv1 = luinv(cross(zs, zs))
+    delta1 = inv1*cross(zs, y[start::(start+h-1)])
+    res = y[start::(start+h-1)] - zs*delta1
+    vecssr[start+h-1] = cross(res, res)
+    for (r = start+h; r <= last; r++) {
+        zr = z[r, .], imp[r-start+1]
+        v = y[r] - zr*delta1
+        invz = inv1*zr'
+        f = 1 + zr*invz
+        delta2 = delta1 + (invz*v)/f
+        inv1 = inv1 - (invz*invz')/f
+        delta1 = delta2
+        vecssr[r] = vecssr[r-1] + v*v/f
+    }
+    return(vecssr)
+}
+
+// optimal one-break partition of a segment (GAUSS __sbur_parti)
+void _tsav_parti(real scalar start, real scalar b1, real scalar b2,
+    real scalar last, real colvector bigvec, real scalar bigt,
+    real scalar ssrmin, real scalar dx)
+{
+    real colvector dvec
+    real scalar j, jj, k, ini
+
+    dvec = J(bigt, 1, 0)
+    ini = (start-1)*bigt - (start-2)*(start-1)/2 + 1
+    for (j = b1; j <= b2; j++) {
+        jj = j - start
+        k = j*bigt - (j-1)*j/2 + last - j
+        dvec[j] = bigvec[ini+jj] + bigvec[k]
+    }
+    ssrmin = min(dvec[b1::b2])
+    dx = (b1-1) + _tsav_minindc(dvec[b1::b2])
+}
+
+// Bai-Perron dating (GAUSS __sbur_dating / __sbur_dating_gls); glsflag picks
+// the OLS or GLS recursive-SSR builder
+void _tsav_dating(real colvector y, real matrix z, real scalar h,
+    real scalar m, real scalar bigt, real scalar glsflag,
+    real colvector glob, real matrix datevec, real colvector bigvec)
+{
+    real matrix optdat, optssr
+    real colvector dvec, vecssr
+    real scalar i, ssrmin, datx, j1, ib, jlast, jb, xx
+
+    datevec = J(m, m, 0)
+    optdat = J(bigt, m, 0)
+    optssr = J(bigt, m, 0)
+    dvec = J(bigt, 1, 0)
+    glob = J(m, 1, 0)
+    bigvec = J(bigt*(bigt+1)/2, 1, 0)
+    for (i = 1; i <= bigt-h+1; i++) {
+        if (glsflag == 0) {
+            vecssr = _tsav_recssr(i, y, z, h, bigt)
+        }
+        else {
+            vecssr = _tsav_recssr_gls(i, y, z, h, bigt)
+        }
+        bigvec[((i-1)*bigt+i-(i-1)*i/2)::(i*bigt-(i-1)*i/2)] = vecssr[i::bigt]
+    }
+    if (m == 1) {
+        _tsav_parti(1, h, bigt-h, bigt, bigvec, bigt, ssrmin, datx)
+        datevec[1, 1] = datx
+        glob[1] = ssrmin
+    }
+    else {
+        for (j1 = 2*h; j1 <= bigt; j1++) {
+            _tsav_parti(1, h, j1-h, j1, bigvec, bigt, ssrmin, datx)
+            optssr[j1, 1] = ssrmin
+            optdat[j1, 1] = datx
+        }
+        glob[1] = optssr[bigt, 1]
+        datevec[1, 1] = optdat[bigt, 1]
+        for (ib = 2; ib <= m; ib++) {
+            if (ib == m) {
+                jlast = bigt
+                for (jb = ib*h; jb <= jlast-h; jb++) {
+                    dvec[jb] = optssr[jb, ib-1] + bigvec[(jb+1)*bigt-jb*(jb+1)/2]
+                }
+                optssr[jlast, ib] = min(dvec[(ib*h)::(jlast-h)])
+                optdat[jlast, ib] = (ib*h-1) + _tsav_minindc(dvec[(ib*h)::(jlast-h)])
+            }
+            else {
+                for (jlast = (ib+1)*h; jlast <= bigt; jlast++) {
+                    for (jb = ib*h; jb <= jlast-h; jb++) {
+                        dvec[jb] = optssr[jb, ib-1] + bigvec[jb*bigt-jb*(jb-1)/2+jlast-jb]
+                    }
+                    optssr[jlast, ib] = min(dvec[(ib*h)::(jlast-h)])
+                    optdat[jlast, ib] = (ib*h-1) + _tsav_minindc(dvec[(ib*h)::(jlast-h)])
+                }
+            }
+            datevec[ib, ib] = optdat[bigt, ib]
+            for (i = 1; i <= ib-1; i++) {
+                xx = ib - i
+                datevec[xx, ib] = optdat[datevec[xx+1, ib], xx]
+            }
+            glob[ib] = optssr[bigt, ib]
+        }
+    }
+}
+
+// per-segment squared residuals under coefficients b (GAUSS __sbur_ssr2_gls)
+real colvector _tsav_ssr2_gls(real colvector y, real matrix z,
+    real colvector b, real scalar q, real colvector br)
+{
+    real scalar m, i, bigt
+    real matrix imp
+    real colvector bigvec2, e
+
+    m = rows(br)
+    bigt = rows(y)
+    bigvec2 = J(bigt*(m+1), 1, 0)
+    imp = 1 \ J(bigt-1, 1, 0)
+    for (i = 1; i <= m; i++) {
+        imp = imp, (J(br[i], 1, 0) \ 1 \ J(bigt-br[i]-1, 1, 0))
+    }
+    for (i = 1; i <= m+1; i++) {
+        e = y - (z, imp[., i])*b[((i-1)*(q+1)+1)::(i*(q+1))]
+        bigvec2[((i-1)*bigt+1)::(i*bigt)] = e:^2
+    }
+    return(bigvec2)
+}
+
+// one-break partition on the coefficient-based SSR (GAUSS __sbur_parti2)
+void _tsav_parti2(real scalar start, real scalar b1, real scalar b2,
+    real scalar last, real colvector bigvec2, real scalar bigt,
+    real scalar ssrmin, real scalar dx)
+{
+    real colvector dvec
+    real scalar j
+
+    dvec = J(bigt, 1, 0)
+    for (j = b1; j <= b2; j++) {
+        dvec[j] = sum(bigvec2[start::j]) + sum(bigvec2[(bigt+j+1)::(bigt+last)])
+    }
+    ssrmin = min(dvec[b1::b2])
+    dx = (b1-1) + _tsav_minindc(dvec[b1::b2])
+}
+
+// dating on coefficient-based SSR (GAUSS __sbur_dating2_gls)
+void _tsav_dating2_gls(real colvector bigvec2, real scalar h,
+    real scalar m, real scalar bigt, real colvector glob, real matrix datevec)
+{
+    real matrix optdat, optssr
+    real colvector dvec
+    real scalar i, ssrmin, datx, j1, ib, jlast, jb, xx
+
+    datevec = J(m, m, 0)
+    optdat = J(bigt, m, 0)
+    optssr = J(bigt, m, 0)
+    dvec = J(bigt, 1, 0)
+    glob = J(m, 1, 0)
+    if (m == 1) {
+        _tsav_parti2(1, h, bigt-h, bigt, bigvec2, bigt, ssrmin, datx)
+        datevec[1, 1] = datx
+        glob[1] = ssrmin
+    }
+    else {
+        for (j1 = 2*h; j1 <= bigt; j1++) {
+            _tsav_parti2(1, h, j1-h, j1, bigvec2[1::(2*bigt)], bigt, ssrmin, datx)
+            optssr[j1, 1] = ssrmin
+            optdat[j1, 1] = datx
+        }
+        glob[1] = optssr[bigt, 1]
+        datevec[1, 1] = optdat[bigt, 1]
+        for (ib = 2; ib <= m; ib++) {
+            if (ib == m) {
+                jlast = bigt
+                for (jb = ib*h; jb <= jlast-h; jb++) {
+                    dvec[jb] = optssr[jb, ib-1] + sum(bigvec2[(bigt*m+jb+1)::(bigt*(m+1))])
+                }
+                optssr[jlast, ib] = min(dvec[(ib*h)::(jlast-h)])
+                optdat[jlast, ib] = (ib*h-1) + _tsav_minindc(dvec[(ib*h)::(jlast-h)])
+            }
+            else {
+                for (jlast = (ib+1)*h; jlast <= bigt; jlast++) {
+                    for (jb = ib*h; jb <= jlast-h; jb++) {
+                        dvec[jb] = optssr[jb, ib-1] + sum(bigvec2[(bigt*ib+jb+1)::(bigt*ib+jlast)])
+                    }
+                    optssr[jlast, ib] = min(dvec[(ib*h)::(jlast-h)])
+                    optdat[jlast, ib] = (ib*h-1) + _tsav_minindc(dvec[(ib*h)::(jlast-h)])
+                }
+            }
+            datevec[ib, ib] = optdat[bigt, ib]
+            for (i = 1; i <= ib-1; i++) {
+                xx = ib - i
+                datevec[xx, ib] = optdat[datevec[xx+1, ib], xx]
+            }
+            glob[ib] = optssr[bigt, ib]
+        }
+    }
+}
+
+// block-diagonal GLS regressor matrix with per-segment impulse (GAUSS zbar)
+real matrix _tsav_cis_zbar(real matrix z2, real colvector dv, real scalar T,
+    real scalar q)
+{
+    real matrix zbar, blk, imp
+    real scalar i, m, t1, t2, tbar
+
+    m = rows(dv)
+    imp = 1 \ J(T-1, 1, 0)
+    tbar = dv[1]
+    zbar = (z2[1::tbar, .], imp[1::tbar]) \ J(T-tbar, q+1, 0)
+    for (i = 2; i <= m; i++) {
+        t1 = dv[i-1]
+        t2 = dv[i]
+        blk = J(t1, q+1, 0) \ (z2[(t1+1)::t2, .], imp[1::(t2-t1)]) \ J(T-t2, q+1, 0)
+        zbar = zbar, blk
+    }
+    t2 = dv[m]
+    blk = J(t2, q+1, 0) \ (z2[(t2+1)::T, .], imp[1::(T-t2)])
+    zbar = zbar, blk
+    return(zbar)
+}
+
+// restriction matrix R for the restricted GLS estimation (GAUSS est2 R)
+real matrix _tsav_cis_R(real scalar model1, real scalar alpha,
+    real colvector dv, real scalar m, real scalar q)
+{
+    real matrix R, temp, temp2
+    real scalar i, ncol
+
+    ncol = (m+1)*3
+    R = (-alpha, 0, 1), J(1, m*3, 0)
+    temp = J(m, ncol, 0)
+    for (i = 1; i <= m; i++) {
+        if (model1 == 2) {
+            temp[i, (3*i-2)::((i+1)*3)] = (-1, -dv[i], 0, 1, dv[i], 0)
+        }
+        else {
+            temp[i, (3*i-2)::((i+1)*3)] = (-1, -dv[i], 0, 1, dv[i], -1/alpha)
+        }
+    }
+    R = R \ temp
+    if (model1 == 2) {
+        temp2 = J(m, ncol, 0)
+        for (i = 1; i <= m; i++) {
+            temp2[i, 3*(i+1)] = 1
+        }
+        R = R \ temp2
+    }
+    return(R)
+}
+
+// restricted GLS estimation stage (GAUSS __sbur_est2_gls); returns the refined
+// break dates in brout and the restricted SSR in ssrout (inner cap = 10 iters)
+void _tsav_est2_gls(real colvector y, real scalar model1, real scalar q,
+    real scalar m, real scalar T, real scalar trm, real colvector dvin,
+    real colvector brout, real scalar ssrout)
+{
+    real matrix z2, zbar, R, zz, datevec2
+    real colvector dv, ygls, cns, tend, b, delta, e, bigvec2, glob
+    real scalar h, cbar, alpha, ssrprev, ssrnew, count
+
+    h = round(trm*T)
+    dv = sort(dvin, 1)
+    cbar = _tsav_cbar(_tsav_lam5(dv, T))
+    alpha = 1 + cbar/T
+    cns = J(T, 1, 1-alpha)
+    tend = 1 \ ((-cbar/T):*(1::(T-1)) :+ 1)
+    z2 = cns, tend
+    ygls = y[1] \ (y[2::T] - alpha*y[1::(T-1)])
+    zbar = _tsav_cis_zbar(z2, dv, T, q)
+    R = _tsav_cis_R(model1, alpha, dv, m, q)
+    b = qrsolve(zbar, ygls)
+    zz = invsym(cross(zbar, zbar))
+    delta = b + zz*R'*invsym(R*zz*R')*(-(R*b))
+    e = ygls - zbar*delta
+    ssrprev = cross(e, e)
+    count = 0
+    while (1) {
+        bigvec2 = _tsav_ssr2_gls(ygls, z2, delta, q, dv)
+        _tsav_dating2_gls(bigvec2, h, m, T, glob, datevec2)
+        dv = datevec2[., m]
+        cbar = _tsav_cbar(_tsav_lam5(sort(dv, 1), T))
+        alpha = 1 + cbar/T
+        cns = J(T, 1, 1-alpha)
+        tend = 1 \ ((-cbar/T):*(1::(T-1)) :+ 1)
+        z2 = cns, tend
+        ygls = y[1] \ (y[2::T] - alpha*y[1::(T-1)])
+        zbar = _tsav_cis_zbar(z2, dv, T, q)
+        R = _tsav_cis_R(model1, alpha, dv, m, q)
+        b = qrsolve(zbar, ygls)
+        zz = invsym(cross(zbar, zbar))
+        delta = b + zz*R'*invsym(R*zz*R')*(-(R*b))
+        e = ygls - zbar*delta
+        ssrnew = cross(e, e)
+        if (count < 10 & abs(ssrnew-ssrprev) > 1e-3) {
+            count = count + 1
+            ssrprev = ssrnew
+        }
+        else {
+            brout = dv
+            ssrout = ssrnew
+            return
+        }
+    }
+}
+
+// dynamic-programming driver (GAUSS __sbur_multiple_gls_algorithm): three
+// stages (OLS dating -> iterated GLS dating -> restricted estimation). Returns
+// the final break dates (sorted) in mintb and the stage-2 c_bar in cbarout
+// (the source uses the stage-2 c_bar for the final statistics while building
+// the regressors from the stage-3 dates).
+void _tsav_cis_dp(real colvector y, real scalar model1, real scalar m,
+    real scalar maxiter, real colvector mintb, real scalar cbarout)
+{
+    real matrix zols, zg, datevec, datevec2
+    real colvector dv, glob, glob2, bigvec, cns, tend, ygls, dxout
+    real scalar T, trm, h1, cbar, alpha, ssrprev, count, ssrdummy, ssrest, ssrestprev
+
+    T = rows(y)
+    trm = 0.10
+    h1 = trunc(trm*T)
+    // ---- stage 1: OLS Bai-Perron dating ----
+    zols = J(T, 1, 1), (1::T)
+    _tsav_dating(y, zols, h1, m, T, 0, glob, datevec, bigvec)
+    dv = select(datevec[., m], datevec[., m] :> 0)
+    dv = sort(dv, 1)
+    // ---- stage 2: iterated GLS re-dating with c_bar updating ----
+    count = 0
+    ssrprev = glob[m]
+    cbar = _tsav_cbar(_tsav_lam5(dv, T))
+    while (1) {
+        cbar = _tsav_cbar(_tsav_lam5(dv, T))
+        alpha = 1 + cbar/T
+        cns = 1 \ J(T-1, 1, 1-alpha)
+        tend = 1 \ ((-cbar/T):*(2::T) :+ 1)
+        zg = cns, tend
+        ygls = y[1] \ (y[2::T] - alpha*y[1::(T-1)])
+        _tsav_dating(ygls, zg, h1, m, T, 1, glob2, datevec2, bigvec)
+        if (count < maxiter & abs(glob2[m]-ssrprev) > 1e-3) {
+            ssrprev = glob2[m]
+            dv = datevec2[., m]
+            count = count + 1
+        }
+        else {
+            break
+        }
+    }
+    cbarout = cbar
+    // ---- stage 3: restricted GLS estimation (outer iteration) ----
+    count = 0
+    ssrestprev = cross(y, y)
+    while (1) {
+        _tsav_est2_gls(y, model1, 2, m, T, trm, dv, dxout, ssrest)
+        if (count < maxiter & abs(ssrest-ssrestprev) > 1e-3) {
+            count = count + 1
+            ssrestprev = ssrest
+            dv = sort(dxout, 1)
+        }
+        else {
+            break
+        }
+    }
+    mintb = sort(dv, 1)
+}
+
 // ---------------------------------------------------------------------------
-// CiS main routine (GAUSS sbur_gls + __sbur_multiple_gls_brute, exact)
+// CiS main routine (GAUSS sbur_gls + __sbur_multiple_gls_brute /
+// __sbur_multiple_gls_algorithm, exact)
 // model: 0 const / 1 trend / 2 slope breaks / 3 level+slope breaks
-// known = 1 with tbmat holding known break positions; else brute search
-// Fills: STname (1x7: pt mpt adf za mza msb mzt), CVname (4x3), TBname (mx1)
+// known = 1 with tbmat holding known break positions; est = 0 brute search
+// (sburControlCreate default), est = 1 dynamic-programming dating
+// Fills: STname (1x7: pt mpt adf za mza msb mzt), CVname (4x4), TBname (mx1)
 //        r(cbar), r(krule); stores the fitted GLS trend in fitname
 // ---------------------------------------------------------------------------
 void _tsav_cis(string scalar yname, string scalar touse, real scalar model,
     real scalar known, string scalar tbmat, real scalar nbrk,
     real scalar penalty, real scalar kmax, real scalar kmin,
+    real scalar est, real scalar maxiter,
     string scalar fitname, string scalar STname, string scalar CVname,
     string scalar TBname)
 {
@@ -2167,6 +2621,12 @@ void _tsav_cis(string scalar yname, string scalar touse, real scalar model,
             }
             z = _tsav_cis_z(T, model, mintb)
             cbar = _tsav_cbar(_tsav_lam5(mintb, T))
+        }
+        else if (est == 1) {
+            // dynamic-programming dating (GAUSS estimation = 1); mintb gets the
+            // stage-3 dates and cbar the stage-2 c_bar (source convention)
+            _tsav_cis_dp(y, model, nbrk, maxiter, mintb, cbar)
+            z = _tsav_cis_z(T, model, mintb)
         }
         else {
             minssra = cross(y, y)

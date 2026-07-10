@@ -22,7 +22,7 @@
 {synopt:{opt ag:es(list of age codes|_all)}}age category codes in the database; {it:999} for all ages, {it:992} for adults; default is {it:_all} for all age categories; see {help wid##options:options} for more{p_end}
 {synopt:{opt pop:ulation(list of population codes|_all)}}type of population; one-letter code, {it:t} for tax units, {it:i} for individuals; default is {it:_all} for all population types; see {help wid##options:options} for more{p_end}
 {synopt:{opt meta:data}}retrieve metadata (ie. variable descriptions, sources, methodological notes, etc.){p_end}
-{synopt:{opt ex:clude}}exclude interpolations and extrapolations from the results{p_end}
+{synopt:{opt score_filter(filter)}}keep observations whose row-level or series-level data quality score matches the filter{p_end}
 {synopt:{opt clear}}replace data in memory{p_end}
 {synoptline}
 
@@ -127,10 +127,10 @@ Some of the most common possibilities include:
 {p2colreset}{...}
 
 {phang}
-{opt metadata} also retrieve metadata. Metadata provide, for each observation, the name and short description of the variable, of the age category, of the population category, the source of the data, and methodological notes.
+{opt metadata} also retrieve metadata. Metadata provide, for each observation, the country name, variable name and description, population category, age category, source, methodological notes, row-level data quality score, and series-level data quality score. The metadata output columns are {it:country}, {it:countryname}, {it:variable}, {it:percentile}, {it:year}, {it:value}, {it:shortname}, {it:shortdes}, {it:pop}, {it:age}, {it:source}, {it:row_score}, {it:series_score}, and {it:method}.
 
 {phang}
-{opt exclude} exclude interpolation/extrapolations from the results. Some of the data on WID.world is the result of interpolations (when data is only available for a few years) or extrapolations (when data is not available for the most recent years) that are based on much more limited information that other data points. We include these interpolations/extrapolation by default as a convenience, and also because these values are used to perform regional aggregations. Yet we stress that these estimates, especially at the level of individual countries, can be fragile. For many purposes, it can be preferable to exclude these data points.
+{opt score_filter(filter)} keep observations whose data quality scores match the filter. A single unnamed number is interpreted as a minimum {it:row_score}; for example, {cmd:score_filter(3)} keeps observations with {it:row_score >= 3}. Named filters may target {it:row_score}, {it:series_score}, or both. Bounds may be one number, two numbers for an inclusive range, or explicit {it:min}/{it:max} bounds. Examples include {cmd:score_filter(row_score=4)}, {cmd:score_filter(row_score=3 5)}, {cmd:score_filter(series_score={min:2,max:5})}, and {cmd:score_filter(row_score=3; series_score=4)}. Valid score bounds are 0 through 5. Missing scores do not pass a filter.
 
 {phang}
 {opt clear} replace data in memory, if any; if dataset is not empty and that option is not specified, the command will refuse to execute to avoid data losses.
@@ -243,4 +243,3 @@ Plot the long-run evolution of average net national income per adult in France, 
 
 {pstd}
 If you have comments, suggestions, or experience any problem with this command, please contact <stats@wid.world>.
-

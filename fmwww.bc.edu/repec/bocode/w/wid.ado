@@ -3,7 +3,8 @@
 program wid
 	version 13
 	
-	syntax, [INDicators(string) AReas(string) Years(numlist) Perc(string) AGes(string) POPulation(string) METAdata EXclude clear VERBOSE]
+	local wid_cmdline `"`0'"'
+	syntax, [INDicators(string) AReas(string) Years(numlist) Perc(string) AGes(string) POPulation(string) METAdata SCORE_filter(string asis) clear VERBOSE]
 	
 	// ---------------------------------------------------------------------- //
 	// Check if there are already some data in memory
@@ -19,7 +20,34 @@ program wid
 	// Define verbosity
 	// ---------------------------------------------------------------------- //
 	
-    local verbosity = cond("`verbose'" != "", "verbose", "silent")
+	local verbosity = cond("`verbose'" != "", "verbose", "silent")
+
+	// ---------------------------------------------------------------------- //
+	// Parse score filters before any API request is made
+	// ---------------------------------------------------------------------- //
+
+	local wid_cmdline_lower = lower(`"`wid_cmdline'"')
+	local wid_cmdline_nospace = subinstr(`"`wid_cmdline_lower'"', " ", "", .)
+	local score_filter_specified = (strpos(`"`wid_cmdline_nospace'"', "score_filter(") > 0)
+	local row_score_filter = 0
+	local series_score_filter = 0
+	local row_score_min = .
+	local row_score_max = .
+	local series_score_min = .
+	local series_score_max = .
+	if (`score_filter_specified') {
+		if (trim(`"`score_filter'"') == "") {
+			display as error "score_filter() cannot be empty"
+			exit 198
+		}
+		wid_parse_score_filter `"`score_filter'"'
+		local row_score_filter = r(row_score_filter)
+		local series_score_filter = r(series_score_filter)
+		local row_score_min = r(row_score_min)
+		local row_score_max = r(row_score_max)
+		local series_score_min = r(series_score_min)
+		local series_score_max = r(series_score_max)
+	}
 	
 	// ---------------------------------------------------------------------- //
 	// Check the user specified at least some countries and/or indicators
@@ -284,7 +312,7 @@ program wid
 		quietly levelsof country if (chunk == `c'), separate(",") local(areas_list) clean
 		
 		clear
-		javacall com.wid.WIDDownloader importCountriesVariables, args("`areas_list'" "`variables_list'" "`exclude'" "`verbosity'")  jars("wid.jar" "json-20180813.jar" "sfi-api.jar")
+		javacall com.wid.WIDDownloader importCountriesVariables, args("`areas_list'" "`variables_list'" "`verbosity'")  jars("wid.jar" "json-20180813.jar" "sfi-api.jar")
 		
 		quietly drop if missing(value)
 		
@@ -317,21 +345,36 @@ program wid
 	
 	quietly duplicates drop country variable age pop percentile year, force
 	quietly replace variable = variable + age + pop
+	capture confirm variable row_score
+	if (_rc) {
+		quietly generate double row_score = .
+	}
+	if (`row_score_filter') {
+		quietly drop if missing(row_score) | row_score < `row_score_min' | row_score > `row_score_max'
+	}
 	order country variable percentile year value
 	quietly save "`output_data'", replace
 	
 	// ---------------------------------------------------------------------- //
-	// Retrieve the metadata, if required
+	// Retrieve the metadata, if requested or needed for series_score filtering
 	// ---------------------------------------------------------------------- //
 	
-	if ("`metadata'" != "") {
-		display as text "* Download the metadata...", _continue
+	if ("`metadata'" != "" | `series_score_filter') {
+		if ("`metadata'" != "") {
+			display as text "* Download the metadata...", _continue
+		}
+		else {
+			display as text "* Download the metadata for score filtering...", _continue
+		}
+		local metadata_mode "compact"
+		if ("`metadata'" == "") {
+			local metadata_mode "score_only"
+		}
 		
-		// Only keep information required for the metadata, and divide them again
+		// Metadata are percentile-invariant, but vary by country, indicator,
+		// age category, and population category.
 		tempfile output_metadata
 		quietly use "`codes'", clear
-		
-		// Only keep one percentile per variable (metadata are the same for all percentiles)
 		drop chunk
 		quietly duplicates drop variable country age pop, force
 		quietly generate chunk = round(_n/50)
@@ -345,7 +388,7 @@ program wid
 			quietly levelsof country if (chunk == `c'), separate(",") local(areas_list) clean
 			
 			clear
-			javacall com.wid.WIDDownloader importCountriesVariablesMetadata, args("`areas_list'" "`variables_list'" "`verbosity'")  jars("wid.jar" "json-20180813.jar" "sfi-api.jar")
+			javacall com.wid.WIDDownloader importCountriesVariablesMetadata, args("`areas_list'" "`variables_list'" "`verbosity'" "`metadata_mode'")  jars("wid.jar" "json-20180813.jar" "sfi-api.jar")
 			
 			// Pass if the dataset is empty (can happen with metadata)
 			quietly count
@@ -353,7 +396,9 @@ program wid
 				continue
 			}
 		
-			drop percentile
+			capture drop percentile
+			quietly replace variable = variable + agecode + popcode
+			quietly duplicates drop variable country, force
 			
 			if (`first' == 0) {
 				quietly append using "`output_metadata'"
@@ -362,34 +407,296 @@ program wid
 			quietly save "`output_metadata'", replace
 		}
 				
-		quietly count
-		if (r(N) > 0) {
+		if (`first' == 0) {
+			quietly use "`output_metadata'", clear
 			display as text "DONE"
-		
-			quietly replace variable = variable + age + pop
+			capture drop quality data_quality imputation
 			quietly duplicates drop variable country, force
-			
 			quietly save "`output_metadata'", replace
 			
-			// Merge data & metadata
-			use "`output_data'", clear
-			quietly merge n:1 country variable using "`output_metadata'", nogenerate keep(master match)
+			if ("`metadata'" != "") {
+				use "`output_data'", clear
+				capture drop age pop
+				quietly merge n:1 country variable using "`output_metadata'", nogenerate keep(master match)
+			}
+			else {
+				quietly keep country variable series_score
+				quietly save "`output_metadata'", replace
+				use "`output_data'", clear
+				quietly merge n:1 country variable using "`output_metadata'", nogenerate keep(master match)
+			}
 		}
 		else {
 			display as text "DONE (no metadata found for requested data)"
+			use "`output_data'", clear
+			if ("`metadata'" != "") {
+				capture drop age pop
+			}
+			if (`series_score_filter') {
+				quietly generate double series_score = .
+			}
 		}
-		
-		quietly replace imputation = "regional imputation"       if imputation == "region"
-		quietly replace imputation = "adjusted surveys"          if imputation == "survey"
-		quietly replace imputation = "surveys and tax data"      if imputation == "tax"
-		quietly replace imputation = "surveys and tax microdata" if imputation == "full"
-		quietly replace imputation = "rescaled fiscal income"    if imputation == "rescaling"
-
-		order country variable percentile year value
+	}
+	
+	if (`series_score_filter') {
+		capture confirm variable series_score
+		if (_rc) {
+			quietly generate double series_score = .
+		}
+		quietly drop if missing(series_score) | series_score < `series_score_min' | series_score > `series_score_max'
+	}
+	
+	capture drop quality data_quality imputation
+	
+	if ("`metadata'" != "") {
+		foreach v in countryname shortname shortdes pop age source method {
+			capture confirm variable `v'
+			if (_rc) {
+				quietly generate str1 `v' = ""
+			}
+		}
+		foreach v in row_score series_score {
+			capture confirm variable `v'
+			if (_rc) {
+				quietly generate double `v' = .
+			}
+		}
+		quietly keep country countryname variable percentile year value shortname shortdes pop age source row_score series_score method
+		order country countryname variable percentile year value shortname shortdes pop age source row_score series_score method
+	}
+	else {
+		if (!`row_score_filter') {
+			capture drop row_score
+		}
+		if (!`series_score_filter') {
+			capture drop series_score
+		}
+		local score_columns
+		if (`row_score_filter') {
+			local score_columns `score_columns' row_score
+		}
+		if (`series_score_filter') {
+			local score_columns `score_columns' series_score
+		}
+		capture order country variable percentile year value age pop `score_columns'
 	}
 	
 	// Saves memory
 	quietly compress
 	
 	sort country variable percentile year
+end
+
+program wid_parse_score_filter, rclass
+	version 13
+	args filter
+	
+	local filter = lower(trim(`"`filter'"'))
+	if (`"`filter'"' == "") {
+		display as error "score_filter() cannot be empty"
+		exit 198
+	}
+	
+	local row_used = 0
+	local series_used = 0
+	local row_min = .
+	local row_max = .
+	local series_min = .
+	local series_max = .
+	
+	if (strpos(`"`filter'"', "row_score") == 0 & strpos(`"`filter'"', "series_score") == 0) {
+		wid_parse_score_bounds `"`filter'"'
+		local row_used = 1
+		local row_min = r(min)
+		local row_max = r(max)
+	}
+	else {
+		local work = subinstr(`"`filter'"', char(9), " ", .)
+		local work = subinstr(`"`work'"', "row_score", ";row_score", .)
+		local work = subinstr(`"`work'"', "series_score", ";series_score", .)
+		
+		local rest `"`work'"'
+		while (`"`rest'"' != "") {
+			gettoken segment rest : rest, parse(";")
+			local segment = trim(`"`segment'"')
+			if (`"`segment'"' == "" | `"`segment'"' == ";") {
+				continue
+			}
+			local junk = subinstr(`"`segment'"', "{", "", .)
+			local junk = subinstr(`"`junk'"', "}", "", .)
+			local junk = subinstr(`"`junk'"', ",", "", .)
+			if (trim(`"`junk'"') == "") {
+				continue
+			}
+			
+			if (substr(`"`segment'"', 1, 9) == "row_score") {
+				local name row_score
+				local values = substr(`"`segment'"', 10, .)
+			}
+			else if (substr(`"`segment'"', 1, 12) == "series_score") {
+				local name series_score
+				local values = substr(`"`segment'"', 13, .)
+			}
+			else {
+				display as error "score_filter() only supports row_score and series_score"
+				exit 198
+			}
+			
+			local separator = substr(`"`values'"', 1, 1)
+			if (`"`separator'"' != "" & !inlist(`"`separator'"', " ", "=", ":", "{", "[")) {
+				display as error "invalid score_filter() score name"
+				exit 198
+			}
+			
+			wid_parse_score_bounds `"`values'"'
+			if ("`name'" == "row_score") {
+				if (`row_used') {
+					display as error "row_score specified more than once in score_filter()"
+					exit 198
+				}
+				local row_used = 1
+				local row_min = r(min)
+				local row_max = r(max)
+			}
+			else {
+				if (`series_used') {
+					display as error "series_score specified more than once in score_filter()"
+					exit 198
+				}
+				local series_used = 1
+				local series_min = r(min)
+				local series_max = r(max)
+			}
+		}
+	}
+	
+	if (!`row_used' & !`series_used') {
+		display as error "score_filter() cannot be empty"
+		exit 198
+	}
+	
+	return scalar row_score_filter = `row_used'
+	return scalar series_score_filter = `series_used'
+	return scalar row_score_min = `row_min'
+	return scalar row_score_max = `row_max'
+	return scalar series_score_min = `series_min'
+	return scalar series_score_max = `series_max'
+end
+
+program wid_parse_score_bounds, rclass
+	version 13
+	args raw
+	
+	local spec = lower(trim(`"`raw'"'))
+	local first = substr(`"`spec'"', 1, 1)
+	if (inlist(`"`first'"', "=", ":")) {
+		local spec = trim(substr(`"`spec'"', 2, .))
+	}
+	if (`"`spec'"' == "") {
+		display as error "score_filter() bounds cannot be empty"
+		exit 198
+	}
+	
+	local min_set = 0
+	local max_set = 0
+	local min = .
+	local max = .
+	
+	if (strpos(`"`spec'"', "min") > 0 | strpos(`"`spec'"', "max") > 0) {
+		local clean `"`spec'"'
+		foreach ch in "{" "}" "[" "]" "," ":" "=" "/" {
+			local clean = subinstr(`"`clean'"', "`ch'", " ", .)
+		}
+		local clean = itrim(trim(`"`clean'"'))
+		
+		while (`"`clean'"' != "") {
+			gettoken key clean : clean
+			local key = trim(`"`key'"')
+			if (inlist(`"`key'"', "min", "minimum")) {
+				if (`min_set') {
+					display as error "minimum score specified more than once"
+					exit 198
+				}
+				gettoken token clean : clean
+				wid_parse_score_number `"`token'"'
+				local min = r(value)
+				local min_set = 1
+			}
+			else if (inlist(`"`key'"', "max", "maximum")) {
+				if (`max_set') {
+					display as error "maximum score specified more than once"
+					exit 198
+				}
+				gettoken token clean : clean
+				wid_parse_score_number `"`token'"'
+				local max = r(value)
+				local max_set = 1
+			}
+			else {
+				display as error "invalid score_filter() bounds"
+				exit 198
+			}
+		}
+		
+		if (!`min_set' & !`max_set') {
+			display as error "score_filter() bounds cannot be empty"
+			exit 198
+		}
+		if (!`min_set') {
+			local min = 0
+		}
+		if (!`max_set') {
+			local max = 5
+		}
+	}
+	else {
+		local clean `"`spec'"'
+		foreach ch in "{" "}" "[" "]" "," "/" {
+			local clean = subinstr(`"`clean'"', "`ch'", " ", .)
+		}
+		local clean = itrim(trim(`"`clean'"'))
+		local n : word count `clean'
+		if (!inlist(`n', 1, 2)) {
+			display as error "score_filter() bounds must be one number, two numbers, or min/max bounds"
+			exit 198
+		}
+		
+		gettoken token clean : clean
+		wid_parse_score_number `"`token'"'
+		local min = r(value)
+		if (`n' == 1) {
+			local max = 5
+		}
+		else {
+			gettoken token clean : clean
+			wid_parse_score_number `"`token'"'
+			local max = r(value)
+		}
+	}
+	
+	if (`min' < 0 | `min' > 5 | `max' < 0 | `max' > 5) {
+		display as error "score_filter() bounds must be between 0 and 5"
+		exit 198
+	}
+	if (`min' > `max') {
+		display as error "score_filter() minimum cannot exceed maximum"
+		exit 198
+	}
+	
+	return scalar min = `min'
+	return scalar max = `max'
+end
+
+program wid_parse_score_number, rclass
+	version 13
+	args token
+	
+	local token = trim(`"`token'"')
+	local value = real(`"`token'"')
+	if (`"`token'"' == "" | missing(`value')) {
+		display as error "score_filter() bounds must be numeric"
+		exit 198
+	}
+	
+	return scalar value = `value'
 end
