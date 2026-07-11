@@ -14,9 +14,9 @@ d
 d KW: profile
 d KW: file management
 d
-d Requires: Stata version 12
+d Requires: Stata version 14
 d
-d Distribution-Date: 20260619
+d Distribution-Date: 20260710
 d
 d Author: Wu LiangHai,  Anhui University of Technology
 d Support: email agd2010@@yeah.net

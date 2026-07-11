@@ -236,7 +236,8 @@ regression model with autoregressive errors. {it:TEST} 24(4): 752-775.
 {phang}
 Linden, A. 2026. Beta regression with autoregressive errors for interrupted time
 series analysis of proportion and rate outcomes: A simulation study.
-Preprint. {it:arXiv}.
+Preprint. 
+{browse "https://doi.org/10.48550/arXiv.2603.17281":https://arxiv.org/abs/2607.07914}
 
 {phang}
 Rocha, A. V., and F. Cribari-Neto. 2009. Beta autoregressive moving average models.
@@ -255,15 +256,13 @@ alinden@lindenconsulting.org{break}
 
 {title:Citation of {cmd:betark}}
 
-
 {p 4 8 2}{cmd:betark} is not an official Stata command. It is a free contribution
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
 Linden, Ariel. 2026. Stata module for computing Beta regression with autoregressive-corrected errors for proportion outcomes, 
-by joint conditional maximum likelihood. Statistical Software Components sXXXXXX, Boston College Department of Economics.
+by joint conditional maximum likelihood. Statistical Software Components s459773, Boston College Department of Economics.
 {p_end}
-
 
 
 

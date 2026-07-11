@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  17June2026  Wu Lianghai (agd2010@yeah.net)}{...}
+{* *! version 1.0.8  10July2026  Wu Lianghai (agd2010@yeah.net)}{...}
 {hline}
 
 {title:help for editprofile}
@@ -11,15 +11,15 @@
 {p_end}
 
 {p 4 8}
-{cmdab:editprofile,} {opt create} [{opt path(}{it:filename}{opt )}]
+{cmd:editprofile,} {bf:create} [{bf:path(}{it:filename}{bf:)}]
 {p_end}
 
 {p 4 8}
-{cmdab:editprofile,} {opt open}   [{opt path(}{it:filename}{opt )}]
+{cmd:editprofile,} {bf:open}   [{bf:path(}{it:filename}{bf:)}]
 {p_end}
 
 {p 4 8}
-{cmdab:editprofile,} {opt showpath} [{opt path(}{it:filename}{opt )}]
+{cmd:editprofile,} {bf:showpath} [{bf:path(}{it:filename}{bf:)}]
 {p_end}
 
 {title:Description}
@@ -38,13 +38,13 @@ Called without any options, {cmd:editprofile} opens the first
 current working directory, the Stata installation directory, or
 the PERSONAL ado directory.  If no {bf:profile.do} exists yet,
 an error message is shown and the user is advised to use the
-{opt create} option.
+{bf:create} option.
 {p_end}
 
 {title:Options}
 
 {phang}
-{opt create} creates a new {bf:profile.do} from a template if
+{bf:create} creates a new {bf:profile.do} from a template if
 one does not already exist at the target location.  The template
 includes commented settings for common customisations (working
 directory, graphics scheme, memory, labels, matrices, scrollback,
@@ -54,21 +54,21 @@ instead of being overwritten.
 {p_end}
 
 {phang}
-{opt open} explicitly opens an existing {bf:profile.do} in the
+{bf:open} explicitly opens an existing {bf:profile.do} in the
 do-file editor.  This is the default action when no option is
 specified.  The option is mainly provided for explicitness in
 do-files and scripts.
 {p_end}
 
 {phang}
-{opt showpath} displays the full path of the {bf:profile.do}
+{bf:showpath} displays the full path of the {bf:profile.do}
 that {cmd:editprofile} would act on, without opening or modifying
 the file.  Useful for confirming which {bf:profile.do} Stata is
 using before making changes.
 {p_end}
 
 {phang}
-{opt path(}{it:filename}{opt )} specifies a custom location for
+{bf:path(}{it:filename}{bf:)} specifies a custom location for
 {bf:profile.do}.  The argument may be a full file path (ending
 in {bf:profile.do}) or a directory; if a directory is given,
 {bf:profile.do} is appended to it automatically.  By default,
@@ -78,7 +78,7 @@ in {bf:profile.do}) or a directory; if a directory is given,
 {title:Search order}
 
 {pstd}
-When {opt path()} is not supplied, {cmd:editprofile} searches
+When {bf:path()} is not supplied, {cmd:editprofile} searches
 the following locations in order:
 {p_end}
 
@@ -88,12 +88,12 @@ the following locations in order:
 
 {p 8 12}
 2.  Stata executable directory
-({stata `c(sysdir_stata)':c(sysdir_stata)})
+`c(sysdir_stata)'
 {p_end}
 
 {p 8 12}
 3.  PERSONAL ado directory
-({stata `c(sysdir_personal)':c(sysdir_personal)})
+`c(sysdir_personal)'
 {p_end}
 
 {pstd}
@@ -180,7 +180,8 @@ Email: {browse "mailto:agd2010@yeah.net":agd2010@yeah.net}
 
 {title:Version history}
 
-{phang}
+{pstd}
+{bf:1.0.8} 10July2026.  Revised release.{break}
 {bf:1.0.0} 17June2026.  Initial release.
 {p_end}
 

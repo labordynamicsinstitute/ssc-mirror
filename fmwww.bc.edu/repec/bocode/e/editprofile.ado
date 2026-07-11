@@ -1,4 +1,5 @@
 *! editprofile.ado - Edit your user-specific profile.do file
+*! version 1.0.8  10July2026  Wu Lianghai (agd2010@yeah.net)
 *! version 1.0.0  17June2026  Wu Lianghai (agd2010@yeah.net)
 *! School of Business, Anhui University of Technology (AHUT)
 *! Ma'anshan, China
@@ -16,7 +17,7 @@ program define editprofile
        ---------------------------------------------------------------- */
 
     if "`open'" == "" & "`create'" == "" & "`showpath'" == "" {
-        local open = "open"
+        local open "open"
     }
 
     /* ----------------------------------------------------------------
@@ -70,15 +71,15 @@ program define editprofile
         capture confirm file "`profile_file'"
         if _rc == 0 {
             di as txt "{p}profile.do found at:{p_end}"
-            di as res "  {stata `profile_file':`profile_file'}"
-            di as txt "{p}This file will execute automatically every time "
-            di as txt "Stata starts.{p_end}"
+            di as res "  `profile_file' "
+            di as txt "{p}This file will execute automatically every " ///
+                     "time Stata starts.{p_end}"
         }
         else {
             di as txt "{p}No profile.do found at:{p_end}"
-            di as res "  `profile_file'"
-            di as txt "{p}Use {cmd:editprofile, create} to create a "
-            di as txt "template profile.do at this location.{p_end}"
+            di as res "  `profile_file' "
+            di as txt "{p}Use {cmd:editprofile, create} to create a " ///
+                     "template profile.do at this location.{p_end}"
         }
         exit
     }
@@ -90,11 +91,15 @@ program define editprofile
         capture confirm file "`profile_file'"
         if _rc == 0 {
             di as txt "{p}profile.do already exists at:{p_end}"
-            di as res "  {stata `profile_file':`profile_file'}"
+            di as res "  `profile_file'"
             di as txt "{p}Opening the existing file instead of overwriting.{p_end}"
             doedit "`profile_file'"
         }
         else {
+            /* Ensure the parent directory exists */
+            local parent_dir = subinstr("`profile_file'", "profile.do", "", 1)
+            capture mkdir "`parent_dir'"
+
             /* Write a well-documented template */
             tempname fh
             quietly file open `fh' using "`profile_file'", write text replace
@@ -138,9 +143,9 @@ program define editprofile
             quietly file close `fh'
 
             di as txt "{p}New profile.do created at:{p_end}"
-            di as res "  {stata `profile_file':`profile_file'}"
-            di as txt "{p}This file will run automatically every time you "
-            di as txt "launch Stata.  Customise the settings and save.{p_end}"
+            di as res "  `profile_file'"
+            di as txt "{p}This file will run automatically every time " ///
+                     "you launch Stata.  Customise the settings and save.{p_end}"
             doedit "`profile_file'"
         }
         exit
@@ -153,16 +158,16 @@ program define editprofile
         capture confirm file "`profile_file'"
         if _rc == 0 {
             di as txt "{p}Opening profile.do:{p_end}"
-            di as res "  {stata `profile_file':`profile_file'}"
+            di as res "  `profile_file'"
             doedit "`profile_file'"
         }
         else {
             di as err "{p}profile.do not found at:{p_end}"
             di as res "  `profile_file'"
-            di as txt "{p}Use {cmd:editprofile, create} to create a "
-            di as txt "template profile.do at this location.{p_end}"
-            di as txt "{p}Or use {cmd:editprofile, path(filename)} to "
-            di as txt "specify a different location.{p_end}"
+            di as txt "{p}Use {cmd:editprofile, create} to create a " ///
+                     "template profile.do at this location.{p_end}"
+            di as txt "{p}Or use {cmd:editprofile, path(filename)} to " ///
+                     "specify a different location.{p_end}"
             exit 601
         }
     }
