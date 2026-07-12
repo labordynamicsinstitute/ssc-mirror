@@ -1,0 +1,35 @@
+d 'XTHPOOL': module to perform Hausman poolability test for cointegrated panels (Westerlund and Hess 2011) 
+d
+d      xthpool implements the poolability test of Westerlund and
+d Hess (2011, Journal of Applied Econometrics). Consider the   
+d cointegrated panel	    y_it = a_i + b_i x_it + e_it,    where
+d b_i is a unit-specific slope vector and the error e_it may
+d contain r common factors, so the cross-sectional units are   
+d dependent. The test evaluates the null hypothesis of poolability 
+d	H0: b_i = b for all i	 against the heterogeneous
+d alternative that at least one unit differs. It compares an
+d individual and a pooled bias-adjusted    least-squares estimator
+d of the cointegrating slope, unit by unit, in a Hausman (1978)
+d way, and takes the maximum of the    individual Hausman
+d statistics. After a Gumbel normalization the statistic has a
+d well-defined limiting distribution even when N    is of the same
+d order as T — a regime where the seemingly-unrelated Wald test
+d of Mark, Ogaki and Sul (2005) is badly distorted. 
+d
+d KW: panel data
+d KW: structural breaks
+d KW:  cointegration
+d KW: Hausman
+d KW: poolability
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260711
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xthpool.ado
+f xthpool.sthlp
+f xthpool_methods.sthlp
+f xthpool_example.do

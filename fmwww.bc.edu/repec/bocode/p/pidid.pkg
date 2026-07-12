@@ -1,0 +1,43 @@
+d 'PIDID': module to estimate Path-Integrated Difference-in-Differences 
+d
+d      pidid implements the Path-Integrated
+d Difference-in-Differences framework: instead of comparing treated
+d and control outcomes at    a single endline date, it treats the
+d treatment effect as a trajectory				   
+d		       tau(t) = c1(t) - c0(t)	 where c1(t) and
+d c0(t) are the (group-mean) treated and control outcome paths over
+d time, and integrates this gap over the    post-treatment window
+d [t0, t1] using the trapezoidal rule to obtain the cumulative
+d causal effect 						
+d sigma = INTEGRAL_t0^t1 tau(t) dt    and the path-integrated
+d Average Treatment Effect on the Treated, tau-bar = sigma / (t1 -
+d t0).	For comparison, pidid also    reports the conventional
+d static two-period DiD estimate, tau(t1) - tau(t0), which is
+d computed only from the endpoints and can    be zero (or
+d misleadingly small) whenever a transitory intervention's effect
+d has fully decayed by t1, even though sigma remains	strictly
+d positive.  See Salavi (2026) for the underlying theory and the
+d endpoint-subtraction-bias result. 
+d
+d KW: panel data
+d KW: repeated cross-sections
+d KW: difference in differences
+d KW: DiD
+d KW: path-integrated
+d KW: ATE
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260711
+d
+d Author: Comlan Apollinaire-Fabrice Salavi,  African School of Economics
+d Support: email fsalavi@@africanschoolofeconomics.com
+d
+f pidid.ado
+f pidid.sthlp
+f pididplot.ado
+f pididplot.sthlp
+f test_pidid.do
+f ../e/example_pidid.do
+f pididplot_example.pdf
+f ../t/trainingpanel.dta

@@ -1,0 +1,25 @@
+d 'WKSMIRNOV': module to perform a weighted two-sample Kolmogorov-Smirnov equality-of-distributions test
+d
+d   wksmirnov computes a weighted two-sample Kolmogorov-Smirnov
+d test of the equality of distributions.  This is the balance
+d diagnostic used by the R package twang (Toolkit for Weighting and
+d Analysis of Nonequivalent Groups) to assess whether
+d propensity-score weighting has equalized the distribution of a
+d covariate between a treatment group and a comparison group, and
+d to drive its generalized boosted regression stopping rules. When
+d weights are not specified, wksmirnov produces the same results as
+d ksmirnov. 
+d
+d KW: Kolmogorov-Smirnov
+d KW: equality-of-distributions
+d KW: covariate balance
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260711
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f wksmirnov.ado
+f wksmirnov.sthlp

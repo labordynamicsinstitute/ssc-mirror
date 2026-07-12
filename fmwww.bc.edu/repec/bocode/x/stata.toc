@@ -38,6 +38,7 @@ p xtbalance2 module to create a balanced subsample from unbalanced panel data
 p xtbalfront module to trade-off frontier diagnostics and balanced-subsample selection for unbalanced panel data
 p xtbcfe module to perform bootstrap-corrected Fixed Effects estimation and inference in dynamic panel models
 p xtbestcce module to compute Bootstrap-Enhanced Common Correlated Effects for panel data with distinct correlated factors
+p xtbfkbreak module to estimate common structural breaks in heterogeneous panels with correlated common effects and (optionally) endogenous regressors
 p xtbhst module to implement bootstrap test for slope homogeneity in large panels.
 p xtbreak module for detecting and dating multiple structural breaks in time series and panel data
 p xtbreakcoint module to implement the panel cointegration test with structural breaks developed by Banerjee and Carrion-i-Silvestre (2015, Journal of Applied Econometrics)
@@ -101,6 +102,7 @@ p xtgunitroot module providing generalized fixed-T panel unit root test (doubly 
 p xtheckmanfe module to fit panel data models in the presence of endogeneity and selection
 p xtheteroquant module to compute quantiles of heterogeneous individual-specific coefficients in panel data, with SQB and CDQB bootstrap inference (Galvao, Hounyo and Lin, 2026)
 p xthkrcoint module to perform Hadri-Kurozumi-Rao panel cointegration test with the null of cointegration
+p xthpool module to perform Hausman poolability test for cointegrated panels (Westerlund and Hess 2011) 
 p xthrtest module to perform Born & Breitung Bias-corrected HR-test for first order panel serial correlation
 p xthst module to test slope homogeneity in large panels
 p xthybrid module to estimate hybrid and correlated random effect (Mundlak) models within the framework of generalized linear mixed models (GLMM)
