@@ -37,6 +37,7 @@ p xtbalance module to transform the dataset into balanced Panel Data
 p xtbalance2 module to create a balanced subsample from unbalanced panel data
 p xtbalfront module to trade-off frontier diagnostics and balanced-subsample selection for unbalanced panel data
 p xtbcfe module to perform bootstrap-corrected Fixed Effects estimation and inference in dynamic panel models
+p xtbchpanel module implementing Bias-corrected mean-group long-run estimators for dynamic heterogeneous panels (ARDL), with an optional climate-deviation mode
 p xtbestcce module to compute Bootstrap-Enhanced Common Correlated Effects for panel data with distinct correlated factors
 p xtbfkbreak module to estimate common structural breaks in heterogeneous panels with correlated common effects and (optionally) endogenous regressors
 p xtbhst module to implement bootstrap test for slope homogeneity in large panels.

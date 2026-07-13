@@ -1,0 +1,28 @@
+d 'HPCM': module compting Hosoya (2001) partial measures of causality by one-way-effect elimination
+d
+d	 hpcm implements the partial measures of causality of
+d Hosoya (2001) for a pair of (vector) time series x and y observed
+d    together with a third (vector) series z.  Ordinary
+d conditioning on the whole history of z (as in Granger's partial  
+d  cross-spectrum or Geweke's conditional measures) distorts the
+d feedback between x and y and can manufacture the spurious   
+d causality of Hsiao (1982).  Instead, Hosoya eliminates from x and
+d y only the one-way-effect component of z -- the part of z    that
+d drives (x,y) without suffering feedback from them -- and defines
+d the partial causal relations between x and y as the	 simple
+d one-way-effect measures between the two cleaned series u and v. 
+d
+d KW: causality
+d KW: time series
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260712
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f hpcm.ado
+f hpcm.sthlp
+f hpcm_methods.sthlp
+f hpcm_example.do

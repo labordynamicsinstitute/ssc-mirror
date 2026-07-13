@@ -84,6 +84,7 @@ p hotvalue module to generate scales with missing values conditionally imputed
 p how_many_imputations module to determine required number of imputations
 p hpc module to perform specification test to discriminate between models for non-negative data with many zeros
 p hpclg module to estimate Poisson-complementary log log hurdle regression
+p hpcm module compting Hosoya (2001) partial measures of causality by one-way-effect elimination
 p hpfilter module to compute one-sided Hodrick-Prescott filter
 p hplogit module to estimate Poisson-logit hurdle regression
 p hplot module to generate horizontal plots

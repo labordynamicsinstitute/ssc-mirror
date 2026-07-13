@@ -1,0 +1,33 @@
+d 'XTBCHPANEL': module implementing Bias-corrected mean-group long-run estimators for dynamic heterogeneous panels (ARDL), with an optional climate-deviation mode
+d
+d      xtbchpanel estimates the long-run effect of each regressor
+d in a {it:dynamic heterogeneous} panel and averages the   
+d unit-specific effects with a family of bias-corrected and trimmed
+d mean-group estimators. For each cross-section unit i it    fits,
+d by OLS, the ARDL(p,q) model	     y(i,t) = a(i) +
+d {&Sigma}(l=1..p) {&phi}(i,l) y(i,t-l) + {&Sigma}(k)
+d {&Sigma}(l=0..q) {&beta}_k(i,l) x_k(i,t-l) [+        {&gamma}(i)
+d cce(i,t-1)] + u(i,t),    and forms the long-run coefficient of
+d each regressor k, theta_k(i) = [{&Sigma}_l {&beta}_k(i,l)] / [1 -
+d {&Sigma}_l	{&phi}(i,l)]. These are general dynamic-panel
+d long-run estimators (Pesaran & Smith 1995; Chudik & Pesaran 2015;
+d Kiviet &    Phillips 1993; Pesaran & Zhao 1999; Pesaran & Yang
+d 2024; Chudik, Pesaran & Yang 2018) and apply to any field, not
+d only	  climate. 
+d
+d KW: panel data
+d KW: ARDL
+d KW: mean group estimators
+d KW: long-run effect
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20260712
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtbchpanel.ado
+f xtbchpanel.sthlp
+f xtbchpanel_methods.sthlp
+f xtbchpanel_example.do
