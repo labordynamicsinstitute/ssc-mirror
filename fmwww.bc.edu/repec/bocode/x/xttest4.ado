@@ -2,7 +2,7 @@
 	Test for heteroscedasticity in fixed-T panel data models
 ============================================================================*/
 
-*	Version 1.4		17 Jan 2026 by Manh Hoang-Ba (hbmanh9492@gmail.com)
+*	Version 1.5		13 Jul 2026 by Manh Hoang-Ba (hbmanh9492@gmail.com)
 
 /* -----------------------------------------------------------------
 	Kezdi (2003) LM test for fixed-T one-way fixed-effects models
@@ -20,6 +20,7 @@
 *				not allow weight in xtreg, fe
 *				add regression-based test for FEM and REM
 
+*	Version 1.5 correctly compute `e2_i' in Regression-based test
 
 cap program drop xttest4
 program define xttest4, rclass
@@ -465,28 +466,28 @@ preserve
 	else if `est' == 1 {
 		tempvar e2	e2_i e2_dm
 
-		qui gen  double `e2' = `e'^2
-		qui egen double `e2_i' = mean(`e2')
-		qui gen  double `e2_dm' = `e2' - `e2_i'
+		qui gen  double `e2' = `e'^2 if `touse'
+		qui egen double `e2_i' = mean(`e2') if `touse' , by(id)	// version 1.5
+		qui gen  double `e2_dm' = `e2' - `e2_i' if `touse'
 		
 		local xvar_dm
 		qui foreach var of local xvar {
 			tempvar `var'_i `var'_dm
-			egen double ``var'_i' = mean(`var'), by(id)
-			gen double ``var'_dm' = `var' - ``var'_i'
+			egen double ``var'_i' = mean(`var') if `touse' , by(id)
+			gen double ``var'_dm' = `var' - ``var'_i' if `touse'
 			local xvar_dm `xvar_dm' ``var'_dm'
 		}
 		
 *		H1: Var(e_it|X, u_i) = sigma_it^2
 
-		qui reg `e2' `xvar'
+		qui reg `e2' `xvar' if `touse'
 		local lm1 = e(N) * e(r2)
 		local df1 = e(df_m)
 		local lm1_p = 1- chi2(`df1', `lm1')
 
 *		H2: Var(e_it|X, u_i) = sigma_i^2
 
-		qui reg `e2_dm' `xvar_dm'
+		qui reg `e2_dm' `xvar_dm' if `touse'
 		local lm2 = e(N) * e(r2)
 		local df2 = e(df_m)
 		local lm2_p = 1- chi2(`df2', `lm2')			
@@ -537,42 +538,42 @@ preserve
 	
 	else {
 
-		qui reg `depvar' `xvar'		// OLS
+		qui reg `depvar' `xvar'	if `touse'	// OLS
 		
 		tempvar w w_i w_dm w_i_sq w_dm_sq w_dm_sq_i w_i_dm_sq _cons Ti p_Ti
-		qui predict double `w' , r	
-		qui egen double `w_i' = mean(`w') , by(id)
-		qui gen  double `w_dm' = `w' - `w_i'
-		qui gen  double `w_i_sq' = `w_i'^2
-		qui gen  double `w_dm_sq' = `w_dm'^2
+		qui predict double `w' if `touse' , r	
+		qui egen double `w_i' = mean(`w') if `touse' , by(id)
+		qui gen  double `w_dm' = `w' - `w_i' if `touse'
+		qui gen  double `w_i_sq' = `w_i'^2 if `touse'
+		qui gen  double `w_dm_sq' = `w_dm'^2 if `touse'
 		
-		qui gen  byte `_cons' = 1
-		qui egen long `Ti' = total(`_cons'), by(id)
+		qui gen  byte `_cons' = 1 if `touse'
+		qui egen long `Ti' = total(`_cons') if `touse' , by(id)
 //		qui gen  double `p_Ti' = 1 / `Ti'
-		qui egen double `w_dm_sq_i' = mean(`w_dm_sq'), by(id)
-		qui gen  double `w_i_dm_sq' = `w_i_sq' - `w_dm_sq_i'/(`Ti'-1)
-		qui by id: replace `w_i_dm_sq' = . if _n > 1
+		qui egen double `w_dm_sq_i' = mean(`w_dm_sq') if `touse' , by(id)
+		qui gen  double `w_i_dm_sq' = `w_i_sq' - `w_dm_sq_i'/(`Ti'-1) if `touse'
+		qui by id: replace `w_i_dm_sq' = . if _n > 1 & `touse'
 		
 		local xvar_i
 		local xvar_dm
 		qui foreach var of local xvar {
 			tempvar `var'_i `var'_dm
 			
-			egen double ``var'_i' = mean(`var'), by(id)
+			egen double ``var'_i' = mean(`var') if `touse' , by(id)
 			local xvar_i `xvar_i' ``var'_i'
 			
-			gen double ``var'_dm' = `var' - ``var'_i'
+			gen double ``var'_dm' = `var' - ``var'_i' if `touse'
 			local xvar_dm `xvar_dm' ``var'_dm'
 		}
 		
 *		H01: Var(e_it|X) = sigma_e^2 | Var(u_i|X) = sigma_u^2
-		qui reg `w_dm_sq' `xvar_dm'
+		qui reg `w_dm_sq' `xvar_dm' if `touse'
 		local lm1 = e(N) * e(r2)
 		local df1 = e(df_m)
 		local lm1_p = 1- chi2(`df1', `lm1')
 
 *		H02: Var(u_i|X) = sigma_u^2 | Var(e_it|X) = sigma_e^2
-		qui reg `w_i_dm_sq' `xvar_i'
+		qui reg `w_i_dm_sq' `xvar_i' if `touse'
 		local lm2 = e(N) * e(r2)
 		local df2 = e(df_m)
 		local lm2_p = 1- chi2(`df2', `lm2')	

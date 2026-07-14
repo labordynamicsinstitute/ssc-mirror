@@ -210,13 +210,8 @@ program trop_bootstrap, eclass
     }
 
     // ---------------------------------------------------------------
-    // Load compiled plugin and Mata routines.
+    // Load Mata routines (plugin loaded lazily by Mata at first call).
     // ---------------------------------------------------------------
-    capture _trop_load_plugin
-    if _rc {
-        di as error "TROP plugin not found. Cannot run bootstrap."
-        exit 601
-    }
 
     _trop_load_mata
 

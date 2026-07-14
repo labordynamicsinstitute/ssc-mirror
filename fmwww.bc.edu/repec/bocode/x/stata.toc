@@ -131,6 +131,7 @@ p xtmispanel module to provide Comprehensive Missing Data Detection, Imputation 
 p xtmissingfill module to balance panel datasets and fill in missing values
 p xtmixed_corr module to compute model-implied intracluster correlations after xtmixed
 p xtmixediou module to estimate Linear mixed effects Integrated Ornstein-Uhlenbeck model
+p xtmixedroot module to compute the fraction of nonstationary (unit-root) units in a mixed panel: the Ng (2008) estimator with Westerlund (2016) bias-adjusted fixed-T inference
 p xtmod module to analyze and display interactions based on time-series data
 p xtmoran module to calculate Moran's I and Moran's Ii statistics for panel data and displaying a Moran scatterplot
 p xtmrho module to calculate intra-class correlations after xtmixed

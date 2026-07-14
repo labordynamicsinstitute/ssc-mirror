@@ -1,0 +1,26 @@
+d 'XTMIXEDROOT': module to compute the fraction of nonstationary (unit-root) units in a mixed panel: the Ng (2008) estimator with Westerlund (2016) bias-adjusted fixed-T inference
+d
+d	xtmixedroot estimates theta, the fraction of units in a
+d panel whose autoregressive representation contains a unit root,
+d and	 tests H0: theta = theta_0 for any theta_0 in (0,1]. Unlike
+d conventional panel unit-root tests, which only test the extreme  
+d  hypotheses that all units are nonstationary or all are
+d stationary, xtmixedroot quantifies how many units are
+d nonstationary,    which is the quantity Pesaran (2012) recommends
+d reporting alongside any panel unit-root test. 
+d
+d KW: panel data
+d KW: unit roots
+d KW: stationarity
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260713
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtmixedroot.ado
+f xtmixedroot.sthlp
+f xtmixedroot_methods.sthlp
+f xtmixedroot_example.do

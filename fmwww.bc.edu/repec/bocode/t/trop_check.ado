@@ -39,17 +39,14 @@ program define trop_check
     display as text "{bf:Check 2: Native Plugin (required)}"
     display as text "  Platform: `c(os)' `c(machine_type)'"
 
-    capture _trop_load_plugin
+    capture findfile trop.plugin
     if _rc == 0 {
-        display as result "  [OK] Plugin found: `_plugin_name'"
-        display as result "    Platform: `_platform_desc'"
-        if "`_plugin_path'" != "" {
-            display as text "    Path: `_plugin_path'"
-        }
+        display as result "  [OK] Plugin found: trop.plugin"
+        display as text "    Path: `r(fn)'"
         local n_pass = `n_pass' + 1
     }
     else {
-        display as error "  [FAIL] Native plugin not found"
+        display as error "  [FAIL] Native plugin not found (trop.plugin)"
         display as error "    trop cannot run without the compiled plugin."
         display as error "    See {help trop##installation:trop installation} for details."
         local n_fail = `n_fail' + 1

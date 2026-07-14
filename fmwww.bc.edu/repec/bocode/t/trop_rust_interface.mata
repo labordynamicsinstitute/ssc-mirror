@@ -11,9 +11,10 @@
   Contents
   ────────
   1. Platform detection and plugin loading
-       _trop_get_plugin_name()        platform-specific plugin filename
+       _trop_get_plugin_name()        canonical plugin filename (trop.plugin)
+       _trop_get_plugin_name_platform()  platform-specific fallback filename
        _trop_get_plugin_path()        locate plugin binary on disk
-       _trop_load_plugin()            load plugin into Stata
+       _trop_ensure_plugin()           load plugin into Stata
        _trop_call_plugin()            issue a plugin call with varlist
        _trop_call_plugin_simple()     issue a plugin call without varlist
        trop_rust_available()          query plugin availability
@@ -55,19 +56,20 @@ mata set matastrict on
 /*──────────────────────────────────────────────────────────────────────────────
   _trop_get_plugin_name()
 
-  Maps the current OS and CPU architecture to the corresponding plugin
-  filename.
+  Returns the canonical plugin filename.  When installed via `net install`
+  (SSC or GitHub) the platform-specific binary is already mapped to the
+  generic name "trop.plugin" by the g/h directives in trop.pkg.
 
-  Supported targets
-    macOS  Apple Silicon   trop_macos_arm64.plugin
-    macOS  Intel x86-64    trop_macos_x64.plugin
-    Linux  x86-64          trop_linux_x64.plugin
-    Windows x86-64         trop_windows_x64.plugin
-
-  Returns "" when the platform cannot be identified.
+  For development builds where the platform-specific name still lives
+  under plugin/, fall back to the old per-OS names.
 ──────────────────────────────────────────────────────────────────────────────*/
 
 string scalar _trop_get_plugin_name()
+{
+    return("trop.plugin")
+}
+
+string scalar _trop_get_plugin_name_platform()
 {
     string scalar os, machine
 
@@ -99,14 +101,11 @@ string scalar _trop_get_plugin_name()
 /*──────────────────────────────────────────────────────────────────────────────
   _trop_get_plugin_path()
 
-  Searches for the plugin binary in the following order:
-    1. Relative to trop.ado via adopath (CWD-independent)
-    2. <cwd>/trop_stata/plugin/
-    3. <cwd>/plugin/
-    4. <cwd>/../plugin/
-    5. PLUS   sysdir  c(sysdir_plus)t/
-    6. PERSONAL sysdir  c(sysdir_personal)
-    7. Current working directory
+  Searches for the plugin binary with a two-tier fallback:
+    1) SSC install: g/h directives rename to "trop.plugin" — found first.
+    2) GitHub install: g/h not effective, files keep platform-specific names
+       (trop_macos_arm64.plugin, trop_macos_x64.plugin, etc.).
+  Also checks development build paths under plugin/ subdirectories.
 
   Returns the full path if found, "" otherwise.
 ──────────────────────────────────────────────────────────────────────────────*/
@@ -115,51 +114,91 @@ string scalar _trop_get_plugin_path()
 {
     string scalar plugin_name, plugin_path
     string scalar sysdir_plus, sysdir_personal, pwd
-    string scalar ado_path, pkg_dir
+    string scalar ado_path, pkg_dir, platform_name
 
     plugin_name = _trop_get_plugin_name()
     if (plugin_name == "") return("")
+    platform_name = _trop_get_plugin_name_platform()
 
-    /* adopath-based lookup */
+    /* --- 1. findfile on adopath (covers SSC where g/h maps to trop.plugin) --- */
+    (void) _stata("capture findfile " + plugin_name, 1)
+    plugin_path = st_global("r(fn)")
+    if (plugin_path != "" & fileexists(plugin_path)) return(plugin_path)
+
+    /* --- 1b. findfile platform name (GitHub: g/h not effective, original names) --- */
+    if (platform_name != "") {
+        (void) _stata("capture findfile " + platform_name, 1)
+        plugin_path = st_global("r(fn)")
+        if (plugin_path != "" & fileexists(plugin_path)) return(plugin_path)
+    }
+
+    /* --- 2. Same dir as trop.ado (adopath-relative) --- */
     (void) _stata("capture findfile trop.ado", 1)
     ado_path = st_global("r(fn)")
     if (ado_path != "") {
+        /* net install puts plugin alongside ado */
+        pkg_dir = subinstr(ado_path, "trop.ado", "", 1)
+        plugin_path = pkg_dir + plugin_name
+        if (fileexists(plugin_path)) return(plugin_path)
+
+        /* GitHub install: platform-specific name alongside ado */
+        if (platform_name != "") {
+            plugin_path = pkg_dir + platform_name
+            if (fileexists(plugin_path)) return(plugin_path)
+        }
+
+        /* dev layout: ado/ -> ../plugin/ */
         pkg_dir = subinstr(ado_path, "/ado/trop.ado", "", 1)
         if (pkg_dir != ado_path) {
-            plugin_path = pkg_dir + "/plugin/" + plugin_name
-            if (fileexists(plugin_path)) return(plugin_path)
+            if (platform_name != "") {
+                plugin_path = pkg_dir + "/plugin/" + platform_name
+                if (fileexists(plugin_path)) return(plugin_path)
+            }
         }
     }
 
-    /* CWD-relative paths */
+    /* --- 3. CWD-relative dev paths with platform-specific name --- */
     pwd = st_global("c(pwd)")
+    if (platform_name != "") {
+        plugin_path = pwd + "/trop_stata/plugin/" + platform_name
+        if (fileexists(plugin_path)) return(plugin_path)
 
-    plugin_path = pwd + "/trop_stata/plugin/" + plugin_name
-    if (fileexists(plugin_path)) return(plugin_path)
+        plugin_path = pwd + "/plugin/" + platform_name
+        if (fileexists(plugin_path)) return(plugin_path)
 
-    plugin_path = pwd + "/plugin/" + plugin_name
-    if (fileexists(plugin_path)) return(plugin_path)
+        plugin_path = pwd + "/../plugin/" + platform_name
+        if (fileexists(plugin_path)) return(plugin_path)
+    }
 
-    plugin_path = pwd + "/../plugin/" + plugin_name
-    if (fileexists(plugin_path)) return(plugin_path)
-
-    /* System directories */
+    /* --- 4. System directories (try both canonical and platform names) --- */
     sysdir_plus = st_global("c(sysdir_plus)")
     plugin_path = sysdir_plus + "t/" + plugin_name
     if (fileexists(plugin_path)) return(plugin_path)
+    if (platform_name != "") {
+        plugin_path = sysdir_plus + "t/" + platform_name
+        if (fileexists(plugin_path)) return(plugin_path)
+    }
 
     sysdir_personal = st_global("c(sysdir_personal)")
     plugin_path = sysdir_personal + plugin_name
     if (fileexists(plugin_path)) return(plugin_path)
+    if (platform_name != "") {
+        plugin_path = sysdir_personal + platform_name
+        if (fileexists(plugin_path)) return(plugin_path)
+    }
 
     plugin_path = pwd + "/" + plugin_name
     if (fileexists(plugin_path)) return(plugin_path)
+    if (platform_name != "") {
+        plugin_path = pwd + "/" + platform_name
+        if (fileexists(plugin_path)) return(plugin_path)
+    }
 
     return("")
 }
 
 /*──────────────────────────────────────────────────────────────────────────────
-  _trop_load_plugin()
+  _trop_ensure_plugin()
 
   Loads the plugin into Stata via `program ... plugin using()`.
   If the plugin is already loaded (rc 110), the error is silently
@@ -168,7 +207,7 @@ string scalar _trop_get_plugin_path()
   Returns 0 on success, 601 if the binary cannot be found.
 ──────────────────────────────────────────────────────────────────────────────*/
 
-real scalar _trop_load_plugin()
+real scalar _trop_ensure_plugin()
 {
     string scalar plugin_path, cmd
 
@@ -208,7 +247,7 @@ real scalar _trop_call_plugin(string scalar command, | string scalar varlist)
     string scalar cmd, vars, touse_var
     real scalar rc
 
-    rc = _trop_load_plugin()
+    rc = _trop_ensure_plugin()
     if (rc != 0) return(rc)
 
     if (args() < 2 | varlist == "") {
@@ -251,7 +290,7 @@ real scalar _trop_call_plugin_simple(string scalar command)
     string scalar cmd
     real scalar rc
 
-    rc = _trop_load_plugin()
+    rc = _trop_ensure_plugin()
     if (rc != 0) return(rc)
 
     cmd = "plugin call _trop_plugin , " + command
@@ -271,7 +310,7 @@ real scalar _trop_call_plugin_simple(string scalar command)
 real scalar trop_rust_available()
 {
     if (_trop_get_plugin_path() == "") return(0)
-    return(_trop_load_plugin() == 0)
+    return(_trop_ensure_plugin() == 0)
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

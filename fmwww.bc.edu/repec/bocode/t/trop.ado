@@ -49,7 +49,7 @@ program define trop, eclass
     // requires exactly two variables.  This allows users to verify the
     // installed version without supplying a varlist.
     if `"`0'"' == ", version" | `"`0'"' == ",version" | `"`0'"' == "version" {
-        di as txt "trop version 1.2.1"
+        di as txt "trop version 1.2.2"
         di as txt "Triply Robust Panel Estimator"
         di as txt "Athey, Imbens, Qu & Viviano (2025)"
         di as txt ""
@@ -256,7 +256,7 @@ program define trop, eclass
     // --- Load auxiliary ado-files -----------------------------------------
     // Each helper is loaded on demand: first from the PLUS sysdir, then the
     // current working directory, and finally via findfile along the adopath.
-    foreach prog in _trop_load_plugin _trop_set_grid ///
+    foreach prog in _trop_set_grid ///
                     _trop_validate_params ///
                     trop_handle_error trop_validate {
         capture program list `prog'
@@ -276,15 +276,9 @@ program define trop, eclass
     }
 
     // --- Plugin loading ---------------------------------------------------
-    capture _trop_load_plugin
-    if _rc {
-        di as error "Error: TROP plugin not found. The compiled plugin is required."
-        di as error ""
-        di as error "Platform: `c(os)' `c(machine_type)'"
-        di as error "Please install the TROP plugin for your platform."
-        di as error "See {help trop##installation:trop installation} for details."
-        exit 601
-    }
+    // Plugin is loaded lazily by Mata at first call.
+    // After SSC/net install, the plugin is "trop.plugin" (generic name).
+    // No explicit ado-level plugin resolution needed.
     
     // --- One-time data deployment ------------------------------------------
     // Silently deploy example datasets to adopath on first invocation.

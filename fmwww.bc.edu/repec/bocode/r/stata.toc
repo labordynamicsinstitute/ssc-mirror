@@ -93,6 +93,7 @@ p recap module to perform capture-recapture analysis for three sources with Good
 p recast2 module to change storage type of variable
 p reclink module to probabilistically match records
 p recocl module to recode municipal codes for Chile (CL)
+p recode12 module to standardize 1/2-coded variables as labeled 0/1 indicators
 p recode2 module to provide extended recode capabilities
 p recol module to Dynamically Resize Columns in Stata's Data Browser 
 p redcapsetup module to perform some checks on the setup of a REDCap database

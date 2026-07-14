@@ -651,9 +651,23 @@ bootstrap path automatically.
 {phang2}{cmd:. gen d = (id > 80 & t > 7)}{p_end}
 
 {pstd}
-{bf:Basic usage (twostep method, default)}
+{bf:Quick start (fixed lambda, runs in seconds)}
+
+{phang2}{cmd:. trop y d, panelvar(id) timevar(t) fixedlambda(0.5 1.0 0.1) seed(42)}{p_end}
+
+{pstd}
+{it:Use {cmd:fixedlambda()} to bypass LOOCV and get immediate results.
+Recommended for first-time exploration and large panels.}
+
+{pstd}
+{bf:Twostep method with LOOCV (default)}
 
 {phang2}{cmd:. trop y d, panelvar(id) timevar(t) seed(42)}{p_end}
+
+{pstd}
+{it:Note: LOOCV hyperparameter search can be slow on large panels.
+Consider {cmd:fixedlambda()} or use a custom {cmd:lambda_nn_grid()}
+that avoids the (0, 0.1) region for faster convergence.}
 
 {pstd}
 {bf:Joint method}

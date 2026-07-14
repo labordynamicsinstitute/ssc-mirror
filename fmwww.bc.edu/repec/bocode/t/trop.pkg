@@ -2,9 +2,9 @@ d 'TROP': module implementing Triply Robust Panel Estimator
 d
 d	trop implements the Triply Robust Panel (TROP) estimator
 d proposed by Athey, Imbens, Qu, and Viviano (2025) for estimating
-d the	 average treatment effect on the treated (ATT) in panel
+d the average treatment effect on the treated (ATT) in panel
 d data settings.  The estimator combines unit weights, time
-d weights, and	  a nuclear-norm regularized low-rank factor model
+d weights, and a nuclear-norm regularized low-rank factor model
 d to predict counterfactual outcomes for treated unit-time pairs.  
 d  The triple robustness property (Theorem 5.1) ensures that the
 d bias of the estimator is bounded by the product of three   
@@ -17,7 +17,7 @@ d KW: triply robust estimator
 d
 d Requires: Stata version 17
 d
-d Distribution-Date: 20260709
+d Distribution-Date: 20260713
 d
 d Author:   Xuanyu Cai,  City University of Macau
 d Support: email  xuanyuCAI@@outlook.com
@@ -49,10 +49,12 @@ f trop_estat.sthlp
 f trop_eventstudy.mata
 f trop_handle_error.ado
 f trop_lambda_grid.mata
-f trop_linux_x64.plugin
 f trop_loocv_validation.mata
-f trop_macos_arm64.plugin
-f trop_macos_x64.plugin
+g MACARM64 trop_macos_arm64.plugin trop.plugin
+g MACINTEL64 trop_macos_x64.plugin trop.plugin
+g LINUX64 trop_linux_x64.plugin trop.plugin
+g WIN64 trop_windows_x64.plugin trop.plugin
+h trop.plugin
 f trop_main.mata
 f trop_p.ado
 f trop_predict_alpha.ado
@@ -68,7 +70,6 @@ f trop_predict.sthlp
 f trop_rust_interface.mata
 f trop_validate.ado
 f trop_validation.mata
-f trop_windows_x64.plugin
 f ../_/_trop_attach_idnames.ado
 f ../_/_trop_cleanup_vars.ado
 f ../_/_trop_deploy_data.ado
@@ -78,7 +79,6 @@ f ../_/_trop_estat_mht.ado
 f ../_/_trop_estat_pretrend.ado
 f ../_/_trop_estat_table.ado
 f ../_/_trop_load_mata.ado
-f ../_/_trop_load_plugin.ado
 f ../_/_trop_set_grid.ado
 f ../_/_trop_validate_params.ado
 f ../l/load_mata_once.do

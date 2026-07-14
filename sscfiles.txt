@@ -608,6 +608,7 @@ fmwww.bc.edu/repec/bocode/r/ralpha.pkg
 fmwww.bc.edu/repec/bocode/r/r2sem.pkg
 fmwww.bc.edu/repec/bocode/r/runparscale.html
 fmwww.bc.edu/repec/bocode/r/regxfe.pkg
+fmwww.bc.edu/repec/bocode/r/recode12.pkg
 fmwww.bc.edu/repec/bocode/r/round_exact.ado
 fmwww.bc.edu/repec/bocode/r/regoprob.ado
 fmwww.bc.edu/repec/bocode/r/reffadjust4nlcom.html
@@ -1157,6 +1158,7 @@ fmwww.bc.edu/repec/bocode/r/ridder.ado
 fmwww.bc.edu/repec/bocode/r/recol.pkg
 fmwww.bc.edu/repec/bocode/r/repscan.sthlp
 fmwww.bc.edu/repec/bocode/r/r2_mlm_5L.ado
+fmwww.bc.edu/repec/bocode/r/recode12_example_data.dta
 fmwww.bc.edu/repec/bocode/r/rifsureg.sthlp
 fmwww.bc.edu/repec/bocode/r/rc_spline.html
 fmwww.bc.edu/repec/bocode/r/round_exact.sthlp
@@ -1487,6 +1489,7 @@ fmwww.bc.edu/repec/bocode/r/rmhbounds.ado
 fmwww.bc.edu/repec/bocode/r/randomid.pkg
 fmwww.bc.edu/repec/bocode/r/raschtestv7.ado
 fmwww.bc.edu/repec/bocode/r/r2var.ado
+fmwww.bc.edu/repec/bocode/r/recode12.sthlp
 fmwww.bc.edu/repec/bocode/r/rollbook.sthlp
 fmwww.bc.edu/repec/bocode/r/r_ml_stata_data_new_example.dta
 fmwww.bc.edu/repec/bocode/r/repsample.ado
@@ -1847,6 +1850,7 @@ fmwww.bc.edu/repec/bocode/r/regxfe.sthlp
 fmwww.bc.edu/repec/bocode/r/rotlist.ado
 fmwww.bc.edu/repec/bocode/r/ralscoint.ado
 fmwww.bc.edu/repec/bocode/r/riflogit.ado
+fmwww.bc.edu/repec/bocode/r/recode12.ado
 fmwww.bc.edu/repec/bocode/r/rollbook.ado
 fmwww.bc.edu/repec/bocode/r/rvlrplot.html
 fmwww.bc.edu/repec/bocode/r/reghdfe5_footnote.ado
@@ -1913,6 +1917,7 @@ fmwww.bc.edu/repec/bocode/r/rangejoin.sthlp
 fmwww.bc.edu/repec/bocode/r/romantoarabic.pkg
 fmwww.bc.edu/repec/bocode/r/relogit.ado
 fmwww.bc.edu/repec/bocode/r/reftex.pkg
+fmwww.bc.edu/repec/bocode/r/recode12_example.do
 fmwww.bc.edu/repec/bocode/r/revv.html
 fmwww.bc.edu/repec/bocode/r/rangestat.ado
 fmwww.bc.edu/repec/bocode/r/rkqte.sthlp
@@ -1939,6 +1944,7 @@ fmwww.bc.edu/repec/bocode/r/reset.ado
 fmwww.bc.edu/repec/bocode/r/rrlogit_p.ado
 fmwww.bc.edu/repec/bocode/r/regcoef.pkg
 fmwww.bc.edu/repec/bocode/r/report.sthlp
+fmwww.bc.edu/repec/bocode/r/recode12_test.do
 fmwww.bc.edu/repec/bocode/r/regen.pkg
 fmwww.bc.edu/repec/bocode/r/renamefrom.ado
 fmwww.bc.edu/repec/bocode/r/rsz.pkg
@@ -2457,7 +2463,6 @@ fmwww.bc.edu/repec/bocode/_/_cwfcn_isco08_to_bibb.sthlp
 fmwww.bc.edu/repec/bocode/_/_gfastxtile.ado
 fmwww.bc.edu/repec/bocode/_/_gtvor.ado
 fmwww.bc.edu/repec/bocode/_/_unicef_load_indicators_cache.ado
-fmwww.bc.edu/repec/bocode/_/_trop_load_plugin.ado
 fmwww.bc.edu/repec/bocode/_/_mixi01_mata.ado
 fmwww.bc.edu/repec/bocode/_/_fcoint_cv_fadl_cumul.ado
 fmwww.bc.edu/repec/bocode/_/_grmedf.pkg
@@ -24324,6 +24329,7 @@ fmwww.bc.edu/repec/bocode/t/texmerge.sthlp
 fmwww.bc.edu/repec/bocode/x/xtqrplot_manual.pdf
 fmwww.bc.edu/repec/bocode/x/x13as_static
 fmwww.bc.edu/repec/bocode/x/xdir.sthlp
+fmwww.bc.edu/repec/bocode/x/xtmixedroot.pkg
 fmwww.bc.edu/repec/bocode/x/xtmrho.html
 fmwww.bc.edu/repec/bocode/x/xtbcfe.pkg
 fmwww.bc.edu/repec/bocode/x/xtcaec.ado
@@ -24439,6 +24445,7 @@ fmwww.bc.edu/repec/bocode/x/xtwestdata.dta
 fmwww.bc.edu/repec/bocode/x/xsmle_examples.ado
 fmwww.bc.edu/repec/bocode/x/xrigls.ado
 fmwww.bc.edu/repec/bocode/x/xtdynestimb.sthlp
+fmwww.bc.edu/repec/bocode/x/xtmixedroot_example.do
 fmwww.bc.edu/repec/bocode/x/xtcdf.pkg
 fmwww.bc.edu/repec/bocode/x/xtbreakcoint.pkg
 fmwww.bc.edu/repec/bocode/x/xtdpdgmm.sthlp
@@ -24469,6 +24476,7 @@ fmwww.bc.edu/repec/bocode/x/xb2pi.hlp
 fmwww.bc.edu/repec/bocode/x/xtab.ado
 fmwww.bc.edu/repec/bocode/x/xls2stata.html
 fmwww.bc.edu/repec/bocode/x/xtsurmg.pkg
+fmwww.bc.edu/repec/bocode/x/xtmixedroot.ado
 fmwww.bc.edu/repec/bocode/x/xtivdfreg.pkg
 fmwww.bc.edu/repec/bocode/x/xtsum2docx.sthlp
 fmwww.bc.edu/repec/bocode/x/xtrantreat.sthlp
@@ -25168,6 +25176,7 @@ fmwww.bc.edu/repec/bocode/x/xtprobitunbal.ado
 fmwww.bc.edu/repec/bocode/x/xtss.pkg
 fmwww.bc.edu/repec/bocode/x/xtvc.html
 fmwww.bc.edu/repec/bocode/x/xtregfem.ado
+fmwww.bc.edu/repec/bocode/x/xtmixedroot_methods.sthlp
 fmwww.bc.edu/repec/bocode/x/xtreghet.sthlp
 fmwww.bc.edu/repec/bocode/x/xvbinmtrx.ihlp
 fmwww.bc.edu/repec/bocode/x/xbrcspline.sthlp
@@ -25285,6 +25294,7 @@ fmwww.bc.edu/repec/bocode/x/xtgls2.sthlp
 fmwww.bc.edu/repec/bocode/x/xtidt.ado
 fmwww.bc.edu/repec/bocode/x/xtcbc.pkg
 fmwww.bc.edu/repec/bocode/x/xtbsht.ado
+fmwww.bc.edu/repec/bocode/x/xtmixedroot.sthlp
 fmwww.bc.edu/repec/bocode/x/xtvar2_example.do
 fmwww.bc.edu/repec/bocode/x/xtkr.pkg
 fmwww.bc.edu/repec/bocode/x/xtile2.pkg

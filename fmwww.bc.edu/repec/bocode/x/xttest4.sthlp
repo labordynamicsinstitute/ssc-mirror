@@ -1,6 +1,6 @@
 {smcl}
 
-help for {hi:xttest4}                            (Version 1.4, 17 Jan 2026)
+help for {helpb xttest4}{right:Manh Hoang-Ba (hbmanh9492@gmail, {browse "https://www.youtube.com/@manhb.econometrics":Youtube}, {browse "https://www.facebook.com/ManhHB94/":Facebook}, {browse "https://manhb94econometrics.wordpress.com":Website})}
 
 
 {title: Test for heteroscedasticity in fixed-T panel data models}
