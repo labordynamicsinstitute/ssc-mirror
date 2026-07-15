@@ -15526,6 +15526,7 @@ fmwww.bc.edu/repec/bocode/l/lmharchnl.dta
 fmwww.bc.edu/repec/bocode/l/lr.do
 fmwww.bc.edu/repec/bocode/l/lognfit.ado
 fmwww.bc.edu/repec/bocode/l/labvalclone.sthlp
+fmwww.bc.edu/repec/bocode/l/loevh2_booti.ado
 fmwww.bc.edu/repec/bocode/l/logitjack.pkg
 fmwww.bc.edu/repec/bocode/l/libxv.sthlp
 fmwww.bc.edu/repec/bocode/l/lpdensity_normdgp.mo
@@ -15942,6 +15943,7 @@ fmwww.bc.edu/repec/bocode/l/lmnwhite2.pkg
 fmwww.bc.edu/repec/bocode/l/lmnadnl.pkg
 fmwww.bc.edu/repec/bocode/l/logithetm_lf.ado
 fmwww.bc.edu/repec/bocode/l/ldta.ado
+fmwww.bc.edu/repec/bocode/l/loevh2i.ado
 fmwww.bc.edu/repec/bocode/l/lmcovvar.sthlp
 fmwww.bc.edu/repec/bocode/l/labmask.ado
 fmwww.bc.edu/repec/bocode/l/lpretrends.mlib
@@ -19859,6 +19861,7 @@ fmwww.bc.edu/repec/bocode/c/case2tex.ado
 fmwww.bc.edu/repec/bocode/c/Conleyetal2012.dta
 fmwww.bc.edu/repec/bocode/c/color-pll2.style
 fmwww.bc.edu/repec/bocode/c/cattaneo2.dta
+fmwww.bc.edu/repec/bocode/c/chord.pkg
 fmwww.bc.edu/repec/bocode/c/csdid_estat.ado
 fmwww.bc.edu/repec/bocode/c/corrtable.ado
 fmwww.bc.edu/repec/bocode/c/cmpmargins.ado
@@ -20705,6 +20708,7 @@ fmwww.bc.edu/repec/bocode/c/cvarlist.html
 fmwww.bc.edu/repec/bocode/c/cmdmod.ado
 fmwww.bc.edu/repec/bocode/c/cdo.ado
 fmwww.bc.edu/repec/bocode/c/cdtab_s1.dta
+fmwww.bc.edu/repec/bocode/c/chord.ado
 fmwww.bc.edu/repec/bocode/c/Ch06_2mods.do
 fmwww.bc.edu/repec/bocode/c/cdist.zip
 fmwww.bc.edu/repec/bocode/c/cnuse.ado
@@ -21635,6 +21639,7 @@ fmwww.bc.edu/repec/bocode/c/covid.dta
 fmwww.bc.edu/repec/bocode/c/ckkeep.ado
 fmwww.bc.edu/repec/bocode/c/cauchitcauchyinnerw2.ado
 fmwww.bc.edu/repec/bocode/c/cconv.ado
+fmwww.bc.edu/repec/bocode/c/chord.sthlp
 fmwww.bc.edu/repec/bocode/c/classoselect.ado
 fmwww.bc.edu/repec/bocode/c/cs_ranktest_1.4.01.do
 fmwww.bc.edu/repec/bocode/c/cipolate.pkg

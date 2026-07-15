@@ -1,8 +1,14 @@
-*! xtpcmg v1.0.0 - Panel Cointegrating Polynomial Regressions
+*! xtpcmg v1.0.2 - Panel Cointegrating Polynomial Regressions
 *! Based on Wagner & Reichold (2023, Econometric Reviews) and
-*! de Jong & Wagner (2022, Annals of Applied Statistics)
+*! de Jong & Wagner (2022, Econometrics and Statistics)
 *! Author: Dr. Merwan Roudane
-*! Date: March 2026
+*! Date: July 2026
+*! v1.0.2: CRITICAL fix - correct panel reshape (colshape(.,T)' not (.,N));
+*!         prior versions scrambled panels/time. Added Modified-OLS (M-OLS)
+*!         estimator for pmg (de Jong & Wagner 2022): e(b_mod), e(V_mod).
+*!         Validated numerically against the authors' MATLAB code.
+*! v1.0.1: Two-way pooled VCV correction (PanelEKC_two_eff), one-sided
+*!         long-run covariance for qs/da kernels, Newey-West (1994) bandwidth
 *! v1.0.0: Multi-regressor support with poly() option
 capture program drop xtpcmg
 program define xtpcmg, eclass sortpreserve
@@ -31,7 +37,11 @@ program define xtpcmg, eclass sortpreserve
 	if "`kernel'" == "" local kernel "ba"
 	if "`bw'" == "" local bw "And91"
 	if "`effects'" == "" local effects "oneway"
-	
+	if !inlist("`effects'", "oneway", "twoway") {
+		di as error "effects() must be oneway or twoway"
+		exit 198
+	}
+
 	marksample touse
 	gettoken depvar regressors : varlist
 	
@@ -79,7 +89,7 @@ program define xtpcmg, eclass sortpreserve
 	* Header
 	di as text ""
 	di as text "{hline 78}"
-	di as text "Panel Cointegrating Polynomial Regressions" _col(60) "xtpcmg v1.0.0"
+	di as text "Panel Cointegrating Polynomial Regressions" _col(60) "xtpcmg v1.0.2"
 	if "`model'" == "mg" {
 		local moddesc "Group-Mean FM-OLS (Wagner & Reichold, 2023)"
 	}
@@ -125,7 +135,18 @@ program define xtpcmg, eclass sortpreserve
 		capture matrix `indiv_b' = __xtpcmg_indiv
 		capture matrix drop __xtpcmg_indiv
 	}
-	
+
+	* Store Modified-OLS results for PMG model (de Jong & Wagner 2022)
+	if "`model'" == "pmg" {
+		tempname bmod Vmod
+		capture matrix `bmod' = __xtpcmg_bmod
+		capture matrix `Vmod' = __xtpcmg_Vmod
+		capture matrix drop __xtpcmg_bmod __xtpcmg_Vmod
+		capture matrix colnames `bmod' = `cnames'
+		capture matrix colnames `Vmod' = `cnames'
+		capture matrix rownames `Vmod' = `cnames'
+	}
+
 	ereturn post `b' `V', esample(`touse')
 	ereturn local cmd "xtpcmg"
 	ereturn local cmdline "xtpcmg `0'"
@@ -146,7 +167,39 @@ program define xtpcmg, eclass sortpreserve
 	
 	* Display table
 	ereturn display, level(`level')
-	
+
+	* --- Modified OLS (M-OLS) results table (PMG model) ---
+	if "`model'" == "pmg" {
+		capture confirm matrix `bmod'
+		if _rc == 0 {
+			di as text ""
+			di as text "{hline 78}"
+			di as text "Modified OLS (M-OLS) estimator (de Jong & Wagner, 2022)"
+			di as text "{hline 78}"
+			local nbmod = colsof(`bmod')
+			local zc = invnormal(1 - (100-`level')/200)
+			di as text %14s "`depvar'" _col(18) %11s "Coef." _col(31) %11s "Std. Err." ///
+				_col(44) %8s "z" _col(54) %8s "P>|z|" _col(64) %19s "[`level'% Conf. Int.]"
+			di as text "{hline 78}"
+			forvalues j = 1/`nbmod' {
+				local nm : word `j' of `cnames'
+				local bj  = `bmod'[1,`j']
+				local sej = sqrt(`Vmod'[`j',`j'])
+				local zj  = `bj'/`sej'
+				local pj  = 2*(1 - normal(abs(`zj')))
+				local loj = `bj' - `zc'*`sej'
+				local hij = `bj' + `zc'*`sej'
+				di as text %14s "`nm'" _col(18) as result %11.5f `bj' _col(31) %11.5f `sej' ///
+					_col(44) %8.2f `zj' _col(54) %8.3f `pj' _col(64) %9.5f `loj' _col(74) %9.5f `hij'
+			}
+			di as text "{hline 78}"
+			di as text " e(b)/e(V) hold FM-OLS (headline); M-OLS in e(b_mod)/e(V_mod)."
+			di as text "{hline 78}"
+			ereturn matrix b_mod = `bmod'
+			ereturn matrix V_mod = `Vmod'
+		}
+	}
+
 	* =====================================================================
 	* ADVANCED ANALYSIS
 	* =====================================================================
@@ -805,15 +858,18 @@ void _lr_varmod(real matrix u, string scalar kern, real scalar band,
 	Sigma = (1/TT) * (u' * u)
 
 	if (kern == "qs" | kern == "da") {
+		// Replicates MATLAB: R = toeplitz([0;w], zeros(1,T))' , R(T,:) = 0
+		// i.e. a STRICTLY UPPER-triangular (one-sided) weight matrix so that
+		// Delta is the one-sided long-run covariance. (A full symmetric R
+		// would double-count lags and corrupt the FM bias correction.)
 		ws_vec = (0 \ w)
 		R = J(TT, TT, 0)
 		for (ii=1; ii<=TT; ii++) {
-			for (jj2=1; jj2<=TT; jj2++) {
-				idx = abs(ii-jj2) + 1
+			for (jj2=ii; jj2<=TT; jj2++) {
+				idx = jj2 - ii + 1
 				if (idx <= rows(ws_vec)) R[ii, jj2] = ws_vec[idx]
 			}
 		}
-		R = R'
 		R[TT, .] = J(1, TT, 0)
 		Delta1 = R * u
 		Delta = (1/TT) * (u' * Delta1)
@@ -882,6 +938,53 @@ real scalar _And_HAC91(real matrix v, string scalar kern)
 
 	bwidth = ceil(bwidth)
 	return(bwidth)
+}
+
+// -----------------------------------------------------------------------
+// bwNW  (Newey & West 1994 automatic bandwidth; matches bwNW.m)
+// Only ba/pa/qs are defined in NW(1994); other kernels fall back to And91.
+// -----------------------------------------------------------------------
+real scalar _bwNW(real matrix v, string scalar kern)
+{
+	real scalar TT, m, n, npower, j, s0, s1, s2, qq, Tpow, gam, bandw
+	real colvector weights, vmatw, sigma
+	real rowvector jvec
+
+	if (kern != "ba" & kern != "pa" & kern != "qs")
+		return(_And_HAC91(v, kern))
+
+	TT = rows(v)
+	m  = cols(v)
+	weights = J(m, 1, 1)          // no intercept
+
+	if      (kern == "ba") npower = 2/9
+	else if (kern == "pa") npower = 4/25
+	else                   npower = 2/25
+	n = floor(4 * (TT/100)^npower)
+	if (n < 1)      n = 1
+	if (n > TT-1)   n = TT-1
+
+	vmatw = v * weights           // TT x 1 : per-period sum over columns
+	sigma = J(n+1, 1, 0)
+	for (j=1; j<=n+1; j++) {
+		sigma[j] = (1/TT) * (vmatw[j..TT]' * vmatw[1..(TT-j+1)])
+	}
+
+	jvec = (1..n)
+	s0 = sigma[1] + 2*colsum(sigma[2..(n+1)])
+	s1 = 2 * (jvec * sigma[2..(n+1)])
+	s2 = 2 * ((jvec:^2) * sigma[2..(n+1)])
+
+	if (kern == "ba") qq = 1
+	else              qq = 2
+	Tpow = 1/(2*qq + 1)
+
+	if      (kern == "ba") gam = 1.1447 * ((s1/s0)^2)^Tpow
+	else if (kern == "pa") gam = 2.6614 * ((s2/s0)^2)^Tpow
+	else                   gam = 1.3221 * ((s2/s0)^2)^Tpow
+
+	bandw = gam * TT^Tpow
+	return(bandw)
 }
 
 // -----------------------------------------------------------------------
@@ -989,8 +1092,8 @@ void _xtpcmg_mg(string scalar depvar, string scalar reg, string scalar ctrls,
 	st_view(X_view, ., reg, touse)
 	y = Y_view[.,.]
 	x = X_view[.,.]
-	y = colshape(y, N)
-	x = colshape(x, N)
+	y = colshape(y, T)'
+	x = colshape(x, T)'
 
 	// Parse controls
 	nc = 0
@@ -1020,7 +1123,7 @@ void _xtpcmg_mg(string scalar depvar, string scalar reg, string scalar ctrls,
 		for (k=1; k<=nc; k++) {
 			st_view(Z_view, ., ctrl_tokens[k], touse)
 			z_raw = Z_view[.,.]
-			z_raw = colshape(z_raw, N)
+			z_raw = colshape(z_raw, T)'
 			z_k = z_raw[2..T, .]
 			for (i=1; i<=N; i++) {
 				ztilde_list[., (k-1)*N + i] = P2 * z_k[., i]
@@ -1052,7 +1155,8 @@ void _xtpcmg_mg(string scalar depvar, string scalar reg, string scalar ctrls,
 		u_hat_all[.,i] = u_hat_i
 		v_hat_all[.,i] = v_i :- mu_i
 
-		if (bwopt == "And91") bandw = _And_HAC91((u_hat_i, v_i:-mu_i), kern)
+		if (bwopt == "And91")    bandw = _And_HAC91((u_hat_i, v_i:-mu_i), kern)
+		else if (bwopt == "NW")  bandw = _bwNW((u_hat_i, v_i:-mu_i), kern)
 		else {
 			bandw = strtoreal(bwopt)
 			if (bandw >= .) bandw = _And_HAC91((u_hat_i, v_i:-mu_i), kern)
@@ -1089,7 +1193,12 @@ void _xtpcmg_mg(string scalar depvar, string scalar reg, string scalar ctrls,
 
 	// --- Cross-sectional robust VCV ---
 	if (corrrob == 1) {
-		if (bwopt == "And91") bandw = _And_HAC91((u_hat_all, v_hat_all), kern)
+		if (bwopt == "And91")    bandw = _And_HAC91((u_hat_all, v_hat_all), kern)
+		else if (bwopt == "NW")  bandw = _bwNW((u_hat_all, v_hat_all), kern)
+		else {
+			bandw = strtoreal(bwopt)
+			if (bandw >= .) bandw = _And_HAC91((u_hat_all, v_hat_all), kern)
+		}
 		_lr_varmod((u_hat_all, v_hat_all), kern, bandw, 0, Omega_2N, Delta_2N, Sigma_2N)
 
 		Omega_uu_N = Omega_2N[1..N, 1..N]
@@ -1167,8 +1276,8 @@ void _xtpcmg_pmg(string scalar depvar, string scalar reg, string scalar ctrls,
 	st_view(X_view, ., reg, touse)
 	y = Y_view[.,.]
 	x = X_view[.,.]
-	y = colshape(y, N)
-	x = colshape(x, N)
+	y = colshape(y, T)'
+	x = colshape(x, T)'
 
 	// Parse controls
 	nc = 0
@@ -1204,7 +1313,7 @@ void _xtpcmg_pmg(string scalar depvar, string scalar reg, string scalar ctrls,
 		for (k=1; k<=nc; k++) {
 			st_view(Z_view, ., ctrl_tokens[k], touse)
 			z_raw = Z_view[.,.]
-			z_raw = colshape(z_raw, N)
+			z_raw = colshape(z_raw, T)'
 			// Demean control using same scheme as y (pass z as y argument)
 			_simpledemean(z_raw, x, effects, q, zt_y, zt_x, zt_x2, zt_x3)
 			Xtilde_vec = (Xtilde_vec, vec(zt_y))
@@ -1235,6 +1344,8 @@ void _xtpcmg_pmg(string scalar depvar, string scalar reg, string scalar ctrls,
 	Sum_FM_cor      = J(p,1,0)
 	Sum_DMD         = J(q,q,0)
 	Sum_Omega_udotv = 0
+	Sum_OudotvOvv   = 0
+	Sum_OuuOvv      = 0
 	Sum_ODMD        = J(q,q,0)
 	Sum_ODQD        = J(q,q,0)
 	Sum_Sigma_13    = J(q,q,0)
@@ -1246,7 +1357,7 @@ void _xtpcmg_pmg(string scalar depvar, string scalar reg, string scalar ctrls,
 		Xtilde_i2 = Xtilde_vec[((i-1)*TT+1)..(i*TT),.]
 
 		if (bwopt == "And91")    bandw = _And_HAC91((u_hat_i2, vt_i), kern)
-		else if (bwopt == "NW")  bandw = _And_HAC91((u_hat_i2, vt_i), kern)
+		else if (bwopt == "NW")  bandw = _bwNW((u_hat_i2, vt_i), kern)
 		else {
 			bandw = strtoreal(bwopt)
 			if (bandw >= .) bandw = _And_HAC91((u_hat_i2, vt_i), kern)
@@ -1256,6 +1367,7 @@ void _xtpcmg_pmg(string scalar depvar, string scalar reg, string scalar ctrls,
 
 		Sum_Lr = Sum_Lr + Lr_i
 		Sum_Dr = Sum_Dr + Dr_i
+		Sum_OuuOvv = Sum_OuuOvv + Lr_i[1,1]*Lr_i[2,2]
 
 		if (q == 2) Mi = (TT \ 2*sum(x[.,i]))
 		else        Mi = (TT \ 2*sum(x[.,i]) \ 3*sum(x[.,i]:^2))
@@ -1268,6 +1380,7 @@ void _xtpcmg_pmg(string scalar depvar, string scalar reg, string scalar ctrls,
 
 		Omega_udotv_i   = Lr_i[1,1] - (Lr_i[2,2]^(-1))*Lr_i[2,1]^2
 		Sum_Omega_udotv = Sum_Omega_udotv + Omega_udotv_i
+		Sum_OudotvOvv   = Sum_OudotvOvv + Omega_udotv_i*Lr_i[2,2]
 
 		Sum_ODMD = Sum_ODMD + Omega_udotv_i*(D_i*M_mat*D_i)
 
@@ -1306,12 +1419,35 @@ void _xtpcmg_pmg(string scalar depvar, string scalar reg, string scalar ctrls,
 	// --- VCV ---
 	// Polynomial VCV uses exact M/Q/GT framework
 	V1_hat    = Sum_DMD/N
-	invV1_hat = invsym(V1_hat)
 	Sigma11   = Sum_ODMD/N
 	Sigma12   = Sum_ODQD/N
 	Sigma13   = Sum_Sigma_13/N
+	Omega_udotv_mean = Sum_Omega_udotv/N
 
-	VCV_poly = (1/N) * GT * (invV1_hat*Sigma11*invV1_hat) * GT
+	if (effects == "twoway") {
+		// Two-way corrected VCV (PanelEKC_two_eff.m): the second-power
+		// (x^2) diagonal element of both the V and Sigma blocks carries an
+		// extra bias term absent in the one-way case.
+		OudotvOvv_mean = Sum_OudotvOvv/N
+		vcorr = (Lr_mean[2,2]^2)/12
+		s2p_a = Lr_mean[2,2]*OudotvOvv_mean/6
+		s2p_b = Omega_udotv_mean*(Lr_mean[2,2]^2)/12
+		if (q == 2) {
+			V2_hat     = V1_hat  - diag((0, vcorr))
+			Sigma2plus = Sigma11 - diag((0, s2p_a)) + diag((0, s2p_b))
+		}
+		else {
+			V2_hat     = V1_hat  - diag((0, vcorr, 0))
+			Sigma2plus = Sigma11 - diag((0, s2p_a, 0)) + diag((0, s2p_b, 0))
+		}
+		invVfm  = invsym(V2_hat)
+		VCV_poly = (1/N) * GT * (invVfm*Sigma2plus*invVfm) * GT
+	}
+	else {
+		// One-way VCV (PanelEKC_indiv_eff_only.m)
+		invVfm  = invsym(V1_hat)
+		VCV_poly = (1/N) * GT * (invVfm*Sigma11*invVfm) * GT
+	}
 
 	if (nc > 0) {
 		// For controls: use sandwich VCV from OLS residuals
@@ -1333,6 +1469,49 @@ void _xtpcmg_pmg(string scalar depvar, string scalar reg, string scalar ctrls,
 		VCV_FM = VCV_poly
 	}
 
+	// =====================================================================
+	// MODIFIED OLS (M-OLS) estimator  (de Jong & Wagner 2022; PanelEKC_*.m)
+	// Uses the large-N additive bias correction, WITHOUT transforming y.
+	// Shares the V1/V2 weighting with FM; Sigma differs (Sigma1 / Sigma2).
+	// =====================================================================
+	Sigma1 = Sigma11 + Sigma12 - Sigma13
+
+	// Additive bias-correction vector (polynomial terms only)
+	if (q == 2) Ci_extra = (-0.5*TT*Lr_mean[1,2] \ 0)
+	else        Ci_extra = (-0.5*TT*Lr_mean[1,2] \ 0 \ -(TT^2)*Lr_mean[2,2]*Lr_mean[1,2])
+	Sum_Ci_star = Dr_mean[2,1]*Sum_Mi + N*Ci_extra
+	if (nc > 0) Sum_Ci_star = (Sum_Ci_star \ J(nc,1,0))
+
+	beta_Mod = beta_lsdv - invXX_tilde * Sum_Ci_star
+
+	if (effects == "twoway") {
+		// invVfm already == invsym(V2_hat) from the FM branch above
+		OuuOvv_mean = Sum_OuuOvv/N
+		if (q == 2) Sigma2 = Sigma1 - diag((0, OuuOvv_mean*Lr_mean[2,2]/6)) + diag((0, Lr_mean[1,1]*(Lr_mean[2,2]^2)/12))
+		else        Sigma2 = Sigma1 - diag((0, OuuOvv_mean*Lr_mean[2,2]/6, 0)) + diag((0, Lr_mean[1,1]*(Lr_mean[2,2]^2)/12, 0))
+		VCV_poly_mod = (1/N) * GT * (invVfm*Sigma2*invVfm) * GT
+	}
+	else {
+		// invVfm already == invsym(V1_hat) from the FM branch above
+		VCV_poly_mod = (1/N) * GT * (invVfm*Sigma1*invVfm) * GT
+	}
+
+	if (nc > 0) {
+		// Control block: HC0 sandwich on M-OLS residuals (reuses FM Xc, bread_c)
+		VCV_full_mod = J(p, p, 0)
+		VCV_full_mod[1..q, 1..q] = VCV_poly_mod
+		u_mod = ytilde_vec - Xtilde_vec * beta_Mod
+		meat_cm = J(nc, nc, 0)
+		for (i=1; i<=N*TT; i++) {
+			meat_cm = meat_cm + u_mod[i]^2 * (Xc[i,.]' * Xc[i,.])
+		}
+		VCV_full_mod[(q+1)..p, (q+1)..p] = bread_c * meat_cm * bread_c
+		VCV_Mod = VCV_full_mod
+	}
+	else {
+		VCV_Mod = VCV_poly_mod
+	}
+
 	if (q == 2) cnames = reg + " " + reg + "^2"
 	else        cnames = reg + " " + reg + "^2 " + reg + "^3"
 	if (nc > 0) {
@@ -1341,6 +1520,8 @@ void _xtpcmg_pmg(string scalar depvar, string scalar reg, string scalar ctrls,
 
 	st_matrix("__xtpcmg_b", beta_FM')
 	st_matrix("__xtpcmg_V", VCV_FM)
+	st_matrix("__xtpcmg_bmod", beta_Mod')
+	st_matrix("__xtpcmg_Vmod", VCV_Mod)
 	st_local("bnames", cnames)
 }
 

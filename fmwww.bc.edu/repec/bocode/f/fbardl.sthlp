@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  21feb2026}{...}
+{* *! version 1.0.1  13jul2026}{...}
 {vieweralsosee "[R] regress" "help regress"}{...}
 {vieweralsosee "[R] ardl" "help ardl"}{...}
 {viewerjumpto "Syntax" "fbardl##syntax"}{...}

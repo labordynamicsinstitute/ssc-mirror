@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0 01mar2026}{...}
+{* *! version 1.0.2 13jul2026}{...}
 {vieweralsosee "xtpmg" "help xtpmg"}{...}
 {vieweralsosee "pnardl" "help pnardl"}{...}
 {viewerjumpto "Syntax" "xtpcmg##syntax"}{...}
@@ -14,7 +14,7 @@
 {title:Title}
 
 {phang}
-{bf:xtpcmg} {hline 2} Panel Cointegrating Polynomial Regressions: Group-Mean & Pooled FM-OLS (v1.0.0)
+{bf:xtpcmg} {hline 2} Panel Cointegrating Polynomial Regressions: Group-Mean & Pooled FM-OLS (v1.0.2)
 
 
 {marker syntax}{...}
@@ -38,7 +38,7 @@
 
 {syntab:HAC Estimation}
 {synopt :{opt kern:el(string)}}kernel: {bf:ba} (Bartlett, default), {bf:tr} (Truncated), {bf:pa} (Parzen), {bf:bo} (Bohman), {bf:da} (Daniell), {bf:qs} (Quadratic Spectral){p_end}
-{synopt :{opt bw(string)}}bandwidth: {bf:And91} (Andrews 1991, default), or a positive integer{p_end}
+{synopt :{opt bw(string)}}bandwidth: {bf:And91} (Andrews 1991, default), {bf:NW} (Newey-West 1994), or a positive integer{p_end}
 
 {syntab:Advanced}
 {synopt :{opt corrrob}}{it:(mg only)} cross-sectional dependence robust VCV matrix{p_end}
@@ -60,7 +60,10 @@ Curve (EKC), where CO2 emissions follow a quadratic or cubic function of GDP.
 Standard panel cointegration estimators are inconsistent for these models because the polynomial
 powers are perfectly correlated with the level of the integrated process.
 {cmd:xtpcmg} applies the specialised FM-OLS corrections developed in the recent econometrics
-literature.
+literature. For the pooled model ({cmd:model(pmg)}), {cmd:xtpcmg} additionally reports the
+Modified OLS (M-OLS) estimator of de Jong and Wagner (2022), which exploits the large
+cross-sectional dimension to subtract an additive bias term without transforming the dependent
+variable; it is stored in {cmd:e(b_mod)} and {cmd:e(V_mod)}.
 {p_end}
 
 {pstd}
@@ -158,7 +161,9 @@ Available kernels: {bf:ba} (Bartlett, default), {bf:tr} (Truncated),
 
 {phang}
 {opt bw(string)} selects the bandwidth. {bf:And91} uses the data-driven bandwidth
-selector of Andrews (1991) (default). Alternatively, specify a positive integer.
+selector of Andrews (1991) (default); {bf:NW} uses the Newey-West (1994) automatic
+bandwidth (defined for the {bf:ba}, {bf:pa}, and {bf:qs} kernels). Alternatively,
+specify a positive integer.
 {p_end}
 
 {dlgtab:Advanced}
@@ -291,8 +296,10 @@ When {opt graph} is specified, {cmd:xtpcmg} generates a comprehensive diagnostic
 {synopt:{cmd:e(controls)}}list of control variables (if any){p_end}
 
 {p2col 5 24 28 2: Matrices}{p_end}
-{synopt:{cmd:e(b)}}coefficient vector{p_end}
-{synopt:{cmd:e(V)}}variance-covariance matrix{p_end}
+{synopt:{cmd:e(b)}}coefficient vector (FM-OLS){p_end}
+{synopt:{cmd:e(V)}}variance-covariance matrix (FM-OLS){p_end}
+{synopt:{cmd:e(b_mod)}}Modified-OLS coefficient vector (pmg only){p_end}
+{synopt:{cmd:e(V_mod)}}Modified-OLS variance-covariance matrix (pmg only){p_end}
 {synopt:{cmd:e(indiv_b)}}N x K matrix of individual FM-OLS coefficients (mg only){p_end}
 
 {p2col 5 24 28 2: Functions}{p_end}

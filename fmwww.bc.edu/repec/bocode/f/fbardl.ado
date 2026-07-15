@@ -1,5 +1,5 @@
 *! fbardl — Fourier Bootstrap ARDL Cointegration Test
-*! Version 1.0.0 — 2026-02-21
+*! Version 1.0.1 — 2026-07-13
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 *! Independent Researcher
 *!
@@ -717,15 +717,16 @@ program define fbardl, eclass sortpreserve
                     sr(`sr_count') siglevels(10 5 1) pvalue(`Fov_stat')
                 tempname Fcvmat
                 mat `Fcvmat' = r(cvmat)
-                // cvmat has rows for each sig level, cols: I(0) I(1) pairs
-                // row 1 = 10%, row 2 = 5%, row 3 = 1%
-                // For F: last 2 cols are p-value(I0) p-value(I1)
+                // cvmat is a single row; sig levels run across the columns
+                // as consecutive I(0) I(1) pairs in the requested order
+                // (siglevels(10 5 1)): cols 1-2 = 10%, cols 3-4 = 5%,
+                // cols 5-6 = 1%. For F the last 2 cols are p-value(I0) p-value(I1).
                 local F_I0_10 = `Fcvmat'[1, 1]
                 local F_I1_10 = `Fcvmat'[1, 2]
-                local F_I0_05 = `Fcvmat'[2, 1]
-                local F_I1_05 = `Fcvmat'[2, 2]
-                local F_I0_01 = `Fcvmat'[3, 1]
-                local F_I1_01 = `Fcvmat'[3, 2]
+                local F_I0_05 = `Fcvmat'[1, 3]
+                local F_I1_05 = `Fcvmat'[1, 4]
+                local F_I0_01 = `Fcvmat'[1, 5]
+                local F_I1_01 = `Fcvmat'[1, 6]
                 // p-values from last row
                 local ncol_F = colsof(`Fcvmat')
                 if `ncol_F' >= 8 {
@@ -746,12 +747,13 @@ program define fbardl, eclass sortpreserve
                         sr(`sr_count') siglevels(10 5 1) pvalue(`t_stat')
                     tempname tcvmat
                     mat `tcvmat' = r(cvmat)
+                    // single row; cols 1-2 = 10%, 3-4 = 5%, 5-6 = 1%
                     local t_I0_10 = `tcvmat'[1, 1]
                     local t_I1_10 = `tcvmat'[1, 2]
-                    local t_I0_05 = `tcvmat'[2, 1]
-                    local t_I1_05 = `tcvmat'[2, 2]
-                    local t_I0_01 = `tcvmat'[3, 1]
-                    local t_I1_01 = `tcvmat'[3, 2]
+                    local t_I0_05 = `tcvmat'[1, 3]
+                    local t_I1_05 = `tcvmat'[1, 4]
+                    local t_I0_01 = `tcvmat'[1, 5]
+                    local t_I1_01 = `tcvmat'[1, 6]
                     // p-values
                     local ncol_t = colsof(`tcvmat')
                     if `ncol_t' >= 8 {
@@ -774,36 +776,60 @@ program define fbardl, eclass sortpreserve
             di as txt ""
 
             if `k_pss' == 1 {
-                local F_I0_10 = 4.04 ; local F_I1_10 = 4.78
-                local F_I0_05 = 4.94 ; local F_I1_05 = 5.73
-                local F_I0_01 = 6.84 ; local F_I1_01 = 7.84
-                local t_I0_10 = -2.57 ; local t_I1_10 = -2.91
-                local t_I0_05 = -2.86 ; local t_I1_05 = -3.22
-                local t_I0_01 = -3.43 ; local t_I1_01 = -3.82
+                local F_I0_10 = 4.04
+                local F_I1_10 = 4.78
+                local F_I0_05 = 4.94
+                local F_I1_05 = 5.73
+                local F_I0_01 = 6.84
+                local F_I1_01 = 7.84
+                local t_I0_10 = -2.57
+                local t_I1_10 = -2.91
+                local t_I0_05 = -2.86
+                local t_I1_05 = -3.22
+                local t_I0_01 = -3.43
+                local t_I1_01 = -3.82
             }
             else if `k_pss' == 2 {
-                local F_I0_10 = 3.17 ; local F_I1_10 = 4.14
-                local F_I0_05 = 3.79 ; local F_I1_05 = 4.85
-                local F_I0_01 = 5.15 ; local F_I1_01 = 6.36
-                local t_I0_10 = -2.57 ; local t_I1_10 = -3.21
-                local t_I0_05 = -2.86 ; local t_I1_05 = -3.53
-                local t_I0_01 = -3.43 ; local t_I1_01 = -4.10
+                local F_I0_10 = 3.17
+                local F_I1_10 = 4.14
+                local F_I0_05 = 3.79
+                local F_I1_05 = 4.85
+                local F_I0_01 = 5.15
+                local F_I1_01 = 6.36
+                local t_I0_10 = -2.57
+                local t_I1_10 = -3.21
+                local t_I0_05 = -2.86
+                local t_I1_05 = -3.53
+                local t_I0_01 = -3.43
+                local t_I1_01 = -4.10
             }
             else if `k_pss' == 3 {
-                local F_I0_10 = 2.72 ; local F_I1_10 = 3.77
-                local F_I0_05 = 3.23 ; local F_I1_05 = 4.35
-                local F_I0_01 = 4.29 ; local F_I1_01 = 5.61
-                local t_I0_10 = -2.57 ; local t_I1_10 = -3.46
-                local t_I0_05 = -2.86 ; local t_I1_05 = -3.78
-                local t_I0_01 = -3.43 ; local t_I1_01 = -4.37
+                local F_I0_10 = 2.72
+                local F_I1_10 = 3.77
+                local F_I0_05 = 3.23
+                local F_I1_05 = 4.35
+                local F_I0_01 = 4.29
+                local F_I1_01 = 5.61
+                local t_I0_10 = -2.57
+                local t_I1_10 = -3.46
+                local t_I0_05 = -2.86
+                local t_I1_05 = -3.78
+                local t_I0_01 = -3.43
+                local t_I1_01 = -4.37
             }
             else {
-                local F_I0_10 = 2.45 ; local F_I1_10 = 3.52
-                local F_I0_05 = 2.86 ; local F_I1_05 = 4.01
-                local F_I0_01 = 3.74 ; local F_I1_01 = 5.06
-                local t_I0_10 = -2.57 ; local t_I1_10 = -3.66
-                local t_I0_05 = -2.86 ; local t_I1_05 = -3.99
-                local t_I0_01 = -3.43 ; local t_I1_01 = -4.60
+                local F_I0_10 = 2.45
+                local F_I1_10 = 3.52
+                local F_I0_05 = 2.86
+                local F_I1_05 = 4.01
+                local F_I0_01 = 3.74
+                local F_I1_01 = 5.06
+                local t_I0_10 = -2.57
+                local t_I1_10 = -3.66
+                local t_I0_05 = -2.86
+                local t_I1_05 = -3.99
+                local t_I0_01 = -3.43
+                local t_I1_01 = -4.60
             }
             local F_pv_I0 = .
             local F_pv_I1 = .
@@ -821,13 +847,13 @@ program define fbardl, eclass sortpreserve
         di as txt ""
 
         // Table header
-        di as txt "  {hline 74}"
+        di as txt "  {hline 76}"
         di as txt _col(5) "Test" _col(18) "Stat" ///
            _col(27) "  10% cv" _col(41) "   5% cv" _col(55) "   1% cv" ///
-           _col(67) "p-value"
+           _col(68) "p-value"
         di as txt _col(27) " I(0)  I(1)" _col(41) " I(0)  I(1)" ///
            _col(55) " I(0)  I(1)" _col(67) "I(0)  I(1)"
-        di as txt "  {hline 74}"
+        di as txt "  {hline 76}"
 
         // F_overall row
         // Decision based on 5% critical values
@@ -846,7 +872,7 @@ program define fbardl, eclass sortpreserve
            _col(39) %6.3f `F_I0_05' " " %6.3f `F_I1_05' ///
            _col(53) %6.3f `F_I0_01' " " %6.3f `F_I1_01' _c
         if `F_pv_I0' < . & `F_pv_I1' < . {
-           di as res _col(65) %5.3f `F_pv_I0' " " %5.3f `F_pv_I1'
+           di as res _col(67) %5.3f `F_pv_I0' " " %5.3f `F_pv_I1'
         }
         else {
            di as txt ""
@@ -868,7 +894,7 @@ program define fbardl, eclass sortpreserve
            _col(39) %6.3f `t_I0_05' " " %6.3f `t_I1_05' ///
            _col(53) %6.3f `t_I0_01' " " %6.3f `t_I1_01' _c
         if `t_pv_I0' < . & `t_pv_I1' < . {
-           di as res _col(65) %5.3f `t_pv_I0' " " %5.3f `t_pv_I1'
+           di as res _col(67) %5.3f `t_pv_I0' " " %5.3f `t_pv_I1'
         }
         else {
            di as txt ""
@@ -878,7 +904,7 @@ program define fbardl, eclass sortpreserve
         di as txt _col(3) "F_ind" _col(15) as res %7.3f `Find_stat' ///
            _col(25) as txt "(standard PSS CVs not available; use bootstrap)"
 
-        di as txt "  {hline 74}"
+        di as txt "  {hline 76}"
 
         // Decision summary
         di as txt ""
@@ -1155,7 +1181,7 @@ program define fbardl, eclass sortpreserve
     // =========================================================================
     di as txt ""
     di as txt "{hline 78}"
-    di as res _col(5) "fbardl v1.0.0"
+    di as res _col(5) "fbardl v1.0.1"
     di as txt "{hline 78}"
 
     // Clean up

@@ -1,7 +1,52 @@
 *! _fbardl_advanced — Advanced Post-Estimation Analysis for FBARDL
-*! Version 1.0.0 — 2026-02-21
+*! Version 1.0.1 — 2026-04-12
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 
+// =============================================================================
+// HELPER: Persistence Profile computation (separate program to avoid
+// Stata's parse-time evaluation of mata{} blocks inside if-branches)
+// =============================================================================
+capture program drop _fbardl_persist
+program define _fbardl_persist
+    version 17
+
+    syntax, alpha(real) p(integer) horizon(integer) depvar(string)
+
+    // Get AR coefficients
+    forvalues j = 1/`p' {
+        capture local phi_`j' = _b[L`j'.D.`depvar']
+        if _rc != 0 local phi_`j' = 0
+    }
+
+    // Compute persistence profile in Mata
+    local alpha_val = `alpha'
+    local p_val = `p'
+    local H_val = `horizon' + 1
+
+    mata {
+        H = `H_val'
+        persist_vec = J(H, 1, 0)
+        persist_vec[1] = 1
+
+        alpha_v = `alpha_val'
+        p_v = `p_val'
+
+        for (h = 1; h < H; h++) {
+            val = (1 + alpha_v) * persist_vec[h]
+            for (j = 2; j <= min((h, p_v)); j++) {
+                phi_j = strtoreal(st_local("phi_" + strofreal(j)))
+                val = val + phi_j * persist_vec[h - j + 1]
+            }
+            persist_vec[h+1] = val
+        }
+
+        st_matrix("__fbardl_pp", persist_vec)
+    }
+end
+
+// =============================================================================
+// MAIN: Advanced Post-Estimation Analysis
+// =============================================================================
 capture program drop _fbardl_advanced
 program define _fbardl_advanced
     version 17
@@ -57,107 +102,96 @@ program define _fbardl_advanced
     // =========================================================================
     // PERSISTENCE PROFILE (Pesaran & Shin, 1996)
     // =========================================================================
-    di as txt ""
-    di as txt "  {bf:Persistence Profile} (Pesaran & Shin, 1996)"
-    di as txt "  {hline 55}"
-    di as txt _col(5) "Horizon" _col(20) "Persistence" _col(38) "Cumul. adj."
-    di as txt "  {hline 55}"
 
     if `alpha' < 0 & `alpha' > -2 {
-        // Get AR coefficients
-        forvalues j = 1/`p' {
-            capture local phi_`j' = _b[L`j'.D.`depvar']
-            if _rc != 0 local phi_`j' = 0
-        }
-
-        mata {
-            H = `horizon' + 1
-            pp = J(H, 1, 0)
-            pp[1] = 1  // h=0: full disequilibrium
-
-            for (h = 1; h < H; h++) {
-                val = (1 + `alpha') * pp[h]
-                for (j = 2; j <= min((h, `p')); j++) {
-                    phi_j = strtoreal(st_local("phi_" + strofreal(j)))
-                    val = val + phi_j * pp[h - j + 1]
-                }
-                pp[h+1] = val
-            }
-
-            st_matrix("__fbardl_pp", pp)
-        }
-
-        // Find PP half-life
-        local pp_halflife = `horizon'
-        forvalues h = 0/`horizon' {
-            local hidx = `h' + 1
-            local ppval = el(__fbardl_pp, `hidx', 1)
-            local cum_adj = 1 - `ppval'
-
-            if `h' <= 5 | `h' == 10 | `h' == 15 | `h' == `horizon' {
-                di as txt _col(7) %4.0f `h' _col(18) as res %12.6f `ppval' ///
-                   _col(36) %12.6f `cum_adj'
-            }
-
-            if `ppval' <= 0.5 & `pp_halflife' == `horizon' {
-                local pp_halflife = `h'
-            }
-        }
-
-        di as txt "  {hline 55}"
-        di as txt _col(5) "Profile half-life:" _col(30) as res "`pp_halflife' periods"
         di as txt ""
+        di as txt "  {bf:Persistence Profile} (Pesaran & Shin, 1996)"
+        di as txt "  {hline 55}"
+        di as txt _col(5) "Horizon" _col(20) "Persistence" _col(38) "Cumul. adj."
+        di as txt "  {hline 55}"
 
-        // =====================================================================
-        // PERSISTENCE PROFILE GRAPH (publication quality)
-        // =====================================================================
-        capture noisily {
-            tempfile _pp_data
-            qui save `_pp_data', replace
+        // Call helper program (avoids Mata parse-time issue)
+        capture noisily _fbardl_persist, alpha(`alpha') p(`p') horizon(`horizon') depvar(`depvar')
 
-            qui clear
-            local HH = `horizon' + 1
-            qui set obs `HH'
-            qui gen int horizon = _n - 1
-            qui gen double persistence = .
-            qui gen double halfline = 0.5
-
+        if _rc == 0 {
+            // Display persistence values and find half-life
+            local pp_halflife = `horizon'
             forvalues h = 0/`horizon' {
                 local hidx = `h' + 1
-                qui replace persistence = el(__fbardl_pp, `hidx', 1) in `hidx'
+                local ppval = el(__fbardl_pp, `hidx', 1)
+                local cum_adj = 1 - `ppval'
+
+                if `h' <= 5 | `h' == 10 | `h' == 15 | `h' == `horizon' {
+                    di as txt _col(7) %4.0f `h' _col(18) as res %12.6f `ppval' ///
+                       _col(36) %12.6f `cum_adj'
+                }
+
+                if `ppval' <= 0.5 & `pp_halflife' == `horizon' {
+                    local pp_halflife = `h'
+                }
             }
 
-            twoway (area persistence horizon, color("156 39 176%30") ///
-                       lcolor("156 39 176") lwidth(medthick)) ///
-                   (line halfline horizon, lcolor("255 152 0") ///
-                       lpattern(dash) lwidth(medium)), ///
-                   title("{bf:Persistence Profile}", size(medlarge) color("24 54 104")) ///
-                   subtitle("Pesaran & Shin (1996) — fraction of disequilibrium remaining", ///
-                       size(small) color(gs6)) ///
-                   xtitle("Horizon", size(medsmall)) ///
-                   ytitle("Persistence (proportion)", size(medsmall)) ///
-                   xline(`pp_halflife', lcolor("255 152 0") lpattern(shortdash) lwidth(thin)) ///
-                   legend(order(1 "Persistence profile" ///
-                       2 "Half-life = `pp_halflife' periods") ///
-                       size(small) cols(2) ring(0) pos(1) ///
-                       region(fcolor(white%80) lcolor(gs12))) ///
-                   graphregion(fcolor(white) lcolor(white)) ///
-                   plotregion(fcolor(white) lcolor(gs14)) ///
-                   ylabel(0(0.2)1, format(%4.2f) labsize(small) angle(0) grid glcolor(gs14%50)) ///
-                   xlabel(0(5)`horizon', labsize(small) grid glcolor(gs14%50)) ///
-                   note("Pesaran & Shin (1996)", size(vsmall) color(gs8)) ///
-                   scheme(s2color) name(persistence_profile, replace)
+            di as txt "  {hline 55}"
+            di as txt _col(5) "Profile half-life:" _col(30) as res "`pp_halflife' periods"
+            di as txt ""
 
-            qui graph export "persistence_profile.png", replace width(1400)
-            di as txt _col(5) "Graph saved: persistence_profile.png"
+            // Persistence profile graph
+            capture noisily {
+                tempfile _pp_data
+                qui save `_pp_data', replace
 
-            qui use `_pp_data', clear
+                qui clear
+                local HH = `horizon' + 1
+                qui set obs `HH'
+                qui gen int horizon = _n - 1
+                qui gen double persistence = .
+                qui gen double halfline = 0.5
+
+                forvalues h = 0/`horizon' {
+                    local hidx = `h' + 1
+                    qui replace persistence = el(__fbardl_pp, `hidx', 1) in `hidx'
+                }
+
+                twoway (area persistence horizon, color("156 39 176%30") ///
+                           lcolor("156 39 176") lwidth(medthick)) ///
+                       (line halfline horizon, lcolor("255 152 0") ///
+                           lpattern(dash) lwidth(medium)), ///
+                       title("{bf:Persistence Profile}", size(medlarge) color("24 54 104")) ///
+                       subtitle("Pesaran & Shin (1996) — fraction of disequilibrium remaining", ///
+                           size(small) color(gs6)) ///
+                       xtitle("Horizon", size(medsmall)) ///
+                       ytitle("Persistence (proportion)", size(medsmall)) ///
+                       xline(`pp_halflife', lcolor("255 152 0") lpattern(shortdash) lwidth(thin)) ///
+                       legend(order(1 "Persistence profile" ///
+                           2 "Half-life = `pp_halflife' periods") ///
+                           size(small) cols(2) ring(0) pos(1) ///
+                           region(fcolor(white%80) lcolor(gs12))) ///
+                       graphregion(fcolor(white) lcolor(white)) ///
+                       plotregion(fcolor(white) lcolor(gs14)) ///
+                       ylabel(0(0.2)1, format(%4.2f) labsize(small) angle(0) grid glcolor(gs14%50)) ///
+                       xlabel(0(5)`horizon', labsize(small) grid glcolor(gs14%50)) ///
+                       note("Pesaran & Shin (1996)", size(vsmall) color(gs8)) ///
+                       scheme(s2color) name(persistence_profile, replace)
+
+                qui graph export "persistence_profile.png", replace width(1400)
+                di as txt _col(5) "Graph saved: persistence_profile.png"
+
+                qui use `_pp_data', clear
+            }
+
+            capture mat drop __fbardl_pp
         }
-
-        capture mat drop __fbardl_pp
+        else {
+            di as txt _col(5) "(Persistence profile computation failed)"
+            di as txt "  {hline 55}"
+        }
     }
     else {
-        di as txt _col(5) "(Persistence profile not computed — ECM coefficient invalid)"
+        di as txt ""
+        di as txt "  {bf:Persistence Profile} (Pesaran & Shin, 1996)"
+        di as txt "  {hline 55}"
+        di as txt _col(5) "(Not computed — ECM coefficient is non-negative or explosive)"
+        di as txt "  {hline 55}"
     }
 
     // =========================================================================

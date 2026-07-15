@@ -1,0 +1,23 @@
+d 'CHORD': module to draw chord diagrams
+d
+d  chord draws chord diagrams for visualizing flows or connections
+d between categories. It accepts either long-format (from/to/value)
+d data or a wide-format adjacency matrix, and supports flexible
+d sector layout, ribbon styling, directional arrows, sector
+d grouping, value/percentage axes, and curved or radial labels. 
+d
+d KW: graphics
+d KW: chords
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20260714
+d
+d Author: Jiajun Zhou,  Technical University of Munich
+d Support: email zhoujiajun_06@@163.com
+d
+d Author: De Zhou,  Nanjing Agricultural University
+d Support: email zhou-de@@hotmail.com
+d
+f chord.ado
+f chord.sthlp

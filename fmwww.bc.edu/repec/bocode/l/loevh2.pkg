@@ -1,15 +1,19 @@
 d 'LOEVH2': module to calculate Loevinger's H for two dichotomous variables
 d
-d   loevh2 calculates Loevinger's H for two dichotomous variables.
-d loevh2_boot provides bootstrapped confidence intervals. 
+d  loevh2 calculates Loevinger's H (= RIOC) for two dichotomous
+d variables. loevh2i is the immediate command for loevh2.
+d loevh2_boot provides bootstrapped confidence intervals.
+d loevh2_booti is the immediate command for loevh2_boot. 
 d
 d KW: Loevinger's H
 d KW: association measure
 d KW: Bootstrap confidence intervals
+d KW: overlap of two binary variables
+d KW: RIOC (relative improvement over chance)
 d
-d Requires: Stata version 15
+d Requires: Stata version 14
 d
-d Distribution-Date: 20250829
+d Distribution-Date: 20260714
 d
 d Author: Dirk Enzmann, University of Hamburg
 d Support: email dirk.enzmann@@uni-hamburg.de
@@ -18,3 +22,5 @@ f loevh2.ado
 f loevh2.sthlp
 f loevh2_boot.ado
 f loevh2_boot.sthlp
+f loevh2i.ado
+f loevh2_booti.ado
