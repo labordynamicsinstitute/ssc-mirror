@@ -4,19 +4,23 @@ import subprocess
 import csv
 
 
-
 folder = Path("./stata-pkg-files")
 rows = []
+
+
+release = subprocess.run(
+    ["git", "describe", "--tags", "--abbrev=0"],
+    capture_output=True,
+    text=True,
+    check=True
+).stdout.strip()
+
 
 for i, pkg in enumerate(folder.rglob("*.pkg")):
     pkgname = pkg.stem
     keyword = ""
     filename = ""
     extension = ""
-    release = ""
-
-    #if i > 295:
-        #print(f"Opening package {i} - {pkgname})")
 
     try:
         with pkg.open(encoding="utf-8", errors="replace") as f:
@@ -47,3 +51,4 @@ with open("crosswalk.csv", "w", newline="") as csvfile:
 
 
 print("Done!")
+
