@@ -31,6 +31,7 @@ p lasagna module to produce lasagna plots
 p lassopack module for lasso, square-root lasso, elastic net, ridge, adaptive lasso estimation and cross-validation
 p lastupto module to collapse a dataset to have 1 observation for each of a list of X-values
 p latab module to generate LaTeX output from tabulate
+p latinobarometro module to load, standardize, and enrich a Latinobarometro survey wave
 p lbpower module to calculate approximate power (or sample size) for longitudinal studies with binary response and two equally sized treatment groups
 p lbsvmat module to create labeled variables from a matrix
 p lcaentropy module to calculate entropy for models with categorical latent variables

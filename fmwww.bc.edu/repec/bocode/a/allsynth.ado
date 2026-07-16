@@ -1,4 +1,4 @@
-*! version 1.33 by Justin Wiltshire. Updated 06/25/2026 - Wrapper adding functionality to -synth- package
+*! version 1.34 by Justin Wiltshire. Updated 07/14/2026 - Wrapper adding functionality to -synth- package
 
 program allsynth, eclass sortpreserve byable(recall)
 	version 15.1 // Not tested on earlier versions

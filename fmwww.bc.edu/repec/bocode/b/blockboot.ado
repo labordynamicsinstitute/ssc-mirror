@@ -3,7 +3,8 @@
 *! modified  v1.2 jotero 4jun2025
 *! modified  v1.3 cfb 27aug2025 for tsset checks
 *! modified  v1.4 jotero 11nov2025 for nbb fix
-*! modified. v1.5 cfb to return auto _lblk
+*! modified  v1.5 cfb to return auto _lblk
+*! modified  v1.6 cfb to require positive lblock
 *! This routine implements the stationary bootstrap for bootstrapping stationary, dependent series
 *! The code draws on the MATLAB function stationary_bootstrap developed by Kevin Sheppard
 
@@ -52,6 +53,10 @@ if ("`lblock'" == "auto") {
 else {
 	loc tauto noauto
 	loc _lblk `lblock'
+	if (`_lblk'== 0) {
+		di as err "Error: block length must be positive"
+		error 198
+	}
 }
 
 tempvar trd

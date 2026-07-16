@@ -1,0 +1,26 @@
+d 'LATINOBAROMETRO': module to load, standardize, and enrich a Latinobarometro survey wave
+d
+d      latinobarometro downloads (or reuses a cached copy of) a
+d single year's Latinobarometro survey wave, loads the
+d English-language    .dta file, sanitizes variable names and
+d value-label names that are invalid in Stata (accented/Unicode
+d characters and periods),    and optionally:	     1. renames
+d every variable to a standardized name that is consistent across
+d survey years, using the official	      Latinobarometro
+d "Serie de Tiempo" crosswalk file, and        2. merges in World
+d Bank total-population data by country and constructs a
+d population-based sampling weight (wt_lac)	       suitable for
+d pooled cross-country analysis. 
+d
+d KW: data management
+d KW: latinobarometro
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260715
+d
+d Author: Jorge Soler-Lopez,  Bocconi University
+d Support: email   jorge.solerlopez@@phd.unibocconi.it
+d
+f latinobarometro.ado
+f latinobarometro.sthlp

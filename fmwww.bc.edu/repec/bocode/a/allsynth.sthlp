@@ -1,9 +1,9 @@
 {smcl}
-{* June25,2026}{...}
+{* July14,2026}{...}
 {cmd:help allsynth} 
 {hline}
 
-{title:Title} {p 19 20 0} {cmd:Version 1.33} - Release date: June 25, 2026. Tested on Stata 15.1 and above. 
+{title:Title} {p 19 20 0} {cmd:Version 1.34} - Release date: July 14, 2026. Tested on Stata 15.1 and above. 
 
 {p2colset 5 20 20 2}{...}
 {p2col :{hi:allsynth} {hline 2}}Automates estimation of (i) bias-corrected synthetic control gaps ("treatment effects"); (ii) RMSPE-ranked {it:p}-values and 
@@ -101,11 +101,12 @@ only in the difference rather than in these variables individually; however, vis
 
 
 {p 4 8 2}
-{cmd:gapfigure}({cmd:classic}|{cmd:bcorrect} [ {cmd:lineback, save}({it:file}) [{cmd:, replace} ]) {it:twoway_options} ]) can be used to 
-automatically generate a plot of the trajectories of (at most two of) the estimated gaps and bias-corrected gaps. The bias-corrected gaps can only be plotted if the {cmd:allsynth} option {cmd:bcorrect()} 
-is specified. If {cmd:bcorrect()} is specified, only the bias-corrected gaps can be plotted. {cmd: gapfigure()} should not be specified if the {cmd: allsynth} option {cmd: stacked()} is specified.
+{cmd:gapfigure}({cmd:classic}|{cmd:bcorrect} [ {cmd:placebos lineback, save}({it:file}) [{cmd:, replace} ]) {it:twoway_options} ]) can be used to automatically generate a plot of the trajectories of (at most two of) the estimated gap, the bias-corrected gap, the set of placebo gaps, or the set of bias-corrected placebo gaps. The bias-corrected gap can only be plotted if the {cmd:allsynth} option {cmd:bcorrect()} 
+is specified, and the placebo gaps can only be plotted if {cmd:pvalues()} is specified. If {cmd:bcorrect()} is specified, only the only the bias-corrected gap and placebo gaps can be plotted. {cmd: gapfigure()} should not be specified if the {cmd: allsynth} option {cmd: stacked()} is specified.
 
 {p 8 8 2}{it:At least one} of {cmd:classic} or {cmd:bcorrect} must be specified, though both may also be specified. {cmd:classic} plots the classic estimated gaps for the treated units, and {cmd:bcorrect} plots the bias-corrected estimated gaps for the treated unit.{p_end}
+
+{p 10 10 2}(1) {cmd:placebos} may only be specified if {\it exactly one} of {\tt classic} and {\tt bcorrect} is specified, and will plot the corresponding placebo gaps alongside the specified estimated gap.
 
 {p 10 10 2}(2) {cmd:lineback} places a vertical dotted line on the plot in the final pre-treatment period. The default setting places a vertical dotted line on the plot in the treatment period.
 
