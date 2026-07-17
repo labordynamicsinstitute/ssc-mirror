@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  21may2026}{...}
+{* *! version 1.1  15jul2026}{...}
 {viewerjumpto "Syntax" "fourierur##syntax"}{...}
 {viewerjumpto "Description" "fourierur##description"}{...}
 {viewerjumpto "Sub-commands" "fourierur##subcommands"}{...}

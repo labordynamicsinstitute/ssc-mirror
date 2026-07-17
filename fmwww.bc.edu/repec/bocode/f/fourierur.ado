@@ -1,9 +1,9 @@
-*! fourierur v1.0 - Main entry point for Fourier unit root / stationarity tests
+*! fourierur v1.1 - Main entry point for Fourier unit root / stationarity tests
 *! Dispatches to one of six tests, or runs all of them.
 *! Compatible with Stata 14+
-*! Package: fourierur v1.0
+*! Package: fourierur v1.1
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: 21 May 2026
+*! Date: 15 July 2026
 
 program define fourierur, rclass
     version 14

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  11mar2026}{...}
+{* *! version 1.1  15jul2026}{...}
 {viewerjumpto "Syntax" "fourierdf##syntax"}{...}
 {viewerjumpto "Description" "fourierdf##description"}{...}
 {viewerjumpto "Options" "fourierdf##options"}{...}
@@ -155,10 +155,18 @@ Using Fourier terms when they are not needed reduces power.
 {synopt:{cmd:r(ADFk)}}ADF test statistic{p_end}
 {synopt:{cmd:r(k)}}optimal frequency{p_end}
 {synopt:{cmd:r(p)}}optimal lag order{p_end}
-{synopt:{cmd:r(Fk)}}F-statistic for Fourier terms{p_end}
 {synopt:{cmd:r(cv1)}}1% critical value{p_end}
 {synopt:{cmd:r(cv5)}}5% critical value{p_end}
 {synopt:{cmd:r(cv10)}}10% critical value{p_end}
+{synopt:{cmd:r(F_stat)}}F-statistic for joint significance of Fourier terms{p_end}
+{synopt:{cmd:r(Fcv1)}}1% critical value of the Fourier F-test{p_end}
+{synopt:{cmd:r(Fcv5)}}5% critical value of the Fourier F-test{p_end}
+{synopt:{cmd:r(Fcv10)}}10% critical value of the Fourier F-test{p_end}
+
+{pstd}
+The Fourier F-test (H0: alpha = beta = 0) is reported automatically and uses the
+non-standard critical values of Enders and Lee (2012b, Table 1a/1b), which depend
+only on the deterministic specification and the sample size.
 
 
 {marker examples}{...}
@@ -206,5 +214,5 @@ Email: merwanroudane920@gmail.com{p_end}
 
 {psee}
 {space 2}Help:  {helpb fourierlm}, {helpb fouriergls}, {helpb fourierkpss},
-{helpb fourierfffff}, {helpb fourierdfdf}, {helpb fourierall}
+{helpb fourierfffff}, {helpb fourierdfdf}
 {p_end}

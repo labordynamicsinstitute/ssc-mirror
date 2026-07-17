@@ -18,6 +18,7 @@ p oesch module to recode ISCO codes into Oesch class scheme
 p oga module to perform estimation and inference for high-dimensional regressions without imposing the sparsity restriction
 p oglm module to estimate Ordinal Generalized Linear Models
 p oglm9 module to estimate Ordinal Generalized Linear Models
+p okpreserve module to implement nested preserve and restore for data workflows
 p omegacoef module to calculate the omega reliability coefficient
 p omninorm module to calculate omnibus test for univariate/multivariate normality
 p omodel modules to perform tests on ordered probit and ordered logit models

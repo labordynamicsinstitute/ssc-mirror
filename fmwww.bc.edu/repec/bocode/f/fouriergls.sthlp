@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  11mar2026}{...}
+{* *! version 1.1  15jul2026}{...}
 {viewerjumpto "Syntax" "fouriergls##syntax"}{...}
 {viewerjumpto "Description" "fouriergls##description"}{...}
 {viewerjumpto "Options" "fouriergls##options"}{...}
@@ -201,5 +201,5 @@ Email: merwanroudane920@gmail.com{p_end}
 
 {psee}
 {space 2}Help:  {helpb fourierlm}, {helpb fourierdf}, {helpb fourierkpss},
-{helpb fourierfffff}, {helpb fourierdfdf}, {helpb fourierall}
+{helpb fourierfffff}, {helpb fourierdfdf}
 {p_end}

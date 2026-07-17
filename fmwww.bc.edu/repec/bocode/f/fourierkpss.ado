@@ -1,10 +1,10 @@
-*! fourierkpss v2.0  Becker, Enders & Lee (2006) Fourier KPSS Stationarity Test
+*! fourierkpss v2.1  Becker, Enders & Lee (2006) Fourier KPSS Stationarity Test
 *! Journal of Time Series Analysis, 27(3), 381-409
 *! Ported from GAUSS code by Saban Nazlioglu
 *! Compatible with Stata 14+
-*! Package: fourierur v1.0
+*! Package: fourierur v1.1
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: 11 March 2026
+*! Date: 15 July 2026
 
 program define fourierkpss, rclass
     version 14
@@ -52,6 +52,10 @@ program define fourierkpss, rclass
     local cv1       = r(cv1)
     local cv5       = r(cv5)
     local cv10      = r(cv10)
+    local F_stat    = r(F_stat)
+    local Fcv1      = r(Fcv1)
+    local Fcv5      = r(Fcv5)
+    local Fcv10     = r(Fcv10)
 
     if `KPSS_stat' >= `cv1' {
         local sig "*** reject stationarity at 1%"
@@ -75,6 +79,19 @@ program define fourierkpss, rclass
     di as text "    10% : " as result %9.4f `cv10'
     di as text ""
     di as text "  " as result "`sig'"
+    di as text "{hline 70}"
+
+    * F-test for the joint significance of the Fourier terms (Becker, Enders
+    * & Lee, 2006). Non-standard distribution; tabulated critical values.
+    di as text "  Fourier F-test (H0: no smooth break, sin=cos=0)"
+    di as text "  F-statistic         = " as result %9.3f `F_stat'
+    di as text "  Critical Values: 1%=" as result %6.3f `Fcv1' as text "  5%=" as result %6.3f `Fcv5' as text "  10%=" as result %6.3f `Fcv10'
+    if `F_stat' >= `Fcv5' {
+        di as text "  Decision: " as result "Fourier terms significant - use the Fourier KPSS test"
+    }
+    else {
+        di as text "  Decision: " as result "Cannot reject linearity - a standard KPSS test is preferable"
+    }
     di as text "{hline 70}"
 
     if "`graph'" != "" {
@@ -104,6 +121,10 @@ program define fourierkpss, rclass
     return scalar cv1          = `cv1'
     return scalar cv5          = `cv5'
     return scalar cv10         = `cv10'
+    return scalar F_stat       = `F_stat'
+    return scalar Fcv1         = `Fcv1'
+    return scalar Fcv5         = `Fcv5'
+    return scalar Fcv10        = `Fcv10'
 end
 
 
@@ -111,27 +132,29 @@ mata:
 
 void _fkpss_main(string scalar yvar, string scalar tvar, string scalar touse, real scalar T, real scalar kmax, real scalar model, real scalar kfix)
 {
-    real colvector y, t_vec, sink, cosk
+    real colvector y, t_vec, sink, cosk, idx, b_r, e_r, Fcv
     real scalar k, f, KPSS_stat, min_ssr, ssr_k
-    real matrix z, crit
+    real matrix z, crit, z_r
     real colvector b, e, S
-    real scalar lrv
+    real scalar lrv, ssr_r, ssr_u, F_stat
 
     y     = st_data(., yvar, touse)
     t_vec = st_data(., tvar, touse)
+    // Fourier/trend use the observation ordinal 1..T (GAUSS seqa(1,1,t)).
+    idx   = (1::T)
 
     f = 1
     min_ssr = .
 
     for (k = 1; k <= kmax; k++) {
         if (kfix > 0 & k != kfix) continue
-        sink = sin(2*pi()*k*t_vec/T)
-        cosk = cos(2*pi()*k*t_vec/T)
+        sink = sin(2*pi()*k*idx/T)
+        cosk = cos(2*pi()*k*idx/T)
         if (model == 1) {
             z = J(T,1,1), sink, cosk
         }
         else {
-            z = J(T,1,1), t_vec, sink, cosk
+            z = J(T,1,1), idx, sink, cosk
         }
         b = invsym(cross(z,z)) * cross(z,y)
         e = y - z * b
@@ -142,13 +165,13 @@ void _fkpss_main(string scalar yvar, string scalar tvar, string scalar touse, re
         }
     }
 
-    sink = sin(2*pi()*f*t_vec/T)
-    cosk = cos(2*pi()*f*t_vec/T)
+    sink = sin(2*pi()*f*idx/T)
+    cosk = cos(2*pi()*f*idx/T)
     if (model == 1) {
         z = J(T,1,1), sink, cosk
     }
     else {
-        z = J(T,1,1), t_vec, sink, cosk
+        z = J(T,1,1), idx, sink, cosk
     }
     b = invsym(cross(z,z)) * cross(z,y)
     e = y - z * b
@@ -158,11 +181,55 @@ void _fkpss_main(string scalar yvar, string scalar tvar, string scalar touse, re
 
     crit = _fkpss_getCrit(T, model)
 
+    // F-test for the joint significance of the Fourier terms
+    // (Becker, Enders & Lee, 2006). Non-standard under the null of a
+    // stationary process with no smooth breaks; tabulated CVs below.
+    if (model == 1) {
+        z_r = J(T,1,1)
+    }
+    else {
+        z_r = J(T,1,1), idx
+    }
+    b_r    = invsym(cross(z_r,z_r)) * cross(z_r,y)
+    e_r    = y - z_r * b_r
+    ssr_r  = quadcross(e_r,e_r)
+    ssr_u  = quadcross(e,e)
+    F_stat = ((ssr_r - ssr_u) / 2) / (ssr_u / (T - cols(z)))
+    Fcv    = _fkpss_getFcrit(model, T)
+
     st_numscalar("r(KPSSk)", KPSS_stat)
     st_numscalar("r(k)",     f)
     st_numscalar("r(cv1)",   crit[f,1])
     st_numscalar("r(cv5)",   crit[f,2])
     st_numscalar("r(cv10)",  crit[f,3])
+    st_numscalar("r(F_stat)", F_stat)
+    st_numscalar("r(Fcv1)",   Fcv[1])
+    st_numscalar("r(Fcv5)",   Fcv[2])
+    st_numscalar("r(Fcv10)",  Fcv[3])
+}
+
+real colvector _fkpss_getFcrit(real scalar model, real scalar T)
+{
+    real colvector cv
+
+    // Becker, Enders & Lee (2006) F-test critical values, order (1% \ 5% \ 10%).
+    if (model == 1) {
+        if (T < 500) {
+            cv = (6.730 \ 4.929 \ 4.133)
+        }
+        else {
+            cv = (6.281 \ 4.651 \ 3.935)
+        }
+    }
+    else {
+        if (T < 500) {
+            cv = (6.873 \ 4.972 \ 4.162)
+        }
+        else {
+            cv = (6.315 \ 4.669 \ 3.928)
+        }
+    }
+    return(cv)
 }
 
 real colvector _fkpss_cumsum(real colvector x)

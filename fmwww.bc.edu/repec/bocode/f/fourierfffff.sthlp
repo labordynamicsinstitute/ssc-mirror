@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  11mar2026}{...}
+{* *! version 1.1  15jul2026}{...}
 {viewerjumpto "Syntax" "fourierfffff##syntax"}{...}
 {viewerjumpto "Description" "fourierfffff##description"}{...}
 {viewerjumpto "Options" "fourierfffff##options"}{...}
@@ -168,12 +168,20 @@ ADF test.
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
 {synopt:{cmd:r(ADFk)}}FFFFF-ADF test statistic{p_end}
-{synopt:{cmd:r(kfr)}}optimal fractional frequency{p_end}
+{synopt:{cmd:r(kfr_selected)}}optimal fractional frequency{p_end}
 {synopt:{cmd:r(p)}}optimal lag order{p_end}
-{synopt:{cmd:r(Fk)}}F-statistic for Fourier terms{p_end}
 {synopt:{cmd:r(cv1)}}1% critical value{p_end}
 {synopt:{cmd:r(cv5)}}5% critical value{p_end}
 {synopt:{cmd:r(cv10)}}10% critical value{p_end}
+{synopt:{cmd:r(F_stat)}}F-statistic for joint significance of Fourier terms{p_end}
+{synopt:{cmd:r(Fcv1)}}1% critical value of the Fourier F-test{p_end}
+{synopt:{cmd:r(Fcv5)}}5% critical value of the Fourier F-test{p_end}
+{synopt:{cmd:r(Fcv10)}}10% critical value of the Fourier F-test{p_end}
+
+{pstd}
+The Fourier F-test uses the {bf:simulated, non-standard} critical values of
+Omay (2015, Table 1/2), which are appropriate under the unit-root null; the
+standard F distribution is {it:not} valid for this pretest.
 
 
 {marker examples}{...}
@@ -219,5 +227,5 @@ Email: merwanroudane920@gmail.com{p_end}
 
 {psee}
 {space 2}Help:  {helpb fourierlm}, {helpb fourierdf}, {helpb fouriergls},
-{helpb fourierkpss}, {helpb fourierdfdf}, {helpb fourierall}
+{helpb fourierkpss}, {helpb fourierdfdf}
 {p_end}

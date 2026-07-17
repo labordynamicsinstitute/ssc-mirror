@@ -1,10 +1,10 @@
-*! fourierlm v2.0 - Enders & Lee (2012a) Fourier LM Unit Root Test
+*! fourierlm v2.1 - Enders & Lee (2012a) Fourier LM Unit Root Test
 *! Oxford Bulletin of Economics and Statistics, 74(4), 574-599
 *! Ported from GAUSS code by Saban Nazlioglu
 *! Compatible with Stata 14+
-*! Package: fourierur v1.0
+*! Package: fourierur v1.1
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: 11 March 2026
+*! Date: 15 July 2026
 
 program define fourierlm, rclass
     version 14
@@ -101,7 +101,7 @@ mata:
 
 void _flm_main(string scalar yvar, string scalar tvar, string scalar touse, real scalar T, real scalar pmax, real scalar kmax, real scalar ic, real scalar kfix)
 {
-    real colvector y, t_vec, dy0, sink, cosk, dsink, dcosk, ylm
+    real colvector y, t_vec, dy0, sink, cosk, dsink, dcosk, ylm, idx
     real colvector dy_ylm, ly_ylm, dc_ylm, dt_ylm
     real colvector ssrk, tauk, keep_p
     real colvector taup_v, aicp_v, sicp_v, tstatp_v, ssrp_v
@@ -121,18 +121,21 @@ void _flm_main(string scalar yvar, string scalar tvar, string scalar touse, real
     for (k=1; k<=kmax; k++) {
         if (kfix > 0 & k != kfix) continue
 
-        sink  = sin(2*pi()*k*t_vec/T)
-        cosk  = cos(2*pi()*k*t_vec/T)
+        // Fourier/trend use the observation ordinal 1..T (GAUSS seqa(1,1,t)),
+        // NOT the raw tsset time variable.
+        idx   = (1::T)
+        sink  = sin(2*pi()*k*idx/T)
+        cosk  = cos(2*pi()*k*idx/T)
         dsink = sink[2..T,.] - sink[1..T-1,.]
         dcosk = cosk[2..T,.] - cosk[1..T-1,.]
 
-        z_det = t_vec, sink, cosk
+        z_det = idx, sink, cosk
         ylm   = _flm_detrendData(y, z_det, dy0, dsink, dcosk)
 
         dy_ylm = ylm[2..T,.] - ylm[1..T-1,.]
         ly_ylm = ylm[1..T-1,.]
         dc_ylm = J(T-1, 1, 1)
-        dt_ylm = t_vec[2..T,.]
+        dt_ylm = idx[2..T,.]
 
         lmat = _flm_lagmatrix(dy_ylm, pmax)
 
@@ -143,18 +146,19 @@ void _flm_main(string scalar yvar, string scalar tvar, string scalar touse, real
         ssrp_v   = J(pmax+1, 1, .)
 
         for (p=0; p<=pmax; p++) {
-            dep  = dy_ylm[p+2..T-1,.]
-            y1   = ly_ylm[p+2..T-1,.]
-            sbt  = dc_ylm[p+2..T-1,.]
-            trnd = dt_ylm[p+2..T-1,.]
-            sinp = dsink[p+2..T-1,.]
-            cosp = dcosk[p+2..T-1,.]
+            if (p+1 > T-1) continue
+            dep  = dy_ylm[p+1..T-1,.]
+            y1   = ly_ylm[p+1..T-1,.]
+            sbt  = dc_ylm[p+1..T-1,.]
+            trnd = dt_ylm[p+1..T-1,.]
+            sinp = dsink[p+1..T-1,.]
+            cosp = dcosk[p+1..T-1,.]
 
             if (p == 0) {
                 z_reg = y1, sbt, sinp, cosp
             }
             else {
-                ldy   = lmat[p+2..T-1, 1..p]
+                ldy   = lmat[p+1..T-1, 1..p]
                 z_reg = y1, sbt, sinp, cosp, ldy
             }
 

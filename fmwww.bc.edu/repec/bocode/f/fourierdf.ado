@@ -1,10 +1,10 @@
-*! fourierdf v2.0 - Enders & Lee (2012b) Fourier ADF Unit Root Test
+*! fourierdf v2.1 - Enders & Lee (2012b) Fourier ADF Unit Root Test
 *! Economics Letters, 117 (2012), 196-199
 *! Ported from GAUSS code by Saban Nazlioglu
 *! Compatible with Stata 14+
-*! Package: fourierur v1.0
+*! Package: fourierur v1.1
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: 11 March 2026
+*! Date: 15 July 2026
 
 program define fourierdf, rclass
     version 14
@@ -88,6 +88,25 @@ program define fourierdf, rclass
     }
     di as text "{hline 70}"
 
+    * F-test for the joint significance of the Fourier terms (Enders & Lee,
+    * 2012b, Table 1a/1b "Critical values of F(k-hat)"). Non-standard under
+    * the unit-root null. Evaluated at the selected frequency k and lag p.
+    mata: _fdf_Ftest("`y'", "`tvar'", "`touse'", `T', `f', `opt_lag', `model')
+    local F_stat = r(Fstat)
+    local Fcv1   = r(Fcv1)
+    local Fcv5   = r(Fcv5)
+    local Fcv10  = r(Fcv10)
+    di as text "  Fourier F-test (H0: no nonlinear trend, c3=c4=0)"
+    di as text "  F-statistic         = " as result %9.3f `F_stat'
+    di as text "  Critical Values: 1%=" as result %6.3f `Fcv1' as text "  5%=" as result %6.3f `Fcv5' as text "  10%=" as result %6.3f `Fcv10'
+    if `F_stat' >= `Fcv5' {
+        di as text "  Decision: " as result "Fourier terms significant - use the Fourier ADF test"
+    }
+    else {
+        di as text "  Decision: " as result "Cannot reject linearity - a standard ADF test is preferable"
+    }
+    di as text "{hline 70}"
+
     if "`graph'" != "" {
         quietly {
             tempvar sink_g cosk_g fitted_g
@@ -113,6 +132,10 @@ program define fourierdf, rclass
     return scalar tau_stat     = `ADF_stat'
     return scalar k_selected   = `f'
     return scalar lags_selected= `opt_lag'
+    return scalar F_stat       = `F_stat'
+    return scalar Fcv1         = `Fcv1'
+    return scalar Fcv5         = `Fcv5'
+    return scalar Fcv10        = `Fcv10'
 end
 
 
@@ -180,7 +203,9 @@ void _fdf_main(string scalar yvar, string scalar tvar, string scalar touse, real
     dy = y[2..T,.] - y[1..T-1,.]
     ly = y[1..T-1,.]
     dc = J(T, 1, 1)
-    dt = t_vec
+    // Fourier/trend use the observation ordinal 1..T (GAUSS seqa(1,1,t)),
+    // NOT the raw tsset time variable, so a dated/gapped tsset is handled.
+    dt = (1::T)
     lmat = _fdf_lagmatrix(dy, pmax)
     ssrk   = J(kmax, 1, .)
     tauk   = J(kmax, 1, .)
@@ -188,8 +213,8 @@ void _fdf_main(string scalar yvar, string scalar tvar, string scalar touse, real
 
     for (k=1; k<=kmax; k++) {
         if (kfix > 0 & k != kfix) continue
-        sink = sin(2*pi()*k*t_vec/T)
-        cosk = cos(2*pi()*k*t_vec/T)
+        sink = sin(2*pi()*k*dt/T)
+        cosk = cos(2*pi()*k*dt/T)
         taup_v   = J(pmax+1, 1, .)
         aicp_v   = J(pmax+1, 1, .)
         sicp_v   = J(pmax+1, 1, .)
@@ -197,13 +222,13 @@ void _fdf_main(string scalar yvar, string scalar tvar, string scalar touse, real
         ssrp_v   = J(pmax+1, 1, .)
 
         for (p=0; p<=pmax; p++) {
-            if (p+2 > T-1) continue
-            dep = dy[p+2..T-1,.]
+            if (p+1 > T-1) continue
+            dep = dy[p+1..T-1,.]
             if (p == 0) {
                 ldy = J(0, 0, .)
             }
             else {
-                ldy = lmat[p+2..T-1, 1..p]
+                ldy = lmat[p+1..T-1, 1..p]
             }
             z_reg = _fdf_get_model_x(ly, p, model, ldy, dc, dt, sink, cosk, T)
             if (rows(z_reg) == 0) continue
@@ -261,12 +286,12 @@ real matrix _fdf_get_model_x(real colvector ly, real scalar p, real scalar model
     real colvector yt_t, c_t, sink_t, cosk_t, trend_t
     real matrix x
 
-    if (p+2 > T-1) return(J(0,0,.))
-    yt_t   = ly[p+2..T-1,.]
-    c_t    = dc[p+2..T-1,.]
-    sink_t = sink[p+2..T-1,.]
-    cosk_t = cosk[p+2..T-1,.]
-    trend_t= dt[p+2..T-1,.]
+    if (p+1 > T-1) return(J(0,0,.))
+    yt_t   = ly[p+1..T-1,.]
+    c_t    = dc[p+1..T-1,.]
+    sink_t = sink[p+1..T-1,.]
+    cosk_t = cosk[p+1..T-1,.]
+    trend_t= dt[p+1..T-1,.]
     x = yt_t, c_t, sink_t, cosk_t
     if (model == 2) {
         x = x, trend_t
@@ -410,22 +435,22 @@ void _fdf_Ftest(string scalar yvar, string scalar tvar, string scalar touse, rea
     dy = y[2..T,.] - y[1..T-1,.]
     ly = y[1..T-1,.]
     dc = J(T, 1, 1)
-    dt = t_vec
-    sink = sin(2*pi()*k*t_vec/T)
-    cosk = cos(2*pi()*k*t_vec/T)
+    dt = (1::T)
+    sink = sin(2*pi()*k*dt/T)
+    cosk = cos(2*pi()*k*dt/T)
     lmat = _fdf_lagmatrix(dy, p)
-    dep  = dy[p+2..T-1,.]
-    y1   = ly[p+2..T-1,.]
-    sbt  = dc[p+2..T-1,.]
-    trnd = dt[p+2..T-1,.]
+    dep  = dy[p+1..T-1,.]
+    y1   = ly[p+1..T-1,.]
+    sbt  = dc[p+1..T-1,.]
+    trnd = dt[p+1..T-1,.]
     if (p == 0) {
         ldy = J(0,0,.)
     }
     else {
-        ldy = lmat[p+2..T-1, 1..p]
+        ldy = lmat[p+1..T-1, 1..p]
     }
-    sinp = sink[p+2..T-1,.]
-    cosp = cosk[p+2..T-1,.]
+    sinp = sink[p+1..T-1,.]
+    cosp = cosk[p+1..T-1,.]
     if (p == 0) {
         if (model == 1) {
             z1 = y1, sbt

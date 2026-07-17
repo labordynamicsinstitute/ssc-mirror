@@ -1,10 +1,10 @@
-*! fourierdfdf v1.0  Cai & Omay (2021) Double Frequency Fourier DF Unit Root Test
+*! fourierdfdf v1.1  Cai & Omay (2021) Double Frequency Fourier DF Unit Root Test
 *! Computational Economics, 59: 445-470
 *! With Sieve Bootstrap extension (Gerolimetto & Magrini, RIEDS 2026)
 *! Compatible with Stata 14+
-*! Package: fourierur v1.0
+*! Package: fourierur v1.1
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: 11 March 2026
+*! Date: 15 July 2026
 
 program define fourierdfdf, rclass
     version 14
@@ -77,7 +77,7 @@ program define fourierdfdf, rclass
     * Bootstrap critical values if requested
     if "`bootstrap'" != "" {
         di as text "  Computing Sieve Bootstrap critical values (B=`breps') ..."
-        mata: _dfdf_sieve_bootstrap("`y'", "`tvar'", "`touse'", `T', `pmax', `ic', `model', `ks', `kc', `breps')
+        mata: _dfdf_sieve_bootstrap("`y'", "`tvar'", "`touse'", `T', `pmax', `ic', `model', `kmax', `dk', `breps')
         local bcv1  = r(bcv1)
         local bcv5  = r(bcv5)
         local bcv10 = r(bcv10)
@@ -211,7 +211,7 @@ mata:
 
 void _dfdf_main(string scalar yvar, string scalar tvar, string scalar touse, real scalar T, real scalar pmax, real scalar ic, real scalar model, real scalar kmax, real scalar dk)
 {
-    real colvector y, t_vec, dy, ly, sink, cosk
+    real colvector y, t_vec, dy, ly, sink, cosk, idx
     real scalar ks, kc, ks_opt, kc_opt, p_opt, tau_opt, ssr_min
     real scalar nks, nkc, iks, ikc
     real matrix lmat, crit_tau, crit_F
@@ -226,6 +226,8 @@ void _dfdf_main(string scalar yvar, string scalar tvar, string scalar touse, rea
     t_vec = st_data(., tvar, touse)
     dy    = y[2..T,.] - y[1..T-1,.]
     ly    = y[1..T-1,.]
+    // Fourier/trend use the observation ordinal 1..T (GAUSS seqa(1,1,t)).
+    idx   = (1::T)
     lmat  = _dfdf_lagmatrix(dy, pmax)
 
     nks = round((kmax - dk) / dk) + 1
@@ -240,16 +242,16 @@ void _dfdf_main(string scalar yvar, string scalar tvar, string scalar touse, rea
         ks = iks * dk
         for (ikc = 1; ikc <= nkc; ikc++) {
             kc = ikc * dk
-            sink = sin(2*pi()*ks*t_vec/T)
-            cosk = cos(2*pi()*kc*t_vec/T)
+            sink = sin(2*pi()*ks*idx/T)
+            cosk = cos(2*pi()*kc*idx/T)
             taup_v   = J(pmax+1, 1, .)
             aicp_v   = J(pmax+1, 1, .)
             sicp_v   = J(pmax+1, 1, .)
             tstatp_v = J(pmax+1, 1, .)
             ssrp_v   = J(pmax+1, 1, .)
             for (p = 0; p <= pmax; p++) {
-                if (p+2 > T-1) continue
-                dep = dy[p+2..T-1,.]
+                if (p+1 > T-1) continue
+                dep = dy[p+1..T-1,.]
                 z_reg_v = _dfdf_build_x(ly, p, model, lmat, sink, cosk, T)
                 if (rows(z_reg_v) == 0) continue
                 nobs  = rows(z_reg_v)
@@ -307,12 +309,12 @@ real matrix _dfdf_build_x(real colvector ly, real scalar p, real scalar model, r
     real colvector yt_t, c_t, sink_t, cosk_t, trend_t
     real matrix x, ldy
 
-    if (p+2 > T-1) return(J(0,0,.))
-    yt_t   = ly[p+2..T-1,.]
-    c_t    = J(T-1-p-1, 1, 1)
-    sink_t = sink[p+2..T-1,.]
-    cosk_t = cosk[p+2..T-1,.]
-    trend_t= (p+2..T-1)'
+    if (p+1 > T-1) return(J(0,0,.))
+    yt_t   = ly[p+1..T-1,.]
+    c_t    = J(rows(yt_t), 1, 1)
+    sink_t = sink[p+1..T-1,.]
+    cosk_t = cosk[p+1..T-1,.]
+    trend_t= (p+1..T-1)'
     if (model == 1) {
         x = yt_t, c_t, sink_t, cosk_t
     }
@@ -320,7 +322,7 @@ real matrix _dfdf_build_x(real colvector ly, real scalar p, real scalar model, r
         x = yt_t, c_t, trend_t, sink_t, cosk_t
     }
     if (p > 0) {
-        ldy = lmat[p+2..T-1, 1..p]
+        ldy = lmat[p+1..T-1, 1..p]
         x = x, ldy
     }
     return(x)
@@ -333,15 +335,15 @@ real scalar _dfdf_Ftest(real colvector y, real colvector t_vec, real scalar T, r
     real matrix z1, z2, ldy
     real scalar ssr1, ssr2, k1, k2
 
-    if (p+2 > T-1) return(.)
-    sinp = sin(2*pi()*ks*t_vec/T)
-    cosp = cos(2*pi()*kc*t_vec/T)
-    dep  = dy[p+2..T-1,.]
-    y1   = ly[p+2..T-1,.]
+    if (p+1 > T-1) return(.)
+    sinp = sin(2*pi()*ks*(1::T)/T)
+    cosp = cos(2*pi()*kc*(1::T)/T)
+    dep  = dy[p+1..T-1,.]
+    y1   = ly[p+1..T-1,.]
     sbt  = J(rows(dep), 1, 1)
-    trnd = (p+2..T-1)'
-    sinp = sinp[p+2..T-1,.]
-    cosp = cosp[p+2..T-1,.]
+    trnd = (p+1..T-1)'
+    sinp = sinp[p+1..T-1,.]
+    cosp = cosp[p+1..T-1,.]
 
     if (p == 0) {
         if (model == 1) {
@@ -352,7 +354,7 @@ real scalar _dfdf_Ftest(real colvector y, real colvector t_vec, real scalar T, r
         }
     }
     else {
-        ldy = lmat[p+2..T-1, 1..p]
+        ldy = lmat[p+1..T-1, 1..p]
         if (model == 1) {
             z1 = y1, sbt, ldy
         }
@@ -504,85 +506,107 @@ real colvector _dfdf_getCritF(real scalar T, real scalar model, real scalar kmax
 }
 
 
-void _dfdf_sieve_bootstrap(string scalar yvar, string scalar tvar, string scalar touse, real scalar T, real scalar pmax, real scalar ic, real scalar model, real scalar ks_fix, real scalar kc_fix, real scalar B)
+void _dfdf_sieve_bootstrap(string scalar yvar, string scalar tvar, string scalar touse, real scalar T, real scalar pmax, real scalar ic, real scalar model, real scalar kmax, real scalar dk, real scalar B)
 {
-    real colvector y, t_vec, dy, resid, ar_coef, x_star, y_star
-    real colvector boot_tau, sink, cosk, dep, b, e, se_b
-    real matrix X_ar, XtX_inv, lmat, z_reg_v
-    real scalar p_ar, i, j, n_dy, ssr, nobs, ncols, tau_b
-    real scalar cv1, cv5, cv10
+    real colvector y, dy0, resid, ar_coef, x_star, y_star, dyb, lyb, boot_tau
+    real colvector dep0, sinb, cosb, dep, b, e, se_b
     real colvector taup_v, aicp_v, sicp_v, tstatp_v, ssrp_v
-    real scalar p, p_b, tau_p, LL, aic_p, sic_p, tst_p
+    real matrix X_ar, lmatb, z_reg_v, XtX_inv
+    real scalar p_ar, i, j, n_dy, nks, nkc, iks, ikc, ks, kc
+    real scalar ssr_min, tau_star, ssr_kc, tau_kc, p_kc, val
+    real scalar p, nobs, ncols, ssr, tau_p, LL, aic_p, sic_p, tst_p
+    real scalar cv1, cv5, cv10
 
-    y     = st_data(., yvar, touse)
-    t_vec = st_data(., tvar, touse)
-    dy    = y[2..T,.] - y[1..T-1,.]
-    n_dy  = rows(dy)
+    y    = st_data(., yvar, touse)
+    dy0  = y[2..T,.] - y[1..T-1,.]
+    n_dy = rows(dy0)
 
-    p_ar = min((floor(sqrt(n_dy)), 12))
+    // Prefiltered sieve (Poskitt et al. 2015): AR order chosen by AIC
+    // (Gerolimetto & Magrini step 2), fitted WITH an intercept (step 4).
+    p_ar = _dfdf_sieve_arorder(dy0, n_dy)
     if (p_ar < 1) p_ar = 1
-    X_ar = J(n_dy - p_ar, p_ar, 0)
+    X_ar = J(n_dy - p_ar, p_ar+1, 1)
     for (j = 1; j <= p_ar; j++) {
-        X_ar[.,j] = dy[p_ar+1-j..n_dy-j,.]
+        X_ar[., j+1] = dy0[p_ar+1-j..n_dy-j, .]
     }
-    dep = dy[p_ar+1..n_dy,.]
+    dep0    = dy0[p_ar+1..n_dy, .]
     XtX_inv = invsym(cross(X_ar, X_ar))
-    ar_coef = XtX_inv * cross(X_ar, dep)
-    resid = dep - X_ar * ar_coef
-    resid = resid :- mean(resid)
+    ar_coef = XtX_inv * cross(X_ar, dep0)
+    resid   = dep0 - X_ar * ar_coef
+    resid   = resid :- mean(resid)
 
+    nks = round((kmax - dk) / dk) + 1
+    nkc = nks
     boot_tau = J(B, 1, .)
-    sink = sin(2*pi()*ks_fix*t_vec/T)
-    cosk = cos(2*pi()*kc_fix*t_vec/T)
 
     for (i = 1; i <= B; i++) {
+        // Regenerate the stationary series from the estimated AR(p) + intercept
         x_star = J(n_dy, 1, 0)
         for (j = p_ar+1; j <= n_dy; j++) {
-            x_star[j] = resid[ceil(rows(resid) * uniform(1,1))]
+            val = ar_coef[1] + resid[ceil(rows(resid) * uniform(1,1))]
             for (p = 1; p <= p_ar; p++) {
-                x_star[j] = x_star[j] + ar_coef[p] * x_star[j-p]
+                val = val + ar_coef[p+1] * x_star[j-p]
             }
+            x_star[j] = val
         }
+        // Undifference to a unit-root series under H0
         y_star = J(T, 1, 0)
-        y_star[1] = 0
         for (j = 2; j <= T; j++) {
             y_star[j] = y_star[j-1] + x_star[j-1]
         }
-        dy = y_star[2..T,.] - y_star[1..T-1,.]
-        lmat = _dfdf_lagmatrix(dy, pmax)
 
-        taup_v   = J(pmax+1, 1, .)
-        aicp_v   = J(pmax+1, 1, .)
-        sicp_v   = J(pmax+1, 1, .)
-        tstatp_v = J(pmax+1, 1, .)
-        ssrp_v   = J(pmax+1, 1, .)
-
-        for (p = 0; p <= pmax; p++) {
-            if (p+2 > T-1) continue
-            dep = dy[p+2..T-1,.]
-            z_reg_v = _dfdf_build_x(y_star[1..T-1,.], p, model, lmat, sink, cosk, T)
-            if (rows(z_reg_v) == 0) continue
-            nobs  = rows(z_reg_v)
-            ncols = cols(z_reg_v)
-            if (nobs <= ncols) continue
-            XtX_inv = invsym(cross(z_reg_v, z_reg_v))
-            b       = XtX_inv * cross(z_reg_v, dep)
-            e       = dep - z_reg_v * b
-            ssr     = quadcross(e, e)
-            se_b    = sqrt(diagonal(XtX_inv) * ssr / (nobs - ncols))
-            tau_p   = b[1] / se_b[1]
-            LL      = -nobs/2 * (1 + log(2*pi()) + log(ssr/nobs))
-            aic_p   = (2*ncols - 2*LL) / nobs
-            sic_p   = (ncols*log(nobs) - 2*LL) / nobs
-            tst_p   = abs(b[ncols] / se_b[ncols])
-            taup_v[p+1]   = tau_p
-            aicp_v[p+1]   = aic_p
-            sicp_v[p+1]   = sic_p
-            tstatp_v[p+1] = tst_p
-            ssrp_v[p+1]   = ssr
+        // Replicate the WHOLE observed statistic: re-run the (ks,kc) grid
+        // search by min-SSR on each bootstrap sample, not a fixed pair.
+        dyb   = y_star[2..T, .] - y_star[1..T-1, .]
+        lyb   = y_star[1..T-1, .]
+        lmatb = _dfdf_lagmatrix(dyb, pmax)
+        ssr_min  = .
+        tau_star = .
+        for (iks = 1; iks <= nks; iks++) {
+            ks = iks * dk
+            for (ikc = 1; ikc <= nkc; ikc++) {
+                kc = ikc * dk
+                sinb = sin(2*pi()*ks*(1::T)/T)
+                cosb = cos(2*pi()*kc*(1::T)/T)
+                taup_v   = J(pmax+1, 1, .)
+                aicp_v   = J(pmax+1, 1, .)
+                sicp_v   = J(pmax+1, 1, .)
+                tstatp_v = J(pmax+1, 1, .)
+                ssrp_v   = J(pmax+1, 1, .)
+                for (p = 0; p <= pmax; p++) {
+                    if (p+1 > T-1) continue
+                    dep = dyb[p+1..T-1, .]
+                    z_reg_v = _dfdf_build_x(lyb, p, model, lmatb, sinb, cosb, T)
+                    if (rows(z_reg_v) == 0) continue
+                    nobs  = rows(z_reg_v)
+                    ncols = cols(z_reg_v)
+                    if (nobs <= ncols) continue
+                    XtX_inv = invsym(cross(z_reg_v, z_reg_v))
+                    b       = XtX_inv * cross(z_reg_v, dep)
+                    e       = dep - z_reg_v * b
+                    ssr     = quadcross(e, e)
+                    se_b    = sqrt(diagonal(XtX_inv) * ssr / (nobs - ncols))
+                    tau_p   = b[1] / se_b[1]
+                    LL      = -nobs/2 * (1 + log(2*pi()) + log(ssr/nobs))
+                    aic_p   = (2*ncols - 2*LL) / nobs
+                    sic_p   = (ncols*log(nobs) - 2*LL) / nobs
+                    tst_p   = abs(b[ncols] / se_b[ncols])
+                    taup_v[p+1]   = tau_p
+                    aicp_v[p+1]   = aic_p
+                    sicp_v[p+1]   = sic_p
+                    tstatp_v[p+1] = tst_p
+                    ssrp_v[p+1]   = ssr
+                }
+                p_kc   = _dfdf_get_lag(ic, pmax, aicp_v, sicp_v, tstatp_v)
+                ssr_kc = ssrp_v[p_kc+1]
+                tau_kc = taup_v[p_kc+1]
+                if (ssr_kc < . & (ssr_min == . | ssr_kc < ssr_min)) {
+                    ssr_min  = ssr_kc
+                    tau_star = tau_kc
+                }
+            }
         }
-        p_b = _dfdf_get_lag(ic, pmax, aicp_v, sicp_v, tstatp_v)
-        boot_tau[i] = taup_v[p_b+1]
+        boot_tau[i] = tau_star
     }
 
     _sort(boot_tau, 1)
@@ -593,6 +617,37 @@ void _dfdf_sieve_bootstrap(string scalar yvar, string scalar tvar, string scalar
     st_numscalar("r(bcv1)",  cv1)
     st_numscalar("r(bcv5)",  cv5)
     st_numscalar("r(bcv10)", cv10)
+}
+
+real scalar _dfdf_sieve_arorder(real colvector x, real scalar n)
+{
+    // Sieve AR order by AIC on a common sample (max candidate order).
+    real scalar kmax_ar, k, j, best_k, best_aic, nobs, ssr, aic
+    real matrix X
+    real colvector dep, b, e
+
+    kmax_ar = floor(sqrt(n))
+    if (kmax_ar > 12) kmax_ar = 12
+    if (kmax_ar < 1)  kmax_ar = 1
+    best_k   = 1
+    best_aic = .
+    for (k = 1; k <= kmax_ar; k++) {
+        nobs = n - kmax_ar
+        X = J(nobs, k+1, 1)
+        for (j = 1; j <= k; j++) {
+            X[., j+1] = x[kmax_ar+1-j..n-j, .]
+        }
+        dep = x[kmax_ar+1..n, .]
+        b   = invsym(cross(X, X)) * cross(X, dep)
+        e   = dep - X * b
+        ssr = quadcross(e, e)
+        aic = nobs * log(ssr/nobs) + 2 * (k+1)
+        if (best_aic == . | aic < best_aic) {
+            best_aic = aic
+            best_k   = k
+        }
+    }
+    return(best_k)
 }
 
 

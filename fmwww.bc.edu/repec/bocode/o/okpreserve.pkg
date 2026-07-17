@@ -1,0 +1,27 @@
+d 'OKPRESERVE': module to implement nested preserve and restore for data workflows
+d
+d      okpreserve and okrestore provide a solution for managing
+d complex, multi-level data transformations in Stata. These
+d commands    enable true nested preservation of data states, which
+d is essential when your analysis involves multiple stages of data 
+d   aggregation, filtering, and transformation.    Unlike Stata's
+d built-in preserve/restore, which do not support nesting,
+d okpreserve/okrestore maintain a stack of saved data	 states.
+d This allows you to work with different levels of data granularity
+d within a single do-file. 
+d
+d KW: data management
+d KW: preserve
+d KW: restore
+d
+d Requires: Stata version 19
+d
+d Distribution-Date: 20260716
+d
+d Author: Vikrant V. Kamble,   University of Delaware
+d Support: email vvkamble@@udel.edu
+d
+f okpreserve.ado
+f okrestore.ado
+f okpreserve.sthlp
+f ../t/test_okpreserve.do

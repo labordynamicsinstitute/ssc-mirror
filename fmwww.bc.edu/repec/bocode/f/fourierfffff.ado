@@ -1,10 +1,10 @@
-*! fourierfffff v2.1  Omay (2015) Fractional Frequency Flexible Fourier Form DF Test
+*! fourierfffff v2.2  Omay (2015) Fractional Frequency Flexible Fourier Form DF Test
 *! Economics Letters 134 (2015): 123-126
 *! Extension of GAUSS Fourier_ADF to fractional frequencies
 *! Compatible with Stata 14+
-*! Package: fourierur v1.0
+*! Package: fourierur v1.1
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: 11 March 2026
+*! Date: 15 July 2026
 
 program define fourierfffff, rclass
     version 14
@@ -59,7 +59,9 @@ program define fourierfffff, rclass
     local cv5      = r(cv5)
     local cv10     = r(cv10)
     local F_stat   = r(Fstat)
+    local Fcv1     = r(Fcv1)
     local Fcv5     = r(Fcv5)
+    local Fcv10    = r(Fcv10)
 
     if `ADF_stat' <= `cv1' {
         local sig "*** reject at 1%"
@@ -76,7 +78,9 @@ program define fourierfffff, rclass
 
     if "`ftest'" == "" {
         if `F_stat' < . {
-            di as text "  F-test (H0: no Fourier) = " as result %8.3f `F_stat' as text "   CV(5%)=" as result %6.3f `Fcv5'
+            di as text "  Fourier F-test (H0: no nonlinear trend, c3=c4=0)"
+            di as text "  F-statistic = " as result %8.3f `F_stat'
+            di as text "  Critical Values (Omay 2015): 1%=" as result %6.3f `Fcv1' as text "  5%=" as result %6.3f `Fcv5' as text "  10%=" as result %6.3f `Fcv10'
             if `F_stat' >= `Fcv5' {
                 di as text "  F decision: " as result "Fourier terms significant"
             }
@@ -126,6 +130,9 @@ program define fourierfffff, rclass
     return scalar p             = `opt_lag'
     return scalar lags_selected = `opt_lag'
     return scalar F_stat        = `F_stat'
+    return scalar Fcv1          = `Fcv1'
+    return scalar Fcv5          = `Fcv5'
+    return scalar Fcv10         = `Fcv10'
     return scalar cv1           = `cv1'
     return scalar cv5           = `cv5'
     return scalar cv10          = `cv10'
@@ -143,7 +150,7 @@ void _fff_main(string scalar yvar, string scalar tvar, string scalar touse, real
     real colvector kf_grid, ssr_grid, tau_grid, lag_grid
     real colvector taup_v, aicp_v, sicp_v, tstatp_v, ssrp_v
     real scalar p, p_opt, nobs, ncols, ssr, tau_p, LL, aic_p, sic_p, tst_p
-    real colvector dep, b, e, se_b
+    real colvector dep, b, e, se_b, Fcrit
     real scalar F_stat, Fcv5, Fcv1, Fcv10
 
     y     = st_data(., yvar, touse)
@@ -151,7 +158,8 @@ void _fff_main(string scalar yvar, string scalar tvar, string scalar touse, real
     dy    = y[2..T,.] - y[1..T-1,.]
     ly    = y[1..T-1,.]
     dc    = J(T, 1, 1)
-    dt    = t_vec
+    // Fourier/trend use the observation ordinal 1..T (GAUSS seqa(1,1,t)).
+    dt    = (1::T)
     lmat  = _fff_lagmatrix(dy, pmax)
     nsteps = round((kfmax - kfmin)/kfstep) + 1
     kf_grid  = J(nsteps, 1, .)
@@ -163,21 +171,21 @@ void _fff_main(string scalar yvar, string scalar tvar, string scalar touse, real
         kf = kfmin + (i-1)*kfstep
         kf_grid[i] = kf
         if (kfr_fix > 0 & abs(kf - kfr_fix) > kfstep/2) continue
-        sink = sin(2*pi()*kf*t_vec/T)
-        cosk = cos(2*pi()*kf*t_vec/T)
+        sink = sin(2*pi()*kf*dt/T)
+        cosk = cos(2*pi()*kf*dt/T)
         taup_v   = J(pmax+1, 1, .)
         aicp_v   = J(pmax+1, 1, .)
         sicp_v   = J(pmax+1, 1, .)
         tstatp_v = J(pmax+1, 1, .)
         ssrp_v   = J(pmax+1, 1, .)
         for (p = 0; p <= pmax; p++) {
-            if (p+2 > T-1) continue
-            dep = dy[p+2..T-1,.]
+            if (p+1 > T-1) continue
+            dep = dy[p+1..T-1,.]
             if (p == 0) {
                 ldy = J(0,0,.)
             }
             else {
-                ldy = lmat[p+2..T-1, 1..p]
+                ldy = lmat[p+1..T-1, 1..p]
             }
             z_reg = _fff_get_model_x(ly, p, model, ldy, dc, dt, sink, cosk, T)
             if (rows(z_reg) == 0) continue
@@ -231,15 +239,21 @@ void _fff_main(string scalar yvar, string scalar tvar, string scalar touse, real
     ADF_stat  = tau_grid[best_i]
     f_opt_lag = lag_grid[best_i]
     F_stat = _fff_Ftest(y, t_vec, T, kfhat, f_opt_lag, model, dc, dt, dy, ly, lmat, pmax)
-    Fcv5   = invFtail(2, T-6, 0.05)
-    Fcv1   = invFtail(2, T-6, 0.01)
-    Fcv10  = invFtail(2, T-6, 0.10)
+    // F-test for the fractional-frequency Fourier terms is NON-STANDARD under
+    // the unit-root null: use Omay (2015, Table 1/2 "Critical values of F"),
+    // NOT the central-F distribution.
+    Fcrit  = _fff_getFcrit(model, T)
+    Fcv10  = Fcrit[1]
+    Fcv5   = Fcrit[2]
+    Fcv1   = Fcrit[3]
     crit_v = _fff_getCrit(T, model, kfhat)
     st_numscalar("r(ADFk)",  ADF_stat)
     st_numscalar("r(kfr)",   kfhat)
     st_numscalar("r(p)",     f_opt_lag)
     st_numscalar("r(Fstat)", F_stat)
+    st_numscalar("r(Fcv1)",  Fcv1)
     st_numscalar("r(Fcv5)",  Fcv5)
+    st_numscalar("r(Fcv10)", Fcv10)
     st_numscalar("r(cv1)",   crit_v[1])
     st_numscalar("r(cv5)",   crit_v[2])
     st_numscalar("r(cv10)",  crit_v[3])
@@ -250,12 +264,12 @@ real matrix _fff_get_model_x(real colvector ly, real scalar p, real scalar model
     real colvector yt_t, c_t, sink_t, cosk_t, trend_t
     real matrix x
 
-    if (p+2 > T-1) return(J(0,0,.))
-    yt_t   = ly[p+2..T-1,.]
-    c_t    = dc[p+2..T-1,.]
-    sink_t = sink[p+2..T-1,.]
-    cosk_t = cosk[p+2..T-1,.]
-    trend_t= dt[p+2..T-1,.]
+    if (p+1 > T-1) return(J(0,0,.))
+    yt_t   = ly[p+1..T-1,.]
+    c_t    = dc[p+1..T-1,.]
+    sink_t = sink[p+1..T-1,.]
+    cosk_t = cosk[p+1..T-1,.]
+    trend_t= dt[p+1..T-1,.]
     x = yt_t, c_t, sink_t, cosk_t
     if (model == 2) {
         x = x, trend_t
@@ -273,20 +287,20 @@ real scalar _fff_Ftest(real colvector y, real colvector t_vec, real scalar T, re
     real matrix z1, z2, ldy
     real scalar ssr1, ssr2, k1, k2
 
-    if (p+2 > T-1) return(.)
-    sink = sin(2*pi()*kf*t_vec/T)
-    cosk = cos(2*pi()*kf*t_vec/T)
-    dep  = dy[p+2..T-1,.]
-    y1   = ly[p+2..T-1,.]
-    sbt  = dc[p+2..T-1,.]
-    trnd = dt[p+2..T-1,.]
-    sinp = sink[p+2..T-1,.]
-    cosp = cosk[p+2..T-1,.]
+    if (p+1 > T-1) return(.)
+    sink = sin(2*pi()*kf*dt/T)
+    cosk = cos(2*pi()*kf*dt/T)
+    dep  = dy[p+1..T-1,.]
+    y1   = ly[p+1..T-1,.]
+    sbt  = dc[p+1..T-1,.]
+    trnd = dt[p+1..T-1,.]
+    sinp = sink[p+1..T-1,.]
+    cosp = cosk[p+1..T-1,.]
     if (p == 0) {
         ldy = J(0,0,.)
     }
     else {
-        ldy = lmat[p+2..T-1, 1..p]
+        ldy = lmat[p+1..T-1, 1..p]
     }
     if (p == 0) {
         if (model == 1) {
@@ -314,6 +328,43 @@ real scalar _fff_Ftest(real colvector y, real colvector t_vec, real scalar T, re
     k1 = cols(z1)
     k2 = cols(z2)
     return(((ssr1-ssr2)/(k2-k1)) / (ssr2/(rows(dep)-k2)))
+}
+
+real colvector _fff_getFcrit(real scalar model, real scalar T)
+{
+    real colvector cv
+
+    // Omay (2015) Table 1 (constant) / Table 2 (trend),
+    // "Critical values of F(k-hat)=MaxF". Order returned: (10% \ 5% \ 1%).
+    if (model == 1) {
+        if (T <= 100) {
+            cv = (8.78 \ 10.29 \ 13.48)
+        }
+        else if (T <= 200) {
+            cv = (8.50 \ 9.85 \ 12.76)
+        }
+        else if (T <= 500) {
+            cv = (8.33 \ 9.64 \ 12.37)
+        }
+        else {
+            cv = (8.31 \ 9.60 \ 12.31)
+        }
+    }
+    else {
+        if (T <= 100) {
+            cv = (9.38 \ 11.07 \ 14.62)
+        }
+        else if (T <= 200) {
+            cv = (9.11 \ 10.62 \ 13.79)
+        }
+        else if (T <= 500) {
+            cv = (8.91 \ 10.40 \ 13.42)
+        }
+        else {
+            cv = (8.88 \ 10.32 \ 13.26)
+        }
+    }
+    return(cv)
 }
 
 real colvector _fff_getCrit(real scalar T, real scalar model, real scalar kf)

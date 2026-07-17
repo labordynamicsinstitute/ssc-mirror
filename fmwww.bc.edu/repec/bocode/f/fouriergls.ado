@@ -1,10 +1,10 @@
-*! fouriergls v2.1  Rodrigues & Taylor (2012) Fourier GLS Unit Root Test
+*! fouriergls v2.2  Rodrigues & Taylor (2012) Fourier GLS Unit Root Test
 *! Oxford Bulletin of Economics and Statistics, 74(5): 736-759
 *! Port of GAUSS code by Saban Nazlioglu
 *! Compatible with Stata 14+
-*! Package: fourierur v1.0
+*! Package: fourierur v1.1
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: 11 March 2026
+*! Date: 15 July 2026
 
 program define fouriergls, rclass
     version 14
@@ -140,13 +140,16 @@ program define fourierGLSFTest, rclass
     di as text "  H0: no Fourier terms (alpha_k=beta_k=0)"
     di as text "  k=" as result `k' as text "  p=" as result `p' as text "  model=" as result `model'
     di as text "  F-statistic = " as result %9.3f `F_stat'
-    di as text "  CV: 1%=" as result %6.3f `Fcv1' as text "  5%=" as result %6.3f `Fcv5' as text "  10%=" as result %6.3f `Fcv10'
+    di as text "  CV (approx., central F): 1%=" as result %6.3f `Fcv1' as text "  5%=" as result %6.3f `Fcv5' as text "  10%=" as result %6.3f `Fcv10'
     if `F_stat' >= `Fcv5' {
         di as text "  Decision: reject linearity (Fourier terms significant)"
     }
     else {
         di as text "  Decision: cannot reject linearity"
     }
+    di as text "  Note: Rodrigues & Taylor (2012) do not tabulate a Fourier"
+    di as text "        pretest; these central-F values are approximate. For a"
+    di as text "        tabulated pretest use fourierdf (Enders & Lee, 2012b)."
 
     return scalar Fstat = `F_stat'
     return scalar Fcv1  = `Fcv1'
@@ -159,7 +162,7 @@ mata:
 
 void _fgls_main(string scalar yvar, string scalar tvar, string scalar touse, real scalar T, real scalar pmax, real scalar kmax, real scalar ic, real scalar model, real scalar kfix)
 {
-    real colvector y, t_vec, sink, cosk, ygls, dy_gls, ly_gls
+    real colvector y, t_vec, sink, cosk, ygls, dy_gls, ly_gls, idx
     real colvector ssrk, tauk, keep_p
     real scalar k, f, GLS_stat, opt_lag, cbar_f, ms, kk, cbar
     real matrix crit, z, lmat, z_reg, ldy, XtX_inv
@@ -169,6 +172,8 @@ void _fgls_main(string scalar yvar, string scalar tvar, string scalar touse, rea
 
     y     = st_data(., yvar, touse)
     t_vec = st_data(., tvar, touse)
+    // Fourier/trend use the observation ordinal 1..T (GAUSS seqa(1,1,t)).
+    idx   = (1::T)
     ssrk   = J(kmax, 1, .)
     tauk   = J(kmax, 1, .)
     keep_p = J(kmax, 1, .)
@@ -176,13 +181,13 @@ void _fgls_main(string scalar yvar, string scalar tvar, string scalar touse, rea
     for (k = 1; k <= kmax; k++) {
         if (kfix > 0 & k != kfix) continue
         cbar = _fgls_getCbar(model, k)
-        sink = sin(2*pi()*k*t_vec/T)
-        cosk = cos(2*pi()*k*t_vec/T)
+        sink = sin(2*pi()*k*idx/T)
+        cosk = cos(2*pi()*k*idx/T)
         if (model == 1) {
             z = J(T,1,1), sink, cosk
         }
         else {
-            z = J(T,1,1), t_vec, sink, cosk
+            z = J(T,1,1), idx, sink, cosk
         }
         ygls = _fgls_glsDetrend(y, z, cbar, T)
         dy_gls = ygls[2..T,.] - ygls[1..T-1,.]
@@ -194,14 +199,14 @@ void _fgls_main(string scalar yvar, string scalar tvar, string scalar touse, rea
         tstatp_v = J(pmax+1, 1, .)
         ssrp_v   = J(pmax+1, 1, .)
         for (p = 0; p <= pmax; p++) {
-            if (p+2 > T-1) continue
-            dep = dy_gls[p+2..T-1,.]
-            y1  = ly_gls[p+2..T-1,.]
+            if (p+1 > T-1) continue
+            dep = dy_gls[p+1..T-1,.]
+            y1  = ly_gls[p+1..T-1,.]
             if (p == 0) {
                 z_reg = y1
             }
             else {
-                ldy = lmat[p+2..T-1, 1..p]
+                ldy = lmat[p+1..T-1, 1..p]
                 z_reg = y1, ldy
             }
             nobs  = rows(z_reg)
@@ -309,21 +314,22 @@ real matrix _fgls_getCrit(real scalar T, real scalar model)
 
 void _fgls_Ftest(string scalar yvar, string scalar tvar, string scalar touse, real scalar T, real scalar k, real scalar p, real scalar model)
 {
-    real colvector y, t_vec, dy, ly, ygls1, ygls2, sink, cosk, dy2, ly2
+    real colvector y, t_vec, dy, ly, ygls1, ygls2, sink, cosk, dy2, ly2, idx
     real colvector dep1, dep2, y1, y2, b1, e1, b2, e2
     real matrix z1, z2, z_r, z_u, lmat, ldy1, ldy2v
     real scalar cbar, ssr1, ssr2, k1, k2, F_stat, Fcv1, Fcv5, Fcv10
 
     y     = st_data(., yvar, touse)
     t_vec = st_data(., tvar, touse)
+    idx   = (1::T)
     cbar  = _fgls_getCbar(model, k)
-    sink  = sin(2*pi()*k*t_vec/T)
-    cosk  = cos(2*pi()*k*t_vec/T)
+    sink  = sin(2*pi()*k*idx/T)
+    cosk  = cos(2*pi()*k*idx/T)
     if (model == 1) {
         z_r = J(T,1,1)
     }
     else {
-        z_r = J(T,1,1), t_vec
+        z_r = J(T,1,1), idx
     }
     z_u = z_r, sink, cosk
     ygls1 = _fgls_glsDetrend(y, z_r, cbar, T)
@@ -333,18 +339,18 @@ void _fgls_Ftest(string scalar yvar, string scalar tvar, string scalar touse, re
     lmat = _fgls_lagmatrix(dy, p)
     dy2 = ygls2[2..T,.] - ygls2[1..T-1,.]
     ly2 = ygls2[1..T-1,.]
-    dep1 = dy[p+2..T-1,.]
-    dep2 = dy2[p+2..T-1,.]
-    y1   = ly[p+2..T-1,.]
-    y2   = ly2[p+2..T-1,.]
+    dep1 = dy[p+1..T-1,.]
+    dep2 = dy2[p+1..T-1,.]
+    y1   = ly[p+1..T-1,.]
+    y2   = ly2[p+1..T-1,.]
     if (p == 0) {
         z1 = y1
         z2 = y2
     }
     else {
-        ldy1  = lmat[p+2..T-1, 1..p]
+        ldy1  = lmat[p+1..T-1, 1..p]
         lmat  = _fgls_lagmatrix(dy2, p)
-        ldy2v = lmat[p+2..T-1, 1..p]
+        ldy2v = lmat[p+1..T-1, 1..p]
         z1 = y1, ldy1
         z2 = y2, ldy2v
     }
@@ -357,6 +363,13 @@ void _fgls_Ftest(string scalar yvar, string scalar tvar, string scalar touse, re
     k1 = cols(z1)
     k2 = cols(z2)
     F_stat = ((ssr1 - ssr2) / (k2 - k1)) / (ssr2 / (rows(dep1) - k2))
+    // NOTE: Rodrigues & Taylor (2012) do NOT tabulate a Fourier pretest; they
+    // regard testing for the presence of the Fourier terms as beyond scope
+    // (their Remark 1) and point to Enders-Lee / Harvey-Leybourne-Taylor. The
+    // Nazlioglu GAUSS proc left its tabulated CV commented out and used an
+    // ad-hoc central F. Under the unit-root + local-GLS null the F distribution
+    // is NON-STANDARD, so the central-F values below are only a rough guide.
+    // For a properly tabulated Fourier pretest use fourierdf (Enders & Lee).
     Fcv1  = invFtail(2, rows(dep1)-k2, 0.01)
     Fcv5  = invFtail(2, rows(dep1)-k2, 0.05)
     Fcv10 = invFtail(2, rows(dep1)-k2, 0.10)

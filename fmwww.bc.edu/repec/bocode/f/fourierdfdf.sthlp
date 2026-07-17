@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  11mar2026}{...}
+{* *! version 1.1  15jul2026}{...}
 {viewerjumpto "Syntax" "fourierdfdf##syntax"}{...}
 {viewerjumpto "Description" "fourierdfdf##description"}{...}
 {viewerjumpto "Options" "fourierdfdf##options"}{...}
@@ -164,11 +164,13 @@ Frequency Dickey-Fuller (SB-DFDF) test. The algorithm:
 
 {p 8 8 2}
 1. First-difference the series: x_t = Delta(y_t){break}
-2. Fit AR(p) to x_t (p selected by AIC){break}
+2. Fit AR(p) to x_t (p selected by AIC), with an intercept{break}
 3. Resample residuals with replacement to get epsilon_t*{break}
-4. Generate bootstrap stationary series x_t* using AR coefficients and epsilon_t*{break}
+4. Generate bootstrap stationary series x_t* using the AR coefficients and epsilon_t*{break}
 5. Reconstruct bootstrap series y_t* by cumulative sum of x_t*{break}
-6. Compute tau_Dfr on y_t*{break}
+6. Compute tau_Dfr on y_t*, {bf:re-running the full (k_s, k_c) grid search} on
+each replication so the bootstrap replicates the observed statistic's frequency
+selection (holding the frequency pair fixed would over-reject){break}
 7. Repeat B times to obtain the empirical distribution{break}
 8. Bootstrap critical values = quantiles of the empirical distribution
 
@@ -325,5 +327,5 @@ Email: merwanroudane920@gmail.com{p_end}
 
 {psee}
 {space 2}Help:  {helpb fourierlm}, {helpb fourierdf}, {helpb fouriergls},
-{helpb fourierkpss}, {helpb fourierfffff}, {helpb fourierall}
+{helpb fourierkpss}, {helpb fourierfffff}
 {p_end}

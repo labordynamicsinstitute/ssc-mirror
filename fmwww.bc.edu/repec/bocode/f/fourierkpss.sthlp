@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  11mar2026}{...}
+{* *! version 1.1  15jul2026}{...}
 {viewerjumpto "Syntax" "fourierkpss##syntax"}{...}
 {viewerjumpto "Description" "fourierkpss##description"}{...}
 {viewerjumpto "Options" "fourierkpss##options"}{...}
@@ -99,8 +99,16 @@ regression of y_t on the Fourier deterministic terms. Under H0, the statistic
 converges to a functional of Brownian motion.
 
 {pstd}
-{bf:Note on lag truncation:} This implementation uses the Newey-West bandwidth
-for long-run variance estimation.
+{bf:Note on the long-run variance:} This implementation uses the i.i.d. estimator
+(residual variance), matching the default of the original Becker, Enders and Lee
+(2006) code on which the tabulated critical values are based. Kernel-based
+(Bartlett/quadratic-spectral) long-run variance options are not implemented.
+
+{pstd}
+{bf:F-test for the Fourier terms:} An F-test of H0: the sine and cosine
+coefficients are jointly zero is reported automatically, using the non-standard
+critical values of Becker, Enders and Lee (2006). If it fails to reject, the
+Fourier terms are not needed and a standard KPSS test is preferable.
 
 
 {marker interpretation}{...}
@@ -146,6 +154,10 @@ correlation or large structural breaks.
 {synopt:{cmd:r(cv1)}}1% critical value{p_end}
 {synopt:{cmd:r(cv5)}}5% critical value{p_end}
 {synopt:{cmd:r(cv10)}}10% critical value{p_end}
+{synopt:{cmd:r(F_stat)}}F-statistic for joint significance of Fourier terms{p_end}
+{synopt:{cmd:r(Fcv1)}}1% critical value of the Fourier F-test{p_end}
+{synopt:{cmd:r(Fcv5)}}5% critical value of the Fourier F-test{p_end}
+{synopt:{cmd:r(Fcv10)}}10% critical value of the Fourier F-test{p_end}
 
 
 {marker examples}{...}
@@ -186,5 +198,5 @@ Email: merwanroudane920@gmail.com{p_end}
 
 {psee}
 {space 2}Help:  {helpb fourierlm}, {helpb fourierdf}, {helpb fouriergls},
-{helpb fourierfffff}, {helpb fourierdfdf}, {helpb fourierall}
+{helpb fourierfffff}, {helpb fourierdfdf}
 {p_end}
