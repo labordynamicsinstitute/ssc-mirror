@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.2  19jul2024}{...}
+{* *! version 1.1.0  17jul2026}{...}
 {* *! Sebastian Kripfganz, www.kripfganz.de}{...}
 {vieweralsosee "[R] regress" "help regress"}{...}
 {vieweralsosee "[R] regress postestimation time series" "help regress postestimationts"}{...}
@@ -95,7 +95,7 @@ as well as the community-contributed commands {helpb xtdpdbc} and {helpb xtdpdgm
 
 {pstd}
 {cmd:xtdpdserial} implements serial correlation tests for linear panel data models that fall into the framework of the portmanteau test developed by Jochmans (2020).
-Special cases are the Arellano and Bond (1991) and Yamagata (2008) tests, and further variants proposed by Kripfganz, Demetrescu, and Hosseinkouchack (2024) designed to improve the power of the test.
+Special cases are the Arellano and Bond (1991) and Yamagata (2008) tests, and further variants proposed by Kripfganz, Hosseinkouchack, and Demetrescu (2026) designed to improve the power of the test.
 
 {pstd}
 By default, these are postestimation tests for serial correlation in the idiosyncratic error component e_it from a linear error components model with combined error term u_i + e_it, where u_i is the group-specific error component.
@@ -118,7 +118,7 @@ as long as the estimator is consistent under the null hypothesis of serially unc
 {opt difference} requests to compute the test with covariance restrictions entirely based on first differences, as proposed by Arellano and Bond (1991) and Yamagata (2008).
 
 {phang}
-{opt sdifference} requests to compute the tests with restrictions on the covariances between first differences and seasonal differences, as proposed by Kripfganz, Demetrescu, and Hosseinkouchack (2024).
+{opt sdifference} requests to compute the tests with restrictions on the covariances between first differences and seasonal differences, as proposed by Kripfganz, Hosseinkouchack, and Demetrescu (2026).
 
 {phang}
 {opt order(#)} requests to exclude covariance restrictions that are unaffected by serial correlation of up to order {it:#}. By default, arbitrary higher-order serial correlation is allowed under the alternative hypothesis.
@@ -131,7 +131,7 @@ Alternative lower and upper bounds can be specified with {it:#_1} and {it:#_2}, 
 
 {phang}
 {opt collapse} or {opt fullcollapse} request to compute a collapsed version of the test, which involves sums of covariance restrictions, to limit the degrees of freedom,
-as proposed by Kripfganz, Demetrescu, and Hosseinkouchack (2024). With {opt fullcollapse}, the degrees of freedom are reduced to 1.
+as proposed by Kripfganz, Hosseinkouchack, and Demetrescu (2026). With {opt fullcollapse}, the degrees of freedom are reduced to 1.
 
 {phang}
 {opt noforward} requests to ignore forward-looking covariance restrictions. This option is implied by option {opt difference} but otherwise seldom used.
@@ -178,7 +178,7 @@ However, because the number of covariance restrictions increases quadratically w
 {title:Dimensionality reduction}
 
 {pstd}
-To avoid power problems, several strategies can be employed to limit the degrees of freedom of the test, as proposed by Kripfganz, Demetrescu, and Hosseinkouchack (2024).
+To avoid power problems, several strategies can be employed to limit the degrees of freedom of the test, as proposed by Kripfganz, Hosseinkouchack, and Demetrescu (2026).
 Collapsing, implemented with option {opt collapse}, linearly combines the covariance restrictions into fewer ones by averaging them across time periods.
 Full collapsing with option {opt fullcollapse} goes one step further by also averaging across lag orders {it:#}, creating a test with only 1 degree of freedom.
 
@@ -221,7 +221,7 @@ Cov ({cmd:FS}({it:#}+1){cmd:.}{it:e}, {cmd:D.}{it:e}) = 0 for {it:#} = 2, 3, ...
 
 {pstd}
 are also unaffected by high variances of {it:u} because {cmd:S.}{it:ue} = {cmd:S.}{it:e}. They retain power even under a random-walk alternative, and they have been shown to often be more powerful than the portmanteau test,
-partly due to their more conservative use of degrees of freedom. These tests have been proposed by Kripfganz, Demetrescu, and Hosseinkouchack (2024). They can be implemented with Syntax 1 option {opt sdifference}.
+partly due to their more conservative use of degrees of freedom. These tests have been proposed by Kripfganz, Hosseinkouchack, and Demetrescu (2026). They can be implemented with Syntax 1 option {opt sdifference}.
 Option {opt collapse} is generally recommended as well. These tests also require T >= 4.
 
 
@@ -245,7 +245,7 @@ Option {opt collapse} is generally recommended as well. These tests also require
 {pstd}Yamagata test for no autocorrelation in first differences of arbitrary order{p_end}
 {phang2}. {stata xtdpdserial, d c}{p_end}
 
-{pstd}Kripfganz-Demetrescu-Hosseinkouchack tests for no autocorrelation{p_end}
+{pstd}Kripfganz-Hosseinkouchack-Demetrescu tests for no autocorrelation{p_end}
 {phang2}. {stata xtdpdserial, sd c o(2)}{p_end}
 {phang2}. {stata xtdpdserial, sd c}{p_end}
 
@@ -308,9 +308,9 @@ Testing for correlation in error-component models.
 {it:Journal of Applied Econometrics} 35: 860-878.
 
 {phang}
-Kripfganz, S., M. Demetrescu, and M. Hosseinkouchack. 2024.
+Kripfganz, S., M. Hosseinkouchack, and M. Demetrescu. 2026.
 Serial correlation testing in error component models with moderately small T.
-{it:Manuscript}.
+{it:Department of Economics Discussion Papers} 26/03, University of Exeter.
 
 {phang}
 Yamagata, T. 2008.

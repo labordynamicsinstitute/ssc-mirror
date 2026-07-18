@@ -1,0 +1,37 @@
+d 'XTCOMBREAK': module to estimate the common break date with a confidence interval (Bai 2010) and test whether the break really is common across units (Jiang and Kurozumi 2026)
+d
+d	xtcombreak implements two complementary papers on common
+d breaks in panel data.    xtcombreak estimate implements Bai
+d (2010). In a single time series only the break fraction can be
+d estimated consistently; the	 break date cannot. Bai's result is
+d that a panel fixes this: as N grows, P(khat = k0) -> 1, so the
+d exact date is recovered. This    holds even when a regime
+d contains a {bf:single observation}, which makes it useful for
+d pinning down the onset of a new regime    quickly. The command
+d estimates the date by least squares, quasi-maximum likelihood or
+d feasible GLS, reports Bai's parameter-free	confidence
+d interval, and runs his series-by-series Chow test to say which
+d units actually broke.    xtcombreak test implements Jiang and
+d Kurozumi (2026). Every common-break method, including Bai's,
+d assumes the break is at the	 same date for all units. This is a
+d real restriction and can fail. The command tests that assumption
+d with a self-normalised CUSUM	  statistic built from OLS
+d residuals. 
+d
+d KW: panel data
+d KW: structural breaks
+d KW: common breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260717
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtcombreak.ado
+f xtcombreak.sthlp
+f xtcombreak_methods.sthlp
+f xtcombreak_estimate.sthlp
+f xtcombreak_test.sthlp
+f xtcombreak_example.do

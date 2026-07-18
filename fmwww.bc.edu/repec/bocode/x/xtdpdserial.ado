@@ -1,4 +1,4 @@
-*! version 1.0.2  19jul2024
+*! version 1.1.0  17jul2026
 *! Sebastian Kripfganz, www.kripfganz.de
 
 *==================================================*
@@ -9,7 +9,7 @@
 program define xtdpdserial, rclass prop(xt)
 	version 13.0
 	_xt, treq
-	syntax [varname(default=none num ts)] [if] [in] [, Statistics(string) noResiduals *]
+	syntax [varname(default=none num ts)] [if] [in] [, Statistics(string) noResiduals Many *]
 	
 	if "`varlist'" == "" {
 		if "`residuals'" != "" {
@@ -48,7 +48,8 @@ program define xtdpdserial, rclass prop(xt)
 		exit 198
 	}
 	if `"`statistics'"' == "" {
-		xtdpdserial_stat `varlist' `if' `in', `residuals' `options'
+		xtdpdserial_stat `varlist' `if' `in', `residuals' `many' `options'
+		ret add
 	}
 	else {
 		xtdpdserial_parse_stats , `statistics'
@@ -59,7 +60,7 @@ program define xtdpdserial, rclass prop(xt)
 		}
 		tempname S
 		forv j = 1 / `J' {
-			cap noi xtdpdserial_stat `varlist' `if' `in', `residuals' `options`j'' `options'
+			cap noi xtdpdserial_stat `varlist' `if' `in', `residuals' `many' `options`j'' `options'
 			if "`r(chi2)'" != "" {
 				ret loc chi2_`j'	= r(chi2)
 				ret loc df_`j'		= r(df)
@@ -71,7 +72,7 @@ end
 
 program define xtdpdserial_stat, rclass prop(xt)
 	version 13.0
-	syntax [varname(default=none num ts)] [if] [in] [, noResiduals *]
+	syntax [varname(default=none num ts)] [if] [in] [, noResiduals Many *]
 	marksample touse
 
 	*--------------------------------------------------*
@@ -186,6 +187,8 @@ program define xtdpdserial_stat, rclass prop(xt)
 			di as txt "note: test not valid for regression residuals"
 		}
 	}
+	sum `e', mean
+	qui replace `e' = `e' - r(mean)
 	tempvar dtouse
 	qui gen byte `dtouse' = `touse'
 	markout `dtouse' D.`e'
@@ -277,12 +280,17 @@ program define xtdpdserial_stat, rclass prop(xt)
 	mata: st_numscalar("r(df)", xtdpdserial_result_rank(`serial'))
 	loc chi2			= r(chi2)
 	loc df				= r(df)
-	loc p				= chi2tail(`df', `chi2')
 
 	*--------------------------------------------------*
 	*** display of test results ***
 	di _n as txt "`label'" _c
-	di _col(56) "chi2(" as res `df' as txt ")" _col(68) "=" _col(70) as res %9.4f `chi2'
+	if "`many'" == "" {
+		di _col(56) "chi2(" as res `df' as txt ")" _col(68) "=" _col(70) as res %9.4f `chi2'
+	}
+	else {
+		loc z				= (`chi1' - `df') / sqrt(2 * `df')
+		di _col(56) "z" _col(68) "=" _col(70) as res %9.4f `z'
+	}
 	di as txt "H0: no autocorrelation " _c
 	if `difference' < 3 {
 		if `order' == . {
@@ -292,13 +300,25 @@ program define xtdpdserial_stat, rclass prop(xt)
 			di "up to order `order'" _c
 		}
 	}
-	di _col(56) as txt "Prob > chi2" _col(68) "=" _col(73) as res %6.4f `p'
+	if "`many'" == "" {
+		loc p				= chi2tail(`df', `chi2')
+		di _col(56) as txt "Prob > chi2" _col(68) "=" _col(73) as res %6.4f `p'
+	}
+	else {
+		loc p				= 2 * (1 - normal(abs(`z')))
+		di _col(56) as txt "Prob > |z|" _col(68) "=" _col(73) as res %6.4f `p'
+	}
 
 	*--------------------------------------------------*
 	*** returned test results ***
 	ret sca p			= `p'
 	ret sca df			= `df'
-	ret sca chi2		= `chi2'
+	if "`many'" == "" {
+		ret sca chi2		= `chi2'
+	}
+	else {
+		ret sca z			= `z'
+	}
 end
 
 *==================================================*
@@ -514,6 +534,8 @@ end
 
 *==================================================*
 *** version history ***
+* version 1.1.0  17jul2026  residuals re-centered; undocumented option many added
+* version 1.0.3  30oct2024  bug fixed with missing saved results
 * version 1.0.2  19jul2024  bug fixed with fully collapsed tests in unbalanced panels
 * version 1.0.1  12jul2024  support added for xtreg, re
 * version 1.0.0  11jul2024  available online at www.kripfganz.de

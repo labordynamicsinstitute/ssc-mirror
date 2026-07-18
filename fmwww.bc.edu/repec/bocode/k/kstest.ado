@@ -1,12 +1,14 @@
-*! 2.0.0 Ariel Linden 08Jan2026		// add weights, graph, and dots options
-*! 1.1.0 Ariel Linden 08Jan2026		// fixed by() to allow a string variable and use value labels
-*! 1.0.0 Ariel Linden 22Dec2025
+*! 1.0.0 Ariel Linden 12Jul2026
 
-program define cvmtest, rclass
+program define kstest, rclass
 	version 11.0
 
-	syntax varname [pweight fweight aweight iweight] [if] [in], BY(varname) ///
-		[Reps(integer 1000) SEED(string) Power(real 2) GRaph DOts]
+	syntax varname [pweight aweight iweight] [if] [in], ///
+		BY(varname) ///
+		[Reps(integer 1000) ///
+		SEED(string) ///
+		DOts ///
+		GRaph]
 
 	tempvar touse
 	marksample touse, novarlist
@@ -94,30 +96,34 @@ program define cvmtest, rclass
 		_dots 0
 	}
 
-	// run CVM test
-	mata: cvm_by_test("`depvar'", "`by'", "`w'", "`touse'", `reps', `power', `showdots')
+	// run KS test
+	mata: ks_by_test("`depvar'", "`by'", "`w'", "`touse'", `reps', `showdots')
+
+	// save stats
+	local Dstat = r(stat)
+	local Pstat = r(p)
 
 	// display results
 	if `hasweight' {
-		di as txt _n "Weighted two-sample Cramer-von Mises test for equality of distribution functions"
-		di "{hline 80}"
+		di as txt _n "Weighted two-sample Kolmogorov-Smirnov test for equality of distribution functions"
+		di "{hline 82}"
 	}
 	else {
-		di as txt _n "Two-sample Cramer-von Mises test for equality of distribution functions"
-		di "{hline 71}"
+		di as txt _n "Two-sample Kolmogorov-Smirnov test for equality of distribution functions"
+		di "{hline 73}"
 	}
 	di as txt "Outcome:  `depvar'"
 	di as txt "Groups:   `origby' (`group1' vs `group2')"
 	di "{hline 55}"
-	di as txt "Test Statistic:  " as res %6.4f r(stat)
-	di as txt "{it:P}-value:         " as res %6.4f r(p) as txt " (based on " as res `reps' as txt " permutations)"
+	di as txt "Test Statistic:  " as res %6.4f `Dstat'
+	di as txt "{it:P}-value:         " as res %6.4f `Pstat' as txt " (based on " as res `reps' as txt " permutations)"
 	di "{hline 55}"
-	
+
+
 	// save return values
-	return scalar stat = r(stat)
-	return scalar p = r(p)
+	return scalar stat = `Dstat'
+	return scalar p = `Pstat'
 	return scalar reps = `reps'
-	return scalar power = `power'
 	return local group1 = "`group1'"
 	return local group2 = "`group2'"
 	return local by = "`origby'"
@@ -125,8 +131,8 @@ program define cvmtest, rclass
 	// graph
 	if "`graph'" != "" {
 		tempname M
-		mata: st_matrix("`M'", cvm_ecdf_cvm(st_data(.,"`depvar'","`touse'"), ///
-			st_data(.,"`by'","`touse'"), st_data(.,"`w'","`touse'"), `power'))
+		mata: st_matrix("`M'", ks_ecdf(st_data(.,"`depvar'","`touse'"), ///
+			st_data(.,"`by'","`touse'"), st_data(.,"`w'","`touse'")))
 
 		preserve
 		quietly drop _all
@@ -134,7 +140,20 @@ program define cvmtest, rclass
 		quietly rename c1 x
 		quietly rename c2 F1
 		quietly rename c3 F0
-		quietly rename c4 cumCVM
+
+		quietly gen double gap = abs(F1 - F0)
+		quietly summarize gap, meanonly
+		quietly gen byte atmax = (gap == r(max)) if !missing(gap)
+		quietly summarize x if atmax, meanonly
+		local Dx    = r(mean)
+		quietly summarize F1 if atmax, meanonly
+		local DF1   = r(mean)
+		quietly summarize F0 if atmax, meanonly
+		local DF0   = r(mean)
+		local Dmidy = (`DF1' + `DF0') / 2
+
+		quietly summarize x, meanonly
+		local Dtextx = `Dx' + 0.035 * (r(max) - r(min))
 
 		local cdftitle "Empirical CDFs"
 		local cdfytitle "Cumulative proportion"
@@ -143,19 +162,16 @@ program define cvmtest, rclass
 			local cdfytitle "Weighted cumulative proportion"
 		}
 
-		quietly twoway (line F1 x, sort connect(stairstep) lwidth(medthick))  ///
-						(line F0 x, sort connect(stairstep) lpattern(dash)), ///
-						legend(order(1 "`group2'" 2 "`group1'"))             ///
-						ytitle("`cdfytitle'") xtitle("`depvar'")             ///
-						title("`cdftitle'") name(cvmtest_ecdf, replace)
-
-		quietly twoway (line cumCVM x, sort lcolor(red) lwidth(medthick)),  ///
-						ytitle("Cumulative CVM contribution") xtitle("`depvar'") ///
-						title("Where the CVM statistic accumulates")        ///
-						name(cvmtest_contrib, replace)
-
-		graph combine cvmtest_ecdf cvmtest_contrib, rows(2)               ///
-			title("Cramer-von Mises diagnostic: `depvar'")
+		quietly twoway (line F1 x, sort connect(stairstep) lwidth(medthick))          ///
+						(line F0 x, sort connect(stairstep) lpattern(dash))           ///
+						(pcspike F0 x F1 x if atmax, lcolor(black) lwidth(medium)      ///
+							mcolor(black) msymbol(O) msize(small)),                   ///
+						legend(order(1 "`group2'" 2 "`group1'"))                      ///
+						ytitle("`cdfytitle'")                                        ///
+						xtitle("`depvar'")                                           ///
+						title("`cdftitle'")                                          ///
+						text(`Dmidy' `Dtextx' "D = `: display %5.3f `Dstat''", place(e) size(small)) ///
+						name(kstest_ecdf, replace)
 		restore
 	}
 
@@ -168,7 +184,7 @@ end
 version 11.0
 mata:
 
-void cvm_by_test(depvar, byvar, wvar, touse, reps, power, showdots)
+void ks_by_test(depvar, byvar, wvar, touse, reps, showdots)
 {
 	// grab data from Stata
 	st_view(y = ., ., depvar, touse)
@@ -200,10 +216,10 @@ void cvm_by_test(depvar, byvar, wvar, touse, reps, power, showdots)
 	w2 = select(w, g :== g2)
 
 	// observed statistic
-	obs = cvm_compute(v1, v2, w1, w2, power)
+	obs = ks_compute(v1, v2, w1, w2)
 	st_numscalar("r(stat)", obs)
 
-	// permutation test Ns
+	// permutation Ns
 	N = rows(y)
 	n1 = rows(v1)
 	n2 = rows(v2)
@@ -217,9 +233,9 @@ void cvm_by_test(depvar, byvar, wvar, touse, reps, power, showdots)
 		wshuf = w[idx]
 
 		// calculate the stat for permutation
-		stat = cvm_compute(shuf[1::n1], shuf[(n1+1)::N], wshuf[1::n1], wshuf[(n1+1)::N], power)
+		stat = ks_compute(shuf[1::n1], shuf[(n1+1)::N], wshuf[1::n1], wshuf[(n1+1)::N])
 		if (stat >= obs) count++
-		if (showdots==1) cvm_dots_tick(r, reps)
+		if (showdots==1) ks_dots_tick(r, reps)
 	}
 
 	p = (count + 1) / (reps + 1)
@@ -227,7 +243,7 @@ void cvm_by_test(depvar, byvar, wvar, touse, reps, power, showdots)
 }
 
 // dots
-void cvm_dots_tick(real scalar b, real scalar B)
+void ks_dots_tick(real scalar b, real scalar B)
 {
 	real scalar pad
 	string scalar fmt
@@ -244,7 +260,7 @@ void cvm_dots_tick(real scalar b, real scalar B)
 	displayflush()
 }
 
-real scalar cvm_compute(a, b, wa, wb, pwr)
+real scalar ks_compute(a, b, wa, wb)
 {
 	n1 = rows(a); n2 = rows(b); n = n1 + n2
 	d  = a \ b
@@ -255,25 +271,26 @@ real scalar cvm_compute(a, b, wa, wb, pwr)
 	idx = order(d,1)
 	d = d[idx]; e = e[idx]; f = f[idx]
 
-	out = 0; Ec = 0; Fc = 0
+	Dmax = 0; Ec = 0; Fc = 0
 
 	for (i=1; i<=n-1; i++) {
 		Ec = Ec + e[i]; Fc = Fc + f[i]
-		h = abs(Fc - Ec)
 
 		if (d[i] != d[i+1]) {
-			out = out + h^pwr
+			h = abs(Fc - Ec)
+			if (h > Dmax) Dmax = h
 		}
 	}
 
-	return(out)
+	return(Dmax)
 }
 
-real matrix cvm_ecdf_cvm(real vector x, real vector g, real vector w, real scalar pwr)
+// companion to ks_compute() for the graph option
+real matrix ks_ecdf(real vector x, real vector g, real vector w)
 {
-	real vector idx, xs, gs, ws, e, f, w0, w1
-	real vector ux_v, Ec_v, Fc_v, contrib
-	real scalar n, n0w, n1w, i, Ec, Fc, h, m
+	real vector idx, xs, gs, ws, e, f
+	real vector ux_v, Ec_v, Fc_v
+	real scalar n, n0w, n1w, i, Ec, Fc, m
 	real scalar g0val, g1val
 	real vector groups
 
@@ -287,18 +304,15 @@ real matrix cvm_ecdf_cvm(real vector x, real vector g, real vector w, real scala
 	gs  = g[idx]
 	ws  = w[idx]
 
-	w0 = select(w, g:==g0val)
-	w1 = select(w, g:==g1val)
-	n0w = sum(w0)
-	n1w = sum(w1)
+	n0w = sum(select(w, g:==g0val))
+	n1w = sum(select(w, g:==g1val))
 
 	e = (gs:==g0val) :* (ws :/ n0w)
 	f = (gs:==g1val) :* (ws :/ n1w)
 
-	ux_v    = J(n-1, 1, .)
-	Ec_v    = J(n-1, 1, .)
-	Fc_v    = J(n-1, 1, .)
-	contrib = J(n-1, 1, .)
+	ux_v = J(n-1, 1, .)
+	Ec_v = J(n-1, 1, .)
+	Fc_v = J(n-1, 1, .)
 
 	Ec = 0
 	Fc = 0
@@ -306,22 +320,19 @@ real matrix cvm_ecdf_cvm(real vector x, real vector g, real vector w, real scala
 	for (i=1; i<=n-1; i++) {
 		Ec = Ec + e[i]
 		Fc = Fc + f[i]
-		h  = abs(Fc - Ec)
 		if (xs[i] != xs[i+1]) {
 			m = m + 1
 			ux_v[m] = xs[i]
 			Fc_v[m] = Fc
 			Ec_v[m] = Ec
-			contrib[m] = (m > 1 ? contrib[m-1] : 0) + h^pwr
 		}
 	}
 
-	ux_v    = ux_v[1::m]
-	Fc_v    = Fc_v[1::m]
-	Ec_v    = Ec_v[1::m]
-	contrib = contrib[1::m]
+	ux_v = ux_v[1::m]
+	Fc_v = Fc_v[1::m]
+	Ec_v = Ec_v[1::m]
 
-	return((ux_v, Fc_v, Ec_v, contrib))
+	return((ux_v, Fc_v, Ec_v))
 }
 
 end

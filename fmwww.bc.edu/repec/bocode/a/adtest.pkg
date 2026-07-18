@@ -1,22 +1,28 @@
 d 'ADTEST': module to perform a two-sample Anderson-Darling equality-of-distributions test
 d
-d  adtest performs a two-sample Anderson-Darling (AD) permutation
-d test to assess whether two samples come from the same
-d distribution. The AD statistic weights discrepancies between
-d empirical cumulative distribution functions (ECDFs) by the
-d inverse of their variance, making it more sensitive to
-d differences in the distribution tails compared to other EDF-based
-d tests. The permutation test provides an exact p-value by
-d comparing the observed statistic to its distribution under random
-d reassignment of group labels. 
+d  adtest performs a (optionally weighted) two-sample
+d Anderson-Darling (AD) permutation test to assess whether two
+d samples come from the same distribution. The AD statistic
+d standardizes the squared discrepancy between the two empirical
+d cumulative distribution functions (ECDFs) by its variance under
+d the null, which is smallest at the center of the pooled
+d distribution and largest near its tails, making it most sensitive
+d to a discrepancy concentrated in the tails, and better suited
+d than Cramer-von Mises (cvmtest) to that case, though less
+d sensitive than Kolmogorov-Smirnov (kstest) to a single large,
+d localized discrepancy in the center of the distribution. The
+d permutation test provides a valid p-value by comparing the
+d observed statistic to its distribution under random reassignment
+d of group labels. 
 d
 d KW: equality of distributions
 d KW: two-sample
 d KW: comparisons
+d KW: weighting
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20260109
+d Distribution-Date: 20260717
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org

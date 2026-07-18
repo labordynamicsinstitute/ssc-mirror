@@ -44,6 +44,7 @@ p krls module to perform Kernel–Based Regularized Least Squares
 p ksi module to compute Krugman specialization index
 p ksmirnov2var module to perform the Kolmogorov-Smirnov test of the equality of distributions for two variables. 
 p kssur module to calculate Kapetanios, Shin & Snell unit root test statistic along with critical values and p-values
+p kstest module to perform weighted two-sample Kolmogorov-Smirnov equality-of-distributions test 
 p ksur module to calculate Kapetanios & Shin unit root test statistic along with finite-sample critical values and p-values
 p kuipertest module to perform a two-sample Kuiper test for equality of distributions
 p kwallis2 module to perform Kruskal-Wallis Test for equality of populations

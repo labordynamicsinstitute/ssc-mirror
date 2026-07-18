@@ -58,6 +58,7 @@ p xtcdf module to perform Pesaran's CD-test for cross-sectional dependence in pa
 p xtcenter module to disaggregate within and between-person effects by centering variables for mixed and melogit models
 p xtcips module to compute Pesaran Panel Unit Root Test in the Presence of Cross-section Dependence 
 p xtcointreg module for panel data generalization of cointegration regression using fully modified ordinary least squares, dynamic ordinary least squares, and canonical correlation regression methods
+p xtcombreak module to estimate the common break date with a confidence interval (Bai 2010) and test whether the break really is common across units (Jiang and Kurozumi 2026)
 p xtcsb module to compute Multifactor cross-sectionally augmented panel unit root tests of CIPS* and CSB (Pesaran, Smith & Yamagata 2013)
 p xtcsd module to test for cross-sectional dependence in panel data models
 p xtcsdq module to implement Tests of no cross-sectional error dependence in panel quantile regressions
