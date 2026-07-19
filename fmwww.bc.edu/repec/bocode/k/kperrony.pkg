@@ -1,0 +1,28 @@
+d 'KPERRONY': module to determine the number and dates of structural breaks in cointegrated equations, with regime-wise estimates and stability tests 
+d
+d  kperrony determines the number and dates of structural breaks in
+d cointegrated equations (Kejriwal & Perron, 2010; Kejriwal, Perron
+d & Yu, 2021). It reports the estimated break dates, regime-wise
+d coefficient estimates with HAC standard errors, the
+d Kejriwal-Perron-Yu (2021) two-step partial stability test for
+d each coefficient, and the Arai-Kurozumi (2007) test of the null
+d of cointegration at the estimated breaks, with simulated critical
+d values. Serially correlated errors are handled through the robust
+d versions of the tests, and endogenous I(1) regressors through the
+d dynamic OLS leads and lags, both added automatically. Critical
+d values are embedded for up to five breaks with 15 percent
+d trimming. 
+d
+d KW: unit root tests
+d KW: cointegration
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260718
+d
+d Author: Ozan Eruygur,  Ankara Haci Bayram Veli University
+d Support: email eruygur@@gmail.com
+d
+f kperrony.ado
+f kperrony.sthlp

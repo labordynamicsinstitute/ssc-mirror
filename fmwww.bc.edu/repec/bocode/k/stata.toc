@@ -36,6 +36,7 @@ p koenker module to perform Koenker/White detailed test for heteroskedasticity
 p konfound module to quantify robustness of causal inferences
 p kotlarski module to execute deconvolution kernel density estimation and produce a robust construction of its uniform confidence band
 p kountry module to standardize country names across various datasets
+p kperrony module to determine the number and dates of structural breaks in cointegrated equations, with regime-wise estimates and stability tests 
 p kpss module to compute Kwiatkowski-Phillips-Schmidt-Shin test for stationarity
 p kpssbr module to implement KPSS unit root tests with up to 2 structural breaks
 p kr20 module to calculate Kuder-Richardson coefficient of reliability
@@ -50,3 +51,4 @@ p kuipertest module to perform a two-sample Kuiper test for equality of distribu
 p kwallis2 module to perform Kruskal-Wallis Test for equality of populations
 p kwstat module to compute kernel weighted sample statistics
 p ky_fit module to fit mixture models of the Kapteyn-Ypma type to linked survey and administrative data
+p kypshift module to test shifts between I(1) and I(0) regimes at unknown dates (Kejriwal-Yu-Perron 2020) 

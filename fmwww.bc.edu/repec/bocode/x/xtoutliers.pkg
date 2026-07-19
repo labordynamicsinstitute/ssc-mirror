@@ -1,0 +1,37 @@
+d 'XTOUTLIERS': module providing outlier detection and robust estimation for panel data 
+d
+d   xtvsom implements the Variance Shift Outlier Model (Gumedze
+d 2008; adapted to  panel data by Ismadyaliana, Setiawan & Purnomo,
+d MethodsX 13 (2024) 102900).  It detects and accommodates outliers
+d by shifting (down-weighting) their  variance, and runs as a
+d postestimation companion to xtreg (fixed effects),  regress
+d (pooled), and ivregress 2sls / xtivreg (simultaneous equations),
+d as  well as standalone. 
+d
+d KW: panel data
+d KW: outliers
+d KW: robust estimation
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260718
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtoutliers.ado
+f xtoutliers.sthlp
+f xtoutliers_methods.sthlp
+f xtlossf.ado
+f xtlossf.sthlp
+f xtlossf_example.do
+f xtoutliers.ado
+f xtoutliers.sthlp
+f xtoutliers_methods.sthlp
+f xtrobust.ado
+f xtrobust.sthlp
+f xtrobust_example.do
+f xtvsom.ado
+f xtvsom.sthlp
+f xtvsom_example.do
+f xtvsom_postestimation.sthlp

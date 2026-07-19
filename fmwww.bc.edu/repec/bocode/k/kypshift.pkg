@@ -1,0 +1,28 @@
+d 'KYPSHIFT': module to test shifts between I(1) and I(0) regimes at unknown dates (Kejriwal-Yu-Perron 2020) 
+d
+d   kypshift implements the wild bootstrap tests of Kejriwal, Yu,
+d and Perron (2020, Journal of Time Series Analysis) for multiple
+d shifts between I(1) and I(0) regimes, with the number of breaks
+d and the break dates unknown, and with tests that remain valid
+d under heteroskedasticity. The number and dates of the breaks are
+d estimated by the sequential procedure of the paper, and the
+d diagnostics of its Tables I and II are reproduced. The
+d directional statistics of Kejriwal, Perron, and Zhou (2013,
+d Econometric Theory), which identify whether the series starts in
+d an I(1) or an I(0) regime, are also reported; the asympcv option
+d adds their asymptotic critical values, the Bai-Perron critical
+d values, and the hybrid decision of that paper. 
+d
+d KW: unit root tests
+d KW: stationarity
+d KW: break points
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260718
+d
+d Author: Ozan Eruygur,  Ankara Haci Bayram Veli University
+d Support: email eruygur@@gmail.com
+d
+f kypshift.ado
+f kypshift.sthlp
