@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.2  24may2026}{...}
+{* *! version 1.0.4  19jul2026}{...}
 {vieweralsosee "[asycaus] main" "help asycaus"}{...}
 {vieweralsosee "asycaus static" "help asycaus_static"}{...}
 
@@ -32,6 +32,7 @@ that single system four hypotheses are tested:{p_end}
 {synopt :{opt maxl:ag(#)}}max VAR lag (default 8){p_end}
 {synopt :{opt ic(string)}}IC (default hjc){p_end}
 {synopt :{opt into:rder(#)}}TY augmentation lags (default 1){p_end}
+{synopt :{opt tr:end(string)}}component transform: {bf:none} (default) | {bf:drift} | {bf:both} (Hatemi-J and El-Khatib 2016){p_end}
 {synopt :{opt ln:form}}log of inputs{p_end}
 {synopt :{opt nograph}}suppress graph{p_end}
 {synopt :{opt sav:ing(name)}}save graph{p_end}

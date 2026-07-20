@@ -1,6 +1,6 @@
-*! asycaus_efficient v1.0.0  24may2026
+*! asycaus_efficient v1.0.1  19jul2026
 *! Efficient Asymmetric Causality Tests (Hatemi-J 2024 — arXiv 2408.03137)
-*! Joint SUR system over positive and negative components: tests
+*! v1.0.1: engine now estimates the full four-equation SURE (Eq.7); tests
 *!     (i) no causality via positive shocks,
 *!     (ii) no causality via negative shocks,
 *!     (iii) joint no causality,
@@ -13,6 +13,7 @@ program define asycaus_efficient, rclass
           MAXLag(integer 8)         ///
           IC(string)                ///
           INTOrder(integer 1)       ///
+          TRend(string)             ///
           LNform                    ///
           noGRAPH                   ///
           SAVing(string)            ///
@@ -28,13 +29,21 @@ program define asycaus_efficient, rclass
     _asycaus_iccode `ic'
     local icnum = r(ic)
 
+    if "`trend'" == "" local trend none
+    local trend = lower("`trend'")
+    if !inlist("`trend'", "none", "drift", "both") {
+        di as err "trend() must be {bf:none}, {bf:drift}, or {bf:both}"
+        exit 198
+    }
+    local tcode = cond("`trend'"=="both", 2, cond("`trend'"=="drift", 1, 0))
+
     qui keep if `touse'
     tempname Yraw
     qui mkmat `depvar' `causvar', matrix(`Yraw')
     if "`lnform'" != "" mata: st_matrix("`Yraw'", log(st_matrix("`Yraw'")))
 
-    mata: st_matrix("Zpos", asycaus_pos_neg(st_matrix("`Yraw'"), 1))
-    mata: st_matrix("Zneg", asycaus_pos_neg(st_matrix("`Yraw'"), 0))
+    mata: st_matrix("Zpos", asycaus_pos_neg_trend(st_matrix("`Yraw'"), 1, `tcode'))
+    mata: st_matrix("Zneg", asycaus_pos_neg_trend(st_matrix("`Yraw'"), 0, `tcode'))
 
     // Choose a common lag: pick the larger of the two HJC choices
     mata: st_local("p_pos", strofreal( ///
@@ -62,6 +71,8 @@ program define asycaus_efficient, rclass
     di as txt _col(2) "Reference: Hatemi-J (2024) arXiv:2408.03137 — SUR-based efficient tests"
     di as txt _col(2) "Lag selection:           " as res "`=upper("`ic'")'" as txt _col(40) "Common lag p:       " as res "`p'"
     di as txt _col(2) "Augmentation lags:       " as res "`intorder'"
+    local trlab = cond("`trend'"=="both","Drift + trend (2016)", cond("`trend'"=="drift","Drift (2016)","None (Granger-Yoon)"))
+    di as txt _col(2) "Component transformation: " as res "`trlab'"
     di as txt "{hline 78}"
     di as txt _col(2) "{ralign 28:Null hypothesis}" ///
               _col(33) "{ralign 11:Wald}" ///

@@ -1,4 +1,4 @@
-*! asycaus v1.0.1  24may2026
+*! asycaus v1.0.4  19jul2026
 *! Asymmetric Causality Suite — main dispatcher
 *! Implements: Hatemi-J (2012, 2021, 2024), Hacker & Hatemi-J (2006, 2012),
 *!             Nazlioglu, Gormus & Soytas (2016), Bahmani-Oskooee, Chang & Ranjbar (2016),

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.2  24may2026}{...}
+{* *! version 1.0.4  19jul2026}{...}
 {vieweralsosee "[asycaus] main" "help asycaus"}{...}
 {vieweralsosee "asycaus static" "help asycaus_static"}{...}
 {vieweralsosee "bcgcausality" "help bcgcausality"}{...}

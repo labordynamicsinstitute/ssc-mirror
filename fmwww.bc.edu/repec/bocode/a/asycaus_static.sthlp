@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.2  24may2026}{...}
+{* *! version 1.0.4  19jul2026}{...}
 {vieweralsosee "[asycaus] main" "help asycaus"}{...}
 {vieweralsosee "asycaus dynamic" "help asycaus_dynamic"}{...}
 {vieweralsosee "asycaus fourier" "help asycaus_fourier"}{...}
@@ -46,6 +46,7 @@ unit roots and structural changes better than AIC or SBC.{p_end}
 {synopt :{opt ic(string)}}{bf:aic} | {bf:aicc} | {bf:sbc} | {bf:hqc} | {bf:hjc} (default){p_end}
 {synopt :{opt into:rder(#)}}TY augmentation lags (default 1){p_end}
 {synopt :{opt shock(string)}}{bf:pos} | {bf:neg} | {bf:both} (default {bf:pos}){p_end}
+{synopt :{opt tr:end(string)}}component transform: {bf:none} (default) | {bf:drift} | {bf:both}; {bf:drift}/{bf:both} use the deterministic-trend transformation of {bf:Hatemi-J and El-Khatib (2016)}{p_end}
 {synopt :{opt boot(#)}}bootstrap replications (default 1000){p_end}
 {synopt :{opt seed(#)}}RNG seed (default 12345){p_end}
 {synopt :{opt ln:form}}take ln of inputs before decomposition{p_end}

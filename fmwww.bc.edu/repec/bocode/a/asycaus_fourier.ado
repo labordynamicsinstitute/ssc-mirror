@@ -1,6 +1,8 @@
-*! asycaus_fourier v1.0.0  24may2026
+*! asycaus_fourier v1.0.1  19jul2026
 *! Fourier Asymmetric Toda-Yamamoto causality (Nazlioglu, Gormus & Soytas 2016; Pata 2020)
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
+*! v1.0.1: select optimal frequency k* by minimizing model SSR (not by
+*!         maximizing the causality Wald, which would be data-snooping).
 
 program define asycaus_fourier, rclass
     version 14.0
@@ -65,25 +67,26 @@ program define asycaus_fourier, rclass
             asycaus_lag_select(st_matrix("Zcomp"), 1, `maxlag', `icnum')))
         local p `p_opt'
 
-        // Search k from 1 to kmax: pick k that minimizes asymptotic p-value
-        // of equation residual variance for the dep var equation.
+        // Select the optimal frequency k* by MINIMIZING the model SSR (the
+        // multivariate det of the residual covariance), following Nazlioglu,
+        // Gormus & Soytas (2016).  Selecting k to maximize the causality Wald
+        // would be data-snooping and would invalidate the test.
         local kbest = 1
-        local wbest = .
-        local pbest = .
+        local fitbest = .
         forvalues k = 1/`kmax' {
-            mata: st_matrix("wres", asycaus_wald_fourier( ///
-                st_matrix("Zcomp"), `p', `intorder', 1, 2, `k', "`form'"))
-            local Wk   = wres[1,1]
-            local dofk = wres[1,2]
-            local pvk  = chi2tail(`dofk', `Wk')
-            // Pick the k yielding largest residual fit improvement —
-            // approximate by largest Wald (most informative Fourier basis).
-            if `wbest' == . | `Wk' > `wbest' {
-                local wbest = `Wk'
-                local pbest = `pvk'
+            mata: st_local("fitk", strofreal(asycaus_fourier_fit( ///
+                st_matrix("Zcomp"), `p', `intorder', `k', "`form'")))
+            if `fitbest' == . | `fitk' < `fitbest' {
+                local fitbest = `fitk'
                 local kbest = `k'
             }
         }
+        // Compute the Fourier-Wald statistic at the selected k*.
+        mata: st_matrix("wres", asycaus_wald_fourier( ///
+            st_matrix("Zcomp"), `p', `intorder', 1, 2, `kbest', "`form'"))
+        local wbest = wres[1,1]
+        local dofk  = wres[1,2]
+        local pbest = chi2tail(`dofk', `wbest')
         local nobs = rowsof(Zcomp)
         matrix `Restab' = nullmat(`Restab') \ ( `wbest', `p', `kbest', `pbest', `nobs' )
         local lbl = cond("`s'" == "pos", "Positive", "Negative")

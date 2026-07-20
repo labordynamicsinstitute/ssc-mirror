@@ -4,7 +4,7 @@
 
 program define asycaus_static, rclass
     version 14.0
-    syntax varlist(min=2 max=2 numeric) [if] [in] [, MAXLag(integer 8) IC(string) INTOrder(integer 1) SHOCK(string) BOOT(integer 1000) SEED(integer 12345) LNform noGRAPH SAVing(string) ]
+    syntax varlist(min=2 max=2 numeric) [if] [in] [, MAXLag(integer 8) IC(string) INTOrder(integer 1) SHOCK(string) TRend(string) BOOT(integer 1000) SEED(integer 12345) LNform noGRAPH SAVing(string) ]
     _asycaus_check_tsset
     marksample touse
     tokenize `varlist'
@@ -13,6 +13,16 @@ program define asycaus_static, rclass
     if "`ic'" == "" local ic hjc
     _asycaus_iccode `ic'
     local icnum = r(ic)
+
+    // Deterministic-trend transformation (Hatemi-J & El-Khatib 2016):
+    //   none = Granger-Yoon cumulation (default), drift, or drift+trend.
+    if "`trend'" == "" local trend none
+    local trend = lower("`trend'")
+    if !inlist("`trend'", "none", "drift", "both") {
+        di as err "trend() must be {bf:none}, {bf:drift}, or {bf:both}"
+        exit 198
+    }
+    local tcode = cond("`trend'"=="both", 2, cond("`trend'"=="drift", 1, 0))
 
     if "`shock'" == "" local shock pos
     local shock = lower("`shock'")
@@ -52,7 +62,7 @@ program define asycaus_static, rclass
         local ++idx
         local pflag = cond("`s'" == "pos", 1, 0)
         local stitle = cond("`s'" == "pos", "POSITIVE", "NEGATIVE")
-        mata: st_matrix("Zcomp", asycaus_pos_neg(st_matrix("`Yraw'"), `pflag'))
+        mata: st_matrix("Zcomp", asycaus_pos_neg_trend(st_matrix("`Yraw'"), `pflag', `tcode'))
         mata: st_local("nn", strofreal(rows(st_matrix("Zcomp"))))
 
         // Select lag via chosen IC
@@ -91,6 +101,8 @@ program define asycaus_static, rclass
     di as txt _col(2) "H0: " as res "`causvar'" as txt " does not Granger-cause " as res "`depvar'"
     di as txt _col(2) "Lag selection:                          " as res "`=upper("`ic'")'"
     di as txt _col(2) "Augmentation lags (max integration):    " as res "`intorder'"
+    local trlab = cond("`trend'"=="both","Drift + trend (H&El-Khatib 2016)", cond("`trend'"=="drift","Drift (H&El-Khatib 2016)","None (Granger-Yoon)"))
+    di as txt _col(2) "Component transformation:               " as res "`trlab'"
     di as txt _col(2) "Bootstrap replications:                 " as res "`boot'"
     di as txt _col(2) "Sample size (after differencing):       " as res "`nn'"
     di as txt "{hline 78}"

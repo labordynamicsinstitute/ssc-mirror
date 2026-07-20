@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.2  24may2026}{...}
+{* *! version 1.0.4  19jul2026}{...}
 {vieweralsosee "[asycaus] main" "help asycaus"}{...}
 {vieweralsosee "asycaus static" "help asycaus_static"}{...}
 {vieweralsosee "asycaus fourier" "help asycaus_fourier"}{...}
@@ -39,6 +39,7 @@ graph is produced unless {opt nograph} is set.{p_end}
 {synopt :{opt ic(string)}}IC (default hjc){p_end}
 {synopt :{opt into:rder(#)}}TY augmentation lags (default 1){p_end}
 {synopt :{opt shock(string)}}{bf:pos} | {bf:neg} (default pos){p_end}
+{synopt :{opt tr:end(string)}}component transform: {bf:none} (default) | {bf:drift} | {bf:both} (Hatemi-J and El-Khatib 2016){p_end}
 {synopt :{opt wind:ow(#)}}rolling/recursive window length (default = PSY min){p_end}
 {synopt :{opt rol:ling}}rolling window (default){p_end}
 {synopt :{opt rec:ursive}}recursive (anchored) window{p_end}

@@ -1,0 +1,27 @@
+d 'PRCOINT': module to perform Perron and Rodriguez (2016) residual-based tests for cointegration under endogeneity and serial correlation 
+d
+d  prcoint computes the residuals-based tests of Perron and
+d Rodriguez (2016) for cointegration under endogeneity and serial
+d correlation. The deterministic components are removed from each
+d series by local-to-unity GLS detrending before the cointegrating
+d regression is estimated. Seven statistics are reported based on
+d the autoregressive spectral density estimator of the long-run
+d variance with BIC lag selection. The tests remain valid under
+d endogenous I(1) regressors and serially correlated errors. Three
+d deterministic cases are covered (constant; constant and trend;
+d constant with trending regressors). 
+d
+d KW: unit root tests
+d KW: cointegration
+d KW: Perron
+d KW: Rodriguez
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260719
+d
+d Author: Ozan Eruygur,  Ankara Haci Bayram Veli University
+d Support: email eruygur@@gmail.com
+d
+f prcoint.ado
+f prcoint.sthlp

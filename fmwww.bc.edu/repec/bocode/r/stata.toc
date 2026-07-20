@@ -93,7 +93,7 @@ p recap module to perform capture-recapture analysis for three sources with Good
 p recast2 module to change storage type of variable
 p reclink module to probabilistically match records
 p recocl module to recode municipal codes for Chile (CL)
-p recode12 module to standardize 1/2-coded variables as labeled 0/1 indicators
+p recode12 module to standardize numeric 1/2 variables and corresponding two-category string variables as labeled 0/1 indicators
 p recode2 module to provide extended recode capabilities
 p recol module to Dynamically Resize Columns in Stata's Data Browser 
 p redcapsetup module to perform some checks on the setup of a REDCap database
@@ -111,6 +111,7 @@ p reg_ss module to compute confidence intervals, standard errors, and p-values i
 p regall module to run and compare all regressions derived from complete sets of regressors
 p reganat module to perform graphical inspection of linear multivariate models based on regression anatomy
 p regaxis module to make regular linear and logarithmic axis scales, ranges and tick lists
+p regbreak module to provide estimation and inference for structural breaks in the coefficients and error variance of a linear regression
 p regcheck module to examine regression assumptions
 p regcoef module to compute coefficients for quantifying relative importance of predictors
 p regdis module to control variables and decimals in regression displays

@@ -156,6 +156,7 @@ p ppschromy module to draw sample with probability proportionate to size, using 
 p ppssampford module to draw sample with probability proportionate to size, without replacement, using Sampford's method
 p pq module to read, write, and manage Parquet files in Stata
 p praisk module to perform Iterated Prais-Winsten regression with AR(k) errors
+p prcoint module to perform Perron and Rodriguez (2016) residual-based tests for cointegration under endogeneity and serial correlation 
 p pre module to calculate the proportional reduction in errors accomplished by an estimated model
 p predcalc module to calculate out-of-sample predictions for regression, logistic
 p predperf module module for calculating simple indices describing the accuracy and precision of one or two continuous-value predictors, based on a series of predictions matched with corresponding ‘true’ observations.

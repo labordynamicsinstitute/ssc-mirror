@@ -1,20 +1,27 @@
-d 'RECODE12': module to standardize 1/2-coded variables as labeled 0/1 indicators
+d 'RECODE12': module to standardize numeric 1/2 variables and corresponding two-category string variables as labeled 0/1 indicators
 d
-d  recode12 standardizes eligible numeric variables coded 1/2 as
-d labeled 0/1 indicators. The command requires the user to specify
-d which source value becomes Yes/1, preserves ordinary system
-d missing values, skips variables that do not satisfy the coding
-d rule, supports generated-variable and replace modes, and verifies
-d the resulting mapping and value range. The package includes
-d documentation, an example dataset, an example do-file, and a test
-d do-file. 
+d  recode12 standardizes eligible numeric variables coded 1/2 and
+d eligible two-category string variables as labeled 0/1 indicators.
+d For a string variable, the first and second distinct nonmissing
+d categories encountered in the current observation order serve as
+d source categories 1 and 2. The required yesvalue() option applies
+d the same mapping rule to numeric and string variables. The
+d command supports numeric-only, string-only, and mixed-variable
+d processing; generated-variable and replace modes; user-specified
+d suffixes; optional detailed reporting; preservation of missing
+d observations; and post-recoding verification. Variables that do
+d not satisfy the applicable eligibility rule are left unchanged. 
 d
 d KW: data management
 d KW: binary variables
+d KW: recoding
+d KW: categorical variables
+d KW: string variables
+d KW: indicator variables
 d
 d Requires: Stata version 19.5
 d
-d Distribution-Date: 20260713
+d Distribution-Date: 20260719
 d
 d Author:  Hao Ma,  NA
 d Support: email shouhuoxiwang2027@@gmail.com

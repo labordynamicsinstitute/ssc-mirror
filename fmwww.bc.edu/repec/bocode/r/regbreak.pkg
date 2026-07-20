@@ -1,0 +1,47 @@
+d 'REGBREAK': module to provide estimation and inference for structural breaks in the coefficients and error variance of a linear regression
+d
+d	regbreak estimates and tests for multiple structural
+d changes in a linear regression. Two	 complementary procedures
+d are provided in one command:	      Default (Bai & Perron 1998) -
+d tests for breaks in the {it:regression coefficients}. 	  
+d It reports the Sup F tests of no break versus a fixed number of
+d breaks, the		 UDmax double-maximum test, the sequential
+d Sup F(l+1|l) tests, and the number of 	   breaks selected
+d by the BIC, LWZ and KT information criteria. It then estimates   
+d	  the selected model, giving the break dates with
+d confidence intervals and the		  regime-specific
+d coefficients with heteroskedasticity- and	      
+d autocorrelation-corrected standard errors.	    Joint (joint) -
+d Perron, Yamamoto & Zhou tests jointly for breaks in the error    
+d	 variance and the coefficients. It reports the Sup LR4
+d joint statistic, the		  marginal Sup LR / Sup LR3
+d (coefficient breaks given variance breaks) and Sup LR1	   
+d / Sup LR2 (variance breaks given coefficient breaks), the UDmax4
+d test, and the 	   sequential SeqLR9 / SeqLR10 procedures
+d that select the number of coefficient and	       variance
+d breaks and their dates. 
+d
+d KW: panel data
+d KW: structural breaks
+d KW: regression
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260719
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f regbreak.ado
+f regbreak.sthlp
+f ../l/lregbreak.mlib
+f regbreak_brcv.mata
+f regbreak_cv.mata
+f regbreak_driver.mata
+f regbreak_engine.mata
+f regbreak_engine2.mata
+f regbreak_engine3.mata
+f regbreak_engine4.mata
+f regbreak_engine5.mata
+f regbreak_example.do
+f regbreak_methods.sthlp

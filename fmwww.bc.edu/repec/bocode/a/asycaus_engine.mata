@@ -1,6 +1,21 @@
-*! asycaus_engine v1.0.0  24may2026
+*! asycaus_engine v1.0.4  19jul2026
 *! Mata computational core for the asycaus package
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
+*! v1.0.4:
+*!   - corrected the Wald covariance Kronecker order (Sigma # (X'X)^-1) to match
+*!     Hatemi-J (2012) Eq.7 / (2021) Eq.13 and the GAUSS reference (verified
+*!     against Stata -vargranger-);
+*!   - fixed the leverage-bootstrap CV order-statistic step (min, per the GAUSS
+*!     Bootstrap_Toda routine);
+*!   - lag selection now holds the estimation sample fixed at T-maxlag across
+*!     candidate lags (GAUSS lag_length2 / Hatemi-J 2003);
+*!   - asycaus_fourier_fit added for SSR-based Fourier frequency selection
+*!     (Nazlioglu, Gormus & Soytas 2016);
+*!   - asycaus_efficient rewritten as the full four-equation SURE/FGLS of
+*!     Hatemi-J (2024, Eq.7 / Appendix A1-A4) (verified against -sureg-);
+*!   - asycaus_pos_neg_trend added: the deterministic-trend (drift and/or linear
+*!     trend) asymmetric transformation of Hatemi-J & El-Khatib (2016);
+*!     trend=0 reproduces the Granger-Yoon cumulation exactly.
 
 version 14.0
 mata:
@@ -37,6 +52,50 @@ real matrix asycaus_pos_neg(real matrix Y, real scalar pos)
 }
 
 // ============================================================
+//  Deterministic-trend asymmetric transformation
+//  (Hatemi-J & El-Khatib 2016, Eqs 3-5 / application Eqs 22-23).
+//  For an I(1) column y: d = Dy; regress d on the chosen deterministic
+//  terms; cumulate the positive (or negative) part of the RESIDUALS and
+//  add back half of the fitted deterministic trajectory:
+//     comp_s = det_s/2 + cumsum(resid+/-),
+//     det_s  = a*s + b*s(s+1)/2 + y0 ,   y0 = y[1].
+//  trend: 0 = none (identical to asycaus_pos_neg / Granger-Yoon),
+//         1 = drift only, 2 = drift + linear trend.
+//  By construction comp+ + comp- reproduces the level, so the equivalency
+//  y = y+ + y- of Hatemi-J & El-Khatib (2016) holds.
+// ============================================================
+real matrix asycaus_pos_neg_trend(real matrix Y, real scalar pos, real scalar trend)
+{
+    real scalar K, ns, k, s, aa, bb
+    real matrix d, C, X
+    real colvector dk, bk, resid, dtr, sidx, pp
+
+    if (trend <= 0) return(asycaus_pos_neg(Y, pos))
+    if (rows(Y) < 2) return(J(0, cols(Y), .))
+
+    K  = cols(Y)
+    d  = Y[2..rows(Y), .] :- Y[1..rows(Y)-1, .]     // (T-1) x K
+    ns = rows(d)
+    sidx = (1::ns)
+    C = J(ns, K, 0)
+
+    for (k = 1; k <= K; k++) {
+        dk = d[., k]
+        if (trend == 1) X = J(ns, 1, 1)
+        else            X = J(ns, 1, 1), sidx
+        bk    = qrsolve(X'X, X'dk)
+        resid = dk - X*bk
+        aa = bk[1]
+        bb = (trend >= 2 ? bk[2] : 0)
+        dtr = aa :* sidx :+ bb :* (sidx :* (sidx :+ 1) :/ 2) :+ Y[1, k]
+        if (pos) pp = resid :* (resid :> 0)
+        else     pp = resid :* (resid :< 0)
+        C[., k] = dtr :/ 2 :+ runningsum(pp)
+    }
+    return(C)
+}
+
+// ============================================================
 //  Build lagged regressor matrix
 // ============================================================
 real matrix asycaus_lagmat(real matrix Y, real scalar p)
@@ -62,31 +121,39 @@ real matrix asycaus_lagmat(real matrix Y, real scalar p)
 real scalar asycaus_lag_select(real matrix Z, real scalar minlag, ///
                                real scalar maxlag, real scalar ic)
 {
-    real scalar n, T, p, bestlag, bestic, q, dvc, val, aic, sbc, hqc, aicc
-    real matrix Y, X, L, A, R, V
+    real scalar n, T, p, bestlag, bestic, Tc, dvc, val, sbc, hqc
+    real matrix Y, X, Lmax, A, R, V
 
     n = cols(Z); T = rows(Z)
     bestlag = minlag; bestic = .
 
+    // Match GAUSS lag_length2: lag once at maxlag and hold the estimation
+    // sample fixed at T-maxlag for ALL candidate lags (each smaller lag order
+    // just uses the first p*n lag columns).  This keeps the information
+    // criteria comparable across p, as required by Hatemi-J (2003).
+    if (maxlag < 1 | T - maxlag < 2) return(bestlag)
+    Lmax = asycaus_lagmat(Z, maxlag)          // (T-maxlag) x (n*maxlag)
+    Y    = Z[maxlag+1..T, .]                   // common sample
+    Tc   = rows(Y)
+
     for (p = maxlag; p >= minlag; p--) {
         if (p < 1) continue
-        L = asycaus_lagmat(Z, p)
-        if (rows(L) < cols(L)+2) continue
-        Y = Z[p+1..T, .]
-        X = J(rows(L), 1, 1), L
+        if (p == 0) X = J(Tc, 1, 1)
+        else        X = J(Tc, 1, 1), Lmax[., 1..p*n]
+        if (Tc < cols(X) + 2) continue
         A = qrsolve(X'X, X'Y)
         R = Y - X*A
-        V = (R'R) / rows(Y)
+        V = (R'R) / Tc
         dvc = det(V)
         if (dvc <= 0) continue
 
-        if (ic == 1) val = ln(dvc) + (2/rows(Y)) * (n*n*p + n) + n*(1+ln(2*pi()))
-        else if (ic == 2) val = ln(dvc) + ((rows(Y) + (1+p*n))*n) / (rows(Y) - (1+p*n) - n - 1)
-        else if (ic == 3) val = ln(dvc) + (1/rows(Y))*(n*n*p+n)*ln(rows(Y)) + n*(1+ln(2*pi()))
-        else if (ic == 4) val = ln(dvc) + (2/rows(Y))*(n*n*p+n)*ln(ln(rows(Y))) + n*(1+ln(2*pi()))
+        if (ic == 1) val = ln(dvc) + (2/Tc) * (n*n*p + n) + n*(1+ln(2*pi()))
+        else if (ic == 2) val = ln(dvc) + ((Tc + (1+p*n))*n) / (Tc - (1+p*n) - n - 1)
+        else if (ic == 3) val = ln(dvc) + (1/Tc)*(n*n*p+n)*ln(Tc) + n*(1+ln(2*pi()))
+        else if (ic == 4) val = ln(dvc) + (2/Tc)*(n*n*p+n)*ln(ln(Tc)) + n*(1+ln(2*pi()))
         else if (ic == 5) {
-            sbc = ln(dvc) + (1/rows(Y))*(n*n*p+n)*ln(rows(Y)) + n*(1+ln(2*pi()))
-            hqc = ln(dvc) + (2/rows(Y))*(n*n*p+n)*ln(ln(rows(Y))) + n*(1+ln(2*pi()))
+            sbc = ln(dvc) + (1/Tc)*(n*n*p+n)*ln(Tc) + n*(1+ln(2*pi()))
+            hqc = ln(dvc) + (2/Tc)*(n*n*p+n)*ln(ln(Tc)) + n*(1+ln(2*pi()))
             val = (sbc + hqc)/2
         }
         else val = .
@@ -144,7 +211,11 @@ real rowvector asycaus_wald(real matrix Z, real scalar p, real scalar addlags, /
         C[r, idx] = 1
     }
     beta = vec(A)
-    Wm = invsym(X'X) # Sigma         // q*n x q*n covariance for vec(A)
+    // Cov(vec(A)) = Sigma (X) (X'X)^-1 for the column-stacked (equation-major)
+    // vec(A) with A being q x n.  This reproduces Eq.(7) of Hatemi-J (2012) /
+    // Eq.(13) of Hatemi-J (2021) and the GAUSS W_test (which pairs the reverse
+    // Kronecker order (X'X)^-1 (X) Sigma with a regressor-major vecr(Ahat')).
+    Wm = Sigma # invsym(X'X)         // q*n x q*n covariance for vec(A)
     mid = C * Wm * C'
     W = ((C*beta)' * invsym(mid) * (C*beta))
     return((W, p))
@@ -256,10 +327,13 @@ real rowvector asycaus_boot_cv(real matrix Z, real scalar p, real scalar addlags
     i1  = B - trunc(B/100)
     i5  = B - trunc(B/20)
     i10 = B - trunc(B/10)
+    // GAUSS Bootstrap_Toda averages the order statistic with the *adjacent*
+    // one: index step = min(1, trunc(B/frac)) (= 1 for B >= frac).  Using max()
+    // here averaged with the sample maximum W[B] and inflated every CV.
     real scalar c1, c5, c10
-    c1  = (W[i1]  + W[min((B, i1  + max((1, trunc(B/100))) ))]) / 2
-    c5  = (W[i5]  + W[min((B, i5  + max((1, trunc(B/20))) ))])  / 2
-    c10 = (W[i10] + W[min((B, i10 + max((1, trunc(B/10))) ))])  / 2
+    c1  = (W[i1]  + W[min((B, i1  + min((1, trunc(B/100))) ))]) / 2
+    c5  = (W[i5]  + W[min((B, i5  + min((1, trunc(B/20))) ))])  / 2
+    c10 = (W[i10] + W[min((B, i10 + min((1, trunc(B/10))) ))])  / 2
     cv = (c1, c5, c10)
     return(cv)
 }
@@ -326,10 +400,36 @@ real rowvector asycaus_wald_fourier(real matrix Z, real scalar p, real scalar ad
         Cmat[r, idx] = 1
     }
     beta = vec(A)
-    Wm = invsym(X'X) # Sigma
+    Wm = Sigma # invsym(X'X)          // Cov(vec(A)); see asycaus_wald note
     midm = Cmat * Wm * Cmat'
     W = ((Cmat*beta)' * invsym(midm) * (Cmat*beta))
     return((W, p))
+}
+
+// ============================================================
+//  Fit criterion for selecting the optimal Fourier frequency k*.
+//  Returns det of the residual covariance of the Fourier-augmented VAR.
+//  Nazlioglu, Gormus & Soytas (2016) select k* by minimizing the model SSR
+//  (here its multivariate analogue), NOT by maximizing the causality Wald.
+// ============================================================
+real scalar asycaus_fourier_fit(real matrix Z, real scalar p, real scalar addlags, ///
+                                real scalar kfreq, string scalar mode)
+{
+    real scalar T, n, maxlag, T2
+    real matrix Y, L, F, X, A, R, V
+
+    n = cols(Z); T = rows(Z)
+    maxlag = p + addlags
+    L = asycaus_lagmat(Z, maxlag)
+    F = asycaus_fourier_terms(T, kfreq, mode)
+    F = F[maxlag+1..T, .]
+    Y = Z[maxlag+1..T, .]
+    T2 = rows(Y)
+    X = J(T2, 1, 1), F, L
+    A = qrsolve(X'X, X'Y)
+    R = Y - X*A
+    V = (R'R) / T2
+    return(det(V))
 }
 
 // ============================================================
@@ -363,7 +463,7 @@ real scalar asycaus_bc_at_omega(real matrix Z, real scalar p, real scalar omega,
         Cmat[2, ix] = sin(r*omega)
     }
     beta = vec(A)
-    Wm = invsym(X'X) # Sigma
+    Wm = Sigma # invsym(X'X)          // Cov(vec(A)); see asycaus_wald note
     midm = Cmat * Wm * Cmat'
     W = ((Cmat*beta)' * invsym(midm) * (Cmat*beta))
     return(W)
@@ -456,16 +556,28 @@ void asycaus_qfourier_detrend(real scalar kmax)
 }
 
 // ============================================================
-//  Efficient asymmetric test via SUR-style joint estimation
-//  Combines positive and negative components into one system,
-//  tests joint and difference restrictions.
+//  Efficient asymmetric causality test — Hatemi-J (2024, arXiv:2408.03137)
+//  Full four-equation autoregressive SURE / FGLS over the stacked
+//  dependent vector [Z1+, Z2+, Z1-, Z2-] (Eq.7).  The efficiency gain and
+//  the cross-component covariance needed for the POS-vs-NEG difference test
+//  come from the joint 4x4 error covariance Omega (Appendix A1-A4):
+//     Chat = [X'(Omega^-1 (x) I)X]^-1 X'(Omega^-1 (x) I)Y ,  Var(Chat)=[.]^-1 .
+//  The + equations regress on lagged + components, the - equations on lagged
+//  - components; an extra unrestricted Toda-Yamamoto lag (addlags) is included
+//  and the causality restrictions cover lags 1..p only.
+//  Returns (Wpos, Wneg, Wjoint, Wdiff, p) for the null that jvar does not
+//  cause kvar (Eqs 8, 9, 10, 11 respectively).
 // ============================================================
 real rowvector asycaus_efficient(real matrix Zpos, real matrix Zneg, ///
                                  real scalar p, real scalar addlags, ///
                                  real scalar kvar, real scalar jvar)
 {
-    real scalar n, Tp, Tn, T, q, r, idx
-    real matrix Yp, Yn, Lp, Ln, Xp, Xn, Y, X, A, R, Sigma, Wm, C1, C2, beta, midm
+    real scalar n, Tp, Tn, T, maxlag, q, T2, a, b, r, k
+    real scalar eqPos, eqNeg, colP, colN
+    real matrix Lp, Ln, Xp, Xm, Ymat, E, Om, iOm
+    real matrix XpXp, XpXm, XmXm, XpY, XmY, XtXab, A, V
+    real matrix Cpos, Cneg, Cjoint, Cdiff
+    real colvector Chat, g, Ya
     real scalar Wp, Wn, Wjoint, Wdiff
 
     n = cols(Zpos)
@@ -473,71 +585,74 @@ real rowvector asycaus_efficient(real matrix Zpos, real matrix Zneg, ///
     T = min((Tp, Tn))
     Zpos = Zpos[1..T, .]; Zneg = Zneg[1..T, .]
 
-    // Build stacked system: equations for kvar in pos and neg models share X structure
-    // but coefficients differ. We estimate two unrestricted regressions and form
-    // a Wald test using joint covariance from the SUR.
-    real scalar maxlag
     maxlag = p + addlags
-    Lp = asycaus_lagmat(Zpos, maxlag)
+    Lp = asycaus_lagmat(Zpos, maxlag)   // (T-maxlag) x (n*maxlag)
     Ln = asycaus_lagmat(Zneg, maxlag)
-    Yp = Zpos[maxlag+1..T, kvar]
-    Yn = Zneg[maxlag+1..T, kvar]
-    Xp = J(rows(Lp), 1, 1), Lp
-    Xn = J(rows(Ln), 1, 1), Ln
-    q = cols(Xp)
-
-    // Compute OLS first to get residuals
-    real colvector bp, bn, ep, en
-    bp = qrsolve(Xp'Xp, Xp'Yp)
-    bn = qrsolve(Xn'Xn, Xn'Yn)
-    ep = Yp - Xp*bp
-    en = Yn - Xn*bn
-    real scalar sp, sn, scov, det2
-    sp  = (ep'ep) / (rows(ep) - q)
-    sn  = (en'en) / (rows(en) - q)
-    scov = (ep'en) / max((rows(ep), rows(en)))
-    det2 = sp*sn - scov^2
-
-    // GLS / SUR using inverse Sigma kron I
-    real matrix Sig, iSig, big_X, big_Y
-    Sig = (sp, scov \ scov, sn)
-    iSig = invsym(Sig)
-
-    real scalar T2
+    Xp = J(rows(Lp), 1, 1), Lp          // design for the + equations
+    Xm = J(rows(Ln), 1, 1), Ln          // design for the - equations
+    q  = cols(Xp)
     T2 = rows(Xp)
-    // Block-diagonal X for the two equations
-    real matrix Xblock
-    Xblock = (Xp, J(T2, q, 0) \ J(T2, q, 0), Xn)
-    real colvector Yblock
-    Yblock = Yp \ Yn
 
-    // SUR estimator: (X' (iSig kron I) X)^-1 X' (iSig kron I) Y
-    real matrix Omega_inv
-    Omega_inv = iSig # I(T2)
-    real colvector bsur
-    real matrix Vsur
-    Vsur = invsym(Xblock'Omega_inv*Xblock)
-    bsur = Vsur*Xblock'Omega_inv*Yblock
+    // Dependent vectors, common sample, in equation order [Z1+, Z2+, Z1-, Z2-]
+    Ymat = Zpos[maxlag+1..T, 1], Zpos[maxlag+1..T, 2], ///
+           Zneg[maxlag+1..T, 1], Zneg[maxlag+1..T, 2]
 
-    // C1: causality from jvar in positive system
-    // C2: causality from jvar in negative system
-    // Joint: both restrictions; Diff: bpos = bneg
-    C1 = J(p, 2*q, 0); C2 = J(p, 2*q, 0)
-    real matrix Cdiff
-    Cdiff = J(p, 2*q, 0)
-    for (r = 1; r <= p; r++) {
-        idx = 1 + (r - 1)*n + jvar
-        C1[r, idx]      =  1
-        C2[r, q + idx]  =  1
-        Cdiff[r, idx]      =  1
-        Cdiff[r, q + idx]  = -1
+    // Equation-by-equation OLS residuals -> 4x4 covariance Omega (divisor T2,
+    // matching Zellner / Stata -sureg-).
+    E = J(T2, 4, 0)
+    for (a = 1; a <= 4; a++) {
+        if (a <= 2) E[., a] = Ymat[., a] - Xp*qrsolve(Xp'Xp, Xp'Ymat[., a])
+        else        E[., a] = Ymat[., a] - Xm*qrsolve(Xm'Xm, Xm'Ymat[., a])
     }
-    Wp     = ((C1*bsur)'    * invsym(C1*Vsur*C1')       * (C1*bsur))
-    Wn     = ((C2*bsur)'    * invsym(C2*Vsur*C2')       * (C2*bsur))
-    real matrix Cjoint
-    Cjoint = C1 \ C2
-    Wjoint = ((Cjoint*bsur)' * invsym(Cjoint*Vsur*Cjoint') * (Cjoint*bsur))
-    Wdiff  = ((Cdiff*bsur)' * invsym(Cdiff*Vsur*Cdiff') * (Cdiff*bsur))
+    Om  = (E'E) / T2
+    iOm = invsym(Om)
+
+    // Pre-compute the distinct design cross-products.  Equations 1,2 share Xp
+    // and equations 3,4 share Xm, so only three blocks are distinct.
+    XpXp = Xp'Xp; XpXm = Xp'Xm; XmXm = Xm'Xm
+    XpY  = Xp'Ymat        // q x 4
+    XmY  = Xm'Ymat        // q x 4
+
+    // Assemble A = X'(Omega^-1 (x) I)X   (4q x 4q) and g = X'(Omega^-1 (x) I)Y.
+    A = J(4*q, 4*q, 0)
+    g = J(4*q, 1, 0)
+    for (a = 1; a <= 4; a++) {
+        Ya = J(q, 1, 0)
+        for (b = 1; b <= 4; b++) {
+            if (a <= 2 & b <= 2)      XtXab = XpXp
+            else if (a <= 2 & b >  2) XtXab = XpXm
+            else if (a >  2 & b <= 2) XtXab = XpXm'
+            else                      XtXab = XmXm
+            A[(a-1)*q+1..a*q, (b-1)*q+1..b*q] = iOm[a, b] * XtXab
+            if (a <= 2) Ya = Ya + iOm[a, b]*XpY[., b]
+            else        Ya = Ya + iOm[a, b]*XmY[., b]
+        }
+        g[(a-1)*q+1..a*q] = Ya
+    }
+    V    = invsym(A)
+    Chat = V * g
+
+    // Depvar (kvar) + equation is eqPos; its - equation is eqNeg.  The causal
+    // coefficient of jvar at lag r sits at column 1+(r-1)*n+jvar within a block.
+    eqPos = kvar
+    eqNeg = kvar + 2
+    Cpos  = J(p, 4*q, 0)
+    Cneg  = J(p, 4*q, 0)
+    Cdiff = J(p, 4*q, 0)
+    for (r = 1; r <= p; r++) {
+        colP = (eqPos - 1)*q + 1 + (r - 1)*n + jvar
+        colN = (eqNeg - 1)*q + 1 + (r - 1)*n + jvar
+        Cpos[r, colP]  =  1
+        Cneg[r, colN]  =  1
+        Cdiff[r, colP] =  1
+        Cdiff[r, colN] = -1
+    }
+    Cjoint = Cpos \ Cneg
+
+    Wp     = ((Cpos*Chat)'   * invsym(Cpos*V*Cpos')     * (Cpos*Chat))
+    Wn     = ((Cneg*Chat)'   * invsym(Cneg*V*Cneg')     * (Cneg*Chat))
+    Wjoint = ((Cjoint*Chat)' * invsym(Cjoint*V*Cjoint') * (Cjoint*Chat))
+    Wdiff  = ((Cdiff*Chat)'  * invsym(Cdiff*V*Cdiff')   * (Cdiff*Chat))
 
     return((Wp, Wn, Wjoint, Wdiff, p))
 }

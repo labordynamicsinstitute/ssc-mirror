@@ -10785,6 +10785,7 @@ fmwww.bc.edu/repec/bocode/p/pschset_i_7.dlg
 fmwww.bc.edu/repec/bocode/p/praisk_methods.pdf
 fmwww.bc.edu/repec/bocode/p/prodvars.sthlp
 fmwww.bc.edu/repec/bocode/p/project_setup.dlg
+fmwww.bc.edu/repec/bocode/p/prcoint.sthlp
 fmwww.bc.edu/repec/bocode/p/prolist.pkg
 fmwww.bc.edu/repec/bocode/p/parmest_varadd_opts.sthlp
 fmwww.bc.edu/repec/bocode/p/power_cmd_tworoc.ado
@@ -10971,6 +10972,7 @@ fmwww.bc.edu/repec/bocode/p/pascal.ado
 fmwww.bc.edu/repec/bocode/p/ppplot.html
 fmwww.bc.edu/repec/bocode/p/power_kappa.pkg
 fmwww.bc.edu/repec/bocode/p/pvtest.ado
+fmwww.bc.edu/repec/bocode/p/prcoint.pkg
 fmwww.bc.edu/repec/bocode/p/popsim.ado
 fmwww.bc.edu/repec/bocode/p/plottabs.pkg
 fmwww.bc.edu/repec/bocode/p/powerq.ado
@@ -11034,6 +11036,7 @@ fmwww.bc.edu/repec/bocode/p/probgenextvalcovid.dta
 fmwww.bc.edu/repec/bocode/p/power_cmd_twosens_init.ado
 fmwww.bc.edu/repec/bocode/p/punaf.html
 fmwww.bc.edu/repec/bocode/p/parmparse.ado
+fmwww.bc.edu/repec/bocode/p/prcoint.ado
 fmwww.bc.edu/repec/bocode/p/pstest.ado
 fmwww.bc.edu/repec/bocode/p/province_devcat.sthlp
 fmwww.bc.edu/repec/bocode/p/psmatch2.dlg
@@ -13557,6 +13560,7 @@ fmwww.bc.edu/repec/bocode/l/linshell2.mlib
 fmwww.bc.edu/repec/bocode/l/lkhb.mlib
 fmwww.bc.edu/repec/bocode/l/lognormal_lefttrunc.ado
 fmwww.bc.edu/repec/bocode/l/lpoparms.mlib
+fmwww.bc.edu/repec/bocode/l/lregbreak.mlib
 fmwww.bc.edu/repec/bocode/l/lomackinlay.hlp
 fmwww.bc.edu/repec/bocode/l/lrdrop1.pkg
 fmwww.bc.edu/repec/bocode/l/lstrfun.pkg
@@ -18879,6 +18883,7 @@ fmwww.bc.edu/repec/bocode/r/rcl_functions_marginal_costs.do
 fmwww.bc.edu/repec/bocode/r/rgroup.pkg
 fmwww.bc.edu/repec/bocode/r/reprun.ado
 fmwww.bc.edu/repec/bocode/r/ras.sthlp
+fmwww.bc.edu/repec/bocode/r/regbreak_driver.mata
 fmwww.bc.edu/repec/bocode/r/roctabi.pkg
 fmwww.bc.edu/repec/bocode/r/regxfe.sthlp
 fmwww.bc.edu/repec/bocode/r/reffadjust.sthlp
@@ -18901,6 +18906,7 @@ fmwww.bc.edu/repec/bocode/r/readraster_setup.do
 fmwww.bc.edu/repec/bocode/r/runmixregmls.sthlp
 fmwww.bc.edu/repec/bocode/r/rifsureg.sthlp
 fmwww.bc.edu/repec/bocode/r/recode2.ado
+fmwww.bc.edu/repec/bocode/r/regbreak.sthlp
 fmwww.bc.edu/repec/bocode/r/rrc.ado
 fmwww.bc.edu/repec/bocode/r/regplot7.ado
 fmwww.bc.edu/repec/bocode/r/reffect.ado
@@ -19065,6 +19071,7 @@ fmwww.bc.edu/repec/bocode/r/ralsfkss.sthlp
 fmwww.bc.edu/repec/bocode/r/rdstagger_sim.sthlp
 fmwww.bc.edu/repec/bocode/r/runmlwin_mcmcdiagnostics.lin64
 fmwww.bc.edu/repec/bocode/r/rosner.pkg
+fmwww.bc.edu/repec/bocode/r/regbreak_engine4.mata
 fmwww.bc.edu/repec/bocode/r/randomid.pkg
 fmwww.bc.edu/repec/bocode/r/rawdata.xlsx
 fmwww.bc.edu/repec/bocode/r/rvlrplot7.html
@@ -19238,6 +19245,7 @@ fmwww.bc.edu/repec/bocode/r/reformat.pkg
 fmwww.bc.edu/repec/bocode/r/rdrobust_res.mo
 fmwww.bc.edu/repec/bocode/r/reghdfe_mata.sthlp
 fmwww.bc.edu/repec/bocode/r/rnbinom.mata
+fmwww.bc.edu/repec/bocode/r/regbreak.pkg
 fmwww.bc.edu/repec/bocode/r/rcsgen2.ado
 fmwww.bc.edu/repec/bocode/r/repado.ado
 fmwww.bc.edu/repec/bocode/r/reshapelabel.sthlp
@@ -19537,6 +19545,7 @@ fmwww.bc.edu/repec/bocode/r/rollreg.src
 fmwww.bc.edu/repec/bocode/r/rmcorr.ado
 fmwww.bc.edu/repec/bocode/r/runmlwin_quietshell.win64
 fmwww.bc.edu/repec/bocode/r/regtable.sthlp
+fmwww.bc.edu/repec/bocode/r/regbreak_cv.mata
 fmwww.bc.edu/repec/bocode/r/randid.ado
 fmwww.bc.edu/repec/bocode/r/runmlwin_getversion64.plugin
 fmwww.bc.edu/repec/bocode/r/ranwtddat_conttime.dta
@@ -19608,6 +19617,7 @@ fmwww.bc.edu/repec/bocode/r/radar.ado
 fmwww.bc.edu/repec/bocode/r/regresby.pkg
 fmwww.bc.edu/repec/bocode/r/rndlgn.ado
 fmwww.bc.edu/repec/bocode/r/randomid.ado
+fmwww.bc.edu/repec/bocode/r/regbreak_engine.mata
 fmwww.bc.edu/repec/bocode/r/resp.ado
 fmwww.bc.edu/repec/bocode/r/reffect.html
 fmwww.bc.edu/repec/bocode/r/randomizr.do
@@ -19643,6 +19653,7 @@ fmwww.bc.edu/repec/bocode/r/rscript.ado
 fmwww.bc.edu/repec/bocode/r/r2sem.html
 fmwww.bc.edu/repec/bocode/r/replacebylab.ado
 fmwww.bc.edu/repec/bocode/r/robreg10.pkg
+fmwww.bc.edu/repec/bocode/r/regbreak_example.do
 fmwww.bc.edu/repec/bocode/r/ralslmb.sthlp
 fmwww.bc.edu/repec/bocode/r/randomforest.jar
 fmwww.bc.edu/repec/bocode/r/revcat.pkg
@@ -19773,6 +19784,7 @@ fmwww.bc.edu/repec/bocode/r/reggae_music.ado
 fmwww.bc.edu/repec/bocode/r/robinson.sthlp
 fmwww.bc.edu/repec/bocode/r/rensheet.pkg
 fmwww.bc.edu/repec/bocode/r/reganat.ado
+fmwww.bc.edu/repec/bocode/r/regbreak_methods.sthlp
 fmwww.bc.edu/repec/bocode/r/readshare.pkg
 fmwww.bc.edu/repec/bocode/r/runmplus.sthlp
 fmwww.bc.edu/repec/bocode/r/rrlogit.ado
@@ -19792,6 +19804,7 @@ fmwww.bc.edu/repec/bocode/r/rcspc.ado
 fmwww.bc.edu/repec/bocode/r/rrdat1_plot.do
 fmwww.bc.edu/repec/bocode/r/rdplot7.html
 fmwww.bc.edu/repec/bocode/r/reprun_dataline.ado
+fmwww.bc.edu/repec/bocode/r/regbreak_engine3.mata
 fmwww.bc.edu/repec/bocode/r/replicate_lalonde.do
 fmwww.bc.edu/repec/bocode/r/rmloa.ado
 fmwww.bc.edu/repec/bocode/r/rvfplot27.html
@@ -19875,6 +19888,7 @@ fmwww.bc.edu/repec/bocode/r/redcapsetup.ado
 fmwww.bc.edu/repec/bocode/r/recycle.mo
 fmwww.bc.edu/repec/bocode/r/runmplus_load_savedata.sthlp
 fmwww.bc.edu/repec/bocode/r/rollreg.ado
+fmwww.bc.edu/repec/bocode/r/regbreak_engine5.mata
 fmwww.bc.edu/repec/bocode/r/rndwei.ado
 fmwww.bc.edu/repec/bocode/r/rwolf2.sthlp
 fmwww.bc.edu/repec/bocode/r/rcentile.ado
@@ -20082,6 +20096,7 @@ fmwww.bc.edu/repec/bocode/r/rfl.ado
 fmwww.bc.edu/repec/bocode/r/rhetplot.hlp
 fmwww.bc.edu/repec/bocode/r/renlabv.pkg
 fmwww.bc.edu/repec/bocode/r/roman.mata
+fmwww.bc.edu/repec/bocode/r/regbreak_brcv.mata
 fmwww.bc.edu/repec/bocode/r/runparscale.hlp
 fmwww.bc.edu/repec/bocode/r/rori.ado
 fmwww.bc.edu/repec/bocode/r/raking.zip
@@ -20331,6 +20346,7 @@ fmwww.bc.edu/repec/bocode/r/rcd.html
 fmwww.bc.edu/repec/bocode/r/reset2.ado
 fmwww.bc.edu/repec/bocode/r/rglm.html
 fmwww.bc.edu/repec/bocode/r/robreg.zip
+fmwww.bc.edu/repec/bocode/r/regbreak.ado
 fmwww.bc.edu/repec/bocode/r/rel_clust.html
 fmwww.bc.edu/repec/bocode/r/rdrobust.pdf
 fmwww.bc.edu/repec/bocode/r/recode12_example_data.dta
@@ -20366,6 +20382,7 @@ fmwww.bc.edu/repec/bocode/r/reghdfe5_footnote.ado
 fmwww.bc.edu/repec/bocode/r/reftex.pkg
 fmwww.bc.edu/repec/bocode/r/redi.pkg
 fmwww.bc.edu/repec/bocode/r/read_convergence.sthlp
+fmwww.bc.edu/repec/bocode/r/regbreak_engine2.mata
 fmwww.bc.edu/repec/bocode/r/rmanova.html
 fmwww.bc.edu/repec/bocode/r/reldist.pkg
 fmwww.bc.edu/repec/bocode/r/rcolp2mat.sthlp

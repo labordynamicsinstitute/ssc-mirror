@@ -9,6 +9,7 @@ program define asycaus_dynamic, rclass
           IC(string)                ///
           INTOrder(integer 1)       ///
           SHOCK(string)             ///
+          TRend(string)             ///
           WINDow(integer 0)         ///
           ROLLing                   ///
           RECursive                 ///
@@ -34,6 +35,13 @@ program define asycaus_dynamic, rclass
         di as err "shock() must be {bf:pos} or {bf:neg}"
         exit 198
     }
+    if "`trend'" == "" local trend none
+    local trend = lower("`trend'")
+    if !inlist("`trend'", "none", "drift", "both") {
+        di as err "trend() must be {bf:none}, {bf:drift}, or {bf:both}"
+        exit 198
+    }
+    local tcode = cond("`trend'"=="both", 2, cond("`trend'"=="drift", 1, 0))
     if "`rolling'" == "" & "`recursive'" == "" local rolling rolling
     if "`rolling'" != "" & "`recursive'" != "" {
         di as err "specify only one of {bf:rolling} or {bf:recursive}"
@@ -50,10 +58,10 @@ program define asycaus_dynamic, rclass
     qui mkmat `depvar' `causvar', matrix(`Yraw')
     if "`lnform'" != "" {
         mata: st_matrix("Yraw_log", log(st_matrix("`Yraw'")))
-        mata: st_matrix("Zfull", asycaus_pos_neg(st_matrix("Yraw_log"), `pflag'))
+        mata: st_matrix("Zfull", asycaus_pos_neg_trend(st_matrix("Yraw_log"), `pflag', `tcode'))
     }
     else {
-        mata: st_matrix("Zfull", asycaus_pos_neg(st_matrix("`Yraw'"), `pflag'))
+        mata: st_matrix("Zfull", asycaus_pos_neg_trend(st_matrix("`Yraw'"), `pflag', `tcode'))
     }
     local Tcomp = rowsof(Zfull)
     if `Tcomp' < 10 {
@@ -88,6 +96,8 @@ program define asycaus_dynamic, rclass
     di as txt _col(2) "Subsample mode:           " as res "`sample_type'"
     di as txt _col(2) "Window length S:          " as res "`window'"  as txt _col(40) "Min. window (Phillips et al.): " as res "`Smin'"
     di as txt _col(2) "Lag selection:            " as res "`=upper("`ic'")'" as txt _col(40) "Augmentation lags:             " as res "`intorder'"
+    local trlab = cond("`trend'"=="both","Drift + trend (2016)", cond("`trend'"=="drift","Drift (2016)","None (Granger-Yoon)"))
+    di as txt _col(2) "Component transformation:  " as res "`trlab'"
     di as txt _col(2) "Bootstrap reps per win.:  " as res "`boot'"
     di as txt "{hline 78}"
     di as txt _col(2) "Estimating " as res "`nsub'" as txt " subsamples..."  _continue
