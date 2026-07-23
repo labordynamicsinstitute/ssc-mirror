@@ -63,6 +63,7 @@ p nsplit module to split numeric variable into components
 p nstage module for multi-arm, multi-stage (MAMS) trial designs for time-to-event outcomes
 p nstagebin module to provide facilities for optimising and designing multi-arm multi-stage (MAMS) randomised controlled trials with binary outcomes
 p nstagebinopt module to compute admissible multi-arm multi-stage trial designs with binary outcomes
+p ntables module to export journal-style publication-ready tables
 p ntreatreg module for estimation of treatment effects in the presence of neighbourhood interactions
 p ntwrk module for network analysis
 p num2base26 module to provide an interface to Mata's numtobase26() function

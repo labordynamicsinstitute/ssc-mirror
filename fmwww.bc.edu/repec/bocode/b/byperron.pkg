@@ -1,0 +1,25 @@
+d 'BYPERRON': module to determine structural breaks in time series models (Bai-Perron, 2003; Yamamoto-Perron, 2013) 
+d
+d  byperron estimates and tests multiple structural changes in
+d linear time series models, implementing both the classical time
+d domain procedure of Bai and Perron (1998 & 2003) and its band
+d spectral generalization by Yamamoto and Perron (2013). Three
+d methods are provided: the full spectrum, which delivers the
+d classical Bai-Perron tests and break dates; the truncated
+d spectrum, which is robust to low frequency contamination of the
+d errors such as level shifts, remaining trends or long memory; and
+d a user-chosen frequency band, which tests stability at specific
+d horizons such as business cycle frequencies. 
+d
+d KW: time series
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260722
+d
+d Author: Ozan Eruygur,  Ankara Haci Bayram Veli University
+d Support: email eruygur@@gmail.com
+d
+f byperron.ado
+f byperron.sthlp

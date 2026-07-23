@@ -84,6 +84,7 @@ p bmtest module for computing the independent two-sample Brunner-Munzel test
 p bnormpdf module to calculate the bivariate normal density
 p boost module to perform boosted regression
 p boottest module to provide fast execution of the wild bootstrap with null imposed
+p bootur module to perform bootstrap unit root tests for single series, multiple series and panels 
 p boundedur module to perform unit root tests for bounded time series
 p boundeduroot module to perform unit-root and level-shift tests for bounded time series 
 p box module to find and set the Box local folder as Stata's working directory 
@@ -114,6 +115,7 @@ p butterworth module to implement Butterworth square-wave highpass filter for ti
 p bygap module to insert by-gap observation at the start of each by-group
 p byhist module to produce interlaced histograms
 p bynote module to create a note with a user-specified format for use with the by option
+p byperron module to determine structural breaks in time series models (Bai-Perron, 2003; Yamamoto-Perron, 2013) 
 p bys module to automatically sort on the bylist (version 5)
 p bystore module to repeat estimation commands and store estimates
 p byvar module to repeat a command by variable

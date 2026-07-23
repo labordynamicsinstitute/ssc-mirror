@@ -1,0 +1,21 @@
+d 'MINDF': module to perform HLT unit root tests with up to three breaks in trend (Harvey, Leybourne and Taylor, 2013)
+d
+d  Abstract: mindf computes the minimum Dickey-Fuller unit root
+d tests of Harvey, Leybourne and Taylor (2013, Journal of
+d Econometrics) allowing for up to three breaks in the linear
+d trend. Trend breaks are permitted under both the unit root null
+d and the trend-stationary alternative, so the tests remain valid
+d when breaks occur in a unit root process. The ADF lag order is
+d selected by the MAIC of Ng and Perron (2001) computed on
+d OLS-detrended residuals, following Perron and Qu (2007). 
+d
+d KW: time series
+d KW: structural breaks
+d KW: unit roots
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260722
+d
+f mindf.ado
+f mindf.sthlp

@@ -172,6 +172,7 @@ p mimpt module to impute missing values and persist in case of non-convergence
 p mimrgns module to run margins after mi estimate
 p mimstack module to stack multiply-imputed datasets into format required by mim
 p minap module to calculate minimum average partial correlation for principal components
+p mindf module to perform HLT unit root tests with up to three breaks in trend (Harvey, Leybourne and Taylor, 2013)
 p minmse module to create balanced groups for treatment in experiments with one or several treatment arms 
 p mint module to examine across-groups equivalence of confirmatory factor analysis (CFA) measurement model parameters
 p miparallel module to perform parallel estimation for multiple imputed datasets

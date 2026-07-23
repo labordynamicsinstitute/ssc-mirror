@@ -1,0 +1,24 @@
+d 'NTABLES': module to export journal-style publication-ready tables
+d
+d  ntables exports estimation and descriptive output to
+d journal-formatted tables in DOCX, XLSX, HTML and CSV. It
+d auto-detects the result type in memory (any e(b)/e(V) estimator,
+d summary statistics, correlation matrices, cross-tabulations,
+d codebooks and unit-root tests) and applies the appropriate
+d layout. It supports prefix syntax, side-by-side multi-model
+d regression tables, variable filtering via keep()/drop(), variable
+d labels, custom significance thresholds and user-supplied notes. 
+d
+d KW: tables
+d KW: estiaation tables
+d KW: output formats 
+d
+d Requires: Stata version 16 (rforest from SSC required for rf option)
+d
+d Distribution-Date: 20260722
+d
+d Author: Ajay Kumar Samariya,  Noterva
+d Support: email notervaindia@@gmail.com
+d
+f ntables.ado
+f ntables.sthlp

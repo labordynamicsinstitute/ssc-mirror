@@ -1,0 +1,40 @@
+d 'BOOTUR': module to perform bootstrap unit root tests for single series, multiple series and panels 
+d
+d	  bootur is a Stata port of the R package bootUR (Smeekes
+d and Wilms, 2023). It performs a wide	  range of bootstrap
+d augmented Dickey-Fuller (ADF) unit root tests for individual time
+d series,    several time series jointly, and panel data. It also
+d computes the standard (asymptotic) ADF test	 with MacKinnon
+d (1996) p-values, determines the order of integration of each
+d series, and provides	  differencing and missing-value/order
+d diagnostics.	  Data are supplied as one or more numeric
+d variables in wide form (each variable is one time    series, rows
+d are time). Series may have different starting and end points
+d (unbalanced): the    leading/trailing missing values of each
+d series are handled automatically. Internal missing values   
+d (gaps) are not allowed.    Six bootstrap schemes are available.
+d The moving-block (MBB) and sieve (SB) bootstraps resample    and
+d cannot be used with unbalanced panels for the joint tests; the
+d wild schemes (BWB, DWB, AWB,	  SWB) can. The union test takes
+d the union of rejections over intercept/trend and OLS/QD (GLS)   
+d detrending (Harvey, Leybourne and Taylor, 2012; Smeekes and
+d Taylor, 2012) and needs no choice of	  deterministic component. 
+d See help bootur methods for the underlying algorithm and its
+d mapping to	the equations in the references. 
+d
+d KW: panel data
+d KW: unit root tests
+d KW: bootstrap
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260722
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f bootur.ado
+f bootur.sthlp
+f bootur_example.do
+f bootur_methods.sthlp
+f ../m/MacroTS.dta

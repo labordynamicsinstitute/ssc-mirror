@@ -62,6 +62,13 @@ help for {hi: weakivtest}
 
 {phang2}{stata "weakivtest" : . weakivtest }{p_end}
 
+{pstd}Weights {p_end}
+{phang2}{stata "generate double aw = 1 " : . generate double aw = 1}{p_end}
+
+{phang2}{stata "ivreg2 dc (rrf = z1 z2 z3 z4) [aweight=aw], robust bw(7)" : . ivreg2 dc (rrf = z1 z2 z3 z4) [aweight=aw], robust bw(7)}{p_end}
+
+{phang2}{stata "weakivtest" : . weakivtest }{p_end}
+
 {pstd}Implement {cmd:weakivtest} as a postestimation command for {cmd:ivregress}.{p_end}
 {phang2}{stata "ivregress 2sls dc (rrf=z1 z2 z3 z4), vce(hac nw 6)" : . ivregress 2sls dc (rrf=z1 z2 z3 z4), vce(hac nw 6)}{p_end}
 
@@ -98,30 +105,30 @@ help for {hi: weakivtest}
 {col 4} {cmd:r(eps)} {col 25} Optimization Parameter
 {col 4} {cmd:r(F_eff)} {col 25} Effective F Statistic
  
-{col 4} {cmd:r(c_TSLS_5)} {col 25} TSLS Critical Value for tau{it:=}5{it:%}
-{col 4} {cmd:r(c_TSLS_10)} {col 25} TSLS Critical Value for tau{it:=}10{it:%}
-{col 4} {cmd:r(c_TSLS_20)} {col 25} TSLS Critical Value for tau{it:=}20{it:%}
-{col 4} {cmd:r(c_TSLS_30)} {col 25} TSLS Critical Value for tau{it:=}30{it:%}
+{col 4} {cmd:r(c_TSLS_5)} {col 25} TSLS Crit Value for tau{it:=}5{it:%}
+{col 4} {cmd:r(c_TSLS_10)} {col 25} TSLS Crit Value for tau{it:=}10{it:%}
+{col 4} {cmd:r(c_TSLS_20)} {col 25} TSLS Crit Value for tau{it:=}20{it:%}
+{col 4} {cmd:r(c_TSLS_30)} {col 25} TSLS Crit Value for tau{it:=}30{it:%}
 
-{col 4} {cmd:r(c_LIML_5)} {col 25} LIML Critical Value for tau{it:=}5{it:%}
-{col 4} {cmd:r(c_LIML_10)} {col 25} LIML Critical Value for tau{it:=}10{it:%}
-{col 4} {cmd:r(c_LIML_20)} {col 25} LIML Critical Value for tau{it:=}20{it:%}
-{col 4} {cmd:r(c_LIML_30)} {col 25} LIML Critical Value for tau{it:=}30{it:%}
+{col 4} {cmd:r(c_LIML_5)} {col 25} LIML Crit Value for tau{it:=}5{it:%}
+{col 4} {cmd:r(c_LIML_10)} {col 25} LIML Crit Value for tau{it:=}10{it:%}
+{col 4} {cmd:r(c_LIML_20)} {col 25} LIML Crit Value for tau{it:=}20{it:%}
+{col 4} {cmd:r(c_LIML_30)} {col 25} LIML CritValue for tau{it:=}30{it:%}
 
-{col 4} {cmd:r(c_simp_5)} {col 25} TSLS Simplified Conservative Critical Value for tau{it:=}5{it:%}
-{col 4} {cmd:r(c_simp_10)} {col 25} TSLS Simplified Conservative Critical Value for tau{it:=}10{it:%}
-{col 4} {cmd:r(c_simp_20)} {col 25} TSLS Simplified Conservative Critical Value for tau{it:=}20{it:%}
-{col 4} {cmd:r(c_simp_30)} {col 25} TSLS Simplified Conservative Critical Value for tau{it:=}30{it:%}
+{col 4} {cmd:r(c_simp_5)} {col 25} TSLS Simplified Conservative Crit Value for tau{it:=}5{it:%}
+{col 4} {cmd:r(c_simp_10)} {col 25} TSLS Simplified Conservative Crit Value for tau{it:=}10{it:%}
+{col 4} {cmd:r(c_simp_20)} {col 25} TSLS Simplified Conservative Crit Value for tau{it:=}20{it:%}
+{col 4} {cmd:r(c_simp_30)} {col 25} TSLS Simplified Conservative Crit Value for tau{it:=}30{it:%}
 
 {col 4} {cmd:r(x_TSLS_5)} {col 25} TSLS Non-Centrality Parameter for tau{it:=}5{it:%}
 {col 4} {cmd:r(x_TSLS_10)} {col 25} TSLS Non-Centrality Parameter for tau{it:=}10{it:%}
 {col 4} {cmd:r(x_TSLS_20)} {col 25} TSLS Non-Centrality Parameter for tau{it:=}20{it:%}
 {col 4} {cmd:r(x_TSLS_30)} {col 25} TSLS Non-Centrality Parameter for tau{it:=}30{it:%}
 
-{col 4} {cmd:r(K_eff_TSLS_5)} {col 25} TSLS Effective Degrees of Freedom for tau{it:=}5{it:%}
-{col 4} {cmd:r(K_eff_TSLS_10)} {col 25} TSLS Effective Degrees of Freedom for tau{it:=}10{it:%}
-{col 4} {cmd:r(K_eff_TSLS_20)} {col 25} TSLS Effective Degrees of Freedom for tau{it:=}20{it:%}
-{col 4} {cmd:r(K_eff_TSLS_30)} {col 25} TSLS Effective Degrees of Freedom for tau{it:=}30{it:%}
+{col 4} {cmd:r(K_eff_TSLS_5)} {col 25} TSLS Effective Deg of Freedom for tau{it:=}5{it:%}
+{col 4} {cmd:r(K_eff_TSLS_10)} {col 25} TSLS Effective Deg of Freedom for tau{it:=}10{it:%}
+{col 4} {cmd:r(K_eff_TSLS_20)} {col 25} TSLS Effective Deg of Freedom for tau{it:=}20{it:%}
+{col 4} {cmd:r(K_eff_TSLS_30)} {col 25} TSLS Effective Deg of Freedom for tau{it:=}30{it:%}
 
 {col 4} {cmd:r(x_LIML_5)} {col 25} LIML Non-Centrality Parameter for tau{it:=}5{it:%}
 {col 4} {cmd:r(x_LIML_10)} {col 25} LIML Non-Centrality Parameter for tau{it:=}10{it:%}
@@ -133,10 +140,10 @@ help for {hi: weakivtest}
 {col 4} {cmd:r(K_eff_LIML_20)} {col 25} LIML Effective Degrees of Freedom for tau{it:=}20{it:%}
 {col 4} {cmd:r(K_eff_LIML_30)} {col 25} LIML Effective Degrees of Freedom for tau{it:=}30{it:%}
 
-{col 4} {cmd:r(x_simp_5)} {col 25} TSLS Simplified Non-Centrality Parameter for tau{it:=}5{it:%}
-{col 4} {cmd:r(x_simp_10)} {col 25} TSLS Simplified Non-Centrality Parameter for tau{it:=}10{it:%}
-{col 4} {cmd:r(x_simp_20)} {col 25} TSLS Simplified Non-Centrality Parameter for tau{it:=}20{it:%}
-{col 4} {cmd:r(x_simp_30)} {col 25} TSLS Simplified Non-Centrality Parameter for tau{it:=}30{it:%}
+{col 4} {cmd:r(x_simp_5)} {col 25} TSLS Simplified Non-Centrality Param for tau{it:=}5{it:%}
+{col 4} {cmd:r(x_simp_10)} {col 25} TSLS Simplified Non-Centrality Param for tau{it:=}10{it:%}
+{col 4} {cmd:r(x_simp_20)} {col 25} TSLS Simplified Non-Centrality Param for tau{it:=}20{it:%}
+{col 4} {cmd:r(x_simp_30)} {col 25} TSLS Simplified Non-Centrality Param for tau{it:=}30{it:%}
 
 {col 4} {cmd:r(K_eff_simp_5)} {col 25} TSLS Simplified Effective Degrees of Freedom for tau{it:=}5{it:%}
 {col 4} {cmd:r(K_eff_simp_10)} {col 25} TSLS Simplified Effective Degrees of Freedom for tau{it:=}10{it:%}
@@ -190,8 +197,11 @@ are weak. {it:Review of Economics and Statistics} 86:797-810.
 
 	The package is currently maintained by Carolin Pflueger, Su Wang and Luis Yepez (luisyepezsa@uchicago.edu). 
 
-        	We thank Peter Hull for pointing out and fixing an error with the weights. We thank Johannes Stroebel and Drew Johnston for help with reghdfe. 
-		All remaining errors are our own. 
+        We thank Peter Hull for pointing out and fixing an error with the weights. 
+
+	We thank Johannes Stroebel and Drew Johnston for help with reghdfe. 
+
+	All remaining errors are our own. 
 
 {marker also}{...}
 {title:Also see}
