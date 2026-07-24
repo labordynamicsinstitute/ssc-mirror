@@ -1,0 +1,26 @@
+d 'XTFLEXUR': module to provide factor-augmented, break- and Fourier-robust panel time-series tests
+d
+d    xtflexur is a library of second-generation panel unit root
+d tests built on a common factor-extraction engine (the PANIC
+d procedure of Bai and Ng), so that the tests are robust to strong
+d cross-sectional dependence of an unknown form.   
+d
+d KW: panel data
+d KW: unit root tests
+d KW: structural breaks
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260723
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtflexur.sthlp
+f xtfpanic_methods.sthlp
+f xtfpanic.ado
+f xtfpanic.sthlp
+f xtpanic_example.do
+f xtpanic_methods.sthlp
+f xtpanic.ado
+f xtpanic.sthlp

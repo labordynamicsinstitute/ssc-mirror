@@ -13,13 +13,15 @@ d KW: APC analysis
 d
 d Requires: Stata version 14 and palettes from SSC (q.v.)
 d
-d Distribution-Date: 20251125
+d Distribution-Date: 20260723
 d
 d Author:  Gordey Yastrebov, Department of Sociology and Social Psychology, University of Cologne
 d Support: email gordey.yastrebov@@gmail.com
 d
 f apcbound.ado
 f apcbound.sthlp
+f apcdescribe.ado
+f apcdescribe.sthlp
 f apcest.ado
 f apcest.sthlp
 f apcplot.ado

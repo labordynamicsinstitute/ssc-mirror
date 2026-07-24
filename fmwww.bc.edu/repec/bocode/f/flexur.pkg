@@ -1,0 +1,26 @@
+d 'FLEXUR': module to provide flexible unit-root, stationarity and variance-break tests for time series
+d
+d    flexur is a small library of time-series tests robust to
+d structural breaks, non-normal errors and conditional
+d heteroskedasticity.	 
+d
+d KW: unit root tests
+d KW: structural breaks
+d KW: normality
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260723
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f flexur.sthlp
+f ../c/covstat_example.do
+f ../c/covstat_methods.sthlp
+f ../c/covstat.ado
+f ../c/covstat.sthlp
+f ../i/icss_example.do
+f ../i/icss_methods.sthlp
+f ../i/icss.ado
+f ../i/icss.sthlp

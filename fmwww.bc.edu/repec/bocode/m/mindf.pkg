@@ -17,5 +17,8 @@ d Requires: Stata version 14
 d
 d Distribution-Date: 20260722
 d
+d Author: Ozan Eruygur,  Ankara Haci Bayram Veli University
+d Support: email eruygur@@gmail.com
+d
 f mindf.ado
 f mindf.sthlp

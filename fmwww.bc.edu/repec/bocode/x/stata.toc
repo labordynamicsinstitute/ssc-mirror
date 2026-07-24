@@ -88,6 +88,7 @@ p xtfeis module to estimate linear Fixed-Effects model with Individual-specific 
 p xtfifevd module to implement Fixed Effects Filtered & Vector Decomposition Estimation for Time-Invariant and Rarely Changing Variables in Panel Data with Unit Fixed Effects
 p xtfisher module to compute Fisher type unit root test for panel data 
 p xtfixedcoeftvcu module to estimate Panel Data Models with Coefficients that Vary over Time and Cross-sectional Units
+p xtflexur module to provide factor-augmented, break- and Fourier-robust panel time-series tests
 p xtfmb module to execute Fama-MacBeth two-step panel regression
 p xtfmg module providing second-generation heterogeneous panel estimators with individual and common shocks:
 p xtgcause module to test for Granger non-causality in heterogeneous panels

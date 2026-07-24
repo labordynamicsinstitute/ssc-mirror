@@ -71,6 +71,7 @@ p flex module for flexible pseudo maximum likelihood estimation of models for do
 p flexdid module for flexible estimation of difference-in-differences regression with staggered implementation
 p flexmat module to create flexible matrices / tables of text, numbers or both
 p flexpaneldid module to perform causal analysis of treatments with varying start dates and durations
+p flexur module to provide flexible unit-root, stationarity and variance-break tests for time series
 p floatplot module to draw Floating or sliding stacked bar plot
 p floattolong module to recast variables from float to long storage type
 p florindjp module to create a flower plot to visualize indicators

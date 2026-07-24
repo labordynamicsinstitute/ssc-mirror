@@ -1,7 +1,9 @@
-*! version 2.4.6
+*! version 2.4.7
 *! ntables: Advanced journal-level publication-ready tables
-*! Author: Ajay Kumar Samariya, Noterva, India
+*! Author: Ajay Kumar Samariya, Noterva India
 *! Support: notervaindia@gmail.com
+*! License: MIT. Copyright (c) 2026 Ajay Kumar Samariya, Noterva India.
+*! Provided as is, without warranty of any kind.
 
 program define ntables, rclass
     version 16.0
@@ -60,7 +62,7 @@ program define ntables, rclass
     }
     local fmt = lower("`format'")
     
-    local ntables_version "2.4.6"
+    local ntables_version "2.4.7"
     di as txt "{hline 70}"
     di as res "Noterva Tables (ntables) v`ntables_version' - `method' to `format'"
     di as txt "Exporting to: `using'"
