@@ -82,12 +82,12 @@
 
 <div id="extoc">
 <ul>
-<li><a href="estout.html#estout000">Basic syntax and usage</a></li>
-<li><a href="estout.html#estout002">Choosing a <b>style()</b></a></li>
-<li><a href="estout.html#estout003">The <b>cells()</b> option</a></li>
-<li><a href="estout.html#estout004">The <b>stats()</b> option</a></li>
-<li><a href="estout.html#estout005">Using labels</a></li>
-<li><a href="estout.html#estout006">Numerical formats</a></li>
+<li><a href="#estout000">Basic syntax and usage</a></li>
+<li><a href="#estout002">Choosing a <b>style()</b></a></li>
+<li><a href="#estout003">The <b>cells()</b> option</a></li>
+<li><a href="#estout004">The <b>stats()</b> option</a></li>
+<li><a href="#estout005">Using labels</a></li>
+<li><a href="#estout006">Numerical formats</a></li>
 </ul>
 </div>
 
@@ -107,9 +107,9 @@ most important options:</p>
 </pre>
 <p>where <i>namelist</i> is a list of the names of stored estimation sets (the name
 list can be entered as <b>*</b> to refer to all stored estimates). The
-<a href="hlp_estout.html#cells"><b>cells()</b></a>
-and <a href="hlp_estout.html#sum"><b>stats()</b></a> options determine the primary contents of the table. The
-<a href="hlp_estout.html#def"><b>style()</b></a> option determines the basic formatting of the table.
+<a href=hlp_estout.html#cells><b>cells()</b></a>
+and <a href=hlp_estout.html#sum><b>stats()</b></a> options determine the primary contents of the table. The
+<a href=hlp_estout.html#def><b>style()</b></a> option determines the basic formatting of the table.
 </p>
 
 
@@ -255,7 +255,7 @@ results window or the log). However, the table would look tidy if
 <h2>Choosing a <b>style()</b></h2>
 
 <p>
-<b>estout</b> has a <a href="hlp_estout.html#def"><b>style()</b></a> option to set the basic format of the table. The default style for
+<b>estout</b> has a <a href=hlp_estout.html#def><b>style()</b></a> option to set the basic format of the table. The default style for
 screen display is the <b>smcl</b> style.  The default export style (i.e. if <b>using</b> is specified) is
 the <b>tab</b> style. (See the examples above.) Other predefined styles are <b>fixed</b>, <b>tex</b>, and <b>html</b>,
 but it is also possible to define one's own styles
@@ -289,7 +289,7 @@ tabular environment:
 
 <p>
 (Note that <b>_cons</b> has been replaced by its LaTeX equivalent in the example
-above using the <a href="hlp_estout.html#varlabels"><b>varlabels()</b></a> option (the underscore character produces an
+above using the <a href=hlp_estout.html#varlabels><b>varlabels()</b></a> option (the underscore character produces an
 error in LaTeX unless it is preceded by a backslash). For more
 information on the <b>varlabels()</b> option, see <b>estout</b>'s <a href="hlp_estout.html#lab">Labeling</a> options.)
 </p>
@@ -299,7 +299,7 @@ information on the <b>varlabels()</b> option, see <b>estout</b>'s <a href="hlp_e
 <h2>The <b>cells()</b> option</h2>
 
 <p>
-Use the <a href="hlp_estout.html#cells"><b>cells()</b></a> option to specify the parameter statistics to be
+Use the <a href=hlp_estout.html#cells><b>cells()</b></a> option to specify the parameter statistics to be
 tabulated and how they are to be arranged. The parameter statistics
 available are <b>b</b> (point estimates; the default), <b>se</b> (standard errors), <b>t</b>
 (t-/z-statistics), <b>p</b> (p-values), <b>ci</b> (confidence intervals; to display the
@@ -433,7 +433,7 @@ fully customizable (see <b>estout</b>'s <a href="hlp_estout.html#sig">Significan
 <h2>The <b>stats()</b> option</h2>
 
 <p>
-Finally, use the <a href="hlp_estout.html#sum"><b>stats()</b></a> option to specify scalar statistics to be
+Finally, use the <a href=hlp_estout.html#sum><b>stats()</b></a> option to specify scalar statistics to be
 displayed for each model in the table footer. The available scalar
 statistics are <b>aic</b> (Akaike's information criterion), <b>bic</b> (Schwarz's
 information criterion), <b>rank</b> (the rank of <b>e(V)</b>, i.e. the number of free
@@ -519,8 +519,8 @@ vce         <b>          ols       robust    bootstrap</b>
 <h2>Using labels</h2>
 
 <p>
-The <a href="hlp_estout.html#label"><b>label</b></a> option will cause <b>estout</b> to use variable labels
-and model labels, if available, and <a href="hlp_estout.html#legend"><b>legend</b></a> will display a legend
+The <a href=hlp_estout.html#label><b>label</b></a> option will cause <b>estout</b> to use variable labels
+and model labels, if available, and <a href=hlp_estout.html#legend><b>legend</b></a> will display a legend
 explaining the significance symbols and thresholds.
 Furthermore, there are various options for
 specifying custom labels for the different table elements. The following
@@ -567,8 +567,8 @@ N. of cases         <b>           74                           74               
 
 <p>
 The <b>fmt()</b> suboption in
-<a href="hlp_estout.html#cells"><b>cells()</b></a> and
-<a href="hlp_estout.html#sum"><b>stats()</b></a>
+<a href=hlp_estout.html#cells><b>cells()</b></a> and
+<a href=hlp_estout.html#sum><b>stats()</b></a>
 can be used to determine the display formats of the tabulates statistics.
 Available format specifications are official Stata's display formats, such as
 %9.0g or %8.2f (see help <a href="http://www.stata.com/help.cgi?format"><b>format</b></a>),

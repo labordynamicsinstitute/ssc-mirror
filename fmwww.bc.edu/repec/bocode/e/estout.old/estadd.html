@@ -82,10 +82,10 @@
 
 <div id="extoc">
 <ul>
-<li><a href="estadd.html#estadd001">Basic syntax and usage</a></li>
-<li><a href="estadd.html#estadd004">Adding scalars</a></li>
-<li><a href="estadd.html#estadd008">Adding results by subgroups</a></li>
-<li><a href="estadd.html#estadd007">Writing one's own subroutines</a></li>
+<li><a href="#estadd001">Basic syntax and usage</a></li>
+<li><a href="#estadd004">Adding scalars</a></li>
+<li><a href="#estadd008">Adding results by subgroups</a></li>
+<li><a href="#estadd007">Writing one's own subroutines</a></li>
 </ul>
 </div>
 
@@ -194,7 +194,7 @@ Hint: To add the beta coefficients to all stored models, you may also type</p>
 <a name="estadd003"></a>
 <p>
 The procedure can be further simplified using
-<a href="http://fmwww.bc.edu/repec/bocode/e/estout.old/intro_eststo.html"><b>eststo</b></a>
+<a href="intro_eststo.html"><b>eststo</b></a>
 to store the models:
 </p>
 
@@ -232,7 +232,7 @@ foreign     <b>                   .573081</b>
 <p>
 A common situation is that one wants to compute some additional
 tests statistics or summary measures and then included them in the regression table.
-Use <a href="hlp_estadd.html#scalar"><b>estadd scalar</b></a> to add such scalar results to the
+Use <a href=hlp_estadd.html#scalar><b>estadd scalar</b></a> to add such scalar results to the
 estimation sets. Example:
 </p>
 
@@ -334,8 +334,8 @@ to compute additional statistics
 (see the help file for a <a href="hlp_estadd.html#subcommands">list of the available functions</a>).
 If you want to add other results, you
 can either hand-code the computation of the results after each model and add them
-using <a href="hlp_estadd.html#scalar"><b>estadd scalar</b></a>
-and <a href="hlp_estadd.html#matrix"><b>estadd matrix</b></a>, or you can automate the
+using <a href=hlp_estadd.html#scalar><b>estadd scalar</b></a>
+and <a href=hlp_estadd.html#matrix><b>estadd matrix</b></a>, or you can automate the
 process by writing your own subcommand. Say, you want to report the 
 multiple correlation (i.e. the square root of the R-squared), then you could either
 code something like
@@ -540,8 +540,8 @@ _cons       <b>     1946.069    -5853.696</b>
 
 <p>
 The simple subcommand examples given here do not support
-<b>estadd</b>'s <a href="hlp_estadd.html#options"><b>replace</b></a> and
-<a href="hlp_estadd.html#options"><b>prefix()</b></a> options.
+<b>estadd</b>'s <a href=hlp_estadd.html#options><b>replace</b></a> and
+<a href=hlp_estadd.html#options><b>prefix()</b></a> options.
 If you are interested in writing more advanced subcommands,
 have a look at the code of the existing subcommands in "estadd.ado".
 To view the code in Stata 9, type</p>

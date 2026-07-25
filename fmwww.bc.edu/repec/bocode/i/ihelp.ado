@@ -361,7 +361,7 @@ program define ihelp_ms, rclass
 	if "`clipoff'" ~= ""{
 		exit 
 	}
-	local text_ws <html><body><!--StartFragment--><a href='http://fmwww.bc.edu/repec/bocode/i/`url''><strong>`bold'</strong> `text'</a><!--EndFragment--></body></html>
+	local text_ws <html><body><!--StartFragment--><a href='`url''><strong>`bold'</strong> `text'</a><!--EndFragment--></body></html>
 	local ws_start: display %09.0f strpos(`"`text_ws'"', "<html>")
 	local ws_end: display %09.0f strpos(`"`text_ws'"', "</html>") + strlen("</html>")
 	local ws_startf: display %09.0f strpos(`"`text_ws'"', "<!--StartFragment-->") + strlen("<!--StartFragment-->")

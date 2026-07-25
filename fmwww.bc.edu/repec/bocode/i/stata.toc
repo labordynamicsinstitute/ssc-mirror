@@ -31,6 +31,7 @@ p ihstrans module for generating inverse hyperbolic sine (IHS) transformed varia
 p iia module to test the iia assumption in conditional logistic regression (version 5)
 p ilr module to compute a isometric log-ratio (ILR) transformation of a set of variables
 p imbalance module to check covariate imbalance before and after matching
+p imeus2 module to install SSC routines 
 p imperfectiv module to estimate bounds with "Imperfect Instrumental Variables" (Nevo and Rosen, 2012)
 p importsav module to convert SPSS file to Stata 
 p imputeitems module to impute missing data of binary items

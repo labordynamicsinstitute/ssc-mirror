@@ -1,0 +1,22 @@
+d 'IMEUS2': module to install SSC routines 
+d
+d    imeus2} is a convenience command that accompanies	An
+d Introduction to Modern Econometrics Using Stata, Second Edition, 
+d by Christopher F. Baum (Stata Press, 2026).  The book's examples
+d use several community-contributed Stata  commands that are
+d available from the SSC archive. The {cmd:imeus2} command will
+d automatically install the latest versions of these commands into
+d the user's copy of Stata by using the official SSC command. 
+d
+d KW: community-contributed commands
+d KW: IMEUS2
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260724
+d
+d Author: Christopher F Baum, Boston College 
+d Support: email baum@@bc.edu
+d
+f imeus2.ado
+f imeus2.sthlp

@@ -364,9 +364,9 @@ program webdoc_set
         global WebDoc_set_figure  <figure id="\`macval(id)'">
         global WebDoc_set__figure </figure>
         global WebDoc_set_fcap    <figcaption>\`macval(caption)'</figcaption>
-        global WebDoc_set_flink   <a href="http://fmwww.bc.edu/repec/bocode/w/\`webname'\`suffix'">
+        global WebDoc_set_flink   <a href="\`webname'\`suffix'">
         global WebDoc_set__flink  </a>
-        global WebDoc_set_img   `"<img alt="\`macval(alt)'"\`macval(title)' src="webdoc.ado"'
+        global WebDoc_set_img   `"<img alt="\`macval(alt)'"\`macval(title)' src=""'
         global WebDoc_set__img  `""\`macval(attributes)'/>"'
         global WebDoc_set_svg     <span\`macval(title)'\`macval(attributes)'>
         global WebDoc_set__svg    </span>
@@ -1921,7 +1921,7 @@ void webdoc_header(real scalar fh, real scalar fh2)
             else if (theme=="united")    integrity = "sha384-pVJelSCJ58Og1XDc2E95RVYHZDPb9AVyXsI8NoVpB2xmtxoZKJePbMfE4mlXw7BJ"
             else if (theme=="yeti")      integrity = "sha384-HzUaiJdCTIY/RL2vDPRGdEQHHahjzwoJJzGUkYjHVzTwXFQ2QN/nVgX7tzoMW3Ov"
             else _error(theme + ": invalid bstheme")
-            fput(fh, `"<link href="webdoc.ado"' + css + ".min.css" + 
+            fput(fh, `"<link href=""' + css + ".min.css" + 
                 `"" rel="stylesheet" integrity=""' + integrity + 
                 `"" crossorigin="anonymous">"')
         }
@@ -2040,8 +2040,8 @@ void webdoc_stripsthlp(real scalar fh)
     cmd = st_local("using")
     pathsplit(cmd, path, cmd)
     cmd = pathrmsuffix(cmd)
-    href0 = `"<a href="http://fmwww.bc.edu/help.cgi?"'
-    href1 = `"<a href="webdoc.ado#"'
+    href0 = `"<a href="/help.cgi?"'
+    href1 = `"<a href="#"'
     href2 = `"<a href="http://www.stata.com/help.cgi?"'
     if (noid==0) sub = 
         "<p>", "",                                 // remove <p> tags 
@@ -3225,7 +3225,7 @@ void _webdoc_toc(pointer vector S, string colvector f, real scalar toc,
             j = strpos(s, "</h" + strofreal(d+otoc) + ">") // closing </h#>
             if (j>0) s = substr(s, 1, j-1)
         }
-        *S[2] = *S[2] \ `"<li><a href="webdoc.ado#"' + id + `"">"' + num + s + "</a>"
+        *S[2] = *S[2] \ `"<li><a href="#"' + id + `"">"' + num + s + "</a>"
     }
 }
 
