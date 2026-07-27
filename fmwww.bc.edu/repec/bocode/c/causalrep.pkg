@@ -1,0 +1,40 @@
+d 'CAUSALREP': module for quantifying the internal validity and representativeness of OLS, IV, and two-way fixed-effects estimands
+d
+d  causalrep implements diagnostics for quantifying the internal
+d validity and representativeness of weighted estimands developed
+d by Poirier and Słoczyński (2026). It computes the measure of
+d internal validity (MIV), defined as the largest possible share of
+d the relevant target population for which an ordinary
+d least-squares (OLS), instrumental-variables (IV), or two-way
+d fixed-effects (TWFE) estimand can be represented as an average
+d treatment effect. Where applicable, it also computes the measure
+d of representativeness (MR), defined as the corresponding largest
+d possible share of the entire population. The target population is
+d the entire population for OLS, the complier population for IV,
+d and the treated population for TWFE. The package can also compute
+d these measures conditional on user-supplied conditional average
+d treatment effects. 
+d
+d KW: weighted estimands
+d KW: internal validity
+d KW: representativeness
+d KW: heterogeneous treatment effects
+d KW: ordinary least squares
+d KW: instrumental variables
+d KW: two-way fixed effects
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260726
+d
+d Author:  Tymon Słoczyński , Brandeis University
+d Support: email tslocz@@brandeis.edu
+d
+f causalrep.ado
+f causalrep.sthlp
+f causalrep_did.sthlp
+f causalrep_iv.sthlp
+f causalrep_ols.sthlp
+f ../_/_causalrep_ols.ado
+f ../_/_causalrep_did.ado
+f ../_/_causalrep_iv.ado

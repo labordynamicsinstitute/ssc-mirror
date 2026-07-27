@@ -1,7 +1,8 @@
 {smcl}
 {* 23jul2026}{...}
 {vieweralsosee "xtpanic" "help xtpanic"}{...}
-{vieweralsosee "xtpanic methods" "help xtpanic_methods"}{...}
+{vieweralsosee "xtfpanic" "help xtfpanic"}{...}
+{vieweralsosee "xtpdroot (panel breaks/stationarity/causality)" "help xtpdroot"}{...}
 {vieweralsosee "flexur (time series)" "help flexur"}{...}
 {title:Title}
 
@@ -36,9 +37,11 @@ breaks and common factors (Nazlioglu et al. 2023){p_end}
 {p2colreset}{...}
 
 {pstd}
-Further {bf:xtflexur} commands (PANIC with sharp/smooth breaks, panel stationarity
-combination tests, factor-corrected panel causality) build on the same factor
-engine and are documented under their own help files.
+Related second-generation panel tests with structural breaks, stationarity
+combination tests and factor-corrected causality are in the companion
+{helpb xtpdroot:xtpdroot} library ({helpb xtpstat}, {helpb xtbreaklm},
+{helpb xtfaclm}, {helpb xtpanicsb}, {helpb xtpdcause}). The single-series
+counterparts are in {helpb flexur:flexur} and {helpb ffrals_hub:ffrals}.
 
 {title:Common conventions}
 

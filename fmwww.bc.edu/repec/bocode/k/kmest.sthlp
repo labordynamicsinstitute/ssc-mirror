@@ -3,6 +3,7 @@
 help for {cmd:kmest}{right:(Roger Newson)}
 {hline}
 
+
 {title:Compute Kaplan-Meier survival probabilities and/or percentiles as estimation results}
 
 {p 8 21 2}
@@ -60,6 +61,16 @@ in which the percentile has been replaced by {cmd:@}.
 For instance, if we want to transform the percentile using the log transform,
 then we use the option {cmd:ctransform(log(@))}.
 The default is {cmd:ctransform(@)}, implying untransformed percentiles.
+
+
+{title:Technical note}
+
+{pstd}
+{cmd:kmest} checks that the dataset has been set up as survival data using {helpb stset},
+and then checks whether the {help weight:weights} set are of a type allowed by {cmd:kmest},
+which must be {cmd:fweight} for frequency weights or {cmd:iweight} for importance weights.
+{cmd:aweight} or {cmd:pweight} aew not currently allowed.
+See {helpb weight} for details.
 
 
 {title:Examples}

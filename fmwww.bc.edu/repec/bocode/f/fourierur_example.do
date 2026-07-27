@@ -1,7 +1,7 @@
 *! fourierur_example.do - Demonstration of the fourierur main command
-*! Package: fourierur v1.0
+*! Package: fourierur v1.2
 *! Author: Dr. Merwan Roudane
-*! Date: 21 May 2026
+*! Date: 24 July 2026
 
 clear all
 set more off

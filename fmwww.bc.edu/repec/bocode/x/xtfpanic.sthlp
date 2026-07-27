@@ -1,8 +1,9 @@
 {smcl}
 {* 23jul2026}{...}
+{vieweralsosee "xtflexur (library: all commands)" "help xtflexur"}{...}
 {vieweralsosee "xtfpanic methods" "help xtfpanic_methods"}{...}
+{vieweralsosee "" "--"}{...}
 {vieweralsosee "xtpanic" "help xtpanic"}{...}
-{vieweralsosee "xtflexur (library)" "help xtflexur"}{...}
 {viewerjumpto "Syntax" "xtfpanic##syntax"}{...}
 {viewerjumpto "Description" "xtfpanic##description"}{...}
 {viewerjumpto "Options" "xtfpanic##options"}{...}

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1  15jul2026}{...}
+{* *! version 1.2  24jul2026}{...}
 {viewerjumpto "Syntax" "fourierkpss##syntax"}{...}
 {viewerjumpto "Description" "fourierkpss##description"}{...}
 {viewerjumpto "Options" "fourierkpss##options"}{...}

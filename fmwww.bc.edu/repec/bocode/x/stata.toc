@@ -152,6 +152,7 @@ p xtpatternvar module to generate string variable describing panel patterns
 p xtpcaus module to perform Panel Granger Causality Tests: Panel Fourier Toda-Yamamoto (PFTY) and Panel Quantile Causality (PQC)
 p xtpcmg module to implement Panel Cointegrating Polynomial Regressions: Group-Mean & Pooled FM-OLS
 p xtpdlib module to provide a library of second-generation panel data tests 
+p xtpdroot module to perform second-generation panel unit-root and stationarity tests robust to cross-sectional dependence
 p xtpdyn module to estimate dynamic random effects probit model with unobserved heterogeneity
 p xtpedroni module to perform Pedroni's panel cointegration tests and Panel Dynamic OLS estimation
 p xtpfardl module to provide Fourier-augmented panel ARDL / CS-ARDL estimator 

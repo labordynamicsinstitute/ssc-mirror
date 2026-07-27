@@ -1,4 +1,4 @@
-*! xtpanic 1.0.1  23jul2026   (xtflexur library)
+*! xtpanic 1.0.2  23jul2026   (xtflexur library)
 *! PANIC panel unit root test (Bai & Ng 2004): tests the idiosyncratic
 *! component after extracting common factors by principal components.
 *!

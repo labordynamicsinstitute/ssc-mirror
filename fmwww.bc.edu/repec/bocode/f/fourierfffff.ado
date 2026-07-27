@@ -2,9 +2,9 @@
 *! Economics Letters 134 (2015): 123-126
 *! Extension of GAUSS Fourier_ADF to fractional frequencies
 *! Compatible with Stata 14+
-*! Package: fourierur v1.1
+*! Package: fourierur v1.2
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: 15 July 2026
+*! Date: 24 July 2026
 
 program define fourierfffff, rclass
     version 14

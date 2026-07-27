@@ -2,9 +2,9 @@
 *! Economics Letters, 117 (2012), 196-199
 *! Ported from GAUSS code by Saban Nazlioglu
 *! Compatible with Stata 14+
-*! Package: fourierur v1.1
+*! Package: fourierur v1.2
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: 15 July 2026
+*! Date: 24 July 2026
 
 program define fourierdf, rclass
     version 14

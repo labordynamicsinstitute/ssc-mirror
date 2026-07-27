@@ -33,6 +33,7 @@ p partpred module to generate partial predictions
 p parttau module to calculate Kendall's partial tau and confidence interval
 p pascal module to draw Pascal's triangle
 p path module to support file path manipulation
+p pathintdid module performing Path-Integrated Difference-in-Differences (PI-DiD): Identification, Estimation, and Inference
 p pathmaker module to set global path variables using subfolder names
 p pathof module to return the absolute path of any parent directory of the current working directory
 p pathutil module to support file path manipulation

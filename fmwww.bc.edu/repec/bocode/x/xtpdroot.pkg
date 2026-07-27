@@ -1,0 +1,42 @@
+d 'XTPDROOT': module to perform second-generation panel unit-root and stationarity tests robust to cross-sectional dependence
+d
+d      xtpdroot collects panel unit-root and stationarity tests
+d that control for cross-sectional    dependence through common
+d factors (the PANIC approach) and, where relevant, structural	 
+d breaks. Commands read the panel from xtset, return everything in
+d r(), and ship    cross-linked help with a companion methods page.
+d It complements xtflexur (factor-based    panel unit-root tests)
+d and flexur (single-series tests). 
+d
+d KW: unit root tests
+d KW: panel data
+d KW: cross-sectional dependence
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260726
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtbreaklm_example.do
+f xtbreaklm_methods.sthlp
+f xtbreaklm.ado
+f xtbreaklm.sthlp
+f xtfaclm_example.do
+f xtfaclm_methods.sthlp
+f xtfaclm.ado
+f xtfaclm.sthlp
+f xtpanicsb_example.do
+f xtpanicsb_methods.sthlp
+f xtpanicsb.ado
+f xtpanicsb.sthlp
+f xtpdcause_example.do
+f xtpdcause_methods.sthlp
+f xtpdcause.ado
+f xtpdcause.sthlp
+f xtpdroot.sthlp
+f xtpstat_example.do
+f xtpstat_methods.sthlp
+f xtpstat.ado
+f xtpstat.sthlp

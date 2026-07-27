@@ -2,9 +2,9 @@
 *! Computational Economics, 59: 445-470
 *! With Sieve Bootstrap extension (Gerolimetto & Magrini, RIEDS 2026)
 *! Compatible with Stata 14+
-*! Package: fourierur v1.1
+*! Package: fourierur v1.2
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: 15 July 2026
+*! Date: 24 July 2026
 
 program define fourierdfdf, rclass
     version 14

@@ -29,6 +29,7 @@ p fejiv module to perform fixed effect jackknife IV (FEJIV) estimation
 p feldti module to compare two independent coefficients of reliability
 p fencode module to provide frequency-based encoding of string and numeric variables
 p fese module to calculate standard errors for fixed effects
+p ffrals module to provide Flexible-Fourier LM unit-root test with RALS and factor (RALS2) augmentation  for non-normal errors
 p fframeappend module to append data frames to currently active data frame
 p ffroot module to run all Fourier unit root and stationarity tests 
 p fgt_ci module to calculate and decompose Foster–Greer–Thorbecke (and standard) concentration indices

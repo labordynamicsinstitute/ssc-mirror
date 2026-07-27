@@ -1,22 +1,27 @@
-*! version 0.7.9.1  02jul2026  (companion predict program for xtdpthresh; code unchanged since 0.7.5)
+*! version 0.9.23  13jul2026  (companion predict program; recomputed cache checksum, guarded serial/token identity and data-integrity checks)
 *!
 *! predict program for xtdpthresh: residuals, xb, regime, arresiduals.
 *!
-*! Architecture: xtdpthresh_run persists two row sets in Mata globals that
-*! survive -restore-, both keyed by (panelvar, timevar):
+*! Architecture: xtdpthresh_run persists two row sets in Mata memory,
+*! keyed by run serial plus the exact token/recomputed-checksum guard (asarrays
+*! holding the 20 most recent runs, so -estimates store/restore- works within
+*! a session) and, within a run,
+*! by (panelvar, timevar):
 *!   (1) the ESTIMATION-equation series — y and e-hat on the rows the estimator
 *!       actually used (FOD rows under method(fod); FD rows under fd);
 *!   (2) the FD AR-test series — the exact rows the AR(1)/AR(2) tests consume.
 *! This program merges the requested series back by key via xdpt2_p_fill()
-*! (defined in xtdpthresh.ado), guarded by e(p_serial) against stale Mata
+*! (defined in xtdpthresh.ado), guarded by e(p_serial), an exact per-fit token,
+*! and e(p_cache_sig) against stale or serial-colliding Mata
 *! state. Both series are identical BY CONSTRUCTION to their estimation-time
 *! values, for every method and any panel pattern — no transformation, trim,
 *! t-2 membership, or zero-instrument (B4) filter is re-derived here.
 *!
 *! Syntax:
-*!   predict [type] newvar [if] [in] [, RESiduals XB Regime ARResiduals]
+*!   predict [type] newvar [if] [in] [, Residuals XB REGime ARResiduals]
+*!   (v0.7.13: -r- abbreviates residuals; regime needs -reg-)
 *!
-*!     residuals    (default) residual of the ESTIMATED equation:
+*!     residuals    residual of the ESTIMATED equation (must be requested):
 *!                    method(fd)     — FD residual dy - dW(g)theta
 *!                    method(fod)    — forward-orthogonal-deviation residual
 *!                    method(system) — FD-restack residual (level-equation
@@ -35,10 +40,12 @@
 *!                  not restricted to e(sample)
 *!
 *! Notes:
-*!   - Requires xtdpthresh as the active estimation results AND its Mata state
-*!     intact. After -mata: mata clear-, -discard-, a Stata restart, or
-*!     -estimates restore- of an older run, re-run xtdpthresh first (a clear
-*!     error is issued in those cases).
+*!   - Requires xtdpthresh estimation results and intact Mata state.
+*!     -estimates store/restore- IS supported for the 20 most recent runs of
+*!     the current session (v0.9.18+ guarded runtimes). After -mata: mata clear-,
+*!     -discard-, a Stata restart, eviction (>20 newer runs), or any change
+*!     to the source data (signature check, rc 459), re-run xtdpthresh
+*!     first -- a clear error is issued in every case.
 *!   - Rows outside the estimation row set (trimmed rows, rows failing the t-2
 *!     instrument-history requirement, zero-instrument rows) are missing.
 
@@ -50,13 +57,26 @@ program xtdpthresh_p
         exit 301
     }
 
-    syntax newvarname [if] [in] [, RESiduals XB Regime ARResiduals]
+    // v0.7.13: -Residuals- abbreviates to "r" (the universal Stata idiom
+    // -predict e, r-) and -REGime- requires "reg". Previously -Regime-
+    // captured the single letter "r", so -predict e, r- silently returned
+    // the 0/1 regime dummy instead of residuals.
+    syntax newvarname [if] [in] [, Residuals XB REGime ARResiduals]
 
-    // Resolve statistic (default residuals); reject combinations
+    // Resolve the explicitly requested statistic; reject combinations
     local n_opts = ("`residuals'" != "") + ("`xb'" != "") ///
                  + ("`regime'" != "") + ("`arresiduals'" != "")
     if `n_opts' > 1 {
         di as err "only one of residuals, xb, regime, arresiduals may be specified"
+        exit 198
+    }
+    // v0.9.6 R22 (#6): no silent default. Official dynamic-panel commands
+    // default to xb; this predictor's statistics are CACHED estimation-row
+    // series (not current-data linear predictions), so a silent default in
+    // either direction misleads -- require the caller to say what they want.
+    if `n_opts' == 0 {
+        di as err "specify one of: xb, residuals, arresiduals, regime"
+        di as err "(cached estimation-row statistics; see help xtdpthresh)"
         exit 198
     }
     local stat "residuals"
@@ -88,6 +108,33 @@ program xtdpthresh_p
         di as err "that did not store prediction rows; re-run xtdpthresh (>= v0.7.4)"
         exit 301
     }
+    if missing(e(p_cache_sig)) {
+        di as err "these e() results do not contain the model-specific predict cache guard"
+        di as err "required by xtdpthresh 0.9.18 or newer; re-run xtdpthresh, then predict"
+        exit 301
+    }
+    if `"`e(p_cache_token)'"' == "" {
+        di as err "these e() results do not contain the exact predict cache token"
+        di as err "required by xtdpthresh 0.9.18 or newer; re-run xtdpthresh, then predict"
+        exit 301
+    }
+
+    // v0.9.6 R22 (#5): cached series are estimation-time values -- refuse
+    // when the source columns changed since estimation (or a different
+    // dataset with coincident panel-time keys is in memory).
+    if `"`e(p_dsig)'"' != "" {
+        cap qui _datasignature `e(p_dsig_vars)'
+        if _rc {
+            di as err "data have changed since estimation (source variables missing or"
+            di as err "renamed); cached residuals/fitted values are no longer valid."
+            exit 459
+        }
+        if `"`r(datasignature)'"' != `"`e(p_dsig)'"' {
+            di as err "data have changed since estimation; cached residuals and fitted"
+            di as err "values are no longer valid. Re-run xtdpthresh on the current data."
+            exit 459
+        }
+    }
 
     // source: 1 = FD AR-test series, 2 = estimation-equation series.
     //   arresiduals -> always the FD AR-test series (source 1)
@@ -104,9 +151,23 @@ program xtdpthresh_p
         local source = cond("`method'" == "fod", 2, 1)
     }
 
-    qui gen `typlist' `varlist' = . if `touse'
-    mata: xdpt2_p_fill("`panelvar'", "`timevar'", "`varlist'", ///
-                        "`touse'", `source', `which', `=e(p_serial)')
+    // Fill a temporary target and rename only after the cache lookup succeeds.
+    // A failed lookup must not leave an all-missing user variable behind.
+    tempvar _cacheout
+    tempname _pserial _psig
+    local _ptoken `"`e(p_cache_token)'"'
+    scalar `_pserial' = e(p_serial)
+    scalar `_psig' = e(p_cache_sig)
+    qui gen `typlist' `_cacheout' = . if `touse'
+    capture noisily mata: xdpt2_p_fill("`panelvar'", "`timevar'", "`_cacheout'", ///
+        "`touse'", `source', `which', st_numscalar("`_pserial'"), ///
+        st_numscalar("`_psig'"), st_local("_ptoken"))
+    local _rc = _rc
+    if `_rc' {
+        capture drop `_cacheout'
+        exit `_rc'
+    }
+    rename `_cacheout' `varlist'
 
     // ---------- labels ----------
     if "`stat'" == "arresiduals" {
@@ -135,37 +196,86 @@ end
 // Mata helper for predict — duplicated from xtdpthresh.ado because functions
 // in an ado's inline mata: block are private to that ado on Stata 17 (the
 // version targeted by SSC), so xtdpthresh.ado's xdpt2_p_fill is not callable
-// from xtdpthresh_p.ado. The externals xdpt_p_resid / xdpt_p_est /
-// xdpt_p_serial_m ARE persistent across calls (Mata externals survive), so
-// they refer to the values xtdpthresh_run populated.
+// from xtdpthresh_p.ado. Mata EXTERNALS persist across calls: v0.9.18+
+// runtimes populate serial-keyed row, token, and checksum stores; v0.9.19
+// additionally recomputes that checksum from the actual rows. Older
+// cached results without the exact token are rejected and must be re-run.
 // ============================================================================
+version 15.0
 mata:
 mata set matastrict off
 
 void xdpt2_p_fill(string scalar pvar, string scalar tvar,
                    string scalar outvar, string scalar touse,
                    real scalar source, real scalar which,
-                   real scalar serial_expect)
+                   real scalar serial_expect, real scalar sig_expect,
+                   string scalar token_expect)
 {
-    external real matrix xdpt_p_resid, xdpt_p_est, xdpt_p_serial_m
-    real matrix D, S
-    real scalar r, v
+    // Serial-keyed lookup plus an exact per-fit token and a deterministic
+    // checksum of the cache matrices. A bare serial is unsafe because its
+    // counter restarts after mata clear and can collide with restored e().
+    external transmorphic xdpt_p_store_r, xdpt_p_store_e, xdpt_p_store_sig
+    external transmorphic xdpt_p_store_token
+    real matrix D, S, S_r, S_e
+    real scalar r, v, sig_have, sig_actual
+    string scalar token_have
     transmorphic A
 
-    S = (source == 2 ? xdpt_p_est : xdpt_p_resid)
-
-    if (rows(xdpt_p_serial_m) == 0 | rows(S) == 0) {
+    if (serial_expect >= . | sig_expect >= . | token_expect == "") {
+        errprintf("xtdpthresh predict: cache identity is missing; re-run xtdpthresh.\n")
+        exit(498)
+    }
+    if (eltype(xdpt_p_store_r) == "real" | eltype(xdpt_p_store_e) == "real" |
+        eltype(xdpt_p_store_sig) == "real" |
+        eltype(xdpt_p_store_token) == "real") {
         errprintf("xtdpthresh predict: stored estimation rows not found in Mata memory\n")
         errprintf("  (cleared by -mata: mata clear-, -discard-, or restarting Stata).\n")
         errprintf("  Re-run xtdpthresh, then predict.\n")
         exit(498)
     }
-    if (serial_expect >= . | xdpt_p_serial_m[1, 1] != serial_expect) {
-        errprintf("xtdpthresh predict: stored rows belong to a different xtdpthresh run\n")
-        errprintf("  than the current e() results (e.g. -estimates restore- of an older\n")
-        errprintf("  model). Re-run xtdpthresh, then predict.\n")
+    if (!asarray_contains(xdpt_p_store_token, serial_expect)) {
+        errprintf("xtdpthresh predict: this run's exact cache token was evicted or cleared\n")
+        errprintf("  Re-run xtdpthresh, then predict.\n")
         exit(498)
     }
+    token_have = asarray(xdpt_p_store_token, serial_expect)
+    if (token_have != token_expect) {
+        errprintf("xtdpthresh predict: cached rows belong to a different model/run\n")
+        errprintf("  (the Mata serial was reused after state was cleared).\n")
+        errprintf("  Re-run xtdpthresh, then predict.\n")
+        exit(498)
+    }
+    if (!asarray_contains(xdpt_p_store_sig, serial_expect)) {
+        errprintf("xtdpthresh predict: this run's cache was evicted or cleared\n")
+        errprintf("  Re-run xtdpthresh, then predict.\n")
+        exit(498)
+    }
+    sig_have = asarray(xdpt_p_store_sig, serial_expect)
+    if (sig_have != sig_expect) {
+        errprintf("xtdpthresh predict: cached rows belong to a different model/run\n")
+        errprintf("  (the Mata serial was reused after state was cleared).\n")
+        errprintf("  Re-run xtdpthresh, then predict.\n")
+        exit(498)
+    }
+    // v0.9.19: recompute the combined checksum from the two ACTUAL cache
+    // matrices. Comparing only the parallel stored checksum with e() does
+    // not detect a row matrix that another Mata routine overwrote.
+    if (!asarray_contains(xdpt_p_store_r, serial_expect) |
+        !asarray_contains(xdpt_p_store_e, serial_expect)) {
+        errprintf("xtdpthresh predict: this run's stored rows were evicted or cleared\n")
+        exit(498)
+    }
+    S_r = asarray(xdpt_p_store_r, serial_expect)
+    S_e = asarray(xdpt_p_store_e, serial_expect)
+    sig_actual = hash1(S_r, 2147483647) * 4194304 +
+                 mod(hash1(S_e), 4194304)
+    if (sig_actual != sig_have) {
+        errprintf("xtdpthresh predict: cached estimation rows failed their checksum\n")
+        errprintf("  (Mata cache contents were changed or corrupted).\n")
+        errprintf("  Re-run xtdpthresh, then predict.\n")
+        exit(498)
+    }
+    S = (source == 2 ? S_e : S_r)
 
     A = asarray_create("real", 2)
     asarray_notfound(A, .)

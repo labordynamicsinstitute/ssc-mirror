@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1  15jul2026}{...}
+{* *! version 1.2  24jul2026}{...}
 {viewerjumpto "Syntax" "fourierdf##syntax"}{...}
 {viewerjumpto "Description" "fourierdf##description"}{...}
 {viewerjumpto "Options" "fourierdf##options"}{...}

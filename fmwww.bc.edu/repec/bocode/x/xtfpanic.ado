@@ -1,4 +1,4 @@
-*! xtfpanic 1.0.1  23jul2026   (xtflexur library)
+*! xtfpanic 1.0.2  23jul2026   (xtflexur library)
 *! Fourier-PANIC panel unit root test: PANIC with smooth (Fourier) structural
 *! breaks and a common factor structure.
 *!

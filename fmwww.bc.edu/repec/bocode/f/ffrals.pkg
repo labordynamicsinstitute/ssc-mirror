@@ -1,0 +1,37 @@
+d 'FFRALS': module to provide Flexible-Fourier LM unit-root test with RALS and factor (RALS2) augmentation  for non-normal errors
+d
+d	ffrals implements the flexible-Fourier LM unit-root test of
+d Lee, Islam, Tieslau, Payne	and Nazlioglu, in which an unknown
+d number of smooth structural breaks is approximated by    a single
+d Fourier frequency (chosen by minimum residual sum of squares over
+d 1..fmax) and	  the score-based LM statistic is computed by
+d augmented regression. With rals(1) the    regression is augmented
+d by the residual-augmented least squares (RALS) terms, which	
+d exploit non-normality of the errors to gain power without
+d nuisance parameters. With    rals(2) the regression is further
+d augmented by supplied common and group factors() (the    RALS2
+d factor test), making the test robust to cross-sectional
+d dependence when applied    series-by-series to a panel. 
+d
+d KW: unit root tests
+d KW: Fourier
+d KW: normality
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260726
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f ffrals.ado
+f ffrals.sthlp
+f ffadf_example.do
+f ffadf.ado
+f ffadf.sthlp
+f fflm2_example.do
+f fflm2.ado
+f fflm2.sthlp
+f ffrals_example.do
+f ffrals_hub.sthlp
+f ffrals_methods.sthlp

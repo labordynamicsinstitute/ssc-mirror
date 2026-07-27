@@ -1,0 +1,41 @@
+d 'PATHINTDID': module performing Path-Integrated Difference-in-Differences (PI-DiD): Identification, Estimation, and Inference
+d
+d  In empirical policy evaluation, interventions such as worker
+d training programs, cash transfers, localized health programs, and
+d digital financial services often produce dynamic, transitory
+d effects where individual outcome paths temporarily diverge from
+d counterfactuals before converging again due to skill depreciation
+d or control-group catch-up. Standard Difference-in-Differences
+d models suffer from endpoint-subtraction bias because they
+d evaluate policy efficacy using static endline snapshot contrasts,
+d which can erroneously indicate zero impact when trajectories
+d rejoin despite substantial historical utility generated while the
+d program was active. The pathintdid package overcomes this
+d limitation by implementing a path-integrated framework that
+d measures the total net stock of accumulated welfare generated
+d over the post-treatment window by integrating the area trapped
+d between realized and counterfactual outcome trajectories. This
+d cumulative impact is also scaled into an annualized per-unit
+d treatment flow, providing an accurate metric of policy success
+d under dynamic rejoining conditions while accounting for arbitrary
+d within-unit temporal correlation through cluster-robust standard
+d errors. 
+d
+d KW: difference in differences
+d KW: DiD
+d KW: path integration
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260726
+d
+d Author: Comlan Apollinaire-Fabrice Salavi,  African School of Economics, Benin
+d Support: email  fsalavi@@africanschoolofeconomics.com
+d
+f pathintdid.ado
+f pathintdid.sthlp
+f pathintdidplot.ado
+f pathintdidrobust.ado
+f pathintdidrobust.sthlp
+f ../e/example_pathintdid.do
+f ../t/trainingpanel.dta

@@ -2203,7 +2203,7 @@ preserve
   cap copy "`url_fn'" "`fn'.txt", replace
   if _rc == 0 {
       infix strL `v' 1-1000 using "`fn'.txt", clear
-      local begin   `"<b><a href="http://fmwww.bc.edu/sj"'
+      local begin   `"<b><a href="/sj"'
       local endwith `".html"'
       local regex `"(?<=`begin')(.*)(?=`endwith')"'  
       gen `VolNum' = ustrregexs(1) if ustrregexm(`v', `"`regex'"')
@@ -2316,7 +2316,7 @@ qui{
   local url "https://www.stata-journal.com/archives/"    
   copy "`url'"  "`sjarc'.txt" , replace
   infix strL v 1-1000 using "`sjarc'.txt", clear
-  local begin `"<b><a href="http://fmwww.bc.edu/sj"'
+  local begin `"<b><a href="/sj"'
   local end   `".html"'
   local match ".*"
   local regex `"(?<=`begin')(`match')(?=`end')"'  

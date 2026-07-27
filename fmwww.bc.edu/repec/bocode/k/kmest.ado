@@ -8,7 +8,7 @@ version 16.0;
  for input to bootstrap or jackknife.
  This command assumes that the data have been stset.
 *!Author: Roger Newson
-*!Date: 05 July 2025
+*!Date: 24 July 2025
 */
 
 
@@ -24,11 +24,24 @@ syntax [if] [in], [ Times(numlist) Centiles(numlist >=0 <=100)
 */
 
 
+/*
+ Check that dataset is stset with permitted weights
+*/
+if `"`_dta[_dta]'"'!="st" {;
+  disp as error "Data not stset";
+  error 498;
+};
+if !inlist(`"`_dta[st_wt]'"',"","fweight","iweight") {;
+  disp as error "Data weights must be stset as fweights or iweights or not at all";
+  error 498;
+};
+
+
 *
  Check that times() or centiles() option is present
 *;
 if "`times'"=="" & "`centiles'"=="" {;
-  disp as error "Either times() option or centiles() option must be prsent";
+  disp as error "Either times() option or centiles() option must be present";
   error 498;
 };
 
@@ -79,7 +92,7 @@ else {;
 *;
 marksample touse, novarlist;
 tempname Nscal;
-summ `touse', meanonly;
+summ `touse' `_dta[st_w]', meanonly;
 scal `Nscal'=r(sum);
 
 
@@ -95,7 +108,7 @@ qui sts generate `se_kmsurv'=se(s) if `touse';
  Extract survival times and probabilities
 *;
 tempname survframe;
-frame put _t _d `kmsurv' `se_kmsurv' `touse', into(`survframe');
+frame put _t _d `kmsurv' `se_kmsurv' `touse' `_dta[st_wv]:', into(`survframe');
 qui frame `survframe' {;
   keep if `touse';
   drop `touse';
@@ -104,7 +117,7 @@ qui frame `survframe' {;
   gene long `obsseq'=_n;
   * Extract number of failures *;
   tempname N_fail_scal;
-  summ _d, meanonly;
+  summ _d `_dta[st_w]', meanonly;
   scal `N_fail_scal'=r(sum);
   * Create output vectors of times and survival probabilities *;
   if `Ntime'>0 {;
@@ -137,7 +150,7 @@ qui frame `survframe' {;
         error 498;
       };
       matr def `smat'[1,`i1']=`sscal';
-      summ _d if _t<=`Tcur', meanonly;
+      summ _d if _t<=`Tcur' `_dta[st_w]', meanonly;
       scal `cfscal'=max(r(sum),0);
       matr def `cfmat'[1,`i1']=`cfscal';
       summ `obsseq' if _t<=`Tcur', meanonly;
