@@ -19589,6 +19589,7 @@ fmwww.bc.edu/repec/bocode/s/scheme_538.sthlp
 fmwww.bc.edu/repec/bocode/s/soreg.html
 fmwww.bc.edu/repec/bocode/s/sampsi_mcc.html
 fmwww.bc.edu/repec/bocode/s/stcascoh.html
+fmwww.bc.edu/repec/bocode/s/segmcoint_example.do
 fmwww.bc.edu/repec/bocode/s/summarizeby.ado
 fmwww.bc.edu/repec/bocode/s/svytabform.hlp
 fmwww.bc.edu/repec/bocode/s/spearman2.ado
@@ -19728,6 +19729,7 @@ fmwww.bc.edu/repec/bocode/s/synth2_example.do
 fmwww.bc.edu/repec/bocode/s/spregcs3.dta
 fmwww.bc.edu/repec/bocode/s/setroot.pkg
 fmwww.bc.edu/repec/bocode/s/spautoerrnw.ado
+fmwww.bc.edu/repec/bocode/s/segmcoint.ado
 fmwww.bc.edu/repec/bocode/s/spregsdm2.ado
 fmwww.bc.edu/repec/bocode/s/smfit_ll.ado
 fmwww.bc.edu/repec/bocode/s/strsrcs.html
@@ -20106,6 +20108,7 @@ fmwww.bc.edu/repec/bocode/s/sf36fr.hlp
 fmwww.bc.edu/repec/bocode/s/stpm2_postestimation.html
 fmwww.bc.edu/repec/bocode/s/stylerules.hlp
 fmwww.bc.edu/repec/bocode/s/stmixed.pkg
+fmwww.bc.edu/repec/bocode/s/segmcoint_dm.sthlp
 fmwww.bc.edu/repec/bocode/s/sqclustermat.ado
 fmwww.bc.edu/repec/bocode/s/svr.pkg
 fmwww.bc.edu/repec/bocode/s/SPWmstarxt4.dta
@@ -20177,6 +20180,7 @@ fmwww.bc.edu/repec/bocode/s/scheme-ie.scheme
 fmwww.bc.edu/repec/bocode/s/spautoc5.hlp
 fmwww.bc.edu/repec/bocode/s/spgen.pkg
 fmwww.bc.edu/repec/bocode/s/switchr.ado
+fmwww.bc.edu/repec/bocode/s/segmcoint.sthlp
 fmwww.bc.edu/repec/bocode/s/saswrapper.hlp
 fmwww.bc.edu/repec/bocode/s/stepp.sthlp
 fmwww.bc.edu/repec/bocode/s/save9.ado
@@ -20716,6 +20720,7 @@ fmwww.bc.edu/repec/bocode/s/strofnum.ado
 fmwww.bc.edu/repec/bocode/s/sptobitmstarh3.ado
 fmwww.bc.edu/repec/bocode/s/stcascoh.pkg
 fmwww.bc.edu/repec/bocode/s/samregc.ado
+fmwww.bc.edu/repec/bocode/s/segmcoint_kim.sthlp
 fmwww.bc.edu/repec/bocode/s/sqindexplot.ado
 fmwww.bc.edu/repec/bocode/s/spautodurne.ado
 fmwww.bc.edu/repec/bocode/s/seg.html
@@ -21925,6 +21930,7 @@ fmwww.bc.edu/repec/bocode/s/spmlreg_error.ado
 fmwww.bc.edu/repec/bocode/s/staft.ado
 fmwww.bc.edu/repec/bocode/s/sccendif.sthlp
 fmwww.bc.edu/repec/bocode/s/sankeyplot.ado
+fmwww.bc.edu/repec/bocode/s/segmcoint.pkg
 fmwww.bc.edu/repec/bocode/s/sptobitmstarxt.ado
 fmwww.bc.edu/repec/bocode/s/sequencex.sthlp
 fmwww.bc.edu/repec/bocode/s/sqclusterdat.sthlp
@@ -22179,6 +22185,7 @@ fmwww.bc.edu/repec/bocode/s/subsave.html
 fmwww.bc.edu/repec/bocode/s/stjm11_pred.ado
 fmwww.bc.edu/repec/bocode/s/sptobitsarxt3.ado
 fmwww.bc.edu/repec/bocode/s/savewsz.hlp
+fmwww.bc.edu/repec/bocode/s/segmcoint_mr.sthlp
 fmwww.bc.edu/repec/bocode/s/scheme-white_w3d.scheme
 fmwww.bc.edu/repec/bocode/s/samplesize.hlp
 fmwww.bc.edu/repec/bocode/s/svcom.pkg
@@ -22400,6 +22407,7 @@ fmwww.bc.edu/repec/bocode/s/strgroup.ado
 fmwww.bc.edu/repec/bocode/s/spweightxt.dta
 fmwww.bc.edu/repec/bocode/s/spregfext.sthlp
 fmwww.bc.edu/repec/bocode/s/SPWcs.dta
+fmwww.bc.edu/repec/bocode/s/segmcoint_methods.sthlp
 fmwww.bc.edu/repec/bocode/s/symbolpalette.ado
 fmwww.bc.edu/repec/bocode/s/s2s.ado
 fmwww.bc.edu/repec/bocode/s/sqr.html

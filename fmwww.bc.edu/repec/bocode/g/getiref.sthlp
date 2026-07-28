@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.2  08May2025}{...}
+{* *! version 2.3  08May2025}{...}
 {hi:help getiref}{right:also see: {help lianxh}}
 {right: {browse "https://github.com/arlionn/getiref"}}
 {hline}

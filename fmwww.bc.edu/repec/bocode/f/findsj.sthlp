@@ -1,9 +1,10 @@
 {smcl}
-{* *! version 3.1  03feb2026}{...}
+{* *! version 3.2.8  26Jul2026}{...}
 {vieweralsosee "[R] search" "help search"}{...}
 {vieweralsosee "[R] net" "help net"}{...}
 {viewerjumpto "Syntax" "findsj##syntax"}{...}
 {viewerjumpto "Description" "findsj##description"}{...}
+{viewerjumpto "Installation" "findsj##installation"}{...}
 {viewerjumpto "Options" "findsj##options"}{...}
 {viewerjumpto "Examples" "findsj##examples"}{...}
 {viewerjumpto "Stored results" "findsj##results"}{...}
@@ -30,6 +31,17 @@ Search for articles
 
 
 {pstd}
+Export search results
+
+{p 8 16 2}
+{cmd:findsj}
+[{it:keywords}]
+{cmd:,} {opt md} | {opt markdown} | {opt latex} | {opt tex} |
+{opt plain} | {opt text} | {opt txt}
+[{opt noclip}]
+
+
+{pstd}
 Show citation formats for specific article
 
 {p 8 16 2}
@@ -44,7 +56,7 @@ Download BibTeX or RIS file
 {p 8 16 2}
 {cmd:findsj}
 {it:article_id}
-{cmd:,} {opt type(bib|ris)}
+{cmd:,} {opt bib} | {opt ris}
 
 
 {pstd}
@@ -52,7 +64,11 @@ Update local database
 
 {p 8 16 2}
 {cmd:findsj}
-{cmd:,} {opt update} [{opt source(github|gitee|both)}]
+{cmd:,} {opt update}
+
+{p 8 16 2}
+{cmd:findsj}
+{cmd:,} {opt updatesource} [{opt source(github|gitee|both)}]
 
 
 {pstd}
@@ -71,35 +87,37 @@ Configure download path
 {synopt:{opt title}}search by article title{p_end}
 {synopt:{opt keyword}}search by keyword (default){p_end}
 
+{syntab:Search source}
+{synopt:{opt online}}query the Stata Journal website even when the local database is available{p_end}
+
 {syntab:Display control}
-{synopt:{opt n(#)}}number of results to display; default is {cmd:n(10)}{p_end}
-{synopt:{opt allresults}}display all search results{p_end}
-{synopt:{opt nobrowser}}suppress clickable buttons and links{p_end}
-{synopt:{opt nopdf}}hide PDF download buttons{p_end}
-{synopt:{opt nopkg}}hide package installation buttons{p_end}
+{synopt:{opt n(#)}}maximum results to display or export; default is {cmd:n(10)}{p_end}
+{synopt:{opt allresults}}display or export all search results{p_end}
 
 {syntab:Citation and export}
-{synopt:{opt ref}}enable citation buttons (.md, .latex, .txt) for each article{p_end}
-{synopt:{opt md}}export all results in Markdown format{p_end}
+{synopt:{opt ref}}display DOI information; citation buttons are shown by default{p_end}
+{synopt:{opt bib}}download the selected article's BibTeX file{p_end}
+{synopt:{opt ris}}download the selected article's RIS file{p_end}
+{synopt:{opt md}}export results in Markdown format{p_end}
 {synopt:{opt markdown}}same as {cmd:md}{p_end}
-{synopt:{opt latex}}export all results in LaTeX format{p_end}
+{synopt:{opt latex}}export results in LaTeX format{p_end}
 {synopt:{opt tex}}same as {cmd:latex}{p_end}
-{synopt:{opt plain}}export all results in plain text format{p_end}
+{synopt:{opt plain}}export results in plain text format{p_end}
+{synopt:{opt text}}same as {cmd:plain}{p_end}
+{synopt:{opt txt}}same as {cmd:plain}{p_end}
 {synopt:{opt noclip}}disable automatic clipboard copying{p_end}
-{synopt:{opt getdoi}}fetch DOI information (auto-enabled with {cmd:ref}){p_end}
+{synopt:{opt getdoi}}display DOI information (auto-enabled with {cmd:ref}){p_end}
 
 {syntab:Database management}
-{synopt:{opt update}}update local database from specified source{p_end}
-{synopt:{opt source(string)}}download source: {cmd:github}, {cmd:gitee}, or {cmd:both}{p_end}
+{synopt:{opt update}}update the local database using {cmd:source(both)}{p_end}
+{synopt:{opt updatesource}}display a source menu or update from {cmd:source()}{p_end}
+{synopt:{opt source(string)}}source for {cmd:updatesource}: {cmd:github}, {cmd:gitee}, or {cmd:both}{p_end}
 
 {syntab:Path management}
 {synopt:{opt setpath(path)}}set custom download path for BibTeX/RIS files{p_end}
 {synopt:{opt querypath}}display current download path{p_end}
 {synopt:{opt resetpath}}reset to default path (current directory){p_end}
 
-{syntab:Other}
-{synopt:{opt clear}}clear previous search results{p_end}
-{synopt:{opt debug}}enable debug mode with trace output{p_end}
 {synoptline}
 {p2colreset}{...}
 
@@ -108,16 +126,22 @@ Configure download path
 {title:Description}
 
 {pstd}
-{cmd:findsj} searches and cites articles published in the {it:Stata Journal} (2001-present) 
-and {it:Stata Technical Bulletin} (1991-2000). It provides an integrated workflow 
-for finding, reading, citing, and installing Stata packages from journal articles.
+{cmd:findsj} searches and cites articles published in the {it:Stata Journal}
+(2001-present). It provides an integrated workflow
+for finding articles, opening publisher links, generating citations, and launching
+package searches associated with journal articles.
 
 {pstd}
 Key features:
 
 {phang2}
-{bf:1. Interactive Search} - Search by keyword, author, or title with real-time results from 
-the official Stata Journal website.
+{bf:1. Interactive Search} - Search by keyword, author, or title. {cmd:findsj}
+uses the bundled local database first and falls back to the official Stata Journal
+website when the database is unavailable. Specify {cmd:online} to query the website
+even when the local database is available. {cmd:findsj} displays or exports the
+website-supplied matches without applying an additional query-term post-filter. The
+{cmd:n()} and {cmd:allresults} options continue to control how many results are
+displayed or exported.
 
 {phang2}
 {bf:2. Clickable Buttons} - Each search result displays interactive buttons that execute 
@@ -125,10 +149,10 @@ actions with a single click:
 
 {phang3}
 • {bf:Web} - Opens article page in your browser{break}
-• {bf:PDF} - Opens full-text PDF in browser (requires DOI){break}
+• {bf:PDF} - Opens a DOI-based publisher PDF link; access may be restricted{break}
 • {bf:Google} - Searches article on Google Scholar{break}
 • {bf:Install} - Searches for installable Stata packages{break}
-• {bf:Ref} - Displays citation format buttons{break}
+• {bf:.md}, {bf:.latex}, and {bf:.txt} - Generate a citation (when a DOI is available){break}
 • {bf:BibTeX} - Downloads BibTeX reference file{break}
 • {bf:RIS} - Downloads RIS reference file
 
@@ -150,16 +174,49 @@ with four access buttons:
 
 {phang3}
 • {bf:View} - Open in Stata's viewer{break}
-• {bf:Open_Mac} - Open with default Mac app{break}
-• {bf:Open_Win} - Open with default Windows app{break}
+• {bf:Open_Mac} - Open the exported file or its containing folder on macOS{break}
+• {bf:Open_Win} - Open the exported file or reveal it in File Explorer on Windows{break}
 • {bf:dir} - Browse to file location
 
 {phang2}
-{bf:5. Automatic Clipboard} - Citations are automatically copied to clipboard (disable with {cmd:noclip}).
+{bf:5. Automatic Clipboard} - Batch citation exports are copied automatically on
+Windows and macOS (disable with {cmd:noclip}). Linux exports are saved to a file,
+but automatic clipboard copying is not supported.
 
 {phang2}
-{bf:6. Smart Database} - Local database (findsj.dta) enables offline DOI lookup and faster 
-citation generation. Updates available from GitHub or Gitee (China mirror).
+{bf:6. Smart Database} - The local database ({cmd:findsj.dta}) contains 1,269
+records and enables fast offline searching and local-first DOI lookup. Updates are
+available from GitHub or Gitee (China mirror).
+
+
+{marker installation}{...}
+{title:Installation}
+
+{pstd}
+{cmd:findsj} requires Stata 16 or later.
+
+{pstd}
+For the recommended SSC installation, type:
+
+{phang2}{cmd:. ssc install findsj, all replace}{p_end}
+
+{pstd}
+This installation places the runtime databases ({cmd:findsj.dta} and
+{cmd:findsj_version.dta}) in the PLUS package directory together with the
+program and help files for {cmd:findsj} and the bundled {cmd:getiref}. Local
+search therefore works immediately and continues to use the installed database
+after the current working directory is changed.
+
+{pstd}
+The {cmd:all} option additionally downloads ancillary files such as
+{cmd:findsj_examples.do}, {cmd:findsj_examples.log}, and {cmd:README.txt}; it is
+not required for the runtime database, but is recommended so that the complete
+distribution and reproducibility materials are obtained together. The
+{cmd:replace} option lets the same command upgrade an existing installation.
+
+{pstd}
+To refresh the database later without reinstalling the package, use
+{cmd:findsj, update} (see {it:Database management} below).
 
 
 {marker options}{...}
@@ -168,46 +225,53 @@ citation generation. Updates available from GitHub or Gitee (China mirror).
 {dlgtab:Search scope}
 
 {phang}
-{opt author} searches for articles by author name. Example: {cmd:findsj cox, author}
+{opt author} searches for articles by author name. In local-database searches, each
+query term is matched as a complete name token, and a multiple-term query requires
+all tokens to be present. Thus, the local search {cmd:findsj lian, author} does not
+match {it:Iliana}, and {cmd:findsj "Christopher F. Baum", author} requires the
+complete tokens {it:Christopher}, {it:F}, and {it:Baum}. In online searches, the
+Stata Journal website controls matching; {cmd:findsj} does not apply an additional
+query-term post-filter, including its local complete-token rule.
 
 {phang}
 {opt title} searches for articles by words in the title.
 
 {phang}
-{opt keyword} searches across titles, abstracts, and keywords. This is the default 
+{opt keyword} searches across titles, author lists, and abstracts. This is the default
 if no scope is specified.
+
+
+{dlgtab:Search source}
+
+{phang}
+{opt online} bypasses the bundled database and queries the official Stata Journal
+website. This is useful for comparing the two search paths or requesting current
+website results without removing {cmd:findsj.dta}. Subject to {cmd:n()} or
+{cmd:allresults}, {cmd:findsj} displays or exports the website-supplied matches
+without applying an additional query-term post-filter. In particular, online
+author results may reflect broader website matching than a local complete-token
+author search.
+Internet access is required.
 
 
 {dlgtab:Display control}
 
 {phang}
-{opt n(#)} specifies maximum number of results to display. Default is 10. 
-Use {cmd:allresults} to show all matches.
+{opt n(#)} specifies the maximum number of results to display or export.
+Default is 10. The argument must be a positive integer.
+Use {cmd:allresults} to display or export all matches.
 
 {phang}
-{opt allresults} displays all search results without limit. Useful for comprehensive 
-reviews or when exporting complete citation lists.
-
-{phang}
-{opt nobrowser} suppresses all clickable buttons and links. Use when working in 
-batch mode or when buttons are not needed. By default, seven buttons appear 
-for each result: {bf:Web}, {bf:PDF}, {bf:Google}, {bf:Install}, {bf:Ref}, 
-{bf:BibTeX}, and {bf:RIS}.
-
-{phang}
-{opt nopdf} hides PDF download buttons. PDF links require DOI information from 
-the local database or online fetch.
-
-{phang}
-{opt nopkg} hides the {bf:Install} button. By default, this button executes 
-{cmd:search article_id} to find installable packages associated with the article.
+{opt allresults} displays or exports all search results without limit. Useful for
+comprehensive reviews or when exporting complete citation lists.
 
 
 {dlgtab:Citation and export}
 
 {phang}
-{opt ref} enables citation mode. When specified, each search result displays three 
-clickable format buttons below the article information:
+{opt ref} displays DOI information for matching search results. The three clickable
+citation-format buttons are already included in the standard result row whenever a
+DOI is available:
 
 {phang2}
 • {bf:.md} - Click to generate Markdown citation via {cmd:getiref}{break}
@@ -215,17 +279,19 @@ clickable format buttons below the article information:
 • {bf:.txt} - Click to generate plain text citation via {cmd:getiref}
 
 {pmore}
-This option automatically enables {cmd:getdoi} to fetch DOI information required 
-for citation generation.
+For an article ID, {cmd:findsj article_id, ref} displays the three citation formats
+for that article. For a regular search, {cmd:ref} is equivalent to {cmd:getdoi}; it
+is not required to make citation buttons appear.
 
 {phang}
-{opt md} or {opt markdown} exports all search results as formatted citations in 
-Markdown format. The output includes:
+{opt md} or {opt markdown} exports search results as formatted citations in
+Markdown format. By default, the first 10 results are exported; {cmd:n()} changes
+that limit, and {cmd:allresults} exports every match. The output includes:
 
 {phang2}
 • Citations displayed in Results window{break}
 • File saved as {bf:_findsj_temp_out_.md} in current directory{break}
-• Citations copied to clipboard (unless {cmd:noclip} specified){break}
+• Citations copied to the clipboard on Windows and macOS (unless {cmd:noclip} is specified){break}
 • Four access buttons: {bf:View}, {bf:Open_Mac}, {bf:Open_Win}, {bf:dir}
 
 {pmore}
@@ -234,8 +300,9 @@ Cox, N. J. (2007). Speaking Stata: Identifying Spells. The Stata Journal, 7(2).
 [Link](https://...), [PDF](https://...), [Google](<https://...>)
 
 {phang}
-{opt latex} or {opt tex} exports citations in LaTeX format with \href commands. 
-File saved as {bf:_findsj_temp_out_.txt}.
+{opt latex} or {opt tex} exports citations in LaTeX format with \href commands.
+The same {cmd:n()} and {cmd:allresults} limits apply. File saved as
+{bf:_findsj_temp_out_.tex}.
 
 {pmore}
 Format example:{break}
@@ -243,56 +310,72 @@ Cox, N. J. (2007). Speaking Stata: Identifying Spells. The Stata Journal, 7(2).
 \href{https://...}{Link}, \href{https://...}{PDF}, \href{https://...}{Google}
 
 {phang}
-{opt plain} exports citations in plain text format. File saved as {bf:_findsj_temp_out_.txt}.
+{opt plain}, {opt text}, or {opt txt} exports citations in plain text format. File
+saved as {bf:_findsj_temp_out_.txt}. The same {cmd:n()} and {cmd:allresults}
+limits apply.
 
 {pmore}
 Format example:{break}
 Cox, N. J. (2007). Speaking Stata: Identifying Spells. The Stata Journal, 7(2). 
 Link: https://..., PDF: https://..., Google: https://...
 
-{phang}
-{opt noclip} disables automatic clipboard copying. By default, export formats 
-({cmd:md}, {cmd:latex}, {cmd:plain}) automatically copy citations to system clipboard 
-using PowerShell (Windows) or pbcopy (Mac).
+{pmore}
+The fixed {bf:_findsj_temp_out_.md}, {bf:_findsj_temp_out_.tex}, and
+{bf:_findsj_temp_out_.txt} names denote temporary working files in the current
+directory. An existing file with the applicable name is overwritten.
+The Results window prints a notice before replacement.
 
 {phang}
-{opt getdoi} fetches DOI and page information for all articles. This option:
+{opt noclip} disables automatic clipboard copying. By default, export formats
+({cmd:md}, {cmd:latex}, {cmd:plain}, {cmd:text}, and {cmd:txt}) copy citations to
+the system clipboard using PowerShell on Windows or {cmd:pbcopy} on macOS.
+Automatic clipboard copying is not supported on Linux; the exported file is still
+created.
+
+{phang}
+{opt getdoi} displays the DOI found for each displayed result. The lookup needed
+for the standard PDF and citation actions is already attempted for every displayed
+result, using local metadata first and an online DOI lookup when needed. This option:
 
 {phang2}
-• First searches local database (findsj.dta) if available{break}
-• Falls back to real-time web fetch if not in database{break}
-• Enables complete citations with page numbers{break}
-• Enables PDF download links{break}
+• Adds the DOI value as a separate line in the displayed result{break}
+• Does not change the search match set or ordering{break}
 • Is automatically activated when {cmd:ref} is specified
 
 
 {dlgtab:Database management}
 
 {phang}
-{opt update} initiates database update process. Without {cmd:source()}, displays 
-clickable buttons for available sources. With {cmd:source()}, downloads database 
-from specified location.
+{opt update} updates the local database using the two-source fallback represented by
+{cmd:source(both)}. It is equivalent to
+{cmd:findsj, updatesource source(both)}.
 
 {phang}
-{opt source(string)} specifies download source:
+{opt updatesource} displays a clickable source menu when used without
+{cmd:source()}. With {cmd:source()}, it starts an update from the selected source.
+
+{phang}
+{opt source(string)} specifies the download source for {cmd:updatesource}:
 
 {phang2}
 • {bf:github} - Download from GitHub{break}
 • {bf:gitee} - Download from Gitee mirror (fallback when GitHub is unavailable){break}
-• {bf:both} - Try GitHub first, fallback to Gitee if failed (recommended for reliability)
+• {bf:both} - Try the language-preferred source first, then the alternate source
 
 {pmore}
-The database file (findsj.dta) is updated in place where findsj.ado is installed. 
-Contains DOI and page information for all Stata Journal articles. The database is 
-automatically updated by GitHub Actions that monitor the Stata Journal website for 
-new publications. {cmd:findsj} checks once daily and reminds if database is >120 days old.
+The database file ({cmd:findsj.dta}) is updated in place where {cmd:findsj.ado} is
+installed in PLUS; changing the current working directory does not change the
+database used for local search. The bundled database contains 1,269 records with
+article metadata, including DOI and page information where available. A GitHub
+Actions workflow checks the Stata Journal website monthly and updates the
+repository database when its contents change.
 
 
 {dlgtab:Path management}
 
 {phang}
 {opt setpath(path)} sets persistent download directory for BibTeX and RIS files. 
-Directory must exist. Setting is saved to {bf:findsj_config.txt} in personal ado 
+Directory must exist. Setting is saved to {bf:findsj_config.txt} in personal ado
 directory and persists across Stata sessions.
 
 {pmore}
@@ -306,15 +389,6 @@ shows default (current working directory).
 {opt resetpath} resets download path to default by removing configuration file.
 
 
-{dlgtab:Other}
-
-{phang}
-{opt clear} clears previous search results before new search. Helps avoid confusion 
-with multiple searches.
-
-{phang}
-{opt debug} enables trace mode for troubleshooting. Use when reporting issues.
-
 {marker examples}{...}
 {title:Examples}
 
@@ -326,10 +400,17 @@ any blue underlined text or button with your mouse to execute the action.
 {pstd}{bf:Basic Search}{p_end}
 
 {phang2}{inp:.} {stata "findsj panel data":findsj panel data}{p_end}
-{pmore}→ Searches for "panel data", displays 10 results with 7 buttons each{p_end}
+{pmore}→ Searches for "panel data" and displays 10 results with the available action buttons{p_end}
 
 {phang2}{inp:.} {stata "findsj cox, author":findsj cox, author}{p_end}
 {pmore}→ Finds all articles by Nicholas J. Cox{p_end}
+
+{phang2}{inp:.} {stata "findsj Christopher F. Baum, author":findsj Christopher F. Baum, author}{p_end}
+{pmore}→ In the local database, requires all three complete author-name tokens to match{p_end}
+
+{phang2}{inp:.} {stata "findsj lian, author online allresults":findsj lian, author online allresults}{p_end}
+{pmore}→ Displays the website-supplied author matches without an additional
+{cmd:findsj} query-term post-filter{p_end}
 
 {phang2}{inp:.} {stata "findsj propensity score matching, title":findsj propensity score matching, title}{p_end}
 {pmore}→ Searches article titles only{p_end}
@@ -345,20 +426,20 @@ any blue underlined text or button with your mouse to execute the action.
 
 {phang2}{inp:.} {stata "findsj fixed effects":findsj fixed effects}{p_end}
 {pmore}For each result, click:{p_end}
-{pmore2}• {bf:Article} to read abstract online{p_end}
-{pmore2}• {bf:PDF} to view full text in browser{p_end}
+{pmore2}• {bf:Web} to read the article page online{p_end}
+{pmore2}• {bf:PDF} to open the DOI-based publisher PDF link (access may be restricted){p_end}
 {pmore2}• {bf:Google} to search on Google Scholar{p_end}
-{pmore2}• {bf:Install} to find and install Stata package{p_end}
-{pmore2}• {bf:Ref} to see citation format options{p_end}
+{pmore2}• {bf:Install} to launch a Stata package search{p_end}
+{pmore2}• {bf:.md}, {bf:.latex}, or {bf:.txt} to generate a citation{p_end}
 {pmore2}• {bf:BibTeX} to download BibTeX file{p_end}
 {pmore2}• {bf:RIS} to download RIS file for Zotero/EndNote{p_end}
 
     {hline}
-{pstd}{bf:Citation Generation - Individual Articles}{p_end}
+{pstd}{bf:Citation Generation and DOI Display}{p_end}
 
 {phang2}{inp:.} {stata "findsj matching, ref":findsj matching, ref}{p_end}
-{pmore}→ Shows three format buttons (.md, .latex, .txt) below each result{p_end}
-{pmore}→ Click any button to generate and copy that citation format{p_end}
+{pmore}→ Displays DOI information in addition to the standard result buttons{p_end}
+{pmore}→ Citation buttons (.md, .latex, .txt) appear by default when a DOI is available{p_end}
 
 {phang2}{inp:.} {stata "findsj st0001, ref":findsj st0001, ref}{p_end}
 {pmore}→ Shows citation buttons for specific article ID{p_end}
@@ -370,7 +451,7 @@ any blue underlined text or button with your mouse to execute the action.
 {phang2}{inp:.} {stata "findsj causal inference, md":findsj causal inference, md}{p_end}
 {pmore}→ Exports first 10 citations in Markdown format{p_end}
 {pmore}→ Saves to _findsj_temp_out_.md{p_end}
-{pmore}→ Copies to clipboard automatically{p_end}
+{pmore}→ Copies to the clipboard automatically on Windows and macOS{p_end}
 {pmore}→ Shows View/Open_Mac/Open_Win/dir buttons{p_end}
 
 {phang2}{inp:.} {stata "findsj meta-analysis, latex allresults":findsj meta-analysis, latex allresults}{p_end}
@@ -384,11 +465,11 @@ any blue underlined text or button with your mouse to execute the action.
     {hline}
 {pstd}{bf:Reference File Download}{p_end}
 
-{phang2}{inp:.} {stata "findsj st0377, type(bib)":findsj st0377, type(bib)}{p_end}
+{phang2}{inp:.} {stata "findsj st0377, bib":findsj st0377, bib}{p_end}
 {pmore}→ Downloads BibTeX file for article st0377{p_end}
-{pmore}→ File saved to configured path and auto-opened{p_end}
+{pmore}→ File saved to the configured path{p_end}
 
-{phang2}{inp:.} {stata "findsj dm0065, type(ris)":findsj dm0065, type(ris)}{p_end}
+{phang2}{inp:.} {stata "findsj dm0065, ris":findsj dm0065, ris}{p_end}
 {pmore}→ Downloads RIS file for EndNote/Zotero/Mendeley{p_end}
 
 {phang2}{bf:Tip}: You can also click {bf:BibTeX} or {bf:RIS} buttons in search results{p_end}
@@ -397,18 +478,22 @@ any blue underlined text or button with your mouse to execute the action.
 {pstd}{bf:Database Management}{p_end}
 
 {phang2}{inp:.} {stata "findsj, update":findsj, update}{p_end}
+{pmore}→ Uses the language-preferred source first, then the alternate source
+({cmd:source(both)}){p_end}
+
+{phang2}{inp:.} {stata "findsj, updatesource":findsj, updatesource}{p_end}
 {pmore}→ Shows clickable buttons for GitHub, Gitee, and both{p_end}
-{pmore}→ Click your preferred source to start download{p_end}
+{pmore}→ Click a source to start the download{p_end}
 
-{phang2}{inp:.} {stata "findsj, update source(both)":findsj, update source(both)}{p_end}
-{pmore}→ Downloads from GitHub, falls back to Gitee if failed{p_end}
-{pmore}→ Recommended for reliability{p_end}
-
-{phang2}{inp:.} {stata "findsj, update source(github)":findsj, update source(github)}{p_end}
+{phang2}{inp:.} {stata "findsj, updatesource source(github)":findsj, updatesource source(github)}{p_end}
 {pmore}→ Downloads from GitHub only{p_end}
 
-{phang2}{inp:.} {stata "findsj, update source(gitee)":findsj, update source(gitee)}{p_end}
+{phang2}{inp:.} {stata "findsj, updatesource source(gitee)":findsj, updatesource source(gitee)}{p_end}
 {pmore}→ Downloads from Gitee (faster for China users){p_end}
+
+{phang2}{inp:.} {stata "findsj, updatesource source(both)":findsj, updatesource source(both)}{p_end}
+{pmore}→ Tries Gitee first in a Chinese locale and GitHub first otherwise,
+then falls back to the alternate source{p_end}
 
     {hline}
 {pstd}{bf:Download Path Configuration}{p_end}
@@ -427,14 +512,8 @@ any blue underlined text or button with your mouse to execute the action.
     {hline}
 {pstd}{bf:Advanced Usage}{p_end}
 
-{phang2}{inp:.} {stata "findsj simulation monte carlo, nopdf nopkg":findsj simulation monte carlo, nopdf nopkg}{p_end}
-{pmore}→ Minimal output: hides PDF and Install buttons{p_end}
-
-{phang2}{inp:.} {stata "findsj bootstrap, nobrowser":findsj bootstrap, nobrowser}{p_end}
-{pmore}→ No clickable buttons (for batch scripts){p_end}
-
-{phang2}{inp:.} {stata "findsj survival analysis, md allresults getdoi":findsj survival analysis, md allresults getdoi}{p_end}
-{pmore}→ Export all results with complete DOI information{p_end}
+{phang2}{inp:.} {stata "findsj survival analysis, md allresults noclip":findsj survival analysis, md allresults noclip}{p_end}
+{pmore}→ Export all matching results in Markdown without clipboard copying{p_end}
 
 
 
@@ -451,6 +530,7 @@ any blue underlined text or button with your mouse to execute the action.
 {p2col 5 20 24 2: Macros}{p_end}
 {synopt:{cmd:r(keywords)}}search keywords used{p_end}
 {synopt:{cmd:r(scope)}}search scope: author, title, or keyword{p_end}
+{synopt:{cmd:r(search_source)}}search source: local or online{p_end}
 {synopt:{cmd:r(url)}}URL of search results page{p_end}
 {synopt:{cmd:r(art_id_1)}}article ID of first result{p_end}
 {synopt:{cmd:r(title_1)}}title of first result{p_end}
@@ -465,7 +545,7 @@ any blue underlined text or button with your mouse to execute the action.
 
 {pstd}
 Complete documentation and examples available at:{break}
-{browse "https://github.com/arlionn/findsj":GitHub repository}{break}
+{browse "https://github.com/BlueDayDreeaming/findsj":GitHub repository}{break}
 {browse "https://gitee.com/ChuChengWan/findsj":Gitee mirror (China)}
 
 
@@ -489,7 +569,7 @@ Email: {browse "mailto:chucheng.wan@outlook.com":chucheng.wan@outlook.com}
 Help: {helpb search}, {helpb net}, {helpb ssc}
 
 {psee}
-Web: {browse "https://github.com/arlionn/findsj":GitHub}, 
+Web: {browse "https://github.com/BlueDayDreeaming/findsj":GitHub},
 {browse "https://gitee.com/ChuChengWan/findsj":Gitee}, 
 {browse "https://www.stata-journal.com":Stata Journal}, 
 {browse "https://www.lianxh.cn":Lianxh}

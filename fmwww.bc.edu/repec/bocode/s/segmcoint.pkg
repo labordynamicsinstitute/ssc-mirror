@@ -1,0 +1,31 @@
+d 'SEGMCOINT': module to provide tests for segmented cointegration (cointegration holding only over part of the sample)
+d
+d	  segmcoint implements three complementary residual-based
+d procedures that test the null of    no cointegration over the
+d whole sample against the alternative that a stable   
+d cointegrating relationship prevails over one or more subperiods,
+d while breaking down	 (nonstationary error) over others.  This
+d situation - segmented cointegration - was    introduced by Kim
+d (2003) and explains why standard full-sample Engle-Granger /	 
+d Phillips-Ouliaris tests often fail to confirm a well understood
+d long-run relationship: a    relatively short interval of
+d nonstationary deviation can dominate the full-sample	  statistic
+d and mask the relationship. 
+d
+d KW: cointegration
+d KW: tests
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260727
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f segmcoint.ado
+f segmcoint.sthlp
+f segmcoint_dm.sthlp
+f segmcoint_example.do
+f segmcoint_kim.sthlp
+f segmcoint_methods.sthlp
+f segmcoint_mr.sthlp
