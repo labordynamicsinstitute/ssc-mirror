@@ -1,3 +1,4 @@
+*! 1.0.1 NJC 27 July 2026 
 *! 1.0.0 NJC 27 February 2025
 * lmoments 6.0.0 NJC 3 October 2012 
 * 1.0.0 NJC 17 September 1997
@@ -69,6 +70,7 @@ real scalar lmax
 
 	_sort(x, 1)
 	result = lmocoeff(n, lmax)' * x / n
+	if (x[1] == x[n]) result = result[1] \ J(lmax - 1, 1, 0)
 
 	lnames = tokens(lnames) 
 	for (j = 1; j <= length(lnames); j++) { 

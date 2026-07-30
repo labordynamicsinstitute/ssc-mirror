@@ -215,6 +215,7 @@ p mlowess module for lowess smoothing with multiple predictors
 p mlr2sls module for 2SLS estimation with multiple-LATEs robust standard error under treatment effect heterogeneity
 p mlt module to provide multilevel tools
 p mmat2tex module to output Mata matrix as LaTeX table
+p mmd_2s module to perform Two-sample Maximum Mean Discrepancy (MMD) test
 p mmeiv module to perform Multiple Marginal Effects IV Estimation
 p mmerge module: Safer and easier to use variant of merge.
 p mmodes module to calculate the mode for a numeric varlist

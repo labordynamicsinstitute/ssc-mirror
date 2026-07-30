@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 7aug2023}{...}
+{* *! version 14july2026}{...}
 {hline}
-{cmd:help pystacked}{right: v0.7.5}
+{cmd:help pystacked}{right: v0.8.0}
 {hline}
 
 {title:Title}
@@ -36,7 +36,7 @@ algorithms.
 a Python installation and scikit-learn (0.24 or higher). {opt pystacked}
 has been 
 {browse "https://github.com/aahrens1/pystacked/tree/main/cert":tested} 
-with scikit-learn 0.24.2, 1.0.2, 1.1.3, 1.2.1 and 1.3.
+with scikit-learn 1.3.0 to 1.9.0.
 See {helpb python:here} and {browse "https://blog.stata.com/2020/08/18/stata-python-integration-part-1-setting-up-stata-to-use-python/":here} 
 for how to set up Python for Stata on your system.
 
@@ -131,6 +131,9 @@ Furthermore, {opt xvars*(varlist)} allows to specify a learner-specific varlist 
 In the second syntax, base learners are added before the comma 
 using {opt method(string)} together with {opt opt(string)} and separated by
 "||". 
+
+{pstd}
+Both {it:predictors} and {it:varlists} may contain factor variables or time-series operators.
 
 {marker syntax1}{...}
 {title:Syntax 1}
@@ -272,6 +275,16 @@ shows, for each base learner, the coefficient estimates (in the case of ols,
 logit, regularized regression) or variable importance measures 
 (random forests and gradient boosting)
 {p_end}
+{synopt:{opt cvc}[{cmd:(}{it:bootnum}{cmd:)}]}
+(regression-type models only) display, for each base learner,
+the p-values of the "cross-validation with confidence" test ({helpb pystacked##Lei2020:Lei 2020}).
+Under H0, the respective learner has the lowest predictive risk among all candidate learners.
+Under the alternative, there is another learner with lower predictive risk.
+The number of bootstrap repetitions (default=500) can be specified with {it:bootnum}.
+The {opt cvc} test is always calculated at estimation and the p-values saved in the macro {opt e(cvc_p)};
+specifying {opt cvc} with the estimation, on replay or with postestimation
+just requests that the results are displayed.
+{p_end}
 {synopt:{opt pyseed(int)}} 
 set the Python seed. Note that since {cmd:pystacked} uses
 Python, we also need to set the Python seed to ensure replicability.
@@ -294,6 +307,14 @@ prints the options passed on to Python.
 {p_end}
 {synopt:{opt showp:y}} 
 prints Python messages.
+{p_end}
+{synopt:{opt altpython}} 
+Use an alternative method for importing {opt pystacked}'s Python code.
+{opt pystacked}'s default is to use "python: from pystacked import *",
+but very occasionally some Stata installations have trouble with loading this.
+In our experience usually a Stata update will fix this,
+but users can alternatively use the {opt altpython} option,
+which causes {opt pystacked} to use a separate ado file with the Python code inside it.
 {p_end}
 {synoptline}
 
@@ -544,6 +565,11 @@ Methods {it:ols} {break}
 {stata "pystacked, type(reg) method(ols) printopt":Show options}
 
 {pstd}
+NB: To specify a mean-only model with no predictors,
+create a variable which is a vector of ones, use this as the only predictor,
+and specify that the ols method uses the nocons option.
+
+{pstd}
 {ul:Logistic regression} {break}
 Methods: {it:logit} {break}
 Type: {it:class} {break}
@@ -551,6 +577,11 @@ Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklear
 
 {pstd}
 {stata "pystacked, type(class) method(logit) printopt":Show options}
+
+{pstd}
+NB: To specify an intercept-only model with no predictors,
+create a variable which is a vector of zeros and use this as the only predictor.
+The zeros variable will be reported in e.g. the list of coefficients but can be ignored.
 
 {pstd}
 {ul:Penalized regression with information criteria} {break}
@@ -604,6 +635,15 @@ Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklear
 {stata "pystacked, type(reg) method(rf) printopt":Show options}
 
 {pstd}
+{ul:Gradient boosted classification trees} {break}
+Method: {it:gradboost} {break}
+Type: {it:class} {break}
+Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier.html":ensemble.GradientBoostingClassifier}
+
+{pstd}
+{stata "pystacked, type(class) method(gradboost) printopt":Show options}
+
+{pstd}
 {ul:Gradient boosted regression trees} {break}
 Method: {it:gradboost} {break}
 Type: {it:reg} {break}
@@ -624,7 +664,7 @@ Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklear
 {pstd}
 {ul:SVM (SVR)} {break}
 Method: {it:svm} {break}
-Type: {it:class} {break}
+Type: {it:reg} {break}
 Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR.html":svm.SVR}
 
 {pstd}
@@ -633,7 +673,7 @@ Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklear
 {pstd}
 {ul:SVM (SVC)} {break}
 Method: {it:svm} {break}
-Type: {it:reg} {break}
+Type: {it:class} {break}
 Documentation: {browse "https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html":svm.SVC}
 
 {pstd}
@@ -780,10 +820,6 @@ Graph predicted vs actual for the holdout sample:{p_end}
 {pstd}
 Storing the predicted values:{p_end}
 {phang2}. {stata "predict double yhat, xb"}{p_end}
-
-{pstd}
-Storing the cross-validated predicted values:{p_end}
-{phang2}. {stata "predict double yhat_cv, xb cvalid"}{p_end}
 
 {pstd}
 We can also save the predicted values of each base learner:{p_end}
@@ -997,6 +1033,12 @@ For further information, see
 To install/update {cmd:pystacked}, type {p_end}
 {phang2}. {stata "net install pystacked, from(https://raw.githubusercontent.com/aahrens1/pystacked/main) replace"}{p_end}
 
+{pstd}
+{it:Note:}
+Very occasionally a Stata installation will have trouble loading {opt pystacked}'s Python code.
+Usually a Stata update will fix this, but alternatively you can try calling {opt pystacked} with the {opt altpython} option.
+See above in {help pystacked##otheropts:options}.
+
 {marker misc}{title:Miscellaneous}
 
 {title:Website}
@@ -1028,6 +1070,12 @@ Hastie, T., Tibshirani, R., & Friedman, J. (2009).
 The elements of statistical learning: data mining, inference,
 and prediction. Springer Science & Business Media.
 
+{marker Lei2020}{...}
+{pstd}
+Lei, Jing. Cross-Validation with Confidence.
+{it:Journal of the American Statistical Association} 115.532 (2020): 1978-1997.
+{browse "https://doi.org/10.1080/01621459.2019.1672556"}
+
 {marker Wolpert1992}{...}
 {pstd}
 Wolpert, David H. Stacked generalization. {it:Neural networks} 5.2 (1992): 241-259.
@@ -1046,9 +1094,8 @@ can also post on Statalist (please tag @Achim Ahrens).
 {cmd:pystacked} took some inspiration from Michael Droste's 
 {browse "https://github.com/mdroste/stata-pylearn":pylearn}, 
 which implements other scikit-learn programs for Stata.
-Thanks to Jan Ditzen for testing an early version 
-of the program. We also thank Brigham Frandsen and 
-Marco Alfano for feedback. 
+We thank Brigham Frandsen, Jan Ditzen,
+Marco Alfano, Joao Santos Silva and many others for feedback. 
 All remaining errors are our own. 
 
 {title:Citation}
@@ -1067,8 +1114,8 @@ Please also cite scikit-learn; see {browse "https://scikit-learn.org/stable/abou
 {title:Authors}
 
 {pstd}
-Achim Ahrens, Public Policy Group, ETH Zurich, Switzerland {break}
-achim.ahrens@gess.ethz.ch
+Achim Ahrens, CERGE-EI, Prague {break}
+achim.ahrens@cerge-ei.cz
 
 {pstd}
 Christian B. Hansen, University of Chicago, USA {break}

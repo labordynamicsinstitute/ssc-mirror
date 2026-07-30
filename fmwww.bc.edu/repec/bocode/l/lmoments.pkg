@@ -18,13 +18,14 @@ d KW: frequency distributions
 d
 d Requires: Stata version 10 (9 for lmoments 9, 8 for lmoments8, 6 for lmoments6)
 d
-d Distribution-Date: 20131022
+d Distribution-Date: 20260729
 d
 d Author: Nicholas J. Cox, University of Durham
 d Support: email N.J.Cox@@durham.ac.uk
 d
 f lmoments.ado
 f lmoments.sthlp
+f ../_/_lmoments.ado
 f lmose.ado
 f lmose.sthlp
 f lmoments9.ado

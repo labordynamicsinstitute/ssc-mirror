@@ -1,0 +1,22 @@
+d 'SRIINEI': module to download microdata modules from Peru's INEI official statistics portal
+d
+d  sriinei downloads a specified module of public microdata from
+d the SRIENAHO portal of Peru's National Institute of Statistics
+d and Informatics (INEI), given the survey code and module number
+d as they appear in the portal's own download URLs. The command
+d works for any survey published on the portal, not just one
+d specific survey, since it does not embed any survey-specific
+d catalog of years or module numbers. 
+d
+d KW: data management
+d KW: Peru
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260729
+d
+d Author: Andres Talavera Cuya,   Direccion Nacional de Censos y Encuestas -- INEI Peru
+d Support: email talaveracuya@@gmail.com
+d
+f sriinei.ado
+f sriinei.sthlp

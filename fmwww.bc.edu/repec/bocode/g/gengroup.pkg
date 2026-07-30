@@ -12,10 +12,10 @@ d KW: ordinal
 d
 d Requires: Stata version 7.0 
 d
-d Distribution-Date: 20101208
+d Distribution-Date: 20260729
 d
 d Author: Jean-Benoit Hardouin, University of Nantes, France
 d Support: email jean-benoit.hardouin@@univ-nantes.fr
 d
 f gengroup.ado
-f gengroup.hlp
+f gengroup.sthlp

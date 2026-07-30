@@ -1,25 +1,26 @@
-*! version 1.2  28october2009
+*! version 1.3  1 June 2013
 *! Jean-Benoit Hardouin
 *
 ************************************************************************************************************
 * Stata program : genscore
-* Generate groups of individals based on the values of an ordinal variable
+* Generate groups of individals based on the values of an ordinal or continuous variable
 *
 * Historic
 * Version 1 (2007-05-27): Jean-Benoit Hardouin
 * Version 1.1 (2007-06-21): Jean-Benoit Hardouin /*Correction of a bug without -if- */
 * Version 1.2 (2009-10-28): Jean-Benoit Hardouin /*-continuous- option*/
+* Version 1.3 (2013-06-01): Jean-Benoit Hardouin /*Correction in presence of missing values*/
 *
 * Jean-benoit Hardouin, phD, Assistant Professor
-* Team of Biostatistics, Clinical Research and Subjective Measures in Health Sciences
+* EA4275 - SPHERE
+* Team of Biostatistics, Pharmacoepidemiology and Subjective Measures in Health Sciences
 * University of Nantes - Faculty of Pharmaceutical Sciences
 * France
 * jean-benoit.hardouin@univ-nantes.fr
 *
 * News about this program :http://www.anaqol.org
-* FreeIRT Project website : http://www.freeirt.org
 *
-* Copyright 2007, 2009 Jean-Benoit Hardouin
+* Copyright 2007, 2009, 2013 Jean-Benoit Hardouin
 *
 * This program is free software; you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
@@ -120,8 +121,11 @@ else {
    qui tempvar sort2
    qui gen `sort2'=_n
    qui gen `newvariable'=0 `if2' `in'
-   qui count `if2' `in'
+   qui replace `newvariable'=. if `varlist'==.
+   qui count if `varlist'!=.`if3' `in'
    local nbind=r(N)
+   local tmpgp=floor(`nbind'/`minsize')
+   local minsize=floor(`nbind'/`tmpgp')
    local nbused=0
    tempvar used
    qui gen `used'=0 `if2' `in'
@@ -141,6 +145,13 @@ else {
       local num=`num'+1
    }
    qui replace `newvariable'=`num'-1 if `newvariable'==0
+      if "`details'"!="" {
+         qui su `varlist'
+         local max=r(max)
+         if `max'>`mean' {
+            di in gr "Individuals between " in ye `mean' in gr "and " in ye `max' " are recoded in " in ye `=`num'-1'
+         }
+      }
    qui sort `sort'
 }
 return local list `list'

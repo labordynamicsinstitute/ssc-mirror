@@ -1,5 +1,5 @@
-#! pystacked v0.7.5
-#! last edited: 7aug2023
+#! pystacked v0.8.0
+#! last edited: 14july2026
 #! authors: aa/ms
 
 # Import required Python modules
@@ -9,7 +9,7 @@ import __main__
 import warnings
 from sklearn.pipeline import make_pipeline,Pipeline
 from sklearn.neural_network import MLPRegressor,MLPClassifier
-from sklearn.preprocessing import StandardScaler,PolynomialFeatures,OneHotEncoder
+from sklearn.preprocessing import StandardScaler,PolynomialFeatures,OneHotEncoder,MinMaxScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer,KNNImputer
 from sklearn.linear_model import LassoLarsIC,LassoCV,LogisticRegression,LogisticRegressionCV,LinearRegression
@@ -18,7 +18,7 @@ from sklearn.ensemble import StackingRegressor,StackingClassifier
 from sklearn.ensemble import VotingRegressor,VotingClassifier
 from sklearn.ensemble import RandomForestRegressor,RandomForestClassifier
 from sklearn.ensemble import GradientBoostingRegressor,GradientBoostingClassifier
-from sklearn.base import TransformerMixin,BaseEstimator
+from sklearn.base import TransformerMixin,BaseEstimator,ClassifierMixin,RegressorMixin
 from sklearn.svm import LinearSVR,LinearSVC,SVC,SVR
 from sklearn.utils import check_X_y,check_array
 from sklearn.utils.validation import check_is_fitted
@@ -29,21 +29,25 @@ from sklearn import __version__ as sklearn_version
 from scipy import __version__ as scipy_version
 from numpy import __version__ as numpy_version
 from sys import version as sys_version
-from sklearn.utils import parallel_backend
+try:
+    from sklearn.utils import parallel_backend
+except ImportError:
+    # from 1.7.0 onwards
+    from joblib import parallel_backend
 from sklearn.model_selection import PredefinedSplit,KFold,StratifiedKFold
 
 ### Define required Python functions/classes
 
-class SingleBest(BaseEstimator):
+class SingleBest(RegressorMixin,BaseEstimator):
     """
     Select base learner with lowest MSE
     """
-    _estimator_type="regressor"
     def fit(self, X, y):
         X, y = check_X_y(X, y, accept_sparse=True)
         self.is_fitted_ = True
         ncols = X.shape[1]
-        lowest_mse = np.Inf
+        best = 0
+        lowest_mse = np.inf
         for i in range(ncols):
             this_mse=np.mean((y-X[:, i]) ** 2)
             if this_mse < lowest_mse:
@@ -55,16 +59,16 @@ class SingleBest(BaseEstimator):
         self.coef_ = coef
         self.cvalid=X
         return self
+
     def predict(self, X):
         X = check_array(X, accept_sparse=True)
         check_is_fitted(self, 'is_fitted_')
         return X[:,self.best]
 
-class AvgEstimator(BaseEstimator):
+class AvgEstimator(RegressorMixin,BaseEstimator):
     """
     Avg of learners
     """
-    _estimator_type="regressor"
     def fit(self, X, y):
         X, y = check_X_y(X, y, accept_sparse=True)
         self.is_fitted_ = True
@@ -72,16 +76,19 @@ class AvgEstimator(BaseEstimator):
         self.coef_ = np.repeat(1/ncols,ncols)
         self.cvalid=X
         return self
+
     def predict(self, X):
         X = check_array(X, accept_sparse=True)
         check_is_fitted(self, 'is_fitted_')
         return X.mean(axis=1)
 
-class ConstrLS(BaseEstimator):
+class ConstrLS(RegressorMixin,BaseEstimator):
     """
     Constrained least squares, weights sum to 1 and optionally >= 0
     """
-    _estimator_type="regressor"
+    def __init__(self, unit_interval=True):
+        self.unit_interval = unit_interval
+    
     def fit(self, X, y):
 
         X,y = check_X_y(X,y, accept_sparse=True)
@@ -100,39 +107,32 @@ class ConstrLS(BaseEstimator):
             bounds = [[0.0,1.0] for i in range(xdim)] 
         else:
             bounds = None
-
+        
         #Do minimisation
         fit = minimize(fn,coef0,args=(X, y),method='SLSQP',bounds=bounds,constraints=cons)
         self.coef_ = fit.x
         self.is_fitted_ = True
         self.cvalid=X
         return self
-        
+    
     def predict(self, X):
         X = check_array(X, accept_sparse=True)
         check_is_fitted(self, 'is_fitted_')
         return np.matmul(X,self.coef_)
 
-    def __init__(self, unit_interval=True):
-        self.unit_interval = unit_interval
-
-class ConstrLSClassifier(ConstrLS):
-    _estimator_type="classifier"
+class ConstrLSClassifier(ClassifierMixin,ConstrLS):
     def predict_proba(self, X):
         return self.predict(X)
 
-class AvgClassifier(AvgEstimator):
-    _estimator_type="classifier"
+class AvgClassifier(ClassifierMixin,AvgEstimator):
     def predict_proba(self, X):
         return self.predict(X)
 
-class SingleBestClassifier(SingleBest):
-    _estimator_type="classifier"
+class SingleBestClassifier(ClassifierMixin,SingleBest):
     def predict_proba(self, X):
         return self.predict(X)
 
-class LinearRegressionClassifier(LinearRegression):
-    _estimator_type="classifier"
+class LinearRegressionClassifier(ClassifierMixin,LinearRegression):
     def predict_proba(self, X):
         self.cvalid=X
         return self.predict(X)
@@ -153,6 +153,12 @@ class SparseTransformer(TransformerMixin):
     def transform(self, X, y=None, **fit_params):
         return csr_matrix(X)
 
+class DenseTransformer(TransformerMixin):
+    def fit(self, X, y=None, **fit_params):
+        return self
+    def transform(self, X, y=None, **fit_params):
+        return X.todense()
+
 def get_index(lst, w):
     """
     return indexes of where elements in 'w' are stored in 'lst'
@@ -165,6 +171,51 @@ def get_index(lst, w):
             ix = lst.index(w[i]) 
             sel.append(ix)
     return(sel)
+
+def cvc(Yhat1, Yhat2, fid, bootnum=500, random_state=None):
+    Yhat1 = np.asarray(Yhat1)
+    if Yhat1.ndim == 1:
+        Yhat1 = Yhat1[:, None]
+    Yhat2 = np.asarray(Yhat2)
+    fid = np.asarray(fid)
+    
+    N = Yhat1.shape[0]
+    
+    # step 1
+    zeta = (Yhat1**2) - (Yhat2**2)
+    
+    # step 2: compute group means manually
+    fid_uni = np.unique(fid)
+    mu = np.zeros((len(fid_uni), zeta.shape[1]))
+    for i, f in enumerate(fid_uni):
+        mu[i, :] = zeta[fid == f, :].mean(axis=0)
+    
+    # step 3: group centering
+    zeta_til = zeta.copy()
+    for i, f in enumerate(fid_uni):
+        zeta_til[fid == f, :] = zeta_til[fid == f, :] - mu[i, :]
+    
+    # step 4
+    zeta_m = zeta.mean(axis=0)
+    zeta_sd = zeta_til.std(axis=0, ddof=1)
+    
+    # step 5
+    Tx = np.max(np.sqrt(N) * zeta_m / zeta_sd)
+    
+    # step 6
+    rng = (random_state if isinstance(random_state, np.random.Generator)
+           else np.random.default_rng(random_state))
+    S = zeta_til / zeta_sd
+    
+    Txb = np.empty(bootnum)
+    for b in range(bootnum):
+        eps = rng.normal(size=N)
+        boot_vec = (S * eps[:, None]).sum(axis=0) / np.sqrt(N)
+        Txb[b] = np.max(boot_vec)
+    
+    # step 7
+    Pval = np.mean(Txb > Tx)
+    return Pval
 
 def build_pipeline(pipes,xvars,xvar_sel):
     #
@@ -225,12 +276,13 @@ def run_stacked(type, # regression or classification
     bfolds, #
     shuff, #
     idvar, # id var
+    cvcbootnum, # number of bootstrap reps for cvc
     showpywarnings, # show warnings?
     parbackend, # backend
     sparse, # sparse predictor 
     showopt #
     ):
-    
+
     if int(format(sklearn_version).split(".")[1])<24 and int(format(sklearn_version).split(".")[0])<1:
         sfi.SFIToolkit.stata('di as err "pystacked requires sklearn 0.24.0 or higher. Please update sklearn."')
         sfi.SFIToolkit.stata('di as err "See instructions on https://scikit-learn.org/stable/install.html, and in the help file."')
@@ -613,6 +665,19 @@ def run_stacked(type, # regression or classification
             cv0 = x.shape[0]
             cv1 = transf.shape[1]
             __main__.cvalid = np.empty((cv0,cv1))*np.nan
+
+    # cvc
+    if (type=="reg") and (len(methods)>1):
+        nobs = len(y)
+        residuals = y[...,None] - __main__.cvalid
+        fid_list = np.unique(fid)
+        cvc_p = [0]*len(methods)
+        for i in range(len(methods)):
+            yhat1 = residuals[:,i] 
+            yhat2 = np.delete(residuals,i,axis=1)
+            pval = cvc(yhat1,yhat2,fid,random_state=seed)
+            cvc_p[i] = pval
+        sfi.Matrix.store("e(cvc_p)",cvc_p)
 
     # save versions of Python and packages
     sfi.Macro.setGlobal("e(sklearn_ver)",format(sklearn_version))

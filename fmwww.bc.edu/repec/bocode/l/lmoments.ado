@@ -1,4 +1,5 @@
-*! 6.0.0 NJC 3 October 2012 
+*! 6.1.0 NJC 28 July 2026
+* 6.0.0 NJC 3 October 2012 
 * 5.0.0 NJC 15 April 2010 
 * 4.0.1 NJC 16 October 2006 
 * 4.0.0 NJC 4 October 2006 
@@ -211,7 +212,10 @@ void _lmo(string scalar varname, string scalar usename, string scalar nname, str
 
 	_sort(x, 1)
 	result = lmocoeff(n, lmax)' * x / n
+	
+	if (x[1] == x[n]) result = result[1] \ J(lmax - 1, 1, 0) 
 	if (n < lmax) result[(n + 1)::lmax] = J(lmax - n, 1, .) 
+	
 	st_store(i, tokens(lnames), result') 
 }
 

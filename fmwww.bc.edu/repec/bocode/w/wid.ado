@@ -1,10 +1,10 @@
-*! wid v1.0.6 world inequality database 26Jan2026
+*! wid v1.0.7 world inequality database 28Jul2026
 
 program wid
-	version 13
+	version 15
 	
 	local wid_cmdline `"`0'"'
-	syntax, [INDicators(string) AReas(string) Years(numlist) Perc(string) AGes(string) POPulation(string) METAdata SCORE_filter(string asis) clear VERBOSE]
+	syntax, [INDicators(string) AReas(string) Years(numlist) Perc(string) AGes(string) POPulation(string) METAdata QUALITY_filter(string asis) clear VERBOSE]
 	
 	// ---------------------------------------------------------------------- //
 	// Check if there are already some data in memory
@@ -23,30 +23,30 @@ program wid
 	local verbosity = cond("`verbose'" != "", "verbose", "silent")
 
 	// ---------------------------------------------------------------------- //
-	// Parse score filters before any API request is made
+	// Parse quality filters before any API request is made
 	// ---------------------------------------------------------------------- //
 
 	local wid_cmdline_lower = lower(`"`wid_cmdline'"')
-	local wid_cmdline_nospace = subinstr(`"`wid_cmdline_lower'"', " ", "", .)
-	local score_filter_specified = (strpos(`"`wid_cmdline_nospace'"', "score_filter(") > 0)
-	local row_score_filter = 0
-	local series_score_filter = 0
-	local row_score_min = .
-	local row_score_max = .
-	local series_score_min = .
-	local series_score_max = .
-	if (`score_filter_specified') {
-		if (trim(`"`score_filter'"') == "") {
-			display as error "score_filter() cannot be empty"
+	local wid_cmdline_normalized = subinstr(`"`wid_cmdline_lower'"', char(9), " ", .)
+	local quality_filter_specified = regexm(`"`wid_cmdline_normalized'"', "(^|[ ,])quality[_a-z]*[ ]*\(")
+	local data_quality_filter = 0
+	local avg_quality_filter = 0
+	local data_quality_min = .
+	local data_quality_max = .
+	local avg_quality_min = .
+	local avg_quality_max = .
+	if (`quality_filter_specified') {
+		if (trim(`"`quality_filter'"') == "") {
+			display as error "quality_filter() cannot be empty"
 			exit 198
 		}
-		wid_parse_score_filter `"`score_filter'"'
-		local row_score_filter = r(row_score_filter)
-		local series_score_filter = r(series_score_filter)
-		local row_score_min = r(row_score_min)
-		local row_score_max = r(row_score_max)
-		local series_score_min = r(series_score_min)
-		local series_score_max = r(series_score_max)
+		wid_parse_quality_filter `"`quality_filter'"'
+		local data_quality_filter = r(data_quality_filter)
+		local avg_quality_filter = r(avg_quality_filter)
+		local data_quality_min = r(data_quality_min)
+		local data_quality_max = r(data_quality_max)
+		local avg_quality_min = r(avg_quality_min)
+		local avg_quality_max = r(avg_quality_max)
 	}
 	
 	// ---------------------------------------------------------------------- //
@@ -345,26 +345,26 @@ program wid
 	
 	quietly duplicates drop country variable age pop percentile year, force
 	quietly replace variable = variable + age + pop
-	capture confirm variable row_score
+	capture confirm variable data_quality
 	if (_rc) {
-		quietly generate double row_score = .
+		quietly generate double data_quality = .
 	}
-	if (`row_score_filter') {
-		quietly drop if missing(row_score) | row_score < `row_score_min' | row_score > `row_score_max'
+	if (`data_quality_filter') {
+		quietly drop if missing(data_quality) | data_quality < `data_quality_min' | data_quality > `data_quality_max'
 	}
 	order country variable percentile year value
 	quietly save "`output_data'", replace
 	
 	// ---------------------------------------------------------------------- //
-	// Retrieve the metadata, if requested or needed for series_score filtering
+	// Retrieve the metadata, if requested or needed for avg_quality filtering
 	// ---------------------------------------------------------------------- //
 	
-	if ("`metadata'" != "" | `series_score_filter') {
+	if ("`metadata'" != "" | `avg_quality_filter') {
 		if ("`metadata'" != "") {
 			display as text "* Download the metadata...", _continue
 		}
 		else {
-			display as text "* Download the metadata for score filtering...", _continue
+			display as text "* Download the metadata for quality filtering...", _continue
 		}
 		local metadata_mode "compact"
 		if ("`metadata'" == "") {
@@ -410,7 +410,7 @@ program wid
 		if (`first' == 0) {
 			quietly use "`output_metadata'", clear
 			display as text "DONE"
-			capture drop quality data_quality imputation
+			capture drop quality imputation
 			quietly duplicates drop variable country, force
 			quietly save "`output_metadata'", replace
 			
@@ -420,7 +420,7 @@ program wid
 				quietly merge n:1 country variable using "`output_metadata'", nogenerate keep(master match)
 			}
 			else {
-				quietly keep country variable series_score
+				quietly keep country variable avg_quality
 				quietly save "`output_metadata'", replace
 				use "`output_data'", clear
 				quietly merge n:1 country variable using "`output_metadata'", nogenerate keep(master match)
@@ -432,21 +432,21 @@ program wid
 			if ("`metadata'" != "") {
 				capture drop age pop
 			}
-			if (`series_score_filter') {
-				quietly generate double series_score = .
+			if (`avg_quality_filter') {
+				quietly generate double avg_quality = .
 			}
 		}
 	}
 	
-	if (`series_score_filter') {
-		capture confirm variable series_score
+	if (`avg_quality_filter') {
+		capture confirm variable avg_quality
 		if (_rc) {
-			quietly generate double series_score = .
+			quietly generate double avg_quality = .
 		}
-		quietly drop if missing(series_score) | series_score < `series_score_min' | series_score > `series_score_max'
+		quietly drop if missing(avg_quality) | avg_quality < `avg_quality_min' | avg_quality > `avg_quality_max'
 	}
 	
-	capture drop quality data_quality imputation
+	capture drop quality imputation
 	
 	if ("`metadata'" != "") {
 		foreach v in countryname shortname shortdes pop age source method {
@@ -455,30 +455,24 @@ program wid
 				quietly generate str1 `v' = ""
 			}
 		}
-		foreach v in row_score series_score {
+		foreach v in data_quality avg_quality {
 			capture confirm variable `v'
 			if (_rc) {
 				quietly generate double `v' = .
 			}
 		}
-		quietly keep country countryname variable percentile year value shortname shortdes pop age source row_score series_score method
-		order country countryname variable percentile year value shortname shortdes pop age source row_score series_score method
+		quietly keep country countryname variable percentile year value shortname shortdes pop age source data_quality avg_quality method
+		order country countryname variable percentile year value shortname shortdes pop age source data_quality avg_quality method
 	}
 	else {
-		if (!`row_score_filter') {
-			capture drop row_score
+		if (!`avg_quality_filter') {
+			capture drop avg_quality
 		}
-		if (!`series_score_filter') {
-			capture drop series_score
+		local quality_columns data_quality
+		if (`avg_quality_filter') {
+			local quality_columns `quality_columns' avg_quality
 		}
-		local score_columns
-		if (`row_score_filter') {
-			local score_columns `score_columns' row_score
-		}
-		if (`series_score_filter') {
-			local score_columns `score_columns' series_score
-		}
-		capture order country variable percentile year value age pop `score_columns'
+		capture order country variable percentile year value age pop `quality_columns'
 	}
 	
 	// Saves memory
@@ -487,33 +481,33 @@ program wid
 	sort country variable percentile year
 end
 
-program wid_parse_score_filter, rclass
-	version 13
+program wid_parse_quality_filter, rclass
+	version 15
 	args filter
 	
 	local filter = lower(trim(`"`filter'"'))
 	if (`"`filter'"' == "") {
-		display as error "score_filter() cannot be empty"
+		display as error "quality_filter() cannot be empty"
 		exit 198
 	}
 	
-	local row_used = 0
-	local series_used = 0
-	local row_min = .
-	local row_max = .
-	local series_min = .
-	local series_max = .
+	local data_quality_used = 0
+	local avg_quality_used = 0
+	local data_quality_min = .
+	local data_quality_max = .
+	local avg_quality_min = .
+	local avg_quality_max = .
 	
-	if (strpos(`"`filter'"', "row_score") == 0 & strpos(`"`filter'"', "series_score") == 0) {
+	if (strpos(`"`filter'"', "data_quality") == 0 & strpos(`"`filter'"', "avg_quality") == 0) {
 		wid_parse_score_bounds `"`filter'"'
-		local row_used = 1
-		local row_min = r(min)
-		local row_max = r(max)
+		local data_quality_used = 1
+		local data_quality_min = r(min)
+		local data_quality_max = r(max)
 	}
 	else {
 		local work = subinstr(`"`filter'"', char(9), " ", .)
-		local work = subinstr(`"`work'"', "row_score", ";row_score", .)
-		local work = subinstr(`"`work'"', "series_score", ";series_score", .)
+		local work = subinstr(`"`work'"', "data_quality", ";data_quality", .)
+		local work = subinstr(`"`work'"', "avg_quality", ";avg_quality", .)
 		
 		local rest `"`work'"'
 		while (`"`rest'"' != "") {
@@ -529,62 +523,62 @@ program wid_parse_score_filter, rclass
 				continue
 			}
 			
-			if (substr(`"`segment'"', 1, 9) == "row_score") {
-				local name row_score
-				local values = substr(`"`segment'"', 10, .)
-			}
-			else if (substr(`"`segment'"', 1, 12) == "series_score") {
-				local name series_score
+			if (substr(`"`segment'"', 1, 12) == "data_quality") {
+				local name data_quality
 				local values = substr(`"`segment'"', 13, .)
 			}
+			else if (substr(`"`segment'"', 1, 11) == "avg_quality") {
+				local name avg_quality
+				local values = substr(`"`segment'"', 12, .)
+			}
 			else {
-				display as error "score_filter() only supports row_score and series_score"
+				display as error "quality_filter() only supports data_quality and avg_quality"
 				exit 198
 			}
 			
 			local separator = substr(`"`values'"', 1, 1)
 			if (`"`separator'"' != "" & !inlist(`"`separator'"', " ", "=", ":", "{", "[")) {
-				display as error "invalid score_filter() score name"
+				display as error "invalid quality_filter() score name"
 				exit 198
 			}
 			
 			wid_parse_score_bounds `"`values'"'
-			if ("`name'" == "row_score") {
-				if (`row_used') {
-					display as error "row_score specified more than once in score_filter()"
+			if ("`name'" == "data_quality") {
+				if (`data_quality_used') {
+					display as error "data_quality specified more than once in quality_filter()"
 					exit 198
 				}
-				local row_used = 1
-				local row_min = r(min)
-				local row_max = r(max)
+				local data_quality_used = 1
+				local data_quality_min = r(min)
+				local data_quality_max = r(max)
 			}
 			else {
-				if (`series_used') {
-					display as error "series_score specified more than once in score_filter()"
+				if (`avg_quality_used') {
+					display as error "avg_quality specified more than once in quality_filter()"
 					exit 198
 				}
-				local series_used = 1
-				local series_min = r(min)
-				local series_max = r(max)
+				local avg_quality_used = 1
+				local avg_quality_min = r(min)
+				local avg_quality_max = r(max)
 			}
 		}
 	}
 	
-	if (!`row_used' & !`series_used') {
-		display as error "score_filter() cannot be empty"
+	if (!`data_quality_used' & !`avg_quality_used') {
+		display as error "quality_filter() cannot be empty"
 		exit 198
 	}
 	
-	return scalar row_score_filter = `row_used'
-	return scalar series_score_filter = `series_used'
-	return scalar row_score_min = `row_min'
-	return scalar row_score_max = `row_max'
-	return scalar series_score_min = `series_min'
-	return scalar series_score_max = `series_max'
+	return scalar data_quality_filter = `data_quality_used'
+	return scalar avg_quality_filter = `avg_quality_used'
+	return scalar data_quality_min = `data_quality_min'
+	return scalar data_quality_max = `data_quality_max'
+	return scalar avg_quality_min = `avg_quality_min'
+	return scalar avg_quality_max = `avg_quality_max'
 end
 
 program wid_parse_score_bounds, rclass
-	version 13
+	version 15
 	args raw
 	
 	local spec = lower(trim(`"`raw'"'))
@@ -593,7 +587,7 @@ program wid_parse_score_bounds, rclass
 		local spec = trim(substr(`"`spec'"', 2, .))
 	}
 	if (`"`spec'"' == "") {
-		display as error "score_filter() bounds cannot be empty"
+		display as error "quality_filter() bounds cannot be empty"
 		exit 198
 	}
 	
@@ -633,13 +627,13 @@ program wid_parse_score_bounds, rclass
 				local max_set = 1
 			}
 			else {
-				display as error "invalid score_filter() bounds"
+				display as error "invalid quality_filter() bounds"
 				exit 198
 			}
 		}
 		
 		if (!`min_set' & !`max_set') {
-			display as error "score_filter() bounds cannot be empty"
+			display as error "quality_filter() bounds cannot be empty"
 			exit 198
 		}
 		if (!`min_set') {
@@ -657,7 +651,7 @@ program wid_parse_score_bounds, rclass
 		local clean = itrim(trim(`"`clean'"'))
 		local n : word count `clean'
 		if (!inlist(`n', 1, 2)) {
-			display as error "score_filter() bounds must be one number, two numbers, or min/max bounds"
+			display as error "quality_filter() bounds must be one number, two numbers, or min/max bounds"
 			exit 198
 		}
 		
@@ -675,11 +669,11 @@ program wid_parse_score_bounds, rclass
 	}
 	
 	if (`min' < 0 | `min' > 5 | `max' < 0 | `max' > 5) {
-		display as error "score_filter() bounds must be between 0 and 5"
+		display as error "quality_filter() bounds must be between 0 and 5"
 		exit 198
 	}
 	if (`min' > `max') {
-		display as error "score_filter() minimum cannot exceed maximum"
+		display as error "quality_filter() minimum cannot exceed maximum"
 		exit 198
 	}
 	
@@ -688,13 +682,13 @@ program wid_parse_score_bounds, rclass
 end
 
 program wid_parse_score_number, rclass
-	version 13
+	version 15
 	args token
 	
 	local token = trim(`"`token'"')
 	local value = real(`"`token'"')
 	if (`"`token'"' == "" | missing(`value')) {
-		display as error "score_filter() bounds must be numeric"
+		display as error "quality_filter() bounds must be numeric"
 		exit 198
 	}
 	

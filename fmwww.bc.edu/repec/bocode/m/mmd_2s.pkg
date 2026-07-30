@@ -1,0 +1,20 @@
+d 'MMD_2S': module to perform Two-sample Maximum Mean Discrepancy (MMD) test
+d
+d   mmd_2s tests the null hypothesis that two independent samples
+d were drawn from the same    distribution, using a Maximum Mean
+d Discrepancy (MMD) statistic with an RBF (Gaussian)	kernel and
+d a bootstrap p-value. 
+d
+d KW: mean discrepancy
+d KW: two-sample test
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260729
+d
+d Author: Andres Talavera Cuya,   Direccion Nacional de Censos y Encuestas -- INEI Peru
+d Support: email talaveracuya@@gmail.com
+d
+f mmd_2s.ado
+f mmd_2s.sthlp
+f mmd_2s_es.sthlp

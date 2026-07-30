@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.6  26Jan2026}{...}
+{* *! version 1.0.7  28Jul2026}{...}
 {title:Title}
 
 {phang}
@@ -22,7 +22,7 @@
 {synopt:{opt ag:es(list of age codes|_all)}}age category codes in the database; {it:999} for all ages, {it:992} for adults; default is {it:_all} for all age categories; see {help wid##options:options} for more{p_end}
 {synopt:{opt pop:ulation(list of population codes|_all)}}type of population; one-letter code, {it:t} for tax units, {it:i} for individuals; default is {it:_all} for all population types; see {help wid##options:options} for more{p_end}
 {synopt:{opt meta:data}}retrieve metadata (ie. variable descriptions, sources, methodological notes, etc.){p_end}
-{synopt:{opt score_filter(filter)}}keep observations whose row-level or series-level data quality score matches the filter{p_end}
+{synopt:{opt quality:_filter(filter)}}keep observations whose {it:data_quality} or {it:avg_quality} score matches the filter{p_end}
 {synopt:{opt clear}}replace data in memory{p_end}
 {synoptline}
 
@@ -31,6 +31,9 @@
 
 {pstd}
 {cmd:wid} imports data from the World Inequality Database (WID.world) directly into Stata.
+
+{pstd}
+{cmd:wid} requires Stata 15 or newer.
 
 {marker options}{...}
 {title:Options}
@@ -127,10 +130,10 @@ Some of the most common possibilities include:
 {p2colreset}{...}
 
 {phang}
-{opt metadata} also retrieve metadata. Metadata provide, for each observation, the country name, variable name and description, population category, age category, source, methodological notes, row-level data quality score, and series-level data quality score. The metadata output columns are {it:country}, {it:countryname}, {it:variable}, {it:percentile}, {it:year}, {it:value}, {it:shortname}, {it:shortdes}, {it:pop}, {it:age}, {it:source}, {it:row_score}, {it:series_score}, and {it:method}.
+{opt metadata} also retrieve metadata. Every download includes the row-level data quality score as {it:data_quality}. Metadata downloads additionally provide the country name, variable name and description, population category, age category, source, methodological notes, and the series-level average quality score as {it:avg_quality}. The metadata output columns are {it:country}, {it:countryname}, {it:variable}, {it:percentile}, {it:year}, {it:value}, {it:shortname}, {it:shortdes}, {it:pop}, {it:age}, {it:source}, {it:data_quality}, {it:avg_quality}, and {it:method}.
 
 {phang}
-{opt score_filter(filter)} keep observations whose data quality scores match the filter. A single unnamed number is interpreted as a minimum {it:row_score}; for example, {cmd:score_filter(3)} keeps observations with {it:row_score >= 3}. Named filters may target {it:row_score}, {it:series_score}, or both. Bounds may be one number, two numbers for an inclusive range, or explicit {it:min}/{it:max} bounds. Examples include {cmd:score_filter(row_score=4)}, {cmd:score_filter(row_score=3 5)}, {cmd:score_filter(series_score={min:2,max:5})}, and {cmd:score_filter(row_score=3; series_score=4)}. Valid score bounds are 0 through 5. Missing scores do not pass a filter.
+{opt quality:_filter(filter)} keep observations whose data quality scores match the filter. A single unnamed number is interpreted as a minimum {it:data_quality}; for example, {cmd:quality_filter(3)} keeps observations with {it:data_quality >= 3}. Named filters may target {it:data_quality}, {it:avg_quality}, or both. Bounds may be one number, two numbers for an inclusive range, or explicit {it:min}/{it:max} bounds. Examples include {cmd:quality_filter(data_quality=4)}, {cmd:quality_filter(data_quality=3 5)}, {cmd:quality_filter(avg_quality={min:2,max:5})}, and {cmd:quality_filter(data_quality=3; avg_quality=4)}. Valid score bounds are 0 through 5. Missing scores do not pass a filter.
 
 {phang}
 {opt clear} replace data in memory, if any; if dataset is not empty and that option is not specified, the command will refuse to execute to avoid data losses.
