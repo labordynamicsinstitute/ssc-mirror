@@ -1,9 +1,11 @@
 /*#####################################################
-#  Version 1.1.1
+#  Version 1.1.2
 #  Author: Hannes Serruys
 #  Last updated: 11/30/2025
 #####################################################*/
-global EUROMOD_COMMAND_VERSION = "1.1.0"
+global EUROMOD_COMMAND_VERSION = "1.1.2"
+// Minimum EUROMOD software version these commands require (keep in sync with euromod.ado).
+global EUROMOD_CONNECTOR_VERSION = "3.7.10"
 
 if "$EUROMOD_PATH" == "" {
 	global EUROMOD_PATH = "C:/Program Files/EUROMOD/Executable"
@@ -12,7 +14,6 @@ if "$EUROMOD_PATH" == "" {
 local wd = c(pwd)
 quietly cd "$EUROMOD_PATH"
 capture program EM_StataPlugin, plugin using ("$EUROMOD_PATH/StataPlugin.plugin")
-capture program drop euromod_getinfo
 quietly cd "`wd'"
 program define euromod_getinfo, rclass
 	local wd = c(pwd)
@@ -58,7 +59,7 @@ program define euromod_getinfo, rclass
 			}
 		}
 		
-		if parId != "" { 
+		if "`parId'" != "" { 
 			capture noisily plugin call EM_StataPlugin, "xmlInfoSystem" "`model'" "`country'" "`system'" "`parId'"
 			di in r "`errorMessageEM'"
 			if (_rc != 0) {

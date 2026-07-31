@@ -1,0 +1,22 @@
+d 'STATASHINY': module to build interactive HTML dashboards, calculators, and data tables from Stata
+d
+d  statashiny generates standalone, interactive HTML dashboards
+d from Stata using Bootstrap 5 (layout), DataTables
+d (searchable/sortable tables), and Chart.js (live charts). Define
+d numeric and checkbox inputs, value cards, data tables from
+d variables in memory, and JavaScript-driven visualizations that
+d recompute in the browser -- no web-dev required. Output is a
+d single self-contained .html file you can email, host, or embed
+d via <iframe> (pairs naturally with webdoc2 reports). 
+d
+d KW: dashboard; html; interactive; bootstrap; datatables; chartjs; reporting; visualization
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260730
+d
+d Author: Eric A. Booth, Texas 2036
+d Support: email eric.a.booth@@gmail.com
+d
+f statashiny.ado
+f statashiny.sthlp

@@ -17,6 +17,7 @@ p weakivtest module to perform weak instrument test for a single endogenous regr
 p weakivtest2 module to compute Robust Test for Weak Instruments with Multiple Endogenous Regressors
 p weathr module to display US weather conditions
 p weaver module to produce dynamic reports in HTML, LaTeX and PDF
+p webapi module to fetch an authenticated JSON web API into Stata as a dataset
 p webdoc module to create a HTML or Markdown document including Stata output
 p webimage module to print images from web files in pdf, png, jpeg, gif, and bmp format
 p weeklyclaims module to Get Weekly Initial Jobless Claims from the US Dept. of Labor
@@ -55,7 +56,7 @@ p worldstat module to produce a visualisation of the state of world development
 p wosaddress module to convert datasets from Web of Science data from wide to long
 p wosload module to load datasets from Web of Science data
 p wridit module to generate weighted ridits
-p writeinput module  to write dataset in memory to new do-file as an input command
+p writeinput module to turn the data in memory into a self-contained, reproducible input command block
 p writekml module to write Keyhole Markup Language file 
 p writepsfrag module to translate Stata text to EPS
 p wscv module to compute the within-subject coefficient of variation

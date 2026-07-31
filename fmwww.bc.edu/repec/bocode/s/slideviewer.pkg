@@ -1,23 +1,24 @@
-d 'SLIDEVIEWER': module to manage linked SMCL presentations
+d 'SLIDEVIEWER': module to navigate SMCL slides, presentations, and tutorials in the Stata Viewer
 d
-d  Stata module to manage and view inter-linked SMCL files
-d displayed in the Viewer window, including subdirectory navigation
-d to access SMCL files.  slideviewer  can be used to show a series
-d of linked SMCL files (like in a  slideshow or presentation using
-d the Viewer) that are stored in sub-directories and post
-d information about progress through the slides to r-class scalars. d
-d KW: SMCL
-d KW: Viewer
-d KW: presentations
-d KW: linked slides
-d KW: window manage
+d  slideviewer turns a folder of .smcl files into an interactive
+d presentation or tutorial inside the Stata Viewer, so a deck needs
+d no hard-coded Next and Previous links in each slide. Move through
+d the deck alphabetically with next, prev, first, and last; the
+d navbar option injects a clickable [First] [Prev] [TOC] [Next]
+d [Last] header and footer into any slide as it is shown.
+d slideviewer toc builds a clickable table of contents of every
+d .smcl file in the project directory. The project subdirectory is
+d set once and remembered for the rest of the session. Fully UTF-8
+d aware. 
 d
-d Requires: Stata version 9
+d KW: SMCL; presentation; teaching; utilities
 d
-d Distribution-Date: 20120220
+d Requires: Stata version 16.0
 d
-d Author: Eric Booth, Texas A&M University
-d Support: email ebooth@@tamu.edu
+d Distribution-Date: 20260730
+d
+d Author: Eric A. Booth, Texas 2036
+d Support: email eric.a.booth@@gmail.com
 d
 f slideviewer.ado
-f slideviewer.hlp
+f slideviewer.sthlp

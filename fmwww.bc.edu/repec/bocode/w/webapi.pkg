@@ -1,0 +1,23 @@
+d 'WEBAPI': module to fetch an authenticated JSON web API into Stata as a dataset
+d
+d  A small, dependency-free generalisation of the "web API from
+d Stata" pattern: a request to a URL, an authentication step
+d (bearer token, API key, or HTTP basic), and a JSON reply parsed
+d back into variables and observations. The HTTP + auth +
+d JSON-to-table work is done by a Python standard-library helper,
+d so no pip packages or virtualenv are required -- only a working
+d python3 on the PATH. webapi get using "<URL>" , records("data")
+d [options] webapi post using "<URL>" , body("<json>") [options] 
+d
+d KW: web api; json; http; rest; oauth; import
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260730
+d
+d Author: Eric A. Booth, Texas 2036
+d Support: email eric.a.booth@@gmail.com
+d
+f webapi.ado
+f webapi.sthlp
+f webapi_helper.py

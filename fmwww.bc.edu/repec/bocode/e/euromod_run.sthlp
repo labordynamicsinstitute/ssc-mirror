@@ -1,12 +1,12 @@
 {smcl}
-{* *! version 1.1.1  1 December, 2025 @ 12:00:00}{...}
+{* *! version 1.1.2  1 December, 2025 @ 12:00:00}{...}
 {viewerjumpto "Syntax" "euromod run####syntax"} 
 {viewerjumpto "Description" "euromod run####description"} 
 {viewerjumpto "Options" "euromod run####options"} 
 {viewerjumpto "Examples" "euromod run####examples"} 
 {viewerjumpto "Requirements" "euromod run####requirements"}
 {viewerjumpto "Authors" "euromod run####authors"}
-{cmd:help euromod run} {it:(EUROMOD Connector v1.1.1)}
+{cmd:help euromod run} {it:(EUROMOD Connector v1.1.2)}
 
 {hline}
 
@@ -21,6 +21,7 @@
 {bf: model }{it:(Path to model)}  
 {bf:system }{it:(EUROMOD system name)} 
 {bf:dataset }{it:(EUROMOD dataset)}
+{bf:bestmatch }
 {bf:country }{it:(EU country)}
 [{opt addons(addon name)}
 {opt extensions(extension condition)}
@@ -58,7 +59,9 @@ When the run is successful, the EUROMOD output data will be loaded into the Stat
 
 {p 4 4 2}{opt system(string)} This parameter represents the name of a system in EUROMOD (e.g. DK_2023) that you want to run using the connector. {p_end}
 
-{p 4 4 2}{opt dataset(string)} This parameter is the dataset name as configured in the EUROMOD model. The parameter will determine the uprating factors and extensions to be applied to the input data. {p_end}
+{p 4 4 2}{opt dataset(string)} This parameter is the dataset name as configured in the EUROMOD model. The parameter will determine the uprating factors and extensions to be applied to the input data. This parameter cannot be used with the bestmatch option.{p_end}
+
+{p 4 4 2}{opt bestmatch} Instead of using the dataset option,one can use the bestmatch option which will automatically look into the model and choose the best match dataset for the specified system. Either of the options needs to be specified. The bestmatch option cannot be used together with the dataset option. {p_end}
 
 {p 4 4 2}{opt country(string)} The official country code of the country of interest (for EU member states see: 
 https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Tutorial:Country_codes_and_protocol_order#Codes.2C_names_and_protocol_order_of_European_Union_.28EU.29_Member_States) {p_end}
@@ -70,11 +73,13 @@ https://ec.europa.eu/eurostat/statistics-explained/index.php?title=Tutorial:Coun
 {pstd}{opt repository(string)} This parameter specifies a path to a folder where there is a dataset stored with the name of the data set with the “.txt” extension. 
 When using this option the data held in memory is overwritten by the data contained in the input dataset. {p_end}
 
-{pstd}{opt addons(string)} 
-This parameter takes a string which lists the names of the add-ons and their specific country implementation. {Addon}|{Addon}_{Country}.  Multiple add-ons can be used by passing them in a comma separated fashion. 
-For example, integrating the of MTR and TCA add-ons for BG in the run of EUROMOD can be done with the following syntax: {p_end}
+{pstd}{opt addons(string)}
+This parameter takes a string which lists the names of the add-ons and, optionally, their specific country implementation. {Addon}|{Addon}_{Country}.  Multiple add-ons can be used by passing them in a comma separated fashion.
+The add-on system ({Addon}_{Country}) may be omitted, in which case it is resolved automatically (like the EUROMOD user interface does) by matching the run's system against the add-on's applicability; an error is raised if no system, or more than one system, applies (in which case the system must be given explicitly).
+For example, integrating the MTR and TCA add-ons for BG in the run of EUROMOD can be done with either of the following syntaxes: {p_end}
 
 {p 8 2 1}{it:euromod run, … addon("MTR|MTR_BG, TCA|TCA_BG")}{p_end}
+{p 8 2 1}{it:euromod run, … addon("MTR, TCA")}{p_end}
 
 {pstd}{opt extensions(string)} This parameter allows to activate and deactivate global and country-specific extensions that deviate from the default configuration of the specific system-dataset combination. 
 This parameter takes a comma-separated list of {ShortNameExtension}={on|off}. 
@@ -197,6 +202,10 @@ Running EUROMOD, controlling the extensions and generating a new prefix. {p_end}
 {p 4 8 2}{cmd:. euromod run, model({it:Path to model}) system(SK_2022) dataset(SK_2010_x1) country(SK) addons(ITT_XBASE|ITT_XBase) prefix(sim1_)} {p_end}
 {p 4 4 2}
 Running EUROMOD, multiple addons selection and generating a new prefix. {p_end}
+
+{p 4 8 2}{cmd:. euromod run, model({it:Path to model}) system(SK_2022) dataset(SK_2010_x1) country(SK) addons(ITT_XBASE) prefix(sim1_)} {p_end}
+{p 4 4 2}
+Same as above, but giving only the add-on name: the applicable add-on system is resolved automatically (an error is raised if no system, or more than one system, applies, in which case it must be given explicitly as add-on{c |}system). {p_end}
 
 {p 4 8 2}{cmd:. euromod run, model({it:Path to model}) system(SK_2022) dataset(SK_2010_x1) country(SK) addons(ITT_XBASE|ITT_XBase) prefix(sim2_) constants("tco_base_t_std(2022)='0.3'") outputdataset(sk_2022_xbase_std.txt)} {p_end}
 {p 4 4 2}

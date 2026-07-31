@@ -1,0 +1,32 @@
+d 'RESHAPEHELPER': module to diagnose the dataset and suggest (never run) the likely reshape command
+d
+d  A dry-run advisor for Stata's hardest data-management command.
+d reshapehelper never reshapes your data. It scans variable names
+d for wide patterns (numeric suffixes, string suffixes, @ mid-name
+d stubs, doubly-wide double indices), finds candidate i and j
+d variables (honoring xtset/tsset and svyset declarations), decides
+d the likely direction, composes the reshape command, and TESTS it
+d on a small sample inside preserve/restore, iterating on reshape's
+d own errors (string j, spaces in j, duplicates within i-j,
+d non-constant variables) until the suggestion runs or the blocker
+d is diagnosed. Output: an ASCII before/after diagram of what the
+d suggestion would do, the suggested syntax with its dry-run
+d verdict (also stored in r(cmd) and $reshapehelper_cmd, written
+d unwrapped to a viewable SMCL file, and offered as a click-to-run
+d link), or - when it cannot discern the design - a numbered
+d checklist of what to fix or specify before running reshapehelper
+d again. Flags transpose jobs that are really xpose/sxpose
+d problems. 
+d
+d KW: reshape; data management; long; wide
+d
+d Requires: Stata version 16.0
+d
+d Distribution-Date: 20260730
+d
+d Author: Eric A. Booth, Texas 2036
+d Support: email eric.a.booth@@gmail.com
+d
+f ../e/example_reshapehelper.do
+f reshapehelper.ado
+f reshapehelper.sthlp

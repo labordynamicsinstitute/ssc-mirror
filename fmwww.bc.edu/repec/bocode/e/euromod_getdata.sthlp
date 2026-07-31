@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 1.1.1  January 22, 2024 @ 12:00:00}{...}
+{* *! version 1.1.2  January 22, 2024 @ 12:00:00}{...}
 {viewerjumpto "Syntax" "euromod getdata##syntax"} {viewerjumpto "Description" "euromod getdata####description"}{viewerjumpto "Options" "euromod getdata####options"}{viewerjumpto "Examples" "euromod getdata####examples"}
-{viewerjumpto "Authors" "euromod getdata####authors"}{cmd:help euromod getdata} {it:(EUROMOD Connector v1.1.1)}
+{viewerjumpto "Authors" "euromod getdata####authors"}{cmd:help euromod getdata} {it:(EUROMOD Connector v1.1.2)}
 
 {hline}
 

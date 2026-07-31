@@ -1,10 +1,11 @@
 /*#####################################################
-#  Version 1.1.1
+#  Version 1.1.2
 #  Author: Hannes Serruys
 #  Last updated: 11/30/2025
 #####################################################*/
-global EUROMOD_COMMAND_VERSION = "1.1.0"
-
+global EUROMOD_COMMAND_VERSION = "1.1.2"
+// Minimum EUROMOD software version these commands require (keep in sync with euromod.ado).
+global EUROMOD_CONNECTOR_VERSION = "3.7.10"
 
 if "$EUROMOD_PATH" == "" {
 	global EUROMOD_PATH = "C:/Program Files/EUROMOD/Executable"
@@ -12,10 +13,8 @@ if "$EUROMOD_PATH" == "" {
 adopath + "$EUROMOD_PATH"
 local wd = c(pwd)
 quietly cd "$EUROMOD_PATH"
-capture program drop EM_StataPlugin
 capture program EM_StataPlugin, plugin using ("$EUROMOD_PATH/StataPlugin.plugin")
 quietly cd "`wd'"
-capture program drop euromod_getdata
 program define euromod_getdata, rclass
 	set type double
 	syntax , OUTputdataset(string) [replace PREfix(string)]

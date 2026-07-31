@@ -1,9 +1,9 @@
 /*#####################################################
-#  Version 1.1.1
+#  Version 1.1.2
 #  Author: Hannes Serruys
 #  Last updated: 11/30/2025
 #####################################################*/
-global EUROMOD_COMMAND_VERSION = "1.1.0"
+global EUROMOD_COMMAND_VERSION = "1.1.2"
 global EUROMOD_CONNECTOR_VERSION = "3.7.10"
 
 

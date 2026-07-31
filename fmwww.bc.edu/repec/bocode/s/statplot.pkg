@@ -15,7 +15,7 @@ d KW: dot chart
 d
 d Requires: Stata version 8.2
 d
-d Distribution-Date: 20110508
+d Distribution-Date: 20260730
 d
 d Author: Eric Booth, Public Policy Research Institute, Texas A&M University
 d Support: email ebooth@@ppri.tamu.edu
@@ -24,4 +24,6 @@ d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk
 d
 f statplot.ado
-f statplot.hlp
+f statplot.sthlp
+f statplot_pkgtest.do
+f statplot_examples.zip

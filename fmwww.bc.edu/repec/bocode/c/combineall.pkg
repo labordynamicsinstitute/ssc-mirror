@@ -1,0 +1,30 @@
+d 'COMBINEALL': module to combine (append, merge, or joinby) or convert every file in a directory
+d
+d  combineall sweeps a directory and combines every file of one
+d type (.dta, CSV and other delimited text, Excel, or XML) into a
+d single dataset by append, merge, or joinby, or converts the files
+d to .dta and stops (convertonly). The engine dates to 2011
+d (v1.0.0). v2.0.0 adds a harmonization layer under cmethod(append)
+d for stacking yearly file releases whose element names mutate
+d across vintages: map(renames.csv) applies only the renames whose
+d [firstyear,lastyear] window covers the 4-digit year extracted
+d from each filename, generates int year, records provenance in
+d char varname[source], and prints a variable-by-year harmonization
+d table. strict turns absent-oldname reports into errors. Replaces
+d the panelstack package. combineall using "built/panel",
+d cmethod(append) map(renames.csv) 
+d
+d KW: append; merge; joinby; import; convert; panel; harmonize; rename; vintage
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260730
+d
+d Author: Eric A. Booth, Texas 2036
+d Support: email eric.a.booth@@gmail.com
+d
+d Author: Elizabeth Teas, Far Harbor, LLC
+d Support: email elizabeth@@farharbor.com
+d
+f combineall.ado
+f combineall.sthlp

@@ -1,32 +1,45 @@
-d 'USEPACKAGE': module to find and install a list of user-written packages needed to run a do-file
+d 'USEPACKAGE': module to find, verify, and install the user-written packages (and data) a do-file needs
 d
-d  usepackage finds and installs user-written packages that are
-d needed to run a do-file.  When sharing a do-file that contains
-d calls to user-written commands from SSC or elsewhere, you can use
-d usepackage to include a list of packages rather than writing a
-d series of net install or ssc install commands to install a list
-d of user-written packages (or instructing the user to find and
-d install a list of packages via commands like findit or search). 
-d usepackage is particularly useful when user-written packages come
-d from locations other than the SSC Archives because usepackage
-d first searches the SSC and then if it does not find a match it
-d searches other internet locations (e.g., those searched by net
-d search by default), including but not limited to user-written
-d additions published in the Stata Journal (SJ) and the Stata
-d Technical Bulletin (STB). 
+d  usepackage takes the list of user-written packages a do-file
+d needs and makes sure they are installed, so a shared do-file can
+d open with one line instead of a stack of ssc install / net
+d install commands or a paragraph telling the reader to go run
+d findit. For each name it checks whether it is already installed,
+d then SSC, then the net search catalogue (which covers the Stata
+d Journal and the STB), reporting what it found, what it skipped,
+d and why. The name you ask for is often a COMMAND rather than a
+d PACKAGE -- dropmiss ships inside dm89_2, bacon inside st0197.
+d usepackage resolves that case, but because the mapping is
+d inferred it asks before installing, and in a batch run it
+d declines rather than guessing (see noconfirm). Ancillary files (a
+d package's example do-files and datasets, which net install does
+d not place on the adopath) are fetched by default and reported;
+d noancillary skips them. github() installs a package straight from
+d a GitHub repository, probing branch (main, then master) and the
+d usual layouts for stata.toc; give it a bare owner and it searches
+d that account's repositories by name, or set the global
+d usepackage_github once and any unresolved name is looked for
+d there. It uses only raw.githubusercontent.com for installs, so it
+d is not rate-limited the way the GitHub code-search API is. data()
+d fetches data files out of a GitHub repository, guessing the live
+d branch and transparently resolving Git LFS pointers, which the
+d raw endpoint otherwise serves as a 130-byte text stub that Stata
+d cannot read. scan() reads a do-file and reports which of its
+d commands do not resolve on this machine. usepackage does not
+d check versions; pair it with require (Correia and Seay, Stata
+d Journal 24(4)) when you need minimum or exact versions pinned.
+d Version 1.0.0 (2011) was written at the Public Policy Research
+d Institute, Texas A&M University. 
 d
-d KW: user-written packages
-d KW: findit
-d KW: search
-d KW: ssc install
-d KW: net install 
+d KW: user-written packages; findit; search; ssc install; net install; ancillary files; github; git lfs; reproducibility
 d
-d Requires: Stata version 9.2
+d Requires: Stata version 16.0
 d
-d Distribution-Date: 20110508
+d Distribution-Date: 20260730
 d
-d Author: Eric Booth, Public Policy Research Institute, Texas A&M University
-d Support: email ebooth@@ppri.tamu.edu
+d Author: Eric A. Booth, Texas 2036
+d Support: email eric.a.booth@@gmail.com
 d
+f ../e/example_usepackage.do
 f usepackage.ado
-f usepackage.hlp
+f usepackage.sthlp

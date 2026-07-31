@@ -100,6 +100,7 @@ Patron URL de descarga directa:{break}
 {pstd}
 Andres Talavera{break}
 Direccion Nacional de Censos y Encuestas -- INEI Peru{break}
+Email: atalaveracuya@gmail.com{break}
 Junio 2026
 
 {hline}

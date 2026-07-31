@@ -1,0 +1,31 @@
+d 'XTBETARK': module for computing beta regression with AR(k) errors for proportion/rate outcomes, by joint conditional maximum likelihood, with panel-corrected standard errors
+d
+d  xtbetark extends betark (if installed) to panel data.  The AR(k)
+d component -- the mean equation's autoregressive adjustment,
+d jointly estimated with the scale equation and AR coefficients via
+d the same recursive conditional likelihood -- works exactly as in
+d betark. xtbetark adds the variance-covariance estimator. A
+d panel-appropriate sandwich is applied on top of the
+d AR(k)-adjusted likelihood, so the correction targets only the
+d cross-panel dependence the AR(k) term does not already handle. 
+d Two such corrections are available via vce() -- pcse (Beck and
+d Katz [1995]) and dk ( Driscoll and Kraay [1998])-- differing in
+d whether they include a time-lag smoothing kernel; a third, oim,
+d applies no panel correction at all  and provides results
+d identical to those produced by betark. 
+d
+d KW: Beta regression
+d KW: autoregressive errors
+d KW: panel data
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260730
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f xtbetark.ado
+f xtbetark_p.ado
+f xtbetark.sthlp
+f xtbetark_example.dta

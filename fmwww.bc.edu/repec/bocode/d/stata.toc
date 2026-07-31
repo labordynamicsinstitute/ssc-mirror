@@ -4,9 +4,11 @@ p dag module to provide utilities for directed acyclic graphs
 p dagfit module to fit a Generalized Beta (Type 2) distribution to grouped data via ML
 p dagumfit module to fit a Dagum distribution by maximum likelihood
 p dash module to score Disabilities of the Arm, Shoulder and Hand
+p dashboardbuilder module to build a self-contained interactive HTML dashboard from Stata
 p dashgph module to construct dashed lines in scatterplots
 p dashln module to add dashed lines to graphs
 p datacheck module to perform data checks and produce informative output
+p datadictionary module to enhanced, over-time-ready codebook generator for multi-wave data
 p dataex module to generate a properly formatted data example for Statalist
 p datanet module to facilitate dataset organization for network analysis purposes
 p dataout module to export a dataset or tab-delimited file into various formats

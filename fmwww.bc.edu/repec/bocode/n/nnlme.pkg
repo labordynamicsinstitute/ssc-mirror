@@ -1,0 +1,24 @@
+d 'NNLME': module to estimate Nested Nonlinear Longitudinal Mixed-Effects regression
+d
+d     nnlme defines a program designed to implement a nested
+d nonlinear regression following	a standard exponentiated
+d survival curve. When working correctly, the program	    
+d isolates a latent curve along which there is an exogenous but
+d unobserved	    acceleration in the negative direction in the
+d rate of change over time. Because time	is the main
+d boundary defining parameter of interest, it is required for
+d analysis to	     be feasible. 
+d
+d KW: panel data
+d KW: mixed effects
+d KW: nested models
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260730
+d
+d Author: Sean Clouston,  Stony Brook University
+d Support: email Sean.Clouston@@stonybrookmedicine.edu
+d
+f nnlme.ado
+f nnlme.sthlp

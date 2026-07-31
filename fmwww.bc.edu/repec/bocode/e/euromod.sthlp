@@ -1,8 +1,8 @@
 {smcl}
-{* *! version 1.1.1  1 December, 2025 @ 12:00:00}{...}
+{* *! version 1.1.2  1 December, 2025 @ 12:00:00}{...}
 {viewerjumpto "Requirements" "euromod####Requirements"}
 {viewerjumpto "Description" "euromod####description"}{viewerjumpto "Examples" "euromod####examples"}
-{viewerjumpto "Authors" "euromod####authors"}{cmd:euromod} {it:(EUROMOD Connector v1.1.1)}
+{viewerjumpto "Authors" "euromod####authors"}{cmd:euromod} {it:(EUROMOD Connector v1.1.2)}
 
 {hline}
 {marker description}{title:Requirements}

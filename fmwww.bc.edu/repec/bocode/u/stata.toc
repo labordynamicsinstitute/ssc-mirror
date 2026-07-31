@@ -36,7 +36,7 @@ p use13save12 module to load sets of matched Stata 13-files into Stata 10-12 and
 p usecausaldata module providing datasets used in causal analysis
 p uselab module to  list value labels and variables using them
 p useold module to provide a convenient wrapper for unicode translate in Stata 14+ 
-p usepackage module to find and install a list of user-written packages needed to run a do-file
+p usepackage module to find, verify, and install the user-written packages (and data) a do-file needs
 p usesas module to use a SAS dataset
 p usesome module to use subset of Stata dataset
 p usespss module to import SPSS (*.sav) data (Windows only)

@@ -1,0 +1,34 @@
+d 'PROJECTBUILDER': module to scaffold a data-analysis project folder with a numbered do-file pipeline
+d
+d  projectbuilder builds a project folder in one command: a
+d raw-data folder, an analytic-data folder, an output folder, a
+d documentation folder, and a numbered do-file pipeline
+d (000_control through 600_analysis). A control file holds every
+d path in one place and can run the whole pipeline. If you already
+d have the data, point data() at local files or url() at a source
+d address and projectbuilder copies it in, converts it, appends it
+d into one analytic file, and writes a documentation page. If the
+d data comes later, scaffold now and rerun with rebuild on every
+d refresh; rebuild never overwrites a do-file you have edited
+d unless you add replace. The tool is self-contained (every file is
+d written by the program, no template folder), uses only Stata's
+d cross-platform file commands, and never overwrites an existing
+d project. Optional companions add power when installed but are
+d never required: convertanything and combineall (author's GitHub),
+d descsave (SSC), srctag/srcfind (author's GitHub), and webdoc2
+d (author's GitHub). 
+d
+d KW: reproducible research; project management; workflow; do-files
+d
+d Requires: Stata version 16.0
+d
+d Distribution-Date: 20260730
+d
+d Author: Eric A. Booth, Texas 2036
+d Support: email eric.a.booth@@gmail.com
+d
+d Author: Elizabeth Teas, Far Harbor, LLC
+d Support: email elizabeth@@farharbor.com
+d
+f projectbuilder.ado
+f projectbuilder.sthlp

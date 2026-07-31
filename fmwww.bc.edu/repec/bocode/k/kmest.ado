@@ -8,7 +8,7 @@ version 16.0;
  for input to bootstrap or jackknife.
  This command assumes that the data have been stset.
 *!Author: Roger Newson
-*!Date: 24 July 2025
+*!Date: 30 July 2025
 */
 
 
@@ -256,6 +256,9 @@ if `Ncentile'>0 {;
 ereturn local predict "kmest_p";
 ereturn local ctransform `"`ctransform'"';
 ereturn local stransform `"`stransform'"';
+ereturn local wtype `"`_dta[st_wt]'"';
+ereturn local wexp `"`_dta[st_wv]'"';
+
 if `Ntime'>0 {;
   ereturn matrix greenwood_se=`sebmat';
   ereturn matrix greenwood_Vdiag=`vabdiagmat';

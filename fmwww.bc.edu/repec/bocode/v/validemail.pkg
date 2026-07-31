@@ -1,0 +1,18 @@
+d 'VALIDEMAIL': module to email validation via Regex, DNS/MX Check, and Disposable Domain Detection
+d
+d  Eric A. Booth, eric.a.booth@gmail.com validemail provides a
+d multi-stage validation for email address variables. It performs
+d Regex format checks, Disposable email detection, and DNS/MX
+d record verification. 
+d
+d KW: email; data validation; data cleaning; DNS
+d
+d Requires: Stata version 16.0
+d
+d Distribution-Date: 20260730
+d
+d Author: Eric A. Booth, Texas 2036
+d Support: email eric.a.booth@@gmail.com
+d
+f validemail.ado
+f validemail.sthlp

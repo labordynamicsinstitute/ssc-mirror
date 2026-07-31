@@ -1,93 +1,81 @@
 {smcl}
-{* 29jan2012} {...}
+{* Feb 2024} {...}
 {hline}
 help for {hi:nearmrg}
 {hline}
 
-{title:Nearest match merging of datasets}
+{title:Title}
+
+{p 4 8 2}{hi:nearmrg} {hline 2} Nearest match merging of datasets
 
 
-{p 4 8 2}{cmd:nearmrg} [{it:varlist}] {cmd:using} {cmd:,}
-	{cmdab:n:earvar(}{it:varname}{cmd:)} [ {cmdab:lim:it(}{it:real}{cmd:)} {cmdab:g:enmatch(}{it:newvarname}{cmd:)} 
-	{cmdab:low:er} {cmdab:up:per} {cmdab:ro:undup} {cmdab:type:(}{it:mergetype}{cmd:)} {it: mergeoptions}] {p_end}
+{title:Syntax}
+
+{p 4 8 2}
+{cmd:nearmrg} [{it:varlist}] {cmd:using} {it:filename} {cmd:,}
+{cmdab:n:earvar(}{it:nearvar_spec}{cmd:)} 
+[{it:options}]
+
+{p 4 8 2}
+where {it:nearvar_spec} is {it:master_var} [{cmd:=}{it:using_var}].
 
 
 {title:Description}
 
-{p}{cmd:nearmrg} performs nearest match merging of two datasets on the values of the numeric variable {it:nearvar}.  {cmd:nearmrg} was designed as a way to use 
-lookup tables that have binned or rounded values on the variable of interest.{p_end}
+{p}{cmd:nearmrg} performs nearest match merging of two datasets on the values of the numeric variable {it:nearvar}. It is particularly useful for matching datasets where the merge key is not exact, such as dates, times, or rounded measurements. {p_end}
 
-{p}The user specifies whether the master dataset should be matched with observations in the using dataset with the value closest and higher (or {bf: upper}) than each {it:nearvar} value, or observations nearest and {bf:lower} than near values.{{p_end}}
-
-{p} Since the {it:nearvar} must be a numeric variable, be sure to convert any time-date string variables to their numeric equivalent (see {help datetime}).  Variables may be specified in an optional {it:varlist} and these variables are treated as  standard merge variable which must match exactly. This option allows nearest matching  within subsets defined by the varlist.  {cmd:nearmrg} requires Stata 11+ since it utilizes the newer {help merge} command syntax. {p_end}
+{p}The command finds the closest value in the using dataset for each observation in the master dataset, optionally within subsets defined by {it:varlist} (exact match variables). Once the nearest match is identified, it performs a standard Stata {help merge}. {p_end}
 
 
 {title:Options}
 
-{p 0 4}{cmd:nearvar()} is required and specifies the variable in the master and using datasets that is to be 
-matched as closely as possible.  {cmd:nearvar()} is not optional and must be unique in the using 
-dataset, but not necessarily in the master dataset.{p_end}
+{p 0 4}{cmdab:n:earvar(}{it:master_var} [{cmd:=}{it:using_var}]{cmd:)} is required. It specifies the numeric variable in the master and using datasets to be matched. If the variable has different names in the two datasets, use the {it:master_var = using_var} syntax. {p_end}
+
+{p 0 4}{cmdab:lim:it(}{it:real}{cmd:)} specifies the maximum allowable absolute difference between the master and using values. If the nearest value exceeds this limit, no match is made for that observation. {p_end}
+
+{p 0 4}{cmdab:low:er} matches to the closest value in the using dataset that is {it:less than or equal to} the master value. {p_end}
+
+{p 0 4}{cmdab:up:per} matches to the closest value in the using dataset that is {it:greater than or equal to} the master value. {p_end}
+
+{p 0 4}{cmdab:ro:undup} breaks distance ties by selecting the higher value. By default, ties are broken by selecting the lower value. {p_end}
+
+{p 0 4}{cmdab:dist:ance(}{it:newvarname}{cmd:)} creates a new variable containing the absolute difference between the master value and the matched using value. {p_end}
+
+{p 0 4}{cmdab:g:enmatch(}{it:newvarname}{cmd:)} creates a new variable in the master dataset containing the specific value from the using dataset that was matched. {p_end}
+
+{p 0 4}{cmdab:type:(}{it:mergetype}{cmd:)} specifies the type of merge (1:1, m:1, 1:m, or m:m). The default is {cmd:m:1}. {p_end}
+
+{p 0 4}{cmdab:nokeep} drops observations from the master dataset that do not find a match in the using dataset (equivalent to keeping only {cmd:_merge==3}). {p_end}
+
+{p 0 4}{it:mergeoptions} allows any standard {help merge} options (e.g., {cmd:keepusing()}, {cmd:update}, {cmd:replace}). {p_end}
 
 
-{p 0 4}{cmd:limit()} is optional and specifies a limit to how far away from the master dataset value the matched using dataset value can be.  For a {cmd:nearvar()} that represents days or date-time, you can specify "limit(90)" to limit matches to within 90 days of the matching date.{p_end}
+{title:Examples}
+
+{p 4 8 2}1. Basic nearest match on price:{p_end}
+{p 8 12 2}{cmd:. sysuse auto, clear}{p_end}
+{p 8 12 2}{cmd:. tempfile using}{p_end}
+{p 8 12 2}{cmd:. preserve}{p_end}
+{p 8 12 2}{cmd:. keep if _n <= 10}{p_end}
+{p 8 12 2}{cmd:. replace price = price + 10}{p_end}
+{p 8 12 2}{cmd:. save `using'}{p_end}
+{p 8 12 2}{cmd:. restore}{p_end}
+{p 8 12 2}{cmd:. nearmrg using `using', nearvar(price) genmatch(p_matched) distance(diff)}{p_end}
+
+{p 4 8 2}2. Nearest match within categories (exact match on foreign):{p_end}
+{p 8 12 2}{cmd:. nearmrg foreign using `using', nearvar(price) limit(50)}{p_end}
+
+{p 4 8 2}3. Different variable names in master and using:{p_end}
+{p 8 12 2}{cmd:. nearmrg using "other_data.dta", nearvar(date = event_date) lower}{p_end}
 
 
-{p 0 4}{cmd:lower, upper, roundup} are mutually exclusive options that alter the default approach to defining the nearest match 
-for {cmd:nearvar}.  {cmd:lower} matches to the closest value of {cmd:nearvar} in the using dataset that is less than 
-or equal to {cmd:nearvar} in the master dataset.  {cmd:upper} matches to the closest value that is greater than or 
-equal to {cmd:nearvar}.  {cmd:roundup} breaks distance ties by always selecting the higher value instead of the default
-lower value.  If none of these options are specified, {cmd:nearmrg} matches to the closest observation defined as minimizing
-the absolute difference between {cmd:nearvar} in the master and using datasets.  {p_end}
+{title:Author}
 
-{p 0 4}{cmd:type()} is an advanced option that overrides the default {it:mergetype} {bf:m:1}.  See the help {help merge} documentation for information on the other available {it:mergetype}s (e.g., m:1, 1:m, m:m, 1:1).{p_end}
-
-{p 0 4}{cmd:genmatch()} is optional and specifies that a new variable should be created in the master datset that identifies the 
-specific value of {cmd:nearvar} in the using dataset that was matched.  {p_end}
-
-{p 0 4}{cmd:mergeoptions} allows the user to specify any of the standard Stata {help merge} options (such as
-{cmd:update} or {cmd: replace}).  See {help merge} for more on these options.{p_end}
-
-
-
-{title:Example}
-
-//Find car prices in "autoexpense.dta" within $50 of "auto.dta"//
-
-**1:  create 'using' data**
-webuse autoexpense.dta, clear
-rename make make2
-sa "using.dta", replace
-
-**2:  merge to auto.dta by price**
-sysuse auto.dta, clear
-nearmrg  using "using.dta", upper nearvar(price) genmatch(usingmatch) limit(50) 
-list make* price  usingmatch _m if inrange(_m, 3, 5)
-
-
-
-
-
-{title:Authors}
-{p 2 6 4}Current version of {bf:nearmrg} (updated for Stata 11+ merge syntax) is written and maintained by:{p_end}
-	
-	{bf:Eric A. Booth}
-	Public Policy Research Institute
-	Texas A&M University
-	ebooth@tamu.edu
-	http://www.eric-a-booth.com
-
-
-	{p 6 6 4}*Original {bf:nearmrg} package appeared in 2003 and was co-authored by:{p_end}
-	 Michael Blasnik
-	 M Blasnik & Associates
-	 michael.blasnik@verizon.net
-	
-	 Katherine Smith
-	 Clinical Epidemiology and Biostatistics Unit
-	 Murdoch Childrens Research Institute
-	 katherine.smith@mcri.edu.au
-
+{p 4 4 2}Eric A. Booth{p_end}
+{p 4 4 2}eric.a.booth@gmail.com{p_end}
+{p 4 4 2}https://github.com/ericbooth/nearmrg-stata{p_end}
 
 {title:Also See}
 
-{p 0 19}On-line:  help for {help merge}{p_end}
+{p 4 4 2}Manual: {hi:[D] merge}{p_end}
+{p 4 4 2}Online: {help merge}, {help joinby}{p_end}

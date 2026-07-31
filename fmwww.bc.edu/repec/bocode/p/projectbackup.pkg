@@ -1,0 +1,29 @@
+d 'PROJECTBACKUP': module to zip up a project folder, subfolders included, in native Stata
+d
+d  projectbackup archives a folder and everything under it into a
+d single .zip using only Stata's own zipfile command and Mata -- no
+d tar, 7-Zip, or PowerShell, so it behaves identically on macOS,
+d Windows, and Linux and works where you cannot run external
+d programs. It is built for the everyday "snapshot my project"
+d habit: point it at a folder and it writes a (optionally dated)
+d zip into an _archive subfolder, and can keep a running Markdown
+d log of every backup. Before writing it walks the tree and warns
+d about oversized folders, too many files, and paths too deep for
+d Windows to extract -- with a dryrun that measures without
+d writing. Options: archive(), prefix(), timestamp, label(),
+d exclude(), nodotfiles, toc, note(), manifest, keep(), removeall,
+d dryrun, force, and a zippy option that also writes a Stata
+d Journal .zippy copy. projectbackup [folder] [, timestamp toc
+d exclude() keep() dryrun ...] 
+d
+d KW: backup; archive; zip; zipfile; project; reproducibility; Stata Journal
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260730
+d
+d Author: Eric A. Booth, Texas 2036
+d Support: email eric.a.booth@@gmail.com
+d
+f projectbackup.ado
+f projectbackup.sthlp

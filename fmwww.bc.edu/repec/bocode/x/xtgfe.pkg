@@ -1,0 +1,28 @@
+d 'XTGFE': module to perform grouped fixed-effects (GFE) estimation for panel data (Bonhomme and Manresa, 2015)
+d
+d  xtgfe estimates the grouped fixed-effects model of Bonhomme and
+d Manresa (2015, Econometrica), in which the units of a panel are
+d classified into a finite number of latent groups, each with its
+d own time-varying (or, optionally, time-invariant) fixed effect.
+d Group membership is unobserved and is estimated from the data,
+d jointly with the common coefficients. Both of the authors'
+d computational algorithms are implemented (the iterative Algorithm
+d 1 and the variable neighborhood search Algorithm 2), for balanced
+d and unbalanced panels. Three types of standard errors are
+d available: large-N large-T cluster-sandwich (default),
+d unit-resampling bootstrap with bias correction, and the large-N
+d fixed-T analytic formula based on Pollard (1982). The number of
+d groups can be selected by the BIC criterion of the paper. 
+d
+d KW: grouped fixed effects
+d KW: panel data
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260740
+d
+d Author: Ozan Eruygur,  Ankara Haci Bayram Veli University
+d Support: email eruygur@@gmail.com
+d
+f xtgfe.ado
+f xtgfe.sthlp

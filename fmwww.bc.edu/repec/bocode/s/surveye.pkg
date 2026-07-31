@@ -1,0 +1,34 @@
+d 'SURVEYE': module to create an interactive HTML dashboard from a Survey Solutions or SurveyCTO questionnaire and the corresponding Stata data
+d
+d   Load one survey data file and point surveye to the
+d questionnaire.  Three questionnaire	 files are accepted,
+d detected by content rather than extension: a Survey Solutions   
+d questionnaire preview (HTML); a SurveyCTO form definition (XML,
+d downloaded in SurveyCTO    under Design - form files), which is
+d read exactly, including groups, repeats, choice    lists,
+d translations, and calculate fields; and a SurveyCTO printable
+d form (HTML) - the    printed Field/Question/Answer table is read
+d directly, including group sections, nested	and repeated
+d subgroups, choice lists, and relevance conditions.  Printables do
+d not	 encode field types, so choice fields import as select_one
+d and open or note fields as	text; notes drop automatically when
+d no matching data column exists.  When a printable    layout is
+d not recognized, the error points to the XML definition. 
+d SurveyCTO split    select_multiple exports (field_1, field_2,
+d ...) are reassembled automatically. 
+d
+d KW: survey data
+d KW: World Bank data
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260730
+d
+d Author:  Attique Ur Rehman,  Enterprise Analysis Unit, World Bank
+d Support: email attique@@worldbank.org
+d
+f surveye.ado
+f surveye.sthlp
+f surveye.jar
+f surveye_2_2_0.jar
+f surveye_example.do

@@ -1,0 +1,28 @@
+d 'DASHBOARDBUILDER': module to build a self-contained interactive HTML dashboard from Stata
+d
+d  A putdocx-style builder: init -> tab -> panel -> build. Each
+d panel call snapshots the data currently in memory; build writes
+d ONE self-contained HTML file (inline JSON data, readable vanilla
+d SVG/JS charts, no CDN). Tabs; kpi/line/bar/hbar/compare/table
+d panels plus an html panel that inlines an external HTML file
+d (e.g. a sparkta2 map) as an iframe; a selector dropdown with a
+d reference-unit overlay; per-panel CSV/PNG downloads; save-as-PDF;
+d callout and source notes; Texas 2036 or neutral theming; and a
+d build receipt listing what likely still needs a human pass. only;
+d nothing to pip install). See help dashboardbuilder. License: MIT 
+d
+d KW: graphics; HTML; dashboard; reporting
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260730
+d
+d Author: Eric A. Booth, Texas 2036
+d Support: email eric.a.booth@@gmail.com
+d
+f dashboardbuilder.ado
+f dashboardbuilder.py
+f dashboardbuilder.sthlp
+f ../e/example_dashboardbuilder.do
+f ../e/example_dashboardbuilder_map.do
+f ../t/texas_counties.csv

@@ -1,16 +1,17 @@
 /*#####################################################
-#  Version 1.1.1
+#  Version 1.1.2
 #  Author: Hannes Serruys
 #  Last updated: 11/30/2025
 #####################################################*/
-global EUROMOD_COMMAND_VERSION = "1.1.0"
+global EUROMOD_COMMAND_VERSION = "1.1.2"
+// Minimum EUROMOD software version these commands require (keep in sync with euromod.ado).
+global EUROMOD_CONNECTOR_VERSION = "3.7.10"
 if "$EUROMOD_PATH" == "" {
 	global EUROMOD_PATH = "C:/Program Files/EUROMOD/Executable"
 }
 
 
 capture program EM_StataPlugin, plugin using ("$EUROMOD_PATH/StataPlugin.plugin")
-capture program drop euromod_setinfo
 program define euromod_setinfo, rclass
 	syntax , model(string) country(string) system(string) parId(string) newParValue(string)
 	if "`system'" != "" & "`country'" == "" {

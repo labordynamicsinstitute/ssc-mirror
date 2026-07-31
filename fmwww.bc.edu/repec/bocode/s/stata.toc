@@ -150,7 +150,7 @@ p sknor module to generate a sample from a normal or skewed (skew-normal) distri
 p skprobit module to perform Lagrange Multiplier Test for Normality for Probit model
 p sliceplot module for time series or other plot in slices
 p slideplot module for sliding bar plot for frequencies or percents
-p slideviewer module to manage linked SMCL presentations
+p slideviewer module to navigate SMCL slides, presentations, and tutorials in the Stata Viewer
 p slist module to "smart list" variables in compact format
 p slopepower module to compute sample size and power calculator for rate outcomes
 p sls module to perform semiparametric least squares
@@ -309,6 +309,7 @@ p statacmds module to produce list of all commands known to Stata, including fuc
 p stataid module to obtain and display information about running Stata instances under Microsoft Windows
 p statajava module to provide Java library of helper classes for Stata plug-ins
 p statapush module to send push notifications to mobile device 
+p statashiny module to build interactive HTML dashboards, calculators, and data tables from Stata
 p statastates module to add US state identifiers to dataset
 p statax module to highlight Stata syntax
 p statflow module for dynamically updating flowcharts in Excel
@@ -436,6 +437,7 @@ p surrog module to compute surrogate variables after factor analysis
 p survcollapse module to collapse surveillance data over a chosen time unit and complete the series
 p surveybias module to compute the B and B_w multinomial accuracy measures for polling bias
 p surveycluster module to calculate sample size for cluster-based surveys to achieve desired precision
+p surveye module to create an interactive HTML dashboard from a Survey Solutions or SurveyCTO questionnaire and the corresponding Stata data
 p surveyspan module to analyze timestamp metadata from field surveys to monitor data quality.
 p survsim module to simulate complex survival data
 p survtime module to compute survival time for use in stset

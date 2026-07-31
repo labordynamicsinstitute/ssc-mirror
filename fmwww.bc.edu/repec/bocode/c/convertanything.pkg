@@ -1,0 +1,20 @@
+d 'CONVERTANYTHING': module to multi-format importer and converter for Stata
+d
+d  Walks a file or a whole directory tree and converts every
+d Stata-friendly format it finds (csv, xlsx, xls, and more) into
+d .dta, mirroring the source tree, optionally importing every
+d worksheet, cleaning variable names, and compressing. Turns a
+d shared-drive drop of mixed formats into one clean set of datasets
+d in a single pass. 
+d
+d KW: data management; file conversion; import; Excel; CSV
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260730
+d
+d Author: Eric A. Booth, Texas 2036
+d Support: email eric.a.booth@@gmail.com
+d
+f convertanything.ado
+f convertanything.sthlp

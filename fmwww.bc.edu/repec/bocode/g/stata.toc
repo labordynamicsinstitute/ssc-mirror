@@ -23,6 +23,7 @@ p ge_gravity module to solve a simple general equilibrium one sector Armington-C
 p ge_gravity2 module to solve a gravity model within the universal gravity class 
 p geekel2d module to estimate the parameters of unidimensional and bidimensional IRT models
 p geivars module to calculate Generalized Entropy inequality indices
+p gemini module to use Google's Gemini AI from the Stata command line via the Gemini CLI
 p gen_tail module to work with indicator observations
 p genass module to perform Genetic Case-control Association tests
 p gencpr module for users of Danish CPR numbers
@@ -110,7 +111,9 @@ p goelevation module to compute elevation for latitude and longitude from Google
 p gologit module to estimate generalized ordered logit models
 p gologit2 module to estimate generalized logistic regression models for ordinal dependent variables
 p gologit29 module to estimate generalized logistic regression models for ordinal dependent variables
+p googlechart module to stata wrapper for the Google Charts (Visualization API)
 p googleplaces module to return search results from Google Places
+p googlesheets module to read, write, and edit Google Sheets directly from Stata
 p goprobit module to estimate generalized ordered probit models
 p goprobit2 module to perform generalized ordered probit regression
 p gpfobl module to perform rotation after factor / principal components

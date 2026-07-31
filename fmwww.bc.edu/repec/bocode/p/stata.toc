@@ -186,6 +186,8 @@ p prody module to calculate factor intensity and sophistication indicators
 p profhap module to construct profile likelihood confidence intervals for haplotype analysis
 p progres module to measure distributive effects of an income tax
 p project module providing a set of tools to build and manage a Stata project
+p projectbackup module to zip up a project folder, subfolders included, in native Stata
+p projectbuilder module to scaffold a data-analysis project folder with a numbered do-file pipeline
 p prolist module to list programs, help files, dialogs
 p propcnsreg module fitting a measurement model with causal indicators
 p proprcspline module for restricted cubic spline smoothing of proportions

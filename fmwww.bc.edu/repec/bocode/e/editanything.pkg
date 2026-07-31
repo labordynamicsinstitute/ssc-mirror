@@ -1,0 +1,27 @@
+d 'EDITANYTHING': module to open any text file (.ado, .sthlp, .do, .md, .py, .R, .csv, ...) from Stata
+d
+d  editanything is a one-command replacement for SSC's -adoedit-
+d that works on any text file -- not just .ado. It searches the
+d ado-path, opens in the Do-file Editor, Viewer, or your OS default
+d app, and refuses to clobber Stata-supplied files (use -replace-
+d to copy them into PERSONAL first). Supports: .ado .sthlp .hlp
+d .smcl .do .mata .md .markdown .html .htm .tex .bib .xml .rst .csv
+d .tsv .txt .raw .log .R .r .py .js .css .sql .sh .bat .ps1 .json
+d .yaml .yml .toml .ini .cfg .conf .env -- and any other plain-text
+d file. 
+d
+d KW: ado-files; editing; programming; utilities
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260730
+d
+d Author: Eric A. Booth, Texas 2036
+d Support: email eric.a.booth@@gmail.com
+d
+d Author: Elizabeth Teas, Far Harbor, LLC
+d Support: email elizabeth@@farharbor.com
+d
+f editanything.ado
+f editanything.sthlp
+f editanything_example.do

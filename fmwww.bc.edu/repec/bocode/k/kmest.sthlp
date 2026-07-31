@@ -182,6 +182,8 @@ like the logit.
 {synopt:{cmd:e(ctransform)}}{cmd:ctransform()} option for percentiles{p_end}
 {synopt:{cmd:e(predict)}}program called by {cmd:predict} ({cmd:kmest_p}){p_end}
 {synopt:{cmd:e(properties)}}{cmd:b}{p_end}
+{synopt:{cmd:e(wtype)}}Weight type{p_end}
+{synopt:{cmd:e(wexp)}}Weight expression{p_end}
 
 {p2col 5 20 24 2: Matrices}{p_end}
 {synopt:{cmd:e(b)}}vector of survival probability estimates and/or percentiles (in ascending order of time){p_end}
@@ -203,6 +205,13 @@ like the logit.
 Note that {cmd:e(greenwood_Vdiag)} is a diagonal matrix.
 It can therefore be used by {helpb parmest} for computing confidence limits,
 but does not estimate the covariance of the survival probability estimates.
+
+
+{title:Acknowledgement}
+
+{pstd}
+I would like to thank Isabel Canette of StataCorp for some very helpful technical advice
+while I developed this package.
 
 
 {title:Author}

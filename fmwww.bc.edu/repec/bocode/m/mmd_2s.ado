@@ -35,7 +35,7 @@
 program define mmd_2s, rclass
     version 14
     syntax varname(numeric) [pweight aweight iweight] [if] [in], BY(varname numeric) ///
-        [BOOT(integer 200) REPS(integer 1) SEED(integer -1) BOXPLOT ///
+        [BOOT(integer 200) REPS(integer 20) SEED(integer -1) BOXPLOT ///
          KDENSITY BW(real 0) NPOINTS(integer 200)]
 
     tempvar touse
@@ -100,7 +100,7 @@ program define mmd_2s, rclass
         local nfA_f  : display %9.1f r(neff_A)
         local nfB_f  : display %9.1f r(neff_B)
         local gtitle "Distribucion de `varlist' por `by'"
-        if `hasweight' local gtitle "`gtitle' (grafico NO ponderado)"
+        if `hasweight' local gtitle "`gtitle' (dibujo SIN ponderar -- graph box no soporta pesos; ver estadistico anotado)"
         * mismo contenido y formato de anotacion que usa kdensity (linea
         * 397 mas abajo) -- antes este note() mezclaba texto entre comillas
         * con codigos de formato tipo "display" (%6.1f r(neff_A)), que NO
@@ -348,7 +348,14 @@ void mmd_2s_run(string scalar varname, string scalar byname, string scalar wtnam
             printf("{txt}{err}   AVISO: cv_se>20%%, el promedio reportado aun es impreciso -- suba reps()\n")
         }
     }
-    else printf("{txt}MMD estadistico observado:      {res}%9.6f\n", stat)
+    else {
+        printf("{txt}MMD estadistico observado:      {res}%9.6f\n", stat)
+        printf("{txt}{err}AVISO: reps(1) -- una sola corrida del estimador. Con muestras chicas/\n")
+        printf("{txt}{err}moderadas esto puede ser MUY ruidoso (visto en la practica: cv_draw>50%%\n")
+        printf("{txt}{err}en un caso real con n=52/22) y llevar a una conclusion equivocada sobre\n")
+        printf("{txt}{err}significancia. No hay forma de medir la estabilidad con reps(1) -- subir\n")
+        printf("{txt}{err}a reps(20) o mas antes de interpretar este resultado.\n")
+    }
     printf("{txt}MMD bootstrap (media, B=%g):    {res}%9.6f\n", B, mn)
     printf("{txt}p-valor (bootstrap, +1 correccion):  {res}%9.4f\n", pv)
     printf("{txt}Effect size (stat/boot_mean):   {res}%9.4f\n", stat/mn)

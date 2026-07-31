@@ -29,7 +29,7 @@
 
 {syntab:Opcional}
 {synopt:{cmdab:boot:(}{it:#}{cmd:)}}numero de replicas de bootstrap; por defecto {cmd:boot(200)}{p_end}
-{synopt:{cmdab:reps:(}{it:#}{cmd:)}}numero de corridas independientes que se promedian para el estadistico observado; por defecto {cmd:reps(1)}{p_end}
+{synopt:{cmdab:reps:(}{it:#}{cmd:)}}numero de corridas independientes que se promedian para el estadistico observado; por defecto {cmd:reps(20)}{p_end}
 {synopt:{cmdab:seed:(}{it:#}{cmd:)}}semilla del generador aleatorio (Mata {cmd:rseed()}); por defecto usa la semilla actual de Stata{p_end}
 {synopt:{cmd:boxplot}}dibuja un boxplot (NO ponderado) de {varname} por {cmd:by()}, anotado con p-boot, effect size y neff{p_end}
 {synopt:{cmd:kdensity}}dibuja la densidad kernel (ponderada, si corresponde) de ambos grupos{p_end}
@@ -103,12 +103,20 @@ resolucion en el p-valor (el minimo detectable es 1/(boot+1)).
 
 {phang}
 {cmdab:reps:(}{it:#}{cmd:)} numero de corridas independientes que se
-promedian para formar el estadistico observado. Como el estimador
-submuestrea los datos, una sola corrida puede ser ruidosa, sobre todo
-con tamaño de muestra efectivo chico. {cmd:reps(1)} (por defecto)
-replica una corrida unica; se recomienda {cmd:reps(20)} o mas para uso
-en produccion. Con {cmd:reps(#)>1}, {cmd:r(mmd_stat_sd)} reporta la
-desviacion estandar entre corridas como diagnostico de estabilidad.
+promedian para formar el estadistico observado. {bf:Por defecto
+{cmd:reps(20)}.} Como el estimador submuestrea los datos, una sola
+corrida ({cmd:reps(1)}) puede ser {bf:severamente} ruidosa, sobre todo
+con tamaño de muestra efectivo chico o moderado -- confirmado en la
+practica: con n=52/22 (un tamaño de muestra comun en casos reales), una
+sola corrida dio un p-valor no significativo (p=0.22) para una
+diferencia que tanto un test de Kolmogorov-Smirnov completo como este
+mismo estadistico MMD promediado sobre muchas corridas encontraron
+altamente significativa (p<0.01). {cmd:reps(1)} desactiva por completo
+el diagnostico de estabilidad (no hay nada contra que comparar una
+corrida unica) y por eso imprime un aviso explicito. No bajes
+{cmd:reps()} por debajo del default para ahorrar tiempo sin antes
+revisar {cmd:r(mmd_stat_sd)} / el cv_draw y cv_se impresos con un
+{cmd:reps()} mas alto.
 
 {phang}
 {cmdab:seed:(}{it:#}{cmd:)} fija la semilla de Mata via {cmd:rseed()}
@@ -116,9 +124,17 @@ antes de cualquier remuestreo, para reproducibilidad. Si se omite, se
 usa el estado aleatorio actual de Mata.
 
 {phang}
-{cmd:boxplot} dibuja un {cmd:graph box} de {varname} segun {cmd:by()} (el
-boxplot en si NO esta ponderado -- es solo ayuda visual), anotado con
-p-boot, effect size y neff de ambos grupos.
+{cmd:boxplot} dibuja un {cmd:graph box} de {varname} segun {cmd:by()},
+anotado con el estadistico MMD (ponderado, si corresponde), p-boot,
+effect size y neff de ambos grupos. {bf:El boxplot en si SIEMPRE sale
+sin ponderar}, sin importar que peso hayas especificado -- es una
+limitacion del propio comando nativo {cmd:graph box} de Stata, que no
+tiene ninguna opcion de ponderacion, no una decision de este paquete. El
+estadistico y el p-valor de la anotacion SI estan correctamente
+ponderados; solo el dibujo de cajas no. Si necesitas que el grafico en
+si refleje la ponderacion, usa {cmd:kdensity} en su lugar, que calcula
+la densidad kernel ponderada directamente (ver abajo) y no tiene esta
+limitacion.
 
 {phang}
 {cmd:kdensity} dibuja curvas de densidad kernel para ambos grupos,
@@ -132,7 +148,7 @@ sigma del propio test salvo que {cmd:bw()} lo sobreescriba.
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Escalares}{p_end}
 {synopt:{cmd:r(mmd_stat)}}estadistico MMD observado (promedio de {cmd:reps()} corridas){p_end}
-{synopt:{cmd:r(mmd_stat_sd)}}desviacion estandar entre corridas de {cmd:reps()} (missing si {cmd:reps(1)}){p_end}
+{synopt:{cmd:r(mmd_stat_sd)}}desviacion estandar entre corridas de {cmd:reps()} (missing solo si se fuerza {cmd:reps(1)} explicitamente -- no es el default){p_end}
 {synopt:{cmd:r(mmd_boot_mean)}}media de la distribucion nula de bootstrap{p_end}
 {synopt:{cmd:r(p_boot)}}p-valor de bootstrap, {cmd:(#(boot>=stat)+1)/(boot()+1)} (correccion "+1" de Davison-Hinkley -- nunca da exactamente 0){p_end}
 {synopt:{cmd:r(effect_size)}}{cmd:mmd_stat / mmd_boot_mean}{p_end}
@@ -186,10 +202,10 @@ estadistico cada vez. p-valor = (# replicas >= observado + 1) /
 {phang2}{cmd:. sysuse auto, clear}{p_end}
 
 {pstd}Sin ponderar (no se especifica {cmd:[weight]}): ¿el rendimiento (mpg) tiene la misma distribucion en autos importados vs. nacionales?{p_end}
-{phang2}{cmd:. mmd_2s mpg, by(foreign) boot(200) seed(12345)}{p_end}
+{phang2}{cmd:. mmd_2s mpg, by(foreign) boot(200) reps(20) seed(12345)}{p_end}
 
 {pstd}Mismo ejemplo, con grafico de densidad kernel{p_end}
-{phang2}{cmd:. mmd_2s mpg, by(foreign) boot(200) seed(12345) kdensity}{p_end}
+{phang2}{cmd:. mmd_2s mpg, by(foreign) boot(200) reps(20) seed(12345) kdensity}{p_end}
 
 {pstd}Estabilizando el estadistico con {cmd:reps()} y el boxplot diagnostico{p_end}
 {phang2}{cmd:. mmd_2s price, by(foreign) boot(200) reps(20) seed(12345) boxplot}{p_end}
@@ -208,24 +224,20 @@ estadistico cada vez. p-valor = (# replicas >= observado + 1) /
 
 {pstd}
 {bf:Ejemplo con datos reales, microdatos publicos}: superficie cosechada
-entre cultivos transitorios y permanentes ({cmd:p204_tipo}), usando la
+entre cultivos transitorios y permanentes ({cmd:P204_TIPO}), usando la
 Encuesta Nacional Agropecuaria (ENA) de Peru, ponderado por el factor de
 expansion. Los datos se descargan directo del portal oficial de
 microdatos de INEI con el comando complementario {help sriinei:sriinei}
 (tambien disponible en SSC) -- este paquete no distribuye ningun archivo
 de datos. {bf:Probado y validado} por el autor con datos reales:{p_end}
-{phang2}{cmd:. sriinei, codigo(1036) modulo(1895) tipo(csv) destino("C:\BD_INEI\mic")}{p_end}
+{phang2}{cmd:. sriinei, codigo(1036) modulo(1895) tipo(stata) destino("C:\BD_INEI\mic")}{p_end}
 {phang2}{cmd:. cd "C:\BD_INEI\mic\1036-Modulo1895"}{p_end}
 {phang2}{cmd:. use 03_CAP200AB, clear}{p_end}
-{phang2}{cmd:. keep if codigo==1 & inlist(p204_tipo,1,2)}{p_end}
-{phang2}{cmd:. gen sup_cosechada=p217_sup_ha}{p_end}
-{phang2}{cmd:. drop if missing(sup_cosechada, factor)}{p_end}
-{phang2}{cmd:. gen double sup_cosechada_log = log(sup_cosechada + 1)}{p_end}
-{phang2}{cmd:. timer clear}{p_end}
-{phang2}{cmd:. timer on 1}{p_end}
-{phang2}{cmd:. mmd_2s sup_cosechada_log [aweight=factor], by(p204_tipo) boot(30) reps(20) kdensity}{p_end}
-{phang2}{cmd:. timer off 1}{p_end}
-{phang2}{cmd:. timer list}{p_end}
+{phang2}{cmd:. keep if CODIGO==1 & inlist(P204_TIPO,1,2)}{p_end}
+{phang2}{cmd:. gen SUP_COSECHADA=P217_SUP_ha}{p_end}
+{phang2}{cmd:. drop if missing(SUP_COSECHADA, FACTOR_PRODUCTOR)}{p_end}
+{phang2}{cmd:. gen double SUP_COSECHADA_log = log(SUP_COSECHADA + 1)}{p_end}
+{phang2}{cmd:. mmd_2s SUP_COSECHADA_log [aweight=FACTOR_PRODUCTOR], by(P204_TIPO) boot(30) reps(20) kdensity}{p_end}
 
 
 {marker author}{...}
@@ -242,6 +254,7 @@ microdatos publicos directo de un portal oficial de estadisticas
 {pstd}
 Andres Talavera Cuya{break}
 Direccion Nacional de Censos y Encuestas -- INEI Peru{break}
+Email: atalaveracuya@gmail.com{break}
 Junio 2026
 
 {hline}

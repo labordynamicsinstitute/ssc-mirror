@@ -39,6 +39,7 @@ p xtbalfront module to trade-off frontier diagnostics and balanced-subsample sel
 p xtbcfe module to perform bootstrap-corrected Fixed Effects estimation and inference in dynamic panel models
 p xtbchpanel module implementing Bias-corrected mean-group long-run estimators for dynamic heterogeneous panels (ARDL), with an optional climate-deviation mode
 p xtbestcce module to compute Bootstrap-Enhanced Common Correlated Effects for panel data with distinct correlated factors
+p xtbetark module for computing beta regression with AR(k) errors for proportion/rate outcomes, by joint conditional maximum likelihood, with panel-corrected standard errors
 p xtbfkbreak module to estimate common structural breaks in heterogeneous panels with correlated common effects and (optionally) endogenous regressors
 p xtbhst module to implement bootstrap test for slope homogeneity in large panels.
 p xtbreak module for detecting and dating multiple structural breaks in time series and panel data
@@ -94,6 +95,7 @@ p xtfmg module providing second-generation heterogeneous panel estimators with i
 p xtgcause module to test for Granger non-causality in heterogeneous panels
 p xtgeebcv module to compute bias-corrected (small-sample) standard errors for generalized estimating equations
 p xtgets module providing Panel General-to-Specific (GETS) Indicator Saturation for Structural Break Detection
+p xtgfe module to perform grouped fixed-effects (GFE) estimation for panel data (Bonhomme and Manresa, 2015)
 p xtgls2 module to estimate GLS estimator for large N, small T panel data models
 p xtglsr module to calculate robust, or cluster-robust variance after xtgls
 p xtgmcoint module to estimate the cointegrating relationship in heterogeneous panels using Pedroni's group-mean Fully Modified OLS (FMOLS) and Dynamic OLS (DOLS)

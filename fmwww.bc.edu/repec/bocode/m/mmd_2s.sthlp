@@ -29,7 +29,7 @@
 
 {syntab:Optional}
 {synopt:{cmdab:boot:(}{it:#}{cmd:)}}number of bootstrap replications; default {cmd:boot(200)}{p_end}
-{synopt:{cmdab:reps:(}{it:#}{cmd:)}}number of independent draws averaged for the observed statistic; default {cmd:reps(1)}{p_end}
+{synopt:{cmdab:reps:(}{it:#}{cmd:)}}number of independent draws averaged for the observed statistic; default {cmd:reps(20)}{p_end}
 {synopt:{cmdab:seed:(}{it:#}{cmd:)}}sets the random-number seed via Mata {cmd:rseed()}; default uses current Stata seed{p_end}
 {synopt:{cmd:boxplot}}draws an (unweighted) boxplot of {varname} by {cmd:by()} annotated with p-boot, effect size, and neff{p_end}
 {synopt:{cmd:kdensity}}draws a (weighted, if applicable) kernel density plot of both groups{p_end}
@@ -101,12 +101,18 @@ finer p-value resolution (minimum detectable p-value is 1/(boot+1)).
 
 {phang}
 {cmdab:reps:(}{it:#}{cmd:)} number of independent draws averaged to form
-the observed MMD statistic. Because the estimator subsamples the data, a
-single draw can be noisy, especially with small effective sample size.
-{cmd:reps(1)} (default) reproduces a single-draw statistic;
-{cmd:reps(20)} or higher is recommended for production use. When
-{cmd:reps(#)>1}, {cmd:r(mmd_stat_sd)} reports the draw-to-draw standard
-deviation as a stability diagnostic.
+the observed MMD statistic. {bf:Default {cmd:reps(20)}.} Because the
+estimator subsamples the data, a single draw ({cmd:reps(1)}) can be
+{bf:severely} noisy, especially with small or moderate effective sample
+size -- confirmed empirically: with n=52/22 (a common real-world sample
+size), a single draw gave a non-significant p-value (p=0.22) for a
+difference that both a full Kolmogorov-Smirnov test and this same MMD
+statistic averaged over many draws found highly significant (p<0.01).
+{cmd:reps(1)} disables the stability diagnostic entirely (there is
+nothing to compare a single draw against) and prints an explicit warning
+for that reason. Do not lower {cmd:reps()} below the default to save
+time without first checking {cmd:r(mmd_stat_sd)} / the printed cv_draw
+and cv_se at a higher {cmd:reps()}.
 
 {phang}
 {cmdab:seed:(}{it:#}{cmd:)} sets the Mata seed via {cmd:rseed()} before
@@ -114,9 +120,17 @@ any resampling, for reproducibility. If omitted, the current Mata random
 state is used.
 
 {phang}
-{cmd:boxplot} draws a {cmd:graph box} of {varname} over {cmd:by()} (the
-boxplot itself is unweighted -- visual aid only), annotated with p-boot,
-effect size, and neff of both groups.
+{cmd:boxplot} draws a {cmd:graph box} of {varname} over {cmd:by()},
+annotated with the (weighted, if applicable) MMD statistic, p-boot,
+effect size, and neff of both groups. {bf:The boxplot itself is always
+unweighted}, regardless of any {cmd:[weight]} specified -- this is a
+limitation of Stata's native {cmd:graph box} command, which has no
+weighting option at all, not a choice made by this package. The
+statistic and p-value in the annotation ARE correctly weighted; only the
+box-and-whisker drawing is not. If you need the plot itself to reflect
+the weighting, use {cmd:kdensity} instead, which computes a weighted
+kernel density directly (see below) and is not subject to this
+limitation.
 
 {phang}
 {cmd:kdensity} draws kernel density curves for both groups, weighted if
@@ -130,7 +144,7 @@ unless {cmd:bw()} overrides it.
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
 {synopt:{cmd:r(mmd_stat)}}observed MMD statistic (average of {cmd:reps()} draws){p_end}
-{synopt:{cmd:r(mmd_stat_sd)}}SD across {cmd:reps()} draws (missing if {cmd:reps(1)}){p_end}
+{synopt:{cmd:r(mmd_stat_sd)}}SD across {cmd:reps()} draws (missing only if {cmd:reps(1)} is explicitly forced -- not the default){p_end}
 {synopt:{cmd:r(mmd_boot_mean)}}mean of the bootstrap null distribution{p_end}
 {synopt:{cmd:r(p_boot)}}bootstrap p-value, {cmd:(#(boot>=stat)+1)/(boot()+1)} (Davison-Hinkley "+1" correction -- never exactly 0){p_end}
 {synopt:{cmd:r(effect_size)}}{cmd:mmd_stat / mmd_boot_mean}{p_end}
@@ -177,8 +191,29 @@ time. p-value = (# replicates >= observed + 1) / (boot() + 1).
 {marker examples}{...}
 {title:Examples}
 
-{pstd}Unweighted (no {cmd:[weight]} specified){p_end}
-{phang2}{cmd:. mmd_2s wage, by(union) boot(200) seed(12345)}{p_end}
+{pstd}Setup{p_end}
+{phang2}{cmd:. sysuse auto, clear}{p_end}
+
+{pstd}Unweighted (no {cmd:[weight]} specified): does fuel economy (mpg) have the same distribution in imported vs. domestic cars?{p_end}
+{phang2}{cmd:. mmd_2s mpg, by(foreign) boot(200) reps(20) seed(12345)}{p_end}
+
+{pstd}Same example, with kernel density plot{p_end}
+{phang2}{cmd:. mmd_2s mpg, by(foreign) boot(200) reps(20) seed(12345) kdensity}{p_end}
+
+{pstd}Stabilizing the statistic with {cmd:reps()} and the diagnostic boxplot{p_end}
+{phang2}{cmd:. mmd_2s price, by(foreign) boot(200) reps(20) seed(12345) boxplot}{p_end}
+
+{pstd}Setup, second dataset{p_end}
+{phang2}{cmd:. sysuse nlsw88, clear}{p_end}
+
+{pstd}Weighted, with {cmd:aweight}: does wage have the same distribution by union affiliation?{p_end}
+{phang2}{cmd:. mmd_2s wage [aweight=hours], by(union) boot(500) reps(20) seed(12345) boxplot}{p_end}
+
+{pstd}Check that it reduces to the unweighted case (constant weight = 1){p_end}
+{phang2}{cmd:. gen peso1 = 1}{p_end}
+{phang2}{cmd:. mmd_2s wage [aweight=peso1], by(union) boot(500) reps(20) seed(12345)}{p_end}
+{phang2}{cmd:. * compare r(mmd_stat), r(p_boot), and r(effect_size) against the run without [weight], same seed()}{p_end}
+{phang2}{cmd:. mmd_2s wage, by(union) boot(500) reps(20) seed(12345)}{p_end}
 
 {pstd}
 {bf:Real-data example, weighted, with public microdata}: harvested
@@ -187,14 +222,14 @@ agricultural survey (ENA). Data downloaded directly from the official
 INEI microdata portal with the companion command {help sriinei:sriinei}
 (also available on SSC) -- no data files are distributed with this
 package.{p_end}
-{phang2}{cmd:. sriinei, codigo(1036) modulo(1895) tipo(csv) destino("C:\BD_INEI\mic")}{p_end}
+{phang2}{cmd:. sriinei, codigo(1036) modulo(1895) tipo(stata) destino("C:\BD_INEI\mic")}{p_end}
 {phang2}{cmd:. cd "C:\BD_INEI\mic\1036-Modulo1895"}{p_end}
 {phang2}{cmd:. use 03_CAP200AB, clear}{p_end}
-{phang2}{cmd:. keep if codigo==1 & inlist(p204_tipo,1,2)}{p_end}
-{phang2}{cmd:. gen sup_cosechada=p217_sup_ha}{p_end}
-{phang2}{cmd:. drop if missing(sup_cosechada, factor)}{p_end}
-{phang2}{cmd:. gen double sup_cosechada_log = log(sup_cosechada + 1)}{p_end}
-{phang2}{cmd:. mmd_2s sup_cosechada_log [aweight=factor], by(p204_tipo) boot(30) reps(20) kdensity}{p_end}
+{phang2}{cmd:. keep if CODIGO==1 & inlist(P204_TIPO,1,2)}{p_end}
+{phang2}{cmd:. gen SUP_COSECHADA=P217_SUP_ha}{p_end}
+{phang2}{cmd:. drop if missing(SUP_COSECHADA, FACTOR_PRODUCTOR)}{p_end}
+{phang2}{cmd:. gen double SUP_COSECHADA_log = log(SUP_COSECHADA + 1)}{p_end}
+{phang2}{cmd:. mmd_2s SUP_COSECHADA_log [aweight=FACTOR_PRODUCTOR], by(P204_TIPO) boot(30) reps(20) kdensity}{p_end}
 
 
 {marker author}{...}
@@ -211,6 +246,7 @@ real-data example above).
 {pstd}
 Andres Talavera Cuya{break}
 Direccion Nacional de Censos y Encuestas -- INEI Peru{break}
+Email: atalaveracuya@gmail.com{break}
 Junio 2026
 
 {hline}

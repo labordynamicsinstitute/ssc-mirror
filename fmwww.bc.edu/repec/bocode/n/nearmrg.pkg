@@ -1,21 +1,28 @@
-d 'NEARMRG': module to provide nearest-match merging of datasets
+d 'NEARMRG': module to nearest match merging of two datasets on a numeric variable
 d
-d Stata module to provide nearest-match merging of datasets.
-d nearmrg performs nearest match merging of two datasets.  nearmrg 
-d matches  observations that are closest on the variable specified
-d in nearvar() and can limit the range of the values matched (e.g.,
-d limiting matches to 90 days with a date variable). 
+d  nearmrg merges a using dataset onto the data in memory by
+d NEAREST value of a numeric variable rather than by exact
+d equality, which is what you want when the keys are dates,
+d timestamps, or measurements that differ by rounding. For every
+d master observation it finds the closest value of nearvar() in the
+d using file, optionally within exact matches of a varlist, and
+d optionally restricted to values at or below (lower) or at or
+d above (upper) the master value. A limit() caps how far a match
+d may reach; distance() records how far it did. Master and using
+d variables may carry different names, and all standard merge
+d options (keepusing, update, replace) pass through. Original
+d package co-authored by Michael Blasnik and Katherine Smith
+d (2003); taken over and rewritten by Eric A. Booth beginning in
+d 2010. 
 d
-d KW: merge
-d KW: join
+d KW: merge; data management; nearest neighbour; panel data
 d
-d Requires: Stata version 11
+d Requires: Stata version 11.0
 d
+d Distribution-Date: 20260730
 d
-d Author: Eric Booth, Texas A&M University
-d Support: email ebooth@@tamu.edu
-d
-d Distribution-Date: 20120207
+d Author: Eric A. Booth, Texas 2036
+d Support: email eric.a.booth@@gmail.com
 d
 f nearmrg.ado
 f nearmrg.sthlp

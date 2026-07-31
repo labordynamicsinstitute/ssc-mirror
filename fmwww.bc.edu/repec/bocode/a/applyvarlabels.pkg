@@ -1,0 +1,35 @@
+d 'APPLYVARLABELS': module to apply variable labels to the data in memory from a two-column (Variable, Label) crosswalk
+d
+d  Label the variables in memory from an Excel workbook or a
+d delimited file that lists each variable name beside the label it
+d should carry. Solves the Statalist problem (thread 1768839) where
+d a levelsof/tokenize loop puts the wrong label on the wrong
+d variable because levelsof sorts the labels alphabetically.
+d applyvarlabels reads the crosswalk in row order and matches every
+d label to its variable BY NAME, never by position. It writes a
+d capture-guarded relabel do-file (a variable named in the
+d crosswalk but absent from the data is skipped, not an error),
+d runs it to apply the labels, and prints an inventory of what did
+d not line up: crosswalk rows with no such variable, and variables
+d in memory with no crosswalk row. The data in memory are never
+d sorted, dropped, or reordered - the crosswalk is read in its own
+d frame, so nothing changes but the variable labels themselves. The
+d generated do-file is a keepable, rerunnable artifact (see
+d dofile()). Reads .xlsx/.xls and .csv/.tsv/.txt; nocase matches
+d names ignoring case; norun writes the relabel do-file without
+d applying it. 
+d
+d KW: variable labels; codebook; data management; Excel
+d
+d Requires: Stata version 16.0
+d
+d Distribution-Date: 20260730
+d
+d Author: Eric A. Booth, Texas 2036
+d Support: email eric.a.booth@@gmail.com
+d
+f applyvarlabels.ado
+f applyvarlabels.sthlp
+f ../e/example_applyvarlabels.do
+f ../e/example_varlabels.xlsx
+f ../m/make_example_varlabels.py

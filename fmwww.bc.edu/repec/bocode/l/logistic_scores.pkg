@@ -1,0 +1,22 @@
+d 'LOGISTIC_SCORES': module to calculate logistic scores from ordinal data
+d
+d  logistic_scores calculates logistic scores in the sense of
+d Mosteller and Tukey (Data Analysis and Regression, 1977) from a
+d graded ordinal variable. 
+d
+d KW: logistic scores
+d KW: Mosteller
+d KW: Tukey
+d KW: ordinal data 
+d
+d Requires: Stata version 9
+d
+d Distribution-Date: 20260730
+d
+d Author: Nicholas J. Cox, Durham University
+d Support: email N.J.Cox@@durham.ac.uk
+d
+f logistic_scores.ado
+f logistic_scores.sthlp
+f logistic_scores_examples.do
+f logistic_scores_derivation.pdf

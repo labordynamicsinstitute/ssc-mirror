@@ -217,6 +217,7 @@ p colorscatter module to draw scatter plots with marker colors varying by a thir
 p colrspace module providing a class-based color management system in Mata
 p combinatorics module to evaluate the performance of all possible 2^n models generated with a given set of n possible explanatory variables
 p combine module to combine n, mean, and SD from two groups according to the Cochrane-recommended formula for meta-analyses
+p combineall module to combine (append, merge, or joinby) or convert every file in a directory
 p combineplot module to combine similar univariate or bivariate plots for different variables
 p combival module to combine levels of a categorical variable over observation groups
 p combomarginsplot module to combine the saved results from multiple calls to margins into one marginsplot
@@ -242,6 +243,7 @@ p conservatism module to calculate Khan & Watts (2009) Accounting Conservatism M
 p contour module to draw contour plots
 p contrast module to calculate contrasts between factor levels
 p convert_top_lines module to handle leading lines of text file
+p convertanything module to multi-format importer and converter for Stata
 p cooksd2 module to compute Cook's distance after regress or xtreg
 p copycode module to produce modular self-written ado files
 p copydesc module to copy description of variable
