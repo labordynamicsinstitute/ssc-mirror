@@ -14094,6 +14094,7 @@ fmwww.bc.edu/repec/bocode/i/isa_rangecheck.ado
 fmwww.bc.edu/repec/bocode/i/intllf_lnormal.ado
 fmwww.bc.edu/repec/bocode/i/indexplot7.ado
 fmwww.bc.edu/repec/bocode/i/itspower.ado
+fmwww.bc.edu/repec/bocode/i/intllf_sgt_group.ado
 fmwww.bc.edu/repec/bocode/i/ivreg2hfe.sthlp
 fmwww.bc.edu/repec/bocode/i/irrepro.html
 fmwww.bc.edu/repec/bocode/i/import_svmlight.sthlp
@@ -25197,7 +25198,6 @@ fmwww.bc.edu/repec/bocode/p/pystacked.sthlp
 fmwww.bc.edu/repec/bocode/p/power_twospec.sthlp
 fmwww.bc.edu/repec/bocode/p/pv.pkg
 fmwww.bc.edu/repec/bocode/p/pareademo.do
-fmwww.bc.edu/repec/bocode/intllf_sgt_group.ado
 fmwww.bc.edu/repec/bocode/b/baiduweather.sthlp
 fmwww.bc.edu/repec/bocode/b/bimpoisson_lf.ado
 fmwww.bc.edu/repec/bocode/b/bbandits_update.sthlp

@@ -8,6 +8,7 @@
 *!     {helpb lgeoplot_source##geo_clip:geo_clip()}
 *!     {helpb lgeoplot_source##geo_gtype:geo_gtype()}
 *!     {helpb lgeoplot_source##geo_hull:geo_hull()}
+*!     {helpb lgeoplot_source##geo_inpoly:geo_inpoly()}
 *!     {helpb lgeoplot_source##geo_json:geo_json_import() and geo_json2xy()}
 *!     {helpb lgeoplot_source##geo_ksmooth:geo_ksmooth()}
 *!     {helpb lgeoplot_source##geo_orientation:geo_orientation()}
@@ -1103,7 +1104,7 @@ end
 
 *! {smcl}
 *! {marker geo_clip}{bf:geo_clip()}{asis}
-*! version 1.0.4  16jul2024  Ben Jann
+*! version 1.0.5  05feb2025  Ben Jann
 *!
 *! Clips or selects shape items by a convex mask; a modified Sutherland–Hodgman
 *! algorithm is used for clipping (returning divided polygons if appropriate);
@@ -1282,8 +1283,9 @@ mata set matastrict on
 {   // first row in XY assumed missing
     `BoolC' I
 
-    if (cols(mask)==1) I = __geo_rclip_point(XY[|a+1,1\b,.|], mask)
-    else               I =  __geo_clip_point(XY[|a+1,1\b,.|], mask)
+    if (b<=a)               I = J(0,1,.) // empty shape item
+    else if (cols(mask)==1) I = __geo_rclip_point(XY[|a+1,1\b,.|], mask)
+    else                    I =  __geo_clip_point(XY[|a+1,1\b,.|], mask)
     if (method==2) {
         if (any(I)) return(J(b-a+1,1,1)) // at least one point inside
         else        return(J(b-a+1,1,0)) // else drop all
@@ -1339,10 +1341,11 @@ mata set matastrict on
     `Int'  r, i, n
     `RM'   xy
     `PS'   f
-    
+
     r = b - a + 1
     // point item
     if (r<=2) {
+        if (r<2) return(J(0,2,.)) // empty shape item
         xy = _geo_clip_point(XY[|a+1,1 \ b,.|], mask, 0)
         if (rows(xy)) return(XY[a,] \ xy)
         return(J(0,2,.))
@@ -1360,7 +1363,6 @@ mata set matastrict on
         else {
             f = &_geo_clip_area()
             flip = geo_orientation(xy)==1        // is counterclockwise
-            //flip = geo_orientation(xy)==1        // is counterclockwise
             if (flip) xy = J(1,2,.) \ xy[r::2,.] // flip orientation
         }
     }
@@ -1946,8 +1948,412 @@ real scalar _geo_hull_leftturn(real rowvector p1, real rowvector p2,
 end
 
 *! {smcl}
+*! {marker geo_inpoly}{bf:geo_inpoly()}{asis}
+*! version 1.0.1  13aug2025  Ben Jann
+*!
+*! Spatially joins the points in xy to the shapes in XY. Results are equivalent
+*! to the ones from geo_spjoin(), but geo_inpoly() is much more efficient.
+*! 
+*! geo_inpoly() is based on geoinpoly.ado by Robert Picard; see
+*! -ssc describe geoinpoly-
+*!
+*! Syntax:
+*!
+*!      result = geo_inpoly(xy, ID, XY [, mtype, nodots, expand])
+*!
+*!  result  r x 2 matrix containing matched IDs in 1st column and matching
+*!          flags in 2nd column (0 = no match, 1 = strictly inside, 2 = on edge
+*!          between two vertices, 3 = on vertex)
+*!  xy      r x 2 matrix containing points to be matched
+*!  ID      n x 1 real colvector of unit IDs
+*!  XY      n x 2 real matrix of (X,Y) coordinates of the shapes
+*!  mtype   restricts the type matches to be considered: 1 = strictly inside,
+*!          2 = on border (edge or vertex), 3 = on vertex; all type of matches
+*!          are considered if mtype is omitted or set to any other value
+*!  nodots  nodots!=0 suppresses progress dots
+*!  expand  changes how multiple matches are handled; by default, if a point
+*!          matches multiple shapes, only the first match will be reported;
+*!          alternatively, if argument expand is provided, all matches will be
+*!          listed, expanding the number of rows in result; furthermore,
+*!          expand will be replaced by a r x 1 colvector indicating for each
+*!          point the number of rows included in result (1 row if a point has
+*!          no match, m rows if a point has m matches)
+*!
+*! geo_pid() and geo_gtype() are used to identify and classify the shape items
+*! in XY; polygons and lines are assumed to start with missing
+*!
+
+local Bool    real scalar
+local BoolC   real colvector
+local Int     real scalar
+local IntC    real colvector
+local IntR    real rowvector
+local IntM    real matrix
+local RC      real colvector
+local RR      real rowvector
+local RM      real matrix
+local PS      pointer scalar
+local PC      pointer colvector
+local SLICE   _geo_inpoly_slice
+local Slice   struct `SLICE' scalar
+local PSlice  pointer (`Slice') scalar
+local PSlices pointer (`Slice') rowvector
+local STACK   _geo_inpoly_stack
+local Stack   struct `STACK' scalar
+
+mata:
+mata set matastrict on
+
+`RM' geo_inpoly(`RM' xy, `RC' ID, `RM' XY, | `Int' mtyp, `Bool' nodots,
+    transmorphic E)
+{
+    `Bool' expand, mmsg
+    `Int'  i, j, m, mtype
+    `RR'   r
+    `PC'   R
+    `RM'   M 
+    
+    expand = (args()==6)
+    if (args()<5) nodots = 0
+    if (anyof((1,2,3), mtyp)) mtype = mtyp
+    else                      mtype = 0
+    if (cols(xy)!=2) {
+        errprintf("{it:XY} must have two columns\n")
+        exit(3200)
+    }
+    if (cols(XY)!=2) {
+        errprintf("{it:XY} must have two columns\n")
+        exit(3200)
+    }
+    if (rows(ID)!=rows(XY)) {
+        errprintf("{it:ID} and {it:XY} must have the same number of rows\n")
+        exit(3200)
+    }
+    R = _geo_inpoly(xy, ID, XY, nodots)
+    i = rows(xy)
+    if (expand) {
+        E = J(i, 1, 1)
+        for (; i; i--) {
+            if (R[i]==NULL) continue
+            r = *R[i]
+            if (mtype) {
+                if (mtype==2) r = select(r, r[,2]:==2 :| r[,2]:==3)
+                else          r = select(r, r[,2]:==mtype)
+            }
+            m = rows(r)
+            if (m) E[i] = m
+        }
+        j = sum(E)
+        i = rows(xy)
+    }
+    else j = i
+    mmsg = 0
+    M = J(j,1,.), J(j, 1, 0) // second column: 0 if no match
+    for (; i; i--) {
+        if (R[i]==NULL) {; j--; continue; }
+        r = *R[i]
+        if (mtype) {
+            if (mtype==2) r = select(r, r[,2]:==2 :| r[,2]:==3)
+            else          r = select(r, r[,2]:==mtype)
+            m = rows(r)
+            if (!m) {; j--; continue; }
+        }
+        else m = rows(r)
+        if (expand) {
+            M[|j-m+1,1 \ j,.|] = r
+            j = j - m
+        }
+        else {
+            if (m>1) mmsg = 1
+            M[j--,] = r[1,] // using first match
+        }
+    }
+    if (mmsg) display("{txt}(multiple matches found for at least on point;" +
+        " using first match only)")
+    return(M)
+}
+
+struct `SLICE' {
+    `RM' xy  // selected points in slice (x, y, id)
+    `RM' E   // selected edges in slice
+}
+
+struct `STACK' {
+    `Int'     n, N  // current and overall length of stack
+    `PSlices' S     // stack of slices
+}
+
+`PSlice' _geo_inpoly_stack_pop(`Stack' stack)
+{
+    `PSlice' s
+    
+    s = stack.S[stack.n]
+    stack.n = stack.n - 1
+    return(s)
+}
+
+void _geo_inpoly_stack_append(`Stack' stack, `PSlice' s)
+{
+    stack.n = stack.n + 1
+    if (stack.n > stack.N) {
+        stack.S = stack.S, J(1,100,NULL)
+        stack.N = stack.N + 100
+    }
+    stack.S[stack.n] = s
+}
+
+`PC' _geo_inpoly(`RM' xy, `RC' ID, `RM' XY, `Bool' nodots)
+{   /* the function returns a rows(xy) x 1 pointer vector; elements are set to
+       NULL for unmatched points or else to a pointer to an m x 2 matrix with
+       the IDs of the matched shapes in the first column and corresponding
+       matching flags in the second column (1 = strictly inside, 2 = on edge,
+       but not on vertex, 3 = on vertex); same pointer is use for duplicates */
+    `Int'    r, dj, di, dn
+    `BoolC'  t
+    `IntC'   p
+    `PC'     R
+    `PSlice' s, s1
+    `Stack'  stack
+
+    if (!rows(xy)) return(J(0,1,NULL))
+    if (!rows(XY)) return(J(rows(xy),1,NULL))
+    if (!nodots) di = 0
+    // initialize data
+    if (!nodots) {
+        displayas("txt")
+        printf("(preparing data ...")
+        displayflush()
+    }
+    stack = _geo_inpoly_init(xy, ID, XY, di, p=., t=.)
+    if (!nodots) {
+        printf(" done)\n")
+        dj = _geo_progress_init("(")
+        dn = rows(stack.S[1]->xy)
+    }
+    // recursively slice and process data
+    R = J(rows(xy), 1, NULL)
+    while (stack.n) {
+        s = _geo_inpoly_stack_pop(stack)
+        r = rows(s->xy)
+        if (r < 10) { // process slice
+            _geo_inpoly_process(R, s->xy, s->E)
+            if (!nodots) {
+                di = di + rows(s->xy)
+                _geo_progress(dj, di/dn)
+            }
+            continue
+        }
+        // continue dividing
+        r = trunc(r / 2)
+        s1 = &(`SLICE'())
+        s1->xy = s->xy[|r+1,1 \ .,.|]
+        _geo_inpoly_setslice(stack, s1, s->E, di)
+        s1 = &(`SLICE'())
+        s1->xy = s->xy[|1,1 \ r,.|]
+        _geo_inpoly_setslice(stack, s1, s->E, di)
+    }
+    if (!all(t)) R[p] = _geo_inpoly_fillup(R[p], t)
+    if (!nodots) _geo_progress_end(dj, ")")
+    return(R)
+}
+
+`PC' _geo_inpoly_fillup(`PC' R, `BoolC' t)
+{
+    `Int' i
+    
+    for (i=rows(R); i; i--) {
+        if (!t[i]) R[i] = R[i+1]
+    }
+    return(R)
+}
+
+`Stack' _geo_inpoly_init(`RM' xy, `RC' ID, `RM' XY,
+    `Int' di, `IntC' p, `BoolC' t) // di, p, t will be modified
+{
+    `Bool'   vert
+    `RR'     Xmm, Ymm
+    `PSlice' s
+    `Stack'  stack
+    
+    // horizontal or vertical rays?
+    Xmm = minmax(XY[,1])
+    Ymm = minmax(XY[,2])
+    vert = (Ymm[2]-Ymm[1]) < (Xmm[2]-Xmm[1])
+    // sort order
+    if (vert) p = order(xy,(1,2))   // vertical rays; sort points by x
+    else      p = order(xy,(2,1))   // horizontal rays; sort points by y
+    t = _mm_uniqrows_tag(xy[p,], 1) // (tag last)
+    // initialize stack
+    s = &(`SLICE'())
+    stack.n = stack.N = 0
+    if (vert) s->xy = _geo_inpoly_dropoutside( // use flipped coordinates
+        select((xy[,(2,1)], (1::rows(xy)))[p,], t), Ymm, Xmm)
+    else      s->xy = _geo_inpoly_dropoutside(
+        select((xy, (1::rows(xy)))[p,], t), Xmm, Ymm)
+    _geo_inpoly_setslice(stack, s, _geo_inpoly_edgelist(ID, XY, vert), di)
+    return(stack)
+}
+
+`RM' _geo_inpoly_dropoutside(`RM' xy, `RR' Xmm, `RR' Ymm)
+{   // drop points that are outside the global bounds of XY
+    return(select(xy, xy[,1]:>=Xmm[1] :& xy[,1]:<=Xmm[2] :&
+                      xy[,2]:>=Ymm[1] :& xy[,2]:<=Ymm[2]))
+}
+
+`RM' _geo_inpoly_edgelist(`RC' ID, `RM' XY, `Bool' vert)
+{
+    `Int'  cx, cy
+    `IntC' PID
+    `IntC' GT, p
+    `RM'   XY0
+    
+    PID = geo_pid(ID, XY)
+    GT  = geo_gtype(1, ID, PID, XY)
+    // determine starting points of edges
+    if (rows(XY)>1) XY0 = (.,.) \ XY[|1,1 \ rows(XY)-1,2|]
+    else            XY0 = (.,.)
+    if (anyof(GT,1)) { // represent point as zero-length edge
+        p = selectindex(GT:==1)
+        XY0[p,] = XY[p,]
+    }
+    if (anyof(GT,2)) { // represent first segment of line as zero-length edge
+        p = selectindex(GT:==2)
+        p = select(p, _geo_inpoly_edgelist_tagfirst((ID, PID)[p,]))
+        XY0[p,] = XY[p,]
+    }
+    // mark out duplicates and rows no longer needed
+    p = !rowmissing((XY,XY0))
+    p = _mm_uniqrows_tag((ID, PID, XY, p)) :& p
+    // return edgelist
+    if (vert) {; cx = 2; cy = 1; } // (use flipped coordinates)
+    else      {; cx = 1; cy = 2; }
+    return(select((GT, ID,
+        rowminmax((XY0[,cx],XY[,cx])), rowminmax((XY0[,cy],XY[,cy])),
+        (XY[,cx] - XY0[,cx]) :/ (XY[,cy] - XY0[,cy]),
+        XY[,cx], XY[,cy], _geo_inpoly_edgelist_xmm(ID, PID, XY, vert)), p))
+        /* gtype ID xlo xup ylo yup slope x1 y1 xmin xmax
+             1   2   3   4   5   6    7   8   9  10   11  */
+}
+
+`BoolC' _geo_inpoly_edgelist_tagfirst(`IntM' ID)
+{
+    `Int'   i, n, j
+    `IntR'  id0
+    `BoolC' p
+    
+    n = rows(ID)
+    p = J(n, 1, 0)
+    id0 = (.,.)
+    for (i=1; i<=n; i++) {
+        if (ID[i,]!=id0) {
+            j = 1
+            id0 = ID[i,]
+            continue
+        }
+        j++
+        if (j==2) p[i] = 1  // line starts on 2nd row of shape item
+    }
+    return(p)
+}
+
+`RM' _geo_inpoly_edgelist_xmm(`IntC' ID, `IntC' PID, `RM' XY, `Bool' vert)
+{    // minimum and maximum x-coordinate of shape item
+    `Int'  i, a, b, cx
+    `IntC' p
+    `RM'   xmm
+    
+    cx = vert ? 2 : 1
+    p  = selectindex(_mm_uniqrows_tag((ID, PID)))
+    i  = rows(p)
+    a  = rows(XY) + 1
+    xmm = J(a-1, 2, .)
+    for (;i;i--) {
+        b = a - 1; a = p[i]
+        xmm[|a,1 \ b,2|] = J(b-a+1, 1, minmax(XY[|a,cx \ b,cx|]))
+    }
+    return(xmm)
+}
+
+end
+local gt    1  // type if shape item (1 point, 2 line, 3 polygon)
+local ID    2  // ID of shape (possibly containing multiple items)
+local xlo   3  // lower x-coordinate of edge
+local xup   4  // upper x-coordinate of edge
+local ylo   5  // lower y-coordinate of edge
+local yup   6  // upper y-coordinate of edge
+local slope 7  // slope of edge (missing if infinity or undetermined)
+local x1    8  // x-coordinate of end point of edge
+local y1    9  // y-coordinate of end point of edge
+local xmin  10 // minimum x-coordinate of shape item
+local xmax  11 // maximum y-coordinate of shape item
+mata:
+
+void _geo_inpoly_setslice(`Stack' stack, `PSlice' s, `RM' E, `Int' di)
+{
+    `RR' ymm
+    
+    ymm = minmax(s->xy[,2])
+    s->E = select(E, E[,`ylo']:<=ymm[2] :& E[,`yup']:>=ymm[1])
+    if (rows(s->E)) _geo_inpoly_stack_append(stack, s)
+    else if (di<.) di = di + rows(s->xy) // slice is skipped; update progress
+}
+
+void _geo_inpoly_process(`PC' R, `RM' xy, `RM' E)
+{
+    `Int'  i
+    `RR'   xyi
+    
+    i = rows(xy)
+    for (;i;i--) {
+        xyi = xy[i,]
+        R[xy[i,3]] = __geo_inpoly_process(xyi, select(E,
+            // keep edge if point is within the x-range of shape item
+            (xyi[1]:>=E[,`xmin'] :& xyi[1]:<=E[,`xmax']) :&
+            // keep edge if point is within y-range of edge
+            (xyi[2]:>=E[,`ylo'] :& xyi[2]:<=E[,`yup'])))
+    }
+}
+
+`PS' __geo_inpoly_process(`RR' xy, `RM' E)
+{
+    `Int'   i, j, k, a, b
+    `IntC'  p
+    `RC'    x
+    `BoolC' onvertex, onedge
+    `RM'    r
+    
+    if (!rows(E)) return(NULL)
+    x = E[,`x1'] :+ (xy[2] :- E[,`y1']) :* E[,`slope'] // where ray hits edge
+    p = selectindex(_mm_unique_tag(E[,`ID']))
+    onvertex = (xy[1]:==E[,`x1'] :& xy[2]:==E[,`y1'])
+    onedge   = (x:==xy[1] :|
+               (x:>=. :& xy[1]:>=E[,`xlo'] :& xy[1]:<=E[,`xup'])) // flat edge
+    i = j = k = rows(p)
+    r = J(k,2,.)
+    a = rows(E) + 1
+    for (;i;i--) {
+        b = a - 1; a = p[i]
+        if      (any(onvertex[|a \ b|])) r[j--,] = (E[a,`ID'], 3)
+        else if (any(onedge[|a \ b|]))   r[j--,] = (E[a,`ID'], 2)
+        else if (E[a,`gt']==3) {
+            if (mod(sum(
+                // number of edges hit by y-ray
+                xy[1]:<x[|a \ b|] :&
+                // ignore if at bottom (avoid double counting)
+                xy[2]:!=E[|a,`ylo' \ b,`ylo'|]
+                ),2)) r[j--,] = (E[a,`ID'], 1)
+        }
+    }
+    if (j==k) return(NULL)
+    if (j)    r = r[|j+1,1 \ .,.|]
+    return(&r)
+}
+
+end
+
+*! {smcl}
 *! {marker geo_json}{bf:geo_json_import() and geo_json2xy()}{asis}
-*! version 1.0.1  19dec2023  Ben Jann
+*! version 1.0.2  31jul2026  Ben Jann
 *!
 *! geo_json_import() imports a GeoJSON FeatureCollection from a source file
 *! (see https://en.wikipedia.org/wiki/GeoJSON and https://geojson.org/). The
@@ -2120,7 +2526,7 @@ void _geo_json_features_properties(`T' t0, `Int' i, `T' F, `T' V, `SM' S,
     L = J(2,cols(S),"")
     L[1,1] = "_GEOMETRY"
     L[2,1] = "string"
-    L[1,2] = "id"
+    /*L[1,2] = "id"*/
     keys = asarray_keys(V)
     for (j=rows(keys);j;j--) {
         key = keys[j]
@@ -2471,7 +2877,7 @@ end
 
 *! {smcl}
 *! {marker geo_ksmooth}{bf:geo_ksmooth()}{asis}
-*! version 1.0.1  08sep2024  Ben Jann
+*! version 1.0.2  20sep2024  Ben Jann
 *!
 *! Function to obtain spatially smoothed values using a kernel-weighted local
 *! average or local linear fit based on euclidean distances.
@@ -2593,12 +2999,12 @@ mata:
 
 `RC' _geo_ksmooth(`RC' Z, `RC' w, `RM' XY, `RM' XY1,
     `RS' bw, `RS' bw2, `SS' kernel, `Bool' ll, `Bool' nodots)
-{   // algorithm using search window based on sum score
+{   // algorithm using search window
     `Bool' hasW
-    `Int'  i, j, a, b, d, dn
+    `Int'  i, j, q, a, b, d, dn
     `RS'   h, c
     `IntC' p, p1, pi
-    `RC'   D, D1, S
+    `RC'   S
     `PS'   k
     
     // kernel
@@ -2613,20 +3019,17 @@ mata:
         else                        h = 1
     }
     h = sqrt(2 * (h * bw)^2)
-    // sum scores
+    // determine direction of search window
     b = rows(XY)
     if (!b) return(J(rows(XY1),1,.)) // no data
-    D = rowsum(XY)
-    p = order(D, 1)
-    if ((D[p[b]]-D[p[1]]) < 10*h) { // use naive algorithm if bwidth is large
+    if (mm_diff(minmax(XY[,1])) > mm_diff(minmax(XY[,2]))) q = 1 // vertical
+    else                                                   q = 2 // horizontal
+    p = order(XY[,q], 1)
+    if ((XY[p[b],q]-XY[p[1],q]) < 10*h) { // use naive algorithm if bw is large
         return(_geo_ksmooth_naive(Z, w, XY, XY1, bw, bw2, kernel, ll, nodots))
     }
-    if (XY!=XY1) {
-        i  = rows(XY1)
-        D1 = rowsum(XY1)
-        p1 = order(D1, 1)
-    }
-    else {; i = b; D1 = D; p1 = p; }
+    if (XY!=XY1) {; i = rows(XY1); p1 = order(XY1[,q], 1); }
+    else         {; i = b;         p1 = p; }
     // run algorithm
     hasW = rows(w)!=1
     if (!nodots) {
@@ -2638,9 +3041,9 @@ mata:
     for (;i;i--) {
         if (!nodots) _geo_progress(d, 1-i/dn)
         j = p1[i]
-        c = D1[j] + h
+        c = XY1[j,q] + h
         for (;b;b--) {
-            if (D[p[b]]<=c) break
+            if (XY[p[b],q]<=c) break
         }
         if (!b) { // reached bottom; no more data
             if (bw2<.) {
@@ -2652,9 +3055,9 @@ mata:
             break 
         }
         a = b
-        c = D1[j] - h
+        c = XY1[j,q] - h
         for (;a;a--) {
-            if (D[p[a]]<c) {; a++ ; break; }
+            if (XY[p[a],q]<c) {; a++ ; break; }
             if (a==1) break // reached bottom
         }
         if (a>b) { // no data within range
@@ -3128,12 +3531,6 @@ real scalar geo_pointinpolygon(real scalar x, real scalar y, real matrix XY)
     real scalar  i, c, C, poly
     real scalar  ax, ay, bx, by
     
-    /*
-    if (cols(XY)!=2) {
-         errprintf("{it:XY} must have two columns\n")
-         exit(3200)
-    }
-    */
     // XY empty
     if (!(i = rows(XY))) return(0)
     // XY is point
@@ -3752,7 +4149,8 @@ end
 *!           ID is set to 1 for all rows in XY if ID is omitted; can also
 *!           specify # to set the ID to # for all rows
 *!  PL       n x 1 real colvector containing the plot levels of the individual
-*!           shape items in XY; can specify PL as . to omit plot levels
+*!           shape items in XY; can specify PL as . to omit plot levels; PL will
+*!           not be used if rtype = 0 (point)
 *!  mtype    real scalar selecting the type of merging; 0 = merge and clip
 *!           raster items to shape units; 1 = select raster items that overlap
 *!           with at least one shape unit; 2 = skip merging and return a full
@@ -3826,7 +4224,7 @@ struct `ITEM' {
             display(" done)")
             if (mtype!=2) display("(mapping raster items to shape units)")
         }
-        return(_geo_raster_point_map(R, XY, *pID, *pPL, mtype, nodots))
+        return(_geo_raster_point_map(R, XY, *pID, mtype, nodots))
     }
     // merge raster to shapes
     if (!nodots) {
@@ -3968,13 +4366,12 @@ void _geo_raster_minmax(`Item' p)
     return(XY)
 }
 
-`RM' _geo_raster_point_map(`RM' R, `RM' XY, `RC' ID, `IntC' PL, `Int' mtype,
-    `Bool' nodots)
+`RM' _geo_raster_point_map(`RM' R, `RM' XY, `RC' ID, `Int' mtype, `Bool' nodots)
 {
     `RM' id
     
     if (mtype!=2) {
-        id = geo_spjoin(R, ID, geo_pid(ID, XY), XY, PL, nodots)
+        id = geo_inpoly(R, ID, XY, 0, nodots) 
         if (mtype==1) R = select(R, id[,2])
         else          R = mm_sort(select((R,id[,1]), id[,2]), 3, 1)
     }
@@ -4822,13 +5219,14 @@ end
 *! {marker geo_spjoin}{bf:geo_spjoin()}{asis}
 *! version 1.0.3  16aug2024  Ben Jann
 *!
-*! Spatially joins the points in xy to the polygons in XY
+*! Spatially joins the points in xy to the polygons in XY. Note that function
+*! geo_inpoly() does the same in a much more efficient way.
 *!
 *! Syntax:
 *!
 *!      result = geo_spjoin(xy, ID, PID, XY [, PL, nodots])
 *!
-*!  result  r x 2 colvector containing matched IDs in 1st column and matching
+*!  result  r x 2 matrix containing matched IDs in 1st column and matching
 *!          flag in 2nd column (1 if matched, 0 else)
 *!  xy      r x 2 matrix containing points to be matched
 *!  ID      n x 1 real colvector of unit IDs
@@ -5401,13 +5799,12 @@ end
 
 *! {smcl}
 *! {marker geo_welzl}{bf:geo_welzl()}{asis}
-*! version 1.0.0  27jun2023  Ben Jann
+*! version 1.0.1  30jul2025  Ben Jann
 *!
 *! Find minimum enclosing circle using Welzl's algorithm; based on
 *! https://www.geeksforgeeks.org/minimum-enclosing-circle-using-welzls-algorithm/
 *! and
 *! https://stackoverflow.com/questions/50925307/iterative-version-of-welzls-algorithm
-*!
 *!
 *! Syntax:
 *!
@@ -5476,7 +5873,7 @@ struct `FRAMES' {
     `PFrames' F  // stack of frames
 }
 
-`PFrames' _geo_welzl_frames_pop(`Frames' frames)
+`PFrame' _geo_welzl_frames_pop(`Frames' frames)
 {
     `PFrame' f
     
