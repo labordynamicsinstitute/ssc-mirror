@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-index of NJC's Stata stuff (version 4 December 2025)
+index of NJC's Stata stuff (version 30 July 2026)
 {hline}
 
 {title:Description}
@@ -233,6 +233,16 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 
 {space 4}{help cisets}
 {space 4}SSC (NJC)
+{space 4}confidence interval sets
+{space 4}+
+
+{space 4}{help cisets}
+{space 4}SSC (NJC)
+{space 4}confidence interval sets
+{space 4}+
+
+{space 4}{help cisets}
+{space 4}dm0119 sj26-2(NJC)
 {space 4}confidence interval sets
 {space 4}+
 
@@ -1081,6 +1091,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}SSC (C.F. Baum, NJC, B. Rising)
 {space 4}produce HTML log files
 
+{space 4}{help logistic_scores}
+{space 4}logistic scores from graded ordinal variables
+{space 4}SSC (NJC)
+{space 4}+ 
+
 {space 4}{help longplot}
 {space 4}SSC (Z. Wang, NJC)
 {space 4}exploratory plots for longitudinal data
@@ -1300,10 +1315,15 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help multqplot}
 {space 4}gr0053 sj12-3 (NJC) 
 {space 4}multiple quantile plots
-{space 4}sup(SJ 19-3)
+{space 4}sup(SJ 26-2)
 
 {space 4}{help multqplot}
 {space 4}gr0053_1 sj19-3 (NJC) 
+{space 4}multiple quantile plots
+{space 4}sup(SJ 26-2)
+
+{space 4}{help multqplot}
+{space 4}gr0053_2 sj26-2 (NJC) 
 {space 4}multiple quantile plots
 {space 4}+
 
@@ -1528,6 +1548,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}percentile sets
 {space 4}+
 
+{space 4}{help pctilesets}
+{space 4}dm0119 sj26-2 (NJC)
+{space 4}percentile sets
+{space 4}+
+
 {space 4}{help pdplot}
 {space 4}SSC (NJC)
 {space 4}Pareto dot plots
@@ -1683,6 +1708,11 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 
 {space 4}{help quantilesets}
 {space 4}SSC (NJC)
+{space 4}quantilesets for selected probability levels 
+{space 4}+
+
+{space 4}{help quantilesets}
+{space 4}dm0119 sj26-2 (NJC)
 {space 4}quantilesets for selected probability levels 
 {space 4}+
 
@@ -2224,6 +2254,16 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 {space 4}{help upsetplot}
 {space 4}SSC (T. Morris, NJC)
 {space 4}Euler or Venn diagrams mapped to bar charts, upsetplot style
+{space 4}sup(SJ 26-2)
+
+{space 4}{help upsetplot}
+{space 4}gr0095  (T. Morris, NJC)
+{space 4}Euler or Venn diagrams mapped to bar charts, upsetplot style
+{space 4}sup(SJ 26-2)
+
+{space 4}{help upsetplot}
+{space 4}gr0095_1  (T. Morris, NJC)
+{space 4}Euler or Venn diagrams mapped to bar charts, upsetplot style
 {space 4}+
 
 {space 4}{help vallab}
@@ -2256,6 +2296,16 @@ listed thematically at {help njc_best_stuff:NJC best stuff}.
 
 {space 4}{help vennbar}
 {space 4}SSC (NJC, T. Morris)
+{space 4}Euler or Venn diagrams mapped to bar or dot charts
+{space 4}+
+
+{space 4}{help vennbar}
+{space 4}gr0095 sj24-2 (NJC, T. Morris)
+{space 4}Euler or Venn diagrams mapped to bar or dot charts
+{space 4}+
+
+{space 4}{help vennbar}
+{space 4}gr0095_1 sj26-2 (NJC, T. Morris)
 {space 4}Euler or Venn diagrams mapped to bar or dot charts
 {space 4}+
 

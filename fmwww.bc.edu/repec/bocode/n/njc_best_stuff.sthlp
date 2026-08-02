@@ -1,6 +1,6 @@
 {smcl}
 {hline}
-index of NJC's best Stata stuff (version 4 December 2025)  
+index of NJC's best Stata stuff (version 30 July 2026)  
 {hline}
 
 {title:Description} 
@@ -152,6 +152,7 @@ available at {help njc_stuff:NJC stuff}.
 {space 4}{help iquantile}           interpolated quantiles 
 {space 4}{help lmoments}            L-moments and derived statistics 
 {space 4}{help lmomentsets}         L-moment-based measures collected as datasets
+{space 4}{help logistic_scores}     logistic scores from graded ordinal variables 
 {space 4}{help lvalues}             letter value calculation
 {space 4}{help modes}               tabulation of modes 
 {space 4}{help moments}             moment-based statistics
