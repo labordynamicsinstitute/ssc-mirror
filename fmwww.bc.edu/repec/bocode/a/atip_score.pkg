@@ -1,0 +1,23 @@
+d 'ATIP_SCORE': module to score outliers on two separate axes (evidence and magnitude)
+d
+d  atip_score generalizes atip_reglas (calls it internally):
+d instead of a single binary flag, it produces two continuous axes
+d -- N_REGLAS (how many of the 5 rules fired, 0-5) and
+d MAGNITUD_LOCAL (|z|, how far the value is) -- kept separate so
+d that a case with strong evidence but modest magnitude can be
+d distinguished from one with both, following the selective editing
+d framework of de Waal, Pannekoek and Scholtus (2011, Handbook of
+d Statistical Data Editing and Imputation, Wiley). 
+d
+d KW: outliers
+d KW: score
+d
+d Requires: Stata version 14 and atip_reglas from SSC (q.v.)
+d
+d Distribution-Date: 20260802
+d
+d Author: Andres Talavera Cuya,   Direccion Nacional de Censos y Encuestas -- INEI Peru
+d Support: email talaveracuya@@gmail.com
+d
+f atip_score.ado
+f atip_score.sthlp

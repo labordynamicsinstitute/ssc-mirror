@@ -6,17 +6,21 @@ d documentation folder, and a numbered do-file pipeline
 d (000_control through 600_analysis). A control file holds every
 d path in one place and can run the whole pipeline. If you already
 d have the data, point data() at local files or url() at a source
-d address and projectbuilder copies it in, converts it, appends it
-d into one analytic file, and writes a documentation page. If the
-d data comes later, scaffold now and rerun with rebuild on every
-d refresh; rebuild never overwrites a do-file you have edited
-d unless you add replace. The tool is self-contained (every file is
-d written by the program, no template folder), uses only Stata's
-d cross-platform file commands, and never overwrites an existing
-d project. Optional companions add power when installed but are
-d never required: convertanything and combineall (author's GitHub),
-d descsave (SSC), srctag/srcfind (author's GitHub), and webdoc2
-d (author's GitHub). 
+d address and projectbuilder copies it in and writes a
+d documentation page; with the optional convertanything and
+d combineall installed it also converts each raw file and appends
+d them into one analytic file. If the data comes later, scaffold
+d now and rerun with rebuild on every refresh; rebuild never
+d overwrites a do-file you have edited unless you add replace. The
+d tool is self-contained (every file is written by the program, no
+d template folder), uses only Stata's cross-platform file commands,
+d and never overwrites an existing project. Optional companions add
+d power when installed but are never required: convertanything and
+d combineall (author's GitHub), descsave (SSC), srctag/srcfind
+d (author's GitHub), and webdoc2 (author's GitHub). The command
+d leaves the dataset in memory untouched. A test battery ships with
+d the package as an ancillary file; retrieve it with -net get
+d projectbuilder- and run it with -do test_projectbuilder.do-. 
 d
 d KW: reproducible research; project management; workflow; do-files
 d
@@ -32,3 +36,4 @@ d Support: email elizabeth@@farharbor.com
 d
 f projectbuilder.ado
 f projectbuilder.sthlp
+f ../t/test_projectbuilder.do

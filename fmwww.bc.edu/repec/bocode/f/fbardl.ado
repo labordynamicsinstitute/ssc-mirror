@@ -1,5 +1,5 @@
 *! fbardl — Fourier Bootstrap ARDL Cointegration Test
-*! Version 1.0.1 — 2026-07-13
+*! Version 1.2.0 — 2026-08-02
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 *! Independent Researcher
 *!
@@ -9,6 +9,9 @@
 *!   Bertelli, Vacca & Zoia (2022) — Bootstrap ARDL (conditional)
 *!   Yilanci, Bozoklu & Gorus (2020) — Fourier ARDL approach
 *!   Kripfganz & Schneider (2020) — ARDL bounds test critical values
+*!   White (1980) — heteroskedasticity-consistent covariance matrix
+*!   Newey & West (1987) — heteroskedasticity- and autocorrelation-consistent
+*!                         (HAC) covariance matrix
 
 capture program drop fbardl
 program define fbardl, eclass sortpreserve
@@ -32,6 +35,12 @@ program define fbardl, eclass sortpreserve
         NOADVanced                          /// suppress advanced analyses
         NOTable                             /// suppress main regression table
         case(integer 3)                     /// PSS case (2=restricted, 3=unrestricted intercept)
+        HAC(string)                         /// robust VCE: hetero | auto | both | none
+        HACLAGS(integer -1)                 /// Newey-West truncation lag (-1 = automatic)
+        EXOg(varlist ts fv)                 /// fixed (exogenous) regressors, e.g. dummies
+        FIXed(varlist ts fv)                /// synonym for exog()
+        UNCONDitional                       /// drop contemporaneous D.x (Yilanci/McNown form)
+        DGPcheck                            /// verify the bootstrap recursion (developer aid)
         ]
 
     // Mark estimation sample
@@ -59,10 +68,90 @@ program define fbardl, eclass sortpreserve
         exit 198
     }
 
-    // Validate case
+    // -------------------------------------------------------------------------
+    // Validate case — PSS (2001) deterministic specification
+    // -------------------------------------------------------------------------
+    //   2 : restricted intercept,   no trend   -> intercept joins the F_ov null
+    //   3 : unrestricted intercept, no trend   -> levels only in the F_ov null
+    //   4 : unrestricted intercept, restricted trend -> trend joins the F_ov null
+    //   5 : unrestricted intercept, unrestricted trend
+    // Cases 4 and 5 add a linear trend to the estimated equation.
+    // -------------------------------------------------------------------------
     if !inlist(`case', 2, 3, 4, 5) {
         di as err "case() must be 2, 3, 4, or 5"
         exit 198
+    }
+
+    local hastrend = 0
+    if inlist(`case', 4, 5) local hastrend = 1
+
+    // Case 2 restricts the intercept under H0, so the restricted model that
+    // generates the bootstrap data must be estimated without a constant
+    local fovnocons ""
+    if `case' == 2 local fovnocons "noconstant"
+
+    // -------------------------------------------------------------------------
+    // Conditional vs unconditional ARDL
+    // -------------------------------------------------------------------------
+    // Default (conditional, Pesaran-Shin-Smith Eq. 4 / Bertelli-Vacca-Zoia):
+    //   short-run x terms run j = 0, 1, ..., q  (contemporaneous D.x included)
+    // unconditional (Yilanci et al. Eq. 8 / McNown et al. Eq. 10):
+    //   short-run x terms run j = 1, ..., q     (no contemporaneous D.x)
+    // -------------------------------------------------------------------------
+    local j0 = 0
+    if "`unconditional'" != "" local j0 = 1
+
+    // -------------------------------------------------------------------------
+    // Validate hac() — covariance matrix estimator for inference
+    // -------------------------------------------------------------------------
+    //   hetero : White (1980) HC1  — heteroskedasticity only
+    //   auto   : Newey-West HAC    — autocorrelation (also robust to hetero)
+    //   both   : Newey-West HAC    — heteroskedasticity AND autocorrelation
+    // -------------------------------------------------------------------------
+    local hac = lower(strtrim("`hac'"))
+    if inlist("`hac'", "", "none", "no", "ols", "iid") {
+        local vcetype "ols"
+    }
+    else if inlist("`hac'", "het", "hetero", "heteroskedastic", "heteroskedasticity", "robust", "white", "hc1") {
+        local vcetype "robust"
+    }
+    else if inlist("`hac'", "auto", "ac", "autocorr", "autocorrelation", "serial") {
+        local vcetype "hac"
+    }
+    else if inlist("`hac'", "both", "hac", "nw", "newey", "neweywest", "newey-west") {
+        local vcetype "hac"
+    }
+    else {
+        di as err "hac() must be {bf:hetero}, {bf:auto}, {bf:both}, or {bf:none}"
+        di as err "  hetero : heteroskedasticity-robust (White 1980, HC1)"
+        di as err "  auto   : autocorrelation-robust (Newey-West 1987 HAC)"
+        di as err "  both   : heteroskedasticity- and autocorrelation-robust (HAC)"
+        exit 198
+    }
+
+    if `haclags' < -1 {
+        di as err "haclags() must be a non-negative integer (or omitted for automatic)"
+        exit 198
+    }
+    if `haclags' >= 0 & "`vcetype'" != "hac" {
+        di as err "haclags() requires hac(auto) or hac(both)"
+        exit 198
+    }
+
+    // -------------------------------------------------------------------------
+    // Fixed (exogenous) regressors — fixed() is a synonym for exog()
+    // -------------------------------------------------------------------------
+    if "`fixed'" != "" {
+        local exog "`exog' `fixed'"
+    }
+    local exog = stritrim(strtrim("`exog'"))
+
+    // Restrict the estimation sample to observations where the fixed
+    // regressors are also non-missing (fvrevar strips ts/fv operators
+    // so markout sees plain variable names)
+    if "`exog'" != "" {
+        qui fvrevar `exog', list
+        markout `touse' `r(varlist)'
     }
 
     // Confirm time series
@@ -101,6 +190,58 @@ program define fbardl, eclass sortpreserve
     }
 
     // =========================================================================
+    // 3b. FIXED REGRESSORS — expand factor/ts operators to coefficient names
+    // =========================================================================
+    local exogexp ""
+    if "`exog'" != "" {
+        capture fvexpand `exog'
+        if _rc == 0 {
+            local exogexp "`r(varlist)'"
+        }
+        else {
+            local exogexp "`exog'"
+        }
+    }
+
+    // =========================================================================
+    // 3c. COVARIANCE MATRIX ESTIMATOR
+    // =========================================================================
+    // Point estimates are identical under all three; only the standard errors,
+    // t/z statistics, p-values and Wald (F) statistics change.
+    if "`vcetype'" == "robust" {
+        local estcmd   "regress"
+        local estopt   "vce(robust)"
+        local vcelabel "Heteroskedasticity-robust (White 1980, HC1)"
+        local vceshort "HC1 robust"
+    }
+    else if "`vcetype'" == "hac" {
+        // Newey & West (1987) Bartlett kernel.
+        // Automatic bandwidth: floor(4*(T/100)^(2/9))  (Newey & West 1994)
+        if `haclags' < 0 {
+            local nwlag = floor(4 * (`T' / 100)^(2/9))
+            if `nwlag' < 1 local nwlag = 1
+            local nwrule "automatic: floor(4*(T/100)^(2/9))"
+        }
+        else {
+            local nwlag = `haclags'
+            local nwrule "user-specified"
+        }
+        local estcmd   "newey"
+        local estopt   "lag(`nwlag')"
+        local vcelabel "HAC Newey-West (1987), Bartlett kernel, lag = `nwlag'"
+        local vceshort "HAC (NW, lag `nwlag')"
+    }
+    else {
+        local estcmd   "regress"
+        local estopt   ""
+        local vcelabel "Conventional OLS (i.i.d. errors)"
+        local vceshort "OLS"
+    }
+
+    local vceclause ""
+    if "`estopt'" != "" local vceclause ", `estopt'"
+
+    // =========================================================================
     //   HEADER
     // =========================================================================
     di as txt ""
@@ -117,6 +258,9 @@ program define fbardl, eclass sortpreserve
     di as txt "{hline 78}"
     di as txt _col(5) "Dependent variable  : " as res "`depvar'"
     di as txt _col(5) "Independent var(s)  : " as res "`indepvars'"
+    if "`exog'" != "" {
+        di as txt _col(5) "Fixed regressor(s)  : " as res "`exog'"
+    }
     di as txt _col(5) "Sample size (T)     : " as res "`T'"
     di as txt _col(5) "Max lag order       : " as res "`maxlag'"
     if "`nofourier'" == "" {
@@ -126,7 +270,25 @@ program define fbardl, eclass sortpreserve
         di as txt _col(5) "Fourier terms       : " as res "excluded"
     }
     di as txt _col(5) "Information crit.   : " as res upper("`ic'")
-    di as txt _col(5) "PSS Case            : " as res "Case `case'"
+    if `case' == 2 {
+        di as txt _col(5) "PSS Case            : " as res "Case 2 (restricted intercept, no trend)"
+    }
+    else if `case' == 3 {
+        di as txt _col(5) "PSS Case            : " as res "Case 3 (unrestricted intercept, no trend)"
+    }
+    else if `case' == 4 {
+        di as txt _col(5) "PSS Case            : " as res "Case 4 (unrestricted intercept, restricted trend)"
+    }
+    else {
+        di as txt _col(5) "PSS Case            : " as res "Case 5 (unrestricted intercept and trend)"
+    }
+    if "`unconditional'" != "" {
+        di as txt _col(5) "ARDL form           : " as res "unconditional (no contemporaneous D.x)"
+    }
+    else {
+        di as txt _col(5) "ARDL form           : " as res "conditional (contemporaneous D.x included)"
+    }
+    di as txt _col(5) "Std. errors         : " as res "`vcelabel'"
     if inlist("`type'", "fbardl_mcnown", "fbardl_bvz") {
         di as txt _col(5) "Bootstrap reps      : " as res "`reps'"
     }
@@ -154,6 +316,14 @@ program define fbardl, eclass sortpreserve
     // Generate time trend for Fourier
     tempvar ttrend
     qui gen `ttrend' = _n
+
+    // Deterministic linear trend for PSS cases 4 and 5
+    capture drop _fbardl_trend
+    local trendvar ""
+    if `hastrend' {
+        qui gen double _fbardl_trend = `ttrend'
+        local trendvar "_fbardl_trend"
+    }
 
     // =========================================================================
     // 5. STEP 1: SELECT k* BY MINIMUM SSR (Yilanci et al. 2020)
@@ -190,9 +360,9 @@ program define fbardl, eclass sortpreserve
             local regvars_max "`regvars_max' L`j'.D.`depvar'"
         }
 
-        // Contemporaneous & lagged differences of indepvars
+        // Contemporaneous (unless unconditional) & lagged differences of indepvars
         foreach xvar of local indepvars {
-            forvalues j = 0/`maxlag' {
+            forvalues j = `j0'/`maxlag' {
                 if `j' == 0 {
                     local regvars_max "`regvars_max' D.`xvar'"
                 }
@@ -207,7 +377,18 @@ program define fbardl, eclass sortpreserve
             local regvars_max "`regvars_max' _fbardl_sin _fbardl_cos"
         }
 
+        // Deterministic trend (PSS cases 4 and 5)
+        if `hastrend' {
+            local regvars_max "`regvars_max' _fbardl_trend"
+        }
+
+        // Fixed (exogenous) regressors — enter every candidate model
+        if "`exog'" != "" {
+            local regvars_max "`regvars_max' `exog'"
+        }
+
         // Estimate and record SSR
+        // Plain OLS: the SSR does not depend on the covariance estimator
         capture qui regress D.`depvar' `regvars_max'
         if _rc == 0 {
             local this_ssr = e(rss)
@@ -229,6 +410,22 @@ program define fbardl, eclass sortpreserve
 
     di as txt _col(5) "Optimal k* = " as res "`best_kstar'" ///
        as txt " (min SSR = " as res %12.4f scalar(`best_ssr_k') as txt ")"
+    // Christopoulos & Leon-Ledesma (2011), cited by Yilanci et al. (2020):
+    // an integer frequency approximates temporary breaks, a fractional one
+    // approximates permanent breaks
+    if `best_kstar' > 0 {
+        if abs(`best_kstar' - round(`best_kstar')) < 1e-8 {
+            di as txt _col(5) "{it:k* is an integer frequency: temporary breaks}"
+            local kstar_type "integer (temporary breaks)"
+        }
+        else {
+            di as txt _col(5) "{it:k* is a fractional frequency: permanent breaks}"
+            local kstar_type "fractional (permanent breaks)"
+        }
+    }
+    else {
+        local kstar_type "none"
+    }
     di as txt ""
 
     // =========================================================================
@@ -348,7 +545,7 @@ program define fbardl, eclass sortpreserve
             foreach xvar of local indepvars {
                 local cname = subinstr("`xvar'", ".", "_", .)
                 local qi = `q_`cname''
-                forvalues j = 0/`qi' {
+                forvalues j = `j0'/`qi' {
                     if `j' == 0 {
                         local regvars "`regvars' D.`xvar'"
                     }
@@ -363,7 +560,19 @@ program define fbardl, eclass sortpreserve
                 local regvars "`regvars' _fbardl_sin _fbardl_cos"
             }
 
+            // Deterministic trend (PSS cases 4 and 5)
+            if `hastrend' {
+                local regvars "`regvars' _fbardl_trend"
+            }
+
+            // Fixed (exogenous) regressors — enter every candidate model
+            if "`exog'" != "" {
+                local regvars "`regvars' `exog'"
+            }
+
             // Estimate
+            // Plain OLS: the log-likelihood (hence AIC/BIC) does not depend
+            // on the covariance estimator
             capture qui regress D.`depvar' `regvars'
             if _rc == 0 {
                 local nobs_tmp = e(N)
@@ -441,7 +650,7 @@ program define fbardl, eclass sortpreserve
     foreach xvar of local indepvars {
         local cname = subinstr("`xvar'", ".", "_", .)
         local q_this = `best_q_`cname''
-        forvalues j = 0/`q_this' {
+        forvalues j = `j0'/`q_this' {
             if `j' == 0 {
                 local regvars "`regvars' D.`xvar'"
                 local sr_indepvars "`sr_indepvars' D.`xvar'"
@@ -458,11 +667,35 @@ program define fbardl, eclass sortpreserve
         local regvars "`regvars' _fbardl_sin _fbardl_cos"
     }
 
-    // Final OLS estimation
-    qui regress D.`depvar' `regvars'
+    // Deterministic trend (PSS cases 4 and 5)
+    if `hastrend' {
+        local regvars "`regvars' _fbardl_trend"
+    }
 
-    // Store estimation for later restoration after bootstrap
-    estimates store _fbardl_main
+    // Fixed (exogenous) regressors — part of the estimated equation but NOT
+    // part of the long-run relationship, so they are excluded from
+    // `levelvars' and `indeplev' and hence from the cointegration tests
+    if "`exog'" != "" {
+        local regvars "`regvars' `exog'"
+    }
+
+    // Selected q for each indepvar, in indepvars order (for the bootstrap DGP)
+    local bestq_list ""
+    foreach xvar of local indepvars {
+        local cname = subinstr("`xvar'", ".", "_", .)
+        local bestq_list "`bestq_list' `best_q_`cname''"
+    }
+    local bestq_list = strtrim("`bestq_list'")
+
+    // -------------------------------------------------------------------------
+    // Final estimation, stage 1: plain OLS
+    // -------------------------------------------------------------------------
+    // The covariance estimator does not change the point estimates, so all
+    // goodness-of-fit quantities (R2, log-likelihood, AIC/BIC, RSS, RMSE) and
+    // the residuals are taken from the OLS fit. This estimate set is also what
+    // Ramsey's RESET (estat ovtest) needs in Table 4.
+    qui regress D.`depvar' `regvars'
+    estimates store _fbardl_ols
 
     local nobs = e(N)
     local nparams = e(df_m) + 1
@@ -471,8 +704,6 @@ program define fbardl, eclass sortpreserve
     local ll = e(ll)
     local rss = e(rss)
     local mss = e(mss)
-    local F_model = e(F)
-    local F_model_p = Ftail(e(df_m), e(df_r), e(F))
     local df_m = e(df_m)
     local df_r = e(df_r)
     local rmse = e(rmse)
@@ -488,6 +719,61 @@ program define fbardl, eclass sortpreserve
     // Save residuals
     tempvar residvar
     qui predict double `residvar', residuals
+
+    // -------------------------------------------------------------------------
+    // Final estimation, stage 2: apply the requested covariance estimator
+    // -------------------------------------------------------------------------
+    // Everything downstream that reports standard errors, t/z statistics,
+    // p-values, confidence intervals or Wald tests (Tables 2, 3, 7 and 8, and
+    // the bootstrap test statistics) uses this estimate set.
+    if "`vcetype'" != "ols" {
+        capture qui `estcmd' D.`depvar' `regvars' `vceclause'
+        if _rc != 0 {
+            di as err _col(5) "Warning: `estcmd' `estopt' failed (rc = " _rc ")."
+            if "`vcetype'" == "hac" {
+                di as err _col(5) "  Newey-West requires equally spaced observations with no gaps."
+                di as err _col(5) "  Falling back to heteroskedasticity-robust (HC1) standard errors."
+                qui regress D.`depvar' `regvars', vce(robust)
+                local vcetype  "robust"
+                local estcmd   "regress"
+                local estopt   "vce(robust)"
+                local vceclause ", vce(robust)"
+                local vcelabel "Heteroskedasticity-robust (White 1980, HC1) [HAC fallback]"
+                local vceshort "HC1 robust"
+            }
+            else {
+                di as err _col(5) "  Falling back to conventional OLS standard errors."
+                qui regress D.`depvar' `regvars'
+                local vcetype  "ols"
+                local estcmd   "regress"
+                local estopt   ""
+                local vceclause ""
+                local vcelabel "Conventional OLS (i.i.d. errors)"
+                local vceshort "OLS"
+            }
+        }
+    }
+
+    // Store estimation for later restoration after bootstrap
+    estimates store _fbardl_main
+
+    // Model F-statistic from the active (possibly robust/HAC) estimation
+    local F_model = e(F)
+    local F_model_p = Ftail(`df_m', `df_r', `F_model')
+
+    // Count the fixed regressors that were actually estimated (base and
+    // omitted factor levels carry a zero standard error and are skipped)
+    local nexog_est = 0
+    local exogkeep ""
+    foreach v of local exogexp {
+        capture local ese = _se[`v']
+        if _rc == 0 {
+            if `ese' > 0 & `ese' < . {
+                local nexog_est = `nexog_est' + 1
+                local exogkeep "`exogkeep' `v'"
+            }
+        }
+    }
 
     // Get ECM coefficient
     local ecm_coef = _b[L.`depvar']
@@ -512,6 +798,10 @@ program define fbardl, eclass sortpreserve
     di as txt ")"
     di as txt _col(5) "Fourier Frequency (k*)" _col(45) "`best_kstar'"
     di as txt _col(5) "PSS Case" _col(45) "Case `case'"
+    if "`exog'" != "" {
+        di as txt _col(5) "Fixed regressors" _col(45) "`nexog_est'"
+    }
+    di as txt _col(5) "Std. errors" _col(45) "`vceshort'"
     di as txt "  {hline 68}"
     di as txt _col(5) "Observations" _col(45) as res %8.0f `nobs'
     di as txt _col(5) "R-squared" _col(45) as res %8.6f `r2'
@@ -519,8 +809,14 @@ program define fbardl, eclass sortpreserve
     di as txt _col(5) "Log-Likelihood" _col(45) as res %12.4f `ll'
     di as txt _col(5) "AIC" _col(45) as res %12.4f `aic_val'
     di as txt _col(5) "BIC" _col(45) as res %12.4f `bic_val'
-    di as txt _col(5) "F-statistic" _col(45) as res %8.4f `F_model' ///
-       as txt " (p = " as res %6.4f `F_model_p' as txt ")"
+    if "`vcetype'" == "ols" {
+        di as txt _col(5) "F-statistic" _col(45) as res %8.4f `F_model' ///
+           as txt " (p = " as res %6.4f `F_model_p' as txt ")"
+    }
+    else {
+        di as txt _col(5) "F-statistic (`vceshort')" _col(45) as res %8.4f `F_model' ///
+           as txt " (p = " as res %6.4f `F_model_p' as txt ")"
+    }
     di as txt _col(5) "RMSE" _col(45) as res %12.6f `rmse'
     di as txt _col(5) "Models evaluated" _col(45) as res %8.0f `total_specs'
     if "`nofourier'" == "" {
@@ -541,6 +837,9 @@ program define fbardl, eclass sortpreserve
         }
         di as res ") regression, EC representation"
         di as txt "{hline 78}"
+        if "`vcetype'" != "ols" {
+            di as txt _col(5) "Standard errors: " as res "`vcelabel'"
+        }
         di as txt ""
 
         // ----- ADJ: Speed of Adjustment -----
@@ -610,7 +909,7 @@ program define fbardl, eclass sortpreserve
         foreach xvar of local indepvars {
             local cname = subinstr("`xvar'", ".", "_", .)
             local q_this = `best_q_`cname''
-            forvalues j = 0/`q_this' {
+            forvalues j = `j0'/`q_this' {
                 if `j' == 0 {
                     local vname "D.`xvar'"
                 }
@@ -627,6 +926,39 @@ program define fbardl, eclass sortpreserve
             }
         }
         di as txt "  {hline 68}"
+
+        // Joint significance of the whole short-run block
+        local srall "`sr_depvars' `sr_indepvars'"
+        if "`srall'" != "" {
+            capture qui test `srall'
+            if _rc == 0 {
+                di as txt _col(5) "Joint test: all short-run coefficients = 0" ///
+                   _col(49) as res %8.4f r(F) as txt " (p = " as res %6.4f r(p) as txt ")"
+                di as txt "  {hline 68}"
+            }
+        }
+
+        // ----- Fixed (exogenous) regressors -----
+        if "`exogkeep'" != "" {
+            di as txt ""
+            di as txt "  {bf:FIXED — Fixed (Exogenous) Regressors}  " ///
+               "{it:(excluded from the long-run relationship)}"
+            di as txt "  {hline 68}"
+            di as txt _col(5) "Variable" _col(28) "Coef." _col(40) "Std.Err." ///
+               _col(52) "t-stat" _col(62) "p-value"
+            di as txt "  {hline 68}"
+
+            foreach v of local exogkeep {
+                local b = _b[`v']
+                local se = _se[`v']
+                local t = `b' / `se'
+                local p = 2 * ttail(`df_r', abs(`t'))
+                di as txt _col(5) abbrev("`v'", 18) _col(25) as res %10.6f `b' ///
+                   _col(37) %10.6f `se' _col(49) %8.4f `t' _col(59) %8.4f `p' _c
+                _fbardl_stars `p'
+            }
+            di as txt "  {hline 68}"
+        }
 
         // ----- Deterministics: Fourier Terms & Constant -----
         di as txt ""
@@ -651,6 +983,16 @@ program define fbardl, eclass sortpreserve
             _fbardl_stars `p'
         }
 
+        if `hastrend' {
+            local b = _b[_fbardl_trend]
+            local se = _se[_fbardl_trend]
+            local t = `b' / `se'
+            local p = 2 * ttail(`df_r', abs(`t'))
+            di as txt _col(5) "Trend (Case `case')" _col(25) as res %10.6f `b' ///
+               _col(37) %10.6f `se' _col(49) %8.4f `t' _col(59) %8.4f `p' _c
+            _fbardl_stars `p'
+        }
+
         local b = _b[_cons]
         local se = _se[_cons]
         local t = `b' / `se'
@@ -667,9 +1009,17 @@ program define fbardl, eclass sortpreserve
     // =========================================================================
     // TABLE 3: COINTEGRATION TESTS
     // =========================================================================
-    // Compute test statistics from the estimated model
-    // Fov: joint test on all lagged level variables
-    qui test `levelvars'
+    // The F_ov restriction depends on the PSS case:
+    //   Case 2: lagged levels AND the intercept
+    //   Case 3: lagged levels only
+    //   Case 4: lagged levels AND the trend coefficient
+    //   Case 5: lagged levels only (trend is unrestricted)
+    local fovterms "`levelvars'"
+    if `case' == 2 local fovterms "`fovterms' _cons"
+    if `case' == 4 local fovterms "`fovterms' _fbardl_trend"
+
+    // Fov: joint test on the restricted deterministic/level terms
+    qui test `fovterms'
     local Fov_stat = r(F)
 
     // t: t-statistic on lagged dependent variable
@@ -682,6 +1032,9 @@ program define fbardl, eclass sortpreserve
     di as txt "{hline 78}"
     di as res _col(5) "Table 3: Cointegration Test Results"
     di as txt "{hline 78}"
+    if "`vcetype'" != "ols" {
+        di as txt _col(5) "Test statistics computed with " as res "`vcelabel'"
+    }
     di as txt ""
 
     if "`type'" == "fardl" {
@@ -692,16 +1045,33 @@ program define fbardl, eclass sortpreserve
         di as txt _col(5) "Critical values: Kripfganz & Schneider (2020)"
         di as txt ""
 
+        // The tabulated bounds are derived under i.i.d. errors. With a robust
+        // or HAC covariance matrix the statistics no longer follow the
+        // distributions those bounds were simulated from, so the comparison is
+        // an approximation. The bootstrap types re-derive their own critical
+        // values under the same covariance estimator and are exact in that
+        // sense; recommend them here.
+        if "`vcetype'" != "ols" {
+            di as err _col(5) "Warning: PSS / Kripfganz-Schneider bounds assume i.i.d. errors."
+            di as err _col(5) "  With `vceshort' standard errors the tabulated bounds are only"
+            di as err _col(5) "  approximate. For inference that is consistent with the chosen"
+            di as err _col(5) "  covariance estimator use type(fbardl_mcnown) or type(fbardl_bvz),"
+            di as err _col(5) "  which bootstrap the critical values under the same estimator."
+            di as txt ""
+        }
+
         // Compute the number of short-run coefficients (sr) for ardlbounds
-        // sr = #lagged dep diffs + #lagged/contemp indep diffs + #Fourier terms
+        // sr = #lagged dep diffs + #lagged/contemp indep diffs
+        //      + #Fourier terms + #fixed regressors
         local sr_count = `best_p'
         foreach xvar of local indepvars {
             local cname = subinstr("`xvar'", ".", "_", .)
-            local sr_count = `sr_count' + `best_q_`cname'' + 1
+            local sr_count = `sr_count' + `best_q_`cname'' + 1 - `j0'
         }
         if `best_kstar' > 0 {
             local sr_count = `sr_count' + 2
         }
+        local sr_count = `sr_count' + `nexog_est'
 
         local k_pss = `nindep'
         local has_ardlbounds = 0
@@ -936,8 +1306,10 @@ program define fbardl, eclass sortpreserve
             di as res _col(5) "=> COINTEGRATION detected (Fov and t both reject at 5%)"
         }
         else if "`Fov_dec'" == "Reject H0" & "`t_dec'" != "Reject H0" {
-            di as err _col(5) "=> POSSIBLE DEGENERATE CASE"
-            di as err _col(5) "   (Fov significant but t not — check with bootstrap)"
+            di as err _col(5) "=> POSSIBLE DEGENERATE CASE #2"
+            di as err _col(5) "   (Fov significant but t not — `depvar' does not error-correct.)"
+            di as err _col(5) "   F_ind has no tabulated PSS bounds; use type(fbardl_mcnown) or"
+            di as err _col(5) "   type(fbardl_bvz) to test it and separate the degenerate cases."
         }
         else if "`Fov_dec'" == "Inconclusive" | "`t_dec'" == "Inconclusive" {
             di as err _col(5) "=> INCONCLUSIVE (consider bootstrap: type(fbardl_mcnown) or type(fbardl_bvz))"
@@ -967,7 +1339,15 @@ program define fbardl, eclass sortpreserve
         }
         di as txt ""
 
+        if "`vcetype'" != "ols" {
+            di as txt _col(5) "Statistics and bootstrap distributions use " ///
+               as res "`vcelabel'"
+            di as txt ""
+        }
+
         // Call bootstrap module
+        // `regvars' already contains the fixed regressors; `exog' is passed
+        // separately so the auxiliary/marginal DGP equations include them too.
         _fbardl_bootstrap D.`depvar' `regvars', ///
             depvar(`depvar') ///
             indepvars(`indepvars') ///
@@ -979,7 +1359,16 @@ program define fbardl, eclass sortpreserve
             nobs(`nobs') ///
             best_p(`best_p') ///
             best_kstar(`best_kstar') ///
-            timevar(`timevar')
+            timevar(`timevar') ///
+            estcmd(`estcmd') ///
+            estopt(`estopt') ///
+            exog(`exog') ///
+            fovterms(`fovterms') ///
+            fovnocons(`fovnocons') ///
+            trendvar(`trendvar') ///
+            j0(`j0') ///
+            bestq(`bestq_list') ///
+            `dgpcheck'
 
         // Display bootstrap results
         local Fov_cv01 = r(Fov_cv01)
@@ -997,6 +1386,26 @@ program define fbardl, eclass sortpreserve
         local Fov_pval = r(Fov_pval)
         local t_pval = r(t_pval)
         local Find_pval = r(Find_pval)
+        local nvalid_Fov  = r(nvalid_Fov)
+        local nvalid_t    = r(nvalid_t)
+        local nvalid_Find = r(nvalid_Find)
+
+        // A replication that fails leaves its statistic missing. Missing
+        // p-values must never be silently read as "fail to reject": in Stata
+        // (. < 0.05) is false, which would report no cointegration whenever
+        // the bootstrap itself broke down. Flag that case explicitly.
+        local boot_ok = 1
+        local minvalid = min(`nvalid_Fov', `nvalid_t', `nvalid_Find')
+        if `minvalid' < ceil(0.5 * `reps') {
+            local boot_ok = 0
+            di as err _col(5) "Warning: only `minvalid' of `reps' bootstrap replications produced"
+            di as err _col(5) "  a usable test statistic (Fov: `nvalid_Fov', t: `nvalid_t', Find: `nvalid_Find')."
+            di as err _col(5) "  Bootstrap critical values and p-values are unreliable; no decision"
+            di as err _col(5) "  is reported below. Check for collinearity in the bootstrap DGP,"
+            di as err _col(5) "  reduce maxlag(), or drop fixed regressors that are near-constant"
+            di as err _col(5) "  within the resampled series."
+            di as txt ""
+        }
 
         di as txt "  {hline 68}"
         di as txt _col(5) "Test" _col(20) "Statistic" _col(32) "p-value" ///
@@ -1004,7 +1413,10 @@ program define fbardl, eclass sortpreserve
         di as txt "  {hline 68}"
 
         // Fov
-        if `Fov_pval' < 0.05 {
+        if missing(`Fov_pval') {
+            local Fov_dec "n/a"
+        }
+        else if `Fov_pval' < 0.05 {
             local Fov_dec "Reject H0"
         }
         else {
@@ -1017,7 +1429,10 @@ program define fbardl, eclass sortpreserve
         _fbardl_stars `Fov_pval'
 
         // t
-        if `t_pval' < 0.05 {
+        if missing(`t_pval') {
+            local t_dec "n/a"
+        }
+        else if `t_pval' < 0.05 {
             local t_dec "Reject H0"
         }
         else {
@@ -1030,7 +1445,10 @@ program define fbardl, eclass sortpreserve
         _fbardl_stars `t_pval'
 
         // Find
-        if `Find_pval' < 0.05 {
+        if missing(`Find_pval') {
+            local Find_dec "n/a"
+        }
+        else if `Find_pval' < 0.05 {
             local Find_dec "Reject H0"
         }
         else {
@@ -1046,7 +1464,12 @@ program define fbardl, eclass sortpreserve
         di as txt ""
 
         // Cointegration conclusion with degenerate case detection
-        if "`Fov_dec'" == "Reject H0" & "`t_dec'" == "Reject H0" & "`Find_dec'" == "Reject H0" {
+        if `boot_ok' == 0 {
+            di as err _col(5) "=> NO CONCLUSION: the bootstrap did not produce a usable"
+            di as err _col(5) "   distribution (see the warning above). Do not interpret the"
+            di as err _col(5) "   table as evidence for or against cointegration."
+        }
+        else if "`Fov_dec'" == "Reject H0" & "`t_dec'" == "Reject H0" & "`Find_dec'" == "Reject H0" {
             di as res _col(5) "=> COINTEGRATION detected"
             di as res _col(5) "   (Fov, t, and Find all significant — McNown et al. 2018 Case 1)"
         }
@@ -1054,13 +1477,21 @@ program define fbardl, eclass sortpreserve
             di as txt _col(5) "=> NO COINTEGRATION"
             di as txt _col(5) "   (None of the test statistics are significant — Case 2)"
         }
-        else if "`Fov_dec'" == "Reject H0" & "`Find_dec'" == "Reject H0" & "`t_dec'" != "Reject H0" {
-            di as err _col(5) "=> DEGENERATE CASE #1"
-            di as err _col(5) "   (Fov & Find significant but t not — y_t may be I(0))"
-        }
         else if "`Fov_dec'" == "Reject H0" & "`t_dec'" == "Reject H0" & "`Find_dec'" != "Reject H0" {
-            di as err _col(5) "=> DEGENERATE CASE #2"
-            di as err _col(5) "   (Fov & t significant but Find not — x variables not in ECM)"
+            // McNown, Sam & Goh (2018, p.4): pi_yy != 0, pi_yx.x = 0.
+            // The joint significance comes solely from the lagged dependent
+            // variable, so the equation collapses to a generalised
+            // Dickey-Fuller regression and y_t is in fact I(0).
+            di as err _col(5) "=> DEGENERATE CASE #1 (degenerate lagged dependent variable)"
+            di as err _col(5) "   (Fov & t significant but Find not — the level relationship comes"
+            di as err _col(5) "    solely from L.`depvar'; the equation reduces to a generalised"
+            di as err _col(5) "    Dickey-Fuller test, so `depvar' is likely I(0), not cointegrated)"
+        }
+        else if "`Fov_dec'" == "Reject H0" & "`Find_dec'" == "Reject H0" & "`t_dec'" != "Reject H0" {
+            // McNown, Sam & Goh (2018, p.4): pi_yy = 0, pi_yx.x != 0.
+            di as err _col(5) "=> DEGENERATE CASE #2 (degenerate lagged independent variable)"
+            di as err _col(5) "   (Fov & Find significant but t not — `depvar' does not error-correct"
+            di as err _col(5) "    towards the level relationship, so no cointegration)"
         }
         else {
             di as txt _col(5) "=> PARTIAL EVIDENCE: see individual test results above"
@@ -1082,7 +1513,23 @@ program define fbardl, eclass sortpreserve
         di as txt "{hline 78}"
         di as res _col(5) "Table 4: Diagnostic Tests"
         di as txt "{hline 78}"
-        _fbardl_diagtest _fbardl_resid `nobs' `nparams'
+        if "`vcetype'" != "ols" {
+            di as txt _col(5) "{it:Note: standard errors already correct for }" _c
+            if "`vcetype'" == "robust" {
+                di as txt "{it:heteroskedasticity (HC1).}"
+            }
+            else {
+                di as txt "{it:heteroskedasticity and}"
+                di as txt _col(5) "{it:autocorrelation (Newey-West, lag `nwlag').}"
+            }
+            di as txt _col(5) "{it:The tests below remain informative about the error process.}"
+        }
+        // The estat-based tests (Breusch-Godfrey, Durbin alternative,
+        // Breusch-Pagan, White, ARCH LM, Ramsey RESET) need the OLS estimate
+        // set: none of them is supported after newey / vce(robust)
+        capture estimates restore _fbardl_ols
+        _fbardl_diagtest, residvar(_fbardl_resid) nobs(`nobs') ///
+            nparams(`nparams') lhs(D.`depvar') rhs(`regvars')
     }
 
     // Restore estimation again (diagnostics may have clobbered e())
@@ -1114,6 +1561,7 @@ program define fbardl, eclass sortpreserve
 
     // Clean up stored estimates
     capture estimates drop _fbardl_main
+    capture estimates drop _fbardl_ols
 
     // =========================================================================
     // STORE e() RESULTS
@@ -1170,21 +1618,37 @@ program define fbardl, eclass sortpreserve
         ereturn scalar best_q_`cname' = `best_q_`cname''
     }
 
+    ereturn scalar n_exog = `nexog_est'
+    if "`vcetype'" == "hac" {
+        ereturn scalar haclags = `nwlag'
+    }
+
     ereturn local cmd "fbardl"
     ereturn local depvar "`depvar'"
     ereturn local indepvars "`indepvars'"
+    ereturn local exog "`exog'"
     ereturn local type "`type'"
     ereturn local ic "`ic'"
+    ereturn local vcetype "`vcetype'"
+    ereturn local vce "`vcelabel'"
+    ereturn scalar case = `case'
+    if "`unconditional'" != "" {
+        ereturn local ardlform "unconditional"
+    }
+    else {
+        ereturn local ardlform "conditional"
+    }
+    ereturn local kstar_type "`kstar_type'"
 
     // =========================================================================
     // FINAL SUMMARY FOOTER
     // =========================================================================
     di as txt ""
     di as txt "{hline 78}"
-    di as res _col(5) "fbardl v1.0.1"
+    di as res _col(5) "fbardl v1.2.0"
     di as txt "{hline 78}"
 
     // Clean up
-    capture drop _fbardl_sin _fbardl_cos _fbardl_resid
+    capture drop _fbardl_sin _fbardl_cos _fbardl_resid _fbardl_trend
     restore
 end

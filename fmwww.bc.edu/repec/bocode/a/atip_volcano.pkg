@@ -1,0 +1,21 @@
+d 'ATIP_VOLCANO': module to plot outlier evidence vs. magnitude
+d
+d  atip_volcano draws a volcano-style scatter plot (magnitude on X,
+d evidence on Y) from the output of atip_score, using the same
+d visual language as an existing MMD volcano-plot command but
+d without inventing a formal p-value, since the underlying rules
+d are heuristic. Vertical jitter is applied because the evidence
+d axis (0-5) is discrete. 
+d
+d KW: outliers
+d KW: plot
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260802
+d
+d Author: Andres Talavera Cuya,   Direccion Nacional de Censos y Encuestas -- INEI Peru
+d Support: email talaveracuya@@gmail.com
+d
+f atip_volcano.ado
+f atip_volcano.sthlp

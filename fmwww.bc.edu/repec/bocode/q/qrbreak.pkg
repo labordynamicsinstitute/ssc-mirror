@@ -1,0 +1,29 @@
+d 'QRBREAK': module to test and estimate structural breaks in quantile regression 
+d
+d    qrbreak tests for structural breaks occurring at unknown dates
+d in regression quantiles    and estimates the break dates, their
+d confidence intervals, and the regression    coefficients in each
+d regime.  The analysis is carried out both quantile by quantile
+d (the	  SQ test of Qu 2008) and jointly over a range of quantiles
+d (the DQ test of Oka and Qu	2011).	The number of breaks is
+d determined by a sequential testing procedure, break	 dates are
+d estimated by dynamic programming, and confidence intervals for
+d the break dates    are constructed under the shrinking-break
+d asymptotic framework of Oka and Qu (2011). 
+d
+d KW: structural breaks
+d KW: quantile regression
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260802
+d
+d Author: Ozan Eruygur,  Ankara Haci Bayram Veli University
+d Support: email eruygur@@gmail.com
+d
+f qrbreak.ado
+f qrbreak.sthlp
+F qrbreak_core_macosx_arm64.plugin
+F qrbreak_core_macosx_x86_64.plugin
+F qrbreak_core_unix.plugin
+F qrbreak_core_windows.plugin

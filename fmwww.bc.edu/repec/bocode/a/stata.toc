@@ -117,6 +117,10 @@ p astile module to provide a faster and byable alternative for xtile
 p astx module to create a table of descriptive statistics and t-statistics by a grouping variable
 p asycaus module to provide Asymmetric Granger-Causality Suite 
 p ate_pct module to compute ATE in percentage points under subgroup heterogeneity (post-estimation)
+p atip_mahal module for genuine multivariate outlier detection via Mahalanobis distance 
+p atip_reglas module for outlier detection via an ensemble of five classic rules
+p atip_score module to score outliers on two separate axes (evidence and magnitude)
+p atip_volcano module to plot outlier evidence vs. magnitude
 p atkplot module to generate Atkinson residual normality plots
 p attcic module to implement the attrition corrections from Ghanem et al. (2024b) and comparator approaches
 p attregtest module to implement the regression-based attrition tests proposed in  Ghanem et al. (2022)

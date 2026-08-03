@@ -12,7 +12,7 @@ d KW: unit root test
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20260704
+d Distribution-Date: 20260802
 d
 d Author:   Merwan Roudane, NA
 d Support: email  merwanroudane920@@gmail.com
@@ -20,6 +20,7 @@ d
 f qadf.ado
 f qadf.sthlp
 f qadf_boot.ado
+f qadf_core.ado
 f qadf_graph.ado
 f qadf_process.ado
 f ../_/_qadf_mata.ado

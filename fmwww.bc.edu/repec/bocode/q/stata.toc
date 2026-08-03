@@ -29,6 +29,7 @@ p qqplot3 module to plot the unweighted and weighted quantiles of one variable a
 p qqplotg module to draw quantile-quantile plots, generalized to allow groups and plotting difference vs mean
 p qqr module to estimate Bivariate Quantile-on-Quantile Regression (Sim & Zhou 2015)
 p qqvalue module to generate quasi-q-values by inverting multiple-test procedures
+p qrbreak module to test and estimate structural breaks in quantile regression 
 p qreg2 module to perform quantile regression with robust and clustered standard errors
 p qregpd module to perform Quantile Regression for Panel Data
 p qregplot module for plotting coefficients of a Quantile Regression

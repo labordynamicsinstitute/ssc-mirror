@@ -15,9 +15,9 @@ d
 d KW: regression discontinuity
 d KW: robust inference
 d
-d Requires: Stata version 13.1
+d Requires: Stata version 16
 d
-d Distribution-Date: 20260709
+d Distribution-Date: 20260802
 d
 d Author: Sebastian Calonico, Department of Economics, University of Miami
 d Support: email scalonico@@bus.miami.edu
@@ -32,26 +32,19 @@ d Author: Rocio Titiunik, Department of Political Science, University of Michiga
 d Support: email  titiunik@@umich.edu
 d
 f rdrobust.ado
-f rdrobust.sthlp
-f rdbwselect.ado
-f rdbwselect.sthlp
-f rdplot.ado
-f rdplot.sthlp
-f rdplot_illustration.do
-f rdbwselect_2014.ado
-f rdbwselect_2014.sthlp
-f rdbwselect_2014_functions.do
-f rdbwselect_2014_kconst.ado
-f rdrobust_bw.mo
-f rdrobust_collapse.mo
-f rdrobust_functions.do
-f rdrobust_groupid.mo
-f rdrobust_illustration.do
-f rdrobust_kweight.mo
-f rdrobust_median.mo
-f rdrobust_res.mo
-f rdrobust_vce.mo
-f rdbwselect.pdf
-f rdplot.pdf
 f rdrobust.pdf
+f rdrobust.sthlp
+f rdrobustplot.ado
+f rdrobustplot.pdf
+f rdrobustplot.sthlp
+f rdplot.ado
+f rdplot.pdf
+f rdplot.sthlp
+f rdbwselect.ado
+f rdbwselect.pdf
+f rdbwselect.sthlp
+f ../l/lrdrobust.mlib
+f rdplot_illustration.do
+f rdrobust_illustration_new.do
+f rdrobust_illustration.do
 f rdrobust_senate.dta

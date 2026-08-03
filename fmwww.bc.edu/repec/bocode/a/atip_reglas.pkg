@@ -1,0 +1,24 @@
+d 'ATIP_REGLAS': module for outlier detection via an ensemble of five classic rules
+d
+d  atip_reglas flags outliers within groups using five classic
+d rules (mean+/-3SD, mean+/-2SD, z-score, Tukey IQR, univariate
+d Mahalanobis), combined as a union (any rule firing flags the
+d case). By default it uses median/MAD instead of mean/SD as the
+d reference (Iglewicz and Hoaglin 1993), which is far more robust
+d to masking under contamination -- validated by simulation (1,000
+d datasets): at 20% contamination, recall of the strict criterion
+d rises from 27.4% (mean/SD) to 95.5% (median/MAD). A classic
+d option reverts to the mean/SD behavior. 
+d
+d KW: outliers
+d KW: contamination
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260802
+d
+d Author: Andres Talavera Cuya,   Direccion Nacional de Censos y Encuestas -- INEI Peru
+d Support: email talaveracuya@@gmail.com
+d
+f atip_reglas.ado
+f atip_reglas.sthlp

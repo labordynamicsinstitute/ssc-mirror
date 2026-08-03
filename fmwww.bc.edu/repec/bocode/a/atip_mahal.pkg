@@ -1,0 +1,27 @@
+d 'ATIP_MAHAL': module for genuine multivariate outlier detection via Mahalanobis distance 
+d
+d  atip_mahal computes the multivariate Mahalanobis distance (2+
+d variables) within groups, detecting anomalous combinations that
+d no univariate rule can see. By default it uses the Minimum
+d Covariance Determinant estimator (Rousseeuw and Van Driessen
+d 1999, Technometrics 41:212-223) instead of the classical
+d covariance, which is highly robust to masking -- validated by
+d simulation (1,000 datasets): at 20% contamination, recall stays
+d at 100% with MCD versus 0% with the classical estimator. Includes
+d an optional tolerance-ellipse graph (2 variables only) that can
+d overlay both the classical and MCD ellipses to visualize the
+d masking effect directly. A classic option reverts to the
+d classical covariance estimator. 
+d
+d KW: outliers
+d KW: Mahalanobis distance 
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260802
+d
+d Author: Andres Talavera Cuya,   Direccion Nacional de Censos y Encuestas -- INEI Peru
+d Support: email talaveracuya@@gmail.com
+d
+f atip_mahal.ado
+f atip_mahal.sthlp

@@ -1,5 +1,5 @@
 *! _fbardl_advanced — Advanced Post-Estimation Analysis for FBARDL
-*! Version 1.0.1 — 2026-04-12
+*! Version 1.2.0 — 2026-08-02
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 
 // =============================================================================
@@ -237,6 +237,21 @@ program define _fbardl_advanced
         else {
             di as txt _col(5) "(could not compute Fourier significance test)"
         }
+
+        // The restriction itself is the right one, but the p-value above is
+        // read off a standard F distribution. In an equation that contains
+        // I(1) lagged levels, a Wald test on trigonometric deterministic
+        // terms does not have that distribution: Becker, Enders & Lee (2006)
+        // tabulate the correct, non-standard critical values. Treat the
+        // p-value as indicative, and note that k* was itself chosen by
+        // minimising the SSR over the same grid, which biases the test
+        // towards significance.
+        di as txt ""
+        di as txt _col(5) "{it:Note: the p-value uses the standard F distribution. With I(1)}"
+        di as txt _col(5) "{it:levels in the equation the null distribution of a test on the}"
+        di as txt _col(5) "{it:Fourier terms is non-standard (Becker, Enders & Lee, 2006), and}"
+        di as txt _col(5) "{it:k* was selected by minimising the SSR over the same grid. Read}"
+        di as txt _col(5) "{it:this test as indicative rather than exact.}"
         di as txt ""
     }
 

@@ -1,4 +1,4 @@
-*! SurvEye example 2.1.3 21jul2026
+*! SurvEye example 2.2.0 29jul2026
 version 16.0
 clear all
 set more off
@@ -6,7 +6,10 @@ set more off
 /*
 Run this starter from Stata with three quoted arguments:
 
-    do surveye_example.do "questionnaire.html" "survey_data.dta" "dashboard.html"
+    do example.do "questionnaire.html" "survey_data.dta" "dashboard.html"
+
+The questionnaire may be a Survey Solutions preview (.html) or a SurveyCTO
+form definition (.xml) / printable form (.html); detection is by content.
 
 Paths may contain spaces.  The do-file inspects the questionnaire first, then
 builds a dashboard from the data.  It will not silently reuse placeholder paths.
