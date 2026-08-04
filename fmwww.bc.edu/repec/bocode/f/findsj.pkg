@@ -12,7 +12,7 @@ d KW: articles
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20260727
+d Distribution-Date: 20260803
 d
 d Author:      Yujun Lian,   Lingnan College, Sun Yat-sen University
 d Support: email   arlionn@@163.com
@@ -22,6 +22,6 @@ d Support: email    chucheng.wan@@outlook.com
 d
 f findsj.ado
 f findsj.sthlp
-F findsj.dta
-F findsj_version.dta
+f findsj.dta
+f findsj_version.dta
 f findsj_examples.do

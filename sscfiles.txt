@@ -13279,6 +13279,7 @@ fmwww.bc.edu/repec/bocode/i/irr.ado
 fmwww.bc.edu/repec/bocode/i/ineq.pkg
 fmwww.bc.edu/repec/bocode/i/imbalance.ado
 fmwww.bc.edu/repec/bocode/i/indexplot.ado
+fmwww.bc.edu/repec/bocode/i/example.Rdata
 fmwww.bc.edu/repec/bocode/i/ineqdecgini.sthlp
 fmwww.bc.edu/repec/bocode/i/ivvif.ado
 fmwww.bc.edu/repec/bocode/i/ivgravity.ado
@@ -13496,6 +13497,7 @@ fmwww.bc.edu/repec/bocode/i/imvol.sthlp
 fmwww.bc.edu/repec/bocode/i/Italy-Lakes.dta
 fmwww.bc.edu/repec/bocode/i/ivendog.pkg
 fmwww.bc.edu/repec/bocode/i/iota.pkg
+fmwww.bc.edu/repec/bocode/i/importr.ado
 fmwww.bc.edu/repec/bocode/i/ivmediate_Becker_Woessmann_2009_example.do
 fmwww.bc.edu/repec/bocode/i/iscogen.pkg
 fmwww.bc.edu/repec/bocode/i/ineqdecgini.ado
@@ -13628,6 +13630,7 @@ fmwww.bc.edu/repec/bocode/i/inshell_example1.sh
 fmwww.bc.edu/repec/bocode/i/insingap.ado
 fmwww.bc.edu/repec/bocode/i/isko.html
 fmwww.bc.edu/repec/bocode/i/imusic.pkg
+fmwww.bc.edu/repec/bocode/i/importr.sthlp
 fmwww.bc.edu/repec/bocode/i/imeus2.ado
 fmwww.bc.edu/repec/bocode/i/inputst.ado
 fmwww.bc.edu/repec/bocode/i/integrate_aq.pkg

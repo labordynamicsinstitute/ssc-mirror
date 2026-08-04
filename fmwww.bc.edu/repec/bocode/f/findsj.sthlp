@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.2.8  26Jul2026}{...}
+{* *! version 3.2.9  02Aug2026}{...}
 {vieweralsosee "[R] search" "help search"}{...}
 {vieweralsosee "[R] net" "help net"}{...}
 {viewerjumpto "Syntax" "findsj##syntax"}{...}
@@ -66,11 +66,6 @@ Update local database
 {cmd:findsj}
 {cmd:,} {opt update}
 
-{p 8 16 2}
-{cmd:findsj}
-{cmd:,} {opt updatesource} [{opt source(github|gitee|both)}]
-
-
 {pstd}
 Configure download path
 
@@ -109,9 +104,7 @@ Configure download path
 {synopt:{opt getdoi}}display DOI information (auto-enabled with {cmd:ref}){p_end}
 
 {syntab:Database management}
-{synopt:{opt update}}update the local database using {cmd:source(both)}{p_end}
-{synopt:{opt updatesource}}display a source menu or update from {cmd:source()}{p_end}
-{synopt:{opt source(string)}}source for {cmd:updatesource}: {cmd:github}, {cmd:gitee}, or {cmd:both}{p_end}
+{synopt:{opt update}}update the local database and version metadata from GitHub{p_end}
 
 {syntab:Path management}
 {synopt:{opt setpath(path)}}set custom download path for BibTeX/RIS files{p_end}
@@ -186,7 +179,7 @@ but automatic clipboard copying is not supported.
 {phang2}
 {bf:6. Smart Database} - The local database ({cmd:findsj.dta}) contains 1,269
 records and enables fast offline searching and local-first DOI lookup. Updates are
-available from GitHub or Gitee (China mirror).
+available from GitHub.
 
 
 {marker installation}{...}
@@ -346,29 +339,18 @@ result, using local metadata first and an online DOI lookup when needed. This op
 {dlgtab:Database management}
 
 {phang}
-{opt update} updates the local database using the two-source fallback represented by
-{cmd:source(both)}. It is equivalent to
-{cmd:findsj, updatesource source(both)}.
-
-{phang}
-{opt updatesource} displays a clickable source menu when used without
-{cmd:source()}. With {cmd:source()}, it starts an update from the selected source.
-
-{phang}
-{opt source(string)} specifies the download source for {cmd:updatesource}:
-
-{phang2}
-• {bf:github} - Download from GitHub{break}
-• {bf:gitee} - Download from Gitee mirror (fallback when GitHub is unavailable){break}
-• {bf:both} - Try the language-preferred source first, then the alternate source
+{opt update} downloads and validates the latest {cmd:findsj.dta} and
+{cmd:findsj_version.dta} from GitHub, then installs them as one transaction.
+The caller's active dataset, including unsaved changes, is preserved. If either
+file cannot be installed, the previous runtime files are restored.
 
 {pmore}
-The database file ({cmd:findsj.dta}) is updated in place where {cmd:findsj.ado} is
-installed in PLUS; changing the current working directory does not change the
-database used for local search. The bundled database contains 1,269 records with
-article metadata, including DOI and page information where available. A GitHub
-Actions workflow checks the Stata Journal website monthly and updates the
-repository database when its contents change.
+The database and version-metadata files are updated in place where
+{cmd:findsj.ado} is installed in PLUS; changing the current working directory
+does not change the database used for local search. The bundled database
+contains 1,269 records with article metadata, including DOI and page information
+where available. A GitHub Actions workflow checks the Stata Journal website
+monthly and updates the repository database when its contents change.
 
 
 {dlgtab:Path management}
@@ -478,22 +460,7 @@ any blue underlined text or button with your mouse to execute the action.
 {pstd}{bf:Database Management}{p_end}
 
 {phang2}{inp:.} {stata "findsj, update":findsj, update}{p_end}
-{pmore}→ Uses the language-preferred source first, then the alternate source
-({cmd:source(both)}){p_end}
-
-{phang2}{inp:.} {stata "findsj, updatesource":findsj, updatesource}{p_end}
-{pmore}→ Shows clickable buttons for GitHub, Gitee, and both{p_end}
-{pmore}→ Click a source to start the download{p_end}
-
-{phang2}{inp:.} {stata "findsj, updatesource source(github)":findsj, updatesource source(github)}{p_end}
-{pmore}→ Downloads from GitHub only{p_end}
-
-{phang2}{inp:.} {stata "findsj, updatesource source(gitee)":findsj, updatesource source(gitee)}{p_end}
-{pmore}→ Downloads from Gitee (faster for China users){p_end}
-
-{phang2}{inp:.} {stata "findsj, updatesource source(both)":findsj, updatesource source(both)}{p_end}
-{pmore}→ Tries Gitee first in a Chinese locale and GitHub first otherwise,
-then falls back to the alternate source{p_end}
+{pmore}→ Downloads and validates the current database and version metadata from GitHub{p_end}
 
     {hline}
 {pstd}{bf:Download Path Configuration}{p_end}
@@ -545,8 +512,7 @@ then falls back to the alternate source{p_end}
 
 {pstd}
 Complete documentation and examples available at:{break}
-{browse "https://github.com/BlueDayDreeaming/findsj":GitHub repository}{break}
-{browse "https://gitee.com/ChuChengWan/findsj":Gitee mirror (China)}
+{browse "https://github.com/BlueDayDreeaming/findsj":GitHub repository}
 
 
 {marker authors}{...}
@@ -570,6 +536,5 @@ Help: {helpb search}, {helpb net}, {helpb ssc}
 
 {psee}
 Web: {browse "https://github.com/BlueDayDreeaming/findsj":GitHub},
-{browse "https://gitee.com/ChuChengWan/findsj":Gitee}, 
 {browse "https://www.stata-journal.com":Stata Journal}, 
 {browse "https://www.lianxh.cn":Lianxh}

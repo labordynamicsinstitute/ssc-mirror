@@ -33,18 +33,22 @@
 		
 {marker nnlmeexpr}{...}
 {phang}
-<{it:nnlme}> defines a program designed to implement a nested nonlinear regression following a standard exponentiated survival curve. When working correctly, the program isolates a latent curve along which there is an exogenous but unobserved acceleration in the negative direction in the rate of change over time. Because time is the main boundary defining parameter of interest, it is required for analysis to be feasible. 
+<{it:nnlme}> defines a program designed to implement a nested nonlinear regression following a standard exponentiated survival curve. When working correctly, the program isolates a latent curve along which there is an exogenous but unobserved acceleration in the negative direction in the rate of change over time. Because time is the main boundary defining parameter of interest, it is required for this analysis to be feasible. 
 
 {marker description}{...}
 {title:Description}
 {pstd}
-The model contains has the option to differentiate factors predicing the placement of the latent curve as well as shape parameters that help to improve the underlying model by accounting for exogeneous factors that might influence the pattern of mean change over time. The underlying distribution of the outcome is assumed to be multivariate normal, while the latent curve is assumed to be followed by an acceleration only in the negative direction.
+The model contained has the option to differentiate factors predicing the placement of the latent curve as well as shape parameters that help to improve the underlying model by accounting for exogeneous factors that might influence the pattern of mean change over time. The underlying distribution of the outcome is assumed to be multivariate normal, while the latent curve is assumed to be followed by an acceleration only in the negative direction.
 
 {pstd}
 The model is implemented using {opt MENL} so there are an array of general options that may work with this program including, for example, random effects specifications. Different covariance structures are provided to model random effects and to model heteroskedasticity and correlations within lowest-level groups. 
 
 {pstd}
 See {manhelp menl ME:menl} for other available features during estimation.{p_end}
+
+
+{title:Implementation Notes}
+The ID variable cannot be a string.  
 
 {marker results}{...}
 {title:Stored results}
@@ -161,4 +165,3 @@ at the hierarchical level k - {it:#} + 1 in a k-level model{p_end}
 {synopt:{cmd:e(sample)}}marks estimation sample{p_end}
 {p2colreset}{...}
 
-INCLUDE help rtable

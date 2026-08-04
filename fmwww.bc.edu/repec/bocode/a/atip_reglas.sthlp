@@ -56,15 +56,13 @@ pensada para screening/pre-revision, no para confirmacion estadistica
 formal.
 
 {pstd}
-Es una generalizacion de un bloque de deteccion de atipicos usado en
-produccion para RDTO (rendimiento) por CCDD/cultivo, con dos
-correcciones respecto al original: (1) la regla IQR usaba {bf:OR} en
-vez de {bf:AND} en la condicion de "valor normal", lo que anulaba
-silenciosamente la deteccion de atipicos por el lado bajo; aqui esta
-corregido. (2) La regla ZSCORE original solo detectaba un lado (cola
-alta); aqui es asi por defecto tambien (para no cambiar el
-comportamiento esperado), pero {cmd:zsymmetric} permite usar version
-de dos colas.
+Este comando corrige dos problemas frecuentes en implementaciones
+tipicas de estas reglas: (1) la regla IQR suele usar {bf:OR} en vez de
+{bf:AND} en la condicion de "valor normal", lo que anula silenciosamente
+la deteccion de atipicos por el lado bajo; aqui esta corregido. (2) La
+regla ZSCORE suele detectar solo un lado (cola alta); aqui es asi por
+defecto tambien (para no romper el comportamiento esperado por defecto),
+pero {cmd:zsymmetric} permite usar la version de dos colas.
 
 {pstd}
 La distancia de Mahalanobis, al ser univariada aqui, es

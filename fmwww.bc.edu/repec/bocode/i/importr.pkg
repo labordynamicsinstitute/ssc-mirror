@@ -4,14 +4,12 @@ d  .Rdata and .Rds files are compressed binary objects in R's own
 d serialization format, so there is no pure-Stata way to read them;
 d something outside Stata has to do the decoding. importr takes a
 d dual-bridge approach so that it works on machines with R and on
-d machines without it. It first looks for Rscript and, if found,
-d converts the file through the haven package. If R is absent it
-d falls back to Stata's built-in Python integration and the
-d pyreadstat library. Either path lands the data in memory; the
-d choice is reported so you know which bridge ran. Handles .Rdata,
-d .Rda, and .Rds. R with the haven package (Rscript on the PATH),
-d or Stata's Python integration with pyreadstat (python pip install
-d pyreadstat). 
+d machines without it. It first tries R, converting the file
+d through the haven package; if that does not produce a dataset it
+d falls back to Stata's built-in Python integration, reading with
+d pyreadr and writing with pyreadstat. Either path lands the data
+d in memory, and the bridge that succeeded is reported. Handles
+d .Rdata, .Rda, and .Rds. 
 d
 d KW: import; R; data management; interoperability
 d
@@ -22,6 +20,7 @@ d
 d Author: Eric A. Booth, Texas 2036
 d Support: email eric.a.booth@@gmail.com
 d
-f ../e/example.Rdata
 f importr.ado
 f importr.sthlp
+f importr_example.rdata
+f importr_example.rds

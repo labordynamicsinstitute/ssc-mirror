@@ -1,7 +1,10 @@
-*! version 3.2.8  26Jul2026
+*! version 3.2.9  02Aug2026
 *! Yujun Lian (arlionn@163.com), Chucheng Wan (chucheng.wan@outlook.com)
 
 * Search Stata Journal articles
+* v3.2.9: Expose a single database-update interface, findsj, update; download,
+*   validate, and transactionally install both runtime files from GitHub while
+*   preserving caller data; remove source-selection options
 * v3.2.8: Cache true APA-style citation strings, use record-level citation
 *   fallbacks, and keep single-article and batch citation presentation aligned
 * v3.2.7: Ensure the bundled runtime database and version metadata are
@@ -342,10 +345,8 @@ syntax [anything(name=keywords id="keywords" everything)] [, ///
     GETDOI ///
     SETPath(string) ///
 	  QUERYpath ///
-	  RESETpath ///
+    RESETpath ///
     UPdate ///
-    UPdatesource ///
-    SOUrce(string) ///
     BIB ///
     RIS ///
     ONLINE ///
@@ -378,8 +379,6 @@ if "`online'" != "" {
     if "`bib'" != ""          local online_conflict "bib"
     else if "`ris'" != ""     local online_conflict "ris"
     else if "`update'" != ""  local online_conflict "update"
-    else if "`updatesource'" != "" local online_conflict "updatesource"
-    else if "`source'" != ""   local online_conflict "source()"
     else if "`setpath'" != ""  local online_conflict "setpath()"
     else if "`querypath'" != "" local online_conflict "querypath"
     else if "`resetpath'" != "" local online_conflict "resetpath"
@@ -418,20 +417,8 @@ if "`ref'" != "" & "`online'" == "" & "`keywords'" != "" & "`author'" == "" & "`
 }
 
 * Handle database update subcommand
-* If user specifies 'update' without 'updatesource', default to 'both'
-if "`update'" != "" & "`updatesource'" == "" {
-    local updatesource "updatesource"
-    local source "both"
-}
-
-* If user specifies 'updatesource' without source(), show menu
-if "`updatesource'" != "" & "`source'" == "" {
-    local source ""  // Empty will trigger menu in findsj_update_db
-}
-
-if "`updatesource'" != "" {
-    * source parameter contains the source choice (empty = show menu)
-    findsj_update_db "`source'"
+if "`update'" != "" {
+    findsj_update_db
     exit
 }
 
@@ -636,9 +623,7 @@ if `dta_found' == 0 & "`ref'" != "" {
     dis as text " " as result "Notice:" as text " Local database (findsj.dta) not found."
     dis as text " DOI information will be fetched online (may be slower)."
     dis as text _n " For faster performance, update the database:"
-    dis as text "   {stata findsj, updatesource source(github):findsj, updatesource source(github)}  " as text "(international users)"
-    dis as text "   {stata findsj, updatesource source(gitee):findsj, updatesource source(gitee)}   " as text "(China users, faster)"
-    dis as text "   {stata findsj, updatesource source(both):findsj, updatesource source(both)}    " as text "(auto fallback)"
+    dis as text "   {stata findsj, update:findsj, update}"
     dis as text "{hline 70}" _n
 }
 
@@ -2171,7 +2156,7 @@ program define findsj_show_ref
     }
     else {
         dis as text "" as error "(No DOI found)" as text " - Try: " _c
-        dis as text `"{stata "findsj, updatesource source(both)":Update database}"'
+        dis as text `"{stata "findsj, update":Update database}"'
     }
     
     dis as text "{hline 70}" _n
@@ -2501,8 +2486,6 @@ end
 
 // cap program drop findsj_update_db
 program define findsj_update_db
-    args source_choice
-    
     dis as text "{hline 70}"
     dis as result "  Stata Journal Database Update"
     dis as text "{hline 70}"
@@ -2527,139 +2510,210 @@ program define findsj_update_db
     if c(os) == "Windows" {
         local ado_dir = subinstr("`ado_dir'", "/", "\", .)
         local dta_file "`ado_dir'\findsj.dta"
+        local version_file "`ado_dir'\findsj_version.dta"
         * Normalize for display
         local dta_file = subinstr("`dta_file'", "/", "\", .)
+        local version_file = subinstr("`version_file'", "/", "\", .)
     }
     else {
         local dta_file "`ado_dir'/findsj.dta"
+        local version_file "`ado_dir'/findsj_version.dta"
     }
     
     dis as text "Database location: " as result "`dta_file'"
     dis ""
     
-    * Define download sources
-    local github_url "https://raw.githubusercontent.com/BlueDayDreeaming/findsj/main/findsj.dta"
-    local gitee_url "https://gitee.com/ChuChengWan/findsj/raw/main/findsj.dta"
-    
-    * Determine source based on argument
-    if "`source_choice'" == "" | "`source_choice'" == "auto" {
-        dis as text "Download source options:"
-        dis as text "  {stata findsj, updatesource source(github):github} = GitHub"
-        dis as text "  {stata findsj, updatesource source(gitee):gitee}  = Gitee (Fallback when GitHub is unavailable)"
-        dis as text "  {stata findsj, updatesource source(both):both}   = Try both (auto-detect language)"
-        dis as text ""
-        dis as text "Click on a source above to download."
-        dis as text "{hline 70}"
-        exit
+    * Download both runtime files to temporary paths.  The installed files are
+    * not touched until both downloads have passed validation.
+    local github_dta_url "https://raw.githubusercontent.com/BlueDayDreeaming/findsj/main/findsj.dta"
+    local github_version_url "https://raw.githubusercontent.com/BlueDayDreeaming/findsj/main/findsj_version.dta"
+    tempfile downloaded_dta downloaded_version backup_dta backup_version
+    tempname validation_data validation_version
+
+    local update_rc = 0
+    local failure_reason ""
+    local n_records = .
+
+    dis as text "Downloading from GitHub..." _c
+
+    capture copy "`github_dta_url'" "`downloaded_dta'", replace
+    if _rc {
+        local update_rc = _rc
+        local failure_reason "Could not download findsj.dta from GitHub"
     }
-    
-    local sources ""
-    local source_names ""
-    
-    if "`source_choice'" == "github" {
-        local sources "`github_url'"
-        local source_names "GitHub"
-    }
-    else if "`source_choice'" == "gitee" {
-        local sources "`gitee_url'"
-        local source_names "Gitee"
-    }
-    else if "`source_choice'" == "both" {
-        * Auto-detect user's Stata language setting to determine optimal source order
-        * Chinese users (zh_CN): Gitee first (faster access in China)
-        * Non-Chinese users: GitHub first (global CDN)
-        local locale_ui = c(locale_ui)
-        if "`locale_ui'" == "zh_CN" {
-            local sources "`gitee_url' `github_url'"
-            local source_names "Gitee GitHub"
-            dis as text "Language detected: Chinese (优先使用 Gitee)"
-        }
-        else {
-            local sources "`github_url' `gitee_url'"
-            local source_names "GitHub Gitee"
-            dis as text "Language detected: Non-Chinese (Using GitHub first)"
+
+    if `update_rc' == 0 {
+        capture copy "`github_version_url'" "`downloaded_version'", replace
+        if _rc {
+            local update_rc = _rc
+            local failure_reason "Could not download findsj_version.dta from GitHub"
         }
     }
-    else {
-        dis as error "Invalid source: `source_choice'"
-        dis as text "Valid options: github, gitee, both"
-        exit 198
+
+    * Validate the article database in a separate frame so that the caller's
+    * active dataset, including unsaved changes, remains untouched.
+    if `update_rc' == 0 {
+        frame create `validation_data'
+        capture frame `validation_data': use "`downloaded_dta'", clear
+        local validation_rc = _rc
+
+        if `validation_rc' == 0 {
+            foreach required_var in art_id title authors year doi url citation_apa {
+                capture frame `validation_data': confirm variable `required_var'
+                if _rc & `validation_rc' == 0 local validation_rc = _rc
+            }
+        }
+
+        if `validation_rc' == 0 {
+            capture frame `validation_data': isid art_id
+            if _rc local validation_rc = _rc
+        }
+
+        if `validation_rc' == 0 {
+            frame `validation_data': quietly count
+            local n_records = r(N)
+            if `n_records' < 1 local validation_rc = 2000
+        }
+
+        capture frame drop `validation_data'
+
+        if `validation_rc' != 0 {
+            local update_rc = 610
+            local failure_reason "Downloaded findsj.dta failed validation"
+        }
     }
-    
-    * Try each source (stop after first success)
-    local n_sources = wordcount("`sources'")
-    local update_success = 0
-    forvalues i = 1/`n_sources' {
-        local source_url = word("`sources'", `i')
-        local source_name = word("`source_names'", `i')
-        
+
+    * Validate the companion version metadata and require its record count to
+    * agree with the downloaded article database.
+    if `update_rc' == 0 {
+        frame create `validation_version'
+        capture frame `validation_version': use "`downloaded_version'", clear
+        local validation_rc = _rc
+
+        if `validation_rc' == 0 {
+            foreach required_var in update_date total_articles {
+                capture frame `validation_version': confirm variable `required_var'
+                if _rc & `validation_rc' == 0 local validation_rc = _rc
+            }
+        }
+
+        if `validation_rc' == 0 {
+            capture frame `validation_version': confirm numeric variable total_articles
+            if _rc local validation_rc = _rc
+        }
+
+        if `validation_rc' == 0 {
+            frame `validation_version': quietly count
+            if r(N) != 1 local validation_rc = 459
+        }
+
+        if `validation_rc' == 0 {
+            frame `validation_version': quietly summarize total_articles, meanonly
+            if r(min) != `n_records' local validation_rc = 459
+        }
+
+        capture frame drop `validation_version'
+
+        if `validation_rc' != 0 {
+            local update_rc = 610
+            local failure_reason "Downloaded findsj_version.dta failed validation"
+        }
+    }
+
+    * Back up both installed runtime files before replacing either one.
+    local had_dta = 0
+    local had_version = 0
+
+    if `update_rc' == 0 {
+        capture confirm file "`dta_file'"
+        if !_rc {
+            capture copy "`dta_file'" "`backup_dta'", replace
+            if _rc {
+                local update_rc = _rc
+                local failure_reason "Could not back up the installed findsj.dta"
+            }
+            else local had_dta = 1
+        }
+    }
+
+    if `update_rc' == 0 {
+        capture confirm file "`version_file'"
+        if !_rc {
+            capture copy "`version_file'" "`backup_version'", replace
+            if _rc {
+                local update_rc = _rc
+                local failure_reason "Could not back up the installed findsj_version.dta"
+            }
+            else local had_version = 1
+        }
+    }
+
+    * Install both validated files.  If either copy fails, restore the prior
+    * pair so that the package never retains a half-completed update.
+    if `update_rc' == 0 {
+        capture copy "`downloaded_dta'" "`dta_file'", replace
+        if _rc {
+            local update_rc = _rc
+            local failure_reason "Could not install the downloaded findsj.dta"
+            if `had_dta' capture copy "`backup_dta'" "`dta_file'", replace
+            else capture erase "`dta_file'"
+        }
+    }
+
+    if `update_rc' == 0 {
+        capture copy "`downloaded_version'" "`version_file'", replace
+        if _rc {
+            local update_rc = _rc
+            local failure_reason "Could not install the downloaded findsj_version.dta"
+            if `had_dta' capture copy "`backup_dta'" "`dta_file'", replace
+            else capture erase "`dta_file'"
+            if `had_version' capture copy "`backup_version'" "`version_file'", replace
+            else capture erase "`version_file'"
+        }
+    }
+
+    if `update_rc' != 0 {
+        dis as error " Failed."
+
+        * Normalize ado_dir for display
+        local display_dir = "`ado_dir'"
+        if c(os) == "Windows" {
+            local display_dir = subinstr("`display_dir'", "/", "\", .)
+        }
+
         dis ""
-        dis as text "Downloading from `source_name'..." _c
-        
-        cap copy "`source_url'" "`dta_file'", replace
-        
-        if _rc == 0 {
-            dis as result " Success!"
-            
-            * Verify the file
-            cap use "`dta_file'", clear
-            if _rc == 0 {
-                qui count
-                local n_records = r(N)
-                * Normalize path for display
-                local display_path = "`dta_file'"
-                if c(os) == "Windows" {
-                    local display_path = subinstr("`display_path'", "/", "\", .)
-                }
-                dis ""
-                dis as text "{hline 70}"
-                dis as result "  Update Complete!"
-                dis as text "{hline 70}"
-                dis as text "Database updated successfully from `source_name'"
-                dis as text "Total articles: " as result "`n_records'"
-                dis as text "Location: " as result "`display_path'"
-                dis as text "{hline 70}"
-                local update_success = 1
-                * Exit immediately after successful update (don't try other sources)
-                exit
-            }
-            else {
-                dis as error " File corrupted."
-                if `i' < `n_sources' {
-                    dis as text "Trying next source..."
-                }
-            }
-        }
-        else {
-            dis as error " Failed."
-            if `i' < `n_sources' {
-                dis as text "Trying next source..."
-            }
-        }
+        dis as text "{hline 70}"
+        dis as error "  Update Failed"
+        dis as text "{hline 70}"
+        dis as error "`failure_reason'"
+        dis as text "The existing database and version metadata were left unchanged."
+        dis as text "Possible reasons:"
+        dis as text "  - No internet connection"
+        dis as text "  - Firewall blocking access"
+        dis as text "  - Repository temporarily unavailable"
+        dis ""
+        dis as text "Manual download instructions:"
+        dis as text "  1. Visit: " as result "https://github.com/BlueDayDreeaming/findsj"
+        dis as text "  2. Download findsj.dta and findsj_version.dta"
+        dis as text "  3. Copy both files to: " as result "`display_dir'"
+        dis as text "{hline 70}"
+        exit `update_rc'
     }
-    
-    * All sources failed
-    * Normalize ado_dir for display
-    local display_dir = "`ado_dir'"
+
+    dis as result " Success!"
+
+    * Normalize path for display
+    local display_path = "`dta_file'"
     if c(os) == "Windows" {
-        local display_dir = subinstr("`display_dir'", "/", "\", .)
+        local display_path = subinstr("`display_path'", "/", "\", .)
     }
-    
     dis ""
     dis as text "{hline 70}"
-    dis as error "  Update Failed"
+    dis as result "  Update Complete!"
     dis as text "{hline 70}"
-    dis as error "Could not download database from selected source(s)"
-    dis as text "Possible reasons:"
-    dis as text "  - No internet connection"
-    dis as text "  - Firewall blocking access"
-    dis as text "  - Repository temporarily unavailable"
-    dis ""
-    dis as text "Manual download instructions:"
-    dis as text "  1. Visit: " as result "https://github.com/BlueDayDreeaming/findsj"
-    dis as text "     (China: " as result "https://gitee.com/ChuChengWan/findsj" as text ")"
-    dis as text "  2. Download findsj.dta"
-    dis as text "  3. Copy to: " as result "`display_dir'"
+    dis as text "Database and version metadata updated successfully from GitHub"
+    dis as text "Total articles: " as result "`n_records'"
+    dis as text "Location: " as result "`display_path'"
     dis as text "{hline 70}"
 end
 
@@ -2737,7 +2791,7 @@ program define findsj_check_update
                 noi dis as result "  📢 Database may need updating"
                 noi dis as text "{hline 70}"
                 noi dis as text "Last updated: " as result "`update_date_str'" as text " (" as result "`days_diff'" as text " days ago)"
-                noi dis as text "Update: " `"{stata "findsj, updatesource source(both)":findsj, updatesource source(both)}"`
+                noi dis as text "Update: " `"{stata "findsj, update":findsj, update}"'
                 noi dis as text "{hline 70}"
                 noi dis ""
             }
