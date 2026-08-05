@@ -1,4 +1,4 @@
-*! qardl_analysis v1.0.0 - Advanced post-estimation analysis for QARDL
+*! qardl_analysis v1.2.0 - Advanced QARDL post-estimation analysis
 *! Asymmetry diagnostics, pairwise tests, and professional visualizations
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
 
@@ -22,6 +22,15 @@ program define qardl_analysis
     local nobs = e(N)
     local depvar "`e(depvar)'"
     local indepvars "`e(indepvars)'"
+
+    * Covariance normalisation.  Under the Cho-Kim-Shin iid formulas the
+    * stored beta covariance is on the (n-1)^2 scale and phi/gamma on the
+    * (n-1) scale; robust/HAC sandwich covariances need no rescaling.
+    * The e() fallbacks keep results estimated by qardl < 1.2.0 working.
+    local sb = e(scale_beta)
+    local ss = e(scale_short)
+    if `sb' >= . local sb = (`nobs' - 1)^2
+    if `ss' >= . local ss = `nobs' - 1
     
     tempname beta beta_cov phi phi_cov gamma gamma_cov tau_vec
     mat `beta' = e(beta)
@@ -122,7 +131,7 @@ program define qardl_analysis
                 
                 * Scale covariance
                 tempname bvcov_s
-                mat `bvcov_s' = `bvcov' / ((`nobs' - 1)^2)
+                mat `bvcov_s' = `bvcov' / `sb'
                 
                 * Wald = (R*b)' * inv(R*V*R') * (R*b)
                 tempname Rb_v RVR_v RVR_inv Wm
@@ -159,7 +168,7 @@ program define qardl_analysis
                 }
                 
                 tempname gvcov_s Rg_b RgVRg RgVRg_inv Wgm
-                mat `gvcov_s' = `gvcov' / (`nobs' - 1)
+                mat `gvcov_s' = `gvcov' / `ss'
                 mat `Rg_b' = `Rg' * `gvec'
                 mat `RgVRg' = `Rg' * `gvcov_s' * (`Rg'')
                 mat `RgVRg_inv' = syminv(`RgVRg')
@@ -175,10 +184,10 @@ program define qardl_analysis
             if `wb_stat' != . {
                 di as res "  {ralign 10:" %8.2f `wb_stat' "}" _c
                 if `wb_pval' < 0.01 {
-                    di as err "  " %5.3f `wb_pval' "***" _c
+                    di as res "  " %5.3f `wb_pval' "***" _c
                 }
                 else if `wb_pval' < 0.05 {
-                    di as err "  " %5.3f `wb_pval' "** " _c
+                    di as res "  " %5.3f `wb_pval' "** " _c
                 }
                 else if `wb_pval' < 0.10 {
                     di as res "  " %5.3f `wb_pval' "*  " _c
@@ -196,10 +205,10 @@ program define qardl_analysis
             if `wg_stat' != . {
                 di as res "  {ralign 10:" %8.2f `wg_stat' "}" _c
                 if `wg_pval' < 0.01 {
-                    di as err "  " %5.3f `wg_pval' "***" _c
+                    di as res "  " %5.3f `wg_pval' "***" _c
                 }
                 else if `wg_pval' < 0.05 {
-                    di as err "  " %5.3f `wg_pval' "** " _c
+                    di as res "  " %5.3f `wg_pval' "** " _c
                 }
                 else if `wg_pval' < 0.10 {
                     di as res "  " %5.3f `wg_pval' "*  " _c
@@ -219,7 +228,7 @@ program define qardl_analysis
                 di as txt "  {ralign 8:Conv.}" _c
             }
             else {
-                di as err "  {ralign 8:Diverg}" _c
+                di as res "  {ralign 8:Diverg}" _c
             }
             
             * Verdict: QC exists if beta OR gamma Wald rejects at 5%
@@ -231,7 +240,7 @@ program define qardl_analysis
                 local qc_exists = 1
             }
             if `qc_exists' == 1 {
-                di as err "   {bf:QC Exists}"
+                di as res "   {bf:QC Exists}"
             }
             else {
                 di as txt "   No QC"
@@ -259,7 +268,7 @@ program define qardl_analysis
             }
             
             tempname bcov_s
-            mat `bcov_s' = `beta_cov' / ((`nobs' - 1)^2)
+            mat `bcov_s' = `beta_cov' / `sb'
             mat `Rbj' = `Rj' * `beta'
             mat `RVRj' = `Rj' * `bcov_s' * (`Rj'')
             tempname RVRj_inv Wjm
@@ -286,7 +295,7 @@ program define qardl_analysis
             }
             
             tempname gcov_s
-            mat `gcov_s' = `gamma_cov' / (`nobs' - 1)
+            mat `gcov_s' = `gamma_cov' / `ss'
             mat `Rgjb' = `Rjg' * `gamma'
             mat `RgVRgj' = `Rjg' * `gcov_s' * (`Rjg'')
             tempname RgVRgj_inv Wgjm
@@ -302,10 +311,10 @@ program define qardl_analysis
         if `jb_stat' != . {
             di as res "  {ralign 10:" %8.2f `jb_stat' "}" _c
             if `jb_pval' < 0.01 {
-                di as err "  " %5.3f `jb_pval' "***" _c
+                di as res "  " %5.3f `jb_pval' "***" _c
             }
             else if `jb_pval' < 0.05 {
-                di as err "  " %5.3f `jb_pval' "** " _c
+                di as res "  " %5.3f `jb_pval' "** " _c
             }
             else if `jb_pval' < 0.10 {
                 di as res "  " %5.3f `jb_pval' "*  " _c
@@ -322,10 +331,10 @@ program define qardl_analysis
         if `jg_stat' != . {
             di as res "  {ralign 10:" %8.2f `jg_stat' "}" _c
             if `jg_pval' < 0.01 {
-                di as err "  " %5.3f `jg_pval' "***" _c
+                di as res "  " %5.3f `jg_pval' "***" _c
             }
             else if `jg_pval' < 0.05 {
-                di as err "  " %5.3f `jg_pval' "** " _c
+                di as res "  " %5.3f `jg_pval' "** " _c
             }
             else if `jg_pval' < 0.10 {
                 di as res "  " %5.3f `jg_pval' "*  " _c
@@ -345,7 +354,7 @@ program define qardl_analysis
             di as txt "  {ralign 8:Conv.}" _c
         }
         else {
-            di as err "  {ralign 8:Diverg}" _c
+            di as res "  {ralign 8:Diverg}" _c
         }
         
         * Joint verdict
@@ -353,7 +362,7 @@ program define qardl_analysis
         if `jb_pval' != . & `jb_pval' < 0.05 local jqc = 1
         if `jg_pval' != . & `jg_pval' < 0.05 local jqc = 1
         if `jqc' == 1 {
-            di as err "   {bf:QC Exists}"
+            di as res "   {bf:QC Exists}"
         }
         else {
             di as txt "   No QC"
@@ -427,7 +436,7 @@ program define qardl_analysis
                     }
                 }
                 
-                mat `bvcov_s' = `bvcov' / ((`nobs' - 1)^2)
+                mat `bvcov_s' = `bvcov' / `sb'
                 mat `Rb_v' = `Rv' * `bvec'
                 mat `RVR_v' = `Rv' * `bvcov_s' * (`Rv'')
                 mat `RVR_inv' = syminv(`RVR_v')
@@ -495,7 +504,7 @@ program define qardl_analysis
             * Color the ratio
             if `aratio' != . {
                 if abs(`aratio' - 1) > 0.5 {
-                    di as err "  {ralign 9:" %7.3f `aratio' "}" _c
+                    di as res "  {ralign 9:" %7.3f `aratio' "}" _c
                 }
                 else if abs(`aratio' - 1) > 0.2 {
                     di as res "  {ralign 9:" %7.3f `aratio' "}" _c
@@ -511,7 +520,7 @@ program define qardl_analysis
             * Asymmetry index
             if `aidx' != . {
                 if `aidx' > 0.5 {
-                    di as err "  {ralign 9:" %7.3f `aidx' "}" _c
+                    di as res "  {ralign 9:" %7.3f `aidx' "}" _c
                 }
                 else if `aidx' > 0.2 {
                     di as res "  {ralign 9:" %7.3f `aidx' "}" _c
@@ -527,10 +536,10 @@ program define qardl_analysis
             * Wald p-value with stars (per-variable test)
             if `wpval_beta' != . {
                 if `wpval_beta' < 0.01 {
-                    di as err " " %6.3f `wpval_beta' "***"
+                    di as res " " %6.3f `wpval_beta' "***"
                 }
                 else if `wpval_beta' < 0.05 {
-                    di as err " " %6.3f `wpval_beta' "** "
+                    di as res " " %6.3f `wpval_beta' "** "
                 }
                 else if `wpval_beta' < 0.10 {
                     di as res " " %6.3f `wpval_beta' "*  "
@@ -591,7 +600,7 @@ program define qardl_analysis
                     }
                 }
                 
-                mat `gvcov_s' = `gvcov' / (`nobs' - 1)
+                mat `gvcov_s' = `gvcov' / `ss'
                 mat `Rg_b' = `Rg' * `gvec'
                 mat `RgVRg' = `Rg' * `gvcov_s' * (`Rg'')
                 mat `RgVRg_inv' = syminv(`RgVRg')
@@ -650,7 +659,7 @@ program define qardl_analysis
             
             if `gratio' != . {
                 if abs(`gratio' - 1) > 0.5 {
-                    di as err "  {ralign 9:" %7.3f `gratio' "}" _c
+                    di as res "  {ralign 9:" %7.3f `gratio' "}" _c
                 }
                 else if abs(`gratio' - 1) > 0.2 {
                     di as res "  {ralign 9:" %7.3f `gratio' "}" _c
@@ -665,7 +674,7 @@ program define qardl_analysis
             
             if `gidx' != . {
                 if `gidx' > 0.5 {
-                    di as err "  {ralign 9:" %7.3f `gidx' "}" _c
+                    di as res "  {ralign 9:" %7.3f `gidx' "}" _c
                 }
                 else if `gidx' > 0.2 {
                     di as res "  {ralign 9:" %7.3f `gidx' "}" _c
@@ -681,10 +690,10 @@ program define qardl_analysis
             * Wald p-value with stars (per-variable test)
             if `gwpval_gam' != . {
                 if `gwpval_gam' < 0.01 {
-                    di as err " " %6.3f `gwpval_gam' "***"
+                    di as res " " %6.3f `gwpval_gam' "***"
                 }
                 else if `gwpval_gam' < 0.05 {
-                    di as err " " %6.3f `gwpval_gam' "** "
+                    di as res " " %6.3f `gwpval_gam' "** "
                 }
                 else if `gwpval_gam' < 0.10 {
                     di as res " " %6.3f `gwpval_gam' "*  "
@@ -736,7 +745,7 @@ program define qardl_analysis
                 
                 * Color code: red for high, blue for low
                 if `bval' > `bmid' {
-                    di as err "  {ralign 9:" %7.3f `bval' "}" _c
+                    di as res "  {ralign 9:" %7.3f `bval' "}" _c
                 }
                 else {
                     di as res "  {ralign 9:" %7.3f `bval' "}" _c
@@ -796,14 +805,14 @@ program define qardl_analysis
                         
                         if `var_diff' > 0 {
                             local wstat_pair = `wstat_pair' + ///
-                                (`nobs' - 1)^2 * (`diff')^2 / `var_diff'
+                                `sb' * (`diff')^2 / `var_diff'
                         }
                     }
                     
                     local pval_pair = chi2tail(`wdf_pair', `wstat_pair')
                     
                     if `pval_pair' < 0.01 {
-                        di as err "  {ralign 7:" %5.3f `pval_pair' "}" _c
+                        di as res "  {ralign 7:" %5.3f `pval_pair' "}" _c
                     }
                     else if `pval_pair' < 0.05 {
                         di as res "  {ralign 7:" %5.3f `pval_pair' "}" _c
@@ -865,7 +874,7 @@ program define qardl_analysis
                     if `idx' <= rowsof(`beta_cov') {
                         local var_val = `beta_cov'[`idx', `idx']
                         if `var_val' > 0 {
-                            local se = sqrt(`var_val') / (`nobs' - 1)
+                            local se = sqrt(`var_val' / `sb')
                             qui replace beta_lo_v`vnum' = `est' - 1.96*`se' in `t'
                             qui replace beta_hi_v`vnum' = `est' + 1.96*`se' in `t'
                         }
@@ -930,7 +939,7 @@ program define qardl_analysis
                     if `idx' <= rowsof(`gamma_cov') {
                         local var_val = `gamma_cov'[`idx', `idx']
                         if `var_val' > 0 {
-                            local se = sqrt(`var_val') / sqrt(`nobs' - 1)
+                            local se = sqrt(`var_val' / `ss')
                             qui replace gamma_lo_v`vnum' = `est' - 1.96*`se' in `t'
                             qui replace gamma_hi_v`vnum' = `est' + 1.96*`se' in `t'
                         }
@@ -1083,7 +1092,7 @@ program define qardl_analysis
             
             qui replace tail_diff = `diff' in `vnum'
             if `var_diff' > 0 {
-                local se_diff = sqrt(`var_diff') / (`nobs' - 1)
+                local se_diff = sqrt(`var_diff' / `sb')
                 qui replace tail_diff_lo = `diff' - 1.96 * `se_diff' in `vnum'
                 qui replace tail_diff_hi = `diff' + 1.96 * `se_diff' in `vnum'
             }
@@ -1222,7 +1231,7 @@ program define qardl_analysis
                 }
             }
             if `var_rho' > 0 {
-                local se_rho = sqrt(`var_rho') / sqrt(`nobs' - 1)
+                local se_rho = sqrt(`var_rho' / `ss')
                 qui replace rho_lo = `rho_val' - 1.96 * `se_rho' in `t'
                 qui replace rho_hi = `rho_val' + 1.96 * `se_rho' in `t'
             }
@@ -1310,7 +1319,7 @@ program define qardl_analysis
                             local v_ij = `beta_cov'[`idx_i', `idx_j']
                             local var_d = `v_ii' + `v_jj' - 2 * `v_ij'
                             if `var_d' > 1e-15 {
-                                local ws = (`nobs' - 1)^2 * (`diff')^2 / `var_d'
+                                local ws = `sb' * (`diff')^2 / `var_d'
                                 local pv = chi2tail(1, abs(`ws'))
                                 qui replace pval_beta = `pv' in `obs'
                             }
@@ -1327,7 +1336,7 @@ program define qardl_analysis
                             local v_ij = `gamma_cov'[`idx_i', `idx_j']
                             local var_d = `v_ii' + `v_jj' - 2 * `v_ij'
                             if `var_d' > 1e-15 {
-                                local ws = (`nobs' - 1) * (`diff')^2 / `var_d'
+                                local ws = `ss' * (`diff')^2 / `var_d'
                                 local pv = chi2tail(1, abs(`ws'))
                                 qui replace pval_gamma = `pv' in `obs'
                             }

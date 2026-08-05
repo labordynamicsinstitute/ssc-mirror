@@ -27,7 +27,7 @@ program define googlesheets_runpy, rclass
     local helper "`r(fn)'"
 
     tempfile outjson
-    file open _gsfh using `"`outjson'"', write text replace
+    quietly file open _gsfh using `"`outjson'"', write text replace
     file close _gsfh
 
     if lower("`c(os)'") == "windows" {

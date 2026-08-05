@@ -19,10 +19,10 @@
 {title:Syntax}
 
 {p 8 16 2}
-{cmd:webapi get}  {cmd:using} {it:"URL"} {cmd:,} [{it:options}]
+{cmd:webapi get} {cmd:using} {it:"URL"} [{cmd:,} {it:options}]
 
 {p 8 16 2}
-{cmd:webapi post} {cmd:using} {it:"URL"} {cmd:,} {cmd:body(}{it:text}{cmd:)} [{it:options}]
+{cmd:webapi post} {cmd:using} {it:"URL"} [{cmd:,} {cmd:body(}{it:text}{cmd:)} {it:options}]
 
 {synoptset 26 tabbed}{...}
 {synopthdr}
@@ -63,8 +63,7 @@ authentication step, and a JSON reply that must be parsed into memory.
 {pstd}
 The network and JSON work is done by a companion Python helper that uses only
 the Python {bf:standard library} (no pip packages, no virtualenv), so the only
-requirement is a working {cmd:python3} on the PATH, which Stata 16 and later
-ships.  The helper selects the array of records named by {cmd:records()},
+requirement is a working {cmd:python3} on the system PATH.  The helper selects the array of records named by {cmd:records()},
 flattens each record's nested scalar fields into dotted column names, and
 writes a tab-separated table that {cmd:webapi} imports with
 {help import delimited}.
@@ -109,9 +108,20 @@ token into the do-file.
 
 {pstd}{cmd:webapi} stores in {cmd:r()}:{p_end}
 {synoptset 14 tabbed}{...}
-{synopt :{cmd:r(nrows)}}number of records read{p_end}
-{synopt :{cmd:r(ncols)}}number of columns{p_end}
-{synopt :{cmd:r(http)}}HTTP status code{p_end}
+{p2col 5 20 24 2: Scalars}{p_end}
+{synopt :{cmd:r(nrows)}}number of records read; on a polling call, the total
+rows accumulated across all polls{p_end}
+{synopt :{cmd:r(ncols)}}number of columns (single-request calls only; not
+returned when polling){p_end}
+{synopt :{cmd:r(polls)}}number of polls completed (polling calls only){p_end}
+
+{pstd}
+Note: a polling call ({cmd:every()} with {cmd:times()}) always replaces the
+data in memory, whether or not {cmd:clear} is specified.{p_end}
+{synoptset 20 tabbed}{...}
+
+{p2col 5 20 24 2: Macros}{p_end}
+{synopt :{cmd:r(http)}}HTTP status code (of the last poll when polling){p_end}
 {synopt :{cmd:r(url)}}the request URL{p_end}
 {p2colreset}{...}
 
@@ -133,7 +143,7 @@ field filters and a header:{p_end}
 
 {pstd}Create a resource with {cmd:post}; the reply is the created object:{p_end}
 {phang2}{cmd:. webapi post using "https://api.example.org/v1/items", ///}{p_end}
-{phang2}{cmd:      body(`"{"name":"Texas","value":18.8}"') bearer("$API_TOKEN") records("") clear}{p_end}
+{phang2}{cmd:      body(`"{c -(}"name":"Texas","value":18.8{c )-}"') bearer("$API_TOKEN") records("") clear}{p_end}
 
 {pstd}Poll a live endpoint on an interval; each snapshot stacks into a panel
 keyed by {cmd:_poll} and {cmd:_polltime}:{p_end}
@@ -158,5 +168,5 @@ and never commit a token to a public repository.{p_end}
 {title:Author}
 
 {pstd}
-Eric A. Booth, Sr Researcher, Texas 2036 (eric.a.booth@gmail.com), 2026.
+Eric A. Booth, Sr Researcher, Texas2036.org (eric.a.booth@gmail.com), 2026.
 MIT-licensed.  A companion to {help googlesheets} and {help googlechart}.

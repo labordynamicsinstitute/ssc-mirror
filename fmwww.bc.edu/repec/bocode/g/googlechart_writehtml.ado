@@ -39,7 +39,7 @@ program define googlechart_writehtml
     if "`labelwrap'"   == "" local labelwrap   "auto"
 
     tempname fh
-    file open `fh' using `"`export'"', write text replace
+    quietly file open `fh' using `"`export'"', write text replace
 
     local esc_title : subinstr local title `"&"' `"&amp;"', all
     local esc_title : subinstr local esc_title `"<"' `"&lt;"', all

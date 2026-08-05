@@ -23,7 +23,7 @@ program define googlesheets_addsheet, rclass
     local ti `"`r(escaped)'"'
 
     tempfile argjson
-    file open _h using `"`argjson'"', write text replace
+    quietly file open _h using `"`argjson'"', write text replace
     file write _h `"{"' _n
     file write _h `"  "subcommand":"add_sheet","' _n
     file write _h `"  "client_json":"`cj'","' _n

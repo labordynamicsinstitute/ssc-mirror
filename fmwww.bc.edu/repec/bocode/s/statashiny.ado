@@ -1,3 +1,18 @@
+*! version 1.5.2  02aug2026  Eric A. Booth
+*! - also escape the double quote.  A value or label containing one, e.g. a
+*!   6" pipe or a label like the "quoted" column, aborted -build- with r(198)
+*!   and left a truncated .html on disk.  It is emitted as the JS escape
+*!   backslash-u-0022, so no quote character survives into the Stata string
+*!   that -file write- has to parse.
+*! version 1.5.1  02aug2026  Eric A. Booth
+*! - escape ' and \ in string values, variable labels and value labels before
+*!   they reach the generated JavaScript.  A value like O'Brien, or a label like
+*!   "Client's score", used to close the JS string early: the whole data array
+*!   then failed to parse and the table rendered empty.
+*! - build reports how many controls and panels it wrote, so a dashboard built
+*!   without -replace- no longer silently inherits the previous one's panels.
+*! - build explains itself when a table asks for variables that are not in
+*!   memory, instead of stopping on a bare "variable ... not found".
 *! version 1.5.0  26may2026  Eric A. Booth
 *! - output(table) now emits value-label text for labeled numeric variables
 *!   (e.g. "Foreign" instead of 1); falls back to the number when unlabeled.
@@ -215,6 +230,26 @@ program define _statashiny_build
     local outputs : copy global S_outputs
     local scripts : copy global S_calc_js
 
+    * A dashboard is assembled in global macros, and those are only cleared when
+    * -replace- (or title()) runs an init.  Building a second dashboard without
+    * -replace- therefore silently carries the first one's panels along with it.
+    * Rather than add an option, count what is about to be written and say so:
+    * "3 panels" when the user expected 1 is the clue that -replace- was missed.
+    * NB: -: subinstr local- returns the SUBSTITUTED STRING; the tally goes to
+    * the macro named in count().  They must be different macros.
+    local n_ctrl  = 0
+    local n_panel = 0
+    if `"`macval(inputs)'"' != "" {
+        local _junk : subinstr local inputs "updateDashboard()" "", all count(local n_ctrl)
+    }
+    if `"`macval(outputs)'"' != "" {
+        local _junk : subinstr local outputs "statashiny-component" "", all count(local n_panel)
+    }
+    if `"`macval(title)'"' == "" {
+        local title "StataShiny Dashboard"
+        di as txt "statashiny build: no title() was set; using the default."
+    }
+
     file write `fh' "<!DOCTYPE html><html><head><meta charset='utf-8'><title>`macval(title)'</title>" _n
     file write `fh' "<link href='https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css' rel='stylesheet'>" _n
     file write `fh' "<link rel='stylesheet' type='text/css' href='https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css'/>" _n
@@ -244,11 +279,30 @@ program define _statashiny_build
         local id = substr("`entry'", 1, strpos("`entry'", ":")-1)
         local vars = substr("`entry'", strpos("`entry'", ":")+1, .)
         if "`vars'" == "" local vars _all
+        * Every table is written from the data in memory AT BUILD TIME, not from
+        * whatever was loaded when output(table) was called.  Registering two
+        * tables from two different datasets therefore fails here with a bare
+        * "variable ... not found", which tells the user nothing about why.
+        capture confirm variable `vars'
+        if _rc {
+            file close `fh'
+            di as error "statashiny build: table `id' asks for variables that are not in memory."
+            di as error "  Every table is written from the data loaded when -build- runs, so all"
+            di as error "  tables in one dashboard must come from the same dataset. Load the data"
+            di as error "  first, then register the tables, then build."
+            exit 111
+        }
         file write `fh' "var cols_`id' = ["
         foreach v of varlist `vars' {
             local lab : var label `v'
             if "`lab'" == "" local lab "`v'"
-            file write `fh' "{ title: '`lab'' },"
+            * A label such as "Client's score" used to close the JS string
+            * early, so the whole <script> block failed to parse and the table
+            * rendered empty.  Escape it, the way the value-label path below does.
+            local lab = subinstr(`"`macval(lab)'"', "\", "\\", .)
+            local lab = subinstr(`"`macval(lab)'"', char(34), char(92)+"u0022", .)
+            local lab = subinstr(`"`macval(lab)'"', "'", "\'", .)
+            file write `fh' `"{ title: '`macval(lab)'' },"'
         }
         file write `fh' "]; var data_`id' = ["
         forvalues i = 1/`=_N' {
@@ -256,9 +310,15 @@ program define _statashiny_build
             foreach v of varlist `vars' {
                 capture confirm numeric variable `v'
                 if _rc {
-                    * string variable: quote in single-quotes for JS
+                    * String variable, quoted for JS.  A value like O'Brien
+                    * used to close the quote early and break the entire data
+                    * array -- the table then rendered empty, with nothing but a
+                    * console error to show for it.
                     local val = `v'[`i']
-                    file write `fh' "'`val'', "
+                    local val = subinstr(`"`macval(val)'"', "\", "\\", .)
+                    local val = subinstr(`"`macval(val)'"', char(34), char(92)+"u0022", .)
+                    local val = subinstr(`"`macval(val)'"', "'", "\'", .)
+                    file write `fh' `"'`macval(val)'', "'
                 }
                 else if missing(`v'[`i']) {
                     * Stata's . (missing) is not valid JS — emit null instead.
@@ -275,6 +335,7 @@ program define _statashiny_build
                     if "`vlname'" != "" & `val' == int(`val') {
                         local lbl : label `vlname' `val'
                         local lbl = subinstr(`"`macval(lbl)'"', "\", "\\", .)
+                        local lbl = subinstr(`"`macval(lbl)'"', char(34), char(92)+"u0022", .)
                         local lbl = subinstr(`"`macval(lbl)'"', "'", "\'", .)
                         file write `fh' `"'`macval(lbl)'', "'
                     }
@@ -294,7 +355,10 @@ program define _statashiny_build
     file write `fh' "$(document).ready(function(){ setTimeout(updateDashboard, 700); });" _n
     file write `fh' "</script></body></html>" _n
     file close `fh'
-    di as txt "StataShiny built." _n as smcl `"File: {browse `"`path'"'}"'
+    di as txt "StataShiny built: `n_ctrl' control(s), `n_panel' panel(s)." ///
+       _n as txt "  (start a new dashboard with -statashiny, title(...) replace-;" ///
+       _n as txt "   without it, panels accumulate from the previous one.)" ///
+       _n as smcl `"File: {browse `"`path'"'}"'
     if "`open'" != "" {
         cap file close _ss_fh
         tempfile _ss_sh

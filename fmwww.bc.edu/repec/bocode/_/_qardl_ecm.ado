@@ -1,12 +1,15 @@
-*! _qardl_ecm v1.0.0 - QARDL Error Correction Model estimation
-*! Translates qardlecm.m (MATLAB) 
+*! _qardl_ecm v1.2.0 - QARDL Error Correction Model estimation
+*! Translates qardlecm.m (MATLAB, Cho 2022): phi*(tau) and theta(tau)
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
+*!
+*! See _qardl_ecm2.ado for the GAUSS 3.1.1 two-step ECM, which reports
+*! alpha(tau) and the speed of adjustment rho(tau) instead.
 
 program define _qardl_ecm, rclass
     version 14.0
     
     * Ensure core Mata function _qardl_qreg() is available
-    capture mata: mata which _qardl_qreg()
+    capture mata which _qardl_qreg()
     if _rc {
         * Load it by running the estimation ado
         capture program drop _qardl_estimate
@@ -24,20 +27,12 @@ program define _qardl_ecm, rclass
     
     qui count if `touse'
     local nobs = r(N)
-    
-    * First run standard QARDL
-    _qardl_estimate `varlist' if `touse', p(`p') q(`q') tau(`tau') `noconstant'
-    
-    tempname beta beta_cov phi phi_cov gamma gamma_cov bt_raw fh_vec
-    mat `beta' = r(beta)
-    mat `beta_cov' = r(beta_cov)
-    mat `phi' = r(phi)
-    mat `phi_cov' = r(phi_cov)
-    mat `gamma' = r(gamma)
-    mat `gamma_cov' = r(gamma_cov)
-    mat `bt_raw' = r(bt_raw)
-    mat `fh_vec' = r(fh_vec)
-    
+
+    if `q' < 1 {
+        di as error "the phi*/theta ECM parameterisation requires q >= 1"
+        exit 198
+    }
+
     * Put data into Mata for ECM computation
     qui putmata _ecm_y = `depvar' if `touse', replace
     
@@ -56,19 +51,11 @@ program define _qardl_ecm, rclass
     * Run ECM estimation in Mata
     mata: _qardl_ecm_estimate(_ecm_y, _ecm_X, `p', `q', _ecm_tau)
     
-    * Return all results
-    return matrix beta = `beta'
-    return matrix beta_cov = `beta_cov'
-    return matrix phi = `phi'
-    return matrix phi_cov = `phi_cov'
-    return matrix gamma = `gamma'
-    return matrix gamma_cov = `gamma_cov'
+    * Return ECM-specific results
     return matrix phi_ecm = _qardl_phi_ecm
     return matrix phi_ecm_cov = _qardl_phi_ecm_cov
     return matrix theta = _qardl_theta
     return matrix theta_cov = _qardl_theta_cov
-    return matrix bt_raw = `bt_raw'
-    return matrix fh_vec = `fh_vec'
     return scalar p = `p'
     return scalar q = `q'
     return scalar k = `k'

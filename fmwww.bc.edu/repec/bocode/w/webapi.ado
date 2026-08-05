@@ -73,7 +73,7 @@ program define webapi, rclass
     * A flat key<TAB>value file (rather than JSON built in Stata) means URLs,
     * tokens, and parameter values need no escaping on the Stata side.
     tempname h
-    file open `h' using `"`argjson'"', write text replace
+    quietly file open `h' using `"`argjson'"', write text replace
     file write `h' "method"  _tab "`method'"    _n
     file write `h' "url"     _tab `"`url'"'      _n
     file write `h' "records" _tab `"`records'"'  _n

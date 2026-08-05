@@ -3,7 +3,6 @@
 *!   googlesheets list, spreadsheet("<id-or-url>") [keyfile() tokenfile() verbose]
 *! Returns:
 *!   r(sheets) -- pipe-separated list of tab titles
-*!   r(title)  -- the spreadsheet name
 
 program define googlesheets_list, rclass
     version 17.0
@@ -21,7 +20,7 @@ program define googlesheets_list, rclass
     local ss `"`r(escaped)'"'
 
     tempfile argjson
-    file open _h using `"`argjson'"', write text replace
+    quietly file open _h using `"`argjson'"', write text replace
     file write _h `"{"' _n
     file write _h `"  "subcommand":"list_sheets","' _n
     file write _h `"  "client_json":"`cj'","' _n

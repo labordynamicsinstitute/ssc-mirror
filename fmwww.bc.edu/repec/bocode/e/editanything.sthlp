@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.0 26may2026 Author: Eric A. Booth}{...}
+{* *! version 2.0.0 26may2026 Eric A. Booth and Elizabeth Teas}{...}
 {vieweralsosee "doedit"   "help doedit"}{...}
 {vieweralsosee "findfile" "help findfile"}{...}
 {vieweralsosee "view"     "help view"}{...}
@@ -10,7 +10,7 @@
 {viewerjumpto "Examples"    "editanything##examples"}{...}
 {viewerjumpto "Returns"     "editanything##returns"}{...}
 {viewerjumpto "Remarks"     "editanything##remarks"}{...}
-{viewerjumpto "Author"      "editanything##author"}{...}
+{viewerjumpto "Authors"     "editanything##authors"}{...}
 {hline}
 Help file for {hi:editanything}
 {hline}

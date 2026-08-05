@@ -1,10 +1,11 @@
 {smcl}
-{* *! version 1.5.0 26may2026 Author: Eric A. Booth}{...}
+{* *! version 1.5.2 02aug2026 Eric A. Booth}{...}
 {viewerjumpto "Syntax" "statashiny##syntax"}{...}
 {viewerjumpto "Options" "statashiny##options"}{...}
 {viewerjumpto "Description" "statashiny##description"}{...}
 {viewerjumpto "Integration" "statashiny##integration"}{...}
 {viewerjumpto "Examples" "statashiny##examples"}{...}
+{viewerjumpto "How it fits together" "statashiny##model"}{...}
 {viewerjumpto "Author" "statashiny##author"}{...}
 {hline}
 Help file for {hi:statashiny}
@@ -106,6 +107,37 @@ in the {it:same directory} when opened via {cmd:file://}
 {cmd:statashiny} generates standalone, interactive HTML dashboards from Stata. 
 It uses Bootstrap 5 for layout, Chart.js for visualization, and DataTables for interactive tables. 
 If no inputs are defined, the dashboard automatically adjusts to a full-width layout.
+
+
+{marker model}{...}
+{title:How it fits together}
+
+{pstd}
+A dashboard is assembled in four steps, in this order:{p_end}
+
+{phang2}1. {cmd:statashiny, title("...") replace} starts a new dashboard.{p_end}
+{phang2}2. {cmd:statashiny} {it:id}{cmd:, input(...)} adds a control; {cmd:output(...)} adds a panel.{p_end}
+{phang2}3. {cmd:statashiny, calc("...")} adds JavaScript that runs whenever a control changes.{p_end}
+{phang2}4. {cmd:statashiny, build} writes the file.{p_end}
+
+{pstd}
+The {it:id} you give in step 2 becomes the HTML element id, and that is the
+only link between the two halves: {opt calc()} reaches a control or a panel with
+{cmd:document.getElementById('}{it:id}{cmd:')}. {opt calc()} is raw JavaScript,
+passed through untouched, so anything the browser understands works.{p_end}
+
+{pstd}
+{bf:Each dashboard needs its own} {opt replace}. The pieces accumulate in global
+macros until an init clears them, so building a second dashboard without
+{opt replace} carries the first one's panels along too. {cmd:build} reports how
+many controls and panels it wrote -- if that count is higher than you expect,
+that is the reason.{p_end}
+
+{pstd}
+{bf:All tables come from the data in memory when} {cmd:build} {bf:runs}, not from
+whatever was loaded when {cmd:output(table)} was called. Several tables in one
+dashboard therefore have to draw on the same dataset (different variables are
+fine). Load the data, register the tables, then build.{p_end}
 
 
 {marker integration}{...}
@@ -404,6 +436,75 @@ less time to observe results).
 
     statashiny, build open
 {txt}{hline}
+
+
+{marker example6}{...}
+{pstd}
+{bf:Example 6: Dynamic UI -- the visible panel follows the input}
+
+{pstd}
+The Shiny gallery's {browse "https://shiny.posit.co/r/gallery/dynamic-user-interface/dynamic-ui/":dynamic UI}
+demo redraws its controls when you change a selector. The same idea works here
+without any new options, because every panel {cmd:statashiny} writes is an
+ordinary page element and {opt calc()} is plain JavaScript: hide and show them
+with {cmd:style.display}.{p_end}
+
+{pstd}
+Two things in this example are worth stealing. {cmd:closest('.statashiny-component')}
+walks up from an output's id to the card that wraps it, so you can hide a whole
+panel rather than just its contents. And the table writer leaves its rows in a
+JavaScript array named {cmd:data_}{it:id}, so the summary cards below are computed
+from exactly the same data the table shows -- no second pass over the data.{p_end}
+
+{hline}
+{cmd}
+    sysuse auto, clear
+    keep make price mpg weight foreign
+    label var make "Model"
+    label var price "Price"
+    label var mpg "MPG"
+    label var weight "Weight (lbs)"
+    label var foreign "Origin"
+
+    statashiny, title("Dynamic UI: the panel follows the input") ///
+        subtitle("Move the selector - the dashboard shows a different panel") replace
+
+    statashiny view, input(num) label("View: 1 = summary cards, 2 = data table") ///
+        val(1) min(1) max(2) step(1)
+    statashiny shownotes, input(check) label("Show the notes panel") checked
+
+    * Panel A - two summary cards
+    statashiny n_cars, output(val) label("Cars shown")
+    statashiny avgprice, output(val) label("Mean price") prefix("$")
+
+    * Panel B - the full table
+    statashiny cars, output(table) label("Car detail") ///
+        vars(make price mpg weight foreign)
+
+    * Panel C - plain HTML, shown/hidden by the checkbox
+    statashiny, output(raw) label("<div id='notes' class='card statashiny-component'><div class='card-body'><h6 class='small fw-bold'>Notes</h6><p class='small mb-0'>Panels are ordinary page elements.</p></div></div>")
+
+    * The dynamic behaviour, one calc() per line
+    statashiny, calc("var v = parseInt(document.getElementById('view').value); ")
+    statashiny, calc("var card = function(id){ return document.getElementById(id).closest('.statashiny-component'); }; ")
+    statashiny, calc("card('n_cars').style.display   = (v === 1) ? '' : 'none'; ")
+    statashiny, calc("card('avgprice').style.display = (v === 1) ? '' : 'none'; ")
+    statashiny, calc("card('cars').style.display     = (v === 2) ? '' : 'none'; ")
+    statashiny, calc("document.getElementById('notes').style.display = document.getElementById('shownotes').checked ? '' : 'none'; ")
+    statashiny, calc("document.getElementById('n_cars').textContent = data_cars.length; ")
+    statashiny, calc("var s = 0; data_cars.forEach(function(r){ s += r[1]; }); ")
+    statashiny, calc("document.getElementById('avgprice').textContent = Math.round(s / data_cars.length); ")
+    statashiny, calc("if (v === 2 && window.table_cars) window.table_cars.columns.adjust(); ")
+
+    statashiny, build open
+{txt}{hline}
+
+{pstd}
+With {cmd:sysuse auto} this shows 74 cars and a mean price of 6165, matching
+{cmd:summarize price}. Set the selector to 2 and the cards give way to the
+table; untick the box and the notes panel disappears. The last {opt calc()}
+line matters: a DataTable that was hidden when it was first drawn has no column
+widths to work from, so ask it to recompute them when it becomes visible.{p_end}
 
 
 {marker author}{...}

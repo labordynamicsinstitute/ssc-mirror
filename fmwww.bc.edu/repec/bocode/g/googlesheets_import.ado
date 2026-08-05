@@ -47,7 +47,7 @@ program define googlesheets_import
     tempfile dataout
 
     tempfile argjson
-    file open _h using `"`argjson'"', write text replace
+    quietly file open _h using `"`argjson'"', write text replace
     file write _h `"{"' _n
     file write _h `"  "subcommand":"read_range","' _n
     file write _h `"  "client_json":"`cj'","' _n

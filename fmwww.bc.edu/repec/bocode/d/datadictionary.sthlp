@@ -213,10 +213,12 @@ reported for value-labeled variables, each as {it:label (n, pct%)}; the
 default is 5.{p_end}
 
 {phang}{cmd:nochars} skips characteristics entirely: neither the
-{cmd:srctag} column (harvested from {cmd:char} {it:varname}{cmd:[srctag]},
-written by the author's {cmd:combineall}/{cmd:projectbuilder} tools) nor the
-{cmd:chars} column (all other characteristics, concatenated as
-{it:name=value} pairs) is filled.{p_end}
+{cmd:srctag} column (harvested from {cmd:char} {it:varname}{cmd:[source]}, the
+provenance stamp written by the author's {cmd:srctag} and {cmd:combineall}
+tools) nor the {cmd:chars} column (all other characteristics, concatenated as
+{it:name=value} pairs) is filled. The column is named for the tool that writes
+the stamp, not for the characteristic; nothing writes a characteristic called
+{cmd:srctag}.{p_end}
 
 {phang}{cmd:nonotes} skips stored {help notes}.{p_end}
 

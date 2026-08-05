@@ -1,4 +1,4 @@
-*! googlesheets_put v0.1.0  2026-06-27
+*! googlesheets_put v0.1.1  2026-07-31
 *! Surgical placement of a single value, formula, or matrix into specific
 *! cells of a Google Sheet.  Modelled on Stata's `putexcel'.
 *!
@@ -11,7 +11,7 @@
 program define googlesheets_put
     version 17.0
     syntax using/, SHeet(string) CELL(string)             ///
-        [ VALue(string) STRing(string) FORMula(string) MATrix(string) ///
+        [ VALue(string) STRing(string) FORMula(string) MATrix(string) NAMES ///
           KEYfile(string) TOKENfile(string) VERBose ]
 
     * Validate exactly-one source.
@@ -24,6 +24,10 @@ program define googlesheets_put
         display as error "googlesheets put: pass exactly one of value() / string() / formula() / matrix()."
         exit 198
     }
+    if "`names'" != "" & `"`matrix'"' == "" {
+        display as error "googlesheets put: names is allowed only with matrix()."
+        exit 198
+    }
 
     * Build a 2D values list as JSON.
     if `"`matrix'"' != "" {
@@ -34,10 +38,29 @@ program define googlesheets_put
         }
         local nr = rowsof(`matrix')
         local nc = colsof(`matrix')
+        if "`names'" != "" {
+            local _rn : rownames `matrix'
+            local _cn : colnames `matrix'
+        }
         local rows_json "["
+        if "`names'" != "" {
+            * Header row: an empty corner cell, then the column names.
+            local rows_json `"`rows_json'["""'
+            forvalues j = 1/`nc' {
+                local _c : word `j' of `_cn'
+                _gs_jesc, raw(`"`_c'"')
+                local rows_json `"`rows_json',"`r(escaped)'""'
+            }
+            local rows_json `"`rows_json']"'
+        }
         forvalues i = 1/`nr' {
-            if `i' > 1 local rows_json `"`rows_json',"'
+            if `i' > 1 | "`names'" != "" local rows_json `"`rows_json',"'
             local rows_json `"`rows_json'["'
+            if "`names'" != "" {
+                local _r : word `i' of `_rn'
+                _gs_jesc, raw(`"`_r'"')
+                local rows_json `"`rows_json'"`r(escaped)'","'
+            }
             forvalues j = 1/`nc' {
                 local v = `matrix'[`i', `j']
                 if `j' > 1 local rows_json `"`rows_json',"'
@@ -103,7 +126,7 @@ program define googlesheets_put
     local rg `"`r(escaped)'"'
 
     tempfile argjson
-    file open _h using `"`argjson'"', write text replace
+    quietly file open _h using `"`argjson'"', write text replace
     file write _h `"{"' _n
     file write _h `"  "subcommand":"write_range","' _n
     file write _h `"  "client_json":"`cj'","' _n

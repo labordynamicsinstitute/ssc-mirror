@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.1  30jul2026}{...}
+{* *! version 2.0.1 30jul2026 Eric A. Booth and Elizabeth Teas}{...}
 {viewerjumpto "Syntax" "combineall##syntax"}{...}
 {viewerjumpto "Description" "combineall##description"}{...}
 {viewerjumpto "Engine options" "combineall##engine"}{...}

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0  14feb2026}{...}
+{* *! version 1.2.0  04aug2026}{...}
 {vieweralsosee "qreg" "help qreg"}{...}
 {vieweralsosee "ardl" "help ardl"}{...}
 {viewerjumpto "Syntax" "qardl##syntax"}{...}
@@ -11,6 +11,8 @@
 {viewerjumpto "Stored results" "qardl##results"}{...}
 {viewerjumpto "Methods and formulas" "qardl##methods"}{...}
 {viewerjumpto "Companion commands" "qardl##companion"}{...}
+{viewerjumpto "The qardl suite" "qardl##suite"}{...}
+{viewerjumpto "Changes in version 1.2.0" "qardl##version"}{...}
 {viewerjumpto "References" "qardl##references"}{...}
 {viewerjumpto "Author" "qardl##author"}{...}
 {title:Title}
@@ -36,12 +38,24 @@
 {synoptline}
 {syntab:Model}
 {synopt:{opt tau(numlist)}}quantile levels; {ul:required}; values in (0,1){p_end}
-{synopt:{opt p(#)}}autoregressive lag order for {depvar}; default 0 = auto BIC{p_end}
-{synopt:{opt q(#)}}distributed lag order for {indepvars}; default 0 = auto BIC{p_end}
-{synopt:{opt pmax(#)}}maximum p for BIC search; default is {cmd:pmax(7)}{p_end}
-{synopt:{opt qmax(#)}}maximum q for BIC search; default is {cmd:qmax(7)}{p_end}
+{synopt:{opt p(#)}}autoregressive lag order for {depvar}; default 0 = automatic{p_end}
+{synopt:{opt q(#)}}distributed lag order for {indepvars}; default = automatic{p_end}
+{synopt:{opt qvec(numlist)}}per-regressor distributed-lag orders, one per {indepvar}{p_end}
 {synopt:{opt ecm}}estimate QARDL-ECM (Error Correction Model) form{p_end}
+{synopt:{opt ecmt:ype(type)}}ECM parameterisation: {cmd:cho}, {cmd:twostep} or {cmd:both}{p_end}
 {synopt:{opt nocons:tant}}suppress constant term{p_end}
+
+{syntab:Lag selection}
+{synopt:{opt crit:erion(ic)}}{cmd:aic}, {cmd:bic}, {cmd:hq}, {cmd:hqc} or {cmd:gets}; default {cmd:bic}{p_end}
+{synopt:{opt pmin(#)}}minimum p for the search; default is {cmd:pmin(1)}{p_end}
+{synopt:{opt pmax(#)}}maximum p for the search; default is {cmd:pmax(8)}{p_end}
+{synopt:{opt qmin(#)}}minimum q for the search; default is {cmd:qmin(0)}{p_end}
+{synopt:{opt qmax(#)}}maximum q for the search; default is {cmd:qmax(8)}{p_end}
+{synopt:{opt getsp:val(#)}}GETS significance threshold; default is {cmd:getspval(0.1)}{p_end}
+
+{syntab:Covariance}
+{synopt:{opt cov:ariance(vce)}}{cmd:iid}, {cmd:robust} or {cmd:hac}; default {cmd:iid}{p_end}
+{synopt:{opt hac:lags(#)}}HAC bandwidth; 0 = automatic Newey-West{p_end}
 
 {syntab:Rolling estimation}
 {synopt:{opt rolling(#)}}rolling window size; 0 = auto (10% of sample){p_end}
@@ -51,7 +65,8 @@
 {synopt:{opt simulate(# [#])}}Monte Carlo with {it:reps} [and {it:nobs}]{p_end}
 
 {syntab:Testing}
-{synopt:{opt waldtest(string)}}Wald test specification{p_end}
+{synopt:{opt sym:metry}}Wald tests of H0: b(tau) = b(1-tau){p_end}
+{synopt:{opt wald:test(spec)}}Wald tests on chosen parameter blocks{p_end}
 
 {syntab:Output}
 {synopt:{opt graph}}produce quantile process graphs{p_end}
@@ -111,41 +126,139 @@ parameter constancy. Common choices:
 {cmd:tau(0.1(0.1)0.9)} for a fine grid of 9 quantiles
 
 {phang}
-{opt p(#)} specifies the autoregressive lag order for the dependent variable 
-(p >= 1). If both {opt p()} and {opt q()} are left at their defaults (0), 
-the BIC-based automatic lag selection is performed, displaying a {bf:full BIC grid}
-of all (p,q) combinations with the optimal pair highlighted.
+{opt p(#)} specifies the autoregressive lag order for the dependent variable
+(p >= 1).  Left at its default of 0, p is chosen automatically over
+{opt pmin()}-{opt pmax()} by the criterion in {opt criterion()}, and the full
+information-criterion grid is displayed with the optimal pair highlighted.
 
 {phang}
 {opt q(#)} specifies the distributed lag order for the independent variables
-(q >= 1). Works analogously to {opt p()}.
+(q >= 0).  Omitted, q is chosen automatically over {opt qmin()}-{opt qmax()}.
+{cmd:q(0)} is a valid fixed order: it drops the lagged-difference terms so the
+model contains only the levels of {indepvars} and the p lags of {depvar}.
+This matches {cmd:q = 0} support in the GAUSS QARDL 3.1.1 library.
+
+{pstd}
+{bf:Note.} p and q are selected jointly, so fixing one and leaving the other
+automatic searches only over the free order.
 
 {phang}
-{opt pmax(#)} specifies the maximum autoregressive lag order for the BIC 
-search; default is {cmd:pmax(7)}. The grid searches all combinations from
-p=1 to pmax and q=1 to qmax.
+{opt qvec(numlist)} gives each regressor its own distributed-lag order, in the
+order the regressors appear in {indepvars}.  This is {cmd:qardlX} in GAUSS
+QARDL 3.1.1.  It requires an explicit {opt p()} and cannot be combined with
+{opt q()}, {opt ecm}, {opt rolling()} or {opt simulate()}.  A constant vector
+such as {cmd:qvec(2 2)} is silently treated as {cmd:q(2)}.
+
+{pstd}
+Because the Cho-Kim-Shin iid covariance formulas are written for a single
+scalar q and do not generalise to a heterogeneous lag structure, {opt qvec()}
+always uses the quantile-regression sandwich; specifying
+{cmd:covariance(iid)} with it switches to {cmd:robust} with a note.  GAUSS
+{cmd:qardlX} defaults to {cmd:cov_type = "robust"} for the same reason.
+
+{dlgtab:Lag selection}
 
 {phang}
-{opt qmax(#)} specifies the maximum distributed lag order for the BIC search;
-default is {cmd:qmax(7)}.
-
-{phang}
-{opt ecm} requests the QARDL Error Correction Model (ECM) form. In addition
-to the standard beta, phi, and gamma, the ECM form estimates:
+{opt criterion(ic)} selects the information criterion used for automatic lag
+selection.  {cmd:bic} (default), {cmd:aic}, {cmd:hq} and {cmd:hqc} are
+supported, matching the criteria available in {cmd:icmean}/{cmd:pqSelect} in
+GAUSS QARDL 3.1.1.  With n the effective sample size, s2 the residual variance
+and m the number of estimated coefficients:
 
 {p 12 16 2}
-{bf:phi*(tau)} — cumulative AR coefficients that capture the short-run dynamics
-in the ECM parameterization.{break}
-{bf:theta(tau)} — ECM impact coefficients of the differenced independent 
-variables.
+{cmd:aic} = n*ln(s2) + 2*m{break}
+{cmd:bic} = n*ln(s2) + m*ln(n){break}
+{cmd:hq}, {cmd:hqc} = n*ln(s2) + 2*m*ln(ln(n))
+
+{phang}
+{opt pmin(#)}, {opt pmax(#)}, {opt qmin(#)}, {opt qmax(#)} bound the lag search
+grid.  The defaults {cmd:pmin(1)}, {cmd:pmax(8)}, {cmd:qmin(0)}, {cmd:qmax(8)}
+match the GAUSS 3.1.1 defaults.
+
+{phang}
+{opt criterion(gets)} instead runs the hierarchical general-to-specific search
+of GAUSS 3.1.1.  It starts at {opt pmax()}/{opt qmax()} and repeatedly drops
+whichever boundary lag is least significant, until the highest retained AR lag
+and the highest retained distributed lag are both significant at
+{opt getspval()}.  No information-criterion grid is produced in this mode.
+
+{phang}
+{opt getspval(#)} sets the GETS retention threshold; the default 0.1 matches
+the GAUSS default.
+
+{pstd}
+{bf:Change from version 1.1.0.}  The search bounds were {cmd:pmax(7)} and
+{cmd:qmax(7)} and q started at 1.  Selected orders may therefore differ from
+earlier runs.  To reproduce version 1.1.0 output exactly, specify
+{cmd:pmax(7) qmax(7) qmin(1)}.
+
+{dlgtab:Covariance}
+
+{phang}
+{opt covariance(vce)} chooses the asymptotic covariance estimator.
+
+{p 12 16 2}
+{cmd:iid} (default) uses the Cho-Kim-Shin (2015) covariance formulas.  This is
+the estimator the published results and the author demos are based on.{break}
+{cmd:robust} uses a heteroskedasticity-robust quantile-regression sandwich.{break}
+{cmd:hac} uses a Newey-West/Bartlett HAC quantile-regression sandwich, which is
+appropriate when the quantile scores are serially correlated.
+
+{pstd}
+{cmd:robust} and {cmd:hac} correspond to {cmd:qardlRobust} and {cmd:qardlHAC}
+in GAUSS QARDL 3.1.1.  Because the Cho-Kim-Shin iid covariance formulas are not
+defined for q = 0, {cmd:q(0)} always uses the sandwich estimator, again as in
+GAUSS.
+
+{phang}
+{opt haclags(#)} sets the HAC bandwidth and requires {cmd:covariance(hac)}.
+The default 0 selects the automatic bandwidth trunc(4*(n/100)^(2/9)), matching
+{cmd:_qardlAutomaticHACLags()} in GAUSS.
+
+{dlgtab:Error correction}
+
+{phang}
+{opt ecm} requests the QARDL Error Correction Model (ECM) form, reported in
+addition to the standard beta, phi, and gamma.
+
+{phang}
+{opt ecmtype(type)} selects the ECM parameterisation.  The two are different
+objects, not competing estimates of the same thing.
+
+{p 12 16 2}
+{cmd:cho} (default) reproduces Cho's MATLAB {cmd:qardlecm.m} and reports
+{bf:phi*(tau)}, the cumulative AR coefficients of the ECM parameterisation, and
+{bf:theta(tau)}, the ECM impact coefficients of the differenced regressors.
+This is the parameterisation shipped in versions 1.0.0 and 1.1.0 and requires
+q >= 1.{break}
+{cmd:twostep} reproduces {cmd:qardlECM()} from GAUSS QARDL 3.1.1: the long-run
+vector beta_LR is estimated by OLS in step one, the error-correction term
+ECT(-1) = y(-1) - x(-1)'beta_LR is formed from it, and step two runs a quantile
+regression of d.y on [1, ECT(-1), d.y lags, d.x lags], reporting the intercept
+{bf:alpha(tau)} and the speed of adjustment {bf:rho(tau)} with a half-life
+column.{break}
+{cmd:both} reports both parameterisations.
+
+{pstd}
+Specifying {opt ecmtype()} implies {opt ecm}.
 
 {dlgtab:Rolling estimation}
 
 {phang}
-{opt rolling(#)} activates rolling-window QARDL estimation with the specified 
-window size. This produces time-varying parameter estimates and Wald test 
-statistics, useful for structural break analysis. If set to 0, the window 
+{opt rolling(#)} activates rolling-window QARDL estimation with the specified
+window size. This produces time-varying parameter estimates and Wald test
+statistics, useful for structural break analysis. If set to 0, the window
 size is automatically chosen as max(10% of sample, p+q+k+10).
+
+{pstd}
+{bf:Change from version 1.1.0.}  The rolling Wald matrices
+{cmd:e(rolling_wald_beta)}, {cmd:e(rolling_wald_phi)} and
+{cmd:e(rolling_wald_gamma)} were allocated but never filled, so they were
+returned as matrices of zeros.  They now hold the per-window constancy Wald
+statistic, its p-value and its degrees of freedom in columns 1, 2 and 3.  Any
+graph or table built on the old zeros will change.  Windows in which estimation
+fails are stored as missing rather than silently skipped, and the count of such
+windows is reported.
 
 {dlgtab:Simulation}
 
@@ -158,9 +271,36 @@ sample size). Reports empirical rejection rates at 10%, 5%, and 1% levels.
 {dlgtab:Testing}
 
 {phang}
-{opt waldtest(string)} specifies the Wald test. By default, {cmd:qardl} 
-automatically performs constancy tests for all parameters. The null hypothesis
-is H0: parameter(tau_i) = parameter(tau_{i+1}).
+{opt symmetry} adds Wald tests of quantile symmetry, H0: b(tau) = b(1-tau),
+applied to beta, phi and gamma over every symmetric pair present in
+{opt tau()}.  This is {cmd:wtestsym()} from GAUSS QARDL 3.1.1.  With no
+symmetric pair in the grid the test is reported as unavailable rather than
+computed on nothing; supply e.g. {cmd:tau(0.1 0.25 0.5 0.75 0.9)}.
+
+{phang}
+{opt waldtest(spec)} runs Wald tests on chosen parameter blocks.  {it:spec} is
+
+{p 12 16 2}
+{it:blocks} [{cmd:,} {opt r(matname)} {opt rr(matname)}]
+
+{pstd}
+where {it:blocks} is any combination of {cmd:beta}, {cmd:phi} and {cmd:gamma}.
+Without {opt r()} the null is cross-quantile constancy,
+H0: b(tau_i) = b(tau_{i+1}).  With {opt r()} the null is the general linear
+restriction H0: R*b = r, where {opt r()} names the restriction matrix R and
+{opt rr()} the (optional) right-hand-side vector, defaulting to zero.  These
+correspond to {cmd:wtestlrb}, {cmd:wtestsrp} and {cmd:wtestsrg} in GAUSS.
+
+{pstd}
+The across-quantile constancy tests ({cmd:wtestconst}) are always reported
+whether or not {opt waldtest()} is given.
+
+{pstd}
+{bf:Change from version 1.1.0.}  {opt waldtest()} was accepted but had no
+effect: its parser was an empty placeholder, so the option silently did
+nothing.  It is now implemented.  Degrees of freedom are also now
+rank(R*V*R') rather than rows(R), matching {cmd:_qardlWaldInvAndRank()} in
+GAUSS 3.1.1; the two differ when restrictions are redundant.
 
 {dlgtab:Output}
 
@@ -237,11 +377,54 @@ This matches the ordering used in the original GAUSS implementation by Cho, Kim 
 {pstd}{bf:Example 2: Automatic BIC lag selection}{p_end}
     {hline}
 
-{pstd}Let the BIC choose optimal p and q (searched over 1 to 7){p_end}
+{pstd}Let the BIC choose optimal p and q (p over 1-8, q over 0-8){p_end}
 {phang2}{cmd:. qardl dln_inv dln_inc dln_consump, tau(0.1 0.25 0.5 0.75 0.9)}{p_end}
 
 {pstd}For a narrower search range:{p_end}
 {phang2}{cmd:. qardl dln_inv dln_inc dln_consump, tau(0.1 0.25 0.5 0.75 0.9) pmax(4) qmax(4)}{p_end}
+
+{pstd}With a different criterion, and excluding q = 0 from the grid:{p_end}
+{phang2}{cmd:. qardl dln_inv dln_inc dln_consump, tau(0.25 0.5 0.75) criterion(aic) qmin(1)}{p_end}
+
+{pstd}Fix p and let the criterion choose q only:{p_end}
+{phang2}{cmd:. qardl dln_inv dln_inc dln_consump, tau(0.25 0.5 0.75) p(2)}{p_end}
+
+{pstd}Reproduce version 1.1.0 lag selection exactly:{p_end}
+{phang2}{cmd:. qardl dln_inv dln_inc dln_consump, tau(0.25 0.5 0.75) pmax(7) qmax(7) qmin(1)}{p_end}
+
+    {hline}
+{pstd}{bf:Example 2b: Robust and HAC covariance}{p_end}
+    {hline}
+
+{pstd}Heteroskedasticity-robust quantile-regression sandwich ({cmd:qardlRobust}){p_end}
+{phang2}{cmd:. qardl dln_inv dln_inc dln_consump, tau(0.25 0.5 0.75) p(2) q(1) covariance(robust)}{p_end}
+
+{pstd}Newey-West HAC with the automatic bandwidth ({cmd:qardlHAC}){p_end}
+{phang2}{cmd:. qardl dln_inv dln_inc dln_consump, tau(0.25 0.5 0.75) p(2) q(1) covariance(hac)}{p_end}
+
+{pstd}HAC with a fixed bandwidth of 4 lags{p_end}
+{phang2}{cmd:. qardl dln_inv dln_inc dln_consump, tau(0.25 0.5 0.75) p(2) q(1) covariance(hac) haclags(4)}{p_end}
+
+{pstd}A pure quantile autoregression with levels of x and no lagged differences{p_end}
+{phang2}{cmd:. qardl dln_inv dln_inc dln_consump, tau(0.25 0.5 0.75) p(2) q(0)}{p_end}
+
+    {hline}
+{pstd}{bf:Example 2c: Symmetry and custom Wald tests}{p_end}
+    {hline}
+
+{pstd}Test H0: b(tau) = b(1-tau) on a symmetric quantile grid{p_end}
+{phang2}{cmd:. qardl dln_inv dln_inc dln_consump, tau(0.1 0.25 0.5 0.75 0.9) p(2) q(1) symmetry}{p_end}
+
+{pstd}Constancy tests on selected parameter blocks{p_end}
+{phang2}{cmd:. qardl dln_inv dln_inc dln_consump, tau(0.25 0.5 0.75) p(2) q(1) waldtest(beta gamma)}{p_end}
+
+{pstd}A custom restriction, here H0: beta_1(0.25) = beta_1(0.75) with k = 2, s = 3{p_end}
+{phang2}{cmd:. matrix R = (1,0,0,0,-1,0)}{p_end}
+{phang2}{cmd:. qardl dln_inv dln_inc dln_consump, tau(0.25 0.5 0.75) p(2) q(1) waldtest(beta, r(R))}{p_end}
+
+{pstd}The same test as postestimation{p_end}
+{phang2}{cmd:. _qardl_waldtest, type(beta) r(R)}{p_end}
+{phang2}{cmd:. _qardl_waldtest, type(gamma) null(symmetry)}{p_end}
 
     {hline}
 {pstd}{bf:Example 3: QARDL-ECM estimation}{p_end}
@@ -256,6 +439,17 @@ adjustment) is of interest{p_end}
 {bf:phi*(tau):} Cumulative AR parameters in the ECM parameterization.{break}
 {bf:theta(tau):} Impact coefficients of dx in the ECM form.{break}
 Plus ECM-specific Wald tests for constancy of phi* and theta.
+
+{pstd}The GAUSS 3.1.1 two-step ECM instead, reporting alpha(tau), the speed of
+adjustment rho(tau) with half-lives, and the step-one OLS long-run vector{p_end}
+{phang2}{cmd:. qardl dln_inv dln_inc dln_consump, tau(0.25 0.5 0.75) p(2) q(1) ecmtype(twostep)}{p_end}
+
+{pstd}Both parameterisations side by side{p_end}
+{phang2}{cmd:. qardl dln_inv dln_inc dln_consump, tau(0.25 0.5 0.75) p(2) q(1) ecmtype(both)}{p_end}
+
+{pstd}The two answer different questions, so neither supersedes the other: the
+Cho form describes the short-run dynamics, the two-step form gives the
+error-correction speed directly.{p_end}
 
     {hline}
 {pstd}{bf:Example 4: Fine quantile grid with graphs}{p_end}
@@ -485,10 +679,30 @@ combining the contemporaneous and lagged effects of dx.
 {synoptset 30 tabbed}{...}
 {p2col 5 30 34 2: Scalars}{p_end}
 {synopt:{cmd:e(N)}}number of observations{p_end}
+{synopt:{cmd:e(N_eff)}}effective estimation sample after lag truncation{p_end}
 {synopt:{cmd:e(p)}}autoregressive lag order{p_end}
 {synopt:{cmd:e(q)}}distributed lag order{p_end}
 {synopt:{cmd:e(k)}}number of independent variables{p_end}
 {synopt:{cmd:e(ntau)}}number of quantile levels{p_end}
+{synopt:{cmd:e(haclags)}}HAC bandwidth actually used (0 if not HAC){p_end}
+{synopt:{cmd:e(scale_beta)}}normalisation divisor for the beta covariance{p_end}
+{synopt:{cmd:e(scale_short)}}normalisation divisor for the phi/gamma covariance{p_end}
+
+{pstd}
+{cmd:e(beta_cov)} is stored on the scale of the underlying asymptotic formulas,
+so standard errors are
+
+{p 12 16 2}
+se(beta) = sqrt( diag(e(beta_cov)) / e(scale_beta) ){break}
+se(phi)  = sqrt( diag(e(phi_cov))  / e(scale_short) ){break}
+se(gamma)= sqrt( diag(e(gamma_cov))/ e(scale_short) )
+
+{pstd}
+Under {cmd:covariance(iid)} with q >= 1 these divisors are (n-1)^2 and (n-1)
+respectively, matching {cmd:_qardlLevelsSE()} in GAUSS QARDL 3.1.1.  Under
+{cmd:robust}, {cmd:hac} or {cmd:q(0)} the stored matrices are ordinary
+covariance estimates and both divisors are 1.  Always divide by the stored
+scalars rather than hardcoding (n-1).
 
 {synoptset 30 tabbed}{...}
 {p2col 5 30 34 2: Matrices}{p_end}
@@ -499,11 +713,13 @@ combining the contemporaneous and lagged effects of dx.
 {synopt:{cmd:e(phi_cov)}}(p*ntau x p*ntau) covariance of phi{p_end}
 {synopt:{cmd:e(gamma)}}(k*ntau x 1) short-run impact parameters{p_end}
 {synopt:{cmd:e(gamma_cov)}}(k*ntau x k*ntau) covariance of gamma{p_end}
+{synopt:{cmd:e(alpha)}}(ntau x 1) intercept alpha(tau) of the levels equation{p_end}
+{synopt:{cmd:e(rho)}}(ntau x 1) implied rho(tau) = sum phi(tau) - 1{p_end}
 {synopt:{cmd:e(bt_raw)}}(ncols x ntau) raw quantile regression coefficients{p_end}
 {synopt:{cmd:e(fh)}}(ntau x 1) kernel density estimates{p_end}
 
 {pstd}
-With {cmd:ecm} option, additionally:
+With {cmd:ecm} and {cmd:ecmtype(cho)} or {cmd:ecmtype(both)}, additionally:
 
 {synoptset 30 tabbed}{...}
 {synopt:{cmd:e(phi_ecm)}}((p-1)*ntau x 1) ECM cumulative AR parameters{p_end}
@@ -512,21 +728,43 @@ With {cmd:ecm} option, additionally:
 {synopt:{cmd:e(theta_cov)}}covariance of theta{p_end}
 
 {pstd}
+With {cmd:ecm} and {cmd:ecmtype(twostep)} or {cmd:ecmtype(both)}, additionally:
+
+{synoptset 30 tabbed}{...}
+{synopt:{cmd:e(beta_lr)}}(k x 1) step-one OLS long-run coefficients{p_end}
+{synopt:{cmd:e(ecm_alpha)}}(ntau x 1) ECM intercept alpha(tau){p_end}
+{synopt:{cmd:e(ecm_alpha_cov)}}(ntau x ntau) covariance of alpha(tau){p_end}
+{synopt:{cmd:e(ecm_rho)}}(ntau x 1) speed of adjustment rho(tau){p_end}
+{synopt:{cmd:e(ecm_rho_cov)}}(ntau x ntau) covariance of rho(tau){p_end}
+{synopt:{cmd:e(rho_ols)}}step-one OLS speed of adjustment{p_end}
+{synopt:{cmd:e(N_ecm)}}observations in the step-two ECM regression{p_end}
+
+{pstd}
+The two-step covariances are ordinary covariance estimates and need no
+rescaling.
+
+{pstd}
 With {cmd:rolling()} option, additionally:
 
 {synoptset 30 tabbed}{...}
 {synopt:{cmd:e(rolling_beta)}}(nwindows x k*ntau) time-varying beta{p_end}
 {synopt:{cmd:e(rolling_phi)}}(nwindows x p*ntau) time-varying phi{p_end}
 {synopt:{cmd:e(rolling_gamma)}}(nwindows x k*ntau) time-varying gamma{p_end}
-{synopt:{cmd:e(rolling_wald_beta)}}(nwindows x 1) time-varying beta Wald stats{p_end}
-{synopt:{cmd:e(rolling_wald_phi)}}(nwindows x 1) time-varying phi Wald stats{p_end}
-{synopt:{cmd:e(rolling_wald_gamma)}}(nwindows x 1) time-varying gamma Wald stats{p_end}
+{synopt:{cmd:e(rolling_beta_se)}}(nwindows x k*ntau) time-varying beta SEs{p_end}
+{synopt:{cmd:e(rolling_phi_se)}}(nwindows x p*ntau) time-varying phi SEs{p_end}
+{synopt:{cmd:e(rolling_gamma_se)}}(nwindows x k*ntau) time-varying gamma SEs{p_end}
+{synopt:{cmd:e(rolling_wald_beta)}}(nwindows x 3) beta constancy Wald, p, df{p_end}
+{synopt:{cmd:e(rolling_wald_phi)}}(nwindows x 3) phi constancy Wald, p, df{p_end}
+{synopt:{cmd:e(rolling_wald_gamma)}}(nwindows x 3) gamma constancy Wald, p, df{p_end}
 {synopt:{cmd:e(rolling_window)}}rolling window size{p_end}
 
 {synoptset 30 tabbed}{...}
 {p2col 5 30 34 2: Macros}{p_end}
 {synopt:{cmd:e(cmd)}}{cmd:qardl}{p_end}
 {synopt:{cmd:e(model)}}{cmd:qardl} or {cmd:qardl-ecm}{p_end}
+{synopt:{cmd:e(covariance)}}{cmd:iid}, {cmd:robust} or {cmd:hac}{p_end}
+{synopt:{cmd:e(criterion)}}lag-selection criterion{p_end}
+{synopt:{cmd:e(ecmtype)}}{cmd:cho}, {cmd:twostep} or {cmd:both} (ECM only){p_end}
 {synopt:{cmd:e(depvar)}}name of dependent variable{p_end}
 {synopt:{cmd:e(indepvars)}}names of independent variables{p_end}
 {synopt:{cmd:e(title)}}estimation title{p_end}
@@ -718,6 +956,95 @@ u_hat = OLS residuals, k_total = 1 + q*k + k + p.  Grid search over
 p = 1,...,pmax and q = 1,...,qmax (default 7 each).{p_end}
 
 
+{marker suite}{...}
+{title:The qardl suite}
+
+{pstd}
+Version 1.2.0 ports the rest of the QARDL family from GAUSS QARDL 3.1.1.
+Each command below is documented in its own file header; all of them are
+post-estimation except {cmd:qardl_full}.
+
+{synoptset 22 tabbed}{...}
+{synopt:{helpb qardl_full}}the whole applied sequence in one call: lag
+selection, QARDL, QARDL-ECM and residual diagnostics.  This is
+{cmd:qardlFull} in GAUSS, minus its bounds-test step (see below), and is the
+recommended entry point for applied work{p_end}
+{synopt:{helpb qardl_qirf}}quantile impulse responses to a permanent or
+temporary unit shock, with optional block-bootstrap bands and panel graphs
+({cmd:qirf}, {cmd:blockBootstrapQIRF}, {cmd:plotQIRF}){p_end}
+{synopt:{helpb qardl_boot}}block-bootstrap percentile confidence intervals for
+beta, gamma and phi, or for the two-step ECM alpha and rho.  Moving, circular
+and stationary resampling ({cmd:blockBootstrapQARDL*}){p_end}
+{synopt:{helpb qardl_diag}}residual diagnostics per quantile: Ljung-Box,
+Breusch-Godfrey, Breusch-Pagan, ARCH LM, Jarque-Bera, RESET, CUSUM and CUSUMSQ
+({cmd:ardlResidualDiagnostics}){p_end}
+{synopt:{helpb qardl_forecast}}recursive dynamic forecasts, optionally along a
+supplied future regressor path ({cmd:forecastQARDL}){p_end}
+{synopt:{helpb qardl_export}}write the coefficient tables to CSV, LaTeX or
+Markdown ({cmd:saveQARDLResults}, {cmd:saveARDLLaTeX}, {cmd:saveARDLMarkdown}){p_end}
+{synopt:{cmd:predict}}fitted values or residuals; takes {opt tau(#)} for one
+quantile or a stub such as {cmd:predict fit*} for all of them
+({cmd:predictQARDL}){p_end}
+{synoptline}
+
+{pstd}
+A typical applied session:
+
+{phang2}{cmd:. qardl_full y x1 x2, tau(0.1 0.25 0.5 0.75 0.9) symmetry}{p_end}
+{phang2}{cmd:. qardl_qirf, horizon(24) bootstrap reps(499) graph}{p_end}
+{phang2}{cmd:. qardl_boot, reps(999) method(circular)}{p_end}
+{phang2}{cmd:. qardl_export using results.tex, format(latex) ci replace}{p_end}
+
+{pstd}
+{bf:Why there is no bounds test in this package.}  The Pesaran-Shin-Smith
+bounds test is a {ul:conditional-mean} procedure: it estimates an unrestricted
+error-correction model by OLS and forms an F-test on the lagged level terms.
+No quantile enters the computation, so running it after a QARDL fit returns
+the same number whatever {opt tau()} was used.  It tests whether a long-run
+relation exists {it:on average}, not at any particular quantile.
+
+{pstd}
+GAUSS QARDL 3.1.1 ships it and {cmd:qardlFull} calls it, but its own
+documentation is explicit that this is a compatibility statistic:
+{cmd:docs/guides/BOUNDS_TESTING_SUPPORT.md} records that {cmd:qardlFull}
+"reports the same compatibility ARDL Case III bounds statistic on the
+underlying levels data" and that "quantile-specific bounds variants remain
+outside the current public API".  Its {cmd:ardlbounds.src} contains no
+reference to tau at all.
+
+{pstd}
+Shipping a mean-based cointegration test inside a package named {cmd:qardl}
+invites it to be reported as evidence of cointegration at each quantile, which
+it is not, so it is deliberately excluded.  If you need the bounds test as a
+pre-test, run it with a dedicated ARDL command, cite it as a conditional-mean
+result, and keep it separate from the quantile findings.
+
+{pstd}
+For quantile-by-quantile evidence on the long-run relation, use the speed of
+adjustment rho(tau) from {opt ecmtype(twostep)}, which is estimated separately
+at each quantile.  Note that under the null of no cointegration an ECM t-ratio
+does not have a standard normal distribution, so the normal p-values printed
+beside rho(tau) support inference on the adjustment speed {it:given}
+cointegration, not a test {it:of} it.  No formal quantile cointegration test
+is implemented here or in GAUSS 3.1.1; see Xiao (2009, Journal of
+Econometrics) for the standard reference.
+
+{pstd}
+{bf:Per-regressor lag orders.}  {opt qvec()} gives each regressor its own
+distributed-lag order, as {cmd:qardlX} does in GAUSS.  Because the
+Cho-Kim-Shin iid covariance formulas are written for a single scalar q and do
+not generalise to a heterogeneous lag structure, this path always uses the
+quantile-regression sandwich; {cmd:qardlX} in GAUSS defaults to
+{cmd:cov_type = "robust"} for the same reason.  The ECM, rolling and Monte
+Carlo paths require a scalar {opt q()}.
+
+{pstd}
+{bf:GETS lag selection.}  {cmd:criterion(gets)} starts at
+{opt pmax()}/{opt qmax()} and drops whichever boundary lag is least
+significant until the highest retained lag of both blocks is significant at
+{opt getspval()}.  No information-criterion grid is produced in this mode.
+
+
 {marker companion}{...}
 {title:Companion commands}
 
@@ -746,6 +1073,98 @@ Usage examples:
 {phang2}{cmd:. qardl_analysis, nograph}{p_end}
 {phang2}{cmd:. qardl_makedata, n(1000) seed(42)}{p_end}
 {phang2}{cmd:. _qardl_waldtest, type(beta) tau(0.25 0.5 0.75)}{p_end}
+
+
+{marker version}{...}
+{title:Changes in version 1.2.0}
+
+{pstd}
+Version 1.2.0 aligns {cmd:qardl} with the GAUSS QARDL 3.1.1 library.  Two of
+the changes below alter numbers reported by earlier versions.
+
+{pstd}
+{bf:Exact quantile regression solver.}  Versions 1.0.0 and 1.1.0 solved each
+quantile regression by iteratively reweighted least squares, capped at 200
+iterations.  On QARDL designs that solver reached the cap or stalled at a
+non-optimal point often enough to move coefficients by up to 0.05 and long-run
+beta by up to 0.014, non-deterministically.  It is replaced by the
+Frisch-Newton primal-dual interior-point method of Portnoy and Koenker (1997),
+the same class of solver behind GAUSS {cmd:quantileFit()} and the MATLAB
+{cmd:linprog()} call in {cmd:qregressMatlab.m}.  Against the exact linear
+program it reproduces the optimum to within 3e-8 across all tested designs, in
+11 to 15 iterations.  Estimates from earlier versions will change slightly;
+the new values are the correct ones.
+
+{pstd}
+{bf:Rolling Wald statistics.}  {cmd:e(rolling_wald_beta)},
+{cmd:e(rolling_wald_phi)} and {cmd:e(rolling_wald_gamma)} were previously
+returned as matrices of zeros.  They now contain real statistics.  See
+{opt rolling()}.
+
+{pstd}
+{bf:waldtest() implemented.}  The option previously had no effect.  See
+{opt waldtest()}.
+
+{pstd}
+{bf:Wald degrees of freedom.}  Now rank(R*V*R') rather than rows(R).  The
+restriction machinery also errors on a dimension mismatch instead of silently
+trimming R, and no longer takes the absolute value of the statistic.
+
+{pstd}
+{bf:Lag search defaults.}  {cmd:pmax()} and {cmd:qmax()} default to 8 rather
+than 7, and the q grid starts at 0.  See {opt pmin()}.
+
+{pstd}
+{bf:New options.}  {opt covariance()}, {opt haclags()}, {opt criterion()}
+(now including {cmd:gets}), {opt getspval()}, {opt pmin()}, {opt qmin()},
+{opt qvec()}, {opt symmetry}, {opt ecmtype()}, and support for {cmd:q(0)}.
+
+{pstd}
+{bf:New commands.}  The rest of the QARDL family from GAUSS 3.1.1 is now
+available: {helpb qardl_full}, {helpb qardl_qirf}, {helpb qardl_boot},
+{helpb qardl_diag}, {helpb qardl_forecast}, {helpb qardl_export}, and
+{cmd:predict}.  See {help qardl##suite:The qardl suite}.  The Pesaran-Shin-Smith
+bounds test is deliberately {ul:not} included; see the note in that section.
+
+{pstd}
+{bf:Rolling ECM.}  With {opt rolling()} and {opt ecmtype(twostep)} or
+{opt ecmtype(both)}, {cmd:e(rolling_ecm_alpha)} and {cmd:e(rolling_ecm_rho)}
+hold the per-window two-step ECM estimates ({cmd:rollingQardlECM} in GAUSS).
+
+{pstd}
+{bf:ECM theta standard errors corrected.}  Versions 1.0.0 and 1.1.0 divided the
+theta covariance by (n-1) while the matching Wald test used (n-2), following
+Cho's {cmd:wtesttheta.m}.  The standard errors now use (n-2) as well, so the
+reported t-ratios are consistent with the reported Wald statistic.
+
+{pstd}
+{bf:ECM theta labels corrected.}  The row labels of the theta table ran
+lag-major while the coefficients are stored variable-major, so with more than
+one regressor and q > 1 the labels did not match the numbers.  The estimates
+themselves were always correct.
+
+{pstd}
+{bf:RESET conditioning.}  {helpb qardl_diag} standardises the fitted values
+before forming the squared and cubed terms of the Ramsey RESET auxiliary
+regression.  The span of [1, f, f^2, f^3] is invariant to an affine
+transformation of f, so the statistic is unchanged in exact arithmetic, but
+the raw form is severely ill-conditioned when the fitted values are large:
+with f of order 1e3 the design reaches a condition number near 4e9, Stata's
+{cmd:rank()} reports a rank deficiency that is not there, and the statistic
+collapses to exactly zero.  Standardising brings the condition number to
+about 5.  GAUSS forms the powers on the raw fitted values, so a RESET row of
+exactly zero in a GAUSS log is this same numerical artifact.
+
+{pstd}
+{bf:Deviation from GAUSS 3.1.1.}  In GAUSS, {cmd:wtestsym()} scales the gamma
+and phi statistics by (n-1)^2 while their covariances are stored on the (n-1)
+scale, which inflates those two statistics by a factor of (n-1).  Its own
+documentation and {cmd:wtestconst()} use (n-1) for gamma and phi.
+{cmd:qardl} applies the consistent (n-1) scaling.  Likewise, GAUSS applies the
+(n-1) Wald scalings under robust and HAC covariance even though
+{cmd:_qardlLevelsSE()} does not rescale those covariances; {cmd:qardl} uses no
+rescaling throughout the robust and HAC paths.  Under the default
+{cmd:covariance(iid)} the two implementations agree.
 
 
 {marker references}{...}

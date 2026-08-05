@@ -1,4 +1,4 @@
-*! _qardl_simulate v1.1.0 - Monte Carlo simulation for QARDL
+*! _qardl_simulate v1.2.0 - Monte Carlo simulation for QARDL Wald tests
 *! Translates WaldTestsSims.m and qardlestimation.m
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
 
@@ -61,7 +61,7 @@ program define _qardl_simulate, rclass
             forvalues j = 1/3 {
                 local val = `sim_res'[`i', `j']
                 if `val' > 0.15 | `val' < 0.001 {
-                    di as err "  " %8.4f `val' _c
+                    di as res "  " %8.4f `val' _c
                 }
                 else {
                     di as res "  " %8.4f `val' _c
@@ -120,9 +120,11 @@ void _qardl_mc_sim(real scalar reps, real scalar nn, real scalar ppp,
         
         data = (yy, xx)
         
-        // Run QARDL on simulated data
-        _qardl_core_estimate(yy, xx, ppp, qqq, tau)
-        
+        // Run QARDL on simulated data.  The Monte Carlo evaluates the
+        // Cho-Kim-Shin Wald tests, so it always uses the iid covariance
+        // path and the (n-1) / (n-1)^2 scalings applied below.
+        _qardl_core_estimate(yy, xx, ppp, qqq, tau, "iid", 0)
+
         // Get results
         real matrix beta, beta_cov, phi, phi_cov, gamma, gamma_cov
         beta = st_matrix("_qardl_beta")

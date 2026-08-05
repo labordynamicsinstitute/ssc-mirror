@@ -825,7 +825,7 @@ def main():
     # it natively, and (b) "=" is rarer than tab/colon inside spreadsheet
     # titles or row content (which is escaped to "_eq_" if present).
     def _safekey(s):  return str(s).replace("=", "_eq_").replace("\n", " ").replace("\r", " ")
-    def _safeval(s):  return str(s).replace("\n", " ").replace("\r", " ")
+    def _safeval(s):  return str(s).replace("\n", " ").replace("\r", " ").replace('"', "'")
     with open(out_path, "w") as f:
         f.write(f"status={payload['status']}\n")
         if payload["status"] == "ok":

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.2.9  02Aug2026}{...}
+{* *! version 3.2.10  03Aug2026}{...}
 {vieweralsosee "[R] search" "help search"}{...}
 {vieweralsosee "[R] net" "help net"}{...}
 {viewerjumpto "Syntax" "findsj##syntax"}{...}
@@ -158,7 +158,7 @@ actions with a single click:
 • {bf:Plain text} (.txt) - For Word and plain text documents
 
 {phang3}
-Citation format follows {cmd:getiref} style:{break}
+Citation format follows the private bundled {cmd:_getiref} component:{break}
 Cox, N. J. (2007). Speaking Stata: Identifying Spells. The Stata Journal, 7(2), 249-265.
 
 {phang2}
@@ -196,9 +196,14 @@ For the recommended SSC installation, type:
 {pstd}
 This installation places the runtime databases ({cmd:findsj.dta} and
 {cmd:findsj_version.dta}) in the PLUS package directory together with the
-program and help files for {cmd:findsj} and the bundled {cmd:getiref}. Local
+program and help files for {cmd:findsj} and its private {cmd:_getiref} component. Local
 search therefore works immediately and continues to use the installed database
 after the current working directory is changed.
+
+{pstd}
+The private {cmd:_getiref} component is namespaced for {cmd:findsj} citation
+links. It can coexist with the independently installed public {help getiref}
+package, and uninstalling either package does not remove the other command.
 
 {pstd}
 The {cmd:all} option additionally downloads ancillary files such as
@@ -267,9 +272,9 @@ citation-format buttons are already included in the standard result row whenever
 DOI is available:
 
 {phang2}
-• {bf:.md} - Click to generate Markdown citation via {cmd:getiref}{break}
-• {bf:.latex} - Click to generate LaTeX citation via {cmd:getiref}{break}
-• {bf:.txt} - Click to generate plain text citation via {cmd:getiref}
+• {bf:.md} - Click to generate Markdown citation via private {cmd:_getiref}{break}
+• {bf:.latex} - Click to generate LaTeX citation via private {cmd:_getiref}{break}
+• {bf:.txt} - Click to generate plain text citation via private {cmd:_getiref}
 
 {pmore}
 For an article ID, {cmd:findsj article_id, ref} displays the three citation formats

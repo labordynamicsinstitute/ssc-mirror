@@ -52,7 +52,7 @@ program define googlesheets_export
     local sub = cond("`append'" != "", "append_range", "write_range")
 
     tempfile argjson
-    file open _h using `"`argjson'"', write text replace
+    quietly file open _h using `"`argjson'"', write text replace
     file write _h `"{"' _n
     file write _h `"  "subcommand":"`sub'","' _n
     file write _h `"  "client_json":"`cj'","' _n

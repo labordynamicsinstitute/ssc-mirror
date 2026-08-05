@@ -1,4 +1,4 @@
-*! qardl_graph v1.0.0 - Visualizations for QARDL
+*! qardl_graph v1.2.0 - Publication-quality QARDL graphs
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
 
 program define qardl_graph
@@ -37,6 +37,14 @@ program define qardl_graph
     mat `tau_mat' = e(tau)
     
     local nobs = e(N)
+
+    * Covariance normalisation: iid stores beta at (n-1)^2 and phi/gamma at
+    * (n-1); robust/HAC sandwich covariances need no rescaling.  The e()
+    * fallbacks keep results estimated by qardl < 1.2.0 working.
+    local sb = e(scale_beta)
+    local ss = e(scale_short)
+    if `sb' >= . local sb = (`nobs' - 1)^2
+    if `ss' >= . local ss = `nobs' - 1
     
     * Create temporary data for plotting
     preserve
@@ -66,7 +74,7 @@ program define qardl_graph
                 if `idx' <= rowsof(`beta_cov') & `idx' <= colsof(`beta_cov') {
                     local var = `beta_cov'[`idx', `idx']
                     if `var' > 0 {
-                        local se = sqrt(`var') / (`nobs' - 1)
+                        local se = sqrt(`var' / `sb')
                         qui replace beta_lo_`vnum' = `est' - 1.96*`se' in `t'
                         qui replace beta_hi_`vnum' = `est' + 1.96*`se' in `t'
                     }
@@ -127,7 +135,7 @@ program define qardl_graph
                 if `idx' <= rowsof(`phi_cov') & `idx' <= colsof(`phi_cov') {
                     local var = `phi_cov'[`idx', `idx']
                     if `var' > 0 {
-                        local se = sqrt(`var') / sqrt(`nobs' - 1)
+                        local se = sqrt(`var' / `ss')
                         qui replace phi_lo_`j' = `est' - 1.96*`se' in `t'
                         qui replace phi_hi_`j' = `est' + 1.96*`se' in `t'
                     }
@@ -179,7 +187,7 @@ program define qardl_graph
                 if `idx' <= rowsof(`gamma_cov') & `idx' <= colsof(`gamma_cov') {
                     local var = `gamma_cov'[`idx', `idx']
                     if `var' > 0 {
-                        local se = sqrt(`var') / sqrt(`nobs' - 1)
+                        local se = sqrt(`var' / `ss')
                         qui replace gamma_lo_`vnum' = `est' - 1.96*`se' in `t'
                         qui replace gamma_hi_`vnum' = `est' + 1.96*`se' in `t'
                     }

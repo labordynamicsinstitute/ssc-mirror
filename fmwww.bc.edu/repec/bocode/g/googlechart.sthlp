@@ -53,10 +53,10 @@ embargoed reports), the visualization is a Texas county / school-district
 choropleth, or you want bivariate / hexbin maps.
 
 {pstd}
-The Texas 2036 brand is baked in: {cmd:tx2036style} loads Montserrat from
-Google Fonts and applies the brand palette ({bf:#1B2D55} navy, {bf:#D44500}
-orange, {bf:#2B6CB0} link blue, {bf:#6C7A8D} muted gray) to titles, axes,
-and series colors.
+Colors come from {cmd:scheme()}, which selects among the built-in palettes
+({bf:blues}, {bf:reds}, {bf:viridis}, and others).  One further option,
+{cmd:tx2036style}, applies a fixed house style (Montserrat plus the Texas 2036
+palette) for teams that publish under it; see the option list below.
 
 
 {marker types}{...}
@@ -69,7 +69,7 @@ and series colors.
 {synopt :{cmd:bar}}horizontal bars; one row per category{p_end}
 {synopt :{cmd:line}}line chart; supports multiple series via {cmd:over()}{p_end}
 {synopt :{cmd:area}}filled-area line chart; same data shape as line{p_end}
-{synopt :{cmd:combo}}mixed bars + lines / areas via {cmd:combo_types()}{p_end}
+{synopt :{cmd:combo}}mixed bars + lines / areas via {cmd:combotypes()}{p_end}
 {synopt :{cmd:pie}}pie chart; one row per slice{p_end}
 {synopt :{cmd:donut}}pie with center hole; {cmd:innerradius()} controls hole size{p_end}
 {synopt :{cmd:scatter}}point cloud; two-variable {it:varlist} = (x y){p_end}
@@ -101,18 +101,18 @@ and series colors.
 {synopt :{cmd:horizontal}}swap column to bar (or accept the bar default){p_end}
 {synopt :{cmd:stacked}}stacked instead of grouped{p_end}
 {synopt :{cmd:normalize}}stacked + 100% normalised{p_end}
-{synopt :{cmd:directlabels}}value labels on slices (pie/donut), bars (column/bar via annotation role){p_end}
+{synopt :{cmd:directlabels}}values on bars (column/bar, via annotation role); switches pie/donut slice text from value to percentage{p_end}
 {synopt :{cmd:innerradius(}{it:#}{cmd:)}}donut hole fraction (default 0.45){p_end}
 {synopt :{cmd:legendpos(}{it:string}{cmd:)}}{bf:top} | {bf:right} | {bf:bottom} | {bf:left} -- pie/donut default to {bf:bottom}{p_end}
 {synopt :{cmd:bucketsize(}{it:#}{cmd:)}}explicit histogram bucket width (default auto){p_end}
 {synopt :{cmd:labelwrap(}{it:#}|{bf:none}{cmd:)}}divbar row-label wrap width (default 50 chars; {bf:none} disables){p_end}
 {synopt :{cmd:tablesearch}}free-text Search box above {cmd:type(table)} -- substring match across all columns{p_end}
-{synopt :{cmd:tableheadersticky}}sticky table header on scroll (use with {cmd:type(table)}){p_end}
+{synopt :{cmd:tableheadersticky}}accepted for compatibility; {cmd:type(table)} headers are sticky on scroll whether or not it is given{p_end}
 {synopt :{cmd:time(}{it:varname}{cmd:)}}for {cmd:type(bubble)}: time dimension that drives a Play button + range slider (requires a {it:panel} -- one row per entity per value of {it:varname}){p_end}
-{synopt :{cmd:geo_region(}{it:string}{cmd:)}}geo region: {bf:world} | {bf:US} | {bf:150} | etc.{p_end}
-{synopt :{cmd:geo_resolution(}{it:string}{cmd:)}}{bf:countries} | {bf:provinces} | {bf:metros} | {bf:us-states} (alias for {bf:provinces}){p_end}
-{synopt :{cmd:combo_types(}{it:string}{cmd:)}}pipe-separated per-series chart type for {cmd:combo}{p_end}
-{synopt :{cmd:combo_default(}{it:string}{cmd:)}}default chart type per series for {cmd:combo}{p_end}
+{synopt :{cmd:georegion(}{it:string}{cmd:)}}geo region: {bf:world} | {bf:US} | {bf:150} | etc.{p_end}
+{synopt :{cmd:georesolution(}{it:string}{cmd:)}}{bf:countries} | {bf:provinces} | {bf:metros} | {bf:us-states} (alias for {bf:provinces}){p_end}
+{synopt :{cmd:combotypes(}{it:string}{cmd:)}}pipe-separated per-series chart type for {cmd:combo}{p_end}
+{synopt :{cmd:combodflt(}{it:string}{cmd:)}}default chart type per series for {cmd:combo}{p_end}
 
 {syntab :Brand + interactivity}
 {synopt :{cmd:tx2036style}}Texas 2036 brand + Montserrat font{p_end}
@@ -122,7 +122,8 @@ and series colors.
 {synopt :{cmd:animate}}IntersectionObserver-gated draw (chart appears + animates when scrolled into view){p_end}
 {synopt :{cmd:downloadpos(}{it:string}{cmd:)}}{bf:side} (default) | {bf:below} | {bf:none}{p_end}
 {marker filters}{...}
-{synopt :{cmd:filters(}{it:varlist}{cmd:)}}build a Google Dashboard with CategoryFilter (categorical) / NumberRangeFilter (numeric) per variable{p_end}
+{synopt :{cmd:filters(}{it:varlist}{cmd:)}}build a Google Dashboard with CategoryFilter (categorical) / NumberRangeFilter (numeric) per variable;{p_end}
+{synopt :}takes effect for {cmd:type(column)}, {cmd:type(bar)}, {cmd:type(line)}, {cmd:type(area)}, and {cmd:type(table)} only{p_end}
 
 {syntab :Text + layout}
 {synopt :{cmd:title(}{it:string}{cmd:)}}{p_end}
@@ -137,7 +138,7 @@ and series colors.
 
 {syntab :Output}
 {synopt :{cmd:export(}{it:path}{cmd:)}}output HTML path; default {bf:googlechart_{it:type}.html} in cwd{p_end}
-{synopt :{cmd:noopen}}do not auto-open in default browser{p_end}
+{synopt :{cmd:noopen}}accepted for compatibility; {cmd:googlechart} never opens a browser, it only prints a clickable link{p_end}
 {synoptline}
 
 
@@ -210,41 +211,41 @@ expects an open {bf:cwd}; HTML files are written there.{p_end}
 {dlgtab:1. Column chart -- mean poverty by region}
 
 {phang}{cmd}collapse (mean) poverty_rate, by(region){p_end}
-{phang}{cmd}googlechart poverty_rate, name(region) type(column)         ///{p_end}
-{phang}{cmd}    tx2036style download datatable animate                  ///{p_end}
-{phang}{cmd}    title("Texas regions: mean poverty rate")               ///{p_end}
-{phang}{cmd}    ylabel("Poverty rate (%)")                              ///{p_end}
+{phang}{cmd}googlechart poverty_rate, name(region) type(column) ///{p_end}
+{phang}{cmd}    download datatable animate                      ///{p_end}
+{phang}{cmd}    title("Texas regions: mean poverty rate")       ///{p_end}
+{phang}{cmd}    ylabel("Poverty rate (%)")                      ///{p_end}
 {phang}{cmd}    export("01_column.html"){p_end}
 
 
 {dlgtab:2. Bar (horizontal) with filter dropdowns}
 
-{phang}{cmd}googlechart poverty_rate, name(region) type(bar)            ///{p_end}
-{phang}{cmd}    over(year) filters(year urban)                          ///{p_end}
-{phang}{cmd}    tx2036style download datatable downloadpos(below)       ///{p_end}
+{phang}{cmd}googlechart poverty_rate, name(region) type(bar)                ///{p_end}
+{phang}{cmd}    over(year) filters(year urban)                              ///{p_end}
+{phang}{cmd}    download datatable downloadpos(below)                       ///{p_end}
 {phang}{cmd}    title("Poverty by region -- filter by year / urbanisation") ///{p_end}
 {phang}{cmd}    export("02_bar_filters.html"){p_end}
 
 
 {dlgtab:3. Multi-series line + animate-on-scroll}
 
-{phang}{cmd}googlechart y yr, over(region) type(line)                   ///{p_end}
-{phang}{cmd}    tx2036style download datatable animate                  ///{p_end}
-{phang}{cmd}    xlabel("Year") ylabel("% meeting standard")             ///{p_end}
-{phang}{cmd}    title("Texas regions: trend 2018-2024")                 ///{p_end}
+{phang}{cmd}googlechart y yr, over(region) type(line)       ///{p_end}
+{phang}{cmd}    download datatable animate                  ///{p_end}
+{phang}{cmd}    xlabel("Year") ylabel("% meeting standard") ///{p_end}
+{phang}{cmd}    title("Texas regions: trend 2018-2024")     ///{p_end}
 {phang}{cmd}    export("03_line.html"){p_end}
 
 
 {dlgtab:4. Donut chart with brand palette (legend below)}
 
-{phang}{cmd}googlechart enrollment, name(sector) type(donut)            ///{p_end}
-{phang}{cmd}    innerradius(0.5) directlabels animate                   ///{p_end}
-{phang}{cmd}    tx2036style download datatable downloadpos(below)       ///{p_end}
-{phang}{cmd}    title("Texas postsecondary enrollment by sector")       ///{p_end}
-{phang}{cmd}    width(640) height(540)                                  ///{p_end}
+{phang}{cmd}googlechart enrollment, name(sector) type(donut)      ///{p_end}
+{phang}{cmd}    innerradius(0.5) directlabels animate             ///{p_end}
+{phang}{cmd}    download datatable downloadpos(below)             ///{p_end}
+{phang}{cmd}    title("Texas postsecondary enrollment by sector") ///{p_end}
+{phang}{cmd}    width(640) height(540)                            ///{p_end}
 {phang}{cmd}    export("04_donut.html"){p_end}
 
-{phang}Pie / donut default to legend below the chart and a square 640x540
+{phang}Pie / donut default to legend below the chart and the standard 980x644
 frame, so the bounding card hugs the chart instead of leaving an empty
 band of right-side legend space.  Pass {cmd:legendpos(right)} to restore
 the older layout.{p_end}
@@ -252,40 +253,40 @@ the older layout.{p_end}
 
 {dlgtab:5. Bubble chart -- 3+ variable comparison}
 
-{phang}{cmd}googlechart life_expect poverty_rate, name(county)          ///{p_end}
-{phang}{cmd}    over(region_name) sizevar(pop_thou)                     ///{p_end}
-{phang}{cmd}    type(bubble) tx2036style download datatable animate     ///{p_end}
-{phang}{cmd}    title("Life expectancy vs poverty rate; bubble = pop")  ///{p_end}
+{phang}{cmd}googlechart life_expect poverty_rate, name(county)             ///{p_end}
+{phang}{cmd}    over(region_name) sizevar(pop_thou)                        ///{p_end}
+{phang}{cmd}    type(bubble) download datatable animate                    ///{p_end}
+{phang}{cmd}    title("Life expectancy vs poverty rate; bubble = pop")     ///{p_end}
 {phang}{cmd}    xlabel("Poverty rate (%)") ylabel("Life expectancy (yrs)") ///{p_end}
 {phang}{cmd}    export("05_bubble.html"){p_end}
 
 
 {dlgtab:6. Combo chart -- bars + overlay line}
 
-{phang}{cmd}googlechart value, name(year) over(metric) type(combo)      ///{p_end}
-{phang}{cmd}    combo_default(bars) combo_types("bars|bars|line")       ///{p_end}
-{phang}{cmd}    tx2036style download datatable                          ///{p_end}
-{phang}{cmd}    title("Bars + overlay line via combo_types()")          ///{p_end}
+{phang}{cmd}googlechart value, name(year) over(metric) type(combo) ///{p_end}
+{phang}{cmd}    combodflt(bars) combotypes("bars|bars|line")       ///{p_end}
+{phang}{cmd}    download datatable                                 ///{p_end}
+{phang}{cmd}    title("Bars + overlay line via combotypes()")      ///{p_end}
 {phang}{cmd}    export("06_combo.html"){p_end}
 
 
 {dlgtab:7. Geo chart -- US state choropleth}
 
 {phang}{it:Important:} only country and US-state level are supported.{p_end}
-{phang}{cmd}googlechart value, name(state_code) type(geo)               ///{p_end}
-{phang}{cmd}    geo_region("US") geo_resolution("us-states")            ///{p_end}
-{phang}{cmd}    tx2036style download datatable                          ///{p_end}
-{phang}{cmd}    title("US states -- example metric")                    ///{p_end}
+{phang}{cmd}googlechart value, name(state_code) type(geo)  ///{p_end}
+{phang}{cmd}    georegion("US") georesolution("us-states") ///{p_end}
+{phang}{cmd}    download datatable                         ///{p_end}
+{phang}{cmd}    title("US states -- example metric")       ///{p_end}
 {phang}{cmd}    export("07_geo.html"){p_end}
 
 
 {dlgtab:8. Timeline -- Gantt-style swimlanes}
 
 {phang}{cmd}* Data: one row per session, with name(=row), startvar, endvar.{p_end}
-{phang}{cmd}googlechart, type(timeline) name(session_label)             ///{p_end}
-{phang}{cmd}    startvar(date_start) endvar(date_end)                   ///{p_end}
-{phang}{cmd}    tx2036style download datatable                          ///{p_end}
-{phang}{cmd}    title("Texas legislative session timeline")             ///{p_end}
+{phang}{cmd}googlechart, type(timeline) name(session_label) ///{p_end}
+{phang}{cmd}    startvar(date_start) endvar(date_end)       ///{p_end}
+{phang}{cmd}    download datatable                          ///{p_end}
+{phang}{cmd}    title("Texas legislative session timeline") ///{p_end}
 {phang}{cmd}    export("08_timeline.html"){p_end}
 
 
@@ -293,32 +294,32 @@ the older layout.{p_end}
 
 {phang}A free-text search box can be wired above the rendered table
 using {cmd:tablesearch}; rows filter live by substring match across all
-columns and the row count updates next to the input.  Pair with
-{cmd:tableheadersticky} for a header that stays visible while scrolling
-through long tables.{p_end}
+columns and the row count updates next to the input.  The header row stays
+visible while you scroll a long table; that is the default for every
+{cmd:type(table)} rendering and needs no option.{p_end}
 
 {phang}{cmd}googlechart, type(table)                                     ///{p_end}
 {phang}{cmd}    tooltipvars(region poverty_rate uninsured_rate pop_thou) ///{p_end}
-{phang}{cmd}    tablesearch tableheadersticky                            ///{p_end}
-{phang}{cmd}    tx2036style download datatable                           ///{p_end}
+{phang}{cmd}    tablesearch                                              ///{p_end}
+{phang}{cmd}    download datatable                                       ///{p_end}
 {phang}{cmd}    title("Texas regions: searchable data table")            ///{p_end}
 {phang}{cmd}    export("09_table.html"){p_end}
 
 {phang}For a dropdown-filtered (Dashboard + CategoryFilter) variant, add
-{cmd:filters(group year)} -- this composes with {cmd:tablesearch}: the
-dropdowns narrow the dataset and the search box narrows further within
-that subset.{p_end}
+{cmd:filters(group year)}.  Note that the two do not combine: when
+{cmd:filters()} is given, the table is rendered inside a dashboard and the
+{cmd:tablesearch} box is not built.  Choose dropdowns or the search box.{p_end}
 
 
 {dlgtab:10. Diverging stacked bar (Pew-style Likert)}
 
 {phang}{cmd}* Long form: name = item, level = response, varlist = share %.{p_end}
-{phang}{cmd}googlechart share, name(q) level(response) type(divbar)     ///{p_end}
+{phang}{cmd}googlechart share, name(q) level(response) type(divbar)                   ///{p_end}
 {phang}{cmd}    levelorder("Strongly disagree|Disagree|Neutral|Agree|Strongly agree") ///{p_end}
-{phang}{cmd}    centerlevel(Neutral)                                    ///{p_end}
-{phang}{cmd}    tx2036style download datatable downloadpos(below)       ///{p_end}
-{phang}{cmd}    title("Texans on K-12 and higher-ed policy")            ///{p_end}
-{phang}{cmd}    width(1100) height(640)                                  ///{p_end}
+{phang}{cmd}    centerlevel(Neutral)                                                  ///{p_end}
+{phang}{cmd}    download datatable downloadpos(below)                                 ///{p_end}
+{phang}{cmd}    title("Texans on K-12 and higher-ed policy")                          ///{p_end}
+{phang}{cmd}    width(1100) height(640)                                               ///{p_end}
 {phang}{cmd}    export("10_divbar.html"){p_end}
 
 
@@ -326,18 +327,34 @@ that subset.{p_end}
 
 {phang}{cmd}* The sparkta2 dashboard composer works on any HTML files,{p_end}
 {phang}{cmd}* including googlechart outputs.  Pass the file basenames:{p_end}
-{phang}{cmd}sparkta2_dashboard,                                          ///{p_end}
+{phang}{cmd}sparkta2_dashboard,                                                   ///{p_end}
 {phang}{cmd}    files("01_column.html 03_line.html 04_donut.html 10_divbar.html") ///{p_end}
-{phang}{cmd}    titles("Column|Line|Donut|Divbar")                       ///{p_end}
-{phang}{cmd}    heights("680") tx2036style                                ///{p_end}
-{phang}{cmd}    title("googlechart v0.1.3 demo gallery")                 ///{p_end}
+{phang}{cmd}    titles("Column|Line|Donut|Divbar")                                ///{p_end}
+{phang}{cmd}    heights("680")                                                    ///{p_end}
+{phang}{cmd}    title("googlechart demo gallery")                          ///{p_end}
 {phang}{cmd}    export("gallery.html"){p_end}
+
+
+{marker results}{...}
+{title:Stored results}
+
+{pstd}
+{cmd:googlechart} stores the following in {cmd:r()}:
+
+{synoptset 20 tabbed}{...}
+{p2col 5 20 24 2: Scalars}{p_end}
+{synopt :{cmd:r(n_rows)}}number of data rows written to the HTML payload{p_end}
+
+{p2col 5 20 24 2: Macros}{p_end}
+{synopt :{cmd:r(export)}}path of the HTML file written{p_end}
+{synopt :{cmd:r(type)}}chart type rendered{p_end}
+{p2colreset}{...}
 
 
 {title:Author and acknowledgements}
 
 {pstd}
-googlechart is by Eric A. Booth, Sr Researcher, Texas 2036 (eric.a.booth@gmail.com), 2026.  Built atop Google Charts
+googlechart is by Eric A. Booth, Sr Researcher, Texas2036.org (eric.a.booth@gmail.com), 2026.  Built atop Google Charts
 (https://developers.google.com/chart) which is the property of Google LLC
 and is subject to the Google Charts Terms of Service.  This package is
 not affiliated with or endorsed by Google.

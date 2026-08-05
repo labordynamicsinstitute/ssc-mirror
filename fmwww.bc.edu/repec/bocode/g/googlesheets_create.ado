@@ -27,7 +27,7 @@ program define googlesheets_create, rclass
     local ti `"`r(escaped)'"'
 
     tempfile argjson
-    file open _h using `"`argjson'"', write text replace
+    quietly file open _h using `"`argjson'"', write text replace
     file write _h `"{"' _n
     file write _h `"  "subcommand":"create_spreadsheet","' _n
     file write _h `"  "client_json":"`cj'","' _n

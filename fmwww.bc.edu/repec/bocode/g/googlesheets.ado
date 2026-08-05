@@ -1,4 +1,4 @@
-*! googlesheets v0.1.1  2026-07-04
+*! googlesheets v0.1.2  2026-07-31
 *! Stata wrapper for the Google Sheets API.
 *!
 *! Read, write, and structurally edit Google Sheets from Stata, the way
@@ -32,7 +32,7 @@ program define googlesheets
     gettoken sub 0 : 0, parse(", ")
     if "`sub'" == "" {
         display as error "googlesheets: missing subcommand"
-        display as error "  Valid: create | import | export | put | list | ping | addsheet"
+        display as error "  Valid: create | import | export | put | format | addchart | list | ping | addsheet"
         display as error "         | deletesheet | renamesheet | format"
         display as error "  See {bf:help googlesheets}."
         exit 198

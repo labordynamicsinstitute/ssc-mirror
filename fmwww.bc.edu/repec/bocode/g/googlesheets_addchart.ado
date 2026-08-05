@@ -103,7 +103,7 @@ program define googlesheets_addchart
     local tc `"`r(escaped)'"'
 
     tempfile argjson
-    file open _h using `"`argjson'"', write text replace
+    quietly file open _h using `"`argjson'"', write text replace
     file write _h `"{"' _n
     file write _h `"  "subcommand":"add_chart","' _n
     file write _h `"  "client_json":"`cj'","' _n

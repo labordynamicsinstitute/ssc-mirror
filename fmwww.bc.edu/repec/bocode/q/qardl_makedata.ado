@@ -1,4 +1,4 @@
-*! qardl_makedata v1.0.0 - Generate example data for QARDL
+*! qardl_makedata v1.2.0 - Generate example QARDL data
 *! DGP based on Cho, Kim & Shin (2015)
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
 

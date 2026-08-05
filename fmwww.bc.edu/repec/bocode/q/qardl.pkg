@@ -14,22 +14,32 @@ d KW: quantile
 d KW: autoregressive
 d KW: distributed lag
 d
-d Requires: Stata version 
+d Requires: Stata version 14
 d
-d Distribution-Date: 20260215
+d Distribution-Date: 20260804
 d
 d Author:   Merwan Roudane, NA
 d Support: email  merwanroudane920@@gmail.com
 d
 f qardl.ado
 f qardl.sthlp
+f qardl_analysis.ado
+f qardl_boot.ado
+f qardl_diag.ado
+f qardl_export.ado
+f qardl_forecast.ado
+f qardl_full.ado
+f qardl_graph.ado
+f qardl_makedata.ado
+f qardl_p.ado
+f qardl_qirf.ado
 f ../_/_qardl_ecm.ado
+f ../_/_qardl_ecm2.ado
 f ../_/_qardl_estimate.ado
+f ../_/_qardl_estimatex.ado
 f ../_/_qardl_icmean.ado
 f ../_/_qardl_rolling.ado
 f ../_/_qardl_simulate.ado
 f ../_/_qardl_waldtest.ado
-f qardl_analysis.ado
-f qardl_graph.ado
-f qardl_makedata.ado
-f ../t/test_qardl.do
+f ../t/test_qardl_suite.do
+f ../t/test_qardl_v120.do

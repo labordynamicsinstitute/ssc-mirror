@@ -509,7 +509,7 @@ program define datadictionary, rclass
         label variable max      "maximum"
         label variable examples "example values / top categories"
         label variable notes    "stored notes"
-        label variable srctag   "char [srctag] (combineall/projectbuilder)"
+        label variable srctag   "char [source] (written by srctag/combineall)"
         label variable chars    "other characteristics"
         if `overtime' {
             label variable wave    "wave"
@@ -777,15 +777,18 @@ program define _dd_rows, rclass
             local ntxt = substr(`"`ntxt'"', 1, 2000)
         }
 
-        * characteristics: srctag in its own column, all others concatenated
+        * Characteristics: the provenance stamp in its own column, all others
+        * concatenated.  The stamp is char[source] -- that is what -srctag- and
+        * -combineall- both write.  This used to read char[srctag], which
+        * nothing writes, so the column came back empty every time.
         local st ""
         local ch ""
         if "`nochars'" == "" {
-            local st : char `v'[srctag]
+            local st : char `v'[source]
             local st = substr(`"`st'"', 1, 2000)
             local allc : char `v'[]
             foreach c of local allc {
-                if "`c'" == "srctag" continue
+                if "`c'" == "source" continue
                 if regexm("`c'", "^note[0-9]+$") | "`c'" == "note0" continue
                 local cv : char `v'[`c']
                 if `"`ch'"' == "" local ch `"`c'=`cv'"'
@@ -940,7 +943,7 @@ program define _dd_dofile
         if `wrotehdr' file write `fh' "" _n
     }
 
-    * characteristics (srctag and any others; notes handled above)
+    * characteristics (the char[source] stamp and any others; notes above)
     if "`nochars'" == "" {
         local wrotehdr 0
         foreach v of local vars {
@@ -949,7 +952,7 @@ program define _dd_dofile
                 if regexm("`c'", "^note[0-9]+$") | "`c'" == "note0" continue
                 local cv : char `v'[`c']
                 if !`wrotehdr' {
-                    file write `fh' `"* ---- characteristics (including srctag) ----"' _n
+                    file write `fh' `"* ---- characteristics (including char[source]) ----"' _n
                     local wrotehdr 1
                 }
                 local L `"capture char define `v'[`c'] `"`cv'"'"'

@@ -1,7 +1,10 @@
-*! version 3.2.9  02Aug2026
+*! version 3.2.10  03Aug2026
 *! Yujun Lian (arlionn@163.com), Chucheng Wan (chucheng.wan@outlook.com)
 
 * Search Stata Journal articles
+* v3.2.10: Strip HTML markup and source whitespace from titles and cached
+*   citations; namespace the bundled DOI formatter as the private _getiref
+*   component and include it in the standard SSC installation
 * v3.2.9: Expose a single database-update interface, findsj, update; download,
 *   validate, and transactionally install both runtime files from GitHub while
 *   preserving caller data; remove source-selection options
@@ -25,8 +28,9 @@
 *   arbitrary substrings; replace the generic type() download interface with
 *   explicit bib/ris options; validate article IDs before downloads
 * v3.2: Option pruning and getiref bundling (in response to SJ peer review)
-*   - Bundled: getiref.ado/getiref.sthlp now ship with findsj; removed the
-*     runtime "ssc install getiref" auto-install block
+*   - Bundled: getiref.ado/getiref.sthlp shipped with findsj; removed the
+*     runtime "ssc install getiref" auto-install block.  The bundled copy was
+*     later namespaced as _getiref in v3.2.10.
 *   - Removed options: checkdb, installdb(), debug, clear, nobrowser,
 *     nopdf, nopkg, offline. Their behavior is either obsolete or now
 *     handled automatically (e.g. offline mode is auto-enabled when the
@@ -49,10 +53,10 @@
 *   - Fixed Bug #1: Citation count display (results < n)
 *   - Fixed Bug #3: Author name order (via citation_apa)
 *   - Fixed Bug #4: Added text/txt options as aliases for plain format
-* v1.6.0: Use local citation_apa field for offline citations (no need to call getiref)
+* v1.6.0: Use local citation_apa field for offline citations (no need to call _getiref)
 * v1.5.0: 'added by Yujun Lian 2026/02/03', add number list before ref
 * v1.4.0: Auto-check for database updates (monthly reminder with download option)
-* v1.3.0: Direct getiref integration - click .md/.latex/.txt calls getiref with DOI
+* v1.3.0: Direct _getiref integration - click .md/.latex/.txt calls _getiref with DOI
 * v1.2.0: Simplified to single 'ref' option with three format buttons
 * v1.1.1: Added individual "Ref" button for each article to copy citation
 * v1.1.0: Removed local data file dependency, all info fetched online
@@ -89,6 +93,40 @@ program define findsj_author_match
         replace `generate' = 0 if ///
             strpos(`author_tokens', " `query_word' ") == 0
     }
+end
+
+
+*===============================================================================
+* Helper program: findsj_html_clean
+* Decode common entities, remove markup, and collapse source whitespace.  The
+* database builder performs the same cleanup; this is a defensive layer for an
+* older installed database and for live website results.
+*===============================================================================
+program define findsj_html_clean
+    version 14
+    syntax varname, Generate(name)
+
+    confirm new variable `generate'
+    quietly gen strL `generate' = `varlist'
+    quietly replace `generate' = subinstr(`generate', "&amp;", "&", .)
+    quietly replace `generate' = subinstr(`generate', "&lt;", "<", .)
+    quietly replace `generate' = subinstr(`generate', "&gt;", ">", .)
+    quietly replace `generate' = subinstr(`generate', "&quot;", char(34), .)
+    quietly replace `generate' = subinstr(`generate', "&#39;", "'", .)
+    quietly replace `generate' = subinstr(`generate', "&apos;", "'", .)
+    quietly replace `generate' = subinstr(`generate', "&nbsp;", " ", .)
+    quietly replace `generate' = subinstr(`generate', "&#160;", " ", .)
+    quietly replace `generate' = subinstr(`generate', "&ndash;", "-", .)
+    quietly replace `generate' = subinstr(`generate', "&mdash;", "--", .)
+    quietly replace `generate' = ustrregexra(`generate', "<[^>]*>", "")
+    quietly replace `generate' = ustrregexra(`generate', "[[:space:]]+", " ")
+    quietly replace `generate' = strtrim(`generate')
+    foreach mark in "," "." ";" ":" "!" "?" "%" ")" "]" {
+        quietly replace `generate' = ///
+            subinstr(`generate', " `mark'", "`mark'", .)
+    }
+    quietly replace `generate' = subinstr(`generate', "( ", "(", .)
+    quietly replace `generate' = subinstr(`generate', "[ ", "[", .)
 end
 
 
@@ -1027,12 +1065,30 @@ else {
     local total_results = _N
     if `num_export' > 0 {
         tempfile online_export_data
-        save "`online_export_data'", replace
     }
     } // End of online search qui block
 } // End of else (online search mode)
 
 * ===== COMMON DISPLAY CODE FOR BOTH ONLINE AND OFFLINE =====
+* Normalize source text before display, returned results, or export.  This also
+* protects users who still have a database generated before the builder fix.
+tempvar title_clean
+findsj_html_clean title, generate(`title_clean')
+quietly replace title = `title_clean'
+quietly drop `title_clean'
+
+capture confirm variable citation_apa
+if !_rc {
+    tempvar citation_clean
+    findsj_html_clean citation_apa, generate(`citation_clean')
+    quietly replace citation_apa = `citation_clean'
+    quietly drop `citation_clean'
+}
+
+if "`search_source'" == "online" & `num_export' > 0 {
+    save "`online_export_data'", replace
+}
+
 if "`allresults'" != "" local n_display = `total_results'
 else local n_display = min(`n', `total_results')
 
@@ -1276,14 +1332,14 @@ else {
     dis as text " | " _c
     dis as text `"{stata "search `art_id_nobom'":Install}"' _c
     
-    * Display .md .latex .txt buttons (citation formats) using getiref with DOI
+    * Display .md .latex .txt buttons (citation formats) using _getiref with DOI
     if `has_doi' == 1 {
         dis as text "  |  " _c
-        dis as text `"{stata "getiref `doi_i', md":.md}"' _c
+        dis as text `"{stata "_getiref `doi_i', md":.md}"' _c
         dis as text " | " _c
-        dis as text `"{stata "getiref `doi_i', latex":.latex}"' _c
+        dis as text `"{stata "_getiref `doi_i', latex":.latex}"' _c
         dis as text " | " _c
-        dis as text `"{stata "getiref `doi_i', text":.txt}"' _c
+        dis as text `"{stata "_getiref `doi_i', text":.txt}"' _c
     }
     
     * Display BibTeX and RIS buttons (on-demand download via helper program)
@@ -1789,6 +1845,19 @@ if `num_export' > 0 {
                     replace title = subinstr(title, "&lt;", "<", .)
                     replace title = subinstr(title, "&gt;", ">", .)
                     replace title = subinstr(title, "&quot;", char(34), .)
+                    tempvar online_title_clean
+                    findsj_html_clean title, generate(`online_title_clean')
+                    quietly replace title = `online_title_clean'
+                    quietly drop `online_title_clean'
+
+                    capture confirm variable citation_apa
+                    if !_rc {
+                        tempvar online_citation_clean
+                        findsj_html_clean citation_apa, ///
+                            generate(`online_citation_clean')
+                        quietly replace citation_apa = `online_citation_clean'
+                        quietly drop `online_citation_clean'
+                    }
                     
                     * Generate Google Scholar link (simplified - use space for now)
                     gen title_for_url = subinstr(title, " ", "%20", .)
@@ -2148,11 +2217,11 @@ program define findsj_show_ref
     * Display citation buttons or error message
     if `has_doi' == 1 {
         dis as text "Cite: " _c
-        dis as text `"{stata "getiref `doi', md":.md}"' _c
+        dis as text `"{stata "_getiref `doi', md":.md}"' _c
         dis as text " | " _c
-        dis as text `"{stata "getiref `doi', latex":.latex}"' _c
+        dis as text `"{stata "_getiref `doi', latex":.latex}"' _c
         dis as text " | " _c
-        dis as text `"{stata "getiref `doi', text":.txt}"'
+        dis as text `"{stata "_getiref `doi', text":.txt}"'
     }
     else {
         dis as text "" as error "(No DOI found)" as text " - Try: " _c
@@ -2801,7 +2870,7 @@ end
 
 
 *==========================================
-* Clipboard function (similar to getiref's get_clipout)
+* Clipboard function (similar to _getiref's get_clipout)
 *==========================================
 // cap program drop findsj_clipout
 program define findsj_clipout

@@ -34,7 +34,7 @@ program define googlesheets_format
     local rg `"`r(escaped)'"'
 
     tempfile argjson
-    file open _h using `"`argjson'"', write text replace
+    quietly file open _h using `"`argjson'"', write text replace
     file write _h `"{"' _n
     file write _h `"  "subcommand":"format_range","' _n
     file write _h `"  "client_json":"`cj'","' _n
