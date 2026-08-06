@@ -1,4 +1,4 @@
-* lpdid program, version 1.0.2
+* lpdid program, version 1.0.3
 
 * Authors: Alexander Busch (Massachusetts Institute of Technology, abusch@mit.edu) and Daniele Girardi (King's College London, daniele.girardi@kcl.ac.uk), in collaboration with Arin Dube, Oscar Jordà and Alan M. Taylor
 
@@ -7,6 +7,10 @@
 * Also see the Stata example files at the following repository
 * https://github.com/danielegirardi/lpdid/
 
+* Version 1.0.3 (August 2026):
+	* Bug fix: In prior versions of the program, the pmd(max) option could incorrectly compute the transformed outcome variable in panels with explicit missing values. This version solves the problem. 
+	* Bug fix: In the previous version (1.0.2) of the program, when using pmd() in combination with the oneoff suboption of nonabsorbing(), a slightly too restrictive definition of the clean control sample was imposed, possibly resulting in a loss of statistical power. This version solves the problem.
+	* Improved numerical precision of the PMD and pooled outcome transformations, which are now computed in double precision (instead of float).
 * Version 1.0.2 (December 2025): 
 	* The 'rw' option with covariates or non-absorbing treatment runs much faster relative to previous versions, and is now compatible with the bootstrap() option for wild bootstrap standard errors. This was achieved by (a) extending the set of cases in which a weighted regression is used; (b) using -listreg- to perform regression adjustment when wildcluster bootstrapping is not requested and (c) using -margins- to perform regression adjustment with wildcluster bootstrap. 
 	* Introduced the 'oneoff' suboption within the 'nonabsorbing' option, which allows to deal with repeated oneoff treatments (see help file for details). 
@@ -540,9 +544,9 @@ program define lpdid, eclass
 		}		
 	}
 	else if "`pmd'"=="max" { // if PMD selected with the max option, do PMD with all available pre-treatment observations
-		quietly bysort `unit' (`time') : gen cumulative_y = sum(`depvar')
-		quietly bysort `unit' (`time') : gen obs_n = _n
-		quietly gen aveLY = L.cumulative_y/(obs_n-1)
+		quietly bysort `unit' (`time') : gen double cumulative_y = sum(`depvar')
+		quietly bysort `unit' (`time') : gen obs_n = sum(!missing(`depvar'))
+		quietly gen double aveLY = L.cumulative_y/L.obs_n
 		forval h = 0/`post_window' {
 			quietly gen D`h'y = F`h'.`depvar' - aveLY
 		}
@@ -552,11 +556,18 @@ program define lpdid, eclass
 		quietly drop obs_n		
 	}
 	else if "`pmd'"!="max" & "`pmd'"!=""{ // moving average of periods [-k,-1] 		
-		qui egen aveLY =  filter(`depvar'), lags(`pmd'/1) normalize // requires egenmore
+		qui egen double aveLY =  filter(`depvar'), lags(`pmd'/1) normalize // requires egenmore
 		if "`nonabsorbing'"!=""{ // set to missing if any of the MA values affected by previous treatment 
 			local pmd_L = `pmd' + `L' - 1
 			forvalues k=1/`pmd_L'{
+				if "`oneoff'" != "" {
+			        // For one-off, check if the LEVEL of the treatment is non-zero
+			        quietly by `unit': replace aveLY = . if L`k'.`treat'!=0
+			    }
+			    else {
+					// For persistent, check if the DIFFERENCE of the treatment is non-zero
 				quietly by `unit': replace aveLY = . if abs(L`k'.D.`treat')!=0
+				}
 			}
 		}
 		forval h = 0/`post_window' {
@@ -849,7 +860,7 @@ program define lpdid, eclass
 			if "`horizon'"=="post" local pooled_start = -`post_pooled_start' 
 			
 			* generating pooled dependent variable 
-			qui egen aveFY =  filter(`depvar'), lags(`pooled_end'/`pooled_start') normalize 
+			qui egen double aveFY =  filter(`depvar'), lags(`pooled_end'/`pooled_start') normalize 
 			if "`pmd'"=="" { // recall aveLY was created in the previous pmd section
 				qui gen pooled_y = aveFY - L.`depvar'
 			}

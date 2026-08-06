@@ -20,6 +20,7 @@ p caterpillar module to generate confidence intervals, Bonferroni-corrected conf
 p catgraph module to plotting means of a variable by category 
 p catplot module for plots of frequencies, fractions or percents of categorical data
 p causaldata module providing datasets used in causal analysis
+p causalimpact module to evaluate the Causal impact of an intervention on a time series using a Bayesian structural time-series model
 p causalrep module for quantifying the internal validity and representativeness of OLS, IV, and two-way fixed-effects estimands
 p causalspline module to perform nonlinear causal dose-response estimation via restricted cubic splines
 p caustests module to implement seven Granger causality tests for multivariate time series
@@ -331,7 +332,7 @@ p cv_regress module to estimate the leave-one-out error for linear regression mo
 p cvauroc module to compute Cross-validated Area Under the Curve for ROC Analysis after Predictive Modelling for Binary Outcomes
 p cvcrand module for efficient design and analysis of Cluster Randomized Trials
 p cvequal module to compute the equality of coefficients of variation (CV) from k populations
-p cvmtest module to perform a two-sample Cramer-von Mises equality-of-distributions test
+p cvmtest module to perform a k-sample Cramer-von Mises equality-of-distributions test
 p cvxhull module to compute and plot convex hulls of bivariate data
 p cwmglm module to estimate Cluster Weighted Models (CWM)
 p cycleplot module for cycle plot (month plot or seasonal subseries plot)

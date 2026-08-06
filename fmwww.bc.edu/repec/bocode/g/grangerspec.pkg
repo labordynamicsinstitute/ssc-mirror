@@ -1,0 +1,39 @@
+d 'GRANGERSPEC': module to Granger causality tests across frequencies: Granger-causality spectra 
+d
+d     grangerspec provides seven tools for Granger causality in the
+d frequency domain.  All series must be stationary, I(0):  the
+d spectra and every test are built on stationary-VAR   
+d representations, and a stable VAR (every companion root modulus
+d below one) is assumed.  Difference or detrend integrated   
+d series first - the article's own application passes all six
+d series through the Hodrick-Prescott filter before testing - and  
+d  check the Stability line of the output.     Time-domain Granger
+d causality only says whether the past of a series y helps predict
+d a series x	overall. The frequency-domain Granger-causality
+d spectrum of Geweke (1982, 1984) instead measures the strength of
+d the causal	link at each frequency, so that causality at low
+d (business-cycle) and high frequencies can be distinguished.
+d Inference on	  these spectra, however, is an open problem: the
+d limiting distribution of the estimated spectrum under the null of
+d no causality	  is unknown (Farne and Montanari 2022, Section
+d 2.2). Farne and Montanari propose a bootstrap solution: they test
+d each	  frequency-specific causality against the distribution of
+d the median causality across frequencies computed on	
+d stationary-bootstrap series that are independent by construction,
+d so that the null hypothesis is stochastic independence    between
+d the series.  grangerspec computes the spectra and performs this
+d bootstrap test. 
+d
+d KW: Granger causality
+d KW: frequency domain
+d KW: spectrum
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260805
+d
+d Author: Ozan Eruygur,  Ankara Haci Bayram Veli University
+d Support: email eruygur@@gmail.com
+d
+f grangerspec.ado
+f grangerspec.sthlp

@@ -1,27 +1,24 @@
-d 'KSTEST': module to perform weighted two-sample Kolmogorov-Smirnov equality-of-distributions test 
+d 'KSTEST': module to perform a k-sample Kolmogorov-Smirnov equality-of-distributions test
 d
-d  kstest performs a (optionally weighted) two-sample
-d Kolmogorov-Smirnov (KS) permutation test to assess whether two
-d samples come from the same distribution.  The KS statistic is the
-d single largest absolute difference between the two empirical
-d cumulative distribution functions (ECDFs), making it most
-d sensitive to a discrepancy that is large and concentrated at one
-d location, and less sensitive to differences spread across the
-d distribution or concentrated in the tails (see adtest and cvmtest
-d for alternative tests better suited to those cases). The
-d permutation test provides a valid p-value by comparing the
-d observed statistic to its distribution under random reassignment
-d of group labels. 
+d  kstest performs a (optionally weighted) k-sample
+d Kolmogorov-Smirnov (KS) permutation test to assess whether k >= 2
+d samples come from the same distribution, as proposed by Kiefer
+d (1959). It is the k-sample generalization of the two-sample test
+d (Kolmogorov 1933; Smirnov 1948).  When k > 2, there is no single
+d pairwise comparison to make, so kstest instead compares each
+d group's empirical CDF to the (weighted) pooled empirical CDF of
+d all groups combined and combines the discrepancies into a single
+d statistic based on the T statistic of Kiefer (1959). 
 d
 d KW: equality of distributions
-d KW: two-sample
+d KW: k-sample
 d KW: Kolmogorov-Smirnov
 d KW: comparisons
 d KW: weighting
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20260717
+d Distribution-Date: 20260805
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org

@@ -1,12 +1,14 @@
-*! 2.0.0 Ariel Linden 17Jul2026		// add weights, graph, and dots options
+*! 3.0.0 Ariel Linden 24Jul2026		//generalization to k-samples; added posthoc option
+*! 2.0.0 Ariel Linden 17Jul2026		// added weights, graph, and dots options
 *! 1.1.0 Ariel Linden 08Jan2026		// fixed by() to allow a string variable and use value labels
 *! 1.0.0 Ariel Linden 22Dec2025
+
 
 program define adtest, rclass
 	version 11.0
 
-	syntax varname [pweight fweight aweight iweight] [if] [in], BY(varname) ///
-		[Reps(integer 1000) SEED(string) Power(real 2) GRaph DOts]
+	syntax varname [pweight aweight iweight] [if] [in], BY(varname) ///
+		[Reps(integer 1000) SEED(string) Power(real 2) GRaph DOts POSThoc]
 
 	tempvar touse
 	marksample touse, novarlist
@@ -18,7 +20,7 @@ program define adtest, rclass
 	local depvar `varlist'
 	local origby "`by'"
 
-	// weights (new)
+	// weights
 	tempvar w
 	local hasweight = ("`weight'" != "")
 	if `hasweight' {
@@ -44,43 +46,36 @@ program define adtest, rclass
 	qui levelsof `by' if `touse', local(by_vals)
 	local num_groups : word count `by_vals'
 
-	if `num_groups' != 2 {
-		di as error "{bf:by()} variable must have exactly 2 distinct values"
-		if `num_groups' == 1 di as error "found 1 group: `by_vals'"
-		else di as error "found `num_groups' groups: `by_vals'"
+	if `num_groups' < 2 {
+		di as error "{bf:by()} variable must have at least 2 distinct values"
 		exit 420
 	}
 
-	// extract the two group values
-	local group1_str : word 1 of `by_vals'
-	local group2_str : word 2 of `by_vals'
-
-	// check if by() variable needs to be converted to numeric
+	// build numeric group codes (recoding string by() to 1..k), and labels
 	capture confirm numeric variable `by'
-	if _rc {
-		// variable is string - create numeric version
-		tempvar numby
+	local needrecode = _rc != 0
+
+	tempvar numby
+	if `needrecode' {
 		qui gen `numby' = .
-		qui replace `numby' = 0 if `origby' == "`group1_str'" & `touse'
-		qui replace `numby' = 1 if `origby' == "`group2_str'" & `touse'
-
-		// use original string values for display
-		local group1 "`group1_str'"
-		local group2 "`group2_str'"
-		local by "`numby'"
 	}
-	else {
-		// variable is numeric - get value labels if they exist
-		capture local label1 : label (`by') `group1_str'
-		capture local label2 : label (`by') `group2_str'
 
-		// use labels if available, otherwise use numeric values
-		if "`label1'" == "" local label1 "`group1_str'"
-		if "`label2'" == "" local label2 "`group2_str'"
-
-		local group1 "`label1'"
-		local group2 "`label2'"
+	local i = 0
+	foreach lv of local by_vals {
+		local ++i
+		if `needrecode' {
+			qui replace `numby' = `i' if `origby' == "`lv'" & `touse'
+			local grouplabel`i' "`lv'"
+			local grpval`i' "`i'"
+		}
+		else {
+			capture local lbl : label (`by') `lv'
+			if "`lbl'" == "" local lbl "`lv'"
+			local grouplabel`i' "`lbl'"
+			local grpval`i' "`lv'"
+		}
 	}
+	if `needrecode' local by "`numby'"
 
 	// set seed
 	if "`seed'" != "" {
@@ -94,47 +89,79 @@ program define adtest, rclass
 		_dots 0
 	}
 
-	// run AD test
-	mata: ad_by_test("`depvar'", "`by'", "`w'", "`touse'", `reps', `power', `showdots')
+	// run K-sample AD test
+	mata: adk_by_test("`depvar'", "`by'", "`w'", "`touse'", `reps', `power', `showdots')
+
+	local Astat = r(stat)
+	local Pstat = r(p)
 
 	// display results
 	if `hasweight' {
-		di as txt _n "Weighted two-sample Anderson-Darling test for equality of distribution functions"
+		di as txt _n "Weighted `num_groups'-sample Anderson-Darling test for equality of distribution functions"
 		di "{hline 80}"
 	}
 	else {
-		di as txt _n "Two-sample Anderson-Darling test for equality of distribution functions"
+		di as txt _n "`num_groups'-sample Anderson-Darling test for equality of distribution functions"
 		di "{hline 71}"
 	}
 	di as txt "Outcome:  `depvar'"
-	di as txt "Groups:   `origby' (`group1' vs `group2')"
-	di "{hline 55}"
-	di as txt "Test Statistic:  " as res %6.4f r(stat)
-	di as txt "{it:P}-value:         " as res %6.4f r(p) as txt " (based on " as res `reps' as txt " permutations)"
-	di "{hline 55}"
-	
+	di as txt "Groups:   `origby'"
+	forvalues j = 1/`num_groups' {
+		qui count if `by' == `grpval`j'' & `touse'
+		di as txt "  `j'. `grouplabel`j''" _col(35) "N = " as res r(N)
+	}
+	di "{hline 60}"
+	if `num_groups' == 2 {
+		di as txt "Test Statistic (AD):  " as res %6.4f `Astat'
+	}
+	else {
+		di as txt "Test Statistic (A^2):  " as res %6.4f `Astat'
+	}
+	di as txt "{it:P}-value:               " as res %6.4f `Pstat' as txt " (based on " as res `reps' as txt " permutations)"
+	di "{hline 60}"
+	if `num_groups' == 2 {
+*		di as txt "Note: AD = " as res "{c S|}" as txt "_x [|S_1(x)-S_2(x)| / sqrt(2*Sbar(x)(1-Sbar(x))/n_e)]^`power', " as txt "identical to {bf:adtest}'s formula (k=2 case)"
+	}
+	else {
+*		di as txt "Note: A^2 = (n_e-1)/n_e " as res "{c S|}" as txt "_x h_x {" as res "{c S|}" as txt "_j W_j (S_j(x)-Sbar(x))^2 / [n_e Sbar(x)(1-Sbar(x)) - h_x/4]}, Scholz-Stephens (1987)"
+	}
+
 	// save return values
-	return scalar stat = r(stat)
-	return scalar p = r(p)
+	return scalar stat = `Astat'
+	return scalar p = `Pstat'
 	return scalar reps = `reps'
 	return scalar power = `power'
-	return local group1 = "`group1'"
-	return local group2 = "`group2'"
+	return scalar k = `num_groups'
 	return local by = "`origby'"
+	return local statlabel = cond(`num_groups' == 2, "AD", "A2")
 
 	// graph
 	if "`graph'" != "" {
 		tempname M
-		mata: st_matrix("`M'", ad_ecdf_ad(st_data(.,"`depvar'","`touse'"), ///
-			st_data(.,"`by'","`touse'"), st_data(.,"`w'","`touse'"), `power'))
+		mata: adk_ecdf_wrap("`depvar'", "`by'", "`w'", "`touse'", `power', "`M'")
 
 		preserve
 		quietly drop _all
 		quietly svmat `M', names(col)
 		quietly rename c1 x
-		quietly rename c2 F1
-		quietly rename c3 F0
-		quietly rename c4 cumAD
+		forvalues j = 1/`num_groups' {
+			local jj = `j' + 1
+			quietly rename c`jj' S`j'
+		}
+		local sbarcol = `num_groups' + 2
+		quietly rename c`sbarcol' Sbar
+		local contribcol = `num_groups' + 3
+		quietly rename c`contribcol' cumAD
+
+		local plotcmd ""
+		local legendorder ""
+		forvalues j = 1/`num_groups' {
+			local plotcmd `"`plotcmd' (line S`j' x, sort connect(stairstep))"'
+			local legendorder `"`legendorder' `j' "`grouplabel`j''""'
+		}
+		local plotcmd `"`plotcmd' (line Sbar x, sort connect(stairstep) lpattern(dash) lcolor(black) lwidth(medthick))"'
+		local sbarnum = `num_groups' + 1
+		local legendorder `"`legendorder' `sbarnum' "Pooled""'
 
 		local cdftitle "Empirical CDFs"
 		local cdfytitle "Cumulative proportion"
@@ -143,24 +170,86 @@ program define adtest, rclass
 			local cdfytitle "Weighted cumulative proportion"
 		}
 
-		quietly twoway (line F1 x, sort connect(stairstep) lwidth(medthick))  ///
-						(line F0 x, sort connect(stairstep) lpattern(dash)), ///
-						legend(order(1 "`group2'" 2 "`group1'"))             ///
-						ytitle("`cdfytitle'") xtitle("`depvar'")             ///
-						title("`cdftitle'") name(adtest_ecdf, replace)
+		quietly twoway `plotcmd',                    ///
+			legend(order(`legendorder'))              ///
+			ytitle("`cdfytitle'")                     ///
+			xtitle("`depvar'")                        ///
+			title("`cdftitle'")                       ///
+			name(adtestk_ecdf, replace)
 
-		quietly twoway (line cumAD x, sort lcolor(red) lwidth(medthick)),   ///
-						ytitle("Cumulative AD contribution") xtitle("`depvar'") ///
-						title("Where the AD statistic accumulates")         ///
-						name(adtest_contrib, replace)
+		quietly twoway (line cumAD x, sort lcolor(red) lwidth(medthick)), ///
+			ytitle("Cumulative A^2 contribution")      ///
+			xtitle("`depvar'")                        ///
+			title("Where the A^2 statistic accumulates") ///
+			name(adtestk_contrib, replace)
 
-		graph combine adtest_ecdf adtest_contrib, rows(2)                 ///
-			title("Anderson-Darling diagnostic: `depvar'")
+		graph combine adtestk_ecdf adtestk_contrib, rows(2) ///
+			title("`num_groups'-sample Anderson-Darling diagnostic: `depvar'")
 		restore
 	}
 
+	// post-hoc pairwise comparisons
+	if "`posthoc'" != "" {
+		local npairs = `num_groups' * (`num_groups' - 1) / 2
+
+		tempname PHraw PH
+		matrix `PHraw' = J(`npairs', 2, .)
+
+		tempvar touse2
+		qui gen byte `touse2' = .
+
+		local pr = 0
+		local rownames ""
+		forvalues a = 1/`=`num_groups'-1' {
+			forvalues b = `=`a'+1'/`num_groups' {
+				local ++pr
+				qui replace `touse2' = `touse' & (`by' == `grpval`a'' | `by' == `grpval`b'')
+
+				if `showdots' {
+					di as txt _n "Pairwise: `grouplabel`a'' vs `grouplabel`b''"
+					_dots 0
+				}
+				mata: adk_by_test("`depvar'", "`by'", "`w'", "`touse2'", `reps', `power', `showdots')
+
+				matrix `PHraw'[`pr',1] = r(stat)
+				matrix `PHraw'[`pr',2] = r(p)
+				local rn`pr' "`grouplabel`a'' vs `grouplabel`b''"
+				local rownames `"`rownames' "`rn`pr''""'
+			}
+		}
+
+		// compute Bonferroni, Sidak, Holm, and FDR (Benjamini-Hochberg) adjusted p-values
+		mata: st_matrix("`PH'", (st_matrix("`PHraw'"), adtestk_padjust(st_matrix("`PHraw'")[.,2])))
+		matrix colnames `PH' = Stat P_raw P_bonf P_sidak P_holm P_fdr
+		matrix rownames `PH' = `rownames'
+
+		// size the label column to the longest group-pair label (avoids truncation)
+		local maxlen = strlen("Groups")
+		forvalues pr = 1/`npairs' {
+			local len = strlen("`rn`pr''")
+			if `len' > `maxlen' local maxlen = `len'
+		}
+		local maxlen = `maxlen' + 2
+		local tablewidth = `maxlen' + 60
+
+		di as txt _n "Post-hoc pairwise comparisons (" as res `npairs' as txt " pairs)"
+		di "{hline `tablewidth'}"
+		di as txt %-`maxlen's "Groups" "     Stat     {it:P}_raw    {it:P}_bonf   {it:P}_sidak    {it:P}_holm     {it:P}_fdr"		
+		di "{hline `tablewidth'}"
+		forvalues pr = 1/`npairs' {
+			di as txt %-`maxlen's "`rn`pr''" as res ///
+				%9.4f `PH'[`pr',1] " " %9.4f `PH'[`pr',2] " " %9.4f `PH'[`pr',3] " " ///
+				%9.4f `PH'[`pr',4] " " %9.4f `PH'[`pr',5] " " %9.4f `PH'[`pr',6]
+		}
+		di "{hline `tablewidth'}"
+		di as txt "{it:P}_bonf = Bonferroni; {it:P}_sidak = Sidak; {it:P}_holm = Holm step-down; {it:P}_fdr = Benjamini-Hochberg FDR"
+
+		return matrix pairwise = `PH'
+		return scalar npairs = `npairs'
+	}
+
 	// clean up temporary variable if created
-	if "`numby'" != "" {
+	if `needrecode' {
 		capture drop `numby'
 	}
 end
@@ -168,58 +257,42 @@ end
 version 11.0
 mata:
 
-void ad_by_test(depvar, byvar, wvar, touse, reps, power, showdots)
+void adk_by_test(string scalar depvar, string scalar byvar, string scalar wvar, ///
+	string scalar touse, real scalar reps, real scalar power, real scalar showdots)
 {
-	// grab data from Stata
+	real vector y, g, w, groups, nonmiss
+	real scalar N, obs, count, r
+
 	st_view(y = ., ., depvar, touse)
 	st_view(g = ., ., byvar, touse)
 	st_view(w = ., ., wvar, touse)
 
-	// remove any rows where either variable is missing
 	nonmiss = (y :!= . :& g :!= .)
 	y = select(y, nonmiss)
 	g = select(g, nonmiss)
 	w = select(w, nonmiss)
 
-	// get groups
 	groups = uniqrows(g)
-	if (rows(groups) != 2) {
-		errprintf("Need exactly 2 groups\n")
+	if (rows(groups) < 2) {
+		errprintf("Need at least 2 groups\n")
 		st_numscalar("r(stat)", .)
 		st_numscalar("r(p)", .)
 		return
 	}
 
-	g1 = groups[1]
-	g2 = groups[2]
+	N = rows(y)
 
-	// extract group data (values AND weights, kept as fixed pairs)
-	v1 = select(y, g :== g1)
-	v2 = select(y, g :== g2)
-	w1 = select(w, g :== g1)
-	w2 = select(w, g :== g2)
-
-	// observed statistic
-	obs = ad_compute(v1, v2, w1, w2, power)
+	obs = adk_compute(y, g, w, groups, power)
 	st_numscalar("r(stat)", obs)
 
-	// permutation test Ns
-	N = rows(y)
-	n1 = rows(v1)
-	n2 = rows(v2)
-
 	count = 0
-
 	for (r = 1; r <= reps; r++) {
-		// shuffle all (value, weight) pairs together
+		// permute (value, weight) pairs across the pooled sample; keep
+		// group labels g fixed in original row order
 		idx = order(runiform(N, 1), 1)
-		shuf  = y[idx]
-		wshuf = w[idx]
-
-		// calculate the stat for permutation
-		stat = ad_compute(shuf[1::n1], shuf[(n1+1)::N], wshuf[1::n1], wshuf[(n1+1)::N], power)
+		stat = adk_compute(y[idx], g, w[idx], groups, power)
 		if (stat >= obs) count++
-		if (showdots==1) ad_dots_tick(r, reps)
+		if (showdots == 1) adk_dots_tick(r, reps)
 	}
 
 	p = (count + 1) / (reps + 1)
@@ -227,7 +300,7 @@ void ad_by_test(depvar, byvar, wvar, touse, reps, power, showdots)
 }
 
 // dots
-void ad_dots_tick(real scalar b, real scalar B)
+void adk_dots_tick(real scalar b, real scalar B)
 {
 	real scalar pad
 	string scalar fmt
@@ -244,31 +317,53 @@ void ad_dots_tick(real scalar b, real scalar B)
 	displayflush()
 }
 
-real scalar ad_compute(a, b, wa, wb, pwr)
+// For k=2, reduces to the classic two-sample AD statistic
+// For k>2, computes the Scholz-Stephens (1987) AD statistic
+real scalar adk_compute(real vector y, real vector g, real vector w, ///
+	real vector groups, real scalar pwr)
 {
-	n1 = rows(a); n2 = rows(b); n = n1 + n2
-	d  = a \ b
-	waSum = sum(wa); wbSum = sum(wb)
-	Nw = waSum + wbSum
-	ws = wa \ wb
-	e = (wa :/ waSum) \ J(n2,1,0)
-	f = J(n1,1,0) \ (wb :/ wbSum)
+	real scalar n, k, j, i, Wtot, neTot, leadfac, Fcum, out, numv, denomv, dup, h, sdv
+	real vector idx, ys, gs, ws, Wsum, ne, Ecum, diff, wj
 
-	idx = order(d,1)
-	d = d[idx]; e = e[idx]; f = f[idx]; ws = ws[idx]
+	n = rows(y)
+	k = rows(groups)
 
-	out = 0; Ec = 0; Fc = 0; Gc = 0; dup = 1
-	ne1 = (waSum^2) / sum(wa:^2)
-	ne2 = (wbSum^2) / sum(wb:^2)
-	ne  = ne1 + ne2
+	idx = order(y, 1)
+	ys = y[idx]; gs = g[idx]; ws = w[idx]
+
+	Wsum = J(k, 1, 0)
+	ne   = J(k, 1, 0)
+	for (j=1; j<=k; j++) {
+		wj = select(w, g :== groups[j])
+		Wsum[j] = sum(wj)
+		ne[j]   = Wsum[j]^2 / sum(wj:^2)
+	}
+	Wtot    = sum(w)
+	neTot   = sum(ne)
+	leadfac = (neTot - 1) / neTot
+
+	Ecum = J(k, 1, 0)
+	Fcum = 0
+	out  = 0
+	dup  = 1
 
 	for (i=1; i<=n-1; i++) {
-		Ec = Ec + e[i]; Fc = Fc + f[i]; Gc = Gc + ws[i]/Nw
-		sd = sqrt((2*Gc*(1-Gc))/ne)
-		h = abs(Fc - Ec)
+		j = selectindex(groups :== gs[i])
+		Ecum[j] = Ecum[j] + ws[i] / Wsum[j]
+		Fcum = Fcum + ws[i] / Wtot
 
-		if (d[i] != d[i+1]) {
-			out = out + ((h/sd)^pwr) * dup
+		if (ys[i] != ys[i+1]) {
+			if (k == 2) {
+				h   = abs(Ecum[1] - Ecum[2])
+				sdv = sqrt(2 * Fcum * (1 - Fcum) / neTot)
+				if (sdv > 0) out = out + dup * (h / sdv)^pwr
+			}
+			else {
+				diff   = Ecum :- Fcum
+				numv   = sum(Wsum :* diff:^2)
+				denomv = neTot * Fcum * (1 - Fcum) - dup / 4
+				if (denomv > 0) out = out + dup * (numv / denomv)^(pwr/2)
+			}
 			dup = 1
 		}
 		else {
@@ -276,61 +371,78 @@ real scalar ad_compute(a, b, wa, wb, pwr)
 		}
 	}
 
-	return(out)
+	return(k == 2 ? out : leadfac * out)
 }
 
-real matrix ad_ecdf_ad(real vector x, real vector g, real vector w, real scalar pwr)
+// wrapper to build ECDF + contribution matrix for graphing
+void adk_ecdf_wrap(string scalar depvar, string scalar byvar, string scalar wvar, ///
+	string scalar touse, real scalar pwr, string scalar matname)
 {
-	real vector idx, xs, gs, ws, e, f, w0, w1
-	real vector ux_v, Ec_v, Fc_v, contrib
-	real scalar n, n0w, n1w, Nw, ne0, ne1, ne, i, Ec, Fc, Gc, sd, h, dup, m
-	real scalar g0val, g1val
-	real vector groups
+	real vector y, g, w, groups
 
+	y = st_data(., depvar, touse)
+	g = st_data(., byvar, touse)
+	w = st_data(., wvar, touse)
 	groups = uniqrows(g)
-	g0val  = groups[1]
-	g1val  = groups[2]
 
-	n   = rows(x)
-	idx = order(x, 1)
-	xs  = x[idx]
-	gs  = g[idx]
-	ws  = w[idx]
+	st_matrix(matname, adk_ecdf(y, g, w, groups, pwr))
+}
 
-	w0 = select(w, g:==g0val)
-	w1 = select(w, g:==g1val)
-	n0w = sum(w0)
-	n1w = sum(w1)
-	Nw  = n0w + n1w
-	ne0 = n0w^2 / sum(w0:^2)
-	ne1 = n1w^2 / sum(w1:^2)
-	ne  = ne0 + ne1
+real matrix adk_ecdf(real vector y, real vector g, real vector w, ///
+	real vector groups, real scalar pwr)
+{
+	real scalar n, k, j, i, Wtot, neTot, leadfac, Fcum, m, numv, denomv, dup, h, sdv
+	real vector idx, ys, gs, ws, Wsum, ne, Ecum, diff, wj, ux_v, Sbar_v, contrib
+	real matrix S_v
 
-	e = (gs:==g0val) :* (ws :/ n0w)
-	f = (gs:==g1val) :* (ws :/ n1w)
+	n = rows(y)
+	k = rows(groups)
+
+	idx = order(y, 1)
+	ys = y[idx]; gs = g[idx]; ws = w[idx]
+
+	Wsum = J(k, 1, 0)
+	ne   = J(k, 1, 0)
+	for (j=1; j<=k; j++) {
+		wj = select(w, g :== groups[j])
+		Wsum[j] = sum(wj)
+		ne[j]   = Wsum[j]^2 / sum(wj:^2)
+	}
+	Wtot    = sum(w)
+	neTot   = sum(ne)
+	leadfac = (neTot - 1) / neTot
+
+	Ecum = J(k, 1, 0)
+	Fcum = 0
 
 	ux_v    = J(n-1, 1, .)
-	Ec_v    = J(n-1, 1, .)
-	Fc_v    = J(n-1, 1, .)
+	S_v     = J(n-1, k, .)
+	Sbar_v  = J(n-1, 1, .)
 	contrib = J(n-1, 1, .)
-
-	Ec  = 0
-	Fc  = 0
-	Gc  = 0
-	dup = 1
 	m   = 0
+	dup = 1
+
 	for (i=1; i<=n-1; i++) {
-		Ec = Ec + e[i]
-		Fc = Fc + f[i]
-		Gc = Gc + ws[i]/Nw
-		sd = sqrt(2*Gc*(1-Gc)/ne)
-		h  = abs(Fc - Ec)
-		if (xs[i] != xs[i+1]) {
+		j = selectindex(groups :== gs[i])
+		Ecum[j] = Ecum[j] + ws[i] / Wsum[j]
+		Fcum = Fcum + ws[i] / Wtot
+
+		if (ys[i] != ys[i+1]) {
 			m = m + 1
-			ux_v[m] = xs[i]
-			Fc_v[m] = Fc
-			Ec_v[m] = Ec
-			contrib[m] = (m > 1 ? contrib[m-1] : 0) + (h/sd)^pwr * dup
+			ux_v[m] = ys[i]
+			S_v[m,.] = Ecum'
+			Sbar_v[m] = Fcum
+			if (k == 2) {
+				h   = abs(Ecum[1] - Ecum[2])
+				sdv = sqrt(2 * Fcum * (1 - Fcum) / neTot)
+				contrib[m] = (m > 1 ? contrib[m-1] : 0) + (sdv > 0 ? dup * (h/sdv)^pwr : 0)
+			}
+			else {
+				diff   = Ecum :- Fcum
+				numv   = sum(Wsum :* diff:^2)
+				denomv = neTot * Fcum * (1 - Fcum) - dup / 4
+				contrib[m] = (m > 1 ? contrib[m-1] : 0) + leadfac * (denomv > 0 ? dup * (numv/denomv)^(pwr/2) : 0)
+			}
 			dup = 1
 		}
 		else {
@@ -339,11 +451,59 @@ real matrix ad_ecdf_ad(real vector x, real vector g, real vector w, real scalar 
 	}
 
 	ux_v    = ux_v[1::m]
-	Fc_v    = Fc_v[1::m]
-	Ec_v    = Ec_v[1::m]
+	S_v     = S_v[1::m,.]
+	Sbar_v  = Sbar_v[1::m]
 	contrib = contrib[1::m]
 
-	return((ux_v, Fc_v, Ec_v, contrib))
+	return((ux_v, S_v, Sbar_v, contrib))
+}
+
+// multiple-comparison adjustments
+real matrix adtestk_padjust(real vector p)
+{
+	real scalar m, i, val, runmax, runmin
+	real vector bonf, idx, ps, adjs, holm, idxa, psa, adja, fdr, sidak
+
+	m = rows(p)
+
+	// Bonferroni
+	bonf = p :* m
+	for (i=1; i<=m; i++) if (bonf[i] > 1) bonf[i] = 1
+
+	// Sidak
+	sidak = 1 :- (1 :- p):^m
+
+	// Holm step-down
+	idx = order(p, 1)
+	ps  = p[idx]
+	adjs = J(m, 1, .)
+	runmax = 0
+	for (i=1; i<=m; i++) {
+		val = (m - i + 1) * ps[i]
+		if (val > 1) val = 1
+		if (val < runmax) val = runmax
+		runmax = val
+		adjs[i] = val
+	}
+	holm = J(m, 1, .)
+	for (i=1; i<=m; i++) holm[idx[i]] = adjs[i]
+
+	// Benjamini-Hochberg FDR step-up
+	idxa = order(p, 1)
+	psa  = p[idxa]
+	adja = J(m, 1, .)
+	runmin = 1
+	for (i=m; i>=1; i--) {
+		val = (m / i) * psa[i]
+		if (val > 1) val = 1
+		if (val > runmin) val = runmin
+		runmin = val
+		adja[i] = val
+	}
+	fdr = J(m, 1, .)
+	for (i=1; i<=m; i++) fdr[idxa[i]] = adja[i]
+
+	return((bonf, sidak, holm, fdr))
 }
 
 end

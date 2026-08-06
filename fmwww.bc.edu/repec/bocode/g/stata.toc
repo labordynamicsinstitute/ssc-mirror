@@ -126,6 +126,7 @@ p gpscore2 module to estimate the parameters of the conditional distribution of 
 p gpsmd module for or the estimation of the dose-response function when the treatment is multidimensional
 p grand modules to compute grand mean and dummies for differences
 p grand2 module to compute an estimate of the grand mean/intercept and differences
+p grangerspec module to Granger causality tests across frequencies: Granger-causality spectra 
 p graph3d module to draw colored, scalable, rotatable 3D plots
 p graphbinary module to plot explanatory variables vs binary outcome
 p graphexportpdf module to produce PDF graphics on non-Windows systems

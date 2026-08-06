@@ -1,0 +1,39 @@
+d 'CAUSALIMPACT': module to evaluate the Causal impact of an intervention on a time series using a Bayesian structural time-series model
+d
+d	 causalimpact estimates the causal effect of a designed
+d intervention on a time series, using the Bayesian structural	 
+d time-series (BSTS) approach of Brodersen, Gallusser, Koehler,
+d Remy and Scott (2015). It is a faithful Stata implementation of  
+d  the R package CausalImpact 1.4.1
+d (github.com/google/CausalImpact), against which it has been
+d verified on shared data; see help    causalimpact rcheck.    The
+d idea is a generalisation of difference-in-differences to the
+d time-series setting. A state-space model is fitted to the   
+d response over the pre-intervention period only, using a set of
+d control series that were not themselves affected by the   
+d intervention. The fitted model is then used to predict what the
+d response would have been over the post-intervention period had   
+d the intervention not taken place. That prediction is the
+d counterfactual; the difference between the observed response and
+d the	 counterfactual is the causal effect. 
+d
+d KW: causal effect
+d KW: counterfactual
+d KW: tiem series
+d KW: intervention
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260805
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f causalimpact.ado
+f causalimpact.sthlp
+f causalimpact_example.do
+f causalimpact_interpretation.sthlp
+f causalimpact_methods.sthlp
+f causalimpact_p.ado
+f causalimpact_postestimation.sthlp
+f causalimpact_rcheck.sthlp

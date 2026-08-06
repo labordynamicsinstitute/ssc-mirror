@@ -22,6 +22,8 @@ d Support: email    chucheng.wan@@outlook.com
 d
 f findsj.ado
 f findsj.sthlp
+f ../_/_getiref.ado
+f ../_/_getiref.sthlp
 f findsj.dta
 f findsj_version.dta
 f findsj_examples.do

@@ -1,27 +1,22 @@
-d 'CVMTEST': module to perform a two-sample Cramer-von Mises equality-of-distributions test
+d 'CVMTEST': module to perform a k-sample Cramer-von Mises equality-of-distributions test
 d
-d  cvmtest performs a (optionally weighted) two-sample Cramer-von
-d Mises (CVM) permutation test to assess whether two samples come
-d from the same distribution. The CVM statistic sums the squared
-d discrepancy between the two empirical cumulative distribution
-d functions (ECDFs) across every distinct value in the combined
-d sample, with no variance standardization, making it best suited
-d to detecting a discrepancy that is diffuse across the
-d distribution, and less sensitive than Kolmogorov-Smirnov (kstest)
-d to a single large, localized discrepancy or than Anderson-Darling
-d (adtest) to a discrepancy concentrated in the tails. The
-d permutation test provides a valid p-value by comparing the
-d observed statistic to its distribution under random reassignment
-d of group labels. 
+d  cvmtest performs a (optionally weighted) k-sample Cramer-von
+d Mises (CVM) permutation test to assess whether k >= 2 samples
+d come from the same distribution, as proposed by Kiefer (1959). It
+d is the k-sample generalization of the two-sample test (Cramer
+d 1928; von Mises 1931).  When k > 2, there is no single pairwise
+d comparison to make, so cvmtest instead compares each group's
+d empirical CDF to the (weighted) pooled empirical CDF of all
+d groups combined. 
 d
 d KW: equality of distributions
-d KW: two-sample
+d KW: k-sample
 d KW: comparisons
 d KW: weighting
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20260717
+d Distribution-Date: 20260805
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
