@@ -8811,6 +8811,7 @@ fmwww.bc.edu/repec/bocode/m/mtreatreg_logit_lf.ado
 fmwww.bc.edu/repec/bocode/m/matchk.ado
 fmwww.bc.edu/repec/bocode/m/mvfiles.sthlp
 fmwww.bc.edu/repec/bocode/m/matvsort.pkg
+fmwww.bc.edu/repec/bocode/m/mcset.pkg
 fmwww.bc.edu/repec/bocode/m/meloreg2.dta
 fmwww.bc.edu/repec/bocode/m/midas.sthlp
 fmwww.bc.edu/repec/bocode/m/midas_condiplot.sthlp
@@ -9974,6 +9975,7 @@ fmwww.bc.edu/repec/bocode/m/mvsktest.pkg
 fmwww.bc.edu/repec/bocode/m/maxdrawdown.sthlp
 fmwww.bc.edu/repec/bocode/m/marg_poissonhangroot_prep.ado
 fmwww.bc.edu/repec/bocode/m/mpm.sthlp
+fmwww.bc.edu/repec/bocode/m/mcset.sthlp
 fmwww.bc.edu/repec/bocode/m/myvecstr.mata
 fmwww.bc.edu/repec/bocode/m/matmap.ado
 fmwww.bc.edu/repec/bocode/m/mycd10.ado
@@ -10245,6 +10247,7 @@ fmwww.bc.edu/repec/bocode/m/mp_main.mpb
 fmwww.bc.edu/repec/bocode/m/mixi01_test.sthlp
 fmwww.bc.edu/repec/bocode/m/matmps.ado
 fmwww.bc.edu/repec/bocode/m/multisite_varitt.sthlp
+fmwww.bc.edu/repec/bocode/m/mcset.ado
 fmwww.bc.edu/repec/bocode/m/mf_mm_pieces.hlp
 fmwww.bc.edu/repec/bocode/m/mf_mm_ecdf.hlp
 fmwww.bc.edu/repec/bocode/m/mkcorr.ado

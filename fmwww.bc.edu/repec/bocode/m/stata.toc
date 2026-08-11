@@ -83,6 +83,7 @@ p mcmccqreg module to perform simulation assisted estimation of censored quantil
 p mcmclinear module for MCMC sampling of linear models
 p mcmcstats module to compute convergence and summary statistics for MCMC estimation
 p mcqscore module to score the Monetary Choice Questionnaire using logistic regression 
+p mcset module to construct the Model Confidence Set (MCS)
 p mcwr module to compute Markov chain with rewards calculations
 p mdensity module for univariate kernel density estimation, for variables or groups 
 p mdepriv module to compute synthetic indicators of multiple deprivation

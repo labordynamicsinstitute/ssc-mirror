@@ -1,0 +1,29 @@
+d 'MCSET': module to construct the Model Confidence Set (MCS)
+d
+d	 The mcset command implements the Model Confidence Set
+d (MCS) procedure of Hansen, Lunde,    and Nason (2011), which
+d provides a formal way to ask which forecasting models are   
+d statistically distinguishable from the best-performing
+d alternatives. The main output of    the procedure is not a single
+d “winner”, but a set of models that cannot be rejected as	 
+d having superior predictive ability at a chosen confidence level.
+d The algorithm is based    on the implementation in R provided by
+d Catania (2026), first described by Bernardi and    Catania (2014)
+d and the block bootstrap schemes of Baum and Otero (forthcoming). 
+d
+d KW: model confidence
+d KW: forecasting
+d KW: block bootstrap
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260810
+d
+d Author: Christopher F Baum, Boston College 
+d Support: email baum@@bc.edu
+d
+d Author: Jesús Otero, Universidad del Rosario
+d Support: email jesus.otero@@urosario.edu.co
+d
+f mcset.ado
+f mcset.sthlp
