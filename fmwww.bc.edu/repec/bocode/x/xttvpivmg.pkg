@@ -1,0 +1,38 @@
+d 'XTTVPIVMG': module to perform time-varying parameter IV mean-group estimation of heterogeneous panels
+d
+d    xttvpivmg implements the kernel-based time-varying parameter
+d instrumental variable mean-group (TVP-IV-MG) estimator of Bai,
+d Marcellino and Kapetanios (2026, Econometrics and Statistics 37,
+d 26-41), for large heterogeneous panels in which the slope
+d coefficients (a) differ across units, (b) evolve smoothly over
+d time, and (c) are attached to endogenous regressors. The estimand
+d is a path rather than a scalar: the whole trajectory of the
+d cross-sectional mean coefficient vector, estimated
+d non-parametrically with no state-space model, no assumed break
+d dates and no functional form for the time variation beyond
+d smoothness. Mechanically the command runs the time-varying IV
+d estimator of Giraitis, Kapetanios and Marcellino (2021, Journal
+d of Econometrics 224, 394-415) separately on each panel unit and
+d averages across units in the manner of Pesaran and Smith (1995,
+d Journal of Econometrics 68, 79-113). Inference follows the
+d paper's Theorem 1(ii): the kernel-IV sampling error is dominated
+d by the coefficient heterogeneity, so the standard errors are the
+d cross-sectional dispersion of the unit-level paths, with no HAC
+d correction and no bootstrap required. 
+d
+d KW: panel data
+d KW: structural breaks
+d KW: directional symmetry
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260820
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xttvpivmg.ado
+f xttvpivmg.sthlp
+f xttvpivmg_methods.sthlp
+f xttvpivmg_postestimation.sthlp
+f xttvpivmg_example.do

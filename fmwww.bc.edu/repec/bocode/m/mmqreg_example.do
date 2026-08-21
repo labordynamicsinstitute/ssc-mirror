@@ -215,3 +215,22 @@ mmqregplot age ttl_exp tenure, ///
     level(90) nozero label ///
     grcopt(title("Results (90% CI)", size(small) color(black)))
 
+
+*--------------------------------------------------------------
+* 7. The figure and the coefficient table (v2.6 / mmqregplot v2.2)
+*--------------------------------------------------------------
+* By default mmqregplot plots the estimates in memory, at the
+* quantiles you estimated, so the graph reproduces the table --
+* including the jackknife correction.
+xtset idcode year
+mmqreg ln_w age ttl_exp tenure, absorb(idcode) q(10 25 50 75 90) jknife
+mmqregplot age ttl_exp tenure
+
+* r(bplot) holds exactly what was drawn: quantile, coefficient and
+* the two confidence limits for each variable. Compare with the table.
+matrix list r(bplot)
+di _b[qtile_50:age]
+
+* Ask for a denser curve and the model is re-estimated on that grid,
+* carrying jknife over; the two agree at the shared quantiles.
+mmqregplot age, quantile(10(5)90)

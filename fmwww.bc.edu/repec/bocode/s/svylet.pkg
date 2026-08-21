@@ -1,0 +1,39 @@
+d 'SVYLET': module to perform Wald omnibus F-test, Bonferroni, and Compact Letter Display for means/proportions/totals under svy
+d
+d  svylet tests whether a mean, proportion, or total differs across
+d the categories of an over() variable (e.g., survey year) under a
+d complex survey design, and reports the result as a Compact Letter
+d Display (CLD) -- the familiar Tukey/Duncan-style letter grouping
+d from agronomic ANOVA post-hoc tables (categories sharing a letter
+d are not significantly different), adapted here to a design-based
+d Wald test rather than classical ANOVA. It reports a design-based
+d Wald omnibus F-test (with the Korn & Graubard 1990 small-sample
+d adjustment, matching Stata's own default for test/testparm after
+d svy:), all pairwise comparisons with Bonferroni correction, and
+d the resulting letter groups. All three stat() modes share one
+d Mata engine that operates directly on e(b)/e(V)/e(df_r), so the
+d same code works after svy: mean, svy: proportion, and svy: total
+d without depending on margins/testparm chaining correctly after
+d non-regress estimation commands. An optional boot() setting
+d recalibrates the omnibus F-test by prepivoting (Beran 1988),
+d using a bootstrap that resamples the pooled observations across
+d over() categories (Rao, Wu & Yue 1992; Beaumont & Patak 2012) and
+d reassigns group labels at random to enforce the null hypothesis
+d in the resampling itself (Hall & Wilson 1991). 
+d
+d KW: Wald
+d KW: Bonferroni
+d KW: means
+d KW: proportions
+d KW: totals
+d KW: complex survey data
+d
+d Requires: Stata version 14 
+d
+d Distribution-Date: 20260820
+d
+d Author: Andres Talavera Cuya,   Direccion Nacional de Censos y Encuestas -- INEI Peru
+d Support: email talaveracuya@@gmail.com
+d
+f svylet.ado
+f svylet.sthlp

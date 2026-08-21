@@ -3,7 +3,10 @@ d
 d  loevh2 calculates Loevinger's H (= RIOC) for two dichotomous
 d variables. loevh2i is the immediate command for loevh2.
 d loevh2_boot provides bootstrapped confidence intervals.
-d loevh2_booti is the immediate command for loevh2_boot. 
+d loevh2_booti is the immediate command for loevh2_boot. loevh2_svy
+d allows pweight etc. via svyset. loevh2_meta_save shared
+d subroutine used by loevh2, loevh2_boot, and loevh2_svy.
+d loevh2_meta_writedo helper for loevh2_meta_save. 
 d
 d KW: Loevinger's H
 d KW: association measure
@@ -11,16 +14,22 @@ d KW: Bootstrap confidence intervals
 d KW: overlap of two binary variables
 d KW: RIOC (relative improvement over chance)
 d
-d Requires: Stata version 14
+d Requires: Stata version 16
 d
-d Distribution-Date: 20260714
+d Distribution-Date: 20260820
 d
 d Author: Dirk Enzmann, University of Hamburg
 d Support: email dirk.enzmann@@uni-hamburg.de
 d
 f loevh2.ado
 f loevh2.sthlp
+f loevh2i.ado
+f loevh2i.sthlp
 f loevh2_boot.ado
 f loevh2_boot.sthlp
-f loevh2i.ado
 f loevh2_booti.ado
+f loevh2_booti.sthlp
+f loevh2_svy.ado
+f loevh2_svy.sthlp
+f loevh2_meta_save.ado
+f loevh2_meta_writedo.ado

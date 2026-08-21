@@ -1,0 +1,29 @@
+d 'LUMPAPELL': module to perform Lumsdaine-Papell unit root test allowing for two unknown breaks
+d
+d    lumpapell implements the Lumsdaine-Papell unit root test,
+d allowing for two breaks in the intercept, the trend or both at
+d unknown locations (Lumsdaine & Papell, Review of Economics and
+d Statistics, 1997). Four break specifications are available. Model
+d AA lets both breaks shift the intercept; model CC lets each break
+d shift both the intercept and the slope; model CA is the mixed
+d case, in which the first break shifts the intercept and the slope
+d and the second shifts the intercept only; and finally the
+d break(trend) specification, which the article does not consider,
+d lets each break shift the slope only. Lag lengths can be fixed or
+d selected by information criteria or by the sequential t-test of
+d Perron (1989). The command also writes the break dummies to the
+d dataset and prints a plain regress command that reproduces the
+d break regression. 
+d
+d KW: unit root tests
+d KW: structural breaks
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20260820
+d
+d Author: Ozan Eruygur,  Ankara Haci Bayram Veli University
+d Support: email eruygur@@gmail.com
+d
+f lumpapell.ado
+f lumpapell.sthlp

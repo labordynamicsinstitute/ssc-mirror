@@ -1,0 +1,36 @@
+d 'XTASYM': module to analyze directional asymmetry with panel data: partial sums, diagnostics and graphics
+d
+d   xtasym builds, describes and draws the positive and negative
+d partial sums used to test directional asymmetry with panel data:
+d whether an increase in a regressor has an effect equal and
+d opposite to a decrease. It implements the partial-sum
+d decomposition of Shin, Yu and Greenwood-Nimmo (2014) as used by
+d Thombs, Huang and Fitzgerald (2022, Sociological Methodology
+d 52:1-29), and the cumulated components of Allison (2019, Socius
+d 5:1-12), selectable with a convention() option, since the two
+d differ in the sign of the negative arm and therefore in the
+d symmetry restriction to be tested. Beyond construction, the
+d command reports the diagnostics needed to choose an estimator for
+d those series: a directional frequency table, the within and
+d between dispersion of each partial sum, the Pesaran (2015) CD
+d test for cross-sectional dependence (computed internally, so no
+d other package is needed), and the Pesaran (2007) CIPS panel
+d unit-root test. It also produces three publication-quality
+d figures in a choice of four colour ramps, including a
+d colour-blind-safe one.  
+d
+d KW: panel data
+d KW: structural breaks
+d KW: directional symmetry
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260820
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtasym.ado
+f xtasym.sthlp
+f xtasym_methods.sthlp
+f xtasym_example.do

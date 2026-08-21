@@ -14,6 +14,7 @@ p valuesof module  to return the contents of a variable in a macro
 p vam module to compute teacher value-added measures
 p vanelteren module to perform van Elteren's test  (generalized Wilcoxon-Mann-Whitney ranksum test)
 p var_nr module to estimate set identified SVARS 
+p varatio module for calculating the k-group omnibus variance-ratio balance diagnostic
 p varcase module to toggle the case of variable names
 p varck module to check existence of variables in Stata memory
 p vardistinct module to generate a variable representing the number(s) of distinct observations or values

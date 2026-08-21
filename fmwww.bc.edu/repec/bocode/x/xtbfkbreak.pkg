@@ -36,7 +36,7 @@ d KW: endogeneity
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20260711
+d Distribution-Date: 20260820
 d
 d Author:   Merwan Roudane, NA
 d Support: email  merwanroudane920@@gmail.com
@@ -45,3 +45,4 @@ f xtbfkbreak.ado
 f xtbfkbreak.sthlp
 f xtbfkbreak_methods.sthlp
 f xtbfkbreak_example.do
+f xtbfkbreak_diagnose.do

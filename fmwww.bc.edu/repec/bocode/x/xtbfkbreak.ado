@@ -1,4 +1,4 @@
-*! xtbfkbreak version 1.0.0  11jul2026
+*! xtbfkbreak version 1.0.1  07aug2026
 *! Structural breaks in heterogeneous panels with common correlated effects,
 *!   optionally with endogenous regressors (instrumental-variable slopes).
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
@@ -30,7 +30,7 @@ program define xtbfkbreak, eclass sortpreserve
 
     if replay() {
         if ("`e(cmd)'" != "xtbfkbreak") error 301
-        Display `0'
+        xtbfk_display `0'
         exit
     }
 
@@ -230,7 +230,7 @@ program define xtbfkbreak, eclass sortpreserve
      * 5. Graphs (do BEFORE the ereturn matrix moves, using tempname mats)
      * ------------------------------------------------------------------ */
     if ("`graph'"!="") {
-        MakeGraphs, prof(`prof') bmg(`bMG') vmat(`V') brk(`brk') ///
+        xtbfk_graphs, prof(`prof') bmg(`bMG') vmat(`V') brk(`brk') ///
             nbrk(`nbrk') rreg(`Rreg') p(`p') hascons(`hascons')  ///
             level(`level') rlist(`rlist') depvar(`depvar')       ///
             ssrname(`ssrname') coefname(`coefname')
@@ -277,13 +277,13 @@ program define xtbfkbreak, eclass sortpreserve
     ereturn matrix ssrprofile = `prof'
 
     /* ------------------------------------------------------------------ */
-    Display, level(`level')
+    xtbfk_display, level(`level')
 end
 
 /* ====================================================================== *
  *  DISPLAY
  * ====================================================================== */
-program define Display
+program define xtbfk_display
     version 14.0
     syntax [, Level(cilevel) ]
     if ("`level'"=="") local level = c(level)
@@ -293,7 +293,16 @@ program define Display
     local rlist  `e(indepvars)' `e(endog)'
     local p      : word count `rlist'
     local hascons = 0
-    local kcoef = colsof(e(b))
+
+    /* Copy e(b)/e(V) into real matrices FIRST.  colsof() needs a matrix NAME:
+       -local kcoef = colsof(e(b))- puts a matrix operand inside a scalar
+       expression and fails with r(509), "matrix operators that return
+       matrices not allowed in this context". */
+    tempname b V
+    matrix `b' = e(b)
+    matrix `V' = e(V)
+
+    local kcoef = colsof(`b')
     if (`kcoef' == `Rreg'*(`p'+1)) local hascons = 1
     local bs = `hascons' + `p'
 
@@ -319,10 +328,6 @@ program define Display
     di as text "{hline 78}"
     di as text %-20s "Regressor" " " %10s "Coef." " " %9s "Std.err." " " %8s "z" " " %7s "P>|z|" "  " %8s "Lower" " " %8s "Upper"
     di as text "{hline 78}"
-
-    tempname b V
-    matrix `b' = e(b)
-    matrix `V' = e(V)
 
     forval r = 1/`Rreg' {
         di as text "Regime `r':"
@@ -358,9 +363,9 @@ program define Display
     /* ---- Structural-change contrasts:  delta = Regime(r) - Regime(r-1) ---- */
     if (`Rreg'>=2) {
         di ""
-        di as text "Structural change in slopes:  {&delta} = Regime(r) - Regime(r-1)"
+        di as text "Structural change in slopes:  delta = Regime(r) - Regime(r-1)"
         di as text "{hline 78}"
-        di as text %-16s "Change" " " %-12s "Regressor" " " %10s "{&delta}" " " %9s "Std.err." " " %8s "z" " " %7s "P>|z|"
+        di as text %-16s "Change" " " %-12s "Regressor" " " %10s "delta" " " %9s "Std.err." " " %8s "z" " " %7s "P>|z|"
         di as text "{hline 78}"
         forval r = 2/`Rreg' {
             local rm1 = `r' - 1
@@ -397,7 +402,7 @@ end
 /* ====================================================================== *
  *  GRAPHS
  * ====================================================================== */
-program define MakeGraphs
+program define xtbfk_graphs
     version 14.0
     syntax , prof(name) bmg(name) vmat(name) brk(name) nbrk(integer) ///
              rreg(integer) p(integer) hascons(integer) level(cilevel) ///

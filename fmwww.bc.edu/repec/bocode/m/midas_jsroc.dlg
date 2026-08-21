@@ -1,0 +1,165 @@
+/*
+midas_jsroc.dlg -- dialog for -midas jsroc-
+*! version 1.0.0  14aug2026  Ben A. Dwamena, MD (bdwamena@umich.edu)
+Joint summary ROC curve with confidence/prediction regions (MIDAS suite)
+Launch with:  db midas_jsroc
+*/
+
+VERSION 16.0
+
+POSITION . . 460 420
+
+LIST colors
+BEGIN
+	black
+	blue
+	navy
+	green
+	dkgreen
+	maroon
+	red
+	orange
+	purple
+	gray
+	gs12
+	blue%30
+	green%30
+	red%30
+END
+
+OK ok1,      label("OK")
+CANCEL can1, label("Cancel")
+SUBMIT sub1, label("Submit")
+RESET res1
+COPY copy1
+HELP hlp1,   view("help midas_jsroc")
+
+/* ---------------------------------------------------------- Main tab --- */
+DIALOG main, label("midas jsroc - Joint summary ROC curve") tabtitle("Main")
+BEGIN
+  GROUPBOX gb_curve   10  10 440  70, label("Summary ROC curve")
+  CHECKBOX ck_scurve  20  32 260   ., label("Draw SROC curve") option(scurve) default(1) onclickon(script curve_on) onclickoff(script curve_off)
+  CHECKBOX ck_noextrap 40 54 390  ., label("Do not extrapolate beyond observed specificities") option(noextrapolate)
+
+  GROUPBOX gb_conf    10  90 215 100, label("Confidence display")
+  RADIO    rb_cnone   20 112 180   ., first label("None")
+  RADIO    rb_cellipse 20 134 180  ., label("Ellipse (outline only)") option(cellipse)
+  RADIO    rb_cregion 20 156 180   ., last  label("Shaded region") option(cregion)
+
+  GROUPBOX gb_pred   235  90 215 100, label("Prediction display")
+  RADIO    rb_pnone  245 112 180   ., first label("None")
+  RADIO    rb_pellipse 245 134 180 ., label("Ellipse (outline only)") option(pellipse)
+  RADIO    rb_pregion 245 156 180  ., last  label("Shaded region") option(pregion)
+
+  GROUPBOX gb_other   10 200 440 140, label("Other plot elements")
+  CHECKBOX ck_data    20 222 260   ., label("Observed study data") option(data) onclickon(script data_on) onclickoff(script data_off)
+  CHECKBOX ck_weighted 40 244 260  ., label("Size markers by study weights") option(weighted)
+  CHECKBOX ck_labeldata 40 266 260 ., label("Label points with study numbers") option(labeldata)
+  CHECKBOX ck_mean    20 288 320   ., label("Summary operating point (with results table)") option(mean)
+  CHECKBOX ck_area    20 310 420   ., label("Region areas and heterogeneity indices (requires both regions)") option(area)
+
+  GROUPBOX gb_level   10 350 215  55, label("Confidence level")
+  SPINNER  sp_level   20 372  70   ., min(10) max(99) default(95) option(level)
+  TEXT     tx_level   95 374 110   ., label("percent")
+END
+
+/* --------------------------------------------- Colors and options tab --- */
+DIALOG opts, tabtitle("Colors and options")
+BEGIN
+  GROUPBOX gb_colors  10  10 440 140, label("Colors")
+  TEXT     tx_ccol    20  32 150   ., label("SROC curve:")
+  COMBOBOX cb_curvecolor 180 30 120 ., dropdown contents(colors) option(curvecolor)
+  TEXT     tx_confc   20  60 150   ., label("Confidence region/ellipse:")
+  COMBOBOX cb_confcolor 180 58 120 ., dropdown contents(colors) option(confcolor)
+  TEXT     tx_predc   20  88 150   ., label("Prediction region/ellipse:")
+  COMBOBOX cb_predcolor 180 86 120 ., dropdown contents(colors) option(predcolor)
+  TEXT     tx_summc   20 116 150   ., label("Summary point:")
+  COMBOBOX cb_summcolor 180 114 120 ., dropdown contents(colors) option(summcolor)
+
+  GROUPBOX gb_over    10 160 440 110, label("Advanced overrides (full option strings)")
+  TEXT     tx_cvopts  20 182 150   ., label("Curve line options:")
+  EDIT     ed_curveopts 180 180 260 ., option(curveopts)
+  TEXT     tx_ptopts  20 210 150   ., label("Data marker options:")
+  EDIT     ed_pointopts 180 208 260 ., option(pointopts)
+  TEXT     tx_smopts  20 238 150   ., label("Summary marker options:")
+  EDIT     ed_summopts 180 236 260 ., option(summopts)
+
+  GROUPBOX gb_legend  10 280 440  55, label("Legend")
+  CHECKBOX ck_lgnd    20 302 150   ., label("Display legend") option(lgnd) onclickon(script lgnd_on) onclickoff(script lgnd_off)
+  TEXT     tx_lgnpos 180 304 120   ., label("Clock position:")
+  SPINNER  sp_lgnpos 300 302  60   ., min(1) max(12) default(6) option(lgnpos)
+
+  GROUPBOX gb_extra   10 345 440  55, label("Additional twoway options")
+  EDIT     ed_extra   20 367 420   .,
+END
+
+/* ------------------------------------------------- enable/disable u-i --- */
+SCRIPT curve_on
+BEGIN
+	main.ck_noextrap.enable
+	opts.cb_curvecolor.enable
+	opts.ed_curveopts.enable
+END
+
+SCRIPT curve_off
+BEGIN
+	main.ck_noextrap.disable
+	opts.cb_curvecolor.disable
+	opts.ed_curveopts.disable
+END
+
+SCRIPT data_on
+BEGIN
+	main.ck_weighted.enable
+	main.ck_labeldata.enable
+	opts.ed_pointopts.enable
+END
+
+SCRIPT data_off
+BEGIN
+	main.ck_weighted.disable
+	main.ck_labeldata.disable
+	opts.ed_pointopts.disable
+END
+
+SCRIPT lgnd_on
+BEGIN
+	opts.sp_lgnpos.enable
+END
+
+SCRIPT lgnd_off
+BEGIN
+	opts.sp_lgnpos.disable
+END
+
+/* ------------------------------------------------------ build command --- */
+PROGRAM command
+BEGIN
+	put "midas jsroc"
+	beginoptions
+		option   main.ck_scurve
+		option   main.ck_noextrap
+		option   main.rb_cellipse
+		option   main.rb_cregion
+		option   main.rb_pellipse
+		option   main.rb_pregion
+		option   main.ck_data
+		option   main.ck_weighted
+		option   main.ck_labeldata
+		option   main.ck_mean
+		option   main.ck_area
+		optionarg /hidedefault main.sp_level
+		optionarg opts.cb_curvecolor
+		optionarg opts.ed_curveopts
+		optionarg opts.cb_confcolor
+		optionarg opts.cb_predcolor
+		optionarg opts.cb_summcolor
+		optionarg opts.ed_pointopts
+		optionarg opts.ed_summopts
+		option   opts.ck_lgnd
+		optionarg /hidedefault opts.sp_lgnpos
+		if opts.ed_extra {
+			put " " opts.ed_extra
+		}
+	endoptions
+END

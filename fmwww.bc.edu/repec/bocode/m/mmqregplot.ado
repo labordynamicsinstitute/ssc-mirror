@@ -1,8 +1,22 @@
-*! mmqregplot v2.1  May 2026
-*! Shipped with mmqreg v2.5 (SSC).
+*! mmqregplot v2.2  August 2026
+*! Shipped with mmqreg v2.6 (SSC).
 *! Authors: Fernando Rios-Avila (original mmqreg, friosa@gmail.com)
 *!          Dr Merwan Roudane (mmqregplot companion, merwanroudane920@gmail.com)
 *! Description: Beautiful coefficient plots for mmqreg
+*!   v2.2: quantile paths are now read from the estimates in memory, so the
+*!         plotted coefficients reproduce the mmqreg coefficient table exactly
+*!         (this fixes the mismatch reported after mmqreg ..., jknife, where
+*!         the internal re-estimation silently dropped the jackknife
+*!         correction); re-estimation now happens only when the user asks for
+*!         a different grid with quantile() or forces it with the new refit
+*!         option, and in that case jknife is carried over; a single-panel
+*!         figure is no longer dropped from memory (keepgraphs is no longer
+*!         needed to keep one graph); returns r(bplot) with the plotted
+*!         coefficients and confidence limits; name() and nodraw are now
+*!         honoured for single-panel figures too (they used to be forwarded
+*!         to graph combine only, so name() was silently ignored whenever a
+*!         single variable was plotted); viridis RGB colours are quoted, so
+*!         the scheme no longer falls back to Stata's defaults.
 *!   v2.1: single-call multi-quantile design (replaces fragile per-quantile loop
 *!         that produced r(503) conformability errors); new options showall,
 *!         saving(prefix), gformat(), keepgraphs, nocombine; named graphs
@@ -15,7 +29,7 @@
 *!   v1.0: quantile coefficient paths with CI bands
 
 /*===========================================================================
-  mmqregplot — Visualization suite for mmqreg
+  mmqregplot - Visualization suite for mmqreg
 
   Syntax:
     mmqregplot [varlist] [, options]
@@ -23,7 +37,9 @@
   Core options:
     eqplot(qtile|location|scale|all)  which equation(s) to plot
     colorscheme(navy|viridis|autumn|warm|mono|teal)
-    quantile(numlist)   quantile range for qtile plots (default 10(5)90)
+    quantile(numlist)   re-estimate the path on this grid (default: plot the
+                        quantiles that mmqreg actually estimated)
+    refit               re-estimate on the default 10(5)90 grid
     ols olsopt(str)     OLS overlay
     feplot              fixed effects / country effects panel
     festyle(bar|hist|dot)   style for feplot (default bar)
@@ -61,6 +77,9 @@ program define mmqregplot, rclass
 		 KEEPgraphs               /// keep individual panels in memory after combine
 		 SHOWall                  /// draw each panel directly (no nodraw); skip combine
 		 NOCombine                /// skip the graph combine step
+		 REFit                    /// force re-estimation on a finer grid
+		 NAME(string asis)        /// name for the FINAL figure
+		 NODRAW                   /// do not display the final figure
 		 *]
 
 	** ---- Validate ----
@@ -83,6 +102,18 @@ program define mmqregplot, rclass
 	}
 	else local ndraw "nodraw"
 
+	** ---- Final figure name (v2.2) ----
+	** name() used to fall through to graph combine via the catch-all, so it
+	** was ignored whenever the figure ended up with a single panel. It is now
+	** parsed here and applied to whatever the final figure turns out to be.
+	local gname
+	local grepl
+	if `"`name'"'!="" {
+		local nm0 = subinstr(`"`name'"',","," ",1)
+		gettoken gname nmrest: nm0
+		if strpos(lower("`nmrest'"),"replace") local grepl "replace"
+	}
+
 	** ---- Save original estimates ----
 	tempname lastreg
 	capture: est store `lastreg'
@@ -99,8 +130,8 @@ program define mmqregplot, rclass
 	local sca_color  "`r(sca_color)'"
 
 	** ---- Apply user overrides to defaults ----
-	if `"`raopt'"'=="" local raopt "color(`ci_color') lwidth(none)"
-	if `"`lnopt'"'=="" local lnopt "lcolor(`ln_color') lwidth(medthick)"
+	if `"`raopt'"'=="" local raopt `"color("`ci_color'") lwidth(none)"'
+	if `"`lnopt'"'=="" local lnopt `"lcolor("`ln_color'") lwidth(medthick)"'
 	if `"`twopt'"'=="" {
 		local twopt "graphregion(color(white)) plotregion(margin(small)) bgcolor(white)"
 	}
@@ -123,14 +154,13 @@ program define mmqregplot, rclass
 			local oth2 "`oth2' `word'"
 		}
 	}
-	** strip jknife from oth2 (not needed for re-estimation)
-	local oth3
+	** v2.2: jknife is NO LONGER stripped. If the path has to be re-estimated
+	** it must carry the same bias correction as the model in memory, otherwise
+	** the plotted coefficients differ from the reported ones.
+	local jkflag 0
 	foreach word of local oth2 {
-		if !regexm("`word'","^(jk|jkn|jkni|jknif|jknife)") {
-			local oth3 "`oth3' `word'"
-		}
+		if regexm("`word'","^(jk|jkn|jkni|jknif|jknife)$") local jkflag 1
 	}
-	local oth2 `oth3'
 
 	** ---- Variable list for plotting ----
 	ms_fvstrip `xvar', expand dropomit
@@ -146,7 +176,7 @@ program define mmqregplot, rclass
 				if "`v'"=="`x'" local found=1
 			}
 			if `found' local vlist2 `vlist2' `v'
-			else display in red "Warning: `v' not in original model — skipped"
+			else display in red "Warning: `v' not in original model - skipped"
 		}
 		local vlist `vlist2'
 	}
@@ -154,8 +184,33 @@ program define mmqregplot, rclass
 
 	if "`cons'"!="" local vlist `vlist' _cons
 
-	** ---- Quantile list ----
-	if "`quantile'"!="" {
+	** ---- Quantile list and estimation mode (v2.2) ----
+	** Quantiles actually estimated by mmqreg, recovered from the equation
+	** names of e(b) (qtile_10, qtile_25, ..., or plain qtile if only one).
+	local qest
+	local ceq0: coleq e(b)
+	foreach e0 of local ceq0 {
+		if substr("`e0'",1,6)=="qtile_" {
+			local qv = subinstr(substr("`e0'",7,.),"_",".",.)
+			local dup 0
+			foreach q0 of local qest {
+				if "`q0'"=="`qv'" local dup 1
+			}
+			if !`dup' local qest `qest' `qv'
+		}
+	}
+	local nqest: word count `qest'
+
+	** Default = plot what mmqreg estimated, so the figure matches the table.
+	** Re-estimate only on explicit request, or when a path cannot be drawn
+	** from a single estimated quantile.
+	local usestored 0
+	if "`quantile'"=="" & "`refit'"=="" & `nqest'>=2 local usestored 1
+
+	if `usestored' {
+		local qlist `qest'
+	}
+	else if "`quantile'"!="" {
 		mmqreg_mynlist "`quantile'"
 		local qlist `r(numlist)'
 	}
@@ -186,20 +241,46 @@ program define mmqregplot, rclass
 		local fespec
 		if "`fevlist'"!="" local fespec absorb(`fevlist')
 
+		** ----- Coefficients to plot -----
+		** v2.2: read the estimates in memory FIRST (before the OLS overlay
+		** regression overwrites e()), so the plotted numbers are literally
+		** the ones mmqreg reported, jknife correction included.
+		tempname bigB bigV
+		if `usestored' {
+			matrix `bigB' = e(b)
+			matrix `bigV' = e(V)
+		}
+
 		** OLS reference (single regress)
 		if "`ols'"!="" {
 			tempname olsaux
 			qui: regress `yvar' `xvar' `ifin' `wgt', `olsopt'
 			matrix `olsaux'=r(table)
+			qui: est restore `lastreg'
 		}
 
-		** ----- Single multi-quantile mmqreg call (v2.4 supports q(numlist)) -----
-		display as text _n "Estimating quantile paths..."
-		qui: mmqreg `yvar' `xvar' `ifin' `wgt', q(`qlist') `fespec' `oth2' nols
-
-		tempname bigB bigV
-		matrix `bigB' = e(b)
-		matrix `bigV' = e(V)
+		if `usestored' {
+			display as text _n "Plotting the stored mmqreg estimates at " ///
+				as result "`nqest'" as text " quantile(s): " as result "`qlist'"
+			if `jkflag' display as text ///
+				"  (jackknife-corrected coefficients, exactly as reported by mmqreg)"
+		}
+		else {
+			** ----- Single multi-quantile mmqreg call (v2.4 supports q(numlist)) -----
+			local nqplot: word count `qlist'
+			display as text _n "Re-estimating quantile paths over `nqplot' quantiles..."
+			if `jkflag' display as text ///
+				"  (jknife carried over from the model in memory; this needs 3 estimations)"
+			qui: mmqreg `yvar' `xvar' `ifin' `wgt', q(`qlist') `fespec' `oth2' nols
+			matrix `bigB' = e(b)
+			matrix `bigV' = e(V)
+			if `nqest'>1 {
+				display as text "  note: this grid differs from the model in memory (estimated: `qest')."
+				display as text "        Coefficients coincide at the shared quantiles; omit"
+				display as text "        quantile()/refit to plot exactly the reported table."
+			}
+			qui: est restore `lastreg'
+		}
 		local cnms: colnames `bigB'
 		local ceqs: coleq    `bigB'
 		local K     = colsof(`bigB')
@@ -218,12 +299,13 @@ program define mmqregplot, rclass
 		local gcnt: word count `vlist'
 		local cnt  = 0
 		local nmtitle: word count `mtitles'
-		tempname aux
+		tempname aux plotm
+		local plotnms
 
 		foreach v of local vlist {
 			local cnt = `cnt' + 1
 
-			** Per-variable matrix: Nq rows × 4 cols (q, b, ll, ul)
+			** Per-variable matrix: Nq rows x 4 cols (q, b, ll, ul)
 			matrix `aux' = J(`nq', 4, .)
 			local i = 0
 			local missing_any = 0
@@ -255,7 +337,18 @@ program define mmqregplot, rclass
 			}
 
 			if `missing_any' {
-				display in red "mmqregplot: some quantiles for `v' not found in e(b) — partial plot"
+				display in red "mmqregplot: some quantiles for `v' not found in e(b) - partial plot"
+			}
+
+			** accumulate the plotted numbers so they can be checked against
+			** the coefficient table: r(bplot)
+			if `cnt'==1 {
+				matrix `plotm' = `aux'
+				local plotnms "quantile `v'_b `v'_ll `v'_ul"
+			}
+			else {
+				matrix `plotm' = `plotm', `aux'[1...,2..4]
+				local plotnms "`plotnms' `v'_b `v'_ll `v'_ul"
 			}
 
 			svmat double `aux', names(__mmqp_)
@@ -277,9 +370,9 @@ program define mmqregplot, rclass
 					qui: gen double __mmqo_1 = `olsb'  in 1/`nq'
 					qui: gen double __mmqo_2 = `olsll' in 1/`nq'
 					qui: gen double __mmqo_3 = `olsul' in 1/`nq'
-					local olsci (line __mmqo_1 __mmqp_1, lpattern(solid) lcolor(`ols_color') lwidth(medthick)) ///
-								(line __mmqo_2 __mmqp_1, lpattern(dash) lcolor(`ols_color'%60) lwidth(thin)) ///
-								(line __mmqo_3 __mmqp_1, lpattern(dash) lcolor(`ols_color'%60) lwidth(thin))
+					local olsci (line __mmqo_1 __mmqp_1, lpattern(solid) lcolor("`ols_color'") lwidth(medthick)) ///
+								(line __mmqo_2 __mmqp_1, lpattern(dash) lcolor("`ols_color'%60") lwidth(thin)) ///
+								(line __mmqo_3 __mmqp_1, lpattern(dash) lcolor("`ols_color'%60") lwidth(thin))
 				}
 			}
 
@@ -320,6 +413,10 @@ program define mmqregplot, rclass
 		}
 
 		** Return
+		capture: matrix colnames `plotm' = `plotnms'
+		capture: return matrix bplot = `plotm'
+		return local quantiles "`qlist'"
+		return scalar usestored = `usestored'
 		return matrix qq = `qq'
 	}
 
@@ -398,7 +495,7 @@ program define mmqregplot, rclass
 		display in red "No plots were generated."
 	}
 	else if "`nocombine'"!="" {
-		** Skip combine — show each panel individually
+		** Skip combine - show each panel individually
 		foreach pnm of local grcmb_all {
 			graph display `pnm'
 		}
@@ -406,38 +503,47 @@ program define mmqregplot, rclass
 		display as text "  use {stata graph display NAME} to bring one to front (e.g. {stata graph display mmqp1})"
 	}
 	else if `npanels' == 1 {
-		** Single panel — re-draw without nodraw overlay
+		** Single panel - re-draw without the nodraw overlay.
+		** v2.2: a lone panel IS the final figure, so it is always kept, and
+		** name()/nodraw apply to it. keepgraphs only governs the individual
+		** panels of a combined figure.
 		local singpanel: word 1 of `grcmb_all'
-		graph display `singpanel'
-		if "`keepgraphs'"=="" {
-			capture: graph drop `singpanel'
+		if "`gname'"!="" {
+			capture: graph rename `singpanel' `gname', `grepl'
+			if !_rc local singpanel `gname'
+			else display in red ///
+				"name(`gname') not applied: a graph of that name already exists (add , replace)"
 		}
+		if "`nodraw'"=="" graph display `singpanel'
+		display as text "Graph kept in memory as: " as result "`singpanel'"
 	}
 	else {
 		** Build clean title
 		if "`eqplot'"=="all" {
-			local grc_title "MM-QR Results — `yvar'"
+			local grc_title "MM-QR Results - `yvar'"
 		}
 		else if "`eqplot'"=="qtile" {
-			local grc_title "Quantile Coefficient Paths — `yvar'"
+			local grc_title "Quantile Coefficient Paths - `yvar'"
 		}
 		else {
-			local grc_title "MM-QR `eqplot' Equation — `yvar'"
+			local grc_title "MM-QR `eqplot' Equation - `yvar'"
 		}
 
-		capture graph drop mmqcombined
+		local combname mmqcombined
+		if "`gname'"!="" local combname `gname'
+		capture graph drop `combname'
 		graph combine `grcmb_all',                              ///
-			name(mmqcombined, replace)                          ///
+			name(`combname', replace)                           ///
 			title("`grc_title'", size(medsmall) color(navy))    ///
 			graphregion(color(white)) imargin(tiny)             ///
-			`grcopt' `options'
+			`nodraw' `grcopt' `options'
 
 		** Save combined (if requested)
 		if "`saving'"!="" {
-			capture qui: graph save mmqcombined "`saving'.gph", replace
+			capture qui: graph save `combname' "`saving'.gph", replace
 			if "`gformat'"!="" {
 				foreach fmt of local gformat {
-					capture qui: graph export "`saving'.`fmt'", name(mmqcombined) replace
+					capture qui: graph export "`saving'.`fmt'", name(`combname') replace
 				}
 			}
 			display as text "Saved combined figure: " as result "`saving'.gph"
@@ -459,7 +565,7 @@ end
 
 
 ** =========================================================
-** mmqreg_coefgraph — Horizontal coefplot for location/scale
+** mmqreg_coefgraph - Horizontal coefplot for location/scale
 ** Uses e(bls) and e(vls) from current estimates
 ** =========================================================
 program define mmqreg_coefgraph
@@ -549,9 +655,9 @@ program define mmqreg_coefgraph
 
 	twoway ///
 		(rspike __mmqc_3 __mmqc_4 __mmqc_1, horizontal ///
-			lcolor(`pcolor'%50) lwidth(thick)) ///
+			lcolor("`pcolor'%50") lwidth(thick)) ///
 		|| (scatter __mmqc_1 __mmqc_2, ///
-			msymbol(circle) mcolor(`pcolor') msize(medlarge)) , ///
+			msymbol(circle) mcolor("`pcolor'") msize(medlarge)) , ///
 		`xzero' ///
 		ylabel(`ylabcmd', angle(0) nogrid labsize(small)) ///
 		ytitle("") xtitle("Coefficient (`level'% CI)", size(small)) ///
@@ -565,7 +671,7 @@ end
 
 
 ** =========================================================
-** mmqreg_feplot — Fixed effects / country effects visualization
+** mmqreg_feplot - Fixed effects / country effects visualization
 ** Requires: areg available; single absorb variable
 ** =========================================================
 program define mmqreg_feplot
@@ -626,9 +732,9 @@ program define mmqreg_feplot
 			** Show individual unit labels
 			twoway ///
 				(bar __fe_mean__ __fe_pos__ if __fe_color__==0 & __fe_id__==1, ///
-					horizontal barw(0.7) color(`fe_neg'%80) lwidth(none)) ///
+					horizontal barw(0.7) color("`fe_neg'%80") lwidth(none)) ///
 				|| (bar __fe_mean__ __fe_pos__ if __fe_color__==1 & __fe_id__==1, ///
-					horizontal barw(0.7) color(`fe_pos'%80) lwidth(none)) , ///
+					horizontal barw(0.7) color("`fe_pos'%80") lwidth(none)) , ///
 				xline(0, lcolor(gs10) lpattern(dash)) ///
 				ytitle("`felab'", size(small)) xtitle("Fixed effect", size(small)) ///
 				title("Country/Unit Effects: `felab'", size(small) color(navy)) ///
@@ -637,11 +743,11 @@ program define mmqreg_feplot
 				`twopt'
 		}
 		else {
-			** Too many units — use histogram
+			** Too many units - use histogram
 			histogram __fe_mean__ if __fe_id__==1, ///
 				kdensity frequency ///
-				color(`fe_pos'%50) lcolor(`fe_pos') ///
-				kdenopts(lcolor(`fe_neg') lwidth(medthick)) ///
+				color("`fe_pos'%50") lcolor("`fe_pos'") ///
+				kdenopts(lcolor("`fe_neg'") lwidth(medthick)) ///
 				xtitle("Fixed Effect (unit mean deviation)", size(small)) ///
 				ytitle("Frequency", size(small)) ///
 				title("Distribution of `felab' Effects (N=`N_fe' units)", ///
@@ -656,8 +762,8 @@ program define mmqreg_feplot
 		** Histogram with KDE overlay
 		histogram __fe_mean__ if __fe_id__==1, ///
 			kdensity frequency ///
-			color(`fe_pos'%40) lcolor(`fe_pos') ///
-			kdenopts(lcolor(`fe_neg') lwidth(medthick)) ///
+			color("`fe_pos'%40") lcolor("`fe_pos'") ///
+			kdenopts(lcolor("`fe_neg'") lwidth(medthick)) ///
 			xtitle("Fixed Effect (unit mean deviation)", size(small)) ///
 			ytitle("Frequency", size(small)) ///
 			title("Distribution of `felab' Effects (N=`N_fe' units)", ///
@@ -672,9 +778,9 @@ program define mmqreg_feplot
 		** Cleveland dot plot (sorted scatter)
 		twoway ///
 			(scatter __fe_pos__ __fe_mean__ if __fe_id__==1 & __fe_mean__<0, ///
-				msymbol(circle) mcolor(`fe_neg'%80) msize(small)) ///
+				msymbol(circle) mcolor("`fe_neg'%80") msize(small)) ///
 			|| (scatter __fe_pos__ __fe_mean__ if __fe_id__==1 & __fe_mean__>=0, ///
-				msymbol(circle) mcolor(`fe_pos'%80) msize(small)) ///
+				msymbol(circle) mcolor("`fe_pos'%80") msize(small)) ///
 			|| (dropline __fe_pos__ __fe_mean__ if __fe_id__==1, ///
 				lcolor(gs12) lwidth(vthin) msymbol(none) horizontal) , ///
 			xline(0, lcolor(gs10) lpattern(dash)) ///
@@ -693,7 +799,7 @@ end
 
 
 ** =========================================================
-** mmqreg_colors — Color palette factory
+** mmqreg_colors - Color palette factory
 ** =========================================================
 program define mmqreg_colors, rclass
 	syntax, scheme(string)
@@ -759,7 +865,7 @@ program define mmqreg_colors, rclass
 		return local sca_color "orange"
 	}
 	else {
-		** unknown → fallback to navy
+		** unknown -> fallback to navy
 		return local ci_color  "navy%25"
 		return local ln_color  "navy"
 		return local dot_color "navy"
@@ -773,7 +879,7 @@ end
 
 
 ** =========================================================
-** mmqreg_mynlist — numlist parser
+** mmqreg_mynlist - numlist parser
 ** =========================================================
 program define mmqreg_mynlist, rclass
 	syntax anything,
@@ -790,7 +896,7 @@ end
 
 
 ** =========================================================
-** mmqreg_stripper — parse original command line
+** mmqreg_stripper - parse original command line
 ** =========================================================
 program define mmqreg_stripper, rclass
 	syntax anything [if] [in] [aw iw pw fw], ///

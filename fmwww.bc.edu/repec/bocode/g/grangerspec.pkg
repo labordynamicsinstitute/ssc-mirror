@@ -1,28 +1,16 @@
-d 'GRANGERSPEC': module to Granger causality tests across frequencies: Granger-causality spectra 
+d 'GRANGERSPEC': module to conduct Granger causality tests across frequencies: Granger-causality spectra 
 d
-d     grangerspec provides seven tools for Granger causality in the
-d frequency domain.  All series must be stationary, I(0):  the
-d spectra and every test are built on stationary-VAR   
-d representations, and a stable VAR (every companion root modulus
-d below one) is assumed.  Difference or detrend integrated   
-d series first - the article's own application passes all six
-d series through the Hodrick-Prescott filter before testing - and  
-d  check the Stability line of the output.     Time-domain Granger
-d causality only says whether the past of a series y helps predict
-d a series x	overall. The frequency-domain Granger-causality
-d spectrum of Geweke (1982, 1984) instead measures the strength of
-d the causal	link at each frequency, so that causality at low
-d (business-cycle) and high frequencies can be distinguished.
-d Inference on	  these spectra, however, is an open problem: the
-d limiting distribution of the estimated spectrum under the null of
-d no causality	  is unknown (Farne and Montanari 2022, Section
-d 2.2). Farne and Montanari propose a bootstrap solution: they test
-d each	  frequency-specific causality against the distribution of
-d the median causality across frequencies computed on	
-d stationary-bootstrap series that are independent by construction,
-d so that the null hypothesis is stochastic independence    between
-d the series.  grangerspec computes the spectra and performs this
-d bootstrap test. 
+d    grangerspec tests for Granger causality at different
+d frequencies, so that Granger causality at low (business-cycle)
+d and high frequencies can be distinguished. It estimates the
+d Granger-causality spectrum, which shows how strongly one series
+d helps predict another at each frequency, in unconditional form
+d and conditional on a third variable, and tests its significance
+d with the bootstrap method of Farne & Montanari (2022,
+d Computational Economics). A further test shows whether the
+d causality between the two series changes once the third variable
+d is taken into account, and the parametric Breitung & Candelon
+d (2006) F test is included as a complement. 
 d
 d KW: Granger causality
 d KW: frequency domain

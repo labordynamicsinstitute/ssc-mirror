@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.4 May 2026}{...}
+{* *! version 2.6 August 2026}{...}
 {cmd:help mmqreg}
 
 {hline}
@@ -142,6 +142,26 @@ conditional quantile function of y given x:
 
 {pmore}
 beta(tau) = b + g * Q(tau)
+
+
+{marker whatsnew26}{...}
+{title:What's new in v2.6}
+
+{pstd}
+{bf:Bug fix ({cmd:jknife} without {cmd:absorb()}).} In v2.4 and v2.5,
+{cmd:mmqreg y x, jknife} on a model without {cmd:absorb()} stopped with
+{err:program error: code follows on the same line as open brace} {cmd:r(198)}:
+one internal loop was written on a single line, which Stata does not accept
+inside a program. The loop was redundant and has been removed. The
+{cmd:absorb()} + {cmd:jknife} path was not affected.{p_end}
+
+{pstd}
+{bf:{help mmqregplot} v2.2.} The quantile paths are now taken from the
+estimates in memory, so the plotted coefficients reproduce the coefficient
+table exactly, {cmd:jknife} included. Previously {cmd:mmqregplot} re-estimated
+the model internally and dropped the {cmd:jknife} option while doing so, so the
+figure showed the uncorrected path. A single-panel figure is also no longer
+dropped from memory. See {help mmqregplot} for details.{p_end}
 
 
 {marker whatsnew24}{...}

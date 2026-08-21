@@ -1,5 +1,5 @@
 {smcl}
-{* *! xtbfkbreak version 1.0.0  11jul2026}{...}
+{* *! xtbfkbreak version 1.0.1  07aug2026}{...}
 {vieweralsosee "xtbfkbreak" "help xtbfkbreak"}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "xtdcce2" "help xtdcce2"}{...}

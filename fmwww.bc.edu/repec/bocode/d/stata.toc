@@ -17,6 +17,7 @@ p datefrac module to convert calendar dates to fractional years
 p datelist module to to create ascending numeric lists of dates
 p datesum module to display summary statistics for date variables
 p datmat module to multiply variables via matrix multiplication
+p dbf2stata module for batch conversion of DBF files to Stata .dta format
 p dbmscopybatch module to produce a batch file for DBMS/Copy 
 p dbnomics module for DB.nomics, the world's economic database
 p dcreate module to create efficient designs for discrete choice experiments

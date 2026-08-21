@@ -203,6 +203,7 @@ p riflogit module to fit unconditional logistic regression
 p rii module to perform Repeated-Imputation Inference
 p riigen module to generate Variables to Compute the Relative Index of Inequality
 p rioc module to compute Relative improvement over chance (RIOC)
+p riskcalplot module to plot observed and model-predicted risks across values of discrete clinical scores
 p ritest module to perform randomization inference and permutation tests
 p rkqte module for estimation and robust inference for quantile treatment effects (QTE) in regression kink designs (RKD)
 p rmanova module to estimate repeated measures ANOVA

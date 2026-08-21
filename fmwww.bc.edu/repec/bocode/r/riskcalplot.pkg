@@ -1,0 +1,30 @@
+d 'RISKCALPLOT': module to plot observed and model-predicted risks across values of discrete clinical scores
+d
+d      riskcalplot displays observed event risks and
+d model-predicted risks across the distinct values of one to five
+d discrete    clinical scores.	  For each score value, the
+d observed risk is the proportion of observations with endpoint=1.
+d Marker size is proportional to the	number of observations at
+d that score value.    Unless noci is specified, each observed risk
+d is accompanied by an exact Clopper-Pearson binomial confidence
+d interval. The    confidence level is controlled by level().	 A
+d separate regression model is fitted for each score. model(logit)
+d fits a logistic risk function. model(log) fits a modified   
+d Poisson model with a log link and robust standard errors.    The
+d command uses a common complete-case analysis sample containing
+d nonmissing values for the endpoint and every score	specified
+d in the command. 
+d
+d KW: clinical scores
+d KW: event risks
+d KW: predicted risks
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260820
+d
+d Author: Suppachai Lawanaskol,  Chaiprakarn Hospital, Chiang Mai, Thailand
+d Support: email suppachai.lawanaskol@@gmail.com
+d
+f riskcalplot.ado
+f riskcalplot.sthlp

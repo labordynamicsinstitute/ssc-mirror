@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0  19nov2013}{...}
+{* *! version v3.0.0  21Jul2026}{...}
 {hline}
 
 {title:Title}
@@ -17,15 +17,8 @@
 {opt nc:omb(#1,#2)}
 {opt same:sample}
 {opt vs:elect}
-{opt dl:ags(numlist)}
-{opt il:ags(numlist)}
-{opt l:ags(numlist)}
+{opt gr:oupscandidates(groupvars1 [| groupvars2...] )}
 {opt f:ixvar(varlist_fix)}
-{opt sc:hange(varname_sc)}
-{opt int:eractions}
-{opt sq:uares}
-{opt cub:ic}
-{opt fixint:eractions}
 {opt o:utsample(#)}
 {opt cmde:st(commandname)}
 {opt cmdo:ptions(commandoptions)}
@@ -60,6 +53,10 @@
 
 {phang2}{cmd:fweight}s, {cmd:aweight}s, and {cmd:pweight}s are allowed depending on the estimation command specified in {opt cmdest(commandname)}; see
 {help weight}. {p_end}
+
+{phang2} Starting with version 3.0.0 of {cmd:gsreg}, all variable lists (such as
+{varlist:_ocand} and {varlist:_fix}) allow time-series and factor-variable operators (see {it:{help tsvarlist}}, {it:{help fvvarlist}}). These operators should be used with caution, as variables may be repeated across different variable lists, potentially leading to unexpected errors, an excessively large number of combinations, or both. Consequently, the {cmd:lags}, {cmd:dlags}, {cmd:ilags}, {cmd:schange}, {cmd:interactions}, {cmd:squares}, {cmd:cubic} and {cmd:fixinteractions} options available in previous versions are no longer necessary and have therefore been removed. {p_end}
+
 
 {*:*****************************************************************************************}
 {title:Sections}
@@ -197,118 +194,20 @@ the only additional gsreg option that can be specified is the fixvar option.
 See {it:{help gsreg##egvselect:Examples of using vselect}} 
 {p_end}
 
-{*:*****************************************************************************************}
-{marker lag}{...}
-{syntab:{it:Lag structure options}}
+{phang} {opt gr:oupscandidates (groupvars1 [| groupvars2 ..])} This option allows 
+groups of variables to be included among the candidate variables, with all variables
+in each group being included or excluded jointly. Thus, for the purposes of 
+constructing combinations, each group is treated as a single variable. For example,
+{it:groupscandidates(v1_1 v1_2 | v2_1 v2_2 v2_3)} defines two groups: "v1_1 v1_2"
+and "v2_1 v2_2 v2_3". Therefore, these groups add four specifications to the set of
+combinations: one including neither group, one including group 1 only, one including
+group 2 only, and one including both groups.{p_end}
 
 {phang} 
-{opt dl:ags(numlist)} allows to include dependent variable lags ({depvar}) among 
-candidate covariates. tsset must be specified when using this option. 
-See {it:{help gsreg##eglag:Examples of using dlag, ilags or lags}} 
-{p_end}
-
-{phang} 
-dlags({it:#}) adds among candidates the {it:#} dependent variable lag. 
-{p_end}
-
-{phang} 
-dlags({it:#1/#2}) adds among candidates all dependent variable lags from {it:#1} to
-{it:#2} considering one-unit intervals. 
-{p_end}
-
-{phang} 
-dlags({it:#1 #2 #3}) adds among candidates the {it:#1}, the {it:#2}, and the {it:#3} 
-dependent variable lags. 
-{p_end}
-
-{phang} 
-dlags({it:#1 (#d) #2}) adds among candidates all dependent variable lags from {it:#1} 
-to {it:#2} considering {it:#d} unit intervals. 
-{p_end}
-
-{phang} 
-dlags({it:#1 #2 #3 … #4 (#d) #5}) adds among candidates dependent variable lags {it:#1}
-, {it:#2}, and {it:#3}, and additionally all dependent variable lags from {it:#4} to
-{it:#5} considering {it:#d} unit intervals.
-{p_end}
-
-{phang} 
-{opt il:ags(numlist)} allows including independent variable lags among original candidates.
-The syntax is flexible and identical to that used in {opt dlags}. 
-See {it:{help gsreg##eglag:Examples of using dlag, ilags or lags}} 
-{p_end}
-
-{phang} 
-{opt l:ags(numlist)} allows to jointly include dependent and independent variable lags 
-among original candidates. It replaces {opt dlags} and {opt ilags} when the argument is 
-identical. tsset must be specified when using this option. {opt lags} must not be specified 
-together with {opt dlags} or {opt ilags}. 
-See {it:{help gsreg##eglag:Examples of using dlag, ilags or lags}} 
-{p_end}
-
-{*:*****************************************************************************************}
-{marker fixvar}{...}
-{syntab:{it:Fixed variable options}}
-
-{phang} 
-{opt f:ixvar(varlist_fix)} allows users to specify a subset of covariates which must be 
-included in all regressions. Variables defined in {varlist:_fix} must not be included 
-among the standard candidates ({it:{help gsreg:varlist_ocand}}). 
+{opt f:ixvar(varlist_fix)} allows users to specify a subset of covariates which 
+must be included in all regressions. Variables defined in {varlist:_fix} must
+not be included among the standard candidates ({it:{help gsreg:varlist_ocand}}). 
 See {it:{help gsreg##egfixvar:Examples of using fixvar}} 
-{p_end}
-
-{*:*****************************************************************************************}
-{marker interactions}{...}
-{syntab:{it:Options for transformations and interactions}}
-
-{phang} 
-{opt sc:hange(varname_sc)} tests structural change of slops (using dummy {varname:_sc} as 
-interaction with all candidates) or dependent variable levels (alternatively allowing 
-{varname:_sc} to interact with the intercept). Interactions of {varname:_sc} with any candidate 
-will only be included if this candidate is in the equation. {varname:_sc} must not be included 
-among original candidates ({it:{help gsreg:varlist_ocand}}) because it will only be used for 
-structural change. 
-See {it:{help gsreg##eginteractions:Examples of using transformations and interactions}} 
-{p_end}
-
-{phang} 
-{opt int:eractions} includes additional covariate candidates to evaluate all possible 
-interactions without repetition among original candidates ({it:{help gsreg:varlist_ocand}}) 
-and lags, if specified in {it:{help gsreg##lag:dlags}}, {it:{help gsreg##lag:ilags}} or 
-{it:{help gsreg##lag:lags}}. Interactions between any two candidates will only be allowed 
-if both of them are in the equation. When used together with {opt schange}, the structural 
-change of interactions will only be used if these interactions are included in the estimated 
-specification. 
-See {it:{help gsreg##eginteractions:Examples of using transformations and interactions}} 
-{p_end}
-
-{phang} 
-{opt sq:uares} adds the squares of each variable in {it:{help gsreg:varlist_ocand}} 
-(and lags, if specified in {it:{help gsreg##lag:dlags}}, {it:{help gsreg##lag:ilags}} 
-or {it:{help gsreg##lag:lags}}) as new candidates. Each square will only be accepted as 
-a regression covariate if its level (original variable) is present in the equation. 
-Similarly, when used together with {opt schange}, the structural change of the squares 
-will only be allowed if these squares are in the equation. 
-See {it:{help gsreg##eginteractions:Examples of using transformations and interactions}} 
-{p_end}
-
-{phang} 
-{opt cub:ic} is similar to {opt squares}. It includes cubes of each variable in
-{it:{help gsreg:varlist_ocand}} (and lags, if specified in {it:{help gsreg##lag:dlags}},
-{it:{help gsreg##lag:ilags}} or {it:{help gsreg##lag:lags}}) as new candidates. 
-These cubes will only be accepted as covariates if level and squares of the same 
-variable are also included in the equation. As for {opt squares}, when used together
-with {opt schange}, the structural change of the cubes will only be allowed if these 
-cubes are also in the equation. 
-See {it:{help gsreg##eginteractions:Examples of using transformations and interactions}} 
-{p_end}
-
-{phang} 
-{opt fixint:eractions} is similar to {opt interactions}, but it includes as additional
-candidates all possible interactions without repetition among {it:{help gsreg:varlist_ocand}}
-(and lags, if specified in {it:{help gsreg##lag:dlags}}, {it:{help gsreg##lag:ilags}} or 
-{it:{help gsreg##lag:lags}}) and each fixed variable in {it:{help gsreg##fixvar:varlist_fix}}. 
-See {it:{help gsreg##eginteractions:Examples of using transformations and interactions}} 
 {p_end}
 
 {*:*****************************************************************************************}
@@ -322,7 +221,7 @@ forecast accuracy. {opt outsample(#)} leaves the last {it:#} periods to make for
 regressions are performed over the first {it:T-#} periods – where {it:T} is the total number of
 available time series observations). When this option is specified, {cmd:gsreg} calculates and
 store the rmse_in (in sample root mean square error) between period {it:1} and {it:N-#}, and 
-rmse_out (out sample root mean square error) between period {it:N-#} and {it:N}. tsset must be
+rmse_out (out sample root mean square error) between period {it:N-#} and {it:N}. {opt tsset} must be
 specified when using this option.
 See {it:{help gsreg##egoutsample:Examples of using outsample}} 
 {p_end}
@@ -391,7 +290,7 @@ See {it:{help gsreg##egposestim:Examples of using Post-estimation options}}
 {p_end}
 
 {phang} {opt arc:hlm} runs default {it:{help regress postestimationts##archlm:estat archlm}} 
-after each regression and saves p-values. tsset must be specified when using this option.
+after each regression and saves p-values. {opt tsset} must be specified when using this option.
 See {it:{help gsreg##egposestim:Examples of using Post-estimation options}} 
 {p_end}
 
@@ -402,7 +301,7 @@ See {it:{help gsreg##egposestim:Examples of using Post-estimation options}}
 {phang}	Serial autocorrelation tests{p_end}
 
 {phang} {opt bgod:frey} computes default {it:{help regress postestimationts##bgodfrey:estat bgodfrey}}
-after each regression and saves p-values. tsset must be specified when using this option.
+after each regression and saves p-values. {opt tsset} must be specified when using this option.
 See {it:{help gsreg##egposestim:Examples of using Post-estimation options}} 
 {p_end}
 
@@ -411,7 +310,7 @@ See {it:{help gsreg##egposestim:Examples of using Post-estimation options}}
 {p_end}
 
 {phang} {opt dur:binalt} calculates {it:{help regress postestimationts##durbinalt:estat durbinalt}} 
-after each regression and saves the p-values. tsset must be specified when using this option.
+after each regression and saves the p-values. {opt tsset} must be specified when using this option.
 See {it:{help gsreg##egposestim:Examples of using Post-estimation options}} 
 {p_end}
 
@@ -420,14 +319,14 @@ See {it:{help gsreg##egposestim:Examples of using Post-estimation options}}
 {p_end}
 
 {phang} {opt dw:atson} runs {it:{help regress postestimationts##dwatson:estat dwatson}} after each
-regression and saves the Durbin-Watson statistic. tsset must be specified when using this option.
+regression and saves the Durbin-Watson statistic. {opt tsset} must be specified when using this option.
 See {it:{help gsreg##egposestim:Examples of using Post-estimation options}} 
 {p_end}
 
 {phang} Normality tests of residuals{p_end}
 
 {phang} {opt sk:test} computes {it:{help sktest:sktest}} after each regression and saves the p-value 
-of the joint probability of skewness and kurtosis for normality. tsset must be specified when using this option.
+of the joint probability of skewness and kurtosis for normality. 
 See {it:{help gsreg##egposestim:Examples of using Post-estimation options}} 
 {p_end}
 
@@ -436,7 +335,7 @@ See {it:{help gsreg##egposestim:Examples of using Post-estimation options}}
 {p_end}
 
 {phang} {opt sw:ilk} calculates {it:{help swilk:swilk}} after each regression and saves the p-value 
-of the Shapiro-Wilk normality test. tsset must be specified when using this option.
+of the Shapiro-Wilk normality test. 
 See {it:{help gsreg##egposestim:Examples of using Post-estimation options}} 
 {p_end}
 
@@ -445,7 +344,7 @@ See {it:{help gsreg##egposestim:Examples of using Post-estimation options}}
 {p_end}
 
 {phang} {opt sf:rancia} runs {it:{help sfrancia:sfrancia}} after each regression and saves the p-value 
-of the Shapiro-Francia normality test. tsset must be specified when using this option.
+of the Shapiro-Francia normality test. 
 See {it:{help gsreg##egposestim:Examples of using Post-estimation options}} 
 {p_end}
 
@@ -647,70 +546,7 @@ models of 2, 3 and 4 covariates (plus the intercept) in terms of in-sample RMSE,
 
 {pstd} Back to {it:{help gsreg##genoption:General options}} {p_end}
 {pstd} Back to {it:{help gsreg:Top}} {p_end}
-{*:*****************************************************************************************}
-{marker eglag}{...}
-{dlgtab: Examples of using dlags, ilags and lags}
 
-{phang2}{cmd:. gsreg depvar ocand1 ocand2, ncomb(3) dlags(1/4)} {p_end}
-{pstd} 
-In this example there are two original candidate covariates (ocand1 and ocand2). 
-Dependent variable lags 1 to 4 will be added to the original candidates. 
-Therefore there will be 6 final candidates: 
-{p_end}
-{pstd} 
-{it:ocand1 ocand2 L2.depvar L1.depvar L3. depvar L4.depvar.}
-{p_end}
-{pstd} 
-and 20 regressions must be estimated (combinations of size 3 taken from 6)
-{p_end}
-{pstd} 
-The same problem structure can be obtained by generating all lags before
-executing gsreg and including them as original candidates:
-{p_end}
-{phang2}{cmd:. gen aux1= L1.depvar} {p_end}
-{phang2}{cmd:. gen aux2= L2.depvar} {p_end}
-{phang2}{cmd:. gen aux3= L3.depvar} {p_end}
-{phang2}{cmd:. gen aux4= L4.depvar} {p_end}
-{phang2}{cmd:. gsreg depvar ocand1 ocand2 aux1 aux2 aux3 aux4, ncomb(3) } {p_end}
-
-{phang2}{cmd:. gsreg depvar ocand1 ocand2, ncomb(3) dlags(1 2 4(4)12)} {p_end}
-{pstd} 
-In this example dependent variable lags 1,2,4,8 and 12 are included among 
-candidate covariates, increasing to 7 the final number of potential candidates: 
-{p_end}
-{pstd} 
-{it:ocand1 ocand2 L1.depvar L2.depvar L4.depvar L8.depvar L12.depvar}
-{p_end}
-{pstd} 
-35 regressions will be estimated (combinations of size 3 taken from 7)
-{p_end}
-
-{phang2}{cmd:. gsreg depvar ocand1 ocand2, ncomb(3) ilags(1/4)} {p_end}
-{pstd} 
-In this case, independent (explanatory) variable lags 1 to 4 will be added to the 
-original candidate covariates, obtaining the following final candidate list: 
-{p_end}
-{pstd} 
-{it:ocand1 ocand2 L1.ocand1 L2.ocand1 L3.ocand1 L4.ocand1 L1.ocand2 L2.ocand2 L3. ocand2 L4.ocand2}
-{p_end}
-{pstd} 
-120 regressions must be estimated (combinations of size 3 taken from 10)
-{p_end}
-
-{phang2}{cmd:. gsreg depvar ocand1 ocand2, ncomb(3) lags(1 3))} {p_end}
-{pstd} 
-In our final lag-structure example, lags 1 and 3 of dependent and explanatory variables 
-are included among candidates (now 8 candidates): 
-{p_end}
-{pstd} 
-{it:ocand1 ocand2 L1.depvar L3.depvar L1.ocand1 L3.ocand1 L1.ocand2 L3.ocand2}
-{p_end}
-{pstd} 
-56 regressions will be estimated (combinations 3 taken from 8)
-{p_end}
-
-{pstd} Back to {it:{help gsreg##lag:Lag structure options}} {p_end}
-{pstd} Back to {it:{help gsreg:Top}} {p_end}
 {*:*****************************************************************************************}
 {marker egfixvar}{...}
 {dlgtab: Examples of using fixvar}
@@ -733,121 +569,7 @@ without any variable candidate covariate:
 
 {pstd} Back to {it:{help gsreg##fixvar:Fixed variable options}} {p_end}
 {pstd} Back to {it:{help gsreg:Top}} {p_end}
-{*:*****************************************************************************************}
-{marker eginteractions}{...}
-{dlgtab: Examples of using schange, interactions, squares, cubic and fixinteractions}
 
-{phang2}{cmd:. gsreg depvar ocand1 ocand2, ncomb(1) schange(varschange)} {p_end}
-{pstd} will perform the following 6 regressions: {p_end}
-{pstd} {it: regress depvar ocand1}  {p_end}
-{pstd} {it: regress depvar ocand1 c.ocand1#varschange} {p_end}
-{pstd} {it: regress depvar ocand1 c.ocand1#varschange varschange} {p_end}
-{pstd} {it: regress depvar ocand2} {p_end}
-{pstd} {it: regress depvar ocand2 c.ocand2#varschange} {p_end}
-{pstd} {it: regress depvar ocand2 c.ocand2#varschange varschange} {p_end}
-
-{pstd} Note that it is also possible to test structural change by: {p_end}
-{phang2}{cmd:. gen aux1= c.ocand1#varschange} {p_end}
-{phang2}{cmd:. gen aux2= c.ocand2#varschange} {p_end}
-{phang2}{cmd:. gsreg depvar ocand1 ocand2 aux1 aux2 varschange, ncomb(1,3) } {p_end}
-{pstd} 
-But this procedure will run 25 regressions (including the 6 of the first procedure).
-{p_end}
-
-{phang2}{cmd:. gsreg depvar ocand1 ocand2 ocand3, ncomb(2,3) interactions} {p_end}
-{pstd} will perform the following 14 regressions: {p_end}
-{pstd} {it: regress depvar ocand1 ocand2} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 c.ocand1#c.ocand2} {p_end}
-{pstd} {it: regress depvar ocand1 ocand3}  {p_end}
-{pstd} {it: regress depvar ocand1 ocand3 c.ocand1#c.ocand3} {p_end}
-{pstd} {it: regress depvar ocand2 ocand3} {p_end}
-{pstd} {it: regress depvar ocand2 ocand3 c.ocand2#c.ocand3} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 ocand3} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 ocand3 c.ocand1#c.ocand2} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 ocand3 c.ocand1#c.ocand3} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 ocand3 c.ocand2#c.ocand3} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 ocand3 c.ocand1#c.ocand2 c.ocand1#c.ocand3} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 ocand3 c.ocand1#c.ocand2 c.ocand2#c.ocand3} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 ocand3 c.ocand1#c.ocand3 c.ocand1#c.ocand3} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 ocand3 c.ocand1#c.ocand2 c.ocand1#c.ocand3}
-{it: c.ocand2#c.ocand3} 
-{p_end}
-
-{pstd} Note that it is also possible to evaluate this problem by generating 
-interactions before {cmd:gsreg}, including them as original {cmd:gsreg} candidates 
-and using the ncomb(2,6) option. 
-{p_end}
-{pstd} 
-However, with this procedure {cmd:gsreg} will run 57 regressions 
-(including the 14 models of the first procedure).
-{p_end}
-
-{phang2}{cmd:. gsreg depvar ocand1 ocand2, ncomb(1,2) squares} {p_end}
-{pstd} will perform the following 8 regressions: {p_end}
-{pstd} {it: regress depvar ocand1 } {p_end}
-{pstd} {it: regress depvar ocand1 c.ocand1#c.ocand1} {p_end}
-{pstd} {it: regress depvar ocand2 } {p_end}
-{pstd} {it: regress depvar ocand2 c.ocand2#c.ocand2} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 } {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 c.ocand1#c.ocand1} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 c.ocand2#c.ocand2} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 c.ocand1#c.ocand1 c.ocand2#c.ocand2} {p_end}
-{pstd} Note that it is also possible to examine the same problem by generating squares
-before using {cmd:gsreg}, including them as original {cmd:gsreg} candidates and 
-using the option ncomb(1,4) 
-{p_end}
-{pstd} 
-Notwithstanding, this procedure will run 15 regressions (including the 8 of the first procedure).
-{p_end}
-
-{phang2}{cmd:. gsreg depvar ocand1 ocand2, ncomb(1,2) squares cubic} {p_end}
-{pstd} will perform the following 15 regressions: {p_end}
-{pstd} {it: regress depvar ocand1 } {p_end}
-{pstd} {it: regress depvar ocand1 c.ocand1#c.ocand1} {p_end}
-{pstd} {it: regress depvar ocand1 c.ocand1#c.ocand1 c.ocand1#c.ocand1#c.ocand1} {p_end}
-{pstd} {it: regress depvar ocand2 } {p_end}
-{pstd} {it: regress depvar ocand2 c.ocand2#c.ocand2} {p_end}
-{pstd} {it: regress depvar ocand2 c.ocand2#c.ocand2 c.ocand2#c.ocand2#c.ocand2} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 } {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 c.ocand1#c.ocand1 } {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 c.ocand1#c.ocand1 c.ocand1#c.ocand1#c.ocand1} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 c.ocand2#c.ocand2} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 c.ocand2#c.ocand2 c.ocand2#c.ocand2#c.ocand2} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 c.ocand1#c.ocand1 c.ocand2#c.ocand2} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 c.ocand1#c.ocand1 c.ocand2#c.ocand2} 
-{it: c.ocand1#c.ocand1#c.ocand1} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 c.ocand1#c.ocand1 c.ocand2#c.ocand2}
-{it: c.ocand2#c.ocand2#c.ocand2} {p_end}
-{pstd} {it: regress depvar ocand1 ocand2 c.ocand1#c.ocand1 c.ocand2#c.ocand2}
-{it: c.ocand1#c.ocand1#c.ocand1 c.ocand2#c.ocand2#c.ocand2} {p_end}
-{pstd} Note that it is also possible to obtain these 15 regressions by generating squares 
-and cubes before {cmd:gsreg}, including them as original {cmd:gsreg} candidates and 
-using the option ncomb(1,6) 
-{p_end}
-{pstd} 
-But this procedure will run 63 regressions (including the 15 of the first procedure).
-{p_end}
-
-{phang2}{cmd:. gsreg depvar ocand1 ocand2, ncomb(1,2) fixvar(fixvar1) fixinteractions} {p_end}
-{pstd} will perform the following 8 regressions: {p_end}
-{pstd} {it: regress depvar fixvar1 ocand1 } {p_end}
-{pstd} {it: regress depvar fixvar1 ocand1 c.ocand1#c.fixvar1} {p_end}
-{pstd} {it: regress depvar fixvar1 ocand2 } {p_end}
-{pstd} {it: regress depvar fixvar1 ocand2 c.ocand2#c.fixvar1} {p_end}
-{pstd} {it: regress depvar fixvar1 ocand1 ocand2 } {p_end}
-{pstd} {it: regress depvar fixvar1 ocand1 ocand2 c.ocand1#c.fixvar1} {p_end}
-{pstd} {it: regress depvar fixvar1 ocand1 ocand2 c.ocand2#c.fixvar1} {p_end}
-{pstd} {it: regress depvar fixvar1 ocand1 ocand2 c.ocand1#c.fixvar1 c.ocand2#c.fixvar1} {p_end}
-{pstd} Note that it is also possible to evaluate the same model selection problem by generating 
-interactions with fixvar before using {cmd:gsreg}, including them as original {cmd:gsreg} candidates
-and using the option ncomb(1,4) 
-{p_end}
-{pstd} 
-However, this procedure will run 15 regressions (including the 8 of the first procedure).
-{p_end}
-
-{pstd} Back to {it:{help gsreg##interactions:Options for transformations and interactions}} {p_end}
-{pstd} Back to {it:{help gsreg:Top}} {p_end}
 {*:*****************************************************************************************}
 {marker egoutsample}{...}
 {dlgtab: Examples of using outsample}
@@ -1059,15 +781,15 @@ are also saved in {bf: e()}.
 {marker Authors}{...}
 {title:Authors}
 
-{pstd}Pablo Gluzmann{p_end}
-{pstd}CEDLAS-UNLP and CONICET{p_end}
-{pstd}La Plata, Argentina{p_end}
-{pstd}gluzmann@yahoo.com{p_end}
+{pstd}Pablo Gluzmann {p_end}
+{pstd} CEDLAS-fce-UNLP and CONICET {p_end}
+{pstd} La Plata, Argentina {p_end}
+{pstd} gluzmann@yahoo.com {p_end}
 
-{pstd}Demian Panigo{p_end}
-{pstd}CEIL-CONICET, UNM and UNLP{p_end}
-{pstd}La Plata, Argentina{p_end}
-{pstd}dpanigo@ceil-conicet.gov.ar{p_end}
+{pstd} Demian Panigo{p_end}
+{pstd} Instituto Malvinas, UNLP and CONICET{p_end}
+{pstd} La Plata, Argentina{p_end}
+{pstd} panigo@gmail.com {p_end}
 
 {pstd}Back to {it:{help gsreg:Top}} {p_end}
 

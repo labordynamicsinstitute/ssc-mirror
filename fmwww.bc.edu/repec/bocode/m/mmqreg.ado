@@ -1,3 +1,8 @@
+*! v2.6 Bug fix: mmqreg with jknife and no absorb() failed with
+*!      "code follows on the same line as open brace" r(198); the offending
+*!      (and redundant) one-line forvalues loop in mmqreg1_jk is removed.
+*!      Ships mmqregplot v2.2, whose quantile paths now reproduce the
+*!      coefficient table exactly, jknife included.
 *! v2.5 Adds explicit "version 13" statement (per Kit Baum's note on v2.4),
 *!      and ships the polished mmqregplot companion (single-call multi-quantile
 *!      design; new options: showall, saving, gformat, keepgraphs, nocombine;
@@ -7,7 +12,7 @@
 *!      quantile Q(.) separately, then recombined as b + g_jk * Q_jk(tau).
 *!      Also adds mmqregplot companion.
 *! Authors: Fernando Rios-Avila (original, v1.0-v2.3)
-*!          Dr Merwan Roudane (contributor, v2.4-v2.5 extensions)
+*!          Dr Merwan Roudane (contributor, v2.4-v2.6 extensions)
 *!          Contact: merwanroudane920@gmail.com
 * v2.3 More Efficient rewritten. adds NOls
 * v2.21 keep singletons
@@ -612,8 +617,6 @@ program define mmqreg1_jk, eclass sortpreserve
 	** Updated bls with JK-corrected scale & quantile values
 	tempname bls_new
 	matrix `bls_new' = `b_loc', `g_jk', `Q_jk'
-	local extracl ""
-	forvalues i = 1/`nk' { local extracl `extracl' c`i' }
 	** keep names from original
 	local extracl_orig: colnames `bls_full'
 	matrix colnames `bls_new' = `extracl_orig'

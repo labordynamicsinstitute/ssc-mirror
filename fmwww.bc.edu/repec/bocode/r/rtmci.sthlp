@@ -1,217 +1,272 @@
 {smcl}
+{* *! version 2.0.0 16Aug2026}{...} 
 {* *! version 1.1.0 03Mar2013}{...} 
 {* *! version 1.0.0 11Feb2013}{...}
-{cmd:help rtmci}
-{hline}
 
 {title:Title}
 
-{p2colset 5 16 18 2}{...}
-{p2col :{hi:rtmci} {hline 2}}Regression to the mean effects with confidence intervals {p_end}
+{p2colset 5 14 15 2}{...}
+{p2col:{hi:rtmci} {hline 2}} Regression to the mean effects with confidence intervals{p_end}
 {p2colreset}{...}
 
 
+{marker syntax}{...}
 {title:Syntax}
 
-{p 8 15 2}
-        {cmd:rtmci} {it:pre-test} {it:post-test} {ifin} {cmd:,} cutoff [{it:{help rtmci##options:options}}] 
+{pstd}
+Using data in memory{p_end}
 
-	
-{pstd}{it:pre-test} is the pre-test variable, {it:post-test} is the post-test variable, 
-and {it:cut-off} is the cutoff value on the pre-test variable.{p_end}
+{p 8 14 2}
+{cmd:rtmci}
+{it:pretest posttest}
+{ifin}
+{cmd:,}
+{opt cut:off(#)}
+[
+{opt per:iod(#)}
+{cmd:vce(vcetype)}
+{opt lev:el(#)}
+{opt fig:ure}
+]
+
+{pstd}
+{it:pretest} is the pre-test variable, {it:posttest} is the post-test variable, and
+{opt cutoff(#)} is the cutoff value on the pre-test variable.{p_end}
 
 
-{marker options}{...}
+{pstd}
+Immediate form of {it:rtmci}{p_end}
+
+{p 8 14 2}
+{cmd:rtmcii}
+{it:mean_pre sd_pre cut-off rho}
+[{cmd:,}
+{opt per:iod(#)}
+{opt n(#)}
+{cmd:vce(vcetype)}
+{opt lev:el(#)}
+{opt fig:ure}
+]
+
+{pstd}
+In the immediate version, {it:mean_pre} is the pre-test mean, {it:sd_pre} is its standard
+deviation, {it:cut-off} is the cutoff value, and {it:rho} is the correlation between the
+pre-test and post-test variables.{p_end}
+
+
+
 {synoptset 23 tabbed}{...}
-{synopthdr}
+{synopthdr:rtmci and rtmcii}
 {synoptline}
-{syntab:{help rtmci##main:Main}}
-{synopt:{cmdab:per:iods(}{it:#}{cmd:)}}{...}
-	defines the number of periods that the {it:pre-test} variable represents{p_end}
-{synopt:{cmdab:fig:ure}}{...}
-	 produces a plot of the expected pre- and post-test means and confidence intervals for values 
-	 above and below the cutoff {p_end}
-	
-{syntab:{help rtmci##sim:Bootstrapped CIs}}
-{synopt:{cmd:seed(}{it:#}{cmd:)}}{...}
-	sets the random-number seed to {it:#}{p_end}
-{synopt:{cmd:reps(}{it:#}{cmd:)}}{...}
-	specifies the number of replications to be performed {p_end}
-{synopt :{opt si:ze(#)}}{...}
-	draws samples of size {it:#}{p_end}
-{synopt :{opt lev:el(#)}}{...}
-	sets the confidence level; default is {cmd:level(95)}{p_end}
-{synopt :{help prefix_saving_option:{bf:saving(}{it:filename}{bf:, ...)}}}
-	saves results to {it:filename}{p_end}	
-{synoptline}
-{p2colreset}{...}
-{p 4 6 2}
-{opt by} is allowed with {cmd:rtmci}; see {manhelp by D}.{p_end}
+{syntab:Main}
+{synopt :{opt cut:off(#)}}cutoff value on the pre-test variable; {cmd:required for {cmd:rtmci} only}{p_end}
+{synopt :{opt per:iod(#)}}number of periods represented by the pre-test measurement; default {cmd:period(1)}{p_end}
+{synopt :{opt n(#)}}{cmd:rtmcii} only; meaning depends on {cmd:vce()} -- see {help rtmci##options:Options}; default {cmd:n(1000)}{p_end}
 
-	
-	
+{syntab:SE/Robust}
+{synopt :{cmd:vce(}{it:vcetype}{cmd:)}}may be {opt r:obust} (the default for {cmd:rtmci}), {opt nor:mal} (the default for {cmd:rtmcii})
+ or {opt boot:strap}{p_end}
+
+{synopt: {cmd:bootstrap options}}{p_end}
+{synopt :{cmd:seed(}{it:#}{cmd:)}}sets the random-number seed to {it:#}{p_end}
+{synopt :{cmd:reps(}{it:#}{cmd:)}}specifies the number of replications to be performed {p_end}
+{synopt :{opt si:ze(#)}}draws samples of size {it:#}{p_end}
+{synopt :{help prefix_saving_option:{bf:saving(}{it:filename}{bf:, ...)}}}saves results to {it:filename}{p_end}
+
+{syntab:Reporting}
+{synopt :{opt l:evel(#)}}set confidence level; default is {cmd:level(95)}{p_end}
+{synopt :{cmdab:fig:ure}}produces a plot of the expected pre- and post-test means and confidence intervals for values 
+above and below the cutoff {p_end}
+{synoptline}
+
+
 {title:Description}
 
 {pstd}
 {cmd:rtmci} calculates the regression to the mean effect for a variable that is generally measured 
 at two points in time (i.e., "pre-test" and "post-test"), based on a defined cutoff value on the "pre-test" measure, and 
-estimates confidence intervals using bootstrap simulation; see {help bootstrap}. If only summary level statistics are 
+estimates confidence intervals using either robust or bootstrapped standard errors. If only summary level statistics are 
 available (e.g., as published in a journal article), the user may consider using {help rtmcii}, an immediate form of {cmd:rtmci}.{p_end}
 
 
+
+{marker options}{...}
 {title:Options}
 
-{marker main}{...}
 {dlgtab:Main}
+
+{p 4 8 2}
+{opt cutoff(#)} {cmd:Required for rtmci}. It specifies the cutoff value on the pre-test variable used to
+define the "above cutoff" and "below cutoff" subgroups.
 
 {p 4 8 2}
 {cmd:periods(}{it:#}{cmd:)} defines the number of periods that the {it:pre-test}
 variable represents; default is {cmd:per(1)}.
 
 {p 4 8 2}
-{opt figure} produces a plot of the expected pre- and post-test means and confidence intervals for values 
-	 above and below the cutoff. This option requires Roger Newson's {help xsvmat} and {help eclplot} packages to be 
-	 installed; both are downloadable from {help ssc:SSC}
+{opt n(#)} {cmd:For rtmcii only}. It means different things depending on {cmd:vce()}. With
+{cmd:vce(bootstrap)} it is the size of the dataset simulated by {helpb corr2data} to match the
+supplied summary statistics. With {cmd:vce(normal)} it is used
+directly as the sample size underlying the supplied summary statistics, and must reflect the
+actual N of the source data. If this not specified correctly, the CI width will be wrong even though the
+point estimates are unaffected.
 
+{dlgtab:SE/Robust}
 
-{marker sim}{...}
-{dlgtab:Bootstrapped CIs}
+{phang}
+{opt vce(vcetype)} specifies the type of standard error reported, which
+includes ({cmd:normal} - the default for {cmd:rtmcii}) derived from asymptotic theory,
+({cmd:robust} - the default for {cmd:rtmci}) which is robust to a type of misspecification, 
+and the ({cmd:bootstrap}) method.
 
-{p 4 8 2}
+{phang2}
+{cmd:vce(robust)}, the default for {cmd:rtmci}, builds the covariance empirically from
+observation-level residuals ("sandwich"/influence-function covariance) and applies a small-sample 
+correction (N/(N-4)). This robust standard error tracks the bootstrap closely on both normal and non-normal data.
+
+{phang2}
+{cmd:vce(normal)}, the default for {cmd:rtmcii}, uses the classical bivariate-normal-theory 
+delta-method formula. If the source data are meaningfully non-normal and available,
+it is better to run {cmd:rtmci} on the raw data rather than {cmd:rtmcii} on summary statistics.
+
+{phang2}
+{cmd:vce(bootstrap)} computes bootstrapped standard errors and confidence intervals. 
+
+{phang3}
 {opt seed(#)} sets the random-number seed to {it:#}. Specifying this option 
-is equivalent to typing {cmd:. set seed} {it:#} before calling {cmd:rtmci}; default is {cmd:seed(1234)}.
+is equivalent to typing {cmd:. set seed} {it:#} before calling {cmd:rtmci} or {cmd:rtmcii}; default is {cmd:seed(1234)}.
 
-{p 4 8 2}
+{phang3}
 {opt reps(#)} specifies the number of replications to be performed; default
 is {cmd:reps(1000)}.
 	
-{p 4 8 2}
+{phang3}
 {opt size(#)} sets the number of observations drawn at each replication; default is {help _N}.
 
-{p 4 8 2}
-{opt level(#)} specifies the confidence level, as a percentage, for confidence
-   intervals. The default is {cmd:level(95)} or as set by {helpb set level}.
-
-{p 4 8 2}
+{phang3}
 {help prefix_saving_option:{bf:saving(}{it:filename}{bf:, ...)}}
 saves the bootstrapped results of the simulations to {it:filename}. See
 {it:{help prefix_saving_option}} for details about {it:suboptions}.
 
-{synoptline}
-{p2colreset}{...}
-{p 4 6 2}
+{dlgtab:Reporting}
 
+{phang}
+{opt level(#)} specifies the confidence level, as a percentage, for confidence intervals. The
+default is {cmd:level(95)} or as set by {helpb set level}.
 
-{title:Remarks} 
+{phang}
+{opt figure} plots the expected pre-test and post-test values, with confidence intervals, above
+and below the cutoff.
 
-{pstd}
-Regression to the mean (RTM), originally termed “regression toward mediocrity”, was described over a century ago by Sir Francis Galton (1886)
-upon discovering that on average, tall parents had children shorter themselves and short parents had 
-taller children. An excellent historical review of RTM is provided by Stigler (1997). 
-
-{pstd}
-RTM poses a major threat to the internal validity of any study in which 
-subjects are initially selected for their extreme values. Upon remeasurement, the sample mean 
-from this outlier group is likely to be much closer to the overall population mean. This 
-statistical phenomenon can be easily confused with a treatment effect. 
-
-{pstd}
-{cmd:rtmci} calculates the expected pre-test value, post-test value, and estimated RTM effects using
-equations proposed by Gardner & Hardy (1973) and Davis (1976) for Normally distributed data. Importantly, {cmd:rtmci} provides 
-confidence intervals to indicate the precision (uncertainty) for these estimates. See Linden (2013) for the results of simulation
-a more comprehensive discussion.
 
 
 {title:Examples}
 
+{dlgtab:rtmci}
+
+{pstd}Setup{p_end}
+{phang2}{cmd:. use RTM_example.dta}{p_end}
+
+{pstd}With robust standard errors{p_end}
+{phang2}{cmd:. rtmci pretest posttest, cutoff(75)}{p_end}
+
+{pstd}With bootstrapped standard errors{p_end}
+{phang2}{cmd:. rtmci pretest posttest, cutoff(75) vce(boot) reps(2000) seed(4321) figure}{p_end}
+
+
+{dlgtab:rtmcii}
+
+{pstd}Data from Linden (2007), Figure 2. {cmd:n()} here is the real sample size behind the
+summary statistics, since {cmd:vce(normal)} is the default.{p_end}
+{phang2}{cmd:. rtmcii 53.12 8.27 44.25 0.742, n(118)}{p_end}
+
+{pstd}Same data, bootstrap CI for comparison.{p_end}
+{phang2}{cmd:. rtmcii 53.12 8.27 44.25 0.742, n(118) bootstrap reps(2000) seed(4321)}{p_end}
+
+{dlgtab:by()}
+
+{phang2}{cmd:. bys treat: rtmci pretest posttest, cutoff(75)}{p_end}
+
+
+{marker results}{title:Stored results}
+
 {pstd}
+{cmd:rtmci} and {cmd:rtmcii} store the following in {cmd:e()}:
 
-{p 4 8 2}{cmd:. rtmci pretest posttest, cutoff(44.25) period(1) fig}
-
-{p 4 8 2}{cmd:. rtmci pretest posttest, cut(44.25) per(1) reps(2000) seed(4321) size(50)}
-
-{p 4 8 2}{cmd:. estat bootstrap, all}
-
-{p 4 8 2}{cmd:. bys treat: rtmci pretest posttest, cut(44.25) per(1) reps(2000) seed(4321) size(50)}
-
-
-
-{marker output_tables}{...}
-{title:Output tables}
-
-{pstd}
-{cmd:rtmci} produces standard bootstrap output tables. Below is a cross reference to the variables in the tables:
-
-{synoptset 20 tabbed}{...}
-{p2col 5 25 19 2:}{p_end}
-{synopt:{cmd:Variable}}{cmd:Description}{p_end}
-
-{synopt:{cmd:mu}}pre-test mean{p_end}
-{synopt:{cmd:sd}}pre-test sd{p_end}
-{synopt:{cmd:rho}}correlation between pre-test and post-test{p_end}
-{synopt:{cmd:firstval_high}}expected pre-test value above the cutoff{p_end}
-{synopt:{cmd:secondval_high}}expected post-test value above the cutoff{p_end}
-{synopt:{cmd:rtm_high}}RTM effect above the cutoff{p_end}
-{synopt:{cmd:pct_rtm_high}}percent RTM effect above the cutoff{p_end}
-{synopt:{cmd:firstval_low}}expected pre-test value below the cutoff{p_end}
-{synopt:{cmd:secondval_low}}expected post-test value below the cutoff{p_end}
-{synopt:{cmd:rtm_low}}RTM effect below the cutoff{p_end}
-{synopt:{cmd:pct_rtm_low}}percent RTM effect below the cutoff{p_end}
-
+{synoptset 16 tabbed}{...}
+{p2col 5 16 20 2: Scalars}{p_end}
+{synopt:{cmd:e(N)}}number of observations ({cmd:rtmci}) or assumed N ({cmd:rtmcii}, {cmd:vce(normal)}){p_end}
+{synopt:{cmd:e(k)}}cutoff value{p_end}
+{synopt:{cmd:e(m)}}number of periods{p_end}
+{synopt:{cmd:e(rho)}}supplied correlation ({cmd:rtmcii} only){p_end}
 {p2colreset}{...}
+
+{synoptset 16 tabbed}{...}
+{p2col 5 16 20 2: Macros}{p_end}
+{synopt:{cmd:e(cmd)}}{cmd:rtmci} or {cmd:rtmcii}{p_end}
+{synopt:{cmd:e(vce)}}{cmd:robust} or {cmd:bootstrap} ({cmd:rtmci}); {cmd:normal} or {cmd:bootstrap} ({cmd:rtmcii}){p_end}
+{synopt:{cmd:e(vcetype)}}{cmd:Robust}, {cmd:Normal}, or {cmd:Bootstrap}{p_end}
+{p2colreset}{...}
+
+{synoptset 16 tabbed}{...}
+{p2col 5 16 20 2: Matrices}{p_end}
+{synopt:{cmd:e(b)}}coefficient vector{p_end}
+{synopt:{cmd:e(V)}}variance-covariance matrix{p_end}
+{p2colreset}{...}
+
 
 
 {title:References}
 
 {p 4 8 2}
-Davis CE. The effect of regression to the mean in epidemiologic and clinical studies. {it:American Journal of Epidemioliology} 1976;104:493-498.{p_end}
+Davis CE. The effect of regression to the mean in epidemiologic and clinical studies.
+{it:American Journal of Epidemiology} 1976;104:493-498.{p_end}
 
 {p 4 8 2}
-Galton F. Regression towards mediocrity in hereditary stature. {it:Journal of the Anthropological Institute} 1886;15:246-263.{p_end}
+Galton F. Regression towards mediocrity in hereditary stature. {it:Journal of the Anthropological
+Institute} 1886;15:246-263.{p_end}
 
 {p 4 8 2}
-Gardner MJ, Hardy JA. Some effects of within person variability in epidemiological studies. {it:Journal of Chronic Disease} 1973;26:781-795.{p_end}
+Gardner MJ, Hardy JA. Some effects of within person variability in epidemiological studies.
+{it:Journal of Chronic Disease} 1973;26:781-795.{p_end}
 
 {p 4 8 2}
-Linden A. Assessing regression to the mean effects in health care initiatives. {it:BMC Medical Research Methodology} 2013;13(119):1-7.{p_end}
+Linden A. Estimating the effect of regression to the mean in health management programs.
+{it:Disease Management & Health Outcomes} 2007;15(1):7-12.{p_end}
 
 {p 4 8 2}
-Stigler SM. Regression towards the mean, historically considered. {it:Statistical Methods in Medical Research} 1997;6(2):103-14.{p_end}
+Linden A. Assessing regression to the mean effects in health care initiatives. {it:BMC Medical
+Research Methodology} 2013;13(119):1-7.{p_end}
 
+{p 4 8 2}
+Stigler SM. Regression towards the mean, historically considered. {it:Statistical Methods in
+Medical Research} 1997;6(2):103-14.{p_end}
+
+{p 4 8 2}
+Yudkin PL, Stratton IM. How to deal with regression to the mean in intervention studies.
+{it:Lancet} 1996;347:241-243.{p_end}
 
 
 {marker citation}{title:Citation of {cmd:rtmci}}
 
-{p 4 8 2}{cmd:rtmci} is not an official Stata command. It is a free contribution
-to the research community, like a paper. Please cite it as such: {p_end}
+{p 4 8 2}{cmd:rtmci} is not an official Stata command. It is a free contribution to the research
+community, like a paper. Please cite it as such:{p_end}
 
 {p 4 8 2}
-Linden, Ariel (2013). rtmci: Stata module for estimating regression to the mean effects with confidence intervals.
-{browse "http://www.lindenconsulting.org":http://www.lindenconsulting.org}
-{p_end}
+Linden, Ariel (2013). RTMCI: Stata module for estimating regression to the mean effects with confidence intervals. 
+Statistical Software Components S457757, Boston College Department of Economics. {p_end}
 
 
 
-{title:Author}
+{title:Authors}
 
-{p 4 8 2}	Ariel Linden{p_end}
-{p 4 8 2}	President, Linden Consulting Group, LLC{p_end}
-{p 4 8 2}	Ann Arbor, MI, USA{p_end}
-{p 4 8 2}{browse "mailto:alinden@lindenconsulting.org":alinden@lindenconsulting.org}{p_end}
-{p 4 8 2}{browse "http://www.lindenconsulting.org"}{p_end}
+{p 4 4 2}
+Ariel Linden{break}
+President, Linden Consulting Group, LLC{break}
+alinden@lindenconsulting.org{break}
 
-         
-{title:Acknowledgments} 
-
-{p 4 4 2} I would like to thank Nicholas J. Cox for his never-ending support and patience with me while 
-developing both {cmd:rtmci} and its immediate form; {cmd:rtmcii}. He knows Stata better than Stata knows Stata.
-I would also like to thank Roger Newson for his guidance in creating the figure option using his {help xsvmat} 
-and {help eclplot} programs.
 
 
 {title:Also see}
 
-{p 4 8 2} Manual: {bf:[R] bootstrap}, {bf:[D] by} {p_end}
-
-{p 4 8 2} Online:  {helpb bootstrap}, {helpb by}, {helpb xsvmat} (if installed), {helpb eclplot} (if installed) {p_end}
-
+{p 4 8 2} Online: {helpb corr2data}, {helpb bootstrap}, {helpb nlcom}{p_end}

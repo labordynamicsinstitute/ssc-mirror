@@ -1,25 +1,20 @@
-d 'WASSTEST': module to perform a two-sample Wasserstein Distance test for equality of distributions 
+d 'WASSTEST': module to perform a k-sample Wasserstein distance equality-of-distributions test
 d
-d  wasstest performs a two-sample Wasserstein distance permutation
-d test to assess whether two samples come from the same
-d distribution. The Wasserstein distance (also known as Earth
-d Mover's Distance) measures the minimum "work" required to
-d transform one distribution into another.  Unlike Cramer-von Mises
-d and Anderson-Darling tests which focus on vertical differences
-d between CDFs, the Wasserstein distance considers both vertical
-d differences and the horizontal distances between points, making
-d it sensitive to both location and spread differences. The
-d permutation test provides an exact p-value by comparing the
-d observed statistic to its distribution under random reassignment
-d of group labels. 
+d  wasstest performs a (optionally weighted) k-sample Wasserstein
+d distance permutation test to assess whether k >= 2 samples come
+d from the same distribution. It is the k-sample generalization of
+d the two-sample Wasserstein test (see Ramdas et al. 2017; Villani
+d 2009).  When k > 2, there is no single pairwise comparison to
+d make, so wasstest instead compares each group's empirical CDF to
+d the (weighted) pooled empirical CDF of all groups combined. 
 d
 d KW: equality of distributions
-d KW: two-sample
+d KW: k-sample
 d KW: comparisons
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20260109
+d Distribution-Date: 20260820
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org

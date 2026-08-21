@@ -1,0 +1,28 @@
+d 'XTFLUCBREAK': module to perform a fluctuation test for a structural change at an unknown date in heterogeneous panel data models, with or without common correlated effects
+d
+d	xtflucbreak implements the fluctuation test of Li, Xiao and
+d Chen (2024) for a structural change at an unknown date in the   
+d heterogeneous panel regression	    y{sub:it} =
+d x{sub:it}'({&beta}{sub:i} + {&delta}{sub:i}·1{t > k{sub:0}}) +
+d e{sub:it},	 i = 1,...,N,  t = 1,...,T,    where every panel
+d has its own slope vector {&beta}{sub:i}. The null is H{sub:0}:
+d {&delta}{sub:i} = 0 for all i; the	alternative allows a break
+d in a fraction c > 0 of the panels. 
+d
+d KW: panel data
+d KW: structural breaks
+d KW: common correlated effects
+d KW: fluctuation test
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260820
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f xtflucbreak.ado
+f xtflucbreak.sthlp
+f xtflucbreak_methods.sthlp
+f xtflucbreak_postestimation.sthlp
+f xtflucbreak_example.do

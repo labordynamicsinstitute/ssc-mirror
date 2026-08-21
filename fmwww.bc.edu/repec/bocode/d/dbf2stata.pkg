@@ -1,0 +1,32 @@
+d 'DBF2STATA': module for batch conversion of DBF files to Stata .dta format
+d
+d  dbf2stata is a Stata 16+ command for batch conversion of DBF
+d files to Stata .dta format. The command uses the public dbf2stata
+d Python package as its conversion engine and supports DBF date and
+d datetime fields, numeric and logical fields, character and memo
+d fields, lowercase variable names by default, optional
+d preservation of DBF field-name case, selectable output
+d directories, and overwrite protection. The package also includes
+d dbf2stata_setup, a companion setup utility for the external
+d Python dependency. dbf2stata itself never silently installs or
+d upgrades Python packages. If the Python engine is missing, the
+d user receives a clear message to run dbf2stata_setup. When
+d explicitly invoked, dbf2stata_setup uses the exact Python
+d interpreter currently running inside Stata, checks Python and
+d pip, installs the supported public PyPI dependency when needed,
+d and verifies that the conversion engine can be imported. 
+d
+d KW: DBF files
+d KW: Python
+d
+d Requires: Stata version 16 and Python 3.10
+d
+d Distribution-Date: 20260820
+d
+d Author: William Dormechele,  University of East Anglia 
+d Support: email W.Dormechele@@uea.ac.uk
+d
+f dbf2stata.ado
+f dbf2stata.sthlp
+f dbf2stata_setup.ado
+f dbf2stata_setup.sthlp

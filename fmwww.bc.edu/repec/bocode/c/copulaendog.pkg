@@ -1,0 +1,36 @@
+d 'COPULAENDOG': module to correct endogenous regressors in a linear model when no instrument is available
+d
+d  copulaendog corrects endogenous regressors in a linear model
+d when no instrument is available. The dependence between the
+d regressor and the structural error is modelled with a Gaussian
+d copula, and the resulting control function is added to the
+d regression. Five cross-sectional estimators sit behind one
+d interface: Park and Gupta (2012), the two-stage copula generated
+d regressor approach of Yang, Qian and Xie (2025), the
+d between-regressor correlation variant of Haschka (2025), the
+d nonlinear-transformation approach of Breitung, Mayer and Wied
+d (2024), and the adjusted estimator of Liengaard et al. (2025).
+d Six marginal CDF estimators are available for the copula
+d transformation, inference is by pairs bootstrap, and a validity
+d option reports the identification requirements the literature
+d states — non-normality of the endogenous regressor on both the
+d Yang and the Becker criteria, the uncorrelatedness assumption
+d where it applies, and the ICON standard-error inflation of Qian,
+d Koschmann and Xie (2025). 
+d
+d KW: endogenity
+d KW: copula
+d KW: control functions
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260820
+d
+d Author: Girish Mallapragada,  Kelley School of Business, Indiana University
+d Support: email mallapr@@iu.edu
+d
+f copulaendog.ado
+f copulaendog_p.ado
+f copulaendog.sthlp
+f copulaendog_examples.do
+f copulaendog_quickstart.do

@@ -1,0 +1,26 @@
+d 'MKES': module to generate English oral sentences from a user-supplied prompt phrase
+d
+d	mkes is a spoken English sentence generator. Provide a
+d short daily-English prompt phrase -- for example, "There is no",
+d "I	want to", or "Can you" -- and the program automatically
+d produces sentences sharing the same grammatical structure. Every 
+d   English sentence is paired with a complete Chinese translation,
+d so learners see the full meaning at a glance. 
+d
+d KW: translation
+d KW: English
+d KW: Chinese
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260820
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+f mkes.ado
+f mkes.sthlp
+f ../s/sunny_test.do

@@ -76,7 +76,7 @@ p erepost module to repost the estimation results
 p eret2 module to save results in e()
 p ersur module to calculate Elliott, Rothenberg & Stock DF-GLS unit root test statistic along with 1, 5 and 10% finite-sample critical values and associated p-values
 p esetran module to transform estimates and standard errors in parmest resultssets
-p esizereg module  for computing the effect size based on a linear regression coefficient
+p esizereg module for calculating effect size based on a k-level linear regression coefficient
 p esli module to calculate the equation of a straight line
 p est2tex module to create LaTeX tables from estimation results
 p esteta module to estimate long-run effects using historical instruments

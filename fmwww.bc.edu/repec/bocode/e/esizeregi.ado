@@ -64,6 +64,15 @@ version 11.0
 				local cohensd "cohensd"
 				local hedgesg "hedgesg"
 			}
+			if "`cohensd'" != "" & "`hedgesg'" != "" {
+				local esizelabel "Cohen's d and Hedges' g"
+			}
+			else if "`hedgesg'" != "" {
+				local esizelabel "Hedges' g"
+			}
+			else {
+				local esizelabel "Cohen's d"
+			}
 
 			// Display Title (weighted or unweighted)
 			if "`weightexp'" == "" {
@@ -72,6 +81,7 @@ version 11.0
 			else {
 				disp _newline as text "{bf:Weighted} effect size based on the regression coefficient of the treatment (exposure) variable"
 			}
+			disp as text "Reporting: " as res "`esizelabel'"
 			
 			// Display table header information 
 			disp _newline %45s "Obs per group:"

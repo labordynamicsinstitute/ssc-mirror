@@ -126,7 +126,7 @@ p gpscore2 module to estimate the parameters of the conditional distribution of 
 p gpsmd module for or the estimation of the dose-response function when the treatment is multidimensional
 p grand modules to compute grand mean and dummies for differences
 p grand2 module to compute an estimate of the grand mean/intercept and differences
-p grangerspec module to Granger causality tests across frequencies: Granger-causality spectra 
+p grangerspec module to conduct Granger causality tests across frequencies: Granger-causality spectra 
 p graph3d module to draw colored, scalable, rotatable 3D plots
 p graphbinary module to plot explanatory variables vs binary outcome
 p graphexportpdf module to produce PDF graphics on non-Windows systems
@@ -183,6 +183,7 @@ p gtools module to provide a fast implementation of common group commands
 p gtsheckman module to compute a generalized two-step Heckman selection model
 p gumbelfit module to fit a two-parameter Gumbel distribution
 p guttmanl module to produce Guttman lower bound reliability coefficients
+p gvar module to fit and solve Global VAR models
 p gvselect module to perform best subsets variable selection
 p gweakivtest module providing robust test for weak instruments for 2SLS with multiple endogenous regressors
 p gwhet module to perform test for groupwise heteroskedasticity

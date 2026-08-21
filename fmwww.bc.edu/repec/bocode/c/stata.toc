@@ -246,6 +246,7 @@ p contrast module to calculate contrasts between factor levels
 p convert_top_lines module to handle leading lines of text file
 p convertanything module to multi-format importer and converter for Stata
 p cooksd2 module to compute Cook's distance after regress or xtreg
+p copulaendog module to correct endogenous regressors in a linear model when no instrument is available
 p copycode module to produce modular self-written ado files
 p copydesc module to copy description of variable
 p coranal module to perform simple correspondence analysis

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.0.0  30mar2026}{...}
+{* *! version 3.0.3  14aug2026}{...}
 {viewerjumpto "Syntax" "midas##syntax"}{...}
 {viewerjumpto "Description" "midas##description"}{...}
 {viewerjumpto "Subcommands" "midas##subcommands"}{...}
@@ -29,7 +29,7 @@ where {it:subcommand} is one of the commands listed below.
 {pstd}
 {cmd:midas} is a comprehensive Stata suite for diagnostic test accuracy (DTA)
 meta-analysis using the bivariate random-effects model.  It provides five
-estimation engines, nine post-estimation graphics, seven exploratory tools,
+estimation engines, twelve post-estimation graphics, eight exploratory tools,
 and five data management utilities, all accessible through both command-line
 syntax and GUI dialogs.
 
@@ -81,6 +81,7 @@ To open the main GUI launcher:
 {synopt:{helpb midas_bayesplot:bayesplot}}MCMC diagnostic plots (trace, density, ACF, Gelman-Rubin){p_end}
 {synopt:{helpb midas_rgsroc:rgsroc}}Rutter-Gatsonis hierarchical summary ROC curve{p_end}
 {synopt:{helpb midas_bvsroc:bvsroc}}bivariate summary ROC with confidence/prediction ellipses{p_end}
+{synopt:{helpb midas_jsroc:jsroc}}joint summary ROC curve with AUC and confidence/prediction regions{p_end}
 {synopt:{helpb midas_fagan:fagan}}Fagan nomogram for post-test probability{p_end}
 {synopt:{helpb midas_lrmat:lrmat}}likelihood ratio scattergram and matrix{p_end}
 {synopt:{helpb midas_condiplot:condiplot}}conditional sensitivity-specificity plot{p_end}
@@ -110,6 +111,7 @@ To open the main GUI launcher:
 {phang2}{cmd:. midas sforest, plottype(generic) predinterval}{p_end}
 {phang2}{cmd:. midas rgsroc, data cregion pregion weighted}{p_end}
 {phang2}{cmd:. midas bvsroc, cellipse pellipse data mean}{p_end}
+{phang2}{cmd:. midas jsroc, scurve cregion pregion data mean lgnd area}{p_end}
 {phang2}{cmd:. midas fagan, pretestprob(0.10 0.30 0.50)}{p_end}
 {phang2}{cmd:. midas lrmat}{p_end}
 {phang2}{cmd:. midas condiplot}{p_end}

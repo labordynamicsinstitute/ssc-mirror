@@ -12,9 +12,9 @@ d KW: global search
 d KW: specification search
 d KW: regression
 d
-d Requires: Stata version 11
+d Requires: Stata version 17
 d
-d Distribution-Date: 20131124
+d Distribution-Date: 20260820
 d
 d Author: Pablo Gluzmann , Universidad Nacional de La Plata
 d Support: email gluzmann@@yahoo.com

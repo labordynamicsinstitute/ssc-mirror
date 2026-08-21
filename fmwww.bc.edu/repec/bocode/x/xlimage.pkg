@@ -1,0 +1,26 @@
+d 'XLIMAGE': module to insert or replace an image in an Excel workbook without stacking copies and without Python
+d
+d     xlimage places an image in an Excel workbook at the specified
+d cell. If that cell does not yet hold an image, the image is	
+d inserted; if one is already anchored there, it is replaced. In
+d both cases it avoids the common problem with putexcel, whereby   
+d re-running a do-file does not overwrite images but stacks new
+d copies at the same position, inflating the file with invisible   
+d duplicates.	 Because of this, the same command line can be used
+d on every run: the first time it inserts and later runs replace,
+d with no    duplicated code and no stacked images. The title,
+d tables, formatting, and other images in the workbook are left
+d untouched. 
+d
+d KW: image handling
+d KW: Excel
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260820
+d
+d Author: Mario Anderson Apaza Ñaupa,  NA
+d Support: email marioapaza@@outlook.com
+d
+f xlimage.ado
+f xlimage.sthlp

@@ -61,6 +61,7 @@ program define rtm_calc, rclass byable(recall)
 	
 	// returned values
 	
+	return scalar N = `N'
 	return scalar mu = `mu'
 	return scalar sd = `sd'
 	return scalar rho = `rho'

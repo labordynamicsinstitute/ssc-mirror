@@ -458,6 +458,7 @@ p svvarlbl module to save variable labels to a file
 p svybsamp2 module to perform re-sampling for complex survey data
 p svycanon module to assess the statistical significance of the canonical correlations incorporating complex survey design factors
 p svygei_svyatk module to derive the sampling variances of Generalized Entropy and Atkinson inequality indices when estimated from complex survey data
+p svylet module to perform Wald omnibus F-test, Bonferroni, and Compact Letter Display for means/proportions/totals under svy
 p svylorenz module to derive distribution-free variance estimates from complex survey data, of quantile group shares of a total, cumulative quantile group shares
 p svypxcat module to calculate predicted means or proportions for nominal X's for survey data
 p svypxcon module to calculate predicted means or proportions for a continuous X variable for survey data

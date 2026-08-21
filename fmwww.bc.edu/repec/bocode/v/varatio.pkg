@@ -1,0 +1,25 @@
+d 'VARATIO': module for calculating the k-group omnibus variance-ratio balance diagnostic
+d
+d  varatio reports a k-group omnibus summary of variance-ratio
+d imbalance across levels of by(). Three omnibus statistics are
+d reported together: (1) F_VR, a size-weighted quadratic
+d combination of the pairwise log-variance-ratios (Linden, 2026),
+d (2) GMVR, the geometric mean of the pairwise variance ratios,
+d extended from two-groups (Linden and Samuels, 2013), and (3)
+d max(VR*), the largest pairwise variance ratio, extended from
+d two-groups for standardized mean differences (Lopez and Gutman,
+d 2017). 
+d
+d KW: variance ratio
+d KW: k-samples
+d KW: weights
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20260820
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f varatio.ado
+f varatio.sthlp

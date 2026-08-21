@@ -13,6 +13,7 @@ p xglm module to extend glm
 p xgroup module to create a grouping variable with key values in an output dataset
 p xicor module to estimate Chatterjee's rank correlation 
 p xlcor module to estimate Chatterjee's rank correlation 
+p xlimage module to insert or replace an image in an Excel workbook without stacking copies and without Python
 p xlincom module to estimate multiple linear combinations of parameters
 p xlink module to provide extra link functions for use with glm
 p xls2dta module to save Excel files as Stata datasets
@@ -32,6 +33,7 @@ p xtable module for exporting table output to Excel
 p xtabond2 module to extend xtabond dynamic panel data estimator 
 p xtarimau module to find the best [S]ARIMA[X] models in heterogeneous panels with the help of arimaauto 
 p xtarsim module to perform Monte Carlo analysis for dynamic panel data models
+p xtasym module to analyze directional asymmetry with panel data: partial sums, diagnostics and graphics
 p xtavplot module to produce added-variable plots for panel data estimation
 p xtbalance module to transform the dataset into balanced Panel Data
 p xtbalance2 module to create a balanced subsample from unbalanced panel data
@@ -90,6 +92,7 @@ p xtfifevd module to implement Fixed Effects Filtered & Vector Decomposition Est
 p xtfisher module to compute Fisher type unit root test for panel data 
 p xtfixedcoeftvcu module to estimate Panel Data Models with Coefficients that Vary over Time and Cross-sectional Units
 p xtflexur module to provide factor-augmented, break- and Fourier-robust panel time-series tests
+p xtflucbreak module to perform a fluctuation test for a structural change at an unknown date in heterogeneous panel data models, with or without common correlated effects
 p xtfmb module to execute Fama-MacBeth two-step panel regression
 p xtfmg module providing second-generation heterogeneous panel estimators with individual and common shocks:
 p xtgcause module to test for Granger non-causality in heterogeneous panels
@@ -132,6 +135,7 @@ p xtmg module to estimate panel time series models with heterogeneous slopes
 p xtmipolateu module to replace missing values in a time series, two- or multidimensional varlist with interpolated (extrapolated) ones 
 p xtmis module to report missing observations for each variable in xt data
 p xtmispanel module to provide Comprehensive Missing Data Detection, Imputation and Diagnostics for Panel Data
+p xtmiss module to report missing observations of individual and time variables in panel data
 p xtmissingfill module to balance panel datasets and fill in missing values
 p xtmixed_corr module to compute model-implied intracluster correlations after xtmixed
 p xtmixediou module to estimate Linear mixed effects Integrated Ornstein-Uhlenbeck model
@@ -212,6 +216,7 @@ p xttest3 module to compute Modified Wald statistic for groupwise heteroskedasti
 p xttest4 module to calculate heterokedasticity tests for fixed-T panel data models
 p xttestpanel module to perform post-estimation diagnostic test suite for linear panel-data models
 p xttrans2 module to compute tables of transition probabilities 
+p xttvpivmg module to perform time-varying parameter IV mean-group estimation of heterogeneous panels
 p xtusreg module to estimate dynamic panel models under irregular time spacing
 p xtvar module to compute panel vector autoregression 
 p xtvar2 module to compute panel vector autoregression 

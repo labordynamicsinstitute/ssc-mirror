@@ -1,0 +1,21 @@
+d 'MSRRD': module to compute Risk Ratio and Risk Difference estimation using Marginal standardisation (G-computation) method
+d
+d  This routine Computes Risk Ratio (RR) and Risk Difference (RD)
+d using Marginal standardisation (G-computation) method (see
+d margins). Standard errors and 95% CI's are computed using the
+d delta-method (see nlcom). The command will also displays n/N (%)
+d by group (and for each subgroup if subgroup option selected). 
+d
+d KW: risk ratio
+d KW: risk difference
+d KW: marginal standardization 
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260820
+d
+d Author:  Samir Mehta ,   Birmingham Clinical Trials Unit (BCTU), University of Birmingham
+d Support: email  s.mehta.1@@bham.ac.uk
+d
+f msrrd.ado
+f msrrd.sthlp

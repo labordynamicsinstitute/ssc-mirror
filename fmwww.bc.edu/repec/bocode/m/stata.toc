@@ -199,6 +199,7 @@ p mkcorr module to generate correlation table formatted for easy inclusion in ar
 p mkdat module providing easy SOEP retrievals
 p mkdensity module to graph kernel densities of several variables
 p mkern module to perform multivariate nonparametric kernel regression
+p mkes module to generate English oral sentences from a user-supplied prompt phrase
 p mkest module to convert variables to estimates matrix
 p mkprofile module to create or edit your 'profile.do'
 p mkproject module to create a project folder with some boilerplate code and research log
@@ -266,6 +267,7 @@ p msdirb module to create a dataset of file names from the output of a MS-DOS di
 p mseffect module to estimate the mean effect size of (binary/multiple group) treatment on multiple outcomes
 p msp module to perform the Mokken Scale Procedure
 p msplot module for multiple median-spline plots
+p msrrd module to compute Risk Ratio and Risk Difference estimation using Marginal standardisation (G-computation) method
 p mss module to perform heteroskedasticity test for quantile and OLS regressions
 p mstdize module to produce marginal standardization of two-way tables
 p mstore module to Store and Retrieve Matrices with Dataset
