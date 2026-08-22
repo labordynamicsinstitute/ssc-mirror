@@ -9,7 +9,7 @@ d KW: weak exogeneity
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20260820
+d Distribution-Date: 20260821
 d
 d Author:   Merwan Roudane, NA
 d Support: email  merwanroudane920@@gmail.com
@@ -24,33 +24,23 @@ f gvar_bforecast.sthlp
 f gvar_clear.sthlp
 f gvar_coint.sthlp
 f gvar_contemp.sthlp
-f gvar_cv.dta
 f gvar_datasets.sthlp
-f gvar_demo.dta
-f gvar_demo26.dta
-f gvar_demoagg.dta
-f gvar_demoregions.dta
-f gvar_demospec.dta
 f gvar_describe.sthlp
 f gvar_diag.sthlp
 f gvar_dominant.sthlp
-f gvar_eer.dta
 f gvar_estimate.sthlp
-f gvar_example.do
 f gvar_fevd.sthlp
-f gvar_flows.dta
 f gvar_forecast.sthlp
 f gvar_foreign.sthlp
 f gvar_gc.sthlp
+f gvar_getdata.sthlp
 f gvar_hd.sthlp
 f gvar_import.sthlp
 f gvar_irf.sthlp
 f gvar_lags.sthlp
 f gvar_methods.sthlp
-f gvar_mr.dta
 f gvar_overid.sthlp
 f gvar_pp.sthlp
-f gvar_pricevol.dta
 f gvar_references.sthlp
 f gvar_report.sthlp
 f gvar_save.sthlp
@@ -59,24 +49,8 @@ f gvar_solve.sthlp
 f gvar_spillover.sthlp
 f gvar_stability.sthlp
 f gvar_tcdecomp.sthlp
-f gvar_test.dta
 f gvar_unitroot.sthlp
 f gvar_use.sthlp
-f gvar_w_eer_fin0708.dta
-f gvar_w_eer_fin0711.dta
-f gvar_w_eer_fin11.dta
-f gvar_w_eer_inv.dta
-f gvar_w_eer_inv2.dta
-f gvar_w_eer_knn8.dta
-f gvar_w_eer_trade00.dta
-f gvar_w_eer_trade0006.dta
-f gvar_w_eer_trade0012.dta
-f gvar_w_eer_trade12.dta
-f gvar_w_gvarx_tv.dta
-f gvar_w_gvarx2014.dta
-f gvar_w_mr_8016.dta
-f gvar_w_mr_tv.dta
-f gvar_w_test.dta
 f gvar_weights.sthlp
 f gvar_wetest.sthlp
 f ../_/_gvar_avgcorr.ado
@@ -96,6 +70,7 @@ f ../_/_gvar_fevd.ado
 f ../_/_gvar_forecast.ado
 f ../_/_gvar_foreign.ado
 f ../_/_gvar_gc.ado
+f ../_/_gvar_getdata.ado
 f ../_/_gvar_hd.ado
 f ../_/_gvar_import.ado
 f ../_/_gvar_irf.ado
@@ -115,3 +90,8 @@ f ../_/_gvar_usemodel.ado
 f ../_/_gvar_util.ado
 f ../_/_gvar_weights.ado
 f ../_/_gvar_wetest.ado
+f gvar_example.do
+f gvar_demo26.dta
+f gvar_demoagg.dta
+f gvar_demospec.dta
+f gvar_flows.dta

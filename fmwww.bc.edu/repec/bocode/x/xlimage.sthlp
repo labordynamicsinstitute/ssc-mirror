@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 3.1.0  03aug2026}{...}
+{* *! version 3.1.1  21aug2026}{...}
 {vieweralsosee "putexcel" "help putexcel"}{...}
 {vieweralsosee "putdocx" "help putdocx"}{...}
 {vieweralsosee "[D] zipfile" "help zipfile"}{...}
@@ -110,6 +110,12 @@ to place the graphs.
 {pstd}
 The workbook must not be open in Excel while the command runs, because the file
 is locked and cannot be rewritten.
+
+{pstd}
+Both {opt using()} and {opt image()} accept absolute paths (for example
+{cmd:D:\reports\report.xlsx}) as well as paths relative to the current
+directory; the command resolves them internally, so it can be run from any
+working directory.
 
 {pstd}
 This is a beta release, tested with workbooks produced by {helpb putexcel} and

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.5 10AUGUST2026 Soo Jeong Lee and Jeffrey M. Wooldridge *}
+{* *! version 3.1 21AUGUST2026 Soo Jeong Lee and Jeffrey M. Wooldridge *}
 {viewerjumpto "Syntax" "lwdid##syntax"}{...}
 {viewerjumpto "Description" "lwdid##description"}{...}
 {viewerjumpto "Options" "lwdid##options"}{...}
@@ -77,8 +77,10 @@ For example, {cmd:pre(1)} uses only the last pre-treatment period, while
 {synopt:{opt save(filename)}}Save estimation results as a .dta file.{p_end}
 
 {synopt:{opt graph}}Displays graphical results.{break}
-Large-N: plots weighted ATT estimates by relative time.{break}
+Large-N: plots weighted ATT estimates by relative time with simultaneous confidence bands by default. Use {opt pointwise} for pointwise confidence intervals.{break}
 Small-N: plots treated and control means of residualized outcomes over time.{p_end}
+
+{synopt:{opt pointwise}}Large-N only. Uses pointwise confidence intervals, rather than simultaneous confidence bands, in both the event-study table and graph.{p_end}
 
 {synopt:{opt gopts(string)}}Additional {cmd:twoway} graph options (only with {cmd:graph}).{p_end}
 

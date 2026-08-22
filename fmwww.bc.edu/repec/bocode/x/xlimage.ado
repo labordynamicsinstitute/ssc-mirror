@@ -1,4 +1,4 @@
-*! xlimage v3.1.0  Mario Anderson Apaza Naupa  03aug2026
+*! xlimage v3.1.1  Mario Anderson Apaza Naupa  21aug2026
 *! Insert or replace an image in an Excel workbook without stacking copies,
 *! and without Python.
 *!
@@ -17,6 +17,11 @@
 *! several sheets, and several images per sheet.
 *!
 *! Requires Stata 14+ (unzipfile/zipfile). No Python required.
+*!
+*! v3.1.1: fixed unzip failure when using()/image() are given as absolute
+*!         paths (e.g. D:\\folder\\file.xlsx). Paths are now resolved to
+*!         absolute before entering the temp dir, so xlimage works from any
+*!         current directory.
 
 program define xlimage
     version 14.0
@@ -42,6 +47,13 @@ program define xlimage
     }
     local cell = upper("`cell'")
 
+    // ---------- resolve workbook and image to ABSOLUTE paths ----------
+    // The routine cd's into a temp subdir, so any relative path (or the old
+    // "../`wb'" trick) breaks when the user passes a full path like D:\...\.
+    // Resolving to absolute here makes it work from any current directory.
+    mata: st_local("wb",  _xlimage_abspath(`"`wb'"'))
+    mata: st_local("image", _xlimage_abspath(`"`image'"'))
+
     quietly {
         local here "`c(pwd)'"
         local stub = "__xlimg_" + strofreal(runiformint(1,999999))
@@ -49,7 +61,7 @@ program define xlimage
 
         // ---------- unzip ----------
         cd "`stub'"
-        capture unzipfile `"../`wb'"', replace
+        capture unzipfile `"`wb'"', replace
         if _rc {
             cd "`here'"
             capture rmdir "`stub'"
@@ -555,6 +567,35 @@ string scalar _xlimage_esc(string scalar s)
         else out = out + ch
     }
     return(out)
+}
+
+
+// resolve a path to absolute, so routines that cd elsewhere still find it.
+// handles Windows (X:\... , \\server\\share) and Unix (/...) absolute forms;
+// otherwise prefixes the current working directory. Uses char(92) for the
+// backslash so no string ends with an escaping backslash.
+string scalar _xlimage_abspath(string scalar path)
+{
+    string scalar p, cwd, sep, last, bs
+    bs = char(92)
+    p = path
+    if (p == "") return(p)
+
+    // already absolute?
+    //  - Unix drive-less:   /....
+    //  - Windows drive:     X:... (second char is a colon)
+    //  - Windows UNC:       two leading backslashes
+    if (substr(p,1,1) == "/") return(p)
+    if (strlen(p) >= 2 & substr(p,2,1) == ":") return(p)
+    if (substr(p,1,2) == bs + bs) return(p)
+
+    // relative: prefix the current working directory
+    cwd = c("pwd")
+    if (strpos(cwd, bs) > 0) sep = bs
+    else sep = "/"
+    last = substr(cwd, strlen(cwd), 1)
+    if (last == "/" | last == bs) return(cwd + p)
+    return(cwd + sep + p)
 }
 
 end
