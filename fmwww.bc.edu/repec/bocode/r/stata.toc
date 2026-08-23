@@ -270,7 +270,7 @@ p rsource module to run R from inside Stata using an R source file
 p rspeedindex module to compute a response speed index and perform outlier identification
 p rsz module to draw a stratified simple random sample, a systematic sample, or a randomly split zones sample, with probabilities proportional to size
 p rtfutil module to provide utilities for writing Rich Text Format (RTF) files
-p rtmci module to estimate regression to the mean effects with confidence intervals
+p rtmci module  for estimating regression to the mean effects with confidence intervals
 p rtnorm Mata module to produce truncated normal pseudorandom variates (Mata)
 p runby module to run a user's program on by-groups of observations
 p runmixregls module to run the MIXREGLS software from within Stata

@@ -1,4 +1,5 @@
-* *! Version 1.1.0 by Francisco Perales 26-April-2013 
+* *! Version 1.2.0 by Francisco Perales 13-August-2026
+* Version 1.2 - Fixes naming of 'xwaveid' variable in survey wave 'x' (2024)
 * Requires Stata version 12 or higher
 
 program define hildasetup
@@ -22,6 +23,7 @@ local waves = substr(c(alpha), 1, (`release'*2)-1)
 		quietly{
 			use "`datadirectory'\Combined_`waveprefix'`release'0`type'", clear
 			renpfix `waveprefix'
+			cap rename waveid xwaveid
 			local list ""
 			foreach variable in xwaveid `variables'{
 				capture des `variable', varlist

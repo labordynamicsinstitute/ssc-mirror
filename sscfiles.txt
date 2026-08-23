@@ -545,6 +545,7 @@ fmwww.bc.edu/repec/bocode/v/vorter.pkg
 fmwww.bc.edu/repec/bocode/v/vallabsave.ado
 fmwww.bc.edu/repec/bocode/v/varflist.ado
 fmwww.bc.edu/repec/bocode/v/varelist.sthlp
+fmwww.bc.edu/repec/bocode/v/varorder.pkg
 fmwww.bc.edu/repec/bocode/v/vc_bwalt.ado
 fmwww.bc.edu/repec/bocode/v/vc_pack.pkg
 fmwww.bc.edu/repec/bocode/v/vallab.pkg
@@ -560,6 +561,7 @@ fmwww.bc.edu/repec/bocode/v/varsearch.html
 fmwww.bc.edu/repec/bocode/v/vallist.ado
 fmwww.bc.edu/repec/bocode/v/vallabtran.sthlp
 fmwww.bc.edu/repec/bocode/v/var_nr_fevd_bands.ado
+fmwww.bc.edu/repec/bocode/v/varorder.ado
 fmwww.bc.edu/repec/bocode/v/validly.pkg
 fmwww.bc.edu/repec/bocode/v/vc_reg.ado
 fmwww.bc.edu/repec/bocode/v/vectlist.hlp
@@ -793,6 +795,7 @@ fmwww.bc.edu/repec/bocode/v/varlocal.pkg
 fmwww.bc.edu/repec/bocode/v/vc_graph.sthlp
 fmwww.bc.edu/repec/bocode/v/vclose.ado
 fmwww.bc.edu/repec/bocode/v/vc_graph.ado
+fmwww.bc.edu/repec/bocode/v/varorder.sthlp
 fmwww.bc.edu/repec/bocode/v/variancemat.ado
 fmwww.bc.edu/repec/bocode/v/varck.ado
 fmwww.bc.edu/repec/bocode/v/visits.dta
@@ -804,6 +807,7 @@ fmwww.bc.edu/repec/bocode/v/vlc.ado
 fmwww.bc.edu/repec/bocode/v/vececm.html
 fmwww.bc.edu/repec/bocode/v/var_nr_hd.ado
 fmwww.bc.edu/repec/bocode/v/var_nr_shock_name.ado
+fmwww.bc.edu/repec/bocode/v/varorder_example_data.dta
 fmwww.bc.edu/repec/bocode/v/var_nr.sthlp
 fmwww.bc.edu/repec/bocode/v/varratio.m
 fmwww.bc.edu/repec/bocode/v/var_nr_narr_create.sthlp
@@ -832,6 +836,7 @@ fmwww.bc.edu/repec/bocode/v/violin.html
 fmwww.bc.edu/repec/bocode/v/vbkw.sthlp
 fmwww.bc.edu/repec/bocode/v/v2seats.ado
 fmwww.bc.edu/repec/bocode/v/varcase.ado
+fmwww.bc.edu/repec/bocode/v/varorder_example.do
 fmwww.bc.edu/repec/bocode/v/v2seats.hlp
 fmwww.bc.edu/repec/bocode/v/vecar.hlp
 fmwww.bc.edu/repec/bocode/v/vselect.pkg
@@ -846,6 +851,7 @@ fmwww.bc.edu/repec/bocode/v/var_nr_fevd.ado
 fmwww.bc.edu/repec/bocode/v/xtdpdgmm_postestimation.sthlp
 fmwww.bc.edu/repec/bocode/v/validarcae.pkg
 fmwww.bc.edu/repec/bocode/v/vlc.pkg
+fmwww.bc.edu/repec/bocode/v/varorder_test.do
 fmwww.bc.edu/repec/bocode/v/var_nr_narr_set.sthlp
 fmwww.bc.edu/repec/bocode/v/vonhippelbellows2018.do
 fmwww.bc.edu/repec/bocode/v/vtokenize.pkg

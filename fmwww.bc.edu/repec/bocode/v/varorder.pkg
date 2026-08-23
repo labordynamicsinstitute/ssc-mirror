@@ -1,0 +1,34 @@
+d 'VARORDER': module for automatic semantic temporal ordering of variables in wide-format Stata datasets
+d
+d  varorder automatically detects and reorganizes eligible temporal
+d variable families in wide-format Stata datasets. The module uses
+d semantic information in variable names, variable labels, variable
+d notes, and attached value-label metadata; recognizes supported
+d ordinary, staged, and hierarchical temporal sequences; and
+d normalizes harmless differences in capitalization, separators,
+d punctuation, and leading zeros internally. Attached value labels
+d provide conservative value-domain or construct evidence but do
+d not by themselves assign a variable-level time position.
+d Ambiguous, conflicting, colliding, related but non-temporal, and
+d unsupported cases are left unchanged. Before changing physical
+d variable order, varorder displays one bounded consolidated
+d preview and asks for a single Enter confirmation. This module
+d changes only physical variable order, preserves data and
+d metadata, applies the proposed permutation transactionally, and
+d provides a single-level undo. 
+d
+d KW: data management
+d KW: variable order
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260822
+d
+d Author: Hao Ma,  NA
+d Support: email shouhuoxiwang2027@@gmail.com
+d
+f varorder.ado
+f varorder.sthlp
+f varorder_test.do
+f varorder_example.do
+f varorder_example_data.dta

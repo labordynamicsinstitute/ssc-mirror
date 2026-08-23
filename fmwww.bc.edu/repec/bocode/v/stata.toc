@@ -25,6 +25,7 @@ p varlag module to determine the appropriate lag length in VARs, ECMs
 p varlmhet module to calculate heterokedasticity tests for VAR, VEC
 p varlocal module to transform values of a variable in local
 p varmi module to create a dummy variable that takes 1 when all the variable in the varlist are missing
+p varorder module for automatic semantic temporal ordering of variables in wide-format Stata datasets
 p varprod module to Generate Row Product of Variables
 p varsearch program to search variable names and labels
 p vartyp module to set variable types for codebook2
