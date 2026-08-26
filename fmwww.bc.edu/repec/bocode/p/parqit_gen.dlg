@@ -1,0 +1,171 @@
+/*
+  parqit — generate, egen or replace a variable on the open view (lazy)
+
+*!  VERSION 0.1.28  23aug2026
+
+  Launch with:  db parqit_gen     (installed on the menu by: parqit menu)
+  Both Create... buttons open Stata's expression builder (dates via td(),
+  tm(), year(), mdy(), ...). Untyped results store as double; choose a
+  storage type to control it, exactly like a typed native generate.
+*/
+
+VERSION 16.0
+
+INCLUDE _std_wide
+DEFINE _dlght 415
+INCLUDE header
+HELP hlp1, view("help parqit")
+RESET res1
+
+SCRIPT PREINIT
+BEGIN
+	script gen_on
+END
+
+SCRIPT gen_on
+BEGIN
+	main.cb_type.enable
+	main.cb_fcn.disable
+	main.ed_by.disable
+	main.tx_fcn.disable
+	main.tx_by.disable
+	main.ex_if.enable
+	main.tx_if.enable
+END
+
+SCRIPT egen_on
+BEGIN
+	main.cb_type.enable
+	main.cb_fcn.enable
+	main.ed_by.enable
+	main.tx_fcn.enable
+	main.tx_by.enable
+	main.ex_if.disable
+	main.tx_if.disable
+END
+
+SCRIPT repl_on
+BEGIN
+	main.cb_type.disable
+	main.cb_fcn.disable
+	main.ed_by.disable
+	main.tx_fcn.disable
+	main.tx_by.disable
+	main.ex_if.enable
+	main.tx_if.enable
+END
+
+DIALOG main, label("parqit — generate / egen / replace (lazy)") tabtitle("Main")
+BEGIN
+  RADIO rb_gen			_lft	_top	180	.,		///
+	first label("Generate a new variable")				///
+	onclickon(script gen_on)
+  RADIO rb_egen			+190	@	180	.,		///
+	label("Generate by group (egen)")				///
+	onclickon(script egen_on)
+  RADIO rb_repl			+190	@	180	.,		///
+	last label("Replace an existing variable")			///
+	onclickon(script repl_on)
+
+  TEXT tx_type			_lft	+35	180	.,		///
+	label("Storage type (gen/egen)")
+  COMBOBOX cb_type		@	_ss	_vnwd	.,		///
+	dropdown contents(type_list) default("(double)")		///
+	label("storage type")
+
+  TEXT tx_name			+200	-20	180	.,		///
+	label("Variable name")
+  EDIT ed_name			@	_ss	_vnwd	.,		///
+	error("Variable name") label("name")
+
+  TEXT tx_fcn			+200	-20	180	.,		///
+	label("egen function")
+  COMBOBOX cb_fcn		@	_ss	_vnwd	.,		///
+	dropdownlist contents(fcn_list) default("mean")		///
+	label("egen function")
+
+  TEXT tx_exp			_lft	+40	440	.,		///
+	label("= expression (dates: td(01jan2015), year(x), ...)")
+  BUTTON bu_vars		+450	@	110	.,		///
+	label("View variables")						///
+	onpush(program pq_show_vars)
+  EXP ex_exp			_lft	+25	_iwd	.,		///
+	error("Expression") label("Create...")
+
+  TEXT tx_if			_lft	+35	_iwd	.,		///
+	label("Only where (optional if condition)")
+  EXP ex_if			@	_ss	_iwd	.,		///
+	label("Create...")
+
+  TEXT tx_by			_lft	+35	180	.,		///
+	label("egen by variables (optional)")
+  EDIT ed_by			@	_ss	_iwd	.,		///
+	option(by) label("by variables")
+END
+
+LIST type_list
+BEGIN
+	"(double)"
+	byte
+	int
+	long
+	float
+	double
+	strL
+END
+
+LIST fcn_list
+BEGIN
+	total
+	mean
+	sd
+	min
+	max
+	count
+END
+
+PROGRAM pq_show_vars
+BEGIN
+	put "parqit ds"
+	stata hidden immediate
+END
+
+PROGRAM command
+BEGIN
+	if main.rb_gen {
+		put "parqit gen "
+		if !main.cb_type.isdefault() {
+			put main.cb_type " "
+		}
+		require main.ed_name
+		put main.ed_name " = "
+		require main.ex_exp
+		put main.ex_exp
+		if main.ex_if {
+			put " if " main.ex_if
+		}
+	}
+	if main.rb_egen {
+		put "parqit egen "
+		if !main.cb_type.isdefault() {
+			put main.cb_type " "
+		}
+		require main.ed_name
+		put main.ed_name " = " main.cb_fcn "("
+		require main.ex_exp
+		put main.ex_exp ")"
+		beginoptions
+			optionarg main.ed_by
+		endoptions
+	}
+	if main.rb_repl {
+		put "parqit replace "
+		require main.ed_name
+		put main.ed_name " = "
+		require main.ex_exp
+		put main.ex_exp
+		if main.ex_if {
+			put " if " main.ex_if
+		}
+	}
+END

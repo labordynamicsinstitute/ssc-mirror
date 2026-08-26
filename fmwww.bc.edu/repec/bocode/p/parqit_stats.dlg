@@ -1,0 +1,274 @@
+/*
+  parqit — descriptive statistics over the open view (engine-side)
+
+*!  VERSION 0.1.28  23aug2026
+
+  Launch with:  db parqit_stats     (installed on the menu by: parqit menu)
+  Everything is computed by the engine as a push-down query; only the
+  summary numbers (or the histogram bin table) reach Stata.
+*/
+
+VERSION 16.0
+
+INCLUDE _std_wide
+DEFINE _dlght 470
+INCLUDE header
+HELP hlp1, view("help parqit")
+RESET res1
+
+SCRIPT PREINIT
+BEGIN
+	script sum_on
+END
+
+SCRIPT all_off
+BEGIN
+	main.ed_sumvars.disable
+	main.ck_detail.disable
+	main.ed_tab.disable
+	main.ck_tmiss.disable
+	main.ck_trow.disable
+	main.ck_tcol.disable
+	main.ed_tsvars.disable
+	main.ck_s_n.disable
+	main.ck_s_mean.disable
+	main.ck_s_sd.disable
+	main.ck_s_min.disable
+	main.ck_s_max.disable
+	main.ck_s_med.disable
+	main.ck_s_sum.disable
+	main.ck_s_var.disable
+	main.ed_sextra.disable
+	main.ed_tsby.disable
+	main.ed_corr.disable
+	main.ck_pw.disable
+	main.ck_obs.disable
+	main.ck_sig.disable
+	main.ed_hvar.disable
+	main.ed_bins.disable
+	main.ck_nodraw.disable
+END
+
+SCRIPT sum_on
+BEGIN
+	script all_off
+	main.ed_sumvars.enable
+	main.ck_detail.enable
+END
+
+SCRIPT tab_on
+BEGIN
+	script all_off
+	main.ed_tab.enable
+	main.ck_tmiss.enable
+	main.ck_trow.enable
+	main.ck_tcol.enable
+END
+
+SCRIPT ts_on
+BEGIN
+	script all_off
+	main.ed_tsvars.enable
+	main.ck_s_n.enable
+	main.ck_s_mean.enable
+	main.ck_s_sd.enable
+	main.ck_s_min.enable
+	main.ck_s_max.enable
+	main.ck_s_med.enable
+	main.ck_s_sum.enable
+	main.ck_s_var.enable
+	main.ed_sextra.enable
+	main.ed_tsby.enable
+END
+
+SCRIPT corr_on
+BEGIN
+	script all_off
+	main.ed_corr.enable
+	main.ck_pw.enable
+END
+
+SCRIPT pw_on
+BEGIN
+	main.ck_obs.enable
+	main.ck_sig.enable
+END
+
+SCRIPT pw_off
+BEGIN
+	main.ck_obs.disable
+	main.ck_sig.disable
+END
+
+SCRIPT hist_on
+BEGIN
+	script all_off
+	main.ed_hvar.enable
+	main.ed_bins.enable
+	main.ck_nodraw.enable
+END
+
+DIALOG main, label("parqit — descriptive statistics (engine-side)") tabtitle("Main")
+BEGIN
+  RADIO rb_sum			_lft	_top	_iwd	.,		///
+	first label("Summarize numeric variables")			///
+	onclickon(script sum_on)
+  EDIT ed_sumvars		_indent	_ss	280	.,		///
+	label("variables (blank = all numeric)")
+  CHECKBOX ck_detail		+290	@	90	.,		///
+	option(detail) label("Detail")
+  BUTTON bu_vars		+100	@	110	.,		///
+	label("View variables")						///
+	onpush(program pq_show_vars)
+
+  RADIO rb_tab			_lft	+30	_iwd	.,		///
+	label("Tabulate: frequencies of one or two variables")		///
+	onclickon(script tab_on)
+  EDIT ed_tab			_indent	_ss	200	.,		///
+	label("varname [varname2]")
+  CHECKBOX ck_tmiss		+210	@	80	.,		///
+	option(missing) label("Missing")
+  CHECKBOX ck_trow		+85	@	60	.,		///
+	option(row) label("Row %")
+  CHECKBOX ck_tcol		+65	@	60	.,		///
+	option(col) label("Col %")
+
+  RADIO rb_ts			_lft	+30	_iwd	.,		///
+	label("Tabstat: chosen statistics, optionally by group")	///
+	onclickon(script ts_on)
+  EDIT ed_tsvars		_indent	_ss	370	.,		///
+	label("variables")
+  CHECKBOX ck_s_n		_indent	+25	50	., label("n")
+  CHECKBOX ck_s_mean		+55	@	65	., default(1) label("mean")
+  CHECKBOX ck_s_sd		+70	@	50	., default(1) label("sd")
+  CHECKBOX ck_s_min		+55	@	55	., label("min")
+  CHECKBOX ck_s_max		+60	@	60	., label("max")
+  CHECKBOX ck_s_med		+65	@	75	., label("median")
+  CHECKBOX ck_s_sum		_ilft	+22	55	., label("sum")
+  CHECKBOX ck_s_var		+60	@	55	., label("var")
+  TEXT tx_sextra		+65	@	120	.,		///
+	label("Other (p90 ...):")
+  EDIT ed_sextra		+125	@	90	.,		///
+	label("extra statistics")
+  TEXT tx_tsby			_ilft	+25	80	.,		///
+	label("By group:")
+  EDIT ed_tsby			+85	@	140	.,		///
+	option(by) label("group variable")
+
+  RADIO rb_corr		_lft	+32	_iwd	.,			///
+	label("Correlations")						///
+	onclickon(script corr_on)
+  EDIT ed_corr			_indent	_ss	230	.,		///
+	label("variables")
+  CHECKBOX ck_pw		+240	@	95	.,		///
+	label("Pairwise")						///
+	onclickon(script pw_on)						///
+	onclickoff(script pw_off)
+  CHECKBOX ck_obs		+100	@	55	.,		///
+	option(obs) label("Obs")
+  CHECKBOX ck_sig		+60	@	55	.,		///
+	option(sig) label("Sig")
+
+  RADIO rb_hist		_lft	+30	_iwd	.,			///
+	last label("Histogram (bins computed by the engine)")		///
+	onclickon(script hist_on)
+  EDIT ed_hvar			_indent	_ss	200	.,		///
+	label("variable")
+  TEXT tx_bins			+210	@	50	.,		///
+	label("Bins:")
+  EDIT ed_bins			+55	@	70	.,		///
+	numonly option(bins) label("bins")
+  CHECKBOX ck_nodraw		+140	@	210	.,		///
+	option(nodraw) label("Return bins without drawing")
+END
+
+PROGRAM pq_show_vars
+BEGIN
+	put "parqit ds"
+	stata hidden immediate
+END
+
+PROGRAM command
+BEGIN
+	if main.rb_sum {
+		put "parqit summarize"
+		if main.ed_sumvars {
+			put " " main.ed_sumvars
+		}
+		beginoptions
+			option main.ck_detail
+		endoptions
+	}
+	if main.rb_tab {
+		put "parqit tabulate "
+		require main.ed_tab
+		put main.ed_tab
+		beginoptions
+			option main.ck_tmiss
+			option main.ck_trow
+			option main.ck_tcol
+		endoptions
+	}
+	if main.rb_ts {
+		put "parqit tabstat "
+		require main.ed_tsvars
+		put main.ed_tsvars
+		beginoptions
+			put "statistics("
+			if main.ck_s_n {
+				put "n "
+			}
+			if main.ck_s_mean {
+				put "mean "
+			}
+			if main.ck_s_sd {
+				put "sd "
+			}
+			if main.ck_s_min {
+				put "min "
+			}
+			if main.ck_s_max {
+				put "max "
+			}
+			if main.ck_s_med {
+				put "median "
+			}
+			if main.ck_s_sum {
+				put "sum "
+			}
+			if main.ck_s_var {
+				put "var "
+			}
+			if main.ed_sextra {
+				put main.ed_sextra
+			}
+			put ") "
+			optionarg main.ed_tsby
+		endoptions
+	}
+	if main.rb_corr {
+		if main.ck_pw {
+			put "parqit pwcorr "
+			require main.ed_corr
+			put main.ed_corr
+			beginoptions
+				option main.ck_obs
+				option main.ck_sig
+			endoptions
+		}
+		else {
+			put "parqit correlate "
+			require main.ed_corr
+			put main.ed_corr
+		}
+	}
+	if main.rb_hist {
+		put "parqit histogram "
+		require main.ed_hvar
+		put main.ed_hvar
+		beginoptions
+			optionarg main.ed_bins
+			option main.ck_nodraw
+		endoptions
+	}
+END

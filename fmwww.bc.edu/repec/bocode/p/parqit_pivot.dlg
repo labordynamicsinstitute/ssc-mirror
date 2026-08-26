@@ -1,0 +1,266 @@
+/*
+  parqit — aggregate, reshape or pivot the open view (lazy)
+
+*!  VERSION 0.1.28  23aug2026
+
+  Launch with:  db parqit_pivot     (installed on the menu by: parqit menu)
+  Excel's pivot-table layout: Rows -> one output row per combination of
+  values, Columns -> one output column per distinct value, Values -> the
+  aggregated cells (a second measure is optional). Builds
+  parqit pivot (stat) [name=]var ..., rows() cols() — lazy like every verb;
+  materialise with the Collect / save dialog (db parqit_write).
+  The Load variables button fills the pickers from the OPEN VIEW's columns.
+*/
+
+VERSION 16.0
+
+INCLUDE _std_wide
+DEFINE _dlght 510
+INCLUDE header
+HELP hlp1, view("help parqit")
+RESET res1
+
+SCRIPT PREINIT
+BEGIN
+	create STRING dlgname
+	dlgname.storeDialogClassName
+	script pivot_on
+END
+
+PROGRAM pq_load_vars
+BEGIN
+	put "parqit _dlgvars "
+	put dlgname
+	put " vv_list"
+	stata hidden immediate
+	call main.cb_col.repopulate
+	call main.cb_val.repopulate
+	call main.cb_val2.repopulate
+END
+
+PROGRAM pq_show_vars
+BEGIN
+	put "parqit ds"
+	stata hidden immediate
+END
+
+SCRIPT all_off
+BEGIN
+	main.ed_specs.disable
+	main.ed_by.disable
+	main.ed_contract.disable
+	main.ed_freq.disable
+	main.cb_dir.disable
+	main.ed_stubs.disable
+	main.ed_i.disable
+	main.ed_j.disable
+	main.ed_rows.disable
+	main.cb_col.disable
+	main.cb_stat.disable
+	main.cb_val.disable
+	main.ed_tgt.disable
+	main.cb_stat2.disable
+	main.cb_val2.disable
+	main.ed_tgt2.disable
+END
+
+SCRIPT collapse_on
+BEGIN
+	script all_off
+	main.ed_specs.enable
+	main.ed_by.enable
+END
+
+SCRIPT contract_on
+BEGIN
+	script all_off
+	main.ed_contract.enable
+	main.ed_freq.enable
+END
+
+SCRIPT reshape_on
+BEGIN
+	script all_off
+	main.cb_dir.enable
+	main.ed_stubs.enable
+	main.ed_i.enable
+	main.ed_j.enable
+END
+
+SCRIPT pivot_on
+BEGIN
+	script all_off
+	main.ed_rows.enable
+	main.cb_col.enable
+	main.cb_stat.enable
+	main.cb_val.enable
+	main.ed_tgt.enable
+	main.cb_stat2.enable
+	main.cb_val2.enable
+	main.ed_tgt2.enable
+END
+
+DIALOG main, label("parqit — aggregate / reshape / pivot (lazy)") tabtitle("Main")
+BEGIN
+  RADIO rb_pivot		_lft	_top	135	.,		///
+	first label("Pivot table")					///
+	onclickon(script pivot_on)
+  RADIO rb_collapse		+145	@	135	.,		///
+	label("Collapse")						///
+	onclickon(script collapse_on)
+  RADIO rb_contract		+145	@	135	.,		///
+	label("Contract")						///
+	onclickon(script contract_on)
+  RADIO rb_reshape		+145	@	135	.,		///
+	last label("Reshape")					///
+	onclickon(script reshape_on)
+
+  GROUPBOX gb_other		_lft	45	_iwd	150,		///
+	label("Collapse / contract / reshape inputs")
+  TEXT tx_specs			_ilft	65	140	.,		///
+	label("Aggregate specifications")
+  EDIT ed_specs			+150	@	410	.,		///
+	label("(stat) [target=]source ...")
+  TEXT tx_by			_ilft	95	140	., label("Collapse by variables")
+  EDIT ed_by			+150	@	150	.,		///
+	option(by) label("by variables")
+  TEXT tx_contract		+165	@	90	., label("Contract variables")
+  EDIT ed_contract		+95	@	145	., label("contract variables")
+  TEXT tx_freq			_ilft	125	140	., label("Frequency variable")
+  EDIT ed_freq			+150	@	150	.,		///
+	option(freq) label("frequency variable")
+  TEXT tx_dir			+165	@	70	., label("Direction")
+  COMBOBOX cb_dir		+75	@	80	.,		///
+	dropdownlist contents(dir_list) default("long") label("direction")
+  TEXT tx_stubs			_ilft	155	140	., label("Reshape stubs")
+  EDIT ed_stubs			+150	@	150	., label("stub names")
+  TEXT tx_i			+165	@	25	., label("i:")
+  EDIT ed_i			+30	@	95	., label("i variables")
+  TEXT tx_j			+105	@	25	., label("j:")
+  EDIT ed_j			+30	@	85	., label("j variable")
+
+  GROUPBOX gb_layout		_lft	210	_iwd	235,		///
+	label("Pivot-table layout and values")
+  TEXT tx_rows			_ilft	230	440	.,		///
+	label("Rows: one output row per value combination")
+  BUTTON bu_vars		+450	@	110	.,		///
+	label("Load variables")					///
+	onpush(program pq_load_vars)
+  EDIT ed_rows			_ilft	250	_ibwd	.,		///
+	error("Row variables") label("rows")
+  TEXT tx_col			_ilft	280	_ibwd	.,		///
+	label("Columns: one output column per distinct value (one variable)")
+  COMBOBOX cb_col		_ilft	300	_vnwd	.,		///
+	dropdown contents(vv_list)					///
+	error("Columns variable") label("columns")
+  TEXT tx_stat			_ilft	335	120	.,		///
+	label("Statistic")
+  TEXT tx_val			+130	@	160	.,		///
+	label("Of variable")
+  TEXT tx_tgt			+170	@	170	.,		///
+	label("Result name (optional)")
+  COMBOBOX cb_stat		_ilft	355	120	.,		///
+	dropdownlist contents(stat_list) default("sum")			///
+	label("statistic")
+  COMBOBOX cb_val		+130	@	160	.,		///
+	dropdown contents(vv_list)					///
+	error("Values variable") label("values variable")
+  EDIT ed_tgt			+170	@	170	.,		///
+	label("result name")
+
+  TEXT tx_val2			_ilft	385	_ibwd	.,		///
+	label("Second measure (optional)")
+  COMBOBOX cb_stat2		_ilft	405	120	.,		///
+	dropdownlist contents(stat_list) default("count")		///
+	label("second statistic")
+  COMBOBOX cb_val2		+130	@	160	.,		///
+	dropdown contents(vv_list)					///
+	label("second values variable")
+  EDIT ed_tgt2			+170	@	170	.,		///
+	label("second result name")
+
+  TEXT tx_note			_lft	460	_iwd	.,		///
+	label("Lazy: materialise the table with Collect / save (db parqit_write).")
+END
+
+LIST dir_list
+BEGIN
+	long
+	wide
+END
+
+LIST vv_list
+BEGIN
+END
+
+LIST stat_list
+BEGIN
+	sum
+	mean
+	count
+	min
+	max
+	sd
+	median
+	p10
+	p25
+	p50
+	p75
+	p90
+	first
+	last
+	firstnm
+	lastnm
+END
+
+PROGRAM command
+BEGIN
+	if main.rb_collapse {
+		put "parqit collapse "
+		require main.ed_specs
+		put main.ed_specs
+		beginoptions
+			optionarg main.ed_by
+		endoptions
+	}
+	if main.rb_contract {
+		put "parqit contract "
+		require main.ed_contract
+		put main.ed_contract
+		beginoptions
+			optionarg main.ed_freq
+		endoptions
+	}
+	if main.rb_reshape {
+		put "parqit reshape " main.cb_dir " "
+		require main.ed_stubs
+		put main.ed_stubs ", i("
+		require main.ed_i
+		put main.ed_i ") j("
+		require main.ed_j
+		put main.ed_j ")"
+	}
+	if main.rb_pivot {
+		put "parqit pivot "
+		put "(" main.cb_stat ") "
+		if main.ed_tgt {
+			put main.ed_tgt "="
+		}
+		require main.cb_val
+		put main.cb_val
+		if main.cb_val2 {
+			put " (" main.cb_stat2 ") "
+			if main.ed_tgt2 {
+				put main.ed_tgt2 "="
+			}
+			put main.cb_val2
+		}
+		put ", rows("
+		require main.ed_rows
+		put main.ed_rows
+		put ") cols("
+		require main.cb_col
+		put main.cb_col
+		put ")"
+	}
+END

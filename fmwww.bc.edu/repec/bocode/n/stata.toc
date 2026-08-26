@@ -16,6 +16,7 @@ p nearmrg module to nearest match merging of two datasets on a numeric variable
 p nearstat module to calculate distance-based variables and export distance matrix to text file
 p nehurdle module for estimation of models with corner solutions
 p neoclassical module to estimate neoclassical education transitions model
+p nestpreserve module  to preserve, inspect, and restore multiple nested dataset states
 p netplot module to provide social network visualization
 p netreg module to perform linear regression of a network response with the exchangeable assumption
 p network module to perform network meta-analysis

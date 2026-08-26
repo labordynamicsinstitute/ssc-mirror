@@ -1,7 +1,7 @@
 version 16.0
 
 /*
-    varorder 1.0.0 example
+    varorder 1.1.0 comprehensive example
 
     Place this file, varorder_example_data.dta, and varorder.ado in the same
     directory, start Stata in that directory, and run:

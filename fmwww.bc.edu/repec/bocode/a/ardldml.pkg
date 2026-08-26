@@ -1,0 +1,54 @@
+d 'ARDLDML': module to perform DML-Bounds: ARDL bounds testing for cointegration with many persistent controls
+d
+d	 ardldml implements DML-Bounds, the procedure of Villena
+d (2026): a test for a long-run (cointegrating) relationship
+d between    depvar and focalvar when the conditioning set is
+d high-dimensional and may itself carry stochastic trends.    The
+d classical ARDL bounds test of Pesaran, Shin and Smith (2001)
+d brackets one unknown: whether the tested regressors are I(0)	 
+d or I(1). With a large, persistent control set a second unknown
+d appears. Partialling out controls that carry stochastic trends   
+d can absorb part of the long-run variation that identifies the
+d error-correction relation. What then governs the null is not the 
+d   integration order of the original regressors but the
+d {bf:effective integrated count} k-tilde: the number of stochastic
+d trends    that survive residualisation.  k-tilde = k puts the
+d null at the classical I(1) endpoint, k-tilde = 0 at the I(0)
+d endpoint, and    anything between lands inside the bracket.	
+d The procedure has three stages. A balanced first stage projects
+d the differenced outcome on stationary regressors only and the   
+d lagged levels on the control levels, cross-fitted over contiguous
+d time blocks separated by an h-observation buffer. The lagged	 
+d levels are then residualised, and the F form of the Wald test of
+d joint insignificance is computed on the orthogonalised terms.   
+d Inference comes from a restricted system wild bootstrap that
+d regenerates the outcome and the focal regressor jointly under the
+d    null. 
+d
+d KW: ARDL
+d KW: cointegration
+d KW: bounds
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260825
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f ardldml.ado
+f ardldml.mata
+f ardldml.sthlp
+f ardldml_buildmlib.do
+f ardldml_estat.ado
+f ardldml_example.do
+f ardldml_examples.sthlp
+f ardldml_mcheck.do
+f ardldml_methods.sthlp
+f ardldml_p.ado
+f ardldml_passthrough.dta
+f ardldml_postestimation.sthlp
+f ardldml_validate.do
+f ../_/_ardldml_blockgraph.ado
+f ../_/_ardldml_nullgraph.ado
+f ../l/lardldml.mlib

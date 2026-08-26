@@ -1,0 +1,275 @@
+/*
+  parqit — explore structure and data quality (current dataset unchanged)
+
+*!  VERSION 0.1.28  23aug2026
+
+  Launch with:  db parqit_explore     (installed on the menu by: parqit menu)
+  Descriptive statistics (summarize, tabulate, tabstat, correlations,
+  histogram) live in the companion dialog:  db parqit_stats
+*/
+
+VERSION 16.0
+
+INCLUDE _std_wide
+DEFINE _dlght 515
+INCLUDE header
+HELP hlp1, view("help parqit")
+RESET res1
+
+SCRIPT PREINIT
+BEGIN
+	main.fi_file.formatfilter					///
+		"Parquet (*.parquet)|*.parquet|"			///
+		"All files (*.*)|*.*"
+	script descview_on
+END
+
+SCRIPT all_off
+BEGIN
+	main.fi_file.disable
+	main.ed_input.disable
+	main.ex_if.disable
+	main.ed_rows.disable
+	main.ed_limit.disable
+	main.ed_from.disable
+	main.ed_to.disable
+	main.ck_patterns.disable
+	main.ck_joint.disable
+END
+
+SCRIPT descview_on
+BEGIN
+	script all_off
+END
+
+SCRIPT descfile_on
+BEGIN
+	script all_off
+	main.fi_file.enable
+END
+
+SCRIPT head_on
+BEGIN
+	script all_off
+	main.ed_rows.enable
+END
+
+SCRIPT list_on
+BEGIN
+	script all_off
+	main.ed_input.enable
+	main.ex_if.enable
+	main.ed_from.enable
+	main.ed_to.enable
+END
+
+SCRIPT input_on
+BEGIN
+	script all_off
+	main.ed_input.enable
+END
+
+SCRIPT ms_on
+BEGIN
+	script input_on
+	main.ck_patterns.enable
+END
+
+SCRIPT dist_on
+BEGIN
+	script input_on
+	main.ck_joint.enable
+END
+
+SCRIPT dup_on
+BEGIN
+	script input_on
+	main.ed_limit.enable
+END
+
+SCRIPT levels_on
+BEGIN
+	script input_on
+	main.ed_limit.enable
+END
+
+SCRIPT count_on
+BEGIN
+	script all_off
+	main.ex_if.enable
+END
+
+DIALOG main, label("parqit — explore structure and quality (no materialisation)") tabtitle("Main")
+BEGIN
+  GROUPBOX gb_action		_lft	_top	_iwd	190,		///
+	label("Operation")
+  RADIO rb_descview		_ilft	_ss	270	.,		///
+	first label("Describe current view")				///
+	onclickon(script descview_on)
+  RADIO rb_descfile		+280	@	270	.,		///
+	label("Describe Parquet footer")				///
+	onclickon(script descfile_on)
+  RADIO rb_glimpse		_ilft	+24	270	.,		///
+	label("Glimpse current view")				///
+	onclickon(script descview_on)
+  RADIO rb_head			+280	@	270	.,		///
+	label("Preview first rows (head)")			///
+	onclickon(script head_on)
+  RADIO rb_list			_ilft	+24	270	.,		///
+	label("Preview selected rows (list)")			///
+	onclickon(script list_on)
+  RADIO rb_ds			+280	@	270	.,		///
+	label("List variable names (ds)")				///
+	onclickon(script descview_on)
+  RADIO rb_lookfor		_ilft	+24	270	.,		///
+	label("Search names and labels (lookfor)")			///
+	onclickon(script input_on)
+  RADIO rb_cb			+280	@	270	.,		///
+	label("Codebook")					///
+	onclickon(script input_on)
+  RADIO rb_ms			_ilft	+24	270	.,		///
+	label("Missing values / patterns")			///
+	onclickon(script ms_on)
+  RADIO rb_levels		+280	@	270	.,		///
+	label("Levels of one variable")				///
+	onclickon(script levels_on)
+  RADIO rb_dist			_ilft	+24	270	.,		///
+	label("Distinct values")					///
+	onclickon(script dist_on)
+  RADIO rb_dup			+280	@	270	.,		///
+	label("Duplicates report")				///
+	onclickon(script dup_on)
+  RADIO rb_duplist		_ilft	+24	270	.,		///
+	label("List duplicate rows")				///
+	onclickon(script dup_on)
+  RADIO rb_count			+280	@	270	.,		///
+	last label("Count rows")					///
+	onclickon(script count_on)
+
+  GROUPBOX gb_inputs		_lft	210	_iwd	200,		///
+	label("Inputs for the selected operation")
+  TEXT tx_file			_ilft	_ss	170	.,		///
+	label("Parquet file / glob / folder")
+  FILE fi_file			+180	@	380	.,		///
+	error("File to describe") defext(parquet) label("Browse...")
+  TEXT tx_input			_ilft	+30	170	.,		///
+	label("Variables / keys / terms")
+  EDIT ed_input			+180	@	380	.,		///
+	label("variables, keys or search terms")
+  TEXT tx_cond			_ilft	+30	170	.,		///
+	label("Condition (list/count)")
+  EXP ex_if			+180	@	380	.,		///
+	label("Create...")
+  TEXT tx_rows			_ilft	+32	45	., label("Rows:")
+  EDIT ed_rows			+50	@	65	.,		///
+	numonly default(5) label("rows")
+  TEXT tx_limit			+80	@	45	., label("Limit:")
+  EDIT ed_limit			+50	@	70	.,		///
+	numonly option(limit) label("limit")
+  TEXT tx_from			+85	@	45	., label("From:")
+  EDIT ed_from			+50	@	65	.,		///
+	numonly label("first")
+  TEXT tx_to			+80	@	25	., label("to:")
+  EDIT ed_to			+30	@	65	.,		///
+	numonly label("last")
+  CHECKBOX ck_patterns		_ilft	+30	150	.,		///
+	label("Missing patterns")
+  CHECKBOX ck_joint		+165	@	180	.,		///
+	option(joint) label("Joint distinct count")
+END
+
+PROGRAM command
+BEGIN
+	if main.rb_descview {
+		put "parqit describe"
+	}
+	if main.rb_descfile {
+		put "parqit describe "
+		require main.fi_file
+		put `"""' main.fi_file `"""'
+	}
+	if main.rb_glimpse {
+		put "parqit glimpse"
+	}
+	if main.rb_head {
+		put "parqit head "
+		require main.ed_rows
+		put main.ed_rows
+	}
+	if main.rb_list {
+		put "parqit list"
+		if main.ed_input {
+			put " " main.ed_input
+		}
+		if main.ex_if {
+			put " if " main.ex_if
+		}
+		if main.ed_from | main.ed_to {
+			require main.ed_from
+			require main.ed_to
+			put " in " main.ed_from "/" main.ed_to
+		}
+	}
+	if main.rb_ds {
+		put "parqit ds"
+	}
+	if main.rb_lookfor {
+		put "parqit lookfor "
+		require main.ed_input
+		put main.ed_input
+	}
+	if main.rb_cb {
+		put "parqit codebook"
+		if main.ed_input {
+			put " " main.ed_input
+		}
+	}
+	if main.rb_ms {
+		put "parqit misstable"
+		if main.ck_patterns {
+			put " patterns"
+		}
+		if main.ed_input {
+			put " " main.ed_input
+		}
+	}
+	if main.rb_levels {
+		put "parqit levelsof "
+		require main.ed_input
+		put main.ed_input
+		beginoptions
+			optionarg main.ed_limit
+		endoptions
+	}
+	if main.rb_dist {
+		put "parqit distinct"
+		if main.ed_input {
+			put " " main.ed_input
+		}
+		beginoptions
+			option main.ck_joint
+		endoptions
+	}
+	if main.rb_dup {
+		put "parqit duplicates report "
+		require main.ed_input
+		put main.ed_input
+		beginoptions
+			optionarg main.ed_limit
+		endoptions
+	}
+	if main.rb_duplist {
+		put "parqit duplicates list "
+		require main.ed_input
+		put main.ed_input
+		beginoptions
+			optionarg main.ed_limit
+		endoptions
+	}
+	if main.rb_count {
+		put "parqit count"
+		if main.ex_if {
+			put " if " main.ex_if
+		}
+	}
+END

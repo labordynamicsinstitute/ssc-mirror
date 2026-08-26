@@ -6,6 +6,7 @@ p factmerg module to merge a list of factors to create string variables
 p factorn module to calculate the factors of an integer
 p factortest module to perform tests for appropriateness of factor analysis
 p factref module to insert new observations with reference values for factors
+p factsheetplot module to apply standardized factsheet styling to graphs
 p fagan module for Fagan's Bayesian nomoigram
 p fairlie module to generate nonlinear decomposition of binary outcome differentials
 p far5 module to compute floating absolute risk for Cox and conditional logit regression

@@ -1,0 +1,47 @@
+d 'PARQIT': module providing a grammar of data manipulation for Parquet files on an embedded DuckDB engine
+d
+d     parqit reads, writes, joins and manipulates columnar Parquet
+d data with ordinary Stata verbs -- keep, drop, gen, replace,
+d collapse, pivot, merge, append, sort, reshape -- that run out-of-core
+d on an embedded DuckDB engine and materialise one result table
+d at a time into Stata's memory, or write it straight back to
+d Parquet without loading the result into Stata's current dataset.
+d Variable labels, value labels,
+d notes, display formats and characteristics survive a parqit save /
+d parqit use round-trip through standard Parquet key-value metadata,
+d while files remain plain Parquet for Python (pandas, polars), R,
+d Spark and other tools. SQL is available as an escape hatch (parqit
+d sql), and parqit show prints the generated query.
+d
+d KW: Parquet
+d KW: DuckDB
+d KW: out-of-core
+d KW: big data
+d KW: data management
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260823
+d
+d Author: Miguel Portela, Universidade do Minho & NIPE
+d Support: email miguel.portela@@eeg.uminho.pt
+d
+f parqit.ado
+f parqit.sthlp
+f parqit_read.dlg
+f parqit_explore.dlg
+f parqit_stats.dlg
+f parqit_filter.dlg
+f parqit_vars.dlg
+f parqit_gen.dlg
+f parqit_pivot.dlg
+f parqit_combine.dlg
+f parqit_write.dlg
+f parqit_views.dlg
+g LINUX64 parqit_linux64.plugin parqit.plugin
+g MACINTEL64 parqit_macintel64.plugin parqit.plugin
+g OSX.X8664 parqit_macintel64.plugin parqit.plugin
+g MACARM64 parqit_macarm64.plugin parqit.plugin
+g OSX.ARM64 parqit_macarm64.plugin parqit.plugin
+g WIN64 parqit_win64.plugin parqit.plugin
+h parqit.plugin

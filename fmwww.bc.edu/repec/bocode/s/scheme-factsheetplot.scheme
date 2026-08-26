@@ -1,0 +1,58 @@
+* Standardized policy factsheet graph scheme
+
+#include s1color
+
+sequence 2000
+label "Policy fact sheet"
+
+graphsize x 8
+graphsize y 5
+
+color background       white
+color plotregion       white
+color plotregion_line  white
+color legend           white
+color legend_line      white
+color axisline         "217 217 217"
+
+color text           "73 74 77"
+color body           "73 74 77"
+color heading        "73 74 77"
+color subheading     "73 74 77"
+color axis_title     "73 74 77"
+color label          "73 74 77"
+color key_label      "73 74 77"
+color tick_label     "73 74 77"
+color tick_biglabel  "73 74 77"
+
+color grid        "217 217 217"
+color major_grid  "217 217 217"
+color refline     "124 125 128"
+color ci_line     "124 125 128"
+color ci_arealine "183 184 185"
+color ci_area     "183 184 185 %35"
+
+color p1 "54 151 219"
+color p2 "124 125 128"
+color p3 "27 177 190"
+color p4 "67 57 107"
+color p5 "22 86 131"
+color p6 "13 105 110"
+
+linepattern p1line     solid
+linepattern p1lineplot solid
+linepattern p2line     shortdash
+linepattern p2lineplot shortdash
+linepattern refline    shortdash
+
+gsize heading    medium
+gsize subheading small
+gsize axis_title small
+gsize tick_label small
+gsize key_label  small
+gsize note       vsmall
+
+yesno draw_major_hgrid no
+yesno draw_major_vgrid no
+
+linestyle plotregion none

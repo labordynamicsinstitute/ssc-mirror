@@ -1,0 +1,155 @@
+/*
+  parqit — run the pipeline: collect into memory, or save to Parquet
+
+*!  VERSION 0.1.28  23aug2026
+
+  Launch with:  db parqit_write     (installed on the menu by: parqit menu)
+*/
+
+VERSION 16.0
+
+INCLUDE _std_wide
+DEFINE _dlght 420
+INCLUDE header
+HELP hlp1, view("help parqit")
+RESET res1
+
+SCRIPT PREINIT
+BEGIN
+	main.fi_out.formatfilter					///
+		"Parquet (*.parquet)|*.parquet|"			///
+		"All files (*.*)|*.*"
+	script collect_on
+END
+
+SCRIPT collect_on
+BEGIN
+	main.ck_repl.enable
+	main.fi_out.disable
+	main.ck_replace.disable
+	main.cb_comp.disable
+	main.ed_level.disable
+	main.ed_part.disable
+	main.ed_chunk.disable
+	main.cb_enc.disable
+	main.ck_data.disable
+	main.ck_copy.disable
+END
+
+SCRIPT save_on
+BEGIN
+	main.ck_repl.disable
+	main.fi_out.enable
+	main.ck_replace.enable
+	main.cb_comp.enable
+	main.ed_level.enable
+	main.ed_part.enable
+	main.ed_chunk.enable
+	main.cb_enc.enable
+	main.ck_data.enable
+	main.ck_copy.enable
+END
+
+DIALOG main, label("parqit — collect or save (runs the pipeline)") tabtitle("Main")
+BEGIN
+  RADIO rb_collect		_lft	_top	_iwd	.,		///
+	first								///
+	label("Collect: stream the result into Stata's memory (atomically)") ///
+	onclickon(script collect_on)
+  CHECKBOX ck_repl		_indent	+22	_ibwd	.,		///
+	label("Replace the dataset in memory (clear; else unsaved changes refuse)")
+
+  RADIO rb_save			_lft	+25	_iwd	.,		///
+	last								///
+	label("Save: write the result straight to Parquet (memory untouched)") ///
+	onclickon(script save_on)
+
+  TEXT tx_out			_indent	+25	370	.,		///
+	label("Output file (or directory when partitioning)")
+  FILE fi_out			@	_ss	@	.,		///
+	error("Output file")						///
+	defext(parquet)							///
+	save								///
+	label("Save as...")
+
+  CHECKBOX ck_replace		@	+30	170	.,		///
+	option(replace) label("Overwrite if it exists")
+  CHECKBOX ck_data		+180	@	200	.,		///
+	option(data)							///
+	label("Export the in-memory dataset")
+
+  CHECKBOX ck_copy		_lft	275	_ibwd	.,		///
+	option(copysource)						///
+	label("With Export: copy the unchanged file loaded by parqit use (assert nothing changed)")
+
+  TEXT tx_comp			_lft	165	130	.,		///
+	label("Compression")
+  COMBOBOX cb_comp		_lft	185	120	.,		///
+	dropdownlist contents(comp_list) default("snappy")		///
+	option(compression) label("compression")
+
+  TEXT tx_level			190	165	140	.,		///
+	label("Compression level")
+  EDIT ed_level			190	185	90	.,		///
+	numonly option(compression_level) label("compression level")
+
+  TEXT tx_part			340	165	230	.,		///
+	label("Partition by (Hive tree)")
+  EDIT ed_part			340	185	240	.,		///
+	option(partition_by) label("partition variables")
+
+  TEXT tx_chunk			_lft	225	230	.,		///
+	label("Rows per row group (optional)")
+  EDIT ed_chunk			_lft	245	120	.,		///
+	numonly option(chunk) label("rows per row group")
+
+  TEXT tx_enc			260	225	300	.,		///
+	label("Legacy text encoding (for non-UTF-8 strings/labels)")
+  COMBOBOX cb_enc		260	245	150	.,		///
+	dropdownlist contents(enc_list) default("windows-1252")	///
+	option(encoding) label("encoding")
+END
+
+LIST comp_list
+BEGIN
+	snappy
+	zstd
+	gzip
+	lz4
+	lz4_raw
+	brotli
+	uncompressed
+END
+
+LIST enc_list
+BEGIN
+	windows-1252
+	latin1
+	latin9
+	macroman
+END
+
+PROGRAM command
+BEGIN
+	if main.rb_collect {
+		put "parqit collect"
+		if main.ck_repl {
+			put ", clear"
+		}
+	}
+	if main.rb_save {
+		put "parqit save "
+		require main.fi_out
+		put `"""' main.fi_out `"""'
+		beginoptions
+			option main.ck_replace
+			optionarg /hidedefault main.cb_comp
+			optionarg main.ed_level
+			optionarg main.ed_part
+			optionarg main.ed_chunk
+			optionarg /hidedefault main.cb_enc
+			option main.ck_data
+			option main.ck_copy
+		endoptions
+	}
+END

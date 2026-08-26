@@ -1,0 +1,23 @@
+d 'FACTSHEETPLOT': module to apply standardized factsheet styling to graphs
+d
+d  factsheetplot applies a bundled graph scheme and standardized
+d 8-by-5 dimensions to the current or a named Stata graph. It can
+d also activate the scheme for graphs subsequently created in the
+d current Stata session and optionally export the styled graph at a
+d configurable pixel width. Explicit plot styling and the
+d substantive content of the original graph are preserved. 
+d
+d KW: graphics
+d KW: scheme
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260825
+d
+d Author: Sam Sturm,  Johns Hopkins University
+d Support: email ssturm@@jhu.edu
+d
+f factsheetplot.ado
+f factsheetplot.sthlp
+f factsheetplot_example.do
+f ../s/scheme-factsheetplot.scheme

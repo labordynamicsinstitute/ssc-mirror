@@ -1,0 +1,44 @@
+d 'NESTPRESERVE': module  to preserve, inspect, and restore multiple nested dataset states
+d
+d  nestpreserve provides a disk-backed, last-in–first-out stack
+d of dataset-state checkpoints. It allows each Stata frame to save,
+d inspect, and restore multiple analytical states while enforcing
+d frame ownership and restoration order. The module automatically
+d records checkpoint dimensions, variable and observation changes,
+d dataset signatures, and transaction history. nesttransaction:
+d runs a command and automatically rolls back its dataset changes
+d after either success or failure. nestrecover and nestclear
+d provide fail-closed recovery and cleanup after a Stata process
+d ends, acting automatically only when exactly one intact abandoned
+d checkpoint stack is identified and its originating process is
+d proven dead. Ambiguous, live, corrupt, legacy, or otherwise
+d unverifiable candidates are not modified automatically. The
+d module manages the dataset state rather than the complete Stata
+d session. 
+d
+d KW: data management
+d KW: nested data states; dataset checkpoints; transaction rollback; data audit; crash recovery; frames
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260825
+d
+d Author: Hao Ma,  NA
+d Support: email shouhuoxiwang2027@@gmail.com
+d
+f nestpreserve.ado
+f nestpreserve.sthlp
+f nestclear.ado
+f nestclear.sthlp
+f nestpreserve-process.jar
+f nestrecover.ado
+f nestrecover.sthlp
+f nestrestore.ado
+f nestrestore.sthlp
+f neststatus.ado
+f neststatus.sthlp
+f nesttransaction.ado
+f nesttransaction.sthlp
+f ../_/_nestpreserve_audit.ado
+f ../_/_nestpreserve_manifest.ado
+f ../_/_nestpreserve_process.ado

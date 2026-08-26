@@ -1,0 +1,181 @@
+/*
+  parqit — read a source, open memory, or resolve a path
+
+*!  VERSION 0.1.28  23aug2026
+
+  Launch with:  db parqit_read
+  Install a User-menu entry with:  parqit menu
+*/
+
+VERSION 16.0
+
+INCLUDE _std_wide
+DEFINE _dlght 445
+INCLUDE header
+HELP hlp1, view("help parqit")
+RESET res1
+
+SCRIPT PREINIT
+BEGIN
+	main.fi_using.formatfilter					///
+		"Parquet (*.parquet)|*.parquet|"			///
+		"Delimited text (*.csv *.tsv *.txt)|*.csv;*.tsv;*.txt|"	///
+		"Stata data (*.dta)|*.dta|"				///
+		"Excel (*.xlsx *.xls)|*.xlsx;*.xls|"			///
+		"All files (*.*)|*.*"
+	script use_on
+END
+
+SCRIPT all_off
+BEGIN
+	main.fi_using.disable
+	main.ed_vars.disable
+	main.ck_clear.disable
+	main.ed_name.disable
+	main.ck_relaxed.disable
+	main.bu_desc.disable
+	main.tx_vars.disable
+	main.tx_lazy.disable
+	main.tx_name.disable
+END
+
+SCRIPT use_on
+BEGIN
+	script all_off
+	main.fi_using.enable
+	main.ed_vars.enable
+	main.ck_clear.enable
+	main.ed_name.enable
+	main.ck_relaxed.enable
+	main.bu_desc.enable
+	main.tx_vars.enable
+	main.tx_lazy.enable
+	main.tx_name.enable
+END
+
+SCRIPT open_on
+BEGIN
+	script all_off
+	main.ed_name.enable
+	main.tx_name.enable
+END
+
+SCRIPT path_on
+BEGIN
+	script all_off
+	main.fi_using.enable
+END
+
+SCRIPT clear_on
+BEGIN
+	main.tx_name.disable
+	main.ed_name.disable
+END
+
+SCRIPT clear_off
+BEGIN
+	main.tx_name.enable
+	main.ed_name.enable
+END
+
+DIALOG main, label("parqit — read / open / path") tabtitle("Main")
+BEGIN
+  RADIO rb_use			_lft	_top	180	.,		///
+	first label("Read a source (use)")				///
+	onclickon(script use_on)
+  RADIO rb_open			+190	@	180	.,		///
+	label("Open current memory")				///
+	onclickon(script open_on)
+  RADIO rb_path			+190	@	180	.,		///
+	last label("Resolve a path")				///
+	onclickon(script path_on)
+
+  TEXT tx_using			_lft	+35	440	.,		///
+	label("File, glob (data_*.parquet), Hive folder or other supported source")
+  BUTTON bu_desc		+450	@	130	.,		///
+	label("Describe footer")					///
+	onpush(program pq_describe)
+  FILE fi_using			_lft	_ss	_iwd	.,		///
+	error("File to read")						///
+	defext(parquet)							///
+	label("Browse...")
+
+  TEXT tx_vars			_lft	+35	_iwd	.,		///
+	label("Variables to read (optional; default is all columns)")
+  EDIT ed_vars			@	_ss	@	.,		///
+	label("variables to read")
+
+  CHECKBOX ck_clear		_lft	+35	_iwd	.,		///
+	option(clear) default(0)					///
+	label("Read into memory now (replaces the data in memory)")	///
+	onclickon(script clear_on)					///
+	onclickoff(script clear_off)
+
+  TEXT tx_lazy			_lft	+25	_iwd	.,		///
+	label("Use defaults to a lazy view: schema probed, no result rows loaded into Stata")
+
+  TEXT tx_name			_lft	+25	_vnwd	.,		///
+	label("View name (optional)")
+  EDIT ed_name			@	_ss	@	.,		///
+	option(name)							///
+	label("view name")
+
+  CHECKBOX ck_relaxed		_lft	+35	_iwd	.,		///
+	option(relaxed)							///
+	label("Union a glob whose files have different schemas (relaxed)")
+
+  TEXT tx_enc			_lft	+30	260	.,		///
+	label("Legacy code page for a non-UTF-8 .dta/Excel source (bridge)")
+  COMBOBOX cb_enc		+265	@	150	.,		///
+	dropdownlist contents(enc_list) default("windows-1252")	///
+	option(encoding) label("encoding")
+END
+
+LIST enc_list
+BEGIN
+	windows-1252
+	latin1
+	latin9
+	macroman
+END
+
+PROGRAM pq_describe
+BEGIN
+	require main.fi_using
+	put "parqit describe "
+	put `"""' main.fi_using `"""'
+	stata hidden immediate
+END
+
+PROGRAM command
+BEGIN
+	if main.rb_use {
+		put "parqit use "
+		if main.ed_vars {
+			put main.ed_vars " "
+		}
+		put "using "
+		require main.fi_using
+		put `"""' main.fi_using `"""'
+		beginoptions
+			option main.ck_clear
+			if !main.ck_clear & main.ed_name {
+				optionarg main.ed_name
+			}
+			option main.ck_relaxed
+			optionarg /hidedefault main.cb_enc
+		endoptions
+	}
+	if main.rb_open {
+		put "parqit open _data"
+		beginoptions
+			optionarg main.ed_name
+			optionarg /hidedefault main.cb_enc
+		endoptions
+	}
+	if main.rb_path {
+		put "parqit path "
+		require main.fi_using
+		put `"""' main.fi_using `"""'
+	}
+END

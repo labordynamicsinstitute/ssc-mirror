@@ -1,16 +1,23 @@
 d 'PPPLOT': module for P-P plots
 d
-d ppplot produces a P-P (probability-probability) plot	of the
+d  ppplot produces a P-P (probability-probability) plot  of the
 d cumulative distribution functions of one or  more groups or
 d variables against that of a reference  group or variable, for the
 d same sets of observed values.  By default the reference group is
 d the last variable named,  or, with a single variable, that
 d defined by the highest value	of the grouping variable. 
 d
-d Distribution-Date: 20040312
+d KW: graphics
+d KW: probability-probability plot
+d KW: P-P plot 
 d
-d Author: Nicholas J. Cox, University of Durham
+d Requires: Stata version 8.0
+d
+d Distribution-Date: 20260825
+d
+d Author: Nicholas J. Cox, Durham University
 d Support: email N.J.Cox@@durham.ac.uk
 d
 f ppplot.ado
-f ppplot.hlp
+f ppplot.sthlp
+f ppplot_examples.do

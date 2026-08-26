@@ -1,0 +1,308 @@
+/*
+  parqit — combine lazy views or join a disk source into Stata memory
+
+*!  VERSION 0.1.28  23aug2026
+
+  Launch with:  db parqit_combine     (installed on the menu by: parqit menu)
+  The using side may be Parquet, a glob, a Hive directory, CSV, dta or Excel
+  (dta/Excel are bridged), or another open view typed as  view:name .
+*/
+
+VERSION 16.0
+
+INCLUDE _std_wide
+DEFINE _dlght 545
+INCLUDE header
+HELP hlp1, view("help parqit")
+RESET res1
+
+SCRIPT PREINIT
+BEGIN
+	main.fi_using.formatfilter					///
+		"Parquet (*.parquet)|*.parquet|"			///
+		"Delimited text (*.csv *.tsv *.txt)|*.csv;*.tsv;*.txt|"	///
+		"Stata data (*.dta)|*.dta|"				///
+		"Excel (*.xlsx *.xls)|*.xlsx;*.xls|"			///
+		"All files (*.*)|*.*"
+	script merge_on
+END
+
+SCRIPT all_off
+BEGIN
+	main.fi_using.disable
+	main.cb_kind.disable
+	main.cb_inkind.disable
+	main.ed_keys.disable
+	main.ed_more.disable
+	main.ed_keepus.disable
+	main.ck_match.disable
+	main.ck_master.disable
+	main.ck_musing.disable
+	main.ck_nogen.disable
+	main.ed_mgen.disable
+	main.ed_gen.disable
+	main.ed_native.disable
+	main.ck_force.disable
+	main.cb_enc.disable
+END
+
+SCRIPT merge_on
+BEGIN
+	script all_off
+	main.fi_using.enable
+	main.cb_kind.enable
+	main.ed_keys.enable
+	main.ed_keepus.enable
+	main.ck_match.enable
+	main.ck_master.enable
+	main.ck_musing.enable
+	main.ck_nogen.enable
+	main.ed_mgen.enable
+	main.cb_enc.enable
+END
+
+SCRIPT append_on
+BEGIN
+	script all_off
+	main.fi_using.enable
+	main.ed_more.enable
+	main.ed_gen.enable
+	main.cb_enc.enable
+END
+
+SCRIPT joinby_on
+BEGIN
+	script all_off
+	main.fi_using.enable
+	main.ed_keys.enable
+	main.cb_enc.enable
+END
+
+SCRIPT mergein_on
+BEGIN
+	script all_off
+	main.fi_using.enable
+	main.cb_inkind.enable
+	main.ed_keys.enable
+	main.ed_keepus.enable
+	main.ck_match.enable
+	main.ck_master.enable
+	main.ck_musing.enable
+	main.ck_nogen.enable
+	main.ed_mgen.enable
+	main.ed_native.enable
+END
+
+SCRIPT appendin_on
+BEGIN
+	script all_off
+	main.fi_using.enable
+	main.ed_keepus.enable
+	main.ck_force.enable
+END
+
+DIALOG main, label("parqit — combine lazy / in-memory data") tabtitle("Main")
+BEGIN
+  RADIO rb_merge		_lft	_top	105	.,		///
+	first label("Lazy merge")					///
+	onclickon(script merge_on)
+  RADIO rb_append		+115	@	105	.,		///
+	label("Lazy append")					///
+	onclickon(script append_on)
+  RADIO rb_joinby		+115	@	105	.,		///
+	label("Lazy joinby")					///
+	onclickon(script joinby_on)
+  RADIO rb_mergein		+115	@	105	.,		///
+	label("Memory mergein")					///
+	onclickon(script mergein_on)
+  RADIO rb_appendin		+115	@	105	.,		///
+	last label("Memory appendin")				///
+	onclickon(script appendin_on)
+
+  TEXT tx_using			_lft	45	440	.,		///
+	label("Using side: file, glob, folder or view:name (lazy modes)")
+  BUTTON bu_vars		+450	@	110	.,		///
+	label("View variables")						///
+	onpush(program pq_show_vars)
+  FILE fi_using			_lft	65	_iwd	.,		///
+	error("Using file or view:name") defext(parquet) label("Browse...")
+
+  TEXT tx_more			_lft	100	210	.,		///
+	label("Additional lazy-append sources")
+  EDIT ed_more			+220	@	360	.,		///
+	label("quoted files, globs, folders or view:names")
+
+  TEXT tx_kind			_lft	135	115	., label("Lazy merge kind")
+  COMBOBOX cb_kind		@	155	115	.,		///
+	dropdownlist contents(kind_list) default("m:1") label("kind")
+  TEXT tx_inkind			+135	135	130	., label("Memory merge kind")
+  COMBOBOX cb_inkind		@	155	115	.,		///
+	dropdownlist contents(inkind_list) default("m:1") label("memory kind")
+  TEXT tx_keys			+135	135	180	., label("Key variables")
+  EDIT ed_keys			@	155	290	., label("keys")
+
+  TEXT tx_keepus		_lft	195	_iwd	.,		///
+	label("Using-side variables: keepusing() for merge; keep() for appendin")
+  EDIT ed_keepus		_lft	215	_iwd	.,		///
+	label("using-side variables")
+
+  GROUPBOX gb_keep		_lft	250	_iwd	65,		///
+	label("Merge results to keep (blank = all)")
+  CHECKBOX ck_match		_ilft	270	140	., label("matched")
+  CHECKBOX ck_master		+150	@	140	., label("master only")
+  CHECKBOX ck_musing		+150	@	140	., label("using only")
+
+  CHECKBOX ck_nogen		_lft	330	190	.,		///
+	option(nogenerate) label("Do not create _merge")
+  TEXT tx_mgen			+205	@	150	., label("Merge-result variable")
+  EDIT ed_mgen			+155	@	210	.,		///
+	option(generate) label("merge result variable")
+
+  TEXT tx_gen			_lft	365	205	.,		///
+	label("Lazy-append source marker")
+  EDIT ed_gen			+215	@	150	.,		///
+	option(generate) label("source marker")
+  CHECKBOX ck_force		+165	@	185	.,		///
+	option(force) label("appendin force")
+
+  TEXT tx_native		_lft	400	_iwd	.,		///
+	label("Extra mergein options: assert(), update, replace, nolabel, nonotes, force, noreport")
+  EDIT ed_native		_lft	420	_iwd	.,		///
+	label("additional native merge options")
+
+  TEXT tx_enc			_lft	460	320	.,		///
+	label("Legacy code page for a non-UTF-8 .dta/Excel using source (lazy merge/append/joinby)")
+  COMBOBOX cb_enc		+325	@	150	.,		///
+	dropdownlist contents(enc_list) default("windows-1252")	///
+	option(encoding) label("encoding")
+
+  TEXT tx_note			_lft	490	_iwd	.,		///
+	label("Lazy modes build the open-view pipeline; mergein/appendin modify Stata memory now.")
+END
+
+LIST enc_list
+BEGIN
+	windows-1252
+	latin1
+	latin9
+	macroman
+END
+
+LIST kind_list
+BEGIN
+	"1:1"
+	"m:1"
+	"1:m"
+END
+
+LIST inkind_list
+BEGIN
+	"1:1"
+	"m:1"
+	"1:m"
+	"m:m"
+END
+
+PROGRAM pq_show_vars
+BEGIN
+	put "parqit ds"
+	stata hidden immediate
+END
+
+PROGRAM command
+BEGIN
+	if main.rb_merge {
+		put "parqit merge "
+		put main.cb_kind " "
+		require main.ed_keys
+		put main.ed_keys " using "
+		require main.fi_using
+		put `"""' main.fi_using `"""'
+		beginoptions
+			if main.ck_match | main.ck_master | main.ck_musing {
+				put "keep("
+				if main.ck_match {
+					put "match "
+				}
+				if main.ck_master {
+					put "master "
+				}
+				if main.ck_musing {
+					put "using"
+				}
+				put ") "
+			}
+			optionarg main.ed_keepus
+			option main.ck_nogen
+			if !main.ck_nogen {
+				optionarg main.ed_mgen
+			}
+			optionarg /hidedefault main.cb_enc
+		endoptions
+	}
+	if main.rb_append {
+		put "parqit append using "
+		require main.fi_using
+		put `"""' main.fi_using `"""'
+		if main.ed_more {
+			put " " main.ed_more
+		}
+		beginoptions
+			optionarg main.ed_gen
+			optionarg /hidedefault main.cb_enc
+		endoptions
+	}
+	if main.rb_joinby {
+		put "parqit joinby "
+		require main.ed_keys
+		put main.ed_keys " using "
+		require main.fi_using
+		put `"""' main.fi_using `"""'
+		beginoptions
+			optionarg /hidedefault main.cb_enc
+		endoptions
+	}
+	if main.rb_mergein {
+		put "parqit mergein " main.cb_inkind " "
+		require main.ed_keys
+		put main.ed_keys " using "
+		require main.fi_using
+		put `"""' main.fi_using `"""'
+		beginoptions
+			if main.ck_match | main.ck_master | main.ck_musing {
+				put "keep("
+				if main.ck_match {
+					put "match "
+				}
+				if main.ck_master {
+					put "master "
+				}
+				if main.ck_musing {
+					put "using"
+				}
+				put ") "
+			}
+			if main.ed_keepus {
+				put "keepusing(" main.ed_keepus ") "
+			}
+			option main.ck_nogen
+			if !main.ck_nogen {
+				optionarg main.ed_mgen
+			}
+			if main.ed_native {
+				put main.ed_native
+			}
+		endoptions
+	}
+	if main.rb_appendin {
+		put "parqit appendin using "
+		require main.fi_using
+		put `"""' main.fi_using `"""'
+		beginoptions
+			if main.ed_keepus {
+				put "keep(" main.ed_keepus ") "
+			}
+			option main.ck_force
+		endoptions
+	}
+END

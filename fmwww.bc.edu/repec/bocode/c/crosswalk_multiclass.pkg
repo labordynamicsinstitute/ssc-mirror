@@ -1,0 +1,64 @@
+d 'CROSSWALK_MULTICLASS': module to provide crosswalk tables to translate ISCO-88com and ISCO-08 into the Multilevel Socio-Economic Classes schemes
+d
+d  crosswalk_multiclass is an add-on for the crosswalk package (Ben
+d Jann). It provides crosswalk tables translating ISCO-88com and
+d ISCO-08 occupational codes into the Multilevel Socio-Economic
+d Classes (MSEC) schemes -- Micro-SEC (30 classes), Meso-SEC (18
+d classes), and Macro-SEC (11 classes, ESEC plus differentiation of
+d SC I and II) -- plus, for ISCO-08 only, a separate 77-category
+d micro-class scheme that is not part of MSEC. Micro-SEC, Meso-SEC
+d and Macro-SEC are defined jointly over occupation and employment
+d relation, so those tables carry one destination column per
+d employment status; two case functions are supplied to build that
+d argument, either from a self-employment indicator and a
+d supervisory/employee-count variable, or from a status variable
+d already coded 1-5. The micro-class scheme is purely occupational
+d and takes no case argument. Tables are provided for 4-digit ISCO
+d codes and, directly, for 3-digit ISCO minor groups. The MSEC
+d schemes nest: Micro-SEC, Meso-SEC and Macro-SEC each aggregate to
+d the European Socio-economic Classification (ESeC). This package
+d does not duplicate plain ESeC itself, since crosswalk already
+d provides isco88_to_esec() and isco08_to_esec(); see help
+d crosswalk_multiclass for details and the correct case functions
+d to use with them. The package contains no ado-file and defines no
+d command of its own; all recoding is carried out by crosswalk. 
+d
+d KW: ISCO
+d KW: occupation
+d KW: social class
+d KW: ESeC
+d KW: Macro-SEC
+d KW: micro-class
+d KW: Meso-SEC
+d KW: Micro-SEC
+d KW: MSEC
+d KW: class scheme
+d KW: crosswalk
+d KW: recode
+d
+d Requires: Stata version 14 and crosswalk, moremata from SSC (q.v.)
+d
+d Distribution-Date: 20260825
+d
+d Author: Oscar Smallenbroek,  European Commission
+d Support: email Oscar.SMALLENBROEK@@ec.europa.eu
+d
+f crosswalk_multiclass.sthlp
+f ../_/_cwcasefcn_mcempstat.sthlp
+f ../_/_cwfcn_labels_mc_macro.sthlp
+f ../_/_cwfcn_labels_mc_meso.sthlp
+f ../_/_cwfcn_labels_mc_micro.sthlp
+f ../_/_cwfcn_labels_mc_microclass.sthlp
+f ../_/_cwfcn_mc_isco08_3_to_macro.sthlp
+f ../_/_cwfcn_mc_isco08_3_to_meso.sthlp
+f ../_/_cwfcn_mc_isco08_3_to_micro.sthlp
+f ../_/_cwfcn_mc_isco08_to_macro.sthlp
+f ../_/_cwfcn_mc_isco08_to_meso.sthlp
+f ../_/_cwfcn_mc_isco08_to_micro.sthlp
+f ../_/_cwfcn_mc_isco08_to_microclass.sthlp
+f ../_/_cwfcn_mc_isco88_3_to_macro.sthlp
+f ../_/_cwfcn_mc_isco88_3_to_meso.sthlp
+f ../_/_cwfcn_mc_isco88_3_to_micro.sthlp
+f ../_/_cwfcn_mc_isco88com_to_macro.sthlp
+f ../_/_cwfcn_mc_isco88com_to_meso.sthlp
+f ../_/_cwfcn_mc_isco88com_to_micro.sthlp

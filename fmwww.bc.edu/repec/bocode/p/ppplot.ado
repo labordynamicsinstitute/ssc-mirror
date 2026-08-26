@@ -1,22 +1,24 @@
-*! NJC 1.0.0 5 March 2004 
+*! 1.1.0 NJC 24 August 2026
+*! 1.0.0 NJC 5 March 2004 
 program ppplot, sort 
+    * addplot() requires version 9 up 
 	version 8.0
 
 	gettoken plottype 0 : 0 
 	local plotlist "area bar connected dot dropline line scatter spike" 
 	if !`: list plottype in plotlist' { 
 		di ///
-		"{p}{txt}syntax is {inp:ppplot} {it:plottype} ... " /// 
-		"... e.g. {inp: ppplot connected} ...{p_end}" 
+		"{p}{txt}syntax is {cmd:ppplot} {it:plottype} ... " /// 
+		"... e.g. {cmd: ppplot connected} ...{p_end}" 
 		exit 198 
 	}
 
 	capture syntax varname [if] [in] [fweight aweight/], BY(varname)  ///
-	[ MISSing REFerence(str asis) PLOT(str asis) * ]
+	[ MISSing REFerence(str asis) PLOT(str asis) ADDPLOT(str asis) * ]
 
 	if _rc { 
 		syntax varlist(min=2 numeric) [if] [in] [fweight aweight/] ///
-		[, PLOT(str asis) BY(varname) * ] 
+		[, PLOT(str asis) ADDPLOT(str asis) BY(varname) * ] 
 		
 		if "`by'" != "" { 
 			di as err "by() not supported with two or more variables"
@@ -25,22 +27,29 @@ program ppplot, sort
 	}	
 	
 	marksample touse
-
+	
 	if "`exp'" == "" local exp "1" 
 	else {
-		capture assert `exp' >= 0 if `touse'
+		capture assert `exp' >= 0 
 		if _rc {
 			di as err "weight assumes negative values"
 			exit 402
-	        }    
+	    }    
 	}
-
-	qui { 
+	
+	preserve 
+	
+	local defaultlabel `" 0 "0" 0.25 "0.25" 0.5 "0.5" 0.75 "0.75" 1 "1" "'
+	
+	quietly {
+		
 		if "`by'" != "" {
 			if "`missing'" == "" markout `touse' `by', strok 
+			keep if `touse'
 			tempname stub 
 			separate `varlist', by(`by') gen(`stub') `missing' short
 			local vlist "`r(varlist)'"
+			
 			local ref `"`reference'"' 
 			if `"`ref'"' != "" { 
 				foreach v of local vlist {  
@@ -54,7 +63,7 @@ program ppplot, sort
 				local vlist "`vlist' `x'" 
 			}	
 		
-			sort `touse' `varlist' 
+			sort `varlist' 
 		
 			foreach v of local vlist {
 				local label : variable label `v' 
@@ -62,21 +71,20 @@ program ppplot, sort
 				local label = substr(`"`label'"', `where', .) 
 				label var `v' `"`label'"' 
 				format `v' %2.1g 
-				by `touse' : replace `v' = sum(`exp' * (`v' < .)) 
-				by `touse' `varlist' : replace `v' = `v'[_N] 
-				by `touse' : replace `v' = `v' / `v'[_N]
-				replace `v' = . if !`touse' 
+				replace `v' = sum(`exp' * (`v' < .)) 
+				by `varlist' : replace `v' = `v'[_N] 
+				replace `v' = `v' / `v'[_N]
 			}   
 
-			noi twoway `plottype' `vlist', ///
-				yla(, ang(h)) xla(0(0.2)1) `options' ///
-			|| `plot' 
+			noisily twoway `plottype' `vlist', ///
+			yla(`defaultlabel', ang(h)) xla(`defaultlabel') `options' ///
+			|| `plot' ///
+			|| `addplot' 
 			// blank 
 			
 			exit 0 
 		}
 		else { 
-			preserve 
 			tempvar data wt 
 
 			tokenize `varlist' 
@@ -86,7 +94,7 @@ program ppplot, sort
 				if `"`label`i''"' == "" local label`i' "``i''" 
 			}	
 
-			gen `wt' = `exp' 
+			gen double `wt' = `exp' 
 
 			foreach v of local varlist { 
 				local tostack "`tostack' `v' `wt'" 
@@ -107,9 +115,10 @@ program ppplot, sort
 				local ++i 
 			}   
 
-			noi twoway `plottype' `vlist', /// 
-				yla(, ang(h)) xla(0(0.2)1) `options' ///
-			|| `plot' 
+			noisily twoway `plottype' `vlist', /// 
+			yla(`defaultlabel', ang(h)) xla(`defaultlabel') `options' ///
+			|| `plot' ///
+			|| `addplot'
 			// blank 
 		}
 	}		

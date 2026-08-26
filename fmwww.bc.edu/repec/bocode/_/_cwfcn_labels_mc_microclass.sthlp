@@ -1,0 +1,95 @@
+{smcl}
+{* version 1.0.0  18aug2026}{...}
+{hi:labels_mc_microclass()} {hline 2} microclass scheme class labels (English)
+
+{title:Description}
+
+{pstd}
+    {helpb crosswalk} label set for the microclass scheme (77 categories).
+    Picked up automatically by the {cmd:mc.}{it:origin}{cmd:_to_microclass()}
+    tables when the prefix syntax {cmd:mc.} is used.
+    {p_end}
+
+{pstd}
+    Taken from the value labels carried by the source
+    crosswalk files.
+    {p_end}
+{hline}
+{asis}
+111  "Legislators and senior officials"
+112  "Managing directors and chief executives"
+120  "Administrative and commercial managers"
+131  "Production managers in agriculture, forestry and fisheries"
+132  "Manufacturing, mining, construction and distribution managers"
+134  "welfare managers"
+140  "Hospitality, retail and other services managers"
+199  "Production and specialized services managers NEC"
+210  "Natural Science, Mathematicians and Statistics professionals"
+214  "Engineering and Electrotechnology Professionals"
+216  "Architects, planners, surveyors and designers"
+221  "Health professionals"
+222  "Nursing and midwifery professionals"
+226  "Other health professionals"
+230  "Education Teachers NEC"
+231  "University and higher education teachers"
+233  "Secondary education teachers"
+234  "Primary school and early childhood teachers"
+241  "Finance professionals"
+242  "Administration, Sales, marketing and public relations professionals"
+250  "Information and communications technology professionals"
+261  "Legal professionals"
+263  "Social Science Professionals"
+265  "Creative and performing professionals"
+299  "Other professionals NEC"
+300  "Technicians and Engineering associate NEC"
+311  "Physical and engineering science technicians"
+312  "Mining, manufacturing and construction supervisors and proccess control technicians"
+315  "Ship and aircraft controllers and technicians"
+320  "HEALTH ASSOCIATES NEC"
+322  "Nursing and midwifery associate professionals"
+331  "Financial and mathematical associate professionals"
+332  "Sales and purchasing agents and brokers"
+334  "Administrative and specialized secretaries"
+335  "Regulatory government associate professionals"
+343  "Creative and performing associate professionals"
+350  "Information and communications technicians"
+399  "social, cultural and related associate professionals NEC"
+400  "Clerical Support Workers NEC"
+411  "General office clerks"
+412  "Secretaries (general)"
+421  "Tellers, money collectors and related clerks"
+422  "Client information workers"
+431  "Numerical clerks"
+432  "Material recording and transport clerks"
+500  " Services and sales workers NEC"
+511  "rail, bus and tram drivers and attendants"
+512  "Cooks"
+513  "Waiters and bartenders"
+514  "Hairdressers, beauticians and related workers"
+520  "Sales workers"
+531  "Child care workers and teachers' aides"
+532  "Personal care workers in health services"
+540  "Protective services workers"
+600  "Subsistence and Market-oriented skilled forestry, fishery and hunting workers"
+611  "Market gardeners and crop growers"
+700  "Craft and related trades workers NEC"
+711  "Building frame and related trades workers"
+712  "Building finishers and related trades workers"
+720  "Metal, machinery and related trades workers"
+723  "Machinery mechanics and repairers"
+740  "Electrical and electronics trades workers"
+751  "Food processing and related trades workers"
+752  "Handicraft, wood and Wood treaters, cabinet-makers and related trades workers"
+810  "Stationary plant and machine operators"
+815  "Garment, Textile, fur and leather workers and product machine operators"
+820  "assemblers"
+830  "Car, van and motorcycle drivers"
+833  "Heavy truck and bus drivers"
+834  "Mobile plant operators"
+900  "Elementary occupations NEC"
+910  "Cleaners and helpers"
+920  "Agricultural, forestry and fishery labourers"
+930  "Mining and construction labourers"
+932  "Manufacturing and Transport and storage labourers"
+940  "Food preparation assistants"
+990  "Armed Forces"

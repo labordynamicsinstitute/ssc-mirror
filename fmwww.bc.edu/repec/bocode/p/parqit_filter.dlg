@@ -1,0 +1,138 @@
+/*
+  parqit — filter or sample the open view's observations (lazy)
+
+*!  VERSION 0.1.28  23aug2026
+
+  Launch with:  db parqit_filter     (installed on the menu by: parqit menu)
+  The Create... button opens Stata's expression builder, including the date
+  functions and pseudofunctions (td(), tm(), year(), inrange(), ...).
+*/
+
+VERSION 16.0
+
+INCLUDE _std_wide
+DEFINE _dlght 410
+INCLUDE header
+HELP hlp1, view("help parqit")
+RESET res1
+
+SCRIPT PREINIT
+BEGIN
+	script if_on
+END
+
+SCRIPT if_on
+BEGIN
+	main.ex_if.enable
+	main.ed_from.disable
+	main.ed_to.disable
+	main.ed_amount.disable
+	main.ck_count.disable
+	main.ed_seed.disable
+END
+
+SCRIPT in_on
+BEGIN
+	main.ex_if.disable
+	main.ed_from.enable
+	main.ed_to.enable
+	main.ed_amount.disable
+	main.ck_count.disable
+	main.ed_seed.disable
+END
+
+SCRIPT sample_on
+BEGIN
+	main.ex_if.disable
+	main.ed_from.disable
+	main.ed_to.disable
+	main.ed_amount.enable
+	main.ck_count.enable
+	main.ed_seed.enable
+END
+
+DIALOG main, label("parqit — filter / sample observations (lazy)") tabtitle("Main")
+BEGIN
+  GROUPBOX gb_mode		_lft	_top	_iwd	300,		///
+	label("Operation on the open view")
+
+  RADIO rb_keepif		_ilft	_ss	_ibwd	.,		///
+	first label("Keep observations satisfying a condition")	///
+	onclickon(script if_on)
+  RADIO rb_dropif		@	+22	@	.,		///
+	label("Drop observations satisfying a condition")		///
+	onclickon(script if_on)
+  TEXT tx_if			@	+25	440	.,		///
+	label("Condition (dates via td(), tm(), year(), ...; see Create...)")
+  BUTTON bu_vars		+450	@	110	.,		///
+	label("View variables")						///
+	onpush(program pq_show_vars)
+  EXP ex_if			_ilft	+25	_ibwd	.,		///
+	error("Condition") label("Create...")
+
+  RADIO rb_keepin		@	+35	@	.,		///
+	label("Keep an observation range of the pipeline")		///
+	onclickon(script in_on)
+  TEXT tx_from			@	+25	60	.,		///
+	label("From:")
+  EDIT ed_from			+45	@	80	.,		///
+	numonly default(1) label("first")
+  TEXT tx_to			+95	@	30	.,		///
+	label("to:")
+  EDIT ed_to			+35	@	80	.,		///
+	numonly label("last")
+
+  RADIO rb_sample		_ilft	+40	_ibwd	.,		///
+	last label("Draw an engine-side random sample")			///
+	onclickon(script sample_on)
+  TEXT tx_sample			_indent	+25	_ibwd	.,		///
+	label("Amount is a percentage by default; tick Count for an exact row count")
+  TEXT tx_amount			_indent	+25	65	.,		///
+	label("Amount:")
+  EDIT ed_amount			+70	@	90	.,		///
+	error("Sample amount") label("amount")
+  CHECKBOX ck_count		+105	@	140	.,		///
+	option(count) label("Exact count")
+  TEXT tx_seed			+155	@	45	.,		///
+	label("Seed:")
+  EDIT ed_seed			+50	@	90	.,		///
+	numonly option(seed) label("seed")
+
+  TEXT tx_note			_lft	325	_iwd	.,		///
+	label("These verbs stay lazy; materialise the result with parqit collect/save.")
+END
+
+PROGRAM pq_show_vars
+BEGIN
+	put "parqit ds"
+	stata hidden immediate
+END
+
+PROGRAM command
+BEGIN
+	if main.rb_keepif {
+		put "parqit keep if "
+		require main.ex_if
+		put main.ex_if
+	}
+	if main.rb_dropif {
+		put "parqit drop if "
+		require main.ex_if
+		put main.ex_if
+	}
+	if main.rb_keepin {
+		put "parqit keep in "
+		require main.ed_from
+		require main.ed_to
+		put main.ed_from "/" main.ed_to
+	}
+	if main.rb_sample {
+		put "parqit sample "
+		require main.ed_amount
+		put main.ed_amount
+		beginoptions
+			option main.ck_count
+			optionarg main.ed_seed
+		endoptions
+	}
+END
