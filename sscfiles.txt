@@ -254,6 +254,7 @@ fmwww.bc.edu/repec/bocode/n/nbercycles.ado
 fmwww.bc.edu/repec/bocode/n/nlls.pkg
 fmwww.bc.edu/repec/bocode/n/neigh5.ado
 fmwww.bc.edu/repec/bocode/n/nl_choi_support_interval.ado
+fmwww.bc.edu/repec/bocode/n/nehurdle_truncnb2_het.ado
 fmwww.bc.edu/repec/bocode/n/nnmatch.ado
 fmwww.bc.edu/repec/bocode/n/natl_random.dta
 fmwww.bc.edu/repec/bocode/n/ncinfo.ado
@@ -13303,7 +13304,6 @@ fmwww.bc.edu/repec/bocode/m/mat2txt.ado
 fmwww.bc.edu/repec/bocode/m/mhtopt.pkg
 fmwww.bc.edu/repec/bocode/m/mahascores.ado
 fmwww.bc.edu/repec/bocode/m/mido.hlp
-fmwww.bc.edu/repec/bocode/nehurdle_truncnb2_het.ado
 fmwww.bc.edu/repec/bocode/s/smokingresults.dta
 fmwww.bc.edu/repec/bocode/s/smrtbl.sthlp
 fmwww.bc.edu/repec/bocode/s/survgini.ado
