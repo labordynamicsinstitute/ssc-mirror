@@ -1,4 +1,4 @@
-*! ardldml_example.do  1.0.0  24aug2026
+*! ardldml_example.do  1.0.1  24aug2026
 *! Self-test and worked example for ardldml
 *! Dr Merwan Roudane -- merwanroudane920@gmail.com
 *! https://github.com/merwanroudane

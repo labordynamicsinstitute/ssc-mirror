@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  24aug2026}{...}
+{* *! version 1.0.1  24aug2026}{...}
 {vieweralsosee "ardldml" "help ardldml"}{...}
 {vieweralsosee "ardldml methods" "help ardldml_methods"}{...}
 {vieweralsosee "ardldml examples" "help ardldml_examples"}{...}

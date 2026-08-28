@@ -1,0 +1,30 @@
+d 'TSVY': module to produce point-estimate table and Wald/Bonferroni/CLD test, by level of aggregation and year, using svylet as the estimation engine
+d
+d    tsvy builds, in one pass, the table that a researcher working
+d with repeated cross-sections or panel waves of a complex survey  
+d  usually needs: point estimates broken down by level of
+d aggregation (national, regional, local, ...) and by year,
+d together with    a test of whether each level's estimate actually
+d changed from year to year. It loops over every level of
+d aggregation named in	  caida(), running the same
+d omnibus-F/Bonferroni/CLD computation as svylet once per (level x
+d value x [sexovar value])    combination, and accumulates one row
+d per year in a frame that is ready to reshape wide and export --
+d so the point-estimate    table and the F/Bonferroni/CLD test come
+d from the very same call, with no separate pass to keep aligned by
+d hand. 
+d
+d KW: complex survey data
+d KW: taabulations
+d KW: export
+d
+d Requires: Stata version 14 and svylet from SSC (q.v.)
+d
+d Distribution-Date: 20260827
+d
+d Author: Andres Talavera Cuya,   Direccion Nacional de Censos y Encuestas -- INEI Peru
+d Support: email talaveracuya@@gmail.com
+d
+f tsvy.ado
+f tsvy.sthlp
+f tsvy_es.sthlp

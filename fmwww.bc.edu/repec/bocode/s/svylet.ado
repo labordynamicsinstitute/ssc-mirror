@@ -1,6 +1,7 @@
-*! svylet.ado v1.0 - 16aug2026
+*! svylet.ado v1.5 - 26aug2026
 *! Wald omnibus F-test + Bonferroni pairwise comparisons + Compact Letter
-*! Display (CLD) for means, proportions, and totals under survey design.
+*! Display (CLD) for means, totals, proportions, and ratios under survey
+*! design.
 *! Adds r(letra_1..k) and r(nombre_categoria_1..k) so the CLD letters can
 *! be read programmatically after the command runs, not only displayed.
 *! Author: Andres Talavera Cuya. Affiliation stated for identification
@@ -11,23 +12,164 @@
 *! Distributed under the GNU General Public License v3
 *! (https://www.gnu.org/licenses/gpl-3.0.txt).
 *!
+*! v1.5 -- FIX real (encontrado corriendo revision_pre_ssc.do en Stata
+*! real, StataNow 19.5, antes de mandar el paquete a SSC): over() STRING
+*! (ej. una variable armada con decode()) hacia que "over() debe tener
+*! al menos 2 categorias en la muestra" saltara SIEMPRE, sin importar
+*! cuantas categorias reales tuviera la variable. Causa raiz: la linea
+*! "markout `touse' `over' `denominator'" (sin la opcion strok) hace que
+*! Stata excluya el 100% de las observaciones en cuanto CUALQUIER
+*! variable de su lista es de tipo string -- no solo las de string vacio,
+*! TODAS -- confirmado aislando el markout solo (fuera de svylet.ado) con
+*! datos donde la variable string no tenia NINGUN valor vacio. touse
+*! quedaba en 0 para las 74 observaciones de auto.dta, "levelsof origin
+*! if touse" devolvia vacio, y el chequeo de k<2 saltaba por una causa
+*! que no tenia nada que ver con el numero real de categorias. Afecta a
+*! CUALQUIER llamada con over() string -- el camino numerico (el uso mas
+*! comun) nunca estuvo afectado, porque strok no cambia el manejo de
+*! variables numericas. Corregido agregando ", strok" al markout. Este
+*! bug estaba presente desde v1.0; el ejemplo de over() string agregado
+*! al help en esta misma sesion (svylet.sthlp) nunca se habia corrido en
+*! Stata real hasta ahora -- ver revision_pre_ssc.do en el repo, seccion 5.
+*!
+*! v1.5 (parte 2, mismo dia, corriendo el FIX de arriba en Stata real):
+*! con touse corregido, over() string sigue sin funcionar -- ahora falla
+*! en el "svy: mean/total/proportion/ratio ..., over(`over')" interno con
+*! el error NATIVO de Stata "string variables not allowed in varlist;
+*! invalid over() option" (r(109)). Esto es una limitacion DURA de
+*! svy: mismo (over() debe ser numerico, sin excepcion) -- no algo que
+*! svylet pueda evitar sin re-mapear el string a codigos numericos por
+*! dentro (no intentado; agrega complejidad no validada en Stata real
+*! justo antes de una entrega). La documentacion previa ("varname may be
+*! numeric or string") era incorrecta desde antes de esta sesion -- ver
+*! svylet.sthlp/svylet_es.sthlp. Agregado un chequeo temprano (justo
+*! despues de syntax) que detecta over() string y corta con un mensaje
+*! claro sugiriendo encode(), en vez de dejar que el usuario llegue al
+*! error crudo de Stata mas abajo.
+*!
+*! v1.1 -- auditoria: dos cambios de comportamiento respecto a v1.0:
+*!   1. boot(): la reasignacion de pseudo-grupo bajo H0 (prepivoting,
+*!      Beran 1988 / Hall & Wilson 1991) ahora se hace a nivel de
+*!      CONGLOMERADO (`newpsu' tras bsample), no a nivel de observacion.
+*!      En v1.0, un sorteo por FILA + reparto en bloques de filas
+*!      contiguas partia un mismo conglomerado entre varios pseudo-
+*!      grupos, destruyendo la correlacion intra-conglomerado que el
+*!      propio diseno (svyset) asume al calcular varianza -- eso sesga
+*!      el p-valor bootstrap hacia el rechazo (ver simulacion en
+*!      sim/simulacion_bootstrap.py: con v1.0 el error tipo I bajo H0
+*!      queda inflado por encima del alpha nominal; con v1.1 queda
+*!      centrado en el nominal). Respaldo: Rao & Wu (1988, JASA),
+*!      Rust & Rao (1996, Stat Methods Med Res), Wolter (2007,
+*!      "Introduction to Variance Estimation" 2nd ed, cap. 6),
+*!      Field & Welsh (2007, JRSS-B), Hall & Wilson (1991, Biometrics),
+*!      Canty & Davison (1999, The Statistician), Davison & Hinkley
+*!      (1997, "Bootstrap Methods and Their Application", cap. 3 y 9).
+*!   2. refgroup() ELIMINADO de la sintaxis. Estaba declarado desde v1.0
+*!      pero nunca se usaba en el programa ni en el motor Mata -- el
+*!      contraste F omnibus siempre corria contra el grupo 1. Al revisar
+*!      la matematica: el estadistico de Wald para "todos los grupos
+*!      iguales" es INVARIANTE al grupo de referencia elegido, porque
+*!      cualquier conjunto de k-1 contrastes independientes que genere
+*!      el mismo subespacio da el mismo Wald (R2 = A*R para A invertible
+*!      => (R2 b)'(R2 V R2')^-1(R2 b) = (R b)'(R V R')^-1(R b)). Por eso
+*!      no se "implementa" refgroup(): no hay nada que implementar que
+*!      cambie el resultado. Dejarlo en la sintaxis como no-op silencioso
+*!      es peor que quitarlo -- un usuario que lo pase ahora obtiene un
+*!      error claro de Stata ("option refgroup() not allowed") en vez de
+*!      creer que cambio algo cuando no lo hizo.
+*!   3. Nota agregada: level() solo tiene efecto para stat(proportion).
+*!      Si se pasa level() distinto del default junto con mean/total, se
+*!      muestra un aviso (no es un error -- level() simplemente no aplica
+*!      ahi) en vez de ignorarlo en silencio.
+*!
+*! v1.2 -- agrega stat(ratio): svy: ratio numerador/denominador, over().
+*!   El denominador se pasa por la opcion denominator(varname), no por
+*!   texto "num/den" en varlist -- svylet arma la sintaxis "num/den" que
+*!   svy: ratio espera internamente. e(b)/e(V) de svy: ratio tienen la
+*!   MISMA forma que mean/total (una sola ecuacion, k columnas, una por
+*!   categoria de over()) -- por eso _svylet_seleccionar no necesito
+*!   cambios: su rama "else" (ya usada por mean/total) sirve igual para
+*!   ratio, sin logica nueva de seleccion de ecuacion.
+*!
+*! v1.3 -- FIX: r(n_ponderado)/r(n_sin_ponderar) devolvian los valores
+*!   INVERTIDOS desde v1.0 (e(_N) mapeado a "ponderado" y e(_N_subp) a
+*!   "sin ponderar" -- al reves). Encontrado en produccion via tsvy:
+*!   en la columna N_SIN_PON del frame acumulador aparecia un numero del
+*!   orden de millones (identico a ESTIMA en stat(total) con varname
+*!   constante =1, que por construccion ES el tamano de poblacion
+*!   ponderado) en vez de un conteo de casos de muestra. Ver nota junto a
+*!   "tempname Nmat Nsubpmat Rtable" en el cuerpo del programa. Afecta a
+*!   TODO llamador de svylet que use r(n_ponderado)/r(n_sin_ponderar) --
+*!   en particular tsvy (columnas N_PONDERA/N_SIN_PON del frame
+*!   acumulador). No afecta r(b)/r(V) ni el test F/CLD -- esas cantidades
+*!   nunca pasaron por Nmat/Nsubpmat.
+*!
+*! v1.4 -- agrega ref(): comparaciones "cada categoria de over() contra
+*!   una categoria base fija", Bonferroni sobre k-1 comparaciones -- una
+*!   FAMILIA DE HIPOTESIS DISTINTA de la que responde el F omnibus + CLD
+*!   existente (que compara TODOS los pares, Bonferroni sobre
+*!   k(k-1)/2). Ver svylet.sthlp, seccion Remarks, para la justificacion
+*!   y las referencias (Dunn 1961; Dunnett 1955, 1964; Hsu 1996) sobre
+*!   por que estas dos preguntas dan, legitimamente, resultados
+*!   distintos para el MISMO dato -- encontrado al comparar las letras
+*!   CLD de tsvy contra un script de referencia que solo comparaba cada
+*!   anio contra el anio mas reciente (Bonferroni sobre 3 comparaciones,
+*!   no sobre 6): ninguna de las dos salidas estaba mal, respondian
+*!   preguntas distintas.
+*!
 *! See svylet.sthlp for full documentation, options, examples, and
 *! references.
 
 program define svylet, rclass
     version 14
     syntax varname(numeric) [if] [in], OVER(varname) ///
-        STAT(string) [ALPHA(real 0.05) REFGROUP(integer 1) LEVEL(integer 1) ///
-        BOOT(integer 0) BSEED(integer -1)]
+        STAT(string) [ALPHA(real 0.05) LEVEL(integer 1) ///
+        DENOMINATOR(varname numeric) BOOT(integer 0) BSEED(integer -1) ///
+        REF(string)]
+
+    * over() DEBE ser numerico -- svy: mean/total/proportion/ratio no
+    * aceptan un over() string en absoluto ("string variables not
+    * allowed in varlist; invalid over() option", r(109)), confirmado en
+    * Stata real (StataNow 19.5). Rechazar ACA con un mensaje claro, antes
+    * de marksample/markout, en vez de dejar que el usuario llegue al
+    * error crudo de Stata mas abajo -- sugiere encode() como salida.
+    capture confirm string variable `over'
+    if !_rc {
+        di as err "over(`over') es una variable string -- svy: `stat' no acepta over() string."
+        di as err "Solucion: encode `over', gen(nombre_numerico) y use over(nombre_numerico)."
+        exit 109
+    }
 
     local stat = lower("`stat'")
-    if !inlist("`stat'", "mean", "proportion", "total") {
-        di as err "stat() debe ser mean, proportion o total"
+    if !inlist("`stat'", "mean", "proportion", "total", "ratio") {
+        di as err "stat() debe ser mean, proportion, total o ratio"
         exit 198
+    }
+    if "`stat'" != "proportion" & `level' != 1 {
+        di as text "Nota: level() solo tiene efecto con stat(proportion) -- se ignora para `stat'."
+    }
+    if "`stat'" == "ratio" & "`denominator'" == "" {
+        di as err "stat(ratio) requiere denominator(varname) -- el numerador es `varlist'"
+        exit 198
+    }
+    if "`stat'" != "ratio" & "`denominator'" != "" {
+        di as text "Nota: denominator() solo tiene efecto con stat(ratio) -- se ignora para `stat'."
     }
 
     marksample touse
-    markout `touse' `over'
+    * strok: SIN esta opcion, markout excluye TODAS las observaciones
+    * (no solo las de string vacio) en cuanto `over' es string -- no un
+    * comportamiento documentado de forma obvia, confirmado en Stata real
+    * (ver changelog v1.4.1 arriba): "markout touse over" sobre una
+    * variable string (ej. over() con decode()) dejaba touse=0 para el
+    * 100% de las observaciones, y el error resultante ("over() debe
+    * tener al menos 2 categorias") no tenia nada que ver con la causa
+    * real. strok le dice a markout que una variable string no-missing
+    * (incluida "") se trate como valida -- las observaciones con string
+    * REALMENTE vacio en `over' siguen quedando excluidas mas abajo,
+    * porque levelsof nunca las cuenta como una categoria (una categoria
+    * "" no es una categoria valida de over() para el test).
+    markout `touse' `over' `denominator', strok
 
     quietly levelsof `over' if `touse', local(niveles_over)
     local k : word count `niveles_over'
@@ -36,12 +178,35 @@ program define svylet, rclass
         exit 198
     }
 
+    * -- v1.4 -- ref(): comparaciones "cada categoria vs una categoria
+    * base", Bonferroni sobre k-1 comparaciones -- PREGUNTA DISTINTA de
+    * la que responde el F omnibus + CLD de mas abajo (que compara TODOS
+    * los pares, Bonferroni sobre k(k-1)/2). Ver help para la cita de
+    * literatura sobre por que estas dos familias de hipotesis dan,
+    * legitimamente, resultados distintos (Dunn 1961; Dunnett 1955).
+    local ref_idx = 0
+    if "`ref'" != "" {
+        local i = 0
+        foreach v of local niveles_over {
+            local i = `i' + 1
+            if `v' == `ref' local ref_idx = `i'
+        }
+        if `ref_idx' == 0 {
+            di as err "svylet: ref(`ref') no es un valor observado de over(`over') en la muestra."
+            di as err "  valores observados: `niveles_over'"
+            exit 198
+        }
+    }
+
     * -- Correr el comando svy correspondiente ------------------------------
     if "`stat'" == "mean" {
         svy: mean `varlist' if `touse', over(`over')
     }
     else if "`stat'" == "total" {
         svy: total `varlist' if `touse', over(`over')
+    }
+    else if "`stat'" == "ratio" {
+        svy: ratio `varlist'/`denominator' if `touse', over(`over')
     }
     else {
         svy: proportion `varlist' if `touse', over(`over')
@@ -55,11 +220,76 @@ program define svylet, rclass
         di as err "e(df_r) no disponible tras el svy -- revisar version de Stata/diseno"
         exit 498
     }
+    * Capturar N, N_subp, y r(table) INMEDIATAMENTE, antes de que
+    * cualquier otro comando pueda tocar e()/r() -- mismo criterio que
+    * ya establecimos: guardar apenas esta disponible, no confiar en que
+    * sobreviva hasta mas adelante en el programa.
+    *
+    * v1.2 -- FIX: `Nmat' (e(_N)) y `Nsubpmat' (e(_N_subp)) estaban
+    * INVERTIDOS al exponerse como r(n_ponderado)/r(n_sin_ponderar) desde
+    * v1.0. Confirmado con datos reales (ENA, stat(total) con varname
+    * constante =1): para NIVEL=NACIONAL/ANIO=2026, e(_N) devolvia
+    * 20783 (el N de casos SIN ponderar, coincide con el conteo de filas
+    * de la muestra ese anio) y e(_N_subp) devolvia 2057264.91... --
+    * EXACTAMENTE igual a r(b) (la estimacion PONDERADA, ya que
+    * varname=1 hace que total(varname) sea el tamano de poblacion
+    * ponderado). O sea e(_N) es el tamano SIN ponderar y e(_N_subp) es
+    * el PONDERADO -- al reves de lo que el nombre "_N_subp" sugiere y de
+    * lo que este mismo archivo asumia. Los nombres de macro (`Nmat'/
+    * `Nsubpmat') se mantienen como estaban (mapeados 1 a 1 a e(_N)/
+    * e(_N_subp) respectivamente, para no confundir de donde viene cada
+    * uno) -- el swap se hace mas abajo, en el return matrix, que es
+    * donde se decide el significado (ponderado/sin ponderar) que ve
+    * quien llama.
+    tempname Nmat Nsubpmat Rtable
+    capture matrix `Nmat' = e(_N)
+    capture matrix `Nsubpmat' = e(_N_subp)
+    capture matrix `Rtable' = r(table)
 
     * -- Seleccionar las filas relevantes de b/V (subrutina reutilizable, ----
     *    la necesita tambien el loop de boot() mas abajo) --------------------
     tempname b_sel V_sel
     _svylet_seleccionar `B' `V' `k' `level' "`stat'" "`varlist'" `b_sel' `V_sel'
+    local idx_usar "`r(idx_usar)'"
+
+    * -- v1.4 -- ref(): k-1 contrastes de Wald "categoria vs ref_idx",
+    * Bonferroni sobre k-1 (no sobre k(k-1)/2 como el CLD). Usa el MISMO
+    * b_sel/V_sel/df_r ya calculados -- ningun svy: adicional.
+    tempname p_vsref p_vsref_raw
+    matrix `p_vsref'     = J(`k', 1, .)
+    matrix `p_vsref_raw' = J(`k', 1, .)
+    if `ref_idx' > 0 {
+        mata: svylet_vsref("`b_sel'", "`V_sel'", `df_r', `ref_idx', `k', "`p_vsref'", "`p_vsref_raw'")
+    }
+
+    * N ponderado / sin ponderar por categoria, en el mismo orden que
+    * b_sel/V_sel (usa los mismos indices de columna que ya selecciono
+    * _svylet_seleccionar). Si e(_N)/e(_N_subp) no existieran por algun
+    * motivo (comando svy distinto sin esa info), quedan en missing en
+    * vez de cortar la ejecucion -- esto es informativo, no critico para
+    * el test en si.
+    tempname Nout Nsubpout
+    matrix `Nout' = J(`k', 1, .)
+    matrix `Nsubpout' = J(`k', 1, .)
+
+    * Limite inferior/superior del IC por categoria: se leen DIRECTO de
+    * r(table) (filas "ll"/"ul"), NO se reconstruyen con una formula
+    * simetrica propia. r(table) ya trae el IC correcto para cada
+    * stat() -- simetrico para mean/total, en escala logit para
+    * proportion (respeta [0,1]) -- construirlo de nuevo a mano
+    * arriesgaba reimplementar mal esa transformacion. Usar lo que Stata
+    * ya calculo es mas robusto que reimplementarlo.
+    tempname LIout LSout
+    matrix `LIout' = J(`k', 1, .)
+    matrix `LSout' = J(`k', 1, .)
+    local fila = 0
+    foreach i of local idx_usar {
+        local fila = `fila' + 1
+        capture matrix `Nout'[`fila', 1] = `Nmat'[1, `i']
+        capture matrix `Nsubpout'[`fila', 1] = `Nsubpmat'[1, `i']
+        capture matrix `LIout'[`fila', 1] = `Rtable'["ll", `i']
+        capture matrix `LSout'[`fila', 1] = `Rtable'["ul", `i']
+    }
 
     * -- Motor Mata: F omnibus + Bonferroni + CLD ----------------------------
     mata: svylet_core("`b_sel'", "`V_sel'", `df_r', `alpha', `k')
@@ -118,15 +348,20 @@ program define svylet, rclass
             exit 498
         }
 
-        tempname n_por_grupo
-        matrix `n_por_grupo' = J(`k', 1, .)
-        local n_total_orig = 0
+        * Tamanos por grupo medidos en NUMERO DE CONGLOMERADOS distintos
+        * (no en numero de filas -- v1.1: la unidad que se reasigna bajo
+        * H0 es el conglomerado, asi que las proporciones deben calcularse
+        * sobre esa misma unidad).
+        tempname n_psu_por_grupo
+        matrix `n_psu_por_grupo' = J(`k', 1, .)
+        local n_psu_total_orig = 0
         local i = 0
         foreach niv of local niveles_over {
             local i = `i' + 1
-            quietly count if `over' == `niv' & `touse'
-            matrix `n_por_grupo'[`i', 1] = r(N)
-            local n_total_orig = `n_total_orig' + r(N)
+            quietly levelsof `psuvar' if `over' == `niv' & `touse', local(__psulet_lv)
+            local n_psu_niv : word count `__psulet_lv'
+            matrix `n_psu_por_grupo'[`i', 1] = `n_psu_niv'
+            local n_psu_total_orig = `n_psu_total_orig' + `n_psu_niv'
         }
 
         * Acumular los F de cada replica en una MATRIZ de Stata en memoria,
@@ -148,22 +383,27 @@ program define svylet, rclass
         forvalues rep = 1/`boot' {
             preserve
             quietly keep if `touse'
-            tempvar newpsu orden grupo_pseudo
+            tempvar newpsu psu_first psu_orden rank_psu grupo_asig grupo_pseudo
             capture noisily {
                 bsample, cluster(`psuvar') strata(`stratavar') idcluster(`newpsu')
-                * El total de observaciones DESPUES de bsample no tiene por
-                * que coincidir con el original -- conglomerados de tamano
-                * desigual + remuestreo con reemplazo cambian el total real
-                * en cada replica. Los tamanos de pseudo-grupo se recalculan
-                * proporcionalmente sobre el total REAL de esta replica, no
-                * sobre el original -- si no, "in a/b" termina pidiendo
-                * observaciones que no existen ("observation numbers out of
-                * range"), confirmado con datos reales.
-                quietly count
-                local n_actual = r(N)
-                quietly gen double `orden' = runiform()
-                sort `orden'
-                quietly gen `grupo_pseudo' = .
+
+                * v1.1 -- Reasignar el pseudo-grupo a nivel de CONGLOMERADO
+                * (`newpsu', el conglomerado ya remuestreado por bsample),
+                * NO a nivel de observacion. Un solo sorteo por
+                * conglomerado; el conglomerado entero se mueve como
+                * bloque indivisible al pseudo-grupo que le toque -- nunca
+                * se parte entre dos pseudo-grupos. Esto es lo que
+                * preserva la correlacion intra-conglomerado que el propio
+                * diseno (y el F observado) asume al calcular varianza
+                * (ver referencias en el encabezado).
+                quietly bysort `newpsu': gen byte `psu_first' = (_n==1)
+                quietly count if `psu_first'
+                local n_psu_actual = r(N)
+
+                quietly gen double `psu_orden' = runiform() if `psu_first'
+                quietly egen `rank_psu' = rank(`psu_orden') if `psu_first', unique
+
+                quietly gen `grupo_asig' = .
                 local acumulado = 0
                 local asignado = 0
                 local i = 0
@@ -172,26 +412,36 @@ program define svylet, rclass
                     if `i' == `k' {
                         * el ultimo grupo se lleva el resto exacto, para
                         * garantizar que la suma de todos los ni sea
-                        * exactamente n_actual (evita perder o sobrar obs
-                        * por redondeo)
-                        local ni = `n_actual' - `asignado'
+                        * exactamente n_psu_actual (evita perder o sobrar
+                        * conglomerados por redondeo)
+                        local ni = `n_psu_actual' - `asignado'
                     }
                     else {
-                        local ni_orig = `n_por_grupo'[`i', 1]
-                        local ni = round(`n_actual' * `ni_orig' / `n_total_orig')
+                        local ni_orig = `n_psu_por_grupo'[`i', 1]
+                        local ni = round(`n_psu_actual' * `ni_orig' / `n_psu_total_orig')
                     }
                     if `ni' > 0 {
-                        quietly replace `grupo_pseudo' = `niv' in `=`acumulado'+1'/`=`acumulado'+`ni''
+                        quietly replace `grupo_asig' = `niv' if `psu_first' & ///
+                            `rank_psu' > `acumulado' & `rank_psu' <= `acumulado' + `ni'
                     }
                     local acumulado = `acumulado' + `ni'
                     local asignado = `asignado' + `ni'
                 }
+                * Expandir la etiqueta asignada en el "primero de cada
+                * conglomerado" a TODAS sus filas -- max() por `newpsu',
+                * ya que dentro de cada conglomerado solo esa fila tiene
+                * un valor no-missing.
+                quietly bysort `newpsu': egen `grupo_pseudo' = max(`grupo_asig')
+
                 quietly svyset `newpsu', strata(`stratavar') singleunit(certainty)
                 if "`stat'" == "mean" {
                     quietly svy: mean `varlist', over(`grupo_pseudo')
                 }
                 else if "`stat'" == "total" {
                     quietly svy: total `varlist', over(`grupo_pseudo')
+                }
+                else if "`stat'" == "ratio" {
+                    quietly svy: ratio `varlist'/`denominator', over(`grupo_pseudo')
                 }
                 else {
                     quietly svy: proportion `varlist', over(`grupo_pseudo')
@@ -224,7 +474,9 @@ program define svylet, rclass
 
     * -- Salida a la ventana de resultados (todavia sin exportar a archivo) --
     di as text _n "{hline 70}"
-    di as text "svylet -- `stat' de `varlist', over(`over')"
+    local etiqueta_var "`varlist'"
+    if "`stat'" == "ratio" local etiqueta_var "`varlist'/`denominator'"
+    di as text "svylet -- `stat' de `etiqueta_var', over(`over')"
     di as text "{hline 70}"
     di as text "F de Wald (ANOVA global, ajustado por diseno):"
     if `F_obs' == . {
@@ -261,6 +513,32 @@ program define svylet, rclass
     return scalar df_num         = `k' - 1
     return scalar df_den          = `df_r' - (`k'-1) + 1
     return scalar k_categorias   = `k'
+    * Grados de libertad de diseno SIN el ajuste Korn-Graubard (el que
+    * necesita un IC estandar tipo b +/- t(df)*se) -- df_den de arriba
+    * es el ajustado para el F omnibus, un numero distinto a proposito
+    * (ver help, seccion Korn-Graubard). Devolver los dos por separado
+    * para que quien arme una tabla de IC no use por error el ajustado.
+    return scalar df_raw          = `df_r'
+    * Estimaciones puntuales, varianza, y tamanos de muestra por
+    * categoria -- lo que hace falta para armar una tabla de punto
+    * (estimacion + error estandar + IC + casos) sin tener que correr
+    * svy: total/mean/proportion una SEGUNDA vez por separado. svylet ya
+    * corrio esa estimacion internamente -- exponerla evita duplicar el
+    * trabajo de estimacion (confirmado con datos reales de ENA: correr
+    * la estimacion dos veces en paralelo fue la fuente de varios bugs
+    * de alineacion en el pipeline de especies).
+    return matrix b               = `b_obs'
+    return matrix V               = `V_sel'
+    * Swap deliberado -- ver nota junto a "tempname Nmat Nsubpmat Rtable"
+    * mas arriba: e(_N) (-> `Nout') resulto ser el tamano SIN ponderar y
+    * e(_N_subp) (-> `Nsubpout') el PONDERADO, al reves de la asuncion
+    * original.
+    return matrix n_ponderado     = `Nsubpout'
+    return matrix n_sin_ponderar  = `Nout'
+    * Limite inferior/superior tal como los devolvio Stata en r(table)
+    * (ver nota mas arriba de por que no se reconstruyen a mano).
+    return matrix ci_lower        = `LIout'
+    return matrix ci_upper        = `LSout'
     * Letras CLD y nombre de cada categoria de over(), expuestos
     * explicitamente via return local -- antes solo vivian en locales
     * internos (leidos de r(letra_N) puesto por Mata via st_global) que
@@ -273,6 +551,13 @@ program define svylet, rclass
         return local letra_`i' "`letra_`i''"
         return local nombre_categoria_`i' "`nom_grupo_`i''"
     }
+
+    * -- v1.4 -- ref(): p-valores "vs categoria base", crudo y ajustado
+    * por Bonferroni (k-1 comparaciones) -- vacios (missing) si ref() no
+    * se especifico, y en la posicion de la propia categoria base.
+    return scalar ref_idx        = `ref_idx'
+    return matrix p_vsref        = `p_vsref'
+    return matrix p_vsref_raw    = `p_vsref_raw'
 end
 
 * -------------------------------------------------------------------------
@@ -282,7 +567,7 @@ end
 * por cada replica del bootstrap -- un solo lugar donde vive esta logica.
 * -------------------------------------------------------------------------
 capture program drop _svylet_seleccionar
-program define _svylet_seleccionar
+program define _svylet_seleccionar, rclass
     args Bmat Vmat k level stat varname bout Vout
 
     local idx_usar ""
@@ -369,6 +654,10 @@ program define _svylet_seleccionar
             matrix `Vout'[`fila', `col'] = `Vmat'[`i', `j']
         }
     }
+    * Exponer los indices de columna usados -- el caller los necesita
+    * para extraer en el mismo orden otras cantidades por categoria que
+    * no pasan por esta subrutina (ej. e(_N), e(_N_subp)).
+    return local idx_usar "`idx_usar'"
 end
 
 version 14
@@ -453,6 +742,11 @@ void svylet_core(string scalar bname, string scalar Vname, real scalar df,
     }
 
     // ---- F omnibus: H0 b1=b2=...=bk, contraste contra el grupo 1 ----
+    // (matematicamente invariante al grupo de referencia elegido -- ver
+    // nota v1.1 en el encabezado del .ado sobre por que refgroup() se
+    // elimino en vez de "implementarse": cualquier conjunto de k-1
+    // contrastes independientes que genere el mismo subespacio da
+    // identico Wald).
     // Ajuste de Korn & Graubard (1990), que es el DEFAULT de Stata para
     // testparm/test despues de un comando svy: -- confirmado contra
     // datos reales (sysuse auto): sin este ajuste, svylet daba F(4,67)
@@ -589,5 +883,42 @@ void svylet_core(string scalar bname, string scalar Vname, real scalar df,
     for (i=1; i<=k; i++) {
         st_global("r(letra_"+strofreal(i)+")", letra_grupo[i])
     }
+}
+
+// v1.4 -- ref(): contrastes de Wald de UNA categoria contra una
+// categoria BASE fija (ref_idx), k-1 comparaciones -- distinto del F
+// omnibus + CLD de arriba (que compara TODOS los pares, k(k-1)/2
+// comparaciones). Corrige por Bonferroni sobre k-1 (min(1, p_crudo *
+// (k-1))), el mismo criterio que Dunn (1961, JASA) para "comparar
+// varios grupos contra un control" -- MAS simple y MAS conservador que
+// el metodo de un solo paso de Dunnett (1955, JASA; 1964, Biometrics),
+// que usa la distribucion t multivariada para aprovechar que las k-1
+// comparaciones comparten la misma categoria base y ganar potencia; no
+// implementado aca (ver help para el detalle y las referencias).
+void svylet_vsref(string scalar bname, string scalar Vname, real scalar df,
+                   real scalar ref_idx, real scalar k,
+                   string scalar pname, string scalar prawname)
+{
+    real matrix b, V
+    real colvector p_adj, p_raw
+    real scalar i, se, t, ncomp
+
+    b = st_matrix(bname)
+    V = st_matrix(Vname)
+    p_adj = J(k,1,.)
+    p_raw = J(k,1,.)
+    ncomp = k - 1
+
+    for (i=1; i<=k; i++) {
+        if (i == ref_idx) continue
+        if (missing(V[i,i]) | missing(V[ref_idx,ref_idx]) | V[i,i]<=0 | V[ref_idx,ref_idx]<=0) continue
+        se = sqrt(V[i,i] + V[ref_idx,ref_idx] - 2*V[i,ref_idx])
+        if (se<=0 | missing(se)) continue
+        t = (b[i] - b[ref_idx]) / se
+        p_raw[i] = 2*ttail(df, abs(t))
+        p_adj[i] = min((p_raw[i]*ncomp, 1))
+    }
+    st_matrix(pname, p_adj)
+    st_matrix(prawname, p_raw)
 }
 end

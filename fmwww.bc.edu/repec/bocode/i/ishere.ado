@@ -37,13 +37,13 @@ program define ishere
                 if "`zoom'" != "" {
                     if strpos("`zoom'", "%") == 0 local zoom "`zoom'%"
                     di
-                    display `"<img src="`filepath'" style="zoom:`zoom';">"'
+                    display `"<img src="http://fmwww.bc.edu/repec/bocode/i/`filepath'" style="zoom:`zoom';">"'
                 }
                 else if "`height'" != "" | "`width'" != "" {
                     if "`width'" == "" local width "auto"
                     if "`height'" == "" local height "auto"
                     di
-                    display `"<img src="`filepath'" width="`width'" height="`height'">"'
+                    display `"<img src="http://fmwww.bc.edu/repec/bocode/i/`filepath'" width="`width'" height="`height'">"'
                 }
                 else {
                     di 
@@ -79,7 +79,7 @@ program define ishere
                 if "`height'" == "" local height "400px"
                 if "`width'" == "" local width "100%"
                 di 
-                display `"<iframe src='`filepath'' width='`width'' height='`height'' frameBorder='0'></iframe>"'
+                display `"<iframe src='http://fmwww.bc.edu/repec/bocode/i/`filepath'' width='`width'' height='`height'' frameBorder='0'></iframe>"'
             }
             // Markdown files: emit placeholder for tohtml to inline the md source
             else if "`extension'" == ".md" {

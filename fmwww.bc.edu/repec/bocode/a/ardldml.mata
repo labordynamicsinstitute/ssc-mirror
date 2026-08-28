@@ -1,4 +1,4 @@
-*! ardldml.mata 1.0.0  24aug2026
+*! ardldml.mata 1.0.1  24aug2026
 *! Mata engine for ardldml -- DML-Bounds (Villena 2026, SSRN 6472826)
 *! Dr Merwan Roudane -- merwanroudane920@gmail.com
 *! https://github.com/merwanroudane

@@ -31,7 +31,7 @@ d KW: bounds
 d
 d Requires: Stata version 14
 d
-d Distribution-Date: 20260825
+d Distribution-Date: 20260827
 d
 d Author:   Merwan Roudane, NA
 d Support: email  merwanroudane920@@gmail.com
@@ -46,6 +46,7 @@ f ardldml_examples.sthlp
 f ardldml_mcheck.do
 f ardldml_methods.sthlp
 f ardldml_p.ado
+f ardldml_mata.ado
 f ardldml_passthrough.dta
 f ardldml_postestimation.sthlp
 f ardldml_validate.do

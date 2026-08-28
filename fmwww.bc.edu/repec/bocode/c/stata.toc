@@ -44,6 +44,7 @@ p cdo module to get an update when the dofile stalls
 p cdout module to display the current working directory
 p cdreg module to estimate Linear Regression under Measurement Error using Auxiliary Information
 p cedesign module to find the optimal flexible two stage single-arm binary outcome design
+p cellgraph module to collapse data to cell level and graph the results
 p cem module to perform Coarsened Exact Matching
 p cemimix module to perform reference-based multiple imputation of cost-effectiveness data in clinical trials
 p cenpois module to estimate censored maximum likelihood Poisson regression models

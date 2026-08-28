@@ -82,20 +82,20 @@
 
 <div id="extoc">
 <ul>
-<li><a href="#esttab001">Basic syntax and usage</a></li>
-<li><a href="#esttab002">Standard errors, p-values, and summary statistics</a></li>
-<li><a href="#esttab003">Beta coefficients</a></li>
-<li><a href="#esttab004">Wide table: coefficients and t-statistics side-by-side</a></li>
-<li><a href="#esttab008">Numerical formats</a></li>
-<li><a href="#esttab005">Labels, titles, and notes</a></li>
-<li><a href="#esttab006">Plain table</a></li>
-<li><a href="#esttab007">Compressed table</a></li>
-<li><a href="#esttab009">Significance stars: change symbols and thresholds</a></li>
-<li><a href="#esttab010">Use with Excel</a></li>
-<li><a href="#esttab011">Use with Word</a></li>
-<li><a href="#esttab012">Use with LaTeX</a></li>
-<li><a href="#esttab013">Non-standard table contents</a></li>
-<li><a href="#esttab014">Viewing the internal <b>estout</b> call</a></li>
+<li><a href="esttab.html#esttab001">Basic syntax and usage</a></li>
+<li><a href="esttab.html#esttab002">Standard errors, p-values, and summary statistics</a></li>
+<li><a href="esttab.html#esttab003">Beta coefficients</a></li>
+<li><a href="esttab.html#esttab004">Wide table: coefficients and t-statistics side-by-side</a></li>
+<li><a href="esttab.html#esttab008">Numerical formats</a></li>
+<li><a href="esttab.html#esttab005">Labels, titles, and notes</a></li>
+<li><a href="esttab.html#esttab006">Plain table</a></li>
+<li><a href="esttab.html#esttab007">Compressed table</a></li>
+<li><a href="esttab.html#esttab009">Significance stars: change symbols and thresholds</a></li>
+<li><a href="esttab.html#esttab010">Use with Excel</a></li>
+<li><a href="esttab.html#esttab011">Use with Word</a></li>
+<li><a href="esttab.html#esttab012">Use with LaTeX</a></li>
+<li><a href="esttab.html#esttab013">Non-standard table contents</a></li>
+<li><a href="esttab.html#esttab014">Viewing the internal <b>estout</b> call</a></li>
 </ul>
 </div>
 
@@ -209,11 +209,11 @@ Standard errors in parentheses
 The t-statistics can also be replaced by p-values (<b>p</b>),
 confidence intervals (<b>ci</b>), or any
 parameter statistics contained in the estimates (see the
-<a href=hlp_esttab.html#aux><b>aux()</b></a> option).
+<a href="hlp_esttab.html#aux"><b>aux()</b></a> option).
 Further summary statistics options are, for example,
 <b>pr2</b> for the pseudo R-squared and
 <b>bic</b> for Schwarz's information criterion. Moreover, there
-is a generic <a href=hlp_esttab.html#scalars><b>scalars()</b></a>
+is a generic <a href="hlp_esttab.html#scalars"><b>scalars()</b></a>
 option to include any other scalar statistics
 contained in the stored estimates. For instance, to print p-values and
 add the overall F-statistic and information on the degrees of freedom, type:
@@ -292,7 +292,7 @@ Standardized beta coefficients
 <h2>Wide table: coefficients and t-statistics side-by-side</h2>
 
 <p>
-The <a href=hlp_esttab.html#wide><b>wide</b></a> option arranges point estimates and t-statistics beside
+The <a href="hlp_esttab.html#wide"><b>wide</b></a> option arranges point estimates and t-statistics beside
 one another instead of beneath one another:
 </p>
 
@@ -438,7 +438,7 @@ Source: auto.dta
 <h2>Plain table</h2>
 
 <p>
-The <a href=hlp_esttab.html#plain><b>plain</b></a> option produces a minimally formatted
+The <a href="hlp_esttab.html#plain"><b>plain</b></a> option produces a minimally formatted
 table with all display formats set to Stata's %9.0g quasi-standard:
 </p>
 
@@ -475,7 +475,7 @@ N           <b>           74           74</b>
 <h2>Compressed table</h2>
 
 <p>
-The <a href=hlp_esttab.html#compress><b>compress</b></a>
+The <a href="hlp_esttab.html#compress"><b>compress</b></a>
 option reduces horizontal spacing to
 fit more models on screen without line breaking:
 </p>
@@ -574,7 +574,7 @@ t statistics in parentheses
 </pre>
 
 <p>
-Use the <a href=hlp_esttab.html#stars><b>nostar</b></a> option suppresses the significance stars.
+Use the <a href="hlp_esttab.html#stars"><b>nostar</b></a> option suppresses the significance stars.
 </p>
 
 
@@ -583,8 +583,8 @@ Use the <a href=hlp_esttab.html#stars><b>nostar</b></a> option suppresses the si
 
 <p>
 To produce a table for use with Excel, specify an output filename and apply
-the <a href=hlp_esttab.html#csv><b>csv</b></a> format (or the
-<a href=hlp_esttab.html#scsv><b>scsv</b></a> format depending on the language version of Excel). For
+the <a href="hlp_esttab.html#csv"><b>csv</b></a> format (or the
+<a href="hlp_esttab.html#scsv"><b>scsv</b></a> format depending on the language version of Excel). For
 example:
 </p>
 
@@ -612,7 +612,7 @@ and display the file:</p>
 
 <a name="esttab010b"></a>
 <p>
-Depending on whether the <a href=hlp_esttab.html#plain><b>plain</b></a> option is specified or
+Depending on whether the <a href="hlp_esttab.html#plain"><b>plain</b></a> option is specified or
 not, <b>esttab</b> uses two different variants of the CSV format. By
 default, that is, if <b>plain</b> is omitted, the contents of the table
 cells are enclosed in double quotes preceded by an equal sign (i.e.
@@ -645,7 +645,7 @@ Result:</p>
 
 <p>
 To produce a table for use with Word, specify an output filename with an <b>.rtf</b> suffix
-or apply the <a href=hlp_esttab.html#rtf><b>rtf</b></a> format:
+or apply the <a href="hlp_esttab.html#rtf"><b>rtf</b></a> format:
 </p>
 
 <pre>
@@ -689,7 +689,7 @@ Result:</p>
 
 <a name="esttab011c"></a>
 <p>
-Another very useful feature is the <a href=hlp_esttab.html#onecell><b>onecell</b></a> option that
+Another very useful feature is the <a href="hlp_esttab.html#onecell"><b>onecell</b></a> option that
 causes the point estimates and t statistics (or standard errors, etc.) to be
 placed beneath one another in the same table cell:
 </p>
@@ -764,8 +764,8 @@ TeXifying a document containing</p>
 <p>then produces the following result:</p>
 <p align="center"><img src="esttab012.png" alt="esttab012.png"></p>
 <p>Note that <b>esttab</b> automatically initializes the tabular environment
-and, if <a href=hlp_esttab.html#title><b>title()</b></a> is specified, sets the table as a float object. Use
-the <a href=hlp_esttab.html#fragment><b>fragment</b></a> option if you prefer to hard-code the table's
+and, if <a href="hlp_esttab.html#title"><b>title()</b></a> is specified, sets the table as a float object. Use
+the <a href="hlp_esttab.html#fragment"><b>fragment</b></a> option if you prefer to hard-code the table's
 environment and have <b>esttab</b> just produce the table rows.
 </p>
 
@@ -773,7 +773,7 @@ environment and have <b>esttab</b> just produce the table rows.
 <a name="esttab012b"></a>
 <p>
 The table above looks alright, but a better result is achieved by
-specifying the <a href=hlp_esttab.html#booktabs><b>booktabs</b></a> option and loading LaTeX's
+specifying the <a href="hlp_esttab.html#booktabs"><b>booktabs</b></a> option and loading LaTeX's
 <a href="http://www.ctan.org/tex-archive/macros/latex/contrib/booktabs/">booktabs</a>
 package in the document preamble:
 </p>
@@ -839,8 +839,8 @@ Result:</p>
 <p>
 Sometimes it is necessary to include parameter statistics in a table for which
 no predefined option exists in <b>esttab</b>. Once the statistics are are stored
-in an <b>e()</b>-matrix, they can be displayed using the <a href=hlp_esttab.html#main><b>main()</b></a> option
-(replacing the point-estimates) or the <a href=hlp_esttab.html#aux><b>aux()</b></a> option (replacing the
+in an <b>e()</b>-matrix, they can be displayed using the <a href="hlp_esttab.html#main"><b>main()</b></a> option
+(replacing the point-estimates) or the <a href="hlp_esttab.html#aux"><b>aux()</b></a> option (replacing the
 t-statistics). For example, to include
 variance inflation factors instead of t-statistics after
 <a href=http://www.stata.com/help.cgi?regress><b>regress</b></a>, you
@@ -892,10 +892,10 @@ vif in second column
 <a name="esttab013b"></a>
 <p>
 However, if you want to include more than two kinds of parameter statistics, you
-have to switch to <b>estout</b> syntax and make use of the <a href=hlp_estout.html#cell><b>cells()</b></a> option.
+have to switch to <b>estout</b> syntax and make use of the <a href="hlp_estout.html#cell"><b>cells()</b></a> option.
 All <b>estout</b> options are allowed in <b>esttab</b>, but you have to be aware
 that the specified <b>estout</b> options will take precedence over
-<b>esttab</b>'s own options. For example, specifying <a href=hlp_estout.html#cell><b>cells()</b></a> disables
+<b>esttab</b>'s own options. For example, specifying <a href="hlp_estout.html#cell"><b>cells()</b></a> disables
 <b>b()</b>, <b>beta()</b>, <b>main()</b>, <b>t()</b>, <b>abs</b>, <b>not</b>,
 <b>se()</b>, <b>p()</b>, <b>ci()</b>, <b>aux()</b>, <b>star</b>, <b>staraux</b>,
 <b>wide</b>, <b>onecell</b>, <b>parentheses</b>, and <b>brackets</b>. In the following
@@ -946,7 +946,7 @@ N           <b>           74                </b>
 <p>
 Similarly, for a complicated summary statistics section
 in the table footer you might have to use <b>estout</b>'s
-<a href=hlp_estout.html#sum><b>stats()</b></a> option
+<a href="hlp_estout.html#sum"><b>stats()</b></a> option
 (which overwrites <b>esttab</b> options such as
 <b>r2()</b>, <b>ar2()</b>, <b>pr2()</b>, <b>aic()</b>, <b>bic()</b>, <b>scalars()</b>,
 <b>sfmt()</b>, <b>noobs</b>, and <b>obslast</b>.)

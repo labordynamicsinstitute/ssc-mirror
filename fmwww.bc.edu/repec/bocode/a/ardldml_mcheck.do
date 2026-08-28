@@ -1,4 +1,4 @@
-*! ardldml_mcheck.do  1.0.0  24aug2026
+*! ardldml_mcheck.do  1.0.1  24aug2026
 *! Monte Carlo size and power check for ardldml
 *! Dr Merwan Roudane -- merwanroudane920@gmail.com
 *! https://github.com/merwanroudane

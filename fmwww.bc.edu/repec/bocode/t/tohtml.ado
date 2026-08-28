@@ -551,7 +551,7 @@ void function inject_css(string scalar htmlfile, string scalar css_rel)
     // avoid duplicate injection
     if (sum(ustrpos(lines, css_rel) :> 0) > 0) return
 
-    link = "<link rel=" + char(34) + "stylesheet" + char(34) + " href=" + char(34) + css_rel + char(34) + ">"
+    link = "<link rel=" + char(34) + "stylesheet" + char(34) + " href="http://fmwww.bc.edu/repec/bocode/t/+&#32;char(34)&#32;+&#32;css_rel&#32;+&#32;char(34)&#32;+">"
     idx = selectindex(ustrpos(lines, "</head>") :> 0)
     if (rows(idx) > 0) {
         i = idx[1]
@@ -819,16 +819,8 @@ string colvector merge_html_vectorized(string colvector f)
     n = rows(f)
     if (n == 0) return(f)
     
-        // 1. flag1: 当前行是否以 <iframe src= 或 <img src= 开头
-    len_iframe = strlen("<iframe src=")
-    len_img    = strlen("<img src=")
-        f_trim = ustrltrim(f)
-    
-        flag1 = J(n, 1, 0)
-        flag1 = (substr(f_trim, 1, len_iframe) :== "<iframe src=") :| ///
-            (substr(f_trim, 1, len_img)    :== "<img src=")
-    
-        // 2. flag2: 当前行是否以 ">" 开头（用于下一行判断）
+        // 1. flag1: 当前行是否以 <iframe src= "http://fmwww.bc.edu/repec/bocode/t/%E6%88%96" <img src= "http://fmwww.bc.edu/repec/bocode/t/%E5%BC%80%E5%A4%B4"
+    len_iframe = strlen("<iframe src="http://fmwww.bc.edu/repec/bocode/t/)&#32;&#32;&#32;&#32;len_img&#32;&#32;&#32;&#32;=&#32;strlen("<img src="http://fmwww.bc.edu/repec/bocode/t/)&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;f_trim&#32;=&#32;ustrltrim(f)&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;flag1&#32;=&#32;J(n,&#32;1,&#32;0)&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;flag1&#32;=&#32;(substr(f_trim,&#32;1,&#32;len_iframe)&#32;:=="<iframe src="http://fmwww.bc.edu/repec/bocode/t/)&#32;:|&#32;///&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(substr(f_trim,&#32;1,&#32;len_img)&#32;&#32;&#32;&#32;:=="<img src="http://fmwww.bc.edu/repec/bocode/t/)%20%20%20%20%20%20%20%20%20%20%20%20//%202.%20flag2:%20%E5%BD%93%E5%89%8D%E8%A1%8C%E6%98%AF%E5%90%A6%E4%BB%A5">" 开头（用于下一行判断）
         flag2 = (substr(f_trim, 1, 1) :== ">")
     
     // 3. 合并标志：第 i 行要合并下一行 iff flag1[i]==1 且 flag2[i+1]==1 （i=1..n-1）
@@ -1676,7 +1668,7 @@ program define alltohtml,rclass
     if "`height'" == "" local height "400px"
     if "`width'" == "" local width "100%"    
     local zoomstyle  style="zoom:`zoom';"
-    mata: ifig = `"<img src="_filepath_" `zoomstyle' />"'
+    mata: ifig = `"<img src="http://fmwww.bc.edu/repec/bocode/t/_filepath_" `zoomstyle' />"'
 
     mata: tables = J(0,1,"")
     mata: tabletitles = J(0,1,"")
@@ -1694,7 +1686,7 @@ program define alltohtml,rclass
             display as error "Directory `folder' does not exist."
             exit 198
         }
-        mata: itab = "<iframe src='_filepath_' width='`width'' height='`height'' frameBorder='0'></iframe>"
+        mata: itab = "<iframe src='http://fmwww.bc.edu/repec/bocode/t/_filepath_' width='`width'' height='`height'' frameBorder='0'></iframe>"
         quietly fs "`folder'/table*.html"
 
         foreach file in `r(files)' {

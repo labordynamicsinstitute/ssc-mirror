@@ -1,4 +1,4 @@
-*! ardldml_estat 1.0.0  24aug2026
+*! ardldml_estat 1.0.1  24aug2026
 *! postestimation for ardldml -- DML-Bounds
 *! Dr Merwan Roudane -- merwanroudane920@gmail.com
 *! https://github.com/merwanroudane
@@ -10,6 +10,8 @@ program define ardldml_estat, rclass
 		di as error "last estimates not found; {bf:ardldml} must be run first"
 		exit 301
 	}
+
+	ardldml_mata
 
 	gettoken sub 0 : 0, parse(" ,")
 	local sub = lower("`sub'")

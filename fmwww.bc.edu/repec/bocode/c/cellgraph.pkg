@@ -1,0 +1,22 @@
+d 'CELLGRAPH': module to collapse data to cell level and graph the results
+d
+d    Data is collapsed to cell level, where cells are defined by
+d one or two categorical variables (byvar1 and byvar2) and cell   
+d means (or other statistics) of a third variable (varname) are
+d graphed. 
+d
+d KW: data management
+d KW: cells
+d KW: collapse
+d KW: graphics
+d
+d Requires: Stata version 18
+d
+d Distribution-Date: 20260827
+d
+d Author: Johannes Schmieder,  Boston University
+d Support: email johannes@@bu.edu
+d
+f cellgraph.ado
+f cellgraph_run.ado
+f cellgraph.sthlp

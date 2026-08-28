@@ -1,4 +1,4 @@
-*! _ardldml_nullgraph 1.0.0  24aug2026
+*! _ardldml_nullgraph 1.0.1  24aug2026
 *! graph helper for ardldml -- DML-Bounds
 *! Dr Merwan Roudane -- merwanroudane920@gmail.com
 *! https://github.com/merwanroudane

@@ -1,4 +1,4 @@
-*! ardldml 1.0.0  24aug2026
+*! ardldml 1.0.1  24aug2026
 *! DML-Bounds: ARDL bounds testing for cointegration with many persistent controls
 *! Implements Villena (2026), SSRN working paper 6472826
 *! Dr Merwan Roudane -- merwanroudane920@gmail.com
@@ -190,7 +190,7 @@ program define ardldml, eclass sortpreserve
 	// ------------------------------------------------------------------
 	// engine
 	// ------------------------------------------------------------------
-	_ardldml_haveengine
+	ardldml_mata
 
 	tempname bmat Vmat draws foldm lamv
 	if ("`seed'" != "") set seed `seed'
@@ -418,24 +418,3 @@ end
 // graphs live in _ardldml_nullgraph.ado and _ardldml_blockgraph.ado, so
 // that ardldml_estat.ado can call them too
 // ======================================================================
-
-// ======================================================================
-// confirm the Mata engine is reachable
-// ======================================================================
-program define _ardldml_haveengine
-	version 14.0
-	capture mata: st_numscalar("__ardldml_ver", ardldml_version())
-	if (_rc) {
-		// a library installed during this session is not in the search
-		// list yet; rebuilding the index is enough and costs a moment
-		capture quietly mata: mata mlib index
-		capture mata: st_numscalar("__ardldml_ver", ardldml_version())
-	}
-	if (_rc) {
-		di as error "the ardldml Mata library (lardldml.mlib) could not be found."
-		di as error "Run {bf:mata: mata mlib index}, or restart Stata, and try again."
-		di as error "If that fails, reinstall the package."
-		exit 3499
-	}
-	capture scalar drop __ardldml_ver
-end
