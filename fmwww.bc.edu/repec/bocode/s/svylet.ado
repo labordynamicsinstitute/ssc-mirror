@@ -1,4 +1,4 @@
-*! svylet.ado v1.5 - 26aug2026
+*! svylet.ado v1.6 - 27aug2026
 *! Wald omnibus F-test + Bonferroni pairwise comparisons + Compact Letter
 *! Display (CLD) for means, totals, proportions, and ratios under survey
 *! design.
@@ -31,6 +31,24 @@
 *! bug estaba presente desde v1.0; el ejemplo de over() string agregado
 *! al help en esta misma sesion (svylet.sthlp) nunca se habia corrido en
 *! Stata real hasta ahora -- ver revision_pre_ssc.do en el repo, seccion 5.
+*!
+*! v1.6 -- FIX (encontrado revisando tabulados de produccion reales,
+*! tipo_actividad/Pecuaria): filas con las 4 categorias de over() con
+*! estimacion presente (ninguna realmente faltante) igual mostraban el F
+*! omnibus en blanco, porque 1-3 de esas 4 categorias tenian proporcion
+*! exactamente 0% (varianza degenerada). Causa raiz: el contraste R del
+*! F omnibus (svylet_core(), Mata) se armaba con las k categorias
+*! COMPLETAS -- una sola con V[i,i] missing o <=0 propaga "." por
+*! R*V*R' y lusolve() devuelve missing para TODO el estadistico, aunque
+*! el resto de las k-1 categorias tuvieran variables perfectamente
+*! calculables. Mismo criterio que ya se aplicaba a los pares (Pmat: una
+*! categoria degenerada solo invalida SUS pares, no todos) -- ahora el F
+*! omnibus se calcula sobre el SUBCONJUNTO de categorias con varianza
+*! definida (minimo 2, no se puede testear una igualdad con menos). Con
+*! 0 categorias degeneradas el resultado es identico al de v1.5 (mismo
+*! contraste, misma formula). Replicado en tsvy.ado (tsvy_core(), que
+*! mantiene su propia copia de este motor -- ver nota ahi sobre por que
+*! no puede llamar a svylet_core() entre archivos .ado separados de SSC).
 *!
 *! v1.5 (parte 2, mismo dia, corriendo el FIX de arriba en Stata real):
 *! con touse corregido, over() string sigue sin funcionar -- ahora falla
@@ -756,18 +774,58 @@ void svylet_core(string scalar bname, string scalar Vname, real scalar df,
     //   CON ajuste (el default real de Stata):
     //     (d-k+1)/(k*d) * W ~ F(k, d-k+1)
     // con k = dimension del test (aqui, num_grupos-1) y d = e(df_r).
-    real scalar k_dim, df_ajustado
-    k_dim = k - 1
-    R = J(k_dim, k, 0)
-    for (i=2; i<=k; i++) {
-        R[i-1,1] = -1
-        R[i-1,i] = 1
+    //
+    // v1.6 -- FIX: hasta v1.5, R se armaba con las k categorias
+    // COMPLETAS (incluyendo las de varianza degenerada), asi que UNA
+    // sola categoria con proporcion exactamente 0 o 1 (sin variabilidad)
+    // hacia que TODO el F omnibus quedara en missing -- el "." de esa
+    // categoria se propaga por R*V*R' y lusolve() devuelve missing,
+    // aunque el resto de las categorias tuvieran variables perfectamente
+    // calculables. Confirmado en produccion (tsvy, tabulado real):
+    // filas con 4 de 4 anios con "Estimacion" (ninguno realmente
+    // faltante) igual daban F en blanco porque 1-3 de esos anios eran
+    // exactamente 0%. Igual que ya se hacia para los pares (Pmat, mas
+    // abajo: una categoria degenerada solo invalida SUS pares, no todos)
+    // ahora el F omnibus se calcula sobre el SUBCONJUNTO de categorias
+    // con varianza definida, excluyendo las degeneradas del contraste en
+    // vez de dejar que su "." contamine todo. Minimo 2 categorias
+    // validas para poder testear una igualdad (con 0 o 1, no hay nada
+    // que comparar) -- con 0 degeneradas, idx_validas es 1..k y el
+    // resultado es identico al de v1.5.
+    real scalar k_dim, df_ajustado, k_valida
+    real colvector idx_validas, b_valida
+    real matrix V_valida
+    idx_validas = select((1::k), var_degenerada :== 0)
+    k_valida = rows(idx_validas)
+    if (k_valida >= 2) {
+        b_valida = b[idx_validas]
+        V_valida = V[idx_validas, idx_validas]
+        k_dim = k_valida - 1
+        R = J(k_dim, k_valida, 0)
+        for (i=2; i<=k_valida; i++) {
+            R[i-1,1] = -1
+            R[i-1,i] = 1
+        }
+        RVR = R*V_valida*R'
+        stat_wald = (R*b_valida)' * lusolve(RVR, R*b_valida)
+        df_ajustado = df - k_dim + 1
+        Fstat = (df_ajustado / (k_dim * df)) * stat_wald
+        p_omni = 1 - F(k_dim, df_ajustado, Fstat)
+        if (k_valida < k) {
+            printf("{txt}  F omnibus calculado con %g de %g categorias" +
+                   " (las de varianza degenerada quedan afuera del" +
+                   " contraste, no del reporte -- sus puntos siguen" +
+                   " listados, su letra queda en [?]).\n", k_valida, k)
+        }
     }
-    RVR = R*V*R'
-    stat_wald = (R*b)' * lusolve(RVR, R*b)
-    df_ajustado = df - k_dim + 1
-    Fstat = (df_ajustado / (k_dim * df)) * stat_wald
-    p_omni = 1 - F(k_dim, df_ajustado, Fstat)
+    else {
+        k_dim = .
+        df_ajustado = .
+        Fstat = .
+        p_omni = .
+        printf("{txt}  F omnibus no calculable: menos de 2 categorias" +
+               " con varianza definida (%g de %g).\n", k_valida, k)
+    }
 
     // ---- Pares con correccion Bonferroni ----
     npares = k*(k-1)/2

@@ -21,13 +21,15 @@ d KW: data management
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20260823
+d Distribution-Date: 20260828
 d
 d Author: Miguel Portela, Universidade do Minho & NIPE
 d Support: email miguel.portela@@eeg.uminho.pt
 d
 f parqit.ado
 f parqit.sthlp
+f parqit_basics.do
+f parqit_tour.do
 f parqit_read.dlg
 f parqit_explore.dlg
 f parqit_stats.dlg

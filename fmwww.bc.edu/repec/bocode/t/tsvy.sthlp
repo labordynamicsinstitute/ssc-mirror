@@ -472,7 +472,13 @@ categorical variable){p_end}
 {synopt:{cmd:REF_}}{cmd:"a/"} if {cmd:CV} exceeds {cmd:threshold()}{p_end}
 {synopt:{cmd:F_WALD P_WALD}}omnibus Wald F-statistic and its analytic
 p-value -- {it:constant across all years within the same block}, since the
-test compares all years in that block at once{p_end}
+test compares all years in that block at once. Missing when fewer than 2
+years in the block have a defined, positive variance (a year with a
+proportion of exactly 0 or 1 has none) -- with only 0 or 1 usable years
+there is nothing left to test. As long as {it:at least 2} years are
+usable, {cmd:F_WALD}/{cmd:P_WALD} are computed on that subset (the
+degenerate years are dropped from the contrast, not the whole block);
+see {help svylet##remarks_degenerate:Remarks in svylet.sthlp}{p_end}
 {synopt:{cmd:GRUPO}}the Compact Letter Display code for {it:this row's}
 year within its block -- varies by year{p_end}
 {synopt:{cmd:P_VS_REF}}Bonferroni-adjusted ({it:k}-1 comparisons) p-value

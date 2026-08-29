@@ -1,146 +1,223 @@
-// =========================================================================
-// aardl_example.do — Example: Augmented ARDL Package (8 Models)
-// =========================================================================
-// Version 1.2.0 — 2026-03-04
-// Author: Dr. Merwan Roudane
-//
-// This example demonstrates all 8 model types in the aardl package
-// using the Lutkepohl (1993) macroeconomic dataset (built into Stata).
-// =========================================================================
+*==============================================================================
+* aardl — worked examples
+* Augmented ARDL cointegration analysis
+* Version 2.0.0 — 28 August 2026
+* Dr Merwan Roudane  (merwanroudane920@gmail.com)
+*==============================================================================
+* Run this file after installing the package.  Each block is self-contained.
+*==============================================================================
 
 clear all
 set more off
 
-// ─── 1. LOAD SAMPLE DATA ───
-// Lutkepohl (1993): West German quarterly macroeconomic data, 1960q1-1982q4
-// Variables: ln_inv (log investment), ln_inc (log income), ln_consump (log consumption)
+*------------------------------------------------------------------------------
+* 0.  Data
+*     Any tsset time-series dataset with a contiguous sample will do.  The
+*     Lutkepohl macro data that ships with Stata is used here.
+*------------------------------------------------------------------------------
 webuse lutkepohl2, clear
-tsset
+tsset qtr
 
-di as txt ""
-di as txt "{hline 60}"
-di as res "  Lutkepohl (1993) — West German Macro Data"
-di as txt "{hline 60}"
-summarize ln_inv ln_inc ln_consump
-di as txt "{hline 60}"
-di as txt ""
+*------------------------------------------------------------------------------
+* 1.  Baseline augmented ARDL, asymptotic bounds
+*
+*     Three tests are reported.  Cointegration requires all three to reject:
+*       F_overall  joint significance of every lagged level
+*       t_DV       the lagged level of the dependent variable
+*       F_ind      the lagged levels of the independent variables
+*
+*     F and t bounds come from ardlbounds (Kripfganz & Schneider 2020).
+*     F_ind bounds come from Tables 1-3 of Sam, McNown & Goh (2019), which are
+*     built into the package.  The ordinary regression p-value for F_ind is
+*     invalid under I(1) regressors and is deliberately not shown.
+*------------------------------------------------------------------------------
+aardl ln_inv ln_inc ln_consump, maxlag(4) ic(aic)
 
-// =========================================================================
-// MODEL 1: aardl — Augmented ARDL (asymptotic)
-//   Uses Sam et al. (2019) 3-test framework
-//   No bootstrap, no Fourier, no NARDL
-// =========================================================================
-di as res _n "=========================================="
-di as res "  Example 1: aardl (Augmented ARDL)"
-di as res "=========================================="
+* what came out
+display "cointegration status : " e(coint_status)
+display "speed of adjustment  : " e(ecm_coef)
+display "half-life            : " e(halflife)
+display "CUSUM / CUSUMSQ      : " e(cusum) " / " e(cusumsq)
+matrix list e(bounds)
 
-aardl ln_inv ln_inc ln_consump, type(aardl) maxlag(4) ic(aic) case(3)
+*------------------------------------------------------------------------------
+* 2.  Deterministic cases
+*
+*     case() changes the ESTIMATED equation, not just the critical-value table.
+*       1  no intercept, no trend
+*       2  restricted intercept   (the intercept joins the F_overall null and
+*                                  appears among the long-run coefficients)
+*       3  unrestricted intercept (default)
+*       4  restricted trend       (the trend joins the F_overall null and
+*                                  appears among the long-run coefficients)
+*       5  unrestricted trend
+*------------------------------------------------------------------------------
+aardl ln_inv ln_inc ln_consump, case(5) maxlag(4) ///
+      nodiag nostability nodynmult noadvanced nograph
+aardl ln_inv ln_inc ln_consump, case(2) maxlag(4) ///
+      nodiag nostability nodynmult noadvanced nograph
 
-di as txt _n "Check stored results:"
-ereturn list
+*------------------------------------------------------------------------------
+* 3.  Robust and HAC inference
+*
+*     vce() feeds the coefficient table, the three bounds statistics, the
+*     asymmetry Wald tests, the multiplier confidence bands AND the bootstrap.
+*     Reach for vce(hac) when panel B or C of the diagnostics flags serial
+*     correlation or ARCH.
+*------------------------------------------------------------------------------
+aardl ln_inv ln_inc ln_consump, vce(robust) maxlag(4) ///
+      nostability nodynmult noadvanced nograph
+aardl ln_inv ln_inc ln_consump, vce(hac) maxlag(4) ///
+      nostability nodynmult noadvanced nograph
+display "Newey-West bandwidth used: " e(hlag)
 
-// =========================================================================
-// MODEL 2: baardl — Bootstrap Augmented ARDL
-//   Uses bootstrap critical values (BVZ method)
-// =========================================================================
-di as res _n "=========================================="
-di as res "  Example 2: baardl (Bootstrap A-ARDL)"
-di as res "=========================================="
+* a bandwidth of your own
+aardl ln_inv ln_inc ln_consump, vce(hac) lags(6) maxlag(4) ///
+      nodiag nostability nodynmult noadvanced nograph
 
-aardl ln_inv ln_inc ln_consump, type(baardl) maxlag(4) reps(499) bootstrap(bvz) case(3)
+*------------------------------------------------------------------------------
+* 4.  Bootstrap critical values
+*
+*     Both methods impose the null and generate the pseudo-data recursively.
+*       bootstrap(bvz)     Bertelli, Vacca & Zoia (2022): a separate restricted
+*                          equation per null hypothesis (their eqs. 16-18)
+*       bootstrap(mcnown)  McNown, Sam & Goh (2018): one restricted equation,
+*                          all lagged levels zero, serving all three tests
+*
+*     xdgp() controls the marginal process for x:
+*       rw    (default) impose the unit root, x*(t) = x*(t-1) + Dx*(t) with
+*                       Dx* a stationary VAR in differences
+*       vecm            estimate the marginal VECM including the x levels,
+*                       as printed in the two papers
+*
+*     See "Size properties" in the help file before choosing.
+*------------------------------------------------------------------------------
+aardl ln_inv ln_inc ln_consump, type(baardl) reps(999) maxlag(4) ///
+      nodiag nostability nodynmult noadvanced nograph
 
-// =========================================================================
-// MODEL 3: faardl — Fourier Augmented ARDL
-//   Adds Fourier terms, selects k* by min SSR
-// =========================================================================
-di as res _n "=========================================="
-di as res "  Example 3: faardl (Fourier A-ARDL)"
-di as res "=========================================="
+aardl ln_inv ln_inc ln_consump, type(baardl) bootstrap(mcnown) reps(999) ///
+      maxlag(4) nodiag nostability nodynmult noadvanced nograph
 
-aardl ln_inv ln_inc ln_consump, type(faardl) maxlag(4) maxk(3) ic(aic) case(3)
+display "bootstrap p-values: F_ov " e(Fov_bp) "  t_DV " e(tDV_bp) "  F_ind " e(Find_bp)
 
-// =========================================================================
-// MODEL 4: fbaardl — Fourier Bootstrap Augmented ARDL
-//   Combines Fourier + bootstrap
-// =========================================================================
-di as res _n "=========================================="
-di as res "  Example 4: fbaardl (Fourier Bootstrap A-ARDL)"
-di as res "=========================================="
+*------------------------------------------------------------------------------
+* 5.  Fourier terms: integer vs fractional frequencies
+*
+*     Yilanci, Bozoklu & Gorus (2020) search k over [0.1, ..., 5] by minimum
+*     SSR.  Christopoulos & Leon-Ledesma (2011) and Omay (2015) show that
+*     INTEGER k implies a TEMPORARY break and FRACTIONAL k a PERMANENT one.
+*     aardl reports the best k on each grid and on the two combined, so the
+*     implied break type is explicit; kmode() decides which one is used.
+*------------------------------------------------------------------------------
+* let the data pick
+aardl ln_inv ln_inc ln_consump, type(faardl) maxk(5) kstep(0.1) ///
+      nodiag nostability nodynmult noadvanced nograph
+display "k* = " e(kstar) "   (" e(ktype) ", " e(breaktype) " break)"
 
-aardl ln_inv ln_inc ln_consump, type(fbaardl) maxlag(3) maxk(3) reps(499) bootstrap(bvz) case(3)
+* force a temporary-break reading
+aardl ln_inv ln_inc ln_consump, type(faardl) kmode(integer) ///
+      nodiag nostability nodynmult noadvanced nograph
 
-// =========================================================================
-// MODEL 5: nardl — Augmented NARDL (asymptotic)
-//   NARDL with asymptotic PSS bounds tests
-//   No bootstrap, no Fourier
-// =========================================================================
-di as res _n "=========================================="
-di as res "  Example 5: nardl (Augmented NARDL)"
-di as res "=========================================="
+* force a permanent-break reading
+aardl ln_inv ln_inc ln_consump, type(faardl) kmode(fractional) ///
+      nodiag nostability nodynmult noadvanced nograph
 
-aardl ln_inv ln_inc ln_consump, type(nardl) decompose(ln_consump) maxlag(4) ic(aic) case(3)
+* Fourier plus bootstrap
+aardl ln_inv ln_inc ln_consump, type(fbaardl) reps(999) maxlag(3) ///
+      nodiag nostability nodynmult noadvanced nograph
 
-// =========================================================================
-// MODEL 6: fanardl — Fourier Augmented NARDL
-//   NARDL + Fourier terms, asymptotic inference
-// =========================================================================
-di as res _n "=========================================="
-di as res "  Example 6: fanardl (Fourier A-NARDL)"
-di as res "=========================================="
+*------------------------------------------------------------------------------
+* 6.  Asymmetric (NARDL) models
+*
+*     decompose() splits a variable into its positive and negative partial
+*     sums.  The multipliers are simulated from the full estimated ECM, and
+*     the asymmetry M+(h) - M-(h) gets its own confidence band.
+*------------------------------------------------------------------------------
+aardl ln_inv ln_inc ln_consump, type(nardl) decompose(ln_inc) maxlag(3) ///
+      horizon(36) bands(1000)
 
-aardl ln_inv ln_inc ln_consump, type(fanardl) decompose(ln_consump) maxlag(3) maxk(3) ic(aic) case(3)
+* the partial sums are kept, so you can inspect them
+summarize ln_inc_pos ln_inc_neg
 
-// =========================================================================
-// MODEL 7: banardl — Bootstrap Augmented NARDL
-//   Decomposes ln_consump into positive/negative partial sums
-// =========================================================================
-di as res _n "=========================================="
-di as res "  Example 7: banardl (Bootstrap A-NARDL)"
-di as res "=========================================="
+* bootstrap NARDL
+aardl ln_inv ln_inc ln_consump, type(banardl) decompose(ln_inc) ///
+      reps(999) maxlag(3) nodiag nostability noadvanced nograph
 
-aardl ln_inv ln_inc ln_consump, type(banardl) decompose(ln_consump) maxlag(3) reps(499) bootstrap(bvz) case(3)
+* Fourier bootstrap NARDL, everything switched on
+aardl ln_inv ln_inc ln_consump, type(fbanardl) decompose(ln_inc) ///
+      maxlag(3) reps(999) horizon(36)
 
-// =========================================================================
-// MODEL 8: fbanardl — Fourier Bootstrap Augmented NARDL
-//   Full model: Fourier + Bootstrap + NARDL
-// =========================================================================
-di as res _n "=========================================="
-di as res "  Example 8: fbanardl (Fourier Bootstrap A-NARDL)"
-di as res "=========================================="
+*------------------------------------------------------------------------------
+* 7.  Lag search
+*
+*     Every candidate is estimated on the SAME sample, the one implied by
+*     maxlag(), so the information criteria are comparable.  search(full) tries
+*     every combination; search(sequential) is the cheap alternative and is
+*     picked automatically when the exhaustive grid exceeds 6000 models.
+*------------------------------------------------------------------------------
+aardl ln_inv ln_inc ln_consump, maxlag(4) search(full) ///
+      nodiag nostability nodynmult noadvanced nograph
+display "models estimated: " e(nmodels) "   strategy: " e(search)
 
-aardl ln_inv ln_inc ln_consump, type(fbanardl) decompose(ln_consump) maxlag(3) maxk(3) reps(499) bootstrap(bvz) case(3)
+aardl ln_inv ln_inc ln_consump, maxlag(4) search(sequential) ///
+      nodiag nostability nodynmult noadvanced nograph
+display "models estimated: " e(nmodels) "   strategy: " e(search)
 
-// =========================================================================
-// ADDITIONAL EXAMPLES
-// =========================================================================
+*------------------------------------------------------------------------------
+* 8.  Postestimation
+*------------------------------------------------------------------------------
+aardl ln_inv ln_inc ln_consump, maxlag(4) nograph
 
-// Example 9: Use McNown bootstrap method instead of BVZ
-di as res _n "=========================================="
-di as res "  Example 9: baardl with McNown bootstrap"
-di as res "=========================================="
-aardl ln_inv ln_inc ln_consump, type(baardl) maxlag(4) reps(499) bootstrap(mcnown) case(3)
+* e(sample) is correct, so the usual tools work
+count if e(sample)
 
-// Example 10: BIC instead of AIC
-di as res _n "=========================================="
-di as res "  Example 10: faardl with BIC selection"
-di as res "=========================================="
-aardl ln_inv ln_inc ln_consump, type(faardl) maxlag(4) maxk(5) ic(bic) case(3)
+predict double dyhat                    // fitted D.depvar
+predict double resid, residuals
+predict double ecterm, ect              // the error-correction term
+predict double lvl,   level             // fitted level of depvar
+summarize dyhat resid ecterm lvl
 
-// Example 11: Minimal output (suppress diagnostics, multipliers, advanced)
-di as res _n "=========================================="
-di as res "  Example 11: Minimal output"
-di as res "=========================================="
-aardl ln_inv ln_inc ln_consump, type(aardl) maxlag(4) nodiag nodynmult noadvanced notable
+* joint test on the long-run block
+test [LR]
 
-// Example 12: Post-estimation advanced analysis
-di as res _n "=========================================="
-di as res "  Example 12: Post-estimation aardl_advanced"
-di as res "=========================================="
-aardl ln_inv ln_inc ln_consump, type(aardl) maxlag(4) ic(aic) case(3) noadvanced nograph
-aardl_advanced
-aardl_advanced, horizon(30) nograph
+* a single long-run coefficient
+lincom [LR]ln_inc
 
-// ─── Done ───
-di as txt _n "{hline 60}"
-di as res "  All aardl examples completed successfully."
-di as txt "{hline 60}"
+* re-run the advanced analysis over a longer horizon
+aardl_advanced, horizon(48)
+
+* the underlying regression is left stored, so estat still works by hand
+estimates restore _aardl_ols
+estat bgodfrey, lags(1 2 3 4)
+estat archlm, lags(1)
+
+*------------------------------------------------------------------------------
+* 9.  Graphs
+*
+*     graphprefix() names every graph, which makes several models easy to keep
+*     apart.  Graph names produced: <p>kstar <p>fit <p>resid <p>hist <p>qq
+*     <p>ac <p>pac <p>ect <p>cusum <p>cusumsq <p>dm_# <p>asym_#
+*     <p>persistence <p>bounds <p>bootFov <p>boottDV <p>bootFind <p>dash
+*------------------------------------------------------------------------------
+aardl ln_inv ln_inc ln_consump, type(fbanardl) decompose(ln_inc) ///
+      maxlag(3) reps(499) graphprefix(m1_)
+
+graph display m1_dash
+graph display m1_cusum
+graph display m1_cusumsq
+graph display m1_asym_1
+graph display m1_bootFov
+
+* export the ones you want
+* graph export "cusum.png",   name(m1_cusum)   replace width(2000)
+* graph export "asym.png",    name(m1_asym_1)  replace width(2000)
+
+*------------------------------------------------------------------------------
+* 10. A fast exploratory run
+*------------------------------------------------------------------------------
+aardl ln_inv ln_inc ln_consump, maxlag(2) ///
+      nodiag nostability nodynmult noadvanced nograph
+
+*==============================================================================
+* end of examples
+*==============================================================================

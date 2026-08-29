@@ -14,7 +14,7 @@ d KW: panel data
 d
 d Requires: Stata version 15.1
 d
-d Distribution-Date: 20260507
+d Distribution-Date: 20260828
 d
 d Author:   Merwan Roudane, NA
 d Support: email  merwanroudane920@@gmail.com
@@ -23,7 +23,10 @@ f xtpqardl.ado
 f xtpqardl_graph.ado
 f xtpqardl_makedata.ado
 f xtpqardl.sthlp
-f ../_/_xtpqardl_ecm.ado
 f ../_/_xtpqardl_estimate.ado
+f ../_/_xtpqardl_mlib.ado
+f ../_/_xtpqardl_load.ado
+f ../_/_xtpqardl_vce.ado
+f ../_/_xtpqardl_delta.ado
 f ../_/_xtpqardl_waldtest.ado
 f xtpqardl_example.do

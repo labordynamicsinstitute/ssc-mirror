@@ -1,135 +1,146 @@
 /*
-  parqit — filter or sample the open view's observations (lazy)
+  parqit keep - Keep or drop observations, or draw a random sample
 
-*!  VERSION 0.1.28  23aug2026
+*!  VERSION 0.1.29  25aug2026
 
-  Launch with:  db parqit_filter     (installed on the menu by: parqit menu)
-  The Create... button opens Stata's expression builder, including the date
-  functions and pseudofunctions (td(), tm(), year(), inrange(), ...).
+  User > parqit > Keep or drop observations, or draw a sample...
+  Launch directly with:  db parqit_filter      (menu installed by: parqit menu)
+
+  Builds parqit keep if / drop if / keep in / sample. The Create... button
+  opens Stata's expression builder (date functions td(), tm(), year(), ...
+  included); Variables lists the names of the current view (parqit ds).
+  These verbs are lazy: they change the view's plan, not the data in memory.
 */
 
 VERSION 16.0
 
 INCLUDE _std_wide
-DEFINE _dlght 410
+DEFINE _dlght 285
 INCLUDE header
-HELP hlp1, view("help parqit")
+HELP hlp1, view("help parqit##menu")
 RESET res1
 
-SCRIPT PREINIT
+PROGRAM POSTINIT_PROGRAM
 BEGIN
-	script if_on
+	call program main_mode
 END
 
-SCRIPT if_on
+DIALOG main, label("parqit keep - Keep or drop observations, or draw a random sample") ///
+	tabtitle("Main")
 BEGIN
-	main.ex_if.enable
-	main.ed_from.disable
-	main.ed_to.disable
-	main.ed_amount.disable
-	main.ck_count.disable
-	main.ed_seed.disable
+  RADIO rb_keepif		_lft	_top	_lw80	.,		///
+	first								///
+	onclickon(program main_mode)					///
+	label("Keep observations satisfying a condition (keep if)")
+  BUTTON bu_ds			_rj80	@	80	.,		///
+	onpush(program main_ds)						///
+	tooltip("List the variable names of the current view (parqit ds)") ///
+	label("Variables")
+  RADIO rb_dropif		_lft	_ss	_iwd	.,		///
+	onclickon(program main_mode)					///
+	label("Drop observations satisfying a condition (drop if)")
+  TEXT tx_if			_ilft	_ss	_ibwd	.,		///
+	label("If (expression):")
+  EXP ex_if			@	_ss	@	.,		///
+	error("If (expression)")					///
+	label("Create...")
+
+  RADIO rb_keepin		_lft	_ls	_iwd	.,		///
+	onclickon(program main_mode)					///
+	label("Keep a range of observations of the pipeline result (keep in)")
+  TEXT tx_from			_ilft	_ss	60	.,		///
+	label("From:") right
+  EDIT ed_from			85	@	80	.,		///
+	default(1)							///
+	label("From")
+  TEXT tx_to			170	@	40	.,		///
+	label("to:") right
+  EDIT ed_to			215	@	80	.,		///
+	label("to")
+  TEXT tx_fl			_ilft	_ss	_ibwd	.,		///
+	label("Bounds may be numbers, f (first), l (last), or negative counts from the end (-1 is the last observation).")
+
+  RADIO rb_sample		_lft	_ls	_iwd	.,		///
+	last								///
+	onclickon(program main_mode)					///
+	label("Draw a random sample of the observations (sample)")
+  TEXT tx_amount		_ilft	_ss	140	.,		///
+	label("Amount:") right
+  EDIT ed_amount		165	@	80	.,		///
+	error("Amount")							///
+	label("Amount")
+  CHECKBOX ck_count		255	@	330	.,		///
+	option(count)							///
+	label("Amount is a number of observations, not a percentage (count)")
+  TEXT tx_seed			_ilft	_ms	140	.,		///
+	label("Random-number seed:") right
+  EDIT ed_seed			165	@	80	.,		///
+	numonly								///
+	option(seed)							///
+	label("Random-number seed")
+
+  TEXT tx_note			_lft	_ls	_iwd	.,		///
+	label("These verbs change the view's plan only; materialise the result with parqit collect or parqit save.")
 END
 
-SCRIPT in_on
+PROGRAM main_mode
 BEGIN
-	main.ex_if.disable
-	main.ed_from.enable
-	main.ed_to.enable
-	main.ed_amount.disable
-	main.ck_count.disable
-	main.ed_seed.disable
+	call main.tx_if.disable
+	call main.ex_if.disable
+	call main.tx_from.disable
+	call main.ed_from.disable
+	call main.tx_to.disable
+	call main.ed_to.disable
+	call main.tx_fl.disable
+	call main.tx_amount.disable
+	call main.ed_amount.disable
+	call main.ck_count.disable
+	call main.tx_seed.disable
+	call main.ed_seed.disable
+	if main.rb_keepif | main.rb_dropif {
+		call main.tx_if.enable
+		call main.ex_if.enable
+	}
+	if main.rb_keepin {
+		call main.tx_from.enable
+		call main.ed_from.enable
+		call main.tx_to.enable
+		call main.ed_to.enable
+		call main.tx_fl.enable
+	}
+	if main.rb_sample {
+		call main.tx_amount.enable
+		call main.ed_amount.enable
+		call main.ck_count.enable
+		call main.tx_seed.enable
+		call main.ed_seed.enable
+	}
 END
 
-SCRIPT sample_on
-BEGIN
-	main.ex_if.disable
-	main.ed_from.disable
-	main.ed_to.disable
-	main.ed_amount.enable
-	main.ck_count.enable
-	main.ed_seed.enable
-END
-
-DIALOG main, label("parqit — filter / sample observations (lazy)") tabtitle("Main")
-BEGIN
-  GROUPBOX gb_mode		_lft	_top	_iwd	300,		///
-	label("Operation on the open view")
-
-  RADIO rb_keepif		_ilft	_ss	_ibwd	.,		///
-	first label("Keep observations satisfying a condition")	///
-	onclickon(script if_on)
-  RADIO rb_dropif		@	+22	@	.,		///
-	label("Drop observations satisfying a condition")		///
-	onclickon(script if_on)
-  TEXT tx_if			@	+25	440	.,		///
-	label("Condition (dates via td(), tm(), year(), ...; see Create...)")
-  BUTTON bu_vars		+450	@	110	.,		///
-	label("View variables")						///
-	onpush(program pq_show_vars)
-  EXP ex_if			_ilft	+25	_ibwd	.,		///
-	error("Condition") label("Create...")
-
-  RADIO rb_keepin		@	+35	@	.,		///
-	label("Keep an observation range of the pipeline")		///
-	onclickon(script in_on)
-  TEXT tx_from			@	+25	60	.,		///
-	label("From:")
-  EDIT ed_from			+45	@	80	.,		///
-	numonly default(1) label("first")
-  TEXT tx_to			+95	@	30	.,		///
-	label("to:")
-  EDIT ed_to			+35	@	80	.,		///
-	numonly label("last")
-
-  RADIO rb_sample		_ilft	+40	_ibwd	.,		///
-	last label("Draw an engine-side random sample")			///
-	onclickon(script sample_on)
-  TEXT tx_sample			_indent	+25	_ibwd	.,		///
-	label("Amount is a percentage by default; tick Count for an exact row count")
-  TEXT tx_amount			_indent	+25	65	.,		///
-	label("Amount:")
-  EDIT ed_amount			+70	@	90	.,		///
-	error("Sample amount") label("amount")
-  CHECKBOX ck_count		+105	@	140	.,		///
-	option(count) label("Exact count")
-  TEXT tx_seed			+155	@	45	.,		///
-	label("Seed:")
-  EDIT ed_seed			+50	@	90	.,		///
-	numonly option(seed) label("seed")
-
-  TEXT tx_note			_lft	325	_iwd	.,		///
-	label("These verbs stay lazy; materialise the result with parqit collect/save.")
-END
-
-PROGRAM pq_show_vars
+PROGRAM main_ds
 BEGIN
 	put "parqit ds"
-	stata hidden immediate
+	stata
 END
 
 PROGRAM command
 BEGIN
 	if main.rb_keepif {
-		put "parqit keep if "
 		require main.ex_if
-		put main.ex_if
+		put "parqit keep if " main.ex_if
 	}
 	if main.rb_dropif {
-		put "parqit drop if "
 		require main.ex_if
-		put main.ex_if
+		put "parqit drop if " main.ex_if
 	}
 	if main.rb_keepin {
-		put "parqit keep in "
 		require main.ed_from
 		require main.ed_to
-		put main.ed_from "/" main.ed_to
+		put "parqit keep in " main.ed_from "/" main.ed_to
 	}
 	if main.rb_sample {
-		put "parqit sample "
 		require main.ed_amount
-		put main.ed_amount
+		put "parqit sample " main.ed_amount
 		beginoptions
 			option main.ck_count
 			optionarg main.ed_seed

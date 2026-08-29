@@ -1,134 +1,115 @@
 /*
-  parqit — read a source, open memory, or resolve a path
+  parqit use - Read Parquet data as a lazy view or into memory
 
-*!  VERSION 0.1.28  23aug2026
+*!  VERSION 0.1.29  25aug2026
 
-  Launch with:  db parqit_read
-  Install a User-menu entry with:  parqit menu
+  User > parqit > Read Parquet data (lazy view or into memory)...
+  Launch directly with:  db parqit_read      (menu installed by: parqit menu)
+
+  Builds parqit use (lazy view, or into memory with clear), parqit open _data
+  and parqit path. The Populate button fills the variable picker from the
+  Parquet footer of the source, as Stata's use/describe/merge dialogs do for a
+  dataset on disk; Describe runs parqit describe on the source.
 */
 
 VERSION 16.0
 
 INCLUDE _std_wide
-DEFINE _dlght 445
+DEFINE _dlght 350
 INCLUDE header
-HELP hlp1, view("help parqit")
+HELP hlp1, view("help parqit##menu")
 RESET res1
 
 SCRIPT PREINIT
 BEGIN
+	create STRING dlgname
+	dlgname.storeDialogClassName
+	create DOUBLE pq_populate_error
 	main.fi_using.formatfilter					///
 		"Parquet (*.parquet)|*.parquet|"			///
-		"Delimited text (*.csv *.tsv *.txt)|*.csv;*.tsv;*.txt|"	///
+		"Delimited text (*.csv *.tsv *.txt *.tab)|*.csv;*.tsv;*.txt;*.tab|" ///
 		"Stata data (*.dta)|*.dta|"				///
 		"Excel (*.xlsx *.xls)|*.xlsx;*.xls|"			///
 		"All files (*.*)|*.*"
-	script use_on
 END
 
-SCRIPT all_off
+PROGRAM POSTINIT_PROGRAM
 BEGIN
-	main.fi_using.disable
-	main.ed_vars.disable
-	main.ck_clear.disable
-	main.ed_name.disable
-	main.ck_relaxed.disable
-	main.bu_desc.disable
-	main.tx_vars.disable
-	main.tx_lazy.disable
-	main.tx_name.disable
+	call program main_mode
 END
 
-SCRIPT use_on
+DIALOG main, label("parqit use - Read Parquet data as a lazy view or into memory") ///
+	tabtitle("Main")
 BEGIN
-	script all_off
-	main.fi_using.enable
-	main.ed_vars.enable
-	main.ck_clear.enable
-	main.ed_name.enable
-	main.ck_relaxed.enable
-	main.bu_desc.enable
-	main.tx_vars.enable
-	main.tx_lazy.enable
-	main.tx_name.enable
-END
+  GROUPBOX gb_what		_lft	_top	_iwd	_ht6,		///
+	label("Operation")
+  RADIO rb_use			_ilft	_ss	_ibwd	.,		///
+	first								///
+	onclickon(program main_mode)					///
+	label("Open a lazy view over a source, or read the source into memory (parqit use)")
+  RADIO rb_open			@	_ss	@	.,		///
+	onclickon(program main_mode)					///
+	label("Open the data in memory as a lazy view (parqit open _data)")
+  RADIO rb_path			@	_ss	@	.,		///
+	last								///
+	onclickon(program main_mode)					///
+	label("Resolve a path and report whether it exists (parqit path)")
 
-SCRIPT open_on
-BEGIN
-	script all_off
-	main.ed_name.enable
-	main.tx_name.enable
-END
-
-SCRIPT path_on
-BEGIN
-	script all_off
-	main.fi_using.enable
-END
-
-SCRIPT clear_on
-BEGIN
-	main.tx_name.disable
-	main.ed_name.disable
-END
-
-SCRIPT clear_off
-BEGIN
-	main.tx_name.enable
-	main.ed_name.enable
-END
-
-DIALOG main, label("parqit — read / open / path") tabtitle("Main")
-BEGIN
-  RADIO rb_use			_lft	_top	180	.,		///
-	first label("Read a source (use)")				///
-	onclickon(script use_on)
-  RADIO rb_open			+190	@	180	.,		///
-	label("Open current memory")				///
-	onclickon(script open_on)
-  RADIO rb_path			+190	@	180	.,		///
-	last label("Resolve a path")				///
-	onclickon(script path_on)
-
-  TEXT tx_using			_lft	+35	440	.,		///
-	label("File, glob (data_*.parquet), Hive folder or other supported source")
-  BUTTON bu_desc		+450	@	130	.,		///
-	label("Describe footer")					///
-	onpush(program pq_describe)
+  TEXT tx_using			_lft	110	_lw80	.,		///
+	label("Filename, glob (data_*.parquet), Hive directory, or other supported source:")
+  BUTTON bu_desc		_rj80	@	80	.,		///
+	onpush(program main_describe)					///
+	tooltip("Describe the Parquet footer of the source (parqit describe)") ///
+	label("Describe")
   FILE fi_using			_lft	_ss	_iwd	.,		///
-	error("File to read")						///
+	error("Filename")						///
 	defext(parquet)							///
 	label("Browse...")
 
-  TEXT tx_vars			_lft	+35	_iwd	.,		///
-	label("Variables to read (optional; default is all columns)")
-  EDIT ed_vars			@	_ss	@	.,		///
-	label("variables to read")
+  TEXT tx_vars			_lft	_ls	_lw80	.,		///
+	label("Variables to read (leave empty for all variables):")
+  BUTTON bu_pop			_rj80	@	80	.,		///
+	onpush(program main_populate)					///
+	tooltip("Populate combobox with the variable names in the Parquet source") ///
+	label("Populate")
+  COMBOBOX cb_vars		_lft	_ss	_iwd	.,		///
+	append								///
+	dropdown							///
+	contents(vv_list)						///
+	label("Variables to read")
 
-  CHECKBOX ck_clear		_lft	+35	_iwd	.,		///
-	option(clear) default(0)					///
-	label("Read into memory now (replaces the data in memory)")	///
-	onclickon(script clear_on)					///
-	onclickoff(script clear_off)
+  CHECKBOX ck_clear		_lft	_ls	_iwd	.,		///
+	option(clear)							///
+	onclickon(program main_mode)					///
+	onclickoff(program main_mode)					///
+	label("Read the data into memory now, replacing the data in memory (clear); otherwise a lazy view is opened")
 
-  TEXT tx_lazy			_lft	+25	_iwd	.,		///
-	label("Use defaults to a lazy view: schema probed, no result rows loaded into Stata")
-
-  TEXT tx_name			_lft	+25	_vnwd	.,		///
-	label("View name (optional)")
-  EDIT ed_name			@	_ss	@	.,		///
+  TEXT tx_name			_lft	_ls	_cwd1	.,		///
+	label("View name (optional; the default view is named default):")
+  EDIT ed_name			@	_ss	_vnwd	.,		///
+	max(32)								///
 	option(name)							///
-	label("view name")
+	label("View name")
 
-  CHECKBOX ck_relaxed		_lft	+35	_iwd	.,		///
+  TEXT tx_enc			_lft2	-20	_cwd1	.,		///
+	label("Code page of legacy text (.dta or Excel source):")
+  COMBOBOX cb_enc		@	_ss	_vnwd	.,		///
+	dropdownlist							///
+	contents(enc_list)						///
+	default("windows-1252")						///
+	option(encoding)						///
+	label("Code page")
+
+  CHECKBOX ck_relaxed		_lft	_ls	_iwd	.,		///
 	option(relaxed)							///
-	label("Union a glob whose files have different schemas (relaxed)")
+	label("Union files with different schemas by column name (relaxed)")
 
-  TEXT tx_enc			_lft	+30	260	.,		///
-	label("Legacy code page for a non-UTF-8 .dta/Excel source (bridge)")
-  COMBOBOX cb_enc		+265	@	150	.,		///
-	dropdownlist contents(enc_list) default("windows-1252")	///
-	option(encoding) label("encoding")
+  TEXT tx_note			_lft	_ls	_iwd	.,		///
+	label("A lazy view probes the schema and loads no result rows; materialise it later with parqit collect or parqit save.")
+END
+
+LIST vv_list
+BEGIN
 END
 
 LIST enc_list
@@ -139,27 +120,95 @@ BEGIN
 	macroman
 END
 
-PROGRAM pq_describe
+PROGRAM main_mode
+BEGIN
+	if main.rb_use {
+		call main.tx_using.enable
+		call main.fi_using.enable
+		call main.bu_desc.enable
+		call main.tx_vars.enable
+		call main.bu_pop.enable
+		call main.cb_vars.enable
+		call main.ck_clear.enable
+		call main.ck_relaxed.enable
+		call main.tx_enc.enable
+		call main.cb_enc.enable
+		if main.ck_clear {
+			call main.tx_name.disable
+			call main.ed_name.disable
+		}
+		else {
+			call main.tx_name.enable
+			call main.ed_name.enable
+		}
+	}
+	if main.rb_open {
+		call main.tx_using.disable
+		call main.fi_using.disable
+		call main.bu_desc.disable
+		call main.tx_vars.disable
+		call main.bu_pop.disable
+		call main.cb_vars.disable
+		call main.ck_clear.disable
+		call main.ck_relaxed.disable
+		call main.tx_name.enable
+		call main.ed_name.enable
+		call main.tx_enc.enable
+		call main.cb_enc.enable
+	}
+	if main.rb_path {
+		call main.tx_using.enable
+		call main.fi_using.enable
+		call main.bu_desc.enable
+		call main.tx_vars.disable
+		call main.bu_pop.disable
+		call main.cb_vars.disable
+		call main.ck_clear.disable
+		call main.ck_relaxed.disable
+		call main.tx_name.disable
+		call main.ed_name.disable
+		call main.tx_enc.disable
+		call main.cb_enc.disable
+	}
+END
+
+PROGRAM main_describe
 BEGIN
 	require main.fi_using
 	put "parqit describe "
-	put `"""' main.fi_using `"""'
+	put /smartquote main.fi_using
+	stata
+END
+
+PROGRAM main_populate
+BEGIN
+	require main.fi_using
+	call pq_populate_error.setvalue 0
+	put "parqit _dlgvars "
+	put dlgname
+	put " vv_list using "
+	put /smartquote main.fi_using
 	stata hidden immediate
+	if pq_populate_error {
+		stopbox stop "Unable to get the variable names from the source." ///
+			"Populate reads the footer of a Parquet file, glob, or Hive directory."
+	}
+	call main.cb_vars.repopulate
 END
 
 PROGRAM command
 BEGIN
 	if main.rb_use {
+		require main.fi_using
 		put "parqit use "
-		if main.ed_vars {
-			put main.ed_vars " "
+		if main.cb_vars {
+			put main.cb_vars " "
 		}
 		put "using "
-		require main.fi_using
-		put `"""' main.fi_using `"""'
+		put /smartquote main.fi_using
 		beginoptions
 			option main.ck_clear
-			if !main.ck_clear & main.ed_name {
+			if !main.ck_clear {
 				optionarg main.ed_name
 			}
 			option main.ck_relaxed
@@ -174,8 +223,8 @@ BEGIN
 		endoptions
 	}
 	if main.rb_path {
-		put "parqit path "
 		require main.fi_using
-		put `"""' main.fi_using `"""'
+		put "parqit path "
+		put /smartquote main.fi_using
 	}
 END

@@ -1,580 +1,731 @@
 {smcl}
-{* *! version 1.2.0  04mar2026}{...}
-{vieweralsosee "[R] regress" "help regress"}{...}
-{vieweralsosee "[R] ardl" "help ardl"}{...}
+{* *! version 2.0.0  28aug2026}{...}
+{vieweralsosee "ardl" "help ardl"}{...}
+{vieweralsosee "ardlbounds" "help ardlbounds"}{...}
+{vieweralsosee "newey" "help newey"}{...}
 {viewerjumpto "Syntax" "aardl##syntax"}{...}
 {viewerjumpto "Description" "aardl##description"}{...}
-{viewerjumpto "Methodology" "aardl##methodology"}{...}
+{viewerjumpto "Model" "aardl##model"}{...}
 {viewerjumpto "Options" "aardl##options"}{...}
-{viewerjumpto "Output tables" "aardl##tables"}{...}
+{viewerjumpto "The three tests" "aardl##threetests"}{...}
+{viewerjumpto "Critical values" "aardl##cv"}{...}
+{viewerjumpto "Bootstrap" "aardl##bootstrap"}{...}
+{viewerjumpto "Size properties" "aardl##size"}{...}
+{viewerjumpto "Fourier frequencies" "aardl##fourier"}{...}
+{viewerjumpto "Diagnostics" "aardl##diagnostics"}{...}
+{viewerjumpto "Stability" "aardl##stability"}{...}
+{viewerjumpto "Dynamic multipliers" "aardl##multipliers"}{...}
+{viewerjumpto "Graphs" "aardl##graphs"}{...}
+{viewerjumpto "Postestimation" "aardl##post"}{...}
 {viewerjumpto "Stored results" "aardl##results"}{...}
 {viewerjumpto "Examples" "aardl##examples"}{...}
 {viewerjumpto "References" "aardl##references"}{...}
 {viewerjumpto "Author" "aardl##author"}{...}
-{viewerjumpto "Post-estimation" "aardl##postestimation"}{...}
 
 {title:Title}
 
-{p2colset 5 18 20 2}{...}
-{p2col:{bf:aardl} {hline 2}}Augmented Autoregressive Distributed Lag Model{p_end}
-{p2colreset}{...}
+{phang}
+{bf:aardl} {hline 2} Augmented ARDL cointegration analysis with Fourier terms,
+bootstrap inference and asymmetric (NARDL) dynamics
 
 
 {marker syntax}{...}
 {title:Syntax}
 
-{p 8 17 2}
-{cmdab:aardl}
-{depvar}
-{indepvars}
-{ifin}{cmd:,}
-[{it:options}]
+{p 8 15 2}
+{cmd:aardl} {depvar} {indepvars} {ifin} [{cmd:,} {it:options}]
 
-{synoptset 28 tabbed}{...}
+{synoptset 26 tabbed}{...}
 {synopthdr}
 {synoptline}
-{syntab:Model specification}
-{synopt:{opt type(string)}}model type: {bf:aardl} (default), {bf:baardl}, {bf:faardl}, {bf:fbaardl}, {bf:nardl}, {bf:fanardl}, {bf:banardl}, or {bf:fbanardl}{p_end}
-{synopt:{opt dec:ompose(varlist)}}NARDL: variables to decompose into positive/negative partial sums{p_end}
-{synopt:{opt maxl:ag(#)}}maximum lag order; default {bf:4}{p_end}
-{synopt:{opt maxk(#)}}maximum Fourier frequency; default {bf:3}{p_end}
-{synopt:{opt ic(string)}}information criterion: {bf:aic} or {bf:bic} (default){p_end}
-{synopt:{opt case(#)}}PSS case: {bf:1}, {bf:2}, {bf:3} (default), {bf:4}, or {bf:5}{p_end}
+{syntab:Model}
+{synopt:{opt ty:pe(string)}}model type; default {cmd:type(aardl)}{p_end}
+{synopt:{opt dec:ompose(varlist)}}variables to decompose into positive and
+negative partial sums; required for the NARDL types{p_end}
+{synopt:{opt case(#)}}Pesaran-Shin-Smith case {bf:1}-{bf:5}; default {cmd:case(3)}{p_end}
+{synopt:{opt maxl:ag(#)}}maximum lag order; default {cmd:maxlag(4)}{p_end}
+{synopt:{opt ic(string)}}{cmd:aic}, {cmd:bic} (default) or {cmd:hqic}{p_end}
+{synopt:{opt sear:ch(string)}}{cmd:full}, {cmd:sequential} or {cmd:auto} (default){p_end}
 
-{syntab:Bootstrap}
-{synopt:{opt reps(#)}}bootstrap replications; default {bf:999}{p_end}
-{synopt:{opt boot:strap(string)}}bootstrap method: {bf:bvz} (default) or {bf:mcnown}{p_end}
+{syntab:Inference}
+{synopt:{opt vce(string)}}{cmd:ols} (default), {cmd:robust}, or
+{cmd:hac} (= {cmd:newey}){p_end}
+{synopt:{opt lags(#)}}Newey-West bandwidth; default is the automatic rule{p_end}
+{synopt:{opt reps(#)}}bootstrap replications; default {cmd:reps(999)}{p_end}
+{synopt:{opt b:ootstrap(string)}}{cmd:bvz} (default) or {cmd:mcnown}{p_end}
+{synopt:{opt xdgp(string)}}marginal process for x in the bootstrap:
+{cmd:rw} (default) or {cmd:vecm}{p_end}
+{synopt:{opt l:evel(#)}}confidence level; default is {cmd:level(95)}{p_end}
+
+{syntab:Fourier}
+{synopt:{opt maxk(#)}}maximum Fourier frequency; default {cmd:maxk(5)}{p_end}
+{synopt:{opt kst:ep(#)}}Fourier grid increment; default {cmd:kstep(0.1)}{p_end}
+{synopt:{opt kmo:de(string)}}{cmd:auto} (default), {cmd:integer} or
+{cmd:fractional}{p_end}
+{synopt:{opt nof:ourier}}suppress the Fourier terms even for a Fourier {cmd:type()}{p_end}
+
+{syntab:Dynamics}
+{synopt:{opt hor:izon(#)}}multiplier and persistence horizon; default {cmd:horizon(24)}{p_end}
+{synopt:{opt ban:ds(#)}}draws for the multiplier confidence bands; default {cmd:bands(500)}{p_end}
 
 {syntab:Reporting}
-{synopt:{opt l:evel(#)}}confidence level; default {cmd:c(level)}{p_end}
-{synopt:{opt hor:izon(#)}}multiplier/persistence horizon; default {bf:20}{p_end}
-{synopt:{opt nodiag}}suppress diagnostic tests{p_end}
-{synopt:{opt nodyn:mult}}suppress dynamic multipliers{p_end}
-{synopt:{opt noadv:anced}}suppress advanced analyses{p_end}
-{synopt:{opt not:able}}suppress regression table{p_end}
-{synopt:{opt noh:eader}}suppress header{p_end}
-{synopt:{opt nog:raph}}suppress graphs{p_end}
+{synopt:{opt graphp:refix(string)}}prefix for all graph names{p_end}
+{synopt:{opt nodi:ag}}suppress the diagnostic panels{p_end}
+{synopt:{opt nostab:ility}}suppress CUSUM and CUSUMSQ{p_end}
+{synopt:{opt nodyn:mult}}suppress the dynamic multipliers{p_end}
+{synopt:{opt noadv:anced}}suppress the advanced analysis{p_end}
+{synopt:{opt notab:le}}suppress the coefficient table{p_end}
+{synopt:{opt nohe:ader}}suppress the header{p_end}
+{synopt:{opt nograph}}suppress all graphs{p_end}
+{synopt:{opt nobounds:graph}}suppress only the bounds graph{p_end}
 {synoptline}
-{p2colreset}{...}
-
-{pstd}
-{bf:Post-estimation:}
-{p_end}
-
-{p 8 17 2}
-{cmd:aardl_advanced}
-[{cmd:,} {opt hor:izon(#)} {opt nog:raph}]
-
-{p 4 6 2}
-You must {cmd:tsset} your data before using {cmd:aardl}; see {helpb tsset}.
-{p_end}
+{p 4 6 2}The data must be {helpb tsset}. {cmd:aardl} is a pure time-series
+command; panels are refused.{p_end}
+{p 4 6 2}The estimation sample must be contiguous (no internal gaps or
+missing values); {cmd:aardl} stops with an error otherwise, because the
+recursive bootstrap and the recursive residuals both require it.{p_end}
 
 
 {marker description}{...}
 {title:Description}
 
 {pstd}
-{cmd:aardl} estimates an {bf:Augmented Autoregressive Distributed Lag} (A-ARDL)
-model with cointegration testing following the 3-test framework of
-Sam, McNown & Goh (2019). It provides eight model types:
-{p_end}
-
-{p2colset 10 28 30 2}{...}
-{p2col:{bf:aardl}}Augmented ARDL (asymptotic){p_end}
-{p2col:{bf:baardl}}Bootstrap Augmented ARDL{p_end}
-{p2col:{bf:faardl}}Fourier Augmented ARDL{p_end}
-{p2col:{bf:fbaardl}}Fourier Bootstrap Augmented ARDL{p_end}
-{p2col:{bf:nardl}}Augmented NARDL (asymptotic){p_end}
-{p2col:{bf:fanardl}}Fourier Augmented NARDL{p_end}
-{p2col:{bf:banardl}}Bootstrap Augmented NARDL{p_end}
-{p2col:{bf:fbanardl}}Fourier Bootstrap Augmented NARDL{p_end}
-{p2colreset}{...}
+{cmd:aardl} implements the augmented ARDL bounds test of Sam, McNown and Goh
+(2019), which supplements the two Pesaran, Shin and Smith (2001) statistics
+with a third test on the lagged levels of the independent variables. Only
+when all three reject can cointegration be concluded; each of the other
+outcomes identifies a specific degenerate case.
 
 {pstd}
-Key features include:
-{p_end}
+Eight model types combine that framework with three extensions: a Fourier
+approximation to unknown smooth structural breaks (Yilanci, Bozoklu and Gorus
+2020), a recursive null-imposed bootstrap (McNown, Sam and Goh 2018; Bertelli,
+Vacca and Zoia 2022), and the asymmetric partial-sum decomposition of Shin, Yu
+and Greenwood-Nimmo (2014).
 
-{phang}
-{bf:1. 3-test cointegration framework} (Sam, McNown & Goh, 2019): Tests
-joint significance of level variables (F_overall), the error correction
-term (t_dependent), and independent level variables (F_independent) to
-distinguish cointegration from degenerate cases.
-{p_end}
-
-{phang}
-{bf:2. Fourier approximation:} Low-frequency trigonometric terms capture
-smooth structural breaks of unknown form, number, and location
-(Enders & Lee, 2012; Yilanci et al., 2020).
-{p_end}
-
-{phang}
-{bf:3. Bootstrap critical values:} Two bootstrap procedures for finite-sample
-inference:
-{p_end}
-
-{phang2}
-{bf:McNown, Sam & Goh (2018):} Unconditional bootstrap with single
-restricted null and residual resampling.
-{p_end}
-
-{phang2}
-{bf:Bertelli, Vacca & Zoia (2022):} Conditional bootstrap with three
-separate nulls and marginal VECM for independent variables.
-{p_end}
-
-{phang}
-{bf:4. NARDL:} Nonlinear ARDL via partial sum decomposition
-(Shin, Yu & Greenwood-Nimmo, 2014).
-{p_end}
-
-{phang}
-{bf:5. Kripfganz & Schneider (2020) critical values:} For asymptotic
-models, response surface finite-sample critical values and approximate
-p-values via the {cmd:ardlbounds} program.
-{p_end}
+{synoptset 14}{...}
+{synopthdr:type()}
+{synoptline}
+{synopt:{cmd:aardl}}augmented ARDL, asymptotic bounds{p_end}
+{synopt:{cmd:baardl}}augmented ARDL, bootstrap critical values{p_end}
+{synopt:{cmd:faardl}}Fourier augmented ARDL, asymptotic bounds{p_end}
+{synopt:{cmd:fbaardl}}Fourier augmented ARDL, bootstrap critical values{p_end}
+{synopt:{cmd:nardl}}augmented NARDL, asymptotic bounds{p_end}
+{synopt:{cmd:fanardl}}Fourier augmented NARDL, asymptotic bounds{p_end}
+{synopt:{cmd:banardl}}augmented NARDL, bootstrap critical values{p_end}
+{synopt:{cmd:fbanardl}}Fourier augmented NARDL, bootstrap critical values{p_end}
+{synoptline}
 
 
-{marker methodology}{...}
-{title:Methodology}
+{marker model}{...}
+{title:The estimated model}
 
 {pstd}
-{ul:The A-ARDL Model (ECM form)}
-{p_end}
-
-{pstd}
-The ARDL(p, q1, ..., qk) error correction model is:
-{p_end}
+{cmd:aardl} estimates the conditional error-correction model
 
 {p 8 8 2}
-D.y_t = c + gamma1*sin(2*pi*k*t/T) + gamma2*cos(2*pi*k*t/T)
-{p_end}
-{p 12 12 2}
-+ alpha*L.y_t + SUM beta_i*L.x_it
-{p_end}
-{p 12 12 2}
-+ SUM(j=1..p) phi_j*L(j).D.y_t + SUM(i,j) theta_ij*L(j).D.x_it + e_t
-{p_end}
+D.y(t) = c0 + c1*t + pi_yy*y(t-1) + sum_i pi_i*x_i(t-1)
++ sum_j psi_j*D.y(t-j) + sum_i sum_j om_ij*D.x_i(t-j)
++ g1*sin(2*pi*k*t/T) + g2*cos(2*pi*k*t/T) + u(t)
 
 {pstd}
-{ul:Three Cointegration Tests (Sam et al. 2019)}
-{p_end}
+{opt case()} determines which deterministic terms enter and which are part of
+the null hypothesis of the overall F test. This is a property of the
+{it:estimated equation}, not merely of the critical-value table:
 
-{phang2}
-{bf:F_overall (F_ov):} Joint test: alpha = beta_1 = ... = beta_k = 0.
-All lagged level variables.
-{p_end}
-
-{phang2}
-{bf:t_dependent (t_DV):} t-test on L.depvar: alpha = 0.
-{p_end}
-
-{phang2}
-{bf:F_independent (F_ind):} Joint test: beta_1 = ... = beta_k = 0.
-Detects degenerate cases.
-{p_end}
+{synoptset 10 tabbed}{...}
+{synopt:{bf:1}}no intercept, no trend; F tests only the lagged levels{p_end}
+{synopt:{bf:2}}intercept estimated but restricted; F tests the lagged levels
+{bf:and} the intercept, and the intercept appears among the long-run
+coefficients{p_end}
+{synopt:{bf:3}}unrestricted intercept, no trend (the default){p_end}
+{synopt:{bf:4}}unrestricted intercept, restricted trend; F tests the lagged
+levels {bf:and} the trend, and the trend appears among the long-run
+coefficients{p_end}
+{synopt:{bf:5}}unrestricted intercept, unrestricted trend{p_end}
 
 {pstd}
-Cointegration is concluded when all three tests are significant.
-{p_end}
+The coefficient table is reported in error-correction form with three
+equations: {bf:ADJ} (the speed of adjustment pi_yy), {bf:LR} (the long-run
+coefficients -pi_i/pi_yy, with delta-method standard errors) and {bf:SR} (the
+short-run coefficients as estimated).
 
 {pstd}
-{ul:NARDL Decomposition}
-{p_end}
-
-{pstd}
-For variables specified in {opt decompose()}, positive and negative partial
-sums are created: x_pos_t = SUM max(D.x_j, 0) and x_neg_t = SUM min(D.x_j, 0).
-Wald tests for long-run and short-run asymmetry are reported.
-{p_end}
+{bf:Lag selection.} Every candidate ARDL(p,q1,...,qk) is estimated on the
+{it:same} sample, namely the one implied by {opt maxlag()}, so the information
+criteria are comparable across candidates. Reported AIC/BIC/HQIC refer to that
+sample as well.
 
 
 {marker options}{...}
 {title:Options}
 
-{dlgtab:Model specification}
+{dlgtab:Model}
 
-{phang}
-{opt type(string)} sets the model type:
-{p_end}
+{phang}{opt type(string)} selects one of the eight models listed above.
 
-{phang2}
-{cmd:type(aardl)} (default): Augmented ARDL with PSS bounds test and
-Kripfganz & Schneider (2020) critical values.
-{p_end}
+{phang}{opt decompose(varlist)} lists the variables to split into positive and
+negative partial sums, x+(t) = sum max(D.x,0) and x-(t) = sum min(D.x,0),
+following Shin, Yu and Greenwood-Nimmo (2014). The partial sums are created as
+{it:varname}{cmd:_pos} and {it:varname}{cmd:_neg} and are {bf:kept} after
+estimation, because postestimation needs them. If variables of those names
+already exist, {cmd:aardl} falls back to an {cmd:_aardl_} prefix and says so.
+Independent variables that are not decomposed enter as controls.
 
-{phang2}
-{cmd:type(baardl)}: Bootstrap Augmented ARDL.
-{p_end}
+{phang}{opt case(#)} see {help aardl##model:The estimated model}.
 
-{phang2}
-{cmd:type(faardl)}: Fourier Augmented ARDL with PSS bounds test.
-{p_end}
+{phang}{opt maxlag(#)} sets the maximum lag order, 1 to 12. Note that
+{opt maxlag()} costs observations: the fixed estimation sample starts
+{it:maxlag}+2 periods in.
 
-{phang2}
-{cmd:type(fbaardl)}: Fourier Bootstrap Augmented ARDL.
-{p_end}
+{phang}{opt ic(string)} is the criterion minimised in lag selection.
 
-{phang2}
-{cmd:type(nardl)}: Augmented NARDL with asymptotic inference (requires {opt decompose()}).
-{p_end}
+{phang}{opt search(string)} controls the lag search. {cmd:full} evaluates
+every (p,q1,...,qk) combination, which is {it:maxlag} x ({it:maxlag}+1)^k
+models. {cmd:sequential} chooses p with all q at their maximum, then sweeps
+each q twice holding the others fixed. {cmd:auto} (the default) uses
+{cmd:full} when that means 6000 models or fewer and {cmd:sequential}
+otherwise, and reports which one it used.
 
-{phang2}
-{cmd:type(fanardl)}: Fourier Augmented NARDL (requires {opt decompose()}).
-{p_end}
+{dlgtab:Inference}
 
-{phang2}
-{cmd:type(banardl)}: Bootstrap Augmented NARDL (requires {opt decompose()}).
-{p_end}
+{phang}{opt vce(string)} chooses the covariance estimator used for the
+coefficient table, for the three bounds statistics, for the asymmetry Wald
+tests, and inside the bootstrap. {cmd:ols} is conventional;
+{cmd:robust} is Huber-White HC1; {cmd:hac} (equivalently {cmd:newey}) is
+Newey-West. Point estimates are identical across the three; only the
+covariance matrix changes. Use {cmd:vce(hac)} when the diagnostics flag
+residual serial correlation or ARCH, which the bounds statistics are otherwise
+sensitive to.
 
-{phang2}
-{cmd:type(fbanardl)}: Fourier Bootstrap Augmented NARDL (requires {opt decompose()}).
-{p_end}
+{phang}{opt lags(#)} is the Newey-West bandwidth. The default is
+floor(4*(N/100)^(2/9)).
 
-{phang}
-{opt decompose(varlist)} specifies which independent variables to decompose
-into positive and negative partial sums for NARDL analysis.
-{p_end}
+{phang}{opt reps(#)} is the number of bootstrap replications. Under
+{cmd:bootstrap(bvz)} each replication simulates three series, one per null
+hypothesis.
 
-{phang}
-{opt maxlag(#)} maximum lag order for ARDL grid search. Default is 4.
-{p_end}
+{phang}{opt bootstrap(string)} see {help aardl##bootstrap:Bootstrap} and
+{help aardl##size:Size properties}.
 
-{phang}
-{opt maxk(#)} maximum Fourier frequency. Default is 3.
-The search grid uses increments of 0.1 (k = 0.1, 0.2, ..., maxk).
-{p_end}
+{phang}{opt xdgp(string)} controls how the independent variables are generated
+in the bootstrap. {cmd:rw} imposes the unit root, x*(t) = x*(t-1) + D.x*(t),
+with D.x* a stationary VAR in differences; this is the default and is the
+better calibrated of the two. {cmd:vecm} estimates the marginal VECM including
+the x levels, exactly as printed in the two papers. See
+{help aardl##size:Size properties} for the measured difference.
 
-{phang}
-{opt ic(string)} information criterion for lag selection: {cmd:aic} or {cmd:bic}.
-Default is {cmd:bic}.
-{p_end}
+{dlgtab:Fourier}
 
-{phang}
-{opt case(#)} PSS case number (1-5). Default is 3 (unrestricted intercept,
-no deterministic trend).
-{p_end}
+{phang}{opt maxk(#)}, {opt kstep(#)} define the search grid
+k = {it:kstep}, 2*{it:kstep}, ..., {it:maxk}. The default grid
+k = 0.1, 0.2, ..., 5 is the one used by Yilanci, Bozoklu and Gorus (2020).
 
-{dlgtab:Bootstrap}
+{phang}{opt kmode(string)} see {help aardl##fourier:Fourier frequencies}.
 
-{phang}
-{opt reps(#)} number of bootstrap replications. Default 999.
-Recommendations: 99 for exploratory work; 999 for standard analysis;
-1999-4999 for publication.
-{p_end}
+{dlgtab:Dynamics}
 
-{phang}
-{opt bootstrap(string)} bootstrap method: {cmd:bvz} (Bertelli et al. 2022,
-default) or {cmd:mcnown} (McNown et al. 2018).
-{p_end}
+{phang}{opt horizon(#)} is the horizon of the dynamic multipliers and of the
+persistence profile.
 
-{dlgtab:Reporting}
-
-{phang}
-{opt level(#)} confidence level for coefficient intervals.
-Default is {cmd:c(level)} (usually 95).
-{p_end}
-
-{phang}
-{opt horizon(#)} maximum horizon for dynamic multipliers and persistence
-profile. Default is 20.
-{p_end}
-
-{phang}
-{opt nodiag} suppresses diagnostic tests (Table 4).
-{p_end}
-
-{phang}
-{opt nodynmult} suppresses dynamic multipliers (Table 5).
-{p_end}
-
-{phang}
-{opt noadvanced} suppresses advanced analyses (Table 6).
-{p_end}
-
-{phang}
-{opt notable} suppresses the ARDL regression table (Table 2).
-{p_end}
+{phang}{opt bands(#)} is the number of parametric draws used for the
+multiplier confidence bands. Set {cmd:bands(0)} to skip them.
 
 
-{marker tables}{...}
-{title:Output tables}
+{marker threetests}{...}
+{title:The three tests}
 
 {pstd}
-{cmd:aardl} produces up to 6 publication-quality tables:
-{p_end}
+Following Sam, McNown and Goh (2019):
 
-{phang2}Table 1: Model Selection Summary (ARDL spec, k*, N, R2, IC){p_end}
-{phang2}Table 2: ARDL(p,q1,...,qk) regression, EC representation{p_end}
-{phang3}ADJ {hline 1} Speed of Adjustment (L.y){p_end}
-{phang3}LR {hline 1} Long-Run Coefficients (-beta/alpha, delta method){p_end}
-{phang3}SR {hline 1} Short-Run Coefficients (D.x, LD.x, ...){p_end}
-{phang2}Table 3: Cointegration Test Results (F_ov, t_DV, F_ind){p_end}
-{phang2}Table 4: Diagnostic Tests (JB, BG-LM, ARCH, RESET){p_end}
-{phang2}Table 5: Dynamic Multipliers / Asymmetric Dynamic Multipliers{p_end}
-{phang2}Table 6: Half-Life, Persistence Profile, Equilibrium Relationship{p_end}
+{p2colset 8 22 24 2}{...}
+{p2col:{bf:F_overall}}H0: pi_yy = 0 and pi_i = 0 for all i (plus the intercept
+in Case 2, plus the trend in Case 4){p_end}
+{p2col:{bf:t_DV}}H0: pi_yy = 0, the lagged level of the dependent variable{p_end}
+{p2col:{bf:F_ind}}H0: pi_i = 0 for all i, the lagged levels of the independent
+variables{p_end}
+
+{pstd}
+The F tests are upper-tail; {bf:t_DV} is lower-tail. The conclusion follows
+Sam et al. (2019, pp. 2 and 14):
+
+{p2colset 8 34 36 2}{...}
+{p2col:all three reject}cointegration{p_end}
+{p2col:F_overall and t_DV reject, F_ind does not}degenerate lagged
+{it:independent} variable(s) case, which is degenerate case {bf:#1} of McNown
+et al. (2018). The equation reduces to a generalised Dickey-Fuller regression
+and {it:depvar} is I(0). No cointegration.{p_end}
+{p2col:F_overall and F_ind reject, t_DV does not}degenerate lagged
+{it:dependent} variable case, which is degenerate case {bf:#2} of McNown et
+al. (2018). No cointegration.{p_end}
+{p2col:anything else}no cointegration{p_end}
+
+{pstd}
+{cmd:e(coint_status)} takes the values {cmd:cointegrated},
+{cmd:degenerate_indep}, {cmd:degenerate_dep} or {cmd:no_cointegration}.
+
+
+{marker cv}{...}
+{title:Critical values}
+
+{pstd}
+{bf:F_overall and t_DV.} With an asymptotic {cmd:type()}, the I(0)/I(1) bounds
+come from {helpb ardlbounds} (Kripfganz and Schneider 2020), which must be
+installed separately ({stata ssc install ardlbounds}). {cmd:aardl} reports the
+bounds and the decision but does not invent a p-value.
+
+{pstd}
+{bf:F_ind.} The regression p-value for this statistic is {bf:not} valid under
+I(1) regressors, so {cmd:aardl} does not report it. Instead the I(0)/I(1)
+bounds are read from Tables 1, 2 and 3 of Sam, McNown and Goh (2019), which
+are shipped with this package for Case I, Case III and Case V, k = 1 to 7, and
+sample sizes 30 to 80 plus the asymptotic row. Cases II and IV are not
+tabulated by Sam et al.; the adjacent tabulated case is used and the output
+says so. For k > 7 no tabulated bounds exist and a bootstrap {cmd:type()} is
+the only valid route.
+
+{pstd}
+Two printed entries in the source tables are inconsistent with their immediate
+neighbours and are corrected in the shipped tables: Case III, p = 0.025,
+N = 45, k = 3 (I(1) bound printed as 4.34, neighbours 5.92 and 5.87, set to
+5.90) and Case V, p = 0.025, N = 30, k = 3 (I(0) bound printed as 3.17,
+neighbours 3.58 and 3.57, set to 3.64).
+
+{pstd}
+{bf:Bootstrap types.} All three statistics get bootstrap critical values and
+p-values from the simulated null distribution; no table is consulted.
+
+
+{marker bootstrap}{...}
+{title:Bootstrap}
+
+{pstd}
+Both methods impose the null, generate the pseudo-data {it:recursively}, and
+re-estimate the unrestricted model on each replication.
+
+{phang}{cmd:bootstrap(mcnown)} follows McNown, Sam and Goh (2018), Steps 1-8.
+One restricted D.y equation (all lagged levels set to zero) supplies the
+residuals for all three tests, as their Step 1 prescribes. The marginal D.x
+equations are unrestricted and include y(t-1), as in their equation (12).
+
+{phang}{cmd:bootstrap(bvz)} follows Bertelli, Vacca and Zoia (2022). Each
+null hypothesis gets its {it:own} restricted D.y equation, their equations
+(16), (17) and (18), so the F_overall, t_DV and F_ind null distributions are
+each generated under the hypothesis actually being tested. The marginal VECM,
+their equations (19)-(20), excludes y(t-1), imposing weak exogeneity of the
+forcing variables.
+
+{pstd}
+Common to both: residuals are recentred and degrees-of-freedom rescaled
+(McNown et al. Step 2; Bertelli et al. equations 21-22); the joint residual
+vector (v_y, e_x) is resampled as a block so contemporaneous correlation is
+preserved; the series are built as y*(t) = y*(t-1) + D.y*(t) and
+x*(t) = x*(t-1) + D.x*(t) (McNown et al. Steps 4-5; Bertelli et al. equation
+23); and the initial conditions are drawn as a contiguous block from the
+original data (Bertelli et al. step 5b). Fourier terms and the trend are
+deterministic and are held at their sample values in every replication, in
+both the y equation and the marginal equations.
+
+{pstd}
+Critical values follow McNown et al. equations (15)-(16) and Bertelli et al.
+equations (24)-(25): the upper-tail order statistic for the F tests and the
+lower-tail order statistic for t_DV.
+
+{pstd}
+The whole engine runs in Mata and reproduces Stata's {helpb test} exactly on
+the observed data.
+
+
+{marker size}{...}
+{title:Size properties of the bootstrap}
+
+{pstd}
+The engine was calibrated against the true finite-sample null distribution.
+The reference distribution comes from 3000 Monte Carlo draws of three
+{it:independent} random walks (so the null of no cointegration holds by
+construction) with T = 150, an ARDL(1,0,0) specification, Case III and k = 2;
+the empirical sizes come from 200 Monte Carlo replications with 199 bootstrap
+replications each, at a nominal 5%.
+
+{pstd}
+{bf:5% critical values} (2000 bootstrap replications on one null dataset):
+
+{p2colset 8 42 44 2}{...}
+{p2col:{space 34}{bf:F_ov}{space 4}{bf:t_DV}{space 4}{bf:F_ind}}{p_end}
+{p2col:true finite-sample}{space 5}4.93{space 4}-3.54{space 5}5.41{p_end}
+{p2col:{cmd:bootstrap(mcnown) xdgp(rw)}}{space 5}4.88{space 4}-3.53{space 5}5.81{p_end}
+{p2col:{cmd:bootstrap(bvz)    xdgp(rw)}}{space 5}4.97{space 4}-2.59{space 5}5.76{p_end}
+{p2col:{cmd:bootstrap(mcnown) xdgp(vecm)}}{space 3}4.54{space 4}-3.16{space 5}5.17{p_end}
+{p2col:{cmd:bootstrap(bvz)    xdgp(vecm)}}{space 3}4.41{space 4}-2.56{space 5}4.83{p_end}
+
+{pstd}
+{bf:Empirical size at nominal 5%} (Monte Carlo standard error about 0.02):
+
+{p2colset 8 42 44 2}{...}
+{p2col:{space 30}{bf:F_ov}{space 3}{bf:t_DV}{space 3}{bf:F_ind}{space 3}{bf:all three}}{p_end}
+{p2col:{cmd:bootstrap(mcnown) xdgp(rw)}}{space 3}0.070{space 2}0.085{space 2}0.040{space 5}0.025{p_end}
+{p2col:{cmd:bootstrap(bvz)    xdgp(rw)}}{space 3}0.090{space 2}0.155{space 2}0.115{space 5}0.075{p_end}
+{p2col:{cmd:bootstrap(bvz)    xdgp(vecm)}}{space 1}0.110{space 2}0.130{space 2}0.145{space 5}0.085{p_end}
+
+{pstd}
+Two things follow. First, {opt xdgp(rw)} is better calibrated than
+{opt xdgp(vecm)} for both methods, which is why it is the default: leaving the
+x levels in the marginal equation gives the estimated coefficient on x(t-1) a
+small negative bias, so the simulated x is slightly mean-reverting rather than
+I(1) and the null distribution comes out too tight.
+
+{pstd}
+Second, the {bf:t_DV} test is noticeably over-sized under
+{cmd:bootstrap(bvz)} and correctly sized under {cmd:bootstrap(mcnown)}. This is
+not an implementation difference: the two run through the same engine and
+differ only in the restricted equation used to generate D.y under the t null.
+Bertelli et al. impose only a_yy = 0 (their equations 12 and 17), leaving the
+estimated x levels in the generating equation, so the simulated y picks up a
+cumulated I(1) component. McNown et al. instead apply the joint restriction to
+all three tests, as their Step 1 states explicitly, and the simulated y is
+exactly I(1). If the t_DV test is doing decisive work in your application, use
+{cmd:bootstrap(mcnown)}, or read the joint three-test decision rather than the
+individual tests, which is what the framework is for: the joint rejection rate
+is conservative under both methods.
+
+{pstd}
+For reference, the asymptotic bounds are the right benchmark here because the
+regressors are purely I(1): {helpb ardlbounds} gives 3.86/4.89 for F_overall
+and -2.87/-3.55 for t_DV, and Sam et al. Table 2 gives 3.01/5.42 for F_ind.
+
+
+{marker fourier}{...}
+{title:Fourier frequencies}
+
+{pstd}
+Yilanci, Bozoklu and Gorus (2020), equations (6)-(8), add a single-frequency
+Fourier term and choose k by minimum sum of squared residuals over the grid.
+Christopoulos and Leon-Ledesma (2011) and Omay (2015) note that {bf:integer}
+frequencies correspond to {bf:temporary} breaks while {bf:fractional}
+frequencies correspond to {bf:permanent} breaks.
+
+{pstd}
+{cmd:aardl} therefore reports the minimum-SSR frequency three ways: over the
+integer grid only, over the fractional grid only, and over the two combined,
+so the break type implied by each is explicit. {opt kmode()} decides which one
+is used in the estimated model:
+
+{p2colset 8 24 26 2}{...}
+{p2col:{cmd:kmode(auto)}}the overall minimum-SSR frequency (default){p_end}
+{p2col:{cmd:kmode(integer)}}restrict to k = 1, 2, ..., forcing a temporary-break
+interpretation{p_end}
+{p2col:{cmd:kmode(fractional)}}restrict to non-integer k, forcing a
+permanent-break interpretation{p_end}
+
+{pstd}
+{cmd:e(ktype)} records {cmd:integer} or {cmd:fractional} and
+{cmd:e(breaktype)} records {cmd:temporary} or {cmd:permanent}. The joint
+significance of sin and cos at the selected frequency is tested in the
+advanced-analysis table; if they are jointly insignificant, a non-Fourier
+{cmd:type()} is the better model.
+
+
+{marker diagnostics}{...}
+{title:Diagnostics}
+
+{pstd}
+Five panels, all computed on the OLS companion fit so that Stata's
+{helpb estat} suite applies to the correct model and sample:
+
+{p2colset 8 22 24 2}{...}
+{p2col:{bf:A Normality}}Jarque-Bera, skewness, kurtosis, Shapiro-Wilk,
+Shapiro-Francia{p_end}
+{p2col:{bf:B Serial correlation}}Breusch-Godfrey LM at 1 to 4 lags (the proper
+auxiliary regression, including the original regressors), Durbin's alternative
+test, Ljung-Box Q(4), Q(8), Q(12){p_end}
+{p2col:{bf:C Heteroskedasticity}}Breusch-Pagan/Cook-Weisberg, White's general
+test, ARCH LM at 1, 2 and 4 lags{p_end}
+{p2col:{bf:D Functional form}}Ramsey RESET{p_end}
+{p2col:{bf:E Collinearity}}mean and maximum variance inflation factor{p_end}
+
+{pstd}
+The statistics and p-values are returned in {cmd:e(diagnostics)}.
+
+
+{marker stability}{...}
+{title:Parameter stability}
+
+{pstd}
+CUSUM and CUSUMSQ are computed from recursive residuals following Brown,
+Durbin and Evans (1975):
+
+{p 8 8 2}
+w(t) = (y(t) - x(t)'b(t-1)) / sqrt(1 + x(t)'(X(t-1)'X(t-1))^(-1) x(t))
+
+{pstd}
+CUSUM(t) is the running sum of w scaled by its standard deviation, with bands
++/- a*[sqrt(N-k) + 2*(t-k)/sqrt(N-k)] and a = 0.850, 0.948, 1.143 at 10%, 5%
+and 1%. CUSUMSQ(t) is the running sum of squared w normalised by the total,
+with bands (t-k)/(N-k) +/- c0, where c0 uses the Kolmogorov-Smirnov
+approximation Durbin (1969) derived for this statistic with m = (N-k)/2 - 1.
+
+{pstd}
+The table reports the largest amount by which each path leaves its band (zero
+if it never does) and the value of the time variable at the first breach.
+Stata's own {helpb estat sbcusum} is reported as a cross-check. Both paths are
+plotted with their bands.
+
+
+{marker multipliers}{...}
+{title:Dynamic multipliers}
+
+{pstd}
+The cumulative multiplier of {it:depvar} with respect to a unit permanent
+shock to x(m) is obtained by simulating the {it:estimated} error-correction
+model forward, using all of its short-run dynamics:
+
+{p 8 8 2}
+D.y(h) = a*y(h-1) + pi(m)*x(m,h-1) + sum_j psi(j)*D.y(h-j)
++ sum_j om(m,j)*D.x(m,h-j)
+
+{pstd}
+with D.x(m,0) = 1 and zero thereafter. M(h) = y(h) converges to the long-run
+coefficient -pi(m)/a. Confidence bands come from a parametric bootstrap,
+b* ~ N(bhat,Vhat), recomputing the whole path per draw; {opt bands()} sets the
+number of draws and {opt vce()} determines Vhat.
+
+{pstd}
+For the NARDL types the positive and negative paths are reported side by side
+together with the asymmetry M+(h) - M-(h) and a confidence band on that
+difference, which is the plot in Shin, Yu and Greenwood-Nimmo (2014).
+
+{pstd}
+The Wald asymmetry tests are H0: pi+ = pi- in the long run (equivalent to
+equality of the long-run coefficients, since they share the denominator) and
+H0: sum(om+) = sum(om-) in the short run, summed over {it:all} lagged
+differences rather than the contemporaneous term alone.
+
+
+{marker graphs}{...}
+{title:Graphs}
+
+{pstd}
+Unless {opt nograph} is specified, {cmd:aardl} produces, with the prefix given
+in {opt graphprefix()}:
+
+{p2colset 8 22 24 2}{...}
+{p2col:{it:p}{cmd:kstar}}SSR over the Fourier grid, integer points marked{p_end}
+{p2col:{it:p}{cmd:fit}}actual vs fitted D.{it:depvar}{p_end}
+{p2col:{it:p}{cmd:resid}}residuals with +/- 2 sigma bands{p_end}
+{p2col:{it:p}{cmd:hist}}residual histogram with a fitted normal{p_end}
+{p2col:{it:p}{cmd:qq}}normal quantile-quantile plot{p_end}
+{p2col:{it:p}{cmd:ac} / {it:p}{cmd:pac}}residual autocorrelations{p_end}
+{p2col:{it:p}{cmd:ect}}the error-correction term over time{p_end}
+{p2col:{it:p}{cmd:cusum} / {it:p}{cmd:cusumsq}}CUSUM and CUSUMSQ with bands{p_end}
+{p2col:{it:p}{cmd:dm_}{it:#}}cumulative multiplier per shock variable{p_end}
+{p2col:{it:p}{cmd:asym_}{it:#}}asymmetric multipliers per decomposed variable{p_end}
+{p2col:{it:p}{cmd:persistence}}persistence profile{p_end}
+{p2col:{it:p}{cmd:bounds}}the three statistics against their critical values{p_end}
+{p2col:{it:p}{cmd:bootFov}, {it:p}{cmd:boottDV}, {it:p}{cmd:bootFind}}bootstrap
+null distributions with the observed statistic marked{p_end}
+{p2col:{it:p}{cmd:dash}}a combined residual dashboard{p_end}
+
+
+{marker post}{...}
+{title:Postestimation}
+
+{pstd}
+{cmd:e(b)} holds the error-correction representation, so a plain linear
+combination of it with the data is meaningless. {cmd:predict} therefore builds
+everything from {cmd:e(b_ecm)}, the coefficient vector of the underlying
+regression:
+
+{p 8 15 2}
+{cmd:predict} [{it:type}] {newvar} {ifin} [{cmd:,} {it:statistic}]
+
+{synoptset 14 tabbed}{...}
+{synopt:{opt xb}}fitted D.{it:depvar}; the default{p_end}
+{synopt:{opt res:iduals}}D.{it:depvar} minus the fitted value{p_end}
+{synopt:{opt ect}}the error-correction term{p_end}
+{synopt:{opt lev:el}}fitted level, L.{it:depvar} plus the fitted difference{p_end}
+
+{pstd}
+{cmd:e(sample)} is set correctly, so {helpb test}, {helpb lincom} and
+{helpb nlcom} all work on the EC representation. The OLS companion fit is left
+stored under the name {cmd:_aardl_ols} and the inference fit under
+{cmd:_aardl_inf}, so {helpb estat} diagnostics can be re-run by hand.
+
+{pstd}
+{cmd:aardl_advanced} re-runs the advanced analysis after estimation, optionally
+with a different {opt horizon()}.
 
 
 {marker results}{...}
 {title:Stored results}
 
-{pstd}
-{cmd:aardl} stores the following in {cmd:e()}:
-{p_end}
+{pstd}{cmd:aardl} stores the following in {cmd:e()}:
 
-{synoptset 28 tabbed}{...}
-{p2col 5 28 32 2: Scalars}{p_end}
-{synopt:{cmd:e(N)}}number of observations{p_end}
-{synopt:{cmd:e(p)}}selected dependent variable lag p{p_end}
-{synopt:{cmd:e(kstar)}}selected Fourier frequency k* (0 if no Fourier){p_end}
-{synopt:{cmd:e(aic)}}AIC{p_end}
-{synopt:{cmd:e(bic)}}BIC{p_end}
-{synopt:{cmd:e(ll)}}log-likelihood{p_end}
-{synopt:{cmd:e(r2)}}R-squared{p_end}
-{synopt:{cmd:e(r2_a)}}adjusted R-squared{p_end}
-{synopt:{cmd:e(rmse)}}root mean squared error{p_end}
-{synopt:{cmd:e(F)}}overall model F-statistic{p_end}
-{synopt:{cmd:e(F_pss)}}F_overall cointegration test statistic{p_end}
-{synopt:{cmd:e(t_pss)}}t_dependent cointegration test statistic{p_end}
-{synopt:{cmd:e(F_ind)}}F_independent cointegration test statistic{p_end}
-{synopt:{cmd:e(case)}}PSS case number{p_end}
-{synopt:{cmd:e(total_models)}}number of models evaluated in grid search{p_end}
-{synopt:{cmd:e(q_varname)}}selected lag q for each independent variable{p_end}
-{synopt:{cmd:e(ecm_coef)}}error correction (speed of adjustment) coefficient{p_end}
-{synopt:{cmd:e(horizon)}}multiplier/persistence horizon used{p_end}
+{synoptset 22 tabbed}{...}
+{p2col 5 22 26 2: Scalars}{p_end}
+{synopt:{cmd:e(N)}}observations used{p_end}
+{synopt:{cmd:e(N_full)}}observations in the marked sample before lag loss{p_end}
+{synopt:{cmd:e(df_m)}, {cmd:e(df_r)}}model and residual degrees of freedom{p_end}
+{synopt:{cmd:e(r2)}, {cmd:e(r2_a)}}R-squared, adjusted{p_end}
+{synopt:{cmd:e(ll)}, {cmd:e(aic)}, {cmd:e(bic)}, {cmd:e(hqic)}}fit criteria{p_end}
+{synopt:{cmd:e(rmse)}, {cmd:e(mss)}, {cmd:e(rss)}, {cmd:e(F)}}fit statistics{p_end}
+{synopt:{cmd:e(F_pss)}}the F_overall statistic{p_end}
+{synopt:{cmd:e(t_pss)}}the t_DV statistic{p_end}
+{synopt:{cmd:e(F_ind)}}the F_ind statistic{p_end}
+{synopt:{cmd:e(Fov_bp)}, {cmd:e(tDV_bp)}, {cmd:e(Find_bp)}}bootstrap p-values{p_end}
+{synopt:{cmd:e(Fov_cv5)}, {cmd:e(tDV_cv5)}, {cmd:e(Find_cv5)}}bootstrap 5% values{p_end}
+{synopt:{cmd:e(case)}, {cmd:e(maxlag)}, {cmd:e(p)}}model configuration{p_end}
+{synopt:{cmd:e(q_}{it:varname}{cmd:)}}selected lag order per regressor{p_end}
+{synopt:{cmd:e(kstar)}}selected Fourier frequency (0 if none){p_end}
+{synopt:{cmd:e(hlag)}}Newey-West bandwidth actually used{p_end}
+{synopt:{cmd:e(ecm_coef)}}the speed of adjustment{p_end}
+{synopt:{cmd:e(halflife)}, {cmd:e(domroot)}}half-life, dominant AR root{p_end}
+{synopt:{cmd:e(nmodels)}}candidate models estimated in lag selection{p_end}
+{synopt:{cmd:e(reps)}}bootstrap replications{p_end}
 
-{p2col 5 28 32 2: Bootstrap only}{p_end}
-{synopt:{cmd:e(Fov_bp)}}bootstrap p-value (F_overall){p_end}
-{synopt:{cmd:e(tDV_bp)}}bootstrap p-value (t_dependent){p_end}
-{synopt:{cmd:e(Find_bp)}}bootstrap p-value (F_independent){p_end}
+{p2col 5 22 26 2: Macros}{p_end}
+{synopt:{cmd:e(cmd)}}{cmd:aardl}{p_end}
+{synopt:{cmd:e(cmdline)}}the command as typed{p_end}
+{synopt:{cmd:e(depvar)}, {cmd:e(indepvars)}, {cmd:e(allx)}}variable lists{p_end}
+{synopt:{cmd:e(ecmvars)}}right-hand side of the underlying regression{p_end}
+{synopt:{cmd:e(fovterms)}, {cmd:e(findterms)}}the tested restrictions{p_end}
+{synopt:{cmd:e(type)}, {cmd:e(ic)}, {cmd:e(search)}}model settings{p_end}
+{synopt:{cmd:e(vce)}, {cmd:e(vcetype)}}covariance estimator{p_end}
+{synopt:{cmd:e(coint_status)}}{cmd:cointegrated}, {cmd:degenerate_indep},
+{cmd:degenerate_dep} or {cmd:no_cointegration}{p_end}
+{synopt:{cmd:e(kmode)}, {cmd:e(ktype)}, {cmd:e(breaktype)}}Fourier settings{p_end}
+{synopt:{cmd:e(cusum)}, {cmd:e(cusumsq)}}{cmd:STABLE} or {cmd:UNSTABLE}{p_end}
+{synopt:{cmd:e(decompose)}, {cmd:e(decnames)}}NARDL variables{p_end}
+{synopt:{cmd:e(predict)}}{cmd:aardl_p}{p_end}
 
-{p2col 5 28 32 2: Macros}{p_end}
-{synopt:{cmd:e(cmd)}}"aardl"{p_end}
-{synopt:{cmd:e(cmdline)}}full command line{p_end}
-{synopt:{cmd:e(depvar)}}dependent variable{p_end}
-{synopt:{cmd:e(indepvars)}}independent variable(s){p_end}
-{synopt:{cmd:e(type)}}model type{p_end}
-{synopt:{cmd:e(ic)}}information criterion used{p_end}
-{synopt:{cmd:e(all_indepvars)}}all independent variables (including decomposed){p_end}
-{synopt:{cmd:e(model)}}"ec"{p_end}
-{synopt:{cmd:e(coint_status)}}"cointegrated", "not_cointegrated", or "degenerate"{p_end}
+{p2col 5 22 26 2: Matrices}{p_end}
+{synopt:{cmd:e(b)}, {cmd:e(V)}}EC representation (ADJ / LR / SR){p_end}
+{synopt:{cmd:e(b_ecm)}, {cmd:e(V_ecm)}}the underlying regression{p_end}
+{synopt:{cmd:e(bounds)}}the three statistics with their critical values{p_end}
+{synopt:{cmd:e(diagnostics)}}diagnostic statistics and p-values{p_end}
 
-{p2col 5 28 32 2: Matrices}{p_end}
-{synopt:{cmd:e(b)}}coefficient vector (ADJ/LR/SR equations){p_end}
-{synopt:{cmd:e(V)}}variance-covariance matrix{p_end}
+{p2col 5 22 26 2: Functions}{p_end}
+{synopt:{cmd:e(sample)}}marks the estimation sample{p_end}
 
 
 {marker examples}{...}
 {title:Examples}
 
-{pstd}
-The following examples use the Lutkepohl (1993) dataset, a classic time-series
-dataset containing West German macroeconomic quarterly data (1960q1-1982q4).
-{p_end}
+{pstd}Setup{p_end}
+{phang2}{cmd:. webuse lutkepohl2, clear}{p_end}
+{phang2}{cmd:. tsset qtr}{p_end}
 
-{pstd}{bf:Setup: Load sample data}{p_end}
-{phang}{cmd:. webuse lutkepohl2, clear}{p_end}
-{phang}{cmd:. tsset}{p_end}
+{pstd}Augmented ARDL, asymptotic bounds{p_end}
+{phang2}{cmd:. aardl ln_inv ln_inc ln_consump, maxlag(4) ic(aic)}{p_end}
 
-{pstd}
-The dataset contains variables {cmd:ln_inv} (log investment), {cmd:ln_inc}
-(log income), and {cmd:ln_consump} (log consumption). We test for
-cointegration among these macroeconomic variables.
-{p_end}
+{pstd}Case V, with a Newey-West covariance matrix{p_end}
+{phang2}{cmd:. aardl ln_inv ln_inc ln_consump, case(5) vce(hac)}{p_end}
 
-{pstd}{bf:Example 1: Augmented ARDL (asymptotic)}{p_end}
-{pstd}Basic A-ARDL with asymptotic PSS bounds test and AIC lag selection:{p_end}
-{phang}{cmd:. aardl ln_inv ln_inc ln_consump, type(aardl) maxlag(4) ic(aic) case(3)}{p_end}
+{pstd}Bootstrap critical values, Bertelli et al. method{p_end}
+{phang2}{cmd:. aardl ln_inv ln_inc ln_consump, type(baardl) reps(999)}{p_end}
 
-{pstd}{bf:Example 2: Bootstrap Augmented ARDL (BVZ method)}{p_end}
-{pstd}Bootstrap critical values using the Bertelli, Vacca & Zoia (2022) method:{p_end}
-{phang}{cmd:. aardl ln_inv ln_inc ln_consump, type(baardl) maxlag(4) reps(999) bootstrap(bvz)}{p_end}
+{pstd}McNown et al. bootstrap instead{p_end}
+{phang2}{cmd:. aardl ln_inv ln_inc ln_consump, type(baardl) bootstrap(mcnown)}{p_end}
 
-{pstd}{bf:Example 3: Fourier Augmented ARDL}{p_end}
-{pstd}Fourier terms capture structural breaks; k* selected by minimum SSR:{p_end}
-{phang}{cmd:. aardl ln_inv ln_inc ln_consump, type(faardl) maxlag(4) maxk(3) ic(aic)}{p_end}
+{pstd}Fourier, with the frequency forced onto the integer grid{p_end}
+{phang2}{cmd:. aardl ln_inv ln_inc ln_consump, type(faardl) kmode(integer)}{p_end}
 
-{pstd}{bf:Example 4: Fourier Bootstrap Augmented ARDL}{p_end}
-{pstd}Combines Fourier approximation with bootstrap inference:{p_end}
-{phang}{cmd:. aardl ln_inv ln_inc ln_consump, type(fbaardl) maxlag(3) maxk(3) reps(999)}{p_end}
+{pstd}Fourier, permanent-break interpretation{p_end}
+{phang2}{cmd:. aardl ln_inv ln_inc ln_consump, type(faardl) kmode(fractional) maxk(5)}{p_end}
 
-{pstd}{bf:Example 5: Augmented NARDL (asymptotic)}{p_end}
-{pstd}Asymptotic NARDL with PSS bounds tests and Kripfganz & Schneider critical values:{p_end}
-{phang}{cmd:. aardl ln_inv ln_inc ln_consump, type(nardl) decompose(ln_consump) maxlag(4) ic(aic) case(3)}{p_end}
+{pstd}Asymmetric ARDL with bootstrap inference{p_end}
+{phang2}{cmd:. aardl ln_inv ln_inc ln_consump, type(banardl) decompose(ln_inc) reps(999)}{p_end}
 
-{pstd}{bf:Example 6: Fourier Augmented NARDL}{p_end}
-{pstd}Fourier terms + NARDL with asymptotic inference:{p_end}
-{phang}{cmd:. aardl ln_inv ln_inc ln_consump, type(fanardl) decompose(ln_consump) maxlag(3) maxk(3) ic(aic)}{p_end}
+{pstd}Fourier bootstrap NARDL, everything on{p_end}
+{phang2}{cmd:. aardl ln_inv ln_inc ln_consump, type(fbanardl) decompose(ln_inc) maxlag(3) reps(999) horizon(36)}{p_end}
 
-{pstd}{bf:Example 7: Bootstrap Augmented NARDL}{p_end}
-{pstd}Decompose {cmd:ln_consump} into positive/negative partial sums to test
-for asymmetric effects:{p_end}
-{phang}{cmd:. aardl ln_inv ln_inc ln_consump, type(banardl) decompose(ln_consump) maxlag(3) reps(999)}{p_end}
+{pstd}Fast exploratory run{p_end}
+{phang2}{cmd:. aardl ln_inv ln_inc ln_consump, maxlag(2) nodiag nostability nodynmult noadvanced nograph}{p_end}
 
-{pstd}{bf:Example 8: Fourier Bootstrap Augmented NARDL (full model)}{p_end}
-{pstd}Combines Fourier + Bootstrap + NARDL:{p_end}
-{phang}{cmd:. aardl ln_inv ln_inc ln_consump, type(fbanardl) decompose(ln_consump) maxlag(3) maxk(3) reps(999)}{p_end}
-
-{pstd}{bf:Example 9: McNown bootstrap method}{p_end}
-{phang}{cmd:. aardl ln_inv ln_inc ln_consump, type(baardl) maxlag(4) reps(999) bootstrap(mcnown)}{p_end}
-
-{pstd}{bf:Example 10: Minimal output}{p_end}
-{pstd}Suppress diagnostics, multipliers, and advanced analysis:{p_end}
-{phang}{cmd:. aardl ln_inv ln_inc ln_consump, type(aardl) maxlag(4) nodiag nodynmult noadvanced}{p_end}
-
-{pstd}{bf:Example 11: Access stored results}{p_end}
-{phang}{cmd:. aardl ln_inv ln_inc ln_consump, type(baardl) reps(999)}{p_end}
-{phang}{cmd:. di e(F_pss)}{space 8}// F_overall statistic{p_end}
-{phang}{cmd:. di e(t_pss)}{space 8}// t_dependent statistic{p_end}
-{phang}{cmd:. di e(F_ind)}{space 8}// F_independent statistic{p_end}
-{phang}{cmd:. di e(coint_status)}{space 1}// Cointegration conclusion{p_end}
-{phang}{cmd:. ereturn list}{space 5}// All stored results{p_end}
-
-{pstd}{bf:Example 12: Post-estimation advanced analysis}{p_end}
-{pstd}Run {cmd:aardl} with {cmd:noadvanced}, then use {cmd:aardl_advanced} separately:{p_end}
-{phang}{cmd:. aardl ln_inv ln_inc ln_consump, type(aardl) maxlag(4) ic(aic) case(3) noadvanced}{p_end}
-{phang}{cmd:. aardl_advanced}{p_end}
-{pstd}Override the horizon:{p_end}
-{phang}{cmd:. aardl_advanced, horizon(30)}{p_end}
+{pstd}Postestimation{p_end}
+{phang2}{cmd:. predict double dyhat}{p_end}
+{phang2}{cmd:. predict double ecterm, ect}{p_end}
+{phang2}{cmd:. test [LR]}{p_end}
+{phang2}{cmd:. aardl_advanced, horizon(48)}{p_end}
 
 
 {marker references}{...}
 {title:References}
 
 {phang}
-Bertelli, S., Vacca, G. & Zoia, M. (2022). Bootstrap cointegration tests in
-ARDL models. {it:Economic Modelling}, 116, 105987.
-{p_end}
+Bertelli, S., Vacca, G. and Zoia, M. 2022. Bootstrap cointegration tests in
+ARDL models. {it:Economic Modelling} 116: 105987.
+{browse "https://doi.org/10.1016/j.econmod.2022.105987"}
 
 {phang}
-Enders, W. & Lee, J. (2012). The flexible Fourier form and Dickey-Fuller type
-unit root tests. {it:Economics Letters}, 117(1), 196-199.
-{p_end}
+Brown, R.L., Durbin, J. and Evans, J.M. 1975. Techniques for testing the
+constancy of regression relationships over time. {it:Journal of the Royal
+Statistical Society, Series B} 37: 149-192.
 
 {phang}
-Kripfganz, S. & Schneider, D.C. (2020). Response surface regressions for
-critical value bounds and approximate p-values in equilibrium correction models.
-{it:Oxford Bulletin of Economics and Statistics}, 82, 1456-1481.
-{p_end}
+Christopoulos, D.K. and Leon-Ledesma, M.A. 2011. International output
+convergence, breaks, and asymmetric adjustment. {it:Studies in Nonlinear
+Dynamics and Econometrics} 15(3).
 
 {phang}
-Lutkepohl, H. (1993). {it:Introduction to Multiple Time Series Analysis}.
-2nd ed. Berlin: Springer-Verlag.
-{p_end}
+Durbin, J. 1969. Tests for serial correlation in regression analysis based on
+the periodogram of least-squares residuals. {it:Biometrika} 56: 1-15.
 
 {phang}
-McNown, R., Sam, C.Y. & Goh, S.K. (2018). Bootstrapping the autoregressive
-distributed lag test for cointegration. {it:Applied Economics}, 50(13), 1509-1521.
-{p_end}
+Kripfganz, S. and Schneider, D.C. 2020. Response surface regressions for
+critical value bounds and approximate p-values in equilibrium correction
+models. {it:Oxford Bulletin of Economics and Statistics} 82: 1456-1481.
+{browse "https://doi.org/10.1111/obes.12377"}
 
 {phang}
-Pesaran, M.H., Shin, Y. & Smith, R.J. (2001). Bounds testing approaches to
-the analysis of level relationships. {it:Journal of Applied Econometrics},
-16(3), 289-326.
-{p_end}
+McNown, R., Sam, C.Y. and Goh, S.K. 2018. Bootstrapping the autoregressive
+distributed lag test for cointegration. {it:Applied Economics} 50: 1509-1521.
+{browse "https://doi.org/10.1080/00036846.2017.1366643"}
 
 {phang}
-Sam, C.Y., McNown, R. & Goh, S.K. (2019). An augmented autoregressive
-distributed lag bounds test for cointegration. {it:Economic Modelling}, 80, 130-141.
-{p_end}
+Newey, W.K. and West, K.D. 1987. A simple, positive semi-definite,
+heteroskedasticity and autocorrelation consistent covariance matrix.
+{it:Econometrica} 55: 703-708.
+{browse "https://doi.org/10.2307/1913610"}
 
 {phang}
-Shin, Y., Yu, B. & Greenwood-Nimmo, M. (2014). Modelling asymmetric
-cointegration and dynamic multipliers in a nonlinear ARDL framework.
-In R. Sickles & W. Horrace (Eds.), {it:Festschrift in Honor of Peter Schmidt}.
-New York: Springer.
-{p_end}
+Omay, T. 2015. Fractional frequency flexible Fourier form to approximate
+smooth breaks in unit root testing. {it:Economics Letters} 134: 123-126.
 
 {phang}
-Yilanci, V., Bozoklu, S. & Gorus, M.S. (2020). Are BRICS countries pollution
+Pesaran, M.H., Shin, Y. and Smith, R.J. 2001. Bounds testing approaches to the
+analysis of level relationships. {it:Journal of Applied Econometrics} 16:
+289-326. {browse "https://doi.org/10.1002/jae.616"}
+
+{phang}
+Sam, C.Y., McNown, R. and Goh, S.K. 2019. An augmented autoregressive
+distributed lag bounds test for cointegration. {it:Economic Modelling} 80:
+130-141. {browse "https://doi.org/10.1016/j.econmod.2018.11.001"}
+
+{phang}
+Shin, Y., Yu, B. and Greenwood-Nimmo, M. 2014. Modelling asymmetric
+cointegration and dynamic multipliers in a nonlinear ARDL framework. In
+{it:Festschrift in Honor of Peter Schmidt}, 281-314. New York: Springer.
+{browse "https://doi.org/10.1007/978-1-4899-8008-3_9"}
+
+{phang}
+Yilanci, V., Bozoklu, S. and Gorus, M.S. 2020. Are BRICS countries pollution
 havens? Evidence from a bootstrap ARDL bounds testing approach with a Fourier
-function. {it:Sustainable Cities and Society}, 55, 102035.
-{p_end}
+function. {it:Sustainable Cities and Society} 60: 102244.
+{browse "https://doi.org/10.1016/j.scs.2020.102244"}
 
 
 {marker author}{...}
 {title:Author}
 
 {pstd}
-Dr. Merwan Roudane{break}
+Dr Merwan Roudane{break}
 Independent Researcher{break}
-Email: {browse "mailto:merwanroudane920@gmail.com":merwanroudane920@gmail.com}
+Email: {browse "mailto:merwanroudane920@gmail.com":merwanroudane920@gmail.com}{break}
+GitHub: {browse "https://github.com/merwanroudane"}
+
+
+{title:Also see}
+
+{psee}
+Online: {helpb ardl}, {helpb ardlbounds}, {helpb newey}, {helpb estat sbcusum}
 {p_end}
-
-
-{marker postestimation}{...}
-{title:Post-estimation}
-
-{pstd}
-{cmd:aardl_advanced} runs the advanced analysis as a separate post-estimation
-command after {cmd:aardl}. It includes dynamic multipliers, half-life analysis,
-persistence profile, Fourier significance test, and long-run equilibrium.
-{p_end}
-
-{pstd}
-{ul:Syntax}
-{p_end}
-
-{p 8 17 2}
-{cmd:aardl_advanced}
-[{cmd:,} {opt hor:izon(#)} {opt nog:raph}]
-{p_end}
-
-{pstd}
-{ul:Options}
-{p_end}
-
-{phang}
-{opt horizon(#)} overrides the horizon from the original {cmd:aardl} estimation.
-Default uses the value from the prior estimation (typically 20).
-{p_end}
-
-{phang}
-{opt nograph} suppresses all graphs (dynamic multipliers, persistence profile).
-{p_end}
-
-{pstd}
-{ul:Description}
-{p_end}
-
-{pstd}
-The advanced analysis includes:
-{p_end}
-
-{phang2}{bf:Dynamic Multipliers:} For linear ARDL models, displays impact and
-cumulative dynamic multipliers for each independent variable. For NARDL models,
-displays asymmetric dynamic multipliers (positive and negative paths) following
-Shin, Yu & Greenwood-Nimmo (2014).{p_end}
-
-{phang2}{bf:Half-Life Analysis:} Computes the half-life of shocks based on the
-ECM coefficient: t_half = -ln(2) / ln(1 + alpha).{p_end}
-
-{phang2}{bf:Persistence Profile:} Shows how shocks dissipate over the specified
-horizon, with persistence = (1 + alpha)^h.{p_end}
-
-{phang2}{bf:Fourier Significance Test:} For Fourier models (faardl, fbaardl,
-fanardl, fbanardl), reports the joint Wald F-test for the sine and cosine terms
-with p-value.{p_end}
-
-{phang2}{bf:Long-Run Equilibrium:} Displays the long-run equilibrium relationship
-derived from the estimated coefficients.{p_end}
-
-{pstd}
-{ul:Usage}
-{p_end}
-
-{pstd}
-The advanced analysis runs automatically when cointegration is found (unless
-suppressed with {opt noadvanced}). Use {cmd:aardl_advanced} to:
-{p_end}
-
-{phang2}1. Re-run the analysis with a different horizon{p_end}
-{phang2}2. Run it after suppressing it with {opt noadvanced}{p_end}
-{phang2}3. Re-display the results without re-running the full estimation{p_end}
-
-{pstd}
-{ul:Example}
-{p_end}
-
-{phang}{cmd:. aardl ln_inv ln_inc ln_consump, type(aardl) maxlag(4) noadvanced}{p_end}
-{phang}{cmd:. aardl_advanced}{p_end}
-{phang}{cmd:. aardl_advanced, horizon(30) nograph}{p_end}

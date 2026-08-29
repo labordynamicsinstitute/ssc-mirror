@@ -1,185 +1,105 @@
 /*
-  parqit — views, SQL, engine settings and diagnostics
+  parqit view - Manage views, run DuckDB SQL, and set engine options
 
-*!  VERSION 0.1.28  23aug2026
+*!  VERSION 0.1.29  25aug2026
 
-  Launch with:  db parqit_views     (installed on the menu by: parqit menu)
-  The Inspect buttons run immediately (the dialog stays open): list the open
-  views, print the current view's generated SQL (show), its engine plan
-  (explain), its schema (describe), or its variable names (ds). OK runs the
-  selected action: switch the current view, close a view (or every view),
-  or change an engine setting — each an ordinary, Review-window-reproducible
-  parqit command.
+  User > parqit > Views, SQL, and engine settings...
+  Launch directly with:  db parqit_views      (menu installed by: parqit menu)
+
+  The report buttons run at once with the dialog open (views, show, explain,
+  describe, ds, version, selftest), echoed to the Results window like a typed
+  command. The list box chooses the action that OK or Submit runs: switch,
+  close, or close every view; run a parqit command on another view; open a
+  view from a DuckDB SQL query or add a raw SQL fragment to the current
+  pipeline; or change an engine setting (statamissing, threads,
+  memory_limit, tempdir).
 */
 
 VERSION 16.0
 
 INCLUDE _std_wide
-DEFINE _dlght 470
+DEFINE _dlght 320
 INCLUDE header
-HELP hlp1, view("help parqit")
+HELP hlp1, view("help parqit##menu")
 RESET res1
 
-SCRIPT PREINIT
+SCRIPT POSTINIT
 BEGIN
-	script sw_on
+	main.lb_op.forceselchange
 END
 
-SCRIPT all_off
+DIALOG main, label("parqit view - Manage views, run DuckDB SQL, and set engine options") ///
+	tabtitle("Main")
 BEGIN
-	main.ed_name.disable
-	main.ed_viewcmd.disable
-	main.ed_sql.disable
-	main.ck_sqlclear.disable
-	main.ed_sqlname.disable
-	main.cb_sm.disable
-	main.ed_threads.disable
-	main.ed_mem.disable
-	main.ed_tmp.disable
-END
-
-SCRIPT sw_on
-BEGIN
-	script all_off
-	main.ed_name.enable
-END
-
-SCRIPT prefix_on
-BEGIN
-	script all_off
-	main.ed_name.enable
-	main.ed_viewcmd.enable
-END
-
-SCRIPT sql_on
-BEGIN
-	script all_off
-	main.ed_sql.enable
-	main.ck_sqlclear.enable
-	main.ed_sqlname.enable
-END
-
-SCRIPT query_on
-BEGIN
-	script all_off
-	main.ed_sql.enable
-END
-
-SCRIPT closeall_on
-BEGIN
-	script all_off
-END
-
-SCRIPT sm_on
-BEGIN
-	script all_off
-	main.cb_sm.enable
-END
-
-SCRIPT th_on
-BEGIN
-	script all_off
-	main.ed_threads.enable
-END
-
-SCRIPT mem_on
-BEGIN
-	script all_off
-	main.ed_mem.enable
-END
-
-SCRIPT tmp_on
-BEGIN
-	script all_off
-	main.ed_tmp.enable
-END
-
-DIALOG main, label("parqit — views / SQL / settings") tabtitle("Main")
-BEGIN
-  GROUPBOX gb_insp		_lft	_top	_iwd	70,		///
-	label("Inspect or diagnose now (dialog stays open)")
+  GROUPBOX gb_report		_lft	_top	_iwd	_ht2h,		///
+	label("Report on the current view now (the dialog stays open)")
   BUTTON bu_views		_ilft	_ss	70	.,		///
-	label("Views")							///
-	onpush(program pq_views)
-  BUTTON bu_show		+80	@	70	.,		///
-	label("Show SQL")						///
-	onpush(program pq_show)
-  BUTTON bu_explain		+80	@	70	.,		///
-	label("Explain")						///
-	onpush(program pq_explain)
-  BUTTON bu_desc		+80	@	70	.,		///
-	label("Describe")						///
-	onpush(program pq_desc)
-  BUTTON bu_ds			+80	@	70	.,		///
-	label("Variables")						///
-	onpush(program pq_ds)
-  BUTTON bu_version		+80	@	70	.,		///
-	label("Version")						///
-	onpush(program pq_version)
-  BUTTON bu_selftest		+80	@	80	.,		///
-	label("Self-test")						///
-	onpush(program pq_selftest)
+	onpush(program rep_views)					///
+	tooltip("List the open views (parqit views)")			///
+	label("Views")
+  BUTTON bu_show		95	@	80	.,		///
+	onpush(program rep_show)					///
+	tooltip("Print the SQL the pipeline compiles to (parqit show)")	///
+	label("Show SQL")
+  BUTTON bu_explain		180	@	70	.,		///
+	onpush(program rep_explain)					///
+	tooltip("Print the engine's query plan (parqit explain)")	///
+	label("Explain")
+  BUTTON bu_desc		255	@	80	.,		///
+	onpush(program rep_describe)					///
+	tooltip("Describe the view's schema and pipeline depth (parqit describe)") ///
+	label("Describe")
+  BUTTON bu_ds			340	@	80	.,		///
+	onpush(program rep_ds)						///
+	tooltip("List the variable names (parqit ds)")			///
+	label("Variables")
+  BUTTON bu_version		425	@	70	.,		///
+	onpush(program rep_version)					///
+	tooltip("Report the parqit, DuckDB, and plugin-interface versions (parqit version)") ///
+	label("Version")
+  BUTTON bu_selftest		500	@	80	.,		///
+	onpush(program rep_selftest)					///
+	tooltip("End-to-end engine and codec check (parqit selftest)")	///
+	label("Self-test")
 
-  GROUPBOX gb_act		_lft	95	_iwd	300,		///
-	label("Action on OK")
-  RADIO rb_switch		_ilft	115	270	.,		///
-	first label("Switch current view")				///
-	onclickon(script sw_on)
-  RADIO rb_close			300	115	270	.,		///
-	label("Close view (blank = current)")			///
-	onclickon(script sw_on)
-  TEXT tx_name			_ilft	145	100	.,		///
+  TEXT tx_op			_lft	75	290	.,		///
+	label("Action:")
+  LISTBOX lb_op			_lft	_ss	290	200,		///
+	contents(op_words)						///
+	values(op_vals)							///
+	onselchangelist(op_change)					///
+	label("Action")
+
+  TEXT tx_name			315	75	275	.,		///
 	label("View name:")
-  EDIT ed_name			+105	@	150	.,		///
-	label("view name")
-  RADIO rb_closeall		_ilft	180	270	.,		///
-	label("Close every view")					///
-	onclickon(script closeall_on)
-  RADIO rb_sm			_ilft	228	180	.,		///
-	label("Stata missing-value mode")				///
-	onclickon(script sm_on)
-  COMBOBOX cb_sm		+185	@	80	.,		///
-	dropdownlist contents(sm_list) default("on")			///
+  EDIT ed_name			315	_ss	_vnwd	.,		///
+	max(32)								///
+	label("View name")
+
+  TEXT tx_cmd			315	_ls	275	.,		///
+	label("Command to run on it (e.g., count):")
+  EDIT ed_cmd			315	_ss	275	.,		///
+	label("Command")
+
+  TEXT tx_sql			315	_ls	275	.,		///
+	label("DuckDB SQL:")
+  EDIT ed_sql			315	_ss	275	.,		///
+	label("DuckDB SQL")
+  CHECKBOX ck_sqlclear		315	_ls	275	.,		///
+	option(clear)							///
+	onclickon(main.ed_name.disable)					///
+	onclickoff(main.ed_name.enable)					///
+	label("Load the result into memory (clear)")
+
+  TEXT tx_value			315	_ls	275	.,		///
+	label("Value:")
+  COMBOBOX cb_sm		315	_ss	_vnwd	.,		///
+	dropdownlist							///
+	contents(sm_list)						///
+	default("on")							///
 	label("statamissing")
-  RADIO rb_threads		300	228	150	.,		///
-	label("Engine threads")						///
-	onclickon(script th_on)
-  EDIT ed_threads		+155	@	80	.,		///
-	numonly label("threads")
-  RADIO rb_mem			_ilft	258	180	.,		///
-	label("Memory limit (e.g. 4GB)")				///
-	onclickon(script mem_on)
-  EDIT ed_mem			+185	@	100	.,		///
-	label("memory limit")
-  RADIO rb_tmp			300	258	150	.,		///
-	label("Spill directory")					///
-	onclickon(script tmp_on)
-  EDIT ed_tmp			+155	@	110	.,		///
-	label("temp directory")
-
-  RADIO rb_prefix		300	180	270	.,		///
-	label("Run on named view, then restore current")		///
-	onclickon(script prefix_on)
-  RADIO rb_sql			_ilft	204	270	.,		///
-	label("Open a view from DuckDB SQL")				///
-	onclickon(script sql_on)
-  RADIO rb_query			300	204	270	.,		///
-	last label("Add SQL fragment to current pipeline")		///
-	onclickon(script query_on)
-
-  TEXT tx_viewcmd		300	295	105	.,		///
-	label("View subcommand:")
-  EDIT ed_viewcmd		+110	@	150	.,		///
-	label("e.g. summarize wage")
-  TEXT tx_sql			_ilft	325	130	.,		///
-	label("SQL / fragment:")
-  EDIT ed_sql			+140	@	400	.,		///
-	label("DuckDB SQL text")
-  CHECKBOX ck_sqlclear		_ilft	355	130	.,		///
-	option(clear) label("Collect now")
-  TEXT tx_sqlname		+145	@	110	., label("SQL view name:")
-  EDIT ed_sqlname		+115	@	150	.,		///
-	option(name) label("SQL view name")
+  EDIT ed_value			315	@	275	.,		///
+	label("Value")
 END
 
 LIST sm_list
@@ -188,104 +108,249 @@ BEGIN
 	off
 END
 
-PROGRAM pq_views
+LIST op_words
+BEGIN
+	Switch to a view (view)
+	Close a view (close)
+	Close every view (close _all)
+	Run a command on another view (view name:)
+	Open a view from a DuckDB SQL query (sql)
+	Add a SQL fragment to the pipeline (query)
+	Set missing-value mode (set statamissing)
+	Set engine threads (set threads)
+	Set memory limit (set memory_limit)
+	Set spill directory (set tempdir)
+END
+
+LIST op_vals
+BEGIN
+	switch
+	close
+	closeall
+	run
+	sql
+	query
+	statamissing
+	threads
+	memory_limit
+	tempdir
+END
+
+LIST op_change
+BEGIN
+	script op_switch
+	script op_close
+	script op_closeall
+	script op_run
+	script op_sql
+	script op_query
+	script op_statamissing
+	script op_threads
+	script op_memory
+	script op_tempdir
+END
+
+SCRIPT all_off
+BEGIN
+	main.tx_name.disable
+	main.ed_name.disable
+	main.tx_cmd.disable
+	main.ed_cmd.disable
+	main.tx_sql.disable
+	main.ed_sql.disable
+	main.ck_sqlclear.disable
+	main.tx_value.disable
+	main.cb_sm.hide
+	main.ed_value.hide
+	main.tx_name.setlabel "View name:"
+	main.tx_sql.setlabel "DuckDB SQL:"
+	main.tx_value.setlabel "Value:"
+END
+
+SCRIPT op_switch
+BEGIN
+	script all_off
+	main.tx_name.enable
+	main.ed_name.enable
+END
+
+SCRIPT op_close
+BEGIN
+	script all_off
+	main.tx_name.enable
+	main.ed_name.enable
+	main.tx_name.setlabel "View name (empty = current view):"
+END
+
+SCRIPT op_closeall
+BEGIN
+	script all_off
+END
+
+SCRIPT op_run
+BEGIN
+	script all_off
+	main.tx_name.enable
+	main.ed_name.enable
+	main.tx_cmd.enable
+	main.ed_cmd.enable
+END
+
+SCRIPT op_sql
+BEGIN
+	script all_off
+	main.tx_name.enable
+	main.tx_name.setlabel "Name of the view to open (optional):"
+	main.tx_sql.enable
+	main.ed_sql.enable
+	main.ck_sqlclear.enable
+	program sql_name_state
+END
+
+PROGRAM sql_name_state
+BEGIN
+	if main.ck_sqlclear {
+		call main.ed_name.disable
+	}
+	else {
+		call main.ed_name.enable
+	}
+END
+
+SCRIPT op_query
+BEGIN
+	script all_off
+	main.tx_sql.enable
+	main.ed_sql.enable
+	main.tx_sql.setlabel "SQL fragment appended to the pipeline:"
+END
+
+SCRIPT op_statamissing
+BEGIN
+	script all_off
+	main.tx_value.enable
+	main.tx_value.setlabel "Mode: on = Stata ordering, off = SQL:"
+	main.cb_sm.show
+END
+
+SCRIPT op_threads
+BEGIN
+	script all_off
+	main.tx_value.enable
+	main.tx_value.setlabel "Number of engine threads:"
+	main.ed_value.show
+END
+
+SCRIPT op_memory
+BEGIN
+	script all_off
+	main.tx_value.enable
+	main.tx_value.setlabel "Memory limit (DuckDB size, e.g., 8GB):"
+	main.ed_value.show
+END
+
+SCRIPT op_tempdir
+BEGIN
+	script all_off
+	main.tx_value.enable
+	main.tx_value.setlabel "Spill directory (existing path):"
+	main.ed_value.show
+END
+
+PROGRAM rep_views
 BEGIN
 	put "parqit views"
-	stata hidden immediate
+	stata
 END
 
-PROGRAM pq_show
+PROGRAM rep_show
 BEGIN
 	put "parqit show"
-	stata hidden immediate
+	stata
 END
 
-PROGRAM pq_explain
+PROGRAM rep_explain
 BEGIN
 	put "parqit explain"
-	stata hidden immediate
+	stata
 END
 
-PROGRAM pq_desc
+PROGRAM rep_describe
 BEGIN
 	put "parqit describe"
-	stata hidden immediate
+	stata
 END
 
-PROGRAM pq_ds
+PROGRAM rep_ds
 BEGIN
 	put "parqit ds"
-	stata hidden immediate
+	stata
 END
 
-PROGRAM pq_version
+PROGRAM rep_version
 BEGIN
 	put "parqit version"
-	stata hidden immediate
+	stata
 END
 
-PROGRAM pq_selftest
+PROGRAM rep_selftest
 BEGIN
 	put "parqit selftest"
-	stata hidden immediate
+	stata
 END
 
 PROGRAM command
 BEGIN
-	if main.rb_switch {
-		put "parqit view "
+	if main.lb_op.equals("switch") {
 		require main.ed_name
-		put main.ed_name
+		put "parqit view " main.ed_name
 	}
-	if main.rb_close {
+	if main.lb_op.equals("close") {
 		put "parqit close"
 		if main.ed_name {
 			put " " main.ed_name
 		}
 	}
-	if main.rb_closeall {
+	if main.lb_op.equals("closeall") {
 		put "parqit close _all"
 	}
-	if main.rb_prefix {
-		put "parqit view "
+	if main.lb_op.equals("run") {
 		require main.ed_name
-		put main.ed_name ": "
-		require main.ed_viewcmd
-		put main.ed_viewcmd
+		require main.ed_cmd
+		put "parqit view " main.ed_name ": " main.ed_cmd
 	}
-	if main.rb_sql {
-		put "parqit sql "
+	if main.lb_op.equals("sql") {
 		require main.ed_sql
-		put `"""' main.ed_sql `"""'
+		put "parqit sql "
+		put /smartquote main.ed_sql
 		beginoptions
 			option main.ck_sqlclear
 			if !main.ck_sqlclear {
-				optionarg main.ed_sqlname
+				if main.ed_name {
+					put "name(" main.ed_name ")"
+				}
 			}
 		endoptions
 	}
-	if main.rb_query {
-		put "parqit query "
+	if main.lb_op.equals("query") {
 		require main.ed_sql
-		put `"""' main.ed_sql `"""'
+		put "parqit query "
+		put /smartquote main.ed_sql
 	}
-	if main.rb_sm {
-		put "parqit set statamissing "
-		put main.cb_sm
+	if main.lb_op.equals("statamissing") {
+		put "parqit set statamissing " main.cb_sm
 	}
-	if main.rb_threads {
-		put "parqit set threads "
-		require main.ed_threads
-		put main.ed_threads
+	if main.lb_op.equals("threads") {
+		require main.ed_value
+		put "parqit set threads " main.ed_value
 	}
-	if main.rb_mem {
-		put "parqit set memory_limit "
-		require main.ed_mem
-		put main.ed_mem
+	if main.lb_op.equals("memory_limit") {
+		require main.ed_value
+		put "parqit set memory_limit " main.ed_value
 	}
-	if main.rb_tmp {
+	if main.lb_op.equals("tempdir") {
+		require main.ed_value
 		put "parqit set tempdir "
-		require main.ed_tmp
-		put `"""' main.ed_tmp `"""'
+		put /smartquote main.ed_value
 	}
 END

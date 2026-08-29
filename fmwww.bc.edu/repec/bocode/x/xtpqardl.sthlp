@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.3  06may2026}{...}
+{* *! version 1.0.4  28aug2026}{...}
 {vieweralsosee "xtpmg" "help xtpmg"}{...}
 {vieweralsosee "qreg" "help qreg"}{...}
 {viewerjumpto "Syntax" "xtpqardl##syntax"}{...}
@@ -47,8 +47,19 @@
 {synopt:{opt pmax(#)}}maximum AR lag for lag selection; default is {cmd:pmax(4)}{p_end}
 {synopt:{opt qmax(#)}}maximum DL lag for lag selection; default is {cmd:qmax(4)}{p_end}
 
+{syntab:SE/Robust}
+{synopt:{opt vce(vcetype)}}{it:vcetype} may be {cmd:mg}, {cmd:iid}, {cmd:robust},
+   {cmd:hac} or {cmd:cluster}; default is {cmd:vce(mg)} for {cmd:pmg}/{cmd:mg}
+   and {cmd:vce(robust)} for {cmd:dfe}{p_end}
+{synopt:{opt bw(#)}}HAC bandwidth (lag truncation); default is the
+   Newey-West rule floor(4*(T/100)^(2/9)){p_end}
+{synopt:{opt kern:el(string)}}HAC kernel: {cmd:bartlett} (default), {cmd:parzen}
+   or {cmd:qs}{p_end}
+
 {syntab:Display}
 {synopt:{opt halflife}}display per-panel half-life table{p_end}
+{synopt:{opt hla:pprox}}report the first-order half-life ln(2)/|rho| used before
+   version 1.0.4 instead of the exact ln(0.5)/ln(1+rho){p_end}
 {synopt:{opt srtable}}display per-panel ECT table{p_end}
 {synopt:{opt full}}display all per-panel tables{p_end}
 {synopt:{opt irf(#)}}number of impulse response periods to display{p_end}
@@ -190,12 +201,57 @@ independent variables having 2 and 3 distributed lags respectively.
 Searches over p = 1,...,pmax and q = 1,...,qmax. Displays a BIC grid
 and selects the optimal PQARDL(p, q1, ..., qk) specification.
 
+{dlgtab:SE/Robust}
+
+{phang}
+{opt vce(vcetype)} selects how the standard errors of the reported
+parameters are computed. For {cmd:pmg} and {cmd:mg}:
+
+{p 12 16 2}
+{cmd:mg} (the default) uses the non-parametric mean-group covariance of
+Pesaran and Smith (1995),
+V = (1/(N(N-1))) sum_i (b_i - bbar)(b_i - bbar)',
+which is robust to heteroskedasticity, serial correlation and parameter
+heterogeneity across panels.  It is the only covariance that carries the
+cross-quantile blocks, so the Wald constancy tests always use it.
+
+{p 12 16 2}
+{cmd:iid} averages the conventional Koenker sparsity-based quantile
+regression covariances, V = (1/N^2) sum_i V_i.
+
+{p 12 16 2}
+{cmd:robust} does the same with the heteroskedasticity-robust Powell (1991)
+sandwich V_i = (1/T) H^-1 J H^-1, psi_t = tau - 1{u_t < 0}.
+
+{p 12 16 2}
+{cmd:hac} replaces the meat J with a Newey-West style long-run covariance
+that weights the autocovariances of psi_t x_t up to lag {opt bw()} with the
+kernel given in {opt kernel()}.  Use this when the residuals of the panel
+ECM are serially correlated.
+
+{p 12 16 2}
+{cmd:cluster} is available for {cmd:dfe} only and clusters by panel.
+
+{phang}
+{opt bw(#)} sets the HAC lag truncation.  The default is the Newey-West
+rule floor(4*(T/100)^(2/9)) computed panel by panel.  Lag distances are
+measured on the time variable, so gaps in the panel are handled correctly.
+
+{phang}
+{opt kernel(string)} sets the HAC kernel: {cmd:bartlett} (default),
+{cmd:parzen} or {cmd:qs} (quadratic spectral).
+
 {dlgtab:Display}
 
 {phang}
 {opt halflife} displays a per-panel half-life table. Half-life is
-defined as HL(tau) = ln(2)/|rho(tau)| and indicates the number of
-periods needed to close 50% of a disequilibrium at quantile tau.
+HL(tau) = ln(0.5)/ln(1 + rho(tau)), the number of periods needed to close
+50% of a disequilibrium at quantile tau.  This is the exact half-life of
+the geometric adjustment path (1 + rho)^h shown by {opt irf()}.
+
+{phang}
+{opt hlapprox} reports the first-order approximation ln(2)/|rho(tau)| used
+by versions up to 1.0.3 instead.  The two agree only for small |rho|.
 
 {phang}
 {opt srtable} displays the per-panel speed of adjustment table,
@@ -226,6 +282,9 @@ Default is ECT.
 {phang}
 {opt noconstant} suppresses the constant term in the quantile regressions.
 
+{phang}
+{opt level(#)} sets the confidence level used by the reported statistics.
+
 
 {marker examples}{...}
 {title:Examples}
@@ -254,11 +313,26 @@ Default is ECT.
 
 {phang2}{cmd:. xtpqardl dy dx1 dx2, lr(ly x1 x2) tau(0.1 0.25 0.5 0.75 0.9) pmg halflife irf(15) graph full}{p_end}
 
-{pstd}Example 6: Post-estimation access{p_end}
+{pstd}Example 6: HAC (Newey-West) standard errors{p_end}
+
+{phang2}{cmd:. xtpqardl dy dx1 dx2, lr(ly x1 x2) tau(0.25 0.5 0.75) mg vce(hac)}{p_end}
+
+{pstd}Example 7: HAC with a Parzen kernel and a fixed bandwidth{p_end}
+
+{phang2}{cmd:. xtpqardl dy dx1 dx2, lr(ly x1 x2) tau(0.25 0.5 0.75) mg vce(hac) kernel(parzen) bw(3)}{p_end}
+
+{pstd}Example 8: Dynamic fixed effects with panel-clustered errors{p_end}
+
+{phang2}{cmd:. xtpqardl dy dx1 dx2, lr(ly x1 x2) tau(0.25 0.5 0.75) dfe vce(cluster)}{p_end}
+
+{pstd}Example 9: Post-estimation access and hypothesis tests{p_end}
 
 {phang2}{cmd:. matrix list e(beta_mg)}{p_end}
 {phang2}{cmd:. matrix list e(rho_mg)}{p_end}
 {phang2}{cmd:. matrix list e(rho_all)}{p_end}
+{phang2}{cmd:. ereturn display}{p_end}
+{phang2}{cmd:. test [q0250]lr_x1 = [q0750]lr_x1}{p_end}
+{phang2}{cmd:. lincom [q0500]ECT - [q0250]ECT}{p_end}
 
 
 {marker results}{...}
@@ -276,6 +350,16 @@ Default is ECT.
 {synopt:{cmd:e(k)}}number of short-run independent variables{p_end}
 {synopt:{cmd:e(k_lr)}}number of long-run regressors (excluding lagged y){p_end}
 {synopt:{cmd:e(ntau)}}number of quantiles{p_end}
+{synopt:{cmd:e(M)}}number of reported parameters per quantile{p_end}
+{synopt:{cmd:e(n_mg)}}panels used for the mean-group covariance{p_end}
+{synopt:{cmd:e(n_pool)}}panels used to pool the long run ({cmd:pmg} only){p_end}
+{synopt:{cmd:e(wald_rho)}}Wald statistic, constancy of rho(tau){p_end}
+{synopt:{cmd:e(wald_beta)}}Wald statistic, constancy of beta(tau){p_end}
+{synopt:{cmd:e(wald_sr)}}Wald statistic, constancy of the short run{p_end}
+{synopt:{cmd:e(wald_joint)}}Wald statistic, joint constancy{p_end}
+{synopt:{cmd:e(hausman)}}Hausman statistic, PMG versus MG ({cmd:pmg} only){p_end}
+{synopt:{cmd:e(hausman_df)}}its degrees of freedom{p_end}
+{synopt:{cmd:e(hausman_p)}}its p-value{p_end}
 
 {p2col 5 20 24 2: Macros}{p_end}
 {synopt:{cmd:e(cmd)}}{cmd:xtpqardl}{p_end}
@@ -286,6 +370,13 @@ Default is ECT.
 {synopt:{cmd:e(lrvars)}}names of long-run regressor variables{p_end}
 {synopt:{cmd:e(lr_y)}}name of lagged dependent variable (ECT){p_end}
 {synopt:{cmd:e(qlags)}}distributed lag orders per variable{p_end}
+{synopt:{cmd:e(vce)}}covariance type requested{p_end}
+{synopt:{cmd:e(vcetype)}}covariance type, spelled out{p_end}
+{synopt:{cmd:e(kernel)}}HAC kernel{p_end}
+{synopt:{cmd:e(poolmeth)}}long-run pooling method ({cmd:pmg} only){p_end}
+{synopt:{cmd:e(taulist)}}the quantiles estimated{p_end}
+{synopt:{cmd:e(srlabels)}}labels of the short-run terms{p_end}
+{synopt:{cmd:e(arlabels)}}labels of the AR terms{p_end}
 
 {p2col 5 20 24 2: Matrices}{p_end}
 {synopt:{cmd:e(beta_mg)}}mean group long-run coefficients beta(tau){p_end}
@@ -298,6 +389,49 @@ Default is ECT.
 {synopt:{cmd:e(beta_all)}}panel-specific long-run beta (N x k*ntau){p_end}
 {synopt:{cmd:e(rho_all)}}panel-specific ECT coefficient (N x ntau){p_end}
 {synopt:{cmd:e(halflife_all)}}panel-specific half-life (N x ntau){p_end}
+{synopt:{cmd:e(panelids)}}panel identifiers matching the rows above{p_end}
+{synopt:{cmd:e(g_mg)}}all reported parameters, stacked by quantile{p_end}
+{synopt:{cmd:e(g_V)}}their covariance (the one used for the tables){p_end}
+{synopt:{cmd:e(g_Vnp)}}non-parametric mean-group covariance{p_end}
+{synopt:{cmd:e(g_Veff)}}(1/N^2) sum_i V_i covariance{p_end}
+{synopt:{cmd:e(b)}}coefficient vector, one equation per quantile{p_end}
+{synopt:{cmd:e(V)}}its covariance, so {helpb test}, {helpb lincom} and
+   {helpb nlcom} work after estimation{p_end}
+
+
+{marker inference}{...}
+{title:Inference}
+
+{pstd}
+{bf:Standard errors.}  Every reported parameter — the speed of adjustment
+rho(tau), the long-run coefficients beta(tau), the AR terms and the
+short-run terms theta(tau) — is reported with a standard error, a z
+statistic and a p-value.  The covariance is selected with {opt vce()};
+see the option list above.
+
+{pstd}
+{bf:Wald tests of quantile constancy.}  Four statistics are reported,
+testing H0: parameter(tau_i) = parameter(tau_i+1) for every adjacent pair
+of quantiles — one for rho, one for beta, one for the short-run block and
+one joint test.  They always use the non-parametric mean-group covariance
+because that is the only one estimated jointly across quantiles (each
+quantile is fitted separately, so the sandwich covariances have no
+cross-quantile blocks).  The degrees of freedom are reduced by the rank
+deficiency of R V R' when the restriction matrix is not of full rank.
+
+{pstd}
+{bf:Hausman test (pmg only).}  {cmd:pmg} imposes a common long-run vector
+across panels while leaving the speed of adjustment and the short-run
+dynamics panel specific; {cmd:mg} imposes nothing.  Under H0 both are
+consistent and {cmd:pmg} is efficient, so a rejection means the long-run
+homogeneity restriction is not supported and {cmd:mg} should be preferred.
+The statistic is reported automatically after every {cmd:pmg} estimation.
+
+{pstd}
+{bf:Half-life.}  HL(tau) = ln(0.5)/ln(1 + rho(tau)) inverts the geometric
+adjustment path (1 + rho)^h reported by {opt irf()} exactly.  Versions up
+to 1.0.3 reported the first-order approximation ln(2)/|rho|, which is
+available through {opt hlapprox}.
 
 
 {marker diagnostics}{...}
@@ -388,14 +522,15 @@ the mean group estimates are computed from the panels that could be estimated.
 The diagnostic line shows:
 
 {phang2}
-{cmd:(Diagnostics: X panels skipped [insuff. obs], Y qreg failures)}
+{cmd:(Diagnostics: X panel(s) skipped [insufficient obs], Y quantile fit failure(s))}
 {p_end}
 
 {pstd}
-where {bf:insuff. obs} means the panel had fewer non-missing observations
-than the minimum required, and {bf:qreg failures} means the quantile
-regression command itself returned an error (e.g., perfect collinearity,
-numerical issues).
+where {bf:insufficient obs} means the panel had fewer non-missing
+observations than the minimum required, and {bf:quantile fit failure}
+means the quantile regression for that panel and quantile could not be
+solved (e.g., perfect collinearity or a regressor with no variation
+inside the panel).
 
 {pstd}
 {bf:Degrees-of-freedom table by number of predictors (PQARDL(1,1,...)):}
@@ -414,6 +549,30 @@ numerical issues).
 
 {marker references}{...}
 {title:References}
+
+{phang}
+Hunter, D.R., and Lange, K. (2000).
+{it:Quantile regression via an MM algorithm.}
+Journal of Computational and Graphical Statistics, 9(1), 60-77.
+
+{phang}
+Koenker, R. (2005). {it:Quantile Regression.} Cambridge University Press.
+
+{phang}
+Newey, W.K., and West, K.D. (1987).
+{it:A simple, positive semi-definite, heteroskedasticity and autocorrelation
+consistent covariance matrix.} Econometrica, 55(3), 703-708.
+
+{phang}
+Powell, J.L. (1991).
+{it:Estimation of monotonic regression models under quantile restrictions.}
+In Barnett, Powell and Tauchen (eds.), Nonparametric and Semiparametric
+Methods in Econometrics. Cambridge University Press.
+
+{phang}
+Pesaran, M.H., and Smith, R.P. (1995).
+{it:Estimating long-run relationships from dynamic heterogeneous panels.}
+Journal of Econometrics, 68(1), 79-113.
 
 {phang}
 Cho, J.S., Kim, T., and Shin, Y. (2015).

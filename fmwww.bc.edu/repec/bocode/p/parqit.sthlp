@@ -1,10 +1,21 @@
 {smcl}
-{* *! version 0.1.28 23aug2026}{...}
+{* *! version 0.1.29 25aug2026}{...}
+{viewerdialog "parqit use" "dialog parqit_read"}{...}
+{viewerdialog "parqit describe" "dialog parqit_explore"}{...}
+{viewerdialog "parqit summarize" "dialog parqit_stats"}{...}
+{viewerdialog "parqit keep if/in, sample" "dialog parqit_filter"}{...}
+{viewerdialog "parqit keep/drop/order/sort/rename" "dialog parqit_vars"}{...}
+{viewerdialog "parqit generate" "dialog parqit_gen"}{...}
+{viewerdialog "parqit collapse/pivot/contract/reshape" "dialog parqit_pivot"}{...}
+{viewerdialog "parqit merge/append/joinby" "dialog parqit_combine"}{...}
+{viewerdialog "parqit collect/save" "dialog parqit_write"}{...}
+{viewerdialog "parqit view/sql/set" "dialog parqit_views"}{...}
 {vieweralsosee "[D] use" "help use"}{...}
 {vieweralsosee "[D] save" "help save"}{...}
 {vieweralsosee "[D] collapse" "help collapse"}{...}
 {vieweralsosee "[D] merge" "help merge"}{...}
 {viewerjumpto "Syntax" "parqit##syntax"}{...}
+{viewerjumpto "Menu" "parqit##menu"}{...}
 {viewerjumpto "Description" "parqit##description"}{...}
 {viewerjumpto "Stata metadata in Parquet" "parqit##metadata"}{...}
 {viewerjumpto "The lazy view" "parqit##lazy"}{...}
@@ -140,50 +151,107 @@ pipeline; only {cmd:collect}/{cmd:save} materialise its full result):
 {p 8 16 2}{cmd:parqit selftest}{space 3}(end-to-end engine and codec check, useful on new installs/HPC nodes){p_end}
 {p 8 16 2}{cmd:parqit menu}{space 8}(add parqit to the {bf:User} menu — GUI Stata only){p_end}
 
+{pstd}For {cmd:parqit sql}, trailing statement terminators ({cmd:;}) are
+optional and ignored; semicolons inside the SQL text are preserved.{p_end}
+
 {pstd}{bf:Point and click.} The dialogs cover every public subcommand listed
-above (apart from {cmd:parqit menu}, which installs the menu itself). Each
-dialog builds and runs an ordinary {cmd:parqit} command, so every click is
-reproducible from the Review window. {cmd:parqit menu} installs the complete
-surface under {bf:User > parqit} (add {cmd:parqit menu} to your
-{help profile}.do to keep it across sessions), or launch a dialog directly:
+above (apart from {cmd:parqit menu}, which installs the menu itself); see
+{help parqit##menu:Menu}.
 
-{p 8 12 2}{cmd:db parqit_read}{space 6}read a source into memory or open a
-lazy view ({cmd:use}), promote the current dataset ({cmd:open _data}), or
-resolve a source path ({cmd:path}); includes variable subset, view name,
-{opt clear}, and {opt relaxed}{p_end}
-{p 8 12 2}{cmd:db parqit_explore}{space 3}structure and data quality: describe
-a file or the view, glimpse, head/list previews, ds/lookfor, codebook, missing
-values/patterns, levelsof, distinct counts, duplicate reports/lists, and count
-under a condition{p_end}
-{p 8 12 2}{cmd:db parqit_stats}{space 5}descriptive statistics: summarize
-(detail), tabulate one/two-way (missing, row/col %), tabstat with the
-statistics chosen by checkboxes and {opt by()}, correlate/pwcorr (obs, sig),
-histogram with engine-computed bins and optional {opt nodraw}{p_end}
-{p 8 12 2}{cmd:db parqit_filter}{space 4}keep/drop observations by condition
-(the {bf:Create...} button opens Stata's expression builder — date functions
-{cmd:td()}, {cmd:tm()}, {cmd:year()}, ... included), keep a row range, or draw
-an engine-side percentage/count sample with an optional seed{p_end}
-{p 8 12 2}{cmd:db parqit_vars}{space 6}keep/drop/order variables, sort and
-gsort, pairwise/multiple rename, or drop duplicates by keys/full rows{p_end}
-{p 8 12 2}{cmd:db parqit_gen}{space 7}generate or egen (storage type, supported
-egen function and optional by()), or replace; expressions and if conditions
-use Stata's builder{p_end}
-{p 8 12 2}{cmd:db parqit_pivot}{space 5}collapse, contract, reshape long/wide,
-or build an Excel-style pivot table with rows, columns and one/two aggregated
-values; every operation remains lazy{p_end}
-{p 8 12 2}{cmd:db parqit_combine}{space 3}lazy merge/append/joinby over files,
-globs, folders or {cmd:view:}{it:name}, including multiple append sources; or
-native mergein/appendin when the master is already in Stata memory{p_end}
-{p 8 12 2}{cmd:db parqit_write}{space 5}run the pipeline: collect into memory
-(with an explicit replace-in-memory tick), or save to Parquet (replace,
-compression/level, partition_by, chunk, encoding, data){p_end}
-{p 8 12 2}{cmd:db parqit_views}{space 5}list/switch/close views, run a command
-on a named view, show/explain/describe a plan, open raw SQL or add a query
-fragment, change all engine settings, and run version/selftest diagnostics{p_end}
 
-{pstd}The manipulation dialogs carry a {bf:View variables} button ({cmd:parqit ds}
-of the open view, printed to Results). In the pivot dialog, {bf:Load variables}
-fills the value/column pickers from the open view on demand.{p_end}
+{marker menu}{...}
+{title:Menu}
+
+{pstd}In GUI Stata, {cmd:parqit menu} adds one submenu to Stata's {bf:User}
+menu for the session; add that line to your {help profile}.do to keep it
+across sessions. Repeating {cmd:parqit menu} is idempotent. If another command
+explicitly runs {cmd:window menu clear}, Stata removes {it:every} package's
+menu additions and exposes no package-local query/removal API; restore parqit's
+entry with {cmd:global PARQIT_MENU_ON} followed by {cmd:parqit menu}. parqit
+never calls {cmd:window menu clear} itself. Each entry opens a dialog that
+builds and runs an ordinary {cmd:parqit} command, echoed to the Results and
+Review windows like a typed
+command, so every click is reproducible in a do-file. The dialogs are also
+listed in the Viewer's {bf:Dialog} menu of this help file, and each can be
+launched directly with {cmd:db} {it:name}.
+
+{phang2}{bf:User > parqit > Read Parquet data (lazy view or into memory)...}{p_end}
+{p 12 12 2}({cmd:db parqit_read}) {cmd:use} — a lazy view, or the data into
+memory with {opt clear} — {cmd:open _data}, and {cmd:path}; {bf:Populate}
+lists the variables recorded in the Parquet footer of the source, and
+{bf:Describe} runs {cmd:describe} on it.{p_end}
+
+{phang2}{bf:User > parqit > Describe and explore data...}{p_end}
+{p 12 12 2}({cmd:db parqit_explore}) {cmd:describe}/{cmd:glimpse} of the view
+or of a file, {cmd:ds}, {cmd:lookfor}, {cmd:codebook}, {cmd:head}, {cmd:list},
+{cmd:count}, {cmd:misstable} [{cmd:patterns}], {cmd:levelsof}, {cmd:distinct}
+and {cmd:duplicates report}/{cmd:list}: one list of operations, every one an
+engine-side query.{p_end}
+
+{phang2}{bf:User > parqit > Summary statistics, tables, and correlations...}{p_end}
+{p 12 12 2}({cmd:db parqit_stats}) {cmd:summarize} [{opt detail}],
+{cmd:tabulate} one- and two-way, {cmd:tabstat} with the statistics chosen by
+check boxes and {opt by()}, {cmd:correlate}/{cmd:pwcorr} and
+{cmd:histogram}.{p_end}
+
+{phang2}{bf:User > parqit > Keep or drop observations, or draw a sample...}{p_end}
+{p 12 12 2}({cmd:db parqit_filter}) {cmd:keep if}, {cmd:drop if}, {cmd:keep in}
+({cmd:f}, {cmd:l} and negative bounds accepted) and {cmd:sample}; the
+{bf:Create...} button opens Stata's expression builder.{p_end}
+
+{phang2}{bf:User > parqit > Keep, drop, order, sort, or rename variables...}{p_end}
+{p 12 12 2}({cmd:db parqit_vars}) {cmd:keep}, {cmd:drop}, {cmd:order},
+{cmd:sort}, {cmd:gsort}, {cmd:rename (oldlist) (newlist)} and
+{cmd:duplicates drop}.{p_end}
+
+{phang2}{bf:User > parqit > Create or change variables...}{p_end}
+{p 12 12 2}({cmd:db parqit_gen}) {cmd:gen} (with a storage type and an
+{cmd:if} qualifier), {cmd:egen} (function and {opt by()}) and
+{cmd:replace}.{p_end}
+
+{phang2}{bf:User > parqit > Collapse, contract, pivot table, or reshape...}{p_end}
+{p 12 12 2}({cmd:db parqit_pivot}) {cmd:collapse} and {cmd:pivot} share two
+statistic rows plus free additional specifications; {cmd:contract};
+{cmd:reshape long}|{cmd:wide}.{p_end}
+
+{phang2}{bf:User > parqit > Combine datasets (merge, append, joinby)...}{p_end}
+{p 12 12 2}({cmd:db parqit_combine}) lazy {cmd:merge}, {cmd:append} (several
+sources) and {cmd:joinby} over files, globs, Hive directories or
+{cmd:view:}{it:name}; native {cmd:mergein}/{cmd:appendin} for data already
+in memory, with the native merge options on the {bf:Options} tab. The
+additional-sources field is raw Stata source-list syntax: compound-quote each
+path that contains spaces or commas.{p_end}
+
+{phang2}{bf:User > parqit > Collect into memory or save as Parquet...}{p_end}
+{p 12 12 2}({cmd:db parqit_write}) {cmd:collect} [{opt clear}] and {cmd:save}
+with {opt replace} (an existing file asks first, as in Stata's save dialog),
+{opt compression()}, {opt compression_level()}, {opt partition_by()},
+{opt chunk()}, {opt encoding()}, {opt data} and {opt copysource};
+{bf:Populate} lists variables from the view, or from the dataset in memory
+when {opt data} is selected.{p_end}
+
+{phang2}{bf:User > parqit > Views, SQL, and engine settings...}{p_end}
+{p 12 12 2}({cmd:db parqit_views}) buttons that report on the current view at
+once ({cmd:views}, {cmd:show}, {cmd:explain}, {cmd:describe}, {cmd:ds},
+{cmd:version}, {cmd:selftest}); the actions {cmd:view}, {cmd:close},
+{cmd:view} {it:name}{cmd::} {it:command}, {cmd:sql}, {cmd:query} and the four
+{cmd:set} options.{p_end}
+
+{phang2}{bf:User > parqit > Version}, {bf:Self-test}, {bf:Help on parqit}{p_end}
+{p 12 12 2}run {cmd:parqit version}, {cmd:parqit selftest} and
+{cmd:help parqit} directly.{p_end}
+
+{pstd}Conventions shared by the dialogs, following Stata's own: a
+{bf:Populate} button fills the variable pickers on demand from the current
+view, from the dataset in memory when the write dialog selects {opt data}, or
+from the Parquet footer of the file named in the dialog, exactly as Stata's
+{cmd:use}, {cmd:describe} and {cmd:merge} dialogs populate from a dataset on
+disk (the pickers are editable, so names may also be typed); the
+{bf:Create...} buttons open Stata's expression builder, whose variable list is
+that of the data in memory, so type the view's variable names into the
+expression; a dialog remembers the last settings submitted with {bf:OK} or
+{bf:Submit} for the session ({bf:Cancel} discards changes), and the {bf:R}
+button resets them.{p_end}
 
 
 {marker description}{...}
@@ -220,6 +288,16 @@ Stata metadata survives: variable labels, value labels, notes, display
 formats, characteristics and original column names are stored in standard
 Parquet key-value metadata under a {cmd:parqit.*} namespace and restored on
 read, while the file remains plain Parquet for pandas, polars, R and Spark.
+
+{pstd}
+StataNow (Stata 19.5) ships a native {cmd:import parquet} that reads a Parquet
+file into memory ({bf:File > Import > Parquet data}). {cmd:parqit} is
+complementary to it, not a replacement: its contribution is the lazy verb
+grammar that filters, derives, aggregates and joins data far larger than
+memory before anything is loaded, the Parquet writer ({cmd:parqit save}) and
+the Stata-metadata round-trip. When reading a whole file into memory is all
+that is needed, either command serves. {cmd:parqit}'s menu and dialogs live
+under {bf:User > parqit} and never alter Stata's own menus.
 
 
 {marker metadata}{...}
@@ -1302,13 +1380,25 @@ materialising either side ({cmd:view:}{it:name} as a {cmd:using} source):{p_end}
 {phang2}{cmd:. parqit version}{p_end}
 {phang2}{cmd:. parqit selftest}{space 17}({it:end-to-end engine/codec check on a new machine}){p_end}
 
-{pstd}Two runnable, {bf:self-verifying} companions ship with the source
-repository. {bf:Start with} {cmd:examples/parqit_basics.do}: it walks
-{cmd:use}/{cmd:save}/{cmd:merge}/{cmd:append} twice each — the eager way
-(everything into memory first) and the lazy way (view + verbs +
-collect/save) — asserting every lazy result against a native Stata twin.
-{cmd:examples/parqit_tour.do} then tours the complete command surface the
-same way. Each ends in a printed {cmd:VERDICT(...): PASS}.{p_end}
+{pstd}Two runnable companions ship with parqit as ancillary files:
+{cmd:ssc install parqit, all replace} (or {cmd:net get parqit} after a
+{cmd:net install} from the same source) copies them into the current
+directory. Both create small artificial NLS-style labour-panel data
+under Stata{c 39}s temporary directory, so they require no data
+download. {bf:Start with}
+{cmd:parqit_basics.do}: a gentle course in Parquet I/O and metadata,
+lazy views and sampling, {cmd:collect} versus {cmd:save} (including a
+partitioned directory and a multi-file glob), lazy and in-memory merge
+and append, and CSV-to-Parquet conversion. {cmd:parqit_tour.do} then
+covers engine-side statistics and missing-value modes, richer lazy
+transformations, collapse, pivot, contract and reshape, named views,
+view-to-view merge, joinby, raw SQL and engine settings. Comments
+identify the matching {bf:User > parqit} dialogs; neither file is
+exhaustive.{p_end}
+
+{phang2}{cmd:. ssc install parqit, all replace}{p_end}
+{phang2}{cmd:. do parqit_basics.do}{p_end}
+{phang2}{cmd:. do parqit_tour.do}{p_end}
 
 
 {marker limitations}{...}

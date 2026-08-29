@@ -15,17 +15,22 @@ d KW: Fourier
 d
 d Requires: Stata version 17
 d
-d Distribution-Date: 20260304
+d Distribution-Date: 20260828
 d
 d Author:   Merwan Roudane, NA
 d Support: email  merwanroudane920@@gmail.com
 d
 f aardl.ado
+f aardl_advanced.ado
+f aardl_p.ado
 f aardl.sthlp
 f ../_/_aardl_advanced.ado
 f ../_/_aardl_bootstrap.ado
 f ../_/_aardl_diagtest.ado
 f ../_/_aardl_dynmult.ado
-f ../_/_aardl_ndynmult.ado
+f ../_/_aardl_fourier.ado
+f ../_/_aardl_graphs.ado
+f ../_/_aardl_samcv.ado
+f ../_/_aardl_stability.ado
 f ../_/_aardl_stars.ado
 f aardl_example.do

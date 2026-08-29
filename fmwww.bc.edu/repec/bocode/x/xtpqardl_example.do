@@ -1,7 +1,7 @@
 * =====================================================================
 * XTPQARDL — Example Do-File
 * Panel Quantile ARDL Estimation
-* Version 1.0.2 | April 2026
+* Version 1.0.4 | August 2026
 * =====================================================================
 * This do-file demonstrates the xtpqardl package using:
 *   1. Simulated data (N=20, T=60) — full demo with all quantiles
@@ -114,3 +114,61 @@ xtpqardl dy dx1 dx2, lr(ly x1 x2)  ///
 di _n(2) in ye "═══════════════════════════════════════════════"
 di in ye "  All examples completed successfully."
 di in ye "═══════════════════════════════════════════════"
+
+
+* =====================================================================
+* EXAMPLE 9 (v1.0.4): HAC standard errors and inference
+* =====================================================================
+di _n(3) in ye "=============================================================="
+di in ye       "  EXAMPLE 9: HAC (Newey-West) standard errors"
+di in ye       "=============================================================="
+
+xtpqardl_makedata, n(15) t(60) seed(2026) clear
+
+* Default: non-parametric mean-group standard errors
+xtpqardl dy dx1 dx2, lr(ly x1 x2) tau(0.25 0.50 0.75) mg
+
+* HAC per-panel standard errors, automatic Newey-West bandwidth
+xtpqardl dy dx1 dx2, lr(ly x1 x2) tau(0.25 0.50 0.75) mg vce(hac)
+
+* HAC with a Parzen kernel and a fixed bandwidth of 3
+xtpqardl dy dx1 dx2, lr(ly x1 x2) tau(0.25 0.50 0.75) mg vce(hac) ///
+	kernel(parzen) bw(3)
+
+* Heteroskedasticity-robust Powell sandwich, no serial-correlation term
+xtpqardl dy dx1 dx2, lr(ly x1 x2) tau(0.25 0.50 0.75) mg vce(robust)
+
+
+* =====================================================================
+* EXAMPLE 10 (v1.0.4): PMG versus MG and the Hausman test
+* =====================================================================
+di _n(3) in ye "=============================================================="
+di in ye       "  EXAMPLE 10: is the pooled long run supported?"
+di in ye       "=============================================================="
+
+* pmg now imposes a common long run and reports a Hausman test against mg
+xtpqardl dy dx1 dx2, lr(ly x1 x2) tau(0.25 0.50 0.75) pmg
+di in ye "Hausman chi2 = " e(hausman) "  p = " e(hausman_p)
+
+* mg leaves the long run panel specific
+xtpqardl dy dx1 dx2, lr(ly x1 x2) tau(0.25 0.50 0.75) mg
+
+
+* =====================================================================
+* EXAMPLE 11 (v1.0.4): post-estimation testing with e(b) / e(V)
+* =====================================================================
+di _n(3) in ye "=============================================================="
+di in ye       "  EXAMPLE 11: test / lincom across quantiles"
+di in ye       "=============================================================="
+
+xtpqardl dy dx1 dx2, lr(ly x1 x2) tau(0.25 0.50 0.75) mg notable
+ereturn display
+
+* is the long-run effect of x1 the same at the first and third quartile?
+test [q0250]lr_x1 = [q0750]lr_x1
+
+* how much faster is adjustment at the median than at the lower quartile?
+lincom [q0500]ECT - [q0250]ECT
+
+* is the contemporaneous short-run impact of dx1 constant across quantiles?
+test [q0250]D_dx1 = [q0500]D_dx1 = [q0750]D_dx1

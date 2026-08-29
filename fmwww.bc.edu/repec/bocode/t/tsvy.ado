@@ -1,9 +1,19 @@
-*! tsvy.ado v1.6 - 26aug2026
+*! tsvy.ado v1.7 - 27aug2026
 *! Motor generico de estimacion + test (F de Wald + Bonferroni + Compact
 *! Letter Display) con encuestas complejas, usando svylet como unico motor.
 *! Requiere Stata 16 o superior EN LA INSTALACION (usa frame create/
 *! frame ...: ...); el "version 14" de las lineas de abajo NO es sobre
 *! eso, ver la nota v1.6 (revertida) inmediatamente debajo.
+*!
+*! v1.7 -- FIX en tsvy_core() (replicado de svylet_core() en svylet.ado
+*! v1.6, ver ese archivo para el detalle completo): el F omnibus quedaba
+*! en blanco apenas UNA de las k categorias de over() tenia varianza
+*! degenerada (proporcion exactamente 0 o 1), aunque las demas tuvieran
+*! variables perfectamente calculables -- confirmado en tabulados de
+*! produccion reales (tipo_actividad/Pecuaria: filas con 4/4 anios con
+*! Estimacion, F en blanco porque 1-3 de esos anios eran exactamente
+*! 0%). Ahora se calcula sobre el subconjunto de categorias con varianza
+*! definida (minimo 2). Identico a v1.6 cuando no hay degeneradas.
 *!
 *! v1.6 -- REVERTIDO (mismo dia): se probo cambiar "version 14" a
 *! "version 16" en las dos declaraciones del programa, con la idea de
@@ -874,7 +884,9 @@ void tsvy_core(string scalar bname, string scalar Vname, real scalar df,
 {
     real matrix b, V, R, RVR, Pmat
     real scalar stat_wald, Fstat, p_omni, i, j, npares, t, se, p_raw, p_adj
-    real scalar k_dim, df_ajustado
+    real scalar k_dim, df_ajustado, k_valida
+    real colvector idx_validas, b_valida
+    real matrix V_valida
 
     b = st_matrix(bname)
     V = st_matrix(Vname)
@@ -896,17 +908,48 @@ void tsvy_core(string scalar bname, string scalar Vname, real scalar df,
                " sin diferencia, el test no se pudo calcular ahi.\n")
     }
 
-    k_dim = k - 1
-    R = J(k_dim, k, 0)
-    for (i=2; i<=k; i++) {
-        R[i-1,1] = -1
-        R[i-1,i] = 1
+    // v1.6 -- FIX (replicado de svylet_core() en svylet.ado, ver ese
+    // archivo para el detalle): R se armaba con las k categorias
+    // COMPLETAS, asi que UNA sola categoria de varianza degenerada
+    // (proporcion exactamente 0 o 1) propagaba "." por R*V*R' y anulaba
+    // el F omnibus ENTERO via lusolve(), aun con el resto de categorias
+    // perfectamente calculables -- confirmado en produccion (tabulado
+    // real de tsvy: filas con 4/4 anios con Estimacion, pero F en blanco
+    // porque 1-3 de esos anios eran exactamente 0%). Ahora se calcula
+    // sobre el SUBCONJUNTO de categorias con varianza definida, minimo 2
+    // para poder testear una igualdad. Con 0 degeneradas, idx_validas es
+    // 1..k y el resultado es identico al de v1.5.
+    idx_validas = select((1::k), var_degenerada :== 0)
+    k_valida = rows(idx_validas)
+    if (k_valida >= 2) {
+        b_valida = b[idx_validas]
+        V_valida = V[idx_validas, idx_validas]
+        k_dim = k_valida - 1
+        R = J(k_dim, k_valida, 0)
+        for (i=2; i<=k_valida; i++) {
+            R[i-1,1] = -1
+            R[i-1,i] = 1
+        }
+        RVR = R*V_valida*R'
+        stat_wald = (R*b_valida)' * lusolve(RVR, R*b_valida)
+        df_ajustado = df - k_dim + 1
+        Fstat = (df_ajustado / (k_dim * df)) * stat_wald
+        p_omni = 1 - F(k_dim, df_ajustado, Fstat)
+        if (k_valida < k) {
+            printf("{txt}  F omnibus calculado con %g de %g categorias" +
+                   " (las de varianza degenerada quedan afuera del" +
+                   " contraste, no del reporte -- sus puntos siguen" +
+                   " listados, su letra queda en [?]).\n", k_valida, k)
+        }
     }
-    RVR = R*V*R'
-    stat_wald = (R*b)' * lusolve(RVR, R*b)
-    df_ajustado = df - k_dim + 1
-    Fstat = (df_ajustado / (k_dim * df)) * stat_wald
-    p_omni = 1 - F(k_dim, df_ajustado, Fstat)
+    else {
+        k_dim = .
+        df_ajustado = .
+        Fstat = .
+        p_omni = .
+        printf("{txt}  F omnibus no calculable: menos de 2 categorias" +
+               " con varianza definida (%g de %g).\n", k_valida, k)
+    }
 
     npares = k*(k-1)/2
     Pmat = J(k,k,.)

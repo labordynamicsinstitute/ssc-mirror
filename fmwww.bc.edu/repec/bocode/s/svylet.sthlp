@@ -330,6 +330,17 @@ position within {cmd:over()}, not their raw value) is printed. Treat
 {cmd:?} as "the test could not be computed here", never as "no
 difference".
 
+{pstd}
+The omnibus F only drops the degenerate categories from its own
+contrast -- it does not go missing just because one category out of
+many is degenerate. As long as at least 2 categories have a defined,
+positive variance, the omnibus F and its p-value are computed on that
+subset (a note is printed naming how many of the {cmd:over()}
+categories were used); with fewer than 2 usable categories there is
+nothing left to test, so {cmd:r(F_omnibus)}/{cmd:r(p_omnibus)} are
+returned missing. Point estimates and pairwise comparisons that do not
+involve a degenerate category are unaffected either way.
+
 {marker remarks_boot}{...}
 {pstd}{bf:Why boot() resamples and reassigns by whole PSU}
 

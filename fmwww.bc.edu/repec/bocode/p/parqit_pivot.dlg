@@ -1,186 +1,177 @@
 /*
-  parqit — aggregate, reshape or pivot the open view (lazy)
+  parqit collapse - Make a dataset of summary statistics, frequencies, or a
+  pivot table; convert between wide and long
 
-*!  VERSION 0.1.28  23aug2026
+*!  VERSION 0.1.29  25aug2026
 
-  Launch with:  db parqit_pivot     (installed on the menu by: parqit menu)
-  Excel's pivot-table layout: Rows -> one output row per combination of
-  values, Columns -> one output column per distinct value, Values -> the
-  aggregated cells (a second measure is optional). Builds
-  parqit pivot (stat) [name=]var ..., rows() cols() — lazy like every verb;
-  materialise with the Collect / save dialog (db parqit_write).
-  The Load variables button fills the pickers from the OPEN VIEW's columns.
+  User > parqit > Collapse, contract, pivot table, or reshape...
+  Launch directly with:  db parqit_pivot      (menu installed by: parqit menu)
+
+  Builds parqit collapse / pivot / contract / reshape. collapse and pivot
+  share the statistic rows ((stat) [target=]source, exactly collapse's
+  grammar); a pivot table additionally spreads one column per distinct
+  value of the cols() variable, Excel-style. Populate fills the pickers
+  from the current view. Lazy: the view's plan changes, not the data in
+  memory — materialise with parqit collect or parqit save.
 */
 
 VERSION 16.0
 
 INCLUDE _std_wide
-DEFINE _dlght 510
+DEFINE _dlght 410
 INCLUDE header
-HELP hlp1, view("help parqit")
+HELP hlp1, view("help parqit##menu")
 RESET res1
 
 SCRIPT PREINIT
 BEGIN
 	create STRING dlgname
 	dlgname.storeDialogClassName
-	script pivot_on
+	create DOUBLE pq_populate_error
 END
 
-PROGRAM pq_load_vars
+PROGRAM POSTINIT_PROGRAM
 BEGIN
-	put "parqit _dlgvars "
-	put dlgname
-	put " vv_list"
-	stata hidden immediate
-	call main.cb_col.repopulate
-	call main.cb_val.repopulate
-	call main.cb_val2.repopulate
+	call program main_mode
 END
 
-PROGRAM pq_show_vars
+DIALOG main, label("parqit collapse - Make a dataset of summary statistics, frequencies, or a pivot table; reshape") ///
+	tabtitle("Main")
 BEGIN
-	put "parqit ds"
-	stata hidden immediate
-END
+  RADIO rb_collapse		_lft	_top	130	.,		///
+	first								///
+	onclickon(program main_mode)					///
+	label("Collapse")
+  RADIO rb_pivot		150	@	130	.,		///
+	onclickon(program main_mode)					///
+	label("Pivot table")
+  RADIO rb_contract		290	@	130	.,		///
+	onclickon(program main_mode)					///
+	label("Contract")
+  RADIO rb_reshape		430	@	130	.,		///
+	last								///
+	onclickon(program main_mode)					///
+	label("Reshape")
 
-SCRIPT all_off
-BEGIN
-	main.ed_specs.disable
-	main.ed_by.disable
-	main.ed_contract.disable
-	main.ed_freq.disable
-	main.cb_dir.disable
-	main.ed_stubs.disable
-	main.ed_i.disable
-	main.ed_j.disable
-	main.ed_rows.disable
-	main.cb_col.disable
-	main.cb_stat.disable
-	main.cb_val.disable
-	main.ed_tgt.disable
-	main.cb_stat2.disable
-	main.cb_val2.disable
-	main.ed_tgt2.disable
-END
-
-SCRIPT collapse_on
-BEGIN
-	script all_off
-	main.ed_specs.enable
-	main.ed_by.enable
-END
-
-SCRIPT contract_on
-BEGIN
-	script all_off
-	main.ed_contract.enable
-	main.ed_freq.enable
-END
-
-SCRIPT reshape_on
-BEGIN
-	script all_off
-	main.cb_dir.enable
-	main.ed_stubs.enable
-	main.ed_i.enable
-	main.ed_j.enable
-END
-
-SCRIPT pivot_on
-BEGIN
-	script all_off
-	main.ed_rows.enable
-	main.cb_col.enable
-	main.cb_stat.enable
-	main.cb_val.enable
-	main.ed_tgt.enable
-	main.cb_stat2.enable
-	main.cb_val2.enable
-	main.ed_tgt2.enable
-END
-
-DIALOG main, label("parqit — aggregate / reshape / pivot (lazy)") tabtitle("Main")
-BEGIN
-  RADIO rb_pivot		_lft	_top	135	.,		///
-	first label("Pivot table")					///
-	onclickon(script pivot_on)
-  RADIO rb_collapse		+145	@	135	.,		///
-	label("Collapse")						///
-	onclickon(script collapse_on)
-  RADIO rb_contract		+145	@	135	.,		///
-	label("Contract")						///
-	onclickon(script contract_on)
-  RADIO rb_reshape		+145	@	135	.,		///
-	last label("Reshape")					///
-	onclickon(script reshape_on)
-
-  GROUPBOX gb_other		_lft	45	_iwd	150,		///
-	label("Collapse / contract / reshape inputs")
-  TEXT tx_specs			_ilft	65	140	.,		///
-	label("Aggregate specifications")
-  EDIT ed_specs			+150	@	410	.,		///
-	label("(stat) [target=]source ...")
-  TEXT tx_by			_ilft	95	140	., label("Collapse by variables")
-  EDIT ed_by			+150	@	150	.,		///
-	option(by) label("by variables")
-  TEXT tx_contract		+165	@	90	., label("Contract variables")
-  EDIT ed_contract		+95	@	145	., label("contract variables")
-  TEXT tx_freq			_ilft	125	140	., label("Frequency variable")
-  EDIT ed_freq			+150	@	150	.,		///
-	option(freq) label("frequency variable")
-  TEXT tx_dir			+165	@	70	., label("Direction")
-  COMBOBOX cb_dir		+75	@	80	.,		///
-	dropdownlist contents(dir_list) default("long") label("direction")
-  TEXT tx_stubs			_ilft	155	140	., label("Reshape stubs")
-  EDIT ed_stubs			+150	@	150	., label("stub names")
-  TEXT tx_i			+165	@	25	., label("i:")
-  EDIT ed_i			+30	@	95	., label("i variables")
-  TEXT tx_j			+105	@	25	., label("j:")
-  EDIT ed_j			+30	@	85	., label("j variable")
-
-  GROUPBOX gb_layout		_lft	210	_iwd	235,		///
-	label("Pivot-table layout and values")
-  TEXT tx_rows			_ilft	230	440	.,		///
-	label("Rows: one output row per value combination")
-  BUTTON bu_vars		+450	@	110	.,		///
-	label("Load variables")					///
-	onpush(program pq_load_vars)
-  EDIT ed_rows			_ilft	250	_ibwd	.,		///
-	error("Row variables") label("rows")
-  TEXT tx_col			_ilft	280	_ibwd	.,		///
-	label("Columns: one output column per distinct value (one variable)")
-  COMBOBOX cb_col		_ilft	300	_vnwd	.,		///
-	dropdown contents(vv_list)					///
-	error("Columns variable") label("columns")
-  TEXT tx_stat			_ilft	335	120	.,		///
+  GROUPBOX gb_stats		_lft	40	_iwd	_ht9,		///
+	label("Statistics to compute (collapse and pivot table)")
+  TEXT tx_stat			_ilft	60	120	.,		///
 	label("Statistic")
-  TEXT tx_val			+130	@	160	.,		///
+  TEXT tx_val			150	@	200	.,		///
 	label("Of variable")
-  TEXT tx_tgt			+170	@	170	.,		///
+  TEXT tx_tgt			360	@	140	.,		///
 	label("Result name (optional)")
-  COMBOBOX cb_stat		_ilft	355	120	.,		///
-	dropdownlist contents(stat_list) default("sum")			///
-	label("statistic")
-  COMBOBOX cb_val		+130	@	160	.,		///
-	dropdown contents(vv_list)					///
-	error("Values variable") label("values variable")
-  EDIT ed_tgt			+170	@	170	.,		///
-	label("result name")
+  BUTTON bu_pop			510	@	80	.,		///
+	onpush(program main_populate)					///
+	tooltip("Populate the comboboxes with the variable names of the current view") ///
+	label("Populate")
+  COMBOBOX cb_stat1		_ilft	_ss	120	.,		///
+	dropdownlist							///
+	contents(stat_list)						///
+	default("mean")							///
+	label("Statistic 1")
+  COMBOBOX cb_val1		150	@	200	.,		///
+	dropdown							///
+	contents(vv_list)						///
+	label("Variable 1")
+  EDIT ed_tgt1			360	@	140	.,		///
+	max(32)								///
+	label("Result name 1")
+  COMBOBOX cb_stat2		_ilft	_ms	120	.,		///
+	dropdownlist							///
+	contents(stat_list)						///
+	default("count")						///
+	label("Statistic 2")
+  COMBOBOX cb_val2		150	@	200	.,		///
+	dropdown							///
+	contents(vv_list)						///
+	label("Variable 2")
+  EDIT ed_tgt2			360	@	140	.,		///
+	max(32)								///
+	label("Result name 2")
+  TEXT tx_specs			_ilft	_ms	200	.,		///
+	label("Additional specifications:")
+  EDIT ed_specs			230	@	330	.,		///
+	label("(stat) [target=]source ...")
 
-  TEXT tx_val2			_ilft	385	_ibwd	.,		///
-	label("Second measure (optional)")
-  COMBOBOX cb_stat2		_ilft	405	120	.,		///
-	dropdownlist contents(stat_list) default("count")		///
-	label("second statistic")
-  COMBOBOX cb_val2		+130	@	160	.,		///
-	dropdown contents(vv_list)					///
-	label("second values variable")
-  EDIT ed_tgt2			+170	@	170	.,		///
-	label("second result name")
+  TEXT tx_by			_lft	170	_cwd1	.,		///
+	label("Group by, option by() (collapse; optional):")
+  TEXT tx_rows			_lft2	@	_cwd1	.,		///
+	label("Rows of the pivot table, option rows():")
+  COMBOBOX cb_by			_lft	_ss	_cwd1	.,		///
+	append								///
+	dropdown							///
+	contents(vv_list)						///
+	option(by)							///
+	label("Group by")
+  COMBOBOX cb_rows		_lft2	@	_cwd1	.,		///
+	append								///
+	dropdown							///
+	contents(vv_list)						///
+	option(rows)							///
+	error("Rows of the pivot table")				///
+	label("Rows of the pivot table")
+  TEXT tx_cols			_lft	_ls	_iwd	.,		///
+	label("Columns of the pivot table, option cols() (one variable; one output column per distinct value):")
+  COMBOBOX cb_cols		_lft	_ss	_vnwd	.,		///
+	dropdown							///
+	contents(vv_list)						///
+	option(cols)							///
+	error("Columns of the pivot table")				///
+	label("Columns of the pivot table")
 
-  TEXT tx_note			_lft	460	_iwd	.,		///
-	label("Lazy: materialise the table with Collect / save (db parqit_write).")
+  TEXT tx_cvars			_lft	_ls	_cwd1	.,		///
+	label("Variables to contract:")
+  TEXT tx_freq			_lft2	@	_cwd1	.,		///
+	label("Name of frequency variable (optional; default _freq):")
+  COMBOBOX cb_cvars		_lft	_ss	_cwd1	.,		///
+	append								///
+	dropdown							///
+	contents(vv_list)						///
+	error("Variables to contract")					///
+	label("Variables to contract")
+  EDIT ed_freq			_lft2	@	_vnwd	.,		///
+	max(32)								///
+	option(freq)							///
+	label("Name of frequency variable")
+
+  TEXT tx_dir			_lft	_ls	120	.,		///
+	label("Reshape to:")
+  TEXT tx_stubs			140	@	220	.,		///
+	label("Base (stub) names of X_ij variables:")
+  TEXT tx_i			370	@	110	.,		///
+	label("ID variables, i():")
+  TEXT tx_j			490	@	100	.,		///
+	label("j() variable:")
+  COMBOBOX cb_dir		_lft	_ss	120	.,		///
+	dropdownlist							///
+	contents(dir_list)						///
+	default("long")							///
+	label("Reshape to")
+  COMBOBOX cb_stubs		140	@	220	.,		///
+	append								///
+	dropdown							///
+	contents(vv_list)						///
+	error("Base (stub) names")					///
+	label("Base (stub) names")
+  COMBOBOX cb_i			370	@	110	.,		///
+	append								///
+	dropdown							///
+	contents(vv_list)						///
+	error("ID variables")						///
+	label("ID variables")
+  COMBOBOX cb_j			490	@	100	.,		///
+	dropdown							///
+	contents(vv_list)						///
+	error("j() variable")						///
+	label("j() variable")
+
+  TEXT tx_note			_lft	_ls	_iwd	.,		///
+	label("All four operations are lazy; materialise the result with parqit collect or parqit save.")
+END
+
+LIST vv_list
+BEGIN
 END
 
 LIST dir_list
@@ -189,14 +180,10 @@ BEGIN
 	wide
 END
 
-LIST vv_list
-BEGIN
-END
-
 LIST stat_list
 BEGIN
-	sum
 	mean
+	sum
 	count
 	min
 	max
@@ -213,54 +200,160 @@ BEGIN
 	lastnm
 END
 
+PROGRAM main_mode
+BEGIN
+	call main.tx_stat.disable
+	call main.tx_val.disable
+	call main.tx_tgt.disable
+	call main.cb_stat1.disable
+	call main.cb_val1.disable
+	call main.ed_tgt1.disable
+	call main.cb_stat2.disable
+	call main.cb_val2.disable
+	call main.ed_tgt2.disable
+	call main.tx_specs.disable
+	call main.ed_specs.disable
+	call main.tx_by.disable
+	call main.cb_by.disable
+	call main.tx_rows.disable
+	call main.cb_rows.disable
+	call main.tx_cols.disable
+	call main.cb_cols.disable
+	call main.tx_cvars.disable
+	call main.cb_cvars.disable
+	call main.tx_freq.disable
+	call main.ed_freq.disable
+	call main.tx_dir.disable
+	call main.cb_dir.disable
+	call main.tx_stubs.disable
+	call main.cb_stubs.disable
+	call main.tx_i.disable
+	call main.cb_i.disable
+	call main.tx_j.disable
+	call main.cb_j.disable
+	if main.rb_collapse | main.rb_pivot {
+		call main.tx_stat.enable
+		call main.tx_val.enable
+		call main.tx_tgt.enable
+		call main.cb_stat1.enable
+		call main.cb_val1.enable
+		call main.ed_tgt1.enable
+		call main.cb_stat2.enable
+		call main.cb_val2.enable
+		call main.ed_tgt2.enable
+		call main.tx_specs.enable
+		call main.ed_specs.enable
+	}
+	if main.rb_collapse {
+		call main.tx_by.enable
+		call main.cb_by.enable
+	}
+	if main.rb_pivot {
+		call main.tx_rows.enable
+		call main.cb_rows.enable
+		call main.tx_cols.enable
+		call main.cb_cols.enable
+	}
+	if main.rb_contract {
+		call main.tx_cvars.enable
+		call main.cb_cvars.enable
+		call main.tx_freq.enable
+		call main.ed_freq.enable
+	}
+	if main.rb_reshape {
+		call main.tx_dir.enable
+		call main.cb_dir.enable
+		call main.tx_stubs.enable
+		call main.cb_stubs.enable
+		call main.tx_i.enable
+		call main.cb_i.enable
+		call main.tx_j.enable
+		call main.cb_j.enable
+	}
+END
+
+PROGRAM main_populate
+BEGIN
+	call pq_populate_error.setvalue 0
+	put "parqit _dlgvars "
+	put dlgname
+	put " vv_list"
+	stata hidden immediate
+	if pq_populate_error {
+		stopbox stop "Unable to get the variable names of the current view." ///
+			"Open a view first (User > parqit > Read Parquet data...)."
+	}
+	call main.cb_val1.repopulate
+	call main.cb_val2.repopulate
+	call main.cb_by.repopulate
+	call main.cb_rows.repopulate
+	call main.cb_cols.repopulate
+	call main.cb_cvars.repopulate
+	call main.cb_stubs.repopulate
+	call main.cb_i.repopulate
+	call main.cb_j.repopulate
+END
+
+PROGRAM main_stats_output
+BEGIN
+	if main.cb_val1 {
+		put " (" main.cb_stat1 ") "
+		if main.ed_tgt1 {
+			put main.ed_tgt1 "="
+		}
+		put main.cb_val1
+	}
+	if main.cb_val2 {
+		put " (" main.cb_stat2 ") "
+		if main.ed_tgt2 {
+			put main.ed_tgt2 "="
+		}
+		put main.cb_val2
+	}
+	if main.ed_specs {
+		put " " main.ed_specs
+	}
+END
+
 PROGRAM command
 BEGIN
+	if main.rb_collapse | main.rb_pivot {
+		if !main.cb_val1 & !main.cb_val2 & !main.ed_specs {
+			stopbox stop "At least one statistic with a variable (or an additional specification) must be given."
+		}
+	}
 	if main.rb_collapse {
-		put "parqit collapse "
-		require main.ed_specs
-		put main.ed_specs
+		put "parqit collapse"
+		put /program main_stats_output
 		beginoptions
-			optionarg main.ed_by
+			optionarg main.cb_by
+		endoptions
+	}
+	if main.rb_pivot {
+		require main.cb_rows
+		require main.cb_cols
+		put "parqit pivot"
+		put /program main_stats_output
+		beginoptions
+			optionarg main.cb_rows
+			optionarg main.cb_cols
 		endoptions
 	}
 	if main.rb_contract {
-		put "parqit contract "
-		require main.ed_contract
-		put main.ed_contract
+		require main.cb_cvars
+		put "parqit contract " main.cb_cvars
 		beginoptions
 			optionarg main.ed_freq
 		endoptions
 	}
 	if main.rb_reshape {
-		put "parqit reshape " main.cb_dir " "
-		require main.ed_stubs
-		put main.ed_stubs ", i("
-		require main.ed_i
-		put main.ed_i ") j("
-		require main.ed_j
-		put main.ed_j ")"
-	}
-	if main.rb_pivot {
-		put "parqit pivot "
-		put "(" main.cb_stat ") "
-		if main.ed_tgt {
-			put main.ed_tgt "="
-		}
-		require main.cb_val
-		put main.cb_val
-		if main.cb_val2 {
-			put " (" main.cb_stat2 ") "
-			if main.ed_tgt2 {
-				put main.ed_tgt2 "="
-			}
-			put main.cb_val2
-		}
-		put ", rows("
-		require main.ed_rows
-		put main.ed_rows
-		put ") cols("
-		require main.cb_col
-		put main.cb_col
-		put ")"
+		require main.cb_stubs
+		require main.cb_i
+		require main.cb_j
+		put "parqit reshape " main.cb_dir " " main.cb_stubs
+		beginoptions
+			put "i(" main.cb_i ") "
+			put "j(" main.cb_j ")"
+		endoptions
 	}
 END

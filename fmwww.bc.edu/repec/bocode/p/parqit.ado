@@ -1,4 +1,4 @@
-*! version 0.1.28 23aug2026
+*! version 0.1.29 25aug2026
 *! parqit — a grammar of data manipulation for Stata, backed by Parquet (embedded DuckDB engine)
 *! Author: Miguel Portela, Universidade do Minho & NIPE
 *! License: MIT (see LICENSE in the parqit repository)
@@ -125,20 +125,25 @@ program define _parqit_menu
         di as txt "(parqit is already on the User menu this session)"
         exit
     }
+    * One submenu under Stata's User menu, in the order of a session and with
+    * the task wording of Stata's own Data/File menus: read; describe and
+    * explore; change; combine; materialise; manage. Every "..." item opens a
+    * dialog; the last group runs a command directly, as official menus do.
+    * Mnemonics (&) are unique within the submenu.
     capture {
         window menu append submenu "stUser" "&parqit"
-        window menu append item "&parqit" "&Read / open / path..." "db parqit_read"
-        window menu append item "&parqit" "&Explore / previews..." "db parqit_explore"
-        window menu append item "&parqit" "&Statistics..." "db parqit_stats"
+        window menu append item "&parqit" "&Read Parquet data (lazy view or into memory)..." "db parqit_read"
+        window menu append item "&parqit" "&Describe and explore data..." "db parqit_explore"
+        window menu append item "&parqit" "Summary &statistics, tables, and correlations..." "db parqit_stats"
         window menu append separator "&parqit"
-        window menu append item "&parqit" "&Filter / sample..." "db parqit_filter"
-        window menu append item "&parqit" "&Variables / duplicates..." "db parqit_vars"
-        window menu append item "&parqit" "&Generate / egen / replace..." "db parqit_gen"
-        window menu append item "&parqit" "&Aggregate / reshape / pivot..." "db parqit_pivot"
-        window menu append item "&parqit" "Co&mbine lazy / in-memory..." "db parqit_combine"
+        window menu append item "&parqit" "Keep or drop &observations, or draw a sample..." "db parqit_filter"
+        window menu append item "&parqit" "Keep, drop, order, sort, or rename &variables..." "db parqit_vars"
+        window menu append item "&parqit" "&Create or change variables..." "db parqit_gen"
+        window menu append item "&parqit" "Colla&pse, contract, pivot table, or reshape..." "db parqit_pivot"
+        window menu append item "&parqit" "Combine datasets (&merge, append, joinby)..." "db parqit_combine"
         window menu append separator "&parqit"
-        window menu append item "&parqit" "C&ollect / save..." "db parqit_write"
-        window menu append item "&parqit" "Vie&ws / SQL / settings..." "db parqit_views"
+        window menu append item "&parqit" "Co&llect into memory or save as Parquet..." "db parqit_write"
+        window menu append item "&parqit" "Views, SQL, and &engine settings..." "db parqit_views"
         window menu append separator "&parqit"
         window menu append item "&parqit" "Vers&ion" "parqit version"
         window menu append item "&parqit" "Self-&test" "parqit selftest"
@@ -167,30 +172,78 @@ end
 * The raw path travels through the global PARQIT_RS_IN to survive spaces/quotes.
 * ----------------------------------------------------------------------------
 
-* Dialog support: fill a dialog's LIST member with the open view's variable
-* names so COMBOBOX pickers are view-aware (the official spreg/sts dialogs'
-* `.dlgname.listname[i] = ...` + .repopulate idiom — dialog LISTs are class
-* members writable from ado). Called from a dialog PREINIT via
-*   parqit _dlgvars <dlgname> <listname>
-* and must NEVER break the dialog: any failure (no view open, no plugin,
-* no such dialog) leaves the list empty and exits 0. Interactive-only glue —
-* intentionally undocumented in the help.
-program define _parqit__dlgvars
+* Dialog support: fill a dialog's LIST member with variable names so the
+* dialogs' COMBOBOX pickers can be populated on demand — Stata's own
+* use/describe/merge dialogs' "Populate" idiom (use_option_wrk_dlg.ado:
+* `.dlgname.listname[i] = ...` + .repopulate; dialog LISTs are class members
+* writable from ado). Called from a dialog button program via
+*   parqit _dlgvars <dlgname> <listname>                 (the current view)
+*   parqit _dlgvars <dlgname> <listname>, data           (Stata memory)
+*   parqit _dlgvars <dlgname> <listname> using <source>  (a Parquet footer)
+* and must NEVER break the dialog: any failure (no view open, no plugin, a
+* non-Parquet source, no such dialog) leaves the list empty, sets the
+* dialog's optional DOUBLE property pq_populate_error to 1 (the official
+* main_des_error pattern, so the dialog can say so in a stopbox) and exits 0.
+* Interactive-only glue — intentionally undocumented in the help.
+program define _parqit__dlgvars, rclass
     version 16.0
-    args dlgname listname
+    syntax [anything] [using/] [, Data]
+    gettoken dlgname anything : anything
+    gettoken listname anything : anything
+    return local varlist ""
+    return scalar k = 0
     if ("`dlgname'" == "" | "`listname'" == "") exit
-    capture {
-        quietly _parqit_ds
-        local vars `"`r(varlist)'"'
-    }
+    capture confirm name `dlgname'
     if (_rc) exit
+    capture confirm name `listname'
+    if (_rc) exit
+    capture .`dlgname'.pq_populate_error.setvalue 0
+    if (`"`using'"' != "" & "`data'" != "") {
+        capture .`dlgname'.pq_populate_error.setvalue 1
+        exit
+    }
+    local vars
+    capture {
+        if ("`data'" != "") {
+            quietly ds
+            local vars `"`r(varlist)'"'
+        }
+        else if (`"`using'"' != "") {
+            quietly _parqit_describe `"`using'"'
+            local ncols = r(n_cols)
+            if (`ncols' > 0) {
+                forvalues i = 1/`ncols' {
+                    local vars `"`vars' `r(name_`i')'"'
+                }
+            }
+        }
+        else {
+            quietly _parqit_ds
+            local vars `"`r(varlist)'"'
+        }
+    }
+    if (_rc) {
+        capture .`dlgname'.pq_populate_error.setvalue 1
+        exit
+    }
+    local vars = strtrim(`"`vars'"')
+    local nvars : word count `vars'
+    return local varlist `"`vars'"'
+    return scalar k = `nvars'
+    * A later Populate may have fewer variables than the previous source.
+    * Clear the class array first so stale tail entries cannot survive.
+    capture .`dlgname'.`listname'.Arrdropall
     local i 1
     foreach v of local vars {
         capture .`dlgname'.`listname'[`i'] = "`v'"
         if (_rc) continue, break
         local ++i
-        if (`i' > 500) continue, break    /* an editable dropdown; cap the fill */
     }
+    * Class writes above may themselves set/clear r(); publish the helper's
+    * contract only after all best-effort dialog interaction is complete.
+    capture confirm name `dlgname'   /* leave the private helper's _rc at zero */
+    return local varlist `"`vars'"'
+    return scalar k = `nvars'
 end
 
 * One-line, truthful performance hint shown when parqit spots a faster path for a
@@ -2299,6 +2352,13 @@ program define _parqit_sql, rclass
     gettoken q 0 : 0, parse(",")
     local q = strtrim(`"`q'"')
     local q `q'
+    * A SQL console habit is to end a statement with semicolon.  parqit opens
+    * the text as a lazy subquery, where that terminator would sit inside
+    * parentheses and make otherwise valid SQL fail.  Remove terminators only
+    * from the trimmed tail; semicolons inside SQL strings remain untouched.
+    while (`"`q'"' != "" & substr(`"`q'"', strlen(`"`q'"'), 1) == ";") {
+        local q = strtrim(substr(`"`q'"', 1, strlen(`"`q'"') - 1))
+    }
     if (`"`q'"' == "") {
         di as err `"parqit sql: a quoted SQL query is required"'
         exit 198

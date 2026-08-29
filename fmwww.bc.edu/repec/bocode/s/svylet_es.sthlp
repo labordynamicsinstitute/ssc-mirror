@@ -349,6 +349,17 @@ aviso nombrando las categorias afectadas (por su posicion dentro de
 {cmd:over()}, no su valor crudo). Trate {cmd:?} como "el test no se pudo
 calcular aca", nunca como "sin diferencia".
 
+{pstd}
+El F omnibus solo excluye del contraste a las categorias degeneradas --
+no queda missing solo porque UNA categoria de varias sea degenerada.
+Mientras al menos 2 categorias tengan varianza definida y positiva, el F
+omnibus y su p-valor se calculan sobre ese subconjunto (se imprime un
+aviso indicando cuantas de las categorias de {cmd:over()} se usaron);
+con menos de 2 categorias utilizables no queda nada que testear, asi que
+{cmd:r(F_omnibus)}/{cmd:r(p_omnibus)} quedan missing. Los puntos
+estimados y las comparaciones pareadas que no involucran una categoria
+degenerada no se ven afectados de ninguna forma.
+
 {marker remarks_boot}{...}
 {pstd}{bf:Por que boot() remuestrea y reasigna por UPM completa}
 

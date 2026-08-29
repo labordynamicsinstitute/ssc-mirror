@@ -1,205 +1,334 @@
 /*
-  parqit — explore structure and data quality (current dataset unchanged)
+  parqit describe - Describe and explore a view or a Parquet file
 
-*!  VERSION 0.1.28  23aug2026
+*!  VERSION 0.1.29  25aug2026
 
-  Launch with:  db parqit_explore     (installed on the menu by: parqit menu)
-  Descriptive statistics (summarize, tabulate, tabstat, correlations,
-  histogram) live in the companion dialog:  db parqit_stats
+  User > parqit > Describe and explore data...
+  Launch directly with:  db parqit_explore      (menu installed by: parqit menu)
+
+  One list box of operations (Stata's interface guideline for more than
+  about twelve choices), each an engine-side query that leaves the data in
+  memory unchanged: describe/glimpse, ds, lookfor, codebook, head, list,
+  count, misstable [patterns], levelsof, distinct, duplicates report/list.
+  Summary statistics live in the companion dialog:  db parqit_stats
 */
 
 VERSION 16.0
 
 INCLUDE _std_wide
-DEFINE _dlght 515
+DEFINE _dlght 350
 INCLUDE header
-HELP hlp1, view("help parqit")
+HELP hlp1, view("help parqit##menu")
 RESET res1
 
 SCRIPT PREINIT
 BEGIN
+	create STRING dlgname
+	dlgname.storeDialogClassName
+	create DOUBLE pq_populate_error
 	main.fi_file.formatfilter					///
 		"Parquet (*.parquet)|*.parquet|"			///
 		"All files (*.*)|*.*"
-	script descview_on
+END
+
+SCRIPT POSTINIT
+BEGIN
+	main.lb_op.forceselchange
+END
+
+DIALOG main, label("parqit describe - Describe and explore a view or a Parquet file") ///
+	tabtitle("Main")
+BEGIN
+  TEXT tx_op			_lft	_top	250	.,		///
+	label("Operation:")
+  LISTBOX lb_op			_lft	_ss	250	300,		///
+	contents(op_words)						///
+	values(op_vals)							///
+	onselchangelist(op_change)					///
+	label("Operation")
+
+  TEXT tx_file			275	_top	315	.,		///
+	label("Parquet file, glob, or Hive directory:")
+  FILE fi_file			275	_ss	315	.,		///
+	error("Filename")						///
+	defext(parquet)							///
+	label("Browse...")
+
+  TEXT tx_vars			275	_ls	230	.,		///
+	label("Variables (leave empty for all):")
+  BUTTON bu_pop			510	@	80	.,		///
+	onpush(program main_populate)					///
+	tooltip("Populate combobox with the variable names of the current view") ///
+	label("Populate")
+  COMBOBOX cb_vars		275	_ss	315	.,		///
+	append								///
+	dropdown							///
+	contents(vv_list)						///
+	label("Variables")
+
+  TEXT tx_if			275	_ls	315	.,		///
+	label("If (expression):")
+  EXP ex_if			275	_ss	315	.,		///
+	label("Create...")
+
+  TEXT tx_rows			275	_ls	60	.,		///
+	label("Rows:") right
+  EDIT ed_rows			340	@	60	.,		///
+	numonly								///
+	default(5)							///
+	label("Rows")
+  TEXT tx_limit			405	@	60	.,		///
+	label("Limit:") right
+  EDIT ed_limit			470	@	60	.,		///
+	numonly								///
+	option(limit)							///
+	label("Limit")
+
+  TEXT tx_from			275	_ls	60	.,		///
+	label("From:") right
+  EDIT ed_from			340	@	60	.,		///
+	numonly								///
+	label("From")
+  TEXT tx_to			405	@	60	.,		///
+	label("to:") right
+  EDIT ed_to			470	@	60	.,		///
+	numonly								///
+	label("to")
+
+  CHECKBOX ck_joint		275	_ls	315	.,		///
+	option(joint)							///
+	label("Also count the distinct joint values (joint)")
+
+  TEXT tx_note			275	_ls	315	.,		///
+	label("Engine-side query; the data in memory are unchanged.")
+END
+
+LIST vv_list
+BEGIN
+END
+
+LIST op_words
+BEGIN
+	Describe the current view
+	Describe a Parquet file (footer only)
+	Glimpse the view or a Parquet file
+	List variable names (ds)
+	Search names and labels (lookfor)
+	Codebook
+	Preview the first rows (head)
+	List observations (list)
+	Count observations (count)
+	Missing values by variable (misstable)
+	Missing patterns (misstable patterns)
+	Levels of one variable (levelsof)
+	Distinct values (distinct)
+	Report duplicates (duplicates report)
+	List duplicates (duplicates list)
+END
+
+LIST op_vals
+BEGIN
+	descview
+	descfile
+	glimpse
+	ds
+	lookfor
+	codebook
+	head
+	list
+	count
+	misstable
+	misspatterns
+	levelsof
+	distinct
+	dupreport
+	duplist
+END
+
+LIST op_change
+BEGIN
+	script op_descview
+	script op_descfile
+	script op_glimpse
+	script op_descview
+	script op_lookfor
+	script op_vars
+	script op_head
+	script op_list
+	script op_count
+	script op_vars
+	script op_vars
+	script op_levelsof
+	script op_distinct
+	script op_keys
+	script op_keys
 END
 
 SCRIPT all_off
 BEGIN
+	main.tx_file.disable
 	main.fi_file.disable
-	main.ed_input.disable
+	main.tx_vars.disable
+	main.bu_pop.disable
+	main.cb_vars.disable
+	main.tx_if.disable
 	main.ex_if.disable
+	main.tx_rows.disable
 	main.ed_rows.disable
+	main.tx_limit.disable
 	main.ed_limit.disable
+	main.tx_from.disable
 	main.ed_from.disable
+	main.tx_to.disable
 	main.ed_to.disable
-	main.ck_patterns.disable
 	main.ck_joint.disable
+	main.tx_vars.setlabel "Variables (leave empty for all):"
+	main.tx_file.setlabel "Parquet file, glob, or Hive directory:"
 END
 
-SCRIPT descview_on
+SCRIPT vars_on
+BEGIN
+	main.tx_vars.enable
+	main.bu_pop.enable
+	main.cb_vars.enable
+END
+
+SCRIPT op_descview
 BEGIN
 	script all_off
 END
 
-SCRIPT descfile_on
+SCRIPT op_descfile
 BEGIN
 	script all_off
+	main.tx_file.enable
 	main.fi_file.enable
 END
 
-SCRIPT head_on
+SCRIPT op_glimpse
 BEGIN
 	script all_off
+	main.tx_file.enable
+	main.fi_file.enable
+	main.tx_file.setlabel "Parquet file, glob, or Hive directory (leave empty for the current view):"
+END
+
+SCRIPT op_lookfor
+BEGIN
+	script all_off
+	script vars_on
+	main.tx_vars.setlabel "Words to search for in variable names and labels:"
+END
+
+SCRIPT op_vars
+BEGIN
+	script all_off
+	script vars_on
+END
+
+SCRIPT op_head
+BEGIN
+	script all_off
+	main.tx_rows.enable
 	main.ed_rows.enable
 END
 
-SCRIPT list_on
+SCRIPT op_list
 BEGIN
 	script all_off
-	main.ed_input.enable
+	script vars_on
+	main.tx_if.enable
 	main.ex_if.enable
+	main.tx_from.enable
 	main.ed_from.enable
+	main.tx_to.enable
 	main.ed_to.enable
 END
 
-SCRIPT input_on
+SCRIPT op_count
 BEGIN
 	script all_off
-	main.ed_input.enable
-END
-
-SCRIPT ms_on
-BEGIN
-	script input_on
-	main.ck_patterns.enable
-END
-
-SCRIPT dist_on
-BEGIN
-	script input_on
-	main.ck_joint.enable
-END
-
-SCRIPT dup_on
-BEGIN
-	script input_on
-	main.ed_limit.enable
-END
-
-SCRIPT levels_on
-BEGIN
-	script input_on
-	main.ed_limit.enable
-END
-
-SCRIPT count_on
-BEGIN
-	script all_off
+	main.tx_if.enable
 	main.ex_if.enable
 END
 
-DIALOG main, label("parqit — explore structure and quality (no materialisation)") tabtitle("Main")
+SCRIPT op_levelsof
 BEGIN
-  GROUPBOX gb_action		_lft	_top	_iwd	190,		///
-	label("Operation")
-  RADIO rb_descview		_ilft	_ss	270	.,		///
-	first label("Describe current view")				///
-	onclickon(script descview_on)
-  RADIO rb_descfile		+280	@	270	.,		///
-	label("Describe Parquet footer")				///
-	onclickon(script descfile_on)
-  RADIO rb_glimpse		_ilft	+24	270	.,		///
-	label("Glimpse current view")				///
-	onclickon(script descview_on)
-  RADIO rb_head			+280	@	270	.,		///
-	label("Preview first rows (head)")			///
-	onclickon(script head_on)
-  RADIO rb_list			_ilft	+24	270	.,		///
-	label("Preview selected rows (list)")			///
-	onclickon(script list_on)
-  RADIO rb_ds			+280	@	270	.,		///
-	label("List variable names (ds)")				///
-	onclickon(script descview_on)
-  RADIO rb_lookfor		_ilft	+24	270	.,		///
-	label("Search names and labels (lookfor)")			///
-	onclickon(script input_on)
-  RADIO rb_cb			+280	@	270	.,		///
-	label("Codebook")					///
-	onclickon(script input_on)
-  RADIO rb_ms			_ilft	+24	270	.,		///
-	label("Missing values / patterns")			///
-	onclickon(script ms_on)
-  RADIO rb_levels		+280	@	270	.,		///
-	label("Levels of one variable")				///
-	onclickon(script levels_on)
-  RADIO rb_dist			_ilft	+24	270	.,		///
-	label("Distinct values")					///
-	onclickon(script dist_on)
-  RADIO rb_dup			+280	@	270	.,		///
-	label("Duplicates report")				///
-	onclickon(script dup_on)
-  RADIO rb_duplist		_ilft	+24	270	.,		///
-	label("List duplicate rows")				///
-	onclickon(script dup_on)
-  RADIO rb_count			+280	@	270	.,		///
-	last label("Count rows")					///
-	onclickon(script count_on)
+	script all_off
+	script vars_on
+	main.tx_vars.setlabel "Variable:"
+	main.tx_limit.enable
+	main.ed_limit.enable
+END
 
-  GROUPBOX gb_inputs		_lft	210	_iwd	200,		///
-	label("Inputs for the selected operation")
-  TEXT tx_file			_ilft	_ss	170	.,		///
-	label("Parquet file / glob / folder")
-  FILE fi_file			+180	@	380	.,		///
-	error("File to describe") defext(parquet) label("Browse...")
-  TEXT tx_input			_ilft	+30	170	.,		///
-	label("Variables / keys / terms")
-  EDIT ed_input			+180	@	380	.,		///
-	label("variables, keys or search terms")
-  TEXT tx_cond			_ilft	+30	170	.,		///
-	label("Condition (list/count)")
-  EXP ex_if			+180	@	380	.,		///
-	label("Create...")
-  TEXT tx_rows			_ilft	+32	45	., label("Rows:")
-  EDIT ed_rows			+50	@	65	.,		///
-	numonly default(5) label("rows")
-  TEXT tx_limit			+80	@	45	., label("Limit:")
-  EDIT ed_limit			+50	@	70	.,		///
-	numonly option(limit) label("limit")
-  TEXT tx_from			+85	@	45	., label("From:")
-  EDIT ed_from			+50	@	65	.,		///
-	numonly label("first")
-  TEXT tx_to			+80	@	25	., label("to:")
-  EDIT ed_to			+30	@	65	.,		///
-	numonly label("last")
-  CHECKBOX ck_patterns		_ilft	+30	150	.,		///
-	label("Missing patterns")
-  CHECKBOX ck_joint		+165	@	180	.,		///
-	option(joint) label("Joint distinct count")
+SCRIPT op_distinct
+BEGIN
+	script all_off
+	script vars_on
+	main.ck_joint.enable
+END
+
+SCRIPT op_keys
+BEGIN
+	script all_off
+	script vars_on
+	main.tx_vars.setlabel "Key variables:"
+	main.tx_limit.enable
+	main.ed_limit.enable
+END
+
+PROGRAM main_populate
+BEGIN
+	call pq_populate_error.setvalue 0
+	put "parqit _dlgvars "
+	put dlgname
+	put " vv_list"
+	stata hidden immediate
+	if pq_populate_error {
+		stopbox stop "Unable to get the variable names of the current view." ///
+			"Open a view first (User > parqit > Read Parquet data...)."
+	}
+	call main.cb_vars.repopulate
 END
 
 PROGRAM command
 BEGIN
-	if main.rb_descview {
+	if main.lb_op.equals("descview") {
 		put "parqit describe"
 	}
-	if main.rb_descfile {
-		put "parqit describe "
+	if main.lb_op.equals("descfile") {
 		require main.fi_file
-		put `"""' main.fi_file `"""'
+		put "parqit describe "
+		put /smartquote main.fi_file
 	}
-	if main.rb_glimpse {
+	if main.lb_op.equals("glimpse") {
 		put "parqit glimpse"
+		if main.fi_file {
+			put " "
+			put /smartquote main.fi_file
+		}
 	}
-	if main.rb_head {
-		put "parqit head "
+	if main.lb_op.equals("ds") {
+		put "parqit ds"
+	}
+	if main.lb_op.equals("lookfor") {
+		require main.cb_vars
+		put "parqit lookfor " main.cb_vars
+	}
+	if main.lb_op.equals("codebook") {
+		put "parqit codebook"
+		if main.cb_vars {
+			put " " main.cb_vars
+		}
+	}
+	if main.lb_op.equals("head") {
 		require main.ed_rows
-		put main.ed_rows
+		put "parqit head " main.ed_rows
 	}
-	if main.rb_list {
+	if main.lb_op.equals("list") {
 		put "parqit list"
-		if main.ed_input {
-			put " " main.ed_input
+		if main.cb_vars {
+			put " " main.cb_vars
 		}
 		if main.ex_if {
 			put " if " main.ex_if
@@ -210,66 +339,52 @@ BEGIN
 			put " in " main.ed_from "/" main.ed_to
 		}
 	}
-	if main.rb_ds {
-		put "parqit ds"
-	}
-	if main.rb_lookfor {
-		put "parqit lookfor "
-		require main.ed_input
-		put main.ed_input
-	}
-	if main.rb_cb {
-		put "parqit codebook"
-		if main.ed_input {
-			put " " main.ed_input
+	if main.lb_op.equals("count") {
+		put "parqit count"
+		if main.ex_if {
+			put " if " main.ex_if
 		}
 	}
-	if main.rb_ms {
+	if main.lb_op.equals("misstable") {
 		put "parqit misstable"
-		if main.ck_patterns {
-			put " patterns"
-		}
-		if main.ed_input {
-			put " " main.ed_input
+		if main.cb_vars {
+			put " " main.cb_vars
 		}
 	}
-	if main.rb_levels {
-		put "parqit levelsof "
-		require main.ed_input
-		put main.ed_input
+	if main.lb_op.equals("misspatterns") {
+		put "parqit misstable patterns"
+		if main.cb_vars {
+			put " " main.cb_vars
+		}
+	}
+	if main.lb_op.equals("levelsof") {
+		require main.cb_vars
+		put "parqit levelsof " main.cb_vars
 		beginoptions
 			optionarg main.ed_limit
 		endoptions
 	}
-	if main.rb_dist {
+	if main.lb_op.equals("distinct") {
 		put "parqit distinct"
-		if main.ed_input {
-			put " " main.ed_input
+		if main.cb_vars {
+			put " " main.cb_vars
 		}
 		beginoptions
 			option main.ck_joint
 		endoptions
 	}
-	if main.rb_dup {
-		put "parqit duplicates report "
-		require main.ed_input
-		put main.ed_input
+	if main.lb_op.equals("dupreport") {
+		require main.cb_vars
+		put "parqit duplicates report " main.cb_vars
 		beginoptions
 			optionarg main.ed_limit
 		endoptions
 	}
-	if main.rb_duplist {
-		put "parqit duplicates list "
-		require main.ed_input
-		put main.ed_input
+	if main.lb_op.equals("duplist") {
+		require main.cb_vars
+		put "parqit duplicates list " main.cb_vars
 		beginoptions
 			optionarg main.ed_limit
 		endoptions
-	}
-	if main.rb_count {
-		put "parqit count"
-		if main.ex_if {
-			put " if " main.ex_if
-		}
 	}
 END

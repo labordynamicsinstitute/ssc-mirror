@@ -1,138 +1,180 @@
 /*
-  parqit — choose, order, rename, sort and deduplicate variables (lazy)
+  parqit keep - Keep, drop, order, sort, or rename variables; drop duplicates
 
-*!  VERSION 0.1.28  23aug2026
+*!  VERSION 0.1.29  25aug2026
 
-  Launch with:  db parqit_vars     (installed on the menu by: parqit menu)
+  User > parqit > Keep, drop, order, sort, or rename variables...
+  Launch directly with:  db parqit_vars      (menu installed by: parqit menu)
+
+  Builds parqit keep / drop / order / sort / gsort / rename / duplicates drop.
+  Populate fills the variable pickers from the current view (parqit ds).
+  These verbs are lazy: they change the view's plan, not the data in memory.
 */
 
 VERSION 16.0
 
 INCLUDE _std_wide
-DEFINE _dlght 430
+DEFINE _dlght 335
 INCLUDE header
-HELP hlp1, view("help parqit")
+HELP hlp1, view("help parqit##menu")
 RESET res1
 
 SCRIPT PREINIT
 BEGIN
-	script vars_on
+	create STRING dlgname
+	dlgname.storeDialogClassName
+	create DOUBLE pq_populate_error
 END
 
-SCRIPT vars_on
+PROGRAM POSTINIT_PROGRAM
 BEGIN
-	main.ed_vars.enable
-	main.ed_old.disable
-	main.ed_new.disable
-	main.ck_force.disable
+	call program main_mode
 END
 
-SCRIPT ren_on
+DIALOG main, label("parqit keep - Keep, drop, order, sort, or rename variables; drop duplicate observations") ///
+	tabtitle("Main")
 BEGIN
-	main.ed_vars.disable
-	main.ed_old.enable
-	main.ed_new.enable
-	main.ck_force.disable
+  RADIO rb_keep			_lft	_top	_lw80	.,		///
+	first								///
+	onclickon(program main_mode)					///
+	label("Keep only these variables (keep)")
+  BUTTON bu_pop			_rj80	@	80	.,		///
+	onpush(program main_populate)					///
+	tooltip("Populate the comboboxes with the variable names of the current view") ///
+	label("Populate")
+  RADIO rb_drop			_lft	_ss	_iwd	.,		///
+	onclickon(program main_mode)					///
+	label("Drop these variables (drop)")
+  RADIO rb_order		@	_ss	@	.,		///
+	onclickon(program main_mode)					///
+	label("Move these variables to the front (order)")
+  RADIO rb_sort			@	_ss	@	.,		///
+	onclickon(program main_mode)					///
+	label("Sort by these variables, ascending (sort)")
+  RADIO rb_gsort		@	_ss	@	.,		///
+	onclickon(program main_mode)					///
+	label("Sort with a + or - prefix per variable, for example -wage id (gsort)")
+  TEXT tx_vars			_ilft	_ms	_ibwd	.,		///
+	label("Variables:")
+  COMBOBOX cb_vars		@	_ss	@	.,		///
+	append								///
+	dropdown							///
+	contents(vv_list)						///
+	error("Variables")						///
+	label("Variables")
+
+  RADIO rb_rename		_lft	_ls	_iwd	.,		///
+	onclickon(program main_mode)					///
+	label("Rename variables (rename)")
+  TEXT tx_old			_ilft	_ss	270	.,		///
+	label("Existing variable names:")
+  TEXT tx_new			_lft2	@	_cwd1	.,		///
+	label("New variable names:")
+  COMBOBOX cb_old		_ilft	_ss	270	.,		///
+	append								///
+	dropdown							///
+	contents(vv_list)						///
+	error("Existing variable names")				///
+	label("Existing variable names")
+  EDIT ed_new			_lft2	@	_cwd1	.,		///
+	error("New variable names")					///
+	label("New variable names")
+
+  RADIO rb_dupdrop		_lft	_ls	_iwd	.,		///
+	last								///
+	onclickon(program main_mode)					///
+	label("Drop duplicate observations (duplicates drop)")
+  TEXT tx_keys			_ilft	_ss	_ibwd	.,		///
+	label("Key variables (leave empty to compare entire observations):")
+  COMBOBOX cb_keys		@	_ss	@	.,		///
+	append								///
+	dropdown							///
+	contents(vv_list)						///
+	label("Key variables")
+  CHECKBOX ck_force		@	_ms	@	.,		///
+	option(force)							///
+	label("Force the drop, even though information may be lost (required with key variables; sort the view first)")
 END
 
-SCRIPT dup_on
+LIST vv_list
 BEGIN
-	main.ed_vars.enable
-	main.ed_old.disable
-	main.ed_new.disable
-	main.ck_force.enable
 END
 
-DIALOG main, label("parqit — variables / sort / duplicates (lazy)") tabtitle("Main")
+PROGRAM main_mode
 BEGIN
-  GROUPBOX gb_what		_lft	_top	_iwd	315,		///
-	label("Operation on the open view")
-
-  RADIO rb_keep			_ilft	_ss	_ibwd	.,		///
-	first label("Keep only these variables")			///
-	onclickon(script vars_on)
-  RADIO rb_drop			@	+22	@	.,		///
-	label("Drop these variables")					///
-	onclickon(script vars_on)
-  RADIO rb_order		@	+22	@	.,		///
-	label("Order these variables first")				///
-	onclickon(script vars_on)
-  RADIO rb_sort		@	+22	@	.,			///
-	label("Sort by these variables (ascending)")			///
-	onclickon(script vars_on)
-  RADIO rb_gsort		@	+22	@	.,		///
-	label("Sort with +/- prefixes, e.g. -wage id (gsort)")		///
-	onclickon(script vars_on)
-  TEXT tx_vars			@	+25	330	.,		///
-	label("Variable list (names as shown by parqit describe/ds)")
-  BUTTON bu_vars		+450	@	110	.,		///
-	label("View variables")						///
-	onpush(program pq_show_vars)
-  EDIT ed_vars			_ilft	_ss	_ibwd	.,		///
-	error("Variable list") label("variables")
-
-  RADIO rb_rename		@	+35	_ibwd	.,		///
-	label("Rename one or several variables")			///
-	onclickon(script ren_on)
-  TEXT tx_old			@	+25	90	.,		///
-	label("Old names:")
-  EDIT ed_old			+95	@	180	.,		///
-	label("old names")
-  TEXT tx_new			+195	@	90	.,		///
-	label("New names:")
-  EDIT ed_new			+95	@	180	.,		///
-	label("new names")
-
-  RADIO rb_dupdrop		_ilft	+38	_ibwd	.,		///
-	last label("Drop duplicate rows by key variables")		///
-	onclickon(script dup_on)
-  CHECKBOX ck_force		_indent	+25	_ibwd	.,		///
-	option(force) label("Allow a blank key list (compare complete rows)")
+	call main.tx_vars.disable
+	call main.cb_vars.disable
+	call main.tx_old.disable
+	call main.cb_old.disable
+	call main.tx_new.disable
+	call main.ed_new.disable
+	call main.tx_keys.disable
+	call main.cb_keys.disable
+	call main.ck_force.disable
+	if main.rb_keep | main.rb_drop | main.rb_order | main.rb_sort | main.rb_gsort {
+		call main.tx_vars.enable
+		call main.cb_vars.enable
+	}
+	if main.rb_rename {
+		call main.tx_old.enable
+		call main.cb_old.enable
+		call main.tx_new.enable
+		call main.ed_new.enable
+	}
+	if main.rb_dupdrop {
+		call main.tx_keys.enable
+		call main.cb_keys.enable
+		call main.ck_force.enable
+	}
 END
 
-PROGRAM pq_show_vars
+PROGRAM main_populate
 BEGIN
-	put "parqit ds"
+	call pq_populate_error.setvalue 0
+	put "parqit _dlgvars "
+	put dlgname
+	put " vv_list"
 	stata hidden immediate
+	if pq_populate_error {
+		stopbox stop "Unable to get the variable names of the current view." ///
+			"Open a view first (User > parqit > Read Parquet data...)."
+	}
+	call main.cb_vars.repopulate
+	call main.cb_old.repopulate
+	call main.cb_keys.repopulate
 END
 
 PROGRAM command
 BEGIN
 	if main.rb_keep {
-		put "parqit keep "
-		require main.ed_vars
-		put main.ed_vars
+		require main.cb_vars
+		put "parqit keep " main.cb_vars
 	}
 	if main.rb_drop {
-		put "parqit drop "
-		require main.ed_vars
-		put main.ed_vars
+		require main.cb_vars
+		put "parqit drop " main.cb_vars
 	}
 	if main.rb_order {
-		put "parqit order "
-		require main.ed_vars
-		put main.ed_vars
+		require main.cb_vars
+		put "parqit order " main.cb_vars
 	}
 	if main.rb_sort {
-		put "parqit sort "
-		require main.ed_vars
-		put main.ed_vars
+		require main.cb_vars
+		put "parqit sort " main.cb_vars
 	}
 	if main.rb_gsort {
-		put "parqit gsort "
-		require main.ed_vars
-		put main.ed_vars
+		require main.cb_vars
+		put "parqit gsort " main.cb_vars
 	}
 	if main.rb_rename {
-		put "parqit rename "
-		require main.ed_old
+		require main.cb_old
 		require main.ed_new
-		put "(" main.ed_old ") (" main.ed_new ")"
+		put "parqit rename (" main.cb_old ") (" main.ed_new ")"
 	}
 	if main.rb_dupdrop {
 		put "parqit duplicates drop"
-		if main.ed_vars {
-			put " " main.ed_vars
+		if main.cb_keys {
+			put " " main.cb_keys
 		}
 		beginoptions
 			option main.ck_force

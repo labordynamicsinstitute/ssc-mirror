@@ -490,7 +490,13 @@ ponderado{p_end}
 {synopt:{cmd:F_WALD P_WALD}}estadistico F de Wald global y su p-valor
 analitico -- {it:constante entre todos los anios dentro del mismo
 bloque}, ya que el test compara todos los anios de ese bloque a la
-vez{p_end}
+vez. Queda missing cuando menos de 2 anios del bloque tienen varianza
+definida y positiva (un anio con proporcion exactamente 0 o 1 no la
+tiene) -- con 0 o 1 anios utilizables no queda nada que testear.
+Mientras {it:al menos 2} anios sean utilizables, {cmd:F_WALD}/
+{cmd:P_WALD} se calculan sobre ese subconjunto (los anios degenerados
+se excluyen del contraste, no todo el bloque); ver {help
+svylet_es##remarks_degenerate:Comentarios en svylet_es.sthlp}{p_end}
 {synopt:{cmd:GRUPO}}el codigo del Compact Letter Display para el anio de
 {it:esta fila} dentro de su bloque -- varia por anio{p_end}
 {synopt:{cmd:P_VS_REF}}p-valor ajustado por Bonferroni ({it:k}-1

@@ -1,0 +1,23 @@
+d 'LATEXLOG': module to build LaTeX log files from within Stata
+d
+d   latexlog builds complete LaTeX reports from within Stata. It
+d creates .tex documents containing text, sections, exported Stata
+d graphs, groups of subfigures, and tables from Stata’s collect
+d framework. Its optional pdf subcommand compiles the report with
+d pdflatex. 
+d
+d KW: log
+d KW: LaTeX
+d KW: publication quality
+d
+d Requires: Stata version 18; optionally estout from SSC
+d
+d Distribution-Date: 20260828
+d
+d Author: Johannes Schmieder,  Boston University
+d Support: email johannes@@bu.edu
+d
+f latexlog.ado
+f latexlog_run.ado
+f latexlog.sthlp
+f latexlog_test.do

@@ -1,10 +1,20 @@
-*! _xtpqardl_estimate v1.0.3 — Per-panel quantile regression engine
+*! _xtpqardl_estimate v1.0.4 — Per-panel quantile regression engine
 *! Called internally by xtpqardl.ado
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: May 2026
+*! Date: August 2026
 *!
-*! v1.0.3: Fixed multi-predictor "0 panels" bug — count obs across ALL vars,
-*!         relaxed min-obs threshold, added failure diagnostics
+*! v1.0.4: - the whole per-panel loop now runs inside Mata (see
+*!           _xtpqardl_mlib.ado).  Stata's qreg costs about 35 ms per
+*!           call, which made large N unusable; the Mata solver is
+*!           roughly two orders of magnitude faster and reproduces
+*!           qreg to ~1e-8 on the check-function objective.
+*!         - full covariance matrix for ALL derived parameters (rho,
+*!           beta, AR and short-run theta) at ALL quantiles, including
+*!           the cross-quantile blocks the constancy Wald tests need.
+*!         - optional robust / HAC / cluster per-panel VCEs.
+*!         - genuine PMG long-run pooling + second-stage ECM.
+*!         - exact half-life; per-panel storage in Mata (no matsize cap).
+*! v1.0.3: Fixed multi-predictor "0 panels" bug — count obs across ALL vars
 *! v1.0.2: Fixed obs counting (non-missing only), relaxed min-obs filter
 *! v1.0.1: Pre-generates lagged variables to avoid qreg+tsop failures
 
@@ -15,14 +25,33 @@ program define _xtpqardl_estimate, rclass
 	syntax , DEPVAR(string) INDEPVARS(string) LRVARS(string) ///
 		P(integer) QLAGS(string) ///
 		TAU(numlist >0 <1 sort) IVAR(string) TVAR(string) ///
-		TOUSE(string) [NOCONStant]
-	
+		TOUSE(string) ///
+		[NOCONStant VCE(string) BW(integer -1) KERNel(string) ///
+		 POOLlr QUIETdiag]
+
+	_xtpqardl_load
+
+	* ----------------------------------------------------------------
+	* Options
+	* ----------------------------------------------------------------
+	if "`vce'"    == "" local vce "mg"
+	if "`kernel'" == "" local kernel "bartlett"
+	local vce    = lower("`vce'")
+	local kernel = lower("`kernel'")
+
+	* ----------------------------------------------------------------
 	* Parse
-	local k : word count `indepvars'
+	* ----------------------------------------------------------------
+	local k    : word count `indepvars'
 	local k_lr : word count `lrvars'
 	local ntau : word count `tau'
-	
-	* Parse q lags per variable
+	local k_x  = `k_lr' - 1
+
+	if `k_x' < 1 {
+		di as err "lr() must contain the lagged dependent level plus at least one long-run regressor"
+		exit 198
+	}
+
 	local nqlags : word count `qlags'
 	if `nqlags' == 1 {
 		forvalues j = 1/`k' {
@@ -38,23 +67,14 @@ program define _xtpqardl_estimate, rclass
 		di as err "qlags() must have 1 or k elements"
 		exit 198
 	}
-	
-	* Get panel IDs
-	qui levelsof `ivar' if `touse', local(ids)
-	local npanels : word count `ids'
-	
+
 	* ================================================================
-	* PRE-GENERATE ALL VARIABLES (qreg does NOT support ts operators)
+	* Pre-generate every regressor as a plain variable
 	* ================================================================
-	* Convert any D./L./S. operator variables into plain temp vars.
-	* This is essential because qreg rejects time-series operators.
-	
-	* --- Depvar ---
 	tempvar dv_plain
 	qui gen double `dv_plain' = `depvar' if `touse'
 	local depvar_q "`dv_plain'"
-	
-	* --- LR variables ---
+
 	local lr_varlist ""
 	forvalues j = 1/`k_lr' {
 		local lrv : word `j' of `lrvars'
@@ -62,8 +82,7 @@ program define _xtpqardl_estimate, rclass
 		qui gen double `lr_plain`j'' = `lrv' if `touse'
 		local lr_varlist "`lr_varlist' `lr_plain`j''"
 	}
-	
-	* --- Contemporaneous indepvars ---
+
 	local indep_plain ""
 	forvalues j = 1/`k' {
 		local xvar : word `j' of `indepvars'
@@ -71,8 +90,7 @@ program define _xtpqardl_estimate, rclass
 		qui gen double `x_plain`j'' = `xvar' if `touse'
 		local indep_plain "`indep_plain' `x_plain`j''"
 	}
-	
-	* --- AR lags of depvar (p-1 additional lags) ---
+
 	local ar_varlist ""
 	if `p' > 1 {
 		forvalues lag = 1/`= `p' - 1' {
@@ -82,16 +100,13 @@ program define _xtpqardl_estimate, rclass
 		}
 	}
 	local ncoefs_ar = `p' - 1
-	
-	* --- SR impact: contemporaneous + lags of each indepvar ---
+
 	local sr_varlist ""
 	local ncoefs_sr = 0
 	forvalues j = 1/`k' {
 		local xvar_p : word `j' of `indep_plain'
-		* Contemporaneous (already generated)
 		local sr_varlist "`sr_varlist' `xvar_p'"
 		local ++ncoefs_sr
-		* Lags
 		if `q`j'' > 1 {
 			forvalues lag = 1/`= `q`j'' - 1' {
 				tempvar sr_`j'_lag`lag'
@@ -101,327 +116,207 @@ program define _xtpqardl_estimate, rclass
 			}
 		}
 	}
-	
-	* Build full regressor list (all plain temp vars, no ts operators)
-	local fullreg "`lr_varlist' `ar_varlist' `sr_varlist'"
-	local ncoefs_lr = `k_lr'
-	local ncoefs_total = `ncoefs_lr' + `ncoefs_ar' + `ncoefs_sr'
-	
+
+	local fullreg      "`lr_varlist' `ar_varlist' `sr_varlist'"
+	local ncoefs_total = `k_lr' + `ncoefs_ar' + `ncoefs_sr'
+	local nrest        = `ncoefs_ar' + `ncoefs_sr'
+	local M            = 1 + `k_x' + `nrest'
+	local cons         = cond("`noconstant'" == "", 1, 0)
+
 	* ================================================================
-	* Storage matrices
+	* Estimation sample: touse AND every regressor observed
 	* ================================================================
-	local beta_dim = (`k_lr' - 1) * `ntau'
-	local phi_dim = max(`ncoefs_ar', 1) * `ntau'
-	local sr_dim = `ncoefs_sr' * `ntau'
-	
-	tempname rho_all beta_all phi_all sr_all halflife_all
-	
-	matrix `rho_all' = J(`npanels', `ntau', .)
-	matrix `beta_all' = J(`npanels', `beta_dim', .)
-	matrix `halflife_all' = J(`npanels', `ntau', .)
-	
-	if `ncoefs_ar' > 0 {
-		matrix `phi_all' = J(`npanels', `ncoefs_ar' * `ntau', .)
+	tempvar useall
+	qui gen byte `useall' = `touse'
+	qui replace `useall' = 0 if missing(`depvar_q')
+	foreach _rv of local fullreg {
+		qui replace `useall' = 0 if missing(`_rv')
 	}
-	else {
-		matrix `phi_all' = J(`npanels', `ntau', 0)
+	qui count if `useall'
+	if r(N) == 0 {
+		di as err "no observations with all PQARDL regressors non-missing"
+		exit 2000
 	}
-	
-	if `ncoefs_sr' > 0 {
-		matrix `sr_all' = J(`npanels', `sr_dim', .)
-	}
-	else {
-		matrix `sr_all' = J(1, 1, .)
-	}
-	
+
 	* ================================================================
-	* Loop over panels
+	* Stage 1 — per-panel quantile ARDL (entirely in Mata)
 	* ================================================================
-	local pi = 0
-	local success_count = 0
-	local first_error = 1
-	local skip_obs = 0
-	local skip_qreg = 0
-	
-	foreach i of local ids {
-		local ++pi
-		
-		* Count non-missing obs where depvar AND ALL regressors are present
-		* This avoids inflated counts when some regressors have many missings
-		local nmiss_cond "`depvar_q' != ."
-		foreach _rv of local fullreg {
-			local nmiss_cond "`nmiss_cond' & `_rv' != ."
-		}
-		qui count if `touse' & `ivar' == `i' & `nmiss_cond'
-		local ni = r(N)
-		
-		* Need at least ncoefs + 1 for qreg to have degrees of freedom
-		* (ncoefs_total counts regressors; +1 for the constant)
-		if `ni' < `ncoefs_total' + 1 {
-			local ++skip_obs
-			continue
-		}
-		
-		local any_tau_ok = 0
-		local ti = 0
-		
-		foreach tauval of local tau {
-			local ++ti
-			local tq = round(`tauval' * 100)
-			
-			* Run quantile regression (no ts operators needed now)
-			capture qui qreg `depvar_q' `fullreg' ///
-				if `touse' & `ivar' == `i', quantile(`tq')
-			
-			local qreg_rc = _rc
-			
-			* rc=498 means VCE failed but coefficients are valid — keep
-			* rc=0 means full success — keep
-			* All other errors: skip this quantile for this panel
-			if `qreg_rc' != 0 & `qreg_rc' != 498 {
-				if `first_error' & `skip_qreg' < 3 {
-					noi di in gr "    (panel `i', τ=`tauval': qreg rc=`qreg_rc', N_avail=`ni')"
-				}
-				local ++skip_qreg
-				continue
-			}
-			
-			* Need at least ncoefs+1 obs for valid estimation
-			if e(N) < `ncoefs_total' + 1 continue
-			
-			local any_tau_ok = 1
-			
-			tempname b_qr
-			matrix `b_qr' = e(b)
-			
-			* ρ(τ) = coefficient on first LR var (lagged y level)
-			matrix `rho_all'[`pi', `ti'] = `b_qr'[1, 1]
-			
-			* Half-life
-			local rho_val = `b_qr'[1, 1]
-			if `rho_val' < 0 {
-				matrix `halflife_all'[`pi', `ti'] = ln(2) / abs(`rho_val')
-			}
-			
-			* β(τ) = -coef(x_level) / coef(y_level)
-			if abs(`rho_val') > 1e-10 {
-				forvalues j = 2/`k_lr' {
-					local bcol = (`ti' - 1) * (`k_lr' - 1) + (`j' - 1)
-					matrix `beta_all'[`pi', `bcol'] = ///
-						-`b_qr'[1, `j'] / `rho_val'
-				}
-			}
-			
-			* φ (AR lags)
-			if `ncoefs_ar' > 0 {
-				forvalues j = 1/`ncoefs_ar' {
-					local pcol = (`ti' - 1) * `ncoefs_ar' + `j'
-					local bpos = `k_lr' + `j'
-					matrix `phi_all'[`pi', `pcol'] = `b_qr'[1, `bpos']
-				}
-			}
-			
-			* SR impact coefficients
-			if `ncoefs_sr' > 0 {
-				forvalues j = 1/`ncoefs_sr' {
-					local scol = (`ti' - 1) * `ncoefs_sr' + `j'
-					local bpos = `k_lr' + `ncoefs_ar' + `j'
-					matrix `sr_all'[`pi', `scol'] = `b_qr'[1, `bpos']
-				}
-			}
-		}
-		
-		if `any_tau_ok' {
-			local ++success_count
-		}
+	tempname taumat s_np s_skip s_fail s_ok
+	matrix `taumat' = J(1, `ntau', .)
+	local ti = 0
+	foreach tauval of local tau {
+		local ++ti
+		matrix `taumat'[1, `ti'] = `tauval'
 	}
-	
-	* Diagnostic summary if many panels failed
-	if `skip_obs' > 0 | `skip_qreg' > 0 {
-		noi di in gr "    (Diagnostics: `skip_obs' panels skipped [insuff. obs]," ///
-			" `skip_qreg' qreg failures)"
+
+	mata: _xtpq_run("`depvar_q'", "`fullreg'", "`ivar'", "`tvar'", ///
+		"`useall'", "`taumat'", `k_x', `nrest', `cons', ///
+		"`vce'", `bw', "`kernel'", "`s_np'", "`s_skip'", "`s_fail'", "`s_ok'")
+
+	local npanels       = `s_np'
+	local skip_obs      = `s_skip'
+	local skip_fit      = `s_fail'
+	local success_count = `s_ok'
+
+	if (`skip_obs' > 0 | `skip_fit' > 0) & "`quietdiag'" == "" {
+		noi di in gr "    (Diagnostics: `skip_obs' panel(s) skipped [insufficient obs], `skip_fit' quantile fit failure(s))"
 	}
-	
-	
+
 	* ================================================================
-	* Compute Mean Group averages
+	* Stage 2 — PMG: pool the long run, then re-estimate the ECM
 	* ================================================================
-	tempname rho_mg beta_mg halflife_mg phi_mg sr_mg
-	matrix `rho_mg' = J(1, `ntau', .)
-	matrix `beta_mg' = J(1, `beta_dim', .)
-	matrix `halflife_mg' = J(1, `ntau', .)
-	
-	if `ncoefs_ar' > 0 {
-		matrix `phi_mg' = J(1, `ncoefs_ar' * `ntau', .)
-	}
-	else {
-		matrix `phi_mg' = J(1, `ntau', .)
-	}
-	if `ncoefs_sr' > 0 {
-		matrix `sr_mg' = J(1, `sr_dim', .)
-	}
-	else {
-		matrix `sr_mg' = J(1, 1, .)
-	}
-	
-	* Average across panels (skip missing)
-	forvalues t = 1/`ntau' {
-		local cnt_rho = 0
-		local cnt_hl = 0
-		local sum_rho = 0
-		local sum_hl = 0
-		forvalues i = 1/`npanels' {
-			if `rho_all'[`i', `t'] != . {
-				local ++cnt_rho
-				local sum_rho = `sum_rho' + `rho_all'[`i', `t']
-			}
-			if `halflife_all'[`i', `t'] != . {
-				local ++cnt_hl
-				local sum_hl = `sum_hl' + `halflife_all'[`i', `t']
-			}
+	tempname beta_pool beta_pool_V
+	local n_pool   = 0
+	local poolmeth ""
+
+	tempname g_mg1 g_Vnp1 g_Veff1 s_nmg1
+	local have_mg1 = 0
+
+	if "`poollr'" != "" & `success_count' > 0 {
+		* unrestricted (MG) results are needed for the Hausman test
+		mata: _xtpq_mg(`k_x', `nrest', "`g_mg1'", "`g_Vnp1'", ///
+			"`g_Veff1'", "`s_nmg1'")
+		local have_mg1 = 1
+
+		tempname s_npool s_pmeth
+		mata: _xtpq_pool_lr(`k_x', "`beta_pool'", "`beta_pool_V'", ///
+			"`s_npool'", "`s_pmeth'")
+		local n_pool = `s_npool'
+
+		if `n_pool' >= 2 {
+			local poolmeth = cond(`s_pmeth' == 1, "minimum distance", "equal weight")
+			mata: _xtpq_run2("`beta_pool'")
 		}
-		if `cnt_rho' > 0 matrix `rho_mg'[1, `t'] = `sum_rho' / `cnt_rho'
-		if `cnt_hl' > 0 matrix `halflife_mg'[1, `t'] = `sum_hl' / `cnt_hl'
-	}
-	
-	* Beta average
-	forvalues c = 1/`beta_dim' {
-		local cnt = 0
-		local sum_b = 0
-		forvalues i = 1/`npanels' {
-			if `beta_all'[`i', `c'] != . {
-				local ++cnt
-				local sum_b = `sum_b' + `beta_all'[`i', `c']
-			}
-		}
-		if `cnt' > 0 matrix `beta_mg'[1, `c'] = `sum_b' / `cnt'
-	}
-	
-	* Phi average
-	local phi_cols = colsof(`phi_mg')
-	forvalues c = 1/`phi_cols' {
-		local cnt = 0
-		local sum_p = 0
-		forvalues i = 1/`npanels' {
-			if `phi_all'[`i', `c'] != . {
-				local ++cnt
-				local sum_p = `sum_p' + `phi_all'[`i', `c']
-			}
-		}
-		if `cnt' > 0 matrix `phi_mg'[1, `c'] = `sum_p' / `cnt'
-	}
-	
-	* SR average
-	if `ncoefs_sr' > 0 {
-		forvalues c = 1/`sr_dim' {
-			local cnt = 0
-			local sum_s = 0
-			forvalues i = 1/`npanels' {
-				if `sr_all'[`i', `c'] != . {
-					local ++cnt
-					local sum_s = `sum_s' + `sr_all'[`i', `c']
-				}
-			}
-			if `cnt' > 0 matrix `sr_mg'[1, `c'] = `sum_s' / `cnt'
+		else {
+			noi di in gr "    (PMG pooling not feasible; falling back to MG)"
+			local poollr ""
+			local have_mg1 = 0
 		}
 	}
-	
+
 	* ================================================================
-	* MG variance: PER-QUANTILE block-diagonal computation
-	* Each quantile's SE uses only panels valid at THAT quantile
-	* V_t = (1/N_t(N_t-1)) Σ(b_it - b_bar_t)(b_it - b_bar_t)'
+	* Mean-group averages and covariance matrices
 	* ================================================================
-	local k_x = `k_lr' - 1
-	tempname beta_V rho_V
-	matrix `beta_V' = J(`beta_dim', `beta_dim', 0)
-	matrix `rho_V' = J(`ntau', `ntau', 0)
-	
-	* --- Beta variance: per-quantile block ---
-	forvalues t = 1/`ntau' {
-		local col_start = (`t' - 1) * `k_x' + 1
-		local col_end = `t' * `k_x'
-		
-		* Count valid panels at this quantile
-		local nv = 0
-		forvalues i = 1/`npanels' {
-			local ok = 1
-			forvalues c = `col_start'/`col_end' {
-				if `beta_all'[`i', `c'] == . local ok = 0
-			}
-			if `ok' local ++nv
-		}
-		
-		if `nv' > 1 {
-			* Compute block (k_x × k_x) for this quantile
-			forvalues i = 1/`npanels' {
-				local ok = 1
-				forvalues c = `col_start'/`col_end' {
-					if `beta_all'[`i', `c'] == . local ok = 0
-				}
-				if `ok' {
-					forvalues r = `col_start'/`col_end' {
-						forvalues c = `col_start'/`col_end' {
-							local dev_r = `beta_all'[`i', `r'] - `beta_mg'[1, `r']
-							local dev_c = `beta_all'[`i', `c'] - `beta_mg'[1, `c']
-							matrix `beta_V'[`r', `c'] = `beta_V'[`r', `c'] + ///
-								`dev_r' * `dev_c'
-						}
+	tempname g_mg g_Vnp g_Veff s_nmg
+	mata: _xtpq_mg(`k_x', `nrest', "`g_mg'", "`g_Vnp'", "`g_Veff'", "`s_nmg'")
+	local n_mg = `s_nmg'
+
+	local haus  = .
+	local hausdf = .
+	local hausp = .
+
+	if "`poollr'" != "" & `n_pool' >= 2 {
+		mata: _xtpq_graft_pool(`k_x', `nrest', "`g_mg'", "`g_Vnp'", ///
+			"`g_Veff'", "`beta_pool'", "`beta_pool_V'")
+
+		* Hausman test of long-run homogeneity: MG (consistent) versus
+		* PMG (efficient under H0).  H0 not rejected => pooling is valid.
+		if `have_mg1' {
+			tempname bmg bpm Vmg Vpm dif Vdif Vinv Hst
+			local kd = `k_x' * `ntau'
+			matrix `bmg' = J(1, `kd', .)
+			matrix `bpm' = J(1, `kd', .)
+			matrix `Vmg' = J(`kd', `kd', 0)
+			matrix `Vpm' = J(`kd', `kd', 0)
+			forvalues t = 1/`ntau' {
+				local o = (`t' - 1) * `M'
+				forvalues j = 1/`k_x' {
+					local a = (`t' - 1) * `k_x' + `j'
+					matrix `bmg'[1, `a'] = `g_mg1'[1, `o' + 1 + `j']
+					matrix `bpm'[1, `a'] = `g_mg'[1, `o' + 1 + `j']
+					forvalues l = 1/`k_x' {
+						local b = (`t' - 1) * `k_x' + `l'
+						matrix `Vmg'[`a', `b'] = `g_Vnp1'[`o' + 1 + `j', `o' + 1 + `l']
+						matrix `Vpm'[`a', `b'] = `g_Vnp'[`o' + 1 + `j', `o' + 1 + `l']
 					}
 				}
 			}
-			local scale = 1 / (`nv' * (`nv' - 1))
-			forvalues r = `col_start'/`col_end' {
-				forvalues c = `col_start'/`col_end' {
-					matrix `beta_V'[`r', `c'] = `scale' * `beta_V'[`r', `c']
-				}
+			capture {
+				matrix `dif'  = `bmg' - `bpm'
+				matrix `Vdif' = `Vmg' - `Vpm'
+				matrix `Vinv' = syminv(`Vdif')
+				matrix `Hst'  = `dif' * `Vinv' * `dif''
+				local haus   = `Hst'[1, 1]
+				local hausdf = `kd' - diag0cnt(`Vinv')
+			}
+			if `haus' < . & `haus' >= 0 & `hausdf' > 0 {
+				local hausp = chi2tail(`hausdf', `haus')
+			}
+			else {
+				local haus = .
+				local hausdf = .
 			}
 		}
 	}
-	
-	* --- Rho variance: per-quantile diagonal ---
-	forvalues t = 1/`ntau' {
-		local nv = 0
-		local ss = 0
-		forvalues i = 1/`npanels' {
-			if `rho_all'[`i', `t'] != . {
-				local ++nv
-				local dev = `rho_all'[`i', `t'] - `rho_mg'[1, `t']
-				local ss = `ss' + `dev' * `dev'
-			}
-		}
-		if `nv' > 1 {
-			matrix `rho_V'[`t', `t'] = `ss' / (`nv' * (`nv' - 1))
-		}
+
+	tempname g_V
+	if "`vce'" == "mg" {
+		matrix `g_V' = `g_Vnp'
 	}
-	
+	else {
+		matrix `g_V' = `g_Veff'
+	}
+
 	* ================================================================
-	* Clean up temp variables
+	* Legacy views kept for the graph module and the Wald tests
 	* ================================================================
-	capture drop __xtpq_*
-	
+	tempname rho_mg beta_mg phi_mg sr_mg halflife_mg rho_V beta_V
+	tempname rho_all beta_all halflife_all phi_all sr_all panelids
+
+	mata: _xtpq_legacy(`k_x', `ncoefs_ar', `ncoefs_sr', ///
+		"`g_mg'", "`g_V'", "`rho_mg'", "`beta_mg'", "`phi_mg'", "`sr_mg'", ///
+		"`rho_V'", "`beta_V'")
+
+	local export_panels = 0
+	capture mata: _xtpq_legacy_panels(`k_x', `ncoefs_ar', `ncoefs_sr', ///
+		"`rho_all'", "`beta_all'", "`phi_all'", "`sr_all'", "`panelids'")
+	if _rc == 0 local export_panels = 1
+
+	mata: _xtpq_halflife("`rho_mg'", "`halflife_mg'", `export_panels', ///
+		"`rho_all'", "`halflife_all'")
+
 	* ================================================================
-	* Return results
+	* Return
 	* ================================================================
-	return scalar npanels = `npanels'
-	return scalar valid_panels = `success_count'
-	return scalar ntau = `ntau'
-	return scalar k = `k'
-	return scalar k_lr = `k_lr'
-	return scalar p = `p'
-	return scalar ncoefs_sr = `ncoefs_sr'
-	
-	return matrix rho_all = `rho_all'
-	return matrix beta_all = `beta_all'
-	return matrix halflife_all = `halflife_all'
-	return matrix phi_all = `phi_all'
-	return matrix sr_all = `sr_all'
-	
-	return matrix rho_mg = `rho_mg'
-	return matrix beta_mg = `beta_mg'
+	return scalar npanels       = `npanels'
+	return scalar valid_panels  = `success_count'
+	return scalar n_mg          = `n_mg'
+	return scalar n_pool        = `n_pool'
+	return scalar ntau          = `ntau'
+	return scalar k             = `k'
+	return scalar k_lr          = `k_lr'
+	return scalar k_x           = `k_x'
+	return scalar p             = `p'
+	return scalar ncoefs_ar     = `ncoefs_ar'
+	return scalar ncoefs_sr     = `ncoefs_sr'
+	return scalar M             = `M'
+	return scalar export_panels = `export_panels'
+	return local  vcetype       "`vce'"
+	return local  pooled        "`poollr'"
+	return local  poolmeth      "`poolmeth'"
+	return scalar hausman       = `haus'
+	return scalar hausman_df    = `hausdf'
+	return scalar hausman_p     = `hausp'
+
+	return matrix g_mg   = `g_mg'
+	return matrix g_V    = `g_V'
+	return matrix g_Vnp  = `g_Vnp'
+	return matrix g_Veff = `g_Veff'
+
+	return matrix rho_mg      = `rho_mg'
+	return matrix beta_mg     = `beta_mg'
+	return matrix phi_mg      = `phi_mg'
+	return matrix sr_mg       = `sr_mg'
 	return matrix halflife_mg = `halflife_mg'
-	return matrix phi_mg = `phi_mg'
-	return matrix sr_mg = `sr_mg'
-	
-	return matrix beta_V = `beta_V'
-	return matrix rho_V = `rho_V'
+	return matrix rho_V       = `rho_V'
+	return matrix beta_V      = `beta_V'
+
+	if `export_panels' {
+		return matrix rho_all      = `rho_all'
+		return matrix beta_all     = `beta_all'
+		return matrix phi_all      = `phi_all'
+		return matrix sr_all       = `sr_all'
+		return matrix halflife_all = `halflife_all'
+		return matrix panelids     = `panelids'
+	}
 end

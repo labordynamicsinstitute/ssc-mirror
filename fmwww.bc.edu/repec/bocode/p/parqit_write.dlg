@@ -1,113 +1,120 @@
 /*
-  parqit — run the pipeline: collect into memory, or save to Parquet
+  parqit collect - Load the pipeline result into memory, or write it to Parquet
 
-*!  VERSION 0.1.28  23aug2026
+*!  VERSION 0.1.29  25aug2026
 
-  Launch with:  db parqit_write     (installed on the menu by: parqit menu)
+  User > parqit > Collect into memory or save as Parquet...
+  Launch directly with:  db parqit_write      (menu installed by: parqit menu)
+
+  The two materialisers: parqit collect executes the current view's pipeline
+  once and replaces the data in memory atomically; parqit save executes it
+  and writes Parquet directly (or, with data, writes the dataset in memory).
+  As in Stata's own save dialogs, an existing file asks before being replaced.
 */
 
 VERSION 16.0
 
 INCLUDE _std_wide
-DEFINE _dlght 420
+DEFINE _dlght 355
 INCLUDE header
-HELP hlp1, view("help parqit")
+HELP hlp1, view("help parqit##menu")
 RESET res1
 
 SCRIPT PREINIT
 BEGIN
+	create STRING dlgname
+	dlgname.storeDialogClassName
+	create DOUBLE pq_populate_error
 	main.fi_out.formatfilter					///
 		"Parquet (*.parquet)|*.parquet|"			///
 		"All files (*.*)|*.*"
-	script collect_on
 END
 
-SCRIPT collect_on
+PROGRAM POSTINIT_PROGRAM
 BEGIN
-	main.ck_repl.enable
-	main.fi_out.disable
-	main.ck_replace.disable
-	main.cb_comp.disable
-	main.ed_level.disable
-	main.ed_part.disable
-	main.ed_chunk.disable
-	main.cb_enc.disable
-	main.ck_data.disable
-	main.ck_copy.disable
+	call program main_mode
 END
 
-SCRIPT save_on
-BEGIN
-	main.ck_repl.disable
-	main.fi_out.enable
-	main.ck_replace.enable
-	main.cb_comp.enable
-	main.ed_level.enable
-	main.ed_part.enable
-	main.ed_chunk.enable
-	main.cb_enc.enable
-	main.ck_data.enable
-	main.ck_copy.enable
-END
-
-DIALOG main, label("parqit — collect or save (runs the pipeline)") tabtitle("Main")
+DIALOG main, label("parqit collect - Load the pipeline result into memory, or write it to Parquet") ///
+	tabtitle("Main")
 BEGIN
   RADIO rb_collect		_lft	_top	_iwd	.,		///
 	first								///
-	label("Collect: stream the result into Stata's memory (atomically)") ///
-	onclickon(script collect_on)
-  CHECKBOX ck_repl		_indent	+22	_ibwd	.,		///
-	label("Replace the dataset in memory (clear; else unsaved changes refuse)")
+	onclickon(program main_mode)					///
+	label("Load the pipeline result into memory, replacing the data in memory (collect)")
+  CHECKBOX ck_repl		_ilft	_ss	_ibwd	.,		///
+	option(clear)							///
+	label("Replace data in memory even when they have unsaved changes (clear)")
 
-  RADIO rb_save			_lft	+25	_iwd	.,		///
+  RADIO rb_save			_lft	_ls	_iwd	.,		///
 	last								///
-	label("Save: write the result straight to Parquet (memory untouched)") ///
-	onclickon(script save_on)
-
-  TEXT tx_out			_indent	+25	370	.,		///
-	label("Output file (or directory when partitioning)")
+	onclickon(program main_mode)					///
+	label("Write the pipeline result to Parquet, leaving the data in memory as they are (save)")
+  TEXT tx_out			_ilft	_ss	_ibwd	.,		///
+	label("Filename (a directory when partitioning):")
   FILE fi_out			@	_ss	@	.,		///
-	error("Output file")						///
+	error("Filename")						///
 	defext(parquet)							///
 	save								///
 	label("Save as...")
-
-  CHECKBOX ck_replace		@	+30	170	.,		///
-	option(replace) label("Overwrite if it exists")
-  CHECKBOX ck_data		+180	@	200	.,		///
+  CHECKBOX ck_replace		@	_ls	@	.,		///
+	option(replace)							///
+	label("Overwrite an existing file or partition directory (replace)")
+  CHECKBOX ck_data		@	_ss	@	.,		///
 	option(data)							///
-	label("Export the in-memory dataset")
-
-  CHECKBOX ck_copy		_lft	275	_ibwd	.,		///
+	onclickon(program main_mode)					///
+	onclickoff(program main_mode)					///
+	label("Write the dataset in memory instead of the view (data)")
+  CHECKBOX ck_copy		@	_ss	@	.,		///
 	option(copysource)						///
-	label("With Export: copy the unchanged file loaded by parqit use (assert nothing changed)")
+	label("Copy the source file of the last parqit use ..., clear instead of reading memory (copysource)")
 
-  TEXT tx_comp			_lft	165	130	.,		///
+  TEXT tx_comp			_ilft	_ls	120	.,		///
+	label("Compression:")
+  TEXT tx_level			160	@	120	.,		///
+	label("Compression level:")
+  TEXT tx_chunk			300	@	160	.,		///
+	label("Rows per row group:")
+  COMBOBOX cb_comp		_ilft	_ss	120	.,		///
+	dropdownlist							///
+	contents(comp_list)						///
+	default("snappy")						///
+	option(compression)						///
 	label("Compression")
-  COMBOBOX cb_comp		_lft	185	120	.,		///
-	dropdownlist contents(comp_list) default("snappy")		///
-	option(compression) label("compression")
-
-  TEXT tx_level			190	165	140	.,		///
+  EDIT ed_level			160	@	80	.,		///
+	numonly								///
+	option(compression_level)					///
 	label("Compression level")
-  EDIT ed_level			190	185	90	.,		///
-	numonly option(compression_level) label("compression level")
+  EDIT ed_chunk			300	@	100	.,		///
+	numonly								///
+	option(chunk)							///
+	label("Rows per row group")
 
-  TEXT tx_part			340	165	230	.,		///
-	label("Partition by (Hive tree)")
-  EDIT ed_part			340	185	240	.,		///
-	option(partition_by) label("partition variables")
+  TEXT tx_part			_ilft	_ls	_ilw80	.,		///
+	label("Partition by these variables into a Hive directory tree, partition_by() (optional):")
+  BUTTON bu_pop			_rj80	@	80	.,		///
+	onpush(program main_populate)					///
+	tooltip("Populate from the current view, or from the dataset in memory when data is selected") ///
+	label("Populate")
+  COMBOBOX cb_part		_ilft	_ss	_ibwd	.,		///
+	append								///
+	dropdown							///
+	contents(vv_list)						///
+	option(partition_by)						///
+	label("Partition by")
 
-  TEXT tx_chunk			_lft	225	230	.,		///
-	label("Rows per row group (optional)")
-  EDIT ed_chunk			_lft	245	120	.,		///
-	numonly option(chunk) label("rows per row group")
+  TEXT tx_enc			_ilft	_ls	_ibwd	.,		///
+	label("Code page of legacy (non-UTF-8) text when the dataset in memory is written:")
+  COMBOBOX cb_enc		@	_ss	_vnwd	.,		///
+	dropdownlist							///
+	contents(enc_list)						///
+	default("windows-1252")						///
+	option(encoding)						///
+	label("Code page")
+END
 
-  TEXT tx_enc			260	225	300	.,		///
-	label("Legacy text encoding (for non-UTF-8 strings/labels)")
-  COMBOBOX cb_enc		260	245	150	.,		///
-	dropdownlist contents(enc_list) default("windows-1252")	///
-	option(encoding) label("encoding")
+LIST vv_list
+BEGIN
 END
 
 LIST comp_list
@@ -129,23 +136,98 @@ BEGIN
 	macroman
 END
 
+PROGRAM main_mode
+BEGIN
+	if main.rb_collect {
+		call main.ck_repl.enable
+		call main.tx_out.disable
+		call main.fi_out.disable
+		call main.ck_replace.disable
+		call main.ck_data.disable
+		call main.ck_copy.disable
+		call main.tx_comp.disable
+		call main.cb_comp.disable
+		call main.tx_level.disable
+		call main.ed_level.disable
+		call main.tx_chunk.disable
+		call main.ed_chunk.disable
+		call main.tx_part.disable
+		call main.bu_pop.disable
+		call main.cb_part.disable
+		call main.tx_enc.disable
+		call main.cb_enc.disable
+	}
+	if main.rb_save {
+		call main.ck_repl.disable
+		call main.tx_out.enable
+		call main.fi_out.enable
+		call main.ck_replace.enable
+		call main.ck_data.enable
+		call main.tx_comp.enable
+		call main.cb_comp.enable
+		call main.tx_level.enable
+		call main.ed_level.enable
+		call main.tx_chunk.enable
+		call main.ed_chunk.enable
+		call main.tx_part.enable
+		call main.bu_pop.enable
+		call main.cb_part.enable
+		call main.tx_enc.enable
+		call main.cb_enc.enable
+		if main.ck_data {
+			call main.ck_copy.enable
+		}
+		else {
+			call main.ck_copy.setoff
+			call main.ck_copy.disable
+		}
+	}
+END
+
+PROGRAM main_populate
+BEGIN
+	call pq_populate_error.setvalue 0
+	put "parqit _dlgvars "
+	put dlgname
+	put " vv_list"
+	if main.ck_data {
+		put ", data"
+	}
+	stata hidden immediate
+	if pq_populate_error {
+		if main.ck_data {
+			stopbox stop "Unable to get the variable names of the dataset in memory."
+		}
+		else {
+			stopbox stop "Unable to get the variable names of the current view." ///
+				"Open a view first (User > parqit > Read Parquet data...)."
+		}
+	}
+	call main.cb_part.repopulate
+END
+
 PROGRAM command
 BEGIN
 	if main.rb_collect {
 		put "parqit collect"
-		if main.ck_repl {
-			put ", clear"
-		}
+		beginoptions
+			option main.ck_repl
+		endoptions
 	}
 	if main.rb_save {
-		put "parqit save "
 		require main.fi_out
-		put `"""' main.fi_out `"""'
+		if !main.ck_replace {
+			repfile main.fi_out
+		}
+		put "parqit save "
+		put /smartquote main.fi_out
 		beginoptions
-			option main.ck_replace
+			if main.ck_replace | main.fi_out.repfile {
+				put "replace "
+			}
 			optionarg /hidedefault main.cb_comp
 			optionarg main.ed_level
-			optionarg main.ed_part
+			optionarg main.cb_part
 			optionarg main.ed_chunk
 			optionarg /hidedefault main.cb_enc
 			option main.ck_data
