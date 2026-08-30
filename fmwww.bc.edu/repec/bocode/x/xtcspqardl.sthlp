@@ -1,473 +1,471 @@
 {smcl}
-{* *! version 1.0.2  27apr2026}{...}
-{vieweralsosee "xtpqardl" "help xtpqardl"}{...}
-{vieweralsosee "xtpmg" "help xtpmg"}{...}
-{vieweralsosee "xtdcce2" "help xtdcce2"}{...}
+{* *! version 1.1.0  29aug2026}{...}
+{vieweralsosee "xtcspqardl methods" "help xtcspqardl_methods"}{...}
+{vieweralsosee "xtcspqardl postestimation" "help xtcspqardl_postestimation"}{...}
 {vieweralsosee "qreg" "help qreg"}{...}
+{vieweralsosee "xtqsh" "help xtqsh"}{...}
+{vieweralsosee "xthst" "help xthst"}{...}
+{vieweralsosee "xtset" "help xtset"}{...}
 {viewerjumpto "Syntax" "xtcspqardl##syntax"}{...}
 {viewerjumpto "Description" "xtcspqardl##description"}{...}
 {viewerjumpto "Estimators" "xtcspqardl##estimators"}{...}
 {viewerjumpto "Options" "xtcspqardl##options"}{...}
+{viewerjumpto "Output" "xtcspqardl##output"}{...}
+{viewerjumpto "Remarks" "xtcspqardl##remarks"}{...}
 {viewerjumpto "Examples" "xtcspqardl##examples"}{...}
 {viewerjumpto "Stored results" "xtcspqardl##results"}{...}
-{viewerjumpto "References" "xtcspqardl##references"}{...}
+{viewerjumpto "References" "xtcspqardl##refs"}{...}
 {viewerjumpto "Author" "xtcspqardl##author"}{...}
 
 {title:Title}
 
-{p2colset 5 24 26 2}{...}
-{p2col:{bf:xtcspqardl} {hline 2}}Cross-Sectionally Augmented Panel Quantile ARDL, Quantile CCE Mean Group, and Quantile CCE Pooled Mean Group Estimation{p_end}
-{p2colreset}{...}
+{phang}
+{bf:xtcspqardl} {hline 2} Cross-sectionally augmented panel quantile ARDL,
+quantile CCE mean group and quantile CCE pooled estimation
 
 
-{marker syntax}{...}
-{title:Syntax}
-
-{pstd}{bf:CS-PQARDL Estimator (default):}{p_end}
+{marker syntax}{title:Syntax}
 
 {p 8 17 2}
 {cmd:xtcspqardl}
 {depvar} {indepvars}
-{ifin}
-{cmd:,} {opt tau(numlist)} {opt lr(varlist)}
-[{it:cs-pqardl_options}]
+{ifin}{cmd:,}
+{opth tau(numlist)}
+[{it:estimator}
+{it:options}]
 
-{pstd}{bf:QCCEMG Estimator:}{p_end}
+{pstd}
+The data must be {helpb xtset} (or {helpb tsset}) as a panel.
 
-{p 8 17 2}
-{cmd:xtcspqardl}
-{depvar} {indepvars}
-{ifin}
-{cmd:,} {opt tau(numlist)} {opt qccemg}
-[{it:qccemg_options}]
-
-{pstd}{bf:QCCEPMG Estimator:}{p_end}
-
-{p 8 17 2}
-{cmd:xtcspqardl}
-{depvar} {indepvars}
-{ifin}
-{cmd:,} {opt tau(numlist)} {opt qccepmg}
-[{it:qccepmg_options}]
-
-{synoptset 28 tabbed}{...}
-{synopthdr}
+{synoptset 26 tabbed}{...}
+{synopthdr:estimator}
 {synoptline}
-{syntab:Required}
-{synopt:{opt tau(numlist)}}quantiles for estimation, e.g., {cmd:tau(0.25 0.5 0.75)}{p_end}
-
-{syntab:Estimator Selection}
-{synopt:{opt qccemg}}use Quantile CCE Mean Group estimator (Harding, Lamarche & Pesaran 2018){p_end}
-{synopt:{opt qccepmg}}use Quantile CCE Pooled Mean Group estimator (Pesaran 2006; HLP 2018){p_end}
-{synopt:{opt lr(varlist)}}long-run level variables for CS-PQARDL;
-   first variable is the lagged dependent (ECT), remaining are long-run regressors{p_end}
-
-{syntab:CS-PQARDL Options}
-{synopt:{opt pmg}}Pooled Mean Group estimator (default){p_end}
-{synopt:{opt mg}}Mean Group estimator{p_end}
-{synopt:{opt dfe}}Dynamic Fixed Effects estimator{p_end}
-{synopt:{opt p(#)}}autoregressive lag order; default is {cmd:p(1)}{p_end}
-{synopt:{opt q(numlist)}}distributed lag orders; single number or per-variable{p_end}
-{synopt:{opt ecm}}use ECM reparameterization; CSA in ECT only{p_end}
-{synopt:{opt lagsel(string)}}automatic lag selection: {cmd:aic}, {cmd:bic}, or {cmd:both}{p_end}
-{synopt:{opt pmax(#)}}maximum AR lag for lag selection; default is {cmd:pmax(4)}{p_end}
-{synopt:{opt qmax(#)}}maximum DL lag for lag selection; default is {cmd:qmax(4)}{p_end}
-
-{syntab:Cross-Sectional Dependence}
-{synopt:{opt cr_lags(#)}}number of CSA lags (pT); default is floor(T^{1/3}){p_end}
-
-{syntab:Advanced Analysis}
-{synopt:{opt full}}perform advanced analysis, including quantile homogeneity test{p_end}
-{synopt:{opt graph}}generate graphs: quantile process, ECT heatmap, half-life{p_end}
-
-{syntab:Display}
-{synopt:{opt show:individual}}display per-panel estimates{p_end}
-{synopt:{opt showcsa}}display Cross-Sectional Average (CSA) nuisance coefficients{p_end}
-{synopt:{opt notable}}suppress coefficient tables{p_end}
-{synopt:{opt nocons:tant}}suppress constant term{p_end}
-{synopt:{opt level(#)}}confidence level; default is {cmd:level(95)}{p_end}
+{synopt :{opt qccemg}}quantile CCE mean group of Harding, Lamarche and
+Pesaran (2018); {it:depvar} and {it:indepvars} are levels{p_end}
+{synopt :{opt qccepmg}}the same unit-level estimates combined by the
+inverse-variance (CCEP) weighting of Pesaran (2006){p_end}
+{synopt :{opt ecm}}two-step CS-PQARDL of Ul-Durar et al. (2025): a pooled
+level regression, then a differenced regression on the lagged residual;
+{it:depvar} and {it:indepvars} are levels{p_end}
+{synopt :{it:(default)}}one-step CS-PQARDL conditional ECM; {it:depvar} and
+{it:indepvars} are the differences and {opt lr()} carries the levels{p_end}
 {synoptline}
-{p2colreset}{...}
 
-{p 4 6 2}
-Data must be declared as panel data using {cmd:xtset} {it:panelvar} {it:timevar}
-before calling {cmd:xtcspqardl}.{p_end}
+{synoptset 26 tabbed}{...}
+{synopthdr:options}
+{synoptline}
+{syntab :Model}
+{synopt :{opth tau(numlist)}}quantiles to estimate; required{p_end}
+{synopt :{opth lr(varlist)}}level (long-run) block for the one-step
+CS-PQARDL, lagged dependent level first{p_end}
+{synopt :{opth csa(varlist)}}variables whose cross-sectional averages
+augment the equation; see {help xtcspqardl##csa:below} for the defaults{p_end}
+{synopt :{opt cr_lags(#)}}number of lags of the cross-sectional averages,
+pT; default is {cmd:floor(T^(1/3))}{p_end}
+{synopt :{opt p(#)}}extra lags of the dependent variable in the one-step
+form; default {cmd:p(1)}{p_end}
+{synopt :{opt q(numlist)}}lags of each short-run regressor, one number or
+one per regressor; default {cmd:q(1)}{p_end}
+
+{syntab :Inference}
+{synopt :{opt unitvce(iid|robust)}}variance estimator inside each unit-level
+{helpb qreg}; default {cmd:iid}{p_end}
+{synopt :{opt reps(#)}}bootstrap replications for the step-1 pooled
+regression under {opt ecm}; default {cmd:100}, {cmd:reps(0)} uses the
+asymptotic variance{p_end}
+{synopt :{opt seed(#)}}random-number seed for that bootstrap{p_end}
+{synopt :{opt level(#)}}confidence level; default {cmd:level(95)}{p_end}
+{synopt :{opt mint(#)}}minimum usable time-series length per unit; default
+is the number of regressors plus five{p_end}
+{synopt :{opt nocd}}skip the Pesaran CD diagnostics (faster on large N){p_end}
+
+{syntab :Reporting}
+{synopt :{opt srtable}}display the short-run dynamics table{p_end}
+{synopt :{opt showcsa}}display the cross-sectional-average coefficients{p_end}
+{synopt :{opt unittable}}display the unit-level persistence / adjustment
+coefficients{p_end}
+{synopt :{opt full}}run the inter-quantile analysis after estimation{p_end}
+{synopt :{opt graph}}draw the publication figures{p_end}
+{synopt :{opt graphopts(str)}}options passed to {helpb xtcspqardl_graph}{p_end}
+{synopt :{opt scheme(str)}}graph scheme{p_end}
+{synopt :{opt notable}}suppress all tables{p_end}
+{synopt :{opt showindividual}}report each unit as it is estimated{p_end}
+{synoptline}
 
 
-{marker description}{...}
-{title:Description}
+{marker description}{title:Description}
 
 {pstd}
-{cmd:xtcspqardl} implements two estimators for dynamic heterogeneous panel data
-models with cross-sectional dependence at the quantile level:
+{cmd:xtcspqardl} estimates dynamic panel quantile regressions for
+heterogeneous panels in which the units share unobserved common factors.
+Each cross-sectional unit is fitted separately by quantile regression
+after the equation has been augmented with cross-sectional averages of
+the dependent variable and the regressors, following the common
+correlated effects (CCE) idea of Pesaran (2006); the unit-level estimates
+are then combined.
+
+{pstd}
+The augmentation makes the estimator robust to cross-sectional
+dependence, the unit-by-unit fitting makes it robust to slope
+heterogeneity, and the quantile objective makes it robust to outliers and
+lets the effect of a regressor differ across the conditional
+distribution of the response.
+
+
+{marker estimators}{title:Estimators}
+
+{dlgtab:qccemg}
+
+{pstd}
+The quantile CCE mean group (QMG) estimator of Harding, Lamarche and
+Pesaran (2018).  For each unit {it:i} and quantile {it:tau},
+
+{p 12 12 2}
+Q(y_it | .) = a_i + lambda_i y_i,t-1 + x_it'beta_i
++ sum_{l=0..pT} zbar_t-l' delta_il,
+
+{pstd}
+with zbar_t = (ybar_t, xbar_t')'.  The reported coefficients are the
+simple averages over units, and the variance is the nonparametric
+mean-group one.  Long-run effects are theta = beta/(1-lambda), the
+plug-in form the paper defines, with a delta-method standard error.
+
+{dlgtab:qccepmg}
+
+{pstd}
+The same unit-level quantile estimates, combined with weights equal to
+the inverse of each unit's estimated variance matrix, which is the
+quantile analogue of the CCE pooled estimator of Pesaran (2006).  The
+reported variance is the heterogeneity-robust sandwich; the
+homogeneity-only variance is also stored.  Pooling is more efficient
+when the slopes are close to homogeneous, so read it together with the
+GJMO slope-homogeneity statistic in the diagnostics block.
+
+{dlgtab:default (one-step CS-PQARDL)}
+
+{pstd}
+A conditional error-correction model estimated in one step.  Put the
+differences in the varlist and the levels in {opt lr()}:
+
+{p 12 12 2}
+Dy_it = phi_i y_i,t-1 + xi_i'x_i,t-1 + short-run terms
++ cross-sectional averages.
+
+{pstd}
+Long-run coefficients are theta = -xi/phi, again with a delta-method
+standard error that includes the covariance between numerator and
+denominator.
+
+{dlgtab:ecm (two-step CS-PQARDL)}
+
+{pstd}
+The procedure of Ul-Durar et al. (2025).  Step 1 fits their equation (2),
+a pooled panel quantile regression of the level dependent variable on the
+level regressors and the cross-sectional averages, and keeps the
+residual.  Step 2 fits their equation (3) unit by unit, regressing the
+differences on the differences and the lagged step-1 residual, and
+averages over units.  Put the levels in the varlist; {opt lr()} is not
+used.
+
+{pstd}
+Because the two steps are separate regressions, the joint covariance
+posted in {cmd:e(V)} treats the long-run and short-run blocks as
+independent.  Do not use {helpb test} across the two blocks in this mode;
+use the one-step form if you need that.
+
+
+{marker options}{title:Options}
+
+{marker csa}{...}
+{phang}
+{opth csa(varlist)} names the variables whose cross-sectional averages
+enter the equation.  The defaults follow the source papers: for
+{opt qccemg}, {opt qccepmg} and {opt ecm} it is the varlist itself, which
+is in levels; for the one-step CS-PQARDL it is the {bf:base variables of}
+{opt lr()}, i.e. the levels, because the common factors live in the level
+relation.  Time-series operators in {opt csa()} are stripped, so
+{cmd:csa(L.y x1)} and {cmd:csa(y x1)} give the same averaging set; the
+lag structure is controlled by {opt cr_lags()}.
 
 {phang}
-{bf:1. CS-PQARDL} (Cross-Sectionally Augmented Panel Quantile ARDL):
-Extends the panel quantile ARDL framework by augmenting unit-specific
-regressions with cross-sectional averages (CSA) of the dependent and independent
-variables, following Pesaran (2006) and Chudik and Pesaran (2015). This absorbs
-unobserved common factors that induce cross-sectional dependence, producing
-consistent estimates under factor structures. CSA enter the long-run equation
-(or ECT in ECM form), but are excluded from short-run dynamics.
+{opt cr_lags(#)} sets pT.  Harding, Lamarche and Pesaran require
+pT^3/T {c 174} 0, and use pT = 4 in their application; the default here is
+floor(T^(1/3)), the Chudik-Pesaran (2015) rate.  More lags absorb more
+persistent factor dynamics but cost degrees of freedom in every unit.
 
 {phang}
-{bf:2. QCCEMG} (Quantile CCE Mean Group):
-Implements the Quantile Common Correlated Effects Mean Group estimator of
-Harding, Lamarche, and Pesaran (2018). This is a dynamic panel quantile
-regression model where unobserved common factors are proxied by CSA and their
-lags. Unit-specific quantile regressions are averaged using the Mean Group
-approach, with inference based on the nonparametric between-group variance
-(Theorem 4 of HLP 2018).
-
-{pstd}
-Both estimators handle heterogeneous slope coefficients across panels,
-permit quantile-varying parameters, and are robust to cross-sectional
-dependence generated by unobserved common factors.
+{opt unitvce(iid|robust)} chooses the variance estimator inside each
+unit-level {helpb qreg}.  It does not change the reported mean-group
+standard errors, which are nonparametric, but it does change the pooling
+weights under {opt qccepmg} and the GJMO homogeneity statistic.  Setting
+{cmd:robust} makes it the Powell (1986) kernel sandwich that Galvao et al.
+use.
 
 {phang}
-{bf:3. QCCEPMG} (Quantile CCE Pooled Mean Group):
-Implements the pooled version of the QCCEMG estimator, following Pesaran (2006)
-CCEP methodology adapted to the quantile setting. Individual quantile regressions
-are estimated identically to QCCEMG, but the Mean Group averaging and inference
-follow the Pooled Mean Group approach. Under slope homogeneity, the QCCEPMG
-estimator achieves √(NT) convergence compared to √N for QCCEMG.
+{opt level(#)} is honoured everywhere: the coefficient tables, the
+inter-quantile analysis and the confidence bands in the figures.
+
+
+{marker output}{title:Interpreting the output}
 
 {pstd}
-All three estimators handle heterogeneous slope coefficients across panels,
-permit quantile-varying parameters, and are robust to cross-sectional
-dependence generated by unobserved common factors.
-{title:Estimators}
+{bf:Coefficient tables.}  One block per quantile.  The standard errors are
+the nonparametric mean-group ones, sqrt(Vv/N) with
+Vv = (1/(N-1)) sum_i (b_i - b)(b_i - b)', which is the estimator Harding,
+Lamarche and Pesaran give in their section 2.3 for the heterogeneous case.
+Significance stars are ***/**/* at 1/5/10 per cent.
 
 {pstd}
-{bf:CS-PQARDL Model:}
+{bf:Half-life} solves lambda^h = 1/2 exactly, h = ln(0.5)/ln(lambda), and
+carries a delta-method standard error.  It is reported only when the
+persistence parameter lies strictly between zero and one.
+
+{pstd}
+{bf:ECT} is the speed of adjustment.  Convergence to the long-run
+relation requires it to lie in (-2, 0); a value outside that range is
+flagged with {cmd:!}.
+
+{pstd}
+{bf:Pseudo R1} is the Koenker-Machado (1999) goodness of fit for the
+quantile objective, pooled over the units used.
+
+{pstd}
+{bf:Wald} tests that the slope coefficients at that quantile are jointly
+zero.
+
+{pstd}
+{bf:CD} is the Pesaran (2004) cross-sectional-dependence statistic,
+reported on the residuals without and with the cross-sectional averages.
+The informative quantity is the {it:fall} in |CD|: it shows that the
+augmentation absorbed the common factors.  With the averages included the
+statistic is biased slightly negative by construction, because the
+augmented residuals sum to approximately zero across units at each date.
+
+{pstd}
+{bf:GJMO D} is the standardized Swamy slope-homogeneity statistic of
+Galvao, Juhl, Montes-Rojas and Olmo (2017), the quantile-regression
+counterpart of the familiar mean-regression test:
 
 {p 8 8 2}
-Q_tau(y_it | X_it, z_bar_t) = rho_i(tau) * LR_vars + phi_i(tau) * AR_lags
-+ gamma_i(tau) * SR_lags + delta_i(tau) * CSA + alpha_i(tau)
+S(tau) = sum_i (b_i - b_MD)' Var(b_i)^-1 (b_i - b_MD),{break}
+D(tau) = sqrt(n) [ S/n - k ] / sqrt(2k)  ~  N(0,1),
 
 {pstd}
-where CSA = (y_bar_t, x1_bar_t, ..., xk_bar_t, L.y_bar_t, ..., L_pT.y_bar_t, ...)
-are cross-sectional averages and their lags. Long-run coefficients
-beta_j(tau) = -coef(x_j)/rho(tau) are computed from the ARDL representation.
+with b_MD the minimum-distance (inverse-variance weighted) estimator.
+The test is one sided: the alternative is over-dispersion of the b_i, so
+large positive values reject homogeneity and favour the mean group over
+pooling.  The chi-squared form, S ~ chi2((n-1)k) for large T and fixed n,
+is printed under the table and stored in {cmd:e(diagnostics)}.
 
 {pstd}
-{bf:ECM reparameterization} ({cmd:ecm} option):
-
-{p 8 8 2}
-Delta y_it = phi_i(tau) * [y_{i,t-1} - theta'_i(tau) * x_{i,t-1}
-- delta'_i(tau) * z_bar_{t-1}] + c_ij(tau) * Delta y_{i,t-j}
-+ d_im(tau) * Delta x_{k,i,t-m} + e_it(tau)
-
-{pstd}
-CSA enter the error correction term only; short-run CSA differences are dropped.
+Note that this is {it:not} the Pesaran-Yamagata (2008) statistic: their
+bias adjustment is derived from the finite-T moments of the least-squares
+Swamy statistic and does not carry over to the quantile case, so it is
+not applied.  Setting {opt unitvce(robust)} makes Var(b_i) the Powell
+(1986) kernel sandwich used by Galvao et al.  For the test on its own,
+with that variance estimator and a HAC option for serially dependent
+data, use {helpb xtqsh} (Roudane, SSC).
 
 {pstd}
-{bf:QCCEMG Model} (Harding, Lamarche & Pesaran 2018, eq. 2.17):
-
-{p 8 8 2}
-y_it = alpha_i(tau) + lambda_i(tau) * y_{i,t-1} + x'_it * beta_i(tau)
-+ sum_{l=0}^{pT} z_bar'_{t-l} * delta_{il}(tau) + e_it(tau)
-
-{pstd}
-The Mean Group estimator (eq. 2.21): theta_hat(tau) = (1/N) * sum theta_hat_i(tau),
-where theta_i = (lambda_i, beta'_i)'.
-
-{pstd}
-Long-run effects: theta_j(tau) = beta_j(tau) / (1 - lambda(tau)), with
-delta-method standard errors. Half-life: h(tau) = ln(0.5) / ln(|lambda(tau)|).
-
-{pstd}
-Inference uses Theorem 4 (heterogeneous coefficients):
-V_hat_v = (1/(N-1)) * sum (theta_hat_i - theta_hat)(theta_hat_i - theta_hat)'.
+The distinction matters when comparing packages: {helpb xthst}
+(Bersvendsen and Ditzen, SSC) reports the Pesaran-Yamagata Delta and
+adjusted Delta for the {bf:conditional mean}, whereas {helpb xtqsh} and
+the statistic reported here are their {bf:quantile} counterpart.  The two
+answer different questions and their numbers are not comparable.
 
 
-{marker options}{...}
-{title:Options}
-
-{dlgtab:Required}
+{marker remarks}{title:Remarks and practical guidance}
 
 {phang}
-{opt tau(numlist)} specifies the quantiles at which estimation is performed.
-Values must be between 0 and 1 exclusive.
-Example: {cmd:tau(0.1 0.25 0.5 0.75 0.9)} for five quantiles.
-
-{dlgtab:Estimator Selection}
-
-{phang}
-{opt qccemg} specifies the Quantile CCE Mean Group estimator. When this
-option is given, the {cmd:lr()} option is not required. The model automatically
-includes one lag of the dependent variable (y_{i,t-1}) and the independent
-variables at their contemporaneous level.
+{bf:Sample-size regime.}  The asymptotics need both N and T large, and
+Theorem 4 of Harding, Lamarche and Pesaran requires T to grow faster than
+N.  With a short T the persistence parameter is biased towards zero (the
+usual dynamic-quantile bias), and because the long-run effect divides by
+(1-lambda) that bias is amplified there.  Treat long-run estimates from
+panels with T below roughly 50 as indicative.
 
 {phang}
-{opt qccepmg} specifies the Quantile CCE Pooled Mean Group estimator. This is
-the pooled counterpart of QCCEMG, based on Pesaran (2006) CCEP methodology.
-The same individual quantile regressions are estimated, but averaging and
-inference follow the Pooled Mean Group approach. Cannot be combined with {cmd:qccemg}.
+{bf:Rank condition.}  The number of cross-sectional averages must be at
+least as large as the number of unobserved factors; with px regressors and
+one dependent variable the augmentation spans px+1 directions per lag.
 
 {phang}
-{opt lr(varlist)} specifies the long-run level variables for CS-PQARDL.
-The first variable must be the lagged dependent variable (e.g., L.y),
-which identifies the error correction mechanism. The remaining variables
-are the long-run regressors.
-
-{dlgtab:CS-PQARDL Options}
-
-{phang}
-{opt pmg} specifies the Pooled Mean Group estimator. This is the default
-for CS-PQARDL.
+{bf:Units that are dropped.}  A unit is skipped at a quantile when it is
+too short, when the quantile regression fails, or when a {it:parameter of
+interest} was dropped for collinearity.  That last check matters:
+{helpb qreg} keeps a collinear regressor in {cmd:e(b)} with a coefficient
+of exactly zero, and averaging that zero into the mean group would bias
+the estimate towards zero.  The header reports the counts.  Cross-sectional
+averages that are dropped for collinearity do not disqualify a unit, but
+they do attenuate the reported CSA averages, and the header says so.
 
 {phang}
-{opt mg} specifies the Mean Group estimator.
+{bf:Reading the homogeneity test.}  The GJMO statistic is derived for
+T {c 174} infinity, and in this command it is computed on unit-level
+regressions that also carry the lagged dependent variable and (1+pT)
+times (1+px) cross-sectional averages.  With a short T that leaves few
+residual degrees of freedom per unit, the unit variance matrices are
+estimated too small and the statistic is biased upwards, so the test
+over-rejects homogeneity.  On the shipped homogeneous-slope design with
+N = 30 the standardized statistic falls from 5.05 at T = 60, to 1.84 at
+T = 150, to 0.92 at T = 400, against a null mean of zero.  Read a
+rejection at short T with that in mind, lower {opt cr_lags()} to free
+degrees of freedom, and when the homogeneity question is itself the
+object of interest use the standalone {helpb xtqsh}, whose static
+specification spends far fewer parameters per unit.
 
 {phang}
-{opt dfe} specifies the Dynamic Fixed Effects estimator.
+{bf:Choosing between the estimators.}  Use {opt qccemg} when the interest
+is in the average distributional effect and the slopes are heterogeneous.
+Use {opt qccepmg} when the GJMO statistic does not reject homogeneity.  Use the one-step CS-PQARDL when the variables are I(1) and
+you want a single well-specified equation; use {opt ecm} when you want to
+reproduce the two-step procedure of Ul-Durar et al. exactly.
 
 {phang}
-{opt p(#)} specifies the autoregressive lag order. Default is 1.
-
-{phang}
-{opt q(numlist)} specifies distributed lag orders for independent variables.
-A single number applies to all variables. A per-variable list is also accepted.
-
-{phang}
-{opt ecm} uses the error correction model reparameterization for CS-PQARDL.
-In this form, CSA enter the ECT only; short-run CSA differences are dropped.
-
-{phang}
-{opt lagsel(string)} activates automatic lag selection ({cmd:aic} or {cmd:bic}).
-
-{dlgtab:Cross-Sectional Dependence}
-
-{phang}
-{opt cr_lags(#)} sets the number of lags of cross-sectional averages.
-Default is floor(T^{1/3}) per Chudik and Pesaran (2015).
-
-{dlgtab:Advanced Analysis}
-
-{phang}
-{opt full} requests a comprehensive suite of advanced post-estimation 
-analysis tables when multiple quantiles are specified. This includes:
-(1) Cross-quantile coefficient comparison
-(2) Pairwise quantile differences (z-tests)
-(3) Persistence profile across quantiles
-(4) Quantile slope homogeneity test (Joint Wald test across quantiles)
-(5) For QCCEMG/QCCEPMG only: Long-run effects and Impulse Response Functions (IRF).
-
-{phang}
-{opt graph} generates and saves figures visualizing the estimation results 
-across quantiles. This includes: coefficient processes (long-run beta(tau), short-run 
-impacts, QCCEMG/QCCEPMG theta(tau) and lambda(tau)), ECT heatmaps (for CS-PQARDL), 
-and half-life comparisons. Short-run coefficient bounds are graphed utilizing 
-MG-averaged variance ({it:sr_V}). {bf:Note:} For CS-PQARDL, ensure short-run 
-{it:indepvars} are explicitly differenced (e.g. {cmd:dx1}) to avoid collinearity 
-with {cmd:lr()} level variables, which would flatten the short-run graphs to zero.
-
-{dlgtab:Display}
-
-{phang}
-{opt showindividual} displays per-panel estimation results.
-
-{phang}
-{opt showcsa} displays the coefficients of the Cross-Sectional Averages (CSA).
-These are treated as nuisance parameters to absorb unobserved common factors.
-
-{phang}
-{opt notable} suppresses the coefficient tables.
-
-{phang}
-{opt noconstant} suppresses the constant term.
+{bf:Speed.}  The command runs one quantile regression per unit and
+quantile, and a second one for the CD diagnostic.  On large panels use
+{opt nocd}, and under {opt ecm} lower {opt reps()}.
 
 
-{marker examples}{...}
-{title:Examples}
+{marker examples}{title:Examples}
 
-{pstd}Setup: generate simulated panel data for testing{p_end}
+{pstd}Set up a panel{p_end}
+{phang2}{cmd:. webuse grunfeld, clear}{p_end}
+{phang2}{cmd:. xtset company year}{p_end}
 
-{phang2}{cmd:. clear}{p_end}
-{phang2}{cmd:. set seed 12345}{p_end}
-{phang2}{cmd:. set obs 50}{p_end}
-{phang2}{cmd:. gen id = _n}{p_end}
-{phang2}{cmd:. expand 100}{p_end}
-{phang2}{cmd:. bysort id: gen t = _n}{p_end}
-{phang2}{cmd:. xtset id t}{p_end}
-{phang2}{cmd:. gen x1 = rnormal()}{p_end}
-{phang2}{cmd:. gen x2 = rnormal()}{p_end}
-{phang2}{cmd:. bysort t: egen f = mean(rnormal())}{p_end}
-{phang2}{cmd:. sort id t}{p_end}
-{phang2}{cmd:. xtset id t}{p_end}
-{phang2}{cmd:. gen y = 0 if t == 1}{p_end}
-{phang2}{cmd:. by id: replace y = 0.5*y[_n-1] + 1.0*x1 + 0.5*x2 + 0.3*f + rnormal() if _n > 1}{p_end}
-{phang2}{cmd:. gen dy = D.y}{p_end}
-{phang2}{cmd:. gen dx1 = D.x1}{p_end}
-{phang2}{cmd:. gen dx2 = D.x2}{p_end}
+{pstd}Quantile CCE mean group at three quantiles{p_end}
+{phang2}{cmd:. xtcspqardl invest mvalue kstock, tau(0.25 0.5 0.75) qccemg}{p_end}
 
-{pstd}{bf:Example 1:} QCCEMG at median{p_end}
+{pstd}The pooled counterpart{p_end}
+{phang2}{cmd:. xtcspqardl invest mvalue kstock, tau(0.5) qccepmg}{p_end}
 
-{phang2}{cmd:. xtcspqardl y x1 x2, tau(0.5) qccemg}{p_end}
+{pstd}One-step CS-PQARDL: differences in the varlist, levels in lr(){p_end}
+{phang2}{cmd:. gen dinv = D.invest}{p_end}
+{phang2}{cmd:. gen dmv  = D.mvalue}{p_end}
+{phang2}{cmd:. gen dks  = D.kstock}{p_end}
+{phang2}{cmd:. xtcspqardl dinv dmv dks, lr(L.invest L.mvalue L.kstock) tau(0.5) srtable}{p_end}
 
-{pstd}{bf:Example 2:} QCCEMG at multiple quantiles{p_end}
+{pstd}Two-step CS-PQARDL as in Ul-Durar et al. (2025){p_end}
+{phang2}{cmd:. xtcspqardl invest mvalue kstock, tau(0.25 0.5 0.75) ecm reps(200) seed(1) unittable}{p_end}
 
-{phang2}{cmd:. xtcspqardl y x1 x2, tau(0.25 0.5 0.75) qccemg}{p_end}
+{pstd}Everything: tables, inter-quantile analysis and figures{p_end}
+{phang2}{cmd:. xtcspqardl invest mvalue kstock, tau(0.1 0.25 0.5 0.75 0.9) qccemg full graph}{p_end}
 
-{pstd}{bf:Example 3:} CS-PQARDL with long-run specification{p_end}
-
-{phang2}{cmd:. xtcspqardl dy dx1 dx2, lr(L.y x1 x2) tau(0.25 0.5 0.75)}{p_end}
-
-{pstd}{bf:Example 4:} CS-PQARDL with ECM reparameterization{p_end}
-
-{phang2}{cmd:. xtcspqardl dy dx1 dx2, lr(L.y x1 x2) tau(0.5) ecm}{p_end}
-
-{pstd}{bf:Example 5:} QCCEMG with custom CSA lags{p_end}
-
-{phang2}{cmd:. xtcspqardl y x1 x2, tau(0.25 0.5 0.75) qccemg cr_lags(3)}{p_end}
-
-{pstd}{bf:Example 6:} Post-estimation access{p_end}
-
-{phang2}{cmd:. xtcspqardl y x1 x2, tau(0.5) qccemg}{p_end}
-{phang2}{cmd:. ereturn list}{p_end}
-{phang2}{cmd:. matrix list e(lambda_mg)}{p_end}
-{phang2}{cmd:. matrix list e(theta_mg)}{p_end}
-
-{pstd}{bf:Example 7:} QCCEPMG at median{p_end}
-
-{phang2}{cmd:. xtcspqardl y x1 x2, tau(0.5) qccepmg}{p_end}
-
-{pstd}{bf:Example 8:} QCCEPMG at multiple quantiles with CSA display{p_end}
-
-{phang2}{cmd:. xtcspqardl y x1 x2, tau(0.25 0.5 0.75) qccepmg showcsa}{p_end}
+{pstd}Postestimation{p_end}
+{phang2}{cmd:. test [q050]mvalue = [q025]mvalue}{p_end}
+{phang2}{cmd:. lincom [lr075]mvalue - [lr025]mvalue}{p_end}
 
 
-{marker results}{...}
-{title:Stored results}
+{marker results}{title:Stored results}
 
-{pstd}
-{cmd:xtcspqardl} stores the following in {cmd:e()}:
+{pstd}{cmd:xtcspqardl} stores the following in {cmd:e()}:
 
-{pstd}{bf:When estimator is QCCEMG or QCCEPMG:}{p_end}
-
-{synoptset 24 tabbed}{...}
-{p2col 5 24 28 2: Scalars}{p_end}
+{synoptset 22 tabbed}{...}
+{p2col 5 22 26 2: Scalars}{p_end}
 {synopt:{cmd:e(N)}}number of observations{p_end}
-{synopt:{cmd:e(n_g)}}number of panels{p_end}
-{synopt:{cmd:e(valid_panels)}}number of panels successfully estimated{p_end}
-{synopt:{cmd:e(k)}}number of independent variables{p_end}
+{synopt:{cmd:e(N_g)}}number of units in the sample{p_end}
+{synopt:{cmd:e(N_used)}}units entering the mean group{p_end}
+{synopt:{cmd:e(n_short)}}units dropped for a short time series{p_end}
+{synopt:{cmd:e(n_failed)}}unit-quantile fits that failed{p_end}
+{synopt:{cmd:e(n_omitted)}}unit-quantiles dropped for collinearity in a
+parameter of interest{p_end}
+{synopt:{cmd:e(k)}}number of regressors{p_end}
 {synopt:{cmd:e(ntau)}}number of quantiles{p_end}
-{synopt:{cmd:e(cr_lags)}}number of CSA lags{p_end}
-{synopt:{cmd:e(avg_T)}}average time periods per panel{p_end}
+{synopt:{cmd:e(cr_lags)}}pT{p_end}
+{synopt:{cmd:e(avg_T)}}average time-series length{p_end}
+{synopt:{cmd:e(level)}}confidence level{p_end}
+{synopt:{cmd:e(pooled)}}1 if the inverse-variance pooling was used{p_end}
 
-{p2col 5 24 28 2: Macros}{p_end}
+{p2col 5 22 26 2: Macros}{p_end}
 {synopt:{cmd:e(cmd)}}{cmd:xtcspqardl}{p_end}
-{synopt:{cmd:e(estimator)}}{cmd:qccemg} or {cmd:qccepmg}{p_end}
-{synopt:{cmd:e(depvar)}}dependent variable name{p_end}
-{synopt:{cmd:e(indepvars)}}independent variable names{p_end}
+{synopt:{cmd:e(estimator)}}{cmd:qccemg}, {cmd:qccepmg}, {cmd:cspqardl} or
+{cmd:cspqardl_ecm}{p_end}
+{synopt:{cmd:e(tau)}}the quantiles{p_end}
+{synopt:{cmd:e(depvar)}}dependent variable{p_end}
+{synopt:{cmd:e(indepvars)}}regressors{p_end}
+{synopt:{cmd:e(lrvars)}}level block{p_end}
+{synopt:{cmd:e(csabase)}}variables that were averaged{p_end}
+{synopt:{cmd:e(csa_labels)}}labels of the CSA terms{p_end}
+{synopt:{cmd:e(coefnames)}}names in the short-run block{p_end}
+{synopt:{cmd:e(lrnames)}}names in the long-run block{p_end}
+{synopt:{cmd:e(srnames)}}names in the short-run dynamics block{p_end}
+{synopt:{cmd:e(ivar)}}, {cmd:e(tvar)}panel and time variables{p_end}
+{synopt:{cmd:e(unitvce)}}unit-level variance estimator{p_end}
 
-{p2col 5 24 28 2: Matrices}{p_end}
-{synopt:{cmd:e(lambda_mg)}}MG autoregressive coefficient lambda(tau){p_end}
-{synopt:{cmd:e(lambda_V)}}variance of lambda_mg{p_end}
-{synopt:{cmd:e(beta_mg)}}MG contemporaneous coefficients beta(tau){p_end}
-{synopt:{cmd:e(beta_V)}}variance-covariance of beta_mg{p_end}
-{synopt:{cmd:e(theta_mg)}}MG long-run effects theta_j(tau) = beta_j/(1-lambda){p_end}
-{synopt:{cmd:e(halflife_mg)}}MG half-life by quantile{p_end}
-{synopt:{cmd:e(lambda_all)}}panel-specific lambda (N x ntau){p_end}
-{synopt:{cmd:e(beta_all)}}panel-specific beta (N x k*ntau){p_end}
+{p2col 5 22 26 2: Matrices}{p_end}
+{synopt:{cmd:e(b)}, {cmd:e(V)}}stacked short-run and long-run coefficients
+and their joint covariance, with one equation per quantile
+({cmd:q025}, {cmd:lr025}, ...){p_end}
+{synopt:{cmd:e(b_sr)}, {cmd:e(V_sr)}}short-run block only{p_end}
+{synopt:{cmd:e(b_lr)}, {cmd:e(V_lr)}}long-run block only{p_end}
+{synopt:{cmd:e(sr_b)}, {cmd:e(sr_V)}}short-run dynamics block{p_end}
+{synopt:{cmd:e(csa_b)}, {cmd:e(csa_V)}}cross-sectional-average
+coefficients{p_end}
+{synopt:{cmd:e(halflife)}, {cmd:e(halflife_se)}}half-life by quantile{p_end}
+{synopt:{cmd:e(diagnostics)}}pseudo R1, Wald, CD before and after
+augmentation, and the Galvao et al. (2017) slope-homogeneity tests, one
+row per quantile{p_end}
+{synopt:{cmd:e(unit_b)}}unit-level estimates{p_end}
+{synopt:{cmd:e(unit_ok)}}unit-by-quantile usability flags{p_end}
 
-{pstd}{bf:When estimator is CS-PQARDL:}{p_end}
-
-{synoptset 24 tabbed}{...}
-{p2col 5 24 28 2: Scalars}{p_end}
-{synopt:{cmd:e(N)}}number of observations{p_end}
-{synopt:{cmd:e(n_g)}}number of panels{p_end}
-{synopt:{cmd:e(valid_panels)}}panels successfully estimated{p_end}
-{synopt:{cmd:e(p)}}AR lag order{p_end}
-{synopt:{cmd:e(k)}}number of short-run independent variables{p_end}
-{synopt:{cmd:e(k_lr)}}number of long-run regressors{p_end}
-{synopt:{cmd:e(ntau)}}number of quantiles{p_end}
-{synopt:{cmd:e(cr_lags)}}CSA lag order{p_end}
-
-{p2col 5 24 28 2: Matrices}{p_end}
-{synopt:{cmd:e(beta_mg)}}MG long-run cointegrating coefficients{p_end}
-{synopt:{cmd:e(beta_V)}}variance of beta_mg{p_end}
-{synopt:{cmd:e(rho_mg)}}MG speed of adjustment rho(tau){p_end}
-{synopt:{cmd:e(rho_V)}}variance of rho_mg{p_end}
-{synopt:{cmd:e(halflife_mg)}}MG half-life{p_end}
-{synopt:{cmd:e(phi_mg)}}MG AR lag coefficients{p_end}
-{synopt:{cmd:e(sr_mg)}}MG short-run impact coefficients{p_end}
-{synopt:{cmd:e(csa_coef_mg)}}MG CSA nuisance coefficients{p_end}
-{synopt:{cmd:e(beta_all)}}panel-specific long-run coefficients{p_end}
-{synopt:{cmd:e(rho_all)}}panel-specific speed of adjustment{p_end}
+{p2col 5 22 26 2: Functions}{p_end}
+{synopt:{cmd:e(sample)}}estimation sample{p_end}
 
 
-{marker references}{...}
-{title:References}
+{marker refs}{title:References}
 
 {phang}
-Harding, M., Lamarche, C., and Pesaran, M.H. (2018).
-{it:Common correlated effects estimation of heterogeneous dynamic panel quantile regression models.}
-Journal of Applied Econometrics, 35(3), 294-314.
-{browse "https://doi.org/10.1002/jae.2753"}
-{p_end}
+Chudik, A., and M. H. Pesaran. 2015. Common correlated effects estimation
+of heterogeneous dynamic panel data models with weakly exogenous
+regressors. {it:Journal of Econometrics} 188: 393-420.
 
 {phang}
-Pesaran, M.H. (2006).
-{it:Estimation and inference in large heterogeneous panels with a multifactor error structure.}
-Econometrica, 74(4), 967-1012.
-{p_end}
+Harding, M., C. Lamarche, and M. H. Pesaran. 2018. Common correlated
+effects estimation of heterogeneous dynamic panel quantile regression
+models. USC-INET Working Paper 18-11.
 
 {phang}
-Chudik, A. and Pesaran, M.H. (2015).
-{it:Common correlated effects estimation of heterogeneous dynamic panel data models with weakly exogenous regressors.}
-Journal of Econometrics, 188(2), 393-420.
-{p_end}
+Koenker, R., and J. A. F. Machado. 1999. Goodness of fit and related
+inference processes for quantile regression.
+{it:Journal of the American Statistical Association} 94: 1296-1310.
 
 {phang}
-Cho, J.S., Kim, T., and Shin, Y. (2015).
-{it:Quantile cointegration in the autoregressive distributed-lag modeling framework.}
-Journal of Econometrics, 188(1), 281-300.
-{p_end}
+Pesaran, M. H. 2004. General diagnostic tests for cross section dependence
+in panels. Cambridge Working Papers in Economics 0435.
 
 {phang}
-Pesaran, M.H., Shin, Y., and Smith, R.P. (1999).
-{it:Pooled mean group estimation of dynamic heterogeneous panels.}
-Journal of the American Statistical Association, 94(446), 621-634.
-{p_end}
+Pesaran, M. H. 2006. Estimation and inference in large heterogeneous
+panels with a multifactor error structure. {it:Econometrica} 74: 967-1012.
 
 {phang}
-Pesaran, M.H. and Smith, R.P. (1995).
-{it:Estimating long-run relationships from dynamic heterogeneous panels.}
-Journal of Econometrics, 68(1), 79-113.
-{p_end}
+Pesaran, M. H., and R. Smith. 1995. Estimating long-run relationships from
+dynamic heterogeneous panels. {it:Journal of Econometrics} 68: 79-113.
 
 {phang}
-Koenker, R. and Bassett, G. (1978).
-{it:Regression quantiles.}
-Econometrica, 46(1), 33-50.
-{p_end}
+Galvao, A. F., T. Juhl, G. Montes-Rojas, and J. Olmo. 2017. Testing slope
+homogeneity in quantile regression panel data with an application to the
+cross-section of stock returns.
+{it:Journal of Financial Econometrics} 16: 211-243.
 
 {phang}
-Ul-Durar, S., Bakkar, Y., Arshed, N., Naveed, S., and Zhang, B. (2025).
-{it:FinTech and economic readiness: Institutional navigation amid climate risks.}
-Research in International Business and Finance, 73, 102543.
-{p_end}
+Powell, J. L. 1986. Censored regression quantiles.
+{it:Journal of Econometrics} 32: 143-155.
+
+{phang}
+Ul-Durar, S., Y. Bakkar, N. Arshed, S. Naveed, and B. Zhang. 2025. FinTech
+and economic readiness: institutional navigation amid climate risks.
+{it:Research in International Business and Finance} 73: 102543.
 
 
-{marker requirements}{...}
-{title:Requirements}
-
-{pstd}
-Stata 15.1 or later.{p_end}
-
-
-{marker author}{...}
-{title:Author}
+{marker author}{title:Author}
 
 {pstd}
 Dr Merwan Roudane{break}
-Email: {browse "mailto:merwanroudane920@gmail.com":merwanroudane920@gmail.com}
-{p_end}
+merwanroudane920@gmail.com{break}
+{browse "https://github.com/merwanroudane":github.com/merwanroudane}
 
 {pstd}
-Please cite this package as:{break}
-Roudane, M. (2026). XTCSPQARDL: Stata module for Cross-Sectionally Augmented
-Panel Quantile ARDL and Quantile CCE Mean Group estimation.
-{p_end}
+See {help xtcspqardl_methods:{bf:help xtcspqardl methods}} for the
+equation-by-equation map, and
+{help xtcspqardl_postestimation:{bf:help xtcspqardl postestimation}} for
+what you can do after estimation.

@@ -1,462 +1,465 @@
-*! _xtcspqardl_estimate v1.0.1 — Per-panel quantile regression engine
-*! CS-PQARDL: Panel Quantile ARDL with CCE augmentation
+*! _xtcspqardl_estimate v1.1.0  29aug2026 -- CS-PQARDL engine (one step)
+*! Cross-sectionally augmented panel quantile ARDL in conditional-ECM form.
 *! Called internally by xtcspqardl.ado
 *! Author: Dr Merwan Roudane (merwanroudane920@gmail.com)
-*! Date: February 2026
-*! CSA variables are added to the LR equation only
+*! github.com/merwanroudane
+*!
+*! Unit-i equation, estimated by quantile regression at each tau:
+*!
+*!   Dy_it = phi_i(t) y_i,t-1 + xi_i(t)' x_i,t-1
+*!           + sum_{j=1}^{p-1} c_ij(t) Dy_i,t-j
+*!           + sum_{m=0}^{q-1} d_im(t) Dx_i,t-m
+*!           + sum_{l=0}^{pT} zbar_{t-l}' delta_il(t) + a_i(t) + e_it
+*!
+*! The level block (y_i,t-1, x_i,t-1) is whatever the user puts in lr().
+*! Long-run coefficients follow the ARDL identity
+*!
+*!   theta_j(tau) = -xi_j(tau)/phi(tau) = xi_j(tau)/(1-lambda(tau)),
+*!   lambda(tau)  = 1 + phi(tau),
+*!
+*! so the persistence parameter is stored internally as lambda and the
+*! SAME delta-method machinery as QCCEMG applies, including the
+*! Cov(xi, phi) term that a diagonal delta method would drop.
+*!
+*! Mean group and variance follow Pesaran & Smith (1995) and
+*! Harding, Lamarche & Pesaran (2018, sec. 2.3).
 
 capture program drop _xtcspqardl_estimate
 program define _xtcspqardl_estimate, rclass
 	version 15.1
-	syntax , DEPVAR(string) INDEPVARS(string) LRVARS(string) ///
-		P(integer) QLAGS(string) ///
-		TAU(numlist >0 <1 sort) IVAR(string) TVAR(string) ///
-		TOUSE(string) CSAVARS(string) [NOCONStant]
-	
-	* Parse
-	local k : word count `indepvars'
-	local k_lr : word count `lrvars'
-	local ntau : word count `tau'
+	syntax , DEPVAR(string) INDEPVARS(string) LRVARS(string)          ///
+		P(integer) Q(string)                                      ///
+		TAU(numlist >0 <1 sort) IVAR(string) TVAR(string)         ///
+		TOUSE(string) CSAVARS(string) CRLAGS(integer)             ///
+		[ NOCONStant SHOWIndividual                               ///
+		  UNITVCE(string) MINT(integer 0) NOCD ]
+
+	_xtcspqardl_mata
+
+	local k     : word count `indepvars'
+	local k_lr  : word count `lrvars'
+	local ntau  : word count `tau'
 	local n_csa : word count `csavars'
-	
-	* Parse q lags per variable
-	local nqlags : word count `qlags'
-	if `nqlags' == 1 {
-		forvalues j = 1/`k' {
-			local q`j' = `qlags'
-		}
-	}
-	else if `nqlags' == `k' {
-		forvalues j = 1/`k' {
-			local q`j' : word `j' of `qlags'
-		}
-	}
-	else {
-		di as err "qlags() must have 1 or k elements"
+
+	if `k_lr' < 2 {
+		di as err "lr() must list the lagged dependent level first, " ///
+			"then at least one level regressor"
 		exit 198
 	}
-	
-	* Get panel IDs
+	if `p' < 1 {
+		di as err "p() must be at least 1"
+		exit 198
+	}
+
+	if "`q'" == "" local q "1"
+	local nq : word count `q'
+	if `nq' == 1 {
+		forvalues j = 1/`k' {
+			local q`j' = `q'
+		}
+	}
+	else if `nq' == `k' {
+		forvalues j = 1/`k' {
+			local q`j' : word `j' of `q'
+		}
+	}
+	else {
+		di as err "q() must be a single number or one number per " ///
+			"short-run regressor"
+		exit 198
+	}
+
+	if !inlist("`unitvce'", "", "iid", "robust") {
+		di as err "unitvce() must be iid or robust"
+		exit 198
+	}
+	if "`unitvce'" == "" local unitvce "iid"
+
 	qui levelsof `ivar' if `touse', local(ids)
 	local npanels : word count `ids'
-	
-	* ================================================================
-	* PRE-GENERATE ALL VARIABLES
-	* ================================================================
-	
-	* --- Depvar ---
-	tempvar dv_plain
-	qui gen double `dv_plain' = `depvar' if `touse'
-	local depvar_q "`dv_plain'"
-	
-	* --- LR variables ---
-	local lr_varlist ""
+
+	* =================================================================
+	* Build plain (non-ts) regressors
+	* =================================================================
+	tempvar dv
+	qui gen double `dv' = `depvar' if `touse'
+
+	* --- level (long-run) block, taken from lr() verbatim ---
+	local lr_plain ""
 	forvalues j = 1/`k_lr' {
-		local lrv : word `j' of `lrvars'
-		tempvar lr_plain`j'
-		qui gen double `lr_plain`j'' = `lrv' if `touse'
-		local lr_varlist "`lr_varlist' `lr_plain`j''"
+		local v : word `j' of `lrvars'
+		tempvar lp`j'
+		qui gen double `lp`j'' = `v' if `touse'
+		local lr_plain "`lr_plain' `lp`j''"
 	}
-	
-	* --- Contemporaneous indepvars ---
-	local indep_plain ""
-	forvalues j = 1/`k' {
-		local xvar : word `j' of `indepvars'
-		tempvar x_plain`j'
-		qui gen double `x_plain`j'' = `xvar' if `touse'
-		local indep_plain "`indep_plain' `x_plain`j''"
-	}
-	
-	* --- AR lags of depvar (p-1 additional lags) ---
-	local ar_varlist ""
-	if `p' > 1 {
-		forvalues lag = 1/`= `p' - 1' {
-			tempvar ar_lag`lag'
-			qui gen double `ar_lag`lag'' = L`lag'.`dv_plain' if `touse'
-			local ar_varlist "`ar_varlist' `ar_lag`lag''"
+
+	* --- extra lags of the dependent variable: p-1 of them ---
+	local ar_plain ""
+	local n_ar = `p' - 1
+	local arnames ""
+	if `n_ar' > 0 {
+		forvalues lag = 1/`n_ar' {
+			tempvar ap`lag'
+			qui gen double `ap`lag'' = L`lag'.`dv' if `touse'
+			local ar_plain "`ar_plain' `ap`lag''"
+			local arnames "`arnames' L`lag'.`depvar'"
 		}
 	}
-	local ncoefs_ar = `p' - 1
-	
-	* --- SR impact: contemporaneous + lags of each indepvar ---
-	local sr_varlist ""
-	local ncoefs_sr = 0
+
+	* --- short-run regressors and their lags ---
+	local sr_plain ""
+	local srnames ""
+	local n_sr = 0
 	forvalues j = 1/`k' {
-		local xvar_p : word `j' of `indep_plain'
-		local sr_varlist "`sr_varlist' `xvar_p'"
-		local ++ncoefs_sr
+		local xv : word `j' of `indepvars'
+		tempvar sp`j'_0
+		qui gen double `sp`j'_0' = `xv' if `touse'
+		local sr_plain "`sr_plain' `sp`j'_0'"
+		local srnames "`srnames' `xv'"
+		local ++n_sr
 		if `q`j'' > 1 {
-			forvalues lag = 1/`= `q`j'' - 1' {
-				tempvar sr_`j'_lag`lag'
-				qui gen double `sr_`j'_lag`lag'' = L`lag'.`xvar_p' if `touse'
-				local sr_varlist "`sr_varlist' `sr_`j'_lag`lag''"
-				local ++ncoefs_sr
+			forvalues m = 1/`= `q`j'' - 1' {
+				tempvar sp`j'_`m'
+				qui gen double `sp`j'_`m'' = L`m'.`sp`j'_0' if `touse'
+				local sr_plain "`sr_plain' `sp`j'_`m''"
+				local srnames "`srnames' L`m'.`xv'"
+				local ++n_sr
 			}
 		}
 	}
-	
-	* --- CSA variables (already generated, just create plain copies) ---
+
 	local csa_plain ""
 	local ci = 0
-	foreach csav of local csavars {
+	foreach cv of local csavars {
 		local ++ci
-		tempvar csa_p`ci'
-		qui gen double `csa_p`ci'' = `csav' if `touse'
-		local csa_plain "`csa_plain' `csa_p`ci''"
+		tempvar cp`ci'
+		qui gen double `cp`ci'' = `cv' if `touse'
+		local csa_plain "`csa_plain' `cp`ci''"
 	}
-	
-	* Build full regressor list: LR + AR + SR + CSA (CSA in LR equation)
-	local fullreg "`lr_varlist' `ar_varlist' `sr_varlist' `csa_plain'"
-	local ncoefs_lr = `k_lr'
-	local ncoefs_total = `ncoefs_lr' + `ncoefs_ar' + `ncoefs_sr' + `n_csa'
-	
-	* ================================================================
-	* Storage matrices
-	* ================================================================
-	local k_x = `k_lr' - 1
-	local beta_dim = `k_x' * `ntau'
-	local phi_dim = max(`ncoefs_ar', 1) * `ntau'
-	local sr_dim = `ncoefs_sr' * `ntau'
-	local csa_dim = `n_csa' * `ntau'
-	
-	tempname rho_all beta_all phi_all sr_all halflife_all csa_all
-	
-	matrix `rho_all' = J(`npanels', `ntau', .)
-	matrix `beta_all' = J(`npanels', max(`beta_dim',1), .)
-	matrix `halflife_all' = J(`npanels', `ntau', .)
-	
-	if `ncoefs_ar' > 0 {
-		matrix `phi_all' = J(`npanels', `ncoefs_ar' * `ntau', .)
+
+	local fullreg "`lr_plain' `ar_plain' `sr_plain' `csa_plain'"
+
+	local pv    = `k_lr'
+	local n_dyn = `n_ar' + `n_sr'
+	local pfull = `k_lr' + `n_dyn' + `n_csa'
+	local minT  = `pfull' + 5
+	if `mint' > 0 local minT = `mint'
+
+	local dynnames "`arnames' `srnames'"
+
+	* residual holders for the CD test
+	local docd = 1
+	if "`nocd'" != "" local docd = 0
+	if `docd' {
+		forvalues t = 1/`ntau' {
+			tempvar rr`t' r0`t'
+			qui gen double `rr`t'' = .
+			qui gen double `r0`t'' = .
+			local resvars  "`resvars' `rr`t''"
+			local resvars0 "`resvars0' `r0`t''"
+		}
 	}
-	else {
-		matrix `phi_all' = J(`npanels', `ntau', 0)
-	}
-	
-	if `ncoefs_sr' > 0 {
-		matrix `sr_all' = J(`npanels', `sr_dim', .)
-	}
-	else {
-		matrix `sr_all' = J(1, 1, .)
-	}
-	
-	matrix `csa_all' = J(`npanels', `csa_dim', .)
-	
-	* ================================================================
-	* Loop over panels
-	* ================================================================
+
+	* =================================================================
+	* Unit-by-unit quantile regressions
+	* =================================================================
+	mata: _xtcspq_init(`npanels', `ntau', `pfull', `pv')
+
+	tempname bfull vfull bblk vblk
 	local pi = 0
 	local success_count = 0
-	
+	local n_short   = 0
+	local n_failed  = 0
+	local n_omitted = 0
+	local n_csaomit = 0
+
 	foreach i of local ids {
 		local ++pi
-		
-		qui count if `touse' & `ivar' == `i'
+		qui count if `touse' & `ivar' == `i' & `lp1' < .
 		local ni = r(N)
-		
-		if `ni' < `ncoefs_total' + 5 {
+		if `ni' < `minT' {
+			local ++n_short
 			continue
 		}
-		
+
 		local any_tau_ok = 0
 		local ti = 0
-		
 		foreach tauval of local tau {
 			local ++ti
-			local tq = round(`tauval' * 100)
-			
-			* Run quantile regression
-			capture qui qreg `depvar_q' `fullreg' ///
-				if `touse' & `ivar' == `i', quantile(`tq')
-			
-			if _rc != 0 & _rc != 498 {
+			capture qui qreg `dv' `fullreg' ///
+				if `touse' & `ivar' == `i', ///
+				quantile(`tauval') vce(`unitvce')
+			local rc = _rc
+			if `rc' != 0 & `rc' != 498 {
+				local ++n_failed
 				continue
 			}
-			if e(N) < 5 continue
-			
-			local any_tau_ok = 1
-			
-			tempname b_qr
-			matrix `b_qr' = e(b)
-			
-			* ρ(τ) = coefficient on first LR var (lagged y level)
-			matrix `rho_all'[`pi', `ti'] = `b_qr'[1, 1]
-			
-			* Half-life
-			local rho_val = `b_qr'[1, 1]
-			if `rho_val' < 0 {
-				matrix `halflife_all'[`pi', `ti'] = ln(2) / abs(`rho_val')
-			}
-			
-			* β(τ) = -coef(x_level) / coef(y_level)
-			if abs(`rho_val') > 1e-10 {
-				forvalues j = 2/`k_lr' {
-					local bcol = (`ti' - 1) * `k_x' + (`j' - 1)
-					matrix `beta_all'[`pi', `bcol'] = ///
-						-`b_qr'[1, `j'] / `rho_val'
+			if e(N) < `minT' continue
+
+			matrix `bfull' = e(b)
+			local cn : colnames `bfull'
+
+			local bad = 0
+			matrix `bblk' = J(1, `pfull', .)
+			forvalues j = 1/`pfull' {
+				local nm : word `j' of `cn'
+				if `j' <= `pv' {
+					if substr("`nm'", 1, 2) == "o." local bad = 1
 				}
-			}
-			
-			* φ (AR lags)
-			if `ncoefs_ar' > 0 {
-				forvalues j = 1/`ncoefs_ar' {
-					local pcol = (`ti' - 1) * `ncoefs_ar' + `j'
-					local bpos = `k_lr' + `j'
-					matrix `phi_all'[`pi', `pcol'] = `b_qr'[1, `bpos']
+				else if `j' > `= `pv' + `n_dyn'' {
+					if substr("`nm'", 1, 2) == "o." ///
+						local ++n_csaomit
 				}
+				matrix `bblk'[1, `j'] = `bfull'[1, `j']
 			}
-			
-			* SR impact coefficients
-			if `ncoefs_sr' > 0 {
-				forvalues j = 1/`ncoefs_sr' {
-					local scol = (`ti' - 1) * `ncoefs_sr' + `j'
-					local bpos = `k_lr' + `ncoefs_ar' + `j'
-					matrix `sr_all'[`pi', `scol'] = `b_qr'[1, `bpos']
+			if `bad' {
+				local ++n_omitted
+				continue
+			}
+
+			* store persistence as lambda = 1 + phi so that the shared
+			* long-run delta method applies unchanged
+			matrix `bblk'[1, 1] = 1 + `bfull'[1, 1]
+
+			matrix `vblk' = J(`pv', `pv', .)
+			if `rc' == 0 {
+				capture matrix `vfull' = e(V)
+				if _rc == 0 matrix `vblk' = `vfull'[1..`pv', 1..`pv']
+			}
+
+			local adev = e(sum_adev)
+			local rdev = e(sum_rdev)
+			local nobs = e(N)
+			mata: _xtcspq_put(`pi', `ti', `pfull', `pv', ///
+				"`bblk'", "`vblk'", `adev', `rdev', `nobs')
+
+			if `docd' {
+				tempvar rtmp
+				capture qui predict double `rtmp' if e(sample), residuals
+				if _rc == 0 {
+					local rv : word `ti' of `resvars'
+					qui replace `rv' = `rtmp' if `rtmp' < .
+					drop `rtmp'
 				}
-			}
-			
-			* CSA coefficients (nuisance)
-			forvalues j = 1/`n_csa' {
-				local ccol = (`ti' - 1) * `n_csa' + `j'
-				local bpos = `k_lr' + `ncoefs_ar' + `ncoefs_sr' + `j'
-				capture matrix `csa_all'[`pi', `ccol'] = `b_qr'[1, `bpos']
-			}
-		}
-		
-		if `any_tau_ok' {
-			local ++success_count
-		}
-	}
-	
-	* ================================================================
-	* Compute Mean Group averages
-	* ================================================================
-	tempname rho_mg beta_mg halflife_mg phi_mg sr_mg csa_coef_mg
-	matrix `rho_mg' = J(1, `ntau', .)
-	matrix `beta_mg' = J(1, max(`beta_dim',1), .)
-	matrix `halflife_mg' = J(1, `ntau', .)
-	
-	if `ncoefs_ar' > 0 {
-		matrix `phi_mg' = J(1, `ncoefs_ar' * `ntau', .)
-	}
-	else {
-		matrix `phi_mg' = J(1, `ntau', .)
-	}
-	if `ncoefs_sr' > 0 {
-		matrix `sr_mg' = J(1, `sr_dim', .)
-	}
-	else {
-		matrix `sr_mg' = J(1, 1, .)
-	}
-	matrix `csa_coef_mg' = J(1, max(`csa_dim',1), .)
-	
-	* Rho & halflife averages
-	forvalues t = 1/`ntau' {
-		local cnt = 0
-		local cnt_hl = 0
-		local sum_r = 0
-		local sum_hl = 0
-		forvalues i = 1/`npanels' {
-			if `rho_all'[`i', `t'] != . {
-				local ++cnt
-				local sum_r = `sum_r' + `rho_all'[`i', `t']
-			}
-			if `halflife_all'[`i', `t'] != . {
-				local ++cnt_hl
-				local sum_hl = `sum_hl' + `halflife_all'[`i', `t']
-			}
-		}
-		if `cnt' > 0 matrix `rho_mg'[1, `t'] = `sum_r' / `cnt'
-		if `cnt_hl' > 0 matrix `halflife_mg'[1, `t'] = `sum_hl' / `cnt_hl'
-	}
-	
-	* Beta average
-	local bdim = max(`beta_dim', 1)
-	forvalues c = 1/`bdim' {
-		local cnt = 0
-		local sum_b = 0
-		forvalues i = 1/`npanels' {
-			if `beta_all'[`i', `c'] != . {
-				local ++cnt
-				local sum_b = `sum_b' + `beta_all'[`i', `c']
-			}
-		}
-		if `cnt' > 0 matrix `beta_mg'[1, `c'] = `sum_b' / `cnt'
-	}
-	
-	* Phi average
-	local phi_cols = colsof(`phi_mg')
-	forvalues c = 1/`phi_cols' {
-		local cnt = 0
-		local sum_p = 0
-		forvalues i = 1/`npanels' {
-			if `phi_all'[`i', `c'] != . {
-				local ++cnt
-				local sum_p = `sum_p' + `phi_all'[`i', `c']
-			}
-		}
-		if `cnt' > 0 matrix `phi_mg'[1, `c'] = `sum_p' / `cnt'
-	}
-	
-	* SR average
-	if `ncoefs_sr' > 0 {
-		forvalues c = 1/`sr_dim' {
-			local cnt = 0
-			local sum_s = 0
-			forvalues i = 1/`npanels' {
-				if `sr_all'[`i', `c'] != . {
-					local ++cnt
-					local sum_s = `sum_s' + `sr_all'[`i', `c']
-				}
-			}
-			if `cnt' > 0 matrix `sr_mg'[1, `c'] = `sum_s' / `cnt'
-		}
-	}
-	
-	* CSA average
-	local cdim = max(`csa_dim', 1)
-	forvalues c = 1/`cdim' {
-		local cnt = 0
-		local sum_c = 0
-		forvalues i = 1/`npanels' {
-			if `csa_all'[`i', `c'] != . {
-				local ++cnt
-				local sum_c = `sum_c' + `csa_all'[`i', `c']
-			}
-		}
-		if `cnt' > 0 matrix `csa_coef_mg'[1, `c'] = `sum_c' / `cnt'
-	}
-	
-	* ================================================================
-	* MG variance: V = (1/(N(N-1))) Σ(b_i - b̄)(b_i - b̄)'
-	* ================================================================
-	tempname beta_V rho_V sr_V
-	matrix `beta_V' = J(max(`beta_dim',1), max(`beta_dim',1), 0)
-	matrix `rho_V' = J(`ntau', `ntau', 0)
-	matrix `sr_V' = J(max(`sr_dim',1), max(`sr_dim',1), 0)
-	
-	* Beta variance: per-quantile block
-	forvalues t = 1/`ntau' {
-		local col_start = (`t' - 1) * `k_x' + 1
-		local col_end = `t' * `k_x'
-		
-		if `k_x' < 1 continue
-		
-		local nv = 0
-		forvalues i = 1/`npanels' {
-			local ok = 1
-			forvalues c = `col_start'/`col_end' {
-				if `beta_all'[`i', `c'] == . local ok = 0
-			}
-			if `ok' local ++nv
-		}
-		
-		if `nv' > 1 {
-			forvalues i = 1/`npanels' {
-				local ok = 1
-				forvalues c = `col_start'/`col_end' {
-					if `beta_all'[`i', `c'] == . local ok = 0
-				}
-				if `ok' {
-					forvalues r = `col_start'/`col_end' {
-						forvalues c = `col_start'/`col_end' {
-							local dev_r = `beta_all'[`i', `r'] - `beta_mg'[1, `r']
-							local dev_c = `beta_all'[`i', `c'] - `beta_mg'[1, `c']
-							matrix `beta_V'[`r', `c'] = `beta_V'[`r', `c'] + ///
-								`dev_r' * `dev_c'
-						}
+				capture qui qreg `dv' `lr_plain' `ar_plain' `sr_plain' ///
+					if `touse' & `ivar' == `i', quantile(`tauval')
+				if _rc == 0 | _rc == 498 {
+					tempvar r0tmp
+					capture qui predict double `r0tmp' ///
+						if e(sample), residuals
+					if _rc == 0 {
+						local rv0 : word `ti' of `resvars0'
+						qui replace `rv0' = `r0tmp' if `r0tmp' < .
+						drop `r0tmp'
 					}
 				}
 			}
-			local scale = 1 / (`nv' * (`nv' - 1))
-			forvalues r = `col_start'/`col_end' {
-				forvalues c = `col_start'/`col_end' {
-					matrix `beta_V'[`r', `c'] = `scale' * `beta_V'[`r', `c']
-				}
-			}
+			local any_tau_ok = 1
+		}
+		if `any_tau_ok' local ++success_count
+		if "`showindividual'" != "" & `any_tau_ok' {
+			di in gr "    unit `i': T_i = " in ye %4.0f `ni' in gr "   ok"
 		}
 	}
-	
-	* Rho variance: per-quantile diagonal
-	forvalues t = 1/`ntau' {
-		local nv = 0
-		local ss = 0
-		forvalues i = 1/`npanels' {
-			if `rho_all'[`i', `t'] != . {
-				local ++nv
-				local dev = `rho_all'[`i', `t'] - `rho_mg'[1, `t']
-				local ss = `ss' + `dev' * `dev'
-			}
-		}
-		if `nv' > 1 {
-			matrix `rho_V'[`t', `t'] = `ss' / (`nv' * (`nv' - 1))
-		}
-	}
-	
-	* SR variance: per-element diagonal (MG between-group variance)
-	if `ncoefs_sr' > 0 {
-		forvalues c = 1/`sr_dim' {
-			local nv = 0
-			local ss = 0
-			forvalues i = 1/`npanels' {
-				if `sr_all'[`i', `c'] != . {
-					local ++nv
-					local dev = `sr_all'[`i', `c'] - `sr_mg'[1, `c']
-					local ss = `ss' + `dev' * `dev'
-				}
-			}
-			if `nv' > 1 {
-				matrix `sr_V'[`c', `c'] = `ss' / (`nv' * (`nv' - 1))
-			}
-		}
-	}
-	
-	* CSA variance: per-element diagonal (MG between-group variance)
-	tempname csa_V
-	local csa_vdim = max(`csa_dim', 1)
-	matrix `csa_V' = J(`csa_vdim', `csa_vdim', 0)
-	
-	forvalues c = 1/`csa_vdim' {
-		local nv = 0
-		local ss = 0
-		forvalues i = 1/`npanels' {
-			if `csa_all'[`i', `c'] != . {
-				local ++nv
-				local dev = `csa_all'[`i', `c'] - `csa_coef_mg'[1, `c']
-				local ss = `ss' + `dev' * `dev'
-			}
-		}
-		if `nv' > 1 {
-			matrix `csa_V'[`c', `c'] = `ss' / (`nv' * (`nv' - 1))
-		}
-	}
-	
-	* ================================================================
-	* Return results
-	* ================================================================
-	return scalar npanels = `npanels'
+
+	* =================================================================
+	* Aggregation
+	* =================================================================
+	tempname bmg Vmg keep
+	mata: _xtcspq_mg(`ntau', `pfull', `pv', "`bmg'", "`Vmg'", ///
+		"r_nused", "`keep'")
+	local n_used = r_nused
+	scalar drop r_nused
+
 	return scalar valid_panels = `success_count'
-	return scalar ntau = `ntau'
-	return scalar k = `k'
-	return scalar k_lr = `k_lr'
-	return scalar p = `p'
-	return scalar ncoefs_sr = `ncoefs_sr'
-	
-	return matrix rho_all = `rho_all'
-	return matrix beta_all = `beta_all'
-	return matrix halflife_all = `halflife_all'
-	return matrix phi_all = `phi_all'
-	return matrix sr_all = `sr_all'
-	return matrix csa_all = `csa_all'
-	
-	return matrix rho_mg = `rho_mg'
-	return matrix beta_mg = `beta_mg'
-	return matrix halflife_mg = `halflife_mg'
-	return matrix phi_mg = `phi_mg'
-	return matrix sr_mg = `sr_mg'
-	return matrix csa_coef_mg = `csa_coef_mg'
-	
-	return matrix beta_V = `beta_V'
-	return matrix rho_V = `rho_V'
-	return matrix sr_V = `sr_V'
-	return matrix csa_V = `csa_V'
+	return scalar n_used       = `n_used'
+	return scalar n_short      = `n_short'
+	return scalar n_failed     = `n_failed'
+	return scalar n_omitted    = `n_omitted'
+	if `n_used' < 2 exit
+
+	* ---- core block (lambda, xi) ----
+	tempname b V
+	matrix `b' = J(1, `ntau' * `pv', .)
+	matrix `V' = J(`ntau' * `pv', `ntau' * `pv', .)
+	forvalues t1 = 1/`ntau' {
+		forvalues a = 1/`pv' {
+			local r1 = (`t1' - 1) * `pv' + `a'
+			local s1 = (`t1' - 1) * `pfull' + `a'
+			matrix `b'[1, `r1'] = `bmg'[1, `s1']
+			forvalues t2 = 1/`ntau' {
+				forvalues bq = 1/`pv' {
+					local r2 = (`t2' - 1) * `pv' + `bq'
+					local s2 = (`t2' - 1) * `pfull' + `bq'
+					matrix `V'[`r1', `r2'] = `Vmg'[`s1', `s2']
+				}
+			}
+		}
+	}
+
+	* ---- long run theta_j = xi_j/(1-lambda) = -xi_j/phi ----
+	local klr1 = `k_lr' - 1
+	tempname lr Vlr Glr
+	mata: _xtcspq_lrdelta(`ntau', `klr1', 1, 1, "`b'", "`V'", ///
+		"`lr'", "`Vlr'", "`Glr'")
+
+	* ---- half-life from lambda ----
+	tempname hl hlse
+	matrix `hl'   = J(1, `ntau', .)
+	matrix `hlse' = J(1, `ntau', .)
+	forvalues t = 1/`ntau' {
+		local c0 = (`t' - 1) * `pv' + 1
+		local lam = `b'[1, `c0']
+		if `lam' > 0 & `lam' < 1 {
+			matrix `hl'[1, `t'] = ln(0.5) / ln(`lam')
+			local g = -ln(0.5) / (`lam' * (ln(`lam'))^2)
+			local vl = `V'[`c0', `c0']
+			if `vl' > 0 & `vl' < . ///
+				matrix `hlse'[1, `t'] = abs(`g') * sqrt(`vl')
+		}
+	}
+
+	* ---- convert the stored lambda back to the speed of adjustment
+	*      phi = lambda - 1 for reporting.  This is an affine shift, so
+	*      V, Glr and the cross-covariance are unchanged. ----
+	forvalues t = 1/`ntau' {
+		local c0 = (`t' - 1) * `pv' + 1
+		matrix `b'[1, `c0'] = `b'[1, `c0'] - 1
+	}
+
+	* ---- short-run dynamics block ----
+	tempname sb sv
+	if `n_dyn' > 0 {
+		matrix `sb' = J(1, `ntau' * `n_dyn', .)
+		matrix `sv' = J(`ntau' * `n_dyn', `ntau' * `n_dyn', 0)
+		forvalues t = 1/`ntau' {
+			forvalues a = 1/`n_dyn' {
+				local r1 = (`t' - 1) * `n_dyn' + `a'
+				local s1 = (`t' - 1) * `pfull' + `pv' + `a'
+				matrix `sb'[1, `r1'] = `bmg'[1, `s1']
+				matrix `sv'[`r1', `r1'] = `Vmg'[`s1', `s1']
+			}
+		}
+	}
+
+	* ---- CSA block ----
+	tempname csab csaV
+	matrix `csab' = J(1, `ntau' * `n_csa', .)
+	matrix `csaV' = J(`ntau' * `n_csa', `ntau' * `n_csa', 0)
+	forvalues t = 1/`ntau' {
+		forvalues a = 1/`n_csa' {
+			local r1 = (`t' - 1) * `n_csa' + `a'
+			local s1 = (`t' - 1) * `pfull' + `pv' + `n_dyn' + `a'
+			matrix `csab'[1, `r1'] = `bmg'[1, `s1']
+			matrix `csaV'[`r1', `r1'] = `Vmg'[`s1', `s1']
+		}
+	}
+
+	* =================================================================
+	* Diagnostics
+	* =================================================================
+	tempname diag
+	matrix `diag' = J(`ntau', 13, .)
+	matrix colnames `diag' = ///
+		r1 wald wald_df wald_p cd cd_p gjmo_d gjmo_d_p cd0 cd0_p ///
+		gjmo_s gjmo_s_df gjmo_s_p
+
+	forvalues t = 1/`ntau' {
+		mata: _xtcspq_r1(`t', "r_r1")
+		matrix `diag'[`t', 1] = r_r1
+		scalar drop r_r1
+
+		* H0: all long-run level regressors have a zero coefficient
+		tempname idx
+		matrix `idx' = J(1, `klr1', .)
+		forvalues j = 1/`klr1' {
+			matrix `idx'[1, `j'] = (`t' - 1) * `pv' + 1 + `j'
+		}
+		mata: _xtcspq_wald("`b'", "`V'", "`idx'", "r_w", "r_df", "r_p")
+		matrix `diag'[`t', 2] = r_w
+		matrix `diag'[`t', 3] = r_df
+		matrix `diag'[`t', 4] = r_p
+		scalar drop r_w r_df r_p
+
+		if `docd' {
+			local rv : word `t' of `resvars'
+			capture mata: _xtcspq_cd("`rv'", "`ivar'", "`tvar'", ///
+				"`touse'", "r_cd", "r_cdp", "r_cdn", "r_cdt")
+			if _rc == 0 {
+				matrix `diag'[`t', 5] = r_cd
+				matrix `diag'[`t', 6] = r_cdp
+				scalar drop r_cd r_cdp r_cdn r_cdt
+			}
+			local rv0 : word `t' of `resvars0'
+			capture mata: _xtcspq_cd("`rv0'", "`ivar'", "`tvar'", ///
+				"`touse'", "r_cd", "r_cdp", "r_cdn", "r_cdt")
+			if _rc == 0 {
+				matrix `diag'[`t', 9]  = r_cd
+				matrix `diag'[`t', 10] = r_cdp
+				scalar drop r_cd r_cdp r_cdn r_cdt
+			}
+		}
+
+		capture mata: _xtcspq_gjmo(`t', `pfull', `pv', "r_s", ///
+			"r_sdf", "r_sp", "r_d", "r_dp", "r_n")
+		if _rc == 0 {
+			matrix `diag'[`t', 7]  = r_d
+			matrix `diag'[`t', 8]  = r_dp
+			matrix `diag'[`t', 11] = r_s
+			matrix `diag'[`t', 12] = r_sdf
+			matrix `diag'[`t', 13] = r_sp
+			scalar drop r_s r_sdf r_sp r_d r_dp r_n
+		}
+	}
+
+	tempname unitb unitok
+	mata: _xtcspq_getall("`unitb'")
+	mata: _xtcspq_getok("`unitok'")
+	matrix rownames `unitb'  = `ids'
+	matrix rownames `unitok' = `ids'
+	mata: _xtcspq_drop()
+
+	* =================================================================
+	* Names and return
+	* =================================================================
+	local lr_y : word 1 of `lrvars'
+	local lr_x ""
+	forvalues j = 2/`k_lr' {
+		local v : word `j' of `lrvars'
+		local lr_x "`lr_x' `v'"
+	}
+	return local coefnames "ECT `lr_x'"
+	return local lrnames   "`lr_x'"
+	return local srnames   "`dynnames'"
+	return local unitvce   "`unitvce'"
+
+	return scalar npanels   = `npanels'
+	return scalar ntau      = `ntau'
+	return scalar k         = `k'
+	return scalar k_lr      = `k_lr'
+	return scalar pblk      = `pv'
+	return scalar pfull     = `pfull'
+	return scalar n_csa     = `n_csa'
+	return scalar n_dyn     = `n_dyn'
+	return scalar cr_lags   = `crlags'
+	return scalar pooled    = 0
+	return scalar n_csaomit = `n_csaomit'
+
+	return matrix b        = `b'
+	return matrix V        = `V'
+	return matrix lr       = `lr'
+	return matrix V_lr     = `Vlr'
+	return matrix G_lr     = `Glr'
+	return matrix halflife = `hl'
+	return matrix halflife_se = `hlse'
+	return matrix diag     = `diag'
+	return matrix csa_b    = `csab'
+	return matrix csa_V    = `csaV'
+	return matrix unit_b   = `unitb'
+	return matrix unit_ok  = `unitok'
+	return matrix keep     = `keep'
+	if `n_dyn' > 0 {
+		return matrix sr_b = `sb'
+		return matrix sr_V = `sv'
+	}
 end

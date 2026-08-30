@@ -1,0 +1,18 @@
+v 3
+d texpdf: standalone LaTeX-to-PDF compilation for Stata
+d Distribution-Date: 20260829
+d
+d Project-owned source is MIT licensed. Bundled engine and TeX resources
+d retain their upstream licenses and notices.
+f texpdf.ado
+f texpdf.sthlp
+f texpdf_run.ado
+f ../_/_texpdf_ssc_install.ado
+g LINUX64 ../_/_texpdf_plugin_unix.plugin _texpdf_plugin.plugin
+g MACINTEL64 ../_/_texpdf_plugin_macosx.plugin _texpdf_plugin.plugin
+g OSX.X8664 ../_/_texpdf_plugin_macosx.plugin _texpdf_plugin.plugin
+g MACARM64 ../_/_texpdf_plugin_macosx.plugin _texpdf_plugin.plugin
+g OSX.ARM64 ../_/_texpdf_plugin_macosx.plugin _texpdf_plugin.plugin
+g WIN64 ../_/_texpdf_plugin_windows.plugin _texpdf_plugin.plugin
+h _texpdf_plugin.plugin
+f texpdf_licenses.zip

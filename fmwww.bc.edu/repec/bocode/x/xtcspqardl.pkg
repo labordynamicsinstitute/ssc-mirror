@@ -43,16 +43,22 @@ d KW: pooled mean group
 d
 d Requires: Stata version 15.1
 d
-d Distribution-Date: 20260427
+d Distribution-Date: 20260829
 d
 d Author:   Merwan Roudane, NA
 d Support: email  merwanroudane920@@gmail.com
 d
 f xtcspqardl.ado
+F xtcspqardl.pkg
 f xtcspqardl.sthlp
+f xtcspqardl_example.do
+f xtcspqardl_graph.ado
+f xtcspqardl_methods.sthlp
+f xtcspqardl_postestimation.sthlp
 f ../_/_xtcspqardl_advanced.ado
 f ../_/_xtcspqardl_ecm.ado
 f ../_/_xtcspqardl_estimate.ado
+f ../_/_xtcspqardl_mata.ado
+f ../_/_xtcspqardl_mata.mata
 f ../_/_xtcspqardl_qccemg.ado
 f ../_/_xtcspqardl_qccepmg.ado
-f xtcspqardl_graph.ado
