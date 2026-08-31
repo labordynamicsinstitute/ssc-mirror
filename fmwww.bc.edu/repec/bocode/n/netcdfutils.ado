@@ -1,11 +1,15 @@
 *! version 3.0.1   2025-10-07
 * NetCDF Utilities for processing NetCDF files in Stata
 *
-program define netcdfutils 
+program define netcdfutils, rclass 
     version 17
     java: `0'
-
-
+    /* di "dimensions: `dimensions'"
+    di "coordAxes: `coordAxes'"
+    di "datatype: `datatype'" */
+    return local dimensions `dimensions'
+    return local coordAxes `coordAxes'
+    return local datatype `datatype'
 end 
 
 java:

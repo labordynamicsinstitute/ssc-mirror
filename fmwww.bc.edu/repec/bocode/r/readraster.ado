@@ -1,12 +1,66 @@
-*! version 3.0.2, 2025-11-19
+*! version 3.1.3, 2026-08-27
+*! version 3.1.2, 2026-01-27
 program define readraster
 
 syntax, [update]
  
 if "`update'" == "" {
 	help readraster
+    extractversion
+    local localversion `r(localversion)'
+    local gitversion   `r(gitversion)'
+
+    if "`localversion'" != "`gitversion'" {
+        gettoken loci localversion : localversion, p(".")
+        gettoken giti gitversion : gitversion, p(".")
+		while ("`loci'" !="" & "`giti'" !=""){
+	        if "`loci'" !="" & "`giti'" !="" {
+	            if "`loci'" < "`giti'" {
+					di "run the following command to update the package"
+	                di  "      readraster, update"
+	            }
+	         }
+        gettoken loci localversion : localversion, p(".")
+        gettoken giti gitversion : gitversion, p(".")		
+	    }
+	}
 }
 else {
+	extractversion
+    local localversion `r(localversion)'
+    local gitversion   `r(gitversion)'
+
+    if "`localversion'" == "`gitversion'" {
+    	di "You have the latest version of readraster."
+    }
+    else {
+        gettoken loci localversion : localversion, p(".")
+        gettoken giti gitversion : gitversion, p(".")
+		while ("`loci'" !="" & "`giti'" !=""){
+	        if "`loci'" !="" & "`giti'" !="" {
+	            if "`loci'" < "`giti'" {
+	                di "updating readraster...."
+	                net install readraster, from(https://raw.github.com/kerrydu/readraster/develop) replace
+				    di
+					*di "The Java dependencies can be updated via:"
+					*di "          geotools_init, compiled"
+				    *di "          netcdf_init,   compiled"
+					cap noi net install readrasterjar, from("https://raw.githubusercontent.com/kerrydu/readraster/refs/heads/develop/") replace
+					cap noi net install NetCDFUtils.pkg, from("https://raw.githubusercontent.com/kerrydu/readraster/refs/heads/develop/") replace
+	            }
+	        }
+        gettoken loci localversion : localversion, p(".")
+        gettoken giti gitversion : gitversion, p(".")		
+	  }
+
+    }
+}
+
+end
+
+/////////////////////////////////////////////////////
+program define extractversion,rclass
+    version 16
 	qui findfile readraster.ado 
     local fn `r(fn)'
     mata: filec = cat(`"`fn'"')
@@ -22,24 +76,6 @@ else {
     local filec = substr("`filec'", strpos("`filec'", "version")+8,.)
     local gitversion = substr("`filec'", 1,strpos("`filec'", ",")-1)
     di "The remote version is `gitversion'"
-    if "`localversion'" == "`gitversion'" {
-    	di "You have the latest version of readraster."
-    }
-    else {
-        gettoken loci localversion : localversion, p(".")
-        gettoken giti gitversion : gitversion, p(".")
-		while ("`loci'" !="" & "`giti'" !=""){
-        if "`loci'" !="" & "`giti'" !="" {
-            if "`loci'" < "`giti'" {
-                di "updating readraster...."
-                net install readraster, from(https://raw.github.com/kerrydu/readraster/develop) replace force
-            }
-        }
-        gettoken loci localversion : localversion, p(".")
-        gettoken giti gitversion : gitversion, p(".")		
-	  }
-    }
-
-}
-
+	return local localversion `localversion'
+	return local gitversion  `gitversion'
 end

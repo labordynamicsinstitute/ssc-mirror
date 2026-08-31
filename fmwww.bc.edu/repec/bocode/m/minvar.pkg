@@ -1,0 +1,34 @@
+d 'MINVAR': module to conduct longitudinal measurement invariance tests
+d
+d   minvar tests whether a latent construct is measured
+d equivalently across repeated measurements (or any set of parallel
+d    indicator lists in wide format).  It fits a sequence of nested
+d models and compares them:	  configural	  same items load
+d on the same factor at each timepoint; all loadings and intercepts
+d free	     weak (metric)   loadings constrained equal across
+d timepoints	   strong (scalar) loadings and intercepts
+d constrained equal across timepoints	    strict (residual)	   
+d		    optional fourth step (the strict option): each
+d item's residual variance also equated across timepoints    There
+d is no limit on the number of indicators, and up to 16
+d timepoints/groups are accepted. Effects coding is used for   
+d identification (Little, Slegers, & Card 2006): each factor's
+d loadings sum to the number of indicators and its intercepts sum  
+d  to 0, so the latent variables keep the metric of the items and
+d factor means are estimated at every timepoint. The residual of   
+d each item is allowed to covary with the residual of the same item
+d at every other timepoint. Estimation is by method(mlmv)   
+d (full-information ML under missing data) unless overridden. 
+d
+d KW: measurement invariance
+d KW: longitudinal data
+d
+d Requires: Stata version 
+d
+d Distribution-Date: 20260830
+d
+d Author: W. Justin Dyer,  Brigham Young University
+d Support: email Justin.Dyer@@byu.edu
+d
+f minvar.ado
+f minvar.sthlp

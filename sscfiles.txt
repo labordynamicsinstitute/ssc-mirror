@@ -6463,6 +6463,7 @@ fmwww.bc.edu/repec/bocode/h/hmindex.ado
 fmwww.bc.edu/repec/bocode/h/heabs-example.do
 fmwww.bc.edu/repec/bocode/h/hangr_laplace.ado
 fmwww.bc.edu/repec/bocode/h/hotdeck.ado
+fmwww.bc.edu/repec/bocode/h/hunan.dta
 fmwww.bc.edu/repec/bocode/h/hoi_equations.pdf
 fmwww.bc.edu/repec/bocode/h/halfinvnormi.ado
 fmwww.bc.edu/repec/bocode/h/hte.html
@@ -6707,6 +6708,7 @@ fmwww.bc.edu/repec/bocode/h/heterogi.hlp
 fmwww.bc.edu/repec/bocode/h/htmlwbr.mata
 fmwww.bc.edu/repec/bocode/h/heterogi.pkg
 fmwww.bc.edu/repec/bocode/h/hglogit.html
+fmwww.bc.edu/repec/bocode/h/hunan.nc
 fmwww.bc.edu/repec/bocode/h/hlp2winpdf.html
 fmwww.bc.edu/repec/bocode/h/hotdeck.html
 fmwww.bc.edu/repec/bocode/h/historaj.pkg
@@ -11128,6 +11130,7 @@ fmwww.bc.edu/repec/bocode/m/midas_dlg_subgroup.dlg
 fmwww.bc.edu/repec/bocode/m/mtefeplot.sthlp
 fmwww.bc.edu/repec/bocode/m/mimix.sthlp
 fmwww.bc.edu/repec/bocode/m/mifit.html
+fmwww.bc.edu/repec/bocode/m/minvar.ado
 fmwww.bc.edu/repec/bocode/m/mp_b_readme_sp.sthlp
 fmwww.bc.edu/repec/bocode/m/mf_mm_posof.hlp
 fmwww.bc.edu/repec/bocode/m/mm_regress.pkg
@@ -11638,6 +11641,7 @@ fmwww.bc.edu/repec/bocode/m/multimport.pkg
 fmwww.bc.edu/repec/bocode/m/mareg_est.ado
 fmwww.bc.edu/repec/bocode/m/metaeff.pkg
 fmwww.bc.edu/repec/bocode/m/manski_ci.ado
+fmwww.bc.edu/repec/bocode/m/minvar.pkg
 fmwww.bc.edu/repec/bocode/m/mixi12_sw.ado
 fmwww.bc.edu/repec/bocode/m/multicolinRidge.m
 fmwww.bc.edu/repec/bocode/m/mijoin.hlp
@@ -11978,6 +11982,7 @@ fmwww.bc.edu/repec/bocode/m/mktab.hlp
 fmwww.bc.edu/repec/bocode/m/margdistfit_mata_invert.do
 fmwww.bc.edu/repec/bocode/m/mladutil.py
 fmwww.bc.edu/repec/bocode/m/midas_assess.ado
+fmwww.bc.edu/repec/bocode/m/minvar.sthlp
 fmwww.bc.edu/repec/bocode/m/metandi_p.ado
 fmwww.bc.edu/repec/bocode/m/metaxl_clear.sthlp
 fmwww.bc.edu/repec/bocode/m/mapsm.ado

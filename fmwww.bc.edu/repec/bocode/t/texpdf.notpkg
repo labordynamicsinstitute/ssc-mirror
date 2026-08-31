@@ -1,9 +1,19 @@
 v 3
 d texpdf: standalone LaTeX-to-PDF compilation for Stata
-d Distribution-Date: 20260829
+
 d
 d Project-owned source is MIT licensed. Bundled engine and TeX resources
 d retain their upstream licenses and notices.
+d
+d KW: LaTeX
+d KW: PDF
+d
+d Requires: Stata version 14.1
+d
+d Distribution-Date: 20260829
+d
+d Author: Johannes Schmieder
+d Support: email johannes@@bu.edu
 f texpdf.ado
 f texpdf.sthlp
 f texpdf_run.ado

@@ -176,6 +176,7 @@ p minap module to calculate minimum average partial correlation for principal co
 p mindf module to perform HLT unit root tests with up to three breaks in trend (Harvey, Leybourne and Taylor, 2013)
 p minmse module to create balanced groups for treatment in experiments with one or several treatment arms 
 p mint module to examine across-groups equivalence of confirmatory factor analysis (CFA) measurement model parameters
+p minvar module to conduct longitudinal measurement invariance tests
 p miparallel module to perform parallel estimation for multiple imputed datasets
 p mipolate module to interpolate values 
 p mira module to compute Rubin's measure for multiple imputation regression analysis

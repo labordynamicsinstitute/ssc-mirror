@@ -1,3 +1,4 @@
+*! version 2.0.2 2026-1-27
 *! version 2.0.1 2025-10-05
 cap program drop gtiffdisp
 program define gtiffdisp,rclass
@@ -6,12 +7,11 @@ version 17
 cap findfile readraster-all-1.0.0-fat.jar
 if !_rc {
     gtiffdisp_2 `0'
-    exit
 }
-
-checkdependencies
-gtiffdisp_core `0'
-
+else{
+	checkdependencies
+	gtiffdisp_core `0'
+}
 
 
 return scalar nband = bands
@@ -87,7 +87,8 @@ removequotes,file(`using')
 
 local using = usubinstr(`"`using'"',"\","/",.)
 // 判断路径是否为绝对路径
-if !strmatch("`using'", "*:/*") & !strmatch("`using'", "/*") {
+//if !strmatch("`using'", "*:/*") & !strmatch("`using'", "/*") {
+if !strpos("`using'", "/") {
     // 如果是相对路径，拼接当前工作目录
     local using = "`c(pwd)'/`using'"
 }
@@ -95,7 +96,7 @@ local using = usubinstr(`"`using'"',"\","/",.)
 
 local rc = fileexists("`using'")
 if `rc'==0{
-	di as error `"`using'" NOT found'
+	di as error `"`using' NOT found"'
 	exit
 }
 

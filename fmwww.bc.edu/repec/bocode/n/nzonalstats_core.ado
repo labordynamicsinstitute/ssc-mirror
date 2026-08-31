@@ -42,15 +42,17 @@ removequotes, file(`using')
 local using = subinstr(`"`using'"',"\","/",.)
 local shpfile = subinstr(`"`shpfile'"',"\","/",.)
 // 判断路径是否为绝对路径
-if !regexm("`using'", "^(https?|ftp|s3|gs|/vsicurl/|/vsis3/|/vsigs/|/vsiaz/|/vsicurl_streaming/|/vsihttp/|/vsimem/|/vsizip/|/vsitar/|/vsicurl/).*") ///
-    & !strmatch("`using'", "*:\\*") & !strmatch("`using'", "/*") {
+//if !regexm("`using'", "^(https?|ftp|s3|gs|/vsicurl/|/vsis3/|/vsigs/|/vsiaz/|/vsicurl_streaming/|/vsihttp/|/vsimem/|/vsizip/|/vsitar/|/vsicurl/).*") ///
+//    & !strmatch("`using'", "*:\\*") & !strmatch("`using'", "/*") {
+if !strpos("`using'", "/") {
     local using = "`c(pwd)'/`using'"
 }
 
 removequotes, file(`shpfile')
 local shpfile `r(file)'
 // 判断路径是否为绝对路径
-if !strmatch("`shpfile'", "*:\\*") & !strmatch("`shpfile'", "/*") {
+//if !strmatch("`shpfile'", "*:\\*") & !strmatch("`shpfile'", "/*") {
+if !strpos("`shpfile'", "/") {
     // 如果是相对路径，拼接当前工作目录
     local shpfile = "`c(pwd)'/`shpfile'"
 }
@@ -198,30 +200,36 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.Handler;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import org.eclipse.imagen.media.range.Range;
+import org.eclipse.imagen.media.range.RangeFactory;
+import org.eclipse.imagen.media.stats.Statistics;
+import org.eclipse.imagen.media.stats.Statistics.StatsType;
+import org.eclipse.imagen.media.zonal.ZoneGeometry;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.MultiPolygon;
+import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.CoordinateFilter;
+import org.geotools.feature.simple.SimpleFeatureBuilder;
+import org.geotools.data.collection.ListFeatureCollection;
 
 // GeoTools API imports
-import org.geotools.api.parameter.GeneralParameterValue;
-import org.geotools.api.parameter.ParameterValue;
 import org.geotools.api.feature.simple.SimpleFeature;
+import org.geotools.api.feature.type.AttributeDescriptor;
+import org.geotools.api.feature.type.GeometryDescriptor;
 import org.geotools.api.referencing.crs.CoordinateReferenceSystem;
-import org.geotools.api.coverage.grid.GridEnvelope;
+import org.geotools.api.referencing.crs.GeographicCRS;
 
 // GeoTools implementation imports
 import org.geotools.coverage.grid.GridCoverage2D;
-import org.geotools.coverage.grid.GridGeometry2D;
-import org.geotools.coverage.grid.GridEnvelope2D;
-import org.geotools.coverage.grid.io.AbstractGridCoverage2DReader;
-import org.geotools.coverage.grid.io.AbstractGridFormat;
 import org.geotools.data.shapefile.ShapefileDataStore;
 import org.geotools.data.shapefile.ShapefileDataStoreFactory;
 import org.geotools.data.simple.SimpleFeatureCollection;
 import org.geotools.data.simple.SimpleFeatureIterator;
 import org.geotools.data.store.ReprojectingFeatureCollection;
-import org.geotools.gce.geotiff.GeoTiffReader;
 import org.geotools.geometry.jts.ReferencedEnvelope;
-import org.geotools.process.raster.RasterZonalStatistics;
+import org.geotools.process.raster.RasterZonalStatistics2;
 import org.geotools.referencing.CRS;
 import org.geotools.coverage.grid.GridCoverageFactory;
 import org.geotools.api.coverage.SampleDimension;
@@ -238,7 +246,6 @@ import ucar.ma2.MAMath;
 
 // Stata SFI imports
 import com.stata.sfi.Data;
-import com.stata.sfi.SFIToolkit;
 
 public class nzonalstatics {
 
@@ -412,8 +419,14 @@ public class nzonalstatics {
 
             Attribute fillAttr = ncVar.findAttribute("_FillValue");
             if (fillAttr == null) fillAttr = ncVar.findAttribute("missing_value");
+            Double fillAttrNumeric = attributeToDouble(fillAttr);
             if (fillAttr != null) {
-                System.out.println("NetCDF variable '" + varName + "' missing value attribute: " + fillAttr.getNumericValue() + " (type: " + fillAttr.getDataType() + ")");
+                String attrType = fillAttr.getDataType().toString();
+                if (fillAttrNumeric != null) {
+                    System.out.println("NetCDF variable '" + varName + "' missing value attribute: " + fillAttrNumeric + " (type: " + attrType + ")");
+                } else {
+                    System.out.println("NetCDF variable '" + varName + "' missing value attribute present but not numeric (type: " + attrType + ")");
+                }
             } else {
                 System.out.println("NetCDF variable '" + varName + "' has no _FillValue or missing_value attribute.");
             }
@@ -547,23 +560,22 @@ public class nzonalstatics {
                 }
             }
 
-            /* Attribute fillAttr = ncVar.findAttribute("_FillValue"); */
-            if (fillAttr == null) fillAttr = ncVar.findAttribute("missing_value");
-            if (fillAttr != null) {
+            if (fillAttrNumeric != null) {
                 if (isDouble) {
-                    fillValueDouble = fillAttr.getNumericValue().doubleValue();
+                    fillValueDouble = fillAttrNumeric;
                 } else {
-                    fillValueFloat = fillAttr.getNumericValue().floatValue();
+                    fillValueFloat = fillAttrNumeric.floatValue();
                 }
             }
 
-            // Identify spatial dimensions
-            for (int i = 0; i < actualDims; i++) {
-                if (actualShape[i] > 1) {
-                    spatialDims.add(i);
-                }
-            }
+            boolean hasFill = (fillAttr != null);
+            float validMin = Float.NaN;
+            float validMax = Float.NaN;
 
+            // Spatial dimensions were already identified once above (spatialDims built at
+            // the top of this method). Re-deriving yDim/xDim here from that single list --
+            // do NOT add to the list again, or the last-two-element lookup would grab the
+            // wrong indices for non-(time,y,x) dimension orderings.
             if (spatialDims.size() < 2) {
                 System.out.println("Error: Need at least 2 spatial dimensions with size > 1");
                 return;
@@ -585,6 +597,7 @@ public class nzonalstatics {
             }
 
             // Iterate over all spatial positions
+            int missingCellCount = 0;
             for (int y = 0; y < height; y++) {
                 for (int x = 0; x < width; x++) {
                     // Set the indices for the spatial dimensions
@@ -601,13 +614,18 @@ public class nzonalstatics {
                         if (!Double.isNaN(fillValueDouble)) {
                             isMissing = Double.compare(dval, fillValueDouble) == 0;
                         }
-                        if (!isMissing && fillAttr == null && Double.isNaN(dval)) {
+                        if (!isMissing && Double.isNaN(dval)) {
                             isMissing = true;
                         }
                         if (isMissing) {
-                            value = Float.NaN;
+                            missingCellCount++;
+                            // Keep the real fill value so it can be registered as NoData
+                            // (a single NaN would otherwise poison the whole zone's stats).
+                            value = hasFill ? fillValueFloat : Float.NaN;
                         } else {
                             value = (float) dval;
+                            if (Float.isNaN(validMin) || value < validMin) validMin = value;
+                            if (Float.isNaN(validMax) || value > validMax) validMax = value;
                         }
                     } else {
                         float fval = dataArray.getFloat(index);
@@ -615,27 +633,85 @@ public class nzonalstatics {
                         if (!Float.isNaN(fillValueFloat)) {
                             isMissing = Float.compare(fval, fillValueFloat) == 0;
                         }
-                        if (!isMissing && fillAttr == null && Float.isNaN(fval)) {
+                        if (!isMissing && Float.isNaN(fval)) {
                             isMissing = true;
                         }
                         if (isMissing) {
-                            value = Float.NaN;
+                            missingCellCount++;
+                            // Keep the real fill value so it can be registered as NoData
+                            // (a single NaN would otherwise poison the whole zone's stats).
+                            value = hasFill ? fillValueFloat : Float.NaN;
                         } else {
                             value = fval;
+                            if (Float.isNaN(validMin) || value < validMin) validMin = value;
+                            if (Float.isNaN(validMax) || value > validMax) validMax = value;
                         }
                     }
                     gridData[y][x] = value;
                 }
             }
 
+            // Determine the NoData value used for zonal statistics.
+            // - If the NetCDF has a _FillValue, keep that real value (it is by design far
+            //   outside the valid range) and register it as NoData.
+            // - If missing is encoded as NaN (no _FillValue), substitute a sentinel value
+            //   that is strictly below the valid minimum, so it can be cleanly excluded.
+            // Either way, registering NoData lets GeoTools/JAI compute stats over VALID
+            // pixels only, instead of turning an entire zone into NaN.
+            double noDataForStats = Double.NaN;
+            if (hasFill && !Float.isNaN(fillValueFloat)) {
+                // A real _FillValue is present: missing cells already hold that real value
+                // (NaN cells were also mapped to it in the loop above), so just exclude it.
+                noDataForStats = (double) fillValueFloat;
+            } else if (!Float.isNaN(validMin) && !Float.isNaN(validMax)) {
+                // No usable _FillValue (absent, or defined as NaN): derive a sentinel value
+                // strictly below the valid range and substitute it for any NaN cells, then
+                // register the sentinel as NoData.
+                float sentinel = validMin - (Math.abs(validMax - validMin) + 100.0f);
+                for (int yy = 0; yy < height; yy++) {
+                    for (int xx = 0; xx < width; xx++) {
+                        if (Float.isNaN(gridData[yy][xx])) {
+                            gridData[yy][xx] = sentinel;
+                        }
+                    }
+                }
+                noDataForStats = (double) sentinel;
+            }
+            // Build the NoData range via the PUBLIC RangeFactory. The concrete RangeDouble
+            // constructor is package-private, so it cannot be called from here -- RangeFactory
+            // is the supported public API. A single-valued range [v, v] tells JAI to skip those
+            // pixels when computing stats, so one missing cell no longer zeroes out a whole zone.
+            Range noDataRange = Double.isNaN(noDataForStats)
+                    ? null
+                    : RangeFactory.create(noDataForStats, true, noDataForStats, true);
+
+            // >>> DIAGNOSTIC: report how missing values were handled for the whole raster
+            int nanRemaining = 0;
+            for (int yy = 0; yy < height; yy++) {
+                for (int xx = 0; xx < width; xx++) {
+                    if (Float.isNaN(gridData[yy][xx])) nanRemaining++;
+                }
+            }
+            System.out.println("[NoData diagnostic] hasFill=" + hasFill
+                    + " fillValue=" + (Float.isNaN(fillValueFloat) ? "NaN" : fillValueFloat)
+                    + " missingCellsInRaster=" + missingCellCount
+                    + " nanRemainingAfterFix=" + nanRemaining
+                    + " validMin=" + validMin + " validMax=" + validMax
+                    + " noDataForStats=" + (Double.isNaN(noDataForStats) ? "NONE" : noDataForStats)
+                    + " noDataRange=" + (noDataRange == null ? "NULL (no masking!)" : "set"));
+            if (nanRemaining > 0 && noDataRange == null) {
+                System.out.println("[NoData diagnostic] WARNING: raster still holds " + nanRemaining
+                        + " NaN cell(s) but no NoData range was set -> these will poison zone stats. "
+                        + "Define a _FillValue or ensure validMin/validMax are non-NaN.");
+            }
 
             // Create GridCoverage2D
             GridCoverageFactory factory = new GridCoverageFactory();
-            GridSampleDimension[] bands = new GridSampleDimension[1];
-            bands[0] = new GridSampleDimension(varName);
+            GridSampleDimension[] sampleDims = new GridSampleDimension[1];
+            sampleDims[0] = new GridSampleDimension(varName);
 
             BufferedImage image = floatArrayToImage(gridData);
-            coverage = factory.create(varName, image, actualEnvelope, bands, null, null);
+            coverage = factory.create(varName, image, actualEnvelope, sampleDims, null, null);
 
             // Get coordinate systems for comparison
             CoordinateReferenceSystem rasterCRS = ncCRS;
@@ -657,229 +733,353 @@ public class nzonalstatics {
                 System.out.println("Coordinate systems are compatible, no reprojection needed");
             }
 
+            // >>> ADDED: reconcile 0-360 vs -180-180 longitude convention mismatch
+            // Both datasets may be EPSG:4326 but one uses [0,360] and the other [-180,180];
+            // the CRS is identical so reprojection is skipped, yet the geometries never overlap.
+            ReferencedEnvelope reprojShpBounds = featureCollection.getBounds();
+            if (isGeographic(rasterCRS)) {
+                double rMin = actualEnvelope.getMinX();
+                double rMax = actualEnvelope.getMaxX();
+                double sMin = reprojShpBounds.getMinX();
+                double sMax = reprojShpBounds.getMaxX();
+                // Detect longitude-convention mismatch (0-360 vs -180-180).
+                // The two conventions overlap in [0,180], so a plain "do the extents intersect?"
+                // test is NOT enough -- the same geographic point has X values that differ by 360.
+                boolean raster0360 = (rMin >= 0 && rMax > 180);
+                boolean vec0360    = (sMin >= 0 && sMax > 180);
+                if (raster0360 != vec0360) {
+                    System.out.println("Longitude convention mismatch (raster is "
+                            + (raster0360 ? "0-360" : "-180-180") + ", shapefile is "
+                            + (vec0360 ? "0-360" : "-180-180")
+                            + ") detected; aligning shapefile longitudes to the raster's convention.");
+                    featureCollection = alignLongitudeConvention(featureCollection, raster0360);
+                    reprojShpBounds = featureCollection.getBounds();
+                }
+            }
 
-            RasterZonalStatistics process = new RasterZonalStatistics();
-            SimpleFeatureCollection resultFeatures = process.execute(
-                    coverage,      // raster data
-                    0,             // use first (only) band
-                    featureCollection,  // vector regions
-                    null           // classification image (optional, not needed here)
-            );
+            // >>> overall extent overlap check (both envelopes now in rasterCRS)
+            if (!actualEnvelope.intersects((org.locationtech.jts.geom.Envelope) reprojShpBounds)) {
+                System.out.println("Warning: The shapefile extent does NOT overlap the NetCDF raster extent.");
+                System.out.println("  Shapefile bounds: " + reprojShpBounds.toString());
+                System.out.println("  NetCDF bounds:   " + actualEnvelope.toString());
+                System.out.println("  No zone will contain valid raster pixels; zonal statistics will be empty.");
+                System.out.println("  Please verify the CRS and the spatial coverage of both datasets.");
+            }
 
-            // Process results - safely with proper resource cleanup and store in a list
-            List<SimpleFeature> allFeatures = new ArrayList<>();
-            featureIterator = resultFeatures.features();
+            // >>> DIAGNOSTIC: report raster vs shapefile extents (both in rasterCRS) for overlap
+            System.out.println("[Extent diagnostic] rasterEnvelope =" + actualEnvelope.toString());
+            System.out.println("[Extent diagnostic] shapeEnvelope  =" + reprojShpBounds.toString());
+            System.out.println("[Extent diagnostic] overallOverlap ="
+                    + actualEnvelope.intersects((org.locationtech.jts.geom.Envelope) reprojShpBounds));
+
+
+            // Materialize shapefile features for repeated use, keep only polygonal geometries
+            int totalFeatureCount = 0;
+            List<SimpleFeature> zoneFeatures = new ArrayList<>();
+            Map<String, Integer> filteredGeometryTypes = new HashMap<>();
+            int invalidPolygonCount = 0;
+            int emptyPolygonCount = 0;
             try {
+                featureIterator = featureCollection.features();
                 while (featureIterator.hasNext()) {
                     SimpleFeature feature = featureIterator.next();
-                    allFeatures.add(feature);
+                    totalFeatureCount++;
+
+                    Object geomObj = feature.getDefaultGeometry();
+                    if (geomObj instanceof Geometry) {
+                        Geometry geom = (Geometry) geomObj;
+                        String geomType = geom.getGeometryType();
+                        if (geom instanceof Polygon || geom instanceof MultiPolygon) {
+                            if (geom.isEmpty()) {
+                                emptyPolygonCount++;
+                                filteredGeometryTypes.merge("Empty " + geomType, 1, Integer::sum);
+                                continue;
+                            }
+                            if (!geom.isValid()) {
+                                invalidPolygonCount++;
+                                filteredGeometryTypes.merge("Invalid " + geomType, 1, Integer::sum);
+                                System.out.println("Skipping invalid " + geomType + " geometry in feature " + feature.getID());
+                                continue;
+                            }
+                            zoneFeatures.add(feature);
+                        } else {
+                            filteredGeometryTypes.merge(geomType, 1, Integer::sum);
+                        }
+                    } else {
+                        String geomType = geomObj == null ? "null" : geomObj.getClass().getSimpleName();
+                        filteredGeometryTypes.merge(geomType, 1, Integer::sum);
+                    }
                 }
             } finally {
                 if (featureIterator != null) {
                     featureIterator.close();
+                    featureIterator = null;
                 }
             }
 
-            // Get total number of features
-            int totalFeatures = allFeatures.size();
-
-            if (totalFeatures > 0) {
-                // First, examine attributes to understand the data structure
-                Map<String, Integer> attributeNameMap = new HashMap<>();
-                List<String> idAttrNames = new ArrayList<>();
-                String countAttrName = null;
-                String avgAttrName = null;
-                String minAttrName = null;
-                String maxAttrName = null;
-                String stddevAttrName = null;
-                String sumAttrName = null;
-
-                // Find attribute names and check which ones are available
-                SimpleFeature firstFeature = allFeatures.get(0);
-                for (int i = 0; i < firstFeature.getType().getAttributeCount(); i++) {
-                    String attributeName = firstFeature.getType().getDescriptor(i).getLocalName();
-
-                    Object value = firstFeature.getAttribute(attributeName);
-
-                    if (attributeName.equals("count")) {
-                        if (showCount) {
-                            countAttrName = attributeName;
-                        }
-                    } else if (attributeName.equals("avg")) {
-                        if (showAvg) {
-                            avgAttrName = attributeName;
-                        }
-                    } else if (attributeName.equals("min")) {
-                        if (showMin) {
-                            minAttrName = attributeName;
-                        }
-                    } else if (attributeName.equals("max")) {
-                        if (showMax) {
-                            maxAttrName = attributeName;
-                        }
-                    } else if (attributeName.equals("stddev")) {
-                        if (showStd) {
-                            stddevAttrName = attributeName;
-                        }
-                    } else if (attributeName.equals("sum")) {
-                        if (showSum) {
-                            sumAttrName = attributeName;
-                        }
-                    } else if (!attributeName.equals("the_geom") && !attributeName.equals("z_the_geom") &&
-                              !attributeName.equals("sum_2")) {
-                        // Exclude geometry attributes but keep all other attributes as ID
-                        idAttrNames.add(attributeName);
+            int filteredCount = totalFeatureCount - zoneFeatures.size();
+            if (filteredCount > 0) {
+                System.out.println("Warning: Filtered out " + filteredCount + " non-polygon feature(s) from " + totalFeatureCount + " total features");
+                if (!filteredGeometryTypes.isEmpty()) {
+                    System.out.println("Filtered geometry types:");
+                    for (Map.Entry<String, Integer> entry : filteredGeometryTypes.entrySet()) {
+                        System.out.println("  - " + entry.getKey() + ": " + entry.getValue() + " feature(s)");
                     }
                 }
+                System.out.println("Only Polygon and MultiPolygon geometries are supported for zonal statistics.");
+            }
 
+            if (invalidPolygonCount > 0) {
+                System.out.println("Skipped " + invalidPolygonCount + " invalid polygon feature(s); fix geometry or remove them to include their statistics.");
+            }
 
-                // Set Stata dataset size
-                Data.setObsTotal(totalFeatures);
+            if (emptyPolygonCount > 0) {
+                System.out.println("Skipped " + emptyPolygonCount + " empty polygon feature(s); ensure geometries contain area before rerunning.");
+            }
 
-                // Create variables in Stata - first the ID attributes, then the stats
-                int varIndex = 1;
+            if (zoneFeatures.isEmpty()) {
+                System.out.println("No valid polygon features found in the shapefile after filtering.");
+                return;
+            }
 
-                // Create ID attribute variables first
-                for (String idAttr : idAttrNames) {
-                    Object value = firstFeature.getAttribute(idAttr);
+            // Build list of statistics required by the user
+            List<StatsType> statsToRequest = new ArrayList<>();
+            if (showMin) {
+                statsToRequest.add(StatsType.MIN);
+            }
+            if (showMax) {
+                statsToRequest.add(StatsType.MAX);
+            }
+            if (showSum) {
+                statsToRequest.add(StatsType.SUM);
+            }
+            if (showAvg) {
+                statsToRequest.add(StatsType.MEAN);
+            }
+            if (showStd) {
+                statsToRequest.add(StatsType.DEV_STD);
+            }
+            if (statsToRequest.isEmpty()) {
+                statsToRequest.add(StatsType.MEAN);
+            }
 
-                    if (value instanceof Number) {
-                        Data.addVarDouble(idAttr);
-                        /* System.out.println("Created numeric variable: " + idAttr); */
+            StatsType[] statsArray = statsToRequest.toArray(new StatsType[0]);
+            int[] bands = new int[] {0};
+
+            RasterZonalStatistics2 process = new RasterZonalStatistics2();
+            List<ZoneGeometry> zoneGeometries = process.execute(
+                    coverage,
+                    bands,
+                    zoneFeatures,
+                    null,
+                    noDataRange,
+                    null,
+                    false,
+                    null,
+                    statsArray,
+                    null,
+                    null,
+                    null,
+                    null,
+                    false);
+
+            if (zoneGeometries == null) {
+                zoneGeometries = new ArrayList<>();
+            }
+
+            int totalFeatures = zoneFeatures.size();
+            Data.setObsTotal(totalFeatures);
+            // >>> ADDED: counter for zones that do not overlap the raster
+            int noOverlapCount = 0;
+
+            Map<String, Integer> attributeNameMap = new HashMap<>();
+            List<String> idAttrNames = new ArrayList<>();
+            Map<String, String> outputToSourceAttr = new HashMap<>();
+            Map<String, Boolean> idAttrNumeric = new HashMap<>();
+            Map<StatsType, Integer> statsIndexMap = new HashMap<>();
+            for (int i = 0; i < statsToRequest.size(); i++) {
+                statsIndexMap.put(statsToRequest.get(i), i);
+            }
+
+            SimpleFeature firstFeature = zoneFeatures.get(0);
+            int varIndex = 1;
+            for (int i = 0; i < firstFeature.getType().getAttributeCount(); i++) {
+                AttributeDescriptor descriptor = firstFeature.getType().getDescriptor(i);
+                if (descriptor instanceof GeometryDescriptor) {
+                    continue;
+                }
+
+                String sourceAttrName = descriptor.getLocalName();
+                String outputAttrName = "z_" + sourceAttrName;
+                idAttrNames.add(outputAttrName);
+                outputToSourceAttr.put(outputAttrName, sourceAttrName);
+
+                Object sampleValue = firstFeature.getAttribute(sourceAttrName);
+                if (sampleValue instanceof Number) {
+                    Data.addVarDouble(outputAttrName);
+                    idAttrNumeric.put(outputAttrName, true);
+                } else {
+                    int strLength = determineStringLength(sampleValue);
+                    Data.addVarStr(outputAttrName, strLength);
+                    idAttrNumeric.put(outputAttrName, false);
+                }
+
+                attributeNameMap.put(outputAttrName, varIndex++);
+            }
+
+            String countAttrName = null;
+            String avgAttrName = null;
+            String minAttrName = null;
+            String maxAttrName = null;
+            String stddevAttrName = null;
+            String sumAttrName = null;
+
+            if (showCount) {
+                countAttrName = "count";
+                Data.addVarDouble(countAttrName);
+                attributeNameMap.put(countAttrName, varIndex++);
+                System.out.println("Created numeric variable: count");
+            }
+
+            if (showAvg && statsIndexMap.containsKey(StatsType.MEAN)) {
+                avgAttrName = "avg";
+                Data.addVarDouble(avgAttrName);
+                attributeNameMap.put(avgAttrName, varIndex++);
+                System.out.println("Created numeric variable: avg");
+            }
+
+            if (showMin && statsIndexMap.containsKey(StatsType.MIN)) {
+                minAttrName = "min";
+                Data.addVarDouble(minAttrName);
+                attributeNameMap.put(minAttrName, varIndex++);
+                System.out.println("Created numeric variable: min");
+            }
+
+            if (showMax && statsIndexMap.containsKey(StatsType.MAX)) {
+                maxAttrName = "max";
+                Data.addVarDouble(maxAttrName);
+                attributeNameMap.put(maxAttrName, varIndex++);
+                System.out.println("Created numeric variable: max");
+            }
+
+            if (showStd && statsIndexMap.containsKey(StatsType.DEV_STD)) {
+                stddevAttrName = "std";
+                Data.addVarDouble(stddevAttrName);
+                attributeNameMap.put(stddevAttrName, varIndex++);
+                System.out.println("Created numeric variable: std");
+            }
+
+            if (showSum && statsIndexMap.containsKey(StatsType.SUM)) {
+                sumAttrName = "sum";
+                Data.addVarDouble(sumAttrName);
+                attributeNameMap.put(sumAttrName, varIndex++);
+                System.out.println("Created numeric variable: sum");
+            }
+
+            for (int i = 0; i < totalFeatures; i++) {
+                SimpleFeature feature = zoneFeatures.get(i);
+                int stataObs = i + 1;
+
+                for (String outputAttrName : idAttrNames) {
+                    String sourceAttrName = outputToSourceAttr.get(outputAttrName);
+                    Object value = feature.getAttribute(sourceAttrName);
+                    int stataVar = attributeNameMap.get(outputAttrName);
+
+                    if (value == null) {
+                        continue;
+                    }
+
+                    if (Boolean.TRUE.equals(idAttrNumeric.get(outputAttrName))) {
+                        Data.storeNumFast(stataVar, stataObs, ((Number) value).doubleValue());
                     } else {
-                        // Optimize string length based on content
-                        int strLength = 32; // Default smaller length
-                        if (value != null) {
-                            String strValue = value.toString();
-                            if (strValue.length() <= 16) {
-                                strLength = 16;
-                            } else if (strValue.length() <= 32) {
-                                strLength = 32;
-                            } else if (strValue.length() <= 48) {
-                                strLength = 48;
-                            }
-                        }
-
-                        Data.addVarStr(idAttr, strLength);
-                        /* System.out.println("Created string variable: " + idAttr + " (length " + strLength + ")"); */
-                    }
-
-                    attributeNameMap.put(idAttr, varIndex++);
-                }
-
-                // Create statistics variables based on user request
-                if (showCount && countAttrName != null) {
-                    Data.addVarDouble("count");
-                    attributeNameMap.put(countAttrName, varIndex++);
-                    System.out.println("Created numeric variable: count");
-                }
-
-                if (showAvg && avgAttrName != null) {
-                    Data.addVarDouble("avg");
-                    attributeNameMap.put(avgAttrName, varIndex++);
-                    System.out.println("Created numeric variable: avg");
-                }
-
-                if (showMin && minAttrName != null) {
-                    Data.addVarDouble("min");
-                    attributeNameMap.put(minAttrName, varIndex++);
-                    System.out.println("Created numeric variable: min");
-                }
-
-                if (showMax && maxAttrName != null) {
-                    Data.addVarDouble("max");
-                    attributeNameMap.put(maxAttrName, varIndex++);
-                    System.out.println("Created numeric variable: max");
-                }
-
-                if (showStd && stddevAttrName != null) {
-                    Data.addVarDouble("std");
-                    attributeNameMap.put(stddevAttrName, varIndex++);
-                    System.out.println("Created numeric variable: std");
-                }
-
-                if (showSum && sumAttrName != null) {
-                    Data.addVarDouble("sum");
-                    attributeNameMap.put(sumAttrName, varIndex++);
-                    System.out.println("Created numeric variable: sum");
-                }
-
-                // Fill Stata dataset with data - more efficiently by processing one observation at a time
-                for (int i = 0; i < totalFeatures; i++) {
-                    SimpleFeature feature = allFeatures.get(i);
-                    int stataObs = i + 1; // Stata is 1-indexed
-
-                    // First process ID attributes
-                    for (String idAttr : idAttrNames) {
-                        Object value = feature.getAttribute(idAttr);
-                        int stataVar = attributeNameMap.get(idAttr);
-
-                        if (value != null) {
-                            if (value instanceof Number) {
-                                Data.storeNumFast(stataVar, stataObs, ((Number) value).doubleValue());
-                            } else {
-                                Data.storeStr(stataVar, stataObs, value.toString());
-                            }
-                        }
-                    }
-
-                    // Then process all statistics for this feature at once
-                    if (showCount && countAttrName != null) {
-                        Object value = feature.getAttribute(countAttrName);
-                        if (value != null) {
-                            Data.storeNumFast(attributeNameMap.get(countAttrName), stataObs,
-                                            ((Number) value).doubleValue());
-                        }
-                    }
-
-                    if (showAvg && avgAttrName != null) {
-                        Object value = feature.getAttribute(avgAttrName);
-                        if (value != null) {
-                            Data.storeNumFast(attributeNameMap.get(avgAttrName), stataObs,
-                                            ((Number) value).doubleValue());
-                        }
-                    }
-
-                    if (showMin && minAttrName != null) {
-                        Object value = feature.getAttribute(minAttrName);
-                        if (value != null) {
-                            Data.storeNumFast(attributeNameMap.get(minAttrName), stataObs,
-                                            ((Number) value).doubleValue());
-                        }
-                    }
-
-                    if (showMax && maxAttrName != null) {
-                        Object value = feature.getAttribute(maxAttrName);
-                        if (value != null) {
-                            Data.storeNumFast(attributeNameMap.get(maxAttrName), stataObs,
-                                            ((Number) value).doubleValue());
-                        }
-                    }
-
-                    if (showStd && stddevAttrName != null) {
-                        Object value = feature.getAttribute(stddevAttrName);
-                        if (value != null) {
-                            Data.storeNumFast(attributeNameMap.get(stddevAttrName), stataObs,
-                                            ((Number) value).doubleValue());
-                        }
-                    }
-
-                    if (showSum && sumAttrName != null) {
-                        Object value = feature.getAttribute(sumAttrName);
-                        if (value != null) {
-                            Data.storeNumFast(attributeNameMap.get(sumAttrName), stataObs,
-                                            ((Number) value).doubleValue());
-                        }
+                        Data.storeStr(stataVar, stataObs, value.toString());
                     }
                 }
 
-                // Force update of the Stata dataset
-                Data.updateModified();
+                ZoneGeometry zoneGeometry = i < zoneGeometries.size() ? zoneGeometries.get(i) : null;
+                Statistics[] stats = extractStatisticsForZone(zoneGeometry, 0);
+                if (stats == null || stats.length == 0) {
+                    // >>> ADDED: zone has no overlapping raster pixels at all
+                    noOverlapCount++;
+                    System.out.println("Warning: Zone " + (i + 1) + " (" + feature.getID() + ") has no overlapping raster pixels; statistics skipped.");
+                    continue;
+                }
 
-                System.out.println("Data successfully exported to Stata dataset.");
-            } else {
-                System.out.println("No features found in the result set.");
+                // >>> ADDED: detect zones whose valid sample count is 0
+                Number sampleCountObj = stats[0].getNumSamples();
+                int sampleCountVal = (sampleCountObj != null) ? sampleCountObj.intValue() : 0;
+                if (sampleCountVal == 0) {
+                    noOverlapCount++;
+                    System.out.println("Warning: Zone " + (i + 1) + " (" + feature.getID() + ") has 0 valid raster pixels; statistics set to missing.");
+                }
+
+                if (countAttrName != null) {
+                    Data.storeNumFast(attributeNameMap.get(countAttrName), stataObs, (double) sampleCountVal);
+                }
+
+                Double zoneProbe = null;
+                if (avgAttrName != null) {
+                    zoneProbe = getStatValue(stats, statsIndexMap, StatsType.MEAN);
+                    if (zoneProbe != null) {
+                        Data.storeNumFast(attributeNameMap.get(avgAttrName), stataObs, zoneProbe);
+                    }
+                } else if (minAttrName != null) {
+                    zoneProbe = getStatValue(stats, statsIndexMap, StatsType.MIN);
+                }
+
+                if (minAttrName != null) {
+                    Double minValue = getStatValue(stats, statsIndexMap, StatsType.MIN);
+                    if (minValue != null) {
+                        Data.storeNumFast(attributeNameMap.get(minAttrName), stataObs, minValue);
+                    }
+                }
+
+                if (maxAttrName != null) {
+                    Double maxValue = getStatValue(stats, statsIndexMap, StatsType.MAX);
+                    if (maxValue != null) {
+                        Data.storeNumFast(attributeNameMap.get(maxAttrName), stataObs, maxValue);
+                    }
+                }
+
+                if (stddevAttrName != null) {
+                    Double stdValue = getStatValue(stats, statsIndexMap, StatsType.DEV_STD);
+                    if (stdValue != null) {
+                        Data.storeNumFast(attributeNameMap.get(stddevAttrName), stataObs, stdValue);
+                    }
+                }
+
+                if (sumAttrName != null) {
+                    Double sumValue = getStatValue(stats, statsIndexMap, StatsType.SUM);
+                    if (sumValue != null) {
+                        Data.storeNumFast(attributeNameMap.get(sumAttrName), stataObs, sumValue);
+                    }
+                }
+
+                // >>> DIAGNOSTIC: explain why a zone's statistics are missing
+                boolean zoneMissing = (zoneProbe == null || zoneProbe.isNaN());
+                if (zoneMissing) {
+                    String reason;
+                    if (sampleCountVal == 0) {
+                        reason = "0 valid pixels overlap this zone -> geometry/CRS or 0-360 vs -180-180 "
+                                + "longitude-convention mismatch, or the zone lies outside the raster extent. "
+                                + "Check the [Extent diagnostic] lines above.";
+                    } else {
+                        reason = "zone HAS " + sampleCountVal + " valid pixels but avg/min is still NaN/missing -> "
+                                + "NoData masking is NOT taking effect (missing values leaked into the stat). "
+                                + "Check the [NoData diagnostic] line above: noDataRange must read 'set', not 'NULL'.";
+                    }
+                    System.out.println("Missing zone #" + (i + 1) + " (" + feature.getID() + "): " + reason);
+                }
             }
+
+            // >>> ADDED: summary of non-overlapping zones
+            if (noOverlapCount > 0) {
+                System.out.println("Warning: " + noOverlapCount + " of " + totalFeatures + " zone(s) did not overlap the raster or had 0 valid pixels.");
+                System.out.println("  These zones have no statistics (or count = 0). Check their location against the raster extent.");
+            }
+
+            Data.updateModified();
+            System.out.println("Data successfully exported to Stata dataset.");
 
         } catch (Exception e) {
             System.out.println("Error in nzonalstatics: " + e.getMessage());
@@ -985,6 +1185,158 @@ public class nzonalstatics {
         }
 
         return new double[]{minLon, minLat, maxLon, maxLat};
+    }
+
+    private static Double attributeToDouble(Attribute attr) {
+        if (attr == null) {
+            return null;
+        }
+
+        Number numericValue = attr.getNumericValue();
+        if (numericValue != null) {
+            return numericValue.doubleValue();
+        }
+
+        String stringValue = attr.getStringValue();
+        if (stringValue == null) {
+            return null;
+        }
+
+        String trimmed = stringValue.trim();
+        if (trimmed.isEmpty() || trimmed.equalsIgnoreCase("null")) {
+            return null;
+        }
+
+        if (trimmed.equalsIgnoreCase("nan")) {
+            return Double.NaN;
+        }
+
+        try {
+            return Double.parseDouble(trimmed);
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private static int determineStringLength(Object value) {
+        if (value == null) {
+            return 32;
+        }
+
+        int length = value.toString().length();
+        if (length <= 16) {
+            return 16;
+        } else if (length <= 32) {
+            return 32;
+        } else if (length <= 48) {
+            return 48;
+        }
+        return 80;
+    }
+
+    private static Statistics[] extractStatisticsForZone(ZoneGeometry zoneGeometry, int bandIndex) {
+        if (zoneGeometry == null) {
+            return null;
+        }
+
+        Map<Integer, Map<Range, Statistics[]>> statsPerBand = zoneGeometry.getStatsPerBand(bandIndex);
+        if (statsPerBand == null || statsPerBand.isEmpty()) {
+            return null;
+        }
+
+        for (Map<Range, Statistics[]> rangeMap : statsPerBand.values()) {
+            if (rangeMap == null || rangeMap.isEmpty()) {
+                continue;
+            }
+            for (Statistics[] statsArray : rangeMap.values()) {
+                if (statsArray != null && statsArray.length > 0) {
+                    return statsArray;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static Double getStatValue(Statistics[] stats, Map<StatsType, Integer> indexMap, StatsType statType) {
+        if (stats == null || indexMap == null || statType == null) {
+            return null;
+        }
+
+        Integer idx = indexMap.get(statType);
+        if (idx == null || idx < 0 || idx >= stats.length) {
+            return null;
+        }
+
+        Statistics statistic = stats[idx];
+        if (statistic == null) {
+            return null;
+        }
+
+        Object result = statistic.getResult();
+        if (result instanceof Number) {
+            return ((Number) result).doubleValue();
+        }
+        return null;
+    }
+
+    /**
+     * Returns true if the CRS is geographic (longitude/latitude, degrees).
+     * Used to decide whether the 0-360 vs -180-180 longitude convention fix applies.
+     */
+    private static boolean isGeographic(CoordinateReferenceSystem crs) {
+        return crs instanceof GeographicCRS;
+    }
+
+    /**
+     * Shift all geometries in the collection by a constant longitude offset (degrees).
+     * Resolves the 0-360 vs -180-180 longitude convention mismatch when both datasets
+     * share the same geographic CRS but different longitude ranges.
+     */
+    private static SimpleFeatureCollection alignLongitudeConvention(SimpleFeatureCollection fc, final boolean raster0360) {
+        try {
+            ListFeatureCollection result = new ListFeatureCollection(fc.getSchema());
+            SimpleFeatureIterator it = fc.features();
+            try {
+                while (it.hasNext()) {
+                    SimpleFeature f = it.next();
+                    SimpleFeature f2 = SimpleFeatureBuilder.copy(f);
+                    Object geomObj = f2.getDefaultGeometry();
+                    if (geomObj instanceof Geometry) {
+                        Geometry g = (Geometry) ((Geometry) geomObj).clone();
+                        g.apply(new CoordinateFilter() {
+                            @Override
+                            public void filter(Coordinate coord) {
+                                // Bring the coordinate into the raster's longitude convention.
+                                if (raster0360) {
+                                    // raster uses 0-360: map negatives into [0,360)
+                                    if (coord.x < 0) {
+                                        coord.x += 360.0;
+                                    } else if (coord.x >= 360.0) {
+                                        coord.x -= 360.0;
+                                    }
+                                } else {
+                                    // raster uses -180-180: map values >180 into (-180,180]
+                                    if (coord.x > 180.0) {
+                                        coord.x -= 360.0;
+                                    } else if (coord.x <= -180.0) {
+                                        coord.x += 360.0;
+                                    }
+                                }
+                            }
+                        });
+                        g.geometryChanged();
+                        f2.setDefaultGeometry(g);
+                    }
+                    result.add(f2);
+                }
+            } finally {
+                it.close();
+            }
+            return result;
+        } catch (Exception e) {
+            System.out.println("Warning: failed to align shapefile longitudes: " + e.getMessage());
+            return fc;
+        }
     }
 }
 
