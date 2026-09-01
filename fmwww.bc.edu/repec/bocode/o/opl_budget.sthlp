@@ -1,5 +1,5 @@
 {smcl}
-{* 21dec2025}{...}
+{* 31aug2026}{...}
 {cmd:help opl_budget}
 {hline}
 
@@ -171,12 +171,11 @@ under the NPRR Grant agreement n. MURIR0000008.
 {phang}Giovanni Cerulli{p_end}
 {phang}IRCrES-CNR{p_end}
 {phang}Research Institute for Sustainable Economic Growth, National Research Council of Italy{p_end}
-{phang}E-mail: {browse "mailto:giovanni.cerulli@ircres.cnr.it"}{p_end}
+{phang}E-mail: {browse "mailto:giovanni.cerulli@cnr.it"}{p_end}
 
 
 {dlgtab:Also see}
 
 {psee}
-Online: {helpb make_cate}, {helpb opl_tb}, {helpb opl_tb_c},
-{helpb opl_lc}, {helpb opl_lc_c}, {helpb opl_dt}, {helpb opl_dt_c}, {helpb opl_overlap}
+Online: {helpb opl}
 {p_end}

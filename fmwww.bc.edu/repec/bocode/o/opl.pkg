@@ -35,7 +35,7 @@ d KW: regression adjustment
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20260503
+d Distribution-Date: 20260831
 d
 d Author: Giovanni Cerulli, IRCrES-CNR
 d Support: email giovanni.cerulli@@ircres.cnr.it
@@ -43,6 +43,8 @@ d
 f opl.sthlp
 f ../m/make_cate.ado
 f ../m/make_cate.sthlp
+f ../m/mydata_test.dta
+f ../m/mydata_train.dta
 f opl_best_treat.ado
 f opl_best_treat.sthlp
 f opl_budget.ado
@@ -51,6 +53,10 @@ f opl_dt_c.ado
 f opl_dt_c.sthlp
 f opl_dt.ado
 f opl_dt.sthlp
+f opl_fb_cba.ado
+f opl_fb_cba.sthlp
+f opl_frontier_tb.ado
+f opl_frontier_tb.sthlp
 f opl_lc_c.ado
 f opl_lc_c.sthlp
 f opl_lc.ado
@@ -63,9 +69,19 @@ f opl_overlap.ado
 f opl_overlap.sthlp
 f opl_plot_best.ado
 f opl_plot_best.sthlp
+f opl_policy_eval.ado
+f opl_policy_eval.sthlp
 f opl_tb_c.ado
 f opl_tb_c.sthlp
+f opl_tb_cba.ado
+f opl_tb_cba.sthlp
 f opl_tb.ado
 f opl_tb.sthlp
-f ../s/spmdata.dta
+f ../p/policy_frontier.dta
+f ../r/reward_graph.gph
+f ../d/action_graph.gph
+f ../d/data_opl_fb_cba.dta
+f ../d/data_opl_tb_cba_1.dta
+f ../d/data_opl_tb_cba_2.dta
+f ../j/JTRAIN2.DTA
 f OptimalPolicyLearning.pdf

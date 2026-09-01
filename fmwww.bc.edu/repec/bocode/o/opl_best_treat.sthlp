@@ -1,5 +1,5 @@
 {smcl}
-{* *! opl_best_treat, v5, GCerulli, 29aug2025}
+{* *! opl_best_treat, v5, GCerulli, 31aug2026}
 {title:Title}
 
 {pstd}
@@ -66,6 +66,6 @@ The command does not alter the input predictions.
 {dlgtab:Also see:}
 
 {psee}
-{help opl_ma_fb}, {help opl_ma_vf}, {help opl_plot_best}
+Online: {helpb opl}
 {p_end}
 

@@ -1,5 +1,5 @@
 {smcl}
-{* *! Version 7, G. Cerulli, 29apr2026}{...}
+{* *! Version 7, G. Cerulli, 31aug2026}{...}
 
 {title:Title}
 
@@ -246,5 +246,6 @@ The development of this software was supported by: FOSSR (Fostering Open Science
 {dlgtab:Also see}
 
 {psee}
-Online: {helpb make_cate}, {helpb opl_tb}, {helpb opl_lc}, {helpb opl_lc_c}, {helpb opl_dt}, {helpb opl_dt_c}{p_end}
+Online: {helpb opl}
+{p_end}
 

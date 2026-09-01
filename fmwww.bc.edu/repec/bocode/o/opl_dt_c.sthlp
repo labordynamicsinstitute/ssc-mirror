@@ -1,5 +1,5 @@
 {smcl}
-{* 11dec2025}{...}
+{* 31aug2026}{...}
 {cmd:help opl_dt_c}
 {hline}
 
@@ -223,10 +223,10 @@ The development of this software was supported by FOSSR (Fostering Open Science 
 {phang}Giovanni Cerulli{p_end}
 {phang}IRCrES-CNR{p_end}
 {phang}Research Institute for Sustainable Economic Growth, National Research Council of Italy{p_end}
-{phang}E-mail: {browse "mailto:giovanni.cerulli@ircres.cnr.it":giovanni.cerulli@ircres.cnr.it}{p_end}
+{phang}E-mail: {browse "mailto:giovanni.cerulli@cnr.it":giovanni.cerulli@cnr.it}{p_end}
 
 {dlgtab:Also see}
 
 {psee}
-Online: {helpb make_cate}, {helpb opl_tb}, {helpb opl_dt}, {helpb opl_dt_c}, {helpb opl_dt}, {helpb opl_dt_c}, {helpb opl_overlap}, {helpb opl_budget}
+Online: {helpb opl}
 {p_end}

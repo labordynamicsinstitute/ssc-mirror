@@ -1,5 +1,5 @@
 {smcl}
-{* *! opl_ma_vf, v5, GCerulli, 24nov2025}
+{* *! opl_ma_vf, v5, GCerulli, 31aug2026}
 {title:Title}
 
 {phang}
@@ -159,4 +159,5 @@ The development of this software was supported by FOSSR (Fostering Open Science 
 {dlgtab:Also see}
 
 {psee}
-Online: {helpb opl_ma_fb}, {helpb make_cate}, {helpb opl_tb}, {helpb opl_lc}, {helpb opl_lc_c}, {helpb opl_dt}, {helpb opl_dt_c}{p_end}
+Online: {helpb opl}
+{p_end}

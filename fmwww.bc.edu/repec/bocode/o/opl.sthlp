@@ -1,5 +1,5 @@
 {smcl}
-{* 11dec2025}{...}
+{* 31aug2026}{...}
 {cmd:help opl}
 {hline}
 
@@ -33,7 +33,20 @@
 {p2colreset}{...}
 
 
-    MODULE 2: MULTIVALUED TREATMENT
+    MODULE 2: BINARY COST-BENEFIT ANALYSIS
+
+{synoptset 18}{...}
+{synopthdr:command}
+{synoptline}
+{synopt :{helpb opl_fb_cba:opl_fb_cba}}First-best cost-benefit analysis and policy-score frontier{p_end}
+{synopt :{helpb opl_tb_cba:opl_tb_cba}}Welfare-maximizing cost-benefit analysis with threshold policies{p_end}
+{synopt :{helpb opl_frontier_tb:opl_frontier_tb}}Postestimation frontiers for threshold-based optimal policy learning{p_end}
+{synopt :{helpb opl_policy_eval:opl_policy_eval}}Evaluation of a user-supplied binary treatment policy after {helpb opl_tb_cba}{p_end}
+{synoptline}
+{p2colreset}{...}
+
+
+    MODULE 3: MULTIVALUED TREATMENT
 
 {synoptset 16}{...}
 {synopthdr:command}
@@ -64,6 +77,52 @@ linear and non-linear Regression Adjustment (RA) allowing for the target outcome
 and via Cross-Fitting Augmented Inverse Probability Weighting (CF-AIPW).
 The treatment variable of reference must be binary 0/1.
 {p_end}
+
+{marker description_cba}{...}
+{dlgtab:Description: Binary Cost-Benefit Analysis}
+
+{pstd}
+The binary cost-benefit analysis module of {cmd:OPL} extends binary optimal
+policy learning to settings in which treatment benefits must be evaluated
+jointly with individual treatment costs. The basic welfare criterion is based
+on the individual policy score
+
+{p 12 12}
+s_i = tau_i - lambda c_i,
+
+{pstd}
+where {it:tau_i} is an estimated individual treatment effect, {it:c_i} is the
+individual treatment cost, and {it:lambda} controls the weight attached to
+costs.
+
+{pstd}
+The command {helpb opl_fb_cba} computes the unconstrained first-best
+cost-benefit policy, assigning treatment when the policy score is positive.
+It also traces a policy-score frontier based on progressively more selective
+cutoffs, summarizing the trade-offs among treatment coverage, total benefit,
+treatment cost, ATET, weighted welfare, and net benefit.
+
+{pstd}
+The command {helpb opl_tb_cba} restricts assignment to interpretable
+threshold policies based on one or two observable selection variables. It
+searches over candidate thresholds to maximize weighted social surplus and
+compares the best threshold policy with the unconstrained first-best policy.
+
+{pstd}
+After {helpb opl_tb_cba}, {helpb opl_frontier_tb} constructs and optionally
+graphs cost-benefit and cost-surplus efficient frontiers from the candidate
+policy grid stored by the estimation command. The command
+{helpb opl_policy_eval} evaluates an externally supplied binary policy using
+the same treatment-effect variable, treatment cost, cost weight, and
+estimation sample, allowing direct comparisons with the estimated policies.
+
+{pstd}
+This module assumes that individual causal treatment effects have already been
+estimated, for example using {helpb make_cate} or another valid CATE/IATE
+estimator. Treatment effects and treatment costs should be expressed on
+compatible scales for the selected value of {cmd:lambda()}.
+{p_end}
+
 
 {marker description}{...}
 {dlgtab:Description: Multivalued Treatment}
@@ -167,4 +226,4 @@ The development of this software was supported by FOSSR (Fostering Open Science 
 {phang}Giovanni Cerulli{p_end}
 {phang}IRCrES-CNR{p_end}
 {phang}Research Institute for Sustainable Economic Growth, National Research Council of Italy{p_end}
-{phang}E-mail: {browse "mailto:giovanni.cerulli@ircres.cnr.it":giovanni.cerulli@ircres.cnr.it}{p_end}
+{phang}E-mail: {browse "mailto:giovanni.cerulli@cnr.it":giovanni.cerulli@cnr.it}{p_end}
