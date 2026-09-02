@@ -98,6 +98,7 @@ p plottabs module providing fast graphing commands for large datasets
 p pls module to calculate composite variables using the partial least squares path modeling (PLS) algorithm
 p plssas module to execute SAS partial least squares procedure (Windows only)
 p plssem module to implement Partial least squares structural equation modelling (PLS-SEM)
+p plssem2 module to support partial least squares structural equation modeling (PLS-SEM) 
 p plztowknr module to translate German zip codes into electoral districts 
 p pmanage module to manage large projects
 p pmcalplot module to produce calibration plot of prediction model performance

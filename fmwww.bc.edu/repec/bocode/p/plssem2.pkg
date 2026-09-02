@@ -1,0 +1,47 @@
+d 'PLSSEM2': module to support partial least squares structural equation modeling (PLS-SEM) 
+d
+d      plssem2 fits partial least squares structural equation
+d models (PLS-SEM), a variance-based, composite-based alternative
+d to	covariance-based structural equation modeling (CB-SEM,
+d e.g., sem and gsem).	The estimation follows the algorithm of
+d Wold	  (1975) and Lohmöller (1989) as implemented in SmartPLS
+d and in the Stata package plssem (Venturini and Mehmetoglu 2019),
+d with	  the additions of blindfolding (Stone-Geisser Q2), HTMT
+d discriminant validity (Henseler et al. 2015), bootstrap with	 
+d bias-corrected and accelerated (BCa) confidence intervals (Efron
+d 1987), higher-order constructs via the two-stage approach   
+d (Becker et al. 2012; Sarstedt et al. 2019), and multi-group
+d analysis based on the permutation test (Henseler et al. 2016). 
+d
+d KW: partial least squares
+d KW: structural equation modeling
+d
+d Requires: Stata version 15.1
+d
+d Distribution-Date: 20260901
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+f plssem2_estat.ado
+f plssem2_estat.sthlp
+f plssem2_predict.ado
+f plssem2_predict.sthlp
+f plssem2.ado
+f plssem2.sthlp
+f ../e/esg_simdata.csv
+f ../e/estat_effects.ado
+f ../e/estat_f2.ado
+f ../e/estat_group.ado
+f ../e/estat_htmt.ado
+f ../e/estat_loadings.ado
+f ../e/estat_q2.ado
+f ../e/estat_reliability.ado
+f ../e/estat_summarize.ado
+f ../e/estat_vif.ado
+f ../e/estat_weights.ado
+f ../o/output_plssem2.do
+f ../t/test_plssem2.do

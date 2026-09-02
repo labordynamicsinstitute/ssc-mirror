@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1.0 23aug2026}{...}
+{* *! version 2.0.0 31aug2026}{...}
 {vieweralsosee "order" "help order"}{...}
 {vieweralsosee "notes" "help notes"}{...}
 
@@ -15,8 +15,10 @@ using semantic information in variable names, labels, variable notes, and attach
 {pstd}
 This module automatically examines the current wide-format dataset, identifies variables with
 sufficiently clear temporal structure using semantic information from variable names, variable
-labels, variable notes, attached value-label metadata, or agreement across these sources, and places eligible variables into a
-defensible temporal order. When the available information is ambiguous or conflicting,
+labels, variable notes, attached value-label metadata, or agreement across these sources. It
+represents supported time expressions as temporal components, combines them with defensible
+precedence relations, and moves a family only when the resulting order is unique and conflict-free.
+When the available information is ambiguous, incomplete, or conflicting,
 {cmd:varorder} reports the issue rather than guessing.{p_end}
 
 
@@ -29,39 +31,35 @@ wide-format datasets, however, the difficult part may be identifying which
 variables belong to the same repeated-measure structure and determining their
 correct temporal sequence.  {cmd:varorder} is designed to reduce the manual
 work required to locate scattered repeated-measure variables, determine their
-temporal sequence, and reorganize them safely.{p_end}
+temporal sequence, and reorganize them safely. {cmd:varorder} applies one common
+decision framework across supported indexes, stages, dates, relative times, and
+hierarchies, so ordinary users do not need to select a pattern or learn new
+options as metadata conventions vary across datasets.{p_end}
 
 
 {title:Key features}
 
-{p 4 6 2}• {bf:Semantic detection from four sources.} {cmd:varorder} uses semantic
-information in variable names, variable labels, variable notes, and attached value-label metadata
-to identify variables that belong together and determine whether they contain a defensible
-temporal structure. Value labels provide value-domain evidence; their category text is not treated
-as a variable's measurement occasion.{p_end}
+{p 4 6 2}• {bf:Semantic detection and normalization across four sources.} {cmd:varorder} uses
+variable names, labels, notes, and attached value-label metadata to identify related variables and
+assess temporal structure. Formatting differences such as capitalization, separators, compact
+forms, and zero-padding in temporal indexes are normalized internally, while original metadata
+remain unchanged and source-specific agreement or conflict remains detectable. Value labels
+provide value-domain evidence; category text is not treated as a measurement occasion.{p_end}
 
-{p 4 6 2}• {bf:Temporal and hierarchical ordering.} The command recognizes high-confidence
-temporal patterns such as {cmd:T1/T2/T3}, {cmd:Wave 1/2/3}, {cmd:Visit 1/2/3}, explicit calendar
-years, and sequences such as {cmd:pre < mid < post} and
-{cmd:screening < baseline < during treatment < discharge < follow-up}. It also supports explicitly
-marked calendar months, valid ISO calendar dates, fiscal year/quarter, academic year/indexed term,
-{cmd:cycle > visit}, {cmd:year > quarter > month}, and signed relative hour/day/week expressions.
-When multiple ordered temporal components are supported by the semantic information,
-{cmd:varorder} uses only frozen, unambiguous precedence. Bare numeric suffixes are not treated as
-temporal unless the available semantics support that interpretation.{p_end}
+{p 4 6 2}• {bf:General temporal, stage, and date ordering.} {cmd:varorder} recognizes
+high-confidence temporal patterns including indexed occasions, calendar periods, validated dates,
+relative time, hierarchical structures, and supported stage sequences. Explicit metadata may
+define additional stage order. Ambiguous dates, cycles, disconnected or non-unique relations, and
+unsupported numeric suffixes are not guessed; invalid dates and two-digit years are not
+interpreted.{p_end}
 
-{p 4 6 2}• {bf:Metadata normalization across semantic sources.} Formatting inconsistencies
-such as capitalization, separators, compact forms, and zero-padding in temporal indexes
-(for example, {cmd:T03} versus {cmd:T3}) may occur in any metadata
-source. {cmd:varorder} normalizes such differences internally for detection while preserving the
-original variable names, labels, notes, and attached value labels and retaining each source separately so that agreement
-and conflict remain detectable.{p_end}
-
-{p 4 6 2}• {bf:Dataset safety.} {cmd:varorder} acts only when temporal evidence is sufficiently
-clear. Related but non-temporal variables, semantically insufficient numeric sequences, ambiguous
-hierarchical structures, normalized-key collisions, and metadata conflicts are reported for review
-rather than guessed into an order. The command is preview-first, proposes one complete ordering
-plan, asks for at most one confirmation, and changes only the physical order of variables.{p_end}
+{p 4 6 2}• {bf:Auditable and conservative operation.} Default output remains compact, while
+readable, self-identifying {cmd:r()} results provide family decisions, temporal types, evidence
+sources, normalized keys, and warning or no-action reasons. {cmd:varorder} orders variables only when evidence is
+sufficiently clear; ambiguity, metadata conflicts, invalid values, collisions, and unsupported
+sequences are reported instead. It is preview-first, asks for at most one confirmation, and changes
+only physical variable order. Indexed gaps warn but do not by themselves prevent an otherwise
+unambiguous ordering.{p_end}
 
 
 {title:Syntax}
@@ -74,20 +72,26 @@ plan, asks for at most one confirmation, and changes only the physical order of 
 
 {title:Example 1. Use the module to automatically detect temporal families and order their variables in the provided example dataset}
 
+{pstd}
+The example dataset contains 5,000 observations and 272 variables. It includes indexed and
+relative time, calendar periods and dates, stage sequences, temporal hierarchies, and explicit
+precedence constraints, together with gaps, collisions, metadata conflicts, ambiguous relations,
+and non-temporal controls.{p_end}
+
 {p 4 4 2}{cmd:. use varorder_example_data.dta, clear}{p_end}
 {p 4 4 2}{cmd:. varorder}{p_end}
 
 {p 8 8 2}{txt:varorder preview summary}{p_end}
 
-{p 8 8 2}{txt:Examined: 146 variables}{p_end}
-{p 8 8 2}{txt:Confirmed temporal structures: 29}{p_end}
-{p 8 8 2}{txt:Variables to be reordered: 131}{p_end}
+{p 8 8 2}{txt:Examined: 272 variables}{p_end}
+{p 8 8 2}{txt:Confirmed temporal structures: 48}{p_end}
+{p 8 8 2}{txt:Variables to be reordered: 186}{p_end}
 {p 8 8 2}{txt:Maximum displacement: 89 columns}{p_end}
 
 {p 8 8 2}{txt:Issues requiring review:}{p_end}
-{p 10 10 2}{txt:Gap warnings but ordering allowed (2): mobility, vigor}{p_end}
-{p 10 10 2}{txt:Related/unverified — no action (6): eng, exercise, lab, mood, promotion_status, reading}{p_end}
-{p 10 10 2}{txt:Ambiguous/conflicting — no action (7): focus, memory, mirage, pain, prism_check, score, survey}{p_end}
+{p 10 10 2}{txt:Gap warnings but ordering allowed (3): fortitude, mobility, vigor}{p_end}
+{p 10 10 2}{txt:Related/unverified — no action (14): barcode, batchcode, chronological_comfort, eng, exercise, lab, moduleitem, mood, ...}{p_end}
+{p 10 10 2}{txt:Ambiguous/conflicting — no action (20): acoustic_calibration, apex, decision_confidence, finance, focus, memory, mirage, motor_coordination, ...}{p_end}
 
 {p 8 8 2}{txt:All eligible structures will be included in the proposed ordering.}
 {txt:Structures marked as no action will remain unchanged.}{p_end}
@@ -107,7 +111,7 @@ physical variable order with:{p_end}
 {p 4 4 2}{cmd:. varorder, undo}{p_end}
 
 
-{title:Stored results}
+{title:Main stored results}
 
 {pstd}
 After {cmd:varorder}, the command stores the following in {cmd:r()}:{p_end}
@@ -121,17 +125,29 @@ After {cmd:varorder}, the command stores the following in {cmd:r()}:{p_end}
 {synopt:{cmd:r(n_families_ambiguous)}}number of ambiguous or conflicting structures{p_end}
 {synopt:{cmd:r(n_families_changed)}}number of confirmed structures contributing to changed positions{p_end}
 {synopt:{cmd:r(n_families_suppressed)}}sum of related and ambiguous structures{p_end}
-{synopt:{cmd:r(families_detected)}}identifiers of candidate structures detected{p_end}
-{synopt:{cmd:r(families_confirmed)}}identifiers of confirmed temporal structures{p_end}
-{synopt:{cmd:r(families_related)}}identifiers of related or temporally unverified structures{p_end}
-{synopt:{cmd:r(families_ambiguous)}}identifiers of ambiguous or conflicting structures{p_end}
-{synopt:{cmd:r(families_changed)}}identifiers of confirmed structures contributing to changed positions{p_end}
-{synopt:{cmd:r(families_suppressed)}}identifiers of related and ambiguous structures{p_end}
+{synopt:{cmd:r(families_detected)}}normalized family names of candidate structures detected{p_end}
+{synopt:{cmd:r(families_confirmed)}}normalized family names of confirmed temporal structures{p_end}
+{synopt:{cmd:r(families_related)}}normalized family names of related or temporally unverified structures{p_end}
+{synopt:{cmd:r(families_ambiguous)}}normalized family names of ambiguous or conflicting structures{p_end}
+{synopt:{cmd:r(families_changed)}}normalized family names of confirmed structures contributing to changed positions{p_end}
+{synopt:{cmd:r(families_suppressed)}}normalized family names of related and ambiguous structures{p_end}
 {synopt:{cmd:r(n_moved)}}number of variables whose physical positions changed{p_end}
 {synopt:{cmd:r(max_displacement)}}largest position displacement among moved variables{p_end}
 {synopt:{cmd:r(order_lists_returned)}}1 when complete order lists are returned{p_end}
 {synopt:{cmd:r(oldorder)}}complete pre-command physical variable order, directly usable as a varlist{p_end}
 {synopt:{cmd:r(neworder)}}complete resulting physical variable order, directly usable as a varlist{p_end}
+{synopt:{cmd:r(audit_lists_returned)}}1 when every readable audit result is returned completely; 0 otherwise{p_end}
+{synopt:{cmd:r(audit_family_types)}}family names and recognized temporal-structure types{p_end}
+{synopt:{cmd:r(audit_family_evidence)}}family names and evidence sources written in words{p_end}
+{synopt:{cmd:r(audit_family_reasons)}}family names and readable warning or no-action explanations{p_end}
+{synopt:{cmd:r(audit_variable_keys)}}variable names, family names, and inferred temporal keys{p_end}
+{synopt:{cmd:r(audit_variable_evidence)}}variable names, family names, and evidence sources written in words{p_end}
+{synopt:{cmd:r(audit_variable_reasons)}}variable names, family names, and specific readable explanations for no action{p_end}
+
+{pstd}
+To view a main stored result, use a command such as
+{cmd:di `"`r(audit_variable_reasons)'"'}; for another result, replace
+{cmd:audit_variable_reasons} with the desired {cmd:r()} name listed above.{p_end}
 
 
 {title:Compatibility}
@@ -141,6 +157,15 @@ After {cmd:varorder}, the command stores the following in {cmd:r()}:{p_end}
 
 
 {title:Version history}
+
+{pstd}
+2.0.0, 31 August 2026. Replaced form-by-form family comparison with a common
+temporal-component and precedence-constraint engine. Added additional validated English
+calendar-date forms, explicit ordering for otherwise unknown semantic stages, stronger cross-source
+evidence fusion, conservative cycle and non-unique-order suppression, and readable family- and
+variable-level audit results. Expanded the single example dataset from 146 to 272 variables by
+adding 126 independent V2 cases. The ordinary syntax, compact preview, single confirmation,
+physical-order-only mutation, rollback, and single-level undo remain unchanged.{p_end}
 
 {pstd}
 1.1.0, 23 August 2026. Added a typed temporal-component model and conservative
@@ -169,7 +194,7 @@ Email: {browse "mailto:shouhuoxiwang2027@gmail.com":shouhuoxiwang2027@gmail.com}
 {title:Suggested citation}
 
 {phang}
-Hao Ma, 2026. "{browse "https://ideas.repec.org/c/boc/bocode/s459871.html":VARORDER: Stata module for automatic semantic temporal ordering of variables in wide-format Stata datasets}", {browse "https://ideas.repec.org/s/boc/bocode.html":Statistical Software Components} S459871, Boston College Department of Economics.{p_end}
+Hao Ma, 2026. "{browse "https://ideas.repec.org/c/boc/bocode/s459871.html":VARORDER: Stata module for automatic semantic temporal ordering of variables in wide-format Stata datasets}", Statistical Software Components S459871, Boston College Department of Economics.{p_end}
 
 
 {title:License}

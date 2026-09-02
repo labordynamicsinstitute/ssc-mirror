@@ -31,8 +31,8 @@
 {syntab:Main}
 {synopt :{opt replace}}overwrite existing file{p_end}
 {synopt :{opt append}}append to existing file{p_end}
-{synopt :{opt html}}output in HTML format{p_end}
-{synopt :{opt md}}output in Markdown format{p_end}
+{synopt :{opt html}}write HTML file only (not Markdown){p_end}
+{synopt :{opt md}}write Markdown file only (not HTML){p_end}
 {synopt :{opt tex}}output in LaTeX format{p_end}
 {synopt :{opt word}}output in Word format{p_end}
 {synopt :{opt excel}}output in Excel format{p_end}
@@ -56,7 +56,7 @@
 {cmd:outreg2e} is based on {cmd:outreg2} ({cmd:outreg2.ado}) and keeps the original table-building behavior.
 
 {pstd}
-Its main extension is direct HTML/Markdown table output for web/markdown workflows. In other words, {cmd:outreg2e} is intended as a lightweight extension of {cmd:outreg2}, adding HTML/Markdown export while preserving familiar syntax.
+Its main extension is direct HTML table output for web/markdown workflows. In other words, {cmd:outreg2e} is intended as a lightweight extension of {cmd:outreg2}, adding HTML export while preserving familiar syntax and most behaviors of the original command.
 
 
 {marker options_details}{...}
@@ -69,10 +69,11 @@ Its main extension is direct HTML/Markdown table output for web/markdown workflo
 {opt append} adds a new column to the existing table in {it:filename}.
 
 {phang}
-{opt html} outputs the table in HTML format, suitable for web embedding or further conversion.
+{opt html} writes an HTML table file only. It does not write Markdown.
 
 {phang}
-{opt md} outputs the table in Markdown format, which can be directly used in markdown editors, GitHub, or converted to other formats using tools like pandoc.
+{opt md} writes a Markdown table file only. It does not write HTML.
+Specify both {opt html} and {opt md} if you want both files.
 
 {phang}
 {opt tex}, {opt word}, {opt excel} specify the output format. {cmd:outreg2e} defaults to text if unspecified.

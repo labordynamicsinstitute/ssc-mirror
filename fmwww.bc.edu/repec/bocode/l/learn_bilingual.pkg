@@ -1,0 +1,26 @@
+d 'LEARN_BILINGUAL': module providing learning models for Stata, Python, LaTeX
+d
+d    This package provides learning modules for Stata, Python, and
+d LaTeX in both English and Chinese. 
+d
+d KW: tutorials
+d KW: Stata
+d KW: Python
+d KW: LaTeX
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20260901
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+f latexedu.ado
+f latexedu.sthlp
+f ../p/pythonedu.ado
+f ../p/pythonedu.sthlp
+f ../s/stataedu.ado
+f ../s/stataedu.sthlp

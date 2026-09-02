@@ -1,12 +1,63 @@
-capture program drop tohtml
+*! version 1.45, 2026-08-29
+*! version 1.44, 2026-08-29
+*! version 1.43, 2026-08-29
+*! version 1.42, 2026-08-28
+*! version 1.41, 2026-08-28
+*! version 1.40, 2026-08-28
+*! version 1.39, 2026-08-28
+*! version 1.38, 2026-08-28
+*! version 1.37, 2026-08-28
+*! version 1.36, 2026-08-24
+*! version 1.35, 2026-08-24
+*! version 1.34, 2026-08-23
+*! version 1.33, 2026-08-23
+*! version 1.32, 2026-08-23
+*! version 1.31, 2026-08-23
+*! version 1.30, 2026-08-23
+*! version 1.29, 2026-08-23
+*! version 1.28, 2026-08-23
+*! version 1.27, 2026-08-23
+*! version 1.26, 2026-08-22
+*! version 1.25, 2026-08-22
+*! version 1.24, 2026-08-21
+*! version 1.23, 2026-08-21
+*! version 1.22, 2026-08-21
+*! version 1.21, 2026-08-21
+*! version 1.20, 2026-08-21
+*! version 1.19, 2026-08-21
+*! version 1.18, 2026-08-21
+*! version 1.17, 2026-08-21
+*! version 1.16, 2026-08-21
+*! version 1.15, 2026-08-21
+*! version 1.14, 2026-08-21
+*! version 1.13, 2026-08-21
+*! version 1.12, 2026-08-19
+*! version 1.11, 2026-08-19
+*! version 1.10, 2026-08-19
+*! version 1.9, 2026-08-19
+*! version 1.8, 2026-08-12
+*! version 1.7, 2026-08-12
+*! version 1.6, 2026-08-11
+*! version 1.5, 2026-08-11
+*! version 1.4, 2026-08-11
+*! version 1.3, 2026-08-11
+*! version 1.2, 2026-08-11
+*! version 1.1, 2026-08-11
+*! version 1.0, 2026-04-28
 program define tohtml
-cap which pathutil
-if _rc ssc install pathutil, replace
-version 17
-    syntax anything ,  [ cleanmd(string) REPlace HTML(string) ///
-                         CSS(string) RPath(string) WPath(string) ///
-                         CLEAN CLEANCODE(string) ///
-                         width(string) height(string) zoom(string)]
+version 16
+    tohtml_require
+    syntax anything ,  [ MD(string) REPlace HTML(string) ///
+                         CSS(string) MATHJAX EMBED ///
+                         CLEAN CLEANCODE ///
+                         BUNDLE ZIP(string) ///
+                         width(string) height(string) zoom(string) ///
+                         TABWidth(string) TABHeight(string)]
+
+    if "`clean'" != "" & "`cleancode'" != "" {
+        di as error "options clean and cleancode may not be combined"
+        exit 198
+    }
 
     removequotes , t(`anything')
     local anything  `r(s)'
@@ -31,50 +82,27 @@ version 17
 
    // log file specified
     confirm file `"`anything'"'
-	local saving `cleanmd'
-    local saving = subinstr(`"`saving'"', "\", "/", .)
     if "`clean'" != "" {
         mclean `0'
         exit
     }
     if "`cleancode'" != "" {
-        cleancode `0' 
+        cleancode `0'
         exit
     }
-    if `"`saving'"' == "" {
-        //在anything扩展名之前加clean，思路找到最后一个.的位置，然后把扩展名之前的部分替换成clean.md
-        local saving = usubstr("`anything'", 1, ustrpos("`anything'", ".")-1) + "_clean.md"
-    }
-    local using `anything'
-    local llp ./
-    if "`wpath'" != "" {
-        // check if wpath is a url
-        mata: st_numscalar("wflag",pathisurl("`wpath'"))
-        if wflag==0 {
-            di as error "`wpath' is not a valid url"
-            exit 601
-        }
-        local llp `wpath'
-      
-    }
 
-    if "`rpath'"!=""{
-        // check if the directory path exist
-        mata: st_numscalar("rflag",direxists("`rpath'")) 
-        if rflag==0 {
-            di as error "directory `rpath' does not exist"
-            exit 601
-        }
-        // convert \ in rpath to /
-        local rpath = usubinstr(`"`rpath'"', "\", "/", .)
-        // if the last character is not /, add it
-        if ustrpos(`"`rpath'"', "/") != ustrlen(`"`rpath'"') {
-            local rpath = `"`rpath'/"' 
-        }
-    }
-    // Resolve paths
-    local infile `using'
-    local outfile `saving'
+    local src_orig `anything'
+    mata: tohtml_init_resource_root(`"`src_orig'"')
+    // SMCL → text log (tempfile owned here so it survives until this program ends)
+    tempfile _tohtml_smcltxt
+    tohtml_ensure_textlog, from(`"`anything'"') dest(`"`_tohtml_smcltxt'.log"')
+    local infile `r(file)'
+
+    // name outputs from original path; read content from (possibly translated) file
+    tohtml_resolve_md, from(`"`src_orig'"') md(`"`md'"') html(`"`html'"')
+    local outfile `r(md)'
+    local html `r(html)'
+    tohtml_check_md_collision, from(`"`src_orig'"') md(`"`outfile'"')
 
     // If outfile exists and no replace, stop
     capture confirm new file `"`outfile'"'
@@ -84,15 +112,6 @@ version 17
     }
 
     if `"`html'"' != "" {
-        qui pathutil split "`html'"
-        if "`s(extension)'"!="" & "`s(extension)'"!=".html" {
-            di as error `"`html' is not a valid html file"'
-            exit 601
-        }
-
-        if "`s(extension)'"==""  {
-            local html `html'.html
-        }
         capture confirm new file "`html'"
         if _rc  & "`replace'" == "" {
             di as error "output file exists; use replace"
@@ -109,89 +128,56 @@ version 17
 
 
     local repl = ("`replace'" != "")
-    mata: rewrite_md(`"`infile'"', `"`outfile'"', `repl', `"`rpath'"', `"`llp'"')
+    mata: rewrite_md(`"`infile'"', `"`outfile'"', `repl')
 
-    di as text "% cleaned markdown written to " "`outfile'"
+    di as text "% markdown written to " "`outfile'"
 
     // Optional: regenerate HTML from cleaned markdown
     if "`html'" != "" {
-
-        markdown `outfile', saving(`"`html'"') replace
-        if "`css'" == "githubstyle" {
-            mata: st_local("html_dir", path_dir(`"`html'"'))
-            if "`html_dir'" == "" local html_dir "."
-            cap mkdir "`html_dir'/css"
-            local css_dest "`html_dir'/css/github.css"
-            mata: write_github_css(`"`css_dest'"')
-            mata: inject_css(`"`html'"', "./css/github.css")
-            mata: inject_mathjax(`"`html'"')
-            copy "`html_dir'/css/github.css" "`html_dir'/css/table-override.css", replace
+        tohtml_emit_html, md(`"`outfile'"') html(`"`html'"') css(`"`css'"') `mathjax' `embed' ///
+            tabwidth(`tabwidth') tabheight(`tabheight')
+        if "`zip'" != "" | "`bundle'" != "" {
+            tohtml_bundle, html(`"`html'"') md(`"`outfile'"') zip(`"`zip'"') `replace'
         }
-        else if "`css'" != "" {
-            mata: st_local("css_base", pathbasename(`"`css'"'))
-            mata: st_local("html_dir", path_dir(`"`html'"'))
-            if "`html_dir'" == "" local html_dir "."
-            cap mkdir "`html_dir'/css"
-            local css_dest "`html_dir'/css/`css_base'"
-            mata: st_local("css_norm", normalize_path(`"`css'"'))
-            mata: st_local("css_dest_norm", normalize_path(`"`css_dest'"'))
-            if `"`css_norm'"' != `"`css_dest_norm'"' {
-                copy `"`css_norm'"' `"`css_dest'"', replace
-                copy `"`css_norm'"' "`html_dir'/css/table-override.css", replace
-            }
-            mata: inject_css(`"`html'"', "./css/`css_base'")
-        }
-        // di as text "% html regenerated to `html'"
     }
-    else if "`css'" != "" {
-        di as error "css() requires html()"
+    else if "`css'" != "" | "`mathjax'" != "" | "`embed'" != "" | "`bundle'" != "" | "`zip'" != "" ///
+        | "`tabwidth'" != "" | "`tabheight'" != "" {
+        di as error "css()/mathjax/embed/bundle/zip/tabwidth()/tabheight() require html()"
         exit 198
     }
 end
 
 
 program define cleancode
-    syntax anything , CLEANCODE(string) [cleanmd(string) REPlace HTML(string) ///
-                                         CSS(string) RPath(string) WPath(string) ///
-                                         width(string) height(string) zoom(string)]
-
-    local saving `cleanmd'
-    // Use the do-file provided in cleancode() as the code source
-    local cmdlog `"`cleancode'"'
-    if `"`cmdlog'"' == "" {
-        di as error "cleancode() requires a do-file with ishere markers"
-        exit 198
-    }
-    capture confirm file `"`cmdlog'"'
-    if _rc != 0 {
-        di as error "do file `cmdlog' does not exist"
-        exit 601
-    }
+    syntax anything , CLEANCODE [MD(string) REPlace HTML(string) ///
+                                         CSS(string) MATHJAX EMBED ///
+                                         BUNDLE ZIP(string) ///
+                                         width(string) height(string) zoom(string) ///
+                                         TABWidth(string) TABHeight(string)]
 
     removequotes , t(`anything')
     local anything  `r(s)'
+    local anything = subinstr(`"`anything'"', "\", "/", .)
+    confirm file `"`anything'"'
+    local src_orig `anything'
+    mata: tohtml_init_resource_root(`"`src_orig'"')
+    tempfile _tohtml_smcltxt
+    tohtml_ensure_textlog, from(`"`anything'"') dest(`"`_tohtml_smcltxt'.log"')
+    local anything `r(file)'
 
-    if `"`saving'"' == "" {
-        local saving = usubstr(`"`anything'"', 1, ustrpos(`"`anything'"', ".")-1) + "_code.md"
+    tohtml_resolve_md, from(`"`src_orig'"') md(`"`md'"') html(`"`html'"')
+    local outfile `r(md)'
+    local html `r(html)'
+    local infile `anything'
+    tohtml_check_md_collision, from(`"`src_orig'"') md(`"`outfile'"')
 
-    }
-
-    capture confirm new file `"`saving'"'
+    capture confirm new file `"`outfile'"'
     if _rc  & "`replace'" == "" {
         di as error "output file exists; use replace"
         exit 602
     }
 
     if `"`html'"' != "" {
-        qui pathutil split "`html'"
-        if "`s(extension)'"!="" & "`s(extension)'"!=".html" {
-            di as error `"`html' is not a valid html file"'
-            exit 601
-        }
-
-        if "`s(extension)'"==""  {
-            local html `html'.html
-        }
         capture confirm new file "`html'"
         if _rc  & "`replace'" == "" {
             di as error "output file exists; use replace"
@@ -201,80 +187,27 @@ program define cleancode
 
     // If replace is specified, erase existing outfile
     if "`replace'" != "" {
-        capture erase `"`saving'"'
+        capture erase `"`outfile'"'
         capture erase `"`html'"'
     }
 
-
-    local using `anything'
-    local llp ./
-    if "`wpath'" != "" {
-        mata: st_numscalar("wflag",pathisurl("`wpath'"))
-        if wflag==0 {
-            di as error "`wpath' is not a valid url"
-            exit 601
-        }
-        local llp `wpath'
-    }
-
-    if "`rpath'"!=""{
-        mata: st_numscalar("rflag",direxists("`rpath'")) 
-        if rflag==0 {
-            di as error "directory `rpath' does not exist"
-            exit 601
-        }
-        local rpath = usubinstr(`"`rpath'"', "\\", "/", .)
-        if ustrpos(`"`rpath'"', "/") != ustrlen(`"`rpath'"') {
-            local rpath = `"`rpath'/"' 
-        }
-    }
-
-    local infile `using'
-    local outfile `saving'
-
-    capture confirm file `"`outfile'"'
-    if _rc == 0 & "`replace'" == "" {
-        di as error "output file exists; use replace"
-        exit 602
-    }
-
-
     local replout = ("`replace'" != "")
-    mata: merge_cmdlog_blocks(`"`infile'"', `"`cmdlog'"', `"`outfile'"', `replout', `"`rpath'"', `"`llp'"')
+    // Keep Stata commands (and img/iframe embeds) from the log; drop output
+    mata: rewrite_md_cleancode(`"`infile'"', `"`outfile'"', `replout')
 
-    di as text `"% cleancode markdown written to `outfile'"'
+    di as text `"% markdown written to `outfile'"'
 
     // Optional: regenerate HTML from code markdown
     if "`html'" != "" {
-        markdown `outfile', saving(`"`html'"') replace
-        if "`css'" == "githubstyle" {
-            mata: st_local("html_dir", path_dir(`"`html'"'))
-            if "`html_dir'" == "" local html_dir "."
-            cap mkdir "`html_dir'/css"
-            local css_dest "`html_dir'/css/github.css"
-            mata: write_github_css(`"`css_dest'"')
-            mata: inject_css(`"`html'"', "./css/github.css")
-            mata: inject_mathjax(`"`html'"')
-            copy "`html_dir'/css/github.css" "`html_dir'/css/table-override.css", replace
+        tohtml_emit_html, md(`"`outfile'"') html(`"`html'"') css(`"`css'"') `mathjax' `embed' highlight ///
+            tabwidth(`tabwidth') tabheight(`tabheight')
+        if "`zip'" != "" | "`bundle'" != "" {
+            tohtml_bundle, html(`"`html'"') md(`"`outfile'"') zip(`"`zip'"') `replace'
         }
-        else if "`css'" != "" {
-            mata: st_local("css_base", pathbasename(`"`css'"'))
-            mata: st_local("html_dir", path_dir(`"`html'"'))
-            if "`html_dir'" == "" local html_dir "."
-            cap mkdir "`html_dir'/css"
-            local css_dest "`html_dir'/css/`css_base'"
-            mata: st_local("css_norm", normalize_path(`"`css'"'))
-            mata: st_local("css_dest_norm", normalize_path(`"`css_dest'"'))
-            if `"`css_norm'"' != `"`css_dest_norm'"' {
-                copy `"`css_norm'"' `"`css_dest'"', replace
-                copy `"`css_norm'"' "`html_dir'/css/override.css", replace
-            }
-            mata: inject_css(`"`html'"', "./css/`css_base'")
-        }
-        // di as text "% html regenerated to `html'"
     }
-    else if "`css'" != "" {
-        di as error "css() requires html()"
+    else if "`css'" != "" | "`mathjax'" != "" | "`embed'" != "" | "`bundle'" != "" | "`zip'" != "" ///
+        | "`tabwidth'" != "" | "`tabheight'" != "" {
+        di as error "css()/mathjax/embed/bundle/zip/tabwidth()/tabheight() require html()"
         exit 198
     }
 end
@@ -288,47 +221,28 @@ end
 
 
 program define mclean
-    syntax anything , [cleanmd(string)  REPlace HTML(string) CSS(string) ///
-                       RPath(string) WPath(string) CLEAN cleancode(string) ///
-                       width(string) height(string) zoom(string)]
+    syntax anything , [MD(string)  REPlace HTML(string) CSS(string) MATHJAX ///
+                       EMBED CLEAN CLEANCODE ///
+                       BUNDLE ZIP(string) ///
+                       width(string) height(string) zoom(string) ///
+                       TABWidth(string) TABHeight(string)]
     // only keep lines that start with #, <iframe, <img
 
     removequotes , t(`anything')
     local anything  `r(s)'
-   local saving `cleanmd'
-    if `"`saving'"' == "" {
-        //在anything扩展名之前加clean，思路找到最后一个.的位置，然后把扩展名之前的部分替换成clean.md
-        local saving = usubstr("`anything'", 1, ustrpos("`anything'", ".")-1) + ".clean.md"
-    }
-    local using `anything'
-    local llp ./
-    if "`wpath'" != "" {
-        // check if wpath is a url
-        mata: st_numscalar("wflag",pathisurl("`wpath'"))
-        if wflag==0 {
-            di as error "`wpath' is not a valid url"
-            exit 601
-        }
-        local llp `wpath'
-    }
+    local anything = subinstr(`"`anything'"', "\", "/", .)
+    confirm file `"`anything'"'
+    local src_orig `anything'
+    mata: tohtml_init_resource_root(`"`src_orig'"')
+    tempfile _tohtml_smcltxt
+    tohtml_ensure_textlog, from(`"`anything'"') dest(`"`_tohtml_smcltxt'.log"')
+    local anything `r(file)'
 
-    if "`rpath'"!=""{
-        // check if the directory path exist
-        mata: st_numscalar("rflag",direxists("`rpath'")) 
-        if rflag==0 {
-            di as error "directory `rpath' does not exist"
-            exit 601
-        }
-        // convert \ in rpath to /
-        local rpath = usubinstr(`"`rpath'"', "\", "/", .)
-        // if the last character is not /, add it
-        if ustrpos(`"`rpath'"', "/") != ustrlen(`"`rpath'"') {
-            local rpath = `"`rpath'/"' 
-        }
-    }
-
-    local infile `using'
-    local outfile `saving'
+    tohtml_resolve_md, from(`"`src_orig'"') md(`"`md'"') html(`"`html'"')
+    local outfile `r(md)'
+    local html `r(html)'
+    local infile `anything'
+    tohtml_check_md_collision, from(`"`src_orig'"') md(`"`outfile'"')
 
     // If outfile exists and no replace, stop
     capture confirm file `"`outfile'"'
@@ -338,15 +252,6 @@ program define mclean
     }
 
     if `"`html'"' != "" {
-        qui pathutil split "`html'"
-        if "`s(extension)'"!="" & "`s(extension)'"!=".html" {
-            di as error `"`html' is not a valid html file"'
-            exit 601
-        }
-
-        if "`s(extension)'"==""  {
-            local html `html'.html
-        }
         capture confirm new file "`html'"
         if _rc  & "`replace'" == "" {
             di as error "output file exists; use replace"
@@ -362,40 +267,20 @@ program define mclean
 
 
     local repl = ("`replace'" != "")
-    mata: rewrite_md2(`"`infile'"', `"`outfile'"', `repl', `"`rpath'"', `"`llp'"')
-    di as text "% cleaned markdown written to " `"`outfile'"'
+    mata: rewrite_md2(`"`infile'"', `"`outfile'"', `repl')
+    di as text "% markdown written to " `"`outfile'"'
 
-        // Optional: regenerate HTML from cleaned markdown
+    // Optional: regenerate HTML from cleaned markdown
     if "`html'" != "" {
-        markdown `outfile', saving(`"`html'"') replace
-        if "`css'" == "githubstyle" {
-            mata: st_local("html_dir", path_dir(`"`html'"'))
-            if "`html_dir'" == "" local html_dir "."
-            cap mkdir "`html_dir'/css"
-            local css_dest "`html_dir'/css/github.css"
-            mata: write_github_css(`"`css_dest'"')
-            mata: inject_css(`"`html'"', "./css/github.css")
-            mata: inject_mathjax(`"`html'"')
-            copy "`html_dir'/css/github.css" "`html_dir'/css/table-override.css", replace
+        tohtml_emit_html, md(`"`outfile'"') html(`"`html'"') css(`"`css'"') `mathjax' `embed' ///
+            tabwidth(`tabwidth') tabheight(`tabheight')
+        if "`zip'" != "" | "`bundle'" != "" {
+            tohtml_bundle, html(`"`html'"') md(`"`outfile'"') zip(`"`zip'"') `replace'
         }
-        else if "`css'" != "" {
-            mata: st_local("css_base", pathbasename(`"`css'"'))
-            mata: st_local("html_dir", path_dir(`"`html'"'))
-            if "`html_dir'" == "" local html_dir "."
-            cap mkdir "`html_dir'/css"
-            local css_dest "`html_dir'/css/`css_base'"
-            mata: st_local("css_norm", normalize_path(`"`css'"'))
-            mata: st_local("css_dest_norm", normalize_path(`"`css_dest'"'))
-            if `"`css_norm'"' != `"`css_dest_norm'"' {
-                copy `"`css_norm'"' `"`css_dest'"', replace
-                copy `"`css_norm'"' "`html_dir'/css/override.css", replace
-            }
-            mata: inject_css(`"`html'"', "./css/`css_base'")
-        }
-        // di as text "% html regenerated to `html'"
     }
-    else if "`css'" != "" {
-        di as error "css() requires html()"
+    else if "`css'" != "" | "`mathjax'" != "" | "`embed'" != "" | "`bundle'" != "" | "`zip'" != "" ///
+        | "`tabwidth'" != "" | "`tabheight'" != "" {
+        di as error "css()/mathjax/embed/bundle/zip/tabwidth()/tabheight() require html()"
         exit 198
     }
 end
@@ -403,67 +288,32 @@ end
 
 
 program define mclean2
-    syntax [anything] , [cleanmd(string)  REPlace HTML(string) CSS(string) ///
-                       RPath(string) WPath(string) CLEAN cleancode(string) ///
-                       width(string) height(string) zoom(string)]
+    syntax [anything] , [MD(string)  REPlace HTML(string) CSS(string) MATHJAX ///
+                       EMBED CLEAN CLEANCODE ///
+                       BUNDLE ZIP(string) ///
+                       width(string) height(string) zoom(string) ///
+                       TABWidth(string) TABHeight(string)]
     // only keep lines that start with #, <iframe, <img
 
     // removequotes , t(`anything')
     // local anything  `r(s)'
     local anything `c(pwd)'/_tempfile_log_.md
-    local saving `cleanmd'
-    if `"`saving'"' == "" {
-        //在anything扩展名之前加clean，思路找到最后一个.的位置，然后把扩展名之前的部分替换成clean.md
-        local saving = usubstr("`anything'", 1, ustrpos("`anything'", ".")-1) + ".clean.md"
-    }
-    local using `anything'
-    local llp ./
-    if "`wpath'" != "" {
-        // check if wpath is a url
-        mata: st_numscalar("wflag",pathisurl("`wpath'"))
-        if wflag==0 {
-            di as error "`wpath' is not a valid url"
-            exit 601
-        }
-        local llp `wpath'
-    }
 
-    if "`rpath'"!=""{
-        // check if the directory path exist
-        mata: st_numscalar("rflag",direxists("`rpath'")) 
-        if rflag==0 {
-            di as error "directory `rpath' does not exist"
-            exit 601
-        }
-        // convert \ in rpath to /
-        local rpath = usubinstr(`"`rpath'"', "\", "/", .)
-        // if the last character is not /, add it
-        if ustrpos(`"`rpath'"', "/") != ustrlen(`"`rpath'"') {
-            local rpath = `"`rpath'/"' 
-        }
-    }
-
-    local infile `using'
-    local outfile `saving'
+    tohtml_resolve_md, from(`"`anything'"') md(`"`md'"') html(`"`html'"')
+    local outfile `r(md)'
+    local html `r(html)'
+    local infile `anything'
+    tohtml_check_md_collision, from(`"`anything'"') md(`"`outfile'"')
 
     // If outfile exists and no replace, stop
 
-    capture confirm new file `"`saving'"'
+    capture confirm new file `"`outfile'"'
     if _rc  & "`replace'" == "" {
         di as error "output file exists; use replace"
         exit 602
     }
 
     if `"`html'"' != "" {
-        qui pathutil split "`html'"
-        if "`s(extension)'"!="" & "`s(extension)'"!=".html" {
-            di as error `"`html' is not a valid html file"'
-            exit 601
-        }
-
-        if "`s(extension)'"==""  {
-            local html `html'.html
-        }
         capture confirm new file "`html'"
         if _rc  & "`replace'" == "" {
             di as error "output file exists; use replace"
@@ -473,49 +323,337 @@ program define mclean2
 
     // If replace is specified, erase existing outfile
     if "`replace'" != "" {
-        capture erase `"`saving'"'
+        capture erase `"`outfile'"'
         capture erase `"`html'"'
     }
   
 
 
     local repl = ("`replace'" != "")
-    mata: rewrite_md2(`"`infile'"', `"`outfile'"', `repl', `"`rpath'"', `"`llp'"')
-    di as text "% cleaned markdown written to " `"`outfile'"'
+    mata: rewrite_md2(`"`infile'"', `"`outfile'"', `repl')
+    di as text "% markdown written to " `"`outfile'"'
 
-        // Optional: regenerate HTML from cleaned markdown
+    // Optional: regenerate HTML from cleaned markdown
     if "`html'" != "" {
-        markdown `outfile', saving(`"`html'"') replace
-        if "`css'" == "githubstyle" {
-            mata: st_local("html_dir", path_dir(`"`html'"'))
-            if "`html_dir'" == "" local html_dir "."
-            cap mkdir "`html_dir'/css"
-            local css_dest "`html_dir'/css/github.css"
-            mata: write_github_css(`"`css_dest'"')
-            mata: inject_css(`"`html'"', "./css/github.css")
-            mata: inject_mathjax(`"`html'"')
-            copy "`html_dir'/css/github.css" "`html_dir'/css/table-override.css", replace
+        tohtml_emit_html, md(`"`outfile'"') html(`"`html'"') css(`"`css'"') `mathjax' `embed' ///
+            tabwidth(`tabwidth') tabheight(`tabheight')
+        if "`zip'" != "" | "`bundle'" != "" {
+            tohtml_bundle, html(`"`html'"') md(`"`outfile'"') zip(`"`zip'"') `replace'
         }
-        else if "`css'" != "" {
-            mata: st_local("css_base", pathbasename(`"`css'"'))
-            mata: st_local("html_dir", path_dir(`"`html'"'))
-            if "`html_dir'" == "" local html_dir "."
-            cap mkdir "`html_dir'/css"
-            local css_dest "`html_dir'/css/`css_base'"
-            mata: st_local("css_norm", normalize_path(`"`css'"'))
-            mata: st_local("css_dest_norm", normalize_path(`"`css_dest'"'))
-            if `"`css_norm'"' != `"`css_dest_norm'"' {
-                copy `"`css_norm'"' `"`css_dest'"', replace
-                copy `"`css_norm'"' "`html_dir'/css/override.css", replace
-            }
-            mata: inject_css(`"`html'"', "./css/`css_base'")
-        }
-        // di as text "% html regenerated to `html'"
     }
-    else if "`css'" != "" {
-        di as error "css() requires html()"
+    else if "`css'" != "" | "`mathjax'" != "" | "`embed'" != "" | "`bundle'" != "" | "`zip'" != "" ///
+        | "`tabwidth'" != "" | "`tabheight'" != "" {
+        di as error "css()/mathjax/embed/bundle/zip/tabwidth()/tabheight() require html()"
         exit 198
     }
+end
+
+
+
+capture program drop tohtml_ensure_textlog
+program define tohtml_ensure_textlog, rclass
+    version 16
+    syntax , FROM(string) [DEST(string)]
+
+    local from = subinstr(`"`from'"', "\", "/", .)
+    confirm file `"`from'"'
+
+    mata: st_local("suf", pathsuffix(st_local("from")))
+    local is_smcl = (ustrlower("`suf'") == ".smcl")
+
+    if !`is_smcl' {
+        // content peek: first non-empty line is {smcl}
+        tempname fh
+        file open `fh' using `"`from'"', read text
+        local found 0
+        local nread 0
+        while `nread' < 40 {
+            file read `fh' line
+            if r(eof) continue, break
+            local ++nread
+            local t = ustrtrim(`"`macval(line)'"')
+            if `"`t'"' == "" continue
+            if `"`t'"' == "{smcl}" local found 1
+            continue, break
+        }
+        file close `fh'
+        local is_smcl = `found'
+    }
+
+    if !`is_smcl' {
+        return local file `"`from'"'
+        return scalar translated = 0
+        exit
+    }
+
+    if `"`dest'"' == "" {
+        di as error "tohtml_ensure_textlog: dest() required for SMCL input"
+        exit 198
+    }
+    local dest = subinstr(`"`dest'"', "\", "/", .)
+
+    quietly translate `"`from'"' `"`dest'"', translator(smcl2log) replace
+    di as text "% SMCL log translated to text: `dest'"
+    return local file `"`dest'"'
+    return scalar translated = 1
+end
+
+
+capture program drop tohtml_require
+program define tohtml_require
+    version 16
+    // Never ssc install. Tell the user what is missing.
+
+    mata: st_numscalar("tohtml_has_mm", findexternal("mm_outsheet()") != NULL)
+    if tohtml_has_mm == 0 {
+        di as error "tohtml requires moremata (Mata function mm_outsheet)"
+        di as error "install with:  ssc install moremata"
+        exit 111
+    }
+end
+
+capture program drop tohtml_require_fs
+program define tohtml_require_fs
+    version 16
+    capture which fs
+    if _rc {
+        di as error "tohtml directory mode requires fs (Nick Cox)"
+        di as error "install with:  ssc install fs"
+        exit 111
+    }
+end
+
+
+capture program drop tohtml_resolve_md
+program define tohtml_resolve_md, rclass
+    version 16
+    syntax , FROM(string) [MD(string) HTML(string)]
+
+    local from = subinstr(`"`from'"', "\", "/", .)
+    local md = subinstr(`"`md'"', "\", "/", .)
+    local html = subinstr(`"`html'"', "\", "/", .)
+
+    if `"`html'"' == "" {
+        local html = ustrregexra(`"`from'"', "\.[^.]+$", "") + ".html"
+    }
+    if ustrright(ustrlower(`"`html'"'), 5) != ".html" {
+        local html `"`html'.html"'
+    }
+
+    if `"`md'"' == "" {
+        local md = ustrregexra(`"`html'"', "\.[Hh][Tt][Mm][Ll]$", ".md")
+    }
+    else if ustrright(ustrlower(`"`md'"'), 3) != ".md" {
+        local md `"`md'.md"'
+    }
+
+    return local md `"`md'"'
+    return local html `"`html'"'
+end
+
+
+capture program drop tohtml_check_md_collision
+program define tohtml_check_md_collision
+    version 16
+    syntax , FROM(string) MD(string)
+    mata: st_numscalar("tohtml_md_same", paths_are_same(st_local("from"), st_local("md")))
+    if tohtml_md_same {
+        di as error "input file and Markdown output file must be different"
+        exit 198
+    }
+end
+
+
+capture program drop tohtml_emit_html
+program define tohtml_emit_html
+    version 16
+    syntax , MD(string) HTML(string) [CSS(string) MATHJAX HIGHLIGHT EMBED TABWidth(string) TABHeight(string)]
+
+    mata: st_local("html_dir", path_dir(`"`html'"'))
+    if "`html_dir'" == "" local html_dir "."
+
+    // HTML tables are always inlined (same path as embed).
+    local convimg = ("`embed'" != "")
+    mata: tohtml_inline_tables(`"`md'"', `convimg')
+
+    if "`embed'" != "" {
+        mata: st_local("embase", tohtml_get_resource_root())
+        markdown `"`md'"', saving(`"`html'"') replace embedimage basedir(`"`embase'"')
+    }
+    else {
+        mata: tohtml_fix_default_refs(`"`md'"', `"`html_dir'"')
+        markdown `"`md'"', saving(`"`html'"') replace
+    }
+    tohtml_style, html(`"`html'"') css(`"`css'"') md(`"`md'"') `mathjax' `highlight' `embed'
+    mata: inject_embed_table_styles(`"`html'"')
+    if "`embed'" == "" {
+        mata: tohtml_finish_default_refs(`"`html'"')
+    }
+    mata: inject_table_scroll_css(`"`html'"', `"`tabwidth'"', `"`tabheight'"')
+end
+
+capture program drop tohtml_style
+program define tohtml_style
+    version 16
+    syntax , HTML(string) [CSS(string) MATHJAX HIGHLIGHT EMBED MD(string)]
+
+    // Default stylesheet is package tohtml.css (GitHub-like). css() is only
+    // for a custom file; there is no githubstyle alias.
+    local css_l = ustrlower(strtrim(`"`css'"'))
+    if `"`css_l'"' == "" {
+        quietly findfile tohtml.css
+        if `"`r(fn)'"' == "" {
+            di as error "tohtml.css not found; reinstall the tohtml package"
+            exit 601
+        }
+        local css_src `"`r(fn)'"'
+        local css_base "tohtml.css"
+    }
+    else {
+        confirm file `"`css'"'
+        local css_src `css'
+        mata: st_local("css_base", path_base(normalize_path(st_local("css_src"))))
+    }
+
+    if "`embed'" != "" {
+        mata: inject_css_inline(`"`html'"', `"`css_src'"')
+    }
+    else {
+        mata: st_local("html_dir", path_dir(`"`html'"'))
+        if "`html_dir'" == "" local html_dir "."
+        cap mkdir "`html_dir'/css"
+        local css_dest "`html_dir'/css/`css_base'"
+
+        mata: st_local("css_norm", normalize_path(`"`css_src'"'))
+        mata: st_local("css_dest_norm", normalize_path(`"`css_dest'"'))
+        if `"`css_norm'"' != `"`css_dest_norm'"' {
+            copy `"`css_src'"' `"`css_dest'"', replace
+        }
+        mata: inject_css(`"`html'"', "./css/`css_base'")
+    }
+    mata: normalize_stata_code_class(`"`html'"')
+
+    // cleancode HTML: syntax-highlight ```stata blocks (CDN; no user option)
+    if "`highlight'" != "" {
+        mata: inject_highlightjs(`"`html'"')
+    }
+
+    // MathJax is opt-in and only injected when equations are present
+    if "`mathjax'" != "" {
+        local mathsrc `md'
+        if `"`mathsrc'"' == "" local mathsrc `html'
+        mata: st_numscalar("hasmath", content_has_math(`"`mathsrc'"'))
+        if hasmath {
+            mata: inject_mathjax(`"`html'"')
+        }
+        else {
+            di as text "% mathjax skipped (no equations detected in `mathsrc')"
+        }
+    }
+end
+
+
+
+capture program drop tohtml_bundle
+program define tohtml_bundle
+    version 16
+    syntax , HTML(string) [MD(string) ZIP(string) REPlace]
+
+    mata: st_local("html_dir", path_dir(`"`html'"'))
+    if "`html_dir'" == "" local html_dir "."
+
+    cap mkdir "`html_dir'/css"
+    cap mkdir "`html_dir'/figures"
+    cap mkdir "`html_dir'/tables"
+
+    mata: bundle_report(`"`html'"', `"`md'"')
+    di as text "% resources bundled under `html_dir'/{css,figures,tables}"
+
+    if `"`zip'"' == "" exit
+
+    // resolve zip archive path
+    if `"`zip'"' == "." | lower(`"`zip'"') == "auto" {
+        mata: st_local("html_base", path_base(`"`html'"'))
+        local stub = ustrregexra("`html_base'", "\.[^.]+$", "")
+        local zipfile "`html_dir'/`stub'.zip"
+    }
+    else {
+        local zipfile `zip'
+        local zipfile = subinstr(`"`zipfile'"', "\", "/", .)
+        mata: st_local("zip_suf", pathsuffix(`"`zipfile'"'))
+        if "`zip_suf'" == "" local zipfile `"`zipfile'.zip"'
+        // bare filename -> place next to HTML
+        mata: st_local("zip_dir", path_dir(`"`zipfile'"'))
+        if "`zip_dir'" == "" local zipfile "`html_dir'/`zipfile'"
+    }
+
+    if "`replace'" != "" {
+        capture erase `"`zipfile'"'
+    }
+    else {
+        capture confirm new file `"`zipfile'"'
+        if _rc {
+            di as error "zip file exists; use replace"
+            exit 602
+        }
+    }
+
+    // build relative file list from package root, then zipfile
+    mata: st_local("html_base", path_base(`"`html'"'))
+    mata: st_local("html_dir_abs", normalize_path(`"`html_dir'"'))
+    mata: st_local("zipfile_abs", normalize_path(`"`zipfile'"'))
+    mata: st_local("zip_base", path_base(st_local("zipfile_abs")))
+    mata: st_local("zip_parent", path_dir(st_local("zipfile_abs")))
+    if "`zip_parent'" == "" local zip_parent "."
+    mata: st_local("zip_parent", normalize_path(st_local("zip_parent")))
+
+    local pwd0 `"`c(pwd)'"'
+    quietly cd `"`html_dir_abs'"'
+
+    local zlist `"`html_base'"'
+    capture local fs : dir "css" files "*"
+    if _rc == 0 {
+        foreach f of local fs {
+            local zlist `"`zlist' "css/`f'""'
+        }
+    }
+    // only pack figures/tables that the report actually references
+    if `"`bundle_zip_rel'"' != "" {
+        foreach f of local bundle_zip_rel {
+            capture confirm file `"`f'"'
+            if _rc == 0 {
+                local zlist `"`zlist' "`f'""'
+            }
+        }
+    }
+    // include cleaned markdown when it lives in the package root
+    if `"`md'"' != "" {
+        mata: st_local("md_norm", normalize_path(`"`md'"'))
+        mata: st_local("md_dir", path_dir(st_local("md_norm")))
+        if "`md_dir'" == "" local md_dir "."
+        mata: st_local("md_dir_norm", normalize_path(`"`md_dir'"'))
+        if `"`md_dir_norm'"' == `"`html_dir_abs'"' {
+            mata: st_local("md_base", path_base(`"`md_norm'"'))
+            confirm file `"`md_base'"'
+            local zlist `"`zlist' "`md_base'""'
+        }
+    }
+
+    if `"`zip_parent'"' == `"`html_dir_abs'"' {
+        local zsave `"`zip_base'"'
+    }
+    else {
+        local zsave `"`zipfile_abs'"'
+    }
+
+    capture noi zipfile `zlist', saving(`"`zsave'"', replace)
+    local rc = _rc
+    quietly cd `"`pwd0'"'
+    if `rc' {
+        di as error "zipfile failed"
+        exit `rc'
+    }
+    di as text "% archive written to " `"`zipfile_abs'"'
 end
 
 
@@ -523,22 +661,15 @@ end
 mata:
 
 
-
-
 string scalar path_dir(string scalar p)
 {
-    p = normalize_path(p)
-    i = lastpos(p, "/")
-    if (i <= 1) return("")
-    return(substr(p, 1, i - 1))
+    if (strtrim(p) == "") return("")
+    return(pathgetparent(p))
 }
 
 string scalar path_base(string scalar p)
 {
-    p = normalize_path(p)
-    i = lastpos(p, "/")
-    if (i == 0) return(p)
-    return(substr(p, i + 1, .))
+    return(pathbasename(p))
 }
 
 
@@ -553,7 +684,7 @@ void function inject_css(string scalar htmlfile, string scalar css_rel)
 
     link = "<link rel=" + char(34) + "stylesheet" + char(34) + " href="http://fmwww.bc.edu/repec/bocode/t/+&#32;char(34)&#32;+&#32;css_rel&#32;+&#32;char(34)&#32;+">"
     idx = selectindex(ustrpos(lines, "</head>") :> 0)
-    if (rows(idx) > 0) {
+    if (length(idx) > 0) {
         i = idx[1]
         if (i > 1) {
             lines = lines[|1 \ i-1|] \ link \ lines[|i \ rows(lines)|]
@@ -569,22 +700,560 @@ void function inject_css(string scalar htmlfile, string scalar css_rel)
     mm_outsheet(htmlfile, lines, "replace")
 }
 
-void function rewrite_md(string scalar ofi, string scalar tfi, real scalar replace, string scalar rpath, string scalar llp)
+void function inject_css_inline(string scalar htmlfile, string scalar cssfile)
 {
-    // 1. 读取文件
-    fcon = cat(ofi)
-    fcon = ishererep(fcon)
+    // embed: put report CSS in <style> so HTML does not need ./css/tohtml.css
+    if (!fileexists(cssfile)) return
+    css = cat(cssfile)
+    if (rows(css) == 0) return
 
-    // 2. 合并 HTML 行
+    lines = cat(htmlfile)
+    if (rows(lines) == 0) return
+    if (sum(ustrpos(lines, "tohtml-inline-css") :> 0) > 0) return
+
+    q = char(34)
+    open = "<style id=" + q + "tohtml-inline-css" + q + ">"
+    close = "</style>"
+    block = open \ css \ close
+
+    idx = selectindex(ustrpos(lines, "</head>") :> 0)
+    if (length(idx) > 0) {
+        i = idx[1]
+        if (i > 1) {
+            lines = lines[|1 \ i-1|] \ block \ lines[|i \ rows(lines)|]
+        }
+        else {
+            lines = block \ lines
+        }
+    }
+    else {
+        lines = block \ lines
+    }
+
+    mm_outsheet(htmlfile, lines, "replace")
+}
+
+void function normalize_stata_code_class(string scalar htmlfile)
+{
+    // Stata markdown: ```stata → language-stata; leftover ```{stata} → language-{stata}
+    lines = cat(htmlfile)
+    if (rows(lines) == 0) return
+    ugly = "language-" + "{" + "stata" + "}"
+    lines = usubinstr(lines, ugly, "language-stata", .)
+    mm_outsheet(htmlfile, lines, "replace")
+}
+
+// ---------- bundle / zip helpers ----------
+
+real scalar path_is_abs(string scalar p)
+{
+    return(pathisabs(p))
+}
+
+string scalar path_suffix_lower(string scalar p)
+{
+    return(ustrlower(pathsuffix(p)))
+}
+
+string scalar embed_kind(string scalar path)
+{
+    ext = path_suffix_lower(path)
+    if (ext == ".png" | ext == ".jpg" | ext == ".jpeg" | ext == ".svg" |
+        ext == ".gif" | ext == ".bmp" | ext == ".webp") return("fig")
+    if (ext == ".html" | ext == ".htm" | ext == ".md") return("tab")
+    return("")
+}
+
+real scalar path_is_remote(string scalar p)
+{
+    pl = strtrim(p)
+    if (pl == "") return(1)
+    if (ustrpos(ustrlower(pl), "data:") == 1) return(1)
+    if (pathisurl(pl)) return(1)
+    return(0)
+}
+
+string colvector path_ancestors(string scalar din)
+{
+    out = J(0, 1, "")
+    d = strtrim(din)
+    if (d == "") d = pwd()
+    if (!pathisabs(d)) d = pathresolve(pwd(), d)
+    for (k = 1; k <= 8; k++) {
+        if (d == "") break
+        if (rows(out) > 0) {
+            if (sum(out :== d) > 0) break
+        }
+        out = out \ d
+        p = pathgetparent(d)
+        if (p == "" | p == d) break
+        d = p
+    }
+    return(out)
+}
+
+string colvector unique_keep_order(string colvector v)
+{
+    out = J(0, 1, "")
+    for (i = 1; i <= rows(v); i++) {
+        if (v[i] == "") continue
+        if (rows(out) > 0) {
+            if (sum(out :== v[i]) > 0) continue
+        }
+        out = out \ v[i]
+    }
+    return(out)
+}
+
+void function tohtml_init_resource_root(string scalar logfile)
+{
+    external string scalar tohtml_resource_root
+    d = pathgetparent(logfile)
+    if (d == "") d = pwd()
+    if (!pathisabs(d)) d = pathresolve(pwd(), d)
+    tohtml_resource_root = d
+}
+
+string scalar tohtml_get_resource_root()
+{
+    external string scalar tohtml_resource_root
+    if (tohtml_resource_root == "") return(pwd())
+    return(tohtml_resource_root)
+}
+
+void function tohtml_note_resource_base(string scalar base)
+{
+    external string scalar tohtml_resource_root
+    if (base == "") return
+    tohtml_resource_root = base
+}
+
+string scalar path_rel_to_base(string scalar absfile, string scalar base)
+{
+    a = normalize_path(absfile)
+    b = normalize_path(base)
+    if (a == "" | b == "") return("")
+    pref = ustrlower(b) + "/"
+    if (ustrpos(ustrlower(a), pref) != 1) return("")
+    return(substr(a, strlen(b) + 2, .))
+}
+
+string scalar path_rel_to_dir(string scalar absfile, string scalar dir)
+{
+    // Relative path from dir to file, using ../ when file is not inside dir.
+    d = normalize_path(dir)
+    if (d != "" & !pathisabs(d)) d = pathresolve(pwd(), d)
+    a = normalize_path(absfile)
+    if (a != "" & !pathisabs(a)) a = pathresolve(pwd(), a)
+    rel = path_rel_to_base(a, d)
+    if (rel != "") return(subinstr(rel, "\", "/", .))
+    prefix = ""
+    for (k = 1; k <= 8; k++) {
+        p = pathgetparent(d)
+        if (p == "" | p == d) break
+        prefix = prefix + "../"
+        rel = path_rel_to_base(a, p)
+        if (rel != "") return(prefix + subinstr(rel, "\", "/", .))
+        d = p
+    }
+    return("")
+}
+
+string scalar resolve_local_file(string scalar src, string scalar root)
+{
+    src0 = strtrim(src)
+    root0 = root
+    if (path_is_remote(src0)) return("")
+
+    if (pathisabs(src0)) {
+        if (fileexists(src0)) return(src0)
+        return("")
+    }
+
+    bases = unique_keep_order(path_ancestors(tohtml_get_resource_root()) \ path_ancestors(root0) \ path_ancestors(pwd()))
+    for (j = 1; j <= rows(bases); j++) {
+        cand = pathresolve(bases[j], src0)
+        if (fileexists(cand)) {
+            tohtml_note_resource_base(bases[j])
+            return(cand)
+        }
+    }
+    if (fileexists(src0)) {
+        tohtml_note_resource_base(pwd())
+        return(pathresolve(pwd(), src0))
+    }
+    return("")
+}
+
+real scalar path_is_under(string scalar file, string scalar dir)
+{
+    f = abs_path_key(file)
+    d = abs_path_key(dir)
+    if (f == "" | d == "") return(0)
+    if (f == d) return(1)
+    return(ustrpos(f, d + "/") == 1)
+}
+
+string scalar unique_bundle_name(string scalar destdir, string scalar base, string colvector used)
+{
+    // Only suffix when THIS run already claimed the basename.
+    // An existing dest file is overwritten (copy, replace), not copied as _2.
+    if (sum(used :== base) == 0) return(base)
+
+    suf = pathsuffix(base)
+    stem = pathrmsuffix(base)
+    for (k = 2; k <= 9999; k++) {
+        cand = stem + "_" + strofreal(k) + suf
+        if (sum(used :== cand) == 0) return(cand)
+    }
+    return(stem + "_x" + suf)
+}
+
+string colvector extract_src_attrs(string scalar s)
+{
+    out = J(0, 1, "")
+    s2 = s
+    for (k = 1; k <= 30; k++) {
+        if (ustrregexm(s2, `"src *= *"([^"]+)""')) {
+            out = out \ ustrregexs(1)
+            s2 = usubinstr(s2, ustrregexs(0), "", 1)
+        }
+        else if (ustrregexm(s2, `"src *= *'([^']+)'"')) {
+            out = out \ ustrregexs(1)
+            s2 = usubinstr(s2, ustrregexs(0), "", 1)
+        }
+        else break
+    }
+    return(out)
+}
+
+string colvector extract_embed_srcs(string colvector lines)
+{
+    out = J(0, 1, "")
+    infence = 0
+    for (i = 1; i <= rows(lines); i++) {
+        if (is_md_fence_line(lines[i])) {
+            infence = !infence
+            continue
+        }
+        if (infence) continue
+        out = out \ extract_src_attrs(lines[i])
+    }
+    return(out)
+}
+
+string colvector extract_md_images(string colvector lines)
+{
+    out = J(0, 1, "")
+    infence = 0
+    for (i = 1; i <= rows(lines); i++) {
+        if (is_md_fence_line(lines[i])) {
+            infence = !infence
+            continue
+        }
+        if (infence) continue
+        s2 = lines[i]
+        for (k = 1; k <= 30; k++) {
+            if (ustrregexm(s2, `"!\[[^\]]*\]\(([^)]+)\)"')) {
+                out = out \ ustrregexs(1)
+                s2 = usubinstr(s2, ustrregexs(0), "", 1)
+            }
+            else break
+        }
+    }
+    return(out)
+}
+
+string colvector replace_path_refs(string colvector lines, string scalar oldp, string scalar newref)
+{
+    // Replace a file path only where it is a complete src / markdown target,
+    // not as a substring of a longer path.
+    if (oldp == "" | newref == "" | oldp == newref) return(lines)
+    dq = char(34)
+    sq = char(39)
+    olds = (oldp \ slash_norm_src(oldp) \ normalize_path(oldp))
+    olds = olds \ subinstr(normalize_path(oldp), "/", char(92), .)
+    olds = uniqrows(select(olds, olds :!= ""))
+    infence = 0
+    for (i = 1; i <= rows(lines); i++) {
+        line = lines[i]
+        if (is_md_fence_line(line)) {
+            infence = !infence
+            continue
+        }
+        if (infence) continue
+        for (j = 1; j <= rows(olds); j++) {
+            op = olds[j]
+            if (op == "" | op == newref) continue
+            line = usubinstr(line, "src=" + dq + op + dq, "src=" + dq + newref + dq, .)
+            line = usubinstr(line, "src=" + sq + op + sq, "src=" + sq + newref + sq, .)
+            line = usubinstr(line, "href=" + dq + op + dq, "href=" + dq + newref + dq, .)
+            line = usubinstr(line, "href=" + sq + op + sq, "href=" + sq + newref + sq, .)
+            line = usubinstr(line, "](" + op + ")", "](" + newref + ")", .)
+        }
+        lines[i] = line
+    }
+    return(lines)
+}
+
+void function fix_table_override_css(string scalar tabfile)
+{
+    // Older outreg2e HTML injected GitHub tohtml.css (as table-override.css)
+    // into iframes. That restyles collect / outreg three-line tables.
+    // Strip those script hooks; leave the table's own <style> alone.
+    if (!fileexists(tabfile)) return
+    lines = cat(tabfile)
+    if (rows(lines) == 0) return
+    n = rows(lines)
+    keep = J(n, 1, 1)
+    i = 1
+    while (i <= n) {
+        if (ustrpos(ustrlower(lines[i]), "<script") > 0) {
+            j = i
+            hit = 0
+            while (j <= n) {
+                if (ustrpos(lines[j], "table-override.css") > 0) hit = 1
+                if (ustrpos(ustrlower(lines[j]), "</script>") > 0) break
+                j++
+            }
+            if (hit) {
+                for (k = i; k <= j; k++) keep[k] = 0
+                i = j + 1
+                continue
+            }
+        }
+        i++
+    }
+    if (sum(keep) == n) return
+    if (sum(keep) == 0) return
+    mm_outsheet(tabfile, select(lines, keep), "replace")
+}
+
+void function stata_copy_file(string scalar src, string scalar dest)
+{
+    cmd = "copy " + char(34) + src + char(34) + " " + char(34) + dest + char(34) + ", replace"
+    stata(cmd, 1)
+}
+
+void function bundle_report(string scalar htmlfile, string scalar mdfile)
+{
+    htmlfile = normalize_path(htmlfile)
+    root = pathgetparent(htmlfile)
+    if (root == "") root = "."
+
+    figdir = pathjoin(root, "figures")
+    tabdir = pathjoin(root, "tables")
+    stata("cap mkdir " + char(34) + figdir + char(34), 1)
+    stata("cap mkdir " + char(34) + tabdir + char(34), 1)
+
+    html = cat(htmlfile)
+    md = J(0, 1, "")
+    hasmd = 0
+    if (mdfile != "") {
+        mdfile = normalize_path(mdfile)
+        if (fileexists(mdfile)) {
+            md = cat(mdfile)
+            hasmd = 1
+        }
+    }
+
+    srcs = extract_embed_srcs(html)
+    if (hasmd) srcs = srcs \ extract_embed_srcs(md) \ extract_md_images(md)
+    srcs = select(srcs, srcs :!= "")
+    if (rows(srcs) > 0) srcs = uniqrows(srcs)
+    if (rows(srcs) > 1) srcs = srcs[order(-strlen(srcs), 1)]
+
+    used_fig = J(0, 1, "")
+    used_tab = J(0, 1, "")
+    copied_key = J(0, 1, "")
+    copied_ref = J(0, 1, "")
+    ziprel = J(0, 1, "")
+
+    for (i = 1; i <= rows(srcs); i++) {
+        src = strtrim(srcs[i])
+        if (path_is_remote(src)) continue
+
+        resolved = resolve_local_file(src, root)
+        if (resolved == "") {
+            printf("{txt}note: resource not found, skipped: %s\n", src)
+            continue
+        }
+        kind = embed_kind(resolved)
+        if (kind == "") {
+            printf("{txt}note: unsupported resource type, skipped: %s\n", src)
+            continue
+        }
+
+        key = abs_path_key(resolved)
+        if (rows(copied_key) > 0) {
+            hit = selectindex(copied_key :== key)
+            if (length(hit) > 0) {
+                newref = copied_ref[hit[1]]
+                html = replace_path_refs(html, src, newref)
+                if (hasmd) md = replace_path_refs(md, src, newref)
+                continue
+            }
+        }
+
+        if (kind == "fig") {
+            dest_dir = figdir
+            relprefix = "./figures/"
+            zipfolder = "figures/"
+        }
+        else {
+            dest_dir = tabdir
+            relprefix = "./tables/"
+            zipfolder = "tables/"
+        }
+
+        // Already lives in the bundle folder: keep the original name, do not copy as _2
+        if (path_is_under(resolved, dest_dir)) {
+            base = pathbasename(resolved)
+            if (kind == "fig") {
+                if (sum(used_fig :== base) == 0) used_fig = used_fig \ base
+            }
+            else {
+                if (sum(used_tab :== base) == 0) used_tab = used_tab \ base
+            }
+            newref = relprefix + base
+            copied_key = copied_key \ key
+            copied_ref = copied_ref \ newref
+            ziprel = ziprel \ (zipfolder + base)
+            html = replace_path_refs(html, src, newref)
+            if (hasmd) md = replace_path_refs(md, src, newref)
+            if (kind == "tab" & (path_suffix_lower(resolved) == ".html" |
+                path_suffix_lower(resolved) == ".htm")) {
+                fix_table_override_css(resolved)
+                css_bases = copy_table_companion_css(resolved, resolved)
+                for (k = 1; k <= rows(css_bases); k++) {
+                    ziprel = ziprel \ (zipfolder + css_bases[k])
+                }
+            }
+            continue
+        }
+
+        base = pathbasename(resolved)
+        if (kind == "fig") {
+            base = unique_bundle_name(dest_dir, base, used_fig)
+            used_fig = used_fig \ base
+        }
+        else {
+            base = unique_bundle_name(dest_dir, base, used_tab)
+            used_tab = used_tab \ base
+        }
+        dest = pathjoin(dest_dir, base)
+        if (!paths_are_same(resolved, dest)) {
+            stata_copy_file(resolved, dest)
+        }
+        newref = relprefix + base
+        copied_key = copied_key \ key
+        copied_ref = copied_ref \ newref
+        dest_key = abs_path_key(dest)
+        if (dest_key != key) {
+            copied_key = copied_key \ dest_key
+            copied_ref = copied_ref \ newref
+        }
+        ziprel = ziprel \ (zipfolder + base)
+        html = replace_path_refs(html, src, newref)
+        if (hasmd) md = replace_path_refs(md, src, newref)
+        if (slash_norm_src(resolved) != slash_norm_src(src)) {
+            html = replace_path_refs(html, resolved, newref)
+            if (hasmd) md = replace_path_refs(md, resolved, newref)
+        }
+        if (kind == "tab" & (path_suffix_lower(dest) == ".html" |
+            path_suffix_lower(dest) == ".htm")) {
+            fix_table_override_css(dest)
+            css_bases = copy_table_companion_css(resolved, dest)
+            for (k = 1; k <= rows(css_bases); k++) {
+                ziprel = ziprel \ (zipfolder + css_bases[k])
+            }
+        }
+    }
+
+    mm_outsheet(htmlfile, html, "replace")
+    if (hasmd) mm_outsheet(mdfile, md, "replace")
+
+    if (rows(ziprel) > 0) ziprel = uniqrows(ziprel)
+    s = ""
+    for (j = 1; j <= rows(ziprel); j++) {
+        if (ziprel[j] == "") continue
+        s = s + (s == "" ? "" : " ") + char(34) + ziprel[j] + char(34)
+    }
+    st_local("bundle_zip_rel", s)
+}
+
+string colvector function keep_stata_code_lines(string colvector lines)
+{
+    // Keep Stata echoed commands (lines starting with . or >) and embed tags.
+    // Drop command output and other non-command lines.
+    n = rows(lines)
+    if (n == 0) return(lines)
+
+    work = J(n, 1, "")
+    for (i = 1; i <= n; i++) {
+        s = ustrltrim(lines[i])
+        changed = 1
+        while (changed) {
+            changed = 0
+            if (ustrpos(s, "{com}") == 1) {
+                s = ustrltrim(usubstr(s, 6, .))
+                changed = 1
+            }
+            else if (ustrpos(s, "{res}") == 1) {
+                s = ustrltrim(usubstr(s, 6, .))
+                changed = 1
+            }
+            else if (ustrpos(s, "{txt}") == 1) {
+                s = ustrltrim(usubstr(s, 6, .))
+                changed = 1
+            }
+        }
+        work[i] = s
+    }
+
+    keep = (usubstr(work, 1, 1) :== ".") :| (usubstr(work, 1, 1) :== ">")
+    keep = keep :| (ustrpos(work, "<iframe") :== 1) :| (ustrpos(work, "<img") :== 1)
+    // After display-tag replacement, keep narrative blocks (markers have no . prefix)
+    keep = keep :| (get_textcell_index(work) :> 0)
+    return(select(lines, keep))
+}
+
+void function rewrite_md_cleancode(string scalar ofi, string scalar tfi, real scalar replace)
+{
+    // Replace {ishere display ...} from the full log first, then drop output.
+    fcon = cat(ofi)
+    fcon = merge_html_vectorized(fcon)
+    fcon = drop_stata_log_header(fcon)
+    fcon = ishererep(fcon)
     fcon = merge_html_vectorized(fcon)
     fcon = clean_textcell_content(fcon)
-    
-    // 2b. 替换文本块中的 ishere display 占位符
     fcon = subisheredintxt(fcon)
-    
+    fcon = keep_stata_code_lines(fcon)
+    rewrite_md_finish(fcon, tfi, replace, 1)
+}
+
+void function rewrite_md(string scalar ofi, string scalar tfi, real scalar replace)
+{
+    fcon = cat(ofi)
+    fcon = merge_html_vectorized(fcon)
+    fcon = fence_stata_log_header(fcon)
+    fcon = ishererep(fcon)
+    fcon = merge_html_vectorized(fcon)
+    fcon = clean_textcell_content(fcon)
+    fcon = subisheredintxt(fcon)
+    rewrite_md_finish(fcon, tfi, replace, 0)
+}
+
+void function rewrite_md_finish(string colvector fcon, string scalar tfi, real scalar replace, real scalar strip_prompt)
+{
     // 3. 移除前缀
     prefixes = (">", "{com}", "{res}", "{txt}")
     fcon = remove_prefix_and_trim(fcon, prefixes)
+
+    // cleancode: splice "> " wraps back onto the ". command" they continue
+    if (strip_prompt) {
+        fcon = join_stata_cmd_continuations(fcon)
+    }
 
     flag = strpos(strtrim(substr(fcon, 2, .)), "ishere"):==1
     rem = strtrim(substr(fcon, strpos(fcon, "ishere"):+strlen("ishere")+1, .))
@@ -606,21 +1275,19 @@ void function rewrite_md(string scalar ofi, string scalar tfi, real scalar repla
     bad3 = subinstr((substr(fcon,2,.))," ","",.) :== "{sf}{uloff}"
     fcon = select(fcon, !(bad1 :| bad2 :| bad3))
     
-    // 5c. 路径替换（仅对 <iframe / <img 行）
-    if (strlen(rpath) > 0) {
-        fcon_trim = ustrltrim(fcon)
-        is_embed = (substr(fcon_trim, 1, strlen("<iframe")) :== "<iframe") :| ///
-                   (substr(fcon_trim, 1, strlen("<img")) :== "<img")
-        if (sum(is_embed) > 0) {
-            fcon[selectindex(is_embed)] = subinstr(fcon[selectindex(is_embed)], "\\", "/", .)
-            fcon[selectindex(is_embed)] = subinstr(fcon[selectindex(is_embed)], rpath, llp, .)
-        }
-    }
     // . ishere # hearder -> # header
     fcon = get_dot_header(fcon)
+
+    // cleancode: drop the Stata prompt so the fence looks like a do-file
+    if (strip_prompt) {
+        fcon = strip_stata_cmd_prompt(fcon)
+    }
     
     // fcon= remove_img_iframe(fcon)
-    // 6. 【核心】动态修复：直到所有 # 行都在代码块外
+    // Open a Stata fence after the ```text log header (or at file start)
+    // so users do not need ishere / ishere ``` as code-block markers.
+    fcon = ensure_stata_fence_open(fcon)
+    // 6. 【核心】动态修复：标题 / 图 / 表 / 叙事块外的代码自动加围栏
     fcon = insert_backtick_before_hash(fcon)
     fcon = add_two_blank_lines(fcon)
     
@@ -629,32 +1296,13 @@ void function rewrite_md(string scalar ofi, string scalar tfi, real scalar repla
     fcon = select(fcon, !(fconlen :< 2*(strlen("```")+2)))
     
     // 将md源代码插入到<iframe ></iframe>位置
-    // 首先使用正则表达式找到 任意空格<iframe任意空格*.md任意空格></iframe>任意空格 的行
-    regex = `"(\s*<iframe\s*.*\.md\s*></iframe>\s*)"'
-    flag = selectindex(regexm(fcon, regex))
-    fconnew = fcon
-    if (sum(flag) > 0) {
-        if (flag[i]<length(fcon)){
-            fconnew = fcon[1::(flag[1]-1)]
-        }
-        else{
-            fconnew = J(0,1,"")
-        }
-        for(i=1; i<=length(flag); i++) {
-            mdtext = extractmdtable(fcon[flag[i]])
-            fconnew = fconnew \ mdtext 
-            if((flag[i]<length(fcon)) & (i<length(flag))) {
-              fconnew = fconnew \ fcon[(flag[i]+1)::(flag[i+1]-1)]
-             }
-             else if(((flag[i]<length(fcon)) & (i==length(flag)))) {
-                fconnew = fconnew \ fcon[(flag[i]+1)::length(fcon)]
-             }
-        }
-    }
-    fcon = fconnew
+    fcon = splice_md_iframes(fcon)
+
+    // Opening Stata code fences: ```  →  ```stata  (keep ```text etc.)
+    fcon = tag_stata_opening_fences(fcon)
+    fcon = slash_normalize_embed_paths(fcon)
 
     // 8. 输出
-    //printf(strofreal(replace))
     if (replace == 0) {
         mm_outsheet(tfi, fcon)
     } else {
@@ -663,12 +1311,12 @@ void function rewrite_md(string scalar ofi, string scalar tfi, real scalar repla
 }
 
 
-
-
-void function rewrite_md2(string scalar ofi, string scalar tfi, real scalar replace, string scalar rpath, string scalar llp)
+void function rewrite_md2(string scalar ofi, string scalar tfi, real scalar replace)
 {
     // 1. 读取文件
     fcon = cat(ofi)
+    fcon = merge_html_vectorized(fcon)
+    fcon = drop_stata_log_header(fcon)
     fcon = ishererep(fcon)
     // 2. 合并 HTML 行
     fcon = merge_html_vectorized(fcon)
@@ -701,47 +1349,10 @@ void function rewrite_md2(string scalar ofi, string scalar tfi, real scalar repl
     }
 
     // 将md源代码插入到<iframe ></iframe>位置
-    // 首先使用正则表达式找到 任意空格<iframe任意空格*.md任意空格></iframe>任意空格 的行
-    regex = `"(\s*<iframe\s*.*\.md\s*></iframe>\s*)"'
-    flag = selectindex(regexm(fcon, regex))
-    fconnew = fcon
-    if (sum(flag) > 0) {
-        if (flag[1]<length(fcon)){
-            fconnew = fcon[1::(flag[1]-1)]
-        }
-        else{
-            fconnew = J(0,1,"")
-        }
-        for(i=1; i<=length(flag); i++) {
-            mdtext = extractmdtable(fcon[flag[i]])
-            fconnew = fconnew \ mdtext 
-            if((flag[i]<length(fcon)) & (i<length(flag))) {
-              if (flag[i]+1 !=flag[i+1]){
-                fconnew = fconnew \ fcon[(flag[i]+1)::(flag[i+1]-1)]
-              }
-              else{
-                fconnew = fconnew \ " "
-              }
-             }
-             else if(((flag[i]<length(fcon)) & (i==length(flag)))) {
-                fconnew = fconnew \ fcon[(flag[i]+1)::length(fcon)]
-             }
-        }
-    }
-    fcon = fconnew
+    fcon = splice_md_iframes(fcon)
     
     
-    // 4b. 路径替换（仅对 <iframe / <img 行）
-    if (strlen(rpath) > 0) {
-        fcon_trim = ustrltrim(fcon)
-        is_embed = (substr(fcon_trim, 1, strlen("<iframe")) :== "<iframe") :| ///
-                   (substr(fcon_trim, 1, strlen("<img")) :== "<img")
-        if (sum(is_embed) > 0) {
-            fcon[selectindex(is_embed)] = subinstr(fcon[selectindex(is_embed)], "\\", "/", .)
-            fcon[selectindex(is_embed)] = subinstr(fcon[selectindex(is_embed)], rpath, llp, .)
-        }
-    }
-    
+    fcon = slash_normalize_embed_paths(fcon)
     // 8. 输出
     if (replace == 0) {
         mm_outsheet(tfi, fcon)
@@ -750,19 +1361,41 @@ void function rewrite_md2(string scalar ofi, string scalar tfi, real scalar repl
     }
 }
 
-string colvector extractmdtable(string scalar line){
-    line2 = usubinstr(line, "<iframe", "", 1)
-    line2 = usubinstr(line2, "</iframe>", "", 1)
-    line2 = strtrim(line2)
-    // 去掉 iframe 开标签的关闭符 ">"，格式为 <iframe filepath >
-    if (substr(line2, strlen(line2), 1) == ">") {
-        line2 = strtrim(substr(line2, 1, strlen(line2)-1))
+string colvector splice_md_iframes(string colvector fcon)
+{
+    // Replace <iframe path.md ></iframe> with the file contents.
+    // Keep every line before the first iframe (flag[1] > 1), not only when
+    // the iframe is not the last line — clean mode often ends with the table.
+    regex = `"(\s*<iframe\s*.*\.md\s*></iframe>\s*)"'
+    flag = selectindex(regexm(fcon, regex))
+    if (length(flag) == 0) return(fcon)
+    n = length(fcon)
+    nflag = length(flag)
+    if (flag[1] > 1) fconnew = fcon[1::(flag[1]-1)]
+    else fconnew = J(0, 1, "")
+    for (i = 1; i <= nflag; i++) {
+        fconnew = fconnew \ extractmdtable(fcon[flag[i]])
+        if (i < nflag) {
+            a = flag[i] + 1
+            b = flag[i + 1] - 1
+            if (a <= b) fconnew = fconnew \ fcon[a::b]
+            else fconnew = fconnew \ " "
+        }
+        else if (flag[i] < n) {
+            fconnew = fconnew \ fcon[(flag[i]+1)::n]
+        }
     }
-    if (!fileexists(line2)) {
-        printf("{err}extractmdtable: file not exist: %s\n", line2)
+    return(fconnew)
+}
+
+string colvector extractmdtable(string scalar line){
+    src = iframe_bare_path(line)
+    resolved = resolve_local_file(src, tohtml_get_resource_root())
+    if (resolved == "") {
+        printf("{err}extractmdtable: file not exist: %s\n", src)
         return(J(0, 1, ""))
     }
-    mdtext = cat(line2)
+    mdtext = cat(resolved)
     flag = 1
     pos = 1
     maxn = length(mdtext)
@@ -784,16 +1417,844 @@ string colvector extractmdtable(string scalar line){
     return(mdtext)
 }
 
+string scalar iframe_bare_path(string scalar line)
+{
+    line2 = usubinstr(line, "<iframe", "", 1)
+    line2 = usubinstr(line2, "</iframe>", "", 1)
+    line2 = strtrim(line2)
+    if (strlen(line2) > 0) {
+        if (substr(line2, strlen(line2), 1) == ">") {
+            line2 = strtrim(substr(line2, 1, strlen(line2)-1))
+        }
+    }
+    // Markdown-table markers are "<iframe path.md></iframe>". Keep only
+    // the path token so data-tohtml-title= and other attributes are ignored.
+    if (ustrregexm(ustrltrim(line2), `"^([^ \t>]+)"')) {
+        return(ustrregexs(1))
+    }
+    return(line2)
+}
+
+string scalar html_data_attr(string scalar tag, string scalar name)
+{
+    if (name == "") return("")
+    if (ustrregexm(tag, "(?i)" + name + `" *= *"([^"]*)""')) return(ustrregexs(1))
+    if (ustrregexm(tag, "(?i)" + name + `" *= *'([^']*)'"')) return(ustrregexs(1))
+    return("")
+}
+
+string scalar strip_html_attr(string scalar tag, string scalar name)
+{
+    if (name == "") return(tag)
+    tag = ustrregexra(tag, "(?i)[ \t]+" + name + `" *= *"[^"]*""', "")
+    tag = ustrregexra(tag, "(?i)[ \t]+" + name + `" *= *'[^']*'"', "")
+    return(tag)
+}
+
+string colvector wrap_captioned_block(string scalar kind, string scalar cap, string colvector body)
+{
+    string scalar q, open, close, capel, cls, capcls
+    if (ustrtrim(cap) == "") return(body)
+    q = char(34)
+    if (kind == "figure") {
+        cls = "tohtml-figure"
+        capcls = "tohtml-fig-title"
+    }
+    else {
+        cls = "tohtml-table-block"
+        capcls = "tohtml-table-title"
+    }
+    open = "<figure class=" + q + cls + q + ">"
+    capel = "<figcaption class=" + q + capcls + q + ">" + cap + "</figcaption>"
+    close = "</figure>"
+    if (kind == "figure") {
+        return((open) \ body \ (capel) \ (close))
+    }
+    return((open) \ (capel) \ body \ (close))
+}
+
+string colvector wrap_img_caption(string scalar line, real scalar convert_img)
+{
+    string scalar cap, img
+    cap = html_data_attr(line, "data-tohtml-title")
+    img = strip_html_attr(line, "data-tohtml-title")
+    if (convert_img) {
+        img = rewrite_md_bang_images(html_img_to_md_image(img))
+    }
+    if (ustrtrim(cap) == "") return((img))
+    if (convert_img) {
+        return(wrap_captioned_block("figure", cap, ("" \ img \ "")))
+    }
+    return(wrap_captioned_block("figure", cap, (img)))
+}
+
+real scalar img_ext_embeddable(string scalar src)
+{
+    ext = path_suffix_lower(src)
+    if (ext == ".png" | ext == ".jpg" | ext == ".jpeg") return(1)
+    if (ext == ".gif" | ext == ".tif" | ext == ".tiff") return(1)
+    return(0)
+}
+
+string scalar slash_norm_src(string scalar src)
+{
+    return(subinstr(strtrim(src), "\", "/", .))
+}
+
+string scalar src_for_default(string scalar src, string scalar basedir)
+{
+    // Keep absolute paths. Keep relative paths if they resolve from basedir
+    // (the report HTML folder). Otherwise use the file's absolute path.
+    src0 = slash_norm_src(src)
+    basedir0 = basedir
+    if (src0 == "" | path_is_remote(src0)) return(src0)
+    resolved = resolve_local_file(src0, basedir0)
+    if (pathisabs(src0)) return(src0)
+    if (basedir0 == "") basedir0 = pwd()
+    if (!pathisabs(basedir0)) basedir0 = pathresolve(pwd(), basedir0)
+    cand = pathresolve(basedir0, src0)
+    if (fileexists(cand)) return(src0)
+    if (resolved != "") return(slash_norm_src(resolved))
+    return(src0)
+}
+
+string colvector slash_normalize_embed_paths(string colvector lines)
+{
+    infence = 0
+    for (i = 1; i <= rows(lines); i++) {
+        line = lines[i]
+        if (is_md_fence_line(line)) {
+            infence = !infence
+            continue
+        }
+        if (infence) continue
+        srcs = extract_src_attrs(line)
+        if (rows(srcs) > 0) {
+            for (j = 1; j <= rows(srcs); j++) {
+                src = srcs[j]
+                if (src == "" | path_is_remote(src)) continue
+                news = slash_norm_src(src)
+                if (news != src) line = subinstr(line, src, news, .)
+            }
+        }
+        else {
+            t = ustrltrim(line)
+            if (usubstr(t, 1, 7) == "<iframe") {
+                bp = iframe_bare_path(line)
+                if (bp != "" & !path_is_remote(bp)) {
+                    news = slash_norm_src(bp)
+                    if (news != bp) line = subinstr(line, bp, news, 1)
+                }
+            }
+        }
+        mdsrcs = extract_md_images((line \ J(0, 1, "")))
+        for (j = 1; j <= rows(mdsrcs); j++) {
+            src = mdsrcs[j]
+            if (src == "" | path_is_remote(src)) continue
+            news = slash_norm_src(src)
+            if (news != src) line = subinstr(line, src, news, .)
+        }
+        lines[i] = line
+    }
+    return(lines)
+}
+
+string scalar rewrite_md_bang_images(string scalar line)
+{
+    // Remote ![](http...) must not go through embedimage (fetch can fail).
+    // Local paths are left as written (absolute or relative); Windows
+    // absolute paths convert to Base64 under markdown, embedimage.
+    s = line
+    out = ""
+    for (k = 1; k <= 40; k++) {
+        if (!ustrregexm(s, `"^(.*?)(!\[[^\]]*\]\()([^)]+)(\))(.*)"')) {
+            out = out + s
+            break
+        }
+        pre = ustrregexs(1)
+        open = ustrregexs(2)
+        src = ustrregexs(3)
+        close = ustrregexs(4)
+        post = ustrregexs(5)
+        out = out + pre
+        if (path_is_remote(src)) {
+            q = char(34)
+            out = out + "<img src="http://fmwww.bc.edu/repec/bocode/t/+&#32;q&#32;+&#32;src&#32;+&#32;q&#32;+">"
+        }
+        else if (img_ext_embeddable(src)) {
+            out = out + open + slash_norm_src(src) + close
+        }
+        else {
+            out = out + open + src + close
+        }
+        s = post
+    }
+    return(out)
+}
+
+string scalar html_img_to_md_image(string scalar line)
+{
+    out = ""
+    rest = line
+    for (k = 1; k <= 30; k++) {
+        low = ustrlower(rest)
+        p = ustrpos(low, "<img")
+        if (p == 0) {
+            out = out + rest
+            break
+        }
+        out = out + usubstr(rest, 1, p - 1)
+        rest = usubstr(rest, p, .)
+        gt = ustrpos(rest, ">")
+        if (gt == 0) {
+            out = out + rest
+            rest = ""
+            break
+        }
+        tag = usubstr(rest, 1, gt)
+        rest = usubstr(rest, gt + 1, .)
+        srcs = extract_src_attrs(tag)
+        src = ""
+        if (rows(srcs) > 0) src = srcs[1]
+        if (src != "" & img_ext_embeddable(src) & !path_is_remote(src)) {
+            out = out + "![](" + slash_norm_src(src) + ")"
+        }
+        else {
+            out = out + tag
+        }
+    }
+    return(out)
+}
+
+string colvector split_newlines(string scalar s)
+{
+    s = usubinstr(s, char(13) + char(10), char(10), .)
+    s = usubinstr(s, char(13), char(10), .)
+    if (s == "") return(J(0, 1, ""))
+    if (usubstr(s, ustrlen(s), 1) == char(10)) {
+        s = usubstr(s, 1, ustrlen(s) - 1)
+    }
+    if (s == "") return(J(0, 1, ""))
+    nlf = ustrlen(s) - ustrlen(usubinstr(s, char(10), "", .))
+    n = nlf + 1
+    out = J(n, 1, "")
+    rest = s
+    for (i = 1; i <= n; i++) {
+        p = ustrpos(rest, char(10))
+        if (p == 0) {
+            out[i] = rest
+            break
+        }
+        out[i] = usubstr(rest, 1, p - 1)
+        rest = usubstr(rest, p + 1, .)
+    }
+    return(out)
+}
+
+void function collect_embed_style(string scalar st)
+{
+    external string scalar tohtml_embed_css
+    st = ustrtrim(st)
+    if (st == "") return
+    // iframe-document rules must not restyle the report page
+    st = ustrregexra(st, `"(?i)html\s*,\s*body\s*\{[^}]*\}"', "")
+    st = ustrtrim(st)
+    if (st == "") return
+    if (tohtml_embed_css == "") {
+        tohtml_embed_css = st
+        return
+    }
+    if (ustrpos(tohtml_embed_css, st) == 0) {
+        tohtml_embed_css = tohtml_embed_css + char(10) + st
+    }
+}
+
+string scalar join_lines(string colvector lines)
+{
+    s = ""
+    for (i = 1; i <= rows(lines); i++) {
+        s = s + lines[i] + char(10)
+    }
+    return(s)
+}
+
+string colvector extract_link_css_hrefs(string scalar blob)
+{
+    out = J(0, 1, "")
+    s = blob
+    for (k = 1; k <= 30; k++) {
+        if (ustrregexm(s, "(?is)<link\b[^>]*>")) {
+            tag = ustrregexs(0)
+            s = usubinstr(s, tag, "", 1)
+            tlow = ustrlower(tag)
+            if (ustrpos(tlow, "stylesheet") == 0 & ustrpos(tlow, "text/css") == 0) continue
+            href = ""
+            if (ustrregexm(tag, `"href *= *"([^"]+)""')) href = ustrregexs(1)
+            else if (ustrregexm(tag, `"href *= *'([^']+)'"')) href = ustrregexs(1)
+            if (href != "") out = out \ href
+        }
+        else break
+    }
+    return(out)
+}
+
+string colvector companion_css_files(string scalar htmlfile)
+{
+    out = J(0, 1, "")
+    if (!fileexists(htmlfile)) return(out)
+    dir = pathgetparent(htmlfile)
+    if (dir == "") dir = pwd()
+    blob = join_lines(cat(htmlfile))
+    hrefs = extract_link_css_hrefs(blob)
+    for (i = 1; i <= rows(hrefs); i++) {
+        f = strtrim(hrefs[i])
+        if (f == "" | path_is_remote(f)) continue
+        if (!pathisabs(f)) f = pathresolve(dir, f)
+        if (fileexists(f)) out = out \ f
+    }
+    sib = pathjoin(dir, pathrmsuffix(pathbasename(htmlfile)) + ".css")
+    if (fileexists(sib)) out = out \ sib
+    if (rows(out) == 0) {
+        g = guess_companion_css(htmlfile, dir)
+        if (g != "") out = out \ g
+    }
+    return(unique_abs_paths(out))
+}
+
+string colvector unique_abs_paths(string colvector files)
+{
+    if (rows(files) == 0) return(files)
+    keep = J(rows(files), 1, 0)
+    keys = J(0, 1, "")
+    for (i = 1; i <= rows(files); i++) {
+        if (files[i] == "") continue
+        k = abs_path_key(files[i])
+        if (k == "") k = slash_norm_src(files[i])
+        if (rows(keys) > 0) {
+            if (sum(keys :== k) > 0) continue
+        }
+        keys = keys \ k
+        keep[i] = 1
+    }
+    if (sum(keep) == 0) return(J(0, 1, ""))
+    return(select(files, keep))
+}
+
+string scalar first_table_class(string scalar blob)
+{
+    cls = ""
+    if (ustrregexm(blob, `"(?is)<table\b[^>]*class *= *"([^"]+)""')) cls = ustrregexs(1)
+    else if (ustrregexm(blob, `"(?is)<table\b[^>]*class *= *'([^']+)'"')) cls = ustrregexs(1)
+    cls = strtrim(cls)
+    if (cls == "") return("")
+    p = ustrpos(cls, " ")
+    if (p > 0) cls = usubstr(cls, 1, p - 1)
+    return(cls)
+}
+
+real scalar reserved_css_name(string scalar base)
+{
+    b = ustrlower(pathbasename(base))
+    return(b == "tohtml.css" | b == "table-override.css")
+}
+
+real scalar css_looks_collect(string scalar cssfile)
+{
+    if (!fileexists(cssfile)) return(0)
+    raw = cat(cssfile)
+    if (rows(raw) == 0) return(0)
+    blob = join_lines(raw)
+    return(ustrpos(blob, "border-collapse") > 0 | ustrpos(blob, ".Table") > 0)
+}
+
+real scalar css_mentions_table_class(string scalar cssfile, string scalar cls)
+{
+    if (cls == "" | !fileexists(cssfile)) return(0)
+    blob = join_lines(cat(cssfile))
+    return(ustrpos(blob, "." + cls + "_") > 0 | ustrpos(blob, "." + cls + "{") > 0 | ustrpos(blob, "." + cls + " ") > 0)
+}
+
+string scalar guess_companion_css(string scalar htmlfile, string scalar hdir)
+{
+    names = dir(hdir, "files", "*.css")
+    if (rows(names) == 0) return("")
+    blob = ""
+    if (fileexists(htmlfile)) blob = join_lines(cat(htmlfile))
+    cls = first_table_class(blob)
+    unpaired = J(0, 1, "")
+    classhit = J(0, 1, "")
+    for (i = 1; i <= rows(names); i++) {
+        base = names[i]
+        if (reserved_css_name(base)) continue
+        full = pathjoin(hdir, base)
+        if (!css_looks_collect(full)) continue
+        stem = pathrmsuffix(base)
+        if (fileexists(pathjoin(hdir, stem + ".html")) | fileexists(pathjoin(hdir, stem + ".htm"))) continue
+        unpaired = unpaired \ full
+        if (css_mentions_table_class(full, cls)) classhit = classhit \ full
+    }
+    if (rows(classhit) == 1) return(classhit[1])
+    if (rows(unpaired) == 1) return(unpaired[1])
+    return("")
+}
+
+void function collect_embed_css_file(string scalar cssfile)
+{
+    if (!fileexists(cssfile)) return
+    css = cat(cssfile)
+    if (rows(css) == 0) return
+    block = "<style>" + char(10) + join_lines(css) + "</style>"
+    collect_embed_style(block)
+}
+
+string colvector copy_table_companion_css(string scalar src_html, string scalar dest_html)
+{
+    // Follow <link rel=stylesheet> in the source table, same-name CSS,
+    // and a unique unpaired collect CSS. Copy them next to dest and
+    // rewrite hrefs so zip/bundle iframes keep collect/tableonly styles.
+    csss = companion_css_files(src_html)
+    dest_dir = pathgetparent(dest_html)
+    if (dest_dir == "") dest_dir = pwd()
+    dest_lines = cat(dest_html)
+    used = J(0, 1, "")
+    dest_bases = J(0, 1, "")
+    seen_key = J(0, 1, "")
+    for (i = 1; i <= rows(csss); i++) {
+        key = abs_path_key(csss[i])
+        if (key != "" & rows(seen_key) > 0) {
+            if (sum(seen_key :== key) > 0) continue
+        }
+        if (key != "") seen_key = seen_key \ key
+        oldbase = pathbasename(csss[i])
+        base = unique_bundle_name(dest_dir, oldbase, used)
+        used = used \ base
+        dest_css = pathjoin(dest_dir, base)
+        if (abs_path_key(csss[i]) != abs_path_key(dest_css)) {
+            stata_copy_file(csss[i], dest_css)
+        }
+        dest_lines = replace_path_refs(dest_lines, csss[i], base)
+        dest_lines = replace_path_refs(dest_lines, slash_norm_src(csss[i]), base)
+        if (oldbase != base) {
+            dest_lines = replace_path_refs(dest_lines, oldbase, base)
+        }
+        dest_bases = dest_bases \ base
+    }
+    mm_outsheet(dest_html, dest_lines, "replace")
+    ensure_table_css_link(dest_html)
+    return(dest_bases)
+}
+
+string scalar table_css_link_tag(string scalar href)
+{
+    q = char(34)
+    return("<link rel=" + q + "stylesheet" + q + " type=" + q + "text/css" + q + " href=" + q + href + q + ">")
+}
+
+real scalar is_stylesheet_link_line(string scalar line)
+{
+    t = ustrlower(ustrtrim(line))
+    if (ustrpos(t, "<link") != 1) return(0)
+    if (ustrpos(t, "stylesheet") > 0) return(1)
+    if (ustrpos(t, "text/css") > 0) return(1)
+    return(0)
+}
+
+string colvector drop_stylesheet_link_lines(string colvector lines)
+{
+    if (rows(lines) == 0) return(lines)
+    keep = J(rows(lines), 1, 1)
+    for (i = 1; i <= rows(lines); i++) {
+        if (is_stylesheet_link_line(lines[i])) keep[i] = 0
+    }
+    if (sum(keep) == 0) return(J(0, 1, ""))
+    return(select(lines, keep))
+}
+
+real scalar lines_already_link_css(string colvector lines, string scalar cssbase)
+{
+    hrefs = extract_link_css_hrefs(join_lines(lines))
+    want = ustrlower(subinstr(cssbase, "\", "/", .))
+    for (i = 1; i <= rows(hrefs); i++) {
+        got = ustrlower(subinstr(pathbasename(hrefs[i]), "\", "/", .))
+        if (got == want) return(1)
+    }
+    return(0)
+}
+
+string colvector attach_table_css_link(string colvector lines, string scalar href)
+{
+    blob = ustrlower(join_lines(lines))
+    link = table_css_link_tag(href)
+    has_html = ustrpos(blob, "<html") > 0
+    has_head_close = ustrpos(blob, "</head>") > 0
+
+    if (has_head_close) {
+        for (i = 1; i <= rows(lines); i++) {
+            if (ustrpos(ustrlower(lines[i]), "</head>") > 0) {
+                if (i == 1) return(link \ lines)
+                return(lines[|1 \ i-1|] \ link \ lines[|i \ rows(lines)|])
+            }
+        }
+    }
+    if (has_html) {
+        return(lines \ link)
+    }
+
+    q = char(34)
+    lines = drop_stylesheet_link_lines(lines)
+    open = "<!DOCTYPE html>" \ "<html>" \ "<head>" \
+        "<meta charset=" + q + "utf-8" + q + ">" \ link \ "</head>" \ "<body>"
+    return(open \ lines \ "</body>" \ "</html>")
+}
+
+void function ensure_table_css_link(string scalar htmlfile)
+{
+    // collect export, tableonly writes a <table> fragment plus basename.css
+    // and no <link>. Wrap the fragment and put the stylesheet in <head>
+    // so an iframe (default / zip) can apply the style.
+    if (!fileexists(htmlfile)) return
+    csss = companion_css_files(htmlfile)
+    if (rows(csss) == 0) return
+
+    lines = cat(htmlfile)
+    hdir = pathgetparent(htmlfile)
+    if (hdir == "") hdir = pwd()
+    sib = pathjoin(hdir, pathrmsuffix(pathbasename(htmlfile)) + ".css")
+    csspath = csss[1]
+    for (i = 1; i <= rows(csss); i++) {
+        if (abs_path_key(csss[i]) == abs_path_key(sib)) {
+            csspath = csss[i]
+            break
+        }
+    }
+
+    href = path_rel_to_dir(csspath, hdir)
+    if (href == "") href = pathbasename(csspath)
+
+    blob = ustrlower(join_lines(lines))
+    if (ustrpos(blob, "<style") > 0 &
+        (ustrpos(blob, ".table") > 0 | ustrpos(blob, ".texout-table") > 0 |
+         ustrpos(blob, "border-top-style") > 0)) return
+    already = lines_already_link_css(lines, pathbasename(csspath))
+    if (already & (ustrpos(blob, "<html") > 0 | ustrpos(blob, "</head>") > 0)) return
+
+    lines = attach_table_css_link(lines, href)
+    mm_outsheet(htmlfile, lines, "replace")
+}
+
+string colvector extract_html_table_fragment(string scalar htmlfile)
+{
+    // Body markup only. CSS braces in <style> break Stata markdown; styles
+    // are collected and injected into the HTML <head> after conversion.
+    raw = cat(htmlfile)
+    if (rows(raw) == 0) return(J(0, 1, ""))
+
+    full = ""
+    for (i = 1; i <= rows(raw); i++) {
+        full = full + raw[i] + char(10)
+    }
+
+    for (k = 1; k <= 20; k++) {
+        if (ustrregexm(full, "(?is)<script\b[^>]*>.*?</script>")) {
+            full = usubinstr(full, ustrregexs(0), "", 1)
+        }
+        else break
+    }
+
+    styles = ""
+    work = full
+    for (k = 1; k <= 20; k++) {
+        if (ustrregexm(work, "(?is)<style\b[^>]*>.*?</style>")) {
+            styles = styles + ustrregexs(0) + char(10)
+            work = usubinstr(work, ustrregexs(0), "", 1)
+        }
+        else break
+    }
+
+    body = ""
+    if (ustrregexm(full, "(?is)<body\b[^>]*>(.*)</body>")) {
+        body = ustrregexs(1)
+        for (k = 1; k <= 20; k++) {
+            if (ustrregexm(body, "(?is)<style\b[^>]*>.*?</style>")) {
+                styles = styles + ustrregexs(0) + char(10)
+                body = usubinstr(body, ustrregexs(0), "", 1)
+            }
+            else break
+        }
+        for (k = 1; k <= 20; k++) {
+            if (ustrregexm(body, "(?is)<script\b[^>]*>.*?</script>")) {
+                body = usubinstr(body, ustrregexs(0), "", 1)
+            }
+            else break
+        }
+    }
+    else {
+        body = work
+    }
+
+    collect_embed_style(styles)
+    cssfiles = companion_css_files(htmlfile)
+    for (i = 1; i <= rows(cssfiles); i++) {
+        collect_embed_css_file(cssfiles[i])
+    }
+    body = ustrtrim(body)
+    for (k = 1; k <= 20; k++) {
+        if (ustrregexm(body, "(?is)<link\b[^>]*>")) {
+            body = usubinstr(body, ustrregexs(0), "", 1)
+        }
+        else break
+    }
+    body = ustrtrim(body)
+    if (body == "") return(J(0, 1, ""))
+    wrapped = "<div class=" + char(34) + "tohtml-embedded-table" + char(34) + ">" + char(10) + body + char(10) + "</div>"
+    return(split_newlines(wrapped))
+}
+
+string colvector inline_iframe_tables(string colvector lines, string scalar mdfile, real scalar convert_img)
+{
+    root = pathgetparent(mdfile)
+    if (root == "") root = pwd()
+    out = J(0, 1, "")
+    infence = 0
+    for (i = 1; i <= rows(lines); i++) {
+        line = lines[i]
+        if (is_md_fence_line(line)) {
+            infence = !infence
+            out = out \ line
+            continue
+        }
+        if (infence) {
+            out = out \ line
+            continue
+        }
+        t = ustrltrim(line)
+        if (usubstr(t, 1, 7) != "<iframe") {
+            out = out \ wrap_img_caption(line, convert_img)
+            continue
+        }
+        cap = html_data_attr(line, "data-tohtml-title")
+        srcs = extract_src_attrs(line)
+        src = ""
+        if (rows(srcs) > 0) src = srcs[1]
+        else src = iframe_bare_path(line)
+        if (src == "" | path_is_remote(src)) {
+            out = out \ line
+            continue
+        }
+        ext = path_suffix_lower(src)
+        resolved = resolve_local_file(src, root)
+        if (resolved == "") {
+            printf("{txt}note: table file not found, iframe kept: %s\n", src)
+            out = out \ line
+            continue
+        }
+        if (ext == ".md") {
+            frag = cat(resolved)
+        }
+        else if (ext == ".html" | ext == ".htm") {
+            frag = extract_html_table_fragment(resolved)
+        }
+        else {
+            out = out \ line
+            continue
+        }
+        if (rows(frag) == 0) {
+            printf("{txt}note: empty table file, iframe kept: %s\n", src)
+            out = out \ line
+            continue
+        }
+        frag = select(frag, strtrim(frag) :!= "")
+        if (ext == ".md" & ustrtrim(cap) != "") {
+            q = char(34)
+            capel = "<p class=" + q + "tohtml-table-title" + q + ">" + cap + "</p>"
+            out = out \ "" \ capel \ "" \ frag \ ""
+        }
+        else {
+            out = out \ "" \ wrap_captioned_block("table", cap, frag) \ ""
+        }
+    }
+    return(out)
+}
+
+void function tohtml_inline_tables(string scalar mdfile, real scalar convert_img)
+{
+    external string scalar tohtml_embed_css
+    if (!fileexists(mdfile)) {
+        errprintf("tohtml: Markdown file not found: %s\n", mdfile)
+        exit(601)
+    }
+    tohtml_embed_css = ""
+    lines = cat(mdfile)
+    lines = inline_iframe_tables(lines, mdfile, convert_img)
+    mm_outsheet(mdfile, lines, "replace")
+}
+
+void function tohtml_prepare_embed(string scalar mdfile)
+{
+    tohtml_inline_tables(mdfile, 1)
+}
+
+void function inject_embed_table_styles(string scalar htmlfile)
+{
+    external string scalar tohtml_embed_css
+    if (tohtml_embed_css == "") return
+    lines = cat(htmlfile)
+    if (rows(lines) == 0) return
+
+    csslines = split_newlines(tohtml_embed_css)
+    idx = selectindex(ustrpos(lines, "</head>") :> 0)
+    if (length(idx) > 0) {
+        i = idx[1]
+        if (i > 1) {
+            lines = lines[|1 \ i-1|] \ csslines \ lines[|i \ rows(lines)|]
+        }
+        else {
+            lines = csslines \ lines
+        }
+    }
+    else {
+        lines = csslines \ lines
+    }
+    mm_outsheet(htmlfile, lines, "replace")
+}
+
+string scalar normalize_table_css_size(string scalar raw, string scalar def)
+{
+    string scalar s, sl
+    s = ustrtrim(raw)
+    if (s == "") return(def)
+    sl = ustrlower(s)
+    if (sl == "none" | sl == "off" | sl == ".") return("none")
+    if (ustrregexm(s, "[;{}<>" + char(34) + char(39) + "]")) return(def)
+    if (ustrregexm(s, "^[0-9]+(\.[0-9]+)?$")) return(s + "px")
+    return(s)
+}
+
+void function inject_table_scroll_css(string scalar htmlfile, string scalar maxw, string scalar maxh)
+{
+    string scalar css, q, ox, oy
+    string colvector lines, csslines
+
+    maxw = normalize_table_css_size(maxw, "100%")
+    maxh = normalize_table_css_size(maxh, "80vh")
+    if (maxw == "none") ox = "visible"
+    else ox = "auto"
+    if (maxh == "none") oy = "visible"
+    else oy = "auto"
+    q = char(34)
+    css = "<style id=" + q + "tohtml-table-scroll" + q + ">" + char(10)
+    css = css + ".tohtml-embedded-table {" + char(10)
+    css = css + "  overflow-x: " + ox + " !important;" + char(10)
+    css = css + "  overflow-y: " + oy + " !important;" + char(10)
+    css = css + "  width: max-content !important;" + char(10)
+    css = css + "  max-width: " + maxw + " !important;" + char(10)
+    css = css + "  max-height: " + maxh + " !important;" + char(10)
+    css = css + "  -webkit-overflow-scrolling: touch;" + char(10)
+    css = css + "}" + char(10)
+    css = css + ".tohtml-embedded-table table," + char(10)
+    css = css + ".tohtml-embedded-table .texout-table {" + char(10)
+    css = css + "  max-width: none !important;" + char(10)
+    css = css + "  width: max-content;" + char(10)
+    css = css + "}" + char(10)
+    css = css + ".tohtml-embedded-table .texout-table-wrap {" + char(10)
+    css = css + "  overflow: visible !important;" + char(10)
+    css = css + "  width: max-content;" + char(10)
+    css = css + "  max-width: none;" + char(10)
+    css = css + "}" + char(10)
+    css = css + "</style>"
+
+    lines = cat(htmlfile)
+    if (rows(lines) == 0) return
+    // Stata markdown has no </head>; a leading <style> would lose to
+    // the later ./css/tohtml.css link. Append so tabwidth/tabheight win.
+    csslines = split_newlines(css)
+    lines = lines \ csslines
+    mm_outsheet(htmlfile, lines, "replace")
+}
+
+void function tohtml_fix_default_refs(string scalar reportfile, string scalar basedir)
+{
+    // Default (non-embed, non-zip) insertion: keep absolute or relative src
+    // as written when it works from the report HTML folder. If a relative
+    // iframe/img path does not resolve there, rewrite it to the file's
+    // absolute path. Attach collect-export CSS on table HTML files.
+    if (!fileexists(reportfile)) {
+        cand = pathjoin(pwd(), reportfile)
+        if (fileexists(cand)) reportfile = cand
+    }
+    if (!fileexists(reportfile)) return
+    if (!pathisabs(reportfile)) reportfile = pathresolve(pwd(), reportfile)
+    if (basedir == "") basedir = pathgetparent(reportfile)
+    if (basedir == "") basedir = pwd()
+    if (!pathisabs(basedir)) basedir = pathresolve(pwd(), basedir)
+    lines = cat(reportfile)
+    if (rows(lines) == 0) return
+    srcs = extract_embed_srcs(lines) \ extract_md_images(lines)
+    srcs = select(srcs, srcs :!= "")
+    if (rows(srcs) == 0) {
+        return
+    }
+    srcs = uniqrows(srcs)
+    if (rows(srcs) > 1) srcs = srcs[order(-strlen(srcs), 1)]
+    changed = 0
+
+    for (i = 1; i <= rows(srcs); i++) {
+        src = strtrim(srcs[i])
+        if (src == "" | path_is_remote(src)) continue
+        ext = path_suffix_lower(src)
+        resolved = resolve_local_file(src, basedir)
+        if (ext == ".html" | ext == ".htm") {
+            if (resolved != "") {
+                fix_table_override_css(resolved)
+                ensure_table_css_link(resolved)
+            }
+        }
+        news = src_for_default(src, basedir)
+        if (news == "" | news == src) continue
+        lines = replace_path_refs(lines, src, news)
+        changed = 1
+    }
+    if (changed) mm_outsheet(reportfile, lines, "replace")
+}
+
+void function tohtml_finish_default_refs(string scalar htmlfile)
+{
+    tohtml_fix_default_refs(htmlfile, pathgetparent(htmlfile))
+}
+
+
+real colvector is_md_fence_line(string colvector lines)
+{
+    // ``` or ```lang  (info string after the backticks)
+    t = strtrim(lines)
+    return(usubstr(t, 1, 3) :== "```")
+}
+
+string colvector tag_stata_opening_fences(string colvector lines)
+{
+    // Odd-numbered fences are openings. Bare ``` become ```stata for Typora/GitHub highlighting.
+    // Leave closings and fences that already have an info string (```text, ```stata, ...).
+    n = rows(lines)
+    if (n == 0) return(lines)
+    is_bt = is_md_fence_line(lines)
+    k = 0
+    for (i = 1; i <= n; i++) {
+        if (!is_bt[i]) continue
+        k++
+        if (mod(k, 2) == 0) continue
+        t = strtrim(lines[i])
+        if (t == "```") lines[i] = "```stata"
+    }
+    return(lines)
+}
 
 real colvector char_lengths_including_backticks(string colvector lines)
 {
     n = rows(lines)
     if (n == 0) return(J(0, 1, .))
-    is_bt_start = (strtrim(lines) :== "```") 
+    is_bt_start = is_md_fence_line(lines)
     idx_bt = selectindex(is_bt_start)
-	if (sum(idx_bt)==0) result = J(n, 1, .)
-    n_bt = rows(idx_bt)
-    // 2. 初始化结果向量（全为缺失值）
+    n_bt = length(idx_bt)
     lens = strlen(lines)
     result = J(n, 1, .)
     if (n_bt <= 1) return(J(n, 1, .))
@@ -814,40 +2275,150 @@ real colvector char_lengths_including_backticks(string colvector lines)
 
 
 
+real scalar is_html_embed_open(string scalar line)
+{
+    t = ustrltrim(line)
+    if (usubstr(t, 1, 7) == "<iframe") return(1)
+    if (usubstr(t, 1, 4) == "<img") return(1)
+    return(0)
+}
+
+real scalar html_embed_tag_complete(string scalar line)
+{
+    t = ustrltrim(line)
+    if (usubstr(t, 1, 7) == "<iframe") {
+        return(ustrpos(ustrlower(t), "</iframe>") > 0)
+    }
+    if (usubstr(t, 1, 4) == "<img") {
+        return(ustrregexm(t, ">\s*$"))
+    }
+    return(1)
+}
+
+real scalar is_stata_wrap_cont(string scalar line)
+{
+    return(usubstr(ustrltrim(line), 1, 1) == ">")
+}
+
+real scalar is_stata_cmd_echo(string scalar line)
+{
+    t = ustrltrim(line)
+    return(usubstr(t, 1, 1) == ".")
+}
+
+string scalar take_stata_wrap_payload(string scalar line)
+{
+    t = ustrltrim(line)
+    if (usubstr(t, 1, 1) != ">") return(t)
+    return(strtrim(usubstr(t, 2, .)))
+}
+
+real scalar line_ends_with_triple_slash(string scalar line)
+{
+    // User-written "///" continuation: keep the line break, do not splice.
+    return(ustrregexm(ustrrtrim(line), "///$"))
+}
+
+string colvector join_stata_cmd_continuations(string colvector lines)
+{
+    // Join Stata linesize wraps ("> ...") onto the preceding ". command".
+    // Do not join after a user "///" break: only the ">" prompt is stripped later.
+    n = rows(lines)
+    if (n == 0) return(lines)
+    out = J(0, 1, "")
+    i = 1
+    while (i <= n) {
+        line = lines[i]
+        if (is_stata_cmd_echo(line) | is_stata_wrap_cont(line)) {
+            while (i < n) {
+                if (!is_stata_wrap_cont(lines[i + 1])) break
+                if (line_ends_with_triple_slash(line)) break
+                line = join_stata_wrap(line, lines[i + 1])
+                i++
+            }
+        }
+        out = out \ line
+        i++
+    }
+    return(out)
+}
+
+string colvector strip_stata_cmd_prompt(string colvector lines)
+{
+    // Remove the Stata echo prompt (". " / "> ") from command lines.
+    // Require a following space/tab/EOL so a narrative ".5" is left alone.
+    n = rows(lines)
+    if (n == 0) return(lines)
+    out = J(n, 1, "")
+    for (i = 1; i <= n; i++) {
+        s = lines[i]
+        t = ustrltrim(s)
+        c = usubstr(t, 1, 1)
+        if (c == ".") {
+            rest = usubstr(t, 2, .)
+            if (rest == "" | usubstr(rest, 1, 1) == " " | usubstr(rest, 1, 1) == char(9)) {
+                out[i] = ustrltrim(rest)
+                continue
+            }
+        }
+        else if (c == ">") {
+            // Drop only the wrap prompt; keep spaces after ">" (/// indent).
+            out[i] = usubstr(t, 2, .)
+            continue
+        }
+        out[i] = s
+    }
+    return(out)
+}
+
+string scalar join_stata_wrap(string scalar line, string scalar nxt)
+{
+    payload = take_stata_wrap_payload(nxt)
+    // Stata drops the space between HTML attributes when it wraps at that
+    // space. Restore it only if the previous line already closed a quoted
+    // value. If the wrap split a name (data-tohtml-ti / tle="..."), do not
+    // insert a space.
+    if (payload != "" & ustrregexm(ustrlower(payload), `"^[a-z][a-z0-9_-]* *="')) {
+        last = usubstr(ustrrtrim(line), ustrlen(ustrrtrim(line)), 1)
+        if (last == char(34) | last == char(39) | last == ">") {
+            return(line + " " + payload)
+        }
+    }
+    return(line + payload)
+}
+
 string colvector merge_html_vectorized(string colvector f)
 {
+    // Stata splits lines longer than linesize; the next line starts with "> ".
+    // Join those output wraps (log paths, <iframe>/<img>, long results).
+    // Do not join ". command" continuations: /** ... **/ narrative is echoed
+    // that way and must stay on separate lines until clean_textcell_content.
     n = rows(f)
     if (n == 0) return(f)
-    
-        // 1. flag1: 当前行是否以 <iframe src= "http://fmwww.bc.edu/repec/bocode/t/%E6%88%96" <img src= "http://fmwww.bc.edu/repec/bocode/t/%E5%BC%80%E5%A4%B4"
-    len_iframe = strlen("<iframe src="http://fmwww.bc.edu/repec/bocode/t/)&#32;&#32;&#32;&#32;len_img&#32;&#32;&#32;&#32;=&#32;strlen("<img src="http://fmwww.bc.edu/repec/bocode/t/)&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;f_trim&#32;=&#32;ustrltrim(f)&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;flag1&#32;=&#32;J(n,&#32;1,&#32;0)&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;flag1&#32;=&#32;(substr(f_trim,&#32;1,&#32;len_iframe)&#32;:=="<iframe src="http://fmwww.bc.edu/repec/bocode/t/)&#32;:|&#32;///&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;&#32;(substr(f_trim,&#32;1,&#32;len_img)&#32;&#32;&#32;&#32;:=="<img src="http://fmwww.bc.edu/repec/bocode/t/)%20%20%20%20%20%20%20%20%20%20%20%20//%202.%20flag2:%20%E5%BD%93%E5%89%8D%E8%A1%8C%E6%98%AF%E5%90%A6%E4%BB%A5">" 开头（用于下一行判断）
-        flag2 = (substr(f_trim, 1, 1) :== ">")
-    
-    // 3. 合并标志：第 i 行要合并下一行 iff flag1[i]==1 且 flag2[i+1]==1 （i=1..n-1）
-    flag_merge = J(n, 1, 0)
-    if (n > 1) {
-        flag_merge[|1 \ n-1|] = flag1[|1 \ n-1|] :& flag2[|2 \ n|]
+    out = J(0, 1, "")
+    i = 1
+    while (i <= n) {
+        line = f[i]
+        if (is_html_embed_open(line)) {
+            while (i < n & !html_embed_tag_complete(line)) {
+                if (!is_stata_wrap_cont(f[i + 1])) break
+                line = join_stata_wrap(line, f[i + 1])
+                i++
+            }
+        }
+        else if (ustrtrim(line) != "" & !is_stata_cmd_echo(line) &
+            !is_stata_wrap_cont(line) &
+            usubstr(ustrltrim(line), 1, 3) != "```") {
+            while (i < n) {
+                if (!is_stata_wrap_cont(f[i + 1])) break
+                line = join_stata_wrap(line, f[i + 1])
+                i++
+            }
+        }
+        out = out \ line
+        i++
     }
-    
-    // 4. 构造新内容：对要合并的行，拼接处理后的下一行
-    new_f = f  // 先复制
-    to_merge_idx = selectindex(flag_merge)
-    if (rows(to_merge_idx) > 0) {
-        next_lines = f[to_merge_idx :+ 1]               // 下一行内容
-        stripped   = strtrim(substr(next_lines, 2, .))   // 去掉首字符 ">"
-        new_f[to_merge_idx] = f[to_merge_idx] :+ stripped
-    }
-    
-    // 5. 标记哪些行应保留：所有行都保留，除了那些是"被合并的下一行"
-    is_next_of_merge = J(n, 1, 0)
-    if (rows(to_merge_idx) > 0) {
-        is_next_of_merge[to_merge_idx :+ 1] = J(length(to_merge_idx), 1, 1)
-    }
-    keep = (is_next_of_merge :== 0)
-    
-    // 6. 返回保留的行
-    result = select(new_f, keep)
-    return(result)
+    return(out)
 }
 
 string colvector remove_prefix_and_trim(string colvector lines,string rowvector prefixes)   
@@ -875,7 +2446,7 @@ string colvector remove_prefix_and_trim(string colvector lines,string rowvector 
         // 找出以 pre 开头的行
         matches = (substr(result, 1, len_pre) :== pre)
         idx = selectindex(matches)
-        if (rows(idx) > 0) {
+        if (length(idx) > 0) {
             result[idx] = ustrtrim(substr(result[idx], len_pre + 1, .))
         }
     }
@@ -888,7 +2459,7 @@ real colvector cumcount_backtick3(string colvector lines)
     n = rows(lines)
     if (n == 0) return(J(0, 1, .))
     
-    is_bt = (strtrim(lines) :== "```") 
+    is_bt = is_md_fence_line(lines) 
     
     // 累积和：到当前行为止（含）的 ``` 行数
     cumsum = runningsum(is_bt)
@@ -900,100 +2471,122 @@ real colvector cumcount_backtick3(string colvector lines)
     return(count_before)
 }
 
+real scalar line_is_md_fence(string scalar s)
+{
+    return(usubstr(strtrim(s), 1, 3) == "```")
+}
+
+real scalar next_nonempty_is_md_fence(string colvector fcon, real scalar i)
+{
+    n = rows(fcon)
+    j = i + 1
+    while (j <= n) {
+        if (ustrtrim(fcon[j]) != "") break
+        j++
+    }
+    if (j > n) return(0)
+    return(line_is_md_fence(fcon[j]))
+}
+
+string colvector ensure_stata_fence_open(string colvector lines)
+{
+    // After ```text ... ``` (log header), open a Stata fence so the rest of
+    // the log is inside a code block. If the user already wrote ishere ```
+    // / **```, do not add a second opener.
+    n = rows(lines)
+    if (n == 0) return(lines)
+
+    k = 1
+    while (k <= n) {
+        if (ustrtrim(lines[k]) != "") break
+        k++
+    }
+    if (k > n) return(lines)
+
+    insert_at = 0
+    if (strtrim(lines[k]) == "```text") {
+        j = k + 1
+        while (j <= n) {
+            if (line_is_md_fence(lines[j])) {
+                insert_at = j
+                break
+            }
+            j++
+        }
+        if (insert_at == 0) return(lines)
+    }
+    else {
+        if (line_is_md_fence(lines[k])) return(lines)
+        insert_at = k - 1
+    }
+
+    m = insert_at + 1
+    while (m <= n) {
+        if (ustrtrim(lines[m]) != "") break
+        m++
+    }
+    if (m > n) return(lines)
+    if (line_is_md_fence(lines[m])) return(lines)
+
+    if (insert_at <= 0) return("```" \ lines)
+    if (insert_at >= n) return(lines \ "```")
+    return(lines[|1 \ insert_at|] \ "```" \ lines[|insert_at + 1 \ n|])
+}
+
 string colvector insert_backtick_before_hash(string colvector fcon)
 {
     n = rows(fcon)
     if (n == 0) return(J(0, 1, ""))
-    
-    // Estimate max iterations based on potential markers
-    fcon_trim_init = ustrltrim(fcon)
-    is_hash_init = (substr(fcon_trim_init, 1, 1) :== "#")
-    is_hash_init = is_hash_init :| (substr(fcon_trim_init, 1, strlen("<iframe")) :== "<iframe") 
-    is_hash_init = is_hash_init :| (substr(fcon_trim_init, 1, strlen("<img")) :== "<img")
     lens = strlen("_ishere_")
-    is_hash_init = is_hash_init :| (usubstr(fcon_trim_init, 1, lens) :== "_ishere_")
-    //is_hash_init = is_hash_init :| (usubstr(fcon_trim_init, 1, lens) :== "ishere/*")
 
-    // 动态修复：每次插入后重新计算 count_before
-    max_iter = sum(is_hash_init) + 50
-    if (max_iter < 100) max_iter = 100
-    
-    iter = 0
-    changed = 1
+    out = J(0, 1, "")
+    inside = 0
 
-    while (changed & iter < max_iter) {
-        iter = iter + 1
+    for (i = 1; i <= n; i++) {
+        line = fcon[i]
+        t = ustrltrim(line)
 
-        count_before = cumcount_backtick3(fcon)
-
-        fcon_trim = ustrltrim(fcon)
-        
-        // Base checks
-        is_hash = (substr(fcon_trim, 1, 1) :== "#")
-        is_hash = is_hash :| (substr(fcon_trim, 1, strlen("<iframe")) :== "<iframe") 
-        is_hash = is_hash :| (substr(fcon_trim, 1, strlen("<img")) :== "<img")
-        is_hash = is_hash :| (usubstr(fcon_trim, 1, lens) :== "_ishere_")
-        // Robust textcell checks
-        is_tc_start_vec = J(rows(fcon), 1, 0)
-        is_tc_end_vec   = J(rows(fcon), 1, 0)
-        
-        // Check for lines starting with _ishere_
-        cand_idx = selectindex(usubstr(fcon_trim, 1, lens) :== "_ishere_")
-        if (rows(cand_idx) > 0) {
-            for (k=1; k<=rows(cand_idx); k++) {
-                 idx = cand_idx[k]
-                 rem = ustrltrim(usubstr(fcon_trim[idx], lens+1, .))
-                 if (usubstr(rem, 1, 2) == "/*") {
-                     is_tc_start_vec[idx] = 1
-                 }
-                 if (usubstr(rem, 1, 2) == "*/") {
-                     is_tc_end_vec[idx] = 1
-                 }
-            }
-        }
-        
-        is_hash = is_hash :| is_tc_start_vec
-               
-        // 条件：是 # 行 且 count_before 为奇数 => 插入 BEFORE (Close code block)
-        need_insert_before = is_hash :& (mod(count_before, 2) :== 1)
-        
-        // 条件：是 _textcell */ 且 count_before 为奇数 => 插入 AFTER (Re-open code block)
-        // 注意：只有当 textcell 确实嵌在代码块里时（count=odd）才需要操作。
-        // 如果 textcell 本就在外（count=even），则不需要任何操作（User Case）。
-        need_insert_after = is_tc_end_vec :& (mod(count_before, 2) :== 1)
-
-        changed = (sum(need_insert_before) + sum(need_insert_after) > 0)
-
-        if (!changed) break
-
-        result = J(0, 1, "")
-        n_current = rows(fcon)
-
-        for (i = 1; i <= n_current; i++) {
-            if (need_insert_before[i]) {
-                result = result \ "```"   // 插入关闭代码块
-            }
-            result = result \ fcon[i]
-            if (need_insert_after[i]) {
-                result = result \ "```"   // 插入（重新）打开代码块
-            }
+        if (line_is_md_fence(line)) {
+            out = out \ line
+            inside = !inside
+            continue
         }
 
-        fcon = result
+        is_heading = (usubstr(t, 1, 1) == "#")
+        is_iframe = (usubstr(t, 1, 7) == "<iframe")
+        is_img = (usubstr(t, 1, 4) == "<img")
+        is_tc_start = 0
+        is_tc_end = 0
+        if (usubstr(t, 1, lens) == "_ishere_") {
+            rem = ustrltrim(usubstr(t, lens + 1, .))
+            if (usubstr(rem, 1, 2) == "/*") is_tc_start = 1
+            if (usubstr(rem, 1, 2) == "*/") is_tc_end = 1
+        }
+
+        is_break = is_heading | is_iframe | is_img | is_tc_start
+        if (is_break & inside) {
+            out = out \ "```"
+            inside = 0
+        }
+
+        if (is_tc_start | is_tc_end) {
+            out = out \ ""
+        }
+        else {
+            out = out \ line
+        }
+
+        is_reopen = is_heading | is_iframe | is_img | is_tc_end
+        if (is_reopen & !inside) {
+            if (!next_nonempty_is_md_fence(fcon, i)) {
+                out = out \ "```"
+                inside = 1
+            }
+        }
     }
 
-    if (iter >= max_iter) {
-        printf("{err}Warning: reached max iterations (%g) in insert_backtick_before_hash\n", max_iter)
-    }
-
-    // 清理 textcell 标记 (Robust removal)
-    // We already know how to identify them, let's just strip them
-    r1 = selectindex(is_tc_start_vec:| is_tc_end_vec )
-    if (sum(r1) > 0) {
-        fcon[r1] = J(rows(r1), 1, "")
-    }
-    
-    return(fcon)
+    if (inside) out = out \ "```"
+    return(out)
 }
 
 
@@ -1033,7 +2626,7 @@ string colvector add_two_blank_lines(string colvector lines)
     return(out)
 }
 
-void function merge_cmdlog_blocks(string scalar clean_md, string scalar cmdlog_md, string scalar out_md, real scalar replace, string scalar rpath, string scalar llp)
+void function merge_cmdlog_blocks(string scalar clean_md, string scalar cmdlog_md, string scalar out_md, real scalar replace)
 {
  
     clean = cat(clean_md)
@@ -1048,6 +2641,30 @@ void function merge_cmdlog_blocks(string scalar clean_md, string scalar cmdlog_m
 
     // 2. 读取 cmdlog
     cmd = cat(cmdlog_md)
+    // 删除 log using 开始的行
+    flag = ustrpos(cmd, "log") :* ustrpos(cmd, "using")
+    flag = flag :* ustrpos(cmd, "text") 
+    flag = flag :* ustrpos(cmd, "replace") 
+    //flag
+    if (sum(flag) > 0) {
+        flag1 = selectindex(flag)
+        cmd = select(cmd, (1::length(cmd)) :!=flag1[1])
+    }
+    flag = ustrpos(cmd, "log") :* ustrpos(cmd, "close")
+    if (sum(flag) > 0) {
+        flag1 = selectindex(flag)
+        if (length(flag1) ==1 ) {
+            cmd = select(cmd, (1::length(cmd)) :!=flag1[1])
+         }
+         else{
+            //cmd = select(cmd, (1::length(cmd)) :!=flag1[length(flag1)])
+            cmd[flag1[length(flag1)]] = "ishere ```"
+            cmd = select(cmd, (1::length(cmd)) :!=flag1[1])
+         }
+    }
+        
+
+    cmd = ishererep2(cmd)
     n_cmd = rows(cmd)
 
     // Handle initial comment block 
@@ -1100,7 +2717,7 @@ void function merge_cmdlog_blocks(string scalar clean_md, string scalar cmdlog_m
          }
     }
 
-    // 3. 检查 ishere /* */  闭合
+    // 3. 检查 /** **/  闭合（拒绝旧版 ishere /* */）
       cmd = check_isheretxt_closed(cmd)
 
     // 4. 统计 ishere fig/tab 数量
@@ -1191,6 +2808,7 @@ void function merge_cmdlog_blocks(string scalar clean_md, string scalar cmdlog_m
     //result = subisheredintxt(result)
 
     // 6. 【核心】动态修复：直到所有 # 行都在代码块外
+    result = ensure_stata_fence_open(result)
     result = insert_backtick_before_hash(result)
     
     // 7. （可选）过滤短代码块
@@ -1199,41 +2817,8 @@ void function merge_cmdlog_blocks(string scalar clean_md, string scalar cmdlog_m
     
     fcon = result
     // 将md源代码插入到<iframe ></iframe>位置
-    // 首先使用正则表达式找到 任意空格<iframe任意空格*.md任意空格></iframe>任意空格 的行
-    regex = `"(\s*<iframe\s*.*\.md\s*></iframe>\s*)"'
-    flag = selectindex(regexm(fcon, regex))
-    fconnew = fcon
-    if (sum(flag) > 0) {
-        if (flag[i]<length(fcon)){
-            fconnew = fcon[1::(flag[1]-1)]
-        }
-        else{
-            fconnew = J(0,1,"")
-        }
-        for(i=1; i<=length(flag); i++) {
-            mdtext = extractmdtable(fcon[flag[i]])
-            fconnew = fconnew \ mdtext 
-            if((flag[i]<length(fcon)) & (i<length(flag))) {
-              fconnew = fconnew \ fcon[(flag[i]+1)::(flag[i+1]-1)]
-             }
-             else if(((flag[i]<length(fcon)) & (i==length(flag)))) {
-                fconnew = fconnew \ fcon[(flag[i]+1)::length(fcon)]
-             }
-        }
-    }
-    result = fconnew
+    result = splice_md_iframes(fcon)
     
-
-    // 8. 路径替换（仅对 <iframe / <img 行）
-    if (strlen(rpath) > 0) {
-        rtrim = ustrltrim(result)
-        is_embed2 = (substr(rtrim, 1, strlen("<iframe")) :== "<iframe") :| ///
-                    (substr(rtrim, 1, strlen("<img")) :== "<img")
-        if (sum(is_embed2) > 0) {
-            result[selectindex(is_embed2)] = subinstr(result[selectindex(is_embed2)], "\\", "/", .)
-            result[selectindex(is_embed2)] = subinstr(result[selectindex(is_embed2)], rpath, llp, .)
-        }
-    }
 
     // 8b. 在代码块之间插入两个空行
     //result = add_two_blank_lines(result)
@@ -1246,162 +2831,6 @@ void function merge_cmdlog_blocks(string scalar clean_md, string scalar cmdlog_m
         mm_outsheet(out_md, result, "replace")
     }
 
-}
-
-void function write_github_css(string scalar filepath)
-{
-    css = J(0, 1, "")
-    css = css \ ":root {"
-    css = css \ "    --side-bar-bg-color: #fafafa;"
-    css = css \ "    --control-text-color: #777;"
-    css = css \ "    --font-sans-serif: " + char(34) + "Open Sans" + char(34) + ", " + char(34) + "Clear Sans" + char(34) + ", " + char(34) + "Helvetica Neue" + char(34) + ", Helvetica, Arial, sans-serif;"
-    css = css \ "    --font-monospace: " + char(34) + "Consolas" + char(34) + ", " + char(34) + "Monaco" + char(34) + ", " + char(34) + "Bitstream Vera Sans Mono" + char(34) + ", " + char(34) + "Courier New" + char(34) + ", monospace;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "body {"
-    css = css \ "    font-family: var(--font-sans-serif);"
-    css = css \ "    font-size: 16px;"
-    css = css \ "    line-height: 1.6;"
-    css = css \ "    color: #333;"
-    css = css \ "    background-color: white;"
-    css = css \ "    margin: 0 auto;"
-    css = css \ "    padding: 2rem;"
-    css = css \ "    max-width: 900px;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "/* Headings */"
-    css = css \ "h1, h2, h3, h4, h5, h6 {"
-    css = css \ "    color: #333;"
-    css = css \ "    line-height: 1.25;"
-    css = css \ "    margin-top: 24px;"
-    css = css \ "    margin-bottom: 16px;"
-    css = css \ "    font-weight: bold;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "h1 { font-size: 2.25em; padding-bottom: 0.3em; border-bottom: 1px solid #eaecef; }"
-    css = css \ "h2 { font-size: 1.75em; padding-bottom: 0.3em; border-bottom: 1px solid #eaecef; }"
-    css = css \ "h3 { font-size: 1.5em; }"
-    css = css \ "h4 { font-size: 1.25em; }"
-    css = css \ "h5 { font-size: 1em; }"
-    css = css \ "h6 { font-size: 0.875em; color: #777; }"
-    css = css \ ""
-    css = css \ "/* Links */"
-    css = css \ "a {"
-    css = css \ "    color: #4183C4;"
-    css = css \ "    text-decoration: none;"
-    css = css \ "}"
-    css = css \ "a:hover {"
-    css = css \ "    text-decoration: underline;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "/* Paragraphs & Lists */"
-    css = css \ "p, blockquote, ul, ol, dl, table, pre {"
-    css = css \ "    margin-top: 0;"
-    css = css \ "    margin-bottom: 16px;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "ul, ol {"
-    css = css \ "    padding-left: 2em;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "/* Blockquotes */"
-    css = css \ "blockquote {"
-    css = css \ "    padding: 0 1em;"
-    css = css \ "    color: #777;"
-    css = css \ "    border-left: 0.25em solid #dfe2e5;"
-    css = css \ "    background: transparent;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "/* Tables - GitHub Style */"
-    css = css \ "table {"
-    css = css \ "    border-collapse: collapse;"
-    css = css \ "    border-spacing: 0;"
-    css = css \ "    width: 100%;"
-    css = css \ "    margin-bottom: 16px;"
-    css = css \ "    display: block;"
-    css = css \ "    overflow: auto;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "table tr {"
-    css = css \ "    background-color: #fff;"
-    css = css \ "    border-top: 1px solid #c6cbd1;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "table tr:nth-child(2n) {"
-    css = css \ "    background-color: #f6f8fa;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "table th, table td {"
-    css = css \ "    border: 1px solid #dfe2e5;"
-    css = css \ "    padding: 6px 13px;"
-    css = css \ "    margin: 0;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "table th {"
-    css = css \ "    font-weight: 600;"
-    css = css \ "    background-color: #f6f8fa; /* Header background usually distinct */"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "/* Code Blocks & Inline Code */"
-    css = css \ "code, kbd, pre, samp {"
-    css = css \ "    font-family: var(--font-monospace);"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "/* Inline code */"
-    css = css \ "code {"
-    css = css \ "    background-color: #f3f4f4;"
-    css = css \ "    padding: 2px 4px;"
-    css = css \ "    border-radius: 3px;"
-    css = css \ "    font-size: 0.9em;"
-    css = css \ "    margin: 0 2px;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "/* Block code (pre) */"
-    css = css \ "pre {"
-    css = css \ "    background-color: #f8f8f8;"
-    css = css \ "    border: 1px solid #e7eaed;"
-    css = css \ "    border-radius: 3px;"
-    css = css \ "    padding: 16px;"
-    css = css \ "    overflow: auto;"
-    css = css \ "    line-height: 1.45;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "pre code {"
-    css = css \ "    background-color: transparent;"
-    css = css \ "    padding: 0;"
-    css = css \ "    margin: 0;"
-    css = css \ "    border: none;"
-    css = css \ "    font-size: 100%; /* Reset from inline code size */"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "/* Specific Stata classes if used */"
-    css = css \ ".stlog, .stcmd {"
-    css = css \ "    font-family: var(--font-monospace);"
-    css = css \ "    white-space: pre-wrap;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "/* Horizontal Rule */"
-    css = css \ "hr {"
-    css = css \ "    height: 0.25em;"
-    css = css \ "    padding: 0;"
-    css = css \ "    margin: 24px 0;"
-    css = css \ "    background-color: #e7e7e7;"
-    css = css \ "    border: 0;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "/* Images */"
-    css = css \ "img {"
-    css = css \ "    max-width: 100%;"
-    css = css \ "    box-sizing: border-box;"
-    css = css \ "}"
-    css = css \ ""
-    css = css \ "/* MathJax */"
-    css = css \ "mjx-container {"
-    css = css \ "    overflow-x: auto;"
-    css = css \ "    overflow-y: hidden;"
-    css = css \ "}"
-
-    mm_outsheet(filepath, css, "replace")
 }
 
 void function inject_mathjax(string scalar htmlfile)
@@ -1423,7 +2852,7 @@ void function inject_mathjax(string scalar htmlfile)
     script = script + "<script id=" + char(34) + "MathJax-script" + char(34) + " async src=" + char(34) + "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" + char(34) + "></script>"
     
     idx = selectindex(ustrpos(lines, "</head>") :> 0)
-    if (rows(idx) > 0) {
+    if (length(idx) > 0) {
         i = idx[1]
         if (i > 1) {
             lines = lines[|1 \ i-1|] \ script \ lines[|i \ rows(lines)|]
@@ -1439,60 +2868,185 @@ void function inject_mathjax(string scalar htmlfile)
     mm_outsheet(htmlfile, lines, "replace")
 }
 
+void function inject_highlightjs(string scalar htmlfile)
+{
+    // Token highlighting for ```stata. Core CDN bundle omits Stata; load it extra.
+    // Run after DOMContentLoaded so <pre><code> exists (scripts sit in <head>).
+    lines = cat(htmlfile)
+    if (rows(lines) == 0) return
+    if (sum(ustrpos(lines, "highlight.min.js") :> 0) > 0) return
+
+    q = char(34)
+    cdn = "https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.1/build/"
+    script = "<link rel=" + q + "stylesheet" + q + " href=" + q + cdn + "styles/github.min.css" + q + ">"
+    script = script + "<script src="http://fmwww.bc.edu/repec/bocode/t/+&#32;q&#32;+&#32;cdn&#32;+"highlight.min.js" + q + "></script>"
+    script = script + "<script src=" + q + cdn + "languages/stata.min.js" + q + "></script>"
+    script = script + "<script>document.addEventListener(" + q + "DOMContentLoaded" + q
+    script = script + ",function(){hljs.highlightAll();});</script>"
+
+    idx = selectindex(ustrpos(lines, "</head>") :> 0)
+    if (length(idx) > 0) {
+        i = idx[1]
+        if (i > 1) {
+            lines = lines[|1 \ i-1|] \ script \ lines[|i \ rows(lines)|]
+        }
+        else {
+            lines = script \ lines
+        }
+    }
+    else {
+        lines = script \ lines
+    }
+
+    mm_outsheet(htmlfile, lines, "replace")
+}
+
+real scalar content_has_math(string scalar filepath)
+{
+    // Detect TeX delimiters used by inject_mathjax configuration.
+    // Do not use "$" in a regex: in .ado files it is a Stata global, and in
+    // ICU regex it is an end-of-string anchor.
+    lines = cat(filepath)
+    n = rows(lines)
+    for (i = 1; i <= n; i++) {
+        s = lines[i]
+        if (ustrpos(s, "$$") > 0) return(1)
+        if (ustrpos(s, "\\(") > 0) return(1)
+        if (ustrpos(s, "\\[") > 0) return(1)
+        if (line_has_inline_math(s)) return(1)
+    }
+    return(0)
+}
+
+real scalar line_has_inline_math(string scalar s)
+{
+    n = ustrlen(s)
+    dollar = char(36)
+    for (i = 1; i <= n; i++) {
+        if (usubstr(s, i, 1) != dollar) continue
+        if (i < n & usubstr(s, i + 1, 1) == dollar) {
+            i = i + 1
+            continue
+        }
+        if (i > 1 & usubstr(s, i - 1, 1) == char(92)) continue
+        for (j = i + 1; j <= n; j++) {
+            if (usubstr(s, j, 1) != dollar) continue
+            if (j < n & usubstr(s, j + 1, 1) == dollar) {
+                j = j + 1
+                continue
+            }
+            if (usubstr(s, j - 1, 1) == char(92)) continue
+            if (j > i + 1) return(1)
+            break
+        }
+    }
+    return(0)
+}
 
 
 
+string colvector function line_cmd_token(string scalar raw)
+{
+    // Strip SMCL / prompt; return space-free command token for matching
+    s = ustrltrim(raw)
+    changed = 1
+    while (changed) {
+        changed = 0
+        if (ustrpos(s, "{com}") == 1) {
+            s = ustrltrim(usubstr(s, 6, .))
+            changed = 1
+        }
+        else if (ustrpos(s, "{res}") == 1) {
+            s = ustrltrim(usubstr(s, 6, .))
+            changed = 1
+        }
+        else if (ustrpos(s, "{txt}") == 1) {
+            s = ustrltrim(usubstr(s, 6, .))
+            changed = 1
+        }
+    }
+    if (usubstr(s, 1, 1) == "." | usubstr(s, 1, 1) == ">") {
+        s = ustrltrim(usubstr(s, 2, .))
+    }
+    return(usubinstr(s, " ", "", .))
+}
 
+void function reject_deprecated_isheretxt(string colvector lines)
+{
+    for (i = 1; i <= rows(lines); i++) {
+        tok = line_cmd_token(lines[i])
+        if (tok == "ishere/*" | tok == "ishere*/" |
+            ustrpos(tok, "ishere/*") == 1 | ustrpos(tok, "ishere*/") == 1) {
+            errprintf("Error: ishere /* and ishere */ are no longer supported; use /** and **/\n")
+            _error(199)
+        }
+    }
+}
+
+string colvector function normalize_mdblock_markers(string colvector content)
+{
+    // Only /** ... **/ mark markdown narrative blocks (internal: _ishere_/* ... _ishere_*/)
+    lines = content
+    for (i = 1; i <= rows(lines); i++) {
+        tok = line_cmd_token(lines[i])
+        if (tok == "/**") {
+            lines[i] = "_ishere_/*"
+        }
+        else if (tok == "**/") {
+            lines[i] = "_ishere_*/"
+        }
+    }
+    return(lines)
+}
 
 string colvector clean_textcell_content(string colvector lines)
 {
-  // 必须放在开始处理
-  lines2 = strltrim(lines)
-  lines2 = strltrim(substr(lines2,2,.))
-  r1 = ustrpos(lines2, "ishere") :== 1
-  
-  lines2 = strltrim(substr(lines2, ustrlen("ishere")+1, .))
-  r12 = ustrpos(lines2,"/*") :== 1
-  r22 = ustrpos(lines2,"*/") :== 1
-  r12 = r1 :& r12
-  
-  r22 = r1 :& r22
-  
-  if (sum(r12)!=sum(r22)){
-       errprintf("Error: unmatched ishere /* and */\n")
-       _error(199)
-   }
-  if (sum(r12)==0){ 
-    return(lines)
-  }
-  idx12 = select(1::rows(lines), r12)
-  idx22 = select(1::rows(lines), r22)
+    // Markdown narrative blocks: /** ... **/ only
+    reject_deprecated_isheretxt(lines)
+    lines = normalize_mdblock_markers(lines)
 
-   if (length(idx12)!=length(idx22)){
-       errprintf("Error: unmatched ishere /* and */\n")
-       _error(199)
-   }
-   if (length(idx12)>0){
-       for (i=1;i<=length(idx12);i++){
-           if (idx12[i]>=idx22[i]) {
-                errprintf("Error: unmatched ishere /* and */\n")
-               _error(199)
-           }
-           if ((i+1) < length(idx12)) {
-		   	 if (idx12[i]<length(lines) & idx12[i+1] < idx22[i]) {
-                errprintf("Error: overlapping ishere /* and */\n")
-                _error(199)    
-               }
-		   	
-		   }
-           
-        lines[idx12[i]..idx22[i]] = substr(lines[idx12[i]..idx22[i]],2,.)
+    trim = ustrtrim(lines)
+    r12 = (trim :== "_ishere_/*")
+    r22 = (trim :== "_ishere_*/")
+
+    if (sum(r12) != sum(r22)) {
+        errprintf("Error: unmatched /** and **/\n")
+        _error(199)
+    }
+    if (sum(r12) == 0) {
+        return(lines)
+    }
+
+    idx12 = selectindex(r12)
+    idx22 = selectindex(r22)
+
+    if (length(idx12) != length(idx22)) {
+        errprintf("Error: unmatched /** and **/\n")
+        _error(199)
+    }
+
+    for (i = 1; i <= length(idx12); i++) {
+        if (idx12[i] >= idx22[i]) {
+            errprintf("Error: unmatched /** and **/\n")
+            _error(199)
+        }
+        if ((i + 1) <= length(idx12)) {
+            if (idx12[i + 1] < idx22[i]) {
+                errprintf("Error: overlapping /** and **/\n")
+                _error(199)
+            }
+        }
+        // Strip leading "." / ">" from log-echoed lines inside the block
+        for (j = idx12[i] + 1; j <= idx22[i] - 1; j++) {
+            s = ustrltrim(lines[j])
+            if (usubstr(s, 1, 1) == "." | usubstr(s, 1, 1) == ">") {
+                lines[j] = ustrltrim(usubstr(s, 2, .))
+            }
+        }
         lines[idx12[i]] = "_ishere_/*"
         lines[idx22[i]] = "_ishere_*/"
-      }
-   }
-   return(lines)
-
+    }
+    return(lines)
 }
 
 
@@ -1545,107 +3099,317 @@ string colvector function get_header(string colvector lines)
 
 
 string colvector function check_isheretxt_closed(string colvector lines)
-{ 
-  lines2 = usubinstr(lines, " ", "", .)
-  flag1 = (ustrpos(lines2, "ishere/*") :== 1)
-  flag2 = (ustrpos(lines2, "ishere*/") :== 1)
-  if (sum(flag1)!=sum(flag2)){
-       errprintf("Error: unmatched ishere /* and */\n")
-       _error(199)
-   }
-   if (sum(flag1)==0){ 
-        return(lines)
-   }
-   idx1 = selectindex(flag1)
-   idx2 = selectindex(flag2)
+{
+    // Do-file path: same /** ... **/ rules as clean_textcell_content
+    reject_deprecated_isheretxt(lines)
+    lines = normalize_mdblock_markers(lines)
 
-   for (i=1;i<=length(idx1);i++){
-      if (idx2[i]<=idx1[i]) {
-        errprintf("Error: unmatched ishere /* and */\n")
+    trim = ustrtrim(lines)
+    flag1 = (trim :== "_ishere_/*")
+    flag2 = (trim :== "_ishere_*/")
+    if (sum(flag1) != sum(flag2)) {
+        errprintf("Error: unmatched /** and **/\n")
         _error(199)
-       }
-       if ((i+1) < length(idx1)) {
-         if (idx1[i]<length(lines) & idx1[i+1] < idx2[i]) {
-            errprintf("Error: overlapping ishere /* and */\n")
-            _error(199)    
-          }
+    }
+    if (sum(flag1) == 0) {
+        return(lines)
+    }
+    idx1 = selectindex(flag1)
+    idx2 = selectindex(flag2)
+
+    for (i = 1; i <= length(idx1); i++) {
+        if (idx2[i] <= idx1[i]) {
+            errprintf("Error: unmatched /** and **/\n")
+            _error(199)
+        }
+        if ((i + 1) <= length(idx1)) {
+            if (idx1[i + 1] < idx2[i]) {
+                errprintf("Error: overlapping /** and **/\n")
+                _error(199)
+            }
         }
         lines[idx1[i]] = "_ishere_/*"
         lines[idx2[i]] = "_ishere_*/"
-
-   }
-
-   return(lines)
-
-
-}
-
-real scalar lastpos(string scalar s, string scalar ch)
-{
-    i = strlen(s)
-    while (i >= 1) {
-        if (substr(s, i, 1) == ch) return(i)
-        i = i - 1
     }
-    return(0)
+    return(lines)
 }
-string scalar normalize_path(string scalar p)
+
+string scalar normalize_path(string scalar pin)
 {
-    // handle Windows backslashes (single or doubled)
+    // Slash-fold for HTML/MD and prefix compares. Joining uses pathjoin/pathresolve.
+    p = pin
     p = subinstr(p, "\\", "/", .)
     p = subinstr(p, "\", "/", .)
-    // remove trailing slash
     while (strlen(p) > 1 & substr(p, strlen(p), 1) == "/") {
         p = substr(p, 1, strlen(p) - 1)
     }
     return(p)
 }
 
+string scalar abs_path_key(string scalar pin)
+{
+    string scalar drive, s, piece, out, p
+    real scalar n, j, i
+    string colvector tok
+
+    p = strtrim(pin)
+    if (p == "" | p == ".") p = pwd()
+    else if (!pathisabs(p)) p = pathresolve(pwd(), p)
+    p = normalize_path(p)
+
+    drive = ""
+    if (strlen(p) >= 2 & substr(p, 2, 1) == ":") {
+        drive = usubstr(p, 1, 2)
+        p = usubstr(p, 3, .)
+    }
+    if (usubstr(p, 1, 1) == "/") p = usubstr(p, 2, .)
+
+    tok = J(0, 1, "")
+    s = p
+    while (s != "") {
+        j = ustrpos(s, "/")
+        if (j == 0) {
+            piece = s
+            s = ""
+        }
+        else {
+            piece = usubstr(s, 1, j - 1)
+            s = usubstr(s, j + 1, .)
+        }
+        if (piece == "" | piece == ".") continue
+        if (piece == "..") {
+            n = rows(tok)
+            if (n > 0) tok = (n == 1 ? J(0, 1, "") : tok[|1 \ n-1|])
+            continue
+        }
+        tok = tok \ piece
+    }
+
+    out = drive + "/"
+    for (i = 1; i <= rows(tok); i++) {
+        if (i > 1) out = out + "/"
+        out = out + tok[i]
+    }
+    if (c("os") == "Windows") out = ustrlower(out)
+    return(out)
+}
+
+real scalar paths_are_same(string scalar a, string scalar b)
+{
+    if (strtrim(a) == "" | strtrim(b) == "") return(0)
+    return(abs_path_key(a) == abs_path_key(b))
+}
+
+real rowvector stata_log_header_range(string colvector lines)
+{
+    real scalar n, i, start
+    string scalar tr
+
+    n = rows(lines)
+    if (n == 0) return((0, 0))
+    i = 1
+    while (i <= n & ustrtrim(lines[i]) == "") i++
+    if (i > n) return((0, 0))
+    start = i
+    tr = ustrtrim(lines[i])
+    if (!ustrregexm(tr, "^[-]{10,}$")) return((0, 0))
+    i++
+
+    // name:
+    while (i <= n & ustrtrim(lines[i]) == "") i++
+    if (i > n) return((0, 0))
+    tr = ustrlower(ustrtrim(lines[i]))
+    if (!ustrregexm(tr, "^name:")) return((0, 0))
+    i++
+    while (i <= n & usubstr(ustrltrim(lines[i]), 1, 1) == ">") i++
+
+    // log:  (not "log type:")
+    while (i <= n & ustrtrim(lines[i]) == "") i++
+    if (i > n) return((0, 0))
+    tr = ustrlower(ustrtrim(lines[i]))
+    if (!ustrregexm(tr, "^log:") | ustrregexm(tr, "^log type:")) return((0, 0))
+    i++
+    while (i <= n & usubstr(ustrltrim(lines[i]), 1, 1) == ">") i++
+
+    // log type:
+    while (i <= n & ustrtrim(lines[i]) == "") i++
+    if (i > n) return((0, 0))
+    tr = ustrlower(ustrtrim(lines[i]))
+    if (!ustrregexm(tr, "^log type:")) return((0, 0))
+    i++
+    while (i <= n & usubstr(ustrltrim(lines[i]), 1, 1) == ">") i++
+
+    // opened on:
+    while (i <= n & ustrtrim(lines[i]) == "") i++
+    if (i > n) return((0, 0))
+    tr = ustrlower(ustrtrim(lines[i]))
+    if (!ustrregexm(tr, "^opened on:")) return((0, 0))
+    i++
+    while (i <= n & usubstr(ustrltrim(lines[i]), 1, 1) == ">") i++
+
+    return((start, i - 1))
+}
+
+string colvector fence_stata_log_header(string colvector lines)
+{
+    real rowvector r
+    real scalar a, b, n
+    string colvector left, mid, right
+
+    r = stata_log_header_range(lines)
+    if (r[1] == 0) return(lines)
+    a = r[1]
+    b = r[2]
+    n = rows(lines)
+    left  = (a == 1 ? J(0, 1, "") : lines[|1 \ a-1|])
+    mid   = lines[|a \ b|]
+    right = (b == n ? J(0, 1, "") : lines[|b+1 \ n|])
+    return(left \ "```text" \ mid \ "```" \ right)
+}
+
+string colvector drop_stata_log_header(string colvector lines)
+{
+    real rowvector r
+    real scalar a, b, n
+
+    r = stata_log_header_range(lines)
+    if (r[1] == 0) return(lines)
+    a = r[1]
+    b = r[2]
+    n = rows(lines)
+    if (a == 1 & b == n) return(J(0, 1, ""))
+    if (a == 1) return(lines[|b+1 \ n|])
+    if (b == n) return(lines[|1 \ a-1|])
+    return(lines[|1 \ a-1|] \ lines[|b+1 \ n|])
+}
+
+string scalar strip_smcl_prefixes(string scalar raw)
+{
+    s = ustrltrim(raw)
+    changed = 1
+    while (changed) {
+        changed = 0
+        if (ustrpos(s, "{com}") == 1) {
+            s = ustrltrim(usubstr(s, 6, .))
+            changed = 1
+        }
+        else if (ustrpos(s, "{res}") == 1) {
+            s = ustrltrim(usubstr(s, 6, .))
+            changed = 1
+        }
+        else if (ustrpos(s, "{txt}") == 1) {
+            s = ustrltrim(usubstr(s, 6, .))
+            changed = 1
+        }
+    }
+    return(s)
+}
+
+string scalar norm_disp_args(string scalar s)
+{
+    return(ustrtrim(ustrregexra(s, "\s+", " ")))
+}
+
+string scalar display_value_after(string colvector lines, real scalar i)
+{
+    n = rows(lines)
+    for (j = i + 1; j <= n; j++) {
+        nxt = strtrim(strip_smcl_prefixes(lines[j]))
+        if (nxt == "") continue
+        if (nxt == "_ishere_/*" | nxt == "_ishere_*/" |
+            ustrpos(nxt, ".") == 1 | ustrpos(nxt, ">") == 1 |
+            ustrpos(nxt, "/**") == 1) return("")
+        return(nxt)
+    }
+    return("")
+}
+
+string scalar replace_ishere_display_tag(string scalar line, string scalar want, string scalar val)
+{
+    s = line
+    out = ""
+    for (t = 1; t <= 30; t++) {
+        p = ustrpos(ustrlower(s), "{ishere")
+        if (p == 0) {
+            out = out + s
+            break
+        }
+        rest = usubstr(s, p, .)
+        q = ustrpos(rest, "}")
+        if (q == 0) {
+            out = out + s
+            break
+        }
+        tag = usubstr(rest, 1, q)
+        out = out + usubstr(s, 1, p - 1)
+        inner = ustrtrim(usubstr(tag, 2, ustrlen(tag) - 2))
+        matched = 0
+        if (ustrregexm(inner, "^ishere\s+display\s+(.*)$")) {
+            args = ustrtrim(ustrregexs(1))
+            if (norm_disp_args(args) == want) {
+                out = out + " " + val + " "
+                matched = 1
+            }
+        }
+        if (!matched) out = out + tag
+        s = usubstr(rest, q + 1, .)
+    }
+    return(out)
+}
+
 string colvector function subisheredintxt(string colvector lines)
 {
     n = rows(lines)
     if (n == 0) return(lines)
-    
+
     lines2 = strltrim(lines)
     textflag = get_textcell_index(lines2)
-    
+
     // Step 1: 找到所有 . ishere display 命令行及其输出值
     flag = (ustrpos(lines2, ".") :== 1)
     lines3 = strltrim(substr(lines2, 2, .))
     flag = flag :& (ustrpos(lines3, "ishere") :== 1)
     lines4 = strtrim(substr(lines3, strlen("ishere")+1, .))
     flag = flag :& (ustrpos(lines4, "display") :== 1)
-    
+
+    // SMCL logs: {com}. ishere display ...
+    if (sum(flag) == 0) {
+        stripped = J(n, 1, "")
+        for (i = 1; i <= n; i++) stripped[i] = strip_smcl_prefixes(lines2[i])
+        flag = (ustrpos(stripped, ".") :== 1)
+        lines3 = strltrim(substr(stripped, 2, .))
+        flag = flag :& (ustrpos(lines3, "ishere") :== 1)
+        lines4 = strtrim(substr(lines3, strlen("ishere")+1, .))
+        flag = flag :& (ustrpos(lines4, "display") :== 1)
+        lines2 = stripped
+    }
+
     if (sum(flag) == 0 | sum(textflag) == 0) {
         return(lines)
     }
-    
-    // Step 2: 提取 display 参数（去除多余空格）
+
+    // Step 2: 提取 display 参数（压缩空白后按字面比较，避免 e(r2) 被当成正则）
     lines5 = substr(lines4, strlen("display")+1, .)
     lines5 = strtrim(lines5)
     dispcmd = select(lines5, flag)
-    
-    // Step 3: 获取显示值（下一行的内容）
+
     idx = selectindex(flag)
     n_displays = rows(idx)
-    //n_displays
-    
-    // inshere display only act in the following one textcell.
-    
+
     for (i = 1; i <= n_displays; i++) {
-        //dispcmd[i]
-        pattern = "\{\s*ishere\s+display\s*" + dispcmd[i] + "\s*\}"
-        if (idx[i] + 1 <= n) {
-            textrow =select(textflag, ((1::n):>idx[i]+1):*textflag)
-            if (length(textrow)){
-                text_j =selectindex(textflag:==textrow[1])
-                lines[text_j] =ustrregexra(lines[text_j], pattern, " "+strtrim(lines[idx[i]+1])+" ")
-            }
+        val = display_value_after(lines, idx[i])
+        if (val == "") continue
+        want = norm_disp_args(dispcmd[i])
+        if (want == "") continue
+        after = ((1::n) :> idx[i]) :* textflag
+        textrow = select(textflag, after)
+        if (length(textrow) == 0) continue
+        text_j = selectindex(textflag :== textrow[1])
+        for (k = 1; k <= length(text_j); k++) {
+            lines[text_j[k]] = replace_ishere_display_tag(lines[text_j[k]], want, val)
         }
     }
-    
-    
-    
+
     return(lines)
 }
 
@@ -1658,7 +3422,8 @@ capture program drop alltohtml
 program define alltohtml,rclass
     version 16
     syntax anything, [width(string) height(string) zoom(string)]
-    
+    tohtml_require_fs
+
     // check directory exists
     if "`zoom'"=="" local zoom "100%"
     else{
@@ -1764,28 +3529,61 @@ void write_log(string matrix tables)
 
 string colvector function ishererep(string colvector content)
 {
-    lines =content
-    lines2 = usubinstr(lines," ","",.)
+    lines = content
+    lines2 = usubinstr(lines, " ", "", .)
     flag = selectindex(ustrpos(lines2, ".**#") :== 1)
     if (length(flag) > 0) {
        lines[flag] = ustrltrim(lines[flag])
        lines[flag] = ustrregexra(lines[flag], "^\.\s*\*\*\s*", ". ishere ")
     }
+    // . **/*  →  . /**   (do not use ishere /*)
     flag = selectindex(ustrpos(lines2, ".**/*") :== 1)
     if (length(flag) > 0) {
        lines[flag] = ustrltrim(lines[flag])
-       lines[flag] = ustrregexra(lines[flag], "^\.\s*\*\*\s*", ". ishere ")
+       lines[flag] = ustrregexra(lines[flag], "^\.\s*\*\*\s*/\*", ". /**")
     }
-    flag = selectindex(ustrpos(lines2, ">***/") :== 1)
+    // > **/  (spaces removed: >**/)
+    flag = selectindex(ustrpos(lines2, ">**/") :== 1)
     if (length(flag) > 0) {
        lines[flag] = ustrltrim(lines[flag])
-       lines[flag] = ustrregexra(lines[flag], "^\>\s*\*\*\s*", "> ishere ")
+       lines[flag] = ustrregexra(lines[flag], "^\>\s*\*\*\s*/", "> **/")
     }
 
     flag = selectindex(ustrpos(lines2, ".**```") :== 1)
     if (length(flag) > 0) {
        lines[flag] = ustrltrim(lines[flag])
        lines[flag] = ustrregexra(lines[flag], "^\.\s*\*\*\s*", ". ishere ")
+    }
+    return(lines)
+}
+
+
+string colvector function ishererep2(string colvector content)
+{
+    lines = content
+    lines2 = usubinstr(lines, " ", "", .)
+    flag = selectindex(ustrpos(lines2, "**#") :== 1)
+    if (length(flag) > 0) {
+       lines[flag] = ustrltrim(lines[flag])
+       lines[flag] = ustrregexra(lines[flag], "^\s*\*\*\s*", "ishere ")
+    }
+    // **/* → /** 
+    flag = selectindex(ustrpos(lines2, "**/*") :== 1)
+    if (length(flag) > 0) {
+       lines[flag] = ustrltrim(lines[flag])
+       lines[flag] = ustrregexra(lines[flag], "^\s*\*\*\s*/\*", "/**")
+    }
+    // **/ closing (avoid matching /**)
+    flag = selectindex((ustrpos(lines2, "**/") :== 1) :* (ustrpos(lines2, "/**") :!= 1))
+    if (length(flag) > 0) {
+       lines[flag] = ustrltrim(lines[flag])
+       lines[flag] = ustrregexra(lines[flag], "^\s*\*\*\s*/", "**/")
+    }
+
+    flag = selectindex(ustrpos(lines2, "**```") :== 1)
+    if (length(flag) > 0) {
+       lines[flag] = ustrltrim(lines[flag])
+       lines[flag] = ustrregexra(lines[flag], "^\s*\*\*\s*", "ishere ")
     }
     return(lines)
 }

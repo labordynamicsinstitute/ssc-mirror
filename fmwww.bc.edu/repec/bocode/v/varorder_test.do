@@ -1,7 +1,7 @@
 version 16.0
 
 /*
-    Release test for varorder 1.1.0.
+    Release test for varorder 2.0.0.
 
     Usage:
         do varorder_test.do
@@ -95,10 +95,13 @@ local example_suppressed = r(n_families_suppressed)
 local example_moved = r(n_moved)
 local example_displacement = r(max_displacement)
 local example_lists = r(order_lists_returned)
+local example_audit_lists = r(audit_lists_returned)
 local example_old `r(oldorder)'
 local example_new `r(neworder)'
 mata: st_numscalar("__tv_quotes",substr(st_global("r(oldorder)"),1,2)==char(96)+char(34) | substr(st_global("r(oldorder)"),-2,2)==char(34)+char(39) | substr(st_global("r(neworder)"),1,2)==char(96)+char(34) | substr(st_global("r(neworder)"),-2,2)==char(34)+char(39))
-mata: st_numscalar("__tv_words",cols(tokens(st_global("r(oldorder)")))==146 & cols(tokens(st_global("r(neworder)")))==146)
+mata: st_numscalar("__tv_words",cols(tokens(st_global("r(oldorder)")))==272 & cols(tokens(st_global("r(neworder)")))==272)
+mata: st_numscalar("__tv_audit_readable",strpos(st_global("r(audit_family_types)"),":")>0 & strpos(st_global("r(audit_family_evidence)"),"variable name")>0 & strpos(st_global("r(audit_family_reasons)"),":")>0 & strpos(st_global("r(audit_variable_keys)"),"temporal key")>0 & strpos(st_global("r(audit_variable_evidence)"),"variable label")>0 & strpos(st_global("r(audit_variable_reasons)"),":")>0 & strpos(st_global("r(audit_variable_reasons)"),"\\u")==0 & strpos(st_global("r(audit_family_evidence)"),"+ +")==0)
+mata: st_numscalar("__tv_audit_hidden",strlen(st_global("r(audit_family_ids)"))==0 & strlen(st_global("r(audit_family_names)"))==0 & strlen(st_global("r(audit_family_states)"))==0 & strlen(st_global("r(audit_variables)"))==0 & strlen(st_global("r(audit_variable_family_ids)"))==0)
 local direct_new_rc = .
 local direct_old_rc = .
 if `is_batch' {
@@ -110,13 +113,16 @@ if `is_batch' {
 log close tvpreview
 
 unab example_after : _all
-tvassert `example_k' == 146
-tvassert `example_detected' == 42
-tvassert `example_confirmed' == 29
-tvassert `example_related' == 6
-tvassert `example_ambiguous' == 7
-tvassert `example_suppressed' == 13
+tvassert `example_k' == 272
+tvassert `example_detected' == 82
+tvassert `example_confirmed' == 48
+tvassert `example_related' == 14
+tvassert `example_ambiguous' == 20
+tvassert `example_suppressed' == 34
 tvassert `example_lists' == 1
+tvassert `example_audit_lists' == 1
+tvassert __tv_audit_readable == 1
+tvassert __tv_audit_hidden == 1
 tvassert __tv_quotes == 0
 tvassert __tv_words == 1
 tvasserteq `"`example_old'"' `"`example_before'"'
@@ -132,8 +138,8 @@ if `is_batch' {
 }
 else {
     tvassert `example_changed' == 1
-    tvassert `example_families_changed' == 29
-    tvassert `example_moved' == 131
+    tvassert `example_families_changed' == 48
+    tvassert `example_moved' == 186
     tvassert `example_displacement' == 89
     tvasserteq `"`example_after'"' `"`example_new'"'
 }
@@ -160,14 +166,14 @@ local previous_line ""
 file read tvp line
 while r(eof) == 0 {
     if strtrim(`"`line'"') == "varorder preview summary" local ++preview_headers
-    if strtrim(`"`line'"') == "Examined: 146 variables" local ++examined_lines
-    if strtrim(`"`line'"') == "Confirmed temporal structures: 29" local ++confirmed_lines
-    if strtrim(`"`line'"') == "Variables to be reordered: 131" local ++reordered_lines
+    if strtrim(`"`line'"') == "Examined: 272 variables" local ++examined_lines
+    if strtrim(`"`line'"') == "Confirmed temporal structures: 48" local ++confirmed_lines
+    if strtrim(`"`line'"') == "Variables to be reordered: 186" local ++reordered_lines
     if strtrim(`"`line'"') == "Maximum displacement: 89 columns" local ++displacement_lines
     if strtrim(`"`line'"') == "Issues requiring review:" local ++issue_headers
-    if strpos(`"`line'"', "Gap warnings but ordering allowed (2): mobility, vigor") local ++gap_lines
-    if strpos(`"`line'"', "Related/unverified") & strpos(`"`line'"', "(6): eng, exercise, lab, mood, promotion_status, reading") local ++related_lines
-    if strpos(`"`line'"', "Ambiguous/conflicting") & strpos(`"`line'"', "(7): focus, memory, mirage, pain, prism_check") local ++ambiguous_lines
+    if strpos(`"`line'"', "Gap warnings but ordering allowed (3): fortitude, mobility, vigor") local ++gap_lines
+    if strpos(`"`line'"', "Related/unverified") & strpos(`"`line'"', "(14): barcode, batchcode") local ++related_lines
+    if strpos(`"`line'"', "Ambiguous/conflicting") & strpos(`"`line'"', "(20): acoustic_calibration, apex") local ++ambiguous_lines
     if strpos(`"`line'"', "All eligible structures will be included in the proposed ordering.") local ++decision_lines
     if strpos(`"`line'"', "Press Enter to apply the proposed ordering.") {
         local ++preview_prompts
