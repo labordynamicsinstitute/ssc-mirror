@@ -72,15 +72,17 @@ For example, {cmd:pre(1)} uses only the last pre-treatment period, while
 
 {synopt:{opt attgt}}{it:Large-N only.}  Reports cohort-by-year  ATT(g,t)  estimates with robust standard errors and confidence intervals.{p_end}
 
+{synopt:{opt cluster(varname)}}{it:Large-N only.} Specifies the clustering level for ATT(g,t) standard errors and multiplier-bootstrap inference. By default, clustering is at the unit level.{p_end}
+
 {synopt:{opt ydot}}{it:Large-N only.}  Saves the cohort-specific residualized outcome variables used to construct the ATT(g,t) estimates. By default, these variables are not saved to avoid conflicts with existing user variables.{p_end}
 
 {synopt:{opt save(filename)}}Save estimation results as a .dta file.{p_end}
 
 {synopt:{opt graph}}Displays graphical results.{break}
-Large-N: plots weighted ATT estimates by relative time with simultaneous confidence bands by default. Use {opt pointwise} for pointwise confidence intervals.{break}
+Large-N: plots weighted ATT estimates by relative time with pointwise confidence intervals by default. {break}
 Small-N: plots treated and control means of residualized outcomes over time.{p_end}
 
-{synopt:{opt pointwise}}Large-N only. Uses pointwise confidence intervals, rather than simultaneous confidence bands, in both the event-study table and graph.{p_end}
+{synopt:{opt cb}}{it:Large-N only.} Uses simultaneous confidence bands over all estimated event times (pre- and post-treatment) in both the event-study table and graph, rather than the default pointwise confidence intervals.{p_end}
 
 {synopt:{opt gopts(string)}}Additional {cmd:twoway} graph options (only with {cmd:graph}).{p_end}
 
