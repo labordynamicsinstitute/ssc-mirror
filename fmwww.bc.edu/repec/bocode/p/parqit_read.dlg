@@ -1,9 +1,9 @@
 /*
-  parqit use - Read Parquet data as a lazy view or into memory
+  parqit use - Open a lazy view or load data into memory
 
-*!  VERSION 0.1.29  25aug2026
+*!  VERSION 0.1.37  07sep2026
 
-  User > parqit > Read Parquet data (lazy view or into memory)...
+  User > parqit > Read data (lazy view or into memory)...
   Launch directly with:  db parqit_read      (menu installed by: parqit menu)
 
   Builds parqit use (lazy view, or into memory with clear), parqit open _data
@@ -15,9 +15,9 @@
 VERSION 16.0
 
 INCLUDE _std_wide
-DEFINE _dlght 350
+DEFINE _dlght 400
 INCLUDE header
-HELP hlp1, view("help parqit##menu")
+HELP hlp1, view("help parqit##lazy")
 RESET res1
 
 SCRIPT PREINIT
@@ -36,9 +36,10 @@ END
 PROGRAM POSTINIT_PROGRAM
 BEGIN
 	call program main_mode
+	call program main_context
 END
 
-DIALOG main, label("parqit use - Read Parquet data as a lazy view or into memory") ///
+DIALOG main, label("parqit use - Open a lazy view or load data into memory") ///
 	tabtitle("Main")
 BEGIN
   GROUPBOX gb_what		_lft	_top	_iwd	_ht6,		///
@@ -62,6 +63,7 @@ BEGIN
 	tooltip("Describe the Parquet footer of the source (parqit describe)") ///
 	label("Describe")
   FILE fi_using			_lft	_ss	_iwd	.,		///
+	onchange(program main_source)					///
 	error("Filename")						///
 	defext(parquet)							///
 	label("Browse...")
@@ -106,6 +108,8 @@ BEGIN
 
   TEXT tx_note			_lft	_ls	_iwd	.,		///
 	label("A lazy view probes the schema and loads no result rows; materialise it later with parqit collect or parqit save.")
+  TEXT tx_context _lft 360 470 ., label("Current view: refresh to check")
+  BUTTON bu_context _rj80 @ 80 ., label("Refresh") onpush(program main_context)
 END
 
 LIST vv_list
@@ -141,6 +145,7 @@ BEGIN
 			call main.tx_name.enable
 			call main.ed_name.enable
 		}
+		call program main_source
 	}
 	if main.rb_open {
 		call main.tx_using.disable
@@ -169,6 +174,28 @@ BEGIN
 		call main.ed_name.disable
 		call main.tx_enc.disable
 		call main.cb_enc.disable
+	}
+END
+
+PROGRAM main_context
+BEGIN
+	put "parqit _dlgcontext "
+	put dlgname
+	stata hidden queue
+	clear
+END
+
+PROGRAM main_source
+BEGIN
+	if main.rb_use {
+		put "parqit _dlgsource "
+		put dlgname
+		if main.fi_using {
+			put " using "
+			put /smartquote main.fi_using
+		}
+		stata hidden queue
+		clear
 	}
 END
 

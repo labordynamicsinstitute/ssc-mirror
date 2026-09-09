@@ -1,7 +1,7 @@
 /*
   parqit view - Manage views, run DuckDB SQL, and set engine options
 
-*!  VERSION 0.1.29  25aug2026
+*!  VERSION 0.1.37  07sep2026
 
   User > parqit > Views, SQL, and engine settings...
   Launch directly with:  db parqit_views      (menu installed by: parqit menu)
@@ -18,14 +18,21 @@
 VERSION 16.0
 
 INCLUDE _std_wide
-DEFINE _dlght 320
+DEFINE _dlght 370
 INCLUDE header
-HELP hlp1, view("help parqit##menu")
+HELP hlp1, view("help parqit##options")
 RESET res1
 
-SCRIPT POSTINIT
+SCRIPT PREINIT
 BEGIN
-	main.lb_op.forceselchange
+	create STRING dlgname
+	dlgname.storeDialogClassName
+END
+
+PROGRAM POSTINIT_PROGRAM
+BEGIN
+	call main.lb_op.forceselchange
+	call program main_context
 END
 
 DIALOG main, label("parqit view - Manage views, run DuckDB SQL, and set engine options") ///
@@ -100,6 +107,16 @@ BEGIN
 	label("statamissing")
   EDIT ed_value			315	@	275	.,		///
 	label("Value")
+  TEXT tx_context _lft 325 470 ., label("Current view: refresh to check")
+  BUTTON bu_context _rj80 @ 80 ., label("Refresh") onpush(program main_context)
+END
+
+PROGRAM main_context
+BEGIN
+	put "parqit _dlgcontext "
+	put dlgname
+	stata hidden queue
+	clear
 END
 
 LIST sm_list

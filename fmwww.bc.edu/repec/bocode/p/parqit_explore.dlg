@@ -1,7 +1,7 @@
 /*
   parqit describe - Describe and explore a view or a Parquet file
 
-*!  VERSION 0.1.29  25aug2026
+*!  VERSION 0.1.37  07sep2026
 
   User > parqit > Describe and explore data...
   Launch directly with:  db parqit_explore      (menu installed by: parqit menu)
@@ -16,9 +16,9 @@
 VERSION 16.0
 
 INCLUDE _std_wide
-DEFINE _dlght 350
+DEFINE _dlght 400
 INCLUDE header
-HELP hlp1, view("help parqit##menu")
+HELP hlp1, view("help parqit##explore")
 RESET res1
 
 SCRIPT PREINIT
@@ -31,9 +31,10 @@ BEGIN
 		"All files (*.*)|*.*"
 END
 
-SCRIPT POSTINIT
+PROGRAM POSTINIT_PROGRAM
 BEGIN
-	main.lb_op.forceselchange
+	call main.lb_op.forceselchange
+	call program main_context
 END
 
 DIALOG main, label("parqit describe - Describe and explore a view or a Parquet file") ///
@@ -101,6 +102,8 @@ BEGIN
 
   TEXT tx_note			275	_ls	315	.,		///
 	label("Engine-side query; the data in memory are unchanged.")
+  TEXT tx_context _lft 355 470 ., label("Current view: refresh to check")
+  BUTTON bu_context _rj80 @ 80 ., label("Refresh") onpush(program main_populate)
 END
 
 LIST vv_list
@@ -157,7 +160,7 @@ BEGIN
 	script op_list
 	script op_count
 	script op_vars
-	script op_vars
+	script op_patterns
 	script op_levelsof
 	script op_distinct
 	script op_keys
@@ -226,6 +229,13 @@ BEGIN
 	script vars_on
 END
 
+SCRIPT op_patterns
+BEGIN
+	script all_off
+	script vars_on
+	main.tx_vars.setlabel "Variables (maximum 14; empty selects all):"
+END
+
 SCRIPT op_head
 BEGIN
 	script all_off
@@ -279,6 +289,7 @@ END
 
 PROGRAM main_populate
 BEGIN
+	call program main_context
 	call pq_populate_error.setvalue 0
 	put "parqit _dlgvars "
 	put dlgname
@@ -286,9 +297,17 @@ BEGIN
 	stata hidden immediate
 	if pq_populate_error {
 		stopbox stop "Unable to get the variable names of the current view." ///
-			"Open a view first (User > parqit > Read Parquet data...)."
+			"Open a view first (User > parqit > Read data...)."
 	}
 	call main.cb_vars.repopulate
+END
+
+PROGRAM main_context
+BEGIN
+	put "parqit _dlgcontext "
+	put dlgname
+	stata hidden queue
+	clear
 END
 
 PROGRAM command

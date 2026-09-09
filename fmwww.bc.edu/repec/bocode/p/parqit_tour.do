@@ -22,6 +22,8 @@ capture mkdir "$PARQIT_TOUR_DIR"
 display as text _newline "PARQIT TOUR: BUILD THE TEACHING FILE"
 parqit version
 parqit selftest
+* GUI only: adds User > parqit. A console/batch run says so and carries on.
+capture noisily parqit menu
 
 clear
 set obs 2400
@@ -64,14 +66,14 @@ label values union married collgrad yesno
 label values race race_lbl
 notes _dta: Artificial teaching data; no real people are represented.
 
-* Menu: User > parqit > Collect into memory or save as Parquet...
+* Menu: User > parqit > Save as Parquet or collect into memory...
 parqit save "$PARQIT_TOUR_WORKERS", replace data compression(zstd)
 clear
 display as text "Observations in memory: " _N
 
 * --------------------------------------------------------------------------
 * 1. Explore first, without loading the panel
-* Menu: User > parqit > Read Parquet data (lazy view or into memory)...
+* Menu: User > parqit > Read data (lazy view or into memory)...
 parqit use using "$PARQIT_TOUR_WORKERS", name(workers)
 
 * Menu: User > parqit > Describe and explore data...
@@ -144,7 +146,7 @@ parqit show
 parqit count
 parqit list idcode year ln_wage wage within_person in 1/6
 
-* Menu: User > parqit > Collect into memory or save as Parquet...
+* Menu: User > parqit > Save as Parquet or collect into memory...
 parqit collect, clear
 list idcode year ln_wage person_mean within_person in 1/8, noobs
 parqit close
@@ -165,6 +167,7 @@ parqit close
 * A pivot performs the aggregation and the wide reshape as one lazy verb.
 parqit use using "$PARQIT_TOUR_WORKERS"
 parqit keep if !missing(ln_wage, union)
+parqit list
 parqit pivot (mean) mean_lnwage=ln_wage (count) n=ln_wage,             ///
     rows(year) cols(union)
 parqit collect, clear
@@ -199,7 +202,7 @@ parqit close
 * --------------------------------------------------------------------------
 * 4. Multiple lazy tables: derive a lookup view and join it to another view
 * No intermediate table is loaded into Stata or written to disk.
-* Menu: User > parqit > Read Parquet data (lazy view or into memory)...
+* Menu: User > parqit > Read data (lazy view or into memory)...
 parqit use using "$PARQIT_TOUR_WORKERS", name(analysis)
 parqit keep if year >= 1982 & !missing(ln_wage)
 parqit keep idcode year age tenure ln_wage union collgrad industry
@@ -222,7 +225,7 @@ parqit merge m:1 industry using view:industry_stats, keep(match)       ///
 parqit gen double industry_premium = ln_wage - industry_mean
 parqit sort industry idcode year
 
-* Menu: User > parqit > Collect into memory or save as Parquet...
+* Menu: User > parqit > Save as Parquet or collect into memory...
 * This materialises the joined plan directly to Parquet, not to Stata memory.
 parqit save "$PARQIT_TOUR_RESULT", replace compression(zstd)
 parqit close _all
@@ -278,7 +281,7 @@ parqit set tempdir "$PARQIT_TOUR_DIR"
 
 * --------------------------------------------------------------------------
 * 7. Read only a small final result into memory when ordinary Stata work is next
-* Menu: User > parqit > Read Parquet data (lazy view or into memory)...
+* Menu: User > parqit > Read data (lazy view or into memory)...
 parqit use idcode year ln_wage industry_mean industry_premium           ///
     using "$PARQIT_TOUR_RESULT", clear
 summarize industry_premium

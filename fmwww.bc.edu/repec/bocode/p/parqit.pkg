@@ -21,13 +21,20 @@ d KW: data management
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20260828
+d Distribution-Date: 20260908
 d
 d Author: Miguel Portela, Universidade do Minho & NIPE
 d Support: email miguel.portela@@eeg.uminho.pt
+d Author: Rute Costa, BPLIM / Banco de Portugal
+d Support: email ricosta@@bportugal.pt
+d Author: Paulo Guimarães, BPLIM / Banco de Portugal
+d Support: email pfguimaraes@@bportugal.pt
+d Author: Marta Silva, BPLIM / Banco de Portugal
+d Support: email msilva@bportugal.pt
 d
 f parqit.ado
 f parqit.sthlp
+f parqit_technical.sthlp
 f parqit_basics.do
 f parqit_tour.do
 f parqit_read.dlg
@@ -40,6 +47,7 @@ f parqit_pivot.dlg
 f parqit_combine.dlg
 f parqit_write.dlg
 f parqit_views.dlg
+f parqit_openmp_license.txt
 g LINUX64 parqit_linux64.plugin parqit.plugin
 g MACINTEL64 parqit_macintel64.plugin parqit.plugin
 g OSX.X8664 parqit_macintel64.plugin parqit.plugin

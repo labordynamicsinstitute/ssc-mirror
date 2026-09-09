@@ -1,7 +1,7 @@
 /*
   parqit summarize - Summary statistics, tables, correlations, and histograms
 
-*!  VERSION 0.1.29  25aug2026
+*!  VERSION 0.1.37  07sep2026
 
   User > parqit > Summary statistics, tables, and correlations...
   Launch directly with:  db parqit_stats      (menu installed by: parqit menu)
@@ -14,9 +14,9 @@
 VERSION 16.0
 
 INCLUDE _std_wide
-DEFINE _dlght 320
+DEFINE _dlght 410
 INCLUDE header
-HELP hlp1, view("help parqit##menu")
+HELP hlp1, view("help parqit##explore")
 RESET res1
 
 SCRIPT PREINIT
@@ -29,6 +29,7 @@ END
 PROGRAM POSTINIT_PROGRAM
 BEGIN
 	call program main_mode
+	call program main_context
 END
 
 DIALOG main, label("parqit summarize - Summary statistics, tables, correlations, and histograms") ///
@@ -45,7 +46,7 @@ BEGIN
   COMBOBOX cb_sumvars		_ilft	_ss	380	.,		///
 	append								///
 	dropdown							///
-	contents(vv_list)						///
+	contents(numeric_list)						///
 	label("Variables (leave empty for all numeric variables)")
   CHECKBOX ck_detail		410	@	180	.,		///
 	option(detail)							///
@@ -54,13 +55,16 @@ BEGIN
   RADIO rb_tab			_lft	_ls	_iwd	.,		///
 	onclickon(program main_mode)					///
 	label("One-way or two-way table of frequencies (tabulate)")
-  COMBOBOX cb_tab		_ilft	_ss	200	.,		///
-	append								///
+  TEXT tx_tab1 _ilft _ss 220 ., label("Row variable:")
+  TEXT tx_tab2 300 @ 290 ., label("Column variable (optional):")
+  COMBOBOX cb_tab		_ilft	_ss	260	.,		///
 	dropdown							///
 	contents(vv_list)						///
 	error("Variables to tabulate")					///
-	label("One or two variables")
-  CHECKBOX ck_tmiss		230	@	150	.,		///
+	label("Row variable")
+  COMBOBOX cb_tab2 300 @ 290 ., dropdown contents(vv_list) ///
+	onselchange(program main_mode) label("Column variable (optional)")
+  CHECKBOX ck_tmiss		_ilft	_ss	175	.,		///
 	option(missing)							///
 	label("Include missing values")
   CHECKBOX ck_trow		390	@	95	.,		///
@@ -69,6 +73,7 @@ BEGIN
   CHECKBOX ck_tcol		490	@	100	.,		///
 	option(col)							///
 	label("Column percent")
+  CHECKBOX ck_nolabel 210 @ 170 ., option(nolabel) label("Show codes (nolabel)")
 
   RADIO rb_ts			_lft	_ls	_iwd	.,		///
 	onclickon(program main_mode)					///
@@ -76,7 +81,7 @@ BEGIN
   COMBOBOX cb_tsvars		_ilft	_ss	380	.,		///
 	append								///
 	dropdown							///
-	contents(vv_list)						///
+	contents(numeric_list)						///
 	error("Variables")						///
 	label("Variables")
   TEXT tx_tsby			410	@	40	.,		///
@@ -85,7 +90,8 @@ BEGIN
 	dropdown							///
 	contents(vv_list)						///
 	option(by)							///
-	label("Group statistics by variable")
+	label("Group statistics by variable") ///
+	tooltip("Group summaries only, without an overall total; at most 200 nonmissing groups")
   CHECKBOX ck_s_n		_ilft	_ms	60	.,		///
 	label("n")
   CHECKBOX ck_s_mean		85	@	65	.,		///
@@ -106,8 +112,12 @@ BEGIN
 	label("var")
   TEXT tx_sextra		_ilft	_ms	260	.,		///
 	label("Other statistics (range, p##; e.g., p90 range):")
-  EDIT ed_sextra		290	@	300	.,		///
+  EDIT ed_sextra		290	@	195	.,		///
 	label("Other statistics")
+  CHECKBOX ck_tsave		500	@	90	.,		///
+	option(save)							///
+	label("Save in r()") ///
+	tooltip("Return the computed tables as Stata matrices; no data file is written")
 
   RADIO rb_corr			_lft	_ls	_iwd	.,		///
 	onclickon(program main_mode)					///
@@ -115,7 +125,7 @@ BEGIN
   COMBOBOX cb_corr		_ilft	_ss	260	.,		///
 	append								///
 	dropdown							///
-	contents(vv_list)						///
+	contents(numeric_list)						///
 	error("Variables")						///
 	label("Variables")
   CHECKBOX ck_pw		300	@	90	.,		///
@@ -135,7 +145,7 @@ BEGIN
 	label("Histogram with engine-computed bins (histogram)")
   COMBOBOX cb_hvar		_ilft	_ss	200	.,		///
 	dropdown							///
-	contents(vv_list)						///
+	contents(numeric_list)						///
 	error("Variable")						///
 	label("Variable")
   TEXT tx_bins			230	@	50	.,		///
@@ -143,13 +153,20 @@ BEGIN
   EDIT ed_bins			285	@	60	.,		///
 	numonly								///
 	option(bins)							///
-	label("Number of bins")
+	label("Number of bins") ///
+	tooltip("Empty or 0: automatic; positive integer requests capped at 1000 bins")
   CHECKBOX ck_nodraw		360	@	230	.,		///
 	option(nodraw)							///
-	label("Return the bins without drawing")
+	label("Do not draw the histogram")
+  TEXT tx_context _lft 365 470 ., label("Current view: refresh to check")
+  BUTTON bu_context _rj80 @ 80 ., label("Refresh") onpush(program main_populate)
 END
 
 LIST vv_list
+BEGIN
+END
+
+LIST numeric_list
 BEGIN
 END
 
@@ -158,6 +175,10 @@ BEGIN
 	call main.cb_sumvars.disable
 	call main.ck_detail.disable
 	call main.cb_tab.disable
+	call main.cb_tab2.disable
+	call main.tx_tab1.disable
+	call main.tx_tab2.disable
+	call main.ck_nolabel.disable
 	call main.ck_tmiss.disable
 	call main.ck_trow.disable
 	call main.ck_tcol.disable
@@ -174,6 +195,7 @@ BEGIN
 	call main.ck_s_var.disable
 	call main.tx_sextra.disable
 	call main.ed_sextra.disable
+	call main.ck_tsave.disable
 	call main.cb_corr.disable
 	call main.ck_pw.disable
 	call main.ck_obs.disable
@@ -188,9 +210,15 @@ BEGIN
 	}
 	if main.rb_tab {
 		call main.cb_tab.enable
+		call main.cb_tab2.enable
+		call main.tx_tab1.enable
+		call main.tx_tab2.enable
+		call main.ck_nolabel.enable
 		call main.ck_tmiss.enable
-		call main.ck_trow.enable
-		call main.ck_tcol.enable
+		if main.cb_tab2 {
+			call main.ck_trow.enable
+			call main.ck_tcol.enable
+		}
 	}
 	if main.rb_ts {
 		call main.cb_tsvars.enable
@@ -206,6 +234,7 @@ BEGIN
 		call main.ck_s_var.enable
 		call main.tx_sextra.enable
 		call main.ed_sextra.enable
+		call main.ck_tsave.enable
 	}
 	if main.rb_corr {
 		call main.cb_corr.enable
@@ -225,21 +254,31 @@ END
 
 PROGRAM main_populate
 BEGIN
+	call program main_context
 	call pq_populate_error.setvalue 0
 	put "parqit _dlgvars "
 	put dlgname
-	put " vv_list"
+	put " vv_list, numeric(numeric_list)"
 	stata hidden immediate
 	if pq_populate_error {
 		stopbox stop "Unable to get the variable names of the current view." ///
-			"Open a view first (User > parqit > Read Parquet data...)."
+			"Open a view first (User > parqit > Read data...)."
 	}
 	call main.cb_sumvars.repopulate
 	call main.cb_tab.repopulate
+	call main.cb_tab2.repopulate
 	call main.cb_tsvars.repopulate
 	call main.cb_tsby.repopulate
 	call main.cb_corr.repopulate
 	call main.cb_hvar.repopulate
+END
+
+PROGRAM main_context
+BEGIN
+	put "parqit _dlgcontext "
+	put dlgname
+	stata hidden queue
+	clear
 END
 
 PROGRAM command
@@ -255,11 +294,20 @@ BEGIN
 	}
 	if main.rb_tab {
 		require main.cb_tab
+		if main.cb_tab.isWordCountGT(1) | main.cb_tab2.isWordCountGT(1) {
+			stopbox stop "Enter one variable in each tabulation field."
+		}
 		put "parqit tabulate " main.cb_tab
+		if main.cb_tab2 {
+			put " " main.cb_tab2
+		}
 		beginoptions
 			option main.ck_tmiss
-			option main.ck_trow
-			option main.ck_tcol
+			option main.ck_nolabel
+			if main.cb_tab2 {
+				option main.ck_trow
+				option main.ck_tcol
+			}
 		endoptions
 	}
 	if main.rb_ts {
@@ -300,6 +348,7 @@ BEGIN
 				put ") "
 			}
 			optionarg main.cb_tsby
+			option main.ck_tsave
 		endoptions
 	}
 	if main.rb_corr {

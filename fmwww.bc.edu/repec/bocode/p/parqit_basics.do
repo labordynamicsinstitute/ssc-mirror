@@ -27,10 +27,12 @@ capture mkdir "$PARQIT_EXAMPLE_DIR"
 display as text _newline "PARQIT BASICS: CHECK THE INSTALLATION"
 parqit version
 parqit selftest
+* GUI only: adds User > parqit. A console/batch run says so and carries on.
+capture noisily parqit menu
 
 * --------------------------------------------------------------------------
 * 1. Create an NLS-style worker panel and write the data in memory to Parquet
-* Menu: User > parqit > Collect into memory or save as Parquet...
+* Menu: User > parqit > Save as Parquet or collect into memory...
 * Select "Write the pipeline result to Parquet ... (save)", tick "Write the
 * dataset in memory instead of the view (data)" and pick zstd as Compression.
 clear
@@ -78,7 +80,7 @@ parqit save "$PARQIT_WORKERS", replace data compression(zstd)
 
 * --------------------------------------------------------------------------
 * 2. Inspect a file and, when it is small enough, read it eagerly into Stata
-* Menu: User > parqit > Read Parquet data (lazy view or into memory)...
+* Menu: User > parqit > Read data (lazy view or into memory)...
 * The Describe button runs -parqit describe- on the file named in the dialog.
 parqit path "$PARQIT_WORKERS"
 parqit describe "$PARQIT_WORKERS"
@@ -94,7 +96,7 @@ assert "`: value label union'" == "yesno"
 
 * --------------------------------------------------------------------------
 * 3. Open a lazy view: the source stays on disk and memory stays untouched
-* Menu: User > parqit > Read Parquet data (lazy view or into memory)...
+* Menu: User > parqit > Read data (lazy view or into memory)...
 * Leave "Read the data into memory now ... (clear)" unticked: a view opens.
 clear
 set obs 1
@@ -132,7 +134,7 @@ parqit sort idcode year
 * show prints the single query the plan compiles to.
 parqit show
 
-* Menu: User > parqit > Collect into memory or save as Parquet...
+* Menu: User > parqit > Save as Parquet or collect into memory...
 * Only now does the result replace Stata's current dataset.
 parqit collect, clear
 list idcode year wage hourly_wage in 1/6, noobs
@@ -151,7 +153,7 @@ parqit close
 * --------------------------------------------------------------------------
 * 4. Run the same kind of plan from Parquet straight back to Parquet
 * The selected result never needs to enter Stata's memory.
-* Menu: User > parqit > Collect into memory or save as Parquet...
+* Menu: User > parqit > Save as Parquet or collect into memory...
 parqit use using "$PARQIT_WORKERS"
 parqit keep if year >= 1983 & !missing(ln_wage)
 parqit keep idcode year age tenure hours ln_wage union collgrad industry
@@ -233,7 +235,7 @@ list idcode year industry sector productivity in 1/4, noobs
 * parqit also opens .csv/.tsv/.txt, Stata .dta and Excel sources as lazy views.
 * Text carries no storage types or labels, so the converted file holds plain
 * numbers; the Parquet written in section 1 keeps the typed, labelled data.
-* Menu: User > parqit > Read Parquet data (lazy view or into memory)...
+* Menu: User > parqit > Read data (lazy view or into memory)...
 parqit use "$PARQIT_WORKERS", clear
 export delimited using "$PARQIT_CSV", replace nolabel
 clear

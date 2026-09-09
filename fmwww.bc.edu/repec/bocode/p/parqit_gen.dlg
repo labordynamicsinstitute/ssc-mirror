@@ -1,7 +1,7 @@
 /*
   parqit generate - Create a new variable, or change the contents of a variable
 
-*!  VERSION 0.1.29  25aug2026
+*!  VERSION 0.1.37  07sep2026
 
   User > parqit > Create or change variables...
   Launch directly with:  db parqit_gen      (menu installed by: parqit menu)
@@ -15,9 +15,9 @@
 VERSION 16.0
 
 INCLUDE _std_wide
-DEFINE _dlght 330
+DEFINE _dlght 380
 INCLUDE header
-HELP hlp1, view("help parqit##menu")
+HELP hlp1, view("help parqit##expressions")
 RESET res1
 
 SCRIPT PREINIT
@@ -30,6 +30,7 @@ END
 PROGRAM POSTINIT_PROGRAM
 BEGIN
 	call program main_mode
+	call program main_context
 END
 
 DIALOG main, label("parqit generate - Create a new variable, or change the contents of a variable") ///
@@ -94,6 +95,16 @@ BEGIN
 
   TEXT tx_note			_lft	_ls	_iwd	.,		///
 	label("An untyped result is stored as double (native generate defaults to float); choose a type to control storage.")
+  TEXT tx_context _lft 335 470 ., label("Current view: refresh to check")
+  BUTTON bu_context _rj80 @ 80 ., label("Refresh") onpush(program main_populate)
+END
+
+PROGRAM main_context
+BEGIN
+	put "parqit _dlgcontext "
+	put dlgname
+	stata hidden queue
+	clear
 END
 
 LIST vv_list
@@ -161,6 +172,7 @@ END
 
 PROGRAM main_populate
 BEGIN
+	call program main_context
 	call pq_populate_error.setvalue 0
 	put "parqit _dlgvars "
 	put dlgname
@@ -168,7 +180,7 @@ BEGIN
 	stata hidden immediate
 	if pq_populate_error {
 		stopbox stop "Unable to get the variable names of the current view." ///
-			"Open a view first (User > parqit > Read Parquet data...)."
+			"Open a view first (User > parqit > Read data...)."
 	}
 	call main.cb_by.repopulate
 END

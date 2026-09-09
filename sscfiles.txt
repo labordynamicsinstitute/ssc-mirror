@@ -1428,6 +1428,7 @@ fmwww.bc.edu/repec/bocode/p/psreg.pkg
 fmwww.bc.edu/repec/bocode/p/pyramid5.tut
 fmwww.bc.edu/repec/bocode/p/pip_tables.ado
 fmwww.bc.edu/repec/bocode/p/psr.pkg
+fmwww.bc.edu/repec/bocode/p/parqit_openmp_license.txt
 fmwww.bc.edu/repec/bocode/p/powerclus.ado
 fmwww.bc.edu/repec/bocode/p/preparation.pkg
 fmwww.bc.edu/repec/bocode/p/pem.dlg
@@ -1484,6 +1485,7 @@ fmwww.bc.edu/repec/bocode/p/pre7.hlp
 fmwww.bc.edu/repec/bocode/p/paramed.mata
 fmwww.bc.edu/repec/bocode/p/povtime.ado
 fmwww.bc.edu/repec/bocode/p/plotsgpv.sthlp
+fmwww.bc.edu/repec/bocode/p/parqit_technical.sthlp
 fmwww.bc.edu/repec/bocode/p/ppml_fe_bias.ado
 fmwww.bc.edu/repec/bocode/p/parmby.hlp
 fmwww.bc.edu/repec/bocode/p/pzms_help.sthlp

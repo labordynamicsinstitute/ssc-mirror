@@ -1,9 +1,9 @@
 /*
-  parqit collect - Load the pipeline result into memory, or write it to Parquet
+  parqit save - Write Parquet or collect a view into memory
 
-*!  VERSION 0.1.29  25aug2026
+*!  VERSION 0.1.37  07sep2026
 
-  User > parqit > Collect into memory or save as Parquet...
+  User > parqit > Save as Parquet or collect into memory...
   Launch directly with:  db parqit_write      (menu installed by: parqit menu)
 
   The two materialisers: parqit collect executes the current view's pipeline
@@ -15,9 +15,9 @@
 VERSION 16.0
 
 INCLUDE _std_wide
-DEFINE _dlght 355
+DEFINE _dlght 450
 INCLUDE header
-HELP hlp1, view("help parqit##menu")
+HELP hlp1, view("help parqit##materialisers")
 RESET res1
 
 SCRIPT PREINIT
@@ -25,6 +25,8 @@ BEGIN
 	create STRING dlgname
 	dlgname.storeDialogClassName
 	create DOUBLE pq_populate_error
+	create DOUBLE pq_view_live
+	create STRING pq_view_name
 	main.fi_out.formatfilter					///
 		"Parquet (*.parquet)|*.parquet|"			///
 		"All files (*.*)|*.*"
@@ -33,24 +35,25 @@ END
 PROGRAM POSTINIT_PROGRAM
 BEGIN
 	call program main_mode
+	call program main_context
 END
 
-DIALOG main, label("parqit collect - Load the pipeline result into memory, or write it to Parquet") ///
+DIALOG main, label("parqit save - Write Parquet or collect a view into memory") ///
 	tabtitle("Main")
 BEGIN
-  RADIO rb_collect		_lft	_top	_iwd	.,		///
+  RADIO rb_save		_lft	_top	_iwd	.,		///
 	first								///
 	onclickon(program main_mode)					///
-	label("Load the pipeline result into memory, replacing the data in memory (collect)")
+	label("Write the selected view shown below to Parquet (save)")
+  RADIO rb_data _lft _ss _iwd ., onclickon(program main_mode) ///
+	label("Write the dataset in Stata memory to Parquet (save, data)")
+  RADIO rb_collect _lft _ss _iwd ., last onclickon(program main_mode) ///
+	label("Load the selected view into Stata memory (collect)")
   CHECKBOX ck_repl		_ilft	_ss	_ibwd	.,		///
 	option(clear)							///
 	label("Replace data in memory even when they have unsaved changes (clear)")
 
-  RADIO rb_save			_lft	_ls	_iwd	.,		///
-	last								///
-	onclickon(program main_mode)					///
-	label("Write the pipeline result to Parquet, leaving the data in memory as they are (save)")
-  TEXT tx_out			_ilft	_ss	_ibwd	.,		///
+  TEXT tx_out			_ilft	_ls	_ibwd	.,		///
 	label("Filename (a directory when partitioning):")
   FILE fi_out			@	_ss	@	.,		///
 	error("Filename")						///
@@ -60,11 +63,6 @@ BEGIN
   CHECKBOX ck_replace		@	_ls	@	.,		///
 	option(replace)							///
 	label("Overwrite an existing file or partition directory (replace)")
-  CHECKBOX ck_data		@	_ss	@	.,		///
-	option(data)							///
-	onclickon(program main_mode)					///
-	onclickoff(program main_mode)					///
-	label("Write the dataset in memory instead of the view (data)")
   CHECKBOX ck_copy		@	_ss	@	.,		///
 	option(copysource)						///
 	label("Copy the source file of the last parqit use ..., clear instead of reading memory (copysource)")
@@ -102,6 +100,14 @@ BEGIN
 	contents(vv_list)						///
 	option(partition_by)						///
 	label("Partition by")
+  TEXT tx_pmode			_ilft	_ls	_ibwd	.,		///
+	label("Existing partitions when partitioning, partitions(): rewrite the whole tree (none), replace or append")
+  COMBOBOX cb_pmode		@	_ss	_vnwd	.,		///
+	dropdownlist							///
+	contents(pmode_list)						///
+	default("none")							///
+	option(partitions)						///
+	label("Existing partitions")
 
   TEXT tx_enc			_ilft	_ls	_ibwd	.,		///
 	label("Code page of legacy (non-UTF-8) text when the dataset in memory is written:")
@@ -111,6 +117,32 @@ BEGIN
 	default("windows-1252")						///
 	option(encoding)						///
 	label("Code page")
+  TEXT tx_context _lft 405 470 ., label("Current view: refresh to check")
+  BUTTON bu_context _rj80 @ 80 ., label("Refresh") onpush(program main_refresh)
+END
+
+PROGRAM main_context
+BEGIN
+	put "parqit _dlgcontext "
+	put dlgname
+	if main.rb_data {
+		put ", data"
+	}
+	else {
+		put ", target"
+	}
+	stata hidden queue
+	clear
+END
+
+PROGRAM main_refresh
+BEGIN
+	if main.rb_collect {
+		call program main_context
+	}
+	else {
+		call program main_populate
+	}
 END
 
 LIST vv_list
@@ -128,6 +160,13 @@ BEGIN
 	uncompressed
 END
 
+LIST pmode_list
+BEGIN
+	none
+	replace
+	append
+END
+
 LIST enc_list
 BEGIN
 	windows-1252
@@ -143,7 +182,6 @@ BEGIN
 		call main.tx_out.disable
 		call main.fi_out.disable
 		call main.ck_replace.disable
-		call main.ck_data.disable
 		call main.ck_copy.disable
 		call main.tx_comp.disable
 		call main.cb_comp.disable
@@ -154,15 +192,16 @@ BEGIN
 		call main.tx_part.disable
 		call main.bu_pop.disable
 		call main.cb_part.disable
+		call main.tx_pmode.disable
+		call main.cb_pmode.disable
 		call main.tx_enc.disable
 		call main.cb_enc.disable
 	}
-	if main.rb_save {
+	if main.rb_save | main.rb_data {
 		call main.ck_repl.disable
 		call main.tx_out.enable
 		call main.fi_out.enable
 		call main.ck_replace.enable
-		call main.ck_data.enable
 		call main.tx_comp.enable
 		call main.cb_comp.enable
 		call main.tx_level.enable
@@ -172,35 +211,41 @@ BEGIN
 		call main.tx_part.enable
 		call main.bu_pop.enable
 		call main.cb_part.enable
-		call main.tx_enc.enable
-		call main.cb_enc.enable
-		if main.ck_data {
+		call main.tx_pmode.enable
+		call main.cb_pmode.enable
+		if main.rb_data {
+			call main.tx_enc.enable
+			call main.cb_enc.enable
 			call main.ck_copy.enable
 		}
 		else {
+			call main.tx_enc.disable
+			call main.cb_enc.disable
 			call main.ck_copy.setoff
 			call main.ck_copy.disable
 		}
 	}
+	call program main_context
 END
 
 PROGRAM main_populate
 BEGIN
+	call program main_context
 	call pq_populate_error.setvalue 0
 	put "parqit _dlgvars "
 	put dlgname
 	put " vv_list"
-	if main.ck_data {
+	if main.rb_data {
 		put ", data"
 	}
 	stata hidden immediate
 	if pq_populate_error {
-		if main.ck_data {
+		if main.rb_data {
 			stopbox stop "Unable to get the variable names of the dataset in memory."
 		}
 		else {
 			stopbox stop "Unable to get the variable names of the current view." ///
-				"Open a view first (User > parqit > Read Parquet data...)."
+				"Open a view first (User > parqit > Read data...)."
 		}
 	}
 	call main.cb_part.repopulate
@@ -208,18 +253,26 @@ END
 
 PROGRAM command
 BEGIN
+	if !main.rb_data & !pq_view_live {
+		stopbox stop "No view is selected. Open a view and click Refresh, or select the dataset in Stata memory."
+	}
 	if main.rb_collect {
-		put "parqit collect"
+		put "parqit view " pq_view_name ": collect"
 		beginoptions
 			option main.ck_repl
 		endoptions
 	}
-	if main.rb_save {
+	if main.rb_save | main.rb_data {
 		require main.fi_out
 		if !main.ck_replace {
 			repfile main.fi_out
 		}
-		put "parqit save "
+		if main.rb_data {
+			put "parqit save "
+		}
+		else {
+			put "parqit view " pq_view_name ": save "
+		}
 		put /smartquote main.fi_out
 		beginoptions
 			if main.ck_replace | main.fi_out.repfile {
@@ -228,9 +281,12 @@ BEGIN
 			optionarg /hidedefault main.cb_comp
 			optionarg main.ed_level
 			optionarg main.cb_part
+			optionarg /hidedefault main.cb_pmode
 			optionarg main.ed_chunk
 			optionarg /hidedefault main.cb_enc
-			option main.ck_data
+			if main.rb_data {
+				put "data "
+			}
 			option main.ck_copy
 		endoptions
 	}

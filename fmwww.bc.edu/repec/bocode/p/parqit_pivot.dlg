@@ -2,7 +2,7 @@
   parqit collapse - Make a dataset of summary statistics, frequencies, or a
   pivot table; convert between wide and long
 
-*!  VERSION 0.1.29  25aug2026
+*!  VERSION 0.1.37  07sep2026
 
   User > parqit > Collapse, contract, pivot table, or reshape...
   Launch directly with:  db parqit_pivot      (menu installed by: parqit menu)
@@ -18,9 +18,9 @@
 VERSION 16.0
 
 INCLUDE _std_wide
-DEFINE _dlght 410
+DEFINE _dlght 460
 INCLUDE header
-HELP hlp1, view("help parqit##menu")
+HELP hlp1, view("help parqit##verbs")
 RESET res1
 
 SCRIPT PREINIT
@@ -33,6 +33,7 @@ END
 PROGRAM POSTINIT_PROGRAM
 BEGIN
 	call program main_mode
+	call program main_context
 END
 
 DIALOG main, label("parqit collapse - Make a dataset of summary statistics, frequencies, or a pivot table; reshape") ///
@@ -168,6 +169,16 @@ BEGIN
 
   TEXT tx_note			_lft	_ls	_iwd	.,		///
 	label("All four operations are lazy; materialise the result with parqit collect or parqit save.")
+  TEXT tx_context _lft 415 470 ., label("Current view: refresh to check")
+  BUTTON bu_context _rj80 @ 80 ., label("Refresh") onpush(program main_populate)
+END
+
+PROGRAM main_context
+BEGIN
+	put "parqit _dlgcontext "
+	put dlgname
+	stata hidden queue
+	clear
 END
 
 LIST vv_list
@@ -274,6 +285,7 @@ END
 
 PROGRAM main_populate
 BEGIN
+	call program main_context
 	call pq_populate_error.setvalue 0
 	put "parqit _dlgvars "
 	put dlgname
@@ -281,7 +293,7 @@ BEGIN
 	stata hidden immediate
 	if pq_populate_error {
 		stopbox stop "Unable to get the variable names of the current view." ///
-			"Open a view first (User > parqit > Read Parquet data...)."
+			"Open a view first (User > parqit > Read data...)."
 	}
 	call main.cb_val1.repopulate
 	call main.cb_val2.repopulate
