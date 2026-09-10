@@ -23,13 +23,13 @@ d KW: GB2
 d KW: inequality
 d KW: maximum likelihood
 d
-d Requires: Stata version 8.2
+d Requires: Stata version 11
 d
-d Distribution-Date: 20140829
+d Distribution-Date: 20260909
 d
 d Author: Stephen P. Jenkins, London School of Economics and Political Science
 d Support: email S.Jenkins@@lse.ac.uk
 d
 f gb2lfit.ado
 f gb2lfit_ll.ado
-f gb2lfit.hlp
+f gb2lfit.sthlp

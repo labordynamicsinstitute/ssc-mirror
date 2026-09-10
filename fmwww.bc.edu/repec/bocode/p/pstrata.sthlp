@@ -1,4 +1,5 @@
 {smcl}
+{* *! version 2.1.0  07Sep2026}{...}
 {* *! version 2.0.0  29May2026}{...}
 {* *! version 1.1.0  28Oct2016}{...}
 {* *! version 1.0.0  21Aug2016}{...}
@@ -7,7 +8,7 @@
 
 {title:Title}
 
-{p2colset 5 18 20 2}{...}
+{p2colset 5 17 18 2}{...}
 {p2col :{hi:pstrata} {hline 2}}Optimal propensity score stratification {p_end}
 {p2colreset}{...}
 
@@ -38,7 +39,7 @@
 {synopt:{opt ps:core}{cmd:(}{it:{help varlist:varlist}}{cmd:)}}{cmd:required.} One or more propensity scores must be provided, depending on the number of treatment levels{p_end}
 {synopt:{opt smi:n}{cmd:(#}{cmd:)}}minimum number of quantiles to start with; default is {cmd:5}{p_end}
 {synopt:{opt sma:x}{cmd:(#}{cmd:)}}maximum number of quantiles to be tested; default is {cmd:50}{p_end}
-{synopt:{opt p:level}{cmd:(#}{cmd:)}}significance level of the test for assessing balance on the propensity score; default is {cmd:0.05}{p_end}
+{synopt:{opt p:level}{cmd:(#}{cmd:)}}significance level of the test for assessing balance on the propensity score, Bonferroni-adjusted for the number of quantiles being tested; default is {cmd:0.05}{p_end}
 {synopt:{opt com:mon}}use only those observations within the region of common support when generating quantiles {p_end}
 {synopt:{opt repl:ace}}replace the strata variables created by {cmd:pstrata} if they already exist {p_end}
 {synopt:{opt pre:fix}}adds a prefix to the names of the strata variables created by {cmd:pstrata}; default name is {it:strata1}, {it:strata2}, etc. {p_end}
@@ -68,10 +69,14 @@ one or more strata variables (named {it:strata1}, {it:strata2}, etc.), depending
 
 {pstd}
 {opt pstrata} implements an iterative process to generate the optimal number of quantiles of the propensity score. {help xtile} initially stratifies the propensity
-score into 5 quantiles (or any other user-specified minimum number, using {opt smin()}). The propensity score is then regressed on the treatment variable 
-within each quantile to assess whether the propensity score is balanced between the treatment groups under study (i.e. treatment groups are not statistically different, 
-based on {opt plevel()}). If the propensity score is imbalanced within any quantile, xtile is reissued adding one additional quantile, and balance is again assessed. 
-This procedure continues until one of the following conditions are met: 
+score into 5 quantiles (or any other user-specified minimum number, using {opt smin()}). The propensity score is then regressed on the treatment variable
+within each quantile to assess whether the propensity score is balanced between the treatment groups under study (i.e. treatment groups are not statistically different).
+Because this balance test is repeated once for every quantile at each iteration, testing more quantiles simultaneously makes it mechanically harder to pass a flat
+{opt plevel()} threshold, independent of whether the propensity score is actually well balanced. To keep the family-wise false-rejection rate near {opt plevel()}
+regardless of how many quantiles are being tested, {opt pstrata} applies a Bonferroni correction: the threshold actually used at each iteration is {opt plevel()}
+divided by the number of quantiles currently being tested (returned as {cmd:r(adjplevel}{it:n}{cmd:)}; see {help pstrata##results:Saved results}). If the propensity
+score is imbalanced within any quantile at that adjusted threshold, xtile is reissued adding one additional quantile, and balance is again assessed.
+This procedure continues until one of the following conditions are met:
 
 {pstd}
 (1) the propensity score is balanced within all quantiles or, 
@@ -118,7 +123,9 @@ ordered correspondingly (e.g. ps1 ps2 ps3 correspond to treatment levels 0 1 2, 
 {opth smax(#)} indicates the maximum number of quantiles that {opt pstrata} will test; the default is {cmd:50}.{p_end}
 
 {phang}
-{opth plevel(#)} indicates the significance level of the ANOVA model used for testing balance on the propensity score; the default is {cmd:0.05}.{p_end}
+{opth plevel(#)} indicates the significance level of the ANOVA model used for testing balance on the propensity score; the default is {cmd:0.05}. Because balance
+is tested across every quantile simultaneously at each iteration, {opt pstrata} Bonferroni-adjusts this threshold by the number of quantiles being tested (r), so
+the effective per-quantile threshold used is {opt plevel()}{cmd:/r}. The adjusted threshold actually applied is returned in {cmd:r(adjplevel}{it:n}{cmd:)}.{p_end}
 
 {phang}
 {opt common} restricts generation of quantiles to those observations within the region of common support.{p_end}
@@ -131,8 +138,9 @@ the same prefix will be replaced.{p_end}
 {opt prefix(string)} adds a prefix to the names of the strata variables created by {cmd:pstrata}. Short prefixes are recommended.{p_end}
 
 {phang}
-{opt display} displays a table of p-values by quantile for each propensity score, along with an indicator of whether balance was achieved within each quantile 
-(based on {opt plevel()}). This provides a convenient summary of the stratification results without needing to inspect the returned matrices directly.{p_end}
+{opt display} displays a table of p-values by quantile for each propensity score, along with an indicator of whether balance was achieved within each quantile
+(based on the Bonferroni-adjusted threshold, {opt plevel()}{cmd:/r}, shown in the table header). This provides a convenient summary of the stratification results
+without needing to inspect the returned matrices directly.{p_end}
 
 
 {title:Examples}
@@ -190,10 +198,10 @@ the same prefix will be replaced.{p_end}
 {p 4 8 2}{stata "margins msmoke, pwcompare(effects) mcompare(bonferroni)":. margins msmoke, pwcompare(effects) mcompare(bonferroni)}{p_end}
 
 
-{title:Saved results}
+{marker results}{title:Saved results}
 
 {p 4 8 2}
-By default, {cmd:pstrata} returns the following results, which 
+By default, {cmd:pstrata} returns the following results, which
 can be displayed by typing {cmd: return list} after 
 {cmd:pstrata} is finished (see {help return}).  
 
@@ -201,6 +209,8 @@ can be displayed by typing {cmd: return list} after
 {p2col 5 15 19 2: Scalars}{p_end}
 {synopt:{cmd:r(suppmin)}}the minimum value of common support (will have a suffix for multiple treatments){p_end}
 {synopt:{cmd:r(suppmax)}}the maximum value of common support (will have a suffix for multiple treatments){p_end}
+{synopt:{cmd:r(nstrata}{it:n}{cmd:)}}the number of quantiles (strata) found to be optimal for propensity score {it:n}{p_end}
+{synopt:{cmd:r(adjplevel}{it:n}{cmd:)}}the Bonferroni-adjusted p-value threshold actually used for propensity score {it:n} (= {opt plevel()} divided by {cmd:r(nstrata}{it:n}{cmd:)}){p_end}
 
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: Matrices}{p_end}
@@ -211,24 +221,34 @@ can be displayed by typing {cmd: return list} after
 
 {p 4 8 2}
 Cochran, W. G. 1968. The effectiveness of adjustment by subclassification
-in removing bias in observational studies. {it:Biometrics} 24: 205{c -}213.
+in removing bias in observational studies. 
+{it:Biometrics} 24: 205{c -}213.
 
 {p 4 8 2}
 Linden, A. 2014. Combining propensity score-based stratification and weighting to improve 
-causal inference in the evaluation of health care interventions. {it:Journal of Evaluation in Clinical Practice} 20: 1065{c -}1071.
+causal inference in the evaluation of health care interventions. 
+{it:Journal of Evaluation in Clinical Practice} 20: 1065{c -}1071.
+
+{p 4 8 2}
+Linden A. 2017. A comparison of approaches for stratifying on the propensity score to 
+reduce bias. 
+{it:Journal of Evaluation in Clinical Practice} 23:690{c -}696.
 
 {p 4 8 2}
 Linden, A. & Adams, J. L. 2008. Improving participant selection in
 disease management programs: insights gained from propensity score
-stratification. {it:Journal of Evaluation in Clinical Practice} 14, 914{c -}918.
+stratification. 
+{it:Journal of Evaluation in Clinical Practice} 14, 914{c -}918.
 
 {p 4 8 2}
 Linden, A., Uysal, S. D., Ryan, A., & Adams, J. L. 2016. Estimating causal effects for multivalued treatments: 
-A comparison of approaches. {it:Statistics in Medicine} 35: 534{c -}552.
+A comparison of approaches. 
+{it:Statistics in Medicine} 35: 534{c -}552.
 
 {p 4 8 2} 
 Rosenbaum, P. R. & Rubin, D. B. 1984. Reducing bias in observational
-studies using subclassification on the propensity score. {it:Journal of the American Statistical Association} 79, 516{c -}524.
+studies using subclassification on the propensity score. 
+{it:Journal of the American Statistical Association} 79, 516{c -}524.
 
 
 
@@ -238,7 +258,8 @@ studies using subclassification on the propensity score. {it:Journal of the Amer
 to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
-Linden, A. 2016. pstrata: Stata module for implementing optimal propensity score stratification. {browse "http://ideas.repec.org/c/boc/bocode/s458232.html": http://ideas.repec.org/c/boc/bocode/s458232.html} {p_end}
+Linden, A. 2016. PSTRATA: Stata module for implementing optimal propensity score stratification. Statistical Software Components S458232, Boston College Department of Economics {p_end}
+
 
 
 {title:Author}
@@ -252,7 +273,7 @@ alinden@lindenconsulting.org
 {title:Acknowledgments} 
 
 {p 4 4 2}
-I wish to thank Nicholas J. Cox for his support while developing {cmd:pstrata}.{p_end}
+I wish to thank Nicholas J. Cox for his support while initially developing {cmd:pstrata}.{p_end}
 
 
 {title:Also see}

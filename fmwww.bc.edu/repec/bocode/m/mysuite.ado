@@ -1,34 +1,36 @@
-*! mysuite v1.1.2 30Jun2026
+*! mysuite v1.2.0 05Sep2026
 *! Authors: Wu Lianghai, Chen Liwen, Wu Hanyan, Wu Xinzhuo, Li Juan
 *! Built-in extensible program suite for empirical research
-*! 39 modules available from SSC
+*! 44 programs available from SSC (41 packages)
 
 program define mysuite
     version 18.0
 
     syntax [, ALL INSTALLed Download]
 
-    * Define SSC module list (39 modules)
+    * Define SSC module list (44 programs in 41 SSC packages)
     local ssc_online art2tex case2tex mktex sumtex tab2excel corrtex ///
                      corrtex2 regtex reftex getref get2ref conservatism em ///
                      efficiency opacity crash scrash eui qta area ///
                      upoint province_devcat bmc polishpaper cleandisk myedit bf ///
                      fshare thesis_diagram rollbook exam2tex mysuite ///
-                     editprofile reduce_aigc myinterval ccgi fm varck
+                     editprofile reduce_aigc myinterval ccgi fm varck ///
+                     mkes plssem2 learn_bilingual
 
     local ssc_modules art2tex case2tex mktex sumtex tab2excel corrtex ///
                      corrtex2 regtex reg2tex reftex getref get2ref conservatism em ///
                      efficiency opacity crash scrash eui qta area ///
                      upoint province_devcat bmc polishpaper cleandisk myedit bf ///
                      fshare thesis_diagram rollbook exam2tex mysuite ///
-                     editprofile reduce_aigc myinterval ccgi fm varck
+                     editprofile reduce_aigc myinterval ccgi fm varck ///
+                     mkes plssem2 stataedu pythonedu latexedu
     *-------------------------------------------------------------------
     * MODE 1: DISPLAY MENU (no options)
     *-------------------------------------------------------------------
     if "`all'" == "" & "`installed'" == "" & "`download'" == "" {
         display as text _n(2)
         display as text "{hline 70}"
-        display as text "{bf:mysuite v1.1.2} - Built-in Extensible Program Suite"
+        display as text "{bf:mysuite v1.2.0} - Built-in Extensible Program Suite"
         display as text "{hline 70}"
         display as text "Developed by: Wu Lianghai (agd2010@yeah.net)"
         display as text "              Chen Liwen (2184844526@qq.com)"
@@ -38,11 +40,11 @@ program define mysuite
         display as text "Institution: School of Business, Anhui University of Technology (AHUT)"
         display as text "             University of Bristol (UB)"
         display as text "             Red Cross Society of Ma'anshan City"
-        display as text "Date: 30 Jun 2026"
+        display as text "Date: 05 Sep 2026"
         display as text "{hline 70}" _n
 
         * Display available modules
-        display as text "{bf:AVAILABLE MODULES (39 programs from SSC)}" _n
+        display as text "{bf:AVAILABLE MODULES (44 programs from SSC)}" _n
 
         display as text "{bf:1. Core Components}"
         display as text "  {bf:art2tex}      : Empirical paper framework"
@@ -76,7 +78,8 @@ program define mysuite
         display as text "  {bf:reduce_aigc}  : AIGC text reduction tool"
         display as text "  {bf:myinterval}   : Confidence interval computation"
         display as text "  {bf:ccgi}         : Corporate governance indicator"
-        display as text "  {bf:varck}        : Variable existence check" _n
+        display as text "  {bf:varck}        : Variable existence check"
+        display as text "  {bf:plssem2}      : Partial least squares SEM (PLS-SEM)" _n
 
         display as text "{bf:3. Research & Teaching Management}"
         display as text "  {bf:cleandisk}    : Disk space cleanup"
@@ -89,13 +92,19 @@ program define mysuite
         display as text "  {bf:mysuite}      : Built-in extensible program suite for empirical research"
         display as text "  {bf:editprofile}  : Stata profile editor" _n
 
+        display as text "{bf:4. Teaching & Learning Kits}"
+        display as text "  {bf:mkes}          : Spoken-English sentence generator (Python)"
+        display as text "  {bf:stataedu}      : Stata beginner learning program (bilingual)"
+        display as text "  {bf:pythonedu}     : Python beginner learning program (bilingual)"
+        display as text "  {bf:latexedu}      : LaTeX beginner learning program (bilingual)" _n
+
 
         display as text "{hline 70}"
         display as text "{bf:USAGE INSTRUCTIONS:}" _n
         display as text "  {bf:mysuite}                 : Show this help and module list"
-        display as text "  {bf:mysuite, all}            : Install all missing SSC modules"
+        display as text "  {bf:mysuite, all}            : Install missing SSC packages"
         display as text "  {bf:mysuite, installed}      : List currently installed modules"
-        display as text "  {bf:mysuite, all download}   : Force reinstall all 39 modules"
+        display as text "  {bf:mysuite, all download}   : Force reinstall all 44 programs"
         display as text "{hline 70}" _n
 
         * Display installation status
@@ -107,7 +116,7 @@ program define mysuite
                 local ++ssc_installed
             }
         }
-        display as text "  SSC modules installed: {res:`ssc_installed'}/39"
+        display as text "  SSC modules installed: {res:`ssc_installed'}/44"
         exit
     }
 
@@ -127,7 +136,7 @@ program define mysuite
                 display as text "  {bf:`mod'}: {error:Not installed}"
             }
         }
-        display as text _n "{bf:Summary:} {res:`ssc_installed'}/39 SSC modules installed"
+        display as text _n "{bf:Summary:} {res:`ssc_installed'}/44 SSC modules installed"
         exit
     }
 
@@ -135,19 +144,32 @@ program define mysuite
     * MODE 3: INSTALL MISSING MODULES (all)
     *-------------------------------------------------------------------
     if "`all'" != "" & "`download'" == "" {
-        display as text _n "{bf:Installing missing SSC modules...}" _n
+        display as text _n "{bf:Installing missing SSC packages...}" _n
         local ssc_count = 0
         local already_count = 0
         local fail_count = 0
 
         foreach mod in `ssc_online' {
             capture which `mod'
+            if "`mod'" == "learn_bilingual" & _rc != 0 {
+                capture which stataedu
+                if _rc == 0 {
+                    capture which pythonedu
+                    if _rc == 0 {
+                        capture which latexedu
+                    }
+                }
+            }
+            local showname "`mod'"
+            if "`mod'" == "learn_bilingual" {
+                local showname "learn_bilingual (stataedu, pythonedu, latexedu)"
+            }
             if _rc == 0 {
-                display as text "  {bf:`mod'}: {res:Already installed}"
+                display as text "  {bf:`showname'}: {res:Already installed}"
                 local ++already_count
             }
             else {
-                display as text "  Installing {bf:`mod'}..." _continue
+                display as text "  Installing {bf:`showname'}..." _continue
                 capture ssc install `mod', replace
                 if _rc == 0 {
                     display as result " Done"
@@ -161,11 +183,12 @@ program define mysuite
         }
 
         display as text _n "{bf:Installation Summary:}"
-        display as text "  Already installed: {res:`already_count'} modules"
-        display as text "  Newly installed:   {res:`ssc_count'} modules"
+        display as text "  Already installed: {res:`already_count'} packages"
+        display as text "  Newly installed:   {res:`ssc_count'} packages"
         if `fail_count' > 0 {
-            display as error "  Failed to install:  {res:`fail_count'} modules"
+            display as error "  Failed to install:  {res:`fail_count'} packages"
         }
+        display as text _n "The mysuite suite covers {res:44 programs}; some share one SSC package."
         exit
     }
 
@@ -173,12 +196,16 @@ program define mysuite
     * MODE 4: FORCE REINSTALL ALL MODULES (all download)
     *-------------------------------------------------------------------
     if "`all'" != "" & "`download'" != "" {
-        display as text _n "{bf:Force reinstalling all 39 SSC modules...}" _n
+        display as text _n "{bf:Force reinstalling all 41 SSC packages...}" _n
         local ssc_count = 0
         local fail_count = 0
 
         foreach mod in `ssc_online' {
-            display as text "  Reinstalling {bf:`mod'}..." _continue
+            local showname "`mod'"
+            if "`mod'" == "learn_bilingual" {
+                local showname "learn_bilingual (stataedu, pythonedu, latexedu)"
+            }
+            display as text "  Reinstalling {bf:`showname'}..." _continue
             capture ssc install `mod', replace
             if _rc == 0 {
                 display as result " Done"
@@ -191,9 +218,9 @@ program define mysuite
         }
 
         display as text _n "{bf:Reinstallation Summary:}"
-        display as text "  Successfully reinstalled: {res:`ssc_count'} modules"
+        display as text "  Successfully reinstalled: {res:`ssc_count'} packages"
         if `fail_count' > 0 {
-            display as error "  Failed to reinstall: {res:`fail_count'} modules"
+            display as error "  Failed to reinstall: {res:`fail_count'} packages"
         }
         display as text _n "Type {bf:help mysuite} for detailed documentation."
         exit

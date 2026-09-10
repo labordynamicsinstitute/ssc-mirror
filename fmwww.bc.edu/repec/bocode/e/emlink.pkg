@@ -1,0 +1,26 @@
+d 'EMLINK': module to perform probabilistic record linkage (Fellegi-Sunter) with unsupervised EM estimation
+d
+d    emlink assumes the comparison variables have already been
+d normalized.  The command does not clean strings for you. Accents,
+d    mixed case, digits and stray punctuation create artificial
+d disagreements that the EM reads as evidence against a match, so  
+d  normalization must happen first {bf:and must use identical rules
+d in both files}. A file that keeps accents linked against one	 
+d that strips them will link badly no matter how the model is
+d specified. 
+d
+d KW: data managemnet
+d KW: linking
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260909
+d
+d Author:  Mario Anderson Apaza Ñaupa,  NA
+d Support: email   rioma310@@gmail.com
+d
+f emlink.ado
+f ../_/_emlink_split.ado
+f emlink.sthlp
+f emlink_engine.mata
+f emlink_test.do

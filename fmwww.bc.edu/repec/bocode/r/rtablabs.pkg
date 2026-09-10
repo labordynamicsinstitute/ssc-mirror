@@ -1,0 +1,17 @@
+d 'RTABLABS': module to label variables in a xsvmat dataset from a transposed r(table) matrix
+d
+d    rtablabs is intended for use in a xsvmat resultsset from a
+d transposed  r(table) matrix saved by an estimation command.  It
+d allocates variable labels to the numeric variables. 
+d
+d KW: label management
+d
+d Requires: Stata version 16 
+d
+d Distribution-Date: 20260909
+d
+d Author: Roger Newson,  King's College London
+d Support: email roger.newson@@kcl.ac.uk
+d
+f rtablabs.sthlp
+f rtablabs.ado

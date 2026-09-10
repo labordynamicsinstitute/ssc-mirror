@@ -269,6 +269,7 @@ p rsort module to perform reproducible random sorting of dataset
 p rsource module to run R from inside Stata using an R source file
 p rspeedindex module to compute a response speed index and perform outlier identification
 p rsz module to draw a stratified simple random sample, a systematic sample, or a randomly split zones sample, with probabilities proportional to size
+p rtablabs module to label variables in a xsvmat dataset from a transposed r(table) matrix
 p rtfutil module to provide utilities for writing Rich Text Format (RTF) files
 p rtmci module  for estimating regression to the mean effects with confidence intervals
 p rtnorm Mata module to produce truncated normal pseudorandom variates (Mata)

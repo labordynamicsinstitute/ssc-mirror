@@ -1,32 +1,57 @@
 d 'FINEGRAY': module for fast Fine-Gray competing risks regression
 d
 d  finegray fits the Fine and Gray (1999) subdistribution hazard
-d model for competing risks data. It estimates subdistribution
-d hazard ratios (SHR) that quantify the effect of covariates on the
-d cumulative incidence of a cause of interest in the presence of
-d competing events. The implementation uses a native Mata
-d forward-backward scan algorithm that avoids data expansion
-d entirely. Supports factor variables, robust/clustered SEs,
-d stratified censoring distributions, CIF prediction, Schoenfeld
-d residuals, and a proportional subdistribution hazards test. 
+d model for competing risks data, reporting subdistribution hazard
+d ratios for the cumulative incidence of a cause of interest. It
+d uses a native Mata forward-backward scan and never expands the
+d data, so it scales to large risk sets. Data are declared with
+d stset; compete() names the event-type variable and cause() the
+d event of interest. Supported are delayed entry, censoring and
+d entry strata, a stratified baseline subdistribution hazard,
+d piecewise-constant time-varying effects, factor variables with
+d margins support, sampling and frequency weights, mi estimate, and
+d robust, nuisance-adjusted or cluster-robust standard errors.
+d Postestimation provides finegray_predict (linear predictor,
+d cumulative incidence, Schoenfeld residuals, baseline hazard),
+d finegray_cif (cumulative incidence at chosen covariate profiles,
+d with analytic or bootstrap confidence limits), and
+d finegray_phtest (proportional subdistribution hazards
+d diagnostic). Methods and formulas are documented in help
+d finegray_methods. 
 d
 d KW: competing risks
 d KW: Fine-Gray
 d KW: subdistribution hazard
 d KW: cumulative incidence
 d KW: survival analysis
+d KW: delayed entry
+d KW: left truncation
+d KW: inverse probability of censoring weighting
+d KW: st
 d
 d Requires: Stata version 16
 d
-d Distribution-Date: 20260408
+d Distribution-Date: 20260909
 d
-d Author: Tim Copeland,  Department of Clinical Neuroscience, Karolinska Institutet
-d Support: email timothy.copeland@@ki.se 
+d Author: Timothy P Copeland, Karolinska Institutet
+d Support: email timothy.copeland@@ki.se
 d
 f finegray.ado
 f finegray.sthlp
-f finegray_phtest.ado
-f finegray_predict.ado
+f ../_/_finegray_assert_cardinality.ado
+f ../_/_finegray_bnb.ado
+f ../_/_finegray_check_data.ado
+f ../_/_finegray_check_level.ado
+f ../_/_finegray_display.ado
+f ../_/_finegray_fv_design.ado
 f ../_/_finegray_mata.ado
+f ../_/_finegray_resolve_baseline.ado
+f ../_/_finegray_weight_groups.ado
+f ../_/_finegray_weight_var.ado
+f finegray_cif.ado
+f finegray_cif.sthlp
+f finegray_methods.sthlp
+f finegray_phtest.ado
 f finegray_phtest.sthlp
+f finegray_predict.ado
 f finegray_predict.sthlp

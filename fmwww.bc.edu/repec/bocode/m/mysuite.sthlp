@@ -1,5 +1,5 @@
 {smcl}
-{* 30Jun2026}{...}
+{* 05Sep2026}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "myedit" "help myedit"}{...}
 {viewerjumpto "Syntax" "mysuite##syntax"}{...}
@@ -37,8 +37,8 @@
 
 {pstd}
 {cmd:mysuite} is a comprehensive Stata program suite designed for empirical research,
-teaching management, and academic writing. It provides access to 39 specialized
-programs available from the SSC archive.
+teaching management, and academic writing. It provides access to 44 specialized
+programs (delivered through 41 SSC packages) available from the SSC archive.
 
 {pstd}
 {bf:Core Features:}
@@ -48,7 +48,7 @@ programs available from the SSC archive.
 {phang2}
 - Smart installation: only installs missing modules (with {opt all}){p_end}
 {phang2}
-- Force reinstall all 39 modules when needed (with {opt all download}){p_end}
+- Force reinstall all 44 programs when needed (with {opt all download}){p_end}
 {phang2}
 - Installation status checking and reporting{p_end}
 {phang2}
@@ -60,27 +60,51 @@ programs available from the SSC archive.
 {phang2}
 {bf:MODE 1 - Display}
   No options specified
-  → Show program banner, complete list of 39 modules,
+  → Show program banner, complete list of 44 programs,
      current installation status, and detailed usage instructions.
      No modules are downloaded or installed.{p_end}
 
 {phang2}
 {bf:MODE 2 - Install Missing}
   {opt all} option specified
-  → Scan and install only SSC modules that are not currently installed.
-     Already installed modules are skipped for efficiency.{p_end}
+  → Scan and install only SSC packages that are not currently installed.
+     Already installed packages are skipped for efficiency.{p_end}
 
 {phang2}
 {bf:MODE 3 - List Installed}
   {opt installed} option specified
-  → Display a complete list of all currently installed modules.
-     Shows installation count summary (e.g., "24/39 modules installed").{p_end}
+  → Display a complete list of all currently installed programs.
+     Shows installation count summary (e.g., "40/44 modules installed").{p_end}
 
 {phang2}
 {bf:MODE 4 - Force Reinstall}
   {opt all} and {opt download} options combined
-  → Force reinstall ALL 39 modules regardless of current installation status.
+  → Force reinstall ALL 44 programs (41 SSC packages) regardless of current
+     installation status.
      Useful for updating to latest versions or fixing corrupted installations.{p_end}
+
+
+{title:Updates in version 1.2.0}
+
+{pstd}
+The following improvements have been made in version 1.2.0:
+
+{phang2}
+- Five new modules have been added to the suite and are now available on SSC:
+  {bf:mkes} (spoken-English sentence generator using Stata's Python integration),
+  {bf:plssem2} (partial least squares structural equation modeling, PLS-SEM),
+  {bf:stataedu} (Stata beginner learning program),
+  {bf:pythonedu} (Python beginner learning program), and
+  {bf:latexedu} (LaTeX beginner learning program).{p_end}
+{phang2}
+- {bf:stataedu}, {bf:pythonedu}, and {bf:latexedu} are bundled in the single SSC
+  package {bf:learn_bilingual}. Typing {cmd:ssc install learn_bilingual} downloads
+  all three programs at once.{p_end}
+{phang2}
+- A new module category, {bf:4. Teaching & Learning Kits}, has been added to the
+  module menu, and {bf:plssem2} has been added to the {bf:Support Kits} category.{p_end}
+{phang2}
+- Total module count increased from 39 to 44 programs.{p_end}
 
 
 {title:Updates in version 1.1.2}
@@ -149,19 +173,21 @@ The following improvements have been made in version 1.0.9:
 {title:Options}
 
 {phang}
-{opt All} installs only missing SSC modules in the mysuite collection.
-Checks each module's installation status first and only downloads those not found.
+{opt All} installs only missing SSC packages in the mysuite collection.
+Checks each package's installation status first and only downloads those not found.
+Some packages provide more than one program, e.g. {cmd:learn_bilingual} installs
+{cmd:stataedu}, {cmd:pythonedu}, and {cmd:latexedu} together.
 Shows installation progress and summary statistics upon completion.
 
 {phang}
-{opt Installed} lists all currently installed modules without making any changes.
-Displays each of the 39 modules with "Installed" or "Not installed" status,
+{opt Installed} lists all currently installed programs without making any changes.
+Displays each of the 44 modules with "Installed" or "Not installed" status,
 followed by a count summary.
 
 {phang}
 {opt Download} modifies the behavior of {opt all}. When combined:
 - {cmd:mysuite, all} → Install missing modules only
-- {cmd:mysuite, all download} → Force reinstall ALL 39 modules
+- {cmd:mysuite, all download} → Force reinstall ALL 44 programs
 
 
 {marker examples}{...}
@@ -171,23 +197,25 @@ followed by a count summary.
 {bf:MODE 1 - Display Program Information:}
 
 {phang}{cmd:. mysuite}{p_end}
-{phang}Display program banner, complete module list (39 programs),
-current installation status (e.g., "SSC modules installed: 20/39"),
+{phang}Display program banner, complete module list (44 programs),
+current installation status (e.g., "SSC modules installed: 20/44"),
 and detailed usage instructions. No modules are downloaded or installed.{p_end}
 
 {pstd}
 {bf:MODE 2 - Install Missing Modules:}
 
 {phang}{cmd:. mysuite, all}{p_end}
-{phang}Smart installation - checks each of the 39 modules and installs
-only those not currently found. Already installed modules are skipped.
+{phang}Smart installation - checks each of the 41 SSC packages and installs
+only those not currently found. Already installed packages are skipped.
+Packages that provide several programs, such as {cmd:learn_bilingual} (installing
+{cmd:stataedu}, {cmd:pythonedu}, and {cmd:latexedu}), are handled in one step.
 Example output:
   {bf:sumtex}: Already installed
   Installing {bf:regtex}... Done
-  {bf:estout}: Already installed
+  {bf:corrtex2}: Already installed
 Installation Summary:
-  Already installed: 30 modules
-  Newly installed:   2 modules{p_end}
+  Already installed: 30 packages
+  Newly installed:   2 packages{p_end}
 
 {pstd}
 {bf:MODE 3 - List Installed Modules:}
@@ -198,29 +226,31 @@ Installation Summary:
     {bf:art2tex}: Installed
     {bf:case2tex}: Installed
     ...
-    {bf:varck}: Not installed
-  {bf:Summary:} 24/39 SSC modules installed
+    {bf:varck}: Installed
+    {bf:latexedu}: Not installed
+  {bf:Summary:} 43/44 SSC modules installed
 Useful for quick inventory of your setup.{p_end}
 
 {pstd}
 {bf:MODE 4 - Force Reinstall All Modules:}
 
 {phang}{cmd:. mysuite, all download}{p_end}
-{phang}Force reinstall ALL 39 modules regardless of current status.
+{phang}Force reinstall ALL 44 programs (41 SSC packages) regardless of current status.
 Use this to update to latest versions or fix corrupted installations.
 Example output:
   Reinstalling {bf:art2tex}... Done
   Reinstalling {bf:case2tex}... Done
   ...
+  Reinstalling {bf:learn_bilingual} (stataedu, pythonedu, latexedu)... Done
 Reinstallation Summary:
-  Successfully reinstalled: 39 modules{p_end}
+  Successfully reinstalled: 41 packages{p_end}
 
 {pstd}
 {bf:Checking Installation Status:}
 
 {phang}{cmd:. mysuite}{p_end}
 {phang}Running without options shows current installation status:
-"SSC modules installed: 18/39" - quickly see what's missing.{p_end}
+"SSC modules installed: 18/44" - quickly see what's missing.{p_end}
 
 {pstd}
 {bf:Editing Installed Modules:}
@@ -271,9 +301,9 @@ This is useful for learning, customization, and debugging.{p_end}
 {pstd}Ma'anshan, Anhui, China{p_end}
 
 {pstd}
-Development Date: 30 Jun 2026{p_end}
+Development Date: 05 Sep 2026{p_end}
 {pstd}
-Version: 1.1.2{p_end}
+Version: 1.2.0{p_end}
 
 
 {marker acknowledgments}{...}
@@ -287,6 +317,8 @@ Thanks to his enthusiastic support and timely scientific guidance, we have succe
 {title:Also see}
 
 {psee}
-Online: {help myedit}, {help editprofile}, {help reduce_aigc}, {help myinterval}, {help ccgi}, {help fm}, {help varck}
+Online: {help myedit}, {help editprofile}, {help reduce_aigc}, {help myinterval},
+{help ccgi}, {help fm}, {help varck}, {help mkes}, {help plssem2},
+{help stataedu}, {help pythonedu}, {help latexedu}
 {p_end}
 {*}

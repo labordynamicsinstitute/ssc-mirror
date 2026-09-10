@@ -47,6 +47,7 @@ p email module to send emails from Stata via Python
 p emailme module to facilitate sending mail on Windows systems
 p emc module providing prefix command estimating contrasts for effect modifier values
 p emh module to compute extended Mantel-Haenszel statistics
+p emlink module to perform probabilistic record linkage (Fellegi-Sunter) with unsupervised EM estimation
 p encode_label module to encode string variable into categorical variable
 p encodefrom module to rename and encode variables using an external crosswalk
 p encodelabel module to encode string variable into categorical variable

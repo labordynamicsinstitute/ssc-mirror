@@ -3,7 +3,7 @@ d
 d    xtpqcs estimates the fixed-effects panel quantile regression
 d (FEQR) model	  using the unregularised Koenker (2004)
 d concentration algorithm and reports the robust covariance matrix
-d of {bf:Chiang, Galvao    and Wei (2026, arXiv:2602.19201)}, which
+d of Chiang, Galvao    and Wei (2026, arXiv:2602.19201), which
 d remains consistent in the presence (or absence) of pervasive
 d common time shocks	Bt that induce arbitrary cross-sectional
 d dependence.	Why does this matter?  In macro/finance panels the

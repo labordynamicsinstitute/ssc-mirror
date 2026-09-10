@@ -1,4 +1,4 @@
-*! riskcalplot version 1.0.1 03aug2026
+*! riskcalplot version 1.1 06sep2026
 *! Suppachai Lawanaskol, MD
 *! Jayanton Patumanond, MD, MPH, MSc, DSc
 
@@ -384,9 +384,9 @@ if `ngroupfit' >= 3 {
         matrix `statistics'[`i', 6] = `auc'
 
         **Call the options from the corresponding plots**
-        local lineopts ``plot`i'opts''
-        local ciopts ``ci`i'opts''
-        local scatteropts ``scatter`i'opts''
+        local lineopts `"`plot`i'opts'"'
+        local ciopts `"`ci`i'opts'"'
+        local scatteropts `"`scatter`i'opts'"'
 
         **Add the fitted line**
         local plots `plots' ///
@@ -493,7 +493,7 @@ else {
 
         **Add the statistics of the first score to the graph note**
         local statgraph ///
-            `"note("AuROC `stat_auc'" "C-slope `stat_slope'" "CITL `stat_citl'" "E:O `stat_eo'" "Adj-R2 `stat_adjr2'" "RMSE `stat_rmse'", size(small) justification(left) ring(0) position(11) margin(t=20 l=5) linegap(2))"'
+            `"note("AuROC `stat_auc'" "C-slope `stat_slope'" "CITL `stat_citl'" "E:O `stat_eo'" "Adj-R{sup:2} `stat_adjr2'" "RMSE `stat_rmse'", size(small) justification(left) ring(0) position(11) margin(t=20 l=5) linegap(2))"'
     }
 
 **Plot the risk calibration graph**

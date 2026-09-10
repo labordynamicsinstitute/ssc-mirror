@@ -1,3 +1,4 @@
+*! version 2.0.0 SPJ, September 2026 Raise version from 8.2 to 11, allow factor var notation option
 *! version 1.2.2 Stephen P. Jenkins, July 2012
 *!   fix typo in post-estimation prediction of variance 
 *!      (Thanks to Michal Brzezinski for spotting the typo)
@@ -8,7 +9,7 @@
 /*------------------------------------------------ playback request */
  
 program define gb2fit, eclass byable(onecall)
-	version 8.2
+	version 11
 	if replay() {
 		if "`e(cmd)'" != "gb2fit" {
 			noi di as error "results for gb2fit not found"
@@ -31,8 +32,10 @@ end
 program define Estimate, eclass byable(recall)
 
 	syntax varlist(max=1) [if] [in] [aw fw pw iw] [,  ///
-		Avar(varlist numeric) Bvar(varlist numeric) Pvar(varlist numeric) Qvar(varlist numeric) ///
-		ABPQ(varlist numeric) CDF(namelist max=1) PDF(namelist max=1) POORfrac(real 0) ///
+		Avar(varlist numeric ts fv) Bvar(varlist numeric ts fv) ///
+		Pvar(varlist numeric ts fv) Qvar(varlist numeric ts fv)) ///
+		ABPQ(varlist numeric ts fv) ///
+		CDF(namelist max=1) PDF(namelist max=1) POORfrac(real 0) ///
 		Robust Cluster(varname) SVY  STats From(string) ///
 		Level(integer $S_level)    ///
 		noLOG  * ]

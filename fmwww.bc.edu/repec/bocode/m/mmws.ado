@@ -1,5 +1,6 @@
+*! 2.10 Ariel Linden 06Sep2026 // added smin() option to allow users to set minimum required N in all strata
 *! 2.00 Ariel Linden 27May2026 // Streamlined validation; fixed bugs
-*! 1.21 Ariel Linden 18Feb2017 // Fixed bug in IPTW for multiple treatments 
+*! 1.21 Ariel Linden 18Feb2017 // Fixed bug in IPTW for multiple treatments
 *! 1.20 Ariel Linden 22Jan2017 // Added tlevel option; cleaned up common support code; changed figure to show only values within common support when common is specified
 *! 1.10 Ariel Linden 31Dec2014 // Added IPTW option
 *! 1.00 Ariel Linden 06Jun2014
@@ -17,15 +18,21 @@ version 13.0
 	NOMinal													///	if nominal treatments
 	ATT				       									///	if average treatment effect on the treated (binary treatments only)
 	IPTW													/// adds IPTW as an option
-	COMMon		                                			/// common support 
+	COMMon		                                			/// common support
 	FIGure													/// histogram of pscore distribution(s)
-	REPLace PREfix(str) *]
-	
+	SMIN(integer 1)											///
+	REPLace PREfix(str)]
+
 	gettoken treat : varlist
 
 	// ordinal and nominal are mutually exclusive -- check once up front
 	if ("`ordinal'" != "") & ("`nominal'" != "") {
 		di as err "Either ordinal or nominal options can be specified, but not both"
+		exit 198
+	}
+
+	if `smin' < 1 {
+		di as err "smin() must be a positive integer"
 		exit 198
 	}
 
@@ -35,26 +42,24 @@ version 13.0
 		local supp1 & `prefix'_support == 1
 	}
 
-quietly { 
-		marksample touse 
-		count if `touse' 
+quietly {
+		marksample touse
+		count if `touse'
 		if r(N) == 0 error 2000
-		local N = r(N) 
-		replace `touse' = -`touse'
 
 		/* drop program variables if option "replace" is chosen */
 		if "`replace'" != "" {
-			local mmws : char _dta[`prefix'_mmws] 
+			local mmws : char _dta[`prefix'_mmws]
 			if "`mmws'" != "" {
-				foreach v of local mmws { 
-					capture drop `v' 
+				foreach v of local mmws {
+					capture drop `v'
 				}
 			}
 		}
 
 *********************************
 ***** Binary treatments *********
-*********************************	
+*********************************
 	if "`ordinal'`nominal'" == "" {
 
 		* validate treatment variable *
@@ -72,7 +77,7 @@ quietly {
 			di as err "With binary treatments, only one pscore can be specified"
 			exit 198
 		}
-		
+
 		local Nstrata : word count `nstrata'
 		if `Nstrata' > 1 {
 			di as err "With binary treatments, only one Nstrata can be specified"
@@ -131,16 +136,24 @@ quietly {
 
 			local propatt = (1 - `treatprop') / `treatprop'
 
-			levelsof `prefix'_strata if `touse' `supp1', local(levels)
-			foreach st of local levels {
-				count if `prefix'_strata==`st' & `treat'==1 `supp1' & `touse'
-				local ntreat = r(N)
-				count if `prefix'_strata==`st' & `treat'==0 `supp1' & `touse'
-				local ncont = r(N)
-				local mmwc = (`ntreat' / `ncont') * `propatt'
-				replace `prefix'_mmws = `mmwc' if `prefix'_strata==`st' & `treat'==0 & `touse'
-				replace `prefix'_mmws = 1 if `prefix'_strata==`st' & `treat'==1 & `touse'
+			tempvar keep isT isC nt nc
+			gen byte `keep' = `touse' `supp1'
+			gen byte `isT' = `keep' & `treat'==1
+			gen byte `isC' = `keep' & `treat'==0
+			bysort `prefix'_strata: egen long `nt' = total(`isT')
+			bysort `prefix'_strata: egen long `nc' = total(`isC')
+
+			count if `keep' & (`nt' < `smin' | `nc' < `smin')
+			if r(N) > 0 {
+				levelsof `prefix'_strata if `keep' & (`nt' < `smin' | `nc' < `smin'), local(badstrata)
+				di as err "`prefix'_strata level(s) `badstrata' do not contain at least `smin' observation(s) of both treatment levels; reduce nstrata(), revise strata(), or lower smin()"
+				exit 459
 			}
+
+			replace `prefix'_mmws = (`nt'/`nc') * `propatt' if `treat'==0 & `touse' & (`nt'+`nc')>0
+			replace `prefix'_mmws = 1 if `treat'==1 & `touse' & (`nt'+`nc')>0
+			drop `keep' `isT' `isC' `nt' `nc'
+
 			if "`common'" != "" {
 				replace `prefix'_mmws = 0 if `prefix'_support != 1 & `touse'
 			}
@@ -152,6 +165,10 @@ quietly {
 					replace `prefix'_iptw = 0 if `prefix'_support != 1 & `touse'
 				}
 				label var `prefix'_iptw "IPTW (ATT) weights for binary treatment"
+				count if missing(`prefix'_iptw) & `touse'
+				if r(N) > 0 {
+					noisily di as err "`prefix'_iptw contains `=r(N)' missing value(s); check `pscore' for values of exactly 0 or 1"
+				}
 			}
 
 			local mmws `prefix'_support `prefix'_strata `prefix'_mmws `prefix'_iptw
@@ -165,19 +182,26 @@ quietly {
 			gen `prefix'_mmws =. if `touse'
 			label var `prefix'_mmws "ATE weights for binary treatment"
 
-			levelsof `prefix'_strata if `touse' `supp1', local(levels)
-			foreach st of local levels {
-				count if `prefix'_strata==`st' `supp1' & `touse'
-				local ntot = r(N)
-				count if `prefix'_strata==`st' & `treat'==1 `supp1' & `touse'
-				local ntreat = r(N)
-				count if `prefix'_strata==`st' & `treat'==0 `supp1' & `touse'
-				local ncont = r(N)
-				local mmwt = (`ntot' / `ntreat') * `treatprop'
-				local mmwc = (`ntot' / `ncont') * `controlprop'
-				replace `prefix'_mmws = `mmwc' if `prefix'_strata==`st' & `treat'==0 & `touse'
-				replace `prefix'_mmws = `mmwt' if `prefix'_strata==`st' & `treat'==1 & `touse'
+			tempvar keep isT isC nt nc ntot
+			gen byte `keep' = `touse' `supp1'
+			gen byte `isT' = `keep' & `treat'==1
+			gen byte `isC' = `keep' & `treat'==0
+			bysort `prefix'_strata: egen long `nt' = total(`isT')
+			bysort `prefix'_strata: egen long `nc' = total(`isC')
+
+			count if `keep' & (`nt' < `smin' | `nc' < `smin')
+			if r(N) > 0 {
+				levelsof `prefix'_strata if `keep' & (`nt' < `smin' | `nc' < `smin'), local(badstrata)
+				di as err "`prefix'_strata level(s) `badstrata' do not contain at least `smin' observation(s) of both treatment levels; reduce nstrata(), revise strata(), or lower smin()"
+				exit 459
 			}
+
+			gen long `ntot' = `nt' + `nc'
+
+			replace `prefix'_mmws = (`ntot'/`nc') * `controlprop' if `treat'==0 & `touse' & `ntot'>0
+			replace `prefix'_mmws = (`ntot'/`nt') * `treatprop' if `treat'==1 & `touse' & `ntot'>0
+			drop `keep' `isT' `isC' `nt' `nc' `ntot'
+
 			if "`common'" != "" {
 				replace `prefix'_mmws = 0 if `prefix'_support != 1 & `touse'
 			}
@@ -191,6 +215,10 @@ quietly {
 				replace `prefix'_iptw = 0 if `prefix'_support != 1 & `touse'
 			}
 			label var `prefix'_iptw "IPTW (ATE) weights for binary treatment"
+			count if missing(`prefix'_iptw) & `touse'
+			if r(N) > 0 {
+				noisily di as err "`prefix'_iptw contains `=r(N)' missing value(s); check `pscore' for values of exactly 0 or 1"
+			}
 		}
 
 		local mmws `prefix'_support `prefix'_strata `prefix'_mmws `prefix'_iptw
@@ -212,7 +240,7 @@ quietly {
 
 **********************************
 ***** Ordinal treatments *********
-**********************************	
+**********************************
 	if ("`ordinal'" != "") {
 
 		* validate treatment variable *
@@ -224,7 +252,7 @@ quietly {
 			di as err "With ordinal treatments, only one pscore can be specified"
 			exit 198
 		}
-		
+
 		local Nstrata : word count `nstrata'
 		if `Nstrata' > 1 {
 			di as err "With ordinal treatments, only one Nstrata can be specified"
@@ -236,7 +264,13 @@ quietly {
 			sum `treat' if `touse', meanonly
 			local tlevel = r(min)
 		}
-				
+
+		count if `treat'==`tlevel' & `touse'
+		if r(N) == 0 {
+			di as err "tlevel(`tlevel') does not occur in `treat' within the estimation sample"
+			exit 459
+		}
+
 		gen `prefix'_support = 1 if `touse'
 		label var `prefix'_support "common support"
 		sum `pscore' if `treat'==`tlevel' & `touse', meanonly
@@ -276,21 +310,30 @@ quietly {
 		gen `prefix'_mmws =. if `touse'
 		label var `prefix'_mmws "weights for ordinal treatments"
 
-		levelsof `treat' if `touse' `supp1', local(treatment)
-		foreach i of local treatment {
-			count if `treat'==`i' `supp1' & `touse'
-			local ntreat = r(N)
-			local treatprop = `ntreat' / `Nall'
-			levelsof `prefix'_strata if `touse' `supp1', local(stratae)
-			foreach s of local stratae {
-				count if `prefix'_strata==`s' `supp1' & `touse'
-				local jstrata = r(N)
-				count if `prefix'_strata==`s' & `treat'==`i' `supp1' & `touse'
-				local n_ij = r(N)
-				replace `prefix'_mmws = (`jstrata'/`n_ij') * `treatprop' ///
-					if `prefix'_strata==`s' & `treat'==`i' & `touse' `supp1'
-			}
+		tempvar keep nstratum nij ntreat
+		gen byte `keep' = `touse' `supp1'
+
+		levelsof `treat' if `keep', local(chklevels)
+		local chkK : word count `chklevels'
+		tempvar chkcnt chkfirst chkndist
+		bysort `prefix'_strata `treat': egen long `chkcnt' = total(`keep')
+		bysort `prefix'_strata `treat': gen byte `chkfirst' = (_n==1) & `chkcnt'>0
+		bysort `prefix'_strata: egen long `chkndist' = total(`chkfirst')
+		count if `keep' & (`chkndist' < `chkK' | `chkcnt' < `smin')
+		if r(N) > 0 {
+			levelsof `prefix'_strata if `keep' & (`chkndist' < `chkK' | `chkcnt' < `smin'), local(badstrata)
+			di as err "`prefix'_strata level(s) `badstrata' do not contain at least `smin' observation(s) of every level of `treat'; reduce nstrata(), revise strata(), or lower smin()"
+			exit 459
 		}
+		drop `chkcnt' `chkfirst' `chkndist'
+
+		bysort `prefix'_strata: egen long `nstratum' = total(`keep')
+		bysort `prefix'_strata `treat': egen long `nij' = total(`keep')
+		bysort `treat': egen long `ntreat' = total(`keep')
+
+		replace `prefix'_mmws = (`nstratum'/`nij') * (`ntreat'/`Nall') if `touse' `supp1'
+		drop `keep' `nstratum' `nij' `ntreat'
+
 		if "`common'" != "" {
 			replace `prefix'_mmws = 0 if `prefix'_support != 1 & `touse'
 		}
@@ -302,11 +345,15 @@ quietly {
 				replace `prefix'_iptw = 0 if `prefix'_support != 1 & `touse'
 			}
 			label var `prefix'_iptw "IPTW weights for ordinal treatment"
+			count if missing(`prefix'_iptw) & `touse'
+			if r(N) > 0 {
+				noisily di as err "`prefix'_iptw contains `=r(N)' missing value(s); check `pscore' for values of exactly 0 or 1"
+			}
 		}
 
 		local mmws `prefix'_support `prefix'_strata `prefix'_mmws `prefix'_iptw
 		char def _dta[`prefix'_mmws] "`mmws'"
-		
+
 		* figure *
 		if ("`figure'" != "") {
 			if ("`common'" != "") {
@@ -318,20 +365,20 @@ quietly {
 					xline(`suppmin' `suppmax') xla(0(.20)1) kdensity
 			}
 		} // end fig
-		
+
 	} // Closing bracket for ordinal treatments
 
 **********************************
 ***** Nominal treatments *********
-**********************************	
+**********************************
 	if ("`nominal'" != "") {
-		
+
 		* validate treatment variable *
 		_validatetreat `treat', touse(`touse')
 
 		* Verify matching number of pscores and nstrata *
 		local Npscore : word count `pscore'
-		
+
 		tabulate `treat' if `touse'
 		if r(r) != `Npscore' {
 			di as err "For nominal treatments, there should be one pscore for each treatment level"
@@ -342,7 +389,7 @@ quietly {
 			di as err "Either strata or nstrata may be specified, but not both"
 			exit 198
 		}
-		
+
 		local Nstrata : word count `nstrata'
 		if `Nstrata' != `Npscore' & `Nstrata' != 0 {
 			di as err "For nominal treatments, there should be one stratification specified for each pscore"
@@ -358,7 +405,7 @@ quietly {
 		* Common support *
 		gen `prefix'_support = 1 if `touse'
 		label var `prefix'_support "common support"
-		levelsof `treat', local(levels)
+		levelsof `treat' if `touse', local(levels)
 		foreach tr of local levels {
 			foreach p of varlist `pscore' {
 				sum `p' if `treat'==`tr' & `touse', meanonly
@@ -400,7 +447,7 @@ quietly {
 			ret scalar suppmin`i' = `suppmin`i''
 			ret scalar suppmax`i' = `suppmax`i''
 		}
-		  
+
 		* Generate weights *
 		levelsof `treat' if `touse', local(treatment)
 		matrix input A = (`treatment')
@@ -408,25 +455,41 @@ quietly {
 		gen `prefix'_mmws =. if `touse'
 		label var `prefix'_mmws "weights for nominal treatments"
 
+		count if `touse' `supp1'
+		local sN = r(N)
+
+		tempvar keep
+		gen byte `keep' = `touse' `supp1'
+
 		local T = 1
 		foreach s of varlist `prefix'_strata* {
 			local tr = el("A", 1, `T')
 
-			tab `s' if `touse' `supp1', matcell(f)
-			local sN = r(N)
-			tab `s' if `treat'==`tr' `supp1' & `touse', matcell(f1)
-			local stN = r(N)
-			local treatprop = `stN' / `sN'
-
-			matrix C = J(`=rowsof(f)', `=colsof(f)', 0)
-			forvalues i = 1/`=rowsof(f)' {
-				forvalues j = 1/`=colsof(f)' {
-					matrix C[`i',`j'] = f[`i',`j'] / f1[`i',`j'] * `treatprop'
-				}
+			tempvar chkT chkpres
+			gen byte `chkT' = `keep' & `treat'==`tr'
+			bysort `s': egen long `chkpres' = total(`chkT')
+			count if `keep' & `chkpres' < `smin'
+			if r(N) > 0 {
+				levelsof `s' if `keep' & `chkpres' < `smin', local(badstrata)
+				di as err "`s' level(s) `badstrata' contain fewer than `smin' observation(s) with `treat'==`tr'; reduce nstrata(), revise strata(), or lower smin()"
+				exit 459
 			}
-			replace `prefix'_mmws = C[`s', 1] if `treat'==`tr' & `touse'
+			drop `chkT' `chkpres'
+
+			tempvar nst nstr
+			bysort `s': egen long `nst' = total(`keep')
+			bysort `s' `treat': egen long `nstr' = total(`keep')
+
+			count if `treat'==`tr' `supp1' & `touse'
+			local treatprop = r(N) / `sN'
+
+			replace `prefix'_mmws = (`nst'/`nstr') * `treatprop' if `treat'==`tr' & `touse'
+			drop `nst' `nstr'
+
 			local T = `T' + 1
 		}
+		drop `keep'
+
 		if "`common'" != "" {
 			replace `prefix'_mmws = 0 if `prefix'_support != 1 & `touse'
 		}
@@ -442,6 +505,10 @@ quietly {
 			}
 			if "`common'" != "" {
 				replace `prefix'_iptw = 0 if `prefix'_support != 1 & `touse'
+			}
+			count if missing(`prefix'_iptw) & `touse'
+			if r(N) > 0 {
+				noisily di as err "`prefix'_iptw contains `=r(N)' missing value(s); check the pscore variables for values of exactly 0 or 1"
 			}
 		}
 
@@ -472,7 +539,7 @@ quietly {
 
 end
 
-program _validatetreat, rclass sortpreserve
+program _validatetreat, rclass
 
 	syntax varname, touse(varname) [ binary ]
 
@@ -487,12 +554,8 @@ program _validatetreat, rclass sortpreserve
 	}
 
 	// count distinct levels within sample
-	tempvar kvar
-	sort `touse' `tvar'
-	qui gen byte `kvar' = 0
-	qui by `touse' `tvar': replace `kvar' = 1 if _n == 1
-	summarize `kvar' if `touse', meanonly
-	local klev = r(sum)
+	qui levelsof `tvar' if `touse', local(_lv)
+	local klev : word count `_lv'
 
 	// must have at least 2 levels
 	if `klev' == 1 {

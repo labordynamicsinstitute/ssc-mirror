@@ -1,7 +1,7 @@
-*! a Stata program for estimating variance function panel regression
-* xtvfreg version 0.4.8
+*! xtvfreg version 0.4.8
 * Tim Liao, University of Illinois
-* Variance decomposition + combined tables working
+* Variance decomposition + combined/table options working; beta_* removed,
+* mean_[group] now carries diagnostics directly
 
 program define xtvfreg, eclass
     version 18.0
@@ -93,11 +93,10 @@ program define xtvfreg, eclass
     // Build list of clean group names
     local mean_est_list ""
     local var_est_list ""
-    local beta_est_list ""
 
     // Display header
     if `show_output' {
-        di as text _n "Varying Fixed Effects Panel Regression (Version 0.4.7)"
+        di as text _n "Varying Fixed Effects Panel Regression (Version 0.4.8)"
         di as text "Dependent variable: " as result "`yvar'"
         di as text "Panel ID: " as result "`fevar'"
         di as text "Group variable: " as result "`groupvar'"
@@ -128,7 +127,6 @@ program define xtvfreg, eclass
         // Add to estimation lists
         local mean_est_list "`mean_est_list' mean_`gname'"
         local var_est_list "`var_est_list' var_`gname'"
-        local beta_est_list "`beta_est_list' beta_`gname'"
 
         // Drop any leftovers
         capture drop Ra_temp R_temp `R2_var' `S2_var' LOGLIK_temp LL0_temp LLN_temp DLL_temp
@@ -297,9 +295,6 @@ program define xtvfreg, eclass
         
         estimates store mean_`gname'
         
-        // Store again as beta for combined tables with variance decomposition
-        estimates store beta_`gname'
-        
         // -------------------------------
         // Calculate and display variance decomposition
         // -------------------------------
@@ -334,14 +329,14 @@ program define xtvfreg, eclass
             di as text "  Unexplained variance: " as result %9.6f =`var_total'-`var_fitted'-`var_heterosced' as text " (" as result %5.1f =`prop_unexplained'*100 as text "%)"
         }
         
-        // Add variance decomposition to stored estimates
-        estimates restore beta_`gname'
-        estadd scalar var_total = `var_total'
-        estadd scalar var_fitted = `var_fitted'
-        estadd scalar var_heterosced = `var_heterosced'
-        estadd scalar prop_mean = `prop_mean'
-        estadd scalar prop_var = `prop_var'
-        estimates store beta_`gname'
+        // Add variance decomposition to the mean equation estimates
+        estimates restore mean_`gname'
+        quietly estadd scalar var_total = `var_total'
+        quietly estadd scalar var_fitted = `var_fitted'
+        quietly estadd scalar var_heterosced = `var_heterosced'
+        quietly estadd scalar prop_mean = `prop_mean'
+        quietly estadd scalar prop_var = `prop_var'
+        estimates store mean_`gname'
         
         // Return values for this group
         ereturn scalar group`i'_iter = `iter'
@@ -370,9 +365,9 @@ program define xtvfreg, eclass
     if (`do_table' & `show_output') {
         capture which esttab
         if _rc == 0 {
-            di as text _n _n "Combined Estimation Results:"
+            di as text _n _n "Mean Equation Results with Diagnostics (All Groups):"
             di as text "{hline 78}"
-            esttab `beta_est_list', p star(* 0.10 ** 0.05 *** 0.01) ///
+            esttab `mean_est_list', p star(* 0.10 ** 0.05 *** 0.01) ///
                 wide scalars(n_iter vf_converged ll_final var_total prop_mean prop_var) ///
                 mtitles
         }
@@ -408,6 +403,7 @@ program define xtvfreg, eclass
     ereturn scalar ngroups = `ngroups'
     ereturn scalar maxiter = `maxiter'
     ereturn scalar converge = `tol'
-	// Clean up temporary variables
-   capture drop R2_* S2_*
+    
+    // Clean up temporary variables
+    capture drop R2_* S2_*
 end

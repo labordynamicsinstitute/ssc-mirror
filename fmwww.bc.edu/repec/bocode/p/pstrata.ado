@@ -1,3 +1,4 @@
+*! 1.20 Ariel Linden 07Sep2026		/// Bonferroni-adjust the balance threshold for the number of strata tested simultaneously
 *! 1.10 Ariel Linden 28August2016	/// fixed bugs, added display option
 *! 1.00 Ariel Linden 16August2016
 
@@ -148,8 +149,13 @@ program define pstrata, rclass
 				* Evaluate the min pval across strata using mata
 				mata: st_local("min", strofreal(min(st_matrix("_pval`n'"))))
 
-				* if the min pval is < the level (0.05) then drop the strata and try again with nq+1
-				if `min' < `plevel' {
+				* Bonferroni-adjust the balance threshold for the number of strata being
+				* tested simultaneously (r), so the family-wise false-rejection rate stays
+				* near plevel() regardless of how finely the search has stratified so far
+				local adjplevel = `plevel' / `r'
+
+				* if the min pval is < the adjusted level then drop the strata and try again with nq+1
+				if `min' < `adjplevel' {
 					drop `prefix'strata`n'
 					matrix drop _pval`n'
 					local smin1 = `smin1' + 1
@@ -163,13 +169,14 @@ program define pstrata, rclass
 					xtile `prefix'strata`n' = `ps' if `touse' `supp1', nq(`smin1')
 				}	//end if min
 
-				* if the min pval is >= the level (0.05) end loop, save results, move to next pscore
-				else if `min' >= `plevel' {
+				* if the min pval is >= the adjusted level end loop, save results, move to next pscore
+				else if `min' >= `adjplevel' {
 					// return matrix moves _pval`n' into r(), so copy it first to preserve for display
 					matrix _pval`n'_disp = _pval`n'
 					return matrix pval`n' = _pval`n'
-					// Return the number of strata found for this pscore
+					// Return the number of strata found for this pscore, and the adjusted threshold used
 					ret scalar nstrata`n' = `smin1'
+					ret scalar adjplevel`n' = `adjplevel'
 					// Add the successful variable to bag only once, after solution is found
 					local bag `bag' `prefix'strata`n'
 					local smin1 = `smin'  // reset for next pscore
@@ -192,17 +199,18 @@ program define pstrata, rclass
 		forval n = 1/`Npscore' {
 			local ps : word `n' of `pscore'
 			local nquant = rowsof(_pval`n'_disp)
+			local adjplevel = `plevel' / `nquant'
 
 			di as txt _newline "{hline 45}"
-			di as txt "  Propensity score `n' (`ps'): `nquant' quantiles"
+			di as txt "  Propensity score `n' (`ps'): `nquant' quantiles (Bonferroni-adjusted threshold = " %6.4f `adjplevel' ")"
 			di as txt "{hline 45}"
 			di as txt %10s "Quantile" %15s "P-value" %15s "Balance"
 			di as txt "{hline 45}"
 
 			forval i = 1/`nquant' {
 				local pv = _pval`n'_disp[`i', 1]
-				if `pv' >= `plevel' local bal "Yes"
-				else                local bal "No"
+				if `pv' >= `adjplevel' local bal "Yes"
+				else                   local bal "No"
 				di as txt %10.0f `i' %15.4f `pv' %15s "`bal'"
 			}
 			di as txt "{hline 45}"

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2.1  18Feb2017}{...}
+{* *! version 1.3.0  06Sep2026}{...}
 {cmd:help mmws}
 {hline}
 
@@ -24,7 +24,8 @@
 		{opt iptw:}
 		{opt comm:on}
 		{opt fig:ure}
-		{opt repl:ace} 
+		{opt smin}({it:#})
+		{opt repl:ace}
 		{opt pre:fix}({it:string})
 		]
 
@@ -104,7 +105,13 @@ for the sample on common support (implemented in {cmd:mmws} by specifying {cmd:n
 a histogram is generated for each propensity score. The minimum and maximum values of common support are presented as vertical lines. When {cmd:common} is specified, only
 values of the propensity scores within common support are presented, otherwise all values are presented.{p_end}
 
-{phang} 
+{phang}
+{opt smin(#)} specifies the minimum number of observations required, within every stratum, for each treatment level (binary and ordinal treatments) or for the treatment level
+corresponding to that stratum's propensity score (nominal treatments); default is {cmd:smin(1)}. If any stratum contains fewer than {cmd:smin()} observations of a required
+treatment level, {cmd:mmws} exits with an error identifying the deficient stratum (or strata); the number of strata specified via {cmd:nstrata()} must be reduced, or the strata
+supplied via {cmd:strata()} revised, so that every stratum meets this minimum.{p_end}
+
+{phang}
 {opt replace} replaces variables created by {cmd:mmws} if they already exist. If {cmd:prefix()} is specified, only variables created by {cmd:mmws} with
 the same prefix will be replaced.{p_end}
 
@@ -306,8 +313,8 @@ to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
 Linden, Ariel. 2014. 
-MMWS: Stata module for implementing mean marginal weighting through stratification. {browse "http://ideas.repec.org/c/boc/bocode/s457886.html":http://ideas.repec.org/c/boc/bocode/s457886.html}
-{p_end}
+MMWS: Stata module for implementing mean marginal weighting through stratification. Statistical Software Components S457886, Boston College Department of Economics{p_end}
+
 
 
 {title:Author}
@@ -315,9 +322,8 @@ MMWS: Stata module for implementing mean marginal weighting through stratificati
 {p 4 4 2}
 Ariel Linden{break}
 President, Linden Consulting Group, LLC{break}
-Ann Arbor, MI, USA{break} 
-{browse "mailto:alinden@lindenconsulting.org":alinden@lindenconsulting.org}{break}
-{browse "http://www.lindenconsulting.org"}{p_end}
+alinden@lindenconsulting.org{break}
+
 
         
 {title:Acknowledgments} 

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 0.5.0  08nov2025}{...}
+{* *! version 0.4.8  25nov2025}{...}
 {viewerjumpto "Syntax" "xtvfreg##syntax"}{...}
 {viewerjumpto "Description" "xtvfreg##description"}{...}
 {viewerjumpto "Options" "xtvfreg##options"}{...}
@@ -47,8 +47,11 @@
 {synopt:{opt converge(real)}}convergence tolerance; default is {cmd:converge(1e-6)}{p_end}
 {synopt:{opt maxiter(integer)}}maximum iterations; default is {cmd:maxiter(100)}{p_end}
 {synopt:{opt nolog}}suppress iteration log{p_end}
-{synopt:{opt table}}display comparison table of estimates across groups{p_end}
-{synopt:{opt combined}}display combined mean and variance equation tables{p_end}
+{synopt:{opt table}}display a single wide table of mean-equation estimates with 
+diagnostic scalars (iterations, convergence, log-likelihood, variance decomposition) 
+across groups{p_end}
+{synopt:{opt combined}}display two separate tables: mean equation estimates for 
+all groups, followed by variance equation estimates for all groups{p_end}
 {synoptline}
 {p2colreset}{...}
 {p 4 6 2}* {opt groupvar()}, {opt panelid()}, {opt meanvars()}, and {opt varvars()} are required.{p_end}
@@ -135,16 +138,27 @@ within this limit. The default is {cmd:maxiter(100)}.
 log-likelihood value and change at each iteration for each group.
 
 {phang}
-{opt table} requests a comparison table of the mean equation estimates across 
-all groups using {helpb esttab} (if installed). The table includes iteration 
-counts, convergence status, and final log-likelihood values.
+{opt table} requests a single wide comparison table, using {helpb esttab} (if 
+installed), of the {bf:mean equation} estimates for every group side by side, 
+annotated with diagnostic scalars: number of iterations, convergence status, 
+final log-likelihood, total variance, and the two variance-decomposition 
+proportions. This table does {bf:not} include the variance equation; use 
+{opt combined} (or {cmd:estimates replay var_[group]}) for that.
 
 {phang}
-{opt combined} displays two additional tables: (1) mean equation results for 
-all groups side-by-side, and (2) variance equation results for all groups 
-side-by-side. This option requires {helpb esttab} to be installed 
-({stata ssc install estout}). This provides an easy way to compare coefficients 
-across groups.
+{opt combined} displays two additional tables, using {helpb esttab} (if 
+installed): (1) mean equation results for all groups side by side, and 
+(2) variance equation results for all groups side by side, each with 
+coefficients and standard errors. This option requires {helpb esttab} to be 
+installed ({stata ssc install estout}).
+
+{pstd}
+{opt table} and {opt combined} are independent and can be used together; doing 
+so will display three tables in sequence (the diagnostics table from 
+{opt table}, then the plain mean-equation table and the variance-equation table 
+from {opt combined}). The mean equation therefore appears twice, in two 
+different formats (once with diagnostic scalars, once with standard errors); 
+this is expected and not a bug.
 
 
 {marker remarks}{...}
@@ -195,32 +209,43 @@ importance of the mean structure and heteroscedasticity in explaining variation
 in the outcome.
 
 {pstd}
-{bf:Stored estimates}: The command stores three sets of estimates for each group 
-(where [group] is the group identifier):
+{bf:Stored estimates}: The command stores {bf:two} sets of estimates for each 
+group (where [group] is the group identifier):
 
-{p 8 12}{cmd:beta_[group]} - Mean equation estimates with metadata (main results){p_end}
-{p 8 12}{cmd:mean_[group]} - Mean equation estimates{p_end}
+{p 8 12}{cmd:mean_[group]} - Mean equation estimates, with diagnostic and 
+variance-decomposition scalars attached via {helpb estadd} (this is the main, 
+full result for the group){p_end}
 {p 8 12}{cmd:var_[group]} - Variance equation estimates{p_end}
 
 {pstd}
+There is no separate {cmd:beta_[group]} set; {cmd:mean_[group]} already carries 
+both the coefficients and the diagnostics. To see the mean equation with all 
+metadata, use {cmd:estimates replay mean_[group]}. To see the variance equation, 
+use {cmd:estimates replay var_[group]}.
+
+{pstd}
 These can be replayed with {helpb estimates replay} or {helpb estimates table}, 
-and can be used with {helpb esttab}, {helpb etable}, or the {helpb collect} system.
+and can be used with {helpb esttab}. Combining multiple stored estimates into a 
+single {helpb etable} requires the {cmd:estimates()} option (Stata 17+); see the 
+examples below. Running {cmd:etable} with no arguments after 
+{cmd:estimates replay} only shows the single currently active estimate, and 
+running {cmd:etable, replay ...} before any {helpb collect} results exist will 
+produce the error {bf:"Your layout specification does not identify any items."} 
+because there is nothing yet to replay.
 
 {pstd}
 {bf:Interpretation}: Coefficients in the mean equation are interpreted as in 
 standard linear regression. Coefficients in the variance equation are on the log 
 scale (due to the log link): positive coefficients indicate that the variable 
-increases variance, while negative coefficients indicate that it decreases variance.
-An effect of an X variable in the variance model on the Y scale of the mean model 
-can be interpreted as follows: A one-unit increase in X is associated with an exp(beta_x) 
-times change in the expected variance of the prediction errors (residuals) of the Y variable 
-in the mean model. This implies that the X variable is influencing the heteroscedasticity of 
-the mean model. A positive beta_x (i.e., exp(beta_x) > 1) suggests that as X increases, 
-the spread of the residuals around the predicted Y values tends to increase, while a negative 
-beta_x (i.e., exp(beta_x) < 1) suggests the spread tends to decrease. Put differently and 
-succinctly (in terms of inequality), an X variable in the variance model has a multiplicative 
-effect on within-group inequality whereas an X variable in the mean model has an additive 
-effect on between-group inequality.
+increases variance, while negative coefficients indicate that it decreases variance. 
+Exponentiate a variance-equation coefficient (e.g., {cmd:exp(_b[x])}) to obtain 
+the multiplicative effect on the variance.
+
+{pstd}
+{bf:Temporary variables}: The command creates group-specific temporary variables 
+named {cmd:R2_[group]} and {cmd:S2_[group]} during estimation. These are 
+automatically dropped when the command finishes, so no manual cleanup is needed 
+before rerunning the model.
 
 
 {marker examples}{...}
@@ -236,80 +261,114 @@ effect on between-group inequality.
 {phang2}{cmd:. gen dage = age - mage}{p_end}
 {phang2}{cmd:. gen dhours = union - mhours}{p_end}
 {phang2}{cmd:. gen dtenure = tenure - mtenure}{p_end}
-{phang2}{cmd:. gen sampwgt = 1}{p_end}
 
 {pstd}Declare panel structure{p_end}
 {phang2}{cmd:. xtset idcode year}{p_end}
 
-{pstd}Basic estimation by region (south) with probability weights{p_end}
+{pstd}Basic estimation by region (south){p_end}
 {phang2}{cmd:. xtvfreg ln_wage, groupvar(south) panelid(idcode) meanvars(collgrad mage mhours mtenure dage dhours dtenure) varvars(collgrad mage mhours mtenure dage dhours dtenure)}{p_end}
 
-{pstd}With combined tables{p_end}
+{pstd}Mean-equation diagnostics table only (one wide table, includes variance decomposition){p_end}
+{phang2}{cmd:. xtvfreg ln_wage, groupvar(south) panelid(idcode) meanvars(collgrad mage mhours mtenure dage dhours dtenure) varvars(collgrad mage mhours mtenure dage dhours dtenure) table}{p_end}
+
+{pstd}Mean AND variance equation tables side by side (two tables){p_end}
 {phang2}{cmd:. xtvfreg ln_wage, groupvar(south) panelid(idcode) meanvars(collgrad mage mhours mtenure dage dhours dtenure) varvars(collgrad mage mhours mtenure dage dhours dtenure) combined}{p_end}
 
 {pstd}Suppress iteration log{p_end}
 {phang2}{cmd:. xtvfreg ln_wage, groupvar(south) panelid(idcode) meanvars(collgrad mage mhours mtenure dage dhours dtenure) varvars(collgrad mage mhours mtenure dage dhours dtenure) nolog}{p_end}
 
-{pstd}Display comparison table across groups with sampling weights{p_end}
-{phang2}{cmd:. xtvfreg ln_wage [pweight=sampwgt], groupvar(south) panelid(idcode) meanvars(collgrad mage mhours mtenure dage dhours dtenure) varvars(collgrad mage mhours mtenure dage dhours dtenure) table}{p_end}
+{pstd}With probability weights{p_end}
+{phang2}{cmd:. gen sampwgt = 1}{p_end}
+{phang2}{cmd:. xtvfreg ln_wage [pweight=sampwgt], groupvar(south) panelid(idcode) meanvars(collgrad mage mhours mtenure dage dhours dtenure) varvars(collgrad mage mhours mtenure dage dhours dtenure) combined}{p_end}
 
-{pstd}Display comparison table across groups with if selecion sampling weights{p_end}
-{phang2}{cmd:. xtvfreg ln_wage if race==1 [pweight=sampwgt], groupvar(south) panelid(idcode) meanvars(collgrad mage mhours mtenure dage dhours dtenure) varvars(collgrad mage mhours mtenure dage dhours dtenure) table}{p_end}
+{pstd}With an {cmd:if} condition{p_end}
+{phang2}{cmd:. xtvfreg ln_wage if race==1, groupvar(south) panelid(idcode) meanvars(collgrad mage mhours mtenure dage dhours dtenure) varvars(collgrad mage mhours mtenure dage dhours dtenure) combined}{p_end}
 
-{pstd}Replay stored estimates{p_end}
-{phang2}{cmd:. estimates replay beta_0}{p_end}
-{phang2}{cmd:. estimates replay mean_1}{p_end}
+{pstd}Replay a single stored estimate{p_end}
+{phang2}{cmd:. estimates replay mean_0}{p_end}
 {phang2}{cmd:. estimates replay var_0}{p_end}
+{phang2}{cmd:. estimates replay mean_1}{p_end}
+{phang2}{cmd:. estimates replay var_1}{p_end}
 
 {pstd}Use with esttab{p_end}
 {phang2}{cmd:. esttab mean_*, se star(* 0.10 ** 0.05 *** 0.01)}{p_end}
 {phang2}{cmd:. esttab var_*, se star(* 0.10 ** 0.05 *** 0.01)}{p_end}
 
-{pstd}Use with etable, which only output one set of the model results{p_end}
-{phang2}{cmd:. etable, replay stars(.05 * .01 ** .001 ***, prefix(Note:))}{p_end}
-{phang2}{cmd:. etable, replay title(Table 2. Regression Estimates) export(RegResults.docx, replace)}{p_end}
+{pstd}Use with etable for a single group (no {cmd:estimates()} needed - the most 
+recently replayed estimate is used){p_end}
+{phang2}{cmd:. estimates replay mean_0}{p_end}
+{phang2}{cmd:. etable, title(Table 1. Group 0 Mean Equation) stars(0.10 "*" 0.05 "**" 0.01 "***")}{p_end}
 
-{pstd}Completely silent execution{p_end}
-{phang2}{cmd:. xtvfreg ln_wage [pweight=sampwgt] if race==1, groupvar(south) panelid(idcode) meanvars(collgrad mage mhours mtenure dage dhours dtenure) varvars(collgrad mage mhours mtenure dage dhours dtenure) table combined}{p_end}
+{pstd}Use with etable to combine multiple groups into one table (requires the 
+{cmd:estimates()} option, Stata 17+; do {bf:not} use {cmd:replay} the first time 
+since nothing has been collected yet){p_end}
+{phang2}{cmd:. etable, estimates(mean_0 mean_1) title(Table 2. Regression Estimates) stars(0.05 "*" 0.01 "**" 0.001 "***") export(RegResults.docx, replace)}{p_end}
+
+{pstd}Only after the above has run once does a collection exist to replay; here 
+we reformat it with looser star thresholds and no exported file{p_end}
+{phang2}{cmd:. etable, replay stars(0.10 "*" 0.05 "**" 0.01 "***")}{p_end}
 
 
 {marker results}{...}
 {title:Stored results}
 
 {pstd}
-{cmd:xtvfreg} stores the following in {cmd:r()}:
+{cmd:xtvfreg} is an {bf:e-class} command. It stores the following in {cmd:e()} 
+after the full command finishes (these describe the overall run, indexed by 
+group number {cmd:#} = 1, 2, ...):
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
-{synopt:{cmd:r(ngroups)}}number of groups estimated{p_end}
-{synopt:{cmd:r(maxiter)}}maximum iterations allowed{p_end}
-{synopt:{cmd:r(converge)}}convergence criterion{p_end}
-{synopt:{cmd:r(group#_iter)}}iterations for group #{p_end}
-{synopt:{cmd:r(group#_converged)}}convergence status for group # (1=converged, 0=not){p_end}
-{synopt:{cmd:r(group#_ll)}}final log-likelihood for group #{p_end}
+{synopt:{cmd:e(ngroups)}}number of groups estimated{p_end}
+{synopt:{cmd:e(maxiter)}}maximum iterations allowed{p_end}
+{synopt:{cmd:e(converge)}}convergence criterion{p_end}
+{synopt:{cmd:e(group#_iter)}}iterations for group #{p_end}
+{synopt:{cmd:e(group#_converged)}}convergence status for group # (1=converged, 0=not){p_end}
+{synopt:{cmd:e(group#_ll)}}final log-likelihood for group #{p_end}
+{synopt:{cmd:e(group#_var_total)}}total variance of dependent variable for group #{p_end}
+{synopt:{cmd:e(group#_prop_mean)}}proportion of variance explained by mean model for group #{p_end}
+{synopt:{cmd:e(group#_prop_var)}}proportion of variance explained by variance model for group #{p_end}
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Macros}{p_end}
-{synopt:{cmd:r(groups)}}list of group values{p_end}
+{synopt:{cmd:e(groups)}}list of group values{p_end}
 
 {pstd}
-For each group, {cmd:xtvfreg} stores estimation results in {cmd:e()} under the names 
-{cmd:beta_[group]}, {cmd:mean_[group]}, and {cmd:var_[group]}. These contain standard 
-{helpb glm} results plus the following additional items in {cmd:beta_[group]}:
+These can be viewed after {cmd:xtvfreg} finishes with {cmd:ereturn list}, or 
+individual scalars can be displayed directly, e.g. {cmd:display e(ngroups)}. 
+Note that because {cmd:xtvfreg} is e-class (not r-class), {cmd:r()} results such 
+as {cmd:r(ngroups)} are {bf:not} set; use the {cmd:e()} names above instead.
+
+{pstd}
+In addition, for each group {cmd:xtvfreg} stores estimation results in {cmd:e()} 
+under {cmd:mean_[group]} and {cmd:var_[group]} (see {help xtvfreg##remarks:Remarks} 
+above). These contain standard {helpb glm} results. The {cmd:mean_[group]} 
+estimates additionally carry:
 
 {synoptset 20 tabbed}{...}
-{p2col 5 20 24 2: Scalars}{p_end}
+{p2col 5 20 24 2: Scalars (in mean_[group])}{p_end}
 {synopt:{cmd:e(group)}}group identifier value{p_end}
 {synopt:{cmd:e(n_iter)}}number of iterations until convergence{p_end}
 {synopt:{cmd:e(vf_converged)}}convergence indicator (1=yes, 0=no){p_end}
 {synopt:{cmd:e(ll_init)}}initial log-likelihood{p_end}
 {synopt:{cmd:e(ll_final)}}final log-likelihood{p_end}
+{synopt:{cmd:e(var_total)}}total variance of dependent variable{p_end}
+{synopt:{cmd:e(var_fitted)}}variance explained by mean model{p_end}
+{synopt:{cmd:e(var_heterosced)}}variance explained by variance model (mean of S²){p_end}
+{synopt:{cmd:e(prop_mean)}}proportion of variance explained by mean model{p_end}
+{synopt:{cmd:e(prop_var)}}proportion of variance explained by variance model{p_end}
 
 {synoptset 20 tabbed}{...}
-{p2col 5 20 24 2: Macros}{p_end}
+{p2col 5 20 24 2: Macros (in mean_[group])}{p_end}
 {synopt:{cmd:e(vf_groupvar)}}name of grouping variable{p_end}
 {synopt:{cmd:e(vf_groupval)}}value of this group{p_end}
 {synopt:{cmd:e(vf_cmd)}}"xtvfreg"{p_end}
+
+{pstd}
+These group-specific scalars/macros are only available after 
+{cmd:estimates replay mean_[group]}, not from the top-level {cmd:e()} left 
+behind by the full {cmd:xtvfreg} call (which instead has the 
+{cmd:e(group#_...)} scalars listed above).
 
 
 {marker references}{...}
@@ -317,8 +376,8 @@ For each group, {cmd:xtvfreg} stores estimation results in {cmd:e()} under the n
 
 {phang}
 Mooi-Reci, I., and T. F. Liao. 2025. Unemployment: a hidden source of wage 
-inequality? {it:European Sociological Review} 41(3): 382-401.
-{browse "https://doi.org/10.1093/esr/jcae052"}
+inequality? {it:European Sociological Review} 41(3): 382-394.
+{browse "https://doi.org/10.1093/esr/jcae029"}
 
 
 {marker author}{...}

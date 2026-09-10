@@ -1,3 +1,4 @@
+*! version 2.0.0 Stephen P. Jenkins, September 2026. Version from 8.2 to 11 to allow factor variables
 *! version 1.2.1 Stephen P. Jenkins, March 2007
 *! Fit Dagum distribution by ML to unit record data
 
@@ -5,7 +6,7 @@
 /*------------------------------------------------ playback request */
  
 program define dagumfit, eclass byable(onecall)
-	version 8.2
+	version 11
 	if replay() {
 		if "`e(cmd)'" != "dagumfit" {
 			noi di as error "results for dagumfit not found"
@@ -28,8 +29,11 @@ end
 program define Estimate, eclass byable(recall)
 
 	syntax varlist(max=1) [if] [in] [aw fw pw iw] [,  ///
-		Avar(varlist numeric) Bvar(varlist numeric) Pvar(varlist numeric) ///
-		ABP(varlist numeric) CDF(namelist max=1) PDF(namelist max=1) POORfrac(real 0) ///
+		Avar(varlist numeric ts fv) ///
+		Bvar(varlist numeric ts fv) ///
+		Pvar(varlist numeric ts fv)) ///
+		ABP(varlist numeric ts fv) ///
+		CDF(namelist max=1) PDF(namelist max=1) POORfrac(real 0) ///
 		Robust Cluster(varname) SVY STats  From(string)  ///
 		Level(integer $S_level)    ///
 		noLOG  * ]

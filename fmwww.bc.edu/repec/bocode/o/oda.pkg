@@ -1,26 +1,36 @@
 d 'ODA': module for conducting Optimal Discriminant Analysis (Windows only)
 d
-d  Optimal Discriminant Analysis (ODA) is a machine learning
-d algorithm that was introduced over 25 years ago to offer an
-d alternative analytic approach to conventional statistical methods
-d commonly used in research (Yarnold & Soltysik 1991). Its appeal
-d lies in its simplicity, flexibility and accuracy as compared with
+d  Optimal discriminant analysis is a machine learning algorithm
+d that was introduced over 30 years ago to offer an alternative
+d analytic approach to conventional statistical methods commonly
+d used in research (Yarnold & Soltysik 1991). Its appeal lies in
+d its simplicity, flexibility and accuracy as compared with
 d conventional statistical methods (Yarnold & Soltysik 2005, 2016).
-d oda is a wrapper program for the Optimal Discriminant Analysis
-d (ODA) software (Yarnold & Soltysik 2005, 2016). Therefore, ODA
-d must be installed in order for the oda Stata package to work. ODA
-d software is available at https://odajournal.com/resources/ 
+d Given classvar (2 or more distinct levels) and attrvar
+d (continuous, or categorical via cat), oda performs an exhaustive
+d search for the cutpoint, the optimal category grouping, the
+d optimal ordered segmentation, or the optimal per-category class
+d assignment that maximizes classification accuracy, and reports
+d overall accuracy, PAC (Percent Accuracy in Classification) and PV
+d (Predictive Value) for every class, and their corresponding
+d Effect Strength (ESS) measures. oda extends ODA's original
+d functionality in a number of ways -- most notably bootstrap
+d confidence intervals and a significance test on the leave-one-out
+d table for a multi-category classvar (looreps()). 
 d
 d KW: machine learning
 d KW: data mining
+d KW: Discriminant analysis
+d KW: Classification analysis
 d
-d Requires: Stata version 11 for Windows and purchase of ODA software 
+d Requires: Stata version 14 for Windows and purchase of ODA software 
 d
-d Distribution-Date: 20200213
+d Distribution-Date: 20200909
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
 d
-f WIN64 oda.ado
+f oda.ado
+f oda_predict.ado
 f oda.sthlp
-h oda.ado
+f ODA_tech_suppl.pdf

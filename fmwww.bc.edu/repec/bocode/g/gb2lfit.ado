@@ -1,3 +1,4 @@
+*! version 3.1.0 SPJ, September 2026 Raise version from 8.2 to 11, allow factor var notation option
 *! version 3.0.0 SPJ, October 2007 Add left-truncation option
 *! version 2.1.0 Stephen P. Jenkins, 11 April 2007
 *!	Revise Gini calc; add GE indices; etc
@@ -9,7 +10,7 @@
 /*------------------------------------------------ playback request */
  
 program define gb2lfit, eclass byable(onecall)
-	version 8.2
+	version 11
 	if replay() {
 		if "`e(cmd)'" != "gb2lfit" {
 			noi di as error "results for gb2lfit not found"
@@ -32,8 +33,10 @@ end
 program define Estimate, eclass byable(recall)
 
 	syntax varlist(max=1) [if] [in] [aw fw pw iw] [,  ///
-		Avar(varlist numeric) Bvar(varlist numeric) Pvar(varlist numeric) Qvar(varlist numeric) ///
-		ABPQ(varlist numeric) CENSvar(varname) From(string) ///
+		Avar(varlist numeric ts fv) Bvar(varlist numeric ts fv) ///
+		Pvar(varlist numeric ts fv) Qvar(varlist numeric ts fv)) ///
+		ABPQ(varlist numeric ts fv) ///
+		CENSvar(varname) From(string) ///
 		CDF(namelist max=1) PDF(namelist max=1) POORfrac(real 0) ///
 		Robust Cluster(varname) SVY  STats  ///
 		Level(integer $S_level) CGINI EPSilon(real 1e-10) EXtras ///
@@ -975,7 +978,7 @@ program define ginicalc
 				+ lngamma(2*`cp' + (1/`ca') + `i') 	///
 				- lngamma(`cp' + 1 + `i')		///
 				- lngamma(2*`cp' + 2*`cq' + `i')	///
-				- lnfact(`i')				///
+				- lnfactorial(`i')				///
 				)
 		scalar `sumBlast' = `sumB'
 		scalar `sumB' = `sumB' + 				///
@@ -984,7 +987,7 @@ program define ginicalc
 				+ lngamma(2*`cp' + (1/`ca') + `i') 	///
 				- lngamma(`cp' + (1/`ca') + 1 + `i')	///
 				- lngamma(2*`cp' + 2*`cq' + `i')	///
-				- lnfact(`i')				///
+				- lnfactorial(`i')				///
 				)
 
 		local i = `i' + 1

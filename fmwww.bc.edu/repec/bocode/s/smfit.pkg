@@ -10,7 +10,7 @@ d KW: Singh-Maddala distribution
 d KW: inequality
 d KW: maximum likelihood
 d
-d Requires: Stata version 8.2
+d Requires: Stata version 11
 d
 d Distribution-Date: 20070316
 d
@@ -19,6 +19,6 @@ d Support: email s.jenkins@@lse.ac.uk
 d
 f smfit.ado
 f smfit_ll.ado
-f smfit.hlp
+f smfit.sthlp
 f smpred.ado
-f smpred.hlp
+f smpred.sthlp
