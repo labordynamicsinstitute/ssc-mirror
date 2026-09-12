@@ -1,0 +1,37 @@
+d 'CALIBRA': module to perform calibracion de factores de expansion (pesos muestrales) por el metodo de Deville y Sarndal (1992)
+d
+d  calibra implements calibration (GREG) estimation for sampling
+d weights following Deville and Särndal (1992, JASA), with the
+d computational engine written in Mata. It adjusts initial design
+d weights so that estimated totals of a set of auxiliary variables
+d exactly reproduce known population totals (e.g., population
+d projections or frame totals), while minimizing a chosen distance
+d function between the new and original weights. calibra ajusta los
+d factores de expansion iniciales (pesos de diseno d{subscript:k})
+d de una encuesta por muestreo, produciendo    nuevos pesos
+d calibrados w{subscript:k} tales que los totales estimados de un
+d conjunto de variables auxiliares reproducen	 exactamente los
+d totales poblacionales conocidos (proyecciones de poblacion,
+d totales de marco muestral, resultados censales),    minimizando
+d una funcion de distancia entre w{subscript:k} y d{subscript:k}.
+d Este es el principio del estimador GREG (regresion   
+d generalizada) de Deville y Sarndal (1992), ampliamente usado en
+d el ajuste de factores de expansion de encuestas de hogares   
+d (ENAHO) y agropecuarias (ENA) del INEI. 
+d
+d KW: calibration
+d KW: design weights
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260911
+d
+d Author:   Mario Anderson Apaza Ñupa ,  NA
+d Support: email rioma310@@gmail.com
+d
+d Author: Lirys Alejandra del Castillo Aliaga ,  NA
+d Support: email alejandra18lia@@gmail.com
+d
+f calibra.ado
+f calibra.sthlp
+f ../e/ejemplo_calibra.do

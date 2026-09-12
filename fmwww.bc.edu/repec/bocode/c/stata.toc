@@ -3,6 +3,7 @@ p cacheit module to cache all other Stata commands
 p cal module to generate calendar
 p calibest module to estimate proportions and means after survey data have been calibrated to population totals
 p calibr module for inverse regression and calibration
+p calibra module to perform calibracion de factores de expansion (pesos muestrales) por el metodo de Deville y Sarndal (1992)
 p calibrate module to calibrate survey datasets to population totals
 p calinski module to compute Calinski-Harabasz cluster stopping index from distance matrix
 p calipmatch module for caliper matching without replacement

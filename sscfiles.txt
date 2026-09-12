@@ -5891,6 +5891,7 @@ fmwww.bc.edu/repec/bocode/e/elabel_cmd_adjust.ado
 fmwww.bc.edu/repec/bocode/e/event_plot.sthlp
 fmwww.bc.edu/repec/bocode/e/elzspelladd.linux.plugin
 fmwww.bc.edu/repec/bocode/e/eurostatuse.ado
+fmwww.bc.edu/repec/bocode/e/ejemplo_calibra.do
 fmwww.bc.edu/repec/bocode/e/egi.pkg
 fmwww.bc.edu/repec/bocode/e/erate.ado
 fmwww.bc.edu/repec/bocode/e/etr.sthlp
@@ -11109,6 +11110,7 @@ fmwww.bc.edu/repec/bocode/c/centpow.pkg
 fmwww.bc.edu/repec/bocode/c/cpoisson.ado
 fmwww.bc.edu/repec/bocode/c/crsconvert_core.ado
 fmwww.bc.edu/repec/bocode/c/cnevent.pkg
+fmwww.bc.edu/repec/bocode/c/calibra.ado
 fmwww.bc.edu/repec/bocode/c/clustergram.pkg
 fmwww.bc.edu/repec/bocode/c/color-538rs11.style
 fmwww.bc.edu/repec/bocode/c/cemimix.pkg
@@ -11214,6 +11216,7 @@ fmwww.bc.edu/repec/bocode/c/catplot_old.hlp
 fmwww.bc.edu/repec/bocode/c/circular.pkg
 fmwww.bc.edu/repec/bocode/c/choi_lr_support_interval_or_eq_0.ado
 fmwww.bc.edu/repec/bocode/c/CheckingDataWithDatacheck.pdf
+fmwww.bc.edu/repec/bocode/c/calibra.pkg
 fmwww.bc.edu/repec/bocode/c/cs_plot.ado
 fmwww.bc.edu/repec/bocode/c/cirkdevm.ado
 fmwww.bc.edu/repec/bocode/c/cprdons_death_patient.sthlp
@@ -11718,6 +11721,7 @@ fmwww.bc.edu/repec/bocode/c/critiband1.ado
 fmwww.bc.edu/repec/bocode/c/clusterbs.sthlp
 fmwww.bc.edu/repec/bocode/c/crash.pkg
 fmwww.bc.edu/repec/bocode/c/cs_weakiv_1.0.10.do
+fmwww.bc.edu/repec/bocode/c/calibra.sthlp
 fmwww.bc.edu/repec/bocode/c/civreg.sthlp
 fmwww.bc.edu/repec/bocode/c/copulaendog_quickstart.do
 fmwww.bc.edu/repec/bocode/c/cwmglm_examples.do
