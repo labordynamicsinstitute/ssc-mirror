@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1 06dec2024}{...}
+{* *! version 13 sep 2026}{...}
 {cmd:help blockboot}
 {hline}
 
@@ -21,9 +21,10 @@
 ]
 
 {p 4 6 2}
-You must {cmd:tsset} your data before using {cmd:blockboot}; see {manhelp tsset TS}.{p_end}
+You must {cmd:tsset} your data before using {cmd:blockboot}; see {manhelp tsset TS}. 
+ {p_end}
 {p 4 6 2}
-{it:varlist} contains the list of variables to be bootstrapped.{p_end}
+{it:varlist} contains the list of variables to be bootstrapped. Gaps are not allowed in the timeseries. A single unit of a panel can be specified.{p_end}
 {p 4 6 2}
 
 {title:Description}

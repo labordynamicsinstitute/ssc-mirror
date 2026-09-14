@@ -1,0 +1,24 @@
+d 'MVARDLURT_MULTIVARIATE': module to implement the multivariate ARDL unit root test proposed by Sam, McNown, Goh and Goh 
+d
+d  mvardlurt_multivariate implements the multivariate ARDL unit
+d root test proposed by Sam, McNown, Goh and Goh (2024). This test 
+d   extends the standard ADF regression by including lagged levels
+d of multiple covariates to improve power, especially when   
+d cointegration exists. 
+d
+d KW: ARDL
+d KW: unit root
+d KW: cointegration
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260913
+d
+d Author:  Yusuf Toyin Yusuf,  Kwara State University
+d Support: email  YUSUF.YUSUF@@KWASU.EDU.NG
+d
+f mvardlurt_multivariate.ado
+f mvardlurt_multivariate_bootstrap.ado
+f mvardlurt_multivariate_diag.ado
+f mvardlurt_multivariate_graph.ado
+f mvardlurt_multivariate.sthlp

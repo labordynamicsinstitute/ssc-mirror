@@ -1,17 +1,23 @@
+*! 2.00 Ariel Linden 12Sep2026		/// replaced Bonferroni-adjusted ANOVA search with local split/exclude/floor-force refinement using fixed max-pairwise-SMD balance instead (smdlevel())
 *! 1.20 Ariel Linden 07Sep2026		/// Bonferroni-adjust the balance threshold for the number of strata tested simultaneously
-*! 1.10 Ariel Linden 28August2016	/// fixed bugs, added display option
-*! 1.00 Ariel Linden 16August2016
+*! 1.10 Ariel Linden 28Aug2016		/// fixed bugs, added display option
+*! 1.00 Ariel Linden 16Aug2016
 
 program define pstrata, rclass
 	version 11.0
 
 	syntax varlist(min=1 max=1 numeric) [if] [in],	///
 		PScore(varlist min=1 numeric)				/// propensity score(s) provided by user
-		[ Plevel(real 0.05)							/// p-value level used for determining balance
+		[ SMDlevel(real 0.25)						/// max pairwise standardized mean difference allowed for a stratum to count as balanced
 		COMmon										/// common support
-		SMIn (int 5)								/// minimum # of strata to start with
+		SMIn (int 0)								/// initial # of strata to start with; 0 = auto
 		SMAx (int 50)								///  maximum # of strata to try
 		REPLace PREfix(str) DISPlay *]
+
+	if `smin' < 0 {
+		di as err "smin() must be nonnegative"
+		exit 198
+	}
 
 	* Parse varlist and call it treat
 	gettoken treat : varlist
@@ -59,6 +65,39 @@ program define pstrata, rclass
 			di as err "For `treatcnt' treatments, there should be `treatcnt' propensity scores, one for each treatment level"
 			exit 198
 		}
+
+		* minsize is a per-group reliability target derived from smdlevel()
+		local minsize = ceil(5.4 / (`smdlevel'^2))
+
+		* does the rarest treatment level have enough observations
+		tempname treatfreq
+		quietly tabulate `treat' if `touse', matcell(`treatfreq')
+		local minlevN = .
+		forvalues i = 1/`treatcnt' {
+			local thisN = `treatfreq'[`i', 1]
+			if `minlevN' == . | `thisN' < `minlevN' local minlevN = `thisN'
+		}
+		local minlevshare = `minlevN' / `N'
+
+		if `minlevN' < `minsize' {
+			di as err "{p 4 4 2}pstrata warning: rarest level of `treat' has only "	///
+				"`minlevN' obs (" %4.1f 100*`minlevshare' "% of N), below the "		///
+				"minsize target of `minsize' -- floor-forced everywhere. Consider "	///
+				"collapsing it with an adjacent level.{p_end}"
+		}
+
+		ret scalar minlevN     = `minlevN'
+		ret scalar minlevshare = `minlevshare'
+
+		* smin() is the number of equal-frequency quantile bins the search starts with
+		if `smin' == 0 {
+			local target_minlevperbin = 100
+			local smin = max(5, floor(`N' * `minlevshare' / `target_minlevperbin'))
+			if `smin' > `smax' local smin = `smax'
+		}
+
+		ret scalar minsize  = `minsize'
+		ret scalar sminused = `smin'
 
 		***********************
 		**** Common support ***
@@ -114,76 +153,202 @@ program define pstrata, rclass
 
 		***** end common support *****
 
-		*****************************************************
-		*** Generate optimized number of strata by pscore ***
-		*****************************************************
+		*****************************************************************
+		*** Generate strata by pscore via local split/exclude refinement
+		*****************************************************************
 
-		local smin1 = `smin'   // reset for each ps loop
 		local bag              // initialize bag to empty
 
 		forval n = 1/`Npscore' {
 			local ps : word `n' of `pscore'
 
-			xtile `prefix'strata`n' = `ps' if `touse' `supp1', nq(`smin1')
+			tempvar exclflag
+			gen byte `exclflag' = 0 if `touse' `supp1'
 
-			while `smin1' <= `smax' {	// default min is 5 and max of 50 strata
+			xtile `prefix'strata`n' = `ps' if `touse' `supp1', nq(`smin')
 
-				qui tab `prefix'strata`n' if `touse' `supp1'
-				local r = r(r)
+			local nextlabel = `smin'
+			local worklist ""
+			forvalues i = 1/`smin' {
+				local worklist "`worklist' `i'"
+			}
 
-				// Build p-value matrix directly — no tempvar needed
-				matrix _pval`n' = J(`r', 1, .)
+			local naccepted = 0
+			local nfloorforced = 0
+			local nexclstrata = 0
+			local exclobs = 0
+			local ntotal = `smin'
+			local capped = 0
 
-				forvalues i = 1/`r' {
-					capture anova `ps' `treat' if `prefix'strata`n' == `i' & `touse' `supp1'
-					local pvalue = 1 - F(e(df_m), e(df_r), e(F))
-					if e(F) == . {		// perfect balance: means/SDs identical across groups
-						local pvalue = 1
+			while ("`worklist'" != "") {
+
+				gettoken cur worklist : worklist
+
+				* has every treatment level been observed within this region?
+				levelsof `treat' if `prefix'strata`n' == `cur' & `touse' `supp1' & `exclflag' == 0, local(levelspresent)
+				local nlevels : word count `levelspresent'
+
+				count if `prefix'strata`n' == `cur' & `touse' `supp1' & `exclflag' == 0
+				local curN = r(N)
+
+				if `nlevels' < `treatcnt' {
+					* missing at least one treatment level -- splitting can never fix this
+					replace `exclflag' = 1 if `prefix'strata`n' == `cur' & `touse' `supp1'
+					local nexclstrata = `nexclstrata' + 1
+					local exclobs = `exclobs' + `curN'
+					if `nexclstrata' == 1 {
+						matrix _excl`n' = (`cur', `curN', 1)
 					}
-					if inlist(_rc, 2000, 2001) {	// no obs or insufficient obs: flag as no balance
-						local pvalue = 0
+					else {
+						matrix _excl`n' = _excl`n' \ (`cur', `curN', 1)
 					}
-					matrix _pval`n'[`i', 1] = `pvalue'
-				} //end forval i
+					continue
+				}
 
-				* Evaluate the min pval across strata using mata
-				mata: st_local("min", strofreal(min(st_matrix("_pval`n'"))))
+				* mean/variance/N of the pscore within each treatment-group level
+				local i = 0
+				local mingrpn = .
+				foreach lv of local levelspresent {
+					local i = `i' + 1
+					summarize `ps' if `prefix'strata`n' == `cur' & `touse' `supp1' & `exclflag' == 0 & `treat' == `lv'
+					local grpn`i'    = r(N)
+					local grpmean`i' = r(mean)
+					local grpvar`i'  = r(Var)
+					* smallest present level's count in this strata, used below
+					* to decide whether splitting further is worth attempting
+					if `mingrpn' == . | `grpn`i'' < `mingrpn' local mingrpn = `grpn`i''
+				}
 
-				* Bonferroni-adjust the balance threshold for the number of strata being
-				* tested simultaneously (r), so the family-wise false-rejection rate stays
-				* near plevel() regardless of how finely the search has stratified so far
-				local adjplevel = `plevel' / `r'
-
-				* if the min pval is < the adjusted level then drop the strata and try again with nq+1
-				if `min' < `adjplevel' {
-					drop `prefix'strata`n'
-					matrix drop _pval`n'
-					local smin1 = `smin1' + 1
-
-					* Terminates code when a solution to any of the PS strata cannot be found
-					if `smin1' > `smax' {
-						local test = `smin1' - 1	// to get the last strata level tested
-						di as err "`test' strata on `ps' were evaluated and no solution could be found. Consider re-estimating the propensity score; see help for details."
-						exit 498
+				local maxsmd = 0
+				local sumsmd = 0
+				local npairs = 0
+				local baddiag = 0
+				forvalues a = 1/`=`nlevels'-1' {
+					local b0 = `a' + 1
+					forvalues b = `b0'/`nlevels' {
+						local npairs = `npairs' + 1
+						if `grpvar`a'' == . | `grpvar`b'' == . {
+							* a group with <2 observations in this strata -- variance
+							* undefined, treat as an unreliable/failing comparison
+							local thissmd = 999
+							local baddiag = 1
+						}
+						else {
+							local denom = sqrt((`grpvar`a'' + `grpvar`b'')/2)
+							if `denom' == 0 {
+								if abs(`grpmean`a''-`grpmean`b'') < 1e-12 local thissmd = 0
+								else                                     local thissmd = 999
+							}
+							else {
+								local thissmd = abs(`grpmean`a''-`grpmean`b'')/`denom'
+							}
+						}
+						if `thissmd' > `maxsmd' local maxsmd = `thissmd'
+						local sumsmd = `sumsmd' + `thissmd'
 					}
-					xtile `prefix'strata`n' = `ps' if `touse' `supp1', nq(`smin1')
-				}	//end if min
+				}
 
-				* if the min pval is >= the adjusted level end loop, save results, move to next pscore
-				else if `min' >= `adjplevel' {
-					// return matrix moves _pval`n' into r(), so copy it first to preserve for display
-					matrix _pval`n'_disp = _pval`n'
-					return matrix pval`n' = _pval`n'
-					// Return the number of strata found for this pscore, and the adjusted threshold used
-					ret scalar nstrata`n' = `smin1'
-					ret scalar adjplevel`n' = `adjplevel'
-					// Add the successful variable to bag only once, after solution is found
-					local bag `bag' `prefix'strata`n'
-					local smin1 = `smin'  // reset for next pscore
-					continue, break
-				} // end else min
+				* mean pairwise SMD
+				if `baddiag' {
+					local meansmd = .
+					local cohenf  = .
+				}
+				else {
+					local meansmd = `sumsmd' / `npairs'
 
+					local pooledmean = 0
+					local sswithin = 0
+					forvalues i = 1/`nlevels' {
+						local pooledmean = `pooledmean' + (`grpn`i''/`curN') * `grpmean`i''
+						local sswithin   = `sswithin' + (`grpn`i''-1) * `grpvar`i''
+					}
+					local sdpooled = sqrt(`sswithin' / (`curN' - `nlevels'))
+
+					local cohenf2 = 0
+					forvalues i = 1/`nlevels' {
+						local dj = (`grpmean`i'' - `pooledmean') / `sdpooled'
+						local cohenf2 = `cohenf2' + (`grpn`i''/`curN') * `dj'^2
+					}
+					local cohenf = sqrt(`cohenf2')
+				}
+
+				if `maxsmd' < `smdlevel' {
+					* balance achieved -- accept this region as a final stratum
+					local naccepted = `naccepted' + 1
+					if `naccepted' == 1 {
+						matrix _accept`n' = (`cur', `curN', `maxsmd', 0, `meansmd', `cohenf')
+					}
+					else {
+						matrix _accept`n' = _accept`n' \ (`cur', `curN', `maxsmd', 0, `meansmd', `cohenf')
+					}
+				}
+				else if (`mingrpn' < 2*`minsize' | `ntotal' >= `smax') {
+					* worst pairwise SMD still >= smdlevel()
+					local naccepted = `naccepted' + 1
+					local nfloorforced = `nfloorforced' + 1
+					if `naccepted' == 1 {
+						matrix _accept`n' = (`cur', `curN', `maxsmd', 1, `meansmd', `cohenf')
+					}
+					else {
+						matrix _accept`n' = _accept`n' \ (`cur', `curN', `maxsmd', 1, `meansmd', `cohenf')
+					}
+					if `ntotal' >= `smax' local capped = 1
+				}
+				else {
+					* split this region's own observations into two sub-strata and requeue both
+					local newlabel1 = `nextlabel' + 1
+					local newlabel2 = `nextlabel' + 2
+					local nextlabel = `newlabel2'
+					local ntotal = `ntotal' + 1		// net one new region (one in, two out)
+
+					tempvar substrat
+					xtile `substrat' = `ps' if `prefix'strata`n' == `cur' & `touse' `supp1' & `exclflag' == 0, nq(2)
+					replace `prefix'strata`n' = `newlabel1' if `substrat' == 1 & `prefix'strata`n' == `cur' & `touse' `supp1'
+					replace `prefix'strata`n' = `newlabel2' if `substrat' == 2 & `prefix'strata`n' == `cur' & `touse' `supp1'
+					drop `substrat'
+
+					local worklist "`worklist' `newlabel1' `newlabel2'"
+				}
 			} //end while
+
+			* excluded regions' strata membership is left missing
+			replace `prefix'strata`n' = . if `exclflag' == 1
+
+			* Renumber accepted strata 1..n accepted in ascending order of mean pscore
+			if `naccepted' > 0 {
+				tempvar meanps neworder
+				egen `meanps'   = mean(`ps') if `touse' `supp1' & `prefix'strata`n' < ., by(`prefix'strata`n')
+				egen `neworder' = group(`meanps') if `touse' `supp1' & `prefix'strata`n' < .
+
+				forvalues i = 1/`naccepted' {
+					local oldlbl = _accept`n'[`i', 1]
+					summarize `neworder' if `prefix'strata`n' == `oldlbl' & `touse' `supp1', meanonly
+					matrix _accept`n'[`i', 1] = r(mean)
+				}
+
+				* sort rows by the new column-1 label so row order matches label order
+				mata: st_matrix("_accept`n'", sort(st_matrix("_accept`n'"), 1))
+
+				replace `prefix'strata`n' = `neworder' if `touse' `supp1' & `prefix'strata`n' < .
+			}
+
+			if `naccepted' > 0 {
+				matrix _accept`n'_disp = _accept`n'
+				return matrix smd`n' = _accept`n'
+			}
+			if `nexclstrata' > 0 {
+				matrix _excl`n'_disp = _excl`n'
+				return matrix excl`n' = _excl`n'
+			}
+			ret scalar nstrata`n'      = `naccepted'
+			ret scalar nfloorforced`n' = `nfloorforced'
+			ret scalar nexcluded`n'    = `nexclstrata'
+			ret scalar exclobs`n'      = `exclobs'
+			ret scalar smdlevel`n'     = `smdlevel'
+			ret scalar capped`n'       = `capped'
+
+			local bag `bag' `prefix'strata`n'
+
 		} // end forvals
 
 		* Store the final set of strata variable names in the dataset characteristic
@@ -192,26 +357,32 @@ program define pstrata, rclass
 	} // end quietly
 
 	*****************************************************
-	*** Display p-value table by strata (if requested) **
+	*** Display accepted/excluded tables (if requested) **
 	*****************************************************
 
 	if "`display'" != "" {
 		forval n = 1/`Npscore' {
 			local ps : word `n' of `pscore'
-			local nquant = rowsof(_pval`n'_disp)
-			local adjplevel = `plevel' / `nquant'
+
+			capture confirm matrix _accept`n'_disp
+			if _rc local nacc = 0
+			else    local nacc = rowsof(_accept`n'_disp)
+
+			capture confirm matrix _excl`n'_disp
+			if _rc local nexc = 0
+			else    local nexc = rowsof(_excl`n'_disp)
 
 			di as txt _newline "{hline 45}"
-			di as txt "  Propensity score `n' (`ps'): `nquant' quantiles (Bonferroni-adjusted threshold = " %6.4f `adjplevel' ")"
+			di as txt "  Propensity score `n' (`ps'): `nacc' strata, `nexc' excluded (smdlevel = " %6.4f `smdlevel' ")"
 			di as txt "{hline 45}"
-			di as txt %10s "Quantile" %15s "P-value" %15s "Balance"
+			di as txt %10s "Stratum" %15s "Max SMD" %15s "Balance"
 			di as txt "{hline 45}"
-
-			forval i = 1/`nquant' {
-				local pv = _pval`n'_disp[`i', 1]
-				if `pv' >= `adjplevel' local bal "Yes"
-				else                   local bal "No"
-				di as txt %10.0f `i' %15.4f `pv' %15s "`bal'"
+			forval i = 1/`nacc' {
+				local lbl = _accept`n'_disp[`i', 1]
+				local sm  = _accept`n'_disp[`i', 3]
+				if `sm' < `smdlevel' local bal "Yes"
+				else                  local bal "No"
+				di as txt %10.0f `lbl' %15.4f `sm' %15s "`bal'"
 			}
 			di as txt "{hline 45}"
 		}
@@ -219,7 +390,10 @@ program define pstrata, rclass
 
 	* Clean up working matrices
 	forval n = 1/`Npscore' {
-		capture matrix drop _pval`n'_disp
+		capture matrix drop _accept`n'
+		capture matrix drop _excl`n'
+		capture matrix drop _accept`n'_disp
+		capture matrix drop _excl`n'_disp
 	}
 
 end

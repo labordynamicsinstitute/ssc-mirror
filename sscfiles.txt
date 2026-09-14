@@ -21675,6 +21675,7 @@ fmwww.bc.edu/repec/bocode/m/mergemany.pkg
 fmwww.bc.edu/repec/bocode/m/mixi12_unit.ado
 fmwww.bc.edu/repec/bocode/m/mtreatreg_logit_lf.mo
 fmwww.bc.edu/repec/bocode/m/mcmcsum.sthlp
+fmwww.bc.edu/repec/bocode/m/mvardlurt_multivariate.sthlp
 fmwww.bc.edu/repec/bocode/m/mountainplot.sthlp
 fmwww.bc.edu/repec/bocode/m/mvtnorm.pkg
 fmwww.bc.edu/repec/bocode/m/multisynth_stack.dta
@@ -22535,6 +22536,7 @@ fmwww.bc.edu/repec/bocode/m/mark_changes.ado
 fmwww.bc.edu/repec/bocode/m/mscatter.pkg
 fmwww.bc.edu/repec/bocode/m/mtad.hlp
 fmwww.bc.edu/repec/bocode/m/mtakelogs.mata
+fmwww.bc.edu/repec/bocode/m/mvardlurt_multivariate_graph.ado
 fmwww.bc.edu/repec/bocode/m/MIsim.do
 fmwww.bc.edu/repec/bocode/m/mf_mm_sort.hlp
 fmwww.bc.edu/repec/bocode/m/mp_main_g.mpb
@@ -22542,6 +22544,7 @@ fmwww.bc.edu/repec/bocode/m/MonteCarloSimulation_Multishell.do
 fmwww.bc.edu/repec/bocode/m/markovfutureprob.pkg
 fmwww.bc.edu/repec/bocode/m/metamiss.pkg
 fmwww.bc.edu/repec/bocode/m/mtad.sthlp
+fmwww.bc.edu/repec/bocode/m/mvardlurt_multivariate.ado
 fmwww.bc.edu/repec/bocode/m/MTUS_hef.dta
 fmwww.bc.edu/repec/bocode/m/meanrets.sthlp
 fmwww.bc.edu/repec/bocode/m/mscologit.ado
@@ -23200,6 +23203,7 @@ fmwww.bc.edu/repec/bocode/m/marimekko.sthlp
 fmwww.bc.edu/repec/bocode/m/makicoint.pkg
 fmwww.bc.edu/repec/bocode/m/matvsort6.ado
 fmwww.bc.edu/repec/bocode/m/mf_mm_freq.hlp
+fmwww.bc.edu/repec/bocode/m/mvardlurt_multivariate.pkg
 fmwww.bc.edu/repec/bocode/m/mediate.ado
 fmwww.bc.edu/repec/bocode/m/mat2txt.pkg
 fmwww.bc.edu/repec/bocode/m/metan.hlp
@@ -23283,6 +23287,7 @@ fmwww.bc.edu/repec/bocode/m/markovpredict.ado
 fmwww.bc.edu/repec/bocode/m/mkomega.sthlp
 fmwww.bc.edu/repec/bocode/m/mstfreq.sthlp
 fmwww.bc.edu/repec/bocode/m/mf_mm_expand.hlp
+fmwww.bc.edu/repec/bocode/m/mvardlurt_multivariate_diag.ado
 fmwww.bc.edu/repec/bocode/m/mvplot.ado
 fmwww.bc.edu/repec/bocode/m/mcmcsum.ado
 fmwww.bc.edu/repec/bocode/m/metamiss2.ado
@@ -23954,6 +23959,7 @@ fmwww.bc.edu/repec/bocode/m/make_example_varlabels.py
 fmwww.bc.edu/repec/bocode/m/marginscontplot2.pkg
 fmwww.bc.edu/repec/bocode/m/makematrix.hlp
 fmwww.bc.edu/repec/bocode/m/midas_bivbox.sthlp
+fmwww.bc.edu/repec/bocode/m/mvardlurt_multivariate_bootstrap.ado
 fmwww.bc.edu/repec/bocode/m/margprev.sthlp
 fmwww.bc.edu/repec/bocode/m/mmws.pkg
 fmwww.bc.edu/repec/bocode/m/mrobust.ado

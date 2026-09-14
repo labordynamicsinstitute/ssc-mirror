@@ -306,6 +306,7 @@ p mundlak module to estimate random-effects regressions adding group-means of in
 p muxplot module to produce scatter plots with y versus multiple x variables
 p muxyplot module to produce scatter plots with multiple x and y variables
 p mvardlurt module to perform Multivariate ARDL Unit Root Test with Bootstrap Critical Values 
+p mvardlurt_multivariate module to implement the multivariate ARDL unit root test proposed by Sam, McNown, Goh and Goh 
 p mvcorr module to generate moving-window correlation or autocorrelation in time series or panel
 p mvdcmp module to compute multivariate decomposition for nonlinear response models
 p mvfiles module to provide  a convenient way to move/copy matched files from a specified input directory (also including, if wanted, additionally recursively matched subsets of files within distinctly matched offspring-directories) to a specified output directory
