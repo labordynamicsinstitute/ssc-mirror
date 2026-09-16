@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1  20apr2026}{...}
+{* *! version 1.2  13sep2026}{...}
 {vieweralsosee "[D] generate" "help generate"}{...}
 {vieweralsosee "sic_to_ff" "help sic_to_ff"}{...}
 {viewerjumpto "Syntax" "naics_to_ff##syntax"}{...}
@@ -10,6 +10,7 @@
 {viewerjumpto "Examples" "naics_to_ff##examples"}{...}
 {viewerjumpto "Technical Notes" "naics_to_ff##technical"}{...}
 {viewerjumpto "References" "naics_to_ff##references"}{...}
+{viewerjumpto "Version history" "naics_to_ff##history"}{...}
 {viewerjumpto "Author" "naics_to_ff##author"}{...}
 {title:Title}
 
@@ -83,11 +84,11 @@ codes to Fama-French industry classifications. This is a companion command to
 {helpb sic_to_ff}.
 
 {pstd}
-Requires {helpb sic_to_ff} version 1.1 or later.
+Requires {helpb sic_to_ff} version 1.2 or later.
 
 {pstd}
-The NAICS lookup is shipped as {bf:naics_sic_lookup.dta} and loaded once into
-a cached Mata index for repeated lookups.
+The NAICS lookup is shipped as {bf:naics_sic_lookup.dta} and loaded into
+a cached Mata index for repeated lookups. The cache refreshes when the file changes.
 
 {pstd}
 The command works in two steps:
@@ -486,6 +487,30 @@ The 6.7% discordance is concentrated in Finance/Real Estate and Business Service
 boundaries.
 
 
+{pstd}
+Output names must be distinct and must differ from every input variable.
+Existing output names are matched exactly. With {opt replace}, the original
+{cmd:if}/{cmd:in} sample is evaluated before outputs are replaced. Results are
+computed in temporary variables and installed together after successful computation.
+On a reported computation error, existing output variables are retained.{p_end}
+
+{pstd}
+The {opt labels} option preserves existing label definitions and their associations.
+It reuses an identical definition or selects a label name that is neither
+defined nor attached to another variable, including undefined associations. The label name
+may therefore differ from {it:newvar}{cmd:_lbl}. The shared label utility
+{bf:ffcode_util.ado} is included with {helpb sic_to_ff} version 1.2.{p_end}
+
+{pstd}
+After updating, restart Stata before using these commands. Update both
+{cmd:sic_to_ff} and {cmd:naics_to_ff} packages together. The latter includes the
+ISIC and NACE commands and all three lookup datasets. File version checks do not
+replace a restart because Stata may retain programs already loaded in memory.{p_end}
+
+{pstd}
+Version 1.2 was tested on Stata/MP 19.0 for macOS. The declared minimum
+remains Stata 14. Native Stata 14 and Windows were not tested.{p_end}
+
 {marker examples}{...}
 {title:Examples}
 
@@ -519,6 +544,38 @@ boundaries.
 
 {marker technical}{...}
 {title:Technical Notes}
+
+{pstd}
+The cached lookup is checked against the file path, file length and Stata
+{helpb checksum} value on every call. A changed file is reloaded automatically.
+The three shipped lookup datasets are unchanged in version 1.2.{p_end}
+
+{pstd}
+After {cmd:mata clear}, the loaded command and its cache can be out of sync.
+To reload without clearing the dataset, run these commands before the next call:{p_end}
+{phang2}{cmd:capture scalar drop __n2f_cache_ready}{p_end}
+{phang2}{cmd:capture macro drop N2F_CACHE_LOOKUP_PATH N2F_CACHE_CHECKSUM N2F_CACHE_FILELEN}{p_end}
+{phang2}{cmd:discard}{p_end}
+
+{pstd}
+{cmd:discard} retains the dataset but clears stored estimation results and
+closes graphs. Save any results or graphs you need before running it.{p_end}
+
+{pstd}
+External {opt comp_*var()} field names follow the caller’s {cmd:set varabbrev}
+setting. Unambiguous prefixes are accepted when it is on. The returned option
+macros retain the supplied spelling. Valid external field names, including
+{cmd:naics_num}, are accepted without collision with internal working names.
+Internal numeric merges import neither
+value-label definitions nor dataset notes from the external Compustat file.{p_end}
+
+{pstd}
+Compustat weights must be positive and nonmissing. This applies to explicit
+weights, both price and shares, and their product. Missing values, including
+extended missing values, zero and negative weights are excluded. If no eligible
+observations remain, the command reports error 2000. If only some NAICS-year
+groups lack eligible observations, the usual fallback rules apply to those groups.
+Overflowing aggregated weights report error 459 and require rescaling the inputs.{p_end}
 
 {phang}1. Both numeric and string NAICS variables are accepted. String NAICS codes
 are cleaned (whitespace and hyphens removed) before conversion. Hyphenated sector
@@ -554,8 +611,10 @@ before FF assignment. With {opt method(skipaux)}, four of these codes (493110,
 493120, 493130, 493190) receive valid non-auxiliary SICs. Two codes (551114, 950000)
 have no non-auxiliary alternative and remain missing.{p_end}
 
-{phang}3a. Auxiliary SIC observations are counted in {cmd:r(N_ff_unmapped)} separately
-from {cmd:r(N_naics_unmapped)}.{p_end}
+{phang}3a. Auxiliary SIC placeholders are cleared before FF assignment.
+These observations count in {cmd:r(N_naics_unmapped)}, which is measured before
+the optional user SIC fallback. They do not count in {cmd:r(N_ff_unmapped)}
+unless a usable fallback SIC is obtained but has no FF assignment.{p_end}
 
 {phang}4. Non-6-digit NAICS codes trigger a warning by default (e.g., 5-digit or 7-digit
 codes). Fractional {it:numeric} NAICS values are rejected because the command cannot
@@ -581,6 +640,12 @@ Autor, Dorn, and Hanson. 2013. "The China Syndrome." {it:American Economic Revie
 Kenneth R. French Data Library:
 {browse "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html"}
 
+
+{marker history}{...}
+{title:Version history}
+
+{pstd}
+{bf:Version 1.2 (13 September 2026)}: Minor bug fixes.{p_end}
 
 {marker author}{...}
 {title:Author}

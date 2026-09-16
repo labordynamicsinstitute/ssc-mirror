@@ -1,0 +1,26 @@
+d 'ITDIDBOUNDS': module to compute timing-uncertainty envelopes for interval-timed difference-in-differences contrasts
+d
+d  itdidbounds computes numerical timing-uncertainty envelopes for
+d difference-in-differences/event-time contrasts when treatment
+d adoption timing is known only to lie within unit-specific
+d intervals. The command enumerates feasible adoption dates and
+d reports the minimum and maximum contrast estimates across those
+d timing assignments. These envelopes characterize sensitivity to
+d interval-known treatment timing; they are not automatically
+d causal treatment-effect bounds or confidence intervals. 
+d
+d KW: difference-in-difference
+d KW: DID
+d KW: event time
+d KW: bunds
+d
+d Requires: Stata version 
+d
+d Distribution-Date: 20260915
+d
+d Author:  Christina Laternser ,  Ann & Robert H. Lurie Children’s Hospital of Chicago
+d Support: email christina.laternser.research@@gmail.com
+d
+f itdidbounds.ado
+f itdidbounds.sthlp
+f itdidbounds_demo.do

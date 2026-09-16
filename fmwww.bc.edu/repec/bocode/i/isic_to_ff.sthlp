@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1  20apr2026}{...}
+{* *! version 1.2  13sep2026}{...}
 {vieweralsosee "naics_to_ff" "help naics_to_ff"}{...}
 {vieweralsosee "sic_to_ff" "help sic_to_ff"}{...}
 {viewerjumpto "Syntax" "isic_to_ff##syntax"}{...}
@@ -9,6 +9,7 @@
 {viewerjumpto "Remarks" "isic_to_ff##remarks"}{...}
 {viewerjumpto "Examples" "isic_to_ff##examples"}{...}
 {viewerjumpto "References" "isic_to_ff##references"}{...}
+{viewerjumpto "Version history" "isic_to_ff##history"}{...}
 {viewerjumpto "Author" "isic_to_ff##author"}{...}
 
 {title:Title}
@@ -147,10 +148,35 @@ The ISIC bridge dataset is distributed with the package as
 {bf:naics_sic_lookup.dta}. Both files must be discoverable on {cmd:adopath}.
 
 {pstd}
-{cmd:isic_to_ff} requires {helpb sic_to_ff} version 1.1 or later. When
-{opt labels} is requested, {helpb naics_to_ff} must also be discoverable on
-{cmd:adopath} so the command can attach the shipped FF value labels.
+{cmd:isic_to_ff} requires {helpb sic_to_ff} version 1.2 or later. The {cmd:naics_to_ff} package supplies the lookup datasets, but the
+{cmd:naics_to_ff} command itself is not called. ISIC mapping reads the shipped
+bridge and NAICS lookup, then calls {cmd:sic_to_ff}. FF value labels come from the shared
+{bf:ffcode_util.ado} utility shipped with {helpb sic_to_ff}.
 
+
+{pstd}
+Output names must be distinct and must differ from every input variable.
+Existing output names are matched exactly. With {opt replace}, the original
+{cmd:if}/{cmd:in} sample is evaluated before outputs are replaced. Results are
+computed in temporary variables and installed together after successful computation.
+On a reported computation error, existing output variables are retained.{p_end}
+
+{pstd}
+The {opt labels} option preserves existing label definitions and their associations.
+It reuses an identical definition or selects a label name that is neither
+defined nor attached to another variable, including undefined associations. The label name
+may therefore differ from {it:newvar}{cmd:_lbl}. The shared label utility
+{bf:ffcode_util.ado} is included with {helpb sic_to_ff} version 1.2.{p_end}
+
+{pstd}
+After updating, restart Stata before using these commands. Update both
+{cmd:sic_to_ff} and {cmd:naics_to_ff} packages together. The latter includes the
+ISIC and NACE commands and all three lookup datasets. File version checks do not
+replace a restart because Stata may retain programs already loaded in memory.{p_end}
+
+{pstd}
+Version 1.2 was tested on Stata/MP 19.0 for macOS. The declared minimum
+remains Stata 14. Native Stata 14 and Windows were not tested.{p_end}
 
 {marker examples}{...}
 {title:Examples}
@@ -167,6 +193,12 @@ The ISIC bridge dataset is distributed with the package as
 U.S. Census Bureau. Concordances between NAICS and ISIC:
 {browse "https://www.census.gov/naics/concordances/concordances.html"}.
 
+
+{marker history}{...}
+{title:Version history}
+
+{pstd}
+{bf:Version 1.2 (13 September 2026)}: Minor bug fixes.{p_end}
 
 {marker author}{...}
 {title:Author}

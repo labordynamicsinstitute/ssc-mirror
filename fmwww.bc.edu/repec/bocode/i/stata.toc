@@ -113,6 +113,7 @@ p isograph module to compute inequality over logit ranks of social hierarchy
 p isopoverty module to generate data for Inequality-Poverty and Iso-Poverty curves
 p istdize module to generate indirectly standardized rates using a standard population
 p isvar module  to filter names into variable names and others
+p itdidbounds module to compute timing-uncertainty envelopes for interval-timed difference-in-differences contrasts
 p itpscore module to implement Iterative Propensity Score Logistic Regression Model Search Procedure
 p itsa module to perform interrupted time series analysis for single and multiple groups
 p itsadgp module to generate artificial data for interrupted time-series analysis

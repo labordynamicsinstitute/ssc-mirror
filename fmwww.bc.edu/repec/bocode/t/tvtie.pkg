@@ -1,0 +1,33 @@
+d 'TVTIE': module to estimate time-varying true individual-effects stochastic frontier models
+d
+d    tvtie estimates the stochastic frontier model of Kutlu, Tran,
+d and Tsionas (J. Econometrics, 2019). The model separates
+d individual heterogeneity    from one-sided inefficiency.
+d Individual effects may vary over time, with a distinct
+d coefficient vector for every panel. A    within-panel orthogonal
+d projection removes these coefficients before maximum-likelihood
+d estimation. 
+d
+d KW: stochastic frontier
+d KW: inefficiency
+d KW: individual effects
+d
+d Requires: Stata version 16
+d
+d Distribution-Date: 20260915
+d
+d Author:  Levent Kutlu,  University of Texas Rio Grande Valley
+d Support: email event.kutlu@@utrgv.edu
+d
+f tvtie.ado
+f tvtie.sthlp
+f tvtie_estat.ado
+f tvtie_example.do
+f tvtie_example.dta
+f tvtie_nonlinear.dta
+f tvtie_p.ado
+f tvtie_postestimation.sthlp
+f ../_/_tvtie_bootstrap.ado
+f ../_/_tvtie_expand.ado
+f ../_/_tvtie_load.ado
+f ../_/_tvtie_mata.ado

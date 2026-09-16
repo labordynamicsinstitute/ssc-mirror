@@ -27,3 +27,7 @@ d Support: email klaw@@ntu.edu.sg
 d
 f sic_to_ff.ado
 f sic_to_ff.sthlp
+f ../f/ffcode_util.ado
+f ../i/isic_to_ff.ado
+f ../i/isic_to_ff.sthlp
+f ../i/isic4_naics17_bridge.dta

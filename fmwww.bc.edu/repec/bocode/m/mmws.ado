@@ -1,3 +1,5 @@
+*! 2.21 Ariel Linden 13Sep2026 // renamed smin() to nmin() so as not to be confused with pstrata's smin()
+*! 2.20 Ariel Linden 07Sep2026 // smin() no longer aborts the command
 *! 2.10 Ariel Linden 06Sep2026 // added smin() option to allow users to set minimum required N in all strata
 *! 2.00 Ariel Linden 27May2026 // Streamlined validation; fixed bugs
 *! 1.21 Ariel Linden 18Feb2017 // Fixed bug in IPTW for multiple treatments
@@ -6,7 +8,7 @@
 *! 1.00 Ariel Linden 06Jun2014
 
 program mmws, rclass
-version 13.0
+version 11.0
 
 	/* obtain settings */
 	syntax varlist(min=1 max=1 numeric) [if] [in], 			/// treatment variable
@@ -20,7 +22,7 @@ version 13.0
 	IPTW													/// adds IPTW as an option
 	COMMon		                                			/// common support
 	FIGure													/// histogram of pscore distribution(s)
-	SMIN(integer 1)											///
+	NMIN(integer 1)											/// minimum per-treatment-level N required within a stratum before it is excluded (unrelated to pstrata's own smin())
 	REPLace PREfix(str)]
 
 	gettoken treat : varlist
@@ -31,8 +33,8 @@ version 13.0
 		exit 198
 	}
 
-	if `smin' < 1 {
-		di as err "smin() must be a positive integer"
+	if `nmin' < 1 {
+		di as err "nmin() must be a positive integer"
 		exit 198
 	}
 
@@ -136,23 +138,28 @@ quietly {
 
 			local propatt = (1 - `treatprop') / `treatprop'
 
-			tempvar keep isT isC nt nc
+			tempvar keep isT isC nt nc badcell
 			gen byte `keep' = `touse' `supp1'
 			gen byte `isT' = `keep' & `treat'==1
 			gen byte `isC' = `keep' & `treat'==0
 			bysort `prefix'_strata: egen long `nt' = total(`isT')
 			bysort `prefix'_strata: egen long `nc' = total(`isC')
+			gen byte `badcell' = `keep' & (`nt' < `nmin' | `nc' < `nmin' | missing(`prefix'_strata))
 
-			count if `keep' & (`nt' < `smin' | `nc' < `smin')
-			if r(N) > 0 {
-				levelsof `prefix'_strata if `keep' & (`nt' < `smin' | `nc' < `smin'), local(badstrata)
-				di as err "`prefix'_strata level(s) `badstrata' do not contain at least `smin' observation(s) of both treatment levels; reduce nstrata(), revise strata(), or lower smin()"
-				exit 459
+			count if `badcell'
+			local nexcl = r(N)
+			if `nexcl' > 0 {
+				levelsof `prefix'_strata if `badcell', local(badstrata)
+				local exclmsg "`prefix'_strata level(s) `badstrata' do not contain at least `nmin' observation(s)"
+				local exclmsg "`exclmsg' of both treatment levels; `nexcl' observation(s) excluded from weighting"
+				local exclmsg "`exclmsg' (no comparator available in this stratum)"
+				noisily di as txt "note: `exclmsg'"
 			}
+			ret scalar nexcluded = `nexcl'
 
-			replace `prefix'_mmws = (`nt'/`nc') * `propatt' if `treat'==0 & `touse' & (`nt'+`nc')>0
-			replace `prefix'_mmws = 1 if `treat'==1 & `touse' & (`nt'+`nc')>0
-			drop `keep' `isT' `isC' `nt' `nc'
+			replace `prefix'_mmws = (`nt'/`nc') * `propatt' if `treat'==0 & `touse' & (`nt'+`nc')>0 & !`badcell'
+			replace `prefix'_mmws = 1 if `treat'==1 & `touse' & (`nt'+`nc')>0 & !`badcell'
+			drop `keep' `isT' `isC' `nt' `nc' `badcell'
 
 			if "`common'" != "" {
 				replace `prefix'_mmws = 0 if `prefix'_support != 1 & `touse'
@@ -182,25 +189,30 @@ quietly {
 			gen `prefix'_mmws =. if `touse'
 			label var `prefix'_mmws "ATE weights for binary treatment"
 
-			tempvar keep isT isC nt nc ntot
+			tempvar keep isT isC nt nc ntot badcell
 			gen byte `keep' = `touse' `supp1'
 			gen byte `isT' = `keep' & `treat'==1
 			gen byte `isC' = `keep' & `treat'==0
 			bysort `prefix'_strata: egen long `nt' = total(`isT')
 			bysort `prefix'_strata: egen long `nc' = total(`isC')
+			gen byte `badcell' = `keep' & (`nt' < `nmin' | `nc' < `nmin' | missing(`prefix'_strata))
 
-			count if `keep' & (`nt' < `smin' | `nc' < `smin')
-			if r(N) > 0 {
-				levelsof `prefix'_strata if `keep' & (`nt' < `smin' | `nc' < `smin'), local(badstrata)
-				di as err "`prefix'_strata level(s) `badstrata' do not contain at least `smin' observation(s) of both treatment levels; reduce nstrata(), revise strata(), or lower smin()"
-				exit 459
+			count if `badcell'
+			local nexcl = r(N)
+			if `nexcl' > 0 {
+				levelsof `prefix'_strata if `badcell', local(badstrata)
+				local exclmsg "`prefix'_strata level(s) `badstrata' do not contain at least `nmin' observation(s)"
+				local exclmsg "`exclmsg' of both treatment levels; `nexcl' observation(s) excluded from weighting"
+				local exclmsg "`exclmsg' (no comparator available in this stratum)"
+				noisily di as txt "note: `exclmsg'"
 			}
+			ret scalar nexcluded = `nexcl'
 
 			gen long `ntot' = `nt' + `nc'
 
-			replace `prefix'_mmws = (`ntot'/`nc') * `controlprop' if `treat'==0 & `touse' & `ntot'>0
-			replace `prefix'_mmws = (`ntot'/`nt') * `treatprop' if `treat'==1 & `touse' & `ntot'>0
-			drop `keep' `isT' `isC' `nt' `nc' `ntot'
+			replace `prefix'_mmws = (`ntot'/`nc') * `controlprop' if `treat'==0 & `touse' & `ntot'>0 & !`badcell'
+			replace `prefix'_mmws = (`ntot'/`nt') * `treatprop' if `treat'==1 & `touse' & `ntot'>0 & !`badcell'
+			drop `keep' `isT' `isC' `nt' `nc' `ntot' `badcell'
 
 			if "`common'" != "" {
 				replace `prefix'_mmws = 0 if `prefix'_support != 1 & `touse'
@@ -310,7 +322,7 @@ quietly {
 		gen `prefix'_mmws =. if `touse'
 		label var `prefix'_mmws "weights for ordinal treatments"
 
-		tempvar keep nstratum nij ntreat
+		tempvar keep nstratum nij ntreat badcell
 		gen byte `keep' = `touse' `supp1'
 
 		levelsof `treat' if `keep', local(chklevels)
@@ -319,20 +331,26 @@ quietly {
 		bysort `prefix'_strata `treat': egen long `chkcnt' = total(`keep')
 		bysort `prefix'_strata `treat': gen byte `chkfirst' = (_n==1) & `chkcnt'>0
 		bysort `prefix'_strata: egen long `chkndist' = total(`chkfirst')
-		count if `keep' & (`chkndist' < `chkK' | `chkcnt' < `smin')
-		if r(N) > 0 {
-			levelsof `prefix'_strata if `keep' & (`chkndist' < `chkK' | `chkcnt' < `smin'), local(badstrata)
-			di as err "`prefix'_strata level(s) `badstrata' do not contain at least `smin' observation(s) of every level of `treat'; reduce nstrata(), revise strata(), or lower smin()"
-			exit 459
+		gen byte `badcell' = `keep' & (`chkndist' < `chkK' | `chkcnt' < `nmin' | missing(`prefix'_strata))
+
+		count if `badcell'
+		local nexcl = r(N)
+		if `nexcl' > 0 {
+			levelsof `prefix'_strata if `badcell', local(badstrata)
+			local exclmsg "`prefix'_strata level(s) `badstrata' do not contain at least `nmin' observation(s)"
+			local exclmsg "`exclmsg' of every level of `treat'; `nexcl' observation(s) excluded from weighting"
+			local exclmsg "`exclmsg' (no comparator available in this stratum)"
+			noisily di as txt "note: `exclmsg'"
 		}
+		ret scalar nexcluded = `nexcl'
 		drop `chkcnt' `chkfirst' `chkndist'
 
 		bysort `prefix'_strata: egen long `nstratum' = total(`keep')
 		bysort `prefix'_strata `treat': egen long `nij' = total(`keep')
 		bysort `treat': egen long `ntreat' = total(`keep')
 
-		replace `prefix'_mmws = (`nstratum'/`nij') * (`ntreat'/`Nall') if `touse' `supp1'
-		drop `keep' `nstratum' `nij' `ntreat'
+		replace `prefix'_mmws = (`nstratum'/`nij') * (`ntreat'/`Nall') if `touse' `supp1' & !`badcell'
+		drop `keep' `nstratum' `nij' `ntreat' `badcell'
 
 		if "`common'" != "" {
 			replace `prefix'_mmws = 0 if `prefix'_support != 1 & `touse'
@@ -462,17 +480,21 @@ quietly {
 		gen byte `keep' = `touse' `supp1'
 
 		local T = 1
+		local nexcl = 0
 		foreach s of varlist `prefix'_strata* {
 			local tr = el("A", 1, `T')
 
-			tempvar chkT chkpres
+			tempvar chkT chkpres badcell
 			gen byte `chkT' = `keep' & `treat'==`tr'
 			bysort `s': egen long `chkpres' = total(`chkT')
-			count if `keep' & `chkpres' < `smin'
-			if r(N) > 0 {
-				levelsof `s' if `keep' & `chkpres' < `smin', local(badstrata)
-				di as err "`s' level(s) `badstrata' contain fewer than `smin' observation(s) with `treat'==`tr'; reduce nstrata(), revise strata(), or lower smin()"
-				exit 459
+			gen byte `badcell' = `keep' & `treat'==`tr' & (`chkpres' < `nmin' | missing(`s'))
+
+			count if `badcell'
+			local nexclT = r(N)
+			local nexcl = `nexcl' + `nexclT'
+			if `nexclT' > 0 {
+				levelsof `s' if `badcell', local(badstrata)
+				noisily di as txt "note: `s' level(s) `badstrata' contain fewer than `nmin' observation(s) with `treat'==`tr'; `nexclT' observation(s) excluded from weighting"
 			}
 			drop `chkT' `chkpres'
 
@@ -483,12 +505,13 @@ quietly {
 			count if `treat'==`tr' `supp1' & `touse'
 			local treatprop = r(N) / `sN'
 
-			replace `prefix'_mmws = (`nst'/`nstr') * `treatprop' if `treat'==`tr' & `touse'
-			drop `nst' `nstr'
+			replace `prefix'_mmws = (`nst'/`nstr') * `treatprop' if `treat'==`tr' & `touse' & !`badcell'
+			drop `nst' `nstr' `badcell'
 
 			local T = `T' + 1
 		}
 		drop `keep'
+		ret scalar nexcluded = `nexcl'
 
 		if "`common'" != "" {
 			replace `prefix'_mmws = 0 if `prefix'_support != 1 & `touse'

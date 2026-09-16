@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.1  15dec2025}{...}
+{* *! version 1.2  13sep2026}{...}
 {vieweralsosee "[D] generate" "help generate"}{...}
 {vieweralsosee "[D] encode" "help encode"}{...}
 {viewerjumpto "Syntax" "sic_to_ff##syntax"}{...}
@@ -11,6 +11,7 @@
 {viewerjumpto "Technical Notes" "sic_to_ff##technical"}{...}
 {viewerjumpto "Installation" "sic_to_ff##installation"}{...}
 {viewerjumpto "References" "sic_to_ff##references"}{...}
+{viewerjumpto "Version history" "sic_to_ff##history"}{...}
 {viewerjumpto "Author" "sic_to_ff##author"}{...}
 {title:Title}
 
@@ -150,6 +151,30 @@ with the {opt nomiss} option).
 For FF5, FF10, and FF12, all valid SICs are always assigned to some industry 
 (including "Other" as a catch-all), regardless of the {opt nomissing} option.
 
+
+{pstd}
+Output names must be distinct and must differ from every input variable.
+Existing output names are matched exactly. With {opt replace}, the original
+{cmd:if}/{cmd:in} sample is evaluated before outputs are replaced. Results are
+computed in temporary variables and installed together after successful computation.
+On a reported computation error, existing output variables are retained.{p_end}
+
+{pstd}
+The {opt labels} option preserves existing label definitions and their associations.
+It reuses an identical definition or selects a label name that is neither
+defined nor attached to another variable, including undefined associations. The label name
+may therefore differ from {it:newvar}{cmd:_lbl}. The shared label utility
+{bf:ffcode_util.ado} is included with {helpb sic_to_ff} version 1.2.{p_end}
+
+{pstd}
+After updating, restart Stata before using these commands. Update both
+{cmd:sic_to_ff} and {cmd:naics_to_ff} packages together. The latter includes the
+ISIC and NACE commands and all three lookup datasets. File version checks do not
+replace a restart because Stata may retain programs already loaded in memory.{p_end}
+
+{pstd}
+Version 1.2 was tested on Stata/MP 19.0 for macOS. The declared minimum
+remains Stata 14. Native Stata 14 and Windows were not tested.{p_end}
 
 {marker examples}{...}
 {title:Examples}
@@ -350,11 +375,17 @@ Kenneth R. French Data Library:
 {browse "https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/data_library.html"}
 
 
+{marker history}{...}
+{title:Version history}
+
+{pstd}
+{bf:Version 1.2 (13 September 2026)}: Minor bug fixes.{p_end}
+
 {marker author}{...}
 {title:Author}
 
 {pstd}
-Kelvin Law{break}
+Kelvin K.F. Law{break}
 Nanyang Business School{break}
 Nanyang Technological University{break}
 Singapore

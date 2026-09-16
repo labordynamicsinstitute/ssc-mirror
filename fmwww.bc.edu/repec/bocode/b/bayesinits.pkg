@@ -1,0 +1,24 @@
+d 'BAYESINITS': module to generate domain-aware, chain-specific initial values for bayesmh
+d
+d   bayesinits generates randomized, domain-respecting initial
+d values for one or more Markov chains for use with bayesmh's
+d init#() options. It supports unconstrained, positive (log-scale),
+d correlation (Fisher-z), Fisher-z, angular, and simplex parameter
+d domains; returns chain-specific strings in r(init1)...r(initK)
+d plus composite strings r(init_all) and r(init_all_wrap); and
+d provides seed and rngstream controls for reproducible, dispersed
+d starting values across chains. 
+d
+d KW: Bayesian estimation
+d KW: initial values
+d KW: Markov chains
+d
+d Requires: Stata version 15
+d
+d Distribution-Date: 20260915
+d
+d Author:  Ben Dwamena, Division of Nuclear Medicine and Molecular Imaging, University of Michigan Health System, Ann Arbor
+d Support: email  bdwamena@@umich.edu
+d
+f bayesinits.ado
+f bayesinits.sthlp

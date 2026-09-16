@@ -1,4 +1,4 @@
-*! version 1.1  20apr2026  Kelvin Law
+*! version 1.2  13sep2026  Kelvin K.F. Law
 *! Converts NAICS codes to Fama-French industry classifications
 *! Uses Dorn's crosswalk + Census concordance + concordance chain for NAICS->SIC
 *! Then calls sic_to_ff for SIC->FF classification
@@ -15,7 +15,7 @@
 *!   - Returns detailed r() results for programmatic use
 *!
 *! Requirements:
-*!   - sic_to_ff v1.1 or later must be installed
+*!   - sic_to_ff v1.2 or later must be installed
 *!   - NAICS-to-SIC lookup data file (naics_sic_lookup.dta) on adopath
 *!
 *! Reference:
@@ -23,9 +23,8 @@
 *!   Census concordance: 2002 NAICS to 1987 SIC
 *!   FF industries: Ken French Data Library
 
-program naics_to_ff, rclass sortpreserve
+program naics_to_ff, rclass
     version 14.0
-
     * syntax does not accept underscore option names, so normalize the
     * documented comp_* aliases into compact internal spellings first.
     local __raw0 `"`0'"'
@@ -59,6 +58,107 @@ program naics_to_ff, rclass sortpreserve
          COMPNAICSvar(name) COMPSICvar(name) COMPPRICEvar(name) COMPSHARESvar(name) ///
          COMPFYEARvar(name) COMPWEIGHTvar(name)]
 
+    * Evaluate the original sample before r-class helpers or output replacement.
+    marksample touse, novarlist
+    local caller_abbrev "`c(varabbrev)'"
+    capture ffcode_util version
+    if _rc {
+        display as error "Install sic_to_ff 1.2 or later, then restart Stata to load the updated programs."
+        exit 111
+    }
+    if r(api) < 112 | missing(r(api)) {
+        display as error "The loaded ffcode_util is outdated. Update sic_to_ff and restart Stata."
+        exit 111
+    }
+    local targets "`generate' `sicgen' `sourcegen' `weightgen'"
+    ffcode_util check, outputs("`targets'") inputs("`varlist' `fallback' `compare' `yearvar'") ///
+        reserved("__n2f_sic __n2f_w __n2f_src") `replace'
+    if "`scheme'" == "" local scheme "48"
+    tempvar staged_ff
+    local staged "`staged_ff'"
+    local opts "generate(`staged_ff') publicname(`generate') `nomissing' `diagnostics' `nofallback'"
+    foreach opt in scheme method fallback compare yearvar cyear compnaicsvar compsicvar comppricevar compsharesvar compfyearvar compweightvar {
+        if "``opt''" != "" local opts "`opts' `opt'(``opt'')"
+    }
+    if "`sicgen'" != "" {
+        tempvar staged_sicgen
+        local staged "`staged' `staged_sicgen'"
+        local opts "`opts' sicgen(`staged_sicgen')"
+    }
+    if "`sourcegen'" != "" {
+        tempvar staged_sourcegen
+        local staged "`staged' `staged_sourcegen'"
+        local opts "`opts' sourcegen(`staged_sourcegen')"
+    }
+    if "`weightgen'" != "" {
+        tempvar staged_weightgen
+        local staged "`staged' `staged_weightgen'"
+        local opts "`opts' weightgen(`staged_weightgen')"
+    }
+    if `"`compustat'"' != "" local opts `"`opts' compustat(`"`compustat'"')"'
+    local opts "`opts' externalabbrev(`caller_abbrev')"
+    * All computation uses disposable outputs. The worker restores observation order.
+    capture noisily novarabbrev _naics_to_ff_work `varlist' if `touse', `opts'
+    local rc = _rc
+    if `rc' exit `rc'
+    tempname results
+    _return hold `results'
+    * Preparation creates only a caller-owned temporary definition.
+    tempname canonical
+    local labelopts ""
+    if "`labels'" != "" {
+        ffcode_util prepare, variable(`staged_ff') publicname(`generate') ///
+            scheme(`scheme') canonical(`canonical')
+        local chosen "`r(label)'"
+        local owned = r(owned)
+        local labelopts "variable(`staged_ff') canonical(`canonical') label(`chosen') owned(`owned')"
+    }
+    * Publish labels and outputs together. Computation above remains interruptible.
+    nobreak {
+        ffcode_util commit, outputs("`targets'") staged("`staged'") `replace' `labelopts'
+        _return restore `results'
+        return add
+        return local varname "`generate'"
+    }
+
+end
+
+program _naics_to_ff_work, rclass sortpreserve
+    version 14.0
+
+    * syntax does not accept underscore option names, so normalize the
+    * documented comp_* aliases into compact internal spellings first.
+    local __raw0 `"`0'"'
+    local __under_opts "comp_naicsvar comp_sicvar comp_pricevar comp_sharesvar comp_fyearvar comp_weightvar"
+    local __compact_opts "compnaicsvar compsicvar comppricevar compsharesvar compfyearvar compweightvar"
+    forvalues __i = 1/6 {
+        local __u : word `__i' of `__under_opts'
+        local __c : word `__i' of `__compact_opts'
+        local __uval ""
+        local __cval ""
+        if regexm(`"`__raw0'"', "`__u'[(]([^)]*)[)]") local __uval = strtrim(regexs(1))
+        if regexm(`"`__raw0'"', "`__c'[(]([^)]*)[)]") local __cval = strtrim(regexs(1))
+        if "`__uval'" != "" & "`__cval'" != "" & "`__uval'" != "`__cval'" {
+            display as error "Specify either `__u'() or `__c'(), not both with different values"
+            exit 198
+        }
+        if "`__cval'" == "" & "`__uval'" != "" {
+            * Rewrite the option token only; this is robust to macro-expanded values.
+            local 0 : subinstr local 0 "`__u'(" "`__c'(", all
+        }
+        else if "`__uval'" != "" {
+            local 0 : subinstr local 0 "`__u'(`__uval')" "", all
+        }
+    }
+
+    syntax varname [if] [in], GENerate(name) ///
+        [SCHeme(string) LABels REPlace NOMISSING DIAGnostics ///
+         SICgen(name) SOURCEgen(name) WEIGHTgen(name) COMPare(varname) ///
+         METHod(string) FALLback(varname) ///
+         COMPUstat(string) YEARvar(varname) CYear(integer 0) NOFALLback ///
+         COMPNAICSvar(name) COMPSICvar(name) COMPPRICEvar(name) COMPSHARESvar(name) ///
+         COMPFYEARvar(name) COMPWEIGHTvar(name) PUBLICname(name) EXTERNALABBREV(string)]
+
     if "`compnaicsvar'" == "" & "`comp_naicsvar'" != "" local compnaicsvar "`comp_naicsvar'"
     if "`compsicvar'" == "" & "`comp_sicvar'" != "" local compsicvar "`comp_sicvar'"
     if "`comppricevar'" == "" & "`comp_pricevar'" != "" local comppricevar "`comp_pricevar'"
@@ -66,91 +166,7 @@ program naics_to_ff, rclass sortpreserve
     if "`compfyearvar'" == "" & "`comp_fyearvar'" != "" local compfyearvar "`comp_fyearvar'"
     if "`compweightvar'" == "" & "`comp_weightvar'" != "" local compweightvar "`comp_weightvar'"
 
-    * Check that sic_to_ff is installed
-    capture which sic_to_ff
-    if _rc != 0 {
-        display as error "naics_to_ff requires sic_to_ff to be installed"
-        display as error "Install it first, then re-run naics_to_ff"
-        exit 111
-    }
-    local __sic_path "`r(which)'"
-    if "`__sic_path'" == "" local __sic_path "`r(fn)'"
-    if "`__sic_path'" == "" {
-        quietly capture findfile sic_to_ff.ado
-        if _rc == 0 local __sic_path "`r(fn)'"
-    }
-    if "`__sic_path'" == "" {
-        display as error "naics_to_ff could not locate sic_to_ff.ado on adopath"
-        exit 111
-    }
-
-    * Lightweight version check using Stata file read (no Mata - avoids r(3000))
-    * Parse first 10 lines of sic_to_ff.ado looking for "*! version X.Y"
-    local __sic_version ""
-    local __sic_major = 0
-    local __sic_minor = 0
-    local __scan_done = 0
-    tempname __fh
-    capture file open `__fh' using "`__sic_path'", read text
-    if _rc == 0 {
-        forvalues __i = 1/20 {
-            if `__scan_done' == 0 {
-                file read `__fh' __line
-                if r(eof) {
-                    local __scan_done = 1
-                }
-                else {
-                    * Look for version line using strpos (relaxed to handle BOM/leading chars)
-                    local __pos = strpos(`"`__line'"', "*! version ")
-                    if `__pos' >= 1 {
-                        * Extract version string after "*! version " (11 chars from position)
-                        local __verstr = substr(`"`__line'"', `__pos' + 11, .)
-                        * Extract major version (before first dot)
-                        local __dotpos = strpos("`__verstr'", ".")
-                        if `__dotpos' > 0 {
-                            local __sic_major = substr("`__verstr'", 1, `__dotpos' - 1)
-                            * Extract minor version (after dot, before space)
-                            local __after_dot = substr("`__verstr'", `__dotpos' + 1, .)
-                            local __spacepos = strpos("`__after_dot'", " ")
-                            if `__spacepos' > 0 {
-                                local __sic_minor = substr("`__after_dot'", 1, `__spacepos' - 1)
-                            }
-                            else {
-                                local __sic_minor = "`__after_dot'"
-                            }
-                            * Handle X.Y.Z format - extract just the first number after dot
-                            local __dotpos2 = strpos("`__sic_minor'", ".")
-                            if `__dotpos2' > 0 {
-                                local __sic_minor = substr("`__sic_minor'", 1, `__dotpos2' - 1)
-                            }
-                            local __sic_version "`__sic_major'.`__sic_minor'"
-                            local __scan_done = 1
-                        }
-                    }
-                }
-            }
-        }
-        file close `__fh'
-    }
-
-    * Check version: require >= 1.1
-    local __version_ok = 0
-    if `__sic_major' > 1 {
-        local __version_ok = 1
-    }
-    else if `__sic_major' == 1 & `__sic_minor' >= 1 {
-        local __version_ok = 1
-    }
-    if `__version_ok' == 0 {
-        display as error "naics_to_ff requires sic_to_ff version 1.1 or later"
-        if "`__sic_version'" != "" {
-            display as error "Detected sic_to_ff version: `__sic_version'"
-        }
-        else {
-            display as error "Could not detect sic_to_ff version"
-        }
-        exit 111
-    }
+    ffcode_util require, command(sic_to_ff)
 
     * Set default scheme to FF48
     if "`scheme'" == "" {
@@ -509,7 +525,7 @@ program naics_to_ff, rclass sortpreserve
         tempfile compustat_map
         _build_compustat_mapping "`compustat'" `cyear' "`compustat_map'" "`yearvar'" ///
             "`compnaicsvar'" "`compsicvar'" "`comppricevar'" "`compsharesvar'" ///
-            "`compfyearvar'" "`compweightvar'"
+            "`compfyearvar'" "`compweightvar'" "`externalabbrev'"
 
         * Merge with Compustat mapping
         _naics_to_sic_merge_compustat `naics_num' `sic_mapped' `mapping_weight' `mapping_source' `touse' "`compustat_map'" "`yearvar'" `cyear'
@@ -744,7 +760,7 @@ program naics_to_ff, rclass sortpreserve
     * Display results
     display as text ""
     display as text "{hline 60}"
-    display as text "Fama-French `scheme'-industry classification: " as result "`generate'"
+    display as text "Fama-French `scheme'-industry classification: " as result "`publicname'"
     display as text "{hline 60}"
     display as text "Observations in sample:           " as result %10.0fc `n_total'
     display as text "Observations with NAICS code:     " as result %10.0fc `n_with_naics'
@@ -942,49 +958,46 @@ end
 *----------------------------------------------------------------------
 program _naics_map_cache_init
     version 14.0
-
     _naics_lookup_path
     local lookup_path "`r(path)'"
-
-    local __cache_ready 0
-    local __cache_path "$N2F_CACHE_LOOKUP_PATH"
+    quietly checksum "`lookup_path'"
+    local fingerprint : display %21.0f r(checksum)
+    local filelen : display %21.0f r(filelen)
+    local ready 0
     capture confirm scalar __n2f_cache_ready
     if _rc == 0 {
-        if scalar(__n2f_cache_ready) == 1 {
-            if "`__cache_path'" == "`lookup_path'" {
-                local __cache_ready 1
-            }
-        }
+        if scalar(__n2f_cache_ready) == 1 & ///
+            `"$N2F_CACHE_LOOKUP_PATH"' == `"`lookup_path'"' & ///
+            "$N2F_CACHE_CHECKSUM" == "`fingerprint'" & ///
+            "$N2F_CACHE_FILELEN" == "`filelen'" local ready 1
     }
-    if `__cache_ready' {
-        exit
-    }
+    if `ready' exit
 
-    preserve
-    quietly use "`lookup_path'", clear
-    foreach v in naics sic sic_skipaux sic_first weight source {
-        capture confirm variable `v'
-        if _rc != 0 {
-            restore
-            display as error "Lookup data file is missing required column: `v'"
-            exit 610
-        }
-    }
-    capture isid naics
-    if _rc != 0 {
-        restore
-        display as error "Lookup data file has duplicate NAICS codes"
-        exit 459
-    }
-    mata: __n2f_drop_cache()
-    mata: __n2f_cache_from_data()
-    restore
-
+    * Invalidate before rebuilding, including on schema or Mata errors.
     capture scalar drop __n2f_cache_ready
-    scalar __n2f_cache_ready = 1
+    preserve
+    capture noisily {
+        quietly use "`lookup_path'", clear
+        foreach v in naics sic sic_skipaux sic_first weight {
+            confirm numeric variable `v', exact
+        }
+        confirm string variable source, exact
+        isid naics
+        mata: __n2f_drop_cache()
+        mata: __n2f_cache_from_data()
+    }
+    local rc = _rc
+    restore
+    if `rc' exit `rc'
+    quietly checksum "`lookup_path'"
+    if r(checksum) != real("`fingerprint'") | r(filelen) != real("`filelen'") {
+        display as error "Lookup file changed during loading. Re-run the command."
+        exit 610
+    }
     global N2F_CACHE_LOOKUP_PATH "`lookup_path'"
-
-    exit
+    global N2F_CACHE_CHECKSUM "`fingerprint'"
+    global N2F_CACHE_FILELEN "`filelen'"
+    scalar __n2f_cache_ready = 1
 end
 
 *----------------------------------------------------------------------
@@ -994,6 +1007,8 @@ program _naics_sic_clearcache
     version 14.0
     capture scalar drop __n2f_cache_ready
     capture macro drop N2F_CACHE_LOOKUP_PATH
+    capture macro drop N2F_CACHE_CHECKSUM
+    capture macro drop N2F_CACHE_FILELEN
     mata: __n2f_drop_cache()
 end
 
@@ -1038,28 +1053,34 @@ end
 *----------------------------------------------------------------------
 program _build_compustat_mapping
     args compustat_path year_filter mapfile yearvar_mode ///
-        comp_naicsvar comp_sicvar comp_pricevar comp_sharesvar comp_fyearvar comp_weightvar
+        comp_naicsvar comp_sicvar comp_pricevar comp_sharesvar comp_fyearvar comp_weightvar external_abbrev
 
     preserve
     capture noisily {
-        * Open the Compustat file once, validate required variables, then trim
-        * to only the needed columns.
-        local __required_vars "`comp_naicsvar' `comp_sicvar' `comp_fyearvar'"
-        if "`comp_weightvar'" == "" {
-            local __required_vars "`__required_vars' `comp_pricevar' `comp_sharesvar'"
-        }
-        else {
-            local __required_vars "`__required_vars' `comp_weightvar'"
-        }
         use using "`compustat_path'", clear
-
-        * Validate required variables exist
-        foreach v in `__required_vars' {
-            capture confirm variable `v'
-            if _rc != 0 {
-                display as error "compustat(): Required variable `v' not found in file"
+        * Resolve external field names inside the external dataset, using the
+        * caller's abbreviation policy. Keep public option return macros intact.
+        local fields "comp_naicsvar comp_sicvar comp_fyearvar"
+        if "`comp_weightvar'" == "" local fields "`fields' comp_pricevar comp_sharesvar"
+        else local fields "`fields' comp_weightvar"
+        local __required_vars ""
+        foreach field of local fields {
+            if "`external_abbrev'" == "on" {
+                capture varabbrev unab resolved : ``field''
+            }
+            else {
+                capture novarabbrev unab resolved : ``field''
+            }
+            if _rc {
+                display as error "compustat(): Required variable ``field'' not found or ambiguous in file"
                 exit 111
             }
+            if `: list resolved in __required_vars' {
+                display as error "All active comp_*var() options must resolve to distinct variables"
+                exit 198
+            }
+            local `field' "`resolved'"
+            local __required_vars "`__required_vars' `resolved'"
         }
         keep `__required_vars'
 
@@ -1102,21 +1123,37 @@ program _build_compustat_mapping
         * - Non-missing year variable
         quietly keep if !missing(`comp_sicvar') & `comp_sicvar' >= 1 & `comp_sicvar' <= 9999 & !missing(`comp_fyearvar')
         if "`comp_weightvar'" == "" {
-            quietly keep if `comp_pricevar' > 0 & `comp_sharesvar' > 0
+            quietly keep if `comp_pricevar' > 0 & `comp_pricevar' < . & ///
+                `comp_sharesvar' > 0 & `comp_sharesvar' < .
         }
         else {
-            quietly keep if `comp_weightvar' > 0
+            quietly keep if `comp_weightvar' > 0 & `comp_weightvar' < .
         }
 
-        * Canonical names used internally from this point onward
-        quietly rename `comp_sicvar' __n2f_sich
-        quietly rename `comp_fyearvar' __n2f_fyear
+        * Isolate all active external fields before introducing fixed names.
+        * This also handles cycles between external SIC/year/weighting names.
+        tempvar ext_naics ext_sic ext_fyear ext_price ext_shares ext_weight
+        quietly rename `comp_naicsvar' `ext_naics'
+        quietly rename `comp_sicvar' `ext_sic'
+        quietly rename `comp_fyearvar' `ext_fyear'
         if "`comp_weightvar'" == "" {
-            quietly rename `comp_pricevar' __n2f_price
-            quietly rename `comp_sharesvar' __n2f_shares
+            quietly rename `comp_pricevar' `ext_price'
+            quietly rename `comp_sharesvar' `ext_shares'
         }
         else {
-            quietly rename `comp_weightvar' __n2f_weightvar
+            quietly rename `comp_weightvar' `ext_weight'
+        }
+        local comp_naicsvar "`ext_naics'"
+
+        * Retain the other external names in locals for error messages.
+        quietly rename `ext_sic' __n2f_sich
+        quietly rename `ext_fyear' __n2f_fyear
+        if "`comp_weightvar'" == "" {
+            quietly rename `ext_price' __n2f_price
+            quietly rename `ext_shares' __n2f_shares
+        }
+        else {
+            quietly rename `ext_weight' __n2f_weightvar
         }
 
         * Handle string vs numeric NAICS
@@ -1226,11 +1263,24 @@ program _build_compustat_mapping
             quietly gen double mktcap = __n2f_weightvar
         }
 
+        * Products may overflow or underflow even when both inputs are positive.
+        quietly keep if mktcap > 0 & mktcap < .
+        if _N == 0 {
+            display as error "compustat(): No positive, nonmissing weights after filtering"
+            exit 2000
+        }
+
         * Aggregate by NAICS-SIC-year (sum market cap)
         quietly collapse (sum) mktcap_sum=mktcap, by(naics sich fyear)
 
         * Calculate weight within each NAICS-year
         quietly bysort naics fyear: egen double total = total(mktcap_sum)
+        * Reject an overflowing group instead of silently choosing a SIC from it.
+        quietly count if missing(mktcap_sum) | missing(total) | total <= 0
+        if r(N) {
+            display as error "compustat(): Weight totals overflowed. Rescale the weighting inputs."
+            exit 459
+        }
         quietly gen double weight = mktcap_sum / total
 
         * Keep maxweight SIC for each NAICS-year
@@ -1276,7 +1326,7 @@ program _naics_to_sic_merge_compustat
     args naicsvar sicvar weightvar sourcevar touse mapfile yearvar cyear
 
     * Create merge keys
-    tempvar naics_key year_key
+    tempvar naics_key year_key cstat_w cstat_sic
 
     quietly generate long `naics_key' = `naicsvar' if `touse'
 
@@ -1293,8 +1343,8 @@ program _naics_to_sic_merge_compustat
 
         * Rename for merge
         rename naics `naics_key'
-        rename weight __n2f_cstat_w
-        rename sic __n2f_cstat_sic
+        rename weight `cstat_w'
+        rename sic `cstat_sic'
 
         if "`yearvar'" != "" {
             * yearvar mode: rename fyear for merge
@@ -1310,15 +1360,15 @@ program _naics_to_sic_merge_compustat
     }
 
     * Check for variable name collisions
-    capture confirm variable __n2f_cstat_sic
+    capture confirm variable `cstat_sic'
     if _rc == 0 {
-        display as error "Variable __n2f_cstat_sic already exists in your data."
+        display as error "Variable `cstat_sic' already exists in your data."
         display as error "Please rename it before running naics_to_ff."
         exit 110
     }
-    capture confirm variable __n2f_cstat_w
+    capture confirm variable `cstat_w'
     if _rc == 0 {
-        display as error "Variable __n2f_cstat_w already exists in your data."
+        display as error "Variable `cstat_w' already exists in your data."
         display as error "Please rename it before running naics_to_ff."
         exit 110
     }
@@ -1326,21 +1376,21 @@ program _naics_to_sic_merge_compustat
     * Perform merge
     if "`yearvar'" != "" {
         * yearvar mode: merge by NAICS + year (time-varying weights)
-        quietly merge m:1 `naics_key' `year_key' using `mapcopy', keep(master match) nogenerate
+        quietly merge m:1 `naics_key' `year_key' using `mapcopy', keep(master match) nogenerate nolabel nonotes
     }
     else {
         * cyear mode: merge by NAICS only (fixed year weights)
-        quietly merge m:1 `naics_key' using `mapcopy', keep(master match) nogenerate
+        quietly merge m:1 `naics_key' using `mapcopy', keep(master match) nogenerate nolabel nonotes
     }
 
     * Move merged results to output variables
     * Only fill where we got a match AND output variable is still missing
-    quietly replace `sicvar'    = __n2f_cstat_sic if `touse' & `sicvar' >= . & __n2f_cstat_sic < .
-    quietly replace `weightvar' = __n2f_cstat_w   if `touse' & `weightvar' >= . & __n2f_cstat_w < .
-    quietly replace `sourcevar' = "compustat"     if `touse' & `sourcevar' == "" & __n2f_cstat_sic < .
+    quietly replace `sicvar'    = `cstat_sic' if `touse' & `sicvar' >= . & `cstat_sic' < .
+    quietly replace `weightvar' = `cstat_w'   if `touse' & `weightvar' >= . & `cstat_w' < .
+    quietly replace `sourcevar' = "compustat"     if `touse' & `sourcevar' == "" & `cstat_sic' < .
 
     * Clean up merge variables
-    capture drop __n2f_cstat_sic __n2f_cstat_w
+    capture drop `cstat_sic' `cstat_w'
 end
 
 mata:

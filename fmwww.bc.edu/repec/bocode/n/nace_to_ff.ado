@@ -1,96 +1,81 @@
-*! version 1.1  20apr2026  Kelvin Law
+*! version 1.2  13sep2026  Kelvin K.F. Law
 *! Converts NACE Rev. 2 codes to Fama-French industry classifications
 *! Uses official NACE2->ISIC4 bridge + isic_to_ff pipeline
 
-program nace_to_ff, rclass sortpreserve
+program nace_to_ff, rclass
     version 14.0
-
     syntax varname [if] [in], GENerate(name) ///
         [SCHeme(string) LABels REPlace DIAGnostics ///
          TIEgen(name) UNRESOLVEDgen(name)]
 
+    * Evaluate the original sample before r-class helpers or output replacement.
+    marksample touse, novarlist
+    capture ffcode_util version
+    if _rc {
+        display as error "Install sic_to_ff 1.2 or later, then restart Stata to load the updated programs."
+        exit 111
+    }
+    if r(api) < 112 | missing(r(api)) {
+        display as error "The loaded ffcode_util is outdated. Update sic_to_ff and restart Stata."
+        exit 111
+    }
+    local targets "`generate' `tiegen' `unresolvedgen'"
+    ffcode_util check, outputs("`targets'") inputs("`varlist'") ///
+        reserved("ff_plurality tie_top top_count second_count unresolved") `replace'
+    if "`scheme'" == "" local scheme "48"
+    tempvar staged_ff
+    local staged "`staged_ff'"
+    local opts "generate(`staged_ff') publicname(`generate') `diagnostics'"
+    foreach opt in scheme {
+        if "``opt''" != "" local opts "`opts' `opt'(``opt'')"
+    }
+    if "`tiegen'" != "" {
+        tempvar staged_tiegen
+        local staged "`staged' `staged_tiegen'"
+        local opts "`opts' tiegen(`staged_tiegen')"
+    }
+    if "`unresolvedgen'" != "" {
+        tempvar staged_unresolvedgen
+        local staged "`staged' `staged_unresolvedgen'"
+        local opts "`opts' unresolvedgen(`staged_unresolvedgen')"
+    }
+    * All computation uses disposable outputs. The worker restores observation order.
+    capture noisily novarabbrev _nace_to_ff_work `varlist' if `touse', `opts'
+    local rc = _rc
+    if `rc' exit `rc'
+    tempname results
+    _return hold `results'
+    * Preparation creates only a caller-owned temporary definition.
+    tempname canonical
+    local labelopts ""
+    if "`labels'" != "" {
+        ffcode_util prepare, variable(`staged_ff') publicname(`generate') ///
+            scheme(`scheme') canonical(`canonical')
+        local chosen "`r(label)'"
+        local owned = r(owned)
+        local labelopts "variable(`staged_ff') canonical(`canonical') label(`chosen') owned(`owned')"
+    }
+    * Publish labels and outputs together. Computation above remains interruptible.
+    nobreak {
+        ffcode_util commit, outputs("`targets'") staged("`staged'") `replace' `labelopts'
+        _return restore `results'
+        return add
+        return local varname "`generate'"
+    }
+
+end
+
+program _nace_to_ff_work, rclass sortpreserve
+    version 14.0
+
+    syntax varname [if] [in], GENerate(name) ///
+        [SCHeme(string) LABels REPlace DIAGnostics ///
+         TIEgen(name) UNRESOLVEDgen(name) PUBLICname(name)]
+
     local nacevar "`varlist'"
 
-    capture which isic_to_ff
-    if _rc != 0 {
-        display as error "nace_to_ff requires isic_to_ff to be installed"
-        display as error "Install it first, then re-run nace_to_ff"
-        exit 111
-    }
-    capture which sic_to_ff
-    if _rc != 0 {
-        display as error "nace_to_ff requires sic_to_ff version 1.1 or later"
-        display as error "Install sic_to_ff, then re-run nace_to_ff"
-        exit 111
-    }
-    * Explicit version guard: parse sic_to_ff version header
-    local __sic_path "`r(which)'"
-    if "`__sic_path'" == "" local __sic_path "`r(fn)'"
-    if "`__sic_path'" == "" {
-        quietly capture findfile sic_to_ff.ado
-        if _rc == 0 local __sic_path "`r(fn)'"
-    }
-    if "`__sic_path'" != "" {
-        local __sic_major = 0
-        local __sic_minor = 0
-        local __scan_done = 0
-        tempname __fh
-        capture file open `__fh' using "`__sic_path'", read text
-        if _rc == 0 {
-            forvalues __i = 1/20 {
-                if `__scan_done' == 0 {
-                    file read `__fh' __line
-                    if r(eof) {
-                        local __scan_done = 1
-                    }
-                    else {
-                        local __pos = strpos(`"`__line'"', "*! version ")
-                        if `__pos' >= 1 {
-                            local __verstr = substr(`"`__line'"', `__pos' + 11, .)
-                            local __dotpos = strpos("`__verstr'", ".")
-                            if `__dotpos' > 0 {
-                                local __sic_major = substr("`__verstr'", 1, `__dotpos' - 1)
-                                local __after_dot = substr("`__verstr'", `__dotpos' + 1, .)
-                                local __spacepos = strpos("`__after_dot'", " ")
-                                if `__spacepos' > 0 {
-                                    local __sic_minor = substr("`__after_dot'", 1, `__spacepos' - 1)
-                                }
-                                else {
-                                    local __sic_minor = "`__after_dot'"
-                                }
-                                local __dotpos2 = strpos("`__sic_minor'", ".")
-                                if `__dotpos2' > 0 {
-                                    local __sic_minor = substr("`__sic_minor'", 1, `__dotpos2' - 1)
-                                }
-                                local __scan_done = 1
-                            }
-                        }
-                    }
-                }
-            }
-            file close `__fh'
-        }
-        local __version_ok = 0
-        if `__sic_major' > 1 {
-            local __version_ok = 1
-        }
-        else if `__sic_major' == 1 & `__sic_minor' >= 1 {
-            local __version_ok = 1
-        }
-        if `__version_ok' == 0 {
-            display as error "nace_to_ff requires sic_to_ff version 1.1 or later"
-            display as error "Found version `__sic_major'.`__sic_minor'; please update sic_to_ff"
-            exit 111
-        }
-    }
-    if "`labels'" != "" {
-        capture which naics_to_ff
-        if _rc != 0 {
-            display as error "nace_to_ff with labels requires naics_to_ff to be installed"
-            display as error "Install naics_to_ff, then re-run nace_to_ff with labels"
-            exit 111
-        }
-    }
+    ffcode_util require, command(isic_to_ff)
+    ffcode_util require, command(sic_to_ff)
 
     if "`scheme'" == "" local scheme "48"
     if !inlist("`scheme'", "5", "10", "12", "17", "30", "38", "48", "49") {
@@ -235,7 +220,7 @@ program nace_to_ff, rclass sortpreserve
 
     display as text ""
     display as text "{hline 60}"
-    display as text "Fama-French `scheme'-industry classification from NACE Rev. 2: " as result "`generate'"
+    display as text "Fama-French `scheme'-industry classification from NACE Rev. 2: " as result "`publicname'"
     display as text "{hline 60}"
     display as text "Observations in sample:           " as result %10.0fc `n_total'
     display as text "Observations with NACE code:      " as result %10.0fc `n_with_nace'

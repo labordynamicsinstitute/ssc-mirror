@@ -181,6 +181,7 @@ p turnbull module to estimate the Turnbull empirical distribution estimator of w
 p tvdiff module to compute pre- and post-treatment estimation of the Average Treatment Effect (ATE) with binary time-varying treatment
 p tvgc module to perform Time-Varying Granger Causality tests
 p tvpreg module to perform parameter path estimation in unstable environments
+p tvtie module to estimate time-varying true individual-effects stochastic frontier models
 p tw3xls module to export publication-ready three-way and four-way tables into xls or xlsx
 p twby module to create a cross-tabulation of graphs
 p twc_inf module to implement the twoway-clustered inference tools of "Analytic inference with two-way clustering" by Davezies et al. (wp, 2025)

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3.0  06Sep2026}{...}
+{* *! version 2.21  13Sep2026}{...}
 {cmd:help mmws}
 {hline}
 
@@ -24,7 +24,7 @@
 		{opt iptw:}
 		{opt comm:on}
 		{opt fig:ure}
-		{opt smin}({it:#})
+		{opt nmin}({it:#})
 		{opt repl:ace}
 		{opt pre:fix}({it:string})
 		]
@@ -32,9 +32,29 @@
 
 {p 4 4 2}
 {it:{help varname: treat}} must contain integer values representing the treatment levels
-		
-		
+
+
 {p 4 6 2}
+
+{synoptset 20 tabbed}{...}
+{synopthdr}
+{synoptline}
+{p2coldent:* {opt ps:core}{cmd:(}{it:{help varlist:varlist}}{cmd:)}}One or more propensity scores must be provided, depending on the number of treatment levels{p_end}
+{synopt:{opth str:ata(varlist)}}user-supplied strata variable(s){p_end}
+{synopt:{opt nstr:ata(numlist)}}number of quantile strata to generate when {cmd:strata()} is not supplied; default is 5{p_end}
+{synopt:{opt ord:inal}}treatment has more than two ordered levels{p_end}
+{synopt:{opt tlev:el(#)}}treatment level whose propensity-score range defines common support; valid only with {cmd:ordinal}, and has no effect unless {cmd:common} is also specified{p_end}
+{synopt:{opt nom:inal}}treatment has more than two nominal (unordered) levels{p_end}
+{synopt:{opt att}}generate weights for the average treatment effect on the treated (binary treatments only){p_end}
+{synopt:{opt iptw}}also generate inverse probability of treatment weights{p_end}
+{synopt:{opt comm:on}}restrict weighting to the region of common support{p_end}
+{synopt:{opt fig:ure}}display a histogram of the propensity score(s), with common support marked{p_end}
+{synopt:{opt nmin(#)}}minimum observations required, per stratum, of each required treatment level; default is 1{p_end}
+{synopt:{opt repl:ace}}replace existing variables created by {cmd:mmws}{p_end}
+{synopt:{opt pre:fix(string)}}prefix applied to variable names created by {cmd:mmws}{p_end}
+{synoptline}
+{p 4 6 2}* {opt pscore()} is required. {p_end}
+{p2colreset}{...}
 
 {title:Description}
 
@@ -75,9 +95,12 @@ of quantile categories of the propensity score. There should be one value specif
 {opt ordinal} specifies that the treatment variable contains more than two ordered levels (i.e. increasing doses of a drug).{p_end}
 
 {phang}
-{opt tlevel(#)} used only in conjunction with {cmd:ordinal} and {cmd:common}. It specifies which treatment level defines common support. Typically this would
-coincide with the treatment level for which the propensity score was estimated in the ologit model (e.g. predict pscore, pr outcome(3) indicates that the propensity
-score is estimated based on treatment level coded as 3). When {cmd:tlevel} is not specified, the ordinal treatment coded with the lowest value is used for common support. {p_end}
+{opt tlevel(#)} is valid only with {cmd:ordinal}. It specifies which treatment level's propensity-score range {cmd:mmws} uses to define common support: the minimum
+and maximum of {cmd:pscore()} among observations at that treatment level become the common-support range, and observations whose propensity score falls outside it
+are flagged via {cmd:_support}. Typically this would coincide with the treatment level for which the propensity score was estimated in the ologit model (e.g. predict
+pscore, pr outcome(3) indicates that the propensity score is estimated based on treatment level coded as 3). When {cmd:tlevel} is not specified, the ordinal
+treatment coded with the lowest value is used to define common support. {cmd:tlevel()} has no effect on the weights unless {cmd:common} is also specified: {cmd:_support}
+and {cmd:r(suppmin)}/{cmd:r(suppmax)} are still computed and returned either way, but nothing restricts stratification or zeroes out weights without {cmd:common}. {p_end}
 
 {phang}
 {opt nominal} specifies that the treatment variable contains more than two nominal levels (i.e. treatment A, treatment B and treatment C).{p_end}
@@ -106,10 +129,8 @@ a histogram is generated for each propensity score. The minimum and maximum valu
 values of the propensity scores within common support are presented, otherwise all values are presented.{p_end}
 
 {phang}
-{opt smin(#)} specifies the minimum number of observations required, within every stratum, for each treatment level (binary and ordinal treatments) or for the treatment level
-corresponding to that stratum's propensity score (nominal treatments); default is {cmd:smin(1)}. If any stratum contains fewer than {cmd:smin()} observations of a required
-treatment level, {cmd:mmws} exits with an error identifying the deficient stratum (or strata); the number of strata specified via {cmd:nstrata()} must be reduced, or the strata
-supplied via {cmd:strata()} revised, so that every stratum meets this minimum.{p_end}
+{opt nmin(#)} specifies the minimum number of observations required, within every stratum, for each treatment level (binary and ordinal treatments) or for the treatment level
+corresponding to that stratum's propensity score (nominal treatments); default is {cmd:nmin(1)}.
 
 {phang}
 {opt replace} replaces variables created by {cmd:mmws} if they already exist. If {cmd:prefix()} is specified, only variables created by {cmd:mmws} with
@@ -250,14 +271,14 @@ a histogram to examine the overlap amongst levels of treatment on the propensity
 {title:Saved results}
 
 {p 4 8 2}
-By default, {cmd:mmws} returns the following results, which 
-can be displayed by typing {cmd: return list} after 
-{cmd:mmws} is finished (see {help return}).  
+By default, {cmd:mmws} stores the following in {cmd:r()}.
 
 {synoptset 15 tabbed}{...}
 {p2col 5 15 19 2: Scalars}{p_end}
 {synopt:{cmd:r(suppmin)}}the minimum value of common support (will have a suffix for nominal treatments){p_end}
 {synopt:{cmd:r(suppmax)}}the maximum value of common support (will have a suffix for nominal treatments){p_end}
+{synopt:{cmd:r(nexcluded)}}the number of observations excluded from weighting because their assigned stratum did not contain at least {cmd:nmin()}
+observations of a required treatment level, or because their supplied stratum value was itself missing (0 if none were excluded){p_end}
 
 
 
@@ -281,11 +302,11 @@ causal inference in the evaluation of health care interventions. {it:Journal of 
 
 {p 4 8 2}
 Linden, A. 2017a. Improving casual inference with a doubly robust estimator that combines propensity score stratification and weighting. 
-{it:Journal of Evaluation in Clinical Practice} DOI:10.1111/jep.12714
+{it:Journal of Evaluation in Clinical Practice} 23: 697-702.
 
 {p 4 8 2}
 Linden, A. 2017b. A comparison of approaches for stratifying on the propensity score to reduce bias. 
-{it:Journal of Evaluation in Clinical Practice} DOI:10.1111/jep.12701
+{it:Journal of Evaluation in Clinical Practice} 23: 690-696.
 
 {p 4 8 2}
 Linden, A. & Adams, J. L. (2008) Improving participant selection in disease management programs: insights gained from propensity score
@@ -329,7 +350,7 @@ alinden@lindenconsulting.org{break}
 {title:Acknowledgments} 
 
 {p 4 4 2}
-I wish to thank Nicholas J. Cox for his support while developing {cmd:mmws}, and to Paul Walsh for pointing out a bug in the code for IPTW in the nominal treatment case.{p_end}
+I wish to thank Nicholas J. Cox for his support while initially developing {cmd:mmws}, and to Paul Walsh for pointing out a bug in the code for IPTW in the nominal treatment case.{p_end}
 
 
 {title:Also see}

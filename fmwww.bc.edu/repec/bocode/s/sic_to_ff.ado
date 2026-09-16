@@ -1,4 +1,4 @@
-*! version 1.1  15dec2025  Kelvin Law
+*! version 1.2  13sep2026  Kelvin K.F. Law
 *! Converts SIC codes to Fama-French industry classifications
 *! Supports FF5, FF10, FF12, FF17, FF30, FF38, FF48, and FF49
 *!
@@ -16,11 +16,62 @@
 *! v1.0: FF12 (3622 stays in Manuf per Ken French), FF17 (complete rewrite),
 *!         FF30 (added missing ranges), FF38 (uses correct simple 2-digit scheme)
 
-program sic_to_ff
+program sic_to_ff, rclass
+    version 14.0
+    syntax varlist(min=1 max=2) [if] [in], GENerate(name) ///
+        [SCHeme(string) LABels REPlace NOMISSING]
+
+    * Evaluate the original sample before r-class helpers or output replacement.
+    marksample touse, novarlist
+    capture ffcode_util version
+    if _rc {
+        display as error "Install sic_to_ff 1.2 or later, then restart Stata to load the updated programs."
+        exit 111
+    }
+    if r(api) < 112 | missing(r(api)) {
+        display as error "The loaded ffcode_util is outdated. Update sic_to_ff and restart Stata."
+        exit 111
+    }
+    local targets "`generate'"
+    ffcode_util check, outputs("`targets'") inputs("`varlist'") ///
+        reserved("") `replace'
+    if "`scheme'" == "" local scheme "48"
+    tempvar staged_ff
+    local staged "`staged_ff'"
+    local opts "generate(`staged_ff') publicname(`generate') `nomissing'"
+    foreach opt in scheme {
+        if "``opt''" != "" local opts "`opts' `opt'(``opt'')"
+    }
+    * All computation uses disposable outputs. The worker restores observation order.
+    capture noisily novarabbrev _sic_to_ff_work `varlist' if `touse', `opts'
+    local rc = _rc
+    if `rc' exit `rc'
+    tempname results
+    _return hold `results'
+    * Preparation creates only a caller-owned temporary definition.
+    tempname canonical
+    local labelopts ""
+    if "`labels'" != "" {
+        ffcode_util prepare, variable(`staged_ff') publicname(`generate') ///
+            scheme(`scheme') canonical(`canonical')
+        local chosen "`r(label)'"
+        local owned = r(owned)
+        local labelopts "variable(`staged_ff') canonical(`canonical') label(`chosen') owned(`owned')"
+    }
+    * Publish labels and outputs together. Computation above remains interruptible.
+    nobreak {
+        ffcode_util commit, outputs("`targets'") staged("`staged'") `replace' `labelopts'
+        _return restore `results'
+        return add
+    }
+
+end
+
+program _sic_to_ff_work
     version 14.0
     
     syntax varlist(min=1 max=2) [if] [in], GENerate(name) ///
-        [SCHeme(string) LABels REPlace NOMISSING]
+        [SCHeme(string) LABels REPlace NOMISSING PUBLICname(name)]
 
     * Store current varabbrev setting (restore at end)
     local __va = c(varabbrev)
@@ -168,7 +219,7 @@ program sic_to_ff
     local nmissing = r(N)
     
     display as text ""
-    display as text "Fama-French `scheme'-industry classification created: " as result "`generate'"
+    display as text "Fama-French `scheme'-industry classification created: " as result "`publicname'"
     display as text "Observations mapped: " as result "`nmapped'"
     if `nmissing' > 0 {
         display as text "Observations with valid SIC but no FF match: " as result "`nmissing'"
