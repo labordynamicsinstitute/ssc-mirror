@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0 ||23.7.2026 || Gordey Yastrebov}{...}
+{* *! version 2.2 || 16.9.2026 || Gordey Yastrebov}{...}
 {hi:help apcbound}{...}
 {right:also see: {helpb apcdescribe}, {helpb apcest}, {helpb apcplot}}
 {hline}
@@ -31,7 +31,8 @@
 {synopt:{opt pc(# #)}}linear {cmd:period} and {cmd:cohort} effect estimates{p_end}
 
 {syntab:{help apcbound##other:{it:Options}}}
-{synopt:{opt ci(#)}}confidence interval setting{p_end}
+{synopt:{opt ci}}requests confidence-interval-adjusted bounds{p_end}
+{synopt:{opt level(#)}}sets the confidence level; default is {cmd:c(level)}{p_end}
 {synopt:{opt f:ormat}({help format:format})}value display format{p_end}
 
 {synoptline}
@@ -83,15 +84,17 @@ into θ₁ = α + π and θ₂ = γ + π as follows: {opt ac(a c)} gives θ₁ =
 θ₂ = c; {opt ap(a p)} gives θ₁ = a + p and θ₂ = p; and {opt pc(p c)} gives
 θ₁ = p and θ₂ = p + c.
 
-{pstd}Specifying custom estimates cannot be combined with {opt ci(#)}, because
+{pstd}Specifying custom estimates cannot be combined with {opt ci}, because
 no standard errors or variance-covariance matrix are supplied.
 
 {marker other}{dlgtab:Other options}
 
-{pstd}{opt ci(#)} sets the desired confidence level for presenting the bounding solution
-which takes confidence intervals into account. The number must be any reasonable value 
-(e.g., 95 for 95% confidence level). If the option is not specified, a 
-confidence-interval-adjusted solution will be suppressed in the output.
+{pstd}{opt ci} requests a confidence-interval-adjusted bounding solution in addition to the point-estimate 
+solution. If {opt level(#)} is not specified, the confidence level is taken from Stata's current 
+{cmd:c(level)}. 
+
+{pstd}{opt level(#)} sets the confidence level used when {opt ci} is specified. The value must be greater 
+than 0 and less than 100. Option {opt level()} requires {opt ci}.
 
 {pstd}{opt format}({help format}) sets the formatting style for the values to 
 appear in the output window of Stata after running the command. The default is {bf:%9.3g}.
@@ -108,9 +111,9 @@ appear in the output window of Stata after running the command. The default is {
 
 	. {stata apcbound, p(-.03 .) c(0 .)}
 
-{pstd}The previous call, enhanced with confidence intervals and a formatting option:
+{pstd}The previous call, enhanced with 95% confidence intervals and a formatting option:
 
-	. {stata apcbound, p(-.03 .) c(0 .) ci(95) format(%9.4f)}
+	. {stata apcbound, p(-.03 .) c(0 .) ci level(95) format(%9.4f)}
 
 {pstd}An autonomous call (no data or estimation needed) implementing the same assumptions but using a custom set of estimates {bf:θ₁ = α + π = -.5} and {bf:θ₂ = γ + π = .5}:
 
@@ -135,8 +138,7 @@ appear in the output window of Stata after running the command. The default is {
 {p2col : {cmd:e(ciPmax)}} same as {cmd:e(pePmax)} but CI-adjusted{p_end}
 {p2col : {cmd:e(ciCmin)}} same as {cmd:e(peCmin)} but CI-adjusted{p_end}
 {p2col : {cmd:e(ciCmax)}} same as {cmd:e(peCmax)} but CI-adjusted{p_end}
-{p2col : {cmd:e(pe_bounded_solution)}} a binary for whether a fully bounded solution exists{p_end}
-{p2col : {cmd:e(ci_bounded_solution)}} same as above but using CI-adjusted estimates{p_end}
+{p2col : {cmd:e(apcboundCI)}} confidence level used for CI-adjusted bounds; missing if {opt ci} was not specified{p_end}
 
 
 {title:Author}
@@ -156,7 +158,7 @@ and the article implementing the bounding approach:
 
 {phang}
 {cmd:Yastrebov, G.} (2026). "APCBOUND: Stata module for the Fosse-Winship bounding
-approach to age-period-cohort analysis (Version 2.0)" [Computer software].
+approach to age-period-cohort analysis (Version 2.2)" [Computer software].
 Boston College Department of Economics, Statistical Software Components. 
 {browse "https://ideas.repec.org/c/boc/bocode/s459449.html":https://ideas.repec.org/c/boc/bocode/s459449.html}
 {p_end}

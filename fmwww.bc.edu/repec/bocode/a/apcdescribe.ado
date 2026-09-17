@@ -1,9 +1,64 @@
+*! APCDESCRIBE by Gordey Yastrebov, version 2.2, released 16.9.2026
 /*******************************************************************************
-APCDESCRIBE: A tool for producing descriptive diagnostic APC graphs.
-********************************************************************************
-Version: 2.0 (23.07.2026)
+A tool for producing descriptive diagnostic APC graphs.
 Author: Gordey Yastrebov, University of Cologne
 License: GPL-3.0
+********************************************************************************
+PACKAGE VERSION HISTORY
+
+Version 2.2 updates:
+- assigned the default color line to be black (can be overridden by the shapeplotops() options) in APCPLOT
+- fixed the bug preventing the use of the name() option within the combplotops() option in APCPLOT and APCDESCRIBE
+- fixed APCPLOT and APCDESCRIBE to prevent it from clearing the graphs window with every run
+- made APCPLOT position categorical APC effects at the mean value of the original APC variable within each category rather than at the category code or lower cutpoint
+- standardized confidence level handling across APCBOUND, APCDESCRIBE, and APCPLOT ("ci" and "level()" options)
+- revised APCEST to separate linear APC components from grouped/categorical nonlinear representations, centered the original APC variables on the estimation sample while preserving the exact APC identity, introduced dedicated nonlinear working variables, and updated APCBOUND and APCPLOT accordingly, including correct original-scale handling of grouped specifications in APCPLOT
+- updated all documentation files in line with the changes
+
+Version 2.1 updates:
+- added support for visualizing semi-bounded solutions in APCPLOT, with fading gradients extending from the finite boundary
+- added the fadespeed() and fadewidth() options to APCPLOT to control the appearance of semi-bounded solution plots; removed the redundant gridfading() option
+- standardized confidence-interval syntax and handling across APCBOUND, APCPLOT, and APCDESCRIBE: "ci" requests confidence intervals, while level() specifies the confidence level; the former ci() syntax is no longer supported
+- added further input validation and more informative error messages across APCBOUND, APCPLOT, and APCDESCRIBE
+- made minor optimization and consistency fixes across the commands and documentation files
+
+Version 2.0 updates:
+- fixed incorrect matching of categorical APC coefficients in APCEST and APCPLOT when variable names overlap (e.g., "year" and "yearofbirth")
+- fixed a bug preventing APCPLOT from retrieving bounded solutions when custom estimates were specified in APCBOUND
+- added the matrix() option to APCPLOT for storing point-estimate and confidence-interval-adjusted plot values as matrices
+- changed the grid option rendering in APCPLOT to allow unique colors for negative and positive offsets
+- added APCDESCRIBE subcommand for producing descriptive APC plots (including the documentation file)
+- fixed the incorrect derivation of the theta_2 value with ap() custom estimate specification in APCBOUND
+- redefined the syntax for APCEST (optimized to accommodate a broader range of estimation commands than previously afforded)
+- minor optimization and consistency fixes to APCPLOT and APCBOUND
+- minor updates to APCEST, APCBOUND and APCPLOT documentation files
+
+Version 1.3 updates:
+- required Stata version downgraded to 14
+- fixed the behavior of [if] and [in] conditions in APCEST in how it is applied in variable centering
+- added estimation sample variable after APCEST (used by APCPLOT)
+- corrected the error breaking the execution of APCBOUND under implausible constraints
+- corrected the returned scalar names for the bounds after APCBOUND to match those in the documentation
+- corrected the formulas for calculating the specific solution, when a single parameter is specified in APCPLOT
+- minor updates to APCEST, APCBOUND and APCPLOT documentation files
+
+Version 1.2 updates:
+- added the "info" option to APCPLOT and its documentation
+- changed the default gradient area palette to rainbow colors (CET R1) in APCPLOT
+- corrected the description of "grid()" option in APCPLOT
+- corrected the functioning of the "nogradient" option in APCPLOT
+- fixed the bug with "areapalette()" option in APCPLOT
+- corrected APCPLOT documentation examples
+- various minor accuracy updates to the commands' code and documentation
+
+Version 1.1 updates:
+- fixed the incorrect calculation of the bounded solutions adjusted for confidence intervals 
+- fixed the incorrect processing and visualization of linear-only APC effects by APCPLOT
+- fixed the labelling of linear component parameters in the console output of APCPLOT when using "a()", "p()", or "c()" options
+- fixed the bug in APCEST that created problems with the use of "if" option when conditioning on temporarily centered continuous APC variables
+- added the option to specify two grid palettes for the separate rendering of positive and negative grid increments with APCPLOT (with corresponding edits in the documentation)
+- updated documentation for APCEST, APCBOUND and APCPLOT with demonstration examples that work with Stata sample datasets  
+- added minor accuracy updates to APCEST documentation
 *******************************************************************************/
 
 	version 14
@@ -14,7 +69,8 @@ License: GPL-3.0
 			 P(string asis) /// period variable + specification
 			 C(string asis) /// cohort variable + specification
 			 Binpos(string) /// bin positioning for grouped data
-			 CI(string) /// confidence level for pointwise intervals
+			 ci /// request confidence intervals
+			 Level(numlist min=1 max=1) /// confidence level
 			 RECASTci(string) /// CI rendering
 			 LIneops(string asis) /// common estimate-line and marker options
 			 ALIneops(string asis) /// age-specific estimate-line and marker options
@@ -41,24 +97,27 @@ License: GPL-3.0
 		di as err "Option {bf:binpos()} must be either {bf:center} or {bf:mean}."
 		exit 198
 	}
-	loc ci = strtrim(`"`ci'"')
-	loc no_ci = (`"`ci'"' == "")
-	loc ci_lvl .
-	if !`no_ci' {
-		cap conf n `ci'
-		if _rc {
-			di as err "Option {bf:ci()} must contain one numeric confidence level."
-			exit 198
-		}
-		loc ci_lvl = `ci'
-		if `ci_lvl' <= 0 | `ci_lvl' >= 100 {
-			di as err "The confidence level in {bf:ci()} must be greater than 0 and less than 100."
+	loc no_ci = ("`ci'" == "")
+	loc level_specified = ("`level'" != "")
+	if `level_specified' & `no_ci' {
+		di as err "Option {bf:level()} requires option {bf:ci}."
+		exit 198
+	}
+	if `level_specified' {
+		if `level' <= 0 | `level' >= 100 {
+			di as err "Confidence level must be greater than 0 " ///
+				"and less than 100."
 			exit 198
 		}
 	}
+	loc ci_lvl .
+	if !`no_ci' {
+		if `level_specified' loc ci_lvl = `level'
+		else loc ci_lvl = c(level)
+	}
 	loc recastci = lower(strtrim(`"`recastci'"'))
 	if `no_ci' & `"`recastci'"' != "" {
-		di as err "Option {bf:recastci()} requires option {bf:ci()}."
+		di as err "Option {bf:recastci()} requires option {bf:ci}."
 		exit 198
 	}
 	if !`no_ci' {
@@ -68,15 +127,16 @@ License: GPL-3.0
 			exit 198
 		}
 		if inlist(`"`weight'"', "pweight", "iweight") {
-			di as err "Option {bf:ci()} is not supported with probability or importance weights."
+			di as err "Option {bf:ci} is not supported with probability or importance weights."
 			exit 198
 		}
 	}
 	else if `"`ciplotops'`aciplotops'`pciplotops'`cciplotops'"' != "" {
-		di as err "CI styling options require option {bf:ci()}."
+		di as err "CI styling options require option {bf:ci}."
 		exit 198
 	}
 	loc combined = (`"`combined'"' != "")
+	if !`no_ci' di as txt "`ci_lvl'% confidence intervals assumed."
 
 *** Parse requested APC dimensions
 	loc selection
@@ -128,7 +188,7 @@ License: GPL-3.0
 				}
 				if `no_ci' & `lpoly_ciopts' {
 					di as err ///
-						"Options {bf:pwidth()} and {bf:var()} within an {bf:lpoly} specification require option {bf:ci()}."
+						"Options {bf:pwidth()} and {bf:var()} within an {bf:lpoly} specification require option {bf:ci}."
 					exit 198
 				}
 			}
@@ -233,17 +293,17 @@ License: GPL-3.0
 					`ciplotops' ``apcvar'ciplotops')
 				loc estimate_defaults
 				if `"`method'"' == "lpoly" loc estimate_defaults msymbol(none)
-				loc graphics `c(graphics)'
-				if `suppress' qui set gr off
+				loc nodraw
+				if `suppress' loc nodraw nodraw
+				loc nameopt name(``apcvar'_title', replace)
+				if `nplots' == 1 loc nameopt
 				cap noi twoway `ci_layer' ///
 					(scatter y_mean x_value, sort connect(l) ///
 					`estimate_defaults' ///
 					`lineops' ``apcvar'lineops'), ///
 					yti("") xti(`"``apcvar'_title'"', height(7)) leg(off) ///
-					`plotops' ``apcvar'plotops' ///
-					name(``apcvar'_title', replace)
+					`plotops' ``apcvar'plotops' `nameopt' `nodraw'
 				loc rc = _rc
-				if `suppress' qui set gr `graphics'
 			}
 		restore
 		if `rc' exit `rc'
@@ -252,7 +312,7 @@ License: GPL-3.0
 
 *** Combine and return
 	if `combined' & `nplots' > 1 gr combine `plots', ///
-		r(1) ycom name(Combined, replace) `combplotops'
+		r(1) ycom `combplotops'
 	ret clear
 	ret loc dimensions `selection'
 	ret loc binpos `binpos'

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0 ||23.7.2026 || Gordey Yastrebov}{...}
+{* *! version 2.2 || 16.9.2026 || Gordey Yastrebov}{...}
 {hi:help apcest}{...}
 {right:also see: {helpb apcdescribe}, {helpb apcbound}, {helpb apcplot}}
 {hline}
@@ -12,7 +12,7 @@
 
 {title:Syntax}
 
-{p 8 15 2}{cmd:apcest}, {help apcest##options:{it:effect_specifications}} {cmd::} {it:estimation_command}
+{p 8 15 2}{cmd:apcest}, {help apcest##options:{it:effect_specifications}}{cmd::} {it:estimation_command}
 
 {pstd}where {it:estimation_command} is a regular Stata estimation command
 (e.g., {cmd:regress y x1 x2 x3 x4 if sample == 1 [aweight = weight], vce(cluster id)}),
@@ -46,34 +46,31 @@ specification for variable {bf:varname} will be assumed, where # is an
 integer that sets the order of the polynomial.
 
 {pstd}2) If {it:specification} = {bf:i.varname} (e.g., {cmd:p(i.period)}), a variable
-{bf:varname} will be treated as categorical. Regular Stata {help fvvarlist##bases:syntax} for specifying reference categories is also possible here.
+{bf:varname} will be treated as categorical. The categorical nonlinear representation is 
+stored in a dedicated newly created variable (see below). Regular 
+Stata {help fvvarlist##bases:syntax} for specifying reference categories is also possible here.
 
 {pstd}3) If {it:specification} = {bf:varname}:{it:{help numlist}} (e.g.,
-{cmd:c(cohort:1900(10)2000)}), the values of a variable {bf:varname} will 
-be grouped as per {cmd:cut(varname)} in Stata's {bf:{help egen}} command with the option {bf:at(}{it:{help numlist}{bf:)}}. The grouped values are saved in the corresponding generated APC estimation variable
-({bf:__apcest_a}, {bf:__apcest_p}, or {bf:__apcest_c}); the original variable
-{bf:varname} is left intact. A reference will be assigned automatically as one
-of the middle categories.
+{cmd:c(cohort:1900(10)2000)}), the values of variable {bf:varname} will
+be grouped as per {cmd:cut(varname)} in Stata's {bf:{help egen}} command with
+the option {bf:at(}{it:{help numlist}{bf:)}}. The grouped nonlinear representation
+is saved in a dedicated newly created variable (see below). A reference will
+be assigned automatically as one of the middle categories.
 
-{pstd}For all continuous specifications, {cmd:apcest} creates copies
-named {bf:__apcest_a}, {bf:__apcest_p}, and {bf:__apcest_c} and mean-centers
-these estimation variables prior to model estimation. The original APC variables
-are not modified. Mean-centering is taken into account in the rendering of APC
-effects by {cmd:apcplot}.
+{pstd}Irrespective of the nonlinear specification, {cmd:apcest} creates
+{bf:__apcest_A}, {bf:__apcest_P}, and {bf:__apcest_C} from the original numerical
+age, period, and cohort variables and mean-centers them on the common estimation
+sample. These variables carry the linear APC components. Categorical and grouped
+nonlinear representations are kept separately in {bf:__apcest_nlA},
+{bf:__apcest_nlP}, and {bf:__apcest_nlC}; polynomial terms are constructed from
+the corresponding centered linear variable. The original APC variables are not modified.
 
-{pstd}{bf:Important notice:} All source APC variables specified with {it:varname},
-regardless of whether they are specified as continuous or categorical, must have
-consistent scales. The most straightforward example of scale consistency is when all
-variables are measured in years (e.g., {it:35} for {bf:age}, {it:2001} for {bf:period},
-and {it:1983} for {bf:cohort}). This is because scale consistency is an important
-assumption for modelling APC effects and, in particular, deducing their linear
-components. One must be particularly careful with categorical APC variables,
-the values of which might not exactly match the distances between categories
-(e.g., when {bf:1} is for cohorts "1930-1932", {bf:2} is for cohorts "1933-1941", etc.),
-in which case it is advisable to recode their values to represent distances between
-average interval values in the scales characteristic of the other APC variables
-(e.g., {bf:1} to become 1931 and {bf:2} to become 1937, when {bf:age} and {bf:period}
-are measured in years).
+{pstd}{bf:Important notice:} The source APC variables must be on a common numerical
+scale and satisfy the linear APC identity {bf:period = age + cohort} on the estimation
+sample (up to numerical precision). Grouping or treating an APC variable as categorical
+changes only its nonlinear representation and does not relax this requirement. The
+most straightforward specification uses all three variables in the same time units
+(e.g., years).
 
 
 {title:Examples}
@@ -90,8 +87,7 @@ specified using a simple linear term:
 	. {stata "apcest, a(age^2) p(i.year) c(birth_yr): regress ln_wage i.race"}
 
 {pstd}Same as above, except grouping {it:period} into five-year intervals using a
-{it:numlist}. The grouped values are stored in {bf:__apcest_p}, while the original
-{bf:year} variable remains unchanged:
+{it:numlist}:
 
 	. {stata "apcest, a(age^2) p(year:68(5)93) c(birth_yr): regress ln_wage i.race"}
 
@@ -116,15 +112,21 @@ ratios instead of regular logits:
 a copy under the name {bf:__apcestimates}. This stored estimate is used by
 {helpb apcbound} and {helpb apcplot} in postestimation.
 
-{pstd}Each call first drops any existing variables with the following names and then
-creates them in the currently active dataset: {bf:__apcest_esample} identifies the estimation sample (1 for observations in the sample and 0 otherwise), {bf:__apcest_a}, {bf:__apcest_p}, and {bf:__apcest_c} for each of the APC estimation variables.
+{pstd}Each call first drops any existing APCEST working variables and then creates
+{bf:__apcest_esample}, which identifies the estimation sample (1 for observations
+in the sample and 0 otherwise), and {bf:__apcest_A}, {bf:__apcest_P}, and
+{bf:__apcest_C}, which contain the original numerical APC variables mean-centered
+on that sample. These centered variables carry the linear APC components.
 
-{pstd}The three APC estimation variables contain copies or transformations of the
-source APC variables according to their effect specifications. Continuous variables
-are mean-centered; variables specified with factor-variable notation are copied;
-and variables specified with {it:varname}:{it:numlist} contain the grouped values
-created by {cmd:egen, cut()}. These four variables remain in the active dataset after
-estimation and are replaced the next time {cmd:apcest} is run.
+{pstd}When a categorical or grouped specification is requested, {cmd:apcest}
+additionally creates the corresponding nonlinear working variable
+{bf:__apcest_nlA}, {bf:__apcest_nlP}, or {bf:__apcest_nlC}. For categorical
+specifications it contains a copy of the source variable; for
+{it:varname}:{it:numlist} specifications it contains the grouped values created
+by {cmd:egen, cut()}. APC working variables are defined only for observations in
+the final estimation sample and are therefore missing outside that sample. They
+remain in the active dataset after estimation and are replaced the next time
+{cmd:apcest} is run.
 
 
 {title:Author}
@@ -144,7 +146,7 @@ and the article implementing the bounding approach:
 
 {phang}
 {cmd:Yastrebov, G.} (2026). "APCBOUND: Stata module for the Fosse-Winship bounding
-approach to age-period-cohort analysis (Version 2.0)" [Computer software].
+approach to age-period-cohort analysis (Version 2.2)" [Computer software].
 Boston College Department of Economics, Statistical Software Components.
 {browse "https://ideas.repec.org/c/boc/bocode/s459449.html":https://ideas.repec.org/c/boc/bocode/s459449.html}
 {p_end}
