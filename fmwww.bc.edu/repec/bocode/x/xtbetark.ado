@@ -1,7 +1,8 @@
+*! 1.1.0	Ariel Linden 16Sep2026	// changed version from 14.0 to 11.0 
 *! 1.0.0	Ariel Linden 21Jul2026	// panel extension of betark; PCSE (default) and DK panel-corrected VCEs
 
 program define xtbetark, eclass
-	version 14.0
+	version 11.0
 
 	if replay() {
 		if "`e(cmd)'" != "xtbetark" {
@@ -31,10 +32,11 @@ program define Display
 
 	di
 	di as txt "Beta AR(" as res e(p_lag) as txt ") regression, panel data, joint conditional ML" ///
-		_col(66) "Number of obs" _col(80) "=" ///
+		_col(66) "Num of obs" _col(80) "=" ///
 		_col(82) as res %8.0fc e(N)
 	di as txt "Group variable: " _col(19) as res "`e(panelvar)'" ///
-		_col(66) as txt "Number of groups" _col(80) "= " as res %8.0f `N_g'
+		_col(66) as txt "Num of groups" _col(80) "=" ///
+		_col(82) as res %8.0fc `N_g'
 	di as txt "Time variable:  " _col(19) as res "`e(timevar)'" ///
 		_col(66) as txt "Obs per group:"
 	di as txt _col(70) "min" _col(80) "= " as res %8.0f `g_min'

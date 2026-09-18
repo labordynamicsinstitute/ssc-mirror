@@ -18,9 +18,9 @@ d KW: Beta regression
 d KW: autoregressive errors
 d KW: panel data
 d
-d Requires: Stata version 14
+d Requires: Stata version 11
 d
-d Distribution-Date: 20260730
+d Distribution-Date: 20260917
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
@@ -29,3 +29,4 @@ f xtbetark.ado
 f xtbetark_p.ado
 f xtbetark.sthlp
 f xtbetark_example.dta
+f xtbetark.pdf

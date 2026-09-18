@@ -1,0 +1,40 @@
+d 'LTSCOINT': module to perform Least Trimmed Squares estimation of a cointegrated ADL with outliers
+d
+d    ltscoint implements the Least Trimmed Squares (LTS) estimator
+d for the autoregressive distributed lag model in
+d equilibrium-correction form analysed by Berenguer-Rico and
+d Nielsen (2026), "Least Trimmed Squares: Cointegration and
+d Outliers", Oxford Bulletin of Economics and Statistics 88,
+d 690-711 (doi:10.1111/obes.70077). The h-subsample with the
+d smallest residual sum of squares is found by the FAST-LTS
+d concentration-step algorithm of Rousseeuw and Van Driessen (2006)
+d or by exact enumeration; the remaining T-h observations are the
+d outliers. Using the authors' oracle result, inference is OLS on
+d the retained observations. The command reports full-sample OLS
+d and LTS side by side: the coefficient table, PcGive-style
+d mis-specification tests, the long-run cointegrating coefficients
+d with delta-method standard errors, the
+d Harbo-Johansen-Nielsen-Rahbek LR test (Gamma-approximation
+d p-values from Doornik 1998, 2003) and the Ericsson-MacKinnon
+d (2002) ECM t-test of no cointegration, weak-exogeneity
+d regressions, and the identified outliers. A subcommand profiles
+d the cumulant normality statistic over h to determine the number
+d of outliers, and graph subcommands draw the paper's
+d mis-specification and data figures. 
+d
+d KW: cointegration
+d KW: least trimmed squares
+d KW: autoregressive distributed lag model
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260917
+d
+d Author:   Merwan Roudane, NA
+d Support: email  merwanroudane920@@gmail.com
+d
+f ltscoint.ado
+f ltscoint.sthlp
+f ltscoint_methods.sthlp
+f ltscoint_example.do
+f ltscoint_ukcons.dta

@@ -227,6 +227,7 @@ p mmqrtest module to provide  specification and diagnostic tests for MM-QR locat
 p mmsel module to simulate (counterfactual) distributions from quantile regressions (w/optional sample selection correction)
 p mmsrm module to estimate Multidimensional Marginally Sufficient Rasch Model (MMSRM)
 p mmws module to perform marginal mean weighting through stratification
+p mmwsl module for implementing longitudinal marginal mean weighting through stratification for time-varying binary or nominal treatments
 p mnthplot module for scatter plot for monthly data with repetition of data
 p mod11 module to generate Chile's National Identification Number (RUT) check digit (DV) (modulo 11)
 p mode module to display and store the mode of a variable

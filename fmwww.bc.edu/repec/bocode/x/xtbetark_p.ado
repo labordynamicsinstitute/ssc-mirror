@@ -1,7 +1,8 @@
+*! 1.1.0	Ariel Linden 16Sep2026	// changed version from 14.0 to 11.0
 *! 0.1.0	Ariel Linden 21Jul2026
 
 program define xtbetark_p
-	version 14.0
+	version 11.0
 	if `"`e(cmd)'"' != "xtbetark" {
 		error 301
 	}

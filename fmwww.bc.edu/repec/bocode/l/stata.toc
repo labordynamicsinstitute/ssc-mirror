@@ -245,6 +245,7 @@ p lstrfun module to modify long local macros
 p ltable2 module to generate life tables for rare events
 p ltimbimata module containing six general-purpose Mata functions
 p ltop module to divide a dataset list into pages without splitting internal by-groups
+p ltscoint module to perform Least Trimmed Squares estimation of a cointegrated ADL with outliers
 p lumpapell module to perform Lumsdaine-Papell unit root test allowing for two unknown breaks
 p luvain module to find communities in weighted graph
 p lvalues module for letter value calculation

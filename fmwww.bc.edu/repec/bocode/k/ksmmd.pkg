@@ -1,0 +1,31 @@
+d 'KSMMD': module to perform Weighted k-sample distributional test combining Kolmogorov-Smirnov (Kiefer's T) and Maximum Mean Discrepancy (MMD via Random Fourier Features)
+d
+d	ksmmd tests whether k >= 2 groups (named by by()) come from
+d the same distribution of varname, computing two test statistics  
+d  from a single permutation resample:	      o a k-sample
+d generalization of the Kolmogorov-Smirnov test (Kiefer's T --
+d Kiefer 1959), the same statistic kstest (Ariel	    Linden,
+d SSC s459801) computes, but reimplemented here so that varname is
+d sorted once (not re-sorted on every		 permutation) --
+d see Remarks: why reimplement kstest.	      o a k-sample
+d generalization of the Maximum Mean Discrepancy (MMD -- Gretton et
+d al. 2012) with an RBF kernel, approximated		via Random
+d Fourier Features (Rahimi & Recht 2007) so it stays tractable at
+d survey-sized n (~10^5), unlike mmd_2s 	   (Boston College
+d SSC s459820), which only compares 2 groups with an exact O(N^2)
+d kernel. 
+d
+d KW: distributions test
+d KW: k-sample
+d KW: KS test
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20260917
+d
+d Author: Andres Talavera Cuya,   Direccion Nacional de Censos y Encuestas -- INEI Peru
+d Support: email talaveracuya@@gmail.com
+d
+f ksmmd.ado
+f ksmmd.sthlp
+f ksmmd_es.sthlp

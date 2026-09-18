@@ -1,7 +1,5 @@
 {smcl}
 {* *! version 2.21  13Sep2026}{...}
-{cmd:help mmws}
-{hline}
 
 {title:Title}
 

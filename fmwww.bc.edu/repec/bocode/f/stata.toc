@@ -33,6 +33,7 @@ p fese module to calculate standard errors for fixed effects
 p ffrals module to provide Flexible-Fourier LM unit-root test with RALS and factor (RALS2) augmentation  for non-normal errors
 p fframeappend module to append data frames to currently active data frame
 p ffroot module to run all Fourier unit root and stationarity tests 
+p fgcifplot module to draw Fine-Gray cumulative-incidence plots with conventional and subdistribution risk-set summaries
 p fgt_ci module to calculate and decompose Foster–Greer–Thorbecke (and standard) concentration indices
 p fgtest module to Compute Farrar-Glauber Multicollinearity Chi2, F, t Tests
 p fhsae module to fit an area level Fay-Herriot model

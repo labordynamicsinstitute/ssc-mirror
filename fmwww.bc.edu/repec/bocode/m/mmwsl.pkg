@@ -1,0 +1,29 @@
+d 'MMWSL': module for implementing longitudinal marginal mean weighting through stratification for time-varying binary or nominal treatments
+d
+d  mmwsl extends marginal mean weighting through stratification
+d (mmws) to panel (longitudinal) data with a time-varying
+d treatments (see Hong 2015). When specified, inverse probability
+d of treatment weights (IPTW) will also be computed, following
+d Robins, Hernan, and Brumback (2000). Treatments can be either
+d binary or nominal. 
+d
+d KW: marginal mean weighting through stratification
+d KW: inverse probability of treatment weights
+d KW: time-varying treatment
+d KW: causal inference
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20260917
+d
+d Author: Ariel Linden, Linden Consulting Group, LLC
+d Support: email alinden@@lindenconsulting.org
+d
+f mmwsl.ado
+f mmwsl.sthlp
+f mmws.ado
+f mmws.sthlp
+f ../p/pstrata.ado
+f ../p/pstrata.sthlp
+f mmwsl_example.dta
+f MMWSL.pdf

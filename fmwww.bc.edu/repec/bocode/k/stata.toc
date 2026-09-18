@@ -44,6 +44,7 @@ p krippalpha module to compute Krippendorff's alpha intercoder reliability coeff
 p krls module to perform Kernel–Based Regularized Least Squares
 p ksi module to compute Krugman specialization index
 p ksmirnov2var module to perform the Kolmogorov-Smirnov test of the equality of distributions for two variables. 
+p ksmmd module to perform Weighted k-sample distributional test combining Kolmogorov-Smirnov (Kiefer's T) and Maximum Mean Discrepancy (MMD via Random Fourier Features)
 p kssur module to calculate Kapetanios, Shin & Snell unit root test statistic along with critical values and p-values
 p kstest module to perform a k-sample Kolmogorov-Smirnov equality-of-distributions test
 p ksur module to calculate Kapetanios & Shin unit root test statistic along with finite-sample critical values and p-values

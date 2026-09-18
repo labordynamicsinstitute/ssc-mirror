@@ -93,7 +93,7 @@ the third is what gets solved for. {cmd:mu()}, {cmd:sd()}, {cmd:corr()}, and
 {title:Description}
 
 {pstd}
-{cmd:onemean_rtm} computes power for a pre-post study to detect 
+{cmd:power onemean_rtm} computes power for a pre-post study to detect 
 the portion of the anticipated effect that cannot be explained by
 regression to the mean (RTM). 
 
@@ -207,7 +207,7 @@ to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
 Linden A. 2026. POWER ONEMEAN_RTM: Stata module to compute power for a regression to the mean-adjusted one-sample mean test. Statistical
-Software Components SXXXXXX, Boston College Department of Economics.
+Software Components S459869, Boston College Department of Economics.
 
 
 

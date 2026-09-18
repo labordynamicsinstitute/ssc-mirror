@@ -327,9 +327,8 @@ series analysis of proportion and rate outcomes: A simulation study.
 Preprint. {browse "https://arxiv.org/abs/2607.07914"}
 
 {phang}
-Linden, A. 2026. Extending beta regression to panel data
-with higher-order autoregressive errors: A Simulation Study.
-Preprint. arXiv.
+Linden, A. 2026. Joint conditional maximum likelihood estimation of beta
+regression for panel data with higher-order autoregressive errors.
 
 {phang}
 Linden, A. 2026. Extending Prais-Winsten regression to panel data
@@ -363,7 +362,7 @@ to the research community, like a paper. Please cite it as such: {p_end}
 {p 4 8 2}
 Linden, Ariel. 2026. XTBETARK: Stata module for computing beta regression with AR(k) errors for
 proportion/rate outcomes, by joint conditional maximum likelihood, with panel-corrected standard errors.
-Statistical Software Components SXXXXXX, Boston College Department of Economics. {p_end}
+Statistical Software Components s459846, Boston College Department of Economics. {p_end}
 
 
 
