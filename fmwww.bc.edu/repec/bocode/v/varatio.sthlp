@@ -192,7 +192,7 @@ to the research community, like a paper. Please cite it as such: {p_end}
 
 {p 4 8 2}
 Linden A. (2026). VARATIO: Stata module for calculating the {it:k}-group omnibus variance-ratio balance diagnostic. 
-Statistical Software Components SXXXXXX, Boston College Department of Economics. {p_end}
+Statistical Software Components S459867, Boston College Department of Economics. {p_end}
 
 
 

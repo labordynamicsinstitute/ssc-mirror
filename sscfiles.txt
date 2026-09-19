@@ -3959,6 +3959,7 @@ fmwww.bc.edu/repec/bocode/v/var_nr_hd.ado
 fmwww.bc.edu/repec/bocode/v/vplplot.pkg
 fmwww.bc.edu/repec/bocode/v/vselect.ado
 fmwww.bc.edu/repec/bocode/v/vlist.hlp
+fmwww.bc.edu/repec/bocode/v/varatio.pdf
 fmwww.bc.edu/repec/bocode/v/opt_display.sthlp
 fmwww.bc.edu/repec/bocode/v/validarcae.sthlp
 fmwww.bc.edu/repec/bocode/v/vmerge.ado

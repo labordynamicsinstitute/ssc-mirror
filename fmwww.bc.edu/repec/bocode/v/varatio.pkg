@@ -16,10 +16,11 @@ d KW: weights
 d
 d Requires: Stata version 11
 d
-d Distribution-Date: 20260820
+d Distribution-Date: 20260918
 d
 d Author: Ariel Linden, Linden Consulting Group, LLC
 d Support: email alinden@@lindenconsulting.org
 d
 f varatio.ado
 f varatio.sthlp
+f varatio.pdf
