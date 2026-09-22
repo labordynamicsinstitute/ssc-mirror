@@ -1,0 +1,28 @@
+d 'IHSRETRAN': module to compute marginal effects on the original scale for linear regression with an inverse hyperbolic sine (IHS) transformed dependent variable using Duan's smearing estimate.
+d
+d  ihsretran calculates consistent marginal effects on the original
+d scale of the outcome	  variable after estimating a linear
+d regression where the dependent variable has been    transformed
+d using the inverse hyperbolic sine function [asinh()].    The
+d command implements Duan's (1983) nonparametric smearing estimate
+d to handle the    retransformation problem from the logarithmic
+d components of the hyperbolic sine function,	 as detailed by
+d Edward C. Norton (2022). This allows researchers to accurately
+d interpret    marginal effects when the dependent variable
+d contains zeros or negative values and    exhibits a right-skewed
+d distribution. 
+d
+d KW: marginal efgfects
+d KW: retransformation
+d KW: regression
+d KW: Duan
+d
+d Requires: Stata version 14
+d
+d Distribution-Date: 20260921
+d
+d Author:  Dereje Fedasa,   Dire Dawa University, Ethiopia
+d Support: email derejefedasaa@@gmail.com
+d
+f ihsretran.ado
+f ihsretran.sthlp

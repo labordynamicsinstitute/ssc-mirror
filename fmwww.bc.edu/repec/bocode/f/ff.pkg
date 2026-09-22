@@ -1,0 +1,23 @@
+d 'FF': module to browse and search Stata's built-in functions
+d
+d	ff browses and searches Stata's built-in functions.  It
+d reads the function documentation    shipped with your copy of
+d Stata, so the list always matches the Stata version you are	
+d running.  No Internet connection is needed and nothing is
+d hard-coded. 
+d
+d KW: online help
+d KW: functions
+d
+d Requires: Stata version 11
+d
+d Distribution-Date: 20260921
+d
+d Author: Wu LiangHai,  Anhui University of Technology
+d Support: email agd2010@@yeah.net
+d
+d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
+d Support: email    2325476320@@qq.com
+d
+f ff.ado
+f ff.sthlp

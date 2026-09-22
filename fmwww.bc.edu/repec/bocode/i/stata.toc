@@ -27,6 +27,7 @@ p igesetci module to compute confidence intervals for partially identified inter
 p igini module to perform Gini index decomposition by individual and group
 p igini1 module to perform Gini index decomposition by individual and group
 p ihelp module to display the help documents in PDF format using the default browser
+p ihsretran module to compute marginal effects on the original scale for linear regression with an inverse hyperbolic sine (IHS) transformed dependent variable using Duan's smearing estimate.
 p ihstrans module for generating inverse hyperbolic sine (IHS) transformed variables
 p iia module to test the iia assumption in conditional logistic regression (version 5)
 p ilr module to compute a isometric log-ratio (ILR) transformation of a set of variables

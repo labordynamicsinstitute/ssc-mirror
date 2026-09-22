@@ -18,7 +18,7 @@ d KW: structural equation modeling
 d
 d Requires: Stata version 15.1
 d
-d Distribution-Date: 20260901
+d Distribution-Date: 20260921
 d
 d Author: Wu LiangHai,  Anhui University of Technology
 d Support: email agd2010@@yeah.net
@@ -26,12 +26,12 @@ d
 d Author:   Wu Hanyan, Nanjing University of Aeronautics and Astronautics
 d Support: email    2325476320@@qq.com
 d
+f plssem2.ado
+f plssem2.sthlp
 f plssem2_estat.ado
 f plssem2_estat.sthlp
 f plssem2_predict.ado
 f plssem2_predict.sthlp
-f plssem2.ado
-f plssem2.sthlp
 f ../e/esg_simdata.csv
 f ../e/estat_effects.ado
 f ../e/estat_f2.ado

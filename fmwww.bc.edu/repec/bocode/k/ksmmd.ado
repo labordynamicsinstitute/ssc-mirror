@@ -1,4 +1,4 @@
-*! ksmmd.ado v0.3 - 16sep2026
+*! ksmmd.ado v0.5 - 18sep2026
 *! Test k-muestras, ponderado, que combina en UN SOLO remuestreo:
 *!   - T de Kiefer (KS generalizado a k grupos -- mismo estadistico que
 *!     kstest de Ariel Linden, SSC s459801, pero reimplementado aca:
@@ -67,6 +67,86 @@
 *!      peso correcto, pairwise queda ALGEBRAICAMENTE IDENTICO a vspool
 *!      (mismo p-valor exacto), asi que ofrecerlo aparte era redundante,
 *!      no una alternativa real.
+*!   4b. mmdtype(fuse) (agregada en v0.4, a pedido explicito del
+*!      usuario, tras evaluar mejoras posibles a MMD en la literatura
+*!      ya revisada en esta sesion): MMD-FUSE (Biggs, Schrab & Gretton
+*!      2023, NeurIPS, arXiv:2306.08777, PDF leido completo). En vez
+*!      de un solo bandwidth (heuristica de mediana), combina el
+*!      T_MMD "vspool" de una GRILLA fija de bandwidths (todos >=
+*!      heuristica: 1x, 1.5x, 2x, 3x) via un soft-max regularizado por
+*!      KL (log-sum-exp con lambda), sin pagar el costo de correccion
+*!      de Bonferroni ni partir la muestra:
+*!        T_FUSE = (1/lambda) * log( mean_g[ exp(lambda*T_g) ] ),
+*!        T_g = T_MMD_vspool(bw_g) / sqrt(Nhat(bw_g))
+*!      La normalizacion por Nhat (ver ksmmd_nhat() en Mata) pone en
+*!      la misma escala el T_MMD de cada bandwidth antes de
+*!      combinarlos. El teorema de calibracion por permutacion
+*!      (Hemerik & Goeman 2018) es valido para CUALQUIER estadistico
+*!      fijo, asi que la grilla/lambda no necesitan estar en la
+*!      literatura para que el p-valor de permutacion siga siendo
+*!      exacto bajo H0 -- lo que si hay que declarar con honestidad es
+*!      que la grilla {1x,1.5x,2x,3x}*heuristica y lambda=0.1 salen de
+*!      una busqueda sistematica en Python/numpy sobre datos
+*!      simulados en ESTA sesion (sim/prototipo_mmd_fuse.py,
+*!      sim/prototipo_mmd_fuse_sistematico.py,
+*!      sim/prototipo_mmd_fuse_escala.py), no de un valor recomendado
+*!      por el paper. Motivo de la busqueda: una primera prueba con
+*!      datos reales de produccion (un outcome de encuesta continuo,
+*!      agrupado por anio, ponderado) mostro que un solo bandwidth es
+*!      sensible al TIPO de alternativa
+*!      (bw() grande diluye corrimientos de ubicacion, bw() chico se
+*!      ahoga en ruido de permutacion) -- la grilla probada busco una
+*!      combinacion que no dependiera de adivinar de antemano que tipo
+*!      de diferencia hay entre anios. Validacion (ver
+*!      sim/resultados_ksmmd_mmd_fuse_2muestras_tipo1.txt y
+*!      sim/resultados_ksmmd_mmd_fuse_4muestras_tipo1.txt, R=20000):
+*!      tasa de error Tipo I controlada, sin inflacion, en los mismos
+*!      3 escenarios de peso "adversos" que el resto de este comando,
+*!      para k=2 Y k=4 (el uso real con by() agrupando por anio).
+*!      Evidencia
+*!      de potencia (R=300, kernel exacto en Python, no RFF):
+*!      {1x,1.5x,2x,3x} fue la UNICA configuracion, de 8 grillas x 6
+*!      lambdas probadas, robusta a la vez contra un corrimiento de
+*!      ubicacion (50-53% de potencia) Y una diferencia de escala
+*!      (89.7-91.3%) -- grillas que ganaban en un escenario (p.ej. solo
+*!      bandwidths grandes) se derrumbaban en el otro. NO configurable
+*!      via opciones del .ado (grilla y lambda quedan fijas en Mata,
+*!      ver ksmmd_run()): exponerlas como opciones multiplicaria la
+*!      superficie de validacion sin que exista todavia evidencia de
+*!      que otra combinacion sea mejor. bw() del usuario se ignora con
+*!      mmdtype(fuse) (el .ado avisa si se paso uno) -- la grilla
+*!      siempre se ancla en la heuristica de mediana interna, unica
+*!      version validada. Costo: nfeatures() features POR CADA uno de
+*!      los 4 puntos de grilla (4x la memoria de Phi que un solo
+*!      mmdtype(vspool)/(maxpairwise) con el mismo nfeatures()).
+*!      ESTADO DE VALIDACION EN STATA REAL de mmdtype(fuse): la
+*!      integracion de FUSE a Mata se escribio SIN Stata real
+*!      disponible (mismo entorno que reescribio v0.3), pero el
+*!      usuario CONFIRMO en esta misma sesion, corriendo el Ejemplo 5
+*!      del help (auto.dta, mpg by(g) mmdtype(fuse) reps(500)) contra
+*!      Stata real, que corre SIN ERROR y da T_MMD=0.4980 p=0.7126,
+*!      mismo orden de magnitud que mmdtype(vspool) sobre el mismo
+*!      dataset/pesos (Ejemplo 2: T_MMD=0.7422 p=0.5629) -- confirma
+*!      que la traduccion a Mata (bloques de columnas
+*!      Phi_grid_sorted/mu_pool_grid, ksmmd_nhat(),
+*!      ksmmd_mmd_fuse_T_batch()) no tiene errores de sintaxis/indexado
+*!      que la revision estatica no hubiera detectado. CONFIRMADO
+*!      TAMBIEN a escala de produccion, en la misma sesion: sobre un
+*!      outcome de encuesta real agrupado por anio (N=141,151, 4
+*!      grupos), reps(200) nfeatures(500) (2000 columnas de
+*!      Phi_grid_sorted en total, 4x
+*!      nfeatures() por los 4 puntos de grilla -- sin problema de
+*!      memoria en la practica), corrio en 364.97s (~6.1 min) SIN
+*!      ERROR: KS T=1705.5730 p=0.4279 (consistente con las corridas
+*!      previas de esta sesion), MMD fuse T=1848.9130 p=0.6617 --
+*!      practicamente igual al p=0.6667 de mmdtype(vspool) sobre el
+*!      mismo dataset con la misma seed, y el post-hoc de MMD (fuse)
+*!      da el mismo patron cualitativo que el de vspool: ningun par
+*!      de anios significativo despues de corregir por comparaciones
+*!      multiples (a diferencia del post-hoc de KS, que si encuentra a
+*!      2026 distinto de los otros 3 anios). mmdtype(fuse) queda
+*!      confirmado en Stata real tanto en escala chica (auto.dta) como
+*!      de produccion (N~137mil).
 *!      Se evaluo tambien KMD (Huang & Sen 2024, JASA -- "A Kernel
 *!      Measure of Dissimilarity between M Distributions", arXiv
 *!      2210.00634) como tercera opcion: leido el paper completo (el
@@ -81,6 +161,29 @@
 *!      tipo KD-tree) es un problema de rendimiento aparte, del mismo
 *!      calibre que el que motivo usar RFF para MMD -- no se resuelve
 *!      "de yapa" en esta version.
+*!      Se evaluo tambien la familia de tests via informacion mutua/
+*!      teoria de la informacion (busqueda bibliografica exhaustiva,
+*!      sept-2026, PDFs leidos completos): Drake, R. & Guha, A. (2014).
+*!      "A mutual information-based k-sample test for discrete
+*!      distributions". Journal of Applied Statistics, 41(9), 2011-2027,
+*!      DOI: 10.1080/02664763.2014.899325 -- unico test k-muestral
+*!      EXPLICITO de esta familia encontrado, pero solo para variables
+*!      DISCRETAS (tablas de contingencia); una variable continua como
+*!      edad requeriria discretizar (binning), decision de diseno que
+*!      afecta la potencia y que el paper no cubre. Berrett, T.B. &
+*!      Samworth, R.J. (2019). "Nonparametric independence testing via
+*!      mutual information". Biometrika, 106(3), 547-566, DOI:
+*!      10.1093/biomet/asz024 -- reformula "k distribuciones iguales"
+*!      como test de independencia entre la variable y la etiqueta de
+*!      grupo, si soporta variables continuas y generaliza a k grupos,
+*!      pero NINGUNO de los dos soporta pesos de encuesta/diseno
+*!      muestral (mismo vacio de literatura que con KMD y con MMD bajo
+*!      pesos). CONCLUSION: fuera de este comando por el mismo motivo
+*!      que KMD -- ninguna via de esta familia resuelve el requisito
+*!      central de pesos, y construirla desde cero (discretizar +
+*!      pesos, o extender el estimador de Berrett-Samworth a pesos)
+*!      seria una contribucion metodologica nueva, no una adopcion de
+*!      literatura existente.
 *!   5. graph: ECDFs ponderadas por grupo, mismo tipo de grafico que
 *!      kstest ..., graph -- es la visual natural para el T de Kiefer;
 *!      MMD no tiene una curva 1-D propia (vive en el espacio de
@@ -89,6 +192,30 @@
 *!   6. posthoc: tabla de a pares para AMBOS estadisticos (T_KS y
 *!      T_MMD), con las mismas 4 correcciones de comparaciones
 *!      multiples que ya usa kstest (Bonferroni/Sidak/Holm/FDR).
+*!
+*! v0.5 -- la salida de consola ahora muestra la Ho de cada prueba (a
+*! pedido explicito del usuario, tras confundir varias veces en esta
+*! sesion que KS y MMD prueban formalmente cantidades distintas -- KS:
+*! igualdad de CDFs, F_j(x)=F_pool(x) para todo x,j; MMD vspool/fuse:
+*! igualdad de mean embeddings en RKHS, mu_j=mu_pool; MMD maxpairwise:
+*! igualdad de a pares, mu_a=mu_b (sin pool, por eso Kim 2021 es
+*! sensible a un solo par divergente y vspool/fuse no -- ver la
+*! discusion de "dilucion por el pool" en el remarks_mmdtype del
+*! help). Ho tambien se agrego a cada tabla post-hoc (una linea, la
+*! misma para cualquier mmdtype ahi porque una comparacion de a pares
+*! no tiene pool que diluya). Sin cambios de algebra ni de Mata --
+*! solo texto de display en el .ado, no afecta T_KS/T_MMD/p-valores.
+*!
+*! v0.4 -- agrega mmdtype(fuse) (MMD-FUSE, Biggs/Schrab/Gretton 2023),
+*! ver el punto 4b mas arriba para el diseno completo, la validacion y
+*! la advertencia honesta especifica de esta opcion (no corrida contra
+*! Stata real todavia). Ademas, refactor interno sin cambio de
+*! comportamiento: la heuristica de mediana que antes vivia inline
+*! dentro de ksmmd_rff_features() se extrajo a su propia funcion
+*! (ksmmd_bw_heuristic()) para que mmdtype(fuse) la reuse como ancla
+*! de su grilla -- mismo orden de sorteos aleatorios que v0.3, asi que
+*! mmdtype(vspool)/mmdtype(maxpairwise) dan el mismo resultado con la
+*! misma seed que antes de este cambio.
 *!
 *! v0.3 -- motor de remuestreo VECTORIZADO (a pedido del usuario, tras
 *! confirmar en Stata real sobre datos reales de produccion, N~127mil, que la
@@ -209,6 +336,11 @@
 *!     (2012). A Kernel Two-Sample Test. JMLR 13(25), 723-773.
 *!   Rahimi, A., Recht, B. (2007). Random Features for Large-Scale
 *!     Kernel Machines. NeurIPS 20.
+*!   Biggs, F., Schrab, A., Gretton, A. (2023). MMD-FUSE: Learning and
+*!     Combining Kernels for Two-Sample Testing Without Data Splitting.
+*!     NeurIPS 36. arXiv:2306.08777.
+*!   Hemerik, J., Goeman, J.J. (2018). Exact testing with random
+*!     permutations. Test 27(4), 811-825.
 *!   Sutherland, D.J., Schneider, J. (2015). On the Error of Random
 *!     Fourier Features. UAI 2015.
 *!   Ong, C.S., Chen, X., Zhu, D., Zhang, Y. (2023). Testing Equality of
@@ -253,16 +385,21 @@ program define ksmmd, rclass
         POSThoc                          ///
         BW(real -1)                      /// -1 = heuristica de mediana
         NFeatures(integer 200)           ///
-        MMDTYPE(string)                  /// vspool (default) o maxpairwise
+        MMDTYPE(string)                  /// vspool (default), maxpairwise o fuse
         KSONLY                           ///
         MMDONLY                          ///
         ]
 
     if "`mmdtype'" == "" local mmdtype "vspool"
     local mmdtype = lower("`mmdtype'")
-    if !inlist("`mmdtype'", "vspool", "maxpairwise") {
-        di as err "ksmmd: mmdtype() debe ser vspool o maxpairwise"
+    if !inlist("`mmdtype'", "vspool", "maxpairwise", "fuse") {
+        di as err "ksmmd: mmdtype() debe ser vspool, maxpairwise o fuse"
         exit 198
+    }
+    if "`mmdtype'" == "fuse" & `bw' != -1 {
+        di as txt "ksmmd: mmdtype(fuse) ignora bw() -- usa una grilla de 4 " ///
+            "bandwidths anclada en la heuristica de mediana calculada " ///
+            "internamente (ver {help ksmmd##remarks_mmdtype:help ksmmd})"
     }
     if "`ksonly'" != "" & "`mmdonly'" != "" {
         di as err "ksmmd: ksonly y mmdonly son mutuamente excluyentes"
@@ -365,14 +502,24 @@ program define ksmmd, rclass
     }
     di "{hline 55}"
     if `do_ks' {
-        di as txt "KS (Kiefer T):        " as res %9.4f `T_KS' ///
-            as txt "   p = " as res %6.4f `P_KS'
+        di as txt "KS (Kiefer T):"
+        di as txt "  Ho: F_j(x) = F_pool(x) for all x, all j   (equal CDFs -- " ///
+            "sensitive to shape/location)"
+        di as txt "  Stat = " as res %9.4f `T_KS' as txt "   p = " as res %6.4f `P_KS'
     }
     if `do_mmd' {
-        di as txt "MMD (`mmdtype', RFF):  " as res %9.4f `T_MMD' ///
-            as txt "   p = " as res %6.4f `P_MMD'
+        di as txt _n "MMD (`mmdtype', RFF):"
+        if "`mmdtype'" == "maxpairwise" {
+            di as txt "  Ho: mu_a = mu_b in RKHS, all pairs (a,b)   (equal kernel " ///
+                "embeddings -- sensitive to a single divergent pair)"
+        }
+        else {
+            di as txt "  Ho: mu_j = mu_pool in RKHS, all j          (equal kernel " ///
+                "embeddings -- sensitive to moment differences)"
+        }
+        di as txt "  Stat = " as res %9.4f `T_MMD' as txt "   p = " as res %6.4f `P_MMD'
     }
-    di as txt "  (basado en " as res `reps' as txt " permutaciones, " ///
+    di as txt _n "  (basado en " as res `reps' as txt " permutaciones, " ///
         "nfeatures=" as res `nfeatures' as txt ")"
     di "{hline 55}"
 
@@ -440,6 +587,12 @@ program define ksmmd, rclass
             local tablewidth = `maxlen' + 60
 
             di as txt _n "Post-hoc pairwise -- `cual' (" as res `npairs' as txt " pares)"
+            if "`cual'" == "KS" {
+                di as txt "Ho: F_a(x) = F_b(x) for all x   (per pair below)"
+            }
+            else {
+                di as txt "Ho: mu_a = mu_b in RKHS   (per pair below)"
+            }
             di "{hline `tablewidth'}"
             di as txt %-`maxlen's "Groups" "     Stat     {it:P}_raw    {it:P}_bonf   {it:P}_sidak    {it:P}_holm     {it:P}_fdr"
             di "{hline `tablewidth'}"
@@ -536,6 +689,18 @@ void ksmmd_run(string scalar depvar, string scalar byvar, string scalar wvar,
     real rowvector Fcumrow, jumpmask
     real vector T_KS_perm, T_MMD_perm
     real matrix RES
+    // -- solo para mmdtype(fuse): grilla de bandwidths ancladas en la
+    // heuristica de mediana. Phi/mu_pool de LOS G puntos de grilla se
+    // guardan uno al lado del otro en una sola matriz (N x G*nfeatures /
+    // 1 x G*nfeatures), mismo patron de "bloques de columnas" que ya usa
+    // ksmmd_mmd_T_batch() para mu_all (ver mas abajo) -- se prefiere a
+    // un vector de punteros por ser el mismo idioma que el resto de este
+    // archivo ya usa y prueba. Fijos, no dependen de la permutacion: se
+    // calculan una sola vez aca, igual que Phi_sorted/mu_pool para
+    // vspool/maxpairwise.
+    real scalar is_fuse, bw_heur, G, gi, fuse_lam, c0, c1
+    real vector fuse_mult, nhatG
+    real matrix Phi_grid_sorted, mu_pool_grid
 
     st_view(y = ., ., depvar, touse)
     st_view(g = ., ., byvar, touse)
@@ -553,11 +718,40 @@ void ksmmd_run(string scalar depvar, string scalar byvar, string scalar wvar,
     g_sorted = g[idx]
     groups = uniqrows(g_sorted)
 
-    if (do_mmd) {
+    is_fuse = (do_mmd & mmdtype == "fuse")
+    if (do_mmd & !is_fuse) {
         Phi = ksmmd_rff_features(y, nfeatures, bw)
         Phi_sorted = Phi[idx, .]
         Wtot = sum(w_sorted)
         mu_pool = (w_sorted' * Phi_sorted) / Wtot
+    }
+    else if (is_fuse) {
+        // grilla validada por simulacion (Tipo I, R=20000, k=2 y k=4 --
+        // ver sim/resultados_ksmmd_mmd_fuse_2muestras_tipo1.txt y
+        // sim/resultados_ksmmd_mmd_fuse_4muestras_tipo1.txt) y robusta a
+        // dos tipos de alternativa distintos, corrimiento de ubicacion y
+        // diferencia de escala (sim/prototipo_mmd_fuse_sistematico.py,
+        // sim/prototipo_mmd_fuse_escala.py) -- NO configurable via
+        // opciones del .ado, ver nota en el encabezado del archivo.
+        // bw() del usuario se IGNORA aca (el .ado avisa si se paso uno):
+        // la grilla siempre se ancla en la heuristica de mediana interna,
+        // que es lo unico que se valido.
+        fuse_mult = (1.0, 1.5, 2.0, 3.0)
+        fuse_lam = 0.1
+        G = cols(fuse_mult)
+        bw_heur = ksmmd_bw_heuristic(y)
+        Wtot = sum(w_sorted)
+        Phi_grid_sorted = J(N, G*nfeatures, .)
+        mu_pool_grid = J(1, G*nfeatures, .)
+        nhatG = J(1, G, .)
+        for (gi=1; gi<=G; gi++) {
+            c0 = (gi-1)*nfeatures + 1
+            c1 = gi*nfeatures
+            Phi = ksmmd_rff_features(y, nfeatures, bw_heur * fuse_mult[gi])
+            Phi_grid_sorted[., c0::c1] = Phi[idx, .]
+            mu_pool_grid[1, c0::c1] = (w_sorted' * Phi_grid_sorted[., c0::c1]) / Wtot
+            nhatG[gi] = ksmmd_nhat(Phi_grid_sorted[., c0::c1])
+        }
     }
 
     // Fcum (peso pooled acumulado hasta cada posicion) y el jump-mask
@@ -579,8 +773,11 @@ void ksmmd_run(string scalar depvar, string scalar byvar, string scalar wvar,
     if (do_ks) {
         T_KS_obs = ksmmd_ks_T_batch(w_sorted, g_sorted', groups, Fcumrow, jumpmask)[1]
     }
-    if (do_mmd) {
+    if (do_mmd & !is_fuse) {
         T_MMD_obs = ksmmd_mmd_T_batch(Phi_sorted, w_sorted, g_sorted', mmdtype, groups, mu_pool)[1]
+    }
+    else if (is_fuse) {
+        T_MMD_obs = ksmmd_mmd_fuse_T_batch(Phi_grid_sorted, w_sorted, g_sorted', groups, mu_pool_grid, nhatG, fuse_lam)[1]
     }
 
     // Tamano de bloque: acota memoria (permutaciones simultaneas x N)
@@ -609,8 +806,12 @@ void ksmmd_run(string scalar depvar, string scalar byvar, string scalar wvar,
             T_KS_perm = ksmmd_ks_T_batch(w_sorted, label_matrix, groups, Fcumrow, jumpmask)
             count_ks = count_ks + sum(T_KS_perm :>= T_KS_obs)
         }
-        if (do_mmd) {
+        if (do_mmd & !is_fuse) {
             T_MMD_perm = ksmmd_mmd_T_batch(Phi_sorted, w_sorted, label_matrix, mmdtype, groups, mu_pool)
+            count_mmd = count_mmd + sum(T_MMD_perm :>= T_MMD_obs)
+        }
+        else if (is_fuse) {
+            T_MMD_perm = ksmmd_mmd_fuse_T_batch(Phi_grid_sorted, w_sorted, label_matrix, groups, mu_pool_grid, nhatG, fuse_lam)
             count_mmd = count_mmd + sum(T_MMD_perm :>= T_MMD_obs)
         }
         done = done + thisB
@@ -760,35 +961,49 @@ real vector ksmmd_ks_T_batch(real vector w_sorted, real matrix label_matrix,
 }
 
 // ---------------------------------------------------------------
+// Heuristica de mediana (Garreau, Jitkrittum & Kanagawa 2017) para el
+// bandwidth del kernel RBF, sobre una submuestra de hasta 2000
+// observaciones (evita el costo O(n^2) de la mediana exacta de
+// distancias par-a-par en el dataset completo). Extraida a funcion
+// propia (antes vivia inline dentro de ksmmd_rff_features) para que
+// mmdtype(fuse) pueda calcularla UNA vez y reusarla como ancla de su
+// grilla de bandwidths -- el resto del codigo (orden de los sorteos
+// aleatorios) queda identico, asi que no cambia el resultado de
+// mmdtype(vspool)/mmdtype(maxpairwise) con la misma seed.
+// ---------------------------------------------------------------
+real scalar ksmmd_bw_heuristic(real vector y)
+{
+    real scalar n, nsub, i, med, p, q
+    real vector ysub, dif
+
+    n = rows(y)
+    nsub = min((n, 2000))
+    ysub = y[order(runiform(n,1),1)[1::nsub]]
+    dif = J(nsub*(nsub-1)/2, 1, .)
+    i = 0
+    for (p=1; p<=nsub-1; p++) {
+        for (q=p+1; q<=nsub; q++) {
+            i++
+            dif[i] = abs(ysub[p] - ysub[q])
+        }
+    }
+    med = ksmmd_median(dif)
+    if (med <= 0) med = 1
+    return(med)
+}
+
+// ---------------------------------------------------------------
 // Random Fourier Features para el kernel RBF exp(-(x-y)^2/(2*bw^2)):
 // phi(x) = sqrt(2/D) * cos(omega*x + b), omega ~ N(0, 1/bw^2),
-// b ~ Uniform(0, 2*pi) -- Rahimi & Recht (2007). bw<=0 dispara la
-// heuristica de mediana (Garreau et al. 2017) sobre una submuestra
-// de hasta 2000 observaciones (evita el costo O(n^2) de la mediana
-// exacta de distancias par-a-par en el dataset completo).
+// b ~ Uniform(0, 2*pi) -- Rahimi & Recht (2007). bw<=0 dispara
+// ksmmd_bw_heuristic() arriba.
 // ---------------------------------------------------------------
 real matrix ksmmd_rff_features(real vector y, real scalar D, real scalar bw)
 {
-    real scalar n, nsub, i, med, p, q
-    real vector ysub, dif, omega, b
+    real vector omega, b
     real matrix Phi
 
-    n = rows(y)
-    if (bw <= 0) {
-        nsub = min((n, 2000))
-        ysub = y[order(runiform(n,1),1)[1::nsub]]
-        dif = J(nsub*(nsub-1)/2, 1, .)
-        i = 0
-        for (p=1; p<=nsub-1; p++) {
-            for (q=p+1; q<=nsub; q++) {
-                i++
-                dif[i] = abs(ysub[p] - ysub[q])
-            }
-        }
-        med = ksmmd_median(dif)
-        bw = med
-        if (bw <= 0) bw = 1
-    }
+    if (bw <= 0) bw = ksmmd_bw_heuristic(y)
 
     omega = rnormal(D, 1, 0, 1/bw)
     b = runiform(D, 1) :* (2*pi())
@@ -868,6 +1083,86 @@ real vector ksmmd_mmd_T_batch(real matrix Phi, real vector w, real matrix label_
         }
     }
     return(T)
+}
+
+// ---------------------------------------------------------------
+// N-hat(bw): normalizador invariante a la permutacion que usa
+// mmdtype(fuse) para poner en la misma escala el T_MMD de cada
+// bandwidth de la grilla antes de combinarlos (si no se normaliza,
+// el bandwidth con features de mayor varianza domina el
+// log-sum-exp sin que eso refleje mas evidencia real -- Biggs,
+// Schrab & Gretton 2023, seccion 3.2). Definicion (su N_hat(Z)):
+// promedio de k(Zi,Zj)^2 sobre los pares i<j de una submuestra de
+// hasta 300 observaciones -- aca aproximado via RFF (Phi*Phi' en
+// vez del kernel exacto, mismo criterio de aproximacion que el
+// resto del comando). Version vectorizada de
+// sim/*_fuse_*.py:nhat_of_kernel() (que usaba un loop sobre indices
+// triangulares en numpy): sum(K^2) sobre TODA la matriz incluye la
+// diagonal y cada par fuera de la diagonal DOS veces (K es
+// simetrica), asi que restar la diagonal y dividir por 2 en vez de
+// por 1 dosifica exactamente el promedio sobre los pares i<j.
+// ---------------------------------------------------------------
+real scalar ksmmd_nhat(real matrix Phi)
+{
+    real scalar N, nsub, cnt, s
+    real vector idx
+    real matrix Phisub, Ksub
+
+    N = rows(Phi)
+    nsub = min((N, 300))
+    idx = order(runiform(N,1), 1)[1::nsub]
+    Phisub = Phi[idx, .]
+    Ksub = Phisub * Phisub'
+    cnt = nsub * (nsub - 1) / 2
+    s = (sum(Ksub:^2) - sum(diagonal(Ksub):^2)) / (2 * cnt)
+    if (s < 1e-12) s = 1e-12
+    return(s)
+}
+
+// ---------------------------------------------------------------
+// T_MMD-FUSE para un BLOQUE de B asignaciones de etiqueta a la vez
+// -- MMD-FUSE (Biggs, Schrab & Gretton 2023, NeurIPS,
+// arXiv:2306.08777): combina el T_MMD "vspool" (mmdtype(vspool),
+// nunca maxpairwise -- la grilla/lambda de abajo solo se valido
+// contra vspool) de VARIOS bandwidths via un soft-max regularizado
+// por KL en vez de un solo bandwidth elegido por heuristica de
+// mediana, evitando tanto la correccion de Bonferroni como partir
+// la muestra:
+//   T_FUSE = (1/lambda) * log( mean_g[ exp(lambda * T_g) ] )
+// con T_g = T_MMD_vspool(bandwidth_g) / sqrt(Nhat(bandwidth_g)) --
+// la normalizacion por Nhat es la que hace que el resultado no
+// dependa de la escala arbitraria de cada bandwidth (ver
+// ksmmd_nhat() arriba). Phi_grid/mu_pool_grid traen los G puntos de
+// grilla uno al lado del otro en bloques de nfeatures() columnas
+// (mismo patron "c0::c1" que mu_all en ksmmd_mmd_T_batch), calculados
+// una sola vez en ksmmd_run() -- ni Phi ni mu_pool dependen de la
+// permutacion. El teorema de calibracion por permutacion (Hemerik &
+// Goeman 2018) vale para CUALQUIER estadistico fijo, asi que corregir
+// por la grilla/lambda elegidas de antemano no hace falta -- lo que
+// si hay que declarar con honestidad es que esa grilla ({1x,1.5x,
+// 2x,3x} * heuristica de mediana) y lambda=0.1 salen de una busqueda
+// en Python/numpy sobre datos simulados (sim/prototipo_mmd_fuse*.py),
+// no de la literatura -- ver la nota en el encabezado del .ado.
+// ---------------------------------------------------------------
+real vector ksmmd_mmd_fuse_T_batch(real matrix Phi_grid, real vector w,
+    real matrix label_matrix, real vector groups, real matrix mu_pool_grid,
+    real vector nhatG, real scalar lam)
+{
+    real scalar G, D, gi, c0, c1
+    real matrix Tg
+    real vector m, fused
+
+    G = cols(nhatG)
+    D = cols(Phi_grid) / G
+    Tg = J(rows(label_matrix), G, .)
+    for (gi=1; gi<=G; gi++) {
+        c0 = (gi-1)*D + 1
+        c1 = gi*D
+        Tg[.,gi] = ksmmd_mmd_T_batch(Phi_grid[.,c0::c1], w, label_matrix, "vspool", groups, mu_pool_grid[1,c0::c1]) :/ sqrt(nhatG[gi])
+    }
+    m = rowmax(Tg)
+    fused = m :+ ln(rowsum(exp(lam :* (Tg :- m))) :/ G) :/ lam
+    return(fused)
 }
 
 // ---------------------------------------------------------------

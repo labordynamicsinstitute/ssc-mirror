@@ -313,7 +313,7 @@ to the research community, like a paper. Please cite it as such: {p_end}
 {p 4 8 2}
 Linden, Ariel. 2026.
 MMWSL: Stata module for implementing longitudinal marginal mean weighting through stratification for time-varying binary or 
-nominal treatments. Statistical Software Components SXXXXXX, Boston College Department of Economics{p_end}
+nominal treatments. Statistical Software Components s459891, Boston College Department of Economics{p_end}
 
 
 

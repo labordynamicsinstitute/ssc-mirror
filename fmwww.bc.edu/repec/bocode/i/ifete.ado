@@ -1,14 +1,14 @@
-*! ifete 1.0.0 2026/03/26
+*! ifete 1.0.1 2026/09/03
 prog def ifete, eclass sortpreserve
 	version 17
 	preserve
-	qui xtset
+	cap qui xtset
     if "`r(panelvar)'" == "" | "`r(timevar)'" == "" {
 		di as err "panel variable or time variable missing, please use -{bf:xtset} {it:panelvar} {it:timevar}"
 		exit 198
     }
 	else if "`r(balanced)'" != "strongly balanced"{
-		di as err "strongly panel dataset is required"
+		di as err "a strongly balanced panel dataset is required"
 		exit 198		
 	}
 	syntax varlist [if] [in], TReatvar(varname) [ ///
@@ -16,18 +16,30 @@ prog def ifete, eclass sortpreserve
 		BOOTStrap(integer 500) seed(integer 1) ///
 		RMEthod(string) rmax(numlist min = 1 max = 1 int) rmin(numlist min = 1 max = 1 int)  ///
 		CIType(string) frame(string) noFIGure SAVEGraph(string) ]
-	local panelVar "`r(panelvar)'"
-    local timeVar "`r(timevar)'"
 	tempvar touse
 	mark `touse' `if' `in'
 	qui keep if `touse'
-	/* Check missing values*/
-	foreach i in `varlist'{
-		qui count if `i' == .
+	/* Check that the panel is still strongly balanced after if/in */
+	qui xtset
+	if "`r(balanced)'" != "strongly balanced" {
+		di as err "the subsample selected by {bf:if}/{bf:in} is not a strongly balanced panel"
+		exit 198
+	}
+	local panelVar "`r(panelvar)'"
+	local timeVar "`r(timevar)'"
+	/* Check missing values */
+	foreach i in `varlist' `treatvar'{
+		qui count if missing(`i')
 		if `r(N)' != 0 {
 			di as err "There are {bf:`r(N)'} missing values in variable {bf:`i'}, which is not allowed by {bf:ifete}"
 			exit 198
 		}
+	}
+	/* Check that the treatment variable is a 0/1 indicator */
+	qui count if `treatvar' != 0 & `treatvar' != 1
+	if `r(N)' != 0 {
+		di as err "invalid treatvar() -- {bf:`treatvar'} must be binary, taking the value 0 or 1"
+		exit 198
 	}
 	/* Check frame() */
 	if "`frame'" == "" tempname frame
@@ -44,13 +56,27 @@ prog def ifete, eclass sortpreserve
 	if "`citype'" == "" loc citype "eq"
 	else {
 		if "`citype'" != "eq" & "`citype'" != "sy" {
-			di as err "invalid frame() -- citype() must be specified one of {bf:eq sy}"
+			di as err "invalid citype() -- citype() must be specified as one of {bf:eq sy}"
 			exit 198
 		}
 	}
-	/* Check r() and rmax() */
-	if "`rmin'" == ""{
-		loc rmin = 1
+	/* Check r(), rmin() and rmax() */
+	if "`rmin'" == "" loc rmin = 1
+	if `rmin' < 1 {
+		di as err "invalid rmin() -- rmin() must be a positive integer"
+		exit 198
+	}
+	if "`r'" != "" {
+		if `r' < 1 {
+			di as err "invalid r() -- r() must be a positive integer"
+			exit 198
+		}
+	}
+	if "`rmax'" != "" {
+		if `rmax' < `rmin' {
+			di as err "invalid rmax() -- rmax() must be greater than or equal to rmin()"
+			exit 198
+		}
 	}
 	if "`r'" == "" & "`rmax'" == ""{
 		loc rmax = 10
@@ -62,14 +88,27 @@ prog def ifete, eclass sortpreserve
 	else if "`r'" != "" & "`rmax'" == ""{
 		loc rstart = `r'
 	}
-	else if "`r'" != "" & "`rmax'" != ""{
-		di as err "invalid r() or rmax() -- either r() or rmax() can be specified at a time"
+	else {
+		di as err "invalid r() or rmax() -- only one of r() and rmax() can be specified at a time"
 		exit 198
 	}
-	local nbck = .
-	local step = 500
-	local cmax = 3
-	local wtype = 1	
+	/* Check trend(), bootstrap(), iterate() and tolerance() */
+	if !inlist(`trend', 0, 1) {
+		di as err "invalid trend() -- trend() must be either 0 or 1"
+		exit 198
+	}
+	if `bootstrap' < 2 {
+		di as err "invalid bootstrap() -- bootstrap() must be an integer no less than 2"
+		exit 198
+	}
+	if `iterate' < 1 {
+		di as err "invalid iterate() -- iterate() must be a positive integer"
+		exit 198
+	}
+	if `tolerance' <= 0 {
+		di as err "invalid tolerance() -- tolerance() must be a positive real number"
+		exit 198
+	}
 	/* Check rmethod() */
 	if "`rmethod'" == "" loc rmethod "loo"
 	else {
@@ -79,8 +118,22 @@ prog def ifete, eclass sortpreserve
 		}
 	}
 	if(substr("`rmethod'", 1, 2) == "cv" ){
-		mata: tmp = tokens(subinstr(subinstr(subinstr("`rmethod'", "(", "", .), ")", "", .), "cv", "", .), " "); if(cols(tmp) != 2) {st_local("J", "."); st_local("KK", ".");} else {st_local("J", strofreal(strtoreal(tmp[2]))); st_local("KK", strofreal(strtoreal(tmp[1])));}
+		mata: tmp = tokens(subinstr(subinstr(subinstr("`rmethod'", "(", "", .), ")", "", .), "cv", "", .), " "); st_local("ncv", strofreal(cols(tmp))); if(cols(tmp) == 2){ st_local("KK", strofreal(strtoreal(tmp[1]))); st_local("J", strofreal(strtoreal(tmp[2]))); } else { st_local("KK", "."); st_local("J", "."); }
 		loc rmethod "cv"
+		if `ncv' != 0 & `ncv' != 2 {
+			di as err "invalid rmethod() -- cv() takes either no argument or two integers, as in {bf:cv(}{it:K} {it:J}{bf:)}"
+			exit 198
+		}
+		if `ncv' == 2 {
+			if "`KK'" == "." | "`J'" == "." {
+				di as err "invalid rmethod() -- {it:K} and {it:J} in cv({it:K} {it:J}) must be numeric"
+				exit 198
+			}
+			if `KK' < 1 | `J' < 1 | `KK' != int(`KK') | `J' != int(`J') {
+				di as err "invalid rmethod() -- {it:K} and {it:J} in cv({it:K} {it:J}) must be positive integers"
+				exit 198
+			}
+		}
 	}
 	else{
 		loc J = .
@@ -96,7 +149,7 @@ prog def ifete, eclass sortpreserve
 		/* Generate timeVarStr */
 		tempvar timeVarStr 
 		qui tostring `timeVar', gen(`timeVarStr') usedisplayformat force
-		mata: ifete("`panelVar'", "`timeVar'", "`varlist'", "`treatvar'", `rmin' ,`rstart', `tolerance', `iterate', `bootstrap', `trend', `seed', `cmax', `step', `wtype', `nbck', ///
+		mata: ifete("`panelVar'", "`timeVar'", "`varlist'", "`treatvar'", `rmin' ,`rstart', `tolerance', `iterate', `bootstrap', `trend', `seed', ///
 			("`rmethod'" == "cv"  ? 10 :  ///
 			("`rmethod'" == "loo" ? 0 :  ///
 			("`rmethod'" == "pc1" ? 1 :  ///
@@ -107,8 +160,10 @@ prog def ifete, eclass sortpreserve
 			("`rmethod'" == "ic3" ? 6 :  ///
 			("`rmethod'" == "er"  ? 8 : 9))))))))), `J', `KK');
 		
+		loc depvar = word("`varlist'", 1)
+		
 		label variable pred·`depvar' "predicted outcome"
-		label variable tr·`depvar' "treatment effect"
+		label variable tr·`depvar' "treatment effect (residual for untreated observations)"
 		label variable pred·`depvar'·eq95 "upper bound of equal tailed 90% confidence interval of predicted outcome"
 		label variable pred·`depvar'·eq05 "lower bound of equal tailed 90% confidence interval of predicted outcome"
 		label variable pred·`depvar'·eq975 "upper bound of equal tailed 95% confidence interval of predicted outcome"
@@ -138,13 +193,10 @@ prog def ifete, eclass sortpreserve
 		label variable tr·`depvar'·sy005 "lower bound of symmetric 99% confidence interval of treatment effect"
 		label variable tr·`depvar'·sypval "p-value corresponding to symmetric confidence interval of treatment effect"
 		
-		loc depvar = word("`varlist'", 1)
 		mata: printf("\n{txt}Estimation results based on the data from control units and the pretreatment data of treated units:\n")
 		mata: ifete_summary(st_data(., "`depvar' pred·`depvar' `treatvar'"));
 		ereturn clear
 		if `K' > 0 {
-			matrix beta = b
-			matrix variance = V
 			ereturn post b V, depname(`depvar') dof(`dof') obs(`obs') 
 			ereturn display
 		}
@@ -154,9 +206,6 @@ prog def ifete, eclass sortpreserve
 			}
 			else if inlist("`rmethod'", "pc1", "pc2", "pc3", "ic1", "ic2", "ic3") {
 				mata: printf("{p 0 6 2}{txt}Note: The number of factors is estimated using the {res}`rmethod'{txt} criterion (Bai and Ng, 2002), with the number of factors selected from the range [{res}`rmin'{txt}, {res}`rmax'{txt}].{p_end}\n");
-			}
-			else if "`rmethod'" == "abc" {
-				mata: printf("{p 0 6 2}{txt}Note: The number of factors is estimated using the {res}`rmethod'{txt} criterion (Alessi et al., 2010), with the number of factors selected from the range [{res}`rmin'{txt}, {res}`rmax'{txt}].{p_end}\n");
 			}
 			else if "`rmethod'" == "er" {
 				mata: printf("{p 0 6 2}{txt}Note: The number of factors is estimated using the {res}eigenvalue ratio{txt} criterion (Ahn and Horenstein, 2013), with the number of factors selected from the range [{res}`rmin'{txt}, {res}`rmax'{txt}].{p_end}\n");
@@ -183,31 +232,37 @@ prog def ifete, eclass sortpreserve
 				mata: st_local("istrname", strtoname(subinstr("`istr'", " ", "", .)))
 				if ("`c(scheme)'" == "sj") mata: st_local("color1", "gs1"); st_local("color2", "gs3"); st_local("color3", "gs1");
 				else mata: st_local("color1", "maroon"); st_local("color2", "navy"); st_local("color3", "dkgreen");
+				loc ylab : variable label `depvar'
+				if "`ylab'" == "" loc ylab "`depvar'"
+				loc xlab : variable label `timeVar'
+				if "`xlab'" == "" loc xlab "`timeVar'"
 				twoway (rarea pred·`depvar'·`citype'025 pred·`depvar'·`citype'975 `timeVar', fcolor(gs8%30) lwidth(none)) ///
 					(connected `depvar' `timeVar', lcolor(`color1') msymbol(smtriangle_hollow) mcolor(`color1')) /// 
 					(connect pred·`depvar' `timeVar', lpattern(dash) lcolor(`color2') msymbol(X) mcolor(`color2')) if `panelVar' == `i', ///
 					title("Actual and Predicted Outcomes in `istr'") name(pred_`istrname', replace) ///
-					ytitle(`depvar')  xline(`xline', lp(dot) lc(black)) ///
-					note("Note: The vertical dotted line indicates the start of the treatment period (`xlinestr').") ///
+					ytitle("`ylab'") xtitle("`xlab'") xline(`xline', lp(dot) lc(black)) ///
+					note("Note: The vertical dotted line marks the start of the treatment period (`xlinestr').") ///
 					legend(order(2 "Actual" 3 "Predicted" 1 "95% Confidence Interval") rows(1) position(6)) nodraw
 				twoway (rarea tr·`depvar'·`citype'025 tr·`depvar'·`citype'975 `timeVar', fcolor(gs8%30) lwidth(none)) ///
 					(connected tr·`depvar' `timeVar', lcolor(`color3') msymbol(smcircle_hollow) mcolor(`color3')) if `panelVar' == `i', ///
 					yline(0, lp(dot) lc(black%40) lwidth(0.5)) ///
 					title("Treatment Effects in `istr'") xline(`xline', lp(dot) lc(black)) ///
-					note("Note: The vertical dotted line indicates the start of the treatment period (`xlinestr').") ///
+					note("Note: The vertical dotted line marks the start of the treatment period (`xlinestr').") ///
 					legend(order(2 "Treatment Effect" 1 "95% Confidence Interval") ///
-					rows(1) cols(2) position(6)) ytitle("treatment effects on `depvar'") name(eff_`istrname', replace) nodraw
+					rows(1) cols(2) position(6)) ytitle("Treatment Effects on `ylab'") xtitle("`xlab'") name(eff_`istrname', replace) nodraw
 				loc graphlist = "`graphlist' pred_`istrname' eff_`istrname'"
 			}
 		}
 	}
-	/* Display graphs */
-	if "`savegraph'" == "" foreach graph in `graphlist'{
-		capture graph display `graph'
+	/* Display or save graphs */
+	if "`savegraph'" == "" {
+		foreach graph in `graphlist'{
+			capture graph display `graph'
+		}
 	}
 	else{
 		di
-		ereturn local graphlist "`graphlist'"
+		ereturn local graph "`graphlist'"
 		ifete_savegraph `savegraph'
 	}
 	mata: st_local("graphlist", strtrim("`graphlist'"))
@@ -218,11 +273,11 @@ prog def ifete, eclass sortpreserve
 	ereturn scalar G = `N'
 	ereturn scalar G0 = `N0'
 	ereturn scalar G1 = `N' - `N0'
-	ereturn scalar MSE = `MSE'
-	ereturn scalar RMSE = `RMSE'
-	ereturn scalar R2 = `R2'
+	ereturn scalar mse = `MSE'
+	ereturn scalar rmse = `RMSE'
+	ereturn scalar r2 = `R2'
 	
-	ereturn local graphlist "`graphlist'"
+	ereturn local graph "`graphlist'"
 	if "`framename'" != "" ereturn loc frame "`framename'"
 	ereturn local seed "`seed'"
 	ereturn local cmdline "ifete `0'"
@@ -242,13 +297,13 @@ prog def ifete, eclass sortpreserve
 end
 
 program ifete_savegraph
-        version 16
-        preserve
-        syntax [anything], [asis replace]
-        foreach graph in `e(graphlist)'{
-                capture graph display `graph'
-                graph save `anything'_`graph', `asis' `replace' 
-        }
+	version 17
+	preserve
+	syntax [anything], [asis replace]
+	foreach graph in `e(graph)'{
+		capture graph display `graph'
+		graph save `anything'_`graph', `asis' `replace' 
+	}
 end
 
 mata:
@@ -337,41 +392,54 @@ mata:
 		real matrix betahat, Fhat, Lhat, V
 	}
 	struct ifete_ifes scalar ifete_ife(real matrix Y, real matrix X, real scalar r, real scalar epsln, real scalar iter, real scalar trend, real scalar isV){
-		struct ifete_svds scalar tmp; real matrix U, D, V; struct ifete_ifes scalar res;
+		struct ifete_svds scalar tmp; struct ifete_ifes scalar res;
 		T = rows(Y);
 		N = cols(Y);		
 		effT = T^(1 + trend);
 		p = cols(X)/N;
 		Ylong = colshape(Y',1);
 		Xlong = J(N * T, p, .);
-		for(i = 0; i < N; i++){
-			Xlong[(i * T) :+ (1..T), .] = X[., (i * p) :+ (1..p)];
-		}
-		betanew = invsym(Xlong' * Xlong) * Xlong' * Ylong;
-		flag = 1;
-		i = 1;
-		while(flag > epsln & i <= iter){
+		for(i = 0; i < N; i++) Xlong[(i * T) :+ (1..T), .] = X[., (i * p) :+ (1..p)];
+		betanew = invsym(quadcross(Xlong, Xlong)) * quadcross(Xlong, Ylong);
+		tmpX = J(N * T, p, .);
+		tmpY = J(N * T, 1, .);
+		flag = .;
+		i = 0;
+		while(i < iter & (flag == . | flag > epsln)){
 			i = i + 1;
 			betaold = betanew;
 			R = (Y - X * (I(N) # betaold))/(sqrt(N*effT));
 			tmp = ifete_svd(R, r)
 			F = sqrt(effT)*tmp.U;
 			H = I(T)-(F * F')/effT;
-			tmpX = (I(N) # H) * Xlong
-			tmpY = (I(N) # H) * Ylong
+			/* apply the annihilator unit by unit, instead of forming the (NT x NT) matrix I(N) # H */
+			for(j = 0; j < N; j++){
+				tmpX[(j * T) :+ (1..T), .] = H * Xlong[(j * T) :+ (1..T), .];
+				tmpY[(j * T) :+ (1..T), .] = H * Ylong[(j * T) :+ (1..T), .];
+			}
 			betanew = invsym(quadcross(tmpX, tmpX)) * quadcross(tmpX, tmpY)
 			flag = sqrt((betanew - betaold)'*(betanew - betaold));
 		}
-		betahat = betanew;
-		Fhat = F;
-		Lhat = sqrt(N) * tmp.V' * tmp.D;
-		res.betahat = betahat;
-		res.Fhat = Fhat;
-		res.Lhat = Lhat;
+		if(flag > epsln) printf("{txt}Warning: the LSPC estimator did not converge in {res}%g{txt} iterations (L2 norm of the last change = {res}%g{txt}).\n", iter, flag);
+		res.betahat = betanew;
+		res.Fhat = F;
+		res.Lhat = sqrt(N) * tmp.V' * tmp.D;
 		if (isV) {
-			Xall = (colshape(X, p), Fhat # I(N), I(T) # Lhat)
+			/* V = sigma2 * (sum_i Zi'Zi)^(-1) with Zi = M_F X_i - sum_k G[i,k] M_F X_k and
+			   G = Lhat * (Lhat'Lhat/N)^(-1) * Lhat'/N; see Bai (2009).  This is the p x p block of
+			   sigma2 * (W'W)^(-1) with W = (X, Fhat # I(N), I(T) # Lhat), computed without ever
+			   forming W, which is of dimension NT x (p + N*r + T*r). */
+			Lhat = res.Lhat;
+			Q = J(T * p, N, .);
+			for(j = 1; j <= N; j++) Q[., j] = colshape(tmpX[((j - 1) * T) :+ (1..T), .], 1);
+			Q = Q - ((Q * Lhat) * invsym(quadcross(Lhat, Lhat)/N)) * Lhat'/N;
+			D = J(p, p, 0);
+			for(j = 1; j <= N; j++){
+				Zj = rowshape(Q[., j], T);
+				D = D + quadcross(Zj, Zj);
+			}
 			e2 = (tmpY - tmpX * betanew):^2;
-			res.V = ((quadsum(e2)/(N * T - p - N * r - T * r)) * invsym(quadcross(Xall, Xall)))[1..p, 1..p];
+			res.V = (quadsum(e2)/(N * T - p - N * r - T * r)) * invsym(D);
 		}
 		return(res);
 	}
@@ -449,17 +517,19 @@ mata:
 	struct ifete_ciers{
 		real matrix est, betahat, V, eq05, eq95, eq025, eq975, eq005, eq995, eqpval, sy05, sy95, sy025, sy975, sy005, sy995, sypval, Yhat
 	}
-	real matrix ifete_quantile(real matrix data, real matrix p){
+	real matrix ifete_quantile(real matrix data, real matrix prob){
 		N = rows(data);
-		res = J(rows(p), cols(data), .);
-		p = ceil(p * N)
-		for(i = 1; i<=cols(data); i++) res[., i] = data[order(data, i)[p, ], i];
+		res = J(rows(prob), cols(data), .);
+		idx = ceil(prob * N);
+		idx = idx :* (idx :>= 1) :+ (idx :< 1);
+		for(i = 1; i<=cols(data); i++) res[., i] = data[order(data, i)[idx, ], i];
 		return(res);
 	}
 	real matrix ifete_pval(real matrix eff, real matrix effs, real matrix SEP, real matrix citype){
 		s = -eff :/ SEP
 		if(citype == 0){
 			pvalues = 2 * colmin(mean(effs:>=s) \ mean(effs:<=s))
+			pvalues = pvalues :* (pvalues :<= 1) :+ (pvalues :> 1)
 		}else{
 			pvalues = mean(abs(effs):>=abs(s))
 		}
@@ -494,7 +564,7 @@ mata:
 				SigBW[h + k, h] = SigBW[h + k, h] + (1 - k/bandwidth)
 			}
 		}
-		BW = cholesky(SigBW)' * rnormal(T, B, 0 ,1)
+		BW = cholesky(SigBW) * rnormal(T, B, 0 ,1)
 		Eibar = mean(Ehat[1..T0, N0 + 1..N]);
 		S_star = J(B, N1 * T1, .);
 		for(b = 1; b<=B; b++){
@@ -539,28 +609,27 @@ mata:
 		T = rows(Y);
 		N = cols(Y);
 		rmax = min((rmax, N - 1, T - 1))
+		if(rmax < rmin) return(rmax);
 		effT = T^(1 + trend);
-		alphaT = T/(4*log(log(T))) * trend + (1 - trend);
 		tmpsvds = ifete_svd(Y/sqrt(effT*N), rmax);
 		F = sqrt(effT) * tmpsvds.U;
 		L = sqrt(N) * tmpsvds.V' * tmpsvds.D;
-		sig2hat = trace((Y - F * L')*(Y - F * L')')/(N * T);
+		sig2hat = sum((Y - F * L'):^2)/(N * T);
 		C2_NT = min((N, T));
 		r_star= rmax;
 		BN = J(6, 1, .)
 		BNmin = .
-		for(r = rmin; r <= (rmax); r++){
+		for(r = rmin; r <= rmax; r++){
 			F = sqrt(effT) * tmpsvds.U[., 1..r];
 			L = sqrt(N) * (tmpsvds.V')[., 1..r] * tmpsvds.D[1..r, 1..r];
-			SSR = trace((Y - F * L')*(Y - F * L')')/(N * T);
+			SSR = sum((Y - F * L'):^2)/(N * T);
 			BN[1] = SSR + r * sig2hat * ((N+T)/(N*T))*ln((N*T)/(N+T));
 			BN[2] = SSR + r * sig2hat * ((N+T)/(N*T))*ln(C2_NT);
 			BN[3] = SSR + r * sig2hat * ln(C2_NT)/(C2_NT);
-			BN[4] = log(SSR) + r * ((N+T)/(N*T))*ln(((N*T)/(N+T)))
-			BN[5] = log(SSR) + r * ((N+T)/(N*T))*ln(C2_NT);
-			BN[6] = log(SSR) + r * ln(C2_NT)/(C2_NT);
-			PC = SSR + r * sig2hat * alphaT * ((N+T)/(N*T)) * log(N * T/(N+T));	
-			if(BNmin = . | BN[type] < BNmin){
+			BN[4] = ln(SSR) + r * ((N+T)/(N*T))*ln((N*T)/(N+T))
+			BN[5] = ln(SSR) + r * ((N+T)/(N*T))*ln(C2_NT);
+			BN[6] = ln(SSR) + r * ln(C2_NT)/(C2_NT);
+			if(BNmin == . | BN[type] < BNmin){
 				BNmin = BN[type];
 				r_star = r;
 			}
@@ -568,17 +637,19 @@ mata:
 		return(r_star);
 	}
 	real scalar ifete_ERofY(real matrix Y, real scalar rmin, real scalar rmax, real scalar trend){
-		struct ifete_svds scalar tmpsvds;
+		/* the eigenvalue ratio is invariant to the scale of Y, hence trend is irrelevant here */
 		T = rows(Y);
 		N = cols(Y);
 		rmax = min((rmax, N - 1, T - 1));
-		m = min((N, T));
-		eignvals = eigenvalues(Y*(Y')/(N*T));
-		r_star= .;
+		/* eigenvalues of Y*Y'/(N*T), sorted in descending order */
+		eignvals = (svdsv(Y/sqrt(N * T)):^2)';
+		m = cols(eignvals);
+		r_star = rmin;
 		ERmax = .;
-		for(r = rmin; r <= min((rmax, cols(eignvals) - 1)); r++){
-			ER = eignvals[r]/eignvals[r + 1]
-			if(ERmax == . |ER > ERmax){
+		for(r = rmin; r <= min((rmax, m - 1)); r++){
+			if(eignvals[r + 1] <= 0) break;
+			ER = eignvals[r]/eignvals[r + 1];
+			if(ERmax == . | ER > ERmax){
 				ERmax = ER;
 				r_star = r;
 			}
@@ -586,20 +657,20 @@ mata:
 		return(r_star);
 	}
 	real scalar ifete_GRofY(real matrix Y, real scalar rmin, real scalar rmax, real scalar trend){
-		struct ifete_svds scalar tmpsvds;
+		/* the growth ratio is invariant to the scale of Y, hence trend is irrelevant here */
 		T = rows(Y);
 		N = cols(Y);
 		rmax = min((rmax, N - 1, T - 1));
-		m = min((N, T));
-		eignvals = eigenvalues(Y*(Y')/(N*T));
-		r_star= .;
-		GRmax = .
-		for(r = rmin; r <= min((rmax, cols(eignvals) - 1)); r++){
+		/* eigenvalues of Y*Y'/(N*T), sorted in descending order */
+		eignvals = (svdsv(Y/sqrt(N * T)):^2)';
+		m = cols(eignvals);
+		r_star = rmin;
+		GRmax = .;
+		for(r = rmin; r <= min((rmax, m - 2)); r++){
 			V = sum(eignvals[(r + 1)..m]);
-			miustar = eignvals[r]/V;
 			Vplus = sum(eignvals[(r + 2)..m]);
-			miustarplus = eignvals[r + 1]/Vplus;
-			GR = log(1 + miustar)/log(1 + miustarplus)
+			if(V <= 0 | Vplus <= 0) break;
+			GR = ln(1 + eignvals[r]/V)/ln(1 + eignvals[r + 1]/Vplus);
 			if(GRmax == . | GR > GRmax){
 				GRmax = GR;
 				r_star = r;
@@ -613,6 +684,7 @@ mata:
 		N0 = cols(Ytall);
 		T0 = rows(Yrest);
 		rmax = min((rmax, N0 - 1, T0 - 1));
+		if(rmax < rmin) return(rmax);
 		effT = T^(1 + trend);
 		MSPElist = J(1, rmax, .)
 		for(r = rmin; r <= rmax; r++){
@@ -671,12 +743,13 @@ mata:
 	}
 	real scalar ifete_CVofY(real matrix Ytall, real matrix Ywide,  string scalar type, real scalar J, real scalar K, real scalar trend, real scalar rmin, real scalar rmax){
 		struct ifete_svds scalar tmpsvds;
-		N0 = cols(Ytall);
-		T0 = rows(Ywide);
-		rmax = min((rmax, N0 - 1, T0 - 1));
 		if(type == "tall") Y = Ytall; else Y = Ywide;
 		T = rows(Y);
 		N = cols(Y);
+		rmax = min((rmax, cols(Ytall) - 1, rows(Ywide) - 1));
+		if(rmax < rmin) return(rmax);
+		J = min((max((J, 1)), N));
+		K = min((max((K, 1)), T));
 		Tlist = ifete_ranSplitRows(Y, K);
 		Nlist = ifete_ranSplitCols(Y, J);
 		effT = T^(1 + trend);
@@ -684,7 +757,7 @@ mata:
 		for(r = rmin; r <= rmax; r++){
 			tmpsum = 0;
 			for(j = 1; j<= J; j++){
-				tmpsvds = ifete_svd(ifete_dropCols(Y, asarray(Nlist, j))/sqrt(effT*(N0- cols(asarray(Nlist, j)))), r);
+				tmpsvds = ifete_svd(ifete_dropCols(Y, asarray(Nlist, j))/sqrt(effT*(N - cols(asarray(Nlist, j)))), r);
 				F = sqrt(effT) * tmpsvds.U;
 				for(k = 1; k<= K; k++){
 					L = svsolve(ifete_dropRows(F, asarray(Tlist, k)), ifete_dropRows(Y[., asarray(Nlist, j)], asarray(Tlist, k)));
@@ -696,48 +769,57 @@ mata:
 		minindex(MSPElist[., rmin..rmax], 1, r_star, .)
 		return(r_star + rmin - 1);
 	}
-	real matrix ifete_std(real matrix A, real scalar w){
-		res = J(1, cols(A), .);
-		for(i = 1; i <= cols(A); i++) res[., i] = (w == 1 ? sqrt(sum((A[., i]:-mean(A[., i])):^2)/rows(A)) : sqrt(sum((A[., i]:-mean(A[., i])):^2)/(rows(A)- 1)));
-		return(res);
-	}
-	real scalar ifete_rfind(real matrix Ytall, real matrix Ywide, real matrix Yrest, real matrix Xtall, real matrix Xwide, real matrix Xrest, real scalar rmin, real scalar rmax, real scalar wtype, real scalar epsilon, real scalar iter, real scalar trend, real scalar cmax, real scalar step, real scalar nbck, real scalar rcriterion, real scalar iscov, real scalar J, real scalar K){
+	real scalar ifete_rfind(real matrix Ytall, real matrix Ywide, real matrix Yrest, real matrix Xtall, real matrix Xwide, real matrix Xrest, real scalar rmin, real scalar rmax, real scalar epsilon, real scalar iter, real scalar trend, real scalar rcriterion, real scalar iscov, real scalar J, real scalar K){
 		struct ifete_ifes scalar tmp;
-		N = cols(Ytall);
+		N0 = cols(Ytall);
+		N = cols(Ywide);
 		N1 = cols(Yrest);
-		rnew = rmax;
-		rold = 0;
-		i = 0;
+		T0 = rows(Ywide);
+		/* the number of factors must be feasible for both the tall and the wide block */
+		rmaxf = min((rmax, N0 - 1, T0 - 1));
+		if(rmaxf < 1) _error("too few control units or pretreatment periods to estimate any factor");
+		if(rmaxf < rmax) printf("{txt}Note: rmax() is reduced to {res}%g{txt}, the largest number of factors allowed by the tall and wide blocks.\n", rmaxf);
+		rminf = min((rmin, rmaxf));
 		type = "tall";
-		if(J == . & type == "tall") J = cols(Ytall);
-		if(J == . & type == "wide") J = cols(Ywide);
-		if(K == . & type == "tall") K = rows(Ytall);
-		if(K == . & type == "wide") K = rows(Ywide);
-		while (rnew !=rold){
+		if(J == .) J = N0;
+		if(K == .) K = rows(Ytall);
+		J = min((J, N0));
+		K = min((K, rows(Ytall)));
+		st_local("J", strofreal(J));
+		st_local("KK", strofreal(K));
+		/* reuse the same random folds in every round so that the loop below is deterministic */
+		cvstate = rseed();
+		rnew = rmaxf;
+		rold = .;
+		i = 0;
+		while(rnew != rold & i < 20){
 			i = i + 1;
 			rold = rnew;
 			if(iscov){
 				tmp = ifete_ife(Ytall, Xtall, rold, epsilon, iter, trend, 0);
-				Rtall = Ytall - Xtall * (I(N) # tmp.betahat);
+				Rtall = Ytall - Xtall * (I(N0) # tmp.betahat);
+				Rwide = Ywide - Xwide * (I(N) # tmp.betahat);
 				Rrest = Yrest - Xrest * (I(N1) # tmp.betahat);
 			} else {
 				Rtall = Ytall;
+				Rwide = Ywide;
 				Rrest = Yrest;
 			}
-			if(rcriterion == 0) rnew = ifete_LOOofY(Rtall, Rrest, trend, rmin, rmax);
-			if(rcriterion >= 1 & rcriterion <= 6) rnew = ifete_BNofY(Rtall, rmin, rmax, trend, rcriterion);
-			if(rcriterion == 8) rnew = ifete_ERofY(Rtall, rmin, rmax, trend);
-			if(rcriterion == 9) rnew = ifete_GRofY(Rtall, rmin, rmax, trend);
-			if(rcriterion == 10)  {
-				st_local("J", strofreal(J));
-				st_local("KK", strofreal(K));
-				rnew = ifete_CVofY(Ytall, Ywide, type, J, K, trend, rmin, rmax);
+			if(rcriterion == 0) rnew = ifete_LOOofY(Rtall, Rrest, trend, rminf, rmaxf);
+			if(rcriterion >= 1 & rcriterion <= 6) rnew = ifete_BNofY(Rtall, rminf, rmaxf, trend, rcriterion);
+			if(rcriterion == 8) rnew = ifete_ERofY(Rtall, rminf, rmaxf, trend);
+			if(rcriterion == 9) rnew = ifete_GRofY(Rtall, rminf, rmaxf, trend);
+			if(rcriterion == 10){
+				rseed(cvstate);
+				rnew = ifete_CVofY(Rtall, Rwide, type, J, K, trend, rminf, rmaxf);
 			}
+			/* without covariates the criterion does not depend on rold: one round suffices */
+			if(!iscov) rold = rnew;
 		}
-		r_star = rnew;
-		return(r_star);
+		if(rnew != rold) printf("{txt}Warning: the selection of the number of factors did not stabilize in {res}%g{txt} rounds; {res}%g{txt} factors are used.\n", i, rnew);
+		return(rnew);
 	}
-	void ifete(string scalar panelvar, string scalar timevar, string scalar varlist, string scalar treatvar, real scalar rmin, real scalar r, real scalar epsilon, real scalar iter, real scalar reps, real scalar trend, real scalar seed, real scalar cmax, real scalar step, real scalar wtype, real scalar nbck, real scalar rcriterion, real scalar J, real scalar K){
+	void ifete(string scalar panelvar, string scalar timevar, string scalar varlist, string scalar treatvar, real scalar rmin, real scalar r, real scalar epsilon, real scalar iter, real scalar reps, real scalar trend, real scalar seed, real scalar rcriterion, real scalar J, real scalar K){
 		struct ifete_ciers scalar res;
 		data = st_data(., panelvar + " " + timevar + " " + treatvar + " " + varlist);
 		times = uniqrows(data[., 2]);
@@ -746,17 +828,20 @@ mata:
 		info_sum = (info, panelsum(data[., 3], info) :> 0);
 		_sort(info_sum, (3, 1));
 		N = rows(info_sum);
+		N1 = sum(info_sum[., 3]);
+		N0 = N - N1;
+		if(N1 == 0) _error("no treated unit found: the treatment variable is 0 for all observations");
+		if(N0 == 0) _error("no control unit found: every unit is treated in some period");
 		tmp = select(info_sum, info_sum[., 3]);
 		unit_tr = data[tmp[., 1], 1];
 		tmp = select(info_sum, !info_sum[., 3]);
 		unit_ctrl = data[tmp[., 1], 1];
-		N1 = rows(select(info_sum, info_sum[., 3]));
-		N0 = N - N1;
 		time_tr = min(select(data[., 2], data[., 3]));
 		time_pre = times[selectindex(times :< time_tr), .];
 		units = (unit_ctrl \ unit_tr);
 		T0 = sum(times :< time_tr);
 		T1 = T - T0;
+		if(T0 == 0) _error("no pretreatment period found: the treatment starts in the first period");
 		Y = J(T, N, .)
 		for(i = 1; i <= N; i++) Y[., i] = panelsubmatrix(data[., 4], i, info_sum);
 		varnames = tokens(varlist);
@@ -774,20 +859,20 @@ mata:
 		}
 		seed_org = rseed();
 		if(r < 0){
-            rseed(seed);
-			r = -min((-r, N0, T0));
+			rseed(seed);
 			if(iscov){
-				r = ifete_rfind(Y[., 1..N0], Y[1..T0, .], Y[1..T0, (N0 + 1)..N], X[., 1..(p*N0)], X[1..T0, .], X[1..T0, (p*N0+1)..(p*N)], rmin, -r, wtype, epsilon, iter, trend, cmax, step, nbck, rcriterion, iscov, J, K);	
+				r = ifete_rfind(Y[., 1..N0], Y[1..T0, .], Y[1..T0, (N0 + 1)..N], X[., 1..(p*N0)], X[1..T0, .], X[1..T0, (p*N0+1)..(p*N)], rmin, -r, epsilon, iter, trend, rcriterion, iscov, J, K);	
 			}else{
-				r = ifete_rfind(Y[., 1..N0], Y[1..T0, .], Y[1..T0, (N0 + 1)..N],., ., ., rmin, -r, wtype, epsilon, iter, trend, cmax, step, nbck, rcriterion, iscov, J, K);
+				r = ifete_rfind(Y[., 1..N0], Y[1..T0, .], Y[1..T0, (N0 + 1)..N], ., ., ., rmin, -r, epsilon, iter, trend, rcriterion, iscov, J, K);
 			}
 		}
+		else if(r > min((N0 - 1, T0 - 1))) _error(sprintf("r() must not exceed min(T0 - 1, N0 - 1) = %g", min((N0 - 1, T0 - 1))));
 		rseed(seed);
 		res = ifete_cier(Y, X, iscov, T0, N0, r,  epsilon, iter, reps, trend);
-		st_matrixrowstripe("Ftall", (J(rows(times), 1, ""), strofreal(times)));
-		st_matrixrowstripe("Ltall", (J(rows(unit_ctrl), 1, ""), strofreal(unit_ctrl)));
-		st_matrixrowstripe("Fwide", (J(rows(time_pre), 1, ""), strofreal(time_pre)));
-		st_matrixrowstripe("Lwide", (J(rows(units), 1, ""), strofreal(units)));
+		st_matrixrowstripe("Ftall", (J(rows(times), 1, ""), strtrim(strofreal(times, "%18.0g"))));
+		st_matrixrowstripe("Ltall", (J(rows(unit_ctrl), 1, ""), strtrim(strofreal(unit_ctrl, "%18.0g"))));
+		st_matrixrowstripe("Fwide", (J(rows(time_pre), 1, ""), strtrim(strofreal(time_pre, "%18.0g"))));
+		st_matrixrowstripe("Lwide", (J(rows(units), 1, ""), strtrim(strofreal(units, "%18.0g"))));
 		st_matrixcolstripe("Ftall", (J(r, 1, ""), "r":+strofreal(1::r)));
 		st_matrixcolstripe("Ltall", (J(r, 1, ""), "r":+strofreal(1::r)));
 		st_matrixcolstripe("Fwide", (J(r, 1, ""), "r":+strofreal(1::r)));
@@ -805,8 +890,8 @@ mata:
 		st_store(., st_addvar("double", "pred·" :+ varnames[., 1] :+ ("·eq95", "·eq05", "·eq975", "·eq025", "·eq995", "·eq005", "·sy95", "·sy05", "·sy975", "·sy025", "·sy995", "·sy005")), 
 				 data[., 4] :- data_pred[., 1..12])
 		st_store(., st_addvar("double", ("tr·" :+ varnames[., 1] :+ ("·eq05", "·eq95", "·eq025", "·eq975", "·eq005", "·eq995", "·sy05", "·sy95", "·sy025", "·sy975", "·sy005", "·sy995", "·eqpval", "·sypval"))), data_pred);
-		st_local("trunits", invtokens(strofreal(unit_tr')));
-		st_local("ctrlunits", invtokens(strofreal(unit_ctrl')));
+		st_local("trunits", invtokens(strtrim(strofreal(unit_tr', "%18.0g"))));
+		st_local("ctrlunits", invtokens(strtrim(strofreal(unit_ctrl', "%18.0g"))));
 		st_local("depvar", varnames[., 1]);
 		st_local("indepvars", (iscov == 1? invtokens(varnames[., 2..cols(varnames)]) : ""));
 		st_local("rend", strofreal(r));
@@ -814,8 +899,8 @@ mata:
 		st_local("T0", strofreal(T0));
 		st_local("N", strofreal(N));
 		st_local("T", strofreal(T));
-		st_local("dof", strofreal(N0 * T - (p + N0 * r + T * r)));
-		st_local("obs", strofreal(N0 * T));
+		st_local("dof", strtrim(strofreal(N0 * T - (p + N0 * r + T * r), "%18.0g")));
+		st_local("obs", strtrim(strofreal(N0 * T, "%18.0g")));
 		st_local("K", strofreal((iscov? p - 1: 0)))
 		if(iscov) {
 			st_matrix("b", res.betahat');
@@ -826,33 +911,52 @@ mata:
 			st_matrixrowstripe("V", mnames);
 			st_local("indepvars", invtokens(varnames[., 2..cols(varnames)]));
 		}
-		rngstate(seed_org);
+		rseed(seed_org);
 	}
 	void ifete_summary(real matrix data){
 		M = select(data[., 1..2], !data[., 3]);
 		y = M[., 1];
 		pred = M[., 2];
 		MSE = mean((y :- pred) :* (y :- pred));
-		MAE = mean(abs(y :- pred));
 		RMSE = sqrt(MSE);
 		R2 = 1 - sum((y :- pred) :* (y :- pred))/sum((y :- mean(y)) :* (y :- mean(y)));
 		wide = 12;
-		wide = wide < 9 ? 9 : (wide + 67 > st_numscalar("c(linesize)") ? max((st_numscalar("c(linesize)") - 67, 9)) : wide);
-		printf("{hline " + strofreal(wide + 66) + "}\n")	
-		printf(" {txt}%-24uds  =   {res}%8.0f {space "+ strofreal(wide - 9) 
-				+ "}{txt}%-18uds =  {res}%12uds\n",  "Number of Control Units", strtoreal(st_local("N0")), "Size of Tall Block", sprintf("(%s, %s)", st_local("T"), st_local("N0")))
-		printf(" {txt}%-28uds  = {res}%4.0f {space "+ strofreal(wide - 9) 
-				+ "}{txt}%-18uds =  {res}%12uds\n",  "Number of Pretreatment Periods", strtoreal(st_local("T0")), "Size of Wide Block", sprintf("(%s, %s)", st_local("T0"), st_local("N")))
-		printf(" {txt}%-24uds  =   {res}%8.0f {space "+ strofreal(wide - 9) 
-				+ "}{txt}%-18uds =  {res}%12.0f\n",  "Number of Covariates", strtoreal(st_local("K")), "Number of Factors", strtoreal(st_local("rend")))
-		printf(" {txt}%-24uds  =   {res}%8.3f {space "+ strofreal(wide - 9) 
-				+ "}{txt}%-23uds =  {res}%12.5f\n",  "Root Mean Squared Error", RMSE, "Pretreatment {it:R}²", R2)
-		printf("{hline " + strofreal(wide + 66) + "}\n")
-		st_local("MSE", strofreal(MSE));
-		st_local("RMSE", strofreal(RMSE));
-		st_local("R2", strofreal(R2));
+		wide = wide < 9 ? 9 : (wide + 72 > st_numscalar("c(linesize)") ? max((st_numscalar("c(linesize)") - 72, 9)) : wide);
+		printf("{hline " + strofreal(wide + 70) + "}\n")
+		printf(" {txt}%-30uds =   {res}%8.0f {space "+ strofreal(wide - 9)
+			+ "}{txt}%-18uds =  {res}%12uds\n",  "Number of Control Units", strtoreal(st_local("N0")), "Size of Tall Block", sprintf("(%s, %s)", st_local("T"), st_local("N0")))
+		printf(" {txt}%-30uds =   {res}%8.0f {space "+ strofreal(wide - 9)
+			+ "}{txt}%-18uds =  {res}%12uds\n",  "Number of Pretreatment Periods", strtoreal(st_local("T0")), "Size of Wide Block", sprintf("(%s, %s)", st_local("T0"), st_local("N")))
+		printf(" {txt}%-30uds =   {res}%8.0f {space "+ strofreal(wide - 9)
+			+ "}{txt}%-18uds =  {res}%12.0f\n",  "Number of Covariates", strtoreal(st_local("K")), "Number of Factors", strtoreal(st_local("rend")))
+		printf(" {txt}%-30uds =   {res}%8.3f {space "+ strofreal(wide - 9)
+			+ "}{txt}%-23uds =  {res}%12.5f\n",  "Root Mean Squared Error", RMSE, "Pretreatment {it:R}²", R2)
+		printf("{hline " + strofreal(wide + 70) + "}\n")
+		st_local("MSE", strtrim(strofreal(MSE, "%18.0g")));
+		st_local("RMSE", strtrim(strofreal(RMSE, "%18.0g")));
+		st_local("R2", strtrim(strofreal(R2, "%18.0g")));
 	}
 end
 
 * Version history
 * 1.0.0 Submit the initial version of ifete
+* 1.0.1 Bug fixes and input validation:
+*       - ifete_BNofY(): '=' corrected to '==' in the comparison with BNmin, which
+*         previously made pc1-pc3 and ic1-ic3 always return rmax
+*       - ifete_cier(): the wild bootstrap multipliers now use cholesky(SigBW), not its
+*         transpose, so that their covariance matrix is the intended Bartlett one
+*       - ifete_rfind(): the number of factors is now selected from the residualized
+*         matrices under all criteria (cv() previously used the raw outcomes); rmax is
+*         capped at min(N0 - 1, T0 - 1) for every criterion; the loop is bounded and the
+*         cross-validation folds are held fixed across rounds
+*       - ifete_ERofY(), ifete_GRofY(): eigenvalues are obtained from the singular values,
+*         which are sorted in descending order, and the range of r is guarded
+*       - ifete_ife(): the annihilator is applied unit by unit and the variance of the
+*         coefficients is computed from Bai (2009)'s D(F), so that the (NT x NT) and
+*         (NT x (p + N*r + T*r)) matrices are no longer formed
+*       - ifete_quantile(), ifete_pval(): guarded quantile index, p-values capped at 1
+*       - e(mse), e(rmse), e(r2) and e(graph) renamed to match the documentation
+*       - validation of r(), rmin(), rmax(), trend(), bootstrap(), iterate(), tolerance(),
+*         cv(K J) and of the treatment variable; balance is rechecked after if/in
+*       - removed unused code (ifete_std(), the abc branch, the PC criterion, the matrices
+*         beta and variance, and the arguments wtype, cmax, step and nbck)

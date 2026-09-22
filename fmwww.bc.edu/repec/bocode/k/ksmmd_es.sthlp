@@ -56,8 +56,8 @@ ajustados por Bonferroni/Sidak/Holm/FDR{p_end}
 aleatoria de hasta 2.000 observaciones{p_end}
 {synopt:{opt nf:eatures(#)}}numero de random Fourier features (la
 dimension {it:D} de la aproximacion); por defecto {cmd:nfeatures(200)}{p_end}
-{synopt:{opt mmdtype(string)}}{cmd:vspool} (por defecto) o
-{cmd:maxpairwise} -- ver {help ksmmd_es##remarks_mmdtype:Comentarios}{p_end}
+{synopt:{opt mmdtype(string)}}{cmd:vspool} (por defecto),
+{cmd:maxpairwise} o {cmd:fuse} -- ver {help ksmmd_es##remarks_mmdtype:Comentarios}{p_end}
 
 {syntab:Alcance}
 {synopt:{opt ksonly}}salta el calculo de MMD, reporta solo el
@@ -173,11 +173,14 @@ computo proporcional; ver
 
 {phang}
 {opt mmdtype(string)} elige la regla de combinacion k-muestras para
-MMD: {cmd:vspool} (por defecto) o {cmd:maxpairwise}. Ver
+MMD: {cmd:vspool} (por defecto), {cmd:maxpairwise} o {cmd:fuse}. Ver
 {help ksmmd_es##remarks_mmdtype:Comentarios} para las formulas
-exactas, las citas, y por que una tercera opcion de una version
+exactas, las citas, por que una tercera opcion de una version
 anterior ({cmd:pairwise}) se elimino por ser matematicamente redundante
-con {cmd:vspool}.
+con {cmd:vspool}, y el estado de validacion de {cmd:fuse}. {opt bw()}
+se {bf:ignora} si se pasa {cmd:mmdtype(fuse)} -- {cmd:fuse} siempre
+ancla su propia grilla interna de bandwidths en la heuristica de
+mediana.
 
 {dlgtab:Alcance}
 
@@ -198,7 +201,7 @@ exacto), o mientras se explora antes de decidir {opt bw()}/{opt nfeatures()}.
 Los comentarios se presentan bajo los siguientes titulos:
 
 {phang2}{help ksmmd_es##remarks_why:Por que reimplementar kstest en vez de llamarlo}{p_end}
-{phang2}{help ksmmd_es##remarks_mmdtype:mmdtype() -- vspool vs. maxpairwise}{p_end}
+{phang2}{help ksmmd_es##remarks_mmdtype:mmdtype() -- vspool, maxpairwise y fuse}{p_end}
 {phang2}{help ksmmd_es##remarks_rff:MMD via Random Fourier Features}{p_end}
 {phang2}{help ksmmd_es##remarks_weights:Los pesos no son el diseno de encuesta}{p_end}
 {phang2}{help ksmmd_es##remarks_kmd:KMD se evaluo y se descarto}{p_end}
@@ -223,7 +226,7 @@ etiquetas de una secuencia ordenada fija), y elimina un factor
 O(N log N) de cada replica.
 
 {marker remarks_mmdtype}{...}
-{pstd}{bf:mmdtype() -- vspool vs. maxpairwise}
+{pstd}{bf:mmdtype() -- vspool, maxpairwise y fuse}
 
 {pstd}
 {cmd:mmdtype(vspool)} (por defecto):
@@ -265,6 +268,76 @@ Una version anterior de este comando ofrecia una tercera opcion,
 igual a {cmd:vspool} (no solo proporcional -- el mismo numero), asi
 que se elimino por redundante en vez de mantenerla como una tercera
 alternativa ilusoria.
+
+{pstd}
+{cmd:mmdtype(fuse)} (agregada en v0.4) -- MMD-FUSE (Biggs, Schrab &
+Gretton 2023, NeurIPS): en vez de un solo bandwidth elegido por la
+heuristica de mediana, combina el T_MMD de {cmd:vspool} a lo largo de
+una grilla {bf:fija} de cuatro bandwidths (1x, 1.5x, 2x, 3x la
+heuristica de mediana) via un soft-max regularizado por KL, sin pagar
+el costo de una correccion de Bonferroni ni partir la muestra:
+
+{p 8 8 2}T_FUSE = (1/lambda) * log( mean_g[ exp(lambda * T_g) ] ),
+T_g = T_MMD_vspool(bw_g) / sqrt(Nhat(bw_g)){p_end}
+
+{pstd}
+donde {cmd:Nhat(bw)} pone en una escala comun el T_MMD de cada
+bandwidth antes de combinarlos (si no, el bandwidth con features de
+mayor varianza dominaria el log-sum-exp sin que eso refleje mas
+evidencia real). El teorema de calibracion por permutacion (Hemerik &
+Goeman 2018) vale para {bf:cualquier} estadistico fijo, asi que la
+grilla y {cmd:lambda=0.1} no necesitan respaldo de la literatura para
+que el p-valor de permutacion siga siendo exacto bajo la nula -- pero,
+con la misma honestidad que el resto de este comando, esa grilla y ese
+{cmd:lambda} especificos salen de una busqueda sistematica en
+Python/numpy sobre datos simulados durante el desarrollo de este
+paquete ({cmd:sim/prototipo_mmd_fuse*.py}), no de un valor que
+recomiende el paper de MMD-FUSE. Motivo: la potencia de un solo
+bandwidth resulto sensible al {it:tipo} de alternativa (un bandwidth
+muy grande diluye un corrimiento de ubicacion, uno muy chico se ahoga
+en ruido de permutacion) sobre datos reales de produccion -- la grilla
+se eligio para no tener que adivinar ese tipo de antemano. Validada
+para el control de la tasa de error Tipo I (R=20000, sin inflacion,
+los mismos 3 escenarios de peso que el resto de este comando, tanto en
+k=2 como en k=4 -- ver {cmd:sim/resultados_ksmmd_mmd_fuse_2muestras_tipo1.txt}
+y {cmd:sim/resultados_ksmmd_mmd_fuse_4muestras_tipo1.txt}) y, con
+kernel exacto en un prototipo de Python (R=300), fue la {bf:unica} de
+8 grillas x 6 lambdas probadas que se mantuvo robusta a la vez contra
+un corrimiento de ubicacion (50-53% de potencia) Y una diferencia de
+escala/dispersion (89.7-91.3%) -- grillas que ganaban bajo un tipo de
+alternativa se derrumbaban bajo el otro.
+
+{pstd}
+La grilla y {cmd:lambda} {bf:no} son configurables via opciones --
+exponerlas ampliaria la superficie de validacion sin que exista
+todavia evidencia de que otra combinacion sea mejor. {opt bw()} se
+ignora con {cmd:mmdtype(fuse)} por el mismo motivo: la grilla solo
+esta validada anclada en la heuristica de mediana interna. Costo de
+memoria: {cmd:fuse} arma {opt nfeatures()} features aleatorias por
+{bf:cada} uno de sus 4 puntos de grilla (4x la memoria de {cmd:Phi}
+que {cmd:vspool}/{cmd:maxpairwise} con el mismo {opt nfeatures()}).
+
+{pstd}
+{bf:Estado de validacion propio de fuse}: el codigo Mata de {cmd:fuse}
+se escribio sin tener Stata real disponible -- el algebra es la misma
+que ya se valido en Python/numpy -- pero desde entonces se
+{bf:confirmo contra Stata real, en dos escalas}. Escala chica
+({cmd:auto.dta}, Ejemplo 5 de abajo, {cmd:mpg}, {cmd:by(g)
+mmdtype(fuse) reps(500)}): {cmd:T_MMD=0.4980 p=0.7126} sin error,
+mismo orden de magnitud que {cmd:mmdtype(vspool)} sobre los mismos
+datos/pesos (Ejemplo 2: {cmd:T_MMD=0.7422 p=0.5629}). Escala de
+produccion (un outcome real de encuesta por anio, N=141,151 en 4
+grupos, {opt reps(200)} {opt nfeatures(500)} -- 2000 columnas RFF en
+total, 4x {opt nfeatures()} por los 4 puntos de grilla, sin problema
+de memoria en la practica): corrio en 364.97 segundos sin error,
+{cmd:T_MMD=1848.9130 p=0.6617} -- practicamente el mismo p-valor que
+el {cmd:p=0.6667} de {cmd:mmdtype(vspool)} sobre los mismos
+datos/seed, y el post-hoc pairwise de {cmd:fuse} muestra el mismo
+patron cualitativo que el de {cmd:vspool} (ningun par significativo
+despues de corregir por comparaciones multiples, a diferencia del
+post-hoc de KS, que si encuentra al anio mas reciente distinto de los
+otros tres). Sin errores de sintaxis ni de indexado en ninguna de las
+dos escalas.
 
 {marker remarks_rff}{...}
 {pstd}{bf:MMD via Random Fourier Features}
@@ -398,6 +471,13 @@ rapida:{p_end}
 {phang2}{cmd:* Ejemplo 4: ksonly}{p_end}
 {phang2}{cmd:. ksmmd mpg [aweight=wgt], by(g) ksonly reps(200)}{p_end}
 
+{pstd}
+{bf:Ejemplo 5: fuse}, combinando una grilla de bandwidths en vez de
+uno solo (ver {help ksmmd_es##remarks_mmdtype:Comentarios} para su
+estado de validacion antes de usarlo en produccion):{p_end}
+{phang2}{cmd:* Ejemplo 5: fuse}{p_end}
+{phang2}{cmd:. ksmmd mpg [aweight=wgt], by(g) mmdtype(fuse) reps(500)}{p_end}
+
 
 {marker results}{...}
 {title:Resultados almacenados}
@@ -417,7 +497,7 @@ rapida:{p_end}
 
 {p2col 5 20 24 2: Macros}{p_end}
 {synopt:{cmd:r(by)}}nombre de la variable {opt by()}{p_end}
-{synopt:{cmd:r(mmdtype)}}{cmd:vspool} o {cmd:maxpairwise}{p_end}
+{synopt:{cmd:r(mmdtype)}}{cmd:vspool}, {cmd:maxpairwise} o {cmd:fuse}{p_end}
 
 {p2col 5 20 24 2: Matrices}{p_end}
 {synopt:{cmd:r(pairwise_ks)}}tabla de a pares para KS (si {opt posthoc}
@@ -442,6 +522,15 @@ Gretton, A., Borgwardt, K.M., Rasch, M.J., Scholkopf, B., Smola, A.
 {pstd}
 Rahimi, A., Recht, B. (2007). Random Features for Large-Scale Kernel
 Machines. {it:NeurIPS} 20.
+
+{pstd}
+Biggs, F., Schrab, A., Gretton, A. (2023). MMD-FUSE: Learning and
+Combining Kernels for Two-Sample Testing Without Data Splitting.
+{it:NeurIPS} 36. arXiv:2306.08777.
+
+{pstd}
+Hemerik, J., Goeman, J.J. (2018). Exact testing with random
+permutations. {it:Test} 27(4), 811-825.
 
 {pstd}
 Sutherland, D.J., Schneider, J. (2015). On the Error of Random Fourier
@@ -515,6 +604,16 @@ contra Stata real (sin Stata disponible en el entorno donde se
 escribio) -- ver la nota de v0.3 y la advertencia cerca del inicio de
 {cmd:ksmmd.ado} para los pasos de validacion pendientes antes de
 confiar en el en produccion.
+
+{pstd}
+La version 0.4 agrega {cmd:mmdtype(fuse)} (MMD-FUSE). Su control de la
+tasa de error Tipo I se valido a R=20000 via una reimplementacion
+separada en Python/numpy de la misma algebra (k=2 y k=4, ver
+{help ksmmd_es##remarks_mmdtype:Comentarios}). El codigo Mata en si ya
+se confirmo contra Stata real tanto a escala chica ({cmd:auto.dta})
+como de produccion (N=141,151, 4 grupos, {opt reps(200)}
+{opt nfeatures(500)}, 364.97 segundos, sin error) -- ver
+{help ksmmd_es##remarks_mmdtype:Comentarios} para ambos resultados.
 
 {pstd}
 Codigo fuente: {browse "https://github.com/atalaveracuya/svylet"}.

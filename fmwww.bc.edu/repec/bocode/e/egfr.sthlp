@@ -1,7 +1,7 @@
 {smcl}
-{* *! version 2.02  03aug2021}{...}
+{* *! version 3.0  20sep2026}{...}
 {hline}
-help for {cmd:egfr}{right:Version 2.02, 3 August 2021}
+help for {cmd:egfr}{right:Version 3.0, 20 September 2026}
 {hline}
 
 {title:Title}
@@ -18,8 +18,7 @@ and/or cystatin C and other variables
 {synoptset 22 tabbed}{...}
 {synopthdr}
 {synoptline}
-{synopt:{opt f:ormula(formula_name)}}formula to use. Supported formulae are {bf:mdrd4} (the
-default), {bf:mdrd6}, {bf:ckdepi}, {bf:ckdepi_cyc}, {bf:ckdepi_cr_cyc}, {bf:mayo}, {bf:cg},
+{synopt:{opt f:ormula(formula_name)}}formula to use. Supported formulae are {bf:mdrd4}, {bf:mdrd6}, {bf:ckdepi}, {bf:ckdepi_cyc}, {bf:ckdepi_cr_cyc}, {bf:ckdepi2021}, {bf:ckdepi2021_cr_cyc}, {bf:mayo}, {bf:cg},
 {bf:nankivell} and {bf:schwartz}{p_end}
 {synopt:{opth cr:eatinine(varname)}}serum creatinine{p_end}
 {synopt:{opth cy:statinc(varname)}}serum cystatin C in mg/L{p_end}
@@ -78,6 +77,14 @@ option is used.
 {bf:ckdepi_cr_cyc} CKD-EPI creatinine-cystatin C formula. This formula requires the {it:creatinine},
 {it:cystatinc}, {it:age} and {it:female} options to be specified. Subjects are assumed to be
 non-black unless the {it:black} option is also specified. Standardised serum creatinines are assumed.
+
+{pmore}
+{bf:ckdepi_2021} 2021 CKD-EPI creatinine-only race-free formula. This formula requires the {it:creatinine},
+{it:age} and {it:female} options to be specified. Standardised serum creatinines are assumed.
+
+{pmore}
+{bf:ckdepi2021_cr_cyc} 2021 CKD-EPI creatinine-cystatin C race-free formula. This formula requires the {it:creatinine},
+{it:cystatinc}, {it:age} and {it:female} options to be specified. Standardised serum creatinines are assumed.
 
 {pmore}
 {bf:mayo} Mayo quadratic formula. This formula requires the {it:age} and {it:female} options to be 
@@ -234,6 +241,29 @@ females and 0.9 for males, {it:a} is -0.248 for females and -0.207 for males, an
 years{p_end}
 
 
+{phang}{bf:2021 CKD-EPI creatinine-only race-free equation} (Inker et al 2021):{p_end}
+
+{pmore}eGFR = 142
+x min({it:Cr}/{it:K}, 1)^{it:a} x max({it:Cr}/{it:K}, 1)^-1.200
+x 0.9938^{it:age} x 1.012 if female
+
+{pmore}where {it:Cr} is creatinine in mg/dL, {it:CyC} is cystatin C in mg/L, {it:K} is 0.7 for
+females and 0.9 for males, {it:a} is -0.241 for females and -0.302 for males, and {it:age} is age in
+years{p_end}
+
+
+{phang}{bf:2021 CKD-EPI creatinine-cystatic C race-free equation} (Inker et al 2021):{p_end}
+
+{pmore}eGFR = 135
+x min({it:Cr}/{it:K}, 1)^{it:a} x max({it:Cr}/{it:K}, 1)^-0.544
+x min({it:CyC}/0.8, 1)^-0.323 x max({it:CyC}/0.8, 1)^-0.778
+x 0.9961^{it:age} x 0.963 if female
+
+{pmore}where {it:Cr} is creatinine in mg/dL, {it:CyC} is cystatin C in mg/L, {it:K} is 0.7 for
+females and 0.9 for males, {it:a} is -0.219 for females and -0.144 for males, and {it:age} is age in
+years{p_end}
+
+
 {phang}{bf:Mayo quadratic formula} (Rule et al 2004):{p_end}
 
 {pmore}If {it:Cr}>=0.8 mg/dL:{p_end}
@@ -279,12 +309,15 @@ urea in mmol/L and {it:height} is height in cm{p_end}
 
 {phang}Brion LP, Fleischman AR, McCarton C, Schwartz GJ. A simple estimate of glomerular filtration
 rate in low birth weight infants during the first year of life: noninvasive assessment of body
-composition and growth. J Pediatr. 1986 Oct.;109(4):698Ð707.{p_end}
+composition and growth. J Pediatr. 1986 Oct.;109(4):698-707.{p_end}
 {phang}Cockcroft DW, Gault MH. Prediction of creatinine clearance from serum creatinine.
 Nephron. 1976;16(1):31-41.{p_end}
 {phang}Inker LA, Schmid CH, Tighiouart H, Eckfeldt JH, Feldman HI, Greene T, et al. Estimating
 glomerular filtration rate from serum creatinine and cystatin C.
-N Engl J Med. 2012 Jul 5;367(1):20Ð9.{p_end}
+N Engl J Med. 2012 Jul 5;367(1):20-29.{p_end}
+{phang}Inker LA, Eneanya ND, Coresh J, Tighiouart H, Wang D, Sang Y, et al.
+New Creatinine- and Cystatin C-Based Equations to Estimate GFR without Race.
+N Engl J Med. 2021 Nov 3;385(19):1737-49. doi:10.1056/NEJMoa2102953{p_end}
 {phang}Levey AS, Bosch JP, Lewis JB, Greene T, Rogers N, Roth D. A more accurate method to estimate
 glomerular filtration rate from serum creatinine: a new prediction equation.
 Modification of Diet in Renal Disease Study Group.

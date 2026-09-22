@@ -1,0 +1,19 @@
+d 'DBCRP': module per data directa del BCRP para Stata
+d
+d      dbcrp es un comando nativo para Stata que permite descargar,
+d limpiar y estructurar series	  de tiempo macroeconómicas
+d directamente desde el API del Banco Central de Reserva del Perú 
+d   (BCRP). 
+d
+d KW: data management
+d KW: Central Bank of Peru
+d
+d Requires: Stata version 15 
+d
+d Distribution-Date: 20260921
+d
+d Author: Anthony Facundo Huaynate Onofre,  NA
+d Support: email anthony1928sacred@@gmail.com
+d
+f dbcrp.ado
+f dbcrp.sthlp

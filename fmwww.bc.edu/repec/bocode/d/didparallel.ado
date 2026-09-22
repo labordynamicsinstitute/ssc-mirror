@@ -1,17 +1,33 @@
-*! didparallel 1.1.0 2026/06/29 Guanpeng Yan, Qiang Chen
+*! didparallel 1.2.0 2026/07/14 Guanpeng Yan, Qiang Chen
 prog def didparallel, eclass
 	version 16
-    qui xtset
-    if "`r(panelvar)'" == "" | "`r(timevar)'" == "" {
+	qui xtset
+	if "`r(panelvar)'" == "" | "`r(timevar)'" == "" {
 		di as err "panel variable or time variable missing, please use -{bf:xtset} {it:panelvar} {it:timevar}"
 		exit 198
-    }
-	syntax anything, TREATVar(varname) [BASEperiod(integer -1) range(numlist min=2 max=2 integer missingokay) frame(string) noFIGure SAVEGraph(string) noOmit]
+	}
+	syntax anything, TREATVar(varname) [BASEperiod(integer -1) range(numlist min=2 max=2 integer missingokay) frame(string) noFIGure SAVEGraph(string) noOmit CALendar TRend]
 	loc panelvar "`r(panelvar)'"
-    loc timevar "`r(timevar)'"
+	loc timevar "`r(timevar)'"
 	local graphlist = ""
+**# Check range()
 	if "`range'" ==  "" {
 		loc range ". ."
+	}
+	tokenize "`range'"
+	loc rlo "`1'"
+	loc rhi "`2'"
+	if "`rlo'" != "." {
+		if `rlo' >= 0 {
+			di as err "invalid {bf:range()} -- the first value must be a negative integer or a missing value {bf:.}"
+			exit 198
+		}
+	}
+	if "`rhi'" != "." {
+		if `rhi' <= 0 {
+			di as err "invalid {bf:range()} -- the second value must be a positive integer or a missing value {bf:.}"
+			exit 198
+		}
 	}
 **# Check estimation
 	cap qui estimates restore `anything'
@@ -24,6 +40,9 @@ prog def didparallel, eclass
 		loc estimatename "`anything'"
 		loc cmd "`e(cmd)'"
 		loc cmdline "`e(cmdline)'"
+		loc depvar "`e(depvar)'"
+		tempvar touse
+		qui gen byte `touse' = e(sample)
 	}
 **# Check treatvar()
 	cap confirm numeric var `treatvar'
@@ -47,14 +66,71 @@ prog def didparallel, eclass
 	preserve
 	mata: didparallel(data, "`panelvar'", "`timevar'", "`treatvar'", "`cmdline'", strtoreal(tokens("`range'")), "`frame'", `baseperiod', ("`omit'"!= "" ? 0 : 1))
 	restore
+**# Set up the horizontal axis
+	if "`calendar'" != "" {
+		if `ngroup' > 1 {
+			di as err "option {bf:calendar} requires a common treatment timing, but `ngroup' distinct treatment cohorts are detected"
+			exit 198
+		}
+		loc tlab : var label `timevar'
+		if `"`tlab'"' == "" loc tlab "`timevar'"
+		loc xlab `"`xlabelc'"'
+		loc xti `"`tlab'"'
+	}
+	else {
+		loc xlab `"`xlabel'"'
+		loc xti "number of periods since the treatment onset"
+	}
 	frame `frame'{
 		twoway  ///
 		(rcap ul ll time) ///
 		(connected b time, msymbol(O)) ///
-		, xlabel(`xlabel', nogrid)  ylabel(, nogrid) xline(`xline', lp(dot)) ///
-		yline(0, lp(dot)) xtitle("number of periods since the treatment onset") ytitle("dynamic treatment effects") ///
+		, xlabel(`xlab', nogrid)  ylabel(, nogrid) xline(`xline', lp(dot)) ///
+		yline(0, lp(dot)) xtitle(`"`xti'"') ytitle("dynamic treatment effects") ///
 		legend(order(2 "Point Estimate" 1 "95% Confidence Interval") position(6) rows(1)) nodraw name(parallel, replace)
 		local graphlist = "`graphlist' parallel"
+	}
+**# Compare the raw trends of the treatment and control groups
+	if "`trend'" != "" {
+		if `ngroup' > 1 {
+			di as err "option {bf:trend} requires a common treatment timing, but `ngroup' distinct treatment cohorts are detected"
+			exit 198
+		}
+		if "`depvar'" == "" {
+			di as err "the dependent variable can not be retrieved from {bf:e(depvar)}, option {bf:trend} is not available"
+			exit 198
+		}
+		if "`framename'" != "" {
+			loc ftrend "`framename'_trend"
+			cap frame drop `ftrend'
+		}
+		else tempname ftrend
+		qui frame put `panelvar' `timevar' `treatvar' `depvar' if `touse', into(`ftrend')
+		loc dlab : var label `depvar'
+		if `"`dlab'"' == "" loc dlab "`depvar'"
+		loc tlab : var label `timevar'
+		if `"`tlab'"' == "" loc tlab "`timevar'"
+		loc cut = `gfirst' - 0.5
+		frame `ftrend'{
+			tempvar ever mdep rel
+			qui gen double `rel' = `timevar' - `gfirst'
+			if "`rlo'" != "." qui drop if `rel' < `rlo'
+			if "`rhi'" != "." qui drop if `rel' > `rhi'
+			if _N == 0 {
+				di as err "no observation remains within {bf:range()}, option {bf:trend} is not available"
+				exit 2000
+			}
+			qui egen byte `ever' = max(`treatvar'), by(`panelvar')
+			qui collapse (mean) `mdep' = `depvar', by(`ever' `timevar')
+			twoway ///
+			(connected `mdep' `timevar' if `ever' == 1, msymbol(O)) ///
+			(connected `mdep' `timevar' if `ever' == 0, msymbol(T) lp(dash)) ///
+			, xlabel(, nogrid) ylabel(, nogrid) xline(`cut', lp(dot)) ///
+			xtitle(`"`tlab'"') ytitle(`"mean of `dlab'"') ///
+			legend(order(1 "Treatment Group" 2 "Control Group") position(6) rows(1)) nodraw name(trend, replace)
+		}
+		local graphlist = "`graphlist' trend"
+		ereturn loc frame_trend "`ftrend'"
 	}
 	cap local graphlist = strltrim("`graphlist'")
 **# Display and save graphs
@@ -71,7 +147,6 @@ prog def didparallel, eclass
 	ereturn loc frame "`framename'"
 	cap ereturn loc graph "`graphlist'"
 end
-
 program didparallel_SaveGraph
 	version 16
 	preserve
@@ -81,5 +156,6 @@ program didparallel_SaveGraph
 	}
 end
 * Version history
+* 1.2.0 Add the calendar option for calendar time axis and the trend option for raw group trends
 * 1.1.0 Optimize ldidparallel.mlib to improve computation speed
 * 1.0.0 Submit the initial version

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0 16 Mar 2026}{...}
+{* *! version 1.0.1 03 Sep 2026}{...}
 {cmd:help ifete} 
 {hline}
 {vieweralsosee "" "--"}{...}
@@ -33,7 +33,7 @@
 {synopt:{opt r(#)}}number of factors{p_end}
 {synopt:{opt iter:ate(#)}}maximum number of iterations{p_end}
 {synopt:{opt tol:erance(tol)}}tolerance criterion for convergence{p_end}
-{synopt:{cmdab: trend}({{bf:0}|{bf:1})}}indicator of nonstationary trend{p_end}
+{synopt:{cmdab:trend}({c -(}{bf:0}|{bf:1}{c )-})}indicator of nonstationary trends{p_end}
 {synopt:{opt boots:trap(#)}}number of bootstrap samples{p_end}
 {synopt:{opth seed(int)}}seed used by the random number generator{p_end}
 
@@ -43,13 +43,13 @@
 {synopt:{opt rmax(#)}}maximum number of factors{p_end}
 
 {syntab:Reporting}
-{synopt:{cmdab: cit:ype}({{bf:eq}|{bf:sy})}}type of reported confidence interval{p_end}
+{synopt:{cmdab:cit:ype}({c -(}{bf:eq}|{bf:sy}{c )-})}type of reported confidence interval{p_end}
 {synopt:{opt frame(framename)}}create a Stata frame storing generated variables.{p_end}
 {synopt:{opt nofig:ure}}do not display figures{p_end}
 {synopt:{cmdab:saveg:raph}({it:prefix}, [{cmdab:asis} {cmdab:replace}])}save all produced graphs to the current path.{p_end}
 {synoptline}
 {p2colreset}{...}
-{p 4 6 2}{helpb xtset} {it:panelvar} {it:timevar} must be used to declare a strongly panel dataset in the usual long form; see {manhelp xtset XT:xtset}.{p_end}
+{p 4 6 2}{helpb xtset} {it:panelvar} {it:timevar} must be used to declare a balanced panel dataset in the usual long form; see {manhelp xtset XT:xtset}.{p_end}
 {p 4 6 2}{depvar} and {indepvars} must be numeric variables, and abbreviations are not allowed.{p_end}
 
 {marker description}{...}
@@ -69,7 +69,7 @@ See Yan et al. (2026) for details.
 {p 4 4 2}
 The outcome variable {depvar} and treatment variable {it:treatvarname} must be specified. Covariates {indepvars} can be included to improve the efficiency of estimation. 
 If {it:treatvarname} indicates staggered treatments (i.e., differential initial treatment timing for different units), 
-{cmd:ifete} automatically identifies the number of pretreatment periods when all units are untreated as {it:T0} (the height of the wide block) and the number of control units as {it:N0} (the width of the tall block).
+{cmd:ifete} automatically identifies the number of pretreatment periods when all units are untreated as {it:T0} (the height of the "wide block") and the number of control units as {it:N0} (the width of the "tall block").
 
 {phang}
 {opt treatvar(treatvarname)} specifies a binary treatment variable indicating whether units are exposed to the treatment of interest in given periods. 
@@ -154,8 +154,9 @@ It is recommended to further increase {opt rmax(#)} if it turns out to be the sa
 {dlgtab:Reporting}
 
 {phang}
-{cmdab: citype}({{bf:eq}|{bf:sy}}) specifies the type of reported confidence intervals of predicted outcomes and treatment effects. 
-{cmdab: citype}({bf:eq}) corresponds to the equal tailed confidence interval, and {cmdab: citype}({bf:sy}) corresponds to the symmetric confidence interval. The default is {cmdab: citype}({bf:eq}).
+{cmdab:cit:ype}({c -(}{bf:eq}|{bf:sy}{c )-}) specifies the type of reported confidence intervals of predicted outcomes and treatment effects. 
+{cmdab:cit:ype}({bf:eq}) corresponds to the equal tailed confidence interval, and {cmdab:cit:ype}({bf:sy}) corresponds to the symmetric confidence interval. 
+The default is {cmdab:cit:ype}({bf:eq}).
 
 {phang}
 {opt frame(framename)} creates a Stata frame storing generated variables including counterfactual predictions, treatment effects, 90%, 95%, 99% confidence intervals of predicted outcomes and treatment effects, 
@@ -190,7 +191,7 @@ Note that this option only applies when {opt nofigure} is not specified.
 {phang2}* Change back to the default Stata frame{p_end}
 {phang2}{cmd:. frame change default}{p_end}
 
-{title:Example 2: estimating the effect of California's tobacco control program (Abadie, Diamond, and Hainmueller 2010)}
+{title:Example 2: estimating the effect of California's tobacco control program (Abadie et al., 2010)}
 
 {phang2}{cmd:. use smoking2, clear}{p_end}
 {phang2}{cmd:. xtset state year}{p_end}
@@ -199,7 +200,7 @@ Note that this option only applies when {opt nofigure} is not specified.
 {phang2}{cmd:. panelview cigsale ctcp, i(state) t(year) type(treat)}{p_end}
 
 {phang2}* Implement factor-based estimation for a model with covariates and a nonstationary trend using eigenvalue ratio criterion ({bf:er}){p_end}
-{phang2}{cmd:. ifete cigsale lnincome eduattain poverty, treatvar(ctcp) trend(1) rmethod(er)}{p_end}
+{phang2}{cmd:. ifete cigsale lnincome eduattain poverty, treatvar(ctcp) trend(1) rmethod(er) iterate(2000)}{p_end}
 
 {phang2}* List the names and values of the macros, scalars and matrix stored in e(){p_end}
 {phang2}{cmd:. ereturn list}{p_end}
@@ -208,7 +209,7 @@ Note that this option only applies when {opt nofigure} is not specified.
 {title:Stored results}
 
 {pstd}
-{cmd:rcm} stores the following in e():
+{cmd:ifete} stores the following in e():
 
 {synoptset 20 tabbed}{...}
 {p2col 5 20 24 2: Scalars}{p_end}
@@ -230,7 +231,7 @@ Note that this option only applies when {opt nofigure} is not specified.
 {synopt:{cmd:e(panelvar)}}name of panel variable{p_end}
 {synopt:{cmd:e(timevar)}}name of time variable{p_end}
 {synopt:{cmd:e(varlist)}}names of dependent variable and independent variables{p_end}
-{synopt:{cmd:e(depvar)}}names of dependent variable{p_end}
+{synopt:{cmd:e(depvar)}}name of dependent variable{p_end}
 {synopt:{cmd:e(indepvars)}}names of independent variables{p_end}
 {synopt:{cmd:e(trend)}}indicator for the presence of nonstationary trends{p_end}
 {synopt:{cmd:e(cmd)}}{bf:ifete}{p_end}

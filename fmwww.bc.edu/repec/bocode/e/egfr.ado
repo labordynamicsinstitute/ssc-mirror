@@ -2,9 +2,11 @@
 * creatinine/cystatin C +/- age, sex, height & weight, urea, albumin etc
 * phil clayton, phil@anzdata.org.au
 
-*! -egfr- version 2.02	Phil Clayton	2021-08-03
+*! -egfr- version 3.0	Phil Clayton	2026-09-20
 
 * version history:
+* 3.0	CKD-EPI race-free formulae (2021 update)
+*		No longer have a default formula
 * 2.02	Fixed typo in help file
 * 2.01	Fixed problem whereby default formula not allowed
 * 2.0	Support CKD-EPI CyC equations
@@ -29,8 +31,8 @@ capture program drop egfr
 program define egfr, rclass
 	version 12
 	syntax [if] [in], ///
-			[Formula(string)				/// which formula to use (default 4-variable MDRD)
-			CReatinine(varname numeric)		/// serum creatinine
+			Formula(string)					/// which formula to use
+			[CReatinine(varname numeric)	/// serum creatinine
 			CYstatinc(varname numeric)		/// serum cystatin C
 			FEMale(string asis)				/// expression true when subject is female
 			age(varname numeric)			/// age in years
@@ -45,15 +47,10 @@ program define egfr, rclass
 			Generate(name)					/// new variable (default is -egfr_formulaname-)
 			replace]						//  replace existing variable
 	
-	* default formula is mdrd 4 variable
-	if "`formula'"=="" {
-		di "Calculating eGFR using 4-variable MDRD formula"
-		local formula="mdrd4"
-	}
-
 	* check formula is known
-	if !inlist("`formula'", "mdrd4", "mdrd6", "ckdepi", ///
-		"ckdepi_cyc", "ckdepi_cr_cyc", "mayo", "cg", "nankivell", "schwartz") {
+	if !inlist("`formula'", "mdrd4", "mdrd6", "ckdepi", "ckdepi_cyc", ///
+		"ckdepi_cr_cyc", "ckdepi2021", "ckdepi2021_cr_cyc") & ///
+		!inlist("`formula'", "mayo", "cg", "nankivell", "schwartz") {
 		di in re "Unrecognised formula: `formula'"
 		error 498
 	}
@@ -101,7 +98,7 @@ program define egfr, rclass
 
 	* MDRD (4 variable)
 	* refs: Levey et al. J Am Soc Nephrol. 2000;11(11):155A
-	*       Levey et al. Ann Intern Med. 2006 Aug 15;145(4):247�54
+	*       Levey et al. Ann Intern Med. 2006 Aug 15;145(4):247–54
 	if "`formula'"=="mdrd4" {
 		if "`creatinine'"=="" | "`age'"=="" | "`female'"=="" {
 			di in re "4-variable MDRD formula requires creatinine, age and female options"
@@ -123,7 +120,7 @@ program define egfr, rclass
 
 	* MDRD (6 variable)
 	* refs: Levey et al. Ann Intern Med. 1999 Mar. 16;130(6):461-470
-	*       Levey et al. Ann Intern Med. 2006 Aug 15;145(4):247�54
+	*       Levey et al. Ann Intern Med. 2006 Aug 15;145(4):247–54
 	if "`formula'"=="mdrd6" {
 		if "`creatinine'"=="" | "`age'"=="" | "`female'"=="" | "`urea'"=="" | "`albumin'"=="" {
 			di in re "6-variable MDRD formula requires creatinine, age, female, urea and albumin options"
@@ -166,7 +163,7 @@ program define egfr, rclass
 	}
 
 	* CKD-EPI cystatin C formula
-	* ref: Inker et al, N Engl J Med. 2012 Jul 5;367(1):20�9
+	* ref: Inker et al, N Engl J Med. 2012 Jul 5;367(1):20–9
 	if "`formula'"=="ckdepi_cyc" {
 		if "`cystatinc'"=="" | "`age'"=="" | "`female'"=="" {
 			di in re "CKD-EPI cystatin C formula requires cystatinc, age and female options"
@@ -181,7 +178,7 @@ program define egfr, rclass
 	}
 
 	* CKD-EPI creatinine plus cystatin C formula
-	* ref: Inker et al, N Engl J Med. 2012 Jul 5;367(1):20�9
+	* ref: Inker et al, N Engl J Med. 2012 Jul 5;367(1):20–9
 	if "`formula'"=="ckdepi_cr_cyc" {
 		if "`creatinine'"=="" | "`cystatinc'"=="" | "`age'"=="" | "`female'"=="" {
 			di in re "CKD-EPI creatinine-cystatin C formula requires creatinine, cystatinc, age and female options"
@@ -197,6 +194,49 @@ program define egfr, rclass
 			cond(`fsex', 0.969, 1, .) * cond(`blk', 1.08, 1, .)
 		
 		local newvarlab="eGFR (CKD-EPI creatinine-cystatin C formula)"
+	}
+
+	* CKD-EPI 2021 creatinine formula
+	* ref: Inker LA et al. NEJM 2021 Nov 3;385(19):1737–49. doi:10.1056/NEJMoa2102953
+	if "`formula'"=="ckdepi2021" {
+		if "`creatinine'"=="" | "`age'"=="" | "`female'"=="" {
+			di in re "CKD-EPI 2021 creatinine formula requires creatinine, age and female options"
+			error 498
+		}
+		
+		if "`standard'"=="" {
+			di "Assuming creatinines are standardised. If not, CKD-EPI formula is not valid."
+		}
+
+		qui gen     `egfr' = 142*(`crmgdl'/0.7)^(-0.241)*0.9938^`age'*1.012 if `fsex'==1 & `crmgdl'<=0.7
+		qui replace `egfr' = 142*(`crmgdl'/0.7)^(-1.2)*0.9938^`age'*1.012 if `fsex'==1 & `crmgdl'>0.7
+		qui replace `egfr' = 142*(`crmgdl'/0.9)^(-0.302)*0.9938^`age' if `fsex'==0 & `crmgdl'<=0.9
+		qui replace `egfr' = 142*(`crmgdl'/0.9)^(-1.2)*0.9938^`age' if `fsex'==0 & `crmgdl'>0.9
+		
+		local newvarlab="eGFR (CKD-EPI 2021 creatinine formula)"
+	}
+
+	* CKD-EPI 2021 creatinine plus cystatin C formula
+	* ref: Inker LA et al. NEJM 2021 Nov 3;385(19):1737–49. doi:10.1056/NEJMoa2102953
+	if "`formula'"=="ckdepi2021_cr_cyc" {
+		if "`creatinine'"=="" | "`cystatinc'"=="" | "`age'"=="" | "`female'"=="" {
+			di in re "CKD-EPI 2021 creatinine formula requires creatinine, cystatinc, age and female options"
+			error 498
+		}
+		
+		if "`standard'"=="" {
+			di "Assuming creatinines are standardised. If not, CKD-EPI formula is not valid."
+		}
+
+		qui gen `egfr' = 135 * ///
+			min(`crmgdl'/cond(`fsex', 0.7, 0.9, .), 1)^cond(`fsex', -0.219, -0.144, .) * ///
+			max(`crmgdl'/cond(`fsex', 0.7, 0.9, .), 1)^(-0.544) * ///
+			min(`cystatinc'/0.8 , 1)^(−0.323) * ///
+			max(`cystatinc'/0.8 , 1)^(−0.778) * ///
+			0.9961^`age' * ///
+			cond(`fsex', 0.963, 1, .)
+		
+		local newvarlab="eGFR (CKD-EPI 2021 creatinine-cystatin C formula)"
 	}
 
 	* Mayo quadratic formula

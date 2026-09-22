@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.0.0  16apr2026  GuanpengYan}{...}
+{* *! version 1.2.0  14jul2026  GuanpengYan}{...}
 {viewerjumpto "Syntax" "didparallel##syntax"}{...}
 {viewerjumpto "Description" "didparallel##description"}{...}
 {viewerjumpto "Options" "didparallel##options"}{...}
@@ -33,6 +33,8 @@
 {synopt:{cmdab:range(}{it:# #}{cmd:)}}range of lags and leads to consider in event study{p_end}
 {synopt:{cmdab:frame(}{it:framename}{cmd:)}}name of the Stata frame to store results{p_end}
 {synopt:{cmdab:noo:mit}}include omitted (base period) coefficients in the graph{p_end}
+{synopt:{cmdab:cal:endar}}use calendar time rather than relative time on the horizontal axis{p_end}
+{synopt:{cmdab:tr:end}}plot the raw trends of the treatment and control groups{p_end}
 {synopt:{opt nofig:ure}}do not display figures{p_end}
 {synopt:{cmdab:saveg:raph}({it:prefix}, [{cmdab:asis} {cmdab:replace}])}save all produced graphs to the current path.{p_end}
 {synoptline}
@@ -46,8 +48,14 @@
 {pstd}
 {cmd:didparallel} provides an easy implementation of event study for difference-in-differences (DID) models, 
 where policy adoption may be synchronized or staggered. It only takes three simple steps: 
-(1) estimate the DID model; (2) store the result; 
+(1) estimate the static DID model; (2) store the result; 
 and (3) run {cmd:didparallel} by specifying the stored result and the treatment variable.
+
+{pstd}
+{bf:Note:} For the staggered adoption design, 
+event study estimators are only consistent under the strong assumption of homogeneous (constant) treatment effects. 
+In the case of heterogeneous (time-varying) treatment effects under the staggered adoption design, 
+event study estimators are generally biased (Sun and Abraham, 2021).
 
 {marker options}{...}
 {title:Options}
@@ -97,7 +105,7 @@ where units start treatment in different periods ({bf:x} denotes a treated obser
 {dlgtab:Optional}
 
 {phang}
-{cmdab:base:period(}{it:#}{cmd:)} specifies the reference period as a negative integer, which defaults to -1.
+{cmdab:baseperiod(}{it:#}{cmd:)} specifies the reference period as a negative integer, which defaults to -1.
 The reference period is dropped from the estimation to avoid perfect multicollinearity.
 
 {phang}
@@ -112,8 +120,17 @@ possible lags and leads.
 The frame named {it:framename} is replaced if it already exists, and created if not. 
 
 {phang}
-{cmdab:noomit} keeps coefficients that Stata drops due to perfect collinearity in the plot. 
+{opt noomit} keeps coefficients that Stata drops due to perfect collinearity in the plot. 
 By default, these omitted coefficients are excluded from the graph.
+
+{phang}
+{opt calendar} labels the horizontal axis of the event study plot with calendar time instead of the number of periods relative to the treatment onset. 
+This option is only available for the standard DID model.
+
+{phang}
+{opt trend} plots the trends of the outcome variable for the treatment group and the control group, 
+where the group means are computed period by period over the estimation sample. 
+This option is only available for the standard DID model.
 
 {phang}
 {opt nofigure} do not display figures. The default is to display all figures from parallel trend test if available.
@@ -127,7 +144,26 @@ for details, see {manhelp graph G-2: graph save}.
 Note that this option only applies when {opt nofigure} is not specified. 
 
 {marker examples}{...}
-{title:Example 1: the impact of the Grand Canal's abandonment on rebellions (Cao and Chen, 2022)}
+{title:Example 1: the effect of police presence on car thefts (Di Tella and Schargrodsky, 2004)}
+
+{phang2}{cmd:. use DS2004.dta, clear}{p_end}
+{phang2}{cmd:. xtset block month}{p_end}
+
+{phang2}* Generate the treatment indicator for blocks with a protected Jewish institution{p_end}
+{phang2}* Such blocks receive police protection from July 1994 (month 7) onwards{p_end}
+{phang2}{cmd:. gen treatvar = sameblock*(month>=7)}{p_end}
+
+{phang2}* Construct the difference-in-differences estimation and store the result{p_end}
+{phang2}{cmd:. xtreg thefts treatvar i.month, fe r}{p_end}
+{phang2}{cmd:. estimates store police_crime}{p_end}
+
+{phang2}* Implement the parallel trends test{p_end}
+{phang2}{cmd:. didparallel police_crime, treatvar(treatvar)}{p_end}
+
+{phang2}* Report the event study on the calendar time axis and compare the raw group trends{p_end}
+{phang2}{cmd:. didparallel police_crime, treatvar(treatvar) calendar trend}{p_end}
+
+{title:Example 2: the impact of the Grand Canal's abandonment on rebellions (Cao and Chen, 2022)}
 
 {phang2}{cmd:. use cao_chen.dta, clear}{p_end}
 {phang2}{cmd:. xtset county year}{p_end}
@@ -139,7 +175,7 @@ Note that this option only applies when {opt nofigure} is not specified.
 {phang2}* Implement the parallel trends test over a window of 10 periods before and after treatment{p_end}
 {phang2}{cmd:. didparallel did_cao_chen, treatvar(canal_post) range(-10 10)}{p_end}
 
-{title:Example 2: the impact of minimum wage increases on county-level teen employment (Callaway and Sant'Anna, 2021)}
+{title:Example 3: the impact of minimum wage increases on county-level teen employment (Callaway and Sant'Anna, 2021)}
 
 {phang2}{cmd:. use mpdta, clear}{p_end}
 {phang2}{cmd:. xtset countyreal year}{p_end}
@@ -154,7 +190,7 @@ Note that this option only applies when {opt nofigure} is not specified.
 {phang2}* Implement the parallel trends test{p_end}
 {phang2}{cmd:. didparallel mpdta_example, treatvar(treat_post)}{p_end}
 
-{title:Example 3: the impact of no-fault divorce reforms on suicide mortality (Stevenson and Wolfers, 2006)}
+{title:Example 4: the impact of no-fault divorce reforms on suicide mortality (Stevenson and Wolfers, 2006)}
 
 {phang2}{cmd:. use bacon_example.dta, clear}{p_end}
 {phang2}{cmd:. xtset stfips year}{p_end}
@@ -176,6 +212,7 @@ In addition to the estimation results carried over from the regression command, 
 {p2col 5 20 24 2: Macros}{p_end}
 {synopt:{cmd:e(graph)}}names of all produced graphs{p_end}
 {synopt:{cmd:e(frame)}}name of Stata frame{p_end}
+{synopt:{cmd:e(frame_trend)}}name of Stata frame storing the group means, only with {cmdab:trend}{p_end}
 {p2colreset}{...}
 
 {marker compatibility}{...}
@@ -190,7 +227,14 @@ Other commands, though not specifically tested, may also be compatible with {cmd
 {title:Reference}
 
 {phang}
+Di Tella, R., and Schargrodsky, E. 2004. Do police reduce crime? Estimates using the allocation of police forces after a terrorist attack. 
+{it:American Economic Review} 94(1): 115-133.
+
+{phang}
 Stevenson, B., and Wolfers, J. 2006. Bargaining in the shadow of the law: Divorce laws and family distress. {it:Quarterly Journal of Economics} 121(1): 267-288.
+
+{phang}
+Sun, L., and Abraham, S. 2021. Estimating dynamic treatment effects in event studies with heterogeneous treatment effects. {it:Journal of Econometrics} 225(2): 175-199.
 
 {phang}
 Goodman-Bacon, A. 2021. Difference-in-differences with variation in treatment timing. {it:Journal of Econometrics} 225(2): 254-277.

@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.3.1  14sep2026  Ben Adarkwa Dwamena}{...}
+{* *! version 1.4.1  19sep2026  Ben Adarkwa Dwamena}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "bayesmh" "help bayesmh"}{...}
 {vieweralsosee "" "--"}{...}
@@ -21,6 +21,10 @@
  {cmd:simplex(}{it:namelist}{cmd:)}
  {cmd:center(}{it:name}{cmd:=}{it:expr} ...{cmd:)}
  {cmd:scale(}{it:name}{cmd:=}{it:#} ...{cmd:)}
+ {cmd:mle}
+ {cmd:estimates(}{it:name}{cmd:)}
+ {cmd:inflate(}{it:#}{cmd:)}
+ {cmd:map(}{it:name}{cmd:=}{it:coefname} ...{cmd:)}
  {cmd:seed(}{it:#}{cmd:)}
  {cmd:rngstream(}{it:#}{cmd:)}
  {cmd:fmt(}{it:"%fmt"}{cmd:)}
@@ -183,6 +187,50 @@ The specified values are interpreted as standard deviations on the working
 scale.  If a parameter is not listed in {cmd:center()} or {cmd:scale()}, the
 domain defaults are used.
 
+{dlgtab:MLE-based initialization}
+
+{phang}
+{cmd:mle} derives centers and scales from the estimation results currently in
+memory (or from a stored set; see {cmd:estimates()}), typically a maximum
+likelihood or least-squares fit of the same or a closely related model.  For
+each parameter listed in {cmd:unconstrained()}, {cmd:positive()},
+{cmd:corr()}, or {cmd:fisherz()} whose coefficient can be located in
+{cmd:e(b)}, the center is set to the point estimate on the natural scale, and
+the scale is set to {cmd:inflate()} times the standard error from {cmd:e(V)},
+transformed to the working scale by the delta method: SE for unconstrained
+and Fisher-z parameters, SE/{it:lambda-hat} on the log scale for positive
+parameters, and SE/(1 - {it:rho-hat}^2) on the Fisher-z scale for correlation
+parameters.  Parameters without a matching coefficient, and all {cmd:phi()}
+and {cmd:simplex()} parameters, keep their domain defaults.  Explicit
+{cmd:center()} and {cmd:scale()} entries override {cmd:mle}-derived values.
+If no estimation results are in memory, {cmd:mle} exits with error 301.
+
+{phang}
+{cmd:estimates(}{it:name}{cmd:)} specifies a stored estimation set (see
+{helpb estimates store}) to use instead of the current results.  The named
+set is restored before centers and scales are derived.
+
+{phang}
+{cmd:inflate(}{it:#}{cmd:)} multiplies the delta-method standard errors to
+produce overdispersed starting points; the default is {cmd:inflate(2)}.
+Values near 1 would concentrate all chains in the immediate neighborhood of
+the MLE - an approximation of the posterior itself - which defeats the
+purpose of between-chain convergence diagnostics; values of 2-4 are
+recommended (Gelman and Rubin 1992).
+
+{phang}
+{cmd:map(}{it:name}{cmd:=}{it:coefname} ...{cmd:)} links {cmd:bayesinits}
+parameter names to coefficient names in {cmd:e(b)} when the two differ, which
+is the usual case: {cmd:regress y x} produces coefficients {cmd:x} and
+{cmd:_cons}, while the corresponding {cmd:bayesmh} parameters might be named
+{cmd:b1} and {cmd:b0}.  For example, {cmd:map(b0=_cons b1=x)}.  Equation-
+qualified names such as {cmd:lnsig:_cons} are allowed; if {it:coefname} alone
+is not found, {it:coefname}{cmd::_cons} is also tried.  Parameters not listed
+in {cmd:map()} are matched by their own names.  For a quantity with no
+coefficient in {cmd:e(b)} (for example, the residual variance after
+{cmd:regress}), use {cmd:center()} directly, which accepts expressions such
+as {cmd:center(sig2=e(rmse)^2)} and overrides {cmd:mle}.
+
 {dlgtab:Random-number controls}
 
 {phang}
@@ -285,7 +333,12 @@ Running multiple chains from dispersed (overdispersed) starting points is the
 basis of standard MCMC convergence diagnostics such as the Gelman-Rubin
 potential scale reduction factor; see Gelman and Rubin (1992), Brooks and
 Gelman (1998), and Vehtari et al. (2021).  The Fisher-z transformation used
-for correlation parameters is due to Fisher (1915).
+for correlation parameters is due to Fisher (1915).  The {cmd:mle} option
+operationalizes a common variant of this advice: center the chains at a
+preliminary maximum likelihood fit and disperse them by an inflated multiple
+of its standard errors, so that every chain starts in the high-density
+region of the likelihood while remaining overdispersed relative to the
+posterior.
 
 
 {title:Examples}
@@ -315,6 +368,14 @@ Passing the composite initialization to {cmd:bayesmh}
 {phang2}{cmd:      prior({c -(}sig2_tau{c )-}, igamma(0.001,0.001)) ///}{p_end}
 {phang2}{cmd:      prior({c -(}rho12{c )-}, normal(0,1)) ///}{p_end}
 {phang2}{cmd:      `r(init_all)'}{p_end}
+
+{pstd}
+Centering at maximum likelihood estimates with inflated dispersion
+
+{phang2}{cmd:. regress y x}{p_end}
+
+{phang2}{cmd:. bayesinits, nchains(4) unconstrained(b0 b1) positive(sig2) ///}{p_end}
+{phang2}{cmd:      mle map(b0=_cons b1=x) inflate(3) center(sig2=e(rmse)^2)}{p_end}
 
 {pstd}
 Using formatted output and compact strings
@@ -367,7 +428,7 @@ assessing convergence of MCMC (with discussion).
 {title:Author}
 
 {pstd}
-Ben Adarkwa Dwamena, M.D., M.S.{break}
+Ben Adarkwa Dwamena, M.D.{break}
 University of Michigan, Department of Radiology{break}
 Division of Nuclear Medicine and Molecular Imaging{break}
 Email: {browse "mailto:bdwamena@umich.edu":bdwamena@umich.edu}

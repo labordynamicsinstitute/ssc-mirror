@@ -1052,7 +1052,7 @@ program DisplayStructural
         if `hasboot' {
           local se = `se_b'[1, `p']
           local t = `coef' / `se'
-          local pv = 2 * tprob(`e(N)' - 1, abs(`t'))
+          local pv = 2 * ttail(`e(N)' - 1, abs(`t'))
           display as text _col(4) as result "`lvj' <- `lvi'" ///
             as text _col(30) as result %9.`digits'f `coef' ///
             as text _col(40) as result %9.`digits'f `se' ///

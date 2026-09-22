@@ -22,7 +22,7 @@
 {title:Syntax}
 
 {pstd}
-Partial least squares structural equation modeling of data
+Partial least squares structural equation modeling of data{p_end}
 
 {p 8 12 2}
 {cmd:plssem2} ({it:LV1} {cmd:>} {it:indblock1}) ({it:LV2} {cmd:>} {it:indblock2})
@@ -44,7 +44,7 @@ required.
 The structural (inner) model is specified with the {cmd:structural()} option:
 for each endogenous latent variable, list the latent variable first and then
 its direct predictors, separating equations by commas, e.g.,
-{cmd:structural(Satisfaction Quality Value, Quality Expectation)}.
+{cmd:structural(Satisfaction Quality Value, Quality Expectation)}.{p_end}
 
 {marker plssem2opts}{...}
 {synoptset 22 tabbed}{...}
@@ -112,10 +112,10 @@ in the Stata package {help plssem2##VenturiniMehmetoglu2019:plssem}
 (Henseler et al. 2015), {bf:bootstrap with bias-corrected and accelerated (BCa)}
 confidence intervals (Efron 1987), {bf:higher-order constructs} via the
 two-stage approach (Becker et al. 2012; Sarstedt et al. 2019), and
-{bf:multi-group analysis} based on the permutation test (Henseler et al. 2016).
+{bf:multi-group analysis} based on the permutation test (Henseler et al. 2016).{p_end}
 
 {pstd}
-The PLS algorithm proceeds in three stages:
+The PLS algorithm proceeds in three stages:{p_end}
 
 {pstd}
 {bf:Stage 1 (iterative).}  The indicators are standardized.  Starting from an
@@ -131,7 +131,7 @@ approximation; Mode B, formative: the weights are the ordinary least squares
 regression coefficients of the inner approximation on the block of
 indicators).  The iterations stop when the change of the outer weights falls
 below the tolerance (convergence criterion {cmd:relative}, {cmd:square}, or
-{cmd:absolute}).
+{cmd:absolute}).{p_end}
 
 {pstd}
 {bf:Stage 2.}  The final latent variable (composite) scores are computed, the
@@ -141,7 +141,7 @@ are estimated by OLS regressions among the composite scores.  R-squared of the
 endogenous latent variables, indicator reliability measures (Cronbach's
 alpha, composite reliability rho_c, and average variance extracted AVE), the
 Fornell-Larcker criterion, the HTMT matrix, the inner and outer VIFs and the
-Cohen effect sizes f2 are computed.
+Cohen effect sizes f2 are computed.{p_end}
 
 {pstd}
 {bf:Stage 3 (optional).}  Inference is obtained by nonparametric bootstrap
@@ -153,7 +153,7 @@ weights.  Predictive relevance is assessed by the {bf:blindfolding} procedure
 ({cmd:blindfold(#)}): the data are divided into d groups, each group is
 omitted in turn, the model is re-estimated on the remaining observations and
 the omitted indicator values are predicted, giving the cross-validated
-{bf:communality} and {bf:redundancy} Q2 (Stone 1974; Geisser 1974; Chin 1998).
+{bf:communality} and {bf:redundancy} Q2 (Stone 1974; Geisser 1974; Chin 1998).{p_end}
 
 {marker options}{...}
 {title:Options}
@@ -293,7 +293,7 @@ matrix.  Consequently, {bf:PLS-SEM has no global goodness-of-fit statistic}.
 RMSEA, CFI, TLI, SRMR, or any other CB-SEM fit index: such indices are not
 defined for PLS-SEM and reporting them would be misleading.  Model evaluation
 rests instead on the assessment criteria printed by {cmd:plssem2} and by its
-{helpb plssem2_estat:postestimation} commands:
+{helpb plssem2_estat:postestimation} commands:{p_end}
 
 {pstd}
 - {bf:Measurement model.}  Indicator loadings (should exceed 0.708
@@ -308,14 +308,14 @@ rests instead on the assessment criteria printed by {cmd:plssem2} and by its
 - {bf:Structural model.}  Path coefficients with bootstrap-based inference,
   R-squared of the endogenous constructs, Cohen's effect sizes f2
   (0.02/0.15/0.35), inner VIFs, and the Stone-Geisser Q2 from blindfolding
-  (predictive relevance, Q2 > 0).
+  (predictive relevance, Q2 > 0).{p_end}
 
 {pstd}
 Use {cmd:sem} or {cmd:gsem} for CB-SEM applications where global fit
 assessment is required; use {cmd:plssem2} when the focus is on prediction,
 when the model contains formative constructs, when the sample size is small,
 or when the distributional assumptions of maximum likelihood cannot be
-maintained.
+maintained.{p_end}
 
 {title:Composite-based estimation and "consistency at large"}
 
@@ -329,7 +329,7 @@ composite scores.  For reflective measurement models the structural path
 coefficients are attenuated relative to the common-factor (CB-SEM) values;
 this is a property of PLS-SEM itself, not of {cmd:plssem2}.  Inferences
 should be based on the bootstrap, which is the standard approach in the
-PLS-SEM literature.
+PLS-SEM literature.{p_end}
 
 {title:Exporting the results (estout / esttab compatibility)}
 
@@ -338,11 +338,11 @@ The structural path coefficients are stored in {cmd:e(b)} with coefficient
 names of the form {it:"dep:pred"} (e.g., {cmd:"RA:ESG"}), and, when
 {cmd:boot()} is used, {cmd:e(V)} contains the bootstrap covariance matrix of
 the path coefficients.  Standard estimation-table commands can therefore be
-used, e.g.:
+used, e.g.:{p_end}
 
 {p 8 12 2}
-{cmd:. plssem2 (ESG > e1-e3) (RA > ra1-ra3) (HQD > in1-in3),}  ///
-{break} {cmd:    structural(RA ESG HQD, HQD RA) boot(500) seed(123)}{p_end}
+{cmd:. plssem2 (ESG > esg_env esg_soc esg_gov esg_gen) (RA < ra_inveff ra_turnover ra_finance ra_cash),}  ///
+{break} {cmd:    structural(RA ESG) boot(999) seed(20260819) bca}{p_end}
 {p 8 12 2}
 {cmd:. estimates store m1}{p_end}
 {p 8 12 2}
@@ -352,7 +352,20 @@ used, e.g.:
 ({cmd:ssc install estout}).  The loadings, weights, reliability, HTMT, Q2,
 effects and VIF tables are available as stored matrices
 (see {help plssem2##results:Stored results}) and through the {cmd:estat}
-subcommands.
+subcommands.{p_end}
+
+{pstd}
+Descriptive statistics can be exported to Excel with the companion command
+{bf:tab2excel} (an AHUT add-on that wraps {cmd:tabstat} with bilingual
+Chinese/English headers), e.g.:{p_end}
+
+{p 8 12 2}
+{cmd:. tab2excel esg_env esg_soc esg_gov esg_gen ra_inveff ra_turnover, }  ///
+{break} {cmd:    statistics(n mean sd min max) language(chinese) }  ///
+{break} {cmd:    title("表2 主要变量描述性统计") filename("表2_描述性统计.xlsx") replace}{p_end}
+
+{pstd}
+All statistical tables of your paper can be encapsulated within a single complete do-file, such as {bf:plssem2_esg_model.do}.  It combines {cmd:tab2excel} (descriptive statistics) with {cmd:esttab} (measurement model, structural path coefficients with BCa confidence intervals, direct/indirect/total effects, R-squared, and multi-group analysis) and writes all results to the {cmd:results} folder.  Path coefficients, loadings, weights, alpha/CR/AVE, R-squared and the effects are deterministic; the bootstrap standard errors, t values, p values and confidence intervals depend on the random seed ({cmd:seed()} option).{p_end}
 
 {title:Data, missing values and latent-variable scores}
 
@@ -364,76 +377,84 @@ variable containing the estimated composite scores (named after the latent
 variables, as in {help plssem2##VenturiniMehmetoglu2019:plssem}); these
 variables can be used for further analysis (e.g., creating interaction terms)
 or can be regenerated with {cmd:predict}.  Choose latent-variable names that
-do not collide with existing variable names.
+do not collide with existing variable names.{p_end}
 
 {title:中文说明 (Remarks in Chinese)}
 
 {pstd}
-{bf:plssem2} 是基于偏最小二乘（PLS）算法的结构方程模型程序，适用于预测导向、
-小样本、包含形成型（formative）构念或数据分布不满足最大似然假设的研究场景
-（会计、管理、营销等实证领域的高频场景）。
+{bf:plssem2} 是基于偏最小二乘（PLS）算法的结构方程模型程序，适用于预测导向、小样本、包含形成型（formative）构念或数据分布不满足最大似然假设的研究场景。{p_end}
+{pstd}（会计、管理、营销等实证领域的高频场景）{p_end}
 
 {pstd}
-{bf:重要提示}：{bf:PLS-SEM 不是基于似然的方法}，{bf:没有}传统的全局拟合优度
-（GOF）指标——程序{bf:不会}输出 CB-SEM 的卡方（chi2）、RMSEA、CFI、TLI 等
-拟合指数，也不应把这些指数用于 PLS-SEM 的模型评价。模型评价应依据：
-（1）测量模型——载荷（>0.708 为佳）、Cronbach's alpha 与组合信度 CR（>=0.7）、
-AVE（>=0.5）；（2）判别效度——Fornell-Larcker 准则与 HTMT（<0.90 或 0.85）；
-（3）结构模型——路径系数及其 Bootstrap 检验、R2、效应量 f2、内部 VIF，
-以及 Blindfolding 的 Stone-Geisser Q2（>0 表明具有预测相关性）。
+{bf:重要提示}：{bf:PLS-SEM 不是基于似然的方法}，{bf:没有}传统的全局拟合优度（GOF）指标——程序{bf:不会}输出 CB-SEM 的卡方（chi2）、RMSEA、CFI、TLI 等拟合指数，也不应把这些指数用于 PLS-SEM 的模型评价。模型评价应依据：（1）测量模型——载荷（>0.708 为佳）、Cronbach's alpha 与组合信度 CR（>=0.7）、AVE（>=0.5）；（2）判别效度——Fornell-Larcker 准则与 HTMT（<0.90 或 0.85）；（3）结构模型——路径系数及其 Bootstrap 检验、R2、效应量 f2、内部 VIF，以及 Blindfolding 的 Stone-Geisser Q2（>0 表明具有预测相关性）。{p_end}
 
 {pstd}
-{bf:常用命令示例}（形成型/反映型混合模型、高阶构念、中介效应）：
+{bf:常用命令示例}（假设模型：ESG、HQD 为反映型，RA、MP、RM 为形成型，平行中介）：
 
 {p 8 12 2}
-{cmd:. plssem2 (ESG < esg1 esg2 esg3) (RA > ra1-ra4) (MP > mp1-mp4) (RM > rm1-rm4) (HQD > hq1-hq4),}  ///{break}
-{cmd:    structural(RA ESG, MP ESG, RM ESG, HQD RA MP RM) boot(999) seed(2026) bca blindfold(7) level(95)}{p_end}
+{cmd:. plssem2 (ESG > esg_env esg_soc esg_gov esg_gen) (RA < ra_inveff ra_turnover ra_finance ra_cash)}  ///{break}
+{cmd:    (MP < mp_tobinq mp_mtb mp_return mp_turnover) (RM < rm_crash rm_duvol rm_interest rm_stable)}  ///{break}
+{cmd:    (HQD > hqd_roa hqd_roe hqd_margin),}  ///{break}
+{cmd:    structural(RA ESG, MP ESG, RM ESG, HQD ESG RA MP RM) boot(999) seed(20260819) bca level(95)}{p_end}
 
 {pstd}
-{bf:中介效应}：直接效应、间接效应和总效应通过 {cmd:estat effects} 查看，
-间接效应（如 ESG→RA→HQD）的显著性以 Bootstrap 置信区间（含 BCa 区间）
-判断，区间不含 0 即为显著。{bf:多组分析}：{cmd:group(soe, method(permutation) reps(1000))} 可检验国有/民营企业等分组下路径系数的差异（置换检验 p 值）。
+{bf:中介效应}：直接效应、间接效应和总效应通过 {cmd:estat effects} 查看，间接效应（如 ESG→RA→HQD）的显著性以 Bootstrap 置信区间（含 BCa 区间）判断，区间不含 0 即为显著。{bf:多组分析}：{cmd:group(soe, method(permutation) reps(1000))} 可检验国有/民营企业等分组下路径系数的差异（置换检验 p 值）。{p_end}
+
+{pstd}
+{bf:一键复现}：论文全部统计表格可封装在一个完整的 do 文件{cmd:plssem2_esg_model.do} 中——描述性统计用 {cmd:tab2excel} 输出到 Excel，测量模型、结构模型（含 BCa 置信区间）、效应分析与多组分析用 {cmd:esttab}输出到 Word/LaTeX。在 Stata 中打开该 do 文件并点击执行（do）即可一键复现。{p_end}
+
+{pstd}
+注意：路径系数、载荷、权重、α/CR/AVE、R² 与各类效应均为{bf:确定性}结果，任何一次运行都一致；标准误、t 值、p 值与 BCa 置信区间来自 Bootstrap 重抽样，取值取决于随机种子 {cmd:seed()}。{p_end}
 
 {marker examples}{...}
 {title:Examples}
 
-    {hline}
-{pstd}Setup (the dataset ships with the package; see
-{cmd:python/run_example.py}){p_end}
-{phang2}{cmd:. import delimited "results/esg_simdata.csv", clear}{p_end}
+{hline}
+{pstd}Setup (the analysis sample of the accompanying paper){p_end}
+{phang2}{cmd:. import delimited "data/final_panel.csv", clear}{p_end}
 
-{pstd}A simple mediation model (reflective measurement, bootstrap BCa,
-blindfolding){p_end}
-{phang2}{cmd:. plssem2 (ESG > e1 e2 e3) (RA > ra1 ra2 ra3) (HQD > in1 in2 in3), structural(HQD RA ESG, RA ESG) boot(200) seed(101) bca blindfold(7)}{p_end}
+{pstd}
+The empirical model of the paper "ESG information disclosure and the
+high-quality development of listed companies in Anhui Province" has five
+latent variables: {cmd:ESG} (reflective) and {cmd:HQD} (reflective), plus
+three formative mediators {cmd:RA}, {cmd:MP} and {cmd:RM}.  The structural
+model is a parallel mediation:{p_end}
 
-{pstd}Formative and reflective blocks together with the centroid scheme{p_end}
-{phang2}{cmd:. plssem2 (ESGindex < e1 s1 g1) (RA > ra1-ra3) (HQD > in1-in3), structural(HQD RA ESGindex, RA ESGindex) wscheme(centroid)}{p_end}
+{p 8 12 2}
+{cmd:RA = ESG}, {cmd:MP = ESG}, {cmd:RM = ESG}, {cmd:HQD = ESG + RA + MP + RM}{p_end}
 
-{pstd}Higher-order constructs (two-stage; ESG second-order formative, HQD
-second-order reflective) with bootstrap BCa, blindfolding and multi-group
-analysis by ownership type.  This is the model of the project "ESG
-information disclosure and the high-quality development of enterprises"
-(see the example do-file {cmd:plssem2_esg_model.do}).{p_end}
-{phang2}{cmd:. plssem2 (E > e1-e4) (S > s1-s4) (G > g1-g4) (RA > ra1-ra4) (MP > mp1-mp4) (RM > rm1-rm4)} ///{break}
-{cmd: (Innov > in1-in4) (Effic > ef1-ef4) (Green > gr1-gr4), } ///{break}
-{cmd: structural(HQD RA MP RM ESG, RA ESG, MP ESG, RM ESG)} ///{break}
-{cmd: higher("ESG: E S G, formative; HQD: Innov Effic Green, reflective")} ///{break}
-{cmd: boot(999) seed(20260819) bca blindfold(7)}{p_end}
+{pstd}Main model (bootstrap BCa inference){p_end}
+{phang2}{cmd:. plssem2 (ESG > esg_env esg_soc esg_gov esg_gen)} ///{break}
+{cmd:    (RA < ra_inveff ra_turnover ra_finance ra_cash)} ///{break}
+{cmd:    (MP < mp_tobinq mp_mtb mp_return mp_turnover)} ///{break}
+{cmd:    (RM < rm_crash rm_duvol rm_interest rm_stable)} ///{break}
+{cmd:    (HQD > hqd_roa hqd_roe hqd_margin),} ///{break}
+{cmd:    structural(RA ESG, MP ESG, RM ESG, HQD ESG RA MP RM)} ///{break}
+{cmd:    boot(999) seed(20260819) bca level(95)}{p_end}
 
 {pstd}Post-estimation{p_end}
 {phang2}{cmd:. estat effects, indirect total level(95)}{p_end}
 {phang2}{cmd:. estat reliability}{p_end}
 {phang2}{cmd:. estat htmt}{p_end}
-{phang2}{cmd:. estat q2}{p_end}
 {phang2}{cmd:. estat vif}{p_end}
+{phang2}{cmd:. estat f2}{p_end}
 {phang2}{cmd:. predict scores, lv(ESG HQD)}{p_end}
 
 {pstd}Multi-group analysis (state-owned vs. private enterprises){p_end}
-{phang2}{cmd:. plssem2 (E > e1-e4) (S > s1-s4) (G > g1-g4) (RA > ra1-ra4) (MP > mp1-mp4) (RM > rm1-rm4) } ///{break}
-{cmd: (Innov > in1-in4) (Effic > ef1-ef4) (Green > gr1-gr4), } ///{break}
-{cmd: structural(HQD RA MP RM ESG, RA ESG, MP ESG, RM ESG) } ///{break}
-{cmd: higher("ESG: E S G, formative; HQD: Innov Effic Green, reflective") } ///{break}
-{cmd: group(soe, method(permutation) reps(1000) seed(20260819))}{p_end}
+{phang2}{cmd:. plssem2 (ESG > esg_env esg_soc esg_gov esg_gen)} ///{break}
+{cmd:    (RA < ra_inveff ra_turnover ra_finance ra_cash)} ///{break}
+{cmd:    (MP < mp_tobinq mp_mtb mp_return mp_turnover)} ///{break}
+{cmd:    (RM < rm_crash rm_duvol rm_interest rm_stable)} ///{break}
+{cmd:    (HQD > hqd_roa hqd_roe hqd_margin),} ///{break}
+{cmd:    structural(RA ESG, MP ESG, RM ESG, HQD ESG RA MP RM)} ///{break}
+{cmd:    group(soe, method(permutation) reps(1000) seed(20260819))}{p_end}
+
+{pstd}Descriptive statistics and publication tables (see also the remarks){p_end}
+{phang2}{cmd:. tab2excel esg_env esg_soc esg_gov esg_gen ra_inveff ra_turnover, } ///{break}
+{cmd:    statistics(n mean sd min max) language(chinese) } ///{break}
+{cmd:    title("表2 主要变量描述性统计") filename("表2_描述性统计.xlsx") replace}{p_end}
+{phang2}{cmd:. estimates store m1}{p_end}
+{phang2}{cmd:. esttab m1, se star(* 0.10 ** 0.05 *** 0.01) title("Table 4. Path coefficients")}{p_end}
 
     {hline}
 
@@ -441,16 +462,17 @@ information disclosure and the high-quality development of enterprises"
 {title:Example output (excerpt)}
 
 {pstd}
-The following excerpt shows the plssem2 output for the ESG research model
-(simulated data, n = 260; full results in the Word and LaTeX versions in the
-{cmd:results} folder and in the example do-files):
+The following excerpt shows the {cmd:plssem2} structural-model output for the
+ESG model above (n = 646):
 
 {p 8 12 2}
-{cmd:. plssem2 (E > e1-e4) (S > s1-s4) (G > g1-g4) (RA > ra1-ra4) (MP > mp1-mp4) (RM > rm1-rm4) } ///{break}
-{cmd: (Innov > in1-in4) (Effic > ef1-ef4) (Green > gr1-gr4), } ///{break}
-{cmd: structural(HQD RA MP RM ESG, RA ESG, MP ESG, RM ESG)} ///{break}
-{cmd: higher("ESG: E S G, formative; HQD: Innov Effic Green, reflective")} ///{break}
-{cmd: boot(999) seed(20260819) bca blindfold(7) digits(4)}
+{cmd:. plssem2 (ESG > esg_env esg_soc esg_gov esg_gen)} ///{break}
+{cmd:    (RA < ra_inveff ra_turnover ra_finance ra_cash)} ///{break}
+{cmd:    (MP < mp_tobinq mp_mtb mp_return mp_turnover)} ///{break}
+{cmd:    (RM < rm_crash rm_duvol rm_interest rm_stable)} ///{break}
+{cmd:    (HQD > hqd_roa hqd_roe hqd_margin),} ///{break}
+{cmd:    structural(RA ESG, MP ESG, RM ESG, HQD ESG RA MP RM)} ///{break}
+{cmd:    boot(999) seed(20260819) bca level(95) digits(4)}
 {break}
 {com}.{break}
 {com}Structural model (inner model){break}
@@ -459,24 +481,26 @@ The following excerpt shows the plssem2 output for the ESG research model
 {com}Confidence intervals are bias-corrected and accelerated (BCa).{break}
 {break}
 {com}Path                     Coef       SE       t      p>|t|   [95% CI]{break}
-{com}RA <- ESG              0.4407    0.0534    8.26    0.0000  [0.3305, 0.5397]{break}
-{com}MP <- ESG              0.2685    0.0554    4.85    0.0000  [0.1405, 0.3678]{break}
-{com}RM <- ESG              0.4345    0.0505    8.61    0.0000  [0.3160, 0.5157]{break}
-{com}HQD <- RA              0.1715    0.0645    2.66    0.0078  [0.0359, 0.2949]{break}
-{com}HQD <- MP              0.2204    0.0608    3.62    0.0003  [0.1079, 0.3508]{break}
-{com}HQD <- RM              0.0659    0.0635    1.04    0.2991  [-0.0557, 0.1900]{break}
-{com}HQD <- ESG             0.2192    0.0707    3.10    0.0019  [0.0659, 0.3460]{break}
+{com}RA <- ESG              -0.029    0.050    -0.59    0.556  [-0.128, 0.068]{break}
+{com}MP <- ESG              -0.071    0.044    -1.60    0.111  [-0.151, 0.024]{break}
+{com}RM <- ESG               0.006    0.038     0.17    0.865  [-0.063, 0.079]{break}
+{com}HQD <- ESG              0.047    0.024     1.93    0.054  [ 0.004, 0.100]{break}
+{com}HQD <- RA               0.270    0.034     7.89    0.000  [ 0.208, 0.341]{break}
+{com}HQD <- MP               0.129    0.068     1.91    0.056  [-0.113, 0.216]{break}
+{com}HQD <- RM               0.542    0.031    17.70    0.000  [ 0.483, 0.601]{break}
 {break}
 {com}Endogenous LV   R-squared{break}
-{com}RA               0.1942{break}
-{com}MP               0.0721{break}
-{com}RM               0.1888{break}
-{com}HQD              0.2218{break}
+{com}RA               0.001{break}
+{com}MP               0.005{break}
+{com}RM               0.000{break}
+{com}HQD              0.566{break}
 {p_end}
 
 {pstd}
-(Figures are based on the simulated data of {cmd:python/run_example.py} and
-illustrate the program output; replace them with the project's own results.)
+(Figures reproduced by {cmd:plssem2_esg_model.do} on {cmd:data/final_panel.csv}.
+The path coefficients and R-squared are deterministic; the bootstrap standard
+errors, t values, p values and BCa intervals depend on the random seed and
+will vary slightly across runs unless the same seed is used.)
 
 {marker results}{...}
 {title:Stored results}
@@ -738,3 +762,8 @@ of plssem.
 {p 4 6 2}
 {helpb plssem:plssem} -- Partial least squares structural equation modeling
 (SSC){p_end}
+{p 4 6 2}
+{help estout:esttab} -- Export estimation tables (SSC){p_end}
+{p 4 6 2}
+{help tab2excel:tab2excel} -- Export tabstat descriptive statistics to
+Excel{p_end}

@@ -55,8 +55,8 @@ the median-heuristic estimate (see {help ksmmd##remarks_rff:Remarks})
 on a random subsample of up to 2,000 observations{p_end}
 {synopt:{opt nf:eatures(#)}}number of random Fourier features (the
 approximation's dimension {it:D}); default {cmd:nfeatures(200)}{p_end}
-{synopt:{opt mmdtype(string)}}{cmd:vspool} (default) or
-{cmd:maxpairwise} -- see {help ksmmd##remarks_mmdtype:Remarks}{p_end}
+{synopt:{opt mmdtype(string)}}{cmd:vspool} (default),
+{cmd:maxpairwise} or {cmd:fuse} -- see {help ksmmd##remarks_mmdtype:Remarks}{p_end}
 
 {syntab:Scope}
 {synopt:{opt ksonly}}skip the MMD computation, report only the KS
@@ -165,11 +165,13 @@ compute cost; see {help ksmmd##remarks_agile:Remarks: agile vs final}.
 
 {phang}
 {opt mmdtype(string)} selects the k-sample combination rule for MMD:
-{cmd:vspool} (default) or {cmd:maxpairwise}. See
+{cmd:vspool} (default), {cmd:maxpairwise}, or {cmd:fuse}. See
 {help ksmmd##remarks_mmdtype:Remarks} for the exact formulas, the
-citations, and why a third option from an earlier version
+citations, why a third option from an earlier version
 ({cmd:pairwise}) was removed as mathematically redundant with
-{cmd:vspool}.
+{cmd:vspool}, and {cmd:fuse}'s validation status. {opt bw()} is
+{bf:ignored} when {cmd:mmdtype(fuse)} is given -- {cmd:fuse} always
+anchors its own internal bandwidth grid to the median heuristic.
 
 {dlgtab:Scope}
 
@@ -190,7 +192,7 @@ exploring before deciding on {opt bw()}/{opt nfeatures()}.
 Remarks are presented under the following headings:
 
 {phang2}{help ksmmd##remarks_why:Why reimplement kstest instead of calling it}{p_end}
-{phang2}{help ksmmd##remarks_mmdtype:mmdtype() -- vspool vs. maxpairwise}{p_end}
+{phang2}{help ksmmd##remarks_mmdtype:mmdtype() -- vspool, maxpairwise, and fuse}{p_end}
 {phang2}{help ksmmd##remarks_rff:MMD via Random Fourier Features}{p_end}
 {phang2}{help ksmmd##remarks_weights:Weights are not a survey design}{p_end}
 {phang2}{help ksmmd##remarks_kmd:KMD was evaluated and excluded}{p_end}
@@ -255,6 +257,73 @@ An earlier version of this command offered a third option,
 {bf:exactly} {cmd:vspool} (not merely proportional -- the identical
 number), so it was removed as redundant rather than kept as a third,
 illusory alternative.
+
+{pstd}
+{cmd:mmdtype(fuse)} (added in v0.4) -- MMD-FUSE (Biggs, Schrab &
+Gretton 2023, NeurIPS): instead of one bandwidth chosen by the median
+heuristic, it combines {cmd:vspool}'s T_MMD across a {bf:fixed grid}
+of four bandwidths (1x, 1.5x, 2x, 3x times the median heuristic) via a
+KL-regularized soft-max, avoiding both a Bonferroni correction and
+splitting the sample:
+
+{p 8 8 2}T_FUSE = (1/lambda) * log( mean_g[ exp(lambda * T_g) ] ),
+T_g = T_MMD_vspool(bw_g) / sqrt(Nhat(bw_g)){p_end}
+
+{pstd}
+where {cmd:Nhat(bw)} rescales each bandwidth's T_MMD onto a common
+scale before combining them (otherwise the bandwidth with the
+highest-variance features would dominate the log-sum-exp regardless of
+whether it carries more real evidence). The permutation-calibration
+theorem (Hemerik & Goeman 2018) holds for {bf:any} fixed statistic, so
+the grid and {cmd:lambda=0.1} do not need literature backing for the
+permutation p-value to stay exact under the null -- but, stated with
+the same honesty as the rest of this command, that specific grid and
+{cmd:lambda} come from a systematic Python/numpy search over simulated
+data in this package's development ({cmd:sim/prototipo_mmd_fuse*.py}),
+not from a value the MMD-FUSE paper itself recommends. Motivation: a
+single bandwidth's power turned out to be sensitive to the {it:type}
+of alternative (a bandwidth too large dilutes a location shift, too
+small drowns in permutation noise) on real production data -- the grid
+was chosen to avoid having to guess that type in advance. Validated
+for Type-I-error control (R=20,000, no inflation, same 3 weight
+scenarios as the rest of this command, at {bf:both} k=2 and k=4 -- see
+{cmd:sim/resultados_ksmmd_mmd_fuse_2muestras_tipo1.txt} and
+{cmd:sim/resultados_ksmmd_mmd_fuse_4muestras_tipo1.txt}) and, with an
+exact kernel in a Python prototype (R=300), the {bf:only} one of 8
+grids x 6 lambdas tried that stayed robust against {bf:both} a
+location shift (50-53% power) and a scale/dispersion difference
+(89.7-91.3%) -- grids that won under one alternative type collapsed
+under the other.
+
+{pstd}
+The grid and {cmd:lambda} are {bf:not} configurable through options --
+exposing them would widen the validation surface without evidence that
+another combination is better. {opt bw()} is ignored with
+{cmd:mmdtype(fuse)} for the same reason: the grid is only validated
+anchored to the internal median heuristic. Memory cost: {cmd:fuse}
+builds {opt nfeatures()} random features for {bf:each} of its 4 grid
+points (4x the {cmd:Phi} memory of {cmd:vspool}/{cmd:maxpairwise} at
+the same {opt nfeatures()}).
+
+{pstd}
+{bf:Validation status specific to fuse}: the Mata code for {cmd:fuse}
+was written without a real Stata available -- the algebra matches what
+was already validated in Python/numpy -- but has since been
+{bf:confirmed against real Stata at two scales}. Small scale
+({cmd:auto.dta}, Example 5 below, {cmd:mpg}, {cmd:by(g) mmdtype(fuse)
+reps(500)}): {cmd:T_MMD=0.4980 p=0.7126} with no error, the same order
+of magnitude as {cmd:mmdtype(vspool)} on the identical data/weights
+(Example 2: {cmd:T_MMD=0.7422 p=0.5629}). Production scale (a real
+survey outcome by year, N=141,151 across 4 groups, {opt reps(200)}
+{opt nfeatures(500)} -- so 2,000 total RFF columns, 4x {opt nfeatures()}
+for the 4 grid points, no memory problem in practice): ran in 364.97
+seconds with no error, {cmd:T_MMD=1848.9130 p=0.6617} -- essentially
+the same p-value as {cmd:mmdtype(vspool)}'s {cmd:p=0.6667} on the same
+data/seed, and {cmd:fuse}'s pairwise post-hoc shows the same
+qualitative pattern as {cmd:vspool}'s (no pair significant after
+multiple-comparison correction, unlike KS's post-hoc, which does find
+the most recent year different from the other three). No syntax or
+indexing error the static review would have missed, at either scale.
 
 {marker remarks_rff}{...}
 {pstd}{bf:MMD via Random Fourier Features}
@@ -382,6 +451,13 @@ divergent pair of groups:{p_end}
 {phang2}{cmd:* Example 4: ksonly}{p_end}
 {phang2}{cmd:. ksmmd mpg [aweight=wgt], by(g) ksonly reps(200)}{p_end}
 
+{pstd}
+{bf:Example 5: fuse}, combining a grid of bandwidths instead of one
+(see {help ksmmd##remarks_mmdtype:Remarks} for its validation status
+before using it in production):{p_end}
+{phang2}{cmd:* Example 5: fuse}{p_end}
+{phang2}{cmd:. ksmmd mpg [aweight=wgt], by(g) mmdtype(fuse) reps(500)}{p_end}
+
 
 {marker results}{...}
 {title:Stored results}
@@ -401,7 +477,7 @@ divergent pair of groups:{p_end}
 
 {p2col 5 20 24 2: Macros}{p_end}
 {synopt:{cmd:r(by)}}name of the {opt by()} variable{p_end}
-{synopt:{cmd:r(mmdtype)}}{cmd:vspool} or {cmd:maxpairwise}{p_end}
+{synopt:{cmd:r(mmdtype)}}{cmd:vspool}, {cmd:maxpairwise}, or {cmd:fuse}{p_end}
 
 {p2col 5 20 24 2: Matrices}{p_end}
 {synopt:{cmd:r(pairwise_ks)}}pairwise table for KS (if {opt posthoc}
@@ -426,6 +502,15 @@ Gretton, A., Borgwardt, K.M., Rasch, M.J., Scholkopf, B., Smola, A.
 {pstd}
 Rahimi, A., Recht, B. (2007). Random Features for Large-Scale Kernel
 Machines. {it:NeurIPS} 20.
+
+{pstd}
+Biggs, F., Schrab, A., Gretton, A. (2023). MMD-FUSE: Learning and
+Combining Kernels for Two-Sample Testing Without Data Splitting.
+{it:NeurIPS} 36. arXiv:2306.08777.
+
+{pstd}
+Hemerik, J., Goeman, J.J. (2018). Exact testing with random
+permutations. {it:Test} 27(4), 811-825.
 
 {pstd}
 Sutherland, D.J., Schneider, J. (2015). On the Error of Random Fourier
@@ -498,6 +583,16 @@ run against real Stata (no Stata available in the environment where it
 was written) -- see the v0.3 note and the warning near the top of
 {cmd:ksmmd.ado} for the validation steps to run before relying on it in
 production.
+
+{pstd}
+Version 0.4 adds {cmd:mmdtype(fuse)} (MMD-FUSE). Its Type-I-error
+control was validated at R=20,000 via a separate Python/numpy
+reimplementation of the same algebra (k=2 and k=4, see
+{help ksmmd##remarks_mmdtype:Remarks}). The Mata code itself has since
+been confirmed against real Stata at both small scale ({cmd:auto.dta})
+and production scale (N=141,151, 4 groups, {opt reps(200)}
+{opt nfeatures(500)}, 364.97 seconds, no error) -- see
+{help ksmmd##remarks_mmdtype:Remarks} for both results.
 
 {pstd}
 Source: {browse "https://github.com/atalaveracuya/svylet"}. Not (yet)
