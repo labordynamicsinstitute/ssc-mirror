@@ -10,8 +10,8 @@ on:
       suffix:
         description: "Suffix to be added to tag"
         required: false
-  schedule:
-    - cron: "42 6 * * *"
+  #schedule:
+  #  - cron: "42 6 * * *"
     
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel

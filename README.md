@@ -1,4 +1,12 @@
-[![Mirror workflow](https://github.com/labordynamicsinstitute/ssc-mirror/actions/workflows/mirror.yml/badge.svg)](https://github.com/labordynamicsinstitute/ssc-mirror/actions/workflows/mirror.yml)
+[![Mirror workflow](https://github.com/ssc-ng/archive/actions/workflows/mirror.yml/badge.svg)](https://github.com/ssc-ng/archive/actions/workflows/mirror.yml)
+
+> **🚚 THIS REPOSITORY HAS BEEN MIGRATED AND IS NOW ARCHIVED (as of 2026-09-24)!**
+
+---
+
+➡️**Please see https://github.com/ssc-ng/archive instead!**
+
+---
 
 # A mirror of the Statistical Software Components archive at BC
 
