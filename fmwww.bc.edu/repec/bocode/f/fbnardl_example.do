@@ -108,9 +108,84 @@ di as res "============================================================"
 fbnardl y z, decompose(x) type(fnardl) nodiag nodynmult notable maxlag(2)
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 7. FIXED (EXOGENOUS) REGRESSORS — exog() / fixed()
+//    Dummies enter every candidate model and the final equation, stay out of
+//    the long-run relationship and the three tests, and are held fixed in
+//    the bootstrap.  See: help fbnardl##exog
+// ─────────────────────────────────────────────────────────────────────────────
+gen byte d_step  = (t >= 120)            // level shift from t = 120
+gen byte d_pulse = (t == 90)             // one-off outlier
+gen byte grp     = mod(t, 4)             // for a factor-variable example
+
+di _newline(3)
+di as res "============================================================"
+di as res "  TEST 6: exog() — step and pulse dummies, type(fnardl)"
+di as res "============================================================"
+
+fbnardl y z, decompose(x) type(fnardl) maxlag(2) maxk(2) exog(d_step d_pulse) ///
+    nodynmult noadvanced
+di "fixed regressors : `e(exog)'    estimated: " e(n_exog)
+
+di _newline(3)
+di as res "============================================================"
+di as res "  TEST 7: fixed() synonym, factor variable and lagged dummy"
+di as res "============================================================"
+
+fbnardl y z, decompose(x) type(fnardl) maxlag(2) maxk(2) fixed(i.grp L.d_step) ///
+    nodiag nodynmult noadvanced notable
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 8. ROBUST / HAC STANDARD ERRORS — hac()
+// ─────────────────────────────────────────────────────────────────────────────
+di _newline(3)
+di as res "============================================================"
+di as res "  TEST 8: hac(both) with type(fnardl) — warns that bounds are approximate"
+di as res "============================================================"
+
+fbnardl y z, decompose(x) type(fnardl) maxlag(2) maxk(2) hac(both) ///
+    nodynmult noadvanced
+di "vce: `e(vce)'   Newey-West lag: " e(haclags)
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 9. BOOTSTRAP WITH DUMMIES AND HAC — the internally consistent combination
+// ─────────────────────────────────────────────────────────────────────────────
+di _newline(3)
+di as res "============================================================"
+di as res "  TEST 9: type(fbnardl) bvz, exog() + hac(both)"
+di as res "============================================================"
+
+fbnardl y z, decompose(x) type(fbnardl) reps(199) maxlag(2) maxk(2) ///
+    exog(d_step) hac(both) nodynmult noadvanced
+di "bootstrap: `e(bootstrap)'  xdgp: `e(xdgp)'  status: `e(coint_status)'"
+
+di _newline(3)
+di as res "============================================================"
+di as res "  TEST 10: type(fbnardl) mcnown, hac(hetero), xdgp(vecm)"
+di as res "============================================================"
+
+fbnardl y z, decompose(x) type(fbnardl) bootstrap(mcnown) xdgp(vecm) reps(199) ///
+    maxlag(2) maxk(2) exog(d_step d_pulse) hac(hetero) nodiag nodynmult noadvanced notable
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 10. VALIDATION MESSAGES
+// ─────────────────────────────────────────────────────────────────────────────
+di _newline(3)
+di as res "============================================================"
+di as res "  TEST 11: exog() validation"
+di as res "============================================================"
+
+gen byte never = 0
+capture noisily fbnardl y z, decompose(x) maxlag(2) maxk(1) exog(never) ///
+    nodiag nodynmult noadvanced notable
+di as txt "expected r(198), got r(" _rc ")"
+capture noisily fbnardl y z, decompose(x) maxlag(2) maxk(1) exog(L.z) ///
+    nodiag nodynmult noadvanced notable
+di as txt "expected r(198), got r(" _rc ")"
+
+// ─────────────────────────────────────────────────────────────────────────────
 di _newline(3)
 di as res "============================================================"
 di as res "  ALL TESTS COMPLETED SUCCESSFULLY"
-di as res "  Package: fbnardl v1.0.0"
+di as res "  Package: fbnardl v2.0.0"
 di as res "  Author: Dr. Merwan Roudane"
 di as res "============================================================"

@@ -1,4 +1,4 @@
-*! ksmmd.ado v0.5 - 18sep2026
+*! ksmmd.ado v0.7 - 20sep2026
 *! Test k-muestras, ponderado, que combina en UN SOLO remuestreo:
 *!   - T de Kiefer (KS generalizado a k grupos -- mismo estadistico que
 *!     kstest de Ariel Linden, SSC s459801, pero reimplementado aca:
@@ -40,8 +40,8 @@
 *!                     forma pairwise-ponderada con kernel RBF que usan
 *!                     Ong, Chen, Zhu & Zhang (2023, Mathematics 11(20),
 *!                     MDPI) y, en el marco general de k muestras con
-*!                     tamanos desiguales, Zhang, Guo & Zhou (2022, J.
-*!                     Econometrics) -- son el mismo estadistico salvo
+*!                     tamanos desiguales, Zhang, Guo & Zhou (2024, J.
+*!                     Econometrics 239(2)) -- son el mismo estadistico salvo
 *!                     una constante positiva (Wtot), que no cambia el
 *!                     p-valor de permutacion (Wtot es fijo, no depende
 *!                     de la asignacion de etiquetas). La equivalencia
@@ -89,8 +89,21 @@
 *!      una busqueda sistematica en Python/numpy sobre datos
 *!      simulados en ESTA sesion (sim/prototipo_mmd_fuse.py,
 *!      sim/prototipo_mmd_fuse_sistematico.py,
-*!      sim/prototipo_mmd_fuse_escala.py), no de un valor recomendado
-*!      por el paper. Motivo de la busqueda: una primera prueba con
+*!      sim/prototipo_mmd_fuse_escala.py). [CORREGIDO sep2026, tras leer
+*!      el PDF completo de Biggs, Schrab & Gretton: el paper SI da una
+*!      recomendacion concreta para lambda -- sus Teoremas 2-3 exigen
+*!      lambda asintoticamente proporcional a n para potencia optima, y
+*!      en TODOS sus experimentos usa lambda=sqrt(n(n-1)) (n=tamano de
+*!      la muestra mas chica). Para un survey con n en cientos/miles eso
+*!      da lambda del orden de cientos/miles, muy distinto de lambda=0.1
+*!      fijo. ksmmd se APARTA DELIBERADAMENTE de esa recomendacion (no
+*!      es que no exista una): el paper solo la valida en el caso exacto
+*!      (kernel completo, no RFF) y no ponderado, mientras que lambda=0.1
+*!      sale de la busqueda propia descrita abajo, en el contexto
+*!      ponderado/RFF real de este comando. Probar lambda~n en ese
+*!      contexto queda como mejora futura sujeta a nueva simulacion de
+*!      potencia antes de reemplazar el valor fijo actual.]
+*!      Motivo de la busqueda original: una primera prueba con
 *!      datos reales de produccion (un outcome de encuesta continuo,
 *!      agrupado por anio, ponderado) mostro que un solo bandwidth es
 *!      sensible al TIPO de alternativa
@@ -109,7 +122,22 @@
 *!      lambdas probadas, robusta a la vez contra un corrimiento de
 *!      ubicacion (50-53% de potencia) Y una diferencia de escala
 *!      (89.7-91.3%) -- grillas que ganaban en un escenario (p.ej. solo
-*!      bandwidths grandes) se derrumbaban en el otro. NO configurable
+*!      bandwidths grandes) se derrumbaban en el otro (mecanismo: Reddi,
+*!      Ramdas, Poczos, Singh & Wasserman 2015, AISTATS/PMLR v38, Lemma
+*!      1, PDF leido completo -- MMD^2 poblacional con kernel Gaussiano
+*!      escala como 2*shift^2/bandwidth^2 (1+o(1)): un bandwidth grande
+*!      respecto al corrimiento de ubicacion diluye la senal de forma
+*!      CUADRATICA, no exponencial [CORREGIDO sep2026: la version
+*!      anterior de este parrafo decia "exponencialmente chico", frase
+*!      que no esta respaldada por el paper -- el propio Teorema 1 de
+*!      potencia del paper es ademas un resultado explicito de ALTA
+*!      DIMENSION (n,d -> infinito conjuntamente, bandwidth
+*!      gamma=Omega(sqrt(d))), que no aplica literalmente a una variable
+*!      escalar como edad (d=1); lo que si generaliza por analogia
+*!      algebraica a cualquier dimension, incluido d=1, es el mecanismo
+*!      del Lemma 1 citado arriba]. Eso explica por que un bandwidth mal
+*!      elegido puede no ver una diferencia real que KS si detecta).
+*!      NO configurable
 *!      via opciones del .ado (grilla y lambda quedan fijas en Mata,
 *!      ver ksmmd_run()): exponerlas como opciones multiplicaria la
 *!      superficie de validacion sin que exista todavia evidencia de
@@ -184,6 +212,78 @@
 *!      pesos, o extender el estimador de Berrett-Samworth a pesos)
 *!      seria una contribucion metodologica nueva, no una adopcion de
 *!      literatura existente.
+*!      Se evaluaron tambien 3 papers 2025-2026 (busqueda bibliografica
+*!      sep-2026, a pedido explicito del usuario, que pregunto si habia
+*!      literatura nueva que mejorara el test de Ho: distribuciones
+*!      iguales; el usuario subio los 3 PDFs completos, leidos por
+*!      agentes en paralelo):
+*!        - Mukherjee, S., Sriperumbudur, B.K. (2025). "Minimax Optimal
+*!          Kernel Two-Sample Tests with Random Features." arXiv:
+*!          2502.20755v2. AFUERA: estrictamente 2 muestras (sin
+*!          generalizacion k-muestral en el paper), sin pesos de
+*!          encuesta (grep de texto completo: "weight"/"survey" no
+*!          aparecen), y costo CUBICO en nfeatures() (O(l^3), Teorema 14)
+*!          en vez del O(N*D) lineal que usa este comando. Su ganancia
+*!          (detectar diferencias de forma/varianza con media igual, via
+*!          un operador de covarianza espectral-regularizado) ya la
+*!          cubre en buena medida el componente KS de este comando.
+*!        - Domingo-Enrich, C., Dwivedi, R., Mackey, L. (2025). "Cheap
+*!          Permutation Testing." arXiv:2502.07672v3. PROMETEDOR A
+*!          FUTURO, no incorporado ahora: agrupa las N unidades en s
+*!          bloques y permuta solo los bloques (no las N unidades),
+*!          reduciendo el costo de permutacion de O(reps*N^2) a
+*!          O(reps*s^2) para estadisticos "cuadraticos" -- 100x-1000x
+*!          mas rapido en sus experimentos (validado solo hasta N~33mil,
+*!          no a escala de produccion de ksmmd). PERO: grep de texto
+*!          completo confirma CERO menciones a pesos de encuesta (el
+*!          marco asume medidas empiricas SIN ponderar); la extension a
+*!          k>2 grupos es solo un boceto en la seccion de discusion, sin
+*!          algoritmo ni prueba de potencia; y el componente KS de este
+*!          comando NO es un "quadratic test statistic" en el sentido
+*!          del paper (esta basado en el supremo de diferencias de CDFs,
+*!          no en una forma cuadratica de medidas empiricas), asi que el
+*!          mecanismo de binning solo cubriria la parte MMD/RFF, no KS.
+*!          Aplicarlo exigiria: (a) extender su prueba de exactitud bajo
+*!          permutacion de bloques al caso ponderado (no trivial -- la
+*!          intercambiabilidad bajo H0 con pesos desiguales viajando con
+*!          cada unidad no esta resuelta en el paper), y (b) derivar la
+*!          version k-muestral. Candidato solido para una futura version
+*!          del motor de remuestreo, pendiente de ese trabajo propio.
+*!        - Wei, A., Jalali, M., Sutherland, D.J. (2026, TMLR). "Maximum
+*!          Mean Discrepancy with Unequal Sample Sizes via Generalized
+*!          U-Statistics." arXiv:2512.13997v2 (mismo Sutherland de
+*!          Sutherland & Schneider 2015, ya citado arriba). AFUERA en lo
+*!          sustantivo: aunque la maquinaria general (Definicion 3.1,
+*!          Teorema E.5) esta enunciada para c muestras generico, el
+*!          paper nunca la instancia ni la ejemplifica para c>2 -- todos
+*!          los resultados con contenido MMD y el experimento (CIFAR-10)
+*!          son c=2. Mas importante: grep de texto completo confirma
+*!          CERO menciones a "weight"/"survey" -- el paper solo trata
+*!          desigualdad de TAMANOS DE MUESTRA (conteos enteros n_j), no
+*!          PESOS CONTINUOS w_i dentro de cada grupo. La formula S_j que
+*!          ya usa ksmmd_mmd_T_batch() (excluir parejas i=i' ponderadas
+*!          por w_i^2 para des-sesgar el termino propio de cada grupo)
+*!          NO es un caso particular de este paper -- es una
+*!          generalizacion genuina adicional (pesos continuos
+*!          intra-grupo) que el paper no cubre; el paper si confirma el
+*!          PRINCIPIO general de excluir parejas propias para lograr
+*!          insesgadez, ya verificado por cuenta propia en v0.7 (ver
+*!          arriba). Idea transferible pero NO citable como resultado
+*!          literal del paper: si en el futuro se deriva una calibracion
+*!          asintotica (en vez de por permutacion), usar el MINIMO de
+*!          los tamanos EFECTIVOS por grupo (tipo Kish, (sum w_i)^2/
+*!          sum(w_i^2)) como escala de normalizacion, en vez de la suma
+*!          -- es la leccion empirica central del paper (sus Teoremas
+*!          3.7/3.9), pero no aplica directamente porque este comando
+*!          calibra por permutacion, no por asintotica.
+*!      CONCLUSION GENERAL de esta ronda: ninguno de los 3 papers ofrece
+*!      una mejora lista para incorporar tal cual a este comando
+*!      (k-muestral, ponderado por encuesta, calibrado por permutacion).
+*!      El de permutacion barata es el mas prometedor a mediano plazo
+*!      para el costo computacional en produccion, pero exige extender
+*!      su prueba de validez al caso ponderado antes de confiar en el
+*!      control de Tipo I -- trabajo de investigacion propio, no
+*!      pendiente de implementarse en esta version.
 *!   5. graph: ECDFs ponderadas por grupo, mismo tipo de grafico que
 *!      kstest ..., graph -- es la visual natural para el T de Kiefer;
 *!      MMD no tiene una curva 1-D propia (vive en el espacio de
@@ -192,6 +292,335 @@
 *!   6. posthoc: tabla de a pares para AMBOS estadisticos (T_KS y
 *!      T_MMD), con las mismas 4 correcciones de comparaciones
 *!      multiples que ya usa kstest (Bonferroni/Sidak/Holm/FDR).
+*!
+*! v0.6 -- revision de la bibliografia contra los PDF completos (el
+*! usuario los compartio via Google Drive; 15 de 16 documentos leidos de
+*! punta a punta por agentes en paralelo -- falta solo Zhang/Guo/Zhou
+*! 2024, detras de paywall de ScienceDirect, no obtenido -- ver NOTA DE
+*! VERIFICACION, segunda ronda, al final del bloque de referencias mas
+*! abajo). SIN CAMBIOS DE ALGEBRA NI DE MATA -- ningun T_KS/T_MMD/
+*! p-valor cambia con esta version, solo texto de documentacion:
+*!   - 3 correcciones OBLIGATORIAS de contenido/cita, ya aplicadas
+*!     inline en los parrafos correspondientes mas arriba/abajo: la
+*!     cota de Sutherland&Schneider (revertida a MMD sin elevar al
+*!     cuadrado, cita corregida de "Theorem 1" a "Seccion 3.3" -- mi
+*!     propio "arreglo" del 19sep2026, hecho sin el PDF completo, habia
+*!     ido en la direccion equivocada), la motivacion de mmdtype(fuse)
+*!     (el mecanismo de Reddi et al. es escala CUADRATICA, no
+*!     "exponencialmente chico"), y la atribucion de Choi&Kim ("Choi,
+*!     I.", no "Choi, S." -- tercer error real de atribucion en esta
+*!     bibliografia) -- mas la aclaracion de que el paper MMD-FUSE SI
+*!     recomienda un valor de lambda (lambda~n), del que ksmmd se aparta
+*!     deliberadamente (no que "no exista recomendacion").
+*!   - Mejoras de documentacion agregadas, todas respaldadas por texto
+*!     primario (PDF leido completo), sin cambiar codigo:
+*!     * Kiefer (1959), Sec. 6: los tests tipo sup (T de Kiefer, KS)
+*!       tienen garantia de potencia minima contra CUALQUIER alternativa
+*!       puntual; los tests tipo integral (MMD, omega^2) no la tienen --
+*!       son complementarios por diseno, cita primaria legitima para el
+*!       combo KS+MMD de este comando. El mismo paper tampoco exige que
+*!       n_j/N converja -- tranquiliza sobre grupos desbalanceados. El
+*!       jumpmask/manejo de empates de este comando ya es coherente con
+*!       lo que el propio Kiefer dice sobre F no continua (conservador,
+*!       nunca anti-conservador).
+*!     * Ong, Chen, Zhu & Zhang (2023) recomiendan textualmente correr
+*!       un test tipo MMD Y uno tipo energy-distance juntos, porque en
+*!       la practica no se sabe de antemano si la diferencia entre
+*!       grupos esta en la media o en la covarianza -- respalda con cita
+*!       directa (no solo diseno propio) el combo KS+MMD de este comando.
+*!     * Kim (2021), Remark 3.3: guia explicita sobre cuando preferir
+*!       maxpairwise (alternativas DISPERSAS -- un solo grupo distinto
+*!       de los demas) sobre vspool/fuse (alternativas DENSAS -- varios
+*!       grupos difieren): la potencia de estadisticos tipo-promedio cae
+*!       con k creciente bajo alternativas dispersas, maxpairwise la
+*!       mantiene. La optimalidad minimax de maxpairwise (Sec. 6 del
+*!       paper) esta condicionada a supuestos tecnicos de kernel
+*!       acotado/subgaussiano y NO se transfiere automaticamente a la
+*!       version ponderada por pesos de encuesta que usa este comando.
+*!     * Garreau, Jitkrittum & Kanagawa (2017): bw() de este comando usa
+*!       la convencion sqrt(Hn) (Hn=mediana de distancias al cuadrado),
+*!       que el propio paper reconoce en su nota al pie 1 como variante
+*!       real de la literatura (la formula principal del paper es
+*!       sqrt(Hn/2)). Su Sec. 4 muestra ademas, empiricamente, que la
+*!       heuristica de mediana elige un bandwidth demasiado grande
+*!       especificamente cuando la diferencia entre grupos es de
+*!       VARIANZA/ESCALA (no de ubicacion) -- respaldo primario adicional
+*!       (mas alla de la simulacion propia) para usar mmdtype(fuse)
+*!       cuando se sospecha una diferencia de dispersion.
+*!     * Rizzo & Szekely (2010, DISCO), Corolario 2: la identidad "cada
+*!       grupo contra el pool" (que generaliza el T de Kiefer y la
+*!       identidad vspool de este comando) SOLO existe para una forma
+*!       CUADRATICA/tipo-RKHS (alpha=2 en su notacion) -- para la energy
+*!       distance original de Szekely&Rizzo (2004, alpha=1) no hay tal
+*!       forma, solo suma pareada. Confirma formalmente por que vspool
+*!       necesita especificamente un kernel (forma cuadratica), no
+*!       cualquier distancia.
+*!     * Sejdinovic, Sriperumbudur, Gretton & Fukumizu (2013): el
+*!       "puente a DISCO/energy distance" de este comando (ver punto 4
+*!       arriba) es correcto en espiritu (mismo marco teorico), pero con
+*!       una precision: el kernel que hace MMD = energy distance
+*!       EUCLIDEA de Rizzo-Szekely no es RBF (es k1(z,z')=0.5*(||z||+
+*!       ||z'||-||z-z'||), no acotado). El RBF que usa este comando SI
+*!       genera una semimetrica de tipo negativo (rho_RBF=2-2*exp(-
+*!       ||z-z'||^2/gamma^2)), pero es una version ACOTADA/saturada de
+*!       la euclidea, no la euclidea misma.
+*!     * Hemerik & Goeman (2018): la validez exacta de mmdtype(fuse) por
+*!       permutacion descansa en 2 condiciones concretas que este
+*!       comando ya cumple: (a) el estadistico observado se incluye
+*!       como una evaluacion mas (el "+1" en (count+1)/(reps+1)); (b) la
+*!       grilla de bandwidths y lambda quedan fijos ANTES de ver las
+*!       permutaciones de cada corrida. Nota honesta menor: la exactitud
+*!       ESTRICTA (nivel = alpha exacto) requiere ademas ausencia de
+*!       empates en la distribucion de T bajo H0 -- con variables de
+*!       encuesta con empates (edad en anios, montos redondeados) el
+*!       test puede ser LIGERAMENTE CONSERVADOR frente al nominal, nunca
+*!       anti-conservador.
+*!     * MMD-FUSE (Biggs, Schrab & Gretton 2023): ademas de lambda (ver
+*!       correccion obligatoria arriba), la constante de normalizacion
+*!       Nhat y la grilla de bandwidths de este comando difieren por
+*!       diseno de la Definicion 1 / Apendice A.2 del paper: Nhat aca se
+*!       calcula sobre una submuestra de hasta 300 observaciones (no el
+*!       dataset agrupado completo, por costo), y la grilla usa 4 puntos
+*!       de un solo kernel Gaussiano (vs. 10-20 puntos de 2 familias,
+*!       Gaussiano y Laplace, en el paper). Ninguna de las dos
+*!       diferencias pone en riesgo la tasa de error Tipo I (eso lo
+*!       garantiza el teorema de permutacion para cualquier estadistico
+*!       fijo, ver Hemerik&Goeman arriba) -- son posibles perdidas de
+*!       POTENCIA, no de validez, ya cubiertas por la simulacion propia.
+*!   - Mejoras de DISENO identificadas en la misma lectura: en esta
+*!     version (v0.6) quedaron documentadas como trabajo futuro,
+*!     pendientes de una nueva simulacion de tasa de error Tipo I antes
+*!     de implementarse. Las 5 se implementaron y se validaron en la
+*!     version SIGUIENTE (v0.7, ver el bloque de arriba) -- el detalle
+*!     de cada una vive ahora en ese changelog.
+*!
+*! v0.7 -- implementa las 5 mejoras de diseno que v0.6 habia dejado
+*! como trabajo futuro (leidas en los PDF completos, ver v0.6 arriba),
+*! todas re-validadas por una simulacion Monte Carlo de tasa de error
+*! Tipo I propia antes de aplicarse (R=2000, k=4 -- el uso real de
+*! produccion, by(anio) --, los mismos 3 escenarios de peso "adversos"
+*! que el resto de este comando: sim/simulacion_ksmmd_v07_tipo1.py /
+*! resultados_ksmmd_v07_tipo1.txt -- tasa de rechazo entre 3.6% y 5.8%
+*! en los 3 escenarios para vspool, maxpairwise Y fuse, sin inflacion
+*! frente al 5% nominal; numeros de la corrida RE-VALIDADA tras el fix
+*! del bug de mmdtype(maxpairwise), ver mas abajo -- la corrida
+*! original, previa al bug, dio un rango similar, 4.3%-5.6%). Un sanity
+*! check algebraico previo (misma
+*! corrida) confirma que la reescritura de vspool via suma par-a-par
+*! coincide, hasta error de punto flotante (~1e-13), con la formula
+*! "cada grupo contra el pool" de v0.6 cuando NO se aplica el de-bias
+*! de mas abajo -- descarta un error de reescritura antes de agregar el
+*! cambio real. SIN cambios en la interfaz de Stata (mismas opciones,
+*! mismos nombres) salvo que {opt nfeatures()} impar ahora se ajusta a
+*! par automaticamente (con aviso), y el mensaje de {cmd:mmdtype(fuse)}
+*! sobre bw() ignorado refleja la nueva grilla:
+*!   1. U-estadistico insesgado (Gretton et al. 2012 dan ambas formas
+*!      para 2 muestras) en vez del V-estadistico sesgado de v0.6 y
+*!      anteriores, para AMBOS mmdtype(vspool) y mmdtype(maxpairwise)
+*!      (comparten la misma estructura par-a-par ||mu_a-mu_b||^2, asi
+*!      que el mismo de-bias aplica a los dos, no solo a vspool como
+*!      pedia el hallazgo original -- extension propia por consistencia
+*!      de diseno). Ver ksmmd_mmd_T_batch() en Mata para el algebra
+*!      exacta (termino S_j que excluye las parejas i=i' de la misma
+*!      unidad, con una salvaguarda que vuelve al V-estadistico solo si
+*!      el denominador de un grupo es numericamente inseguro).
+*!   2. Variante RFF "z-tilde" (Sutherland & Schneider 2015, ecs. 5-7:
+*!      sin fase aleatoria, pares seno/coseno, D/2 frecuencias) en vez
+*!      de la "z-breve" (coseno con fase aleatoria, D frecuencias) --
+*!      mismo costo computacional, varianza estrictamente menor para el
+*!      kernel Gaussiano. {opt nfeatures()} se fuerza a PAR (ver arriba)
+*!      para que la variante siempre devuelva exactamente D columnas.
+*!   3. lambda~n_min (formula del paper MMD-FUSE, lambda=sqrt(n(n-1)))
+*!      para mmdtype(fuse), en vez de lambda=0.1 fijo -- generalizada a
+*!      k grupos usando n=tamano del grupo MAS CHICO (coincide
+*!      exactamente con la formula del paper cuando k=2; la extension a
+*!      k>2 es una decision propia de diseno, no del paper).
+*!   4. Grilla de bandwidths de mmdtype(fuse) por cuantiles 5%/95%
+*!      (discretizacion uniforme entre 0.5x el cuantil 5% y 2x el
+*!      cuantil 95% de las distancias inter-muestra) mas la familia de
+*!      kernel Laplace ademas de la Gaussiana (MMD-FUSE, Apendice
+*!      A.2/A.4) -- 5 puntos por familia (10 en total) en vez de los
+*!      4 puntos Gaussianos anclados en la heuristica de mediana de
+*!      v0.6. El paper valida 10-20 puntos por familia; aca se usan 5
+*!      por el costo de memoria en produccion (N~10^5): con
+*!      {opt nfeatures(200)} default, 10 puntos de grilla dan 2,000
+*!      columnas de Phi por unidad, el mismo orden de magnitud que la
+*!      configuracion reps(200)/nfeatures(500) (2,000 columnas con la
+*!      grilla vieja de 4 puntos) ya confirmada sin problemas de
+*!      memoria en produccion en v0.4 (ver esa nota mas abajo) -- una
+*!      decision practica propia, no del paper.
+*!   5. Heuristica de mediana PONDERADA: el subsample usado para la
+*!      mediana (y, en mmdtype(fuse), para los cuantiles 5%/95% de la
+*!      grilla) ahora se arma con muestreo ponderado por probabilidad
+*!      proporcional al peso de encuesta (clave de Efraimidis-Spirakis,
+*!      logkey=ln(u)/w, tomar las N mayores) en vez de un subsample SIN
+*!      ponderar como en v0.6 y anteriores -- consistente con que el
+*!      resto del estimador si es ponderado.
+*! CONFIRMADO EN STATA REAL (21sep2026, escala chica, auto.dta, el
+*! usuario corrio los 5 casos de sintaxis contra Stata real): sysuse
+*! auto / gen byte g=1+mod(_n,3) / gen double wgt=1, despues:
+*!   ksmmd mpg, by(g) reps(200)
+*!     -> KS T=0.5953 p=0.7164; MMD(vspool) T=-0.1721 p=0.5323
+*!   ksmmd mpg [aweight=wgt], by(g) reps(500) seed(20260916) graph posthoc
+*!     -> KS T=0.5953 p=0.7106; MMD(vspool) T=-0.1989 p=0.5269; posthoc
+*!        KS y MMD (3 pares) sin error
+*!   ksmmd mpg [aweight=wgt], by(g) mmdtype(maxpairwise) reps(500)
+*!     -> KS T=0.5953 p=0.7126; MMD(maxpairwise) T=0.1994 p=0.4471
+*!   ksmmd mpg [aweight=wgt], by(g) ksonly reps(200)
+*!     -> KS T=0.5953 p=0.7214
+*!   ksmmd mpg [aweight=wgt], by(g) mmdtype(fuse) reps(500)
+*!     -> KS T=0.5953 p=0.6966; MMD(fuse) T=-0.1188 p=0.9142
+*! Los 5 corrieron SIN ERROR -- confirma que la reescritura de
+*! ksmmd_run()/ksmmd_mmd_T_batch()/ksmmd_rff_features() y las 2 funciones
+*! nuevas (ksmmd_rff_laplace_features(), ksmmd_bw_quantile_range()) no
+*! tienen errores de sintaxis/indexado Mata que la revision estatica no
+*! hubiera detectado, en los 3 mmdtype() y con posthoc/graph. T_KS queda
+*! identico en las 5 corridas (0.5953 -- no depende de mmdtype ni cambio
+*! en v0.7, como se esperaba).
+*! PRECISION (agregada tras el bug de maxpairwise documentado mas
+*! abajo): esta corrida de mmdtype(maxpairwise) tambien uso codigo con
+*! el bug todavia presente (fue ANTES del fix), y solo probo el
+*! omnibus (T=0.1994, un valor positivo, no floreado -- consistente con
+*! no haber pisado el bug esa vez) sin posthoc -- el posthoc (k=2) es
+*! donde el bug se manifestaba con mas claridad, y este ejemplo de
+*! auto.dta no lo incluyo para maxpairwise. No hay razon para sospechar
+*! que T=0.1994 este mal, pero "confirmado sin error" no es lo mismo
+*! que "confirmado con el fix aplicado" -- esa confirmacion realmente
+*! limpia (fix + posthoc) ya se hizo despues, a escala de produccion,
+*! ver el bloque de confirmacion de produccion mas abajo.
+*!
+*! CONFIRMADO TAMBIEN A ESCALA DE PRODUCCION (21sep2026, mismo dia, el
+*! usuario corrio contra Stata real sobre un outcome real de encuesta,
+*! agrupado en 4 grupos por una variable ordinal (p.ej. periodo/anio),
+*! N~141mil, con un peso de encuesta continuo -- nombres de variables y
+*! comandos exactos omitidos aca por pedido explicito del usuario):
+*!     -> KS T=1705.5730 p=0.4378; MMD(vspool) T=54.6242 p=0.4478;
+*!        155.42s (timer), posthoc KS y MMD (6 pares) sin error, con
+*!        reps(200) nfeatures(500) graph posthoc
+*!   ... mismo comando con bw() fijo (sin heuristica) mmdonly posthoc
+*!       -> MMD T=265.2266 p=0.3582, sin error
+*!   ... ksonly reps(200) -> KS T=1705.5730 p=0.4179; 23.50s
+*!   ... nfeatures(200) mmdonly reps(200) -> MMD T=77.1512 p=0.3781; 25.20s
+*!   ... reps(50) nfeatures(50) (corrida agil) -> KS T=1705.5730
+*!       p=0.3725, MMD T=139.5582 p=0.2157; 9.56s
+*! Las 5 corridas terminaron SIN ERROR a N~141mil -- confirma que la
+*! reescritura de v0.7 funciona en produccion, con pesos de encuesta
+*! reales, [if], posthoc y graph juntos. T_KS = 1705.5730 identico en
+*! las 3 corridas que lo calculan (no depende de nfeatures()/mmdtype
+*! ni de v0.7, como se esperaba). Chequeo cruzado de consistencia
+*! interna: los 2 pares donde el post-hoc de KS NO encuentra diferencia
+*! (p=0.6020 y p=0.7662) son EXACTAMENTE los mismos 2 pares donde el
+*! post-hoc de MMD da un T NEGATIVO (-174.9475 y -361.6898
+*! respectivamente, ver nota abajo sobre por que eso es lo esperado) --
+*! ambos estadisticos, calculados de forma completamente independiente,
+*! coinciden en que grupos no difieren.
+*! Esta primera tanda de 5 corridas de produccion uso todas
+*! mmdtype(vspool) (el default) -- ninguna paso mmdtype(maxpairwise) ni
+*! mmdtype(fuse). Ver el bloque de abajo para esas dos.
+*!
+*! mmdtype(maxpairwise) Y mmdtype(fuse) CONFIRMADOS TAMBIEN A ESCALA DE
+*! PRODUCCION (21sep2026, mismo dia, DESPUES del fix del bug de
+*! maxpairwise -- ver el bloque "BUG ENCONTRADO Y CORREGIDO" abajo --
+*! con el .ado ya corregido, mismo dataset/variables que arriba):
+*!     -> KS T=1705.5730 p=0.4726; MMD(maxpairwise) T=298.8540 p=0.6119;
+*!        141.17s, con reps(200) nfeatures(500) posthoc. Posthoc: los
+*!        mismos 2 pares de arriba dan T=-174.9475 p=0.5970 y
+*!        T=-361.6898 p=0.7861 -- VALORES NEGATIVOS REALES, no
+*!        0.0000/1.0000 como en la corrida pre-fix -- fix CONFIRMADO en
+*!        produccion. Ademas, estos 2 valores coinciden casi exactos
+*!        con el posthoc de vspool para los mismos 2 pares (ver arriba)
+*!        -- consistente con que, a k=2, vspool y maxpairwise son
+*!        algebraicamente el mismo estadistico (ya documentado en el
+*!        punto 4 de mas arriba).
+*!   ... mmdtype(fuse) reps(200) nfeatures(200) posthoc
+*!     -> KS T=1705.5730 p=0.4279; MMD(fuse) T=1692.7238 p=0.3682;
+*!        387.02s (~6.5 min); posthoc sin error (6 pares)
+*!   ... mmdtype(fuse) reps(200) nfeatures(500) posthoc
+*!     -> KS T=1705.5730 p=0.4328; MMD(fuse) T=1166.0802 p=0.3930;
+*!        832.45s (~13.9 min); posthoc sin error (6 pares) -- 10x500=
+*!        5.000 columnas de Phi_grid_sorted, el territorio de memoria
+*!        NO confirmado que se senalaba arriba -- CONFIRMADO SIN
+*!        PROBLEMA DE MEMORIA NI ERROR a N~141mil.
+*! Con esto, los 3 mmdtype() (vspool, maxpairwise, fuse) Y KS quedan
+*! CONFIRMADOS en ambas escalas (chica via auto.dta, produccion via
+*! estos runs) -- no queda ningun mmdtype() ni ninguna combinacion de
+*! opciones pendiente de confirmar contra Stata real para v0.7.
+*!
+*! Nota menor: T_KS=1705.5730 es identico en TODAS las corridas de
+*! produccion (5+3=8 en total), pero el p-valor de KS varia levemente
+*! entre corridas (0.4378, 0.4179, 0.3725, 0.4726, 0.4279, 0.4328) --
+*! es el ruido esperado de permutacion (T_KS es deterministico dado el
+*! dato, pero su p-valor depende de que permutaciones se sortearon esa
+*! corrida en particular). Los posthoc de pares POSITIVOS tampoco
+*! coinciden exactamente entre corridas distintas (un mismo par dio
+*! 258.3331, 265.7532 y 265.2266 en tres corridas distintas) -- mismo
+*! motivo, mas el hecho de que bw() por heuristica de mediana (default)
+*! se recalcula con su propio sorteo aleatorio dentro de cada corrida.
+*! Ninguna de estas variaciones es un problema: son fluctuaciones de
+*! Monte Carlo normales entre corridas independientes con distinto
+*! estado de las variables aleatorias de Stata/Mata al momento de
+*! invocar el comando (aunque se pase el mismo seed() a ksmmd, otros
+*! comandos ejecutados antes en la misma sesion pueden haber consumido
+*! numeros aleatorios de forma distinta entre sesiones distintas de
+*! Stata).
+*!
+*! BUG ENCONTRADO Y CORREGIDO (21sep2026, en la MISMA sesion de
+*! produccion real de arriba): el usuario corrio mmdtype(maxpairwise) a
+*! escala de produccion (mismos datos, N~141mil) ANTES de que este bug
+*! se detectara y corrigiera -- esa corrida especifica (Stat=298.8540
+*! p=0.6119 en el omnibus; posthoc con 2 de los pares dando Stat=0.0000
+*! EXACTO y p=1.0000 EXACTO) uso codigo con el bug todavia presente,
+*! asi que esa corrida especifica NUNCA sirvio como
+*! confirmacion valida de mmdtype(maxpairwise) en produccion -- se
+*! repitio con el .ado corregido el mismo dia (ver el bloque de
+*! confirmacion de produccion mas abajo: valores negativos reales
+*! confirmados, esa confirmacion ya quedo cerrada).
+*! Causa raiz: en ksmmd_mmd_T_batch(), tanto vspool (suma) como
+*! maxpairwise (maximo via rowmax()) arrancaban su acumulador T en
+*! J(B,1,0). Para vspool, 0 es la identidad aditiva correcta. Para
+*! maxpairwise, 0 actuaba como un PISO artificial: con el V-estadistico
+*! sesgado de v0.6 y anteriores (siempre >=0) esto era inofensivo,
+*! porque el maximo real nunca podia ser menor que 0. Con el
+*! U-estadistico insesgado de v0.7 (dist2U puede ser negativo, ver la
+*! nota que sigue), si TODOS los pares de una permutacion -- o, en un
+*! posthoc con k=2, el UNICO par -- daban negativo, el rowmax contra un
+*! piso de 0 devolvia 0 en vez del valor real, y como el mismo piso se
+*! aplicaba tambien a cada permutacion, el conteo del p-valor quedaba
+*! sesgado (mas conservador, no anti-conservador, pero con un valor
+*! reportado literalmente incorrecto: 0.0000 exacto no era el
+*! estadistico real). Fix: T arranca en -1e300 (mismo centinela que ya
+*! usa el jumpmask de KS) SOLO en la rama maxpairwise -- vspool sigue
+*! arrancando en 0. Mismo bug y mismo fix aplicados al prototipo Python
+*! (sim/simulacion_ksmmd_v07_tipo1.py). Re-validado por una nueva
+*! corrida de la simulacion de Tipo I (R=2000, k=4, 3 escenarios --
+*! rango 3.6%-5.8%, sin inflacion, ver arriba y
+*! resultados_ksmmd_v07_tipo1.txt) mas un sanity check dedicado (k=2,
+*! bandwidth grande, confirma que el estadistico puede devolver un
+*! valor no floreado en 0). Este bug NO afectaba a vspool ni a fuse
+*! (fuse solo usa la rama vspool internamente, nunca la de
+*! maxpairwise) -- estaba aislado a mmdtype(maxpairwise).
+*!
+*! NOTA IMPORTANTE sobre los valores NEGATIVOS de T_MMD (ej. -0.1721,
+*! -0.1989, -0.1188 en los ejemplos de vspool/fuse de arriba, y ahora
+*! tambien posible en maxpairwise tras el fix de arriba): esto NO es un
+*! error, es la firma esperada del U-estadistico insesgado agregado en
+*! v0.7. El V-estadistico de v0.6 y anteriores (biased, incluye las
+*! parejas i=i' de la misma unidad) es una suma/maximo de cuadrados y
+*! por construccion nunca podia dar negativo. El U-estadistico
+*! insesgado (v0.7) es distinto: al ser insesgado para una cantidad
+*! poblacional (MMD^2) que tiene un piso en 0 (H0: MMD^2=0), un
+*! estimador insesgado de un valor en el piso de su propio rango DEBE
+*! poder tomar valores en ambas direcciones para no estar sesgado hacia
+*! arriba -- Gretton et al. (2012) ya documentan exactamente esto para
+*! el caso de 2 muestras. Con g=1+mod(_n,3) (una particion arbitraria
+*! de mpg en auto.dta, sin diferencia real entre grupos) el MMD^2
+*! poblacional verdadero es ~0, asi que el estimador insesgado fluctua
+*! alrededor de 0 -- valores negativos moderados son el comportamiento
+*! correcto, no un bug. El p-valor sigue siendo valido (calibrado por
+*! permutacion contra la MISMA distribucion nula, que tambien fluctua
+*! alrededor de 0): un T_MMD observado muy negativo naturalmente da un
+*! p-valor ALTO (ej. p=0.9142 en el ejemplo de fuse arriba), exactamente
+*! como se espera bajo H0.
 *!
 *! v0.5 -- la salida de consola ahora muestra la Ho de cada prueba (a
 *! pedido explicito del usuario, tras confundir varias veces en esta
@@ -303,16 +732,41 @@
 *!     exacta; el kernel bandwidth bw() por default usa la heuristica de
 *!     mediana (Garreau, Jitkrittum & Kanagawa 2017, arXiv:1707.07269)
 *!     sobre una submuestra, no el dataset completo (por costo). Cota de
-*!     error conocida (Sutherland & Schneider 2015, UAI, Theorem 1,
-*!     sobre el estadistico MMD en si, no solo sobre el kernel):
+*!     error conocida (Sutherland & Schneider 2015, UAI, Seccion 3.3,
+*!     sobre el estadistico MMD en si -- NO su cuadrado, no solo sobre
+*!     el kernel):
 *!     P(|MMD_RFF - MMD| >= eps) <= 2*exp(-D*eps^2/128), error absoluto
 *!     esperado <= 8*sqrt(2*pi/D) -- para bajar el error esperado a la
-*!     mitad hace falta CUADRUPLICAR nfeatures(). Ademas, Choi & Kim
-*!     (2024, arXiv:2407.08976) muestran que la potencia del test con
-*!     RFF fijo NO es consistente en general -- D chico (nfeatures()
-*!     bajo) puede perder potencia frente al MMD exacto, mismo patron
-*!     agil->final que reps(): nfeatures() bajo para explorar, alto
-*!     para el resultado que se va a reportar.
+*!     mitad hace falta CUADRUPLICAR nfeatures().
+*!     [CORREGIDO sep2026, tras leer el PDF completo (con verificacion
+*!     cruzada via pdftotext sobre el PDF crudo, caracter por caracter):
+*!     el "CORREGIDO 19sep2026" que tenia esta version antes (que habia
+*!     cambiado "MMD" por "MMD^2" a partir de busqueda bibliografica sin
+*!     acceso al texto completo) estaba EQUIVOCADO -- el propio texto
+*!     primario (pagina 7: "Pr(|MMDz(X,Y) - MMD(X,Y)|) <= 2*exp(-D*
+*!     eps^2/128) and expected absolute error of at most 8*sqrt(2*pi/D)")
+*!     confirma que la cota es sobre MMD sin elevar al cuadrado, tal
+*!     como decia la version ORIGINAL de este parrafo. Se revierte aca a
+*!     esa forma. Ademas, el paper no tiene ningun "Theorem 1" numerado
+*!     (solo Proposiciones 1-10) -- el resultado es un parrafo en prosa
+*!     dentro de la Seccion 3.3, de ahi la cita corregida arriba.]
+*!     Ademas, Choi, I. & Kim, I. (2024, arXiv:2407.08976, PDF leido
+*!     completo) prueban algo MAS FUERTE que "puede perder potencia":
+*!     su Teorema 3 muestra INCONSISTENCIA GENUINA del test con D fijo
+*!     -- existen infinitos pares de distribuciones distintas donde la
+*!     potencia asintotica queda acotada por alpha, sin importar el
+*!     tamano de muestra, si D no crece con N. No hay una tasa universal
+*!     D=O(sqrt(N)); la tasa necesaria depende de la suavidad de la
+*!     alternativa (sus Teoremas 6-7, Prop. 8). Evidencia empirica a
+*!     favor del default: en su caso univariado (d=1, el mismo caso de
+*!     ksmmd) D=200 ya iguala la potencia del MMD exacto en sus
+*!     simulaciones -- respalda nfeatures(200) por default. Su Teorema 7
+*!     tambien advierte que subir D hasta ~n (tamano del grupo minimo)
+*!     recupera la tasa optima pero el costo vuelve a ser esencialmente
+*!     O(N^2) -- "D grande para el resultado final" no es gratis, mismo
+*!     patron agil->final que reps(): nfeatures() bajo para explorar,
+*!     alto (pero no arbitrariamente alto) para el resultado que se va a
+*!     reportar.
 *!   - PESOS DE ENCUESTA (diseno muestral, probabilidad desigual): no
 *!     existe, hasta donde se pudo revisar (busqueda indexada por el
 *!     usuario, sept-2026), ningun test MMD/energy-statistics peer-
@@ -329,9 +783,11 @@
 *!     ella es la simulacion de tasa de error Tipo I pendiente (ver
 *!     arriba), no una cita.
 *!
-*! Referencias completas:
+*! Referencias completas (DOI agregado donde se pudo confirmar por
+*! busqueda -- ver nota de verificacion al final de este bloque):
 *!   Kiefer, J. (1959). K-sample analogues of the Kolmogorov-Smirnov and
-*!     Cramer-v. Mises tests. Ann. Math. Statist. 30(2), 420-447.
+*!     Cramer-v. Mises tests. Ann. Math. Statist. 30(2), 420-447. DOI:
+*!     10.1214/aoms/1177706261.
 *!   Gretton, A., Borgwardt, K.M., Rasch, M.J., Scholkopf, B., Smola, A.
 *!     (2012). A Kernel Two-Sample Test. JMLR 13(25), 723-773.
 *!   Rahimi, A., Recht, B. (2007). Random Features for Large-Scale
@@ -340,31 +796,90 @@
 *!     Combining Kernels for Two-Sample Testing Without Data Splitting.
 *!     NeurIPS 36. arXiv:2306.08777.
 *!   Hemerik, J., Goeman, J.J. (2018). Exact testing with random
-*!     permutations. Test 27(4), 811-825.
+*!     permutations. Test 27(4), 811-825. DOI: 10.1007/s11749-017-0571-1.
 *!   Sutherland, D.J., Schneider, J. (2015). On the Error of Random
 *!     Fourier Features. UAI 2015.
-*!   Ong, C.S., Chen, X., Zhu, D., Zhang, Y. (2023). Testing Equality of
-*!     Several Distributions at High Dimensions: A Maximum Mean
-*!     Discrepancy-Based Approach. Mathematics 11(20), 4272.
-*!   Zhang, Y., Guo, X., Zhou, W. (2022). Testing equality of several
-*!     distributions in separable metric spaces: a maximum mean
-*!     discrepancy based approach. J. Econometrics.
+*!   Choi, I., Kim, I. (2024). Computational-Statistical Trade-off in
+*!     Kernel Two-Sample Testing with Random Fourier Features.
+*!     arXiv:2407.08976. [CORREGIDO sep2026, tras leer el PDF completo:
+*!     la version anterior de esta cita decia "Choi, S." -- el primer
+*!     autor es Ikjun Choi, inicial correcta "I.", no "S." -- tercer
+*!     error real de atribucion detectado en esta bibliografia, mismo
+*!     tipo que las 2 correcciones de Ong et al. y Zhang/Guo/Zhou de
+*!     abajo, esta vez encontrado por lectura de texto completo, no por
+*!     busqueda de metadatos.]
+*!   Reddi, S.J., Ramdas, A., Poczos, B., Singh, A., Wasserman, L.
+*!     (2015). On the High Dimensional Power of a Linear-Time Two
+*!     Sample Test under Mean-shift Alternatives. Proc. AISTATS 2015,
+*!     PMLR v38. arXiv:1411.6314.
+*!   Ong, Z.P., Chen, A.A., Zhu, T., Zhang, J.-T. (2023). Testing
+*!     Equality of Several Distributions at High Dimensions: A
+*!     Maximum-Mean-Discrepancy-Based Approach. Mathematics 11(20),
+*!     4374. DOI: 10.3390/math11204374. [CORREGIDO 19sep2026: la
+*!     version anterior de esta cita tenia autores mal atribuidos
+*!     ("Ong, C.S., Chen, X., Zhu, D., Zhang, Y.") y el numero de
+*!     articulo equivocado (4272) -- error real, no solo un DOI
+*!     faltante, detectado al verificar la bibliografia a pedido
+*!     explicito del usuario.]
+*!   Zhang, J.-T., Guo, J., Zhou, B. (2024). Testing equality of
+*!     several distributions in separable metric spaces: a maximum
+*!     mean discrepancy based approach. J. Econometrics 239(2).
+*!     [CORREGIDO 19sep2026: autores mal atribuidos ("Zhang, Y., Guo,
+*!     X., Zhou, W.") y anio de publicacion equivocado (se cito 2022,
+*!     el paper se publico en 2024 aunque circulo como working paper
+*!     antes) -- mismo motivo que la correccion anterior.]
 *!   Kim, I. (2021). Comparing a large number of multivariate
-*!     distributions. Bernoulli 27(1), 419-441.
+*!     distributions. Bernoulli 27(1), 419-441. DOI: 10.3150/20-BEJ1244.
 *!   Sejdinovic, D., Sriperumbudur, B., Gretton, A., Fukumizu, K.
 *!     (2013). Equivalence of distance-based and RKHS-based statistics
-*!     in hypothesis testing. Ann. Statist. 41(5), 2263-2291.
+*!     in hypothesis testing. Ann. Statist. 41(5), 2263-2291. DOI:
+*!     10.1214/13-AOS1140.
 *!   Rizzo, M.L., Szekely, G.J. (2010). DISCO analysis: a nonparametric
-*!     extension of analysis of variance. Ann. Appl. Stat. 4(2), 1034-1055.
+*!     extension of analysis of variance. Ann. Appl. Stat. 4(2),
+*!     1034-1055. DOI: 10.1214/09-AOAS245.
 *!   Garreau, D., Jitkrittum, W., Kanagawa, M. (2017). Large sample
 *!     analysis of the median heuristic. arXiv:1707.07269.
 *!   Szekely, G.J., Rizzo, M.L. (2004). Testing for Equal Distributions
 *!     in High Dimension. InterStat, Nov(5).
 *!   Rizzo, M.L., Szekely, G.J. (2016). Energy distance. WIREs
-*!     Computational Statistics 8(1), 27-38.
+*!     Computational Statistics 8(1), 27-38. DOI: 10.1002/wics.1375.
 *!   Huang, Z., Sen, B. (2024). A Kernel Measure of Dissimilarity
 *!     between M Distributions. JASA 119(548), 3020-3032 (evaluada,
 *!     NO incorporada -- ver punto 4 arriba).
+*!
+*!   NOTA DE VERIFICACION (19sep2026, a pedido explicito del usuario,
+*!   que pregunto directamente si estas citas se habian verificado
+*!   contra el documento original antes de incorporar sus formulas):
+*!   en una primera ronda NINGUNA de las citas de este bloque (salvo las
+*!   marcadas "PDF leido completo" en el punto 4b y en las secciones de
+*!   KMD/informacion mutua mas arriba) se habia leido como documento
+*!   primario en esta sesion -- las formulas venian de conocimiento
+*!   general/entrenamiento sobre resultados clasicos y muy citados en
+*!   estadistica/ML, no de abrir el PDF. Se verifico autor/anio/
+*!   revista/paginas/DOI de las 14 citas de este bloque via busqueda
+*!   web (no lectura del texto completo): 12 de 14 coincidian
+*!   exactamente; 2 tenian errores reales de atribucion (Ong et al. y
+*!   Zhang/Guo/Zhou, ver correcciones arriba) que NO se habrian
+*!   detectado sin ese chequeo.
+*!
+*!   SEGUNDA RONDA (sep2026): el usuario compartio los PDF completos via
+*!   Google Drive y se leyeron los 15 disponibles de punta a punta (8
+*!   agentes en paralelo, uno queda sin PDF: Zhang/Guo/Zhou 2024,
+*!   detras de paywall de ScienceDirect, no obtenido). Esa lectura
+*!   completa encontro 3 correcciones OBLIGATORIAS adicionales que la
+*!   verificacion de metadatos de la primera ronda no podia detectar
+*!   (porque son errores de CONTENIDO/formula, no de autor/anio/DOI):
+*!   la cota de Sutherland&Schneider (revertida de MMD^2 a MMD, cita
+*!   "Theorem 1" corregida a "Seccion 3.3"), la motivacion de
+*!   mmdtype(fuse) (escala cuadratica de Reddi et al., no exponencial),
+*!   y un TERCER error de atribucion (Choi, S. -> Choi, I.) que la
+*!   busqueda de metadatos de la primera ronda tampoco habia detectado.
+*!   Tambien confirmo/reforzo con texto primario buena parte de las
+*!   justificaciones de diseno que antes descansaban solo en
+*!   conocimiento general (ver remarks_mmdtype en el help para el
+*!   detalle citado por papel). El algebra de la identidad vspool
+*!   (Huygens/ANOVA) fue verificada directamente por calculo propio
+*!   desde el inicio, independiente de esta bibliografia.
 *!
 *! Author: Andres Talavera Cuya. Afiliacion indicada solo para fines de
 *! identificacion -- este software no es un producto oficial de INEI y
@@ -397,9 +912,9 @@ program define ksmmd, rclass
         exit 198
     }
     if "`mmdtype'" == "fuse" & `bw' != -1 {
-        di as txt "ksmmd: mmdtype(fuse) ignora bw() -- usa una grilla de 4 " ///
-            "bandwidths anclada en la heuristica de mediana calculada " ///
-            "internamente (ver {help ksmmd##remarks_mmdtype:help ksmmd})"
+        di as txt "ksmmd: mmdtype(fuse) ignora bw() -- usa una grilla de 10 " ///
+            "bandwidths por cuantiles 5%/95% (kernel Gaussiano y Laplace) " ///
+            "calculada internamente (ver {help ksmmd##remarks_mmdtype:help ksmmd})"
     }
     if "`ksonly'" != "" & "`mmdonly'" != "" {
         di as err "ksmmd: ksonly y mmdonly son mutuamente excluyentes"
@@ -407,6 +922,15 @@ program define ksmmd, rclass
     }
     local do_ks  = cond("`mmdonly'" != "", 0, 1)
     local do_mmd = cond("`ksonly'"  != "", 0, 1)
+
+    * v0.7: la variante RFF "z-tilde" (Sutherland & Schneider 2015) arma
+    * pares seno/coseno a partir de D/2 frecuencias -- nfeatures() debe
+    * ser PAR para que devuelva exactamente nfeatures() columnas.
+    if `do_mmd' & mod(`nfeatures', 2) != 0 {
+        local nfeatures = `nfeatures' + 1
+        di as txt "ksmmd: nfeatures() debe ser par para la variante RFF " ///
+            "z-tilde (v0.7) -- ajustado a " as res `nfeatures'
+    }
 
     tempvar touse
     marksample touse, novarlist
@@ -668,7 +1192,7 @@ mata:
 // ---------------------------------------------------------------
 // Punto de entrada: ordena y UNA vez, calcula todo lo que NO depende
 // de la permutacion de etiquetas una sola vez (jump-mask y Fcum para
-// KS; mu_pool para MMD vspool), y procesa las permutaciones en
+// KS; Phi/Phi_grid para MMD, ver mas abajo), y procesa las permutaciones en
 // BLOQUES (chunk x N) via ksmmd_ks_T_batch()/ksmmd_mmd_T_batch(), en
 // vez de una permutacion a la vez -- ver nota v0.3 en el encabezado
 // del .ado (motivo: v0.2 solo ganaba ~4-5x contra mmd_2s en vez del
@@ -683,24 +1207,26 @@ void ksmmd_run(string scalar depvar, string scalar byvar, string scalar wvar,
     real scalar do_ks, real scalar do_mmd, string scalar resname)
 {
     real vector y, g, w, nonmiss, idx, y_sorted, w_sorted, g_sorted, groups
-    real matrix Phi, Phi_sorted, label_matrix, mu_pool
+    real matrix Phi, Phi_sorted, label_matrix
     real scalar N, T_KS_obs, T_MMD_obs, count_ks, count_mmd
-    real scalar chunk, done, thisB, Wtot, i
+    real scalar chunk, done, thisB, i
     real rowvector Fcumrow, jumpmask
     real vector T_KS_perm, T_MMD_perm
     real matrix RES
-    // -- solo para mmdtype(fuse): grilla de bandwidths ancladas en la
-    // heuristica de mediana. Phi/mu_pool de LOS G puntos de grilla se
-    // guardan uno al lado del otro en una sola matriz (N x G*nfeatures /
-    // 1 x G*nfeatures), mismo patron de "bloques de columnas" que ya usa
-    // ksmmd_mmd_T_batch() para mu_all (ver mas abajo) -- se prefiere a
-    // un vector de punteros por ser el mismo idioma que el resto de este
-    // archivo ya usa y prueba. Fijos, no dependen de la permutacion: se
-    // calculan una sola vez aca, igual que Phi_sorted/mu_pool para
-    // vspool/maxpairwise.
-    real scalar is_fuse, bw_heur, G, gi, fuse_lam, c0, c1
-    real vector fuse_mult, nhatG
-    real matrix Phi_grid_sorted, mu_pool_grid
+    // -- solo para mmdtype(fuse), v0.7: grilla por cuantiles 5%/95% de
+    // las distancias inter-muestra (submuestra ponderada), dos familias
+    // de kernel (Gaussiano y Laplace, NPERFAM puntos cada una). Phi de
+    // LOS G=2*NPERFAM puntos de grilla se guarda uno al lado del otro en
+    // una sola matriz (N x G*nfeatures), mismo patron de "bloques de
+    // columnas" que ya usa ksmmd_mmd_T_batch() para mu_all (ver mas
+    // abajo). Fijos, no dependen de la permutacion: se calculan una sola
+    // vez aca, igual que Phi_sorted para vspool/maxpairwise. Ya no se
+    // necesita mu_pool/mu_pool_grid en ningun camino -- ksmmd_mmd_T_batch()
+    // (v0.7) calcula el U-estadistico via suma/maximo par-a-par, sin
+    // pasar por un "pool" explicito.
+    real scalar is_fuse, G, NPERFAM, gi, fuse_lam, c0, c1, gridlo, gridhi, n_min, jg
+    real vector nhatG, grid_bw, qrange, n_por_grupo
+    real matrix Phi_grid_sorted
 
     st_view(y = ., ., depvar, touse)
     st_view(g = ., ., byvar, touse)
@@ -720,38 +1246,60 @@ void ksmmd_run(string scalar depvar, string scalar byvar, string scalar wvar,
 
     is_fuse = (do_mmd & mmdtype == "fuse")
     if (do_mmd & !is_fuse) {
-        Phi = ksmmd_rff_features(y, nfeatures, bw)
+        Phi = ksmmd_rff_features(y, nfeatures, bw, w)
         Phi_sorted = Phi[idx, .]
-        Wtot = sum(w_sorted)
-        mu_pool = (w_sorted' * Phi_sorted) / Wtot
     }
     else if (is_fuse) {
-        // grilla validada por simulacion (Tipo I, R=20000, k=2 y k=4 --
-        // ver sim/resultados_ksmmd_mmd_fuse_2muestras_tipo1.txt y
-        // sim/resultados_ksmmd_mmd_fuse_4muestras_tipo1.txt) y robusta a
-        // dos tipos de alternativa distintos, corrimiento de ubicacion y
-        // diferencia de escala (sim/prototipo_mmd_fuse_sistematico.py,
-        // sim/prototipo_mmd_fuse_escala.py) -- NO configurable via
-        // opciones del .ado, ver nota en el encabezado del archivo.
-        // bw() del usuario se IGNORA aca (el .ado avisa si se paso uno):
-        // la grilla siempre se ancla en la heuristica de mediana interna,
-        // que es lo unico que se valido.
-        fuse_mult = (1.0, 1.5, 2.0, 3.0)
-        fuse_lam = 0.1
-        G = cols(fuse_mult)
-        bw_heur = ksmmd_bw_heuristic(y)
-        Wtot = sum(w_sorted)
+        // v0.7: grilla por cuantiles 5%/95% (0.5x el cuantil 5%, 2x el
+        // cuantil 95% de las distancias |y_i-y_j| en una submuestra
+        // PONDERADA, discretizacion uniforme -- MMD-FUSE, Apendice
+        // A.2/A.4) + familias Gaussiana Y Laplace (NPERFAM puntos cada
+        // una -- el paper valida 10-20 por familia; aca se usan 5 por
+        // costo de memoria en produccion, ver nota en el encabezado del
+        // .ado), y lambda~n_min (formula del paper, lambda=sqrt(n(n-1)),
+        // generalizada al grupo MAS CHICO -- coincide exactamente con la
+        // formula del paper cuando k=2). Validado por simulacion propia
+        // (Tipo I, R=2000, k=4, 3 escenarios de peso -- ver
+        // sim/simulacion_ksmmd_v07_tipo1.py /
+        // resultados_ksmmd_v07_tipo1.txt). bw() del usuario se IGNORA
+        // aca (el .ado avisa si se paso uno).
+        NPERFAM = 5
+        G = 2*NPERFAM
+        qrange = ksmmd_bw_quantile_range(y, w, 0.05, 0.95)
+        gridlo = 0.5*qrange[1]
+        gridhi = 2*qrange[2]
+        if (gridhi <= gridlo) gridhi = gridlo + 1
+
+        grid_bw = J(1, NPERFAM, .)
+        for (gi=1; gi<=NPERFAM; gi++) {
+            if (NPERFAM == 1) grid_bw[gi] = gridlo
+            else grid_bw[gi] = gridlo + (gi-1)*(gridhi-gridlo)/(NPERFAM-1)
+        }
+
         Phi_grid_sorted = J(N, G*nfeatures, .)
-        mu_pool_grid = J(1, G*nfeatures, .)
         nhatG = J(1, G, .)
-        for (gi=1; gi<=G; gi++) {
+        for (gi=1; gi<=NPERFAM; gi++) {
             c0 = (gi-1)*nfeatures + 1
             c1 = gi*nfeatures
-            Phi = ksmmd_rff_features(y, nfeatures, bw_heur * fuse_mult[gi])
+            Phi = ksmmd_rff_features(y, nfeatures, grid_bw[gi], w)
             Phi_grid_sorted[., c0::c1] = Phi[idx, .]
-            mu_pool_grid[1, c0::c1] = (w_sorted' * Phi_grid_sorted[., c0::c1]) / Wtot
             nhatG[gi] = ksmmd_nhat(Phi_grid_sorted[., c0::c1])
         }
+        for (gi=1; gi<=NPERFAM; gi++) {
+            c0 = (NPERFAM+gi-1)*nfeatures + 1
+            c1 = (NPERFAM+gi)*nfeatures
+            Phi = ksmmd_rff_laplace_features(y, nfeatures, grid_bw[gi])
+            Phi_grid_sorted[., c0::c1] = Phi[idx, .]
+            nhatG[NPERFAM+gi] = ksmmd_nhat(Phi_grid_sorted[., c0::c1])
+        }
+
+        n_por_grupo = J(1, rows(groups), .)
+        for (jg=1; jg<=rows(groups); jg++) {
+            n_por_grupo[jg] = sum(g_sorted :== groups[jg])
+        }
+        n_min = min(n_por_grupo)
+        fuse_lam = sqrt(n_min*(n_min-1))
+        if (fuse_lam <= 0) fuse_lam = 0.1
     }
 
     // Fcum (peso pooled acumulado hasta cada posicion) y el jump-mask
@@ -774,10 +1322,10 @@ void ksmmd_run(string scalar depvar, string scalar byvar, string scalar wvar,
         T_KS_obs = ksmmd_ks_T_batch(w_sorted, g_sorted', groups, Fcumrow, jumpmask)[1]
     }
     if (do_mmd & !is_fuse) {
-        T_MMD_obs = ksmmd_mmd_T_batch(Phi_sorted, w_sorted, g_sorted', mmdtype, groups, mu_pool)[1]
+        T_MMD_obs = ksmmd_mmd_T_batch(Phi_sorted, w_sorted, g_sorted', mmdtype, groups)[1]
     }
     else if (is_fuse) {
-        T_MMD_obs = ksmmd_mmd_fuse_T_batch(Phi_grid_sorted, w_sorted, g_sorted', groups, mu_pool_grid, nhatG, fuse_lam)[1]
+        T_MMD_obs = ksmmd_mmd_fuse_T_batch(Phi_grid_sorted, w_sorted, g_sorted', groups, nhatG, fuse_lam)[1]
     }
 
     // Tamano de bloque: acota memoria (permutaciones simultaneas x N)
@@ -807,11 +1355,11 @@ void ksmmd_run(string scalar depvar, string scalar byvar, string scalar wvar,
             count_ks = count_ks + sum(T_KS_perm :>= T_KS_obs)
         }
         if (do_mmd & !is_fuse) {
-            T_MMD_perm = ksmmd_mmd_T_batch(Phi_sorted, w_sorted, label_matrix, mmdtype, groups, mu_pool)
+            T_MMD_perm = ksmmd_mmd_T_batch(Phi_sorted, w_sorted, label_matrix, mmdtype, groups)
             count_mmd = count_mmd + sum(T_MMD_perm :>= T_MMD_obs)
         }
         else if (is_fuse) {
-            T_MMD_perm = ksmmd_mmd_fuse_T_batch(Phi_grid_sorted, w_sorted, label_matrix, groups, mu_pool_grid, nhatG, fuse_lam)
+            T_MMD_perm = ksmmd_mmd_fuse_T_batch(Phi_grid_sorted, w_sorted, label_matrix, groups, nhatG, fuse_lam)
             count_mmd = count_mmd + sum(T_MMD_perm :>= T_MMD_obs)
         }
         done = done + thisB
@@ -961,24 +1509,28 @@ real vector ksmmd_ks_T_batch(real vector w_sorted, real matrix label_matrix,
 }
 
 // ---------------------------------------------------------------
-// Heuristica de mediana (Garreau, Jitkrittum & Kanagawa 2017) para el
-// bandwidth del kernel RBF, sobre una submuestra de hasta 2000
-// observaciones (evita el costo O(n^2) de la mediana exacta de
-// distancias par-a-par en el dataset completo). Extraida a funcion
-// propia (antes vivia inline dentro de ksmmd_rff_features) para que
-// mmdtype(fuse) pueda calcularla UNA vez y reusarla como ancla de su
-// grilla de bandwidths -- el resto del codigo (orden de los sorteos
-// aleatorios) queda identico, asi que no cambia el resultado de
-// mmdtype(vspool)/mmdtype(maxpairwise) con la misma seed.
+// v0.7: submuestra PONDERADA (hasta 2000 obs) de distancias par-a-par
+// |y_i-y_j|, usada tanto por la heuristica de mediana como por la
+// grilla de cuantiles de mmdtype(fuse). Antes (v0.6 y anteriores) el
+// subsample era UNIFORME (sin usar w), inconsistencia de diseno frente
+// al resto del estimador, que si es ponderado -- corregida aca via la
+// clave de Efraimidis-Spirakis (logkey=ln(u)/w, u~Uniform(0,1) iid):
+// tomar las nsub observaciones con MAYOR logkey es equivalente a un
+// muestreo sin reemplazo con probabilidad proporcional a w (PPS), sin
+// necesitar una suma acumulada de pesos de largo N -- mismo costo que
+// el order() sobre runiform(n,1) que ya se usaba (un sort de N
+// elementos), solo cambia la clave que se ordena.
 // ---------------------------------------------------------------
-real scalar ksmmd_bw_heuristic(real vector y)
+real vector ksmmd_weighted_subsample_pdiffs(real vector y, real vector w)
 {
-    real scalar n, nsub, i, med, p, q
-    real vector ysub, dif
+    real scalar n, nsub, i, p, q
+    real vector ysub, dif, logkey, idx
 
     n = rows(y)
     nsub = min((n, 2000))
-    ysub = y[order(runiform(n,1),1)[1::nsub]]
+    logkey = ln(runiform(n,1)) :/ w
+    idx = order(logkey, -1)[1::nsub]
+    ysub = y[idx]
     dif = J(nsub*(nsub-1)/2, 1, .)
     i = 0
     for (p=1; p<=nsub-1; p++) {
@@ -987,28 +1539,110 @@ real scalar ksmmd_bw_heuristic(real vector y)
             dif[i] = abs(ysub[p] - ysub[q])
         }
     }
-    med = ksmmd_median(dif)
+    return(dif)
+}
+
+// ---------------------------------------------------------------
+// Heuristica de mediana (Garreau, Jitkrittum & Kanagawa 2017) para el
+// bandwidth del kernel RBF, ahora sobre la submuestra PONDERADA de
+// arriba (v0.7 -- antes sin ponderar). Extraida a funcion propia (antes
+// vivia inline dentro de ksmmd_rff_features) para que mmdtype(fuse)
+// pueda reusar la misma logica de submuestreo para su grilla de
+// cuantiles.
+// ---------------------------------------------------------------
+real scalar ksmmd_bw_heuristic(real vector y, real vector w)
+{
+    real scalar med
+    med = ksmmd_median(ksmmd_weighted_subsample_pdiffs(y, w))
     if (med <= 0) med = 1
     return(med)
 }
 
 // ---------------------------------------------------------------
-// Random Fourier Features para el kernel RBF exp(-(x-y)^2/(2*bw^2)):
-// phi(x) = sqrt(2/D) * cos(omega*x + b), omega ~ N(0, 1/bw^2),
-// b ~ Uniform(0, 2*pi) -- Rahimi & Recht (2007). bw<=0 dispara
-// ksmmd_bw_heuristic() arriba.
+// v0.7: rango [lo,hi] = [cuantil q_lo, cuantil q_hi] de las distancias
+// par-a-par en la MISMA submuestra ponderada de arriba -- ancla la
+// grilla de bandwidths de mmdtype(fuse) (MMD-FUSE, Apendice A.2:
+// discretizacion uniforme entre 0.5x el cuantil 5% y 2x el cuantil 95%
+// de las distancias inter-muestra).
 // ---------------------------------------------------------------
-real matrix ksmmd_rff_features(real vector y, real scalar D, real scalar bw)
+real rowvector ksmmd_bw_quantile_range(real vector y, real vector w,
+    real scalar q_lo, real scalar q_hi)
 {
-    real vector omega, b
-    real matrix Phi
+    real vector dif
+    real scalar lo, hi
 
-    if (bw <= 0) bw = ksmmd_bw_heuristic(y)
+    dif = ksmmd_weighted_subsample_pdiffs(y, w)
+    lo = ksmmd_quantile(dif, q_lo)
+    hi = ksmmd_quantile(dif, q_hi)
+    if (lo <= 0) lo = 1e-6
+    if (hi <= lo) hi = lo*1.001
+    return((lo,hi))
+}
 
-    omega = rnormal(D, 1, 0, 1/bw)
-    b = runiform(D, 1) :* (2*pi())
+real scalar ksmmd_quantile(real vector x, real scalar q)
+{
+    real vector xs
+    real scalar n, pos
+    xs = sort(x, 1)
+    n = rows(xs)
+    pos = ceil(q*n)
+    if (pos < 1) pos = 1
+    if (pos > n) pos = n
+    return(xs[pos])
+}
 
-    Phi = sqrt(2/D) :* cos(y * omega' :+ b')
+// ---------------------------------------------------------------
+// v0.7: Random Fourier Features, variante "z-tilde" (Sutherland &
+// Schneider 2015, ecs. 5-7: sin fase aleatoria b, pares seno/coseno,
+// D/2 frecuencias) para el kernel RBF exp(-(x-y)^2/(2*bw^2)):
+// phi(x) = sqrt(1/(D/2)) * [cos(omega_1*x),sin(omega_1*x),...],
+// omega_m ~ N(0, 1/bw^2), m=1..D/2 -- varianza ESTRICTAMENTE MENOR que
+// la variante "z-breve" (v0.6 y anteriores: coseno con fase aleatoria,
+// D frecuencias) al mismo costo computacional O(N*D); ver la nota en
+// el encabezado del .ado. D se fuerza a ser PAR en el .ado (ver
+// validacion de nfeatures() en el programa Stata) para que esta
+// funcion siempre devuelva exactamente D columnas. bw<=0 dispara
+// ksmmd_bw_heuristic() arriba (ponderada, v0.7).
+// ---------------------------------------------------------------
+real matrix ksmmd_rff_features(real vector y, real scalar D, real scalar bw,
+    real vector w)
+{
+    real scalar nfreq
+    real vector omega
+    real matrix Arg, Phi
+
+    if (bw <= 0) bw = ksmmd_bw_heuristic(y, w)
+
+    nfreq = D/2
+    omega = rnormal(nfreq, 1, 0, 1/bw)
+    Arg = y * omega'
+    Phi = sqrt(1/nfreq) :* (cos(Arg), sin(Arg))
+    return(Phi)
+}
+
+// ---------------------------------------------------------------
+// v0.7: Random Fourier Features, mismo estilo "z-tilde" de arriba,
+// para el kernel LAPLACE exp(-|x-y|/bw) -- segunda familia de kernel
+// de la grilla de mmdtype(fuse) (MMD-FUSE, Apendice A.2/A.4: el paper
+// valida empiricamente Gaussiano Y Laplace juntos). Por el teorema de
+// Bochner, la densidad espectral del kernel Laplace es una Cauchy(0,
+// 1/bw) (no Normal, como para el Gaussiano) -- Mata no trae un
+// generador Cauchy nativo, asi que se usa la transformada inversa
+// estandar: omega = (1/bw) * tan(pi*(u-0.5)), u~Uniform(0,1). Nunca se
+// dispara sobre bw<=0: mmdtype(fuse) siempre pasa un bandwidth positivo
+// concreto de su propia grilla (ver ksmmd_run()).
+// ---------------------------------------------------------------
+real matrix ksmmd_rff_laplace_features(real vector y, real scalar D, real scalar bw)
+{
+    real scalar nfreq
+    real vector u, omega
+    real matrix Arg, Phi
+
+    nfreq = D/2
+    u = runiform(nfreq, 1)
+    omega = (1/bw) :* tan(pi() :* (u :- 0.5))
+    Arg = y * omega'
+    Phi = sqrt(1/nfreq) :* (cos(Arg), sin(Arg))
     return(Phi)
 }
 
@@ -1025,31 +1659,62 @@ real scalar ksmmd_median(real vector x)
 
 // ---------------------------------------------------------------
 // T_MMD para un BLOQUE de B asignaciones de etiqueta a la vez
-// (label_matrix: B x N). Mismo algebra que ksmmd_mmd_T() de v0.2 --
-// "vspool" (default) o "maxpairwise", ver encabezado del .ado para
-// las citas -- reorganizada para las B permutaciones a la vez: para
-// cada grupo j se arma el indicador (B x N), se multiplica por Phi
-// (multiplicacion de matrices B x N por N x D, BLAS) para obtener de
-// una sola vez la media ponderada mu_j de cada una de las B
-// permutaciones, guardadas una al lado de la otra en mu_all (B x
-// k*D) e indexadas por bloque de columnas via rango (j-1)*D+1::j*D.
-// mu_pool (fijo, no depende de la permutacion) se calcula UNA vez en
-// ksmmd_run() y se pasa como parametro -- misma logica que ya se
-// valido en Python/numpy en sim/simulacion_ksmmd_mmd_tipo1.py.
+// (label_matrix: B x N) -- "vspool" (default) o "maxpairwise", ver
+// encabezado del .ado para las citas. v0.7: U-ESTADISTICO INSESGADO
+// (Gretton et al. 2012 dan ambas formas, biased/unbiased, para el caso
+// de 2 muestras; aca se generaliza a k grupos ponderados) en vez del
+// V-estadistico sesgado de v0.6 y anteriores. El V-estadistico incluye,
+// dentro de cada mu_j.mu_j, las parejas i=i' de la MISMA unidad
+// (autoproducto phi(x_i).phi(x_i), aprox RFF de k(x_i,x_i)=1) -- sin
+// pesos esa contribucion es una constante aditiva por grupo que no
+// cambia el ranking de permutacion, pero CON pesos de encuesta
+// desiguales deja de serlo (depende de que unidades caen en cada grupo
+// bajo cada permutacion), lo que puede restar potencia sutilmente. El
+// U-estadistico reemplaza mu_j.mu_j por S_j, que excluye esas parejas
+// i=i':
+//   S_j = [Wsum_j^2*(mu_j.mu_j) - sum_i w_i^2*s_i] / [Wsum_j^2 - sum_i w_i^2]
+// (s_i = ||phi(x_i)||^2, suma restringida a las unidades del grupo j
+// bajo la permutacion en curso), y arma
+// ||mu_a-mu_b||^2_U = S_a - 2*mu_a.mu_b + S_b para cada par de grupos.
+// Para vspool esto se suma sobre TODOS los pares a<b (dividido por
+// Wtot, constante fija que no cambia el p-valor pero preserva la
+// escala de la formula "cada grupo contra el pool" ya documentada --
+// via la identidad de Huygens/ANOVA, este formula pairwise coincide
+// EXACTAMENTE con esa formula cuando S_j=mu_j.mu_j, es decir sin
+// de-bias -- verificado numericamente en
+// sim/simulacion_ksmmd_v07_tipo1.py, funcion
+// sanity_check_V_equivale_a_pairwise()); para maxpairwise, igual que
+// antes, se toma el maximo par a par con el peso de Kim (2021).
+// Si Wsum_j^2-sum(w_i^2) es numericamente inseguro (grupo muy chico o
+// pesos muy concentrados en pocas unidades), se cae de vuelta al
+// V-estadistico SOLO para ese grupo/permutacion (evita dividir por un
+// denominador casi nulo) -- nunca invalida el p-valor de permutacion
+// (Hemerik & Goeman 2018 vale para CUALQUIER estadistico fijo), solo
+// podria diluir levemente la ganancia de potencia esperada en ese caso
+// extremo. Validado por simulacion propia (Tipo I, R=2000, k=4, 3
+// escenarios de peso -- sim/simulacion_ksmmd_v07_tipo1.py /
+// resultados_ksmmd_v07_tipo1.txt).
 // ---------------------------------------------------------------
 real vector ksmmd_mmd_T_batch(real matrix Phi, real vector w, real matrix label_matrix,
-    string scalar mmdtype, real vector groups, real matrix mu_pool)
+    string scalar mmdtype, real vector groups)
 {
-    real scalar k, j, l, D, B, c0, c1, c0l, c1l
-    real matrix Ind, Wmat, mu_all, Wsum_all
-    real vector T, dist2, wjl
+    real scalar k, j, l, D, B, c0, c1, c0l, c1l, Wtot
+    real matrix Ind, Wmat, mu_all, Wsum_all, SW2_all, SW2S_all, S_all
+    real vector T, dist2U, wjl, s, ws2, ws2s, selfdotj, denomj, maskj, Sj
 
     k = rows(groups)
     B = rows(label_matrix)
     D = cols(Phi)
+    Wtot = sum(w)
+
+    s = rowsum(Phi:^2)
+    ws2 = w:^2
+    ws2s = ws2 :* s
 
     mu_all = J(B, k*D, .)
     Wsum_all = J(B, k, .)
+    SW2_all = J(B, k, .)
+    SW2S_all = J(B, k, .)
     for (j=1; j<=k; j++) {
         Ind = (label_matrix :== groups[j])
         Wmat = Ind :* w'
@@ -1057,28 +1722,67 @@ real vector ksmmd_mmd_T_batch(real matrix Phi, real vector w, real matrix label_
         c0 = (j-1)*D+1
         c1 = j*D
         mu_all[., c0::c1] = (Wmat * Phi) :/ Wsum_all[.,j]
+        SW2_all[.,j] = rowsum(Ind :* ws2')
+        SW2S_all[.,j] = rowsum(Ind :* ws2s')
     }
 
-    T = J(B, 1, 0)
-    if (mmdtype == "vspool") {
-        for (j=1; j<=k; j++) {
-            c0 = (j-1)*D+1
-            c1 = j*D
-            T = T :+ Wsum_all[.,j] :* rowsum((mu_all[.,c0::c1] :- mu_pool):^2)
-        }
+    S_all = J(B, k, .)
+    for (j=1; j<=k; j++) {
+        c0 = (j-1)*D+1
+        c1 = j*D
+        selfdotj = rowsum(mu_all[.,c0::c1]:^2)
+        denomj = Wsum_all[.,j]:^2 :- SW2_all[.,j]
+        maskj = (denomj :<= (1e-8 :* Wsum_all[.,j]:^2))
+        Sj = (Wsum_all[.,j]:^2 :* selfdotj :- SW2S_all[.,j]) :/ (denomj :+ maskj)
+        S_all[.,j] = maskj :* selfdotj :+ (1 :- maskj) :* Sj
     }
-    else {
-        // maxpairwise (Kim 2021, forma ponderada -- Remark 3.3):
-        // max_{k<l} [Wsum_k*Wsum_l/(Wsum_k+Wsum_l)] * ||mu_k-mu_l||^2
+
+    if (mmdtype == "vspool") {
+        // T empieza en 0: identidad aditiva correcta para una SUMA --
+        // cada termino puede ser negativo (dist2U insesgado, v0.7) sin
+        // que eso rompa nada, porque se van sumando, no comparando
+        // contra un piso.
+        T = J(B, 1, 0)
         for (j=1; j<=k-1; j++) {
             c0 = (j-1)*D+1
             c1 = j*D
             for (l=j+1; l<=k; l++) {
                 c0l = (l-1)*D+1
                 c1l = l*D
-                dist2 = rowsum((mu_all[.,c0::c1] :- mu_all[.,c0l::c1l]):^2)
+                dist2U = S_all[.,j] :- 2:*rowsum(mu_all[.,c0::c1] :* mu_all[.,c0l::c1l]) :+ S_all[.,l]
+                T = T :+ (Wsum_all[.,j] :* Wsum_all[.,l] :* dist2U) :/ Wtot
+            }
+        }
+    }
+    else {
+        // maxpairwise (Kim 2021, forma ponderada -- Remark 3.3):
+        // max_{k<l} [Wsum_k*Wsum_l/(Wsum_k+Wsum_l)] * ||mu_k-mu_l||^2_U
+        // T tiene que arrancar en -infinito (no en 0): con el
+        // V-estadistico de v0.6 y anteriores, cada termino era >=0, asi
+        // que arrancar en 0 era inofensivo (el maximo real nunca podia
+        // ser menor que 0). Con el U-estadistico insesgado de v0.7,
+        // dist2U SI puede ser negativo (ver nota en el encabezado del
+        // .ado) -- si TODOS los pares de una permutacion dan negativo,
+        // arrancar en 0 pisaba el maximo real con un 0 artificial
+        // [BUG detectado 21sep2026 en produccion real: posthoc con
+        // k=2 (un solo par) daba Stat=0.0000 exacto y p=1.0000 exacto
+        // cada vez que ese unico par salia negativo, en vez de reportar
+        // el valor negativo real -- y como el mismo piso aplicaba
+        // tambien a CADA permutacion, el conteo del p-valor quedaba
+        // sesgado hacia arriba en vez de solo el display]. Arrancar en
+        // -1e300 (mismo centinela que ya usa jumpmask en KS) asegura
+        // que el primer par siempre "gana" el rowmax y el resultado
+        // final es el maximo GENUINO, positivo o negativo.
+        T = J(B, 1, -1e300)
+        for (j=1; j<=k-1; j++) {
+            c0 = (j-1)*D+1
+            c1 = j*D
+            for (l=j+1; l<=k; l++) {
+                c0l = (l-1)*D+1
+                c1l = l*D
+                dist2U = S_all[.,j] :- 2:*rowsum(mu_all[.,c0::c1] :* mu_all[.,c0l::c1l]) :+ S_all[.,l]
                 wjl = (Wsum_all[.,j] :* Wsum_all[.,l]) :/ (Wsum_all[.,j] :+ Wsum_all[.,l])
-                T = rowmax((T, wjl :* dist2))
+                T = rowmax((T, wjl :* dist2U))
             }
         }
     }
@@ -1120,33 +1824,35 @@ real scalar ksmmd_nhat(real matrix Phi)
 }
 
 // ---------------------------------------------------------------
-// T_MMD-FUSE para un BLOQUE de B asignaciones de etiqueta a la vez
-// -- MMD-FUSE (Biggs, Schrab & Gretton 2023, NeurIPS,
-// arXiv:2306.08777): combina el T_MMD "vspool" (mmdtype(vspool),
-// nunca maxpairwise -- la grilla/lambda de abajo solo se valido
-// contra vspool) de VARIOS bandwidths via un soft-max regularizado
-// por KL en vez de un solo bandwidth elegido por heuristica de
-// mediana, evitando tanto la correccion de Bonferroni como partir
-// la muestra:
+// T_MMD-FUSE para un BLOQUE de B asignaciones de etiqueta a la vez --
+// MMD-FUSE (Biggs, Schrab & Gretton 2023, NeurIPS, arXiv:2306.08777):
+// combina el T_MMD "vspool" U-estadistico (mmdtype(vspool), nunca
+// maxpairwise) de VARIOS bandwidths/kernels via un soft-max
+// regularizado por KL en vez de un solo bandwidth elegido por
+// heuristica de mediana, evitando tanto la correccion de Bonferroni
+// como partir la muestra:
 //   T_FUSE = (1/lambda) * log( mean_g[ exp(lambda * T_g) ] )
-// con T_g = T_MMD_vspool(bandwidth_g) / sqrt(Nhat(bandwidth_g)) --
-// la normalizacion por Nhat es la que hace que el resultado no
-// dependa de la escala arbitraria de cada bandwidth (ver
-// ksmmd_nhat() arriba). Phi_grid/mu_pool_grid traen los G puntos de
-// grilla uno al lado del otro en bloques de nfeatures() columnas
-// (mismo patron "c0::c1" que mu_all en ksmmd_mmd_T_batch), calculados
-// una sola vez en ksmmd_run() -- ni Phi ni mu_pool dependen de la
-// permutacion. El teorema de calibracion por permutacion (Hemerik &
-// Goeman 2018) vale para CUALQUIER estadistico fijo, asi que corregir
-// por la grilla/lambda elegidas de antemano no hace falta -- lo que
-// si hay que declarar con honestidad es que esa grilla ({1x,1.5x,
-// 2x,3x} * heuristica de mediana) y lambda=0.1 salen de una busqueda
-// en Python/numpy sobre datos simulados (sim/prototipo_mmd_fuse*.py),
-// no de la literatura -- ver la nota en el encabezado del .ado.
+// con T_g = T_MMD_vspool_U(bandwidth_g/kernel_g) / sqrt(Nhat(g)) -- la
+// normalizacion por Nhat es la que hace que el resultado no dependa de
+// la escala arbitraria de cada punto de grilla (ver ksmmd_nhat()
+// arriba). Phi_grid trae los G puntos de grilla (v0.7: Gaussianos Y
+// Laplace, ver ksmmd_run()) uno al lado del otro en bloques de
+// nfeatures() columnas (mismo patron "c0::c1" que mu_all en
+// ksmmd_mmd_T_batch), calculados una sola vez en ksmmd_run() -- Phi no
+// depende de la permutacion. El teorema de calibracion por permutacion
+// (Hemerik & Goeman 2018) vale para CUALQUIER estadistico fijo, asi
+// que la grilla/lambda elegidas de antemano no ponen en riesgo la tasa
+// de error Tipo I -- sus 2 condiciones concretas (el estadistico
+// observado se evalua como una permutacion mas, y la grilla/lambda
+// quedan fijas antes de ver las permutaciones de cada corrida) ya se
+// cumplen aca. v0.7: la grilla (cuantiles 5%/95%, familias Gaussiana y
+// Laplace) y lambda~n_min salen del propio paper MMD-FUSE, generalizado
+// a k grupos ponderados -- ver la nota en ksmmd_run() y en el
+// encabezado del .ado.
 // ---------------------------------------------------------------
 real vector ksmmd_mmd_fuse_T_batch(real matrix Phi_grid, real vector w,
-    real matrix label_matrix, real vector groups, real matrix mu_pool_grid,
-    real vector nhatG, real scalar lam)
+    real matrix label_matrix, real vector groups, real vector nhatG,
+    real scalar lam)
 {
     real scalar G, D, gi, c0, c1
     real matrix Tg
@@ -1158,7 +1864,7 @@ real vector ksmmd_mmd_fuse_T_batch(real matrix Phi_grid, real vector w,
     for (gi=1; gi<=G; gi++) {
         c0 = (gi-1)*D + 1
         c1 = gi*D
-        Tg[.,gi] = ksmmd_mmd_T_batch(Phi_grid[.,c0::c1], w, label_matrix, "vspool", groups, mu_pool_grid[1,c0::c1]) :/ sqrt(nhatG[gi])
+        Tg[.,gi] = ksmmd_mmd_T_batch(Phi_grid[.,c0::c1], w, label_matrix, "vspool", groups) :/ sqrt(nhatG[gi])
     }
     m = rowmax(Tg)
     fused = m :+ ln(rowsum(exp(lam :* (Tg :- m))) :/ G) :/ lam

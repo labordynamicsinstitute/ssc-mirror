@@ -52,9 +52,10 @@ Bonferroni/Sidak/Holm/FDR-adjusted p-values{p_end}
 {syntab:MMD (Random Fourier Features)}
 {synopt:{opt bw(#)}}RBF kernel bandwidth; default {cmd:bw(-1)} triggers
 the median-heuristic estimate (see {help ksmmd##remarks_rff:Remarks})
-on a random subsample of up to 2,000 observations{p_end}
+on a weight-proportional subsample of up to 2,000 observations{p_end}
 {synopt:{opt nf:eatures(#)}}number of random Fourier features (the
-approximation's dimension {it:D}); default {cmd:nfeatures(200)}{p_end}
+approximation's dimension {it:D}); default {cmd:nfeatures(200)},
+rounded up to an even number if needed{p_end}
 {synopt:{opt mmdtype(string)}}{cmd:vspool} (default),
 {cmd:maxpairwise} or {cmd:fuse} -- see {help ksmmd##remarks_mmdtype:Remarks}{p_end}
 
@@ -151,14 +152,18 @@ layout as {cmd:kstest ..., posthoc}. Each pair re-runs
 {phang}
 {opt bw(#)} is the RBF kernel bandwidth. The default,
 {cmd:bw(-1)}, triggers the median-heuristic bandwidth (Garreau,
-Jitkrittum & Kanagawa 2017) computed on a random subsample of up to
-2,000 observations (not the full dataset, for cost reasons -- see
+Jitkrittum & Kanagawa 2017) computed on a subsample of up to 2,000
+observations (not the full dataset, for cost reasons), drawn with
+probability proportional to the survey weight (v0.7 -- see
 {help ksmmd##remarks_rff:Remarks}). Pass a positive value to fix it
 yourself, e.g. for comparability across repeated calls.
 
 {phang}
 {opt nfeatures(#)} is {it:D}, the number of random Fourier features
-used to approximate the RBF kernel. Default {cmd:nfeatures(200)}.
+used to approximate the RBF kernel. Default {cmd:nfeatures(200)},
+rounded up to an even number if an odd value is passed (the v0.7
+"z-tilde" feature construction always produces an even number of
+columns -- see {help ksmmd##remarks_rff:Remarks}).
 Larger {it:D} tightens the MMD approximation (expected error shrinks
 like {it:D}^-0.5 -- Sutherland & Schneider 2015) at a proportional
 compute cost; see {help ksmmd##remarks_agile:Remarks: agile vs final}.
@@ -192,6 +197,7 @@ exploring before deciding on {opt bw()}/{opt nfeatures()}.
 Remarks are presented under the following headings:
 
 {phang2}{help ksmmd##remarks_why:Why reimplement kstest instead of calling it}{p_end}
+{phang2}{help ksmmd##remarks_combo:Why combine KS and MMD}{p_end}
 {phang2}{help ksmmd##remarks_mmdtype:mmdtype() -- vspool, maxpairwise, and fuse}{p_end}
 {phang2}{help ksmmd##remarks_rff:MMD via Random Fourier Features}{p_end}
 {phang2}{help ksmmd##remarks_weights:Weights are not a survey design}{p_end}
@@ -215,6 +221,34 @@ each sorted position is mathematically equivalent (a permutation of a
 fixed sorted sequence's labels), and removes an O(N log N) factor from
 every replication.
 
+{marker remarks_combo}{...}
+{pstd}{bf:Why combine KS and MMD}
+
+{pstd}
+The two statistics are not paired only for this package's convenience.
+Kiefer (1959, Sec. 6, full text read) shows {bf:sup}-type tests (his T,
+which is KS's k-sample generalization) carry a guaranteed minimum power
+against {it:any} pointwise alternative; {bf:integral}-type tests (such
+as omega^2-type tests, and MMD is one of that family) do not have that
+guarantee, but can be more powerful against alternatives that are
+diffuse rather than concentrated at a single point -- KS and MMD are
+complementary by design. Ong, Chen, Zhu & Zhang (2023) make the same
+point from the MMD side: they explicitly recommend running an MMD-type
+test {bf:and} an energy-distance-type test together, because in
+practice it is rarely known in advance whether two distributions differ
+in location/shape (KS's strength) or in higher moments/covariance
+structure (MMD's strength).
+
+{pstd}
+Separately, Kiefer's T does not require the group sizes n_j/N to
+converge to fixed proportions as N grows -- reassuring for unbalanced
+groups (a common case when {opt by()} groups by year and cohort sizes
+differ). The paper's own discussion of non-continuous F (ties) is
+consistent with this command's tie-handling (the {cmd:jumpmask}
+internal to the Mata code: ties are never treated as evidence, which is
+conservative -- it can only make the test slightly less powerful, never
+anti-conservative).
+
 {marker remarks_mmdtype}{...}
 {pstd}{bf:mmdtype() -- vspool vs. maxpairwise}
 
@@ -231,15 +265,58 @@ decomposition in Hilbert space:
 sum_j n_j||mu_j-mu_pool||^2 = (1/N)*sum_{{c i<j}} n_i n_j ||mu_i-mu_j||^2)
 to the pairwise-weighted RBF-kernel k-sample MMD of Ong, Chen, Zhu &
 Zhang (2023, {it:Mathematics} 11(20)) and, in the general unequal-size
-k-sample framework, Zhang, Guo & Zhou (2022, {it:J. Econometrics}) --
-the same statistic up to a positive constant ({it:Wtot}, the total
-weight, which does not depend on the label permutation and therefore
-never changes the permutation p-value).
+k-sample framework, Zhang, Guo & Zhou (2024, {it:J. Econometrics}
+239(2)) -- the same statistic up to a positive constant ({it:Wtot}, the
+total weight, which does not depend on the label permutation and
+therefore never changes the permutation p-value).
+
+{pstd}
+{bf:v0.7:} {cmd:ksmmd} computes this identity's pairwise-sum form
+directly, T_MMD = (1/Wtot) * sum_{{c a<b}} Wsum_a*Wsum_b*||mu_a-mu_b||^2_U,
+using the {bf:unbiased} (U-statistic) form of ||.||^2_U rather than the
+biased (V-statistic) form used through v0.6 -- Gretton et al. (2012)
+give both for the 2-sample case; the choice matters here because the
+biased form's "self" term for each group includes same-unit pairs
+(i=i'), whose weighted contribution is a fixed additive constant under
+{it:equal} weights (so it never affected the permutation p-value) but
+is {bf:not} fixed under unequal survey weights (it depends on which
+units land in which group under each permutation), a potential source
+of subtle power loss. The unbiased form removes those same-unit terms
+group by group (falling back to the biased term only if a group's
+own de-bias denominator is numerically unsafe, e.g. an extremely small
+or weight-concentrated group). {cmd:mmdtype(maxpairwise)} gets the same
+treatment, for consistency -- see below. This changes {bf:only} which
+estimator is used (not validity: Hemerik & Goeman's permutation theorem
+holds for any fixed statistic); re-validated by simulation (Type-I
+error, R=2,000, k=4, same 3 adversarial weight scenarios --
+{cmd:sim/simulacion_ksmmd_v07_tipo1.py} /
+{cmd:resultados_ksmmd_v07_tipo1.txt} -- rejection rates 3.6%-5.8% across
+scenarios and all 3 {opt mmdtype()} options, no inflation vs. the 5%
+nominal level; a preceding algebraic sanity check confirms the
+pairwise-sum rewrite matches the "against the pool" formula above to
+floating-point precision when the unbiasing is turned off).
+
+{pstd}
+The bridge to Rizzo & Szekely's
+DISCO/energy-distance framework, via Sejdinovic, Sriperumbudur, Gretton
+& Fukumizu (2013), is real but has a precise scope (full text read):
+Rizzo & Szekely (2010, DISCO), Corollary 2, shows the "each group
+against the pool" decomposition exists {bf:only} for a {bf:quadratic}
+(RKHS-type) distance -- the original energy distance of Szekely & Rizzo
+(2004) uses a non-quadratic exponent and has no such decomposition,
+only a pairwise sum. That is exactly why {cmd:vspool} needs a kernel
+(a quadratic form), not just any distance. Also, the kernel that makes
+MMD {bf:equal} to the literal Euclidean energy distance is {bf:not}
+RBF -- it is an unbounded kernel, k1(z,z')=0.5*(||z||+||z'||-||z-z'||).
+RBF does generate a negative-type semimetric (so it still detects any
+distributional difference, not just a mean shift), but it is a
+{bf:bounded/saturated} version of the Euclidean one, not the Euclidean
+energy distance itself.
 
 {pstd}
 {cmd:mmdtype(maxpairwise)}:
 
-{p 8 8 2}T_MMD = max_{{c k<l}} [Wsum_k*Wsum_l/(Wsum_k+Wsum_l)] * ||mu_k - mu_l||^2{p_end}
+{p 8 8 2}T_MMD = max_{{c k<l}} [Wsum_k*Wsum_l/(Wsum_k+Wsum_l)] * ||mu_k - mu_l||^2_U{p_end}
 
 {pstd}
 Kim (2021, {it:Bernoulli} 27(1)), weighted form for unequal sizes (his
@@ -249,6 +326,17 @@ discrepancy across {it:all} groups), {cmd:maxpairwise} is sensitive to
 a {it:single} pair of groups differing sharply even when every other
 pair is identical -- a genuinely different alternative-hypothesis
 profile, not a rescaling of {cmd:vspool}.
+
+{pstd}
+The paper (full text read) gives explicit guidance on when each shape
+is preferable: {cmd:maxpairwise} is built for {it:sparse} alternatives
+(a single group differs from the rest); {cmd:vspool}/{cmd:fuse} are
+built for {it:dense} alternatives (many groups differ). Average-type
+statistics lose power as k grows under sparse alternatives;
+{cmd:maxpairwise} keeps it. Its minimax optimality (the paper's Sec. 6)
+is conditioned on technical kernel assumptions (bounded/sub-Gaussian)
+and a specific alternative class, and does {bf:not} automatically carry
+over to the survey-weighted version implemented here.
 
 {pstd}
 An earlier version of this command offered a third option,
@@ -261,69 +349,158 @@ illusory alternative.
 {pstd}
 {cmd:mmdtype(fuse)} (added in v0.4) -- MMD-FUSE (Biggs, Schrab &
 Gretton 2023, NeurIPS): instead of one bandwidth chosen by the median
-heuristic, it combines {cmd:vspool}'s T_MMD across a {bf:fixed grid}
-of four bandwidths (1x, 1.5x, 2x, 3x times the median heuristic) via a
-KL-regularized soft-max, avoiding both a Bonferroni correction and
-splitting the sample:
+heuristic, it combines {cmd:vspool}'s (unbiased, v0.7) T_MMD across a
+{bf:grid} of bandwidths via a KL-regularized soft-max, avoiding both a
+Bonferroni correction and splitting the sample:
 
 {p 8 8 2}T_FUSE = (1/lambda) * log( mean_g[ exp(lambda * T_g) ] ),
-T_g = T_MMD_vspool(bw_g) / sqrt(Nhat(bw_g)){p_end}
+T_g = T_MMD_vspool_U(bw_g, kernel_g) / sqrt(Nhat(g)){p_end}
 
 {pstd}
-where {cmd:Nhat(bw)} rescales each bandwidth's T_MMD onto a common
-scale before combining them (otherwise the bandwidth with the
+where {cmd:Nhat(g)} rescales each grid point's T_MMD onto a common
+scale before combining them (otherwise the point with the
 highest-variance features would dominate the log-sum-exp regardless of
 whether it carries more real evidence). The permutation-calibration
 theorem (Hemerik & Goeman 2018) holds for {bf:any} fixed statistic, so
-the grid and {cmd:lambda=0.1} do not need literature backing for the
-permutation p-value to stay exact under the null -- but, stated with
-the same honesty as the rest of this command, that specific grid and
-{cmd:lambda} come from a systematic Python/numpy search over simulated
-data in this package's development ({cmd:sim/prototipo_mmd_fuse*.py}),
-not from a value the MMD-FUSE paper itself recommends. Motivation: a
-single bandwidth's power turned out to be sensitive to the {it:type}
-of alternative (a bandwidth too large dilutes a location shift, too
-small drowns in permutation noise) on real production data -- the grid
-was chosen to avoid having to guess that type in advance. Validated
-for Type-I-error control (R=20,000, no inflation, same 3 weight
-scenarios as the rest of this command, at {bf:both} k=2 and k=4 -- see
-{cmd:sim/resultados_ksmmd_mmd_fuse_2muestras_tipo1.txt} and
-{cmd:sim/resultados_ksmmd_mmd_fuse_4muestras_tipo1.txt}) and, with an
-exact kernel in a Python prototype (R=300), the {bf:only} one of 8
-grids x 6 lambdas tried that stayed robust against {bf:both} a
-location shift (50-53% power) and a scale/dispersion difference
-(89.7-91.3%) -- grids that won under one alternative type collapsed
-under the other.
+the grid and {cmd:lambda} do not need literature backing for the
+permutation p-value to stay exact under the null; its 2 concrete
+conditions are both satisfied here: (a) the observed statistic is
+evaluated as one more permutation (the "+1" in (count+1)/(reps+1)), and
+(b) the grid and {cmd:lambda} are fixed {bf:before} seeing each run's
+permutations (they never depend on the data being tested).
 
 {pstd}
-The grid and {cmd:lambda} are {bf:not} configurable through options --
-exposing them would widen the validation surface without evidence that
-another combination is better. {opt bw()} is ignored with
-{cmd:mmdtype(fuse)} for the same reason: the grid is only validated
-anchored to the internal median heuristic. Memory cost: {cmd:fuse}
-builds {opt nfeatures()} random features for {bf:each} of its 4 grid
-points (4x the {cmd:Phi} memory of {cmd:vspool}/{cmd:maxpairwise} at
-the same {opt nfeatures()}).
+{bf:v0.7:} both the grid and {cmd:lambda} now follow the MMD-FUSE
+paper directly (full text read), generalized to {cmd:ksmmd}'s
+k-group, weighted, RFF setting:
+
+{phang2}o {bf:lambda} = sqrt(n_min*(n_min-1)), n_min = the size of the
+{it:smallest} group -- the paper's own formula (its Theorems 2-3
+require lambda asymptotically proportional to n for optimal power,
+and every experiment in the paper uses exactly this with n the smaller
+sample size in its 2-sample setting; this matches the paper exactly at
+k=2, and extends to k>2 via the smallest group as {cmd:ksmmd}'s own
+design choice, not the paper's). Replaces the fixed
+{cmd:lambda=0.1} used through v0.6, itself the outcome of a systematic
+Python/numpy search over simulated data
+({cmd:sim/prototipo_mmd_fuse*.py}) run because the paper's formula had
+not yet been tested in this command's weighted/RFF context.{p_end}
+{phang2}o {bf:grid}: 10 bandwidths -- 5 from a uniform discretization
+between 0.5x the 5th percentile and 2x the 95th percentile of
+inter-unit distances (on a {it:weighted} subsample, v0.7 -- see below),
+times {bf:2} kernel families, Gaussian {bf:and} Laplace, matching the
+paper's own empirically validated design (its Appendix A.2/A.4, which
+uses 10-20 bandwidths per family across the same 2 families). The
+paper's range is wider (10-20 vs. 5 per family here) purely for memory
+cost at survey scale (N~10^5) -- see below. Replaces the fixed 4-point
+grid (1x, 1.5x, 2x, 3x times the median heuristic, Gaussian only) used
+through v0.6.{p_end}
 
 {pstd}
-{bf:Validation status specific to fuse}: the Mata code for {cmd:fuse}
-was written without a real Stata available -- the algebra matches what
-was already validated in Python/numpy -- but has since been
-{bf:confirmed against real Stata at two scales}. Small scale
-({cmd:auto.dta}, Example 5 below, {cmd:mpg}, {cmd:by(g) mmdtype(fuse)
-reps(500)}): {cmd:T_MMD=0.4980 p=0.7126} with no error, the same order
-of magnitude as {cmd:mmdtype(vspool)} on the identical data/weights
-(Example 2: {cmd:T_MMD=0.7422 p=0.5629}). Production scale (a real
-survey outcome by year, N=141,151 across 4 groups, {opt reps(200)}
-{opt nfeatures(500)} -- so 2,000 total RFF columns, 4x {opt nfeatures()}
-for the 4 grid points, no memory problem in practice): ran in 364.97
-seconds with no error, {cmd:T_MMD=1848.9130 p=0.6617} -- essentially
-the same p-value as {cmd:mmdtype(vspool)}'s {cmd:p=0.6667} on the same
-data/seed, and {cmd:fuse}'s pairwise post-hoc shows the same
-qualitative pattern as {cmd:vspool}'s (no pair significant after
-multiple-comparison correction, unlike KS's post-hoc, which does find
-the most recent year different from the other three). No syntax or
-indexing error the static review would have missed, at either scale.
+Both changes are re-validated by simulation (Type-I error, R=2,000,
+k=4 -- the real production use, grouping {opt by(year)} -- same 3
+adversarial weight scenarios as the rest of this command:
+{cmd:sim/simulacion_ksmmd_v07_tipo1.py} /
+{cmd:resultados_ksmmd_v07_tipo1.txt}; rejection rates 3.6%-5.8% across
+scenarios, no inflation vs. the 5% nominal level, for {cmd:fuse}
+{bf:and} both other {opt mmdtype()} options in the same run). The
+earlier grid's power validation (R=20,000 Type-I check at k=2 and k=4,
+plus an exact-kernel Python prototype robust to both a location shift
+and a scale/dispersion difference -- {cmd:sim/resultados_ksmmd_mmd_fuse_*_tipo1.txt},
+{cmd:sim/prototipo_mmd_fuse*.py}) remains as a record of the v0.4-v0.6
+design's own validation; it does not carry over automatically to the
+new grid, but nothing in the new grid's construction (a strict
+superset in spirit: wider bandwidth coverage, a second kernel family)
+suggests it should be less powerful.
+
+{pstd}
+The grid and {cmd:lambda} are {bf:still not} configurable through
+options -- exposing them would widen the validation surface without
+evidence that another combination is better. {opt bw()} is ignored
+with {cmd:mmdtype(fuse)} for the same reason. Memory cost: {cmd:fuse}
+builds {opt nfeatures()} random features for {bf:each} of its 10 grid
+points (10x the {cmd:Phi} memory of {cmd:vspool}/{cmd:maxpairwise} at
+the same {opt nfeatures()} -- at the default {opt nfeatures(200)} that
+is 2,000 total RFF columns, the same order of magnitude as the
+{opt reps(200)} {opt nfeatures(500)} / 4-grid-point configuration
+(2,000 columns) already confirmed with no memory problem on real
+production data (N=141,151) in v0.4 -- see the validation note below).
+{cmd:Nhat(g)} is still computed on a subsample of up to 300
+observations rather than the full pooled dataset (for cost) -- the
+paper's own Definition 1 uses the full dataset; this remains a
+deliberate, documented departure, a possible power loss (not a
+validity risk).
+
+{pstd}
+{bf:Validation status specific to fuse}: the {bf:v0.4-v0.6} Mata code
+for {cmd:fuse} (fixed 4-point grid, lambda=0.1) was confirmed against
+real Stata at two scales -- see the record kept in {cmd:ksmmd.ado}'s
+header for the exact runs and values. The {bf:v0.7} rewrite (new grid,
+new lambda, the Laplace kernel, the unbiased U-statistic, the weighted
+median heuristic) was written and validated in Python/numpy (algebraic
+sanity check plus the Type-I simulation above) without a real Stata
+session available in that development environment, the same situation
+already documented for v0.3/v0.4's own first releases. {bf:Confirmed}
+at small scale (21sep2026, {cmd:auto.dta}, 5 syntax variants run
+against real Stata -- {cmd:vspool} unweighted, {cmd:vspool} weighted
+with {opt graph}/{opt posthoc}, {opt mmdtype(maxpairwise)},
+{opt ksonly}, {opt mmdtype(fuse)}): all 5 ran with {bf:no error}.
+{bf:Also confirmed at production scale} the same day (a real survey
+outcome grouped by an ordinal variable, N~141,000): a first batch of 5
+configurations
+(including {opt graph}/{opt posthoc}, a fixed {opt bw()},
+{opt ksonly}/{opt mmdonly}, and an agile pass) used
+{opt mmdtype(vspool)} throughout, and a second batch -- run after the
+bug fix below -- added {opt mmdtype(maxpairwise)} and
+{opt mmdtype(fuse)} (at both {opt nfeatures(200)} and
+{opt nfeatures(500)}, i.e. 10x500=5,000 {cmd:Phi} columns, the
+memory-untested configuration flagged in an earlier version of this
+note) with {opt posthoc}, all with {bf:no error}. {bf:All 3}
+{opt mmdtype()} options and KS are now confirmed at {bf:both} scales;
+no configuration remains outstanding for v0.7. See {cmd:ksmmd.ado}'s
+header for the exact statistics and timings for both scales.
+
+{pstd}
+{bf:About negative T_MMD values}: all 3 {opt mmdtype()} options can now
+report a {bf:negative} T_MMD (seen in the real-Stata run above, e.g.
+T_MMD=-0.1721) -- this is expected, not a bug. Through v0.6, T_MMD was
+a biased (V-statistic) quantity, always >= 0. The v0.7 unbiased
+(U-statistic) estimator targets a population quantity (MMD^2) whose
+floor is exactly 0 under the null; an estimator that is unbiased for a
+value at the floor of its own range must be able to go both ways, or it
+would be biased upward -- Gretton et al. (2012) document exactly this
+for the 2-sample case. Under (or near) the null, the estimator
+fluctuates around 0, so small negative values are the expected
+signature that the null is close to true, not evidence of an error. The
+permutation p-value stays valid regardless: it is calibrated against
+the same null distribution, which fluctuates the same way, so a very
+negative observed T_MMD naturally yields a {bf:high} p-value (as in the
+{cmd:fuse} example above, p=0.9142).
+
+{pstd}
+{bf:Bug found and fixed} (21sep2026): {cmd:mmdtype(maxpairwise)}
+specifically had a real bug tied to this new negative-value behavior --
+found by the user in a production run, where a post-hoc pair (k=2)
+whose true statistic was negative was silently reported as
+T_MMD=0.0000 and p=1.0000, {bf:exactly}, instead of the real negative
+value. Root cause: the running maximum was initialized at 0 (correct
+for {cmd:vspool}'s running {it:sum}, wrong for {cmd:maxpairwise}'s
+running {it:max} once terms can be negative) -- fixed by initializing
+it at a very negative sentinel instead, so the true maximum (positive
+or negative) is always found; re-validated by a fresh Type-I simulation
+(no inflation) and a dedicated sanity check. See
+{cmd:ksmmd.ado}'s header for the full root-cause writeup. This bug did
+{bf:not} affect {cmd:vspool} or {cmd:fuse} (which only ever uses the
+{cmd:vspool} branch internally) -- it was isolated to
+{cmd:mmdtype(maxpairwise)}. Any {cmd:mmdtype(maxpairwise)} run made
+with a {cmd:ksmmd.ado} from before this fix should be re-run. The fix
+itself was confirmed the same day with a production-scale re-run
+(same real survey data): the same two post-hoc pairs that had
+previously shown T_MMD=0.0000/p=1.0000 now correctly showed their real
+negative values (T_MMD=-174.9475 and -361.6898), matching
+{cmd:vspool}'s own post-hoc for those pairs almost exactly -- expected,
+since {cmd:vspool} and {cmd:maxpairwise} are algebraically the same
+statistic at k=2 (see the discussion above).
 
 {marker remarks_rff}{...}
 {pstd}{bf:MMD via Random Fourier Features}
@@ -333,27 +510,85 @@ An exact RBF-kernel MMD needs the full N x N kernel matrix -- O(N^2),
 infeasible once N is in the hundreds of thousands (the exact problem
 that made {cmd:mmd_2s} too slow in production for this scenario).
 {cmd:ksmmd} instead approximates the kernel with {opt nfeatures()}
-random Fourier features (Rahimi & Recht 2007): phi(x) = sqrt(2/D) *
-cos(omega*x + b), omega ~ N(0, 1/bw^2), b ~ Uniform(0, 2*pi) --
-turning the cost into O(reps * N * D), linear in {it:N}.
+random Fourier features (Rahimi & Recht 2007), turning the cost into
+O(reps * N * D), linear in {it:N}. Since v0.7, the features are the
+lower-variance "z-tilde" construction (Sutherland & Schneider 2015,
+eqs. 5-7): phi(x) = sqrt(1/(D/2)) * [cos(omega_1 x), sin(omega_1 x),
+..., cos(omega_{{c D/2}} x), sin(omega_{{c D/2}} x)], omega_m ~ N(0,
+1/bw^2) -- {it:no} random phase and D/2 frequencies, instead of the
+earlier ("z-breve") D-frequency cosine-with-random-phase construction.
+Same computational cost, strictly lower variance for the Gaussian
+kernel at the same {it:D}. {opt nfeatures()} is silently rounded up to
+an even number if needed, since this construction always returns an
+even number of columns (D/2 cosines + D/2 sines).
 
 {pstd}
-The known error bound is on the MMD statistic itself, not just the
-kernel (Sutherland & Schneider 2015, Theorem 1):
+The known error bound is on the MMD statistic itself (not its square),
+not just the kernel (Sutherland & Schneider 2015, Section 3.3):
 P(|MMD_RFF - MMD| >= eps) <= 2*exp(-D*eps^2/128), expected absolute
 error <= 8*sqrt(2*pi/D) -- halving the expected error requires
-{bf:quadrupling} {opt nfeatures()}. Choi & Kim (2024) further show
-that with {it:fixed} {it:D}, the RFF-based test's power is not
-guaranteed to be consistent -- a low {opt nfeatures()} can lose power
-relative to the exact MMD test, which is why {opt nfeatures()} follows
-the same agile-then-final logic as {opt reps()} (see
-{help ksmmd##remarks_agile:Remarks} below).
+{bf:quadrupling} {opt nfeatures()}. ({bf:Corrected} sep2026, after
+reading the full paper text with cross-checked extraction: an earlier
+"correction" dated 19sep2026, made from search-based bibliography
+verification without full-text access, had wrongly changed this bound
+to MMD^2 and cited it as "Theorem 1" -- the paper's primary text
+(p. 7) confirms the bound is on MMD un-squared, and the result is an
+unnumbered paragraph in Section 3.3, not a numbered theorem (the paper
+has no numbered theorems, only Propositions 1-10). Both errors are
+reverted here.) Choi, I. & Kim, I. (2024) go further than "can lose
+power": their Theorem 3 proves genuine {it:inconsistency} with fixed
+{it:D} -- infinitely many pairs of distinct distributions exist where
+asymptotic power stays bounded by alpha regardless of sample size, if
+D does not grow with N. There is no universal rate D=O(sqrt(N)); the
+needed rate depends on the smoothness of the (unobservable)
+alternative (their Theorems 6-7, Prop. 8). Empirically, in their
+univariate case (d=1, the same case {cmd:ksmmd} targets) D=200 already
+matches exact-MMD power -- supporting the {opt nfeatures(200)} default
+-- but their Theorem 7 also warns that raising D up to the smallest
+group size recovers the optimal rate only at essentially O(N^2) cost
+again, so {opt nfeatures()} follows the same agile-then-final logic as
+{opt reps()} (low to explore, higher -- not arbitrarily high -- for
+the reported result; see {help ksmmd##remarks_agile:Remarks} below).
+
+{pstd}
+Separately from the RFF approximation, MMD's power against a location
+shift is itself bandwidth-dependent for a more basic reason (Reddi,
+Ramdas, Poczos, Singh & Wasserman 2015, Lemma 1): population MMD^2
+with a Gaussian kernel scales as 2*shift^2/bandwidth^2 (1+o(1)) -- a
+bandwidth large relative to the shift dilutes the signal
+{bf:quadratically}, not exponentially ({bf:corrected} sep2026: an
+earlier version of this note said "exponentially small," which the
+paper does not support; its formal power theorem is also explicitly a
+high-dimensional result, n and d jointly to infinity with
+bandwidth=Omega(sqrt(d)), so it does not literally apply to a scalar
+variable like age, d=1 -- only the Lemma 1 mechanism generalizes to
+d=1 by algebraic analogy). Either way, a poorly chosen {opt bw()} can
+miss a real difference that KS still detects (this is part of the
+motivation for {cmd:mmdtype(fuse)}, see
+{help ksmmd##remarks_mmdtype:Remarks}).
 
 {pstd}
 {opt bw(-1)} (the default) uses the median-heuristic bandwidth
-(Garreau, Jitkrittum & Kanagawa 2017) on a random subsample of up to
-2,000 observations, not the full dataset -- computing the exact median
-of all pairwise distances is itself O(n^2).
+(Garreau, Jitkrittum & Kanagawa 2017) on a subsample of up to 2,000
+observations, not the full dataset -- computing the exact median of
+all pairwise distances is itself O(n^2). {bf:v0.7:} that subsample is
+drawn with probability proportional to the survey weight (an
+Efraimidis-Spirakis weighted sample without replacement) rather than
+uniformly, as it was through v0.6 -- a design inconsistency fixed, no
+paper in this bibliography covers the median heuristic under weights,
+so this is {cmd:ksmmd}'s own extension, re-validated by the Type-I
+simulation cited in {help ksmmd##remarks_mmdtype:Remarks} (mmdtype()).
+Convention note (full text
+read): {cmd:ksmmd} uses bw = median(|y_i-y_j|) = sqrt(Hn), where Hn is
+the median of {it:squared} pairwise distances; the paper's main formula
+is nu=sqrt(Hn/2), a factor sqrt(2) smaller, but its own footnote 1
+acknowledges "some authors simply choose nu=sqrt(Hn)" -- {cmd:ksmmd}'s
+convention is a real variant in the literature, not an error. The
+paper's Sec. 4 also shows {bf:empirically} that the median heuristic
+picks too large a bandwidth specifically when groups differ in
+{bf:variance/scale} rather than location -- independent support (beyond
+this package's own simulations) for using {cmd:mmdtype(fuse)} when a
+dispersion difference, not just a shift, is suspected.
 
 {marker remarks_weights}{...}
 {pstd}{bf:Weights are not a survey design}
@@ -375,15 +610,23 @@ extension, but it has no paper proving its validity under survey
 weights specifically -- precisely because that paper does not appear
 to exist, the only honest way to trust it is a Type-I-error Monte
 Carlo simulation (the same kind already run for {cmd:kstest} in this
-package's {cmd:sim/} directory), not a citation. That simulation has now been run for {bf:both} {cmd:mmdtype()}
-options: {cmd:vspool} ({cmd:sim/simulacion_ksmmd_mmd_tipo1.py} /
+package's {cmd:sim/} directory), not a citation. That simulation was
+first run (through v0.6) for {cmd:vspool}
+({cmd:sim/simulacion_ksmmd_mmd_tipo1.py} /
 {cmd:resultados_ksmmd_mmd_tipo1.txt}) and {cmd:maxpairwise}
 ({cmd:sim/simulacion_ksmmd_mmd_maxpairwise_tipo1.py} /
 {cmd:resultados_ksmmd_mmd_maxpairwise_tipo1.txt}) -- same 3-scenario
 design as the {cmd:kstest} simulation in both cases, worst-case
 rejection rate under a true null around 6% (vs. 5% nominal) for
 either option, consistent with, and no worse than, {cmd:kstest}'s own
-result.
+result. {bf:v0.7} redid this validation from scratch for the redesigned
+estimator (unbiased U-statistic, z-tilde RFF, weighted median
+heuristic -- see {help ksmmd##remarks_mmdtype:Remarks} for {cmd:fuse}'s
+own grid/lambda changes), all 3 {opt mmdtype()} options together, R=2,000
+at k=4:
+{cmd:sim/simulacion_ksmmd_v07_tipo1.py} /
+{cmd:resultados_ksmmd_v07_tipo1.txt} -- rejection rates 3.6%-5.8% across
+the same 3 scenarios, no worse than the earlier design.
 
 {marker remarks_kmd}{...}
 {pstd}{bf:KMD was evaluated and excluded}
@@ -493,7 +736,8 @@ and not {opt ksonly}), same column layout{p_end}
 
 {pstd}
 Kiefer, J. (1959). K-sample analogues of the Kolmogorov-Smirnov and
-Cramer-v. Mises tests. {it:Ann. Math. Statist.} 30(2), 420-447.
+Cramer-v. Mises tests. {it:Ann. Math. Statist.} 30(2), 420-447. DOI:
+10.1214/aoms/1177706261.
 
 {pstd}
 Gretton, A., Borgwardt, K.M., Rasch, M.J., Scholkopf, B., Smola, A.
@@ -510,34 +754,39 @@ Combining Kernels for Two-Sample Testing Without Data Splitting.
 
 {pstd}
 Hemerik, J., Goeman, J.J. (2018). Exact testing with random
-permutations. {it:Test} 27(4), 811-825.
+permutations. {it:Test} 27(4), 811-825. DOI: 10.1007/s11749-017-0571-1.
 
 {pstd}
 Sutherland, D.J., Schneider, J. (2015). On the Error of Random Fourier
 Features. {it:UAI} 2015.
 
 {pstd}
-Ong, C.S., Chen, X., Zhu, D., Zhang, Y. (2023). Testing Equality of
-Several Distributions at High Dimensions: A Maximum Mean
-Discrepancy-Based Approach. {it:Mathematics} 11(20), 4272.
+Ong, Z.P., Chen, A.A., Zhu, T., Zhang, J.-T. (2023). Testing Equality
+of Several Distributions at High Dimensions: A Maximum-Mean-
+Discrepancy-Based Approach. {it:Mathematics} 11(20), 4374. DOI:
+10.3390/math11204374. ({bf:Corrected} 19sep2026 -- an earlier version
+of this citation had the wrong authors and the wrong article number;
+see the verification note in {cmd:ksmmd.ado}'s header.)
 
 {pstd}
-Zhang, Y., Guo, X., Zhou, W. (2022). Testing equality of several
+Zhang, J.-T., Guo, J., Zhou, B. (2024). Testing equality of several
 distributions in separable metric spaces: a maximum mean discrepancy
-based approach. {it:J. Econometrics}.
+based approach. {it:J. Econometrics} 239(2). ({bf:Corrected}
+19sep2026 -- same reason as above: wrong authors, wrong year.)
 
 {pstd}
 Kim, I. (2021). Comparing a large number of multivariate
-distributions. {it:Bernoulli} 27(1), 419-441.
+distributions. {it:Bernoulli} 27(1), 419-441. DOI: 10.3150/20-BEJ1244.
 
 {pstd}
 Sejdinovic, D., Sriperumbudur, B., Gretton, A., Fukumizu, K. (2013).
 Equivalence of distance-based and RKHS-based statistics in hypothesis
-testing. {it:Ann. Statist.} 41(5), 2263-2291.
+testing. {it:Ann. Statist.} 41(5), 2263-2291. DOI: 10.1214/13-AOS1140.
 
 {pstd}
 Rizzo, M.L., Szekely, G.J. (2010). DISCO analysis: a nonparametric
-extension of analysis of variance. {it:Ann. Appl. Stat.} 4(2), 1034-1055.
+extension of analysis of variance. {it:Ann. Appl. Stat.} 4(2),
+1034-1055. DOI: 10.1214/09-AOAS245.
 
 {pstd}
 Szekely, G.J., Rizzo, M.L. (2004). Testing for Equal Distributions in
@@ -545,15 +794,25 @@ High Dimension. {it:InterStat}, Nov(5).
 
 {pstd}
 Rizzo, M.L., Szekely, G.J. (2016). Energy distance. {it:WIREs
-Computational Statistics} 8(1), 27-38.
+Computational Statistics} 8(1), 27-38. DOI: 10.1002/wics.1375.
 
 {pstd}
 Garreau, D., Jitkrittum, W., Kanagawa, M. (2017). Large sample
 analysis of the median heuristic. arXiv:1707.07269.
 
 {pstd}
-Choi, S., Kim, I. (2024). Computational-Statistical Trade-off in
+Reddi, S.J., Ramdas, A., Poczos, B., Singh, A., Wasserman, L. (2015).
+On the High Dimensional Power of a Linear-Time Two Sample Test under
+Mean-shift Alternatives. {it:Proc. AISTATS 2015}, PMLR v38.
+arXiv:1411.6314.
+
+{pstd}
+Choi, I., Kim, I. (2024). Computational-Statistical Trade-off in
 Kernel Two-Sample Testing with Random Fourier Features. arXiv:2407.08976.
+({bf:Corrected} sep2026, after reading the full paper: first author is
+Ikjun Choi, correct initial "I.", not "S." -- a third real attribution
+error in this bibliography, this time caught by full-text reading
+rather than metadata search.)
 
 {pstd}
 Huang, Z., Sen, B. (2024). A Kernel Measure of Dissimilarity between M
@@ -593,6 +852,74 @@ been confirmed against real Stata at both small scale ({cmd:auto.dta})
 and production scale (N=141,151, 4 groups, {opt reps(200)}
 {opt nfeatures(500)}, 364.97 seconds, no error) -- see
 {help ksmmd##remarks_mmdtype:Remarks} for both results.
+
+{pstd}
+Version 0.5 also corrects two citation errors in the References
+section below (wrong authors, and a wrong article number in one case)
+caught when the bibliography was checked against primary-source
+metadata on 19sep2026, in response to a direct question about whether
+these citations had been verified against the original document
+before their formulas were used -- they had not; see the verification
+note near the end of {cmd:ksmmd.ado}'s header for what was and was not
+checked.
+
+{pstd}
+Version 0.6 revises the bibliography against the {bf:full} PDFs
+(shared by the user via Google Drive; 15 of 16 read cover to cover).
+That full-text reading found 3 further corrections the version-0.5
+metadata check could not catch (content/formula errors, not just
+author/year/DOI): the Sutherland & Schneider bound (reverted from
+MMD^2 to MMD, citation corrected from "Theorem 1" to "Section 3.3"),
+the {cmd:mmdtype(fuse)} motivation (Reddi et al.'s mechanism is
+quadratic scaling, not exponential), and a third attribution error
+(Choi, I., not Choi, S.) -- plus a clarification that the MMD-FUSE
+paper does recommend a lambda value (lambda~n), which {cmd:ksmmd}
+deliberately departs from. No algebra or Mata changed -- no T_KS/
+T_MMD/p-value differs from this version, only documentation text; see
+{cmd:ksmmd.ado}'s header (v0.6) for the full detail of the corrections
+and the documentation improvements added.
+
+{pstd}
+Version 0.7 implements the 5 design improvements that v0.6's reading
+had flagged as future work, each re-validated by its own Type-I-error
+Monte Carlo simulation before being applied (R=2,000, k=4, same 3
+adversarial weight scenarios as the rest of this command --
+{cmd:sim/simulacion_ksmmd_v07_tipo1.py} /
+{cmd:resultados_ksmmd_v07_tipo1.txt} -- rejection rates 3.6%-5.8%
+across scenarios for {opt mmdtype(vspool)}, {opt mmdtype(maxpairwise)}
+{bf:and} {opt mmdtype(fuse)}, no inflation vs. the 5% nominal level; an
+algebraic sanity check separately confirms the rewritten estimator
+reduces to the v0.6 formula, to floating-point precision, when the new
+unbiasing is turned off): an unbiased (U-statistic) MMD estimator, a
+lower-variance "z-tilde" random-Fourier-feature construction, a
+lambda~n formula and a quantile-based, 2-kernel-family bandwidth grid
+for {opt mmdtype(fuse)}, and a weighted (rather than uniform) subsample
+for the median-heuristic bandwidth. T_KS is unchanged; T_MMD values
+{bf:do} change from v0.6 under all 3 {opt mmdtype()} options (a
+different, more efficient estimator of the same population quantity,
+not a different null hypothesis) -- see
+{help ksmmd##remarks_mmdtype:Remarks} (mmdtype()) and
+{help ksmmd##remarks_rff:Remarks} (MMD via Random Fourier Features)
+for the detail of each change. This version's Mata rewrite has been
+{bf:confirmed against real Stata at both scales} (21sep2026): small
+scale ({cmd:auto.dta}, 5 syntax variants covering all 3
+{opt mmdtype()} options, all ran with no error) and {bf:production
+scale} (a real survey outcome grouped by an ordinal variable, N~141,000
+across 4 groups, weighted by a continuous survey weight,
+{opt reps(200)} {opt nfeatures(500)} with {opt graph}/{opt posthoc}:
+155.42 seconds, no error; plus
+{opt ksonly}, {opt mmdonly}, a fixed {opt bw()}, and an agile
+{opt reps(50)} {opt nfeatures(50)} pass; plus, after a real bug found
+and fixed in {opt mmdtype(maxpairwise)} that same day (see the
+validation note below), a follow-up production run confirming
+{opt mmdtype(maxpairwise)} and {opt mmdtype(fuse)} too, including
+{opt fuse} at {opt nfeatures(500)} -- 5,000 {cmd:Phi} columns, no
+memory problem). KS and {bf:all 3} {opt mmdtype()} options are now
+confirmed at {bf:both} scales; no configuration remains outstanding
+for v0.7. See the validation note under
+{help ksmmd##remarks_mmdtype:Remarks} (mmdtype()) for the exact runs
+and values, the bug/fix writeup, and why T_MMD can now be negative
+(expected, not a bug).
 
 {pstd}
 Source: {browse "https://github.com/atalaveracuya/svylet"}. Not (yet)

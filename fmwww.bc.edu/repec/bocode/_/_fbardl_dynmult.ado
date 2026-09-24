@@ -1,5 +1,5 @@
 *! _fbardl_dynmult — Dynamic Multipliers for FBARDL
-*! Version 1.0.0 — 2026-02-21
+*! Version 1.3.0 — 2026-09-22
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 
 capture program drop _fbardl_dynmult

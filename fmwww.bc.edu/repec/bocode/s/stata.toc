@@ -214,6 +214,7 @@ p splinefit module for smooth connected line plots
 p split modules for splitting string variables into parts
 p splithalf module to compute split-half reliability
 p splitit module to split chronological overlapping spells in spell data
+p splitpopsurv module to estimate split-population (cure / mover-stayer) survival models
 p splitvallabels module to split up value labels for multi-line graph labelling
 p splitvarlabels module to split variable labels for multiline graph display
 p spmap module to visualize spatial data

@@ -10,13 +10,14 @@ d KW: Fourier
 d
 d Requires: Stata version 17
 d
-d Distribution-Date: 20260802
+d Distribution-Date: 20260923
 d
 d Author:   Merwan Roudane, NA
 d Support: email  merwanroudane920@@gmail.com
 d
 f fbardl.ado
 f fbardl.sthlp
+f fbardl_example.do
 f ../_/_fbardl_advanced.ado
 f ../_/_fbardl_bootstrap.ado
 f ../_/_fbardl_diagtest.ado

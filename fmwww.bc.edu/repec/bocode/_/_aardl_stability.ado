@@ -1,5 +1,5 @@
 *! _aardl_stability - CUSUM and CUSUMSQ parameter-stability tests for aardl
-*! Version 2.0.0 - 2026-08-28
+*! Version 2.1.0 - 2026-09-22
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 *!
 *! Brown, Durbin & Evans (1975, JRSS-B 37, 149-192) recursive-residual tests.
@@ -180,7 +180,7 @@ void _aardl_recres(string scalar yn, string scalar xn, string scalar tousen,
 {
     real colvector yv, tv, w, cs, cq, band, lo, hi, ww, b, xt
     real matrix    X, XXi, P
-    real scalar    N, k, t, denom, e, sig, tot, i
+    real scalar    N, k, k0, t, denom, e, sig, tot, i
     real scalar    csx, cqx, csfirst, cqfirst, m, c0, aa, nrec
 
     X  = st_data(., tokens(xn), tousen)
@@ -189,19 +189,28 @@ void _aardl_recres(string scalar yn, string scalar xn, string scalar tousen,
     if (cons) X = X, J(rows(X), 1, 1)
 
     N = rows(X); k = cols(X)
-    nrec = N - k
+
+    // The start block must have full rank.  A dummy that is zero in the
+    // first k observations (a late-period break or pulse from exog())
+    // makes X'X singular there, so advance the block to the first window
+    // in which every column has entered.
+    k0 = k
+    while (k0 < N & rank(quadcross(X[|1,1 \ k0,.|], X[|1,1 \ k0,.|])) < k) {
+        k0 = k0 + 1
+    }
+    nrec = N - k0
     st_numscalar("r(nrec)", nrec)
     if (nrec < 5) return
 
     w   = J(nrec, 1, .)
-    XXi = invsym(quadcross(X[|1,1 \ k,.|], X[|1,1 \ k,.|]))
-    b   = XXi*quadcross(X[|1,1 \ k,.|], yv[|1 \ k|])
+    XXi = invsym(quadcross(X[|1,1 \ k0,.|], X[|1,1 \ k0,.|]))
+    b   = XXi*quadcross(X[|1,1 \ k0,.|], yv[|1 \ k0|])
 
-    for (t=k+1; t<=N; t++) {
+    for (t=k0+1; t<=N; t++) {
         xt     = X[t,]'
         e      = yv[t] - X[t,]*b
         denom  = 1 + X[t,]*XXi*xt
-        w[t-k] = e/sqrt(denom)
+        w[t-k0] = e/sqrt(denom)
         XXi    = XXi - (XXi*xt*X[t,]*XXi)/denom
         b      = b + XXi*xt*e
     }
@@ -236,8 +245,8 @@ void _aardl_recres(string scalar yn, string scalar xn, string scalar tousen,
         band[i] = aa*(sqrt(nrec) + 2*i/sqrt(nrec))
         lo[i]   = i/nrec - c0
         hi[i]   = i/nrec + c0
-        if (csfirst >= . & abs(cs[i]) > band[i]) csfirst = tv[k+i]
-        if (cqfirst >= . & (cq[i] > hi[i] | cq[i] < lo[i])) cqfirst = tv[k+i]
+        if (csfirst >= . & abs(cs[i]) > band[i]) csfirst = tv[k0+i]
+        if (cqfirst >= . & (cq[i] > hi[i] | cq[i] < lo[i])) cqfirst = tv[k0+i]
     }
 
     st_numscalar("r(cs_cross)",  csfirst)
@@ -245,7 +254,7 @@ void _aardl_recres(string scalar yn, string scalar xn, string scalar tousen,
     st_numscalar("r(cs_margin)", max((0, colmax(abs(cs) - band))))
     st_numscalar("r(cq_margin)", max((0, colmax(rowmax((cq - hi, lo - cq))))))
 
-    P = tv[|(k+1) \ (k+nrec)|], cs, band, cq, lo, hi
+    P = tv[|(k0+1) \ (k0+nrec)|], cs, band, cq, lo, hi
     st_matrix("r(path)", P)
 }
 end

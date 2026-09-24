@@ -1,5 +1,5 @@
 *! _aardl_diagtest - full residual and specification diagnostics for aardl
-*! Version 2.0.0 - 2026-08-28
+*! Version 2.1.0 - 2026-09-22
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 *!
 *! Must be called while the OLS companion regression is the active estimate,

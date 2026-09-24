@@ -1,5 +1,5 @@
 *! _aardl_fourier - Fourier frequency selection for aardl
-*! Version 2.0.0 - 2026-08-28
+*! Version 2.1.0 - 2026-09-22
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 *!
 *! Yilanci, Bozoklu & Gorus (2020), eqs. (6)-(8): a single-frequency Fourier

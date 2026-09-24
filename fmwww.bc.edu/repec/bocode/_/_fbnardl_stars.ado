@@ -1,4 +1,5 @@
 *! _fbnardl_stars — Display significance stars for FBNARDL package
+*! Version 2.0.0 — 2026-09-22
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 
 capture program drop _fbnardl_stars

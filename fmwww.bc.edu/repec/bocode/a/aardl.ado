@@ -1,5 +1,5 @@
 *! aardl — Augmented ARDL cointegration analysis (8 model types)
-*! Version 2.0.0 — 2026-08-28
+*! Version 2.1.0 — 2026-09-22
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 *! Independent Researcher
 *!
@@ -50,6 +50,7 @@ program define aardl, eclass sortpreserve
         [                                  ///
         TYpe(string)                       /// model type (default aardl)
         DECompose(varlist ts)              /// NARDL partial-sum variables
+        EXog(varlist numeric)              /// fixed regressors (dummies etc.)
         MAXLag(integer 4)                  /// maximum lag order
         MAXk(real 5)                       /// maximum Fourier frequency
         KSTep(real 0.1)                    /// Fourier grid increment
@@ -187,6 +188,30 @@ program define aardl, eclass sortpreserve
     marksample touse
     if "`decompose'" != "" markout `touse' `decompose'
 
+    // ---- fixed regressors: plain variables, no overlap with the model ----
+    local nexog : word count `exog'
+    if `nexog' > 0 {
+        local exog : list uniq exog
+        local nexog : word count `exog'
+        foreach xv of local exog {
+            if "`xv'" == "`depvar'" {
+                di as err "exog(): `xv' is the dependent variable"
+                exit 198
+            }
+            foreach iv of local indepvars {
+                if "`xv'" == "`iv'" {
+                    di as err "exog(): `xv' is already an independent variable"
+                    exit 198
+                }
+            }
+            if strpos("`xv'", "_aardl_") == 1 {
+                di as err "exog(): variable names starting with _aardl_ are reserved"
+                exit 198
+            }
+        }
+        markout `touse' `exog'
+    }
+
     qui count if `touse'
     local T = r(N)
     if `T' < 30 {
@@ -269,10 +294,10 @@ program define aardl, eclass sortpreserve
     local K : word count `allx'
 
     // ---- deterministic block ----------------------------------------------
-    local detreg ""
+    local detreg "`exog'"
     local regopts ""
     if `case' == 1 local regopts "noconstant"
-    if `case' >= 4 local detreg "_aardl_trend"
+    if `case' >= 4 local detreg "`detreg' _aardl_trend"
 
     // ---- estimation sample: fixed at maxlag lags for every candidate ------
     tempvar esample
@@ -282,6 +307,14 @@ program define aardl, eclass sortpreserve
     if `Nfix' < 20 {
         di as err "maxlag(`maxlag') leaves only `Nfix' usable observations"
         exit 2001
+    }
+    foreach xv of local exog {
+        qui summarize `xv' if `esample', meanonly
+        if r(min) == r(max) {
+            di as err "exog(): `xv' is constant on the estimation sample"
+            di as err "        (the sample starts `=`maxlag'+2' periods in because of maxlag())"
+            exit 198
+        }
     }
 
     // =====================================================================
@@ -313,6 +346,9 @@ program define aardl, eclass sortpreserve
             di as txt _col(5) "Decomposed variable(s)" _col(30) ": " as res "`decompose'"
         }
         di as txt _col(5) "Independent variable(s)" _col(30) ": " as res "`indepvars'"
+        if `nexog' > 0 {
+            di as txt _col(5) "Fixed regressor(s)" _col(30) ": " as res "`exog'"
+        }
         di as txt _col(5) "Time variable" _col(30) ": " as res "`timevar'" ///
            as txt " (" as res "`tmin'" as txt " to " as res "`tmax'" as txt ")"
         di as txt _col(5) "Observations" _col(30) ": " as res "`Nfix'" ///
@@ -387,6 +423,10 @@ program define aardl, eclass sortpreserve
     if `has_fourier' {
         local detvars "`detvars' _aardl_sin _aardl_cos"
         local nd = `nd' + 2
+    }
+    if `nexog' > 0 {
+        local detvars "`detvars' `exog'"
+        local nd = `nd' + `nexog'
     }
 
     // =====================================================================
@@ -645,7 +685,9 @@ program define aardl, eclass sortpreserve
         if `keep' {
             local nm : word `j' of `oldnames'
             local newnames "`newnames' `nm'"
-            local eqn      "`eqn' SR"
+            local isfixed : list nm in exog
+            if `isfixed' local eqn "`eqn' FIXED"
+            else         local eqn "`eqn' SR"
         }
     }
 
@@ -1088,6 +1130,7 @@ program define aardl, eclass sortpreserve
     ereturn scalar nmodels = `nfit'
     ereturn scalar ecm_coef = `alpha'
     ereturn scalar horizon  = `horizon'
+    ereturn scalar n_exog   = `nexog'
     ereturn scalar level    = `level'
     if `halflife' < . ereturn scalar halflife = `halflife'
     if `domroot'  < . ereturn scalar domroot  = `domroot'
@@ -1116,6 +1159,7 @@ program define aardl, eclass sortpreserve
     ereturn local depvar     "`depvar'"
     ereturn local indepvars  "`indepvars'"
     ereturn local allx       "`allx'"
+    if `nexog' > 0 ereturn local exog "`exog'"
     ereturn local ecmvars    "`rhs'"
     ereturn local fovterms   "`fovterms'"
     ereturn local findterms  "`findterms'"
@@ -1159,7 +1203,13 @@ program define aardl, eclass sortpreserve
         di as txt ""
         _coef_table, level(`level')
         di as txt _col(5) "{it:ADJ = speed of adjustment; LR = long-run coefficients}"
-        di as txt _col(5) "{it:(delta method); SR = short-run coefficients.}"
+        if `nexog' > 0 {
+            di as txt _col(5) "{it:(delta method); FIXED = fixed regressors from exog();}"
+            di as txt _col(5) "{it:SR = short-run coefficients.}"
+        }
+        else {
+            di as txt _col(5) "{it:(delta method); SR = short-run coefficients.}"
+        }
     }
 
     di as txt ""

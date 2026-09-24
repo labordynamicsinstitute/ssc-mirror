@@ -179,10 +179,35 @@ di "fixed regressors     : " e(exog)
 di "n fixed estimated    : " e(n_exog)
 di "Newey-West lag       : " e(haclags)
 
+di _newline(3)
+di as res "============================================================"
+di as res "  TEST 13: exog() with a lagged dummy and a slope shift"
+di as res "============================================================"
+
+gen double x1_step = x1 * step               // slope shift, built first
+fbardl y x1 x2, type(fardl) maxlag(2) maxk(2) exog(step L.step x1_step) ///
+    nodiag nodynmult noadvanced notable
+di "fixed regressors     : " e(exog)
+di "n fixed estimated    : " e(n_exog)
+
+di _newline(3)
+di as res "============================================================"
+di as res "  TEST 14: exog() validation messages"
+di as res "============================================================"
+
+gen byte never = 0                            // constant on the sample
+capture noisily fbardl y x1 x2, type(fardl) maxlag(2) maxk(2) exog(never) ///
+    nodiag nodynmult noadvanced notable
+di as txt "expected r(198), got r(" _rc ")"
+
+capture noisily fbardl y x1 x2, type(fardl) maxlag(2) maxk(2) exog(L.x1) ///
+    nodiag nodynmult noadvanced notable
+di as txt "expected r(198), got r(" _rc ")"
+
 // ─────────────────────────────────────────────────────────────────────────────
 di _newline(3)
 di as res "============================================================"
 di as res "  ALL TESTS COMPLETED SUCCESSFULLY"
-di as res "  Package: fbardl v1.2.0"
+di as res "  Package: fbardl v1.3.0"
 di as res "  Author: Dr. Merwan Roudane"
 di as res "============================================================"

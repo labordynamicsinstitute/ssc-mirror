@@ -1,5 +1,5 @@
 *! _aardl_stars — significance stars utility for aardl
-*! Version 2.0.0
+*! Version 2.1.0
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 
 capture program drop _aardl_stars

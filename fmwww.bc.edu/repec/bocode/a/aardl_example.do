@@ -1,7 +1,7 @@
 *==============================================================================
 * aardl — worked examples
 * Augmented ARDL cointegration analysis
-* Version 2.0.0 — 28 August 2026
+* Version 2.1.0 — 22 September 2026
 * Dr Merwan Roudane  (merwanroudane920@gmail.com)
 *==============================================================================
 * Run this file after installing the package.  Each block is self-contained.
@@ -162,6 +162,32 @@ display "models estimated: " e(nmodels) "   strategy: " e(search)
 aardl ln_inv ln_inc ln_consump, maxlag(4) search(sequential) ///
       nodiag nostability nodynmult noadvanced nograph
 display "models estimated: " e(nmodels) "   strategy: " e(search)
+
+*------------------------------------------------------------------------------
+* 7b. Fixed regressors: dummies and other unlagged controls
+*
+*     exog() adds variables that enter every equation contemporaneously and
+*     without lags, and that stay OUT of the long-run relationship and of the
+*     three cointegration tests: crisis / policy / break dummies, seasonal
+*     dummies, or an exogenous control.  They are held at their sample values
+*     inside the bootstrap, like the trend and the Fourier terms, and are
+*     reported in their own FIXED equation.
+*------------------------------------------------------------------------------
+generate byte d_oil   = (qtr >= tq(1973q4))      // level shift from 1973q4
+generate byte d_pulse = (qtr == tq(1975q1))      // one-period pulse
+
+aardl ln_inv ln_inc ln_consump, exog(d_oil d_pulse) maxlag(4) ///
+      nodynmult noadvanced nograph
+test [FIXED]                                     // joint test of the dummies
+display "fixed regressors: " e(exog)
+
+* the same dummies with bootstrap critical values
+aardl ln_inv ln_inc ln_consump, type(baardl) exog(d_oil d_pulse) ///
+      reps(499) maxlag(4) nodiag nostability nodynmult noadvanced nograph
+
+* and inside a Fourier NARDL
+aardl ln_inv ln_inc ln_consump, type(fanardl) decompose(ln_inc) ///
+      exog(d_oil) maxlag(3) nodiag nostability nodynmult noadvanced nograph
 
 *------------------------------------------------------------------------------
 * 8.  Postestimation

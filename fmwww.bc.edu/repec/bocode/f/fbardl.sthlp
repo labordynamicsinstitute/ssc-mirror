@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 1.2.0  02aug2026}{...}
+{* *! version 1.3.0  22sep2026}{...}
 {vieweralsosee "[R] regress" "help regress"}{...}
 {vieweralsosee "[TS] newey" "help newey"}{...}
 {vieweralsosee "[R] ardl" "help ardl"}{...}
@@ -7,6 +7,7 @@
 {viewerjumpto "Description" "fbardl##description"}{...}
 {viewerjumpto "Methodology" "fbardl##methodology"}{...}
 {viewerjumpto "Options" "fbardl##options"}{...}
+{viewerjumpto "Fixed regressors and dummies" "fbardl##exog"}{...}
 {viewerjumpto "Output tables" "fbardl##tables"}{...}
 {viewerjumpto "Graphs" "fbardl##graphs"}{...}
 {viewerjumpto "Stored results" "fbardl##results"}{...}
@@ -393,7 +394,18 @@ published with the original Yilanci or McNown specification.
 {opt exog(varlist)} specifies {bf:fixed (exogenous) regressors} — typically
 step dummies, pulse/outlier dummies, seasonal dummies, or a deterministic
 trend. Time-series operators and factor variables are allowed, so
-{cmd:exog(i.quarter)} and {cmd:exog(L.shock)} both work.
+{cmd:exog(i.quarter)} and {cmd:exog(L.shock)} both work. See
+{help fbardl##exog:Fixed regressors and dummy variables} for step-by-step
+code, from building the dummy to reading the output.
+{p_end}
+
+{phang2}
+A fixed regressor may not also be the dependent or an independent variable
+(or a lag or factor of one), and each must vary on the estimation sample; a
+dummy that is identically 0 or 1 there — usually a date written in the wrong
+format — is refused with a message. A fixed regressor that {cmd:regress}
+drops as collinear (for example a full set of seasonal dummies together with
+the constant) is reported in a note and is not counted in {cmd:e(n_exog)}.
 {p_end}
 
 {phang2}
@@ -508,6 +520,194 @@ Default is {cmd:c(level)} (usually 95).
 {opt horizon(#)} maximum horizon for dynamic multipliers and persistence
 profile. Default is 20.
 {p_end}
+
+
+{marker exog}{...}
+{title:Fixed regressors and dummy variables}
+
+{pstd}
+This section shows, line by line, how to build the usual kinds of dummy
+variable and pass them to {opt exog()}. The data must be {helpb tsset}. The
+examples use a monthly variable {cmd:period} in {cmd:%tm} format; for
+quarterly or yearly data replace {cmd:tm()} with {cmd:tq()} or a plain year.
+
+{pstd}
+{bf:What exog() does and does not do.} A variable in {opt exog()} enters the
+estimated equation once, contemporaneously, exactly as typed. It is
+{it:not} lag-searched, {it:not} given a lagged level, {it:not} part of the
+long-run relationship, {it:not} in F_overall or F_independent, does {it:not}
+change the number of forcing variables {it:k} for the bounds tables, and does
+{it:not} receive a dynamic multiplier. It {it:is} in the Step 1 Fourier
+frequency search, in every candidate model of the Step 2 lag search, in the
+final equation, in the diagnostics, and in the marginal and conditional
+equations of the bootstrap data-generating process, where it is held at its
+sample values in every replication. Its coefficient is reported in the
+{bf:FIXED} block of Table 2 and it is counted among the short-run
+coefficients passed to {cmd:ardlbounds}. This is how McNown, Sam and Goh
+(2018) enter their dummy variables (their equation 18 and Table 5).
+
+{pstd}
+{bf:Step 1: make the time variable usable.} Check how the data are
+{cmd:tsset} and which format the time variable has, because the dummy
+condition must be written in that format.
+
+{phang2}{cmd:. tsset}{p_end}
+{phang2}{cmd:. describe period}{p_end}
+{phang2}{cmd:. list period in 1/3}{p_end}
+
+{pstd}
+{bf:Step 2: build the dummy.} Use {cmd:generate byte} with a logical
+expression; Stata evaluates it to 1 when true and 0 when false, so no
+{cmd:replace} is needed.
+
+{pstd}{it:Level-shift (step) dummy}: 0 before the event, 1 from the event
+onwards. Use it for a regime that starts and stays: a war, a policy change, an
+exchange-rate regime, a change of data definition.
+
+{phang2}{cmd:. generate byte d_war = (period >= tm(2022m3))}{p_end}
+{phang2}{cmd:. label variable d_war "1 from 2022m3 onwards"}{p_end}
+
+{pstd}{it:Pulse (one-period) dummy}: 1 in a single month, 0 elsewhere. Use it
+for an outlier or a one-off event whose effect does not persist.
+
+{phang2}{cmd:. generate byte d_pulse = (period == tm(2020m4))}{p_end}
+
+{pstd}{it:Window (temporary regime) dummy}: 1 inside a date range, 0 outside.
+
+{phang2}{cmd:. generate byte d_covid = inrange(period, tm(2020m4), tm(2021m6))}{p_end}
+
+{pstd}{it:Quarterly data}:
+
+{phang2}{cmd:. tsset qtr}{p_end}
+{phang2}{cmd:. generate byte d_gfc = (qtr >= tq(2008q3))}{p_end}
+
+{pstd}{it:Yearly data}: the time variable is usually the year itself.
+
+{phang2}{cmd:. tsset year}{p_end}
+{phang2}{cmd:. generate byte d_1997 = (year >= 1997)}{p_end}
+
+{pstd}{it:Seasonal dummies} for monthly data. With factor-variable notation
+Stata omits the base month itself, so all twelve can be passed and no
+collinearity with the constant arises:
+
+{phang2}{cmd:. generate byte mon = month(dofm(period))}{p_end}
+{phang2}{cmd:. fbardl y x1 x2, exog(i.mon)}{p_end}
+
+{pstd}or by hand, leaving one month out:
+
+{phang2}{cmd:. forvalues m = 2/12 {c -(}}{p_end}
+{phang2}{cmd:.     generate byte m`m' = (month(dofm(period)) == `m')}{p_end}
+{phang2}{cmd:. {c )-}}{p_end}
+{phang2}{cmd:. fbardl y x1 x2, exog(m2-m12)}{p_end}
+
+{pstd}{it:A break date found by another test}: if {cmd:zandrews},
+{cmd:estat sbsingle} or a Bai-Perron routine returned a break date, build
+the dummy from it:
+
+{phang2}{cmd:. local tb = tm(2019m11)}{p_end}
+{phang2}{cmd:. generate byte d_break = (period >= `tb')}{p_end}
+
+{pstd}{it:A lagged dummy} may be given directly with a time-series operator:
+
+{phang2}{cmd:. fbardl y x1 x2, exog(d_covid L.d_covid)}{p_end}
+
+{pstd}{it:A slope shift} (interaction with a regressor) must be created
+first; note that it is then a fixed regressor, not a second long-run
+coefficient:
+
+{phang2}{cmd:. generate double x1_war = x1 * d_war}{p_end}
+{phang2}{cmd:. fbardl y x1 x2, exog(d_war x1_war)}{p_end}
+
+{pstd}
+{bf:Step 3: check the dummy before using it.} It must have no missing
+values on the sample and it must vary on the {it:estimation} sample, which
+starts {it:maxlag}+1 periods after the first observation.
+
+{phang2}{cmd:. tabulate d_war, missing}{p_end}
+{phang2}{cmd:. list period d_war if d_war != L.d_war}{space 3}{it:(the switch dates)}{p_end}
+
+{pstd}
+{bf:Step 4: estimate.} List the dummies in {opt exog()}; everything else is
+unchanged. {opt fixed()} is a synonym.
+
+{pstd}Fourier ARDL with the Pesaran-Shin-Smith bounds, one step dummy:
+
+{phang2}{cmd:. fbardl y x1 x2, type(fardl) maxlag(4) maxk(3) exog(d_war)}{p_end}
+
+{pstd}Window dummy plus pulse, HAC standard errors:
+
+{phang2}{cmd:. fbardl y x1 x2, type(fardl) exog(d_covid d_pulse) hac(both)}{p_end}
+
+{pstd}Bootstrap critical values; the dummies are held fixed in every
+replication of the data-generating process:
+
+{phang2}{cmd:. fbardl y x1 x2, type(fbardl_mcnown) reps(999) exog(d_covid d_war)}{p_end}
+{phang2}{cmd:. fbardl y x1 x2, type(fbardl_bvz) reps(999) hac(both) exog(d_covid)}{p_end}
+
+{pstd}Seasonal dummies together with a break dummy:
+
+{phang2}{cmd:. fbardl y x1 x2, exog(i.mon d_war)}{p_end}
+
+{pstd}The unconditional (Yilanci / McNown) form with a dummy:
+
+{phang2}{cmd:. fbardl y x1 x2, exog(d_war) unconditional}{p_end}
+
+{pstd}
+{bf:Step 5: read the output.} The header lists the fixed regressors on the
+line {it:Fixed regressor(s)} and Table 1 reports how many were actually
+estimated. The three cointegration statistics and their critical values are
+computed exactly as without the dummies; {it:k} is still the number of
+independent variables. In Table 2 the dummies appear in their own
+{bf:FIXED} block, between the short-run block and the deterministics; the
+coefficient is the contemporaneous effect on D.y, in the units of y, with
+the usual t test. The number of estimated fixed regressors and their names
+are stored:
+
+{phang2}{cmd:. display e(n_exog)}{p_end}
+{phang2}{cmd:. display "`e(exog)'"}{p_end}
+
+{pstd}
+{bf:Choosing between exog() and the alternatives.}
+
+{phang2}Use {opt exog()} for a {it:known} sharp break, an outlier, a
+one-off event, seasonality, or an exogenous control that should not be in
+the cointegrating vector.{p_end}
+
+{phang2}Rely on the Fourier terms for {it:unknown} or {it:smooth} breaks;
+the two can be combined, and a sharp known break is better captured by a
+dummy than by a low-frequency sine-cosine pair.{p_end}
+
+{phang2}Put a variable in {it:indepvars} instead if it should carry a
+long-run coefficient and enter the bounds tests; then {it:k} rises by one and
+it is lag-searched like the other regressors.{p_end}
+
+{pstd}
+{bf:Common errors and what they mean.}
+
+{phang2}{it:exog(): d_x is constant on the estimation sample} - the dummy
+is 0 (or 1) everywhere on the sample. Usually the date was written in the
+wrong format, for example {cmd:period >= 2020} instead of
+{cmd:period >= tm(2020m3)}. Check with {cmd:list period d_x if d_x}.{p_end}
+
+{phang2}{it:exog(): x1 is already the dependent or an independent variable}
+- a variable, or a lag or factor of it, cannot be both a forcing variable
+and a fixed regressor.{p_end}
+
+{phang2}{it:note: fixed regressor(s) ... omitted as constant or collinear}
+- the variable varies on the full sample but not on the estimation sample
+that starts {it:maxlag}+1 periods in, or it duplicates another regressor
+(two dummies switching on the same date, a full set of hand-made seasonal
+dummies with the constant). It was dropped from the equation and is not
+counted in {cmd:e(n_exog)}.{p_end}
+
+{phang2}{it:Warning: only ... bootstrap replications produced a usable test
+statistic} - under a bootstrap type a fixed regressor is near-constant
+within the resampled series, so some replications are collinear. Reduce
+{opt maxlag()} or drop the offending dummy.{p_end}
+
+{phang2}{it:option exog() not allowed} - an older copy of {cmd:fbardl} is
+being found first on the {helpb adopath}; type {cmd:which fbardl} and
+reinstall or {cmd:discard}.{p_end}
 
 
 {marker tables}{...}
@@ -685,7 +885,8 @@ labeled axes):
 {p_end}
 {phang}{cmd:. fbardl y x1 x2, type(fbardl_mcnown) reps(999) hac(both)}{p_end}
 
-{pstd}{bf:Example 10: Fixed regressors — a COVID step dummy and a pulse}{p_end}
+{pstd}{bf:Example 10: Fixed regressors — a COVID window dummy and a pulse}
+(see {help fbardl##exog:Fixed regressors and dummy variables}){p_end}
 {phang}{cmd:. gen byte covid = inrange(period, tm(2020m3), tm(2021m12))}{p_end}
 {phang}{cmd:. gen byte pulse = (period == tm(2020m4))}{p_end}
 {phang}{cmd:. fbardl y x1 x2, exog(covid pulse)}{p_end}

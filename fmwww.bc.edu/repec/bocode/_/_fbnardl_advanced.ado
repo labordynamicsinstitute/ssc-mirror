@@ -1,5 +1,5 @@
 *! _fbnardl_advanced — Advanced Post-Estimation Analyses for FBNARDL
-*! Version 1.0.0 — 2026-02-18
+*! Version 2.0.0 — 2026-09-22
 *! Author: fbnardl (merwanroudane920@gmail.com)
 *!
 *! Implements:
@@ -287,50 +287,58 @@ program define _fbnardl_advanced
         capture local lr_neg = -_b[L.`cname'_neg] / `alpha'
         if _rc != 0 local lr_neg = 0
 
-        // Compute cumulative dynamic multipliers for pos/neg separately
-        tempname adj_pos adj_neg
+        // Cumulative dynamic multipliers for pos/neg separately, obtained by
+        // simulating the estimated error-correction equation forward after a
+        // unit permanent shock in the partial sum (Shin et al. 2014): the
+        // path includes the pull of the lagged level (pi*x(t-1)) and the
+        // adjustment on the lagged level of y (alpha*y(t-1)), so it converges
+        // to the analytical long-run multiplier -pi/alpha by construction.
+        capture local pi_pos = _b[L.`cname'_pos]
+        if _rc != 0 local pi_pos = 0
+        capture local pi_neg = _b[L.`cname'_neg]
+        if _rc != 0 local pi_neg = 0
+
+        tempname adj_pos adj_neg dyn_pos dyn_neg
         mat `adj_pos' = J(`horizon' + 1, 1, 0)
         mat `adj_neg' = J(`horizon' + 1, 1, 0)
-
-        // Dynamic multiplier recursive computation
-        tempname dyn_pos dyn_neg
         mat `dyn_pos' = J(`horizon' + 1, 1, 0)
         mat `dyn_neg' = J(`horizon' + 1, 1, 0)
 
         forvalues h = 0/`horizon' {
             local idx = `h' + 1
-
-            // Direct effect
-            if `h' <= `q' {
-                local d_pos = `theta_pos_`h''
-                local d_neg = `theta_neg_`h''
+            local s_p = 0
+            local s_n = 0
+            // adjustment on the lagged level of y (the cumulative multiplier)
+            if `h' > 0 {
+                local s_p = `s_p' + `alpha' * el(`adj_pos', `idx' - 1, 1)
+                local s_n = `s_n' + `alpha' * el(`adj_neg', `idx' - 1, 1)
             }
-            else {
-                local d_pos = 0
-                local d_neg = 0
+            // long-run pull from the lagged level of x (x jumps to 1 at h = 0)
+            if `h' >= 1 {
+                local s_p = `s_p' + `pi_pos'
+                local s_n = `s_n' + `pi_neg'
             }
-
-            // AR feedback
-            local ar_p = 0
-            local ar_n = 0
+            // lagged differences of y
             local jmax = min(`h', `p')
             forvalues j = 1/`jmax' {
                 local prev_idx = `h' - `j' + 1
-                local ar_p = `ar_p' + `phi_`j'' * el(`dyn_pos', `prev_idx', 1)
-                local ar_n = `ar_n' + `phi_`j'' * el(`dyn_neg', `prev_idx', 1)
+                local s_p = `s_p' + `phi_`j'' * el(`dyn_pos', `prev_idx', 1)
+                local s_n = `s_n' + `phi_`j'' * el(`dyn_neg', `prev_idx', 1)
             }
-
-            mat `dyn_pos'[`idx', 1] = `d_pos' + `ar_p'
-            mat `dyn_neg'[`idx', 1] = `d_neg' + `ar_n'
-
-            // Cumulative
+            // current and lagged differences of x (unit impulse at h = 0)
+            if `h' <= `q' {
+                local s_p = `s_p' + `theta_pos_`h''
+                local s_n = `s_n' + `theta_neg_`h''
+            }
+            mat `dyn_pos'[`idx', 1] = `s_p'
+            mat `dyn_neg'[`idx', 1] = `s_n'
             if `h' == 0 {
-                mat `adj_pos'[`idx', 1] = el(`dyn_pos', `idx', 1)
-                mat `adj_neg'[`idx', 1] = el(`dyn_neg', `idx', 1)
+                mat `adj_pos'[`idx', 1] = `s_p'
+                mat `adj_neg'[`idx', 1] = `s_n'
             }
             else {
-                mat `adj_pos'[`idx', 1] = el(`adj_pos', `idx' - 1, 1) + el(`dyn_pos', `idx', 1)
-                mat `adj_neg'[`idx', 1] = el(`adj_neg', `idx' - 1, 1) + el(`dyn_neg', `idx', 1)
+                mat `adj_pos'[`idx', 1] = el(`adj_pos', `idx' - 1, 1) + `s_p'
+                mat `adj_neg'[`idx', 1] = el(`adj_neg', `idx' - 1, 1) + `s_n'
             }
         }
 

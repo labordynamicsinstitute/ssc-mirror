@@ -1,0 +1,30 @@
+d 'SPLITPOPSURV': module to estimate split-population (cure / mover-stayer) survival models
+d
+d     splitpopsurv fits a split-population (also called a "cure" or
+d "mover-stayer") survival model by maximum likelihood. It   
+d combines an accelerated failure-time regression for event timing
+d among "movers" (the H_regression equation, on timevar and   
+d indepvars) with a logistic regression on the probability of
+d belonging to a structurally immune "stayer" population (the	
+d P_regression equation, on cure()). Five baseline distributions
+d are available for the timing part. 
+d
+d KW: survival models
+d KW: mover-stayer
+d KW: failure time regression
+d
+d Requires: Stata version 17
+d
+d Distribution-Date: 20260923
+d
+d Author:  Nobutaka Fukuda ,  Tohoku University
+d Support: email  nobutaka.fukuda@@tohoku.ac.jp
+d
+f splitpopsurv.ado
+f splitpopsurv.sthlp
+f splitpopsurv_d0_ggamma.ado
+f splitpopsurv_lf_gamma.ado
+f splitpopsurv_lf_loglogistic.ado
+f splitpopsurv_lf_lognormal.ado
+f splitpopsurv_lf_weibull.ado
+f splitpopsurv_p.ado

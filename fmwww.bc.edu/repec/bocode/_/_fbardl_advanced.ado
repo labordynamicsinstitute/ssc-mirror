@@ -1,5 +1,5 @@
 *! _fbardl_advanced — Advanced Post-Estimation Analysis for FBARDL
-*! Version 1.2.0 — 2026-08-02
+*! Version 1.3.0 — 2026-09-22
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 
 // =============================================================================

@@ -1,5 +1,5 @@
 *! fbardl — Fourier Bootstrap ARDL Cointegration Test
-*! Version 1.2.0 — 2026-08-02
+*! Version 1.3.0 — 2026-09-22
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 *! Independent Researcher
 *!
@@ -174,6 +174,28 @@ program define fbardl, eclass sortpreserve
         exit 198
     }
 
+    // A fixed regressor may not also be (a lag or factor of) the dependent
+    // or an independent variable: those already carry their own lags and
+    // levels in the ARDL, so the equation would be collinear or, worse,
+    // would double count the variable in the cointegration tests.
+    if "`exog'" != "" {
+        qui fvrevar `exog', list
+        local exogbase "`r(varlist)'"
+        qui fvrevar `depvar' `indepvars', list
+        local modelbase "`r(varlist)'"
+        foreach v of local exogbase {
+            if `: list v in modelbase' {
+                di as err "exog(): {bf:`v'} is already the dependent or an independent variable"
+                di as err "        (a fixed regressor must be a separate variable such as a dummy)"
+                exit 198
+            }
+            if strpos("`v'", "_fbardl_") == 1 {
+                di as err "exog(): names starting with _fbardl_ are reserved"
+                exit 198
+            }
+        }
+    }
+
     // =========================================================================
     // 3. PRESERVE & PREPARE DATA
     // =========================================================================
@@ -187,6 +209,21 @@ program define fbardl, eclass sortpreserve
     if `T' < 20 {
         di as err "sample size too small (N = `T'): need at least 20 obs"
         exit 198
+    }
+
+    // A fixed regressor that is constant on the sample is almost always a
+    // dummy built with the wrong date format (e.g. period >= 2020 instead of
+    // period >= tm(2020m3)); refuse it rather than let regress drop it.
+    if "`exog'" != "" {
+        foreach v of local exogbase {
+            qui summarize `v', meanonly
+            if r(min) == r(max) {
+                di as err "exog(): {bf:`v'} is constant on the estimation sample"
+                di as err "        (a dummy must switch between 0 and 1 inside the sample;"
+                di as err "         check the date condition used to build it)"
+                exit 198
+            }
+        }
     }
 
     // =========================================================================
@@ -765,6 +802,7 @@ program define fbardl, eclass sortpreserve
     // omitted factor levels carry a zero standard error and are skipped)
     local nexog_est = 0
     local exogkeep ""
+    local exogdrop ""
     foreach v of local exogexp {
         capture local ese = _se[`v']
         if _rc == 0 {
@@ -772,7 +810,15 @@ program define fbardl, eclass sortpreserve
                 local nexog_est = `nexog_est' + 1
                 local exogkeep "`exogkeep' `v'"
             }
+            else if !strpos("`v'", "b.") {
+                local exogdrop "`exogdrop' `v'"
+            }
         }
+    }
+    if "`exogdrop'" != "" {
+        di as txt ""
+        di as txt _col(5) "note: fixed regressor(s)`exogdrop' omitted as constant or collinear"
+        di as txt _col(5) "      on the estimation sample (which starts maxlag+1 periods in)."
     }
 
     // Get ECM coefficient
@@ -1645,7 +1691,7 @@ program define fbardl, eclass sortpreserve
     // =========================================================================
     di as txt ""
     di as txt "{hline 78}"
-    di as res _col(5) "fbardl v1.2.0"
+    di as res _col(5) "fbardl v1.3.0"
     di as txt "{hline 78}"
 
     // Clean up

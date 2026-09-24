@@ -1,5 +1,5 @@
 {smcl}
-{* *! version 2.0.0  28aug2026}{...}
+{* *! version 2.1.0  22sep2026}{...}
 {vieweralsosee "ardl" "help ardl"}{...}
 {vieweralsosee "ardlbounds" "help ardlbounds"}{...}
 {vieweralsosee "newey" "help newey"}{...}
@@ -7,6 +7,7 @@
 {viewerjumpto "Description" "aardl##description"}{...}
 {viewerjumpto "Model" "aardl##model"}{...}
 {viewerjumpto "Options" "aardl##options"}{...}
+{viewerjumpto "Fixed regressors and dummies" "aardl##exog"}{...}
 {viewerjumpto "The three tests" "aardl##threetests"}{...}
 {viewerjumpto "Critical values" "aardl##cv"}{...}
 {viewerjumpto "Bootstrap" "aardl##bootstrap"}{...}
@@ -42,6 +43,9 @@ bootstrap inference and asymmetric (NARDL) dynamics
 {synopt:{opt ty:pe(string)}}model type; default {cmd:type(aardl)}{p_end}
 {synopt:{opt dec:ompose(varlist)}}variables to decompose into positive and
 negative partial sums; required for the NARDL types{p_end}
+{synopt:{opt ex:og(varlist)}}fixed regressors (dummies, pulse or shift
+variables, controls) that enter unlagged and outside the cointegration
+tests{p_end}
 {synopt:{opt case(#)}}Pesaran-Shin-Smith case {bf:1}-{bf:5}; default {cmd:case(3)}{p_end}
 {synopt:{opt maxl:ag(#)}}maximum lag order; default {cmd:maxlag(4)}{p_end}
 {synopt:{opt ic(string)}}{cmd:aic}, {cmd:bic} (default) or {cmd:hqic}{p_end}
@@ -126,7 +130,16 @@ and Greenwood-Nimmo (2014).
 {p 8 8 2}
 D.y(t) = c0 + c1*t + pi_yy*y(t-1) + sum_i pi_i*x_i(t-1)
 + sum_j psi_j*D.y(t-j) + sum_i sum_j om_ij*D.x_i(t-j)
-+ g1*sin(2*pi*k*t/T) + g2*cos(2*pi*k*t/T) + u(t)
++ g1*sin(2*pi*k*t/T) + g2*cos(2*pi*k*t/T) + sum_m delta_m*d_m(t) + u(t)
+
+{pstd}
+where the d_m(t) are the optional {opt exog()} fixed regressors: typically
+0/1 dummies for a crisis, a policy change or a known structural break, but
+any variable that should enter contemporaneously, without lags, and stay out
+of the long-run relationship and of the three cointegration tests. They are
+treated exactly like the Fourier terms and the trend: present in every
+candidate model during lag selection, in the final regression, in the CUSUM
+recursion, and held at their sample values inside the bootstrap.
 
 {pstd}
 {opt case()} determines which deterministic terms enter and which are part of
@@ -148,7 +161,9 @@ coefficients{p_end}
 The coefficient table is reported in error-correction form with three
 equations: {bf:ADJ} (the speed of adjustment pi_yy), {bf:LR} (the long-run
 coefficients -pi_i/pi_yy, with delta-method standard errors) and {bf:SR} (the
-short-run coefficients as estimated).
+short-run coefficients as estimated). When {opt exog()} is given, its
+coefficients appear in a fourth equation, {bf:FIXED}, so that
+{cmd:test [FIXED]} tests them jointly.
 
 {pstd}
 {bf:Lag selection.} Every candidate ARDL(p,q1,...,qk) is estimated on the
@@ -171,6 +186,25 @@ following Shin, Yu and Greenwood-Nimmo (2014). The partial sums are created as
 estimation, because postestimation needs them. If variables of those names
 already exist, {cmd:aardl} falls back to an {cmd:_aardl_} prefix and says so.
 Independent variables that are not decomposed enter as controls.
+
+{phang}{opt exog(varlist)} adds fixed regressors to every equation; see
+{help aardl##exog:Fixed regressors and dummy variables} for step-by-step
+code. The variables must be ordinary numeric variables (build lags or
+interactions first if you need them); they may not be the dependent variable, an
+independent variable, or start with {cmd:_aardl_}. Typical uses are 0/1
+dummies for a crisis, a pandemic, a policy regime or a known break date,
+seasonal dummies, or an exogenous control that should not be part of the
+long-run relationship. The fixed regressors are not lagged, are not
+decomposed, are excluded from F_overall, t_DV and F_ind, do not change the
+number of forcing variables {it:k} used to look up the bounds, and are held
+fixed in the bootstrap. Each must vary within the estimation sample, which
+starts {it:maxlag}+2 periods in; a dummy that is identically zero there is
+refused. Observations with a missing fixed regressor are dropped from the
+sample, so an internal gap will trigger the contiguity error. Because
+recursive residuals need a full-rank start block, the CUSUM and CUSUMSQ
+recursion begins at the first observation at which every fixed regressor
+has entered; with a late level-shift dummy the recursive path is
+correspondingly shorter, and the number of recursive residuals is printed.
 
 {phang}{opt case(#)} see {help aardl##model:The estimated model}.
 
@@ -230,6 +264,212 @@ persistence profile.
 
 {phang}{opt bands(#)} is the number of parametric draws used for the
 multiplier confidence bands. Set {cmd:bands(0)} to skip them.
+
+
+{marker exog}{...}
+{title:Fixed regressors and dummy variables}
+
+{pstd}
+This section shows, line by line, how to build the usual kinds of dummy
+variable and pass them to {opt exog()}. Everything below assumes the data
+are {helpb tsset}; the examples use a quarterly variable {cmd:qtr}, but
+the same code works with a yearly or monthly time variable by replacing
+{cmd:tq()} with {cmd:yq()}, a plain year, or {cmd:tm()}.
+
+{pstd}
+{bf:What exog() does and does not do.} A variable in {opt exog()} enters the
+conditional ECM once, contemporaneously, without lags, and is not part of
+the cointegrating relationship. So it is {it:not} lagged, {it:not}
+differenced, {it:not} decomposed into partial sums, {it:not} included in
+F_overall, t_DV or F_ind, does {it:not} change {it:k} for the bounds
+tables, and does {it:not} receive a dynamic multiplier. It {it:is} in every
+candidate model during lag selection, in the final regression, in the CUSUM
+recursion, and it is held at its sample values in every bootstrap
+replication. Its coefficient is reported in the {bf:FIXED} equation of the
+coefficient table.
+
+{pstd}
+{bf:Step 1: make the time variable usable.} Check how the data are
+{cmd:tsset} and which format the time variable has, because the dummy
+conditions are written in that format.
+
+{phang2}{cmd:. tsset}{p_end}
+{phang2}{cmd:. describe qtr}{p_end}
+{phang2}{cmd:. list qtr in 1/4}{p_end}
+
+{pstd}
+{bf:Step 2: build the dummy.} Use {cmd:generate byte} with a logical
+expression; Stata evaluates it to 1 when true and 0 when false, so no
+{cmd:replace} is needed.
+
+{pstd}{it:Level-shift (intercept) dummy}: 0 before the event, 1 from the event
+onwards. Use it for a regime that starts and stays: a crisis, a policy
+change, joining a currency union, a change of data definition.
+
+{phang2}{cmd:. generate byte d_gfc = (qtr >= tq(2008q3))}{p_end}
+{phang2}{cmd:. label variable d_gfc "1 from 2008q3 onwards"}{p_end}
+
+{pstd}{it:Pulse (one-period) dummy}: 1 in a single period, 0 elsewhere. Use it
+for an outlier or a one-off event whose effect does not persist.
+
+{phang2}{cmd:. generate byte d_q2_2020 = (qtr == tq(2020q2))}{p_end}
+
+{pstd}{it:Window (temporary regime) dummy}: 1 inside a date range, 0 outside.
+
+{phang2}{cmd:. generate byte d_covid = inrange(qtr, tq(2020q1), tq(2021q2))}{p_end}
+
+{pstd}{it:Yearly data}: the time variable is usually the year itself.
+
+{phang2}{cmd:. tsset year}{p_end}
+{phang2}{cmd:. generate byte d_1990 = (year >= 1990)}{p_end}
+{phang2}{cmd:. generate byte d_1997 = (year == 1997)}{p_end}
+
+{pstd}{it:Monthly data}:
+
+{phang2}{cmd:. tsset month}{p_end}
+{phang2}{cmd:. generate byte d_2011m3 = (month >= tm(2011m3))}{p_end}
+
+{pstd}{it:Seasonal dummies} for quarterly data (leave one quarter out to avoid
+collinearity with the intercept; with {cmd:case(1)} you may include all
+four):
+
+{phang2}{cmd:. generate byte q2 = (quarter(dofq(qtr)) == 2)}{p_end}
+{phang2}{cmd:. generate byte q3 = (quarter(dofq(qtr)) == 3)}{p_end}
+{phang2}{cmd:. generate byte q4 = (quarter(dofq(qtr)) == 4)}{p_end}
+
+{pstd}{it:A break date found by another test}: if {cmd:zandrews},
+{cmd:xtbreak}, {cmd:estat sbsingle} or a Bai-Perron routine returned a
+break date, say stored in a local or scalar, build the dummy from it:
+
+{phang2}{cmd:. local tb = tq(2001q3)}{p_end}
+{phang2}{cmd:. generate byte d_break = (qtr >= `tb')}{p_end}
+
+{pstd}{it:Interaction with a regressor} (a slope shift): {opt exog()} takes
+only plain variables, so create the product first. Note that a slope-shift
+term is a fixed regressor here, not a second long-run coefficient.
+
+{phang2}{cmd:. generate double x1_post = x1 * d_gfc}{p_end}
+
+{pstd}{it:A lagged dummy}: again, create it first; {cmd:L.d_gfc} is not
+accepted inside {opt exog()}.
+
+{phang2}{cmd:. generate byte d_gfc_l1 = L.d_gfc}{p_end}
+
+{pstd}
+{bf:Step 3: check the dummy before using it.} Two things matter: it must
+have no missing values on the sample, and it must vary on the
+{it:estimation} sample, which starts {it:maxlag}+2 periods after the first
+observation. A dummy that switches on only in the first few observations
+will be constant there and is refused.
+
+{phang2}{cmd:. tabulate d_gfc, missing}{p_end}
+{phang2}{cmd:. summarize d_gfc if _n > 5}{space 12}{it:(for maxlag(4))}{p_end}
+{phang2}{cmd:. list qtr d_gfc if d_gfc != L.d_gfc}{space 3}{it:(the switch dates)}{p_end}
+
+{pstd}
+{bf:Step 4: estimate.} List the dummies in {opt exog()}; everything else is
+unchanged. Several dummies may be given at once.
+
+{pstd}Asymptotic bounds, one shift dummy:
+
+{phang2}{cmd:. aardl y x1 x2, exog(d_gfc)}{p_end}
+
+{pstd}Shift plus pulse, Case V with a HAC covariance:
+
+{phang2}{cmd:. aardl y x1 x2, exog(d_gfc d_q2_2020) case(5) vce(hac)}{p_end}
+
+{pstd}Bootstrap critical values; the dummies are held fixed in every replication:
+
+{phang2}{cmd:. aardl y x1 x2, type(baardl) exog(d_gfc) reps(999)}{p_end}
+
+{pstd}Fourier plus a known break: the Fourier terms absorb smooth unknown
+breaks, the dummy absorbs the sharp known one:
+
+{phang2}{cmd:. aardl y x1 x2, type(faardl) exog(d_gfc) kmode(integer)}{p_end}
+
+{pstd}Asymmetric model with a dummy; the dummy is not decomposed:
+
+{phang2}{cmd:. aardl y x1 x2, type(banardl) decompose(x1) exog(d_gfc) reps(999)}{p_end}
+
+{pstd}Seasonal dummies together with a break dummy:
+
+{phang2}{cmd:. aardl y x1 x2, exog(q2 q3 q4 d_gfc)}{p_end}
+
+{pstd}
+{bf:Step 5: read the output.} The header lists the fixed regressors on the
+line {it:Fixed regressor(s)}. The three test statistics and their bounds
+are computed exactly as without the dummies; {it:k} is still the number of
+independent variables. In the coefficient table the dummies appear under
+{bf:FIXED}, between {bf:LR} and {bf:SR}; their coefficient is the
+contemporaneous effect on D.y, in the units of y, and the usual t test
+applies to it.
+
+{pstd}
+{bf:Step 6: test the dummies.} Because they carry the equation name
+{bf:FIXED}, they can be tested jointly or singly with {helpb test}:
+
+{phang2}{cmd:. test [FIXED]}{space 20}{it:(all of them jointly)}{p_end}
+{phang2}{cmd:. test [FIXED]d_gfc}{space 14}{it:(one of them)}{p_end}
+{phang2}{cmd:. test [FIXED]d_gfc = [FIXED]d_covid}{p_end}
+{phang2}{cmd:. lincom [FIXED]d_gfc + [FIXED]d_covid}{p_end}
+
+{pstd}
+The names are also stored, so a loop over them is easy:
+
+{phang2}{cmd:. foreach v in `e(exog)' {c -(}}{p_end}
+{phang2}{cmd:.     display "`v': " _b[FIXED:`v'] "  t = " _b[FIXED:`v']/_se[FIXED:`v']}{p_end}
+{phang2}{cmd:. {c )-}}{p_end}
+
+{pstd}
+{bf:Step 7: postestimation.} {helpb predict} works unchanged, because the
+dummies are part of {cmd:e(b_ecm)}:
+
+{phang2}{cmd:. predict double dyhat}{p_end}
+{phang2}{cmd:. predict double ect, ect}{space 8}{it:(dummies are not in the ECT)}{p_end}
+{phang2}{cmd:. aardl_advanced, horizon(40)}{p_end}
+
+{pstd}
+{bf:Choosing between exog() and the alternatives.}
+
+{phang2}Use {opt exog()} for a {it:known} sharp break, an outlier, a
+one-off event, seasonality, or an exogenous control that should not be in
+the cointegrating vector.{p_end}
+
+{phang2}Use a Fourier {opt type()} for {it:unknown} or {it:smooth} breaks;
+the two can be combined.{p_end}
+
+{phang2}Put a variable in {it:indepvars} instead if it should carry a
+long-run coefficient and enter the bounds tests; then {it:k} rises by one.{p_end}
+
+{phang2}If the intercept itself is what shifts and the shift date is the
+main object of interest, a shift dummy in {opt exog()} is the right tool;
+remember that with {cmd:case(2)} the restricted intercept is still the
+{it:overall} intercept, and the dummy is unrestricted.{p_end}
+
+{pstd}
+{bf:Common errors and what they mean.}
+
+{phang2}{it:exog(): d_x is constant on the estimation sample} - the dummy is
+0 (or 1) everywhere after the first {it:maxlag}+1 periods. Either the event
+falls in the observations lost to lags, or the dummy was built with the
+wrong date format (for example {cmd:qtr >= 2008} instead of
+{cmd:qtr >= tq(2008q3)}). Check with {cmd:list qtr d_x if d_x}.{p_end}
+
+{phang2}{it:exog(): d_x is already an independent variable} - a variable
+cannot be both a forcing variable and a fixed regressor.{p_end}
+
+{phang2}{it:the estimation sample has internal gaps} - a fixed regressor has
+missing values inside the sample; {cmd:aardl} drops those rows and then
+refuses the non-contiguous sample. Fill or drop the gap first.{p_end}
+
+{phang2}{it:option exog() not allowed} - an older copy of {cmd:aardl} is
+being found first on the {helpb adopath}; type {cmd:which aardl} and
+reinstall or {cmd:discard}.{p_end}
+
+{phang2}A dummy shown with coefficient 0 and {it:(omitted)} in the table is
+collinear with something already in the model: usually a full set of
+seasonal dummies together with the intercept, or two dummies switching on
+the same date.{p_end}
 
 
 {marker threetests}{...}
@@ -322,9 +562,10 @@ vector (v_y, e_x) is resampled as a block so contemporaneous correlation is
 preserved; the series are built as y*(t) = y*(t-1) + D.y*(t) and
 x*(t) = x*(t-1) + D.x*(t) (McNown et al. Steps 4-5; Bertelli et al. equation
 23); and the initial conditions are drawn as a contiguous block from the
-original data (Bertelli et al. step 5b). Fourier terms and the trend are
-deterministic and are held at their sample values in every replication, in
-both the y equation and the marginal equations.
+original data (Bertelli et al. step 5b). Fourier terms, the trend and the
+{opt exog()} fixed regressors are deterministic and are held at their sample
+values in every replication, in both the y equation and the marginal
+equations.
 
 {pstd}
 Critical values follow McNown et al. equations (15)-(16) and Bertelli et al.
@@ -581,11 +822,13 @@ with a different {opt horizon()}.
 {synopt:{cmd:e(halflife)}, {cmd:e(domroot)}}half-life, dominant AR root{p_end}
 {synopt:{cmd:e(nmodels)}}candidate models estimated in lag selection{p_end}
 {synopt:{cmd:e(reps)}}bootstrap replications{p_end}
+{synopt:{cmd:e(n_exog)}}number of fixed regressors{p_end}
 
 {p2col 5 22 26 2: Macros}{p_end}
 {synopt:{cmd:e(cmd)}}{cmd:aardl}{p_end}
 {synopt:{cmd:e(cmdline)}}the command as typed{p_end}
 {synopt:{cmd:e(depvar)}, {cmd:e(indepvars)}, {cmd:e(allx)}}variable lists{p_end}
+{synopt:{cmd:e(exog)}}fixed regressors, if any{p_end}
 {synopt:{cmd:e(ecmvars)}}right-hand side of the underlying regression{p_end}
 {synopt:{cmd:e(fovterms)}, {cmd:e(findterms)}}the tested restrictions{p_end}
 {synopt:{cmd:e(type)}, {cmd:e(ic)}, {cmd:e(search)}}model settings{p_end}
@@ -598,7 +841,7 @@ with a different {opt horizon()}.
 {synopt:{cmd:e(predict)}}{cmd:aardl_p}{p_end}
 
 {p2col 5 22 26 2: Matrices}{p_end}
-{synopt:{cmd:e(b)}, {cmd:e(V)}}EC representation (ADJ / LR / SR){p_end}
+{synopt:{cmd:e(b)}, {cmd:e(V)}}EC representation (ADJ / LR / [FIXED] / SR){p_end}
 {synopt:{cmd:e(b_ecm)}, {cmd:e(V_ecm)}}the underlying regression{p_end}
 {synopt:{cmd:e(bounds)}}the three statistics with their critical values{p_end}
 {synopt:{cmd:e(diagnostics)}}diagnostic statistics and p-values{p_end}
@@ -637,6 +880,16 @@ with a different {opt horizon()}.
 
 {pstd}Fourier bootstrap NARDL, everything on{p_end}
 {phang2}{cmd:. aardl ln_inv ln_inc ln_consump, type(fbanardl) decompose(ln_inc) maxlag(3) reps(999) horizon(36)}{p_end}
+
+{pstd}Fixed regressors: a level-shift dummy and a pulse dummy, excluded
+from the long-run relationship and from the three tests{p_end}
+{phang2}{cmd:. generate byte d_oil = (qtr >= tq(1973q4))}{p_end}
+{phang2}{cmd:. generate byte d_pulse = (qtr == tq(1975q1))}{p_end}
+{phang2}{cmd:. aardl ln_inv ln_inc ln_consump, exog(d_oil d_pulse)}{p_end}
+{phang2}{cmd:. test [FIXED]}{p_end}
+
+{pstd}Same dummies with a bootstrap type; they are held fixed in every replication{p_end}
+{phang2}{cmd:. aardl ln_inv ln_inc ln_consump, type(baardl) exog(d_oil d_pulse) reps(499)}{p_end}
 
 {pstd}Fast exploratory run{p_end}
 {phang2}{cmd:. aardl ln_inv ln_inc ln_consump, maxlag(2) nodiag nostability nodynmult noadvanced nograph}{p_end}

@@ -1,5 +1,5 @@
 *! _fbardl_diagtest — Diagnostic Tests for FBARDL
-*! Version 1.2.0 — 2026-08-02
+*! Version 1.3.0 — 2026-09-22
 *! Author: Dr. Merwan Roudane (merwanroudane920@gmail.com)
 *!
 *! Serial correlation is tested with the genuine Breusch-Godfrey auxiliary

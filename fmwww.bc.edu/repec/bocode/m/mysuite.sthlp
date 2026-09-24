@@ -1,7 +1,8 @@
 {smcl}
-{* 05Sep2026}{...}
+{* 23Sep2026}{...}
 {vieweralsosee "" "--"}{...}
 {vieweralsosee "myedit" "help myedit"}{...}
+{vieweralsosee "ff" "help ff"}{...}
 {viewerjumpto "Syntax" "mysuite##syntax"}{...}
 {viewerjumpto "Description" "mysuite##description"}{...}
 {viewerjumpto "Options" "mysuite##options"}{...}
@@ -37,8 +38,8 @@
 
 {pstd}
 {cmd:mysuite} is a comprehensive Stata program suite designed for empirical research,
-teaching management, and academic writing. It provides access to 44 specialized
-programs (delivered through 41 SSC packages) available from the SSC archive.
+teaching management, and academic writing. It provides access to 45 specialized
+programs (delivered through 42 SSC packages) available from the SSC archive.
 
 {pstd}
 {bf:Core Features:}
@@ -48,7 +49,7 @@ programs (delivered through 41 SSC packages) available from the SSC archive.
 {phang2}
 - Smart installation: only installs missing modules (with {opt all}){p_end}
 {phang2}
-- Force reinstall all 44 programs when needed (with {opt all download}){p_end}
+- Force reinstall all 45 programs when needed (with {opt all download}){p_end}
 {phang2}
 - Installation status checking and reporting{p_end}
 {phang2}
@@ -60,7 +61,7 @@ programs (delivered through 41 SSC packages) available from the SSC archive.
 {phang2}
 {bf:MODE 1 - Display}
   No options specified
-  → Show program banner, complete list of 44 programs,
+  → Show program banner, complete list of 45 programs,
      current installation status, and detailed usage instructions.
      No modules are downloaded or installed.{p_end}
 
@@ -74,14 +75,35 @@ programs (delivered through 41 SSC packages) available from the SSC archive.
 {bf:MODE 3 - List Installed}
   {opt installed} option specified
   → Display a complete list of all currently installed programs.
-     Shows installation count summary (e.g., "40/44 modules installed").{p_end}
+     Shows installation count summary (e.g., "40/45 modules installed").{p_end}
 
 {phang2}
 {bf:MODE 4 - Force Reinstall}
   {opt all} and {opt download} options combined
-  → Force reinstall ALL 44 programs (41 SSC packages) regardless of current
+  → Force reinstall ALL 45 programs (42 SSC packages) regardless of current
      installation status.
      Useful for updating to latest versions or fixing corrupted installations.{p_end}
+
+
+{title:Updates in version 1.2.1}
+
+{pstd}
+The following improvements have been made in version 1.2.1:
+
+{phang2}
+- A new module {bf:ff} (browse and search Stata's built-in functions) has been
+  added to the suite and is now available on SSC; it was first released on
+  21 September 2026.{p_end}
+{phang2}
+- The SSC package {bf:plssem2} has been revised and redistributed on SSC
+  (distribution date 21 September 2026). Reinstalling it with
+  {cmd:mysuite, all download} updates an earlier installation.{p_end}
+{phang2}
+- {bf:ff} has been added to the {bf:3. Research & Teaching Management}
+  category of the module menu.{p_end}
+{phang2}
+- Total module count increased from 44 to 45 programs, and the number of SSC
+  packages increased from 41 to 42.{p_end}
 
 
 {title:Updates in version 1.2.0}
@@ -181,13 +203,13 @@ Shows installation progress and summary statistics upon completion.
 
 {phang}
 {opt Installed} lists all currently installed programs without making any changes.
-Displays each of the 44 modules with "Installed" or "Not installed" status,
+Displays each of the 45 modules with "Installed" or "Not installed" status,
 followed by a count summary.
 
 {phang}
 {opt Download} modifies the behavior of {opt all}. When combined:
 - {cmd:mysuite, all} → Install missing modules only
-- {cmd:mysuite, all download} → Force reinstall ALL 44 programs
+- {cmd:mysuite, all download} → Force reinstall ALL 45 programs
 
 
 {marker examples}{...}
@@ -197,15 +219,15 @@ followed by a count summary.
 {bf:MODE 1 - Display Program Information:}
 
 {phang}{cmd:. mysuite}{p_end}
-{phang}Display program banner, complete module list (44 programs),
-current installation status (e.g., "SSC modules installed: 20/44"),
+{phang}Display program banner, complete module list (45 programs),
+current installation status (e.g., "SSC modules installed: 20/45"),
 and detailed usage instructions. No modules are downloaded or installed.{p_end}
 
 {pstd}
 {bf:MODE 2 - Install Missing Modules:}
 
 {phang}{cmd:. mysuite, all}{p_end}
-{phang}Smart installation - checks each of the 41 SSC packages and installs
+{phang}Smart installation - checks each of the 42 SSC packages and installs
 only those not currently found. Already installed packages are skipped.
 Packages that provide several programs, such as {cmd:learn_bilingual} (installing
 {cmd:stataedu}, {cmd:pythonedu}, and {cmd:latexedu}), are handled in one step.
@@ -228,14 +250,14 @@ Installation Summary:
     ...
     {bf:varck}: Installed
     {bf:latexedu}: Not installed
-  {bf:Summary:} 43/44 SSC modules installed
+  {bf:Summary:} 43/45 SSC modules installed
 Useful for quick inventory of your setup.{p_end}
 
 {pstd}
 {bf:MODE 4 - Force Reinstall All Modules:}
 
 {phang}{cmd:. mysuite, all download}{p_end}
-{phang}Force reinstall ALL 44 programs (41 SSC packages) regardless of current status.
+{phang}Force reinstall ALL 45 programs (42 SSC packages) regardless of current status.
 Use this to update to latest versions or fix corrupted installations.
 Example output:
   Reinstalling {bf:art2tex}... Done
@@ -243,14 +265,14 @@ Example output:
   ...
   Reinstalling {bf:learn_bilingual} (stataedu, pythonedu, latexedu)... Done
 Reinstallation Summary:
-  Successfully reinstalled: 41 packages{p_end}
+  Successfully reinstalled: 42 packages{p_end}
 
 {pstd}
 {bf:Checking Installation Status:}
 
 {phang}{cmd:. mysuite}{p_end}
 {phang}Running without options shows current installation status:
-"SSC modules installed: 18/44" - quickly see what's missing.{p_end}
+"SSC modules installed: 18/45" - quickly see what's missing.{p_end}
 
 {pstd}
 {bf:Editing Installed Modules:}
@@ -301,9 +323,9 @@ This is useful for learning, customization, and debugging.{p_end}
 {pstd}Ma'anshan, Anhui, China{p_end}
 
 {pstd}
-Development Date: 05 Sep 2026{p_end}
+Development Date: 23 Sep 2026{p_end}
 {pstd}
-Version: 1.2.0{p_end}
+Version: 1.2.1{p_end}
 
 
 {marker acknowledgments}{...}
@@ -317,7 +339,7 @@ Thanks to his enthusiastic support and timely scientific guidance, we have succe
 {title:Also see}
 
 {psee}
-Online: {help myedit}, {help editprofile}, {help reduce_aigc}, {help myinterval},
+Online: {help ff}, {help myedit}, {help editprofile}, {help reduce_aigc}, {help myinterval},
 {help ccgi}, {help fm}, {help varck}, {help mkes}, {help plssem2},
 {help stataedu}, {help pythonedu}, {help latexedu}
 {p_end}
